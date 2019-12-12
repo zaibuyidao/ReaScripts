@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="356207057308d555b724df7a755ce3be2a94f179">
+<index version="1" name="zaibuyidao Scripts" commit="4d4e434642e4f5d3e22331ffceaf9befbf1b67ed">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -209,9 +209,7 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity.lua" type="script" desc="Scale Velocity">
-      <metadata>
-        <link rel="website">https://forum.cockos.com/showthread.php?t=225108</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="Edgemeal" time="2019-12-12T14:28:10Z">
         <changelog><![CDATA[+ Initial Release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
@@ -308,18 +306,14 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum Down.lua" type="script" desc="Strum Down">
-      <metadata>
-        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="kawa" time="2019-12-12T14:28:10Z">
         <changelog><![CDATA[+ Initial Release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Strum%20Down.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum Up.lua" type="script" desc="Strum Up">
-      <metadata>
-        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="kawa" time="2019-12-12T14:28:10Z">
         <changelog><![CDATA[+ Initial Release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Strum%20Up.lua</source>
