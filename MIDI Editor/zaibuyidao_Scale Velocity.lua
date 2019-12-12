@@ -1,15 +1,12 @@
 --[[
  * ReaScript Name: Scale Velocity
  * Version: 1.0
- * Author: Edgemeal
- * 算法改进: zaibuyidao
- * Website: https://forum.cockos.com/showthread.php?t=225108
---]]
-
---[[
- * Changelog:
- * v1.0 (2019-12-12)
-     + Initial Release
+ * Author: Edgemeal & zaibuyidao
+ * Improved algorithm: zaibuyidao
+ * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+ * Repository: GitHub > zaibuyidao > ReaScripts
+ * Repository URI: https://github.com/zaibuyidao/ReaScripts
+ * REAPER: 6.0
 --]]
 
 function Main()

@@ -1,15 +1,12 @@
 --[[
  * ReaScript Name: Strum Up
  * Version: 1.0
- * Author: kawa
- * Tick功能实现: zaibuyidao (再補一刀)
- * Website: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---]]
-
---[[
- * Changelog:
- * v1.0 (2019-12-12)
-     + Initial Release
+ * Author: kawa & zaibuyidao
+ * Tick function realize: zaibuyidao
+ * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+ * Repository: GitHub > zaibuyidao > ReaScripts
+ * Repository URI: https://github.com/zaibuyidao/ReaScripts
+ * REAPER: 6.0
 --]]
 
 if (package.config:sub(1, 1) == "\\") then end
