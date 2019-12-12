@@ -1,8 +1,9 @@
 --[[
  * ReaScript Name: Scale Velocity
- * Version: 1.0
- * Author: Edgemeal & zaibuyidao
- * Improved algorithm: zaibuyidao
+ * Description: improved algorithm
+ * Version: 1.1
+ * Original: Edgemeal
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts

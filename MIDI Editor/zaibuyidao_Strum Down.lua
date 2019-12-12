@@ -1,8 +1,9 @@
 --[[
  * ReaScript Name: Strum Down
- * Version: 1.0
- * Author: kawa & zaibuyidao
- * Tick function realize: zaibuyidao
+ * Description: tick function realize
+ * Version: 1.1
+ * Original: kawa
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
