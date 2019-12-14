@@ -1,12 +1,19 @@
 --[[
  * ReaScript Name: Stretch Notes And CC Events
- * Version: 1.1
+ * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
+ * Reference: mpl_Stretch selected MIDI notes positions by custom x.lua
  * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
+--]]
+
+--[[
+ * Changelog:
+ * v1.0 (2019-12-12)
+  + Initial release
 --]]
 
 local title = "Stretch Notes And CC Events"

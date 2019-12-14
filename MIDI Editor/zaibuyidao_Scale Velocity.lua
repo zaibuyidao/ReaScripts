@@ -1,13 +1,20 @@
 --[[
  * ReaScript Name: Scale Velocity
- * Description: improved algorithm
- * Version: 1.1
- * Original: Edgemeal
+ * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
+ * Reference: https://forum.cockos.com/showthread.php?t=225108
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
+--]]
+
+--[[
+ * Changelog:
+ * v1.0 (2019-12-12)
+  + Initial release
 --]]
 
 function Main()

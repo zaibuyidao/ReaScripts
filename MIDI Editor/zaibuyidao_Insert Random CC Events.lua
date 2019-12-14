@@ -1,12 +1,19 @@
 --[[
  * ReaScript Name: Insert Random CC Events
- * Version: 1.1
+ * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
  * Donation: http://www.paypal.me/zaibuyidao
+--]]
+
+--[[
+ * Changelog:
+ * v1.0 (2019-12-12)
+  + Initial release
 --]]
 
 local retval, userInputsCSV = reaper.GetUserInputs("Insert Random CC Events", 4, "CC Number,CC Events,Repetition,Interval", "11,8,4,240")

@@ -1,12 +1,19 @@
 --[[
  * ReaScript Name: Random CC Position And Value (Within Time Selection)
- * Version: 1.1
+ * Instructions: Open a MIDI take in MIDI Editor. Set Time Selection, Run.
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
  * Donation: http://www.paypal.me/zaibuyidao
+--]]
+
+--[[
+ * Changelog:
+ * v1.0 (2019-12-12)
+  + Initial release
 --]]
 
 local diff = 127
