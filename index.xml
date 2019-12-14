@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3bb010aeacb8d1ce6b47c8b05884bef561887306">
+<index version="1" name="zaibuyidao Scripts" commit="5e4ee4723e26b0f05246db683355acafbde35a2b">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -114,6 +114,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%201%20(For%20Selected%20Notes).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2019-12-14T14:30:37Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e4ee4723e26b0f05246db683355acafbde35a2b/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%201%20(For%20Selected%20Notes).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 2 (For Selected Notes).lua" type="script" desc="Insert CC Events 2 (For Selected Notes)">
       <metadata>
@@ -122,6 +125,9 @@
       <version name="1.0" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(For%20Selected%20Notes).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2019-12-14T14:30:37Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e4ee4723e26b0f05246db683355acafbde35a2b/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(For%20Selected%20Notes).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC.lua" type="script" desc="Insert CC">
@@ -182,6 +188,9 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Insert%20Random%20CC%20Events.lua</source>
+      </version>
+      <version name="1.21" author="zaibuyidao" time="2019-12-14T14:30:37Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e4ee4723e26b0f05246db683355acafbde35a2b/MIDI%20Editor/zaibuyidao_Insert%20Random%20CC%20Events.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Sustain Pedal.lua" type="script" desc="Insert Sustain Pedal">
@@ -273,6 +282,9 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Random%20CC%20Position%20(Within%20Time%20Selection).lua</source>
       </version>
+      <version name="1.21" author="zaibuyidao" time="2019-12-14T14:30:37Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e4ee4723e26b0f05246db683355acafbde35a2b/MIDI%20Editor/zaibuyidao_Random%20CC%20Position%20(Within%20Time%20Selection).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Position And Value (Within Time Selection).lua" type="script" desc="Random CC Position And Value (Within Time Selection)">
       <metadata>
@@ -287,6 +299,9 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Random%20CC%20Position%20And%20Value%20(Within%20Time%20Selection).lua</source>
+      </version>
+      <version name="1.21" author="zaibuyidao" time="2019-12-14T14:30:37Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e4ee4723e26b0f05246db683355acafbde35a2b/MIDI%20Editor/zaibuyidao_Random%20CC%20Position%20And%20Value%20(Within%20Time%20Selection).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Value (Limit Range).lua" type="script" desc="Random CC Value (Limit Range)">
@@ -303,6 +318,9 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Random%20CC%20Value%20(Limit%20Range).lua</source>
       </version>
+      <version name="1.21" author="zaibuyidao" time="2019-12-14T14:30:37Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e4ee4723e26b0f05246db683355acafbde35a2b/MIDI%20Editor/zaibuyidao_Random%20CC%20Value%20(Limit%20Range).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Value.lua" type="script" desc="Random CC Value">
       <metadata>
@@ -317,6 +335,9 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Random%20CC%20Value.lua</source>
+      </version>
+      <version name="1.21" author="zaibuyidao" time="2019-12-14T14:30:37Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e4ee4723e26b0f05246db683355acafbde35a2b/MIDI%20Editor/zaibuyidao_Random%20CC%20Value.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Velocity (Limit Range).lua" type="script" desc="Random Velocity (Limit Range)">
