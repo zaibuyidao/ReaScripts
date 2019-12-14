@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Random CC Events
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.2
+ * Version: 1.21
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -35,6 +35,7 @@ function Main()
         end
     end
     reaper.UpdateArrange()
+    reaper.MIDI_Sort(take)
 end
 
 reaper.Undo_BeginBlock()
