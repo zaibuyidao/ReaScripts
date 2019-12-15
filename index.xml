@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5e4ee4723e26b0f05246db683355acafbde35a2b">
+<index version="1" name="zaibuyidao Scripts" commit="7c71998d9a2b4c4eaa7d000d7cd729f2ec0c470c">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -428,6 +428,24 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Velocity Value (By Percent).lua" type="script" desc="Set Velocity Value (By Percent)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2019-12-15T10:46:52Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7c71998d9a2b4c4eaa7d000d7cd729f2ec0c470c/MIDI%20Editor/zaibuyidao_Set%20Velocity%20Value%20(By%20Percent).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Velocity Value.lua" type="script" desc="Set Velocity Value">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2019-12-15T10:46:52Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7c71998d9a2b4c4eaa7d000d7cd729f2ec0c470c/MIDI%20Editor/zaibuyidao_Set%20Velocity%20Value.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide +.lua" type="script" desc="Slide +">
