@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Set Velocity Value (By Percent)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,7 +16,7 @@
   + Initial release
 --]]
 
-local retval, user_input = reaper.GetUserInputs('Set Velocity Value', 1, 'By Percent', '125')
+local retval, user_input = reaper.GetUserInputs('Set Velocity', 1, 'By Percent', '125')
 if not retval then return reaper.SN_FocusMIDIEditor() end
 
 function Main()
@@ -35,7 +35,7 @@ function Main()
   reaper.UpdateArrange()
 end
 
-script_title = "Set Velocity Value"
+script_title = "Set Velocity"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, -1)
