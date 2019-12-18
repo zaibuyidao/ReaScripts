@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert CC Events 1 (For Selected Notes)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -19,21 +19,22 @@
 selected = false
 muted = false
 chan = 0 -- Channel 1
+offset = 0 -- 微移CC位置
 
 function Main()
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   item = reaper.GetMediaItemTake_Item(take)
   retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-  local retval, userInputsCSV = reaper.GetUserInputs("Insert CC Events 1", 3, "CC Number,Value,Offset", "11,127,0")
+  local retval, userInputsCSV = reaper.GetUserInputs("Insert CC Events 1", 2, "CC Number,Value", "11,127")
   if not retval then return reaper.SN_FocusMIDIEditor() end
-  local msg2, msg3, offset = userInputsCSV:match("(.*),(.*),(.*)")
-  msg2, msg3, offset = tonumber(msg2), tonumber(msg3), tonumber(offset)
+  local msg2, msg3 = userInputsCSV:match("(.*),(.*)")
+  msg2, msg3 = tonumber(msg2), tonumber(msg3)
 
   for i = 0,  notes-1 do
     retval, selected, muted, ppq, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if selected == true then
-      ppq = ppq + offset -- 微移CC位置
+      ppq = ppq + offset
       reaper.MIDI_InsertCC(take, selected, muted, ppq, 0xB0, 0, msg2, msg3)
       reaper.UpdateItemInProject(item)
     end

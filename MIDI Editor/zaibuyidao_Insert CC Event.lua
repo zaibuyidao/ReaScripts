@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Insert CC
+ * ReaScript Name: Insert CC Event
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.2
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,17 +12,18 @@
 
 --[[
  * Changelog:
- * v1.0 (2019-12-12)
+ * v1.0 (2019-12-19)
   + Initial release
 --]]
 
 selected = false
 muted = false
+offset = 0
 
-local retval, userInputsCSV = reaper.GetUserInputs("Insert CC", 3, "CC Number,Value,Offset", "120,0,-10")
+local retval, userInputsCSV = reaper.GetUserInputs("Insert CC Event", 2, "CC Number,Value", "11,127")
 if not retval then return reaper.SN_FocusMIDIEditor() end
-local msg2, msg3, offset = userInputsCSV:match("(.*),(.*),(.*)")
-msg2, msg3, offset = tonumber(msg2), tonumber(msg3), tonumber(offset)
+local msg2, msg3 = userInputsCSV:match("(.*),(.*)")
+msg2, msg3 = tonumber(msg2), tonumber(msg3)
 
 function Main()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
@@ -36,5 +37,5 @@ reaper.Undo_BeginBlock()
 selected = true
 Main()
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Insert CC", -1)
+reaper.Undo_EndBlock("Insert CC Event", -1)
 reaper.SN_FocusMIDIEditor()
