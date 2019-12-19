@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert CC Events 1 (For Selected Notes)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.21
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -19,7 +19,7 @@
 selected = false
 muted = false
 chan = 0 -- Channel 1
-offset = 0 -- 微移CC位置
+offset = 0
 
 function Main()
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
@@ -34,14 +34,13 @@ function Main()
   for i = 0,  notes-1 do
     retval, selected, muted, ppq, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if selected == true then
-      ppq = ppq + offset
+      ppq = ppq + offset -- 微移CC位置
       reaper.MIDI_InsertCC(take, selected, muted, ppq, 0xB0, 0, msg2, msg3)
       reaper.UpdateItemInProject(item)
     end
     i=i+1
   end
   reaper.UpdateArrange()
-  reaper.MIDI_Sort(take)
 end
 
 script_title = "Insert CC Events 1"
