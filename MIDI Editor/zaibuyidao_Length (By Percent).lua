@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Stretch Notes And CC Events (By Percent)
+ * ReaScript Name: Length (By Percent)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 1.2
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,7 +16,7 @@
   + Initial release
 --]]
 
-local title = "Stretch Notes And CC Events"
+local title = "Length"
 local HWND =  reaper.MIDIEditor_GetActive()
 if not HWND then return end
 local take =  reaper.MIDIEditor_GetTake(HWND)
@@ -71,7 +71,7 @@ function StretchSelectedCCs(f)
 end
 
 function Main()
-  local retval, str_user_input = reaper.GetUserInputs('Stretch Notes And CC Events', 1, 'By Percent', '200')
+  local retval, str_user_input = reaper.GetUserInputs('Length', 1, 'By Percent', '200')
   if retval then
     local func
     if not str_user_input:match('[%d%.]+') or not tonumber(str_user_input:match('[%d%.]+')) then return end

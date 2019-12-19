@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert CC Events 1
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.2 (2019-12-20)
+  + 移除用户输入偏移设置，并优化脚本。
  * v1.0 (2019-12-19)
   + Initial release
 --]]
