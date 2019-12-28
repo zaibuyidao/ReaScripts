@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="dec2bf9debdfce10e0e6344cdc658f462c9846c9">
+<index version="1" name="zaibuyidao Scripts" commit="4d468339a2719f16b025747efe2305babb978cf7">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -421,6 +421,15 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Select Note (By Channel).lua" type="script" desc="Select Note (By Channel)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2019-12-28T23:05:08Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4d468339a2719f16b025747efe2305babb978cf7/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Channel).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Select Note (By Duration).lua" type="script" desc="Select Note (By Duration)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -446,6 +455,10 @@
       <version name="1.0" author="zaibuyidao" time="2019-12-26T21:12:23Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dec2bf9debdfce10e0e6344cdc658f462c9846c9/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Tick).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2019-12-28T23:05:08Z">
+        <changelog><![CDATA[+ Increase Beat options]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4d468339a2719f16b025747efe2305babb978cf7/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Tick).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Note (By Velocity).lua" type="script" desc="Select Note (By Velocity)">
