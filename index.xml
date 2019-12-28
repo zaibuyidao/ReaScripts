@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="4d468339a2719f16b025747efe2305babb978cf7">
+<index version="1" name="zaibuyidao Scripts" commit="6045667c9961bb46b77e262dc896fd4eac9de9c3">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -468,6 +468,10 @@
       <version name="1.0" author="zaibuyidao" time="2019-12-26T21:12:23Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dec2bf9debdfce10e0e6344cdc658f462c9846c9/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Velocity).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2019-12-28T23:07:29Z">
+        <changelog><![CDATA[+ Increase Beat options]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6045667c9961bb46b77e262dc896fd4eac9de9c3/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Velocity).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value (By Percent).lua" type="script" desc="Set CC Value (By Percent)">
