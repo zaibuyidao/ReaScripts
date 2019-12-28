@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Select Note (By Key)
+ * ReaScript Name: Select Note (By Channel)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -13,19 +13,17 @@
 
 --[[
  * Changelog:
- * v1.1 (2019-12-29)
-  + Increase Beat options
- * v1.0 (2019-12-27)
+ * v1.0 (2019-12-29)
   + Initial release
 --]]
 
 local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-userOK, dialog_ret_vals = reaper.GetUserInputs("Select Note (By Key)", 4, "Min Key,Max Key,Min Beat,Max Beat", "0,127,1,99")
+userOK, dialog_ret_vals = reaper.GetUserInputs("Select Note (By Channel)", 4, "Min Channel,Max Channel,Min Beat,Max Beat", "1,16,1,99")
 if not userOK then return reaper.SN_FocusMIDIEditor() end
-min_key, max_key, min_meas, max_meas = dialog_ret_vals:match("(.*),(.*),(.*),(.*)")
-min_key, max_key, min_meas, max_meas = tonumber(min_key), tonumber(max_key), tonumber(min_meas) -1, tonumber(max_meas) -- min_meas -1: Compensation
-if min_key > 127 or max_key > 127 or min_key < 0 or max_key < 0 then return reaper.MB("Please enter a value from 0 through 127", "Key Error", 0), reaper.SN_FocusMIDIEditor() end
+min_chan, max_chan, min_meas, max_meas = dialog_ret_vals:match("(.*),(.*),(.*),(.*)")
+min_chan, max_chan, min_meas, max_meas = tonumber(min_chan)-1, tonumber(max_chan)-1, tonumber(min_meas) -1, tonumber(max_meas) -- min_meas -1: Compensation
+if min_chan > 16 or max_chan > 16 or min_chan < 0 or max_chan < 0 then return reaper.MB("Please enter a value from 1 through 16", "Channel Error", 0), reaper.SN_FocusMIDIEditor() end
 if min_meas > 99 or max_meas > 99 or min_meas < 0 or max_meas < 0 then return reaper.MB("Please enter a value from 1 through 99", "Beat Error", 0), reaper.SN_FocusMIDIEditor() end
 
 function MEAS()
@@ -46,11 +44,11 @@ function MEAS()
   reaper.MIDI_Sort(take)
 end
 
-function KEY()
+function CHAN()
   for i = 0,  notes-1 do
     retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if sel == true then
-      if pitch >= min_key and pitch <= max_key then -- 定义力度范围
+      if chan >= min_chan and chan <= max_chan then -- 定义通道范围
         reaper.MIDI_SetNote(take, i, true, muted, ppq_start, ppq_end, chan, pitch, vel, true)
       else
         reaper.MIDI_SetNote(take, i, false, muted, ppq_start, ppq_end, chan, pitch, vel, true)
@@ -61,9 +59,9 @@ function KEY()
   reaper.UpdateArrange()
 end
 
-script_title = "Select Note (By Key)"
+script_title = "Select Note (By Channel)"
 reaper.Undo_BeginBlock()
 MEAS()
-KEY()
+CHAN()
 reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()

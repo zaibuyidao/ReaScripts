@@ -13,23 +13,44 @@
 
 --[[
  * Changelog:
+ * v1.1 (2019-12-29)
+  + Increase Beat options
  * v1.0 (2019-12-27)
   + Initial release
 --]]
 
-function Main()
-  local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-  retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-  userOK, dialog_ret_vals = reaper.GetUserInputs("Select Note", 2, "Min Velocity,Max Velocity", "1,100")
-  if not userOK then return reaper.SN_FocusMIDIEditor() end
-  min_val, max_val = dialog_ret_vals:match("(.*),(.*)")
-  min_val, max_val = tonumber(min_val), tonumber(max_val)
-  if min_val > 127 or max_val > 127 or min_val < 1 or max_val < 1 then return reaper.MB("Please enter a value from 1 through 127", "Error", 0), reaper.SN_FocusMIDIEditor() end
+local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
+userOK, dialog_ret_vals = reaper.GetUserInputs("Select Note (By Velocity)", 4, "Min Velocity,Max Velocity,Min Beat,Max Beat", "1,127,1,99")
+if not userOK then return reaper.SN_FocusMIDIEditor() end
+min_vel, max_vel, min_meas, max_meas = dialog_ret_vals:match("(.*),(.*),(.*),(.*)")
+min_vel, max_vel, min_meas, max_meas = tonumber(min_vel), tonumber(max_vel), tonumber(min_meas) -1, tonumber(max_meas) -- min_meas -1: Compensation
+if min_vel > 127 or max_vel > 127 or min_vel < 1 or max_vel < 1 then return reaper.MB("Please enter a value from 1 through 127", "Velocity Error", 0), reaper.SN_FocusMIDIEditor() end
+if min_meas > 99 or max_meas > 99 or min_meas < 0 or max_meas < 0 then return reaper.MB("Please enter a value from 1 through 99", "Beat Error", 0), reaper.SN_FocusMIDIEditor() end
 
+function MEAS()
+  for i = 0,  notes-1 do
+    retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+    newstart = reaper.MIDI_GetProjQNFromPPQPos(take, ppq_start)
+    if sel == true then
+	  local retval, Bar_Start_QN, Bar_End_QN = reaper.TimeMap_QNToMeasures(0, newstart) -- retval每小节
+      if newstart >= math.floor(Bar_Start_QN) + min_meas and newstart < math.floor(Bar_Start_QN) + max_meas then
+        reaper.MIDI_SetNote(take, i, true, muted, ppq_start, ppq_end, chan, pitch, vel, true)
+      else
+        reaper.MIDI_SetNote(take, i, false, muted, ppq_start, ppq_end, chan, pitch, vel, true)
+      end
+    end
+    i=i+1
+  end
+  reaper.UpdateArrange()
+  reaper.MIDI_Sort(take)
+end
+
+function VEL()
   for i = 0,  notes-1 do
     retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if sel == true then
-      if vel >= min_val and vel <= max_val then -- 定义力度范围
+      if vel >= min_vel and vel <= max_vel then -- 定义力度范围
         reaper.MIDI_SetNote(take, i, true, muted, ppq_start, ppq_end, chan, pitch, vel, true)
       else
         reaper.MIDI_SetNote(take, i, false, muted, ppq_start, ppq_end, chan, pitch, vel, true)
@@ -40,8 +61,9 @@ function Main()
   reaper.UpdateArrange()
 end
 
-script_title = "Select Note"
+script_title = "Select Note (By Velocity)"
 reaper.Undo_BeginBlock()
-Main()
+MEAS()
+VEL()
 reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()
