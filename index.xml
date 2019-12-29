@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6045667c9961bb46b77e262dc896fd4eac9de9c3">
+<index version="1" name="zaibuyidao Scripts" commit="431d7607df08076e5160a6c456a151d21c0462be">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -230,6 +230,11 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2019-12-29T19:29:22Z">
+        <changelog><![CDATA[+ Updated algorithm to accurately generate CC event in measuers
++ 更新算法以在小节中准确生成CC事件]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/431d7607df08076e5160a6c456a151d21c0462be/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Vibrato.lua" type="script" desc="Insert Vibrato">
