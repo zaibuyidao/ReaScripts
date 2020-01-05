@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Select Note (By Key)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.125
+ * Version: 1.15
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,6 +13,8 @@
 
 --[[
  * Changelog:
+ * v1.15 (2020-1-5)
+  # Adjust the name
  * v1.125 (2020-1-1)
   # Optimize the code
  * v1.0 (2019-12-27)
@@ -21,7 +23,7 @@
 
 local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-userOK, dialog_ret_vals = reaper.GetUserInputs("Select Note (By Key)", 2, "Min,Max", "0,127")
+userOK, dialog_ret_vals = reaper.GetUserInputs("Select Note By Key", 2, "Min,Max", "0,127")
 if not userOK then return reaper.SN_FocusMIDIEditor() end
 min_key, max_key = dialog_ret_vals:match("(.*),(.*)")
 min_key, max_key = tonumber(min_key), tonumber(max_key)

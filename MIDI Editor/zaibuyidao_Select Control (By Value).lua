@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Select CC (By Value)
+ * ReaScript Name: Select Control (By Value)
  * Instructions: Open a MIDI take in MIDI Editor. Select CC Events. Run.
- * Version: 1.0
+ * Version: 1.125
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,13 +13,15 @@
 
 --[[
  * Changelog:
+ * v1.125 (2020-1-5)
+  # Adjust the name
  * v1.0 (2020-1-1)
   + Initial release
 --]]
 
 local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-userOK, dialog_ret_vals = reaper.GetUserInputs("Select CC (By Value)", 4, "Min Value,Max Value,Min Beat,Max Beat", "0,127,1,99")
+userOK, dialog_ret_vals = reaper.GetUserInputs("Select Control By Value", 4, "Value,,Beat,", "0,127,1,99")
 if not userOK then return reaper.SN_FocusMIDIEditor() end
 min_val, max_val, min_meas, max_meas = dialog_ret_vals:match("(.*),(.*),(.*),(.*)")
 min_val, max_val, min_meas, max_meas = tonumber(min_val), tonumber(max_val), tonumber(min_meas) -1, tonumber(max_meas) -- min_meas -1: Compensation
@@ -59,7 +61,7 @@ function VAL()
   reaper.UpdateArrange()
 end
 
-script_title = "Select CC (By Value)"
+script_title = "Select Control (By Value)"
 reaper.Undo_BeginBlock()
 MEAS()
 VAL()

@@ -13,15 +13,15 @@
 
 --[[
  * Changelog:
- * v1.125 (2020-1-1)
-  # Optimize the code
+ * v1.125 (2020-1-5)
+  # Adjust the name
  * v1.0 (2019-12-29)
   + Initial release
 --]]
 
 local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-userOK, dialog_ret_vals = reaper.GetUserInputs("Select Note (By Channel)", 2, "Min,Max", "1,16")
+userOK, dialog_ret_vals = reaper.GetUserInputs("Select Note By Channel", 2, "Min,Max", "1,16")
 if not userOK then return reaper.SN_FocusMIDIEditor() end
 min_chan, max_chan = dialog_ret_vals:match("(.*),(.*)")
 min_chan, max_chan = tonumber(min_chan) -1, tonumber(max_chan) -1

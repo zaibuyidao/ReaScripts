@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Select CC (By Tick)
+ * ReaScript Name: Select Control (By Tick)
  * Instructions: Open a MIDI take in MIDI Editor. Select CC Events. Run.
- * Version: 1.0
+ * Version: 1.125
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,13 +13,15 @@
 
 --[[
  * Changelog:
+ * v1.125 (2020-1-5)
+  # Adjust the name
  * v1.0 (2020-1-1)
   + Initial release
 --]]
 
 local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-userOK, dialog_ret_vals = reaper.GetUserInputs("Select CC (By Tick)", 4, "Min Tick,Max Tick,Min Beat,Max Beat", "0,1919,1,99")
+userOK, dialog_ret_vals = reaper.GetUserInputs("Select Control By Tick", 4, "Tick,,Beat,", "0,1919,1,99")
 if not userOK then return reaper.SN_FocusMIDIEditor() end
 min_tick, max_tick, min_meas, max_meas = dialog_ret_vals:match("(.*),(.*),(.*),(.*)")
 min_tick, max_tick, min_meas, max_meas = tonumber(min_tick), tonumber(max_tick), tonumber(min_meas) -1, tonumber(max_meas) -- min_meas -1: Compensation
@@ -59,7 +61,7 @@ function TICK()
   reaper.UpdateArrange()
 end
 
-script_title = "Select CC (By Tick)"
+script_title = "Select Control (By Tick)"
 reaper.Undo_BeginBlock()
 MEAS()
 TICK()
