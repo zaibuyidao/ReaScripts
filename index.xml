@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d2160ccfba43d308f7515fdf742bf72a602756c8">
+<index version="1" name="zaibuyidao Scripts" commit="f888ff1f82a9832ad7b630d728f271d0a03562e9">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -884,6 +884,10 @@
       </version>
       <version name="1.21" author="zaibuyidao" time="2019-12-14T09:49:58Z">
         <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/3bb010aeacb8d1ce6b47c8b05884bef561887306/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
+      </version>
+      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:52:59Z">
+        <changelog><![CDATA[+ Version update]]></changelog>
+        <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/f888ff1f82a9832ad7b630d728f271d0a03562e9/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
       </version>
     </reapack>
   </category>
