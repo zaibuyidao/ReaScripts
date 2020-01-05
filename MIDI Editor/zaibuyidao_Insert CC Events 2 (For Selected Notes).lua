@@ -12,11 +12,9 @@
 
 --[[
  * Changelog:
- * v2.0 (2019-1-5)
+ * v2.0 (2020-1-5)
   + Version update
- * v1.7 (2019-1-5)
-  # Adjust the name
- * v1.5 (2019-1-5)
+ * v1.5 (2020-1-5)
   # Bug fix offset
  * v1.0 (2019-12-12)
   + Initial release

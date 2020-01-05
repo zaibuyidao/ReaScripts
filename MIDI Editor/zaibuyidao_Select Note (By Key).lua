@@ -13,7 +13,7 @@
 
 --[[
  * Changelog:
- * v2.0 (2019-1-5)
+ * v2.0 (2020-1-5)
   + Version update
  * v1.0 (2019-12-27)
   + Initial release

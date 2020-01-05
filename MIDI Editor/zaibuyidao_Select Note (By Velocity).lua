@@ -13,7 +13,7 @@
 
 --[[
  * Changelog:
- * v2.0 (2019-1-5)
+ * v2.0 (2020-1-5)
   + Version update
  * v1.1 (2019-12-29)
   + Increase Beat options
