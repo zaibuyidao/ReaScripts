@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f0840eed7f2d4e0de446beb9bf7e5d7d8512c450">
+<index version="1" name="zaibuyidao Scripts" commit="4dba2f7d475fc6f97bc94863c8444eab6ff49b2a">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -171,6 +171,10 @@
       <version name="1.225" author="zaibuyidao" time="2020-01-05T10:39:54Z">
         <changelog><![CDATA[# Bug fix endppqpos offset]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(For%20Selected%20Notes).lua</source>
+      </version>
+      <version name="1.5" author="zaibuyidao" time="2020-01-05T10:45:35Z">
+        <changelog><![CDATA[# Bug fix offset]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4dba2f7d475fc6f97bc94863c8444eab6ff49b2a/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(For%20Selected%20Notes).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 2.lua" type="script" desc="Insert CC Events 2">
