@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="4dba2f7d475fc6f97bc94863c8444eab6ff49b2a">
+<index version="1" name="zaibuyidao Scripts" commit="4d5936420fd023356124d8abf1b64697b7db9327">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -499,6 +499,10 @@
       <version name="1.125" author="zaibuyidao" time="2020-01-02T08:09:44Z">
         <changelog><![CDATA[# Optimize the code]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3566a3a8fa72367de17e7645eda8308c814a3c04/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Channel).lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2020-01-05T10:52:13Z">
+        <changelog><![CDATA[# Adjust the name]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4d5936420fd023356124d8abf1b64697b7db9327/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Channel).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Note (By Duration).lua" type="script" desc="Select Note (By Duration)">
