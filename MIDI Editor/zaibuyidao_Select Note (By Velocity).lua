@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Select Note (By Velocity)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.125
+ * Version: 2.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,8 +13,8 @@
 
 --[[
  * Changelog:
- * v1.125 (2020-1-5)
-  # Adjust the name
+ * v2.0 (2019-1-5)
+  + Version update
  * v1.1 (2019-12-29)
   + Increase Beat options
  * v1.0 (2019-12-27)

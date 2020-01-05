@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert CC Events 2 (For Selected Notes)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.7
+ * Version: 2.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,12 +12,12 @@
 
 --[[
  * Changelog:
+ * v2.0 (2019-1-5)
+  + Version update
  * v1.7 (2019-1-5)
   # Adjust the name
  * v1.5 (2019-1-5)
   # Bug fix offset
- * v1.225 (2019-1-1)
-  # Bug fix endppqpos offset
  * v1.0 (2019-12-12)
   + Initial release
 --]]
