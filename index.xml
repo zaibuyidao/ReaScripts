@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5406758f4ab9beab90deb9240909b89d1996a10c">
+<index version="1" name="zaibuyidao Scripts" commit="b1479deaf17f9f239979a79eae784078ccc4e0ee">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -122,6 +122,15 @@
       <version name="1.0" author="zaibuyidao" time="2019-12-18T18:01:09Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9dea10304edf37dd7c448c8d2bc1b93e73fc5d7c/MIDI%20Editor/zaibuyidao_Insert%20All%20Sound%20Off.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Bend.lua" type="script" desc="Insert Bend">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-01-13T17:53:05Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b1479deaf17f9f239979a79eae784078ccc4e0ee/MIDI%20Editor/zaibuyidao_Insert%20Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 1 (For Selected Notes).lua" type="script" desc="Insert CC Events 1 (For Selected Notes)">
@@ -474,6 +483,10 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-13T17:53:05Z">
+        <changelog><![CDATA[+ Support for one note]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b1479deaf17f9f239979a79eae784078ccc4e0ee/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Select Control (By Channel).lua" type="script" desc="Select Control (By Channel)">
       <metadata>
@@ -647,6 +660,15 @@
       <version name="1.0" author="zaibuyidao" time="2020-01-05T10:39:54Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Note.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select Wheel.lua" type="script" desc="Select Wheel">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-01-13T17:53:05Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b1479deaf17f9f239979a79eae784078ccc4e0ee/MIDI%20Editor/zaibuyidao_Select%20Wheel.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value (By Percent).lua" type="script" desc="Set CC Value (By Percent)">
