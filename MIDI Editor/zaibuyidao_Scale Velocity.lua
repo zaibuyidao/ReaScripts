@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Velocity
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,6 +13,8 @@
 
 --[[
  * Changelog:
+ * v1.3 (2020-1-14)
+  + Support for one note
  * v1.0 (2019-12-12)
   + Initial release
 --]]
@@ -29,7 +31,7 @@ function Main()
     val = reaper.MIDI_EnumSelNotes(take, val)
   end
 
-  if #index > 1 then
+  if #index > 0 then
     local _, _, _, _, _, _, _, begin_vel = reaper.MIDI_GetNote(take, index[1])
     local _, _, _, _, _, _, _, end_vel = reaper.MIDI_GetNote(take, index[#index])
     local cur_range = tostring(begin_vel)..','..tostring(end_vel)
