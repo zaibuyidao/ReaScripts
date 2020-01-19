@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Random CC Position (Within Time Selection)
  * Instructions: Open a MIDI take in MIDI Editor. Set Time Selection, Run.
- * Version: 2.0
+ * Version: 2.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,7 +12,9 @@
 
 --[[
  * Changelog:
- * v2.0 (2020-1-5)
+ * v2.1 (2020-1-20)
+  # Improve processing speed
+ * v2.0 (2019-1-5)
   + Version update
  * v1.0 (2019-12-12)
   + Initial release
@@ -27,16 +29,16 @@ function Main()
   local loop_len = loop_end - loop_start - 1
   local cnt, index = 0, {}
   local val = reaper.MIDI_EnumSelCC(take, -1)
+  reaper.MIDI_DisableSort(take)
   while val ~= - 1 do
     cnt = cnt + 1
     index[cnt] = val
     val = reaper.MIDI_EnumSelCC(take, val)
   end
-
   if #index > 1 then
     for i = 1, #index do
       local retval, sel, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
-      reaper.MIDI_SetCC(take, index[i], sel, muted, loop_start+math.random(loop_len), chanmsg, chan, msg2, msg3, true)
+      reaper.MIDI_SetCC(take, index[i], sel, muted, loop_start+math.random(loop_len), chanmsg, chan, msg2, msg3, false)
     end
   end
   reaper.UpdateArrange()

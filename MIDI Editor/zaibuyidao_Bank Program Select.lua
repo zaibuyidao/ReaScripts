@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Bank Program Select
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.3 (2020-1-20)
+  + Organize the code
  * v1.0 (2019-12-12)
   + Initial release
 --]]
@@ -38,16 +40,15 @@ function Main()
     local MSB = math.modf(BANK / 128)
     local LSB = math.fmod(BANK, 128)
     for i = 1, #index do
-      retval, selected, muted, ppq, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
+      retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
       if selected == true then
-        -- ppq = ppq - 0 -- 插入音色位置偏移
-        reaper.MIDI_InsertCC(take, selected, muted, ppq, 0xB0, chan, 0, MSB) -- CC#00
-        reaper.MIDI_InsertCC(take, selected, muted, ppq, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, selected, muted, ppq, 0xC0, chan, PC, 0) -- Program Change
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xC0, chan, PC, 0) -- Program Change
         reaper.UpdateItemInProject(item)
       end
-  	  reaper.UpdateArrange()
-	end
+      reaper.UpdateArrange()
+    end
   else
     reaper.MB("Please select one or more notes","Error",0)
     reaper.SN_FocusMIDIEditor()
