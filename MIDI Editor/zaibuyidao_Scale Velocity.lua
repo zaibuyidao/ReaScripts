@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Velocity
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,6 +13,8 @@
 
 --[[
  * Changelog:
+ * v1.4 (2020-1-19)
+  # Improve processing speed
  * v1.3 (2020-1-14)
   + Support for one note
  * v1.0 (2019-12-12)
@@ -22,15 +24,14 @@
 function Main()
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
-
   local cnt, index = 0, {}
   local val = reaper.MIDI_EnumSelNotes(take, -1)
+  reaper.MIDI_DisableSort(take)
   while val ~= - 1 do
     cnt = cnt + 1
     index[cnt] = val
     val = reaper.MIDI_EnumSelNotes(take, val)
   end
-
   if #index > 0 then
     local _, _, _, _, _, _, _, begin_vel = reaper.MIDI_GetNote(take, index[1])
     local _, _, _, _, _, _, _, end_vel = reaper.MIDI_GetNote(take, index[#index])
@@ -43,10 +44,11 @@ function Main()
     local offset = (vel_end - vel_first) / (cnt - 1)
     for i = 1, #index do
       local retval, sel, muted, ppq_start, ppq_end, chan, pitch, _ = reaper.MIDI_GetNote(take, index[i])
-      reaper.MIDI_SetNote(take, index[i], sel, muted, ppq_start, ppq_end, chan, pitch, math.floor(0.5 + vel_first), true)
+      reaper.MIDI_SetNote(take, index[i], sel, muted, ppq_start, ppq_end, chan, pitch, math.floor(0.5 + vel_first), false)
       vel_first = vel_first + offset
     end
     reaper.UpdateArrange()
+    reaper.MIDI_Sort(take)
   else
     reaper.MB("Please select two or more notes","Error",0)
   end

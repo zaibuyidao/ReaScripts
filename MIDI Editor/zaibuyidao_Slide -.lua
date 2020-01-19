@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Slide -
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.3 (2020-1-19)
+  # Improve processing speed
  * v1.0 (2019-12-12)
   + Initial release
 --]]
@@ -25,7 +27,7 @@ function Notes()
   for i = 0,  notes-1 do
     retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if sel == true then
-      reaper.MIDI_SetNote(take, i, sel, muted, ppq_start+j, ppq_end+j, chan, pitch, vel, true)
+      reaper.MIDI_SetNote(take, i, sel, muted, ppq_start+j, ppq_end+j, chan, pitch, vel, false)
     end
     i=i+1
   end
@@ -35,7 +37,7 @@ function CCs()
   for i = 0,  ccs-1 do
     retval, sel, muted, cc_ppq, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
     if sel == true then
-      reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+j, chanmsgIn, chanIn, msg2In, msg3In, true)
+      reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+j, chanmsgIn, chanIn, msg2In, msg3In, false)
     end
     i=i+1
   end
@@ -43,8 +45,10 @@ end
 
 script_title = "Slide -"
 reaper.Undo_BeginBlock()
+reaper.MIDI_DisableSort(take)
 Notes()
 CCs()
 reaper.UpdateArrange()
+reaper.MIDI_Sort(take)
 reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()

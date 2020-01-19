@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Set Velocity
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.3 (2020-1-19)
+  # Improve processing speed
  * v1.0 (2019-12-15)
   + Initial release
 --]]
@@ -28,14 +30,16 @@ end
 function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
+  reaper.MIDI_DisableSort(take)
   for i = 0,  notes-1 do
     retval, sel, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if sel == true then
-      reaper.MIDI_SetNote(take, i, sel, muted, startppqpos, endppqpos, chan, pitch, x, true)
+      reaper.MIDI_SetNote(take, i, sel, muted, startppqpos, endppqpos, chan, pitch, x, false)
     end
     i=i+1
   end
   reaper.UpdateArrange()
+  reaper.MIDI_Sort(take)
 end
 
 script_title = "Set Velocity"
