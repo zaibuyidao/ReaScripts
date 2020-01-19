@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b1479deaf17f9f239979a79eae784078ccc4e0ee">
+<index version="1" name="zaibuyidao Scripts" commit="e355c7ff845e49b3be432f5ceab3c695708817a0">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -104,6 +104,10 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Humanize%20Velocity.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Humanize%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert ADR.lua" type="script" desc="Insert ADR">
@@ -453,6 +457,10 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Random%20Velocity%20(Limit%20Range).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Random%20Velocity%20(Limit%20Range).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random Velocity.lua" type="script" desc="Random Velocity">
       <metadata>
@@ -467,6 +475,10 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Random%20Velocity.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Random%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity.lua" type="script" desc="Scale Velocity">
@@ -487,60 +499,9 @@
         <changelog><![CDATA[+ Support for one note]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b1479deaf17f9f239979a79eae784078ccc4e0ee/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Control (By Channel).lua" type="script" desc="Select Control (By Channel)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.125" author="zaibuyidao" time="2020-01-05T10:39:54Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Channel).lua</source>
-      </version>
-      <version name="0.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Channel).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T13:02:34Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5406758f4ab9beab90deb9240909b89d1996a10c/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Channel).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Control (By Number).lua" type="script" desc="Select Control (By Number)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.125" author="zaibuyidao" time="2020-01-05T10:39:54Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Number).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Number).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Control (By Tick).lua" type="script" desc="Select Control (By Tick)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.125" author="zaibuyidao" time="2020-01-05T10:39:54Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Tick).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Tick).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Control (By Value).lua" type="script" desc="Select Control (By Value)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.125" author="zaibuyidao" time="2020-01-05T10:39:54Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Value).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Control%20(By%20Value).lua</source>
+      <version name="1.4" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Control.lua" type="script" desc="Select Control">
@@ -551,106 +512,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Control.lua</source>
       </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Note (By Channel).lua" type="script" desc="Select Note (By Channel)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-28T23:05:08Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4d468339a2719f16b025747efe2305babb978cf7/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Channel).lua</source>
-      </version>
-      <version name="1.125" author="zaibuyidao" time="2020-01-02T08:09:44Z">
-        <changelog><![CDATA[# Optimize the code]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3566a3a8fa72367de17e7645eda8308c814a3c04/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Channel).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-01-05T10:52:13Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4d5936420fd023356124d8abf1b64697b7db9327/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Channel).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Channel).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Note (By Duration).lua" type="script" desc="Select Note (By Duration)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-26T21:12:23Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dec2bf9debdfce10e0e6344cdc658f462c9846c9/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Duration).lua</source>
-      </version>
-      <version name="1.125" author="zaibuyidao" time="2020-01-05T10:39:54Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Duration).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Duration).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Note (By Key).lua" type="script" desc="Select Note (By Key)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-26T21:12:23Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dec2bf9debdfce10e0e6344cdc658f462c9846c9/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Key).lua</source>
-      </version>
-      <version name="1.125" author="zaibuyidao" time="2020-01-02T08:09:44Z">
-        <changelog><![CDATA[# Optimize the code]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3566a3a8fa72367de17e7645eda8308c814a3c04/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Key).lua</source>
-      </version>
-      <version name="1.15" author="zaibuyidao" time="2020-01-05T10:39:54Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Key).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Key).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Note (By Tick).lua" type="script" desc="Select Note (By Tick)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-26T21:12:23Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dec2bf9debdfce10e0e6344cdc658f462c9846c9/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Tick).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-28T23:05:08Z">
-        <changelog><![CDATA[+ Increase Beat options]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4d468339a2719f16b025747efe2305babb978cf7/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Tick).lua</source>
-      </version>
-      <version name="1.125" author="zaibuyidao" time="2020-01-05T10:39:54Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Tick).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Tick).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Select Note (By Velocity).lua" type="script" desc="Select Note (By Velocity)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-26T21:12:23Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dec2bf9debdfce10e0e6344cdc658f462c9846c9/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Velocity).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-28T23:07:29Z">
-        <changelog><![CDATA[+ Increase Beat options]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6045667c9961bb46b77e262dc896fd4eac9de9c3/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Velocity).lua</source>
-      </version>
-      <version name="1.125" author="zaibuyidao" time="2020-01-05T10:39:54Z">
-        <changelog><![CDATA[# Adjust the name]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Velocity).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-01-05T12:50:14Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d2160ccfba43d308f7515fdf742bf72a602756c8/MIDI%20Editor/zaibuyidao_Select%20Note%20(By%20Velocity).lua</source>
+      <version name="1.1" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Fix bug]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Select%20Control.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Note.lua" type="script" desc="Select Note">
@@ -661,6 +525,10 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f0840eed7f2d4e0de446beb9bf7e5d7d8512c450/MIDI%20Editor/zaibuyidao_Select%20Note.lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Fix bug]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Select%20Note.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Select Wheel.lua" type="script" desc="Select Wheel">
       <metadata>
@@ -669,6 +537,10 @@
       <version name="1.0" author="zaibuyidao" time="2020-01-13T17:53:05Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b1479deaf17f9f239979a79eae784078ccc4e0ee/MIDI%20Editor/zaibuyidao_Select%20Wheel.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Fix bug]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Select%20Wheel.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value (By Percent).lua" type="script" desc="Set CC Value (By Percent)">
@@ -685,6 +557,10 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Set%20CC%20Value%20(By%20Percent).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Set%20CC%20Value%20(By%20Percent).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value.lua" type="script" desc="Set CC Value">
       <metadata>
@@ -699,6 +575,10 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T09:49:58Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3bb010aeacb8d1ce6b47c8b05884bef561887306/MIDI%20Editor/zaibuyidao_Set%20CC%20Value.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Set%20CC%20Value.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Note Length.lua" type="script" desc="Set Note Length">
@@ -715,6 +595,10 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Set Velocity (By Percent).lua" type="script" desc="Set Velocity (By Percent)">
       <metadata>
@@ -726,6 +610,10 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-18T18:01:09Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9dea10304edf37dd7c448c8d2bc1b93e73fc5d7c/MIDI%20Editor/zaibuyidao_Set%20Velocity%20(By%20Percent).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Set%20Velocity%20(By%20Percent).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Set Velocity.lua" type="script" desc="Set Velocity">
       <metadata>
@@ -736,6 +624,10 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-18T18:01:09Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9dea10304edf37dd7c448c8d2bc1b93e73fc5d7c/MIDI%20Editor/zaibuyidao_Set%20Velocity.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Set%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide +.lua" type="script" desc="Slide +">
@@ -752,6 +644,10 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Slide%20+.lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Slide%20+.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Slide -.lua" type="script" desc="Slide -">
       <metadata>
@@ -766,6 +662,10 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Slide%20-.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Slide%20-.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide In.lua" type="script" desc="Slide In">
@@ -853,6 +753,10 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L%20(By%20Percent).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L%20(By%20Percent).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Edge L.lua" type="script" desc="Trim Note Edge L">
       <metadata>
@@ -867,6 +771,10 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Edge R (By Percent).lua" type="script" desc="Trim Note Edge R (By Percent)">
@@ -883,6 +791,10 @@
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R%20(By%20Percent).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R%20(By%20Percent).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Edge R.lua" type="script" desc="Trim Note Edge R">
       <metadata>
@@ -897,6 +809,10 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
+        <changelog><![CDATA[# Improve processing speed]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R.lua</source>
       </version>
     </reapack>
   </category>
