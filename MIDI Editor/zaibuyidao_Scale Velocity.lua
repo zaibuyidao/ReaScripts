@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Velocity
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.4
+ * Version: 1.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,6 +13,8 @@
 
 --[[
  * Changelog:
+ * v1.5 (2020-1-27)
+  # Solved the Line problem
  * v1.4 (2020-1-19)
   # Improve processing speed
  * v1.3 (2020-1-14)
@@ -32,25 +34,32 @@ function Main()
     index[cnt] = val
     val = reaper.MIDI_EnumSelNotes(take, val)
   end
-  if #index > 0 then
-    local _, _, _, _, _, _, _, begin_vel = reaper.MIDI_GetNote(take, index[1])
-    local _, _, _, _, _, _, _, end_vel = reaper.MIDI_GetNote(take, index[#index])
-    local cur_range = tostring(begin_vel)..','..tostring(end_vel)
-    local retval, userInputsCSV = reaper.GetUserInputs("Scale Velocity", 2, "Begin,End", cur_range)
-    if not retval then return reaper.SN_FocusMIDIEditor() end
-    local vel_first, vel_end = userInputsCSV:match("(.*),(.*)")
-    vel_first, vel_end = tonumber(vel_first), tonumber(vel_end)
-    if vel_first > 127 or vel_end > 127 or vel_first < 1 or vel_end < 1 then return reaper.MB("Please enter a value from 1 through 127", "Error", 0), reaper.SN_FocusMIDIEditor() end
-    local offset = (vel_end - vel_first) / (cnt - 1)
+  if cnt == 0 then return reaper.MB("Please select one or more notes","Error",0), reaper.SN_FocusMIDIEditor() end
+  local _, _, _, begin_ppqpos, _, _, _, begin_vel = reaper.MIDI_GetNote(take, index[1])
+  local _, _, _, end_ppqpos, _, _, _, end_vel = reaper.MIDI_GetNote(take, index[#index])
+  local cur_range = tostring(begin_vel)..','..tostring(end_vel)
+  local retval, userInputsCSV = reaper.GetUserInputs("Scale Velocity", 2, "Begin,End", cur_range)
+  if not retval then return reaper.SN_FocusMIDIEditor() end
+  local vel_first, vel_end = userInputsCSV:match("(%d*),(%d*)")
+  vel_first, vel_end = tonumber(vel_first), tonumber(vel_end)
+  if vel_first > 127 or vel_end > 127 or vel_first < 1 or vel_end < 1 then return reaper.MB("Please enter a value from 1 through 127", "Error", 0), reaper.SN_FocusMIDIEditor() end
+  local ppq_offset = (vel_end - vel_first) / (end_ppqpos - begin_ppqpos)
+
+  if end_ppqpos ~= begin_ppqpos then
     for i = 1, #index do
-      local retval, sel, muted, ppq_start, ppq_end, chan, pitch, _ = reaper.MIDI_GetNote(take, index[i])
-      reaper.MIDI_SetNote(take, index[i], sel, muted, ppq_start, ppq_end, chan, pitch, math.floor(0.5 + vel_first), false)
-      vel_first = vel_first + offset
+      local _, _, _, startppqpos, _, _, _, _ = reaper.MIDI_GetNote(take, index[i])
+      local new_vel = (startppqpos - begin_ppqpos) * ppq_offset + vel_first
+      reaper.MIDI_SetNote(take, index[i], nil, nil, nil, nil, nil, nil, math.floor(0.5 + new_vel), false)
     end
     reaper.UpdateArrange()
     reaper.MIDI_Sort(take)
   else
-    reaper.MB("Please select two or more notes","Error",0)
+    for i = 1, #index do
+      local _, _, _, startppqpos, _, _, _, _ = reaper.MIDI_GetNote(take, index[i])
+      reaper.MIDI_SetNote(take, index[i], nil, nil, nil, nil, nil, nil, vel_first, false)
+    end
+    reaper.UpdateArrange()
+    reaper.MIDI_Sort(take)
   end
 end
 

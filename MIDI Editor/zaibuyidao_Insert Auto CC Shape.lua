@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Insert ADR
+ * ReaScript Name: Insert Auto CC Shape
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -66,7 +66,7 @@ function INST2()
         reaper.MIDI_InsertCC(take, selected, muted, startppqpos+480, 0xB0, 0, cc_num, val2)
       elseif len > 2880 then
         reaper.MIDI_InsertCC(take, selected, muted, startppqpos+720, 0xB0, 0, cc_num, val2)
-      elseif len <= 120 then -- 长度小于等于120的音符追加默认值设定
+      elseif len <= 120 then
         reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val2)
       end
         reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42081)
@@ -112,7 +112,7 @@ function INST4()
   reaper.MIDIEditor_LastFocused_OnCommand(40671, 0)
 end
 
-script_title = "Insert ADR"
+script_title = "Insert Auto CC Shape"
 reaper.Undo_BeginBlock()
 INST1()
 INST2()
