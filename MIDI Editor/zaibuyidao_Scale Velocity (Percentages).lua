@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Scale Velocity (By Percent)
+ * ReaScript Name: Scale Velocity (Percentages)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -28,7 +28,7 @@ function Main()
     val = reaper.MIDI_EnumSelNotes(take, val)
   end
   if #index > 0 then
-    local retval, userInputsCSV = reaper.GetUserInputs("Scale Velocity", 2, "Begin,End", "100,100")
+    local retval, userInputsCSV = reaper.GetUserInputs("Scale Velocity (Percentages)", 2, "Begin,End", "100,100")
     if not retval then return reaper.SN_FocusMIDIEditor() end
     local bfb_first, bfb_end = userInputsCSV:match("(.*),(.*)")
     bfb_first, bfb_end = tonumber(bfb_first), tonumber(bfb_end)
@@ -47,7 +47,7 @@ function Main()
   end
 end
 
-script_title = "Scale Velocity (By Percent)"
+script_title = "Scale Velocity (Percentages)"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, -1)

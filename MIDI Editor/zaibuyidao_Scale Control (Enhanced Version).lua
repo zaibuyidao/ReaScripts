@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Control (Enhanced Version)
  * Instructions: Open a MIDI take in MIDI Editor. Select CC Events. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.2 (2020-01-29)
+  # Bug fix
  * v1.1 (2020-01-27)
   # Solved the Line problem
  * v1.0 (2020-01-23)
@@ -46,26 +48,20 @@ function Main()
     end
     reaper.MIDI_DisableSort(take)
     for i = 1, #index do
+      local _, _, _, ppqpos, _, _, _, vel = reaper.MIDI_GetCC(take, index[i])
       if state == "1" then
-        local _, _, _, _, _, _, _, vel = reaper.MIDI_GetCC(take, index[i])
         local x = math.floor(0.5 + vel*(val_start/100))
         if x > 127 then x = 127 elseif x < 1 then x = 1 end
         reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, x, false)
         val_start = val_start + val_offset
       else
         if end_ppqpos ~= begin_ppqpos then
-          for i = 1, #index do
-            local _, _, _, ppqpos, _, _, _, _ = reaper.MIDI_GetCC(take, index[i])
-            local new_vel = (ppqpos - begin_ppqpos) * ppq_offset + val_start
-            local y = math.floor(0.5 + new_vel)
-            if y > 127 then y = 127 elseif y < 1 then y = 1 end
-            reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, y, false)
-          end
+          local new_vel = (ppqpos - begin_ppqpos) * ppq_offset + val_start
+          local y = math.floor(0.5 + new_vel)
+          if y > 127 then y = 127 elseif y < 1 then y = 1 end
+          reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, y, false)
         else
-          for i = 1, #index do
-            local _, _, _, ppqpos, _, _, _, _ = reaper.MIDI_GetCC(take, index[i])
-            reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, val_start, false)
-          end
+          reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, val_start, false)
         end
       end
     end

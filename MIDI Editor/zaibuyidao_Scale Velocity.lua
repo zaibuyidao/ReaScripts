@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Velocity
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,6 +13,8 @@
 
 --[[
  * Changelog:
+ * v1.6 (2020-01-29)
+  # Bug fix
  * v1.5 (2020-1-27)
   # Solved the Line problem
  * v1.4 (2020-1-19)
@@ -28,7 +30,6 @@ function Main()
   if take == nil then return end
   local cnt, index = 0, {}
   local val = reaper.MIDI_EnumSelNotes(take, -1)
-  reaper.MIDI_DisableSort(take)
   while val ~= - 1 do
     cnt = cnt + 1
     index[cnt] = val
@@ -44,23 +45,18 @@ function Main()
   vel_first, vel_end = tonumber(vel_first), tonumber(vel_end)
   if vel_first > 127 or vel_end > 127 or vel_first < 1 or vel_end < 1 then return reaper.MB("Please enter a value from 1 through 127", "Error", 0), reaper.SN_FocusMIDIEditor() end
   local ppq_offset = (vel_end - vel_first) / (end_ppqpos - begin_ppqpos)
-
-  if end_ppqpos ~= begin_ppqpos then
-    for i = 1, #index do
-      local _, _, _, startppqpos, _, _, _, _ = reaper.MIDI_GetNote(take, index[i])
+  reaper.MIDI_DisableSort(take)
+  for i = 1, #index do
+    local _, _, _, startppqpos, _, _, _, _ = reaper.MIDI_GetNote(take, index[i])
+    if end_ppqpos ~= begin_ppqpos then
       local new_vel = (startppqpos - begin_ppqpos) * ppq_offset + vel_first
       reaper.MIDI_SetNote(take, index[i], nil, nil, nil, nil, nil, nil, math.floor(0.5 + new_vel), false)
-    end
-    reaper.UpdateArrange()
-    reaper.MIDI_Sort(take)
-  else
-    for i = 1, #index do
-      local _, _, _, startppqpos, _, _, _, _ = reaper.MIDI_GetNote(take, index[i])
+    else
       reaper.MIDI_SetNote(take, index[i], nil, nil, nil, nil, nil, nil, vel_first, false)
     end
-    reaper.UpdateArrange()
-    reaper.MIDI_Sort(take)
   end
+  reaper.UpdateArrange()
+  reaper.MIDI_Sort(take)
 end
 
 script_title = "Scale Velocity"

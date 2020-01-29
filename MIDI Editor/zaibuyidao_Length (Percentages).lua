@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Length (By Percent)
+ * ReaScript Name: Length (Percentages)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -16,7 +16,7 @@
   + Initial release
 --]]
 
-local title = "Length"
+local title = "Length (Percentages)"
 local HWND =  reaper.MIDIEditor_GetActive()
 if not HWND then return end
 local take =  reaper.MIDIEditor_GetTake(HWND)
@@ -71,7 +71,7 @@ function StretchSelectedCCs(f)
 end
 
 function Main()
-  local retval, str_user_input = reaper.GetUserInputs('Length', 1, 'By Percent', '200')
+  local retval, str_user_input = reaper.GetUserInputs('Length', 1, 'Percentages', '200')
   if retval then
     local func
     if not str_user_input:match('[%d%.]+') or not tonumber(str_user_input:match('[%d%.]+')) then return end
