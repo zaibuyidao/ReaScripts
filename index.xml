@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6150ae111324673f721b5bac06b5b33f7128e59e">
+<index version="1" name="zaibuyidao Scripts" commit="c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -347,16 +347,16 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Length (By Percent).lua" type="script" desc="Length (By Percent)">
-      <version name="1.0" author="zaibuyidao" time="2019-12-19T20:09:22Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5f6fa4a564996413f4e83d9406f71ade825d68dd/MIDI%20Editor/zaibuyidao_Length%20(By%20Percent).lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Length (Enhanced Version).lua" type="script" desc="Length (Enhanced Edition)">
       <version name="1.0" author="zaibuyidao" time="2020-01-23T13:23:01Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9b59656e06a08ea58ecb59f87a0d73773c4ed5a9/MIDI%20Editor/zaibuyidao_Length%20(Enhanced%20Version).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Length (Percentages).lua" type="script" desc="Length (Percentages)">
+      <version name="1.0" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Length%20(Percentages).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Length.lua" type="script" desc="Length">
@@ -576,14 +576,9 @@
         <changelog><![CDATA[# Solved the Line problem]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6150ae111324673f721b5bac06b5b33f7128e59e/MIDI%20Editor/zaibuyidao_Scale%20Control%20(Enhanced%20Version).lua</source>
       </version>
-    </reapack>
-    <reapack name="zaibuyidao_Scale Velocity (By Percent).lua" type="script" desc="Scale Velocity (By Percent)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-01-23T13:23:01Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9b59656e06a08ea58ecb59f87a0d73773c4ed5a9/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(By%20Percent).lua</source>
+      <version name="1.2" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[# Bug fix]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Scale%20Control%20(Enhanced%20Version).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity (Enhanced Version).lua" type="script" desc="Scale Velocity (Enhanced Version)">
@@ -597,6 +592,19 @@
       <version name="1.1" author="zaibuyidao" time="2020-01-28T05:29:15Z">
         <changelog><![CDATA[# Solved the Line problem]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6150ae111324673f721b5bac06b5b33f7128e59e/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Enhanced%20Version).lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[# Bug fix]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Enhanced%20Version).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Scale Velocity (Percentages).lua" type="script" desc="Scale Velocity (Percentages)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Percentages).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity.lua" type="script" desc="Scale Velocity">
@@ -624,6 +632,10 @@
       <version name="1.5" author="zaibuyidao" time="2020-01-28T05:29:15Z">
         <changelog><![CDATA[# Solved the Line problem]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6150ae111324673f721b5bac06b5b33f7128e59e/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
+      </version>
+      <version name="1.6" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[# Bug fix]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Control.lua" type="script" desc="Select Control">
@@ -674,23 +686,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Select%20Wheel.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Set CC Value (By Percent).lua" type="script" desc="Set CC Value (By Percent)">
+    <reapack name="zaibuyidao_Set CC Value (Percentages).lua" type="script" desc="Set CC Value (Percentages)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
-        <changelog><![CDATA[+ Initial Release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Set%20CC%20Value%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-12T19:04:10Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab1b98d81ca9adb7618c98d2fa7cf6a3f410ef8c/MIDI%20Editor/zaibuyidao_Set%20CC%20Value%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Set%20CC%20Value%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
-        <changelog><![CDATA[# Improve processing speed]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Set%20CC%20Value%20(By%20Percent).lua</source>
+      <version name="1.0" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Set%20CC%20Value%20(Percentages).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value.lua" type="script" desc="Set CC Value">
@@ -731,19 +733,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Set Velocity (By Percent).lua" type="script" desc="Set Velocity (By Percent)">
+    <reapack name="zaibuyidao_Set Velocity (Percentages).lua" type="script" desc="Set Velocity (Percentages)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.1" author="zaibuyidao" time="2019-12-16T14:12:01Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/720207fda2ae8e60efa740597789eb52c109f5a8/MIDI%20Editor/zaibuyidao_Set%20Velocity%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2019-12-18T18:01:09Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9dea10304edf37dd7c448c8d2bc1b93e73fc5d7c/MIDI%20Editor/zaibuyidao_Set%20Velocity%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
-        <changelog><![CDATA[# Improve processing speed]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Set%20Velocity%20(By%20Percent).lua</source>
+      <version name="1.0" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Set%20Velocity%20(Percentages).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Velocity.lua" type="script" desc="Set Velocity">
@@ -868,23 +864,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Strum%20Up.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Trim Note Edge L (By Percent).lua" type="script" desc="Trim Note Edge L (By Percent)">
+    <reapack name="zaibuyidao_Trim Note Edge L (Percentages).lua" type="script" desc="Trim Note Edge L (Percentages)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
-        <changelog><![CDATA[+ Initial Release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-12T19:04:10Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab1b98d81ca9adb7618c98d2fa7cf6a3f410ef8c/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
-        <changelog><![CDATA[# Improve processing speed]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L%20(By%20Percent).lua</source>
+      <version name="1.0" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L%20(Percentages).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Edge L.lua" type="script" desc="Trim Note Edge L">
@@ -906,23 +892,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20L.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Trim Note Edge R (By Percent).lua" type="script" desc="Trim Note Edge R (By Percent)">
+    <reapack name="zaibuyidao_Trim Note Edge R (Percentages).lua" type="script" desc="Trim Note Edge R (Percentages)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
-        <changelog><![CDATA[+ Initial Release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-12T19:04:10Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab1b98d81ca9adb7618c98d2fa7cf6a3f410ef8c/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R%20(By%20Percent).lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-01-19T15:21:26Z">
-        <changelog><![CDATA[# Improve processing speed]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e355c7ff845e49b3be432f5ceab3c695708817a0/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R%20(By%20Percent).lua</source>
+      <version name="1.0" author="zaibuyidao" time="2020-01-29T12:06:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Trim%20Note%20Edge%20R%20(Percentages).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Edge R.lua" type="script" desc="Trim Note Edge R">
