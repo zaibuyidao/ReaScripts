@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374">
+<index version="1" name="zaibuyidao Scripts" commit="1ff8618062d88c4a86196cbf7b3709abeafa1824">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -57,6 +57,24 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6150ae111324673f721b5bac06b5b33f7128e59e/MIDI%20Editor/zaibuyidao_Event%20Value%20-01.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Go (PPQ).lua" type="script" desc="Go (PPQ)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-02-02T14:38:01Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1ff8618062d88c4a86196cbf7b3709abeafa1824/MIDI%20Editor/zaibuyidao_Go%20(PPQ).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Go (QN).lua" type="script" desc="Go (QN)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-02-02T14:38:01Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1ff8618062d88c4a86196cbf7b3709abeafa1824/MIDI%20Editor/zaibuyidao_Go%20(QN).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Go To Start.lua" type="script" desc="Go To Start">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -70,21 +88,6 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Go%20To%20Start.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Go To Time.lua" type="script" desc="Go To Time">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
-        <changelog><![CDATA[+ Initial Release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Go%20To%20Time.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-12T19:04:10Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab1b98d81ca9adb7618c98d2fa7cf6a3f410ef8c/MIDI%20Editor/zaibuyidao_Go%20To%20Time.lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Go%20To%20Time.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Groove Quantize (Limit Range).lua" type="script" desc="Groove Quantize (Limit Range)">
@@ -420,6 +423,12 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Notes%20Become%20Pitch%20Bend.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Quantize (Enhanced Edition).lua" type="script" desc="Quantize (Enhanced Edition)">
+      <version name="1.0" author="zaibuyidao" time="2020-02-02T14:38:01Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1ff8618062d88c4a86196cbf7b3709abeafa1824/MIDI%20Editor/zaibuyidao_Quantize%20(Enhanced%20Edition).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Position (Within Time Selection).lua" type="script" desc="Random CC Position (Within Time Selection)">
@@ -836,6 +845,10 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Split%20Notes.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-02-02T14:38:01Z">
+        <changelog><![CDATA[+ Bug fix]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1ff8618062d88c4a86196cbf7b3709abeafa1824/MIDI%20Editor/zaibuyidao_Split%20Notes.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum Down.lua" type="script" desc="Strum Down">
