@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Split Notes
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,6 +13,8 @@
 
 --[[
  * Changelog:
+ * v1.3 (2020-1-30)
+  + Bug fix
  * v1.0 (2019-12-12)
   + Initial release
 --]]
@@ -24,6 +26,7 @@ function SplitNotes(div)
   if midieditor == nil then return end
   take = reaper.MIDIEditor_GetTake(midieditor)
   if take == nil then return end
+  reaper.MIDI_DisableSort(take)
   _, notes = reaper.MIDI_CountEvts(take)
   if notes > 0 then
     notes_t = {}
@@ -49,7 +52,8 @@ function SplitNotes(div)
             notes_t[i].start + (j-1) * div + div, 
             notes_t[i].chan, 
             notes_t[i].pitch, 
-            notes_t[i].vel
+            notes_t[i].vel,
+            false
           )
           if mult_len < notes_t[i].ending then
             reaper.MIDI_InsertNote(
@@ -60,7 +64,8 @@ function SplitNotes(div)
               notes_t[i].ending, 
               notes_t[i].chan, 
               notes_t[i].pitch, 
-              notes_t[i].vel
+              notes_t[i].vel,
+              false
             )
           end
         end
@@ -73,7 +78,8 @@ function SplitNotes(div)
           notes_t[i].ending, 
           notes_t[i].chan, 
           notes_t[i].pitch, 
-          notes_t[i].vel
+          notes_t[i].vel,
+          false
         )
       end
     end
