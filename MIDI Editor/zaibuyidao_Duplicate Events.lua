@@ -458,7 +458,7 @@ function DuplicateMix()
             local start_tick = startppqpos - start_meas
             local tick_01 = start_tick % table_max(end_ppq)
             if selected == true then
-                if note_len > 10 and note_len <= 60 then
+                if note_len >= 10 and note_len <= 60 then
                     reaper.MIDI_InsertNote(take, true, muted, startppqpos + 60,
                                            endppqpos + 60, chan, pitch, vel,
                                            false)
@@ -732,7 +732,7 @@ function DuplicateMix()
             local start_tick = startppqpos - start_meas
             local tick_01 = start_tick % table_max(end_ppq)
             if selected == true then
-                if cc_len > 10 and cc_len < 60 then
+                if cc_len >= 10 and cc_len < 60 then
                     reaper.MIDI_InsertNote(take, true, muted, startppqpos + 60,
                                            endppqpos + 60, chan, pitch, vel,
                                            false)
