@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Go (QN)
+ * ReaScript Name: Time (QN)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -45,7 +45,7 @@ function Main()
   reaper.SetEditCurPos(reaper.TimeMap2_beatsToTime(0, z, x), true, true)
 end
 
-script_title = "Go (QN)"
+script_title = "Time (QN)"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, -1)
