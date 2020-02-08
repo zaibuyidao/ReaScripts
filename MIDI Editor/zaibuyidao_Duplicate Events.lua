@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Duplicate Events
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.3 (2020-2-8)
+  + Version update
  * v1.2 (2020-2-8)
   + Extended boundary support
  * v1.1 (2020-2-7)
