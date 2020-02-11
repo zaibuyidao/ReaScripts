@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="834fd1d38d7dd9af5e12acc38b15c24a0affb289">
+<index version="1" name="zaibuyidao Scripts" commit="26b7d26db10fe8d0b02211f20e6613461e04e243">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -66,6 +66,10 @@
       <version name="1.5" author="zaibuyidao" time="2020-02-11T04:32:27Z">
         <changelog><![CDATA[# Item boundary fix]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/834fd1d38d7dd9af5e12acc38b15c24a0affb289/MIDI%20Editor/zaibuyidao_Duplicate%20Events.lua</source>
+      </version>
+      <version name="1.6" author="zaibuyidao" time="2020-02-11T04:35:33Z">
+        <changelog><![CDATA[+ Version update]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/26b7d26db10fe8d0b02211f20e6613461e04e243/MIDI%20Editor/zaibuyidao_Duplicate%20Events.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Value +01.lua" type="script" desc="Event Value +01">
