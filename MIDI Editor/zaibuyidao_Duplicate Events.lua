@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Duplicate Events
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.6 (2020-2-11)
+  + Version update
  * v1.5 (2020-2-11)
   # Item boundary fix
  * v1.4 (2020-2-9)
@@ -102,40 +104,16 @@ function DuplicateNotes()
         local tick_01 = start_tick % table_max(end_ppq)
 
         if selected == true then
-            if note_len >= 0 and note_len <= tick / 8 then
-                reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 8, endppqpos + tick / 8, chan, pitch, vel, false)
-                if not (tick_01 > table_max(end_ppq)) then
-                    reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                end
-                if qn_item_end < (qn_note_len + 1 / 8) then
-                    reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1 / 8)
-                end
-            end
-            if note_len > tick / 8 and note_len <= tick / 4 then
-                reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 4, endppqpos + tick / 4, chan, pitch, vel, false)
-                if not (tick_01 > table_max(end_ppq)) then
-                    reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                end
-                if qn_item_end < (qn_note_len + 1 / 4) then
-                    reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1 / 4)
-                end
-            end
-            if note_len > tick / 4 and note_len <= tick / 2 then
-                reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 2, endppqpos + tick / 2, chan, pitch, vel, false)
-                if not (tick_01 > table_max(end_ppq)) then
-                    reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                end
-                if qn_item_end < (qn_note_len + 1 / 2) then
-                    reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1 / 2)
-                end
-            end
-            if note_len > tick / 2 and note_len <= tick then
-                reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick, endppqpos + tick, chan, pitch, vel, false)
-                if not (tick_01 > table_max(end_ppq)) then
-                    reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                end
-                if qn_item_end < (qn_note_len + 1) then
-                    reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1)
+            for x = 0, 4  do
+                x = 1 << x
+                if note_len > tick / (x * 2) and note_len <= tick / x then
+                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / x, endppqpos + tick / x, chan, pitch, vel, false)
+                    if not (tick_01 > table_max(end_ppq)) then
+                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+                    end
+                    if qn_item_end < (qn_note_len + 1 / x) then
+                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1 / x)
+                    end
                 end
             end
             if note_len > tick and note_len <= tick * 2 then
@@ -167,9 +145,7 @@ function DuplicateNotes()
                     end
                 end
             end
-            
         end
-
         i = i + 1
     end
 end
@@ -188,40 +164,16 @@ function DuplicateCCs()
         local tick_02 = cc_tick % table_max(ppqpos)
 
         if selected == true then
-            if cc_len >= 0 and cc_len < tick / 8 then
-                reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 8, chanmsg, chan, msg2, msg3)
-                if not (tick_02 > table_max(ppqpos)) then
-                    reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                end
-                if qn_item_end < (qn_cc_len + 1 / 8) then
-                    reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1 / 8)
-                end
-            end
-            if cc_len >= tick / 8 and cc_len < tick / 4 then
-                reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 4, chanmsg, chan, msg2, msg3)
-                if not (tick_02 > table_max(ppqpos)) then
-                    reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                end
-                if qn_item_end < (qn_cc_len + 1 / 4) then
-                    reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1 / 4)
-                end
-            end
-            if cc_len >= tick / 4 and cc_len < tick / 2 then
-                reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 2, chanmsg, chan, msg2, msg3)
-                if not (tick_02 > table_max(ppqpos)) then
-                    reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                end
-                if qn_item_end < (qn_cc_len + 1 / 2) then
-                    reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1 / 2)
-                end
-            end
-            if cc_len >= tick / 2 and cc_len < tick then
-                reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick, chanmsg, chan, msg2, msg3)
-                if not (tick_02 > table_max(ppqpos)) then
-                    reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                end
-                if qn_item_end < (qn_cc_len + 1) then
-                    reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1)
+            for y = 0, 4  do
+                y = 1 << y
+                if cc_len >= tick / (y * 2) and cc_len < tick / y then
+                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / y, chanmsg, chan, msg2, msg3)
+                    if not (tick_02 > table_max(ppqpos)) then
+                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
+                    end
+                    if qn_item_end < (qn_cc_len + 1 / y) then
+                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1 / y)
+                    end
                 end
             end
             if cc_len >= tick and cc_len < tick * 2 then
@@ -278,40 +230,16 @@ function DuplicateMix()
             local tick_01 = start_tick % table_max(end_ppq)
     
             if selected == true then
-                if note_len >= 0 and note_len <= tick / 8 then
-                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 8, endppqpos + tick / 8, chan, pitch, vel, false)
-                    if not (tick_01 > table_max(end_ppq)) then
-                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                    if qn_item_end < (qn_note_len + 1 / 8) then
-                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1 / 8)
-                    end
-                end
-                if note_len > tick / 8 and note_len <= tick / 4 then
-                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 4, endppqpos + tick / 4, chan, pitch, vel, false)
-                    if not (tick_01 > table_max(end_ppq)) then
-                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                    if qn_item_end < (qn_note_len + 1 / 4) then
-                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1 / 4)
-                    end
-                end
-                if note_len > tick / 4 and note_len <= tick / 2 then
-                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 2, endppqpos + tick / 2, chan, pitch, vel, false)
-                    if not (tick_01 > table_max(end_ppq)) then
-                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                    if qn_item_end < (qn_note_len + 1 / 2) then
-                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1 / 2)
-                    end
-                end
-                if note_len > tick / 2 and note_len <= tick then
-                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick, endppqpos + tick, chan, pitch, vel, false)
-                    if not (tick_01 > table_max(end_ppq)) then
-                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                    if qn_item_end < (qn_note_len + 1) then
-                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1)
+                for x = 0, 4  do
+                    x = 1 << x
+                    if note_len > tick / (x * 2) and note_len <= tick / x then
+                        reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / x, endppqpos + tick / x, chan, pitch, vel, false)
+                        if not (tick_01 > table_max(end_ppq)) then
+                            reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+                        end
+                        if qn_item_end < (qn_note_len + 1 / x) then
+                            reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_note_len + 1 / x)
+                        end
                     end
                 end
                 if note_len > tick and note_len <= tick * 2 then
@@ -354,28 +282,13 @@ function DuplicateMix()
             local tick_02 = cc_tick % table_max(ppqpos)
     
             if selected == true then
-                if note_len >= 0 and note_len <= tick / 8 then
-                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 8, chanmsg, chan, msg2, msg3)
-                    if not (tick_02 > table_max(ppqpos)) then
-                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                end
-                if note_len > tick / 8 and note_len <= tick / 4 then
-                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 4, chanmsg, chan, msg2, msg3)
-                    if not (tick_02 > table_max(ppqpos)) then
-                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                end
-                if note_len > tick / 4 and note_len <= tick / 2 then
-                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 2, chanmsg, chan, msg2, msg3)
-                    if not (tick_02 > table_max(ppqpos)) then
-                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                end
-                if note_len > tick / 2 and note_len <= tick then
-                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick, chanmsg, chan, msg2, msg3)
-                    if not (tick_02 > table_max(ppqpos)) then
-                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
+                for y = 0, 4  do
+                    y = 1 << y
+                    if note_len > tick / (y * 2) and note_len <= tick / y then
+                        reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / y, chanmsg, chan, msg2, msg3)
+                        if not (tick_02 > table_max(ppqpos)) then
+                            reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
+                        end
                     end
                 end
                 if note_len > tick and note_len <= tick * 2 then
@@ -411,40 +324,16 @@ function DuplicateMix()
             local tick_02 = cc_tick % table_max(ppqpos)
     
             if selected == true then
-                if cc_len >= 0 and cc_len < tick / 8 then
-                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 8, chanmsg, chan, msg2, msg3)
-                    if not (tick_02 > table_max(ppqpos)) then
-                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                    if qn_item_end < (qn_cc_len + 1 / 8) then
-                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1 / 8)
-                    end
-                end
-                if cc_len >= tick / 8 and cc_len < tick / 4 then
-                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 4, chanmsg, chan, msg2, msg3)
-                    if not (tick_02 > table_max(ppqpos)) then
-                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                    if qn_item_end < (qn_cc_len + 1 / 4) then
-                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1 / 4)
-                    end
-                end
-                if cc_len >= tick / 4 and cc_len < tick / 2 then
-                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / 2, chanmsg, chan, msg2, msg3)
-                    if not (tick_02 > table_max(ppqpos)) then
-                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                    if qn_item_end < (qn_cc_len + 1 / 2) then
-                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1 / 2)
-                    end
-                end
-                if cc_len >= tick / 2 and cc_len < tick then
-                    reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick, chanmsg, chan, msg2, msg3)
-                    if not (tick_02 > table_max(ppqpos)) then
-                        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                    if qn_item_end < (qn_cc_len + 1) then
-                        reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1)
+                for y = 0, 4  do
+                    y = 1 << y
+                    if cc_len >= tick / (y * 2) and cc_len < tick / y then
+                        reaper.MIDI_InsertCC(take, true, muted, cc_pos + tick / y, chanmsg, chan, msg2, msg3)
+                        if not (tick_02 > table_max(ppqpos)) then
+                            reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
+                        end
+                        if qn_item_end < (qn_cc_len + 1 / y) then
+                            reaper.MIDI_SetItemExtents(item, qn_item_pos, qn_cc_len + 1 / y)
+                        end
                     end
                 end
                 if cc_len >= tick and cc_len < tick * 2 then
@@ -487,28 +376,13 @@ function DuplicateMix()
             local tick_01 = start_tick % table_max(end_ppq)
     
             if selected == true then
-                if cc_len >= 0 and cc_len < tick / 8 then
-                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 8, endppqpos + tick / 8, chan, pitch, vel, false)
-                    if not (tick_01 > table_max(end_ppq)) then
-                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                end
-                if cc_len >= tick / 8 and cc_len < tick / 4 then
-                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 4, endppqpos + tick / 4, chan, pitch, vel, false)
-                    if not (tick_01 > table_max(end_ppq)) then
-                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                end
-                if cc_len >= tick / 4 and cc_len < tick / 2 then
-                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / 2, endppqpos + tick / 2, chan, pitch, vel, false)
-                    if not (tick_01 > table_max(end_ppq)) then
-                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
-                    end
-                end
-                if cc_len >= tick / 2 and cc_len < tick then
-                    reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick, endppqpos + tick, chan, pitch, vel, false)
-                    if not (tick_01 > table_max(end_ppq)) then
-                        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+                for x = 0, 4  do
+                    x = 1 << x
+                    if cc_len >= tick / (x * 2) and cc_len < tick / x then
+                        reaper.MIDI_InsertNote(take, true, muted, startppqpos + tick / x, endppqpos + tick / x, chan, pitch, vel, false)
+                        if not (tick_01 > table_max(end_ppq)) then
+                            reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+                        end
                     end
                 end
                 if cc_len >= tick and cc_len < tick * 2 then
