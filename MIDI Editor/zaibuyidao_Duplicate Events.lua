@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Duplicate Events
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.7
+ * Version: 1.8
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.8 (2020-2-15)
+  # Bug fix
  * v1.7 (2020-2-13)
   # Remove extended boundary support
  * v1.6 (2020-2-11)
@@ -86,9 +88,10 @@ for i = 1, #ccs_idx do
 end
 
 function DuplicateNotes()
-
     local note_len = table_max(end_ppq) - table_min(start_ppq)
-    local note_meas_dur = reaper.MIDI_GetPPQPos_EndOfMeasure(take, table_min(end_ppq)) - reaper.MIDI_GetPPQPos_StartOfMeasure(take, table_min(start_ppq))
+    local qn_note_start =  reaper.MIDI_GetProjQNFromPPQPos(take, table_min(start_ppq) + 1)
+    local _, qn_note_bar_start, qn_note_bar_end = reaper.TimeMap_QNToMeasures(0, qn_note_start)
+    local note_meas_dur = (qn_note_bar_end - qn_note_bar_start) * tick
 
     for i = 0, notes - 1 do
         local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
@@ -132,9 +135,10 @@ function DuplicateNotes()
 end
 
 function DuplicateCCs()
-
     local cc_len = table_max(ppqpos) - table_min(ppqpos)
-    local cc_meas_dur = reaper.MIDI_GetPPQPos_EndOfMeasure(take, 10 + table_min(ppqpos)) - reaper.MIDI_GetPPQPos_StartOfMeasure(take, table_min(ppqpos))
+    local qn_cc_start =  reaper.MIDI_GetProjQNFromPPQPos(take, table_min(ppqpos) + 1)
+    local _, qn_cc_bar_start, qn_cc_bar_end = reaper.TimeMap_QNToMeasures(0, qn_cc_start)
+    local cc_meas_dur = (qn_cc_bar_end - qn_cc_bar_start) * tick
 
     for i = 0, ccs - 1 do
         local retval, selected, muted, cc_pos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
@@ -178,12 +182,16 @@ function DuplicateCCs()
 end
 
 function DuplicateMix()
-
     local note_len = table_max(end_ppq) - table_min(start_ppq)
-    local note_meas_dur = reaper.MIDI_GetPPQPos_EndOfMeasure(take, table_min(end_ppq)) - reaper.MIDI_GetPPQPos_StartOfMeasure(take, table_min(start_ppq))
-    local cc_len = table_max(ppqpos) - table_min(ppqpos)
-    local cc_meas_dur = reaper.MIDI_GetPPQPos_EndOfMeasure(take, 10 + table_min(ppqpos)) - reaper.MIDI_GetPPQPos_StartOfMeasure(take, table_min(ppqpos))
+    local qn_note_start =  reaper.MIDI_GetProjQNFromPPQPos(take, table_min(start_ppq) + 1)
+    local _, qn_note_bar_start, qn_note_bar_end = reaper.TimeMap_QNToMeasures(0, qn_note_start)
+    local note_meas_dur = (qn_note_bar_end - qn_note_bar_start) * tick
 
+    local cc_len = table_max(ppqpos) - table_min(ppqpos)
+    local qn_cc_start =  reaper.MIDI_GetProjQNFromPPQPos(take, table_min(ppqpos) + 1)
+    local _, qn_cc_bar_start, qn_cc_bar_end = reaper.TimeMap_QNToMeasures(0, qn_cc_start)
+    local cc_meas_dur = (qn_cc_bar_end - qn_cc_bar_start) * tick
+    
     if note_len > cc_len then
 
         for i = 0, notes - 1 do
