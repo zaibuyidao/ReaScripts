@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Auto CC Shape
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,6 +13,8 @@
 
 --[[
  * Changelog:
+ * v1.1 (2020-2-15)
+  # Add midi ticks per beat
  * v1.0 (2020-1-1)
   + Initial release
 --]]
@@ -21,28 +23,29 @@ selected = false
 muted = false
 chan = 0 -- Channel 1
 
-local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if take == nil then return end
-item = reaper.GetMediaItemTake_Item(take)
-retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-local retval, userInputsCSV = reaper.GetUserInputs("Insert ADR", 4, "CC Number,1,2,3", "11,90,127,95")
+local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
+local item = reaper.GetMediaItemTake_Item(take)
+local _, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
+local retval, userInputsCSV = reaper.GetUserInputs("Insert Auto CC Shape", 4, "CC Number,1,2,3", "11,90,127,95")
 if not retval then return reaper.SN_FocusMIDIEditor() end
-local cc_num, val1, val2, val3 = userInputsCSV:match("(.*),(.*),(.*),(.*)")
-cc_num, val1, val2, val3 = tonumber(cc_num), tonumber(val1), tonumber(val2), tonumber(val3)
+local cc_num, val_01, val_02, val_03 = userInputsCSV:match("(.*),(.*),(.*),(.*)")
+cc_num, val_01, val_02, val_03 = tonumber(cc_num), tonumber(val_01), tonumber(val_02), tonumber(val_03)
 
 function INST1()
   for i = 0,  notes-1 do
     retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if selected == true then
       local len = endppqpos - startppqpos
-      if len > 120 and len <= 360  then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val1)
-      elseif len > 360 and len <= 480 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val1)
-      elseif len > 480 and len <= 960 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val1)
-      elseif len > 960 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val1)
+      if len > (tick / 4) and len <= ((tick / 4) + (tick / 2))  then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val_01)
+      elseif len > ((tick / 4) + (tick / 2)) and len <= tick then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val_01)
+      elseif len > tick and len <= tick * 2 then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val_01)
+      elseif len > tick * 2 then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val_01)
       end
       reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42083)
     end
@@ -56,18 +59,18 @@ function INST2()
     retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if selected == true then
       local len = endppqpos - startppqpos
-      if len > 120 and len <= 360 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+90, 0xB0, 0, cc_num, val2)
-      elseif len > 360 and len <= 480 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+240, 0xB0, 0, cc_num, val2)
-      elseif len > 480 and len <= 960 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+240, 0xB0, 0, cc_num, val2)
-      elseif len > 960 and len <= 2880 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+480, 0xB0, 0, cc_num, val2)
-      elseif len > 2880 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+720, 0xB0, 0, cc_num, val2)
-      elseif len <= 120 then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val2)
+      if len > (tick / 4) and len <= ((tick / 4) + (tick / 2)) then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + (tick / 16) * 3, 0xB0, 0, cc_num, val_02) -- 90
+      elseif len > ((tick / 4) + (tick / 2)) and len <= tick then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + (tick / 2), 0xB0, 0, cc_num, val_02) -- 240
+      elseif len > tick and len <= tick * 2 then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + tick, 0xB0, 0, cc_num, val_02) -- 480
+      elseif len > tick * 2 and len <= tick * 6 then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + tick, 0xB0, 0, cc_num, val_02) -- 480
+      elseif len > tick * 6 then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + (tick + (tick / 2)), 0xB0, 0, cc_num, val_02) -- 720
+      elseif len <= (tick / 4) then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, 0, cc_num, val_02)
       end
         reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42081)
     end
@@ -81,12 +84,12 @@ function INST3()
     retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if selected == true then
       local len = endppqpos - startppqpos
-      if len > 480 and len <= 960 then
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos-240, 0xB0, 0, cc_num, val2)
-      elseif len > 960 and len <= 2880 then
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos-480, 0xB0, 0, cc_num, val2)
-      elseif len >  2880 then
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos-960, 0xB0, 0, cc_num, val2)
+      if len > tick and len <= tick * 2 then
+        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - tick / 2, 0xB0, 0, cc_num, val_02) -- 240
+      elseif len > tick * 2 and len <= tick * 6 then
+        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - tick, 0xB0, 0, cc_num, val_02) -- 480
+      elseif len >  tick * 6 then
+        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - tick * 2, 0xB0, 0, cc_num, val_02) -- 960
       end
       reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42084)
     end
@@ -100,10 +103,10 @@ function INST4()
     retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if selected == true then
       local len = endppqpos - startppqpos
-      if len > 480 and len <= 960 then
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos-10, 0xB0, 0, cc_num, val3)
-      elseif len > 960 then
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos-10, 0xB0, 0, cc_num, val3)
+      if len > tick and len <= tick * 2 then
+        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - ((tick / 16) / 3), 0xB0, 0, cc_num, val_03) -- 10
+      elseif len > tick * 2 then
+        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - ((tick / 16) / 3), 0xB0, 0, cc_num, val_03) -- 10
       end
       reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42081)
     end

@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Quantize (Enhanced Edition)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.1 (2020-2-15)
+  + When executing the script, delete overlapped notes is switched, and delete overlapped notes is enabled by default
  * v1.0 (2020-2-1)
   + Initial release
 --]]
@@ -18,6 +20,7 @@
 function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
 local title = "Quantize (Enhanced Edition)"
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local cur_grid, swing = reaper.MIDI_GetGrid(take)
 local _, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
 local OK, userInputsCSV = reaper.GetUserInputs('Quantize', 2, 'Enter A Tick,0=Start+Dur 1=Start 2=Durations', '120,0')
@@ -30,7 +33,7 @@ if has_state == true then
     state = reaper.GetExtState("Quantize", "ToggleValue")
 end
 
-grid = grid / 480
+grid = grid / tick
 
 function StartTimes()
     for i = 1, notecnt do
@@ -127,6 +130,9 @@ end
 function Main()
     reaper.Undo_BeginBlock()
     reaper.MIDI_DisableSort(take)
+    if reaper.GetToggleCommandStateEx(32060, 40681) == 1 then
+        reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
+    end
     if state == "2" then
         NoteDurations()
     elseif state == "1" then
@@ -139,6 +145,7 @@ function Main()
         CCEvents()
         TextSysEvents()
     end
+    reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
     reaper.MIDI_Sort(take)
     reaper.Undo_EndBlock(title, -1)
 end

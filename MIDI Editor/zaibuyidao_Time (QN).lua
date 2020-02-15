@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Time (QN)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,22 +13,21 @@
 
 --[[
  * Changelog:
+ * v1.1 (2020-2-15)
+  # Add midi ticks per beat
  * v1.0 (2020-2-1)
   + Initial release
 --]]
 
--- Ensure accurate time format
--- REAPER Preferences -> MIDI -> Ticks per quarter note for new MIDI Items: 480
--- MIDI Editor -> Options -> Time format for ruler, transoprt, event properties -> Measures.Beats.MIDI_ticks
-
 function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+  local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
   local cur_pos = reaper.GetCursorPositionEx()
   local qn = reaper.TimeMap2_timeToQN(0, cur_pos)
   local ppqpos = reaper.MIDI_GetPPQPosFromProjQN(take, qn)
   local _, measures, _, _, _ = reaper.TimeMap2_timeToBeats(0, cur_pos)
   local start_meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, ppqpos)
-  local start_beat = (ppqpos - start_meas) / 480
+  local start_beat = (ppqpos - start_meas) / tick
   local num_01, num_02 = math.modf(start_beat)
   num_01 = num_01 + 1
   num_02 = num_02

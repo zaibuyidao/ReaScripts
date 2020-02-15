@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Select Control
  * Instructions: Open a MIDI take in MIDI Editor. Select CC Events. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,6 +12,8 @@
 
 --[[
  * Changelog:
+ * v1.2 (2020-2-15)
+  # Add midi ticks per beat
  * v1.1 (2020-1-19)
   # Fix bug
  * v1.0 (2020-1-5)
@@ -19,6 +21,7 @@
 --]]
 
 local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
 userOK, dialog_ret_vals = reaper.GetUserInputs("Select Control", 10, "Tick,,Value,,Beat,,Number,,Channel,", "0,1919,0,127,1,99,0,127,1,16")
 if not userOK then return reaper.SN_FocusMIDIEditor() end
@@ -31,9 +34,9 @@ function Main()
     local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
     local start_meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, ppqpos)
     local start_tick = ppqpos - start_meas
-    local tick = start_tick % 480
+    local tick = start_tick % midi_tick
     if selected == true then
-      if not (start_tick >= min_meas*480 and start_tick < max_meas*480) then
+      if not (start_tick >= min_meas * midi_tick and start_tick < max_meas * midi_tick) then
         reaper.MIDI_SetCC(take, i, false, _, _, _, _, _, _, false)
       end
       if not (tick >= min_tick and tick <= max_tick) then
