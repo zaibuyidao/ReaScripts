@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Duplicate Events (Within Time Selection)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,28 +12,28 @@
 
 --[[
  * Changelog:
- * v1.1 (2020-2-15)
+ * v1.2 (2020-2-16)
   # Bug fix
  * v1.0 (2020-2-13)
   + Initial release
 --]]
 
-function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end -- 调试
+function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
 local midieditor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(midieditor)
 if take == nil then return end
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
 
-function SaveCursorPos() -- 保存编辑光标位置
+function SaveCursorPos()
 	init_cursor_pos = reaper.GetCursorPosition()
 end
 
-function RestoreCursorPos() -- 恢复编辑光标位置
+function RestoreCursorPos()
 	reaper.SetEditCurPos(init_cursor_pos, false, false)
 end
 
-function table_max(t) -- 取最大值
+function table_max(t)
     local mn = nil
     for k, v in pairs(t) do
         if (mn == nil) then mn = v end
@@ -42,7 +42,7 @@ function table_max(t) -- 取最大值
     return mn
 end
 
-function table_min(t) -- 取最小值
+function table_min(t)
     local mn = nil
     for k, v in pairs(t) do
         if (mn == nil) then mn = v end
@@ -79,11 +79,11 @@ for i = 1, #ccs_idx do
     _, sel, _, ppqpos[i], _, _, _, _ = reaper.MIDI_GetCC(take, ccs_idx[i])
 end
 
-function DuplicateNotes() -- 重复音符
-    local note_len = table_max(end_ppq) - table_min(start_ppq)
-    local qn_note_start =  reaper.MIDI_GetProjQNFromPPQPos(take, table_min(start_ppq) + 1) -- 补偿小节长度
+function DuplicateNotes()
+    local note_len = math.floor(0.5 + (table_max(end_ppq) - table_min(start_ppq)))
+    local qn_note_start =  reaper.MIDI_GetProjQNFromPPQPos(take, table_min(start_ppq))
     local _, qn_note_bar_start, qn_note_bar_end = reaper.TimeMap_QNToMeasures(0, qn_note_start)
-    local note_meas_dur = (qn_note_bar_end - qn_note_bar_start) * tick
+    local note_meas_dur = math.floor(0.5 + (qn_note_bar_end - qn_note_bar_start)) * tick
     local proj_note_start = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(start_ppq))
 
     for i = 0, notes - 1 do
@@ -92,21 +92,21 @@ function DuplicateNotes() -- 重复音符
         if selected == true then
             for x = 0, 4  do
                 x = 1 << x
-                if note_len > tick / (x * 2) and note_len <= tick / x then -- 定义一拍
+                if note_len > tick / (x * 2) and note_len <= tick / x then
                     local proj_note_end_01 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(start_ppq) + tick / x)
                     reaper.GetSet_LoopTimeRange(true, false, proj_note_start, proj_note_end_01, false)
                 end
             end
-            if note_len > tick and note_len <= tick * 2 then -- 定义两拍
+            if note_len > tick and note_len <= tick * 2 then
                 local proj_note_end_02 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(start_ppq) + tick * 2)
                 reaper.GetSet_LoopTimeRange(true, false, proj_note_start, proj_note_end_02, false)
             end
-            if note_len > tick * 2 and note_len <= note_meas_dur then -- 定义一个小节
+            if note_len > tick * 2 and note_len <= note_meas_dur then
                 local proj_note_end_03 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(start_ppq) + note_meas_dur)
                 reaper.GetSet_LoopTimeRange(true, false, proj_note_start, proj_note_end_03, false)
             end
             for n = 1, 99 do
-                if note_len > note_meas_dur * n and note_len <= note_meas_dur * (n + 1) then -- 定义N个小节
+                if note_len > note_meas_dur * n and note_len <= note_meas_dur * (n + 1) then
                     local proj_note_end_04 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(start_ppq) + note_meas_dur * (n + 1))
                     reaper.GetSet_LoopTimeRange(true, false, proj_note_start, proj_note_end_04, false)
                 end
@@ -117,11 +117,11 @@ function DuplicateNotes() -- 重复音符
     end
 end
 
-function DuplicateCCs() -- 重复CC事件
-    local cc_len = table_max(ppqpos) - table_min(ppqpos)
-    local qn_cc_start =  reaper.MIDI_GetProjQNFromPPQPos(take, table_min(ppqpos) + 1) -- 补偿小节长度
+function DuplicateCCs()
+    local cc_len = math.floor(0.5 + (table_max(ppqpos) - table_min(ppqpos)))
+    local qn_cc_start =  reaper.MIDI_GetProjQNFromPPQPos(take, table_min(ppqpos))
     local _, qn_cc_bar_start, qn_cc_bar_end = reaper.TimeMap_QNToMeasures(0, qn_cc_start)
-    local cc_meas_dur = (qn_cc_bar_end - qn_cc_bar_start) * tick
+    local cc_meas_dur = math.floor(0.5 + (qn_cc_bar_end - qn_cc_bar_start)) * tick
     local proj_cc_start = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos))
 
     for i = 0, ccs - 1 do
@@ -129,21 +129,21 @@ function DuplicateCCs() -- 重复CC事件
         if selected == true then
             for y = 0, 4  do
                 y = 1 << y
-                if cc_len >= 0 and cc_len < tick / y then -- 定义一拍
+                if cc_len >= tick / (y * 2) and cc_len < tick / y then
                     local proj_cc_end_01 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos) + tick / y)
                     reaper.GetSet_LoopTimeRange(true, false, proj_cc_start, proj_cc_end_01, false)
                 end
             end
-            if cc_len >= tick and cc_len < tick * 2 then -- 定义两拍
+            if cc_len >= tick and cc_len < tick * 2 then
                 local proj_cc_end_02 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos) + tick * 2)
                 reaper.GetSet_LoopTimeRange(true, false, proj_cc_start, proj_cc_end_02, false)
             end
-            if cc_len >= tick * 2 and cc_len < cc_meas_dur then -- 定义一个小节
+            if cc_len >= tick * 2 and cc_len < cc_meas_dur then
                 local proj_cc_end_03 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos) + cc_meas_dur)
                 reaper.GetSet_LoopTimeRange(true, false, proj_cc_start, proj_cc_end_03, false)
             end
             for c = 1, 99 do
-                if cc_len >= cc_meas_dur * c and cc_len < cc_meas_dur * (c + 1) then -- 定义N个小节
+                if cc_len >= cc_meas_dur * c and cc_len < cc_meas_dur * (c + 1) then
                     local proj_cc_end_04 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos) + cc_meas_dur * (c + 1))
                     reaper.GetSet_LoopTimeRange(true, false, proj_cc_start, proj_cc_end_04, false)
                 end
@@ -153,17 +153,16 @@ function DuplicateCCs() -- 重复CC事件
     end
 end
 
-function DuplicateMix() -- 混合重复
+function DuplicateMix()
 
     local mix_start
     local mix_end
     if table_min(start_ppq) > table_min(ppqpos) then mix_start = table_min(ppqpos) elseif table_min(start_ppq) < table_min(ppqpos) then mix_start = table_min(start_ppq) elseif table_min(start_ppq) == table_min(ppqpos) then mix_start = table_min(start_ppq) end
     if table_max(end_ppq) > table_max(ppqpos) then mix_end = table_max(end_ppq) elseif table_max(end_ppq) < table_max(ppqpos) then mix_end = table_max(ppqpos) elseif table_max(end_ppq) == table_max(ppqpos) then mix_end = table_max(end_ppq) end
-    local mix_len = mix_end - mix_start
-
-    local qn_mix_start =  reaper.MIDI_GetProjQNFromPPQPos(take, mix_start + 1) -- 补偿小节长度
+    local mix_len = math.floor(0.5 + (mix_end - mix_start))
+    local qn_mix_start =  reaper.MIDI_GetProjQNFromPPQPos(take, mix_start)
     local _, qn_mix_bar_start, qn_mix_bar_end = reaper.TimeMap_QNToMeasures(0, qn_mix_start)
-    local mix_meas_dur = (qn_mix_bar_end - qn_mix_bar_start) * tick
+    local mix_meas_dur = math.floor(0.5 + (qn_mix_bar_end - qn_mix_bar_start)) * tick
     local proj_mix_start = reaper.MIDI_GetProjTimeFromPPQPos(take, mix_start)
 
     for i = 0, notes - 1 do
@@ -199,7 +198,7 @@ function DuplicateMix() -- 混合重复
         if selected == true then
             for y = 0, 4  do
                 y = 1 << y
-                if mix_len >= 0 and mix_len < tick / y then
+                if mix_len >= tick / (y * 2) and mix_len < tick / y then
                     local proj_cc_end_01 = reaper.MIDI_GetProjTimeFromPPQPos(take, mix_start + tick / y)
                     reaper.GetSet_LoopTimeRange(true, false, proj_mix_start, proj_cc_end_01, false)
                 end
