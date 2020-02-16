@@ -20,7 +20,7 @@
 
 selected = false
 muted = false
-chan = 0 -- Channel 1
+chan = 0
 
 function Main()
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
@@ -58,5 +58,5 @@ end
 script_title = "Insert Bank/Program Select"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()
