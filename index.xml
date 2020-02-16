@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="56673fdff90edb80f73fda95a01345421f1f2ab6">
+<index version="1" name="zaibuyidao Scripts" commit="7e2035b89a6f7ee655e3fd13608bf9528c7f256d">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -55,6 +55,10 @@
         <changelog><![CDATA[# Bug fix]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/56673fdff90edb80f73fda95a01345421f1f2ab6/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Within%20Time%20Selection).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-02-16T12:39:41Z">
+        <changelog><![CDATA[# Bug fix]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7e2035b89a6f7ee655e3fd13608bf9528c7f256d/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Within%20Time%20Selection).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events.lua" type="script" desc="Duplicate Events">
       <metadata>
@@ -99,6 +103,10 @@
       <version name="2.0" author="zaibuyidao" time="2020-02-15T17:35:30Z">
         <changelog><![CDATA[# Bug fix]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/56673fdff90edb80f73fda95a01345421f1f2ab6/MIDI%20Editor/zaibuyidao_Duplicate%20Events.lua</source>
+      </version>
+      <version name="2.1" author="zaibuyidao" time="2020-02-16T12:39:41Z">
+        <changelog><![CDATA[# Bug fix]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7e2035b89a6f7ee655e3fd13608bf9528c7f256d/MIDI%20Editor/zaibuyidao_Duplicate%20Events.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Value +01.lua" type="script" desc="Event Value +01">
@@ -209,6 +217,10 @@
       <version name="1.0" author="zaibuyidao" time="2019-12-18T18:01:09Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9dea10304edf37dd7c448c8d2bc1b93e73fc5d7c/MIDI%20Editor/zaibuyidao_Insert%20All%20Sound%20Off.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-02-16T12:39:41Z">
+        <changelog><![CDATA[# Default selected is false]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7e2035b89a6f7ee655e3fd13608bf9528c7f256d/MIDI%20Editor/zaibuyidao_Insert%20All%20Sound%20Off.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Auto CC Shape.lua" type="script" desc="Insert Auto CC Shape">
@@ -1057,6 +1069,10 @@
       <version name="2.1" author="zaibuyidao" time="2020-01-28T05:29:15Z">
         <changelog><![CDATA[+ Add time offsets so that events can be inserted repeatedly and sorted automatically.]]></changelog>
         <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/6150ae111324673f721b5bac06b5b33f7128e59e/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
+      </version>
+      <version name="2.2" author="zaibuyidao" time="2020-02-16T12:39:41Z">
+        <changelog><![CDATA[+ Version update]]></changelog>
+        <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/7e2035b89a6f7ee655e3fd13608bf9528c7f256d/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
       </version>
     </reapack>
   </category>
