@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Length (Enhanced Edition)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -141,10 +141,22 @@ function Main()
       StretchSelectedNotes(func)
       StretchSelectedCCs(func)
     end
-    reaper.Undo_EndBlock(title, -1)
+    reaper.Undo_EndBlock(title, 0)
   end
 end
 
-Main()
+function CheckForNewVersion(new_version)
+    local app_version = reaper.GetAppVersion()
+    app_version = tonumber(app_version:match('[%d%.]+'))
+    if new_version > app_version then
+      reaper.MB('Update REAPER to newer version '..'('..new_version..' or newer)', '', 0)
+      return
+     else
+      return true
+    end
+end
+
+local CFNV = CheckForNewVersion(6.03)
+if CFNV then Main() end
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

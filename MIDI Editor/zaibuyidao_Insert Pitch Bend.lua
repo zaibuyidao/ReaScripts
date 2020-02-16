@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Pitch Bend
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -17,7 +17,7 @@
 --]]
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-local pos = reaper.GetCursorPositionEx(0)
+local pos = reaper.GetCursorPositionEx()
 local ppq = reaper.MIDI_GetPPQPosFromProjTime(take, pos)
 local retval, userinput = reaper.GetUserInputs('Insert Pitch Bend', 1, 'Value', '0')
 if not retval then return reaper.SN_FocusMIDIEditor() end
@@ -29,9 +29,11 @@ if value < -8192 or value > 8191 then
         reaper.SN_FocusMIDIEditor()
 end
 
+reaper.Undo_BeginBlock()
 value = value + 8192
 local LSB = value & 0x7f
 local MSB = value >> 7 & 0x7f
 reaper.MIDI_InsertCC(take, false, false, ppq, 224, 0, LSB, MSB)
+reaper.Undo_EndBlock("Insert Pitch Bend", 0)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

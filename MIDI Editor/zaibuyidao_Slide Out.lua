@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Slide Out
  * Instructions: Open a MIDI take in MIDI Editor. Set Time Selection, Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,10 +16,11 @@
   + Initial release
 --]]
 
-time_start, time_end = reaper.GetSet_LoopTimeRange2( 0, false, false, 0, 0, 0)
+reaper.Undo_BeginBlock()
 
 local editor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(editor)
+local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
 local loop_start = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_start))
 local loop_end = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_end))
 local loop_len = loop_end - loop_start
@@ -92,6 +93,6 @@ else
   reaper.MIDI_InsertCC(take, false, false, loop_end, 224, 0, 0, 64)
 end
 
--- reaper.SetEditCurPos( time_start, 0, 0 )
 reaper.UpdateArrange()
+reaper.Undo_EndBlock("Slide Out", 0)
 reaper.SN_FocusMIDIEditor()

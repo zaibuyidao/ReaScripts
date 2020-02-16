@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Vibrato
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -35,8 +35,8 @@ function Main()
   local t10 = {0, 480, 960, 1440, 1920, 2400, 1920, 1440, 960, 480, 0}
   local tb = {t1, t2, t3, t4, t5, t6, t7, t8, t9, t10}
   
-  local num = reaper.GetCursorPositionEx(0)
-  local startpos = reaper.MIDI_GetPPQPosFromProjTime(take, num)
+  local cur_pos = reaper.GetCursorPositionEx()
+  local startpos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
   startpos = startpos - jiange
   
   if fudu < 1  or fudu > 10 then return reaper.SN_FocusMIDIEditor() end
@@ -48,9 +48,9 @@ function Main()
       startpos = startpos + jiange
       local value = tb[fudu][i]
       value = value + 8192
-      local lsb = value & 0x7f
-      local msb = value >> 7 & 0x7f
-      reaper.MIDI_InsertCC(take, false, false, startpos, 224, 0, lsb, msb)
+      local LSB = value & 0x7f
+      local MSB = value >> 7 & 0x7f
+      reaper.MIDI_InsertCC(take, false, false, startpos, 224, 0, LSB, MSB)
       i=i+1
     end
     reaper.UpdateArrange()
@@ -60,6 +60,5 @@ end
 script_title = "Insert Vibrato"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()
---reaper.defer(function () end)

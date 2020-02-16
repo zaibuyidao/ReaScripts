@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Random CC Value (Limit Range)
  * Instructions: Open a MIDI take in MIDI Editor. Select CC Event. Run.
- * Version: 2.1
+ * Version: 2.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,8 +12,6 @@
 
 --[[
  * Changelog:
- * v2.1 (2020-1-20)
-  # Improve processing speed
  * v2.0 (2019-1-5)
   + Version update
  * v1.0 (2019-12-12)
@@ -57,7 +55,7 @@ function Main()
     retval, sel, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
     if sel == true then
       local x = tonumber(min_val + math.random(diff))
-      reaper.MIDI_SetCC(take, i, _, _, _, _, _, _, x, false)
+      reaper.MIDI_SetCC(take, i, nil, nil, nil, nil, nil, nil, x, false)
     end
     i=i+1
   end
@@ -65,8 +63,8 @@ function Main()
   reaper.MIDI_Sort(take)
 end
 
-script_title = "Random CC Value"
+script_title = "Random CC Value (Limit Range)"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

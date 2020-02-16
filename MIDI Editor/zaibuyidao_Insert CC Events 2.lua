@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert CC Events 2
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -15,6 +15,9 @@
  * v1.0 (2019-12-19)
   + Initial release
 --]]
+
+selected = true
+chan = 0
 
 local retval, userInputsCSV = reaper.GetUserInputs("Insert CC Events 2", 5, "CC Number,First,Second,Repetition,Interval", "11,100,70,1,120")
 if not retval then return reaper.SN_FocusMIDIEditor() end
@@ -30,15 +33,14 @@ function Main()
     for i = 1, cishu do
         for i = 1, #bolang do
             ppq = ppq + tick
-            reaper.MIDI_InsertCC(take, selected, false, ppq, 0xB0, 0, cc_num, bolang[i])
+            reaper.MIDI_InsertCC(take, selected, false, ppq, 0xB0, chan, cc_num, bolang[i])
             i=i+1
         end
     end
 end
 
 reaper.Undo_BeginBlock()
-selected = true
 Main()
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Insert CC Events 2", -1)
+reaper.Undo_EndBlock("Insert CC Events 2", 0)
 reaper.SN_FocusMIDIEditor()

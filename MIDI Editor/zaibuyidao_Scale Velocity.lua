@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Velocity
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.6
+ * Version: 1.7
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -15,12 +15,6 @@
  * Changelog:
  * v1.6 (2020-01-29)
   # Bug fix
- * v1.5 (2020-1-27)
-  # Solved the Line problem
- * v1.4 (2020-1-19)
-  # Improve processing speed
- * v1.3 (2020-1-14)
-  + Support for one note
  * v1.0 (2019-12-12)
   + Initial release
 --]]
@@ -62,6 +56,5 @@ end
 script_title = "Scale Velocity"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()
-reaper.defer(function () end)

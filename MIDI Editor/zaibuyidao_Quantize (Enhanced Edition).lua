@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Quantize (Enhanced Edition)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -147,7 +147,7 @@ function Main()
     end
     reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
     reaper.MIDI_Sort(take)
-    reaper.Undo_EndBlock(title, -1)
+    reaper.Undo_EndBlock(title, 0)
 end
 
 function CheckForNewVersion(new_version)

@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Random CC Events
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 2.0
+ * Version: 2.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -17,6 +17,8 @@
  * v1.0 (2019-12-12)
   + Initial release
 --]]
+
+selected = false
 
 local retval, userInputsCSV = reaper.GetUserInputs("Insert Random CC Events", 4, "CC Number,CC Events,Repetition,Interval", "11,8,4,240")
 if not retval then return reaper.SN_FocusMIDIEditor() end
@@ -41,8 +43,7 @@ function Main()
 end
 
 reaper.Undo_BeginBlock()
-selected = false
 Main()
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Insert Random CC Events", -1)
+reaper.Undo_EndBlock("Insert Random CC Events", 0)
 reaper.SN_FocusMIDIEditor()

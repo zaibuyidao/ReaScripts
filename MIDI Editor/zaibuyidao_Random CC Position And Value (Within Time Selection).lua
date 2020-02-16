@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Random CC Position And Value (Within Time Selection)
  * Instructions: Open a MIDI take in MIDI Editor. Set Time Selection, Run.
- * Version: 2.1
+ * Version: 2.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,8 +12,6 @@
 
 --[[
  * Changelog:
- * v2.1 (2020-1-20)
-  # Improve processing speed
  * v2.0 (2019-1-5)
   + Version update
  * v1.0 (2019-12-12)
@@ -52,5 +50,5 @@ script_title = "Random CC Position And Value"
 reaper.Undo_BeginBlock()
 reaper.MIDIEditor_LastFocused_OnCommand(40747, 0) -- Edit: Select all CC events in time selection (in last clicked CC lane)
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

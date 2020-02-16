@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Bend
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -35,9 +35,8 @@ function Main()
       reaper.MB("Please enter a value from -8192 through 8191", "Error", 0),
       reaper.SN_FocusMIDIEditor()
   end
-  reaper.Undo_BeginBlock() -- 撤销块开始
-  local tbl = {} -- 存储弯音值
 
+  local tbl = {} -- 存储弯音值
   if cc_begin < cc_end then
     for j = cc_begin - 1, cc_end, step do
       j = j + 1
@@ -57,12 +56,13 @@ function Main()
     local MSB = value >> 7 & 0x7f
     reaper.MIDI_InsertCC(take, selected, muted, ppq+(k-1)*interval, 224, chan, LSB, MSB)
   end
-  reaper.Undo_EndBlock(script_title, -1) -- 撤销块结束
 end
 
 script_title = "Insert Bend"
 reaper.PreventUIRefresh(1) -- 防止UI刷新
-Main() -- 执行功能
+reaper.Undo_BeginBlock() -- 撤销块开始
+Main() -- 执行函数
+reaper.Undo_EndBlock(script_title, 0) -- 撤销块结束
 reaper.PreventUIRefresh(-1) -- 恢复UI刷新
 reaper.UpdateArrange() -- 更新排列
 reaper.SN_FocusMIDIEditor() -- 聚焦MIDI编辑器

@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Wah
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -40,7 +40,7 @@ function GetCC(take, cc)
     return cc.selected, cc.muted, cc.ppqpos, cc.chanmsg, cc.chan, cc.msg2, cc.msg3
 end
 
-function main()
+function Main()
     take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if take ~= nil then
         retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
@@ -84,7 +84,7 @@ reaper.Undo_BeginBlock()
 selected = true
 interval = math.floor(interval) + 1
 Wah()
-main()
+Main()
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Insert Wah", -1)
+reaper.Undo_EndBlock("Insert Wah", 0)
 reaper.SN_FocusMIDIEditor()

@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Select Note
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,8 +13,6 @@
 
 --[[
  * Changelog:
- * v1.2 (2020-2-15)
-  # Add midi ticks per beat
  * v1.1 (2020-1-19)
   # Fix bug
  * v1.0 (2020-1-5)
@@ -39,22 +37,22 @@ function Main()
     local duration = endppqpos - startppqpos
     if selected == true then
       if not (start_tick >= min_meas * midi_tick and start_tick < max_meas * midi_tick) then
-        reaper.MIDI_SetNote(take, i, false, _, _, _, _, _, _, false)
+        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
       end
       if not (vel >= min_vel and vel <= max_vel) then
-        reaper.MIDI_SetNote(take, i, false, _, _, _, _, _, _, false)
+        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
       end
       if not (tick >= min_tick and tick <= max_tick) then
-        reaper.MIDI_SetNote(take, i, false, _, _, _, _, _, _, false)
+        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
       end
       if not (duration >= min_dur and duration <= max_dur) then
-        reaper.MIDI_SetNote(take, i, false, _, _, _, _, _, _, false)
+        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
       end
       if not (pitch >= min_key and pitch <= max_key) then
-        reaper.MIDI_SetNote(take, i, false, _, _, _, _, _, _, false)
+        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
       end
       if not (chan >= min_chan and chan <= max_chan) then
-        reaper.MIDI_SetNote(take, i, false, _, _, _, _, _, _, false)
+        reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
       end
     end
     i=i+1
@@ -66,5 +64,5 @@ end
 script_title = "Select Note"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Groove Quantize (Limit Range)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.4
+ * Version: 1.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,10 +12,6 @@
 
 --[[
  * Changelog:
- * v1.4 (2020-2-15)
-  # Add midi ticks per beat
- * v1.3 (2020-1-20)
-  # Improve processing speed
  * v1.0 (2019-12-12)
   + Initial release
 --]]
@@ -66,10 +62,10 @@ function Main()
 	  if tick == 0 then
         local x = strength+math.random(offset)
         if x > 127 then x = 127 end
-        reaper.MIDI_SetNote(take, i, _, _, _, _, _, _, x, false)
+        reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, x, false)
       else
         local z = tonumber(min_val + math.random(diff))
-        reaper.MIDI_SetNote(take, i, _, _, _, _, _, _, z, false)
+        reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, z, false)
       end
     end
     i=i+1
@@ -81,5 +77,5 @@ end
 script_title = "Groove Quantize (Limit Range)"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Control (Enhanced Version)
  * Instructions: Open a MIDI take in MIDI Editor. Select CC Events. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -14,13 +14,12 @@
  * Changelog:
  * v1.2 (2020-01-29)
   # Bug fix
- * v1.1 (2020-01-27)
-  # Solved the Line problem
  * v1.0 (2020-01-23)
   + Initial release
 --]]
 
 function Main()
+  local script_title = "Scale Control (Enhanced Version)"
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   local cnt, index = 0, {}
@@ -30,6 +29,8 @@ function Main()
     index[cnt] = val
     val = reaper.MIDI_EnumSelCC(take, val)
   end
+  reaper.Undo_BeginBlock()
+  reaper.MIDI_DisableSort(take)
   if #index > 0 then
     local _, _, _, begin_ppqpos, _, _, _, begin_val = reaper.MIDI_GetCC(take, index[1])
     local _, _, _, end_ppqpos, _, _, _, end_val = reaper.MIDI_GetCC(take, index[#index])
@@ -46,7 +47,6 @@ function Main()
     if has_state == true then
       state = reaper.GetExtState("ScaleControl", "ToggleValue")
     end
-    reaper.MIDI_DisableSort(take)
     for i = 1, #index do
       local _, _, _, ppqpos, _, _, _, vel = reaper.MIDI_GetCC(take, index[i])
       if state == "1" then
@@ -65,16 +65,25 @@ function Main()
         end
       end
     end
-    reaper.UpdateArrange()
-    reaper.MIDI_Sort(take)
   else
     reaper.MB("Please select one or more CC events","Error",0)
   end
+  reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock(script_title, 0)
 end
 
-script_title = "Scale Control (Enhanced Version)"
-reaper.Undo_BeginBlock()
-Main()
-reaper.Undo_EndBlock(script_title, -1)
+function CheckForNewVersion(new_version)
+    local app_version = reaper.GetAppVersion()
+    app_version = tonumber(app_version:match('[%d%.]+'))
+    if new_version > app_version then
+      reaper.MB('Update REAPER to newer version '..'('..new_version..' or newer)', '', 0)
+      return
+     else
+      return true
+    end
+end
+
+local CFNV = CheckForNewVersion(6.03)
+if CFNV then Main() end
+reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
-reaper.defer(function () end)

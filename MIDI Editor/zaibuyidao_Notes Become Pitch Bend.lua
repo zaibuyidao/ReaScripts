@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Notes Become Pitch Bend
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -83,5 +83,5 @@ else
   reaper.MB("Please select two or more notes","Error",0)
 end
 
-reaper.Undo_EndBlock("Notes Become Pitch Bend", -1)
+reaper.Undo_EndBlock("Notes Become Pitch Bend", 0)
 reaper.SN_FocusMIDIEditor()

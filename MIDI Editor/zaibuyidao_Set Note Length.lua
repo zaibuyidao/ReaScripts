@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Set Note Length
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,13 +12,12 @@
 
 --[[
  * Changelog:
- * v1.3 (2020-1-19)
-  # Improve processing speed
  * v1.0 (2019-12-12)
   + Initial release
 --]]
 
 reaper.Undo_BeginBlock()
+
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
 local retval, len = reaper.GetUserInputs("Set Note Length", 1, "Length", "10")
@@ -31,7 +30,8 @@ for i = 0,  notes-1 do
   end
   i=i+1
 end
+
 reaper.UpdateArrange()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Set Note Length", -1)
+reaper.Undo_EndBlock("Set Note Length", 0)
 reaper.SN_FocusMIDIEditor()

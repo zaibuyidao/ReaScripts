@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Select Control
  * Instructions: Open a MIDI take in MIDI Editor. Select CC Events. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,8 +12,6 @@
 
 --[[
  * Changelog:
- * v1.2 (2020-2-15)
-  # Add midi ticks per beat
  * v1.1 (2020-1-19)
   # Fix bug
  * v1.0 (2020-1-5)
@@ -61,5 +59,5 @@ end
 script_title = "Select Control"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

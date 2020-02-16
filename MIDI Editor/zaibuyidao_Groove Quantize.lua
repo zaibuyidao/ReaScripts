@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Groove Quantize
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.4
+ * Version: 1.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,10 +12,6 @@
 
 --[[
  * Changelog:
- * v1.4 (2020-2-15)
-  # Add midi ticks per beat
- * v1.3 (2020-1-20)
-  # Improve processing speed
  * v1.0 (2019-12-12)
   + Initial release
 --]]
@@ -38,18 +34,18 @@ function Main()
         local x = vel - 1 + math.random(fudu + 1)
         if x > 127 then x = 127 end
         if x < 1 then x = 1 end
-        reaper.MIDI_SetNote(take, i, _, _, _, _, _, _, x, false)
+        reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, x, false)
       elseif tick == 240 then
         local y = vel - 1 - fudu + math.random(fudu + 1)
         if y > 127 then y = 127 end
         if y < 1 then y = 1 end
-        reaper.MIDI_SetNote(take, i, _, _, _, _, _, _, y, false)
+        reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, y, false)
       else
 	    vel = vel - fudu*2
 	    local z = vel - 1 + math.random(fudu*2 + 1)
         if z > 127 then z = 127 end
         if z < 1 then z = 1 end
-        reaper.MIDI_SetNote(take, i, _, _, _, _, _, _, z, false)
+        reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, z, false)
       end
     end
     i=i+1
@@ -61,5 +57,5 @@ end
 script_title = "Groove Quantize"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

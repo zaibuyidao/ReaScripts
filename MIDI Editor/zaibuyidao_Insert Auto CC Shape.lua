@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Auto CC Shape
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,15 +13,13 @@
 
 --[[
  * Changelog:
- * v1.1 (2020-2-15)
-  # Add midi ticks per beat
  * v1.0 (2020-1-1)
   + Initial release
 --]]
 
 selected = false
 muted = false
-chan = 0 -- Channel 1
+chan = 0
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if take == nil then return end
@@ -122,5 +120,5 @@ INST2()
 INST3()
 INST4()
 reaper.UpdateArrange()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

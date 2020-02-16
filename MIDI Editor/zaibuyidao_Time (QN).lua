@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Time (QN)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,8 +13,6 @@
 
 --[[
  * Changelog:
- * v1.1 (2020-2-15)
-  # Add midi ticks per beat
  * v1.0 (2020-2-1)
   + Initial release
 --]]
@@ -47,5 +45,5 @@ end
 script_title = "Time (QN)"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

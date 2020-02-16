@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Trim Note Edge L (Percentages)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -17,6 +17,7 @@
 --]]
 
 reaper.Undo_BeginBlock()
+
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
 local retval, j = reaper.GetUserInputs("Trim Note Edge L", 1, "Percentages", "200")
@@ -30,7 +31,8 @@ for i = 0,  notes-1 do
   end
   i=i+1
 end
+
 reaper.UpdateArrange()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Trim Note Edge L (Percentages)", -1)
+reaper.Undo_EndBlock("Trim Note Edge L (Percentages)", 0)
 reaper.SN_FocusMIDIEditor()
