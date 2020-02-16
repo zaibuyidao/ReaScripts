@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Duplicate Events (Within Time Selection)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,15 +12,14 @@
 
 --[[
  * Changelog:
- * v1.2 (2020-2-16)
+ * v1.3 (2020-2-16)
   # Bug fix
  * v1.0 (2020-2-13)
   + Initial release
 --]]
 
 function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
-local midieditor = reaper.MIDIEditor_GetActive()
-local take = reaper.MIDIEditor_GetTake(midieditor)
+local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if take == nil then return end
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
@@ -69,12 +68,11 @@ end
 
 local start_ppq = {}
 local end_ppq = {}
-local ppqpos = {}
-
 for i = 1, #note_idx do
     _, sel, _, start_ppq[i], end_ppq[i], _, _, _ = reaper.MIDI_GetNote(take, note_idx[i])
 end
 
+local ppqpos = {}
 for i = 1, #ccs_idx do
     _, sel, _, ppqpos[i], _, _, _, _ = reaper.MIDI_GetCC(take, ccs_idx[i])
 end
@@ -129,21 +127,21 @@ function DuplicateCCs()
         if selected == true then
             for y = 0, 4  do
                 y = 1 << y
-                if cc_len >= tick / (y * 2) and cc_len < tick / y then
+                if cc_len > tick / (y * 2) and cc_len <= tick / y then
                     local proj_cc_end_01 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos) + tick / y)
                     reaper.GetSet_LoopTimeRange(true, false, proj_cc_start, proj_cc_end_01, false)
                 end
             end
-            if cc_len >= tick and cc_len < tick * 2 then
+            if cc_len > tick and cc_len <= tick * 2 then
                 local proj_cc_end_02 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos) + tick * 2)
                 reaper.GetSet_LoopTimeRange(true, false, proj_cc_start, proj_cc_end_02, false)
             end
-            if cc_len >= tick * 2 and cc_len < cc_meas_dur then
+            if cc_len > tick * 2 and cc_len <= cc_meas_dur then
                 local proj_cc_end_03 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos) + cc_meas_dur)
                 reaper.GetSet_LoopTimeRange(true, false, proj_cc_start, proj_cc_end_03, false)
             end
             for c = 1, 99 do
-                if cc_len >= cc_meas_dur * c and cc_len < cc_meas_dur * (c + 1) then
+                if cc_len > cc_meas_dur * c and cc_len <= cc_meas_dur * (c + 1) then
                     local proj_cc_end_04 = reaper.MIDI_GetProjTimeFromPPQPos(take, table_min(ppqpos) + cc_meas_dur * (c + 1))
                     reaper.GetSet_LoopTimeRange(true, false, proj_cc_start, proj_cc_end_04, false)
                 end
@@ -154,7 +152,6 @@ function DuplicateCCs()
 end
 
 function DuplicateMix()
-
     local mix_start
     local mix_end
     if table_min(start_ppq) > table_min(ppqpos) then mix_start = table_min(ppqpos) elseif table_min(start_ppq) < table_min(ppqpos) then mix_start = table_min(start_ppq) elseif table_min(start_ppq) == table_min(ppqpos) then mix_start = table_min(start_ppq) end
@@ -198,21 +195,21 @@ function DuplicateMix()
         if selected == true then
             for y = 0, 4  do
                 y = 1 << y
-                if mix_len >= tick / (y * 2) and mix_len < tick / y then
+                if mix_len > tick / (y * 2) and mix_len <= tick / y then
                     local proj_cc_end_01 = reaper.MIDI_GetProjTimeFromPPQPos(take, mix_start + tick / y)
                     reaper.GetSet_LoopTimeRange(true, false, proj_mix_start, proj_cc_end_01, false)
                 end
             end
-            if mix_len >= tick and mix_len < tick * 2 then
+            if mix_len > tick and mix_len <= tick * 2 then
                 local proj_cc_end_02 = reaper.MIDI_GetProjTimeFromPPQPos(take, mix_start + tick * 2)
                 reaper.GetSet_LoopTimeRange(true, false, proj_mix_start, proj_cc_end_02, false)
             end
-            if mix_len >= tick * 2 and mix_len < mix_meas_dur then
+            if mix_len > tick * 2 and mix_len <= mix_meas_dur then
                 local proj_cc_end_03 = reaper.MIDI_GetProjTimeFromPPQPos(take, mix_start + mix_meas_dur)
                 reaper.GetSet_LoopTimeRange(true, false, proj_mix_start, proj_cc_end_03, false)
             end
             for c = 1, 99 do
-                if mix_len >= mix_meas_dur * c and mix_len < mix_meas_dur * (c + 1) then
+                if mix_len > mix_meas_dur * c and mix_len <= mix_meas_dur * (c + 1) then
                     local proj_cc_end_04 = reaper.MIDI_GetProjTimeFromPPQPos(take, mix_start + mix_meas_dur * (c + 1))
                     reaper.GetSet_LoopTimeRange(true, false, proj_mix_start, proj_cc_end_04, false)
                 end
@@ -220,7 +217,6 @@ function DuplicateMix()
         end
         i = i + 1
     end
-
 end
 
 function Main()
@@ -236,15 +232,15 @@ function Main()
 end
 
 title = "Duplicate Events (Within Time Selection)"
-reaper.Undo_BeginBlock() -- 撤销块开始
-reaper.PreventUIRefresh(1) -- 防止UI刷新
+reaper.Undo_BeginBlock()
+reaper.PreventUIRefresh(1)
 
-SaveCursorPos() -- 保存编辑光标位置
-Main() -- 执行功能
-reaper.MIDIEditor_OnCommand(midieditor, 40883) -- 在时间选择内重复事件
-RestoreCursorPos() -- 恢复编辑光标位置
---reaper.MIDIEditor_OnCommand(midieditor, 40467) -- 删除时间选择和循环点
+SaveCursorPos()
+Main()
+reaper.MIDIEditor_LastFocused_OnCommand(40883, 0) -- Edit: Duplicate events within time selection
+RestoreCursorPos()
+--reaper.MIDIEditor_LastFocused_OnCommand(40467, 0) -- Time selection: Remove time selection and loop points
 
 reaper.PreventUIRefresh(-1)
-reaper.UpdateArrange() -- 更新排列
-reaper.Undo_EndBlock(title, 0) --撤销块结束
+reaper.UpdateArrange()
+reaper.Undo_EndBlock(title, 0)
