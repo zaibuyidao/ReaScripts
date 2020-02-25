@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="23e6f769ae7fbec730a76eaccced7d2c0196875d">
+<index version="1" name="zaibuyidao Scripts" commit="dd6ba893a946cf6708829c172db31ec047a3580d">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -423,6 +423,15 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Random CC Events (For Selected Notes).lua" type="script" desc="Insert Random CC Events (For Selected Notes)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-02-25T16:10:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd6ba893a946cf6708829c172db31ec047a3580d/MIDI%20Editor/zaibuyidao_Insert%20Random%20CC%20Events%20(For%20Selected%20Notes).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Random CC Events.lua" type="script" desc="Insert Random CC Events">
@@ -883,6 +892,24 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Select Bottom Notes In Chord (Leave Single Notes Selected).lua" type="script" desc="Select Bottom Notes In Chord (Leave Single Notes Selected)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-02-25T16:10:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd6ba893a946cf6708829c172db31ec047a3580d/MIDI%20Editor/zaibuyidao_Select%20Bottom%20Notes%20In%20Chord%20(Leave%20Single%20Notes%20Selected).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select Bottom Notes In Chord.lua" type="script" desc="Select Bottom Notes In Chord">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-02-25T16:10:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd6ba893a946cf6708829c172db31ec047a3580d/MIDI%20Editor/zaibuyidao_Select%20Bottom%20Notes%20In%20Chord.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Select Control.lua" type="script" desc="Select Control">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -933,6 +960,24 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Select%20Note.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select Top Notes In Chord (Leave Single Notes Selected).lua" type="script" desc="Select Top Notes In Chord (Leave Single Notes Selected)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-02-25T16:10:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd6ba893a946cf6708829c172db31ec047a3580d/MIDI%20Editor/zaibuyidao_Select%20Top%20Notes%20In%20Chord%20(Leave%20Single%20Notes%20Selected).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select Top Notes In Chord.lua" type="script" desc="Select Top Notes In Chord">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-02-25T16:10:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd6ba893a946cf6708829c172db31ec047a3580d/MIDI%20Editor/zaibuyidao_Select%20Top%20Notes%20In%20Chord.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Wheel.lua" type="script" desc="Select Wheel">
