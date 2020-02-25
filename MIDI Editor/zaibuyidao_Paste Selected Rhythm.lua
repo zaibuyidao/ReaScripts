@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Paste Selected Rhythm
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -43,7 +43,7 @@ function PasteSelectedRhythm()
   reaper.MIDI_Sort(take)
 end
 
-title = "Copy Selected Rhythm"
+title = "Paste Selected Rhythm"
 reaper.Undo_BeginBlock()
 PasteSelectedRhythm()
 reaper.Undo_EndBlock(title, 0)
