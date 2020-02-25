@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="dd6ba893a946cf6708829c172db31ec047a3580d">
+<index version="1" name="zaibuyidao Scripts" commit="4fce0b2595db81ffb19febd615a91bb3675e4636">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -631,6 +631,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-02-21T16:40:02Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/10357c6e9e331a285a53705d0fdf4d719c5c4c59/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Rhythm.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2020-02-25T16:13:10Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4fce0b2595db81ffb19febd615a91bb3675e4636/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Rhythm.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Quantize (Enhanced Edition).lua" type="script" desc="Quantize (Enhanced Edition)">
