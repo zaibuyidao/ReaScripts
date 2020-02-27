@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Copy Selected Rhythm
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -21,20 +21,27 @@ function CopySelectedRhythm()
   if not midieditor then return end
   local take = reaper.MIDIEditor_GetTake(midieditor)
   if not take or not reaper.TakeIsMIDI(take) then return end
-  local _, notecnt = reaper.MIDI_CountEvts(take)    
+  local cnt, index = 0, {}
+  local val = reaper.MIDI_EnumSelNotes(take, -1)
+  while val ~= - 1 do
+    cnt = cnt + 1
+    index[cnt] = val
+    val = reaper.MIDI_EnumSelNotes(take, val)
+  end
   local t = {}
   local str = ""
-  for i = 1, notecnt do
-    _, sel, _, s, e, _, _, v = reaper.MIDI_GetNote(take, i - 1)
-    local meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, s)
+  local _, _, _, b, _, _, _, _ = reaper.MIDI_GetNote(take, index[1])
+  local meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, b) -- 起始小节位置，作为复制节奏的起点
+  for i = 1, #index do
+    _, _, _, s, e, _, _, v = reaper.MIDI_GetNote(take, index[i])
     local sppq = s - meas
     local eppq = e - meas
-    if sel == true then str = str..'\n '..math.floor(sppq)..' '..math.floor(eppq)..' '..math.floor(v) end
+    str = str..'\n '..math.floor(sppq)..' '..math.floor(eppq)..' '..math.floor(v)
   end
   reaper.SetExtState('CopySelectedRhythm', 'buf', str, false)
 end
 
-title = "Copy Selected Rhythm"
+script_title = "Copy Selected Rhythm"
 reaper.Undo_BeginBlock()
 CopySelectedRhythm()
-reaper.Undo_EndBlock(title, 0)
+reaper.Undo_EndBlock(script_title, 0)
