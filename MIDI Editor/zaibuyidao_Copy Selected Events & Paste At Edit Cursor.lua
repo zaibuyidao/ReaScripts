@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Copy Selected Events And Paste At Edit Cursor
+ * ReaScript Name: Copy Selected Events & Paste At Edit Cursor
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -36,5 +36,5 @@ reaper.Undo_BeginBlock()
 SaveCursorPos()
 Main()
 RestoreCursorPos()
-reaper.Undo_EndBlock("Copy Selected Events And Paste At Edit Cursor", 0)
+reaper.Undo_EndBlock("Copy Selected Events & Paste At Edit Cursor", 0)
 reaper.UpdateArrange()

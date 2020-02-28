@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Select Event By Step
+ * ReaScript Name: Select Every Second Event
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 1.1
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,14 +16,11 @@
   + Initial release
 --]]
 
-local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-local _, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-reaper.MIDI_DisableSort(take)
-
 local step = 2
-
+local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+local _, notes, ccs, _ = reaper.MIDI_CountEvts(take)
 function Notes()
-  for i = 0,  notes-1, step do
+  for i = 0, notes-1, step do
     local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     if selected == true then
       if step == 2 then
@@ -33,9 +30,8 @@ function Notes()
     i=i+1
   end
 end
-
 function CCs()
-  for i = 0,  ccs-1, step do
+  for i = 0, ccs-1, step do
     local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
     if selected == true then
       if step == 2 then
@@ -45,12 +41,11 @@ function CCs()
     i=i+1
   end
 end
-
-script_title = "Select Event By Step"
 reaper.Undo_BeginBlock()
+reaper.MIDI_DisableSort(take)
 Notes()
 CCs()
-reaper.UpdateArrange()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock("Select Every Second Event", 0)
+reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
