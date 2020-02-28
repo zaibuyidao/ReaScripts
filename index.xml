@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6f48eb4a60da6cf7a1d6341b2570ebd23ec5ec92">
+<index version="1" name="zaibuyidao Scripts" commit="1a1ff166846e7174725a8a9a2b346bdd75edf461">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select (Bank Select MSB LSB).lua" type="script" desc="Bank Program Select (Bank Select MSB LSB)">
       <metadata>
@@ -1218,6 +1218,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-02-27T17:34:53Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6f48eb4a60da6cf7a1d6341b2570ebd23ec5ec92/MIDI%20Editor/zaibuyidao_Strum%20It.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-02-28T02:43:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a1ff166846e7174725a8a9a2b346bdd75edf461/MIDI%20Editor/zaibuyidao_Strum%20It.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum Up.lua" type="script" desc="Strum Up">
