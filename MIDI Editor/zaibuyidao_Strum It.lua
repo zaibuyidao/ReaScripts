@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Strum It
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -88,7 +88,7 @@ function noteIterator() -- 迭代器 用于返回选中的每一个音符信息�
     end
 end
 function main() -- 入口函数
-    local ok, tick = reaper.GetUserInputs('Strum It', 1, 'Down', '4')
+    local ok, tick = reaper.GetUserInputs('Strum It', 1, 'Tick: Down + / Up -', '4')
     if not ok then return reaper.SN_FocusMIDIEditor() end
     if countEvts()==0 then return end
     local noteGroups={} -- 按照startPos进行分组储存note的表
