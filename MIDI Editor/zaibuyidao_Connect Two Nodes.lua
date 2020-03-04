@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Connect Events
- * Instructions: Open a MIDI take in MIDI Editor. Select CC Event, Run.
+ * ReaScript Name: Connect Two Nodes
+ * Instructions: Open a MIDI take in MIDI Editor. Select CC Events, Run.
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -12,7 +12,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-3-3)
+ * v1.0 (2020-3-4)
   + Initial release
 --]]
 
@@ -28,7 +28,7 @@ end
 local _, _, _, cc_start_pos, _, _, _, _ = reaper.MIDI_GetCC(take, cidx[1])
 local _, _, _, cc_end_pos, _, _, _, _ = reaper.MIDI_GetCC(take, cidx[#cidx])
 local cc_len = math.floor(cc_end_pos - cc_start_pos)
-local retval, userInputsCSV = reaper.GetUserInputs("Connect Events", 1, "Tick", "10")
+local retval, userInputsCSV = reaper.GetUserInputs("Connect Two Nodes", 1, "Tick", "20")
 if not retval then return reaper.SN_FocusMIDIEditor() end
 local tick = userInputsCSV:match("(.*)")
 interval = cc_len / tick
@@ -73,9 +73,7 @@ function main()
 end
 reaper.Undo_BeginBlock()
 selected = true
-if #cidx == 2 then
-    main()
-end
-reaper.Undo_EndBlock("Connect Events", 0)
+if #cidx == 2 then main() end
+reaper.Undo_EndBlock("Connect Two Nodes", 0)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
