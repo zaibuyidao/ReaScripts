@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5c62c6d57fb18f3e5973553b3ba740fe1ae17052">
+<index version="1" name="zaibuyidao Scripts" commit="d48239e619c3f6a4643c7bd2204335ee94233da9">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
       <metadata>
@@ -100,6 +100,15 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-27T17:34:53Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6f48eb4a60da6cf7a1d6341b2570ebd23ec5ec92/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Rhythm.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Create And Connect Two Nodes (Within Time Selection).lua" type="script" desc="Create And Connect Two Nodes (Within Time Selection)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-03-04T18:36:05Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d48239e619c3f6a4643c7bd2204335ee94233da9/MIDI%20Editor/zaibuyidao_Create%20And%20Connect%20Two%20Nodes%20(Within%20Time%20Selection).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events (Within Time Selection).lua" type="script" desc="Duplicate Events (Within Time Selection)">
@@ -422,6 +431,15 @@
       </version>
       <version name="2.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(For%20Selected%20Notes).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert CC Events 2 (Within Time Selection).lua" type="script" desc="Insert CC Events 2 (Within Time Selection)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-03-04T18:36:05Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d48239e619c3f6a4643c7bd2204335ee94233da9/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(Within%20Time%20Selection).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 2.lua" type="script" desc="Insert CC Events 2">
