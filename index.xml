@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d48239e619c3f6a4643c7bd2204335ee94233da9">
+<index version="1" name="zaibuyidao Scripts" commit="80fa4a17562d650a137a5d110ef3c0e8050a6be4">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
       <metadata>
@@ -109,6 +109,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-03-04T18:36:05Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d48239e619c3f6a4643c7bd2204335ee94233da9/MIDI%20Editor/zaibuyidao_Create%20And%20Connect%20Two%20Nodes%20(Within%20Time%20Selection).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-03-05T11:54:39Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80fa4a17562d650a137a5d110ef3c0e8050a6be4/MIDI%20Editor/zaibuyidao_Create%20And%20Connect%20Two%20Nodes%20(Within%20Time%20Selection).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events (Within Time Selection).lua" type="script" desc="Duplicate Events (Within Time Selection)">
@@ -441,6 +444,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d48239e619c3f6a4643c7bd2204335ee94233da9/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(Within%20Time%20Selection).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2020-03-05T11:54:39Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80fa4a17562d650a137a5d110ef3c0e8050a6be4/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(Within%20Time%20Selection).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 2.lua" type="script" desc="Insert CC Events 2">
       <metadata>
@@ -581,6 +587,9 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
+      </version>
+      <version name="1.4" author="zaibuyidao" time="2020-03-05T11:54:39Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80fa4a17562d650a137a5d110ef3c0e8050a6be4/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Length (Enhanced Version).lua" type="script" desc="Length (Enhanced Edition)">
