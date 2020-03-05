@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Wah
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,32 +16,28 @@
   + Initial release
 --]]
 
-local retval, userInputsCSV = reaper.GetUserInputs("Insert Wah", 6, "CC Number,Begin,End,Repetition,Begin-End Ticks,Interval:Note values minus 1", "74,32,64,8,480,15")
+take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+local retval, userInputsCSV = reaper.GetUserInputs("Insert Wah", 6, "CC Number,First,Second,Repetition,Length,Interval", "74,32,64,8,480,20")
 if not retval then return reaper.SN_FocusMIDIEditor() end
-local cc_num, cc_begin, cc_end, cishu, tick, interval = userInputsCSV:match("(.*),(.*),(.*),(.*),(.*),(.*)")
-cc_num, cc_begin, cc_end, cishu, tick, interval = tonumber(cc_num), tonumber(cc_begin), tonumber(cc_end), tonumber(cishu), tonumber(tick), tonumber(interval)
-
+local cc_num, cc_begin, cc_end, cishu, tick_01, tick_02 = userInputsCSV:match("(.*),(.*),(.*),(.*),(.*),(.*)")
+cc_num, cc_begin, cc_end, cishu, tick_01, tick_02 = tonumber(cc_num), tonumber(cc_begin), tonumber(cc_end), tonumber(cishu), tonumber(tick_01), tonumber(tick_02)
 function Wah()
-    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    local pos = reaper.GetCursorPositionEx(0)
+    local pos = reaper.GetCursorPositionEx()
     local ppq = reaper.MIDI_GetPPQPosFromProjTime(take, pos)
     local bolang = {cc_begin,cc_end}
-    ppq = ppq - tick
+    ppq = ppq - tick_01
     for i = 1, cishu do
         for i = 1, #bolang do
-            ppq = ppq + tick
+            ppq = ppq + tick_01
             reaper.MIDI_InsertCC(take, selected, false, ppq, 0xB0, 0, cc_num, bolang[i])
             i=i+1
         end
     end
 end
-
 function GetCC(take, cc)
     return cc.selected, cc.muted, cc.ppqpos, cc.chanmsg, cc.chan, cc.msg2, cc.msg3
 end
-
 function Main()
-    take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if take ~= nil then
         retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
         if ccs == 0 then return end
@@ -79,12 +75,11 @@ function Main()
         end
     end
 end
-
-reaper.Undo_BeginBlock()
 selected = true
-interval = math.floor(interval) + 1
+interval = tick_01 / tick_02
+reaper.Undo_BeginBlock()
 Wah()
 Main()
-reaper.UpdateArrange()
 reaper.Undo_EndBlock("Insert Wah", 0)
+reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

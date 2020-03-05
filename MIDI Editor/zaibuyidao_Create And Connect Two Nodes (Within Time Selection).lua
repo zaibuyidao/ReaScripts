@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Create And Connect Two Nodes (Within Time Selection)
  * Instructions: Open a MIDI take in MIDI Editor. Set Time Selection, Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -24,9 +24,16 @@ function main()
   local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
   local loop_start = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_start))
   local loop_end = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_end))
+  local ccs_cnt, ccs_idx = 0, {}
+  local ccs_val = reaper.MIDI_EnumSelCC(take, -1)
+  while ccs_val ~= -1 do
+    ccs_cnt = ccs_cnt + 1
+    ccs_idx[ccs_cnt] = ccs_val
+    ccs_val = reaper.MIDI_EnumSelCC(take, ccs_val)
+  end
   local cc_len = math.floor(loop_end - loop_start)
-  if cc_len <= 0 then return reaper.MB("Please set the time selection range first.", "Error", 0), reaper.SN_FocusMIDIEditor()  end
-  local userOk, userInputsCSV = reaper.GetUserInputs("Create And Connect Two Nodes", 4, "CC Number,First Value,Second Value,Tick", "11,100,1,20")
+  if cc_len == 0 or ccs_cnt > 0 then return reaper.MB("Time selection range is not set or CC Event already exists.", "Error", 0), reaper.SN_FocusMIDIEditor() end
+  local userOk, userInputsCSV = reaper.GetUserInputs("Create And Connect Two Nodes", 4, "CC Number,First Value,Second Value,Interval", "11,100,1,20")
   if not userOk then return reaper.SN_FocusMIDIEditor() end
   local msg2, msg3, msg4, tick = userInputsCSV:match("(.*),(.*),(.*),(.*)")
   msg2, msg3, msg4, tick = tonumber(msg2), tonumber(msg3), tonumber(msg4), tonumber(tick)
@@ -35,7 +42,6 @@ function main()
   reaper.MIDI_InsertCC(take, selected, muted, loop_end, 0xB0, chan, msg2, msg4)
   local interval = cc_len / tick
   retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-  if ccs == 0 then return end
   midi_cc = {}
   for j = 0, ccs - 1 do
       cc = {}
