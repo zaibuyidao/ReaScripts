@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="80fa4a17562d650a137a5d110ef3c0e8050a6be4">
+<index version="1" name="zaibuyidao Scripts" commit="bf52971117057cc4ef44d5481a9399cb76a136cd">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
       <metadata>
@@ -378,13 +378,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%201%20(For%20Selected%20Notes).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Insert CC Events 1-2.lua" type="script" desc="Insert CC Events 1-2 (For Selected Notes)">
+    <reapack name="zaibuyidao_Insert CC Events 1-2 (For Selected Notes).lua" type="script" desc="Insert CC Events 1-2 (For Selected Notes)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-02-28T15:53:14Z">
+      <version name="1.0" author="zaibuyidao" time="2020-03-05T15:08:31Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d0ecef9d911f775bda44295f08c8a0e12f02f7d5/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%201-2.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/bf52971117057cc4ef44d5481a9399cb76a136cd/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%201-2%20(For%20Selected%20Notes).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 1.lua" type="script" desc="Insert CC Events 1">
