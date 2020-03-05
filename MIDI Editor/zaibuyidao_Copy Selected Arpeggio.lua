@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Copy Selected Chord
+ * ReaScript Name: Copy Selected Arpeggio
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -144,13 +144,11 @@ function main()
     table.insert(outData[insertIndex],note)
   end
   outData.lineNum=lineNum
-  saveData("CopySelectedChord","data",table.serialize(outData))
+  saveData("CopySelectedArpeggio","data",table.serialize(outData))
 end
-
-script_title = "Copy Selected Chord"
 reaper.Undo_BeginBlock()
 reaper.MIDI_DisableSort(take)
 main()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock("Copy Selected Arpeggio", 0)
 reaper.UpdateArrange()

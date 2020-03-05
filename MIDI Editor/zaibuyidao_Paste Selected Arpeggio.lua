@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Paste Selected Chord
+ * ReaScript Name: Paste Selected Arpeggio
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -121,7 +121,7 @@ function getSavedData(key1,key2) --获取已储存的table数据
   return table.unserialize(reaper.GetExtState(key1, key2))
 end
 function main()
-  local pasteInfos=getSavedData("CopySelectedChord","data")
+  local pasteInfos=getSavedData("CopySelectedArpeggio","data")
   local selPitchInfo={}
   local tempStartMeasure=0
   for note in selNoteIterator() do
@@ -146,11 +146,9 @@ function main()
     end
   end
 end
-
-script_title = "Paste Selected Chord"
 reaper.Undo_BeginBlock()
 reaper.MIDI_DisableSort(take)
 main()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock("Paste Selected Arpeggio", 0)
 reaper.UpdateArrange()
