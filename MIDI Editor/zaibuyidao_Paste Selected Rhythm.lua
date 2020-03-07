@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Paste Selected Rhythm
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -66,24 +66,38 @@ function getSavedData(key1, key2) -- 获取已储存的table数据
 end
 function main()
     local pasteInfos = getSavedData("CopySelectedRhythm", "data") -- 获取复制数据
-    if #pasteInfos < 0 then return end
+    if (not pasteInfos) or #pasteInfos < 0 then return end
     local selPitchInfo = {} -- 选中音符的音高及起始时间数据
     for note in selNoteIterator() do -- 遍历选中音符
         table.insert(selPitchInfo, {["pitch"]=note.pitch,["startPos"]=note.startPos})
     end
     deleteSelNote() -- 删除选中音符
+
+    -- 该步作用是整合复制音符到第一列，方便后续操作
+    local startPosFlag={} -- 标记已存在的起始位置信息
+    for i, info in ipairs(pasteInfos[1]) do -- 获取数据中最小的起始时间数据
+        startPosFlag[info.startPos]=true
+    end
+    for i=2,#pasteInfos do 
+        for j=1,#pasteInfos[i] do
+            if not startPosFlag[pasteInfos[i][j].startPos] then
+                table.insert(pasteInfos[1],pasteInfos[i][j])
+                startPosFlag[pasteInfos[i][j].startPos]=true
+            end
+        end
+    end
     local minStartPos
-    for i, info in ipairs(pasteInfos[1]) do --获取数据中最小的起始时间数据
+    for i, info in ipairs(pasteInfos[1]) do -- 获取数据中最小的起始时间数据
         if minStartPos==nil then minStartPos=info.startPos end
         if minStartPos>info.startPos then minStartPos=info.startPos end
     end
     for i,insertInfo in pairs(selPitchInfo) do
         for j,note in ipairs (pasteInfos[1]) do
             note.pitch = insertInfo.pitch
-            note.startPos = note.startPos + insertInfo.startPos -minStartPos --偏移
+            note.startPos = note.startPos + insertInfo.startPos - minStartPos -- 偏移
             note.endPos = note.endPos + insertInfo.startPos -minStartPos
-            insertNote(note) --加入音符
-            note.startPos = note.startPos - insertInfo.startPos + minStartPos --恢复
+            insertNote(note) -- 加入音符
+            note.startPos = note.startPos - insertInfo.startPos + minStartPos -- 恢复
             note.endPos = note.endPos - insertInfo.startPos +minStartPos
         end
     end

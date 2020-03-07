@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Copy Selected Rhythm
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -47,26 +47,6 @@ function table.serialize(obj) --将table序列化为字符串
   end
   return lua
 end
-function table.unserialize(lua) --将字符串反序列化为table
-  local t = type(lua)
-  if t == "nil" or lua == "" then
-      return nil
-  elseif t == "number" or t == "string" or t == "boolean" then
-      lua = tostring(lua)
-  else
-      error("can not unserialize a " .. t .. " type.")
-  end
-  lua = "return " .. lua
-  local func = loadstring(lua)
-  if func == nil then
-      return nil
-  end
-  return func()
-end
-function countEvts() --获取选中音符数量
-    local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
-    return notecnt
-end
 function getNote(sel) --根据传入的sel索引值，返回指定位置的含有音符信息的表
     local retval, selected, muted, startPos, endPos, channel, pitch, vel = reaper.MIDI_GetNote(take, sel)
     return {
@@ -80,21 +60,6 @@ function getNote(sel) --根据传入的sel索引值，返回指定位置的含�
         ["vel"]=vel,
         ["sel"]=sel
     }
-end
-function getSelIndexs() --获取全部被选中音符的索引值
-    local sel=-1
-    local ret={}
-    repeat
-        sel = reaper.MIDI_EnumSelNotes(take, sel)
-        if sel~=-1 then
-          local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, sel)
-          table.insert(ret,sel)
-        end
-    until sel == -1
-    return ret
-end
-function setNote(note,sel,arg) --传入一个音符信息表已经索引值，对指定索引位置的音符信息进行修改
-    reaper.MIDI_SetNote(take,sel,note["selected"],note["muted"],note["startPos"],note["endPos"],note["channel"],note["pitch"],note["vel"],arg or false)
 end
 function selNoteIterator() --迭代器 用于返回选中的每一个音符信息表
     local sel=-1
@@ -110,9 +75,6 @@ function getPPQStartOfMeasure(note) --获取音符所在小节起始位置
 end
 function saveData(key1,key2,data) --储存table数据
   reaper.SetExtState(key1, key2, data, false)
-end
-function getSavedData(key1,key2) --获取已储存的table数据
-  return table.unserialize(reaper.GetExtState(key1, key2))
 end
 function main()
   local notes={}

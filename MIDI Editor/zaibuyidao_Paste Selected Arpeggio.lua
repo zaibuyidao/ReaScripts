@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Paste Selected Arpeggio
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -76,8 +76,9 @@ function main()
         table.insert(selPitchInfo[tempStartMeasure], note.pitch)
     end
     deleteSelNote() -- 删除选中音符
+
     local minStartPos
-    for i, infos in ipairs(pasteInfos) do --获取数据中最小的起始时间数据
+    for i, infos in ipairs(pasteInfos) do -- 获取数据中最小的起始时间数据
         for j,info in ipairs(pasteInfos[i]) do
             if minStartPos==nil then minStartPos=info.startPos end
             if minStartPos>info.startPos then minStartPos=info.startPos end
@@ -85,15 +86,15 @@ function main()
     end
     for startMeasure, pitchs in pairs(selPitchInfo) do
         table.sort(pitchs) -- 将音高排序
-        for i, pitch in ipairs(pitchs) do --应用音高至以复制音符
+        for i, pitch in ipairs(pitchs) do -- 应用音高至以复制音符
             if i > pasteInfos.lineNum then break end
             local notes = pasteInfos[i]
             for j, note in ipairs(notes) do
                 note.pitch = pitch
-                note.startPos = note.startPos + startMeasure -minStartPos --偏移
+                note.startPos = note.startPos + startMeasure -minStartPos -- 偏移
                 note.endPos = note.endPos + startMeasure -minStartPos
-                insertNote(note) --加入音符
-                note.startPos = note.startPos - startMeasure + minStartPos --恢复
+                insertNote(note) -- 加入音符
+                note.startPos = note.startPos - startMeasure + minStartPos -- 恢复
                 note.endPos = note.endPos - startMeasure +minStartPos
             end
         end
