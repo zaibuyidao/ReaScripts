@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7a4b687f8c30216d45a4024f8793a814ea0626d3">
+<index version="1" name="zaibuyidao Scripts" commit="3fe8cc6afc6d15729422ad05055287dbd5c105a0">
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
       <metadata>
@@ -80,6 +80,9 @@
       <version name="1.1" author="zaibuyidao" time="2020-03-06T15:06:58Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7a4b687f8c30216d45a4024f8793a814ea0626d3/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Arpeggio.lua</source>
       </version>
+      <version name="1.2" author="zaibuyidao" time="2020-03-07T11:31:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Arpeggio.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Selected Events &amp; Paste At Edit Cursor.lua" type="script" desc="Copy Selected Events &amp; Paste At Edit Cursor">
       <metadata>
@@ -106,6 +109,9 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2020-03-06T15:06:58Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7a4b687f8c30216d45a4024f8793a814ea0626d3/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Rhythm.lua</source>
+      </version>
+      <version name="1.6" author="zaibuyidao" time="2020-03-07T11:31:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Rhythm.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Create And Connect Two Nodes (Within Time Selection).lua" type="script" desc="Create And Connect Two Nodes (Within Time Selection)">
@@ -712,6 +718,9 @@
       <version name="1.1" author="zaibuyidao" time="2020-03-06T15:06:58Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7a4b687f8c30216d45a4024f8793a814ea0626d3/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Arpeggio.lua</source>
       </version>
+      <version name="1.2" author="zaibuyidao" time="2020-03-07T11:31:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Arpeggio.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Selected Rhythm.lua" type="script" desc="Paste Selected Rhythm">
       <metadata>
@@ -735,6 +744,9 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2020-03-06T15:06:58Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7a4b687f8c30216d45a4024f8793a814ea0626d3/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Rhythm.lua</source>
+      </version>
+      <version name="1.6" author="zaibuyidao" time="2020-03-07T11:31:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Rhythm.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Quantize (Enhanced Edition).lua" type="script" desc="Quantize (Enhanced Edition)">
