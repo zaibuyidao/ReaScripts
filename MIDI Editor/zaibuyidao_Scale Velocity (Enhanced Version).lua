@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Velocity (Enhanced Version)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,14 +12,11 @@
 
 --[[
  * Changelog:
- * v1.2 (2020-01-29)
-  # Bug fix
  * v1.0 (2020-01-23)
   + Initial release
 --]]
 
 function Main()
-  local script_title = "Scale Velocity (Enhanced Version)"
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   local cnt, index = 0, {}
@@ -32,21 +29,28 @@ function Main()
   reaper.Undo_BeginBlock()
   reaper.MIDI_DisableSort(take)
   if #index > 0 then
-    local _, _, _, begin_ppqpos, _, _, _, begin_vel = reaper.MIDI_GetNote(take, index[1])
-    local _, _, _, end_ppqpos, _, _, _, end_vel = reaper.MIDI_GetNote(take, index[#index])
-    local cur_range = tostring(begin_vel)..','..tostring(end_vel)..','.."0"
-    local retval, userInputsCSV = reaper.GetUserInputs("Scale Velocity", 3, "Begin,End,0=Default 1=Percentages", cur_range)
-    if not retval then return reaper.SN_FocusMIDIEditor() end
-    local vel_start, vel_end, toggle = userInputsCSV:match("(%d*),(%d*),(%d*)")
-    if not vel_start:match('[%d%.]+') or not vel_end:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
-    vel_start, vel_end, toggle = tonumber(vel_start), tonumber(vel_end), tonumber(toggle)
-    reaper.SetExtState("ScaleVelocity", "ToggleValue", toggle, 0)
+    local vel_start = reaper.GetExtState("ScaleVelocityEV", "Start")
+    local vel_end = reaper.GetExtState("ScaleVelocityEV", "End")
+    local vel_toggle = reaper.GetExtState("ScaleVelocityEV", "Toggle")
+    if (vel_start == "") then vel_start = "100" end
+    if (vel_end == "") then vel_end = "100" end
+    if (vel_toggle == "") then vel_toggle = "0" end
+    local userOK, userInputsCSV = reaper.GetUserInputs("Scale Velocity", 3, "Begin,End,0=Default 1=Percentages", vel_start..','..vel_end..','.. vel_toggle)
+    if not userOK then return reaper.SN_FocusMIDIEditor() end
+    vel_start, vel_end, vel_toggle = userInputsCSV:match("(%d*),(%d*),(%d*)")
+    if not vel_start:match('[%d%.]+') or not vel_end:match('[%d%.]+') or not vel_toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
+    reaper.SetExtState("ScaleVelocityEV", "Start", vel_start, false)
+    reaper.SetExtState("ScaleVelocityEV", "End", vel_end, false)
+    reaper.SetExtState("ScaleVelocityEV", "Toggle", vel_toggle, false)
+    reaper.SetExtState("ScaleVelocityEV", "ToggleValue", vel_toggle, 0)
+    local has_state = reaper.HasExtState("ScaleVelocityEV", "ToggleValue")
+    if has_state == true then
+      state = reaper.GetExtState("ScaleVelocityEV", "ToggleValue")
+    end
+    local _, _, _, begin_ppqpos, _, _, _, _ = reaper.MIDI_GetNote(take, index[1])
+    local _, _, _, end_ppqpos, _, _, _, _ = reaper.MIDI_GetNote(take, index[#index])
     local ppq_offset = (vel_end - vel_start) / (end_ppqpos - begin_ppqpos)
     local vel_offset = (vel_end - vel_start) / (cnt - 1)
-    local has_state = reaper.HasExtState("ScaleVelocity", "ToggleValue")
-    if has_state == true then
-      state = reaper.GetExtState("ScaleVelocity", "ToggleValue")
-    end
     for i = 1, #index do
       local _, _, _, startppqpos, _, _, _, vel = reaper.MIDI_GetNote(take, index[i])
       if state == "1" then
@@ -69,20 +73,18 @@ function Main()
     reaper.MB("Please select one or more notes","Error",0)
   end
   reaper.MIDI_Sort(take)
-  reaper.Undo_EndBlock(script_title, 0)
+  reaper.Undo_EndBlock("Scale Velocity (Enhanced Version)", 0)
 end
-
 function CheckForNewVersion(new_version)
     local app_version = reaper.GetAppVersion()
     app_version = tonumber(app_version:match('[%d%.]+'))
     if new_version > app_version then
       reaper.MB('Update REAPER to newer version '..'('..new_version..' or newer)', '', 0)
       return
-     else
+    else
       return true
     end
 end
-
 local CFNV = CheckForNewVersion(6.03)
 if CFNV then Main() end
 reaper.UpdateArrange()
