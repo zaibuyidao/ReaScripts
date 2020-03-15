@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="562ffc00aac343debf301ad3992641e1566dfa89">
+<index version="1" name="zaibuyidao Scripts" commit="1bd5059ee9b7f200a82f4f44ea219bd3c5949047">
+  <category name="Items Editing">
+    <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-03-15T07:18:49Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1bd5059ee9b7f200a82f4f44ea219bd3c5949047/Items%20Editing/zaibuyidao_Move%20Selected%20Items%20+10.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Move Selected Items -10.lua" type="script" desc="Move Selected Items -10">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-03-15T07:18:49Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1bd5059ee9b7f200a82f4f44ea219bd3c5949047/Items%20Editing/zaibuyidao_Move%20Selected%20Items%20-10.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Move Selected Items To X.lua" type="script" desc="Move Selected Items To X">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-03-15T07:18:49Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1bd5059ee9b7f200a82f4f44ea219bd3c5949047/Items%20Editing/zaibuyidao_Move%20Selected%20Items%20To%20X.lua</source>
+      </version>
+    </reapack>
+  </category>
   <category name="MIDI Editor">
     <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
       <metadata>
