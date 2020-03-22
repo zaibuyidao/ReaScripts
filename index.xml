@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1bd5059ee9b7f200a82f4f44ea219bd3c5949047">
+<index version="1" name="zaibuyidao Scripts" commit="43f96193a62b39d344e52384b8fcde8c0b665699">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
@@ -454,6 +454,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/bf52971117057cc4ef44d5481a9399cb76a136cd/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%201-2%20(For%20Selected%20Notes).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2020-03-22T17:30:29Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/43f96193a62b39d344e52384b8fcde8c0b665699/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%201-2%20(For%20Selected%20Notes).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 1.lua" type="script" desc="Insert CC Events 1">
       <metadata>
@@ -637,6 +640,9 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20Vibrato.lua</source>
+      </version>
+      <version name="1.4" author="zaibuyidao" time="2020-03-22T17:30:29Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/43f96193a62b39d344e52384b8fcde8c0b665699/MIDI%20Editor/zaibuyidao_Insert%20Vibrato.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Wah.lua" type="script" desc="Insert Wah">
