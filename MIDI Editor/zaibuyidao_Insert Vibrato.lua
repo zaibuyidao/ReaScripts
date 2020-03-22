@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Insert Vibrato
  * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,7 +18,7 @@
 
 function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-  local retval, userInputsCSV = reaper.GetUserInputs("Insert Vibrato", 3, "Amplitude:1-10,Repetition:1-10,Interval:1-99", "3,7,7") 
+  local retval, userInputsCSV = reaper.GetUserInputs("Insert Vibrato", 3, "Amplitude:1-9,Repetition:1-99,Interval:1-99", "3,7,7")
   if not retval then return reaper.SN_FocusMIDIEditor() end
   local fudu, cishu, jiange = userInputsCSV:match("(.*),(.*),(.*)")
   fudu, cishu, jiange = tonumber(fudu), tonumber(cishu), tonumber(jiange)
@@ -39,8 +39,8 @@ function Main()
   local startpos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
   startpos = startpos - jiange
   
-  if fudu < 1  or fudu > 10 then return reaper.SN_FocusMIDIEditor() end
-  if cishu < 1 or cishu > 10 then return reaper.SN_FocusMIDIEditor() end
+  if fudu < 1  or fudu > 9 then return reaper.SN_FocusMIDIEditor() end
+  if cishu < 1 or cishu > 99 then return reaper.SN_FocusMIDIEditor() end
   if jiange < 1 or jiange > 99 then return reaper.SN_FocusMIDIEditor() end
   
   for i = 1, cishu do
