@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="43f96193a62b39d344e52384b8fcde8c0b665699">
+<index version="1" name="zaibuyidao Scripts" commit="ae502bbf035ff87942a979e11be5e3209164bfef">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
@@ -599,6 +599,15 @@
       </version>
       <version name="2.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20Random%20CC%20Events.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Sustain Pedal (For Selected Notes).lua" type="script" desc="Insert Sustain Pedal (For Selected Notes)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-03-23T19:46:56Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae502bbf035ff87942a979e11be5e3209164bfef/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal%20(For%20Selected%20Notes).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Sustain Pedal.lua" type="script" desc="Insert Sustain Pedal">
