@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ae502bbf035ff87942a979e11be5e3209164bfef">
+<index version="1" name="zaibuyidao Scripts" commit="41afbc7635b9ef2a882b4be2168bc52525e3d1d9">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
@@ -19,13 +19,13 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1bd5059ee9b7f200a82f4f44ea219bd3c5949047/Items%20Editing/zaibuyidao_Move%20Selected%20Items%20-10.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Move Selected Items To X.lua" type="script" desc="Move Selected Items To X">
+    <reapack name="zaibuyidao_Move Selected Items.lua" type="script" desc="Move Selected Items">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-03-15T07:18:49Z">
+      <version name="1.0" author="zaibuyidao" time="2020-04-01T14:56:01Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1bd5059ee9b7f200a82f4f44ea219bd3c5949047/Items%20Editing/zaibuyidao_Move%20Selected%20Items%20To%20X.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/Items%20Editing/zaibuyidao_Move%20Selected%20Items.lua</source>
       </version>
     </reapack>
   </category>
@@ -120,6 +120,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-02-28T15:53:14Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d0ecef9d911f775bda44295f08c8a0e12f02f7d5/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Events%20&amp;%20Paste%20At%20Edit%20Cursor.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-04-01T14:56:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Events%20&amp;%20Paste%20At%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Selected Rhythm.lua" type="script" desc="Copy Selected Rhythm">
@@ -1250,6 +1253,9 @@
       </version>
       <version name="1.4" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
+      </version>
+      <version name="1.5" author="zaibuyidao" time="2020-04-01T14:56:01Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Velocity (Percentages).lua" type="script" desc="Set Velocity (Percentages)">
