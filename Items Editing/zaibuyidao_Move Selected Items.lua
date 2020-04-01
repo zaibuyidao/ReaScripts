@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Move Selected Items To X
+ * ReaScript Name: Move Selected Items
  * Instructions: Select Items. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -38,7 +38,7 @@ function main()
 		new_item_pos = reaper.TimeMap2_QNToTime(0, new_qn_item_pos)
 		reaper.SetMediaItemInfo_Value(item, "D_POSITION", new_item_pos)
 	end
-	reaper.Undo_EndBlock("Move Selected Items To X", 0)
+	reaper.Undo_EndBlock("Move Selected Items", 0)
 end
 reaper.PreventUIRefresh(1)
 main()
