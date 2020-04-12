@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: MIDI Chan From Track Send
+ * ReaScript Name: MIDI Channel From Track Send
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -11,7 +11,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-4-12)
+ * v1.0 (2020-4-13)
   + Initial release
 --]]
 
@@ -42,6 +42,6 @@ end
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("MIDI Chan From Track Send", 0)
+reaper.Undo_EndBlock("MIDI Channel From Track Send", 0)
 reaper.UpdateArrange()
 reaper.PreventUIRefresh(-1)
