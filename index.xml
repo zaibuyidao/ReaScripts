@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="89bfa5394c949b6136521424b1e46d2b882ce291">
+<index version="1" name="zaibuyidao Scripts" commit="f423643c9523e47aa130d6a53f4848beef84cab8">
   <category name="Items Editing">
-    <reapack name="zaibuyidao_MIDI Chan From Track Send.lua" type="script" desc="MIDI Chan From Track Send">
-      <version name="1.0" author="zaibuyidao" time="2020-04-12T10:01:41Z">
+    <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
+      <version name="1.0" author="zaibuyidao" time="2020-04-12T18:07:24Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/Items%20Editing/zaibuyidao_MIDI%20Chan%20From%20Track%20Send.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f423643c9523e47aa130d6a53f4848beef84cab8/Items%20Editing/zaibuyidao_MIDI%20Channel%20From%20Track%20Send.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
