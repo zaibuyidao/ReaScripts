@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="41afbc7635b9ef2a882b4be2168bc52525e3d1d9">
+<index version="1" name="zaibuyidao Scripts" commit="89bfa5394c949b6136521424b1e46d2b882ce291">
   <category name="Items Editing">
+    <reapack name="zaibuyidao_MIDI Chan From Track Send.lua" type="script" desc="MIDI Chan From Track Send">
+      <version name="1.0" author="zaibuyidao" time="2020-04-12T10:01:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/Items%20Editing/zaibuyidao_MIDI%20Chan%20From%20Track%20Send.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -26,6 +32,12 @@
       <version name="1.0" author="zaibuyidao" time="2020-04-01T14:56:01Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/Items%20Editing/zaibuyidao_Move%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Toggle Mute PC CC6.lua" type="script" desc="Toggle Mute PC CC6">
+      <version name="1.0" author="zaibuyidao" time="2020-04-12T10:01:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/Items%20Editing/zaibuyidao_Toggle%20Mute%20PC%20CC6.lua</source>
       </version>
     </reapack>
   </category>
@@ -634,6 +646,9 @@
       </version>
       <version name="1.4" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal.lua</source>
+      </version>
+      <version name="1.5" author="zaibuyidao" time="2020-04-12T10:01:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Vibrato.lua" type="script" desc="Insert Vibrato">
@@ -1473,6 +1488,15 @@
         <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Time%20(QN).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Transpose.lua" type="script" desc="Transpose">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-04-12T10:01:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/MIDI%20Editor/zaibuyidao_Transpose.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge (Percentages).lua" type="script" desc="Trim Note Left Edge (Percentages)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -1532,6 +1556,9 @@
       <version name="2.2" author="zaibuyidao" time="2020-02-16T12:39:41Z">
         <changelog><![CDATA[+ Version update]]></changelog>
         <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/7e2035b89a6f7ee655e3fd13608bf9528c7f256d/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
+      </version>
+      <version name="2.3" author="zaibuyidao" time="2020-04-12T10:01:41Z">
+        <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
       </version>
     </reapack>
   </category>
