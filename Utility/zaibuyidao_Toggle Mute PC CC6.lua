@@ -7,12 +7,12 @@
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * Reference: Mute PC CC6.lua (dangguidan)
  * REAPER: 6.0
- * provides: [main=main,midi_editor] .
+ * provides: [main=main,midi_editor,midi_eventlisteditor] .
 --]]
 
 --[[
  * Changelog:
- * v1.0 (2020-4-12)
+ * v1.0 (2020-4-15)
   + Initial release
 --]]
 

@@ -11,7 +11,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-4-13)
+ * v1.0 (2020-4-14)
   + Initial release
 --]]
 
@@ -22,7 +22,7 @@ function main()
     count_items = reaper.CountMediaItems(0)
     if count_items == 0 then return end
     for i = 1, count_items do
-        item = reaper.GetMediaItem(0, count_items - i)
+        item = reaper.GetMediaItem(0, i - 1)
         take = reaper.GetTake(item, 0)
         track = reaper.GetMediaItem_Track(item)
         hwout = reaper.GetMediaTrackInfo_Value(track, 'I_MIDIHWOUT')
@@ -37,7 +37,7 @@ function main()
         end
         reaper.MIDI_Sort(take)
     end
-    reaper.MB("All MIDI channels have been mapped to track send.","Complete!",0)
+    reaper.MB("所有MIDI通道已对应好轨道发送.","执行完毕!",0)
 end
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
