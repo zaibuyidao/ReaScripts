@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f423643c9523e47aa130d6a53f4848beef84cab8">
+<index version="1" name="zaibuyidao Scripts" commit="ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf">
   <category name="Items Editing">
-    <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
-      <version name="1.0" author="zaibuyidao" time="2020-04-12T18:07:24Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f423643c9523e47aa130d6a53f4848beef84cab8/Items%20Editing/zaibuyidao_MIDI%20Channel%20From%20Track%20Send.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -32,12 +26,6 @@
       <version name="1.0" author="zaibuyidao" time="2020-04-01T14:56:01Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/Items%20Editing/zaibuyidao_Move%20Selected%20Items.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Toggle Mute PC CC6.lua" type="script" desc="Toggle Mute PC CC6">
-      <version name="1.0" author="zaibuyidao" time="2020-04-12T10:01:41Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/Items%20Editing/zaibuyidao_Toggle%20Mute%20PC%20CC6.lua</source>
       </version>
     </reapack>
   </category>
@@ -1559,6 +1547,29 @@
       </version>
       <version name="2.3" author="zaibuyidao" time="2020-04-12T10:01:41Z">
         <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Utility">
+    <reapack name="zaibuyidao_Add MIDI Hardware Output And Receives To Selected Tracks.lua" type="script" desc="Add MIDI Hardware Output And Receives To Selected Tracks">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-04-14T16:15:42Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
+      <version name="1.0" author="zaibuyidao" time="2020-04-14T16:15:42Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf/Utility/zaibuyidao_MIDI%20Channel%20From%20Track%20Send.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Toggle Mute PC CC6.lua" type="script" desc="Toggle Mute PC CC6">
+      <version name="1.0" author="zaibuyidao" time="2020-04-14T16:15:42Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf/Utility/zaibuyidao_Toggle%20Mute%20PC%20CC6.lua</source>
       </version>
     </reapack>
   </category>
