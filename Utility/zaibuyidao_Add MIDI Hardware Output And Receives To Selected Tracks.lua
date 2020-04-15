@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Add MIDI Hardware Output And Receives To Selected Tracks
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -39,18 +39,20 @@ function main()
     ordinal = ordinal - 1
     reaper.Undo_BeginBlock()
     if toggle == "0" then
+        commandID_03 = reaper.NamedCommandLookup("_S&M_SENDS5") -- SWS/S&M: Remove receives from selected tracks
+        reaper.Main_OnCommand(commandID_03, 0)
         for i = 1, count_sel_track do
             select_track = reaper.GetSelectedTrack(0, i - 1)
             channel = i + ordinal
             if channel < 1 or channel > 16 then channel = 0 end
             number = channel | output_device << 5
             reaper.SetMediaTrackInfo_Value(select_track,"I_MIDIHWOUT", number)
-            commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
-            reaper.Main_OnCommand(commandID_01, 0)
             track_to_receive = reaper.GetTrack(0, track_num - 1)
             reaper.CreateTrackSend(track_to_receive, select_track)
             commandID_02 = reaper.NamedCommandLookup("_SWS_MUTERECVS") -- SWS: Mute all receives for selected track(s)
             reaper.Main_OnCommand(commandID_02, 0)
+            commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
+            reaper.Main_OnCommand(commandID_01, 0)
         end
     elseif toggle == "1" then
         for i = 1, count_sel_track do
@@ -60,20 +62,34 @@ function main()
             number = channel | output_device << 5
             reaper.SetMediaTrackInfo_Value(select_track,"I_MIDIHWOUT", number)
         end
+        commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
+        reaper.Main_OnCommand(commandID_01, 0)
     elseif toggle == "2" then
-        for i = 1, count_sel_track do
-            select_track = reaper.GetSelectedTrack(0, i - 1)
-            commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
-            reaper.Main_OnCommand(commandID_01, 0)
-            track_to_receive = reaper.GetTrack(0, track_num - 1)
-            reaper.CreateTrackSend(track_to_receive, select_track)
-            commandID_02 = reaper.NamedCommandLookup("_SWS_MUTERECVS") -- SWS: Mute all receives for selected track(s)
-            reaper.Main_OnCommand(commandID_02, 0)
-        end
-    else
         commandID_03 = reaper.NamedCommandLookup("_S&M_SENDS5") -- SWS/S&M: Remove receives from selected tracks
         reaper.Main_OnCommand(commandID_03, 0)
+        for i = 1, count_sel_track do
+            select_track = reaper.GetSelectedTrack(0, i - 1)
+            track_to_receive = reaper.GetTrack(0, track_num - 1)
+            reaper.CreateTrackSend(track_to_receive, select_track)
+        end
+        commandID_02 = reaper.NamedCommandLookup("_SWS_MUTERECVS") -- SWS: Mute all receives for selected track(s)
+        reaper.Main_OnCommand(commandID_02, 0)
+        commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
+        reaper.Main_OnCommand(commandID_01, 0)
+    else
+        for i = 1, count_sel_track do
+            select_track = reaper.GetSelectedTrack(0, i - 1)
+            number = 0 | -1 << 5
+            reaper.SetMediaTrackInfo_Value(select_track,"I_MIDIHWOUT", number)
+        end
+        commandID_03 = reaper.NamedCommandLookup("_S&M_SENDS5") -- SWS/S&M: Remove receives from selected tracks
+        reaper.Main_OnCommand(commandID_03, 0)
+        commandID_04 = reaper.NamedCommandLookup("_SWS_ENMPSEND") -- SWS: Enable master/parent send on selected track(s)
+        reaper.Main_OnCommand(commandID_04, 0)
     end
     reaper.Undo_EndBlock("Add MIDI Hardware Output And Receives To Selected Tracks", 0)
 end
+reaper.PreventUIRefresh(1)
 main()
+reaper.PreventUIRefresh(-1)
+reaper.UpdateArrange()
