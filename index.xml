@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a3f36828a917157f6607c308f27b1ddb17d02f07">
+<index version="1" name="zaibuyidao Scripts" commit="19f1fb6c01a7d41f8058f74f80bf42b857750549">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
@@ -1561,6 +1561,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-04-15T03:51:11Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a3f36828a917157f6607c308f27b1ddb17d02f07/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2020-04-15T05:13:07Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/19f1fb6c01a7d41f8058f74f80bf42b857750549/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
