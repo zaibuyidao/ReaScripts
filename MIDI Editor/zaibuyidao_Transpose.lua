@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Transpose
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or MIDI Takes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -34,11 +34,23 @@ function main()
         end
         reaper.MIDI_DisableSort(take)
         _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+        local note = {}
         for i = 1, notecnt do
-            _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i - 1)
-            if selected == true then
-              reaper.MIDI_SetNote(take, i - 1, nil, nil, nil, nil, nil, pitch + amount, nil, false)
-            end
+            note[i] = {}
+            note[i].ret, 
+            note[i].sel, 
+            note[i].muted,  
+            note[i].startppqpos,
+            note[i].endppqpos,
+            note[i].chan, 
+            note[i].pitch,
+            note[i].vel = reaper.MIDI_GetNote(take, i - 1)
+        end
+        for i = 1, notecnt do
+            reaper.MIDI_DeleteNote(take, 0)
+        end
+        for i = 1, notecnt do
+            reaper.MIDI_InsertNote(take, note[i].sel, note[i].muted, note[i].startppqpos, note[i].endppqpos, note[i].chan, note[i].pitch + amount, note[i].vel, false)
         end
         if not inline_editor then reaper.SN_FocusMIDIEditor() end
         reaper.MIDI_Sort(take)
@@ -52,9 +64,23 @@ function main()
             reaper.MIDI_DisableSort(take)
             if reaper.TakeIsMIDI(take) then
                 _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+                local note = {}
                 for i = 1, notecnt do
-                    _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i - 1)
-                    reaper.MIDI_SetNote(take, i - 1, nil, nil, nil, nil, nil, pitch + amount, nil, false)
+                    note[i] = {}
+                    note[i].ret, 
+                    note[i].sel, 
+                    note[i].muted,  
+                    note[i].startppqpos,
+                    note[i].endppqpos,
+                    note[i].chan, 
+                    note[i].pitch,
+                    note[i].vel = reaper.MIDI_GetNote(take, i - 1)
+                end
+                for i = 1, notecnt do
+                    reaper.MIDI_DeleteNote(take, 0)
+                end
+                for i = 1, notecnt do
+                    reaper.MIDI_InsertNote(take, note[i].sel, note[i].muted, note[i].startppqpos, note[i].endppqpos, note[i].chan, note[i].pitch + amount, note[i].vel, false)
                 end
             end
             reaper.MIDI_Sort(take)

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Add MIDI Hardware Output And Receives To Selected Tracks
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -29,7 +29,7 @@ function main()
     if (track_num == "") then track_num = "1" end
     local toggle = reaper.GetExtState("AddMIDIHardwareOutput", "Toggle")
     if (toggle == "") then toggle = "0" end
-    user_ok, input_cav = reaper.GetUserInputs("选定轨道添加MIDI硬件输出和接收到选定的轨道", 4, "MIDI硬件输出,MIDI通道序数,接收轨道编号,0=默认1=通道2=接收3=移除", output_device ..','.. ordinal ..','.. track_num ..','.. toggle)
+    user_ok, input_cav = reaper.GetUserInputs("选定轨道添加MIDI硬件输出和接收", 4, "MIDI硬件输出,MIDI通道序数,接收轨道编号,0=默认1=通道2=接收3=移除", output_device ..','.. ordinal ..','.. track_num ..','.. toggle)
     output_device, ordinal, track_num, toggle = input_cav:match("(.*),(.*),(.*),(.*)")
     if not user_ok or not tonumber(output_device) or not tonumber(ordinal) or not tonumber(track_num) or not tonumber(toggle) then return end
     reaper.SetExtState("AddMIDIHardwareOutput", "Device", output_device, false)
@@ -62,8 +62,8 @@ function main()
             number = channel | output_device << 5
             reaper.SetMediaTrackInfo_Value(select_track,"I_MIDIHWOUT", number)
         end
-        commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
-        reaper.Main_OnCommand(commandID_01, 0)
+        -- commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
+        -- reaper.Main_OnCommand(commandID_01, 0)
     elseif toggle == "2" then
         commandID_03 = reaper.NamedCommandLookup("_S&M_SENDS5") -- SWS/S&M: Remove receives from selected tracks
         reaper.Main_OnCommand(commandID_03, 0)
@@ -74,8 +74,8 @@ function main()
         end
         commandID_02 = reaper.NamedCommandLookup("_SWS_MUTERECVS") -- SWS: Mute all receives for selected track(s)
         reaper.Main_OnCommand(commandID_02, 0)
-        commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
-        reaper.Main_OnCommand(commandID_01, 0)
+        -- commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
+        -- reaper.Main_OnCommand(commandID_01, 0)
     else
         for i = 1, count_sel_track do
             select_track = reaper.GetSelectedTrack(0, i - 1)
