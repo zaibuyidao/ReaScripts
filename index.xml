@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f7ffbae7c0176dba465dc2d6987763cfa6978fe4">
+<index version="1" name="zaibuyidao Scripts" commit="2bcf063eea1cb6511e2f18dc4399c91608729378">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
@@ -1534,6 +1534,9 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2020-05-04T05:32:12Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f7ffbae7c0176dba465dc2d6987763cfa6978fe4/MIDI%20Editor/zaibuyidao_Transpose.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-05-04T10:20:33Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2bcf063eea1cb6511e2f18dc4399c91608729378/MIDI%20Editor/zaibuyidao_Transpose.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge (Percentages).lua" type="script" desc="Trim Note Left Edge (Percentages)">
