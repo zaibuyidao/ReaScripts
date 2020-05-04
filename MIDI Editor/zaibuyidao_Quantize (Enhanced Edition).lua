@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Quantize (Enhanced Edition)
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 1.2
+ * Instructions: Open a MIDI take in MIDI Editor. Select Notes Or CC Events. Run.
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,8 +11,6 @@
 
 --[[
  * Changelog:
- * v1.1 (2020-2-15)
-  + When executing the script, delete overlapped notes is switched, and delete overlapped notes is enabled by default
  * v1.0 (2020-2-1)
   + Initial release
 --]]
@@ -23,18 +21,16 @@ local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local cur_grid, swing = reaper.MIDI_GetGrid(take)
 local _, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
-local OK, userInputsCSV = reaper.GetUserInputs('Quantize', 2, 'Enter A Tick,0=Start+Dur 1=Start 2=Durations', '120,0')
-if not OK then return reaper.SN_FocusMIDIEditor() end
-local grid, toggle = userInputsCSV:match("(.*),(.*)")
-if not grid:match('[%d%.]+') or not toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
-reaper.SetExtState("Quantize", "ToggleValue", toggle, true)
-local has_state = reaper.HasExtState("Quantize", "ToggleValue")
-if has_state == true then
-    state = reaper.GetExtState("Quantize", "ToggleValue")
-end
-
+local grid = reaper.GetExtState("QuantizeEnhanced", "Grid")
+if (grid == "") then grid = "120" end
+local toggle = reaper.GetExtState("QuantizeEnhanced", "Toggle")
+if (toggle == "") then toggle = "0" end
+local user_ok, input_cav = reaper.GetUserInputs('Quantize', 2, 'Enter A Tick,0=Start+Dur 1=Start 2=Durations', grid ..','.. toggle)
+grid, toggle = input_cav:match("(.*),(.*)")
+if not user_ok or not grid:match('[%d%.]+') or not toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
+reaper.SetExtState("QuantizeEnhanced", "Grid", grid, false)
+reaper.SetExtState("QuantizeEnhanced", "Toggle", toggle, false)
 grid = grid / tick
-
 function StartTimes()
     for i = 1, notecnt do
         local _, selected, _, startppqpos, endppqpos, _, _, _ = reaper.MIDI_GetNote(take, i - 1)
@@ -59,7 +55,6 @@ function StartTimes()
         end
     end
 end
-
 function NoteDurations()
     for i = 1, notecnt do
         local _, selected, _, startppqpos, endppqpos, _, _, _ = reaper.MIDI_GetNote(take, i - 1)
@@ -84,7 +79,6 @@ function NoteDurations()
         end
     end
 end
-
 function CCEvents()
     for i = 1, ccevtcnt do
         local _, selected, _, ppqpos, _, _, _, _ = reaper.MIDI_GetCC(take, i - 1)
@@ -105,7 +99,6 @@ function CCEvents()
         end
     end
 end
-
 function TextSysEvents()
     for i = 1, textsyxevtcnt do
         local _, selected, _, ppqpos, _, _ = reaper.MIDI_GetTextSysexEvt(take, i - 1)
@@ -126,16 +119,17 @@ function TextSysEvents()
         end
     end
 end
-
 function Main()
     reaper.Undo_BeginBlock()
     reaper.MIDI_DisableSort(take)
+    local flag
     if reaper.GetToggleCommandStateEx(32060, 40681) == 1 then
         reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
+        flag = true
     end
-    if state == "2" then
+    if toggle == "2" then
         NoteDurations()
-    elseif state == "1" then
+    elseif toggle == "1" then
         StartTimes()
         CCEvents()
         TextSysEvents()
@@ -145,11 +139,12 @@ function Main()
         CCEvents()
         TextSysEvents()
     end
-    reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
+    if flag then
+        reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
+    end
     reaper.MIDI_Sort(take)
     reaper.Undo_EndBlock(title, 0)
 end
-
 function CheckForNewVersion(new_version)
     local app_version = reaper.GetAppVersion()
     app_version = tonumber(app_version:match('[%d%.]+'))
@@ -160,7 +155,6 @@ function CheckForNewVersion(new_version)
       return true
     end
 end
-
 local CFNV = CheckForNewVersion(6.03)
 if CFNV then Main() end
 reaper.UpdateArrange()

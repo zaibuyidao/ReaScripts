@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Transpose
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or MIDI Takes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -32,28 +32,26 @@ function main()
         else
             take = reaper.BR_GetMouseCursorContext_Take()
         end
-        reaper.MIDI_DisableSort(take)
-        _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
-        local note = {}
-        for i = 1, notecnt do
+        reaper.MIDI_Sort(take)
+        i = reaper.MIDI_EnumSelNotes(take, -1)
+        while i ~= -1 do
+            local note = {}
             note[i] = {}
-            note[i].ret, 
-            note[i].sel, 
-            note[i].muted,  
+            note[i].ret,
+            note[i].sel,
+            note[i].muted,
             note[i].startppqpos,
             note[i].endppqpos,
-            note[i].chan, 
+            note[i].chan,
             note[i].pitch,
-            note[i].vel = reaper.MIDI_GetNote(take, i - 1)
+            note[i].vel = reaper.MIDI_GetNote(take, i)
+            if note[i].sel then
+                reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, note[i].pitch + amount, nil, true)
+            end
+            i = reaper.MIDI_EnumSelNotes(take, i)
         end
-        for i = 1, notecnt do
-            reaper.MIDI_DeleteNote(take, 0)
-        end
-        for i = 1, notecnt do
-            reaper.MIDI_InsertNote(take, note[i].sel, note[i].muted, note[i].startppqpos, note[i].endppqpos, note[i].chan, note[i].pitch + amount, note[i].vel, false)
-        end
-        if not inline_editor then reaper.SN_FocusMIDIEditor() end
         reaper.MIDI_Sort(take)
+        if not inline_editor then reaper.SN_FocusMIDIEditor() end
     else
         if not user_ok or not tonumber(amount) then return end
         count_sel_items = reaper.CountSelectedMediaItems(0)
