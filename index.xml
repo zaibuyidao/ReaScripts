@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2bcf063eea1cb6511e2f18dc4399c91608729378">
+<index version="1" name="zaibuyidao Scripts" commit="1cdd4f8bb4fbe328af58423d95908f7ce6fbc373">
+  <category name="Color">
+    <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-05T06:45:00Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1cdd4f8bb4fbe328af58423d95908f7ce6fbc373/Color/zaibuyidao_Random%20Marker%20Color.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Region And Marker Color.lua" type="script" desc="Random Region And Marker Color">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-05T06:45:00Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1cdd4f8bb4fbe328af58423d95908f7ce6fbc373/Color/zaibuyidao_Random%20Region%20And%20Marker%20Color.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Region Color.lua" type="script" desc="Random Region Color">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-05T06:45:00Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1cdd4f8bb4fbe328af58423d95908f7ce6fbc373/Color/zaibuyidao_Random%20Region%20Color.lua</source>
+      </version>
+    </reapack>
+  </category>
   <category name="Items Editing">
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
