@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1cdd4f8bb4fbe328af58423d95908f7ce6fbc373">
+<index version="1" name="zaibuyidao Scripts" commit="dffe8ffcea6af9b95441c58a80ccf5c814647b12">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -399,7 +399,7 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/88c3dfededb4e35339fc258d627b8dbb00fbad38/MIDI%20Editor/zaibuyidao_Harmony.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Humanize Velocity (Customize).lua" type="script" desc="Humanize Velocity">
+    <reapack name="zaibuyidao_Humanize Velocity (Customize).lua" type="script" desc="Humanize Velocity (Customize)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
@@ -1005,7 +1005,7 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Random%20CC%20Value.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Random Velocity (Customize).lua" type="script" desc="Random Velocity">
+    <reapack name="zaibuyidao_Random Velocity (Customize).lua" type="script" desc="Random Velocity (Customize)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
