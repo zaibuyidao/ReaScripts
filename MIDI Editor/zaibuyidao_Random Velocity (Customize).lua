@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Random Velocity
+ * ReaScript Name: Random Velocity (Customize)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
