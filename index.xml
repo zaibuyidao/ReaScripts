@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="dffe8ffcea6af9b95441c58a80ccf5c814647b12">
+<index version="1" name="zaibuyidao Scripts" commit="efd206ad6fb2705acf00c180a418a5dc8238aebe">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -888,6 +888,9 @@
       <version name="1.3" author="zaibuyidao" time="2020-05-04T05:32:12Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f7ffbae7c0176dba465dc2d6987763cfa6978fe4/MIDI%20Editor/zaibuyidao_Quantize%20(Enhanced%20Edition).lua</source>
       </version>
+      <version name="1.4" author="zaibuyidao" time="2020-05-14T15:43:11Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Quantize%20(Enhanced%20Edition).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Position (Within Time Selection).lua" type="script" desc="Random CC Position (Within Time Selection)">
       <metadata>
@@ -1003,6 +1006,60 @@
       </version>
       <version name="2.2" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Random%20CC%20Value.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Mute Notes.lua" type="script" desc="Random Mute Notes">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-14T15:43:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Random%20Mute%20Notes.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Notes Durations.lua" type="script" desc="Random Notes Durations">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-14T15:43:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Random%20Notes%20Durations.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Notes End (Customize).lua" type="script" desc="Random Notes End (Customize)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-14T15:43:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Random%20Notes%20End%20(Customize).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Notes End.lua" type="script" desc="Random Notes End">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-14T15:43:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Random%20Notes%20End.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Notes Start (Customize).lua" type="script" desc="Random Notes Start (Customize)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-14T15:43:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Random%20Notes%20Start%20(Customize).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Notes Start.lua" type="script" desc="Random Notes Start">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-14T15:43:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Random%20Notes%20Start.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Velocity (Customize).lua" type="script" desc="Random Velocity (Customize)">
