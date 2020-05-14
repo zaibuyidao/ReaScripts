@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Quantize (Enhanced Edition)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes Or CC Events. Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -51,7 +51,7 @@ function StartTimes()
                 out_pos = reaper.TimeMap2_beatsToTime(0, out_beatpos)
                 out_ppq = reaper.MIDI_GetPPQPosFromProjTime(take, out_pos)
             end
-            reaper.MIDI_SetNote(take, i - 1, true, nil, out_ppq, nil, nil, nil, nil, false)
+            reaper.MIDI_SetNote(take, i - 1, true, nil, out_ppq, nil, nil, nil, nil, true)
         end
     end
 end
@@ -75,7 +75,7 @@ function NoteDurations()
                 out_pos = reaper.TimeMap2_beatsToTime(0, out_beatpos)
                 out_ppq = reaper.MIDI_GetPPQPosFromProjTime(take, out_pos)
             end
-            reaper.MIDI_SetNote(take, i - 1, true, nil, nil, out_ppq, nil, nil, nil, false)
+            reaper.MIDI_SetNote(take, i - 1, true, nil, nil, out_ppq, nil, nil, nil, true)
         end
     end
 end
@@ -95,7 +95,7 @@ function CCEvents()
                 out_pos = reaper.TimeMap2_beatsToTime(0, out_beatpos)
                 out_ppq = reaper.MIDI_GetPPQPosFromProjTime(take, out_pos)
             end
-            reaper.MIDI_SetCC(take, i - 1, true, nil, out_ppq, nil, nil, nil, nil, false)
+            reaper.MIDI_SetCC(take, i - 1, true, nil, out_ppq, nil, nil, nil, nil, true)
         end
     end
 end
@@ -115,13 +115,14 @@ function TextSysEvents()
                 out_pos = reaper.TimeMap2_beatsToTime(0, out_beatpos)
                 out_ppq = reaper.MIDI_GetPPQPosFromProjTime(take, out_pos)
             end
-            reaper.MIDI_SetTextSysexEvt(take, i - 1, true, nil, out_ppq, nil, nil, false) 
+            reaper.MIDI_SetTextSysexEvt(take, i - 1, true, nil, out_ppq, nil, nil, true) 
         end
     end
 end
 function Main()
     reaper.Undo_BeginBlock()
-    reaper.MIDI_DisableSort(take)
+    --reaper.MIDI_DisableSort(take)
+    reaper.MIDI_Sort(take)
     local flag
     if reaper.GetToggleCommandStateEx(32060, 40681) == 1 then
         reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
@@ -139,10 +140,11 @@ function Main()
         CCEvents()
         TextSysEvents()
     end
+    reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40659)
+    reaper.MIDI_Sort(take)
     if flag then
         reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
     end
-    reaper.MIDI_Sort(take)
     reaper.Undo_EndBlock(title, 0)
 end
 function CheckForNewVersion(new_version)
