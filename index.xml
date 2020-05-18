@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9700b1a81f7185f6e1596aaa39d5da0fbffb777c">
+<index version="1" name="zaibuyidao Scripts" commit="c471faac7b49411fff0ffd84ffdc71894dd60657">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -59,6 +59,15 @@
     </reapack>
   </category>
   <category name="MIDI Editor">
+    <reapack name="zaibuyidao_All Selected Notes Length to First Selected.lua" type="script" desc="All Selected Notes Length To First Selected">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-05-18T17:47:03Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c471faac7b49411fff0ffd84ffdc71894dd60657/MIDI%20Editor/zaibuyidao_All%20Selected%20Notes%20Length%20to%20First%20Selected.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
