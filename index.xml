@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ac1a8103c47f892992bac6bbe9a087fd48edaead">
+<index version="1" name="zaibuyidao Scripts" commit="c65d902df69e42f0bd1d26c596ffeeb3a22b2cb8">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1268,6 +1268,15 @@
       </version>
       <version name="1.7" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select All Notes By Note Channel.lua" type="script" desc="Select All Notes By Note Channel">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-06-04T20:26:22Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c65d902df69e42f0bd1d26c596ffeeb3a22b2cb8/MIDI%20Editor/zaibuyidao_Select%20All%20Notes%20By%20Note%20Channel.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Bottom Notes In Chord (Leave Single Notes Selected).lua" type="script" desc="Select Bottom Notes In Chord (Leave Single Notes Selected)">
