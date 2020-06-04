@@ -6,7 +6,6 @@
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Reference: https://forum.cockos.com/showthread.php?t=225108
  * REAPER: 6.0
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
