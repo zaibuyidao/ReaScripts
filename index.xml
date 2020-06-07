@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fc0784b7753f7d6a7956434c2b7ec8a2993914a7">
+<index version="1" name="zaibuyidao Scripts" commit="1bf37788467aad17d4b0c646e0dc9b5552438ec8">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1434,6 +1434,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-06-07T10:08:56Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc0784b7753f7d6a7956434c2b7ec8a2993914a7/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Under%20Mouse).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-06-07T10:34:09Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1bf37788467aad17d4b0c646e0dc9b5552438ec8/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Under%20Mouse).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Note Length To First Selected Note Length.lua" type="script" desc="Set Note Length To First Selected Note Length">
