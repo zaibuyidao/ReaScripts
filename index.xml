@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c65d902df69e42f0bd1d26c596ffeeb3a22b2cb8">
+<index version="1" name="zaibuyidao Scripts" commit="fc0784b7753f7d6a7956434c2b7ec8a2993914a7">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -59,15 +59,6 @@
     </reapack>
   </category>
   <category name="MIDI Editor">
-    <reapack name="zaibuyidao_All Selected Notes Length to First Selected.lua" type="script" desc="All Selected Notes Length To First Selected">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-05-18T17:47:03Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c471faac7b49411fff0ffd84ffdc71894dd60657/MIDI%20Editor/zaibuyidao_All%20Selected%20Notes%20Length%20to%20First%20Selected.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -1270,15 +1261,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Select All Notes By Note Channel.lua" type="script" desc="Select All Notes By Note Channel">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-06-04T20:26:22Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c65d902df69e42f0bd1d26c596ffeeb3a22b2cb8/MIDI%20Editor/zaibuyidao_Select%20All%20Notes%20By%20Note%20Channel.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Select Bottom Notes In Chord (Leave Single Notes Selected).lua" type="script" desc="Select Bottom Notes In Chord (Leave Single Notes Selected)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -1324,6 +1306,24 @@
       <version name="1.0" author="zaibuyidao" time="2020-02-28T15:53:14Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d0ecef9d911f775bda44295f08c8a0e12f02f7d5/MIDI%20Editor/zaibuyidao_Select%20Every%20Second%20Event.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select Note With The Same Channel (Under Mouse).lua" type="script" desc="Select Note With The Same Channel (Under Mouse)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-06-07T10:08:56Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc0784b7753f7d6a7956434c2b7ec8a2993914a7/MIDI%20Editor/zaibuyidao_Select%20Note%20With%20The%20Same%20Channel%20(Under%20Mouse).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select Note With The Same Channel.lua" type="script" desc="Select Note With The Same Channel">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-06-07T10:08:56Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc0784b7753f7d6a7956434c2b7ec8a2993914a7/MIDI%20Editor/zaibuyidao_Select%20Note%20With%20The%20Same%20Channel.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Note.lua" type="script" desc="Select Note">
@@ -1425,6 +1425,24 @@
       <version name="1.0" author="zaibuyidao" time="2020-04-25T05:45:50Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58f6e10a33307e789724b3c455901e701c3e00ff/MIDI%20Editor/zaibuyidao_Set%20Events%20Channel.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Note Length (Under Mouse).lua" type="script" desc="Set Note Length (Under Mouse)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-06-07T10:08:56Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc0784b7753f7d6a7956434c2b7ec8a2993914a7/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Under%20Mouse).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Note Length To First Selected Note Length.lua" type="script" desc="Set Note Length To First Selected Note Length">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-06-07T10:08:56Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc0784b7753f7d6a7956434c2b7ec8a2993914a7/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20To%20First%20Selected%20Note%20Length.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Note Length.lua" type="script" desc="Set Note Length">
