@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set Note Length (Under Mouse)
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -19,6 +19,7 @@ function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
 take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 local cnt, index = 0, {}
 local val = reaper.MIDI_EnumSelNotes(take, -1)
+if val ~= -1 then sel_note = true end
 while val ~= -1 do
     cnt = cnt + 1
     index[cnt] = val
@@ -26,7 +27,7 @@ while val ~= -1 do
 end
 _, _, _ = reaper.BR_GetMouseCursorContext()
 _, _, note_row, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI() -- 获得鼠标下的音高
-mouse_ppq_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.BR_GetMouseCursorContext_Position()) -- 获得鼠标的位置并将工程时间转换为PPQ
+mouse_ppq_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.BR_GetMouseCursorContext_Position()) -- 获得鼠标的位置并将ProjTime转换为PPQ
 _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
 if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then enum_sel_note = true end
 reaper.Undo_BeginBlock()
@@ -43,9 +44,19 @@ for k, v in ipairs(idx) do -- 删除表格中的nil值，只保留鼠标悬停�
 		table.remove(idx, k)
 	end
 end
-for i = 1, notecnt do
-    _, selected, _, startppqpos, endppqpos, chan, pitch, _ = reaper.MIDI_GetNote(take, i - 1)
-    reaper.MIDI_SetNote(take, i - 1, true, nil, startppqpos, startppqpos + idx[1], nil, nil, nil, false)
+reaper.MIDI_DisableSort(take)
+if #index > 0 then
+    for i = 1, #index do
+        _, selected, _, startppqpos, endppqpos, chan, pitch, _ = reaper.MIDI_GetNote(take, index[i])
+        reaper.MIDI_SetNote(take, index[i], nil, nil, startppqpos, startppqpos + idx[1], nil, nil, nil, false)
+    end
+else
+    for i = 1, notecnt do
+        _, selected, _, startppqpos, endppqpos, chan, pitch, _ = reaper.MIDI_GetNote(take, i - 1)
+        reaper.MIDI_SetNote(take, i - 1, true, nil, startppqpos, startppqpos + idx[1], nil, nil, nil, false)
+    end
 end
+reaper.UpdateArrange()
+reaper.MIDI_Sort(take)
 reaper.Undo_EndBlock("Set Note Length (Under Mouse)", 0)
 reaper.SN_FocusMIDIEditor()
