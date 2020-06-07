@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Select All Notes By Note Channel
+ * ReaScript Name: Select Note With The Same Channel
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -12,7 +12,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-6-5)
+ * v1.0 (2020-6-7)
   + Initial release
 --]]
 

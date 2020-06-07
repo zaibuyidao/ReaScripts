@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: All Selected Notes Length To First Selected
+ * ReaScript Name: Set Note Length To First Selected Note Length
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -19,8 +19,10 @@
 function Main()
     take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
+    _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
     local cnt, index = 0, {}
     local val = reaper.MIDI_EnumSelNotes(take, -1)
+    if val ~= -1 then sel_note = true end
     while val ~= - 1 do
         cnt = cnt + 1
         index[cnt] = val
@@ -36,9 +38,19 @@ function Main()
         end
         reaper.UpdateArrange()
         reaper.MIDI_Sort(take)
+    elseif #index == 1 then
+        local _, _, _, startpos, endpos, _, _, _ = reaper.MIDI_GetNote(take, index[1])
+        local notelen = endpos-startpos
+        reaper.MIDI_DisableSort(take)
+        for i = 1, notecnt do
+            local _, _, _, startppqpos, endppqpos, _, _, _ = reaper.MIDI_GetNote(take, i - 1)
+            reaper.MIDI_SetNote(take, i - 1, false, nil, startppqpos, startppqpos+notelen, nil, nil, nil, false)
+        end
+        reaper.UpdateArrange()
+        reaper.MIDI_Sort(take)
     end
 end
-script_title = "All Selected Notes Length To First Selected"
+script_title = "Set Note Length To First Selected Note Length"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, 0)
