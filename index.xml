@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1bf37788467aad17d4b0c646e0dc9b5552438ec8">
+<index version="1" name="zaibuyidao Scripts" commit="56780b7669cb23577c1ca84c07b981f0cfab3164">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1692,6 +1692,24 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Time%20(QN).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Transform CC (For Selected CC).lua" type="script" desc="Transform CC (For Selected CC)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-06-24T16:22:25Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/56780b7669cb23577c1ca84c07b981f0cfab3164/MIDI%20Editor/zaibuyidao_Transform%20CC%20(For%20Selected%20CC).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Transform CC.lua" type="script" desc="Transform CC">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-06-24T16:22:25Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/56780b7669cb23577c1ca84c07b981f0cfab3164/MIDI%20Editor/zaibuyidao_Transform%20CC.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Transpose.lua" type="script" desc="Transpose">
