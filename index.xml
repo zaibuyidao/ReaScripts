@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="56780b7669cb23577c1ca84c07b981f0cfab3164">
+<index version="1" name="zaibuyidao Scripts" commit="ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1848,6 +1848,30 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-04-25T05:45:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/58f6e10a33307e789724b3c455901e701c3e00ff/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Go To Marker (Simplified).lua" type="script" desc="Go To Marker (Simplified)">
+      <version name="1.0" author="zaibuyidao" time="2020-07-13T18:54:44Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c/Utility/zaibuyidao_Go%20To%20Marker%20(Simplified).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Go To Marker.lua" type="script" desc="Go To Marker">
+      <version name="1.0" author="zaibuyidao" time="2020-07-13T18:54:44Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c/Utility/zaibuyidao_Go%20To%20Marker.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Go To Region (Simplified).lua" type="script" desc="Go To Region (Simplified)">
+      <version name="1.0" author="zaibuyidao" time="2020-07-13T18:54:44Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c/Utility/zaibuyidao_Go%20To%20Region%20(Simplified).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Go To Region.lua" type="script" desc="Go To Region">
+      <version name="1.0" author="zaibuyidao" time="2020-07-13T18:54:44Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c/Utility/zaibuyidao_Go%20To%20Region.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
