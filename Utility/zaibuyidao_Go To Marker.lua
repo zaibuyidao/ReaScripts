@@ -1,13 +1,13 @@
 --[[
  * ReaScript Name: Go To Marker
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * Reference: amagalma_Go to region marker (choose from menu list).lua
  * REAPER: 6.0
- * provides: [main=main,midi_editor,midi_inlineeditor] .
+ * provides: [main=main,midi_editor] .
 --]]
 
 --[[
@@ -16,7 +16,6 @@
   + Initial release
 --]]
 
-local window, _, _ = reaper.BR_GetMouseCursorContext()
 if not reaper.APIExists("JS_Window_Find") then
   reaper.MB("请右键单击并安装 'js_ReaScriptAPI: API functions for ReaScripts'. 然后重新启动 REAPER 并再次运行脚本. 谢谢!", "你必须安装 JS_ReaScriptAPI", 0)
   local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
@@ -50,8 +49,7 @@ while true do
     end
   end
 end
-reaper.Undo_BeginBlock()
-local menu = "#Go To Marker|#[ID] [Hr:Mn:Sc:Fr] [Meas:Beat] [Name]||"
+local menu = "#MARKERS|#[ID] [Hr:Mn:Sc:Fr] [Meas:Beat] [Name]||"
 for m = 1, #markers do
   local space = "      "
   space = space:sub(tostring(markers[m].idx):len()*2)
@@ -74,7 +72,7 @@ gfx.quit()
 if selection > 0 then
   reaper.GoToMarker(0, selection - 2, true) -- 注意此处对应标题行数，一行-1，两行则-2
 end
-if window == "midi_editor" then reaper.SN_FocusMIDIEditor() end
+local window, _, _ = reaper.BR_GetMouseCursorContext()
+local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
+if window == "midi_editor" and not inline_editor then reaper.SN_FocusMIDIEditor() end
 reaper.defer(function() end)
-reaper.Undo_EndBlock("Go To Marker", 0)
-reaper.UpdateArrange()
