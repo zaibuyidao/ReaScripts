@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="4a038d1c9139418d69bc62a992e63bd123b9995e">
+<index version="1" name="zaibuyidao Scripts" commit="713ec8d1344d4e2e414934a5dccc02d68633f174">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -339,6 +339,12 @@
       <version name="1.0" author="zaibuyidao" time="2020-03-11T11:37:03Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/562ffc00aac343debf301ad3992641e1566dfa89/MIDI%20Editor/zaibuyidao_Glissando.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Grid.lua" type="script" desc="Grid">
+      <version name="1.0" author="zaibuyidao" time="2020-07-20T13:43:31Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/713ec8d1344d4e2e414934a5dccc02d68633f174/MIDI%20Editor/zaibuyidao_Grid.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Groove Quantize (Limit Range).lua" type="script" desc="Groove Quantize (Limit Range)">
@@ -1850,46 +1856,34 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/58f6e10a33307e789724b3c455901e701c3e00ff/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Go To Marker (Simplified).lua" type="script" desc="Go To Marker (Simplified)">
-      <version name="1.0" author="zaibuyidao" time="2020-07-13T18:54:44Z">
+    <reapack name="zaibuyidao_Markers Lite.lua" type="script" desc="Markers Lite">
+      <version name="1.0" author="zaibuyidao" time="2020-07-20T13:43:31Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c/Utility/zaibuyidao_Go%20To%20Marker%20(Simplified).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-07-16T14:22:12Z">
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4a038d1c9139418d69bc62a992e63bd123b9995e/Utility/zaibuyidao_Go%20To%20Marker%20(Simplified).lua</source>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/713ec8d1344d4e2e414934a5dccc02d68633f174/Utility/zaibuyidao_Markers%20Lite.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Go To Marker.lua" type="script" desc="Go To Marker">
-      <version name="1.0" author="zaibuyidao" time="2020-07-13T18:54:44Z">
+    <reapack name="zaibuyidao_Markers.lua" type="script" desc="Markers">
+      <version name="1.0" author="zaibuyidao" time="2020-07-20T13:43:31Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c/Utility/zaibuyidao_Go%20To%20Marker.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-07-16T14:22:12Z">
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4a038d1c9139418d69bc62a992e63bd123b9995e/Utility/zaibuyidao_Go%20To%20Marker.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Go To Region (Simplified).lua" type="script" desc="Go To Region (Simplified)">
-      <version name="1.0" author="zaibuyidao" time="2020-07-13T18:54:44Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c/Utility/zaibuyidao_Go%20To%20Region%20(Simplified).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-07-16T14:22:12Z">
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4a038d1c9139418d69bc62a992e63bd123b9995e/Utility/zaibuyidao_Go%20To%20Region%20(Simplified).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Go To Region.lua" type="script" desc="Go To Region">
-      <version name="1.0" author="zaibuyidao" time="2020-07-13T18:54:44Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ed1faa5b0ac69d3ba5975fe93f6e13d35c69d05c/Utility/zaibuyidao_Go%20To%20Region.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-07-16T14:22:12Z">
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4a038d1c9139418d69bc62a992e63bd123b9995e/Utility/zaibuyidao_Go%20To%20Region.lua</source>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/713ec8d1344d4e2e414934a5dccc02d68633f174/Utility/zaibuyidao_Markers.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
       <version name="1.0" author="zaibuyidao" time="2020-04-14T16:15:42Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf/Utility/zaibuyidao_MIDI%20Channel%20From%20Track%20Send.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Regions Lite.lua" type="script" desc="Regions Lite">
+      <version name="1.0" author="zaibuyidao" time="2020-07-20T13:43:31Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/713ec8d1344d4e2e414934a5dccc02d68633f174/Utility/zaibuyidao_Regions%20Lite.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Regions.lua" type="script" desc="Regions">
+      <version name="1.0" author="zaibuyidao" time="2020-07-20T13:43:31Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/713ec8d1344d4e2e414934a5dccc02d68633f174/Utility/zaibuyidao_Regions.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Project Grid.lua" type="script" desc="Set Project Grid">
