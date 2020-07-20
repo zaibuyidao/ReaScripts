@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Go To Marker
- * Version: 1.1
+ * ReaScript Name: Regions Lite
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -26,9 +26,9 @@ if not reaper.APIExists("JS_Window_Find") then
   end
   return reaper.defer(function() end)
 end
-local _, num_markers = reaper.CountProjectMarkers(0)
-if num_markers < 1 then
-  reaper.MB("项目中没有标记.", "没有任何标记...", 0)
+local _, _, num_regions = reaper.CountProjectMarkers(0)
+if num_regions < 1 then
+  reaper.MB("项目中没有区域标记.", "没有任何区域标记...", 0)
   return reaper.defer(function() end)
 end
 local markers = {}
@@ -40,8 +40,8 @@ while true do
   if ok == 0 then
     break
   else
-    if not isrgn then
-      if math.abs(cur_pos - pos) < 0.001 then
+    if isrgn then -- isrgn = True 则为区域
+      if cur_pos >= pos and cur_pos < rgnend then
         markers[#markers + 1] = {cur = true, pos = pos, name = name, idx = markrgnindexnumber}
       else
         markers[#markers + 1] = {pos = pos, name = name, idx = markrgnindexnumber}
@@ -49,30 +49,26 @@ while true do
     end
   end
 end
-local menu = "#MARKERS|#[ID] [Hr:Mn:Sc:Fr] [Meas:Beat] [Name]||"
+local menu = "#REGIONS|"
 for m = 1, #markers do
-  local space = "      "
-  space = space:sub(tostring(markers[m].idx):len()*2)
-  tiemcode_2 = reaper.format_timestr_pos(markers[m].pos, "", 2)
-  tiemcode_5 = reaper.format_timestr_pos(markers[m].pos, "", 5)
-  menu = menu .. (markers[m].cur and "!" or "") .. markers[m].idx .. space .. tiemcode_5 .. space .. tiemcode_2 .. space .. (markers[m].name == "" and "(未命名)" or markers[m].name) .. "|"
+  local space = "       "
+    space = space:sub(tostring(markers[m].idx):len() * 2)
+    menu = menu .. (markers[m].cur and "!" or "") .. markers[m].idx .. space .. (markers[m].name == "" and "(未命名)" or markers[m].name) .. "|"
 end
-local title = "Hidden gfx window for showing the markers showmenu"
+local title = "Hidden gfx window for showing the regions showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
-local HWND = reaper.JS_Window_Find(title, true)
+local hwnd = reaper.JS_Window_Find(title, true)
 local out = 0
-if HWND then
+if hwnd then
   out = 7000
-  reaper.JS_Window_Move(HWND, -out, -out)
+  reaper.JS_Window_Move(hwnd, -out, -out)
 end
 local x, y = reaper.GetMousePosition()
 gfx.x, gfx.y = x - 7 + out, y - 30 + out
 local selection = gfx.showmenu(menu)
 gfx.quit()
-if selection > 0 then
-  reaper.GoToMarker(0, selection - 2, true) -- 注意此处对应标题行数，一行-1，两行则-2
-end
+if selection > 0 then reaper.GoToRegion(0, selection - 1, true) end
 local window, _, _ = reaper.BR_GetMouseCursorContext()
 local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
-if window == "midi_editor" and not inline_editor then reaper.SN_FocusMIDIEditor() end
+if window == "midi_editor" and not inline_editor then reaper.SN_FocusMIDIEditor() end -- Focus MIDI Editor
 reaper.defer(function() end)
