@@ -43,7 +43,7 @@ function main()
     or cc_lane == "w"
     or cc_lane == "x"
     or cc_lane == "y"
-    or cc_lane == "x"
+    or cc_lane == "z"
     then return end
     if cc_lane == "v" then -- CC: Set CC lane to Velocity
         parameter = 40237
