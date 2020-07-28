@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Split Notes
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,14 +13,15 @@
 
 --[[
  * Changelog:
- * v1.3 (2020-1-30)
-  + Bug fix
  * v1.0 (2019-12-12)
   + Initial release
 --]]
 
+function Msg(param)
+  reaper.ShowConsoleMsg(tostring(param) .. "\n")
+end
 function SplitNotes(div)
-  if div == nil or div <= 0 then return end
+  if div == nil then return end
   local midieditor, take, notes, len, len_div
   midieditor = reaper.MIDIEditor_GetActive()
   if midieditor == nil then return end
@@ -32,7 +33,11 @@ function SplitNotes(div)
     notes_t = {}
     for i = 1, notes do
       notes_t[i] = {}
-      _, notes_t[i].sel, notes_t[i].muted, notes_t[i].start, notes_t[i].ending, notes_t[i].chan, notes_t[i].pitch, notes_t[i].vel = reaper.MIDI_GetNote(take, i-1)
+      _, notes_t[i].sel, notes_t[i].muted, notes_t[i].start, notes_t[i].ending, notes_t[i].chan, notes_t[i].pitch, notes_t[i].vel = reaper.MIDI_GetNote(take, i - 1)
+      if notes_t[i].sel then
+        if div > notes_t[i].ending - notes_t[i].start then return end
+        -- Msg(div .. " -- " .. notes_t[i].ending - notes_t[i].start)
+      end
     end
     
     for i = 1, notes do reaper.MIDI_DeleteNote(take, 0) end
@@ -42,7 +47,7 @@ function SplitNotes(div)
         len = notes_t[i].ending - notes_t[i].start
         len_div = math.floor(len / div)
         mult_len = notes_t[i].start + div * len_div
-		
+
         for j = 1, len_div do
           reaper.MIDI_InsertNote(
             take, 
@@ -88,10 +93,12 @@ function SplitNotes(div)
 end
 
 script_title = "Split Notes"
-
-userOK, div_ret = reaper.GetUserInputs('Split Notes', 1, 'Length', '240')
+div_ret = reaper.GetExtState("SplitNotes", "Length")
+if (div_ret == "") then div_ret = "240" end
+user_ok, div_ret = reaper.GetUserInputs('Split Notes', 1, 'Length', div_ret)
+reaper.SetExtState("SplitNotes", "Length", div_ret, false)
 div = tonumber(div_ret)
-if not userOK then return reaper.SN_FocusMIDIEditor() end
+if not user_ok then return reaper.SN_FocusMIDIEditor() end
 
 if div ~= nil then
   reaper.Undo_BeginBlock()  
