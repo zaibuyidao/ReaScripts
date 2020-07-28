@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="4ad097c7034d7929f4a16ac72eab7f13365fa3d3">
+<index version="1" name="zaibuyidao Scripts" commit="d686c9a6b0533c43ca39baae698e67948bafb79e">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1391,6 +1391,12 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Select%20Wheel.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set CC Lane.lua" type="script" desc="Set CC Lane">
+      <version name="1.0" author="zaibuyidao" time="2020-07-28T20:22:16Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d686c9a6b0533c43ca39baae698e67948bafb79e/MIDI%20Editor/zaibuyidao_Set%20CC%20Lane.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value (Percentages).lua" type="script" desc="Set CC Value (Percentages)">
