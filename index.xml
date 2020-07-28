@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="713ec8d1344d4e2e414934a5dccc02d68633f174">
+<index version="1" name="zaibuyidao Scripts" commit="4ad097c7034d7929f4a16ac72eab7f13365fa3d3">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1168,6 +1168,9 @@
       <version name="1.4" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Random%20Velocity.lua</source>
       </version>
+      <version name="1.5" author="zaibuyidao" time="2020-07-28T13:11:50Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4ad097c7034d7929f4a16ac72eab7f13365fa3d3/MIDI%20Editor/zaibuyidao_Random%20Velocity.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Rhythm Layer Selection.lua" type="script" desc="Rhythm Layer Selection">
       <metadata>
@@ -1616,6 +1619,9 @@
       <version name="1.3" author="zaibuyidao" time="2020-02-02T14:38:01Z">
         <changelog><![CDATA[+ Bug fix]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1ff8618062d88c4a86196cbf7b3709abeafa1824/MIDI%20Editor/zaibuyidao_Split%20Notes.lua</source>
+      </version>
+      <version name="1.4" author="zaibuyidao" time="2020-07-28T13:11:50Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4ad097c7034d7929f4a16ac72eab7f13365fa3d3/MIDI%20Editor/zaibuyidao_Split%20Notes.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum Down.lua" type="script" desc="Strum Down">
