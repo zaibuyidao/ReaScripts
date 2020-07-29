@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Length (Enhanced Edition)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -15,6 +15,9 @@
   + Initial release
 --]]
 
+function Msg(param)
+  reaper.ShowConsoleMsg(tostring(param) .. "\n")
+end
 local title = "Length (Enhanced Edition)"
 local HWND =  reaper.MIDIEditor_GetActive()
 if not HWND then return end
@@ -117,25 +120,26 @@ function StretchSelectedCCs(f)
   reaper.MIDI_Sort(take)
 end
 
-local retval, userInputsCSV = reaper.GetUserInputs('Length', 2, 'Percent,0=Start+Dur 1=Start 2=Durations', '200,0')
-if not retval then return reaper.SN_FocusMIDIEditor() end
-local percent, toggle = userInputsCSV:match("(%d*),(%d*)")
-reaper.SetExtState("Length", "ToggleValue", toggle, true)
-local has_state = reaper.HasExtState("Length", "ToggleValue")
-if has_state == true then
-  state = reaper.GetExtState("Length", "ToggleValue")
-end
+local percent = reaper.GetExtState("LengthEnhancedVersion", "Percent")
+if (percent == "") then percent = "200" end
+local toggle = reaper.GetExtState("LengthEnhancedVersion", "Toggle")
+if (toggle == "") then toggle = "0" end
+local user_ok, input_csv = reaper.GetUserInputs('Length', 2, 'Percent,0=Start+Dur 1=Start 2=Durations', percent ..','.. toggle)
+if not user_ok then return reaper.SN_FocusMIDIEditor() end
+percent, toggle = input_csv:match("(%d*),(%d*)")
+reaper.SetExtState("LengthEnhancedVersion", "Percent", percent, false)
+reaper.SetExtState("LengthEnhancedVersion", "Toggle", toggle, false)
 
-function Main()
-  if retval then
+function main()
+  if user_ok then
     local func
-    if not percent:match('[%d%.]+') or not tonumber(percent:match('[%d%.]+')) then return end
+    if not percent:match('[%d%.]+') or not tonumber(percent:match('[%d%.]+')) or not toggle:match('[%d%.]+') or not tonumber(toggle:match('[%d%.]+')) then return end
     func = load("local x = ... return x*"..tonumber(percent:match('[%d%.]+')) / 100)
     if not func then return end
     reaper.Undo_BeginBlock()
-    if state == "2" then
+    if toggle == "2" then
       Length2(func)
-    elseif state == "1" then
+    elseif toggle == "1" then
       Length1(func)
     else
       StretchSelectedNotes(func)
@@ -157,6 +161,6 @@ function CheckForNewVersion(new_version)
 end
 
 local CFNV = CheckForNewVersion(6.03)
-if CFNV then Main() end
+if CFNV then main() end
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
