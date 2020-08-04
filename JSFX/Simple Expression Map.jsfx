@@ -1,5 +1,5 @@
 desc: Simple Expression Map
-version: 1.0
+version: 1.1
 changelog: init
 author: zaibuyidao
 website: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -63,6 +63,7 @@ while (midirecv(offset,msg1,msg2,msg3)) (
   pcStatus==pc && channel==inChannel ? (
     pcNumber=msg2;
     slider1=msg2;
+    slider5=velocity;
     midisend(offset, noteOn+outChannel, pcNumber, velocity);
     //send note-off
     midisend(offset, noteOff+outChannel, pcNumber, 0);
