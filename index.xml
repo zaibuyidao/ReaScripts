@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="429ecc4bb46b56b99cb485abbe1c9215585801f7">
+<index version="1" name="zaibuyidao Scripts" commit="9724ed813d671367b2ca8479397a1d5ec2214cdd">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -828,7 +828,7 @@
         <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Move%20Edit%20Cursor%20To%20X.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Note To Program Change (For JSFX-Simple Expression Map).lua" type="script" desc="Note To Program Change">
+    <reapack name="zaibuyidao_Note To Program Change (For JSFX-Simple Expression Map).lua" type="script" desc="Note To Program Change (For JSFX-Simple Expression Map)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
@@ -897,7 +897,7 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Rhythm.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Program Change To Note (For JSFX-Simple Expression Map).lua" type="script" desc="Program Change To Note">
+    <reapack name="zaibuyidao_Program Change To Note (For JSFX-Simple Expression Map).lua" type="script" desc="Program Change To Note (For JSFX-Simple Expression Map)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
