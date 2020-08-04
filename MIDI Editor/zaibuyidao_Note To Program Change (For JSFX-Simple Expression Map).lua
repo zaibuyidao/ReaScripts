@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Note To Program Change
+ * ReaScript Name: Note To Program Change (For JSFX-Simple Expression Map)
  * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao
