@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="cb10158d7bfee73c8ce195dabbc0d000115f18a9">
+<index version="1" name="zaibuyidao Scripts" commit="557688be5055a9c2aa266e9d391ee94bd6e227dd">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -864,6 +864,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-08-05T14:07:02Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cb10158d7bfee73c8ce195dabbc0d000115f18a9/MIDI%20Editor/zaibuyidao_Note%20To%20Program%20Change%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2020-08-05T17:27:14Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/557688be5055a9c2aa266e9d391ee94bd6e227dd/MIDI%20Editor/zaibuyidao_Note%20To%20Program%20Change%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Notes Become Pitch Bend.lua" type="script" desc="Notes Become Pitch Bend">
