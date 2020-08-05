@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Note To Program Change (For JSFX-Simple Expression Map)
  * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -42,7 +42,7 @@ function main()
         reaper.MIDI_InsertCC(take, false, false, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
         reaper.MIDI_InsertCC(take, false, false, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
       end
-      if vel > 1 or vel < 127 then
+      if vel > 1 and vel < 127 then
         MSB = 0
         LSB = 0
         reaper.MIDI_InsertCC(take, false, false, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
