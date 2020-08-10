@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Program Change To Note (For JSFX-Simple Expression Map)
  * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Program Change Event. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -22,18 +22,19 @@ end
 
 function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-  retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
+  _, _, ccevtcnt, _ = reaper.MIDI_CountEvts(take)
   reaper.MIDI_DisableSort(take)
-  for i = 1, ccs do
-    retval, sel, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i - 1)
-    if sel == true then
-      if chanmsg == 176 then
-        cc_bank = msg3
-        if cc_bank == 0 then cc_bank = 96 end
+
+  for i = 1, ccevtcnt do
+    retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i - 1)
+    if selected == true then
+      if chanmsg == 176 and msg2 == 32 then
+        vel = msg3
+        if vel == 0 then vel = 96 end
       end
       if chanmsg == 192 then
-        pc_num = msg2
-        reaper.MIDI_InsertNote(take, false, false, ppqpos, ppqpos+60, 0, pc_num, cc_bank, false)
+        pitch = msg2
+        reaper.MIDI_InsertNote(take, false, false, ppqpos, ppqpos+60, chan, pitch, vel, false)
       end
       flag = true
     end

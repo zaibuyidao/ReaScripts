@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Bank/Program Select
- * Version: 2.0
+ * ReaScript Name: Bank/Program Select (Bank Number)
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,9 +11,11 @@
 
 --[[
  * Changelog:
- * v1.0 (2019-12-12)
+ * v1.0 (2020-8-10)
   + Initial release
 --]]
+
+-- Use the formula bank = MSB × 128 + LSB to find the bank number to use in script.
 
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
@@ -36,20 +38,17 @@ function Main()
     index[count] = value
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
-
-  local MSB = reaper.GetExtState("BankProgramSelect", "MSB")
-  if (MSB == "") then MSB = "0" end
-  local LSB = reaper.GetExtState("BankProgramSelect", "LSB")
-  if (LSB == "") then LSB = "0" end
-  local PC = reaper.GetExtState("BankProgramSelect", "PC")
+  
+  local BANK = reaper.GetExtState("BankProgramSelectBankNumber", "BANK")
+  if (BANK == "") then BANK = "0" end
+  local PC = reaper.GetExtState("BankProgramSelectBankNumber", "PC")
   if (PC == "") then PC = "0" end
 
-  local user_ok, userInputsCSV = reaper.GetUserInputs("Bank/Program Select", 3, "Bank MSB,Bank LSB,Program Change", MSB ..','.. LSB ..','.. PC)
+  local user_ok, userInputsCSV = reaper.GetUserInputs("Bank/Program Select", 2, "Bank,Program Change", BANK ..','.. PC)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local MSB, LSB, PC = userInputsCSV:match("(.*),(.*),(.*)")
-  reaper.SetExtState("BankProgramSelect", "MSB", MSB, false)
-  reaper.SetExtState("BankProgramSelect", "LSB", LSB, false)
-  reaper.SetExtState("BankProgramSelect", "PC", PC, false)
+  local BANK, PC = userInputsCSV:match("(.*),(.*)")
+  reaper.SetExtState("BankProgramSelectBankNumber", "BANK", BANK, false)
+  reaper.SetExtState("BankProgramSelectBankNumber", "PC", PC, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -179,23 +178,20 @@ function Main()
   elseif (PC == "F8") then PC = "125"
   elseif (PC == "F#8") then PC = "126"
   elseif (PC == "G8") then PC = "127"
-  elseif not tonumber(PC) then
+  elseif note tonumber(PC) then
+    BANK = "0"
+    reaper.SetExtState("BankProgramSelectBankNumber", "PC", PC, false)
+    return reaper.SN_FocusMIDIEditor()
+  end
+
+  if not tonumber(BANK) then
     PC = "0"
-    reaper.SetExtState("BankProgramSelect", "PC", PC, false)
+    reaper.SetExtState("BankProgramSelectBankNumber", "BANK", BANK, false)
     return reaper.SN_FocusMIDIEditor()
   end
 
-  if not tonumber(MSB) then
-    MSB = "0"
-    reaper.SetExtState("BankProgramSelect", "MSB", MSB, false)
-    return reaper.SN_FocusMIDIEditor()
-  end
-
-  if not tonumber(LSB) then
-    LSB = "0"
-    reaper.SetExtState("BankProgramSelect", "LSB", LSB, false)
-    return reaper.SN_FocusMIDIEditor()
-  end
+  local MSB = math.modf(BANK / 128)
+  local LSB = math.fmod(BANK, 128)
 
   if #index > 0 then
     for i = 1, #index do
@@ -215,7 +211,7 @@ function Main()
   reaper.UpdateArrange()
 end
 
-script_title = "Bank/Program Select"
+script_title = "Bank/Program Select (Bank Number)"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, 0)

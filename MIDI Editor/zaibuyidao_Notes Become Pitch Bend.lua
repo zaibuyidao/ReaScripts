@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Notes Become Pitch Bend
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -15,6 +15,10 @@
  * v1.0 (2019-12-12)
   + Initial release
 --]]
+
+function Msg(param)
+  reaper.ShowConsoleMsg(tostring(param) .. "\n")
+end
 
 local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if take == nil then return end
@@ -65,11 +69,12 @@ if #index > 1 then
     if sel == true then
       if pitch[i-1] then
         local offset = tostring(pitch[i]-pitch[1])
-        local value = tonumber(tbl[offset])
-        value = value + 8192
-        local lsb = value & 0x7f
-        local msb = value >> 7 & 0x7f
-        reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, lsb, msb)
+          local value = tonumber(tbl[offset])
+          if value == nil then return reaper.MB("Please adjust the note interval. The limit is only one octaves.","Error",0) end
+          value = value + 8192
+          local lsb = value & 0x7f
+          local msb = value >> 7 & 0x7f
+          reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, lsb, msb)
       end
       if i == #index then
         reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
