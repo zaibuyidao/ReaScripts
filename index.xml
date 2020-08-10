@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="557688be5055a9c2aa266e9d391ee94bd6e227dd">
+<index version="1" name="zaibuyidao Scripts" commit="ea2c3e96c2489a4b74b7abd6d3ac055e5e82786a">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -85,7 +85,16 @@
     </reapack>
   </category>
   <category name="MIDI Editor">
-    <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
+    <reapack name="zaibuyidao_Bank Program Select (Bank Number).lua" type="script" desc="Bank/Program Select (Bank Number)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-08-10T17:09:21Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ea2c3e96c2489a4b74b7abd6d3ac055e5e82786a/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select%20(Bank%20Number).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank/Program Select">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
@@ -109,6 +118,9 @@
       </version>
       <version name="1.9" author="zaibuyidao" time="2020-08-04T13:11:05Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/429ecc4bb46b56b99cb485abbe1c9215585801f7/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
+      </version>
+      <version name="2.0" author="zaibuyidao" time="2020-08-10T17:09:21Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ea2c3e96c2489a4b74b7abd6d3ac055e5e82786a/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion (Start Base) +01.lua" type="script" desc="Chord Inversion (Start Base) +01">
@@ -868,6 +880,9 @@
       <version name="1.2" author="zaibuyidao" time="2020-08-05T17:27:14Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/557688be5055a9c2aa266e9d391ee94bd6e227dd/MIDI%20Editor/zaibuyidao_Note%20To%20Program%20Change%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-08-10T17:09:21Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ea2c3e96c2489a4b74b7abd6d3ac055e5e82786a/MIDI%20Editor/zaibuyidao_Note%20To%20Program%20Change%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Notes Become Pitch Bend.lua" type="script" desc="Notes Become Pitch Bend">
       <metadata>
@@ -885,6 +900,9 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Notes%20Become%20Pitch%20Bend.lua</source>
+      </version>
+      <version name="1.4" author="zaibuyidao" time="2020-08-10T17:09:21Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ea2c3e96c2489a4b74b7abd6d3ac055e5e82786a/MIDI%20Editor/zaibuyidao_Notes%20Become%20Pitch%20Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Selected Arpeggio.lua" type="script" desc="Paste Selected Arpeggio">
@@ -936,6 +954,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-08-04T13:11:05Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/429ecc4bb46b56b99cb485abbe1c9215585801f7/MIDI%20Editor/zaibuyidao_Program%20Change%20To%20Note%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-08-10T17:09:21Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ea2c3e96c2489a4b74b7abd6d3ac055e5e82786a/MIDI%20Editor/zaibuyidao_Program%20Change%20To%20Note%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Quantize (Enhanced Edition).lua" type="script" desc="Quantize (Enhanced Edition)">
