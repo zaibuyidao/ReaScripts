@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Bank/Program Select (Bank Number)
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -178,14 +178,14 @@ function Main()
   elseif (PC == "F8") then PC = "125"
   elseif (PC == "F#8") then PC = "126"
   elseif (PC == "G8") then PC = "127"
-  elseif note tonumber(PC) then
-    BANK = "0"
+  elseif not tonumber(PC) then
+    PC = "0"
     reaper.SetExtState("BankProgramSelectBankNumber", "PC", PC, false)
     return reaper.SN_FocusMIDIEditor()
   end
 
   if not tonumber(BANK) then
-    PC = "0"
+    BANK = "0"
     reaper.SetExtState("BankProgramSelectBankNumber", "BANK", BANK, false)
     return reaper.SN_FocusMIDIEditor()
   end
