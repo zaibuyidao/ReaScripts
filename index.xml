@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="12595584199f28ca5a123e302eee3350382c4759">
+<index version="1" name="zaibuyidao Scripts" commit="dee132278c425b45b45e8435a21b43076f4356c3">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -81,6 +81,10 @@
       <version name="1.2" author="zaibuyidao" time="2020-08-05T14:07:02Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/cb10158d7bfee73c8ce195dabbc0d000115f18a9/JSFX/Simple%20Expression%20Map.jsfx</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-08-13T14:26:53Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/dee132278c425b45b45e8435a21b43076f4356c3/JSFX/Simple%20Expression%20Map.jsfx</source>
       </version>
     </reapack>
   </category>
