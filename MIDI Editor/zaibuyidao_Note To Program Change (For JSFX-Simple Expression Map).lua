@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Note To Program Change (For JSFX-Simple Expression Map)
  * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -31,12 +31,19 @@ function main()
     val = reaper.MIDI_EnumSelNotes(take, val)
   end
   if cnt == 0 then return reaper.SN_FocusMIDIEditor() end
-  local MSB = reaper.GetExtState("NoteToProgramChange", "MSB")
-  if (MSB == "") then MSB = "0" end
-  local LSB
-  local user_ok, MSB = reaper.GetUserInputs('Confirm instrument group', 1, 'Group number', MSB)
-  if not user_ok or not tonumber(MSB) then return reaper.SN_FocusMIDIEditor() end
-  reaper.SetExtState("NoteToProgramChange", "MSB", MSB, false)
+
+  local MSB, LSB = {}
+
+  local midi_ok, midi_string = reaper.MIDI_GetAllEvts(take, "")
+  local string_pos, ticks, table_events, offset, flags, msg = 1, 0, {}
+  local pack, unpack = string.pack, string.unpack
+  while string_pos < #midi_string do
+      offset, flags, msg, string_pos = unpack("i4Bs4", midi_string, string_pos)
+      if flags&1 ==1 and #msg >= 3 and msg:byte(1)>>4 == 8 and msg:byte(3) ~= -1 then
+        MSB[#MSB+1] = msg:byte(3)
+      end
+  end
+
   reaper.MIDI_DisableSort(take)
 
   for i = 1, #index do
@@ -44,27 +51,31 @@ function main()
     if selected == true then
       if vel == 96 then
         LSB = 0
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
+        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 0, MSB[1]) -- CC#00
+        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
+        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
       else
         LSB = vel
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
+        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 0, MSB[1]) -- CC#00
+        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
+        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
       end
       flag = true
     end
   end
-  reaper.UpdateArrange()
+
   reaper.MIDI_Sort(take)
+
+  i = reaper.MIDI_EnumSelNotes(take, -1)
+  while i > -1 do
+    reaper.MIDI_DeleteNote(take, i)
+    i = reaper.MIDI_EnumSelNotes(take, -1)
+  end
 end
 
 script_title = "Note To Program Change"
 reaper.Undo_BeginBlock()
 main()
-if flag then
-  reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40667)
-end
+reaper.UpdateArrange()
 reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()
