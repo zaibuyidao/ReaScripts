@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="db1e3b09fd39e47235bcd44b904a9c3619364e8e">
+<index version="1" name="zaibuyidao Scripts" commit="bcc62c0620763a976342109a782f213d06c3139c">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -68,7 +68,7 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 Use JSFX-Simple Expression Map to convert Program Change message to Keyswitches.\par}
 }
 ]]></description>
-        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2020-08-04T15:36:45Z">
         <changelog><![CDATA[init]]></changelog>
@@ -93,6 +93,10 @@
       <version name="1.5" author="zaibuyidao, Tale" time="2020-08-17T02:05:50Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/db1e3b09fd39e47235bcd44b904a9c3619364e8e/JSFX/Simple%20Expression%20Map.jsfx</source>
+      </version>
+      <version name="1.6" author="zaibuyidao, Tale" time="2020-08-17T02:08:17Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/bcc62c0620763a976342109a782f213d06c3139c/JSFX/Simple%20Expression%20Map.jsfx</source>
       </version>
     </reapack>
   </category>
