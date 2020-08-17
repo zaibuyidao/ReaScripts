@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Note To Program Change (For JSFX-Simple Expression Map)
  * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.4
+ * Version: 1.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -42,20 +42,13 @@ function main()
   for i = 1, #index do
     retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
     if selected == true then
-      if vel == 127 then
-        LSB = 127
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
-      end
-      if vel == 1 then
-        LSB = 1
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
-      end
-      if vel > 1 and vel < 127 then
+      if vel == 96 then
         LSB = 0
+        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
+        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
+        reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
+      else
+        LSB = vel
         reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
         reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
         reaper.MIDI_InsertCC(take, false, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change

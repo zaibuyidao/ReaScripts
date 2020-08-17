@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Program Change To Note (For JSFX-Simple Expression Map)
  * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Program Change Event. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -34,7 +34,7 @@ function Main()
       end
       if chanmsg == 192 then
         pitch = msg2
-        reaper.MIDI_InsertNote(take, false, false, ppqpos, ppqpos+60, chan, pitch, vel, false)
+        reaper.MIDI_InsertNote(take, false, false, ppqpos, ppqpos+120, chan, pitch, vel, false)
       end
       flag = true
     end
