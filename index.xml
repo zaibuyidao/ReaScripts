@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8742662b503bd3b10516717d087319df4f4b6080">
+<index version="1" name="zaibuyidao Scripts" commit="589096b54db6a2ebab38c05ebbefe9663a4267b7">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -912,12 +912,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8742662b503bd3b10516717d087319df4f4b6080/MIDI%20Editor/zaibuyidao_Note%20Off%20Velocity%20-10.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Note Off Velocity.lua" type="script" desc="Set Off Velocity">
-      <version name="1.0" author="zaibuyidao" time="2020-08-17T19:17:01Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8742662b503bd3b10516717d087319df4f4b6080/MIDI%20Editor/zaibuyidao_Note%20Off%20Velocity.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Note To Program Change (For JSFX-Simple Expression Map).lua" type="script" desc="Note To Program Change (For JSFX-Simple Expression Map)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -1642,6 +1636,12 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2020-04-01T14:56:01Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Off Velocity.lua" type="script" desc="Set Off Velocity">
+      <version name="1.0" author="zaibuyidao" time="2020-08-18T13:38:45Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/589096b54db6a2ebab38c05ebbefe9663a4267b7/MIDI%20Editor/zaibuyidao_Set%20Off%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Velocity (Percentages).lua" type="script" desc="Set Velocity (Percentages)">
