@@ -1,12 +1,11 @@
 --[[
  * ReaScript Name: Bank/Program Select (Bank Number)
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -25,7 +24,7 @@ selected = false
 muted = false
 chan = 0
 
-function Main()
+function main()
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   item = reaper.GetMediaItemTake_Item(take)
@@ -44,7 +43,7 @@ function Main()
   local PC = reaper.GetExtState("BankProgramSelectBankNumber", "PC")
   if (PC == "") then PC = "0" end
 
-  local user_ok, userInputsCSV = reaper.GetUserInputs("Bank/Program Select", 2, "Bank,Program Change", BANK ..','.. PC)
+  local user_ok, userInputsCSV = reaper.GetUserInputs("Bank/Program Select", 2, "Bank number,Program number", BANK ..','.. PC)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   local BANK, PC = userInputsCSV:match("(.*),(.*)")
   reaper.SetExtState("BankProgramSelectBankNumber", "BANK", BANK, false)
@@ -213,6 +212,6 @@ end
 
 script_title = "Bank/Program Select (Bank Number)"
 reaper.Undo_BeginBlock()
-Main()
+main()
 reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()
