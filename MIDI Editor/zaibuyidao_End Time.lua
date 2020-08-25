@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: End Time
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -23,15 +23,17 @@ function main()
         for i = 1, count_sel_items do
             item = reaper.GetSelectedMediaItem(0, count_sel_items - i)
             take = reaper.GetTake(item, 0)
+            reaper.MIDI_DisableSort(take)
             cur_pos = reaper.GetCursorPositionEx(0)
             dur = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
             _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
             for i = 1, notecnt do
                 _, sel, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i - 1)
                 if sel == true then
-                  reaper.MIDI_SetNote(take, i - 1, sel, muted, startppqpos, dur, chan, pitch, vel, true)
+                  reaper.MIDI_SetNote(take, i - 1, sel, muted, startppqpos, dur, chan, pitch, vel, false)
                 end
             end
+            reaper.MIDI_Sort(take)
         end
     else
         take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())

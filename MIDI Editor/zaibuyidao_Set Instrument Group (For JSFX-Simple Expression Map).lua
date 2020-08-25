@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Set instrument group (For JSFX-Simple Expression Map)
  * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Program Change Event. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -30,11 +30,11 @@ function main()
     val = reaper.MIDI_EnumSelCC(take, val)
   end
   if cnt == 0 then return reaper.SN_FocusMIDIEditor() end
-  local MSB = reaper.GetExtState("NoteToProgramChange", "MSB")
+  local MSB = reaper.GetExtState("SetInstrumentGroup", "MSB")
   if (MSB == "") then MSB = "0" end
   local user_ok, MSB = reaper.GetUserInputs('Set instrument group', 1, 'Group number', MSB)
   if not user_ok or not tonumber(MSB) then return reaper.SN_FocusMIDIEditor() end
-  reaper.SetExtState("NoteToProgramChange", "MSB", MSB, false)
+  reaper.SetExtState("SetInstrumentGroup", "MSB", MSB, false)
   reaper.MIDI_DisableSort(take)
   for i = 1, #index do
     retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])

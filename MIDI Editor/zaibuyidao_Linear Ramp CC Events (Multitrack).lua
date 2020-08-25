@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Linear Ramp CC Events
+ * ReaScript Name: Linear Ramp CC Events (Multitrack)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.5
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,42 +12,21 @@
 
 --[[
  * Changelog:
- * v1.3 (2020-2-15)
-  + Perform actions based on note length
- * v1.0 (2019-12-12)
+ * v1.0 (2020-8-26)
   + Initial release
 --]]
 
-function main()
-  local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-  local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
-  if take == nil then return end
-  reaper.MIDI_DisableSort(take)
-  local cnt, index = 0, {}
-  local val = reaper.MIDI_EnumSelNotes(take, -1)
+function LRCE()
+  tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
+  cnt, index = 0, {}
+  val = reaper.MIDI_EnumSelNotes(take, -1)
   while val ~= - 1 do
     cnt = cnt + 1
     index[cnt] = val
     val = reaper.MIDI_EnumSelNotes(take, val)
   end
+  
   if #index > 0 then
-    cc_num = reaper.GetExtState("LinearRampCCEvents", "Number")
-    cc_begin = reaper.GetExtState("LinearRampCCEvents", "Begin")
-    cc_end = reaper.GetExtState("LinearRampCCEvents", "End")
-    step = reaper.GetExtState("LinearRampCCEvents", "Step")
-    if (cc_num == "") then cc_num = "11" end
-    if (cc_begin == "") then cc_begin = "90" end
-    if (cc_end == "") then cc_end = "127" end
-    if (step == "") then step = "1" end
-    local user_ok, user_input_csv = reaper.GetUserInputs("Linear Ramp CC Events", 4, "CC Number,Min Volume,Max Volume,Step", cc_num..','..cc_begin..','.. cc_end..','..step)
-    cc_num, cc_begin, cc_end, step = user_input_csv:match("(.*),(.*),(.*),(.*)")
-    if not user_ok or not tonumber(cc_num) or not tonumber(cc_begin) or not tonumber(cc_end) or not tonumber(step) then return reaper.SN_FocusMIDIEditor() end
-    cc_num, cc_begin, cc_end, step = tonumber(cc_num), tonumber(cc_begin), tonumber(cc_end), tonumber(step)
-    reaper.SetExtState("LinearRampCCEvents", "Number", cc_num, false)
-    reaper.SetExtState("LinearRampCCEvents", "Begin", cc_begin, false)
-    reaper.SetExtState("LinearRampCCEvents", "End", cc_end, false)
-    reaper.SetExtState("LinearRampCCEvents", "Step", step, false)
-
     if cc_begin >= cc_end then return reaper.SN_FocusMIDIEditor() end
     local ppq = {} -- 音符开头位置
     local ppq_end = {} -- 音符尾巴位置
@@ -82,10 +61,47 @@ function main()
       end
     end
   end
-  reaper.MIDI_Sort(take)
 end
 
-script_title = "Linear Ramp CC Events"
+function main()
+  cc_num = reaper.GetExtState("LinearRampCCEvents", "Number")
+  cc_begin = reaper.GetExtState("LinearRampCCEvents", "Begin")
+  cc_end = reaper.GetExtState("LinearRampCCEvents", "End")
+  step = reaper.GetExtState("LinearRampCCEvents", "Step")
+  if (cc_num == "") then cc_num = "11" end
+  if (cc_begin == "") then cc_begin = "90" end
+  if (cc_end == "") then cc_end = "127" end
+  if (step == "") then step = "1" end
+  local user_ok, user_input_csv = reaper.GetUserInputs("Linear Ramp CC Events", 4, "CC Number,Min Volume,Max Volume,Step", cc_num..','..cc_begin..','.. cc_end..','..step)
+  cc_num, cc_begin, cc_end, step = user_input_csv:match("(.*),(.*),(.*),(.*)")
+  if not user_ok or not tonumber(cc_num) or not tonumber(cc_begin) or not tonumber(cc_end) or not tonumber(step) then return reaper.SN_FocusMIDIEditor() end
+  cc_num, cc_begin, cc_end, step = tonumber(cc_num), tonumber(cc_begin), tonumber(cc_end), tonumber(step)
+  reaper.SetExtState("LinearRampCCEvents", "Number", cc_num, false)
+  reaper.SetExtState("LinearRampCCEvents", "Begin", cc_begin, false)
+  reaper.SetExtState("LinearRampCCEvents", "End", cc_end, false)
+  reaper.SetExtState("LinearRampCCEvents", "Step", step, false)
+
+  count_sel_items = reaper.CountSelectedMediaItems(0)
+
+  if count_sel_items > 0 then
+    for i = 1, count_sel_items do
+      item = reaper.GetSelectedMediaItem(0, i - 1)
+      take = reaper.GetTake(item, 0)
+      if not take or not reaper.TakeIsMIDI(take) then return end
+      reaper.MIDI_DisableSort(take)
+      LRCE()
+      reaper.MIDI_Sort(take)
+    end
+  else
+      take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+      if not take or not reaper.TakeIsMIDI(take) then return end
+      reaper.MIDI_DisableSort(take)
+      LRCE()
+      reaper.MIDI_Sort(take)
+    end
+end
+
+script_title = "Linear Ramp CC Events (Multitrack)"
 reaper.PreventUIRefresh(1) -- 防止UI刷新
 reaper.Undo_BeginBlock() -- 撤销块开始
 main() -- 执行函数
