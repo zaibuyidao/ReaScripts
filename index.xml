@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="dd455f4924a2371b2f560b0e7cbd1546def39cdd">
+<index version="1" name="zaibuyidao Scripts" commit="4edf0690bddc72bd58b80cee02706fb66ea1f0ee">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -843,6 +843,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events%20(Multitrack).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2020-08-26T19:30:13Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4edf0690bddc72bd58b80cee02706fb66ea1f0ee/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Linear Ramp CC Events.lua" type="script" desc="Linear Ramp CC Events">
       <metadata>
@@ -867,6 +870,9 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2020-08-25T19:34:38Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events.lua</source>
+      </version>
+      <version name="1.6" author="zaibuyidao" time="2020-08-26T19:30:13Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4edf0690bddc72bd58b80cee02706fb66ea1f0ee/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Move Edit Cursor +10.lua" type="script" desc="Move Edit Cursor +10">
@@ -2067,6 +2073,18 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-04-25T05:45:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/58f6e10a33307e789724b3c455901e701c3e00ff/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Auto Expression (Multitrack).lua" type="script" desc="Auto Expression (Multitrack)">
+      <version name="1.0" author="zaibuyidao, dangguidan" time="2020-08-26T19:30:13Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4edf0690bddc72bd58b80cee02706fb66ea1f0ee/Utility/zaibuyidao_Auto%20Expression%20(Multitrack).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Auto Expression.lua" type="script" desc="Auto Expression">
+      <version name="1.0" author="zaibuyidao, dangguidan" time="2020-08-26T19:30:13Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4edf0690bddc72bd58b80cee02706fb66ea1f0ee/Utility/zaibuyidao_Auto%20Expression.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Jump To Marker.lua" type="script" desc="Jump To Marker">
