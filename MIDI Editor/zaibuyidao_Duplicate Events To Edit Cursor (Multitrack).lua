@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Duplicate Events
+ * ReaScript Name: Duplicate Events To Edit Cursor (Multitrack)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 3.0
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -19,13 +19,6 @@
 function Msg(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
-
-title = "Duplicate Events"
-take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-if take == nil then return end
-item = reaper.GetMediaItemTake_Item(take)
-tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
-cur_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0))
 
 function table_max(t)
     local mn = nil
@@ -45,35 +38,39 @@ function table_min(t)
     return mn
 end
 
-local note_cnt, note_idx = 0, {}
-local note_val = reaper.MIDI_EnumSelNotes(take, -1)
-while note_val ~= -1 do
-    note_cnt = note_cnt + 1
-    note_idx[note_cnt] = note_val
-    note_val = reaper.MIDI_EnumSelNotes(take, note_val)
+function CountNote()
+    note_cnt, note_idx = 0, {}
+    note_val = reaper.MIDI_EnumSelNotes(take, -1)
+    while note_val ~= -1 do
+        note_cnt = note_cnt + 1
+        note_idx[note_cnt] = note_val
+        note_val = reaper.MIDI_EnumSelNotes(take, note_val)
+    end
+    
+    start_ppq = {}
+    end_ppq = {}
+    for i = 1, #note_idx do
+        _, sel, _, start_ppq[i], end_ppq[i], _, _, _ = reaper.MIDI_GetNote(take, note_idx[i])
+    end
 end
 
-local ccs_cnt, ccs_idx = 0, {}
-local ccs_val = reaper.MIDI_EnumSelCC(take, -1)
-while ccs_val ~= -1 do
-    ccs_cnt = ccs_cnt + 1
-    ccs_idx[ccs_cnt] = ccs_val
-    ccs_val = reaper.MIDI_EnumSelCC(take, ccs_val)
-end
-
-local start_ppq = {}
-local end_ppq = {}
-for i = 1, #note_idx do
-    _, sel, _, start_ppq[i], end_ppq[i], _, _, _ = reaper.MIDI_GetNote(take, note_idx[i])
-end
-
-local ppqpos = {}
-for i = 1, #ccs_idx do
-    _, sel, _, ppqpos[i], _, _, _, _ = reaper.MIDI_GetCC(take, ccs_idx[i])
+function CountCC()
+    ccs_cnt, ccs_idx = 0, {}
+    ccs_val = reaper.MIDI_EnumSelCC(take, -1)
+    while ccs_val ~= -1 do
+        ccs_cnt = ccs_cnt + 1
+        ccs_idx[ccs_cnt] = ccs_val
+        ccs_val = reaper.MIDI_EnumSelCC(take, ccs_val)
+    end
+    
+    ppqpos = {}
+    for i = 1, #ccs_idx do
+        _, sel, _, ppqpos[i], _, _, _, _ = reaper.MIDI_GetCC(take, ccs_idx[i])
+    end
 end
 
 function DuplicateNotes()
-    local note_dur = table_max(end_ppq) - table_min(start_ppq)
+    local note_dur = cur_pos - table_min(start_ppq)
     for i = 1, #note_idx do
         local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx[i])
         local start_meas = table_min(start_ppq)
@@ -88,7 +85,7 @@ function DuplicateNotes()
 end
 
 function DuplicateCCs()
-    local cc_dur = table_max(ppqpos) - table_min(ppqpos)
+    local cc_dur = cur_pos - table_min(ppqpos)
     for i = 1, #ccs_idx do
         local retval, selected, muted, cc_pos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, ccs_idx[i])
         local cc_meas = table_min(ppqpos)
@@ -107,7 +104,7 @@ function DuplicateMix()
     local mix_end
     if table_min(start_ppq) > table_min(ppqpos) then mix_start = table_min(ppqpos) elseif table_min(start_ppq) < table_min(ppqpos) then mix_start = table_min(start_ppq) elseif table_min(start_ppq) == table_min(ppqpos) then mix_start = table_min(start_ppq) end
     if table_max(end_ppq) > table_max(ppqpos) then mix_end = table_max(end_ppq) elseif table_max(end_ppq) < table_max(ppqpos) then mix_end = table_max(ppqpos) elseif table_max(end_ppq) == table_max(ppqpos) then mix_end = table_max(end_ppq) end
-    local mix_dur = math.floor(0.5 + (mix_end - mix_start))
+    local mix_dur = math.floor(0.5 + (cur_pos - mix_start))
     for i = 1, #note_idx do
         local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx[i])
         local start_meas = table_min(start_ppq)
@@ -132,16 +129,43 @@ function DuplicateMix()
     end
 end
 
+title = "Duplicate Events To Edit Cursor (Multitrack)"
+count_sel_items = reaper.CountSelectedMediaItems(0)
+
 reaper.Undo_BeginBlock()
-reaper.MIDI_DisableSort(take)
-if #note_idx > 0 and #ccs_idx == 0 then
-    DuplicateNotes()
-elseif #ccs_idx > 0 and #note_idx == 0 then
-    DuplicateCCs()
-elseif #ccs_idx > 0 and #note_idx > 0 then
-    DuplicateMix()
+if count_sel_items > 0 then
+    for i = 1, count_sel_items do
+        item = reaper.GetSelectedMediaItem(0, i - 1)
+        take = reaper.GetTake(item, 0)
+        if not take or not reaper.TakeIsMIDI(take) then return end
+        CountNote()
+        CountCC()
+        cur_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0))
+        reaper.MIDI_DisableSort(take)
+        if #note_idx > 0 and #ccs_idx == 0 then 
+            DuplicateNotes()
+        elseif #ccs_idx > 0 and #note_idx == 0 then
+            DuplicateCCs()
+        elseif #ccs_idx > 0 and #note_idx > 0 then
+            DuplicateMix()
+        end
+        reaper.MIDI_Sort(take)
+    end
+else
+    take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    if not take or not reaper.TakeIsMIDI(take) then return end
+    CountNote()
+    CountCC()
+    cur_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0))
+    reaper.MIDI_DisableSort(take)
+    if #note_idx > 0 and #ccs_idx == 0 then 
+        DuplicateNotes()
+    elseif #ccs_idx > 0 and #note_idx == 0 then
+        DuplicateCCs()
+    elseif #ccs_idx > 0 and #note_idx > 0 then
+        DuplicateMix()
+    end
+    reaper.MIDI_Sort(take)
 end
-reaper.MIDI_Sort(take)
 reaper.Undo_EndBlock(title, 0)
 reaper.UpdateArrange()
-reaper.UpdateItemInProject(item)

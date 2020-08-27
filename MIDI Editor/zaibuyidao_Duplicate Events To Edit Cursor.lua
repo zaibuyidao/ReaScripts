@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Duplicate Events
+ * ReaScript Name: Duplicate Events To Edit Cursor
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 3.0
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -20,11 +20,9 @@ function Msg(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-title = "Duplicate Events"
+title = "Duplicate Events To Edit Cursor"
 take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if take == nil then return end
-item = reaper.GetMediaItemTake_Item(take)
-tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 cur_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0))
 
 function table_max(t)
@@ -73,13 +71,13 @@ for i = 1, #ccs_idx do
 end
 
 function DuplicateNotes()
-    local note_dur = table_max(end_ppq) - table_min(start_ppq)
+    local note_dur = cur_pos - table_min(start_ppq)
     for i = 1, #note_idx do
         local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx[i])
         local start_meas = table_min(start_ppq)
         local start_tick = startppqpos - start_meas
         local tick_01 = start_tick % table_max(end_ppq)
-
+        
         reaper.MIDI_InsertNote(take, true, muted, startppqpos + note_dur, endppqpos + note_dur, chan, pitch, vel, false)
         if not (tick_01 > table_max(end_ppq)) then
             reaper.MIDI_SetNote(take, note_idx[i], false, nil, nil, nil, nil, nil, nil, false)
@@ -88,13 +86,13 @@ function DuplicateNotes()
 end
 
 function DuplicateCCs()
-    local cc_dur = table_max(ppqpos) - table_min(ppqpos)
+    local cc_dur = cur_pos - table_min(ppqpos)
     for i = 1, #ccs_idx do
         local retval, selected, muted, cc_pos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, ccs_idx[i])
         local cc_meas = table_min(ppqpos)
         local cc_tick = cc_pos - cc_meas
         local tick_02 = cc_tick % table_max(ppqpos)
-
+        
         reaper.MIDI_InsertCC(take, true, muted, cc_pos + cc_dur, chanmsg, chan, msg2, msg3)
         if not (tick_02 > table_max(ppqpos)) then
             reaper.MIDI_SetCC(take, ccs_idx[i], false, nil, nil, nil, nil, nil, nil, false)
@@ -107,7 +105,7 @@ function DuplicateMix()
     local mix_end
     if table_min(start_ppq) > table_min(ppqpos) then mix_start = table_min(ppqpos) elseif table_min(start_ppq) < table_min(ppqpos) then mix_start = table_min(start_ppq) elseif table_min(start_ppq) == table_min(ppqpos) then mix_start = table_min(start_ppq) end
     if table_max(end_ppq) > table_max(ppqpos) then mix_end = table_max(end_ppq) elseif table_max(end_ppq) < table_max(ppqpos) then mix_end = table_max(ppqpos) elseif table_max(end_ppq) == table_max(ppqpos) then mix_end = table_max(end_ppq) end
-    local mix_dur = math.floor(0.5 + (mix_end - mix_start))
+    local mix_dur = math.floor(0.5 + (cur_pos - mix_start))
     for i = 1, #note_idx do
         local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx[i])
         local start_meas = table_min(start_ppq)
@@ -144,4 +142,3 @@ end
 reaper.MIDI_Sort(take)
 reaper.Undo_EndBlock(title, 0)
 reaper.UpdateArrange()
-reaper.UpdateItemInProject(item)
