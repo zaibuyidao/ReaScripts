@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Auto Expression (Multitrack)
+ * ReaScript Name: Auto Expression
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
  * Version: 1.0
  * Author: zaibuyidao, dangguidan
@@ -26,8 +26,35 @@ function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-function autoExp()
+function noteCount() -- 音符计数
+  local cnt, index = 0, {}
+  local val = reaper.MIDI_EnumSelNotes(take, -1)
+  while val ~= - 1 do
+    cnt = cnt + 1
+    index[cnt] = val
+    val = reaper.MIDI_EnumSelNotes(take, val)
+  end
+  return cnt
+end
+
+function main()
+  take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
+  if take == nil or noteCount() < 1 then return end
+
+  min_val = reaper.GetExtState("AutoExpression", "Begin")
+  max_val = reaper.GetExtState("AutoExpression", "End")
+  if (min_val == "") then min_val = "90" end
+  if (max_val == "") then max_val = "127" end
+  local user_ok, user_input_csv = reaper.GetUserInputs("Auto expression", 2, "Min value,Max value", min_val..','.. max_val)
+  min_val, max_val = user_input_csv:match("(.*),(.*),(.*)")
+  if not user_ok or not tonumber(min_val) or not tonumber(max_val) then return reaper.SN_FocusMIDIEditor() end
+  min_val, max_val = tonumber(min_val), tonumber(max_val)
+  if min_val < 1 or max_val > 127 or min_val >= max_val then return reaper.SN_FocusMIDIEditor() end
+  reaper.SetExtState("AutoExpression", "Begin", min_val, false)
+  reaper.SetExtState("AutoExpression", "End", max_val, false)
+
+  reaper.MIDI_DisableSort(take)
   i = reaper.MIDI_EnumSelNotes(take, -1)
   while i ~= -1 do
     note_ok, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
@@ -57,42 +84,10 @@ function autoExp()
       end
       i = reaper.MIDI_EnumSelNotes(take, i)
   end
+  reaper.MIDI_Sort(take)
 end
 
-function main()
-  min_val = reaper.GetExtState("AutoExpression", "Begin")
-  max_val = reaper.GetExtState("AutoExpression", "End")
-  if (min_val == "") then min_val = "90" end
-  if (max_val == "") then max_val = "127" end
-  local user_ok, user_input_csv = reaper.GetUserInputs("自动表情(多轨)", 2, "最小值,最大值", min_val..','.. max_val)
-  min_val, max_val = user_input_csv:match("(.*),(.*),(.*)")
-  if not user_ok or not tonumber(min_val) or not tonumber(max_val) then return reaper.SN_FocusMIDIEditor() end
-  min_val, max_val = tonumber(min_val), tonumber(max_val)
-  if min_val < 1 or max_val > 127 or min_val >= max_val then return reaper.SN_FocusMIDIEditor() end
-  reaper.SetExtState("AutoExpression", "Begin", min_val, false)
-  reaper.SetExtState("AutoExpression", "End", max_val, false)
-
-  count_sel_items = reaper.CountSelectedMediaItems(0)
-
-  if count_sel_items > 0 then
-    for i = 1, count_sel_items do
-      item = reaper.GetSelectedMediaItem(0, i - 1)
-      take = reaper.GetTake(item, 0)
-      if not take or not reaper.TakeIsMIDI(take) then return end
-      reaper.MIDI_DisableSort(take)
-      autoExp()
-      reaper.MIDI_Sort(take)
-    end
-  else
-    take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    if not take or not reaper.TakeIsMIDI(take) then return end
-    reaper.MIDI_DisableSort(take)
-    autoExp()
-    reaper.MIDI_Sort(take)
-  end
-end
-
-script_title = "Auto Expression (Multitrack)"
+script_title = "Auto Expression"
 reaper.PreventUIRefresh(1) -- 防止UI刷新
 reaper.Undo_BeginBlock() -- 撤销块开始
 main() -- 执行函数
