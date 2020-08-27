@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5b64fb7e407bd3013f4ea8e1543746d0f0a4b0a3">
+<index version="1" name="zaibuyidao Scripts" commit="8bbaab36540f1ca0e6311e6adfc9891c964d6d9a">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -832,27 +832,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80fa4a17562d650a137a5d110ef3c0e8050a6be4/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Length (Enhanced Version).lua" type="script" desc="Length (Enhanced Edition)">
-      <version name="1.0" author="zaibuyidao" time="2020-01-23T13:23:01Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9b59656e06a08ea58ecb59f87a0d73773c4ed5a9/MIDI%20Editor/zaibuyidao_Length%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Length%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-07-29T13:09:25Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a9a56868f47447b231effe55ea6e89e22a1c87a9/MIDI%20Editor/zaibuyidao_Length%20(Enhanced%20Version).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Length (Percentages).lua" type="script" desc="Length (Percentages)">
-      <version name="1.0" author="zaibuyidao" time="2020-01-29T12:06:11Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Length%20(Percentages).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Length%20(Percentages).lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Length.lua" type="script" desc="Length">
       <version name="1.0" author="zaibuyidao" time="2019-12-19T20:09:22Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -860,6 +839,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Length.lua</source>
+      </version>
+      <version name="2.0" author="zaibuyidao" time="2020-08-27T17:37:17Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8bbaab36540f1ca0e6311e6adfc9891c964d6d9a/MIDI%20Editor/zaibuyidao_Length.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Linear Ramp CC Events (Multitrack).lua" type="script" desc="Linear Ramp CC Events (Multitrack)">
@@ -1068,25 +1050,6 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-08-17T19:17:01Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8742662b503bd3b10516717d087319df4f4b6080/MIDI%20Editor/zaibuyidao_Program%20Change%20To%20Note%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Quantize (Enhanced Edition).lua" type="script" desc="Quantize (Enhanced Edition)">
-      <version name="1.0" author="zaibuyidao" time="2020-02-02T14:38:01Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1ff8618062d88c4a86196cbf7b3709abeafa1824/MIDI%20Editor/zaibuyidao_Quantize%20(Enhanced%20Edition).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-02-15T06:47:45Z">
-        <changelog><![CDATA[+ When executing the script, delete overlapped notes is switched, and delete overlapped notes is enabled by default]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b16d6cbaa45418b40d7e9e9408999db36f977a4c/MIDI%20Editor/zaibuyidao_Quantize%20(Enhanced%20Edition).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-02-16T14:56:24Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Quantize%20(Enhanced%20Edition).lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-05-04T05:32:12Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f7ffbae7c0176dba465dc2d6987763cfa6978fe4/MIDI%20Editor/zaibuyidao_Quantize%20(Enhanced%20Edition).lua</source>
-      </version>
-      <version name="1.4" author="zaibuyidao" time="2020-05-14T15:43:11Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Quantize%20(Enhanced%20Edition).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Quantize.lua" type="script" desc="Quantize">
@@ -1375,26 +1338,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5c62c6d57fb18f3e5973553b3ba740fe1ae17052/MIDI%20Editor/zaibuyidao_Rhythm%20Layer%20Selection.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Scale Control (Enhanced Version).lua" type="script" desc="Scale Control (Enhanced Version)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-01-23T13:23:01Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9b59656e06a08ea58ecb59f87a0d73773c4ed5a9/MIDI%20Editor/zaibuyidao_Scale%20Control%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-01-28T05:29:15Z">
-        <changelog><![CDATA[# Solved the Line problem]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6150ae111324673f721b5bac06b5b33f7128e59e/MIDI%20Editor/zaibuyidao_Scale%20Control%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-01-29T12:06:11Z">
-        <changelog><![CDATA[# Bug fix]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Scale%20Control%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Scale%20Control%20(Enhanced%20Version).lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Scale Control.lua" type="script" desc="Scale Control">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -1404,29 +1347,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_Scale%20Control.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Scale Velocity (Enhanced Version).lua" type="script" desc="Scale Velocity (Enhanced Version)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-01-23T13:23:01Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9b59656e06a08ea58ecb59f87a0d73773c4ed5a9/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-01-28T05:29:15Z">
-        <changelog><![CDATA[# Solved the Line problem]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6150ae111324673f721b5bac06b5b33f7128e59e/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-01-29T12:06:11Z">
-        <changelog><![CDATA[# Bug fix]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Enhanced%20Version).lua</source>
-      </version>
-      <version name="1.4" author="zaibuyidao" time="2020-03-10T18:32:43Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/88c3dfededb4e35339fc258d627b8dbb00fbad38/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Enhanced%20Version).lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Scale Velocity (Multitrack).lua" type="script" desc="Scale Velocity (Multitrack)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -1434,18 +1354,6 @@
       <version name="1.0" author="zaibuyidao" time="2020-08-25T19:34:38Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Scale Velocity (Percentages).lua" type="script" desc="Scale Velocity (Percentages)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-01-29T12:06:11Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c15bdd22ca6082ce3b2b1bb7dc0a4bd7eb4b8374/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Percentages).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Percentages).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity.lua" type="script" desc="Scale Velocity">
