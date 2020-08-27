@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="25f297e672120560dd2ac34c82338485b53ce293">
+<index version="1" name="zaibuyidao Scripts" commit="5b64fb7e407bd3013f4ea8e1543746d0f0a4b0a3">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -259,30 +259,6 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-03-05T11:54:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80fa4a17562d650a137a5d110ef3c0e8050a6be4/MIDI%20Editor/zaibuyidao_Create%20And%20Connect%20Two%20Nodes%20(Within%20Time%20Selection).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Duplicate Events (Within Time Selection).lua" type="script" desc="Duplicate Events (Within Time Selection)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-02-13T15:07:38Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/36a8c454e269f48943e8d8f4947279a575588383/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Within%20Time%20Selection).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-02-14T18:03:25Z">
-        <changelog><![CDATA[# Bug fix]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b8b8821c4d85253a236df7a4be290ce33c9c1fa8/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Within%20Time%20Selection).lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-02-15T17:35:30Z">
-        <changelog><![CDATA[# Bug fix]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/56673fdff90edb80f73fda95a01345421f1f2ab6/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Within%20Time%20Selection).lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-02-16T12:39:41Z">
-        <changelog><![CDATA[# Bug fix]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7e2035b89a6f7ee655e3fd13608bf9528c7f256d/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Within%20Time%20Selection).lua</source>
-      </version>
-      <version name="1.4" author="zaibuyidao" time="2020-02-23T14:58:37Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/23e6f769ae7fbec730a76eaccced7d2c0196875d/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Within%20Time%20Selection).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events To Edit Cursor (Multitrack).lua" type="script" desc="Duplicate Events To Edit Cursor (Multitrack)">
