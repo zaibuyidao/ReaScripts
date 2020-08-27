@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Length
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 2.0
+ * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
+ * Version: 2.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,7 +18,8 @@
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
-local title = "Length (Enhanced Edition)"
+
+local title = "Length"
 local HWND =  reaper.MIDIEditor_GetActive()
 if not HWND then return end
 local take =  reaper.MIDIEditor_GetTake(HWND)
@@ -120,15 +121,16 @@ function StretchSelectedCCs(f)
   reaper.MIDI_Sort(take)
 end
 
-local percent = reaper.GetExtState("LengthEnhancedVersion", "Percent")
+local percent = reaper.GetExtState("Length", "Percent")
 if (percent == "") then percent = "200" end
-local toggle = reaper.GetExtState("LengthEnhancedVersion", "Toggle")
+local toggle = reaper.GetExtState("Length", "Toggle")
 if (toggle == "") then toggle = "0" end
-local user_ok, input_csv = reaper.GetUserInputs('Length', 2, 'Percent,0=Start+Dur 1=Start 2=Durations', percent ..','.. toggle)
+
+local user_ok, user_input_csv = reaper.GetUserInputs('Length', 2, 'Percent,0=Start+Dur 1=Start 2=Durations', percent ..','.. toggle)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
-percent, toggle = input_csv:match("(%d*),(%d*)")
-reaper.SetExtState("LengthEnhancedVersion", "Percent", percent, false)
-reaper.SetExtState("LengthEnhancedVersion", "Toggle", toggle, false)
+percent, toggle = user_input_csv:match("(%d*),(%d*)")
+reaper.SetExtState("Length", "Percent", percent, false)
+reaper.SetExtState("Length", "Toggle", toggle, false)
 
 function main()
   if user_ok then
