@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8bbaab36540f1ca0e6311e6adfc9891c964d6d9a">
+<index version="1" name="zaibuyidao Scripts" commit="ae4c39098340856981d41a54cf6976dfe5c2188d">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -843,6 +843,9 @@
       <version name="2.0" author="zaibuyidao" time="2020-08-27T17:37:17Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8bbaab36540f1ca0e6311e6adfc9891c964d6d9a/MIDI%20Editor/zaibuyidao_Length.lua</source>
       </version>
+      <version name="2.1" author="zaibuyidao" time="2020-08-27T19:34:44Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae4c39098340856981d41a54cf6976dfe5c2188d/MIDI%20Editor/zaibuyidao_Length.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Linear Ramp CC Events (Multitrack).lua" type="script" desc="Linear Ramp CC Events (Multitrack)">
       <metadata>
@@ -1355,6 +1358,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2020-08-27T19:34:44Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae4c39098340856981d41a54cf6976dfe5c2188d/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity.lua" type="script" desc="Scale Velocity">
       <metadata/>
@@ -1389,6 +1395,9 @@
       </version>
       <version name="2.0" author="zaibuyidao" time="2020-08-25T19:34:38Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
+      </version>
+      <version name="2.1" author="zaibuyidao" time="2020-08-27T19:34:44Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae4c39098340856981d41a54cf6976dfe5c2188d/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Bottom Notes In Chord (Leave Single Notes Selected).lua" type="script" desc="Select Bottom Notes In Chord (Leave Single Notes Selected)">
