@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Slide Out
+ * ReaScript Name: Slide Out (Set CC Shape)
  * Instructions: Open a MIDI take in MIDI Editor. Set Time Selection, Run.
- * Version: 1.4
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,7 +12,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2019-12-12)
+ * v1.0 (2020-8-29)
   + Initial release
 --]]
 
@@ -27,19 +27,15 @@ local take = reaper.MIDIEditor_GetTake(editor)
 local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
 local loop_start = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_start))
 local loop_end = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_end))
-local loop_len = loop_end - loop_start
 
-local pitch = reaper.GetExtState("SlideOut", "Pitch")
+local pitch = reaper.GetExtState("SlideOutShape", "Pitch")
 if (pitch == "") then pitch = "1" end
 
 user_ok, pitch = reaper.GetUserInputs("Slide Out", 1, "Pitch Range", pitch)
 if not user_ok or tonumber(pitch) > 12 or tonumber(pitch) < -12 or tonumber(pitch) == 0 or loop_start == loop_end then return reaper.SN_FocusMIDIEditor() end
-reaper.SetExtState("SlideOut", "Pitch", pitch, false)
+reaper.SetExtState("SlideOutShape", "Pitch", pitch, false)
 
-local average_len = math.floor((loop_len-20)/math.abs(pitch))
-local next_start = loop_start
-
-tbl = {}
+tbl = {} -- 存储弯音值
 tbl["12"]="8191"
 tbl["11"]="7513"
 tbl["10"]="6830"
@@ -66,34 +62,26 @@ tbl["-10"]="-6830"
 tbl["-11"]="-7513"
 tbl["-12"]="-8192"
 
-if tonumber(pitch) < 0 then
-  for i = -1, pitch, -1 do
-    next_start = next_start + average_len
+local pitchbend = tbl[pitch]
+pitchbend = pitchbend + 8192
+local LSB = pitchbend & 0x7f
+local MSB = pitchbend >> 7 & 0x7f
 
-    local get_pitch = tostring(i)
-    local pitchbend = tonumber(tbl[get_pitch])
-    pitchbend = pitchbend + 8192
-    local LSB = pitchbend & 0x7f
-    local MSB = pitchbend >> 7 & 0x7f
-    reaper.MIDI_InsertCC(take, false, false, next_start, 224, 0, LSB, MSB)
-  end
-  reaper.MIDI_InsertCC(take, false, false, loop_start, 224, 0, 0, 64)
-  reaper.MIDI_InsertCC(take, false, false, loop_end, 224, 0, 0, 64)
+reaper.MIDI_InsertCC(take, true, false, loop_start, 224, 0, 0, 64)
+reaper.MIDIEditor_OnCommand(editor, 42082) -- Set CC shape to slow start/end
+reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
+
+if tonumber(pitch) < 0 then -- 如果半音值小于0，那么在LOOP开头插入弯音值并设置CC Shape
+  reaper.MIDI_InsertCC(take, true, false, loop_end-20, 224, 0, LSB, MSB)
+  reaper.MIDIEditor_OnCommand(editor, 42081) -- Set CC shape to square
 else
-  for i = 1, pitch do
-    next_start = next_start + average_len
-
-    local get_pitch = tostring(i)
-    local pitchbend = tonumber(tbl[get_pitch])
-    pitchbend = pitchbend + 8192
-    local LSB = pitchbend & 0x7f
-    local MSB = pitchbend >> 7 & 0x7f
-    reaper.MIDI_InsertCC(take, false, false, next_start, 224, 0, LSB, MSB)
-  end
-  reaper.MIDI_InsertCC(take, false, false, loop_start, 224, 0, 0, 64)
-  reaper.MIDI_InsertCC(take, false, false, loop_end, 224, 0, 0, 64)
+  reaper.MIDI_InsertCC(take, true, false, loop_end-20, 224, 0, LSB, MSB)
+  reaper.MIDIEditor_OnCommand(editor, 42081) -- Set CC shape to square
 end
 
+reaper.MIDI_InsertCC(take, true, false, loop_end, 224, 0, 0, 64) -- 在LOOP结尾插入弯音值归零
+reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
+
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Slide Out", 0)
+reaper.Undo_EndBlock("Slide Out (Set CC Shape)", 0)
 reaper.SN_FocusMIDIEditor()
