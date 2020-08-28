@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ae4c39098340856981d41a54cf6976dfe5c2188d">
+<index version="1" name="zaibuyidao Scripts" commit="07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -683,6 +683,15 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Expression (Set CC Shape).lua" type="script" desc="Insert Expression (Set CC Shape)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-08-28T20:08:36Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Insert%20Expression%20(Set%20CC%20Shape).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend (Semitone).lua" type="script" desc="Insert Pitch Bend (Semitone)">
@@ -1723,6 +1732,15 @@
         <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Slide%20-50.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Slide In (Set CC Shape).lua" type="script" desc="Slide In (Set CC Shape)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-08-28T20:08:36Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Slide%20In%20(Set%20CC%20Shape).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Slide In.lua" type="script" desc="Slide In">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -1739,6 +1757,18 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
+      </version>
+      <version name="1.4" author="zaibuyidao" time="2020-08-28T20:08:36Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Slide Out (Set CC Shape).lua" type="script" desc="Slide Out (Set CC Shape)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-08-28T20:08:36Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Slide%20Out%20(Set%20CC%20Shape).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide Out.lua" type="script" desc="Slide Out">
@@ -1757,6 +1787,9 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
+      </version>
+      <version name="1.4" author="zaibuyidao" time="2020-08-28T20:08:36Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Split Notes.lua" type="script" desc="Split Notes">
