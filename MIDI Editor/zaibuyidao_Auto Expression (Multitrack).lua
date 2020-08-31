@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Auto Expression (Multitrack)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao, dangguidan
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -65,7 +65,7 @@ function main()
   if (min_val == "") then min_val = "90" end
   if (max_val == "") then max_val = "127" end
   local user_ok, user_input_csv = reaper.GetUserInputs("Auto expression (multitrack)", 2, "Min value,Max value", min_val..','.. max_val)
-  min_val, max_val = user_input_csv:match("(.*),(.*),(.*)")
+  min_val, max_val = user_input_csv:match("(.*),(.*)")
   if not user_ok or not tonumber(min_val) or not tonumber(max_val) then return reaper.SN_FocusMIDIEditor() end
   min_val, max_val = tonumber(min_val), tonumber(max_val)
   if min_val < 1 or max_val > 127 or min_val >= max_val then return reaper.SN_FocusMIDIEditor() end
