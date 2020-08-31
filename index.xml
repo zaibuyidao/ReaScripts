@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf">
+<index version="1" name="zaibuyidao Scripts" commit="4089e85e00f92d84eee4360310609b4944482d80">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -106,11 +106,17 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/25f297e672120560dd2ac34c82338485b53ce293/MIDI%20Editor/zaibuyidao_Auto%20Expression%20(Multitrack).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao, dangguidan" time="2020-08-31T18:22:58Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_Auto%20Expression%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Expression.lua" type="script" desc="Auto Expression">
       <version name="1.0" author="zaibuyidao, dangguidan" time="2020-08-27T17:11:11Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/25f297e672120560dd2ac34c82338485b53ce293/MIDI%20Editor/zaibuyidao_Auto%20Expression.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao, dangguidan" time="2020-08-31T18:22:58Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_Auto%20Expression.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Bank Program Select (Bank Number).lua" type="script" desc="Bank/Program Select (Bank Number)">
@@ -154,6 +160,15 @@
       </version>
       <version name="2.1" author="zaibuyidao" time="2020-08-20T17:58:52Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b4ed3f0467e3b93bc3553d6c67d29f911cc45e17/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_CC Curve Shape.lua" type="script" desc="CC Curve Shape">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-08-31T18:22:58Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_CC%20Curve%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion (Start Base) +01.lua" type="script" desc="Chord Inversion (Start Base) +01">
@@ -1446,6 +1461,9 @@
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Select%20Control.lua</source>
       </version>
+      <version name="1.4" author="zaibuyidao" time="2020-08-31T18:22:58Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_Select%20Control.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Select Every Second Event.lua" type="script" desc="Select Every Second Event">
       <metadata>
@@ -1492,6 +1510,9 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Select%20Note.lua</source>
+      </version>
+      <version name="1.4" author="zaibuyidao" time="2020-08-31T18:22:58Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_Select%20Note.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Top Notes In Chord (Leave Single Notes Selected).lua" type="script" desc="Select Top Notes In Chord (Leave Single Notes Selected)">
@@ -2002,6 +2023,15 @@
       <version name="1.0" author="zaibuyidao" time="2020-02-28T15:53:14Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d0ecef9d911f775bda44295f08c8a0e12f02f7d5/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_CC曲綫形狀.lua" type="script" desc="CC曲綫形狀">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-08-31T18:22:58Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_CC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80.lua</source>
       </version>
     </reapack>
   </category>
