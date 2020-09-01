@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Duplicate Events
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 3.0
+ * Version: 3.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -26,6 +26,8 @@ if take == nil then return end
 item = reaper.GetMediaItemTake_Item(take)
 tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 cur_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0))
+_, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
+ccevtcnt = ccevtcnt - 1
 
 function table_max(t)
     local mn = nil
@@ -73,7 +75,7 @@ for i = 1, #ccs_idx do
 end
 
 function DuplicateNotes()
-    local note_dur = table_max(end_ppq) - table_min(start_ppq)
+    local note_dur = math.floor(0.5 + (table_max(end_ppq) - table_min(start_ppq)))
     for i = 1, #note_idx do
         local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx[i])
         local start_meas = table_min(start_ppq)
@@ -88,9 +90,10 @@ function DuplicateNotes()
 end
 
 function DuplicateCCs()
-    local cc_dur = table_max(ppqpos) - table_min(ppqpos)
+    local cc_dur = math.floor(0.5 + (table_max(ppqpos) - table_min(ppqpos)))
     for i = 1, #ccs_idx do
         local retval, selected, muted, cc_pos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, ccs_idx[i])
+        local _, shape, beztension = reaper.MIDI_GetCCShape(take, ccs_idx[i])
         local cc_meas = table_min(ppqpos)
         local cc_tick = cc_pos - cc_meas
         local tick_02 = cc_tick % table_max(ppqpos)
@@ -99,6 +102,8 @@ function DuplicateCCs()
         if not (tick_02 > table_max(ppqpos)) then
             reaper.MIDI_SetCC(take, ccs_idx[i], false, nil, nil, nil, nil, nil, nil, false)
         end
+        ccevtcnt = ccevtcnt + 1
+        reaper.MIDI_SetCCShape(take, ccevtcnt, shape, beztension, false)
     end
 end
 
@@ -121,6 +126,7 @@ function DuplicateMix()
     end
     for i = 1, #ccs_idx do
         local retval, selected, muted, cc_pos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, ccs_idx[i])
+        local _, shape, beztension = reaper.MIDI_GetCCShape(take, ccs_idx[i])
         local cc_meas = table_min(ppqpos)
         local cc_tick = cc_pos - cc_meas
         local tick_02 = cc_tick % table_max(ppqpos)
@@ -129,6 +135,8 @@ function DuplicateMix()
         if not (tick_02 > table_max(ppqpos)) then
             reaper.MIDI_SetCC(take, ccs_idx[i], false, nil, nil, nil, nil, nil, nil, false)
         end
+        ccevtcnt = ccevtcnt + 1
+        reaper.MIDI_SetCCShape(take, ccevtcnt, shape, beztension, false)
     end
 end
 
