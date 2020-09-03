@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9c9f3ce20eea90befec1b60f3c9f8932d56def00">
+<index version="1" name="zaibuyidao Scripts" commit="29147168ec0206893e8bf58d931898aa2fb4d627">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -572,22 +572,6 @@
       <version name="1.1" author="zaibuyidao" time="2020-02-16T12:39:41Z">
         <changelog><![CDATA[# Default selected is false]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7e2035b89a6f7ee655e3fd13608bf9528c7f256d/MIDI%20Editor/zaibuyidao_Insert%20All%20Sound%20Off.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Auto CC Shape.lua" type="script" desc="Insert Auto CC Shape">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-01-28T05:29:15Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6150ae111324673f721b5bac06b5b33f7128e59e/MIDI%20Editor/zaibuyidao_Insert%20Auto%20CC%20Shape.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-02-15T06:47:45Z">
-        <changelog><![CDATA[# Add midi ticks per beat]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b16d6cbaa45418b40d7e9e9408999db36f977a4c/MIDI%20Editor/zaibuyidao_Insert%20Auto%20CC%20Shape.lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-02-16T14:56:24Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20Auto%20CC%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Bend.lua" type="script" desc="Insert Bend">
