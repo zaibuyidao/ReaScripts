@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: End Time
+ * ReaScript Name: End Time (Multitrack)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.3
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -13,7 +13,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-4-24)
+ * v1.0 (2020-9-5)
   + Initial release
 --]]
 
@@ -28,11 +28,6 @@ function EndTime()
     for i = 1, notecnt do
         local cur_note = reaper.FNG_GetMidiNote(fng_take, i - 1)
         local selected = reaper.FNG_GetMidiNoteIntProperty(cur_note, "SELECTED") -- 是否有音符被选中
-        -- local muted = reaper.FNG_GetMidiNoteIntProperty(cur_note, "MUTED") -- 是否静音
-        -- local ppqpos = reaper.FNG_GetMidiNoteIntProperty(cur_note, "POSITION") -- 起始位置
-        -- local chan = reaper.FNG_GetMidiNoteIntProperty(cur_note, "CHANNEL") -- 通道
-        -- local pitch = reaper.FNG_GetMidiNoteIntProperty(cur_note, "PITCH") -- 音高
-        -- local vel = reaper.FNG_GetMidiNoteIntProperty(cur_note, "VELOCITY") -- 力度
 
         if selected == 1 then
             local noteppq = reaper.FNG_GetMidiNoteIntProperty(cur_note, "POSITION") -- 音符起始位置
@@ -48,11 +43,20 @@ end
 
 function Main()
     reaper.Undo_BeginBlock()
-    take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    if take == nil then return end
-    EndTime()
+    count_sel_items = reaper.CountSelectedMediaItems(0)
+    if count_sel_items > 0 then -- 如果有item被选中
+        for i = 1, count_sel_items do
+            item = reaper.GetSelectedMediaItem(0, i - 1)
+            take = reaper.GetTake(item, 0)
+            EndTime()
+        end
+    else -- 否则，判断MIDI编辑器是否被激活
+        take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+        if take == nil then return end
+        EndTime()
+    end
     reaper.UpdateArrange()
-    reaper.Undo_EndBlock("End Time", -1)
+    reaper.Undo_EndBlock("End Time (Multitrack)", -1)
 end
 
 Main()
