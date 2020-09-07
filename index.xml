@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ebd87fc2794c02cf163e6dd1c655cbce38c93e57">
+<index version="1" name="zaibuyidao Scripts" commit="33420f1538025518502a860806e4232698845e1c">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -108,6 +108,18 @@
       </version>
       <version name="1.1" author="zaibuyidao, dangguidan" time="2020-08-31T18:22:58Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_Auto%20Expression%20(Multitrack).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Auto Expression Shape (Multitrack).lua" type="script" desc="Auto Expression Shape (Multitrack)">
+      <version name="1.0" author="zaibuyidao, dangguidan" time="2020-09-07T14:17:05Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/33420f1538025518502a860806e4232698845e1c/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape%20(Multitrack).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Auto Expression Shape.lua" type="script" desc="Auto Expression Shape">
+      <version name="1.0" author="zaibuyidao, dangguidan" time="2020-09-07T14:17:05Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/33420f1538025518502a860806e4232698845e1c/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Expression.lua" type="script" desc="Auto Expression">
@@ -955,6 +967,15 @@
         <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Move%20Edit%20Cursor%20To%20X.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Note Length To End.lua" type="script" desc="Note Length To End">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-09-07T14:17:05Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/33420f1538025518502a860806e4232698845e1c/MIDI%20Editor/zaibuyidao_Note%20Length%20To%20End.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Note Off Velocity +01.lua" type="script" desc="Note Off Velocity +01">
       <version name="1.0" author="zaibuyidao" time="2020-08-17T19:17:01Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -1430,6 +1451,15 @@
       </version>
       <version name="2.1" author="zaibuyidao" time="2020-08-27T19:34:44Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae4c39098340856981d41a54cf6976dfe5c2188d/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select All Note In Take.lua" type="script" desc="Select All Note In Take">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-09-07T14:17:05Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/33420f1538025518502a860806e4232698845e1c/MIDI%20Editor/zaibuyidao_Select%20All%20Note%20In%20Take.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Bottom Notes In Chord (Leave Single Notes Selected).lua" type="script" desc="Select Bottom Notes In Chord (Leave Single Notes Selected)">
