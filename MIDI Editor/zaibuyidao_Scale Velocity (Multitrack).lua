@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Scale Velocity (Multitrack)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -32,8 +32,6 @@ function main()
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   vel_start, vel_end, toggle = user_input_csv:match("(%d*),(%d*),(%d*)")
   if not tonumber(vel_start) or not tonumber(vel_end) or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
-  if tonumber(vel_start) < 1 then vel_start = 1 elseif tonumber(vel_start) > 127 then vel_start = 127 end
-  if tonumber(vel_end) < 1 then vel_end = 1 elseif tonumber(vel_end) > 127 then vel_end = 127 end
   reaper.SetExtState("ScaleVelocity", "Start", vel_start, false)
   reaper.SetExtState("ScaleVelocity", "End", vel_end, false)
   reaper.SetExtState("ScaleVelocity", "Toggle", toggle, false)

@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Slide In (Set CC Shape)
+ * ReaScript Name: Slide In Shape
  * Instructions: Open a MIDI take in MIDI Editor. Set Time Selection, Run.
  * Version: 1.0
  * Author: zaibuyidao
@@ -29,11 +29,20 @@ local loop_start = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time
 local loop_end = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_end))
 
 local pitch = reaper.GetExtState("SlideInShape", "Pitch")
-if (pitch == "") then pitch = "1" end
+if (pitch == "") then pitch = "-1" end
+local bezier = reaper.GetExtState("SlideInShape", "Bezier")
+if (bezier == "") then bezier = "20" end
 
-user_ok, pitch = reaper.GetUserInputs("Slide In", 1, "Pitch Range", pitch)
-if not user_ok or tonumber(pitch) > 12 or tonumber(pitch) < -12 or tonumber(pitch) == 0 or loop_start == loop_end then return reaper.SN_FocusMIDIEditor() end
+user_ok, user_input = reaper.GetUserInputs("Slide In Shape", 2, "Pitch Range,Bezier(-100 - 100)", pitch..','..bezier)
+if not user_ok or loop_start == loop_end then return reaper.SN_FocusMIDIEditor() end
+pitch, bezier = user_input:match("(.*),(.*)")
+
+if tonumber(pitch) < -12 or tonumber(pitch) > 12 or tonumber(pitch) == 0 or tonumber(bezier) < -100 or tonumber(bezier) > 100 then
+  return reaper.SN_FocusMIDIEditor()
+end
+
 reaper.SetExtState("SlideInShape", "Pitch", pitch, false)
+reaper.SetExtState("SlideInShape", "Bezier", bezier, false)
 
 tbl = {} -- 存储弯音值
 tbl["12"]="8191"
@@ -67,17 +76,19 @@ pitchbend = pitchbend + 8192
 local LSB = pitchbend & 0x7f
 local MSB = pitchbend >> 7 & 0x7f
 
-if tonumber(pitch) < 0 then -- 如果半音值小于0，那么在LOOP开头插入弯音值并设置CC Shape
-  reaper.MIDI_InsertCC(take, true, false, loop_start, 224, 0, LSB, MSB)
-  reaper.MIDIEditor_OnCommand(editor, 42082) -- Set CC shape to slow start/end
-else
-  reaper.MIDI_InsertCC(take, true, false, loop_start, 224, 0, LSB, MSB)
-  reaper.MIDIEditor_OnCommand(editor, 42082) -- Set CC shape to slow start/end
+pitch = tonumber(pitch)
+
+reaper.MIDI_InsertCC(take, true, false, loop_start, 224, 0, LSB, MSB)
+
+i = reaper.MIDI_EnumSelCC(take, -1)
+while i ~= -1 do
+  reaper.MIDI_SetCCShape(take, i, 5, bezier / 100, true)
+  reaper.MIDI_SetCC(take, i, false, false, nil, nil, nil, nil, nil, true)
+  i = reaper.MIDI_EnumSelCC(take, i)
 end
 
-reaper.MIDI_InsertCC(take, true, false, loop_end, 224, 0, 0, 64) -- 在LOOP结尾插入弯音值归零
-reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
+reaper.MIDI_InsertCC(take, false, false, loop_end, 224, 0, 0, 64) -- 在LOOP结尾插入弯音值归零
 
+reaper.Undo_EndBlock("Slide In Shape", 0)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Slide In (Set CC Shape)", 0)
 reaper.SN_FocusMIDIEditor()

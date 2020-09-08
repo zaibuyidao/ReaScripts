@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Auto Expression Shape
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao, dangguidan
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -84,7 +84,7 @@ function EndInsert()
     retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     local len = endppqpos - startppqpos
     local val_03
-    if val_02 - val_01 > 10 then val_03 = val_01 + 10 end
+    if val_02 - val_01 > 10 then val_03 = val_01 + 10 else val_03 = val_01 end
     if len >= tick * 2 then -- 如果长度大于等于 960
       reaper.MIDI_InsertCC(take, true, muted, endppqpos - (tick * 0.75), 0xB0, chan, cc_num, val_02)
       reaper.MIDI_InsertCC(take, false, muted, endppqpos - (tick / 24), 0xB0, chan, cc_num, val_03)
