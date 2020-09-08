@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="33420f1538025518502a860806e4232698845e1c">
+<index version="1" name="zaibuyidao Scripts" commit="416f227487a4023a314f1b4e2df63f2035433e4d">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -115,11 +115,17 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/33420f1538025518502a860806e4232698845e1c/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape%20(Multitrack).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao, dangguidan" time="2020-09-08T16:24:13Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Expression Shape.lua" type="script" desc="Auto Expression Shape">
       <version name="1.0" author="zaibuyidao, dangguidan" time="2020-09-07T14:17:05Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/33420f1538025518502a860806e4232698845e1c/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao, dangguidan" time="2020-09-08T16:24:13Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Expression.lua" type="script" desc="Auto Expression">
@@ -1414,6 +1420,9 @@
       <version name="1.1" author="zaibuyidao" time="2020-08-27T19:34:44Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae4c39098340856981d41a54cf6976dfe5c2188d/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
       </version>
+      <version name="1.2" author="zaibuyidao" time="2020-09-08T16:24:13Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity.lua" type="script" desc="Scale Velocity">
       <metadata/>
@@ -1451,6 +1460,9 @@
       </version>
       <version name="2.1" author="zaibuyidao" time="2020-08-27T19:34:44Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae4c39098340856981d41a54cf6976dfe5c2188d/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
+      </version>
+      <version name="2.2" author="zaibuyidao" time="2020-09-08T16:24:13Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select All Note In Take.lua" type="script" desc="Select All Note In Take">
@@ -1791,13 +1803,13 @@
         <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Slide%20-50.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Slide In (Set CC Shape).lua" type="script" desc="Slide In (Set CC Shape)">
+    <reapack name="zaibuyidao_Slide In Shape.lua" type="script" desc="Slide In Shape">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-08-28T20:08:36Z">
+      <version name="1.0" author="zaibuyidao" time="2020-09-08T16:24:13Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Slide%20In%20(Set%20CC%20Shape).lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Slide%20In%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide In.lua" type="script" desc="Slide In">
@@ -1821,13 +1833,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Slide Out (Set CC Shape).lua" type="script" desc="Slide Out (Set CC Shape)">
+    <reapack name="zaibuyidao_Slide Out Shape.lua" type="script" desc="Slide Out Shape">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-08-28T20:08:36Z">
+      <version name="1.0" author="zaibuyidao" time="2020-09-08T16:24:13Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Slide%20Out%20(Set%20CC%20Shape).lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Slide%20Out%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide Out.lua" type="script" desc="Slide Out">
