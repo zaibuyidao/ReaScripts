@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Auto Expression (Multitrack)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao, dangguidan
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -52,6 +52,9 @@ function autoExp()
           if note_len > tick*2 then -- 如果音符大于 960
             reaper.MIDI_InsertCC(take, selected, muted, startppqpos+k*diff_01, 0xB0, chan, cc_number, linear)
             reaper.MIDI_InsertCC(take, selected, muted, endppqpos-tick/24-diff_01*diff_02*0.4, 0xB0, chan, cc_number, fast_end)
+          end
+          if note_len > 0 and note_len < tick/2 then -- 如果音符大于 0 并且 小于 240
+            reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, cc_number, max_val)
           end
         end
       end

@@ -1,8 +1,8 @@
 --[[
- * ReaScript Name: Auto Expression
+ * ReaScript Name: 自動表情
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
- * Author: zaibuyidao, dangguidan
+ * Version: 1.0
+ * Author: 再補一刀, 當歸蛋
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -11,12 +11,12 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-8-27)
+ * v1.0 (2020-9-10)
   + Initial release
 --]]
 
 -- USER AREA
--- Settings that the user can customize.
+-- 用戶可以自定義設置.
 
 cc_number = 11
 
@@ -46,7 +46,7 @@ function main()
   max_val = reaper.GetExtState("AutoExpression", "End")
   if (min_val == "") then min_val = "90" end
   if (max_val == "") then max_val = "127" end
-  local user_ok, user_input_csv = reaper.GetUserInputs("Auto expression", 2, "Min value,Max value", min_val..','.. max_val)
+  local user_ok, user_input_csv = reaper.GetUserInputs("自動表情", 2, "最小值,最大值", min_val..','.. max_val)
   min_val, max_val = user_input_csv:match("(.*),(.*)")
   if not user_ok or not tonumber(min_val) or not tonumber(max_val) then return reaper.SN_FocusMIDIEditor() end
   min_val, max_val = tonumber(min_val), tonumber(max_val)
@@ -90,7 +90,7 @@ function main()
   reaper.MIDI_Sort(take)
 end
 
-script_title = "Auto Expression"
+script_title = "自動表情"
 reaper.PreventUIRefresh(1) -- 防止UI刷新
 reaper.Undo_BeginBlock() -- 撤销块开始
 main() -- 执行函数
