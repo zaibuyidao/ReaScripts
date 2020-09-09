@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="416f227487a4023a314f1b4e2df63f2035433e4d">
+<index version="1" name="zaibuyidao Scripts" commit="f9f328e8561881849086ed8b1e174025b1b8c668">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -109,6 +109,9 @@
       <version name="1.1" author="zaibuyidao, dangguidan" time="2020-08-31T18:22:58Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_Auto%20Expression%20(Multitrack).lua</source>
       </version>
+      <version name="1.2" author="zaibuyidao, dangguidan" time="2020-09-09T17:52:33Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/zaibuyidao_Auto%20Expression%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Expression Shape (Multitrack).lua" type="script" desc="Auto Expression Shape (Multitrack)">
       <version name="1.0" author="zaibuyidao, dangguidan" time="2020-09-07T14:17:05Z">
@@ -135,6 +138,9 @@
       </version>
       <version name="1.1" author="zaibuyidao, dangguidan" time="2020-08-31T18:22:58Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_Auto%20Expression.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao, dangguidan" time="2020-09-09T17:52:33Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/zaibuyidao_Auto%20Expression.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Bank Program Select (Bank Number).lua" type="script" desc="Bank/Program Select (Bank Number)">
@@ -2085,6 +2091,51 @@
       </version>
       <version name="1.1" author="再補一刀" time="2020-09-01T17:44:04Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b0f852869f92fac97f42d7da8c86afca60821733/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_CC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_力度縮放(多軌).lua" type="script" desc="力度縮放(多軌)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="再補一刀" time="2020-09-09T17:52:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE(%E5%A4%9A%E8%BB%8C).lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_力度縮放.lua" type="script" desc="力度縮放">
+      <version name="1.0" author="再補一刀" time="2020-09-09T17:52:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_自動表情(多軌).lua" type="script" desc="自動表情(多軌)">
+      <version name="1.0" author="再補一刀, 當歸蛋" time="2020-09-09T17:52:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85(%E5%A4%9A%E8%BB%8C).lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_自動表情.lua" type="script" desc="自動表情">
+      <version name="1.0" author="再補一刀, 當歸蛋" time="2020-09-09T17:52:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_自動表情形狀(多軌).lua" type="script" desc="自動表情形狀(多軌)">
+      <version name="1.0" author="再補一刀, 當歸蛋" time="2020-09-09T17:52:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80(%E5%A4%9A%E8%BB%8C).lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_自動表情形狀.lua" type="script" desc="自動表情形狀">
+      <version name="1.0" author="再補一刀, 當歸蛋" time="2020-09-09T17:52:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_長度.lua" type="script" desc="長度">
+      <version name="1.0" author="再補一刀" time="2020-09-09T17:52:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%95%B7%E5%BA%A6.lua</source>
       </version>
     </reapack>
   </category>
