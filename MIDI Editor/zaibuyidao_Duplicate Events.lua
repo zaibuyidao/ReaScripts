@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Duplicate Events
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 3.1
+ * Version: 3.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -26,8 +26,6 @@ if take == nil then return end
 item = reaper.GetMediaItemTake_Item(take)
 tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 cur_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0))
-_, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
-ccevtcnt = ccevtcnt - 1
 
 function table_max(t)
     local mn = nil
@@ -102,8 +100,12 @@ function DuplicateCCs()
         if not (tick_02 > table_max(ppqpos)) then
             reaper.MIDI_SetCC(take, ccs_idx[i], false, nil, nil, nil, nil, nil, nil, false)
         end
-        ccevtcnt = ccevtcnt + 1
-        reaper.MIDI_SetCCShape(take, ccevtcnt, shape, beztension, false)
+
+        j = reaper.MIDI_EnumSelCC(take, -1)
+        while j ~= -1 do
+            reaper.MIDI_SetCCShape(take, j, shape, beztension, false)
+          j = reaper.MIDI_EnumSelCC(take, j)
+        end
     end
 end
 
@@ -135,8 +137,12 @@ function DuplicateMix()
         if not (tick_02 > table_max(ppqpos)) then
             reaper.MIDI_SetCC(take, ccs_idx[i], false, nil, nil, nil, nil, nil, nil, false)
         end
-        ccevtcnt = ccevtcnt + 1
-        reaper.MIDI_SetCCShape(take, ccevtcnt, shape, beztension, false)
+
+        j = reaper.MIDI_EnumSelCC(take, -1)
+        while j ~= -1 do
+            reaper.MIDI_SetCCShape(take, j, shape, beztension, false)
+          j = reaper.MIDI_EnumSelCC(take, j)
+        end
     end
 end
 
