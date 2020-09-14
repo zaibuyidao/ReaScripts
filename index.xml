@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f9f328e8561881849086ed8b1e174025b1b8c668">
+<index version="1" name="zaibuyidao Scripts" commit="90b0d6751d6e073acb4ba560516061859174a19d">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -314,6 +314,9 @@
       <version name="1.2" author="zaibuyidao" time="2020-09-03T18:20:11Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9c9f3ce20eea90befec1b60f3c9f8932d56def00/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20To%20Edit%20Cursor%20(Multitrack).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2020-09-14T04:14:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90b0d6751d6e073acb4ba560516061859174a19d/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20To%20Edit%20Cursor%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events To Edit Cursor.lua" type="script" desc="Duplicate Events To Edit Cursor">
       <metadata>
@@ -325,6 +328,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-09-01T17:44:04Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b0f852869f92fac97f42d7da8c86afca60821733/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20To%20Edit%20Cursor.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2020-09-14T04:14:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90b0d6751d6e073acb4ba560516061859174a19d/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20To%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events.lua" type="script" desc="Duplicate Events">
@@ -384,6 +390,9 @@
       <version name="3.1" author="zaibuyidao" time="2020-09-01T17:44:04Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b0f852869f92fac97f42d7da8c86afca60821733/MIDI%20Editor/zaibuyidao_Duplicate%20Events.lua</source>
       </version>
+      <version name="3.2" author="zaibuyidao" time="2020-09-14T04:14:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90b0d6751d6e073acb4ba560516061859174a19d/MIDI%20Editor/zaibuyidao_Duplicate%20Events.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Musical (Within Time Selection).lua" type="script" desc="Duplicate Musical (Within Time Selection)">
       <metadata>
@@ -401,6 +410,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-08-27T16:59:17Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/24af0391030a8a3f8009a58fc8078162ee50308c/MIDI%20Editor/zaibuyidao_Duplicate%20Musical.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-09-14T04:14:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90b0d6751d6e073acb4ba560516061859174a19d/MIDI%20Editor/zaibuyidao_Duplicate%20Musical.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_End Time (Multitrack).lua" type="script" desc="End Time (Multitrack)">
