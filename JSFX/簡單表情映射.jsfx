@@ -1,5 +1,5 @@
 desc: 簡單表情映射
-version: 1.7
+version: 1.8
 changelog: init
 author: 再補一刀, Tale
 website: https://forum.cockos.com/showthread.php?t=240598
@@ -51,7 +51,7 @@ while (midirecv(offset, msg1, msg2, msg3)) (
     slider1 = msg2;
     midisend(offset, note_on + channel, program, bank_lsb);
 
-    // 在 Legato 模式下, 可以使用 CC#119 和 Value=0 手動添加音符關閉
+    // 在 Legato 模式下, 可以使用 CC#119 和 Value=0 手動添加 Note Off
     status == cc && (msg2 == 119) ? (
       sustain = msg3;
       sustain == 0 ? (
