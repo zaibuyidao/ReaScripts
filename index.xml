@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="95a3fa68b2bf325111697ee170242af5923c6034">
+<index version="1" name="zaibuyidao Scripts" commit="b90a2c953420ab4e53a394a3765bef6a4b1cf6bd">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -97,6 +97,26 @@
       <version name="1.6" author="zaibuyidao, Tale" time="2020-08-17T02:08:17Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/bcc62c0620763a976342109a782f213d06c3139c/JSFX/Simple%20Expression%20Map.jsfx</source>
+      </version>
+      <version name="1.7" author="zaibuyidao, Tale" time="2020-09-17T20:42:41Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/JSFX/Simple%20Expression%20Map.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="簡單表情映射.jsfx" type="effect" desc="簡單表情映射">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992? JSFX-\u31777?\u21934?\u34920?\u36948?\u24335?\u26144?\u23556?\u23559?\u31243?\u24335?\u35722?\u25563?\u28040?\u24687?\u36681?\u25563?\u28858?\u37749?\u20301?\u20999?\u25563?\u37749?\u12290?\par}
+}
+]]></description>
+        <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
+      </metadata>
+      <version name="1.7" author="再補一刀, Tale" time="2020-09-17T20:42:41Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/JSFX/%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84.jsfx</source>
       </version>
     </reapack>
   </category>
@@ -424,10 +444,20 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ebd87fc2794c02cf163e6dd1c655cbce38c93e57/MIDI%20Editor/zaibuyidao_End%20Time%20(Multitrack).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_End Time FNG (Multitrack).lua" type="script" desc="End Time FNG (Multitrack)">
+      <version name="1.0" author="zaibuyidao" time="2020-09-17T20:42:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/MIDI%20Editor/zaibuyidao_End%20Time%20FNG%20(Multitrack).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_End Time FNG.lua" type="script" desc="End Time FNG">
+      <version name="1.0" author="zaibuyidao" time="2020-09-17T20:42:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/MIDI%20Editor/zaibuyidao_End%20Time%20FNG.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_End Time.lua" type="script" desc="End Time">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="zaibuyidao" time="2020-04-25T05:45:50Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58f6e10a33307e789724b3c455901e701c3e00ff/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
@@ -440,6 +470,10 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-09-04T18:05:46Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ebd87fc2794c02cf163e6dd1c655cbce38c93e57/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
+      </version>
+      <version name="2.0" author="zaibuyidao" time="2020-09-17T20:42:41Z">
+        <changelog><![CDATA[+ Code rewrite]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Value +01.lua" type="script" desc="Event Value +01">
