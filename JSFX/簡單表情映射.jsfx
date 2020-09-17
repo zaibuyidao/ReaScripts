@@ -1,5 +1,5 @@
 desc: 簡單表情映射
-version: 1.8
+version: 1.8.1
 changelog: init
 author: 再補一刀, Tale
 website: https://forum.cockos.com/showthread.php?t=240598
@@ -51,14 +51,6 @@ while (midirecv(offset, msg1, msg2, msg3)) (
     slider1 = msg2;
     midisend(offset, note_on + channel, program, bank_lsb);
 
-    // 在 Legato 模式下, 可以使用 CC#119 和 Value=0 手動添加 Note Off
-    status == cc && (msg2 == 119) ? (
-      sustain = msg3;
-      sustain == 0 ? (
-        midisend(offset, note_off + channel, program, 0);
-      );
-    );
-
     // Staccato mode
     slider4 == 0 ? (
       // delay note off
@@ -72,6 +64,14 @@ while (midirecv(offset, msg1, msg2, msg3)) (
     );
 
     status = 0; // don't passthrough
+  );
+
+  // 在 Legato 模式下, 可以使用 CC#119 和 Value=0 手動添加 Note Off
+  status == cc && (msg2 == 119) ? (
+    sustain = msg3;
+    sustain == 0 ? (
+      midisend(offset, note_off + channel, program, 0);
+    );
   );
 
   status > 0 ? midisend(offset, msg1, msg2, msg3); // passthrough other events

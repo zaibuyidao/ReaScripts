@@ -1,5 +1,5 @@
 desc: Simple Expression Map
-version: 1.7
+version: 1.7.1
 changelog: init
 author: zaibuyidao, Tale
 website: https://forum.cockos.com/showthread.php?t=240598
@@ -51,14 +51,6 @@ while (midirecv(offset, msg1, msg2, msg3)) (
     slider1 = msg2;
     midisend(offset, note_on + channel, program, bank_lsb);
 
-    // Note-Off can be added manually in Legato mode with CC#119 and value=0.
-    status == cc && (msg2 == 119) ? (
-      sustain = msg3;
-      sustain == 0 ? (
-        midisend(offset, note_off + channel, program, 0);
-      );
-    );
-
     // Staccato mode
     slider4 == 0 ? (
       // delay note off
@@ -72,6 +64,14 @@ while (midirecv(offset, msg1, msg2, msg3)) (
     );
 
     status = 0; // don't passthrough
+  );
+
+  // Note-Off can be added manually in Legato mode with CC#119 and value=0.
+  status == cc && (msg2 == 119) ? (
+    sustain = msg3;
+    sustain == 0 ? (
+      midisend(offset, note_off + channel, program, 0);
+    );
   );
 
   status > 0 ? midisend(offset, msg1, msg2, msg3); // passthrough other events
