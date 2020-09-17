@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2e25c0a39a06603c0027390d381a662bb2e72335">
+<index version="1" name="zaibuyidao Scripts" commit="615af2720c49f8b9b6e5076f176ba864f0f1baf2">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -102,6 +102,10 @@
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/JSFX/Simple%20Expression%20Map.jsfx</source>
       </version>
+      <version name="1.7.1" author="zaibuyidao, Tale" time="2020-09-17T21:47:12Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/615af2720c49f8b9b6e5076f176ba864f0f1baf2/JSFX/Simple%20Expression%20Map.jsfx</source>
+      </version>
     </reapack>
     <reapack name="簡單表情映射.jsfx" type="effect" desc="簡單表情映射">
       <metadata>
@@ -121,6 +125,10 @@
       <version name="1.8" author="再補一刀, Tale" time="2020-09-17T21:16:56Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/2e25c0a39a06603c0027390d381a662bb2e72335/JSFX/%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84.jsfx</source>
+      </version>
+      <version name="1.8.1" author="再補一刀, Tale" time="2020-09-17T21:47:12Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/615af2720c49f8b9b6e5076f176ba864f0f1baf2/JSFX/%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84.jsfx</source>
       </version>
     </reapack>
   </category>
