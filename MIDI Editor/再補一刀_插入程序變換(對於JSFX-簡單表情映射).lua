@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 插入程序變換 (對於JSFX-簡單表情映射)
+ * ReaScript Name: 插入程序變換(對於JSFX-簡單表情映射)
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -213,7 +213,7 @@ function main()
   reaper.UpdateArrange()
 end
 
-script_title = "插入程序變換 (對於JSFX-簡單表情映射)"
+script_title = "插入程序變換(對於JSFX-簡單表情映射)"
 reaper.Undo_BeginBlock()
 main()
 reaper.Undo_EndBlock(script_title, 0)
