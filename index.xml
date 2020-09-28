@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a741eba7e71f7f988f89a905b09103d4301621c2">
+<index version="1" name="zaibuyidao Scripts" commit="e8401b5823e2b27a081539b8fb75c165a3799e5b">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -2224,6 +2224,12 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a741eba7e71f7f988f89a905b09103d4301621c2/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E7%A8%8B%E5%BA%8F%E8%AE%8A%E6%8F%9B(%E5%B0%8D%E6%96%BCJSFX-%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84).lua</source>
       </version>
     </reapack>
+    <reapack name="再補一刀_程序變換轉音符(對於JSFX-簡單表情映射).lua" type="script" desc="程序變換轉音符(對於JSFX-簡單表情映射)">
+      <version name="1.0" author="再補一刀" time="2020-09-28T18:32:48Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e8401b5823e2b27a081539b8fb75c165a3799e5b/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%A8%8B%E5%BA%8F%E8%AE%8A%E6%8F%9B%E8%BD%89%E9%9F%B3%E7%AC%A6(%E5%B0%8D%E6%96%BCJSFX-%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84).lua</source>
+      </version>
+    </reapack>
     <reapack name="再補一刀_自動表情(多軌).lua" type="script" desc="自動表情(多軌)">
       <version name="1.0" author="再補一刀, 當歸蛋" time="2020-09-09T17:52:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -2261,6 +2267,12 @@
       <version name="1.0" author="再補一刀" time="2020-09-09T17:52:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%95%B7%E5%BA%A6.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_音符轉程序變換(對於JSFX-簡單表情映射).lua" type="script" desc="音符轉程序變換(對於JSFX-簡單表情映射)">
+      <version name="1.0" author="再補一刀" time="2020-09-28T18:32:48Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e8401b5823e2b27a081539b8fb75c165a3799e5b/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%9F%B3%E7%AC%A6%E8%BD%89%E7%A8%8B%E5%BA%8F%E8%AE%8A%E6%8F%9B(%E5%B0%8D%E6%96%BCJSFX-%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84).lua</source>
       </version>
     </reapack>
   </category>
@@ -2342,6 +2354,12 @@
       <version name="1.0" author="zaibuyidao" time="2020-04-14T16:15:42Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf/Utility/zaibuyidao_Toggle%20Mute%20PC%20CC6.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_VST Instrument.lua" type="script" desc="VST Instrument">
+      <version name="1.0" author="zaibuyidao" time="2020-09-28T18:32:48Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e8401b5823e2b27a081539b8fb75c165a3799e5b/Utility/zaibuyidao_VST%20Instrument.lua</source>
       </version>
     </reapack>
   </category>
