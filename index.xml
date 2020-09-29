@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e8401b5823e2b27a081539b8fb75c165a3799e5b">
+<index version="1" name="zaibuyidao Scripts" commit="6eb2a2f35eb4d67d2e13fad824e0c907231065df">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -962,6 +962,12 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80fa4a17562d650a137a5d110ef3c0e8050a6be4/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Legato.lua" type="script" desc="Legato">
+      <version name="1.0" author="zaibuyidao" time="2020-09-29T14:30:01Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/MIDI%20Editor/zaibuyidao_Legato.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Length.lua" type="script" desc="Length">
       <version name="1.0" author="zaibuyidao" time="2019-12-19T20:09:22Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -1490,9 +1496,7 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity (Multitrack).lua" type="script" desc="Scale Velocity (Multitrack)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="zaibuyidao" time="2020-08-25T19:34:38Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
@@ -1502,6 +1506,9 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2020-09-08T16:24:13Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2020-09-29T14:30:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity.lua" type="script" desc="Scale Velocity">
@@ -1543,6 +1550,9 @@
       </version>
       <version name="2.2" author="zaibuyidao" time="2020-09-08T16:24:13Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
+      </version>
+      <version name="2.3" author="zaibuyidao" time="2020-09-29T14:30:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select All Note In Take.lua" type="script" desc="Select All Note In Take">
@@ -2204,18 +2214,22 @@
       </version>
     </reapack>
     <reapack name="再補一刀_力度縮放(多軌).lua" type="script" desc="力度縮放(多軌)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="再補一刀" time="2020-09-09T17:52:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE(%E5%A4%9A%E8%BB%8C).lua</source>
+      </version>
+      <version name="1.1" author="再補一刀" time="2020-09-29T14:30:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE(%E5%A4%9A%E8%BB%8C).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_力度縮放.lua" type="script" desc="力度縮放">
       <version name="1.0" author="再補一刀" time="2020-09-09T17:52:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE.lua</source>
+      </version>
+      <version name="1.1" author="再補一刀" time="2020-09-29T14:30:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入程序變換(對於JSFX-簡單表情映射).lua" type="script" desc="插入程序變換(對於JSFX-簡單表情映射)">
@@ -2360,6 +2374,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-09-28T18:32:48Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e8401b5823e2b27a081539b8fb75c165a3799e5b/Utility/zaibuyidao_VST%20Instrument.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-09-29T14:30:01Z">
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/Utility/zaibuyidao_VST%20Instrument.lua</source>
       </version>
     </reapack>
   </category>
