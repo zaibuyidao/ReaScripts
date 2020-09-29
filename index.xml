@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6eb2a2f35eb4d67d2e13fad824e0c907231065df">
+<index version="1" name="zaibuyidao Scripts" commit="c6cf759dd8a83d05e96671cbea4416be6d903a4b">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -2368,6 +2368,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-04-14T16:15:42Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf/Utility/zaibuyidao_Toggle%20Mute%20PC%20CC6.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-09-29T17:15:54Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c6cf759dd8a83d05e96671cbea4416be6d903a4b/Utility/zaibuyidao_Toggle%20Mute%20PC%20CC6.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_VST Instrument.lua" type="script" desc="VST Instrument">
