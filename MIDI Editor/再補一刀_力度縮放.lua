@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: 力度縮放
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -20,7 +19,7 @@ function Msg(param)
 end
 
 function main()
-  local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+  local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
 
   local cnt, index = 0, {}
@@ -30,6 +29,9 @@ function main()
     index[cnt] = val
     val = reaper.MIDI_EnumSelNotes(take, val)
   end
+
+  reaper.Undo_BeginBlock()
+  reaper.MIDI_DisableSort(take)
 
   if #index > 0 then
     local vel_start = reaper.GetExtState("ScaleVelocity", "Start")
@@ -51,29 +53,30 @@ function main()
     local _, _, _, end_ppqpos, _, _, _, _ = reaper.MIDI_GetNote(take, index[#index])
     local ppq_offset = (vel_end - vel_start) / (end_ppqpos - begin_ppqpos)
 
-    reaper.Undo_BeginBlock()
-    reaper.MIDI_DisableSort(take)
+
     for i = 1, #index do
       local _, _, _, startppqpos, _, _, _, vel = reaper.MIDI_GetNote(take, index[i])
       if toggle == "1" then
         if end_ppqpos ~= begin_ppqpos then
           new_vel = vel * (((startppqpos - begin_ppqpos) * ppq_offset + vel_start) / 100)
-          x = math.floor(new_vel)
+          velocity = math.floor(new_vel)
         else
-          x = vel_start
+          velocity = vel_start
         end
       else
         if end_ppqpos ~= begin_ppqpos then
           new_vel = (startppqpos - begin_ppqpos) * ppq_offset + vel_start
-          x = math.floor(new_vel)
+          velocity = math.floor(new_vel)
         else
-          x = vel_start
+          velocity = vel_start
         end
       end
-      if x > 127 then x = 127 elseif x < 1 then x = 1 end
-      reaper.MIDI_SetNote(take, index[i], nil, nil, nil, nil, nil, nil, x, false)
+      velocity = tonumber(velocity)
+      if velocity > 127 then velocity = 127 elseif velocity < 1 then velocity = 1 end
+      reaper.MIDI_SetNote(take, index[i], nil, nil, nil, nil, nil, nil, velocity, false)
     end
   end
+
   reaper.MIDI_Sort(take)
   reaper.Undo_EndBlock("力度縮放", 0)
 end
