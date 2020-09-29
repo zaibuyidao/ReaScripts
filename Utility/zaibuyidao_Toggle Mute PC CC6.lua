@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Toggle Mute PC CC6
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,18 +16,14 @@
   + Initial release
 --]]
 
-function Msg(param)
-  reaper.ShowConsoleMsg(tostring(param) .. "\n")
-end
-toggle_mute = reaper.GetExtState("ToggleMutePCCC6", "ToggleMuteValue")
-if (toggle_mute == "") then toggle_mute = "0" end
-reaper.SetExtState("ToggleMutePCCC6", "ToggleMuteValue", toggle_mute, 0)
+function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
+
 function UnMuteCC()
-  count_items = reaper.CountMediaItems(0)
+  local count_items = reaper.CountMediaItems(0)
   for i = 1, count_items do
-    item = reaper.GetMediaItem(0, count_items - i)
-    take = reaper.GetTake(item, 0)
-    item_num = reaper.GetMediaItemInfo_Value(item, 'IP_ITEMNUMBER')
+    local item = reaper.GetMediaItem(0, count_items - i)
+    local take = reaper.GetTake(item, 0)
+    local item_num = reaper.GetMediaItemInfo_Value(item, 'IP_ITEMNUMBER')
     if item_num == 0 and reaper.TakeIsMIDI(take) then
       _, _, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
       for i = 1, ccevtcnt do
@@ -55,14 +51,14 @@ function UnMuteCC()
       reaper.MIDI_Sort(take)
     end
   end
-  reaper.SetExtState("ToggleMutePCCC6", "ToggleMuteValue", "0", 0)
 end
+
 function MuteCC()
-  count_items = reaper.CountMediaItems(0)
+  local count_items = reaper.CountMediaItems(0)
   for i = 1, count_items do
-    item = reaper.GetMediaItem(0, count_items - i)
-    take = reaper.GetTake(item, 0)
-    item_num = reaper.GetMediaItemInfo_Value(item, 'IP_ITEMNUMBER')
+    local item = reaper.GetMediaItem(0, count_items - i)
+    local take = reaper.GetTake(item, 0)
+    local item_num = reaper.GetMediaItemInfo_Value(item, 'IP_ITEMNUMBER')
     if item_num == 0 and reaper.TakeIsMIDI(take) then
       _, _, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
       for i = 1, ccevtcnt do
@@ -90,15 +86,38 @@ function MuteCC()
       reaper.MIDI_Sort(take)
     end
   end
-  reaper.SetExtState("ToggleMutePCCC6", "ToggleMuteValue", "1", 0)
 end
+
+local flag
+local count_items = reaper.CountMediaItems(0)
+for i = 1, count_items do
+  local item = reaper.GetMediaItem(0, i - 1)
+  local take = reaper.GetTake(item, 0)
+  local item_num = reaper.GetMediaItemInfo_Value(item, 'IP_ITEMNUMBER')
+  if item_num == 0 and reaper.TakeIsMIDI(take) then
+    _, _, ccevtcnt, _ = reaper.MIDI_CountEvts(take)
+    for i = 1, ccevtcnt do
+      _, _, muted, _, chanmsg, _, _, _ = reaper.MIDI_GetCC(take, i - 1)
+      if chanmsg == 0xC0 then -- Program Change
+        if muted then
+          flag = true
+        else
+          flag = false
+        end
+      end
+    end
+  end
+end
+
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
-if toggle_mute == "1" then
+
+if flag then
   UnMuteCC()
 else
   MuteCC()
 end
+
 reaper.Undo_EndBlock("Toggle Mute PC CC6", 0)
-reaper.UpdateArrange()
 reaper.PreventUIRefresh(-1)
+reaper.UpdateArrange()
