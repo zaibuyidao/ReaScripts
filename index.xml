@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c6cf759dd8a83d05e96671cbea4416be6d903a4b">
+<index version="1" name="zaibuyidao Scripts" commit="fa74fb3ab1d4679a48a4372b061154e177462f6a">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -59,6 +59,36 @@
     </reapack>
   </category>
   <category name="JSFX">
+    <reapack name="MIDI Route Channel.jsfx" type="effect" desc="MIDI Route Channel">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 listens for Program Change messages sets the MIDI channel to 1 ... 16\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="zaibuyidao, DarkStar" time="2020-10-09T16:05:03Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/fa74fb3ab1d4679a48a4372b061154e177462f6a/JSFX/MIDI%20Route%20Channel.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="MIDI路由通道.jsfx" type="effect" desc="MIDI路由通道">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 \u30435?\u32893?\u31243?\u24335?\u35722?\u25563?\u35338?\u24687?\u23559?MIDI\u36890?\u36947?\u35373?\u23450?\u28858?1...16\par}
+}
+]]></description>
+      </metadata>
+      <version name="1.0" author="zaibuyidao, DarkStar" time="2020-10-09T16:05:03Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/fa74fb3ab1d4679a48a4372b061154e177462f6a/JSFX/MIDI%E8%B7%AF%E7%94%B1%E9%80%9A%E9%81%93.jsfx</source>
+      </version>
+    </reapack>
     <reapack name="Simple Expression Map.jsfx" type="effect" desc="Simple Expression Map">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
@@ -1606,12 +1636,14 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Every Second Event.lua" type="script" desc="Select Every Second Event">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="zaibuyidao" time="2020-02-28T15:53:14Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d0ecef9d911f775bda44295f08c8a0e12f02f7d5/MIDI%20Editor/zaibuyidao_Select%20Every%20Second%20Event.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-10-09T16:05:03Z">
+        <changelog><![CDATA[+ Fix the bug that there are multiple notes in the start position]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fa74fb3ab1d4679a48a4372b061154e177462f6a/MIDI%20Editor/zaibuyidao_Select%20Every%20Second%20Event.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Note With The Same Channel (Under Mouse).lua" type="script" desc="Select Note With The Same Channel (Under Mouse)">
