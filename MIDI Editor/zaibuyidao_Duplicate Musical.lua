@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Duplicate Musical
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -19,6 +19,7 @@
 function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
 take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if take == nil then return end
+_, _, ccevtcnt, _ = reaper.MIDI_CountEvts(take)
 tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 
 function table_max(t)
@@ -153,11 +154,8 @@ function DuplicateCCs()
             end
         end
 
-        j = reaper.MIDI_EnumSelCC(take, -1)
-        while j ~= -1 do
-            reaper.MIDI_SetCCShape(take, j, shape, beztension, false)
-          j = reaper.MIDI_EnumSelCC(take, j)
-        end
+        ccevtcnt = ccevtcnt + 1
+        reaper.MIDI_SetCCShape(take, ccevtcnt - 1, shape, beztension, false)
     end
 end
 
@@ -245,11 +243,8 @@ function DuplicateMix()
             end
         end
 
-        j = reaper.MIDI_EnumSelCC(take, -1)
-        while j ~= -1 do
-            reaper.MIDI_SetCCShape(take, j, shape, beztension, false)
-          j = reaper.MIDI_EnumSelCC(take, j)
-        end
+        ccevtcnt = ccevtcnt + 1
+        reaper.MIDI_SetCCShape(take, ccevtcnt - 1, shape, beztension, false)
     end
 end
 

@@ -1,13 +1,12 @@
 --[[
  * ReaScript Name: Duplicate Events To Edit Cursor (Multitrack)
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -96,11 +95,8 @@ function DuplicateCCs(m) -- 最小位置通过参数m传入
             reaper.MIDI_SetCC(take, ccs_idx[i], false, nil, nil, nil, nil, nil, nil, false)
         end
 
-        j = reaper.MIDI_EnumSelCC(take, -1)
-        while j ~= -1 do
-            reaper.MIDI_SetCCShape(take, j, shape, beztension, false)
-          j = reaper.MIDI_EnumSelCC(take, j)
-        end
+        ccevtcnt = ccevtcnt + 1
+        reaper.MIDI_SetCCShape(take, ccevtcnt - 1, shape, beztension, false)
     end
 end
 
@@ -155,6 +151,7 @@ if count_sel_items > 0 then
         item = reaper.GetSelectedMediaItem(0, i - 1)
         take = reaper.GetTake(item, 0)
         if not take or not reaper.TakeIsMIDI(take) then return end
+        _, _, ccevtcnt, _ = reaper.MIDI_CountEvts(take)
         CountAllSelEvents()
         cur_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0))
         reaper.MIDI_DisableSort(take)
@@ -173,6 +170,7 @@ else
     -- Msg("count_sel_items == 0")
     take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
+    _, _, ccevtcnt, _ = reaper.MIDI_CountEvts(take)
     CountAllSelEvents()
     cur_pos = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0))
     reaper.MIDI_DisableSort(take)
