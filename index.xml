@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="4ed021092fc567b9cb44269e38a18b2042a2a8e1">
+<index version="1" name="zaibuyidao Scripts" commit="8050d6a822f49c58517a8b666098df2badf02de2">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -958,6 +958,12 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2020-04-12T10:01:41Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Sysex.lua" type="script" desc="Insert Sysex">
+      <version name="1.0" author="zaibuyidao" time="2020-10-12T16:37:54Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8050d6a822f49c58517a8b666098df2badf02de2/MIDI%20Editor/zaibuyidao_Insert%20Sysex.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Vibrato.lua" type="script" desc="Insert Vibrato">
