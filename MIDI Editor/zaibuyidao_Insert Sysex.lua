@@ -1,12 +1,12 @@
 --[[
  * ReaScript Name: Insert Sysex
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
- * provides: [main=midi_editor,midi_eventlisteditor] .
+ * provides: [main=main,midi_editor,midi_inlineeditor] .
 --]]
 
 --[[
@@ -20,7 +20,7 @@ local window, _, _ = reaper.BR_GetMouseCursorContext()
 local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
 local sysex_byte = reaper.GetExtState("InsertSysex", "SysexByte")
 if (sysex_byte == "") then sysex_byte = "41 10 42 12 00 00 7F 01 00" end
-user_ok, sysex_byte = reaper.GetUserInputs('Insert Sysex', 1, 'F0 ......... F7,extrawidth=250', sysex_byte)
+user_ok, sysex_byte = reaper.GetUserInputs('Insert Sysex', 1, 'F0 ......... F7,extrawidth=160', sysex_byte)
 
 reaper.SetExtState("InsertSysex", "SysexByte", sysex_byte, false)
 
