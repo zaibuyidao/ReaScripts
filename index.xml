@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8050d6a822f49c58517a8b666098df2badf02de2">
+<index version="1" name="zaibuyidao Scripts" commit="38f8b132895c3c14c2b0e02a2da512047a5e1ef2">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -783,9 +783,7 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 2 (For Selected Notes).lua" type="script" desc="Insert CC Events 2 (For Selected Notes)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(For%20Selected%20Notes).lua</source>
@@ -814,6 +812,9 @@
       </version>
       <version name="2.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(For%20Selected%20Notes).lua</source>
+      </version>
+      <version name="2.2" author="zaibuyidao" time="2020-10-13T20:16:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/38f8b132895c3c14c2b0e02a2da512047a5e1ef2/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%202%20(For%20Selected%20Notes).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 2 (Within Time Selection).lua" type="script" desc="Insert CC Events 2 (Within Time Selection)">
@@ -926,12 +927,13 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Sustain Pedal (For Selected Notes).lua" type="script" desc="Insert Sustain Pedal (For Selected Notes)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="zaibuyidao" time="2020-03-23T19:46:56Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae502bbf035ff87942a979e11be5e3209164bfef/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal%20(For%20Selected%20Notes).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-10-13T20:16:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/38f8b132895c3c14c2b0e02a2da512047a5e1ef2/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal%20(For%20Selected%20Notes).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Sustain Pedal.lua" type="script" desc="Insert Sustain Pedal">
@@ -964,6 +966,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-10-12T16:37:54Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8050d6a822f49c58517a8b666098df2badf02de2/MIDI%20Editor/zaibuyidao_Insert%20Sysex.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-10-13T20:16:01Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/38f8b132895c3c14c2b0e02a2da512047a5e1ef2/MIDI%20Editor/zaibuyidao_Insert%20Sysex.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Vibrato.lua" type="script" desc="Insert Vibrato">
@@ -2419,6 +2424,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-09-29T17:15:54Z">
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c6cf759dd8a83d05e96671cbea4416be6d903a4b/Utility/zaibuyidao_Toggle%20Mute%20PC%20CC6.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2020-10-13T20:16:01Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/38f8b132895c3c14c2b0e02a2da512047a5e1ef2/Utility/zaibuyidao_Toggle%20Mute%20PC%20CC6.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_VST Instrument.lua" type="script" desc="VST Instrument">
