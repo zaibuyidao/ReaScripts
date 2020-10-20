@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="38f8b132895c3c14c2b0e02a2da512047a5e1ef2">
+<index version="1" name="zaibuyidao Scripts" commit="779cebc1924e2bdf5d53e4fc101e3714f0181a11">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -602,6 +602,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-03-11T11:37:03Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/562ffc00aac343debf301ad3992641e1566dfa89/MIDI%20Editor/zaibuyidao_Glissando.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-10-20T18:58:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/779cebc1924e2bdf5d53e4fc101e3714f0181a11/MIDI%20Editor/zaibuyidao_Glissando.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Grid.lua" type="script" desc="Grid">
