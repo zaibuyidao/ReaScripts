@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Glissando
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -100,7 +100,6 @@ function getNote(sel) --根据传入的sel索引值，返回指定位置的含�
     }
     
 end
-
 function selNoteIterator() --迭代器 用于返回选中的每一个音符信息表
     local sel=-1
     return function()
@@ -222,15 +221,48 @@ function main()
         table.insert(selPitchInfo[note.startPos],note)
         table.insert(selPitchInfo[note.endPos],note)
     end
-    times = times/2
-    if state == "1" then
-        for i=1, times do
-            local opNote,overlayPitchMajor,overlayPitchMinor --opNote(用来计算叠加音符的音符) overlayPitch(将被叠加音符的音高)
-            local interval = -2
-            for startPos,notes in pairs(selPitchInfo) do --遍历每一个分组
-                if #notes > 1 then return end -- 如果该分组含有音符数量大于1则不处理
-                table.sortByKey(notes,"pitch",interval<0)  --根据上叠或者下叠决定排序顺序
-                opNote=notes[1] --取排序后的第一个音符作为计算叠加音符的音符
+    times = times / 2
+    for i = 1, times do
+        local opNote,overlayPitchMajor,overlayPitchMinor --opNote(用来计算叠加音符的音符) overlayPitch(将被叠加音符的音高)
+        local interval = -2
+        for startPos,notes in pairs(selPitchInfo) do --遍历每一个分组
+            if #notes > 1 then return end -- 如果该分组含有音符数量大于1则不处理
+            table.sortByKey(notes,"pitch",interval<0)  --根据上叠或者下叠决定排序顺序
+            opNote=notes[1] --取排序后的第一个音符作为计算叠加音符的音符
+            if state_toggle == "0" then
+                interval = -2
+                overlayPitchMajor=getOverlayPitchsMajor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
+                if overlayPitchMajor>0 then  --插入大调音程，如果计算失败会得到-1，这里判断一下再插入音符
+                    opNote.pitch=overlayPitchMajor
+                    opNote.startPos=opNote.startPos-ticks
+                    opNote.endPos=opNote.startPos+ticks
+                    insertNote(opNote)
+                end
+                overlayPitchMinor=getOverlayPitchsMinor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
+                if overlayPitchMinor>0 then  --插入小调音程，如果计算失败会得到-1，这里判断一下再插入音符
+                    opNote.pitch=overlayPitchMinor
+                    opNote.startPos=opNote.startPos-ticks
+                    opNote.endPos=opNote.startPos+ticks
+                    insertNote(opNote)
+                end
+            elseif state_toggle == "1" then
+                interval = 2
+                overlayPitchMajor=getOverlayPitchsMajor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
+                if overlayPitchMajor>0 then  --插入大调音程，如果计算失败会得到-1，这里判断一下再插入音符
+                    opNote.pitch=overlayPitchMajor
+                    opNote.startPos=opNote.startPos-ticks
+                    opNote.endPos=opNote.startPos+ticks
+                    insertNote(opNote)
+                end
+                overlayPitchMinor=getOverlayPitchsMinor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
+                if overlayPitchMinor>0 then  --插入小调音程，如果计算失败会得到-1，这里判断一下再插入音符
+                    opNote.pitch=overlayPitchMinor
+                    opNote.startPos=opNote.startPos-ticks
+                    opNote.endPos=opNote.startPos+ticks
+                    insertNote(opNote)
+                end
+            elseif state_toggle == "2" then
+                interval = -2
                 overlayPitchMajor=getOverlayPitchsMajor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
                 if overlayPitchMajor>0 then  --插入大调音程，如果计算失败会得到-1，这里判断一下再插入音符
                     opNote.pitch=overlayPitchMajor
@@ -245,34 +277,27 @@ function main()
                     opNote.endPos=opNote.endPos+ticks
                     insertNote(opNote)
                 end
-            end
-        end
-    else
-        for i=1, times do
-            local opNote,overlayPitchMajor,overlayPitchMinor --opNote(用来计算叠加音符的音符) overlayPitch(将被叠加音符的音高)
-            local interval = -2
-            for startPos,notes in pairs(selPitchInfo) do --遍历每一个分组
-                if #notes > 1 then return end -- 如果该分组含有音符数量大于1则不处理
-                table.sortByKey(notes,"pitch",interval<0)  --根据上叠或者下叠决定排序顺序
-                opNote=notes[1] --取排序后的第一个音符作为计算叠加音符的音符
+            elseif state_toggle == "3" then
+                interval = 2
                 overlayPitchMajor=getOverlayPitchsMajor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
                 if overlayPitchMajor>0 then  --插入大调音程，如果计算失败会得到-1，这里判断一下再插入音符
                     opNote.pitch=overlayPitchMajor
-                    opNote.startPos=opNote.startPos-ticks
-                    opNote.endPos=opNote.startPos+ticks
+                    opNote.startPos=opNote.endPos
+                    opNote.endPos=opNote.endPos+ticks
                     insertNote(opNote)
                 end
                 overlayPitchMinor=getOverlayPitchsMinor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
                 if overlayPitchMinor>0 then  --插入小调音程，如果计算失败会得到-1，这里判断一下再插入音符
                     opNote.pitch=overlayPitchMinor
-                    opNote.startPos=opNote.startPos-ticks
-                    opNote.endPos=opNote.startPos+ticks
+                    opNote.startPos=opNote.endPos
+                    opNote.endPos=opNote.endPos+ticks
                     insertNote(opNote)
                 end
             end
         end
     end
 end
+
 local cnt, index = 0, {}
 local val = reaper.MIDI_EnumSelNotes(take, -1)
 while val ~= - 1 do
@@ -281,27 +306,27 @@ while val ~= - 1 do
   val = reaper.MIDI_EnumSelNotes(take, val)
 end
 if cnt > 1 then return reaper.SN_FocusMIDIEditor() end
+
 key_signature = reaper.GetExtState("Glissando", "Key")
 times =  reaper.GetExtState("Glissando", "Times")
 ticks =  reaper.GetExtState("Glissando", "Ticks")
 state_toggle = reaper.GetExtState("Glissando", "Toggle")
+
 if (key_signature == "") then key_signature = "C" end
 if (times == "") then times = "8" end
 if (ticks == "") then ticks = "60" end
 if (state_toggle == "") then state_toggle = "0" end
-local userOK, userInputsCSV = reaper.GetUserInputs("Glissando", 4, "key Signature,Amount,Interval,0=Strat Base 1=End Base", key_signature..','.. times..','.. ticks..','.. state_toggle)
+
+local userOK, userInputsCSV = reaper.GetUserInputs("Glissando", 4, "key Signature,Amount,Note Interval,0=LD 1=LU 2=RD 3=RU", key_signature..','.. times..','.. ticks..','.. state_toggle)
 if not userOK then return reaper.SN_FocusMIDIEditor() end
 key_signature, times, ticks, state_toggle = userInputsCSV:match("(%a*),(%d*),(%d*),(%d*)")
 if not key_signature:match('[%a%.]+') or not times:match('[%d%.]+') or not ticks:match('[%d%.]+') or not state_toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
+
 reaper.SetExtState("Glissando", "Key", key_signature, false)
 reaper.SetExtState("Glissando", "Times", times, false)
 reaper.SetExtState("Glissando", "Ticks", ticks, false)
 reaper.SetExtState("Glissando", "Toggle", state_toggle, false)
-reaper.SetExtState("Glissando", "ToggleValue", state_toggle, 0)
-local has_state = reaper.HasExtState("Glissando", "ToggleValue")
-if has_state == true then
-    state = reaper.GetExtState("Glissando", "ToggleValue")
-end
+
 reaper.MIDI_DisableSort(take)
 reaper.Undo_BeginBlock()
 main()
