@@ -1,0 +1,55 @@
+desc: MIDI路由CC到通道
+version: 1.0
+changelog: init
+author: 再補一刀
+website: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+about:
+  監聽CC設置MIDI通道到 1 ... 16
+
+slider1:118<1,127,1>控制器編號(CC)
+slider2:1<0,127,1>值
+slider3:1<1,16,1>通道
+
+in_pin:none
+out_pin:none
+
+@init
+note_on = 9;
+note_off = 8;
+
+// 記住當前音符
+start_ons = 1024;
+note_ons = start_ons;
+end_ons = note_ons + 128;
+memset(start_ons, -1, 128); 
+
+@slider
+
+@sample
+while (
+  midirecv(offset, msg1, msg2, msg3) ? (
+    statusHi = (msg1 / 16) | 0;
+    statusLo = msg1 - (statusHi * 16);
+    msg = (msg1 / 16) | 0;
+    msg_num = msg2;
+    msg_val = msg3;
+    
+    CC118 = slider1;
+    msg == 11 && (msg_num == CC118) ? (
+      slider2 = msg_val;
+      msg_val > 0 ? msg_val -=1;
+      channel_route = msg_val % 16; // 約束到 0 ... 15
+      slider3 = channel_route + 1;
+      msg1 = $xc0 + channel_route;
+    );
+    
+    msg == note_off || (msg == note_on && msg_val == 0) ? (
+      msg1 = msg * 16 + note_ons[msg_num];
+    ) : msg1 = msg * 16 + channel_route;
+      msg == note_on && msg_val > 0 ? (
+      note_ons[msg_num] = channel_route;
+    );
+    
+    midisend(offset, msg1, msg2, msg3);
+  );
+);
