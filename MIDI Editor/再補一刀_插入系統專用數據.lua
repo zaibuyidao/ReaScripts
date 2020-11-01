@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Insert Sysex
- * Version: 1.1
- * Author: zaibuyidao
+ * ReaScript Name: 插入系統專用數據
+ * Version: 1.2
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -18,11 +18,11 @@
 function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
 local window, _, _ = reaper.BR_GetMouseCursorContext()
 local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
-local sysex_byte = reaper.GetExtState("InsertSysex", "SysexByte")
+local sysex_byte = reaper.GetExtState("InsertSysEx", "SysexByte")
 if (sysex_byte == "") then sysex_byte = "41 10 42 12 00 00 7F 01 00" end
-user_ok, sysex_byte = reaper.GetUserInputs('Insert Sysex', 1, 'F0 ......... F7,extrawidth=160', sysex_byte)
+user_ok, sysex_byte = reaper.GetUserInputs('插入系統專用數據', 1, '不包括邊界F0..F7,extrawidth=160', sysex_byte)
 
-reaper.SetExtState("InsertSysex", "SysexByte", sysex_byte, false)
+reaper.SetExtState("InsertSysEx", "SysexByte", sysex_byte, false)
 
 sysex_byte = sysex_byte:gsub("%s+", "") -- 去除所有空格
 
@@ -61,5 +61,5 @@ else
       reaper.MIDI_InsertTextSysexEvt(take, true, false, ppqpos, -1, bytestr)
   end
 end
-reaper.Undo_EndBlock("Insert Sysex", 0)
+reaper.Undo_EndBlock("插入系統專用數據", 0)
 reaper.UpdateArrange()
