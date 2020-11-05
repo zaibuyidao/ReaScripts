@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d8c6f568455294cfc4d178dc3f8a0dbf3d381ce1">
+<index version="1" name="zaibuyidao Scripts" commit="710e081af2a32ee80756013922a6b1269e12b702">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -36,6 +36,12 @@
     </reapack>
   </category>
   <category name="Items Editing">
+    <reapack name="zaibuyidao_Move Items To The Track Of Selected First Item.lua" type="script" desc="Move Items To The Track Of Selected First Item">
+      <version name="1.0" author="zaibuyidao" time="2020-11-05T22:09:31Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/710e081af2a32ee80756013922a6b1269e12b702/Items%20Editing/zaibuyidao_Move%20Items%20To%20The%20Track%20Of%20Selected%20First%20Item.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
