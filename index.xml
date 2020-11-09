@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="710e081af2a32ee80756013922a6b1269e12b702">
+<index version="1" name="zaibuyidao Scripts" commit="b8326d091cd764f45909e20292ce5ec92630b4c2">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -36,10 +36,10 @@
     </reapack>
   </category>
   <category name="Items Editing">
-    <reapack name="zaibuyidao_Move Items To The Track Of Selected First Item.lua" type="script" desc="Move Items To The Track Of Selected First Item">
-      <version name="1.0" author="zaibuyidao" time="2020-11-05T22:09:31Z">
+    <reapack name="zaibuyidao_Move Items To Track Of First Selected Item.lua" type="script" desc="Move Items To Track Of First Selected Item">
+      <version name="1.0" author="zaibuyidao" time="2020-11-09T03:40:38Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/710e081af2a32ee80756013922a6b1269e12b702/Items%20Editing/zaibuyidao_Move%20Items%20To%20The%20Track%20Of%20Selected%20First%20Item.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/Items%20Editing/zaibuyidao_Move%20Items%20To%20Track%20Of%20First%20Selected%20Item.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Move Selected Items +10.lua" type="script" desc="Move Selected Items +10">
@@ -69,16 +69,22 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/Items%20Editing/zaibuyidao_Move%20Selected%20Items.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Reposition Items.lua" type="script" desc="Reposition items">
+    <reapack name="zaibuyidao_Reposition Items.lua" type="script" desc="Reposition Items">
       <version name="1.0" author="zaibuyidao" time="2020-11-05T21:40:58Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d8c6f568455294cfc4d178dc3f8a0dbf3d381ce1/Items%20Editing/zaibuyidao_Reposition%20Items.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-11-09T03:40:38Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/Items%20Editing/zaibuyidao_Reposition%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重新定位對象.lua" type="script" desc="重新定位對象">
       <version name="1.0" author="再補一刀" time="2020-11-05T21:40:58Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d8c6f568455294cfc4d178dc3f8a0dbf3d381ce1/Items%20Editing/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%87%8D%E6%96%B0%E5%AE%9A%E4%BD%8D%E5%B0%8D%E8%B1%A1.lua</source>
+      </version>
+      <version name="1.1" author="再補一刀" time="2020-11-09T03:40:38Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/Items%20Editing/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%87%8D%E6%96%B0%E5%AE%9A%E4%BD%8D%E5%B0%8D%E8%B1%A1.lua</source>
       </version>
     </reapack>
   </category>
@@ -196,6 +202,10 @@
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/c1625a2a14541ac81d023aea2542f6dd981286ad/JSFX/Simple%20Expression%20Map.jsfx</source>
       </version>
+      <version name="2.0" author="zaibuyidao, Tale" time="2020-11-09T03:40:38Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/JSFX/Simple%20Expression%20Map.jsfx</source>
+      </version>
     </reapack>
     <reapack name="簡單表情映射.jsfx" type="effect" desc="簡單表情映射">
       <metadata>
@@ -203,7 +213,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992? JSFX-\u31777?\u21934?\u34920?\u36948?\u24335?\u26144?\u23556?\u23559?\u31243?\u24335?\u35722?\u25563?\u28040?\u24687?\u36681?\u25563?\u28858?\u37749?\u20301?\u20999?\u25563?\u37749?\u12290? \u22312?\u20219?\u20309?\u27169?\u24335?\u19979?\u65292?\u20351?\u29992?CC\u65283?119\u25511?\u21046?\u22120?\u25554?\u20837?0\u20540?\u21363?\u21487?\u31435?\u21363?\u30332?\u36865?Note-Off\u65307? \u24744?\u36996?\u21487?\u20197?\u20351?\u29992?CC\u65283?119\u22312?\u28151?\u21512?\u27169?\u24335?\u19979?\u25511?\u21046?\u38190?\u20301?\u20999?\u25442?\u38190?\u30340?\u38263?\u24230?\u12290?\u30070?\u20540?\u26159?1-127\u26178?\u65292?\u23559?\u28608?\u27963?\u36830?\u22863?\u27169?\u24335?\u20351?\u38899?\u31526?\u24310?\u38271?\u65292?\u32780?\u30070?\u20540?\u26159?0\u26178?\u65292?\u23559?\u28608?\u27963?\u26039?\u22863?\u27169?\u24335?\u24182?\u31435?\u21051?\u21457?\u36865?Note-Off\u12290?\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992? JSFX-\u31777?\u21934?\u34920?\u36948?\u24335?\u26144?\u23556?\u23559?\u31243?\u24335?\u35722?\u25563?\u28040?\u24687?\u36681?\u25563?\u28858?\u37749?\u20301?\u20999?\u25563?\u37749?\u12290? \u22312?\u20219?\u20309?\u27169?\u24335?\u19979?\u65292?\u20351?\u29992?CC\u65283?119\u25511?\u21046?\u22120?\u25554?\u20837?0\u20540?\u21363?\u21487?\u31435?\u21363?\u30332?\u36865?Note-Off(\u25903?\u25345?\u33258?\u23450?\u32681?\u25511?\u21046?\u22120?\u32232?\u34399?)\u65307? \u24744?\u36996?\u21487?\u20197?\u20351?\u29992?CC\u65283?119\u22312?\u28151?\u21512?\u27169?\u24335?\u19979?\u25511?\u21046?\u38190?\u20301?\u20999?\u25442?\u38190?\u30340?\u38263?\u24230?\u12290?\u30070?\u20540?\u26159?1-127\u26178?\u65292?\u23559?\u28608?\u27963?\u36830?\u22863?\u27169?\u24335?\u20351?\u38899?\u31526?\u24310?\u38271?\u65292?\u32780?\u30070?\u20540?\u26159?0\u26178?\u65292?\u23559?\u28608?\u27963?\u26039?\u22863?\u27169?\u24335?\u24182?\u31435?\u21051?\u21457?\u36865?Note-Off\u12290?\par}
 }
 ]]></description>
         <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
@@ -223,6 +233,10 @@
       <version name="1.9" author="再補一刀, Tale" time="2020-09-21T04:21:33Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/c1625a2a14541ac81d023aea2542f6dd981286ad/JSFX/%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84.jsfx</source>
+      </version>
+      <version name="2.0" author="再補一刀, Tale" time="2020-11-09T03:40:38Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/JSFX/%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84.jsfx</source>
       </version>
     </reapack>
   </category>
@@ -2423,9 +2437,7 @@
   </category>
   <category name="MIDI Event List Editor">
     <reapack name="zaibuyidao_Insert NRPN.lua" type="script" desc="Insert NRPN">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
         <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
       </version>
@@ -2446,6 +2458,9 @@
       </version>
       <version name="2.3" author="zaibuyidao" time="2020-04-12T10:01:41Z">
         <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/89bfa5394c949b6136521424b1e46d2b882ce291/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
+      </version>
+      <version name="2.4" author="zaibuyidao" time="2020-11-09T03:40:38Z">
+        <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
       </version>
     </reapack>
   </category>
