@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Move Items To The Track Of Selected First Item
+ * ReaScript Name: Move Items To Track Of First Selected Item
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -28,7 +28,7 @@ if count_sel_items > 0 then
         end
         reaper.MoveMediaItemToTrack(item, track)
     end
-    reaper.Undo_EndBlock("Move Items To The Track Of Selected First Item", -1) -- 撤消塊末尾
+    reaper.Undo_EndBlock("Move Items To Track Of First Selected Item", -1) -- 撤消塊結束
     reaper.UpdateArrange()
     reaper.PreventUIRefresh(-1)
 end
