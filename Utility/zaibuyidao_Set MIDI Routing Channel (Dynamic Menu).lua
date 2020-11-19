@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set MIDI Routing Channel (Dynamic Menu)
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -48,11 +48,11 @@ for i = 0, count_sel_track-1 do
 end
 
 local routing = {}
-for i = 0, 17-1 do
-    if MIDIflags == x then
-        routing[#routing + 1] = {cur = true, idx = i}
+for m = 0, 17-1 do
+    if MIDIflags == m then
+        routing[#routing + 1] = {cur = true, idx = m}
     else
-        routing[#routing + 1] = {cur = false, idx = i}
+        routing[#routing + 1] = {cur = false, idx = m}
     end
 end
 
