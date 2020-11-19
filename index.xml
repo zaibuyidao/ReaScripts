@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="01ce82bf81b32097f975e0dacf5468ef853f3fb0">
+<index version="1" name="zaibuyidao Scripts" commit="a7baf4886893a3163f38d03fb342ed209093aef6">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -2517,6 +2517,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-11-18T23:11:23Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01ce82bf81b32097f975e0dacf5468ef853f3fb0/Utility/zaibuyidao_Set%20MIDI%20Routing%20Channel%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-11-19T04:31:34Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a7baf4886893a3163f38d03fb342ed209093aef6/Utility/zaibuyidao_Set%20MIDI%20Routing%20Channel%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Project Grid.lua" type="script" desc="Set Project Grid">
