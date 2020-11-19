@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Build MIDI Routing Channel To Selected Tracks
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -20,10 +20,17 @@ function main()
     count_sel_track = reaper.CountSelectedTracks(0)
     if count_sel_track == 0 then return end
 
+    sel_track_name = {}
     for i = 0, count_sel_track-1 do
-        select_track = reaper.GetSelectedTrack(0, i)
-        select_track_num = reaper.GetMediaTrackInfo_Value(select_track,'IP_TRACKNUMBER')
-        isVSTi = reaper.TrackFX_GetInstrument(select_track) -- 判斷是否為VSTi
+        local select_track = reaper.GetSelectedTrack(0, i)
+        local _, get_track_name = reaper.GetTrackName(select_track, "")
+        sel_track_name[#sel_track_name+1] = get_track_name
+    end
+
+    for i = 0, count_sel_track-1 do
+        local select_track = reaper.GetSelectedTrack(0, i)
+        local select_track_num = reaper.GetMediaTrackInfo_Value(select_track,'IP_TRACKNUMBER')
+        local isVSTi = reaper.TrackFX_GetInstrument(select_track) -- 判斷是否為VSTi
         if isVSTi == -1 then goto continue end
 
         local channel_total = reaper.GetExtState("BuildMIDIRoutingChannel", "Total")
@@ -31,9 +38,8 @@ function main()
         local channel_ordinal = reaper.GetExtState("BuildMIDIRoutingChannel", "Ordinal")
         if (channel_ordinal == "") then channel_ordinal = "1" end
         
-        _, get_track_name = reaper.GetTrackName(select_track, "")
-        user_ok, input_cav = reaper.GetUserInputs("Build MIDI Routing To " .. get_track_name, 2, "Total number of channels,Channel ordinal", channel_total ..','.. channel_ordinal)
-        channel_total, channel_ordinal = input_cav:match("(.*),(.*)")
+        user_ok, user_input_csv = reaper.GetUserInputs("Build MIDI Routing To " .. sel_track_name[i+1], 2, "Total number of channels,Channel ordinal", channel_total ..','.. channel_ordinal)
+        channel_total, channel_ordinal = user_input_csv:match("(.*),(.*)")
         if not user_ok or not tonumber(channel_total) or not tonumber(channel_ordinal) then return end
         channel_total, channel_ordinal = tonumber(channel_total), tonumber(channel_ordinal)
 
