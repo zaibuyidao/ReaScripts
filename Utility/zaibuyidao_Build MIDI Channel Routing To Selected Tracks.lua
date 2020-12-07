@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: 建立MIDI路由通道到所選軌道
- * Version: 1.1
- * Author: 再補一刀
+ * ReaScript Name: Build MIDI Channel Routing To Selected Tracks
+ * Version: 1.0
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -38,7 +38,7 @@ function main()
         local channel_ordinal = reaper.GetExtState("BuildMIDIRoutingChannel", "Ordinal")
         if (channel_ordinal == "") then channel_ordinal = "1" end
         
-        user_ok, user_input_csv = reaper.GetUserInputs("建立MIDI路由通道到 " .. sel_track_name[i+1], 2, "通道總數,通道順序", channel_total ..','.. channel_ordinal)
+        user_ok, user_input_csv = reaper.GetUserInputs("Build MIDI Routing To " .. sel_track_name[i+1], 2, "Total number of channels,Channel ordinal", channel_total ..','.. channel_ordinal)
         channel_total, channel_ordinal = user_input_csv:match("(.*),(.*)")
         if not user_ok or not tonumber(channel_total) or not tonumber(channel_ordinal) then return end
         channel_total, channel_ordinal = tonumber(channel_total), tonumber(channel_ordinal)
@@ -64,7 +64,7 @@ function main()
             if channel == '0' then channel = 'All' end
             reaper.SetTrackSendInfo_Value(track_to_send, 0, 0, 'I_MIDIFLAGS', channel << 5)
         end
-        reaper.Undo_EndBlock("建立MIDI路由通道到所選軌道", 0)
+        reaper.Undo_EndBlock("Build MIDI Channel Routing To Selected Tracks", 0)
         ::continue::
     end
 end
