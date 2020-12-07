@@ -1,0 +1,29 @@
+desc: MIDI Off Velocity Limiter
+version: 1.0
+changelog: init
+author: zaibuyidao
+website: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+
+slider1:127<0,127,1>Threshold
+slider2:0<0,127,1>Limit
+
+in_pin:none
+out_pin:none
+
+@init
+note_on = $x90;
+note_off = $x80;
+
+@block
+while (midirecv(offset, msg1, msg2, msg3)) (
+  msg = msg1 & $xf0;
+  msg_num = msg2;
+  msg_val = msg3;
+  msg == note_off ? (
+    off_vel = msg3;
+    off_vel > slider1 ? (
+      msg3 = slider2;
+    );
+  );
+  midisend(offset, msg1, msg2, msg3);
+);
