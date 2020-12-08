@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Display Total Length Of Selected Items
+ * ReaScript Name: 顯示所選對象的總長度
  * Version: 1.1
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -90,37 +90,37 @@ function Main()
 
         if count_sel_items > 1 then
             if flag_nil[1] == 0 then
-                Msg("Take name:")
+                Msg("對象名稱:")
                 Msg("")
                 Msg("")
             else
-                Msg("Take name:")
+                Msg("對象名稱:")
                 Msg(take_name_tb[1])
                 Msg("")
             end
         else
-            Msg("Take name:")
+            Msg("對象名稱:")
             Msg(take_name_tb[1])
             Msg("")
         end
 
-        Msg("Number of items selected:")
+        Msg("所選對象數量:")
         Msg(count_sel_items)
         Msg("")
 
-        Msg("Total length (h:m:s.ms)")
+        Msg("總長度(h:m:s.ms)")
         Msg(reaper.format_timestr(len_total, 5))
         Msg("")
 
-        Msg("Position (h:m:s.ms)")
+        Msg("位置(h:m:s.ms)")
         Msg(reaper.format_timestr(near_start_pos, 5) .. ' - ' .. reaper.format_timestr(far_end_pos, 5))
         -- Msg("")
 
-        -- Msg("Total length sum (h:m:s.ms)")
+        -- Msg("總長度之和(h:m:s.ms)")
         -- Msg(reaper.format_timestr(len_sum, 5))
         -- Msg("")
 
-        -- Msg("Average length by item (h:m:s.ms)")
+        -- Msg("平均長度 (h:m:s.ms)")
         -- Msg(reaper.format_timestr(len_sum / count_sel_items, 5))
         -- Msg("")
     end
