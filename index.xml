@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="162d8c9abb1ab2342e2a3b9dc057dff38daaa946">
+<index version="1" name="zaibuyidao Scripts" commit="cbb875e25cca4ba642a337a646c54863ada92cec">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -2512,6 +2512,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/bf471d17769d25eb6dd60100c3c373ebe3bbd2b7/Utility/zaibuyidao_Display%20Total%20Length%20Of%20Selected%20Items.lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2020-12-08T16:28:11Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cbb875e25cca4ba642a337a646c54863ada92cec/Utility/zaibuyidao_Display%20Total%20Length%20Of%20Selected%20Items.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Jump To Marker.lua" type="script" desc="Jump To Marker">
       <version name="1.0" author="zaibuyidao" time="2020-08-12T18:07:49Z">
@@ -2531,13 +2534,10 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf/Utility/zaibuyidao_MIDI%20Channel%20From%20Track%20Send.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Set MIDI Routing Channel (Dynamic Menu).lua" type="script" desc="Set MIDI Routing Channel (Dynamic Menu)">
-      <version name="1.0" author="zaibuyidao" time="2020-11-18T23:11:23Z">
+    <reapack name="zaibuyidao_Set MIDI Channel Routing (Dynamic Menu).lua" type="script" desc="Set MIDI Channel Routing (Dynamic Menu)">
+      <version name="1.0" author="zaibuyidao" time="2020-12-08T16:28:11Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01ce82bf81b32097f975e0dacf5468ef853f3fb0/Utility/zaibuyidao_Set%20MIDI%20Routing%20Channel%20(Dynamic%20Menu).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-11-19T04:31:34Z">
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a7baf4886893a3163f38d03fb342ed209093aef6/Utility/zaibuyidao_Set%20MIDI%20Routing%20Channel%20(Dynamic%20Menu).lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cbb875e25cca4ba642a337a646c54863ada92cec/Utility/zaibuyidao_Set%20MIDI%20Channel%20Routing%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Project Grid.lua" type="script" desc="Set Project Grid">
@@ -2580,6 +2580,11 @@
       <version name="1.0" author="再補一刀, Yanick" time="2020-11-19T20:55:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/38b6e57472fa3ead38b9eccfc635dc6810e3909b/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%87%8D%E5%91%BD%E5%90%8D%E8%BB%8C%E9%81%93.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_顯示所選對象的總長度.lua" type="script" desc="顯示所選對象的總長度">
+      <version name="1.1" author="再補一刀" time="2020-12-08T16:28:11Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cbb875e25cca4ba642a337a646c54863ada92cec/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%A1%AF%E7%A4%BA%E6%89%80%E9%81%B8%E5%B0%8D%E8%B1%A1%E7%9A%84%E7%B8%BD%E9%95%B7%E5%BA%A6.lua</source>
       </version>
     </reapack>
   </category>
