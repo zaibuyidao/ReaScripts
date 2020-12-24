@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Chord Inversion (Start Base)
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -222,8 +221,11 @@ function getInput(title,lable,default)
     if userOK then return get_value end
 end
 function main()
-    local times= getInput("Chord Inversion (Start Base)","Times","1")
-    if times==nil then return end
+    local times = reaper.GetExtState("ChordInversionStartBase", "Times")
+    if (times == "") then times = "1" end
+    times = getInput("Chord Inversion (Start Base)", "Times", times)
+    if times == nil then return end
+    reaper.SetExtState("ChordInversionStartBase", "Times", times, false)
     local noteGroups={}
     for note in selNoteIterator() do
         if noteGroups[note.startPos]==nil then noteGroups[note.startPos]={} end
@@ -249,7 +251,7 @@ function main()
         end
         if up==false then times=-times end
         insertNotes(notes)
-        reaper.Undo_EndBlock("Chord Inversion (Start Base)", 0)
+        reaper.Undo_EndBlock("Chord Inversion (Start Base)", -1)
     end
 end
 function checkForNewVersion(newVersion)

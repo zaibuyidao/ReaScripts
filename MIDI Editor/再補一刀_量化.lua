@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Quantize
+ * ReaScript Name: 量化
  * Version: 1.1
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -15,7 +15,7 @@
 --]]
 
 function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
-local title = "Quantize"
+local title = "量化"
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local cur_grid, swing = reaper.MIDI_GetGrid(take)
@@ -24,7 +24,7 @@ local grid = reaper.GetExtState("Quantize", "Grid")
 if (grid == "") then grid = "120" end
 local toggle = reaper.GetExtState("Quantize", "Toggle")
 if (toggle == "") then toggle = "0" end
-local user_ok, input_cav = reaper.GetUserInputs('Quantize', 2, 'Enter A Tick,0=Default 1=Start 2=End 3=Pos', grid ..','.. toggle)
+local user_ok, input_cav = reaper.GetUserInputs('量化', 2, '輸入嘀嗒數,0=默認 1=開始 2=結束 3=位置', grid ..','.. toggle)
 grid, toggle = input_cav:match("(.*),(.*)")
 if not user_ok or not grid:match('[%d%.]+') or not toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
 reaper.SetExtState("Quantize", "Grid", grid, false)
@@ -158,8 +158,6 @@ function Main()
         NoteDurations()
     elseif toggle == "1" then
         StartTimes()
-        CCEvents()
-        TextSysEvents()
     else
         StartTimes()
         NoteDurations()
@@ -177,7 +175,7 @@ function CheckForNewVersion(new_version)
     local app_version = reaper.GetAppVersion()
     app_version = tonumber(app_version:match('[%d%.]+'))
     if new_version > app_version then
-      reaper.MB('Update REAPER to newer version '..'('..new_version..' or newer)', '', 0)
+      reaper.MB('將REAPER更新到 '..'('..new_version..' or 或更高版本)', '', 0)
       return
      else
       return true

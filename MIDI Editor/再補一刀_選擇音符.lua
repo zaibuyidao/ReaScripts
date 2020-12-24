@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Select Note
+ * ReaScript Name: 選擇音符
  * Version: 1.5
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -50,7 +50,7 @@ if (max_tick == "") then max_tick = "1919" end
 local reset = reaper.GetExtState("SelectNote", "Reset")
 if (reset == "") then reset = "0" end
 
-user_ok, dialog_ret_vals = reaper.GetUserInputs("Select Note", 13, "Key,,Velocity,,Duration,,Channel,,Beat,,Tick,,Enter 1 to restore default settings,", min_key ..','.. max_key ..','.. min_vel ..','.. max_vel ..','.. min_dur ..','.. max_dur ..','.. min_chan ..','.. max_chan ..','.. min_meas ..','.. max_meas ..','.. min_tick ..','.. max_tick ..','.. reset)
+user_ok, dialog_ret_vals = reaper.GetUserInputs("選擇音符", 13, "音高,,力度,,時值,,通道,,拍子,,嘀嗒,,輸入1以恢復默認設置,", min_key ..','.. max_key ..','.. min_vel ..','.. max_vel ..','.. min_dur ..','.. max_dur ..','.. min_chan ..','.. max_chan ..','.. min_meas ..','.. max_meas ..','.. min_tick ..','.. max_tick ..','.. reset)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
 min_key, max_key, min_vel, max_vel, min_dur, max_dur, min_chan, max_chan, min_meas, max_meas, min_tick, max_tick, reset = dialog_ret_vals:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 if not tonumber(min_key) or not tonumber(max_key) or not tonumber(min_vel) or not tonumber(max_vel) or not tonumber(min_dur) or not tonumber(max_dur) or not tonumber(min_meas) or not tonumber(max_meas) or not tonumber(min_tick) or not tonumber(max_tick) or not tonumber(reset) then return reaper.SN_FocusMIDIEditor() end
@@ -124,7 +124,7 @@ function main()
   reaper.MIDI_Sort(take)
 end
 
-script_title = "Select Note"
+script_title = "選擇音符"
 reaper.Undo_BeginBlock()
 main()
 reaper.Undo_EndBlock(script_title, -1)
