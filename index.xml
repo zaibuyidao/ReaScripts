@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="653765ea4a1aac18f4e326685381134e60bdafe1">
+<index version="1" name="zaibuyidao Scripts" commit="0daa4d62fe807576bed4098fe6f7f342b1fd1ffd">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -429,18 +429,6 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2020-03-07T11:31:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Arpeggio.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Copy Selected Events &amp; Paste At Edit Cursor.lua" type="script" desc="Copy Selected Events &amp; Paste At Edit Cursor">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-02-28T15:53:14Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d0ecef9d911f775bda44295f08c8a0e12f02f7d5/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Events%20&amp;%20Paste%20At%20Edit%20Cursor.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-04-01T14:56:01Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Events%20&amp;%20Paste%20At%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Selected Rhythm.lua" type="script" desc="Copy Selected Rhythm">
@@ -2184,19 +2172,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4ad097c7034d7929f4a16ac72eab7f13365fa3d3/MIDI%20Editor/zaibuyidao_Split%20Notes.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Strum Down.lua" type="script" desc="Strum Down">
-      <metadata/>
-      <version name="1.0" author="kawa" time="2019-12-12T14:28:10Z">
-        <changelog><![CDATA[+ Initial Release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Strum%20Down.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-12T19:04:10Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab1b98d81ca9adb7618c98d2fa7cf6a3f410ef8c/MIDI%20Editor/zaibuyidao_Strum%20Down.lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Strum%20Down.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Strum It.lua" type="script" desc="Strum It">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -2210,19 +2185,6 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2020-03-05T15:30:51Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b75fee417d4d9850feebc96adb75a198393083a5/MIDI%20Editor/zaibuyidao_Strum%20It.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Strum Up.lua" type="script" desc="Strum Up">
-      <metadata/>
-      <version name="1.0" author="kawa" time="2019-12-12T14:28:10Z">
-        <changelog><![CDATA[+ Initial Release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Strum%20Up.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-12T19:04:10Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab1b98d81ca9adb7618c98d2fa7cf6a3f410ef8c/MIDI%20Editor/zaibuyidao_Strum%20Up.lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Strum%20Up.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum Velocity Decrement.lua" type="script" desc="Strum Velocity Decrement">
