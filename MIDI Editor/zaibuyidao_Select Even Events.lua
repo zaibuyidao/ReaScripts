@@ -1,7 +1,6 @@
 --[[
- * ReaScript Name: Select Every Second Event
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes And CC Events. Run.
- * Version: 1.1
+ * ReaScript Name: Select Even Events
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,8 +10,6 @@
 
 --[[
  * Changelog:
- * v1.1 (2020-10-9)
-  + Fix the bug that there are multiple notes in the start position
  * v1.0 (2020-1-23)
   + Initial release
 --]]
@@ -122,11 +119,9 @@ for _, note in pairs(notes) do
     if startNotes[note.startPos] == nil then startNotes[note.startPos] = {} end
     startNotes[note.startPos][note.pitch] = note -- 這裡不用table.insert插入，直接使用音高作為索引插入，目的是為了後面方便判斷這一組音符中某個音高有沒有音符
 end
-
 local startPosIndex = {} -- 存放所有音符起始位置的數組，作用是用來對startNotes進行索引
 for startPos, _ in pairs(startNotes) do table.insert(startPosIndex, startPos) end
 table.sort(startPosIndex) -- 按照起始位置進行排序
-
 local note_cnt, note_idx = 0, {}
 local note_val = reaper.MIDI_EnumSelNotes(take, -1)
 while note_val ~= -1 do
@@ -134,7 +129,6 @@ while note_val ~= -1 do
     note_idx[note_cnt] = note_val
     note_val = reaper.MIDI_EnumSelNotes(take, note_val)
 end
-
 local ccs_cnt, ccs_idx = 0, {}
 local ccs_val = reaper.MIDI_EnumSelCC(take, -1)
 while ccs_val ~= -1 do
@@ -142,7 +136,6 @@ while ccs_val ~= -1 do
     ccs_idx[ccs_cnt] = ccs_val
     ccs_val = reaper.MIDI_EnumSelCC(take, ccs_val)
 end
-
 reaper.Undo_BeginBlock()
 local step = 2 -- 設置步長遞增為2
 reaper.MIDI_DisableSort(take)
@@ -159,5 +152,5 @@ for i = 1, #ccs_idx, step do
     reaper.MIDI_SetCC(take, ccs_idx[i], false, nil, nil, nil, nil, nil, nil, false)
 end
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Select Every Second Event", 0)
+reaper.Undo_EndBlock("Select Even Events", 0)
 reaper.UpdateArrange()
