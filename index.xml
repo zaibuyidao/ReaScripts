@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="189967ebf27984cbefcea5a802887a8a1d039d39">
+<index version="1" name="zaibuyidao Scripts" commit="e41c940db6661e130d01630c941c4240962d3058">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -462,6 +462,15 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-03-05T11:54:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80fa4a17562d650a137a5d110ef3c0e8050a6be4/MIDI%20Editor/zaibuyidao_Create%20And%20Connect%20Two%20Nodes%20(Within%20Time%20Selection).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Delete Channel Events (Reserve Channel).lua" type="script" desc="Delete Channel Events (Reserve Channel)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2020-12-26T14:55:30Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e41c940db6661e130d01630c941c4240962d3058/MIDI%20Editor/zaibuyidao_Delete%20Channel%20Events%20(Reserve%20Channel).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Delete Channel Events.lua" type="script" desc="Delete Channel Events">
