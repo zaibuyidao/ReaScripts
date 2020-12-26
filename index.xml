@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0daa4d62fe807576bed4098fe6f7f342b1fd1ffd">
+<index version="1" name="zaibuyidao Scripts" commit="189967ebf27984cbefcea5a802887a8a1d039d39">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1785,15 +1785,10 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_Select%20Control.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Select Every Second Event.lua" type="script" desc="Select Every Second Event">
-      <metadata/>
-      <version name="1.0" author="zaibuyidao" time="2020-02-28T15:53:14Z">
+    <reapack name="zaibuyidao_Select Even Events.lua" type="script" desc="Select Even Events">
+      <version name="1.0" author="zaibuyidao" time="2020-12-26T10:00:18Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d0ecef9d911f775bda44295f08c8a0e12f02f7d5/MIDI%20Editor/zaibuyidao_Select%20Every%20Second%20Event.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-10-09T16:05:03Z">
-        <changelog><![CDATA[+ Fix the bug that there are multiple notes in the start position]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fa74fb3ab1d4679a48a4372b061154e177462f6a/MIDI%20Editor/zaibuyidao_Select%20Every%20Second%20Event.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/189967ebf27984cbefcea5a802887a8a1d039d39/MIDI%20Editor/zaibuyidao_Select%20Even%20Events.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Note With The Same Channel (Under Mouse).lua" type="script" desc="Select Note With The Same Channel (Under Mouse)">
@@ -1838,6 +1833,12 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2020-12-24T20:29:21Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/653765ea4a1aac18f4e326685381134e60bdafe1/MIDI%20Editor/zaibuyidao_Select%20Note.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Select Odd Events.lua" type="script" desc="Select Odd Events">
+      <version name="1.0" author="zaibuyidao" time="2020-12-26T10:00:18Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/189967ebf27984cbefcea5a802887a8a1d039d39/MIDI%20Editor/zaibuyidao_Select%20Odd%20Events.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Top Notes In Chord (Leave Single Notes Selected).lua" type="script" desc="Select Top Notes In Chord (Leave Single Notes Selected)">
