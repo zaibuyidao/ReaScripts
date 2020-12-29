@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: MIDI Item List (Dynamic Menu)
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -27,6 +27,8 @@ if not reaper.APIExists("JS_Window_Find") then
   return reaper.defer(function() end)
 end
 
+local count_track = reaper.CountSelectedTracks(0)
+if count_track > 1 then return end
 local hwnd = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(hwnd)
 local track = reaper.GetMediaItemTake_Track(take)
@@ -42,9 +44,18 @@ for i = 0, item_num-1 do
   else
     flag = false
   end
-  menu = menu .. (flag and "!" or "") .. i .. " " .. take_name .. "|"
+
+  if i == item_num-1 then 
+    menu = menu .. (flag and "!" or "") .. i .. " " .. take_name .. "||"
+  else
+    menu = menu .. (flag and "!" or "") .. i .. " " .. take_name .. "|"
+  end
+
 end
-menu = menu .. "Select all MIDI item" .. "|"
+
+menu = menu
+.. "Select all MIDI items" .. "|"
+.. "Unselect all MIDI items" .. "|"
 
 local title = "Hidden gfx window for showing the MIDI item list showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
@@ -60,18 +71,20 @@ gfx.x, gfx.y = gfx.mouse_x-0+out, gfx.mouse_y-0+out -- 可設置彈出菜單時�
 local selection = gfx.showmenu(menu)
 gfx.quit()
 
-for i = 0, item_num-1 do
-  item = reaper.GetTrackMediaItem(track, i)
-  reaper.SetMediaItemSelected(item, false)
-end
-
 if selection > 0 then
   for i = 0, item_num-1 do
-    local item = reaper.GetTrackMediaItem(track, selection - 1) -- 此處selection值與標題行數關聯，標題佔用一行-1，佔用兩行則-2
-    if selection == (item_num+1) then
-      item = reaper.GetTrackMediaItem(track, i)
+    local item = reaper.GetTrackMediaItem(track, i)
+    if selection == i+1 then
+      reaper.SetMediaItemSelected(item, true)
+    else
+      reaper.SetMediaItemSelected(item, false)
     end
-    reaper.SetMediaItemSelected(item, true)
+    if selection == (item_num+1) then
+      reaper.SetMediaItemSelected(item, true)
+    end
+    if selection == (item_num+2) then
+      reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_UNSELONTRACKS"), 0) -- SWS: Unselect all items on selected track(s)
+    end
   end
 end
 
