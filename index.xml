@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="570fbdec70c789d4e3ee9b73dc2d09ebe461ec7a">
+<index version="1" name="zaibuyidao Scripts" commit="d297406bcb2bf79c813915a6d321e6668bb7ffcb">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -401,10 +401,10 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/653765ea4a1aac18f4e326685381134e60bdafe1/MIDI%20Editor/zaibuyidao_Chord%20Inversion.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Color Notes.lua" type="script" desc="Color Notes">
-      <version name="1.0" author="zaibuyidao" time="2020-11-01T09:09:57Z">
+    <reapack name="zaibuyidao_Color Notes (Dynamic Menu).lua" type="script" desc="Color Notes (Dynamic Menu)">
+      <version name="1.0" author="zaibuyidao" time="2020-12-29T17:23:12Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c338285ba108de1b4a12862836f9cb38b56a6ff/MIDI%20Editor/zaibuyidao_Color%20Notes.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8e4d1745404aac4fc17b41e15ce8a353905a56a2/MIDI%20Editor/zaibuyidao_Color%20Notes%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Connect Two Nodes.lua" type="script" desc="Connect Two Nodes">
@@ -1188,10 +1188,10 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4edf0690bddc72bd58b80cee02706fb66ea1f0ee/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_MIDI Item List.lua" type="script" desc="MIDI Item List">
-      <version name="1.0" author="zaibuyidao" time="2020-11-01T09:09:57Z">
+    <reapack name="zaibuyidao_MIDI Item List (Dynamic Menu).lua" type="script" desc="MIDI Item List (Dynamic Menu)">
+      <version name="1.0" author="zaibuyidao" time="2020-12-29T17:25:47Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c338285ba108de1b4a12862836f9cb38b56a6ff/MIDI%20Editor/zaibuyidao_MIDI%20Item%20List.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d297406bcb2bf79c813915a6d321e6668bb7ffcb/MIDI%20Editor/zaibuyidao_MIDI%20Item%20List%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Move Edit Cursor +10.lua" type="script" desc="Move Edit Cursor +10">
