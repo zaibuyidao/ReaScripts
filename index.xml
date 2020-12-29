@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e41c940db6661e130d01630c941c4240962d3058">
+<index version="1" name="zaibuyidao Scripts" commit="0d2507a26442a6fcd877a4468aff72ad934ab986">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1005,6 +1005,9 @@
       <version name="1.0" author="zaibuyidao" time="2020-09-15T21:18:13Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/95a3fa68b2bf325111697ee170242af5923c6034/MIDI%20Editor/zaibuyidao_Insert%20Program%20Change%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2020-12-29T16:32:09Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0d2507a26442a6fcd877a4468aff72ad934ab986/MIDI%20Editor/zaibuyidao_Insert%20Program%20Change%20(For%20JSFX-Simple%20Expression%20Map).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Random CC Events (For Selected Notes).lua" type="script" desc="Insert Random CC Events (For Selected Notes)">
@@ -2415,6 +2418,9 @@
       <version name="1.0" author="再補一刀" time="2020-09-27T16:42:27Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a741eba7e71f7f988f89a905b09103d4301621c2/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E7%A8%8B%E5%BA%8F%E8%AE%8A%E6%8F%9B(%E5%B0%8D%E6%96%BCJSFX-%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84).lua</source>
+      </version>
+      <version name="1.1" author="再補一刀" time="2020-12-29T16:32:09Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0d2507a26442a6fcd877a4468aff72ad934ab986/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E7%A8%8B%E5%BA%8F%E8%AE%8A%E6%8F%9B(%E5%B0%8D%E6%96%BCJSFX-%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入系統專用數據.lua" type="script" desc="插入系統專用數據">
