@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 插入程序變換(對於JSFX-簡單表情映射)
- * Version: 1.1
+ * Version: 1.2
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -33,11 +33,11 @@ function main()
   end
 
   local MSB = reaper.GetExtState("SimpleExpressionMap", "MSB")
-  --if (MSB == "") then MSB = "0" end
+  if (MSB == "") then MSB = "0" end
+    local PC = reaper.GetExtState("SimpleExpressionMap", "PC")
+  if (PC == "") then PC = "C-1" end
   local LSB = reaper.GetExtState("SimpleExpressionMap", "LSB")
-  --if (LSB == "") then LSB = "0" end
-  local PC = reaper.GetExtState("SimpleExpressionMap", "PC")
-  --if (PC == "") then PC = "0" end
+  if (LSB == "") then LSB = "96" end
 
   local user_ok, user_input_csv = reaper.GetUserInputs("插入程序變換(簡單表情映射)", 3, "樂器組,音符,力度", MSB ..','.. PC ..','.. LSB)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
