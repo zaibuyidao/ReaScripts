@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Program Change (For JSFX-Simple Expression Map)
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -33,18 +33,20 @@ function main()
   end
 
   local MSB = reaper.GetExtState("SimpleExpressionMap", "MSB")
-  if (MSB == "") then MSB = "0" end
+  --if (MSB == "") then MSB = "0" end
   local LSB = reaper.GetExtState("SimpleExpressionMap", "LSB")
-  if (LSB == "") then LSB = "0" end
+  --if (LSB == "") then LSB = "0" end
   local PC = reaper.GetExtState("SimpleExpressionMap", "PC")
-  if (PC == "") then PC = "0" end
+  --if (PC == "") then PC = "0" end
 
-  local user_ok, user_input = reaper.GetUserInputs("Insert Program Change", 3, "Instrument Group,Velocity,Note", MSB ..','.. LSB ..','.. PC)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Insert Program Change (Simple Expression Map)", 3, "Instrument Group,Note,Velocity", MSB ..','.. PC ..','.. LSB)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local MSB, LSB, PC = user_input:match("(.*),(.*),(.*)")
+  local MSB, PC, LSB = user_input_csv:match("(.*),(.*),(.*)")
+  if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) then return reaper.SN_FocusMIDIEditor() end
+
   reaper.SetExtState("SimpleExpressionMap", "MSB", MSB, false)
-  reaper.SetExtState("SimpleExpressionMap", "LSB", LSB, false)
   reaper.SetExtState("SimpleExpressionMap", "PC", PC, false)
+  reaper.SetExtState("SimpleExpressionMap", "LSB", LSB, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -174,22 +176,6 @@ function main()
   elseif (PC == "F8") then PC = "125"
   elseif (PC == "F#8") then PC = "126"
   elseif (PC == "G8") then PC = "127"
-  elseif not tonumber(PC) then
-    PC = "0"
-    reaper.SetExtState("SimpleExpressionMap", "PC", PC, false)
-    return reaper.SN_FocusMIDIEditor()
-  end
-
-  if not tonumber(MSB) then
-    MSB = "0"
-    reaper.SetExtState("SimpleExpressionMap", "MSB", MSB, false)
-    return reaper.SN_FocusMIDIEditor()
-  end
-
-  if not tonumber(LSB) then
-    LSB = "0"
-    reaper.SetExtState("SimpleExpressionMap", "LSB", LSB, false)
-    return reaper.SN_FocusMIDIEditor()
   end
 
   if #index > 0 then
@@ -213,7 +199,7 @@ function main()
   reaper.UpdateArrange()
 end
 
-script_title = "Insert Program Change (For JSFX-Simple Expression Map)"
+local script_title = "Insert Program Change (For JSFX-Simple Expression Map)"
 reaper.Undo_BeginBlock()
 main()
 reaper.Undo_EndBlock(script_title, 0)
