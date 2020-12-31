@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="dad59164880146096f3d207ac876f9f18446fc39">
+<index version="1" name="zaibuyidao Scripts" commit="46bb9ece40d701f9dabc03a0d41210ab60a846d0">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -350,13 +350,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b4ed3f0467e3b93bc3553d6c67d29f911cc45e17/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_CC Curve Shape.lua" type="script" desc="CC Curve Shape">
+    <reapack name="zaibuyidao_CC Curve Shape (Dynamic Menu).lua" type="script" desc="CC Curve Shape (Dynamic Menu)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-08-31T18:22:58Z">
+      <version name="1.0" author="zaibuyidao" time="2020-12-31T19:23:20Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/zaibuyidao_CC%20Curve%20Shape.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/46bb9ece40d701f9dabc03a0d41210ab60a846d0/MIDI%20Editor/zaibuyidao_CC%20Curve%20Shape%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion (Start Base) +01.lua" type="script" desc="Chord Inversion (Start Base) +01">
@@ -2384,16 +2384,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a741eba7e71f7f988f89a905b09103d4301621c2/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge.lua</source>
       </version>
     </reapack>
-    <reapack name="再補一刀_CC曲綫形狀.lua" type="script" desc="CC曲綫形狀">
+    <reapack name="再補一刀_CC曲綫形狀(動態菜單).lua" type="script" desc="CC曲綫形狀(動態菜單)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-08-31T18:22:58Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4089e85e00f92d84eee4360310609b4944482d80/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_CC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80.lua</source>
-      </version>
-      <version name="1.1" author="再補一刀" time="2020-09-01T17:44:04Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b0f852869f92fac97f42d7da8c86afca60821733/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_CC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80.lua</source>
+      <version name="1.0" author="再補一刀" time="2020-12-31T19:23:20Z">
+        <changelog><![CDATA[+ 初始發行]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/46bb9ece40d701f9dabc03a0d41210ab60a846d0/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_CC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_刮奏.lua" type="script" desc="刮奏">
