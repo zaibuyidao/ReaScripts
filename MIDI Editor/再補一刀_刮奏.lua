@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Glissando
+ * ReaScript Name: 刮奏
  * Version: 1.2
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -12,9 +12,9 @@
 --[[
  * Changelog:
  * v1.2 (2021-1-1)
-  + Support selected multi-note operation
+  + 支持選中多音符操作
  * v1.0 (2020-3-11)
-  + Initial release
+  + 初始發行
 --]]
 
 take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive()) -- 全局take值
@@ -200,7 +200,7 @@ function main()
     if (ticks == "") then ticks = "60" end
     if (state_toggle == "") then state_toggle = "0" end
     
-    local userOK, userInputsCSV = reaper.GetUserInputs("Glissando", 4, "key Signature,Amount,Interval (tick),0=LD 1=LU 2=RD 3=RU", key_signature..','.. times..','.. ticks..','.. state_toggle)
+    local userOK, userInputsCSV = reaper.GetUserInputs("刮奏", 4, "調號,數量,間隔(嘀嗒),0=左下 1=左上 2=右下 3=右上", key_signature..','.. times..','.. ticks..','.. state_toggle)
     if not userOK then return reaper.SN_FocusMIDIEditor() end
     key_signature, times, ticks, state_toggle = userInputsCSV:match("(.*),(.*),(.*),(.*)")
     if not tostring(key_signature) or not tonumber(times) or not tonumber(ticks) or not tonumber(state_toggle) then return reaper.SN_FocusMIDIEditor() end
@@ -289,6 +289,6 @@ reaper.Undo_BeginBlock()
 reaper.MIDI_DisableSort(take)
 main()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Glissando", -1)
+reaper.Undo_EndBlock("刮奏", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
