@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Sustain Pedal (For Selected Notes)
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,7 +18,6 @@ function main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   local item = reaper.GetMediaItemTake_Item(take)
-
   local cnt, index = 0, {}
   local val = reaper.MIDI_EnumSelNotes(take, -1)
   while val ~= - 1 do
@@ -26,12 +25,12 @@ function main()
     index[cnt] = val
     val = reaper.MIDI_EnumSelNotes(take, val)
   end
-  
-  local msg2 = reaper.GetExtState("InsertSustainPedal", "Msg2")
-  local msg3 = reaper.GetExtState("InsertSustainPedal", "Msg3")
-  local msg4 = reaper.GetExtState("InsertSustainPedal", "Msg4")
-  local first_offset = reaper.GetExtState("InsertSustainPedal", "FirstOffset")
-  local second_offset = reaper.GetExtState("InsertSustainPedal", "SecondOffset")
+
+  local msg2 = reaper.GetExtState("InsertSustainPedalForSelNote", "Msg2")
+  local msg3 = reaper.GetExtState("InsertSustainPedalForSelNote", "Msg3")
+  local msg4 = reaper.GetExtState("InsertSustainPedalForSelNote", "Msg4")
+  local first_offset = reaper.GetExtState("InsertSustainPedalForSelNote", "FirstOffset")
+  local second_offset = reaper.GetExtState("InsertSustainPedalForSelNote", "SecondOffset")
   
   if (msg2 == "") then msg2 = "64" end
   if (msg3 == "") then msg3 = "127" end
@@ -39,16 +38,16 @@ function main()
   if (first_offset == "") then first_offset = "110" end
   if (second_offset == "") then second_offset = "-10" end
 
-  local user_ok, input_csv = reaper.GetUserInputs("Insert Sustain Pedal", 5, "CC Number,First Value,Second Value,First Offset,Second Offset", msg2..','..msg3..','.. msg4..','..first_offset..','.. second_offset)
+  local user_ok, input_csv = reaper.GetUserInputs("Insert Sustain Pedal", 5, "CC Number,1,2,Offset 1,Offset 2", msg2..','..msg3..','.. msg4..','..first_offset..','.. second_offset)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   msg2, msg3, msg4, first_offset, second_offset = input_csv:match("(.*),(.*),(.*),(.*),(.*)")
   if not tonumber(msg2) or not tonumber(msg3) or not tonumber(msg4) or not tonumber(first_offset) or not tonumber(second_offset) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("InsertSustainPedal", "Msg2", msg2, false)
-  reaper.SetExtState("InsertSustainPedal", "Msg3", msg3, false)
-  reaper.SetExtState("InsertSustainPedal", "Msg4", msg4, false)
-  reaper.SetExtState("InsertSustainPedal", "FirstOffset", first_offset, false)
-  reaper.SetExtState("InsertSustainPedal", "SecondOffset", second_offset, false)
+  reaper.SetExtState("InsertSustainPedalForSelNote", "Msg2", msg2, false)
+  reaper.SetExtState("InsertSustainPedalForSelNote", "Msg3", msg3, false)
+  reaper.SetExtState("InsertSustainPedalForSelNote", "Msg4", msg4, false)
+  reaper.SetExtState("InsertSustainPedalForSelNote", "FirstOffset", first_offset, false)
+  reaper.SetExtState("InsertSustainPedalForSelNote", "SecondOffset", second_offset, false)
   
   for i = 1,  #index do
     local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
@@ -67,6 +66,6 @@ end
 
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("Insert Sustain Pedal (For Selected Notes)", 0)
+reaper.Undo_EndBlock("Insert Sustain Pedal (For Selected Notes)", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

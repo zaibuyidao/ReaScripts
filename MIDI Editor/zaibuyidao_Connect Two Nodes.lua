@@ -1,13 +1,11 @@
 --[[
  * ReaScript Name: Connect Two Nodes
- * Instructions: Open a MIDI take in MIDI Editor. Select CC Events, Run.
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -17,7 +15,7 @@
 --]]
 
 function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
-take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 local ccnt, cidx = 0, {}
 local cval = reaper.MIDI_EnumSelCC(take, -1)
 while cval ~= -1 do
@@ -25,16 +23,25 @@ while cval ~= -1 do
     cidx[ccnt] = cval
     cval = reaper.MIDI_EnumSelCC(take, cval)
 end
+
 local _, _, _, cc_start_pos, _, _, _, _ = reaper.MIDI_GetCC(take, cidx[1])
 local _, _, _, cc_end_pos, _, _, _, _ = reaper.MIDI_GetCC(take, cidx[#cidx])
 local cc_len = math.floor(cc_end_pos - cc_start_pos)
-local retval, userInputsCSV = reaper.GetUserInputs("Connect Two Nodes", 1, "Tick", "20")
-if not retval then return reaper.SN_FocusMIDIEditor() end
-local tick = userInputsCSV:match("(.*)")
-interval = cc_len / tick
+
+local tick = reaper.GetExtState("ConnectTwoNodes", "Tick")
+if (tick == "") then tick = "20" end
+
+user_ok, user_input_csv = reaper.GetUserInputs("Connect Two Nodes", 1, "Enter A Tick", tick)
+if not user_ok then return reaper.SN_FocusMIDIEditor() end
+local tick = user_input_csv:match("(.*)")
+local interval = cc_len / tick
+
+reaper.SetExtState("ConnectTwoNodes", "Tick", tick, false)
+
 function GetCC(take, cc)
     return cc.selected, cc.muted, cc.ppqpos, cc.chanmsg, cc.chan, cc.msg2, cc.msg3
 end
+
 function main()
     retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
     if ccs == 0 then return end
@@ -71,9 +78,10 @@ function main()
         reaper.MIDI_InsertCC(take, selected, false, cc.ppqpos, cc.chanmsg, cc.chan, cc.msg2, cc.msg3)
     end
 end
+
 reaper.Undo_BeginBlock()
 selected = true
 if #cidx == 2 then main() end
-reaper.Undo_EndBlock("Connect Two Nodes", 0)
+reaper.Undo_EndBlock("Connect Two Nodes", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

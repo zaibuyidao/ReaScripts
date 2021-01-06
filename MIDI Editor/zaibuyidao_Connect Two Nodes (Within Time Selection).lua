@@ -1,13 +1,11 @@
 --[[
- * ReaScript Name: Create And Connect Two Nodes (Within Time Selection)
- * Instructions: Open a MIDI take in MIDI Editor. Set Time Selection, Run.
- * Version: 1.1
+ * ReaScript Name: Connect Two Nodes (Within Time Selection)
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -19,6 +17,7 @@
 function GetCC(take, cc)
   return cc.selected, cc.muted, cc.ppqpos, cc.chanmsg, cc.chan, cc.msg2, cc.msg3
 end
+
 function main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
@@ -31,17 +30,35 @@ function main()
     ccs_idx[ccs_cnt] = ccs_val
     ccs_val = reaper.MIDI_EnumSelCC(take, ccs_val)
   end
+
   local cc_len = math.floor(loop_end - loop_start)
+
+  local msg2 = reaper.GetExtState("ConnectTwoNodes", "Msg2")
+  if (msg2 == "") then msg2 = "11" end
+  local msg3 = reaper.GetExtState("ConnectTwoNodes", "Msg3")
+  if (msg3 == "") then msg3 = "100" end
+  local msg4 = reaper.GetExtState("ConnectTwoNodes", "Msg4")
+  if (msg4 == "") then msg4 = "1" end
+  local tick = reaper.GetExtState("ConnectTwoNodes", "Tick")
+  if (tick == "") then tick = "20" end
+
   if cc_len == 0 or ccs_cnt > 0 then return reaper.MB("Time selection range is not set or CC Event already exists.", "Error", 0), reaper.SN_FocusMIDIEditor() end
-  local userOk, userInputsCSV = reaper.GetUserInputs("Create And Connect Two Nodes", 4, "CC Number,First Value,Second Value,Interval", "11,100,1,20")
-  if not userOk then return reaper.SN_FocusMIDIEditor() end
-  local msg2, msg3, msg4, tick = userInputsCSV:match("(.*),(.*),(.*),(.*)")
-  msg2, msg3, msg4, tick = tonumber(msg2), tonumber(msg3), tonumber(msg4), tonumber(tick)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Connect Two Nodes", 4, "CC Number,First Value,Second Value,Interval", msg2 ..','.. msg3 ..','.. msg4 ..','.. tick)
+  if not user_ok then return reaper.SN_FocusMIDIEditor() end
+  msg2, msg3, msg4, tick = user_input_csv:match("(.*),(.*),(.*),(.*)")
   if not tonumber(msg2) or not tonumber(msg3) or not tonumber(msg4) or not tonumber(tick) then return reaper.SN_FocusMIDIEditor() end
+  msg2, msg3, msg4, tick = tonumber(msg2), tonumber(msg3), tonumber(msg4), tonumber(tick)
+
+  reaper.SetExtState("ConnectTwoNodes", "Msg2", msg2, false)
+  reaper.SetExtState("ConnectTwoNodes", "Msg3", msg3, false)
+  reaper.SetExtState("ConnectTwoNodes", "Msg4", msg4, false)
+  reaper.SetExtState("ConnectTwoNodes", "Tick", tick, false)
+
   reaper.MIDI_InsertCC(take, selected, muted, loop_start, 0xB0, chan, msg2, msg3)
   reaper.MIDI_InsertCC(take, selected, muted, loop_end, 0xB0, chan, msg2, msg4)
   local interval = cc_len / tick
-  retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
+  _, _, ccs, _ = reaper.MIDI_CountEvts(take)
+
   midi_cc = {}
   for j = 0, ccs - 1 do
       cc = {}
@@ -75,11 +92,12 @@ function main()
       reaper.MIDI_InsertCC(take, selected, false, cc.ppqpos, cc.chanmsg, cc.chan, cc.msg2, cc.msg3)
   end
 end
+
 selected = true
 chan = 0
 muted = false
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("Create And Connect Two Nodes", 0)
+reaper.Undo_EndBlock("Connect Two Nodes (Within Time Selection)", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

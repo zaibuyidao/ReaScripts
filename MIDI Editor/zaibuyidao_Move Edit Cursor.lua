@@ -1,7 +1,6 @@
 --[[
- * ReaScript Name: Move Edit Cursor To X
- * Instructions: Open a MIDI take in MIDI Editor. Run.
- * Version: 1.1
+ * ReaScript Name: Move Edit Cursor
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,17 +17,19 @@
 --]]
 
 function Main()
-  userOK, get_input = reaper.GetUserInputs("Move Edit Cursor", 1, "Tick", "10")
-  if not userOK then return reaper.SN_FocusMIDIEditor() end
-  tick = get_input:match("(.*)")
-  if not tick:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   local pos = reaper.GetCursorPositionEx()
   local ppq = reaper.MIDI_GetPPQPosFromProjTime(take, pos)
+  local tick = reaper.GetExtState("MoveEditCursor", "Tick")
+  if (tick == "") then tick = "10" end
+  user_ok, get_input_csv = reaper.GetUserInputs("Move Edit Cursor", 1, "Enter A Tick", tick)
+  if not user_ok then return reaper.SN_FocusMIDIEditor() end
+  tick = get_input_csv:match("(.*)")
+  if not tonumber(tick) then return reaper.SN_FocusMIDIEditor() end
+  reaper.SetExtState("MoveEditCursor", "Tick", tick, false)
   reaper.SetEditCurPos(reaper.MIDI_GetProjTimeFromPPQPos(take, ppq+tick), true, true)
 end
-
-script_title = "Move Edit Cursor To X"
+script_title = "Move Edit Cursor"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, 0)

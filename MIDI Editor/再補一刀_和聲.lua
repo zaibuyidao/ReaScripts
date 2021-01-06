@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Generate Chord By Root
- * Version: 1.1
- * Author: zaibuyidao
+ * ReaScript Name: 和聲
+ * Version: 1.0
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -10,7 +10,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-3-11)
+ * v1.0 (2020-3-10)
   + Initial release
 --]]
 
@@ -210,52 +210,48 @@ function getOverlayPitchsMinor(baseScale,ordinal,origPitch) --核心计算函数
     return -1
 end
 function main()
+    --数据的输入和保存
+    local inputs=getSavedData("Overlay","inputs")
+    if inputs==nil or #inputs<2 then 
+        inputs={'C' ,'3'}
+    end
+    inputs=getMutiInput("和聲",2,"調號,度數",inputs[1]..","..inputs[2])
+    if not inputs then return end
+    inputs[2]=tonumber(inputs[2])
+    if not inputs[2] then return end
+    local savedOffset=tostring(inputs[2])
+    if savedOffset=='1' or savedOffset=='0' then savedOffset='2' saveData("Overlay","inputs",{inputs[1],savedOffset}) return end --判断是否输入了1，-1或0
+    if savedOffset=='-1' then savedOffset='-2' saveData("Overlay","inputs",{inputs[1],savedOffset}) return end
+    saveData("Overlay","inputs",{inputs[1],savedOffset})
+
     --将已选择音符按照起始位置分组
     local selPitchInfo={}
     for note in selNoteIterator() do
         if selPitchInfo[note.startPos]==nil then selPitchInfo[note.startPos]={} end
         table.insert(selPitchInfo[note.startPos],note)
     end
-    local times = 2
-    for i=1, times do
-        local opNote,overlayPitchMajor,overlayPitchMinor --opNote(用来计算叠加音符的音符) overlayPitch(将被叠加音符的音高)
-        local interval = 3
-        for startPos,notes in pairs(selPitchInfo) do --遍历每一个分组
-            table.sortByKey(notes,"pitch",interval<0)  --根据上叠或者下叠决定排序顺序
-            opNote=notes[1] --取排序后的第一个音符作为计算叠加音符的音符
-            overlayPitchMajor=getOverlayPitchsMajor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
-            if overlayPitchMajor>0 then  --插入大调音程，如果计算失败会得到-1，这里判断一下再插入音符
-                opNote.pitch=overlayPitchMajor
-                insertNote(opNote)
-            end
-            overlayPitchMinor=getOverlayPitchsMinor(key_signature,interval,opNote.pitch) --调用函数计算将要叠加音符的音高
-            if overlayPitchMinor>0 then  --插入小调音程，如果计算失败会得到-1，这里判断一下再插入音符
-                opNote.pitch=overlayPitchMinor
-                insertNote(opNote)
-            end
+
+    local opNote,overlayPitchMajor,overlayPitchMinor --opNote(用来计算叠加音符的音符) overlayPitch(将被叠加音符的音高)
+
+    for startPos,notes in pairs(selPitchInfo) do --遍历每一个分组
+        table.sortByKey(notes,"pitch",inputs[2]<0)  --根据上叠或者下叠决定排序顺序
+        opNote=notes[1] --取排序后的第一个音符作为计算叠加音符的音符
+        overlayPitchMajor=getOverlayPitchsMajor(inputs[1],inputs[2],opNote.pitch) --调用函数计算将要叠加音符的音高
+        if overlayPitchMajor>0 then  --插入大调音程，如果计算失败会得到-1，这里判断一下再插入音符
+            opNote.pitch=overlayPitchMajor
+            insertNote(opNote)
+        end
+        overlayPitchMinor=getOverlayPitchsMinor(inputs[1],inputs[2],opNote.pitch) --调用函数计算将要叠加音符的音高
+        if overlayPitchMinor>0 then  --插入小调音程，如果计算失败会得到-1，这里判断一下再插入音符
+            opNote.pitch=overlayPitchMinor
+            insertNote(opNote)
         end
     end
 end
-
-key_signature = reaper.GetExtState("GenerateChordByRoot", "Key")
-if (key_signature == "") then key_signature = "C" end
-state_toggle = reaper.GetExtState("GenerateChordByRoot", "Toggle")
-if (state_toggle == "") then state_toggle = "0" end
-local user_ok, user_input_csv = reaper.GetUserInputs("Generate Chord By Root", 2, "key Signature,0=Default 1=Root 8 Degrees", key_signature..','.. state_toggle)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-key_signature, state_toggle = user_input_csv:match("(%a*),(%d*)")
-if not key_signature:match('[%a%.]+') or not state_toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
-reaper.SetExtState("GenerateChordByRoot", "Key", key_signature, false)
-reaper.SetExtState("GenerateChordByRoot", "Toggle", state_toggle, false)
-reaper.MIDI_DisableSort(take)
 reaper.Undo_BeginBlock()
-if state_toggle == "1" then
-    reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40884)
-    main()
-else
-    main()
-end
-reaper.Undo_EndBlock("Generate Chord By Root", -1)
+reaper.MIDI_DisableSort(take)
+main()
 reaper.MIDI_Sort(take)
+reaper.Undo_EndBlock("和聲", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

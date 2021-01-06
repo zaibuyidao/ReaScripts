@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Generate Chord By Root
- * Version: 1.1
- * Author: zaibuyidao
+ * ReaScript Name: 從根音生成和弦
+ * Version: 1.0
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -236,12 +236,11 @@ function main()
         end
     end
 end
-
 key_signature = reaper.GetExtState("GenerateChordByRoot", "Key")
 if (key_signature == "") then key_signature = "C" end
 state_toggle = reaper.GetExtState("GenerateChordByRoot", "Toggle")
 if (state_toggle == "") then state_toggle = "0" end
-local user_ok, user_input_csv = reaper.GetUserInputs("Generate Chord By Root", 2, "key Signature,0=Default 1=Root 8 Degrees", key_signature..','.. state_toggle)
+local user_ok, user_input_csv = reaper.GetUserInputs("從根音創建和弦", 2, "調號,0=默認 1=根音升高8度", key_signature..','.. state_toggle)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
 key_signature, state_toggle = user_input_csv:match("(%a*),(%d*)")
 if not key_signature:match('[%a%.]+') or not state_toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
@@ -255,7 +254,7 @@ if state_toggle == "1" then
 else
     main()
 end
-reaper.Undo_EndBlock("Generate Chord By Root", -1)
+reaper.Undo_EndBlock("從根音生成和弦", -1)
 reaper.MIDI_Sort(take)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
