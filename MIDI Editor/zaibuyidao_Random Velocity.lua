@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Random Velocity
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -58,9 +57,7 @@ function main()
         end
     end
 end
-reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 main()
 reaper.Undo_EndBlock("Random Velocity", 0)
 reaper.UpdateArrange()
-reaper.PreventUIRefresh(-1)

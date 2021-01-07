@@ -1,13 +1,11 @@
 --[[
  * ReaScript Name: Random Velocity (Limit Range)
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.4
+ * Version: 1.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -18,11 +16,21 @@
 
 function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-  retval, notes, ccs, sysex = reaper.MIDI_CountEvts(take)
-  userOK, dialog_ret_vals = reaper.GetUserInputs("Random Velocity", 2, "Min Value,Max Value", "1,127")
-  if not userOK then return reaper.SN_FocusMIDIEditor() end
-  min_val, max_val = dialog_ret_vals:match("(.*),(.*)")
+  _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+
+  local min_val = reaper.GetExtState("RandVeloLimit", "Min")
+  if (min_val == "") then min_val = "1" end
+  local max_val = reaper.GetExtState("RandVeloLimit", "Max")
+  if (max_val == "") then max_val = "127" end
+
+  user_ok, user_input_csv = reaper.GetUserInputs("Random Velocity", 2, "Min Value,Max Value", min_val ..','.. max_val)
+  if not user_ok then return reaper.SN_FocusMIDIEditor() end
+  min_val, max_val = user_input_csv:match("(.*),(.*)")
+  if not tonumber(min_val) or not tonumber(max_val) then return reaper.SN_FocusMIDIEditor() end
   min_val, max_val = tonumber(min_val), tonumber(max_val)
+
+  reaper.SetExtState("RandVeloLimit", "Min", min_val, false)
+  reaper.SetExtState("RandVeloLimit", "Max", max_val, false)
 
   if min_val > 127 then
     min_val = 127
@@ -49,11 +57,11 @@ function Main()
 
   local diff = max_val - min_val
   reaper.MIDI_DisableSort(take)
-  for i = 0,  notes-1 do
-    retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-    if sel == true then
+  for i = 0,  notecnt-1 do
+    retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+    if selected == true then
       vel = tonumber(min_val + math.random(diff))
-      reaper.MIDI_SetNote(take, i, sel, muted, ppq_start, ppq_end, chan, pitch, vel, false)
+      reaper.MIDI_SetNote(take, i, selected, muted, startppqpos, endppqpos, chan, pitch, vel, false)
     end
     i=i+1
   end
