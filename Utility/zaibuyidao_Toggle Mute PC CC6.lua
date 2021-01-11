@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Toggle Mute PC CC6
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -28,7 +28,7 @@ for i = 1, count_items do
     local _, _, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
     for i = 1, ccevtcnt do
       local _, _, muted_flag, _, chanmsg, chan, _, _ = reaper.MIDI_GetCC(take, i - 1)
-      if chanmsg == 0xC0 and chan == 15 then -- Program Change and Channel = 16
+      if (chanmsg == 0xC0 and chan == 3) or (chanmsg == 0xC0 and chan == 6) or (chanmsg == 0xC0 and chan == 9) then -- Program Change and Channel = 4 or 7 or 10
         if muted_flag then
           customColor = 21036800
           isMuted = false
