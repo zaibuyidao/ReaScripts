@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 掃弦
- * Version: 1.2
+ * Version: 1.3
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -87,8 +87,13 @@ function noteIterator() -- 迭代器 用于返回选中的每一个音符信息�
     end
 end
 function main() -- 入口函数
-    local ok, tick = reaper.GetUserInputs('掃弦', 1, '輸入嘀嗒數', '4')
-    if not ok then return reaper.SN_FocusMIDIEditor() end
+    local tick = reaper.GetExtState("StrumIt", "Tick")
+    if (tick == "") then tick = "4" end
+    user_ok, user_input_csv = reaper.GetUserInputs('掃弦', 1, '輸入嘀嗒數', tick)
+    if not user_ok then return reaper.SN_FocusMIDIEditor() end
+    tick = user_input_csv:match("(.*)")
+    if not tonumber(tick) then return reaper.SN_FocusMIDIEditor() end
+    reaper.SetExtState("StrumIt", "Tick", tick, false)
     if countEvts()==0 then return end
     local noteGroups={} -- 按照startPos进行分组储存note的表
     for note in noteIterator() do -- 遍历选中音符，并对noteGroups表赋值
