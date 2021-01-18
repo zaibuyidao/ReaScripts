@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Transform CC (For Selected CC)
+ * ReaScript Name: 轉換CC(對於所選CC)
  * Version: 1.1
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -21,13 +21,13 @@ function Main()
   local _, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
   local cc_new = reaper.GetExtState("TransformCC", "CC_New")
   if (cc_new == "") then cc_new = "11" end
-  local user_ok, user_input_CSV = reaper.GetUserInputs('Transform CC', 1, 'CC number', cc_new)
+  local user_ok, user_input_CSV = reaper.GetUserInputs('轉換CC', 1, 'CC編號', cc_new)
   cc_new = user_input_CSV:match("(.*)")
   if not user_ok or not tonumber(cc_new) then return reaper.SN_FocusMIDIEditor() end
   cc_new = tonumber(cc_new)
   if cc_new > 127 or cc_new < 0 then
     return
-    reaper.MB("Please enter a value from 0 through 127", "Error", 0),
+    reaper.MB("請輸入一個介於0到127之間的值", "錯誤", 0),
     reaper.SN_FocusMIDIEditor()
   end
   reaper.SetExtState("TransformCC", "CC_New", cc_new, false)
@@ -41,7 +41,7 @@ function Main()
   reaper.UpdateArrange()
   reaper.MIDI_Sort(take)
 end
-local script_title = "Transform CC (For Selected CC)"
+local script_title = "轉換CC(對於所選CC)"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, 0)

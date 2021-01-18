@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Bank Program Select
- * Version: 2.2
- * Author: zaibuyidao
+ * ReaScript Name: 音色選擇(庫MSB/LSB)
+ * Version: 1.0
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -10,11 +10,9 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-8-10)
+ * v1.0 (2019-12-12)
   + Initial release
 --]]
-
--- Use the formula bank = MSB × 128 + LSB to find the bank number to use in script.
 
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
@@ -34,18 +32,21 @@ function main()
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
 
-  local BANK = reaper.GetExtState("BankProgramSelect", "BANK")
-  if (BANK == "") then BANK = "259" end
-  local PC = reaper.GetExtState("BankProgramSelect", "PC")
+  local MSB = reaper.GetExtState("BankProgramSelectMSBLSB", "MSB")
+  if (MSB == "") then MSB = "2" end
+  local LSB = reaper.GetExtState("BankProgramSelectMSBLSB", "LSB")
+  if (LSB == "") then LSB = "3" end
+  local PC = reaper.GetExtState("BankProgramSelectMSBLSB", "PC")
   if (PC == "") then PC = "27" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Bank Program Select", 2, "Bank,Program number", BANK ..','.. PC)
+  local user_ok, user_input_csv = reaper.GetUserInputs("音色選擇", 3, "庫MSB,庫LSB,音色編號", MSB ..','.. LSB ..','.. PC)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local BANK, PC = user_input_csv:match("(.*),(.*)")
-  if not tonumber(BANK) or not (tonumber(PC) or tostring(PC)) then return reaper.SN_FocusMIDIEditor() end
+  local MSB, LSB, PC = user_input_csv:match("(.*),(.*),(.*)")
+  if not tonumber(MSB) or not tonumber(LSB) or not (tonumber(PC) or tostring(PC)) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("BankProgramSelect", "BANK", BANK, false)
-  reaper.SetExtState("BankProgramSelect", "PC", PC, false)
+  reaper.SetExtState("BankProgramSelectMSBLSB", "MSB", MSB, false)
+  reaper.SetExtState("BankProgramSelectMSBLSB", "LSB", LSB, false)
+  reaper.SetExtState("BankProgramSelectMSBLSB", "PC", PC, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -177,9 +178,6 @@ function main()
   elseif (PC == "G8") then PC = "127"
   end
 
-  local MSB = math.modf(BANK / 128)
-  local LSB = math.fmod(BANK, 128)
-
   if #index > 0 then
     for i = 1, #index do
       retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
@@ -201,7 +199,7 @@ function main()
   reaper.UpdateArrange()
 end
 
-local script_title = "Bank Program Select"
+local script_title = "音色選擇(庫MSB/LSB)"
 reaper.Undo_BeginBlock()
 main()
 reaper.Undo_EndBlock(script_title, -1)

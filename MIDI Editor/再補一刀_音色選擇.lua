@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Bank/Program Select (Bank Number)
- * Version: 1.2
- * Author: zaibuyidao
+ * ReaScript Name: 音色選擇
+ * Version: 2.2
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -20,16 +20,12 @@ function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-selected = false
-muted = false
-chan = 0
-
 function main()
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
-  item = reaper.GetMediaItemTake_Item(take)
-  local cur_pos = reaper.GetCursorPositionEx()
-  local ppq_pos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
+  local item = reaper.GetMediaItemTake_Item(take)
+  local curpos = reaper.GetCursorPositionEx()
+  local ppqpos = reaper.MIDI_GetPPQPosFromProjTime(take, curpos)
   local count, index = 0, {}
   local value = reaper.MIDI_EnumSelNotes(take, -1)
   while value ~= -1 do
@@ -37,17 +33,19 @@ function main()
     index[count] = value
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
-  
-  local BANK = reaper.GetExtState("BankProgramSelectBankNumber", "BANK")
-  if (BANK == "") then BANK = "0" end
-  local PC = reaper.GetExtState("BankProgramSelectBankNumber", "PC")
-  if (PC == "") then PC = "0" end
 
-  local user_ok, userInputsCSV = reaper.GetUserInputs("Bank/Program Select", 2, "Bank number,Program number", BANK ..','.. PC)
+  local BANK = reaper.GetExtState("BankProgramSelect", "BANK")
+  if (BANK == "") then BANK = "259" end
+  local PC = reaper.GetExtState("BankProgramSelect", "PC")
+  if (PC == "") then PC = "27" end
+
+  local user_ok, user_input_csv = reaper.GetUserInputs("音色選擇", 2, "庫,音色編號", BANK ..','.. PC)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local BANK, PC = userInputsCSV:match("(.*),(.*)")
-  reaper.SetExtState("BankProgramSelectBankNumber", "BANK", BANK, false)
-  reaper.SetExtState("BankProgramSelectBankNumber", "PC", PC, false)
+  local BANK, PC = user_input_csv:match("(.*),(.*)")
+  if not tonumber(BANK) or not (tonumber(PC) or tostring(PC)) then return reaper.SN_FocusMIDIEditor() end
+
+  reaper.SetExtState("BankProgramSelect", "BANK", BANK, false)
+  reaper.SetExtState("BankProgramSelect", "PC", PC, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -177,16 +175,6 @@ function main()
   elseif (PC == "F8") then PC = "125"
   elseif (PC == "F#8") then PC = "126"
   elseif (PC == "G8") then PC = "127"
-  elseif not tonumber(PC) then
-    PC = "0"
-    reaper.SetExtState("BankProgramSelectBankNumber", "PC", PC, false)
-    return reaper.SN_FocusMIDIEditor()
-  end
-
-  if not tonumber(BANK) then
-    BANK = "0"
-    reaper.SetExtState("BankProgramSelectBankNumber", "BANK", BANK, false)
-    return reaper.SN_FocusMIDIEditor()
   end
 
   local MSB = math.modf(BANK / 128)
@@ -202,16 +190,19 @@ function main()
       end
     end
   else
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 0, MSB) -- CC#00
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 32, LSB) -- CC#32
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xC0, chan, PC, 0) -- Program Change
+    local selected = true
+    local muted = false
+    local chan = 0
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xB0, chan, 0, MSB) -- CC#00
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xB0, chan, 32, LSB) -- CC#32
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
   reaper.UpdateArrange()
 end
 
-script_title = "Bank/Program Select (Bank Number)"
+local script_title = "音色選擇"
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()

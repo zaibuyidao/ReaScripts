@@ -1,13 +1,11 @@
 --[[
- * ReaScript Name: Insert Vibrato
- * Instructions: Open a MIDI take in MIDI Editor. Position Edit Cursor, Run.
- * Version: 1.4
- * Author: zaibuyidao
+ * ReaScript Name: 揉弦
+ * Version: 1.0
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -18,11 +16,24 @@
 
 function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-  local retval, userInputsCSV = reaper.GetUserInputs("Insert Vibrato", 3, "Amplitude:1-9,Repetition:1-99,Interval:1-99", "3,7,7")
-  if not retval then return reaper.SN_FocusMIDIEditor() end
-  local fudu, cishu, jiange = userInputsCSV:match("(.*),(.*),(.*)")
+
+  local fudu = reaper.GetExtState("Vibrato", "Amplitude")
+  if (fudu == "") then fudu = "3" end
+  local cishu = reaper.GetExtState("Vibrato", "Repetition")
+  if (cishu == "") then cishu = "7" end
+  local jiange = reaper.GetExtState("Vibrato", "Interval")
+  if (jiange == "") then jiange = "10" end
+  
+  local user_ok, user_input_CSV = reaper.GetUserInputs("揉弦", 3, "幅度:1-10,重複:1-100,間隔:1-120", fudu ..','.. cishu ..','.. jiange)
+  if not user_ok then return reaper.SN_FocusMIDIEditor() end
+  fudu, cishu, jiange = user_input_CSV:match("(.*),(.*),(.*)")
+  if not tonumber(fudu) or not tonumber(cishu) or not tonumber(jiange) then return reaper.SN_FocusMIDIEditor() end
   fudu, cishu, jiange = tonumber(fudu), tonumber(cishu), tonumber(jiange)
   
+  reaper.SetExtState("Vibrato", "Amplitude", fudu, false)
+  reaper.SetExtState("Vibrato", "Repetition", cishu, false)
+  reaper.SetExtState("Vibrato", "Interval", jiange, false)
+
   local t1 = {0, 48, 96, 144, 192, 240, 192, 144, 96, 48, 0}
   local t2 = {0, 96, 192, 288, 384, 480, 384, 288, 192, 96, 0}
   local t3 = {0, 144, 288, 432, 576, 720, 576, 432, 288, 144, 0}
@@ -39,9 +50,9 @@ function Main()
   local startpos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
   startpos = startpos - jiange
   
-  if fudu < 1  or fudu > 9 then return reaper.SN_FocusMIDIEditor() end
-  if cishu < 1 or cishu > 99 then return reaper.SN_FocusMIDIEditor() end
-  if jiange < 1 or jiange > 99 then return reaper.SN_FocusMIDIEditor() end
+  if fudu < 1  or fudu > 10 then return reaper.SN_FocusMIDIEditor() end
+  if cishu < 1 or cishu > 100 then return reaper.SN_FocusMIDIEditor() end
+  if jiange < 1 or jiange > 120 then return reaper.SN_FocusMIDIEditor() end
   
   for i = 1, cishu do
     for i = 1, 11 do
@@ -57,8 +68,8 @@ function Main()
   end
 end
 
-script_title = "Insert Vibrato"
+local script_title = "Vibrato"
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()

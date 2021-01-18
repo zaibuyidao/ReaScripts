@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Groove Quantize
+ * ReaScript Name: 律動量化
  * Version: 1.6
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -22,7 +22,7 @@ function Main()
   local fudu = reaper.GetExtState("GrooveQuantize", "Amount")
   if (fudu == "") then fudu = "3" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Groove Quantize", 1, "Amount", fudu)
+  local user_ok, user_input_csv = reaper.GetUserInputs("律動量化", 1, "量", fudu)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   fudu = user_input_csv:match("(.*)")
   if not tonumber(fudu) then return reaper.SN_FocusMIDIEditor() end

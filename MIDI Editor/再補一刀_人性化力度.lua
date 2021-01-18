@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Humanize Velocity
+ * ReaScript Name: 人性化力度
  * Version: 1.5
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -20,7 +20,7 @@ function Main()
   local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
   local strength = reaper.GetExtState("HumanizeVelocity", "Strength")
   if (strength == "") then strength = "3" end
-  local user_ok, user_input_CSV = reaper.GetUserInputs("Humanize Velocity", 1, "Strength", strength)
+  local user_ok, user_input_CSV = reaper.GetUserInputs("人性化力度", 1, "強度", strength)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   strength = user_input_CSV:match("(.*)")
   reaper.SetExtState("HumanizeVelocity", "Strength", strength, false)
@@ -40,7 +40,7 @@ function Main()
   reaper.UpdateArrange()
   reaper.MIDI_Sort(take)
 end
-local script_title = "Humanize Velocity"
+local script_title = "人性化力度"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, 0)

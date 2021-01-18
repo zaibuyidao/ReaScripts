@@ -1,13 +1,11 @@
 --[[
- * ReaScript Name: Insert CC Events 1-2 (For Selected Notes)
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.1
+ * ReaScript Name: Insert CC Events AB
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -25,21 +23,21 @@ function table.sortByKey(tab,key,ascend) --对于传入的table按照指定的ke
         return a[key]<b[key]
     end)
 end
-function string.split(szFullString, szSeparator)  
-    local nFindStartIndex = 1  
-    local nSplitIndex = 1  
-    local nSplitArray = {}  
-    while true do  
-       local nFindLastIndex = string.find(szFullString, szSeparator, nFindStartIndex)  
-       if not nFindLastIndex then  
-        nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, string.len(szFullString))  
-        break  
-       end  
-       nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, nFindLastIndex - 1)  
-       nFindStartIndex = nFindLastIndex + string.len(szSeparator)  
-       nSplitIndex = nSplitIndex + 1  
-    end  
-    return nSplitArray  
+function string.split(szFullString, szSeparator)
+    local nFindStartIndex = 1
+    local nSplitIndex = 1
+    local nSplitArray = {}
+    while true do
+        local nFindLastIndex = string.find(szFullString, szSeparator, nFindStartIndex)
+        if not nFindLastIndex then  
+            nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, string.len(szFullString))
+            break
+        end
+        nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, nFindLastIndex - 1)
+        nFindStartIndex = nFindLastIndex + string.len(szSeparator)
+        nSplitIndex = nSplitIndex + 1  
+    end
+    return nSplitArray
 end
 function getNote(sel) --根据传入的sel索引值，返回指定位置的含有音符信息的表
     local retval, selected, muted, startPos, endPos, channel, pitch, vel = reaper.MIDI_GetNote(take, sel)
@@ -92,38 +90,46 @@ function setOneNote()
     end
     for index,notes in pairs(noteGroups) do --遍历音符组
         if #notes==0 then goto continue end --如果该音符组为零个音符则不处理
-         table.sortByKey(notes,"pitch") --根据音高将音符组排序
-         if selectedPos>#notes then goto continue end
-         notes[selectedPos].selected=true --将selected值设置为true
-         setNote(notes[selectedPos],notes[selectedPos].sel) --将改变过的note重新置入
-         ::continue::
+        table.sortByKey(notes,"pitch") --根据音高将音符组排序
+        if selectedPos>#notes then goto continue end
+        notes[selectedPos].selected=true --将selected值设置为true
+        setNote(notes[selectedPos],notes[selectedPos].sel) --将改变过的note重新置入
+        ::continue::
     end
 end
 function main()
-  _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
-  local userOK, userInputsCSV = reaper.GetUserInputs("Insert CC Events 1-2", 3, "CC Number,1,2", "10,1,127")
-  if not userOK then return reaper.SN_FocusMIDIEditor() end
-  local msg2, msg3, msg4 = userInputsCSV:match("(.*),(.*),(.*)")
-  if not tonumber(msg2) or not tonumber(msg3) or not tonumber(msg4) then return end
-  setOneNote()
-  local flag = true
-  for i = 1, notecnt do
-    local retval, selected, muted, startpos, endpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i-1)
-    if selected == true then
-      if flag == true then
-        reaper.MIDI_InsertCC(take, selected, muted, startpos, 0xB0, chan, msg2, msg3)
-        flag = false
-      else
-        reaper.MIDI_InsertCC(take, selected, muted, startpos, 0xB0, chan, msg2, msg4)
-        flag = true
-      end
+    _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+    local msg2 = reaper.GetExtState("InsertCCEventsAB", "CCNum")
+    if (msg2 == "") then msg2 = "10" end
+    local msg3 = reaper.GetExtState("InsertCCEventsAB", "ValueA")
+    if (msg3 == "") then msg3 = "1" end
+    local msg4 = reaper.GetExtState("InsertCCEventsAB", "ValueB")
+    if (msg4 == "") then msg4 = "127" end
+    local user_ok, user_input_CSV = reaper.GetUserInputs("Insert CC Events AB", 3, "CC Number,A,B", msg2..','..msg3..','.. msg4)
+    if not user_ok then return reaper.SN_FocusMIDIEditor() end
+    msg2, msg3, msg4 = user_input_CSV:match("(.*),(.*),(.*)")
+    if not tonumber(msg2) or not tonumber(msg3) or not tonumber(msg4) then return end
+    reaper.SetExtState("InsertCCEventsAB", "CCNum", msg2, false)
+    reaper.SetExtState("InsertCCEventsAB", "ValueA", msg3, false)
+    reaper.SetExtState("InsertCCEventsAB", "ValueB", msg4, false)
+    setOneNote()
+    for i = 1, notecnt do
+        local retval, selected, muted, startpos, endpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i-1)
+        if selected == true then
+            if flag == true then
+                reaper.MIDI_InsertCC(take, selected, muted, startpos, 0xB0, chan, msg2, msg3)
+                flag = false
+            else
+                reaper.MIDI_InsertCC(take, selected, muted, startpos, 0xB0, chan, msg2, msg4)
+                flag = true
+            end
+        end
     end
-  end
 end
-reaper.MIDI_DisableSort(take)
 reaper.Undo_BeginBlock()
+reaper.MIDI_DisableSort(take)
 main()
-reaper.Undo_EndBlock("Insert CC Events 1-2 (For Selected Notes)", 0)
 reaper.MIDI_Sort(take)
+reaper.Undo_EndBlock("Insert CC Events AB", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
