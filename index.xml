@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fc51c93a89b6feab693d0deb265e6910ceef5cc7">
+<index version="1" name="zaibuyidao Scripts" commit="1245d1871896028849c97a55b43e6954d16dc2fb">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -344,12 +344,6 @@
       </version>
       <version name="2.2" author="zaibuyidao" time="2021-01-18T04:20:00Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Bend.lua" type="script" desc="Bend">
-      <version name="1.0" author="zaibuyidao" time="2021-01-18T04:20:00Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/zaibuyidao_Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_CC Curve Shape (Dynamic Menu).lua" type="script" desc="CC Curve Shape (Dynamic Menu)">
@@ -810,15 +804,16 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Bend.lua" type="script" desc="Insert Bend">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="zaibuyidao" time="2020-01-13T17:53:05Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b1479deaf17f9f239979a79eae784078ccc4e0ee/MIDI%20Editor/zaibuyidao_Insert%20Bend.lua</source>
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Insert%20Bend.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2021-01-18T04:36:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1245d1871896028849c97a55b43e6954d16dc2fb/MIDI%20Editor/zaibuyidao_Insert%20Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events 1.lua" type="script" desc="Insert CC Events 1">
@@ -1051,6 +1046,11 @@
     <reapack name="zaibuyidao_Insert SysEx.lua" type="script" desc="Insert SysEx">
       <version name="1.2" author="zaibuyidao" time="2020-11-01T09:10:53Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/843708e47c22265d9b89d0a23a4e90b7545bbe94/MIDI%20Editor/zaibuyidao_Insert%20SysEx.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Vibrato.lua" type="script" desc="Insert Vibrato">
+      <version name="1.5" author="zaibuyidao" time="2021-01-18T04:36:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1245d1871896028849c97a55b43e6954d16dc2fb/MIDI%20Editor/zaibuyidao_Insert%20Vibrato.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Wah.lua" type="script" desc="Insert Wah">
@@ -2355,12 +2355,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61a198f97763e85b3144e1b00ad3a86fec79ba8c/MIDI%20Editor/zaibuyidao_Unselect%20All%20Events.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Vibrato.lua" type="script" desc="Vibrato">
-      <version name="1.0" author="zaibuyidao" time="2021-01-18T04:20:00Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/zaibuyidao_Vibrato.lua</source>
-      </version>
-    </reapack>
     <reapack name="再補一刀_CC曲綫形狀(動態菜單).lua" type="script" desc="CC曲綫形狀(動態菜單)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -2486,18 +2480,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58185d8f06c64b37b558aeddc52e91b93b6a5f5d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6.lua</source>
       </version>
     </reapack>
-    <reapack name="再補一刀_推弦.lua" type="script" desc="推弦">
-      <version name="1.0" author="再補一刀" time="2021-01-18T04:20:00Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%A8%E5%BC%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_揉弦.lua" type="script" desc="揉弦">
-      <version name="1.0" author="再補一刀" time="2021-01-18T04:20:00Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%89%E5%BC%A6.lua</source>
-      </version>
-    </reapack>
     <reapack name="再補一刀_插入CC事件AB.lua" type="script" desc="插入CC事件AB">
       <version name="1.0" author="再補一刀" time="2021-01-18T04:20:00Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -2518,6 +2500,16 @@
       </metadata>
       <version name="1.4" author="再補一刀" time="2021-01-11T13:06:36Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58185d8f06c64b37b558aeddc52e91b93b6a5f5d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E5%BD%8E%E9%9F%B3.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_插入推弦.lua" type="script" desc="插入推弦">
+      <version name="1.2" author="再補一刀" time="2021-01-18T04:36:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1245d1871896028849c97a55b43e6954d16dc2fb/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E6%8E%A8%E5%BC%A6.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_插入揉弦.lua" type="script" desc="插入揉弦">
+      <version name="1.5" author="再補一刀" time="2021-01-18T04:36:01Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1245d1871896028849c97a55b43e6954d16dc2fb/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E6%8F%89%E5%BC%A6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入程序變換(對於JSFX-簡單表情映射).lua" type="script" desc="插入程序變換(對於JSFX-簡單表情映射)">
