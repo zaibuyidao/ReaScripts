@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: 揉弦
- * Version: 1.0
+ * ReaScript Name: 插入揉弦
+ * Version: 1.5
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -24,7 +24,7 @@ function Main()
   local jiange = reaper.GetExtState("Vibrato", "Interval")
   if (jiange == "") then jiange = "10" end
   
-  local user_ok, user_input_CSV = reaper.GetUserInputs("揉弦", 3, "幅度:1-10,重複:1-100,間隔:1-120", fudu ..','.. cishu ..','.. jiange)
+  local user_ok, user_input_CSV = reaper.GetUserInputs("插入揉弦", 3, "幅度:1-10,重複:1-100,間隔:1-120", fudu ..','.. cishu ..','.. jiange)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   fudu, cishu, jiange = user_input_CSV:match("(.*),(.*),(.*)")
   if not tonumber(fudu) or not tonumber(cishu) or not tonumber(jiange) then return reaper.SN_FocusMIDIEditor() end
@@ -68,7 +68,7 @@ function Main()
   end
 end
 
-local script_title = "Vibrato"
+local script_title = "插入揉弦"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, -1)

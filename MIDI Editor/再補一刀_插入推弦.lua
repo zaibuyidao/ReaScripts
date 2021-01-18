@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Bend
- * Version: 1.0
- * Author: zaibuyidao
+ * ReaScript Name: 插入推弦
+ * Version: 1.2
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -32,7 +32,7 @@ function Main()
   local interval = reaper.GetExtState("Bend", "Interval")
   if (interval == "") then interval = "20" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Bend", 3, "Start,End,Interval", bend_start..','..bend_end..','.. interval)
+  local user_ok, user_input_csv = reaper.GetUserInputs("插入推弦", 3, "開始,結束,間隔", bend_start..','..bend_end..','.. interval)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   bend_start, bend_end, interval = user_input_csv:match("(.*),(.*),(.*)")
   if not tonumber(bend_start) or not tonumber(bend_end) or not tonumber(interval) then return reaper.SN_FocusMIDIEditor() end
@@ -44,7 +44,7 @@ function Main()
 
   if bend_start < -8192 or bend_start > 8191 or bend_end < -8192 or bend_end > 8191 then
     return
-      reaper.MB("Please enter a value from -8192 through 8191", "Error", 0),
+      reaper.MB("請輸入一個介於-8192到8191之間的值", "錯誤", 0),
       reaper.SN_FocusMIDIEditor()
   end
   local tbl = {} -- 存儲彎音值
@@ -69,7 +69,7 @@ function Main()
   end
 end
 
-local script_title = "Bend"
+local script_title = "插入推弦"
 reaper.Undo_BeginBlock() -- 撤銷塊開始
 Main() -- 執行函數
 reaper.Undo_EndBlock(script_title, -1) -- 撤銷塊結束
