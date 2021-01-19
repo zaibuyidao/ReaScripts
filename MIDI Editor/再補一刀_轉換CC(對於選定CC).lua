@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 轉換CC(對於所選CC)
+ * ReaScript Name: 轉換CC(對於選定CC)
  * Version: 1.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -41,7 +41,7 @@ function Main()
   reaper.UpdateArrange()
   reaper.MIDI_Sort(take)
 end
-local script_title = "轉換CC(對於所選CC)"
+local script_title = "轉換CC(對於選定CC)"
 reaper.Undo_BeginBlock()
 Main()
 reaper.Undo_EndBlock(script_title, 0)

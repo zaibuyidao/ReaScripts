@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Insert Wah
+ * ReaScript Name: 插入哇音
  * Version: 1.5
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -29,7 +29,7 @@ if (tick_01 == "") then tick_01 = "480" end
 local tick_02 = reaper.GetExtState("InsertWah", "Interval")
 if (tick_02 == "") then tick_02 = "20" end
 
-local retval, user_input_CSV = reaper.GetUserInputs("Insert Wah", 6, "CC Number,1,2,Repetition,Length,Interval", cc_num ..','.. cc_begin ..','.. cc_end ..','.. cishu ..','.. tick_01 ..','.. tick_02)
+local retval, user_input_CSV = reaper.GetUserInputs("插入哇音", 6, "CC編號,1,2,重複,長度,間隔", cc_num ..','.. cc_begin ..','.. cc_end ..','.. cishu ..','.. tick_01 ..','.. tick_02)
 if not retval then return reaper.SN_FocusMIDIEditor() end
 cc_num, cc_begin, cc_end, cishu, tick_01, tick_02 = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*),(.*)")
 if not tonumber(cc_num) or not tonumber(cc_begin) or not tonumber(cc_end) or not tonumber(cishu) or not tonumber(tick_01) or not tonumber(tick_02) then return reaper.SN_FocusMIDIEditor() end
@@ -103,6 +103,6 @@ reaper.MIDI_DisableSort(take)
 Wah()
 Main()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Insert Wah", -1)
+reaper.Undo_EndBlock("插入哇音", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 建立MIDI通道路由到所選軌道
+ * ReaScript Name: 建立MIDI通道路由到選定軌道
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -64,7 +64,7 @@ function main()
             if channel == '0' then channel = 'All' end
             reaper.SetTrackSendInfo_Value(track_to_send, 0, 0, 'I_MIDIFLAGS', channel << 5)
         end
-        reaper.Undo_EndBlock("建立MIDI通道路由到所選軌道", 0)
+        reaper.Undo_EndBlock("建立MIDI通道路由到選定軌道", 0)
         ::continue::
     end
 end

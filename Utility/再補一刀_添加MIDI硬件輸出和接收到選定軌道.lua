@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Add MIDI Hardware Output And Receives To Selected Tracks
+ * ReaScript Name: 添加MIDI硬件輸出和接收到選定軌道
  * Version: 1.4
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -28,7 +28,7 @@ function main()
     if (track_num == "") then track_num = "1" end
     local toggle = reaper.GetExtState("AddMIDIHardwareOutput", "Toggle")
     if (toggle == "") then toggle = "0" end
-    user_ok, user_input_CSV = reaper.GetUserInputs("Add Hardware Output And Receives", 4, "MIDI Hardware Output,Send To Channel,Receive From Track,0=DEF 1=CH 2=RECV 3=RMV", output_device ..','.. ordinal ..','.. track_num ..','.. toggle)
+    local user_ok, user_input_CSV = reaper.GetUserInputs("添加MIDI硬件輸出和接收到選定軌道", 4, "MIDI硬件輸出,MIDI通道順序,接收軌道編號,0=默認1=通道2=接收3=移除", output_device ..','.. ordinal ..','.. track_num ..','.. toggle)
     output_device, ordinal, track_num, toggle = user_input_CSV:match("(.*),(.*),(.*),(.*)")
     if not user_ok or not tonumber(output_device) or not tonumber(ordinal) or not tonumber(track_num) or not tonumber(toggle) then return end
     reaper.SetExtState("AddMIDIHardwareOutput", "Device", output_device, false)
@@ -86,7 +86,7 @@ function main()
         commandID_04 = reaper.NamedCommandLookup("_SWS_ENMPSEND") -- SWS: Enable master/parent send on selected track(s)
         reaper.Main_OnCommand(commandID_04, 0)
     end
-    reaper.Undo_EndBlock("Add MIDI Hardware Output And Receives To Selected Tracks", 0)
+    reaper.Undo_EndBlock("添加MIDI硬件輸出和接收到選定軌道", 0)
 end
 reaper.PreventUIRefresh(1)
 main()
