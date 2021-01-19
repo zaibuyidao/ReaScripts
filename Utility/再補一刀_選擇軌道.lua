@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 選擇軌道並選擇軌道中的所有對象
+ * ReaScript Name: 選擇軌道
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -63,7 +63,7 @@ for i = 0, count_track-1 do
   end
 end
 
-reaper.Undo_EndBlock("選擇軌道並選擇軌道中的所有對象", 0) -- 撤銷塊結束
+reaper.Undo_EndBlock("選擇軌道", 0) -- 撤銷塊結束
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

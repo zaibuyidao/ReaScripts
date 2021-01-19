@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Pick Track And Select All Items In Track
+ * ReaScript Name: Pick Track
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -63,7 +63,7 @@ for i = 0, count_track-1 do
   end
 end
 
-reaper.Undo_EndBlock("Pick Track And Select All Items In Track", 0) -- 撤銷塊結束
+reaper.Undo_EndBlock("Pick Track", 0) -- 撤銷塊結束
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

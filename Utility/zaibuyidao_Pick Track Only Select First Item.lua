@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Pick Track And Select First Item In Track
+ * ReaScript Name: Pick Track Only Select First Item
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -68,7 +68,7 @@ for i = 0, count_track-1 do
   end
 end
 
-reaper.Undo_EndBlock("Pick Track And Select First Item In Track", 0) -- 撤銷塊結束
+reaper.Undo_EndBlock("Pick Track Only Select First Item", 0) -- 撤銷塊結束
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

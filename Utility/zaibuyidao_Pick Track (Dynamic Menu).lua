@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: 選擇軌道並選擇軌道中的第一個對象(動態菜單)
+ * ReaScript Name: Pick Track (Dynamic Menu)
  * Version: 1.0
- * Author: 再補一刀
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -44,7 +44,7 @@ for i = 1, count_track do
   menu = menu .. (flag and "!" or "") .. "CH " .. i .. " " .. track_name .. "|"
 end
 
-local title = "Hidden gfx window for showing the pick track first track showmenu"
+local title = "Hidden gfx window for showing the pick track all items showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
 local HWND = reaper.JS_Window_Find(title, true)
 local out = 0
@@ -79,12 +79,7 @@ if selection > 0 then
   
     for i = 0, item_num-1 do
       local item = reaper.GetTrackMediaItem(sel_track, i)
-      if i == 0 then
-        reaper.SetMediaItemSelected(item, true)
-      else
-        reaper.SetMediaItemSelected(item, false)
-      end
-      -- reaper.SetMediaItemSelected(item, true) -- 選中所有item
+      reaper.SetMediaItemSelected(item, true) -- 選中所有item
       reaper.UpdateItemInProject(item)
     end
   end
