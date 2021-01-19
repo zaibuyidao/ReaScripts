@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1245d1871896028849c97a55b43e6954d16dc2fb">
+<index version="1" name="zaibuyidao Scripts" commit="6c636758cd170409cade9d9e74cc245d7f83145c">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1054,9 +1054,7 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Wah.lua" type="script" desc="Insert Wah">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
         <changelog><![CDATA[+ Initial Release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
@@ -1072,6 +1070,9 @@
       </version>
       <version name="1.4" author="zaibuyidao" time="2020-03-05T11:54:39Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80fa4a17562d650a137a5d110ef3c0e8050a6be4/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
+      </version>
+      <version name="1.5" author="zaibuyidao" time="2021-01-19T19:51:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Interval.lua" type="script" desc="Interval">
@@ -1323,6 +1324,30 @@
       </version>
       <version name="1.6" author="zaibuyidao" time="2020-03-07T11:31:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Rhythm.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Pick Track And Select All Items In Track (Dynamic Menu).lua" type="script" desc="Pick Tracks (Dynamic Menu)">
+      <version name="1.0" author="zaibuyidao" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/zaibuyidao_Pick%20Track%20And%20Select%20All%20Items%20In%20Track%20(Dynamic%20Menu).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Pick Track And Select All Items In Track.lua" type="script" desc="Pick Track And Select All Items In Track">
+      <version name="1.0" author="zaibuyidao" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/zaibuyidao_Pick%20Track%20And%20Select%20All%20Items%20In%20Track.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Pick Track And Select First Item In Track (Dynamic Menu).lua" type="script" desc="Pick Tracks (Dynamic Menu)">
+      <version name="1.0" author="zaibuyidao" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/zaibuyidao_Pick%20Track%20And%20Select%20First%20Item%20In%20Track%20(Dynamic%20Menu).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Pick Track And Select First Item In Track.lua" type="script" desc="Pick Track And Select First Item In Track">
+      <version name="1.0" author="zaibuyidao" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/zaibuyidao_Pick%20Track%20And%20Select%20First%20Item%20In%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Program Change To Note (For JSFX-Simple Expression Map).lua" type="script" desc="Program Change To Note (For JSFX-Simple Expression Map)">
@@ -2486,6 +2511,11 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5CC%E4%BA%8B%E4%BB%B6AB.lua</source>
       </version>
     </reapack>
+    <reapack name="再補一刀_插入哇音.lua" type="script" desc="插入哇音">
+      <version name="1.5" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E5%93%87%E9%9F%B3.lua</source>
+      </version>
+    </reapack>
     <reapack name="再補一刀_插入彎音(半音).lua" type="script" desc="插入彎音(半音)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -2543,6 +2573,16 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e8401b5823e2b27a081539b8fb75c165a3799e5b/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%A8%8B%E5%BA%8F%E8%AE%8A%E6%8F%9B%E8%BD%89%E9%9F%B3%E7%AC%A6(%E5%B0%8D%E6%96%BCJSFX-%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84).lua</source>
       </version>
     </reapack>
+    <reapack name="再補一刀_線性斜坡CC事件(多軌).lua" type="script" desc="線性斜坡CC事件(多軌)">
+      <version name="1.1" author="zaibuyidao" time="2021-01-19T19:51:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%B7%9A%E6%80%A7%E6%96%9C%E5%9D%A1CC%E4%BA%8B%E4%BB%B6(%E5%A4%9A%E8%BB%8C).lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_線性斜坡CC事件.lua" type="script" desc="線性斜坡CC事件">
+      <version name="1.6" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%B7%9A%E6%80%A7%E6%96%9C%E5%9D%A1CC%E4%BA%8B%E4%BB%B6.lua</source>
+      </version>
+    </reapack>
     <reapack name="再補一刀_自動表情(多軌).lua" type="script" desc="自動表情(多軌)">
       <version name="1.0" author="再補一刀, 當歸蛋" time="2020-09-09T17:52:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -2590,12 +2630,12 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a741eba7e71f7f988f89a905b09103d4301621c2/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AE%E6%A8%82%E5%99%A8%E7%B5%84(%E5%B0%8D%E6%96%BCJSFX-%E7%B0%A1%E5%96%AE%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84).lua</source>
       </version>
     </reapack>
-    <reapack name="再補一刀_轉換CC(對於所選CC).lua" type="script" desc="轉換CC(對於所選CC)">
+    <reapack name="再補一刀_轉換CC(對於選定CC).lua" type="script" desc="轉換CC(對於選定CC)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.1" author="再補一刀" time="2021-01-18T04:20:00Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%BD%89%E6%8F%9BCC(%E5%B0%8D%E6%96%BC%E6%89%80%E9%81%B8CC).lua</source>
+      <version name="1.1" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%BD%89%E6%8F%9BCC(%E5%B0%8D%E6%96%BC%E9%81%B8%E5%AE%9ACC).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_轉換CC.lua" type="script" desc="轉換CC">
@@ -2604,6 +2644,30 @@
       </metadata>
       <version name="1.1" author="再補一刀" time="2021-01-18T04:20:00Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%BD%89%E6%8F%9BCC.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_選擇軌道並選擇軌道中的所有對象(動態菜單).lua" type="script" desc="選擇軌道並選擇軌道中的所有對象(動態菜單)">
+      <version name="1.0" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%E4%B8%A6%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%E4%B8%AD%E7%9A%84%E6%89%80%E6%9C%89%E5%B0%8D%E8%B1%A1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_選擇軌道並選擇軌道中的所有對象.lua" type="script" desc="選擇軌道並選擇軌道中的所有對象">
+      <version name="1.0" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%E4%B8%A6%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%E4%B8%AD%E7%9A%84%E6%89%80%E6%9C%89%E5%B0%8D%E8%B1%A1.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_選擇軌道並選擇軌道中的第一個對象(動態菜單).lua" type="script" desc="選擇軌道並選擇軌道中的第一個對象(動態菜單)">
+      <version name="1.0" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%E4%B8%A6%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%E4%B8%AD%E7%9A%84%E7%AC%AC%E4%B8%80%E5%80%8B%E5%B0%8D%E8%B1%A1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_選擇軌道並選擇軌道中的第一個對象.lua" type="script" desc="選擇軌道並選擇軌道中的第一個對象">
+      <version name="1.0" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%E4%B8%A6%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%E4%B8%AD%E7%9A%84%E7%AC%AC%E4%B8%80%E5%80%8B%E5%B0%8D%E8%B1%A1.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_選擇音符.lua" type="script" desc="選擇音符">
@@ -2673,13 +2737,14 @@
       <version name="2.4" author="zaibuyidao" time="2020-11-09T03:40:38Z">
         <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
       </version>
+      <version name="2.5" author="zaibuyidao" time="2021-01-19T19:51:41Z">
+        <source main="midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Event%20List%20Editor/zaibuyidao_Insert%20NRPN.lua</source>
+      </version>
     </reapack>
   </category>
   <category name="Utility">
     <reapack name="zaibuyidao_Add MIDI Hardware Output And Receives To Selected Tracks.lua" type="script" desc="Add MIDI Hardware Output And Receives To Selected Tracks">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
+      <metadata/>
       <version name="1.0" author="zaibuyidao" time="2020-04-14T16:15:42Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ccdfc6721a2b1e7df7f63cc3c6095439bb5a2eaf/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
@@ -2692,6 +2757,9 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2020-04-25T05:45:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/58f6e10a33307e789724b3c455901e701c3e00ff/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
+      </version>
+      <version name="1.4" author="zaibuyidao" time="2021-01-19T19:51:41Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Channel Routing To Selected Tracks.lua" type="script" desc="Build MIDI Channel Routing To Selected Tracks">
@@ -2766,10 +2834,21 @@
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/Utility/zaibuyidao_VST%20Instrument.lua</source>
       </version>
     </reapack>
-    <reapack name="再補一刀_建立MIDI通道路由到所選軌道.lua" type="script" desc="建立MIDI通道路由到所選軌道">
-      <version name="1.0" author="再補一刀" time="2020-12-07T18:20:28Z">
+    <reapack name="再補一刀_建立MIDI通道路由到選定軌道.lua" type="script" desc="建立MIDI通道路由到選定軌道">
+      <version name="1.0" author="再補一刀" time="2021-01-19T19:51:41Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/162d8c9abb1ab2342e2a3b9dc057dff38daaa946/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BB%BA%E7%AB%8BMIDI%E9%80%9A%E9%81%93%E8%B7%AF%E7%94%B1%E5%88%B0%E6%89%80%E9%81%B8%E8%BB%8C%E9%81%93.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BB%BA%E7%AB%8BMIDI%E9%80%9A%E9%81%93%E8%B7%AF%E7%94%B1%E5%88%B0%E9%81%B8%E5%AE%9A%E8%BB%8C%E9%81%93.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_添加MIDI硬件輸出和接收到選定軌道.lua" type="script" desc="添加MIDI硬件輸出和接收到選定軌道">
+      <version name="1.4" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%B7%BB%E5%8A%A0MIDI%E7%A1%AC%E4%BB%B6%E8%BC%B8%E5%87%BA%E5%92%8C%E6%8E%A5%E6%94%B6%E5%88%B0%E9%81%B8%E5%AE%9A%E8%BB%8C%E9%81%93.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_設置MIDI通道路由(動態菜單).lua" type="script" desc="設置MIDI通道路由(動態菜單)">
+      <version name="1.0" author="再補一刀" time="2021-01-19T19:51:41Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AEMIDI%E9%80%9A%E9%81%93%E8%B7%AF%E7%94%B1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重命名軌道.lua" type="script" desc="重命名軌道">
