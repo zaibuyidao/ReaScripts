@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 顯示所選對象的總長度
+ * ReaScript Name: 顯示選定對象的總長度
  * Version: 1.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
