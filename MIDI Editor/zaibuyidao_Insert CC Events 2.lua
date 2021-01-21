@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert CC Events 2
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -10,54 +10,66 @@
 
 --[[
  * Changelog:
- * v1.0 (2019-12-19)
+ * v1.0 (2019-12-12)
   + Initial release
 --]]
 
-local cc_num = reaper.GetExtState("InsertCCEvents2", "CC_Num")
-local cc_begin = reaper.GetExtState("InsertCCEvents2", "CC_Begin")
-local cc_end = reaper.GetExtState("InsertCCEvents2", "CC_End")
-local cishu = reaper.GetExtState("InsertCCEvents2", "Cishu")
-local tick = reaper.GetExtState("InsertCCEvents2", "Tick")
+function main()
+  take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+  if take == nil then return end
+  local item = reaper.GetMediaItemTake_Item(take)
 
-if (cc_num == "") then cc_num = "11" end
-if (cc_begin == "") then cc_begin = "100" end
-if (cc_end == "") then cc_end = "70" end
-if (cishu == "") then cishu = "1" end
-if (tick == "") then tick = "120" end
+  local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
 
-local user_ok, user_input_csv = reaper.GetUserInputs("Insert CC Events 2", 5, "CC Number,1,2,Repetition,Interval", cc_num..','..cc_begin..','.. cc_end..','..cishu..','.. tick)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-cc_num, cc_begin, cc_end, cishu, tick = user_input_csv:match("(.*),(.*),(.*),(.*),(.*)")
-if not tonumber(cc_num) or not tonumber(cc_begin) or not tonumber(cc_end) or not tonumber(cishu) or not tonumber(tick) then return reaper.SN_FocusMIDIEditor() end
+  local cnt, index = 0, {}
+  local val = reaper.MIDI_EnumSelNotes(take, -1)
+  while val ~= - 1 do
+    cnt = cnt + 1
+    index[cnt] = val
+    val = reaper.MIDI_EnumSelNotes(take, val)
+  end
+  
+  local msg2 = reaper.GetExtState("InsertCCEvents2ForSelNote", "Msg2")
+  local msg3 = reaper.GetExtState("InsertCCEvents2ForSelNote", "Msg3")
+  local msg4 = reaper.GetExtState("InsertCCEvents2ForSelNote", "Msg4")
+  local first_offset = reaper.GetExtState("InsertCCEvents2ForSelNote", "FirstOffset")
+  local second_offset = reaper.GetExtState("InsertCCEvents2ForSelNote", "SecondOffset")
+  
+  if (msg2 == "") then msg2 = "64" end
+  if (msg3 == "") then msg3 = "127" end
+  if (msg4 == "") then msg4 = "0" end
+  if (first_offset == "") then first_offset = "10" end
+  if (second_offset == "") then second_offset = "-10" end
 
-reaper.SetExtState("InsertCCEvents2", "CC_Num", cc_num, false)
-reaper.SetExtState("InsertCCEvents2", "CC_Begin", cc_begin, false)
-reaper.SetExtState("InsertCCEvents2", "CC_End", cc_end, false)
-reaper.SetExtState("InsertCCEvents2", "Cishu", cishu, false)
-reaper.SetExtState("InsertCCEvents2", "Tick", tick, false)
+  local user_ok, input_csv = reaper.GetUserInputs("Insert CC Events 2", 5, "CC Number,1,2,1 ofs,2 ofs", msg2..','..msg3..','.. msg4..','..first_offset..','.. second_offset)
+  if not user_ok then return reaper.SN_FocusMIDIEditor() end
+  msg2, msg3, msg4, first_offset, second_offset = input_csv:match("(.*),(.*),(.*),(.*),(.*)")
+  if not tonumber(msg2) or not tonumber(msg3) or not tonumber(msg4) or not tonumber(first_offset) or not tonumber(second_offset) then return reaper.SN_FocusMIDIEditor() end
 
-cc_num, cc_begin, cc_end, cishu, tick = tonumber(cc_num), tonumber(cc_begin), tonumber(cc_end), tonumber(cishu)*8, tonumber(tick)
-
-function Main()
-    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    local cuspos = reaper.GetCursorPositionEx(0)
-    local ppqpos = reaper.MIDI_GetPPQPosFromProjTime(take, cuspos)
-    local bolang = {cc_begin,cc_end}
-    ppqpos = ppqpos - tick
-    for i = 1, cishu do
-        for i = 1, #bolang do
-            ppqpos = ppqpos + tick
-            reaper.MIDI_InsertCC(take, selected, false, ppqpos, 0xB0, chan, cc_num, bolang[i])
-            i=i+1
-        end
+  reaper.SetExtState("InsertCCEvents2ForSelNote", "Msg2", msg2, false)
+  reaper.SetExtState("InsertCCEvents2ForSelNote", "Msg3", msg3, false)
+  reaper.SetExtState("InsertCCEvents2ForSelNote", "Msg4", msg4, false)
+  reaper.SetExtState("InsertCCEvents2ForSelNote", "FirstOffset", first_offset, false)
+  reaper.SetExtState("InsertCCEvents2ForSelNote", "SecondOffset", second_offset, false)
+  
+  if #index > 0 then
+    for i = 1, #index do
+      local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
+      reaper.MIDI_InsertCC(take, selected, muted, startppqpos + first_offset, 0xB0, chan, msg2, msg3)
+      reaper.MIDI_InsertCC(take, selected, muted, endppqpos + second_offset, 0xB0, chan, msg2, msg4)
     end
+  else
+    for i = 0, notecnt-1 do
+      local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+      reaper.MIDI_InsertCC(take, selected, muted, startppqpos + first_offset, 0xB0, chan, msg2, msg3)
+      reaper.MIDI_InsertCC(take, selected, muted, endppqpos + second_offset, 0xB0, chan, msg2, msg4)
+    end
+    reaper.UpdateItemInProject(item)
+  end
 end
 
+local script_title = "Insert CC Events 2"
 reaper.Undo_BeginBlock()
-selected = true
-chan = 0
-Main()
-reaper.UpdateArrange()
-reaper.Undo_EndBlock("Insert CC Events 2", -1)
+main()
+reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()

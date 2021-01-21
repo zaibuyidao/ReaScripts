@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 重命名軌道
- * Version: 1.0
+ * Version: 1.1
  * Author: 再補一刀, Yanick
  * Reference: https://forum.cockos.com/showthread.php?t=243582 (僅中文化並做適當調整)
  * REAPER: 6.0
@@ -19,7 +19,7 @@ local j = 1
 while j <= count_sel_tracks do
     local select_track = reaper.GetSelectedTrack(0, j - 1)
     local _, track_name = reaper.GetSetMediaTrackInfo_String(select_track, 'P_NAME', 0, false)
-    retval, user_input_csv = reaper.GetUserInputs('重命名 '.. count_sel_tracks .. ' 條軌道中的第 '.. j .. ' 軌 - "ESC"後退', 1, '設置第 ' .. j .. ' 條軌道名:,extrawidth=60', track_name)
+    retval, user_input_csv = reaper.GetUserInputs('重命名 '.. count_sel_tracks .. ' 條軌道中的第 '.. j .. ' 軌 - "ESC"後退', 1, '設置第 ' .. j .. ' 條軌道名:,extrawidth=150', track_name)
     user_input_csv = tostring(user_input_csv)
     if retval then
         if string.upper(user_input_csv) == 'ESC' then
