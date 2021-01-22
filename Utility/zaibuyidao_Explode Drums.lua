@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Explode Drums
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -67,212 +67,214 @@ for i = 0, item_num-1 do
 
       -- 定義鍵位名稱，符合條件將被映射
       if track_name == "A10-DRUMS" or track_name == "B10-DRUMS" or track_name == "B11-SUB DRUMS" then
-        if note_name == 0 then  note_name = "[88] Standard1 Kick1" end
-        if note_name == 1 then  note_name = "[88] Standard1 Kick2" end
-        if note_name == 2 then  note_name = "[88] Standard2 Kick1" end
-        if note_name == 3 then  note_name = "[88] Standard2 Kick2" end
-        if note_name == 4 then  note_name = "[55] Kick Drum1" end
-        if note_name == 5 then  note_name = "[55] Kick Drum2" end
-        if note_name == 6 then  note_name = "[88] Jazz Kick1" end
-        if note_name == 7 then  note_name = "[88] Jazz Kick2" end
-        if note_name == 8 then  note_name = "[88] Room Kick1" end
-        if note_name == 9 then  note_name = "[88] Room Kick2" end
-        if note_name == 10 then note_name = "[88] Power Kick1" end
-        if note_name == 11 then note_name = "[88] Power Kick2" end
-        if note_name == 12 then note_name = "[88] Electric Kick2" end
-        if note_name == 13 then note_name = "[88] Electric Kick1" end
-        if note_name == 14 then note_name = "[88] TR-808 Kick" end
-        if note_name == 15 then note_name = "[88] TR-909 Kick" end
-        if note_name == 16 then note_name = "[88] Dance Kick" end
-        if note_name == 17 then note_name = "Voice One" end
-        if note_name == 18 then note_name = "Voice Two" end
-        if note_name == 19 then note_name = "Voice Three" end
-        if note_name == 22 then note_name = "MC-500 Beep1" end
-        if note_name == 23 then note_name = "MC-500 Beep2" end
-        if note_name == 24 then note_name = "Concert SD" end
-        if note_name == 25 then note_name = "Snare Roll" end
-        if note_name == 26 then note_name = "Finger Snap2" end
-        if note_name == 27 then note_name = "High Q" end
-        if note_name == 28 then note_name = "Slap" end
-        if note_name == 29 then note_name = "Scratch Push" end
-        if note_name == 30 then note_name = "Scratch Pull" end
-        if note_name == 31 then note_name = "Sticks" end
-        if note_name == 32 then note_name = "Square Click" end
-        if note_name == 33 then note_name = "Metronome Click" end
-        if note_name == 34 then note_name = "Metronome  Bell" end
-        if note_name == 35 then note_name = "Standard3 Kick2" end
-        if note_name == 36 then note_name = "[RND] Kick" end
-        if note_name == 37 then note_name = "Side Stick" end
-        if note_name == 38 then note_name = "[RND] Snare" end
-        if note_name == 39 then note_name = "[RND] Hand Clap" end
-        if note_name == 40 then note_name = "Standard3 Snare2" end
-        if note_name == 41 then note_name = "Low Tom2" end
-        if note_name == 42 then note_name = "[RND] Closed Hi-Hat" end
-        if note_name == 43 then note_name = "Low Tom1" end
-        if note_name == 44 then note_name = "[RND] Pedal Hi-Hat" end
-        if note_name == 45 then note_name = "Mid Tom2" end
-        if note_name == 46 then note_name = "[RND] Open Hi-Hat" end
-        if note_name == 47 then note_name = "Mid Tom1" end
-        if note_name == 48 then note_name = "High Tom2" end
-        if note_name == 49 then note_name = "[RND] Crash Cymbal" end
-        if note_name == 50 then note_name = "High Tom1" end
-        if note_name == 51 then note_name = "[RND] Ride Cymbal1" end
-        if note_name == 52 then note_name = "Chinese Cymbal" end
-        if note_name == 53 then note_name = "[RND] Ride Bell" end
-        if note_name == 54 then note_name = "Tambourine" end
-        if note_name == 55 then note_name = "Splash Cymbal" end
-        if note_name == 56 then note_name = "Cowbell" end
-        if note_name == 57 then note_name = "Crash Cymbal2" end
-        if note_name == 58 then note_name = "Vibra-slap" end
-        if note_name == 59 then note_name = "[RND] Ride Cymbal2" end
-        if note_name == 60 then note_name = "High Bongo" end
-        if note_name == 61 then note_name = "Low Bongo" end
-        if note_name == 62 then note_name = "Mute High Conga" end
-        if note_name == 63 then note_name = "Open High Conga" end
-        if note_name == 64 then note_name = "Open Low Conga" end
-        if note_name == 65 then note_name = "High Timbale" end
-        if note_name == 66 then note_name = "Low Timbale" end
-        if note_name == 67 then note_name = "High Agogo" end
-        if note_name == 68 then note_name = "Low Agogo" end
-        if note_name == 69 then note_name = "Cabasa" end
-        if note_name == 70 then note_name = "Maracas" end
-        if note_name == 71 then note_name = "Short High Whisle" end
-        if note_name == 72 then note_name = "Long Low Whisle" end
-        if note_name == 73 then note_name = "Short Guiro" end
-        if note_name == 74 then note_name = "Long Guiro" end
-        if note_name == 75 then note_name = "Claves" end
-        if note_name == 76 then note_name = "High Wood Block" end
-        if note_name == 77 then note_name = "Low Wood Block" end
-        if note_name == 78 then note_name = "Mute Cuica" end
-        if note_name == 79 then note_name = "Open Cuica" end
-        if note_name == 80 then note_name = "Mute Triangle" end
-        if note_name == 81 then note_name = "Open Triangle" end
-        if note_name == 82 then note_name = "Shaker" end
-        if note_name == 83 then note_name = "Jingle Bell" end
-        if note_name == 84 then note_name = "Bell Tree" end
-        if note_name == 85 then note_name = "Castanets" end
-        if note_name == 86 then note_name = "Mute Surdo" end
-        if note_name == 87 then note_name = "Open Surdo" end
-        if note_name == 88 then note_name = "Applaus2" end
-        if note_name == 97 then note_name = "[88] Standard1 Snare1" end
-        if note_name == 98 then note_name = "[88] Standard1 Snare2" end
-        if note_name == 99 then note_name = "[88] Standard2 Snare1" end
-        if note_name == 100 then note_name = "[88] Standard2 Snare2" end
-        if note_name == 101 then note_name = "[55] Snare Drum2" end
-        if note_name == 102 then note_name = "Standard1 Snare1" end
-        if note_name == 103 then note_name = "Standard1 Snare2" end
-        if note_name == 104 then note_name = "Standard Snare3" end
-        if note_name == 105 then note_name = "[88] Jazz Snare1" end
-        if note_name == 106 then note_name = "[88] Jazz Snare2" end
-        if note_name == 107 then note_name = "[88] Room Snare1" end
-        if note_name == 108 then note_name = "[88] Room Snare2" end
-        if note_name == 109 then note_name = "[88] Power Snare1" end
-        if note_name == 110 then note_name = "[88] Power Snare2" end
-        if note_name == 111 then note_name = "[55] Gated Snare" end
-        if note_name == 112 then note_name = "[88] Dance Snare1" end
-        if note_name == 113 then note_name = "[88] Dance Snare2" end
-        if note_name == 114 then note_name = "[88] Disco Snare" end
-        if note_name == 115 then note_name = "[88] Electric Snare2" end
-        if note_name == 116 then note_name = "[55] Electric Snare" end
-        if note_name == 117 then note_name = "[88] Electric Snare 3" end
-        if note_name == 118 then note_name = "TR-707 Snare" end
-        if note_name == 119 then note_name = "[88] TR-808 Snare1" end
-        if note_name == 120 then note_name = "[88] TR-808 Snare2" end
-        if note_name == 121 then note_name = "[88] TR-909 Snare1" end
-        if note_name == 122 then note_name = "[88] TR-909 Snare2" end
-        if note_name == 123 then note_name = "Rap Snare" end
-        if note_name == 124 then note_name = "Jungle Snare1" end
-        if note_name == 125 then note_name = "House Snare1" end
-        if note_name == 126 then note_name = "[88] House Snare" end
-        if note_name == 127 then note_name = "House Snare2" end
+        if note_name == 0 then note_name = "STANDARD1 KICK1" end
+        if note_name == 1 then note_name = "STANDARD1 KICK2" end
+        if note_name == 2 then note_name = "STANDARD2 KICK1" end
+        if note_name == 3 then note_name = "STANDARD2 KICK2" end
+        if note_name == 4 then note_name = "KICK DRUM1" end
+        if note_name == 5 then note_name = "KICK DRUM2" end
+        if note_name == 6 then note_name = "JAZZ KICK1" end
+        if note_name == 7 then note_name = "JAZZ KICK2" end
+        if note_name == 8 then note_name = "ROOM KICK1" end
+        if note_name == 9 then note_name = "ROOM KICK2" end
+        if note_name == 10 then note_name = "POWER KICK1" end
+        if note_name == 11 then note_name = "POWER KICK2" end
+        if note_name == 12 then note_name = "ELECTRIC KICK2" end
+        if note_name == 13 then note_name = "ELECTRIC KICK1" end
+        if note_name == 14 then note_name = "TR-808 KICK" end
+        if note_name == 15 then note_name = "TR-909 KICK" end
+        if note_name == 16 then note_name = "DANCE KICK" end
+        if note_name == 17 then note_name = "VOICE ONE" end
+        if note_name == 18 then note_name = "VOICE TWO" end
+        if note_name == 19 then note_name = "VOICE THREE" end
+        if note_name == 22 then note_name = "MC-500 BEEP1" end
+        if note_name == 23 then note_name = "MC-500 BEEP2" end
+        if note_name == 24 then note_name = "CONCERT SD" end
+        if note_name == 25 then note_name = "SNARE ROLL" end
+        if note_name == 26 then note_name = "FINGER SNAP2" end
+        if note_name == 27 then note_name = "HIGH Q" end
+        if note_name == 28 then note_name = "SLAP" end
+        if note_name == 29 then note_name = "SCRATCH PUSH" end
+        if note_name == 30 then note_name = "SCRATCH PULL" end
+        if note_name == 31 then note_name = "STICKS" end
+        if note_name == 32 then note_name = "SQUARE CLICK" end
+        if note_name == 33 then note_name = "METRONOME CLICK" end
+        if note_name == 34 then note_name = "METRONOME  BELL" end
+        if note_name == 35 then note_name = "STANDARD3 KICK2" end
+        if note_name == 36 then note_name = "KICK" end
+        if note_name == 37 then note_name = "SIDE STICK" end
+        if note_name == 38 then note_name = "SNARE" end
+        if note_name == 39 then note_name = "HAND CLAP" end
+        if note_name == 40 then note_name = "STANDARD3 SNARE2" end
+        if note_name == 41 then note_name = "LOW TOM2" end
+        if note_name == 42 then note_name = "CLOSED HI-HAT" end
+        if note_name == 43 then note_name = "LOW TOM1" end
+        if note_name == 44 then note_name = "PEDAL HI-HAT" end
+        if note_name == 45 then note_name = "MID TOM2" end
+        if note_name == 46 then note_name = "OPEN HI-HAT" end
+        if note_name == 47 then note_name = "MID TOM1" end
+        if note_name == 48 then note_name = "HIGH TOM2" end
+        if note_name == 49 then note_name = "CRASH CYMBAL" end
+        if note_name == 50 then note_name = "HIGH TOM1" end
+        if note_name == 51 then note_name = "RIDE CYMBAL1" end
+        if note_name == 52 then note_name = "CHINESE CYMBAL" end
+        if note_name == 53 then note_name = "RIDE BELL" end
+        if note_name == 54 then note_name = "TAMBOURINE" end
+        if note_name == 55 then note_name = "SPLASH CYMBAL" end
+        if note_name == 56 then note_name = "COWBELL" end
+        if note_name == 57 then note_name = "CRASH CYMBAL2" end
+        if note_name == 58 then note_name = "VIBRA-SLAP" end
+        if note_name == 59 then note_name = "RIDE CYMBAL2" end
+        if note_name == 60 then note_name = "HIGH BONGO" end
+        if note_name == 61 then note_name = "LOW BONGO" end
+        if note_name == 62 then note_name = "MUTE HIGH CONGA" end
+        if note_name == 63 then note_name = "OPEN HIGH CONGA" end
+        if note_name == 64 then note_name = "OPEN LOW CONGA" end
+        if note_name == 65 then note_name = "HIGH TIMBALE" end
+        if note_name == 66 then note_name = "LOW TIMBALE" end
+        if note_name == 67 then note_name = "HIGH AGOGO" end
+        if note_name == 68 then note_name = "LOW AGOGO" end
+        if note_name == 69 then note_name = "CABASA" end
+        if note_name == 70 then note_name = "MARACAS" end
+        if note_name == 71 then note_name = "SHORT HIGH WHISLE" end
+        if note_name == 72 then note_name = "LONG LOW WHISLE" end
+        if note_name == 73 then note_name = "SHORT GUIRO" end
+        if note_name == 74 then note_name = "LONG GUIRO" end
+        if note_name == 75 then note_name = "CLAVES" end
+        if note_name == 76 then note_name = "HIGH WOOD BLOCK" end
+        if note_name == 77 then note_name = "LOW WOOD BLOCK" end
+        if note_name == 78 then note_name = "MUTE CUICA" end
+        if note_name == 79 then note_name = "OPEN CUICA" end
+        if note_name == 80 then note_name = "MUTE TRIANGLE" end
+        if note_name == 81 then note_name = "OPEN TRIANGLE" end
+        if note_name == 82 then note_name = "SHAKER" end
+        if note_name == 83 then note_name = "JINGLE BELL" end
+        if note_name == 84 then note_name = "BELL TREE" end
+        if note_name == 85 then note_name = "CASTANETS" end
+        if note_name == 86 then note_name = "MUTE SURDO" end
+        if note_name == 87 then note_name = "OPEN SURDO" end
+        if note_name == 88 then note_name = "APPLAUS2" end
+        if note_name == 97 then note_name = "STANDARD1 SNARE1" end
+        if note_name == 98 then note_name = "STANDARD1 SNARE2" end
+        if note_name == 99 then note_name = "STANDARD2 SNARE1" end
+        if note_name == 100 then note_name = "STANDARD2 SNARE2" end
+        if note_name == 101 then note_name = "SNARE DRUM2" end
+        if note_name == 102 then note_name = "STANDARD1 SNARE1" end
+        if note_name == 103 then note_name = "STANDARD1 SNARE2" end
+        if note_name == 104 then note_name = "STANDARD SNARE3" end
+        if note_name == 105 then note_name = "JAZZ SNARE1" end
+        if note_name == 106 then note_name = "JAZZ SNARE2" end
+        if note_name == 107 then note_name = "ROOM SNARE1" end
+        if note_name == 108 then note_name = "ROOM SNARE2" end
+        if note_name == 109 then note_name = "POWER SNARE1" end
+        if note_name == 110 then note_name = "POWER SNARE2" end
+        if note_name == 111 then note_name = "GATED SNARE" end
+        if note_name == 112 then note_name = "DANCE SNARE1" end
+        if note_name == 113 then note_name = "DANCE SNARE2" end
+        if note_name == 114 then note_name = "DISCO SNARE" end
+        if note_name == 115 then note_name = "ELECTRIC SNARE2" end
+        if note_name == 116 then note_name = "ELECTRIC SNARE" end
+        if note_name == 117 then note_name = "ELECTRIC SNARE3" end
+        if note_name == 118 then note_name = "TR-707 SNARE" end
+        if note_name == 119 then note_name = "TR-808 SNARE1" end
+        if note_name == 120 then note_name = "TR-808 SNARE2" end
+        if note_name == 121 then note_name = "TR-909 SNARE1" end
+        if note_name == 122 then note_name = "TR-909 SNARE2" end
+        if note_name == 123 then note_name = "RAP SNARE" end
+        if note_name == 124 then note_name = "JUNGLE SNARE1" end
+        if note_name == 125 then note_name = "HOUSE SNARE1" end
+        if note_name == 126 then note_name = "HOUSE SNARE" end
+        if note_name == 127 then note_name = "HOUSE SNARE2" end
       elseif track_name == "A11-KICK&SN" then
-        if note_name == 25 then note_name = "CR-78 Kick1" end
-        if note_name == 26 then note_name = "CR-78 Kick2" end
-        if note_name == 27 then note_name = "TR-606 Kick1" end
-        if note_name == 28 then note_name = "TR-707 Kick" end
-        if note_name == 29 then note_name = "TR-808 Kick" end
-        if note_name == 30 then note_name = "Hip-Hop Kick2" end
-        if note_name == 31 then note_name = "TR-909 Kick1" end
-        if note_name == 32 then note_name = "Hip-Hop Kick3" end
-        if note_name == 33 then note_name = "Hip-Hop Kick1" end
-        if note_name == 34 then note_name = "Jungle Kick2" end
-        if note_name == 35 then note_name = "Jungle Kick1" end
-        if note_name == 36 then note_name = "Techno Kick2" end
-        if note_name == 37 then note_name = "Techno Kick1" end
-        if note_name == 38 then note_name = "Standard1 Kick2" end
-        if note_name == 39 then note_name = "Standard1 Kick1" end
-        if note_name == 40 then note_name = "[88] Standard1 Kick1" end
-        if note_name == 41 then note_name = "[88] Standard1 Kick2" end
-        if note_name == 42 then note_name = "[88] Standard2 Kick1" end
-        if note_name == 43 then note_name = "[88] Standard2 Kick2" end
-        if note_name == 44 then note_name = "[55] Kick Drum1" end
-        if note_name == 45 then note_name = "[55] Kick Drum2" end
-        if note_name == 46 then note_name = "[88] Soft Kick" end
-        if note_name == 47 then note_name = "[88] Jazz Kick1" end
-        if note_name == 48 then note_name = "[88] Jazz Kick2" end
-        if note_name == 49 then note_name = "[55] Concert BD1" end
-        if note_name == 50 then note_name = "[88] Room Kick1" end
-        if note_name == 51 then note_name = "[88] Room Kick2" end
-        if note_name == 52 then note_name = "[88] Power Kick1" end
-        if note_name == 53 then note_name = "[88] Power Kick2" end
-        if note_name == 54 then note_name = "[88] Electric Kick2" end
-        if note_name == 55 then note_name = "[88] Electric Kick1" end
-        if note_name == 56 then note_name = "[55] Electric Kick" end
-        if note_name == 57 then note_name = "[88] TR-808 Kick" end
-        if note_name == 58 then note_name = "[88] TR-909 Kick" end
-        if note_name == 59 then note_name = "[88] Dance Kick" end
-        if note_name == 60 then note_name = "[88] Standard1 Snare1" end
-        if note_name == 61 then note_name = "[88] Standard1 Snare2" end
-        if note_name == 62 then note_name = "[88] Standard2 Snare1" end
-        if note_name == 63 then note_name = "[88] Standard2 Snare2" end
-        if note_name == 64 then note_name = "[55] Snare Drum2" end
-        if note_name == 65 then note_name = "[55] Concert Snare" end
-        if note_name == 66 then note_name = "[88] Jazz Snare1" end
-        if note_name == 67 then note_name = "[88] Jazz Snare2" end
-        if note_name == 68 then note_name = "[88] Room Snare1" end
-        if note_name == 69 then note_name = "[88] Room Snare2" end
-        if note_name == 70 then note_name = "[88] Power Snare1" end
-        if note_name == 71 then note_name = "[88] Power Snare2" end
-        if note_name == 72 then note_name = "[55] Gated Snare" end
-        if note_name == 73 then note_name = "[88] Dance Snare1" end
-        if note_name == 74 then note_name = "[88] Dance Snare2" end
-        if note_name == 75 then note_name = "[88] Disco Snare" end
-        if note_name == 76 then note_name = "[88] Electric Snare2" end
-        if note_name == 77 then note_name = "[88] House Snare" end
-        if note_name == 78 then note_name = "[55] Electric Snare1" end
-        if note_name == 79 then note_name = "[88] Electric Snare3" end
-        if note_name == 80 then note_name = "[88] TR-808 Snare1" end
-        if note_name == 81 then note_name = "[88] TR-808 Snare2" end
-        if note_name == 82 then note_name = "[88] TR-909 Snare1" end
-        if note_name == 83 then note_name = "[88] TR-909 Snare2" end
-        if note_name == 84 then note_name = "[88] Brush Tap1" end
-        if note_name == 85 then note_name = "[88] Brush Tap2" end
-        if note_name == 86 then note_name = "[88] Brush Slap1" end
-        if note_name == 87 then note_name = "[88] Brush Slap2" end
-        if note_name == 88 then note_name = "[88] Brush Slap3" end
-        if note_name == 89 then note_name = "[88] Brush Swirl1" end
-        if note_name == 90 then note_name = "[88] Brush Swirl2" end
-        if note_name == 91 then note_name = "[88] Brush Long Swirl" end
-        if note_name == 92 then note_name = "Standard1 Snare1" end
-        if note_name == 93 then note_name = "Standard1 Snare2" end
-        if note_name == 94 then note_name = "Standard Snare3" end
-        if note_name == 95 then note_name = "Rap Snare" end
-        if note_name == 96 then note_name = "Hip-Hop Snare2" end
-        if note_name == 97 then note_name = "Jungle Snare1" end
-        if note_name == 98 then note_name = "Jungle Snare2" end
-        if note_name == 99 then note_name = "Techno Snare1" end
-        if note_name == 100 then note_name = " Techno Snare2" end
-        if note_name == 101 then note_name = " House Snare2" end
-        if note_name == 102 then note_name = " CR-78 Snare1" end
-        if note_name == 103 then note_name = " CR-78 Snare2" end
-        if note_name == 104 then note_name = " TR-606 Snare1" end
-        if note_name == 105 then note_name = " TR-606 Snare2" end
-        if note_name == 106 then note_name = " TR-707 Snare1" end
-        if note_name == 107 then note_name = " TR-707 Snare2" end
-        if note_name == 108 then note_name = " Standard3 Snare2" end
-        if note_name == 109 then note_name = " TR-808 Snare2" end
-        if note_name == 110 then note_name = " TR-909 Snare1" end
-        if note_name == 111 then note_name = " TR-909 Snare2" end
+        if note_name > 59 and note_name < 112 then track_name = "A11-SN" end
+        if note_name > 24 and note_name < 60 then track_name = "A11-KICK" end
+        if note_name == 25 then note_name = "CR-78 KICK1" end
+        if note_name == 26 then note_name = "CR-78 KICK2" end
+        if note_name == 27 then note_name = "TR-606 KICK1" end
+        if note_name == 28 then note_name = "TR-707 KICK" end
+        if note_name == 29 then note_name = "TR-808 KICK" end
+        if note_name == 30 then note_name = "HIP-HOP KICK2" end
+        if note_name == 31 then note_name = "TR-909 KICK1" end
+        if note_name == 32 then note_name = "HIP-HOP KICK3" end
+        if note_name == 33 then note_name = "HIP-HOP KICK1" end
+        if note_name == 34 then note_name = "JUNGLE KICK2" end
+        if note_name == 35 then note_name = "JUNGLE KICK1" end
+        if note_name == 36 then note_name = "TECHNO KICK2" end
+        if note_name == 37 then note_name = "TECHNO KICK1" end
+        if note_name == 38 then note_name = "STANDARD1 KICK2" end
+        if note_name == 39 then note_name = "STANDARD1 KICK1" end
+        if note_name == 40 then note_name = "STANDARD1 KICK1" end
+        if note_name == 41 then note_name = "STANDARD1 KICK2" end
+        if note_name == 42 then note_name = "STANDARD2 KICK1" end
+        if note_name == 43 then note_name = "STANDARD2 KICK2" end
+        if note_name == 44 then note_name = "KICK DRUM1" end
+        if note_name == 45 then note_name = "KICK DRUM2" end
+        if note_name == 46 then note_name = "SOFT KICK" end
+        if note_name == 47 then note_name = "JAZZ KICK1" end
+        if note_name == 48 then note_name = "JAZZ KICK2" end
+        if note_name == 49 then note_name = "CONCERT BD1" end
+        if note_name == 50 then note_name = "ROOM KICK1" end
+        if note_name == 51 then note_name = "ROOM KICK2" end
+        if note_name == 52 then note_name = "POWER KICK1" end
+        if note_name == 53 then note_name = "POWER KICK2" end
+        if note_name == 54 then note_name = "ELECTRIC KICK2" end
+        if note_name == 55 then note_name = "ELECTRIC KICK1" end
+        if note_name == 56 then note_name = "ELECTRIC KICK" end
+        if note_name == 57 then note_name = "TR-808 KICK" end
+        if note_name == 58 then note_name = "TR-909 KICK" end
+        if note_name == 59 then note_name = "DANCE KICK" end
+        if note_name == 60 then note_name = "STANDARD1 SNARE1" end
+        if note_name == 61 then note_name = "STANDARD1 SNARE2" end
+        if note_name == 62 then note_name = "STANDARD2 SNARE1" end
+        if note_name == 63 then note_name = "STANDARD2 SNARE2" end
+        if note_name == 64 then note_name = "SNARE DRUM2" end
+        if note_name == 65 then note_name = "CONCERT SNARE" end
+        if note_name == 66 then note_name = "JAZZ SNARE1" end
+        if note_name == 67 then note_name = "JAZZ SNARE2" end
+        if note_name == 68 then note_name = "ROOM SNARE1" end
+        if note_name == 69 then note_name = "ROOM SNARE2" end
+        if note_name == 70 then note_name = "POWER SNARE1" end
+        if note_name == 71 then note_name = "POWER SNARE2" end
+        if note_name == 72 then note_name = "GATED SNARE" end
+        if note_name == 73 then note_name = "DANCE SNARE1" end
+        if note_name == 74 then note_name = "DANCE SNARE2" end
+        if note_name == 75 then note_name = "DISCO SNARE" end
+        if note_name == 76 then note_name = "ELECTRIC SNARE2" end
+        if note_name == 77 then note_name = "HOUSE SNARE" end
+        if note_name == 78 then note_name = "ELECTRIC SNARE1" end
+        if note_name == 79 then note_name = "ELECTRIC SNARE3" end
+        if note_name == 80 then note_name = "TR-808 SNARE1" end
+        if note_name == 81 then note_name = "TR-808 SNARE2" end
+        if note_name == 82 then note_name = "TR-909 SNARE1" end
+        if note_name == 83 then note_name = "TR-909 SNARE2" end
+        if note_name == 84 then note_name = "BRUSH TAP1" end
+        if note_name == 85 then note_name = "BRUSH TAP2" end
+        if note_name == 86 then note_name = "BRUSH SLAP1" end
+        if note_name == 87 then note_name = "BRUSH SLAP2" end
+        if note_name == 88 then note_name = "BRUSH SLAP3" end
+        if note_name == 89 then note_name = "BRUSH SWIRL1" end
+        if note_name == 90 then note_name = "BRUSH SWIRL2" end
+        if note_name == 91 then note_name = "BRUSH LONG SWIRL" end
+        if note_name == 92 then note_name = "STANDARD1 SNARE1" end
+        if note_name == 93 then note_name = "STANDARD1 SNARE2" end
+        if note_name == 94 then note_name = "STANDARD SNARE3" end
+        if note_name == 95 then note_name = "RAP SNARE" end
+        if note_name == 96 then note_name = "HIP-HOP SNARE2" end
+        if note_name == 97 then note_name = "JUNGLE SNARE1" end
+        if note_name == 98 then note_name = "JUNGLE SNARE2" end
+        if note_name == 99 then note_name = "TECHNO SNARE1" end
+        if note_name == 100 then note_name = "TECHNO SNARE2" end
+        if note_name == 101 then note_name = "HOUSE SNARE2" end
+        if note_name == 102 then note_name = "CR-78 SNARE1" end
+        if note_name == 103 then note_name = "CR-78 SNARE2" end
+        if note_name == 104 then note_name = "TR-606 SNARE1" end
+        if note_name == 105 then note_name = "TR-606 SNARE2" end
+        if note_name == 106 then note_name = "TR-707 SNARE1" end
+        if note_name == 107 then note_name = "TR-707 SNARE2" end
+        if note_name == 108 then note_name = "STANDARD3 SNARE2" end
+        if note_name == 109 then note_name = "TR-808 SNARE2" end
+        if note_name == 110 then note_name = "TR-909 SNARE1" end
+        if note_name == 111 then note_name = "TR-909 SNARE2" end
       end
 
       reaper.GetSetMediaTrackInfo_String(dup_track, "P_NAME", track_name .. " " .. note_name, true) -- 定義重複軌道的名稱
@@ -332,7 +334,18 @@ for i = 0, item_num-1 do
     end
   end
 end
-reaper.SetMediaTrackInfo_Value(source_track, "B_MUTE", 1) -- 靜音源軌道
+--reaper.SetMediaTrackInfo_Value(source_track, "B_MUTE", 1) -- 靜音源軌道
+
+-- 刪除源軌道所有MIDI音符
+local source_item_num = reaper.CountTrackMediaItems(source_track)
+for i = 0, source_item_num-1 do
+  local source_item = reaper.GetTrackMediaItem(source_track, i)
+  local source_take = reaper.GetActiveTake(source_item)
+  local _, source_notecnt, _, _ = reaper.MIDI_CountEvts(source_take)
+  for i = 0, source_notecnt-1 do
+    reaper.MIDI_DeleteNote(source_take, 0)
+  end
+end
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Explode Drums", 0) -- 撤消塊結束 並在撤消歷史中顯示名稱
+reaper.Undo_EndBlock("鼓分軌", 0) -- 撤消塊結束 並在撤消歷史中顯示名稱
