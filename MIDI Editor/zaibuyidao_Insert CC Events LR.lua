@@ -1,11 +1,12 @@
 --[[
- * ReaScript Name: Insert CC Events AB
+ * ReaScript Name: Insert CC Events LR
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -98,20 +99,21 @@ function setOneNote()
     end
 end
 function main()
+    reaper.MIDI_DisableSort(take)
     _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
-    local msg2 = reaper.GetExtState("InsertCCEventsAB", "CCNum")
+    local msg2 = reaper.GetExtState("InsertCCEventsLR", "CCNum")
     if (msg2 == "") then msg2 = "10" end
-    local msg3 = reaper.GetExtState("InsertCCEventsAB", "ValueA")
+    local msg3 = reaper.GetExtState("InsertCCEventsLR", "ValueA")
     if (msg3 == "") then msg3 = "1" end
-    local msg4 = reaper.GetExtState("InsertCCEventsAB", "ValueB")
+    local msg4 = reaper.GetExtState("InsertCCEventsLR", "ValueB")
     if (msg4 == "") then msg4 = "127" end
-    local user_ok, user_input_CSV = reaper.GetUserInputs("Insert CC Events AB", 3, "CC Number,A,B", msg2..','..msg3..','.. msg4)
+    local user_ok, user_input_CSV = reaper.GetUserInputs("Insert CC Events LR", 3, "CC Number,L,R", msg2..','..msg3..','.. msg4)
     if not user_ok then return reaper.SN_FocusMIDIEditor() end
     msg2, msg3, msg4 = user_input_CSV:match("(.*),(.*),(.*)")
     if not tonumber(msg2) or not tonumber(msg3) or not tonumber(msg4) then return end
-    reaper.SetExtState("InsertCCEventsAB", "CCNum", msg2, false)
-    reaper.SetExtState("InsertCCEventsAB", "ValueA", msg3, false)
-    reaper.SetExtState("InsertCCEventsAB", "ValueB", msg4, false)
+    reaper.SetExtState("InsertCCEventsLR", "CCNum", msg2, false)
+    reaper.SetExtState("InsertCCEventsLR", "ValueA", msg3, false)
+    reaper.SetExtState("InsertCCEventsLR", "ValueB", msg4, false)
     setOneNote()
     for i = 1, notecnt do
         local retval, selected, muted, startpos, endpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i-1)
@@ -125,11 +127,12 @@ function main()
             end
         end
     end
+    reaper.MIDI_Sort(take)
 end
 reaper.Undo_BeginBlock()
-reaper.MIDI_DisableSort(take)
+reaper.PreventUIRefresh(1)
 main()
-reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Insert CC Events AB", -1)
+reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
+reaper.Undo_EndBlock("Insert CC Events LR", 0)
 reaper.SN_FocusMIDIEditor()

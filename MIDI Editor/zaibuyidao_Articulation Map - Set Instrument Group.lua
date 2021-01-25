@@ -1,7 +1,6 @@
 --[[
- * ReaScript Name: Set instrument group (For JSFX-Simple Expression Map)
- * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Program Change Event. Run.
- * Version: 1.1
+ * ReaScript Name: Articulation Map - Set instrument group
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -45,9 +44,11 @@ function main()
   reaper.MIDI_Sort(take)
 end
 
-script_title = "Set instrument group"
+local script_title = "Set instrument group"
 reaper.Undo_BeginBlock()
+reaper.PreventUIRefresh(1)
 main()
+reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

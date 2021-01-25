@@ -1,12 +1,12 @@
 --[[
- * ReaScript Name: 程序變換轉音符(對於JSFX-簡單表情映射)
- * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Program Change Event. Run.
+ * ReaScript Name: 表情映射 - 程序變換轉音符
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -72,9 +72,11 @@ function main()
   reaper.MIDI_SetAllEvts(take, table.concat(table_events))
 end
 
-script_title = "程序變換轉音符(對於JSFX-簡單表情映射)"
+local script_title = "程序變換轉音符"
 reaper.Undo_BeginBlock()
+reaper.PreventUIRefresh(1)
 main()
+reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

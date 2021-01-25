@@ -1,10 +1,10 @@
-desc: 簡單表情映射
-version: 2.0
+desc: 表情映射
+version: 1.0
 changelog: init
 author: 再補一刀, Tale
 website: https://forum.cockos.com/showthread.php?t=240598
 about:
-  使用 JSFX-簡單表達式映射將程式變換消息轉換為鍵位切換鍵。
+  使用 JSFX-表達式映射 將程式變換消息轉換為鍵位切換鍵。
   在任何模式下，使用CC＃119控制器插入0值即可立即發送Note-Off(支持自定義控制器編號)；
   您還可以使用CC＃119在混合模式下控制键位切换键的長度。當值是1-127時，將激活连奏模式使音符延长，而當值是0時，將激活斷奏模式并立刻发送Note-Off。
 

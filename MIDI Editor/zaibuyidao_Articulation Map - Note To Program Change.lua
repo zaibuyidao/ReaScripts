@@ -1,16 +1,17 @@
 --[[
- * ReaScript Name: 音符轉程序變換(對於JSFX-簡單表情映射)
- * Version: 1.7
- * Author: 再補一刀
+ * ReaScript Name: Articulation Map - Note To Program Change
+ * Version: 1.0
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
  * Changelog:
- * v1.0 (2020-9-29)
+ * v1.0 (2020-8-4)
   + Initial release
 --]]
 
@@ -71,9 +72,11 @@ function main()
   end
 end
 
-script_title = "音符轉程序變換(對於JSFX-簡單表情映射)"
+local script_title = "Note To Program Change"
 reaper.Undo_BeginBlock()
+reaper.PreventUIRefresh(1)
 main()
+reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

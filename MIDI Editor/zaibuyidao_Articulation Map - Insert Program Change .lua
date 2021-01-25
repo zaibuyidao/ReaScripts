@@ -1,11 +1,12 @@
 --[[
- * ReaScript Name: 插入程序變換(對於JSFX-簡單表情映射)
- * Version: 1.2
- * Author: 再補一刀
+ * ReaScript Name: Articulation Map - Insert Program Change
+ * Version: 1.0
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -32,21 +33,21 @@ function main()
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
 
-  local MSB = reaper.GetExtState("SimpleExpressionMap", "MSB")
+  local MSB = reaper.GetExtState("ArticulationMap", "MSB")
   if (MSB == "") then MSB = "0" end
-    local PC = reaper.GetExtState("SimpleExpressionMap", "PC")
+    local PC = reaper.GetExtState("ArticulationMap", "PC")
   if (PC == "") then PC = "C-1" end
-  local LSB = reaper.GetExtState("SimpleExpressionMap", "LSB")
+  local LSB = reaper.GetExtState("ArticulationMap", "LSB")
   if (LSB == "") then LSB = "96" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("插入程序變換(簡單表情映射)", 3, "樂器組,音符,力度", MSB ..','.. PC ..','.. LSB)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Insert Program Change", 3, "Instrument Group,Note,Velocity", MSB ..','.. PC ..','.. LSB)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   local MSB, PC, LSB = user_input_csv:match("(.*),(.*),(.*)")
   if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("SimpleExpressionMap", "MSB", MSB, false)
-  reaper.SetExtState("SimpleExpressionMap", "PC", PC, false)
-  reaper.SetExtState("SimpleExpressionMap", "LSB", LSB, false)
+  reaper.SetExtState("ArticulationMap", "MSB", MSB, false)
+  reaper.SetExtState("ArticulationMap", "PC", PC, false)
+  reaper.SetExtState("ArticulationMap", "LSB", LSB, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -196,11 +197,13 @@ function main()
     reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
-  reaper.UpdateArrange()
 end
 
-local script_title = "插入程序變換(對於JSFX-簡單表情映射)"
+local script_title = "Insert Program Change"
 reaper.Undo_BeginBlock()
+reaper.PreventUIRefresh(1)
 main()
+reaper.PreventUIRefresh(-1)
+reaper.UpdateArrange()
 reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

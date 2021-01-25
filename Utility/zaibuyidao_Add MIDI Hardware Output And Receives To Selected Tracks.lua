@@ -1,11 +1,12 @@
 --[[
  * ReaScript Name: Add MIDI Hardware Output And Receives To Selected Tracks
- * Version: 1.4
+ * Version: 1.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -24,17 +25,21 @@ function main()
     if (output_device == "") then output_device = "0" end
     local ordinal = reaper.GetExtState("AddMIDIHardwareOutput", "Ordinal")
     if (ordinal == "") then ordinal = "1" end
+    local maxval = reaper.GetExtState("AddMIDIHardwareOutput", "MaxVal")
+    if (maxval == "") then maxval = "16" end
     local track_num = reaper.GetExtState("AddMIDIHardwareOutput", "Track")
     if (track_num == "") then track_num = "1" end
     local toggle = reaper.GetExtState("AddMIDIHardwareOutput", "Toggle")
     if (toggle == "") then toggle = "0" end
-    user_ok, user_input_CSV = reaper.GetUserInputs("Add Hardware Output And Receives", 4, "MIDI Hardware Output,Send To Channel,Receive From Track,0=DEF 1=CH 2=RECV 3=RMV", output_device ..','.. ordinal ..','.. track_num ..','.. toggle)
-    output_device, ordinal, track_num, toggle = user_input_CSV:match("(.*),(.*),(.*),(.*)")
-    if not user_ok or not tonumber(output_device) or not tonumber(ordinal) or not tonumber(track_num) or not tonumber(toggle) then return end
+    user_ok, user_input_CSV = reaper.GetUserInputs("Add Hardware Output And Receives", 5, "MIDI Hardware Output,Send To Min Channel,Send To Max Channel,Receive From Track,0=DEF 1=CH 2=RECV 3=RMV", output_device ..','.. ordinal ..','.. maxval ..','.. track_num ..','.. toggle)
+    output_device, ordinal, maxval, track_num, toggle = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*)")
+    if not user_ok or not tonumber(output_device) or not tonumber(ordinal) or not tonumber(maxval) or not tonumber(track_num) or not tonumber(toggle) then return end
     reaper.SetExtState("AddMIDIHardwareOutput", "Device", output_device, false)
     reaper.SetExtState("AddMIDIHardwareOutput", "Ordinal", ordinal, false)
+    reaper.SetExtState("AddMIDIHardwareOutput", "MaxVal", maxval, false)
     reaper.SetExtState("AddMIDIHardwareOutput", "Track", track_num, false)
     reaper.SetExtState("AddMIDIHardwareOutput", "Toggle", toggle, false)
+    maxval = tonumber(maxval)
     ordinal = ordinal - 1
     reaper.Undo_BeginBlock()
     if toggle == "0" then
@@ -43,6 +48,7 @@ function main()
         for i = 1, count_sel_track do
             select_track = reaper.GetSelectedTrack(0, i - 1)
             channel = i + ordinal
+            if channel >= maxval then channel = maxval end
             if channel < 1 or channel > 16 then channel = 0 end
             number = channel | output_device << 5
             reaper.SetMediaTrackInfo_Value(select_track,"I_MIDIHWOUT", number)
@@ -57,6 +63,7 @@ function main()
         for i = 1, count_sel_track do
             select_track = reaper.GetSelectedTrack(0, i - 1)
             channel = i + ordinal
+            if channel >= maxval then channel = maxval end
             if channel < 1 or channel > 16 then channel = 0 end
             number = channel | output_device << 5
             reaper.SetMediaTrackInfo_Value(select_track,"I_MIDIHWOUT", number)

@@ -1,6 +1,5 @@
 --[[
- * ReaScript Name: 設置樂器組(對於JSFX-簡單表情映射)
- * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Program Change Event. Run.
+ * ReaScript Name: 表情映射 - 設置樂器組
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -45,9 +44,11 @@ function main()
   reaper.MIDI_Sort(take)
 end
 
-script_title = "設置樂器組(對於JSFX-簡單表情映射)"
+local script_title = "設置樂器組"
 reaper.Undo_BeginBlock()
+reaper.PreventUIRefresh(1)
 main()
+reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

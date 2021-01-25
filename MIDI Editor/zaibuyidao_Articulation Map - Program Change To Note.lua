@@ -1,7 +1,6 @@
 --[[
- * ReaScript Name: Program Change To Note (For JSFX-Simple Expression Map)
- * Instructions: Part of [JSFX: Simple Expression Map]. Open a MIDI take in MIDI Editor. Select Program Change Event. Run.
- * Version: 1.3
+ * ReaScript Name: Articulation Map - Program Change To Note
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -73,9 +72,11 @@ function main()
   reaper.MIDI_SetAllEvts(take, table.concat(table_events))
 end
 
-script_title = "Program Change To Note"
+local script_title = "Program Change To Note"
 reaper.Undo_BeginBlock()
+reaper.PreventUIRefresh(1)
 main()
+reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()
