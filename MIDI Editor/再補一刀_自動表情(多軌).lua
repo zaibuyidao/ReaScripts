@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 自動表情(多軌)
- * Version: 1.3
+ * Version: 1.3.1
  * Author: 再補一刀, 當歸蛋
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -80,7 +80,7 @@ max_val = reaper.GetExtState("AutoExpression", "End")
 if (min_val == "") then min_val = "90" end
 if (max_val == "") then max_val = "127" end
 
-local user_ok, user_input_CSV = reaper.GetUserInputs("Auto expression (multitrack)", 2, "Min value,Max value", min_val ..','.. max_val)
+local user_ok, user_input_CSV = reaper.GetUserInputs("自動表情(多軌)", 2, "最小值,最大值", min_val ..','.. max_val)
 min_val, max_val = user_input_CSV:match("(.*),(.*)")
 
 if not user_ok or not tonumber(min_val) or not tonumber(max_val) then return reaper.SN_FocusMIDIEditor() end
@@ -126,5 +126,5 @@ end
 -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗余CCs
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Auto Expression", 0)
+reaper.Undo_EndBlock("自動表情(多軌)", 0)
 reaper.SN_FocusMIDIEditor()
