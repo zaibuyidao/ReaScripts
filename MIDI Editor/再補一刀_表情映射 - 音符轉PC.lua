@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 表情映射 - 音符轉程序變換
+ * ReaScript Name: 表情映射 - 音符轉PC
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -72,7 +72,7 @@ function main()
   end
 end
 
-local script_title = "音符轉程序變換"
+local script_title = "音符轉PC"
 reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh(1)
 main()

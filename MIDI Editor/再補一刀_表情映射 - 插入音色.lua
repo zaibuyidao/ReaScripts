@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 表情映射 - 插入程序變換
+ * ReaScript Name: 表情映射 - 插入音色
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -40,7 +40,7 @@ function main()
   local LSB = reaper.GetExtState("ArticulationMap", "LSB")
   if (LSB == "") then LSB = "96" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("插入程序變換", 3, "樂器組,音符,力度", MSB ..','.. PC ..','.. LSB)
+  local user_ok, user_input_csv = reaper.GetUserInputs("插入音色", 3, "樂器組,音符,力度", MSB ..','.. PC ..','.. LSB)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   local MSB, PC, LSB = user_input_csv:match("(.*),(.*),(.*)")
   if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) then return reaper.SN_FocusMIDIEditor() end
@@ -199,7 +199,7 @@ function main()
   reaper.UpdateItemInProject(item)
 end
 
-local script_title = "插入程序變換"
+local script_title = "插入音色"
 reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh(1)
 main()
