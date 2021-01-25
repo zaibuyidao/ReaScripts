@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: 表情映射 - PC音符
- * Version: 1.0
+ * ReaScript Name: 表情映射 - PC轉音符
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
