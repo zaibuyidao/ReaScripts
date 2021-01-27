@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Delete Channel Events (Reserve Channel)
+ * ReaScript Name: Delete Channel Events (Keep Channel)
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -87,11 +87,11 @@ end
 function Main()
   local window, _, _ = reaper.BR_GetMouseCursorContext()
   local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
-  amount = reaper.GetExtState("DeleteChannelEventsReserveChannel", "Channel")
+  amount = reaper.GetExtState("DeleteChannelEventsKeepChannel", "Channel")
   if (amount == "") then amount = "1" end
-  user_ok, amount = reaper.GetUserInputs("Delete Channel Events (Reserve Channel)", 1, "Reserve channel", amount)
+  user_ok, amount = reaper.GetUserInputs("Delete Channel Events (Keep Channel)", 1, "Keep channel", amount)
   amount = tonumber(amount)
-  reaper.SetExtState("DeleteChannelEventsReserveChannel", "Channel", amount, false)
+  reaper.SetExtState("DeleteChannelEventsKeepChannel", "Channel", amount, false)
   amount = amount - 1
   if window == "midi_editor" then
     if not inline_editor then
@@ -129,7 +129,7 @@ function Main()
     end
   end
 end
-local title = "Delete Channel Events (Reserve Channel)"
+local title = "Delete Channel Events (Keep Channel)"
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 Main()
