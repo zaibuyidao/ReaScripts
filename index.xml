@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6563be5436121f78d8bc239e59cb1e723de342f6">
+<index version="1" name="zaibuyidao Scripts" commit="25091557ce4bfe44c69aa34036376a4ac48c7550">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1418,6 +1418,12 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/201cd3b960bcb9ff1d35bafa9e7a270a02563d85/MIDI%20Editor/zaibuyidao_Random%20CC%20Value%20(Limit%20Range).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Random CC Value - GUI.lua" type="script" desc="Random CC Value - GUI">
+      <version name="1.0" author="zaibuyidao" time="2021-01-27T18:27:27Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/25091557ce4bfe44c69aa34036376a4ac48c7550/MIDI%20Editor/zaibuyidao_Random%20CC%20Value%20-%20GUI.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Random CC Value.lua" type="script" desc="Random CC Value">
       <metadata/>
       <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
@@ -1579,6 +1585,12 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/201cd3b960bcb9ff1d35bafa9e7a270a02563d85/MIDI%20Editor/zaibuyidao_Random%20Velocity%20(Limit%20Range).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Random Velocity - GUI.lua" type="script" desc="Random Velocity - GUI">
+      <version name="1.0" author="zaibuyidao" time="2021-01-27T18:27:27Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/25091557ce4bfe44c69aa34036376a4ac48c7550/MIDI%20Editor/zaibuyidao_Random%20Velocity%20-%20GUI.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Random Velocity.lua" type="script" desc="Random Velocity">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -1614,18 +1626,6 @@
       <version name="1.0" author="zaibuyidao" time="2020-03-04T15:49:07Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5c62c6d57fb18f3e5973553b3ba740fe1ae17052/MIDI%20Editor/zaibuyidao_Rhythm%20Layer%20Selection.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Rondom CC Value - GUI.lua" type="script" desc="Rondom CC Value - GUI">
-      <version name="1.0" author="zaibuyidao" time="2021-01-27T17:26:39Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6563be5436121f78d8bc239e59cb1e723de342f6/MIDI%20Editor/zaibuyidao_Rondom%20CC%20Value%20-%20GUI.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Rondom Velocity - GUI.lua" type="script" desc="Rondom Velocity - GUI">
-      <version name="1.0" author="zaibuyidao" time="2021-01-27T17:26:39Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6563be5436121f78d8bc239e59cb1e723de342f6/MIDI%20Editor/zaibuyidao_Rondom%20Velocity%20-%20GUI.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Control.lua" type="script" desc="Scale Control">
