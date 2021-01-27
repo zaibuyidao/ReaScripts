@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e374c74e7ce5354ee434784aa956415f60fbc1d6">
+<index version="1" name="zaibuyidao Scripts" commit="6563be5436121f78d8bc239e59cb1e723de342f6">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -508,13 +508,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Copy%20Selected%20Rhythm.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Delete Channel Events (Reserve Channel).lua" type="script" desc="Delete Channel Events (Reserve Channel)">
+    <reapack name="zaibuyidao_Delete Channel Events (Keep Channel).lua" type="script" desc="Delete Channel Events (Keep Channel)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-12-26T14:55:30Z">
+      <version name="1.0" author="zaibuyidao" time="2021-01-27T17:26:39Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e41c940db6661e130d01630c941c4240962d3058/MIDI%20Editor/zaibuyidao_Delete%20Channel%20Events%20(Reserve%20Channel).lua</source>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6563be5436121f78d8bc239e59cb1e723de342f6/MIDI%20Editor/zaibuyidao_Delete%20Channel%20Events%20(Keep%20Channel).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Delete Channel Events.lua" type="script" desc="Delete Channel Events">
@@ -1614,6 +1614,18 @@
       <version name="1.0" author="zaibuyidao" time="2020-03-04T15:49:07Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5c62c6d57fb18f3e5973553b3ba740fe1ae17052/MIDI%20Editor/zaibuyidao_Rhythm%20Layer%20Selection.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Rondom CC Value - GUI.lua" type="script" desc="Rondom CC Value - GUI">
+      <version name="1.0" author="zaibuyidao" time="2021-01-27T17:26:39Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6563be5436121f78d8bc239e59cb1e723de342f6/MIDI%20Editor/zaibuyidao_Rondom%20CC%20Value%20-%20GUI.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Rondom Velocity - GUI.lua" type="script" desc="Rondom Velocity - GUI">
+      <version name="1.0" author="zaibuyidao" time="2021-01-27T17:26:39Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6563be5436121f78d8bc239e59cb1e723de342f6/MIDI%20Editor/zaibuyidao_Rondom%20Velocity%20-%20GUI.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Control.lua" type="script" desc="Scale Control">
