@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Rondom CC Value - GUI
+ * ReaScript Name: Random CC Value - GUI
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -32,11 +32,11 @@ GUI.req("Classes/Class - Button.lua")()
 -- If any of the requested libraries weren't found, abort the script.
 if missing_lib then return 0 end
 
-GUI.name = "Rondom CC Value"
+GUI.name = "Random CC Value"
 GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 384, 168
 GUI.anchor, GUI.corner = "mouse", "C"
 
-function rondVelo()
+function randCC()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   local _, _, ccevtcnt, _ = reaper.MIDI_CountEvts(take)
 
@@ -132,9 +132,8 @@ GUI.New("Button1", "Button", {
   font = 3,
   col_txt = "txt",
   col_fill = "elm_frame",
-  func = rondVelo
+  func = randCC
 })
-
 
 
 GUI.Init()
