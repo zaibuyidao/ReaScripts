@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: 選擇音符
- * Version: 1.5
+ * ReaScript Name: 事件過濾 - 選擇音符
+ * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -68,20 +68,20 @@ reaper.SetExtState("SelectNote", "MinMeas", min_meas, false)
 reaper.SetExtState("SelectNote", "MaxMeas", max_meas, false)
 reaper.SetExtState("SelectNote", "MinTick", min_tick, false)
 reaper.SetExtState("SelectNote", "MaxTick", max_tick, false)
---reaper.SetExtState("SelectNote", "Reset", reset, false)
+-- reaper.SetExtState("SelectNote", "Reset", reset, false)
 
 min_chan = min_chan - 1
 max_chan = max_chan - 1
 min_meas = min_meas - 1
 
 function main()
-  reaper.MIDI_DisableSort(take)
   for i = 0,  notecnt - 1 do
     local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
     local start_meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, startppqpos)
     local start_tick = startppqpos - start_meas
     local tick = start_tick % midi_tick
     local duration = endppqpos - startppqpos
+    reaper.MIDI_DisableSort(take)
     if reset == 0 then
       if selected == true then
         if not (pitch >= min_key and pitch <= max_key) then -- Key
@@ -120,12 +120,11 @@ function main()
     end
     i = i + 1
   end
-  reaper.UpdateArrange()
   reaper.MIDI_Sort(take)
 end
 
-script_title = "選擇音符"
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock(script_title, -1)
+reaper.UpdateArrange()
+reaper.Undo_EndBlock("選擇音符", 0)
 reaper.SN_FocusMIDIEditor()

@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Select Control
- * Version: 1.5
+ * ReaScript Name: Event Filter - Select Control
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -62,19 +62,19 @@ reaper.SetExtState("SelectControl", "MinMeas", min_meas, false)
 reaper.SetExtState("SelectControl", "MaxMeas", max_meas, false)
 reaper.SetExtState("SelectControl", "MinTick", min_tick, false)
 reaper.SetExtState("SelectControl", "MaxTick", max_tick, false)
---reaper.SetExtState("SelectControl", "Reset", reset, false)
+-- reaper.SetExtState("SelectControl", "Reset", reset, false)
 
 min_chan = min_chan - 1
 max_chan = max_chan - 1
 min_meas = min_meas - 1
 
 function main()
-  reaper.MIDI_DisableSort(take)
   for i = 0, ccevtcnt - 1 do
     local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
     local start_meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, ppqpos)
     local start_tick = ppqpos - start_meas
     local tick = start_tick % midi_tick
+    reaper.MIDI_DisableSort(take)
     if reset == 0 then
       if selected == true then
         if not (msg2 >= min_num and msg2 <= max_num) then -- Number
@@ -108,12 +108,11 @@ function main()
     end
     i=i+1
   end
-  reaper.UpdateArrange()
   reaper.MIDI_Sort(take)
 end
 
-script_title = "Select Control"
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock(script_title, 0)
+reaper.UpdateArrange()
+reaper.Undo_EndBlock("Select Control", 0)
 reaper.SN_FocusMIDIEditor()
