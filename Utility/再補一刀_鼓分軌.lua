@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 鼓分軌
- * Version: 1.1
+ * Version: 1.2
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -314,17 +314,28 @@ for i = 0, item_num-1 do
   
         stringPos = 1
         while stringPos < MIDIlen do
-            offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-            if msg:len() == 3 then
-                mb1 = msg:byte(1) >> 4
-                if mb1 == 9 or mb1 == 8 then -- note-on/off MIDI事件类型
-                    local pitch = msg:byte(2)
-                    if pitch ~= note_pitch[i] then
-                      msg = ""
-                    end
-                end
+          offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
+          local eventType = (msg:byte(1))>>4
+          if msg:len() == 3 and (eventType == 9 or eventType == 8) then
+            local pitch = msg:byte(2)
+            if pitch ~= note_pitch[i] then -- 刪除指定音高之外的音符
+              msg = ""
             end
-            table.insert(tableEvents, string.pack("i4Bs4", offset, flags, msg))
+          elseif msg:len() == 3 and eventType == 11 then
+            local ccval = msg:byte(3)
+            local ccnum = msg:byte(2)
+            if ccnum >= 0 and ccnum <= 127 then -- 刪除所有控制器信息
+              msg = " "
+            end
+          elseif msg:len() == 3 and eventType == 14 then
+            local LSB = msg:byte(2) -- Least Significant Byte
+            local MSB = msg:byte(3) -- Most Significant Byte
+            local value = (128*MSB+LSB)-8192 -- 計算彎音值
+            if value >= -8091 and value <= 8191 then -- 刪除所有彎音信息
+              msg = ""
+            end
+          end
+          table.insert(tableEvents, string.pack("i4Bs4", offset, flags, msg))
         end
         reaper.MIDI_SetAllEvts(take, table.concat(tableEvents))
         item_idx = item_idx + 1

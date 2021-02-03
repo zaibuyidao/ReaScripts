@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Pick Track Only Select First Item
+ * ReaScript Name: 選擇軌道 - 只選擇第一個對象
  * Version: 1.0
- * Author: zaibuyidao
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -29,7 +29,7 @@ end
 
 track_num = math.floor(track_num)
 
-local user_ok, user_input_CSV = reaper.GetUserInputs("Pick Track, " .. "total " .. count_track .. " tracks.", 1, "Track number", track_num)
+local user_ok, user_input_CSV = reaper.GetUserInputs("選擇軌道, " .. "共 " .. count_track .." 條軌道.", 1, "軌道編號", track_num)
 sel_only_num = user_input_CSV:match("(.*)")
 if not tonumber(sel_only_num) then return reaper.SN_FocusMIDIEditor() end
 sel_only_num = tonumber(sel_only_num)
@@ -68,7 +68,7 @@ for i = 0, count_track-1 do
   end
 end
 
-reaper.Undo_EndBlock("Pick Track Only Select First Item", 0) -- 撤銷塊結束
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
+reaper.Undo_EndBlock("選擇軌道 - 只選擇第一個對象", 0) -- 撤銷塊結束
 reaper.SN_FocusMIDIEditor()

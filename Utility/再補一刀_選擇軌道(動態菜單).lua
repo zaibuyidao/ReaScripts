@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 選擇軌道(動態菜單)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -41,7 +41,7 @@ for i = 1, count_track do
     flag = false
   end
 
-  menu = menu .. (flag and "!" or "") .. "CH " .. i .. " " .. track_name .. "|"
+  menu = menu .. (flag and "!" or "") .. "Track " .. i .. ": " .. track_name .. "|"
 end
 
 local title = "Hidden gfx window for showing the pick track all items showmenu"
