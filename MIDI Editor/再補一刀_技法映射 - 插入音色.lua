@@ -1,16 +1,17 @@
 --[[
- * ReaScript Name: 音色選擇(庫MSB/LSB)
+ * ReaScript Name: 技法映射 - 插入音色
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
  * Changelog:
- * v1.0 (2019-12-12)
+ * v1.0 (2020-9-16)
   + Initial release
 --]]
 
@@ -19,11 +20,13 @@ function Msg(param)
 end
 
 function main()
-  local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+  reaper.Undo_BeginBlock()
+  reaper.PreventUIRefresh(1)
+  local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
-  local item = reaper.GetMediaItemTake_Item(take)
-  local curpos = reaper.GetCursorPositionEx()
-  local ppqpos = reaper.MIDI_GetPPQPosFromProjTime(take, curpos)
+  item = reaper.GetMediaItemTake_Item(take)
+  local cur_pos = reaper.GetCursorPositionEx()
+  local ppq_pos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
   local count, index = 0, {}
   local value = reaper.MIDI_EnumSelNotes(take, -1)
   while value ~= -1 do
@@ -32,21 +35,21 @@ function main()
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
 
-  local MSB = reaper.GetExtState("BankProgramSelectMSBLSB", "MSB")
-  if (MSB == "") then MSB = "2" end
-  local LSB = reaper.GetExtState("BankProgramSelectMSBLSB", "LSB")
-  if (LSB == "") then LSB = "3" end
-  local PC = reaper.GetExtState("BankProgramSelectMSBLSB", "PC")
-  if (PC == "") then PC = "27" end
+  local MSB = reaper.GetExtState("ArticulationMap", "MSB")
+  if (MSB == "") then MSB = "0" end
+    local PC = reaper.GetExtState("ArticulationMap", "PC")
+  if (PC == "") then PC = "C-1" end
+  local LSB = reaper.GetExtState("ArticulationMap", "LSB")
+  if (LSB == "") then LSB = "96" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("音色選擇", 3, "庫MSB,庫LSB,音色編號", MSB ..','.. LSB ..','.. PC)
+  local user_ok, user_input_csv = reaper.GetUserInputs("插入音色", 3, "樂器組,音符,力度", MSB ..','.. PC ..','.. LSB)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local MSB, LSB, PC = user_input_csv:match("(.*),(.*),(.*)")
-  if not tonumber(MSB) or not tonumber(LSB) or not (tonumber(PC) or tostring(PC)) then return reaper.SN_FocusMIDIEditor() end
+  local MSB, PC, LSB = user_input_csv:match("(.*),(.*),(.*)")
+  if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("BankProgramSelectMSBLSB", "MSB", MSB, false)
-  reaper.SetExtState("BankProgramSelectMSBLSB", "LSB", LSB, false)
-  reaper.SetExtState("BankProgramSelectMSBLSB", "PC", PC, false)
+  reaper.SetExtState("ArticulationMap", "MSB", MSB, false)
+  reaper.SetExtState("ArticulationMap", "PC", PC, false)
+  reaper.SetExtState("ArticulationMap", "LSB", LSB, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -191,16 +194,15 @@ function main()
     local selected = true
     local muted = false
     local chan = 0
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xB0, chan, 0, MSB) -- CC#00
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xB0, chan, 32, LSB) -- CC#32
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xC0, chan, PC, 0) -- Program Change
+    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 0, MSB) -- CC#00
+    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 32, LSB) -- CC#32
+    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
+  reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
+  reaper.Undo_EndBlock("插入音色", 0)
 end
 
-local script_title = "音色選擇(庫MSB/LSB)"
-reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()

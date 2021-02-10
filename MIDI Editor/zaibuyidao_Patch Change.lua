@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Bank Program Select
- * Version: 2.2
+ * ReaScript Name: Patch Change
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -21,7 +21,8 @@ function Msg(param)
 end
 
 function main()
-  local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+  reaper.Undo_BeginBlock()
+  local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   local item = reaper.GetMediaItemTake_Item(take)
   local curpos = reaper.GetCursorPositionEx()
@@ -34,18 +35,18 @@ function main()
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
 
-  local BANK = reaper.GetExtState("BankProgramSelect", "BANK")
+  local BANK = reaper.GetExtState("PatchChange", "BANK")
   if (BANK == "") then BANK = "259" end
-  local PC = reaper.GetExtState("BankProgramSelect", "PC")
+  local PC = reaper.GetExtState("PatchChange", "PC")
   if (PC == "") then PC = "27" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Bank Program Select", 2, "Bank,Program number", BANK ..','.. PC)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Patch Change", 2, "Bank,Program number", BANK ..','.. PC)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   local BANK, PC = user_input_csv:match("(.*),(.*)")
   if not tonumber(BANK) or not (tonumber(PC) or tostring(PC)) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("BankProgramSelect", "BANK", BANK, false)
-  reaper.SetExtState("BankProgramSelect", "PC", PC, false)
+  reaper.SetExtState("PatchChange", "BANK", BANK, false)
+  reaper.SetExtState("PatchChange", "PC", PC, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -199,10 +200,8 @@ function main()
   end
   reaper.UpdateItemInProject(item)
   reaper.UpdateArrange()
+  reaper.Undo_EndBlock("Patch Change", 0)
 end
 
-local script_title = "Bank Program Select"
-reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()

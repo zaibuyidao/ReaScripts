@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: 表情映射 - PC轉音符
- * Version: 1.0.1
- * Author: 再補一刀
+ * ReaScript Name: Articulation Map - PC To Note
+ * Version: 1.0
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -11,7 +11,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-9-29)
+ * v1.0 (2020-8-4)
   + Initial release
 --]]
 
@@ -72,7 +72,7 @@ function main()
   reaper.MIDI_SetAllEvts(take, table.concat(table_events))
 end
 
-local script_title = "PC轉音符"
+local script_title = "PC To Note"
 reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh(1)
 main()

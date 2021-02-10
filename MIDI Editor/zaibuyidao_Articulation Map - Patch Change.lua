@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: 表情映射 - 插入音色
+ * ReaScript Name: Articulation Map - Patch Change
  * Version: 1.0
- * Author: 再補一刀
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -20,7 +20,9 @@ function Msg(param)
 end
 
 function main()
-  local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+  reaper.Undo_BeginBlock()
+  reaper.PreventUIRefresh(1)
+  local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   item = reaper.GetMediaItemTake_Item(take)
   local cur_pos = reaper.GetCursorPositionEx()
@@ -40,7 +42,7 @@ function main()
   local LSB = reaper.GetExtState("ArticulationMap", "LSB")
   if (LSB == "") then LSB = "96" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("插入音色", 3, "樂器組,音符,力度", MSB ..','.. PC ..','.. LSB)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Patch Change", 3, "Instrument Group,Note,Velocity", MSB ..','.. PC ..','.. LSB)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   local MSB, PC, LSB = user_input_csv:match("(.*),(.*),(.*)")
   if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) then return reaper.SN_FocusMIDIEditor() end
@@ -197,13 +199,10 @@ function main()
     reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
+  reaper.Undo_EndBlock("Patch Change", 0)
 end
 
-local script_title = "插入音色"
-reaper.Undo_BeginBlock()
-reaper.PreventUIRefresh(1)
 main()
-reaper.PreventUIRefresh(-1)
-reaper.UpdateArrange()
-reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()
