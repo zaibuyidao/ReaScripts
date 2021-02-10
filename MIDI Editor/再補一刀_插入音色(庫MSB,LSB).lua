@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 插入音色(庫選擇MSB/LSB)
+ * ReaScript Name: 插入音色(庫MSB/LSB)
  * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -198,7 +198,7 @@ function main()
   end
   reaper.UpdateItemInProject(item)
   reaper.UpdateArrange()
-  reaper.Undo_EndBlock("插入音色(庫選擇MSB/LSB)", 0)
+  reaper.Undo_EndBlock("插入音色(庫MSB/LSB)", 0)
 end
 
 main()
