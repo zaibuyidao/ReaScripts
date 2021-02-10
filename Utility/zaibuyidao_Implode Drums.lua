@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Implode Drums
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -433,32 +433,30 @@ function ImplodeDrums()
 
             reaper.SelectAllMediaItems(0, false) -- 取消選擇所有item
 
-            -- 如果軌道內item大於1，那麼刪除編號為0的item 。不建議啟用，可能有BUG
-            -- for k = 0, reaper.CountSelectedTracks(0)-1 do -- 刪除編號為0的item
-            --     local slelTrack = reaper.GetSelectedTrack(0, k)
-            --     local itemNum = reaper.CountTrackMediaItems(slelTrack)
-            --     if itemNum > 1 then
-            --         for i = 0, itemNum-1 do
-            --             local item = reaper.GetTrackMediaItem(slelTrack, i)
-            --             local item_num = reaper.GetMediaItemInfo_Value(item, 'IP_ITEMNUMBER')
-            --             if item_num == 0 then reaper.SetMediaItemSelected(item, true) end -- 如果item編號為0那麼選中
-            --             if item_num > 0 then
-            --                 reaper.Main_OnCommand(40699,0) -- 刪除item
-            --             end
-            --         end
-            --     end
-            -- end
-
-            for k = 0, reaper.CountSelectedTracks(0)-1 do -- 計數選中的item
+            -- 如果軌道內item大於1，那麼刪除編號為0的item
+            for k = 0, reaper.CountSelectedTracks(0)-1 do -- 刪除編號為0的item
                 local slelTrack = reaper.GetSelectedTrack(0, k)
                 local itemNum = reaper.CountTrackMediaItems(slelTrack)
                 if itemNum > 1 then
                     for i = 0, itemNum-1 do
                         local item = reaper.GetTrackMediaItem(slelTrack, i)
-                        reaper.SetMediaItemSelected(item, true) -- 設置item為選中，用於之後的合併軌道，粘合item
                         local item_num = reaper.GetMediaItemInfo_Value(item, 'IP_ITEMNUMBER')
-                        if item_num == 0 then reaper.SetMediaItemSelected(item, false) end -- 防止編號為0的item被粘合
+                        if item_num == 0 then reaper.SetMediaItemSelected(item, true) end -- 如果item編號為0那麼選中
+                        if item_num > 0 then
+                            reaper.Main_OnCommand(40699,0) -- 刪除item
+                        end
                     end
+                end
+            end
+
+            for k = 0, reaper.CountSelectedTracks(0)-1 do -- 計數選中的item
+                local slelTrack = reaper.GetSelectedTrack(0, k)
+                local itemNum = reaper.CountTrackMediaItems(slelTrack)
+                for i = 0, itemNum-1 do
+                    local item = reaper.GetTrackMediaItem(slelTrack, i)
+                    reaper.SetMediaItemSelected(item, true) -- 設置item為選中，用於之後的合併軌道，粘合item
+                    -- local item_num = reaper.GetMediaItemInfo_Value(item, 'IP_ITEMNUMBER')
+                    -- if item_num == 0 then reaper.SetMediaItemSelected(item, false) end -- 防止編號為0的item被粘合(啟用有BUG)
                 end
             end
         end
