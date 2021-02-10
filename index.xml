@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d851e00902bb3771d7ae7fa947c4ede2557e1505">
+<index version="1" name="zaibuyidao Scripts" commit="e1a08d566596b84d3bc2bd5e4e007a874d40b715">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -191,105 +191,49 @@
         <source>https://github.com/zaibuyidao/ReaScripts/raw/89e7c476dc525e3c77cd941503e3d431c9380f89/JSFX/MIDI%E9%87%8B%E9%8D%B5%E9%99%90%E5%88%B6%E5%99%A8.jsfx</source>
       </version>
     </reapack>
-    <reapack name="Simple Expression Map.jsfx" type="effect" desc="Simple Expression Map">
+    <reapack name="技法映射.jsfx" type="effect" desc="技法映射">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Use JSFX-Simple Expression Map to convert Program Change message to Keyswitches. In any mode, use the CC#119 controller to insert a value of 0 to immediately send Note-Off; You can also use CC#119 to control the length of the keyswitches in the blend mode. When the value is 1-127, the Legato mode will be activated to extend the note, and when the value is 0, the staccato mode will be activated and Note-Off will be sent immediately.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992? JSFX-\u25216?\u27861?\u26144?\u23556? \u23559?\u31243?\u24335?\u35722?\u25563?\u28040?\u24687?\u36681?\u25563?\u28858?\u37749?\u20301?\u20999?\u25563?\u37749?\u12290? \u22312?\u20219?\u20309?\u27169?\u24335?\u19979?\u65292?\u20351?\u29992?CC\u65283?119\u25511?\u21046?\u22120?\u25554?\u20837?0\u20540?\u21363?\u21487?\u31435?\u21363?\u30332?\u36865?Note-Off(\u25903?\u25345?\u33258?\u23450?\u32681?\u25511?\u21046?\u22120?\u32232?\u34399?)\u65307? \u24744?\u36996?\u21487?\u20197?\u20351?\u29992?CC\u65283?119\u22312?\u28151?\u21512?\u27169?\u24335?\u19979?\u25511?\u21046?\u38190?\u20301?\u20999?\u25442?\u38190?\u30340?\u38263?\u24230?\u12290?\u30070?\u20540?\u26159?1-127\u26178?\u65292?\u23559?\u28608?\u27963?\u36830?\u22863?\u27169?\u24335?\u20351?\u38899?\u31526?\u24310?\u38271?\u65292?\u32780?\u30070?\u20540?\u26159?0\u26178?\u65292?\u23559?\u28608?\u27963?\u26039?\u22863?\u27169?\u24335?\u24182?\u31435?\u21051?\u21457?\u36865?Note-Off\u12290?\par}
 }
 ]]></description>
         <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-08-04T15:36:45Z">
+      <version name="1.0" author="再補一刀, Tale" time="2021-02-10T15:05:19Z">
         <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/52b100ade42f5ed72a20a6ab161523850f165ff1/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-08-04T20:45:01Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/f94c2299ac44940f977355890388f436bd4ca6b2/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-08-05T14:07:02Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/cb10158d7bfee73c8ce195dabbc0d000115f18a9/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-08-13T14:26:53Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/dee132278c425b45b45e8435a21b43076f4356c3/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.4" author="zaibuyidao, Tale" time="2020-08-17T02:02:43Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/05b03effb979e12cba66dfc638eccf54df001cd4/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.5" author="zaibuyidao, Tale" time="2020-08-17T02:05:50Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/db1e3b09fd39e47235bcd44b904a9c3619364e8e/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.6" author="zaibuyidao, Tale" time="2020-08-17T02:08:17Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/bcc62c0620763a976342109a782f213d06c3139c/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.7" author="zaibuyidao, Tale" time="2020-09-17T20:42:41Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.7.1" author="zaibuyidao, Tale" time="2020-09-17T21:47:12Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/615af2720c49f8b9b6e5076f176ba864f0f1baf2/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="1.8" author="zaibuyidao, Tale" time="2020-09-21T04:21:33Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/c1625a2a14541ac81d023aea2542f6dd981286ad/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-      <version name="2.0" author="zaibuyidao, Tale" time="2020-11-09T03:40:38Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/JSFX/Simple%20Expression%20Map.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="表情映射.jsfx" type="effect" desc="表情映射">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992? JSFX-\u34920?\u36948?\u24335?\u26144?\u23556? \u23559?\u31243?\u24335?\u35722?\u25563?\u28040?\u24687?\u36681?\u25563?\u28858?\u37749?\u20301?\u20999?\u25563?\u37749?\u12290? \u22312?\u20219?\u20309?\u27169?\u24335?\u19979?\u65292?\u20351?\u29992?CC\u65283?119\u25511?\u21046?\u22120?\u25554?\u20837?0\u20540?\u21363?\u21487?\u31435?\u21363?\u30332?\u36865?Note-Off(\u25903?\u25345?\u33258?\u23450?\u32681?\u25511?\u21046?\u22120?\u32232?\u34399?)\u65307? \u24744?\u36996?\u21487?\u20197?\u20351?\u29992?CC\u65283?119\u22312?\u28151?\u21512?\u27169?\u24335?\u19979?\u25511?\u21046?\u38190?\u20301?\u20999?\u25442?\u38190?\u30340?\u38263?\u24230?\u12290?\u30070?\u20540?\u26159?1-127\u26178?\u65292?\u23559?\u28608?\u27963?\u36830?\u22863?\u27169?\u24335?\u20351?\u38899?\u31526?\u24310?\u38271?\u65292?\u32780?\u30070?\u20540?\u26159?0\u26178?\u65292?\u23559?\u28608?\u27963?\u26039?\u22863?\u27169?\u24335?\u24182?\u31435?\u21051?\u21457?\u36865?Note-Off\u12290?\par}
-}
-]]></description>
-        <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
-      </metadata>
-      <version name="1.0" author="再補一刀, Tale" time="2021-01-25T18:39:19Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/JSFX/%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84.jsfx</source>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
       </version>
     </reapack>
   </category>
   <category name="MIDI Editor">
-    <reapack name="zaibuyidao_Articulation Map - Insert Program Change .lua" type="script" desc="Articulation Map - Insert Program Change">
+    <reapack name="zaibuyidao_Articulation Map - Note To PC.lua" type="script" desc="Articulation Map - Note To PC">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-01-25T18:39:19Z">
+      <version name="1.0" author="zaibuyidao" time="2021-02-10T15:05:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Insert%20Program%20Change%20.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Note%20To%20PC.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Articulation Map - Note To Program Change.lua" type="script" desc="Articulation Map - Note To Program Change">
+    <reapack name="zaibuyidao_Articulation Map - Patch Change.lua" type="script" desc="Articulation Map - Patch Change">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-01-25T18:39:19Z">
+      <version name="1.0" author="zaibuyidao" time="2021-02-10T15:05:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Note%20To%20Program%20Change.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Articulation Map - Program Change To Note.lua" type="script" desc="Articulation Map - Program Change To Note">
+    <reapack name="zaibuyidao_Articulation Map - PC To Note.lua" type="script" desc="Articulation Map - PC To Note">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-01-25T18:39:19Z">
+      <version name="1.0" author="zaibuyidao" time="2021-02-10T15:05:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Program%20Change%20To%20Note.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20PC%20To%20Note.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Set Instrument Group.lua" type="script" desc="Articulation Map - Set instrument group">
@@ -359,45 +303,6 @@
       </version>
       <version name="1.3" author="zaibuyidao, dangguidan" time="2021-01-25T18:39:19Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/zaibuyidao_Auto%20Expression.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Bank Program Select (Bank MSB,LSB).lua" type="script" desc="Bank Program Select (Bank MSB/LSB)">
-      <version name="1.0" author="zaibuyidao" time="2021-01-18T04:20:00Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select%20(Bank%20MSB,LSB).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Bank Program Select.lua" type="script" desc="Bank Program Select">
-      <metadata/>
-      <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
-        <changelog><![CDATA[+ Initial Release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/356207057308d555b724df7a755ce3be2a94f179/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2019-12-12T19:04:10Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab1b98d81ca9adb7618c98d2fa7cf6a3f410ef8c/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2019-12-14T06:17:39Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e44d1930146831803a947fdaa10f0ae9427dd35b/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-01-19T21:19:49Z">
-        <changelog><![CDATA[+ Organize the code]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0d5277e17757568ac9be9e5fffc4cc4392b9fbcd/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-      <version name="1.4" author="zaibuyidao" time="2020-02-16T12:53:15Z">
-        <changelog><![CDATA[+ Version update]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ded730463e6ac74b798269d8b8ef42c7b0cdf998/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-      <version name="1.9" author="zaibuyidao" time="2020-08-04T13:11:05Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/429ecc4bb46b56b99cb485abbe1c9215585801f7/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-08-10T17:09:21Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ea2c3e96c2489a4b74b7abd6d3ac055e5e82786a/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-      <version name="2.1" author="zaibuyidao" time="2020-08-20T17:58:52Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b4ed3f0467e3b93bc3553d6c67d29f911cc45e17/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
-      </version>
-      <version name="2.2" author="zaibuyidao" time="2021-01-18T04:20:00Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/zaibuyidao_Bank%20Program%20Select.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_CC Curve Shape (Dynamic Menu).lua" type="script" desc="CC Curve Shape (Dynamic Menu)">
@@ -1345,6 +1250,18 @@
       </version>
       <version name="1.6" author="zaibuyidao" time="2020-03-07T11:31:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3fe8cc6afc6d15729422ad05055287dbd5c105a0/MIDI%20Editor/zaibuyidao_Paste%20Selected%20Rhythm.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Patch Change (Bank MSB,LSB).lua" type="script" desc="Patch Change (Bank MSB/LSB)">
+      <version name="1.0" author="zaibuyidao" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Patch%20Change%20(Bank%20MSB,LSB).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Patch Change.lua" type="script" desc="Patch Change">
+      <version name="1.0" author="zaibuyidao" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Patch%20Change.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Quantize.lua" type="script" desc="Quantize">
@@ -2420,6 +2337,41 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61a198f97763e85b3144e1b00ad3a86fec79ba8c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BE%9E%E6%A0%B9%E9%9F%B3%E7%94%9F%E6%88%90%E5%92%8C%E5%BC%A6.lua</source>
       </version>
     </reapack>
+    <reapack name="再補一刀_技法映射 - PC轉音符.lua" type="script" desc="技法映射 - PC轉音符">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0.1" author="再補一刀" time="2021-02-10T15:05:19Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20PC%E8%BD%89%E9%9F%B3%E7%AC%A6.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_技法映射 - 插入音色.lua" type="script" desc="技法映射 - 插入音色">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_技法映射 - 設置樂器組.lua" type="script" desc="技法映射 - 設置樂器組">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20%E8%A8%AD%E7%BD%AE%E6%A8%82%E5%99%A8%E7%B5%84.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_技法映射 - 音符轉PC.lua" type="script" desc="技法映射 - 音符轉PC">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20%E9%9F%B3%E7%AC%A6%E8%BD%89PC.lua</source>
+      </version>
+    </reapack>
     <reapack name="再補一刀_拆分音符.lua" type="script" desc="拆分音符">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -2493,6 +2445,18 @@
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c338285ba108de1b4a12862836f9cb38b56a6ff/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E7%B3%BB%E7%B5%B1%E5%B0%88%E7%94%A8%E6%95%B8%E6%93%9A.lua</source>
       </version>
     </reapack>
+    <reapack name="再補一刀_插入音色(庫選擇MSB,LSB).lua" type="script" desc="插入音色(庫選擇MSB/LSB)">
+      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2(%E5%BA%AB%E9%81%B8%E6%93%87MSB,LSB).lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_插入音色.lua" type="script" desc="插入音色">
+      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2.lua</source>
+      </version>
+    </reapack>
     <reapack name="再補一刀_插入顫音.lua" type="script" desc="插入顫音">
       <version name="1.0" author="再補一刀" time="2021-01-21T20:09:16Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -2562,45 +2526,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80.lua</source>
       </version>
     </reapack>
-    <reapack name="再補一刀_表情映射 - PC轉音符.lua" type="script" desc="表情映射 - PC轉音符">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-01-25T18:48:07Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/caf2fd6f215ced815c66f5f939ca9e1d218206ff/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84%20-%20PC%E8%BD%89%E9%9F%B3%E7%AC%A6.lua</source>
-      </version>
-      <version name="1.0.1" author="再補一刀" time="2021-01-25T19:38:06Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e374c74e7ce5354ee434784aa956415f60fbc1d6/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84%20-%20PC%E8%BD%89%E9%9F%B3%E7%AC%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_表情映射 - 插入音色.lua" type="script" desc="表情映射 - 插入音色">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-01-25T18:48:07Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/caf2fd6f215ced815c66f5f939ca9e1d218206ff/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84%20-%20%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_表情映射 - 設置樂器組.lua" type="script" desc="表情映射 - 設置樂器組">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-01-25T18:39:19Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84%20-%20%E8%A8%AD%E7%BD%AE%E6%A8%82%E5%99%A8%E7%B5%84.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_表情映射 - 音符轉PC.lua" type="script" desc="表情映射 - 音符轉PC">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-01-25T18:48:07Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/caf2fd6f215ced815c66f5f939ca9e1d218206ff/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A1%A8%E6%83%85%E6%98%A0%E5%B0%84%20-%20%E9%9F%B3%E7%AC%A6%E8%BD%89PC.lua</source>
-      </version>
-    </reapack>
     <reapack name="再補一刀_設置CC車道.lua" type="script" desc="設置CC車道">
       <version name="1.2" author="再補一刀" time="2021-01-11T13:06:36Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58185d8f06c64b37b558aeddc52e91b93b6a5f5d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AECC%E8%BB%8A%E9%81%93.lua</source>
@@ -2651,17 +2576,6 @@
       <version name="1.0" author="再補一刀" time="2020-09-09T17:52:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%95%B7%E5%BA%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_音色選擇(庫MSB,LSB).lua" type="script" desc="音色選擇(庫MSB/LSB)">
-      <version name="1.0" author="再補一刀" time="2021-01-18T04:20:00Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%9F%B3%E8%89%B2%E9%81%B8%E6%93%87(%E5%BA%ABMSB,LSB).lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_音色選擇.lua" type="script" desc="音色選擇">
-      <version name="2.2" author="再補一刀" time="2021-01-18T04:20:00Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc51c93a89b6feab693d0deb265e6910ceef5cc7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%9F%B3%E8%89%B2%E9%81%B8%E6%93%87.lua</source>
       </version>
     </reapack>
   </category>
@@ -2747,6 +2661,15 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2021-02-03T13:49:45Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d851e00902bb3771d7ae7fa947c4ede2557e1505/Utility/zaibuyidao_Explode%20Drums.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2021-02-10T15:05:19Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/Utility/zaibuyidao_Explode%20Drums.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Implode Drums.lua" type="script" desc="Implode Drums">
+      <version name="1.0" author="zaibuyidao" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/Utility/zaibuyidao_Implode%20Drums.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Jump To Marker.lua" type="script" desc="Jump To Marker">
@@ -2927,6 +2850,15 @@
       </version>
       <version name="1.2" author="再補一刀" time="2021-02-03T13:49:45Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d851e00902bb3771d7ae7fa947c4ede2557e1505/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%BC%93%E5%88%86%E8%BB%8C.lua</source>
+      </version>
+      <version name="1.3" author="再補一刀" time="2021-02-10T15:05:19Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%BC%93%E5%88%86%E8%BB%8C.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_鼓合併.lua" type="script" desc="鼓合併">
+      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%BC%93%E5%90%88%E4%BD%B5.lua</source>
       </version>
     </reapack>
   </category>
