@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b7c5c449689f57f782627ab7e67445b78f1cb98a">
+<index version="1" name="zaibuyidao Scripts" commit="4fc50b0cafe5123dfe743a135f03f5a116a8ec18">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -2771,6 +2771,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2021-02-15T13:07:51Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/Utility/zaibuyidao_MIDI%20Channel%20From%20Track%20Send.lua</source>
+      </version>
+      <version name="1.1.1" author="zaibuyidao" time="2021-02-15T14:41:14Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4fc50b0cafe5123dfe743a135f03f5a116a8ec18/Utility/zaibuyidao_MIDI%20Channel%20From%20Track%20Send.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set MIDI Channel Routing (Dynamic Menu).lua" type="script" desc="Set MIDI Channel Routing (Dynamic Menu)">
