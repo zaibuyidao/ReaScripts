@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: MIDI Channel From Track Send
- * Version: 1.1
+ * Version: 1.1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -38,7 +38,7 @@ for i = 1, count_items do
     end
     reaper.MIDI_Sort(take)
 end
-reaper.MB("所有MIDI通道已對應好Send,可以導出MIDI了！.","成功!",0)
+reaper.MB("所有MIDI通道已對應好Send,可以導出MIDI了!","成功!",0)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.Undo_EndBlock("MIDI Channel From Track Send", 0)
