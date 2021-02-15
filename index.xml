@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0fe186681d4ab199b9b4e91222026c54359c0909">
+<index version="1" name="zaibuyidao Scripts" commit="b7c5c449689f57f782627ab7e67445b78f1cb98a">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -870,13 +870,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Insert%20Expression%20(Set%20CC%20Shape).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Insert Patch Change (Bank MSB LSB).lua" type="script" desc="Insert Patch Change (Bank MSB/LSB)">
+    <reapack name="zaibuyidao_Insert Patch Change (Bank MSB,LSB).lua" type="script" desc="Insert Patch Change (Bank MSB/LSB)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-02-15T13:07:51Z">
+      <version name="1.0" author="zaibuyidao" time="2021-02-15T13:11:41Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/MIDI%20Editor/zaibuyidao_Insert%20Patch%20Change%20(Bank%20MSB%20LSB).lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b7c5c449689f57f782627ab7e67445b78f1cb98a/MIDI%20Editor/zaibuyidao_Insert%20Patch%20Change%20(Bank%20MSB,LSB).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Patch Change.lua" type="script" desc="Insert Patch Change">
@@ -2457,10 +2457,10 @@
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c338285ba108de1b4a12862836f9cb38b56a6ff/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E7%B3%BB%E7%B5%B1%E5%B0%88%E7%94%A8%E6%95%B8%E6%93%9A.lua</source>
       </version>
     </reapack>
-    <reapack name="再補一刀_插入音色(庫MSB LSB).lua" type="script" desc="插入音色(庫MSB/LSB)">
-      <version name="1.0" author="再補一刀" time="2021-02-15T13:07:51Z">
+    <reapack name="再補一刀_插入音色(庫MSB,LSB).lua" type="script" desc="插入音色(庫MSB/LSB)">
+      <version name="1.0" author="再補一刀" time="2021-02-15T13:11:41Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2(%E5%BA%ABMSB%20LSB).lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b7c5c449689f57f782627ab7e67445b78f1cb98a/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2(%E5%BA%ABMSB,LSB).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入音色.lua" type="script" desc="插入音色">
