@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 重命名軌道
- * Version: 1.1
+ * Version: 1.0
  * Author: 再補一刀, Yanick
  * Reference: https://forum.cockos.com/showthread.php?t=243582 (僅中文化並做適當調整)
  * REAPER: 6.0
@@ -11,6 +11,9 @@
  * v1.0 (2020-11-20)
   + Initial release
 --]]
+
+reaper.Undo_BeginBlock() -- 撤銷塊開始
+reaper.PreventUIRefresh(1)
 
 count_sel_tracks = reaper.CountSelectedTracks(0)
 if count_sel_tracks == 0 then return end
@@ -38,3 +41,7 @@ while j <= count_sel_tracks do
         end
     end
 end
+
+reaper.PreventUIRefresh(-1)
+reaper.UpdateArrange()
+reaper.Undo_EndBlock("重命名軌道", 0) -- 撤銷塊結束

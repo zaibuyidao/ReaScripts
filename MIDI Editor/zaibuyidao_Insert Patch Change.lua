@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Articulation Map - Patch Change
+ * ReaScript Name: Insert Patch Change
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -11,9 +11,11 @@
 
 --[[
  * Changelog:
- * v1.0 (2020-9-16)
+ * v1.0 (2020-8-10)
   + Initial release
 --]]
+
+-- Use the formula bank = MSB × 128 + LSB to find the bank number to use in script.
 
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
@@ -21,12 +23,11 @@ end
 
 function main()
   reaper.Undo_BeginBlock()
-  reaper.PreventUIRefresh(1)
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
-  item = reaper.GetMediaItemTake_Item(take)
-  local cur_pos = reaper.GetCursorPositionEx()
-  local ppq_pos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
+  local item = reaper.GetMediaItemTake_Item(take)
+  local curpos = reaper.GetCursorPositionEx()
+  local ppqpos = reaper.MIDI_GetPPQPosFromProjTime(take, curpos)
   local count, index = 0, {}
   local value = reaper.MIDI_EnumSelNotes(take, -1)
   while value ~= -1 do
@@ -35,21 +36,18 @@ function main()
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
 
-  local MSB = reaper.GetExtState("ArticulationMap", "MSB")
-  if (MSB == "") then MSB = "0" end
-    local PC = reaper.GetExtState("ArticulationMap", "PC")
-  if (PC == "") then PC = "C-1" end
-  local LSB = reaper.GetExtState("ArticulationMap", "LSB")
-  if (LSB == "") then LSB = "96" end
+  local BANK = reaper.GetExtState("InsertPatchChange", "BANK")
+  if (BANK == "") then BANK = "259" end
+  local PC = reaper.GetExtState("InsertPatchChange", "PC")
+  if (PC == "") then PC = "27" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Patch Change", 3, "Instrument Group,Note,Velocity", MSB ..','.. PC ..','.. LSB)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Insert Patch Change", 2, "Bank,Program number", BANK ..','.. PC)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local MSB, PC, LSB = user_input_csv:match("(.*),(.*),(.*)")
-  if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) then return reaper.SN_FocusMIDIEditor() end
+  local BANK, PC = user_input_csv:match("(.*),(.*)")
+  if not tonumber(BANK) or not (tonumber(PC) or tostring(PC)) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("ArticulationMap", "MSB", MSB, false)
-  reaper.SetExtState("ArticulationMap", "PC", PC, false)
-  reaper.SetExtState("ArticulationMap", "LSB", LSB, false)
+  reaper.SetExtState("InsertPatchChange", "BANK", BANK, false)
+  reaper.SetExtState("InsertPatchChange", "PC", PC, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -181,6 +179,9 @@ function main()
   elseif (PC == "G8") then PC = "127"
   end
 
+  local MSB = math.modf(BANK / 128)
+  local LSB = math.fmod(BANK, 128)
+
   if #index > 0 then
     for i = 1, #index do
       retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
@@ -194,14 +195,13 @@ function main()
     local selected = true
     local muted = false
     local chan = 0
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 0, MSB) -- CC#00
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 32, LSB) -- CC#32
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xC0, chan, PC, 0) -- Program Change
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xB0, chan, 0, MSB) -- CC#00
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xB0, chan, 32, LSB) -- CC#32
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
-  reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
-  reaper.Undo_EndBlock("Patch Change", 0)
+  reaper.Undo_EndBlock("Insert Patch Change", 0)
 end
 
 main()

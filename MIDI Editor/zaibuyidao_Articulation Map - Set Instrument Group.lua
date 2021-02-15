@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Articulation Map - Set instrument group
- * Version: 1.0
+ * ReaScript Name: Articulation Map - Set Instrument Group
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -20,6 +20,8 @@ function Msg(param)
 end
 
 function main()
+  reaper.Undo_BeginBlock()
+  reaper.PreventUIRefresh(1)
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   local cnt, index = 0, {}
   local val = reaper.MIDI_EnumSelCC(take, -1)
@@ -42,13 +44,9 @@ function main()
     end
   end
   reaper.MIDI_Sort(take)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
+  reaper.Undo_EndBlock("Set Instrument Group", 0)
 end
-
-local script_title = "Set instrument group"
-reaper.Undo_BeginBlock()
-reaper.PreventUIRefresh(1)
 main()
-reaper.PreventUIRefresh(-1)
-reaper.UpdateArrange()
-reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

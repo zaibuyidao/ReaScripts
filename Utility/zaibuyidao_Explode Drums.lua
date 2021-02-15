@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Explode Drums
- * Version: 1.3
+ * Version: 1.3.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -67,9 +67,6 @@ for i = 0, item_num-1 do
 
       -- 定義鍵位名稱，符合條件將被映射
       if track_name == "A10-DRUMS" or track_name == "B10-DRUMS" or track_name == "B11-SUB DRUMS" then
-        if track_name == "A10-DRUMS" then track_name = "A10-DRUMS " end
-        if track_name == "B10-DRUMS" then track_name = "B10-DRUMS " end
-        if track_name == "B11-SUB DRUMS" then track_name = "B11-SUB DRUMS " end
         if note_name == 0 then note_name = "STANDARD1 KICK1" end
         if note_name == 1 then note_name = "STANDARD1 KICK2" end
         if note_name == 2 then note_name = "STANDARD2 KICK1" end
@@ -189,8 +186,8 @@ for i = 0, item_num-1 do
         if note_name == 126 then note_name = "HOUSE SNARE" end
         if note_name == 127 then note_name = "HOUSE SNARE2" end
       elseif track_name == "A11-KICK&SN" then
-        if note_name > 59 and note_name < 112 then track_name = "A11-SN " end
-        if note_name > 24 and note_name < 60 then track_name = "A11-KICK " end
+        if note_name > 59 and note_name < 112 then track_name = "A11-SN" end
+        if note_name > 24 and note_name < 60 then track_name = "A11-KICK" end
         if note_name == 25 then note_name = "CR-78 KICK1" end
         if note_name == 26 then note_name = "CR-78 KICK2" end
         if note_name == 27 then note_name = "TR-606 KICK1" end
@@ -280,7 +277,11 @@ for i = 0, item_num-1 do
         if note_name == 111 then note_name = "TR-909 SNARE2" end
       end
 
-      reaper.GetSetMediaTrackInfo_String(dup_track, "P_NAME", track_name .. note_name, true) -- 定義重複軌道的名稱
+      if track_name ~= '' then -- 定義重複軌道的名稱
+        reaper.GetSetMediaTrackInfo_String(dup_track, "P_NAME", track_name .. " [" .. note_name .. "]", true)
+      else
+        reaper.GetSetMediaTrackInfo_String(dup_track, "P_NAME", track_name .. "[" .. note_name .. "]", true)
+      end
 
       -- 檢查軌道名字是否重複，重複則跳過
       local track_name_tb = {} -- 將軌道名存入track_name_tb表中進行比較
