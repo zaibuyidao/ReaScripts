@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Pick Track (Dynamic Menu)
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -34,14 +34,19 @@ for i = 1, count_track do
   local track = reaper.GetTrack(0, i - 1)
   local ok, track_name = reaper.GetSetMediaTrackInfo_String(track, 'P_NAME', '', false)
   local track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
+  local folder = reaper.GetMediaTrackInfo_Value(track, 'I_FOLDERDEPTH')
 
   if reaper.IsTrackSelected(track) == true then
     flag = true
   else
     flag = false
   end
-
-  menu = menu .. (flag and "!" or "") .. "Track " .. i .. ": " .. track_name .. "|"
+  
+  if folder <= 0 then
+    menu = menu .. (flag and "!" or "") .. "Track " .. i .. ": " .. track_name .. "|"
+  else
+    menu = menu .. (flag and "!" or "") .. "Folder " .. i .. ": " .. track_name .. "|"
+  end
 end
 
 local title = "Hidden gfx window for showing the pick track all items showmenu"

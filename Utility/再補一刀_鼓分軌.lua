@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 鼓分軌
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -278,9 +278,9 @@ for i = 0, item_num-1 do
       end
 
       if track_name ~= '' then -- 定義重複軌道的名稱
-        reaper.GetSetMediaTrackInfo_String(dup_track, "P_NAME", track_name .. " [" .. note_name .. "]", true)
+        reaper.GetSetMediaTrackInfo_String(dup_track, "P_NAME", track_name .. " " .. note_name .. "", true)
       else
-        reaper.GetSetMediaTrackInfo_String(dup_track, "P_NAME", track_name .. "[" .. note_name .. "]", true)
+        reaper.GetSetMediaTrackInfo_String(dup_track, "P_NAME", track_name .. "" .. note_name .. "", true)
       end
       
       -- 檢查軌道名字是否重複，重複則跳過
