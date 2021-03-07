@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="de83ecede084c72d4da65d86b37cf8cd9d5c0196">
+<index version="1" name="zaibuyidao Scripts" commit="5e8aa1994dc104ad893a3f7739ba842ed611dd02">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -283,6 +283,9 @@
       <version name="1.1" author="zaibuyidao, dangguidan" time="2020-09-08T16:24:13Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape%20(Multitrack).lua</source>
       </version>
+      <version name="1.2" author="zaibuyidao" time="2021-03-07T10:07:46Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Expression Shape.lua" type="script" desc="Auto Expression Shape">
       <version name="1.0" author="zaibuyidao, dangguidan" time="2020-09-07T14:17:05Z">
@@ -291,6 +294,9 @@
       </version>
       <version name="1.1" author="zaibuyidao, dangguidan" time="2020-09-08T16:24:13Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2021-03-07T10:07:46Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/MIDI%20Editor/zaibuyidao_Auto%20Expression%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Expression.lua" type="script" desc="Auto Expression">
@@ -1230,6 +1236,9 @@
       <version name="1.4" author="zaibuyidao" time="2020-08-10T17:09:21Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ea2c3e96c2489a4b74b7abd6d3ac055e5e82786a/MIDI%20Editor/zaibuyidao_Notes%20Become%20Pitch%20Bend.lua</source>
       </version>
+      <version name="1.5" author="zaibuyidao" time="2021-03-07T10:07:46Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/MIDI%20Editor/zaibuyidao_Notes%20Become%20Pitch%20Bend.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Selected Arpeggio.lua" type="script" desc="Paste Selected Arpeggio">
       <metadata>
@@ -1573,6 +1582,12 @@
       </version>
       <version name="1.6" author="zaibuyidao" time="2021-01-07T16:43:56Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/201cd3b960bcb9ff1d35bafa9e7a270a02563d85/MIDI%20Editor/zaibuyidao_Random%20Velocity.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Remove Redundant CCs.lua" type="script" desc="Remove Redundant CCs">
+      <version name="1.0" author="zaibuyidao" time="2021-03-07T10:07:46Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/MIDI%20Editor/zaibuyidao_Remove%20Redundant%20CCs.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Rhythm Layer Selection.lua" type="script" desc="Rhythm Layer Selection">
@@ -2531,11 +2546,17 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80(%E5%A4%9A%E8%BB%8C).lua</source>
       </version>
+      <version name="1.2" author="再補一刀" time="2021-03-07T10:07:46Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80(%E5%A4%9A%E8%BB%8C).lua</source>
+      </version>
     </reapack>
     <reapack name="再補一刀_自動表情形狀.lua" type="script" desc="自動表情形狀">
       <version name="1.0" author="再補一刀, 當歸蛋" time="2020-09-09T17:52:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9f328e8561881849086ed8b1e174025b1b8c668/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80.lua</source>
+      </version>
+      <version name="1.2" author="再補一刀" time="2021-03-07T10:07:46Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_設置CC車道.lua" type="script" desc="設置CC車道">
@@ -2731,10 +2752,10 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cbb875e25cca4ba642a337a646c54863ada92cec/Utility/zaibuyidao_Display%20Total%20Length%20Of%20Selected%20Items.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Explode Drums V2.lua" type="script" desc="Explode Drums V2">
-      <version name="1.0" author="zaibuyidao, dangguidan" time="2021-03-03T13:59:40Z">
+    <reapack name="zaibuyidao_Explode Drums GM.lua" type="script" desc="Explode Drums GM">
+      <version name="1.0" author="zaibuyidao" time="2021-03-07T10:07:46Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/de83ecede084c72d4da65d86b37cf8cd9d5c0196/Utility/zaibuyidao_Explode%20Drums%20V2.lua</source>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/Utility/zaibuyidao_Explode%20Drums%20GM.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Explode Drums.lua" type="script" desc="Explode Drums">
