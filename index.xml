@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5e8aa1994dc104ad893a3f7739ba842ed611dd02">
+<index version="1" name="zaibuyidao Scripts" commit="7c1707659ae33717ab6d702b482394748aa7a79b">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -1588,6 +1588,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-03-07T10:07:46Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/MIDI%20Editor/zaibuyidao_Remove%20Redundant%20CCs.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2021-03-07T10:12:42Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7c1707659ae33717ab6d702b482394748aa7a79b/MIDI%20Editor/zaibuyidao_Remove%20Redundant%20CCs.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Rhythm Layer Selection.lua" type="script" desc="Rhythm Layer Selection">
