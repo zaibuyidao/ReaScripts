@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 插入音色
- * Version: 1.1
+ * Version: 1.1.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -188,18 +188,18 @@ function main()
     for i = 1, #index do
       retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
       if selected == true then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tcik, 0xB0, chan, 0, MSB) -- CC#00
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tcik, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tcik, 0xC0, chan, PC, 0) -- Program Change
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xB0, chan, 0, MSB) -- CC#00
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xB0, chan, 32, LSB) -- CC#32
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xC0, chan, PC, 0) -- Program Change
       end
     end
   else
     local selected = true
     local muted = false
     local chan = 0
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tcik, 0xB0, chan, 0, MSB) -- CC#00
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tcik, 0xB0, chan, 32, LSB) -- CC#32
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tcik, 0xC0, chan, PC, 0) -- Program Change
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tick, 0xB0, chan, 0, MSB) -- CC#00
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tick, 0xB0, chan, 32, LSB) -- CC#32
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tick, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
   reaper.UpdateArrange()
