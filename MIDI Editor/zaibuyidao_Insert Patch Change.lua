@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Patch Change
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -40,14 +40,17 @@ function main()
   if (BANK == "") then BANK = "259" end
   local PC = reaper.GetExtState("InsertPatchChange", "PC")
   if (PC == "") then PC = "27" end
+  local Tick = reaper.GetExtState("PatchChange", "Tick")
+  if (Tick == "") then Tick = "-10" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Insert Patch Change", 2, "Bank,Program number", BANK ..','.. PC)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Insert Patch Change", 3, "Bank,Program number,Offset", BANK ..','.. PC ..','.. Tick)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local BANK, PC = user_input_csv:match("(.*),(.*)")
-  if not tonumber(BANK) or not (tonumber(PC) or tostring(PC)) then return reaper.SN_FocusMIDIEditor() end
+  local BANK, PC, Tick = user_input_csv:match("(.*),(.*),(.*)")
+  if not tonumber(BANK) or not (tonumber(PC) or tostring(PC)) or not tonumber(Tick) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("InsertPatchChange", "BANK", BANK, false)
-  reaper.SetExtState("InsertPatchChange", "PC", PC, false)
+  reaper.SetExtState("PatchChange", "BANK", BANK, false)
+  reaper.SetExtState("PatchChange", "PC", PC, false)
+  reaper.SetExtState("PatchChange", "Tick", Tick, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -186,18 +189,18 @@ function main()
     for i = 1, #index do
       retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
       if selected == true then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xC0, chan, PC, 0) -- Program Change
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tcik, 0xB0, chan, 0, MSB) -- CC#00
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tcik, 0xB0, chan, 32, LSB) -- CC#32
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tcik, 0xC0, chan, PC, 0) -- Program Change
       end
     end
   else
     local selected = true
     local muted = false
     local chan = 0
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xB0, chan, 0, MSB) -- CC#00
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xB0, chan, 32, LSB) -- CC#32
-    reaper.MIDI_InsertCC(take, selected, muted, ppqpos, 0xC0, chan, PC, 0) -- Program Change
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tcik, 0xB0, chan, 0, MSB) -- CC#00
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tcik, 0xB0, chan, 32, LSB) -- CC#32
+    reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tcik, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
   reaper.UpdateArrange()
