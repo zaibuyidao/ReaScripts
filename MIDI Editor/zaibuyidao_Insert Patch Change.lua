@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Patch Change
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -184,7 +184,7 @@ function main()
 
   local MSB = math.modf(BANK / 128)
   local LSB = math.fmod(BANK, 128)
-
+  reaper.MIDI_DisableSort(take)
   if #index > 0 then
     for i = 1, #index do
       retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
@@ -202,6 +202,7 @@ function main()
     reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tick, 0xB0, chan, 32, LSB) -- CC#32
     reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tick, 0xC0, chan, PC, 0) -- Program Change
   end
+  reaper.MIDI_Sort(take)
   reaper.UpdateItemInProject(item)
   reaper.UpdateArrange()
   reaper.Undo_EndBlock("Insert Patch Change", 0)
