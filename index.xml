@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a4b01afad345d0df6b982ae1fdadb4d329f3e6f5">
+<index version="1" name="zaibuyidao Scripts" commit="d722670a1893621ee3af90a1579abd637397fd6c">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -895,6 +895,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2021-03-18T14:42:17Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a4b01afad345d0df6b982ae1fdadb4d329f3e6f5/MIDI%20Editor/zaibuyidao_Insert%20Patch%20Change.lua</source>
+      </version>
+      <version name="1.1.1" author="zaibuyidao" time="2021-03-18T15:13:36Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d722670a1893621ee3af90a1579abd637397fd6c/MIDI%20Editor/zaibuyidao_Insert%20Patch%20Change.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend (Semitone).lua" type="script" desc="Insert Pitch Bend (Semitone)">
@@ -2491,6 +2494,9 @@
       </version>
       <version name="1.1" author="再補一刀" time="2021-03-18T14:42:17Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a4b01afad345d0df6b982ae1fdadb4d329f3e6f5/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2.lua</source>
+      </version>
+      <version name="1.1.1" author="再補一刀" time="2021-03-18T15:13:36Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d722670a1893621ee3af90a1579abd637397fd6c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入顫音.lua" type="script" desc="插入顫音">
