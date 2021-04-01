@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 技法映射 - 插入音色
- * Version: 1.0
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -41,15 +41,18 @@ function main()
   if (PC == "") then PC = "C-1" end
   local LSB = reaper.GetExtState("ArticulationMap", "LSB")
   if (LSB == "") then LSB = "96" end
+  local Tick = reaper.GetExtState("ArticulationMap", "Tick")
+  if (Tick == "") then Tick = "-10" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("插入音色", 3, "樂器組,音符,力度", MSB ..','.. PC ..','.. LSB)
+  local user_ok, user_input_csv = reaper.GetUserInputs("插入音色", 4, "樂器組,音符,力度,偏移", MSB ..','.. PC ..','.. LSB ..','.. Tick)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local MSB, PC, LSB = user_input_csv:match("(.*),(.*),(.*)")
-  if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) then return reaper.SN_FocusMIDIEditor() end
+  local MSB, PC, LSB, Tick = user_input_csv:match("(.*),(.*),(.*),(.*)")
+  if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) or not tonumber(Tick) then return reaper.SN_FocusMIDIEditor() end
 
   reaper.SetExtState("ArticulationMap", "MSB", MSB, false)
   reaper.SetExtState("ArticulationMap", "PC", PC, false)
   reaper.SetExtState("ArticulationMap", "LSB", LSB, false)
+  reaper.SetExtState("ArticulationMap", "Tick", Tick, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -185,18 +188,18 @@ function main()
     for i = 1, #index do
       retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
       if selected == true then
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, 0, MSB) -- CC#00
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xC0, chan, PC, 0) -- Program Change
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xB0, chan, 0, MSB) -- CC#00
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xB0, chan, 32, LSB) -- CC#32
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xC0, chan, PC, 0) -- Program Change
       end
     end
   else
     local selected = true
     local muted = false
     local chan = 0
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 0, MSB) -- CC#00
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 32, LSB) -- CC#32
-    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xC0, chan, PC, 0) -- Program Change
+    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos+Tick, 0xB0, chan, 0, MSB) -- CC#00
+    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos+Tick, 0xB0, chan, 32, LSB) -- CC#32
+    reaper.MIDI_InsertCC(take, selected, muted, ppq_pos+Tick, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
   reaper.PreventUIRefresh(-1)
