@@ -1,0 +1,37 @@
+desc: MIDI Transform CC
+version: 1.0
+changelog: init
+author: zaibuyidao
+website: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+about:
+  Transform CC# A Into CC# B.
+
+slider1:117<1,127,1>Transform CC#
+slider2:120<1,127,1>Into CC#
+
+in_pin:none
+out_pin:none
+
+@init
+cc = $xb0;
+note_on = 9;
+note_off = 8;
+
+@slider
+
+@sample
+while (
+  midirecv(offset, msg1, msg2, msg3) ? (
+    status = msg1 & $xf0;
+    channel = msg1 & $x0f;
+    msg_num = msg2;
+    msg_val = msg3;
+
+    CC117 = slider1;
+    status == cc && (msg2 == CC117) ? (
+      msg2 = slider2;
+    );
+
+    midisend(offset, msg1, msg2, msg3);
+  );
+);
