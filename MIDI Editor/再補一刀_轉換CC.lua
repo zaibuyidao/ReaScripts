@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 轉換CC
- * Version: 1.1
+ * Version: 1.1.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -25,7 +25,7 @@ function Main()
   if (cc_num == "") then cc_num = "1" end
   local cc_new = reaper.GetExtState("TransformCCIntoX", "CC_New")
   if (cc_new == "") then cc_new = "11" end
-  local user_ok, user_input = reaper.GetUserInputs('轉換CC', 2, '將CC編號:,轉換為CC編號:', cc_num ..','.. cc_new)
+  local user_ok, user_input = reaper.GetUserInputs('轉換CC', 2, '轉換 CC#,至 CC#', cc_num ..','.. cc_new)
   cc_num, cc_new = user_input:match("(.*),(.*)")
   if not user_ok or not tonumber(cc_num) or not tonumber(cc_new) then return reaper.SN_FocusMIDIEditor() end
 

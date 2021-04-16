@@ -1,13 +1,13 @@
-desc: MIDI Transform CC
-version: 1.0
+desc: MIDI轉換CC
+version: 1.0.1
 changelog: init
 author: zaibuyidao
 website: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 about:
   將 CC# A 轉為 CC# B.
 
-slider1:117<1,127,1>將CC#
-slider2:120<1,127,1>轉為CC#
+slider1:117<1,127,1>轉換 CC#
+slider2:120<1,127,1>至 CC#
 
 in_pin:none
 out_pin:none
