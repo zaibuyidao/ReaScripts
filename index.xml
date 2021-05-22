@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d7bd35d86adddd7305aca0c8c16e3f3bc4505c8a">
+<index version="1" name="zaibuyidao Scripts" commit="01df275ef728fa89df9bcde94f2af1ff1d51ddc5">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -36,6 +36,72 @@
     </reapack>
   </category>
   <category name="Items Editing">
+    <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Add%20Take%20Marker%20At%20Snap%20Offset.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Copy Item Position.lua" type="script" desc="Copy Item Position">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Copy%20Item%20Position.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Equal Cut At Edit Cursor.lua" type="script" desc="Equal Cut At Edit Cursor">
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Equal%20Cut%20At%20Edit%20Cursor.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Equal Cut.lua" type="script" desc="Equal Cut">
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Equal%20Cut.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Humanize Item Volume.lua" type="script" desc="Humanize Item Volume">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Humanize%20Item%20Volume.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Humanize Take Pan.lua" type="script" desc="Humanize Take Pan">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Humanize%20Take%20Pan.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Humanize Take Pitch.lua" type="script" desc="Humanize Take Pitch">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Humanize%20Take%20Pitch.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Humanize Take Volume.lua" type="script" desc="Humanize Take Volume">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Humanize%20Take%20Volume.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Move Items To Track Of First Selected Item.lua" type="script" desc="Move Items To Track Of First Selected Item">
       <version name="1.0" author="zaibuyidao" time="2020-11-09T03:40:38Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -69,10 +135,55 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/Items%20Editing/zaibuyidao_Move%20Selected%20Items.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Paste Item Position (Move Only).lua" type="script" desc="Paste Item Position (Move Only)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Paste%20Item%20Position%20(Move%20Only).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Paste Item Position.lua" type="script" desc="Paste Item Position">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Paste%20Item%20Position.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Item Volume.lua" type="script" desc="Random Item Volume">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Random%20Item%20Volume.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Random Take Pan.lua" type="script" desc="Random Take Pan">
       <version name="1.0" author="zaibuyidao" time="2021-01-07T16:43:56Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/201cd3b960bcb9ff1d35bafa9e7a270a02563d85/Items%20Editing/zaibuyidao_Random%20Take%20Pan.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Take Pitch.lua" type="script" desc="Random Take Pitch">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Random%20Take%20Pitch.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Take Volume.lua" type="script" desc="Random Take Volume">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Random%20Take%20Volume.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Reposition Items.lua" type="script" desc="Reposition Items">
@@ -82,6 +193,69 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-11-09T03:40:38Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/Items%20Editing/zaibuyidao_Reposition%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Scale Item Volume.lua" type="script" desc="Scale Item Volume">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Scale%20Item%20Volume.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Item Volume.lua" type="script" desc="Set Item Volume">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Item%20Volume.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Take Name (Order).lua" type="script" desc="Set Take Name (Order)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Name%20(Order).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Take Name.lua" type="script" desc="Set Take Name">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Name.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Take Pan.lua" type="script" desc="Set Take Pan">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Pan.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Take Pitch.lua" type="script" desc="Set Take Pitch">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Pitch.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Take Volume.lua" type="script" desc="Set Take Volume">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Volume.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重新定位對象.lua" type="script" desc="重新定位對象">
@@ -2840,6 +3014,12 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/162d8c9abb1ab2342e2a3b9dc057dff38daaa946/Utility/zaibuyidao_Build%20MIDI%20Channel%20Routing%20To%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Design Tools (Dynamic Menu).lua" type="script" desc="Design Tools (Dynamic Menu)">
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Display Total Length Of Selected Items.lua" type="script" desc="Display Total Length Of Selected Items">
       <version name="1.0" author="zaibuyidao" time="2020-11-04T18:21:25Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -2960,6 +3140,11 @@
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/37c8d12097ea441cddbaf6f255f3c8ed16b265bf/Utility/zaibuyidao_Toggle%20Solo%20Track.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Track Follows Item Razor Selection.lua" type="script" desc="Track Follows Item/Razor Selection">
+      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Utility/zaibuyidao_Track%20Follows%20Item%20Razor%20Selection.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_VST Instrument.lua" type="script" desc="VST Instrument">
       <version name="1.0" author="zaibuyidao" time="2020-09-28T18:32:48Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -3015,12 +3200,6 @@
       </metadata>
       <version name="1.1" author="再補一刀" time="2021-01-25T18:39:19Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AE%E5%B7%A5%E7%A8%8B%E7%B6%B2%E6%A0%BC.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_音頻編輯(動態菜單).lua" type="script" desc="音頻編輯(動態菜單)">
-      <version name="1.0" author="zaibuyidao" time="2021-05-12T17:15:25Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d7bd35d86adddd7305aca0c8c16e3f3bc4505c8a/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%9F%B3%E9%A0%BB%E7%B7%A8%E8%BC%AF(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_顯示選定對象的總長度.lua" type="script" desc="顯示選定對象的總長度">
