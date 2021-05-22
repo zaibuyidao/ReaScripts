@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: 音頻編輯(動態菜單)
+ * ReaScript Name: Design Tools (Dynamic Menu)
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -16,6 +16,54 @@
 
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
+end
+
+function table.serialize(obj)
+  local lua = ""
+  local t = type(obj)
+  if t == "number" then
+    lua = lua .. obj
+  elseif t == "boolean" then
+    lua = lua .. tostring(obj)
+  elseif t == "string" then
+    lua = lua .. string.format("%q", obj)
+  elseif t == "table" then
+    lua = lua .. "{\n"
+  for k, v in pairs(obj) do
+    lua = lua .. "[" .. table.serialize(k) .. "]=" .. table.serialize(v) .. ",\n"
+  end
+  local metatable = getmetatable(obj)
+  if metatable ~= nil and type(metatable.__index) == "table" then
+    for k, v in pairs(metatable.__index) do
+      lua = lua .. "[" .. table.serialize(k) .. "]=" .. table.serialize(v) .. ",\n"
+    end
+  end
+  lua = lua .. "}"
+  elseif t == "nil" then
+    return nil
+  else
+    error("can not serialize a " .. t .. " type.")
+  end
+  return lua
+end
+
+function table.unserialize(lua)
+  local t = type(lua)
+  if t == "nil" or lua == "" then
+    return nil
+  elseif t == "number" or t == "string" or t == "boolean" then
+    lua = tostring(lua)
+  else
+    error("can not unserialize a " .. t .. " type.")
+  end
+  lua = "return " .. lua
+  local func = load(lua)
+  if func == nil then return nil end
+  return func()
+end
+
+function getSavedData(key1, key2)
+  return table.unserialize(reaper.GetExtState(key1, key2))
 end
 
 -- 計算數字的位數
@@ -49,7 +97,6 @@ function AddZeroFrontNum(dest_dight, num)
     return str_e .. tostring(num)
   end
 end
-
 
 function RegionRGB()
   local R = math.random(255)
@@ -159,7 +206,7 @@ function MultiCut2()
   local sel_item = reaper.GetSelectedMediaItem(0, 0)
   if sel_item == nil then return end
 
-  local retval, retvals_csv = reaper.GetUserInputs('平均分割', 1, '長度 秒:', '')
+  local retval, retvals_csv = reaper.GetUserInputs('均等分割', 1, '長度 秒:', '')
   if not retval or not tonumber(retvals_csv) then return end
 
   local item_start = reaper.GetMediaItemInfo_Value(sel_item, "D_POSITION")
@@ -439,7 +486,7 @@ end
 
 function SetTakeRandPitch()
   if count_sel_items > 0 then
-    local retval, retvals_csv = reaper.GetUserInputs('設置音高', 1, '音高幅度 dB:', '')
+    local retval, retvals_csv = reaper.GetUserInputs('音高人性化', 1, '音高幅度 dB:', '')
     if not retval or not tonumber(retvals_csv) then return end
     for i = 0, count_sel_items - 1 do
       local item = reaper.GetSelectedMediaItem(0, i)
@@ -453,6 +500,101 @@ function SetTakeRandPitch()
       reaper.SetMediaItemTakeInfo_Value(take, 'D_PITCH', pitch+rand)
       reaper.UpdateItemInProject(item)
     end
+  end
+end
+
+function CopyItemPosition()
+  local start_t = {}
+  count_sel_items = reaper.CountSelectedMediaItems(0)
+  for i = 0, count_sel_items - 1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
+    item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    table.insert(start_t, item_start)
+  end
+  reaper.SetExtState("CopyItemPosition", "Position", table.serialize(start_t), false)
+end
+
+function PasteItemPosition()
+  local item_pos = getSavedData("CopyItemPosition", "Position")
+  local cur_pos = reaper.GetCursorPosition()
+
+  -- local items = reaper.CountSelectedMediaItems()
+  -- if items > 1 then return reaper.MB("僅可以復制一個對象", "錯誤", 0) end
+  
+  reaper.Main_OnCommand(40698, 0) -- Edit: Copy items
+  
+  for i = 1, #item_pos do
+    reaper.SetEditCurPos(item_pos[i], 0, 0)
+    -- reaper.Main_OnCommand(42398, 0) -- Item: Paste items/tracks
+    reaper.Main_OnCommand(40058, 0) -- Item: Paste items/tracks (old-style handling of hidden tracks)
+  end
+  reaper.SetEditCurPos(cur_pos, 0, 0)
+end
+
+function PasteItemPositionMove()
+  local items = reaper.CountSelectedMediaItems()
+  local pos = getSavedData("CopyItemPosition", "Position")
+  local cur_pos = reaper.GetCursorPosition()
+  local t = {}
+  for i = 0, items-1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    t[#t+1] = item
+  end
+  
+  if #t > #pos then
+    return
+    reaper.MB("移動對像數量超出範圍", "錯誤", 0)
+  end
+
+  for i = 1, #t do
+    reaper.SetMediaItemInfo_Value(t[i], 'D_POSITION', pos[i])
+  end
+  reaper.SetEditCurPos(cur_pos, 0, 0)
+end
+
+function ScaleItemVolume()
+  local count_item = reaper.CountSelectedMediaItems(0)
+  if count_item == 0 then return end
+
+  local item_t, pos = {}, {}
+  for i = 0, count_item - 1 do
+      item_t[i] = reaper.GetSelectedMediaItem(0, i)
+      pos[i] = reaper.GetMediaItemInfo_Value(item_t[i], "D_POSITION")
+  end
+
+  local log10 = function(x) return math.log(x, 10) end
+  local a = 20*log10(reaper.GetMediaItemInfo_Value(item_t[0], 'D_VOL'))
+  local z = 20*log10(reaper.GetMediaItemInfo_Value(item_t[#item_t], 'D_VOL'))
+  local n = reaper.GetExtState("ScaleItemVolume", "Toggle")
+  if (n == "") then n = "0" end
+  local cur_range = tostring(a)..','..tostring(z)..','..tostring(n)
+  local retval, userInputsCSV = reaper.GetUserInputs("縮放對象音量", 3, "開始位置 dB,結束位置 dB,切換模式 (0=絕對 1=相對),extrawidth=60", cur_range)
+  if not retval then return end
+  local begin_db, end_db, toggle = userInputsCSV:match("(.*),(.*),(.*)")
+  n = toggle
+  reaper.SetExtState("ScaleItemVolume", "Toggle", n, false)
+  local offset_0 = (end_db - begin_db) / (pos[#pos] - pos[0])
+  local offset_1 = (end_db - begin_db) / count_item
+  
+  for i = 0, count_item - 1 do
+      local item = reaper.GetSelectedMediaItem(0, i)
+      local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+      local item_vol = reaper.GetMediaItemInfo_Value(item, 'D_VOL')
+      local item_db = 20*log10(item_vol)
+      if toggle == '0' then
+          local new_db = (item_pos - pos[0]) * offset_0 + begin_db
+          local delta_db = new_db - item_db
+          reaper.SetMediaItemInfo_Value(item, 'D_VOL', item_vol*10^(0.05*delta_db))
+      elseif toggle == '1' then
+          local delta_db = begin_db - item_db
+          reaper.SetMediaItemInfo_Value(item, 'D_VOL', item_vol*10^(0.05*delta_db))
+          begin_db = offset_1 + begin_db
+          if i == count_item - 1 then -- 補償最後一個數
+              delta_db = end_db - item_db
+              reaper.SetMediaItemInfo_Value(item, 'D_VOL', item_vol*10^(0.05*delta_db))
+          end
+      end
   end
 end
 
@@ -496,10 +638,17 @@ menu = menu
 .. (create_region and "!" or "") .. "按片段名稱創建區域" .. "||"
 
 .. (take_reverse and "!" or "") .. "反向活動片段" .. "|"
-.. (render_item_new and "!" or "") .. "將對象渲染到新片段(右)" .. "|"
-.. (multi_cut2 and "!" or "") .. "平均分割對象" .. "|"
-.. (multi_cut and "!" or "") .. "在光標處平均分割對象" .. "|"
+.. (render_item_new and "!" or "") .. "將對象渲染到新片段(右)" .. "||"
+
 .. (exchange_2_items and "!" or "") .. "交換兩個對象" .. "|"
+.. (multi_cut2 and "!" or "") .. "平均分割對象" .. "|"
+.. (multi_cut and "!" or "") .. "在光標處平均分割對象" .. "||"
+
+.. (copy_item_pos and "!" or "") .. "複製對象位置" .. "|"
+.. (paste_item_pos and "!" or "") .. "粘貼對象位置" .. "|"
+.. (paste_item_pos_move and "!" or "") .. "粘貼對象位置(僅移動)" .. "||"
+
+.. (scale_item_vol and "!" or "") .. "對象音量縮放" .. "|"
 
 title = "Hidden gfx window for showing the 音頻編輯 Menu showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
@@ -566,9 +715,13 @@ if selection > 0 then
     reaper.Main_OnCommand(41999, 0) -- Item: Render items to new take
     reaper.Main_OnCommand(40643, 0) -- Take: Explode takes of items in order
   end
-  if selection == 30 then MultiCut2() end
-  if selection == 31 then MultiCut() end
-  if selection == 32 then Exchange2Items() end
+  if selection == 30 then Exchange2Items() end
+  if selection == 31 then MultiCut2() end
+  if selection == 32 then MultiCut() end
+  if selection == 33 then CopyItemPosition() end
+  if selection == 34 then PasteItemPosition() end
+  if selection == 35 then PasteItemPositionMove() end
+  if selection == 36 then ScaleItemVolume() end
 end
 
 reaper.Undo_EndBlock('', -1)
