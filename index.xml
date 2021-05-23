@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="01df275ef728fa89df9bcde94f2af1ff1d51ddc5">
+<index version="1" name="zaibuyidao Scripts" commit="9fb861904c2c045f6c5b56eaf2374642ac2a8a01">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3006,6 +3006,15 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2021-01-25T18:39:19Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Rename.lua" type="script" desc="Batch Rename">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-23T12:16:39Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9fb861904c2c045f6c5b56eaf2374642ac2a8a01/Utility/zaibuyidao_Batch%20Rename.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Channel Routing To Selected Tracks.lua" type="script" desc="Build MIDI Channel Routing To Selected Tracks">
