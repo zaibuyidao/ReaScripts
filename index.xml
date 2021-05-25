@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a431449bece396efb7227d6e03d46115fa846730">
+<index version="1" name="zaibuyidao Scripts" commit="efbe5cb99bcace2fad89c23b5380361ba778b128">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3019,6 +3019,10 @@
       <version name="1.1" author="zaibuyidao" time="2021-05-25T15:30:35Z">
         <changelog><![CDATA[+ 修復排序Bug, 增加文件夾(父級)鍵.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a431449bece396efb7227d6e03d46115fa846730/Utility/zaibuyidao_Batch%20Rename.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2021-05-25T16:21:03Z">
+        <changelog><![CDATA[+ 刪除無效代碼.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/efbe5cb99bcace2fad89c23b5380361ba778b128/Utility/zaibuyidao_Batch%20Rename.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Channel Routing To Selected Tracks.lua" type="script" desc="Build MIDI Channel Routing To Selected Tracks">
