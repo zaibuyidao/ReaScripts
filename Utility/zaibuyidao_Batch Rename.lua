@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.2 (2021-5-26)
+  + 刪除無效代碼.
  * v1.1 (2021-5-25)
   + 修復排序Bug, 增加文件夾(父級)鍵.
  * v1.0 (2021-5-23)
@@ -18,26 +20,13 @@
 --]]
 
 local function Msg(str)
-	reaper.ShowConsoleMsg(tostring(str).."\n")
-end
-
-local function SaveSelectedTracks (table)
-	for i = 0, reaper.CountSelectedTracks(0)-1 do
-		table[i+1] = reaper.GetSelectedTrack(0, i)
-	end
-end
-
-local function RestoreSelectedTracks (table)
-	UnselectAllTracks()
-	for _, track in ipairs(table) do
-		reaper.SetTrackSelected(track, true)
-	end
+    reaper.ShowConsoleMsg(tostring(str).."\n")
 end
 
 function UnselectAllTracks()
-	first_track = reaper.GetTrack(0, 0)
-	reaper.SetOnlyTrackSelected(first_track)
-	reaper.SetTrackSelected(first_track, false)
+    first_track = reaper.GetTrack(0, 0)
+    reaper.SetOnlyTrackSelected(first_track)
+    reaper.SetTrackSelected(first_track, false)
 end
 
 function DightNum(num) -- 計算數字的位數
@@ -88,20 +77,16 @@ end
 local count_sel_items = reaper.CountSelectedMediaItems(0)
 if count_sel_items < 0 then return end
 
-init_sel_tracks = {}
-
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
-SaveSelectedTracks(init_sel_tracks)
-
 local rn, d, a, z, pos, ins, del, f, r = '', '2', '0', '0', '0', '', '0', '', ''
-local retval, retvals_csv = reaper.GetUserInputs("Batch Rename", 9, "Rename 重命名,Digits 位數,From Beginning 從左起,From End 從右起,At Position 位置,To Insert 插入,Remove 移除,Find What 查找,Replace With 替換,extrawidth=200", tostring(rn)..','..tostring(d)..','..tostring(a)..','..tostring(z)..','..tostring(pos)..','..tostring(ins)..','..tostring(del)..','..tostring(f)..','..tostring(r))
+local retval, retvals_csv = reaper.GetUserInputs("Batch Rename", 9, "Rename 重命名,Digits 位數,From Beginning 從左起,From End 從右起 (負數),At Position 位置,To Insert 插入,Remove 移除,Find What 查找,Replace With 替換,extrawidth=200", tostring(rn)..','..tostring(d)..','..tostring(a)..','..tostring(z)..','..tostring(pos)..','..tostring(ins)..','..tostring(del)..','..tostring(f)..','..tostring(r))
 if not retval then return end
 local rename, digits, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
 begin_str = begin_str + 1
-end_str = math.abs(end_str - 1)
+end_str = end_str - 1
 digits = tonumber(digits)
 
 UnselectAllTracks()
@@ -227,9 +212,7 @@ for z = 0, count_sel_items - 1 do  -- 獲取上面的takename，對take排序進
         reaper.GetSetMediaItemTakeInfo_String(take, 'P_NAME', take_name, true)
     end
 end
+
 reaper.Undo_EndBlock('Batch Rename', -1)
-
-RestoreSelectedTracks(init_sel_tracks)
-
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
