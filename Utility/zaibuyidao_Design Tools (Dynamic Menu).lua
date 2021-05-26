@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Design Tools (Dynamic Menu)
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -10,6 +10,8 @@
 
 --[[
  * Changelog:
+ * v1.1 (2021-5-26)
+  + 加入批量重命名
  * v1.0 (2021-5-13)
   + Initial release
 --]]
@@ -633,7 +635,7 @@ menu = menu
 .. (remove_fx and "!" or "") .. "移除活動片段的FX鏈" .. "||"
 
 .. (set_take_name and "!" or "") .. "設置片段名稱" .. "|"
-.. (set_take_name_order and "!" or "") .. "設置片段名稱(自動排序)" .. "|"
+-- .. (set_take_name_order and "!" or "") .. "設置片段名稱(自動排序)" .. "|"
 .. (remove_extension and "!" or "") .. "移除片段擴展名" .. "|"
 .. (create_region and "!" or "") .. "按片段名稱創建區域" .. "||"
 
@@ -649,6 +651,7 @@ menu = menu
 .. (paste_item_pos_move and "!" or "") .. "粘貼對象位置(僅移動)" .. "||"
 
 .. (scale_item_vol and "!" or "") .. "對象音量縮放" .. "|"
+.. (batch_rename and "!" or "") .. "批量重命名" .. "|"
 
 title = "Hidden gfx window for showing the 音頻編輯 Menu showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
@@ -702,26 +705,29 @@ if selection > 0 then
   if selection == 23 then reaper.Main_OnCommand(40640, 0) end -- Item: Remove FX for item take
 
   if selection == 24 then SetTakeName() end
-  if selection == 25 then SetTakeNameOrder() end
+  -- if selection == 25 then SetTakeNameOrder() end
   -- 移除擴展名
-  if selection == 26 then RemoveExtension() end
-  if selection == 27 then
+  if selection == 25 then RemoveExtension() end
+  if selection == 26 then
     reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_REGIONSFROMITEMS"), 0) -- SWS: Create regions from selected items (name by active take)
   end
 
   -- 重複激活片段 反向活動片段
-  if selection == 28 then reaper.Main_OnCommand(41051, 0) end -- Item properties: Toggle take reverse
-  if selection == 29 then
+  if selection == 27 then reaper.Main_OnCommand(41051, 0) end -- Item properties: Toggle take reverse
+  if selection == 28 then
     reaper.Main_OnCommand(41999, 0) -- Item: Render items to new take
     reaper.Main_OnCommand(40643, 0) -- Take: Explode takes of items in order
   end
-  if selection == 30 then Exchange2Items() end
-  if selection == 31 then MultiCut2() end
-  if selection == 32 then MultiCut() end
-  if selection == 33 then CopyItemPosition() end
-  if selection == 34 then PasteItemPosition() end
-  if selection == 35 then PasteItemPositionMove() end
-  if selection == 36 then ScaleItemVolume() end
+  if selection == 29 then Exchange2Items() end
+  if selection == 30 then MultiCut2() end
+  if selection == 31 then MultiCut() end
+  if selection == 32 then CopyItemPosition() end
+  if selection == 33 then PasteItemPosition() end
+  if selection == 34 then PasteItemPositionMove() end
+  if selection == 35 then ScaleItemVolume() end
+  if selection == 36 then
+    reaper.Main_OnCommand(reaper.NamedCommandLookup("_RS5bae9b0e666f10e6ec1f3dee643f28482af75478"), 0) -- Script: zaibuyidao_Batch Rename.lua
+  end
 end
 
 reaper.Undo_EndBlock('', -1)
