@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="efbe5cb99bcace2fad89c23b5380361ba778b128">
+<index version="1" name="zaibuyidao Scripts" commit="fd105a34fd914e4c772ce34b1a50430e9b44be57">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -194,6 +194,10 @@
       <version name="1.1" author="zaibuyidao" time="2020-11-09T03:40:38Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/Items%20Editing/zaibuyidao_Reposition%20Items.lua</source>
       </version>
+      <version name="1.2" author="zaibuyidao" time="2021-05-26T15:15:42Z">
+        <changelog><![CDATA[+ 增加軌道定位]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/fd105a34fd914e4c772ce34b1a50430e9b44be57/Items%20Editing/zaibuyidao_Reposition%20Items.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Item Volume.lua" type="script" desc="Scale Item Volume">
       <metadata>
@@ -265,6 +269,10 @@
       </version>
       <version name="1.1" author="再補一刀" time="2020-11-09T03:40:38Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b8326d091cd764f45909e20292ce5ec92630b4c2/Items%20Editing/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%87%8D%E6%96%B0%E5%AE%9A%E4%BD%8D%E5%B0%8D%E8%B1%A1.lua</source>
+      </version>
+      <version name="1.2" author="再補一刀" time="2021-05-26T15:15:42Z">
+        <changelog><![CDATA[+ 增加軌道定位]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/fd105a34fd914e4c772ce34b1a50430e9b44be57/Items%20Editing/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%87%8D%E6%96%B0%E5%AE%9A%E4%BD%8D%E5%B0%8D%E8%B1%A1.lua</source>
       </version>
     </reapack>
   </category>
@@ -3035,6 +3043,10 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2021-05-26T15:15:42Z">
+        <changelog><![CDATA[+ 加入批量重命名]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/fd105a34fd914e4c772ce34b1a50430e9b44be57/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Display Total Length Of Selected Items.lua" type="script" desc="Display Total Length Of Selected Items">
