@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Notes Become Pitch Bend
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.5 (2021-5-26)
+  + 刪除冗餘Pitch
  * v1.0 (2019-12-12)
   + Initial release
 --]]
@@ -66,7 +68,7 @@ tbl["-12"]="-8192"
 
 if #index > 1 then
   for i = 1, #index do
-  retval, sel, muted, startppqpos[i], endppqpos[i], chan, pitch[i], vel[i] = reaper.MIDI_GetNote(take, index[i])
+    retval, sel, muted, startppqpos[i], endppqpos[i], chan, pitch[i], vel[i] = reaper.MIDI_GetNote(take, index[i])
     if sel == true then
       if pitch[i-1] then
         local offset = tostring(pitch[i]-pitch[1])
@@ -83,7 +85,9 @@ if #index > 1 then
           reaper.MIDI_DeleteNote(take, ii)
           ii = reaper.MIDI_EnumSelNotes(take, -1)
         end
-        reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
+        if (pitch[1] ~= pitch[i]) then
+          reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
+        end
         reaper.MIDI_InsertNote(take, sel, muted, startppqpos[1], endppqpos[i], chan, pitch[1], vel[1], true)
       end
     end
@@ -92,7 +96,7 @@ if #index > 1 then
 else
   reaper.MB("Please select two or more notes","Error",0)
 end
+reaper.Undo_EndBlock("Notes Become Pitch Bend", 0)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Notes Become Pitch Bend", 0)
 reaper.MIDIEditor_OnCommand(editor , 40366) -- CC: Set CC lane to Pitch
