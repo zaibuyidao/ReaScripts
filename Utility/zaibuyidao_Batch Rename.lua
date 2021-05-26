@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename
- * Version: 1.2
+ * Version: 1.2.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -146,8 +146,8 @@ for i = 0, count_sel_track - 1 do -- 遍歷選中軌道
 
         take_name = reaper.GetTakeName(take)
 
-        -- local check_s = string.gsub(rename, "%$", "") -- 检查 %$
-        local check_k = string.gsub(rename, "%b[]", "") -- 检查 []
+        local check_s = string.gsub(rename, "%$", "") -- 检查 %$
+        -- local check_k = string.gsub(rename, "%b[]", "") -- 检查 []
         if check_s ~= rename then flag = true else flag = false end
         -- local isTrue = reaper.SetMediaItemInfo_Value(item, "IP_ITEMNUMBER", item_num_new[k])
 
