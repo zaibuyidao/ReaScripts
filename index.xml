@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8636ff814a599407ef9e08a84e3fdffd7544cb4d">
+<index version="1" name="zaibuyidao Scripts" commit="9d6b70ba3bd381f53374d4b0ea8dd413578a2067">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3146,6 +3146,33 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2021-01-25T18:39:19Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/Utility/zaibuyidao_Set%20Project%20Grid.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo Selected Item (Play From Mouse Position).lua" type="script" desc="Solo Selected Item (Play From Mouse Position)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-27T18:52:53Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9d6b70ba3bd381f53374d4b0ea8dd413578a2067/Utility/zaibuyidao_Solo%20Selected%20Item%20(Play%20From%20Mouse%20Position).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo Selected Item Link Track (Play From First Item Position).lua" type="script" desc="Solo Selected Item Link Track (Play From First Item Position)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-27T18:52:53Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9d6b70ba3bd381f53374d4b0ea8dd413578a2067/Utility/zaibuyidao_Solo%20Selected%20Item%20Link%20Track%20(Play%20From%20First%20Item%20Position).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo Selected Item Link Track (Play From Mouse Position).lua" type="script" desc="Solo Selected Item Link Track (Play From Mouse Position)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-05-27T18:52:53Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9d6b70ba3bd381f53374d4b0ea8dd413578a2067/Utility/zaibuyidao_Solo%20Selected%20Item%20Link%20Track%20(Play%20From%20Mouse%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Mute PC CC6.lua" type="script" desc="Toggle Mute PC CC6">
