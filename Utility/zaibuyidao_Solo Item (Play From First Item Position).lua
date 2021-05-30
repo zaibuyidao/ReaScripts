@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo Item (Play From First Item Position)
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.1 (2021-5-30)
+  + 支持無撤銷點
  * v1.0 (2021-5-28)
   + Initial release
 --]]
@@ -71,8 +73,10 @@ local function RestoreSelectedTracks(t)
     end
 end
 
+function NoUndoPoint() end
+
 reaper.PreventUIRefresh(1)
-reaper.Undo_BeginBlock()
+--reaper.Undo_BeginBlock()
 
 cur_pos = reaper.GetCursorPosition()
 init_sel_items = {}
@@ -147,8 +151,9 @@ if isPlay == 1 then
 end
 
 reaper.SetEditCurPos(cur_pos, false, false)
-reaper.Undo_EndBlock("Solo Item (Play From First Item Position)", -1)
+--reaper.Undo_EndBlock("Solo Item (Play From First Item Position)", -1)
 RestoreSelectedItems(init_sel_items)
 --RestoreSelectedTracks(init_sel_tracks)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
+reaper.defer(NoUndoPoint)
