@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="42d43b5b197df7c9f5636c6f625fa91bf3753202">
+<index version="1" name="zaibuyidao Scripts" commit="d73ee5fd04e64766fcfa1be58685855b5fd38d20">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3156,6 +3156,10 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/42d43b5b197df7c9f5636c6f625fa91bf3753202/Utility/zaibuyidao_Solo%20Item%20(Play%20From%20First%20Item%20Position).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2021-05-30T06:03:49Z">
+        <changelog><![CDATA[+ 支持無撤銷點]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d73ee5fd04e64766fcfa1be58685855b5fd38d20/Utility/zaibuyidao_Solo%20Item%20(Play%20From%20First%20Item%20Position).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item (Play From Mouse Position).lua" type="script" desc="Solo Item (Play From Mouse Position)">
       <metadata>
@@ -3164,6 +3168,10 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-29T17:10:07Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/42d43b5b197df7c9f5636c6f625fa91bf3753202/Utility/zaibuyidao_Solo%20Item%20(Play%20From%20Mouse%20Position).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2021-05-30T06:03:49Z">
+        <changelog><![CDATA[+ 支持無撤銷點]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d73ee5fd04e64766fcfa1be58685855b5fd38d20/Utility/zaibuyidao_Solo%20Item%20(Play%20From%20Mouse%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track (Play From First Item Position).lua" type="script" desc="Solo Track (Play From First Item Position)">
@@ -3174,6 +3182,10 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/42d43b5b197df7c9f5636c6f625fa91bf3753202/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20First%20Item%20Position).lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2021-05-30T06:03:49Z">
+        <changelog><![CDATA[+ 支持無撤銷點]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d73ee5fd04e64766fcfa1be58685855b5fd38d20/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20First%20Item%20Position).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track (Play From Mouse Position).lua" type="script" desc="Solo Track (Play From Mouse Position)">
       <metadata>
@@ -3182,6 +3194,10 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-29T17:10:07Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/42d43b5b197df7c9f5636c6f625fa91bf3753202/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20Mouse%20Position).lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2021-05-30T06:03:49Z">
+        <changelog><![CDATA[+ 支持無撤銷點]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d73ee5fd04e64766fcfa1be58685855b5fd38d20/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20Mouse%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Mute PC CC6.lua" type="script" desc="Toggle Mute PC CC6">
