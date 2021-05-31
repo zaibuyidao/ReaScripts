@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo Item (Play From First Item Position)
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.2 (2021-5-31)
+  + 修復Snap錯誤
  * v1.1 (2021-5-30)
   + 支持無撤銷點
  * v1.0 (2021-5-28)
@@ -86,9 +88,7 @@ SaveSelectedItems(init_sel_items)
 --SaveSelectedTracks(init_sel_tracks)
 
 local count_sel_items = reaper.CountSelectedMediaItems(0)
-if count_sel_items < 0 then return end
-count_sel_track = reaper.CountSelectedTracks(0)
-if count_sel_track < 0 then return end
+local count_sel_track = reaper.CountSelectedTracks(0)
 
 isPlay = reaper.GetPlayState()
 snap_t = {}
@@ -107,7 +107,7 @@ if isPlay == 0 then
             local take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
             local item_snap = reaper.GetMediaItemInfo_Value(item_ret, "D_SNAPOFFSET")
             local item_pos = reaper.GetMediaItemInfo_Value(item_ret, "D_POSITION")
-            local snap = item_pos + take_start + item_snap
+            local snap = item_pos + item_snap
             reaper.SetEditCurPos(snap, 0, 0)
             reaper.Main_OnCommand(41558,0) -- Item properties: Solo exclusive
             reaper.Main_OnCommand(1007, 0) -- Transport: Play
@@ -135,7 +135,7 @@ if isPlay == 0 then
             local take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
             local item_snap = reaper.GetMediaItemInfo_Value(item, "D_SNAPOFFSET")
             local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-            local snap = item_pos + take_start + item_snap
+            local snap = item_pos + item_snap
             snap_t[#snap_t + 1] = snap
         end
         local snap_pos = TableMin(snap_t)
