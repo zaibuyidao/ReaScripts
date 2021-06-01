@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: 重命名區域
+ * ReaScript Name: Set Region Name
  * Version: 1.0
- * Author: 再補一刀
+ * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -11,7 +11,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-5-30)
+ * v1.0 (2021-6-1)
   + Initial release
 --]]
 
@@ -19,20 +19,41 @@ function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n") 
 end
 
+function DightNum(num) -- 計算數字的位數
+  if math.floor(num) ~= num or num < 0 then
+      return -1
+  elseif 0 == num then
+      return 1
+  else
+      local tmp_dight = 0
+      while num > 0 do
+          num = math.floor(num/10)
+          tmp_dight = tmp_dight + 1
+      end
+      return tmp_dight 
+  end
+end
+
+function AddZeroFrontNum(dest_dight, num) -- 在整數數字前面加0
+  local num_dight = DightNum(num)
+  if -1 == num_dight then 
+      return -1 
+  elseif num_dight >= dest_dight then
+      return tostring(num)
+  else
+      local str_e = ""
+      for var =1, dest_dight - num_dight do
+          str_e = str_e .. "0"
+      end
+      return str_e .. tostring(num)
+  end
+end
+
 function max(a,b)
   if a>b then
     return a
   end
   return b
-end
-
-function dialog(title)
-  local ret, retvals = reaper.GetUserInputs(title, 1, "區域名稱,extrawidth=200", name)
-  if not ret then return end
-  if ret then
-    return retvals
-  end
-  return ret
 end
 
 function create_region(reg_start, reg_end, name)
@@ -91,20 +112,30 @@ table.insert(regions, cur)
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
+local name = reaper.GetExtState("SetRegionName", "Name")
+if (name == "") then name = "Region_$inctimeorder" end
+local order = reaper.GetExtState("SetRegionName", "Order")
+if (order == "") then order = "1" end
+local tail = reaper.GetExtState("SetRegionName", "Tail")
+if (tail == "") then tail = "0" end
+
+input_ret, retvals_csv = reaper.GetUserInputs("Set Region Name", 3, "Region name 區域名稱:,Order 順序:,Tail 尾巴:,extrawidth=200", name .. ',' .. order .. ',' .. tail)
+if not input_ret or not tonumber(order) or not tonumber(tail) then return end
+name, order, tail = retvals_csv:match("(.*),(.*),(.*)")
+reaper.SetExtState("SetRegionName", "Order", order, false)
+reaper.SetExtState("SetRegionName", "Name", name, false)
+reaper.SetExtState("SetRegionName", "Tail", tail, false)
+order = math.floor(order)-1
+
+local check_inctimeorder = string.gsub(name, "%$inctimeorder", "inctimeorder")
+
 for i, region in ipairs(regions) do
-  markeridx, regionidx = reaper.GetLastMarkerAndCurRegion(0, region.left)
-  retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, regionidx)
-  input_ret, retvals = reaper.GetUserInputs("重命名 " .. tostring(#regions) .." 個區域中的第 " .. tostring(i) .. " 個區域 - 輸入 '-1' 中斷腳本", 1, "區域名稱,extrawidth=200", name)
-  if retvals == '-1' then break end
-  if input_ret then
-    if isrgn then
-      rename_region(retvals)
-    else
-      create_region(region.left, region.right, retvals)
-    end
+  if check_inctimeorder ~= name then
+    name = string.gsub(check_inctimeorder, 'inctimeorder', AddZeroFrontNum(2, i+order))
   end
+  create_region(region.left, region.right+tail, name)
 end
 
-reaper.Undo_EndBlock("重命名區域", -1)
+reaper.Undo_EndBlock("Set Region Name", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
