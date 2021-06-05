@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="326750ef702a6917ad872cc76d800cf483317983">
+<index version="1" name="zaibuyidao Scripts" commit="14853256152a014c6c2c37bab61429a9a217e9d1">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -43,6 +43,24 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Add%20Take%20Marker%20At%20Snap%20Offset.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Rename Take.lua" type="script" desc="Batch Rename Take">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-05T15:05:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Copy Item Length.lua" type="script" desc="Copy Item Length">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-05T15:05:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Items%20Editing/zaibuyidao_Copy%20Item%20Length.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Item Position.lua" type="script" desc="Copy Item Position">
@@ -133,6 +151,15 @@
       <version name="1.0" author="zaibuyidao" time="2020-04-01T14:56:01Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/Items%20Editing/zaibuyidao_Move%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Paste Item Length.lua" type="script" desc="Paste Item Length">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-05T15:05:43Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Items%20Editing/zaibuyidao_Paste%20Item%20Length.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Item Position (Move Only).lua" type="script" desc="Paste Item Position (Move Only)">
@@ -2927,16 +2954,13 @@
     </reapack>
   </category>
   <category name="Regions">
-    <reapack name="zaibuyidao_Rename Region.lua" type="script" desc="Rename Region">
+    <reapack name="zaibuyidao_Batch Rename Region.lua" type="script" desc="Batch Rename Region">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="再補一刀" time="2021-05-31T17:09:10Z">
+      <version name="1.0" author="zaibuyidao" time="2021-06-05T15:05:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e1d6afdd8405619c7ba3c560ccfd6cdd7bd85ba6/Regions/zaibuyidao_Rename%20Region.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2021-06-01T15:02:08Z">
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/326750ef702a6917ad872cc76d800cf483317983/Regions/zaibuyidao_Rename%20Region.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Regions/zaibuyidao_Batch%20Rename%20Region.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Region Name.lua" type="script" desc="Set Region Name">
@@ -2946,6 +2970,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-06-01T15:02:08Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/326750ef702a6917ad872cc76d800cf483317983/Regions/zaibuyidao_Set%20Region%20Name.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2021-06-05T15:05:43Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Regions/zaibuyidao_Set%20Region%20Name.lua</source>
       </version>
     </reapack>
   </category>
@@ -3042,26 +3069,6 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Batch Rename.lua" type="script" desc="Batch Rename">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-05-23T12:16:39Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9fb861904c2c045f6c5b56eaf2374642ac2a8a01/Utility/zaibuyidao_Batch%20Rename.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2021-05-25T15:30:35Z">
-        <changelog><![CDATA[+ 修復排序Bug, 增加文件夾(父級)鍵.]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a431449bece396efb7227d6e03d46115fa846730/Utility/zaibuyidao_Batch%20Rename.lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2021-05-25T16:21:03Z">
-        <changelog><![CDATA[+ 刪除無效代碼.]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/efbe5cb99bcace2fad89c23b5380361ba778b128/Utility/zaibuyidao_Batch%20Rename.lua</source>
-      </version>
-      <version name="1.2.1" author="zaibuyidao" time="2021-05-26T16:19:10Z">
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8636ff814a599407ef9e08a84e3fdffd7544cb4d/Utility/zaibuyidao_Batch%20Rename.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Build MIDI Channel Routing To Selected Tracks.lua" type="script" desc="Build MIDI Channel Routing To Selected Tracks">
       <version name="1.0" author="zaibuyidao" time="2020-12-07T18:20:28Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -3076,6 +3083,10 @@
       <version name="1.1" author="zaibuyidao" time="2021-05-26T15:15:42Z">
         <changelog><![CDATA[+ 加入批量重命名]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/fd105a34fd914e4c772ce34b1a50430e9b44be57/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2021-06-05T15:05:43Z">
+        <changelog><![CDATA[+ 加入複製粘貼item長度]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Display Total Length Of Selected Items.lua" type="script" desc="Display Total Length Of Selected Items">
@@ -3221,6 +3232,10 @@
         <changelog><![CDATA[+ 修復Snap錯誤]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e1d6afdd8405619c7ba3c560ccfd6cdd7bd85ba6/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20First%20Item%20Position).lua</source>
       </version>
+      <version name="1.3" author="zaibuyidao" time="2021-06-05T15:05:43Z">
+        <changelog><![CDATA[+ 優化提速]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20First%20Item%20Position).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track (Play From Mouse Position).lua" type="script" desc="Solo Track (Play From Mouse Position)">
       <metadata>
@@ -3237,6 +3252,10 @@
       <version name="1.2" author="zaibuyidao" time="2021-05-31T17:09:10Z">
         <changelog><![CDATA[+ 修復Snap錯誤]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e1d6afdd8405619c7ba3c560ccfd6cdd7bd85ba6/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20Mouse%20Position).lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2021-06-05T15:05:43Z">
+        <changelog><![CDATA[+ 優化提速]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20Mouse%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track (Play From Play State).lua" type="script" desc="Solo Track (Play From Play State)">
