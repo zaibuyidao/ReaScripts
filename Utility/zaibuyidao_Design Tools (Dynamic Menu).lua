@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Design Tools (Dynamic Menu)
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -10,6 +10,8 @@
 
 --[[
  * Changelog:
+ * v1.2 (2021-6-5)
+  + 加入複製粘貼item長度
  * v1.1 (2021-5-26)
   + 加入批量重命名
  * v1.0 (2021-5-13)
@@ -18,6 +20,12 @@
 
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
+end
+
+function UnselectAllTracks()
+  first_track = reaper.GetTrack(0, 0)
+  reaper.SetOnlyTrackSelected(first_track)
+  reaper.SetTrackSelected(first_track, false)
 end
 
 function table.serialize(obj)
@@ -505,6 +513,24 @@ function SetTakeRandPitch()
   end
 end
 
+function CopyItemLength()
+  local len_t = {}
+  count_sel_items = reaper.CountSelectedMediaItems(0)
+  for i = 0, count_sel_items - 1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  end
+  reaper.SetExtState("CopyItemLength", "Length", item_len, false)
+end
+
+function PasteItemLength()
+  local item_len = getSavedData("CopyItemLength", "Length")
+  for i = 1, count_sel_items do
+    local item = reaper.GetSelectedMediaItem(0, i-1)
+    reaper.SetMediaItemInfo_Value(item, "D_LENGTH", item_len)
+  end
+end
+
 function CopyItemPosition()
   local start_t = {}
   count_sel_items = reaper.CountSelectedMediaItems(0)
@@ -649,9 +675,12 @@ menu = menu
 .. (copy_item_pos and "!" or "") .. "複製對象位置" .. "|"
 .. (paste_item_pos and "!" or "") .. "粘貼對象位置" .. "|"
 .. (paste_item_pos_move and "!" or "") .. "粘貼對象位置(僅移動)" .. "||"
+.. (copy_item_len and "!" or "") .. "複製對象長度" .. "|"
+.. (paste_item_len and "!" or "") .. "粘貼對象長度" .. "||"
 
 .. (scale_item_vol and "!" or "") .. "對象音量縮放" .. "|"
-.. (batch_rename and "!" or "") .. "批量重命名" .. "|"
+.. (batch_rename and "!" or "") .. "批量重命名Take" .. "|"
+
 
 title = "Hidden gfx window for showing the 音頻編輯 Menu showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
@@ -724,10 +753,13 @@ if selection > 0 then
   if selection == 32 then CopyItemPosition() end
   if selection == 33 then PasteItemPosition() end
   if selection == 34 then PasteItemPositionMove() end
-  if selection == 35 then ScaleItemVolume() end
-  if selection == 36 then
+  if selection == 35 then CopyItemLength() end
+  if selection == 36 then PasteItemLength() end
+  if selection == 37 then ScaleItemVolume() end
+  if selection == 38 then
     reaper.Main_OnCommand(reaper.NamedCommandLookup("_RS5bae9b0e666f10e6ec1f3dee643f28482af75478"), 0) -- Script: zaibuyidao_Batch Rename.lua
   end
+
 end
 
 reaper.Undo_EndBlock('', -1)
