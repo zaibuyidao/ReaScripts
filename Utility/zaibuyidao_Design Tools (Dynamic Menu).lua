@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Design Tools (Dynamic Menu)
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -10,6 +10,8 @@
 
 --[[
  * Changelog:
+ * v1.3 (2021-6-6)
+  + 加入隨機交換對象(橫向)
  * v1.2 (2021-6-5)
   + 加入複製粘貼item長度
  * v1.1 (2021-5-26)
@@ -26,6 +28,16 @@ function UnselectAllTracks()
   first_track = reaper.GetTrack(0, 0)
   reaper.SetOnlyTrackSelected(first_track)
   reaper.SetTrackSelected(first_track, false)
+end
+
+local function ShuffleTable( t )
+	local rand = math.random 
+	local iterations = #t
+	local w
+	for z = iterations, 2, -1 do
+		w = rand(z)
+		t[z], t[w] = t[w], t[z]
+	end
 end
 
 function table.serialize(obj)
@@ -626,6 +638,60 @@ function ScaleItemVolume()
   end
 end
 
+function RandomExchangeItems()
+	selected_items_count = reaper.CountSelectedMediaItems(0)
+	if selected_items_count >= 2 then
+		first_track = reaper.GetTrack(0, 0)
+		reaper.SetOnlyTrackSelected(first_track)
+		reaper.SetTrackSelected(first_track, false)
+	
+		selected_items_count = reaper.CountSelectedMediaItems(0)
+		
+		for i = 0, selected_items_count - 1  do
+			item = reaper.GetSelectedMediaItem(0, i)
+			track = reaper.GetMediaItem_Track(item)
+			reaper.SetTrackSelected(track, true)
+		end
+	
+		selected_tracks_count = reaper.CountSelectedTracks(0)
+	
+		for i = 0, selected_tracks_count - 1  do
+			track = reaper.GetSelectedTrack(0, i) 
+			count_items_on_track = reaper.CountTrackMediaItems(track)
+			sel_items_on_track = {}
+			snap_sel_items_on_track = {}
+			snap_sel_items_on_tracks_len = 1 
+	
+			for j = 0, count_items_on_track - 1  do
+				item = reaper.GetTrackMediaItem(track, j)
+				if reaper.IsMediaItemSelected(item) == true then
+					sel_items_on_track[snap_sel_items_on_tracks_len] = item
+					snap_sel_items_on_track[snap_sel_items_on_tracks_len] = reaper.GetMediaItemInfo_Value(item, "D_SNAPOFFSET") + reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+					snap_sel_items_on_tracks_len = snap_sel_items_on_tracks_len + 1
+				end     
+			end
+	
+			ShuffleTable(snap_sel_items_on_track)
+	
+			for k = 1, snap_sel_items_on_tracks_len - 1 do
+				item = sel_items_on_track[k]
+				item_snap = reaper.GetMediaItemInfo_Value(item, "D_SNAPOFFSET")
+				item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+	
+				reaper.SetMediaItemInfo_Value(item, "D_POSITION", snap_sel_items_on_track[k] - item_snap)
+				offset = reaper.GetMediaItemInfo_Value(item, "D_POSITION") - item_pos
+				if group_state == 1 then
+					group = reaper.GetMediaItemInfo_Value(item, "I_GROUPID")
+					if group > 0 then
+						groups[group].offset = offset
+					end
+				end
+			end
+		end
+	end
+end
+
+
 -- 勾選狀態，如果狀態為1則勾選。
 if reaper.GetToggleCommandStateEx(0, 41051) == 1 then take_reverse = true end
 
@@ -668,7 +734,8 @@ menu = menu
 .. (take_reverse and "!" or "") .. "反向活動片段" .. "|"
 .. (render_item_new and "!" or "") .. "將對象渲染到新片段(右)" .. "||"
 
-.. (exchange_2_items and "!" or "") .. "交換兩個對象" .. "|"
+.. (exchange_2_items and "!" or "") .. "上下交換兩個對象" .. "|"
+.. (rand_exchange_items and "!" or "") .. "隨機交換對象(橫向)" .. "|"
 .. (multi_cut2 and "!" or "") .. "平均分割對象" .. "|"
 .. (multi_cut and "!" or "") .. "在光標處平均分割對象" .. "||"
 
@@ -679,8 +746,8 @@ menu = menu
 .. (paste_item_len and "!" or "") .. "粘貼對象長度" .. "||"
 
 .. (scale_item_vol and "!" or "") .. "對象音量縮放" .. "|"
-.. (batch_rename and "!" or "") .. "批量重命名Take" .. "|"
-
+.. (batch_rename_take and "!" or "") .. "批量重命名片段" .. "|"
+.. (batch_rename_region and "!" or "") .. "批量重命名區域" .. "|"
 
 title = "Hidden gfx window for showing the 音頻編輯 Menu showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
@@ -748,21 +815,25 @@ if selection > 0 then
     reaper.Main_OnCommand(40643, 0) -- Take: Explode takes of items in order
   end
   if selection == 29 then Exchange2Items() end
-  if selection == 30 then MultiCut2() end
-  if selection == 31 then MultiCut() end
-  if selection == 32 then CopyItemPosition() end
-  if selection == 33 then PasteItemPosition() end
-  if selection == 34 then PasteItemPositionMove() end
-  if selection == 35 then CopyItemLength() end
-  if selection == 36 then PasteItemLength() end
-  if selection == 37 then ScaleItemVolume() end
-  if selection == 38 then
-    reaper.Main_OnCommand(reaper.NamedCommandLookup("_RS5bae9b0e666f10e6ec1f3dee643f28482af75478"), 0) -- Script: zaibuyidao_Batch Rename.lua
+  if selection == 30 then RandomExchangeItems() end
+  if selection == 31 then MultiCut2() end
+  if selection == 32 then MultiCut() end
+  if selection == 33 then CopyItemPosition() end
+  if selection == 34 then PasteItemPosition() end
+  if selection == 35 then PasteItemPositionMove() end
+  if selection == 36 then CopyItemLength() end
+  if selection == 37 then PasteItemLength() end
+  if selection == 38 then ScaleItemVolume() end
+  if selection == 39 then
+    reaper.Main_OnCommand(reaper.NamedCommandLookup("_RSb6ef8409fd708ea9bc92396e7b8d3210b71d6eec"), 0) -- Script: zaibuyidao_Batch Rename Take.lua
+  end
+  if selection == 40 then
+    reaper.Main_OnCommand(reaper.NamedCommandLookup("_RSa0cfd778eeff4b28569c51bf2d4cad1ccadad689"), 0) -- Script: zaibuyidao_Batch Rename Region.lua
   end
 
 end
 
-reaper.Undo_EndBlock('', -1)
+reaper.Undo_EndBlock('Design Tools (Dynamic Menu)', -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.defer(function() end)

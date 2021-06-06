@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Take
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -59,7 +59,7 @@ local show_msg = reaper.GetExtState("BatchRenameTake", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
-    script_name = "批量重命名"
+    script_name = "批量重命名片段"
     text = "$trackname -- 軌道名稱\n$takename -- 片段名稱\n$foldername -- 文件夾名稱\n$tracknum -- 軌道編號\n$inctrackorder -- 軌道順序\n$inctimeorder -- 時間順序\n$GUID -- Take guid\n"
     text = text.."\n下次還顯示此列表嗎？"
     local box_ok = reaper.ShowMessageBox("可用鍵 :\n\n"..text, script_name, 4)

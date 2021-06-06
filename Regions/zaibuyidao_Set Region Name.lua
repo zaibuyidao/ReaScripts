@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set Region Name
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -19,7 +19,7 @@ function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n") 
 end
 
-function DightNum(num) -- 計算數字的位數
+function DightNum(num)
   if math.floor(num) ~= num or num < 0 then
       return -1
   elseif 0 == num then
@@ -34,7 +34,7 @@ function DightNum(num) -- 計算數字的位數
   end
 end
 
-function AddZeroFrontNum(dest_dight, num) -- 在整數數字前面加0
+function AddZeroFrontNum(dest_dight, num)
   local num_dight = DightNum(num)
   if -1 == num_dight then 
       return -1 
@@ -119,8 +119,8 @@ if (order == "") then order = "1" end
 local tail = reaper.GetExtState("SetRegionName", "Tail")
 if (tail == "") then tail = "0" end
 
-input_ret, retvals_csv = reaper.GetUserInputs("Set Region Name", 3, "Region name 區域名,Order 順序,Tail 尾巴 (ms),extrawidth=200", name .. ',' .. order .. ',' .. tail)
-if not input_ret or not tonumber(order) or not tonumber(tail) then return end
+ok, retvals_csv = reaper.GetUserInputs("Set Region Name", 3, "Region name 區域名,Order 順序,Tail 尾巴 (ms),extrawidth=200", name .. ',' .. order .. ',' .. tail)
+if not ok or not tonumber(order) or not tonumber(tail) then return end
 name, order, tail = retvals_csv:match("(.*),(.*),(.*)")
 reaper.SetExtState("SetRegionName", "Order", order, false)
 reaper.SetExtState("SetRegionName", "Name", name, false)
@@ -128,13 +128,8 @@ reaper.SetExtState("SetRegionName", "Tail", tail, false)
 order = math.floor(order)-1
 tail = tail / 1000
 
-local check_inctimeorder = string.gsub(name, "%$inctimeorder", "inctimeorder")
-
 for i, region in ipairs(regions) do
-  if check_inctimeorder ~= name then
-    name = string.gsub(check_inctimeorder, 'inctimeorder', AddZeroFrontNum(2, i+order))
-  end
-  create_region(region.left, region.right+tail, name)
+  create_region(region.left, region.right+tail, name:gsub('%$number', AddZeroFrontNum(2, i+order)))
 end
 
 reaper.Undo_EndBlock("Set Region Name", -1)
