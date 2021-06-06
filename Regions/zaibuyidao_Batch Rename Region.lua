@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -111,7 +111,7 @@ local cur = {
 }
 
 for i,item in ipairs(items) do
-  if cur.right - item.left >= 0 then -- 確定區域是否為相交
+  if cur.right - item.left > 0 then -- 確定區域是否為相交
     cur.right = max(item.right,cur.right)
   else
     table.insert(regions, cur)
