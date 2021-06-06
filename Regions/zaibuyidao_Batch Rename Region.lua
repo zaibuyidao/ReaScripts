@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region
- * Version: 1.0.1
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -188,7 +188,7 @@ tail = tail / 1000
 
 name_t = {}
 for i,region in ipairs(regions) do
-  local matched = all_regions[key_of(region.left, region.right)]
+  local matched = all_regions[key_of(region.left, region.right+tail)]
   if matched then
     name_t[#name_t+1] = matched.name
   end
@@ -202,18 +202,15 @@ for i,region in ipairs(regions) do
 
     if pattern ~= "" then matched.name = pattern end
 
-    matched.name = string.sub(matched.name, begin_str, end_str)
-    matched.name = string.sub(matched.name, 1, position) .. insert .. string.sub(matched.name, position+1+delete)
-    matched.name = string.gsub(matched.name, find, replace)
-
+    matched.name = matched.name:gsub("$name", name_t[i])
     matched.name = matched.name:gsub("$number", function ()
       cnt = AddZeroFrontNum(2, math.floor(cnt+1))
       return tostring(cnt)
     end)
 
-    matched.name = matched.name:gsub("$name", function ()
-      return name_t[i]
-    end)
+    matched.name = string.sub(matched.name, begin_str, end_str)
+    matched.name = string.sub(matched.name, 1, position) .. insert .. string.sub(matched.name, position+1+delete)
+    matched.name = string.gsub(matched.name, find, replace)
 
     set_region(matched)
   end
