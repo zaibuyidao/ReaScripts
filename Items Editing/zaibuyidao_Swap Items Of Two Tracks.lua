@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Swap Items Of Two Tracks
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.1 (2021-6-6)
+  + 修復Track不能正確選定的問題
  * v1.0 (2021-6-6)
   + Initial release
 --]]
@@ -25,9 +27,6 @@ function UnselectAllTracks()
     reaper.SetTrackSelected(first_track, false)
 end
 
-count_sel_track = reaper.CountSelectedTracks(0)
-if count_sel_track ~= 2 then return end
-
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
@@ -40,6 +39,9 @@ for m = 0, count_sel_items - 1  do
     local track = reaper.GetMediaItem_Track(item)
     reaper.SetTrackSelected(track, true)
 end
+
+count_sel_track = reaper.CountSelectedTracks(0)
+if count_sel_track ~= 2 then return end
 
 track_n = {}
 
