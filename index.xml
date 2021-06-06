@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="14853256152a014c6c2c37bab61429a9a217e9d1">
+<index version="1" name="zaibuyidao Scripts" commit="55c751fc257b71cc1e309c04046c84e23e8ac1aa">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -52,6 +52,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-06-05T15:05:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-06-06T07:16:01Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/55c751fc257b71cc1e309c04046c84e23e8ac1aa/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Item Length.lua" type="script" desc="Copy Item Length">
@@ -189,6 +192,12 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Random%20Item%20Volume.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Random Swap Items.lua" type="script" desc="Random Swap Items">
+      <version name="1.0" author="zaibuyidao, X-Raym" time="2021-06-06T07:16:01Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/55c751fc257b71cc1e309c04046c84e23e8ac1aa/Items%20Editing/zaibuyidao_Random%20Swap%20Items.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Random Take Pan.lua" type="script" desc="Random Take Pan">
       <version name="1.0" author="zaibuyidao" time="2021-01-07T16:43:56Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -244,15 +253,6 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Item%20Volume.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Set Take Name (Order).lua" type="script" desc="Set Take Name (Order)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Name%20(Order).lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Set Take Name.lua" type="script" desc="Set Take Name">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -260,6 +260,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Name.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2021-06-06T07:16:01Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/55c751fc257b71cc1e309c04046c84e23e8ac1aa/Items%20Editing/zaibuyidao_Set%20Take%20Name.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Take Pan.lua" type="script" desc="Set Take Pan">
@@ -287,6 +290,15 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Volume.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Swap Items Of Two Tracks.lua" type="script" desc="Swap Items Of Two Tracks">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-06T07:16:01Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/55c751fc257b71cc1e309c04046c84e23e8ac1aa/Items%20Editing/zaibuyidao_Swap%20Items%20Of%20Two%20Tracks.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重新定位對象.lua" type="script" desc="重新定位對象">
@@ -2974,6 +2986,9 @@
       <version name="1.1" author="zaibuyidao" time="2021-06-05T15:05:43Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Regions/zaibuyidao_Set%20Region%20Name.lua</source>
       </version>
+      <version name="1.2" author="zaibuyidao" time="2021-06-06T07:16:01Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/55c751fc257b71cc1e309c04046c84e23e8ac1aa/Regions/zaibuyidao_Set%20Region%20Name.lua</source>
+      </version>
     </reapack>
   </category>
   <category name="Tracks Properties">
@@ -3087,6 +3102,10 @@
       <version name="1.2" author="zaibuyidao" time="2021-06-05T15:05:43Z">
         <changelog><![CDATA[+ 加入複製粘貼item長度]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/14853256152a014c6c2c37bab61429a9a217e9d1/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2021-06-06T07:16:01Z">
+        <changelog><![CDATA[+ 加入隨機交換對象(橫向)]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/55c751fc257b71cc1e309c04046c84e23e8ac1aa/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Display Total Length Of Selected Items.lua" type="script" desc="Display Total Length Of Selected Items">
