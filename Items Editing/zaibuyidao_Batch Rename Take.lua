@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Take
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -77,7 +77,7 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local rn, od, a, z, pos, ins, del, f, r = '', '1', '0', '0', '0', '', '0', '', ''
-local retval, retvals_csv = reaper.GetUserInputs("Batch Rename Take", 9, "Rename 重命名,Order 順序,From beginning 從左起,From end 從右起 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", tostring(rn)..','..tostring(od)..','..tostring(a)..','..tostring(z)..','..tostring(pos)..','..tostring(ins)..','..tostring(del)..','..tostring(f)..','..tostring(r))
+local retval, retvals_csv = reaper.GetUserInputs("Batch Rename Take", 9, "Rename 重命名,Order 順序,From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", tostring(rn)..','..tostring(od)..','..tostring(a)..','..tostring(z)..','..tostring(pos)..','..tostring(ins)..','..tostring(del)..','..tostring(f)..','..tostring(r))
 if not retval then return end
 local rename, order, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 

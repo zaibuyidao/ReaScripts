@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set Region Name
- * Version: 1.3
+ * Version: 1.3.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -121,7 +121,7 @@ if (order == "") then order = "1" end
 local tail = reaper.GetExtState("SetRegionName", "Tail")
 if (tail == "") then tail = "0" end
 
-ok, retvals_csv = reaper.GetUserInputs("Set Region Name", 3, "Region name 區域名,Order 順序,Tail 尾巴 (ms),extrawidth=200", name .. ',' .. order .. ',' .. tail)
+ok, retvals_csv = reaper.GetUserInputs("Set Region Name", 3, "Region name 區域名,Order 順序,Tail 尾部 (ms),extrawidth=200", name .. ',' .. order .. ',' .. tail)
 if not ok or not tonumber(order) or not tonumber(tail) then return end
 name, order, tail = retvals_csv:match("(.*),(.*),(.*)")
 reaper.SetExtState("SetRegionName", "Order", order, false)
