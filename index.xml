@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0e15b74042799bca08d07d0428474634a0d35b2c">
+<index version="1" name="zaibuyidao Scripts" commit="e41fcc8cf742d9caf17816d018f38a4984af7ed9">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -2981,6 +2981,10 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0e15b74042799bca08d07d0428474634a0d35b2c/Regions/zaibuyidao_Batch%20Rename%20Region%20Manager.lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2021-06-10T17:20:11Z">
+        <changelog><![CDATA[+ 支持標尺時間單位]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e41fcc8cf742d9caf17816d018f38a4984af7ed9/Regions/zaibuyidao_Batch%20Rename%20Region%20Manager.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Region.lua" type="script" desc="Batch Rename Region">
       <metadata>
@@ -2998,6 +3002,9 @@
       </version>
       <version name="1.1.1" author="zaibuyidao" time="2021-06-09T16:57:47Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0e15b74042799bca08d07d0428474634a0d35b2c/Regions/zaibuyidao_Batch%20Rename%20Region.lua</source>
+      </version>
+      <version name="1.1.2" author="zaibuyidao" time="2021-06-10T17:20:11Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e41fcc8cf742d9caf17816d018f38a4984af7ed9/Regions/zaibuyidao_Batch%20Rename%20Region.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Region Name.lua" type="script" desc="Set Region Name">
@@ -3020,6 +3027,18 @@
       </version>
       <version name="1.3.1" author="zaibuyidao" time="2021-06-09T16:57:47Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0e15b74042799bca08d07d0428474634a0d35b2c/Regions/zaibuyidao_Set%20Region%20Name.lua</source>
+      </version>
+      <version name="1.3.2" author="zaibuyidao" time="2021-06-10T17:20:11Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e41fcc8cf742d9caf17816d018f38a4984af7ed9/Regions/zaibuyidao_Set%20Region%20Name.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Region Tail.lua" type="script" desc="Set Region Tail">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-10T17:20:11Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e41fcc8cf742d9caf17816d018f38a4984af7ed9/Regions/zaibuyidao_Set%20Region%20Tail.lua</source>
       </version>
     </reapack>
   </category>
