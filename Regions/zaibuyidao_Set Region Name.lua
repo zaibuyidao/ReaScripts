@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set Region Name
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,7 +12,7 @@
 --[[
  * Changelog:
  * v1.3 (2021-6-6)
-  + 修改通配符規則以及將編號定義為$number
+  + 修改通配符規則以及將編號定義為$inctimeorder
  * v1.0 (2021-6-1)
   + Initial release
 --]]
@@ -115,7 +115,7 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local name = reaper.GetExtState("SetRegionName", "Name")
-if (name == "") then name = "Region_$number" end
+if (name == "") then name = "Region_$inctimeorder" end
 local order = reaper.GetExtState("SetRegionName", "Order")
 if (order == "") then order = "1" end
 local tail = reaper.GetExtState("SetRegionName", "Tail")
@@ -131,7 +131,7 @@ order = math.floor(order)-1
 tail = tail / 1000
 
 for i, region in ipairs(regions) do
-  create_region(region.left, region.right+tail, name:gsub('%$number', AddZeroFrontNum(2, i+order)))
+  create_region(region.left, region.right+tail, name:gsub('%$inctimeorder', AddZeroFrontNum(2, i+order)))
 end
 
 reaper.Undo_EndBlock("Set Region Name", -1)

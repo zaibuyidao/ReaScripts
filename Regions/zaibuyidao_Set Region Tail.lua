@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Batch Rename Region
- * Version: 1.1.2
+ * ReaScript Name: Set Region Tail
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,42 +11,12 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-6-5)
+ * v1.0 (2021-6-10)
   + Initial release
 --]]
 
 function Msg(param) 
   reaper.ShowConsoleMsg(tostring(param) .. "\n") 
-end
-
-function DightNum(num)
-  if math.floor(num) ~= num or num < 0 then
-      return -1
-  elseif 0 == num then
-      return 1
-  else
-      local tmp_dight = 0
-      while num > 0 do
-          num = math.floor(num/10)
-          tmp_dight = tmp_dight + 1
-      end
-      return tmp_dight 
-  end
-end
-
-function AddZeroFrontNum(dest_dight, num)
-  local num_dight = DightNum(num)
-  if -1 == num_dight then 
-      return -1 
-  elseif num_dight >= dest_dight then
-      return tostring(num)
-  else
-      local str_e = ""
-      for var =1, dest_dight - num_dight do
-          str_e = str_e .. "0"
-      end
-      return str_e .. tostring(num)
-  end
 end
 
 function max(a,b)
@@ -64,21 +34,6 @@ end
 function rename_region(name)
   if name == nil then return end
   reaper.SetProjectMarker3(0, markrgnindexnumber, isrgn, pos, rgnend, name, color)
-end
-
-local show_msg = reaper.GetExtState("BatchRenameRegion", "ShowMsg")
-if (show_msg == "") then show_msg = "true" end
-
-if show_msg == "true" then
-    script_name = "批量重命名區域"
-    text = "$regionname -- 區域名稱\n$inctimeorder -- 區域順序\n"
-    text = text.."\n下次還顯示此列表嗎？"
-    local box_ok = reaper.ShowMessageBox("可用鍵 :\n\n"..text, script_name, 4)
-
-    if box_ok == 7 then
-        show_msg = "false"
-        reaper.SetExtState("BatchRenameRegion", "ShowMsg", show_msg, true)
-    end
 end
 
 item_count = reaper.CountSelectedMediaItems(0)
@@ -170,53 +125,31 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local all_regions = collect_regions()
-local pattern, cnt, tail, begin_str, end_str, position, insert, delete, find, replace = '', '1', '0', '0', '0', '0', '', '0', '', ''
+local tail = reaper.GetExtState("SetRegionTail", "Tail")
+if (tail == "") then tail = "0" end
 
 -- for key,region in pairs(all_regions) do
 --   Msg("all:" .. key)
 -- end
 
-local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region", 10, "Rename 重命名,Order 順序,Tail 尾部 (ms),From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. cnt ..','.. tail ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
+local ok, retvals_csv = reaper.GetUserInputs("Set Region Tail", 1, "Tail 尾部 (ms)", tail)
 if not ok then return end
 
-pattern, cnt, tail, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
-
-cnt = cnt -1
-begin_str = begin_str + 1
-end_str = end_str - 1
+tail = retvals_csv:match("(.*)")
+reaper.SetExtState("SetRegionTail", "Tail", tail, false)
 tail = tail / 1000
 
-name_t = {}
-for i,region in ipairs(regions) do
-  local matched = all_regions[key_of(region.left, region.right+tail)]
-  if matched then
-    name_t[#name_t+1] = matched.name
-  end
-end
-
-for i,region in ipairs(regions) do
+for i, region in ipairs(regions) do
 
   -- Msg("finding:" .. key_of(region.left, region.right))
-  local matched = all_regions[key_of(region.left, region.right+tail)]
+  local matched = all_regions[key_of(region.left, region.right)]
   if matched then
-
-    if pattern ~= "" then matched.name = pattern end
-
-    matched.name = matched.name:gsub("$regionname", name_t[i])
-    matched.name = matched.name:gsub("$inctimeorder", function ()
-      cnt = AddZeroFrontNum(2, math.floor(cnt+1))
-      return tostring(cnt)
-    end)
-
-    matched.name = string.sub(matched.name, begin_str, end_str)
-    matched.name = string.sub(matched.name, 1, position) .. insert .. string.sub(matched.name, position+1+delete)
-    matched.name = string.gsub(matched.name, find, replace)
-
+    matched.right = matched.right + tail
     set_region(matched)
   end
 
 end
 
-reaper.Undo_EndBlock('Batch Rename Region', -1)
+reaper.Undo_EndBlock('Set Region Tail', -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region Manager
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.1 (2021-6-10)
+  + 支持標尺時間單位
  * v1.0 (2021-6-10)
   + Initial release
 --]]
@@ -90,7 +92,7 @@ function table.print(t)
 end
 
 function get_precise_decimal(num, n)
-  if	type(num) ~= "number" then
+  if type(num) ~= "number" then
     return num
   end
   n = n or 0
@@ -102,7 +104,7 @@ function get_precise_decimal(num, n)
 end
 
 function key_of(name, left, right)
-  return tostring(name .. " " .. tostring(get_precise_decimal(left,2)) .. " " .. tostring(get_precise_decimal(right,2)))
+  return tostring(name .. " " .. tostring(get_precise_decimal(left,3)) .. " " .. tostring(get_precise_decimal(right,3)))
 end
 
 function collect_regions()
@@ -151,7 +153,7 @@ if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
     script_name = "批量重命名區域管理器"
-    text = "$name -- 區域名稱\n$number -- 區域編號\n"
+    text = "$regionname -- 區域名稱\n$inctimeorder -- 區域順序\n"
     text = text.."\n下次還顯示此列表嗎？"
     local box_ok = reaper.ShowMessageBox("可用鍵 :\n\n"..text, script_name, 4)
 
@@ -164,14 +166,40 @@ end
 local hWnd = GetRegionManager()
 if hWnd == nil then return end  
 
+if reaper.GetToggleCommandStateEx(0, 40365) == 1 then -- View: Time unit for ruler: Minutes:Seconds
+  seconds_flag = true
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 40367) == 1 then -- View: Time unit for ruler: Measures.Beats
+  meas_beat_flag = true
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 41916) == 1 then -- View: Time unit for ruler: Measures.Beats (minimal)
+  meas_beat_mini_flag = true
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 40369) == 1 then -- View: Time unit for ruler: Samples
+  samples_flag = true
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 40370) == 1 then -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
+  hours_frames_flag = true
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for ruler: Absolute frames
+  frames_flag = true
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+end
+
 local container = reaper.JS_Window_FindChildByID(hWnd, 1071)
 
 sel_count, sel_indexes = reaper.JS_ListView_ListAllSelItems(container)
 if sel_count == 0 then return end 
-
-rgname = {}
-left_t = {}
-right_t = {}
 
 nt = {}
 lt = {}
@@ -183,16 +211,13 @@ i = 0
 for index in string.gmatch(sel_indexes, '[^,]+') do
 
   i = i + 1
-  rgname[i] = reaper.JS_ListView_GetItemText(container, tonumber(index), 2)
-  left_t[i] = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
-  right_t[i] = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
+  rgname = reaper.JS_ListView_GetItemText(container, tonumber(index), 2)
+  renleft = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
+  regnright = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
 
-  beat_L = reaper.TimeMap2_beatsToTime(0, string.match(left_t[i], "%d+.%d+$")-1, string.match(left_t[i], "^%d+")-1) -- 將節拍轉爲秒
-  beat_R = reaper.TimeMap2_beatsToTime(0, string.match(right_t[i], "%d+.%d+$")-1, string.match(right_t[i], "^%d+")-1)
-
-  nt[#nt+1] = rgname[i]
-  lt[#lt+1] = beat_L
-  rt[#rt+1] = beat_R
+  nt[#nt+1] = rgname
+  lt[#lt+1] = renleft
+  rt[#rt+1] = regnright
 
   cur = {
     regionname = nt[i],
@@ -204,25 +229,31 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
 
 end
 
+if seconds_flag then reaper.Main_OnCommand(40365, 0) end -- View: Time unit for ruler: Minutes:Seconds
+if meas_beat_flag then reaper.Main_OnCommand(40367, 0) end -- View: Time unit for ruler: Measures.Beats
+if meas_beat_mini_flag then reaper.Main_OnCommand(41916, 0) end -- View: Time unit for ruler: Measures.Beats (minimal)
+if samples_flag then reaper.Main_OnCommand(40369, 0) end -- View: Time unit for ruler: Samples
+if hours_frames_flag then reaper.Main_OnCommand(40370, 0) end -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
+if frames_flag then reaper.Main_OnCommand(41973, 0) end -- View: Time unit for ruler: Absolute frames
+
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local all_regions = collect_regions()
-local pattern, cnt, tail, begin_str, end_str, position, insert, delete, find, replace = '', '1', '0', '0', '0', '0', '', '0', '', ''
+local pattern, cnt, begin_str, end_str, position, insert, delete, find, replace = '', '1', '0', '0', '0', '', '0', '', ''
 
 -- for key,region in pairs(all_regions) do
 --   Msg("all:" .. key)
 -- end
 
-local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region Manager", 10, "Rename 重命名,Order 順序,Tail 尾部 (ms),From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. cnt ..','.. tail ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
+local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region Manager", 9, "Rename 重命名,Order 順序,From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. cnt ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
 if not ok then return end
 
-pattern, cnt, tail, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
+pattern, cnt, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
 cnt = cnt -1
 begin_str = begin_str + 1
 end_str = end_str - 1
-tail = tail / 1000
 
 name_t = {}
 
@@ -235,14 +266,14 @@ end
 
 for i, region in ipairs(regions) do
 
-  -- Msg("finding:" .. key_of(region.left, region.right))
+  -- Msg("finding:" .. key_of(region.regionname, region.left, region.right))
   local matched = all_regions[key_of(region.regionname, region.left, region.right)]
   if matched then
 
     if pattern ~= "" then matched.name = pattern end
 
-    matched.name = matched.name:gsub("$name", name_t[i])
-    matched.name = matched.name:gsub("$number", function ()
+    matched.name = matched.name:gsub("$regionname", name_t[i])
+    matched.name = matched.name:gsub("$inctimeorder", function ()
       cnt = add_zero_front_num(2, math.floor(cnt+1))
       return tostring(cnt)
     end)
@@ -257,8 +288,6 @@ for i, region in ipairs(regions) do
 
 end
 
--- print(regions)
--- print(all_regions)
 reaper.Undo_EndBlock('Batch Rename Region Manager', -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
