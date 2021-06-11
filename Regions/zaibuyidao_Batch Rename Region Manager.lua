@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region Manager
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.2 (2021-6-11)
+  + 解決標尺時間單位換算錯誤
  * v1.1 (2021-6-10)
   + 支持標尺時間單位
  * v1.0 (2021-6-10)
@@ -103,6 +105,51 @@ function get_precise_decimal(num, n)
   return temp / decimal
 end
 
+local show_msg = reaper.GetExtState("BatchRenameRegionManager", "ShowMsg")
+if (show_msg == "") then show_msg = "true" end
+
+if show_msg == "true" then
+    script_name = "批量重命名區域管理器"
+    text = "$regionname -- 區域名稱\n$inctimeorder -- 區域順序\n"
+    text = text.."\n下次還顯示此列表嗎？"
+    local box_ok = reaper.ShowMessageBox("可用鍵 :\n\n"..text, script_name, 4)
+
+    if box_ok == 7 then
+        show_msg = "false"
+        reaper.SetExtState("BatchRenameRegionManager", "ShowMsg", show_msg, true)
+    end
+end
+
+if reaper.GetToggleCommandStateEx(0, 40368) == 1 then -- View: Time unit for ruler: Seconds
+  seconds_flag = true
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 40367) == 1 then -- View: Time unit for ruler: Measures.Beats
+  meas_beat_flag = true
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 41916) == 1 then -- View: Time unit for ruler: Measures.Beats (minimal)
+  meas_beat_mini_flag = true
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 40369) == 1 then -- View: Time unit for ruler: Samples
+  samples_flag = true
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 40370) == 1 then -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
+  hours_frames_flag = true
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for ruler: Absolute frames
+  frames_flag = true
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+end
+
 function key_of(name, left, right)
   return tostring(name .. " " .. tostring(get_precise_decimal(left,3)) .. " " .. tostring(get_precise_decimal(right,3)))
 end
@@ -116,6 +163,11 @@ function collect_regions()
     if retval ~= nil then
       if isrgn then
 
+        pos = string.format("%.10f", pos) -- 保留10位數用於截取
+        rgnend = string.format("%.10f", rgnend)
+        pos = string.sub(pos, 1, -8) -- 保留小數點3位數
+        rgnend = string.sub(rgnend, 1, -8)
+        -- Msg('ALL L : '.. pos ..' ALL R : '..rgnend)
         result[key_of(name, pos, rgnend)] = {
           index = markrgnindexnumber,
           isrgn = isrgn,
@@ -148,64 +200,16 @@ function GetRegionManager()
   end
 end
 
-local show_msg = reaper.GetExtState("BatchRenameRegionManager", "ShowMsg")
-if (show_msg == "") then show_msg = "true" end
-
-if show_msg == "true" then
-    script_name = "批量重命名區域管理器"
-    text = "$regionname -- 區域名稱\n$inctimeorder -- 區域順序\n"
-    text = text.."\n下次還顯示此列表嗎？"
-    local box_ok = reaper.ShowMessageBox("可用鍵 :\n\n"..text, script_name, 4)
-
-    if box_ok == 7 then
-        show_msg = "false"
-        reaper.SetExtState("BatchRenameRegionManager", "ShowMsg", show_msg, true)
-    end
-end
-
 local hWnd = GetRegionManager()
 if hWnd == nil then return end  
-
-if reaper.GetToggleCommandStateEx(0, 40365) == 1 then -- View: Time unit for ruler: Minutes:Seconds
-  seconds_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-end
-
-if reaper.GetToggleCommandStateEx(0, 40367) == 1 then -- View: Time unit for ruler: Measures.Beats
-  meas_beat_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-end
-
-if reaper.GetToggleCommandStateEx(0, 41916) == 1 then -- View: Time unit for ruler: Measures.Beats (minimal)
-  meas_beat_mini_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-end
-
-if reaper.GetToggleCommandStateEx(0, 40369) == 1 then -- View: Time unit for ruler: Samples
-  samples_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-end
-
-if reaper.GetToggleCommandStateEx(0, 40370) == 1 then -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
-  hours_frames_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-end
-
-if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for ruler: Absolute frames
-  frames_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-end
 
 local container = reaper.JS_Window_FindChildByID(hWnd, 1071)
 
 sel_count, sel_indexes = reaper.JS_ListView_ListAllSelItems(container)
 if sel_count == 0 then return end 
 
-nt = {}
-lt = {}
-rt = {}
-regions = {}
-cur = {}
+nt, lt, rt, regions, cur = {}, {}, {}, {}, {}
+
 i = 0
 
 for index in string.gmatch(sel_indexes, '[^,]+') do
@@ -215,9 +219,19 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
   renleft = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
   regnright = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
 
+  beat_L = string.match(renleft, "^%d+")*60 + string.match(renleft, "%d+.%d+$") -- 將分秒轉為秒
+  beat_R = string.match(regnright, "^%d+")*60 + string.match(regnright, "%d+.%d+$")
+
+  beat_L = string.format("%.10f", beat_L) -- 保留10位數用於截取
+  beat_R = string.format("%.10f", beat_R)
+
+  beat_L = string.sub(beat_L, 1, -8) -- 保留小數點3位數
+  beat_R = string.sub(beat_R, 1, -8)
+
+  -- Msg('SEL L : ' .. beat_L ..' SEL R : '..beat_R)
   nt[#nt+1] = rgname
-  lt[#lt+1] = renleft
-  rt[#rt+1] = regnright
+  lt[#lt+1] = beat_L
+  rt[#rt+1] = beat_R
 
   cur = {
     regionname = nt[i],
@@ -229,7 +243,7 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
 
 end
 
-if seconds_flag then reaper.Main_OnCommand(40365, 0) end -- View: Time unit for ruler: Minutes:Seconds
+if seconds_flag then reaper.Main_OnCommand(40368, 0) end -- View: Time unit for ruler: Seconds
 if meas_beat_flag then reaper.Main_OnCommand(40367, 0) end -- View: Time unit for ruler: Measures.Beats
 if meas_beat_mini_flag then reaper.Main_OnCommand(41916, 0) end -- View: Time unit for ruler: Measures.Beats (minimal)
 if samples_flag then reaper.Main_OnCommand(40369, 0) end -- View: Time unit for ruler: Samples
