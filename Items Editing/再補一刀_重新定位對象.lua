@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 重新定位對象
- * Version: 1.2
+ * Version: 1.3
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -10,6 +10,8 @@
 
 --[[
  * Changelog:
+ * v1.3 (2021-6-12)
+  + 增加混合排序模式
  * v1.2 (2021-5-26)
   + 增加軌道定位
  * v1.0 (2020-11-6)
@@ -21,10 +23,78 @@ function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
 count_sel_items = reaper.CountSelectedMediaItems(0)
 if count_sel_items < 0 then return end
 
+function print(param)
+    if type(param) == "table" then
+        table.print(param)
+        return
+    end
+    reaper.ShowConsoleMsg(tostring(param) .. "\n")
+end
+function table.print(t)
+    local print_r_cache = {}
+    local function sub_print_r(t, indent)
+        if (print_r_cache[tostring(t)]) then
+            print(indent .. "*" .. tostring(t))
+        else
+            print_r_cache[tostring(t)] = true
+            if (type(t) == "table") then
+                for pos, val in pairs(t) do
+                    if (type(val) == "table") then
+                        print(indent .. "[" .. pos .. "] => " .. tostring(t) .. " {")
+                        sub_print_r(val, indent .. string.rep(" ", string.len(pos) + 8))
+                        print(indent .. string.rep(" ", string.len(pos) + 6) .. "}")
+                    elseif (type(val) == "string") then
+                        print(indent .. "[" .. pos .. '] => "' .. val .. '"')
+                    else
+                        print(indent .. "[" .. pos .. "] => " .. tostring(val))
+                    end
+                end
+            else
+                print(indent .. tostring(t))
+            end
+        end
+    end
+    if (type(t) == "table") then
+        print(tostring(t) .. " {")
+        sub_print_r(t, "  ")
+        print("}")
+    else
+        sub_print_r(t, "  ")
+    end
+  end
+  
+  function max(a,b)
+    if a>b then
+      return a
+    end
+    return b
+  end
+
 function UnselectAllTracks()
     first_track = reaper.GetTrack(0, 0)
     reaper.SetOnlyTrackSelected(first_track)
     reaper.SetTrackSelected(first_track, false)
+end
+
+function get_item_pos()
+    local t = {}
+    for i = 1, reaper.CountSelectedMediaItems(0) do
+        t[i] = {}
+        local item = reaper.GetSelectedMediaItem(0, i-1)
+        if item ~= nil then
+          t[i].item = item
+          t[i].pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+          t[i].len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+        end
+    end
+    return t
+end
+
+sort_func = function(a,b)
+    if (a.pos < b.pos) then
+      -- primary sort on pos -> a before b
+      return true
+    end
 end
 
 reaper.PreventUIRefresh(1)
@@ -35,9 +105,9 @@ local toggle = reaper.GetExtState("RepositionItems", "Toggle")
 local mode = reaper.GetExtState("RepositionItems", "Mode")
 if (interval == "") then interval = "0" end
 if (toggle == "") then toggle = "1" end
-if (mode == "") then mode = "0" end
+if (mode == "") then mode = "2" end
 
-local user_ok, user_input_csv = reaper.GetUserInputs("重新定位對象", 3, "時間間隔(秒),0=開始位置 1=結束位置,0=軌道 1=時間", interval .. ',' .. toggle .. ',' .. mode)
+local user_ok, user_input_csv = reaper.GetUserInputs("重新定位對象", 3, "時間間隔(秒),0=開始位置 1=結束位置,0=軌道 1=時間綫 2=混合", interval .. ',' .. toggle .. ',' .. mode)
 if not user_ok or not tonumber(interval) or not tonumber(toggle) or not tonumber(mode) then return end
 interval, toggle, mode = user_input_csv:match("(.*),(.*),(.*)")
 if not tonumber(interval) or not tonumber(toggle) or not tonumber(mode) then return end
@@ -105,8 +175,26 @@ elseif mode == '0' then
             end
         end
     end
+elseif mode ==  '2' then
+
+    local data = get_item_pos()
+    table.sort(data, sort_func)
+
+    for i = 1, #data do
+        local item_next_start = reaper.GetMediaItemInfo_Value(data[i].item, "D_POSITION")
+        local item_next_end = reaper.GetMediaItemInfo_Value(data[i].item, "D_LENGTH") + item_next_start
+
+        if i < #data then
+            if toggle == "1" then
+                reaper.SetMediaItemInfo_Value(data[i+1].item, "D_POSITION", item_next_end + interval)
+            elseif toggle == "0" then
+                reaper.SetMediaItemInfo_Value(data[i+1].item, "D_POSITION", item_next_start + interval)
+            end
+        end
+    end
+
 end
 
 reaper.Undo_EndBlock("重新定位對象", -1) -- 撤消塊結束
-reaper.UpdateArrange()
 reaper.PreventUIRefresh(-1)
+reaper.UpdateArrange()
