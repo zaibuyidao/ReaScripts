@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="620621d328d6f1b3dd9da4c341e18994938b95de">
+<index version="1" name="zaibuyidao Scripts" commit="212586403f945e25eec800c87fb2be183186cfa0">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -687,6 +687,24 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2021-01-06T18:34:11Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61a198f97763e85b3144e1b00ad3a86fec79ba8c/MIDI%20Editor/zaibuyidao_Connect%20Two%20Nodes.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Copy CC (For Selected CC).lua" type="script" desc="Copy CC (For Selected CC)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-12T13:41:39Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/212586403f945e25eec800c87fb2be183186cfa0/MIDI%20Editor/zaibuyidao_Copy%20CC%20(For%20Selected%20CC).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Copy CC.lua" type="script" desc="Copy CC">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-12T13:41:39Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/212586403f945e25eec800c87fb2be183186cfa0/MIDI%20Editor/zaibuyidao_Copy%20CC.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Selected Arpeggio.lua" type="script" desc="Copy Selected Arpeggio">
