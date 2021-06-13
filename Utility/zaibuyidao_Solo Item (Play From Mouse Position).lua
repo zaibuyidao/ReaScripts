@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo Item (Play From Mouse Position)
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -75,39 +75,62 @@ local count_sel_track = reaper.CountSelectedTracks(0)
 isPlay = reaper.GetPlayState()
 
 if isPlay == 0 then
-    if count_sel_items == 0 then
-        local item_ret, position = reaper.BR_ItemAtMouseCursor()
-        local track_ret, context, position = reaper.BR_TrackAtMouseCursor()
-        if item_ret then
-            UnselAllTrack()
-            reaper.SelectAllMediaItems(0, false)
-            reaper.SetMediaItemSelected(item_ret, true)
-            local track = reaper.GetMediaItem_Track(item_ret)
-            reaper.SetTrackSelected(track, true)
-            reaper.SetEditCurPos(position, 0, 0)
-            reaper.Main_OnCommand(41558,0) -- Item properties: Solo exclusive
-            reaper.Main_OnCommand(1007, 0) -- Transport: Play
-        else
-            if track_ret then
+    local item_ret, item_mouse_pos = reaper.BR_ItemAtMouseCursor()
+    local track_ret, context, track_mouse_pos = reaper.BR_TrackAtMouseCursor()
+
+    if count_sel_track <= 1 then
+        if count_sel_items == 0 then
+            if item_ret then
+                UnselAllTrack()
+                --reaper.SelectAllMediaItems(0, false)
+                reaper.SetMediaItemSelected(item_ret, true)
+                local track = reaper.GetMediaItem_Track(item_ret)
+                reaper.SetTrackSelected(track, true)
+                reaper.SetEditCurPos(item_mouse_pos, 0, 0)
+                reaper.Main_OnCommand(41558,0) -- Item properties: Solo exclusive
+                reaper.Main_OnCommand(1007, 0) -- Transport: Play
+            elseif track_ret then
                 UnselAllTrack()
                 reaper.SetTrackSelected(track_ret, true)
                 if context == 2 then
-                    reaper.SetEditCurPos(position, 0, 0)
+                    reaper.SetEditCurPos(track_mouse_pos, 0, 0)
                     reaper.Main_OnCommand(1007, 0) -- Transport: Play
                 end
             end
+        elseif count_sel_items > 0 then
+            UnselAllTrack()
+            for m = 0, count_sel_items - 1  do
+                local item = reaper.GetSelectedMediaItem(0, m)
+                local track = reaper.GetMediaItem_Track(item)
+                reaper.SetTrackSelected(track, true)
+            end
+            if context == 2 then
+                reaper.SetEditCurPos(track_mouse_pos, 0, 0)
+                reaper.Main_OnCommand(41558,0) -- Item properties: Solo exclusive
+                reaper.Main_OnCommand(1007, 0) -- Transport: Play
+            end
         end
-    end
-    if count_sel_items > 0 then
-        UnselAllTrack()
-        for m = 0, count_sel_items - 1  do
-            local item = reaper.GetSelectedMediaItem(0, m)
-            local track = reaper.GetMediaItem_Track(item)
-            reaper.SetTrackSelected(track, true)
-        end
-        local track_ret, context, position = reaper.BR_TrackAtMouseCursor()
-        if context == 2 then
-            reaper.SetEditCurPos(position, 0, 0)
+    elseif count_sel_track > 1 then
+        if track_ret then
+            for i = 0, count_sel_track-1 do
+                if count_sel_items == 0 then
+                    local track = reaper.GetSelectedTrack(0, i)
+                    local item_num = reaper.CountTrackMediaItems(track)
+                    for j = 0, item_num-1 do
+                        local item = reaper.GetTrackMediaItem(track, j)
+                        reaper.SetMediaItemSelected(item, true)
+                        --reaper.SetTrackSelected(track, true)
+                    end
+                else
+                    UnselAllTrack()
+                    for m = 0, count_sel_items - 1  do
+                        local item = reaper.GetSelectedMediaItem(0, m)
+                        local track = reaper.GetMediaItem_Track(item)
+                        reaper.SetTrackSelected(track, true)
+                    end
+                end
+            end
+            reaper.SetEditCurPos(track_mouse_pos, 0, 0)
             reaper.Main_OnCommand(41558,0) -- Item properties: Solo exclusive
             reaper.Main_OnCommand(1007, 0) -- Transport: Play
         end

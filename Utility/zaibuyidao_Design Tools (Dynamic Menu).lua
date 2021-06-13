@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Design Tools (Dynamic Menu)
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -250,17 +250,6 @@ function MultiCut2()
   reaper.SelectAllMediaItems(0, 0)
 end
 
-function Exchange2Items()
-  local items = reaper.CountSelectedMediaItems()
-  if items ~= 2 then return end
-  local item_a = reaper.GetSelectedMediaItem(0, 0)
-  local track_a = reaper.GetMediaItem_Track(item_a)
-  local item_b = reaper.GetSelectedMediaItem(0, 1)
-  local track_b = reaper.GetMediaItem_Track(item_b)
-  reaper.MoveMediaItemToTrack(item_a, track_b)
-  reaper.MoveMediaItemToTrack(item_b, track_a)
-end
-
 count_sel_items = reaper.CountSelectedMediaItems(0)
 
 function AddMarkToSnapOffset()
@@ -457,21 +446,6 @@ function SetTakeRandPan()
       if rand < -100 then rand = -100 end
       reaper.SetMediaItemTakeInfo_Value(take, 'D_PAN', rand)
       reaper.UpdateItemInProject(item)
-    end
-  end
-end
-
-function RemoveExtension()
-  if count_sel_items == 0 then return end
-  for i = 0, count_sel_items-1 do
-    local item = reaper.GetSelectedMediaItem(0, i)
-    local take = reaper.GetActiveTake(item)
-    if take then
-      local name = reaper.GetTakeName(take)
-      local name_noext = name:match("(.+)%.%w+$")
-      local name_new
-      if not name_noext then name_new = name else name_new = name_noext end
-      reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", name_new, true)
     end
   end
 end
@@ -691,7 +665,6 @@ function RandomExchangeItems()
 	end
 end
 
-
 -- 勾選狀態，如果狀態為1則勾選。
 if reaper.GetToggleCommandStateEx(0, 41051) == 1 then take_reverse = true end
 
@@ -727,17 +700,14 @@ menu = menu
 .. (remove_fx and "!" or "") .. "移除活動片段的FX鏈" .. "||"
 
 .. (set_take_name and "!" or "") .. "設置片段名稱" .. "|"
--- .. (set_take_name_order and "!" or "") .. "設置片段名稱(自動排序)" .. "|"
-.. (remove_extension and "!" or "") .. "移除片段擴展名" .. "|"
+.. (batch_rename_take and "!" or "") .. "批量重命名片段" .. "|"
 .. (create_region and "!" or "") .. "按片段名稱創建區域" .. "||"
+
+.. (set_region_name and "!" or "") .. "設置區域名稱" .. "|"
+.. (batch_rename_region and "!" or "") .. "批量重命名區域" .. "||"
 
 .. (take_reverse and "!" or "") .. "反向活動片段" .. "|"
 .. (render_item_new and "!" or "") .. "將對象渲染到新片段(右)" .. "||"
-
-.. (exchange_2_items and "!" or "") .. "上下交換兩個對象" .. "|"
-.. (rand_exchange_items and "!" or "") .. "隨機交換對象(橫向)" .. "|"
-.. (multi_cut2 and "!" or "") .. "平均分割對象" .. "|"
-.. (multi_cut and "!" or "") .. "在光標處平均分割對象" .. "||"
 
 .. (copy_item_pos and "!" or "") .. "複製對象位置" .. "|"
 .. (paste_item_pos and "!" or "") .. "粘貼對象位置" .. "|"
@@ -746,8 +716,10 @@ menu = menu
 .. (paste_item_len and "!" or "") .. "粘貼對象長度" .. "||"
 
 .. (scale_item_vol and "!" or "") .. "對象音量縮放" .. "|"
-.. (batch_rename_take and "!" or "") .. "批量重命名片段" .. "|"
-.. (batch_rename_region and "!" or "") .. "批量重命名區域" .. "|"
+.. (swap_items_2_tracks and "!" or "") .. "交換兩軌對象" .. "|"
+.. (rand_exchange_items and "!" or "") .. "隨機交換對象位置" .. "||"
+.. (multi_cut2 and "!" or "") .. "平均分割對象" .. "|"
+.. (multi_cut and "!" or "") .. "在光標處平均分割對象" .. "|"
 
 title = "Hidden gfx window for showing the 音頻編輯 Menu showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
@@ -800,36 +772,32 @@ if selection > 0 then
   if selection == 22 then reaper.Main_OnCommand(reaper.NamedCommandLookup("_S&M_COPYFXCHAIN8"), 0) end -- SWS/S&M: Paste FX chain to selected items
   if selection == 23 then reaper.Main_OnCommand(40640, 0) end -- Item: Remove FX for item take
 
-  if selection == 24 then SetTakeName() end
-  -- if selection == 25 then SetTakeNameOrder() end
-  -- 移除擴展名
-  if selection == 25 then RemoveExtension() end
-  if selection == 26 then
-    reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_REGIONSFROMITEMS"), 0) -- SWS: Create regions from selected items (name by active take)
-  end
+  -- 設置片段名稱
+  if selection == 24 then reaper.Main_OnCommand(reaper.NamedCommandLookup("_RS330a59e50afdc815f97d12a5e02cf45c596a5282"), 0) end -- Script: zaibuyidao_Set Take Name.lua
+  -- 批量重命名片段
+  if selection == 25 then reaper.Main_OnCommand(reaper.NamedCommandLookup("_RSb6ef8409fd708ea9bc92396e7b8d3210b71d6eec"), 0) end -- Script: zaibuyidao_Batch Rename Take.lua
+  -- 按片段創建區域
+  if selection == 26 then reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_REGIONSFROMITEMS"), 0) end -- SWS: Create regions from selected items (name by active take)
+
+  if selection == 27 then reaper.Main_OnCommand(reaper.NamedCommandLookup("_RS72ddd826cdde392952c6a8a735687ffa6599a7fb"), 0) end -- Script: zaibuyidao_Set Region Name.lua
+  if selection == 28 then reaper.Main_OnCommand(reaper.NamedCommandLookup("_RSa0cfd778eeff4b28569c51bf2d4cad1ccadad689"), 0) end -- Script: zaibuyidao_Batch Rename Region.lua 
 
   -- 重複激活片段 反向活動片段
-  if selection == 27 then reaper.Main_OnCommand(41051, 0) end -- Item properties: Toggle take reverse
-  if selection == 28 then
+  if selection == 29 then reaper.Main_OnCommand(41051, 0) end -- Item properties: Toggle take reverse
+  if selection == 30 then
     reaper.Main_OnCommand(41999, 0) -- Item: Render items to new take
     reaper.Main_OnCommand(40643, 0) -- Take: Explode takes of items in order
   end
-  if selection == 29 then Exchange2Items() end
-  if selection == 30 then RandomExchangeItems() end
-  if selection == 31 then MultiCut2() end
-  if selection == 32 then MultiCut() end
-  if selection == 33 then CopyItemPosition() end
-  if selection == 34 then PasteItemPosition() end
-  if selection == 35 then PasteItemPositionMove() end
-  if selection == 36 then CopyItemLength() end
-  if selection == 37 then PasteItemLength() end
-  if selection == 38 then ScaleItemVolume() end
-  if selection == 39 then
-    reaper.Main_OnCommand(reaper.NamedCommandLookup("_RSb6ef8409fd708ea9bc92396e7b8d3210b71d6eec"), 0) -- Script: zaibuyidao_Batch Rename Take.lua
-  end
-  if selection == 40 then
-    reaper.Main_OnCommand(reaper.NamedCommandLookup("_RSa0cfd778eeff4b28569c51bf2d4cad1ccadad689"), 0) -- Script: zaibuyidao_Batch Rename Region.lua
-  end
+  if selection == 31 then CopyItemPosition() end
+  if selection == 32 then PasteItemPosition() end
+  if selection == 33 then PasteItemPositionMove() end
+  if selection == 34 then CopyItemLength() end
+  if selection == 35 then PasteItemLength() end
+  if selection == 36 then ScaleItemVolume() end
+  if selection == 37 then reaper.Main_OnCommand(reaper.NamedCommandLookup("_RS3afff51cc0ffcfe7b6797e743c138acefd608692"), 0) end -- Script: zaibuyidao_Swap Items Of Two Tracks.lua 交換兩軌對象
+  if selection == 38 then RandomExchangeItems() end
+  if selection == 39 then MultiCut2() end
+  if selection == 40 then MultiCut() end
 
 end
 

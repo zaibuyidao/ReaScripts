@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo Track (Play From Mouse Position)
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -64,38 +64,41 @@ if isPlay == 0 then
     local item_ret, item_mouse_pos = reaper.BR_ItemAtMouseCursor()
     local track_ret, context, track_mouse_pos = reaper.BR_TrackAtMouseCursor()
     if count_sel_track <= 1 then
-        UnselectAllTracks()
-        reaper.Main_OnCommand(40340,0) -- Track: Unsolo all tracks
-        reaper.SetEditCurPos(track_mouse_pos, 0, 0)
-        reaper.Main_OnCommand(1007, 0) -- Transport: Play
-        if count_sel_items == 0 then
-            if track_ret then
+        if track_ret then
+            UnselectAllTracks()
+            reaper.Main_OnCommand(40340,0) -- Track: Unsolo all tracks
+            reaper.SetEditCurPos(track_mouse_pos, 0, 0)
+            reaper.Main_OnCommand(1007, 0) -- Transport: Play
+            if count_sel_items == 0 then
                 reaper.SetTrackSelected(track_ret, true)
                 reaper.SetMediaTrackInfo_Value(track_ret, 'I_SOLO', 2)
-            end
-        else
-            for m = 0, count_sel_items-1  do
-                local item = reaper.GetSelectedMediaItem(0, m)
-                local track = reaper.GetMediaItem_Track(item)
-                reaper.SetTrackSelected(track, true)
-                reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
-            end
-        end
-    elseif count_sel_track > 1 then
-        reaper.Main_OnCommand(40340,0) -- Track: Unsolo all tracks
-        reaper.SetEditCurPos(track_mouse_pos, 0, 0)
-        reaper.Main_OnCommand(1007, 0) -- Transport: Play
-        for i = 0, count_sel_track-1 do
-            if count_sel_items == 0 then
-                local track = reaper.GetSelectedTrack(0, i)
-                reaper.SetTrackSelected(track, true)
-                reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
             else
                 for m = 0, count_sel_items-1  do
                     local item = reaper.GetSelectedMediaItem(0, m)
                     local track = reaper.GetMediaItem_Track(item)
                     reaper.SetTrackSelected(track, true)
                     reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
+                end
+            end
+        end
+    elseif count_sel_track > 1 then
+        if track_ret then
+            reaper.Main_OnCommand(40340,0) -- Track: Unsolo all tracks
+            reaper.SetEditCurPos(track_mouse_pos, 0, 0)
+            reaper.Main_OnCommand(1007, 0) -- Transport: Play
+            for i = 0, count_sel_track-1 do
+                if count_sel_items == 0 then
+                    local track = reaper.GetSelectedTrack(0, i)
+                    reaper.SetTrackSelected(track, true)
+                    reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
+                else
+                    UnselectAllTracks()
+                    for m = 0, count_sel_items-1  do
+                        local item = reaper.GetSelectedMediaItem(0, m)
+                        local track = reaper.GetMediaItem_Track(item)
+                        reaper.SetTrackSelected(track, true)
+                        reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
+                    end
                 end
             end
         end
