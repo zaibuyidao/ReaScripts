@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5d9a6b186f038ef19f8bf78a9d1097aad8be4d6d">
+<index version="1" name="zaibuyidao Scripts" commit="0247e7a9d4fec2e413bbe8d922d3d9290f2b8f62">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3047,6 +3047,15 @@
       </version>
       <version name="1.1.2" author="zaibuyidao" time="2021-06-10T17:20:11Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e41fcc8cf742d9caf17816d018f38a4984af7ed9/Regions/zaibuyidao_Batch%20Rename%20Region.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Region Name From Clipboard.lua" type="script" desc="Set Region Name From Clipboard">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-14T14:09:44Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0247e7a9d4fec2e413bbe8d922d3d9290f2b8f62/Regions/zaibuyidao_Set%20Region%20Name%20From%20Clipboard.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Region Name.lua" type="script" desc="Set Region Name">
