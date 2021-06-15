@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set Region Name From Clipboard
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -83,12 +83,10 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local clipboard = reaper.CF_GetClipboard('')
-clipboard = clipboard:gsub('\"', '')
-
 local rgntext={}
 cnt = 0
 
-for text in clipboard:gmatch('[^\r\n]+') do
+for text in clipboard:gmatch('[^\r]+') do -- 可選項 \r\n
   cnt = cnt + 1
   rgntext[cnt] = text
 end
