@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="cf7523336c093e55a5118324e04cf83b0416c5d7">
+<index version="1" name="zaibuyidao Scripts" commit="b1ac44133d92d1529173fb72df02cca923ddb18e">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3351,6 +3351,12 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2021-06-13T14:31:36Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5d9a6b186f038ef19f8bf78a9d1097aad8be4d6d/Utility/zaibuyidao_Solo%20Item%20(Play%20From%20Mouse%20Position).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo Track (Auto Toggle Solo).lua" type="script" desc="Solo Track (Auto Toggle Solo)">
+      <version name="1.0" author="zaibuyidao" time="2021-06-28T16:17:06Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b1ac44133d92d1529173fb72df02cca923ddb18e/Utility/zaibuyidao_Solo%20Track%20(Auto%20Toggle%20Solo).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track (Play From First Item Position).lua" type="script" desc="Solo Track (Play From First Item Position)">
