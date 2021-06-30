@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b1ac44133d92d1529173fb72df02cca923ddb18e">
+<index version="1" name="zaibuyidao Scripts" commit="bf4c6ad78a00f00aea7280e5a41d340d01dc9c78">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3265,16 +3265,31 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a6f13dffbd8f13a245b132663f08bda7253f90f6/Utility/zaibuyidao_Implode%20Drums.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Jump To Marker Region.lua" type="script" desc="Jump To Marker/Region">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-06-30T16:50:31Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/bf4c6ad78a00f00aea7280e5a41d340d01dc9c78/Utility/zaibuyidao_Jump%20To%20Marker%20Region.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Jump To Marker.lua" type="script" desc="Jump To Marker">
       <version name="1.0" author="zaibuyidao" time="2020-08-12T18:07:49Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/12595584199f28ca5a123e302eee3350382c4759/Utility/zaibuyidao_Jump%20To%20Marker.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2021-06-30T16:50:31Z">
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/bf4c6ad78a00f00aea7280e5a41d340d01dc9c78/Utility/zaibuyidao_Jump%20To%20Marker.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Jump To Region.lua" type="script" desc="Jump To Region">
       <version name="1.0" author="zaibuyidao" time="2020-08-12T18:07:49Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/12595584199f28ca5a123e302eee3350382c4759/Utility/zaibuyidao_Jump%20To%20Region.lua</source>
+      </version>
+      <version name="1.1" author="zaibuyidao" time="2021-06-30T16:50:31Z">
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/bf4c6ad78a00f00aea7280e5a41d340d01dc9c78/Utility/zaibuyidao_Jump%20To%20Region.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
