@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region
- * Version: 1.1.2
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.2 (2021-7-3)
+  + 插入支持通配符
  * v1.0 (2021-6-5)
   + Initial release
 --]]
@@ -211,6 +213,14 @@ for i,region in ipairs(regions) do
     matched.name = string.sub(matched.name, begin_str, end_str)
     matched.name = string.sub(matched.name, 1, position) .. insert .. string.sub(matched.name, position+1+delete)
     matched.name = string.gsub(matched.name, find, replace)
+
+    if insert ~= '' then
+      matched.name = matched.name:gsub("$regionname", name_t[i])
+      matched.name = matched.name:gsub("$inctimeorder", function ()
+        cnt = AddZeroFrontNum(2, math.floor(cnt+1))
+        return tostring(cnt)
+      end)
+    end
 
     set_region(matched)
   end
