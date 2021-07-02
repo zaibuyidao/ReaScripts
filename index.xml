@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="bf4c6ad78a00f00aea7280e5a41d340d01dc9c78">
+<index version="1" name="zaibuyidao Scripts" commit="94eda80c00e77f9e265eb7ea0b3466a477510c7b">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3265,31 +3265,25 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a6f13dffbd8f13a245b132663f08bda7253f90f6/Utility/zaibuyidao_Implode%20Drums.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Jump To Marker Region.lua" type="script" desc="Jump To Marker/Region">
+    <reapack name="zaibuyidao_Jump To Marker (Dynamic Menu).lua" type="script" desc="Jump To Marker (Dynamic Menu)">
+      <version name="1.0" author="zaibuyidao" time="2021-07-02T04:02:20Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/94eda80c00e77f9e265eb7ea0b3466a477510c7b/Utility/zaibuyidao_Jump%20To%20Marker%20(Dynamic%20Menu).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Jump To Marker Region (Dynamic Menu).lua" type="script" desc="Jump To Marker/Region (Dynamic Menu)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-06-30T16:50:31Z">
+      <version name="1.0" author="zaibuyidao" time="2021-07-02T04:02:20Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/bf4c6ad78a00f00aea7280e5a41d340d01dc9c78/Utility/zaibuyidao_Jump%20To%20Marker%20Region.lua</source>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/94eda80c00e77f9e265eb7ea0b3466a477510c7b/Utility/zaibuyidao_Jump%20To%20Marker%20Region%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Jump To Marker.lua" type="script" desc="Jump To Marker">
-      <version name="1.0" author="zaibuyidao" time="2020-08-12T18:07:49Z">
+    <reapack name="zaibuyidao_Jump To Region (Dynamic Menu).lua" type="script" desc="Jump To Region (Dynamic Menu)">
+      <version name="1.0" author="zaibuyidao" time="2021-07-02T04:02:20Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/12595584199f28ca5a123e302eee3350382c4759/Utility/zaibuyidao_Jump%20To%20Marker.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2021-06-30T16:50:31Z">
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/bf4c6ad78a00f00aea7280e5a41d340d01dc9c78/Utility/zaibuyidao_Jump%20To%20Marker.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Jump To Region.lua" type="script" desc="Jump To Region">
-      <version name="1.0" author="zaibuyidao" time="2020-08-12T18:07:49Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/12595584199f28ca5a123e302eee3350382c4759/Utility/zaibuyidao_Jump%20To%20Region.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2021-06-30T16:50:31Z">
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/bf4c6ad78a00f00aea7280e5a41d340d01dc9c78/Utility/zaibuyidao_Jump%20To%20Region.lua</source>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/94eda80c00e77f9e265eb7ea0b3466a477510c7b/Utility/zaibuyidao_Jump%20To%20Region%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
@@ -3368,10 +3362,10 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5d9a6b186f038ef19f8bf78a9d1097aad8be4d6d/Utility/zaibuyidao_Solo%20Item%20(Play%20From%20Mouse%20Position).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Solo Track (Auto Toggle Solo).lua" type="script" desc="Solo Track (Auto Toggle Solo)">
-      <version name="1.0" author="zaibuyidao" time="2021-06-28T16:17:06Z">
+    <reapack name="zaibuyidao_Solo Track (Auto Solo).lua" type="script" desc="Solo Track (Auto Toggle Solo)">
+      <version name="1.0" author="zaibuyidao" time="2021-07-02T04:02:20Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b1ac44133d92d1529173fb72df02cca923ddb18e/Utility/zaibuyidao_Solo%20Track%20(Auto%20Toggle%20Solo).lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/94eda80c00e77f9e265eb7ea0b3466a477510c7b/Utility/zaibuyidao_Solo%20Track%20(Auto%20Solo).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track (Play From First Item Position).lua" type="script" desc="Solo Track (Play From First Item Position)">
@@ -3487,6 +3481,10 @@
       <version name="1.1" author="zaibuyidao" time="2021-05-12T17:15:25Z">
         <changelog><![CDATA[+ 設置完成將自動退出REAPER]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d7bd35d86adddd7305aca0c8c16e3f3bc4505c8a/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%95%9F%E7%94%A8MIDI%E7%AB%AF%E5%8F%A30123.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2021-07-02T03:59:10Z">
+        <changelog><![CDATA[+ 優化彈窗]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/98aa3b474e065cbeab04e4caaab3b8bc7c3f9ba2/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%95%9F%E7%94%A8MIDI%E7%AB%AF%E5%8F%A30123.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_建立MIDI通道路由到選定軌道.lua" type="script" desc="建立MIDI通道路由到選定軌道">
