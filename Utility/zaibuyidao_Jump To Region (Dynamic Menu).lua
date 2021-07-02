@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Jump To Region
- * Version: 1.1
+ * ReaScript Name: Jump To Region (Dynamic Menu)
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,8 +11,6 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-6-30)
-  # 將當前區域完成後再跳轉修改為立即跳轉
  * v1.0 (2020-8-12)
   + Initial release
 --]]
