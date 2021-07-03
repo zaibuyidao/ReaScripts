@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Take
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,8 +11,6 @@
 
 --[[
  * Changelog:
- * v1.1 (2021-7-3)
-  + 插入支持通配符
  * v1.0 (2021-5-23)
   + Initial release
 --]]
@@ -133,23 +131,26 @@ for i = 0, count_sel_track - 1 do -- 遍歷選中軌道
         take_name_tb[#take_name_tb + 1] = take_name
     end
 
-    for k = 1, item_num_order - 1 do -- 每條軌道分別計算take num 1234.. / 1234..
+    for k = 1, item_num_order - 1 do -- 每條軌道分別計算take num
         local item = sel_item_track[k]
         local take = reaper.GetActiveTake(item)
         local take_guid = reaper.BR_GetMediaItemTakeGUID(take)
 
         take_name = reaper.GetTakeName(take)
-        if rename == '' then rename = take_name end
 
-        take_name = reaper.GetTakeName(take)
         new_order = math.abs(item_num_new[k] - (item_num_new[k] + k))
         new_order = new_order + order
-        take_name = take_name:gsub("%$inctrackorder", AddZeroFrontNum(2, math.floor(new_order)))
-        take_name = take_name:gsub("%$takename", take_name_tb[k])
-        take_name = take_name:gsub('%$trackname', track_name)
-        take_name = take_name:gsub('%$tracknum', track_num)
-        take_name = take_name:gsub('%$GUID', take_guid)
-        take_name = take_name:gsub('%$foldername', parent_buf)
+
+        if rename ~= '' then
+            take_name = rename
+            take_name = take_name:gsub("%$inctrackorder", AddZeroFrontNum(2, math.floor(new_order)))
+            take_name = take_name:gsub("%$takename", take_name_tb[k])
+            take_name = take_name:gsub('%$trackname', track_name)
+            take_name = take_name:gsub('%$tracknum', track_num)
+            take_name = take_name:gsub('%$GUID', take_guid)
+            take_name = take_name:gsub('%$foldername', parent_buf)
+        end
+
         take_name = string.sub(take_name, begin_str, end_str)
         take_name = string.sub(take_name, 1, position) .. insert .. string.sub(take_name, position+1+delete)
         take_name = string.gsub(take_name, find, replace)
@@ -162,8 +163,6 @@ for i = 0, count_sel_track - 1 do -- 遍歷選中軌道
             take_name = take_name:gsub('%$GUID', take_guid)
             take_name = take_name:gsub('%$foldername', parent_buf)
         end
-
-        -- take_name = (take_name):gsub(("."):rep(4),'%1'..'*'):sub(1, -2) -- 按指定間隔插入
 
         reaper.GetSetMediaItemTakeInfo_String(take, 'P_NAME', take_name, true)
     end
