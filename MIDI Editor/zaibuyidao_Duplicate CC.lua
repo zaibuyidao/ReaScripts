@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Copy CC
+ * ReaScript Name: Duplicate CC
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -23,11 +23,11 @@ function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   local _, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
-  local cc_num = reaper.GetExtState("CopyCC", "CC_Number")
+  local cc_num = reaper.GetExtState("DuplicateCC", "CC_Number")
   if (cc_num == "") then cc_num = "1" end
-  local cc_new = reaper.GetExtState("CopyCC", "CC_New")
+  local cc_new = reaper.GetExtState("DuplicateCC", "CC_New")
   if (cc_new == "") then cc_new = "11" end
-  local user_ok, user_input = reaper.GetUserInputs('Copy CC', 2, 'Copy CC#,To CC#', cc_num ..','.. cc_new)
+  local user_ok, user_input = reaper.GetUserInputs('Duplicate CC', 2, 'Duplicate CC#,To CC#', cc_num ..','.. cc_new)
   cc_num, cc_new = user_input:match("(.*),(.*)")
   if not user_ok or not tonumber(cc_num) or not tonumber(cc_new) then return reaper.SN_FocusMIDIEditor() end
 
@@ -39,8 +39,8 @@ function Main()
     reaper.SN_FocusMIDIEditor()
   end
 
-  reaper.SetExtState("CopyCC", "CC_Number", cc_num, false)
-  reaper.SetExtState("CopyCC", "CC_New", cc_new, false)
+  reaper.SetExtState("DuplicateCC", "CC_Number", cc_num, false)
+  reaper.SetExtState("DuplicateCC", "CC_New", cc_new, false)
 
   reaper.MIDI_DisableSort(take)
   for i = 1, ccevtcnt do
@@ -55,5 +55,5 @@ end
 
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock("Copy CC", -1)
+reaper.Undo_EndBlock("Duplicate CC", -1)
 reaper.SN_FocusMIDIEditor()

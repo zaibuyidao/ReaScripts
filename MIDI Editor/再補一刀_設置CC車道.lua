@@ -1,11 +1,12 @@
 --[[
  * ReaScript Name: 設置CC車道
- * Version: 1.2
+ * Version: 1.2.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -18,6 +19,7 @@ function Msg(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 function main()
+    reaper.Undo_BeginBlock()
     cc_lane = reaper.GetExtState("SetCCLane", "Parameter")
     if (cc_lane == "") then cc_lane = "v" end
     user_ok, cc_lane = reaper.GetUserInputs("設置CC車道", 1, "參數 (CC編號 或 v,p,g,c,b,t,s)", cc_lane)
@@ -50,8 +52,7 @@ function main()
         parameter = cc_lane + 40238 -- CC: Set CC lane to 000 Bank Select MSB
     end
     reaper.MIDIEditor_OnCommand(HWND, parameter)
+    reaper.Undo_EndBlock("設置CC車道", -1)
 end
-reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("設置CC車道", 0)
 reaper.SN_FocusMIDIEditor()

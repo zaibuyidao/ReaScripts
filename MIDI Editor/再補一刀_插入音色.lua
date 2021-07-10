@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 插入音色
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -203,8 +203,8 @@ function main()
   end
   reaper.MIDI_Sort(take)
   reaper.UpdateItemInProject(item)
+  reaper.Undo_EndBlock("插入音色", -1)
   reaper.UpdateArrange()
-  reaper.Undo_EndBlock("插入音色", 0)
 end
 
 main()

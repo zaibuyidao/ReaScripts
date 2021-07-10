@@ -1,7 +1,7 @@
 --[[
- * ReaScript Name: Insert Patch Change (Bank MSB/LSB)
- * Version: 1.0.1
- * Author: zaibuyidao
+ * ReaScript Name: 插入音色(庫MSB/LSB)
+ * Version: 1.0
+ * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -34,24 +34,24 @@ function main()
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
 
-  local MSB = reaper.GetExtState("InsertPatchChangeMSBLSB", "MSB")
+  local MSB = reaper.GetExtState("PatchChangeMSBLSB", "MSB")
   if (MSB == "") then MSB = "2" end
-  local LSB = reaper.GetExtState("InsertPatchChangeMSBLSB", "LSB")
+  local LSB = reaper.GetExtState("PatchChangeMSBLSB", "LSB")
   if (LSB == "") then LSB = "3" end
-  local PC = reaper.GetExtState("InsertPatchChangeMSBLSB", "PC")
+  local PC = reaper.GetExtState("PatchChangeMSBLSB", "PC")
   if (PC == "") then PC = "27" end
-  local Tick = reaper.GetExtState("InsertPatchChangeMSBLSB", "Tick")
+  local Tick = reaper.GetExtState("PatchChangeMSBLSB", "Tick")
   if (Tick == "") then Tick = "-10" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Insert Patch Change", 4, "Bank MSB,Bank LSB,Program number,Offset", MSB ..','.. LSB ..','.. PC ..','.. Tick)
+  local user_ok, user_input_csv = reaper.GetUserInputs("插入音色", 4, "庫 MSB,庫 LSB,音色編號,偏移", MSB ..','.. LSB ..','.. PC ..','.. Tick)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   local MSB, LSB, PC, Tick = user_input_csv:match("(.*),(.*),(.*),(.*)")
   if not tonumber(MSB) or not tonumber(LSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(Tick) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("InsertPatchChangeMSBLSB", "MSB", MSB, false)
-  reaper.SetExtState("InsertPatchChangeMSBLSB", "LSB", LSB, false)
-  reaper.SetExtState("InsertPatchChangeMSBLSB", "PC", PC, false)
-  reaper.SetExtState("InsertPatchChangeMSBLSB", "Tick", Tick, false)
+  reaper.SetExtState("PatchChangeMSBLSB", "MSB", MSB, false)
+  reaper.SetExtState("PatchChangeMSBLSB", "LSB", LSB, false)
+  reaper.SetExtState("PatchChangeMSBLSB", "PC", PC, false)
+  reaper.SetExtState("PatchChangeMSBLSB", "Tick", Tick, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -201,8 +201,8 @@ function main()
     reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tick, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
+  reaper.Undo_EndBlock("插入音色(庫MSB/LSB)", -1)
   reaper.UpdateArrange()
-  reaper.Undo_EndBlock("Insert Patch Change (Bank MSB/LSB)", 0)
 end
 
 main()
