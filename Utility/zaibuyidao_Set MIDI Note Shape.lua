@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set MIDI Note Shape
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -101,8 +101,6 @@ SaveSelectedItems(init_sel_items)
 is_drum_mode, drum_mode = reaper.GetUserInputs( 'Set MIDI Note Shape', 1, '0=Triangle 1=Normal 2=Diamond', '0' )
 if not is_drum_mode then return end
 
-reaper.SelectAllMediaItems(0, false)
-
 for i = 0, reaper.CountSelectedTracks(0)-1 do
 
     local track = reaper.GetSelectedTrack(0, i)
@@ -114,6 +112,7 @@ for i = 0, reaper.CountSelectedTracks(0)-1 do
         local take = reaper.GetTake(item, 0)
         if not take or not reaper.TakeIsMIDI(take) then return end
 
+        reaper.SelectAllMediaItems(0, false)
         reaper.SetMediaItemSelected(item, true)
 
         reaper.Main_OnCommand(40153, 0) -- Item: Open in built-in MIDI editor (set default behavior in preferences) 打開MIDI編輯器
