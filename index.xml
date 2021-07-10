@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="239ebd6a73cf5e7b124ef6f65b21e8eae63acd61">
+<index version="1" name="zaibuyidao Scripts" commit="aa2e416186273e9cfc4cc0db962e726f26105d3d">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3368,6 +3368,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-07-10T17:04:10Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/239ebd6a73cf5e7b124ef6f65b21e8eae63acd61/Utility/zaibuyidao_Set%20MIDI%20Note%20Shape.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-07-10T17:18:10Z">
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/aa2e416186273e9cfc4cc0db962e726f26105d3d/Utility/zaibuyidao_Set%20MIDI%20Note%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Project Grid.lua" type="script" desc="Set Project Grid">
