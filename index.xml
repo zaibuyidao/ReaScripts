@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="aa2e416186273e9cfc4cc0db962e726f26105d3d">
+<index version="1" name="zaibuyidao Scripts" commit="2613b12194094f2ef9eb36741c6dde464e4e8e60">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -3371,6 +3371,15 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-07-10T17:18:10Z">
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/aa2e416186273e9cfc4cc0db962e726f26105d3d/Utility/zaibuyidao_Set%20MIDI%20Note%20Shape.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Point Shape (Dynamic Menu).lua" type="script" desc="Set Point Shape (Dynamic Menu)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-07-11T16:14:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2613b12194094f2ef9eb36741c6dde464e4e8e60/Utility/zaibuyidao_Set%20Point%20Shape%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Project Grid.lua" type="script" desc="Set Project Grid">
