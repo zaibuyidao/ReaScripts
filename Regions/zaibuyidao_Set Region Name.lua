@@ -1,18 +1,16 @@
 --[[
  * ReaScript Name: Set Region Name
- * Version: 1.3.2
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
+ * REAPER: 6.0 or newer recommended
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
  * Changelog:
- * v1.3 (2021-6-6)
-  + 修改通配符規則以及將編號定義為$inctimeorder
  * v1.0 (2021-6-1)
   + Initial release
 --]]
@@ -68,6 +66,21 @@ function rename_region(name)
   reaper.SetProjectMarker3(0, markrgnindexnumber, isrgn, pos, rgnend, name, color)
 end
 
+local show_msg = reaper.GetExtState("SetRegionName", "ShowMsg")
+if (show_msg == "") then show_msg = "true" end
+
+if show_msg == "true" then
+    script_name = "設置區域名稱"
+    text = "v=001 -- Timeline order 時間順序\na=a -- Letter order 字母順序\n"
+    text = text.."\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
+    local box_ok = reaper.ShowMessageBox("Wildcards 通配符 :\n\n"..text, script_name, 4)
+
+    if box_ok == 7 then
+        show_msg = "false"
+        reaper.SetExtState("SetRegionName", "ShowMsg", show_msg, true)
+    end
+end
+
 item_count = reaper.CountSelectedMediaItems(0)
 if item_count == 0 then return end
 
@@ -115,23 +128,57 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local name = reaper.GetExtState("SetRegionName", "Name")
-if (name == "") then name = "Region_$inctimeorder" end
-local order = reaper.GetExtState("SetRegionName", "Order")
-if (order == "") then order = "1" end
+if (name == "") then name = "Region_v=001" end
 local tail = reaper.GetExtState("SetRegionName", "Tail")
 if (tail == "") then tail = "0" end
 
-ok, retvals_csv = reaper.GetUserInputs("Set Region Name", 3, "Region name 區域名,Order 順序,Tail 尾部 (ms),extrawidth=200", name .. ',' .. order .. ',' .. tail)
-if not ok or not tonumber(order) or not tonumber(tail) then return end
-name, order, tail = retvals_csv:match("(.*),(.*),(.*)")
-reaper.SetExtState("SetRegionName", "Order", order, false)
+local ok, retvals_csv = reaper.GetUserInputs("Set Region Name", 2, "Region name 區域名,Tail 尾部 (ms),extrawidth=200", name .. ',' .. tail)
+if not ok or not tonumber(tail) then return end
+name, tail = retvals_csv:match("(.*),(.*)")
 reaper.SetExtState("SetRegionName", "Name", name, false)
 reaper.SetExtState("SetRegionName", "Tail", tail, false)
-order = math.floor(order)-1
 tail = tail / 1000
 
 for i, region in ipairs(regions) do
-  create_region(region.left, region.right+tail, name:gsub('%$inctimeorder', AddZeroFrontNum(2, i+order)))
+  region_name = name
+
+  if string.match(region_name, "v=[%d+]*") ~= nil then -- 長度3
+    nbr = string.match(region_name, "v=[%d+]*")
+    nbr = string.sub(nbr, 3) -- 截取3
+    if tonumber(nbr) then
+      region_name = region_name:gsub("v="..nbr, function ()
+        nbr = AddZeroFrontNum(string.len(nbr), math.floor(nbr+(i-1)))
+        return tostring(nbr)
+      end)
+    end
+  end
+
+  if string.match(region_name, "a=[A-Za-z]*") ~= nil then -- 長度3
+    xyz = string.match(region_name, "a=[A-Za-z]*")
+    xyz_len = string.len(xyz)
+    xyz_pos = string.sub(xyz, 3, 3) -- 截取3
+
+    -- if xyz_len == 3 then
+      if string.find(xyz_pos,"(%u)") == 1 then
+        letter = string.upper(xyz_pos) -- 大寫
+        alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      else
+        letter = string.lower(xyz_pos) -- 小寫
+        alphabet = 'abcdefghijklmnopqrstuvwxyz'
+      end
+
+      local letter_byte = string.char(letter:byte())
+      local letter_idx = alphabet:find(letter)
+      letter_idx = (letter_idx % #alphabet) + (i-1)
+      letter_idx = letter_idx % #alphabet
+      if letter_idx == 0 then letter_idx = #alphabet end
+      letter_byte = alphabet:sub(letter_idx, letter_idx)
+
+      region_name = region_name:gsub("a=" .. xyz_pos, letter_byte)
+    -- end
+  end
+  
+  create_region(region.left, region.right+tail, region_name)
 end
 
 reaper.Undo_EndBlock("Set Region Name", -1)

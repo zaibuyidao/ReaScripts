@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Batch Rename Region Manager
- * Version: 1.5
+ * ReaScript Name: Batch Rename Marker Manager
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,7 +11,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-6-10)
+ * v1.0 (2021-7-17)
   + Initial release
 --]]
 
@@ -123,18 +123,18 @@ local container = reaper.JS_Window_FindChildByID(hWnd, 1071)
 sel_count, sel_indexes = reaper.JS_ListView_ListAllSelItems(container)
 if sel_count == 0 then return end 
 
-local show_msg = reaper.GetExtState("BatchRenameRegionManager", "ShowMsg")
+local show_msg = reaper.GetExtState("BatchRenameMarkerManager", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
-    script_name = "批量重命名區域管理器"
-    text = "$regionname -- 區域名稱\nv=001 -- Timeline order 時間順序\na=a -- Letter order 字母順序\n"
+    script_name = "批量重命名標記管理器"
+    text = "$markername -- 標記名稱\nv=001 -- Timeline order 時間順序\na=a -- Letter order 字母順序\n"
     text = text.."\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
     local box_ok = reaper.ShowMessageBox("Wildcards 通配符 :\n\n"..text, script_name, 4)
 
     if box_ok == 7 then
         show_msg = "false"
-        reaper.SetExtState("BatchRenameRegionManager", "ShowMsg", show_msg, true)
+        reaper.SetExtState("BatchRenameMarkerManager", "ShowMsg", show_msg, true)
     end
 end
 
@@ -168,8 +168,8 @@ if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for rul
   reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
 end
 
-function key_of(name, left, right)
-  return tostring(name .. " " .. tostring(get_precise_decimal(left,3)) .. " " .. tostring(get_precise_decimal(right,3)))
+function key_of(name, left)
+  return tostring(name .. " " .. tostring(get_precise_decimal(left,3)))
 end
 
 function collect_regions()
@@ -179,7 +179,7 @@ function collect_regions()
     local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
 
     if retval ~= nil then
-      if isrgn then
+      if not isrgn then
         pos_left = pos
         rgnend_right = rgnend
         pos = string.format("%.10f", pos) -- 保留13位數用於截取
@@ -215,17 +215,14 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
   i = i + 1
   rgname = reaper.JS_ListView_GetItemText(container, tonumber(index), 2)
   rgnleft = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
-  rgnright = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
 
-  --Msg('SEL L : ' .. rgnleft ..' SEL R : '..rgnright)
+  -- Msg('SEL L : ' .. rgnleft)
   nt[#nt+1] = rgname
   lt[#lt+1] = rgnleft
-  rt[#rt+1] = rgnright
 
   cur = {
     regionname = nt[i],
-    left = lt[i],
-    right = rt[i]
+    left = lt[i]
   }
 
   table.insert(regions, cur)
@@ -249,7 +246,7 @@ local pattern, begin_str, end_str, position, insert, delete, find, replace = '',
 --   Msg("all:" .. key)
 -- end
 
-local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region Manager", 8, "Rename 重命名,From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
+local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Marker Manager", 8, "Rename 重命名,From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
 if not ok then return end
 
 pattern, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
@@ -260,7 +257,7 @@ end_str = end_str - 1
 name_t = {}
 
 for i, region in ipairs(regions) do
-  local matched = all_regions[key_of(region.regionname, region.left, region.right)]
+  local matched = all_regions[key_of(region.regionname, region.left)]
   if matched then
     name_t[#name_t+1] = matched.name
   end
@@ -269,12 +266,12 @@ end
 for i, region in ipairs(regions) do
 
   -- Msg("finding:" .. key_of(region.regionname, region.left, region.right))
-  local matched = all_regions[key_of(region.regionname, region.left, region.right)]
+  local matched = all_regions[key_of(region.regionname, region.left)]
   if matched then
 
     if pattern ~= "" then
       matched.name = pattern
-      matched.name = matched.name:gsub("$regionname", name_t[i])
+      matched.name = matched.name:gsub("$markername", name_t[i])
       -- matched.name = matched.name:gsub("$inctimeorder", function ()
       --   cnt = add_zero_front_num(2, math.floor(cnt+1))
       --   return tostring(cnt)
@@ -370,6 +367,6 @@ for i, region in ipairs(regions) do
 
 end
 
-reaper.Undo_EndBlock('Batch Rename Region Manager', -1)
+reaper.Undo_EndBlock('Batch Rename Marker Manager', -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()

@@ -1,18 +1,16 @@
 --[[
  * ReaScript Name: Batch Rename Region
- * Version: 1.2.1
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
+ * REAPER: 6.0 or newer recommended
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
  * Changelog:
- * v1.2 (2021-7-3)
-  + 插入支持通配符
  * v1.0 (2021-6-5)
   + Initial release
 --]]
@@ -73,9 +71,9 @@ if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
     script_name = "批量重命名區域"
-    text = "$regionname -- 區域名稱\n$inctimeorder -- 區域順序\n"
-    text = text.."\n下次還顯示此列表嗎？"
-    local box_ok = reaper.ShowMessageBox("可用鍵 :\n\n"..text, script_name, 4)
+    text = "$regionname -- 區域名稱\nv=001 -- Timeline order 時間順序\na=a -- Letter order 字母順序\n"
+    text = text.."\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
+    local box_ok = reaper.ShowMessageBox("Wildcards 通配符 :\n\n"..text, script_name, 4)
 
     if box_ok == 7 then
         show_msg = "false"
@@ -172,18 +170,17 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local all_regions = collect_regions()
-local pattern, cnt, tail, begin_str, end_str, position, insert, delete, find, replace = '', '1', '0', '0', '0', '0', '', '0', '', ''
+local pattern, tail, begin_str, end_str, position, insert, delete, find, replace = '', '0', '0', '0', '0', '', '0', '', ''
 
 -- for key,region in pairs(all_regions) do
 --   Msg("all:" .. key)
 -- end
 
-local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region", 10, "Rename 重命名,Order 順序,Tail 尾部 (ms),From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. cnt ..','.. tail ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
+local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region", 9, "Rename 重命名,Tail 尾部 (ms),From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. tail ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
 if not ok then return end
 
-pattern, cnt, tail, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
+pattern, tail, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
-cnt = cnt -1
 begin_str = begin_str + 1
 end_str = end_str - 1
 tail = tail / 1000
@@ -205,10 +202,46 @@ for i,region in ipairs(regions) do
     if pattern ~= "" then
       matched.name = pattern
       matched.name = matched.name:gsub("$regionname", name_t[i])
-      matched.name = matched.name:gsub("$inctimeorder", function ()
-        cnt = AddZeroFrontNum(2, math.floor(cnt+1))
-        return tostring(cnt)
-      end)
+      -- matched.name = matched.name:gsub("$inctimeorder", function ()
+      --   cnt = AddZeroFrontNum(2, math.floor(cnt+1))
+      --   return tostring(cnt)
+      -- end)
+
+      if string.match(matched.name, "v=[%d+]*") ~= nil then -- 長度3
+        nbr = string.match(matched.name, "v=[%d+]*")
+        nbr = string.sub(nbr, 3) -- 截取3
+        if tonumber(nbr) then
+          matched.name = matched.name:gsub("v="..nbr, function ()
+            nbr = AddZeroFrontNum(string.len(nbr), math.floor(nbr+(i-1)))
+            return tostring(nbr)
+          end)
+        end
+      end
+
+      if string.match(matched.name, "a=[A-Za-z]*") ~= nil then -- 長度3
+        xyz = string.match(matched.name, "a=[A-Za-z]*")
+        xyz_len = string.len(xyz)
+        xyz_pos = string.sub(xyz, 3, 3) -- 截取3
+
+        -- if xyz_len == 3 then
+          if string.find(xyz_pos,"(%u)") == 1 then
+            letter = string.upper(xyz_pos) -- 大寫
+            alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+          else
+            letter = string.lower(xyz_pos) -- 小寫
+            alphabet = 'abcdefghijklmnopqrstuvwxyz'
+          end
+  
+          local letter_byte = string.char(letter:byte())
+          local letter_idx = alphabet:find(letter)
+          letter_idx = (letter_idx % #alphabet) + (i-1)
+          letter_idx = letter_idx % #alphabet
+          if letter_idx == 0 then letter_idx = #alphabet end
+          letter_byte = alphabet:sub(letter_idx, letter_idx)
+
+          matched.name = matched.name:gsub("a=" .. xyz_pos, letter_byte)
+        -- end
+      end
     end
 
     matched.name = string.sub(matched.name, begin_str, end_str)
@@ -217,10 +250,46 @@ for i,region in ipairs(regions) do
 
     if insert ~= '' then
       matched.name = matched.name:gsub("$regionname", name_t[i])
-      matched.name = matched.name:gsub("$inctimeorder", function ()
-        cnt = AddZeroFrontNum(2, math.floor(cnt+1))
-        return tostring(cnt)
-      end)
+      -- matched.name = matched.name:gsub("$inctimeorder", function ()
+      --   cnt = AddZeroFrontNum(2, math.floor(cnt+1))
+      --   return tostring(cnt)
+      -- end)
+
+      if string.match(matched.name, "v=[%d+]*") ~= nil then -- 長度3
+        nbr = string.match(matched.name, "v=[%d+]*")
+        nbr = string.sub(nbr, 3) -- 截取3
+        if tonumber(nbr) then
+          matched.name = matched.name:gsub("v="..nbr, function ()
+            nbr = AddZeroFrontNum(string.len(nbr), math.floor(nbr+(i-1)))
+            return tostring(nbr)
+          end)
+        end
+      end
+
+      if string.match(matched.name, "a=[A-Za-z]*") ~= nil then -- 長度3
+        xyz = string.match(matched.name, "a=[A-Za-z]*")
+        xyz_len = string.len(xyz)
+        xyz_pos = string.sub(xyz, 3, 3) -- 截取3
+
+        -- if xyz_len == 3 then
+          if string.find(xyz_pos,"(%u)") == 1 then
+            letter = string.upper(xyz_pos) -- 大寫
+            alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+          else
+            letter = string.lower(xyz_pos) -- 小寫
+            alphabet = 'abcdefghijklmnopqrstuvwxyz'
+          end
+  
+          local letter_byte = string.char(letter:byte())
+          local letter_idx = alphabet:find(letter)
+          letter_idx = (letter_idx % #alphabet) + (i-1)
+          letter_idx = letter_idx % #alphabet
+          if letter_idx == 0 then letter_idx = #alphabet end
+          letter_byte = alphabet:sub(letter_idx, letter_idx)
+
+          matched.name = matched.name:gsub("a=" .. xyz_pos, letter_byte)
+        -- end
+      end
     end
 
     set_region(matched)
