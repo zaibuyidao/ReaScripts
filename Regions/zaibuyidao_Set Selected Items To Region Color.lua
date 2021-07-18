@@ -6,7 +6,7 @@
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * Reference: X-Raym_Color selected items from regions.lua
- * REAPER: 6.0
+ * REAPER: 6.0 or newer recommended
 --]]
 
 --[[
