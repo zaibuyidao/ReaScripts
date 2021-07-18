@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="38441ae237b19be1b5b844ffc4961edbf11e8f51">
+<index version="1" name="zaibuyidao Scripts" commit="5cddf276391f75eaf79fab050c6ce6031a9b3b89">
   <category name="Color">
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
       <metadata>
@@ -68,6 +68,9 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2021-07-18T09:12:55Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/38441ae237b19be1b5b844ffc4961edbf11e8f51/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
+      </version>
+      <version name="1.3.1" author="zaibuyidao" time="2021-07-18T09:26:55Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5cddf276391f75eaf79fab050c6ce6031a9b3b89/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Item Length.lua" type="script" desc="Copy Item Length">
@@ -295,6 +298,9 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2021-07-18T09:12:55Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/38441ae237b19be1b5b844ffc4961edbf11e8f51/Items%20Editing/zaibuyidao_Set%20Take%20Name.lua</source>
+      </version>
+      <version name="1.2.1" author="zaibuyidao" time="2021-07-18T09:26:55Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5cddf276391f75eaf79fab050c6ce6031a9b3b89/Items%20Editing/zaibuyidao_Set%20Take%20Name.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Take Pan.lua" type="script" desc="Set Take Pan">
