@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Generate Chord By Root
- * Version: 1.1
+ * Version: 1.1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -247,15 +247,15 @@ key_signature, state_toggle = user_input_csv:match("(%a*),(%d*)")
 if not key_signature:match('[%a%.]+') or not state_toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
 reaper.SetExtState("GenerateChordByRoot", "Key", key_signature, false)
 reaper.SetExtState("GenerateChordByRoot", "Toggle", state_toggle, false)
-reaper.MIDI_DisableSort(take)
 reaper.Undo_BeginBlock()
+reaper.MIDI_DisableSort(take)
 if state_toggle == "1" then
     reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40884)
     main()
 else
     main()
 end
-reaper.Undo_EndBlock("Generate Chord By Root", -1)
 reaper.MIDI_Sort(take)
+reaper.Undo_EndBlock("Generate Chord By Root", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

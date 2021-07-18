@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Chord Inversion -01
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -139,6 +138,8 @@ function getPPQStartOfMeasure(note) --获取音符所在小节起始位置
   return reaper.MIDI_GetPPQPos_StartOfMeasure(take, note.startPos)
 end
 function main()
+    reaper.Undo_BeginBlock()
+    reaper.MIDI_DisableSort(take)
     local times=1 --翻转次数
     local noteGroups={} --音符组表
     local tempStartMeasure=0
@@ -154,10 +155,9 @@ function main()
         end
         insertNotes(notes) --将移动过的音符组重新加入
     end
+    reaper.MIDI_Sort(take)
+    reaper.Undo_EndBlock("Chord Inversion -01", -1)
 end
-reaper.MIDI_DisableSort(take)
-reaper.Undo_BeginBlock()
+
 main()
-reaper.Undo_EndBlock("Chord Inversion -01", 0)
-reaper.MIDI_Sort(take)
 reaper.UpdateArrange()

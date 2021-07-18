@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 控制器縮放
- * Version: 1.0
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,7 +16,6 @@
 --]]
 
 function main()
-  local script_title = "控制器縮放"
   local take=reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   local cnt, index = 0, {}
@@ -67,7 +66,7 @@ function main()
     end
   end
   reaper.MIDI_Sort(take)
-  reaper.Undo_EndBlock(script_title, 0)
+  reaper.Undo_EndBlock("控制器縮放", -1)
 end
 function CheckForNewVersion(new_version)
     local app_version = reaper.GetAppVersion()

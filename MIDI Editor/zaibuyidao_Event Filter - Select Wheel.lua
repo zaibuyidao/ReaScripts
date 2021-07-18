@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Event Filter - Select Wheel
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -66,6 +66,7 @@ function Main()
     local start_tick = ppqpos - start_meas
     local tick = start_tick % midi_tick
     local pitchbend = (MSB-64)*128+LSB
+    reaper.Undo_BeginBlock()
     reaper.MIDI_DisableSort(take)
     if reset == 0 then
       if selected == true then
@@ -96,10 +97,10 @@ function Main()
     i=i+1
   end
   reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock("Select Wheel", -1)
 end
 
-reaper.Undo_BeginBlock()
+
 Main()
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Select Wheel", 0)
 reaper.SN_FocusMIDIEditor()

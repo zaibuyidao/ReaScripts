@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Humanize Velocity
- * Version: 1.5
+ * Version: 1.5.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,6 +16,7 @@
 --]]
 
 function Main()
+  reaper.Undo_BeginBlock()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
   local strength = reaper.GetExtState("HumanizeVelocity", "Strength")
@@ -37,11 +38,10 @@ function Main()
     end
     i=i+1
   end
-  reaper.UpdateArrange()
   reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock("Humanize Velocity", -1)
+  reaper.UpdateArrange()
 end
-local script_title = "Humanize Velocity"
-reaper.Undo_BeginBlock()
+
 Main()
-reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

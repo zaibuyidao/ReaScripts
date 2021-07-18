@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Duplicate Musical (Within Time Selection)
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -219,7 +218,6 @@ function Main()
     end
 end
 
-title = "Duplicate Musical (Within Time Selection)"
 reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh(1)
 
@@ -231,4 +229,4 @@ RestoreCursorPos()
 
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock(title, 0)
+reaper.Undo_EndBlock("Duplicate Musical (Within Time Selection)", -1)

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Auto Expression
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -24,9 +24,6 @@ cc_number = 11
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
-
-reaper.Undo_BeginBlock() -- 撤销块开始
-reaper.PreventUIRefresh(1) -- 防止UI刷新
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
@@ -66,6 +63,9 @@ if #index > 0 then
     if j > max_val then j = max_val end
     table.insert(tbl, j) -- 将计算得到的CC值存入tbl表
   end
+
+  reaper.PreventUIRefresh(1) -- 防止UI刷新
+  reaper.Undo_BeginBlock() -- 撤销块开始
 
   reaper.MIDI_DisableSort(take)
   for i = 1, #index do
@@ -110,10 +110,10 @@ if #index > 0 then
     end
   end
   reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock("Auto Expression", 0) -- 撤销块结束
+  reaper.PreventUIRefresh(-1) -- 恢复UI刷新
 end
 
 -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗余CCs
-reaper.PreventUIRefresh(-1) -- 恢复UI刷新
 reaper.UpdateArrange() -- 更新排列
-reaper.Undo_EndBlock("Auto Expression", 0) -- 撤销块结束
 reaper.SN_FocusMIDIEditor() -- 聚焦MIDI编辑器

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 力度人性化
- * Version: 1.5
+ * Version: 1.5.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -37,11 +37,11 @@ function Main()
     end
     i=i+1
   end
-  reaper.UpdateArrange()
   reaper.MIDI_Sort(take)
+  reaper.UpdateArrange()
 end
 
 reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock("力度人性化", 0)
+reaper.Undo_EndBlock("力度人性化", -1)
 reaper.SN_FocusMIDIEditor()

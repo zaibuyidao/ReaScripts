@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 線性斜坡CC事件
- * Version: 1.7
+ * Version: 1.7.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,9 +18,6 @@
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
-
-reaper.Undo_BeginBlock() -- 撤銷塊開始
-reaper.PreventUIRefresh(1) -- 防止UI刷新
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
@@ -67,6 +64,8 @@ if #index > 0 then
     table.insert(tbl, j) -- 將計算得到的CC值存入tbl表
   end
 
+  reaper.PreventUIRefresh(1) -- 防止UI刷新
+  reaper.Undo_BeginBlock() -- 撤銷塊開始
   reaper.MIDI_DisableSort(take)
   for i = 1, #index do
     retval, selected, muted, startppqpos[i], endppqpos[i], chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
@@ -110,10 +109,10 @@ if #index > 0 then
     end
   end
   reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock("線性斜坡CC事件", -1) -- 撤銷塊結束
+  reaper.PreventUIRefresh(-1) -- 恢复UI刷新
 end
 
 -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗餘CCs
-reaper.PreventUIRefresh(-1) -- 恢复UI刷新
 reaper.UpdateArrange() -- 更新排列
-reaper.Undo_EndBlock("線性斜坡CC事件", 0) -- 撤銷塊結束
 reaper.SN_FocusMIDIEditor() -- 聚焦MIDI編輯器

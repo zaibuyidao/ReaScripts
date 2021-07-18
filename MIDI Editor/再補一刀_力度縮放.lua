@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 力度縮放
- * Version: 1.1
+ * Version: 1.1.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -78,7 +78,7 @@ function main()
   end
 
   reaper.MIDI_Sort(take)
-  reaper.Undo_EndBlock("力度縮放", 0)
+  reaper.Undo_EndBlock("力度縮放", -1)
 end
 
 function CheckForNewVersion(new_version)

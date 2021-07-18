@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Move Selected Items
- * Instructions: Select Items. Run.
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -17,6 +16,7 @@
 --]]
 
 function main()
+	reaper.PreventUIRefresh(1)
 	reaper.Undo_BeginBlock()
 	count_sel_items = reaper.CountSelectedMediaItems(0)
 	if count_sel_items == 0 then return end
@@ -38,9 +38,8 @@ function main()
 		new_item_pos = reaper.TimeMap2_QNToTime(0, new_qn_item_pos)
 		reaper.SetMediaItemInfo_Value(item, "D_POSITION", new_item_pos)
 	end
-	reaper.Undo_EndBlock("Move Selected Items", 0)
+	reaper.Undo_EndBlock("Move Selected Items", -1)
+	reaper.PreventUIRefresh(-1)
+	reaper.UpdateArrange()
 end
-reaper.PreventUIRefresh(1)
 main()
-reaper.UpdateArrange()
-reaper.PreventUIRefresh(-1)

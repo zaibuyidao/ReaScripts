@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 自動表情(多軌)
- * Version: 1.3.2
+ * Version: 1.3.3
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -71,8 +71,8 @@ function autoExp()
   end
 end
 
-reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh(1)
+reaper.Undo_BeginBlock()
 
 min_val = reaper.GetExtState("AutoExpression", "Begin")
 max_val = reaper.GetExtState("AutoExpression", "End")
@@ -124,7 +124,7 @@ else
 end
 
 -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗余CCs
+reaper.Undo_EndBlock("自動表情(多軌)", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("自動表情(多軌)", 0)
 reaper.SN_FocusMIDIEditor()

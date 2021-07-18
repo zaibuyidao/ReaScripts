@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 自動表情
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -25,8 +25,9 @@ function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-reaper.Undo_BeginBlock()
+
 reaper.PreventUIRefresh(1)
+reaper.Undo_BeginBlock()
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
@@ -113,7 +114,7 @@ if #index > 0 then
 end
 
 -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗余CCs
+reaper.Undo_EndBlock("自動表情", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("自動表情", 0)
 reaper.SN_FocusMIDIEditor()

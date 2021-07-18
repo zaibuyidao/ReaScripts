@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Auto Expression Arc (Multitrack)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -94,11 +94,11 @@ function main()
   end
 end
 
-reaper.Undo_BeginBlock() -- 撤销块开始
 reaper.PreventUIRefresh(1) -- 防止UI刷新
+reaper.Undo_BeginBlock() -- 撤销块开始
 main() -- 执行函数
+reaper.Undo_EndBlock("Auto Expression Arc (Multitrack)", 0) -- 撤销块结束
 -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗余CCs
 reaper.PreventUIRefresh(-1) -- 恢复UI刷新
 reaper.UpdateArrange() -- 更新排列
-reaper.Undo_EndBlock("Auto Expression Arc (Multitrack)", 0) -- 撤销块结束
 reaper.SN_FocusMIDIEditor() -- 聚焦MIDI编辑器

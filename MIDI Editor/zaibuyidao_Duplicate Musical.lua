@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Duplicate Musical
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.2
+ * Version: 1.2.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -248,9 +247,8 @@ function DuplicateMix()
     end
 end
 
-title = "Duplicate Musical"
-reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh(1)
+reaper.Undo_BeginBlock()
 reaper.MIDI_DisableSort(take)
 
 if #note_idx > 0 and #ccs_idx == 0 then
@@ -264,6 +262,7 @@ else
 end
 
 reaper.MIDI_Sort(take)
+reaper.Undo_EndBlock("Duplicate Musical", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock(title, 0)
+

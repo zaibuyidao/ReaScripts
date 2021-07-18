@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 自動表情形狀
- * Version: 1.2
+ * Version: 1.2.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -116,11 +116,11 @@ function EndInsert()
   reaper.MIDI_Sort(take)
 end
 
-reaper.Undo_BeginBlock()
 reaper.PreventUIRefresh(1)
+reaper.Undo_BeginBlock()
 StartInsert()
 EndInsert()
+reaper.Undo_EndBlock("自動表情形狀", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("自動表情形狀", 0)
 reaper.SN_FocusMIDIEditor()

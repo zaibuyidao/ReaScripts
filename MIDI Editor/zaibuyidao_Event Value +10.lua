@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Event Value +10
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.1
+ * Version: 1.1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -45,12 +44,11 @@ function CCS()
   end
 end
 
-script_title = "Event Value +10"
 reaper.Undo_BeginBlock()
 reaper.MIDI_DisableSort(take)
 NOTES()
 CCS()
-reaper.UpdateArrange()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock("Event Value +10", -1)
+reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

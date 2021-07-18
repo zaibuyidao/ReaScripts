@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Auto Expression (Multitrack)
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -71,9 +71,6 @@ function autoExp()
   end
 end
 
-reaper.Undo_BeginBlock() -- 撤销块开始
-reaper.PreventUIRefresh(1) -- 防止UI刷新
-
 min_val = reaper.GetExtState("AutoExpression", "Begin")
 max_val = reaper.GetExtState("AutoExpression", "End")
 
@@ -106,6 +103,9 @@ end
 
 count_sel_items = reaper.CountSelectedMediaItems(0)
 
+reaper.PreventUIRefresh(1) -- 防止UI刷新
+reaper.Undo_BeginBlock() -- 撤销块开始
+
 if count_sel_items > 0 then
   for i = 1, count_sel_items do
     item = reaper.GetSelectedMediaItem(0, i - 1)
@@ -124,7 +124,7 @@ else
 end
 
 -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗余CCs
+reaper.Undo_EndBlock("Auto Expression", -1) -- 撤销块结束
 reaper.PreventUIRefresh(-1) -- 恢复UI刷新
 reaper.UpdateArrange() -- 更新排列
-reaper.Undo_EndBlock("Auto Expression", 0) -- 撤销块结束
 reaper.SN_FocusMIDIEditor() -- 聚焦MIDI编辑器

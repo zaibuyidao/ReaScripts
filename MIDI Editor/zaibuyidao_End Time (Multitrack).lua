@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: End Time (Multitrack)
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 2.0
+ * Version: 2.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -147,8 +146,8 @@ function main()
         endTime()
         reaper.MIDI_Sort(take)
     end
-    reaper.UpdateArrange()
     reaper.Undo_EndBlock("End Time (Multitrack)", -1)
+    reaper.UpdateArrange()
 end
 
 main()

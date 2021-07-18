@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 事件過濾 - 選擇控制器
- * Version: 1.0
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -74,6 +74,7 @@ function main()
     local start_meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, ppqpos)
     local start_tick = ppqpos - start_meas
     local tick = start_tick % midi_tick
+    reaper.Undo_BeginBlock()
     reaper.MIDI_DisableSort(take)
     if reset == 0 then
       if selected == true then
@@ -109,10 +110,9 @@ function main()
     i=i+1
   end
   reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock("選擇控制器", -1)
+  reaper.UpdateArrange()
 end
 
-reaper.Undo_BeginBlock()
 main()
-reaper.UpdateArrange()
-reaper.Undo_EndBlock("選擇控制器", 0)
 reaper.SN_FocusMIDIEditor()

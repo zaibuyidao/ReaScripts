@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 彎音滑入形狀
- * Version: 1.0
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,8 +18,6 @@
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
-
-reaper.Undo_BeginBlock()
 
 local editor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(editor)
@@ -70,6 +68,8 @@ tbl["-10"]="-6830"
 tbl["-11"]="-7513"
 tbl["-12"]="-8192"
 
+reaper.Undo_BeginBlock()
+
 local pitchbend = tbl[pitch]
 pitchbend = pitchbend + 8192
 local LSB = pitchbend & 0x7f
@@ -88,6 +88,6 @@ end
 
 reaper.MIDI_InsertCC(take, false, false, loop_end, 224, 0, 0, 64) --在LOOP結尾插入彎音值歸零
 
-reaper.Undo_EndBlock("彎音滑入形狀", 0)
+reaper.Undo_EndBlock("彎音滑入形狀", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

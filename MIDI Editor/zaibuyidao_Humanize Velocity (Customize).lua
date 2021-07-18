@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Humanize Velocity (Customize)
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -24,6 +23,7 @@ strength = 3
 -- End of USER AREA
 
 function Main()
+    reaper.Undo_BeginBlock()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     _, notes, _, _ = reaper.MIDI_CountEvts(take)
     strength = tonumber(strength * 2)
@@ -39,11 +39,11 @@ function Main()
         end
         i = i + 1
     end
-    reaper.UpdateArrange()
+
     reaper.MIDI_Sort(take)
+    reaper.Undo_EndBlock("Humanize Velocity", -1)
+    reaper.UpdateArrange()
 end
-script_title = "Humanize Velocity"
-reaper.Undo_BeginBlock()
+
 Main()
-reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

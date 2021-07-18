@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Chord Inversion (Start Base) -01
  * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -131,13 +131,14 @@ function moveDownNotes(notes)
     end
 end
 function main()
+    reaper.Undo_BeginBlock()
+    reaper.MIDI_DisableSort(take)
     local times=1
     local noteGroups={}
     for note in selNoteIterator() do
         if noteGroups[note.startPos]==nil then noteGroups[note.startPos]={} end
         table.insert(noteGroups[note.startPos],note)
     end
-    reaper.Undo_BeginBlock()
     deleteSelNote()
     for k,notes in pairs(noteGroups) do
         for i=1,tonumber(times) do
@@ -145,9 +146,9 @@ function main()
         end
         insertNotes(notes)
     end
+    reaper.MIDI_Sort(take)
     reaper.Undo_EndBlock("Chord Inversion (Start Base) -01", 0)
 end
-reaper.MIDI_DisableSort(take)
+
 main()
-reaper.MIDI_Sort(take)
 reaper.UpdateArrange()

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 律動量化
- * Version: 1.6
+ * Version: 1.6.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -29,6 +29,7 @@ function Main()
   fudu = tonumber(fudu)
   reaper.SetExtState("GrooveQuantize", "Amount", fudu, false)
 
+  reaper.Undo_BeginBlock()
   reaper.MIDI_DisableSort(take)
   for i = 0,  notecnt-1 do
     local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
@@ -56,12 +57,10 @@ function Main()
     end
     i=i+1
   end
-  reaper.UpdateArrange()
+  reaper.Undo_EndBlock("Groove Quantize", -1)
   reaper.MIDI_Sort(take)
+  reaper.UpdateArrange()
 end
 
-local script_title = "Groove Quantize"
-reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
 reaper.SN_FocusMIDIEditor()

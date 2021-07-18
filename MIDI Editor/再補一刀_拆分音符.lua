@@ -1,11 +1,10 @@
 --[[
  * ReaScript Name: 拆分音符
- * Version: 1.4
+ * Version: 1.4.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Reference: mpl_Split selected notes to equal parts.lua
  * REAPER: 6.0
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
@@ -91,7 +90,6 @@ function SplitNotes(div)
   end
 end
 
-script_title = "拆分音符"
 div_ret = reaper.GetExtState("SplitNotes", "Length")
 if (div_ret == "") then div_ret = "240" end
 user_ok, div_ret = reaper.GetUserInputs('拆分音符', 1, '長度', div_ret)
@@ -102,7 +100,7 @@ if not user_ok then return reaper.SN_FocusMIDIEditor() end
 if div ~= nil then
   reaper.Undo_BeginBlock()  
   SplitNotes(div)
-  reaper.Undo_EndBlock(script_title, 0)
+  reaper.Undo_EndBlock("拆分音符", -1)
 end
 
 reaper.SN_FocusMIDIEditor()

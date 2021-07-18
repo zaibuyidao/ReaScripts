@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 轉換CC(對於選定CC)
- * Version: 1.1
+ * Version: 1.1.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -31,6 +31,7 @@ function Main()
     reaper.SN_FocusMIDIEditor()
   end
   reaper.SetExtState("TransformCC", "CC_New", cc_new, false)
+  reaper.Undo_BeginBlock()
   reaper.MIDI_DisableSort(take)
   for i = 1, ccevtcnt do
     local _, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i - 1)
@@ -38,11 +39,10 @@ function Main()
       reaper.MIDI_SetCC(take, i - 1, nil, nil, nil, nil, nil, cc_new, nil, false)
     end
   end
-  reaper.UpdateArrange()
   reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock("轉換CC(對於選定CC)", -1)
+  reaper.UpdateArrange()
 end
-local script_title = "轉換CC(對於選定CC)"
-reaper.Undo_BeginBlock()
+
 Main()
-reaper.Undo_EndBlock(script_title, 0)
 reaper.SN_FocusMIDIEditor()

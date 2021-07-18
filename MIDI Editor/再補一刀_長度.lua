@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: 長度
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.0
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -19,7 +18,6 @@ function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-local title = "長度"
 local HWND =  reaper.MIDIEditor_GetActive()
 if not HWND then return end
 local take =  reaper.MIDIEditor_GetTake(HWND)
@@ -147,7 +145,7 @@ function main()
       StretchSelectedNotes(func)
       StretchSelectedCCs(func)
     end
-    reaper.Undo_EndBlock(title, 0)
+    reaper.Undo_EndBlock("長度", -1)
   end
 end
 

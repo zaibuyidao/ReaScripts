@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Duplicate Events
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 3.3
+ * Version: 3.3.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -20,7 +19,6 @@ function Msg(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-title = "Duplicate Events"
 take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if take == nil then return end
 _, _, ccevtcnt, _ = reaper.MIDI_CountEvts(take)
@@ -151,6 +149,6 @@ elseif #ccs_idx > 0 and #note_idx > 0 then
     DuplicateMix()
 end
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock(title, 0)
+reaper.Undo_EndBlock("Duplicate Events", -1)
 reaper.UpdateArrange()
 reaper.UpdateItemInProject(item)

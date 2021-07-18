@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Paste Selected Arpeggio
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.2.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -65,6 +64,8 @@ function getSavedData(key1, key2) -- 获取已储存的table数据
     return table.unserialize(reaper.GetExtState(key1, key2))
 end
 function main()
+    reaper.Undo_BeginBlock()
+    reaper.MIDI_DisableSort(take)
     local pasteInfos = getSavedData("CopySelectedArpeggio", "data") -- 获取复制数据
     local selPitchInfo = {} -- 选中音符的音高数据
     local tempStartMeasure = 0
@@ -99,10 +100,9 @@ function main()
             end
         end
     end
+    reaper.MIDI_Sort(take)
+    reaper.Undo_EndBlock("Paste Selected Arpeggio", -1)
 end
-reaper.Undo_BeginBlock()
-reaper.MIDI_DisableSort(take)
+
 main()
-reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Paste Selected Arpeggio", 0)
 reaper.UpdateArrange()

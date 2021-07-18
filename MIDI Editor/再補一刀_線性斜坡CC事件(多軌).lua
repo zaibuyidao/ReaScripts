@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 線性斜坡CC事件(多軌)
- * Version: 1.7
+ * Version: 1.7.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -57,8 +57,8 @@ function autoExp()
   end
 end
 
-reaper.Undo_BeginBlock() -- 撤銷塊開始
 reaper.PreventUIRefresh(1) -- 防止UI刷新
+reaper.Undo_BeginBlock() -- 撤銷塊開始
 
 cc_begin = reaper.GetExtState("LinearRampCCEvents", "Begin")
 if (cc_begin == "") then cc_begin = "90" end
@@ -113,7 +113,7 @@ else
 end
 
 -- reaper.MIDIEditor_LastFocused_OnCommand(reaper.NamedCommandLookup("_RS7d3c_38c941e712837e405c3c662e2a39e3d03ffd5364"), 0) -- 移除冗餘CCs
+reaper.Undo_EndBlock("線性斜坡CC事件(多軌)", 0) -- 撤銷塊結束
 reaper.PreventUIRefresh(-1) -- 恢复UI刷新
 reaper.UpdateArrange() -- 更新排列
-reaper.Undo_EndBlock("線性斜坡CC事件(多軌)", 0) -- 撤銷塊結束
 reaper.SN_FocusMIDIEditor() -- 聚焦MIDI編輯器

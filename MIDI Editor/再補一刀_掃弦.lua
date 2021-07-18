@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 掃弦
- * Version: 1.3
+ * Version: 1.3.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -89,17 +89,20 @@ end
 function main() -- 入口函数
     local tick = reaper.GetExtState("StrumIt", "Tick")
     if (tick == "") then tick = "4" end
+
     user_ok, user_input_csv = reaper.GetUserInputs('掃弦', 1, '輸入嘀嗒數', tick)
     if not user_ok then return reaper.SN_FocusMIDIEditor() end
     tick = user_input_csv:match("(.*)")
     if not tonumber(tick) then return reaper.SN_FocusMIDIEditor() end
     reaper.SetExtState("StrumIt", "Tick", tick, false)
     if countEvts()==0 then return end
+
     local noteGroups={} -- 按照startPos进行分组储存note的表
     for note in noteIterator() do -- 遍历选中音符，并对noteGroups表赋值
         if noteGroups[note.startPos]==nil then noteGroups[note.startPos]={} end
         table.insert(noteGroups[note.startPos],note)
     end
+
     local infoGroup={}
     for startPos,notes in pairs(noteGroups) do -- 遍历noteGroups表，notes
         if #notes <= 1 then goto continue end -- 如果该分组含有音符数量不大于1则不处理
@@ -112,12 +115,14 @@ function main() -- 入口函数
         end
         ::continue::
     end
+
     local infos={} -- 包含了每个被选中的音符起始位置应该增加的长度信息的表
     for i,v in ipairs (infoGroup) do -- 将infoGroup表整合入infos表
         for k2,v2 in pairs(v) do
             infos[k2]=v2
         end
     end
+
     while table.nums(infos)>0 do -- 再次遍历选中音符，使用infos表中的信息来对音符起始位置进行改变
         for note in noteIterator() do
             local val=infos[note.pitch..","..note.startPos]
@@ -133,6 +138,6 @@ reaper.Undo_BeginBlock()
 reaper.MIDI_DisableSort(take)
 main()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("掃弦", 0)
+reaper.Undo_EndBlock("掃弦", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

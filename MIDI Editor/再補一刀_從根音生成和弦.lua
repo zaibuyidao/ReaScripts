@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 從根音生成和弦
- * Version: 1.0
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -254,7 +254,7 @@ if state_toggle == "1" then
 else
     main()
 end
-reaper.Undo_EndBlock("從根音生成和弦", -1)
 reaper.MIDI_Sort(take)
+reaper.Undo_EndBlock("從根音生成和弦", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

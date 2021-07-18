@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 彎音滑入
- * Version: 1.4
+ * Version: 1.4.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,8 +18,6 @@
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
-
-reaper.Undo_BeginBlock()
 
 local editor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(editor)
@@ -65,6 +63,8 @@ tbl["-10"]="-6830"
 tbl["-11"]="-7513"
 tbl["-12"]="-8192"
 
+reaper.Undo_BeginBlock()
+
 if tonumber(pitch) < 0 then
   for i = math.floor(pitch), -1, 1 do
     next_start = next_start + average_len
@@ -90,7 +90,6 @@ else
   end
   reaper.MIDI_InsertCC(take, false, false, loop_end, 224, 0, 0, 64)
 end
-
+reaper.Undo_EndBlock("彎音滑入", -1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("彎音滑入", 0)
 reaper.SN_FocusMIDIEditor()

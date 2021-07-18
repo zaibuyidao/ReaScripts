@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 移調
- * Version: 1.3
+ * Version: 1.3.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -25,6 +25,8 @@ function main()
     user_ok, amount = reaper.GetUserInputs("移調", 1, "量", amount)
     amount = tonumber(amount)
     reaper.SetExtState("TransposeMIDI", "Transpose", amount, false)
+
+    reaper.Undo_BeginBlock()
     if window == "midi_editor" then
         if not inline_editor then
             if not user_ok or not tonumber(amount) then return reaper.SN_FocusMIDIEditor() end
@@ -96,9 +98,8 @@ function main()
             reaper.MIDI_Sort(take)
         end
     end
+    reaper.Undo_EndBlock("移調", -1)
 end
 
-reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("移調", -1)
 reaper.UpdateArrange()

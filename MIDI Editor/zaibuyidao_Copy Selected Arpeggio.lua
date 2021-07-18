@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Copy Selected Arpeggio
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes. Run.
- * Version: 1.2
+ * Version: 1.2.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -77,6 +76,8 @@ function saveData(key1,key2,data) --储存table数据
   reaper.SetExtState(key1, key2, data, false)
 end
 function main()
+  reaper.Undo_BeginBlock()
+  reaper.MIDI_DisableSort(take)
   local notes={}
   local startMeasure,tempMeasure=-1,0
   local pitchsFlag={}
@@ -107,10 +108,9 @@ function main()
   end
   outData.lineNum=lineNum
   saveData("CopySelectedArpeggio","data",table.serialize(outData))
+  reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock("Copy Selected Arpeggio", -1)
 end
-reaper.Undo_BeginBlock()
-reaper.MIDI_DisableSort(take)
+
 main()
-reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Copy Selected Arpeggio", 0)
 reaper.UpdateArrange()

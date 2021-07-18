@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Duplicate Events To Edit Cursor (Multitrack)
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes or CC Events. Run.
- * Version: 1.4
+ * Version: 1.4.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -105,7 +104,6 @@ isDuplicateCCsMulti = false -- 是否需要复制CC(仅针对选中的轨道)
 isDuplicateNotes = false -- 是否需要复制音符(仅针对激活的MIDI编辑器)
 isDuplicateCCs = false -- 是否需要复制CC(仅针对激活的MIDI编辑器)
 
-script_title = "Duplicate Events To Edit Cursor (Multitrack)"
 count_sel_items = reaper.CountSelectedMediaItems(0)
 reaper.Undo_BeginBlock()
 
@@ -186,5 +184,5 @@ else
     reaper.MIDI_Sort(take)
 end
 
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock("Duplicate Events To Edit Cursor (Multitrack)", -1)
 reaper.UpdateArrange()
