@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="873d5bafd6544f8b3c14c9f37a7368c088a89c65">
+<index version="1" name="zaibuyidao Scripts" commit="95663ef0a18b0fb4e81ec6309b395a4777fa3e84">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -546,18 +546,6 @@
     </reapack>
   </category>
   <category name="MIDI Editor">
-    <reapack name="zaibuyidao_Articulation Map - Insert Patch Change.lua" type="script" desc="Articulation Map - Insert Patch Change">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-02-15T13:07:51Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Insert%20Patch%20Change.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-04-01T10:16:26Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdc54985c5ce9dce4863cf380ab48e15d4f2e68c/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Insert%20Patch%20Change.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Articulation Map - Note To PC.lua" type="script" desc="Articulation Map - Note To PC">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -565,6 +553,24 @@
       <version name="1.0" author="zaibuyidao" time="2021-02-10T15:05:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Note%20To%20PC.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Articulation Map - Patch Change GUI.lua" type="script" desc="Articulation Map - Patch Change GUI">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-07-22T16:00:37Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/95663ef0a18b0fb4e81ec6309b395a4777fa3e84/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Articulation Map - Patch Change.lua" type="script" desc="Articulation Map - Patch Change">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-07-22T16:00:37Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/95663ef0a18b0fb4e81ec6309b395a4777fa3e84/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - PC To Note.lua" type="script" desc="Articulation Map - PC To Note">
