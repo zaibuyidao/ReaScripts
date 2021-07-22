@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Articulation Map - Insert Patch Change
- * Version: 1.0.1
+ * ReaScript Name: Articulation Map - Patch Change
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -20,8 +20,8 @@ function Msg(param)
 end
 
 function main()
-  reaper.Undo_BeginBlock()
   reaper.PreventUIRefresh(1)
+  reaper.Undo_BeginBlock()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   item = reaper.GetMediaItemTake_Item(take)
@@ -44,7 +44,7 @@ function main()
   local Tick = reaper.GetExtState("ArticulationMap", "Tick")
   if (Tick == "") then Tick = "-10" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Insert Patch Change", 4, "Instrument Group,Note,Velocity,Offset", MSB ..','.. PC ..','.. LSB ..','.. Tick)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Patch Change", 4, "Instrument Group,Note,Velocity,Offset", MSB ..','.. PC ..','.. LSB ..','.. Tick)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   local MSB, PC, LSB, Tick = user_input_csv:match("(.*),(.*),(.*),(.*)")
   if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) or not tonumber(Tick) then return reaper.SN_FocusMIDIEditor() end
@@ -202,9 +202,9 @@ function main()
     reaper.MIDI_InsertCC(take, selected, muted, ppq_pos+Tick, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
+  reaper.Undo_EndBlock("Patch Change", -1)
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
-  reaper.Undo_EndBlock("Insert Patch Change", 0)
 end
 
 main()
