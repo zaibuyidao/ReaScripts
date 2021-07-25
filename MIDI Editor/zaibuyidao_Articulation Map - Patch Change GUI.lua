@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -896,7 +896,17 @@ function mainloop()
     last_x, last_y = gfx.mouse_x, gfx.mouse_y
     gfx.mouse_wheel = 0 -- reset gfx.mouse_wheel 
     char = gfx.getchar()
-    if char==32 then reaper.Main_OnCommand(40044, 0) end -- play 
+    if char == 13 then -- Enter 键
+        if current_mode == "1" then
+            local bank_item = store[ch_box1.norm_val]
+            local note_item = bank_item.notes[ch_box2.norm_val]
+            inset_patch(bank_item.bank.bank, note_item.note, bank_item.bank.velocity)
+        elseif current_mode == "2" then
+            local note_item = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val]
+            inset_patch(note_item.bank, note_item.note, note_item.velocity)
+        end
+        gfx.quit()
+    end
     if char~=-1 then reaper.defer(mainloop) end          -- defer
     if char == -1 or char == 27 then saveExtState() end  -- saveState (window position)
     gfx.update()
