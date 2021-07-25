@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -181,13 +181,76 @@ function process_lines(lines)
     return lines
 end
 
-function read_config_lines()
-    local filepath = reaper.GetResourcePath() .. "\\" .. "Data" .."\\" .. "Articulation Map.reabank"
-    local file = io.open(filepath, "r")
-    if not file then
-        return reaper.MB("文件不存在！ \nFile does not exist!\n\n請將音色表 Articulation Map.reabank 放在DATA目錄下:\nC:\\REAPER\\Data\\Articulation Map.reabank", "Error", 0),
+local function osOpenCommand()
+    local commands = {
+        {os = "Win", cmd = 'start ""'},
+        {os = "OSX", cmd = 'open ""'},
+        {os = "Other", cmd = 'xdg-open'},
+    }
+    
+    local OS = reaper.GetOS()
+    
+    for _, v in ipairs(commands) do
+      if OS:match(v.os) then return v.cmd end
+    end
+end
+
+local reabank_path = reaper.GetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch")
+
+if (reabank_path == "") then 
+
+    reaper.ShowMessageBox("The reabank does not exist, please select a reabank!\n音色表不存在，請選擇一個音色表！", "找不到音色表 Can't find reabank", 0)
+    local retval, new_path = reaper.GetUserFileNameForRead("", "選擇音色表", "") -- 系统文件路径
+    if not retval then return 0 end
+    local bank_num = new_path:reverse():find('[%/%\\]')
+    local bank_name = new_path:sub(-bank_num + 1) .. "" -- 音色表名称
+
+    if string.match(bank_name, "%..+$") ~= ".reabank" then
+        return reaper.MB("Please select reabank file with the suffix .reabank!\n請選擇後綴為 .reabank 的音色表！", "Error", 0),
         reaper.SN_FocusMIDIEditor()
     end
+    reabank_path = new_path
+    reaper.SetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch", reabank_path, true)
+
+end
+
+function create_reabank_action(get_path)
+
+    local bank_num = get_path:reverse():find('[%/%\\]')
+    local bank_name = get_path:sub(-bank_num + 1) .. "" -- 音色表名称
+    
+    local retval, retvals_csv = reaper.GetUserInputs("Create an action 創建一個動作", 2, "Reabank path 音色表路徑 :,Reabank alias 音色表別名 :,extrawidth=200", get_path.."," .. "Open Reabank - " ..bank_name)
+    if not retval or retvals_csv == "" then return 0 end
+    
+    get_path, bank_name = string.match(retvals_csv, "([^,]+),([^,]*)")
+    if not get_path then return 0 end
+
+    local str =	"-- 使用表情映射-插入音色GUI腳本創建的動作，用於一鍵打開音色表。\n" .. [[os.execute(']] .. osOpenCommand() .. [[ "]] .. get_path .. [["')]]
+    str = string.gsub(str, [[\]], [[\\]])
+
+    local info = debug.getinfo(1,'S');
+
+    local script_path = info.source:match[[^@?(.*[\/])[^\/]-$]] -- 脚本位置
+    local file_name = script_path .. "" .. bank_name .. ".lua" -- 完整路径
+
+    local file, err = io.open(file_name , "w+")
+
+    if not file then
+        reaper.ShowMessageBox("不能創建文件 Couldn't create file:\n" .. file_name .. "\n\nError: " .. tostring(err), "Whoops", 0)
+        return 0
+    end
+    
+    file:write(str) -- 将内容写入脚本中
+
+    reaper.ShowMessageBox( "成功創建文件 Successfully created file:\n" .. ( string.len(file_name) > 64 and ( "..." .. string.sub(file_name, -56) ) or file_name), "Yes!", 0)
+    
+    io.close(file)
+    
+    reaper.AddRemoveReaScript(true, 32060, file_name, true)
+end
+
+function read_config_lines(reabank_path)
+    local file = io.open(reabank_path, "r")
     local temp = {}
     for line in file:lines() do
         table.insert(temp, line)
@@ -554,15 +617,17 @@ function Frame:draw()
    self:draw_frame()  -- draw frame
 end
 
--- 按钮位置 1-左 2-上 3-右 4-下
+-- 按钮位置: 1-左 2-上 3-右 4-下
 local btn1 = Button:new(10,10,25,30, 0.7,0.7,0.7,0.3, "1","Arial",15, 0 )
 local btn4 = Button:new(50,10,25,30, 0.7,0.7,0.7,0.3, "2","Arial",15, 0 )
 local btn2 = Button:new(120,130,100,30, 0.8,0.8,0.8,0.8, "OK","Arial",15, 0 )
 local btn3 = Button:new(230,130,100,30, 0.8,0.8,0.8,0.8, "Cancel","Arial",15, 0 )
 local btn5 = Button:new(90,10,25,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
 local btn6 = Button:new(130,10,25,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
+local btn7 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
+local btn8 = Button:new(210,10,25,30, 0.7,0.7,0.7,0.3, "...","Arial",15, 0 )
 
-local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6 }
+local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8 }
 
 -- x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val = check, norm_val2 = checkbox table
 local ch_box1 = CheckBox:new(50,50,280,30,  0.8,0.8,0.8,0.3, "Bank : ","Arial",15,  1, {})
@@ -575,14 +640,18 @@ local Frame_TB = { W_Frame }
 btn3.onClick = function () gfx.quit() end   -- 退出按钮
 btn5.onClick = function () slideF10() end   -- -10Tick
 btn6.onClick = function () slideZ10() end   -- +10Tick
+btn7.onClick = function () create_reabank_action(reabank_path) end   -- 创建音色表脚本
 
-local store = parse_banks(read_config_lines())      -- 模式1数据
+if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
+local store = parse_banks(read_config_lines(reabank_path))      -- 模式1数据
 local store_grouped = group_banks(store)            -- 模式2数据
 local current_state         -- 当前选中的参数
 local current_mode = "1"    -- 当前模式
 
 local function push_current_state() -- 保存当前状态
-    reaper.SetProjExtState(0, SCRIPT_NAME, "baseState", pickle(current_state))
+    if current_state then -- 新增判断
+        reaper.SetProjExtState(0, SCRIPT_NAME, "baseState", pickle(current_state))
+    end
     reaper.SetProjExtState(0, SCRIPT_NAME, "baseStateMode", current_mode)
 end
 
@@ -638,6 +707,7 @@ local function switch_mode_1() -- 模式1 切换
     
     ch_box1.onClick = function()
         update_patch_box()
+        ch_box2.norm_val = 1 -- 新增判断
         update_current_state()
     end
 
@@ -691,7 +761,7 @@ local function switch_mode_2() -- 模式2 切换
     end
     
     ch_box1.onClick = function()
-        update_patch_box() 
+        update_patch_box()
         update_current_state()
     end
 
@@ -727,6 +797,29 @@ btn4.onClick = function () -- 切换模式2
     push_current_state()
 end
 
+btn8.onClick = function () -- 选择音色表
+    local retval, path = reaper.GetUserFileNameForRead("", "選擇音色表", "") -- 系统文件路径
+    if not retval then return 0 end
+    local bank_num = path:reverse():find('[%/%\\]')
+    local bank_name = path:sub(-bank_num + 1) .. "" -- 音色表名称
+
+    if string.match(bank_name, "%..+$") ~= ".reabank" then
+        return reaper.MB("Please select reabank file with the suffix .reabank!\n請選擇後綴為 .reabank 的音色表！", "Error", 0),
+        reaper.SN_FocusMIDIEditor()
+    end
+
+    reabank_path = path
+    reaper.SetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch", reabank_path, true)
+
+    if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
+    store = parse_banks(read_config_lines(reabank_path)) -- 模式1数据
+    store_grouped = group_banks(store)                   -- 模式2数据
+
+    state_getter = switch_mode_1()
+    current_mode = "1"
+    push_current_state()
+end
+
 -- Main DRAW function
 
 function DRAW()
@@ -757,7 +850,7 @@ function Init()
     -- Some gfx Wnd Default Values
     local R,G,B = 240,240,240            -- 0..255 form
     local Wnd_bgd = R + G*256 + B*65536  -- red+green*256+blue*65536  
-    local Wnd_Title = "Articulation Map - Patch Change GUI"
+    local Wnd_Title = "Articulation Map - Patch Change"
 
     local Wnd_Dock,Wnd_X,Wnd_Y = 0,800,320
     Wnd_W,Wnd_H = 340,170 -- global values(used for define zoom level) -- 脚本界面尺寸
