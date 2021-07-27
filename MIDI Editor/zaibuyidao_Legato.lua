@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Legato
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -157,9 +157,9 @@ for i = 1, #startPosIndex - 1 do
                 if nextStartPos ~= nil then
                     note.endPos = nextStartPos
                 end -- 如果前面找到了“離當前組最近的”選中音符組，就把當前音符結束位置設置為那個音符組的起始位置
-                if startNotes[startPosIndex[i + 1]][note.pitch] ~= nil then
-                    note.endPos = startPosIndex[i + 1]
-                end -- 判斷下一組音符在相同的音高處有沒有音符，如果有音符就直接把當前音符的結束位置設置為那個音符的起始位置
+                -- if startNotes[startPosIndex[i + 1]][note.pitch] ~= nil then
+                --     note.endPos = startPosIndex[i + 1]
+                -- end -- 判斷下一組音符在相同的音高處有沒有音符，如果有音符就直接把當前音符的結束位置設置為那個音符的起始位置
                 insertNote(note)
             end
         end
@@ -172,5 +172,5 @@ for _, note in pairs(startNotes[startPosIndex[#startPosIndex]]) do
 end
 
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Legato", 0)
+reaper.Undo_EndBlock("Legato", -1)
 reaper.UpdateArrange()
