@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,6 +16,10 @@
 --]]
 
 SCRIPT_NAME = "INSERT_PATCH_GUI"
+
+local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+
+if not take or not reaper.TakeIsMIDI(take) then return end
 
 function Msg(param) 
     reaper.ShowConsoleMsg(tostring(param) .. "\n") 
@@ -199,7 +203,7 @@ local reabank_path = reaper.GetExtState("ArticulationMapPatchChangeGUI", "ReaBan
 
 if (reabank_path == "") then 
 
-    reaper.ShowMessageBox("The reabank does not exist, please select a reabank!\n音色表不存在，請選擇一個音色表！", "找不到音色表 Can't find reabank", 0)
+    reaper.ShowMessageBox("The reabank does not exist, please select a reabank!\n音色表不存在，請選擇一個音色表！", "Can't find reabank", 0)
     local retval, new_path = reaper.GetUserFileNameForRead("", "選擇音色表", "") -- 系统文件路径
     if not retval then return 0 end
     local bank_num = new_path:reverse():find('[%/%\\]')
@@ -339,6 +343,161 @@ function slideZ10()
     end
     reaper.MIDI_Sort(take)
 end
+
+function ToggleNotePC()
+    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    if take == nil then return end
+
+    local note_cnt, note_idx = 0, {}
+    local note_val = reaper.MIDI_EnumSelNotes(take, -1)
+    while note_val ~= -1 do
+        note_cnt = note_cnt + 1
+        note_idx[note_cnt] = note_val
+        note_val = reaper.MIDI_EnumSelNotes(take, note_val)
+    end
+    
+    local ccs_cnt, ccs_idx = 0, {}
+    local ccs_val = reaper.MIDI_EnumSelCC(take, -1)
+    while ccs_val ~= -1 do
+        ccs_cnt = ccs_cnt + 1
+        ccs_idx[ccs_cnt] = ccs_val
+        ccs_val = reaper.MIDI_EnumSelCC(take, ccs_val)
+    end
+
+    if note_cnt == 0 and ccs_cnt == 0 then
+        return
+        reaper.MB("PC or Note event must be selected\n必須選擇PC或音符事件", "Error", 0),
+        reaper.SN_FocusMIDIEditor()
+    end
+
+    local function NoteToPC()
+        local MSB, LSB = {}
+        
+        local midi_ok, midi_string = reaper.MIDI_GetAllEvts(take, "")
+        local string_pos, ticks, table_events, offset, flags, msg = 1, 0, {}
+        local pack, unpack = string.pack, string.unpack
+        while string_pos < #midi_string do
+            offset, flags, msg, string_pos = unpack("i4Bs4", midi_string, string_pos)
+            if flags&1 ==1 and #msg >= 3 and msg:byte(1)>>4 == 8 and msg:byte(3) ~= -1 then
+                MSB[#MSB+1] = msg:byte(3)
+            end
+        end
+    
+        reaper.PreventUIRefresh(1)
+        reaper.MIDI_DisableSort(take)
+      
+        for i = 1, #note_idx do
+            retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx[i])
+            if selected == true then
+              -- if vel == 96 then
+              --   LSB = 0
+              --   reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 0, MSB[1]) -- CC#00
+              --   reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
+              --   reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
+              -- else
+                LSB = vel
+                reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 0, MSB[1]) -- CC#00
+                reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
+                reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
+                -- end
+                flag = true
+            end
+        end
+      
+        i = reaper.MIDI_EnumSelNotes(take, -1)
+        while i > -1 do
+            reaper.MIDI_DeleteNote(take, i)
+            i = reaper.MIDI_EnumSelNotes(take, -1)
+        end
+    
+        reaper.MIDI_Sort(take)
+        reaper.PreventUIRefresh(-1)
+    end
+    
+    local function PCToNote()
+        local bank_msb = {}
+    
+        reaper.PreventUIRefresh(1)
+        reaper.MIDI_DisableSort(take)
+    
+        for i = 1, #ccs_idx do
+            retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, ccs_idx[i])
+            if chanmsg == 176 and msg2 == 0 then -- CC#0
+                bank_msb_num = msg3
+                bank_msb[#bank_msb+1] = bank_msb_num
+            end
+            if chanmsg == 176 and msg2 == 32 then -- CC#32
+                vel = msg3
+                if vel == 0 then vel = 96 end
+            end
+            if chanmsg == 192 then --Program Change
+                pitch = msg2
+                reaper.MIDI_InsertNote(take, true, muted, ppqpos, ppqpos+120, chan, pitch, vel, false)
+            end
+        end
+    
+        i = reaper.MIDI_EnumSelCC(take, -1)
+        while i > -1 do
+            reaper.MIDI_DeleteCC(take, i)
+            i = reaper.MIDI_EnumSelCC(take, -1)
+        end
+      
+        local midi_ok, midi_string = reaper.MIDI_GetAllEvts(take, "")
+        if not midi_ok then reaper.ShowMessageBox("Error loading MIDI", "Error", 0) return end
+        local string_pos, ticks, table_events, offset, flags, msg = 1, 0, {}
+        local pack, unpack = string.pack, string.unpack
+        while string_pos < #midi_string do
+            offset, flags, msg, string_pos = unpack("i4Bs4", midi_string, string_pos)
+            if flags&1 ==1 and #msg >= 3 and msg:byte(1)>>4 == 8 and msg:byte(3) ~= -1 then
+                msg = msg:sub(1,2) .. string.char(msg:byte(3) + bank_msb[1])
+            end
+            table_events[#table_events+1] = pack("i4Bs4", offset, flags, msg)
+        end
+        reaper.MIDI_SetAllEvts(take, table.concat(table_events))
+    
+        reaper.MIDI_Sort(take)
+        reaper.PreventUIRefresh(-1)
+    end
+    
+    if #note_idx > 0 and #ccs_idx == 0 then
+        NoteToPC()
+    elseif #ccs_idx > 0 and #note_idx ==0 then
+        PCToNote()
+    end
+    reaper.UpdateArrange()
+end
+
+function SetBank()
+    reaper.PreventUIRefresh(1)
+    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    local cnt, index = 0, {}
+    local val = reaper.MIDI_EnumSelCC(take, -1)
+    while val ~= - 1 do
+      cnt = cnt + 1
+      index[cnt] = val
+      val = reaper.MIDI_EnumSelCC(take, val)
+    end
+    if cnt == 0 then
+        return
+        reaper.MB("PC event must be selected\n必須選擇PC事件", "Error", 0),
+        reaper.SN_FocusMIDIEditor()
+    end
+    local MSB = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MSB")
+    if (MSB == "") then MSB = "0" end
+    local user_ok, MSB = reaper.GetUserInputs('Set Bank', 1, 'Bank number', MSB)
+    if not user_ok or not tonumber(MSB) then return reaper.SN_FocusMIDIEditor() end
+    reaper.SetExtState("ArticulationMapPatchChangeGUI", "MSB", MSB, false)
+    reaper.MIDI_DisableSort(take)
+    for i = 1, #index do
+      retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
+      if chanmsg == 176 and msg2 == 0 then -- CC#0
+        reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, MSB, false)
+      end
+    end
+    reaper.MIDI_Sort(take)
+    reaper.PreventUIRefresh(-1)
+    reaper.UpdateArrange()
+  end
 
 -- table.print(group_banks(parse_banks(process_lines(read_test_lines()))))
 -- os.exit()
@@ -624,10 +783,12 @@ local btn2 = Button:new(120,130,100,30, 0.8,0.8,0.8,0.8, "OK","Arial",15, 0 )
 local btn3 = Button:new(230,130,100,30, 0.8,0.8,0.8,0.8, "Cancel","Arial",15, 0 )
 local btn5 = Button:new(90,10,25,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
 local btn6 = Button:new(130,10,25,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
-local btn7 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
-local btn8 = Button:new(210,10,25,30, 0.7,0.7,0.7,0.3, "...","Arial",15, 0 )
+local btn8 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
+local btn7 = Button:new(210,10,25,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
+local btn9 = Button:new(250,10,25,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
+local btn10 = Button:new(290,10,25,30, 0.7,0.7,0.7,0.3, "SB","Arial",15, 0 )
 
-local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8 }
+local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10 }
 
 -- x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val = check, norm_val2 = checkbox table
 local ch_box1 = CheckBox:new(50,50,280,30,  0.8,0.8,0.8,0.3, "Bank : ","Arial",15,  1, {})
@@ -640,7 +801,14 @@ local Frame_TB = { W_Frame }
 btn3.onClick = function () gfx.quit() end   -- 退出按钮
 btn5.onClick = function () slideF10() end   -- -10Tick
 btn6.onClick = function () slideZ10() end   -- +10Tick
-btn7.onClick = function () create_reabank_action(reabank_path) end   -- 创建音色表脚本
+--btn7.onClick = function () create_reabank_action(reabank_path) end   -- 创建音色表脚本
+btn7.onClick = function () ToggleNotePC() end   -- NOTE PC 来回切
+btn9.onClick = function () -- 编辑音色表
+    local rea_patch = '\"'..reabank_path..'\"'
+    edit_reabank = 'start "" '..rea_patch
+    os.execute(edit_reabank)
+end
+btn10.onClick = function () SetBank() end -- 设置乐器组
 
 if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
 local store = parse_banks(read_config_lines(reabank_path))      -- 模式1数据
@@ -762,6 +930,7 @@ local function switch_mode_2() -- 模式2 切换
     
     ch_box1.onClick = function()
         update_patch_box()
+        ch_box2.norm_val = 1 -- 新增判断
         update_current_state()
     end
 
@@ -850,7 +1019,7 @@ function Init()
     -- Some gfx Wnd Default Values
     local R,G,B = 240,240,240            -- 0..255 form
     local Wnd_bgd = R + G*256 + B*65536  -- red+green*256+blue*65536  
-    local Wnd_Title = "Articulation Map - Patch Change"
+    local Wnd_Title = "Patch Change"
 
     local Wnd_Dock,Wnd_X,Wnd_Y = 0,800,320
     Wnd_W,Wnd_H = 340,170 -- global values(used for define zoom level) -- 脚本界面尺寸
