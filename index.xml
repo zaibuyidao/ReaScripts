@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d9efd7b3dc7f4a53983fabb535a45f3afcb8245d">
+<index version="1" name="zaibuyidao Scripts" commit="9dd4942a97c15c75b38ca59790b8218b41fd7866">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -568,6 +568,9 @@
       </version>
       <version name="1.2" author="zaibuyidao" time="2021-07-25T15:55:19Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6b7858f44627a1ff9ce465f074a35f39662da590/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
+      </version>
+      <version name="1.3" author="zaibuyidao" time="2021-07-29T16:46:13Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9dd4942a97c15c75b38ca59790b8218b41fd7866/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Patch Change.lua" type="script" desc="Articulation Map - Patch Change">
