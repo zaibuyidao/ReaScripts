@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Articulation Map - Set Instrument Group
- * Version: 1.0.1
+ * ReaScript Name: Articulation Map - Set Bank
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -33,7 +33,7 @@ function main()
   if cnt == 0 then return reaper.SN_FocusMIDIEditor() end
   local MSB = reaper.GetExtState("SetInstrumentGroup", "MSB")
   if (MSB == "") then MSB = "0" end
-  local user_ok, MSB = reaper.GetUserInputs('Set instrument group', 1, 'Group number', MSB)
+  local user_ok, MSB = reaper.GetUserInputs('Set Bank', 1, 'Bank number', MSB)
   if not user_ok or not tonumber(MSB) then return reaper.SN_FocusMIDIEditor() end
   reaper.SetExtState("SetInstrumentGroup", "MSB", MSB, false)
   reaper.MIDI_DisableSort(take)
@@ -46,7 +46,7 @@ function main()
   reaper.MIDI_Sort(take)
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
-  reaper.Undo_EndBlock("Set Instrument Group", 0)
+  reaper.Undo_EndBlock("Set Bank", -1)
 end
 main()
 reaper.SN_FocusMIDIEditor()

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.3
+ * Version: 1.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -77,6 +77,58 @@ function string.split(input, delimiter)
     end
     table.insert(arr, string.sub(input, pos))
     return arr
+end
+
+function read_file(fname)
+    local f, err = io.open(fname)
+    if f then
+        local contents = f:read("*all")
+        f:close()
+        return contents, nil
+    else
+        return nil, err
+    end
+end
+
+function write_file(fname, contents)
+    local f, err = io.open(fname, "w")
+    if f then
+        f:write(contents)
+        f:close()
+    else
+        return err
+    end
+end
+
+local function set_reabank_file(reabank_path)
+
+    local ini_file = reaper.get_ini_file()
+    local ini, err = read_file(ini_file)
+
+    if err then
+        return
+        reaper.MB("Failed to read REAPER's ini file\n無法讀取 REAPER 的 ini 文件", "Error", 0),
+        reaper.SN_FocusMIDIEditor()
+    end
+    if ini:find("mididefbankprog=") then -- 如果找到 mididefbankprog=
+        ini = ini:gsub("mididefbankprog=[^\n]*", "mididefbankprog=" .. reabank_path) -- 在下一行新增BANK地址
+    else
+        local pos = ini:find('%[REAPER%]\n')
+        if not pos then
+            pos = ini:find('%[reaper%]\n')
+        end
+        if pos then
+            ini = ini:sub(1, pos + 8) .. "mididefbankprog=" .. reabank_path .. "\n" .. ini:sub(pos + 9)
+        end
+    end
+
+    err = write_file(ini_file, ini)
+    if err then
+        return
+        reaper.MB("Failed to write ini file\n寫入ini文件失敗", "Error", 0),
+        reaper.SN_FocusMIDIEditor()
+    end
+
 end
 
 function parse_banks(lines)
@@ -218,6 +270,8 @@ if (reabank_path == "") then
 
 end
 
+set_reabank_file(reabank_path)
+
 function create_reabank_action(get_path)
 
     local bank_num = get_path:reverse():find('[%/%\\]')
@@ -279,7 +333,8 @@ function read_test_lines()
     return string.split(data, "\n")
 end
 
-function inset_patch(bank, note, velocity)
+function inset_patch(bank, note, velocity, chan)
+    local chan = chan - 1
     reaper.PreventUIRefresh(1)
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if take == nil then return end
@@ -306,7 +361,7 @@ function inset_patch(bank, note, velocity)
     else
       local selected = true
       local muted = false
-      local chan = 0
+      --local chan = 0
       reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 0, bank)
       reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 32, velocity)
       reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xC0, chan, note, 0)
@@ -477,27 +532,54 @@ function SetBank()
       index[cnt] = val
       val = reaper.MIDI_EnumSelCC(take, val)
     end
+
     if cnt == 0 then
         return
         reaper.MB("PC event must be selected\n必須選擇PC事件", "Error", 0),
         reaper.SN_FocusMIDIEditor()
     end
-    local MSB = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MSB")
-    if (MSB == "") then MSB = "0" end
-    local user_ok, MSB = reaper.GetUserInputs('Set Bank', 1, 'Bank number', MSB)
+
+    local bank_msb = {}
+
+    for i = 1, #index do
+        local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
+        if chanmsg == 176 and msg2 == 0 then -- GET BANK NUM
+            bank_msb_num = msg3
+            bank_msb[#bank_msb+1] = bank_msb_num
+        end
+    end
+
+    -- local MSB = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MSB")
+    -- if (MSB == "") then MSB = "0" end
+    local user_ok, MSB = reaper.GetUserInputs('Set Bank', 1, 'Bank number', bank_msb[1])
     if not user_ok or not tonumber(MSB) then return reaper.SN_FocusMIDIEditor() end
-    reaper.SetExtState("ArticulationMapPatchChangeGUI", "MSB", MSB, false)
+    -- reaper.SetExtState("ArticulationMapPatchChangeGUI", "MSB", MSB, false)
     reaper.MIDI_DisableSort(take)
     for i = 1, #index do
-      retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
-      if chanmsg == 176 and msg2 == 0 then -- CC#0
-        reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, MSB, false)
-      end
+        local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
+        if chanmsg == 176 and msg2 == 0 then -- CC#0
+            reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, MSB, false)
+        end
     end
     reaper.MIDI_Sort(take)
     reaper.PreventUIRefresh(-1)
     reaper.UpdateArrange()
-  end
+    reaper.SN_FocusMIDIEditor()
+end
+
+function add_fx()
+    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    local track = reaper.GetMediaItemTake_Track(take)
+    local pand = reaper.TrackFX_AddByName(track, "Articulation Map", false, 0)
+    if pand < 0 then
+        reaper.TrackFX_AddByName(track, "Articulation Map", false, -1000)
+        local FX1_id = reaper.TrackFX_GetByName(track, "Articulation Map", true)
+        reaper.TrackFX_Show(track, FX1_id, 3)
+    else
+        local FX1_id = reaper.TrackFX_GetByName(track, "Articulation Map", true)
+        reaper.TrackFX_Show(track, FX1_id, 3)
+    end
+end
 
 -- table.print(group_banks(parse_banks(process_lines(read_test_lines()))))
 -- os.exit()
@@ -602,56 +684,60 @@ end
 -- Function for Child Classes(args = Child,Parent Class)
 
 function extended(Child, Parent)
-  setmetatable(Child,{__index = Parent}) 
+    setmetatable(Child,{__index = Parent}) 
 end
 
 -- Element Class Methods(Main Methods)
 
 function Element:update_xywh()
-  if not Z_w or not Z_h then return end -- return if zoom not defined
-  self.x, self.w = math.ceil(self.def_xywh[1]* Z_w) , math.ceil(self.def_xywh[3]* Z_w) -- upd x,w
-  self.y, self.h = math.ceil(self.def_xywh[2]* Z_h) , math.ceil(self.def_xywh[4]* Z_h) -- upd y,h
-  if self.fnt_sz then --fix it!--
-     self.fnt_sz = math.max(9,self.def_xywh[5]* (Z_w+Z_h)/2)
-     self.fnt_sz = math.min(22,self.fnt_sz)
-  end       
+    if not Z_w or not Z_h then return end -- return if zoom not defined
+    self.x, self.w = math.ceil(self.def_xywh[1]* Z_w) , math.ceil(self.def_xywh[3]* Z_w) -- upd x,w
+    self.y, self.h = math.ceil(self.def_xywh[2]* Z_h) , math.ceil(self.def_xywh[4]* Z_h) -- upd y,h
+    if self.fnt_sz then --fix it!--
+        self.fnt_sz = math.max(9,self.def_xywh[5]* (Z_w+Z_h)/2)
+        self.fnt_sz = math.min(22,self.fnt_sz)
+    end       
 end
 
 function Element:pointIN(p_x, p_y)
-  return p_x >= self.x and p_x <= self.x + self.w and p_y >= self.y and p_y <= self.y + self.h
+    return p_x >= self.x and p_x <= self.x + self.w and p_y >= self.y and p_y <= self.y + self.h
 end
 
 function Element:mouseIN()
-  return gfx.mouse_cap&1==0 and self:pointIN(gfx.mouse_x,gfx.mouse_y)
+    return gfx.mouse_cap&1==0 and self:pointIN(gfx.mouse_x,gfx.mouse_y)
 end
 
 function Element:mouseDown()
-  return gfx.mouse_cap&1==1 and self:pointIN(mouse_ox,mouse_oy)
+    return gfx.mouse_cap&1==1 and self:pointIN(mouse_ox,mouse_oy)
 end
 
 function Element:mouseUp() -- its actual for sliders and knobs only!
-  return gfx.mouse_cap&1==0 and self:pointIN(mouse_ox,mouse_oy)
+    return gfx.mouse_cap&1==0 and self:pointIN(mouse_ox,mouse_oy)
 end
 
 function Element:mouseClick()
-  return gfx.mouse_cap&1==0 and last_mouse_cap&1==1 and
-  self:pointIN(gfx.mouse_x,gfx.mouse_y) and self:pointIN(mouse_ox,mouse_oy)         
+    return gfx.mouse_cap&1==0 and last_mouse_cap&1==1 and
+    self:pointIN(gfx.mouse_x,gfx.mouse_y) and self:pointIN(mouse_ox,mouse_oy)         
 end
 
 function Element:mouseR_Down()
-  return gfx.mouse_cap&2==2 and self:pointIN(mouse_ox,mouse_oy)
+    return gfx.mouse_cap&2==2 and self:pointIN(mouse_ox,mouse_oy)
 end
 
 function Element:mouseM_Down()
-  return gfx.mouse_cap&64==64 and self:pointIN(mouse_ox,mouse_oy)
+    return gfx.mouse_cap&64==64 and self:pointIN(mouse_ox,mouse_oy)
 end
 
 function Element:draw_frame()
-  local x,y,w,h  = self.x,self.y,self.w,self.h
-  gfx.rect(x, y, w, h, false)            -- frame1
-  gfx.roundrect(x, y, w-1, h-1, 3, true) -- frame2         
+    local x,y,w,h  = self.x,self.y,self.w,self.h
+    gfx.rect(x, y, w, h, false)            -- frame1
+    gfx.roundrect(x, y, w-1, h-1, 3, true) -- frame2         
 end
 
+function Element:mouseRClick()
+    return gfx.mouse_cap & 2 == 0 and last_mouse_cap & 2 == 2 and
+    self:pointIN(gfx.mouse_x, gfx.mouse_y) and self:pointIN(mouse_ox, mouse_oy)         
+end
 -- Create Element Child Classes(Button,Slider,Knob)
 
 local Button = {}
@@ -660,12 +746,14 @@ local Slider = {}
 local Rng_Slider = {}
 local Frame = {}
 local CheckBox = {}
+local Textbox = {}
 extended(Button,     Element)
 extended(Knob,       Element)
 extended(Slider,     Element)
 extended(Rng_Slider, Element)
 extended(Frame,      Element)
 extended(CheckBox,   Element)
+extended(Textbox,    Element)
 
 -- Create Slider Child Classes(V_Slider,H_Slider)
 
@@ -776,29 +864,76 @@ function Frame:draw()
    self:draw_frame()  -- draw frame
 end
 
+--  Textbox Class Methods
+
+function Textbox:draw_body()
+    gfx.rect(self.x, self.y, self.w, self.h, true) -- draw textbox body
+end
+
+function Textbox:draw_label()
+    local lbl_w, lbl_h = gfx.measurestr(self.lbl)
+    gfx.x = self.x + (self.w - lbl_w) / 2
+    gfx.y = self.y + (self.h - lbl_h) / 2
+    gfx.drawstr(self.lbl)
+end
+
+--gActiveLayer = 1
+function Textbox:draw()
+    local r,g,b,a  = self.r,self.g,self.b,self.a
+    local fnt,fnt_sz = self.fnt, self.fnt_sz
+    --if (self.tab & (1 << gActiveLayer)) == 0 and self.tab ~= 0 then return end
+
+    self:update_xywh() -- Update xywh(if wind changed)
+    --self:update_zoom() -- check and update if window resized
+
+    -- in elm R_up (released and was previously pressed), run onRClick (user defined)
+    if self:mouseRClick() and self.onRClick then self.onRClick() end -- if mouseR clicked and released, execute onRClick()
+    gfx.set(r,g,b,a) -- set the drawing colour for the e.Element
+    self:draw_body()
+    self:draw_frame()
+    -- Draw label
+    gfx.set(0, 0, 0, 1) -- set label color
+    gfx.setfont(1, fnt, fnt_sz) -- set label font
+    self:draw_label()
+end
+
 -- 按钮位置: 1-左 2-上 3-右 4-下
 local btn1 = Button:new(10,10,25,30, 0.7,0.7,0.7,0.3, "1","Arial",15, 0 )
-local btn4 = Button:new(50,10,25,30, 0.7,0.7,0.7,0.3, "2","Arial",15, 0 )
-local btn2 = Button:new(120,130,100,30, 0.8,0.8,0.8,0.8, "OK","Arial",15, 0 )
-local btn3 = Button:new(230,130,100,30, 0.8,0.8,0.8,0.8, "Cancel","Arial",15, 0 )
-local btn5 = Button:new(90,10,25,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
-local btn6 = Button:new(130,10,25,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
-local btn8 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
-local btn7 = Button:new(210,10,25,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
-local btn9 = Button:new(250,10,25,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
-local btn10 = Button:new(290,10,25,30, 0.7,0.7,0.7,0.3, "SB","Arial",15, 0 )
+local btn4 = Button:new(52,10,25,30, 0.7,0.7,0.7,0.3, "2","Arial",15, 0 )
+local btn5 = Button:new(94,10,25,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
+local btn6 = Button:new(136,10,25,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
+--local btn8 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
+local btn7 = Button:new(178,10,25,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
+local btn10 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "SB","Arial",15, 0 )
+local btn9 = Button:new(262,10,25,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
+local btn11 = Button:new(304,10,25,30, 0.7,0.7,0.7,0.3, "FX","Arial",15, 0 )
 
-local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10 }
+local btn8 = Button:new(10,210,100,30, 0.8,0.8,0.8,0.8, "Load File","Arial",15, 0 )
+local btn2 = Button:new(120,210,100,30, 0.8,0.8,0.8,0.8, "OK","Arial",15, 0 )
+local btn3 = Button:new(230,210,100,30, 0.8,0.8,0.8,0.8, "Cancel","Arial",15, 0 )
+
+local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11 }
 
 -- x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val = check, norm_val2 = checkbox table
-local ch_box1 = CheckBox:new(50,50,280,30,  0.8,0.8,0.8,0.3, "Bank : ","Arial",15,  1, {})
-local ch_box2 = CheckBox:new(50,90,280,30,  0.8,0.8,0.8,0.3, "Patch :","Arial",15,  1, {})
-local CheckBox_TB = {ch_box1,ch_box2}
+local ch_box1 = CheckBox:new(50,50,280,30,  0.8,0.8,0.8,0.3, "Bank :","Arial",15,  1, {})
+local ch_box2 = CheckBox:new(50,90,280,30,  0.8,0.8,0.8,0.3, "Patch:","Arial",15,  1, {})
+local ch_box3 = CheckBox:new(170,130,160,30,  0.8,0.8,0.8,0.3, "MIDI Channel :","Arial",15,  1, {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"})
+--local ch_box3 = CheckBox:new(120,130,210,30,  0.8,0.8,0.8,0.3, "MIDI Channel :","Arial",15,  1, {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"})
+local CheckBox_TB = {ch_box1,ch_box2,ch_box3}
 
-local W_Frame = Frame:new(10,10,320,150,  0,0.5,0,0.4 ) -- 虚线尺寸
+local W_Frame = Frame:new(10,10,320,230,  0,0.9,0,0.1 ) -- 虚线尺寸
 local Frame_TB = { W_Frame }
 
-btn3.onClick = function () gfx.quit() end   -- 退出按钮
+-- 文本框
+local bank_num = reabank_path:reverse():find('[%/%\\]')
+local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
+local textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, "Arial", 15, 0)
+local Textbox_TB = { textb }
+
+btn3.onClick = function ()
+    gfx.quit()
+    reaper.SN_FocusMIDIEditor()
+end   -- 退出按钮
 btn5.onClick = function () slideF10() end   -- -10Tick
 btn6.onClick = function () slideZ10() end   -- +10Tick
 --btn7.onClick = function () create_reabank_action(reabank_path) end   -- 创建音色表脚本
@@ -809,6 +944,16 @@ btn9.onClick = function () -- 编辑音色表
     os.execute(edit_reabank)
 end
 btn10.onClick = function () SetBank() end -- 设置乐器组
+btn11.onClick = function () add_fx() end -- 添加表情映射插件
+
+midi_chan = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MIDIChannel")
+if midi_chan == "" then midi_chan = 1 end
+ch_box3.norm_val = tonumber(midi_chan)
+ch_box3.onClick = function()
+    midi_chan = ch_box3.norm_val
+    reaper.SetExtState("ArticulationMapPatchChangeGUI", "MIDIChannel", midi_chan, false)
+end
+midi_chan = tonumber(midi_chan)
 
 if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
 local store = parse_banks(read_config_lines(reabank_path))      -- 模式1数据
@@ -888,7 +1033,7 @@ local function switch_mode_1() -- 模式1 切换
     btn2.onClick = function ()
         local bank_item = store[ch_box1.norm_val]
         local note_item = bank_item.notes[ch_box2.norm_val]
-        inset_patch(bank_item.bank.bank, note_item.note, bank_item.bank.velocity)
+        inset_patch(bank_item.bank.bank, note_item.note, bank_item.bank.velocity, midi_chan)
         -- gfx.quit()
     end
 end
@@ -898,7 +1043,7 @@ local function switch_mode_2() -- 模式2 切换
         current_state = {
             velocity = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].velocity,
             note = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].note,
-            bank = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].bank,
+            bank = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].bank
         }
         push_current_state()
     end
@@ -942,7 +1087,7 @@ local function switch_mode_2() -- 模式2 切换
     
     btn2.onClick = function ()
         local note_item = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val]
-        inset_patch(note_item.bank, note_item.note, note_item.velocity)
+        inset_patch(note_item.bank, note_item.note, note_item.velocity, midi_chan)
         -- gfx.quit()
     end
 end
@@ -958,6 +1103,7 @@ btn1.onClick = function () -- 切换模式1
     state_getter = switch_mode_1()
     current_mode = "1"
     push_current_state()
+
 end
 
 btn4.onClick = function () -- 切换模式2
@@ -987,6 +1133,11 @@ btn8.onClick = function () -- 选择音色表
     state_getter = switch_mode_1()
     current_mode = "1"
     push_current_state()
+
+    set_reabank_file(reabank_path)
+
+    textb = Textbox:new(10,170,320,30, 0.7,0.7,0.7,0.3, bank_name, "Arial", 15, 0)
+    Textbox_TB = { textb }
 end
 
 -- Main DRAW function
@@ -994,6 +1145,7 @@ end
 function DRAW()
     for key,btn     in pairs(Button_TB)   do btn:draw()    end
     for key,ch_box  in pairs(CheckBox_TB) do ch_box:draw() end
+    for key, textb  in pairs(Textbox_TB)  do textb:draw()  end
     --for key,frame   in pairs(Frame_TB)    do frame:draw()  end -- 启用外框线
 end
 
@@ -1019,10 +1171,10 @@ function Init()
     -- Some gfx Wnd Default Values
     local R,G,B = 240,240,240            -- 0..255 form
     local Wnd_bgd = R + G*256 + B*65536  -- red+green*256+blue*65536  
-    local Wnd_Title = "Patch Change"
+    local Wnd_Title = "Articulation Map Patch Change"
 
     local Wnd_Dock,Wnd_X,Wnd_Y = 0,800,320
-    Wnd_W,Wnd_H = 340,170 -- global values(used for define zoom level) -- 脚本界面尺寸
+    Wnd_W,Wnd_H = 340,250 -- global values(used for define zoom level) -- 脚本界面尺寸
     -- Init window
     gfx.clear = Wnd_bgd
     local pExtState = readExtState()
@@ -1069,14 +1221,14 @@ function mainloop()
         if current_mode == "1" then
             local bank_item = store[ch_box1.norm_val]
             local note_item = bank_item.notes[ch_box2.norm_val]
-            inset_patch(bank_item.bank.bank, note_item.note, bank_item.bank.velocity)
+            inset_patch(bank_item.bank.bank, note_item.note, bank_item.bank.velocity, midi_chan)
         elseif current_mode == "2" then
             local note_item = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val]
-            inset_patch(note_item.bank, note_item.note, note_item.velocity)
+            inset_patch(note_item.bank, note_item.note, note_item.velocity, midi_chan)
         end
         gfx.quit()
     end
-    if char~=-1 then reaper.defer(mainloop) end          -- defer
+    if char ~= -1 then reaper.defer(mainloop) end          -- defer
     if char == -1 or char == 27 then saveExtState() end  -- saveState (window position)
     gfx.update()
 
