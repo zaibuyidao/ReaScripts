@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9dd4942a97c15c75b38ca59790b8218b41fd7866">
+<index version="1" name="zaibuyidao Scripts" commit="5846c0f8e57f868cdd92450aa1a48eedee2e09ee">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -572,6 +572,9 @@
       <version name="1.3" author="zaibuyidao" time="2021-07-29T16:46:13Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9dd4942a97c15c75b38ca59790b8218b41fd7866/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
       </version>
+      <version name="1.4" author="zaibuyidao" time="2021-07-31T21:32:20Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5846c0f8e57f868cdd92450aa1a48eedee2e09ee/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Patch Change.lua" type="script" desc="Articulation Map - Patch Change">
       <metadata>
@@ -591,16 +594,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20PC%20To%20Note.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Articulation Map - Set Instrument Group.lua" type="script" desc="Articulation Map - Set Instrument Group">
+    <reapack name="zaibuyidao_Articulation Map - Set Bank.lua" type="script" desc="Articulation Map - Set Bank">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-01-25T18:39:19Z">
+      <version name="1.0" author="zaibuyidao" time="2021-07-31T21:32:20Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Set%20Instrument%20Group.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-02-15T13:07:51Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Set%20Instrument%20Group.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5846c0f8e57f868cdd92450aa1a48eedee2e09ee/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Set%20Bank.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Toggle Note PC.lua" type="script" desc="Articulation Map - Toggle Note PC">
@@ -3683,6 +3683,15 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2021-04-01T09:46:12Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9713d75722f809592d58785d31680c200eff0961/Utility/zaibuyidao_MIDI%20Channel%20From%20Track%20Send.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-07-31T21:32:20Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5846c0f8e57f868cdd92450aa1a48eedee2e09ee/Utility/zaibuyidao_Set%20Default%20Reabank.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set MIDI Channel Routing (Dynamic Menu).lua" type="script" desc="Set MIDI Channel Routing (Dynamic Menu)">
