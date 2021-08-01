@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.4
+ * Version: 1.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -373,12 +373,24 @@ end
 
 function slideF10()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    _, _, ccs, _ = reaper.MIDI_CountEvts(take)
+    _, notes, ccs, _ = reaper.MIDI_CountEvts(take)
     reaper.MIDI_DisableSort(take)
     for i = 0,  ccs - 1 do
         local retval, sel, muted, cc_ppq, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
         if sel == true then
-            reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq-10, nil, nil, nil, nil, false)
+            if chanmsg == 176 and (msg2 == 0 or msg2 == 32) then
+                reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq-10, nil, nil, nil, nil, false)
+            end
+            if chanmsg == 192 then
+                reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq-10, nil, nil, nil, nil, false)
+            end
+        end
+        i = i + 1
+    end
+    for i = 0,  notes - 1 do
+        local retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+        if sel == true then
+            reaper.MIDI_SetNote(take, i, sel, muted, ppq_start-10, ppq_end-10, nil, nil, nil, false)
         end
         i = i + 1
     end
@@ -387,12 +399,24 @@ end
 
 function slideZ10()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    _, _, ccs, _ = reaper.MIDI_CountEvts(take)
+    _, notes, ccs, _ = reaper.MIDI_CountEvts(take)
     reaper.MIDI_DisableSort(take)
     for i = 0,  ccs - 1 do
         local retval, sel, muted, cc_ppq, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
         if sel == true then
-            reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+10, nil, nil, nil, nil, false)
+            if chanmsg == 176 and (msg2 == 0 or msg2 == 32) then
+                reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+10, nil, nil, nil, nil, false)
+            end
+            if chanmsg == 192 then
+                reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+10, nil, nil, nil, nil, false)
+            end
+        end
+        i = i + 1
+    end
+    for i = 0,  notes - 1 do
+        local retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+        if sel == true then
+            reaper.MIDI_SetNote(take, i, sel, muted, ppq_start+10, ppq_end+10, nil, nil, nil, false)
         end
         i = i + 1
     end
