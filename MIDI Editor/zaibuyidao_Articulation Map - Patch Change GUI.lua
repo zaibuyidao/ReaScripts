@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -337,7 +337,7 @@ function inset_patch(bank, note, velocity, chan)
     local chan = chan - 1
     reaper.PreventUIRefresh(1)
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    if take == nil then return end
+    if not take or not reaper.TakeIsMIDI(take) then return end
     item = reaper.GetMediaItemTake_Item(take)
     local cur_pos = reaper.GetCursorPositionEx()
     local ppq_pos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
@@ -373,12 +373,13 @@ end
 
 function slideF10()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    if not take or not reaper.TakeIsMIDI(take) then return end
     _, notes, ccs, _ = reaper.MIDI_CountEvts(take)
     reaper.MIDI_DisableSort(take)
     for i = 0,  ccs - 1 do
         local retval, sel, muted, cc_ppq, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
         if sel == true then
-            if chanmsg == 176 and (msg2 == 0 or msg2 == 32) then
+            if chanmsg == 176 then -- and (msg2 == 0 or msg2 == 32) 
                 reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq-10, nil, nil, nil, nil, false)
             end
             if chanmsg == 192 then
@@ -395,16 +396,18 @@ function slideF10()
         i = i + 1
     end
     reaper.MIDI_Sort(take)
+    reaper.SN_FocusMIDIEditor()
 end
 
 function slideZ10()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    if not take or not reaper.TakeIsMIDI(take) then return end
     _, notes, ccs, _ = reaper.MIDI_CountEvts(take)
     reaper.MIDI_DisableSort(take)
     for i = 0,  ccs - 1 do
         local retval, sel, muted, cc_ppq, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
         if sel == true then
-            if chanmsg == 176 and (msg2 == 0 or msg2 == 32) then
+            if chanmsg == 176 then -- and (msg2 == 0 or msg2 == 32)
                 reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+10, nil, nil, nil, nil, false)
             end
             if chanmsg == 192 then
@@ -421,11 +424,12 @@ function slideZ10()
         i = i + 1
     end
     reaper.MIDI_Sort(take)
+    reaper.SN_FocusMIDIEditor()
 end
 
 function ToggleNotePC()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    if take == nil then return end
+    if not take or not reaper.TakeIsMIDI(take) then return end
 
     local note_cnt, note_idx = 0, {}
     local note_val = reaper.MIDI_EnumSelNotes(take, -1)
@@ -514,7 +518,9 @@ function ToggleNotePC()
                 reaper.MIDI_InsertNote(take, true, muted, ppqpos, ppqpos+120, chan, pitch, vel, false)
             end
         end
-    
+
+        if bank_msb[1] == nil or vel == nil or pitch == nil then return reaper.SN_FocusMIDIEditor() end
+
         i = reaper.MIDI_EnumSelCC(take, -1)
         while i > -1 do
             reaper.MIDI_DeleteCC(take, i)
@@ -544,11 +550,13 @@ function ToggleNotePC()
         PCToNote()
     end
     reaper.UpdateArrange()
+    reaper.SN_FocusMIDIEditor()
 end
 
-function SetBank()
+function set_group_velocity()
     reaper.PreventUIRefresh(1)
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    if not take or not reaper.TakeIsMIDI(take) then return end
     local cnt, index = 0, {}
     local val = reaper.MIDI_EnumSelCC(take, -1)
     while val ~= - 1 do
@@ -563,7 +571,7 @@ function SetBank()
         reaper.SN_FocusMIDIEditor()
     end
 
-    local bank_msb = {}
+    local bank_msb, note_vel = {}, {}
 
     for i = 1, #index do
         local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
@@ -571,18 +579,28 @@ function SetBank()
             bank_msb_num = msg3
             bank_msb[#bank_msb+1] = bank_msb_num
         end
+        if chanmsg == 176 and msg2 == 32 then -- CC#32
+            note_vel_num = msg3
+            note_vel[#note_vel+1] = note_vel_num
+        end
     end
 
+    if bank_msb[1] == nil or note_vel[1] == nil then return reaper.SN_FocusMIDIEditor() end
     -- local MSB = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MSB")
     -- if (MSB == "") then MSB = "0" end
-    local user_ok, MSB = reaper.GetUserInputs('Set Bank', 1, 'Bank number', bank_msb[1])
-    if not user_ok or not tonumber(MSB) then return reaper.SN_FocusMIDIEditor() end
+    local user_ok, input_csv = reaper.GetUserInputs('Set Group Velocity', 2, 'Group 樂器組,Velocity 力度', bank_msb[1] ..','.. note_vel[1])
+    if not user_ok then return reaper.SN_FocusMIDIEditor() end
+    local MSB, LSB = input_csv:match("(.*),(.*)")
+    if not tonumber(MSB) or not tonumber(LSB) then return reaper.SN_FocusMIDIEditor() end
     -- reaper.SetExtState("ArticulationMapPatchChangeGUI", "MSB", MSB, false)
     reaper.MIDI_DisableSort(take)
     for i = 1, #index do
         local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
         if chanmsg == 176 and msg2 == 0 then -- CC#0
             reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, MSB, false)
+        end
+        if chanmsg == 176 and msg2 == 32 then -- CC#32
+            reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, nil, LSB, false)
         end
     end
     reaper.MIDI_Sort(take)
@@ -593,6 +611,7 @@ end
 
 function add_fx()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    if not take or not reaper.TakeIsMIDI(take) then return end
     local track = reaper.GetMediaItemTake_Track(take)
     local pand = reaper.TrackFX_AddByName(track, "Articulation Map", false, 0)
     if pand < 0 then
@@ -928,7 +947,7 @@ local btn5 = Button:new(94,10,25,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
 local btn6 = Button:new(136,10,25,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
 --local btn8 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
 local btn7 = Button:new(178,10,25,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
-local btn10 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "SB","Arial",15, 0 )
+local btn10 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "GV","Arial",15, 0 )
 local btn9 = Button:new(262,10,25,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
 local btn11 = Button:new(304,10,25,30, 0.7,0.7,0.7,0.3, "FX","Arial",15, 0 )
 
@@ -958,16 +977,16 @@ btn3.onClick = function ()
     gfx.quit()
     reaper.SN_FocusMIDIEditor()
 end   -- 退出按钮
-btn5.onClick = function () slideF10() end   -- -10Tick
-btn6.onClick = function () slideZ10() end   -- +10Tick
---btn7.onClick = function () create_reabank_action(reabank_path) end   -- 创建音色表脚本
+btn5.onClick = function () slideF10() end -- -10Tick
+btn6.onClick = function () slideZ10() end -- +10Tick
+--btn7.onClick = function () create_reabank_action(reabank_path) end -- 创建音色表脚本
 btn7.onClick = function () ToggleNotePC() end   -- NOTE PC 来回切
 btn9.onClick = function () -- 编辑音色表
     local rea_patch = '\"'..reabank_path..'\"'
     edit_reabank = 'start "" '..rea_patch
     os.execute(edit_reabank)
 end
-btn10.onClick = function () SetBank() end -- 设置乐器组
+btn10.onClick = function () set_group_velocity() end -- 设置乐器组
 btn11.onClick = function () add_fx() end -- 添加表情映射插件
 
 midi_chan = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MIDIChannel")
@@ -1234,7 +1253,6 @@ function mainloop()
     Shift = gfx.mouse_cap&8==8
     Alt   = gfx.mouse_cap&16==16 -- Shift state
 
-    -- DRAW,MAIN functions
     DRAW() -- Main() 
 
     last_mouse_cap = gfx.mouse_cap
@@ -1252,8 +1270,8 @@ function mainloop()
         end
         gfx.quit()
     end
-    if char ~= -1 then reaper.defer(mainloop) end          -- defer
-    if char == -1 or char == 27 then saveExtState() end  -- saveState (window position)
+    if char ~= -1 then reaper.defer(mainloop) end -- defer
+    if char == -1 or char == 27 then saveExtState() end -- saveState (window position)
     gfx.update()
 
 end
