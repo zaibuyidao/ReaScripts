@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1022f0335ea9fafd13c5039b8b4375dd6ef437eb">
+<index version="1" name="zaibuyidao Scripts" commit="3acf29e38fdafa0d3467a36e7a4948ff747fca90">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -351,6 +351,10 @@
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/JSFX/Articulation%20Map.jsfx</source>
       </version>
+      <version name="1.1" author="zaibuyidao, Tale" time="2021-08-02T15:59:32Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/3acf29e38fdafa0d3467a36e7a4948ff747fca90/JSFX/Articulation%20Map.jsfx</source>
+      </version>
     </reapack>
     <reapack name="MIDI Off Velocity Limiter.jsfx" type="effect" desc="MIDI Off Velocity Limiter">
       <metadata>
@@ -487,6 +491,10 @@
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
       </version>
+      <version name="1.1" author="再補一刀, Tale" time="2021-08-02T15:59:32Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/3acf29e38fdafa0d3467a36e7a4948ff747fca90/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
+      </version>
     </reapack>
   </category>
   <category name="Markers">
@@ -577,6 +585,9 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2021-08-01T15:38:30Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1022f0335ea9fafd13c5039b8b4375dd6ef437eb/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
+      </version>
+      <version name="1.6" author="zaibuyidao" time="2021-08-02T15:59:32Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3acf29e38fdafa0d3467a36e7a4948ff747fca90/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Patch Change.lua" type="script" desc="Articulation Map - Patch Change">
