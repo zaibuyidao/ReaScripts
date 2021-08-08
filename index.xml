@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7d07ee9efc8e0d7609fd89649b99ee7b27b5999f">
+<index version="1" name="zaibuyidao Scripts" commit="2e41149db8c7ad0e74b1c7d7cbdf32aa12f066a6">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -578,6 +578,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Note%20To%20PC.lua</source>
       </version>
+      <version name="1.1" author="zaibuyidao" time="2021-08-08T17:43:12Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2e41149db8c7ad0e74b1c7d7cbdf32aa12f066a6/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Note%20To%20PC.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Patch Change GUI.lua" type="script" desc="Articulation Map - Patch Change GUI">
       <metadata>
@@ -608,6 +611,9 @@
       <version name="1.7" author="zaibuyidao" time="2021-08-05T16:56:50Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7d07ee9efc8e0d7609fd89649b99ee7b27b5999f/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
       </version>
+      <version name="1.7.1" author="zaibuyidao" time="2021-08-08T17:43:12Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2e41149db8c7ad0e74b1c7d7cbdf32aa12f066a6/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Patch Change.lua" type="script" desc="Articulation Map - Patch Change">
       <metadata>
@@ -626,14 +632,8 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20PC%20To%20Note.lua</source>
       </version>
-    </reapack>
-    <reapack name="zaibuyidao_Articulation Map - Set Bank.lua" type="script" desc="Articulation Map - Set Bank">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-07-31T21:32:20Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5846c0f8e57f868cdd92450aa1a48eedee2e09ee/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Set%20Bank.lua</source>
+      <version name="1.1" author="zaibuyidao" time="2021-08-08T17:43:12Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2e41149db8c7ad0e74b1c7d7cbdf32aa12f066a6/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20PC%20To%20Note.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Toggle Note PC.lua" type="script" desc="Articulation Map - Toggle Note PC">
@@ -646,6 +646,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2021-08-05T16:56:50Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7d07ee9efc8e0d7609fd89649b99ee7b27b5999f/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Toggle%20Note%20PC.lua</source>
+      </version>
+      <version name="1.2" author="zaibuyidao" time="2021-08-08T17:43:12Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2e41149db8c7ad0e74b1c7d7cbdf32aa12f066a6/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Toggle%20Note%20PC.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Expression (Multitrack).lua" type="script" desc="Auto Expression (Multitrack)">
@@ -2954,47 +2957,6 @@
       </version>
       <version name="1.0.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BE%9E%E6%A0%B9%E9%9F%B3%E7%94%9F%E6%88%90%E5%92%8C%E5%BC%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_技法映射 - PC轉音符.lua" type="script" desc="技法映射 - PC轉音符">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0.1" author="再補一刀" time="2021-02-10T15:05:19Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20PC%E8%BD%89%E9%9F%B3%E7%AC%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_技法映射 - 插入音色.lua" type="script" desc="技法映射 - 插入音色">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2.lua</source>
-      </version>
-      <version name="1.0.1" author="再補一刀" time="2021-04-01T10:16:26Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdc54985c5ce9dce4863cf380ab48e15d4f2e68c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20%E6%8F%92%E5%85%A5%E9%9F%B3%E8%89%B2.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_技法映射 - 設置樂器組.lua" type="script" desc="技法映射 - 設置樂器組">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20%E8%A8%AD%E7%BD%AE%E6%A8%82%E5%99%A8%E7%B5%84.lua</source>
-      </version>
-      <version name="1.0.1" author="再補一刀" time="2021-02-15T13:07:51Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20%E8%A8%AD%E7%BD%AE%E6%A8%82%E5%99%A8%E7%B5%84.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_技法映射 - 音符轉PC.lua" type="script" desc="技法映射 - 音符轉PC">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-02-10T15:05:19Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84%20-%20%E9%9F%B3%E7%AC%A6%E8%BD%89PC.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_拆分音符.lua" type="script" desc="拆分音符">
