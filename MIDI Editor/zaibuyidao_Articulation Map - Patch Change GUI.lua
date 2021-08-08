@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.7
+ * Version: 1.7.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -478,7 +478,7 @@ function ToggleNotePC()
                 reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0)
 
                 if endppqpos - startppqpos > 120 then
-                    reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 119, 127)
+                    reaper.MIDI_InsertCC(take, true, muted, startppqpos-10, 0xB0, chan, 119, 127) -- 插入CC需提前于PC 默认10tick
                     reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, 119, 0)
                 end
             end
@@ -531,7 +531,7 @@ function ToggleNotePC()
             -- 遍历cc119列表，查找符合条件的cc119值
             for j, c in ipairs(cc119s) do
                 -- 如果当前被遍历的cc119不是最后一个，当前cc119位置等于音符起始位置 且 当前状态为开 且下一个状态为 关
-                if j ~= #cc119s and c[1] == note[4] and c[2] >= 64 and c[2] <=127 and cc119s[j+1][2]>=0 and cc119s[j+1][2]<=63 then
+                if j ~= #cc119s and (c[1] <= note[4] and c[1] >= note[4]-240) and c[2] >= 64 and c[2] <=127 and cc119s[j+1][2]>=0 and cc119s[j+1][2]<=63 then
                     -- 则当前音符的结束位置为下一个cc119的位置
                     note[5] = cc119s[j+1][1]
                     break

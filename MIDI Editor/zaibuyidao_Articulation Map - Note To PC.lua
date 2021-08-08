@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Note To PC
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -32,51 +32,47 @@ function main()
   if cnt == 0 then return reaper.SN_FocusMIDIEditor() end
 
   local MSB, LSB = {}
-
+        
   local midi_ok, midi_string = reaper.MIDI_GetAllEvts(take, "")
   local string_pos, ticks, table_events, offset, flags, msg = 1, 0, {}
   local pack, unpack = string.pack, string.unpack
   while string_pos < #midi_string do
-    offset, flags, msg, string_pos = unpack("i4Bs4", midi_string, string_pos)
-    if flags&1 ==1 and #msg >= 3 and msg:byte(1)>>4 == 8 and msg:byte(3) ~= -1 then
-      MSB[#MSB+1] = msg:byte(3)
-    end
+      offset, flags, msg, string_pos = unpack("i4Bs4", midi_string, string_pos)
+      if flags&1 ==1 and #msg >= 3 and msg:byte(1)>>4 == 8 and msg:byte(3) ~= -1 then
+          MSB[#MSB+1] = msg:byte(3)
+      end
   end
 
+  reaper.PreventUIRefresh(1)
   reaper.MIDI_DisableSort(take)
 
   for i = 1, #index do
-    retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
-    if selected == true then
-      -- if vel == 96 then
-      --   LSB = 0
-      --   reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 0, MSB[1]) -- CC#00
-      --   reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
-      --   reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
-      -- else
-        LSB = vel
-        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 0, MSB[1]) -- CC#00
-        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, LSB) -- CC#32
-        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0) -- Program Change
-      -- end
-      flag = true
-    end
-  end
+      retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
+      if selected == true then
+          LSB = vel
+          reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 0, MSB[1])
+          reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, LSB)
+          reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0)
 
-  reaper.MIDI_Sort(take)
+          if endppqpos - startppqpos > 120 then
+              reaper.MIDI_InsertCC(take, true, muted, startppqpos-10, 0xB0, chan, 119, 127) -- 插入CC需提前于PC 默认10tick
+              reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, 119, 0)
+          end
+      end
+  end
 
   i = reaper.MIDI_EnumSelNotes(take, -1)
   while i > -1 do
-    reaper.MIDI_DeleteNote(take, i)
-    i = reaper.MIDI_EnumSelNotes(take, -1)
+      reaper.MIDI_DeleteNote(take, i)
+      i = reaper.MIDI_EnumSelNotes(take, -1)
   end
+
+  reaper.MIDI_Sort(take)
+  reaper.PreventUIRefresh(-1)
 end
 
-local script_title = "Note To PC"
 reaper.Undo_BeginBlock()
-reaper.PreventUIRefresh(1)
 main()
-reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock("Note To PC", -1)
 reaper.SN_FocusMIDIEditor()
