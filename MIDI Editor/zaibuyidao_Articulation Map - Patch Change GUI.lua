@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.7.1
+ * Version: 1.8
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -431,6 +431,10 @@ function ToggleNotePC()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
 
+    reaper.gmem_attach('gmem_articulation_map')
+    local gmem_cc_num = reaper.gmem_read(1)
+    gmem_cc_num = math.floor(gmem_cc_num)
+
     local note_cnt, note_idx = 0, {}
     local note_val = reaper.MIDI_EnumSelNotes(take, -1)
     while note_val ~= -1 do
@@ -478,8 +482,8 @@ function ToggleNotePC()
                 reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0)
 
                 if endppqpos - startppqpos > 120 then
-                    reaper.MIDI_InsertCC(take, true, muted, startppqpos-10, 0xB0, chan, 119, 127) -- 插入CC需提前于PC 默认10tick
-                    reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, 119, 0)
+                    reaper.MIDI_InsertCC(take, true, muted, startppqpos-10, 0xB0, chan, gmem_cc_num, 127) -- 插入CC需提前于PC 默认10tick
+                    reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, gmem_cc_num, 0)
                 end
             end
         end
@@ -511,7 +515,7 @@ function ToggleNotePC()
             elseif chanmsg == 176 and msg2 == 32 then
                 vel = msg3
                 if vel == 0 then vel = 96 end
-            elseif chanmsg == 176 and msg2 == 119 then
+            elseif chanmsg == 176 and msg2 == gmem_cc_num then
                 table.insert(cc119s, { ppqpos, msg3 })
             elseif chanmsg == 192 then
                 pitch = msg2
@@ -962,15 +966,15 @@ function Textbox:draw()
 end
 
 -- 按钮位置: 1-左 2-上 3-右 4-下
-local btn1 = Button:new(10,10,25,30, 0.7,0.7,0.7,0.3, "1","Arial",15, 0 )
-local btn4 = Button:new(52,10,25,30, 0.7,0.7,0.7,0.3, "2","Arial",15, 0 )
-local btn5 = Button:new(94,10,25,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
-local btn6 = Button:new(136,10,25,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
+local btn1 = Button:new(10,10,30,30, 0.7,0.7,0.7,0.3, "1","Arial",15, 0 )
+local btn4 = Button:new(50,10,30,30, 0.7,0.7,0.7,0.3, "2","Arial",15, 0 )
+local btn5 = Button:new(90,10,30,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
+local btn6 = Button:new(130,10,30,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
 --local btn8 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
-local btn7 = Button:new(178,10,25,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
-local btn10 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "GV","Arial",15, 0 )
-local btn9 = Button:new(262,10,25,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
-local btn11 = Button:new(304,10,25,30, 0.7,0.7,0.7,0.3, "FX","Arial",15, 0 )
+local btn7 = Button:new(170,10,30,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
+local btn10 = Button:new(210,10,30,30, 0.7,0.7,0.7,0.3, "GV","Arial",15, 0 )
+local btn9 = Button:new(250,10,30,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
+local btn11 = Button:new(290,10,40,30, 0.7,0.7,0.7,0.3, "JSFX","Arial",15, 0 )
 
 local btn8 = Button:new(10,210,100,30, 0.8,0.8,0.8,0.8, "Load File","Arial",15, 0 )
 local btn2 = Button:new(120,210,100,30, 0.8,0.8,0.8,0.8, "OK","Arial",15, 0 )
@@ -1235,7 +1239,7 @@ function Init()
     -- Some gfx Wnd Default Values
     local R,G,B = 240,240,240            -- 0..255 form
     local Wnd_bgd = R + G*256 + B*65536  -- red+green*256+blue*65536  
-    local Wnd_Title = "Articulation Map Patch Change"
+    local Wnd_Title = "Patch Change"
 
     local Wnd_Dock,Wnd_X,Wnd_Y = 0,800,320
     Wnd_W,Wnd_H = 340,250 -- global values(used for define zoom level) -- 脚本界面尺寸
