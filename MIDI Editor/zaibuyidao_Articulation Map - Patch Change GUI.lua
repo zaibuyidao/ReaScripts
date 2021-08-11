@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.8
+ * Version: 1.8.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -434,7 +434,8 @@ function ToggleNotePC()
     reaper.gmem_attach('gmem_articulation_map')
     local gmem_cc_num = reaper.gmem_read(1)
     gmem_cc_num = math.floor(gmem_cc_num)
-
+    if gmem_cc_num == 0 then gmem_cc_num = 119 end
+    
     local note_cnt, note_idx = 0, {}
     local note_val = reaper.MIDI_EnumSelNotes(take, -1)
     while note_val ~= -1 do
