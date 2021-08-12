@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.8.1
+ * Version: 1.8.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -427,15 +427,20 @@ function slideZ10()
     reaper.SN_FocusMIDIEditor()
 end
 
+reaper.gmem_attach('gmem_articulation_map')
+gmem_cc_num = reaper.gmem_read(1)
+gmem_cc_num = math.floor(gmem_cc_num)
+
+local track = reaper.GetMediaItemTake_Track(take)
+local pand = reaper.TrackFX_AddByName(track, "Articulation Map", false, 0)
+if pand < 0 then
+    gmem_cc_num = 119
+end
+
 function ToggleNotePC()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
 
-    reaper.gmem_attach('gmem_articulation_map')
-    local gmem_cc_num = reaper.gmem_read(1)
-    gmem_cc_num = math.floor(gmem_cc_num)
-    if gmem_cc_num == 0 then gmem_cc_num = 119 end
-    
     local note_cnt, note_idx = 0, {}
     local note_val = reaper.MIDI_EnumSelNotes(take, -1)
     while note_val ~= -1 do
@@ -967,15 +972,15 @@ function Textbox:draw()
 end
 
 -- 按钮位置: 1-左 2-上 3-右 4-下
-local btn1 = Button:new(10,10,30,30, 0.7,0.7,0.7,0.3, "1","Arial",15, 0 )
-local btn4 = Button:new(50,10,30,30, 0.7,0.7,0.7,0.3, "2","Arial",15, 0 )
-local btn5 = Button:new(90,10,30,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
-local btn6 = Button:new(130,10,30,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
+local btn1 = Button:new(10,10,25,30, 0.7,0.7,0.7,0.3, "1","Arial",15, 0 )
+local btn4 = Button:new(45,10,25,30, 0.7,0.7,0.7,0.3, "2","Arial",15, 0 )
+local btn5 = Button:new(80,10,25,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
+local btn6 = Button:new(115,10,25,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
 --local btn8 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
-local btn7 = Button:new(170,10,30,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
-local btn10 = Button:new(210,10,30,30, 0.7,0.7,0.7,0.3, "GV","Arial",15, 0 )
-local btn9 = Button:new(250,10,30,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
-local btn11 = Button:new(290,10,40,30, 0.7,0.7,0.7,0.3, "JSFX","Arial",15, 0 )
+local btn7 = Button:new(150,10,25,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
+local btn10 = Button:new(185,10,25,30, 0.7,0.7,0.7,0.3, "GV","Arial",15, 0 )
+local btn9 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
+local btn11 = Button:new(255,10,75,30, 0.7,0.7,0.7,0.3, "JS:CC#" .. gmem_cc_num,"Arial",15, 0 )
 
 local btn8 = Button:new(10,210,100,30, 0.8,0.8,0.8,0.8, "Load File","Arial",15, 0 )
 local btn2 = Button:new(120,210,100,30, 0.8,0.8,0.8,0.8, "OK","Arial",15, 0 )
