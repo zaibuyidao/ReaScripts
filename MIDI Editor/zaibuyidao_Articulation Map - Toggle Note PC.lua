@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Toggle Note PC
- * Version: 1.2
+ * Version: 1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -59,6 +59,16 @@ function main()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
 
+    reaper.gmem_attach('gmem_articulation_map')
+    gmem_cc_num = reaper.gmem_read(1)
+    gmem_cc_num = math.floor(gmem_cc_num)
+    
+    local track = reaper.GetMediaItemTake_Track(take)
+    local pand = reaper.TrackFX_AddByName(track, "Articulation Map", false, 0)
+    if pand < 0 then
+        gmem_cc_num = 119
+    end
+
     local note_cnt, note_idx = 0, {}
     local note_val = reaper.MIDI_EnumSelNotes(take, -1)
     while note_val ~= -1 do
@@ -106,8 +116,8 @@ function main()
                 reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0)
 
                 if endppqpos - startppqpos > 120 then
-                    reaper.MIDI_InsertCC(take, true, muted, startppqpos-10, 0xB0, chan, 119, 127) -- 插入CC需提前于PC 默认10tick
-                    reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, 119, 0)
+                    reaper.MIDI_InsertCC(take, true, muted, startppqpos-10, 0xB0, chan, gmem_cc_num, 127) -- 插入CC需提前于PC 默认10tick
+                    reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, gmem_cc_num, 0)
                 end
             end
         end
@@ -139,7 +149,7 @@ function main()
             elseif chanmsg == 176 and msg2 == 32 then
                 vel = msg3
                 if vel == 0 then vel = 96 end
-            elseif chanmsg == 176 and msg2 == 119 then
+            elseif chanmsg == 176 and msg2 == gmem_cc_num then
                 table.insert(cc119s, { ppqpos, msg3 })
             elseif chanmsg == 192 then
                 pitch = msg2

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - PC To Note
- * Version: 1.1
+ * Version: 1.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -21,6 +21,18 @@ end
 
 function main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+  if not take or not reaper.TakeIsMIDI(take) then return end
+
+  reaper.gmem_attach('gmem_articulation_map')
+  gmem_cc_num = reaper.gmem_read(1)
+  gmem_cc_num = math.floor(gmem_cc_num)
+  
+  local track = reaper.GetMediaItemTake_Track(take)
+  local pand = reaper.TrackFX_AddByName(track, "Articulation Map", false, 0)
+  if pand < 0 then
+      gmem_cc_num = 119
+  end
+
   local cnt, index = 0, {}
   local val = reaper.MIDI_EnumSelCC(take, -1)
   while val ~= - 1 do
@@ -46,7 +58,7 @@ function main()
       elseif chanmsg == 176 and msg2 == 32 then
           vel = msg3
           if vel == 0 then vel = 96 end
-      elseif chanmsg == 176 and msg2 == 119 then
+      elseif chanmsg == 176 and msg2 == gmem_cc_num then
           table.insert(cc119s, { ppqpos, msg3 })
       elseif chanmsg == 192 then
           pitch = msg2
