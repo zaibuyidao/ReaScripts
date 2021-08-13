@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Duplicate CC (For Selected CC)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -25,7 +25,7 @@ function Main()
   local _, notecnt, ccevtcnt, textsyxevtcnt = reaper.MIDI_CountEvts(take)
   local cc_new = reaper.GetExtState("DuplicateCCForSelectedCC", "CC_New")
   if (cc_new == "") then cc_new = "11" end
-  local user_ok, user_input_CSV = reaper.GetUserInputs('Duplicate CC (For Selected CC)', 1, 'To CC#', cc_new)
+  local user_ok, user_input_CSV = reaper.GetUserInputs('Duplicate CC (For Selected CC)', 1, 'Target CC', cc_new)
   cc_new = user_input_CSV:match("(.*)")
   if not user_ok or not tonumber(cc_new) then return reaper.SN_FocusMIDIEditor() end
   cc_new = tonumber(cc_new)

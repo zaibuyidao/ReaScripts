@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Duplicate CC
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -27,7 +27,7 @@ function Main()
   if (cc_num == "") then cc_num = "1" end
   local cc_new = reaper.GetExtState("DuplicateCC", "CC_New")
   if (cc_new == "") then cc_new = "11" end
-  local user_ok, user_input = reaper.GetUserInputs('Duplicate CC', 2, 'Duplicate CC#,To CC#', cc_num ..','.. cc_new)
+  local user_ok, user_input = reaper.GetUserInputs('Duplicate CC', 2, 'Source CC,Target CC', cc_num ..','.. cc_new)
   cc_num, cc_new = user_input:match("(.*),(.*)")
   if not user_ok or not tonumber(cc_num) or not tonumber(cc_new) then return reaper.SN_FocusMIDIEditor() end
 
