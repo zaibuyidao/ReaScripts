@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="39d21f6f5636881fb9b439d24e28bae3160e83aa">
+<index version="1" name="zaibuyidao Scripts" commit="a44e2673391d33e367746a373cd40364958f74c1">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -3863,13 +3863,13 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5d9a6b186f038ef19f8bf78a9d1097aad8be4d6d/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20Mouse%20Position).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Solo Track (Play From Play State).lua" type="script" desc="Solo Track (Play From Play State)">
+    <reapack name="zaibuyidao_Solo Track.lua" type="script" desc="Solo Track">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-05-31T17:09:10Z">
+      <version name="1.0" author="zaibuyidao" time="2021-08-18T14:40:39Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e1d6afdd8405619c7ba3c560ccfd6cdd7bd85ba6/Utility/zaibuyidao_Solo%20Track%20(Play%20From%20Play%20State).lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a44e2673391d33e367746a373cd40364958f74c1/Utility/zaibuyidao_Solo%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Mute PC CC6.lua" type="script" desc="Toggle Mute PC CC6">
