@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo Track
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -31,17 +31,33 @@ function NoUndoPoint() end
 reaper.PreventUIRefresh(1)
 -- reaper.Undo_BeginBlock()
 
+local count_sel_track = reaper.CountSelectedTracks(0)
 local track_ret, context, track_pos = reaper.BR_TrackAtMouseCursor()
 
-if track_ret then
-    if reaper.GetMediaTrackInfo_Value(track_ret, 'I_SOLO') == 2 then
-        return
-        reaper.SetMediaTrackInfo_Value(track_ret, 'I_SOLO', 0)
+if count_sel_track <= 1 then
+    if track_ret then
+        if reaper.GetMediaTrackInfo_Value(track_ret, 'I_SOLO') == 2 then
+            return
+            reaper.Main_OnCommand(40340,0) -- Track: Unsolo all tracks
+        end
+        unselect_all_tracks()
+        reaper.Main_OnCommand(40340,0) -- Track: Unsolo all tracks
+        reaper.SetTrackSelected(track_ret, true)
+        reaper.SetMediaTrackInfo_Value(track_ret, 'I_SOLO', 2)
     end
-    unselect_all_tracks()
-    reaper.Main_OnCommand(40340,0) -- Track: Unsolo all tracks
-    reaper.SetTrackSelected(track_ret, true)
-    reaper.SetMediaTrackInfo_Value(track_ret, 'I_SOLO', 2)
+else
+    for i = 0, count_sel_track-1 do
+        local track = reaper.GetSelectedTrack(0, i)
+        if reaper.GetMediaTrackInfo_Value(track, 'I_SOLO') == 2 then return reaper.Main_OnCommand(40340,0) end
+    end
+    
+    reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
+    
+    for i = 0, count_sel_track-1 do
+        local track = reaper.GetSelectedTrack(0, i)
+        reaper.SetTrackSelected(track, true)
+        reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
+    end
 end
 
 -- reaper.Undo_EndBlock("Toggle Solo Track", -1)
