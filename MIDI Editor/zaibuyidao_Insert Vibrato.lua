@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Vibrato
- * Version: 1.5
+ * Version: 2.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -12,64 +12,135 @@
  * Changelog:
  * v1.0 (2019-12-12)
   + Initial release
+ * v2.0 (2021-8-21)
+  + Code rewriting
 --]]
+
+function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
+local _SN_FocusMIDIEditor = reaper.SN_FocusMIDIEditor
+reaper.SN_FocusMIDIEditor = function(...) if _SN_FocusMIDIEditor then _SN_FocusMIDIEditor(...) end end
+
+function get_curve1(bottom, top, num) -- 正弦曲线版本
+  local scale = math.abs(top-bottom) / 2
+  local step_length = math.pi * 2 / num
+  local result = {}
+  local cur = -math.pi
+  local revert = 1
+  if (top < bottom) then revert = -1 end
+  local offset = bottom + scale
+  if (top < bottom) then offset = bottom - scale end
+  for i=1,num do
+    table.insert(result, math.floor(math.cos(cur) * scale * revert + offset + 0.5))
+    cur = cur + step_length
+  end
+  return result
+end
+
+function get_curve2(bottom, top, num) -- 正弦曲线间隙版本
+  local scale = math.abs(top-bottom) / 2
+  local step_length = math.pi * 2 / (num -2)
+  local result = {}
+  local cur = -math.pi
+  local revert = 1
+  if (top < bottom) then revert = -1 end
+  local offset = bottom + scale
+  if (top < bottom) then offset = bottom - scale end
+  for i=1,num/2 do
+    table.insert(result, math.floor(math.cos(cur) * scale * revert + offset + 0.5))
+    cur = cur + step_length
+  end
+
+  -- 复制对称点
+  local s = #result
+  for i=s,1,-1 do
+    table.insert(result,result[i])
+  end
+
+  return result
+end
+
+get_curve = get_curve1
 
 function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+  if not take or not reaper.TakeIsMIDI(take) then return end
 
-  local fudu = reaper.GetExtState("Vibrato", "Amplitude")
-  if (fudu == "") then fudu = "3" end
-  local cishu = reaper.GetExtState("Vibrato", "Repetition")
-  if (cishu == "") then cishu = "7" end
-  local jiange = reaper.GetExtState("Vibrato", "Interval")
-  if (jiange == "") then jiange = "10" end
-  
-  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Vibrato", 3, "Amplitude:1-10,Repetition:1-100,Interval:1-120", fudu ..','.. cishu ..','.. jiange)
+  local bottom = reaper.GetExtState("Vibrato", "Bottom")
+  if (bottom == "") then bottom = "0" end
+  local top = reaper.GetExtState("Vibrato", "Top")
+  if (top == "") then top = "256" end
+  local times = reaper.GetExtState("Vibrato", "Times") 
+  if (times == "") then times = "16" end
+  local length = reaper.GetExtState("Vibrato", "Length")
+  if (length == "") then length = "120" end
+  local num = reaper.GetExtState("Vibrato", "Num")
+  if (num == "") then num = "12" end
+
+  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Vibrato", 5, "Starting value,Highest value,Repetitions,Length,Points", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  fudu, cishu, jiange = user_input_CSV:match("(.*),(.*),(.*)")
-  if not tonumber(fudu) or not tonumber(cishu) or not tonumber(jiange) then return reaper.SN_FocusMIDIEditor() end
-  fudu, cishu, jiange = tonumber(fudu), tonumber(cishu), tonumber(jiange)
-  
-  reaper.SetExtState("Vibrato", "Amplitude", fudu, false)
-  reaper.SetExtState("Vibrato", "Repetition", cishu, false)
-  reaper.SetExtState("Vibrato", "Interval", jiange, false)
+  bottom, top, times, length, num = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*)")
+  if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) then return reaper.SN_FocusMIDIEditor() end
+  bottom, top, times, length, num = tonumber(bottom), tonumber(top), tonumber(times), tonumber(length), tonumber(num)
+  if times < 1 then return reaper.SN_FocusMIDIEditor() end
 
-  local t1 = {0, 48, 96, 144, 192, 240, 192, 144, 96, 48, 0}
-  local t2 = {0, 96, 192, 288, 384, 480, 384, 288, 192, 96, 0}
-  local t3 = {0, 144, 288, 432, 576, 720, 576, 432, 288, 144, 0}
-  local t4 = {0, 192, 384, 576, 768, 960, 768, 576, 384, 192, 0}
-  local t5 = {0, 240, 480, 720, 960, 1200, 960, 720, 480, 240, 0}
-  local t6 = {0, 288, 576, 864, 1152, 1440, 1152, 864, 576, 288, 0}
-  local t7 = {0, 336, 672, 1008, 1344, 1680, 1344, 1008, 672, 336, 0}
-  local t8 = {0, 384, 768, 1152, 1536, 1920, 1536, 1152, 768, 384, 0}
-  local t9 = {0, 432, 864, 1296, 1728, 2160, 1728, 1296, 864, 432, 0}
-  local t10 = {0, 480, 960, 1440, 1920, 2400, 1920, 1440, 960, 480, 0}
-  local tb = {t1, t2, t3, t4, t5, t6, t7, t8, t9, t10}
+  reaper.SetExtState("Vibrato", "Bottom", bottom, false)
+  reaper.SetExtState("Vibrato", "Top", top, false)
+  reaper.SetExtState("Vibrato", "Times", times, false)
+  reaper.SetExtState("Vibrato", "Length", length, false)
+  reaper.SetExtState("Vibrato", "Num", num, false)
   
-  local cur_pos = reaper.GetCursorPositionEx()
-  local startpos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
-  startpos = startpos - jiange
-  
-  if fudu < 1  or fudu > 10 then return reaper.SN_FocusMIDIEditor() end
-  if cishu < 1 or cishu > 100 then return reaper.SN_FocusMIDIEditor() end
-  if jiange < 1 or jiange > 120 then return reaper.SN_FocusMIDIEditor() end
-  
-  for i = 1, cishu do
-    for i = 1, 11 do
-      startpos = startpos + jiange
-      local value = tb[fudu][i]
-      value = value + 8192
-      local LSB = value & 0x7f
-      local MSB = value >> 7 & 0x7f
-      reaper.MIDI_InsertCC(take, false, false, startpos, 224, 0, LSB, MSB)
-      i=i+1
-    end
-    reaper.UpdateArrange()
+  local step_length = length / num
+
+  local cur_pos = reaper.GetCursorPositionEx() -- 获取光标位置
+  local cur_tick = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos) -- 转换光标的tick位置
+  reaper.Undo_BeginBlock()
+  reaper.MIDI_DisableSort(take)
+
+  idx = reaper.MIDI_EnumSelCC(take, -1) -- 反选所有CC
+  while idx ~= -1 do
+    reaper.MIDI_SetCC(take, idx, false, false, nil, nil, nil, nil, nil, false)
+    idx = reaper.MIDI_EnumSelCC(take, idx)
   end
+
+  local curve = get_curve(bottom, top, num)
+  chan = 0 -- 通道默认为0
+
+  -- for j = 1, #curve do
+  --   Msg(curve[j])
+  -- end
+
+  for i = 1, times do
+    for j = 1, #curve do
+      local value = curve[j]
+      value = value + 8192
+      local LSB = value & 0x7f -- 低7位
+      local MSB = value >> 7 & 0x7f -- 高7位
+      reaper.MIDI_InsertCC(take, true, false, cur_tick, 224, chan, LSB, MSB) -- 224=弯音，LSB+MSB=弯音值
+      cur_tick = cur_tick + step_length
+    end
+  end
+  if (curve[#curve] ~= bottom) then
+    value = bottom + 8192
+    reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, value & 0x7f, value >> 7 & 0x7f)
+  end
+  
+  j = reaper.MIDI_EnumSelCC(take, -1) -- 选中CC设置形状
+  while j ~= -1 do
+    reaper.MIDI_SetCCShape(take, j, 1, 0, false)
+    reaper.MIDI_SetCC(take, j, false, false, nil, nil, nil, nil, nil, false)
+    j = reaper.MIDI_EnumSelCC(take, j)
+  end
+  
+  reaper.MIDI_Sort(take)
+  reaper.Undo_EndBlock("Insert Vibrato", -1)
+  reaper.UpdateArrange()
 end
 
-local script_title = "Insert Vibrato"
-reaper.Undo_BeginBlock()
 Main()
-reaper.Undo_EndBlock(script_title, -1)
+
+-- local c = get_curve(0,1024,12)
+-- for j = 1, #c do
+--   print(c[j])
+-- end
+
 reaper.SN_FocusMIDIEditor()
