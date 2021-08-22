@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Track Name Fix
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -25,19 +25,6 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 if count_sel_items > 0 then
-    for i = 0, count_sel_items - 1 do
-        local item = reaper.GetSelectedMediaItem(0, i)
-        local take = reaper.GetTake(item, 0)
-        local track = reaper.GetMediaItem_Track(item)
-        local retval, selected, muted, ppqpos, type, msg = reaper.MIDI_GetTextSysexEvt(take, 0, nil, nil, nil, 0, '')
-        reaper.MIDI_DisableSort(take)
-        if type == 3 then
-            reaper.GetSetMediaTrackInfo_String(track, 'P_NAME', msg, true)
-            reaper.MIDI_DeleteTextSysexEvt(take, 0)
-        end
-        reaper.MIDI_Sort(take)
-    end
-
     idx = 0
     while idx < count_sel_items do
         item = reaper.GetSelectedMediaItem(0, idx)
@@ -45,6 +32,13 @@ if count_sel_items > 0 then
         take = reaper.GetTake(item, 0)
         reaper.MIDI_DisableSort(take)
     
+        local retval, selected, muted, ppqpos, type, msg = reaper.MIDI_GetTextSysexEvt(take, 0, nil, nil, nil, 0, '')
+        if type == 3 then
+            track  = reaper.GetMediaItem_Track(item)
+            reaper.GetSetMediaTrackInfo_String(track, 'P_NAME', msg, true)
+            reaper.MIDI_DeleteTextSysexEvt(take, 0)
+        end
+
         i = 1
         idx2 = 0
         pcpos = {}
@@ -76,19 +70,6 @@ if count_sel_items > 0 then
         reaper.MIDI_Sort(take)
     end
 else
-    for i = 0, count_item-1 do
-        local item = reaper.GetMediaItem(0, i)
-        local take = reaper.GetTake(item, 0)
-        local track = reaper.GetMediaItem_Track(item)
-        local retval, selected, muted, ppqpos, type, msg = reaper.MIDI_GetTextSysexEvt(take, 0, nil, nil, nil, 0, '')
-        reaper.MIDI_DisableSort(take)
-        if type == 3 then
-            reaper.GetSetMediaTrackInfo_String(track, 'P_NAME', msg, true)
-            reaper.MIDI_DeleteTextSysexEvt(take, 0)
-        end
-        reaper.MIDI_Sort(take)
-    end
-
     idx = 0
     while idx < count_item do
         item = reaper.GetMediaItem(0, idx)
@@ -96,6 +77,13 @@ else
         take = reaper.GetTake(item, 0)
         reaper.MIDI_DisableSort(take)
     
+        local retval, selected, muted, ppqpos, type, msg = reaper.MIDI_GetTextSysexEvt(take, 0, nil, nil, nil, 0, '')
+        if type == 3 then
+            track  = reaper.GetMediaItem_Track(item)
+            reaper.GetSetMediaTrackInfo_String(track, 'P_NAME', msg, true)
+            reaper.MIDI_DeleteTextSysexEvt(take, 0)
+        end
+
         i = 1
         idx2 = 0
         pcpos = {}
@@ -115,7 +103,7 @@ else
             if chanmsg == 176 then
                 if msg2 == 0 or msg2 == 32 then
                     for j, v in ipairs(pcpos) do
-                        if v - ppqpos <= 2 then 
+                        if v - ppqpos <= 2 then
                             reaper.MIDI_SetCC(take, idx3, nil, nil, pcpos[j], nil, nil, nil, nil, false)
                         end
                     end
