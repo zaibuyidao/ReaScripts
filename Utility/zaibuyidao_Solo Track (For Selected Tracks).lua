@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo Track (For Selected Tracks)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -38,6 +38,10 @@ for i = 0, count_sel_track-1 do
     reaper.SetTrackSelected(track, true)
     reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
 end
+
+local window, _, _ = reaper.BR_GetMouseCursorContext()
+local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
+if window == "midi_editor" and not inline_editor then reaper.SN_FocusMIDIEditor() end -- 聚焦 MIDI Editor
 
 -- reaper.Undo_EndBlock("Solo Track (For Selected Tracks)", -1)
 reaper.PreventUIRefresh(-1)
