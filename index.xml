@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="73a8a4103ac64f737f6cf6d84c8807872eb5415d">
+<index version="1" name="zaibuyidao Scripts" commit="654b036d5aef77b16af0548a002ce5930a2eae96">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -3560,6 +3560,12 @@
       <version name="1.0" author="zaibuyidao" time="2021-07-18T09:12:55Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/38441ae237b19be1b5b844ffc4961edbf11e8f51/Tracks%20Properties/zaibuyidao_Set%20Track%20Name.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Track Name Fix.lua" type="script" desc="Track Name Fix">
+      <version name="1.0" author="zaibuyidao" time="2021-08-22T15:03:19Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/654b036d5aef77b16af0548a002ce5930a2eae96/Tracks%20Properties/zaibuyidao_Track%20Name%20Fix.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_選擇軌道 - 只選擇第一個對象(動態菜單).lua" type="script" desc="選擇軌道 - 只選擇第一個對象(動態菜單)">
