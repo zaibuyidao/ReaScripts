@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region Manager
- * Version: 1.5
+ * Version: 1.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -138,38 +138,39 @@ if show_msg == "true" then
     end
 end
 
-if reaper.GetToggleCommandStateEx(0, 40365) == 1 then -- View: Time unit for ruler: Minutes:Seconds
-  minutes_seconds_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-end
-
+-- 使用標尺的時間單位 分:秒 計算區域的起點和終點位置
 if reaper.GetToggleCommandStateEx(0, 40367) == 1 then -- View: Time unit for ruler: Measures.Beats
   meas_beat_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 41916) == 1 then -- View: Time unit for ruler: Measures.Beats (minimal)
   meas_beat_mini_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 40368) == 1 then -- View: Time unit for ruler: Seconds
+  seconds_flag = true
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 40369) == 1 then -- View: Time unit for ruler: Samples
   samples_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 40370) == 1 then -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
   hours_frames_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for ruler: Absolute frames
   frames_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 function key_of(name, left, right)
-  return tostring(name .. " " .. tostring(get_precise_decimal(left,3)) .. " " .. tostring(get_precise_decimal(right,3)))
+  return tostring(name .. " " .. tostring(get_precise_decimal(left,10)) .. " " .. tostring(get_precise_decimal(right,10)))
 end
 
 function collect_regions()
@@ -217,10 +218,20 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
   rgnleft = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
   rgnright = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
 
-  --Msg('SEL L : ' .. rgnleft ..' SEL R : '..rgnright)
+  local left_sec = string.match(rgnleft, "^%d+") * 60  + string.match(string.match(rgnleft, "%d+.%d+$"), "^%d+")
+  left_sec = math.modf(left_sec)
+  local left_ms = string.match(rgnleft, "%d+$")
+  link_left = left_sec .."." ..left_ms -- 將 分:秒 轉為 秒
+
+  local right_sec = string.match(rgnright, "^%d+") * 60  + string.match(string.match(rgnright, "%d+.%d+$"), "^%d+")
+  right_sec = math.modf(right_sec)
+  local right_ms = string.match(rgnright, "%d+$")
+  link_right = right_sec .."." ..right_ms -- 將 分:秒 轉為 秒
+
+  --Msg('SEL L : ' .. link_left ..' SEL R : '..link_right)
   nt[#nt+1] = rgname
-  lt[#lt+1] = rgnleft
-  rt[#rt+1] = rgnright
+  lt[#lt+1] = link_left
+  rt[#rt+1] = link_right
 
   cur = {
     regionname = nt[i],
@@ -232,7 +243,7 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
 
 end
 
-if minutes_seconds_flag then reaper.Main_OnCommand(40365, 0) end -- View: Time unit for ruler: Minutes:Seconds
+if seconds_flag then reaper.Main_OnCommand(40368, 0) end -- View: Time unit for ruler: Seconds
 if meas_beat_flag then reaper.Main_OnCommand(40367, 0) end -- View: Time unit for ruler: Measures.Beats
 if meas_beat_mini_flag then reaper.Main_OnCommand(41916, 0) end -- View: Time unit for ruler: Measures.Beats (minimal)
 if samples_flag then reaper.Main_OnCommand(40369, 0) end -- View: Time unit for ruler: Samples

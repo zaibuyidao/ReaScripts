@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Marker Manager
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -138,38 +138,39 @@ if show_msg == "true" then
     end
 end
 
-if reaper.GetToggleCommandStateEx(0, 40365) == 1 then -- View: Time unit for ruler: Minutes:Seconds
-  minutes_seconds_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-end
-
+-- 使用標尺的時間單位 分:秒 計算標記的起點和終點位置
 if reaper.GetToggleCommandStateEx(0, 40367) == 1 then -- View: Time unit for ruler: Measures.Beats
   meas_beat_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 41916) == 1 then -- View: Time unit for ruler: Measures.Beats (minimal)
   meas_beat_mini_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+end
+
+if reaper.GetToggleCommandStateEx(0, 40368) == 1 then -- View: Time unit for ruler: Seconds
+  seconds_flag = true
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 40369) == 1 then -- View: Time unit for ruler: Samples
   samples_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 40370) == 1 then -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
   hours_frames_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for ruler: Absolute frames
   frames_flag = true
-  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
 end
 
 function key_of(name, left)
-  return tostring(name .. " " .. tostring(get_precise_decimal(left,3)))
+  return tostring(name .. " " .. tostring(get_precise_decimal(left,10)))
 end
 
 function collect_regions()
@@ -216,9 +217,14 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
   rgname = reaper.JS_ListView_GetItemText(container, tonumber(index), 2)
   rgnleft = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
 
+  local left_sec = string.match(rgnleft, "^%d+") * 60  + string.match(string.match(rgnleft, "%d+.%d+$"), "^%d+")
+  left_sec = math.modf(left_sec)
+  local left_ms = string.match(rgnleft, "%d+$")
+  link_left = left_sec .."." ..left_ms -- 將 分:秒 轉為 秒
+
   -- Msg('SEL L : ' .. rgnleft)
   nt[#nt+1] = rgname
-  lt[#lt+1] = rgnleft
+  lt[#lt+1] = link_left
 
   cur = {
     regionname = nt[i],
@@ -229,7 +235,7 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
 
 end
 
-if minutes_seconds_flag then reaper.Main_OnCommand(40365, 0) end -- View: Time unit for ruler: Minutes:Seconds
+if seconds_flag then reaper.Main_OnCommand(40368, 0) end -- View: Time unit for ruler: Seconds
 if meas_beat_flag then reaper.Main_OnCommand(40367, 0) end -- View: Time unit for ruler: Measures.Beats
 if meas_beat_mini_flag then reaper.Main_OnCommand(41916, 0) end -- View: Time unit for ruler: Measures.Beats (minimal)
 if samples_flag then reaper.Main_OnCommand(40369, 0) end -- View: Time unit for ruler: Samples
