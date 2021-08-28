@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region Manager
- * Version: 1.6
+ * Version: 1.6.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -218,20 +218,30 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
   rgnleft = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
   rgnright = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
 
-  local left_sec = string.match(rgnleft, "^%d+") * 60  + string.match(string.match(rgnleft, "%d+.%d+$"), "^%d+")
-  left_sec = math.modf(left_sec)
-  local left_ms = string.match(rgnleft, "%d+$")
-  link_left = left_sec .."." ..left_ms -- 將 分:秒 轉為 秒
+  msl = string.match(rgnleft, "%d+$") -- 毫秒
+  sl = string.match(string.match(rgnleft, "%d+.%d+$"), "^%d+") -- 秒
+  ml = string.match(string.match(rgnleft, "%d+.%d+.%d+$"), "^%d+") -- 分
+  hl = string.sub(rgnleft, 1, -11) -- 時
+  if hl == "" then
+    lnkl = math.modf(ml * 60 + sl) .. "." .. msl
+  else
+    lnkl = math.modf(hl * 3600 + ml * 60 + sl) .. "." .. msl
+  end
 
-  local right_sec = string.match(rgnright, "^%d+") * 60  + string.match(string.match(rgnright, "%d+.%d+$"), "^%d+")
-  right_sec = math.modf(right_sec)
-  local right_ms = string.match(rgnright, "%d+$")
-  link_right = right_sec .."." ..right_ms -- 將 分:秒 轉為 秒
+  msr = string.match(rgnright, "%d+$") -- 毫秒
+  sr = string.match(string.match(rgnright, "%d+.%d+$"), "^%d+") -- 秒
+  mr = string.match(string.match(rgnright, "%d+.%d+.%d+$"), "^%d+") -- 分
+  hr = string.sub(rgnright, 1, -11) -- 時
+  if hr == "" then
+    lnkr = math.modf(mr * 60 + sr) .. "." .. msr
+  else
+    lnkr = math.modf(hr * 3600 + mr * 60 + sr) .. "." .. msr
+  end
 
-  --Msg('SEL L : ' .. link_left ..' SEL R : '..link_right)
+  --Msg('SEL L : ' .. lnkl ..' SEL R : '..lnkr)
   nt[#nt+1] = rgname
-  lt[#lt+1] = link_left
-  rt[#rt+1] = link_right
+  lt[#lt+1] = lnkl
+  rt[#rt+1] = lnkr
 
   cur = {
     regionname = nt[i],

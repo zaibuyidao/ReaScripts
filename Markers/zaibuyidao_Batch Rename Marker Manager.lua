@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Marker Manager
- * Version: 1.1
+ * Version: 1.1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -217,14 +217,19 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
   rgname = reaper.JS_ListView_GetItemText(container, tonumber(index), 2)
   rgnleft = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
 
-  local left_sec = string.match(rgnleft, "^%d+") * 60  + string.match(string.match(rgnleft, "%d+.%d+$"), "^%d+")
-  left_sec = math.modf(left_sec)
-  local left_ms = string.match(rgnleft, "%d+$")
-  link_left = left_sec .."." ..left_ms -- 將 分:秒 轉為 秒
+  msl = string.match(rgnleft, "%d+$") -- 毫秒
+  sl = string.match(string.match(rgnleft, "%d+.%d+$"), "^%d+") -- 秒
+  ml = string.match(string.match(rgnleft, "%d+.%d+.%d+$"), "^%d+") -- 分
+  hl = string.sub(rgnleft, 1, -11) -- 時
+  if hl == "" then
+    lnkl = math.modf(ml * 60 + sl) .. "." .. msl
+  else
+    lnkl = math.modf(hl * 3600 + ml * 60 + sl) .. "." .. msl
+  end
 
-  -- Msg('SEL L : ' .. rgnleft)
+  -- Msg('SEL L : ' .. lnkl)
   nt[#nt+1] = rgname
-  lt[#lt+1] = link_left
+  lt[#lt+1] = lnkl
 
   cur = {
     regionname = nt[i],
