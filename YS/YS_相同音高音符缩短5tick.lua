@@ -2,7 +2,7 @@
  * ReaScript Name: 相同音高音符缩短5tick
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

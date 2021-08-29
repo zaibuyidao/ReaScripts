@@ -2,7 +2,7 @@
  * ReaScript Name: 小力度音符粘连到上一音符（吉他扫弦工具）
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

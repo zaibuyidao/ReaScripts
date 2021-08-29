@@ -2,7 +2,7 @@
  * ReaScript Name: Velocity to CC 力度转CC
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

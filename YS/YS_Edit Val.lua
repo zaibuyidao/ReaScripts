@@ -2,7 +2,7 @@
  * ReaScript Name: Edit Val
  * Version: 1.0
  * Author: YS
- * provides: [midi_eventlisteditor] .
+ * provides: [main=midi_eventlisteditor] .
 --]]
 
 --[[

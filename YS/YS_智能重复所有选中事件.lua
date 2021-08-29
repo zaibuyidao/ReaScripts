@@ -2,7 +2,7 @@
  * ReaScript Name: 智能重复所有选中事件
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

@@ -2,7 +2,7 @@
  * ReaScript Name: A.G 吉他和弦建立
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

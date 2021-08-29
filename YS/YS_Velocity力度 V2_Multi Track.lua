@@ -2,7 +2,7 @@
  * ReaScript Name: Velocity力度 V2_Multi Track
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

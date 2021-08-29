@@ -2,7 +2,7 @@
  * ReaScript Name: 自动表情_Multi Track V2
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

@@ -2,7 +2,7 @@
  * ReaScript Name: select Top Note
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

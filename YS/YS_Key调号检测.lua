@@ -2,7 +2,7 @@
  * ReaScript Name: Key调号检测
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

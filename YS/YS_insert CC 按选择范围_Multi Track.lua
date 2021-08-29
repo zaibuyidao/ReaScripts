@@ -2,7 +2,7 @@
  * ReaScript Name: insert CC 按选择范围_Multi Track
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

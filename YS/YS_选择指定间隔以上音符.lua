@@ -2,7 +2,7 @@
  * ReaScript Name: 选择指定间隔以上音符
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

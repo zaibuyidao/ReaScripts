@@ -2,7 +2,7 @@
  * ReaScript Name: 弯音变实音(击勾弦转换)
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

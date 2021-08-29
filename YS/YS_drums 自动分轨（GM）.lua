@@ -2,7 +2,7 @@
  * ReaScript Name: drums 自动分轨（GM）
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

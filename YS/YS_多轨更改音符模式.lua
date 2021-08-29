@@ -2,7 +2,7 @@
  * ReaScript Name: 多轨更改音符模式
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[

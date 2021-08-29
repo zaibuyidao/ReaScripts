@@ -2,7 +2,7 @@
  * ReaScript Name: Note Lenth half 音符长度减半_Multi Track
  * Version: 1.0
  * Author: YS
- * provides: [midi_editor] .
+ * provides: [main=midi_editor] .
 --]]
 
 --[[
