@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Track Name Fix
- * Version: 1.0.1
+ * ReaScript Name: MIDI File Track Name Fix
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -116,6 +116,6 @@ else
     end
 end
 
-reaper.Undo_EndBlock("Track Name Fix", -1)
+reaper.Undo_EndBlock("MIDI File Track Name Fix", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
