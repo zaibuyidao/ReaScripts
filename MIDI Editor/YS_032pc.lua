@@ -2,6 +2,7 @@
  * ReaScript Name: 032pc
  * Version: 1.0
  * Author: YS
+ * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * provides: [midi_editor,midi_eventlisteditor] .
 --]]
 
