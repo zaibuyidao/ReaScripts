@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.8.3
+ * Version: 1.8.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -818,20 +818,20 @@ function ToggleNotePC()
 end
 
 function set_group_velocity()
-    local show_msg = reaper.GetExtState("ArticulationMapSetGroupVelocityNote", "ShowMsg")
-    if (show_msg == "") then show_msg = "true" end
+    -- local show_msg = reaper.GetExtState("ArticulationMapSetGroupVelocityNote", "ShowMsg")
+    -- if (show_msg == "") then show_msg = "true" end
 
-    if show_msg == "true" then
-        script_name = "Set Group/Velocity/Note"
-        text = "Select PC event to modify Instrument Group/Velocity/Note individually or together. If not, please leave it blank.\n選擇 PC 事件以單獨或一起修改樂器組/力度/音符。如果不執行請留空。"
-        text = text.."\n\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
-        local box_ok = reaper.ShowMessageBox(""..text, script_name, 4)
+    -- if show_msg == "true" then
+    --     script_name = "Set Group/Velocity/Note"
+    --     text = "Select PC event to modify Instrument Group/Velocity/Note individually or together. If not, please leave it blank.\n選擇 PC 事件以單獨或一起修改樂器組/力度/音符。如果不執行請留空。"
+    --     text = text.."\n\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
+    --     local box_ok = reaper.ShowMessageBox(""..text, script_name, 4)
     
-        if box_ok == 7 then
-            show_msg = "false"
-            reaper.SetExtState("ArticulationMapSetGroupVelocityNote", "ShowMsg", show_msg, true)
-        end
-    end
+    --     if box_ok == 7 then
+    --         show_msg = "false"
+    --         reaper.SetExtState("ArticulationMapSetGroupVelocityNote", "ShowMsg", show_msg, true)
+    --     end
+    -- end
 
     reaper.PreventUIRefresh(1)
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
@@ -844,11 +844,11 @@ function set_group_velocity()
       val = reaper.MIDI_EnumSelCC(take, val)
     end
 
-    -- if cnt == 0 then
-    --     return
-    --     reaper.MB("PC event must be selected\n必須選擇PC事件", "Error", 0),
-    --     reaper.SN_FocusMIDIEditor()
-    -- end
+    if cnt == 0 then
+        return
+        reaper.MB("PC event must be selected\n必須選擇PC事件", "Error", 0),
+        reaper.SN_FocusMIDIEditor()
+    end
 
     local bank_msb, note_vel, note_pitch = {}, {}, {}
 
