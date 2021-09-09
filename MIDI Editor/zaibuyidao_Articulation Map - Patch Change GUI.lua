@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.8.4
+ * Version: 1.8.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -308,11 +308,17 @@ local function osOpenCommand()
     end
 end
 
+function get_script_path() -- 脚本路径
+    local info = debug.getinfo(1,'S');
+    local script_path = info.source:match[[^@?(.*[\/])[^\/]-$]]
+    return script_path
+end
+
 local reabank_path = reaper.GetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch")
 
 if (reabank_path == "") then 
 
-    reaper.ShowMessageBox("The reabank does not exist, please select a reabank!\n音色表不存在，請選擇一個音色表！", "Can't find reabank", 0)
+    reaper.ShowMessageBox("Please select a Reabank file!\n請選擇一個音色表！", "Can't find reabank", 0)
     local retval, new_path = reaper.GetUserFileNameForRead("", "選擇音色表", "") -- 系统文件路径
     if not retval then return 0 end
     local bank_num = new_path:reverse():find('[%/%\\]')
