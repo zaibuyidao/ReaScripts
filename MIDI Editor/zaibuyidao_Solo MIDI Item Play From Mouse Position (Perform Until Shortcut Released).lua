@@ -7,6 +7,7 @@
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
  * Donation: http://www.paypal.me/zaibuyidao
+ * provides: [main=midi_editor] .
 --]]
 
 --[[
