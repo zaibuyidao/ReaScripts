@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.8.5
+ * Version: 1.8.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.0 (2021-9-21)
+  + Refresh reabank file
  * v1.0 (2021-7-22)
   + Initial release
 --]]
@@ -157,8 +159,35 @@ function getMutiInput(title,num,lables,defaults)
     if userOK then return string.split(getValue,",") end
 end
 
-local function set_reabank_file(reabank_path)
+local function get_reabank_file()
+    local ini = read_file(reaper.get_ini_file())
+    return ini and ini:match("mididefbankprog=([^\n]*)")
+end
 
+function refresh_bank() -- 刷新reabank
+    count_sel_items = reaper.CountSelectedMediaItems(0)
+    if count_sel_items > 0 then
+        for i = 1, count_sel_items do
+            local item = reaper.GetSelectedMediaItem(0, i - 1)
+            local take = reaper.GetTake(item, 0)
+            if not take or not reaper.TakeIsMIDI(take) then return end
+            -- reaper.Main_OnCommand( 40716, 0 ) -- View: Toggle show MIDI editor windows
+            -- reaper.Main_OnCommand( 40716, 1 ) -- View: Toggle show MIDI editor windows
+            local retval, chunk = reaper.GetItemStateChunk(item, "", 0)
+            reaper.SetItemStateChunk(item, chunk, 0)
+        end
+    else
+        local editor = reaper.MIDIEditor_GetActive()
+        local take = reaper.MIDIEditor_GetTake(editor)
+        if not take or not reaper.TakeIsMIDI(take) then return end
+        local item = reaper.GetMediaItemTake_Item(take)
+        local retval, chunk = reaper.GetItemStateChunk(item, "", 0)
+        reaper.SetItemStateChunk(item, chunk, 0)
+        reaper.SN_FocusMIDIEditor()
+    end
+end
+
+local function set_reabank_file(reabank_path)
     local ini_file = reaper.get_ini_file()
     local ini, err = read_file(ini_file)
 
@@ -167,10 +196,12 @@ local function set_reabank_file(reabank_path)
         reaper.MB("Failed to read REAPER's ini file\n無法讀取 REAPER 的 ini 文件", "Error", 0),
         reaper.SN_FocusMIDIEditor()
     end
+
     if ini:find("mididefbankprog=") then -- 如果找到 mididefbankprog=
         ini = ini:gsub("mididefbankprog=[^\n]*", "mididefbankprog=" .. reabank_path) -- 在下一行新增BANK地址
     else
         local pos = ini:find('%[REAPER%]\n')
+
         if not pos then
             pos = ini:find('%[reaper%]\n')
         end
@@ -185,7 +216,7 @@ local function set_reabank_file(reabank_path)
         reaper.MB("Failed to write ini file\n寫入ini文件失敗", "Error", 0),
         reaper.SN_FocusMIDIEditor()
     end
-
+    refresh_bank()
 end
 
 function parse_banks(lines)
@@ -1233,6 +1264,7 @@ function Textbox:draw()
 
     -- in elm R_up (released and was previously pressed), run onRClick (user defined)
     if self:mouseRClick() and self.onRClick then self.onRClick() end -- if mouseR clicked and released, execute onRClick()
+    if self:mouseClick() and self.onClick then self.onClick() end -- if mouse clicked and released, execute onClick()
     gfx.set(r,g,b,a) -- set the drawing colour for the e.Element
     self:draw_body()
     self:draw_frame()
@@ -1290,6 +1322,9 @@ btn9.onClick = function () -- 编辑音色表
 end
 btn10.onClick = function () set_group_velocity() end -- 设置乐器组
 btn11.onClick = function () add_fx() end -- 添加表情映射插件
+
+textb.onClick = function () refresh_bank() end -- 左键点击刷新reabank
+--textb.onRClick = function () refresh_bank() end -- 右键点击刷新reabank
 
 midi_chan = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MIDIChannel")
 if midi_chan == "" then midi_chan = 1 end
@@ -1575,7 +1610,6 @@ function mainloop()
     if char ~= -1 then reaper.defer(mainloop) end -- defer
     if char == -1 or char == 27 then saveExtState() end -- saveState (window position)
     gfx.update()
-
 end
 
 Init()
