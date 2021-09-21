@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b7a3ffc837f21314e501eca4276c77d1f323f6db">
+<index version="1" name="zaibuyidao Scripts" commit="ba16f8f0d890f5d70cd6991c6f3ff823b2295dfa">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -356,24 +356,6 @@
       <version name="1.0" author="zaibuyidao" time="2021-09-21T11:34:38Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b7a3ffc837f21314e501eca4276c77d1f323f6db/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Mouse%20Position.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Solo MIDI Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Item Play Edit Cursor Position (Perform Until Shortcut Released)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-09-21T11:34:38Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b7a3ffc837f21314e501eca4276c77d1f323f6db/Items%20Editing/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-09-21T11:34:38Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b7a3ffc837f21314e501eca4276c77d1f323f6db/Items%20Editing/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Swap Items Of Two Tracks.lua" type="script" desc="Swap Items Of Two Tracks">
@@ -2734,6 +2716,24 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/07e4afec91e0e7ea2b3cd1fe6ca880652222b0bf/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Solo MIDI Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Item Play Edit Cursor Position (Perform Until Shortcut Released)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-09-21T14:23:54Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ba16f8f0d890f5d70cd6991c6f3ff823b2295dfa/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-09-21T14:23:54Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ba16f8f0d890f5d70cd6991c6f3ff823b2295dfa/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Split Notes.lua" type="script" desc="Split Notes">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -3696,6 +3696,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-09-21T11:34:38Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b7a3ffc837f21314e501eca4276c77d1f323f6db/Tracks%20Properties/zaibuyidao_Set%20Solo%20Track.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-09-21T14:23:54Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ba16f8f0d890f5d70cd6991c6f3ff823b2295dfa/Tracks%20Properties/zaibuyidao_Set%20Solo%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Track Name.lua" type="script" desc="Set Track Name">
