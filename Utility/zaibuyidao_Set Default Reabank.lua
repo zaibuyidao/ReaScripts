@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set Default Reabank
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -89,9 +89,51 @@ end
 
 set_reabank_file(reabank_path)
 
-local window, _, _ = reaper.BR_GetMouseCursorContext()
-local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
-if window == "midi_editor" and not inline_editor then reaper.SN_FocusMIDIEditor() end -- 聚焦 MIDI Editor
+-- local window, _, _ = reaper.BR_GetMouseCursorContext()
+-- local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
+
+-- if window == "midi_editor" then
+--     if not inline_editor then
+--         if not user_ok or not tonumber(velo) then return reaper.SN_FocusMIDIEditor() end
+--         take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+--     else
+--         take = reaper.BR_GetMouseCursorContext_Take()
+--     end
+--     local item = reaper.GetMediaItemTake_Item(take)
+--     local retval, chunk = reaper.GetItemStateChunk(item, "", 0)
+--     reaper.SetItemStateChunk(item, chunk, 0)
+--     if not inline_editor then reaper.SN_FocusMIDIEditor() end
+-- else
+--     count_sel_items = reaper.CountSelectedMediaItems(0)
+--     if count_sel_items == 0 then return end
+--     -- for i = 1, count_sel_items do
+--     --     item = reaper.GetSelectedMediaItem(0, count_sel_items - i)
+--     --     take = reaper.GetTake(item, 0)
+--     --     local retval, chunk = reaper.GetItemStateChunk(item, "", 0)
+--     --     reaper.SetItemStateChunk(item, chunk, 0)
+--     -- end
+-- end -- 聚焦 MIDI Editor
+
+count_sel_items = reaper.CountSelectedMediaItems(0)
+if count_sel_items > 0 then
+    for i = 1, count_sel_items do
+        item = reaper.GetSelectedMediaItem(0, i - 1)
+        take = reaper.GetTake(item, 0)
+        if not take or not reaper.TakeIsMIDI(take) then return end
+        -- reaper.Main_OnCommand( 40716, 0 ) -- View: Toggle show MIDI editor windows
+        -- reaper.Main_OnCommand( 40716, 1 ) -- View: Toggle show MIDI editor windows
+        local retval, chunk = reaper.GetItemStateChunk(item, "", 0)
+        reaper.SetItemStateChunk(item, chunk, 0)
+    end
+else
+    editor = reaper.MIDIEditor_GetActive()
+    take = reaper.MIDIEditor_GetTake(editor)
+    if not take or not reaper.TakeIsMIDI(take) then return end
+    local item = reaper.GetMediaItemTake_Item(take)
+    local retval, chunk = reaper.GetItemStateChunk(item, "", 0)
+    reaper.SetItemStateChunk(item, chunk, 0)
+    reaper.SN_FocusMIDIEditor()
+end
 
 reaper.Undo_EndBlock("Set Default Reabank", -1)
 reaper.PreventUIRefresh(-1)
