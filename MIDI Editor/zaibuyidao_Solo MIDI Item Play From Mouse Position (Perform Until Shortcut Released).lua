@@ -1,13 +1,13 @@
 --[[
  * ReaScript Name: Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
  * Donation: http://www.paypal.me/zaibuyidao
- * provides: [main=midi_editor] .
+ * provides: [main=main,midi_editor,midi_inlineeditor] .
 --]]
 
 --[[
@@ -143,36 +143,88 @@ function main()
     count_sel_track = reaper.CountSelectedTracks(0) -- 計算選中的軌道
     count_tracks = reaper.CountTracks(0)
     state = reaper.JS_VKeys_GetState(0) -- 獲取按鍵的狀態
-    if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
-        if count_sel_items > 0 then
-            --reaper.ShowConsoleMsg("按键按下" .. "\n")
-            for i = 0, count_tracks -1 do
-                track = reaper.GetTrack(0, i)
-                count_items_track = reaper.CountTrackMediaItems(track)
 
-                for i = 0, count_items_track - 1 do
-                    local item = reaper.GetTrackMediaItem(track, i)
-                    set_item_mute(item, 1)
-                    if reaper.IsMediaItemSelected(item) == true then
-                        set_item_mute(item, 0)
+    local window, _, _ = reaper.BR_GetMouseCursorContext()
+    local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
+    if window == "midi_editor" then
+        if not inline_editor then
+            take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+        else
+            take = reaper.BR_GetMouseCursorContext_Take()
+        end
+
+        if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
+            if count_sel_items > 0 then
+                --reaper.ShowConsoleMsg("按键按下" .. "\n")
+                for i = 0, count_tracks -1 do
+                    track = reaper.GetTrack(0, i)
+                    count_items_track = reaper.CountTrackMediaItems(track)
+    
+                    for i = 0, count_items_track - 1 do
+                        local item = reaper.GetTrackMediaItem(track, i)
+                        set_item_mute(item, 1)
+                        if reaper.IsMediaItemSelected(item) == true then
+                            set_item_mute(item, 0)
+                        end
                     end
                 end
+                reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
+                -- reaper.SetEditCurPos(cur_pos, 0, 0)
+                reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
+            else
+                --print(reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443))
+                reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
+                -- reaper.SetEditCurPos(cur_pos, 0, 0)
+                reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
             end
-            reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
-            -- reaper.SetEditCurPos(cur_pos, 0, 0)
-            reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
-        else
-            reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
-            -- reaper.SetEditCurPos(cur_pos, 0, 0)
-            reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
+            flag = 1
+        elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
+            -- reaper.ShowConsoleMsg("按键释放" .. "\n")
+            reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1142) -- Transport: Stop
+            restore_items() -- 恢复item静音状态
+            flag = 0
         end
-        flag = 1
-    elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
-        -- reaper.ShowConsoleMsg("按键释放" .. "\n")
-        reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1142) -- Transport: Stop
-        restore_items() -- 恢复item静音状态
-        flag = 0
+
+        -- if not inline_editor then reaper.SN_FocusMIDIEditor() end
+    else
+        count_sel_items = reaper.CountSelectedMediaItems(0)
+        for i = 1, count_sel_items do
+            item = reaper.GetSelectedMediaItem(0, count_sel_items - i)
+            take = reaper.GetTake(item, 0)
+
+            if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
+                if count_sel_items > 0 then
+                    --reaper.ShowConsoleMsg("按键按下" .. "\n")
+                    for i = 0, count_tracks -1 do
+                        track = reaper.GetTrack(0, i)
+                        count_items_track = reaper.CountTrackMediaItems(track)
+        
+                        for i = 0, count_items_track - 1 do
+                            local item = reaper.GetTrackMediaItem(track, i)
+                            set_item_mute(item, 1)
+                            if reaper.IsMediaItemSelected(item) == true then
+                                set_item_mute(item, 0)
+                            end
+                        end
+                    end
+                    reaper.Main_OnCommand(40513, 0) -- View: Move edit cursor to mouse cursor
+                    -- reaper.SetEditCurPos(cur_pos, 0, 0)
+                    reaper.Main_OnCommand(1007, 0) -- Transport: Play
+                else
+                    reaper.Main_OnCommand(40513, 0) -- View: Move edit cursor to mouse cursor
+                    -- reaper.SetEditCurPos(cur_pos, 0, 0)
+                    reaper.Main_OnCommand(1007, 0) -- Transport: Play
+                end
+                flag = 1
+            elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
+                -- reaper.ShowConsoleMsg("按键释放" .. "\n")
+                reaper.Main_OnCommand(1016, 0) -- Transport: Stop
+                restore_items() -- 恢复item静音状态
+                flag = 0
+            end
+        end
     end
+
     reaper.SetEditCurPos(cur_pos, false, false) -- 恢復光標位置
     reaper.PreventUIRefresh(-1)
     reaper.UpdateArrange()
@@ -185,7 +237,7 @@ if not reaper.JS_VKeys_GetState then
         Open_URL("https://github.com/juliansader/ReaExtensions/tree/master/js_ReaScriptAPI/")
     end
     return
-    --reaper.ShowConsoleMsg('Please Install js_ReaScriptAPI extension.\nhttps://forum.cockos.com/showthread.php?t=212174\n')
+    -- reaper.ShowConsoleMsg('Please Install js_ReaScriptAPI extension.\nhttps://forum.cockos.com/showthread.php?t=212174\n')
   else
     reaper.ClearConsole()
     local _, _, sectionId, cmdId = reaper.get_action_context()
