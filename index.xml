@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6a3ef0563959e3964cf46a416074636c3f0874c5">
+<index version="1" name="zaibuyidao Scripts" commit="74079a80fdad1cf4fc3819f38daf435e36995fb0">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -1982,6 +1982,9 @@
       <version name="1.2" author="zaibuyidao" time="2021-02-02T18:22:00Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a2121155c52ad8b0a874b8a0f582579023da8e5/MIDI%20Editor/zaibuyidao_Quantize.lua</source>
       </version>
+      <version name="1.2.1" author="zaibuyidao" time="2021-10-01T13:57:45Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/74079a80fdad1cf4fc3819f38daf435e36995fb0/MIDI%20Editor/zaibuyidao_Quantize.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Position (Within Time Selection).lua" type="script" desc="Random CC Position (Within Time Selection)">
       <metadata>
@@ -2874,6 +2877,9 @@
       <version name="1.3" author="zaibuyidao" time="2020-05-04T10:20:33Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2bcf063eea1cb6511e2f18dc4399c91608729378/MIDI%20Editor/zaibuyidao_Transpose.lua</source>
       </version>
+      <version name="1.3.2" author="zaibuyidao" time="2021-10-01T13:57:45Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/74079a80fdad1cf4fc3819f38daf435e36995fb0/MIDI%20Editor/zaibuyidao_Transpose.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge (Percentages).lua" type="script" desc="Trim Note Left Edge (Percentages)">
       <metadata>
@@ -3266,6 +3272,9 @@
       <version name="1.3.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%A7%BB%E8%AA%BF.lua</source>
       </version>
+      <version name="1.3.2" author="再補一刀" time="2021-10-01T13:57:45Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/74079a80fdad1cf4fc3819f38daf435e36995fb0/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%A7%BB%E8%AA%BF.lua</source>
+      </version>
     </reapack>
     <reapack name="再補一刀_線性斜坡CC事件(多軌).lua" type="script" desc="線性斜坡CC事件(多軌)">
       <metadata>
@@ -3426,6 +3435,9 @@
       </version>
       <version name="1.2" author="再補一刀" time="2021-02-02T18:22:00Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a2121155c52ad8b0a874b8a0f582579023da8e5/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%87%8F%E5%8C%96.lua</source>
+      </version>
+      <version name="1.2.1" author="再補一刀" time="2021-10-01T13:57:45Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/74079a80fdad1cf4fc3819f38daf435e36995fb0/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%87%8F%E5%8C%96.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_長度.lua" type="script" desc="長度">
