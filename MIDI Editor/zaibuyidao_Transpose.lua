@@ -1,7 +1,6 @@
 --[[
  * ReaScript Name: Transpose
- * Instructions: Open a MIDI take in MIDI Editor. Select Notes or MIDI Takes. Run.
- * Version: 1.3
+ * Version: 1.3.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -23,9 +22,12 @@ function main()
     local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
     amount = reaper.GetExtState("TransposeMIDI", "Transpose")
     if (amount == "") then amount = "0" end
-    user_ok, amount = reaper.GetUserInputs("Transpose", 1, "Amount", amount)
+    user_ok, amount = reaper.GetUserInputs("Transpose", 1, "Semitones", amount)
     amount = tonumber(amount)
     reaper.SetExtState("TransposeMIDI", "Transpose", amount, false)
+
+    reaper.PreventUIRefresh(1)
+    reaper.Undo_BeginBlock()
     if window == "midi_editor" then
         if not inline_editor then
             if not user_ok or not tonumber(amount) then return reaper.SN_FocusMIDIEditor() end
@@ -97,10 +99,8 @@ function main()
             reaper.MIDI_Sort(take)
         end
     end
+    reaper.Undo_EndBlock("Transpose", -1)
+    reaper.PreventUIRefresh(-1)
+    reaper.UpdateArrange()
 end
-reaper.PreventUIRefresh(1)
-reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("Transpose", 0)
-reaper.UpdateArrange()
-reaper.PreventUIRefresh(-1)

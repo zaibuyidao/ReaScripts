@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 移調
- * Version: 1.3.1
+ * Version: 1.3.2
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -22,10 +22,11 @@ function main()
     local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
     amount = reaper.GetExtState("TransposeMIDI", "Transpose")
     if (amount == "") then amount = "0" end
-    user_ok, amount = reaper.GetUserInputs("移調", 1, "量", amount)
+    user_ok, amount = reaper.GetUserInputs("移調", 1, "半音", amount)
     amount = tonumber(amount)
     reaper.SetExtState("TransposeMIDI", "Transpose", amount, false)
 
+    reaper.PreventUIRefresh(1)
     reaper.Undo_BeginBlock()
     if window == "midi_editor" then
         if not inline_editor then
@@ -99,7 +100,7 @@ function main()
         end
     end
     reaper.Undo_EndBlock("移調", -1)
+    reaper.PreventUIRefresh(-1)
+    reaper.UpdateArrange()
 end
-
 main()
-reaper.UpdateArrange()

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 量化
- * Version: 1.2
+ * Version: 1.2.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -201,8 +201,16 @@ function Main()
     end
 
     reaper.UpdateArrange()
-    reaper.Undo_EndBlock("量化", 0)
+    reaper.Undo_EndBlock("量化", -1)
 end
+
+if not reaper.SN_FocusMIDIEditor then
+    local retval = reaper.ShowMessageBox("SWS extension is required by this script.\n此腳本需要 SWS 擴展。\nHowever, it doesn't seem to be present for this REAPER installation.\n然而，對於這個REAPER安裝來說，它似乎並不存在。\n\nDo you want to download it now ?\n你想現在就下載它嗎？", "Warning", 1)
+    if retval == 1 then
+      Open_URL("http://www.sws-extension.org/download/pre-release/")
+    end
+    return
+end
+
 Main()
 reaper.SN_FocusMIDIEditor()
-reaper.defer(Main)
