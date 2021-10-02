@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Design Tools (Dynamic Menu)
- * Version: 1.4
+ * Version: 1.4.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -720,6 +720,7 @@ menu = menu
 .. (rand_exchange_items and "!" or "") .. "隨機交換對象位置" .. "||"
 .. (multi_cut2 and "!" or "") .. "平均分割對象" .. "|"
 .. (multi_cut and "!" or "") .. "在光標處平均分割對象" .. "|"
+.. (create_marker and "!" or "") .. "按對象名稱創建標記" .. "|"
 
 title = "Hidden gfx window for showing the 音頻編輯 Menu showmenu"
 gfx.init(title, 0, 0, 0, 0, 0)
@@ -798,6 +799,7 @@ if selection > 0 then
   if selection == 38 then RandomExchangeItems() end
   if selection == 39 then MultiCut2() end
   if selection == 40 then MultiCut() end
+  if selection == 41 then  reaper.Main_OnCommand(reaper.NamedCommandLookup("_XENAKIOS_CRTMARKERSFROMITEMS1"), 0) end -- Xenakios/SWS: Create markers from selected items (name by take source file name)
 
 end
 
