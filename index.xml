@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="98c17ca6c8a69eaa21869e2fd9bcf7cef2f234d4">
+<index version="1" name="zaibuyidao Scripts" commit="0fba86c5650f5c2780a5136bf40028de546c90dd">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -4012,6 +4012,12 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cbb875e25cca4ba642a337a646c54863ada92cec/Utility/zaibuyidao_Set%20MIDI%20Channel%20Routing%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Set MIDI Out Devices.lua" type="script" desc="Set MIDI Out Devices">
+      <version name="1.0" author="zaibuyidao, YS" time="2021-10-03T15:43:29Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0fba86c5650f5c2780a5136bf40028de546c90dd/Utility/zaibuyidao_Set%20MIDI%20Out%20Devices.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Set Point Shape (Dynamic Menu).lua" type="script" desc="Set Point Shape (Dynamic Menu)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -4063,27 +4069,6 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-09-29T14:30:01Z">
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/Utility/zaibuyidao_VST%20Instrument.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_啟用MIDI端口0123.lua" type="script" desc="啟用MIDI端口0123">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-04-01T09:46:12Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9713d75722f809592d58785d31680c200eff0961/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%95%9F%E7%94%A8MIDI%E7%AB%AF%E5%8F%A30123.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-04-01T09:52:34Z">
-        <changelog><![CDATA[+ 文字描述修正]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/566ce4c782d3bac075dcc563bac276d7d2bd989c/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%95%9F%E7%94%A8MIDI%E7%AB%AF%E5%8F%A30123.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2021-05-12T17:15:25Z">
-        <changelog><![CDATA[+ 設置完成將自動退出REAPER]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d7bd35d86adddd7305aca0c8c16e3f3bc4505c8a/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%95%9F%E7%94%A8MIDI%E7%AB%AF%E5%8F%A30123.lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2021-07-02T03:59:10Z">
-        <changelog><![CDATA[+ 優化彈窗]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/98aa3b474e065cbeab04e4caaab3b8bc7c3f9ba2/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%95%9F%E7%94%A8MIDI%E7%AB%AF%E5%8F%A30123.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_建立MIDI通道路由到選定軌道.lua" type="script" desc="建立MIDI通道路由到選定軌道">
