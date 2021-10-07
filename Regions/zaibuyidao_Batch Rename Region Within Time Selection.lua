@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region Within Time Selection
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -47,6 +47,77 @@ function AddZeroFrontNum(dest_dight, num)
       end
       return str_e .. tostring(num)
   end
+end
+
+function chsize(char)
+  if not char then
+    return 0
+  elseif char > 240 then
+    return 4
+  elseif char > 225 then
+    return 3
+  elseif char > 192 then
+    return 2
+  else
+    return 1
+  end
+end
+
+function utf8len(str)
+  local len = 0
+  local currentIndex = 1
+  while currentIndex <= #str do
+    local char = string.byte(str,currentIndex)
+    currentIndex = currentIndex + chsize(char)
+    len = len + 1
+  end
+  return len
+end
+
+function utf8sub(str,startChar,endChars)
+  local startIndex = 1
+  startChar = startChar + 1
+  while startChar > 1 do
+    local char = string.byte(str,startIndex)
+    startIndex = startIndex + chsize(char)
+    startChar = startChar - 1
+  end
+  local currentIndex = startChar
+  newChars = utf8len(str) - endChars
+  while newChars > 0 and currentIndex <= #str do
+    local char = string.byte(str,currentIndex)
+    currentIndex = currentIndex + chsize(char)
+    newChars = newChars - 1
+  end
+  return str:sub(startIndex,currentIndex - 1)
+end
+
+function utf8sub2(str,startChar,endChars)
+  local startIndex = 1
+  startChar = startChar + 1
+  while startChar > 1 do
+    local char = string.byte(str,startIndex)
+    startIndex = startIndex + chsize(char)
+    startChar = startChar - 1
+  end
+  local currentIndex = startChar
+  while tonumber(endChars) > 0 and currentIndex <= #str do
+    local char = string.byte(str,currentIndex)
+    currentIndex = currentIndex + chsize(char)
+    endChars = endChars - 1
+  end
+  return str:sub(startIndex,currentIndex - 1)
+end
+
+function utf8sub_del(str,startChar)
+  local startIndex = 1
+  startChar = startChar + 1
+  while startChar > 1 do
+      local char = string.byte(str,startIndex)
+      startIndex = startIndex + chsize(char)
+      startChar = startChar - 1
+  end
+  return str:sub(startIndex)
 end
 
 function print(param)
@@ -180,13 +251,10 @@ local pattern, begin_str, end_str, position, insert, delete, find, replace = '',
 --   Msg("all:" .. key)
 -- end
 
-local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region", 8, "Rename 重命名,From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
+local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region", 8, "Rename 重命名,From beginning 截取開頭,From end 截取結尾,At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace)
 if not ok then return end
 
 pattern, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
-
-begin_str = begin_str + 1
-end_str = end_str - 1
 
 name_t = {}
 for i, region in ipairs(regions) do
@@ -246,8 +314,8 @@ for i, region in ipairs(regions) do
           end
         end
 
-        matched.name = string.sub(matched.name, begin_str, end_str)
-        matched.name = string.sub(matched.name, 1, position) .. insert .. string.sub(matched.name, position+1+delete)
+        matched.name = utf8sub(matched.name,begin_str,end_str)
+        matched.name = utf8sub2(matched.name,0,position)..insert..utf8sub_del(matched.name,position+delete)
         matched.name = string.gsub(matched.name, find, replace)
     
         if insert ~= '' then

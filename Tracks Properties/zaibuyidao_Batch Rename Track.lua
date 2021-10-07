@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Track
- * Version: 1.0
+ * Version: 1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -49,6 +49,77 @@ function AddZeroFrontNum(dest_dight, num)
     end
 end
 
+function chsize(char)
+    if not char then
+        return 0
+    elseif char > 240 then
+        return 4
+    elseif char > 225 then
+        return 3
+    elseif char > 192 then
+        return 2
+    else
+        return 1
+    end
+end
+  
+function utf8len(str)
+    local len = 0
+    local currentIndex = 1
+    while currentIndex <= #str do
+        local char = string.byte(str,currentIndex)
+        currentIndex = currentIndex + chsize(char)
+        len = len + 1
+    end
+    return len
+end
+  
+function utf8sub(str,startChar,endChars)
+    local startIndex = 1
+    startChar = startChar + 1
+    while startChar > 1 do
+        local char = string.byte(str,startIndex)
+        startIndex = startIndex + chsize(char)
+        startChar = startChar - 1
+    end
+    local currentIndex = startChar
+    newChars = utf8len(str) - endChars
+    while newChars > 0 and currentIndex <= #str do
+        local char = string.byte(str,currentIndex)
+        currentIndex = currentIndex + chsize(char)
+        newChars = newChars - 1
+    end
+    return str:sub(startIndex,currentIndex - 1)
+end
+  
+function utf8sub2(str,startChar,endChars)
+    local startIndex = 1
+    startChar = startChar + 1
+    while startChar > 1 do
+        local char = string.byte(str,startIndex)
+        startIndex = startIndex + chsize(char)
+        startChar = startChar - 1
+    end
+    local currentIndex = startChar
+    while tonumber(endChars) > 0 and currentIndex <= #str do
+        local char = string.byte(str,currentIndex)
+        currentIndex = currentIndex + chsize(char)
+        endChars = endChars - 1
+    end
+    return str:sub(startIndex,currentIndex - 1)
+end
+  
+function utf8sub_del(str,startChar)
+    local startIndex = 1
+    startChar = startChar + 1
+    while startChar > 1 do
+        local char = string.byte(str,startIndex)
+        startIndex = startIndex + chsize(char)
+        startChar = startChar - 1
+    end
+    return str:sub(startIndex)
+end
+
 local show_msg = reaper.GetExtState("SetTrackName", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
@@ -71,12 +142,9 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local rn, a, z, pos, ins, del, f, r = '', '0', '0', '0', '', '0', '', ''
-local retval, retvals_csv = reaper.GetUserInputs("Batch Rename Track", 8, "Rename 重命名,From beginning 截取開頭,From end 截取結尾 (負數),At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", tostring(rn)..','..tostring(a)..','..tostring(z)..','..tostring(pos)..','..tostring(ins)..','..tostring(del)..','..tostring(f)..','..tostring(r))
+local retval, retvals_csv = reaper.GetUserInputs("Batch Rename Track", 8, "Rename 重命名,From beginning 截取開頭,From end 截取結尾,At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", tostring(rn)..','..tostring(a)..','..tostring(z)..','..tostring(pos)..','..tostring(ins)..','..tostring(del)..','..tostring(f)..','..tostring(r))
 if not retval then return end
 local rename, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
-
-begin_str = begin_str + 1
-end_str = end_str - 1
 
 track_name_tb = {} -- 將track名稱存入表
 parent_track_tb = {}
@@ -152,8 +220,8 @@ for i = 0, count_sel_tracks - 1 do -- 遍歷選中軌道
         end
     end
 
-    track_name = string.sub(track_name, begin_str, end_str)
-    track_name = string.sub(track_name, 1, position) .. insert .. string.sub(track_name, position+1+delete)
+    track_name = utf8sub(track_name,begin_str,end_str)
+    track_name = utf8sub2(track_name,0,position)..insert..utf8sub_del(track_name,position+delete)
     track_name = string.gsub(track_name, find, replace)
 
     if insert ~= '' then
