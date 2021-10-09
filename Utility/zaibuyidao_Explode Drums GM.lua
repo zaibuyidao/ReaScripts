@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Explode Drums GM
- * Version: 1.0
- * Author: zaibuyidao
+ * Version: 1.0.1
+ * Author: zaibuyidao, YS
  * Reference: drums 自动分轨（GM）.lua (增加編輯器外部支持)
  * REAPER: 6.0
  * provides: [main=main,midi_editor,midi_eventlisteditor] .

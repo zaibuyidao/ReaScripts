@@ -1,11 +1,12 @@
 --[[
- * ReaScript Name: Insert Vibrato (Square)
+ * ReaScript Name: Insert Wheel Curve (Sawtooth)
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -57,7 +58,7 @@ function get_cur_sine2(bottom, top, num) -- 正弦曲线间隙版本
   return result
 end
 
-function get_cur_triangle(bottom, top, num) -- 三角波曲线版本
+function get_cur_straight(bottom, top, num) -- 三角波曲线版本
   local result = {}
   local step = (top - bottom) / (num / 2)
   local cur = bottom
@@ -83,35 +84,46 @@ function get_cur_square(bottom, top, num) -- 方波曲线版本
   return result
 end
 
-get_curve = get_cur_square
+function get_cur_sawtooth(bottom, top, num) -- 锯齿波曲线版本
+  local result = {}
+  local step = (top - bottom) / (num - 1)
+  local cur = bottom
+  for i = 1, num do
+    table.insert(result, math.floor(cur))
+    cur = cur + step
+  end
+  return result
+end
+
+get_curve = get_cur_sawtooth
 
 function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if not take or not reaper.TakeIsMIDI(take) then return end
 
-  local bottom = reaper.GetExtState("InsterVibratoSquare", "Bottom")
+  local bottom = reaper.GetExtState("InsterWheelCurveSawtooth", "Bottom")
   if (bottom == "") then bottom = "0" end
-  local top = reaper.GetExtState("InsterVibratoSquare", "Top")
+  local top = reaper.GetExtState("InsterWheelCurveSawtooth", "Top")
   if (top == "") then top = "1024" end
-  local times = reaper.GetExtState("InsterVibratoSquare", "Times") 
+  local times = reaper.GetExtState("InsterWheelCurveSawtooth", "Times") 
   if (times == "") then times = "16" end
-  local length = reaper.GetExtState("InsterVibratoSquare", "Length")
+  local length = reaper.GetExtState("InsterWheelCurveSawtooth", "Length")
   if (length == "") then length = "240" end
-  local num = reaper.GetExtState("InsterVibratoSquare", "Num")
-  if (num == "") then num = "12" end
+  local num = reaper.GetExtState("InsterWheelCurveSawtooth", "Num")
+  if (num == "") then num = "2" end
 
-  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Vibrato (方波)", 5, "Starting value 起點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
+  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Wheel Curve (鋸齒波)", 5, "Starting value 起點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   bottom, top, times, length, num = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*)")
   if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) then return reaper.SN_FocusMIDIEditor() end
   bottom, top, times, length, num = tonumber(bottom), tonumber(top), tonumber(times), tonumber(length), tonumber(num)
   if times < 1 then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("InsterVibratoSquare", "Bottom", bottom, false)
-  reaper.SetExtState("InsterVibratoSquare", "Top", top, false)
-  reaper.SetExtState("InsterVibratoSquare", "Times", times, false)
-  reaper.SetExtState("InsterVibratoSquare", "Length", length, false)
-  reaper.SetExtState("InsterVibratoSquare", "Num", num, false)
+  reaper.SetExtState("InsterWheelCurveSawtooth", "Bottom", bottom, false)
+  reaper.SetExtState("InsterWheelCurveSawtooth", "Top", top, false)
+  reaper.SetExtState("InsterWheelCurveSawtooth", "Times", times, false)
+  reaper.SetExtState("InsterWheelCurveSawtooth", "Length", length, false)
+  reaper.SetExtState("InsterWheelCurveSawtooth", "Num", num, false)
   
   local step_length = length / num
 
@@ -148,7 +160,7 @@ function Main()
     reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, 0, 64)
   end
   
-  j = reaper.MIDI_EnumSelCC(take, -1) -- 选中CC设置形状为直线
+  j = reaper.MIDI_EnumSelCC(take, -1) -- 选中CC设置形状
   while j ~= -1 do
     reaper.MIDI_SetCCShape(take, j, 0, 0, false)
     reaper.MIDI_SetCC(take, j, false, false, nil, nil, nil, nil, nil, false)
@@ -156,7 +168,7 @@ function Main()
   end
   
   reaper.MIDI_Sort(take)
-  reaper.Undo_EndBlock("Insert Vibrato (Square)", -1)
+  reaper.Undo_EndBlock("Insert Wheel Curve (Sawtooth)", -1)
   reaper.UpdateArrange()
 end
 

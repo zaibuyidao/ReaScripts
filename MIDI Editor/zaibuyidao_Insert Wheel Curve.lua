@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Insert Vibrato
- * Version: 2.0.2
+ * ReaScript Name: Insert Wheel Curve
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,7 +11,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-10-2)
+ * v1.0 (2021-10-10)
   + Initial release
 --]]
 
@@ -107,32 +107,32 @@ end
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if not take or not reaper.TakeIsMIDI(take) then return end
 
-local bottom = reaper.GetExtState("InsterVibrato", "Bottom")
+local bottom = reaper.GetExtState("InsterWheelCurve", "Bottom")
 if (bottom == "") then bottom = "0" end
-local top = reaper.GetExtState("InsterVibrato", "Top")
+local top = reaper.GetExtState("InsterWheelCurve", "Top")
 if (top == "") then top = "1024" end
-local times = reaper.GetExtState("InsterVibrato", "Times") 
+local times = reaper.GetExtState("InsterWheelCurve", "Times") 
 if (times == "") then times = "16" end
-local length = reaper.GetExtState("InsterVibrato", "Length")
+local length = reaper.GetExtState("InsterWheelCurve", "Length")
 if (length == "") then length = "240" end
-local num = reaper.GetExtState("InsterVibrato", "Num")
+local num = reaper.GetExtState("InsterWheelCurve", "Num")
 if (num == "") then num = "12" end
-local shape = reaper.GetExtState("InsterVibrato", "Shape")
+local shape = reaper.GetExtState("InsterWheelCurve", "Shape")
 if (shape == "") then shape = "0" end
 
-local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Vibrato", 6, "Starting value 起始點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數,Shape 形狀(0-1)", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
+local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Wheel Curve", 6, "Starting value 起始點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數,Shape 形狀(0-1)", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
 bottom, top, times, length, num, shape = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*),(.*)")
 if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) or not tonumber(shape) then return reaper.SN_FocusMIDIEditor() end
 bottom, top, times, length, num, shape = tonumber(bottom), tonumber(top), tonumber(times), tonumber(length), tonumber(num), tonumber(shape)
-if times < 1  or shape > 1 then return reaper.SN_FocusMIDIEditor() end
+if times < 1  or shape > 3 then return reaper.SN_FocusMIDIEditor() end
 
-reaper.SetExtState("InsterVibrato", "Bottom", bottom, false)
-reaper.SetExtState("InsterVibrato", "Top", top, false)
-reaper.SetExtState("InsterVibrato", "Times", times, false)
-reaper.SetExtState("InsterVibrato", "Length", length, false)
-reaper.SetExtState("InsterVibrato", "Num", num, false)
-reaper.SetExtState("InsterVibrato", "Shape", shape, false)
+reaper.SetExtState("InsterWheelCurve", "Bottom", bottom, false)
+reaper.SetExtState("InsterWheelCurve", "Top", top, false)
+reaper.SetExtState("InsterWheelCurve", "Times", times, false)
+reaper.SetExtState("InsterWheelCurve", "Length", length, false)
+reaper.SetExtState("InsterWheelCurve", "Num", num, false)
+reaper.SetExtState("InsterWheelCurve", "Shape", shape, false)
 
 local step_length = length / num
 
@@ -195,7 +195,7 @@ elseif shape == 2 or shape == 3 then
 end
 
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Insert Vibrato", -1)
+reaper.Undo_EndBlock("Insert Wheel Curve", -1)
 reaper.UpdateArrange()
 
 -- local c = get_curve(0,1024,12)

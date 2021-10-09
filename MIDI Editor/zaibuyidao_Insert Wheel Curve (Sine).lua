@@ -1,11 +1,12 @@
 --[[
- * ReaScript Name: Insert Vibrato (Sine)
+ * ReaScript Name: Insert Wheel Curve (Sine)
  * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -63,29 +64,29 @@ function Main()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if not take or not reaper.TakeIsMIDI(take) then return end
 
-  local bottom = reaper.GetExtState("InsterVibratoSine", "Bottom")
+  local bottom = reaper.GetExtState("InsterWheelCurveSine", "Bottom")
   if (bottom == "") then bottom = "0" end
-  local top = reaper.GetExtState("InsterVibratoSine", "Top")
+  local top = reaper.GetExtState("InsterWheelCurveSine", "Top")
   if (top == "") then top = "256" end
-  local times = reaper.GetExtState("InsterVibratoSine", "Times") 
+  local times = reaper.GetExtState("InsterWheelCurveSine", "Times") 
   if (times == "") then times = "16" end
-  local length = reaper.GetExtState("InsterVibratoSine", "Length")
+  local length = reaper.GetExtState("InsterWheelCurveSine", "Length")
   if (length == "") then length = "120" end
-  local num = reaper.GetExtState("InsterVibratoSine", "Num")
+  local num = reaper.GetExtState("InsterWheelCurveSine", "Num")
   if (num == "") then num = "12" end
 
-  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Vibrato (正弦波)", 5, "Starting value 起點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
+  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Wheel Curve (正弦波)", 5, "Starting value 起點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   bottom, top, times, length, num = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*)")
   if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) then return reaper.SN_FocusMIDIEditor() end
   bottom, top, times, length, num = tonumber(bottom), tonumber(top), tonumber(times), tonumber(length), tonumber(num)
   if times < 1 then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("InsterVibratoSine", "Bottom", bottom, false)
-  reaper.SetExtState("InsterVibratoSine", "Top", top, false)
-  reaper.SetExtState("InsterVibratoSine", "Times", times, false)
-  reaper.SetExtState("InsterVibratoSine", "Length", length, false)
-  reaper.SetExtState("InsterVibratoSine", "Num", num, false)
+  reaper.SetExtState("InsterWheelCurveSine", "Bottom", bottom, false)
+  reaper.SetExtState("InsterWheelCurveSine", "Top", top, false)
+  reaper.SetExtState("InsterWheelCurveSine", "Times", times, false)
+  reaper.SetExtState("InsterWheelCurveSine", "Length", length, false)
+  reaper.SetExtState("InsterWheelCurveSine", "Num", num, false)
   
   local step_length = length / num
 
@@ -119,7 +120,7 @@ function Main()
   end
   if (curve[#curve] ~= bottom) then
     value = bottom + 8192
-    reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, 0, 64)
+    reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, value & 0x7f, value >> 7 & 0x7f)
   end
   
   j = reaper.MIDI_EnumSelCC(take, -1) -- 选中CC设置形状
@@ -130,7 +131,7 @@ function Main()
   end
   
   reaper.MIDI_Sort(take)
-  reaper.Undo_EndBlock("Insert Vibrato (Sine)", -1)
+  reaper.Undo_EndBlock("Insert Wheel Curve (Sine)", -1)
   reaper.UpdateArrange()
 end
 

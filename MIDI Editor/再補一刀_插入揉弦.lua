@@ -1,11 +1,12 @@
 --[[
  * ReaScript Name: 插入揉弦
- * Version: 2.0.1
+ * Version: 2.0.2
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
  * REAPER: 6.0
+ * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
@@ -17,6 +18,15 @@
 --]]
 
 function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
+
+if not reaper.SN_FocusMIDIEditor then
+  local retval = reaper.ShowMessageBox("SWS extension is required by this script.\n此腳本需要 SWS 擴展。\nHowever, it doesn't seem to be present for this REAPER installation.\n然而，對於這個REAPER安裝來說，它似乎並不存在。\n\nDo you want to download it now ?\n你想現在就下載它嗎？", "Warning", 1)
+  if retval == 1 then
+    Open_URL("http://www.sws-extension.org/download/pre-release/")
+  end
+  return
+end
+
 local _SN_FocusMIDIEditor = reaper.SN_FocusMIDIEditor
 reaper.SN_FocusMIDIEditor = function(...) if _SN_FocusMIDIEditor then _SN_FocusMIDIEditor(...) end end
 
@@ -112,12 +122,12 @@ if (num == "") then num = "12" end
 local shape = reaper.GetExtState("InsterVibrato", "Shape")
 if (shape == "") then shape = "0" end
 
-local user_ok, user_input_CSV = reaper.GetUserInputs("插入揉弦", 6, "起點,最高點,重複,長度,點數,形狀(0-3)", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
+local user_ok, user_input_CSV = reaper.GetUserInputs("插入揉弦", 6, "起始點,最高點,重複,長度,點數,形狀(0-1)", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
 bottom, top, times, length, num, shape = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*),(.*)")
 if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) or not tonumber(shape) then return reaper.SN_FocusMIDIEditor() end
 bottom, top, times, length, num, shape = tonumber(bottom), tonumber(top), tonumber(times), tonumber(length), tonumber(num), tonumber(shape)
-if times < 1 then return reaper.SN_FocusMIDIEditor() end
+if times < 1 or shape > 1 then return reaper.SN_FocusMIDIEditor() end
 
 reaper.SetExtState("InsterVibrato", "Bottom", bottom, false)
 reaper.SetExtState("InsterVibrato", "Top", top, false)
@@ -167,7 +177,7 @@ for i = 1, times do
 end
 if (curve[#curve] ~= bottom) then
   value = bottom + 8192
-  reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, 0, 64)
+  reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, value & 0x7f, value >> 7 & 0x7f)
 end
 
 if shape == 0 or shape == 1 then
