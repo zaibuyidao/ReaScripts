@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a967cfe5367e32b6c8315ff65bcbc9a3458a2ea0">
+<index version="1" name="zaibuyidao Scripts" commit="93f417fd12ef3267003d44b653c52618faaa30d8">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -1481,6 +1481,15 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1245d1871896028849c97a55b43e6954d16dc2fb/MIDI%20Editor/zaibuyidao_Insert%20Bend.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Insert CC Curve.lua" type="script" desc="Insert CC Curve">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20CC%20Curve.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Insert CC Events 1.lua" type="script" desc="Insert CC Events 1">
       <metadata/>
       <version name="1.1" author="zaibuyidao" time="2019-12-19T12:04:39Z">
@@ -1705,31 +1714,10 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/be789d5cbe4d4559a8e7f7498c1473744418dc7d/MIDI%20Editor/zaibuyidao_Insert%20Tremolo.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Insert Vibrato (Sawtooth).lua" type="script" desc="Insert Vibrato (Sawtooth)">
-      <version name="1.0" author="zaibuyidao" time="2021-10-02T11:27:37Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/98c17ca6c8a69eaa21869e2fd9bcf7cef2f234d4/MIDI%20Editor/zaibuyidao_Insert%20Vibrato%20(Sawtooth).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Vibrato (Sine).lua" type="script" desc="Insert Vibrato (Sine)">
-      <version name="1.0" author="zaibuyidao" time="2021-10-02T11:27:37Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/98c17ca6c8a69eaa21869e2fd9bcf7cef2f234d4/MIDI%20Editor/zaibuyidao_Insert%20Vibrato%20(Sine).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Vibrato (Square).lua" type="script" desc="Insert Vibrato (Square)">
-      <version name="1.0" author="zaibuyidao" time="2021-10-02T11:27:37Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/98c17ca6c8a69eaa21869e2fd9bcf7cef2f234d4/MIDI%20Editor/zaibuyidao_Insert%20Vibrato%20(Square).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Vibrato (Triangle).lua" type="script" desc="Insert Vibrato (Triangle)">
-      <version name="1.0" author="zaibuyidao" time="2021-10-02T11:27:37Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/98c17ca6c8a69eaa21869e2fd9bcf7cef2f234d4/MIDI%20Editor/zaibuyidao_Insert%20Vibrato%20(Triangle).lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Insert Vibrato.lua" type="script" desc="Insert Vibrato">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
       <version name="1.5" author="zaibuyidao" time="2021-01-18T04:36:01Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1245d1871896028849c97a55b43e6954d16dc2fb/MIDI%20Editor/zaibuyidao_Insert%20Vibrato.lua</source>
       </version>
@@ -1739,6 +1727,9 @@
       </version>
       <version name="2.0.1" author="zaibuyidao" time="2021-10-02T11:27:37Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/98c17ca6c8a69eaa21869e2fd9bcf7cef2f234d4/MIDI%20Editor/zaibuyidao_Insert%20Vibrato.lua</source>
+      </version>
+      <version name="2.0.2" author="zaibuyidao" time="2021-10-09T16:52:45Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Vibrato.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Wah.lua" type="script" desc="Insert Wah">
@@ -1761,6 +1752,51 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2021-01-19T19:51:41Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Wheel Curve (Sawtooth).lua" type="script" desc="Insert Wheel Curve (Sawtooth)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Sawtooth).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Wheel Curve (Sine).lua" type="script" desc="Insert Wheel Curve (Sine)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Sine).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Wheel Curve (Square).lua" type="script" desc="Insert Wheel Curve (Square)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Square).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Wheel Curve (Triangle).lua" type="script" desc="Insert Wheel Curve (Triangle)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Triangle).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Wheel Curve.lua" type="script" desc="Insert Wheel Curve">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Interval.lua" type="script" desc="Interval">
@@ -3252,6 +3288,9 @@
       </version>
     </reapack>
     <reapack name="再補一刀_插入揉弦.lua" type="script" desc="插入揉弦">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
       <version name="1.5" author="再補一刀" time="2021-01-18T04:36:01Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1245d1871896028849c97a55b43e6954d16dc2fb/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E6%8F%89%E5%BC%A6.lua</source>
       </version>
@@ -3261,6 +3300,9 @@
       </version>
       <version name="2.0.1" author="再補一刀" time="2021-10-02T11:27:37Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/98c17ca6c8a69eaa21869e2fd9bcf7cef2f234d4/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E6%8F%89%E5%BC%A6.lua</source>
+      </version>
+      <version name="2.0.2" author="再補一刀" time="2021-10-09T16:52:45Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E6%8F%89%E5%BC%A6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入系統專用數據.lua" type="script" desc="插入系統專用數據">
@@ -3938,6 +3980,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-03-07T10:07:46Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5e8aa1994dc104ad893a3f7739ba842ed611dd02/Utility/zaibuyidao_Explode%20Drums%20GM.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao, YS" time="2021-10-09T16:52:45Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/Utility/zaibuyidao_Explode%20Drums%20GM.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Explode Drums.lua" type="script" desc="Explode Drums">
