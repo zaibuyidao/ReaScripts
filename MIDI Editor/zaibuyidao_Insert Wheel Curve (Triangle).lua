@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Wheel Curve (Triangle)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -82,11 +82,11 @@ function Main()
   local bottom = reaper.GetExtState("InsterWheelCurveTriangle", "Bottom")
   if (bottom == "") then bottom = "0" end
   local top = reaper.GetExtState("InsterWheelCurveTriangle", "Top")
-  if (top == "") then top = "512" end
+  if (top == "") then top = "1024" end
   local times = reaper.GetExtState("InsterWheelCurveTriangle", "Times") 
   if (times == "") then times = "16" end
   local length = reaper.GetExtState("InsterWheelCurveTriangle", "Length")
-  if (length == "") then length = "120" end
+  if (length == "") then length = "240" end
   local num = reaper.GetExtState("InsterWheelCurveTriangle", "Num")
   if (num == "") then num = "12" end
 
@@ -135,7 +135,7 @@ function Main()
   end
   if (curve[#curve] ~= bottom) then
     value = bottom + 8192
-    reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, 0, 64)
+    reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, value & 0x7f, value >> 7 & 0x7f)
   end
   
   j = reaper.MIDI_EnumSelCC(take, -1) -- 选中CC设置形状为直线
@@ -158,4 +158,4 @@ Main()
 -- end
 
 reaper.SN_FocusMIDIEditor()
-reaper.MIDIEditor_OnCommand(editor , 40366) -- CC: Set CC lane to Pitch
+reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40366) -- CC: Set CC lane to Pitch

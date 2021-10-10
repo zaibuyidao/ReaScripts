@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Wheel Curve (Square)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -169,4 +169,4 @@ Main()
 -- end
 
 reaper.SN_FocusMIDIEditor()
-reaper.MIDIEditor_OnCommand(editor , 40366) -- CC: Set CC lane to Pitch
+reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40366) -- CC: Set CC lane to Pitch

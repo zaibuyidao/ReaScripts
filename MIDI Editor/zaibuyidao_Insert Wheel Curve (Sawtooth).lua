@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Wheel Curve (Sawtooth)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -110,9 +110,9 @@ function Main()
   local length = reaper.GetExtState("InsterWheelCurveSawtooth", "Length")
   if (length == "") then length = "240" end
   local num = reaper.GetExtState("InsterWheelCurveSawtooth", "Num")
-  if (num == "") then num = "2" end
+  if (num == "") then num = "12" end
 
-  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Wheel Curve (鋸齒波)", 5, "Starting value 起點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
+  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Wheel Curve (鋸齒波)", 5, "Starting value 起始點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   bottom, top, times, length, num = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*)")
   if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) then return reaper.SN_FocusMIDIEditor() end
@@ -157,7 +157,7 @@ function Main()
   end
   if (curve[#curve] ~= bottom) then
     value = bottom + 8192
-    reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, 0, 64)
+    reaper.MIDI_InsertCC(take, false, false, cur_tick, 224, chan, value & 0x7f, value >> 7 & 0x7f)
   end
   
   j = reaper.MIDI_EnumSelCC(take, -1) -- 选中CC设置形状
@@ -180,4 +180,4 @@ Main()
 -- end
 
 reaper.SN_FocusMIDIEditor()
-reaper.MIDIEditor_OnCommand(editor , 40366) -- CC: Set CC lane to Pitch
+reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40366) -- CC: Set CC lane to Pitch

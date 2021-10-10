@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Insert Vibrato
- * Version: 2.0.2
+ * Version: 2.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -120,7 +120,7 @@ if (num == "") then num = "12" end
 local shape = reaper.GetExtState("InsterVibrato", "Shape")
 if (shape == "") then shape = "0" end
 
-local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Vibrato", 6, "Starting value 起始點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數,Shape 形狀(0-1)", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
+local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Vibrato", 6, "Starting value 起始點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數,Shape 形狀 (0-1)", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
 bottom, top, times, length, num, shape = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*),(.*)")
 if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) or not tonumber(shape) then return reaper.SN_FocusMIDIEditor() end
@@ -204,4 +204,4 @@ reaper.UpdateArrange()
 -- end
 
 reaper.SN_FocusMIDIEditor()
-reaper.MIDIEditor_OnCommand(editor , 40366) -- CC: Set CC lane to Pitch
+reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40366) -- CC: Set CC lane to Pitch
