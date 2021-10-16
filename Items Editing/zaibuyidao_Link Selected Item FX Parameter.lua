@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Item FX Parameter
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -40,7 +40,7 @@ function main()
   local track_id =  reaper.GetTrack(0, track_idx - 1)
   local item_id = reaper.GetTrackMediaItem(track_id, item_idx - 1)
 
-  if not reaper.IsMediaItemSelected(item_id) then
+  if item_id ==nil or not reaper.IsMediaItemSelected(item_id) then
     return reaper.defer(main)
   end
 
