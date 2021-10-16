@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="cdac6a66c76ad046364c72b8ef68aa14a2b5f203">
+<index version="1" name="zaibuyidao Scripts" commit="83d20fe9869772ae9c9a4368b3c791b1646d5816">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -114,6 +114,18 @@
       <version name="1.0" author="zaibuyidao" time="2021-10-15T18:16:27Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f77222235296bc4ab45e2475ff7754ca9a9c69c7/Items%20Editing/zaibuyidao_Link%20Selected%20Item%20FX%20Parameter.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-10-16T14:31:31Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83d20fe9869772ae9c9a4368b3c791b1646d5816/Items%20Editing/zaibuyidao_Link%20Selected%20Item%20FX%20Parameter.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Link Selected Track-Item FX Parameter.lua" type="script" desc="Link Selected Track-Item FX Parameter">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-16T14:31:31Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83d20fe9869772ae9c9a4368b3c791b1646d5816/Items%20Editing/zaibuyidao_Link%20Selected%20Track-Item%20FX%20Parameter.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Move Items To Track (Explode).lua" type="script" desc="Move Items To Track (Explode)">
@@ -316,6 +328,15 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Set%20Take%20Volume.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Show FX Chain For Selected Item.lua" type="script" desc="Show FX Chain For Selected Item">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-16T14:31:31Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83d20fe9869772ae9c9a4368b3c791b1646d5816/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Item.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Show FX Chain For Selected Track-Item.lua" type="script" desc="Show FX Chain For Selected Track-Item">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -323,6 +344,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-10-15T18:16:27Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f77222235296bc4ab45e2475ff7754ca9a9c69c7/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track-Item.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-10-16T14:31:31Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83d20fe9869772ae9c9a4368b3c791b1646d5816/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track-Item.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released)">
@@ -3894,6 +3918,15 @@
       <version name="1.0" author="zaibuyidao" time="2021-07-18T09:12:55Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/38441ae237b19be1b5b844ffc4961edbf11e8f51/Tracks%20Properties/zaibuyidao_Set%20Track%20Name.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Show FX Chain For Selected Track.lua" type="script" desc="Show FX Chain For Selected Track">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2021-10-16T14:31:31Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83d20fe9869772ae9c9a4368b3c791b1646d5816/Tracks%20Properties/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released)">
