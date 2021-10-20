@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Show FX Chain For Selected Track-Item
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -15,35 +15,83 @@
   + Initial release
 --]]
 
-item_keep = false
-track_keep = false
-
 function Msg(string) reaper.ShowConsoleMsg(tostring(string) .. '\n') end
+function NoUndoPoint() end
 
-function updateTracksFx()
-  local track_count = reaper.CountTracks(0)
-  for track_idx = 0, track_count - 1 do
-    value = reaper.CF_EnumSelectedFX(reaper.CF_GetTrackFXChain(reaper.GetTrack(0, track_idx)), -1)
-    if value >= 0 then
-      tracks_fx[track_idx] = value
-    end
+keep_fx = true  -- true or false -- Keep window open when no item/track is selected 沒有選中item/track時，保持窗口打開
+tracks_fx = {}  -- 記錄track對應的上一次打開的fx窗口最後一次選中的fx條目
+items_fx = {}   -- 記錄item對應的上一次打開的fx窗口最後一次選中的fx條目
+opened_fx_tracks = {} -- 已經打開的fx窗口的track
+opened_fx_items = {}  -- 已經打開的fx窗口的item
+
+function forEachSelectedItems(block) -- 遍歷選中item
+  local selected_item_count = reaper.CountSelectedMediaItems(0)
+  for item_idx = 0, selected_item_count - 1 do
+    block(reaper.GetSelectedMediaItem(0, item_idx), item_idx)
   end
 end
 
-function updateItemsFx()
-  local item_count = reaper.CountMediaItems(0)
-  for item_idx = 0, item_count - 1 do
-    local item = reaper.GetMediaItem(0, item_idx)
-    local take = reaper.GetTake(item, 0)
-    local chain = reaper.CF_GetTakeFXChain(take)
-    value = reaper.CF_EnumSelectedFX(chain, -1)
-    if value >= 0 then
-      items_fx[item_idx] = value
-    end
+function forEachSelectedTracks(block) -- 遍歷選中track
+  local master_track = reaper.GetMasterTrack(0)
+  if reaper.IsTrackSelected(master_track) then
+    block(master_track, -1)
+  end
+
+  local selected_track_count = reaper.CountSelectedTracks(0)
+  for track_idx = 0, selected_track_count - 1 do
+    block(reaper.GetSelectedTrack(0, track_idx), track_idx)
   end
 end
 
-function hasTakeFxOpen(take)
+function forEachSelectedFxItems(block) -- 遍歷帶有fx的選中item
+  forEachSelectedItems(function (item, id)
+    local take = reaper.GetActiveTake(item, 0)
+    if take ~= nil then
+      local fx_count = reaper.TakeFX_GetCount(take)
+      if fx_count > 0 then
+        block(item, id, fx_count)
+      end
+    end
+  end)
+end
+
+function forEachSelectedFxTracks(block) -- 遍歷帶有fx的選中track
+  forEachSelectedTracks(function (track, id)
+    local fx_count = reaper.TrackFX_GetCount(track)
+    if fx_count > 0 then
+      block(track, id, fx_count)
+    end
+  end)
+end
+
+function countSelectedFxItems()
+  local count = 0
+  forEachSelectedFxItems(function () count = count + 1 end)
+  return count
+end
+
+function countSelectedFxTracks()
+  local count = 0
+  forEachSelectedFxTracks(function () count = count + 1 end)
+  return count
+end
+
+function updateTracksFx() -- 更新track fx窗口選擇條目
+  forEachSelectedTracks(function (track)
+    value = reaper.CF_EnumSelectedFX(reaper.CF_GetTrackFXChain(track), -1)
+    if value >= 0 then tracks_fx[track] = value end
+  end)
+end
+
+function updateItemsFx() -- 更新item fx窗口選擇條目
+  forEachSelectedItems(function (item)
+    value = reaper.CF_EnumSelectedFX(reaper.CF_GetTakeFXChain(reaper.GetActiveTake(item, 0)), -1)
+    if value >= 0 then items_fx[item] = value end
+  end)
+end
+
+function hasTakeFxOpen(take) -- take是否存在一個打開的fx窗口
+  if take == nil then return false end
   local cnt = reaper.TakeFX_GetCount(take)
   for i = 0, cnt - 1 do
     if reaper.TakeFX_GetOpen(take, i) then
@@ -53,7 +101,14 @@ function hasTakeFxOpen(take)
   return false
 end
 
-function hasTrackFxOpen(track)
+function hasItemFxOpen(item) -- item是否存在一個打開的fx窗口
+  local take = reaper.GetActiveTake(item, 0)
+  if take ~= nil then
+    return hasTakeFxOpen(take)
+  end
+end
+
+function hasTrackFxOpen(track) -- track是否存在一個打開的fx窗口
   local cnt = reaper.TrackFX_GetCount(track)
   for i = 0, cnt - 1 do
     if reaper.TrackFX_GetOpen(track, i) then
@@ -63,84 +118,107 @@ function hasTrackFxOpen(track)
   return false
 end
 
-tracks_fx = {}
-items_fx = {}
+function openItemFx(item)
+  if not hasItemFxOpen(item) then
+    -- 防止item被刪除
+    pcall(function ()
+      reaper.TakeFX_SetOpen(reaper.GetActiveTake(item, 0), items_fx[item] or 0, true)
+    end)
+  end
+end
+
+function openTrackFx(track)
+  if not hasTrackFxOpen(track) then
+    -- 防止track被刪除
+    pcall(function ()
+      reaper.TrackFX_SetOpen(track, tracks_fx[track] or 0, true)
+    end)
+  end
+end
+
+function closeOpenedFxTracks(cond)
+  for track in pairs(opened_fx_tracks) do
+    if cond == nil or cond(track) then
+      pcall(function ()
+        reaper.TrackFX_SetOpen(track, 0, false)
+      end)
+    end
+  end
+end
+
+function closeOpenedFxItems(cond)
+  for item in pairs(opened_fx_items) do
+    if cond == nil or cond(item) then
+      pcall(function ()
+        reaper.TakeFX_SetOpen(reaper.GetActiveTake(item, 0), 0, false)
+      end)
+    end
+  end
+end
+
+-- 更新已打開的fx窗口(track)
+for track_idx = 0, reaper.CountTracks(0) - 1 do
+  local track = reaper.GetTrack(0, track_idx)
+  if hasTrackFxOpen(track) then opened_fx_tracks[track] = true end
+end
+-- 更新已打開的fx窗口(item)
+for item_idx = 0, reaper.CountMediaItems(0) - 1 do
+  local item = reaper.GetMediaItem(0, item_idx)
+  if hasItemFxOpen(item) then opened_fx_items[item] = true end
+end
 
 function main()
-  
-  updateTracksFx()
-  updateItemsFx()
+    reaper.PreventUIRefresh(1)
+    updateTracksFx()
+    updateItemsFx()
 
-  -- 標記某個item的fx窗口是否已生效(被打開), 如果已生效後續操作將關閉所有item/track的fx窗口
-  local item_processed = false
-  local track_processed = false
+    local selected_item_count = countSelectedFxItems()
+    local selected_track_count = countSelectedFxTracks()
+    
+    if selected_item_count > 0 then -- 情況1, 選中了item
+      local selected_items = {}
+      -- 打開選中的item fx窗口
+      forEachSelectedFxItems(function (item)
+        selected_items[item] = true
+        openItemFx(item)
+      end)
+      -- 關閉先前的item fx窗口
+      closeOpenedFxItems(function (item)
+        return selected_items[item] == nil
+      end)
+      opened_fx_items = selected_items -- 更新已打開的item fx窗口
 
-  -- item 處理
-  local item_count = reaper.CountMediaItems(0)
-  for item_idx = 0, item_count - 1 do
-    local item = reaper.GetMediaItem(0, item_idx)
-    local take = reaper.GetTake(item, 0)
-    take_fx_count = reaper.TakeFX_GetCount(take)
-     -- if reaper.IsMediaItemSelected(item) and take_fx_count > 0 then
-    if reaper.IsMediaItemSelected(item) then
-      item_processed = true
+      -- 關閉所有track fx窗口
+      closeOpenedFxTracks()
+      opened_fx_tracks = {}
+    elseif selected_track_count > 0 then -- 情況2, 選中了track但沒有選中item
+      local selected_tracks = {}
+      -- 打開選中的track fx窗口
+      forEachSelectedFxTracks(function (track)
+        selected_tracks[track] = true
+        openTrackFx(track)
+      end)
+      -- 關閉先前的track fx窗口
+      closeOpenedFxTracks(function (track)
+        return selected_tracks[track] == nil
+      end)
+      opened_fx_tracks = selected_tracks -- 更新已打開的track fx窗口
+      -- 關閉所有item fx窗口
+      closeOpenedFxItems()
+      opened_fx_items = {}
+    elseif not keep_fx then -- 情況3, 沒有選中任何項, 並且不保持窗口
+      -- 全部關閉
+      closeOpenedFxItems()
+      opened_fx_items = {}
+      closeOpenedFxTracks()
+      opened_fx_tracks = {}
     end
-  end
+    -- 情況4, 沒有選中任何項, 且保持窗口. 不做任何處理
 
-  for item_idx = 0, item_count - 1 do
-    local item = reaper.GetMediaItem(0, item_idx)
-    local take = reaper.GetTake(item, 0)
-    take_fx_count = reaper.TakeFX_GetCount(take)
-    fx = reaper.TakeFX_GetChainVisible(take)
-    if not reaper.IsMediaItemSelected(item) or take_fx_count <= 0 then
-      reaper.PreventUIRefresh(1)
-      -- if not item_keep or item_processed then
-      if not item_keep then
-        reaper.TakeFX_SetOpen(take, fx, false)
-      end
-    else
-      if not hasTakeFxOpen(take) then
-        reaper.TakeFX_SetOpen(take, items_fx[item_idx] or fx, true)
-      end
-      reaper.UpdateArrange()
-      reaper.PreventUIRefresh(-1)
-    end
-  end
-
-  -- track 處理
-  local track_count = reaper.CountTracks(0)
-
-  for track_idx = 0, track_count - 1 do
-    local track = reaper.GetTrack(0, track_idx)
-    local track_fx_count = reaper.TrackFX_GetCount(track)
-    local fx = reaper.TrackFX_GetChainVisible(track)
-    -- if not item_processed and reaper.IsTrackSelected(track) and track_fx_count > 0 then
-    if not item_processed and reaper.IsTrackSelected(track) then
-      track_processed = true
-    end
-  end
-
-  for track_idx = 0, track_count - 1 do
-    local track = reaper.GetTrack(0, track_idx)
-    local track_fx_count = reaper.TrackFX_GetCount(track)
-    local fx = reaper.TrackFX_GetChainVisible(track)
-    if item_processed or not reaper.IsTrackSelected(track) or track_fx_count <= 0 then
-      reaper.PreventUIRefresh(1)
-      -- if not track_keep or track_processed then
-      if not track_keep then
-        reaper.TrackFX_SetOpen(track, fx, false)
-      end
-    else
-      if not hasTrackFxOpen(track) then
-        reaper.TrackFX_SetOpen(track, tracks_fx[track_idx] or fx, true)
-      end
-    end
-    reaper.UpdateArrange()
+    reaper.defer(main)
     reaper.PreventUIRefresh(-1)
-  end
-
-  reaper.defer(main)
-  
 end
 
 main()
+reaper.UpdateArrange()
+reaper.defer(NoUndoPoint)
