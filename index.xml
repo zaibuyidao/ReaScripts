@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="83d20fe9869772ae9c9a4368b3c791b1646d5816">
+<index version="1" name="zaibuyidao Scripts" commit="438b7030f911f6069368421441a4ebf3efeb9550">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -347,6 +347,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-10-16T14:31:31Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83d20fe9869772ae9c9a4368b3c791b1646d5816/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track-Item.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2021-10-20T16:08:19Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/438b7030f911f6069368421441a4ebf3efeb9550/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track-Item.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released)">
