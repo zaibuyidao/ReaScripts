@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Show FX Chain For Selected Track-Item
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -16,7 +16,6 @@
 --]]
 
 function Msg(string) reaper.ShowConsoleMsg(tostring(string) .. '\n') end
-function NoUndoPoint() end
 
 keep_fx = true  -- true or false -- Keep window open when no item/track is selected 沒有選中item/track時，保持窗口打開
 tracks_fx = {}  -- 記錄track對應的上一次打開的fx窗口最後一次選中的fx條目
@@ -215,10 +214,18 @@ function main()
     end
     -- 情況4, 沒有選中任何項, 且保持窗口. 不做任何處理
 
-    reaper.defer(main)
     reaper.PreventUIRefresh(-1)
+    reaper.UpdateArrange()
+    reaper.defer(main)
 end
 
-main()
-reaper.UpdateArrange()
-reaper.defer(NoUndoPoint)
+local _, _, sectionId, cmdId = reaper.get_action_context()
+if sectionId ~= -1 then
+  reaper.SetToggleCommandState(sectionId, cmdId, 1)
+  reaper.RefreshToolbar2(sectionId, cmdId)
+  main()
+  reaper.atexit(function()
+    reaper.SetToggleCommandState(sectionId, cmdId, 0)
+    reaper.RefreshToolbar2(sectionId, cmdId)
+  end)
+end

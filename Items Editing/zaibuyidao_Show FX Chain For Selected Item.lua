@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Show FX Chain For Selected Item
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -15,24 +15,46 @@
   + Initial release
 --]]
 
-item_keep = false
-
 function Msg(string) reaper.ShowConsoleMsg(tostring(string) .. '\n') end
 
-function updateItemsFx()
-  local item_count = reaper.CountMediaItems(0)
-  for item_idx = 0, item_count - 1 do
-    local item = reaper.GetMediaItem(0, item_idx)
-    local take = reaper.GetTake(item, 0)
-    local chain = reaper.CF_GetTakeFXChain(take)
-    value = reaper.CF_EnumSelectedFX(chain, -1)
-    if value >= 0 then
-      items_fx[item_idx] = value
-    end
+keep_fx = true  -- true or false -- Keep window open when no item is selected 沒有選中item時，保持窗口打開
+items_fx = {}   -- 記錄item對應的上一次打開的fx窗口最後一次選中的fx條目
+opened_fx_items = {}  -- 已經打開的fx窗口的item
+
+function forEachSelectedItems(block) -- 遍歷選中item
+  local selected_item_count = reaper.CountSelectedMediaItems(0)
+  for item_idx = 0, selected_item_count - 1 do
+    block(reaper.GetSelectedMediaItem(0, item_idx), item_idx)
   end
 end
 
-function hasTakeFxOpen(take)
+function forEachSelectedFxItems(block) -- 遍歷帶有fx的選中item
+  forEachSelectedItems(function (item, id)
+    local take = reaper.GetActiveTake(item, 0)
+    if take ~= nil then
+      local fx_count = reaper.TakeFX_GetCount(take)
+      if fx_count > 0 then
+        block(item, id, fx_count)
+      end
+    end
+  end)
+end
+
+function countSelectedFxItems()
+  local count = 0
+  forEachSelectedFxItems(function () count = count + 1 end)
+  return count
+end
+
+function updateItemsFx() -- 更新item fx窗口選擇條目
+  forEachSelectedItems(function (item)
+    value = reaper.CF_EnumSelectedFX(reaper.CF_GetTakeFXChain(reaper.GetActiveTake(item, 0)), -1)
+    if value >= 0 then items_fx[item] = value end
+  end)
+end
+
+function hasTakeFxOpen(take) -- take是否存在一個打開的fx窗口
+  if take == nil then return false end
   local cnt = reaper.TakeFX_GetCount(take)
   for i = 0, cnt - 1 do
     if reaper.TakeFX_GetOpen(take, i) then
@@ -42,49 +64,75 @@ function hasTakeFxOpen(take)
   return false
 end
 
-items_fx = {}
-
-function main()
-
-  updateItemsFx()
-
-  -- 標記某個item的fx窗口是否已生效(被打開), 如果已生效後續操作將關閉所有item的fx窗口
-  local item_processed = false
-
-  -- item 處理
-  local item_count = reaper.CountMediaItems(0)
-  for item_idx = 0, item_count - 1 do
-    local item = reaper.GetMediaItem(0, item_idx)
-    local take = reaper.GetTake(item, 0)
-    take_fx_count = reaper.TakeFX_GetCount(take)
-     -- if reaper.IsMediaItemSelected(item) and take_fx_count > 0 then
-    if reaper.IsMediaItemSelected(item) then
-      item_processed = true
-    end
+function hasItemFxOpen(item) -- item是否存在一個打開的fx窗口
+  local take = reaper.GetActiveTake(item, 0)
+  if take ~= nil then
+    return hasTakeFxOpen(take)
   end
-
-  for item_idx = 0, item_count - 1 do
-    local item = reaper.GetMediaItem(0, item_idx)
-    local take = reaper.GetTake(item, 0)
-    take_fx_count = reaper.TakeFX_GetCount(take)
-    fx = reaper.TakeFX_GetChainVisible(take)
-    if not reaper.IsMediaItemSelected(item) or take_fx_count <= 0 then
-      reaper.PreventUIRefresh(1)
-      -- if not item_keep or item_processed then
-      if not item_keep then
-        reaper.TakeFX_SetOpen(take, fx, false)
-      end
-    else
-      if not hasTakeFxOpen(take) then
-        reaper.TakeFX_SetOpen(take, items_fx[item_idx] or fx, true)
-      end
-      reaper.UpdateArrange()
-      reaper.PreventUIRefresh(-1)
-    end
-  end
-
-  reaper.defer(main)
-  
 end
 
-main()
+function openItemFx(item)
+  if not hasItemFxOpen(item) then
+    -- 防止item被刪除
+    pcall(function ()
+      reaper.TakeFX_SetOpen(reaper.GetActiveTake(item, 0), items_fx[item] or 0, true)
+    end)
+  end
+end
+
+function closeOpenedFxItems(cond)
+  for item in pairs(opened_fx_items) do
+    if cond == nil or cond(item) then
+      pcall(function ()
+        reaper.TakeFX_SetOpen(reaper.GetActiveTake(item, 0), 0, false)
+      end)
+    end
+  end
+end
+
+-- 更新已打開的fx窗口(item)
+for item_idx = 0, reaper.CountMediaItems(0) - 1 do
+  local item = reaper.GetMediaItem(0, item_idx)
+  if hasItemFxOpen(item) then opened_fx_items[item] = true end
+end
+
+function main()
+    reaper.PreventUIRefresh(1)
+    updateItemsFx()
+
+    local selected_item_count = countSelectedFxItems()
+
+    if selected_item_count > 0 then -- 情況1, 選中了item
+      local selected_items = {}
+      -- 打開選中的item fx窗口
+      forEachSelectedFxItems(function (item)
+        selected_items[item] = true
+        openItemFx(item)
+      end)
+      -- 關閉先前的item fx窗口
+      closeOpenedFxItems(function (item)
+        return selected_items[item] == nil
+      end)
+      opened_fx_items = selected_items -- 更新已打開的item fx窗口
+    elseif not keep_fx then -- 情況2, 沒有選中任何項, 並且不保持窗口
+      -- 全部關閉
+      closeOpenedFxItems()
+      opened_fx_items = {}
+    end
+    -- 情況3, 沒有選中任何項, 且保持窗口. 不做任何處理
+
+    reaper.PreventUIRefresh(-1)
+    reaper.UpdateArrange()
+    reaper.defer(main)
+end
+
+local _, _, sectionId, cmdId = reaper.get_action_context()
+if sectionId ~= -1 then
+  reaper.SetToggleCommandState(sectionId, cmdId, 1)
+  reaper.RefreshToolbar2(sectionId, cmdId)
+  main()
+  reaper.atexit(function()
+    reaper.SetToggleCommandState(sectionId, cmdId, 0)
+    reaper.RefreshToolbar2(sectionId, cmdId)
+  end)
+end

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 選擇軌道 - 只選擇第一個對象(動態菜單)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -88,6 +88,7 @@ if selection > 0 then
       reaper.UpdateItemInProject(item)
     end
   end
+  reaper.Main_OnCommand(40913,0) -- Track: Vertical scroll selected tracks into view
 end
 
 reaper.SN_FocusMIDIEditor()

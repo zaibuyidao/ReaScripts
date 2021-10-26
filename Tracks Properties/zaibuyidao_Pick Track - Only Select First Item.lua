@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Pick Track - Only Select First Item
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -48,7 +48,7 @@ for i = 0, count_track-1 do
     UnselectAllTracks()
     local sel_track = reaper.GetTrack(0, sel_only_num)
     reaper.SetTrackSelected(sel_track, true)
-
+    
     local item_num = reaper.CountTrackMediaItems(sel_track)
     if item_num == nil then return end
 
@@ -66,6 +66,7 @@ for i = 0, count_track-1 do
     end
 
   end
+  reaper.Main_OnCommand(40913,0) -- Track: Vertical scroll selected tracks into view
 end
 
 reaper.PreventUIRefresh(-1)
