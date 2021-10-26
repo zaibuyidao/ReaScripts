@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a3d045c6b572ec0bface8e3ddae148320ab85a31">
+<index version="1" name="zaibuyidao Scripts" commit="32c9100ff61a865b93eed3a4466fb361f199ef49">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -360,6 +360,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83d20fe9869772ae9c9a4368b3c791b1646d5816/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Item.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-10-26T13:28:10Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Item.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Show FX Chain For Selected Track-Item.lua" type="script" desc="Show FX Chain For Selected Track-Item">
       <metadata>
@@ -374,6 +377,9 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2021-10-20T16:08:19Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/438b7030f911f6069368421441a4ebf3efeb9550/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track-Item.lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2021-10-26T13:28:10Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track-Item.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released)">
@@ -3916,6 +3922,9 @@
       <version name="1.1" author="zaibuyidao" time="2021-03-03T13:59:40Z">
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/de83ecede084c72d4da65d86b37cf8cd9d5c0196/Tracks%20Properties/zaibuyidao_Pick%20Track%20(Dynamic%20Menu).lua</source>
       </version>
+      <version name="1.1.1" author="zaibuyidao" time="2021-10-26T13:28:10Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/zaibuyidao_Pick%20Track%20(Dynamic%20Menu).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Pick Track - Only Select First Item (Dynamic Menu).lua" type="script" desc="Pick Track - Only Select First Item (Dynamic Menu)">
       <version name="1.0" author="zaibuyidao" time="2021-02-15T13:07:51Z">
@@ -3925,17 +3934,26 @@
       <version name="1.1" author="zaibuyidao" time="2021-03-03T13:59:40Z">
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/de83ecede084c72d4da65d86b37cf8cd9d5c0196/Tracks%20Properties/zaibuyidao_Pick%20Track%20-%20Only%20Select%20First%20Item%20(Dynamic%20Menu).lua</source>
       </version>
+      <version name="1.1.1" author="zaibuyidao" time="2021-10-26T13:28:10Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/zaibuyidao_Pick%20Track%20-%20Only%20Select%20First%20Item%20(Dynamic%20Menu).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Pick Track - Only Select First Item.lua" type="script" desc="Pick Track - Only Select First Item">
       <version name="1.0" author="zaibuyidao" time="2021-02-15T13:07:51Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/Tracks%20Properties/zaibuyidao_Pick%20Track%20-%20Only%20Select%20First%20Item.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-10-26T13:28:10Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/zaibuyidao_Pick%20Track%20-%20Only%20Select%20First%20Item.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Pick Track.lua" type="script" desc="Pick Track">
       <version name="1.0" author="zaibuyidao" time="2021-02-15T13:07:51Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/Tracks%20Properties/zaibuyidao_Pick%20Track.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-10-26T13:28:10Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/zaibuyidao_Pick%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Track By Name.lua" type="script" desc="Select Track By Name">
@@ -3972,6 +3990,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-10-16T14:31:31Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83d20fe9869772ae9c9a4368b3c791b1646d5816/Tracks%20Properties/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-10-26T13:28:10Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released)">
@@ -4039,11 +4060,17 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%20-%20%E5%8F%AA%E9%81%B8%E6%93%87%E7%AC%AC%E4%B8%80%E5%80%8B%E5%B0%8D%E8%B1%A1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
+      <version name="1.0.1" author="再補一刀" time="2021-10-26T13:28:10Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%20-%20%E5%8F%AA%E9%81%B8%E6%93%87%E7%AC%AC%E4%B8%80%E5%80%8B%E5%B0%8D%E8%B1%A1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
+      </version>
     </reapack>
     <reapack name="再補一刀_選擇軌道 - 只選擇第一個對象.lua" type="script" desc="選擇軌道 - 只選擇第一個對象">
       <version name="1.0" author="再補一刀" time="2021-02-15T13:07:51Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%20-%20%E5%8F%AA%E9%81%B8%E6%93%87%E7%AC%AC%E4%B8%80%E5%80%8B%E5%B0%8D%E8%B1%A1.lua</source>
+      </version>
+      <version name="1.0.1" author="再補一刀" time="2021-10-26T13:28:10Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%20-%20%E5%8F%AA%E9%81%B8%E6%93%87%E7%AC%AC%E4%B8%80%E5%80%8B%E5%B0%8D%E8%B1%A1.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_選擇軌道(動態菜單).lua" type="script" desc="選擇軌道(動態菜單)">
@@ -4051,11 +4078,17 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
+      <version name="1.0.1" author="再補一刀" time="2021-10-26T13:28:10Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
+      </version>
     </reapack>
     <reapack name="再補一刀_選擇軌道.lua" type="script" desc="選擇軌道">
       <version name="1.0" author="再補一刀" time="2021-02-15T13:07:51Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0fe186681d4ab199b9b4e91222026c54359c0909/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93.lua</source>
+      </version>
+      <version name="1.0.1" author="再補一刀" time="2021-10-26T13:28:10Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重命名軌道.lua" type="script" desc="重命名軌道">
