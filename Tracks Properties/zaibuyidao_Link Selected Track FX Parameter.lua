@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Track FX Parameter
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -73,52 +73,19 @@ function main()
 
     -- 對所有選中的track遍歷
     for i, selected_track in pairs(selected_tracks) do
-
       for selected_fx_number = 0, reaper.TrackFX_GetCount(selected_track) - 1 do
         local _, dest_fxname = reaper.TrackFX_GetFXName(selected_track, selected_fx_number, "")
-        if selected_track == last_touched_track or dest_fxname ~= last_touched_fx_name then
-          goto continue
-        end
-        -- 全量更新
-        if touch_changed then
-          for params_idx = 0, reaper.TrackFX_GetNumParams(last_touched_track, last_touched_fx_number) - 1 do
-            reaper.TrackFX_SetParam(selected_track, selected_fx_number, params_idx, 
-              reaper.TrackFX_GetParam(last_touched_track, last_touched_fx_number, params_idx)
-            )
-            -- reaper.TrackFX_SetParam(last_touched_track, last_touched_fx_number, last_touched_param_number, last_touched_param_val)
-          end
-          -- Msg("full update " .. tostring(i))
-          if only_first then break end -- 代碼運行至此處說明已經有一個關聯的fx被更新, 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
-          goto continue
-        end
-        -- 仅更新最后触碰
+        if selected_track == last_touched_track or dest_fxname ~= last_touched_fx_name then goto continue end
         local selected_val = reaper.TrackFX_GetParam(selected_track, selected_fx_number, last_touched_param_number)
-        if selected_val ~= last_touched_param_val then
-          reaper.TrackFX_SetParam(selected_track, selected_fx_number, last_touched_param_number, last_touched_param_val)
-          -- reaper.TrackFX_SetParam(last_touched_track, last_touched_fx_number, last_touched_param_number, last_touched_param_val)
-          -- Msg("val update " .. tostring(i))
-          if only_first then break end -- 代碼運行至此處說明已經有一個關聯的fx被更新, 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
+        if selected_val == last_touched_param_val then goto continue end
+        for params_idx = 0, reaper.TrackFX_GetNumParams(last_touched_track, last_touched_fx_number) - 1 do
+          reaper.TrackFX_SetParam(selected_track, selected_fx_number, params_idx, 
+            reaper.TrackFX_GetParam(last_touched_track, last_touched_fx_number, params_idx)
+          )
         end
+        if only_first then break end -- 代碼運行至此處說明已經有一個關聯的fx被更新, 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
         ::continue::
       end
-
-      -- local selected_fx_number = reaper.CF_EnumSelectedFX(reaper.CF_GetTrackFXChain(selected_track), -1)
-      -- local _, selected_fx_name = reaper.TrackFX_GetFXName(selected_track, selected_fx_number, '')
-      -- if selected_fx_name == last_touched_fx_name then
-      --   if touch_changed then -- 全量更新
-      --     for params_idx = 0, reaper.TrackFX_GetNumParams(last_touched_track, last_touched_fx_number) - 1 do
-      --       reaper.TrackFX_SetParam(selected_track, selected_fx_number, params_idx, 
-      --         reaper.TrackFX_GetParam(last_touched_track, last_touched_fx_number, params_idx)
-      --       )
-      --     end
-      --   else -- 僅更新最後觸碰點
-      --     local selected_val = reaper.TrackFX_GetParam(selected_track, selected_fx_number, last_touched_param_number)
-      --     if selected_val ~= last_touched_param_val then
-      --       reaper.TrackFX_SetParam(selected_track, selected_fx_number, last_touched_param_number, last_touched_param_val)
-      --     end
-      --   end
-      -- end
-
     end
 
     reaper.TrackFX_SetParam(last_touched_track, last_touched_fx_number, last_touched_param_number, last_touched_param_val)

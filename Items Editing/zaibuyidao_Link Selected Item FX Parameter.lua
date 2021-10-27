@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Item FX Parameter
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -66,7 +66,7 @@ function main()
     last_touched_item = reaper.GetTrackMediaItem(last_touched_item_from_track, item_idx - 1)
   end
 
-  --Link item
+  -- Link item
   if last_touched_item ~= nil then
     if not reaper.IsMediaItemSelected(last_touched_item) then return reaper.defer(main) end
 
@@ -84,24 +84,14 @@ function main()
       
       for selected_fx_number = 0, reaper.TakeFX_GetCount(selected_take) - 1 do
         local _, dest_fxname = reaper.TakeFX_GetFXName(selected_take, selected_fx_number, '')
-        if selected_take == last_touched_take or dest_fxname ~= last_touched_fx_name then
-          goto continue
-        end
-        if touch_changed then -- 全量更新
-          -- 將fx下所有param複製
-          for params_idx = 0, reaper.TakeFX_GetNumParams(last_touched_take, last_touched_fx_number) - 1 do
-            local val = reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, params_idx)
-            reaper.TakeFX_SetParam(selected_take, selected_fx_number, params_idx, val)
-          end
-          if only_first then break end -- 代碼運行至此處說明已經有一個關聯的fx被更新, 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
-          goto continue
-        end
-        -- 僅更新最後觸碰點
+        if selected_take == last_touched_take or dest_fxname ~= last_touched_fx_name then goto continue end
         local selected_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, last_touched_param_number)
-        if selected_val ~= last_touched_param_val then
-          reaper.TakeFX_SetParam(selected_take, selected_fx_number, last_touched_param_number, last_touched_param_val)
-          if only_first then break end -- 代碼運行至此處說明已經有一個關聯的fx被更新, 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
+        if selected_val == last_touched_param_val then goto continue end
+        for params_idx = 0, reaper.TakeFX_GetNumParams(last_touched_take, last_touched_fx_number) - 1 do
+          local val = reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, params_idx)
+          reaper.TakeFX_SetParam(selected_take, selected_fx_number, params_idx, val)
         end
+        if only_first then break end -- 代碼運行至此處說明已經有一個關聯的fx被更新, 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
         ::continue::
       end
     end

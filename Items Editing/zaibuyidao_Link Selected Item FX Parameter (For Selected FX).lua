@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Item FX Parameter (For Selected FX)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -64,7 +64,7 @@ function main()
     last_touched_item = reaper.GetTrackMediaItem(last_touched_item_from_track, item_idx - 1)
   end
 
-  --Link item
+  -- Link item
   if last_touched_item ~= nil then
     if not reaper.IsMediaItemSelected(last_touched_item) then return reaper.defer(main) end
 
@@ -82,17 +82,11 @@ function main()
       
       local selected_fx_number = reaper.CF_EnumSelectedFX(reaper.CF_GetTakeFXChain(selected_take), -1)
       local _, selected_fx_name = reaper.TakeFX_GetFXName(selected_take, selected_fx_number, '')
-      if selected_fx_name == last_touched_fx_name then
-        if touch_changed then -- 全量更新
-          for params_idx = 0, reaper.TakeFX_GetNumParams(last_touched_take, last_touched_fx_number) - 1 do
-            local val, _, _ = reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, params_idx)
-            reaper.TakeFX_SetParam(selected_take, selected_fx_number, params_idx, val)
-          end
-        else -- 僅更新最後觸碰點
-          local selected_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, last_touched_param_number)
-          if selected_val ~= last_touched_param_val then
-            reaper.TakeFX_SetParam(selected_take, selected_fx_number, last_touched_param_number, last_touched_param_val)
-          end
+      local selected_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, last_touched_param_number)
+      if selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
+        for params_idx = 0, reaper.TakeFX_GetNumParams(last_touched_take, last_touched_fx_number) - 1 do
+          local val, _, _ = reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, params_idx)
+          reaper.TakeFX_SetParam(selected_take, selected_fx_number, params_idx, val)
         end
       end
     end
