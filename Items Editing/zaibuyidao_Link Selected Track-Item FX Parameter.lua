@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Track-Item FX Parameter
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -72,14 +72,14 @@ function main()
 
     local last_touched_take = reaper.GetActiveTake(last_touched_item)
     local _, last_touched_fx_name = reaper.TakeFX_GetFXName(last_touched_take, last_touched_fx_number, '')
-    local item_num_params = reaper.TakeFX_GetNumParams(last_touched_take, last_touched_fx_number)
+    local take_num_params = reaper.TakeFX_GetNumParams(last_touched_take, last_touched_fx_number)
 
-    local track_fx_params_idx = 0
-    local track_fx_params = {}
-    while track_fx_params_idx < item_num_params do
-      local val, _, _ = reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, track_fx_params_idx)
-      table.insert(track_fx_params, val)
-      track_fx_params_idx = track_fx_params_idx + 1
+    local take_fx_params_idx = 0
+    local take_fx_params = {}
+    while take_fx_params_idx < take_num_params do
+      local val, _, _ = reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, take_fx_params_idx)
+      table.insert(take_fx_params, val)
+      take_fx_params_idx = take_fx_params_idx + 1
     end
 
     local items_count = reaper.CountSelectedMediaItems(0)
@@ -94,7 +94,7 @@ function main()
           local _, selected_fx_name = reaper.TakeFX_GetFXName(selected_take, j, '')
           if selected_take ~= last_touched_take and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
             if touch_changed then -- 全量更新
-              for k, v in ipairs(track_fx_params) do
+              for k, v in ipairs(take_fx_params) do
                 reaper.TakeFX_SetParam(selected_take, j, k - 1, v)
               end
             end
@@ -107,7 +107,7 @@ function main()
       -- local selected_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, last_touched_param_number)
       -- if selected_take ~= last_touched_take and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
       --   if touch_changed then -- 全量更新
-      --     for k, v in ipairs(track_fx_params) do
+      --     for k, v in ipairs(take_fx_params) do
       --       reaper.TakeFX_SetParam(selected_take, selected_fx_number, k - 1, v)
       --     end
       --   end
@@ -115,7 +115,7 @@ function main()
 
     end
 
-    reaper.TakeFX_SetParam(last_touched_take, last_touched_fx_number, 0, track_fx_params[1])
+    reaper.TakeFX_SetParam(last_touched_take, last_touched_fx_number, 0, take_fx_params[1])
   end
 
   -- track 聯動
