@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Show FX Chain For Selected Track
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -50,7 +50,8 @@ end
 
 function updateTracksFx() -- 更新track fx窗口選擇條目
   forEachSelectedTracks(function (track)
-    value = reaper.CF_EnumSelectedFX(reaper.CF_GetTrackFXChain(track), -1)
+    value = reaper.TrackFX_GetChainVisible(track)
+    -- value = reaper.CF_EnumSelectedFX(reaper.CF_GetTrackFXChain(track), -1)
     if value >= 0 then tracks_fx[track] = value end
   end)
 end

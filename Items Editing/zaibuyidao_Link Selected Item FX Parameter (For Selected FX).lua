@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Item FX Parameter (For Selected FX)
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -102,7 +102,8 @@ function main()
       --     end
       -- end
 
-      local selected_fx_number = reaper.CF_EnumSelectedFX(reaper.CF_GetTakeFXChain(selected_take), -1)
+      local selected_fx_number = reaper.TakeFX_GetChainVisible(selected_take)
+      -- local selected_fx_number = reaper.CF_EnumSelectedFX(reaper.CF_GetTakeFXChain(selected_take), -1)
       local _, selected_fx_name = reaper.TakeFX_GetFXName(selected_take, selected_fx_number, '')
       local selected_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, last_touched_param_number)
       if selected_take ~= last_touched_take and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Show FX Chain For Selected Item
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -30,7 +30,7 @@ end
 
 function forEachSelectedFxItems(block) -- 遍歷帶有fx的選中item
   forEachSelectedItems(function (item, id)
-    local take = reaper.GetActiveTake(item, 0)
+    local take = reaper.GetActiveTake(item)
     if take ~= nil then
       local fx_count = reaper.TakeFX_GetCount(take)
       if fx_count > 0 then
@@ -48,7 +48,8 @@ end
 
 function updateItemsFx() -- 更新item fx窗口選擇條目
   forEachSelectedItems(function (item)
-    value = reaper.CF_EnumSelectedFX(reaper.CF_GetTakeFXChain(reaper.GetActiveTake(item, 0)), -1)
+    value = reaper.TakeFX_GetChainVisible(reaper.GetActiveTake(item))
+    -- value = reaper.CF_EnumSelectedFX(reaper.CF_GetTakeFXChain(reaper.GetActiveTake(item)), -1)
     if value >= 0 then items_fx[item] = value end
   end)
 end
@@ -65,7 +66,7 @@ function hasTakeFxOpen(take) -- take是否存在一個打開的fx窗口
 end
 
 function hasItemFxOpen(item) -- item是否存在一個打開的fx窗口
-  local take = reaper.GetActiveTake(item, 0)
+  local take = reaper.GetActiveTake(item)
   if take ~= nil then
     return hasTakeFxOpen(take)
   end
@@ -75,7 +76,7 @@ function openItemFx(item)
   if not hasItemFxOpen(item) then
     -- 防止item被刪除
     pcall(function ()
-      reaper.TakeFX_SetOpen(reaper.GetActiveTake(item, 0), items_fx[item] or 0, true)
+      reaper.TakeFX_SetOpen(reaper.GetActiveTake(item), items_fx[item] or 0, true)
     end)
   end
 end
@@ -84,7 +85,7 @@ function closeOpenedFxItems(cond)
   for item in pairs(opened_fx_items) do
     if cond == nil or cond(item) then
       pcall(function ()
-        reaper.TakeFX_SetOpen(reaper.GetActiveTake(item, 0), 0, false)
+        reaper.TakeFX_SetOpen(reaper.GetActiveTake(item), 0, false)
       end)
     end
   end
