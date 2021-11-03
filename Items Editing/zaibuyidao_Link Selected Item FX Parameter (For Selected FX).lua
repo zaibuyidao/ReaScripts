@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Item FX Parameter (For Selected FX)
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -107,11 +107,11 @@ function main()
       local _, selected_fx_name = reaper.TakeFX_GetFXName(selected_take, selected_fx_number, '')
       local selected_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, last_touched_param_number)
       if selected_take ~= last_touched_take and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
-        --if touch_changed then -- 全量更新
+        if touch_changed then -- 全量更新
           for k, v in ipairs(take_fx_params) do
             reaper.TakeFX_SetParam(selected_take, selected_fx_number, k - 1, v)
           end
-        --end
+        end
       end
 
     end

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Track-Item FX Parameter
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -72,15 +72,6 @@ function main()
 
     local last_touched_take = reaper.GetActiveTake(last_touched_item)
     local _, last_touched_fx_name = reaper.TakeFX_GetFXName(last_touched_take, last_touched_fx_number, '')
-    local take_num_params = reaper.TakeFX_GetNumParams(last_touched_take, last_touched_fx_number)
-
-    local take_fx_params_idx = 0
-    local take_fx_params = {}
-    while take_fx_params_idx < take_num_params do
-      local val, _, _ = reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, take_fx_params_idx)
-      table.insert(take_fx_params, val)
-      take_fx_params_idx = take_fx_params_idx + 1
-    end
 
     local items_count = reaper.CountSelectedMediaItems(0)
     local last_touched_param_val = reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, last_touched_param_number)
@@ -90,47 +81,29 @@ function main()
       local selected_item = reaper.GetSelectedMediaItem(0, i)
       local selected_take = reaper.GetActiveTake(selected_item)
     
-      for j = 0, reaper.TakeFX_GetCount(selected_take) - 1 do
-          local _, selected_fx_name = reaper.TakeFX_GetFXName(selected_take, j, '')
-          if selected_take ~= last_touched_take and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
-            --if touch_changed then -- 全量更新
-              for k, v in ipairs(take_fx_params) do
-                reaper.TakeFX_SetParam(selected_take, j, k - 1, v)
-              end
-            --end
-            if only_first then break end -- 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
-          end
+      for selected_fx_number = 0, reaper.TakeFX_GetCount(selected_take) - 1 do
+        local _, dest_fxname = reaper.TakeFX_GetFXName(selected_take, selected_fx_number, '')
+        if selected_take == last_touched_take or dest_fxname ~= last_touched_fx_name then goto continue end
+        local selected_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, last_touched_param_number)
+        if selected_val == last_touched_param_val then goto continue end
+        for params_idx = 0, reaper.TakeFX_GetNumParams(last_touched_take, last_touched_fx_number) - 1 do
+          reaper.TakeFX_SetParam(selected_take, selected_fx_number, params_idx, 
+          reaper.TakeFX_GetParam(last_touched_take, last_touched_fx_number, params_idx)
+        )
+        end
+        if only_first then break end -- 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
+        ::continue::
       end
-
-      -- local selected_fx_number = reaper.CF_EnumSelectedFX(reaper.CF_GetTakeFXChain(selected_take), -1)
-      -- local _, selected_fx_name = reaper.TakeFX_GetFXName(selected_take, selected_fx_number, '')
-      -- local selected_val = reaper.TakeFX_GetParam(selected_take, selected_fx_number, last_touched_param_number)
-      -- if selected_take ~= last_touched_take and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
-      --   if touch_changed then -- 全量更新
-      --     for k, v in ipairs(take_fx_params) do
-      --       reaper.TakeFX_SetParam(selected_take, selected_fx_number, k - 1, v)
-      --     end
-      --   end
-      -- end
 
     end
 
-    reaper.TakeFX_SetParam(last_touched_take, last_touched_fx_number, 0, take_fx_params[1])
+    reaper.TakeFX_SetParam(last_touched_take, last_touched_fx_number, last_touched_param_number,last_touched_param_val)
   end
 
   -- track 聯動
   local last_touched_track = reaper.CSurf_TrackFromID(last_touched_track_number, false)
   if last_touched_track ~= nil and reaper.IsTrackSelected(last_touched_track) then
     local _, last_touched_fx_name = reaper.TrackFX_GetFXName(last_touched_track, last_touched_fx_number, "")
-    local track_num_params = reaper.TrackFX_GetNumParams(last_touched_track, last_touched_fx_number)
-
-    local track_fx_params_idx = 0
-    local track_fx_params = {}
-    while track_fx_params_idx < track_num_params do
-      local val, _, _ = reaper.TrackFX_GetParam(last_touched_track, last_touched_fx_number, track_fx_params_idx)
-      table.insert(track_fx_params, val)
-      track_fx_params_idx = track_fx_params_idx + 1
-    end
 
     local selected_tracks = {} -- 記錄所有選中的track
     for i = 0, reaper.CountSelectedTracks(0) - 1 do
@@ -145,32 +118,22 @@ function main()
     -- 對所有選中的track遍歷
     for i, selected_track in pairs(selected_tracks) do
 
-      for j = 0, reaper.TrackFX_GetCount(selected_track) - 1 do
-        local _, selected_fx_name = reaper.TrackFX_GetFXName(selected_track, j, '')
-        local selected_val = reaper.TrackFX_GetParam(selected_track, j, last_touched_param_number)
-        if selected_track ~= last_touched_track and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
-          --if touch_changed then -- 全量更新
-            for k, v in ipairs(track_fx_params) do
-              reaper.TrackFX_SetParam(selected_track, j, k - 1, v)
-            end
-          --end
-          if only_first then break end -- 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
+      for selected_fx_number = 0, reaper.TrackFX_GetCount(selected_track) - 1 do
+        local _, dest_fxname = reaper.TrackFX_GetFXName(selected_track, selected_fx_number, "")
+        if selected_track == last_touched_track or dest_fxname ~= last_touched_fx_name then goto continue end
+        local selected_val = reaper.TrackFX_GetParam(selected_track, selected_fx_number, last_touched_param_number)
+        if selected_val == last_touched_param_val then goto continue end
+        for params_idx = 0, reaper.TrackFX_GetNumParams(last_touched_track, last_touched_fx_number) - 1 do
+          reaper.TrackFX_SetParam(selected_track, selected_fx_number, params_idx, 
+          reaper.TrackFX_GetParam(last_touched_track, last_touched_fx_number, params_idx)
+        )
         end
+        if only_first then break end -- 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fxfx
+        ::continue::
       end
 
-      -- local selected_fx_number = reaper.CF_EnumSelectedFX(reaper.CF_GetTrackFXChain(selected_track), -1)
-      -- local _, selected_fx_name = reaper.TrackFX_GetFXName(selected_track, selected_fx_number, '')
-      -- local selected_val = reaper.TrackFX_GetParam(selected_track, selected_fx_number, last_touched_param_number)
-      -- if selected_track ~= last_touched_track and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
-      --   if touch_changed then -- 全量更新
-      --     for k, v in ipairs(track_fx_params) do
-      --       reaper.TrackFX_SetParam(selected_track, selected_fx_number, k - 1, v)
-      --     end
-      --   end
-      -- end
-
     end
-    reaper.TrackFX_SetParam(last_touched_track, last_touched_fx_number, 0, track_fx_params[1])
+    reaper.TrackFX_SetParam(last_touched_track, last_touched_fx_number, last_touched_param_number, last_touched_param_val)
   end
   
   reaper.PreventUIRefresh(-1)
