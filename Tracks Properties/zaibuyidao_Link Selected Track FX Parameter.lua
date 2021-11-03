@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Track FX Parameter
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -87,11 +87,11 @@ function main()
         local _, selected_fx_name = reaper.TrackFX_GetFXName(selected_track, j, '')
         local selected_val = reaper.TrackFX_GetParam(selected_track, j, last_touched_param_number)
         if selected_track ~= last_touched_track and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
-          if touch_changed then -- 全量更新
+          --if touch_changed then -- 全量更新
             for k, v in ipairs(track_fx_params) do
               reaper.TrackFX_SetParam(selected_track, j, k - 1, v)
             end
-          end
+          --end
           if only_first then break end -- 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
         end
       end

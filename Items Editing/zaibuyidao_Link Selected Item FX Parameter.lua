@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Link Selected Item FX Parameter
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -93,11 +93,11 @@ function main()
       for j = 0, reaper.TakeFX_GetCount(selected_take) - 1 do
           local _, selected_fx_name = reaper.TakeFX_GetFXName(selected_take, j, '')
           if selected_take ~= last_touched_take and selected_fx_name == last_touched_fx_name and selected_val ~= last_touched_param_val then
-            if touch_changed then -- 全量更新
+            --if touch_changed then -- 全量更新
               for k, v in ipairs(take_fx_params) do
                 reaper.TakeFX_SetParam(selected_take, j, k - 1, v)
               end
-            end
+            --end
             if only_first then break end -- 如果開啟開關, 則直接跳出循環, 不再繼續尋找剩餘的fx
           end
       end
