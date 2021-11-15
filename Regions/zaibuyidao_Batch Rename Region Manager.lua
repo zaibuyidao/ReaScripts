@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region Manager
- * Version: 1.7
+ * Version: 1.7.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -14,6 +14,8 @@
  * v1.0 (2021-6-10)
   + Initial release
 --]]
+
+fluctuation = 1 -- 輸入1則波動為0.001，2則為0.002，以此類推
 
 function Msg(str)
   reaper.ShowConsoleMsg(tostring(str) .. "\n")
@@ -209,35 +211,40 @@ if show_msg == "true" then
     end
 end
 
--- 使用標尺的時間單位 分:秒 計算區域的起點和終點位置
+-- 使用標尺的時間單位:秒 計算區域的起點和終點位置
+if reaper.GetToggleCommandStateEx(0, 40365) == 1 then -- View: Time unit for ruler: Minutes:Seconds
+  minutes_seconds_flag = true
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
+end
+
 if reaper.GetToggleCommandStateEx(0, 40367) == 1 then -- View: Time unit for ruler: Measures.Beats
   meas_beat_flag = true
-  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 41916) == 1 then -- View: Time unit for ruler: Measures.Beats (minimal)
   meas_beat_mini_flag = true
-  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 40368) == 1 then -- View: Time unit for ruler: Seconds
   seconds_flag = true
-  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 40369) == 1 then -- View: Time unit for ruler: Samples
   samples_flag = true
-  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 40370) == 1 then -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
   hours_frames_flag = true
-  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
 end
 
 if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for ruler: Absolute frames
   frames_flag = true
-  reaper.Main_OnCommand(40365, 0) -- View: Time unit for ruler: Minutes:Seconds
+  reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
 end
 
 function key_of(name, left, right)
@@ -254,9 +261,9 @@ function collect_regions()
       if isrgn then
         pos_left = pos
         rgnend_right = rgnend
-        pos = string.format("%.10f", pos) -- 保留13位數用於截取
+        pos = string.format("%.10f", pos) -- 保留10位數用於截取
         rgnend = string.format("%.10f", rgnend)
-        pos = string.sub(pos, 1, -8) -- 保留小數點3位數
+        pos = string.sub(pos, 1, -8) -- 截取到小數點3位數
         rgnend = string.sub(rgnend, 1, -8)
         --Msg('ALL L : '.. pos ..' ALL R : '..rgnend)
 
@@ -282,6 +289,28 @@ nt, lt, rt, regions, cur = {}, {}, {}, {}, {}
 
 i = 0
 
+function reserver3(num)
+  num = string.format("%.10f", num)
+  return string.sub(num, 1, -8)
+end
+
+function insert_region(r, step)
+  -- table.insert(regions, r)
+  -- print(r)
+  local time = 0.001  -- 修改傳入的step值不在此處
+
+  for ii = -step, step do
+    for jj = -step, step do
+      table.insert(regions, {
+        regionname = r.regionname,
+        left = reserver3(r.left + ii * time),
+        right = reserver3(r.right + jj * time)
+      })
+      -- print(tostring(reserver3(r.left + ii * time)) .. " " .. tostring(reserver3(r.right + jj * time)))
+    end
+  end
+end
+
 for index in string.gmatch(sel_indexes, '[^,]+') do
 
   i = i + 1
@@ -289,30 +318,31 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
   rgnleft = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
   rgnright = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
 
-  msl = string.match(rgnleft, "%d+$") -- 毫秒
-  sl = string.match(string.match(rgnleft, "%d+.%d+$"), "^%d+") -- 秒
-  ml = string.match(string.match(rgnleft, "%d+.%d+.%d+$"), "^%d+") -- 分
-  hl = string.sub(rgnleft, 1, -11) -- 時
-  if hl == "" then
-    lnkl = math.modf(ml * 60 + sl) .. "." .. msl
-  else
-    lnkl = math.modf(hl * 3600 + ml * 60 + sl) .. "." .. msl
-  end
+  -- msl = string.match(rgnleft, "%d+$") -- 毫秒
+  -- sl = string.match(string.match(rgnleft, "%d+.%d+$"), "^%d+") -- 秒
+  -- ml = string.match(string.match(rgnleft, "%d+.%d+.%d+$"), "^%d+") -- 分
+  -- hl = string.sub(rgnleft, 1, -11) -- 時
+  -- if hl == "" then
+  --   lnkl = math.modf(ml * 60 + sl) .. "." .. msl
+  -- else
+  --   lnkl = math.modf(hl * 3600 + ml * 60 + sl) .. "." .. msl
+  -- end
 
-  msr = string.match(rgnright, "%d+$") -- 毫秒
-  sr = string.match(string.match(rgnright, "%d+.%d+$"), "^%d+") -- 秒
-  mr = string.match(string.match(rgnright, "%d+.%d+.%d+$"), "^%d+") -- 分
-  hr = string.sub(rgnright, 1, -11) -- 時
-  if hr == "" then
-    lnkr = math.modf(mr * 60 + sr) .. "." .. msr
-  else
-    lnkr = math.modf(hr * 3600 + mr * 60 + sr) .. "." .. msr
-  end
+  -- msr = string.match(rgnright, "%d+$") -- 毫秒
+  -- sr = string.match(string.match(rgnright, "%d+.%d+$"), "^%d+") -- 秒
+  -- mr = string.match(string.match(rgnright, "%d+.%d+.%d+$"), "^%d+") -- 分
+  -- hr = string.sub(rgnright, 1, -11) -- 時
+  -- if hr == "" then
+  --   lnkr = math.modf(mr * 60 + sr) .. "." .. msr
+  -- else
+  --   lnkr = math.modf(hr * 3600 + mr * 60 + sr) .. "." .. msr
+  -- end
 
   --Msg('SEL L : ' .. lnkl ..' SEL R : '..lnkr)
+
   nt[#nt+1] = rgname
-  lt[#lt+1] = lnkl
-  rt[#rt+1] = lnkr
+  lt[#lt+1] = rgnleft
+  rt[#rt+1] = rgnright
 
   cur = {
     regionname = nt[i],
@@ -320,10 +350,11 @@ for index in string.gmatch(sel_indexes, '[^,]+') do
     right = rt[i]
   }
 
-  table.insert(regions, cur)
+  insert_region(cur, fluctuation)
 
 end
 
+if minutes_seconds_flag then reaper.Main_OnCommand(40365, 0) end -- View: Time unit for ruler: Minutes:Seconds
 if seconds_flag then reaper.Main_OnCommand(40368, 0) end -- View: Time unit for ruler: Seconds
 if meas_beat_flag then reaper.Main_OnCommand(40367, 0) end -- View: Time unit for ruler: Measures.Beats
 if meas_beat_mini_flag then reaper.Main_OnCommand(41916, 0) end -- View: Time unit for ruler: Measures.Beats (minimal)
@@ -346,24 +377,25 @@ if not ok then return end
 
 pattern, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
-name_t = {}
+-- for i, region in ipairs(regions) do
+--   local matched = all_regions[key_of(region.regionname, region.left, region.right)]
+--   if matched then
+--     name_t[#name_t+1] = matched.name
+--   end
+-- end
 
-for i, region in ipairs(regions) do
-  local matched = all_regions[key_of(region.regionname, region.left, region.right)]
-  if matched then
-    name_t[#name_t+1] = matched.name
-  end
-end
+local cnt = 1
 
 for i, region in ipairs(regions) do
 
   -- Msg("finding:" .. key_of(region.regionname, region.left, region.right))
   local matched = all_regions[key_of(region.regionname, region.left, region.right)]
-  if matched then
+  if matched and not matched.mark then
+    matched.mark = true
 
     if pattern ~= "" then
       matched.name = pattern
-      matched.name = matched.name:gsub("$regionname", name_t[i])
+      matched.name = matched.name:gsub("$regionname", matched.name)
       -- matched.name = matched.name:gsub("$inctimeorder", function ()
       --   cnt = add_zero_front_num(2, math.floor(cnt+1))
       --   return tostring(cnt)
@@ -374,7 +406,7 @@ for i, region in ipairs(regions) do
         nbr = string.sub(nbr, 3) -- 截取3
         if tonumber(nbr) then
           matched.name = matched.name:gsub("v="..nbr, function ()
-            nbr = add_zero_front_num(string.len(nbr), math.floor(nbr+(i-1)))
+            nbr = add_zero_front_num(string.len(nbr), math.floor(nbr+(cnt-1)))
             return tostring(nbr)
           end)
         end
@@ -396,7 +428,7 @@ for i, region in ipairs(regions) do
   
           local letter_byte = string.char(letter:byte())
           local letter_idx = alphabet:find(letter)
-          letter_idx = (letter_idx % #alphabet) + (i-1)
+          letter_idx = (letter_idx % #alphabet) + (cnt-1)
           letter_idx = letter_idx % #alphabet
           if letter_idx == 0 then letter_idx = #alphabet end
           letter_byte = alphabet:sub(letter_idx, letter_idx)
@@ -404,6 +436,7 @@ for i, region in ipairs(regions) do
           matched.name = matched.name:gsub("a=" .. xyz_pos, letter_byte)
         -- end
       end
+      cnt = cnt + 1
     end
 
     matched.name = utf8sub(matched.name,begin_str,end_str)
@@ -411,7 +444,7 @@ for i, region in ipairs(regions) do
     matched.name = string.gsub(matched.name, find, replace)
 
     if insert ~= '' then
-      matched.name = matched.name:gsub("$regionname", name_t[i])
+      matched.name = matched.name:gsub("$regionname", matched.name)
       -- matched.name = matched.name:gsub("$inctimeorder", function ()
       --   cnt = add_zero_front_num(2, math.floor(cnt+1))
       --   return tostring(cnt)
@@ -422,7 +455,7 @@ for i, region in ipairs(regions) do
         nbr = string.sub(nbr, 3) -- 截取3
         if tonumber(nbr) then
           matched.name = matched.name:gsub("v="..nbr, function ()
-            nbr = add_zero_front_num(string.len(nbr), math.floor(nbr+(i-1)))
+            nbr = add_zero_front_num(string.len(nbr), math.floor(nbr+(cnt-1)))
             return tostring(nbr)
           end)
         end
@@ -444,7 +477,7 @@ for i, region in ipairs(regions) do
   
           local letter_byte = string.char(letter:byte())
           local letter_idx = alphabet:find(letter)
-          letter_idx = (letter_idx % #alphabet) + (i-1)
+          letter_idx = (letter_idx % #alphabet) + (cnt-1)
           letter_idx = letter_idx % #alphabet
           if letter_idx == 0 then letter_idx = #alphabet end
           letter_byte = alphabet:sub(letter_idx, letter_idx)
@@ -452,6 +485,7 @@ for i, region in ipairs(regions) do
           matched.name = matched.name:gsub("a=" .. xyz_pos, letter_byte)
         -- end
       end
+      cnt = cnt + 1
     end
 
     set_region(matched)
