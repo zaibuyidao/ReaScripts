@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Marker Manager
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -360,7 +360,7 @@ if not ok then return end
 
 pattern, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
-local cnt = 1
+local cnt, name_t = 1, {}
 
 for i, region in ipairs(regions) do
 
@@ -368,10 +368,11 @@ for i, region in ipairs(regions) do
   local matched = all_regions[key_of(region.regionname, region.left)]
   if matched and not matched.mark then
     matched.mark = true
-
+    name_t[#name_t+1] = matched.name
+    
     if pattern ~= "" then
       matched.name = pattern
-      matched.name = matched.name:gsub("$markername", matched.name)
+      matched.name = matched.name:gsub("$markername", name_t[cnt])
       -- matched.name = matched.name:gsub("$inctimeorder", function ()
       --   cnt = add_zero_front_num(2, math.floor(cnt+1))
       --   return tostring(cnt)
@@ -420,7 +421,7 @@ for i, region in ipairs(regions) do
     matched.name = string.gsub(matched.name, find, replace)
 
     if insert ~= '' then
-      matched.name = matched.name:gsub("$regionname", matched.name)
+      matched.name = matched.name:gsub("$markername", name_t[cnt])
       -- matched.name = matched.name:gsub("$inctimeorder", function ()
       --   cnt = add_zero_front_num(2, math.floor(cnt+1))
       --   return tostring(cnt)
