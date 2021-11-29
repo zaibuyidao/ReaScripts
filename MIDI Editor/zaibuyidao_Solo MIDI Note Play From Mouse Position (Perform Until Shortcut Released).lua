@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -125,9 +125,11 @@ local function SaveMutedNotes(t)
 end
 
 local function RestoreMutedNotes(t)
+    reaper.MIDI_DisableSort(take)
     for i, mute in ipairs(t) do
         reaper.MIDI_SetNote(take, i - 1, nil, mute, nil, nil, nil, nil, nil, false)
     end
+    reaper.MIDI_Sort(take)
 end
 
 local function SaveSelectedNotes(t)
@@ -137,10 +139,12 @@ local function SaveSelectedNotes(t)
 end
 
 local function RestoreSelectedNotes(t)
+    reaper.MIDI_DisableSort(take)
     reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40214)
     for i, selected in ipairs(t) do
         reaper.MIDI_SetNote(take, i - 1, selected, nil, nil, nil, nil, nil, nil, false)
     end
+    reaper.MIDI_Sort(take)
 end
 
 function restore_items() -- 恢復item狀態
@@ -151,16 +155,27 @@ function restore_items() -- 恢復item狀態
 end
 
 function set_note_mute(take, value)
-    i = reaper.MIDI_EnumSelNotes(take, -1)
-    while i ~= -1 do
-        _, selected, mute, startppqpos, endppqpos, _, _, _ = reaper.MIDI_GetNote(take, i)
+    -- i = reaper.MIDI_EnumSelNotes(take, -1)
+    -- while i ~= -1 do
+    --     _, selected, mute, startppqpos, endppqpos, _, _, _ = reaper.MIDI_GetNote(take, i)
 
-        if (value == mute) then return end
-        reaper.MIDI_SetNote(take, i, nil, value, nil, nil, nil, nil, nil, false)
-        table.insert(note_restores, function ()
-            reaper.MIDI_SetNote(take, i, nil, mute, nil, nil, nil, nil, nil, false)
-        end)
-        i = reaper.MIDI_EnumSelNotes(take, i)
+    --     if (value == mute) then return end
+    --     reaper.MIDI_SetNote(take, i, nil, value, nil, nil, nil, nil, nil, false)
+    --     table.insert(note_restores, function ()
+    --         reaper.MIDI_SetNote(take, i, nil, mute, nil, nil, nil, nil, nil, false)
+    --     end)
+    --     i = reaper.MIDI_EnumSelNotes(take, i)
+    -- end
+
+    for i = 0, notecnt - 1 do
+        retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+        if selected then
+            if (value == muted) then return end
+            reaper.MIDI_SetNote(take, i, nil, value, nil, nil, nil, nil, nil, false)
+            table.insert(note_restores, function ()
+                reaper.MIDI_SetNote(take, i, nil, muted, nil, nil, nil, nil, nil, false)
+            end)
+        end
     end
 end
 
@@ -197,23 +212,16 @@ function main()
             take = reaper.BR_GetMouseCursorContext_Take()
         end
 
-        --reaper.MIDI_DisableSort(take)
         if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
-            
-            cnt, index = 0, {}
-            val = reaper.MIDI_EnumSelNotes(take, -1)
-            while val ~= - 1 do
-              cnt = cnt + 1
-              index[cnt] = val
-              val = reaper.MIDI_EnumSelNotes(take, val)
-            end
 
             init_mute_notes = {}
             init_selected_notes = {}
+
+            reaper.MIDI_DisableSort(take)
+
             SaveMutedNotes(init_mute_notes)
             SaveSelectedNotes(init_selected_notes)
 
-            if #index == 0 or #index == nil then goto continue end
             set_note_mute(take, 0)
 
             for i = 0, notecnt - 1 do
@@ -231,8 +239,6 @@ function main()
             --     reaper.MIDI_SetNote(take, j, false, true, nil, nil, nil, nil, nil, false)
             --     j = reaper.MIDI_EnumSelNotes(take, j)
             -- end
-
-            ::continue::
 
             if count_sel_items > 0 then
                 --reaper.ShowConsoleMsg("按键按下" .. "\n")
@@ -259,27 +265,26 @@ function main()
                 -- reaper.SetEditCurPos(cur_pos, 0, 0)
                 reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
             end
-
+            reaper.MIDI_Sort(take)
             flag = 1
             
         elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
+
             -- reaper.ShowConsoleMsg("按键释放" .. "\n")
+            RestoreMutedNotes(init_mute_notes)
+            RestoreSelectedNotes(init_selected_notes)
             reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1142) -- Transport: Stop
             restore_items() -- 恢复item静音状态
 
-            RestoreMutedNotes(init_mute_notes)
-            RestoreSelectedNotes(init_selected_notes)
             flag = 0
         end
-        --reaper.MIDI_Sort(take)
+        
         -- if not inline_editor then reaper.SN_FocusMIDIEditor() end
     else
         count_sel_items = reaper.CountSelectedMediaItems(0)
         for i = 1, count_sel_items do
             item = reaper.GetSelectedMediaItem(0, count_sel_items - i)
             take = reaper.GetTake(item, 0)
-
-            --reaper.MIDI_DisableSort(take)
 
             if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
 
@@ -306,6 +311,7 @@ function main()
                     reaper.Main_OnCommand(1007, 0) -- Transport: Play
                 end
                 flag = 1
+                
             elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
                 -- reaper.ShowConsoleMsg("按键释放" .. "\n")
                 reaper.Main_OnCommand(1016, 0) -- Transport: Stop
@@ -314,7 +320,7 @@ function main()
                 RestoreSelectedNotes(init_selected_notes)
                 flag = 0
             end
-            --reaper.MIDI_Sort(take)
+            
         end
     end
     reaper.SetEditCurPos(cur_pos, false, false) -- 恢復光標位置
@@ -336,9 +342,9 @@ if not reaper.JS_VKeys_GetState then
     if sectionId ~= -1 then
         reaper.SetToggleCommandState(sectionId, cmdId, 1)
         reaper.RefreshToolbar2(sectionId, cmdId)
-        reaper.MIDI_DisableSort(take)
+        --reaper.MIDI_DisableSort(take)
         main()
-        reaper.MIDI_Sort(take)
+        --reaper.MIDI_Sort(take)
         reaper.atexit(function()
             reaper.SetToggleCommandState(sectionId, cmdId, 0)
             reaper.RefreshToolbar2(sectionId, cmdId)
