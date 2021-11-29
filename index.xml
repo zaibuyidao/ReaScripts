@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fad5ad07222109b962c528101c1fc0c122105dbe">
+<index version="1" name="zaibuyidao Scripts" commit="f511435379f43e4526e0c8975d2589710e5767d7">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -3050,6 +3050,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-11-28T17:30:05Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fad5ad07222109b962c528101c1fc0c122105dbe/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-11-29T16:37:32Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f511435379f43e4526e0c8975d2589710e5767d7/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Split Notes.lua" type="script" desc="Split Notes">
