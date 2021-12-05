@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released)
- * Version: 1.0.2
+ * ReaScript Name: Solo MIDI Note Play From Edit Cursor Position (Perform Until Shortcut Released)
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,7 +11,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-11-28)
+ * v1.0 (2021-12-6)
   + Initial release
 --]]
 
@@ -254,8 +254,8 @@ function main()
 
         ::continue::
 
-        reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
-        -- reaper.SetEditCurPos(cur_pos, 0, 0)
+        -- reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
+        reaper.SetEditCurPos(cur_pos, 0, 0)
         reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
 
         reaper.MIDI_Sort(take)
