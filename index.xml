@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1f9c3c414e02a894a491754924e3c4a828b6fa3c">
+<index version="1" name="zaibuyidao Scripts" commit="acf71825b2c02280bc2308be03596e6edb2350a6">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -3051,6 +3051,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1f9c3c414e02a894a491754924e3c4a828b6fa3c/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-06T12:35:34Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/acf71825b2c02280bc2308be03596e6edb2350a6/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released)">
       <metadata>
@@ -3065,6 +3068,9 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2021-12-05T16:12:17Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1f9c3c414e02a894a491754924e3c4a828b6fa3c/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2021-12-06T12:35:34Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/acf71825b2c02280bc2308be03596e6edb2350a6/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Split Notes.lua" type="script" desc="Split Notes">
