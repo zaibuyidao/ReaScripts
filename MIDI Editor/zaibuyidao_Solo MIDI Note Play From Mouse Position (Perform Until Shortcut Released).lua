@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released)
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -87,7 +87,7 @@ key_map = {
     ['z'] = 0x5A
 }
 
-key = reaper.GetExtState("SoloMIDIEditorFromMousePosition", "VirtualKey")
+key = reaper.GetExtState("SoloMIDINoteFromMousePosition", "VirtualKey")
 VirtualKeyCode = key_map[key]
 function show_select_key_dialog()
     if (not key or not key_map[key]) then
@@ -99,7 +99,7 @@ function show_select_key_dialog()
         end
         key = input
         VirtualKeyCode = key_map[key]
-        reaper.SetExtState("SoloMIDIEditorFromMousePosition", "VirtualKey", key, true)
+        reaper.SetExtState("SoloMIDINoteFromMousePosition", "VirtualKey", key, true)
     end
 end
 
@@ -263,11 +263,14 @@ function main()
         
     elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
         -- reaper.ShowConsoleMsg("按键释放" .. "\n")
+        if #index == 0 or #index == nil then goto continue end
         reaper.MIDI_DisableSort(take)
         RestoreMutedNotes(init_mute_notes)
         --RestoreSelectedNotes(init_selected_notes)
         reaper.MIDI_Sort(take)
 
+        ::continue::
+        
         reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1142) -- Transport: Stop
 
         flag = 0
