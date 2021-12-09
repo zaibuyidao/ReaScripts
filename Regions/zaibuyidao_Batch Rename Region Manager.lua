@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region Manager
- * Version: 1.7.2
+ * Version: 1.7.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -376,6 +376,8 @@ local ok, retvals_csv = reaper.GetUserInputs("Batch Reanme Region Manager", 8, "
 if not ok then return end
 
 pattern, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
+find = find:gsub('-', '%%-')
+find = find:gsub('+', '%%+')
 
 local cnt, name_t = 1, {}
 

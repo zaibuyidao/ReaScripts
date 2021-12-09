@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Take
- * Version: 1.4
+ * Version: 1.4.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -183,6 +183,8 @@ local rn, a, z, pos, ins, del, f, r = '', '0', '0', '0', '', '0', '', ''
 local retval, retvals_csv = reaper.GetUserInputs("Batch Rename Take", 8, "Rename 重命名,From beginning 截取開頭,From end 截取結尾,At position 位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,extrawidth=200", tostring(rn)..','..tostring(a)..','..tostring(z)..','..tostring(pos)..','..tostring(ins)..','..tostring(del)..','..tostring(f)..','..tostring(r))
 if not retval then return end
 local rename, begin_str, end_str, position, insert, delete, find, replace = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
+find = find:gsub('-', '%%-')
+find = find:gsub('+', '%%+')
 
 UnselectAllTracks()
 
