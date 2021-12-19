@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Toggle Solo Track
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -29,10 +29,10 @@ end
 
 function NoUndoPoint() end
 reaper.PreventUIRefresh(1)
--- reaper.Undo_BeginBlock()
 
 local count_sel_track = reaper.CountSelectedTracks(0)
-local track_ret, context, track_pos = reaper.BR_TrackAtMouseCursor()
+local screen_x, screen_y = reaper.GetMousePosition()
+local track_ret, info_out = reaper.GetTrackFromPoint(screen_x, screen_y)
 
 if count_sel_track <= 1 then
     if track_ret then
@@ -60,7 +60,6 @@ else
     end
 end
 
--- reaper.Undo_EndBlock("Toggle Solo Track", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.defer(NoUndoPoint)

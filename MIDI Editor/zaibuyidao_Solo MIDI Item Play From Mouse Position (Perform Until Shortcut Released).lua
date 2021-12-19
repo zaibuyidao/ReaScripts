@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -17,9 +17,6 @@
 --]]
 
 function print(string) reaper.ShowConsoleMsg(tostring(string)..'\n') end
-
-take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-if not take or not reaper.TakeIsMIDI(take) then return end
 
 -- https://docs.microsoft.com/en-us/windows/desktop/inputdev/virtual-key-codes
 
@@ -93,7 +90,7 @@ VirtualKeyCode = key_map[key]
 function show_select_key_dialog()
     if (not key or not key_map[key]) then
         key = '9'
-        local ok, input = reaper.GetUserInputs("Set Virtual Key", 1, "Enter 0-9 or A-Z", key)
+        local ok, input = reaper.GetUserInputs("Set the Solo Key", 1, "Enter 0-9 or A-Z", key)
         if (not key_map[input]) then
             reaper.ShowConsoleMsg("Cannot set this Key\n無法設置此按鍵" .. "\n")
             return
@@ -140,7 +137,6 @@ function main()
     cur_pos = reaper.GetCursorPosition() -- 獲取光標位置
 
     count_sel_items = reaper.CountSelectedMediaItems(0) -- 計算選中的item
-    count_sel_track = reaper.CountSelectedTracks(0) -- 計算選中的軌道
     count_tracks = reaper.CountTracks(0)
     state = reaper.JS_VKeys_GetState(0) -- 獲取按鍵的狀態
 
@@ -168,67 +164,51 @@ function main()
                         end
                     end
                 end
-                reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
-                -- reaper.SetEditCurPos(cur_pos, 0, 0)
-                reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
-            else
-                --print(reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443))
-                reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
-                -- reaper.SetEditCurPos(cur_pos, 0, 0)
-                reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
             end
+            reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40443) -- View: Move edit cursor to mouse cursor
+            -- reaper.SetEditCurPos(cur_pos, 0, 0)
+            reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1140) -- Transport: Play
             flag = 1
-        elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
+        elseif state:byte(VirtualKeyCode) == 0 and flag == 1 then
             -- reaper.ShowConsoleMsg("按键释放" .. "\n")
             reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1142) -- Transport: Stop
             restore_items() -- 恢复item静音状态
             flag = 0
         end
-
         -- if not inline_editor then reaper.SN_FocusMIDIEditor() end
     else
-        count_sel_items = reaper.CountSelectedMediaItems(0)
-        for i = 1, count_sel_items do
-            item = reaper.GetSelectedMediaItem(0, count_sel_items - i)
-            take = reaper.GetTake(item, 0)
-
-            if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
-                if count_sel_items > 0 then
-                    --reaper.ShowConsoleMsg("按键按下" .. "\n")
-                    for i = 0, count_tracks -1 do
-                        track = reaper.GetTrack(0, i)
-                        count_items_track = reaper.CountTrackMediaItems(track)
-        
-                        for i = 0, count_items_track - 1 do
-                            local item = reaper.GetTrackMediaItem(track, i)
-                            set_item_mute(item, 1)
-                            if reaper.IsMediaItemSelected(item) == true then
-                                set_item_mute(item, 0)
-                            end
+        if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
+            if count_sel_items > 0 then
+                --reaper.ShowConsoleMsg("按键按下" .. "\n")
+                for i = 0, count_tracks -1 do
+                    track = reaper.GetTrack(0, i)
+                    count_items_track = reaper.CountTrackMediaItems(track)
+    
+                    for i = 0, count_items_track - 1 do
+                        local item = reaper.GetTrackMediaItem(track, i)
+                        set_item_mute(item, 1)
+                        if reaper.IsMediaItemSelected(item) == true then
+                            set_item_mute(item, 0)
                         end
                     end
-                    reaper.Main_OnCommand(40513, 0) -- View: Move edit cursor to mouse cursor
-                    -- reaper.SetEditCurPos(cur_pos, 0, 0)
-                    reaper.Main_OnCommand(1007, 0) -- Transport: Play
-                else
-                    reaper.Main_OnCommand(40513, 0) -- View: Move edit cursor to mouse cursor
-                    -- reaper.SetEditCurPos(cur_pos, 0, 0)
-                    reaper.Main_OnCommand(1007, 0) -- Transport: Play
                 end
-                flag = 1
-            elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
-                -- reaper.ShowConsoleMsg("按键释放" .. "\n")
-                reaper.Main_OnCommand(1016, 0) -- Transport: Stop
-                restore_items() -- 恢复item静音状态
-                flag = 0
             end
+            reaper.Main_OnCommand(40513, 0) -- View: Move edit cursor to mouse cursor
+            -- reaper.SetEditCurPos(cur_pos, 0, 0)
+            reaper.Main_OnCommand(1007, 0) -- Transport: Play
+            flag = 1
+        elseif state:byte(VirtualKeyCode) == 0 and flag == 1 then
+            -- reaper.ShowConsoleMsg("按键释放" .. "\n")
+            reaper.Main_OnCommand(1016, 0) -- Transport: Stop
+            restore_items() -- 恢复item静音状态
+            flag = 0
         end
     end
 
-    reaper.SetEditCurPos(cur_pos, false, false) -- 恢復光標位置
+    reaper.SetEditCurPos(cur_pos, 0, 0) -- 恢復光標位置
     reaper.PreventUIRefresh(-1)
     reaper.UpdateArrange()
-    reaper.defer( main )
+    reaper.defer(main)
 end
 
 if not reaper.JS_VKeys_GetState then

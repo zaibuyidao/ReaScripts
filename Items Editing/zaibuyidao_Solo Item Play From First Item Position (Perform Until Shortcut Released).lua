@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo Item Play From First Item Position (Perform Until Shortcut Released)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -89,7 +89,7 @@ VirtualKeyCode = key_map[key]
 function show_select_key_dialog()
     if (not key or not key_map[key]) then
         key = '9'
-        local ok, input = reaper.GetUserInputs("Set Virtual Key", 1, "Enter 0-9 or A-Z", key)
+        local ok, input = reaper.GetUserInputs("Set the Solo Key", 1, "Enter 0-9 or A-Z", key)
         if (not key_map[input]) then
             reaper.ShowConsoleMsg("Cannot set this Key\n無法設置此按鍵" .. "\n")
             return
@@ -107,19 +107,6 @@ function Open_URL(url)
      else
       os.execute("start ".. url)
     end
-end
-
-function CheckSWS()
-    local SWS_installed
-    if not reaper.BR_ItemAtMouseCursor then
-        local retval = reaper.ShowMessageBox("SWS extension is required by this script.\nHowever, it doesn't seem to be present for this REAPER installation.\n\nDo you want to download it now ?", "Warning", 1)
-        if retval == 1 then
-          Open_URL("http://www.sws-extension.org/download/pre-release/")
-        end
-    else
-        SWS_installed = true
-    end
-    return SWS_installed
 end
 
 local function UnSoloAllTrack()
@@ -222,41 +209,40 @@ function main()
     reaper.PreventUIRefresh(1)
     cur_pos = reaper.GetCursorPosition() -- 獲取光標位置
     count_sel_items = reaper.CountSelectedMediaItems(0) -- 計算選中的item
-    count_sel_track = reaper.CountSelectedTracks(0) -- 計算選中的軌道
     state = reaper.JS_VKeys_GetState(0) -- 獲取按鍵的狀態
-    snap_t = {}
 
-    if count_sel_items > 0 then
-        for i = 0, count_sel_items-1 do
-            local item = reaper.GetSelectedMediaItem(0, i)
-            local take = reaper.GetActiveTake(item)
-            local take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-            local item_snap = reaper.GetMediaItemInfo_Value(item, "D_SNAPOFFSET")
-            local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-            local snap = item_pos + item_snap
-            snap_t[#snap_t + 1] = snap
-        end
-        snap_pos = TableMin(snap_t)
-    end
 
-    x, y = reaper.GetMousePosition()
-    item_point = reaper.GetItemFromPoint(x, y, false) -- 獲取鼠標下的item
-
-    local item_ret, item_mouse_pos = reaper.BR_ItemAtMouseCursor()
-    if item_ret then
-        take = reaper.GetActiveTake(item_ret)
-        take_tarck = reaper.GetMediaItemTake_Track(take)
-        check_track = reaper.GetMediaTrackInfo_Value(take_tarck, 'I_SELECTED')
-        take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-        item_snap = reaper.GetMediaItemInfo_Value(item_ret, "D_SNAPOFFSET")
-        item_pos = reaper.GetMediaItemInfo_Value(item_ret, "D_POSITION")
-        snap = item_pos + item_snap
-    end
-    local track_ret, context, track_mouse_pos = reaper.BR_TrackAtMouseCursor()
-    
     if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
         -- reaper.ShowConsoleMsg("按键按下" .. "\n")
-        
+
+        local screen_x, screen_y = reaper.GetMousePosition()
+        local item_ret, take = reaper.GetItemFromPoint(screen_x, screen_y, true)
+        local track_ret, info_out = reaper.GetTrackFromPoint(screen_x, screen_y)
+
+        snap_t = {}
+        if count_sel_items > 0 then
+            for i = 0, count_sel_items-1 do
+                local item = reaper.GetSelectedMediaItem(0, i)
+                local take = reaper.GetActiveTake(item)
+                local take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+                local item_snap = reaper.GetMediaItemInfo_Value(item, "D_SNAPOFFSET")
+                local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+                local snap = item_pos + item_snap
+                snap_t[#snap_t + 1] = snap
+            end
+            snap_pos = TableMin(snap_t)
+        end
+    
+        if item_ret then
+            take = reaper.GetActiveTake(item_ret)
+            -- take_tarck = reaper.GetMediaItemTake_Track(take)
+            -- check_track = reaper.GetMediaTrackInfo_Value(take_tarck, 'I_SELECTED')
+            -- take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+            item_snap = reaper.GetMediaItemInfo_Value(item_ret, "D_SNAPOFFSET")
+            item_pos = reaper.GetMediaItemInfo_Value(item_ret, "D_POSITION")
+            snap = item_pos + item_snap
+        end
+
         init_sel_items = {}
         SaveSelectedItems(init_sel_items) -- 保存選中的item
         --init_sel_tracks = {}
@@ -265,61 +251,57 @@ function main()
         SaveSoloTracks(init_solo_tracks) -- 保存選中的軌道
 
         if count_sel_items == 0 then -- 沒有item被選中
-            reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
-            if item_ret then -- 在鼠標下的item
+            if item_ret then
+                reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
                 local track = reaper.GetMediaItem_Track(item_ret) -- 獲取鼠標下item對應的軌道
-                --reaper.SetTrackSelected(track, true) -- 將軌道設置為選中
                 reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2) -- 激活軌道的SOLO按鈕
                 local item_num = reaper.CountTrackMediaItems(track) -- 計算item的總數
+
                 for i = 0, item_num-1 do
                     local item = reaper.GetTrackMediaItem(track, i) -- 獲取軌道下的所有item
                     set_item_mute(item, 1) -- 設置為靜音
                 end
-                if reaper.GetMediaItemInfo_Value( item_ret, "B_MUTE" ) == 1 then
+                if reaper.GetMediaItemInfo_Value(item_ret, "B_MUTE") == 1 then
                     set_item_mute(item_ret, 0) -- 設置為非靜音
                 end
                 reaper.SetEditCurPos(snap, 0, 0)
                 reaper.Main_OnCommand(1007, 0) -- Transport: Play
-            elseif track_ret then -- 鼠標不在item上方
-                --reaper.SetTrackSelected(track_ret, true) -- 將軌道設置為選中
-                reaper.SetMediaTrackInfo_Value(track_ret, 'I_SOLO', 2) -- 激活軌道的SOLO按鈕
-                if context == 2 then
-                    reaper.SetEditCurPos(track_mouse_pos, 0, 0) -- 從光標位置播放
-                    reaper.Main_OnCommand(1007, 0) -- Transport: Play
+            else
+                if track_ret then
+                    reaper.SetMediaTrackInfo_Value(track_ret, 'I_SOLO', 2)
                 end
-            end
-        elseif count_sel_items > 0 then -- 如果選中item大於0
-            if track_ret then
-                reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
-                local selected_track = {} -- 选中的轨道
-    
-                for m = 0, count_sel_items - 1  do
-                    local item = reaper.GetSelectedMediaItem(0, m)
-                    local track = reaper.GetMediaItem_Track(item)
-                    if (not selected_track[track]) then
-                        selected_track[track] = true
-                    end
-                end
-    
-                for track, _ in pairs(selected_track) do
-                    --reaper.SetTrackSelected(track, true) -- 將軌道設置為選中
-                    reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
-                    local item_num = reaper.CountTrackMediaItems(track)
-    
-                    for i = 0, item_num - 1 do
-                        local item = reaper.GetTrackMediaItem(track, i)
-                        set_item_mute(item, 1)
-                        if reaper.IsMediaItemSelected(item) == true then
-                            set_item_mute(item, 0)
-                        end
-                    end
-                end
-                reaper.SetEditCurPos(snap_pos, 0, 0)
+                reaper.Main_OnCommand(40514, 0) -- View: Move edit cursor to mouse cursor (no snapping)
                 reaper.Main_OnCommand(1007, 0) -- Transport: Play
             end
+        else -- 如果選中item大於0
+            reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
+            local selected_track = {} -- 选中的轨道
+
+            for m = 0, count_sel_items - 1  do
+                local item = reaper.GetSelectedMediaItem(0, m)
+                local track = reaper.GetMediaItem_Track(item)
+                if (not selected_track[track]) then
+                    selected_track[track] = true
+                end
+            end
+            for track, _ in pairs(selected_track) do
+                --reaper.SetTrackSelected(track, true) -- 將軌道設置為選中
+                reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
+                local item_num = reaper.CountTrackMediaItems(track)
+
+                for i = 0, item_num - 1 do
+                    local item = reaper.GetTrackMediaItem(track, i)
+                    set_item_mute(item, 1)
+                    if reaper.IsMediaItemSelected(item) == true then
+                        set_item_mute(item, 0)
+                    end
+                end
+            end
+            reaper.SetEditCurPos(snap_pos, 0, 0)
+            reaper.Main_OnCommand(1007, 0) -- Transport: Play
         end
         flag = 1
-    elseif state:byte(VirtualKeyCode) == 0 and flag==1 then
+    elseif state:byte(VirtualKeyCode) == 0 and flag == 1 then
         -- reaper.ShowConsoleMsg("按键释放" .. "\n")
 
         reaper.Main_OnCommand(1016, 0) -- Transport: Stop
@@ -331,18 +313,10 @@ function main()
         flag = 0
     end
 
-    reaper.SetEditCurPos(cur_pos, false, false) -- 恢復光標位置
+    reaper.SetEditCurPos(cur_pos, 0, 0) -- 恢復光標位置
     reaper.PreventUIRefresh(-1)
     reaper.UpdateArrange()
-    reaper.defer( main )
-end
-
-if not reaper.BR_ItemAtMouseCursor then
-    local retval = reaper.ShowMessageBox("SWS extension is required by this script.\n此腳本需要 SWS 擴展。\nHowever, it doesn't seem to be present for this REAPER installation.\n然而，对于这个REAPER安装来说，它似乎并不存在。\n\nDo you want to download it now ?\n你想现在就下载它吗？", "Warning", 1)
-    if retval == 1 then
-      Open_URL("http://www.sws-extension.org/download/pre-release/")
-    end
-    return
+    reaper.defer(main)
 end
 
 if not reaper.JS_VKeys_GetState then
