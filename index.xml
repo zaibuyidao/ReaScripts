@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f9339fd4fe37b79368ee784e424f3c11a6c56b41">
+<index version="1" name="zaibuyidao Scripts" commit="90536a96c095f1c8b96b334fbaaa53a038351326">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -1121,6 +1121,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8e4d1745404aac4fc17b41e15ce8a353905a56a2/MIDI%20Editor/zaibuyidao_Color%20Notes%20(Dynamic%20Menu).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/MIDI%20Editor/zaibuyidao_Color%20Notes%20(Dynamic%20Menu).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Connect Two Nodes (Within Time Selection).lua" type="script" desc="Connect Two Nodes (Within Time Selection)">
       <version name="1.2" author="zaibuyidao" time="2021-01-06T18:34:11Z">
@@ -1551,6 +1554,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-01-06T18:34:11Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61a198f97763e85b3144e1b00ad3a86fec79ba8c/MIDI%20Editor/zaibuyidao_Grid%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/MIDI%20Editor/zaibuyidao_Grid%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Groove Quantize.lua" type="script" desc="Groove Quantize">
@@ -2119,6 +2125,9 @@
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-12-29T20:35:23Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/08ff128a894ff0990f7bc10db6d81baa7d32db79/MIDI%20Editor/zaibuyidao_MIDI%20Item%20List%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.1.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/MIDI%20Editor/zaibuyidao_MIDI%20Item%20List%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Move Edit Cursor +10.lua" type="script" desc="Move Edit Cursor +10">
@@ -2751,6 +2760,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-07-18T12:12:35Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_Set%20CC%20Curve%20Shape%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/MIDI%20Editor/zaibuyidao_Set%20CC%20Curve%20Shape%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Lane.lua" type="script" desc="Set CC Lane">
@@ -3720,6 +3732,9 @@
         <changelog><![CDATA[+ 初始發行]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AECC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
+      <version name="1.0.1" author="再補一刀" time="2021-12-19T15:17:05Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AECC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
+      </version>
     </reapack>
     <reapack name="再補一刀_設置CC車道.lua" type="script" desc="設置CC車道">
       <metadata>
@@ -4117,6 +4132,9 @@
       <version name="1.1.1" author="zaibuyidao" time="2021-10-26T13:28:10Z">
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/zaibuyidao_Pick%20Track%20(Dynamic%20Menu).lua</source>
       </version>
+      <version name="1.1.2" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Tracks%20Properties/zaibuyidao_Pick%20Track%20(Dynamic%20Menu).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Pick Track - Only Select First Item (Dynamic Menu).lua" type="script" desc="Pick Track - Only Select First Item (Dynamic Menu)">
       <version name="1.0" author="zaibuyidao" time="2021-02-15T13:07:51Z">
@@ -4128,6 +4146,9 @@
       </version>
       <version name="1.1.1" author="zaibuyidao" time="2021-10-26T13:28:10Z">
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/zaibuyidao_Pick%20Track%20-%20Only%20Select%20First%20Item%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.1.2" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Tracks%20Properties/zaibuyidao_Pick%20Track%20-%20Only%20Select%20First%20Item%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Pick Track - Only Select First Item.lua" type="script" desc="Pick Track - Only Select First Item">
@@ -4258,6 +4279,9 @@
       <version name="1.0.1" author="再補一刀" time="2021-10-26T13:28:10Z">
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%20-%20%E5%8F%AA%E9%81%B8%E6%93%87%E7%AC%AC%E4%B8%80%E5%80%8B%E5%B0%8D%E8%B1%A1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
+      <version name="1.0.2" author="再補一刀" time="2021-12-19T15:17:05Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93%20-%20%E5%8F%AA%E9%81%B8%E6%93%87%E7%AC%AC%E4%B8%80%E5%80%8B%E5%B0%8D%E8%B1%A1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
+      </version>
     </reapack>
     <reapack name="再補一刀_選擇軌道 - 只選擇第一個對象.lua" type="script" desc="選擇軌道 - 只選擇第一個對象">
       <version name="1.0" author="再補一刀" time="2021-02-15T13:07:51Z">
@@ -4275,6 +4299,9 @@
       </version>
       <version name="1.0.1" author="再補一刀" time="2021-10-26T13:28:10Z">
         <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32c9100ff61a865b93eed3a4466fb361f199ef49/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
+      </version>
+      <version name="1.0.2" author="再補一刀" time="2021-12-19T15:17:05Z">
+        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Tracks%20Properties/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E9%81%B8%E6%93%87%E8%BB%8C%E9%81%93(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_選擇軌道.lua" type="script" desc="選擇軌道">
@@ -4347,6 +4374,9 @@
       <version name="1.4.1" author="zaibuyidao" time="2021-10-02T11:27:37Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/98c17ca6c8a69eaa21869e2fd9bcf7cef2f234d4/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
       </version>
+      <version name="1.4.2" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Utility/zaibuyidao_Design%20Tools%20(Dynamic%20Menu).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Display Total Length Of Selected Items.lua" type="script" desc="Display Total Length Of Selected Items">
       <version name="1.0" author="zaibuyidao" time="2020-11-04T18:21:25Z">
@@ -4401,6 +4431,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/94eda80c00e77f9e265eb7ea0b3466a477510c7b/Utility/zaibuyidao_Jump%20To%20Marker%20(Dynamic%20Menu).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Utility/zaibuyidao_Jump%20To%20Marker%20(Dynamic%20Menu).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Jump To Marker Region (Dynamic Menu).lua" type="script" desc="Jump To Marker/Region (Dynamic Menu)">
       <metadata>
@@ -4410,11 +4443,17 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/94eda80c00e77f9e265eb7ea0b3466a477510c7b/Utility/zaibuyidao_Jump%20To%20Marker%20Region%20(Dynamic%20Menu).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Utility/zaibuyidao_Jump%20To%20Marker%20Region%20(Dynamic%20Menu).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Jump To Region (Dynamic Menu).lua" type="script" desc="Jump To Region (Dynamic Menu)">
       <version name="1.0" author="zaibuyidao" time="2021-07-02T04:02:20Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/94eda80c00e77f9e265eb7ea0b3466a477510c7b/Utility/zaibuyidao_Jump%20To%20Region%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Utility/zaibuyidao_Jump%20To%20Region%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
@@ -4458,6 +4497,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cbb875e25cca4ba642a337a646c54863ada92cec/Utility/zaibuyidao_Set%20MIDI%20Channel%20Routing%20(Dynamic%20Menu).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Utility/zaibuyidao_Set%20MIDI%20Channel%20Routing%20(Dynamic%20Menu).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Set MIDI Out Devices.lua" type="script" desc="Set MIDI Out Devices">
       <version name="1.0" author="zaibuyidao, YS" time="2021-10-03T15:43:29Z">
@@ -4472,6 +4514,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-07-11T16:14:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2613b12194094f2ef9eb36741c6dde464e4e8e60/Utility/zaibuyidao_Set%20Point%20Shape%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Utility/zaibuyidao_Set%20Point%20Shape%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Project Grid.lua" type="script" desc="Set Project Grid">
@@ -4539,6 +4584,9 @@
       <version name="1.0" author="再補一刀" time="2021-01-19T19:51:41Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AEMIDI%E9%80%9A%E9%81%93%E8%B7%AF%E7%94%B1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
+      </version>
+      <version name="1.0.1" author="再補一刀" time="2021-12-19T15:17:05Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Utility/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AEMIDI%E9%80%9A%E9%81%93%E8%B7%AF%E7%94%B1(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_設置工程網格.lua" type="script" desc="設置工程網格">
