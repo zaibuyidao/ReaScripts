@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Design Tools (Dynamic Menu)
- * Version: 1.4.1
+ * Version: 1.4.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -722,17 +722,13 @@ menu = menu
 .. (multi_cut and "!" or "") .. "在光標處平均分割對象" .. "|"
 .. (create_marker and "!" or "") .. "按對象名稱創建標記" .. "|"
 
-title = "Hidden gfx window for showing the 音頻編輯 Menu showmenu"
-gfx.init(title, 0, 0, 0, 0, 0)
-local dyn_win = reaper.JS_Window_Find(title, true)
-local out = 0
-if dyn_win then
-  out = 7000
-  reaper.JS_Window_Move(dyn_win, -out, -out)
+local title = "hidden " .. reaper.genGuid()
+gfx.init( title, 0, 0, 0, 0, 0 )
+local hwnd = reaper.JS_Window_Find( title, true )
+if hwnd then
+  reaper.JS_Window_Show( hwnd, "HIDE" )
 end
-
-out = reaper.GetOS():find("OSX") and 0 or out
-gfx.x, gfx.y = gfx.mouse_x-0+out, gfx.mouse_y-0+out -- 可設置彈出菜單時鼠標所處的位置
+gfx.x, gfx.y = gfx.mouse_x-0, gfx.mouse_y-0
 local selection = gfx.showmenu(menu)
 gfx.quit()
 

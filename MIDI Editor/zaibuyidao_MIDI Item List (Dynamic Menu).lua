@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: MIDI Item List (Dynamic Menu)
- * Version: 1.1
+ * Version: 1.1.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -57,17 +57,13 @@ menu = menu
 .. "Select all MIDI items" .. "|"
 .. "Unselect all MIDI items" .. "|"
 
-local title = "Hidden gfx window for showing the MIDI item list showmenu"
-gfx.init(title, 0, 0, 0, 0, 0)
-local HWND = reaper.JS_Window_Find(title, true)
-local out = 0
-if HWND then
-  out = 7000
-  reaper.JS_Window_Move(HWND, -out, -out)
+local title = "hidden " .. reaper.genGuid()
+gfx.init( title, 0, 0, 0, 0, 0 )
+local hwnd = reaper.JS_Window_Find( title, true )
+if hwnd then
+  reaper.JS_Window_Show( hwnd, "HIDE" )
 end
-
-out = reaper.GetOS():find("OSX") and 0 or out
-gfx.x, gfx.y = gfx.mouse_x-0+out, gfx.mouse_y-0+out -- 可設置彈出菜單時鼠標所處的位置
+gfx.x, gfx.y = gfx.mouse_x-0, gfx.mouse_y-0
 local selection = gfx.showmenu(menu)
 gfx.quit()
 

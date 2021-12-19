@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Jump To Marker/Region (Dynamic Menu)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -99,17 +99,13 @@ for j = 1, #regions do
   menu = menu .. 'Region ' .. regions[j].renidx .. ': ' .. space .. (regions[j].name == "" and "" or regions[j].name) .. space .. ' [' .. tiemcode_proj_default .. '] ' .. space .. '-' .. space .. ' [' .. rgnend_proj_default .. '] ' .. "|"
 end
 
-local title = "Hidden gfx window for showing the jump to marker/region showmenu"
-gfx.init(title, 0, 0, 0, 0, 0)
-local hwnd = reaper.JS_Window_Find(title, true)
-local out = 0
+local title = "hidden " .. reaper.genGuid()
+gfx.init( title, 0, 0, 0, 0, 0 )
+local hwnd = reaper.JS_Window_Find( title, true )
 if hwnd then
-  out = 7000
-  reaper.JS_Window_Move(hwnd, -out, -out)
+  reaper.JS_Window_Show( hwnd, "HIDE" )
 end
-
-out = reaper.GetOS():find("OSX") and 0 or out
-gfx.x, gfx.y = gfx.mouse_x-0+out, gfx.mouse_y-0+out -- 可設置彈出菜單時鼠標所處的位置
+gfx.x, gfx.y = gfx.mouse_x-0, gfx.mouse_y-0
 local selection = gfx.showmenu(menu)
 gfx.quit()
 
