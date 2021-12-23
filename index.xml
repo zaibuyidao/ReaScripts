@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e01076f9c04ff1142c19832d5a62c735a12fb560">
+<index version="1" name="zaibuyidao Scripts" commit="9c702b1ceeb88ab89c4bfee7e4af432c9ceb16ec">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -588,7 +588,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Use JSFX-Articulation Map to convert Program Change message to Keyswitches. In any mode, use the CC#119 controller to insert a value of 0 to immediately send Note-Off; You can also use CC#119 to control the length of the keyswitches in the blend mode. When the value is 1-127, the Legato mode will be activated to extend the note, and when the value is 0, the staccato mode will be activated and Note-Off will be sent immediately.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Use JSFX-Articulation Map to convert Program Change message to Keyswitches. In any mode, use the CC#119 controller to insert a value of 0 to immediately send Note-Off; You can also use CC#119 to control the length of the keyswitches in the blend mode. When the value is 64-127, the Legato mode will be activated to extend the note, and when the value is 0-63, the staccato mode will be activated and Note-Off will be sent immediately.\par}
 }
 ]]></description>
         <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
@@ -620,6 +620,10 @@
       <version name="1.1.5" author="zaibuyidao, Tale" time="2021-09-09T13:31:24Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/248c9a8e3545ab38d84fa293ceabad0bd534e980/JSFX/Articulation%20Map.jsfx</source>
+      </version>
+      <version name="1.1.6" author="zaibuyidao, Tale" time="2021-12-23T16:35:36Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/9c702b1ceeb88ab89c4bfee7e4af432c9ceb16ec/JSFX/Articulation%20Map.jsfx</source>
       </version>
     </reapack>
     <reapack name="MIDI Off Velocity Limiter.jsfx" type="effect" desc="MIDI Off Velocity Limiter">
@@ -748,7 +752,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992? JSFX-\u25216?\u27861?\u26144?\u23556? \u23559?\u31243?\u24335?\u35722?\u25563?\u28040?\u24687?\u36681?\u25563?\u28858?\u37749?\u20301?\u20999?\u25563?\u37749?\u12290? \u22312?\u20219?\u20309?\u27169?\u24335?\u19979?\u65292?\u20351?\u29992?CC\u65283?119\u25511?\u21046?\u22120?\u25554?\u20837?0\u20540?\u21363?\u21487?\u31435?\u21363?\u30332?\u36865?Note-Off(\u25903?\u25345?\u33258?\u23450?\u32681?\u25511?\u21046?\u22120?\u32232?\u34399?)\u65307? \u24744?\u36996?\u21487?\u20197?\u20351?\u29992?CC\u65283?119\u22312?\u28151?\u21512?\u27169?\u24335?\u19979?\u25511?\u21046?\u38190?\u20301?\u20999?\u25442?\u38190?\u30340?\u38263?\u24230?\u12290?\u30070?\u20540?\u26159?1-127\u26178?\u65292?\u23559?\u28608?\u27963?\u36830?\u22863?\u27169?\u24335?\u20351?\u38899?\u31526?\u24310?\u38271?\u65292?\u32780?\u30070?\u20540?\u26159?0\u26178?\u65292?\u23559?\u28608?\u27963?\u26039?\u22863?\u27169?\u24335?\u24182?\u31435?\u21051?\u21457?\u36865?Note-Off\u12290?\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992? JSFX-\u25216?\u27861?\u26144?\u23556? \u23559?\u31243?\u24335?\u35722?\u25563?\u28040?\u24687?\u36681?\u25563?\u28858?\u37749?\u20301?\u20999?\u25563?\u37749?\u12290? \u22312?\u20219?\u20309?\u27169?\u24335?\u19979?\u65292?\u20351?\u29992?CC\u65283?119\u25511?\u21046?\u22120?\u25554?\u20837?0\u20540?\u21363?\u21487?\u31435?\u21363?\u30332?\u36865?Note-Off(\u25903?\u25345?\u33258?\u23450?\u32681?\u25511?\u21046?\u22120?\u32232?\u34399?)\u65307? \u24744?\u36996?\u21487?\u20197?\u20351?\u29992?CC\u65283?119\u22312?\u28151?\u21512?\u27169?\u24335?\u19979?\u25511?\u21046?\u38190?\u20301?\u20999?\u25442?\u38190?\u30340?\u38263?\u24230?\u12290?\u30070?\u20540?\u26159?64-127\u26178?\u65292?\u23559?\u28608?\u27963?\u36830?\u22863?\u27169?\u24335?\u20351?\u38899?\u31526?\u24310?\u38271?\u65292?\u32780?\u30070?\u20540?\u26159?0-63\u26178?\u65292?\u23559?\u28608?\u27963?\u26039?\u22863?\u27169?\u24335?\u24182?\u31435?\u21051?\u21457?\u36865?Note-Off\u12290?\par}
 }
 ]]></description>
         <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
@@ -780,6 +784,10 @@
       <version name="1.1.5" author="再補一刀, Tale" time="2021-09-09T13:31:24Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/248c9a8e3545ab38d84fa293ceabad0bd534e980/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
+      </version>
+      <version name="1.1.6" author="再補一刀, Tale" time="2021-12-23T16:35:36Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/9c702b1ceeb88ab89c4bfee7e4af432c9ceb16ec/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
       </version>
     </reapack>
   </category>
