@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9c702b1ceeb88ab89c4bfee7e4af432c9ceb16ec">
+<index version="1" name="zaibuyidao Scripts" commit="c0a8858f0b6d3aa68229d4f67d8c315e2747c48e">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -4602,12 +4602,18 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_VST Instrument.lua" type="script" desc="VST Instrument">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
       <version name="1.0" author="zaibuyidao" time="2020-09-28T18:32:48Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e8401b5823e2b27a081539b8fb75c165a3799e5b/Utility/zaibuyidao_VST%20Instrument.lua</source>
       </version>
       <version name="1.1" author="zaibuyidao" time="2020-09-29T14:30:01Z">
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eb2a2f35eb4d67d2e13fad824e0c907231065df/Utility/zaibuyidao_VST%20Instrument.lua</source>
+      </version>
+      <version name="1.1.1" author="zaibuyidao" time="2021-12-26T14:15:31Z">
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c0a8858f0b6d3aa68229d4f67d8c315e2747c48e/Utility/zaibuyidao_VST%20Instrument.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_建立MIDI通道路由到選定軌道.lua" type="script" desc="建立MIDI通道路由到選定軌道">
