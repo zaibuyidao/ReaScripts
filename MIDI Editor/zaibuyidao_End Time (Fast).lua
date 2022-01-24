@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: End Time (Fast)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -19,12 +19,6 @@ function Msg(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-if not take or not reaper.TakeIsMIDI(take) then return end
-
-if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then notes_selected = true end
-if not notes_selected then return end
-
 local function min(a,b)
     if a>b then
         return b
@@ -32,10 +26,9 @@ local function min(a,b)
     return a
 end
 
-local function getAllNotesQuick(tail)
-    tail = tail or 12
+local function getAllNotesQuick()
     local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
-    local MIDIlen = MIDIstring:len() - tail
+    local MIDIlen = MIDIstring:len()
     local result = {}
     local stringPos = 1
     while stringPos < MIDIlen do
@@ -55,24 +48,22 @@ local function getAllNotesQuick(tail)
             })
         end
     end
-    return result, MIDIstring:sub(-tail)
+    return result
 end
 
-local function setAllEvents(events, tail)
+local function setAllEvents(events)
     local tab = {}
     for _, event in pairs(events) do
         table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
     end
-    table.insert(tab, tail)
     reaper.MIDI_SetAllEvts(take, table.concat(tab))-- 将编辑好的MIDI上传到take
 end
 
-local function getGroupPitchEvents(tail)
+function endTime()
     local lastPos = 0
     local pitchNotes = {}
-    tail = tail or 12
     local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
-    local MIDIlen = MIDIstring:len() - tail
+    local MIDIlen = MIDIstring:len()
     local stringPos = 1
     while stringPos < MIDIlen do
         local offset, flags, msg
@@ -93,16 +84,12 @@ local function getGroupPitchEvents(tail)
             lastPos = lastPos + offset
         end
     end
-    return pitchNotes, MIDIstring:sub(-tail)
-end
 
-function endTime()
     local pitchLastStart = {} -- 每个音高上一个音符的开始位置
-    local pitchEvents, tail = getGroupPitchEvents()
     local events = {}
     local dur = reaper.MIDI_GetPPQPosFromProjTime(take, reaper.GetCursorPositionEx(0)) -- 获取光标位置
     
-    for _, es in pairs(pitchEvents) do
+    for _, es in pairs(pitchNotes) do
         for i = 1, #es do
             if not es[i].selected then
                 goto continue
@@ -129,12 +116,15 @@ function endTime()
         end
     end
     
-    table.sort(events,function(a,b) -- 事件重新排序
-        if a.pos == b.pos then
-            return a.status < b.status
-        end
-        return a.pos < b.pos
-    end)
+    -- table.sort(events,function(a,b) -- 事件重新排序
+    --     if a.pos == b.pos then
+    --         if a.status == b.status then
+    --             return a.pitch < b.pitch
+    --         end
+    --         return a.status < b.status
+    --     end
+    --     return a.pos < b.pos
+    -- end)
     
     local lastPos = 0
     
@@ -144,7 +134,12 @@ function endTime()
         -- Msg(tostring(event.offset) .. " " .. tostring(event.status))
     end
     
-    setAllEvents(events, tail)
+    setAllEvents(events)
+
+    if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
+        reaper.MIDI_SetAllEvts(take, MIDIstring)
+        reaper.ShowMessageBox("腳本造成 All-Note-Off 的位置偏移\n\n已恢復原始數據", "ERROR", 0)
+    end
 end
 
 function main()
@@ -154,11 +149,18 @@ function main()
         for i = 1, count_sel_items do
             item = reaper.GetSelectedMediaItem(0, i - 1)
             take = reaper.GetTake(item, 0)
+            sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
+            if not take or not reaper.TakeIsMIDI(take) then return end
+            if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then notes_selected = true end
+            if not notes_selected then return end
             endTime()
         end
     else -- 否则，判断MIDI编辑器是否被激活
         take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-        if take == nil then return end
+        sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
+        if not take or not reaper.TakeIsMIDI(take) then return end
+        if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then notes_selected = true end
+        if not notes_selected then return end
         endTime()
     end
 
