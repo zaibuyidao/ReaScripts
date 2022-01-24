@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="df41f8a4b1d8f27e8e916e6e56e8f39aeb8fc112">
+<index version="1" name="zaibuyidao Scripts" commit="63ce39f115c5904960e8fcadd88709fd789a1313">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -1118,6 +1118,15 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/653765ea4a1aac18f4e326685381134e60bdafe1/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20(Start%20Base).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Chord Inversion +01 (Fast).lua" type="script" desc="Chord Inversion +01 (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-01-24T16:40:59Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63ce39f115c5904960e8fcadd88709fd789a1313/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20+01%20(Fast).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Chord Inversion +01.lua" type="script" desc="Chord Inversion +01">
       <version name="1.0" author="zaibuyidao" time="2020-03-02T17:05:34Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -1406,6 +1415,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-01-02T17:08:17Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/df41f8a4b1d8f27e8e916e6e56e8f39aeb8fc112/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-01-24T16:40:59Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63ce39f115c5904960e8fcadd88709fd789a1313/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_End Time (Multitrack).lua" type="script" desc="End Time (Multitrack)">
@@ -2093,6 +2105,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-01-02T17:08:17Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/df41f8a4b1d8f27e8e916e6e56e8f39aeb8fc112/MIDI%20Editor/zaibuyidao_Legato%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-01-24T16:40:59Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63ce39f115c5904960e8fcadd88709fd789a1313/MIDI%20Editor/zaibuyidao_Legato%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Legato.lua" type="script" desc="Legato">
@@ -3167,6 +3182,15 @@
       </version>
       <version name="1.4" author="zaibuyidao" time="2020-07-28T13:11:50Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4ad097c7034d7929f4a16ac72eab7f13365fa3d3/MIDI%20Editor/zaibuyidao_Split%20Notes.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Strum It (Fast).lua" type="script" desc="Strum It (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-01-24T16:40:59Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63ce39f115c5904960e8fcadd88709fd789a1313/MIDI%20Editor/zaibuyidao_Strum%20It%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum It.lua" type="script" desc="Strum It">
