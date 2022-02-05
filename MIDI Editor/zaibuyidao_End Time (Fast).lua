@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: End Time (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -116,15 +116,15 @@ function endTime()
         end
     end
     
-    -- table.sort(events,function(a,b) -- 事件重新排序
-    --     if a.pos == b.pos then
-    --         if a.status == b.status then
-    --             return a.pitch < b.pitch
-    --         end
-    --         return a.status < b.status
-    --     end
-    --     return a.pos < b.pos
-    -- end)
+    table.sort(events,function(a,b) -- 事件重新排序
+        if a.pos == b.pos then
+            if a.status == b.status then
+                return a.pitch < b.pitch
+            end
+            return a.status < b.status
+        end
+        return a.pos < b.pos
+    end)
     
     local lastPos = 0
     

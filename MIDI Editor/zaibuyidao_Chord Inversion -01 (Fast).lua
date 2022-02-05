@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Chord Inversion +01 (Fast)
+ * ReaScript Name: Chord Inversion -01 (Fast)
  * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -223,7 +223,7 @@ function move(eventPairs, up)
 end
 
 for groupPos, eventPairs in pairs(groupEventPairs) do
-    move(eventPairs, true)
+    move(eventPairs, false)
 end
 
 setAllEvents(events)
@@ -233,5 +233,5 @@ if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
     reaper.ShowMessageBox("腳本造成 All-Notes-Off 的位置偏移\n\n已恢複原始數據", "ERROR", 0)
 end
 
-reaper.Undo_EndBlock("Chord Inversion +01 (Fast)", -1)
+reaper.Undo_EndBlock("Chord Inversion -01 (Fast)", -1)
 reaper.UpdateArrange()
