@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="63ce39f115c5904960e8fcadd88709fd789a1313">
+<index version="1" name="zaibuyidao Scripts" commit="0104b4605af12daa7128e3e54b786353df4320b7">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -1091,6 +1091,15 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_Auto%20Expression.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Chord Inversion (Fast).lua" type="script" desc="Chord Inversion (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-02-05T11:23:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20(Fast).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Chord Inversion (Start Base) +01.lua" type="script" desc="Chord Inversion (Start Base) +01">
       <version name="1.0" author="zaibuyidao" time="2020-03-02T17:05:34Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -1126,6 +1135,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63ce39f115c5904960e8fcadd88709fd789a1313/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20+01%20(Fast).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-02-05T11:23:33Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20+01%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion +01.lua" type="script" desc="Chord Inversion +01">
       <version name="1.0" author="zaibuyidao" time="2020-03-02T17:05:34Z">
@@ -1134,6 +1146,14 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20+01.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Chord Inversion -01 (Fast).lua" type="script" desc="Chord Inversion -01 (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0.1" author="zaibuyidao" time="2022-02-05T11:23:33Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20-01%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion -01.lua" type="script" desc="Chord Inversion -01">
@@ -1418,6 +1438,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2022-01-24T16:40:59Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63ce39f115c5904960e8fcadd88709fd789a1313/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-02-05T11:23:33Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_End Time (Multitrack).lua" type="script" desc="End Time (Multitrack)">
@@ -1979,8 +2002,14 @@
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert SysEx.lua" type="script" desc="Insert SysEx">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
       <version name="1.2" author="zaibuyidao" time="2020-11-01T09:10:53Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/843708e47c22265d9b89d0a23a4e90b7545bbe94/MIDI%20Editor/zaibuyidao_Insert%20SysEx.lua</source>
+      </version>
+      <version name="1.2.1" author="zaibuyidao" time="2022-02-05T11:23:33Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/zaibuyidao_Insert%20SysEx.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Tremolo.lua" type="script" desc="Insert Tremolo">
@@ -3664,9 +3693,13 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a97819d1709c41cba23fab615f2a2b18656bcea/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E6%8F%89%E5%BC%A6.lua</source>
       </version>
     </reapack>
-    <reapack name="再補一刀_插入系統專用數據.lua" type="script" desc="插入系統專用數據">
-      <version name="1.2" author="再補一刀" time="2020-11-01T09:09:57Z">
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c338285ba108de1b4a12862836f9cb38b56a6ff/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E7%B3%BB%E7%B5%B1%E5%B0%88%E7%94%A8%E6%95%B8%E6%93%9A.lua</source>
+    <reapack name="再補一刀_插入系統專用信息.lua" type="script" desc="插入系統專用信息">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="再補一刀" time="2022-02-05T11:23:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E7%B3%BB%E7%B5%B1%E5%B0%88%E7%94%A8%E4%BF%A1%E6%81%AF.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入音色(庫MSB LSB).lua" type="script" desc="插入音色(庫MSB/LSB)">
