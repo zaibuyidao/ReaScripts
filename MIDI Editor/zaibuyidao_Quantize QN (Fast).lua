@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Quantize (Fast)
- * Version: 1.0.1
+ * ReaScript Name: Quantize QN (Fast)
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,7 +11,7 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-2-15)
+ * v1.0 (2021-2-21)
   + Initial release
 --]]
 
@@ -135,33 +135,33 @@ local gird, toggle
 local use_tick = false
 
 if tonumber(swing) == 0 then
-    gird = reaper.GetExtState("Quantize", "Grid")
-    if (gird == "") then gird = "240" end
-    toggle = reaper.GetExtState("Quantize", "Toggle")
+    gird = reaper.GetExtState("QuantizeQN", "Grid")
+    if (gird == "") then gird = "0.5" end
+    toggle = reaper.GetExtState("QuantizeQN", "Toggle")
     if (toggle == "") then toggle = "0" end
 
-    local user_ok, input_cav = reaper.GetUserInputs('Quantize', 2, 'Enter A Tick (0=Grid),0=Default 1=Start 2=End 3=Pos', gird ..','.. toggle)
+    local user_ok, input_cav = reaper.GetUserInputs('Quantize', 2, 'Enter QN Value (0=Grid),0=Default 1=Start 2=End 3=Pos', gird ..','.. toggle)
     gird, toggle = input_cav:match("(.*),(.*)")
 
     if not user_ok or not tonumber(gird) or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
-    reaper.SetExtState("Quantize", "Grid", gird, false)
-    reaper.SetExtState("Quantize", "Toggle", toggle, false)
+    reaper.SetExtState("QuantizeQN", "Grid", gird, false)
+    reaper.SetExtState("QuantizeQN", "Toggle", toggle, false)
 
-    gird = gird / tick
-    use_tick = true
+    -- gird = gird / tick
+    -- use_tick = true
 
     gird = tonumber(gird)
     if (gird == 0 or gird == -1) then
         gird = cur_gird
     end
 else
-    toggle = reaper.GetExtState("Quantize", "Toggle")
+    toggle = reaper.GetExtState("QuantizeQN", "Toggle")
     if (toggle == "") then toggle = "0" end
 
     local user_ok, input_cav = reaper.GetUserInputs('Quantize', 1, '0=Default 1=Start 2=End 3=Pos', toggle)
     toggle = input_cav
     if not user_ok or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
-    reaper.SetExtState("Quantize", "Toggle", toggle, false)
+    reaper.SetExtState("QuantizeQN", "Toggle", toggle, false)
 
     gird = cur_gird
 end
@@ -446,6 +446,6 @@ end
 
 CheckSWS()
 
-reaper.Undo_EndBlock("Quantize (Fast)", -1)
+reaper.Undo_EndBlock("Quantize QN (Fast)", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
