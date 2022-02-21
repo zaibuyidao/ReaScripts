@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Quantize (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -168,7 +168,8 @@ end
 
 function find_measure_pos(beat)
     count_tempo_markers = reaper.CountTempoTimeSigMarkers(0)
-    if count_tempo_markers <= 0 then error("count_tempo_markers is nil") end
+    -- if count_tempo_markers <= 0 then error("count_tempo_markers is nil") end
+    if count_tempo_markers <= 0 then return 0 end
     
     local cur = 0
     local last = 0
