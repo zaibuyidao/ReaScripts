@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Chord Inversion (Fast)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -33,38 +33,18 @@ function getInput(title,lable,default)
 end
 
 local function setAllEvents(events)
-    -- -- 排序事件
-    -- table.sort(events,function(a,b)
-    --     if a.status == 11 then return false end
-    --     if a.pos == b.pos then
-    --         if a.status == b.status then
-    --             return a.pitch < b.pitch
-    --         end
-    --         return a.status < b.status
-    --     end
-    --     return a.pos < b.pos
-    -- end)
-    -- local lastPos = 0
-    -- for _, event in pairs(events) do
-    --     event.offset = event.pos - lastPos
-    --     lastPos = event.pos
-    -- end
-
-    -- 构造事件字符串数据
     local tab = {}
     for _, event in pairs(events) do
-        local msg = event.msg
-        if event.msg:len() == 3 then
-            msg = string.pack("BBB", event.msg:byte(1), event.pitch or event.msg:byte(2), event.msg:byte(3))
-        end
-        table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, msg))
-        -- Msg("build item len:" .. #item)
+        table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
     end
-    -- Msg("Set")
-    -- Msg("events num:" .. #tab)
-    -- Msg("string len:" .. #table.concat(tab))
-    reaper.MIDI_SetAllEvts(take, table.concat(tab))-- 将编辑好的MIDI上传到take
+    reaper.MIDI_SetAllEvts(take, table.concat(tab)) -- 将编辑好的MIDI上传到take
 end
+
+function getEventPitch(event) return event.msg:byte(2) end
+function getEventSelected(event) return event.flags&1 == 1 end
+function getEventType(event) return event.msg:byte(1)>>4 end
+function getArticulationInfo(event) return event.msg:match("NOTE (%d+) (%d+) ") end
+function setEventPitch(event, pitch) event.msg = string.pack("BBB", event.msg:byte(1), pitch or event.msg:byte(2), event.msg:byte(3)) end
 
 function move(eventPairs, up)
     if up == nil then
@@ -149,8 +129,8 @@ function move(eventPairs, up)
 
     for i, eventPair in ipairs(eventPairs) do
         local p = newPitch[eventPair.pitch]
-        eventPair.first.pitch = p
-        eventPair.second.pitch = p
+        setEventPitch(eventPair.first, p)
+        setEventPitch(eventPair.second, p)
         if eventPair.articulation then
             eventPair.articulation.msg = eventPair.articulation.msg:gsub("(NOTE %d+ )(%d+)", "%1" .. p)
         end
@@ -185,58 +165,44 @@ function chordInversion()
         while stringPos <= MIDIstring:len() do
             local offset, flags, msg
             offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-        
-            -- Msg("msg_len:" .. msg:len() .. " flags:" .. flags .. " offset:" .. offset .. " stringPos:" .. stringPos .. " pitch:" .. msg:byte(2) .. " status:"  .. (msg:byte(1)>>4))
-            -- if (msg:len()~=3) then
-            --     Msg(msg)
-            --     local t = {}
-            --     for i=1,msg:len() do
-            --         table.insert(t, "[" .. i .. ":" .. msg:byte(i) .. "]")
-            --     end
-            --     Msg(table.concat(t, " "))
-            --     local chan, pitch = msg:match("NOTE (%d+) (%d+) ")
-            --     Msg(pitch)
-            -- end
-        
             local event = {
                 offset = offset,
                 pos = lastPos + offset,
                 flags = flags,
                 msg = msg,
-                selected = flags&1 == 1,
-                status = msg:byte(1)>>4,
             }
-            if msg:len() == 3 then
-                event.pitch = msg:byte(2)
-            end
             table.insert(events, event)
         
-            if event.status == EVENT_NOTE_START then
-                noteStartEventAtPitch[event.pitch] = event
-            elseif event.status == EVENT_NOTE_END then
-                local start = noteStartEventAtPitch[event.pitch]
+            local status = getEventType(event)
+            if status == EVENT_NOTE_START then
+                noteStartEventAtPitch[getEventPitch(event)] = event
+            elseif status == EVENT_NOTE_END then
+                local start = noteStartEventAtPitch[getEventPitch(event)]
+                if start == nil then error("音符有重叠无法解析") end
                 local groupPos = reaper.MIDI_GetPPQPos_StartOfMeasure(take, start.pos)
                 if not groupEventPairs[groupPos] then groupEventPairs[groupPos] = {} end
-                if event.selected then
+                if getEventSelected(event) then
                     table.insert(groupEventPairs[groupPos], {
                         first = start, 
                         second = event,
-                        articulation = articulationEventAtPitch[event.pitch],
-                        pitch = start.pitch
+                        articulation = articulationEventAtPitch[getEventPitch(event)],
+                        pitch = getEventPitch(start)
                     })
                 end
-                noteStartEventAtPitch[event.pitch] = nil
-                articulationEventAtPitch[event.pitch] = nil
-            elseif event.status == EVENT_ARTICULATION then
-                local chan, pitch = msg:match("NOTE (%d+) (%d+) ")
-                articulationEventAtPitch[tonumber(pitch)] = event
+                noteStartEventAtPitch[getEventPitch(event)] = nil
+                articulationEventAtPitch[getEventPitch(event)] = nil
+            elseif status == EVENT_ARTICULATION then
+                if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
+                    -- text event
+                else
+                    local chan, pitch = msg:match("NOTE (%d+) (%d+) ")
+                    articulationEventAtPitch[tonumber(pitch)] = event
+                end
             end
         
             ::continue::
             lastPos = lastPos + offset
         end
-        
-        -- Msg("events num:" .. #events)
         
         for groupPos, eventPairs in pairs(groupEventPairs) do
             move(eventPairs, flag)
@@ -254,7 +220,7 @@ end
 function main()
     reaper.Undo_BeginBlock()
     count_sel_items = reaper.CountSelectedMediaItems(0)
-    if count_sel_items > 0 then -- 如果有item被选中
+    if count_sel_items > 0 then
         for i = 1, count_sel_items do
             item = reaper.GetSelectedMediaItem(0, i - 1)
             take = reaper.GetTake(item, 0)
@@ -264,7 +230,7 @@ function main()
             if not notes_selected then return end
             chordInversion()
         end
-    else -- 否则，判断MIDI编辑器是否被激活
+    else
         take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
         sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
         if not take or not reaper.TakeIsMIDI(take) then return end

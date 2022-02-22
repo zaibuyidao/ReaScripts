@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Chord Inversion +01 (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -22,50 +22,30 @@ EVENT_ARTICULATION = 15
 function Msg(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
-local midiEditor=reaper.MIDIEditor_GetActive()
-take = reaper.MIDIEditor_GetTake(midiEditor) --全局take值
-if take == nil then return end
+
+local midiEditor = reaper.MIDIEditor_GetActive()
+take = reaper.MIDIEditor_GetTake(midiEditor)
+if not take or not reaper.TakeIsMIDI(take) then return end
 
 sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
 
 function min(a,b) if a>b then return b end return a end
 
-reaper.Undo_BeginBlock()
-
 local function setAllEvents(events)
-    -- -- 排序事件
-    -- table.sort(events,function(a,b)
-    --     if a.status == 11 then return false end
-    --     if a.pos == b.pos then
-    --         if a.status == b.status then
-    --             return a.pitch < b.pitch
-    --         end
-    --         return a.status < b.status
-    --     end
-    --     return a.pos < b.pos
-    -- end)
-    -- local lastPos = 0
-    -- for _, event in pairs(events) do
-    --     event.offset = event.pos - lastPos
-    --     lastPos = event.pos
-    -- end
-
-    -- 构造事件字符串数据
     local tab = {}
     for _, event in pairs(events) do
-        local msg = event.msg
-        if event.msg:len() == 3 then
-            msg = string.pack("BBB", event.msg:byte(1), event.pitch or event.msg:byte(2), event.msg:byte(3))
-        end
-        table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, msg))
-        -- Msg("build item len:" .. #item)
+        table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
     end
-    -- Msg("Set")
-    -- Msg("events num:" .. #tab)
-    -- Msg("string len:" .. #table.concat(tab))
-    reaper.MIDI_SetAllEvts(take, table.concat(tab))-- 将编辑好的MIDI上传到take
+    reaper.MIDI_SetAllEvts(take, table.concat(tab)) -- 将编辑好的MIDI上传到take
 end
 
+reaper.Undo_BeginBlock()
+
+function getEventPitch(event) return event.msg:byte(2) end
+function getEventSelected(event) return event.flags&1 == 1 end
+function getEventType(event) return event.msg:byte(1)>>4 end
+function getArticulationInfo(event) return event.msg:match("NOTE (%d+) (%d+) ") end
+function setEventPitch(event, pitch) event.msg = string.pack("BBB", event.msg:byte(1), pitch or event.msg:byte(2), event.msg:byte(3)) end
 
 local events = {}
 local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
@@ -79,58 +59,44 @@ local lastPos = 0
 while stringPos <= MIDIstring:len() do
     local offset, flags, msg
     offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-
-    -- Msg("msg_len:" .. msg:len() .. " flags:" .. flags .. " offset:" .. offset .. " stringPos:" .. stringPos .. " pitch:" .. msg:byte(2) .. " status:"  .. (msg:byte(1)>>4))
-    -- if (msg:len()~=3) then
-    --     Msg(msg)
-    --     local t = {}
-    --     for i=1,msg:len() do
-    --         table.insert(t, "[" .. i .. ":" .. msg:byte(i) .. "]")
-    --     end
-    --     Msg(table.concat(t, " "))
-    --     local chan, pitch = msg:match("NOTE (%d+) (%d+) ")
-    --     Msg(pitch)
-    -- end
-
     local event = {
         offset = offset,
         pos = lastPos + offset,
         flags = flags,
         msg = msg,
-        selected = flags&1 == 1,
-        status = msg:byte(1)>>4,
     }
-    if msg:len() == 3 then
-        event.pitch = msg:byte(2)
-    end
     table.insert(events, event)
 
-    if event.status == EVENT_NOTE_START then
-        noteStartEventAtPitch[event.pitch] = event
-    elseif event.status == EVENT_NOTE_END then
-        local start = noteStartEventAtPitch[event.pitch]
+    local status = getEventType(event)
+    if status == EVENT_NOTE_START then
+        noteStartEventAtPitch[getEventPitch(event)] = event
+    elseif status == EVENT_NOTE_END then
+        local start = noteStartEventAtPitch[getEventPitch(event)]
+        if start == nil then error("音符有重叠无法解析") end
         local groupPos = reaper.MIDI_GetPPQPos_StartOfMeasure(take, start.pos)
         if not groupEventPairs[groupPos] then groupEventPairs[groupPos] = {} end
-        if event.selected then
+        if getEventSelected(event) then
             table.insert(groupEventPairs[groupPos], {
                 first = start, 
                 second = event,
-                articulation = articulationEventAtPitch[event.pitch],
-                pitch = start.pitch
+                articulation = articulationEventAtPitch[getEventPitch(event)],
+                pitch = getEventPitch(start)
             })
         end
-        noteStartEventAtPitch[event.pitch] = nil
-        articulationEventAtPitch[event.pitch] = nil
-    elseif event.status == EVENT_ARTICULATION then
-        local chan, pitch = msg:match("NOTE (%d+) (%d+) ")
-        articulationEventAtPitch[tonumber(pitch)] = event
+        noteStartEventAtPitch[getEventPitch(event)] = nil
+        articulationEventAtPitch[getEventPitch(event)] = nil
+    elseif status == EVENT_ARTICULATION then
+        if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
+            -- text event
+        else
+            local chan, pitch = msg:match("NOTE (%d+) (%d+) ")
+            articulationEventAtPitch[tonumber(pitch)] = event
+        end
     end
 
     ::continue::
     lastPos = lastPos + offset
 end
-
--- Msg("events num:" .. #events)
 
 function move(eventPairs, up)
     if up == nil then
@@ -158,7 +124,7 @@ function move(eventPairs, up)
             end
         end
     end
-    if #pitchs == 1 then return end       -- 只有一种音高则不处理
+    if #pitchs == 1 then return end -- 只有一种音高则不处理
 
     -- for tone, num in pairs(toneNum) do
     --     Msg("tone " .. tone .. " " .. num)
@@ -168,7 +134,7 @@ function move(eventPairs, up)
     --     Msg("pitch " .. i .. " " .. pitch .. " tone " .. pitch % 12)
     -- end
 
-    local overlayTone       -- 决定最后叠在顶部或底部音符的音调
+    local overlayTone -- 决定最后叠在顶部或底部音符的音调
     if toneNum[pitchs[1] % 12] == 1 then
         overlayTone = pitchs[1] % 12
         -- Msg("use Bottom")
@@ -198,12 +164,12 @@ function move(eventPairs, up)
     local topPitch=pitchs[#pitchs]
     local overlayPitch = overlayTone
     if up then
-        repeat overlayPitch = overlayPitch + 12 until overlayPitch > topPitch --重复将被叠加的音符的音高+12，直到这个音高比原来顶部的音高要大
-        if overlayPitch > 127 then return end --如果将被叠加的音高大于127，则直接返回，不再继续进行处理
+        repeat overlayPitch = overlayPitch + 12 until overlayPitch > topPitch -- 重复将被叠加的音符的音高+12，直到这个音高比原来顶部的音高要大
+        if overlayPitch > 127 then return end -- 如果将被叠加的音高大于127，则直接返回，不再继续进行处理
     else 
         overlayPitch = overlayPitch + 132
         repeat overlayPitch = overlayPitch - 12 until overlayPitch < topPitch --重复将被叠加的音符的音高+12，直到这个音高比原来顶部的音高要大
-        if overlayPitch < 0 then return end --如果将被叠加的音高小于0，则直接返回，不再继续进行处理
+        if overlayPitch < 0 then return end -- 如果将被叠加的音高小于0，则直接返回，不再继续进行处理
     end
 
     local newPitch = {}
@@ -214,8 +180,8 @@ function move(eventPairs, up)
 
     for i, eventPair in ipairs(eventPairs) do
         local p = newPitch[eventPair.pitch]
-        eventPair.first.pitch = p
-        eventPair.second.pitch = p
+        setEventPitch(eventPair.first, p)
+        setEventPitch(eventPair.second, p)
         if eventPair.articulation then
             eventPair.articulation.msg = eventPair.articulation.msg:gsub("(NOTE %d+ )(%d+)", "%1" .. p)
         end

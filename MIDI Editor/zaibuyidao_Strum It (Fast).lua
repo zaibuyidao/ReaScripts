@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Strum It (Fast)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -20,7 +20,6 @@ function Msg(param)
 end
 
 local function getAllNotesQuick()
-    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
     local MIDIlen = MIDIstring:len()
     local result = {}
@@ -28,7 +27,7 @@ local function getAllNotesQuick()
     while stringPos < MIDIlen do
         local offset, flags, msg
         offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-        if msg:len() == 3 then -- 如果 msg 包含 3 个字节
+        -- if msg:len() == 3 then -- 如果 msg 包含 3 个字节
             local selected = flags&1 == 1
             local pitch = msg:byte(2)
             local status = msg:byte(1)>>4
@@ -40,31 +39,21 @@ local function getAllNotesQuick()
                 ["pitch"] = pitch,
                 ["status"] = status,
             })
-        end
+        -- end
     end
     return result
-end
-
-local function setAllEvents(events)
-    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    local tab = {}
-    for _, event in pairs(events) do
-        table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
-    end
-    reaper.MIDI_SetAllEvts(take, table.concat(tab)) -- 将编辑好的MIDI上传到take
 end
 
 local function getGroupPitchEvents()
     local lastPos = 0
     local pitchNotes = {}
-    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
     local MIDIlen = MIDIstring:len()
     local stringPos = 1
     while stringPos < MIDIlen do
         local offset, flags, msg
         offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-        if msg:len() == 3 then -- 如果 msg 包含 3 个字节
+        -- if msg:len() == 3 then -- 如果 msg 包含 3 个字节
             local selected = flags&1 == 1
             local pitch = msg:byte(2)
             local status = msg:byte(1)>>4
@@ -78,9 +67,22 @@ local function getGroupPitchEvents()
                 ["status"] = status,
             })
             lastPos = lastPos + offset
-        end
+        -- end
     end
     return pitchNotes
+end
+
+function CheckSWS()
+    local SWS_installed
+    if not reaper.SN_FocusMIDIEditor then
+        local retval = reaper.ShowMessageBox("此腳本需要 SWS 擴展.\n\n你想現在下載它嗎?", "Warning", 1)
+        if retval == 1 then
+            Open_URL("http://www.sws-extension.org/download/pre-release/")
+        end
+    else
+        SWS_installed = true
+    end
+    return SWS_installed
 end
 
 function table.sortByKey(tab,key,ascend) -- 对于传入的table按照指定的key值进行排序,ascend参数决定是否为升序,默认为true
@@ -98,6 +100,14 @@ if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then notes_selected = true end
 if not notes_selected then return end
 
 sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
+
+local function setAllEvents(events)
+    local tab = {}
+    for _, event in pairs(events) do
+        table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
+    end
+    reaper.MIDI_SetAllEvts(take, table.concat(tab)) -- 将编辑好的MIDI上传到take
+end
 
 local tick = reaper.GetExtState("StrumIt", "Tick")
 if (tick == "") then tick = "4" end
@@ -123,32 +133,31 @@ local stringPos = 1
 while stringPos < MIDIlen do
     local offset, flags, msg
     offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-    if msg:len() == 3 then -- 如果 msg 包含 3 个字节
-        local selected = flags&1 == 1
-        local pitch = msg:byte(2)
-        local status = msg:byte(1)>>4
-        local event = {
-            ["pos"] = lastPos + offset,
-            ["flags"] = flags,
-            ["msg"] = msg,
-            ["selected"] = selected,
-            ["pitch"] = pitch,
-            ["status"] = status,
-        }
-        table.insert(events, event)
 
-        if not event.selected then
-            goto continue
-        end
+    local selected = flags&1 == 1
+    local pitch = msg:byte(2)
+    local status = msg:byte(1)>>4
+    local event = {
+        ["pos"] = lastPos + offset,
+        ["flags"] = flags,
+        ["msg"] = msg,
+        ["selected"] = selected,
+        ["pitch"] = pitch,
+        ["status"] = status,
+    }
+    table.insert(events, event)
 
-        if event.status == 9 then
-            if selectedStartEvents[event.pos] == nil then selectedStartEvents[event.pos] = {} end
-            table.insert(selectedStartEvents[event.pos], event)
-        end
-
-        ::continue::
-        lastPos = lastPos + offset
+    if not event.selected then
+        goto continue
     end
+
+    if event.status == 9 then
+        if selectedStartEvents[event.pos] == nil then selectedStartEvents[event.pos] = {} end
+        table.insert(selectedStartEvents[event.pos], event)
+    end
+
+    ::continue::
+    lastPos = lastPos + offset
 end
 
 local atick = math.abs(tick)
@@ -185,4 +194,6 @@ end
 
 reaper.Undo_EndBlock("Strum It", -1)
 reaper.UpdateArrange()
+
+CheckSWS()
 reaper.SN_FocusMIDIEditor()
