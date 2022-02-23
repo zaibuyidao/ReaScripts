@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Legato (Fast)
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,6 +18,21 @@
 function Msg(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
+
+function CheckSWS()
+    local SWS_installed
+    if not reaper.BR_GetMidiSourceLenPPQ then
+        local retval = reaper.ShowMessageBox("此腳本需要 SWS 擴展, 你想現在下載它嗎?", "Warning", 1)
+        if retval == 1 then
+            Open_URL("http://www.sws-extension.org/download/pre-release/")
+        end
+    else
+        SWS_installed = true
+    end
+    return SWS_installed
+end
+
+CheckSWS()
 
 local function setAllEvents(events)
     local tab = {}

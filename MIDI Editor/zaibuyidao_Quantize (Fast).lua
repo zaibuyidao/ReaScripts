@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Quantize (Fast)
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -23,16 +23,10 @@ function Msg(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-local midiEditor = reaper.MIDIEditor_GetActive()
-take = reaper.MIDIEditor_GetTake(midiEditor)
-if not take or not reaper.TakeIsMIDI(take) then return end
-
-sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-
 function CheckSWS()
     local SWS_installed
-    if not reaper.SN_FocusMIDIEditor then
-        local retval = reaper.ShowMessageBox("此腳本需要 SWS 擴展。\n\n你想現在下載它嗎？", "Warning", 1)
+    if not reaper.BR_GetMidiSourceLenPPQ then
+        local retval = reaper.ShowMessageBox("此腳本需要 SWS 擴展, 你想現在下載它嗎?", "Warning", 1)
         if retval == 1 then
             Open_URL("http://www.sws-extension.org/download/pre-release/")
         end
@@ -41,6 +35,14 @@ function CheckSWS()
     end
     return SWS_installed
 end
+
+local midiEditor = reaper.MIDIEditor_GetActive()
+take = reaper.MIDIEditor_GetTake(midiEditor)
+if not take or not reaper.TakeIsMIDI(take) then return end
+
+CheckSWS()
+
+sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
 
 function setAllEvents(events)
     -- -- 排序事件
@@ -75,7 +77,7 @@ function getEventType(event) return event.msg:byte(1)>>4 end
 function getArticulationInfo(event) return event.msg:match("NOTE (%d+) (%d+) ") end
 function setEventPitch(event, pitch) event.msg = string.pack("BBB", event.msg:byte(1), pitch or event.msg:byte(2), event.msg:byte(3)) end
 
-reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40659)
+reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40659) -- 删除重叠音符
 
 local events = {}
 local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
@@ -139,16 +141,23 @@ if tonumber(swing) == 0 then
     if (gird == "") then gird = "240" end
     toggle = reaper.GetExtState("Quantize", "Toggle")
     if (toggle == "") then toggle = "0" end
+    qntick = reaper.GetExtState("Quantize", "QNTick")
+    if (qntick == "") then qntick = "1" end
 
-    local user_ok, input_cav = reaper.GetUserInputs('Quantize', 2, 'Enter A Tick (0=Grid),0=Default 1=Start 2=End 3=Pos', gird ..','.. toggle)
-    gird, toggle = input_cav:match("(.*),(.*)")
+    local user_ok, input_csv = reaper.GetUserInputs('Quantize', 3, 'Enter A Value (0=Grid),0=Default 1=Start 2=End 3=Pos,QN=0 Tick=1', gird ..','.. toggle ..','.. qntick)
+    gird, toggle, qntick = input_csv:match("(.*),(.*),(.*)")
 
-    if not user_ok or not tonumber(gird) or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
+    if not user_ok or not tonumber(gird) or not tonumber(toggle) or not tonumber(qntick) then return reaper.SN_FocusMIDIEditor() end
     reaper.SetExtState("Quantize", "Grid", gird, false)
     reaper.SetExtState("Quantize", "Toggle", toggle, false)
+    reaper.SetExtState("Quantize", "QNTick", qntick, false)
 
-    gird = gird / tick
-    use_tick = true
+    if qntick == "1" then
+        gird = gird / tick
+        use_tick = true
+    elseif qntick == "0" then
+        use_tick = false
+    end
 
     gird = tonumber(gird)
     if (gird == 0 or gird == -1) then
@@ -444,8 +453,6 @@ if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
     reaper.MIDI_SetAllEvts(take, MIDIstring)
     reaper.ShowMessageBox("腳本造成 All-Note-Off 的位置偏移\n\n已恢復原始數據", "ERROR", 0)
 end
-
-CheckSWS()
 
 reaper.Undo_EndBlock("Quantize (Fast)", -1)
 reaper.UpdateArrange()

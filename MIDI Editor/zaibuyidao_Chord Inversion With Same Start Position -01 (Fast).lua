@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Chord Inversion -01 (Fast)
- * Version: 1.0.3
+ * ReaScript Name: Chord Inversion With Same Start Position -01 (Fast)
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -88,7 +88,8 @@ while stringPos <= MIDIstring:len() do
     elseif status == EVENT_NOTE_END then
         local start = noteStartEventAtPitch[getEventPitch(event)]
         if start == nil then error("音符有重叠无法解析") end
-        local groupPos = reaper.MIDI_GetPPQPos_StartOfMeasure(take, start.pos)
+        -- local groupPos = reaper.MIDI_GetPPQPos_StartOfMeasure(take, start.pos) -- 每个小节起始位置
+        local groupPos = start.pos
         if not groupEventPairs[groupPos] then groupEventPairs[groupPos] = {} end
         if getEventSelected(event) then
             table.insert(groupEventPairs[groupPos], {
@@ -214,5 +215,5 @@ if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
     reaper.ShowMessageBox("腳本造成 All-Notes-Off 的位置偏移\n\n已恢複原始數據", "ERROR", 0)
 end
 
-reaper.Undo_EndBlock("Chord Inversion -01 (Fast)", -1)
+reaper.Undo_EndBlock("Chord Inversion With Same Start Position -01 (Fast)", -1)
 reaper.UpdateArrange()

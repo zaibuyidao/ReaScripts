@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Strum It (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -74,8 +74,8 @@ end
 
 function CheckSWS()
     local SWS_installed
-    if not reaper.SN_FocusMIDIEditor then
-        local retval = reaper.ShowMessageBox("此腳本需要 SWS 擴展.\n\n你想現在下載它嗎?", "Warning", 1)
+    if not reaper.BR_GetMidiSourceLenPPQ then
+        local retval = reaper.ShowMessageBox("此腳本需要 SWS 擴展, 你想現在下載它嗎?", "Warning", 1)
         if retval == 1 then
             Open_URL("http://www.sws-extension.org/download/pre-release/")
         end
@@ -84,6 +84,8 @@ function CheckSWS()
     end
     return SWS_installed
 end
+
+CheckSWS()
 
 function table.sortByKey(tab,key,ascend) -- 对于传入的table按照指定的key值进行排序,ascend参数决定是否为升序,默认为true
     direct=direct or true
@@ -194,6 +196,4 @@ end
 
 reaper.Undo_EndBlock("Strum It", -1)
 reaper.UpdateArrange()
-
-CheckSWS()
 reaper.SN_FocusMIDIEditor()

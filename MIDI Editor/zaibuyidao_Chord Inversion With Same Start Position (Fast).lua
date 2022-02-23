@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Chord Inversion (Fast)
- * Version: 1.0.2
+ * ReaScript Name: Chord Inversion With Same Start Position (Fast)
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -153,11 +153,11 @@ function move(eventPairs, up)
 end
 
 function chordInversion()
-    local times = reaper.GetExtState("ChordInversion", "Times")
+    local times = reaper.GetExtState("ChordInversionWithSameStartPosition", "Times")
     if (times == "") then times = "1" end
-    times = getInput("Chord Inversion", "Times", times) --获得翻转次数
+    times = getInput("Chord Inversion", "Times", times) -- 获得翻转次数
     if times == nil then return end
-    reaper.SetExtState("ChordInversion", "Times", times, false)
+    reaper.SetExtState("ChordInversionWithSameStartPosition", "Times", times, false)
     times = tonumber(times) --将文本型的次数转换为整数型的次数
     if times == nil then return end
 
@@ -194,7 +194,8 @@ function chordInversion()
             elseif status == EVENT_NOTE_END then
                 local start = noteStartEventAtPitch[getEventPitch(event)]
                 if start == nil then error("音符有重叠无法解析") end
-                local groupPos = reaper.MIDI_GetPPQPos_StartOfMeasure(take, start.pos)
+                -- local groupPos = reaper.MIDI_GetPPQPos_StartOfMeasure(take, start.pos) -- 每个小节起始位置
+                local groupPos = start.pos
                 if not groupEventPairs[groupPos] then groupEventPairs[groupPos] = {} end
                 if getEventSelected(event) then
                     table.insert(groupEventPairs[groupPos], {
@@ -254,7 +255,7 @@ function main()
         chordInversion()
     end
 
-    reaper.Undo_EndBlock("Chord Inversion (Fast)", -1)
+    reaper.Undo_EndBlock("Chord Inversion With Same Start Position (Fast)", -1)
     reaper.UpdateArrange()
     reaper.SN_FocusMIDIEditor()
 end

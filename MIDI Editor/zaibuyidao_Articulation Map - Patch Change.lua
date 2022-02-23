@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -44,7 +44,7 @@ function main()
   local Tick = reaper.GetExtState("ArticulationMap", "Tick")
   if (Tick == "") then Tick = "-10" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Patch Change", 4, "Instrument Group 樂器組,Velocity 力度,Note 音符,Offset 偏移", MSB ..','.. LSB ..','.. PC ..','.. Tick)
+  local user_ok, user_input_csv = reaper.GetUserInputs("Patch Change", 4, "Instrument Group,Velocity,Note,Offset", MSB ..','.. LSB ..','.. PC ..','.. Tick)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   local MSB, LSB, PC, Tick = user_input_csv:match("(.*),(.*),(.*),(.*)")
   if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) or not tonumber(Tick) then return reaper.SN_FocusMIDIEditor() end
