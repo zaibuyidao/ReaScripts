@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fd93b38d2c0c03329f775d43474941944f6018c5">
+<index version="1" name="zaibuyidao Scripts" commit="5c764be4c5253cb8992032ed9848e92b4a2fcb76">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -42,6 +42,10 @@
       </version>
       <version name="1.4.1" author="zaibuyidao" time="2021-12-09T14:34:42Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9339fd4fe37b79368ee784e424f3c11a6c56b41/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
+      </version>
+      <version name="1.4.2" author="zaibuyidao" time="2022-03-20T14:59:33Z">
+        <changelog><![CDATA[+ 優化匹配功能，優化查找/替換功能。]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Item Length.lua" type="script" desc="Copy Item Length">
@@ -478,6 +482,15 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/eef140ba21e17105c106df886864e71871e31c12/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track-Item.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Show List Of Selected Items.lua" type="script" desc="Show List Of Selected Items">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-03-20T14:59:33Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Items%20Editing/zaibuyidao_Show%20List%20Of%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -818,6 +831,10 @@
       <version name="1.2.3" author="zaibuyidao" time="2021-12-09T14:34:42Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9339fd4fe37b79368ee784e424f3c11a6c56b41/Markers/zaibuyidao_Batch%20Rename%20Marker%20Manager.lua</source>
       </version>
+      <version name="1.2.4" author="zaibuyidao" time="2022-03-20T14:59:33Z">
+        <changelog><![CDATA[+ 修復部分marker無法匹配問題，同時優化查找/替換功能。]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Markers/zaibuyidao_Batch%20Rename%20Marker%20Manager.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Marker Within Time Selection.lua" type="script" desc="Batch Rename Marker Within Time Selection">
       <metadata>
@@ -832,6 +849,10 @@
       </version>
       <version name="1.1.1" author="zaibuyidao" time="2021-12-09T14:34:42Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9339fd4fe37b79368ee784e424f3c11a6c56b41/Markers/zaibuyidao_Batch%20Rename%20Marker%20Within%20Time%20Selection.lua</source>
+      </version>
+      <version name="1.1.2" author="zaibuyidao" time="2022-03-20T14:59:33Z">
+        <changelog><![CDATA[+ 修復部分marker無法匹配問題，同時優化查找/替換功能。]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Markers/zaibuyidao_Batch%20Rename%20Marker%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Delete Marker Within Time Selection.lua" type="script" desc="Delete Marker Within Time Selection">
@@ -4088,6 +4109,10 @@
       <version name="1.7.3" author="zaibuyidao" time="2021-12-09T14:34:42Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9339fd4fe37b79368ee784e424f3c11a6c56b41/Regions/zaibuyidao_Batch%20Rename%20Region%20Manager.lua</source>
       </version>
+      <version name="1.7.4" author="zaibuyidao" time="2022-03-20T14:59:33Z">
+        <changelog><![CDATA[+ 修復部分region無法匹配問題，同時優化查找/替換功能。]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Regions/zaibuyidao_Batch%20Rename%20Region%20Manager.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Region Within Time Selection.lua" type="script" desc="Batch Rename Region Within Time Selection">
       <metadata>
@@ -4102,6 +4127,10 @@
       </version>
       <version name="1.1.1" author="zaibuyidao" time="2021-12-09T14:34:42Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9339fd4fe37b79368ee784e424f3c11a6c56b41/Regions/zaibuyidao_Batch%20Rename%20Region%20Within%20Time%20Selection.lua</source>
+      </version>
+      <version name="1.1.2" author="zaibuyidao" time="2022-03-20T14:59:33Z">
+        <changelog><![CDATA[+ 修復部分region無法匹配問題，同時優化查找/替換功能。]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Regions/zaibuyidao_Batch%20Rename%20Region%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Region.lua" type="script" desc="Batch Rename Region">
@@ -4139,6 +4168,10 @@
       </version>
       <version name="1.4.1" author="zaibuyidao" time="2021-12-09T14:34:42Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9339fd4fe37b79368ee784e424f3c11a6c56b41/Regions/zaibuyidao_Batch%20Rename%20Region.lua</source>
+      </version>
+      <version name="1.4.2" author="zaibuyidao" time="2022-03-20T14:59:33Z">
+        <changelog><![CDATA[+ 修復部分region無法匹配問題，同時優化查找/替換功能。]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Regions/zaibuyidao_Batch%20Rename%20Region.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Delete Region Within Time Selection.lua" type="script" desc="Delete Region Within Time Selection">
@@ -4256,6 +4289,10 @@
       </version>
       <version name="1.1.1" author="zaibuyidao" time="2021-12-09T14:34:42Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9339fd4fe37b79368ee784e424f3c11a6c56b41/Tracks%20Properties/zaibuyidao_Batch%20Rename%20Track.lua</source>
+      </version>
+      <version name="1.1.2" author="zaibuyidao" time="2022-03-20T14:59:33Z">
+        <changelog><![CDATA[+ 優化匹配功能，優化查找/替換功能。]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Tracks%20Properties/zaibuyidao_Batch%20Rename%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Link Selected Track FX Parameter (For Selected FX).lua" type="script" desc="Link Selected Track FX Parameter (For Selected FX)">
