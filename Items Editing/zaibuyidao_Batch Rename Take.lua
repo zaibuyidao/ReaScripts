@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Take
- * Version: 1.4.3
+ * Version: 1.4.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -262,41 +262,57 @@ for i = 0, count_sel_items - 1  do
       set_take_name(take, take_name, z)
     end
   elseif order == "2" then -- 按時間綫順序排序
-    local item, item_pos, item_take, list = {}, {}, {}, {}
-
+    local startEvents = {}
     for i = 0, count_sel_items - 1 do
-      item[i] = reaper.GetSelectedMediaItem(0, i)
-      item_take[i] = reaper.GetActiveTake(item[i])
-      item_pos[i] = reaper.GetMediaItemInfo_Value(item[i], "D_POSITION")
-    end
-    
-    for pos, v in pairs(item_pos) do
-      list[#list+1] = pos
-    end
-    
-    local function byval(a,b)
-      return item_pos[a] < item_pos[b]
+      local item = reaper.GetSelectedMediaItem(0, i)
+      local track = reaper.GetMediaItem_Track(item)
+      local pitch = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
+      local startPos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+      local take = reaper.GetActiveTake(item)
+      local takeName = reaper.GetTakeName(take)
+      if startEvents[startPos] == nil then startEvents[startPos] = {} end
+      local event = {
+        ["startPos"]=startPos,
+        ["pitch"]=pitch,
+        ["takeName"]=takeName,
+        ["item"]=item
+      }
+      
+      table.insert(startEvents[startPos], event)
     end
 
-    table.sort(list, byval)
-    
-    for k = 1, #list do
-      -- Msg(k-1 ..": "..list[k] .. " - " .. item_pos[list[k]])
-      track = reaper.GetMediaItem_Track(item[list[k]])
-      track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
-      track_num = string.format("%0" .. 2 .. "d", track_num)
-      _, track_name = reaper.GetTrackName(track)
-      if parent_track ~= nil then
-        _, parent_buf = reaper.GetTrackName(parent_track)
-      else
-        parent_buf = ''
+    local tempEvents = {}
+    for i in pairs(startEvents) do
+      table.insert(tempEvents,i)  
+    end
+    table.sort(tempEvents,function(a,b)return (tonumber(a) < tonumber(b)) end) -- 對key進行升序
+
+    local result = {}
+    for i,v in pairs(tempEvents) do
+      table.insert(result,startEvents[v])
+    end
+
+    j = 0
+    for _, list in pairs(result) do
+      for i = 1, #list do
+        j = j + 1
+        track = reaper.GetMediaItem_Track(list[i].item)
+        track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
+        track_num = string.format("%0" .. 2 .. "d", track_num)
+        _, track_name = reaper.GetTrackName(track)
+        if parent_track ~= nil then
+          _, parent_buf = reaper.GetTrackName(parent_track)
+        else
+          parent_buf = ''
+        end
+
+        take = reaper.GetActiveTake(list[i].item)
+        take_name = reaper.GetTakeName(take)
+        take_guid = reaper.BR_GetMediaItemTakeGUID(take)
+        origin_name = reaper.GetTakeName(take)
+
+        set_take_name(take, take_name, j - 1)
       end
-
-      take_name = reaper.GetTakeName(item_take[list[k]])
-      take_guid = reaper.BR_GetMediaItemTakeGUID(item_take[list[k]])
-      origin_name = reaper.GetTakeName(item_take[list[k]])
-
-      set_take_name(item_take[list[k]], take_name, k-1)
     end
   end
 end
