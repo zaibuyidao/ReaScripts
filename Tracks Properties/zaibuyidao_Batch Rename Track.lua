@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Track
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -205,9 +205,8 @@ for i = 0, count_sel_tracks - 1 do -- 遍歷選中軌道
 
   track_name = utf8_sub1(track_name, begin_str, end_str)
   track_name = utf8_sub2(track_name, 0, position) .. insert .. utf8_sub3(track_name, position + delete)
-
-  track_name = string.gsub(track_name, find, replace)
-
+  if find ~= "" then track_name = string.gsub(track_name, find, replace) end
+  
   if insert ~= '' then -- 指定位置插入内容
     track_name = build_name(track_name, origin_name, i + 1)
   end

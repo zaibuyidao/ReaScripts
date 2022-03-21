@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Take
- * Version: 1.4.2
+ * Version: 1.4.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -96,7 +96,7 @@ local show_msg = reaper.GetExtState("BatchRenameTake", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
-  script_name = "批量重命名片段" text = "$takename: 片段名稱\n$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: Take guid\nv=01: Take count 片段計數\nv=01-05 or v=05-01: Loop take count 循環片段計數\na=a: Letter count 字母計數\na=a-e or a=e-a: Loop letter count 循環字母範圍\n\nScript function description:\n脚本功能説明：\n\n1.Rename only\nRename 重命名\n\n2.String interception\nFrom beginning 截取開頭\nFrom end 截取結尾\n\n3.Specify position, insert or remove\nAt position 指定位置\nTo insert 插入\nRemove 移除\n\n4.Find and Replace\nFind what 查找\nReplace with 替換\n\nFind supports two pattern modifiers: * and ?\n查找支持两個模式修飾符：* 和 ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n\n6.Order\nDetermine Takes order. Enter 0 to Track, 1 to Wrap, 2 to Timeline\n確定片段順序。輸入0為軌道，1為換行，2為時間綫\n"
+  script_name = "批量重命名片段" text = "$takename: 片段名稱\n$trackname: 軌道名稱\n$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: Take guid\nv=01: Take count 片段計數\nv=01-05 or v=05-01: Loop take count 循環片段計數\na=a: Letter count 字母計數\na=a-e or a=e-a: Loop letter count 循環字母範圍\n\nScript function description:\n脚本功能説明：\n\n1.Rename only\nRename 重命名\n\n2.String interception\nFrom beginning 截取開頭\nFrom end 截取結尾\n\n3.Specify position, insert or remove\nAt position 指定位置\nTo insert 插入\nRemove 移除\n\n4.Find and Replace\nFind what 查找\nReplace with 替換\n\nFind supports two pattern modifiers: * and ?\n查找支持两個模式修飾符：* 和 ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n\n6.Take order\nDetermine Takes order. Enter 0 to Track, 1 to Wrap, 2 to Timeline\n確定片段順序。輸入0為軌道，1為換行，2為時間綫\n"
   text = text.."\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
   local box_ok = reaper.ShowMessageBox("Wildcards 通配符 :\n\n"..text, script_name, 4)
 
@@ -114,7 +114,7 @@ reaper.Undo_BeginBlock()
 
 local pattern, begin_str, end_str, position, insert, delete, find, replace, reverse, order = '', '0', '0', '0', '', '0', '', '', '1', '0'
 
-local retval, retvals_csv = reaper.GetUserInputs("Batch Rename Take", 10, "Rename 重命名,From beginning 截取開頭,From end 截取結尾,At position 指定位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,Loop count 循環計數,Take Order 片段排序,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse ..','.. order)
+local retval, retvals_csv = reaper.GetUserInputs("Batch Rename Take", 10, "Rename 重命名,From beginning 截取開頭,From end 截取結尾,At position 指定位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,Loop count 循環計數,Take order 片段排序,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse ..','.. order)
 if not retval then return end
 
 pattern, begin_str, end_str, position, insert, delete, find, replace, reverse, order = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
@@ -190,8 +190,8 @@ function set_take_name(take, take_name, i)
   
   take_name = utf8_sub1(take_name, begin_str, end_str)
   take_name = utf8_sub2(take_name, 0, position) .. insert .. utf8_sub3(take_name, position + delete)
-  take_name = string.gsub(take_name, find, replace)
-  
+  if find ~= "" then take_name = string.gsub(take_name, find, replace) end
+
   if insert ~= '' then -- 指定位置插入内容
     take_name = build_name(take_name, origin_name, i + 1)
   end
@@ -202,14 +202,7 @@ end
 for i = 0, count_sel_items - 1  do
   local item = reaper.GetSelectedMediaItem(0, i)
   local track = reaper.GetMediaItem_Track(item)
-  count_track_items = reaper.CountTrackMediaItems(track)
-  _, track_name = reaper.GetTrackName(track)
-  parent_track = reaper.GetParentTrack(track)
-  if parent_track ~= nil then
-    _, parent_buf = reaper.GetTrackName(parent_track)
-  else
-    parent_buf = ''
-  end
+  local count_track_items = reaper.CountTrackMediaItems(track)
 
   track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
   track_num = string.format("%0" .. 2 .. "d", track_num)
@@ -230,6 +223,16 @@ for i = 0, count_sel_items - 1  do
 
     for k = 1, item_num_order - 1 do -- 按軌道順序排序
       item = sel_item_track[k]
+      track = reaper.GetMediaItem_Track(item)
+      track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
+      track_num = string.format("%0" .. 2 .. "d", track_num)
+      _, track_name = reaper.GetTrackName(track)
+      if parent_track ~= nil then
+        _, parent_buf = reaper.GetTrackName(parent_track)
+      else
+        parent_buf = ''
+      end
+
       take = reaper.GetActiveTake(item)
       take_name = reaper.GetTakeName(take)
       take_guid = reaper.BR_GetMediaItemTakeGUID(take)
@@ -241,6 +244,16 @@ for i = 0, count_sel_items - 1  do
   elseif order == "1" then
     for z = 0, count_sel_items - 1 do -- 按換行順序排序
       item = reaper.GetSelectedMediaItem(0, z)
+      track = reaper.GetMediaItem_Track(item)
+      track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
+      track_num = string.format("%0" .. 2 .. "d", track_num)
+      _, track_name = reaper.GetTrackName(track)
+      if parent_track ~= nil then
+        _, parent_buf = reaper.GetTrackName(parent_track)
+      else
+        parent_buf = ''
+      end
+
       take = reaper.GetActiveTake(item)
       take_name = reaper.GetTakeName(take)
       take_guid = reaper.BR_GetMediaItemTakeGUID(take)
@@ -269,6 +282,16 @@ for i = 0, count_sel_items - 1  do
     
     for k = 1, #list do
       -- Msg(k-1 ..": "..list[k] .. " - " .. item_pos[list[k]])
+      track = reaper.GetMediaItem_Track(item[list[k]])
+      track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
+      track_num = string.format("%0" .. 2 .. "d", track_num)
+      _, track_name = reaper.GetTrackName(track)
+      if parent_track ~= nil then
+        _, parent_buf = reaper.GetTrackName(parent_track)
+      else
+        parent_buf = ''
+      end
+
       take_name = reaper.GetTakeName(item_take[list[k]])
       take_guid = reaper.BR_GetMediaItemTakeGUID(item_take[list[k]])
       origin_name = reaper.GetTakeName(item_take[list[k]])

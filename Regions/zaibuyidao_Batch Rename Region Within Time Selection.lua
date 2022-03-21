@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region Within Time Selection
- * Version: 1.1.2
+ * Version: 1.1.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -268,8 +268,7 @@ for i, region in ipairs(sel_regions) do
     
       region.name = utf8_sub1(region.name, begin_str, end_str)
       region.name = utf8_sub2(region.name, 0, position) .. insert .. utf8_sub3(region.name, position + delete)
-    
-      region.name = string.gsub(region.name, find, replace)
+      if find ~= "" then region.name = string.gsub(region.name, find, replace) end
     
       if insert ~= '' then -- 指定位置插入内容
         region.name = build_name(region.name, origin_name, #j)
