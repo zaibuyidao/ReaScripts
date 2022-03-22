@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region
- * Version: 1.4.3
+ * Version: 1.4.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -108,6 +108,7 @@ function get_all_regions()
         name = name,
         color = color
       })
+    end
   end
   return result
 end
