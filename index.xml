@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6a967b0f25c4c747e0589ed75bb9822115224ab5">
+<index version="1" name="zaibuyidao Scripts" commit="f9be32e192f147903f59cf3d05652951e11c91b5">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -495,6 +495,15 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/eef140ba21e17105c106df886864e71871e31c12/Items%20Editing/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track-Item.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Show List Of Selected Items And Regions.lua" type="script" desc="Show List Of Selected Items And Regions">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-03-22T15:51:08Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9be32e192f147903f59cf3d05652951e11c91b5/Items%20Editing/zaibuyidao_Show%20List%20Of%20Selected%20Items%20And%20Regions.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Show List Of Selected Items.lua" type="script" desc="Show List Of Selected Items">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -502,6 +511,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-03-20T14:59:33Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c764be4c5253cb8992032ed9848e92b4a2fcb76/Items%20Editing/zaibuyidao_Show%20List%20Of%20Selected%20Items.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-03-22T15:51:08Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9be32e192f147903f59cf3d05652951e11c91b5/Items%20Editing/zaibuyidao_Show%20List%20Of%20Selected%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released)">
@@ -4201,6 +4213,9 @@
       <version name="1.4.3" author="zaibuyidao" time="2022-03-21T15:01:30Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1ee64529a2da0b65a5c88748872fa3990082f46c/Regions/zaibuyidao_Batch%20Rename%20Region.lua</source>
       </version>
+      <version name="1.4.4" author="zaibuyidao" time="2022-03-22T15:51:08Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9be32e192f147903f59cf3d05652951e11c91b5/Regions/zaibuyidao_Batch%20Rename%20Region.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Delete Region Within Time Selection.lua" type="script" desc="Delete Region Within Time Selection">
       <metadata>
@@ -4286,6 +4301,10 @@
       <version name="1.4" author="zaibuyidao" time="2021-07-18T09:12:55Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/38441ae237b19be1b5b844ffc4961edbf11e8f51/Regions/zaibuyidao_Set%20Region%20Name.lua</source>
       </version>
+      <version name="1.4.1" author="zaibuyidao" time="2022-03-22T15:51:08Z">
+        <changelog><![CDATA[+ 新增通配符功能，優化查找/替換功能。]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9be32e192f147903f59cf3d05652951e11c91b5/Regions/zaibuyidao_Set%20Region%20Name.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Set Region Tail.lua" type="script" desc="Set Region Tail">
       <metadata>
@@ -4294,6 +4313,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-06-10T17:20:11Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e41fcc8cf742d9caf17816d018f38a4984af7ed9/Regions/zaibuyidao_Set%20Region%20Tail.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-03-22T15:51:08Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9be32e192f147903f59cf3d05652951e11c91b5/Regions/zaibuyidao_Set%20Region%20Tail.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Selected Items To Region Color.lua" type="script" desc="Set Selected Items To Region Color">
