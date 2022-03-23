@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set Region Name
- * Version: 1.4.1
+ * Version: 1.4.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -17,24 +17,8 @@
   + Initial release
 --]]
 
-local bias = 0.002 -- 补偿偏差值
-
 function Msg(param) 
   reaper.ShowConsoleMsg(tostring(param) .. "\n") 
-end
-
-function chsize(char)
-  if not char then
-    return 0
-  elseif char > 240 then
-    return 4
-  elseif char > 225 then
-    return 3
-  elseif char > 192 then
-    return 2
-  else
-    return 1
-  end
 end
 
 function utf8_len(str)
@@ -114,8 +98,6 @@ function get_all_regions()
 end
 
 function get_sel_regions()
-  local all_regions = get_all_regions()
-  if #all_regions == 0 then return {} end
   local sel_index = {}
   local item_count = reaper.CountSelectedMediaItems(0)
   if item_count == 0 then return {} end
@@ -153,37 +135,12 @@ function get_sel_regions()
     end
   end
   table.insert(merged_items, cur)
+  return merged_items
+end
 
-  -- 标记选中区间
-  for _, merged_item in ipairs(merged_items) do
-    local l, r = 1, #all_regions
-    -- 查找第一个左端点在item左侧的区间
-    while l <= r do
-      local mid = math.floor((l+r)/2)
-      if (all_regions[mid].left - bias) > merged_item.left then
-        r = mid - 1
-      else 
-        l = mid + 1
-      end
-    end
-
-    if math.abs( (merged_item.right - merged_item.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
-      sel_index[r] = true
-    end
-
-    -- if merged_item.right <= all_regions[r].right + bias then
-    --   sel_index[r] = true
-    -- end
-  end
-
-  -- 处理结果
-  local result = {}
-  local indexs = {}
-  for k, _ in pairs(sel_index) do table.insert(indexs, k) end
-  table.sort(indexs)
-  for _, v in ipairs(indexs) do table.insert(result, all_regions[v]) end
-
-  return result
+function create_region(reg_start, reg_end, name)
+  if name == nil then return end
+  local index = reaper.AddProjectMarker2(0, true, reg_start, reg_end, name, -1, 0)
 end
 
 function set_region(region)
@@ -203,8 +160,8 @@ if show_msg == "true" then
     local box_ok = reaper.ShowMessageBox("Wildcards 通配符:\n\n"..text, script_name, 4)
 
     if box_ok == 7 then
-        show_msg = "false"
-        reaper.SetExtState("SetRegionName", "ShowMsg", show_msg, true)
+      show_msg = "false"
+      reaper.SetExtState("SetRegionName", "ShowMsg", show_msg, true)
     end
 end
 
@@ -278,7 +235,7 @@ end
 
 for i,region in ipairs(sel_regions) do
   region.name = build_name(pattern, i)
-  set_region(region)
+  create_region(region.left, region.right, region.name)
 end
 
 reaper.Undo_EndBlock('Set Region Name', -1)
