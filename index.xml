@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="889cde2ca704c3344ec703673584593ef3cfdbc0">
+<index version="1" name="zaibuyidao Scripts" commit="902d620614b7ea5774a0d243346b139f47cdac1f">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -1369,6 +1369,9 @@
       <version name="1.0.1" author="zaibuyidao" time="2021-08-13T15:47:54Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/39d21f6f5636881fb9b439d24e28bae3160e83aa/MIDI%20Editor/zaibuyidao_Duplicate%20CC%20(For%20Selected%20CC).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-03-26T13:47:50Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/902d620614b7ea5774a0d243346b139f47cdac1f/MIDI%20Editor/zaibuyidao_Duplicate%20CC%20(For%20Selected%20CC).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate CC.lua" type="script" desc="Duplicate CC">
       <metadata>
@@ -1380,6 +1383,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-08-13T15:47:54Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/39d21f6f5636881fb9b439d24e28bae3160e83aa/MIDI%20Editor/zaibuyidao_Duplicate%20CC.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-03-26T13:47:50Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/902d620614b7ea5774a0d243346b139f47cdac1f/MIDI%20Editor/zaibuyidao_Duplicate%20CC.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events To Edit Cursor (Multitrack).lua" type="script" desc="Duplicate Events To Edit Cursor (Multitrack)">
