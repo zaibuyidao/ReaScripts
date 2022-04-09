@@ -1,0 +1,77 @@
+Data file description:
+UCS_List.csv file: script preset categories (based on official UCS documentation, will be updated from time to time)
+UCS_List_custom.csv file: user-defined categories
+
+Description of csv file format:
+Need to change all Chinese commas, periods to English commas
+Need to change the file encoding to UTF8 encoding
+
+Run method:
+zaibuyidao_USC Tags Search.lua is the entry file, just find the script in the action list and run it
+
+Shortcut key description:
+Click on a list item to refresh the secondary list, or double-click on a category item to refresh the keywords for that category.
+Double left click: add the list item to the search box (add CatID if CatID is active)
+Hold ALT and click on the search box or filter box (or right-click): empty the content
+Ctrl+double-click on search box or filter box: copy search box and filter box terms
+Shift+left-click: Perform search
+Ctrl+Enter : Filter button
+F5：Clear button
+Enter : SEARCH button
+
+Known issues:
+The filter box will be garbled when entering Chinese
+
+Translated with www.DeepL.com/Translator (free version)
+
+--
+
+数据文件说明：
+UCS_List.csv文件：脚本预置分类（基于官方UCS文档，将不定期更新）
+UCS_List_custom.csv文件：用户自定义分类
+
+csv文件格式说明：
+需要将所有的中文逗号，顿号改为英文逗号
+需要将文件编码改为UTF8编码
+
+运行方法：
+zaibuyidao_USC Tags Search.lua为入口文件，在动作列表找到该脚本运行即可
+
+快捷键说明：
+单击列表项：刷新二级列表，如双击分类项则刷新该分类项的关键词
+左键双击：将列表项内容添加至搜索框（激活CatID则添加CatID）
+按住ALT点击搜索框或过滤框（或右键单击）：清空内容
+Ctrl+双击搜索框或过滤框：复制搜索框和过滤框的词汇
+Shift+左键单击：执行搜索
+Ctrl+Enter ：Filter按钮
+F5：Clear按钮
+Enter：SEARCH按钮
+
+已知问题：
+过滤框输入中文会乱码
+
+--
+
+資料檔案說明：
+UCS_List.csv文件：文稿預置分類（基於官方UCS文檔，將不定期更新）
+UCS_List_custom.csv檔：使用者自定義分類
+
+csv檔案格式說明：
+需要將所有的中文逗號，頓號改為英文逗號
+需要將文件編碼改為UTF8編碼
+
+執行方法：
+zaibuyidao_USC Tags Search.lua為入口檔，在動作清單找到該腳本運行即可
+
+快速鍵說明：
+按一下清單項：刷新二級清單，如按兩下分類項則刷新該分類項的關鍵詞
+左鍵按下：將清單項內容加入至搜尋框（啟動CatID則添加CatID）
+按住ALT點擊搜索框或過濾框（或右鍵按一下）：清空內容
+Ctrl+按兩下搜尋框或過濾框：複製搜尋框和過濾框的詞彙
+Shift+左鍵按一下：執行搜索
+Ctrl+Enter ：Filter按鈕
+F5：Clear按鈕
+Enter：SEARCH按鈕
+
+已知問題：
+過濾框輸入中文會亂碼
