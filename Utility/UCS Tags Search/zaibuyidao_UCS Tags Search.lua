@@ -1,5 +1,5 @@
 -- @description UCS Tags Search
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -11,7 +11,6 @@
 --   [nomain] lib/utils.lua
 --   UCS_list.csv
 --   UCS_list_custom.csv
---   description.txt
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI
 
