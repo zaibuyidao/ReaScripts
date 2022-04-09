@@ -1,5 +1,5 @@
 -- @description UCS Tags Search
--- @version 1.0.2
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -63,10 +63,10 @@ end
 function reload_usc_data()
     full_usc_data = {}
     if should_load_system_usc_data() then
-        usc.read_from_csv(base_path .. "UCS_List.csv", full_usc_data)
+        usc.read_from_csv(base_path .. "UCS_list.csv", full_usc_data)
     end
     if should_load_user_usc_data() then
-        usc.read_from_csv(base_path .. "UCS_List_custom.csv", full_usc_data)
+        usc.read_from_csv(base_path .. "UCS_list_custom.csv", full_usc_data)
     end
 end
 
@@ -378,6 +378,27 @@ else
     end
 end
 
+local fonts = GUI.get_OS_fonts()
+GUI.fonts.monospace = {fonts.mono, 14}
+GUI.fonts[4] = {fonts.sans, 16}
+GUI.fonts[3] = {fonts.sans, 16}
+GUI.fonts.version = {fonts.sans, 12, "i"}
+GUI.colors.white = {225, 225, 225, 255} -- set gui.lua [color = "white"]
+GUI.Draw_Version = function ()
+    --GUI.version = nil -- GUI版本显示
+    if not GUI.version then return 0 end
+    --local str = "Lokasenna_GUI "..GUI.version
+    local str = "Script by 再補一刀  -  using Lokasenna_GUI " .. GUI.version
+    GUI.font("version")
+    GUI.color("txt")
+    local str_w, str_h = gfx.measurestr(str)
+    -- gfx.x = gfx.w/2 - str_w/2
+    -- gfx.y = gfx.h - str_h - 4
+    gfx.x = gfx.w - str_w - 6
+    gfx.y = gfx.h - str_h - 4
+    gfx.drawstr(str)
+end
+
 GUI.elms.check_cat:val({[1] = false, [2] = true, [3] = true})
 switch_lang(1)
 
@@ -438,5 +459,12 @@ function GUI.func()
         update_usc_data()
     end
 end
+
+-- local function force_size()
+--     gfx.quit()
+--     gfx.init(GUI.name, GUI.w, GUI.h, GUI.dock, GUI.x, GUI.y)
+--     GUI.cur_w, GUI.cur_h = GUI.w, GUI.h
+-- end
+-- GUI.onresize = force_size
 
 GUI.Main()

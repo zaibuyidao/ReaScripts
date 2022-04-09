@@ -18,7 +18,7 @@ GUI.req("Classes/Class - Menubox.lua")()
 if missing_lib then return 0 end
 
 GUI.name = "UCS Tags Search"
-GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 752, 448
+GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 752, 456
 GUI.anchor, GUI.corner = "mouse", "C"
 
 GUI.New("edittext_filter", "Textbox", {
@@ -73,7 +73,7 @@ GUI.New("btn_clear", "Button", {
     y = 16,
     w = 96,
     h = 24,
-    caption = "Reset",
+    caption = "Reset all",
     font = 3,
     col_txt = "txt",
     col_fill = "elm_frame"

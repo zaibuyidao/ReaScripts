@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Random Velocity - GUI
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -20,9 +20,9 @@ function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-local lib_path = reaper.GetExtState("Lokasenna_GUI", "lib_path_v2")
+local lib_path = reaper.GetExtState("GUILibrary", "lib_path_v2")
 if not lib_path or lib_path == "" then
-  reaper.MB("Couldn't load the Lokasenna_GUI library. Please install 'Lokasenna's GUI library v2 for Lua', available on ReaPack, then run the 'Set Lokasenna_GUI v2 library path.lua' script in your Action List.", "Whoops!", 0)
+  reaper.MB("Couldn't load the Lokasenna_GUI library. Please install 'Get Lokasenna_GUI library', available on ReaPack, then run the 'Set Lokasenna_GUI library.lua' script in your Action List.", "Whoops!", 0)
   return
 end
 loadfile(lib_path .. "Core.lua")()
@@ -111,4 +111,13 @@ GUI.New("Button1", "Button", {
 })
 
 GUI.Init()
+if reaper.JS_Window_FindEx then
+  hwnd = reaper.JS_Window_Find(GUI.name, true)
+  if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
+else
+  local retval = reaper.ShowMessageBox("js_ReaScriptAPI extension is required by this script. Do you want to download it now ?", "Warning", 1)
+  if retval == 1 then
+    Open_URL("http://www.sws-extension.org/download/pre-release/")
+  end
+end
 GUI.Main()
