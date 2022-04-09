@@ -1,5 +1,5 @@
 -- @description UCS Tags Search
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -39,8 +39,7 @@ LANGS = {
 
 base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 
-loadfile(reaper.GetResourcePath() .. '\\Scripts\\zaibuyidao Scripts\\Development\\Lokasenna_GUI Library\\Set Lokasenna_GUI library path.lua')()
---loadfile(base_path .. "GUILibrary\\Set Lokasenna_GUI Library path.lua")() -- 同级目录下
+loadfile(reaper.GetResourcePath() .. '\\Scripts\\zaibuyidao Scripts\\Development\\Lokasenna_GUI Library\\Set Lokasenna_GUI library.lua')()
 loadfile(base_path .. "\\lib\\utils.lua")()
 loadfile(base_path .. "\\lib\\ucs.lua")()
 loadfile(base_path .. "\\lib\\gui.lua")()

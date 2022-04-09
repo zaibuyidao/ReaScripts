@@ -1,11 +1,11 @@
 --[[
 Description: Get Lokasenna_GUI library
-Version: 2.16.13
+Version: 2.16.14
 Changelog:
     Fix listbox bug
 Author: Lokasenna
 Provides:
-    [main]   Lokasenna_GUI Library/Set Lokasenna_GUI library path.lua
+    [main]   Lokasenna_GUI Library/Set Lokasenna_GUI library.lua
     [nomain] Lokasenna_GUI Library/{Core,Classes/*,Modules/*}.lua
 Metapackage: true
 Donation: https://paypal.me/Lokasenna

@@ -18,7 +18,7 @@ GUI.script_path, GUI.script_name = ({reaper.get_action_context()})[2]:match("(.-
 
 GUI.lib_path = reaper.GetExtState("GUILibrary", "lib_path_v2") -- GUILibrary路径
 if not GUI.lib_path or GUI.lib_path == "" then
-    reaper.MB("Couldn't load the Lokasenna_GUI library. Please install 'Lokasenna's GUI library for Lua', available on ReaPack, then run the 'Set Lokasenna_GUI library path.lua' script in your Action List.", "Whoops!", 0)
+    reaper.MB("Couldn't load the Lokasenna_GUI library. Please install 'Get Lokasenna_GUI library', available on ReaPack, then run the 'Set Lokasenna_GUI library.lua' script in your Action List.", "Whoops!", 0)
     return
 end
 
