@@ -43,7 +43,6 @@ GUI.get_version = function()
 
 end
 GUI.version = GUI.get_version()
-GUI.version = nil
 
 -- ReaPack version info
 GUI.get_script_version = function()
@@ -1401,8 +1400,8 @@ GUI.chars = {
 GUI.OS_fonts = {
 
     Windows = {
-        sans = "Arial",
-        mono = "Consolas" -- "Consolas"、"Courier New"、"Lucida Console"
+        sans = "Arial", -- "Arial", "Calibri"
+        mono = "Consolas" -- "Consolas", "Courier New", "Lucida Console"
     },
 
     OSX = {
