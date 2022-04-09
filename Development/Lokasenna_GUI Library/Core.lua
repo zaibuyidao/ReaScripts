@@ -30,8 +30,7 @@ GUI.get_version = function()
     else
         local package, err = reaper.ReaPack_GetOwner(file)
         if not package or package == "" then
-            -- return "(" .. tostring(err) .. ")"
-            return -- "(" .. tostring(err) .. ")" -- 屏蔽版本显示
+            return "(" .. tostring(err) .. ")"
         else
             local ret, repo, cat, pkg, desc, type, ver, author, pinned, fileCount = reaper.ReaPack_GetEntryInfo(package)
             if ret then
@@ -44,6 +43,7 @@ GUI.get_version = function()
 
 end
 GUI.version = GUI.get_version()
+GUI.version = nil
 
 -- ReaPack version info
 GUI.get_script_version = function()
