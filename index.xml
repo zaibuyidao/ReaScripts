@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3">
+<index version="1" name="zaibuyidao Scripts" commit="c247d91296450bf8dde0a7d5d058e5fbc343509c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5039,7 +5039,7 @@
       </version>
     </reapack>
   </category>
-  <category name="Utility/UCS Tags Search">
+  <category name="Various/UCS Tags Search">
     <reapack name="zaibuyidao_UCS Tags Search.lua" type="script" desc="UCS Tags Search">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
@@ -5053,22 +5053,13 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-04-09T16:06:21Z">
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/dbe684e377c294b1be033cb0f263cde435b35394/Utility/UCS%20Tags%20Search/zaibuyidao_UCS%20Tags%20Search.lua</source>
-        <source file="lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/dbe684e377c294b1be033cb0f263cde435b35394/Utility/UCS%20Tags%20Search/lib/gui.lua</source>
-        <source file="lib/ucs.lua">https://github.com/zaibuyidao/ReaScripts/raw/dbe684e377c294b1be033cb0f263cde435b35394/Utility/UCS%20Tags%20Search/lib/ucs.lua</source>
-        <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/dbe684e377c294b1be033cb0f263cde435b35394/Utility/UCS%20Tags%20Search/lib/utils.lua</source>
-        <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/dbe684e377c294b1be033cb0f263cde435b35394/Utility/UCS%20Tags%20Search/UCS_list.csv</source>
-        <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/dbe684e377c294b1be033cb0f263cde435b35394/Utility/UCS%20Tags%20Search/UCS_list_custom.csv</source>
-        <source file="description.txt">https://github.com/zaibuyidao/ReaScripts/raw/dbe684e377c294b1be033cb0f263cde435b35394/Utility/UCS%20Tags%20Search/description.txt</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-04-09T16:09:41Z">
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e74939efae4e9cbd07df61466bd0b082109d3a0a/Utility/UCS%20Tags%20Search/zaibuyidao_UCS%20Tags%20Search.lua</source>
-        <source file="lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/e74939efae4e9cbd07df61466bd0b082109d3a0a/Utility/UCS%20Tags%20Search/lib/gui.lua</source>
-        <source file="lib/ucs.lua">https://github.com/zaibuyidao/ReaScripts/raw/e74939efae4e9cbd07df61466bd0b082109d3a0a/Utility/UCS%20Tags%20Search/lib/ucs.lua</source>
-        <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/e74939efae4e9cbd07df61466bd0b082109d3a0a/Utility/UCS%20Tags%20Search/lib/utils.lua</source>
-        <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/e74939efae4e9cbd07df61466bd0b082109d3a0a/Utility/UCS%20Tags%20Search/UCS_list.csv</source>
-        <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/e74939efae4e9cbd07df61466bd0b082109d3a0a/Utility/UCS%20Tags%20Search/UCS_list_custom.csv</source>
+      <version name="1.0.1" author="zaibuyidao" time="2022-04-09T17:53:01Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c247d91296450bf8dde0a7d5d058e5fbc343509c/Various/UCS%20Tags%20Search/zaibuyidao_UCS%20Tags%20Search.lua</source>
+        <source file="lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/c247d91296450bf8dde0a7d5d058e5fbc343509c/Various/UCS%20Tags%20Search/lib/gui.lua</source>
+        <source file="lib/ucs.lua">https://github.com/zaibuyidao/ReaScripts/raw/c247d91296450bf8dde0a7d5d058e5fbc343509c/Various/UCS%20Tags%20Search/lib/ucs.lua</source>
+        <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/c247d91296450bf8dde0a7d5d058e5fbc343509c/Various/UCS%20Tags%20Search/lib/utils.lua</source>
+        <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/c247d91296450bf8dde0a7d5d058e5fbc343509c/Various/UCS%20Tags%20Search/UCS_list.csv</source>
+        <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/c247d91296450bf8dde0a7d5d058e5fbc343509c/Various/UCS%20Tags%20Search/UCS_list_custom.csv</source>
       </version>
     </reapack>
   </category>
