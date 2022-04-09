@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1bc8538613af1566c336c947fdd3da843e401f2e">
+<index version="1" name="zaibuyidao Scripts" commit="70867c7e94014659d9dea5d0abe9851fb20b6d5a">
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
@@ -534,6 +534,9 @@
       <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:23:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position.lua" type="script" desc="Solo Item Play From Edit Cursor Position">
       <metadata>
@@ -558,6 +561,9 @@
       <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:23:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20First%20Item%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20First%20Item%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From First Item Position.lua" type="script" desc="Solo Item Play From First Item Position">
       <metadata>
@@ -581,6 +587,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:23:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Mouse Position.lua" type="script" desc="Solo Item Play From Mouse Position">
@@ -3337,6 +3346,9 @@
       <version name="1.0.2" author="zaibuyidao" time="2021-12-19T15:23:50Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.3" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released)">
       <metadata>
@@ -3352,6 +3364,9 @@
       <version name="1.0.2" author="zaibuyidao" time="2021-12-19T15:23:50Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.3" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Note Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Note Play From Edit Cursor Position (Perform Until Shortcut Released)">
       <metadata>
@@ -3363,6 +3378,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-12-06T12:35:34Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/acf71825b2c02280bc2308be03596e6edb2350a6/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released)">
@@ -3381,6 +3399,9 @@
       </version>
       <version name="1.0.3" author="zaibuyidao" time="2021-12-06T12:35:34Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/acf71825b2c02280bc2308be03596e6edb2350a6/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Split Notes.lua" type="script" desc="Split Notes">
@@ -4575,6 +4596,9 @@
       <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:23:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Edit Cursor Position.lua" type="script" desc="Solo Track Play From Edit Cursor Position">
       <metadata>
@@ -4598,6 +4622,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:23:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Mouse Position.lua" type="script" desc="Solo Track Play From Mouse Position">
