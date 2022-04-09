@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c2affe06e870128ea5f7b2a9a678b595c12a0852">
+<index version="1" name="zaibuyidao Scripts" commit="885790ed61bbfa558909fea6d7d647edda094f51">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -51,6 +51,25 @@
         <source file="Lokasenna_GUI Library/Classes/Class - Window.lua">https://github.com/zaibuyidao/ReaScripts/raw/c2affe06e870128ea5f7b2a9a678b595c12a0852/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Window.lua</source>
         <source file="Lokasenna_GUI Library/Core.lua">https://github.com/zaibuyidao/ReaScripts/raw/c2affe06e870128ea5f7b2a9a678b595c12a0852/Development/Lokasenna_GUI%20Library/Core.lua</source>
         <source file="Lokasenna_GUI Library/Modules/Window - GetUserInputs.lua">https://github.com/zaibuyidao/ReaScripts/raw/c2affe06e870128ea5f7b2a9a678b595c12a0852/Development/Lokasenna_GUI%20Library/Modules/Window%20-%20GetUserInputs.lua</source>
+      </version>
+      <version name="2.16.15" author="Lokasenna" time="2022-04-09T22:00:49Z">
+        <changelog><![CDATA[Fix listbox bug]]></changelog>
+        <source main="main" file="Lokasenna_GUI Library/Set Lokasenna_GUI library.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Set%20Lokasenna_GUI%20library.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Button.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Button.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Frame.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Frame.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Knob.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Knob.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Label.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Label.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Listbox.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Listbox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Menubar.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Menubar.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Menubox.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Menubox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Options.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Options.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Slider.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Slider.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Tabs.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Tabs.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - TextEditor.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20TextEditor.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Textbox.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Textbox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Window.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Window.lua</source>
+        <source file="Lokasenna_GUI Library/Core.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Core.lua</source>
+        <source file="Lokasenna_GUI Library/Modules/Window - GetUserInputs.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Development/Lokasenna_GUI%20Library/Modules/Window%20-%20GetUserInputs.lua</source>
       </version>
     </reapack>
   </category>
@@ -2744,6 +2763,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/25091557ce4bfe44c69aa34036376a4ac48c7550/MIDI%20Editor/zaibuyidao_Random%20CC%20Value%20-%20GUI.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-04-09T22:00:49Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/MIDI%20Editor/zaibuyidao_Random%20CC%20Value%20-%20GUI.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Value.lua" type="script" desc="Random CC Value">
       <metadata/>
@@ -2910,6 +2932,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-01-27T18:27:27Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/25091557ce4bfe44c69aa34036376a4ac48c7550/MIDI%20Editor/zaibuyidao_Random%20Velocity%20-%20GUI.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-04-09T22:00:49Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/MIDI%20Editor/zaibuyidao_Random%20Velocity%20-%20GUI.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Velocity.lua" type="script" desc="Random Velocity">
@@ -5087,6 +5112,14 @@
         <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/c2affe06e870128ea5f7b2a9a678b595c12a0852/Various/UCS%20Tags%20Search/lib/utils.lua</source>
         <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/c2affe06e870128ea5f7b2a9a678b595c12a0852/Various/UCS%20Tags%20Search/UCS_list.csv</source>
         <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/c2affe06e870128ea5f7b2a9a678b595c12a0852/Various/UCS%20Tags%20Search/UCS_list_custom.csv</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2022-04-09T22:00:49Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Various/UCS%20Tags%20Search/zaibuyidao_UCS%20Tags%20Search.lua</source>
+        <source file="lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Various/UCS%20Tags%20Search/lib/gui.lua</source>
+        <source file="lib/ucs.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Various/UCS%20Tags%20Search/lib/ucs.lua</source>
+        <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Various/UCS%20Tags%20Search/lib/utils.lua</source>
+        <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Various/UCS%20Tags%20Search/UCS_list.csv</source>
+        <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/Various/UCS%20Tags%20Search/UCS_list_custom.csv</source>
       </version>
     </reapack>
   </category>
