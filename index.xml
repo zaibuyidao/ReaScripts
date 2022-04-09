@@ -1,5 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e74939efae4e9cbd07df61466bd0b082109d3a0a">
+<index version="1" name="zaibuyidao Scripts" commit="b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3">
+  <category name="Development">
+    <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Provides a framework allowing Lua scripts to use a graphical interface, since Reaper has no ability to do so natively. INSTALLATION: After installing this package, you must tell Reaper where to find the library. In the Action List, find and run: "Script: Set Lokasenna_GUI library path.lua"\par}
+}
+]]></description>
+        <link rel="website" href="https://forum.cockos.com/showthread.php?t=177772">Forum Thread</link>
+        <link rel="website" href="http://forum.cockos.com/member.php?u=10417">Lokasenna's Website</link>
+        <link rel="donation">https://paypal.me/Lokasenna</link>
+      </metadata>
+      <version name="2.16.13" author="Lokasenna" time="2022-04-09T17:28:57Z">
+        <changelog><![CDATA[Fix listbox bug]]></changelog>
+        <source main="main" file="Lokasenna_GUI Library/Set Lokasenna_GUI library path.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Set%20Lokasenna_GUI%20library%20path.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Button.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Button.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Frame.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Frame.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Knob.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Knob.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Label.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Label.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Listbox.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Listbox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Menubar.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Menubar.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Menubox.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Menubox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Options.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Options.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Slider.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Slider.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Tabs.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Tabs.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - TextEditor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20TextEditor.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Textbox.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Textbox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Window.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Window.lua</source>
+        <source file="Lokasenna_GUI Library/Core.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Core.lua</source>
+        <source file="Lokasenna_GUI Library/Modules/Window - GetUserInputs.lua">https://github.com/zaibuyidao/ReaScripts/raw/b5e26bd67255cd79efefaa9cd649e3eeb69ebbb3/Development/Lokasenna_GUI%20Library/Modules/Window%20-%20GetUserInputs.lua</source>
+      </version>
+    </reapack>
+  </category>
   <category name="Items Editing">
     <reapack name="zaibuyidao_Add Take Marker At Snap Offset.lua" type="script" desc="Add Take Marker At Snap Offset">
       <metadata>
