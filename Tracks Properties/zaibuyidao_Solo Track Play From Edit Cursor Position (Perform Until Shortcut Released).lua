@@ -1,11 +1,11 @@
 --[[
  * ReaScript Name: Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
+ * REAPER: 6.0 or newer recommended
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
@@ -13,6 +13,14 @@
  * Changelog:
  * v1.0 (2021-9-20)
   + Initial release
+--]]
+
+--[[
+1.After running the script, it will work in the background. If you want to stop it, run the script again (or set the script as a toolbar button to toggle it on and off).
+2.If the bound key triggers the system alarm, then please bind the key to Action:No-op (no action)
+3.If you want to change the key, find reaper-extstate.ini in the REAPER installation folder, find and delete:
+[SoloItemPlayFromMousePosition]
+Key=the key you set
 --]]
 
 function print(string) reaper.ShowConsoleMsg(tostring(string)..'\n') end
@@ -86,19 +94,28 @@ key_map = {
 
 key = reaper.GetExtState("SoloTrackPlayFromEditCursorPosition", "VirtualKey")
 VirtualKeyCode = key_map[key]
+
 function show_select_key_dialog()
     if (not key or not key_map[key]) then
         key = '9'
-        local ok, input = reaper.GetUserInputs("Set Virtual Key", 1, "Enter 0-9 or A-Z", key)
-        if (not key_map[input]) then
-            reaper.ShowConsoleMsg("Cannot set this Key\n無法設置此按鍵" .. "\n")
-            return
+        local retval, retvals_csv = reaper.GetUserInputs("Set the Solo Key", 1, "Enter 0-9 or A-Z", key)
+        if not retval then
+            stop_solo = true
+            return stop_solo
         end
-        key = input
+        if (not key_map[retvals_csv]) then
+            reaper.MB("Cannot set this Key", "Error", 0)
+            stop_solo = true
+            return stop_solo
+        end
+        key = retvals_csv
         VirtualKeyCode = key_map[key]
         reaper.SetExtState("SoloTrackPlayFromEditCursorPosition", "VirtualKey", key, true)
     end
 end
+
+show_select_key_dialog()
+if stop_solo then return end
 
 function Open_URL(url)
     if not OS then local OS = reaper.GetOS() end
@@ -164,10 +181,7 @@ local function RestoreSoloTracks(t) -- 恢復Solo的軌道状态
     end
 end
 
-function NoUndoPoint() end
-
 flag = 0
-show_select_key_dialog() -- 顯示快捷鍵設置對話框
 
 function main()
     reaper.PreventUIRefresh(1)
@@ -260,4 +274,4 @@ if not reaper.JS_VKeys_GetState then
     end
 end
 
-reaper.defer(NoUndoPoint)
+reaper.defer(function() end)
