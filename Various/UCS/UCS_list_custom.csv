@@ -1,0 +1,3 @@
+Category,SubCategory,CatID,Synonyms - Comma Separated,Category_zh,SubCategory_zh,Synonyms_zh,Category_tw,SubCategory_tw,Synonyms_tw
+CUSTOM,TEST,CUSTOMTest,"a,b,c",自定义,测试,"甲,乙,丙",自訂,測試,"庚,辛,壬"
+CUSTOM,HELLO,CUSTOMHello,"d,e,f",自定义,你好,"丁,戊,己",自訂,你好,"癸,甲,乙"

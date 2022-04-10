@@ -98,7 +98,7 @@ GUI.New("menu_lang", "Menubox", {
     w = 96,
     h = 20,
     caption = "",
-    optarray = {"!English", "中文"},
+    optarray = {"!English", "简体中文", "正體中文"},
     retval = 1,
     font_a = 3,
     font_b = 4,

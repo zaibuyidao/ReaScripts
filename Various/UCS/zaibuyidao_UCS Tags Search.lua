@@ -1,5 +1,5 @@
 -- @description UCS Tags Search
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -34,7 +34,7 @@ KEYS = {
 LANGS = {
     { id = "en", name = 'English' },
     { id = "zh", name = '简体中文' },
-    { id = "tw", name = '正体中文' }
+    { id = "tw", name = '正體中文' }
 }
 
 base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
@@ -196,6 +196,9 @@ function display_usc_data(data)
         GUI.elms.list_category.list = table.map(data, function(item)
             return item.name:get(locale)
         end)
+        GUI.elms.list_category.category_en_list = table.map(data, function(item) -- 强制启用英文主分类列表
+            return item.name.en
+        end)
         if category_index and category_index >= 1 and category_index <= #GUI.elms.list_category.list then
             GUI.elms.list_category:val(category_index)
         else
@@ -220,6 +223,9 @@ function display_usc_data(data)
         GUI.elms.list_subcategory.cat_list = table.map(data[category_index].children, function (item)
             return item.cat_id
         end)
+        GUI.elms.list_subcategory.subcategory_en_list = table.map(data[category_index].children, function (item) -- 强制启用英文子分类列表
+            return item.subcategory_id
+        end)
         if subcategory_index and subcategory_index >= 1 and subcategory_index <= #GUI.elms.list_subcategory.list then
             GUI.elms.list_subcategory:val(subcategory_index)
         else
@@ -243,6 +249,7 @@ function display_usc_data(data)
 
         local locale = get_locale()
         GUI.elms.list_synonym.list = data[category_index].children[subcategory_index].synonyms:get(locale)
+        GUI.elms.list_synonym.synonyms_en_list = data[category_index].children[subcategory_index].synonyms_id -- 强制启用英文关键词列表
         if synonym_index and synonym_index >= 1 and synonym_index <= #GUI.elms.list_synonym.list then
             GUI.elms.list_synonym:val(synonym_index)
         else
@@ -256,7 +263,11 @@ function display_usc_data(data)
     update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), orig_list_synonym_val)
 
     function GUI.elms.list_category:ondoubleclick()
-        append_search(self.list[self:val()])
+        if is_key_active(KEYS.SHIFT) then
+            append_search(self.category_en_list[self:val()])
+        else
+            append_search(self.list[self:val()])
+        end
     end
 
     function GUI.elms.list_category:onvalchange()
@@ -269,8 +280,12 @@ function display_usc_data(data)
     function GUI.elms.list_subcategory:ondoubleclick()
         if is_cat_id_enable() then
             append_search(self.cat_list[self:val()])
-        else 
-            append_search(self.name_list[self:val()])
+        else
+            if is_key_active(KEYS.SHIFT) then
+                append_search(self.subcategory_en_list[self:val()])
+            else
+                append_search(self.name_list[self:val()])
+            end
         end
     end
 
@@ -281,7 +296,11 @@ function display_usc_data(data)
     end
 
     function GUI.elms.list_synonym:ondoubleclick()
-        append_search(self.list[self:val()])
+        if is_key_active(KEYS.SHIFT) then
+            append_search(self.synonyms_en_list[self:val()])
+        else
+            append_search(self.list[self:val()])
+        end
     end
 
     function GUI.elms.list_synonym:onvalchange()
@@ -442,6 +461,7 @@ function GUI.func()
 
     -- 键值处理
     local char = GUI.char
+    -- print(char)
     if char == 13 then -- Enter 键
         if is_key_active(KEYS.CONTROL) then    -- 同时按住Ctrl
             current_filter_pattern = GUI.elms.edittext_filter:val()
@@ -457,6 +477,14 @@ function GUI.func()
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
+    end
+
+    if char == 6579564 then -- Del 键
+        if is_key_active(KEYS.CONTROL) then
+            GUI.elms.edittext_filter:val("")
+        else
+            GUI.elms.edittext_search:val("")
+        end
     end
 end
 
