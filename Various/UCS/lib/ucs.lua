@@ -69,8 +69,6 @@ function usc.read_from_csv(filename, result)
                 tw = data[i][9],
             },
             cat_id = data[i][3],
-            subcategory_id = data[i][2], -- 英文子分类列表
-            synonyms_id = table.map(string.split(data[i][4], ","), string.trim), -- 英文关键词列表
             synonyms = LocaleData {
                 en = table.map(string.split(data[i][4], ","), string.trim),
                 zh = table.map(string.split(data[i][7], ","), string.trim),

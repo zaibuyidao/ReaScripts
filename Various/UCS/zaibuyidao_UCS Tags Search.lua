@@ -1,5 +1,5 @@
 -- @description UCS Tags Search
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -56,7 +56,7 @@ function should_load_user_usc_data()
     return GUI.elms.check_cat:val()[3] == true
 end
 
-function is_cat_id_enable()
+function is_cat_id_enable() -- 启用CatID
     return GUI.elms.check_cat:val()[1] == true
 end
 
@@ -75,20 +75,20 @@ function is_key_active(key)
     return false
 end
 
-function switch_lang(index)
+function switch_lang(index) -- 切换语言
     GUI.elms.menu_lang:val(index)
     local optarray = table.map(LANGS, function (item) return item.name end)
     optarray[GUI.elms.menu_lang:val()] = "!" .. optarray[GUI.elms.menu_lang:val()]
     GUI.elms.menu_lang.optarray = optarray
 end
 
-function copy_text(text)  --复制关键词
+function copy_text(text)  -- 复制关键词
     if text == '' then return end
     reaper.CF_SetClipboard(text)
 end
 
 function send_search_text(text) -- 开始搜索
-    local title = reaper.JS_Localize("Media Explorer","common")
+    local title = reaper.JS_Localize("Media Explorer", "common")
     local hwnd = reaper.JS_Window_Find(title, true)
     local search = reaper.JS_Window_FindChildByID(hwnd, 1015)
     if search == nil then return end
@@ -165,8 +165,6 @@ function filter(data, pattern)
             table.insert(new_children, { 
                 name = child.name,
                 cat_id = child.cat_id,
-                synonyms_id = child.synonyms_id,
-                subcategory_id = child.subcategory_id,
                 synonyms = new_synonym
             })
             
@@ -226,7 +224,7 @@ function display_usc_data(data)
             return item.cat_id
         end)
         GUI.elms.list_subcategory.subcategory_en_list = table.map(data[category_index].children, function (item) -- 强制启用英文子分类列表
-            return item.subcategory_id
+            return item.name.en
         end)
         if subcategory_index and subcategory_index >= 1 and subcategory_index <= #GUI.elms.list_subcategory.list then
             GUI.elms.list_subcategory:val(subcategory_index)
@@ -251,7 +249,7 @@ function display_usc_data(data)
 
         local locale = get_locale()
         GUI.elms.list_synonym.list = data[category_index].children[subcategory_index].synonyms:get(locale)
-        GUI.elms.list_synonym.synonyms_en_list = data[category_index].children[subcategory_index].synonyms_id -- 强制启用英文关键词列表
+        GUI.elms.list_synonym.synonyms_en_list = data[category_index].children[subcategory_index].synonyms.en -- 强制启用英文同义词列表
         if synonym_index and synonym_index >= 1 and synonym_index <= #GUI.elms.list_synonym.list then
             GUI.elms.list_synonym:val(synonym_index)
         else
@@ -405,11 +403,9 @@ GUI.fonts.monospace = {fonts.mono, 14}
 GUI.fonts[4] = {fonts.sans, 16}
 GUI.fonts[3] = {fonts.sans, 16}
 GUI.fonts.version = {fonts.sans, 12, "i"}
-GUI.colors.white = {225, 225, 225, 255} -- set gui.lua [color = "white"]
+GUI.colors.white = {225, 225, 225, 255} -- Set gui.lua [color = "white"]
 GUI.Draw_Version = function ()
-    --GUI.version = nil -- GUI版本显示
     if not GUI.version then return 0 end
-    --local str = "Lokasenna_GUI "..GUI.version
     local str = "Script by 再補一刀  -  using Lokasenna_GUI " .. GUI.version
     GUI.font("version")
     GUI.color("txt")
@@ -466,14 +462,13 @@ function GUI.func()
     local char = GUI.char
     -- print(char)
     if char == 13 then -- Enter 键
-        if is_key_active(KEYS.CONTROL) then    -- 同时按住Ctrl
+        if is_key_active(KEYS.CONTROL) then -- 同时按住Ctrl
             current_filter_pattern = GUI.elms.edittext_filter:val()
             update_usc_data()
         else 
             send_search_text(GUI.elms.edittext_search:val())
         end
-    elseif char == 26165 then --F5键
-        --print("f5")
+    elseif char == 26165 then -- F5 键
         GUI.elms.edittext_filter:val("")
         current_filter_pattern = ""
         GUI.elms.list_category:val(1)
@@ -491,7 +486,7 @@ function GUI.func()
     end
 end
 
--- local function force_size()
+-- local function force_size() -- 锁定GUI边界
 --     gfx.quit()
 --     gfx.init(GUI.name, GUI.w, GUI.h, GUI.dock, GUI.x, GUI.y)
 --     GUI.cur_w, GUI.cur_h = GUI.w, GUI.h
