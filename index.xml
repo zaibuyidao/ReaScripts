@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="98fe764185ec3ca2665bc33f6ca1c5099df1165f">
+<index version="1" name="zaibuyidao Scripts" commit="2a6de921daa722ad59c9afb81cc9f263b20ca5f6">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5112,6 +5112,14 @@
         <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/98fe764185ec3ca2665bc33f6ca1c5099df1165f/Various/UCS/lib/utils.lua</source>
         <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/98fe764185ec3ca2665bc33f6ca1c5099df1165f/Various/UCS/UCS_list.csv</source>
         <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/98fe764185ec3ca2665bc33f6ca1c5099df1165f/Various/UCS/UCS_list_custom.csv</source>
+      </version>
+      <version name="1.0.7" author="zaibuyidao" time="2022-04-12T12:45:53Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/zaibuyidao_UCS%20Tags%20Search.lua</source>
+        <source file="lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/lib/gui.lua</source>
+        <source file="lib/ucs.lua">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/lib/ucs.lua</source>
+        <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/lib/utils.lua</source>
+        <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/UCS_list.csv</source>
+        <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/UCS_list_custom.csv</source>
       </version>
     </reapack>
   </category>
