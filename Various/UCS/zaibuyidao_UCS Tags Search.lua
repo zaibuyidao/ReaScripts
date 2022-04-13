@@ -1,5 +1,5 @@
 -- @description UCS Tags Search
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -37,12 +37,19 @@ LANGS = {
     { id = "tw", name = '正體中文' }
 }
 
-base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
-
-loadfile(reaper.GetResourcePath() .. '\\Scripts\\zaibuyidao Scripts\\Development\\Lokasenna_GUI Library\\Set Lokasenna_GUI library.lua')()
-loadfile(base_path .. "\\lib\\utils.lua")()
-loadfile(base_path .. "\\lib\\ucs.lua")()
-loadfile(base_path .. "\\lib\\gui.lua")()
+local base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
+local os = reaper.GetOS()
+if os ~= "Win32" and os ~= "Win64" then
+    loadfile(reaper.GetResourcePath() .. "/Scripts/zaibuyidao Scripts/Development/Lokasenna_GUI Library/Set Lokasenna_GUI library.lua")()
+    loadfile(base_path .. "/lib/utils.lua")()
+    loadfile(base_path .. "/lib/ucs.lua")()
+    loadfile(base_path .. "/lib/gui.lua")()
+else
+    loadfile(reaper.GetResourcePath() .. "\\Scripts\\zaibuyidao Scripts\\Development\\Lokasenna_GUI Library\\Set Lokasenna_GUI library.lua")()
+    loadfile(base_path .. "\\lib\\utils.lua")()
+    loadfile(base_path .. "\\lib\\ucs.lua")()
+    loadfile(base_path .. "\\lib\\gui.lua")()
+end
 
 local full_usc_data
 local cur_usc_data
@@ -387,7 +394,10 @@ end
 
 GUI.Init()
 
-if not reaper.APIExists("JS_Window_Find") then
+if reaper.APIExists("JS_Window_Find") then
+    hwnd = reaper.JS_Window_Find(GUI.name, true)
+    if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
+else
     reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'. Then restart REAPER and run the script again. Thank you!\n\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。然後重新啟動 REAPER 並再次運行腳本。謝謝！", "你必須安裝 JS_ReaScriptAPI", 0)
     local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
     if ok then

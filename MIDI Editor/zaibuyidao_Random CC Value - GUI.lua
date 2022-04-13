@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Random CC Value - GUI
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -137,13 +137,19 @@ GUI.New("Button1", "Button", {
 
 
 GUI.Init()
-if reaper.JS_Window_FindEx then
+
+if reaper.APIExists("JS_Window_Find") then
   hwnd = reaper.JS_Window_Find(GUI.name, true)
   if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
 else
-  local retval = reaper.ShowMessageBox("js_ReaScriptAPI extension is required by this script. Do you want to download it now ?", "Warning", 1)
-  if retval == 1 then
-    Open_URL("http://www.sws-extension.org/download/pre-release/")
+  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'. Then restart REAPER and run the script again. Thank you!\n\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。然後重新啟動 REAPER 並再次運行腳本。謝謝！", "你必須安裝 JS_ReaScriptAPI", 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, "錯誤", 0)
   end
+  return reaper.defer(function() end)
 end
+
 GUI.Main()
