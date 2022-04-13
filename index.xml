@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2a6de921daa722ad59c9afb81cc9f263b20ca5f6">
+<index version="1" name="zaibuyidao Scripts" commit="be9c1443f076202d8412b8598262fe1e8c8f1a51">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2766,6 +2766,9 @@
       <version name="1.0.1" author="zaibuyidao" time="2022-04-09T22:00:49Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/MIDI%20Editor/zaibuyidao_Random%20CC%20Value%20-%20GUI.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-13T12:32:48Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/MIDI%20Editor/zaibuyidao_Random%20CC%20Value%20-%20GUI.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Value.lua" type="script" desc="Random CC Value">
       <metadata/>
@@ -2935,6 +2938,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2022-04-09T22:00:49Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/885790ed61bbfa558909fea6d7d647edda094f51/MIDI%20Editor/zaibuyidao_Random%20Velocity%20-%20GUI.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-13T12:32:48Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/MIDI%20Editor/zaibuyidao_Random%20Velocity%20-%20GUI.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Velocity.lua" type="script" desc="Random Velocity">
@@ -4980,6 +4986,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0fba86c5650f5c2780a5136bf40028de546c90dd/Utility/zaibuyidao_Set%20MIDI%20Out%20Devices.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao, YS" time="2022-04-13T12:32:48Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/Utility/zaibuyidao_Set%20MIDI%20Out%20Devices.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Set Point Shape (Dynamic Menu).lua" type="script" desc="Set Point Shape (Dynamic Menu)">
       <metadata>
@@ -5120,6 +5129,14 @@
         <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/lib/utils.lua</source>
         <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/UCS_list.csv</source>
         <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/2a6de921daa722ad59c9afb81cc9f263b20ca5f6/Various/UCS/UCS_list_custom.csv</source>
+      </version>
+      <version name="1.0.8" author="zaibuyidao" time="2022-04-13T12:32:48Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/Various/UCS/zaibuyidao_UCS%20Tags%20Search.lua</source>
+        <source file="lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/Various/UCS/lib/gui.lua</source>
+        <source file="lib/ucs.lua">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/Various/UCS/lib/ucs.lua</source>
+        <source file="lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/Various/UCS/lib/utils.lua</source>
+        <source file="UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/Various/UCS/UCS_list.csv</source>
+        <source file="UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/be9c1443f076202d8412b8598262fe1e8c8f1a51/Various/UCS/UCS_list_custom.csv</source>
       </version>
     </reapack>
   </category>
