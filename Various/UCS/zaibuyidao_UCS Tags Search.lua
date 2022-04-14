@@ -1,5 +1,5 @@
 -- @description UCS Tags Search
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -37,8 +37,8 @@ LANGS = {
     { id = "tw", name = '正體中文' }
 }
 
-local base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
-local os = reaper.GetOS()
+base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
+os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
     loadfile(reaper.GetResourcePath() .. "/Scripts/zaibuyidao Scripts/Development/Lokasenna_GUI Library/Set Lokasenna_GUI library.lua")()
     loadfile(base_path .. "/lib/utils.lua")()
@@ -101,9 +101,14 @@ function send_search_text(text) -- 开始搜索
     if search == nil then return end
     reaper.JS_Window_SetTitle(search, text)
 
-    -- https://github.com/justinfrankel/WDL/blob/main/WDL/swell/swell-types.h
-    reaper.JS_WindowMessage_Post(search, "WM_KEYDOWN", 0x0020, 0, 0, 0) -- 空格
-    reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x0008, 0, 0, 0) -- 退格
+    if os ~= "Win32" and os ~= "Win64" then
+        reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+        reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+    else
+        -- https://github.com/justinfrankel/WDL/blob/main/WDL/swell/swell-types.h
+        reaper.JS_WindowMessage_Post(search, "WM_KEYDOWN", 0x0020, 0, 0, 0) -- 空格
+        reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x0008, 0, 0, 0) -- 退格
+    end
 end
 
 function append_search(text)
@@ -403,7 +408,7 @@ else
     if ok then
         reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
     else
-        reaper.MB(err, "錯誤", 0)
+        reaper.MB(err, "Error", 0)
     end
     return reaper.defer(function() end)
 end
