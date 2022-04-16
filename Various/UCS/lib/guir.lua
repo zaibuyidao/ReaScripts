@@ -101,11 +101,11 @@ GUI.New("radio_connect", "Radio", {
 GUI.New("radio_order", "Radio", {
     z = 11,
     x = 640,
-    y = 224,
+    y = 240,
     w = 96,
     h = 88,
-    caption = "take order",
-    optarray = {"Track", "Wrap", "Time"},
+    caption = "Take order",
+    optarray = {"Track", "Wrap", "Timeline"},
     dir = "v",
     font_a = 2,
     font_b = 3,
@@ -245,11 +245,11 @@ mnu_file = {
 
 GUI.New("menubar_wild", "Menubar", {
     z = 11,
-    x = 752,
+    x = 816,
     y = 336,
-    w = 96,
+    w = 24,
     h = 20,
-    menus = {{title = "Wildcards", options = {
+    menus = {{title = "..", options = {
         {">Region"},
             {"<$regionname",mnu_file.regionname},
         {">Marker"}, 
