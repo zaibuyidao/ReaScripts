@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Random CC Value - GUI
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,6 +18,13 @@
 
 function Msg(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
+end
+
+os = reaper.GetOS()
+if os ~= "Win32" and os ~= "Win64" then
+  loadfile(reaper.GetResourcePath() .. "/Scripts/zaibuyidao Scripts/Development/Lokasenna_GUI Library/Set Lokasenna_GUI library.lua")()
+else
+  loadfile(reaper.GetResourcePath() .. "\\Scripts\\zaibuyidao Scripts\\Development\\Lokasenna_GUI Library\\Set Lokasenna_GUI library.lua")()
 end
 
 local lib_path = reaper.GetExtState("GUILibrary", "lib_path_v2")

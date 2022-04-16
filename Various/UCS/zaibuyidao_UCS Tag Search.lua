@@ -1,18 +1,8 @@
--- @description UCS Tags Search
--- @version 1.0.9
--- @author zaibuyidao
--- @links
---   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   https://github.com/zaibuyidao/ReaScripts
--- @provides
---   [main] .
---   [nomain] lib/gui.lua
---   [nomain] lib/ucs.lua
---   [nomain] lib/utils.lua
---   UCS_list.csv
---   UCS_list_custom.csv
--- @donation http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI
+-- NoIndex: true
+
+function Msg(param) 
+    reaper.ShowConsoleMsg(tostring(param) .. "\n") 
+end
 
 function print(...)
     for _, v in ipairs({...}) do
@@ -43,12 +33,12 @@ if os ~= "Win32" and os ~= "Win64" then
     loadfile(reaper.GetResourcePath() .. "/Scripts/zaibuyidao Scripts/Development/Lokasenna_GUI Library/Set Lokasenna_GUI library.lua")()
     loadfile(base_path .. "/lib/utils.lua")()
     loadfile(base_path .. "/lib/ucs.lua")()
-    loadfile(base_path .. "/lib/gui.lua")()
+    loadfile(base_path .. "/lib/guis.lua")()
 else
     loadfile(reaper.GetResourcePath() .. "\\Scripts\\zaibuyidao Scripts\\Development\\Lokasenna_GUI Library\\Set Lokasenna_GUI library.lua")()
     loadfile(base_path .. "\\lib\\utils.lua")()
     loadfile(base_path .. "\\lib\\ucs.lua")()
-    loadfile(base_path .. "\\lib\\gui.lua")()
+    loadfile(base_path .. "\\lib\\guis.lua")()
 end
 
 local full_usc_data
@@ -379,11 +369,11 @@ function display_usc_data(data)
         end
     end
 
-    function GUI.elms.edittext_filter:onmouser_down() -- onr_doubleclick() 右键双击
+    function GUI.elms.edittext_filter:onr_doubleclick() -- onr_doubleclick() 双击 onmouser_down() 单击
         self:val("")
     end
 
-    function GUI.elms.edittext_search:onmouser_down()
+    function GUI.elms.edittext_search:onr_doubleclick()
         self:val("")
     end
 
@@ -492,13 +482,13 @@ function GUI.func()
         update_usc_data()
     end
 
-    if char == 6579564 then -- Del 键
-        if is_key_active(KEYS.CONTROL) then
-            GUI.elms.edittext_filter:val("")
-        else
-            GUI.elms.edittext_search:val("")
-        end
-    end
+    -- if char == 6579564 then -- Del 键
+    --     if is_key_active(KEYS.CONTROL) then
+    --         GUI.elms.edittext_filter:val("")
+    --     else
+    --         GUI.elms.edittext_search:val("")
+    --     end
+    -- end
 end
 
 -- local function force_size() -- 锁定GUI边界
