@@ -17,7 +17,7 @@ GUI.req("Classes/Class - Menubox.lua")()
 -- If any of the requested libraries weren't found, abort the script.
 if missing_lib then return 0 end
 
-GUI.name = "UCS Tags Search"
+GUI.name = "UCS Tag Search"
 GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 752, 456
 GUI.anchor, GUI.corner = "mouse", "C"
 
