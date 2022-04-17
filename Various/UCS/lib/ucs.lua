@@ -60,19 +60,20 @@ function usc.read_from_csv(filename, result)
     local column_names = data[1]
     for i = 2, #data do
         local index = get_category_index(data[i][1])
-        result[index].name.zh = data[i][5]
-        result[index].name.tw = data[i][8]
+        result[index].name.zh = data[i][6]
+        result[index].name.tw = data[i][9]
+        result[index].name.cat_short = data[i][4]
         table.insert(result[index].children, {
             name = LocaleData {
                 en = data[i][2],
-                zh = data[i][6],
-                tw = data[i][9],
+                zh = data[i][7],
+                tw = data[i][10],
             },
             cat_id = data[i][3],
             synonyms = LocaleData {
-                en = table.map(string.split(data[i][4], ","), string.trim),
-                zh = table.map(string.split(data[i][7], ","), string.trim),
-                tw = table.map(string.split(data[i][10], ","), string.trim)
+                en = table.map(string.split(data[i][5], ","), string.trim),
+                zh = table.map(string.split(data[i][8], ","), string.trim),
+                tw = table.map(string.split(data[i][11], ","), string.trim)
             }
         })
     end
