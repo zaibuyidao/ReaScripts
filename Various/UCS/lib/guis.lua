@@ -184,7 +184,7 @@ GUI.New("check_cat", "Checklist", {
     bg = "wnd_bg",
     frame = false,
     shadow = true,
-    swap = true,
+    swap = false,
     opt_size = 20
 })
 

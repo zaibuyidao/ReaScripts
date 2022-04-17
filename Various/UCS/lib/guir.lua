@@ -48,11 +48,11 @@ GUI.New("btn_clear", "Button", {
 
 GUI.New("btn_search", "Button", {
     z = 11,
-    x = 640.0,
-    y = 368.0,
-    w = 208,
-    h = 64,
-    caption = "RENAMING",
+    x = 640,
+    y = 336,
+    w = 96,
+    h = 96,
+    caption = "RENAME",
     font = 3,
     col_txt = "txt",
     col_fill = "elm_frame"
@@ -61,7 +61,7 @@ GUI.New("btn_search", "Button", {
 GUI.New("radio_pro", "Radio", {
     z = 11,
     x = 640,
-    y = 48,
+    y = 32,
     w = 96,
     h = 160,
     caption = "Processing",
@@ -81,7 +81,7 @@ GUI.New("radio_pro", "Radio", {
 GUI.New("radio_connect", "Radio", {
     z = 11,
     x = 752,
-    y = 192,
+    y = 176,
     w = 96,
     h = 112,
     caption = "Separator",
@@ -101,7 +101,7 @@ GUI.New("radio_connect", "Radio", {
 GUI.New("radio_order", "Radio", {
     z = 11,
     x = 640,
-    y = 240,
+    y = 224,
     w = 96,
     h = 88,
     caption = "Take order",
@@ -209,11 +209,10 @@ GUI.New("edittext_search", "Textbox", {
     undo_limit = 20
 })
 
-
 GUI.New("menu_lang", "Menubox", {
     z = 11,
-    x = 752.0,
-    y = 16.0,
+    x = 752,
+    y = 16,
     w = 96,
     h = 20,
     caption = "",
@@ -245,10 +244,10 @@ mnu_file = {
 
 GUI.New("menubar_wild", "Menubar", {
     z = 11,
-    x = 816,
+    x = 752,
     y = 336,
     w = 24,
-    h = 20,
+    h = 24,
     menus = {{title = "..", options = {
         {">Region"},
             {"<$regionname",mnu_file.regionname},
