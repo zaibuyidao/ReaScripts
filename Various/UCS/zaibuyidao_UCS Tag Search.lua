@@ -187,6 +187,9 @@ function get_locale()
     return LANGS[GUI.elms.menu_lang:val()].id
 end
 
+GUI.elms.edittext_search._onmousedown = GUI.elms.edittext_search.onmousedown
+GUI.elms.edittext_filter._onmousedown = GUI.elms.edittext_filter.onmousedown
+
 function display_usc_data(data)
     
     local orig_list_category_val = GUI.elms.list_category:val()
@@ -343,6 +346,7 @@ function display_usc_data(data)
     end
 
     function GUI.elms.edittext_search:onmousedown()
+        GUI.elms.edittext_search:_onmousedown()
         if is_key_active(KEYS.ALT) then
             self:val("")
         end
@@ -352,6 +356,7 @@ function display_usc_data(data)
     end
 
     function GUI.elms.edittext_filter:onmousedown()
+        GUI.elms.edittext_filter:_onmousedown()
         if is_key_active(KEYS.ALT) then
             self:val("")
         end

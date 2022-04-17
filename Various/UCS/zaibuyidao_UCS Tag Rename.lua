@@ -1283,6 +1283,9 @@ function get_locale()
     return LANGS[GUI.elms.menu_lang:val()].id
 end
 
+GUI.elms.edittext_search._onmousedown = GUI.elms.edittext_search.onmousedown
+GUI.elms.edittext_filter._onmousedown = GUI.elms.edittext_filter.onmousedown
+
 function display_usc_data(data)
     
     local orig_list_category_val = GUI.elms.list_category:val()
@@ -1292,7 +1295,13 @@ function display_usc_data(data)
     function update_category(category_index)
         local locale = get_locale()
         GUI.elms.list_category.list = table.map(data, function(item)
+            return item.name:get(locale) .. "  [" .. item.name.cat_short .. "]"
+        end)
+        GUI.elms.list_category.name_list = table.map(data, function(item)
             return item.name:get(locale)
+        end)
+        GUI.elms.list_category.cat_short_list = table.map(data, function(item)
+            return item.name.cat_short
         end)
         GUI.elms.list_category.category_en_list = table.map(data, function(item) -- 强制启用英文主分类列表
             return item.name.en
@@ -1363,8 +1372,10 @@ function display_usc_data(data)
     function GUI.elms.list_category:ondoubleclick()
         if is_key_active(KEYS.SHIFT) then
             append_search(self.category_en_list[self:val()])
+        elseif is_key_active(KEYS.ALT) then
+            append_search(self.cat_short_list[self:val()])
         else
-            append_search(self.list[self:val()])
+            append_search(self.name_list[self:val()])
         end
     end
 
@@ -1381,6 +1392,8 @@ function display_usc_data(data)
         else
             if is_key_active(KEYS.SHIFT) then
                 append_search(self.subcategory_en_list[self:val()])
+            elseif is_key_active(KEYS.ALT) then
+                append_search(self.cat_list[self:val()])
             else
                 append_search(self.name_list[self:val()])
             end
@@ -1486,17 +1499,14 @@ function display_usc_data(data)
     end
 
     function GUI.elms.edittext_search:onmousedown()
+        GUI.elms.edittext_search:_onmousedown()
         if is_key_active(KEYS.ALT) then
             self:val("")
         end
-        -- if is_key_active(KEYS.SHIFT) then
-        --     reaper.Undo_BeginBlock()
-        --     rename_region(GUI.elms.edittext_search:val())
-        --     reaper.Undo_EndBlock('', -1)
-        -- end
     end
 
     function GUI.elms.edittext_filter:onmousedown()
+        GUI.elms.edittext_filter:_onmousedown()
         if is_key_active(KEYS.ALT) then
             self:val("")
         end
