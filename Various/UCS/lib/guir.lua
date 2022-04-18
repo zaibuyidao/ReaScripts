@@ -279,7 +279,7 @@ GUI.New("check_cat", "Checklist", {
     w = 96,
     h = 128,
     caption = "",
-    optarray = {"CatID", "CatShort", "USC list", "Custom list", "Loop count"},
+    optarray = {"CatID", "CatShort", "UCS list", "Custom list", "Loop count"},
     dir = "v",
     pad = 4,
     font_a = 2,
