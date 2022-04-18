@@ -46,15 +46,19 @@ local cur_usc_data
 local current_filter_pattern = ""
 
 function should_load_system_usc_data()
-    return GUI.elms.check_cat:val()[2] == true
+    return GUI.elms.check_cat:val()[3] == true
 end
 
 function should_load_user_usc_data()
-    return GUI.elms.check_cat:val()[3] == true
+    return GUI.elms.check_cat:val()[4] == true
 end
 
 function is_cat_id_enable() -- 启用CatID
     return GUI.elms.check_cat:val()[1] == true
+end
+
+function is_cat_short_enable() -- 启用CatShort
+    return GUI.elms.check_cat:val()[2] == true
 end
 
 function reload_usc_data()
@@ -198,8 +202,23 @@ function display_usc_data(data)
 
     function update_category(category_index)
         local locale = get_locale()
-        GUI.elms.list_category.list = table.map(data, function(item)
+        if is_cat_short_enable() then
+            GUI.elms.list_category.list = table.map(data, function(item)
+                return item.name:get(locale) .. "  [" .. item.name.cat_short .. "]"
+            end)
+        else
+            GUI.elms.list_category.list = table.map(data, function(item)
+                return item.name:get(locale)
+            end)
+        end
+        GUI.elms.list_category.name_list = table.map(data, function(item)
             return item.name:get(locale)
+        end)
+        GUI.elms.list_category.cat_short_list = table.map(data, function(item)
+            return item.name.cat_short
+        end)
+        GUI.elms.list_category.cat_egory_list = table.map(data, function(item)
+            return item.name.cat_egory
         end)
         GUI.elms.list_category.category_en_list = table.map(data, function(item) -- 强制启用英文主分类列表
             return item.name.en
@@ -219,9 +238,15 @@ function display_usc_data(data)
             return
         end
         local locale = get_locale()
-        GUI.elms.list_subcategory.list = table.map(data[category_index].children, function (item)
-            return item.name:get(locale) .. "  [" .. item.cat_id .. "]"
-        end)
+        if is_cat_id_enable() then
+            GUI.elms.list_subcategory.list = table.map(data[category_index].children, function (item)
+                return item.name:get(locale) .. "  [" .. item.cat_id .. "]"
+            end)
+        else
+            GUI.elms.list_subcategory.list = table.map(data[category_index].children, function (item)
+                return item.name:get(locale)
+            end)
+        end
         GUI.elms.list_subcategory.name_list = table.map(data[category_index].children, function (item)
             return item.name:get(locale)
         end)
@@ -268,13 +293,29 @@ function display_usc_data(data)
     update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), orig_list_synonym_val)
 
     function GUI.elms.list_category:ondoubleclick()
-        if is_key_active(KEYS.SHIFT) then
-            append_search(self.category_en_list[self:val()])
+        if is_cat_short_enable() then
+            if is_key_active(KEYS.CONTROL) then
+                append_search(self.name_list[self:val()])
+            elseif is_key_active(KEYS.SHIFT) then
+                append_search(self.cat_egory_list[self:val()])
+            elseif is_key_active(KEYS.ALT) then
+                append_search(self.cat_short_list[self:val()])
+            else
+                append_search(self.cat_short_list[self:val()])
+            end
         else
-            append_search(self.list[self:val()])
+            if is_key_active(KEYS.SHIFT) then
+                append_search(self.cat_egory_list[self:val()])
+            elseif is_key_active(KEYS.ALT) then
+                append_search(self.cat_short_list[self:val()])
+            elseif is_key_active(KEYS.CONTROL) then
+                append_search(self.name_list[self:val()])
+            else
+                append_search(self.name_list[self:val()])
+            end
         end
     end
-
+    
     function GUI.elms.list_category:onvalchange()
         update_subcategory(self:val(), 1)
         update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), GUI.elms.list_synonym:val())
@@ -284,10 +325,20 @@ function display_usc_data(data)
 
     function GUI.elms.list_subcategory:ondoubleclick()
         if is_cat_id_enable() then
-            append_search(self.cat_list[self:val()])
+            if is_key_active(KEYS.CONTROL) then
+                append_search(self.name_list[self:val()])
+            elseif is_key_active(KEYS.SHIFT) then
+                append_search(self.subcategory_en_list[self:val()])
+            elseif is_key_active(KEYS.ALT) then
+                append_search(self.cat_list[self:val()])
+            else
+                append_search(self.cat_list[self:val()])
+            end
         else
             if is_key_active(KEYS.SHIFT) then
                 append_search(self.subcategory_en_list[self:val()])
+            elseif is_key_active(KEYS.ALT) then
+                append_search(self.cat_list[self:val()])
             else
                 append_search(self.name_list[self:val()])
             end
@@ -427,7 +478,7 @@ GUI.Draw_Version = function ()
     gfx.drawstr(str)
 end
 
-GUI.elms.check_cat:val({[1] = false, [2] = true, [3] = true})
+GUI.elms.check_cat:val({[1] = true, [2] = false, [3] = true, [4] = true})
 switch_lang(1)
 
 local load_system_usc_data_enabled = should_load_system_usc_data()
@@ -441,6 +492,18 @@ function check_cat_change()
     end
     load_system_usc_data_enabled = new_load_system_usc_data_enabled
     load_user_usc_data_enabled = new_load_user_usc_data_enabled
+end
+
+local load_is_cat_id_enable = is_cat_id_enable()
+local load_is_cat_short_enable = is_cat_short_enable()
+function check_cat_id_change()
+    local new_load_is_cat_id_enable = is_cat_id_enable()
+    local new_load_is_cat_short_enable = is_cat_short_enable()
+    if new_load_is_cat_id_enable ~= load_is_cat_id_enable or new_load_is_cat_short_enable ~= load_is_cat_short_enable then
+        display_usc_data(cur_usc_data)
+    end
+    load_is_cat_id_enable = new_load_is_cat_id_enable
+    load_is_cat_short_enable = new_load_is_cat_short_enable
 end
 
 reload_usc_data()
@@ -467,6 +530,7 @@ function GUI.func()
 
     -- 选择框改变
     check_cat_change()
+    check_cat_id_change()
 
     -- 键值处理
     local char = GUI.char
@@ -487,13 +551,37 @@ function GUI.func()
         update_usc_data()
     end
 
-    -- if char == 6579564 then -- Del 键
-    --     if is_key_active(KEYS.CONTROL) then
-    --         GUI.elms.edittext_filter:val("")
-    --     else
-    --         GUI.elms.edittext_search:val("")
-    --     end
-    -- end
+    if char == 26161 then -- F1 键
+        if is_cat_id_enable() then
+            GUI.elms.check_cat:val({[1] = false})
+        else
+            GUI.elms.check_cat:val({[1] = true})
+        end
+    end
+
+    if char == 26162 then -- F2 键
+        if is_cat_short_enable() then
+            GUI.elms.check_cat:val({[2] = false})
+        else
+            GUI.elms.check_cat:val({[2] = true})
+        end
+    end
+
+    if char == 26163 then -- F3 键
+        if should_load_system_usc_data() then
+            GUI.elms.check_cat:val({[3] = false})
+        else
+            GUI.elms.check_cat:val({[3] = true})
+        end
+    end
+
+    if char == 26164 then -- F4 键
+        if should_load_user_usc_data() then
+            GUI.elms.check_cat:val({[4] = false})
+        else
+            GUI.elms.check_cat:val({[4] = true})
+        end
+    end
 end
 
 -- local function force_size() -- 锁定GUI边界

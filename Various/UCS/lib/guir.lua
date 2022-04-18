@@ -81,7 +81,7 @@ GUI.New("radio_pro", "Radio", {
 GUI.New("radio_connect", "Radio", {
     z = 11,
     x = 752,
-    y = 176,
+    y = 208,
     w = 96,
     h = 112,
     caption = "Separator",
@@ -248,7 +248,7 @@ GUI.New("menubar_wild", "Menubar", {
     y = 336,
     w = 24,
     h = 24,
-    menus = {{title = "..", options = {
+    menus = {{title = " ", options = {
         {">Region"},
             {"<$regionname",mnu_file.regionname},
         {">Marker"}, 
@@ -277,9 +277,9 @@ GUI.New("check_cat", "Checklist", {
     x = 752,
     y = 48,
     w = 96,
-    h = 104,
+    h = 128,
     caption = "",
-    optarray = {"Use CatID", "USC list", "Custom list", "Loop count"},
+    optarray = {"CatID", "CatShort", "USC list", "Custom list", "Loop count"},
     dir = "v",
     pad = 4,
     font_a = 2,

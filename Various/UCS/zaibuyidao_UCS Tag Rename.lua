@@ -1131,19 +1131,23 @@ end
 --------------------------------------------- UCS Rename Start ---------------------------------------------
 
 function should_load_system_usc_data()
-    return GUI.elms.check_cat:val()[2] == true
+    return GUI.elms.check_cat:val()[3] == true
 end
 
 function should_load_user_usc_data()
-    return GUI.elms.check_cat:val()[3] == true
+    return GUI.elms.check_cat:val()[4] == true
 end
 
 function is_cat_id_enable() -- 启用CatID
     return GUI.elms.check_cat:val()[1] == true
 end
 
+function is_cat_short_enable() -- 启用CatShort
+    return GUI.elms.check_cat:val()[2] == true
+end
+
 function is_loop_count_enable() -- 启用Loop count
-    return GUI.elms.check_cat:val()[4] == true
+    return GUI.elms.check_cat:val()[5] == true
 end
 
 function reload_usc_data()
@@ -1283,6 +1287,57 @@ function get_locale()
     return LANGS[GUI.elms.menu_lang:val()].id
 end
 
+function renaming()
+    reaper.Undo_BeginBlock()
+    if is_loop_count_enable() then
+        reverse = true
+        if process == "Region mgr" then
+            rename_region(GUI.elms.edittext_search:val()) -- 重命名区域
+        elseif process == "Region time" then
+            rename_region_time(GUI.elms.edittext_search:val()) -- 重命名区域
+        elseif process == "Marker mgr" then
+            rename_marker(GUI.elms.edittext_search:val()) -- 重命名标记
+        elseif process == "Marker time" then
+            rename_marker_time(GUI.elms.edittext_search:val()) -- 重命名区域
+        elseif process == "Take" then
+            order = GUI.elms.radio_order:val()
+            if take_order == "Track" then
+                rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
+            elseif take_order == "Wrap" then
+                rename_take(GUI.elms.edittext_search:val(), order)
+            elseif take_order == "Time" then
+                rename_take(GUI.elms.edittext_search:val(), order)
+            end
+        elseif process == "Track" then
+            rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
+        end
+
+    else
+        reverse = false
+        if process == "Region mgr" then
+            rename_region(GUI.elms.edittext_search:val()) -- 重命名区域
+        elseif process == "Region time" then
+            rename_region_time(GUI.elms.edittext_search:val()) -- 重命名区域
+        elseif process == "Marker mgr" then
+            rename_marker(GUI.elms.edittext_search:val()) -- 重命名标记
+        elseif process == "Marker time" then
+            rename_marker_time(GUI.elms.edittext_search:val()) -- 重命名区域
+        elseif process == "Take" then
+            order = GUI.elms.radio_order:val()
+            if take_order == "Track" then
+                rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
+            elseif take_order == "Wrap" then
+                rename_take(GUI.elms.edittext_search:val(), order)
+            elseif take_order == "Time" then
+                rename_take(GUI.elms.edittext_search:val(), order)
+            end
+        elseif process == "Track" then
+            rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
+        end
+    end
+    reaper.Undo_EndBlock('', -1)
+end
+
 GUI.elms.edittext_search._onmousedown = GUI.elms.edittext_search.onmousedown
 GUI.elms.edittext_filter._onmousedown = GUI.elms.edittext_filter.onmousedown
 
@@ -1294,14 +1349,23 @@ function display_usc_data(data)
 
     function update_category(category_index)
         local locale = get_locale()
-        GUI.elms.list_category.list = table.map(data, function(item)
-            return item.name:get(locale) .. "  [" .. item.name.cat_short .. "]"
-        end)
+        if is_cat_short_enable() then
+            GUI.elms.list_category.list = table.map(data, function(item)
+                return item.name:get(locale) .. "  [" .. item.name.cat_short .. "]"
+            end)
+        else
+            GUI.elms.list_category.list = table.map(data, function(item)
+                return item.name:get(locale)
+            end)
+        end
         GUI.elms.list_category.name_list = table.map(data, function(item)
             return item.name:get(locale)
         end)
         GUI.elms.list_category.cat_short_list = table.map(data, function(item)
             return item.name.cat_short
+        end)
+        GUI.elms.list_category.cat_egory_list = table.map(data, function(item)
+            return item.name.cat_egory
         end)
         GUI.elms.list_category.category_en_list = table.map(data, function(item) -- 强制启用英文主分类列表
             return item.name.en
@@ -1321,9 +1385,15 @@ function display_usc_data(data)
             return
         end
         local locale = get_locale()
-        GUI.elms.list_subcategory.list = table.map(data[category_index].children, function (item)
-            return item.name:get(locale) .. "  [" .. item.cat_id .. "]"
-        end)
+        if is_cat_id_enable() then
+            GUI.elms.list_subcategory.list = table.map(data[category_index].children, function (item)
+                return item.name:get(locale) .. "  [" .. item.cat_id .. "]"
+            end)
+        else
+            GUI.elms.list_subcategory.list = table.map(data[category_index].children, function (item)
+                return item.name:get(locale)
+            end)
+        end
         GUI.elms.list_subcategory.name_list = table.map(data[category_index].children, function (item)
             return item.name:get(locale)
         end)
@@ -1370,12 +1440,26 @@ function display_usc_data(data)
     update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), orig_list_synonym_val)
 
     function GUI.elms.list_category:ondoubleclick()
-        if is_key_active(KEYS.SHIFT) then
-            append_search(self.category_en_list[self:val()])
-        elseif is_key_active(KEYS.ALT) then
-            append_search(self.cat_short_list[self:val()])
+        if is_cat_short_enable() then
+            if is_key_active(KEYS.CONTROL) then
+                append_search(self.name_list[self:val()])
+            elseif is_key_active(KEYS.SHIFT) then
+                append_search(self.cat_egory_list[self:val()])
+            elseif is_key_active(KEYS.ALT) then
+                append_search(self.cat_short_list[self:val()])
+            else
+                append_search(self.cat_short_list[self:val()])
+            end
         else
-            append_search(self.name_list[self:val()])
+            if is_key_active(KEYS.SHIFT) then
+                append_search(self.cat_egory_list[self:val()])
+            elseif is_key_active(KEYS.ALT) then
+                append_search(self.cat_short_list[self:val()])
+            elseif is_key_active(KEYS.CONTROL) then
+                append_search(self.name_list[self:val()])
+            else
+                append_search(self.name_list[self:val()])
+            end
         end
     end
 
@@ -1388,7 +1472,15 @@ function display_usc_data(data)
 
     function GUI.elms.list_subcategory:ondoubleclick()
         if is_cat_id_enable() then
-            append_search(self.cat_list[self:val()])
+            if is_key_active(KEYS.CONTROL) then
+                append_search(self.name_list[self:val()])
+            elseif is_key_active(KEYS.SHIFT) then
+                append_search(self.subcategory_en_list[self:val()])
+            elseif is_key_active(KEYS.ALT) then
+                append_search(self.cat_list[self:val()])
+            else
+                append_search(self.cat_list[self:val()])
+            end
         else
             if is_key_active(KEYS.SHIFT) then
                 append_search(self.subcategory_en_list[self:val()])
@@ -1424,15 +1516,6 @@ function display_usc_data(data)
         update_usc_data()
     end
 
-    -- function GUI.elms.btn_filter:ondoubleclick() -- 双击过滤按钮 清除
-    --     GUI.elms.edittext_filter:val("")
-    --     current_filter_pattern = ""
-    --     GUI.elms.list_category:val(1)
-    --     GUI.elms.list_subcategory:val(1)
-    --     GUI.elms.list_synonym:val(1)
-    --     update_usc_data()
-    -- end
-
     function GUI.elms.btn_clear:func()
         GUI.elms.edittext_filter:val("")
         current_filter_pattern = ""
@@ -1448,54 +1531,7 @@ function display_usc_data(data)
     end
 
     function GUI.elms.btn_search:func()
-        reaper.Undo_BeginBlock()
-        if is_loop_count_enable() then
-            reverse = true
-            if process == "Region mgr" then
-                rename_region(GUI.elms.edittext_search:val()) -- 重命名区域
-            elseif process == "Region time" then
-                rename_region_time(GUI.elms.edittext_search:val()) -- 重命名区域
-            elseif process == "Marker mgr" then
-                rename_marker(GUI.elms.edittext_search:val()) -- 重命名标记
-            elseif process == "Marker time" then
-                rename_marker_time(GUI.elms.edittext_search:val()) -- 重命名区域
-            elseif process == "Take" then
-                order = GUI.elms.radio_order:val()
-                if take_order == "Track" then
-                    rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
-                elseif take_order == "Wrap" then
-                    rename_take(GUI.elms.edittext_search:val(), order)
-                elseif take_order == "Time" then
-                    rename_take(GUI.elms.edittext_search:val(), order)
-                end
-            elseif process == "Track" then
-                rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
-            end
-
-        else
-            reverse = false
-            if process == "Region mgr" then
-                rename_region(GUI.elms.edittext_search:val()) -- 重命名区域
-            elseif process == "Region time" then
-                rename_region_time(GUI.elms.edittext_search:val()) -- 重命名区域
-            elseif process == "Marker mgr" then
-                rename_marker(GUI.elms.edittext_search:val()) -- 重命名标记
-            elseif process == "Marker time" then
-                rename_marker_time(GUI.elms.edittext_search:val()) -- 重命名区域
-            elseif process == "Take" then
-                order = GUI.elms.radio_order:val()
-                if take_order == "Track" then
-                    rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
-                elseif take_order == "Wrap" then
-                    rename_take(GUI.elms.edittext_search:val(), order)
-                elseif take_order == "Time" then
-                    rename_take(GUI.elms.edittext_search:val(), order)
-                end
-            elseif process == "Track" then
-                rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
-            end
-        end
-        reaper.Undo_EndBlock('', -1)
+        renaming()
     end
 
     function GUI.elms.edittext_search:onmousedown()
@@ -1577,7 +1613,7 @@ GUI.Draw_Version = function ()
     gfx.drawstr(str)
 end
 
-GUI.elms.check_cat:val({[1] = true, [2] = true, [3] = true, [4] = false})
+GUI.elms.check_cat:val({[1] = true, [2] = false, [3] = true, [4] = true, [5] = false})
 switch_lang(1)
 
 local load_system_usc_data_enabled = should_load_system_usc_data()
@@ -1591,6 +1627,18 @@ function check_cat_change()
     end
     load_system_usc_data_enabled = new_load_system_usc_data_enabled
     load_user_usc_data_enabled = new_load_user_usc_data_enabled
+end
+
+local load_is_cat_id_enable = is_cat_id_enable()
+local load_is_cat_short_enable = is_cat_short_enable()
+function check_cat_id_change()
+    local new_load_is_cat_id_enable = is_cat_id_enable()
+    local new_load_is_cat_short_enable = is_cat_short_enable()
+    if new_load_is_cat_id_enable ~= load_is_cat_id_enable or new_load_is_cat_short_enable ~= load_is_cat_short_enable then
+        display_usc_data(cur_usc_data)
+    end
+    load_is_cat_id_enable = new_load_is_cat_id_enable
+    load_is_cat_short_enable = new_load_is_cat_short_enable
 end
 
 reload_usc_data()
@@ -1620,6 +1668,7 @@ function GUI.func()
 
     -- 选择框改变
     check_cat_change()
+    check_cat_id_change()
 
     -- 键值处理
     local char = GUI.char
@@ -1629,54 +1678,7 @@ function GUI.func()
             current_filter_pattern = GUI.elms.edittext_filter:val()
             update_usc_data()
         else
-            reaper.Undo_BeginBlock()
-            if is_loop_count_enable() then
-                reverse = true
-                if process == "Region mgr" then
-                    rename_region(GUI.elms.edittext_search:val()) -- 重命名区域
-                elseif process == "Region time" then
-                    rename_region_time(GUI.elms.edittext_search:val()) -- 重命名区域
-                elseif process == "Marker mgr" then
-                    rename_marker(GUI.elms.edittext_search:val()) -- 重命名标记
-                elseif process == "Marker time" then
-                    rename_marker_time(GUI.elms.edittext_search:val()) -- 重命名区域
-                elseif process == "Take" then
-                    order = GUI.elms.radio_order:val()
-                    if take_order == "Track" then
-                        rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
-                    elseif take_order == "Wrap" then
-                        rename_take(GUI.elms.edittext_search:val(), order)
-                    elseif take_order == "Time" then
-                        rename_take(GUI.elms.edittext_search:val(), order)
-                    end
-                elseif process == "Track" then
-                    rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
-                end
-    
-            else
-                reverse = false
-                if process == "Region mgr" then
-                    rename_region(GUI.elms.edittext_search:val()) -- 重命名区域
-                elseif process == "Region time" then
-                    rename_region_time(GUI.elms.edittext_search:val()) -- 重命名区域
-                elseif process == "Marker mgr" then
-                    rename_marker(GUI.elms.edittext_search:val()) -- 重命名标记
-                elseif process == "Marker time" then
-                    rename_marker_time(GUI.elms.edittext_search:val()) -- 重命名区域
-                elseif process == "Take" then
-                    order = GUI.elms.radio_order:val()
-                    if take_order == "Track" then
-                        rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
-                    elseif take_order == "Wrap" then
-                        rename_take(GUI.elms.edittext_search:val(), order)
-                    elseif take_order == "Time" then
-                        rename_take(GUI.elms.edittext_search:val(), order)
-                    end
-                elseif process == "Track" then
-                    rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
-                end
-            end
-            reaper.Undo_EndBlock('', -1)
+            renaming()
         end
     elseif char == 26165 then -- F5 键
         GUI.elms.edittext_filter:val("")
@@ -1687,13 +1689,37 @@ function GUI.func()
         update_usc_data()
     end
 
-    -- if char == 6579564 then -- Del 键
-    --     if is_key_active(KEYS.CONTROL) then
-    --         GUI.elms.edittext_filter:val("")
-    --     else
-    --         GUI.elms.edittext_search:val("")
-    --     end
-    -- end
+    if char == 26161 then -- F1 键
+        if is_cat_id_enable() then
+            GUI.elms.check_cat:val({[1] = false})
+        else
+            GUI.elms.check_cat:val({[1] = true})
+        end
+    end
+
+    if char == 26162 then -- F2 键
+        if is_cat_short_enable() then
+            GUI.elms.check_cat:val({[2] = false})
+        else
+            GUI.elms.check_cat:val({[2] = true})
+        end
+    end
+
+    if char == 26163 then -- F3 键
+        if should_load_system_usc_data() then
+            GUI.elms.check_cat:val({[3] = false})
+        else
+            GUI.elms.check_cat:val({[3] = true})
+        end
+    end
+
+    if char == 26164 then -- F4 键
+        if should_load_user_usc_data() then
+            GUI.elms.check_cat:val({[4] = false})
+        else
+            GUI.elms.check_cat:val({[4] = true})
+        end
+    end
 end
 
 -- local function force_size() -- 锁定GUI边界

@@ -63,6 +63,7 @@ function usc.read_from_csv(filename, result)
         result[index].name.zh = data[i][6]
         result[index].name.tw = data[i][9]
         result[index].name.cat_short = data[i][4]
+        result[index].name.cat_egory = data[i][1]
         table.insert(result[index].children, {
             name = LocaleData {
                 en = data[i][2],
