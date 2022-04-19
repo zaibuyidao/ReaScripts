@@ -1305,7 +1305,7 @@ function renaming()
                 rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
             elseif take_order == "Wrap" then
                 rename_take(GUI.elms.edittext_search:val(), order)
-            elseif take_order == "Time" then
+            elseif take_order == "Timeline" then
                 rename_take(GUI.elms.edittext_search:val(), order)
             end
         elseif process == "Track" then
@@ -1328,7 +1328,7 @@ function renaming()
                 rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
             elseif take_order == "Wrap" then
                 rename_take(GUI.elms.edittext_search:val(), order)
-            elseif take_order == "Time" then
+            elseif take_order == "Timeline" then
                 rename_take(GUI.elms.edittext_search:val(), order)
             end
         elseif process == "Track" then
@@ -1719,6 +1719,14 @@ function GUI.func()
         else
             GUI.elms.check_cat:val({[4] = true})
         end
+    end
+
+    if char == 26166 then -- F6 键
+        GUI.elms.radio_connect:val(1)
+    elseif char == 26167 then -- F7 键
+        GUI.elms.radio_connect:val(2)
+    elseif char == 26168 then -- F8 键
+        GUI.elms.radio_connect:val(4)
     end
 end
 
