@@ -1186,27 +1186,136 @@ function send_search_text(text) -- 开始搜索
     end
 end
 
-function append_search(text)
-    local orig = GUI.elms.edittext_search:val()
-    local append_pre = ""
-    
-    local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
-    local append_after = ""
-    if connect == "Default" then
-        if #orig > 0 then append_pre = "_" end
-    elseif connect == "Hyphen" then
-        if #orig > 0 then append_pre = "-" end
-    elseif connect == "Space" then
-        if #orig > 0 then append_pre = " " end
-    elseif connect == "None" then
-        if #orig > 0 then append_pre = "" end
-    else
-        append_after = connect .. " " .. text
-    end
-    GUI.elms.edittext_search:val(orig .. append_pre .. text) -- 文本
-    GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
-    GUI.elms.edittext_search:redraw()
+seperators = {
+    {name = "Underline", value = "_"},
+    {name = "Pyphen", value = "-"},
+    {name = "Blank", value = " "},
+    {name = "None", value = ""}
+}
+
+GUI.elms.radio_connect.optarray = table.map(seperators, function (item) return item.name end)
+
+function get_seperator()
+    return seperators[GUI.elms.radio_connect:val()].value
 end
+
+function is_sep(sep)
+    for _, seperator in ipairs(seperators) do
+        if sep == seperator.value then
+            return true
+        end
+    end
+end
+
+function append_search(text)
+    local et = GUI.elms.edittext_search
+    local orig = et:val()
+    local sep = get_seperator()
+    local result = orig
+    if not is_sep(orig:sub(#orig, #orig)) and #orig > 0 then
+        result = result .. sep
+    end
+    result = result .. text
+    et:val(result)
+    et.caret = et:carettoend()
+    et:redraw()
+end
+
+function prepend_cat_id(cat_id)
+    local et = GUI.elms.edittext_search
+    local orig = et:val()
+    local sep = get_seperator()
+    local result = orig
+    -- 存在cat_id前缀，先删除前缀
+    if et.cat_id and et.cat_id == orig:sub(1, #et.cat_id) then
+        result = result:sub(#et.cat_id + 1, #orig)
+    end
+    -- 如果剩余内容不为空，并且开头不是分隔符，则先附加分隔符
+    if #result > 0 and not is_sep(result:sub(1, 1)) then
+        result = sep .. result
+    end
+    result = cat_id .. result
+    et:val(result)
+    et.cat_id = cat_id
+end
+
+function append_search_underline(text)
+    local et = GUI.elms.edittext_search
+    local orig = et:val()
+    local sep = "_"
+    local result = orig
+    if not is_sep(orig:sub(#orig, #orig)) and #orig > 0 then
+        result = result .. sep
+    end
+    result = result .. text
+    et:val(result)
+    et.caret = et:carettoend()
+    et:redraw()
+end
+
+function append_search_hyphen(text)
+    local et = GUI.elms.edittext_search
+    local orig = et:val()
+    local sep = "-"
+    local result = orig
+    if not is_sep(orig:sub(#orig, #orig)) and #orig > 0 then
+        result = result .. sep
+    end
+    result = result .. text
+    et:val(result)
+    et.caret = et:carettoend()
+    et:redraw()
+end
+
+function append_search_blank(text)
+    local et = GUI.elms.edittext_search
+    local orig = et:val()
+    local sep = " "
+    local result = orig
+    if not is_sep(orig:sub(#orig, #orig)) and #orig > 0 then
+        result = result .. sep
+    end
+    result = result .. text
+    et:val(result)
+    et.caret = et:carettoend()
+    et:redraw()
+end
+
+function append_search_none(text)
+    local et = GUI.elms.edittext_search
+    local orig = et:val()
+    local sep = ""
+    local result = orig
+    if not is_sep(orig:sub(#orig, #orig)) and #orig > 0 then
+        result = result .. sep
+    end
+    result = result .. text
+    et:val(result)
+    et.caret = et:carettoend()
+    et:redraw()
+end
+
+-- function append_search(text)
+--     local orig = GUI.elms.edittext_search:val()
+--     local append_pre = ""
+    
+--     local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
+--     local append_after = ""
+--     if connect == "Default" then
+--         if #orig > 0 then append_pre = "_" end
+--     elseif connect == "Hyphen" then
+--         if #orig > 0 then append_pre = "-" end
+--     elseif connect == "Space" then
+--         if #orig > 0 then append_pre = " " end
+--     elseif connect == "None" then
+--         if #orig > 0 then append_pre = "" end
+--     else
+--         append_after = connect .. " " .. text
+--     end
+--     GUI.elms.edittext_search:val(orig .. append_pre .. text) -- 文本
+--     GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+--     GUI.elms.edittext_search:redraw()
+-- end
 
 function filter_pattern_match(text, pattern)
     -- 大小写敏感
@@ -1426,21 +1535,35 @@ function display_usc_data(data)
 
     function GUI.elms.list_category:ondoubleclick()
         if is_cat_short_enable() then
-            if is_key_active(KEYS.CONTROL) then
+            if is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) then
                 append_search(self.name_list[self:val()])
             elseif is_key_active(KEYS.SHIFT) then
-                append_search(self.cat_egory_list[self:val()])
-            elseif is_key_active(KEYS.ALT) then
+                if not is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                    append_search(self.cat_egory_list[self:val()])
+                elseif is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                    append_search_hyphen(self.cat_egory_list[self:val()])
+                end
+                if is_key_active(KEYS.ALT) then
+                    append_search_none(self.cat_egory_list[self:val()])
+                end
+            elseif is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) and not is_key_active(KEYS.CONTROL) then
                 append_search(self.cat_short_list[self:val()])
             else
                 append_search(self.cat_short_list[self:val()])
             end
         else
             if is_key_active(KEYS.SHIFT) then
-                append_search(self.cat_egory_list[self:val()])
-            elseif is_key_active(KEYS.ALT) then
+                if not is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                    append_search(self.cat_egory_list[self:val()])
+                elseif is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                    append_search_hyphen(self.cat_egory_list[self:val()])
+                end
+                if is_key_active(KEYS.ALT) then
+                    append_search_none(self.cat_egory_list[self:val()])
+                end
+            elseif is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) and not is_key_active(KEYS.CONTROL) then
                 append_search(self.cat_short_list[self:val()])
-            elseif is_key_active(KEYS.CONTROL) then
+            elseif is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) then
                 append_search(self.name_list[self:val()])
             else
                 append_search(self.name_list[self:val()])
@@ -1457,20 +1580,34 @@ function display_usc_data(data)
 
     function GUI.elms.list_subcategory:ondoubleclick()
         if is_cat_id_enable() then
-            if is_key_active(KEYS.CONTROL) then
+            if is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) then
                 append_search(self.name_list[self:val()])
             elseif is_key_active(KEYS.SHIFT) then
-                append_search(self.subcategory_en_list[self:val()])
-            elseif is_key_active(KEYS.ALT) then
-                append_search(self.cat_list[self:val()])
+                if not is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                    append_search(self.subcategory_en_list[self:val()])
+                elseif is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                    append_search_hyphen(self.subcategory_en_list[self:val()])
+                end
+                if is_key_active(KEYS.ALT) then
+                    append_search_none(self.subcategory_en_list[self:val()])
+                end
+            elseif is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) and not is_key_active(KEYS.CONTROL) then
+                prepend_cat_id(self.cat_list[self:val()])
             else
-                append_search(self.cat_list[self:val()])
+                prepend_cat_id(self.cat_list[self:val()])
             end
         else
             if is_key_active(KEYS.SHIFT) then
-                append_search(self.subcategory_en_list[self:val()])
-            elseif is_key_active(KEYS.ALT) then
-                append_search(self.cat_list[self:val()])
+                if not is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                    append_search(self.subcategory_en_list[self:val()])
+                elseif is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                    append_search_hyphen(self.subcategory_en_list[self:val()])
+                end
+                if is_key_active(KEYS.ALT) then
+                    append_search_none(self.subcategory_en_list[self:val()])
+                end
+            elseif is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) and not is_key_active(KEYS.CONTROL) then
+                prepend_cat_id(self.cat_list[self:val()])
             else
                 append_search(self.name_list[self:val()])
             end
@@ -1485,7 +1622,14 @@ function display_usc_data(data)
 
     function GUI.elms.list_synonym:ondoubleclick()
         if is_key_active(KEYS.SHIFT) then
-            append_search(self.synonyms_en_list[self:val()])
+            if not is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                append_search(self.synonyms_en_list[self:val()])
+            elseif is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
+                append_search_hyphen(self.synonyms_en_list[self:val()])
+            end
+            if is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) and not is_key_active(KEYS.CONTROL) then
+                append_search_none(self.synonyms_en_list[self:val()])
+            end
         else
             append_search(self.list[self:val()])
         end
@@ -1496,11 +1640,15 @@ function display_usc_data(data)
     end
 
     function GUI.elms.btn_filter:func()
-        if #GUI.elms.edittext_filter:val() < 1 then return end
+        -- if #GUI.elms.edittext_filter:val() < 1 then return end
         current_filter_pattern = GUI.elms.edittext_filter:val()
         update_usc_data()
-    end
 
+        GUI.elms.edittext_filter.focus = false
+        GUI.elms.edittext_filter.focus = true
+        GUI.elms.edittext_filter:redraw()
+    end
+    
     function GUI.elms.btn_clear:func()
         GUI.elms.edittext_filter:val("")
         current_filter_pattern = ""
@@ -1508,6 +1656,10 @@ function display_usc_data(data)
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
+
+        GUI.elms.edittext_filter.focus = false
+        GUI.elms.edittext_filter.focus = true
+        GUI.elms.edittext_filter:redraw()
     end
 
     function GUI.elms.menu_lang:onvalchange()
@@ -1630,6 +1782,8 @@ reload_usc_data()
 update_usc_data()
 
 GUI.freq = 0
+--text_box = false
+GUI.elms.edittext_filter.focus = true
 function GUI.func()
 
     process = GUI.elms.radio_pro.optarray[GUI.elms.radio_pro:val()]
@@ -1662,10 +1816,16 @@ function GUI.func()
         if is_key_active(KEYS.CONTROL) then -- 同时按住Ctrl
             current_filter_pattern = GUI.elms.edittext_filter:val()
             update_usc_data()
+            GUI.elms.edittext_filter.focus = false
+            GUI.elms.edittext_filter.focus = true
+        elseif is_key_active(KEYS.ALT) then -- 同时按住Alt
+            renaming()
         else
             renaming()
         end
-    elseif char == 26165 then -- F5 键
+    end
+
+    if char == 26165 then -- F5 键
         GUI.elms.edittext_filter:val("")
         current_filter_pattern = ""
         GUI.elms.list_category:val(1)
@@ -1712,6 +1872,26 @@ function GUI.func()
         GUI.elms.radio_connect:val(2)
     elseif char == 26168 then -- F8 键
         GUI.elms.radio_connect:val(4)
+    end
+
+    if char == 9 then -- TAB 键
+        if GUI.elms.edittext_filter.focus == false then
+            GUI.elms.edittext_search.focus = false
+            GUI.elms.edittext_filter.focus = false
+            GUI.elms.edittext_filter.focus = true
+            --GUI.elms.edittext_filter.caret = GUI.elms.edittext_search:carettoend()
+            --GUI.elms.edittext_filter.show_caret = true
+            --GUI.elms.edittext_filter:lostfocus()
+            GUI.elms.edittext_filter:redraw()
+        else
+            GUI.elms.edittext_filter.focus = false
+            GUI.elms.edittext_search.focus = false
+            GUI.elms.edittext_search.focus = true
+            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+            --GUI.elms.edittext_search.show_caret = true
+            --GUI.elms.edittext_search:lostfocus()
+            GUI.elms.edittext_search:redraw()
+        end
     end
 end
 
