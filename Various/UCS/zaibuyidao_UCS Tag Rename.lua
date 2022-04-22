@@ -1523,6 +1523,7 @@ function renaming()
     if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
     GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
     GUI.elms.edittext_search.focus = true
+    GUI.elms.edittext_search:redraw()
     reaper.Undo_EndBlock('', -1)
 end
 
@@ -1719,7 +1720,7 @@ function display_usc_data(data)
             elseif is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) then
                 append_search_hyphen(self.synonyms_en_list[self:val()])
             end
-            if is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) and not is_key_active(KEYS.CONTROL) then
+            if is_key_active(KEYS.ALT) and not is_key_active(KEYS.CONTROL) then
                 append_search_none(self.synonyms_en_list[self:val()])
             end
         else
@@ -1738,7 +1739,7 @@ function display_usc_data(data)
 
         if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
         GUI.elms.edittext_filter.focus = true
-        --GUI.elms.edittext_filter:redraw()
+        GUI.elms.edittext_filter:redraw()
     end
     
     function GUI.elms.btn_clear:func()
@@ -1751,7 +1752,7 @@ function display_usc_data(data)
 
         if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
         GUI.elms.edittext_filter.focus = true
-        --GUI.elms.edittext_filter:redraw()
+        GUI.elms.edittext_filter:redraw()
     end
 
     function GUI.elms.menu_lang:onvalchange()
@@ -1918,6 +1919,7 @@ function GUI.func()
 
             if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
             GUI.elms.edittext_filter.focus = true
+            GUI.elms.edittext_filter:redraw()
         elseif is_key_active(KEYS.ALT) then -- 同时按住Alt
             renaming()
         else
@@ -1932,8 +1934,10 @@ function GUI.func()
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
+
         if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
         GUI.elms.edittext_filter.focus = true
+        GUI.elms.edittext_filter:redraw()
     end
 
     if char == 26161 then -- F1 键
@@ -1983,7 +1987,7 @@ function GUI.func()
             --GUI.elms.edittext_filter.caret = GUI.elms.edittext_search:carettoend()
             --GUI.elms.edittext_filter.show_caret = true
             --GUI.elms.edittext_filter:lostfocus()
-            --GUI.elms.edittext_filter:redraw()
+            GUI.elms.edittext_filter:redraw()
             text_box = true
         else
             GUI.elms.edittext_filter.focus = false
@@ -1991,7 +1995,7 @@ function GUI.func()
             GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
             --GUI.elms.edittext_search.show_caret = true
             --GUI.elms.edittext_search:lostfocus()
-            --GUI.elms.edittext_search:redraw()
+            GUI.elms.edittext_search:redraw()
             text_box = false
         end
     end
