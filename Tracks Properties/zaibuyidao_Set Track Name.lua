@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Set Track Name
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -145,6 +145,19 @@ function build_name(build_pattern, i)
     return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
   end)
 
+  build_pattern = build_pattern:gsub("r=(%d+)", function (n)
+    local t = {
+      "0","1","2","3","4","5","6","7","8","9",
+      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+      "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+    }
+    local s = ""
+    for i = 1, n do
+      s = s .. t[math.random(#t)]
+    end
+    return s
+  end)
+  
   local ab = string.byte("a")
   local zb = string.byte("z")
   local Ab = string.byte("A")

@@ -74,92 +74,92 @@ end
 --------------------------------------------- Rename Region Manager ---------------------------------------------
 
 function get_all_regions()
-  local result = {}
-  local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
-  for i = 0, num_markers + num_regions - 1 do
-    local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
-    if retval ~= nil and isrgn then
-      pos2 = string.sub(string.format("%.10f", pos), 1, -8) -- 截取到小數點3位數
-      rgnend2 = string.sub(string.format("%.10f", rgnend), 1, -8) -- 截取到小數點3位數
-
-      table.insert(result, {
-        index = markrgnindexnumber,
-        isrgn = isrgn,
-        left = pos2,
-        right = rgnend2,
-        name = name,
-        color = color,
-        left_ori = pos,
-        right_ori = rgnend
-      })
+    local result = {}
+    local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
+    for i = 0, num_markers + num_regions - 1 do
+        local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
+        if retval ~= nil and isrgn then
+            pos2 = string.sub(string.format("%.10f", pos), 1, -8) -- 截取到小數點3位數
+            rgnend2 = string.sub(string.format("%.10f", rgnend), 1, -8) -- 截取到小數點3位數
+      
+            table.insert(result, {
+                index = markrgnindexnumber,
+                isrgn = isrgn,
+                left = pos2,
+                right = rgnend2,
+                name = name,
+                color = color,
+                left_ori = pos,
+                right_ori = rgnend
+            })
+        end
     end
-  end
-  return result
+    return result
 end
 
 function get_sel_regions()
-  local all_regions = get_all_regions()
-  if #all_regions == 0 then return {} end
-  local sel_index = {}
-
-  local rgn_name, rgn_left, rgn_right, mng_regions, cur = {}, {}, {}, {}, {}
-  local rgn_selected_bool = false
-
-  j = 0
-  for index in string.gmatch(sel_indexes, '[^,]+') do
-    j = j + 1
-    local sel_item = reaper.JS_ListView_GetItemText(container, tonumber(index), 1)
-
-    if sel_item:find("R") ~= nil then
-      rgn_name[j] = reaper.JS_ListView_GetItemText(container, tonumber(index), 2)
-      rgn_left[j] = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
-      rgn_right[j] = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
-
-      cur = {
-        regionname = rgn_name[j],
-        left = tonumber(rgn_left[j]),
-        right = tonumber(rgn_right[j])
-      }
+    local all_regions = get_all_regions()
+    if #all_regions == 0 then return {} end
+    local sel_index = {}
+  
+    local rgn_name, rgn_left, rgn_right, mng_regions, cur = {}, {}, {}, {}, {}
+    local rgn_selected_bool = false
+  
+    j = 0
+    for index in string.gmatch(sel_indexes, '[^,]+') do
+        j = j + 1
+        local sel_item = reaper.JS_ListView_GetItemText(container, tonumber(index), 1)
     
-      table.insert(mng_regions, {
-        regionname = cur.regionname,
-        left = cur.left,
-        right = cur.right
-      })
-
-      rgn_selected_bool = true
+        if sel_item:find("R") ~= nil then
+            rgn_name[j] = reaper.JS_ListView_GetItemText(container, tonumber(index), 2)
+            rgn_left[j] = reaper.JS_ListView_GetItemText(container, tonumber(index), 3)
+            rgn_right[j] = reaper.JS_ListView_GetItemText(container, tonumber(index), 4)
+      
+            cur = {
+                regionname = rgn_name[j],
+                left = tonumber(rgn_left[j]),
+                right = tonumber(rgn_right[j])
+            }
+          
+            table.insert(mng_regions, {
+                regionname = cur.regionname,
+                left = cur.left,
+                right = cur.right
+            })
+        
+            rgn_selected_bool = true
+        end
     end
-  end
-
-  -- 标记选中区域
-  for _, merged_rgn in ipairs(mng_regions) do
-    local l, r = 1, #all_regions
-    -- 查找第一个左端点在左侧的区域
-    while l <= r do
-      local mid = math.floor((l+r)/2)
-      if (all_regions[mid].left - bias) > merged_rgn.left then
-        r = mid - 1
-      else
-        l = mid + 1
-      end
+  
+    -- 标记选中区域
+    for _, merged_rgn in ipairs(mng_regions) do
+        local l, r = 1, #all_regions
+        -- 查找第一个左端点在左侧的区域
+        while l <= r do
+            local mid = math.floor((l+r)/2)
+            if (all_regions[mid].left - bias) > merged_rgn.left then
+                r = mid - 1
+            else
+                l = mid + 1
+            end
+        end
+        if math.abs( (merged_rgn.right - merged_rgn.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
+            sel_index[r] = true
+        end
     end
-    if math.abs( (merged_rgn.right - merged_rgn.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
-      sel_index[r] = true
-    end
-  end
-
-  -- 处理结果
-  local result = {}
-  local indexs = {}
-  for k, _ in pairs(sel_index) do table.insert(indexs, k) end
-  table.sort(indexs)
-  for _, v in ipairs(indexs) do table.insert(result, all_regions[v]) end
-
-  return result
+  
+    -- 处理结果
+    local result = {}
+    local indexs = {}
+    for k, _ in pairs(sel_index) do table.insert(indexs, k) end
+    table.sort(indexs)
+    for _, v in ipairs(indexs) do table.insert(result, all_regions[v]) end
+  
+    return result
 end
 
 function set_region(region)
-  reaper.SetProjectMarker3(0, region.index, region.isrgn, region.left_ori, region.right_ori, region.name, region.color)
+    reaper.SetProjectMarker3(0, region.index, region.isrgn, region.left_ori, region.right_ori, region.name, region.color)
 end
 
 --[[
@@ -180,96 +180,109 @@ function set_sel_regions()
     if reaper.GetToggleCommandStateEx(0, 40367) == 1 then -- View: Time unit for ruler: Measures.Beats
         meas_beat_flag = true
         reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-      end
+    end
       
-      if reaper.GetToggleCommandStateEx(0, 41916) == 1 then -- View: Time unit for ruler: Measures.Beats (minimal)
+    if reaper.GetToggleCommandStateEx(0, 41916) == 1 then -- View: Time unit for ruler: Measures.Beats (minimal)
         meas_beat_mini_flag = true
         reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-      end
+    end
       
-      if reaper.GetToggleCommandStateEx(0, 40368) == 1 then -- View: Time unit for ruler: Seconds
+    if reaper.GetToggleCommandStateEx(0, 40368) == 1 then -- View: Time unit for ruler: Seconds
         seconds_flag = true
         reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-      end
+    end
       
-      if reaper.GetToggleCommandStateEx(0, 40369) == 1 then -- View: Time unit for ruler: Samples
+    if reaper.GetToggleCommandStateEx(0, 40369) == 1 then -- View: Time unit for ruler: Samples
         samples_flag = true
         reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-      end
+    end
       
-      if reaper.GetToggleCommandStateEx(0, 40370) == 1 then -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
+    if reaper.GetToggleCommandStateEx(0, 40370) == 1 then -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
         hours_frames_flag = true
         reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-      end
+    end
       
-      if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for ruler: Absolute frames
+    if reaper.GetToggleCommandStateEx(0, 41973) == 1 then -- View: Time unit for ruler: Absolute frames
         frames_flag = true
         reaper.Main_OnCommand(40368, 0) -- View: Time unit for ruler: Seconds
-      end
+    end
       
-      local sel_regions = get_sel_regions()
+    local sel_regions = get_sel_regions()
       
-      if minutes_seconds_flag then reaper.Main_OnCommand(40365, 0) end -- View: Time unit for ruler: Minutes:Seconds
-      if seconds_flag then reaper.Main_OnCommand(40368, 0) end -- View: Time unit for ruler: Seconds
-      if meas_beat_flag then reaper.Main_OnCommand(40367, 0) end -- View: Time unit for ruler: Measures.Beats
-      if meas_beat_mini_flag then reaper.Main_OnCommand(41916, 0) end -- View: Time unit for ruler: Measures.Beats (minimal)
-      if samples_flag then reaper.Main_OnCommand(40369, 0) end -- View: Time unit for ruler: Samples
-      if hours_frames_flag then reaper.Main_OnCommand(40370, 0) end -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
-      if frames_flag then reaper.Main_OnCommand(41973, 0) end -- View: Time unit for ruler: Absolute frames
-      return sel_regions
+    if minutes_seconds_flag then reaper.Main_OnCommand(40365, 0) end -- View: Time unit for ruler: Minutes:Seconds
+    if seconds_flag then reaper.Main_OnCommand(40368, 0) end -- View: Time unit for ruler: Seconds
+    if meas_beat_flag then reaper.Main_OnCommand(40367, 0) end -- View: Time unit for ruler: Measures.Beats
+    if meas_beat_mini_flag then reaper.Main_OnCommand(41916, 0) end -- View: Time unit for ruler: Measures.Beats (minimal)
+    if samples_flag then reaper.Main_OnCommand(40369, 0) end -- View: Time unit for ruler: Samples
+    if hours_frames_flag then reaper.Main_OnCommand(40370, 0) end -- View: Time unit for ruler: Hours:Minutes:Seconds:Frames
+    if frames_flag then reaper.Main_OnCommand(41973, 0) end -- View: Time unit for ruler: Absolute frames
+    return sel_regions
 end
 
 function build_name_region(build_pattern, origin_name, i)
     build_pattern = build_pattern:gsub("$regionname", origin_name)
 
     if reverse then
-      build_pattern = build_pattern:gsub("v=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号
-        local len = #start_idx
-        start_idx = tonumber(start_idx)
-        end_idx = tonumber(end_idx)
-        if start_idx > end_idx then
-          return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
-        end
-        return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
-      end)
+        build_pattern = build_pattern:gsub("v=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号
+            local len = #start_idx
+            start_idx = tonumber(start_idx)
+            end_idx = tonumber(end_idx)
+            if start_idx > end_idx then
+                return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
+            end
+            return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
+        end)
     end
   
     build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
-      return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
+        return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
     end)
   
+    build_pattern = build_pattern:gsub("r=(%d+)", function (n)
+        local t = {
+            "0","1","2","3","4","5","6","7","8","9",
+            "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+            "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+        }
+        local s = ""
+        for i = 1, n do
+            s = s .. t[math.random(#t)]
+        end
+        return s
+    end)
+
     local ab = string.byte("a")
     local zb = string.byte("z")
     local Ab = string.byte("A")
     local Zb = string.byte("Z")
   
     if reverse then
-      build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
-        local c1b = c1:byte()
-        local c2b = c2:byte()
-        if c1b > c2b then
-          return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-        end
-        return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
-      end)
-    
-      build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
-        local c1b = c1:byte()
-        local c2b = c2:byte()
-        if c1b > c2b then
-          return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-        end
-        return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
-      end)
+        build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
+            local c1b = c1:byte()
+            local c2b = c2:byte()
+            if c1b > c2b then
+                return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
+            end
+            return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+        end)
+        
+        build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
+            local c1b = c1:byte()
+            local c2b = c2:byte()
+            if c1b > c2b then
+                return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
+            end
+            return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+        end)
     end
   
     build_pattern = build_pattern:gsub("a=([A-Za-z])", function(c) -- 匹配字母
-      local cb = c:byte()
-      if cb >= ab and cb <= zb then
-        return string.char(ab + ((cb - ab) + (i - 1)) % 26)
-      elseif cb >= Ab and cb <= Zb then
-        return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
-      end
+        local cb = c:byte()
+        if cb >= ab and cb <= zb then
+            return string.char(ab + ((cb - ab) + (i - 1)) % 26)
+        elseif cb >= Ab and cb <= Zb then
+            return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
+        end
     end)
   
     return build_pattern
@@ -298,17 +311,17 @@ function get_all_regions_time()
     local result = {}
     local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
     for i = 0, num_markers + num_regions - 1 do
-      local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
-      if retval ~= nil and isrgn then
-        table.insert(result, {
-          index = markrgnindexnumber,
-          isrgn = isrgn,
-          left = pos,
-          right = rgnend,
-          name = name,
-          color = color
-        })
-      end
+        local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
+        if retval ~= nil and isrgn then
+            table.insert(result, {
+                index = markrgnindexnumber,
+                isrgn = isrgn,
+                left = pos,
+                right = rgnend,
+                name = name,
+                color = color
+            })
+        end
     end
     return result
 end
@@ -322,31 +335,31 @@ function get_sel_regions_time()
   
     local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
     for i = 0, num_markers + num_regions-1 do
-      local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
+        local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
     
-      if retval ~= nil and isrgn then
-        cur = { left = pos, right = rgnend }
-        table.insert(time_regions, cur)
-      end
+        if retval ~= nil and isrgn then
+            cur = { left = pos, right = rgnend }
+            table.insert(time_regions, cur)
+        end
     end
   
     -- 标记选中区域
     for _, merged_rgn in ipairs(time_regions) do
-      local l, r = 1, #all_regions
-      -- 查找第一个左端点在item左侧的区域
-      while l <= r do
-        local mid = math.floor((l+r)/2)
-  
-        if (all_regions[mid].left - bias) > merged_rgn.left then
-          r = mid - 1
-        else 
-          l = mid + 1
+        local l, r = 1, #all_regions
+        -- 查找第一个左端点在item左侧的区域
+        while l <= r do
+            local mid = math.floor((l+r)/2)
+    
+            if (all_regions[mid].left - bias) > merged_rgn.left then
+                r = mid - 1
+            else 
+                l = mid + 1
+            end
         end
-      end
-  
-      if math.abs( (merged_rgn.right - merged_rgn.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
-        sel_index[r] = true
-      end
+    
+        if math.abs( (merged_rgn.right - merged_rgn.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
+            sel_index[r] = true
+        end
     end
   
     -- 处理结果
@@ -380,7 +393,7 @@ function build_name_region_time(build_pattern, origin_name, i)
         start_idx = tonumber(start_idx)
         end_idx = tonumber(end_idx)
         if start_idx > end_idx then
-          return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
+            return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
         end
         return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
       end)
@@ -388,43 +401,56 @@ function build_name_region_time(build_pattern, origin_name, i)
 
     build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
         return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
-      end)
-    
-      local ab = string.byte("a")
-      local zb = string.byte("z")
-      local Ab = string.byte("A")
-      local Zb = string.byte("Z")
-    
-      if reverse == "1" then
-        build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
-          local c1b = c1:byte()
-          local c2b = c2:byte()
-          if c1b > c2b then
-            return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-          end
-          return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
-        end)
-      
-        build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
-          local c1b = c1:byte()
-          local c2b = c2:byte()
-          if c1b > c2b then
-            return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-          end
-          return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
-        end)
-      end
+    end)
 
-      build_pattern = build_pattern:gsub("a=([A-Za-z])", function(c) -- 匹配字母
+    build_pattern = build_pattern:gsub("r=(%d+)", function (n)
+        local t = {
+            "0","1","2","3","4","5","6","7","8","9",
+            "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+            "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+        }
+        local s = ""
+        for i = 1, n do
+            s = s .. t[math.random(#t)]
+        end
+        return s
+    end)
+    
+    local ab = string.byte("a")
+    local zb = string.byte("z")
+    local Ab = string.byte("A")
+    local Zb = string.byte("Z")
+  
+    if reverse == "1" then
+        build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
+            local c1b = c1:byte()
+            local c2b = c2:byte()
+            if c1b > c2b then
+              return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
+            end
+            return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+        end)
+    
+        build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
+            local c1b = c1:byte()
+            local c2b = c2:byte()
+            if c1b > c2b then
+              return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
+            end
+            return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+        end)
+    end
+
+    build_pattern = build_pattern:gsub("a=([A-Za-z])", function(c) -- 匹配字母
         local cb = c:byte()
         if cb >= ab and cb <= zb then
-          return string.char(ab + ((cb - ab) + (i - 1)) % 26)
+            return string.char(ab + ((cb - ab) + (i - 1)) % 26)
         elseif cb >= Ab and cb <= Zb then
-          return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
+            return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
         end
-      end)
-    
-      return build_pattern
+    end)
+  
+    return build_pattern
 end
 
 function rename_region_time(pattern)
@@ -598,21 +624,34 @@ function build_name_marker(build_pattern, origin_name, i)
     build_pattern = build_pattern:gsub("$regionname", origin_name)
 
     if reverse then
-      build_pattern = build_pattern:gsub("v=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号
-        local len = #start_idx
-        start_idx = tonumber(start_idx)
-        end_idx = tonumber(end_idx)
-        if start_idx > end_idx then
-            return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
-        end
-        return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
-      end)
+        build_pattern = build_pattern:gsub("v=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号
+            local len = #start_idx
+            start_idx = tonumber(start_idx)
+            end_idx = tonumber(end_idx)
+            if start_idx > end_idx then
+                return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
+            end
+            return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
+        end)
     end
   
     build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
-      return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
+        return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
     end)
   
+    build_pattern = build_pattern:gsub("r=(%d+)", function (n)
+        local t = {
+            "0","1","2","3","4","5","6","7","8","9",
+            "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+            "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+        }
+        local s = ""
+        for i = 1, n do
+            s = s .. t[math.random(#t)]
+        end
+        return s
+    end)
+
     local ab = string.byte("a")
     local zb = string.byte("z")
     local Ab = string.byte("A")
@@ -681,6 +720,19 @@ a=a: Letter count 字母計數
 a=a-e or a=e-a: Loop letter count 循環字母範圍
 ]]
 
+-- function get_random(n)
+--     local t = {
+--         "0","1","2","3","4","5","6","7","8","9",
+--         "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+--         "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+--     }
+--     local s = ""
+--     for i = 1, n do
+--         s = s .. t[math.random(#t)]
+--     end
+--     return s
+-- end
+
 function build_name_take(build_pattern, origin_name, i)
     build_pattern = build_pattern:gsub("%$takename", origin_name)
     build_pattern = build_pattern:gsub('%$trackname', track_name)
@@ -702,6 +754,19 @@ function build_name_take(build_pattern, origin_name, i)
 
     build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
         return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
+    end)
+
+    build_pattern = build_pattern:gsub("r=(%d+)", function (n)
+        local t = {
+            "0","1","2","3","4","5","6","7","8","9",
+            "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+            "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+        }
+        local s = ""
+        for i = 1, n do
+            s = s .. t[math.random(#t)]
+        end
+        return s
     end)
 
     local ab = string.byte("a")
@@ -749,31 +814,31 @@ function rename_take(pattern, order)
         local track_items = {}
 
         for i = 0, count_sel_items - 1  do
-          local item = reaper.GetSelectedMediaItem(0, i)
-          local track = reaper.GetMediaItem_Track(item)
-          if not track_items[track] then track_items[track] = {} end
-          table.insert(track_items[track], item)
+            local item = reaper.GetSelectedMediaItem(0, i)
+            local track = reaper.GetMediaItem_Track(item)
+            if not track_items[track] then track_items[track] = {} end
+            table.insert(track_items[track], item)
         end
         
         for _, items in pairs(track_items) do
-          for i, item in ipairs(items) do
-            take = reaper.GetActiveTake(item)
-            track = reaper.GetMediaItem_Track(item)
-            track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
-            track_num = string.format("%0" .. 2 .. "d", track_num)
-            _, track_name = reaper.GetTrackName(track)
-            parent_track = reaper.GetParentTrack(track)
-            if parent_track ~= nil then
-              _, parent_buf = reaper.GetTrackName(parent_track)
-            else
-              parent_buf = ''
-            end
-      
-            take_guid = reaper.BR_GetMediaItemTakeGUID(take)
-            origin_name = reaper.GetTakeName(take)
-            take_name = build_name_take(pattern, origin_name, i)
-            reaper.GetSetMediaItemTakeInfo_String(take, 'P_NAME', take_name, true)
-          end
+            for i, item in ipairs(items) do
+                take = reaper.GetActiveTake(item)
+                track = reaper.GetMediaItem_Track(item)
+                track_num = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
+                track_num = string.format("%0" .. 2 .. "d", track_num)
+                _, track_name = reaper.GetTrackName(track)
+                parent_track = reaper.GetParentTrack(track)
+                if parent_track ~= nil then
+                    _, parent_buf = reaper.GetTrackName(parent_track)
+                else
+                    parent_buf = ''
+                end
+          
+                take_guid = reaper.BR_GetMediaItemTakeGUID(take)
+                origin_name = reaper.GetTakeName(take)
+                take_name = build_name_take(pattern, origin_name, i)
+                reaper.GetSetMediaItemTakeInfo_String(take, 'P_NAME', take_name, true)
+              end
         end
     elseif order == 2 then
         for z = 0, count_sel_items - 1 do -- 按換行順序排序
@@ -868,62 +933,75 @@ a=a-e or a=e-a: Loop letter count 循環字母計數
 ]]
 
 function build_name_track(build_pattern, origin_name, i)
-  build_pattern = build_pattern:gsub("%$trackname", origin_name)
-  build_pattern = build_pattern:gsub('%$tracknum', track_num)
-  build_pattern = build_pattern:gsub('%$trackguid', track_guid)
-  build_pattern = build_pattern:gsub('%$foldername', parent_buf)
-
-  if reverse == "1" then
-    build_pattern = build_pattern:gsub("v=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号
-      local len = #start_idx
-      start_idx = tonumber(start_idx)
-      end_idx = tonumber(end_idx)
-      if start_idx > end_idx then
-        return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
-      end
-      return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
-    end)
-  end
-
-  build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
-    return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
-  end)
-
-  local ab = string.byte("a")
-  local zb = string.byte("z")
-  local Ab = string.byte("A")
-  local Zb = string.byte("Z")
-
-  if reverse == "1" then
-    build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
-      local c1b = c1:byte()
-      local c2b = c2:byte()
-      if c1b > c2b then
-        return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-      end
-      return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+    build_pattern = build_pattern:gsub("%$trackname", origin_name)
+    build_pattern = build_pattern:gsub('%$tracknum', track_num)
+    build_pattern = build_pattern:gsub('%$trackguid', track_guid)
+    build_pattern = build_pattern:gsub('%$foldername', parent_buf)
+  
+    if reverse == "1" then
+        build_pattern = build_pattern:gsub("v=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号
+            local len = #start_idx
+            start_idx = tonumber(start_idx)
+            end_idx = tonumber(end_idx)
+            if start_idx > end_idx then
+                return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
+            end
+            return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
+        end)
+    end
+  
+    build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
+        return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
     end)
   
-    build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
-      local c1b = c1:byte()
-      local c2b = c2:byte()
-      if c1b > c2b then
-        return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-      end
-      return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+    build_pattern = build_pattern:gsub("r=(%d+)", function (n)
+        local t = {
+            "0","1","2","3","4","5","6","7","8","9",
+            "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+            "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+        }
+        local s = ""
+        for i = 1, n do
+            s = s .. t[math.random(#t)]
+        end
+        return s
     end)
-  end
 
-  build_pattern = build_pattern:gsub("a=([A-Za-z])", function(c) -- 匹配字母
-    local cb = c:byte()
-    if cb >= ab and cb <= zb then
-      return string.char(ab + ((cb - ab) + (i - 1)) % 26)
-    elseif cb >= Ab and cb <= Zb then
-      return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
+    local ab = string.byte("a")
+    local zb = string.byte("z")
+    local Ab = string.byte("A")
+    local Zb = string.byte("Z")
+  
+    if reverse == "1" then
+        build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
+            local c1b = c1:byte()
+            local c2b = c2:byte()
+            if c1b > c2b then
+                return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
+            end
+            return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+        end)
+        
+        build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
+            local c1b = c1:byte()
+            local c2b = c2:byte()
+            if c1b > c2b then
+                return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
+            end
+            return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+        end)
     end
-  end)
 
-  return build_pattern
+    build_pattern = build_pattern:gsub("a=([A-Za-z])", function(c) -- 匹配字母
+        local cb = c:byte()
+        if cb >= ab and cb <= zb then
+            return string.char(ab + ((cb - ab) + (i - 1)) % 26)
+        elseif cb >= Ab and cb <= Zb then
+            return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
+        end
+    end)
+    
+    return build_pattern
 end
 
 function rename_track(pattern)
@@ -961,17 +1039,17 @@ function get_all_markers_time()
     local result = {}
     local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
     for i = 0, num_markers + num_regions - 1 do
-      local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
-      if retval ~= nil and not isrgn then
-        table.insert(result, {
-          index = markrgnindexnumber,
-          isrgn = isrgn,
-          left = pos,
-          right = rgnend,
-          name = name,
-          color = color
-        })
-      end
+        local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
+        if retval ~= nil and not isrgn then
+            table.insert(result, {
+                index = markrgnindexnumber,
+                isrgn = isrgn,
+                left = pos,
+                right = rgnend,
+                name = name,
+                color = color
+            })
+        end
     end
     return result
 end
@@ -985,35 +1063,35 @@ function get_sel_markers_time()
   
     local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
     for i = 0, num_markers + num_regions-1 do
-      local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
+        local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
     
-      if retval ~= nil and not isrgn then
-        cur = { left = pos }
-        table.insert(time_regions, cur)
-      end
+        if retval ~= nil and not isrgn then
+            cur = { left = pos }
+            table.insert(time_regions, cur)
+        end
     end
   
     -- 标记选中区域
     for _, merged_rgn in ipairs(time_regions) do
-      local l, r = 1, #all_regions
-      -- 查找第一个左端点在item左侧的区域
-      while l <= r do
-        local mid = math.floor((l+r)/2)
-  
-        if (all_regions[mid].left - bias) > merged_rgn.left then
-          r = mid - 1
-        else 
-          l = mid + 1
+        local l, r = 1, #all_regions
+        -- 查找第一个左端点在item左侧的区域
+        while l <= r do
+            local mid = math.floor((l+r)/2)
+    
+            if (all_regions[mid].left - bias) > merged_rgn.left then
+                r = mid - 1
+            else 
+                l = mid + 1
+            end
         end
-      end
-  
-      -- if math.abs( (merged_rgn.right - merged_rgn.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
-      --   sel_index[r] = true
-      -- end
-  
-      if merged_rgn.left <= all_regions[r].left + bias then
-        sel_index[r] = true
-      end
+    
+        -- if math.abs( (merged_rgn.right - merged_rgn.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
+        --   sel_index[r] = true
+        -- end
+    
+        if merged_rgn.left <= all_regions[r].left + bias then
+            sel_index[r] = true
+        end
     end
   
     -- 处理结果
@@ -1047,48 +1125,61 @@ function build_name_marker_time(build_pattern, origin_name, i)
             start_idx = tonumber(start_idx)
             end_idx = tonumber(end_idx)
             if start_idx > end_idx then
-              return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
+                return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
             end
             return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
         end)
     end
   
     build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
-      return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
+        return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
     end)
   
+    build_pattern = build_pattern:gsub("r=(%d+)", function (n)
+        local t = {
+            "0","1","2","3","4","5","6","7","8","9",
+            "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+            "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+        }
+        local s = ""
+        for i = 1, n do
+            s = s .. t[math.random(#t)]
+        end
+        return s
+    end)
+
     local ab = string.byte("a")
     local zb = string.byte("z")
     local Ab = string.byte("A")
     local Zb = string.byte("Z")
   
     if reverse == "1" then
-      build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
-        local c1b = c1:byte()
-        local c2b = c2:byte()
-        if c1b > c2b then
-          return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-        end
-        return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
-      end)
-    
-      build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
-        local c1b = c1:byte()
-        local c2b = c2:byte()
-        if c1b > c2b then
-          return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-        end
-        return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
-      end)
+        build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
+            local c1b = c1:byte()
+            local c2b = c2:byte()
+            if c1b > c2b then
+                return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
+            end
+            return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+        end)
+        
+        build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
+            local c1b = c1:byte()
+            local c2b = c2:byte()
+            if c1b > c2b then
+                return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
+            end
+            return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
+        end)
     end
   
     build_pattern = build_pattern:gsub("a=([A-Za-z])", function(c) -- 匹配字母
-      local cb = c:byte()
-      if cb >= ab and cb <= zb then
-        return string.char(ab + ((cb - ab) + (i - 1)) % 26)
-      elseif cb >= Ab and cb <= Zb then
-        return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
-      end
+        local cb = c:byte()
+        if cb >= ab and cb <= zb then
+            return string.char(ab + ((cb - ab) + (i - 1)) % 26)
+        elseif cb >= Ab and cb <= Zb then
+            return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
+        end
     end)
   
     return build_pattern
@@ -1429,6 +1520,9 @@ function renaming()
             rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
         end
     end
+    if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
+    GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+    GUI.elms.edittext_search.focus = true
     reaper.Undo_EndBlock('', -1)
 end
 
@@ -1574,7 +1668,6 @@ function display_usc_data(data)
     function GUI.elms.list_category:onvalchange()
         update_subcategory(self:val(), 1)
         update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), GUI.elms.list_synonym:val())
-
         --if is_key_active(KEYS.CONTROL) then append_search(self.list[self:val()]) end -- Ctrl+单击添加关键词进搜索框
     end
 
@@ -1616,7 +1709,6 @@ function display_usc_data(data)
 
     function GUI.elms.list_subcategory:onvalchange()
         update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), 1)
-
         --if is_key_active(KEYS.CONTROL) then self:ondoubleclick() end -- Ctrl+单击添加关键词进搜索框
     end
 
@@ -1640,13 +1732,13 @@ function display_usc_data(data)
     end
 
     function GUI.elms.btn_filter:func()
-        -- if #GUI.elms.edittext_filter:val() < 1 then return end
+        if #GUI.elms.edittext_filter:val() < 1 then return end
         current_filter_pattern = GUI.elms.edittext_filter:val()
         update_usc_data()
 
-        GUI.elms.edittext_filter.focus = false
+        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
         GUI.elms.edittext_filter.focus = true
-        GUI.elms.edittext_filter:redraw()
+        --GUI.elms.edittext_filter:redraw()
     end
     
     function GUI.elms.btn_clear:func()
@@ -1657,9 +1749,9 @@ function display_usc_data(data)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
 
-        GUI.elms.edittext_filter.focus = false
+        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
         GUI.elms.edittext_filter.focus = true
-        GUI.elms.edittext_filter:redraw()
+        --GUI.elms.edittext_filter:redraw()
     end
 
     function GUI.elms.menu_lang:onvalchange()
@@ -1782,10 +1874,17 @@ reload_usc_data()
 update_usc_data()
 
 GUI.freq = 0
---text_box = false
+text_box = true
+if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
 GUI.elms.edittext_filter.focus = true
-function GUI.func()
 
+local function force_size() -- 锁定GUI边界
+    gfx.quit()
+    gfx.init(GUI.name, GUI.w, GUI.h, GUI.dock, GUI.x, GUI.y)
+    GUI.cur_w, GUI.cur_h = GUI.w, GUI.h
+end
+
+function GUI.func()
     process = GUI.elms.radio_pro.optarray[GUI.elms.radio_pro:val()]
     take_order = GUI.elms.radio_order.optarray[GUI.elms.radio_order:val()]
 
@@ -1816,7 +1915,8 @@ function GUI.func()
         if is_key_active(KEYS.CONTROL) then -- 同时按住Ctrl
             current_filter_pattern = GUI.elms.edittext_filter:val()
             update_usc_data()
-            GUI.elms.edittext_filter.focus = false
+
+            if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
             GUI.elms.edittext_filter.focus = true
         elseif is_key_active(KEYS.ALT) then -- 同时按住Alt
             renaming()
@@ -1832,6 +1932,8 @@ function GUI.func()
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
+        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_filter.focus = true
     end
 
     if char == 26161 then -- F1 键
@@ -1875,31 +1977,26 @@ function GUI.func()
     end
 
     if char == 9 then -- TAB 键
-        if GUI.elms.edittext_filter.focus == false then
+        if text_box == false then
             GUI.elms.edittext_search.focus = false
-            GUI.elms.edittext_filter.focus = false
             GUI.elms.edittext_filter.focus = true
             --GUI.elms.edittext_filter.caret = GUI.elms.edittext_search:carettoend()
             --GUI.elms.edittext_filter.show_caret = true
             --GUI.elms.edittext_filter:lostfocus()
-            GUI.elms.edittext_filter:redraw()
+            --GUI.elms.edittext_filter:redraw()
+            text_box = true
         else
             GUI.elms.edittext_filter.focus = false
-            GUI.elms.edittext_search.focus = false
             GUI.elms.edittext_search.focus = true
             GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
             --GUI.elms.edittext_search.show_caret = true
             --GUI.elms.edittext_search:lostfocus()
-            GUI.elms.edittext_search:redraw()
+            --GUI.elms.edittext_search:redraw()
+            text_box = false
         end
     end
-end
 
--- local function force_size() -- 锁定GUI边界
---     gfx.quit()
---     gfx.init(GUI.name, GUI.w, GUI.h, GUI.dock, GUI.x, GUI.y)
---     GUI.cur_w, GUI.cur_h = GUI.w, GUI.h
--- end
--- GUI.onresize = force_size
+    GUI.onresize = force_size
+end
 
 GUI.Main()

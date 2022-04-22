@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Take
- * Version: 1.4.5
+ * Version: 1.4.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -118,6 +118,7 @@ local retval, retvals_csv = reaper.GetUserInputs("Batch Rename Take", 10, "Renam
 if not retval then return end
 
 pattern, begin_str, end_str, position, insert, delete, find, replace, reverse, order = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
+begin_str = tostring(begin_str)
 find = find:gsub('-', '%%-')
 find = find:gsub('+', '%%+')
 find = find:gsub('*', '.*')
@@ -144,6 +145,19 @@ function build_name(build_pattern, origin_name, i)
 
   build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
     return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
+  end)
+
+  build_pattern = build_pattern:gsub("r=(%d+)", function (n)
+    local t = {
+      "0","1","2","3","4","5","6","7","8","9",
+      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+      "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+    }
+    local s = ""
+    for i = 1, n do
+      s = s .. t[math.random(#t)]
+    end
+    return s
   end)
 
   local ab = string.byte("a")
@@ -223,10 +237,11 @@ if order == "0" then
         parent_buf = ''
       end
 
+      take_name = reaper.GetTakeName(take)
       take_guid = reaper.BR_GetMediaItemTakeGUID(take)
       origin_name = reaper.GetTakeName(take)
-      take_name = build_name(pattern, origin_name, i)
-      reaper.GetSetMediaItemTakeInfo_String(take, 'P_NAME', take_name, true)
+
+      set_take_name(take, take_name, i - 1)
     end
   end
 elseif order == "1" then
