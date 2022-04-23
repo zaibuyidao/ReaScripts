@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Batch Rename Region
- * Version: 1.4.5
+ * Version: 1.4.6
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -18,6 +18,7 @@
 --]]
 
 local bias = 0.002 -- 补偿偏差值
+local absolute = false
 
 function Msg(param) 
   reaper.ShowConsoleMsg(tostring(param) .. "\n") 
@@ -167,13 +168,17 @@ function get_sel_regions()
       end
     end
 
-    if math.abs( (merged_item.right - merged_item.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
-      sel_index[r] = true
+    if absolute then
+      if math.abs( (merged_item.right - merged_item.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
+        sel_index[r] = true
+      end
+    else
+      if r ~= 0 then
+        if merged_item.right <= all_regions[r].right then -- if merged_item.right <= all_regions[r].right + bias then
+          sel_index[r] = true
+        end
+      end
     end
-
-    -- if merged_item.right <= all_regions[r].right + bias then
-    --   sel_index[r] = true
-    -- end
   end
 
   -- 处理结果
