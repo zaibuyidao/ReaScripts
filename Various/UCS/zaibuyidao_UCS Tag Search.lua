@@ -99,6 +99,10 @@ function send_search_text(text) -- 开始搜索
         reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
         reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
     else
+        if reaper.GetToggleCommandStateEx(32063, 42051) == 1 then
+            -- reaper.SetToggleCommandState(32063, 42051, 0) -- 无效
+            reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+        end
         -- https://github.com/justinfrankel/WDL/blob/main/WDL/swell/swell-types.h
         reaper.JS_WindowMessage_Post(search, "WM_KEYDOWN", 0x0020, 0, 0, 0) -- 空格
         reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x0008, 0, 0, 0) -- 退格
@@ -367,6 +371,9 @@ function display_usc_data(data)
         if #GUI.elms.edittext_filter:val() < 1 then return end
         current_filter_pattern = GUI.elms.edittext_filter:val()
         update_usc_data()
+
+        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_filter.focus = true
     end
 
     -- function GUI.elms.btn_filter:ondoubleclick() -- 双击过滤按钮 清除
@@ -385,6 +392,9 @@ function display_usc_data(data)
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
+
+        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_filter.focus = true
     end
 
     function GUI.elms.menu_lang:onvalchange()
@@ -394,6 +404,10 @@ function display_usc_data(data)
 
     function GUI.elms.btn_search:func()
         send_search_text(GUI.elms.edittext_search:val())
+
+        if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
+        GUI.elms.edittext_search.focus = true
+        GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
     end
 
     function GUI.elms.edittext_search:onmousedown()
@@ -403,6 +417,10 @@ function display_usc_data(data)
         end
         if is_key_active(KEYS.SHIFT) then
             send_search_text(GUI.elms.edittext_search:val())
+
+            if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
+            GUI.elms.edittext_search.focus = true
+            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
         end
     end
 
@@ -509,7 +527,23 @@ end
 reload_usc_data()
 update_usc_data()
 
-GUI.freq = 0 -- 或者 0.05 
+GUI.freq = 0 -- 或者 0.05
+text_box = true
+GUI.elms.edittext_filter.focus = true
+
+local function force_size() -- 锁定GUI边界
+    gfx.quit()
+    gfx.init(GUI.name, GUI.w, GUI.h, GUI.dock, GUI.x, GUI.y)
+    GUI.cur_w, GUI.cur_h = GUI.w, GUI.h
+end
+
+-- if reaper.GetToggleCommandStateEx(32063, 42051) == 1 then -- 获取切换Enter搜素的状态
+--     local title = reaper.JS_Localize("Media Explorer", "common")
+--     local hwnd = reaper.JS_Window_Find(title, true)
+--     reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+--     --reaper.SetToggleCommandState(32063, 42051, 1)
+-- end
+
 function GUI.func()
 
     -- val改变事件处理
@@ -539,8 +573,15 @@ function GUI.func()
         if is_key_active(KEYS.CONTROL) then -- 同时按住Ctrl
             current_filter_pattern = GUI.elms.edittext_filter:val()
             update_usc_data()
+
+            if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+            GUI.elms.edittext_filter.focus = true
         else 
             send_search_text(GUI.elms.edittext_search:val())
+
+            if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
+            GUI.elms.edittext_search.focus = true
+            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
         end
     elseif char == 26165 then -- F5 键
         GUI.elms.edittext_filter:val("")
@@ -549,6 +590,9 @@ function GUI.func()
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
+
+        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_filter.focus = true
     end
 
     if char == 26161 then -- F1 键
@@ -582,13 +626,26 @@ function GUI.func()
             GUI.elms.check_cat:val({[4] = true})
         end
     end
-end
 
--- local function force_size() -- 锁定GUI边界
---     gfx.quit()
---     gfx.init(GUI.name, GUI.w, GUI.h, GUI.dock, GUI.x, GUI.y)
---     GUI.cur_w, GUI.cur_h = GUI.w, GUI.h
--- end
--- GUI.onresize = force_size
+    if char == 9 then -- TAB 键
+        if text_box == false then
+            GUI.elms.edittext_search.focus = false
+            GUI.elms.edittext_filter.focus = true
+            GUI.elms.edittext_filter.show_caret = true
+            --GUI.elms.edittext_filter.caret = GUI.elms.edittext_search:carettoend()
+            --GUI.elms.edittext_filter:redraw()
+            text_box = true
+        else
+            GUI.elms.edittext_filter.focus = false
+            GUI.elms.edittext_search.focus = true
+            GUI.elms.edittext_search.show_caret = true
+            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+            --GUI.elms.edittext_search:redraw()
+            text_box = false
+        end
+    end
+
+    GUI.onresize = force_size
+end
 
 GUI.Main()
