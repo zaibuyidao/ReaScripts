@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Show List Of Selected Items And Regions
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -123,8 +123,6 @@ function get_sel_regions()
 end
 
 reaper.PreventUIRefresh(1)
---reaper.Undo_BeginBlock()
-
 local sel_regions = get_sel_regions()
 count_sel_items = reaper.CountSelectedMediaItems(0)
 reaper.ClearConsole()
@@ -176,7 +174,7 @@ for i,region in ipairs(sel_regions) do
   table.insert(regionregion, region.name)
 end
 
-if #regionregion <= 0 then return reaper.MB("The item within the Region must be selected.", "Error", 0) end
+-- if #regionregion <= 0 then return reaper.MB("The item within the Region must be selected.", "Error", 0) end
 k = tostring(#regionregion)
 k = #k
 for i = 1, #regionregion do
@@ -186,7 +184,6 @@ for i = 1, #regionregion do
 end
 Msg('')
 Msg('Total: '..#regionregion)
---reaper.Undo_EndBlock('Show List Of Selected Items And Regions', -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.defer(function() end)

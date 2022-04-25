@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Show List Of Selected Items And Source File Names
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -31,16 +31,18 @@ for i = 0, count_sel_items - 1 do
   local pitch = reaper.GetMediaTrackInfo_Value(track, 'IP_TRACKNUMBER')
   local startPos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local take = reaper.GetActiveTake(item)
-  local takeName = reaper.GetTakeName(take)
-  if startEvents[startPos] == nil then startEvents[startPos] = {} end
-  local event = {
-    ["startPos"]=startPos,
-    ["pitch"]=pitch,
-    ["takeName"]=takeName,
-    ["item"]=item
-  }
-  
-  table.insert(startEvents[startPos], event)
+  if not reaper.TakeIsMIDI(take) then
+    local takeName = reaper.GetTakeName(take)
+    if startEvents[startPos] == nil then startEvents[startPos] = {} end
+    local event = {
+      ["startPos"]=startPos,
+      ["pitch"]=pitch,
+      ["takeName"]=takeName,
+      ["item"]=item
+    }
+    
+    table.insert(startEvents[startPos], event)
+  end
 end
 
 local tempEvents = {}
