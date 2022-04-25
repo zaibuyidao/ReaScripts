@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Show List Of Selected Items And Regions
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -15,7 +15,8 @@
   + Initial release
 --]]
 
-local bias = 0.002 -- 补偿偏差值
+local bias = 0.002
+local absolute = false
 
 function Msg(param) 
   reaper.ShowConsoleMsg(tostring(param) .. "\n") 
@@ -98,13 +99,17 @@ function get_sel_regions()
       end
     end
 
-    if math.abs( (merged_item.right - merged_item.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
-      sel_index[r] = true
+    if absolute then
+      if math.abs( (merged_item.right - merged_item.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
+        sel_index[r] = true
+      end
+    else
+      if r ~= 0 then
+        if merged_item.right <= all_regions[r].right then -- if merged_item.right <= all_regions[r].right + bias then
+          sel_index[r] = true
+        end
+      end
     end
-
-    -- if merged_item.right <= all_regions[r].right + bias then
-    --   sel_index[r] = true
-    -- end
   end
 
   -- 处理结果
@@ -118,7 +123,7 @@ function get_sel_regions()
 end
 
 reaper.PreventUIRefresh(1)
-reaper.Undo_BeginBlock()
+--reaper.Undo_BeginBlock()
 
 local sel_regions = get_sel_regions()
 count_sel_items = reaper.CountSelectedMediaItems(0)
@@ -171,6 +176,7 @@ for i,region in ipairs(sel_regions) do
   table.insert(regionregion, region.name)
 end
 
+if #regionregion <= 0 then return reaper.MB("The item within the Region must be selected.", "Error", 0) end
 k = tostring(#regionregion)
 k = #k
 for i = 1, #regionregion do
@@ -180,7 +186,7 @@ for i = 1, #regionregion do
 end
 Msg('')
 Msg('Total: '..#regionregion)
-reaper.Undo_EndBlock('Show List Of Selected Items And Regions', -1)
+--reaper.Undo_EndBlock('Show List Of Selected Items And Regions', -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.defer(function() end)
