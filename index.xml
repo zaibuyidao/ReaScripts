@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ed020d521ed4008b83bfd25472ec65199fc8101a">
+<index version="1" name="zaibuyidao Scripts" commit="ba8d9d97db4f7a466ca3cb0127fcbc752ce53641">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -598,6 +598,9 @@
       <version name="1.0.1" author="zaibuyidao" time="2022-04-25T16:12:12Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ed020d521ed4008b83bfd25472ec65199fc8101a/Items%20Editing/zaibuyidao_Show%20List%20Of%20Selected%20Items%20And%20Regions.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-04-25T16:30:26Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ba8d9d97db4f7a466ca3cb0127fcbc752ce53641/Items%20Editing/zaibuyidao_Show%20List%20Of%20Selected%20Items%20And%20Regions.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Show List Of Selected Items And Source File Names.lua" type="script" desc="Show List Of Selected Items And Source File Names">
       <metadata>
@@ -606,6 +609,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-04-25T16:12:12Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ed020d521ed4008b83bfd25472ec65199fc8101a/Items%20Editing/zaibuyidao_Show%20List%20Of%20Selected%20Items%20And%20Source%20File%20Names.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-04-25T16:30:26Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ba8d9d97db4f7a466ca3cb0127fcbc752ce53641/Items%20Editing/zaibuyidao_Show%20List%20Of%20Selected%20Items%20And%20Source%20File%20Names.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Show List Of Selected Items.lua" type="script" desc="Show List Of Selected Items">
