@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ba8d9d97db4f7a466ca3cb0127fcbc752ce53641">
+<index version="1" name="zaibuyidao Scripts" commit="4d8e0d5fa3771dd6920c82caf12523f7f67da7b7">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -149,6 +149,15 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Copy%20Item%20Position.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Copy Source File Name Of Selected Active Take To Clipboard.lua" type="script" desc="Copy Source File Name Of Selected Active Take To Clipboard">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-04-29T14:52:08Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4d8e0d5fa3771dd6920c82caf12523f7f67da7b7/Items%20Editing/zaibuyidao_Copy%20Source%20File%20Name%20Of%20Selected%20Active%20Take%20To%20Clipboard.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Equal Cut At Edit Cursor.lua" type="script" desc="Equal Cut At Edit Cursor">
@@ -410,6 +419,24 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Paste%20Item%20Position.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Play Stop From First Selected Item Position.lua" type="script" desc="Play Stop From First Selected Item Position">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-04-29T14:52:08Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4d8e0d5fa3771dd6920c82caf12523f7f67da7b7/Items%20Editing/zaibuyidao_Play%20Stop%20From%20First%20Selected%20Item%20Position.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Play Stop From Mouse Position.lua" type="script" desc="Play Stop From Mouse Position">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-04-29T14:52:08Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4d8e0d5fa3771dd6920c82caf12523f7f67da7b7/Items%20Editing/zaibuyidao_Play%20Stop%20From%20Mouse%20Position.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Item Volume.lua" type="script" desc="Random Item Volume">
