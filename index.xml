@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="4d8e0d5fa3771dd6920c82caf12523f7f67da7b7">
+<index version="1" name="zaibuyidao Scripts" commit="673b5dca411760fc1af65a8f77c148bd47f107ba">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3067,6 +3067,22 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_Scale%20Control.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Scale Velocity (Fast).lua" type="script" desc="Scale Velocity (Fast)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-06T15:15:51Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/673b5dca411760fc1af65a8f77c148bd47f107ba/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Fast).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Scale Velocity (Multitrack).lua" type="script" desc="Scale Velocity (Multitrack)">
       <metadata/>
       <version name="1.0" author="zaibuyidao" time="2020-08-25T19:34:38Z">
@@ -3536,6 +3552,18 @@
       <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.3" author="zaibuyidao" time="2022-05-06T15:15:51Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/673b5dca411760fc1af65a8f77c148bd47f107ba/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo MIDI Note Play From Edit Cursor Position.lua" type="script" desc="Solo MIDI Note Play From Edit Cursor Position">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-06T15:15:51Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/673b5dca411760fc1af65a8f77c148bd47f107ba/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released)">
       <metadata>
@@ -3556,6 +3584,18 @@
       </version>
       <version name="1.0.4" author="zaibuyidao" time="2022-04-09T15:55:08Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.5" author="zaibuyidao" time="2022-05-06T15:15:51Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/673b5dca411760fc1af65a8f77c148bd47f107ba/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo MIDI Note Play From Mouse Position.lua" type="script" desc="Solo MIDI Note Play From Mouse Position">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-06T15:15:51Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/673b5dca411760fc1af65a8f77c148bd47f107ba/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Split Notes.lua" type="script" desc="Split Notes">
@@ -5093,6 +5133,22 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/Utility/zaibuyidao_Set%20Point%20Shape%20(Dynamic%20Menu).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Project Grid (Dynamic Menu).lua" type="script" desc="Set Project Grid (Dynamic Menu)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI\par}
+}
+]]></description>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-06T15:15:51Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/673b5dca411760fc1af65a8f77c148bd47f107ba/Utility/zaibuyidao_Set%20Project%20Grid%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Project Grid.lua" type="script" desc="Set Project Grid">
