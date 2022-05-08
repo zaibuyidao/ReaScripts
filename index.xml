@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="673b5dca411760fc1af65a8f77c148bd47f107ba">
+<index version="1" name="zaibuyidao Scripts" commit="750d9a64e207391ab57f3809ceb705358d38688e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3563,6 +3563,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-05-06T15:15:51Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/673b5dca411760fc1af65a8f77c148bd47f107ba/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-08T07:19:02Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/750d9a64e207391ab57f3809ceb705358d38688e/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Note Play From Mouse Position (Perform Until Shortcut Released)">
