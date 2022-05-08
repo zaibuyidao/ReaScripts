@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Solo MIDI Note Play From Edit Cursor Position
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -13,45 +13,13 @@
   + Initial release
 --]]
 
-function print(param)
-  if type(param) == "table" then
-    table.print(param)
-    return
+function print(...)
+  local params = {...}
+  for i=1, #params do
+    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
+    reaper.ShowConsoleMsg(tostring(params[i]))
   end
-  reaper.ShowConsoleMsg(tostring(param) .. "\n")
-end
-
-function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-    if (print_r_cache[tostring(t)]) then
-      print(indent .. "*" .. tostring(t))
-    else
-      print_r_cache[tostring(t)] = true
-      if (type(t) == "table") then
-        for pos, val in pairs(t) do
-          if (type(val) == "table") then
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-          elseif (type(val) == "string") then
-            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-          else
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-          end
-        end
-      else
-        print(indent .. tostring(t))
-      end
-    end
-  end
-  if (type(t) == "table") then
-    print(tostring(t) .. " {")
-    sub_print_r(t, "  ")
-    print("}")
-  else
-    sub_print_r(t, "  ")
-  end
+  reaper.ShowConsoleMsg("\n")
 end
 
 local function encodeBase64(source_str)
