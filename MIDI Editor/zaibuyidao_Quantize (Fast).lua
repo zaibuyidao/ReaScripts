@@ -1,11 +1,9 @@
 --[[
  * ReaScript Name: Quantize (Fast)
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0 or newer recommended
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
@@ -19,32 +17,62 @@ EVENT_NOTE_START = 9
 EVENT_NOTE_END = 8
 EVENT_ARTICULATION = 15
 
-function Msg(param)
-    reaper.ShowConsoleMsg(tostring(param) .. "\n")
+function print(...)
+    local params = {...}
+    for i=1, #params do
+        if i ~= 1 then reaper.ShowConsoleMsg(" ") end
+        reaper.ShowConsoleMsg(tostring(params[i]))
+    end
+    reaper.ShowConsoleMsg("\n")
 end
 
-function CheckSWS()
-    local SWS_installed
-    if not reaper.BR_GetMidiSourceLenPPQ then
-        local retval = reaper.ShowMessageBox("此腳本需要 SWS 擴展, 你想現在下載它嗎?", "Warning", 1)
-        if retval == 1 then
-            Open_URL("http://www.sws-extension.org/download/pre-release/")
+function open_url(url)
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+        os.execute("open ".. url)
+    else
+        os.execute("start ".. url)
+    end
+end
+
+if not reaper.SNM_GetIntConfigVar then
+    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+    if retval == 1 then
+        open_url("http://www.sws-extension.org/download/pre-release/")
+    end
+end
+
+function getAllTakes()
+    tTake = {}
+    if reaper.MIDIEditor_EnumTakes then
+        local editor = reaper.MIDIEditor_GetActive()
+        for i = 0, math.huge do
+            take = reaper.MIDIEditor_EnumTakes(editor, i, false)
+            if take and reaper.ValidatePtr2(0, take, "MediaItem_Take*") then 
+                tTake[take] = true
+                tTake[take] = {item = reaper.GetMediaItemTake_Item(take), editor = editor}
+            else
+                break
+            end
         end
     else
-        SWS_installed = true
+        for i = 0, reaper.CountMediaItems(0)-1 do
+            local item = reaper.GetMediaItem(0, i)
+            local take = reaper.GetActiveTake(item)
+            if reaper.ValidatePtr2(0, take, "MediaItem_Take*") and reaper.TakeIsMIDI(take) and reaper.MIDI_EnumSelNotes(take, -1) == 0 then -- Get potential takes that contain notes. NB == 0 
+                tTake[take] = true
+            end
+        end
+        
+        for take in next, tTake do
+            if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tT[take] = nil end -- Remove takes that were not affected by deselection
+        end
     end
-    return SWS_installed
+    if not next(tTake) then return end
+    return tTake
 end
 
-local midiEditor = reaper.MIDIEditor_GetActive()
-take = reaper.MIDIEditor_GetTake(midiEditor)
-if not take or not reaper.TakeIsMIDI(take) then return end
-
-CheckSWS()
-
-sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-
-function setAllEvents(events)
+function setAllEvents(take, events)
     -- -- 排序事件
     -- table.sort(events,function(a,b)
     --     if a.status == 11 then return false end
@@ -77,80 +105,28 @@ function getEventType(event) return event.msg:byte(1)>>4 end
 function getArticulationInfo(event) return event.msg:match("NOTE (%d+) (%d+) ") end
 function setEventPitch(event, pitch) event.msg = string.pack("BBB", event.msg:byte(1), pitch or event.msg:byte(2), event.msg:byte(3)) end
 
-reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40659) -- 删除重叠音符
-
-local events = {}
-local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
-
-local noteEvents = {}
-local ccEvents = {}
-local textEvents = {}
-
-local noteStartEventAtPitch = {} -- 音高对应的当前遍历开始事件
-local articulationEventAtPitch = {}
-
-local stringPos = 1
-local lastPos = 0
-while stringPos <= MIDIstring:len() do
-    local offset, flags, msg
-    offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-    local event = { offset = offset, pos = lastPos + offset, flags = flags, msg = msg }
-    table.insert(events, event)
-
-    local eventType = getEventType(event)
-    local eventPitch = getEventPitch(event)
-
-    -- Msg("type:" .. eventType .. " flags:" .. flags .. " offset:" .. offset .. " msg:" .. table.concat(table.pack(string.byte(msg, 1, #msg)), " "))
-
-    if eventType == EVENT_NOTE_START then
-        noteStartEventAtPitch[eventPitch] = event
-    elseif eventType == EVENT_NOTE_END then
-        local start = noteStartEventAtPitch[eventPitch]
-        table.insert(noteEvents, {
-            first = start,
-            second = event,
-            articulation = articulationEventAtPitch[eventPitch],
-            pitch = getEventPitch(start)
-        })
-        noteStartEventAtPitch[eventPitch] = nil
-        articulationEventAtPitch[eventPitch] = nil
-    elseif eventType == EVENT_ARTICULATION then
-        if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
-            table.insert(textEvents, event)
-        else
-            local chan, pitch = getArticulationInfo(event)
-            articulationEventAtPitch[tonumber(pitch)] = event
-        end
-    elseif eventType == 11 then
-        if event.msg:byte(2) >= 0 and event.msg:byte(2) <= 127 then
-            table.insert(ccEvents, event)
-        end
-    end
-    lastPos = lastPos + offset
-end
-
-setAllEvents(events)
-
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
-local cur_gird, swing = reaper.MIDI_GetGrid(take)
+local active_take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+if not active_take or not reaper.TakeIsMIDI(active_take) then return end
+local cur_gird, swing = reaper.MIDI_GetGrid(active_take)
 local gird, toggle
 local use_tick = false
 
 if tonumber(swing) == 0 then
-    gird = reaper.GetExtState("Quantize", "Grid")
+    gird = reaper.GetExtState("QuantizeFast", "Grid")
     if (gird == "") then gird = "240" end
-    toggle = reaper.GetExtState("Quantize", "Toggle")
+    toggle = reaper.GetExtState("QuantizeFast", "Toggle")
     if (toggle == "") then toggle = "0" end
-    qntick = reaper.GetExtState("Quantize", "QNTick")
+    qntick = reaper.GetExtState("QuantizeFast", "QNTick")
     if (qntick == "") then qntick = "1" end
 
-    local user_ok, input_csv = reaper.GetUserInputs('Quantize', 3, 'Enter A Value (0=Grid),0=Default 1=Start 2=End 3=Pos,QN=0 Tick=1', gird ..','.. toggle ..','.. qntick)
+    local user_ok, input_csv = reaper.GetUserInputs('Quantize (Fast)', 3, 'Enter A Value (0=Grid),0=Default 1=Start 2=End 3=Pos,QN=0 Tick=1', gird ..','.. toggle ..','.. qntick)
     gird, toggle, qntick = input_csv:match("(.*),(.*),(.*)")
 
     if not user_ok or not tonumber(gird) or not tonumber(toggle) or not tonumber(qntick) then return reaper.SN_FocusMIDIEditor() end
-    reaper.SetExtState("Quantize", "Grid", gird, false)
-    reaper.SetExtState("Quantize", "Toggle", toggle, false)
-    reaper.SetExtState("Quantize", "QNTick", qntick, false)
+    reaper.SetExtState("QuantizeFast", "Grid", gird, false)
+    reaper.SetExtState("QuantizeFast", "Toggle", toggle, false)
+    reaper.SetExtState("QuantizeFast", "QNTick", qntick, false)
 
     if qntick == "1" then
         gird = gird / tick
@@ -164,13 +140,13 @@ if tonumber(swing) == 0 then
         gird = cur_gird
     end
 else
-    toggle = reaper.GetExtState("Quantize", "Toggle")
+    toggle = reaper.GetExtState("QuantizeFast", "Toggle")
     if (toggle == "") then toggle = "0" end
 
-    local user_ok, input_cav = reaper.GetUserInputs('Quantize', 1, '0=Default 1=Start 2=End 3=Pos', toggle)
+    local user_ok, input_cav = reaper.GetUserInputs('Quantize (Fast)', 1, '0=Default 1=Start 2=End 3=Pos', toggle)
     toggle = input_cav
     if not user_ok or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
-    reaper.SetExtState("Quantize", "Toggle", toggle, false)
+    reaper.SetExtState("QuantizeFast", "Toggle", toggle, false)
 
     gird = cur_gird
 end
@@ -300,7 +276,7 @@ function get_refs(gird_beat, swing, beat_start, cml, measure_pos)
     return result
 end
 
-function StartTimes() -- 只量化音符的起始位置
+function StartTimes(take, gird) -- 只量化音符的起始位置
     for i = 1, #noteEvents do
         local selected = getEventSelected(noteEvents[i].first)
         local startppqpos = noteEvents[i].first.pos
@@ -336,7 +312,7 @@ function StartTimes() -- 只量化音符的起始位置
     end
 end
 
-function EndTimes() -- 只量化音符结束位置
+function EndTimes(take, gird) -- 只量化音符结束位置
     for i = 1, #noteEvents do
         local selected = getEventSelected(noteEvents[i].first)
         local startppqpos = noteEvents[i].first.pos
@@ -362,7 +338,7 @@ function EndTimes() -- 只量化音符结束位置
     end
 end
 
-function Position() -- 只移动（不是量化）音符的起始位置，移动到网格位置。
+function Position(take, gird) -- 只移动（不是量化）音符的起始位置，移动到网格位置。
     for i = 1, #noteEvents do
         local selected = getEventSelected(noteEvents[i].first)
         local startppqpos = noteEvents[i].first.pos
@@ -388,7 +364,7 @@ function Position() -- 只移动（不是量化）音符的起始位置，移动
     end
 end
 
-function CCEvents() -- 仅量化CC位置，只在默认使用
+function CCEvents(take, gird) -- 仅量化CC位置，只在默认使用
     for i = 1, #ccEvents do
         local selected = getEventSelected(ccEvents[i])
         local ppqpos = ccEvents[i].pos
@@ -410,7 +386,7 @@ function CCEvents() -- 仅量化CC位置，只在默认使用
     end
 end
 
-function TextEvents() -- 量化文本事件，只在默认使用
+function TextEvents(take, gird) -- 量化文本事件，只在默认使用
     for i = 1, #textEvents do
         local selected = getEventSelected(textEvents[i])
         local ppqpos = textEvents[i].pos
@@ -433,27 +409,86 @@ function TextEvents() -- 量化文本事件，只在默认使用
 end
 
 reaper.Undo_BeginBlock()
+for take, _ in pairs(getAllTakes()) do
+    sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
+    reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
+    
+    local events = {}
+    local _, MIDI = reaper.MIDI_GetAllEvts(take, "")
+    
+    noteEvents = {}
+    ccEvents = {}
+    textEvents = {}
+    
+    local noteStartEventAtPitch = {} -- 音高对应的当前遍历开始事件
+    local articulationEventAtPitch = {}
+    
+    local pos = 1
+    local lastPos = 0
+    while pos <= MIDI:len() do
+        local offset, flags, msg
+        offset, flags, msg, pos = string.unpack("i4Bs4", MIDI, pos)
+        local event = { offset = offset, pos = lastPos + offset, flags = flags, msg = msg }
+        table.insert(events, event)
+        
+        local eventType = getEventType(event)
+        local eventPitch = getEventPitch(event)
+        
+        -- print("type:" .. eventType .. " flags:" .. flags .. " offset:" .. offset .. " msg:" .. table.concat(table.pack(string.byte(msg, 1, #msg)), " "))
+        if eventType == EVENT_NOTE_START then
+            noteStartEventAtPitch[eventPitch] = event
+        elseif eventType == EVENT_NOTE_END then
+            local start = noteStartEventAtPitch[eventPitch]
+            if start == nil then
+                return reaper.ShowMessageBox("非活動Take存在重叠音符，導致脚本無法正常工作。", "錯誤", 0)
+            end
+            table.insert(noteEvents, {
+                first = start,
+                second = event,
+                articulation = articulationEventAtPitch[eventPitch],
+                pitch = getEventPitch(start)
+            })
 
-if toggle == "3" then
-    Position() -- 只移动音符的起始位置
-elseif toggle == "2" then
-    EndTimes() -- 结束位置量化，仅音符
-elseif toggle == "1" then
-    StartTimes() -- 起始位置量化，仅音符
-elseif toggle == "0" then
-    StartTimes() -- 默认起始位置量化，仅音符
-    EndTimes() -- 默认结束位置量化，仅音符
-    CCEvents() -- 默认量化CC事件
-    TextEvents() -- 默认量化文本事件
+            noteStartEventAtPitch[eventPitch] = nil
+            articulationEventAtPitch[eventPitch] = nil
+        elseif eventType == EVENT_ARTICULATION then
+            if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
+                table.insert(textEvents, event)
+            else
+                local chan, pitch = getArticulationInfo(event)
+                articulationEventAtPitch[tonumber(pitch)] = event
+            end
+        elseif eventType == 11 then
+            if event.msg:byte(2) >= 0 and event.msg:byte(2) <= 127 then
+                table.insert(ccEvents, event)
+            end
+        end
+        lastPos = lastPos + offset
+    end
+
+    setAllEvents(take, events)
+    
+    if toggle == "3" then
+        Position(take, gird) -- 只移动音符的起始位置
+    elseif toggle == "2" then
+        EndTimes(take, gird) -- 结束位置量化，仅音符
+    elseif toggle == "1" then
+        StartTimes(take, gird) -- 起始位置量化，仅音符
+    elseif toggle == "0" then
+        StartTimes(take, gird) -- 默认起始位置量化，仅音符
+        EndTimes(take, gird) -- 默认结束位置量化，仅音符
+        CCEvents(take, gird) -- 默认量化CC事件
+        TextEvents(take, gird) -- 默认量化文本事件
+    end
+    
+    setAllEvents(take, events)
+    reaper.MIDI_Sort(take)
+
+    if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
+        reaper.MIDI_SetAllEvts(take, MIDI)
+        reaper.ShowMessageBox("腳本造成 All-Note-Off 位置偏移\n\n已恢復原始數據", "ERROR", 0)
+    end
 end
-
-setAllEvents(events)
-
-if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
-    reaper.MIDI_SetAllEvts(take, MIDIstring)
-    reaper.ShowMessageBox("腳本造成 All-Note-Off 的位置偏移\n\n已恢復原始數據", "ERROR", 0)
-end
-
 reaper.Undo_EndBlock("Quantize (Fast)", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
