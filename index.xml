@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="750d9a64e207391ab57f3809ceb705358d38688e">
+<index version="1" name="zaibuyidao Scripts" commit="d91ff81c243e2df3d071363e38d73160931f31dc">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1710,6 +1710,9 @@
       <version name="1.0.3" author="zaibuyidao" time="2022-02-15T14:18:15Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/18fd5ee1dcef1fa5e8f09fa932d4e1a641ac9071/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
       </version>
+      <version name="1.0.4" author="zaibuyidao" time="2022-05-11T16:00:14Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d91ff81c243e2df3d071363e38d73160931f31dc/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_End Time (Multitrack).lua" type="script" desc="End Time (Multitrack)">
       <metadata/>
@@ -2412,6 +2415,9 @@
       <version name="1.0.3" author="zaibuyidao" time="2022-02-23T15:23:42Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fd93b38d2c0c03329f775d43474941944f6018c5/MIDI%20Editor/zaibuyidao_Legato%20(Fast).lua</source>
       </version>
+      <version name="1.0.4" author="zaibuyidao" time="2022-05-11T16:00:14Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d91ff81c243e2df3d071363e38d73160931f31dc/MIDI%20Editor/zaibuyidao_Legato%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Legato.lua" type="script" desc="Legato">
       <version name="1.0" author="zaibuyidao" time="2020-09-29T14:30:01Z">
@@ -2715,6 +2721,9 @@
       </version>
       <version name="1.0.3" author="zaibuyidao" time="2022-02-23T15:23:42Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fd93b38d2c0c03329f775d43474941944f6018c5/MIDI%20Editor/zaibuyidao_Quantize%20(Fast).lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2022-05-11T16:00:14Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d91ff81c243e2df3d071363e38d73160931f31dc/MIDI%20Editor/zaibuyidao_Quantize%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Quantize.lua" type="script" desc="Quantize">
