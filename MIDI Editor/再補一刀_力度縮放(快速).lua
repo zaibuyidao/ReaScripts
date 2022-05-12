@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Scale Velocity (Fast)
+ * ReaScript Name: 力度縮放(快速)
  * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -183,7 +183,7 @@ local toggle = reaper.GetExtState("ScaleVelocityFast", "Toggle")
 if (vel_start == "") then vel_start = "100" end
 if (vel_end == "") then vel_end = "100" end
 if (toggle == "") then toggle = "0" end
-local uok, retvals_csv = reaper.GetUserInputs("Scale Velocity (Fast)", 3, "Begin,End,Mode:Line-Percent-Sine-In-Out", vel_start..','..vel_end..','.. toggle)
+local uok, retvals_csv = reaper.GetUserInputs("力度縮放(快速)", 3, "開始,結束,模式:直綫-百分比-正弦-凹-凸", vel_start..','..vel_end..','.. toggle)
 if not uok then return reaper.SN_FocusMIDIEditor() end
 vel_start, vel_end, toggle = retvals_csv:match("(%d*),(%d*),(%d*)")
 if not tonumber(vel_start) or not tonumber(vel_end) or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
@@ -248,5 +248,5 @@ for take, _ in pairs(getAllTakes()) do
     reaper.ShowMessageBox("腳本造成 All-Note-Off 位置偏移\n\n已恢復原始數據", "錯誤", 0)
   end
 end
-reaper.Undo_EndBlock("Scale Velocity (Fast)", -1)
+reaper.Undo_EndBlock("力度縮放(快速)", -1)
 reaper.SN_FocusMIDIEditor()

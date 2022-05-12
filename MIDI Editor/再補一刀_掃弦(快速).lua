@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Strum It (Fast)
+ * ReaScript Name: 掃弦(快速)
  * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -171,7 +171,7 @@ end
 
 local tick = reaper.GetExtState("StrumItFast", "Tick")
 if (tick == "") then tick = "4" end
-user_ok, user_input_csv = reaper.GetUserInputs('Strum It (Fast)', 1, 'Enter A Tick (+=Down -=Up)', tick)
+user_ok, user_input_csv = reaper.GetUserInputs('掃弦(快速)', 1, '輸入嘀嗒數:正數=下 負數=上', tick)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
 tick = user_input_csv:match("(.*)")
 if not tonumber(tick) then return reaper.SN_FocusMIDIEditor() end
@@ -246,6 +246,6 @@ for take, _ in pairs(getAllTakes()) do
     end
 end
 
-reaper.Undo_EndBlock("Strum It (Fast)", -1)
+reaper.Undo_EndBlock("掃弦(快速)", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

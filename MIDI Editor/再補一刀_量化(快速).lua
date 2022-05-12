@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Quantize (Fast)
+ * ReaScript Name: 量化(快速)
  * Version: 1.0.5
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -120,7 +120,7 @@ if tonumber(swing) == 0 then
     qntick = reaper.GetExtState("QuantizeFast", "QNTick")
     if (qntick == "") then qntick = "1" end
 
-    local user_ok, input_csv = reaper.GetUserInputs('Quantize (Fast)', 3, 'Enter A Value (0=Grid),0=Default 1=Start 2=End 3=Pos,Time Format: 0=100Ths 1=Ticks', gird ..','.. toggle ..','.. qntick)
+    local user_ok, input_csv = reaper.GetUserInputs('量化(快速)', 3, '輸入數值 (0=網格),0=默認 1=開始 2=結束 3=位置,時間格式: 0=百分數 1=嘀嗒數', gird ..','.. toggle ..','.. qntick)
     gird, toggle, qntick = input_csv:match("(.*),(.*),(.*)")
 
     if not user_ok or not tonumber(gird) or not tonumber(toggle) or not tonumber(qntick) then return reaper.SN_FocusMIDIEditor() end
@@ -144,7 +144,7 @@ else
     toggle = reaper.GetExtState("QuantizeFast", "Toggle")
     if (toggle == "") then toggle = "0" end
 
-    local user_ok, input_cav = reaper.GetUserInputs('Quantize (Fast)', 1, '0=Default 1=Start 2=End 3=Pos', toggle)
+    local user_ok, input_cav = reaper.GetUserInputs('量化(快速)', 1, '0=默認 1=開始 2=結束 3=位置', toggle)
     toggle = input_cav
     if not user_ok or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
     reaper.SetExtState("QuantizeFast", "Toggle", toggle, false)
@@ -441,7 +441,7 @@ for take, _ in pairs(getAllTakes()) do
         elseif eventType == EVENT_NOTE_END then
             local start = noteStartEventAtPitch[eventPitch]
             if start == nil then
-                return reaper.ShowMessageBox("非活動MIDI片段存在重叠音符，請刪除重叠音符后再次運行該脚本，謝謝！", "錯誤", 0)
+                return reaper.ShowMessageBox("非活動MID片段存在重叠音符，請刪除重叠音符后再次運行該脚本，謝謝！", "錯誤", 0)
             end
             table.insert(noteEvents, {
                 first = start,
@@ -490,6 +490,6 @@ for take, _ in pairs(getAllTakes()) do
         reaper.ShowMessageBox("腳本造成 All-Note-Off 位置偏移\n\n已恢復原始數據", "錯誤", 0)
     end
 end
-reaper.Undo_EndBlock("Quantize (Fast)", -1)
+reaper.Undo_EndBlock("量化(快速)", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
