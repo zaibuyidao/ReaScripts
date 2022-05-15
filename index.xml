@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a26729ae09e1becaeda9f9ef201b9a077c60979d">
+<index version="1" name="zaibuyidao Scripts" commit="c23eaa11c96b2c3015d0ad79141ef7350e996751">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3772,6 +3772,15 @@
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/74079a80fdad1cf4fc3819f38daf435e36995fb0/MIDI%20Editor/zaibuyidao_Transpose.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Trim Note Left Edge (Fast).lua" type="script" desc="Trim Note Left Edge (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20(Fast).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge (Percentages).lua" type="script" desc="Trim Note Left Edge (Percentages)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -3779,6 +3788,15 @@
       <version name="1.0" author="zaibuyidao" time="2020-03-04T15:49:07Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5c62c6d57fb18f3e5973553b3ba740fe1ae17052/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20(Percentages).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Trim Note Left Edge +10 (Fast).lua" type="script" desc="Trim Note Left Edge +10 (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20+10%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge +10.lua" type="script" desc="Trim Note Left Edge +10">
@@ -3792,6 +3810,15 @@
       <version name="2.0" author="zaibuyidao" time="2020-09-27T16:42:27Z">
         <changelog><![CDATA[+ Code rewrite]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a741eba7e71f7f988f89a905b09103d4301621c2/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20+10.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Trim Note Left Edge -10 (Fast).lua" type="script" desc="Trim Note Left Edge -10 (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20-10%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge -10.lua" type="script" desc="Trim Note Left Edge -10">
@@ -3820,6 +3847,24 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a741eba7e71f7f988f89a905b09103d4301621c2/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Trim Note Left Grid +1 (Fast).lua" type="script" desc="Trim Note Left Grid +1 (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Grid%20+1%20(Fast).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Trim Note Left Grid -1 (Fast).lua" type="script" desc="Trim Note Left Grid -1 (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Grid%20-1%20(Fast).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Trim Note Right Edge (Fast).lua" type="script" desc="Trim Note Right Edge (Fast)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -3827,6 +3872,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-05-12T16:49:16Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a26729ae09e1becaeda9f9ef201b9a077c60979d/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Right Edge (Percentages).lua" type="script" desc="Trim Note Right Edge (Percentages)">
@@ -3845,6 +3893,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-05-12T16:49:16Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a26729ae09e1becaeda9f9ef201b9a077c60979d/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20+10%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20+10%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Right Edge +10.lua" type="script" desc="Trim Note Right Edge +10">
@@ -3867,6 +3918,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-05-12T16:49:16Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a26729ae09e1becaeda9f9ef201b9a077c60979d/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20-10%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20-10%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Right Edge -10.lua" type="script" desc="Trim Note Right Edge -10">
@@ -3893,6 +3947,24 @@
       <version name="2.0" author="zaibuyidao" time="2020-09-27T16:42:27Z">
         <changelog><![CDATA[+ Code rewrite]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a741eba7e71f7f988f89a905b09103d4301621c2/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Trim Note Right Grid +1 (Fast).lua" type="script" desc="Trim Note Right Grid +1 (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Grid%20+1%20(Fast).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Trim Note Right Grid -1 (Fast).lua" type="script" desc="Trim Note Right Grid -1 (Fast)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Grid%20-1%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Unselect All Events.lua" type="script" desc="Unselect All Events">
