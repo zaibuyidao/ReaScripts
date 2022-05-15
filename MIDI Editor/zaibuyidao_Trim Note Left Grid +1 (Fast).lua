@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Trim Note Right Edge -10 (Fast)
- * Version: 1.0.1
+ * ReaScript Name: Trim Note Left Grid +1 (Fast)
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -16,6 +16,7 @@
 EVENT_NOTE_START = 9
 EVENT_NOTE_END = 8
 EVENT_ARTICULATION = 15
+local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 
 function print(...)
   local params = {...}
@@ -104,13 +105,15 @@ function getEventPitch(event) return event.msg:byte(2) end
 function getEventSelected(event) return event.flags&1 == 1 end
 function getEventType(event) return event.msg:byte(1)>>4 end
 
--- local active_take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
--- if not active_take or not reaper.TakeIsMIDI(active_take) then return end
--- local cur_gird, swing = reaper.MIDI_GetGrid(active_take)
+local active_take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+if not active_take or not reaper.TakeIsMIDI(active_take) then return end
+local cur_gird, swing = reaper.MIDI_GetGrid(active_take)
 
-function rightMinus(take, ticks)
+function leftPlus(take, ticks)
   local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
   reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
+  local cur_gird, swing = reaper.MIDI_GetGrid(take)
+  local tick_gird = midi_tick * cur_gird
   local lastPos = 0
   local pitchNotes = {}
   local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
@@ -135,7 +138,7 @@ function rightMinus(take, ticks)
     elseif eventType == EVENT_NOTE_END then
       local start = noteStartEventAtPitch[eventPitch]
       if start == nil then
-        return reaper.ShowMessageBox("非活動MID片段存在重叠音符，請刪除重叠音符后再次運行該脚本，謝謝！", "錯誤", 0)
+        return reaper.ShowMessageBox("非活動Take存在重叠音符，導致脚本無法正常工作。", "錯誤", 0)
       end
       table.insert(noteEvents, {
         first = start,
@@ -157,11 +160,18 @@ function rightMinus(take, ticks)
     local startppqpos = noteEvents[i].first.pos
     local endppqpos = noteEvents[i].second.pos
     if selected then
-      if noteEvents[i].second.pos <= noteEvents[i].first.pos + 30 then goto continue end -- 限制最小音符长度
-      noteEvents[i].second.pos = noteEvents[i].second.pos + ticks
+      local start_meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, startppqpos)
+      local tick_start = startppqpos - start_meas
+      local tick_pos = tick_start % tick_gird
+      if noteEvents[i].first.pos >= noteEvents[i].second.pos - tick_gird then goto continue end -- 限制最小音符长度
+      if tick_pos ~= 0 then
+        noteEvents[i].first.pos = noteEvents[i].first.pos + (tick_gird - tick_pos)
+      else
+        noteEvents[i].first.pos = noteEvents[i].first.pos + tick_gird
+      end
       ::continue::
-      -- if noteEvents[i].first.pos >= noteEvents[i].second.pos then noteEvents[i].second.pos = startppqpos + 30 end
-      -- if endppqpos - startppqpos < 30 then noteEvents[i].second.pos = startppqpos + 30 end -- 限制最小音符长度
+      -- if noteEvents[i].first.pos >= noteEvents[i].second.pos then noteEvents[i].first.pos = endppqpos - 30 end
+      -- if endppqpos - startppqpos < 30  or startppqpos > endppqpos then noteEvents[i].first.pos = endppqpos - 30 end -- 限制最小音符长度
     end
   end
 
@@ -174,11 +184,11 @@ function rightMinus(take, ticks)
   end
 end
 
-ticks = -10
+ticks = 0
 reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
-  rightMinus(take, ticks)
+  leftPlus(take, ticks)
 end
 
 reaper.UpdateArrange()
-reaper.Undo_EndBlock("Trim Note Right Edge -10 (Fast)", -1)
+reaper.Undo_EndBlock("Trim Note Left Grid +1 (Fast)", -1)
