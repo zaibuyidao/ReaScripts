@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Trim Note Right Edge +10 (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -65,7 +65,7 @@ function getAllTakes()
     end
   
     for take in next, tTake do
-      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tT[take] = nil end -- Remove takes that were not affected by deselection
+      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tTake[take] = nil end -- Remove takes that were not affected by deselection
     end
   end
   if not next(tTake) then return end
@@ -108,7 +108,7 @@ function getEventType(event) return event.msg:byte(1)>>4 end
 
 function rightPlus(take, ticks)
   local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-  reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
+  -- reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
   local lastPos = 0
   local pitchNotes = {}
   local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
@@ -177,5 +177,5 @@ reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
   rightPlus(take, ticks)
 end
-reaper.UpdateArrange()
 reaper.Undo_EndBlock("Trim Note Right Edge +10 (Fast)", -1)
+reaper.UpdateArrange()

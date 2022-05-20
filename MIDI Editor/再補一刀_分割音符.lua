@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: 拆分音符
- * Version: 1.4.1
+ * ReaScript Name: 分割音符
+ * Version: 1.0
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -92,7 +92,7 @@ end
 
 div_ret = reaper.GetExtState("SplitNotes", "Length")
 if (div_ret == "") then div_ret = "240" end
-user_ok, div_ret = reaper.GetUserInputs('拆分音符', 1, '長度', div_ret)
+user_ok, div_ret = reaper.GetUserInputs('分割音符', 1, '長度', div_ret)
 reaper.SetExtState("SplitNotes", "Length", div_ret, false)
 div = tonumber(div_ret)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
@@ -100,7 +100,7 @@ if not user_ok then return reaper.SN_FocusMIDIEditor() end
 if div ~= nil then
   reaper.Undo_BeginBlock()  
   SplitNotes(div)
-  reaper.Undo_EndBlock("拆分音符", -1)
+  reaper.Undo_EndBlock("分割音符", -1)
 end
 
 reaper.SN_FocusMIDIEditor()

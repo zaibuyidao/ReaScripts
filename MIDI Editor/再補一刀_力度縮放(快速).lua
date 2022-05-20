@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 力度縮放(快速)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -66,7 +66,7 @@ function getAllTakes()
     end
   
     for take in next, tTake do
-      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tT[take] = nil end -- Remove takes that were not affected by deselection
+      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tTake[take] = nil end -- Remove takes that were not affected by deselection
     end
   end
   if not next(tTake) then return end
@@ -223,7 +223,7 @@ function process(take)
   
   for _, noteEvent in pairs(selectedNoteEvents) do
     local x = noteEvent.first.pos - selectedNoteEvents[1].first.pos
-    if vel_start == vel_end then
+    if vel_start == vel_end and toggle ~= "1" then
       setEventVel(noteEvent.first, vel_start)
       setEventVel(noteEvent.second, vel_start)
     else 

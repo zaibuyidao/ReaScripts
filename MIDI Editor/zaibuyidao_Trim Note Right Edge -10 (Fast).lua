@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Trim Note Right Edge -10 (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -65,7 +65,7 @@ function getAllTakes()
     end
   
     for take in next, tTake do
-      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tT[take] = nil end -- Remove takes that were not affected by deselection
+      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tTake[take] = nil end -- Remove takes that were not affected by deselection
     end
   end
   if not next(tTake) then return end
@@ -110,7 +110,7 @@ function getEventType(event) return event.msg:byte(1)>>4 end
 
 function rightMinus(take, ticks)
   local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-  reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
+  -- reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
   local lastPos = 0
   local pitchNotes = {}
   local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
@@ -134,9 +134,7 @@ function rightMinus(take, ticks)
       noteStartEventAtPitch[eventPitch] = event
     elseif eventType == EVENT_NOTE_END then
       local start = noteStartEventAtPitch[eventPitch]
-      if start == nil then
-        return reaper.ShowMessageBox("非活動MID片段存在重叠音符，請刪除重叠音符后再次運行該脚本，謝謝！", "錯誤", 0)
-      end
+      if start == nil then error("音符有重叠無法解析") end
       table.insert(noteEvents, {
         first = start,
         second = event,
@@ -179,6 +177,5 @@ reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
   rightMinus(take, ticks)
 end
-
-reaper.UpdateArrange()
 reaper.Undo_EndBlock("Trim Note Right Edge -10 (Fast)", -1)
+reaper.UpdateArrange()

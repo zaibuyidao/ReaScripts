@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Trim Note Left Edge (Fast)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -65,7 +65,7 @@ function getAllTakes()
     end
   
     for take in next, tTake do
-      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tT[take] = nil end -- Remove takes that were not affected by deselection
+      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tTake[take] = nil end -- Remove takes that were not affected by deselection
     end
   end
   if not next(tTake) then return end
@@ -112,7 +112,7 @@ function getEventType(event) return event.msg:byte(1)>>4 end
 
 function LeftMinus(take, ticks)
   local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-  reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
+  -- reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
   local lastPos = 0
   local pitchNotes = {}
   local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
@@ -180,7 +180,7 @@ end
 
 function leftPlus(take, ticks)
   local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-  reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
+  -- reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
   local lastPos = 0
   local pitchNotes = {}
   local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
@@ -204,9 +204,7 @@ function leftPlus(take, ticks)
       noteStartEventAtPitch[eventPitch] = event
     elseif eventType == EVENT_NOTE_END then
       local start = noteStartEventAtPitch[eventPitch]
-      if start == nil then
-        return reaper.ShowMessageBox("非活動Take存在重叠音符，導致脚本無法正常工作。", "錯誤", 0)
-      end
+      if start == nil then error("音符有重叠無法解析") end
       table.insert(noteEvents, {
         first = start,
         second = event,
@@ -257,6 +255,6 @@ for take, _ in pairs(getAllTakes()) do
     LeftMinus(take, ticks)
   end
 end
-reaper.UpdateArrange()
 reaper.Undo_EndBlock("Trim Note Left Edge (Fast)", -1)
+reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
