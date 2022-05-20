@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c23eaa11c96b2c3015d0ad79141ef7350e996751">
+<index version="1" name="zaibuyidao Scripts" commit="61388d27acf0c0ca403fb6a23a3d69999a995422">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1660,6 +1660,22 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/39d21f6f5636881fb9b439d24e28bae3160e83aa/MIDI%20Editor/zaibuyidao_Duplicate%20Events.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Duplicate Musical (Fast).lua" type="script" desc="Duplicate Musical (Fast)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Duplicate%20Musical%20(Fast).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Duplicate Musical (Within Time Selection).lua" type="script" desc="Duplicate Musical (Within Time Selection)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -3097,6 +3113,9 @@
       <version name="1.0.1" author="zaibuyidao" time="2022-05-12T16:49:16Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a26729ae09e1becaeda9f9ef201b9a077c60979d/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Fast).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity (Multitrack).lua" type="script" desc="Scale Velocity (Multitrack)">
       <metadata/>
@@ -3616,6 +3635,22 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/673b5dca411760fc1af65a8f77c148bd47f107ba/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Split Notes (Fast).lua" type="script" desc="Split Notes (Fast)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Split%20Notes%20(Fast).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Split Notes.lua" type="script" desc="Split Notes">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -3780,6 +3815,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20(Fast).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge (Percentages).lua" type="script" desc="Trim Note Left Edge (Percentages)">
       <metadata>
@@ -3797,6 +3835,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20+10%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20+10%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge +10.lua" type="script" desc="Trim Note Left Edge +10">
@@ -3819,6 +3860,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20-10%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Edge%20-10%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge -10.lua" type="script" desc="Trim Note Left Edge -10">
@@ -3855,6 +3899,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Grid%20+1%20(Fast).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Grid%20+1%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Grid -1 (Fast).lua" type="script" desc="Trim Note Left Grid -1 (Fast)">
       <metadata>
@@ -3863,6 +3910,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Grid%20-1%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Left%20Grid%20-1%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Right Edge (Fast).lua" type="script" desc="Trim Note Right Edge (Fast)">
@@ -3875,6 +3925,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2022-05-15T13:15:40Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20(Fast).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Right Edge (Percentages).lua" type="script" desc="Trim Note Right Edge (Percentages)">
@@ -3896,6 +3949,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2022-05-15T13:15:40Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20+10%20(Fast).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20+10%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Right Edge +10.lua" type="script" desc="Trim Note Right Edge +10">
@@ -3921,6 +3977,9 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2022-05-15T13:15:40Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20-10%20(Fast).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Edge%20-10%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Right Edge -10.lua" type="script" desc="Trim Note Right Edge -10">
@@ -3957,6 +4016,9 @@
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Grid%20+1%20(Fast).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Grid%20+1%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Right Grid -1 (Fast).lua" type="script" desc="Trim Note Right Grid -1 (Fast)">
       <metadata>
@@ -3965,6 +4027,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-05-15T13:15:40Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c23eaa11c96b2c3015d0ad79141ef7350e996751/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Grid%20-1%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/zaibuyidao_Trim%20Note%20Right%20Grid%20-1%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Unselect All Events.lua" type="script" desc="Unselect All Events">
@@ -4007,6 +4072,31 @@
       </version>
       <version name="1.0.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E4%BA%8B%E4%BB%B6%E9%81%8E%E6%BF%BE%20-%20%E9%81%B8%E6%93%87%E9%9F%B3%E7%AC%A6.lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_分割音符(快速).lua" type="script" desc="分割音符(快速)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%88%86%E5%89%B2%E9%9F%B3%E7%AC%A6(%E5%BF%AB%E9%80%9F).lua</source>
+      </version>
+    </reapack>
+    <reapack name="再補一刀_分割音符.lua" type="script" desc="分割音符">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="再補一刀" time="2022-05-20T17:17:35Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%88%86%E5%89%B2%E9%9F%B3%E7%AC%A6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_刮奏.lua" type="script" desc="刮奏">
@@ -4055,6 +4145,9 @@
       </metadata>
       <version name="1.0.1" author="zaibuyidao" time="2022-05-12T16:49:16Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a26729ae09e1becaeda9f9ef201b9a077c60979d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE(%E5%BF%AB%E9%80%9F).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-05-20T17:17:35Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61388d27acf0c0ca403fb6a23a3d69999a995422/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE(%E5%BF%AB%E9%80%9F).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_力度縮放.lua" type="script" desc="力度縮放">
@@ -4146,17 +4239,6 @@
       </version>
       <version name="1.0.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BE%9E%E6%A0%B9%E9%9F%B3%E7%94%9F%E6%88%90%E5%92%8C%E5%BC%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_拆分音符.lua" type="script" desc="拆分音符">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.4" author="再補一刀" time="2021-01-11T04:44:18Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/55b0a124c89b9c44470200022585eaf48327a46b/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8B%86%E5%88%86%E9%9F%B3%E7%AC%A6.lua</source>
-      </version>
-      <version name="1.4.1" author="再補一刀" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8B%86%E5%88%86%E9%9F%B3%E7%AC%A6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_掃弦(快速).lua" type="script" desc="掃弦(快速)">
