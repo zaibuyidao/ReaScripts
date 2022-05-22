@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 分割音符(快速)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -254,6 +254,8 @@ function main(div, take)
     end
     
     local newEvents = {}
+    local last = events[#events]
+    table.remove(events, #events) -- 排除 All-Note-Off 事件
     for _, event in ipairs(events) do
       if replacementForEvent[event] then
         for _, e in ipairs(replacementForEvent[event]) do table.insert(newEvents, e) end
@@ -262,6 +264,7 @@ function main(div, take)
         table.insert(newEvents, event)
       end
     end
+    table.insert(newEvents, last) -- 排除 All-Note-Off 事件
     setAllEvents(take, newEvents)
     reaper.MIDI_Sort(take)
 end
@@ -277,12 +280,12 @@ reaper.Undo_BeginBlock()
 if div ~= nil then 
   for take, _ in pairs(getAllTakes()) do
     local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
+    local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
     main(div, take)
 
-    local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
     if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
         reaper.MIDI_SetAllEvts(take, MIDIstring)
-        reaper.ShowMessageBox("腳本造成 All-Note-Off 位置偏移\n\n已恢復原始數據", "錯誤", 0)
+        reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
     end
   end
 end

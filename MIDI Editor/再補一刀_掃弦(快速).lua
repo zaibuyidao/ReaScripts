@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 掃弦(快速)
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -93,58 +93,11 @@ function getAllTakes()
         end
         
         for take in next, tTake do
-            if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tT[take] = nil end -- Remove takes that were not affected by deselection
+            if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tTake[take] = nil end -- Remove takes that were not affected by deselection
         end
     end
     if not next(tTake) then return end
     return tTake
-end
-
-local function getAllNotesQuick()
-    local _, MIDI = reaper.MIDI_GetAllEvts(take, "")
-    local result = {}
-    local stringPos = 1
-    while stringPos < MIDI:len() do
-        local offset, flags, msg
-        offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDI, stringPos)
-        local selected = flags&1 == 1
-        local pitch = msg:byte(2)
-        local status = msg:byte(1)>>4
-        table.insert(result, {
-            ["offset"] = offset,
-            ["flags"] = flags,
-            ["msg"] = msg,
-            ["selected"] = selected,
-            ["pitch"] = pitch,
-            ["status"] = status,
-        })
-    end
-    return result
-end
-
-local function getGroupPitchEvents()
-    local lastPos = 0
-    local pitchNotes = {}
-    local _, MIDI = reaper.MIDI_GetAllEvts(take, "")
-    local stringPos = 1
-    while stringPos < MIDI:len() do
-        local offset, flags, msg
-        offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDI, stringPos)
-        local selected = flags&1 == 1
-        local pitch = msg:byte(2)
-        local status = msg:byte(1)>>4
-        if pitchNotes[pitch] == nil then pitchNotes[pitch] = {} end
-        table.insert(pitchNotes[pitch], {
-            ["pos"] = lastPos + offset,
-            ["flags"] = flags,
-            ["msg"] = msg,
-            ["selected"] = selected,
-            ["pitch"] = pitch,
-            ["status"] = status,
-        })
-        lastPos = lastPos + offset
-    end
-    return pitchNotes
 end
 
 function table.sortByKey(tab,key,ascend) -- 对于传入的table按照指定的key值进行排序,ascend参数决定是否为升序,默认为true
@@ -171,7 +124,7 @@ end
 
 local tick = reaper.GetExtState("StrumItFast", "Tick")
 if (tick == "") then tick = "4" end
-user_ok, user_input_csv = reaper.GetUserInputs('掃弦(快速)', 1, '輸入嘀嗒數:正數=下 負數=上', tick)
+user_ok, user_input_csv = reaper.GetUserInputs('掃弦(快速)', 1, '輸入嘀嗒數(±)', tick)
 if not user_ok then return reaper.SN_FocusMIDIEditor() end
 tick = user_input_csv:match("(.*)")
 if not tonumber(tick) then return reaper.SN_FocusMIDIEditor() end
@@ -186,7 +139,8 @@ for take, _ in pairs(getAllTakes()) do
     
     local _, MIDI = reaper.MIDI_GetAllEvts(take, "")
     local selectedStartEvents = {}
-    
+    local pitchLastStart = {}
+
     local stringPos = 1
     while stringPos < MIDI:len() do
         local offset, flags, msg
@@ -208,10 +162,15 @@ for take, _ in pairs(getAllTakes()) do
         if not event.selected then
             goto continue
         end
-    
+
         if event.status == 9 then
             if selectedStartEvents[event.pos] == nil then selectedStartEvents[event.pos] = {} end
             table.insert(selectedStartEvents[event.pos], event)
+
+            pitchLastStart[event.pitch] = event.pos
+        elseif event.status == 8 then
+            if pitchLastStart[event.pitch] == nil then error("音符有重叠無法解析") end
+            pitchLastStart[event.pitch] = nil
         end
     
         ::continue::
@@ -226,23 +185,26 @@ for take, _ in pairs(getAllTakes()) do
         end
     end
     
+    -- local last = events[#events]
+    -- table.remove(events, #events)
     -- table.sort(events,function(a,b) -- 事件重新排序
-    --     -- if a.status == 11 then return false end
-    --     if a.pos == b.pos then
-    --         if a.status == b.status then
-    --             return a.pitch < b.pitch
-    --         end
-    --         return a.status < b.status
+    --   -- if a.status == 11 then return false end
+    --   if a.pos == b.pos then
+    --     if a.status == b.status then
+    --         return a.pitch < b.pitch
     --     end
-    --     return a.pos < b.pos
+    --     return a.status < b.status
+    --   end
+    --   return a.pos < b.pos
     -- end)
-    
+    -- table.insert(events, last)
+
     setAllEvents(take, events)
     reaper.MIDI_Sort(take)
     
     if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
         reaper.MIDI_SetAllEvts(take, MIDI)
-        reaper.ShowMessageBox("腳本造成 All-Note-Off 位置偏移\n\n已恢復原始數據", "錯誤", 0)
+        reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
     end
 end
 

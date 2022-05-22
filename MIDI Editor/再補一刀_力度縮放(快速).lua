@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 力度縮放(快速)
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -203,6 +203,7 @@ function process(take)
       noteStartEventAtPitch[eventPitch] = event
     elseif eventType == EVENT_NOTE_END then
       local start = noteStartEventAtPitch[eventPitch]
+      if start == nil then error("音符有重叠無法解析") end
       noteStartEventAtPitch[eventPitch] = nil
       if getEventSelected(event) then
         table.insert(selectedNoteEvents, {
@@ -245,7 +246,7 @@ for take, _ in pairs(getAllTakes()) do
   local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
   if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
     reaper.MIDI_SetAllEvts(take, MIDIstring)
-    reaper.ShowMessageBox("腳本造成 All-Note-Off 位置偏移\n\n已恢復原始數據", "錯誤", 0)
+    reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
   end
 end
 reaper.Undo_EndBlock("力度縮放(快速)", -1)

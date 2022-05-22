@@ -1,11 +1,9 @@
 --[[
  * ReaScript Name: Chord Inversion -01 (Fast)
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0 or newer recommended
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
@@ -27,20 +25,21 @@ local midiEditor = reaper.MIDIEditor_GetActive()
 take = reaper.MIDIEditor_GetTake(midiEditor)
 if not take or not reaper.TakeIsMIDI(take) then return end
 
-function CheckSWS()
-    local SWS_installed
-    if not reaper.BR_GetMidiSourceLenPPQ then
-        local retval = reaper.ShowMessageBox("此腳本需要 SWS 擴展, 你想現在下載它嗎?", "Warning", 1)
-        if retval == 1 then
-            Open_URL("http://www.sws-extension.org/download/pre-release/")
-        end
+function open_url(url)
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+        os.execute("open ".. url)
     else
-        SWS_installed = true
+        os.execute("start ".. url)
     end
-    return SWS_installed
 end
 
-CheckSWS()
+if not reaper.BR_GetMidiSourceLenPPQ then
+    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+    if retval == 1 then
+        open_url("http://www.sws-extension.org/download/pre-release/")
+    end
+end
 
 sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
 
@@ -87,7 +86,7 @@ while stringPos <= MIDIstring:len() do
         noteStartEventAtPitch[getEventPitch(event)] = event
     elseif status == EVENT_NOTE_END then
         local start = noteStartEventAtPitch[getEventPitch(event)]
-        if start == nil then error("音符有重叠无法解析") end
+        if start == nil then error("音符有重叠無法解析") end
         local groupPos = reaper.MIDI_GetPPQPos_StartOfMeasure(take, start.pos)
         if not groupEventPairs[groupPos] then groupEventPairs[groupPos] = {} end
         if getEventSelected(event) then
@@ -211,7 +210,7 @@ setAllEvents(events)
 
 if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
     reaper.MIDI_SetAllEvts(take, MIDIstring)
-    reaper.ShowMessageBox("腳本造成 All-Notes-Off 的位置偏移\n\n已恢複原始數據", "ERROR", 0)
+    reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
 end
 
 reaper.Undo_EndBlock("Chord Inversion -01 (Fast)", -1)

@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Trim Note Left Edge +10 (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -134,9 +134,7 @@ function leftPlus(take, ticks)
       noteStartEventAtPitch[eventPitch] = event
     elseif eventType == EVENT_NOTE_END then
       local start = noteStartEventAtPitch[eventPitch]
-      if start == nil then
-        return reaper.ShowMessageBox("非活動Take存在重叠音符，導致脚本無法正常工作。", "錯誤", 0)
-      end
+      if start == nil then error("音符有重叠無法解析") end
       table.insert(noteEvents, {
         first = start,
         second = event,
@@ -170,7 +168,7 @@ function leftPlus(take, ticks)
 
   if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
     reaper.MIDI_SetAllEvts(take, MIDIstring)
-    reaper.ShowMessageBox("腳本造成 All-Note-Off 位置偏移\n\n已恢復原始數據", "錯誤", 0)
+    reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
   end
 end
 

@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Duplicate Musical (Fast)
- * Version: 1.0.1
+ * ReaScript Name: Duplicate Events To Edit Cursor (Fast)
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -295,84 +295,10 @@ local range_qn = {
 }
 range_qn.len = range_qn.tail - range_qn.head
 
-local range_time = {
-    head = reaper.MIDI_GetProjTimeFromPPQPos(take, global_range.head- active_item_event_start_pos_ppq),
-    tail = reaper.MIDI_GetProjTimeFromPPQPos(take, global_range.tail- active_item_event_start_pos_ppq)
-}
-range_time.len = range_time.tail - range_time.head
-
--- print("qn range")
--- table.print(range_qn)
-
-local range_qn_measure = {}
-local _, left, right = reaper.TimeMap_QNToMeasures(0, range_qn.head)
-range_qn_measure.head  = {left = left, right = right, len = right - left}
-local _, left, right = reaper.TimeMap_QNToMeasures(0, range_qn.tail)
-range_qn_measure.tail  = {left = left, right = right, len = right - left}
-
--- print("range_qn_measure")
--- table.print(range_qn_measure)
-
 -- 复制长度
 local copy_start_qn_from_head
-
-local _, _, head_cml, _, head_cdenom = reaper.TimeMap2_timeToBeats(0, range_time.head)
-local range_beats = (range_qn.len / range_qn_measure.head.len) * head_cml
-local qn_per_beat = 4 / head_cdenom
-
-if range_qn.len > range_qn_measure.head.len then -- 选择范围超过了一节(节的长度以左端点所在拍号为准)
-    copy_start_qn_from_head = math.ceil(range_qn.len / range_qn_measure.head.len) * range_qn_measure.head.len
-elseif head_cdenom == 4 then
-    if head_cml == 3 then   -- 3/4 拍
-        if range_beats > 1 then
-            copy_start_qn_from_head = qn_per_beat * 3
-        end
-    elseif head_cml == 4 or head_cml == 2 then-- 4/4 2/4 拍
-        if range_beats > 2 then
-            copy_start_qn_from_head = qn_per_beat * 4
-        end
-    elseif head_cml == 6 then -- 6/4 拍
-        if range_beats > 3 then
-            copy_start_qn_from_head = qn_per_beat * 6
-        elseif range_beats > 1 then
-            copy_start_qn_from_head = qn_per_beat * 3
-        end
-    end
-elseif head_cdenom == 8 then
-    if head_cml == 3 then -- 3/8 拍
-        if range_beats > 1 then
-            copy_start_qn_from_head = qn_per_beat * 3
-        end
-    elseif head_cml == 4 then -- 4/8 拍
-        if range_beats > 2 then
-            copy_start_qn_from_head = qn_per_beat * 4
-        end
-    elseif head_cml == 6 then -- 6/8 拍
-        if range_beats > 3 then
-            copy_start_qn_from_head = qn_per_beat * 6
-        elseif range_beats > 1 then
-            copy_start_qn_from_head = qn_per_beat * 3
-        end
-    end
-end
-
--- print("copy_start_qn_from_head", copy_start_qn_from_head)
-
-if not copy_start_qn_from_head then
-    local cur_beat = head_cml
-    while true do
-        if range_beats <= cur_beat then
-            copy_start_qn_from_head = cur_beat * qn_per_beat
-        else 
-            break
-        end
-        if cur_beat > 1 then
-            cur_beat = cur_beat - 1
-        else 
-            cur_beat = cur_beat / 2
-        end
-    end
-end
+local curpos = reaper.TimeMap2_timeToQN(0, reaper.GetCursorPositionEx(0))
+copy_start_qn_from_head = curpos - range_qn.head
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
@@ -388,6 +314,7 @@ for take, _ in pairs(getAllTakes()) do
     --     reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
     -- end
 end
-reaper.Undo_EndBlock("Duplicate Musical (Fast)", -1)
+
+reaper.Undo_EndBlock("Duplicate Events To Edit Cursor (Fast)", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()

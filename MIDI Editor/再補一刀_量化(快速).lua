@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 量化(快速)
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -65,7 +65,7 @@ function getAllTakes()
         end
         
         for take in next, tTake do
-            if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tT[take] = nil end -- Remove takes that were not affected by deselection
+            if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tTake[take] = nil end -- Remove takes that were not affected by deselection
         end
     end
     if not next(tTake) then return end
@@ -73,17 +73,6 @@ function getAllTakes()
 end
 
 function setAllEvents(take, events)
-    -- -- 排序事件
-    -- table.sort(events,function(a,b)
-    --     if a.status == 11 then return false end
-    --     if a.pos == b.pos then
-    --         if a.status == b.status then
-    --             return a.pitch < b.pitch
-    --         end
-    --         return a.status < b.status
-    --     end
-    --     return a.pos < b.pos
-    -- end)
     local lastPos = 0
     for _, event in pairs(events) do
         event.offset = event.pos - lastPos
@@ -412,7 +401,7 @@ end
 reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
     sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-    reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
+    -- reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
     
     local events = {}
     local _, MIDI = reaper.MIDI_GetAllEvts(take, "")
@@ -440,9 +429,7 @@ for take, _ in pairs(getAllTakes()) do
             noteStartEventAtPitch[eventPitch] = event
         elseif eventType == EVENT_NOTE_END then
             local start = noteStartEventAtPitch[eventPitch]
-            if start == nil then
-                return reaper.ShowMessageBox("非活動MID片段存在重叠音符，請刪除重叠音符后再次運行該脚本，謝謝！", "錯誤", 0)
-            end
+            if start == nil then error("音符有重叠無法解析") end
             table.insert(noteEvents, {
                 first = start,
                 second = event,
@@ -487,7 +474,7 @@ for take, _ in pairs(getAllTakes()) do
 
     if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
         reaper.MIDI_SetAllEvts(take, MIDI)
-        reaper.ShowMessageBox("腳本造成 All-Note-Off 位置偏移\n\n已恢復原始數據", "錯誤", 0)
+        reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
     end
 end
 reaper.Undo_EndBlock("量化(快速)", -1)
