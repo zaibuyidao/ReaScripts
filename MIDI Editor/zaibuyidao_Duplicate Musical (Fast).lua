@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Duplicate Musical (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -96,6 +96,11 @@ local function _copy(object)
     return setmetatable(new_table, getmetatable(object))
 end
 return _copy(object)
+end
+
+local floor = math.floor
+function math.floor(x)
+    return floor(x + 0.0000005)
 end
 
 EVENT_NOTE_START = 9
@@ -197,13 +202,13 @@ end
 function insertEvents(originEvents, toInsertEvents, startPos)
     if (#toInsertEvents == 0) then return end
     local lastEvent = originEvents[#originEvents]
-    table.remove(originEvents, #originEvents) -- 排除 All-Note-Off 事件
+    table.remove(originEvents, #originEvents)
     local startOfToCopy = toInsertEvents[1].pos
     for _, toInsertEvent in ipairs(toInsertEvents) do
         toInsertEvent.pos = startPos + (toInsertEvent.pos - startOfToCopy)
         table.insert(originEvents, toInsertEvent)
     end
-    table.insert(originEvents, lastEvent) -- 排除 All-Note-Off 事件
+    table.insert(originEvents, lastEvent)
 end
 
 function dup(take, copy_start_qn_from_head, global_range_qn)
@@ -239,6 +244,7 @@ function dup(take, copy_start_qn_from_head, global_range_qn)
     local qn_item_end = qn_item_pos + qn_item_len
     local event_start_pos_qn = reaper.MIDI_GetProjQNFromPPQPos(take, 0)
 
+
     -- 复制后音符的结尾位置
     -- local result_tail_qn = global_range_qn.head + copy_start_qn_from_head + (global_range_qn.tail - global_range_qn.head)
     -- local result_tail_qn = global_range_qn.head + copy_start_qn_from_head + copy_start_qn_from_head
@@ -255,8 +261,13 @@ function dup(take, copy_start_qn_from_head, global_range_qn)
 
     -- 当前item第一个事件的插入位置 = 全部take选中区域的开始qn位置 + 复制长度 + 当前item第一个事件与全部take选中区域开头的距离 - 当前item事件开始qn位置
     insertEvents(events, toCopyEvents, math.floor((global_range_qn.head + copy_start_qn_from_head + offset_from_global_head - event_start_pos_qn) * tick))
+
+    -- print(global_range_qn.head, copy_start_qn_from_head, offset_from_global_head, event_start_pos_qn)
+    -- print((global_range_qn.head + copy_start_qn_from_head + offset_from_global_head - event_start_pos_qn))
+    -- print((global_range_qn.head + copy_start_qn_from_head + offset_from_global_head - event_start_pos_qn) * tick, math.floor((global_range_qn.head + copy_start_qn_from_head + offset_from_global_head - event_start_pos_qn) * tick))
     setAllEvents(take, events)
 end
+
 
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local global_range = {head = math.huge, tail = -math.huge}
@@ -264,10 +275,10 @@ local has_selected = false
 for take, _ in pairs(getAllTakes()) do
     getAllEvents(take, function(event)
         if event.selected then
-            -- local item = reaper.GetMediaItemTake_Item(take)
-            -- local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-            -- local item_pos_qn = reaper.TimeMap2_timeToQN(0, item_pos)
-            -- local item_pos_ppq = tick * item_pos_qn
+            local item = reaper.GetMediaItemTake_Item(take)
+            local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+            local item_pos_qn = reaper.TimeMap2_timeToQN(0, item_pos)
+            local item_pos_ppq = tick * item_pos_qn
             local event_start_pos_ppq = tick * reaper.MIDI_GetProjQNFromPPQPos(take, 0)
 
             local pos = event.pos
@@ -356,12 +367,10 @@ elseif head_cdenom == 8 then
     end
 end
 
--- print("copy_start_qn_from_head", copy_start_qn_from_head)
-
 if not copy_start_qn_from_head then
     local cur_beat = head_cml
     while true do
-        if range_beats <= cur_beat then
+        if range_beats <= cur_beat + 0.0000001 then
             copy_start_qn_from_head = cur_beat * qn_per_beat
         else 
             break
@@ -374,12 +383,16 @@ if not copy_start_qn_from_head then
     end
 end
 
+-- print("copy_start_qn_from_head", copy_start_qn_from_head)
+
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
-    local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
+    -- local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
     -- local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
     -- print(sourceLengthTicks)
+
+    reaper.MIDI_DisableSort(take)
     dup(take, copy_start_qn_from_head, range_qn)
     reaper.MIDI_Sort(take)
     -- print(reaper.BR_GetMidiSourceLenPPQ(take))
