@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5cff5bae48eff5e3d4e256997fcc19f84edafa97">
+<index version="1" name="zaibuyidao Scripts" commit="0f15cba693739c6e9befc8feb63473291440a4de">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1563,6 +1563,22 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2022-03-26T13:47:50Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/902d620614b7ea5774a0d243346b139f47cdac1f/MIDI%20Editor/zaibuyidao_Duplicate%20CC.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Duplicate Events (Fast).lua" type="script" desc="Duplicate Events (Fast)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-06-01T12:28:15Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0f15cba693739c6e9befc8feb63473291440a4de/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events To Edit Cursor (Fast).lua" type="script" desc="Duplicate Events To Edit Cursor (Fast)">
