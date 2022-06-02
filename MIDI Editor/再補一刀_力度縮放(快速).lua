@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 力度縮放(快速)
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -201,10 +201,7 @@ function process(take)
     local eventPitch = getEventPitch(event)
     if eventType == EVENT_NOTE_START then
       noteStartEventAtPitch[eventPitch] = event
-    elseif eventType == EVENT_NOTE_END then
       local start = noteStartEventAtPitch[eventPitch]
-      if start == nil then error("音符有重叠無法解析") end
-      noteStartEventAtPitch[eventPitch] = nil
       if getEventSelected(event) then
         table.insert(selectedNoteEvents, {
           first = start,
@@ -214,6 +211,25 @@ function process(take)
       end
     end
   end)
+
+  -- local events = getAllEvents(take, function (event)
+  --   local eventType = getEventType(event)
+  --   local eventPitch = getEventPitch(event)
+  --   if eventType == EVENT_NOTE_START then
+  --     noteStartEventAtPitch[eventPitch] = event
+  --   elseif eventType == EVENT_NOTE_END then
+  --     local start = noteStartEventAtPitch[eventPitch]
+  --     if start == nil then error("音符有重叠無法解析") end
+  --     noteStartEventAtPitch[eventPitch] = nil
+  --     if getEventSelected(event) then
+  --       table.insert(selectedNoteEvents, {
+  --         first = start,
+  --         second = event,
+  --         pitch = eventPitch
+  --       })
+  --     end
+  --   end
+  -- end)
   
   if #selectedNoteEvents == 0 then return end
 
@@ -223,16 +239,19 @@ function process(take)
   )
   
   for _, noteEvent in pairs(selectedNoteEvents) do
-    local x = noteEvent.first.pos - selectedNoteEvents[1].first.pos
-    if vel_start == vel_end and toggle ~= "1" then
+    local vel = getEventVel(noteEvent.first)
+    if selectedNoteEvents[1].first.pos ~= selectedNoteEvents[#selectedNoteEvents].first.pos then
+      local x = noteEvent.first.pos - selectedNoteEvents[1].first.pos
+      if vel_start == vel_end and toggle ~= "1" then
+        setEventVel(noteEvent.first, vel_start)
+      else
+        local vel = getEventVel(noteEvent.first)
+        local newVel = math.floor(f(x, vel))
+        if newVel < 1 then newVel = 1 elseif newVel > 127 then newVel = 127 end
+        setEventVel(noteEvent.first, newVel)
+      end
+    else
       setEventVel(noteEvent.first, vel_start)
-      setEventVel(noteEvent.second, vel_start)
-    else 
-      local vel = getEventVel(noteEvent.first)
-      local newVel = math.floor(f(x, vel))
-      if newVel < 1 then newVel = 1 elseif newVel > 127 then newVel = 127 end
-      setEventVel(noteEvent.first, newVel)
-      setEventVel(noteEvent.second, newVel)
     end
   end
   setAllEvents(take, events)
