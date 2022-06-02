@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0f15cba693739c6e9befc8feb63473291440a4de">
+<index version="1" name="zaibuyidao Scripts" commit="2c1ba30a6c3daecff005f5244d9bf31e9e1aaa62">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2678,6 +2678,22 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/889cde2ca704c3344ec703673584593ef3cfdbc0/MIDI%20Editor/zaibuyidao_Move%20Events%20Right%2050ms.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Move Events To Edit Cursor (Fast).lua" type="script" desc="Move Events To Edit Cursor (Fast)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-06-02T17:33:36Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2c1ba30a6c3daecff005f5244d9bf31e9e1aaa62/MIDI%20Editor/zaibuyidao_Move%20Events%20To%20Edit%20Cursor%20(Fast).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Move Events To Edit Cursor (Multitrack).lua" type="script" desc="Move Events To Edit Cursor (Multitrack)">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -3204,6 +3220,9 @@
       </version>
       <version name="1.0.3" author="zaibuyidao" time="2022-05-22T13:22:38Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8d69b1d0593742bbc15f7dbb85a01d5c4c2a75ad/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Fast).lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2022-06-02T17:33:36Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2c1ba30a6c3daecff005f5244d9bf31e9e1aaa62/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity (Multitrack).lua" type="script" desc="Scale Velocity (Multitrack)">
@@ -4261,6 +4280,9 @@
       </version>
       <version name="1.0.4" author="再補一刀" time="2022-05-22T13:24:44Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9aa3342b0cfa9a51bc2376952d22aedd2a0a278f/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE(%E5%BF%AB%E9%80%9F).lua</source>
+      </version>
+      <version name="1.0.5" author="再補一刀" time="2022-06-02T17:33:36Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2c1ba30a6c3daecff005f5244d9bf31e9e1aaa62/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%8A%9B%E5%BA%A6%E7%B8%AE%E6%94%BE(%E5%BF%AB%E9%80%9F).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_力度縮放.lua" type="script" desc="力度縮放">
