@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Split Notes (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -217,13 +217,13 @@ function main(div, take)
             end
             noteLastEventAtPitch[event.pitch] = nil
             articulationEventAtPitch[event.pitch] = nil
-        elseif event.type == EVENT_ARTICULATION then
-            if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
-                -- text event
-            else
-                local chan, pitch = event.msg:match("NOTE (%d+) (%d+) ")
-                articulationEventAtPitch[tonumber(pitch)] = event
-            end
+        -- elseif event.type == EVENT_ARTICULATION then
+        --     if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
+        --         -- text event
+        --     else
+        --         local chan, pitch = event.msg:match("NOTE (%d+) (%d+) ")
+        --         articulationEventAtPitch[tonumber(pitch)] = event
+        --     end
         end
     end)
 

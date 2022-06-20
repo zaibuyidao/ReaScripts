@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.8.6
+ * Version: 1.8.7
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -1162,6 +1162,7 @@ function Button:draw()
           if self:mouseDown() then a=a+0.2 end
           -- in elm L_up(released and was previously pressed) --
           if self:mouseClick() and self.onClick then self.onClick() end
+          if self:mouseRClick() and self.onRClick then self.onRClick() end -- if mouseR clicked and released, execute onRClick()
     -- Draw btn body, frame
     gfx.set(r,g,b,a)    -- set body color
     self:draw_body()    -- body
@@ -1324,7 +1325,7 @@ btn10.onClick = function () set_group_velocity() end -- 设置乐器组
 btn11.onClick = function () add_fx() end -- 添加表情映射插件
 
 textb.onClick = function () refresh_bank() end -- 左键点击刷新reabank
---textb.onRClick = function () refresh_bank() end -- 右键点击刷新reabank
+
 
 midi_chan = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MIDIChannel")
 if midi_chan == "" then midi_chan = 1 end
@@ -1400,7 +1401,7 @@ local function switch_mode_1() -- 模式1 切换
     
     ch_box1.onClick = function()
         update_patch_box()
-        ch_box2.norm_val = 1 -- 新增判断
+        -- ch_box2.norm_val = 1 -- 新增判断
         update_current_state()
     end
 
@@ -1415,6 +1416,13 @@ local function switch_mode_1() -- 模式1 切换
         local note_item = bank_item.notes[ch_box2.norm_val]
         inset_patch(bank_item.bank.bank, note_item.note, bank_item.bank.velocity, midi_chan)
         -- gfx.quit()
+    end
+    btn2.onRClick = function ()
+        local bank_item = store[ch_box1.norm_val]
+        local note_item = bank_item.notes[ch_box2.norm_val]
+        reaper.StuffMIDIMessage(0, 0xb0+midi_chan-1, 0, bank_item.bank.bank) -- MSB
+        reaper.StuffMIDIMessage(0, 0xb0+midi_chan-1, 0x20, bank_item.bank.velocity) -- LSB
+        reaper.StuffMIDIMessage(0, 0xc0+midi_chan-1, note_item.note, 0) -- Program
     end
 end
 
@@ -1455,7 +1463,7 @@ local function switch_mode_2() -- 模式2 切换
     
     ch_box1.onClick = function()
         update_patch_box()
-        ch_box2.norm_val = 1 -- 新增判断
+        -- ch_box2.norm_val = 1 -- 新增判断
         update_current_state()
     end
 
@@ -1469,6 +1477,12 @@ local function switch_mode_2() -- 模式2 切换
         local note_item = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val]
         inset_patch(note_item.bank, note_item.note, note_item.velocity, midi_chan)
         -- gfx.quit()
+    end
+    btn2.onRClick = function ()
+        local note_item = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val]
+        reaper.StuffMIDIMessage(0, 0xb0+midi_chan-1, 0, note_item.bank) -- MSB
+        reaper.StuffMIDIMessage(0, 0xb0+midi_chan-1, 0x20, note_item.velocity) -- LSB
+        reaper.StuffMIDIMessage(0, 0xc0+midi_chan-1, note_item.note, 0) -- Program
     end
 end
 
@@ -1518,6 +1532,23 @@ btn8.onClick = function () -- 选择音色表
 
     textb = Textbox:new(10,170,320,30, 0.7,0.7,0.7,0.3, bank_name, "Arial", 15, 0)
     Textbox_TB = { textb }
+end
+
+btn8.onRClick = function () -- 右键点击刷新reabank
+    if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
+    store = parse_banks(read_config_lines(reabank_path)) -- 模式1数据
+    store_grouped = group_banks(store)                   -- 模式2数据
+
+    state_getter = switch_mode_1()
+    current_mode = "1"
+    push_current_state()
+
+    set_reabank_file(reabank_path)
+
+    textb = Textbox:new(10,170,320,30, 0.7,0.7,0.7,0.3, bank_name, "Arial", 15, 0)
+    Textbox_TB = { textb }
+
+    refresh_bank()
 end
 
 -- Main DRAW function
