@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.8.7
+ * Version: 1.8.8
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
@@ -11,8 +11,6 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-9-21)
-  + Refresh reabank file
  * v1.0 (2021-7-22)
   + Initial release
 --]]
@@ -1545,6 +1543,9 @@ btn8.onRClick = function () -- 右键点击刷新reabank
 
     set_reabank_file(reabank_path)
 
+    local bank_num = reabank_path:reverse():find('[%/%\\]')
+    local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
+    
     textb = Textbox:new(10,170,320,30, 0.7,0.7,0.7,0.3, bank_name, "Arial", 15, 0)
     Textbox_TB = { textb }
 
