@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a1319b67c911a4319efb7dc6ca29609a54ae5b5a">
+<index version="1" name="zaibuyidao Scripts" commit="a5f295eea93b2c74ad2960310dd11794b7acc338">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1159,6 +1159,9 @@
       </version>
       <version name="1.8.8" author="zaibuyidao" time="2022-06-27T15:25:44Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a1319b67c911a4319efb7dc6ca29609a54ae5b5a/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
+      </version>
+      <version name="1.8.9" author="zaibuyidao" time="2022-06-30T12:39:50Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a5f295eea93b2c74ad2960310dd11794b7acc338/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Patch Change.lua" type="script" desc="Articulation Map - Patch Change">
@@ -5472,6 +5475,33 @@
       <version name="1.0" author="zaibuyidao" time="2020-12-07T18:20:28Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/162d8c9abb1ab2342e2a3b9dc057dff38daaa946/Utility/zaibuyidao_Build%20MIDI%20Channel%20Routing%20To%20Selected%20Tracks.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Cakewalk Style Cursor Follow (Main Or MIDI Editor).lua" type="script" desc="Cakewalk Style Cursor Follow (Main Or MIDI Editor)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-06-30T12:39:50Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a5f295eea93b2c74ad2960310dd11794b7acc338/Utility/zaibuyidao_Cakewalk%20Style%20Cursor%20Follow%20(Main%20Or%20MIDI%20Editor).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Cakewalk Style Cursor Follow (Main).lua" type="script" desc="Cakewalk Style Cursor Follow (Main)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-06-30T12:39:50Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a5f295eea93b2c74ad2960310dd11794b7acc338/Utility/zaibuyidao_Cakewalk%20Style%20Cursor%20Follow%20(Main).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Cakewalk Style Cursor Follow (MIDI Editor).lua" type="script" desc="Cakewalk Style Cursor Follow (MIDI Editor)">
+      <metadata>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-06-30T12:39:50Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a5f295eea93b2c74ad2960310dd11794b7acc338/Utility/zaibuyidao_Cakewalk%20Style%20Cursor%20Follow%20(MIDI%20Editor).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Design Tools (Dynamic Menu).lua" type="script" desc="Design Tools (Dynamic Menu)">
