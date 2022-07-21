@@ -1872,7 +1872,7 @@ reload_usc_data()
 update_usc_data()
 
 GUI.freq = 0
-text_box = true
+-- text_box = true
 GUI.elms.edittext_filter.focus = true
 
 local function force_size() -- 锁定GUI边界
@@ -1975,21 +1975,30 @@ function GUI.func()
     end
 
     if char == 9 then -- TAB 键
-        if text_box == false then
+        if GUI.elms.edittext_filter.focus == false then
             GUI.elms.edittext_search.focus = false
             GUI.elms.edittext_filter.focus = true
             GUI.elms.edittext_filter.show_caret = true
-            --GUI.elms.edittext_filter.caret = GUI.elms.edittext_search:carettoend()
-            --GUI.elms.edittext_filter:redraw()
-            text_box = true
         else
             GUI.elms.edittext_filter.focus = false
             GUI.elms.edittext_search.focus = true
             GUI.elms.edittext_search.show_caret = true
-            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
-            --GUI.elms.edittext_search:redraw()
-            text_box = false
         end
+        -- if text_box == false then
+        --     GUI.elms.edittext_search.focus = false
+        --     GUI.elms.edittext_filter.focus = true
+        --     GUI.elms.edittext_filter.show_caret = true
+        --     --GUI.elms.edittext_filter.caret = GUI.elms.edittext_search:carettoend()
+        --     --GUI.elms.edittext_filter:redraw()
+        --     text_box = true
+        -- else
+        --     GUI.elms.edittext_filter.focus = false
+        --     GUI.elms.edittext_search.focus = true
+        --     GUI.elms.edittext_search.show_caret = true
+        --     GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+        --     --GUI.elms.edittext_search:redraw()
+        --     text_box = false
+        -- end
     end
 
     GUI.onresize = force_size

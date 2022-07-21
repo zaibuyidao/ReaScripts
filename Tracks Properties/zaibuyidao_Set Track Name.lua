@@ -1,18 +1,14 @@
 --[[
  * ReaScript Name: Set Track Name
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0 or newer recommended
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
  * Changelog:
- * v1.0.1 (2022-3-21)
-  + 新增通配符功能，優化查找/替換功能。
  * v1.0 (2021-7-17)
   + Initial release
 --]]
@@ -96,7 +92,7 @@ local show_msg = reaper.GetExtState("SetTrackName", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
-  script_name = "設置軌道名稱" text = "$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: Track guid\nv=01: Track count 軌道計數\nv=01-05 or v=05-01: Loop track count 循環軌道計數\na=a: Letter count 字母順序\na=a-e or a=e-a: Loop letter count 循環字母計數\n\nScript function description:\n脚本功能説明：\n\n1.Set name only\nTrack name 軌道名稱\n\n2.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
+  script_name = "設置軌道名稱" text = "$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: Track guid\nv=01: Track count 軌道計數\nv=01-05 or v=05-01: Loop track count 循環軌道計數\na=a: Letter count 字母順序\na=a-e or a=e-a: Loop letter count 循環字母計數\nr=10: Random string length 隨機字符串長度\n\nScript function description:\n脚本功能説明：\n\n1.Set name only\nTrack name 軌道名稱\n\n2.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
   text = text.."\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
   local box_ok = reaper.ShowMessageBox("Wildcards 通配符 :\n\n"..text, script_name, 4)
 

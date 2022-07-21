@@ -1,18 +1,14 @@
 --[[
  * ReaScript Name: Batch Rename Region Manager
- * Version: 1.7.6
+ * Version: 1.7.7
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0 or newer recommended
  * Donation: http://www.paypal.me/zaibuyidao
 --]]
 
 --[[
  * Changelog:
- * v1.7.4 (2022-3-19)
-  + 修復部分region無法匹配問題，同時優化查找/替換功能。
  * v1.0 (2021-6-10)
   + Initial release
 --]]
@@ -230,7 +226,7 @@ if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
   script_name = "批量重命名區域管理器"
-  text = "$regionname: Region name 區域名稱\nv=01: Region count 區域計數\nv=01-05 or v=05-01: Loop region count 循環區域計數\na=a: Letter count 字母計數\na=a-e or a=e-a: Loop letter count 循環字母計數\n\nScript function description:\n脚本功能説明：\n\n1.Rename only\nRename 重命名\n\n2.String interception\nFrom beginning 截取開頭\nFrom end 截取結尾\n\n3.Specify position, insert or remove\nAt position 指定位置\nTo insert 插入\nRemove 移除\n\n4.Find and Replace\nFind what 查找\nReplace with 替換\n\nFind supports two pattern modifiers: * and ?\n查找支持两個模式修飾符：* 和 ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
+  text = "$regionname: Region name 區域名稱\nv=01: Region count 區域計數\nv=01-05 or v=05-01: Loop region count 循環區域計數\na=a: Letter count 字母計數\na=a-e or a=e-a: Loop letter count 循環字母計數\nr=10: Random string length 隨機字符串長度\n\nScript function description:\n脚本功能説明：\n\n1.Rename only\nRename 重命名\n\n2.String interception\nFrom beginning 截取開頭\nFrom end 截取結尾\n\n3.Specify position, insert or remove\nAt position 指定位置\nTo insert 插入\nRemove 移除\n\n4.Find and Replace\nFind what 查找\nReplace with 替換\n\nFind supports two pattern modifiers: * and ?\n查找支持两個模式修飾符：* 和 ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
   text = text.."\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
   local box_ok = reaper.ShowMessageBox("Wildcards 通配符:\n\n"..text, script_name, 4)
 

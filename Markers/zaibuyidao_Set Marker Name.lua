@@ -1,6 +1,6 @@
 --[[
- * ReaScript Name: Batch Rename Region
- * Version: 1.4.7
+ * ReaScript Name: Set Marker Name
+ * Version: 1.0
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -9,29 +9,12 @@
 
 --[[
  * Changelog:
- * v1.0 (2021-6-5)
+ * v1.0 (2022-7-14)
   + Initial release
 --]]
 
-local bias = 0.002 -- 补偿偏差值
-local absolute = false
-
 function Msg(param) 
   reaper.ShowConsoleMsg(tostring(param) .. "\n") 
-end
-
-function chsize(char)
-  if not char then
-    return 0
-  elseif char > 240 then
-    return 4
-  elseif char > 225 then
-    return 3
-  elseif char > 192 then
-    return 2
-  else
-    return 1
-  end
 end
 
 function utf8_len(str)
@@ -91,28 +74,7 @@ function utf8_sub3(str,startChar)
   return str:sub(startIndex)
 end
 
-function get_all_regions()
-  local result = {}
-  local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
-  for i = 0, num_markers + num_regions - 1 do
-    local retval, isrgn, pos, rgnend, name, markrgnindexnumber, color = reaper.EnumProjectMarkers3(0, i)
-    if retval ~= nil and isrgn then
-      table.insert(result, {
-        index = markrgnindexnumber,
-        isrgn = isrgn,
-        left = pos,
-        right = rgnend,
-        name = name,
-        color = color
-      })
-    end
-  end
-  return result
-end
-
 function get_sel_regions()
-  local all_regions = get_all_regions()
-  if #all_regions == 0 then return {} end
   local sel_index = {}
   local item_count = reaper.CountSelectedMediaItems(0)
   if item_count == 0 then return {} end
@@ -150,41 +112,12 @@ function get_sel_regions()
     end
   end
   table.insert(merged_items, cur)
+  return merged_items
+end
 
-  -- 标记选中区间
-  for _, merged_item in ipairs(merged_items) do
-    local l, r = 1, #all_regions
-    -- 查找第一个左端点在item左侧的区间
-    while l <= r do
-      local mid = math.floor((l+r)/2)
-      if (all_regions[mid].left - bias) > merged_item.left then
-        r = mid - 1
-      else 
-        l = mid + 1
-      end
-    end
-
-    if absolute then
-      if math.abs( (merged_item.right - merged_item.left) - (all_regions[r].right - all_regions[r].left) ) <= bias * 2 then
-        sel_index[r] = true
-      end
-    else
-      if r ~= 0 then
-        if merged_item.right <= all_regions[r].right then -- if merged_item.right <= all_regions[r].right + bias then
-          sel_index[r] = true
-        end
-      end
-    end
-  end
-
-  -- 处理结果
-  local result = {}
-  local indexs = {}
-  for k, _ in pairs(sel_index) do table.insert(indexs, k) end
-  table.sort(indexs)
-  for _, v in ipairs(indexs) do table.insert(result, all_regions[v]) end
-
-  return result
+function create_region(reg_start, reg_end, name)
+  if name == nil then return end
+  local index = reaper.AddProjectMarker2(0, false, reg_start, reg_end, name, -1, 0)
 end
 
 function set_region(region)
@@ -194,37 +127,36 @@ end
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
-local show_msg = reaper.GetExtState("BatchRenameRegion", "ShowMsg")
+local show_msg = reaper.GetExtState("SetMarkerName", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
-    script_name = "批量重命名區域"
-    text = "$regionname: Region name 區域名稱\nv=01: Region count 區域計數\nv=01-05 or v=05-01: Loop region count 循環區域計數\na=a: Letter count 字母計數\na=a-e or a=e-a: Loop letter count 循環字母計數\nr=10: Random string length 隨機字符串長度\n\nScript function description:\n脚本功能説明：\n\n1.Rename only\nRename 重命名\n\n2.String interception\nFrom beginning 截取開頭\nFrom end 截取結尾\n\n3.Specify position, insert or remove\nAt position 指定位置\nTo insert 插入\nRemove 移除\n\n4.Find and Replace\nFind what 查找\nReplace with 替換\n\nFind supports two pattern modifiers: * and ?\n查找支持两個模式修飾符：* 和 ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
+    script_name = "設置標記名稱"
+    text = "v=01: Region count 標記計數\nv=01-05 or v=05-01: Loop region count 循環標記計數\na=a: Letter count 字母計數\na=a-e or a=e-a: Loop letter count 循環字母計數\nr=10: Random string length 隨機字符串長度\n\nScript function description:\n脚本功能説明：\n\n1.Set name only\nRegion name 標記名稱\n\n2.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
     text = text.."\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
     local box_ok = reaper.ShowMessageBox("Wildcards 通配符:\n\n"..text, script_name, 4)
 
     if box_ok == 7 then
-        show_msg = "false"
-        reaper.SetExtState("BatchRenameRegion", "ShowMsg", show_msg, true)
+      show_msg = "false"
+      reaper.SetExtState("SetMarkerName", "ShowMsg", show_msg, true)
     end
 end
 
-local pattern, begin_str, end_str, position, insert, delete, find, replace, reverse = '', '0', '0', '0', '', '0', '', '', '1'
+local pattern = reaper.GetExtState("SetMarkerName", "Name")
+if (pattern == "") then pattern = "Marker_v=001" end
+local reverse = reaper.GetExtState("SetMarkerName", "Reverse")
+if (reverse == "") then reverse = "1" end
 
-local retval, retvals_csv = reaper.GetUserInputs("Batch Reanme Region", 9, "Rename 重命名,From beginning 截取開頭,From end 截取結尾,At position 指定位置,To insert 插入,Remove 移除,Find what 查找,Replace with 替換,Loop count 循環計數,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse)
+local retval, retvals_csv = reaper.GetUserInputs("Set Marker Name", 2, "Marker name 標記名稱,Loop count 循環計數,extrawidth=200", pattern ..','.. reverse)
 if not retval then return end
 
-pattern, begin_str, end_str, position, insert, delete, find, replace, reverse = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
-find = find:gsub('-', '%%-')
-find = find:gsub('+', '%%+')
-find = find:gsub('*', '.*')
-find = find:gsub('?', '.?')
+pattern, reverse = retvals_csv:match("(.*),(.*)")
+reaper.SetExtState("SetMarkerName", "Name", pattern, false)
+reaper.SetExtState("SetMarkerName", "Reverse", reverse, false)
 
 local sel_regions = get_sel_regions()
 
-function build_name(build_pattern, origin_name, i)
-  build_pattern = build_pattern:gsub("$regionname", origin_name)
-
+function build_name(build_pattern, i)
   if reverse == "1" then
     build_pattern = build_pattern:gsub("v=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号
       local len = #start_idx
@@ -253,7 +185,7 @@ function build_name(build_pattern, origin_name, i)
     end
     return s
   end)
-  
+
   local ab = string.byte("a")
   local zb = string.byte("z")
   local Ab = string.byte("A")
@@ -292,23 +224,10 @@ function build_name(build_pattern, origin_name, i)
 end
 
 for i,region in ipairs(sel_regions) do
-  local origin_name = region.name
-  
-  if pattern ~= "" then -- 重命名
-    region.name = build_name(pattern, origin_name, i)
-  end
-
-  region.name = utf8_sub1(region.name, begin_str, end_str)
-  region.name = utf8_sub2(region.name, 0, position) .. insert .. utf8_sub3(region.name, position + delete)
-  if find ~= "" then region.name = string.gsub(region.name, find, replace) end
-
-  if insert ~= '' then -- 指定位置插入内容
-    region.name = build_name(region.name, origin_name, i)
-  end
-
-  set_region(region)
+  region.name = build_name(pattern, i)
+  create_region(region.left, region.right, region.name)
 end
 
-reaper.Undo_EndBlock('Batch Rename Region', -1)
+reaper.Undo_EndBlock('Set Marker Name', -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
