@@ -52,7 +52,7 @@ GUI.New("btn_search", "Button", {
     y = 336,
     w = 96,
     h = 96,
-    caption = "RENAME",
+    caption = "RENAMING",
     font = 3,
     col_txt = "txt",
     col_fill = "elm_frame"
