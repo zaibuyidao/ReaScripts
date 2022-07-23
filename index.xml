@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="29caff7017fea84de685a1fc03a6a3505b11e7a0">
+<index version="1" name="zaibuyidao Scripts" commit="498ecffc569e43e47eaf32c94fdaa3ee004f36c3">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5552,6 +5552,9 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2022-07-23T20:39:30Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/29caff7017fea84de685a1fc03a6a3505b11e7a0/Utility/zaibuyidao_Date%20&amp;%20Time.lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2022-07-23T20:54:18Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/498ecffc569e43e47eaf32c94fdaa3ee004f36c3/Utility/zaibuyidao_Date%20&amp;%20Time.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Design Tools (Dynamic Menu).lua" type="script" desc="Design Tools (Dynamic Menu)">
