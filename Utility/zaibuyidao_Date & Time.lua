@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Date & Time
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -57,50 +57,15 @@ local fmt_hms = function(hour, min, sec, TIME_24H_Flag)
 				return string.format(pmhms, h-12, min, sec)
 			end
 		end
-	elseif (nil ~= min) then
-		assert(nil ~= hour)
-		
-		if (TIME_24H_Flag) then
-			return string.format("%02d:%02d", hour, min)
-		else
-			local h = math.floor(tonumber(hour))
-			
-			if (h < 12) then
-				if (0 == h) then h = 12 end
-				return string.format("%02d:%02d AM", h, min)
-			else
-				if (12 == h) then h = 24 end
-				return string.format("%02d:%02d PM", h-12, min)
-			end
-		end
-	else
-		assert(nil ~= hour)
-		
-		if (TIME_24H_Flag) then
-			return string.format("%02d", hour)
-		else
-			local h = math.floor(tonumber(hour))
-			
-			if (h < 12) then
-				if (0 == h) then h = 12 end
-				return string.format("%02d:00 AM", h)
-			else
-				if (12 == h) then h = 24 end
-				return string.format("%02d:00 PM", h-12)
-			end
-		end
 	end
 end
 
 local fmt_time = function(wday_flag, year, mon, mday, hour, min, sec)
 	if ((nil ~= year) and (nil ~= mon) and (nil ~= mday) and (nil ~= hour) and (nil ~= min) and (nil ~= sec)) then
 
-		local week, moon
-
 		if locale ~= 936 and locale ~= 950 and locale ~= nil then
-			week = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
-			moon = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
-
+			local week = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+			local moon = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
 			local w = os.date("%w", os.time{year=year, month=mon, day=mday})
 			local day = math.floor(tonumber(w)) + 1
 			local m = os.date("%m", os.time{year=year, month=mon, day=mday})
@@ -109,35 +74,13 @@ local fmt_time = function(wday_flag, year, mon, mday, hour, min, sec)
 
       return string.format("%s %s %s", fmt_hms(hour, min, sec)..",", week[day]..",", fmt_date(year, tostring(moon[yue]), mday, fmt))
 		else
-
-			week = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}
-			-- moon = {"一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"}
-
+			local week = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}
 			local w = os.date("%w", os.time{year=year, month=mon, day=mday})
 			local day = math.floor(tonumber(w)) + 1
-			-- local m = os.date("%m", os.time{year=year, month=mon, day=mday})
-			-- local yue = math.floor(tonumber(m))
       local fmt = "YY/MM/DD"
 
 			return string.format("%s %s %s", fmt_date(year, mon, mday), week[day]..",", fmt_hms(hour, min, sec))
 		end
-
-	end
-	
-	if ((nil ~= year) and (nil ~= mon) and (nil ~= mday) and (nil == hour) and (nil == min) and (nil == sec)) then
-		if (("boolean" == type(wday_flag)) and (wday_flag)) then
-			local week = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
-			local w = os.date("%w", os.time{year = year, month = mon, day = mday})
-			local day = math.floor(tonumber(w)) + 1
-			
-      return string.format("%s %s", fmt_date(year, mon, mday), week[day])
-		else
-			return string.format("%s", fmt_date(year, mon, mday))
-		end
-	end
-	
-	if ((nil == year) and (nil == mon) and (nil == mday) and (nil ~= hour) and (nil ~= min)) then
-		return string.format("%s", fmt_hms(hour, min, sec))
 	end
 end
 
@@ -155,16 +98,6 @@ function cooldown()
   reaper.defer(cooldown)
 end
 
--- Empty GUI template
-
-----------
--- Init --
-----------
-
--- GUI table ----------------------------------------------------------------------------------
---   contains GUI related settings (some basic user definable settings), initial values etc. --
------------------------------------------------------------------------------------------------
-
 local gui = {}
 
 function init()
@@ -173,26 +106,17 @@ function init()
   gui.settings = {}                 -- Add "settings" table to "gui" table
   gui.settings.font_size = 20       -- font size
   gui.settings.docker_id = 0        -- try 0, 1, 257, 513, 1027 etc.
-  
-  ---------------------------
-  -- Initialize gfx window --
-  ---------------------------
-  
+
 	if locale ~= 936 and locale ~= 950 and locale ~= nil then
-		gfx.init("Date & Time", 350, 35, gui.settings.docker_id)
+		gfx.init("Date & Time", 360, 35, gui.settings.docker_id)
 	else
-		gfx.init("日期和時間", 300, 35, gui.settings.docker_id)
+		gfx.init("日期和時間", 320, 35, gui.settings.docker_id)
 	end
   gfx.setfont(1,"Arial", gui.settings.font_size)
   gfx.clear = 3355443  -- matches with "FUSION: Pro&Clean Theme :: BETA 01" http://forum.cockos.com/showthread.php?t=155329
-  -- (Double click in ReaScript IDE to open the link)
 
   -- mainloop()
 end
-
---------------
--- Mainloop --
---------------
 
 function mainloop()
   local time = os.date("%Y/%m/%d %H:%M:%S", os.time())
@@ -200,10 +124,6 @@ function mainloop()
 
   -- time = os.date("*t")
 
-  --------------
-  -- Draw GUI --
-  --------------
-  
   gfx.x = 10
   gfx.y = 10
   
