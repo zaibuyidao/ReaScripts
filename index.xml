@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0eec6a361ed54bc6d3166ae702eaccd1a75e0253">
+<index version="1" name="zaibuyidao Scripts" commit="125095b9c3611c12c0f967c776edfa3d40db536c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5540,6 +5540,12 @@
       <version name="1.0" author="zaibuyidao" time="2022-06-30T12:39:50Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a5f295eea93b2c74ad2960310dd11794b7acc338/Utility/zaibuyidao_Cakewalk%20Style%20Cursor%20Follow%20(MIDI%20Editor).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Date &amp; Time.lua" type="script" desc="Date &amp; Time">
+      <version name="1.0" author="zaibuyidao" time="2022-07-23T09:20:56Z">
+        <changelog><![CDATA[+ Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/125095b9c3611c12c0f967c776edfa3d40db536c/Utility/zaibuyidao_Date%20&amp;%20Time.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Design Tools (Dynamic Menu).lua" type="script" desc="Design Tools (Dynamic Menu)">
