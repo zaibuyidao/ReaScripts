@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Date & Time
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -22,6 +22,14 @@ end
 
 local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
 
+function locale_flag()
+	if locale ~= 936 and locale ~= 950 and locale ~= nil then
+		return true
+	else
+		return false
+	end
+end
+
 local fmt_date = function(year, month, day, fmt)
 	if (fmt == "DD/MM/YY") then
 		return string.format("%02d/%02d/%02d", day, month, year)
@@ -32,7 +40,7 @@ local fmt_date = function(year, month, day, fmt)
 	end
 end
 
-if locale ~= 936 and locale ~= 950 and locale ~= nil then
+if not locale_flag then
 	amhms = "%01d:%02d:%02d AM"
 	pmhms = "%01d:%02d:%02d PM"
 else
@@ -63,7 +71,7 @@ end
 local fmt_time = function(wday_flag, year, mon, mday, hour, min, sec)
 	if ((nil ~= year) and (nil ~= mon) and (nil ~= mday) and (nil ~= hour) and (nil ~= min) and (nil ~= sec)) then
 
-		if locale ~= 936 and locale ~= 950 and locale ~= nil then
+		if not locale_flag then
 			local week = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
 			local moon = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
 			local w = os.date("%w", os.time{year=year, month=mon, day=mday})
@@ -107,7 +115,7 @@ function init()
   gui.settings.font_size = 20       -- font size
   gui.settings.docker_id = 0        -- try 0, 1, 257, 513, 1027 etc.
 
-	if locale ~= 936 and locale ~= 950 and locale ~= nil then
+	if not locale_flag then
 		gfx.init("Date & Time", 360, 35, gui.settings.docker_id)
 	else
 		gfx.init("日期和時間", 320, 35, gui.settings.docker_id)
