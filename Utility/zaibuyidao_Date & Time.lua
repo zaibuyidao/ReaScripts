@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Date & Time
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -17,16 +17,27 @@ function print(m)
   return reaper.ShowConsoleMsg(tostring(m) .. "\n")
 end
 
+-- if reaper.GetOS():match("Win") then
+-- end
+
+local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+
 local fmt_date = function(year, month, day, fmt)
 	if (fmt == "DD/MM/YY") then
 		return string.format("%02d/%02d/%02d", day, month, year)
-	elseif (fmt == "DD/YY") then
-		return string.format("%01d, %0d", day, year) -- 定义日位数
   elseif (fmt == "MM/DD/YY") then
-		return string.format("%02d %02d, %02d", month, day, year)
+		return string.format("%s %02d, %02d", month, day, year)
 	else
-		return string.format("%02d/%02d/%02d", year, month, day)
+		return string.format("%02d年%01d月%02d日", year, month, day)
 	end
+end
+
+if locale ~= 936 and locale ~= 950 and locale ~= nil then
+	amhms = "%01d:%02d:%02d AM"
+	pmhms = "%01d:%02d:%02d PM"
+else
+	amhms = "上午 %01d:%02d:%02d"
+	pmhms = "下午 %01d:%02d:%02d"
 end
 
 local fmt_hms = function(hour, min, sec, TIME_24H_Flag)	
@@ -40,10 +51,10 @@ local fmt_hms = function(hour, min, sec, TIME_24H_Flag)
 			
 			if (h < 12) then
 				if (0 == h) then h = 12 end
-				return string.format("%01d:%02d:%02d AM", h, min, sec) -- 定义时位数
+				return string.format(amhms, h, min, sec)
 			else
 				if (12 == h) then h = 24 end
-				return string.format("%01d:%02d:%02d PM", h-12, min, sec) -- 定义时位数
+				return string.format(pmhms, h-12, min, sec)
 			end
 		end
 	elseif (nil ~= min) then
@@ -83,18 +94,34 @@ end
 
 local fmt_time = function(wday_flag, year, mon, mday, hour, min, sec)
 	if ((nil ~= year) and (nil ~= mon) and (nil ~= mday) and (nil ~= hour) and (nil ~= min) and (nil ~= sec)) then
-		if (("boolean" == type(wday_flag)) and (wday_flag)) then
-			local week = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+
+		local week, moon
+
+		if locale ~= 936 and locale ~= 950 and locale ~= nil then
+			week = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
+			moon = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+
 			local w = os.date("%w", os.time{year=year, month=mon, day=mday})
 			local day = math.floor(tonumber(w)) + 1
-			local months = os.date("%B")
-      local fmt = "DD/YY"
-      
-      return string.format("%s %s %s %s", fmt_hms(hour, min, sec)..", ", week[day]..", ", months, fmt_date(year, mon, mday, fmt))
-			-- return string.format("%s %s %s %s", fmt_hms(hour, min, sec)..", ", week[day]..", ", months, fmt_date(year, mon, mday, fmt))
+			local m = os.date("%m", os.time{year=year, month=mon, day=mday})
+			local yue = math.floor(tonumber(m))
+      local fmt = "MM/DD/YY"
+
+      return string.format("%s %s %s", fmt_hms(hour, min, sec)..",", week[day]..",", fmt_date(year, tostring(moon[yue]), mday, fmt))
 		else
-			return string.format("%s %s", fmt_date(year, mon, mday), fmt_hms(hour, min, sec))
+
+			week = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}
+			-- moon = {"一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月"}
+
+			local w = os.date("%w", os.time{year=year, month=mon, day=mday})
+			local day = math.floor(tonumber(w)) + 1
+			-- local m = os.date("%m", os.time{year=year, month=mon, day=mday})
+			-- local yue = math.floor(tonumber(m))
+      local fmt = "YY/MM/DD"
+
+			return string.format("%s %s %s", fmt_date(year, mon, mday), week[day]..",", fmt_hms(hour, min, sec))
 		end
+
 	end
 	
 	if ((nil ~= year) and (nil ~= mon) and (nil ~= mday) and (nil == hour) and (nil == min) and (nil == sec)) then
@@ -151,7 +178,11 @@ function init()
   -- Initialize gfx window --
   ---------------------------
   
-  gfx.init("Date & Time", 350, 35, gui.settings.docker_id)
+	if locale ~= 936 and locale ~= 950 and locale ~= nil then
+		gfx.init("Date & Time", 350, 35, gui.settings.docker_id)
+	else
+		gfx.init("日期和時間", 300, 35, gui.settings.docker_id)
+	end
   gfx.setfont(1,"Arial", gui.settings.font_size)
   gfx.clear = 3355443  -- matches with "FUSION: Pro&Clean Theme :: BETA 01" http://forum.cockos.com/showthread.php?t=155329
   -- (Double click in ReaScript IDE to open the link)
