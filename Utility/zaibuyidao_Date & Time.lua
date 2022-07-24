@@ -1,9 +1,9 @@
 --[[
  * ReaScript Name: Date & Time
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
+ * Author URL: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+ * Repository URL: https://github.com/zaibuyidao/ReaScripts
  * Reference: https://forum.cockos.com/showthread.php?t=165884
 --]]
 
@@ -112,15 +112,18 @@ function init()
 
   -- Add stuff to "gui" table
   gui.settings = {}                 -- Add "settings" table to "gui" table
-  gui.settings.font_size = 20       -- font size
-  gui.settings.docker_id = 0        -- try 0, 1, 257, 513, 1027 etc.
+	gui.settings.docker_id = 0        -- try 0, 1, 257, 513, 1027 etc.
 
 	if not locale_flag then
+		gui.settings.font_size = 20     -- font size
 		gfx.init("Date & Time", 360, 35, gui.settings.docker_id)
+		gfx.setfont(1,"Arial", gui.settings.font_size) -- Arial
 	else
-		gfx.init("日期和時間", 320, 35, gui.settings.docker_id)
+		gui.settings.font_size = 21    -- font size
+		gfx.init("日期和時間", 300, 35, gui.settings.docker_id)
+		gfx.setfont(1,"Microsoft YaHei UI", gui.settings.font_size) -- Microsoft YaHei, Microsoft YaHei UI, Microsoft YaHei UI Light
 	end
-  gfx.setfont(1,"Arial", gui.settings.font_size)
+
   gfx.clear = 3355443  -- matches with "FUSION: Pro&Clean Theme :: BETA 01" http://forum.cockos.com/showthread.php?t=155329
 
   -- mainloop()
