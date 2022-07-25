@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Date & Time
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: zaibuyidao
  * Author URL: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URL: https://github.com/zaibuyidao/ReaScripts
@@ -20,14 +20,17 @@ end
 -- if reaper.GetOS():match("Win") then
 -- end
 
-local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-
 function locale_flag()
-	if locale ~= 936 and locale ~= 950 and locale ~= nil then
-		return true
+	local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+	local f
+	if locale == 936 then
+		f = true
+	elseif locale == 950 then
+		f = true
 	else
-		return false
+		f = false
 	end
+	return f
 end
 
 local fmt_date = function(year, month, day, fmt)
@@ -40,7 +43,7 @@ local fmt_date = function(year, month, day, fmt)
 	end
 end
 
-if not locale_flag then
+if locale_flag() == false then
 	amhms = "%01d:%02d:%02d AM"
 	pmhms = "%01d:%02d:%02d PM"
 else
@@ -71,7 +74,7 @@ end
 local fmt_time = function(wday_flag, year, mon, mday, hour, min, sec)
 	if ((nil ~= year) and (nil ~= mon) and (nil ~= mday) and (nil ~= hour) and (nil ~= min) and (nil ~= sec)) then
 
-		if not locale_flag then
+		if locale_flag() == false then
 			local week = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
 			local moon = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
 			local w = os.date("%w", os.time{year=year, month=mon, day=mday})
@@ -114,7 +117,7 @@ function init()
   gui.settings = {}                 -- Add "settings" table to "gui" table
 	gui.settings.docker_id = 0        -- try 0, 1, 257, 513, 1027 etc.
 
-	if not locale_flag then
+	if locale_flag() == false then
 		gui.settings.font_size = 20     -- font size
 		gfx.init("Date & Time", 360, 35, gui.settings.docker_id)
 		gfx.setfont(1,"Arial", gui.settings.font_size) -- Arial
