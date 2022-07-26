@@ -62,6 +62,7 @@ function usc.read_from_csv(filename, result)
         local index = get_category_index(data[i][1])
         result[index].name.zh = data[i][6]
         result[index].name.tw = data[i][9]
+        result[index].name.ja = data[i][12]
         result[index].name.cat_short = data[i][4]
         result[index].name.cat_egory = data[i][1]
         table.insert(result[index].children, {
@@ -69,12 +70,14 @@ function usc.read_from_csv(filename, result)
                 en = data[i][2],
                 zh = data[i][7],
                 tw = data[i][10],
+                ja = data[i][13],
             },
             cat_id = data[i][3],
             synonyms = LocaleData {
                 en = table.map(string.split(data[i][5], ","), string.trim),
                 zh = table.map(string.split(data[i][8], ","), string.trim),
-                tw = table.map(string.split(data[i][11], ","), string.trim)
+                tw = table.map(string.split(data[i][11], ","), string.trim),
+                ja = table.map(string.split(data[i][14], ","), string.trim)
             }
         })
     end

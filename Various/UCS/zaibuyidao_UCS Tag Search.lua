@@ -24,7 +24,8 @@ KEYS = {
 LANGS = {
     { id = "en", name = 'English' },
     { id = "zh", name = '简体中文' },
-    { id = "tw", name = '正體中文' }
+    { id = "tw", name = '正體中文' },
+    { id = "ja", name = '日本語' }
 }
 
 base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
