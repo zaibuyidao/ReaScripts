@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Media Explorer Search Filter
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -55,7 +55,7 @@ local text = reaper.GetExtState("MediaExplorerSearchFilter", "Input")
 if (text == "") then text = "" end
 userok, text = reaper.GetUserInputs("Media Explorer Search Filter", 1, "Keywords 關鍵詞,extrawidth=100", text)
 if not userok then return end
-reaper.SetExtState("MediaExplorerSearchPlus", "Input", text, false)
+reaper.SetExtState("MediaExplorerSearchFilter", "Input", text, false)
 
 reaper.Undo_BeginBlock()
 send_search_text(text)
