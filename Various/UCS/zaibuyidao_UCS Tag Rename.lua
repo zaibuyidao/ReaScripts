@@ -13,6 +13,24 @@ function print(...)
     reaper.ShowConsoleMsg("\n")
 end
 
+if not reaper.BR_Win32_SetFocus then
+    local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+    if retval == 1 then
+      Open_URL("http://www.sws-extension.org/download/pre-release/")
+    end
+end
+
+if not reaper.APIExists("JS_Localize") then
+  reaper.MB("請右鍵單擊並安裝'js_ReaScriptAPI: API functions for ReaScripts'。然後重新啟動REAPER並再次運行腳本，謝謝！", "你必須安裝 JS_ReaScriptAPI", 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, "錯誤", 0)
+  end
+  return reaper.defer(function() end)
+end
+
 KEYS = {
     LEFT_MOUSE = 1,
     RIGHT_MOUSE = 2,
@@ -2000,6 +2018,27 @@ function GUI.func()
         --     --GUI.elms.edittext_search:redraw()
         --     text_box = false
         -- end
+    end
+
+    if char == 6697266 then -- F12
+        local text = reaper.GetExtState("UCSTagSearchRenameBundle", "Input")
+        if (text == "") then text = "magic" end
+        userok, text = reaper.GetUserInputs("UCS Tag Rename", 1, "關鍵詞,extrawidth=100", text)
+        if not userok then return end
+        reaper.SetExtState("UCSTagSearchRenameBundle", "Input", text, false)
+
+        if GUI.elms.edittext_filter.focus == true then
+            GUI.elms.edittext_filter:val(text)
+            GUI.elms.edittext_filter.caret = GUI.elms.edittext_filter:carettoend()
+            GUI.elms.edittext_filter:redraw()
+        else
+            append_search(text)
+            -- GUI.elms.edittext_search:val(text)
+            -- GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+            -- GUI.elms.edittext_search:redraw()
+        end
+        HWND_USC = reaper.JS_Window_Find("UCS Tag Rename",0)
+        reaper.BR_Win32_SetFocus(HWND_USC)
     end
 
     GUI.onresize = force_size
