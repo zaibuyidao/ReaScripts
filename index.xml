@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="935727f7c72e6f6a28153860cdc94464fb857b29">
+<index version="1" name="zaibuyidao Scripts" commit="38e1007416679773afcac8b6005fa76ba5e7e240">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5678,6 +5678,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-07-26T09:17:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/935727f7c72e6f6a28153860cdc94464fb857b29/Utility/zaibuyidao_Media%20Explorer%20Search%20Filter.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-07-26T09:38:39Z">
+        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/38e1007416679773afcac8b6005fa76ba5e7e240/Utility/zaibuyidao_Media%20Explorer%20Search%20Filter.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Channel From Track Send.lua" type="script" desc="MIDI Channel From Track Send">
