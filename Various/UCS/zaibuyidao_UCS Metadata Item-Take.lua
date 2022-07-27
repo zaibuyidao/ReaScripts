@@ -3,44 +3,27 @@
 local count_sel_items = reaper.CountSelectedMediaItems(0)
 if count_sel_items < 1 then return end
 
-local TrackTitle = reaper.GetExtState("UCSMetadataItem", "TrackTitle")
-local Description = reaper.GetExtState("UCSMetadataItem", "Description")
-local Keywords = reaper.GetExtState("UCSMetadataItem", "Keywords")
-local Microphone = reaper.GetExtState("UCSMetadataItem", "Microphone")
-local MicPerspective = reaper.GetExtState("UCSMetadataItem", "MicPerspective")
-local RecMedium = reaper.GetExtState("UCSMetadataItem", "RecMedium")
-local Designer = reaper.GetExtState("UCSMetadataItem", "Designer")
-local Library = reaper.GetExtState("UCSMetadataItem", "Library")
-local URL = reaper.GetExtState("UCSMetadataItem", "URL")
-local Location = reaper.GetExtState("UCSMetadataItem", "Location")
-local FXName = reaper.GetExtState("UCSMetadataItem", "FXName")
-local CatID = reaper.GetExtState("UCSMetadataItem", "CatID")
-local VendorCategory = reaper.GetExtState("UCSMetadataItem", "VendorCategory")
-local UserCategory = reaper.GetExtState("UCSMetadataItem", "UserCategory")
-local ShortID = reaper.GetExtState("UCSMetadataItem", "ShortID")
-local Show = reaper.GetExtState("UCSMetadataItem", "Show")
-
 ------- USER-DEFINED_AREA_START | 用户自定义开始 --------
 
 OPEN_RENDER_METADATA_WINDOW = true -- To close the render metadata window enter : fasle | 要关闭渲染元数据窗口请输入 : fasle
 ENABLE_EXTENSION_ID = false -- To enable the extension ID enter : true | 要激活扩展ID请输入 : true
 
-if (TrackTitle == "") then TrackTitle = "$takename" end
-if (Description == "") then Description = "UCS Metadata Item-Take (for selected item-take)" end
-if (Keywords == "") then Keywords = "Undead$; Zombie$; Horror$; Male$; Voice$; Vocal. Male zombie gasping$; snarling and moaning raspy$; wet and tonally." end
-if (Microphone == "") then Microphone = "MKH416 P48" end
-if (MicPerspective == "") then MicPerspective = "CU" end
-if (RecMedium == "") then RecMedium = "RME Fireface UFX II" end
-if (Designer == "") then Designer = "zaibuyidao" end
-if (Library == "") then Library = "The Temple of Deicide" end
-if (URL == "") then URL = "www.soundengine.cn" end
-if (Location == "") then Location = "Los Angeles$; USA" end
-if (FXName == "") then FXName = "$fxname" end
-if (CatID == "") then CatID = "$catid" end
-if (VendorCategory == "") then VendorCategory = "$vendorcat" end
-if (UserCategory == "") then UserCategory = "$usercat" end
-if (ShortID == "") then ShortID = "$creatorid" end
-if (Show == "") then Show = "$sourceid" end
+local _TrackTitle = "$takename"
+local _Description = "UCS Metadata Item-Take (for selected item-take)"
+local _Keywords = "Undead$; Zombie$; Horror$; Male$; Voice$; Vocal. Male zombie gasping$; snarling and moaning raspy$; wet and tonally."
+local _Microphone = "MKH416 P48"
+local _MicPerspective = "CU"
+local _RecMedium = "RME Fireface UFX II"
+local _Designer = "zaibuyidao"
+local _Library = "The Temple of Deicide"
+local _URL = "www.soundengine.cn"
+local _Location = "Los Angeles$; USA"
+local _FXName = "$fxname"
+local _CatID = "$catid"
+local _VendorCategory = "$vendorcat"
+local _UserCategory = "$usercat"
+local _ShortID = "$creatorid"
+local _Show = "$sourceid"
 
 -- Extension ID List | 扩展ID列表
 local Artist = ""
@@ -54,6 +37,40 @@ local Composer = ""
 local LongID = ""
 
 ------- USER-DEFINED_AREA_END | 用户自定义结束 -------
+
+local TrackTitle = reaper.GetExtState("UCSMetadataItemTake", "TrackTitle")
+local Description = reaper.GetExtState("UCSMetadataItemTake", "Description")
+local Keywords = reaper.GetExtState("UCSMetadataItemTake", "Keywords")
+local Microphone = reaper.GetExtState("UCSMetadataItemTake", "Microphone")
+local MicPerspective = reaper.GetExtState("UCSMetadataItemTake", "MicPerspective")
+local RecMedium = reaper.GetExtState("UCSMetadataItemTake", "RecMedium")
+local Designer = reaper.GetExtState("UCSMetadataItemTake", "Designer")
+local Library = reaper.GetExtState("UCSMetadataItemTake", "Library")
+local URL = reaper.GetExtState("UCSMetadataItemTake", "URL")
+local Location = reaper.GetExtState("UCSMetadataItemTake", "Location")
+local FXName = reaper.GetExtState("UCSMetadataItemTake", "FXName")
+local CatID = reaper.GetExtState("UCSMetadataItemTake", "CatID")
+local VendorCategory = reaper.GetExtState("UCSMetadataItemTake", "VendorCategory")
+local UserCategory = reaper.GetExtState("UCSMetadataItemTake", "UserCategory")
+local ShortID = reaper.GetExtState("UCSMetadataItemTake", "ShortID")
+local Show = reaper.GetExtState("UCSMetadataItemTake", "Show")
+
+if (TrackTitle == "") then TrackTitle = _TrackTitle end
+if (Description == "") then Description = _Description end
+if (Keywords == "") then Keywords = _Keywords end
+if (Microphone == "") then Microphone = _Microphone end
+if (MicPerspective == "") then MicPerspective = _MicPerspective end
+if (RecMedium == "") then RecMedium = _RecMedium end
+if (Designer == "") then Designer = _Designer end
+if (Library == "") then Library = _Library end
+if (URL == "") then URL = _URL end
+if (Location == "") then Location = _Location end
+if (FXName == "") then FXName = _FXName end
+if (CatID == "") then CatID = _CatID end
+if (VendorCategory == "") then VendorCategory = _VendorCategory end
+if (UserCategory == "") then UserCategory = _UserCategory end
+if (ShortID == "") then ShortID = _ShortID end
+if (Show == "") then Show = _Show end
 
 local MD = {}
 MD["IXML:USER:CatID"]          = "CatID"
@@ -242,22 +259,22 @@ if not retval then return end
 
 TrackTitle, Description, Keywords, Microphone, MicPerspective, RecMedium, Designer, Library, URL, Location, FXName, CatID, VendorCategory, UserCategory, ShortID, Show = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
-reaper.SetExtState("UCSMetadataItem", "TrackTitle", TrackTitle, false)
-reaper.SetExtState("UCSMetadataItem", "Description", Description, false)
-reaper.SetExtState("UCSMetadataItem", "Keywords", Keywords, false)
-reaper.SetExtState("UCSMetadataItem", "Microphone", Microphone, false)
-reaper.SetExtState("UCSMetadataItem", "MicPerspective", MicPerspective, false)
-reaper.SetExtState("UCSMetadataItem", "RecMedium", RecMedium, false)
-reaper.SetExtState("UCSMetadataItem", "Designer", Designer, false)
-reaper.SetExtState("UCSMetadataItem", "Library", Library, false)
-reaper.SetExtState("UCSMetadataItem", "URL", URL, false)
-reaper.SetExtState("UCSMetadataItem", "Location", Location, false)
-reaper.SetExtState("UCSMetadataItem", "FXName", FXName, false)
-reaper.SetExtState("UCSMetadataItem", "CatID", CatID, false)
-reaper.SetExtState("UCSMetadataItem", "VendorCategory", VendorCategory, false)
-reaper.SetExtState("UCSMetadataItem", "UserCategory", UserCategory, false)
-reaper.SetExtState("UCSMetadataItem", "ShortID", ShortID, false)
-reaper.SetExtState("UCSMetadataItem", "Show", Show, false)
+reaper.SetExtState("UCSMetadataItemTake", "TrackTitle", TrackTitle, false)
+reaper.SetExtState("UCSMetadataItemTake", "Description", Description, false)
+reaper.SetExtState("UCSMetadataItemTake", "Keywords", Keywords, false)
+reaper.SetExtState("UCSMetadataItemTake", "Microphone", Microphone, false)
+reaper.SetExtState("UCSMetadataItemTake", "MicPerspective", MicPerspective, false)
+reaper.SetExtState("UCSMetadataItemTake", "RecMedium", RecMedium, false)
+reaper.SetExtState("UCSMetadataItemTake", "Designer", Designer, false)
+reaper.SetExtState("UCSMetadataItemTake", "Library", Library, false)
+reaper.SetExtState("UCSMetadataItemTake", "URL", URL, false)
+reaper.SetExtState("UCSMetadataItemTake", "Location", Location, false)
+reaper.SetExtState("UCSMetadataItemTake", "FXName", FXName, false)
+reaper.SetExtState("UCSMetadataItemTake", "CatID", CatID, false)
+reaper.SetExtState("UCSMetadataItemTake", "VendorCategory", VendorCategory, false)
+reaper.SetExtState("UCSMetadataItemTake", "UserCategory", UserCategory, false)
+reaper.SetExtState("UCSMetadataItemTake", "ShortID", ShortID, false)
+reaper.SetExtState("UCSMetadataItemTake", "Show", Show, false)
 
 function catid_fun(CatID)
   -- Update (Aug 8th, 2021): Version 8.1

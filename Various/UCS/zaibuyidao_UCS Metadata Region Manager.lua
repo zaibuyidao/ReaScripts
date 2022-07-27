@@ -1,43 +1,26 @@
 -- NoIndex: true
 
-local TrackTitle = reaper.GetExtState("UCSiXMLMetadata", "TrackTitle")
-local Description = reaper.GetExtState("UCSiXMLMetadata", "Description")
-local Keywords = reaper.GetExtState("UCSiXMLMetadata", "Keywords")
-local Microphone = reaper.GetExtState("UCSiXMLMetadata", "Microphone")
-local MicPerspective = reaper.GetExtState("UCSiXMLMetadata", "MicPerspective")
-local RecMedium = reaper.GetExtState("UCSiXMLMetadata", "RecMedium")
-local Designer = reaper.GetExtState("UCSiXMLMetadata", "Designer")
-local Library = reaper.GetExtState("UCSiXMLMetadata", "Library")
-local URL = reaper.GetExtState("UCSiXMLMetadata", "URL")
-local Location = reaper.GetExtState("UCSiXMLMetadata", "Location")
-local FXName = reaper.GetExtState("UCSiXMLMetadata", "FXName")
-local CatID = reaper.GetExtState("UCSiXMLMetadata", "CatID")
-local VendorCategory = reaper.GetExtState("UCSiXMLMetadata", "VendorCategory")
-local UserCategory = reaper.GetExtState("UCSiXMLMetadata", "UserCategory")
-local ShortID = reaper.GetExtState("UCSiXMLMetadata", "ShortID")
-local Show = reaper.GetExtState("UCSiXMLMetadata", "Show")
-
 ------- USER-DEFINED_AREA_START | 用户自定义开始 --------
 
 OPEN_RENDER_METADATA_WINDOW = true -- To close the render metadata window enter : fasle | 要关闭渲染元数据窗口请输入 : fasle
 ENABLE_EXTENSION_ID = false -- To enable the extension ID enter : true | 要激活扩展ID请输入 : true
 
-if (TrackTitle == "") then TrackTitle = "$regionname" end
-if (Description == "") then Description = "UCS Metadata Region Manager (The Region/Marker Manager window must be focused in order to work)" end
-if (Keywords == "") then Keywords = "Undead$; Zombie$; Horror$; Male$; Voice$; Vocal. Male zombie gasping$; snarling and moaning raspy$; wet and tonally." end
-if (Microphone == "") then Microphone = "MKH416 P48" end
-if (MicPerspective == "") then MicPerspective = "CU" end
-if (RecMedium == "") then RecMedium = "RME Fireface UFX II" end
-if (Designer == "") then Designer = "zaibuyidao" end
-if (Library == "") then Library = "The Temple of Deicide" end
-if (URL == "") then URL = "www.soundengine.cn" end
-if (Location == "") then Location = "Los Angeles$; USA" end
-if (FXName == "") then FXName = "$fxname" end
-if (CatID == "") then CatID = "$catid" end
-if (VendorCategory == "") then VendorCategory = "$vendorcat" end
-if (UserCategory == "") then UserCategory = "$usercat" end
-if (ShortID == "") then ShortID = "$creatorid" end
-if (Show == "") then Show = "$sourceid" end
+local _TrackTitle = "$regionname"
+local _Description = "UCS Metadata Region Manager (The Region/Marker Manager window must be focused in order to work)"
+local _Keywords = "Undead$; Zombie$; Horror$; Male$; Voice$; Vocal. Male zombie gasping$; snarling and moaning raspy$; wet and tonally."
+local _Microphone = "MKH416 P48"
+local _MicPerspective = "CU"
+local _RecMedium = "RME Fireface UFX II"
+local _Designer = "zaibuyidao"
+local _Library = "The Temple of Deicide"
+local _URL = "www.soundengine.cn"
+local _Location = "Los Angeles$; USA"
+local _FXName = "$fxname"
+local _CatID = "$catid"
+local _VendorCategory = "$vendorcat"
+local _UserCategory = "$usercat"
+local _ShortID = "$creatorid"
+local _Show = "$sourceid"
 
 -- Extension ID List | 扩展ID列表
 local Artist = ""
@@ -51,6 +34,40 @@ local Composer = ""
 local LongID = ""
 
 ------- USER-DEFINED_AREA_END | 用户自定义结束 -------
+
+local TrackTitle = reaper.GetExtState("UCSMetadataRegion", "TrackTitle")
+local Description = reaper.GetExtState("UCSMetadataRegion", "Description")
+local Keywords = reaper.GetExtState("UCSMetadataRegion", "Keywords")
+local Microphone = reaper.GetExtState("UCSMetadataRegion", "Microphone")
+local MicPerspective = reaper.GetExtState("UCSMetadataRegion", "MicPerspective")
+local RecMedium = reaper.GetExtState("UCSMetadataRegion", "RecMedium")
+local Designer = reaper.GetExtState("UCSMetadataRegion", "Designer")
+local Library = reaper.GetExtState("UCSMetadataRegion", "Library")
+local URL = reaper.GetExtState("UCSMetadataRegion", "URL")
+local Location = reaper.GetExtState("UCSMetadataRegion", "Location")
+local FXName = reaper.GetExtState("UCSMetadataRegion", "FXName")
+local CatID = reaper.GetExtState("UCSMetadataRegion", "CatID")
+local VendorCategory = reaper.GetExtState("UCSMetadataRegion", "VendorCategory")
+local UserCategory = reaper.GetExtState("UCSMetadataRegion", "UserCategory")
+local ShortID = reaper.GetExtState("UCSMetadataRegion", "ShortID")
+local Show = reaper.GetExtState("UCSMetadataRegion", "Show")
+
+if (TrackTitle == "") then TrackTitle = _TrackTitle end
+if (Description == "") then Description = _Description end
+if (Keywords == "") then Keywords = _Keywords end
+if (Microphone == "") then Microphone = _Microphone end
+if (MicPerspective == "") then MicPerspective = _MicPerspective end
+if (RecMedium == "") then RecMedium = _RecMedium end
+if (Designer == "") then Designer = _Designer end
+if (Library == "") then Library = _Library end
+if (URL == "") then URL = _URL end
+if (Location == "") then Location = _Location end
+if (FXName == "") then FXName = _FXName end
+if (CatID == "") then CatID = _CatID end
+if (VendorCategory == "") then VendorCategory = _VendorCategory end
+if (UserCategory == "") then UserCategory = _UserCategory end
+if (ShortID == "") then ShortID = _ShortID end
+if (Show == "") then Show = _Show end
 
 local MD = {}
 MD["IXML:USER:CatID"]          = "CatID"
@@ -321,7 +338,7 @@ function set_region(region)
   reaper.SetProjectMarker3(0, region.index, region.isrgn, region.left_ori, region.right_ori, region.name, region.color)
 end
 
-local show_msg = reaper.GetExtState("UCSMetadataRegion", "ShowMsg")
+local show_msg = reaper.GetExtState("UCSMetadataRegionManager", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
@@ -332,7 +349,7 @@ if show_msg == "true" then
 
   if box_ok == 7 then
     show_msg = "false"
-    reaper.SetExtState("UCSMetadataRegion", "ShowMsg", show_msg, true)
+    reaper.SetExtState("UCSMetadataRegionManager", "ShowMsg", show_msg, true)
   end
 end
 
@@ -416,22 +433,22 @@ if not retval then return end
 
 TrackTitle, Description, Keywords, Microphone, MicPerspective, RecMedium, Designer, Library, URL, Location, FXName, CatID, VendorCategory, UserCategory, ShortID, Show = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
-reaper.SetExtState("UCSiXMLMetadata", "TrackTitle", TrackTitle, false)
-reaper.SetExtState("UCSiXMLMetadata", "Description", Description, false)
-reaper.SetExtState("UCSiXMLMetadata", "Keywords", Keywords, false)
-reaper.SetExtState("UCSiXMLMetadata", "Microphone", Microphone, false)
-reaper.SetExtState("UCSiXMLMetadata", "MicPerspective", MicPerspective, false)
-reaper.SetExtState("UCSiXMLMetadata", "RecMedium", RecMedium, false)
-reaper.SetExtState("UCSiXMLMetadata", "Designer", Designer, false)
-reaper.SetExtState("UCSiXMLMetadata", "Library", Library, false)
-reaper.SetExtState("UCSiXMLMetadata", "URL", URL, false)
-reaper.SetExtState("UCSiXMLMetadata", "Location", Location, false)
-reaper.SetExtState("UCSiXMLMetadata", "FXName", FXName, false)
-reaper.SetExtState("UCSiXMLMetadata", "CatID", CatID, false)
-reaper.SetExtState("UCSiXMLMetadata", "VendorCategory", VendorCategory, false)
-reaper.SetExtState("UCSiXMLMetadata", "UserCategory", UserCategory, false)
-reaper.SetExtState("UCSiXMLMetadata", "ShortID", ShortID, false)
-reaper.SetExtState("UCSiXMLMetadata", "Show", Show, false)
+reaper.SetExtState("UCSMetadataRegion", "TrackTitle", TrackTitle, false)
+reaper.SetExtState("UCSMetadataRegion", "Description", Description, false)
+reaper.SetExtState("UCSMetadataRegion", "Keywords", Keywords, false)
+reaper.SetExtState("UCSMetadataRegion", "Microphone", Microphone, false)
+reaper.SetExtState("UCSMetadataRegion", "MicPerspective", MicPerspective, false)
+reaper.SetExtState("UCSMetadataRegion", "RecMedium", RecMedium, false)
+reaper.SetExtState("UCSMetadataRegion", "Designer", Designer, false)
+reaper.SetExtState("UCSMetadataRegion", "Library", Library, false)
+reaper.SetExtState("UCSMetadataRegion", "URL", URL, false)
+reaper.SetExtState("UCSMetadataRegion", "Location", Location, false)
+reaper.SetExtState("UCSMetadataRegion", "FXName", FXName, false)
+reaper.SetExtState("UCSMetadataRegion", "CatID", CatID, false)
+reaper.SetExtState("UCSMetadataRegion", "VendorCategory", VendorCategory, false)
+reaper.SetExtState("UCSMetadataRegion", "UserCategory", UserCategory, false)
+reaper.SetExtState("UCSMetadataRegion", "ShortID", ShortID, false)
+reaper.SetExtState("UCSMetadataRegion", "Show", Show, false)
 
 function catid_fun(CatID)
   -- Update (Aug 8th, 2021): Version 8.1

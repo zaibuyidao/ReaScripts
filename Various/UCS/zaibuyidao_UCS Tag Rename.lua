@@ -2023,7 +2023,7 @@ function GUI.func()
     if char == 6697266 then -- F12
         local text = reaper.GetExtState("UCSTagSearchRenameBundle", "Input")
         if (text == "") then text = "magic" end
-        userok, text = reaper.GetUserInputs("UCS Tag Rename", 1, "關鍵詞,extrawidth=100", text)
+        userok, text = reaper.GetUserInputs("UCS Tag Rename", 1, "Keywords 關鍵詞,extrawidth=100", text)
         if not userok then return end
         reaper.SetExtState("UCSTagSearchRenameBundle", "Input", text, false)
 
