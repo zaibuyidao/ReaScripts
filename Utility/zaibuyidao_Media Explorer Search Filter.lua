@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Media Explorer Search Filter
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -29,7 +29,7 @@ if not reaper.APIExists("JS_Localize") then
   return reaper.defer(function() end)
 end
 
-function send_search_text(text) -- 开始搜索
+function send_search_text(text)
   local title = reaper.JS_Localize("Media Explorer", "common")
   local hwnd = reaper.JS_Window_Find(title, true)
   local search = reaper.JS_Window_FindChildByID(hwnd, 1015)
@@ -51,11 +51,11 @@ function send_search_text(text) -- 开始搜索
   end
 end
 
-local text = reaper.GetExtState("MediaExplorerSearchFilter", "Input")
+local text = reaper.GetExtState("MediaExplorerSearchFilter", "Keywords")
 if (text == "") then text = "" end
-userok, text = reaper.GetUserInputs("Media Explorer Search Filter", 1, "Keywords 關鍵詞,extrawidth=100", text)
+userok, text = reaper.GetUserInputs("Media Explorer Search Filter", 1, "Keywords 關鍵詞,extrawidth=150", text)
 if not userok then return end
-reaper.SetExtState("MediaExplorerSearchFilter", "Input", text, false)
+reaper.SetExtState("MediaExplorerSearchFilter", "Keywords", text, false)
 
 reaper.Undo_BeginBlock()
 send_search_text(text)
