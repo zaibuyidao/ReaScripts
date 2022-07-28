@@ -1539,6 +1539,10 @@ function renaming()
             rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
         end
     end
+
+    search_text = GUI.elms.edittext_search:val()
+    reaper.SetExtState("UCSTagRename", "SearchText", search_text, false)
+
     if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
     GUI.elms.edittext_search.focus = true
     GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
@@ -1784,6 +1788,9 @@ function display_usc_data(data)
         GUI.elms.edittext_search:_onmousedown()
         if is_key_active(KEYS.ALT) then
             self:val("")
+
+            search_text = ""
+            reaper.SetExtState("UCSTagRename", "SearchText", search_text, false)
         end
     end
 
@@ -1889,6 +1896,12 @@ end
 
 reload_usc_data()
 update_usc_data()
+
+local search_text = reaper.GetExtState("UCSTagRename", "SearchText")
+if search_text ~= "" then
+    GUI.elms.edittext_search:val(search_text)
+    GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+end
 
 GUI.freq = 0
 -- text_box = true
@@ -2021,11 +2034,11 @@ function GUI.func()
     end
 
     if char == 6697266 then -- F12
-        local text = reaper.GetExtState("UCSTagSearchRenameBundle", "Input")
+        local text = reaper.GetExtState("UCSTagRename", "Input")
         if (text == "") then text = "magic" end
         userok, text = reaper.GetUserInputs("UCS Tag Rename", 1, "Keywords 關鍵詞,extrawidth=100", text)
         if not userok then return end
-        reaper.SetExtState("UCSTagSearchRenameBundle", "Input", text, false)
+        reaper.SetExtState("UCSTagRename", "Input", text, false)
 
         if GUI.elms.edittext_filter.focus == true then
             GUI.elms.edittext_filter:val(text)

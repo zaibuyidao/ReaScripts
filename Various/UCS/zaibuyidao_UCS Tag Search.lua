@@ -113,6 +113,9 @@ function send_search_text(text) -- 开始搜索
     local search = reaper.JS_Window_FindChildByID(hwnd, 1015)
     if search == nil then return end
     reaper.JS_Window_SetTitle(search, text)
+    
+    search_text = text
+    reaper.SetExtState("UCSTagSearch", "SearchText", search_text, false)
 
     if os ~= "Win32" and os ~= "Win64" then
         reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
@@ -433,6 +436,9 @@ function display_usc_data(data)
         GUI.elms.edittext_search:_onmousedown()
         if is_key_active(KEYS.ALT) then
             self:val("")
+
+            search_text = ""
+            reaper.SetExtState("UCSTagSearch", "SearchText", search_text, false)
         end
         if is_key_active(KEYS.SHIFT) then
             send_search_text(GUI.elms.edittext_search:val())
@@ -545,6 +551,12 @@ end
 
 reload_usc_data()
 update_usc_data()
+
+local search_text = reaper.GetExtState("UCSTagSearch", "SearchText")
+if search_text ~= "" then
+    GUI.elms.edittext_search:val(search_text)
+    GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+end
 
 GUI.freq = 0 -- 或者 0.05
 -- text_box = true
@@ -674,11 +686,11 @@ function GUI.func()
     end
 
     if char == 6697266 then -- F12
-        local text = reaper.GetExtState("UCSTagSearchRenameBundle", "Input")
+        local text = reaper.GetExtState("UCSTagSearch", "Input")
         if (text == "") then text = "" end
         userok, text = reaper.GetUserInputs("UCS Tag Search", 1, "Keywords 關鍵詞,extrawidth=100", text)
         if not userok then return end
-        reaper.SetExtState("UCSTagSearchRenameBundle", "Input", text, false)
+        reaper.SetExtState("UCSTagSearch", "Input", text, false)
 
         if GUI.elms.edittext_filter.focus == true then
             GUI.elms.edittext_filter:val(text)
