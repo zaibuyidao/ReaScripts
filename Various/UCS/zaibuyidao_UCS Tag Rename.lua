@@ -13,10 +13,19 @@ function print(...)
     reaper.ShowConsoleMsg("\n")
 end
 
+function Open_URL(url)
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+        os.execute("open ".. url)
+    else
+        os.execute("start ".. url)
+    end
+end
+
 if not reaper.BR_Win32_SetFocus then
     local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
     if retval == 1 then
-      Open_URL("http://www.sws-extension.org/download/pre-release/")
+        Open_URL("http://www.sws-extension.org/download/pre-release/")
     end
 end
 

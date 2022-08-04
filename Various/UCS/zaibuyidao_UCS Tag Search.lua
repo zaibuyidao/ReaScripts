@@ -11,6 +11,15 @@ function print(...)
     reaper.ShowConsoleMsg("\n")
 end
 
+function Open_URL(url)
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+        os.execute("open ".. url)
+    else
+        os.execute("start ".. url)
+    end
+end
+
 if not reaper.BR_Win32_SetFocus then
     local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
     if retval == 1 then
@@ -19,14 +28,14 @@ if not reaper.BR_Win32_SetFocus then
 end
 
 if not reaper.APIExists("JS_Localize") then
-  reaper.MB("請右鍵單擊並安裝'js_ReaScriptAPI: API functions for ReaScripts'。然後重新啟動REAPER並再次運行腳本，謝謝！", "你必須安裝 JS_ReaScriptAPI", 0)
-  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-  if ok then
-    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-  else
-    reaper.MB(err, "錯誤", 0)
-  end
-  return reaper.defer(function() end)
+    reaper.MB("請右鍵單擊並安裝'js_ReaScriptAPI: API functions for ReaScripts'。然後重新啟動REAPER並再次運行腳本，謝謝！", "你必須安裝 JS_ReaScriptAPI", 0)
+    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+    if ok then
+        reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+    else
+        reaper.MB(err, "錯誤", 0)
+    end
+    return reaper.defer(function() end)
 end
 
 KEYS = {

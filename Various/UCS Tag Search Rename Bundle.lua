@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.2.2
+-- @version 1.2.3
 -- @changelog Initial release
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -13,6 +13,7 @@
 --   [main] UCS/zaibuyidao_UCS Metadata Item-Take.lua
 --   [main] UCS/zaibuyidao_UCS Metadata Region Manager.lua
 --   [main] UCS/zaibuyidao_UCS Metadata Region Within Time Selection.lua
+--   [main] UCS/zaibuyidao_UCS Edit CatID.lua
 --   [nomain] UCS/lib/*.lua
 --   UCS/*.csv
 -- @donation http://www.paypal.me/zaibuyidao
