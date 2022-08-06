@@ -63,7 +63,7 @@ local CatID = reaper.GetExtState("UCSEditCatID", "CatID")
 local mode = reaper.GetExtState("UCSEditCatID", "Mode")
 if mode == "" then mode = "r-mgr" end
 
-local retval, retvals_csv = reaper.GetUserInputs("Edit CatID", 2, "Edit CatID,Process: r-sel / r-mgr / r-ts / take,extrawidth=100", CatID ..','.. mode)
+local retval, retvals_csv = reaper.GetUserInputs("UCS Edit CatID", 2, "CatID,Process: r-sel / r-mgr / r-ts / take,extrawidth=100", CatID ..','.. mode)
 if not retval then return end
 CatID, mode = retvals_csv:match("(.*),(.*)")
 
