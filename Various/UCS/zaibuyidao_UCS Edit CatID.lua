@@ -63,7 +63,7 @@ local CatID = reaper.GetExtState("UCSEditCatID", "CatID")
 local mode = reaper.GetExtState("UCSEditCatID", "Mode")
 if mode == "" then mode = "r-mgr" end
 
-local retval, retvals_csv = reaper.GetUserInputs("UCS Edit CatID", 2, "Edit CatID,Mode: r-sel / r-mgr / r-time / take,extrawidth=100", CatID ..','.. mode)
+local retval, retvals_csv = reaper.GetUserInputs("Edit CatID", 2, "Edit CatID,Process: r-sel / r-mgr / r-ts / take,extrawidth=100", CatID ..','.. mode)
 if not retval then return end
 CatID, mode = retvals_csv:match("(.*),(.*)")
 
@@ -372,7 +372,7 @@ if mode == "r-mgr" then -- Region Manager
   reaper.BR_Win32_SetFocus(HWND_Region)
 end
 
-if mode == "r-time" then -- Region Within Time Selection
+if mode == "r-ts" then -- Region Within Time Selection
   local time_sel_start, time_sel_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, false)
   if time_sel_start == time_sel_end then return end
 
