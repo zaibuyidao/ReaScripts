@@ -1,5 +1,5 @@
 --[[
- * ReaScript Name: Bend Within Time Selection
+ * ReaScript Name: Bend
  * Version: 1.0
  * Author: zaibuyidao
  * Author URL: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -17,19 +17,19 @@ function print(param)
   reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-function open_url(url)
+function Open_URL(url)
   if not OS then local OS = reaper.GetOS() end
   if OS=="OSX32" or OS=="OSX64" then
     os.execute("open ".. url)
-   else
+  else
     os.execute("start ".. url)
   end
 end
 
 if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+  local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
   if retval == 1 then
-    open_url("http://www.sws-extension.org/download/pre-release/")
+    Open_URL("http://www.sws-extension.org/download/pre-release/")
   end
 end
 
@@ -41,12 +41,12 @@ local loop_end = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_e
 if loop_end <= loop_start then return reaper.SN_FocusMIDIEditor() end
 local loop_len = loop_end - loop_start
 
-local pitch = reaper.GetExtState("BendWithinTimeSelection", "Pitch")
+local pitch = reaper.GetExtState("Bend", "Pitch")
 if (pitch == "") then pitch = "12" end
-local mode = reaper.GetExtState("BendWithinTimeSelection", "Mode")
+local mode = reaper.GetExtState("Bend", "Mode")
 if (mode == "") then mode = "0" end
 
-uok, uinput = reaper.GetUserInputs("Bend Within Time Selection", 2, "Pitch Range,0=Hold 1=Immediate 2=Reverse", pitch..','..mode)
+uok, uinput = reaper.GetUserInputs("Bend", 2, "Pitch Range,0=Hold 1=Immediate 2=Reverse", pitch..','..mode)
 if not uok then return reaper.SN_FocusMIDIEditor() end
 pitch, mode = uinput:match("(.*),(.*)")
 
@@ -54,8 +54,8 @@ if tonumber(pitch) < -12 or tonumber(pitch) > 12 or tonumber(pitch) == 0 then
   return reaper.SN_FocusMIDIEditor()
 end
 
-reaper.SetExtState("BendWithinTimeSelection", "Pitch", pitch, false)
-reaper.SetExtState("BendWithinTimeSelection", "Mode", mode, false)
+reaper.SetExtState("Bend", "Pitch", pitch, false)
+reaper.SetExtState("Bend", "Mode", mode, false)
 
 tbl = {} -- 存储弯音值
 tbl["12"]="8191"
@@ -130,6 +130,6 @@ else
   return
 end
 
-reaper.Undo_EndBlock("Bend Within Time Selection", -1)
+reaper.Undo_EndBlock("Bend", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
