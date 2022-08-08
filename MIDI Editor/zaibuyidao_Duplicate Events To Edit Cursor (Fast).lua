@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Duplicate Events To Edit Cursor (Fast)
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -11,7 +11,7 @@
 --[[
  * Changelog:
  * v1.0.3 (2022-8-22)
-  # Fix the problem that the Bezier curve cannot be duplicate
+  + Fix the problem that the Bezier curve cannot be duplicate
  * v1.0 (2022-5-20)
   + Initial release
 --]]

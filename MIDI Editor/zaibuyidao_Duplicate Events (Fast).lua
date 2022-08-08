@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Duplicate Events (Fast)
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -10,8 +10,8 @@
 
 --[[
  * Changelog:
- * v1.0.3 (2022-8-22)
-  # Fix the problem that the Bezier curve cannot be duplicate
+ * v1.0.2 (2022-8-22)
+  + Fix the problem that the Bezier curve cannot be duplicate
  * v1.0 (2022-6-1)
   + Initial release
 --]]
