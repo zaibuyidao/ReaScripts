@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0df9e595aaaf6c9800a2fff218dd4b59cecede37">
+<index version="1" name="zaibuyidao Scripts" commit="f24376872d8a3bd22b76c6a6716ee8784cadf7f8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1621,6 +1621,9 @@
       <version name="1.0.1" author="zaibuyidao" time="2022-08-08T02:04:27Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0df9e595aaaf6c9800a2fff218dd4b59cecede37/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Fast).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-08-08T02:23:14Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f24376872d8a3bd22b76c6a6716ee8784cadf7f8/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events To Edit Cursor (Fast).lua" type="script" desc="Duplicate Events To Edit Cursor (Fast)">
       <metadata>
@@ -1642,6 +1645,9 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2022-08-08T02:04:27Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0df9e595aaaf6c9800a2fff218dd4b59cecede37/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20To%20Edit%20Cursor%20(Fast).lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2022-08-08T02:23:14Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f24376872d8a3bd22b76c6a6716ee8784cadf7f8/MIDI%20Editor/zaibuyidao_Duplicate%20Events%20To%20Edit%20Cursor%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Events To Edit Cursor (Multitrack).lua" type="script" desc="Duplicate Events To Edit Cursor (Multitrack)">
@@ -1780,6 +1786,9 @@
       </version>
       <version name="1.0.3" author="zaibuyidao" time="2022-08-08T02:04:27Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0df9e595aaaf6c9800a2fff218dd4b59cecede37/MIDI%20Editor/zaibuyidao_Duplicate%20Musical%20(Fast).lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2022-08-08T02:23:14Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f24376872d8a3bd22b76c6a6716ee8784cadf7f8/MIDI%20Editor/zaibuyidao_Duplicate%20Musical%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Musical (Within Time Selection).lua" type="script" desc="Duplicate Musical (Within Time Selection)">
