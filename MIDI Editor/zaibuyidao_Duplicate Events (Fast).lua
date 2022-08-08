@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Duplicate Events (Fast)
- * Version: 1.0
+ * Version: 1.0.1
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -10,6 +10,8 @@
 
 --[[
  * Changelog:
+ * v1.0.3 (2022-8-22)
+  # Fix the problem that the Bezier curve cannot be duplicate
  * v1.0 (2022-6-1)
   + Initial release
 --]]
@@ -218,14 +220,19 @@ function dup(take, copy_start_qn_from_head, global_range_qn)
     local toCopyEvents = {}
 
     local range = {head = math.huge, tail = -math.huge}
+
+    local lastEventSelected = false
+
     local events = getAllEvents(take, function(event)
-        if event.selected then
+        local selected = event.selected
+        if event.selected or (lastEventSelected and event.msg:find("CCBZ")) then -- 重复贝塞尔曲线
             local pos = event.pos
             range.head = math.min(range.head, pos)
             range.tail = math.max(range.tail, pos)
             table.insert(toCopyEvents, clone(event))
             event.selected = false
         end
+        lastEventSelected = selected
     end)
     local range_qn = {
         head = reaper.MIDI_GetProjQNFromPPQPos(take, range.head),
