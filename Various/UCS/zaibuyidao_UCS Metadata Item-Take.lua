@@ -7,6 +7,7 @@ if count_sel_items < 1 then return end
 
 OPEN_RENDER_METADATA_WINDOW = true -- To close the render metadata window enter : fasle | 要关闭渲染元数据窗口请输入 : fasle
 ENABLE_EXTENSION_ID = false -- To enable the extension ID enter : true | 要激活扩展ID请输入 : true
+INSERT_MARKERS_AT_END_OF_ITEM = false -- If this option is enabled, the Metadata markers will be inserted in the end position of the Item-Take. | 如果启用该选项，元数据标记将被写入Item-Take的末端位置。
 
 local _TrackTitle = "$takename"
 local _Description = "UCS Metadata Item-Take (for selected item-take)"
@@ -1222,6 +1223,8 @@ elseif order == "2" then -- 按時間綫順序排序
 
       item_pos = reaper.GetMediaItemInfo_Value(list[i].item, "D_POSITION")
       item_end = reaper.GetMediaItemInfo_Value(list[i].item, "D_POSITION") + reaper.GetMediaItemInfo_Value(list[i].item, "D_LENGTH")
+
+      if INSERT_MARKERS_AT_END_OF_ITEM then item_pos = item_end + 0.001 end
 
       take_name = CatID
       if CatID ~= '' then

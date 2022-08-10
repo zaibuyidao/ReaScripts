@@ -7,6 +7,7 @@ if time_sel_start == time_sel_end then return end
 
 OPEN_RENDER_METADATA_WINDOW = true -- To close the render metadata window enter : fasle | 要关闭渲染元数据窗口请输入 : fasle
 ENABLE_EXTENSION_ID = false -- To enable the extension ID enter : true | 要激活扩展ID请输入 : true
+INSERT_MARKERS_AT_END_OF_REGION = false -- If this option is enabled, the Metadata markers will be inserted in the end position of the Region. | 如果启用该选项，元数据标记将被写入Region的末端位置。
 
 local _TrackTitle = "$regionname"
 local _Description = "UCS Metadata Region Within Time Selection"
@@ -1192,6 +1193,8 @@ for i, region in ipairs(sel_regions) do
       j[#j+1] = i
 
       local origin_name = region.name
+
+      if INSERT_MARKERS_AT_END_OF_REGION then region.left = region.right + 0.001 end
 
       region.name = CatID
       if CatID ~= '' then
