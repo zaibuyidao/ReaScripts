@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: 量化(快速)
- * Version: 1.0.7
+ * Version: 1.0.8
  * Author: 再補一刀
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -24,6 +24,39 @@ function print(...)
         reaper.ShowConsoleMsg(tostring(params[i]))
     end
     reaper.ShowConsoleMsg("\n")
+end
+
+function table.print(t)
+    local print_r_cache = {}
+    local function sub_print_r(t, indent)
+        if (print_r_cache[tostring(t)]) then
+            print(indent .. "*" .. tostring(t))
+        else
+            print_r_cache[tostring(t)] = true
+            if (type(t) == "table") then
+                for pos, val in pairs(t) do
+                    if (type(val) == "table") then
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
+                        sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
+                        print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
+                    elseif (type(val) == "string") then
+                        print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
+                    else
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
+                    end
+                end
+            else
+                print(indent .. tostring(t))
+            end
+        end
+    end
+    if (type(t) == "table") then
+        print(tostring(t) .. " {")
+        sub_print_r(t, "  ")
+        print("}")
+    else
+        sub_print_r(t, "  ")
+    end
 end
 
 function open_url(url)
@@ -298,6 +331,7 @@ function StartTimes(take, gird) -- 只量化音符的起始位置
             out_pos = reaper.TimeMap2_beatsToTime(0, out_beatpos)
             out_ppq = math.floor(reaper.MIDI_GetPPQPosFromProjTime(take, out_pos))
             noteEvents[i].first.pos = out_ppq
+            if noteEvents[i].articulation then noteEvents[i].articulation.pos = noteEvents[i].first.pos end
         end
     end
 end
@@ -350,6 +384,7 @@ function Position(take, gird) -- 只移动（不是量化）音符的起始位�
             endppqpos = endppqpos - (startppqpos - out_ppq)
             noteEvents[i].first.pos = out_ppq
             noteEvents[i].second.pos = endppqpos
+            if noteEvents[i].articulation then noteEvents[i].articulation.pos = noteEvents[i].first.pos end
         end
     end
 end
@@ -430,19 +465,21 @@ for take, _ in pairs(getAllTakes()) do
         elseif eventType == EVENT_NOTE_END then
             local start = noteStartEventAtPitch[eventPitch]
             if start == nil then error("音符有重叠無法解析") end
-            table.insert(noteEvents, {
+            local noteEvent = {
                 first = start,
                 second = event,
                 articulation = articulationEventAtPitch[eventPitch],
                 pitch = getEventPitch(start)
-            })
-
+            }
+            table.insert(noteEvents, noteEvent)
+            -- table.print(noteEvent)
             noteStartEventAtPitch[eventPitch] = nil
             articulationEventAtPitch[eventPitch] = nil
         elseif eventType == EVENT_ARTICULATION then
             if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
                 table.insert(textEvents, event)
-            else
+            elseif event.msg:find("articulation") then
+                -- print(event.msg)
                 local chan, pitch = getArticulationInfo(event)
                 articulationEventAtPitch[tonumber(pitch)] = event
             end
@@ -450,12 +487,12 @@ for take, _ in pairs(getAllTakes()) do
             if event.msg:byte(2) >= 0 and event.msg:byte(2) <= 127 then
                 table.insert(ccEvents, event)
             end
+        elseif eventType == 14 then -- 弯音
+            table.insert(ccEvents, event)
         end
         lastPos = lastPos + offset
     end
 
-    setAllEvents(take, events)
-    
     if toggle == "3" then
         Position(take, gird) -- 只移动音符的起始位置
     elseif toggle == "2" then
