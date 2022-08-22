@@ -1,24 +1,20 @@
---[[
- * ReaScript Name: Strum It (Fast)
- * Version: 1.0.4
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
---]]
+-- @description Strum It (Fast)
+-- @version 1.0.6
+-- @author zaibuyidao
+-- @changelog Optimised articulation
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
---[[
- * Changelog:
- * v1.0 (2022-1-21)
-  + Initial release
---]]
-
-function print(param)
-    if type(param) == "table" then
-        table.print(param)
-        return
+function print(...)
+    local params = {...}
+    for i = 1, #params do
+        if i ~= 1 then reaper.ShowConsoleMsg(" ") end
+        reaper.ShowConsoleMsg(tostring(params[i]))
     end
-    reaper.ShowConsoleMsg(tostring(param) .. "\n")
+    reaper.ShowConsoleMsg("\n")
 end
 
 function table.print(t)
@@ -54,7 +50,7 @@ function table.print(t)
     end
 end
 
-function open_url(url)
+function Open_URL(url)
     if not OS then local OS = reaper.GetOS() end
     if OS=="OSX32" or OS=="OSX64" then
         os.execute("open ".. url)
@@ -63,10 +59,10 @@ function open_url(url)
     end
 end
 
-if not reaper.BR_GetMidiSourceLenPPQ then
-    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+if not reaper.SN_FocusMIDIEditor then
+    local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
     if retval == 1 then
-        open_url("http://www.sws-extension.org/download/pre-release/")
+        Open_URL("http://www.sws-extension.org/download/pre-release/")
     end
 end
 
@@ -124,15 +120,30 @@ end
 
 local tick = reaper.GetExtState("StrumItFast", "Tick")
 if (tick == "") then tick = "4" end
-user_ok, user_input_csv = reaper.GetUserInputs('Strum It (Fast)', 1, 'Enter A Tick (±)', tick)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-tick = user_input_csv:match("(.*)")
+uok, uinput = reaper.GetUserInputs('Strum It (Fast)', 1, 'Enter A Tick (±)', tick)
+if not uok then return reaper.SN_FocusMIDIEditor() end
+tick = uinput:match("(.*)")
 if not tonumber(tick) then return reaper.SN_FocusMIDIEditor() end
 reaper.SetExtState("StrumItFast", "Tick", tick, false)
 tick = tonumber(tick)
 
 reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
+    local articulationMap = {}
+    local function markArticulation(pos, pitch, articulationEvent)
+        if not articulationMap[pos] then
+            articulationMap[pos] = {}
+        end
+        articulationMap[pos][pitch] = articulationEvent
+    end
+    local function findArticulation(pos, pitch)
+        local tmp = articulationMap[pos]
+        if not tmp then
+            return nil
+        end
+        return tmp[pitch]
+    end
+
     local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
     local lastPos = 0
     local events = {}
@@ -159,6 +170,15 @@ for take, _ in pairs(getAllTakes()) do
         }
         table.insert(events, event)
     
+        if event.status == 15 then
+            if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
+                -- text event
+            elseif event.msg:find("articulation") then
+                local chan, pitch = msg:match("NOTE (%d+) (%d+) ")
+                markArticulation(event.pos, tonumber(pitch), event)
+            end
+        end
+
         if not event.selected then
             goto continue
         end
@@ -181,7 +201,11 @@ for take, _ in pairs(getAllTakes()) do
     for _, es in pairs(selectedStartEvents) do
         table.sortByKey(es,"pitch",tick < 0)
         for i=1, #es do
+            local articulation = findArticulation(es[i].pos, es[i].pitch)
             es[i].pos = es[i].pos + atick * (i-1)
+            if articulation then
+                articulation.pos = es[i].pos
+            end
         end
     end
     
