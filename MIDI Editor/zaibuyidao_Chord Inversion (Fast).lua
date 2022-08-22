@@ -1,27 +1,90 @@
---[[
- * ReaScript Name: Chord Inversion (Fast)
- * Version: 1.0.3
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
---]]
-
---[[
- * Changelog:
- * v1.0 (2021-1-23)
-  + Initial release
---]]
+-- @description Chord Inversion (Fast)
+-- @version 1.0.5
+-- @author zaibuyidao
+-- @changelog Optimised articulation
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
 EVENT_NOTE_START = 9
 EVENT_NOTE_END = 8
 EVENT_ARTICULATION = 15
 
-function Msg(param)
-    reaper.ShowConsoleMsg(tostring(param) .. "\n")
+function print(...)
+    local params = {...}
+    for i = 1, #params do
+        if i ~= 1 then reaper.ShowConsoleMsg(" ") end
+        reaper.ShowConsoleMsg(tostring(params[i]))
+    end
+    reaper.ShowConsoleMsg("\n")
 end
 
-function open_url(url)
+function table.print(t)
+    local print_r_cache = {}
+    local function sub_print_r(t, indent)
+        if (print_r_cache[tostring(t)]) then
+            print(indent .. "*" .. tostring(t))
+        else
+            print_r_cache[tostring(t)] = true
+            if (type(t) == "table") then
+                for pos, val in pairs(t) do
+                    if (type(val) == "table") then
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
+                        sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
+                        print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
+                    elseif (type(val) == "string") then
+                        print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
+                    else
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
+                    end
+                end
+            else
+                print(indent .. tostring(t))
+            end
+        end
+    end
+    if (type(t) == "table") then
+        print(tostring(t) .. " {")
+        sub_print_r(t, "  ")
+        print("}")
+    else
+        sub_print_r(t, "  ")
+    end
+end
+
+function getAllTakes()
+    tTake = {}
+    if reaper.MIDIEditor_EnumTakes then
+      local editor = reaper.MIDIEditor_GetActive()
+      for i = 0, math.huge do
+          take = reaper.MIDIEditor_EnumTakes(editor, i, false)
+          if take and reaper.ValidatePtr2(0, take, "MediaItem_Take*") then 
+            tTake[take] = true
+            tTake[take] = {item = reaper.GetMediaItemTake_Item(take)}
+          else
+              break
+          end
+      end
+    else
+      for i = 0, reaper.CountMediaItems(0)-1 do
+        local item = reaper.GetMediaItem(0, i)
+        local take = reaper.GetActiveTake(item)
+        if reaper.ValidatePtr2(0, take, "MediaItem_Take*") and reaper.TakeIsMIDI(take) and reaper.MIDI_EnumSelNotes(take, -1) == 0 then -- Get potential takes that contain notes. NB == 0 
+          tTake[take] = true
+        end
+      end
+    
+      for take in next, tTake do
+        if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tTake[take] = nil end
+      end
+    end
+    if not next(tTake) then return end
+    return tTake
+end
+
+function Open_URL(url)
     if not OS then local OS = reaper.GetOS() end
     if OS=="OSX32" or OS=="OSX64" then
         os.execute("open ".. url)
@@ -31,9 +94,9 @@ function open_url(url)
 end
 
 if not reaper.BR_GetMidiSourceLenPPQ then
-    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+    local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
     if retval == 1 then
-        open_url("http://www.sws-extension.org/download/pre-release/")
+        Open_URL("http://www.sws-extension.org/download/pre-release/")
     end
 end
 
@@ -46,7 +109,7 @@ function getInput(title,lable,default)
     if userOK then return get_value end
 end
 
-local function setAllEvents(events)
+local function setAllEvents(take, events)
     local tab = {}
     for _, event in pairs(events) do
         table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
@@ -89,17 +152,17 @@ function move(eventPairs, up)
     if #pitchs == 1 then return end       -- 只有一种音高则不处理
 
     -- for tone, num in pairs(toneNum) do
-    --     Msg("tone " .. tone .. " " .. num)
+    --     print("tone " .. tone .. " " .. num)
     -- end
 
     -- for i, pitch in pairs(pitchs) do
-    --     Msg("pitch " .. i .. " " .. pitch .. " tone " .. pitch % 12)
+    --     print("pitch " .. i .. " " .. pitch .. " tone " .. pitch % 12)
     -- end
 
     local overlayTone       -- 决定最后叠在顶部或底部音符的音调
     if toneNum[pitchs[1] % 12] == 1 then
         overlayTone = pitchs[1] % 12
-        -- Msg("use Bottom")
+        -- print("use Bottom")
     else
         local topTone = pitchs[#pitchs] % 12
         if up then
@@ -151,26 +214,31 @@ function move(eventPairs, up)
     end
 end
 
-function chordInversion()
-    local times = reaper.GetExtState("ChordInversionFast", "Times")
-    if (times == "") then times = "1" end
-    times = getInput("Chord Inversion (Fast)", "Times", times) --获得翻转次数
-    if times == nil then return end
-    reaper.SetExtState("ChordInversionFast", "Times", times, false)
-    times = tonumber(times) --将文本型的次数转换为整数型的次数
-    if times == nil then return end
+local times = reaper.GetExtState("ChordInversionFast", "Times")
+if (times == "") then times = "1" end
+times = getInput("Chord Inversion (Fast)", "Times(±)", times) --获得翻转次数
+if times == nil then return end
+reaper.SetExtState("ChordInversionFast", "Times", times, false)
+times = tonumber(times) --将文本型的次数转换为整数型的次数
+if times == nil then return end
 
-    local flag = true --是否上翻
-    if times < 0 then  --如果次数小于0则下翻
-        flag = false
-        times = -times
-    end
-    
+local flag = true --是否上翻
+if times < 0 then  --如果次数小于0则下翻
+    flag = false
+    times = -times
+end
+
+reaper.Undo_BeginBlock()
+for take, _ in pairs(getAllTakes()) do
+    sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
+    if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then notes_selected = true end
+    if not notes_selected then return end
+
     for i = 1, tonumber(times) do
         local events = {}
         local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
-        -- Msg("Get")
-        -- Msg("string len:" .. #MIDIstring)
+        -- print("Get")
+        -- print("string len:" .. #MIDIstring)
         local groupEventPairs = {} -- {开始事件，结束事件} = groupEventPairs[组位置][i]
         local noteStartEventAtPitch = {} -- 音高对应的当前遍历开始事件
         local articulationEventAtPitch = {}
@@ -208,7 +276,7 @@ function chordInversion()
             elseif status == EVENT_ARTICULATION then
                 if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
                     -- text event
-                else
+                elseif event.msg:find("articulation") then
                     local chan, pitch = msg:match("NOTE (%d+) (%d+) ")
                     articulationEventAtPitch[tonumber(pitch)] = event
                 end
@@ -222,7 +290,7 @@ function chordInversion()
             move(eventPairs, flag)
         end
         
-        setAllEvents(events)
+        setAllEvents(take, events)
     
         if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
             reaper.MIDI_SetAllEvts(take, MIDIstring)
@@ -230,32 +298,6 @@ function chordInversion()
         end
     end
 end
-
-function main()
-    reaper.Undo_BeginBlock()
-    count_sel_items = reaper.CountSelectedMediaItems(0)
-    if count_sel_items > 0 then
-        for i = 1, count_sel_items do
-            item = reaper.GetSelectedMediaItem(0, i - 1)
-            take = reaper.GetTake(item, 0)
-            sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-            if not take or not reaper.TakeIsMIDI(take) then return end
-            if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then notes_selected = true end
-            if not notes_selected then return end
-            chordInversion()
-        end
-    else
-        take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-        sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-        if not take or not reaper.TakeIsMIDI(take) then return end
-        if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then notes_selected = true end
-        if not notes_selected then return end
-        chordInversion()
-    end
-
-    reaper.Undo_EndBlock("Chord Inversion (Fast)", -1)
-    reaper.UpdateArrange()
-    reaper.SN_FocusMIDIEditor()
-end
-
-main()
+reaper.Undo_EndBlock("Chord Inversion (Fast)", -1)
+reaper.UpdateArrange()
+reaper.SN_FocusMIDIEditor()
