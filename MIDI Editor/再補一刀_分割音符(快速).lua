@@ -1,18 +1,16 @@
---[[
- * ReaScript Name: 分割音符(快速)
- * Version: 1.0.3
- * Author: 再補一刀
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
- * About: Requires SWS Extensions
---]]
+-- @description 分割音符(快速)
+-- @version 1.0.4
+-- @author 再補一刀
+-- @changelog Optimised articulation
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
---[[
- * Changelog:
- * v1.0 (2022-5-20)
-  + Initial release
---]]
+EVENT_NOTE_START = 9
+EVENT_NOTE_END = 8
+EVENT_ARTICULATION = 15
 
 function print(...)
     local params = {...}
@@ -24,60 +22,52 @@ function print(...)
 end
 
 function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-      if (print_r_cache[tostring(t)]) then
-          print(indent .. "*" .. tostring(t))
-      else
-          print_r_cache[tostring(t)] = true
-          if (type(t) == "table") then
-              for pos, val in pairs(t) do
-                  if (type(val) == "table") then
-                      print(indent .. "[" .. tostring(pos) .. "] => " ..
-                                tostring(t) .. " {")
-                      sub_print_r(val, indent ..
-                                      string.rep(" ",
-                                                 string.len(tostring(pos)) + 8))
-                      print(indent ..
-                                string.rep(" ", string.len(tostring(pos)) + 6) ..
-                                "}")
-                  elseif (type(val) == "string") then
-                      print(
-                          indent .. "[" .. tostring(pos) .. '] => "' .. val ..
-                              '"')
-                  else
-                      print(indent .. "[" .. tostring(pos) .. "] => " ..
-                                tostring(val))
-                  end
-              end
-          else
-              print(indent .. tostring(t))
-          end
-      end
-  end
-  if (type(t) == "table") then
-      print(tostring(t) .. " {")
-      sub_print_r(t, "  ")
-      print("}")
-  else
-      sub_print_r(t, "  ")
-  end
+    local print_r_cache = {}
+    local function sub_print_r(t, indent)
+        if (print_r_cache[tostring(t)]) then
+            print(indent .. "*" .. tostring(t))
+        else
+            print_r_cache[tostring(t)] = true
+            if (type(t) == "table") then
+                for pos, val in pairs(t) do
+                    if (type(val) == "table") then
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
+                        sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
+                        print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
+                    elseif (type(val) == "string") then
+                        print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
+                    else
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
+                    end
+                end
+            else
+                print(indent .. tostring(t))
+            end
+        end
+    end
+    if (type(t) == "table") then
+        print(tostring(t) .. " {")
+        sub_print_r(t, "  ")
+        print("}")
+    else
+        sub_print_r(t, "  ")
+    end
 end
 
-function open_url(url)
-  if not OS then local OS = reaper.GetOS() end
-  if OS=="OSX32" or OS=="OSX64" then
-    os.execute("open ".. url)
-   else
-    os.execute("start ".. url)
-  end
+function Open_URL(url)
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+        os.execute("open ".. url)
+    else
+        os.execute("start ".. url)
+    end
 end
 
 if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
-  if retval == 1 then
-    open_url("http://www.sws-extension.org/download/pre-release/")
-  end
+    local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+    if retval == 1 then
+        Open_URL("http://www.sws-extension.org/download/pre-release/")
+    end
 end
 
 local function clone(object)
@@ -97,11 +87,6 @@ local function clone(object)
   end
   return _copy(object)
 end
-
-EVENT_NOTE_START = 9
-EVENT_NOTE_END = 8
-EVENT_ALL_NOTES_OFF = 11
-EVENT_ARTICULATION = 15
 
 local EventMeta = {
   __index = function (event, key)
@@ -210,24 +195,25 @@ function main(div, take)
                 table.insert(notes, {
                     head = head,
                     tail = tail,
-                    articulation = event.pitch,
+                    articulation = articulationEventAtPitch[event.pitch],
                     pitch = event.pitch
                 })
             end
             noteLastEventAtPitch[event.pitch] = nil
             articulationEventAtPitch[event.pitch] = nil
-        -- elseif event.type == EVENT_ARTICULATION then
-        --     if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
-        --         -- text event
-        --     else
-        --         local chan, pitch = event.msg:match("NOTE (%d+) (%d+) ")
-        --         articulationEventAtPitch[tonumber(pitch)] = event
-        --     end
+          elseif event.type == EVENT_ARTICULATION then
+            if event.msg:byte(1) == 0xFF and not (event.msg:byte(2) == 0x0F) then
+                -- text event
+            elseif event.msg:find("articulation") then
+                local chan, pitch = event.msg:match("NOTE (%d+) (%d+) ")
+                articulationEventAtPitch[tonumber(pitch)] = event
+            end
         end
     end)
 
     local skipEvents = {}
     local replacementForEvent = {}
+    local copyAritulationForEachNote = false -- 如果为true，则切割后的每一个音符都将带上原有符号信息
 
     for _, note in ipairs(notes) do
       local replacement = {}
@@ -236,19 +222,30 @@ function main(div, take)
       local len = note.tail.pos - note.head.pos
       local len_div = math.floor(len / div)
       local mult_len = note.head.pos + div * len_div
+      local first = true -- 是否是切割后的第一个音符
       for j = 1, len_div do
-          local newNote = clone(note)
-          newNote.head.pos = note.head.pos + (j - 1) * div
-          newNote.tail.pos = note.head.pos + (j - 1) * div + div
-          table.insert(replacement, newNote.head)
-          table.insert(replacement, newNote.tail)
+        local newNote = clone(note)
+        newNote.head.pos = note.head.pos + (j - 1) * div
+        newNote.tail.pos = note.head.pos + (j - 1) * div + div
+        if newNote.articulation then newNote.articulation.pos = newNote.head.pos end
+        table.insert(replacement, newNote.head)
+        if first or copyAritulationForEachNote then
+          table.insert(replacement, newNote.articulation)
+        end
+        table.insert(replacement, newNote.tail)
+        first = false
       end
       if mult_len < note.tail.pos then
         local newNote = clone(note)
         newNote.head.pos = note.head.pos + div * len_div
         newNote.tail.pos = note.tail.pos
+        if newNote.articulation then newNote.articulation.pos = newNote.head.pos end
         table.insert(replacement, newNote.head)
+        if first or copyAritulationForEachNote then
+          table.insert(replacement, newNote.articulation)
+        end
         table.insert(replacement, newNote.tail)
+        first = false
       end
       replacementForEvent[note.tail] = replacement
     end
@@ -271,10 +268,10 @@ end
 
 div_ret = reaper.GetExtState("SplitNotesFast", "Length")
 if (div_ret == "") then div_ret = "240" end
-user_ok, div_ret = reaper.GetUserInputs('分割音符(快速)', 1, '長度', div_ret)
+uok, div_ret = reaper.GetUserInputs('分割音符(快速)', 1, '長度', div_ret)
 reaper.SetExtState("SplitNotesFast", "Length", div_ret, false)
 div = tonumber(div_ret)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
+if not uok then return reaper.SN_FocusMIDIEditor() end
 
 reaper.Undo_BeginBlock()
 if div ~= nil then 
