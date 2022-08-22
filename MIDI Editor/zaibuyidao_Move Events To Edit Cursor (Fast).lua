@@ -1,18 +1,16 @@
---[[
- * ReaScript Name: Move Events To Edit Cursor (Fast)
- * Version: 1.0
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
- * About: Requires SWS Extensions
---]]
+-- @description Move Events To Edit Cursor (Fast)
+-- @version 1.0.1
+-- @author zaibuyidao
+-- @changelog Optimised articulation
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
---[[
- * Changelog:
- * v1.0 (2022-6-2)
-  + Initial release
---]]
+EVENT_NOTE_START = 9
+EVENT_NOTE_END = 8
+EVENT_ARTICULATION = 15
 
 function print(...)
     local params = {...}
@@ -33,21 +31,13 @@ function table.print(t)
             if (type(t) == "table") then
                 for pos, val in pairs(t) do
                     if (type(val) == "table") then
-                        print(indent .. "[" .. tostring(pos) .. "] => " ..
-                                  tostring(t) .. " {")
-                        sub_print_r(val, indent ..
-                                        string.rep(" ",
-                                                   string.len(tostring(pos)) + 8))
-                        print(indent ..
-                                  string.rep(" ", string.len(tostring(pos)) + 6) ..
-                                  "}")
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
+                        sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
+                        print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
                     elseif (type(val) == "string") then
-                        print(
-                            indent .. "[" .. tostring(pos) .. '] => "' .. val ..
-                                '"')
+                        print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
                     else
-                        print(indent .. "[" .. tostring(pos) .. "] => " ..
-                                  tostring(val))
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
                     end
                 end
             else
@@ -64,19 +54,19 @@ function table.print(t)
     end
 end
 
-function open_url(url)
+function Open_URL(url)
     if not OS then local OS = reaper.GetOS() end
     if OS=="OSX32" or OS=="OSX64" then
-      os.execute("open ".. url)
-     else
-      os.execute("start ".. url)
+        os.execute("open ".. url)
+    else
+        os.execute("start ".. url)
     end
 end
 
 if not reaper.SNM_GetIntConfigVar then
-    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+    local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
     if retval == 1 then
-      open_url("http://www.sws-extension.org/download/pre-release/")
+        Open_URL("http://www.sws-extension.org/download/pre-release/")
     end
 end
 
@@ -102,11 +92,6 @@ local floor = math.floor
 function math.floor(x)
     return floor(x + 0.0000005)
 end
-
-EVENT_NOTE_START = 9
-EVENT_NOTE_END = 8
-EVENT_ALL_NOTES_OFF = 11
-EVENT_ARTICULATION = 15
 
 function setAllEvents(take, events)
     local lastPos = 0
@@ -199,16 +184,27 @@ function getAllTakes()
   return tTake
 end
 
-function insertEvents(originEvents, toInsertEvents, startPos)
+function insertEvents(originEvents, toInsertEvents, startPos, lastCC)
     if (#toInsertEvents == 0) then return end
     local lastEvent = originEvents[#originEvents]
-    table.remove(originEvents, #originEvents) -- 排除 All-Note-Off 事件
+    table.remove(originEvents, #originEvents)
     local startOfToCopy = toInsertEvents[1].pos
     for _, toInsertEvent in ipairs(toInsertEvents) do
         toInsertEvent.pos = startPos + (toInsertEvent.pos - startOfToCopy)
+        -- 如果最后一个CC的位置和将要被复制后CC位置一样，那么对原CC进行覆盖，而不是插入新的CC
+        if (lastCC and isCCEvent(toInsertEvent) and toInsertEvent.pos == lastCC.pos) then
+            lastCC.msg = toInsertEvent.msg
+            lastCC.flags = toInsertEvent.flags
+            goto continue
+        end
         table.insert(originEvents, toInsertEvent)
+        ::continue::
     end
-    table.insert(originEvents, lastEvent) -- 排除 All-Note-Off 事件
+    table.insert(originEvents, lastEvent)
+end
+
+function isCCEvent(event)   -- 判断是否为CC事件
+    return event.type == 11 and event.msg:byte(2) >= 0 and event.msg:byte(2) <= 127
 end
 
 function dup(take, copy_start_qn_from_head, global_range_qn)
@@ -218,15 +214,34 @@ function dup(take, copy_start_qn_from_head, global_range_qn)
     local toCopyEvents = {}
 
     local range = {head = math.huge, tail = -math.huge}
+
+    local lastEventSelected = false
+
+    local lastCC -- 最后一个位置的CC事件
+
     local events = getAllEvents(take, function(event)
-        if event.selected then
+        local selected = event.selected
+        if event.selected or (lastEventSelected and (event.msg:find("CCBZ") or event.msg:find("articulation"))) then -- 重复贝塞尔曲线与符号
             local pos = event.pos
+            if (isCCEvent(event) and (not lastCC or event.pos > lastCC.pos)) then
+                lastCC = event
+            end
             range.head = math.min(range.head, pos)
             range.tail = math.max(range.tail, pos)
             table.insert(toCopyEvents, clone(event))
             event.msg = "" -- 删除事件
         end
+        lastEventSelected = selected
     end)
+    -- local events = getAllEvents(take, function(event)
+    --     if event.selected then
+    --         local pos = event.pos
+    --         range.head = math.min(range.head, pos)
+    --         range.tail = math.max(range.tail, pos)
+    --         table.insert(toCopyEvents, clone(event))
+    --         event.msg = "" -- 删除事件
+    --     end
+    -- end)
     local range_qn = {
         head = reaper.MIDI_GetProjQNFromPPQPos(take, range.head),
         tail = reaper.MIDI_GetProjQNFromPPQPos(take, range.tail)
@@ -259,7 +274,7 @@ function dup(take, copy_start_qn_from_head, global_range_qn)
     local offset_from_global_head = range_qn.head - global_range_qn.head 
 
     -- 当前item第一个事件的插入位置 = 全部take选中区域的开始qn位置 + 复制长度 + 当前item第一个事件与全部take选中区域开头的距离 - 当前item事件开始qn位置
-    insertEvents(events, toCopyEvents, math.floor((global_range_qn.head + copy_start_qn_from_head + offset_from_global_head - event_start_pos_qn) * tick))
+    insertEvents(events, toCopyEvents, math.floor((global_range_qn.head + copy_start_qn_from_head + offset_from_global_head - event_start_pos_qn) * tick), lastCC)
     setAllEvents(take, events)
 end
 
@@ -307,18 +322,9 @@ local copy_start_qn_from_head = curpos - range_qn.head
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
-    -- local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
-    -- local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-    -- print(sourceLengthTicks)
     dup(take, copy_start_qn_from_head, range_qn)
     reaper.MIDI_Sort(take)
-    -- print(reaper.BR_GetMidiSourceLenPPQ(take))
-    -- if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
-    --     reaper.MIDI_SetAllEvts(take, MIDIstring)
-    --     reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
-    -- end
 end
-
 reaper.Undo_EndBlock("Move Events To Edit Cursor (Fast)", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
