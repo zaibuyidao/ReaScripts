@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b35cfa16a64e663e058c759fb5fbb69c41c82a70">
+<index version="1" name="zaibuyidao Scripts" commit="e463e4095f708e15681f7f32977b6de8a77a0925">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4128,6 +4128,10 @@
         <changelog><![CDATA[Optimised articulation]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/897ff62e95eccfbbce8d12b513177f1171d0f273/MIDI%20Editor/zaibuyidao_Strum%20It%20(Fast).lua</source>
       </version>
+      <version name="1.0.7" author="zaibuyidao" time="2022-08-22T05:01:27Z">
+        <changelog><![CDATA[Optimised articulation]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e463e4095f708e15681f7f32977b6de8a77a0925/MIDI%20Editor/zaibuyidao_Strum%20It%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Strum It.lua" type="script" desc="Strum It">
       <metadata>
@@ -4792,6 +4796,10 @@
       <version name="1.0.6" author="zaibuyidao" time="2022-08-22T03:57:52Z">
         <changelog><![CDATA[Optimised articulation]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/897ff62e95eccfbbce8d12b513177f1171d0f273/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6(%E5%BF%AB%E9%80%9F).lua</source>
+      </version>
+      <version name="1.0.7" author="再補一刀" time="2022-08-22T05:01:27Z">
+        <changelog><![CDATA[Optimised articulation]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e463e4095f708e15681f7f32977b6de8a77a0925/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6(%E5%BF%AB%E9%80%9F).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_掃弦.lua" type="script" desc="掃弦">
