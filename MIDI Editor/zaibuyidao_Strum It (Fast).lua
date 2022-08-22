@@ -1,5 +1,5 @@
 -- @description Strum It (Fast)
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog Optimised articulation
 -- @links
