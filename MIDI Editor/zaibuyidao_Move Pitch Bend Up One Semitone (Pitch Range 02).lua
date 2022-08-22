@@ -1,10 +1,10 @@
--- @description Move Pitch Bend Up One Semitone (Pitch Range 2)
+-- @description Move Pitch Bend Up One Semitone (Pitch Range 02)
 -- @version 1.0
 -- @author zaibuyidao
 -- @links https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about
---   # Move Pitch Bend Up One Semitone (Pitch Range 2)
+--   # Move Pitch Bend Up One Semitone (Pitch Range 02)
 
 function print(...)
     local params = {...}
@@ -146,7 +146,7 @@ if #index > 0 then
         
         reaper.MIDI_SetCC(take, index[i], selected, muted, ppqpos, chanmsg, chan, LSB, MSB, false)
     end
-    reaper.Undo_EndBlock("Move Pitch Bend Up One Semitone (Pitch Range 2)", -1)
+    reaper.Undo_EndBlock("Move Pitch Bend Up One Semitone (Pitch Range 02)", -1)
 end
 
 reaper.UpdateArrange()
