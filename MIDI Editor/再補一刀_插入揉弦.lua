@@ -1,30 +1,69 @@
---[[
- * ReaScript Name: 插入揉弦
- * Version: 2.0.3
- * Author: 再補一刀
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
---]]
+-- @description 插入揉弦
+-- @version 2.0.4
+-- @author 再補一刀
+-- @changelog 優化代碼
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
---[[
- * Changelog:
- * v1.0 (2019-12-12)
-  + Initial release
- * v2.0 (2021-8-21)
-  + Code rewriting
---]]
+function print(...)
+  local params = {...}
+  for i = 1, #params do
+    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
+    reaper.ShowConsoleMsg(tostring(params[i]))
+  end
+  reaper.ShowConsoleMsg("\n")
+end
 
-function Msg(param) reaper.ShowConsoleMsg(tostring(param) .. "\n") end
+function table.print(t)
+  local print_r_cache = {}
+  local function sub_print_r(t, indent)
+    if (print_r_cache[tostring(t)]) then
+      print(indent .. "*" .. tostring(t))
+    else
+      print_r_cache[tostring(t)] = true
+      if (type(t) == "table") then
+        for pos, val in pairs(t) do
+          if (type(val) == "table") then
+            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
+            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
+            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
+          elseif (type(val) == "string") then
+            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
+          else
+            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
+          end
+        end
+      else
+        print(indent .. tostring(t))
+      end
+    end
+  end
+  if (type(t) == "table") then
+    print(tostring(t) .. " {")
+    sub_print_r(t, "  ")
+    print("}")
+  else
+    sub_print_r(t, "  ")
+  end
+end
+
+function open_url(url)
+  if not OS then local OS = reaper.GetOS() end
+  if OS=="OSX32" or OS=="OSX64" then
+    os.execute("open ".. url)
+  else
+    os.execute("start ".. url)
+  end
+end
 
 if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox("SWS extension is required by this script.\n此腳本需要 SWS 擴展。\nHowever, it doesn't seem to be present for this REAPER installation.\n然而，對於這個REAPER安裝來說，它似乎並不存在。\n\nDo you want to download it now ?\n你想現在就下載它嗎？", "Warning", 1)
+  local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
   if retval == 1 then
-    Open_URL("http://www.sws-extension.org/download/pre-release/")
+    open_url("http://www.sws-extension.org/download/pre-release/")
   end
-  return
 end
 
 local _SN_FocusMIDIEditor = reaper.SN_FocusMIDIEditor
@@ -122,9 +161,9 @@ if (num == "") then num = "12" end
 local shape = reaper.GetExtState("InsterVibrato", "Shape")
 if (shape == "") then shape = "0" end
 
-local user_ok, user_input_CSV = reaper.GetUserInputs("插入揉弦", 6, "起始點,最高點,重複,長度,點數,形狀 (0-1)", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-bottom, top, times, length, num, shape = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*),(.*)")
+local uok, uinput = reaper.GetUserInputs("插入揉弦", 6, "起始點,最高點,重複,長度,點數,0=正弦波 1=三角波", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
+if not uok then return reaper.SN_FocusMIDIEditor() end
+bottom, top, times, length, num, shape = uinput:match("(.*),(.*),(.*),(.*),(.*),(.*)")
 if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) or not tonumber(shape) then return reaper.SN_FocusMIDIEditor() end
 bottom, top, times, length, num, shape = tonumber(bottom), tonumber(top), tonumber(times), tonumber(length), tonumber(num), tonumber(shape)
 if times < 1 or shape > 1 then return reaper.SN_FocusMIDIEditor() end
@@ -199,11 +238,10 @@ end
 reaper.MIDI_Sort(take)
 reaper.Undo_EndBlock("插入揉弦", -1)
 reaper.UpdateArrange()
+reaper.SN_FocusMIDIEditor()
+reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40366) -- CC: Set CC lane to Pitch
 
 -- local c = get_curve(0,1024,12)
 -- for j = 1, #c do
 --   Msg(c[j])
 -- end
-
-reaper.SN_FocusMIDIEditor()
-reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40366) -- CC: Set CC lane to Pitch
