@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b065e65d515fa5f39169232ec9865f72810eddc1">
+<index version="1" name="zaibuyidao Scripts" commit="4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2452,6 +2452,96 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/12934f35140cfed386f1a181f0395910c1e894a1/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20(Semitone).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Insert Pitch Bend Curve (Sawtooth).lua" type="script" desc="Insert Pitch Bend Curve (Sawtooth)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-08-23T16:55:09Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Sawtooth).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Pitch Bend Curve (Sine).lua" type="script" desc="Insert Pitch Bend Curve (Sine)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-08-23T16:55:09Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Sine).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Pitch Bend Curve (Square).lua" type="script" desc="Insert Pitch Bend Curve (Square)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-08-23T16:55:09Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Square).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Pitch Bend Curve (Triangle).lua" type="script" desc="Insert Pitch Bend Curve (Triangle)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-08-23T16:55:09Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Triangle).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Insert Pitch Bend Curve.lua" type="script" desc="Insert Pitch Bend Curve">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-08-23T16:55:09Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend.lua" type="script" desc="Insert Pitch Bend">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -2581,6 +2671,15 @@
     </reapack>
     <reapack name="zaibuyidao_Insert Vibrato.lua" type="script" desc="Insert Vibrato">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.5" author="zaibuyidao" time="2021-01-18T04:36:01Z">
@@ -2598,6 +2697,10 @@
       </version>
       <version name="2.0.3" author="zaibuyidao" time="2021-10-10T15:39:06Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a97819d1709c41cba23fab615f2a2b18656bcea/MIDI%20Editor/zaibuyidao_Insert%20Vibrato.lua</source>
+      </version>
+      <version name="2.0.4" author="zaibuyidao" time="2022-08-23T16:55:09Z">
+        <changelog><![CDATA[Optimized code]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a/MIDI%20Editor/zaibuyidao_Insert%20Vibrato.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Wah.lua" type="script" desc="Insert Wah">
@@ -2620,66 +2723,6 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2021-01-19T19:51:41Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/zaibuyidao_Insert%20Wah.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Wheel Curve (Sawtooth).lua" type="script" desc="Insert Wheel Curve (Sawtooth)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Sawtooth).lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-10-10T15:39:06Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a97819d1709c41cba23fab615f2a2b18656bcea/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Sawtooth).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Wheel Curve (Sine).lua" type="script" desc="Insert Wheel Curve (Sine)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Sine).lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-10-10T15:39:06Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a97819d1709c41cba23fab615f2a2b18656bcea/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Sine).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Wheel Curve (Square).lua" type="script" desc="Insert Wheel Curve (Square)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Square).lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-10-10T15:39:06Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a97819d1709c41cba23fab615f2a2b18656bcea/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Square).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Wheel Curve (Triangle).lua" type="script" desc="Insert Wheel Curve (Triangle)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Triangle).lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-10-10T15:39:06Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a97819d1709c41cba23fab615f2a2b18656bcea/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve%20(Triangle).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Insert Wheel Curve.lua" type="script" desc="Insert Wheel Curve">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-10-09T16:52:45Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/93f417fd12ef3267003d44b653c52618faaa30d8/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-10-10T15:39:06Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a97819d1709c41cba23fab615f2a2b18656bcea/MIDI%20Editor/zaibuyidao_Insert%20Wheel%20Curve.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Interval.lua" type="script" desc="Interval">
@@ -4967,6 +5010,15 @@
     </reapack>
     <reapack name="再補一刀_插入揉弦.lua" type="script" desc="插入揉弦">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.5" author="再補一刀" time="2021-01-18T04:36:01Z">
@@ -4984,6 +5036,10 @@
       </version>
       <version name="2.0.3" author="再補一刀" time="2021-10-10T15:39:06Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a97819d1709c41cba23fab615f2a2b18656bcea/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E6%8F%89%E5%BC%A6.lua</source>
+      </version>
+      <version name="2.0.4" author="再補一刀" time="2022-08-23T16:55:09Z">
+        <changelog><![CDATA[優化代碼]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E6%8F%89%E5%BC%A6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入系統專用信息.lua" type="script" desc="插入系統專用信息">
