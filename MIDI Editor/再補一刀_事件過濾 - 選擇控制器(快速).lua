@@ -1,17 +1,12 @@
---[[
- * ReaScript Name: 事件過濾 - 選擇控制器
- * Version: 1.0
- * Author: 再補一刀
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
---]]
-
---[[
- * Changelog:
- * v1.0 (2022-6-22)
-  + Initial release
---]]
+-- @description 事件過濾 - 選擇控制器(快速)
+-- @version 1.0.1
+-- @author 再補一刀
+-- @changelog Optimized code
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
 function print(...)
     local params = {...}
