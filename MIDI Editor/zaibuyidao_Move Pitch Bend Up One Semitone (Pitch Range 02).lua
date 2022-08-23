@@ -1,5 +1,5 @@
 -- @description Move Pitch Bend Up One Semitone (Pitch Range 02)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @links https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 -- @donation http://www.paypal.me/zaibuyidao
