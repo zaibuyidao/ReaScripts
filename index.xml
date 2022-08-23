@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f2c0b2cdc8d2def7fa42e9c8cf8263ed13100e0c">
+<index version="1" name="zaibuyidao Scripts" commit="cc6cca2a5060e4dda70b277b67b9f92e5cbabe24">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2948,6 +2948,9 @@
       <version name="1.0" author="zaibuyidao" time="2022-08-22T09:38:24Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/144c59536c4bec1dec3079b1872fb9e5551789ec/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Down%20One%20Semitone%20(Pitch%20Range%2002).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-08-23T07:44:28Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc6cca2a5060e4dda70b277b67b9f92e5cbabe24/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Down%20One%20Semitone%20(Pitch%20Range%2002).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Move Pitch Bend Down One Semitone (Pitch Range 12).lua" type="script" desc="Move Pitch Bend Down One Semitone (Pitch Range 12)">
       <metadata>
@@ -2963,6 +2966,9 @@
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-08-09T03:47:13Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/62e45d7fb89b20accc229a210598494c952a0491/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Down%20One%20Semitone%20(Pitch%20Range%2012).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-08-23T07:44:28Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc6cca2a5060e4dda70b277b67b9f92e5cbabe24/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Down%20One%20Semitone%20(Pitch%20Range%2012).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Move Pitch Bend One Semitone.lua" type="script" desc="Move Pitch Bend One Semitone">
@@ -3014,6 +3020,9 @@
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-08-09T03:47:13Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/62e45d7fb89b20accc229a210598494c952a0491/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Up%20One%20Semitone%20(Pitch%20Range%2012).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-08-23T07:44:28Z">
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc6cca2a5060e4dda70b277b67b9f92e5cbabe24/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Up%20One%20Semitone%20(Pitch%20Range%2012).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Note Length To End.lua" type="script" desc="Note Length To End">
