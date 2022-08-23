@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3419776c4141c63c0a127a95a741d433169075b7">
+<index version="1" name="zaibuyidao Scripts" commit="f2c0b2cdc8d2def7fa42e9c8cf8263ed13100e0c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1336,11 +1336,24 @@
     </reapack>
     <reapack name="zaibuyidao_Bend.lua" type="script" desc="Bend">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-08-07T08:45:08Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9c51cd75c825ecc12b433bba222cbff74f31f899/MIDI%20Editor/zaibuyidao_Bend.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-08-23T06:32:58Z">
+        <changelog><![CDATA[Optimised pitch bend interval]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f2c0b2cdc8d2def7fa42e9c8cf8263ed13100e0c/MIDI%20Editor/zaibuyidao_Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion (Fast).lua" type="script" desc="Chord Inversion (Fast)">
