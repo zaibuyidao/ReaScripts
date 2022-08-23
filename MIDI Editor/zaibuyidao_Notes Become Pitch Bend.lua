@@ -1,25 +1,56 @@
---[[
- * ReaScript Name: Notes Become Pitch Bend
- * Version: 1.6
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
---]]
+-- @description Notes Become Pitch Bend
+-- @version 1.6.1
+-- @author zaibuyidao
+-- @changelog Optimised pitch bend
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
 
---[[
- * Changelog:
- * v1.5 (2021-5-26)
-  + 刪除冗餘Pitch
- * v1.0 (2019-12-12)
-  + Initial release
---]]
+range = 12
 
-function Msg(param)
-  reaper.ShowConsoleMsg(tostring(param) .. "\n")
+function print(...)
+  local params = {...}
+  for i = 1, #params do
+    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
+    reaper.ShowConsoleMsg(tostring(params[i]))
+  end
+  reaper.ShowConsoleMsg("\n")
 end
+
+function table.print(t)
+  local print_r_cache = {}
+  local function sub_print_r(t, indent)
+    if (print_r_cache[tostring(t)]) then
+      print(indent .. "*" .. tostring(t))
+    else
+      print_r_cache[tostring(t)] = true
+      if (type(t) == "table") then
+        for pos, val in pairs(t) do
+          if (type(val) == "table") then
+            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
+            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
+            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
+          elseif (type(val) == "string") then
+            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
+          else
+            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
+          end
+        end
+      else
+        print(indent .. tostring(t))
+      end
+    end
+  end
+  if (type(t) == "table") then
+    print(tostring(t) .. " {")
+    sub_print_r(t, "  ")
+    print("}")
+  else
+    sub_print_r(t, "  ")
+  end
+end
+
 local editor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(editor)
 if take == nil then return end
@@ -32,71 +63,88 @@ while val ~= - 1 do
   val = reaper.MIDI_EnumSelNotes(take, val)
 end
 
-reaper.Undo_BeginBlock()
-reaper.PreventUIRefresh(1)
+function getSegments(n)
+  local x = 8192
+  local p = math.floor((x / n) + 0.5) -- 四舍五入
+  local arr = {}
+  local cur = 0
+  for i = 1, n do
+    cur = cur + p
+    table.insert(arr, math.min(cur, x))
+  end
+  local res = {}
+  for i = #arr, 1, -1 do
+    table.insert(res, -arr[i])
+  end
+  table.insert(res, 0)
+  for i = 1, #arr do
+    table.insert(res, arr[i])
+  end
+  res[#res] = 8191 -- 将最后一个点强制设为8191，否则8192会被reaper处理为-8192
+  return res
+end
+
+function pitchUp(o, targets)
+  if #targets == 0 then error() end
+  for i = 1, #targets do
+    return targets[o + (range + 1)]
+  end
+end
+
+function pitchDown(p, targets)
+  if #targets == 0 then error() end
+  for i = #targets, 1, -1 do
+    return targets[p + (range + 1)]
+  end
+end
 
 local pitch = {}
 local startppqpos = {}
 local endppqpos = {}
 local vel = {}
-local tbl={}
-tbl["12"]="8191"
-tbl["11"]="7513"
-tbl["10"]="6830"
-tbl["9"]="6147"
-tbl["8"]="5464"
-tbl["7"]="4781"
-tbl["6"]="4098"
-tbl["5"]="3415"
-tbl["4"]="2732"
-tbl["3"]="2049"
-tbl["2"]="1366"
-tbl["1"]="683"
-tbl["0"]="0"
-tbl["-1"]="-683"
-tbl["-2"]="-1366"
-tbl["-3"]="-2049"
-tbl["-4"]="-2732"
-tbl["-5"]="-3415"
-tbl["-6"]="-4098"
-tbl["-7"]="-4781"
-tbl["-8"]="-5464"
-tbl["-9"]="-6147"
-tbl["-10"]="-6830"
-tbl["-11"]="-7513"
-tbl["-12"]="-8192"
+
+reaper.PreventUIRefresh(1)
+reaper.Undo_BeginBlock()
 
 if #index > 1 then
   for i = 1, #index do
-    retval, sel, muted, startppqpos[i], endppqpos[i], chan, pitch[i], vel[i] = reaper.MIDI_GetNote(take, index[i])
-    if sel == true then
+    retval, selected, muted, startppqpos[i], endppqpos[i], chan, pitch[i], vel[i] = reaper.MIDI_GetNote(take, index[i])
+    if selected then
       if pitch[i-1] then
-        local offset = tostring(pitch[i]-pitch[1])
-          local value = tonumber(tbl[offset])
-          if value == nil then return reaper.MB("Please adjust the note interval. The limit is only one octaves.","Error",0) end
-          value = value + 8192
-          local lsb = value & 0x7f
-          local msb = value >> 7 & 0x7f
-          reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, lsb, msb)
+        local pitchnote = (pitch[i]-pitch[1])
+        local seg = getSegments(range)
+        
+        if pitchnote > 0 then
+          pitchbend = pitchUp(pitchnote, seg)
+        else
+          pitchbend = pitchDown(pitchnote, seg)
+        end
+        
+        if pitchbend == nil then return reaper.MB("Please check the note interval and limit it to one octave.\n請檢查音符間隔，並將其限制在一個八度内。", "Error", 0) end
+
+        LSB = pitchbend & 0x7F
+        MSB = (pitchbend >> 7) + 64
+
+        reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, LSB, MSB)
       end
       if i == #index then
-        ii = reaper.MIDI_EnumSelNotes(take, -1)
-        while ii > -1 do
-          reaper.MIDI_DeleteNote(take, ii)
-          ii = reaper.MIDI_EnumSelNotes(take, -1)
+        j = reaper.MIDI_EnumSelNotes(take, -1)
+        while j > -1 do
+          reaper.MIDI_DeleteNote(take, j)
+          j = reaper.MIDI_EnumSelNotes(take, -1)
         end
         if (pitch[1] ~= pitch[i]) then
           reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
         end
-        reaper.MIDI_InsertNote(take, sel, muted, startppqpos[1], endppqpos[i], chan, pitch[1], vel[1], true)
+        reaper.MIDI_InsertNote(take, selected, muted, startppqpos[1], endppqpos[i], chan, pitch[1], vel[1], true)
       end
     end
-    reaper.UpdateArrange()
   end
 else
-  reaper.MB("Please select two or more notes","Error",0)
+  reaper.MB("Please select two or more notes\n請選擇兩個或更多音符","Error",0)
 end
-reaper.Undo_EndBlock("Notes Become Pitch Bend", 0)
+
+reaper.Undo_EndBlock("Notes Become Pitch Bend", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.MIDIEditor_OnCommand(editor , 40366) -- CC: Set CC lane to Pitch
+reaper.MIDIEditor_OnCommand(editor, 40366) -- CC: Set CC lane to Pitch
