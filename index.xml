@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="4985a68cf4fbc03cb6732d468ebb6182ec3e7d7a">
+<index version="1" name="zaibuyidao Scripts" commit="0d88982bc2cec3bccb78fc17fb0f5d782632a0a8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2023,6 +2023,15 @@
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Control.lua" type="script" desc="Event Filter - Select Control">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-02-01T19:07:57Z">
@@ -2031,6 +2040,10 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Control.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-08-23T17:06:28Z">
+        <changelog><![CDATA[Optimized code]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0d88982bc2cec3bccb78fc17fb0f5d782632a0a8/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Control.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Note (Fast).lua" type="script" desc="Event Filter - Select Note (Fast)">
@@ -4648,6 +4661,15 @@
     </reapack>
     <reapack name="再補一刀_事件過濾 - 選擇控制器.lua" type="script" desc="事件過濾 - 選擇控制器">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="再補一刀" time="2021-02-01T19:07:57Z">
@@ -4656,6 +4678,10 @@
       </version>
       <version name="1.0.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E4%BA%8B%E4%BB%B6%E9%81%8E%E6%BF%BE%20-%20%E9%81%B8%E6%93%87%E6%8E%A7%E5%88%B6%E5%99%A8.lua</source>
+      </version>
+      <version name="1.0.2" author="再補一刀" time="2022-08-23T17:06:28Z">
+        <changelog><![CDATA[優化代碼]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0d88982bc2cec3bccb78fc17fb0f5d782632a0a8/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E4%BA%8B%E4%BB%B6%E9%81%8E%E6%BF%BE%20-%20%E9%81%B8%E6%93%87%E6%8E%A7%E5%88%B6%E5%99%A8.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_事件過濾 - 選擇音符(快速).lua" type="script" desc="事件過濾 - 選擇音符(快速)">
