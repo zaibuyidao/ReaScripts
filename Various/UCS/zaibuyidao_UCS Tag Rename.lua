@@ -1307,8 +1307,8 @@ end
 
 seperators = {
     {name = "Underline", value = "_"},
-    {name = "Pyphen", value = "-"},
-    {name = "Blank", value = " "},
+    {name = "Hyphen", value = "-"},
+    {name = "Space", value = " "},
     {name = "None", value = ""}
 }
 
