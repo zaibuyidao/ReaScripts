@@ -48,22 +48,6 @@ function table.print(t)
     end
 end
 
-function Open_URL(url)
-    if not OS then local OS = reaper.GetOS() end
-    if OS=="OSX32" or OS=="OSX64" then
-        os.execute("open ".. url)
-    else
-        os.execute("start ".. url)
-    end
-end
-
-if not reaper.SN_FocusMIDIEditor then
-    local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
-    if retval == 1 then
-        Open_URL("http://www.sws-extension.org/download/pre-release/")
-    end
-end
-
 function equals(a, b)
     return math.abs(a - b) < 0.0000001
 end
@@ -85,7 +69,7 @@ function getSegments(n)
     for i = 1, #arr do
         table.insert(res, arr[i])
     end
-    res[#res] = 8191    -- 将最后一个点强制设为8191，否则8192会被reaper处理为-8192
+    res[#res] = 8191 -- 将最后一个点强制设为8191，否则8192会被reaper处理为-8192
     return res
 end
 
@@ -150,4 +134,3 @@ if #index > 0 then
 end
 
 reaper.UpdateArrange()
-reaper.SN_FocusMIDIEditor()
