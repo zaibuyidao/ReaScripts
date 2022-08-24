@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d71b7892713735891a7b3e3907cb4e6d78437137">
+<index version="1" name="zaibuyidao Scripts" commit="cdbd94f4683445418f5b6a92755fedfb18a0473a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4023,6 +4023,15 @@
     </reapack>
     <reapack name="zaibuyidao_Slide In.lua" type="script" desc="Slide In">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
@@ -4044,6 +4053,10 @@
       <version name="1.4.1" author="zaibuyidao" time="2022-08-07T08:45:08Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9c51cd75c825ecc12b433bba222cbff74f31f899/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
       </version>
+      <version name="1.4.2" author="zaibuyidao" time="2022-08-24T17:06:05Z">
+        <changelog><![CDATA[Optimised pitch bend]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdbd94f4683445418f5b6a92755fedfb18a0473a/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Slide Out Shape.lua" type="script" desc="Slide Out Shape">
       <metadata>
@@ -4056,6 +4069,15 @@
     </reapack>
     <reapack name="zaibuyidao_Slide Out.lua" type="script" desc="Slide Out">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
@@ -4076,6 +4098,10 @@
       </version>
       <version name="1.4.1" author="zaibuyidao" time="2022-08-07T08:45:08Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9c51cd75c825ecc12b433bba222cbff74f31f899/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
+      </version>
+      <version name="1.4.2" author="zaibuyidao" time="2022-08-24T17:06:05Z">
+        <changelog><![CDATA[Optimised pitch bend]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdbd94f4683445418f5b6a92755fedfb18a0473a/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Item Play From Edit Cursor Position (Perform Until Shortcut Released)">
@@ -4868,6 +4894,15 @@
     </reapack>
     <reapack name="再補一刀_彎音滑入.lua" type="script" desc="彎音滑入">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.4" author="再補一刀" time="2021-01-11T04:44:18Z">
@@ -4876,21 +4911,22 @@
       <version name="1.4.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%85%A5.lua</source>
       </version>
-    </reapack>
-    <reapack name="再補一刀_彎音滑入形狀.lua" type="script" desc="彎音滑入形狀">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-01-11T04:44:18Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/55b0a124c89b9c44470200022585eaf48327a46b/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%85%A5%E5%BD%A2%E7%8B%80.lua</source>
-      </version>
-      <version name="1.0.1" author="再補一刀" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%85%A5%E5%BD%A2%E7%8B%80.lua</source>
+      <version name="1.4.2" author="再補一刀" time="2022-08-24T17:06:05Z">
+        <changelog><![CDATA[優化彎音]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdbd94f4683445418f5b6a92755fedfb18a0473a/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%85%A5.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_彎音滑出.lua" type="script" desc="彎音滑出">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.4" author="再補一刀" time="2021-01-11T04:44:18Z">
@@ -4899,17 +4935,9 @@
       <version name="1.4.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%87%BA.lua</source>
       </version>
-    </reapack>
-    <reapack name="再補一刀_彎音滑出形狀.lua" type="script" desc="彎音滑出形狀">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-01-11T04:44:18Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/55b0a124c89b9c44470200022585eaf48327a46b/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%87%BA%E5%BD%A2%E7%8B%80.lua</source>
-      </version>
-      <version name="1.0.1" author="再補一刀" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%87%BA%E5%BD%A2%E7%8B%80.lua</source>
+      <version name="1.4.2" author="再補一刀" time="2022-08-24T17:06:05Z">
+        <changelog><![CDATA[優化彎音]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdbd94f4683445418f5b6a92755fedfb18a0473a/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%87%BA.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_律動量化.lua" type="script" desc="律動量化">
