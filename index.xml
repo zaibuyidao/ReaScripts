@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="02547674fe0700dabf6e7f4c2a5a5f7c8831b5c7">
+<index version="1" name="zaibuyidao Scripts" commit="6f2f17c58950af9baa541327d7714319fa3b0acb">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4070,6 +4070,10 @@
         <changelog><![CDATA[Optimised pitch bend]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdbd94f4683445418f5b6a92755fedfb18a0473a/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
       </version>
+      <version name="1.4.3" author="zaibuyidao" time="2022-08-25T02:00:43Z">
+        <changelog><![CDATA[Optimised pitch bend]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6f2f17c58950af9baa541327d7714319fa3b0acb/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Slide Out Shape.lua" type="script" desc="Slide Out Shape">
       <metadata>
@@ -4128,6 +4132,10 @@
       <version name="1.4.2" author="zaibuyidao" time="2022-08-24T17:06:05Z">
         <changelog><![CDATA[Optimised pitch bend]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdbd94f4683445418f5b6a92755fedfb18a0473a/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
+      </version>
+      <version name="1.4.3" author="zaibuyidao" time="2022-08-25T02:00:43Z">
+        <changelog><![CDATA[Optimised pitch bend]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6f2f17c58950af9baa541327d7714319fa3b0acb/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Item Play From Edit Cursor Position (Perform Until Shortcut Released)">
@@ -4941,6 +4949,10 @@
         <changelog><![CDATA[優化彎音]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdbd94f4683445418f5b6a92755fedfb18a0473a/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%85%A5.lua</source>
       </version>
+      <version name="1.4.3" author="再補一刀" time="2022-08-25T02:00:43Z">
+        <changelog><![CDATA[優化彎音]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6f2f17c58950af9baa541327d7714319fa3b0acb/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%85%A5.lua</source>
+      </version>
     </reapack>
     <reapack name="再補一刀_彎音滑出.lua" type="script" desc="彎音滑出">
       <metadata>
@@ -4964,6 +4976,10 @@
       <version name="1.4.2" author="再補一刀" time="2022-08-24T17:06:05Z">
         <changelog><![CDATA[優化彎音]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cdbd94f4683445418f5b6a92755fedfb18a0473a/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%87%BA.lua</source>
+      </version>
+      <version name="1.4.3" author="再補一刀" time="2022-08-25T02:00:43Z">
+        <changelog><![CDATA[優化彎音]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6f2f17c58950af9baa541327d7714319fa3b0acb/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%87%BA.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_律動量化.lua" type="script" desc="律動量化">
