@@ -1,5 +1,5 @@
 -- @description 彎音滑入
--- @version 1.4.2
+-- @version 1.4.3
 -- @author 再補一刀
 -- @changelog 優化彎音
 -- @links
@@ -74,13 +74,13 @@ local loop_end = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_e
 if loop_start == loop_end then return reaper.SN_FocusMIDIEditor() end
 
 local pitch = reaper.GetExtState("SlideIn", "Pitch")
-if (pitch == "") then pitch = "-2" end
+if (pitch == "") then pitch = "-7" end
 local range = reaper.GetExtState("SlideIn", "Range")
 if (range == "") then range = "12" end
 local bezier = reaper.GetExtState("SlideIn", "Bezier")
 if (bezier == "") then bezier = "20" end
 local toggle = reaper.GetExtState("SlideIn", "Toggle")
-if (toggle == "") then toggle = "0" end
+if (toggle == "") then toggle = "2" end
 
 uok, uinput = reaper.GetUserInputs("彎音滑入", 4, "彎音間隔,彎音範圍,貝塞爾 (-100,100),0=SMO 1=LIN 2=FRE 3=REV", pitch ..','.. range ..','.. bezier ..','.. toggle)
 if not uok then return reaper.SN_FocusMIDIEditor() end
