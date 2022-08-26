@@ -1,10 +1,10 @@
--- @description Quantize Pitch Bend
+-- @description Quantize Pitch Bend In Semitones
 -- @version 1.0
 -- @author zaibuyidao
 -- @links https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about
---   # Quantize Pitch Bend
+--   # Quantize Pitch Bend In Semitones
 --   Quantize the selected pitch bend to an equal value of the pitch range
 
 function print(...)
@@ -131,13 +131,13 @@ end
 
 if #index > 0 then
 
-    local n = reaper.GetExtState("QuantizePitchBend", "PitchRange")
+    local n = reaper.GetExtState("QuantizePitchBendInSemitones", "PitchRange")
     if (n == "") then n = "2" end
 
-    local uok, n = reaper.GetUserInputs('Quantize Pitch Bend', 1, 'Pitch Range 音高範圍', n)
+    local uok, n = reaper.GetUserInputs('Quantize Pitch Bend In Semitones', 1, 'Pitch Range 音高範圍', n)
     
     if not uok or not tonumber(n) then return reaper.SN_FocusMIDIEditor() end
-    reaper.SetExtState("QuantizePitchBend", "PitchRange", n, false)
+    reaper.SetExtState("QuantizePitchBendInSemitones", "PitchRange", n, false)
     n = tonumber(n)
     local seg = getSegments(n)
 
@@ -158,7 +158,7 @@ if #index > 0 then
         MSB = (pitch >> 7) + 64
 
         reaper.MIDI_SetCC(take, index[i], selected, muted, ppqpos, chanmsg, chan, LSB, MSB, false)
-        reaper.Undo_EndBlock("Quantize Pitch Bend", -1)
+        reaper.Undo_EndBlock("Quantize Pitch Bend In Semitones", -1)
     end
 end
 
