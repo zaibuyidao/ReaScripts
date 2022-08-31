@@ -1,45 +1,192 @@
---[[
- * ReaScript Name: Trim Note Left Edge (Fast)
- * Version: 1.0.2
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
---]]
+-- @description Trim Note Left Edge (Fast)
+-- @version 1.0.4
+-- @author zaibuyidao
+-- @changelog Optimized code
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
---[[
- * Changelog:
- * v1.0 (2022-5-12)
-  + Initial release
---]]
+EVENT_NOTE_START = 9 -- Note-on 音符开
+EVENT_NOTE_END = 8 -- Note-off 音符关
+EVENT_AFTER_TOUCH = 10 -- After Touch 触后
+EVENT_CC = 11 -- Continuous Controller CC控制器
+EVENT_PROGRAM = 12 -- Program 程序选择
+EVENT_CHPRESS = 13 -- Channel Pressure 通道压力
+EVENT_PITCH = 14 -- Pitch Wheel 弯音事件
+EVENT_ARTICULATION = 15 -- Articulation 符号
 
-EVENT_NOTE_START = 9
-EVENT_NOTE_END = 8
-EVENT_ARTICULATION = 15
+--EVENT_BANKPROG = 11 and (msg:byte(2) == 0 or msg:byte(2) == 32) -- 音色库事件
+--EVENT_TEXT = msg:byte(1) == 0xFF and not (msg:byte(2) == 0x0F) -- 文本事件，排除 notation text 事件
+--EVENT_SYSEX = 0xF and not (msg:byte(1) == 0xFF) -- 系统码事件
 
 function print(...)
   local params = {...}
-  for i=1, #params do
+  for i = 1, #params do
     if i ~= 1 then reaper.ShowConsoleMsg(" ") end
     reaper.ShowConsoleMsg(tostring(params[i]))
   end
   reaper.ShowConsoleMsg("\n")
 end
 
+function table.print(t)
+  local print_r_cache = {}
+  local function sub_print_r(t, indent)
+    if (print_r_cache[tostring(t)]) then
+      print(indent .. "*" .. tostring(t))
+    else
+      print_r_cache[tostring(t)] = true
+      if (type(t) == "table") then
+        for pos, val in pairs(t) do
+          if (type(val) == "table") then
+            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
+            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
+            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
+          elseif (type(val) == "string") then
+            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
+          else
+            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
+          end
+        end
+      else
+        print(indent .. tostring(t))
+      end
+    end
+  end
+  if (type(t) == "table") then
+    print(tostring(t) .. " {")
+    sub_print_r(t, "  ")
+    print("}")
+  else
+    sub_print_r(t, "  ")
+  end
+end
+
 function open_url(url)
   if not OS then local OS = reaper.GetOS() end
   if OS=="OSX32" or OS=="OSX64" then
     os.execute("open ".. url)
-   else
+  else
     os.execute("start ".. url)
   end
 end
 
-if not reaper.BR_GetMidiSourceLenPPQ then
-  local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+if not reaper.SN_FocusMIDIEditor then
+  local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
   if retval == 1 then
     open_url("http://www.sws-extension.org/download/pre-release/")
   end
+end
+
+function setAllEvents(take, events)
+  local headPos = math.huge -- 开头位置，用于扩展边界
+  local tailPos = 0 -- 末尾位置，用于扩展边界
+  local lastPos = 0 -- 上一次遍历到的位置
+  
+  -- local minPos = math.huge
+  -- for _, event in pairs(events) do minPos = math.min(minPos, event.pos) end
+  -- local lastPos = math.min(minPos, 0) -- 上一次遍历到的位置
+
+  for _, event in pairs(events) do
+    headPos = math.min(headPos, event.pos)
+    tailPos = math.max(tailPos, event.pos)
+    event.offset = event.pos - lastPos
+    lastPos = event.pos
+  end
+  
+  -- item边界扩展处理
+  events[#events].pos = math.max(events[#events].pos, tailPos)
+  local item = reaper.GetMediaItemTake_Item(take)
+  reaper.MIDI_SetItemExtents(
+    item, 
+    reaper.MIDI_GetProjQNFromPPQPos(take, math.min(0, headPos)), -- reaper.TimeMap2_timeToQN(0, reaper.GetMediaItemInfo_Value(item, "D_POSITION"))
+    reaper.MIDI_GetProjQNFromPPQPos(take, events[#events].pos)
+  )
+
+  local tab = {}
+  for _, event in pairs(events) do
+    table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
+  end
+  reaper.MIDI_SetAllEvts(take, table.concat(tab))
+end
+
+function getAllEvents(take, onEach)
+  local getters = {
+    selected = function (event) return event.flags & 1 == 1 end, -- 选中
+    pitch = function (event)  -- 音高
+      if event.isArticulation then  -- 音符事件的通道和音高需要特殊处理
+        local _, pitch = event.msg:match("NOTE (%d+) (%d+) ")
+        return tonumber(pitch)
+      end
+      return event.msg:byte(2) 
+    end,
+    velocity = function (event) return event.msg:byte(3) end, -- 力度
+    channel = function (event)  -- 通道
+      if event.isArticulation then  -- 音符事件的通道和音高需要特殊处理
+        local channel, _ = event.msg:match("NOTE (%d+) (%d+) ")
+        return tonumber(channel)
+      end
+      return event.msg:byte(1)&0x0F 
+    end,
+    type = function (event) return event.msg:byte(1) >> 4 end, -- 类型
+    articulation = function (event) return event.msg:byte(1) >> 4 end,
+    isArticulation = function (event) if event.type == EVENT_ARTICULATION and event.msg:find("articulation") then return true end return false end,
+    isCCBZ = function (event) if event.type == EVENT_ARTICULATION and event.msg:find("CCBZ") then return true end return false end,
+  }
+  local setters = {
+    pitch = function (event, value)
+      if event.isArticulation then  -- 音符事件的通道和音高需要特殊处理
+        event.msg = event.msg:gsub("NOTE (%d+) (%d+) ", function (channel, pitch)
+          return string.format("NOTE %s %d ", channel, value)
+        end)
+        return
+      end
+      event.msg = string.pack("BBB", event.msg:byte(1), value or event.msg:byte(2), event.msg:byte(3))
+    end,
+    channel = function (event, value)
+      if event.isArticulation then  -- 音符事件的通道和音高需要特殊处理
+        event.msg = event.msg:gsub("NOTE (%d+) (%d+) ", function (channel, pitch)
+          return string.format("NOTE %d %s ", value, pitch)
+        end)
+        return
+      end
+      event.msg = string.pack("BBB", ((event.msg:byte(1)&0xF0) | (value&0x0F)) , event.msg:byte(2), event.msg:byte(3))
+    end,
+    velocity = function (event, value)
+      event.msg = string.pack("BBB", event.msg:byte(1), event.msg:byte(2), value or event.msg:byte(3))
+    end,
+    selected = function (event, value)
+      if value then
+        event.flags = event.flags | 1
+      else
+        event.flags = event.flags & 0xFFFFFFFE
+      end
+    end
+  }
+  local eventMetaTable = {
+    __index = function (event, key) return getters[key](event) end,
+    __newindex = function (event, key, value) return setters[key](event, value) end
+  }
+
+  local events = {}
+  local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
+  local stringPos = 1
+  local lastPos = 0
+  while stringPos <= MIDIstring:len() do
+    local offset, flags, msg
+    offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
+    local event = setmetatable({
+      offset = offset,
+      pos = lastPos + offset,
+      flags = flags,
+      msg = msg
+    }, eventMetaTable)
+    table.insert(events, event)
+    onEach(event)
+    lastPos = lastPos + offset
+  end
+  return events
 end
 
 function getAllTakes()
@@ -50,7 +197,7 @@ function getAllTakes()
       take = reaper.MIDIEditor_EnumTakes(editor, i, false)
       if take and reaper.ValidatePtr2(0, take, "MediaItem_Take*") then 
         tTake[take] = true
-        tTake[take] = {item = reaper.GetMediaItemTake_Item(take)}
+        tTake[take] = {item = reaper.GetMediaItemTake_Item(take), editor = editor}
       else
         break
       end
@@ -72,190 +219,131 @@ function getAllTakes()
   return tTake
 end
 
-local function min(a,b)
-  if a>b then
-    return b
-  end
-  return a
-end
+local moveDistance = reaper.GetExtState("TrimNoteLeftEdgeFast", "MoveDistance")
+if (moveDistance == "") then moveDistance = "10" end
 
-local function max(a,b)
-  if a<b then
-    return b
-  end
-  return a
-end
+uok, uinput = reaper.GetUserInputs("Trim Note Left Edge (Fast)", 1, "Enter A Tick", moveDistance)
+if not uok then return reaper.SN_FocusMIDIEditor() end
+moveDistance = uinput:match("(.*)")
+if not tonumber(moveDistance) then return reaper.SN_FocusMIDIEditor() end
 
-function setAllEvents(take, events)
-  local lastPos = 0
-  for _, event in pairs(events) do
-    -- event.pos = min(event.pos, events[#events].pos)
-    event.offset = event.pos - lastPos
-    lastPos = event.pos
-    -- print("calc offset:" .. event.offset .. " " .. event.status)
-  end
+moveDistance = tonumber(moveDistance)
+reaper.SetExtState("TrimNoteLeftEdgeFast", "MoveDistance", moveDistance, false)
 
-  local tab = {}
-  for _, event in pairs(events) do
-    table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
-  end
-  reaper.MIDI_SetAllEvts(take, table.concat(tab)) -- 将编辑好的MIDI上传到take
-end
-
--- local active_take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
--- if not active_take or not reaper.TakeIsMIDI(active_take) then return end
--- local cur_gird, swing = reaper.MIDI_GetGrid(active_take)
-
-function getEventPitch(event) return event.msg:byte(2) end
-function getEventSelected(event) return event.flags&1 == 1 end
-function getEventType(event) return event.msg:byte(1)>>4 end
-
-function LeftMinus(take, ticks)
-  local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-  -- reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
-  local lastPos = 0
-  local pitchNotes = {}
-  local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
-  local stringPos = 1
-  local events = {}
-  while stringPos < MIDIstring:len() do
-    local offset, flags, msg
-    offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-    
-    local selected = flags&1 == 1
-    local pitch = msg:byte(2)
-    local status = msg:byte(1)>>4
-
-    if pitchNotes[pitch] == nil then pitchNotes[pitch] = {} end
-
-    local event = {
-      pos = lastPos + offset, -- ["pos"] = lastPos + offset,
-      flags = flags,
-      msg = msg,
-      selected = selected,
-      pitch = pitch,
-      status = status,
-    }
-    table.insert(events, event)
-
-    if event.status == EVENT_NOTE_END or event.status == EVENT_NOTE_START then
-      table.insert(pitchNotes[pitch], event)
-    end
-
-    lastPos = lastPos + offset
-  end
-  
-  pitchLastStart = {}
-  
-  for _, es in pairs(pitchNotes) do
-    for i = 1, #es do
-      if es[i].selected then
-        if es[i].status == EVENT_NOTE_START then
-          pitchLastStart[es[i].pitch] = es[i].pos
-          if (pitchLastStart[es[i].pitch] < es[i].pos + ticks) or (pitchLastStart[es[i].pitch] == 0) then
-            goto continue
-          end
-          if i == 1 then
-            if es[i].pos + ticks < 0 then goto continue end
-            es[i].pos = es[i].pos + ticks
-          else
-            es[i].pos = max((es[i].pos + ticks), es[i-1].pos)
-          end
-        elseif es[i].status == EVENT_NOTE_END then
-          if pitchLastStart[es[i].pitch] == nil then error("音符有重叠無法解析") end
-          pitchLastStart[es[i].pitch] = nil
-        end
-      end
-      ::continue::
-    end
-  end
-
-  setAllEvents(take, events)
-  reaper.MIDI_Sort(take)
-
-  if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
-    reaper.MIDI_SetAllEvts(take, MIDIstring)
-    reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
-  end
-end
-
-function leftPlus(take, ticks)
-  local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
-  -- reaper.MIDIEditor_OnCommand(tTake[take].editor, 40659) -- 删除重叠音符
-  local lastPos = 0
-  local pitchNotes = {}
-  local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
-
-  local noteEvents = {}
-
-  local noteStartEventAtPitch = {} -- 音高对应的当前遍历开始事件
-  local articulationEventAtPitch = {}
-  local events = {}
-  local stringPos = 1
-  while stringPos < MIDIstring:len() do
-    local offset, flags, msg
-    offset, flags, msg, stringPos = string.unpack("i4Bs4", MIDIstring, stringPos)
-    local event = { offset = offset, pos = lastPos + offset, flags = flags, msg = msg }
-    table.insert(events, event)
-
-    local eventType = getEventType(event)
-    local eventPitch = getEventPitch(event)
-
-    if eventType == EVENT_NOTE_START then
-      noteStartEventAtPitch[eventPitch] = event
-    elseif eventType == EVENT_NOTE_END then
-      local start = noteStartEventAtPitch[eventPitch]
-      if start == nil then error("音符有重叠無法解析") end
-      table.insert(noteEvents, {
-        first = start,
-        second = event,
-        articulation = articulationEventAtPitch[eventPitch],
-        pitch = getEventPitch(start)
-      })
-
-      noteStartEventAtPitch[eventPitch] = nil
-      articulationEventAtPitch[eventPitch] = nil
-    end
-    lastPos = lastPos + offset
-  end
-
-  setAllEvents(take, events)
-
-  for i = 1, #noteEvents do
-    local selected = getEventSelected(noteEvents[i].first)
-    local startppqpos = noteEvents[i].first.pos
-    local endppqpos = noteEvents[i].second.pos
-    if selected then
-      if noteEvents[i].first.pos >= noteEvents[i].second.pos - 30 then goto continue end -- 限制最小音符长度
-      noteEvents[i].first.pos = noteEvents[i].first.pos + ticks
-      ::continue::
-      if noteEvents[i].first.pos >= noteEvents[i].second.pos then noteEvents[i].first.pos = endppqpos - 30 end
-      if endppqpos - startppqpos < 30 or startppqpos >= endppqpos then noteEvents[i].first.pos = endppqpos - 30 end -- 限制最小音符长度
-    end
-  end
-
-  setAllEvents(take, events)
-  reaper.MIDI_Sort(take)
-
-  if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
-    reaper.MIDI_SetAllEvts(take, MIDIstring)
-    reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
-  end
-end
-
-ticks = reaper.GetExtState("TrimNoteLeftEdgeFast", "Ticks")
-if (ticks == "") then ticks = "-10" end
-local user_ok, ticks = reaper.GetUserInputs("Trim Note Left Edge (Fast)", 1, "Enter A Tick", ticks)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-reaper.SetExtState("TrimNoteLeftEdgeFast", "Ticks", ticks, false)
+reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
+
 for take, _ in pairs(getAllTakes()) do
-  if tonumber(ticks) > 0 then
-    leftPlus(take, ticks)
+  local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
+  local _, originEvent = reaper.MIDI_GetAllEvts(take)
+  local skipCheck = true -- 是否跳过检查
+
+  -- 打印所有参数
+  if false then
+    local events = getAllEvents(take, function (event)
+      print(
+        "type:" .. event.type 
+        .. " flags:" .. event.flags 
+        .. " offset:" .. event.offset 
+        .. " isArticulation:" .. tostring(event.isArticulation)
+        .. " isCCBZ:" .. tostring(event.isCCBZ)
+        -- .. " msg:" .. table.concat(table.pack(string.byte(event.msg, 1, #event.msg)), " ")
+        .. " msg:" .. event.msg
+        
+      )
+    end)
+  end
+
+  -- 符号事件记录表
+  local articulationMap = {}
+
+  -- 在某个音高上的音符事件，用于判断移动过程中的阻挡音符
+  local pitchNoteEvents = {}
+  
+  -- 遇到阻挡音符或超出0边界
+  local overflow = true
+
+  -- 收集事件
+  local events = getAllEvents(take, function (event)
+    if event.isArticulation then
+      articulationMap[event.pos] = articulationMap[event.pos] or {}
+      articulationMap[event.pos][event.pitch] = event
+    end
+
+    if event.type == EVENT_NOTE_START or event.type == EVENT_NOTE_END then
+      pitchNoteEvents[event.pitch] = pitchNoteEvents[event.pitch] or {}
+      table.insert(pitchNoteEvents[event.pitch], event) 
+    end
+  end)
+
+  -- 移动音符事件
+  if moveDistance > 0 then
+
+    diff = 120
+
+    for pitch, pitchNoteEvent in pairs(pitchNoteEvents) do
+      for i=#pitchNoteEvent, 1, -1 do
+        if not pitchNoteEvent[i].selected then goto continue end
+        local nextPos = math.huge
+        if i < #pitchNoteEvent then nextPos = pitchNoteEvent[i+1].pos end
+  
+        local originPos = pitchNoteEvent[i].pos
+        local originPitch = pitchNoteEvent[i].pitch
+  
+        -- 移动音符
+        if pitchNoteEvent[i].type == EVENT_NOTE_START then
+          if originPos + moveDistance > nextPos - moveDistance then overflow = true end
+          pitchNoteEvent[i].pos = math.min(nextPos - moveDistance - (diff - moveDistance), originPos + moveDistance)
+        end
+        
+        -- 移动符号
+        if pitchNoteEvent[i].type == EVENT_NOTE_START and articulationMap[originPos] and articulationMap[originPos][originPitch] then
+          articulationMap[originPos][originPitch].pos = pitchNoteEvent[i].pos
+        end
+  
+        ::continue::
+      end
+    end
   else
-    LeftMinus(take, ticks)
+    moveDistance = math.abs(moveDistance)
+    for pitch, pitchNoteEvent in pairs(pitchNoteEvents) do
+      for i=1, #pitchNoteEvent do
+        if not pitchNoteEvent[i].selected then goto continue end
+        local prePos = reaper.MIDI_GetPPQPosFromProjQN(take, 0)
+        if i > 1 then prePos = pitchNoteEvent[i-1].pos end
+    
+        local originPos = pitchNoteEvent[i].pos
+        local originPitch = pitchNoteEvent[i].pitch
+        
+        -- 移动音符
+        if pitchNoteEvent[i].type == EVENT_NOTE_START then
+          if originPos - moveDistance < prePos then overflow = true end
+          pitchNoteEvent[i].pos = math.max(prePos, originPos - moveDistance)
+        end
+        
+        -- 移动符号
+        if pitchNoteEvent[i].type == EVENT_NOTE_START and articulationMap[originPos] and articulationMap[originPos][originPitch] then
+          articulationMap[originPos][originPitch].pos = pitchNoteEvent[i].pos
+        end
+    
+        ::continue::
+      end
+    end
+  end
+
+  -- 提交事件
+  if overflow then
+    setAllEvents(take, events)
+  end
+  reaper.MIDI_Sort(take)
+
+  if not skipCheck and not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
+    reaper.MIDI_SetAllEvts(take, originEvent)
+    reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
   end
 end
+
 reaper.Undo_EndBlock("Trim Note Left Edge (Fast)", -1)
+reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
