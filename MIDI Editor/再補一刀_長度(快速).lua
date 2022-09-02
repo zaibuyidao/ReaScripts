@@ -1,18 +1,12 @@
---[[
- * ReaScript Name: 長度(快速)
- * Version: 1.0
- * Author: 再補一刀
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
- * About: Requires SWS Extensions
---]]
-
---[[
- * Changelog:
- * v1.0 (2022-6-20)
-  + Initial release
---]]
+-- @description 長度(快速)
+-- @version 1.0.1
+-- @author 再補一刀
+-- @changelog 優化代碼
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repository https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
 function print(...)
     local params = {...}
@@ -67,16 +61,16 @@ end
 function open_url(url)
     if not OS then local OS = reaper.GetOS() end
     if OS=="OSX32" or OS=="OSX64" then
-      os.execute("open ".. url)
-     else
-      os.execute("start ".. url)
+        os.execute("open ".. url)
+    else
+        os.execute("start ".. url)
     end
 end
 
 if not reaper.SN_FocusMIDIEditor then
-    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+    local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
     if retval == 1 then
-      open_url("http://www.sws-extension.org/download/pre-release/")
+        open_url("http://www.sws-extension.org/download/pre-release/")
     end
 end
 
@@ -272,9 +266,9 @@ if (percent == "") then percent = "200" end
 local toggle = reaper.GetExtState("Length", "Toggle")
 if (toggle == "") then toggle = "0" end
 
-local user_ok, user_input_csv = reaper.GetUserInputs('長度(快速)', 2, '百分比,0=開始+時值 1=開始 2=時值', percent .. ',' .. toggle)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-percent, toggle = user_input_csv:match("(%d*),(%d*)")
+local uok, uinput = reaper.GetUserInputs('長度(快速)', 2, '百分比,0=開始+時值 1=開始 2=時值', percent .. ',' .. toggle)
+if not uok or not tonumber(percent) or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
+percent, toggle = uinput:match("(%d*),(%d*)")
 reaper.SetExtState("Length", "Percent", percent, false)
 reaper.SetExtState("Length", "Toggle", toggle, false)
 
@@ -371,7 +365,10 @@ elseif toggle == "2" then
     end
 end
 
-for take, events in pairs(all_events) do setAllEvents(take, events) end
+for take, events in pairs(all_events) do
+    setAllEvents(take, events)
+    reaper.MIDI_Sort(take)
+end
 
 reaper.Undo_EndBlock("長度(快速)", -1)
 reaper.PreventUIRefresh(-1)
