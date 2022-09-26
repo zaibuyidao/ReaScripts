@@ -1,7 +1,7 @@
 -- @description Trim Items Edge Settings
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog Optimize speed
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -107,7 +107,7 @@ function string.split(input, delimiter)
   return arr
 end
 
-function saveData(key1,key2,data) --储存table数据
+function saveData(key1,key2,data)
   reaper.SetExtState(key1, key2, data, false)
 end
 
@@ -163,26 +163,61 @@ function table_to_str(t)
   return retstr
 end
 
+local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+
+function check_locale(locale)
+  if locale == 936 then
+    return true
+  elseif locale == 950 then
+    return true
+  end
+  return false
+end
+
 get = getSavedData("Trim Items Edge", "Parameters")
 -- print(table_to_str(get))
 
-if get == nil then        -- 获取默认预设
-  threshold_l = -96       -- 左阈值(dB)
-  threshold_r = -96       -- 右阈值(dB)
-  leading_pad = 100       -- 前导填充(ms)
-  trailing_pad = 200      -- 尾部填充(ms)
-  fade_pad = 100          -- 淡化填充(ms)
+if get == nil then   -- 默认预设
+  threshold_l = -96  -- 左阈值(dB)
+  threshold_r = -96  -- 右阈值(dB)
+  leading_pad = 100  -- 前导填充(ms)
+  trailing_pad = 200 -- 尾部填充(ms)
+  fade_in = 100      -- 淡入(ms)
+  fade_out = 100     -- 淡出(ms)
+  length_limit = 100 -- 长度限制(ms)
 else
   threshold_l = get[1]
   threshold_r = get[2]
   leading_pad = get[3]
   trailing_pad = get[4]
-  fade_pad = get[5]
+  fade_in = get[5]
+  fade_out = get[6]
+  length_limit = get[7]
 end
 
+os = reaper.GetOS()
+if os ~= "Win32" and os ~= "Win64" then
+  if check_locale(locale) == false then
+    -- WIN 英文
+    title = "Trim Items Edge Settings"
+    lable = "Threshold Left (dB),Threshold Right (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Item Length Limit (ms)"
+  else
+    -- WIN 中文
+    title = "Trim Items Edge 設置"
+    lable = "閾值左 (dB),閾值右 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),對象長度限制 (ms)"
+  end
+else
+  -- MAC 默認英文
+  title = "Trim Items Edge Settings"
+  lable = "Threshold Left (dB),Threshold Right (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Item Length Limit (ms)"
+end
+
+default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit
+
 reaper.Undo_BeginBlock()
-set = getMutiInput("Trim Items Edge Settings", 5, "Threshold Left,Threshold Right,Leading Pad,Trailing Pad,Fade Pad", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_pad)
+set = getMutiInput(title, 7, lable, default)
 if set == nil then return end
+
 reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), false)
-reaper.Undo_EndBlock("Trim Items Edge Settings", -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
