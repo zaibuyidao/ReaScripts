@@ -260,7 +260,7 @@ function get_sample_val_and_pos(take, val_is_dB)
     for i=0, samples_per_block - 1 do
       -- for each channel
       for j=0, take_source_num_channels - 1 do
-        local v = buffer[take_source_num_channels * i + j + 1]
+        local v = math.abs(buffer[take_source_num_channels * i + j + 1])
         if todb(v) > threshold_l then
           lv = v
           l = sample_index
@@ -303,7 +303,7 @@ function get_sample_val_and_pos(take, val_is_dB)
     for i=samples_per_block - 1, 0, -1 do
       -- for each channel
       for j=0, take_source_num_channels - 1 do
-        local v = buffer[take_source_num_channels * i + j + 1]
+        local v = math.abs(buffer[take_source_num_channels * i + j + 1])
         -- print2(v, sample_index, i)
         if todb(v) > threshold_r then
           -- print(v, sample_index, i)
