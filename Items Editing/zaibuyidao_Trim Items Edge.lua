@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Optimize speed
 -- @links
