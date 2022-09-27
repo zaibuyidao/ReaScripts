@@ -1,5 +1,5 @@
 -- @description Trim Items Edge Settings
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog Adjusting the pre-programmed parameters
 -- @links
@@ -199,16 +199,16 @@ os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
   -- MAC 默認英文
   title = "Trim Items Edge Settings"
-  lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Item Length Limit (ms)"
+  lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms)"
 else
   if check_locale(locale) == false then
     -- WIN 英文
     title = "Trim Items Edge Settings"
-    lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Item Length Limit (ms)"
+    lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms)"
   else
     -- WIN 中文
     title = "Trim Items Edge 設置"
-    lable = "左閾值 (dB),右閾值 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),對象長度限制 (ms)"
+    lable = "左閾值 (dB),右閾值 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms)"
   end
 end
 

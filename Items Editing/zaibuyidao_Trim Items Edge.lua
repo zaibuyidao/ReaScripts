@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog Adjusting the pre-programmed parameters
 -- @links
@@ -346,7 +346,7 @@ if get == nil then   -- 默认预设
   fade_out = 3       -- 淡出(ms)
   length_limit = 100 -- 长度限制(ms)
 
-  set = getMutiInput("Trim Items Edge Settings", 7, "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Item Length Limit (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit)
+  set = getMutiInput("Trim Items Edge Settings", 7, "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit)
   if set == nil then return end
   reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), false)
   get = getSavedData("Trim Items Edge", "Parameters")
