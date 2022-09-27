@@ -1,7 +1,7 @@
 -- @description Trim Items Edge
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
--- @changelog Optimize speed
+-- @changelog Adjusting the pre-programmed parameters
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -340,10 +340,10 @@ get = getSavedData("Trim Items Edge", "Parameters")
 if get == nil then   -- 默认预设
   threshold_l = -96  -- 左阈值(dB)
   threshold_r = -96  -- 右阈值(dB)
-  leading_pad = 3    -- 前导填充(ms)
-  trailing_pad = 3   -- 尾部填充(ms)
-  fade_in = 0        -- 淡入(ms)
-  fade_out = 0       -- 淡出(ms)
+  leading_pad = 50   -- 前导填充(ms)
+  trailing_pad = 100 -- 尾部填充(ms)
+  fade_in = 3        -- 淡入(ms)
+  fade_out = 3       -- 淡出(ms)
   length_limit = 100 -- 长度限制(ms)
 
   set = getMutiInput("Trim Items Edge Settings", 7, "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Item Length Limit (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit)
