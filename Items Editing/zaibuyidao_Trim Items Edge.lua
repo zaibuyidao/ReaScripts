@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Optimize speed
 -- @links
@@ -340,13 +340,13 @@ get = getSavedData("Trim Items Edge", "Parameters")
 if get == nil then   -- 默认预设
   threshold_l = -96  -- 左阈值(dB)
   threshold_r = -96  -- 右阈值(dB)
-  leading_pad = 100  -- 前导填充(ms)
-  trailing_pad = 200 -- 尾部填充(ms)
-  fade_in = 100      -- 淡入填充(ms)
-  fade_out = 100     -- 淡出填充(ms)
+  leading_pad = 3    -- 前导填充(ms)
+  trailing_pad = 3   -- 尾部填充(ms)
+  fade_in = 0        -- 淡入(ms)
+  fade_out = 0       -- 淡出(ms)
   length_limit = 100 -- 长度限制(ms)
 
-  set = getMutiInput("Trim Items Edge Settings", 7, "Threshold Left (dB),Threshold Right (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Item Length Limit (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit)
+  set = getMutiInput("Trim Items Edge Settings", 7, "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Item Length Limit (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit)
   if set == nil then return end
   reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), false)
   get = getSavedData("Trim Items Edge", "Parameters")
@@ -384,7 +384,7 @@ for _, items in pairs(track_items) do
 
     if ret and item_len > length_limit/1000 then
       reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', peak_pos_L)
-      reaper.BR_SetItemEdges(item, item_pos + peak_pos_L - leading_pad/1000, item_pos + peak_pos_R + trailing_pad/1000)
+      reaper.BR_SetItemEdges(item, item_pos + peak_pos_L - leading_pad/1000, (item_pos + peak_pos_R + 0.000001) + trailing_pad/1000)
       reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", fade_in/1000)
       reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", fade_out/1000)
     end
