@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @changelog Add snap offset
 -- @links
@@ -336,7 +336,7 @@ if get == nil then   -- 默认预设
 
   set = getMutiInput("Trim Items Edge Settings", 8, "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset)
   if set == nil then return end
-  reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), true)
+  reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), false)
   get = getSavedData("Trim Items Edge", "Parameters")
   return
 end

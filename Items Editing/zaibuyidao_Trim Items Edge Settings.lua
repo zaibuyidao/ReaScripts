@@ -1,5 +1,5 @@
 -- @description Trim Items Edge Settings
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @changelog Add snap offset
 -- @links
@@ -216,6 +216,6 @@ reaper.Undo_BeginBlock()
 set = getMutiInput(title, 8, lable, default)
 if set == nil then return end
 
-reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), true)
+reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), false)
 reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
