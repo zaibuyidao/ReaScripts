@@ -1,7 +1,7 @@
 -- @description Trim Items Edge Settings
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
--- @changelog Adjusting the pre-programmed parameters
+-- @changelog Add snap offset
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -175,16 +175,16 @@ function check_locale(locale)
 end
 
 get = getSavedData("Trim Items Edge", "Parameters")
--- print(table_to_str(get))
 
 if get == nil then   -- 默认预设
   threshold_l = -96  -- 左阈值(dB)
   threshold_r = -96  -- 右阈值(dB)
   leading_pad =  50  -- 前导填充(ms)
   trailing_pad = 100 -- 尾部填充(ms)
-  fade_in = 3        -- 淡入(ms)
-  fade_out = 3       -- 淡出(ms)
+  fade_in = 50       -- 淡入(ms)
+  fade_out = 100     -- 淡出(ms)
   length_limit = 100 -- 长度限制(ms)
+  snap_offset = 0    -- 吸附偏移(ms)
 else
   threshold_l = get[1]
   threshold_r = get[2]
@@ -193,31 +193,29 @@ else
   fade_in = get[5]
   fade_out = get[6]
   length_limit = get[7]
+  snap_offset = get[8]
 end
 
 os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
-  -- MAC 默認英文
   title = "Trim Items Edge Settings"
-  lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms)"
+  lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset"
 else
   if check_locale(locale) == false then
-    -- WIN 英文
     title = "Trim Items Edge Settings"
-    lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms)"
+    lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset"
   else
-    -- WIN 中文
     title = "Trim Items Edge 設置"
-    lable = "左閾值 (dB),右閾值 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms)"
+    lable = "左閾值 (dB),右閾值 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),調整吸附偏移 (ms)"
   end
 end
 
-default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit
+default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset
 
 reaper.Undo_BeginBlock()
-set = getMutiInput(title, 7, lable, default)
+set = getMutiInput(title, 8, lable, default)
 if set == nil then return end
 
-reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), false)
+reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), true)
 reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
