@@ -1,5 +1,5 @@
 -- @description Trim Items Edge Settings
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog Add snap offset
 -- @links
@@ -199,11 +199,11 @@ end
 os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
   title = "Trim Items Edge Settings"
-  lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset"
+  lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset (ms)"
 else
   if check_locale(locale) == false then
     title = "Trim Items Edge Settings"
-    lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset"
+    lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset (ms)"
   else
     title = "Trim Items Edge 設置"
     lable = "左閾值 (dB),右閾值 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),調整吸附偏移 (ms)"
