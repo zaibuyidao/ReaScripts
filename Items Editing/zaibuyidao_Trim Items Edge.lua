@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.0.9
+-- @version 1.1.0
 -- @author zaibuyidao
 -- @changelog Fixing the save state
 -- @links
@@ -161,6 +161,10 @@ function saveDataList(key1, key2, data, boolean)
 end
 
 function getSavedDataList(key1, key2)
+  local check_state = reaper.GetExtState(key1, key2)
+  if check_state == nil or check_state == "" then
+    return nil
+  end
   return string.split(reaper.GetExtState(key1, key2), ",")
 end
 
