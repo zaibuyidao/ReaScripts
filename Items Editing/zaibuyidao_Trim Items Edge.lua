@@ -1,7 +1,7 @@
 -- @description Trim Items Edge
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
--- @changelog Add snap offset
+-- @changelog Fixing the save state
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -94,34 +94,6 @@ function table.unserialize(lua)
   return func()
 end
 
-function string.split(input, delimiter)
-  input = tostring(input)
-  delimiter = tostring(delimiter)
-  if (delimiter == "") then return false end
-  local pos, arr = 0, {}
-  for st, sp in function() return string.find(input, delimiter, pos, true) end do
-      table.insert(arr, string.sub(input, pos, st - 1))
-      pos = sp + 1
-  end
-  table.insert(arr, string.sub(input, pos))
-  return arr
-end
-
-function saveData(key1,key2,data)
-  reaper.SetExtState(key1, key2, data, false)
-end
-
-function getSavedData(key1, key2)
-  return table.unserialize(reaper.GetExtState(key1, key2))
-end
-
-function getMutiInput(title,num,lables,defaults)
-  title=title or "Title"
-  lables=lables or "Lable:"
-  local userOK, getValue = reaper.GetUserInputs(title, num, lables, defaults)
-  if userOK then return string.split(getValue,",") end
-end
-
 function to_string_ex(value)
   if type(value)=='table' then
     return table_to_str(value)
@@ -147,7 +119,7 @@ function table_to_str(t)
       retstr = retstr .. signal .. to_string_ex(value)
     else
       if type(key) == 'number' or type(key) == 'string' then
-        retstr = retstr .. signal .. to_string_ex(remove_name_suffix(value))
+        retstr = retstr .. signal .. to_string_ex(value)
       else
         if type(key) == 'userdata' then
             retstr = retstr .. signal .. "*s" .. table_to_str(getmetatable(key)) .. "*e" .. "=" .. to_string_ex(value)
@@ -161,6 +133,42 @@ function table_to_str(t)
 
   retstr = retstr .. ""
   return retstr
+end
+
+function string.split(input, delimiter)
+  input = tostring(input)
+  delimiter = tostring(delimiter)
+  if (delimiter == "") then return false end
+  local pos, arr = 0, {}
+  for st, sp in function() return string.find(input, delimiter, pos, true) end do
+      table.insert(arr, string.sub(input, pos, st - 1))
+      pos = sp + 1
+  end
+  table.insert(arr, string.sub(input, pos))
+  return arr
+end
+
+function saveData(key1, key2, data, boolean)
+  reaper.SetExtState(key1, key2, data, boolean)
+end
+
+function getSavedData(key1, key2)
+  return table.unserialize(reaper.GetExtState(key1, key2))
+end
+
+function saveDataList(key1, key2, data, boolean)
+  reaper.SetExtState(key1, key2, table_to_str(data), boolean)
+end
+
+function getSavedDataList(key1, key2)
+  return string.split(reaper.GetExtState(key1, key2), ",")
+end
+
+function getMutiInput(title,num,lables,defaults)
+  title = title or "Title"
+  lables = lables or "Lable:"
+  local uok, uinput = reaper.GetUserInputs(title, num, lables, defaults)
+  if uok then return string.split(uinput,",") end
 end
 
 local print2_count = 0
@@ -322,7 +330,7 @@ function get_sample_val_and_pos(take, val_is_dB)
   return nil
 end
 
-get = getSavedData("Trim Items Edge", "Parameters")
+get = getSavedDataList("Trim Items Edge", "Parameters")
 
 if get == nil then   -- 默认预设
   threshold_l = -96  -- 左阈值(dB)
@@ -336,8 +344,8 @@ if get == nil then   -- 默认预设
 
   set = getMutiInput("Trim Items Edge Settings", 8, "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset)
   if set == nil then return end
-  reaper.SetExtState("Trim Items Edge", "Parameters", table.serialize(set), false)
-  get = getSavedData("Trim Items Edge", "Parameters")
+  saveDataList("Trim Items Edge", "Parameters", set, true)
+  get = getSavedDataList("Trim Items Edge", "Parameters")
   return
 end
 
