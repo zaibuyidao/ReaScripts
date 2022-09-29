@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.1.0
+-- @version 1.1.1
 -- @author zaibuyidao
 -- @changelog Fixing the save state
 -- @links
@@ -384,7 +384,7 @@ for _, items in pairs(track_items) do
     local ret, peak_value_L, peak_pos_L, peak_value_R, peak_pos_R = get_sample_val_and_pos(take, true)
 
     if ret and item_len > length_limit/1000 then
-      reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', peak_pos_L + snap_offset)
+      reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', peak_pos_L + snap_offset/1000)
       reaper.BR_SetItemEdges(item, item_pos + peak_pos_L - leading_pad/1000, (item_pos + peak_pos_R + 0.000001) + trailing_pad/1000)
       reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", fade_in/1000)
       reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", fade_out/1000)
