@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.1.2
+-- @version 1.1.3
 -- @author zaibuyidao
 -- @changelog Fixed snap offset
 -- @links
@@ -245,17 +245,10 @@ function get_sample_val_and_pos(take, val_is_dB)
   while sample_index < samples_per_channel do
     -- print("block in find l", offset)
     local buffer = reaper.new_array(samples_per_block * channels)
-    local aa_ret = reaper.GetAudioAccessorSamples(
-      accessor,                       -- AudioAccessor accessor
-      samplerate,  -- integer samplerate
-      channels, -- integer numchannels
-      offset,                   -- number starttime_sec
-      samples_per_block,        -- integer numsamplesperchannel
-      buffer                    -- reaper.array samplebuffer
-    )
-    if aa_ret <= 0 then 
-      sample_index = sample_index + samples_per_block 
-      goto next_block 
+    local aa_ret = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, offset, samples_per_block, buffer)
+    if aa_ret <= 0 then
+      sample_index = sample_index + samples_per_block
+      goto next_block
     end
     -- print("samples_per_block", samples_per_block)
     for i = 0, samples_per_block - 1 do
@@ -274,7 +267,7 @@ function get_sample_val_and_pos(take, val_is_dB)
       end
     end
     ::next_block::
-    offset = offset + samples_per_block / samplerate -- new offset in take source (seconds)
+    offset = offset + samples_per_block / samplerate
   end
   ::found_l::
   
@@ -287,18 +280,11 @@ function get_sample_val_and_pos(take, val_is_dB)
   while sample_index >= 0 do
     -- print("block in find r", offset)
     local buffer = reaper.new_array(samples_per_block * channels)
-    local aa_ret = reaper.GetAudioAccessorSamples(
-      accessor,                       -- AudioAccessor accessor
-      samplerate,  -- integer samplerate
-      channels, -- integer numchannels
-      offset,                   -- number starttime_sec
-      samples_per_block,        -- integer numsamplesperchannel
-      buffer                    -- reaper.array samplebuffer
-    )
+    local aa_ret = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, offset, samples_per_block, buffer)
     -- print("aa_ret", aa_ret)
-    if aa_ret <= 0 then 
-      sample_index = sample_index - samples_per_block 
-      goto next_block 
+    if aa_ret <= 0 then
+      sample_index = sample_index - samples_per_block
+      goto next_block
     end
     for i=samples_per_block - 1, 0, -1 do
       -- for each channel
@@ -318,7 +304,7 @@ function get_sample_val_and_pos(take, val_is_dB)
       end
     end
     ::next_block::
-    offset = offset - samples_per_block / samplerate -- new offset in take source (seconds)
+    offset = offset - samples_per_block / samplerate
   end
   ::found_r::
 
@@ -358,8 +344,8 @@ function max_peak_pos(take, ms)
   reaper.GetAudioAccessorSamples(accessor, samplerate, channels, startpos, samples_per_block, buffer)
 
   local v_max, max_peak, max_zero = 0
-  
-  for i = 1, samples_per_block*((ms/1000)*2) do
+
+  for i = 1, samples_per_block*((ms/1000)) do
     local v = math.abs(buffer[i])
     v_max = math.max(v, v_max)
     if v_max ~= max_zero then
@@ -432,7 +418,9 @@ for _, items in pairs(track_items) do
       reaper.BR_SetItemEdges(item, item_pos + peak_pos_L - toms(leading_pad), (item_pos + peak_pos_R + 0.000001) + toms(trailing_pad))
       reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", toms(fade_in))
       reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", toms(fade_out))
-      reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(take, snap_offset))
+      if snap_offset > 0 then
+        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(take, snap_offset))
+      end
     end
   end
 end
