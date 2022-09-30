@@ -1,7 +1,7 @@
 -- @description Trim Items Edge Settings
--- @version 1.1.0
+-- @version 1.1.1
 -- @author zaibuyidao
--- @changelog Fixing the save state
+-- @changelog Fixed snap offset
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -211,14 +211,14 @@ end
 os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
   title = "Trim Items Edge Settings"
-  lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset (ms)"
+  lable = "Left threshold (dB),Right threshold (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Set snap offset to peak (ms)"
 else
   if check_locale(locale) == false then
     title = "Trim Items Edge Settings"
-    lable = "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset (ms)"
+    lable = "Left threshold (dB),Right threshold (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Set snap offset to peak (ms)"
   else
     title = "Trim Items Edge 設置"
-    lable = "左閾值 (dB),右閾值 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),調整吸附偏移 (ms)"
+    lable = "左邊閾值 (dB),右邊閾值 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),設置吸附偏移到峰值 (ms)"
   end
 end
 
@@ -227,6 +227,9 @@ default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_p
 reaper.Undo_BeginBlock()
 set = getMutiInput(title, 8, lable, default)
 if set == nil then return end
+for i = 1, #set do
+  if not tonumber(set[i]) then return end
+end
 
 saveDataList("Trim Items Edge", "Parameters", set, true)
 reaper.Undo_EndBlock(title, -1)

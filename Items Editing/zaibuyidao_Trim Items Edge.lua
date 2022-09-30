@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.1.3
+-- @version 1.1.4
 -- @author zaibuyidao
 -- @changelog Fixed snap offset
 -- @links
@@ -339,13 +339,13 @@ function max_peak_pos(take, ms)
   local samplerate = reaper.GetMediaSourceSampleRate(source)
   local channels = reaper.GetMediaSourceNumChannels(source)
   local startpos = 0
-  local samples_per_block = samplerate
+  local samples_per_block = samplerate*((ms*2)/1000)
   local buffer = reaper.new_array(samples_per_block * channels)
   reaper.GetAudioAccessorSamples(accessor, samplerate, channels, startpos, samples_per_block, buffer)
 
   local v_max, max_peak, max_zero = 0
 
-  for i = 1, samples_per_block*((ms/1000)) do
+  for i = 1, samples_per_block do
     local v = math.abs(buffer[i])
     v_max = math.max(v, v_max)
     if v_max ~= max_zero then
@@ -377,8 +377,7 @@ if get == nil then   -- 默认预设
   length_limit = 100 -- 长度限制(ms)
   snap_offset = 0    -- 吸附偏移(ms)
 
-  set = getMutiInput("Trim Items Edge Settings", 8, "Left Threshold (dB),Right Threshold (dB),Leading Pad (ms),Trailing Pad (ms),Fade In (ms),Fade Out (ms),Min Item Length (ms),Adjust Snap Offset (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset)
-  if set == nil then return end
+  set = getMutiInput("Trim Items Edge Settings", 8, "Left threshold (dB),Right threshold (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Set snap offset to peak (ms)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset)
   saveDataList("Trim Items Edge", "Parameters", set, true)
   get = getSavedDataList("Trim Items Edge", "Parameters")
   return
