@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="93687ac572f75794387e52a848a8d60740cd1eef">
+<index version="1" name="zaibuyidao Scripts" commit="ee95d6813a7416894b7621c3b272f23258ef00e3">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -810,6 +810,10 @@
         <changelog><![CDATA[Fixing the save state]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5dcb59eeadb768cc05b5b4b299fd95414ea72f7a/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
       </version>
+      <version name="1.1.1" author="zaibuyidao" time="2022-09-30T15:53:42Z">
+        <changelog><![CDATA[Fixed snap offset]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ee95d6813a7416894b7621c3b272f23258ef00e3/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Items Edge.lua" type="script" desc="Trim Items Edge">
       <metadata>
@@ -879,6 +883,10 @@
       <version name="1.1.3" author="zaibuyidao" time="2022-09-30T06:41:12Z">
         <changelog><![CDATA[Fixed snap offset]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/93687ac572f75794387e52a848a8d60740cd1eef/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
+      </version>
+      <version name="1.1.4" author="zaibuyidao" time="2022-09-30T15:53:42Z">
+        <changelog><![CDATA[Fixed snap offset]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ee95d6813a7416894b7621c3b272f23258ef00e3/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重新定位對象.lua" type="script" desc="重新定位對象">
