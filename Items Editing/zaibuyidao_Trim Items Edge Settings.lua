@@ -1,5 +1,5 @@
 -- @description Trim Items Edge Settings
--- @version 1.1.1
+-- @version 1.1.2
 -- @author zaibuyidao
 -- @changelog Fixed snap offset
 -- @links
@@ -189,8 +189,8 @@ end
 get = getSavedDataList("Trim Items Edge", "Parameters")
 
 if get == nil then   -- 默认预设
-  threshold_l = -96  -- 左阈值(dB)
-  threshold_r = -96  -- 右阈值(dB)
+  threshold_l = -60  -- 阈值(dB)
+  threshold_r = -6   -- 滯後(dB)
   leading_pad =  50  -- 前导填充(ms)
   trailing_pad = 100 -- 尾部填充(ms)
   fade_in = 50       -- 淡入(ms)
@@ -211,14 +211,14 @@ end
 os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
   title = "Trim Items Edge Settings"
-  lable = "Left threshold (dB),Right threshold (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Set snap offset to peak (ms)"
+  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms)"
 else
   if check_locale(locale) == false then
     title = "Trim Items Edge Settings"
-    lable = "Left threshold (dB),Right threshold (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Set snap offset to peak (ms)"
+    lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms)"
   else
     title = "Trim Items Edge 設置"
-    lable = "左邊閾值 (dB),右邊閾值 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),設置吸附偏移到峰值 (ms)"
+    lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms)"
   end
 end
 
