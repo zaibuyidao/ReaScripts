@@ -1,7 +1,7 @@
 -- @description Trim Items Edge Settings
--- @version 1.1.2
+-- @version 1.1.3
 -- @author zaibuyidao
--- @changelog Fixed snap offset
+-- @changelog Fixed item edge
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -197,6 +197,7 @@ if get == nil then   -- 默认预设
   fade_out = 100     -- 淡出(ms)
   length_limit = 100 -- 长度限制(ms)
   snap_offset = 0    -- 吸附偏移(ms)
+  step = 100         -- 采样点读取步数
 else
   threshold_l = get[1]
   threshold_r = get[2]
@@ -206,26 +207,27 @@ else
   fade_out = get[6]
   length_limit = get[7]
   snap_offset = get[8]
+  step = get[9]
 end
 
 os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
   title = "Trim Items Edge Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms)"
+  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable)"
 else
   if check_locale(locale) == false then
     title = "Trim Items Edge Settings"
-    lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms)"
+    lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable)"
   else
     title = "Trim Items Edge 設置"
-    lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms)"
+    lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步數 (0為禁用)"
   end
 end
 
-default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset
+default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset ..','.. step
 
 reaper.Undo_BeginBlock()
-set = getMutiInput(title, 8, lable, default)
+set = getMutiInput(title, 9, lable, default)
 if set == nil then return end
 for i = 1, #set do
   if not tonumber(set[i]) then return end
