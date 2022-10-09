@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.1.7
+-- @version 1.1.8
 -- @author zaibuyidao
 -- @changelog Fix snap offset
 -- @links
@@ -317,7 +317,7 @@ function get_sample_val_and_pos(take, step, threshold, hysteresis)
         return
       end
       for j = 0, channels - 1 do
-        local v = buffer[channels * i + j + 1]
+        local v = math.abs(buffer[channels * i + j + 1])
         if v > left_min then
           lv = v
           l = sample_index + i
@@ -353,7 +353,7 @@ function get_sample_val_and_pos(take, step, threshold, hysteresis)
       end
 
       for j = 0, channels - 1 do
-        local v = buffer[channels * i + j + 1]
+        local v = math.abs(buffer[channels * i + j + 1])
         -- print(v, sample_index, i, j)
         if v > right_min and v < 1 then
           -- print("found", v, sample_index)
