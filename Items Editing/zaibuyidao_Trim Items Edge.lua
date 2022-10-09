@@ -1,7 +1,7 @@
 -- @description Trim Items Edge
--- @version 1.1.6
+-- @version 1.1.7
 -- @author zaibuyidao
--- @changelog Fixed item edge
+-- @changelog Fix snap offset
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -198,8 +198,8 @@ function delete_item(item)
   end
 end
 
--- 根据ranges保留item指定区域，并删除剩余区域
--- 例：keep_ranges = { {1, 3}, {5, 8} } 代表将item中 1-3 与 5-8区域保留，其余地方删除
+--根据ranges保留item指定区域，并删除剩余区域
+--例：keep_ranges = { {1, 3}, {5, 8} } 代表将item中 1-3 与 5-8区域保留，其余地方删除
 function trim_item(item, keep_ranges)
   local item_pos = reaper.GetMediaItemInfo_Value(item,"D_POSITION")
   local item_len = reaper.GetMediaItemInfo_Value(item,"D_LENGTH")
@@ -221,6 +221,13 @@ function trim_item(item, keep_ranges)
 
   if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_pos + item_len then
     delete_item(left)
+  end
+end
+
+function trim_edge(item, keep_ranges)
+
+  for i, range in ipairs(keep_ranges) do
+    reaper.BR_SetItemEdges(item, range[1], range[2])
   end
 end
 
@@ -429,7 +436,7 @@ if get == nil then   -- 默认预设
   fade_out = 100     -- 淡出(ms)
   length_limit = 100 -- 长度限制(ms)
   snap_offset = 0    -- 吸附偏移(ms)
-  step = 100         -- 采样点读取步数
+  step = 0         -- 采样点读取步数
 
   set = getMutiInput("Trim Items Edge Settings", 9, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset ..','.. step)
   saveDataList("Trim Items Edge", "Parameters", set, true)
@@ -438,6 +445,16 @@ if get == nil then   -- 默认预设
 end
 
 -- table.print(get)
+
+if get[1] == nil then get[1] = -60 end
+if get[2] == nil then get[2] = -6 end
+if get[3] == nil then get[3] = 50 end
+if get[4] == nil then get[4] = 100 end
+if get[5] == nil then get[5] = 50 end
+if get[6] == nil then get[6] = 100 end
+if get[7] == nil then get[7] = 100 end
+if get[8] == nil then get[8] = 0 end
+if get[9] == nil then get[9] = 0 end
 
 threshold_l = tonumber(get[1])
 threshold_r = tonumber(get[2])
@@ -470,26 +487,23 @@ for _, items in pairs(track_items) do
     local ret, peak_value_L, peak_pos_L, peak_value_R, peak_pos_R = get_sample_val_and_pos(take, step, threshold_l, threshold_r)
 
     if ret and item_len > length_limit / 1000 then
-      if snap_offset > 0 then
-        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000))
-      elseif snap_offset == 0 then
-        local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', item_pos)
-      end
-
       local ranges = { { item_pos + peak_pos_L, item_pos + peak_pos_R } }
       ranges = expand_ranges(item, ranges, leading_pad / 1000, trailing_pad / 1000)
-      trim_item(item, ranges)
-      -- reaper.BR_SetItemEdges(item, item_pos + peak_pos_L, item_pos + peak_pos_R)
+
+      --trim_item(item, ranges) -- 切割item并删除
+      trim_edge(item, ranges)
+
+      if snap_offset > 0 then
+        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, ((leading_pad + snap_offset)*2) / 1000, leading_pad / 1000))
+      elseif snap_offset == 0 then
+        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', peak_pos_L - (leading_pad / 1000))
+      end
+      if fade_in >= 0 or fade_out >= 0 then
+        reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", fade_in / 1000)
+        reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", fade_out / 1000)
+      end
     end
   end
-end
-
-count_sel_items = reaper.CountSelectedMediaItems(0)
-for i = 0, count_sel_items - 1  do
-  local item = reaper.GetSelectedMediaItem(0, i)
-  reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", fade_in / 1000)
-  reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", fade_out / 1000)
 end
 
 reaper.Undo_EndBlock("Trim Items Edge", -1)
