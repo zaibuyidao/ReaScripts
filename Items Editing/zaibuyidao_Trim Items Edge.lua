@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.1.8
+-- @version 1.1.9
 -- @author zaibuyidao
 -- @changelog Fix snap offset
 -- @links
@@ -392,8 +392,8 @@ function max_peak_pos(item, step, pend, pstart)
   local channels = reaper.GetMediaSourceNumChannels(source)
   local startpos = 0
 
-  local samples_per_block = samplerate*pend
-  local samples_per_block_i = samplerate*pstart
+  local samples_per_block = samplerate*(pend*2)
+  local samples_per_block_i = samplerate*(pstart*2)
   if samples_per_block_i == 0 then samples_per_block_i = 1 end
 
   local buffer = reaper.new_array(samples_per_block * channels)
@@ -494,7 +494,7 @@ for _, items in pairs(track_items) do
       trim_edge(item, ranges)
 
       if snap_offset > 0 then
-        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, ((leading_pad + snap_offset)*2) / 1000, leading_pad / 1000))
+        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000)
       elseif snap_offset == 0 then
         reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', peak_pos_L - (leading_pad / 1000))
       end
