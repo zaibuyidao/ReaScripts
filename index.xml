@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c3166c1124b4ebad4726bf7d7b0a81837997a910">
+<index version="1" name="zaibuyidao Scripts" commit="da79f309e62ea47130b415e31d34db529731a9be">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -943,7 +943,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c3166c1124b4ebad4726bf7d7b0a81837997a910/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Trim Split Items.lua" type="script" desc="Trim Split Items (Remove Silence)">
+    <reapack name="zaibuyidao_Trim Split Items.lua" type="script" desc="Trim Split Items">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
