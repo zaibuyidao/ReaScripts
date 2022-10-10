@@ -1,4 +1,4 @@
--- @description Trim Split Items (Remove Silence)
+-- @description Trim Split Items
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
