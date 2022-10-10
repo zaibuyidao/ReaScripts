@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.1.9
+-- @version 1.2.0
 -- @author zaibuyidao
 -- @changelog Fix snap offset
 -- @links
@@ -494,7 +494,7 @@ for _, items in pairs(track_items) do
       trim_edge(item, ranges)
 
       if snap_offset > 0 then
-        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000)
+        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000))
       elseif snap_offset == 0 then
         reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', peak_pos_L - (leading_pad / 1000))
       end
