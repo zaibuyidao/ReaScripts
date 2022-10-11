@@ -1,7 +1,7 @@
 -- @description Trim Split Items Settings
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog Fix fade pad
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -193,60 +193,59 @@ if get == nil then   -- 默认预设
   HYSTERESIS = -6     -- 滯後(dB)
   LEFT_PAD = 0        -- 前导填充(ms)
   RIGHT_PAD = 0       -- 尾部填充(ms)
-  FADE_IN = 0         -- 淡入(ms)
-  FADE_OUT = 0        -- 淡出(ms)
   MIN_SLICE_LEN = 100 -- 最小切片长度(将不会被删除)
   MIN_ITEM_LEN = 100  -- 最小item长度(ms)
   SNAP_OFFSET = 50    -- 吸附偏移(ms)
   SKIP_SAMPLE = 0     -- 跳过采样点
+  FADE = "n"          -- 是否淡变
   SPLIT = "y"         -- 是否切割item
 else
   if get[1] == nil then get[1] = -60 end
   if get[2] == nil then get[2] = -6 end
   if get[3] == nil then get[3] = 0 end
   if get[4] == nil then get[4] = 0 end
-  if get[5] == nil then get[5] = 0 end
-  if get[6] == nil then get[6] = 0 end
-  if get[7] == nil then get[7] = 100 end
-  if get[8] == nil then get[8] = 100 end
-  if get[9] == nil then get[9] = 0 end
-  if get[10] == nil then get[10] = 0 end
-  if get[11] == nil then get[11] = "y" end
+  if get[5] == nil then get[5] = 100 end
+  if get[6] == nil then get[6] = 100 end
+  if get[7] == nil then get[7] = 50 end
+  if get[8] == nil then get[8] = 0 end
+  if get[9] == nil then get[9] = "n" end
+  if get[10] == nil then get[10] = "y" end
   THRESHOLD = get[1]
   HYSTERESIS = get[2]
   LEFT_PAD = get[3]
   RIGHT_PAD = get[4]
-  FADE_IN = get[5]
-  FADE_OUT = get[6]
-  MIN_SLICE_LEN = get[7]
-  MIN_ITEM_LEN = get[8]
-  SNAP_OFFSET = get[9]
-  SKIP_SAMPLE = get[10]
-  SPLIT = get[11]
+  MIN_SLICE_LEN = get[5]
+  MIN_ITEM_LEN = get[6]
+  SNAP_OFFSET = get[7]
+  SKIP_SAMPLE = get[8]
+  FADE = get[9]
+  SPLIT = get[10]
 end
 
-default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. FADE_IN ..','.. FADE_OUT ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. SPLIT
+default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT
 
 os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
   title = "Trim Split Items Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Is it split? (y/n)"
+  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n)"
 else
   if check_locale(locale) == false then
     title = "Trim Split Items Settings"
-    lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Is it split? (y/n)"
+    lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n)"
   else
     title = "Trim Split Items 設置"
-    lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否切割 (y/n)"
+    lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否淡變 (y/n),是否切割 (y/n)"
   end
 end
 
 reaper.Undo_BeginBlock()
-set = getMutiInput(title, 11, lable, default)
+set = getMutiInput(title, 10, lable, default)
 if set == nil then return end
 for i = 1, #set do
-  if i == 11 then
-    if not tostring(set[11]) then return end
+  if i == 10 then
+    if not tostring(set[10]) then return end
+  elseif i == 9 then
+    if not tostring(set[9]) then return end
   else
     if not tonumber(set[i]) then return end
   end

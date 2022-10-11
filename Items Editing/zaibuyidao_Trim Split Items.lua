@@ -1,7 +1,7 @@
 -- @description Trim Split Items
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog Fix fade pad
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -279,6 +279,10 @@ function trim_item(item, keep_ranges)
     end
 
     right = reaper.SplitMediaItem(left, range[2])
+
+    reaper.SetMediaItemInfo_Value(left, "D_FADEINLEN", range.fade[1])
+    reaper.SetMediaItemInfo_Value(left, "D_FADEOUTLEN", range.fade[2])
+
     left = right
     ::continue::
   end
@@ -316,25 +320,32 @@ function merge_ranges(item, keep_ranges, min_len)
 end
 
 -- 扩展保留区域
-function expand_ranges(item, keep_ranges, left_pad, right_pad)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+function expand_ranges(item, keep_ranges, left_pad, right_pad, fade_in, fade_out)
+  local item_pos = reaper.GetMediaItemInfo_Value(item,"D_POSITION")
+  local item_len = reaper.GetMediaItemInfo_Value(item,"D_LENGTH")
+  -- table.print(keep_ranges)
   for i = 1, #keep_ranges do
     local left_inc = left_pad
     local right_inc = right_pad
+    local actual_fade_in = fade_in
+    local actual_fade_out = fade_out
     if (i > 1 and keep_ranges[i][1] - left_inc < keep_ranges[i - 1][2]) then
       left_inc = 0
+      actual_fade_in = 0
     end
     if (i < #keep_ranges and keep_ranges[i][2] + right_inc > keep_ranges[i + 1][1]) then
       right_inc = 0
+      actual_fade_out = 0
     end
     if keep_ranges[i][1] - left_inc <= item_pos + 0.000001 then
       left_inc = keep_ranges[i][1] - item_pos
+      actual_fade_in = 0
     end
     if keep_ranges[i][2] + right_inc >= item_pos + item_len - 0.000001 then
       right_inc = item_pos + item_len - keep_ranges[i][2]
+      actual_fade_out = 0
     end
-    keep_ranges[i] = { keep_ranges[i][1] - left_inc, keep_ranges[i][2] + right_inc }
+    keep_ranges[i] = { keep_ranges[i][1] - left_inc, keep_ranges[i][2] + right_inc, fade = { actual_fade_in, actual_fade_out } }
   end
   return keep_ranges
 end
@@ -385,15 +396,14 @@ if get == nil then    -- 默认预设
   HYSTERESIS = -6     -- 滯後(dB)
   LEFT_PAD = 0        -- 前导填充(ms)
   RIGHT_PAD = 0       -- 尾部填充(ms)
-  FADE_IN = 0         -- 淡入(ms)
-  FADE_OUT = 0        -- 淡出(ms)
   MIN_SLICE_LEN = 100 -- 最小切片长度(将不会被删除)
   MIN_ITEM_LEN = 100  -- 最小item长度(ms)
   SNAP_OFFSET = 50    -- 吸附偏移(ms)
   SKIP_SAMPLE = 0     -- 跳过采样点
+  FADE = "n"          -- 是否淡变
   SPLIT = "y"         -- 是否切割item
 
-  set = getMutiInput("Trim Split Items Settings", 11, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Is it split? (y/n)", THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. FADE_IN ..','.. FADE_OUT ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. SPLIT)
+  set = getMutiInput("Trim Split Items Settings", 10, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n)", THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT)
   saveDataList("Trim Split Items", "Parameters", set, true)
   get = getSavedDataList("Trim Split Items", "Parameters")
   return
@@ -405,29 +415,34 @@ if get[1] == nil then get[1] = -60 end
 if get[2] == nil then get[2] = -6 end
 if get[3] == nil then get[3] = 0 end
 if get[4] == nil then get[4] = 0 end
-if get[5] == nil then get[5] = 0 end
-if get[6] == nil then get[6] = 0 end
-if get[7] == nil then get[7] = 100 end
-if get[8] == nil then get[8] = 100 end
-if get[9] == nil then get[9] = 0 end
-if get[10] == nil then get[10] = 0 end
-if get[11] == nil then get[11] = "y" end
+if get[5] == nil then get[5] = 100 end
+if get[6] == nil then get[6] = 100 end
+if get[7] == nil then get[7] = 50 end
+if get[8] == nil then get[8] = 0 end
+if get[9] == nil then get[9] = "n" end
+if get[10] == nil then get[10] = "y" end
 
 THRESHOLD = tonumber(get[1])
 HYSTERESIS = tonumber(get[2])
 LEFT_PAD = tonumber(get[3])
 RIGHT_PAD = tonumber(get[4])
-FADE_IN = tonumber(get[5])
-FADE_OUT = tonumber(get[6])
-MIN_SLICE_LEN = tonumber(get[7])
-MIN_ITEM_LEN = tonumber(get[8])
-SNAP_OFFSET = tonumber(get[9])
-SKIP_SAMPLE = tonumber(get[10])
-SPLIT = tostring(get[11])
+MIN_SLICE_LEN = tonumber(get[5])
+MIN_ITEM_LEN = tonumber(get[6])
+SNAP_OFFSET = tonumber(get[7])
+SKIP_SAMPLE = tonumber(get[8])
+FADE = tostring(get[9])
+SPLIT = tostring(get[10])
 
 local count_sel_item = reaper.CountSelectedMediaItems(0)
 
-RIGHT_PAD = RIGHT_PAD + 1
+if FADE == "n" then
+  FADE_IN = 0
+  FADE_OUT = 0
+else
+  FADE_IN = LEFT_PAD
+  FADE_OUT = RIGHT_PAD
+end
+
 if not tonumber(THRESHOLD) or THRESHOLD < -150 or THRESHOLD > 24 then THRESHOLD = -80 end
 
 dB_to_val = 10 ^ (THRESHOLD / 20)
@@ -458,7 +473,8 @@ for i = count_sel_item - 1, 0, -1 do
     if sample_max[i] >= dB_to_val and l == nil then
       l = i
     elseif sample_min[i] < dB_to_val2 and l ~= nil then
-      table.insert(keep_ranges, { time_sample[l], time_sample[i - 1], l, i - 1, sample_min[l], sample_max[i - 1]})
+      table.insert(keep_ranges, { time_sample[l], time_sample[i], l, i, sample_min[l], sample_max[i]})
+      -- table.insert(keep_ranges, { time_sample[l], time_sample[i - 1], l, i - 1, sample_min[l], sample_max[i - 1]})
       l = nil
     elseif sample_max[i] >= dB_to_val2 and l == nil and #keep_ranges > 0 and time_sample[i] - keep_ranges[#keep_ranges][2] < MIN_SLICE_LEN / 1000 then
       l = keep_ranges[#keep_ranges][3]
@@ -481,7 +497,7 @@ for i = count_sel_item - 1, 0, -1 do
   -- end
   -- print(keep_ranges[#keep_ranges][2])
   keep_ranges = merge_ranges(item, keep_ranges, MIN_SLICE_LEN / 1000)
-  expand_ranges(item, keep_ranges, LEFT_PAD / 1000, RIGHT_PAD / 1000)
+  expand_ranges(item, keep_ranges, LEFT_PAD / 1000, RIGHT_PAD / 1000, FADE_IN / 1000, FADE_OUT / 1000)
   -- print(keep_ranges[#keep_ranges][2])
   trim_item(item, keep_ranges)
 end
@@ -489,18 +505,11 @@ end
 count_sel_item = reaper.CountSelectedMediaItems(0)
 for i = count_sel_item - 1, 0, -1 do
   local item = reaper.GetSelectedMediaItem(0, i)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-
   if (LEFT_PAD - SNAP_OFFSET > 0 and SNAP_OFFSET > 0) or (SNAP_OFFSET - LEFT_PAD > 0 and SNAP_OFFSET > 0) then
     reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, SKIP_SAMPLE, (LEFT_PAD + SNAP_OFFSET) / 1000, LEFT_PAD / 1000))
   elseif SNAP_OFFSET == 0 then
+    local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
     reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', item_pos)
-  end
-
-  if FADE_IN + FADE_OUT >= item_len then
-    reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", FADE_IN / 1000)
-    reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", FADE_OUT / 1000)
   end
 end
 
