@@ -1,7 +1,7 @@
 -- @description Trim Items Edge
--- @version 1.2.0
+-- @version 1.2.1
 -- @author zaibuyidao
--- @changelog Fix snap offset
+-- @changelog Fix fade pad
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -203,6 +203,7 @@ end
 function trim_item(item, keep_ranges)
   local item_pos = reaper.GetMediaItemInfo_Value(item,"D_POSITION")
   local item_len = reaper.GetMediaItemInfo_Value(item,"D_LENGTH")
+  -- print(item_pos, item_pos + item_len)
   -- table.print(keep_ranges)
   local left = item
   for i, range in ipairs(keep_ranges) do
@@ -215,8 +216,12 @@ function trim_item(item, keep_ranges)
     end
     -- print("ll", left)
     right = reaper.SplitMediaItem(left, range[2])
+
+    reaper.SetMediaItemInfo_Value(left, "D_FADEINLEN", range.fade[1])
+    reaper.SetMediaItemInfo_Value(left, "D_FADEOUTLEN", range.fade[2])
+
     left = right
-    -- print("left", left, "right", right)
+    ::continue::
   end
 
   if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_pos + item_len then
@@ -232,26 +237,32 @@ function trim_edge(item, keep_ranges)
 end
 
 -- 扩展保留区域
-function expand_ranges(item, keep_ranges, left_pad, right_pad)
+function expand_ranges(item, keep_ranges, left_pad, right_pad, fade_in, fade_out)
   local item_pos = reaper.GetMediaItemInfo_Value(item,"D_POSITION")
   local item_len = reaper.GetMediaItemInfo_Value(item,"D_LENGTH")
   -- table.print(keep_ranges)
   for i = 1, #keep_ranges do
     local left_inc = left_pad
     local right_inc = right_pad
+    local actual_fade_in = fade_in
+    local actual_fade_out = fade_out
     if (i > 1 and keep_ranges[i][1] - left_inc < keep_ranges[i - 1][2]) then
       left_inc = 0
+      actual_fade_in = 0
     end
     if (i < #keep_ranges and keep_ranges[i][2] + right_inc > keep_ranges[i + 1][1]) then
       right_inc = 0
+      actual_fade_out = 0
     end
     if keep_ranges[i][1] - left_inc <= item_pos + 0.000001 then
       left_inc = keep_ranges[i][1] - item_pos
+      actual_fade_in = 0
     end
     if keep_ranges[i][2] + right_inc >= item_pos + item_len - 0.000001 then
       right_inc = item_pos + item_len - keep_ranges[i][2]
+      actual_fade_out = 0
     end
-    keep_ranges[i] = { keep_ranges[i][1] - left_inc, keep_ranges[i][2] + right_inc }
+    keep_ranges[i] = { keep_ranges[i][1] - left_inc, keep_ranges[i][2] + right_inc, fade = { actual_fade_in, actual_fade_out } }
   end
   return keep_ranges
 end
@@ -430,15 +441,14 @@ get = getSavedDataList("Trim Items Edge", "Parameters")
 if get == nil then   -- 默认预设
   threshold_l = -60  -- 阈值(dB)
   threshold_r = -6   -- 滯後(dB)
-  leading_pad = 50   -- 前导填充(ms)
-  trailing_pad = 100 -- 尾部填充(ms)
-  fade_in = 50       -- 淡入(ms)
-  fade_out = 100     -- 淡出(ms)
+  leading_pad = 0    -- 前导填充(ms)
+  trailing_pad = 0   -- 尾部填充(ms)
   length_limit = 100 -- 长度限制(ms)
   snap_offset = 0    -- 吸附偏移(ms)
-  step = 0         -- 采样点读取步数
+  step = 0           -- 跳过采样点
+  fade = "n"         -- 是否淡变
 
-  set = getMutiInput("Trim Items Edge Settings", 9, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset ..','.. step)
+  set = getMutiInput("Trim Items Edge Settings", 8, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable),Fade pad (y/n)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. length_limit ..','.. snap_offset ..','.. step ..','.. fade)
   saveDataList("Trim Items Edge", "Parameters", set, true)
   get = getSavedDataList("Trim Items Edge", "Parameters")
   return
@@ -448,26 +458,32 @@ end
 
 if get[1] == nil then get[1] = -60 end
 if get[2] == nil then get[2] = -6 end
-if get[3] == nil then get[3] = 50 end
-if get[4] == nil then get[4] = 100 end
-if get[5] == nil then get[5] = 50 end
-if get[6] == nil then get[6] = 100 end
-if get[7] == nil then get[7] = 100 end
-if get[8] == nil then get[8] = 0 end
-if get[9] == nil then get[9] = 0 end
+if get[3] == nil then get[3] = 0 end
+if get[4] == nil then get[4] = 0 end
+if get[5] == nil then get[5] = 100 end
+if get[6] == nil then get[6] = 0 end
+if get[7] == nil then get[7] = 0 end
+if get[8] == nil then get[8] = "n" end
 
 threshold_l = tonumber(get[1])
 threshold_r = tonumber(get[2])
 leading_pad = tonumber(get[3])
 trailing_pad = tonumber(get[4])
-fade_in = tonumber(get[5])
-fade_out = tonumber(get[6])
-length_limit = tonumber(get[7])
-snap_offset = tonumber(get[8])
-step = tonumber(get[9])
+length_limit = tonumber(get[5])
+snap_offset = tonumber(get[6])
+step = tonumber(get[7])
+fade = tostring(get[8])
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
+
+if fade == "n" then
+  fade_in = 0
+  fade_out = 0
+else
+  fade_in = leading_pad
+  fade_out = trailing_pad
+end
 
 local count_sel_items = reaper.CountSelectedMediaItems(0)
 local track_items = {}
@@ -488,7 +504,7 @@ for _, items in pairs(track_items) do
 
     if ret and item_len > length_limit / 1000 then
       local ranges = { { item_pos + peak_pos_L, item_pos + peak_pos_R } }
-      ranges = expand_ranges(item, ranges, leading_pad / 1000, trailing_pad / 1000)
+      ranges = expand_ranges(item, ranges, leading_pad / 1000, trailing_pad / 1000, fade_in / 1000, fade_out / 1000)
 
       --trim_item(item, ranges) -- 切割item并删除
       trim_edge(item, ranges)
@@ -496,11 +512,7 @@ for _, items in pairs(track_items) do
       if snap_offset > 0 then
         reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000))
       elseif snap_offset == 0 then
-        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', peak_pos_L - (leading_pad / 1000))
-      end
-      if fade_in >= 0 or fade_out >= 0 then
-        reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", fade_in / 1000)
-        reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", fade_out / 1000)
+        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', 0)
       end
     end
   end

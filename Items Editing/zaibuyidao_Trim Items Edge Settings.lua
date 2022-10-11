@@ -1,7 +1,7 @@
 -- @description Trim Items Edge Settings
--- @version 1.1.4
+-- @version 1.1.5
 -- @author zaibuyidao
--- @changelog Fix snap offset
+-- @changelog Fix fade pad
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -191,55 +191,56 @@ get = getSavedDataList("Trim Items Edge", "Parameters")
 if get == nil then   -- 默认预设
   threshold_l = -60  -- 阈值(dB)
   threshold_r = -6   -- 滯後(dB)
-  leading_pad =  50  -- 前导填充(ms)
-  trailing_pad = 100 -- 尾部填充(ms)
-  fade_in = 50       -- 淡入(ms)
-  fade_out = 100     -- 淡出(ms)
+  leading_pad = 0    -- 前导填充(ms)
+  trailing_pad = 0   -- 尾部填充(ms)
   length_limit = 100 -- 长度限制(ms)
   snap_offset = 0    -- 吸附偏移(ms)
-  step = 0         -- 采样点读取步数
+  step = 0           -- 跳过采样点
+  fade = "n"         -- 是否淡变
 else
   if get[1] == nil then get[1] = -60 end
   if get[2] == nil then get[2] = -6 end
-  if get[3] == nil then get[3] = 50 end
-  if get[4] == nil then get[4] = 100 end
-  if get[5] == nil then get[5] = 50 end
-  if get[6] == nil then get[6] = 100 end
-  if get[7] == nil then get[7] = 100 end
-  if get[8] == nil then get[8] = 0 end
-  if get[9] == nil then get[9] = 0 end
+  if get[3] == nil then get[3] = 0 end
+  if get[4] == nil then get[4] = 0 end
+  if get[5] == nil then get[5] = 100 end
+  if get[6] == nil then get[6] = 0 end
+  if get[7] == nil then get[7] = 0 end
+  if get[8] == nil then get[8] = "n" end
   threshold_l = get[1]
   threshold_r = get[2]
   leading_pad = get[3]
   trailing_pad = get[4]
-  fade_in = get[5]
-  fade_out = get[6]
-  length_limit = get[7]
-  snap_offset = get[8]
-  step = get[9]
+  length_limit = get[5]
+  snap_offset = get[6]
+  step = get[7]
+  fade = get[8]
 end
 
-default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade_in ..','.. fade_out ..','.. length_limit ..','.. snap_offset ..','.. step
+default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. length_limit ..','.. snap_offset ..','.. step ..','.. fade
 
 os = reaper.GetOS()
 if os ~= "Win32" and os ~= "Win64" then
   title = "Trim Items Edge Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable)"
+  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable),Fade pad (y/n)"
 else
   if check_locale(locale) == false then
     title = "Trim Items Edge Settings"
-    lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade in (ms),Fade out (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable)"
+    lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable),Fade pad (y/n)"
   else
     title = "Trim Items Edge 設置"
-    lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),淡入 (ms),淡出 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步數 (0為禁用)"
+    lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步數 (0為禁用),是否淡變 (y/n)"
   end
 end
 
 reaper.Undo_BeginBlock()
-set = getMutiInput(title, 9, lable, default)
+set = getMutiInput(title, 8, lable, default)
 if set == nil then return end
 for i = 1, #set do
-  if not tonumber(set[i]) then return end
+  if i == 8 then
+    if not tostring(set[8]) then return end
+  else
+    if not tonumber(set[i]) then return end
+  end
 end
 
 saveDataList("Trim Items Edge", "Parameters", set, true)
