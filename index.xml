@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="da79f309e62ea47130b415e31d34db529731a9be">
+<index version="1" name="zaibuyidao Scripts" commit="58f0ff8de4b7f89752f03c53704533ba4be5f37b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -959,6 +959,10 @@
       <version name="1.0" author="zaibuyidao" time="2022-10-10T15:34:42Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c3166c1124b4ebad4726bf7d7b0a81837997a910/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2022-10-11T13:30:01Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/58f0ff8de4b7f89752f03c53704533ba4be5f37b/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重新定位對象.lua" type="script" desc="重新定位對象">
