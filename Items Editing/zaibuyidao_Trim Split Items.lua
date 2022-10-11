@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -214,9 +214,9 @@ function get_sample_pos_value(take, skip_sample)
       local sample_min_chan = 9^99
       local sample_max_chan = 0
       for i3 = 1, channels do
-        local Sample = math.abs(buffer[i2 + (i3-1)])
-        sample_min_chan = math.min(Sample, sample_min_chan)
-        sample_max_chan = math.max(Sample, sample_max_chan)
+        local sample_buf = math.abs(buffer[i2 + (i3-1)])
+        sample_min_chan = math.min(sample_buf, sample_min_chan)
+        sample_max_chan = math.max(sample_buf, sample_max_chan)
       end
 
       sample_min[#sample_min+1] = sample_min_chan
