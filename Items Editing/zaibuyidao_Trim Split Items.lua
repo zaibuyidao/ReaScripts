@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
@@ -180,9 +180,6 @@ function get_sample_pos_value(take, skip_sample)
     return false, false, false
   end
 
-  if not tonumber(skip_sample) then skip_sample = 0 end
-  skip_sample = math.floor(0.5 + skip_sample)
-
   local item = reaper.GetMediaItemTake_Item(take)
   local playrate_ori = reaper.GetMediaItemTakeInfo_Value(take, "D_PLAYRATE")
   local item_len_ori = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
@@ -194,6 +191,15 @@ function get_sample_pos_value(take, skip_sample)
   local accessor = reaper.CreateTakeAudioAccessor(take)
   local source = reaper.GetMediaItemTake_Source(take)
   local samplerate = reaper.GetMediaSourceSampleRate(source)
+
+  if skip_sample <= 0 or not tonumber(skip_sample) then
+    skip_sample = 0
+  elseif skip_sample > 0 then
+    skip_sample = samplerate / skip_sample -- 每秒处理几个样本
+  end
+
+  skip_sample = math.floor(0.5 + skip_sample)
+
   local channels = reaper.GetMediaSourceNumChannels(source)
   local item_len_idx = math.ceil(item_len)
 
@@ -363,6 +369,7 @@ function max_peak_pos(item, skip, right, left)
   end
 
   local sample_min, sample_max, time_sample = get_sample_pos_value(take, skip)
+  if not time_sample then return nil end
 
   local right_bound = item_pos + right
   local left_bound = item_pos + left
@@ -457,15 +464,10 @@ for i = count_sel_item - 1, 0, -1 do
   local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
 
   local take = reaper.GetActiveTake(item)
-  local source = reaper.GetMediaItemTake_Source(take)
-
-  if SKIP_SAMPLE <= 0 then
-    SKIP_SAMPLE = 0
-  elseif SKIP_SAMPLE > 0 then
-    SKIP_SAMPLE = reaper.GetMediaSourceSampleRate(source) / SKIP_SAMPLE -- 每秒处理几个样本
-  end
+  if take == nil then goto continue end
 
   local sample_min, sample_max, time_sample = get_sample_pos_value(take, SKIP_SAMPLE)
+  if not time_sample then goto continue end
 
   local keep_ranges = {}
   local l
@@ -500,17 +502,24 @@ for i = count_sel_item - 1, 0, -1 do
   expand_ranges(item, keep_ranges, LEFT_PAD / 1000, RIGHT_PAD / 1000, FADE_IN / 1000, FADE_OUT / 1000)
   -- print(keep_ranges[#keep_ranges][2])
   trim_item(item, keep_ranges)
+  ::continue::
 end
 
 count_sel_item = reaper.CountSelectedMediaItems(0)
 for i = count_sel_item - 1, 0, -1 do
   local item = reaper.GetSelectedMediaItem(0, i)
-  if (LEFT_PAD - SNAP_OFFSET > 0 and SNAP_OFFSET > 0) or (SNAP_OFFSET - LEFT_PAD > 0 and SNAP_OFFSET > 0) then
-    reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, SKIP_SAMPLE, (LEFT_PAD + SNAP_OFFSET) / 1000, LEFT_PAD / 1000))
+  if reaper.GetActiveTake(item) == nil then goto continue end
+  -- if (LEFT_PAD - SNAP_OFFSET > 0 and SNAP_OFFSET > 0) or (SNAP_OFFSET - LEFT_PAD > 0 and SNAP_OFFSET > 0) then
+  if SNAP_OFFSET > 0 then
+    local r = max_peak_pos(item, SKIP_SAMPLE, (LEFT_PAD + SNAP_OFFSET) / 1000, LEFT_PAD / 1000)
+    if r then
+      reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', r)
+    end
   elseif SNAP_OFFSET == 0 then
     local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
     reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', item_pos)
   end
+  ::continue::
 end
 
 reaper.Undo_EndBlock("Trim Split Items", -1)
