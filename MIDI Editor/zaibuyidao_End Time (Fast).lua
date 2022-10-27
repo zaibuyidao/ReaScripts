@@ -1,17 +1,12 @@
---[[
- * ReaScript Name: End Time (Fast)
- * Version: 1.0.5
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
---]]
-
---[[
- * Changelog:
- * v1.0 (2022-1-2)
-  + Initial release
---]]
+-- @description End Time (Fast)
+-- @version 1.0.6
+-- @author zaibuyidao
+-- @changelog Fix note pos integer
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires SWS Extensions
 
 function print(...)
   local params = {...}
@@ -86,7 +81,7 @@ function setAllEvents(take, events)
 
   local tab = {}
   for _, event in pairs(events) do
-    table.insert(tab, string.pack("i4Bs4", event.offset, event.flags, event.msg))
+    table.insert(tab, string.pack("i4Bs4", math.floor(0.5 + event.offset), event.flags, event.msg))
   end
   reaper.MIDI_SetAllEvts(take, table.concat(tab)) -- 将编辑好的MIDI上传到take
 end
