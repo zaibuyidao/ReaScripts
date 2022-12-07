@@ -1,4 +1,4 @@
--- @description Random Note Toggle Mute
+-- @description Random Note Mute
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
@@ -52,4 +52,4 @@ end
 
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("Random Note Toggle Mute", -1)
+reaper.Undo_EndBlock("Random Note Mute", -1)
