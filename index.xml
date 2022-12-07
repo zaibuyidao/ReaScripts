@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="96545a5ad0cfdc95db4cfb78b4ee4c6dac2cd33e">
+<index version="1" name="zaibuyidao Scripts" commit="1b82773d3ce8eca542db546a2313c678de8b9c59">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4012,7 +4012,7 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/11c65bacf0cac4b2f25f83599ba91d96e2b16dc3/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Random Note Position By Grid Within Time Selection (Customize).lua" type="script" desc="Random Note Position By Grid Within Time Selection (Customize)">
+    <reapack name="zaibuyidao_Random Note Position By Grid (Within Time Selection).lua" type="script" desc="Random Note Position By Grid (Within Time Selection)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -4025,9 +4025,9 @@
         <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-12-07T14:22:28Z">
+      <version name="1.0.1" author="zaibuyidao" time="2022-12-07T15:14:57Z">
         <changelog><![CDATA[Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/819510df2e33b0914ad5e61479c816154d96d82c/MIDI%20Editor/zaibuyidao_Random%20Note%20Position%20By%20Grid%20Within%20Time%20Selection%20(Customize).lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1b82773d3ce8eca542db546a2313c678de8b9c59/MIDI%20Editor/zaibuyidao_Random%20Note%20Position%20By%20Grid%20(Within%20Time%20Selection).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Note Position Swap.lua" type="script" desc="Random Note Position Swap">
