@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="57a2c622fc5f7adcdec5463f56d6920cec12c8ea">
+<index version="1" name="zaibuyidao Scripts" commit="43b5f6cc0d4ac60d958c54338cf2c9be192cf2f3">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3843,6 +3843,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9b3ffbd8bf1dcdffa50a95ad83f2afda39662e11/MIDI%20Editor/zaibuyidao_Random%20Note%20Arpeggio.lua</source>
       </version>
+      <version name="1.0.4" author="zaibuyidao" time="2022-12-07T14:55:51Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/43b5f6cc0d4ac60d958c54338cf2c9be192cf2f3/MIDI%20Editor/zaibuyidao_Random%20Note%20Arpeggio.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random Note Duration.lua" type="script" desc="Random Note Duration">
       <metadata>
@@ -3976,6 +3980,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2022-12-07T14:31:05Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/11c65bacf0cac4b2f25f83599ba91d96e2b16dc3/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20By%20Key.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2022-12-07T14:55:51Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/43b5f6cc0d4ac60d958c54338cf2c9be192cf2f3/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20By%20Key.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Note Pitch.lua" type="script" desc="Random Note Pitch">
