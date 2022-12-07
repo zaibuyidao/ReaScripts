@@ -1,5 +1,5 @@
 -- @description Random Note Pitch By Key
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -245,12 +245,12 @@ if os ~= "Win32" and os ~= "Win64" then
     inputs_param  = {
         {
             label = "Min Pitch",
-            default = "36",
+            default = "60",
             converter = tonumber
         },
         {
             label = "Max Pitch",
-            default = "48",
+            default = "72",
             converter = tonumber
         },
         {
@@ -264,12 +264,12 @@ else
         inputs_param  = {
             {
                 label = "Min Pitch",
-                default = "36",
+                default = "60",
                 converter = tonumber
             },
             {
                 label = "Max Pitch",
-                default = "48",
+                default = "72",
                 converter = tonumber
             },
             {
@@ -282,12 +282,12 @@ else
         inputs_param  = {
             {
                 label = "最小值",
-                default = "36",
+                default = "60",
                 converter = tonumber
             },
             {
                 label = "最大值",
-                default = "48",
+                default = "72",
                 converter = tonumber
             },
             {
