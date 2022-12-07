@@ -1,5 +1,5 @@
 -- @description Random Note Pitch By Key
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -180,13 +180,13 @@ function prompt(attr)
     local ok, resCsv = reaper.GetUserInputs(attr.title or "", #labels, table.concat(labels, ","), defaultCsv)
     if not ok then return nil end
 
-    if remember.enable then
-        reaper.SetExtState(remember.section, remember.key, resCsv, remember.persist)
-    end
-
     local res = string.split(resCsv, ",")
     for i=1, #res do
         res[i] = converters[i](res[i])
+    end
+
+    if remember.enable and (not remember.preValidation or remember.preValidation(res)) then
+        reaper.SetExtState(remember.section, remember.key, resCsv, remember.persist)
     end
 
     return res
@@ -227,6 +227,13 @@ local tonesMap = { --音调对应的数字
 }
 
 math.randomseed(os.clock())
+
+function argsCheck(args)
+    local function isLegalPitch(pitch)
+        return pitch >= 0 and pitch <= 127
+    end
+    return isLegalPitch(args[1]) and isLegalPitch(args[2]) and args[1] <= args[2] and tonesMap[args[3]:lower()]
+end
 
 local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
 
@@ -305,7 +312,8 @@ local args = prompt({
         enable = true,
         section = "Random Note Pitch By Key",
         key = "Parameters",
-        persist = true
+        persist = true,
+        preValidation = argsCheck
     }
 })
 
@@ -314,12 +322,12 @@ local args = prompt({
 --     inputs = {
 --         {
 --             label = "Min Pitch",
---             default = "36",
+--             default = "60",
 --             converter = tonumber
 --         },
 --         {
 --             label = "Max Pitch",
---             default = "48",
+--             default = "72",
 --             converter = tonumber
 --         },
 --         {
@@ -331,11 +339,12 @@ local args = prompt({
 --         enable = true,
 --         section = "Random Note Pitch By Key",
 --         key = "Parameters",
---         persist = true
+--         persist = true,
+--         preValidation = argsCheck
 --     }
 -- })
 
-if not args then return end
+if not args or not argsCheck(args) then return end
 
 reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do

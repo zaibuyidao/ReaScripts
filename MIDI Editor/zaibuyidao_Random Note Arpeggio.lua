@@ -1,5 +1,5 @@
 -- @description Random Note Arpeggio
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -185,13 +185,13 @@ function prompt(attr)
     local ok, resCsv = reaper.GetUserInputs(attr.title or "", #labels, table.concat(labels, ","), defaultCsv)
     if not ok then return nil end
 
-    if remember.enable then
-        reaper.SetExtState(remember.section, remember.key, resCsv, remember.persist)
-    end
-
     local res = string.split(resCsv, ",")
     for i=1, #res do
         res[i] = converters[i](res[i])
+    end
+
+    if remember.enable and (not remember.preValidation or remember.preValidation(res)) then
+        reaper.SetExtState(remember.section, remember.key, resCsv, remember.persist)
     end
 
     return res
@@ -317,6 +317,10 @@ end
 
 math.randomseed(os.clock())
 
+function argsCheck(args)
+    return args[1] > 0 and args[2] >= 1 and args[2] <= 5
+end
+
 local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
 
 function check_locale(locale)
@@ -382,7 +386,8 @@ local args = prompt({
         enable = true,
         section = "Random Note Arpeggio",
         key = "Parameters",
-        persist = true
+        persist = true,
+        preValidation = argsCheck
     }
 })
 
@@ -404,11 +409,12 @@ local args = prompt({
 --         enable = true,
 --         section = "Random Note Arpeggio",
 --         key = "Parameters",
---         persist = true
+--         persist = true,
+--         preValidation = argsCheck
 --     }
 -- })
 
-if not args then return end
+if not args or not argsCheck(args) then return end
 
 reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
