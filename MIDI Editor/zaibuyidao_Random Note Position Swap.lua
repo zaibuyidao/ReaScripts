@@ -1,4 +1,4 @@
--- @description Random Swap Note Position
+-- @description Random Note Position Swap
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
@@ -243,5 +243,5 @@ end
 math.randomseed(os.clock())
 reaper.Undo_BeginBlock()
 main_exchange()
-reaper.Undo_EndBlock("Random Swap Note Position", -1)
+reaper.Undo_EndBlock("Random Note Position Swap", -1)
 reaper.UpdateArrange()
