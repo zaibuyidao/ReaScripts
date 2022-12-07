@@ -1,5 +1,5 @@
--- @description Random Note Position By Grid Within Time Selection (Customize)
--- @version 1.0
+-- @description Random Note Position By Grid (Within Time Selection)
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -55,5 +55,5 @@ end
 
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("Random Note Position By Grid Within Time Selection", -1)
+reaper.Undo_EndBlock("Random Note Position By Grid", -1)
 reaper.UpdateArrange()
