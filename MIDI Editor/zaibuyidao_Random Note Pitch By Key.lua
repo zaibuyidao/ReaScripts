@@ -1,5 +1,5 @@
--- @description Random Note Pitch By Key Signature
--- @version 1.0.2
+-- @description Random Note Pitch By Key
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -240,10 +240,28 @@ function check_locale(locale)
 end
 
 os = reaper.GetOS()
-if os ~= "Win32" and os ~= "Win64" or check_locale(locale) == false then
-    local args = prompt({
-        title = "Random Note Pitch By Key Signature",
-        inputs = {
+if os ~= "Win32" and os ~= "Win64" then
+    title_param = "Random Note Pitch By Key"
+    inputs_param  = {
+        {
+            label = "Min Pitch",
+            default = "36",
+            converter = tonumber
+        },
+        {
+            label = "Max Pitch",
+            default = "48",
+            converter = tonumber
+        },
+        {
+            label = "Key",
+            default = "C"
+        }
+    }
+else
+    if check_locale(locale) == false then
+        title_param = "Random Note Pitch By Key"
+        inputs_param  = {
             {
                 label = "Min Pitch",
                 default = "36",
@@ -255,21 +273,13 @@ if os ~= "Win32" and os ~= "Win64" or check_locale(locale) == false then
                 converter = tonumber
             },
             {
-                label = "Key Signature",
+                label = "Key",
                 default = "C"
             }
-        },
-        remember = {
-            enable = true,
-            section = "Random Note Pitch By Key Signature",
-            key = "Parameters",
-            persist = true
         }
-    })
-else
-    local args = prompt({
-        title = "按調號音節隨機音符音高",
-        inputs = {
+    else
+        title_param = "按調隨機音符音高"
+        inputs_param  = {
             {
                 label = "最小值",
                 default = "36",
@@ -281,18 +291,49 @@ else
                 converter = tonumber
             },
             {
-                label = "調號",
+                label = "調",
                 default = "C"
             }
-        },
-        remember = {
-            enable = true,
-            section = "Random Note Pitch By Key Signature",
-            key = "Parameters",
-            persist = true
         }
-    })
+    end
 end
+
+local args = prompt({
+    title = title_param,
+    inputs = inputs_param,
+    remember = {
+        enable = true,
+        section = "Random Note Pitch By Key",
+        key = "Parameters",
+        persist = true
+    }
+})
+
+-- local args = prompt({
+--     title = "Random Note Pitch By Key",
+--     inputs = {
+--         {
+--             label = "Min Pitch",
+--             default = "36",
+--             converter = tonumber
+--         },
+--         {
+--             label = "Max Pitch",
+--             default = "48",
+--             converter = tonumber
+--         },
+--         {
+--             label = "Key",
+--             default = "C"
+--         }
+--     },
+--     remember = {
+--         enable = true,
+--         section = "Random Note Pitch By Key",
+--         key = "Parameters",
+--         persist = true
+--     }
+-- })
 
 if not args then return end
 
@@ -316,6 +357,6 @@ for take, _ in pairs(getAllTakes()) do
         insertNote(take, note)
     end
 end
-reaper.Undo_EndBlock("Random Note Pitch By Key Signature", -1)
+reaper.Undo_EndBlock("Random Note Pitch By Key", -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

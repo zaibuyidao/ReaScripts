@@ -1,5 +1,5 @@
 -- @description Random Note Arpeggio
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -329,10 +329,24 @@ function check_locale(locale)
 end
 
 os = reaper.GetOS()
-if os ~= "Win32" and os ~= "Win64" or check_locale(locale) == false then
-    local args = prompt({
-        title = "Random Note Arpeggio",
-        inputs = {
+if os ~= "Win32" and os ~= "Win64" then
+    title_param = "Random Note Arpeggio"
+    inputs_param = {
+        {
+            label = "Enter A Tick",
+            default = "240",
+            converter = tonumber
+        },
+        {
+            label = "Mode:1DU 2UD 3M 4W 5RD", -- 1:下到上 2:上到下 3:下到上波浪 4:上到下波浪 5:随机
+            default = "1",
+            converter = tonumber
+        }
+    }
+else
+    if check_locale(locale) == false then
+        title_param = "Random Note Arpeggio"
+        inputs_param = {
             {
                 label = "Enter A Tick",
                 default = "240",
@@ -343,18 +357,10 @@ if os ~= "Win32" and os ~= "Win64" or check_locale(locale) == false then
                 default = "1",
                 converter = tonumber
             }
-        },
-        remember = {
-            enable = true,
-            section = "Random Note Arpeggio",
-            key = "Parameters",
-            persist = true
         }
-    })
-else
-    local args = prompt({
-        title = "隨機音符琶音",
-        inputs = {
+    else
+        title_param = "隨機音符琶音"
+        inputs_param = {
             {
                 label = "輸入滴答數",
                 default = "240",
@@ -365,15 +371,42 @@ else
                 default = "1",
                 converter = tonumber
             }
-        },
-        remember = {
-            enable = true,
-            section = "Random Note Arpeggio",
-            key = "Parameters",
-            persist = true
         }
-    })
+    end
 end
+
+local args = prompt({
+    title = title_param,
+    inputs = inputs_param,
+    remember = {
+        enable = true,
+        section = "Random Note Arpeggio",
+        key = "Parameters",
+        persist = true
+    }
+})
+
+-- local args = prompt({
+--     title = "Random Note Arpeggio",
+--     inputs = {
+--         {
+--             label = "Enter A Tick",
+--             default = "240",
+--             converter = tonumber
+--         },
+--         {
+--             label = "Mode:1DU 2UD 3M 4W 5RD", -- 1:下到上 2:上到下 3:下到上波浪 4:上到下波浪 5:随机
+--             default = "1",
+--             converter = tonumber
+--         }
+--     },
+--     remember = {
+--         enable = true,
+--         section = "Random Note Arpeggio",
+--         key = "Parameters",
+--         persist = true
+--     }
+-- })
 
 if not args then return end
 
