@@ -1,5 +1,5 @@
 -- @description Random Note Pitch By Key Signature
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -228,31 +228,71 @@ local tonesMap = { --音调对应的数字
 
 math.randomseed(os.clock())
 
-local args = prompt({
-    title = "Random Note Pitch By Key Signature",
-    inputs = {
-        {
-            label = "Min Pitch",
-            default = "12",
-            converter = tonumber
+local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+
+function check_locale(locale)
+  if locale == 936 then
+    return true
+  elseif locale == 950 then
+    return true
+  end
+  return false
+end
+
+os = reaper.GetOS()
+if os ~= "Win32" and os ~= "Win64" or check_locale(locale) == false then
+    local args = prompt({
+        title = "Random Note Pitch By Key Signature",
+        inputs = {
+            {
+                label = "Min Pitch",
+                default = "36",
+                converter = tonumber
+            },
+            {
+                label = "Max Pitch",
+                default = "48",
+                converter = tonumber
+            },
+            {
+                label = "Key Signature",
+                default = "C"
+            }
         },
-        {
-            label = "Max Pitch",
-            default = "36",
-            converter = tonumber
-        },
-        {
-            label = "Key Signature",
-            default = "C"
+        remember = {
+            enable = true,
+            section = "Random Note Pitch By Key Signature",
+            key = "Parameters",
+            persist = true
         }
-    },
-    remember = {
-        enable = true,
-        section = "Random Note Pitch By Key Signature",
-        key = "Parameters",
-        persist = true
-    }
-})
+    })
+else
+    local args = prompt({
+        title = "按調號音節隨機音符音高",
+        inputs = {
+            {
+                label = "最小值",
+                default = "36",
+                converter = tonumber
+            },
+            {
+                label = "最大值",
+                default = "48",
+                converter = tonumber
+            },
+            {
+                label = "調號",
+                default = "C"
+            }
+        },
+        remember = {
+            enable = true,
+            section = "Random Note Pitch By Key Signature",
+            key = "Parameters",
+            persist = true
+        }
+    })
+end
 
 if not args then return end
 

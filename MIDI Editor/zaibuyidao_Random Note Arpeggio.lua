@@ -1,5 +1,5 @@
 -- @description Random Note Arpeggio
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -317,27 +317,63 @@ end
 
 math.randomseed(os.clock())
 
-local args = prompt({
-    title = "Random Note Arpeggio",
-    inputs = {
-        {
-            label = "Enter A Tick",
-            default = "240",
-            converter = tonumber
+local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+
+function check_locale(locale)
+  if locale == 936 then
+    return true
+  elseif locale == 950 then
+    return true
+  end
+  return false
+end
+
+os = reaper.GetOS()
+if os ~= "Win32" and os ~= "Win64" or check_locale(locale) == false then
+    local args = prompt({
+        title = "Random Note Arpeggio",
+        inputs = {
+            {
+                label = "Enter A Tick",
+                default = "240",
+                converter = tonumber
+            },
+            {
+                label = "Mode:1DU 2UD 3M 4W 5RD", -- 1:下到上 2:上到下 3:下到上波浪 4:上到下波浪 5:随机
+                default = "1",
+                converter = tonumber
+            }
         },
-        {
-            label = "Mode:1DU 2UD 3M 4W 5RD", -- 1:下到上 2:上到下 3:下到上波浪 4:上到下波浪 5:随机
-            default = "1",
-            converter = tonumber
+        remember = {
+            enable = true,
+            section = "Random Note Arpeggio",
+            key = "Parameters",
+            persist = true
         }
-    },
-    remember = {
-        enable = true,
-        section = "Random Note Arpeggio",
-        key = "Parameters",
-        persist = true
-    }
-})
+    })
+else
+    local args = prompt({
+        title = "隨機音符琶音",
+        inputs = {
+            {
+                label = "輸入滴答數",
+                default = "240",
+                converter = tonumber
+            },
+            {
+                label = "模式:1DU 2UD 3M 4W 5RD", -- 1:下到上 2:上到下 3:下到上波浪 4:上到下波浪 5:随机
+                default = "1",
+                converter = tonumber
+            }
+        },
+        remember = {
+            enable = true,
+            section = "Random Note Arpeggio",
+            key = "Parameters",
+            persist = true
+        }
+    })
+end
 
 if not args then return end
 
