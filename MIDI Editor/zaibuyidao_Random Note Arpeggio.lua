@@ -1,5 +1,5 @@
 -- @description Random Note Arpeggio
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -333,8 +333,8 @@ local args = prompt({
     },
     remember = {
         enable = true,
-        section = "Split And Arrange Notes",
-        key = "prompt",
+        section = "Random Note Arpeggio",
+        key = "Parameters",
         persist = true
     }
 })
