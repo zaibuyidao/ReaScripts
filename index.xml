@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ee298c9b7b44f5d8e0c6164e66a89246d9e58552">
+<index version="1" name="zaibuyidao Scripts" commit="f4e75a66773269145aedcf963341140b78762257">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3814,15 +3814,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/201cd3b960bcb9ff1d35bafa9e7a270a02563d85/MIDI%20Editor/zaibuyidao_Random%20CC%20Value.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Random Mute Notes.lua" type="script" desc="Random Mute Notes">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-05-14T15:43:11Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/efd206ad6fb2705acf00c180a418a5dc8238aebe/MIDI%20Editor/zaibuyidao_Random%20Mute%20Notes.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Random Note Arpeggio.lua" type="script" desc="Random Note Arpeggio">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -3963,6 +3954,24 @@
       <version name="1.0" author="zaibuyidao" time="2022-12-07T13:26:49Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9b3ffbd8bf1dcdffa50a95ad83f2afda39662e11/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20By%20Key.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Random Note Toggle Mute.lua" type="script" desc="Random Note Toggle Mute">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2022-12-07T14:11:02Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f4e75a66773269145aedcf963341140b78762257/MIDI%20Editor/zaibuyidao_Random%20Note%20Toggle%20Mute.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Notes Pitch (Customize).lua" type="script" desc="Random Notes Pitch (Customize)">
