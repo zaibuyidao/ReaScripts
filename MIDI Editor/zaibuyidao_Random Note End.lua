@@ -1,5 +1,5 @@
--- @description Random Note Duration
--- @version 1.0.1
+-- @description Random Note End
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -18,11 +18,11 @@ end
 function main()
     take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
-    amount = reaper.GetExtState("Random Note Duration", "Parameters")
+    amount = reaper.GetExtState("Random Note End", "Parameters")
     if (amount == "") then amount = "3" end
-    user_ok, amount = reaper.GetUserInputs("Random Note Duration", 1, "Value", amount)
+    user_ok, amount = reaper.GetUserInputs("Random Note End", 1, "Value", amount)
     amount = tonumber(amount)
-    reaper.SetExtState("Random Note Duration", "Parameters", amount, false)
+    reaper.SetExtState("Random Note End", "Parameters", amount, false)
     _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
 
     local flag
@@ -47,7 +47,7 @@ function main()
         note_len = note[i].endppqpos - note[i].startppqpos
         if note_len > amount then
             if note[i].sel then
-                reaper.MIDI_SetNote(take, i, nil, nil, (note[i].startppqpos-amount-1)+math.random(amount*2+1), (note[i].endppqpos-amount-1)+math.random(amount*2+1), nil, nil, nil, true)
+                reaper.MIDI_SetNote(take, i, nil, nil, nil, (note[i].endppqpos-amount-1)+math.random(amount*2+1), nil, nil, nil, true)
             end
         end
         i = reaper.MIDI_EnumSelNotes(take, i)
@@ -57,7 +57,7 @@ function main()
         note_len = endppqpos - startppqpos
         if note_len > amount then
             if not sel_note then
-                reaper.MIDI_SetNote(take, i - 1, nil, nil, (startppqpos-amount-1)+math.random(amount*2+1), (endppqpos-amount-1)+math.random(amount*2+1), nil, nil, nil, true)
+                reaper.MIDI_SetNote(take, i - 1, nil, nil, nil, (endppqpos-amount-1)+math.random(amount*2+1), nil, nil, nil, true)
             end
         end
     end
@@ -65,11 +65,11 @@ function main()
     reaper.MIDI_Sort(take)
 
     if flag then
-        reaper.MIDIEditor_LastFocused_OnCommand(40681, 0)
+        reaper.MIDIEditor_LastFocused_OnCommand(40681,0)
     end
 end
 
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("Random Note Duration", -1)
+reaper.Undo_EndBlock("Random Note End", -1)
 reaper.SN_FocusMIDIEditor()

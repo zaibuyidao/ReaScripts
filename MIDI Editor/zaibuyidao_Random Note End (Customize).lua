@@ -1,5 +1,5 @@
--- @description Random Note Duration
--- @version 1.0.1
+-- @description Random Note End (Customize)
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -8,21 +8,16 @@
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Requires SWS Extensions
 
-if not reaper.SN_FocusMIDIEditor then
-    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
-    if retval == 1 then
-        open_url("http://www.sws-extension.org/download/pre-release/")
-    end
-end
+-- USER AREA
+-- Settings that the user can customize.
+
+num = 3
+
+-- End of USER AREA
 
 function main()
     take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
-    amount = reaper.GetExtState("Random Note Duration", "Parameters")
-    if (amount == "") then amount = "3" end
-    user_ok, amount = reaper.GetUserInputs("Random Note Duration", 1, "Value", amount)
-    amount = tonumber(amount)
-    reaper.SetExtState("Random Note Duration", "Parameters", amount, false)
     _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
 
     local flag
@@ -45,9 +40,9 @@ function main()
         note[i].pitch,
         note[i].vel = reaper.MIDI_GetNote(take, i)
         note_len = note[i].endppqpos - note[i].startppqpos
-        if note_len > amount then
+        if note_len > num then
             if note[i].sel then
-                reaper.MIDI_SetNote(take, i, nil, nil, (note[i].startppqpos-amount-1)+math.random(amount*2+1), (note[i].endppqpos-amount-1)+math.random(amount*2+1), nil, nil, nil, true)
+                reaper.MIDI_SetNote(take, i, nil, nil, nil, (note[i].endppqpos-num-1)+math.random(num*2+1), nil, nil, nil, true)
             end
         end
         i = reaper.MIDI_EnumSelNotes(take, i)
@@ -55,21 +50,20 @@ function main()
     for i = 1, notecnt do
         _, selected, _, startppqpos, endppqpos, _, _, _ = reaper.MIDI_GetNote(take, i - 1)
         note_len = endppqpos - startppqpos
-        if note_len > amount then
+        if note_len > num then
             if not sel_note then
-                reaper.MIDI_SetNote(take, i - 1, nil, nil, (startppqpos-amount-1)+math.random(amount*2+1), (endppqpos-amount-1)+math.random(amount*2+1), nil, nil, nil, true)
+                reaper.MIDI_SetNote(take, i - 1, nil, nil, nil, (endppqpos-num-1)+math.random(num*2+1), nil, nil, nil, true)
             end
         end
     end
     reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40659)
     reaper.MIDI_Sort(take)
-
+    
     if flag then
-        reaper.MIDIEditor_LastFocused_OnCommand(40681, 0)
+        reaper.MIDIEditor_LastFocused_OnCommand(40681,0)
     end
 end
 
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock("Random Note Duration", -1)
-reaper.SN_FocusMIDIEditor()
+reaper.Undo_EndBlock("Random Note End", -1)
