@@ -1,5 +1,5 @@
 -- @description Random Note Key (Customize)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -11,9 +11,9 @@
 -- USER AREA
 -- Settings that the user can customize.
 
-key_signature = "C" -- Use # : C C# D D#...
 key_min = "C5"
 key_max = "C6"
+key_signature = "C" -- Use # : C C# D D#...
 
 -- End of USER AREA
 

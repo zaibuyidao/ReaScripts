@@ -1,5 +1,5 @@
 -- @description Random Note Key
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -19,18 +19,18 @@ function main()
     take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
 
-    local key_signature = reaper.GetExtState("Random Note Key", "Key")
-    if (key_signature == "") then key_signature = "C" end
     local key_min = reaper.GetExtState("Random Note Key", "Min")
     if (key_min == "") then key_min = "C5" end
     local key_max = reaper.GetExtState("Random Note Key", "Max")
     if (key_max == "") then key_max = "C6" end
-    user_ok, input_csv = reaper.GetUserInputs("Random Notes Key", 3, "Key Signature,Key Min,Key Max", key_signature ..','.. key_min ..','.. key_max)
-    if not user_ok then return reaper.SN_FocusMIDIEditor() end
-    key_signature, key_min, key_max = input_csv:match("(.*),(.*),(.*)")
-    reaper.SetExtState("Random Note Key", "Key", key_signature, false)
+    local key_signature = reaper.GetExtState("Random Note Key", "Key")
+    if (key_signature == "") then key_signature = "C" end
+    uok, uinput = reaper.GetUserInputs("Random Note Key", 3, "Key Min,Key Max,Key Signature",  key_min ..','.. key_max ..','.. key_signature)
+    if not uok then return reaper.SN_FocusMIDIEditor() end
+    key_min, key_max, key_signature = uinput:match("(.*),(.*),(.*)")
     reaper.SetExtState("Random Note Key", "Min", key_min, false)
     reaper.SetExtState("Random Note Key", "Max", key_max, false)
+    reaper.SetExtState("Random Note Key", "Key", key_signature, false)
 
     _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
     key_map = {} --音名和键位表
@@ -99,7 +99,7 @@ function main()
 
     local flag
     if reaper.GetToggleCommandStateEx(32060, 40681) == 1 then
-        reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
+        reaper.MIDIEditor_LastFocused_OnCommand(40681, 0) -- Options: Correct overlapping notes while editing
         flag = true
     end
 
