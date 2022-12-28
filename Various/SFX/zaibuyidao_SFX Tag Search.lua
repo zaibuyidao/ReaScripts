@@ -236,7 +236,7 @@ function init()
 			local info = jGuiText:new()
 			info.width = 40
 			info.height = listView.itemHeight
-			info.label_fontsize = math.floor((listView.itemHeight-2) / 2 + 3)
+			info.label_fontsize = math.floor((listView.itemHeight-2) / 2 + 4)
 			info.label_font = getConfig("ui.global.font", "微软雅黑") -- "Calibri"
 			info.label_align = "r"
 			info.label_valign = "m"
@@ -477,4 +477,9 @@ end
 if init() then
 	window:setReaperFocus()
 	loop()
+	
+	if reaper.JS_Window_FindEx then
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title"), true)
+		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
+	end
 end
