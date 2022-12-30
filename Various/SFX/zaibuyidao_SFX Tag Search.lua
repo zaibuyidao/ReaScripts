@@ -356,7 +356,7 @@ function init()
 			title = "跳轉目標",
 			inputs = {
 				{
-					label = "行數",
+					label = "行數,extrawidth=100",
 					default = self.value,
 					converter = tonumber
 				}
@@ -381,7 +381,7 @@ function init()
 			title = "音效搜索",
 			inputs = {
 				{
-					label = "關鍵詞",
+					label = "關鍵詞,extrawidth=100",
 					default = self.value
 				}
 			}
