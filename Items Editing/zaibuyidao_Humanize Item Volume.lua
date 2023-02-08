@@ -1,12 +1,12 @@
 -- @description Humanize Item Volume
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Optimized code
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires SWS Extensions
+-- @about Not Requires SWS Extensions
 
 function print(...)
   local params = {...}
@@ -79,14 +79,14 @@ if count_sel_items > 0 then
   if reaper.GetOS():match("Win") then
     if check_locale(locale) == false then
       title = "Humanize Item Volume"
-      lable = "Strength dB:,Use int value (y/n)"
+      lable = "Strength dB:,Use integer? (y/n)"
     else
-      title = "人性化對象音量"
-      lable = "强度 dB,是否用整數 (y/n)"
+      title = "對象音量人性化"
+      lable = "强度 dB:,是否使用整數 (y/n)"
     end
   else
     title = "Humanize Item Volume"
-    lable = "Strength dB:,Use int value (y/n)"
+    lable = "Strength dB:,Use integer? (y/n)"
   end
 
   local uok, uinput = reaper.GetUserInputs(title, 2, lable, default)
@@ -94,6 +94,7 @@ if count_sel_items > 0 then
 
   strength, toggle = uinput:match("(.*),(.*)")
   strength, toggle = tonumber(strength), tostring(toggle)
+  strength = math.abs(strength)
 
   reaper.SetExtState("HUMANIZE_ITEM_VOLUME", "STRENGTH", strength, false)
   reaper.SetExtState("HUMANIZE_ITEM_VOLUME", "TOGGLE", toggle, false)
