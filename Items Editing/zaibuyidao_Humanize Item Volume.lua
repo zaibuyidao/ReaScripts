@@ -1,5 +1,5 @@
 -- @description Humanize Item Volume
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Optimized code
 -- @links
@@ -94,27 +94,32 @@ if count_sel_items > 0 then
 
   strength, toggle = uinput:match("(.*),(.*)")
   strength, toggle = tonumber(strength), tostring(toggle)
-  strength = math.abs(strength)
 
   reaper.SetExtState("HUMANIZE_ITEM_VOLUME", "STRENGTH", strength, false)
   reaper.SetExtState("HUMANIZE_ITEM_VOLUME", "TOGGLE", toggle, false)
+  strength = math.abs(strength-1)
 
   for i = 0, count_sel_items - 1 do
     local item = reaper.GetSelectedMediaItem(0, i)
-    local item_vol = reaper.GetMediaItemInfo_Value(item, 'D_VOL')
-    local item_db = 20*log10(item_vol) -- 獲取對象的dB
-    local delta_db = strength - item_db
-    local input = (strength)*2
-
-    if toggle == "y" then
-      rand = math.floor(math.random()*(input-1)-(input/2)) -- 隨機整數
-    else
-      rand = math.random()*(input)-(input/2)
+    local take = reaper.GetActiveTake(item)
+    if take then
+      local item_vol = reaper.GetMediaItemInfo_Value(item, 'D_VOL')
+      local item_db = 20*log10(item_vol) -- 獲取對象的dB
+      local delta_db = strength - item_db
+      local input = (strength+1)*2
+  
+      if not reaper.TakeIsMIDI(take) then
+        if toggle == "y" then
+          rand = math.floor(math.random()*(input+1)-(input/2)) -- 隨機整數
+        else
+          rand = math.random()*(input)-(input/2)
+        end
+    
+        local new_db = item_vol*10^(0.05*rand)
+        reaper.SetMediaItemInfo_Value(item, 'D_VOL', new_db)
+        reaper.UpdateItemInProject(item)
+      end
     end
-
-    local new_db = item_vol*10^(0.05*rand)
-    reaper.SetMediaItemInfo_Value(item, 'D_VOL', new_db)
-    reaper.UpdateItemInProject(item)
   end
 end
 reaper.Undo_EndBlock(title, -1)
