@@ -1,5 +1,5 @@
 -- @description Humanize Take Volume
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Optimized code
 -- @links
@@ -50,28 +50,27 @@ function table.print(t)
   end
 end
 
-reaper.PreventUIRefresh(1)
-reaper.Undo_BeginBlock()
 local count_sel_items = reaper.CountSelectedMediaItems(0)
-local log10 = function(x) return math.log(x, 10) end
-
-local strength = reaper.GetExtState("HUMANIZE_TAKE_VOLUME", "STRENGTH")
-if (strength == "") then strength = "3" end
-local toggle = reaper.GetExtState("HUMANIZE_TAKE_VOLUME", "TOGGLE")
-if (toggle == "") then toggle = "n" end
-
-local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-
-function check_locale(locale)
-  if locale == 936 then
-    return true
-  elseif locale == 950 then
-    return true
-  end
-  return false
-end
 
 if count_sel_items > 0 then
+  local log10 = function(x) return math.log(x, 10) end
+
+  local strength = reaper.GetExtState("HUMANIZE_TAKE_VOLUME", "STRENGTH")
+  if (strength == "") then strength = "3" end
+  local toggle = reaper.GetExtState("HUMANIZE_TAKE_VOLUME", "TOGGLE")
+  if (toggle == "") then toggle = "n" end
+  
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  
+  local function check_locale(locale)
+    if locale == 936 then
+      return true
+    elseif locale == 950 then
+      return true
+    end
+    return false
+  end
+
   default = strength ..','.. toggle
 
   if reaper.GetOS():match("Win") then
@@ -92,15 +91,17 @@ if count_sel_items > 0 then
 
   strength, toggle = uinput:match("(.*),(.*)")
   strength, toggle = tonumber(strength), tostring(toggle)
+  if strength == 0 then return end
 
   reaper.SetExtState("HUMANIZE_TAKE_VOLUME", "STRENGTH", strength, false)
   reaper.SetExtState("HUMANIZE_TAKE_VOLUME", "TOGGLE", toggle, false)
   strength = math.abs(strength-1)
 
+  reaper.PreventUIRefresh(1)
+  reaper.Undo_BeginBlock()
   for i = 0, count_sel_items - 1 do
     local item = reaper.GetSelectedMediaItem(0, i)
     local take = reaper.GetActiveTake(item)
-
     if take then
       local take_vol = reaper.GetMediaItemTakeInfo_Value(take, 'D_VOL')
       local take_db = 20*log10(take_vol)
@@ -113,14 +114,13 @@ if count_sel_items > 0 then
         else
           rand = math.random()*(input)-(input/2)
         end
-
         local new_db = take_vol*10^(0.05*rand)
         reaper.SetMediaItemTakeInfo_Value(take, 'D_VOL', new_db)
-        reaper.UpdateItemInProject(item)
       end
     end
+    reaper.UpdateItemInProject(item)
   end
+  reaper.Undo_EndBlock(title, -1)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
 end
-reaper.Undo_EndBlock(title, -1)
-reaper.PreventUIRefresh(-1)
-reaper.UpdateArrange()
