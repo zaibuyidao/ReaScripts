@@ -537,7 +537,7 @@ function init()
 		resultListView:draw()
 		stateLabel.label = "(" .. resultListView.firstIndex .. getPathDelimiter() .. #resultListView.data .. ")"
 		if remain > 0 then
-			stateLabel.label = stateLabel.label .. " 剩余：" .. remain
+			stateLabel.label = stateLabel.label .. " 剩余: " .. remain
 		end
 	end
 
