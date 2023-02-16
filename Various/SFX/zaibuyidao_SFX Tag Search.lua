@@ -133,8 +133,7 @@ for _, db in ipairs(dbList) do
 end
 
 if readDBCount == 0 then
-	print("沒有找到數據庫，請創建一個數據庫，並重新運行該腳本。")
-	return
+	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
 end
 
 -- -- 模拟插入大量数据
@@ -606,4 +605,9 @@ end
 if init() then
 	window:setReaperFocus()
 	loop()
+
+	if reaper.JS_Window_FindEx then
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title"), true)
+		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
+	end
 end
