@@ -2,8 +2,8 @@
 return {
     ui = {
         global = {
-            font = "微软雅黑", -- 默认字体名
-            size_unit = 22, -- 控件单位大小，所有控件大小以此为基准
+            font = "Calibri", -- 默认字体名
+            size_unit = 16, -- 控件单位大小，所有控件大小以此为基准
         },
         window = {
             title = "SFX Tag Search", -- 窗口标题
@@ -42,7 +42,7 @@ return {
             -- 翻页时，滚动的记录条数，不存在配置时则默认使用当前列表一页的条数
             -- page_up_down_size = 50,
             
-            color_highlight = {105/255, 105/255, 105/255, 0.1}, -- 关键词高亮颜色
+            color_highlight = {0/255, 120/255, 212/255, 0.3}, -- 关键词高亮颜色
             color_focus_border = {105/255, 105/255, 105/255, 1} -- 聚焦时边框的颜色（列表项）
         }
     },
@@ -61,7 +61,7 @@ return {
         max_record = 50 -- 关键词排行保存条数限制
     },
     search = {
-        async = false, -- 是否开启异步搜索
+        async = false, -- 是否开启异步搜索（不建议开启）
         switch_database = true, -- 点击关键词时，是否同时切换数据库
         case_sensitive = false, -- 搜索时是否区分大小写
         file = {

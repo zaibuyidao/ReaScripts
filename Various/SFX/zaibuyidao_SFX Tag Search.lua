@@ -326,7 +326,7 @@ function init()
 			local info = jGuiText:new()
 			info.width = 40
 			info.height = listView.itemHeight
-			info.label_fontsize = math.floor((listView.itemHeight-2) / 2 + 4)
+			info.label_fontsize = math.floor((listView.itemHeight-2) / 2 + 5)
 			info.label_font = getConfig("ui.global.font", "微软雅黑") -- "Calibri"
 			info.label_align = "r"
 			info.label_valign = "m"
@@ -422,13 +422,13 @@ function init()
 		elseif key == 1885824110 then
 			-- print("page down")
 			resultListView:scroll(getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
-		elseif key == 26162 then --f2
+		elseif key == 26164 then --跳转目标 f4
 			resultListView:promptForJump()
-		elseif key == 26163 then --f3
+		elseif key == 26163 then --随机行 f3
 			resultListView:randomJump()
-		elseif key == 26164 then --f4
+		elseif key == 6697266 then --过滤关键词 f12
 			searchTextBox:promptForContent()
-		elseif key == 26165 then --f5
+		elseif key == 26162 then --编辑配置表 f2
 			openUrl(script_path .. "lib/config.lua")
 		elseif key == 1752132965 then --HOME
 			resultListView:jump(1)
@@ -537,7 +537,7 @@ function init()
 		resultListView:draw()
 		stateLabel.label = "(" .. resultListView.firstIndex .. getPathDelimiter() .. #resultListView.data .. ")"
 		if remain > 0 then
-			stateLabel.label = stateLabel.label .. " 剩余: " .. remain
+			stateLabel.label = stateLabel.label .. " 剩餘: " .. remain
 		end
 	end
 
