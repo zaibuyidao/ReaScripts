@@ -112,12 +112,33 @@ end
 
 function readReaperFileList(path, processItem)
     local file = io.open(path, "r")
-    if not file then return end
+    if not file then return false end
     while true do
         local line = file:read()
         if line == nil then break end
         processItem(line:match("(%w+) (.+)"))
     end
+    return true
+end
+
+function readReaperFileListAsync(path)
+    local file = io.open(path, "r")
+    if not file then return end
+
+    local line = file:read()
+
+    local function nextItem()
+        if line ~= nil then
+            return line:match("(%w+) (.+)")
+        end
+        line = file:read()
+    end
+
+    local function hasNext()
+        return line ~= nil
+    end
+
+    return hasNext, nextItem
 end
 
 function readDataItemEntry(entry)
@@ -168,7 +189,32 @@ function table.arrayToTable(tab)
 	return r
 end
 
-function readViewModelFromReaperFileList(dbPath, config)
+function table.bininsert(t, value, fcomp)
+    --  Initialise numbers
+    local iStart,iEnd,iMid,iState = 1,#t,1,0
+    -- Get insert position
+    while iStart <= iEnd do
+        -- calculate middle
+        iMid = math.floor( (iStart+iEnd)/2 )
+        -- compare
+        if fcomp( value,t[iMid] ) then
+        iEnd,iState = iMid - 1,0
+        else
+        iStart,iState = iMid + 1,1
+        end
+    end
+    table.insert( t,(iMid+iState),value )
+    return (iMid+iState)
+end
+
+function table.assign(target, source)
+    for k, v in pairs(source) do
+        target[k] = v
+    end
+    return target
+end
+
+function readViewModelFromReaperFileList(dbPath, config, async)
     config = config or {}
     local excludeOrigin = config.excludeOrigin or {}
     local delimiters = config.delimiters or {}
@@ -188,13 +234,18 @@ function readViewModelFromReaperFileList(dbPath, config)
 
     local path
     local keywords = {}
-    readReaperFileList(dbPath, function (itemType, content)
+
+    local function processItem(itemType, content)
         if itemType == "PATH" then
             path = (parseCSVLine(content, " "))[1]
         elseif itemType == "FILE" and not excludeOrigin["File"] then
             local p = (parseCSVLine(content, " "))[1]
+            local matchPattern = "[^/%\\]+$"
+            if config.containsAllParentDirectories then
+                matchPattern = "[^/%\\]+"
+            end
             -- read each part from path
-            for w in p:gmatch("[^/%\\]+") do
+            for w in p:gmatch(matchPattern) do
                 -- not disk
                 if not w:match("^%w+:$") then
                     local value = w:trimFileExtension()
@@ -239,6 +290,17 @@ function readViewModelFromReaperFileList(dbPath, config)
             end
         end
         ::continue::
-    end)
-    return path, keywords
+    end
+
+    if async then
+        local hasNext, _nextItem = readReaperFileList(dbPath)
+        local function nextItem()
+            return processItem(_nextItem)
+        end
+        return hasNext, nextItem
+    end
+    
+    if readReaperFileList(dbPath, processItem) then
+        return path, keywords
+    end
 end

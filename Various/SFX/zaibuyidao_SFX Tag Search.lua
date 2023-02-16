@@ -1,6 +1,24 @@
 -- NoIndex: true
+if not reaper.BR_Win32_SetFocus then
+	local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+	if retval == 1 then
+		Open_URL("http://www.sws-extension.org/download/pre-release/")
+	end
+end
+
+if not reaper.APIExists("JS_Localize") then
+	reaper.MB("請右鍵單擊並安裝'js_ReaScriptAPI: API functions for ReaScripts'。然後重新啟動REAPER並再次運行腳本，謝謝！", "你必須安裝 JS_ReaScriptAPI", 0)
+	local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+	if ok then
+			reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+	else
+			reaper.MB(err, "錯誤", 0)
+	end
+	return reaper.defer(function() end)
+end
+
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
-package.path = package.path .. ";" .. script_path .. "?.lua"
+package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
 require('REQ.j_file_functions')
 require('REQ.JProjectClass')
@@ -22,7 +40,7 @@ function getConfig(configName, default, convert)
 		if not cur then return default end
 		cur = cur[k]
 	end
-	if not cur then return default end
+	if cur == nil then return default end
 	if convert then
 		return convert(cur)
 	end
@@ -89,15 +107,18 @@ function getColorForDb(dbName)
 	return jColor:new(colorMap[dbName])
 end
 
-local data = (function ()
-	local data = {}
-	local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
-	for _, db in ipairs(dbList) do
-		if not excludeDbName[db.name] then
-			local path, keywords = readViewModelFromReaperFileList(db.path, {
-				excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
-				delimiters = getConfig("db.delimiters", {})
-			})
+local data = {}
+local readDBCount = 0
+local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
+for _, db in ipairs(dbList) do
+	if not excludeDbName[db.name] then
+		local path, keywords = readViewModelFromReaperFileList(db.path, {
+			excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
+			delimiters = getConfig("db.delimiters", {}),
+			containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+		})
+		if path and keywords then
+			readDBCount = readDBCount + 1
 			for v, keyword in pairs(keywords) do
 				table.insert(data, {
 					db = db.name,
@@ -109,23 +130,39 @@ local data = (function ()
 			end
 		end
 	end
-	return data
-end)()
+end
+
+if readDBCount == 0 then
+	print("沒有找到數據庫，請創建一個數據庫，並重新運行該腳本。")
+	return
+end
+
+-- -- 模拟插入大量数据
+-- for i=1, 50000 do
+-- 	table.insert(data, {
+-- 		db = "db.name",
+-- 		path = "path",
+-- 		value = "keyword.value" .. i,
+-- 		from = "keyword.from",
+-- 		fromString = "AAA" 
+-- 	})
+-- end
 
 function searchKeyword(value, rating)
 	local res = {}
 	local index = 1
+	local caseSensitive = getConfig("search.case_sensitive")
+	local lowerValue = value:lower()
 	for _, item in ipairs(data) do
-		local caseSensitive = getConfig("search.case_sensitive")
-		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(value:lower())) then
-			table.insert(res, {
+		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(lowerValue)) then
+			res[index] = {
 				index = index, -- for stable sort
 				db = item.db,
 				path = item.path,
 				value = item.value,
 				from = item.from,
 				fromString = item.fromString
-			})
+			}
 			index = index + 1
 		end
 	end
@@ -141,6 +178,53 @@ function searchKeyword(value, rating)
 	return res
 end
 
+function searchKeywordAsync(value, rating, result)
+	local index = 1
+	local caseSensitive = getConfig("search.case_sensitive")
+	local function compare(a, b)
+		local ra = getRating(a.value)
+		local rb = getRating(b.value)
+		if ra == rb then
+			return a.index < b.index
+		end
+		return ra > rb
+	end
+	local function processItem(item, index)
+		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(value:lower())) then
+			-- table.insert(result, {
+			-- 	index = index, -- for stable sort
+			-- 	db = item.db,
+			-- 	path = item.path,
+			-- 	value = item.value,
+			-- 	from = item.from,
+			-- 	fromString = item.fromString
+			-- })
+			table.bininsert(result, {
+				index = index, -- for stable sort
+				db = item.db,
+				path = item.path,
+				value = item.value,
+				from = item.from,
+				fromString = item.fromString
+			}, compare)
+		end
+	end
+	local i = 1
+	local function hasNext()
+		return i <= #data
+	end
+	local function fetchNext()
+		if i > #data then return end
+		local res = processItem(data[i], i)
+		i = i + 1
+		return res
+	end
+	local function getNextIndex()
+		return i
+	end
+	return hasNext, fetchNext, getNextIndex, #data
+end
+
 function init()
 	JProject:new()
 	window = jGui:new({
@@ -151,41 +235,47 @@ function init()
         y = getState("WINDOW_Y", nil, tonumber),
         dockstate=getState("WINDOW_DOCK_STATE")
     })
-
 	local lastSearchText
-	local searchTextBox = jGuiTextInput:new()
-	searchTextBox.x = 10
-	searchTextBox.y = 10
-	searchTextBox.width = 480
-	searchTextBox.height = math.floor( SIZE_UNIT * 1.5 )
-	searchTextBox.label_fontsize = math.floor( SIZE_UNIT * 1.5 )
-	searchTextBox.label_align = "l"
-	searchTextBox.label_font = getConfig("ui.global.font", "微软雅黑")
-	searchTextBox.colors_label = getConfig("ui.search_box.colors_label") or searchTextBox.colors_label
-	searchTextBox.color_focus_border = getConfig("ui.search_box.color_focus_border") or searchTextBox.color_focus_border
-	searchTextBox.focus_index = window:getFocusIndex()
-	searchTextBox.label_padding = 3
-	function searchTextBox:onRightMouseClick() 
-		searchTextBox.value = ""
-		searchTextBox.label = ""
-	end
 
+	local searchTextBox = jGuiTextInput:new()
+	table.assign(searchTextBox, {
+		x = 10,
+		y = 10,
+		width = 480,
+		height = math.floor( SIZE_UNIT * 1.5 ),
+		label_fontsize = math.floor( SIZE_UNIT * 1.5 ),
+		label_align = "l",
+		border_focus = getConfig("ui.search_box.border_focus", searchTextBox.border_focus),
+		label_font = getConfig("ui.global.font", "微软雅黑"),
+		carret_color = getConfig("ui.search_box.carret_color", searchTextBox.carret_color),
+		colors_label = getConfig("ui.search_box.colors_label") or searchTextBox.colors_label,
+		color_focus_border = getConfig("ui.search_box.color_focus_border") or searchTextBox.color_focus_border,
+		focus_index = window:getFocusIndex(),
+		label_padding = 3
+	})
+	function searchTextBox:onRightMouseClick() 
+		self.value = ""
+		self.label = ""
+	end
 	window:controlAdd(searchTextBox)
 
 	local stateLabel = jGuiControl:new()
-	stateLabel.width = SIZE_UNIT * 2.5
-	stateLabel.x = window.width - stateLabel.width - 12
-	stateLabel.y = 10
-	stateLabel.label_fontsize = math.floor(SIZE_UNIT * 0.75)
-	stateLabel.label_align = "r"
-	stateLabel.label_font = getConfig("ui.global.font", "微软雅黑")
-	stateLabel.border = false
-	stateLabel.label = "()"
+	table.assign(stateLabel, {
+		width = SIZE_UNIT * 2.5,
+		x = window.width - stateLabel.width - 12,
+		y = 10,
+		label_fontsize = math.floor(SIZE_UNIT * 0.75),
+		label_align = "r",
+		label_font = getConfig("ui.global.font", "微软雅黑"),
+		border = getConfig("ui.search_box.state_label.border", false),
+		colors_label = getConfig("ui.search_box.state_label.colors_label") or stateLabel.colors_label,
+		label = "()"
+	})
 	window:controlAdd(stateLabel)
 	
 	window:setFocus(searchTextBox)
 
-	jGuiHighlightControl = jGuiControl:new({highlight = {}, color_highlight = {1, .9, 0, .2},})
+	jGuiHighlightControl = jGuiControl:new({highlight = {}, color_highlight = getConfig("ui.result_list.color_highlight", {1, .9, 0, .2}),})
 	function jGuiHighlightControl:_drawLabel()
 		gfx.setfont(1, self.label_font, self.label_fontsize)
 		self:__setLabelXY()
@@ -228,6 +318,7 @@ function init()
 			c.label_fontsize = listView.itemHeight - 2
 			c.label_align = "l"
 			c.label_font = getConfig("ui.global.font", "微软雅黑") -- "Calibri"
+			c.color_focus_border = getConfig("ui.result_list.color_focus_border", c.color_focus_border)
 			c.border = false
 			c.border_focus = true
 			c.x = x
@@ -338,6 +429,8 @@ function init()
 			resultListView:randomJump()
 		elseif key == 26164 then --f4
 			searchTextBox:promptForContent()
+		elseif key == 26165 then --f5
+			openUrl(script_path .. "lib/config.lua")
 		elseif key == 1752132965 then --HOME
 			resultListView:jump(1)
 		elseif key == 6647396 then --END
@@ -365,9 +458,11 @@ function init()
 		if args then
 			self:jump(args[1])
 		end
-		HWND_KS = reaper.JS_Window_Find(getConfig("ui.window.title"),0)
-		reaper.BR_Win32_SetFocus(HWND_KS)
-		return
+		reaper.defer(function()
+			window:setFocus(searchTextBox)
+			window:setReaperFocus()
+		end)
+		return 
 	end
 
 	function resultListView:randomJump()
@@ -393,9 +488,10 @@ function init()
 			self:__setCarretPos(#self.value)
 			self:_draw()
 		end
-		window:setFocus(self)
-		HWND_KS = reaper.JS_Window_Find(getConfig("ui.window.title"),0)
-		reaper.BR_Win32_SetFocus(HWND_KS)
+		reaper.defer(function()
+			window:setFocus(searchTextBox)
+			window:setReaperFocus()
+		end)
 	end
 
 	function searchTextBox:onKeyboard(key)
@@ -425,7 +521,7 @@ function init()
 	end
 
 	resultListView:addScrollListener(function () 
-		stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")"
+		stateLabel.label = "(" .. resultListView.firstIndex .. getPathDelimiter() .. #resultListView.data .. ")"
 	end)
 
 	function window:onResize()
@@ -436,13 +532,46 @@ function init()
 		self:controlInitAll()
 	end
 
+	local remain = 0
+
+	function refreshResultState()
+		resultListView:draw()
+		stateLabel.label = "(" .. resultListView.firstIndex .. getPathDelimiter() .. #resultListView.data .. ")"
+		if remain > 0 then
+			stateLabel.label = stateLabel.label .. " 剩余：" .. remain
+		end
+	end
+
+	function startSearchAsync(value)
+		resultListView.firstIndex = 1
+		local data = {}
+		resultListView.data = data
+		local hasNext, fetchNext, getNextIndex, total = searchKeywordAsync(searchTextBox.value, ratings, data)
+		local function fetch()
+			if not hasNext or resultListView.data ~= data then return end
+			fetchNext()
+			remain = total - getNextIndex() + 1
+			refreshResultState()
+			reaper.defer(fetch)
+		end
+		reaper.defer(fetch)
+	end
+
+	function startSearchSync(value)
+		resultListView.firstIndex = 1
+		resultListView.data = searchKeyword(searchTextBox.value, ratings)
+		refreshResultState()
+	end
+
+	local startSearch = startSearchSync
+	if getConfig("search.async") then
+		startSearch = startSearchAsync
+	end
+
 	function window:update()
 		if lastSearchText ~= searchTextBox.value then
 			lastSearchText = searchTextBox.value
-			resultListView.data = searchKeyword(searchTextBox.value, ratings)
-			resultListView.firstIndex = 1
-			resultListView:draw()
-			stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")"
+			startSearch(lastSearchText)
 		end
 	end
 	
@@ -477,9 +606,4 @@ end
 if init() then
 	window:setReaperFocus()
 	loop()
-	
-	if reaper.JS_Window_FindEx then
-		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title"), true)
-		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
-	end
 end

@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.0.2
+-- @version 1.0.3
 -- @changelog Initial release
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
@@ -10,14 +10,14 @@
 -- @metapackage
 -- @provides
 --   [main] SFX/zaibuyidao_SFX Tag Search.lua
---   [nomain] SFX/config.lua
---   [nomain] SFX/core.lua
---   [nomain] SFX/LIP.lua
---   [nomain] SFX/ListView.lua
---   [nomain] SFX/reaper-utils.lua
---   [nomain] SFX/REQ/*.lua
+--   [nomain] SFX/lib/config.lua
+--   [nomain] SFX/lib/core.lua
+--   [nomain] SFX/lib/LIP.lua
+--   [nomain] SFX/lib/ListView.lua
+--   [nomain] SFX/lib/reaper-utils.lua
+--   [nomain] SFX/lib/REQ/*.lua
 --   SFX/*.csv
 -- @donation http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 -- Licensed under the GNU GPL v3

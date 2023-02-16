@@ -116,6 +116,16 @@ function getPathDelimiter()
     end
 end
 
+function openUrl(url)
+    local osName = reaper.GetOS()
+    if osName:match("^OSX") then
+        os.execute('open "" "' .. url .. '"')
+    else
+        -- chcp 65001
+        os.execute('start "" "' .. url .. '"')
+    end
+end
+
 function getDbList()
     local reaperConfig = LIP.load(reaper.GetResourcePath() .. PATH_DELIMITER .. "reaper.ini")
     local i = 1
@@ -170,7 +180,8 @@ function SetExplorerPath(hwnd, folder)
     if edit then
         reaper.JS_Window_SetTitle(edit, "")
         PostText(edit, folder)
-        reaper.JS_WindowMessage_Post(hwnd, "WM_KEYDOWN", 0x28, 0,0,0) -- https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+        -- https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+        reaper.JS_WindowMessage_Post(hwnd, "WM_KEYDOWN", 0x28, 0,0,0)
         reaper.JS_WindowMessage_Post(hwnd, "WM_KEYUP", 0x26, 0,0,0)
     end
 end
@@ -183,4 +194,20 @@ function getReaperExplorerPath()
     local hWnd = reaper.JS_Window_Find("Media Explorer", true)
     local path_hwnd = reaper.JS_Window_FindChildByID(hWnd, 1002)
     return reaper.JS_Window_GetTitle(path_hwnd, "", 255)
+end
+
+function interval(f, t)
+    local _last = os.clock()
+    local active = true
+    local function iv()
+        if (os.clock() - _last >= t) then
+            _last = os.clock()
+            f()
+        end
+        if active then
+            reaper.defer(iv)
+        end
+    end
+    reaper.defer(iv)
+    return function () active = false end
 end
