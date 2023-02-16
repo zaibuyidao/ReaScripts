@@ -85,7 +85,7 @@ GUI.New("btn_search", "Button", {
     y = 336,
     w = 96,
     h = 96,
-    caption = "SEARCH",
+    caption = "ENTER",
     font = 3,
     col_txt = "txt",
     col_fill = "elm_frame"
@@ -174,7 +174,7 @@ GUI.New("check_cat", "Checklist", {
     w = 96,
     h = 104,
     caption = "",
-    optarray = {"CatID", "CatShort", "UCS list", "Custom list"},
+    optarray = {"CatID", "CatShort", "UCS list", "Custom"},
     dir = "v",
     pad = 4,
     font_a = 2,

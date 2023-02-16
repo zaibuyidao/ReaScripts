@@ -52,7 +52,7 @@ GUI.New("btn_search", "Button", {
     y = 336,
     w = 96,
     h = 96,
-    caption = "RENAMING",
+    caption = "ENTER",
     font = 3,
     col_txt = "txt",
     col_fill = "elm_frame"
@@ -65,7 +65,7 @@ GUI.New("radio_pro", "Radio", {
     w = 96,
     h = 160,
     caption = "Processing",
-    optarray = {"Region mgr", "Region time", "Marker mgr", "Marker time", "Take", "Track"},
+    optarray = {"Rgn manager", "Rgn time", "Mkr manager", "Mkr time", "Take", "Track"},
     dir = "v",
     font_a = 2,
     font_b = 3,
@@ -248,7 +248,7 @@ GUI.New("menubar_wild", "Menubar", {
     y = 336,
     w = 24,
     h = 24,
-    menus = {{title = " ", options = {
+    menus = {{title = "    ", options = {
         {">Region"},
             {"<$regionname",mnu_file.regionname},
         {">Marker"}, 
@@ -265,7 +265,7 @@ GUI.New("menubar_wild", "Menubar", {
             {"$foldername",mnu_file.foldername_tr},
             {"$trackguid",mnu_file.trackguid_tr}
     }}},
-    font = 2,
+    font = 4,
     col_txt = "txt",
     col_bg = "elm_frame",
     col_over = "elm_fill",
@@ -279,7 +279,7 @@ GUI.New("check_cat", "Checklist", {
     w = 96,
     h = 128,
     caption = "",
-    optarray = {"CatID", "CatShort", "UCS list", "Custom list", "Loop count"},
+    optarray = {"CatID", "CatShort", "UCS list", "Custom", "Loop count"},
     dir = "v",
     pad = 4,
     font_a = 2,

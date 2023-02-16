@@ -1400,7 +1400,7 @@ GUI.chars = {
 GUI.OS_fonts = {
 
     Windows = {
-        sans = "Arial", -- "Arial", "Calibri"
+        sans = "Calibri", -- "Arial", "Calibri"
         mono = "Consolas" -- "Consolas", "Courier New", "Lucida Console"
     },
 

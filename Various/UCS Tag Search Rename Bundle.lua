@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.2.7
+-- @version 1.2.8
 -- @changelog Initial release
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -17,6 +17,6 @@
 --   [nomain] UCS/lib/*.lua
 --   UCS/*.csv
 -- @donation http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 -- Licensed under the GNU GPL v3

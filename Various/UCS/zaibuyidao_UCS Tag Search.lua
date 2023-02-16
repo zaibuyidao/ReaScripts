@@ -511,6 +511,32 @@ else
     return reaper.defer(function() end)
 end
 
+GUI.OS_fonts = { -- 字体设置
+    Windows = {
+        sans = "Calibri", -- "Arial", "Calibri"
+        mono = "Consolas" -- "Consolas", "Courier New", "Lucida Console"
+    },
+    OSX = {
+        sans = "Helvetica Neue",
+        mono = "Andale Mono"
+    },
+    Linux = {
+        sans = "Arial",
+        mono = "DejaVuSansMono"
+    }
+}
+
+GUI.get_OS_fonts = function()
+    local os = reaper.GetOS()
+    if os:match("Win") then
+        return GUI.OS_fonts.Windows
+    elseif os:match("OSX") then
+        return GUI.OS_fonts.OSX
+    else
+        return GUI.OS_fonts.Linux
+    end
+end
+
 local fonts = GUI.get_OS_fonts()
 GUI.fonts.monospace = {fonts.mono, 14}
 GUI.fonts[4] = {fonts.sans, 16}
