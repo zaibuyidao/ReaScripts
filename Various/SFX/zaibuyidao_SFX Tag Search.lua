@@ -520,7 +520,7 @@ function init()
 	end
 
 	resultListView:addScrollListener(function () 
-		stateLabel.label = "(" .. resultListView.firstIndex .. getPathDelimiter() .. #resultListView.data .. ")"
+		stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")"
 	end)
 
 	function window:onResize()
@@ -535,7 +535,7 @@ function init()
 
 	function refreshResultState()
 		resultListView:draw()
-		stateLabel.label = "(" .. resultListView.firstIndex .. getPathDelimiter() .. #resultListView.data .. ")"
+		stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")"
 		if remain > 0 then
 			stateLabel.label = stateLabel.label .. " 剩餘: " .. remain
 		end
