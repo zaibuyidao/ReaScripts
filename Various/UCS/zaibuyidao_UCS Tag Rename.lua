@@ -1768,7 +1768,8 @@ function display_usc_data(data)
         current_filter_pattern = GUI.elms.edittext_filter:val()
         update_usc_data()
 
-        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        --if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_search.focus = false
         GUI.elms.edittext_filter.focus = true
     end
     
@@ -1780,8 +1781,9 @@ function display_usc_data(data)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
 
-        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
-        GUI.elms.edittext_filter.focus = true
+        --if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        -- GUI.elms.edittext_search.focus = false
+        -- GUI.elms.edittext_filter.focus = true
     end
 
     function GUI.elms.menu_lang:onvalchange()
@@ -1822,12 +1824,81 @@ function display_usc_data(data)
         end
     end
 
-    function GUI.elms.edittext_filter:onr_doubleclick() -- onr_doubleclick() 双击 onmouser_down() 单击
+    function GUI.elms.edittext_filter:onr_doubleclick() -- onr_doubleclick() 双击过滤框
         self:val("")
+
+        GUI.elms.edittext_filter:val("")
+        current_filter_pattern = ""
+        GUI.elms.list_category:val(1)
+        GUI.elms.list_subcategory:val(1)
+        GUI.elms.list_synonym:val(1)
+        update_usc_data()
+
+        --if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_search.focus = false
+        GUI.elms.edittext_filter.focus = true
     end
 
-    function GUI.elms.edittext_search:onr_doubleclick()
+    function GUI.elms.edittext_search:onr_doubleclick() -- onr_doubleclick() 双击搜索框
         self:val("")
+
+        --if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
+        GUI.elms.edittext_filter.focus = false
+        GUI.elms.edittext_search.focus = true
+    end
+
+    function GUI.elms.edittext_filter:onmouser_down() -- onmouser_down() 单击过滤框
+        self:val("")
+
+        GUI.elms.edittext_filter:val("")
+        current_filter_pattern = ""
+        GUI.elms.list_category:val(1)
+        GUI.elms.list_subcategory:val(1)
+        GUI.elms.list_synonym:val(1)
+        update_usc_data()
+
+        --if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_search.focus = false
+        GUI.elms.edittext_filter.focus = true
+    end
+
+    function GUI.elms.edittext_search:onmouser_down() -- onmouser_down() 单击搜索框
+        self:val("")
+
+        --if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
+        GUI.elms.edittext_filter.focus = false
+        GUI.elms.edittext_search.focus = true
+    end
+
+    function GUI.elms.edittext_filter:ondoubleclick()
+        local text = reaper.GetExtState("UCSTagSearch", "Input")
+        if (text == "") then text = "" end
+        userok, text = reaper.GetUserInputs("UCS Tag Search", 1, "Keywords 關鍵詞,extrawidth=100", text)
+        if not userok then return end
+        reaper.SetExtState("UCSTagSearch", "Input", text, false)
+    
+        if GUI.elms.edittext_filter.focus == true then
+            GUI.elms.edittext_filter:val(text)
+            GUI.elms.edittext_filter.caret = GUI.elms.edittext_filter:carettoend()
+            GUI.elms.edittext_filter:redraw()
+        else
+            append_search(text)
+            -- GUI.elms.edittext_search:val(text)
+            -- GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+            -- GUI.elms.edittext_search:redraw()
+        end
+
+        if #GUI.elms.edittext_filter:val() < 1 then return end
+        current_filter_pattern = GUI.elms.edittext_filter:val()
+        update_usc_data()
+
+        --if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_search.focus = false
+        GUI.elms.edittext_filter.focus = true
+
+
+        HWND_USC = reaper.JS_Window_Find("UCS Tag Search",0)
+        reaper.BR_Win32_SetFocus(HWND_USC)
     end
 
     -- function GUI.elms.edittext_search:onr_doubleclick()
@@ -1854,6 +1925,23 @@ else
         reaper.MB(err, "Error", 0)
     end
     return reaper.defer(function() end)
+end
+
+GUI.font = function (fnt)
+    local font, size, str = table.unpack( type(fnt) == "table" and fnt or  GUI.fonts[fnt])
+    if not string.match( reaper.GetOS(), "Win") then
+        size = math.floor(size * 0.8)
+    else
+        size = math.floor(size+1)
+    end
+
+    local flags = 0
+    if str then
+        for i = 1, str:len() do
+            flags = flags * 256 + string.byte(str, i)
+        end
+    end
+    gfx.setfont(1, font, size, flags)
 end
 
 GUI.OS_fonts = { -- 字体设置
@@ -1940,7 +2028,7 @@ end
 
 GUI.freq = 0
 -- text_box = true
-GUI.elms.edittext_filter.focus = true
+-- GUI.elms.edittext_filter.focus = true -- 脚本启动时，默认聚焦过滤框
 
 local function force_size() -- 锁定GUI边界
     gfx.quit()
@@ -1980,7 +2068,8 @@ function GUI.func()
             current_filter_pattern = GUI.elms.edittext_filter:val()
             update_usc_data()
 
-            if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+            --if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+            GUI.elms.edittext_search.focus = false
             GUI.elms.edittext_filter.focus = true
         elseif is_key_active(KEYS.ALT) then -- 同时按住Alt
             renaming()
@@ -1997,7 +2086,8 @@ function GUI.func()
         GUI.elms.list_synonym:val(1)
         update_usc_data()
 
-        if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        --if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_search.focus = false
         GUI.elms.edittext_filter.focus = true
     end
 
@@ -2085,6 +2175,15 @@ function GUI.func()
             -- GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
             -- GUI.elms.edittext_search:redraw()
         end
+        if #GUI.elms.edittext_filter:val() < 1 then return end
+        current_filter_pattern = GUI.elms.edittext_filter:val()
+        update_usc_data()
+
+        --if GUI.elms.edittext_search.focus == true then GUI.elms.edittext_search.focus = false end
+        GUI.elms.edittext_search.focus = false
+        GUI.elms.edittext_filter.focus = true
+
+
         HWND_USC = reaper.JS_Window_Find("UCS Tag Rename",0)
         reaper.BR_Win32_SetFocus(HWND_USC)
     end
