@@ -1871,12 +1871,13 @@ function display_usc_data(data)
     end
 
     function GUI.elms.edittext_filter:ondoubleclick()
-        local text = reaper.GetExtState("UCSTagSearch", "Input")
-        if (text == "") then text = "" end
-        userok, text = reaper.GetUserInputs("UCS Tag Search", 1, "Keywords 關鍵詞,extrawidth=100", text)
+
+        local text = reaper.GetExtState("UCSTagRename", "Input")
+        if (text == "") then text = "magic" end
+        userok, text = reaper.GetUserInputs("UCS Tag Rename", 1, "Keywords 關鍵詞,extrawidth=100", text)
         if not userok then return end
-        reaper.SetExtState("UCSTagSearch", "Input", text, false)
-    
+        reaper.SetExtState("UCSTagRename", "Input", text, false)
+
         if GUI.elms.edittext_filter.focus == true then
             GUI.elms.edittext_filter:val(text)
             GUI.elms.edittext_filter.caret = GUI.elms.edittext_filter:carettoend()
@@ -1896,8 +1897,7 @@ function display_usc_data(data)
         GUI.elms.edittext_search.focus = false
         GUI.elms.edittext_filter.focus = true
 
-
-        HWND_USC = reaper.JS_Window_Find("UCS Tag Search",0)
+        HWND_USC = reaper.JS_Window_Find("UCS Tag Rename",0)
         reaper.BR_Win32_SetFocus(HWND_USC)
     end
 
