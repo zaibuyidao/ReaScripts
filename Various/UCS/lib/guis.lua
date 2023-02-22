@@ -73,7 +73,7 @@ GUI.New("btn_clear", "Button", {
     y = 16,
     w = 96,
     h = 24,
-    caption = "Reset all",
+    caption = "Reset",
     font = 3,
     col_txt = "txt",
     col_fill = "elm_frame"
