@@ -60,7 +60,7 @@ function jGui:init()
 	gfx.init(self.title, self.width, self.height, self.dockstate, self.x, self.y)
 	gfx.setfont(1, self.settings.font, self.settings.fontsize)
 
-	gfx.clear = 3355443
+	gfx.clear = self.background_color or 3355443
 	self:_resize() -- call once to do initial drawing
 	self:updateFocusOrder()
 end

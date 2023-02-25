@@ -8,6 +8,10 @@ return {
         window = {
             title = "SFX Tag Search", -- 窗口标题
             background_color = { r = 220, g = 222, b = 222 }, -- 窗口背景颜色
+            width = 250, -- 初次启动时的窗口宽度
+            height = 500, -- 初次启动时的窗口高度
+            x = 50, -- 初次启动时的窗口位置横坐标
+            y = 50 -- 初次启动时的窗口位置纵坐标
         },
         search_box = {
             state_label = { -- 右上角状态标签配置

@@ -228,12 +228,14 @@ function init()
 	JProject:new()
 	window = jGui:new({
         title = getConfig("ui.window.title"),
-        width = getState("WINDOW_WIDTH", nil, tonumber),
-        height = getState("WINDOW_HEIGHT", nil, tonumber),
-        x = getState("WINDOW_X", nil, tonumber),
-        y = getState("WINDOW_Y", nil, tonumber),
-        dockstate=getState("WINDOW_DOCK_STATE")
+        width = getState("WINDOW_WIDTH", getConfig("ui.window.width"), tonumber),
+        height = getState("WINDOW_HEIGHT", getConfig("ui.window.height"), tonumber),
+        x = getState("WINDOW_X", getConfig("ui.window.x"), tonumber),
+        y = getState("WINDOW_Y", getConfig("ui.window.y"), tonumber),
+        dockstate = getState("WINDOW_DOCK_STATE"),
+		background_color = getConfig("ui.window.background_color", 0, function (t) return t.r+t.g*256+t.b*65536 end)
     })
+
 	local lastSearchText
 
 	local searchTextBox = jGuiTextInput:new()
@@ -590,7 +592,7 @@ function init()
 	window:onResize()
 	window:init()
 	window:controlInitAll()
-	gfx.clear = getConfig("ui.window.background_color", 0, function (t) return t.r+t.g*256+t.b*65536 end)
+
 	return true
 end
 

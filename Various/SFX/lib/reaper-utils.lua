@@ -131,18 +131,23 @@ function getDbList()
     local i = 1
     local reaper_explorer = reaperConfig.reaper_explorer
     local res = {}
-    while true do
-        if not reaper_explorer["Shortcut" .. i] then
-            break
+    for k, v in pairs(reaper_explorer) do
+        local i = k:match("^Shortcut(%d)$")
+        if i then
+            i = tonumber(i)
+            local name = reaper_explorer["ShortcutT" .. i]
+            if name and #name > 0 and v:find("^%d+%.ReaperFileList$") then
+                table.insert(res, {
+                    path = reaper.GetResourcePath() .. PATH_DELIMITER .. "MediaDB" .. PATH_DELIMITER .. reaper_explorer["Shortcut" .. i],
+                    name = name,
+                    i = i
+                })
+            end
         end
-        if reaper_explorer["Shortcut" .. i]:find("^%d+%.ReaperFileList$") then
-            table.insert(res, {
-                path = reaper.GetResourcePath() .. PATH_DELIMITER .. "MediaDB" .. PATH_DELIMITER .. reaper_explorer["Shortcut" .. i],
-                name = reaper_explorer["ShortcutT" .. i]
-            })
-        end
-        i = i + 1
     end
+    table.sort(res, function(a, b)
+        return a.i < b.i
+    end)
     return res
 end
 
@@ -154,7 +159,7 @@ end
 
 function getState(key, default, convert)
 	local value = reaper.GetExtState(GLOBAL_STATE_SECTION, key)
-    if not value then return default end
+    if not value or value == "" then return default end
     if convert then return convert(value) end
     return value
 end
