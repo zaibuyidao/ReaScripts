@@ -32,7 +32,7 @@ LIP = require('LIP')
 CONFIG = require('config')
 ListView = require('ListView')
 
-setGlobalStateSection("KEYWORD_SEARCH")
+setGlobalStateSection("SFX_TAG_SEARCH")
 
 function getConfig(configName, default, convert)
 	local cur = CONFIG
