@@ -157,6 +157,7 @@ function append_search(text)
     else
         append_after = connect .. " " .. text
     end
+    if append_after == nil then append_after = "" end
     GUI.elms.edittext_search:val(orig .. append_pre .. append_after)
     GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
     GUI.elms.edittext_search:redraw()
