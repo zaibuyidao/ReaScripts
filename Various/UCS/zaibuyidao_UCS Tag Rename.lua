@@ -1334,6 +1334,7 @@ function append_search(text)
     if not is_sep(orig:sub(#orig, #orig)) and #orig > 0 then
         result = result .. sep
     end
+    if text == nil then text = "" end
     result = result .. text
     et:val(result)
     et.caret = et:carettoend()
