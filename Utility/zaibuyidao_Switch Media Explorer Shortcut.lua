@@ -1,5 +1,5 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -55,20 +55,28 @@ function getSystemLanguage()
       lang = "English"
     end
   elseif os == "OSX32" or os == "OSX64" then -- macOS
-    lang = os.setlocale("LC_CTYPE", "")[1]
-    if lang == "zh_CN" then -- Simplified Chinese
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
       lang = "简体中文"
-    elseif lang == "zh_TW" then -- Traditional Chinese
+    elseif lang == "zh-TW" then -- 繁体中文
       lang = "繁體中文"
     else -- English
       lang = "English"
     end
   elseif os == "Linux" then -- Linux
-    local lang = os.getenv("LANG")
-    if lang and string.match(lang, "zh") then
-      title = "中文"
-    else
-      title = "English"
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
     end
   end
 
