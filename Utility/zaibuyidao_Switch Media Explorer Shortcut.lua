@@ -1,5 +1,5 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -93,7 +93,7 @@ function normalize_path(path)
 end
 
 function replace_invalid_chars(path)
-  local new_path = string.gsub(path, "[\\/:*?\"<>|%s]+", "_")
+  local new_path = string.gsub(path, "[\\/:*?\"<>|]+", "_") -- local new_path = string.gsub(path, "[\\/:*?\"<>|%s]+", "_")
   new_path = string.gsub(new_path, "_([%.%s])", "%1") -- 移除下划线后面的点号或空格
   new_path = string.gsub(new_path, "^%s+|_+$", "") -- 移除开头和结尾的空格和下划线
   return new_path
