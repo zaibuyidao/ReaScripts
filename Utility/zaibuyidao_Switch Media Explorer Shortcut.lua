@@ -1,5 +1,5 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -164,30 +164,26 @@ function create_explorer_path(get_path)
   end
 
   file:write([[
-function PostKey(hwnd, vk_code) -- https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-  reaper.JS_WindowMessage_Post(hwnd, "WM_KEYDOWN", vk_code, 0,0,0)
-  reaper.JS_WindowMessage_Post(hwnd, "WM_KEYUP", vk_code, 0,0,0)
-end
-
-function PostText(hwnd, str) -- https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-char
+function post_text(hwnd, str) -- https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-char
   for char in string.gmatch(str, ".") do
     ret = reaper.JS_WindowMessage_Post(hwnd, "WM_CHAR", string.byte(char),0,0,0)
     if not ret then break end
   end
 end
 
-function SetExplorerPath(hwnd, folder)
-  local cbo = reaper.JS_Window_FindChildByID(hwnd, 0x3EA)
-  local edit = reaper.JS_Window_FindChildByID(cbo, 0x3E9)
+function set_explorer_path(hwnd, folder)
+  local cbo = reaper.JS_Window_FindChildByID(hwnd, 1002)
+  local edit = reaper.JS_Window_FindChildByID(cbo, 1001)
   if edit then
     reaper.JS_Window_SetTitle(edit, "")
-    PostText(edit, folder)
-    PostKey(edit, 0xD) -- post Return key
+    post_text(edit, folder)
+    -- https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+    reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER key 模拟用户按下回车键
   end
 end
 
 function set_reaper_explorer_path(f)
-  SetExplorerPath(reaper.JS_Window_Find("Media Explorer", true), f)
+  set_explorer_path(reaper.JS_Window_Find("Media Explorer", true), f)
 end
 
 set_reaper_explorer_path("]] .. escape_if_needed(origin_shortcut) .. [[")
