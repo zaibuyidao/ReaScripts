@@ -1,11 +1,12 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
+-- @provides [main=main,mediaexplorer] .
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(...)
@@ -93,18 +94,10 @@ function normalize_path(path)
 end
 
 function replace_invalid_chars(path)
-  local new_path = string.gsub(path, "[\\/:*?\"<>|]+", "_") -- local new_path = string.gsub(path, "[\\/:*?\"<>|%s]+", "_")
+  local new_path = string.gsub(path, "[\\/:*?\"<>|]+", "_") -- 或同时处理空格 local new_path = string.gsub(path, "[\\/:*?\"<>|%s]+", "_")
   new_path = string.gsub(new_path, "_([%.%s])", "%1") -- 移除下划线后面的点号或空格
   new_path = string.gsub(new_path, "^%s+|_+$", "") -- 移除开头和结尾的空格和下划线
   return new_path
-end
-
--- https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-char
-local function PostText(hwnd, str)
-  for char in string.gmatch(str, ".") do
-    local ret = reaper.JS_WindowMessage_Post(hwnd, "WM_CHAR", string.byte(char),0,0,0)
-    if not ret then break end
-  end
 end
 
 function escape_if_needed(str)
@@ -119,7 +112,10 @@ end
 function create_explorer_path(get_path)
   local language = getSystemLanguage()
   local new_path = ""
-  local chortcut = ""
+
+  local combo_box = reaper.JS_Window_FindChildByID(reaper.JS_Window_Find("Media Explorer", true), 1002)
+  local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
+  local chortcut = reaper.JS_Window_GetTitle(edit)
 
   if language == "简体中文" then
     str = "切换快捷方式 - "
@@ -172,8 +168,8 @@ function post_text(hwnd, str) -- https://docs.microsoft.com/en-us/windows/win32/
 end
 
 function set_explorer_path(hwnd, folder)
-  local cbo = reaper.JS_Window_FindChildByID(hwnd, 1002)
-  local edit = reaper.JS_Window_FindChildByID(cbo, 1001)
+  local combo_box = reaper.JS_Window_FindChildByID(hwnd, 1002)
+  local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
   if edit then
     reaper.JS_Window_SetTitle(edit, "")
     post_text(edit, folder)
