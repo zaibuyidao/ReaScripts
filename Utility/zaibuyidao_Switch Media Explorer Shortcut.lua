@@ -1,5 +1,5 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -131,23 +131,23 @@ function create_explorer_path(get_path)
   local combo_box = reaper.JS_Window_FindChildByID(reaper.JS_Window_Find("Media Explorer", true), 1002)
   local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
   local origin_shortcut = reaper.JS_Window_GetTitle(edit)
-  local chortcut = get_last_folder_name(origin_shortcut)
+  local shortcut = get_last_folder_name(origin_shortcut)
 
   if language == "简体中文" then
     str = "切换快捷方式 - "
-    uok, uinput = reaper.GetUserInputs("创建一个切换快捷方式的动作", 2, "脚本路径:,脚本別名:,extrawidth=200", get_path .. new_path .. "," .. str .. chortcut)
+    uok, uinput = reaper.GetUserInputs("创建一个切换快捷方式的动作", 2, "脚本路径:,脚本別名:,extrawidth=200", get_path .. new_path .. "," .. str .. shortcut)
   elseif language == "繁体中文" then
     str = "切換快捷方式 - "
-    uok, uinput = reaper.GetUserInputs("創建一個切換快捷方式的動作", 2, "脚本路徑:,脚本別名:,extrawidth=200", get_path .. new_path .. "," .. str .. chortcut)
+    uok, uinput = reaper.GetUserInputs("創建一個切換快捷方式的動作", 2, "脚本路徑:,脚本別名:,extrawidth=200", get_path .. new_path .. "," .. str .. shortcut)
   else
     str = "Switch shortcut - "
-    uok, uinput = reaper.GetUserInputs("Create an action to switch shortcut", 2, "Script path:,Script alias:,extrawidth=200", get_path .. new_path .. "," .. str .. chortcut)
+    uok, uinput = reaper.GetUserInputs("Create an action to switch shortcut", 2, "Script path:,Script alias:,extrawidth=200", get_path .. new_path .. "," .. str .. shortcut)
   end
 
   if not uok or uinput == "" then return end
 
-  get_path, chortcut = string.match(uinput, "(.*),(.*)")
-  if not get_path or not chortcut then return end
+  get_path, shortcut = string.match(uinput, "(.*),(.*)")
+  if not get_path or not shortcut then return end
 
   get_path = normalize_path(get_path .. new_path)
   -- 创建新文件夹
