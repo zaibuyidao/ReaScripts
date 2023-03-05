@@ -49,6 +49,8 @@ function send_search_text(text) -- 开始搜索
     reaper.JS_Window_SetTitle(search, text)
     reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
     reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+    -- reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0, 0, 0) -- SPACEBAR
+    -- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE key
 end
 
 function string.split(szFullString, szSeparator)  
@@ -184,10 +186,13 @@ function SetExplorerPath(hwnd, folder)
     local edit = reaper.JS_Window_FindChildByID(cbo, 1001)
     if edit then
         reaper.JS_Window_SetTitle(edit, "")
-        PostText(edit, folder)
+        -- PostText(edit, folder) -- 中文乱码
+        reaper.JS_Window_SetTitle(edit, folder)
         -- https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-        reaper.JS_WindowMessage_Post(hwnd, "WM_KEYDOWN", 0x28, 0,0,0)
-        reaper.JS_WindowMessage_Post(hwnd, "WM_KEYUP", 0x26, 0,0,0)
+        reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0, 0, 0) -- SPACEBAR
+        reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE key
+        -- reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x28, 0,0,0) -- DOWN ARROW key
+        -- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x28, 0,0,0) -- DOWN ARROW key
     end
 end
 
