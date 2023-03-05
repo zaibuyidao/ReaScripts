@@ -1,5 +1,5 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -127,8 +127,8 @@ end
 
 function create_explorer_path(get_path)
   local language = getSystemLanguage()
-  local new_path = ""
 
+  local new_path = ""
   local combo_box = reaper.JS_Window_FindChildByID(reaper.JS_Window_Find("Media Explorer", true), 1002)
   local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
   local chortcut = reaper.JS_Window_GetTitle(edit)
@@ -216,15 +216,16 @@ set_reaper_explorer_path("]] .. escape_if_needed(origin_shortcut) .. [[")
   -- 32061, MIDI Event List Editor
   -- 32062, MIDI Inline Editor
   -- 32063, Media Explorer
+  reaper.AddRemoveReaScript(true, 0, file_path, true)
   reaper.AddRemoveReaScript(true, 32063, file_path, true)
 end
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
-
+local iswin = reaper.GetOS():find('Win')
+if not iswin then return end
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 create_explorer_path(script_path)
-
 reaper.Undo_EndBlock('Switch Media Explorer Shortcut', -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
