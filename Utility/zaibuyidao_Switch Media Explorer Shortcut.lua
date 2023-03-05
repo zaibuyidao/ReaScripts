@@ -1,12 +1,13 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
+-- @provides
+--  [main=main,mediaexplorer] .
 -- @donate http://www.paypal.me/zaibuyidao
--- @provides [main=main,mediaexplorer] .
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(...)
