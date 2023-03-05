@@ -1,5 +1,5 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -127,11 +127,11 @@ end
 
 function create_explorer_path(get_path)
   local language = getSystemLanguage()
-
   local new_path = ""
   local combo_box = reaper.JS_Window_FindChildByID(reaper.JS_Window_Find("Media Explorer", true), 1002)
   local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
-  local chortcut = reaper.JS_Window_GetTitle(edit)
+  local origin_shortcut = reaper.JS_Window_GetTitle(edit)
+  local chortcut = get_last_folder_name(origin_shortcut)
 
   if language == "简体中文" then
     str = "切换快捷方式 - "
@@ -147,17 +147,13 @@ function create_explorer_path(get_path)
   if not uok or uinput == "" then return end
 
   get_path, chortcut = string.match(uinput, "(.*),(.*)")
-  if chortcut == "" then return end
-  if not get_path then return end
+  if not get_path or not chortcut then return end
 
   get_path = normalize_path(get_path .. new_path)
   -- 创建新文件夹
   reaper.RecursiveCreateDirectory(get_path, 0)
 
-  local pattern = str:gsub("%-", "%%-") .. "%s-"
-  local origin_shortcut = string.gsub(chortcut, pattern, "") -- 或 local origin_shortcut = string.gsub(chortcut, str, "") --"Switch Explorer Path%s-[-]%s*", "")
-  if origin_shortcut == "" then return end
-  local file_path = get_path .. "" .. str .. get_last_folder_name(origin_shortcut) .. ".lua"
+  local file_path = get_path .. shortcut .. ".lua"
   local file, err = io.open(file_path , "w+")
   
   if not file then
@@ -201,11 +197,11 @@ end
 set_reaper_explorer_path("]] .. escape_if_needed(origin_shortcut) .. [[")
 ]])
   if language == "简体中文" then
-    reaper.ShowMessageBox("成功创建文件:\n" .. (string.len(file_path) > 64 and ( "..." .. string.sub(file_path, -56) ) or file_path), "非常好!", 0)
+    reaper.ShowMessageBox("成功创建文件:\n" .. file_path, "非常好!", 0)
   elseif language == "繁体中文" then
-    reaper.ShowMessageBox("成功創建文件:\n" .. (string.len(file_path) > 64 and ( "..." .. string.sub(file_path, -56) ) or file_path), "非常好!", 0)
+    reaper.ShowMessageBox("成功創建文件:\n" .. file_path, "非常好!", 0)
   else
-    reaper.ShowMessageBox("Successfully created file:\n" .. (string.len(file_path) > 64 and ( "..." .. string.sub(file_path, -56) ) or file_path), "Yes!", 0)
+    reaper.ShowMessageBox("Successfully created file:\n" .. file_path, "Yes!", 0)
   end
 
   io.close(file)
