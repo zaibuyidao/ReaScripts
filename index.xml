@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8f39210abfbe3df4f0bfc0fe4717a06291d32d5d">
+<index version="1" name="zaibuyidao Scripts" commit="b1a1164f0a07efc515feac61fbaa7e75500dd7d2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7099,6 +7099,10 @@
       <version name="1.0.6" author="zaibuyidao" time="2023-03-05T04:30:31Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/8f39210abfbe3df4f0bfc0fe4717a06291d32d5d/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
+      </version>
+      <version name="1.0.7" author="zaibuyidao" time="2023-03-05T04:37:30Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/b1a1164f0a07efc515feac61fbaa7e75500dd7d2/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Mute PC CC6.lua" type="script" desc="Toggle Mute PC CC6">
