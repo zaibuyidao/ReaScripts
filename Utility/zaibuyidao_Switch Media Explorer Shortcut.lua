@@ -101,6 +101,21 @@ function replace_invalid_chars(path)
   return new_path
 end
 
+function get_last_folder_name(path)
+  local os = reaper.GetOS()
+  if os == "Win32" or os == "Win64" then -- Windows
+    if path:sub(-1) == "\\" then -- 去除路径末尾的反斜杠
+      path = path:sub(1, -2)
+    end
+    return string.match(path, "[^\\]+$") or ""
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    if path:sub(-1) == "/" then -- 去除路径末尾的斜杠
+      path = path:sub(1, -2)
+    end
+    return string.match(path, "[^/]+$") or ""
+  end
+end
+
 function escape_if_needed(str)
   -- 检测字符串中是否包含需要转义的字符
   if string.match(str, "[\\]") then
@@ -142,7 +157,7 @@ function create_explorer_path(get_path)
   local pattern = str:gsub("%-", "%%-") .. "%s-"
   local origin_shortcut = string.gsub(chortcut, pattern, "") -- 或 local origin_shortcut = string.gsub(chortcut, str, "") --"Switch Explorer Path%s-[-]%s*", "")
   if origin_shortcut == "" then return end
-  local file_path = get_path .. "" .. str .. replace_invalid_chars(origin_shortcut) .. ".lua"
+  local file_path = get_path .. "" .. str .. get_last_folder_name(origin_shortcut) .. ".lua"
   local file, err = io.open(file_path , "w+")
   
   if not file then
