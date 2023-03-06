@@ -1,5 +1,5 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.0.9
+-- @version 1.1.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -212,7 +212,6 @@ set_reaper_explorer_path("]] .. escape_if_needed(origin_shortcut) .. [[")
   -- 32061, MIDI Event List Editor
   -- 32062, MIDI Inline Editor
   -- 32063, Media Explorer
-  reaper.AddRemoveReaScript(true, 0, file_path, true)
   reaper.AddRemoveReaScript(true, 32063, file_path, true)
 end
 
