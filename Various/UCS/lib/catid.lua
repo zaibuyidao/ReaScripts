@@ -6,9 +6,10 @@ function catid_match(CatID)
   if CatID == "AIRHiss" then Category = "AIR" SubCategory = "HISS" CatShort = "AIR" CategoryFull = "AIR-HISS" end
   if CatID == "AIRMisc" then Category = "AIR" SubCategory = "MISC" CatShort = "AIR" CategoryFull = "AIR-MISC" end
   if CatID == "AIRSuck" then Category = "AIR" SubCategory = "SUCTION" CatShort = "AIR" CategoryFull = "AIR-SUCTION" end
-  if CatID == "AERODoor" then Category = "AIRCRAFT" SubCategory = "DOOR" CatShort = "AERO" CategoryFull = "AERO-DOOR" end
+  if CatID == "AERODoor" then Category = "AIRCRAFT" SubCategory = "DOOR" CatShort = "AERO" CategoryFull = "AIRCRAFT-DOOR" end
   if CatID == "AEROHeli" then Category = "AIRCRAFT" SubCategory = "HELICOPTER" CatShort = "AERO" CategoryFull = "AIRCRAFT-HELICOPTER" end
   if CatID == "AEROInt" then Category = "AIRCRAFT" SubCategory = "INTERIOR" CatShort = "AERO" CategoryFull = "AIRCRAFT-INTERIOR" end
+  if CatID == "AEROJet" then Category = "AIRCRAFT" SubCategory = "JET" CatShort = "AERO" CategoryFull = "AIRCRAFT-JET" end
   if CatID == "AEROMech" then Category = "AIRCRAFT" SubCategory = "MECHANISM" CatShort = "AERO" CategoryFull = "AIRCRAFT-MECHANISM" end
   if CatID == "AEROMil" then Category = "AIRCRAFT" SubCategory = "MILITARY" CatShort = "AERO" CategoryFull = "AIRCRAFT-MILITARY" end
   if CatID == "AEROMisc" then Category = "AIRCRAFT" SubCategory = "MISC" CatShort = "AERO" CategoryFull = "AIRCRAFT-MISC" end
@@ -59,8 +60,10 @@ function catid_match(CatID)
   if CatID == "AMBSprt" then Category = "AMBIENCE" SubCategory = "SPORT" CatShort = "AMB" CategoryFull = "AMBIENCE-SPORT" end
   if CatID == "AMBSubn" then Category = "AMBIENCE" SubCategory = "SUBURBAN" CatShort = "AMB" CategoryFull = "AMBIENCE-SUBURBAN" end
   if CatID == "AMBSwmp" then Category = "AMBIENCE" SubCategory = "SWAMP" CatShort = "AMB" CategoryFull = "AMBIENCE-SWAMP" end
+  if CatID == "AMBTown" then Category = "AMBIENCE" SubCategory = "TOWN" CatShort = "AMB" CategoryFull = "AMBIENCE-TOWN" end
   if CatID == "AMBTraf" then Category = "AMBIENCE" SubCategory = "TRAFFIC" CatShort = "AMB" CategoryFull = "AMBIENCE-TRAFFIC" end
   if CatID == "AMBTran" then Category = "AMBIENCE" SubCategory = "TRANSPORTATION" CatShort = "AMB" CategoryFull = "AMBIENCE-TRANSPORTATION" end
+  if CatID == "AMBTrop" then Category = "AMBIENCE" SubCategory = "TROPICAL" CatShort = "AMB" CategoryFull = "AMBIENCE-TROPICAL" end
   if CatID == "AMBTndra" then Category = "AMBIENCE" SubCategory = "TUNDRA" CatShort = "AMB" CategoryFull = "AMBIENCE-TUNDRA" end
   if CatID == "AMBUndr" then Category = "AMBIENCE" SubCategory = "UNDERGROUND" CatShort = "AMB" CategoryFull = "AMBIENCE-UNDERGROUND" end
   if CatID == "AMBUndwtr" then Category = "AMBIENCE" SubCategory = "UNDERWATER" CatShort = "AMB" CategoryFull = "AMBIENCE-UNDERWATER" end
@@ -363,6 +366,8 @@ function catid_match(CatID)
   if CatID == "GLASMisc" then Category = "GLASS" SubCategory = "MISC" CatShort = "GLAS" CategoryFull = "GLASS-MISC" end
   if CatID == "GLASMvmt" then Category = "GLASS" SubCategory = "MOVEMENT" CatShort = "GLAS" CategoryFull = "GLASS-MOVEMENT" end
   if CatID == "GLASTonl" then Category = "GLASS" SubCategory = "TONAL" CatShort = "GLAS" CategoryFull = "GLASS-TONAL" end
+  if CatID == "GOREBlood" then Category = "GORE" SubCategory = "BLOOD" CatShort = "GORE" CategoryFull = "GORE-BLOOD" end
+  if CatID == "GOREBone" then Category = "GORE" SubCategory = "BONE" CatShort = "GORE" CategoryFull = "GORE-BONE" end
   if CatID == "GOREBurn" then Category = "GORE" SubCategory = "BURN" CatShort = "GORE" CategoryFull = "GORE-BURN" end
   if CatID == "GOREFlsh" then Category = "GORE" SubCategory = "FLESH" CatShort = "GORE" CategoryFull = "GORE-FLESH" end
   if CatID == "GOREMisc" then Category = "GORE" SubCategory = "MISC" CatShort = "GORE" CategoryFull = "GORE-MISC" end
@@ -409,6 +414,7 @@ function catid_match(CatID)
   if CatID == "ICEMisc" then Category = "ICE" SubCategory = "MISC" CatShort = "ICE" CategoryFull = "ICE-MISC" end
   if CatID == "ICEMvmt" then Category = "ICE" SubCategory = "MOVEMENT" CatShort = "ICE" CategoryFull = "ICE-MOVEMENT" end
   if CatID == "ICETonl" then Category = "ICE" SubCategory = "TONAL" CatShort = "ICE" CategoryFull = "ICE-TONAL" end
+  if CatID == "LASRBeam" then Category = "LASERS" SubCategory = "BEAM" CatShort = "LASR" CategoryFull = "LASERS-BEAM" end
   if CatID == "LASRGun" then Category = "LASERS" SubCategory = "GUN" CatShort = "LASR" CategoryFull = "LASERS-GUN" end
   if CatID == "LASRImpt" then Category = "LASERS" SubCategory = "IMPACT" CatShort = "LASR" CategoryFull = "LASERS-IMPACT" end
   if CatID == "LASRMisc" then Category = "LASERS" SubCategory = "MISC" CatShort = "LASR" CategoryFull = "LASERS-MISC" end
@@ -437,7 +443,7 @@ function catid_match(CatID)
   if CatID == "MACHMech" then Category = "MACHINES" SubCategory = "MECHANISM" CatShort = "MACH" CategoryFull = "MACHINES-MECHANISM" end
   if CatID == "MACHMed" then Category = "MACHINES" SubCategory = "MEDICAL" CatShort = "MACH" CategoryFull = "MACHINES-MEDICAL" end
   if CatID == "MACHMisc" then Category = "MACHINES" SubCategory = "MISC" CatShort = "MACH" CategoryFull = "MACHINES-MISC" end
-  if CatID == "MACHOffi" then Category = "MACHINES" SubCategory = "OFFICE" CatShort = "MACH" CategoryFull = "MACHINES-OFFICE" end
+  if CatID == "MACHOffc" then Category = "MACHINES" SubCategory = "OFFICE" CatShort = "MACH" CategoryFull = "MACHINES-OFFICE" end
   if CatID == "MACHPump" then Category = "MACHINES" SubCategory = "PUMP" CatShort = "MACH" CategoryFull = "MACHINES-PUMP" end
   if CatID == "MAGAngl" then Category = "MAGIC" SubCategory = "ANGELIC" CatShort = "MAG" CategoryFull = "MAGIC-ANGELIC" end
   if CatID == "MAGElem" then Category = "MAGIC" SubCategory = "ELEMENTAL" CatShort = "MAG" CategoryFull = "MAGIC-ELEMENTAL" end
@@ -492,7 +498,7 @@ function catid_match(CatID)
   if CatID == "MUSCPerc" then Category = "MUSICAL" SubCategory = "PERCUSSION" CatShort = "MUSC" CategoryFull = "MUSICAL-PERCUSSION" end
   if CatID == "MUSCTnprc" then Category = "MUSICAL" SubCategory = "PERCUSSION TUNED" CatShort = "MUSC" CategoryFull = "MUSICAL-PERCUSSION TUNED" end
   if CatID == "MUSCPrfm" then Category = "MUSICAL" SubCategory = "PERFORMANCE" CatShort = "MUSC" CategoryFull = "MUSICAL-PERFORMANCE" end
-  if CatID == "MUSCPluck" then Category = "MUSICAL" SubCategory = "PLUCKED" CatShort = "MUSC" CategoryFull = "PLUCKED" end
+  if CatID == "MUSCPluck" then Category = "MUSICAL" SubCategory = "PLUCKED" CatShort = "MUSC" CategoryFull = "MUSICAL-PLUCKED" end
   if CatID == "MUSCSmpl" then Category = "MUSICAL" SubCategory = "SAMPLE" CatShort = "MUSC" CategoryFull = "MUSICAL-SAMPLE" end
   if CatID == "MUSCShake" then Category = "MUSICAL" SubCategory = "SHAKEN" CatShort = "MUSC" CategoryFull = "MUSICAL-SHAKEN" end
   if CatID == "MUSCSong" then Category = "MUSICAL" SubCategory = "SONG & PHRASE" CatShort = "MUSC" CategoryFull = "MUSICAL-SONG & PHRASE" end
@@ -687,6 +693,7 @@ function catid_match(CatID)
   if CatID == "WATRBubl" then Category = "WATER" SubCategory = "BUBBLES" CatShort = "WATR" CategoryFull = "WATER-BUBBLES" end
   if CatID == "WATRDran" then Category = "WATER" SubCategory = "DRAIN" CatShort = "WATR" CategoryFull = "WATER-DRAIN" end
   if CatID == "WATRDrip" then Category = "WATER" SubCategory = "DRIP" CatShort = "WATR" CategoryFull = "WATER-DRIP" end
+  if CatID == "WATRFizz" then Category = "WATER" SubCategory = "FIZZ" CatShort = "WATR" CategoryFull = "WATER-FIZZ" end
   if CatID == "WATRFlow" then Category = "WATER" SubCategory = "FLOW" CatShort = "WATR" CategoryFull = "WATER-FLOW" end
   if CatID == "WATRFoun" then Category = "WATER" SubCategory = "FOUNTAIN" CatShort = "WATR" CategoryFull = "WATER-FOUNTAIN" end
   if CatID == "WATRImpt" then Category = "WATER" SubCategory = "IMPACT" CatShort = "WATR" CategoryFull = "WATER-IMPACT" end
@@ -694,6 +701,7 @@ function catid_match(CatID)
   if CatID == "WATRMisc" then Category = "WATER" SubCategory = "MISC" CatShort = "WATR" CategoryFull = "WATER-MISC" end
   if CatID == "WATRMvmt" then Category = "WATER" SubCategory = "MOVEMENT" CatShort = "WATR" CategoryFull = "WATER-MOVEMENT" end
   if CatID == "WATRPlmb" then Category = "WATER" SubCategory = "PLUMBING" CatShort = "WATR" CategoryFull = "WATER-PLUMBING" end
+  if CatID == "WATRPour" then Category = "WATER" SubCategory = "POUR" CatShort = "WATR" CategoryFull = "WATER-POUR" end
   if CatID == "WATRSplsh" then Category = "WATER" SubCategory = "SPLASH" CatShort = "WATR" CategoryFull = "WATER-SPLASH" end
   if CatID == "WATRSpray" then Category = "WATER" SubCategory = "SPRAY" CatShort = "WATR" CategoryFull = "WATER-SPRAY" end
   if CatID == "WATRStm" then Category = "WATER" SubCategory = "STEAM" CatShort = "WATR" CategoryFull = "WATER-STEAM" end
