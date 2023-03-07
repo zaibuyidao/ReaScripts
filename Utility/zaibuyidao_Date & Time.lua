@@ -1,35 +1,65 @@
---[[
- * ReaScript Name: Date & Time
- * Version: 1.0.7
- * Author: zaibuyidao
- * Author URL: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URL: https://github.com/zaibuyidao/ReaScripts
- * Reference: https://forum.cockos.com/showthread.php?t=165884
---]]
+-- @description Date & Time
+-- @version 1.0.8
+-- @author zaibuyidao
+-- @changelog Initial release
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Not Requires JS_ReaScriptAPI & SWS Extension
 
---[[
- * Changelog:
- * v1.0 (2022-7-23)
-  + Initial release
---]]
-
-function print(m)
-  return reaper.ShowConsoleMsg(tostring(m) .. "\n")
-end
-
--- if reaper.GetOS():match("Win") then
--- end
-
-local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-
-function check_locale(locale)
-  if locale == 936 then
-    return true
-  elseif locale == 950 then
-    return true
+function print(...)
+  local args = {...}
+  local str = ""
+  for i = 1, #args do
+    str = str .. string.format("%s\t", tostring(args[i]))
   end
-  return false
+  reaper.ShowConsoleMsg(str .. "\n")
 end
+
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  end
+
+  return lang
+end
+
+local language = getSystemLanguage()
 
 local fmt_date = function(year, month, day, fmt)
   if (fmt == "DD/MM/YY") then
@@ -41,12 +71,12 @@ local fmt_date = function(year, month, day, fmt)
   end
 end
 
-if check_locale(locale) == false then
-  amhms = "%01d:%02d:%02d AM"
-  pmhms = "%01d:%02d:%02d PM"
-else
+if language == "简体中文" or language == "繁体中文" then
   amhms = "上午 %01d:%02d:%02d"
   pmhms = "下午 %01d:%02d:%02d"
+else
+  amhms = "%01d:%02d:%02d AM"
+  pmhms = "%01d:%02d:%02d PM"
 end
 
 local fmt_hms = function(hour, min, sec, TIME_24H_Flag)  
@@ -71,8 +101,14 @@ end
 
 local fmt_time = function(wday_flag, year, mon, mday, hour, min, sec)
   if ((nil ~= year) and (nil ~= mon) and (nil ~= mday) and (nil ~= hour) and (nil ~= min) and (nil ~= sec)) then
+    if language == "简体中文" or language == "繁体中文" then
+      local week = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}
+      local w = os.date("%w", os.time{year=year, month=mon, day=mday})
+      local day = math.floor(tonumber(w)) + 1
+      local fmt = "YY/MM/DD"
 
-    if check_locale(locale) == false then
+      return string.format("%s %s %s", fmt_date(year, mon, mday), week[day]..",", fmt_hms(hour, min, sec))
+    else
       local week = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
       local moon = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
       local w = os.date("%w", os.time{year=year, month=mon, day=mday})
@@ -82,13 +118,6 @@ local fmt_time = function(wday_flag, year, mon, mday, hour, min, sec)
       local fmt = "MM/DD/YY"
 
       return string.format("%s %s %s", fmt_hms(hour, min, sec)..",", week[day]..",", fmt_date(year, tostring(moon[yue]), mday, fmt))
-    else
-      local week = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}
-      local w = os.date("%w", os.time{year=year, month=mon, day=mday})
-      local day = math.floor(tonumber(w)) + 1
-      local fmt = "YY/MM/DD"
-
-      return string.format("%s %s %s", fmt_date(year, mon, mday), week[day]..",", fmt_hms(hour, min, sec))
     end
   end
 end
@@ -115,14 +144,18 @@ function init()
   gui.settings = {}                 -- Add "settings" table to "gui" table
   gui.settings.docker_id = 0        -- try 0, 1, 257, 513, 1027 etc.
 
-  if check_locale(locale) == false then
+  if language == "简体中文" then
+    gui.settings.font_size = 21    -- font size
+    gfx.init("日期和时间", 300, 35, gui.settings.docker_id)
+    gfx.setfont(1,"Microsoft YaHei UI", gui.settings.font_size) -- Microsoft YaHei, Microsoft YaHei UI, Microsoft YaHei UI Light
+  elseif language == "繁体中文" then
+    gui.settings.font_size = 21    -- font size
+    gfx.init("日期和時間", 300, 35, gui.settings.docker_id)
+    gfx.setfont(1,"Microsoft YaHei UI", gui.settings.font_size)
+  else
     gui.settings.font_size = 20     -- font size
     gfx.init("Date & Time", 360, 35, gui.settings.docker_id)
     gfx.setfont(1,"Arial", gui.settings.font_size) -- Arial
-  else
-    gui.settings.font_size = 21    -- font size
-    gfx.init("日期和時間", 300, 35, gui.settings.docker_id)
-    gfx.setfont(1,"Microsoft YaHei UI", gui.settings.font_size) -- Microsoft YaHei, Microsoft YaHei UI, Microsoft YaHei UI Light
   end
 
   gfx.clear = 3355443  -- matches with "FUSION: Pro&Clean Theme :: BETA 01" http://forum.cockos.com/showthread.php?t=155329
