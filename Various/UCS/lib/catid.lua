@@ -1,3 +1,4 @@
+-- NoIndex: true
 function catid_match(CatID)
   -- Update (Feb 1st, 2023): Version 8.2
   if CatID == "AIRBlow" then Category = "AIR" SubCategory = "BLOW" CatShort = "AIR" CategoryFull = "AIR-BLOW" end
