@@ -197,11 +197,14 @@ function SetExplorerPath(hwnd, folder)
 end
 
 function setReaperExplorerPath(f)
-    SetExplorerPath(reaper.JS_Window_Find("Media Explorer", true), f)
+    local title = reaper.JS_Localize("Media Explorer", "common")
+    local hwnd = reaper.JS_Window_Find(title, true)
+    SetExplorerPath(hwnd, f)
 end
 
 function getReaperExplorerPath()
-    local hWnd = reaper.JS_Window_Find("Media Explorer", true)
+    local title = reaper.JS_Localize("Media Explorer", "common")
+    local hwnd = reaper.JS_Window_Find(title, true)
     local path_hwnd = reaper.JS_Window_FindChildByID(hWnd, 1002)
     return reaper.JS_Window_GetTitle(path_hwnd, "", 255)
 end
