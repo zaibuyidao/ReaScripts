@@ -1,5 +1,5 @@
 -- @description Switch Media Explorer Shortcut
--- @version 1.1.0
+-- @version 1.1.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -128,7 +128,9 @@ end
 function create_explorer_path(get_path)
   local language = getSystemLanguage()
   local new_path = ""
-  local combo_box = reaper.JS_Window_FindChildByID(reaper.JS_Window_Find("Media Explorer", true), 1002)
+  local title = reaper.JS_Localize("Media Explorer", "common")
+  local hwnd = reaper.JS_Window_Find(title, true)
+  local combo_box = reaper.JS_Window_FindChildByID(hwnd, 1002)
   local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
   local origin_shortcut = reaper.JS_Window_GetTitle(edit)
   local shortcut = get_last_folder_name(origin_shortcut)
@@ -172,26 +174,22 @@ function create_explorer_path(get_path)
   end
 
   file:write([[
-function post_text(hwnd, str) -- https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-char
-  for char in string.gmatch(str, ".") do
-    ret = reaper.JS_WindowMessage_Post(hwnd, "WM_CHAR", string.byte(char),0,0,0)
-    if not ret then break end
-  end
-end
-
 function set_explorer_path(hwnd, folder)
   local combo_box = reaper.JS_Window_FindChildByID(hwnd, 1002)
   local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
   if edit then
     reaper.JS_Window_SetTitle(edit, "")
-    post_text(edit, folder)
+    reaper.JS_Window_SetTitle(edit, folder)
     -- https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
     reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER key 模拟用户按下回车键
+    -- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x0D, 0,0,0) -- ENTER key
   end
 end
 
 function set_reaper_explorer_path(f)
-  set_explorer_path(reaper.JS_Window_Find("Media Explorer", true), f)
+  local title = reaper.JS_Localize("Media Explorer", "common")
+  local hwnd = reaper.JS_Window_Find(title, true)
+  set_explorer_path(hwnd, f)
 end
 
 set_reaper_explorer_path("]] .. escape_if_needed(origin_shortcut) .. [[")
@@ -217,7 +215,7 @@ end
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
-local iswin = reaper.GetOS():find('Win')
+local iswin = reaper.GetOS():find('^Win')
 if not iswin then return end
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 create_explorer_path(script_path)
