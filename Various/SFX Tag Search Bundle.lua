@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.1.2
+-- @version 1.1.3
 -- @changelog Initial release
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807

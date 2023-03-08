@@ -448,6 +448,8 @@ function init()
 			resultListView:jump(resultListView.firstIndex - 1)
 		elseif key == 1685026670 then --arrow down
 			resultListView:jump(resultListView.firstIndex + 1)
+		elseif key == 26165 then --F5
+			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
 		end
 	end
 
