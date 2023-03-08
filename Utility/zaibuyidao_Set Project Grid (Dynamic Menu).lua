@@ -1,30 +1,29 @@
---[[
- * ReaScript Name: Set Project Grid (Dynamic Menu)
- * Version: 1.0
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
- * About: Requires JS_ReaScriptAPI
---]]
+-- @description Set Project Grid (Dynamic Menu)
+-- @version 1.0.1
+-- @author zaibuyidao
+-- @changelog Initial release
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI
 
---[[
- * Changelog:
- * v1.0 (2022-5-2)
-  + Initial release
---]]
-
-function Msg(param)
-  reaper.ShowConsoleMsg(tostring(param) .. "\n")
+function print(...)
+  local args = {...}
+  local str = ""
+  for i = 1, #args do
+    str = str .. tostring(args[i]) .. "\t"
+  end
+  reaper.ShowConsoleMsg(str .. "\n")
 end
 
-if not reaper.APIExists("JS_Window_Find") then
-  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'. Then restart REAPER and run the script again. Thank you!\n\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。然後重新啟動 REAPER 並再次運行腳本。謝謝！", "你必須安裝 JS_ReaScriptAPI", 0)
+if not reaper.APIExists("JS_Localize") then
+  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
   local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
   if ok then
     reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
   else
-    reaper.MB(err, "Error", 0)
+    reaper.MB(err, "錯誤", 0)
   end
   return reaper.defer(function() end)
 end
@@ -114,7 +113,7 @@ local selection = gfx.showmenu(menu)
 gfx.quit()
 
 if selection > 0 then
-  selection = selection - 0 -- 此處selection值與標題行數關聯，標題佔用一行-1，佔用兩行則-2
+  selection = selection - 0 -- 此处selection值与标题行数关联，标题占用一行则-1
   if selection == 1 then reaper.Main_OnCommand(40904, 0) end -- Frame
   if selection == 2 then reaper.Main_OnCommand(40923, 0) end -- Measure
   if selection == 3 then reaper.Main_OnCommand(41047, 0) end -- 1/128
