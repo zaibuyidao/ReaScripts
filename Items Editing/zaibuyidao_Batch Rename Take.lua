@@ -1,5 +1,5 @@
 -- @description Batch Rename Take
--- @version 1.4.8
+-- @version 1.4.9
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -160,18 +160,19 @@ local show_msg = reaper.GetExtState("BATCH_RENAME_TAKE", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
-
-
   if language == "简体中文" then
-    script_name = "批量重命名片段" text = "$takename: 片段名称\n$trackname: 轨道名称\n$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: Take guid\nv=01: 片段计数\nv=01-05 or v=05-01: 循环片段计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母范围\nr=10: 随机字符串长度\n\n脚本功能説明：\n\n1.仅重命名\n重命名\n\n2.截取字符串\n截取开头\n截取结尾\n\n3.指定位置插入或删除\n指定位置\n插入\n移除\n\n4.查找和替换\n查找\n替換\n\n查找支持两种模式修饰符：* 和 ?\n\n5.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n\n6.片段排序\n确定片段顺序。输入0为轨道，1为换行，2为时间线\n"
+    script_name = "批量重命名片段"
+    text = "$takename: 片段名称\n$trackname: 轨道名称\n$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: Take guid\nv=01: 片段计数\nv=01-05 or v=05-01: 循环片段计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母范围\nr=10: 随机字符串长度\n\n脚本功能説明：\n\n1.仅重命名\n重命名\n\n2.截取字符串\n截取开头\n截取结尾\n\n3.指定位置插入或删除\n指定位置\n插入\n移除\n\n4.查找和替换\n查找\n替換\n\n查找支持两种模式修饰符：* 和 ?\n\n5.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n\n6.片段排序\n确定片段顺序。输入0为轨道，1为换行，2为时间线\n"
     text = text.."\n下次还显示此页面吗？"
     heading = "通配符 :\n\n"
   elseif language == "繁体中文" then
-    script_name = "批量重命名片段" text = "$takename: 片段名稱\n$trackname: 軌道名稱\n$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: Take guid\nv=01: 片段計數\nv=01-05 or v=05-01: 循環片段計數\na=a: 字母計數\na=a-e or a=e-a: 循環字母範圍\nr=10: 隨機字符串長度\n\n脚本功能説明：\n\n1.僅重命名\n重命名\n\n2.截取字符串\n截取開頭\n截取結尾\n\n3.指定位置插入或刪除\n指定位置\n插入\n移除\n\n4.查找和替換\n查找\n替換\n\n查找支持两個模式修飾符：* 和 ?\n\n5.循環計數\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n\n6.片段排序\n確定片段順序。輸入0為軌道，1為換行，2為時間綫\n"
+    script_name = "批量重命名片段"
+    text = "$takename: 片段名稱\n$trackname: 軌道名稱\n$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: Take guid\nv=01: 片段計數\nv=01-05 or v=05-01: 循環片段計數\na=a: 字母計數\na=a-e or a=e-a: 循環字母範圍\nr=10: 隨機字符串長度\n\n脚本功能説明：\n\n1.僅重命名\n重命名\n\n2.截取字符串\n截取開頭\n截取結尾\n\n3.指定位置插入或刪除\n指定位置\n插入\n移除\n\n4.查找和替換\n查找\n替換\n\n查找支持两個模式修飾符：* 和 ?\n\n5.循環計數\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n\n6.片段排序\n確定片段順序。輸入0為軌道，1為換行，2為時間綫\n"
     text = text.."\n下次還顯示此頁面嗎？"
     heading = "通配符 :\n\n"
   else
-    script_name = "Batch Rename Take" text = "$takename: Take name\n$trackname: Track name\n$foldername: Folder name\n$tracknum: Track number\n$GUID: Take guid\nv=01: Take count\nv=01-05 or v=05-01: Loop take count\na=a: Letter count\na=a-e or a=e-a: Loop letter count\nr=10: Random string length\n\nScript function description:\n\n1.Rename only\nRename\n\n2.String interception\nFrom beginning\nFrom end\n\n3.Specify position, insert or remove\nAt position\nTo insert\nRemove\n\n4.Find and Replace\nFind what\nReplace with\n\nFind supports two pattern modifiers: * and ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n\n6.Take order\nDetermine Takes order. Enter 0 to Track, 1 to Wrap, 2 to Timeline\n"
+    script_name = "Batch Rename Take"
+    text = "$takename: Take name\n$trackname: Track name\n$foldername: Folder name\n$tracknum: Track number\n$GUID: Take guid\nv=01: Take count\nv=01-05 or v=05-01: Loop take count\na=a: Letter count\na=a-e or a=e-a: Loop letter count\nr=10: Random string length\n\nScript function description:\n\n1.Rename only\nRename\n\n2.String interception\nFrom beginning\nFrom end\n\n3.Specify position, insert or remove\nAt position\nTo insert\nRemove\n\n4.Find and Replace\nFind what\nReplace with\n\nFind supports two pattern modifiers: * and ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n\n6.Take order\nDetermine Takes order. Enter 0 to Track, 1 to Wrap, 2 to Timeline\n"
     text = text.."\nWill this list be displayed next time?"
     heading = "Wildcards :\n\n"
   end
@@ -191,7 +192,7 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local pattern, begin_str, end_str, position, insert, delete, find, replace, reverse, order = '', '0', '0', '0', '', '0', '', '', '1', '0'
-language = "简体中文" 
+
 if language == "简体中文" then
   title = "批量重命名片段"
   uok, uinput = reaper.GetUserInputs(title, 10, "1.重命名,2.截取开头,   截取结尾,3.指定位置,   插入,   移除,4.查找,   替换,5.循环计数,6.片段排序,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse ..','.. order)
@@ -200,7 +201,7 @@ elseif language == "繁体中文" then
   uok, uinput = reaper.GetUserInputs(title, 10, "1.重命名,2.截取開頭,   截取結尾,3.指定位置,   插入,   移除,4.查找,   替換,5.循環計數,6.片段排序,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse ..','.. order)
 else
   title = "Batch Rename Take"
-  uok, uinput = reaper.GetUserInputs("Batch Rename Take", 10, "1.Rename,2.From beginning,   From end,3.At position,   To insert,   Remove,4.Find what,   Replace with,5.Loop count,6.Take order,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse ..','.. order)
+  uok, uinput = reaper.GetUserInputs(title, 10, "1.Rename,2.From beginning,   From end,3.At position,   To insert,   Remove,4.Find what,   Replace with,5.Loop count,6.Take order,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse ..','.. order)
 end
 
 if not uok then return end
