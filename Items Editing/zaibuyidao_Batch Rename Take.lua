@@ -1,5 +1,5 @@
 -- @description Batch Rename Take
--- @version 1.4.9
+-- @version 1.5.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -162,7 +162,7 @@ if (show_msg == "") then show_msg = "true" end
 if show_msg == "true" then
   if language == "简体中文" then
     script_name = "批量重命名片段"
-    text = "$takename: 片段名称\n$trackname: 轨道名称\n$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: Take guid\nv=01: 片段计数\nv=01-05 or v=05-01: 循环片段计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母范围\nr=10: 随机字符串长度\n\n脚本功能説明：\n\n1.仅重命名\n重命名\n\n2.截取字符串\n截取开头\n截取结尾\n\n3.指定位置插入或删除\n指定位置\n插入\n移除\n\n4.查找和替换\n查找\n替換\n\n查找支持两种模式修饰符：* 和 ?\n\n5.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n\n6.片段排序\n确定片段顺序。输入0为轨道，1为换行，2为时间线\n"
+    text = "$takename: 片段名称\n$trackname: 轨道名称\n$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: Take guid\nv=01: 片段计数\nv=01-05 or v=05-01: 循环片段计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母范围\nr=10: 随机字符串长度\n\n脚本功能説明：\n\n1.仅重命名\n重命名\n\n2.截取字符串\n截取开头\n截取结尾\n\n3.指定位置插入或删除\n指定位置\n插入\n移除\n\n4.查找和替换\n查找\n替換\n\n查找支持两个模式修饰符：* 和 ?\n\n5.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n\n6.片段排序\n确定片段顺序。输入0为轨道，1为换行，2为时间线\n"
     text = text.."\n下次还显示此页面吗？"
     heading = "通配符 :\n\n"
   elseif language == "繁体中文" then
