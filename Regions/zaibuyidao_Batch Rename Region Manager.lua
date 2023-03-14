@@ -1,5 +1,5 @@
 -- @description Batch Rename Region Manager
--- @version 1.7.8
+-- @version 1.7.9
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -352,10 +352,10 @@ if frames_flag then reaper.Main_OnCommand(41973, 0) end -- View: Time unit for r
 local pattern, begin_str, end_str, position, insert, delete, find, replace, reverse = '', '0', '0', '0', '', '0', '', '', '1'
 
 if language == "简体中文" then
-  title = "批量重命名区域"
+  title = "批量重命名区域管理器"
   uok, uinput = reaper.GetUserInputs(title, 9, "1.重命名,2.截取开头,   截取结尾,3.指定位置,   插入,   移除,4.查找,   替换,5.循环计数,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse)
 elseif language == "繁体中文" then
-  title = "批量重命名區域"
+  title = "批量重命名區域管理器"
   uok, uinput = reaper.GetUserInputs(title, 9, "1.重命名,2.截取開頭,   截取結尾,3.指定位置,   插入,   移除,4.查找,   替換,5.循環計數,extrawidth=200", pattern ..','.. begin_str .. ','.. end_str ..','.. position ..','.. insert ..','.. delete ..','.. find ..','.. replace ..','.. reverse)
 else
   title = "Batch Reanme Region Manager"
