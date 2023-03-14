@@ -1,5 +1,5 @@
 -- @description Batch Rename Region
--- @version 1.4.8
+-- @version 1.4.9
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -266,7 +266,6 @@ local show_msg = reaper.GetExtState("BATCH_RENAME_REGION", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
-  language = "繁体中文"
   if language == "简体中文" then
     script_name = "批量重命名区域"
     text = "$regionname: 区域名称\nv=01: 区域计数\nv=01-05 or v=05-01: 循环区域计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母计数\nr=10: 随机字符串长度\n\n脚本功能说明：\n\n1.仅重命名\n重命名\n\n2.截取字符串\n截取开头\n截取结尾\n\n3.指定位置插入或删除\n指定位置\n插入\n移除\n\n4.查找和替换\n查找\n替换\n\n查找支持两个模式修饰符：* 和 ?\n\n5.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n"
