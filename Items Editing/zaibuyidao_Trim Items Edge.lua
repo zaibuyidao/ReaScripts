@@ -1,12 +1,12 @@
 -- @description Trim Items Edge
--- @version 1.2.1
+-- @version 1.2.2
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires SWS Extensions
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(...)
   local params = {...}
@@ -48,6 +48,72 @@ function table.print(t)
   else
     sub_print_r(t, "  ")
   end
+end
+
+if not reaper.SNM_GetIntConfigVar then
+  local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
+  if retval == 1 then
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
+  end
+  return
+end
+
+if not reaper.APIExists("JS_Localize") then
+  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, "錯誤", 0)
+  end
+  return reaper.defer(function() end)
+end
+
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  end
+
+  return lang
 end
 
 function table.serialize(obj)
@@ -122,9 +188,9 @@ function table_to_str(t)
         retstr = retstr .. signal .. to_string_ex(value)
       else
         if type(key) == 'userdata' then
-            retstr = retstr .. signal .. "*s" .. table_to_str(getmetatable(key)) .. "*e" .. "=" .. to_string_ex(value)
+          retstr = retstr .. signal .. "*s" .. table_to_str(getmetatable(key)) .. "*e" .. "=" .. to_string_ex(value)
         else
-            retstr = retstr .. signal .. key .. "=" .. to_string_ex(value)
+          retstr = retstr .. signal .. key .. "=" .. to_string_ex(value)
         end
       end
     end
@@ -141,8 +207,8 @@ function string.split(input, delimiter)
   if (delimiter == "") then return false end
   local pos, arr = 0, {}
   for st, sp in function() return string.find(input, delimiter, pos, true) end do
-      table.insert(arr, string.sub(input, pos, st - 1))
-      pos = sp + 1
+    table.insert(arr, string.sub(input, pos, st - 1))
+    pos = sp + 1
   end
   table.insert(arr, string.sub(input, pos))
   return arr
@@ -403,11 +469,11 @@ function max_peak_pos(item, step, pend, pstart)
   local channels = reaper.GetMediaSourceNumChannels(source)
   local startpos = 0
 
-  local samples_per_block = samplerate*(pend*2)
+  local samples_per_block = math.floor(0.5+samplerate*(pend*2))
   local samples_per_block_i = samplerate*(pstart*2)
   if samples_per_block_i == 0 then samples_per_block_i = 1 end
 
-  local buffer = reaper.new_array(samples_per_block * channels)
+  local buffer = reaper.new_array(samples_per_block*channels)
   reaper.GetAudioAccessorSamples(accessor, samplerate, channels, startpos, samples_per_block, buffer)
 
   local v_max, max_peak, max_zero = 0
@@ -436,7 +502,9 @@ function max_peak_pos(item, step, pend, pstart)
   return nil
 end
 
-get = getSavedDataList("Trim Items Edge", "Parameters")
+local language = getSystemLanguage()
+
+get = getSavedDataList("TRIM_ITEMS_EDGE", "Parameters")
 
 if get == nil then   -- 默认预设
   threshold_l = -60  -- 阈值(dB)
@@ -448,22 +516,32 @@ if get == nil then   -- 默认预设
   step = 0           -- 跳过采样点
   fade = "n"         -- 是否淡变
 
-  set = getMutiInput("Trim Items Edge Settings", 8, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable),Fade pad (y/n)", threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. length_limit ..','.. snap_offset ..','.. step ..','.. fade)
-  saveDataList("Trim Items Edge", "Parameters", set, true)
-  get = getSavedDataList("Trim Items Edge", "Parameters")
+  default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. length_limit ..','.. snap_offset ..','.. step ..','.. fade
+
+  if language == "简体中文" then
+    set = getMutiInput("修剪对象边缘设置", 8, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步数 (0为禁用),是否淡变 (y/n)", default)
+  elseif language == "繁体中文" then
+    set = getMutiInput("修剪對象邊緣設置", 8, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步數 (0為禁用),是否淡變 (y/n)", default)
+  else
+    set = getMutiInput("Trim Items Edge Settings", 8, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample step (0 to disable),Fade pad (y/n)", default)
+  end
+
+  if not tonumber(threshold_l) or not tonumber(threshold_r) or not tonumber(leading_pad) or not tonumber(trailing_pad) or not tonumber(length_limit) or not tonumber(snap_offset) or not tonumber(step) or not tostring(fade) then return end
+  saveDataList("TRIM_ITEMS_EDGE", "Parameters", set, true)
+  get = getSavedDataList("TRIM_ITEMS_EDGE", "Parameters")
   return
 end
 
 -- table.print(get)
 
-if get[1] == nil then get[1] = -60 end
-if get[2] == nil then get[2] = -6 end
-if get[3] == nil then get[3] = 0 end
-if get[4] == nil then get[4] = 0 end
-if get[5] == nil then get[5] = 100 end
-if get[6] == nil then get[6] = 0 end
-if get[7] == nil then get[7] = 0 end
-if get[8] == nil then get[8] = "n" end
+if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
+if get[2] == nil or not tonumber(get[2]) then get[2] = -6 end
+if get[3] == nil or not tonumber(get[3]) then get[3] = 0 end
+if get[4] == nil or not tonumber(get[4]) then get[4] = 0 end
+if get[5] == nil or not tonumber(get[5]) then get[5] = 100 end
+if get[6] == nil or not tonumber(get[6]) then get[6] = 0 end
+if get[7] == nil or not tonumber(get[7]) then get[7] = 0 end
+if get[8] == nil or not tostring(get[8]) then get[8] = "n" end
 
 threshold_l = tonumber(get[1])
 threshold_r = tonumber(get[2])
@@ -518,6 +596,14 @@ for _, items in pairs(track_items) do
   end
 end
 
-reaper.Undo_EndBlock("Trim Items Edge", -1)
+if language == "简体中文" then
+  title = "修剪对象边缘"
+elseif language == "繁体中文" then
+  title = "修剪對象邊緣"
+else
+  title = "Trim Items Edge"
+end
+
+reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
