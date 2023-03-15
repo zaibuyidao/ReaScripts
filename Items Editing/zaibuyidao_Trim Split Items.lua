@@ -1,12 +1,12 @@
 -- @description Trim Split Items
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires SWS Extensions
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(...)
   local params = {...}
@@ -48,6 +48,72 @@ function table.print(t)
   else
     sub_print_r(t, "  ")
   end
+end
+
+if not reaper.SNM_GetIntConfigVar then
+  local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
+  if retval == 1 then
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
+  end
+  return
+end
+
+if not reaper.APIExists("JS_Localize") then
+  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, "錯誤", 0)
+  end
+  return reaper.defer(function() end)
+end
+
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  end
+
+  return lang
 end
 
 function table.serialize(obj)
@@ -396,7 +462,9 @@ function max_peak_pos(item, skip, right, left)
   return max_pos
 end
 
-get = getSavedDataList("Trim Split Items", "Parameters")
+local language = getSystemLanguage()
+
+get = getSavedDataList("TRIM_SPLIT_ITEMS", "Parameters")
 
 if get == nil then    -- 默认预设
   THRESHOLD = -60     -- 阈值(dB)
@@ -410,24 +478,34 @@ if get == nil then    -- 默认预设
   FADE = "n"          -- 是否淡变
   SPLIT = "y"         -- 是否切割item
 
-  set = getMutiInput("Trim Split Items Settings", 10, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n)", THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT)
-  saveDataList("Trim Split Items", "Parameters", set, true)
-  get = getSavedDataList("Trim Split Items", "Parameters")
+  default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT
+
+  if language == "简体中文" then
+    set = getMutiInput("修剪分割对象设置", 10, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),跳过采样点 (0为禁用),是否淡变 (y/n),是否切割 (y/n)", default)
+  elseif language == "繁体中文" then
+    set = getMutiInput("修剪分割對象設置", 10, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否淡變 (y/n),是否切割 (y/n)", default)
+  else
+    set = getMutiInput("Trim Split Items Settings", 10, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n)", default)
+  end
+
+  if not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SLICE_LEN) or not tonumber(MIN_ITEM_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) then return end
+  saveDataList("TRIM_SPLIT_ITEMS", "Parameters", set, true)
+  get = getSavedDataList("TRIM_SPLIT_ITEMS", "Parameters")
   return
 end
 
 -- table.print(get)
 
-if get[1] == nil then get[1] = -60 end
-if get[2] == nil then get[2] = -6 end
-if get[3] == nil then get[3] = 0 end
-if get[4] == nil then get[4] = 0 end
-if get[5] == nil then get[5] = 100 end
-if get[6] == nil then get[6] = 100 end
-if get[7] == nil then get[7] = 50 end
-if get[8] == nil then get[8] = 0 end
-if get[9] == nil then get[9] = "n" end
-if get[10] == nil then get[10] = "y" end
+if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
+if get[2] == nil or not tonumber(get[2]) then get[2] = -6 end
+if get[3] == nil or not tonumber(get[3]) then get[3] = 0 end
+if get[4] == nil or not tonumber(get[4]) then get[4] = 0 end
+if get[5] == nil or not tonumber(get[5]) then get[5] = 100 end
+if get[6] == nil or not tonumber(get[6]) then get[6] = 100 end
+if get[7] == nil or not tonumber(get[7]) then get[7] = 50 end
+if get[8] == nil or not tonumber(get[8]) then get[8] = 0 end
+if get[9] == nil or not tostring(get[9]) then get[9] = "n" end
+if get[10] == nil or not tostring(get[10]) then get[10] = "y" end
 
 THRESHOLD = tonumber(get[1])
 HYSTERESIS = tonumber(get[2])
@@ -522,6 +600,14 @@ for i = count_sel_item - 1, 0, -1 do
   ::continue::
 end
 
-reaper.Undo_EndBlock("Trim Split Items", -1)
+if language == "简体中文" then
+  title = "修剪分割对象"
+elseif language == "繁体中文" then
+  title = "修剪分割對象"
+else
+  title = "Trim Split Items"
+end
+
+reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
