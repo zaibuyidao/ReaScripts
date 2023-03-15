@@ -1,5 +1,5 @@
 -- @description Batch Rename Track
--- @version 1.1.6
+-- @version 1.1.7
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -162,17 +162,17 @@ if (show_msg == "") then show_msg = "true" end
 if show_msg == "true" then
   if language == "简体中文" then
     script_name = "批量重命名轨道"
-    text = "$trackname: 轨道名称\n$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: Track guid\nv=01: 轨道计数\nv=01-05 or v=05-01: 循环轨道计数\na=a: Letter count 字母计数\na=a-e or a=e-a: 循环字母顺序\nr=10: 随机字符串长度\n\n脚本功能说明：\n\n1.仅重命名\n重命名\n\n2.截取字符串\n截取开头\n截取结尾\n\n3.指定位置插入或删除\n指定位置\n插入\n移除\n\n4.查找和替换\n查找\n替换\n\n查找支持两个模式修饰符：* 和 ?\n\n5.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n"
+    text = "$trackname: 轨道名称\n$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: 轨道 GUID\nv=01: 轨道计数\nv=01-05 or v=05-01: 循环轨道计数\na=a: Letter count 字母计数\na=a-e or a=e-a: 循环字母顺序\nr=10: 随机字符串长度\n\n脚本功能说明：\n\n1.仅重命名\n重命名\n\n2.截取字符串\n截取开头\n截取结尾\n\n3.指定位置插入或删除\n指定位置\n插入\n移除\n\n4.查找和替换\n查找\n替换\n\n查找支持两个模式修饰符：* 和 ?\n\n5.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n"
     text = text.."\n下次还显示此页面吗？"
     heading = "通配符 :\n\n"
   elseif language == "繁体中文" then
     script_name = "批量重命名軌道"
-    text = "$trackname: 軌道名稱\n$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: Track guid\nv=01: 軌道計數\nv=01-05 or v=05-01: 循環軌道計數\na=a: Letter count 字母計數\na=a-e or a=e-a: 循環字母計數\nr=10: 隨機字符串長度\n\n脚本功能説明：\n\n1.僅重命名\n重命名\n\n2.截取字符串\n截取開頭\n截取結尾\n\n3.指定位置插入或刪除\n指定位置\n插入\n移除\n\n4.查找和替換\n查找\n替換\n\n查找支持两個模式修飾符：* 和 ?\n\n5.循環計數\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
+    text = "$trackname: 軌道名稱\n$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: 軌道 GUID\nv=01: 軌道計數\nv=01-05 or v=05-01: 循環軌道計數\na=a: Letter count 字母計數\na=a-e or a=e-a: 循環字母計數\nr=10: 隨機字符串長度\n\n脚本功能説明：\n\n1.僅重命名\n重命名\n\n2.截取字符串\n截取開頭\n截取結尾\n\n3.指定位置插入或刪除\n指定位置\n插入\n移除\n\n4.查找和替換\n查找\n替換\n\n查找支持两個模式修飾符：* 和 ?\n\n5.循環計數\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
     text = text.."\n下次還顯示此頁面嗎？"
     heading = "通配符 :\n\n"
   else
     script_name = "Batch Rename Track"
-    text = "$trackname: Track name\n$foldername: Foldername\n$tracknum: Track number\n$GUID: Track guid\nv=01: Track count\nv=01-05 or v=05-01: Loop track count\na=a: Letter count\na=a-e or a=e-a: Loop letter count\nr=10: Random string length\n\nScript function description:\n\n1.Rename only\nRename\n\n2.String interception\nFrom beginning\nFrom end\n\n3.Specify position, insert or remove\nAt position\nTo insert\nRemove\n\n4.Find and Replace\nFind what\nReplace with\n\nFind supports two pattern modifiers: * and ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n"
+    text = "$trackname: Track name\n$foldername: Folder name\n$tracknum: Track number\n$GUID: Track GUID\nv=01: Track count\nv=01-05 or v=05-01: Loop track count\na=a: Letter count\na=a-e or a=e-a: Loop letter count\nr=10: Random string length\n\nScript function description:\n\n1.Rename only\nRename\n\n2.String interception\nFrom beginning\nFrom end\n\n3.Specify position, insert or remove\nAt position\nTo insert\nRemove\n\n4.Find and Replace\nFind what\nReplace with\n\nFind supports two pattern modifiers: * and ?\n\n5.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n"
     text = text.."\nWill this list be displayed next time?"
     heading = "Wildcards :\n\n"
   end
