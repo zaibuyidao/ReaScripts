@@ -1,5 +1,5 @@
 -- @description Set Track Name
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -162,17 +162,17 @@ if (show_msg == "") then show_msg = "true" end
 if show_msg == "true" then
   if language == "简体中文" then
     script_name = "设置轨道名称"
-    text = "$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: 轨道 GUID\nv=01: Track count 轨道计数\nv=01-05 or v=05-01: 循环轨道计数\na=a: 字母计数\na=a-e or a=e-a: Loop letter count 循环字母计数\nr=10: 随机字符串长度\n\n脚本功能说明：\n\n1.仅设置名称\n轨道名称\n\n2.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n"
+    text = "$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: 轨道 GUID\nv=01: 轨道计数\nv=01-05 or v=05-01: 循环轨道计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母计数\nr=10: 随机字符串长度\n\n脚本功能说明：\n\n1.仅设置名称\n轨道名称\n\n2.循环计数\n限制或反转循环计数。输入1为启用，0为不启用\n"
     text = text.."\n下次还显示此页面吗？"
     heading = "通配符 :\n\n"
   elseif language == "繁体中文" then
     script_name = "設置軌道名稱"
-    text = "$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: 軌道 GUID\nv=01: Track count 軌道計數\nv=01-05 or v=05-01: 循環軌道計數\na=a: 字母計數\na=a-e or a=e-a: Loop letter count 循環字母計數\nr=10: 隨機字符串長度\n\n脚本功能説明：\n\n1.僅設置名稱\n軌道名稱\n\n2.循環計數\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
+    text = "$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: 軌道 GUID\nv=01: 軌道計數\nv=01-05 or v=05-01: 循環軌道計數\na=a: 字母計數\na=a-e or a=e-a: 循環字母計數\nr=10: 隨機字符串長度\n\n脚本功能説明：\n\n1.僅設置名稱\n軌道名稱\n\n2.循環計數\n限制或反轉循環計數。輸入1為啓用，0為不啓用\n"
     text = text.."\n下次還顯示此頁面嗎？"
     heading = "通配符 :\n\n"
   else
     script_name = "Set Track Name"
-    text = "$foldername: Folder name\n$tracknum: Track number\n$GUID: Track guid\nv=01: Track count\nv=01-05 or v=05-01: Loop track count\na=a: Letter count\na=a-e or a=e-a: Loop letter count\nr=10: Random string length\n\nScript function description:\n\n1.Set name only\nTrack name\n\n2.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n"
+    text = "$foldername: Folder name\n$tracknum: Track number\n$GUID: Track GUID\nv=01: Track count\nv=01-05 or v=05-01: Loop track count\na=a: Letter count\na=a-e or a=e-a: Loop letter count\nr=10: Random string length\n\nScript function description:\n\n1.Set name only\nTrack name\n\n2.Loop count\nLimit or reverse cycle count. Enter 1 to enable, 0 to disable\n"
     text = text.."\nWill this list be displayed next time?"
     heading = "Wildcards :\n\n"
   end
