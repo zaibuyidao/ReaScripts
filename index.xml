@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fd18f1323d0cfc10734e09b64b3b1da75661233c">
+<index version="1" name="zaibuyidao Scripts" commit="7f7ab8345d8093997746c479419b55edaedd5cb3">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1410,6 +1410,15 @@
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Marker Within Time Selection.lua" type="script" desc="Batch Rename Marker Within Time Selection">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-07-18T09:12:55Z">
@@ -1434,6 +1443,10 @@
       </version>
       <version name="1.1.5" author="zaibuyidao" time="2022-07-21T16:59:36Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/92cb9290cc1cbd2f4932710ef802152edf803db1/Markers/zaibuyidao_Batch%20Rename%20Marker%20Within%20Time%20Selection.lua</source>
+      </version>
+      <version name="1.1.6" author="zaibuyidao" time="2023-03-15T01:13:45Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7f7ab8345d8093997746c479419b55edaedd5cb3/Markers/zaibuyidao_Batch%20Rename%20Marker%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Delete Marker Within Time Selection.lua" type="script" desc="Delete Marker Within Time Selection">
