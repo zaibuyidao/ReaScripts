@@ -132,6 +132,7 @@ function getDbList()
     local reaperConfig = LIP.load(reaper.GetResourcePath() .. PATH_DELIMITER .. "reaper.ini")
     local i = 1
     local reaper_explorer = reaperConfig.reaper_explorer
+    if reaper_explorer == nil then return false end
     local res = {}
     for k, v in pairs(reaper_explorer) do
         local i = k:match("^Shortcut(%d)$")

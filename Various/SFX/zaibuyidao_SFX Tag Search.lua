@@ -55,6 +55,7 @@ end
 
 SIZE_UNIT = getConfig("ui.global.size_unit", 20)
 dbList = getDbList()
+if dbList == false then return end
 ratings = (function ()
 	local ratings = {}
 	local f = io.open(script_path .. getPathDelimiter() .. "rating.csv", "r")
