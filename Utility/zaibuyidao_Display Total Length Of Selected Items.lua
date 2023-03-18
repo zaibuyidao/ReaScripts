@@ -1,129 +1,170 @@
---[[
- * ReaScript Name: Display Total Length Of Selected Items
- * Version: 1.1
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Reference: X-Raym_Display sum of length of selected media items in the console.lua
- * REAPER: 6.0
---]]
+-- @description Display Total Length Of Selected Items
+-- @version 1.1.1
+-- @author zaibuyidao
+-- @changelog Initial release
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @provides
+--  [main=main,mediaexplorer] .
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about NOT Requires JS_ReaScriptAPI & SWS Extension
 
---[[
- * Changelog:
- * v1.0 (2020-11-4)
-  + Initial release
---]]
-
-console = true -- true/false: 在控制台中顯示調試消息
-
-function Msg(value)
-    if console then reaper.ShowConsoleMsg(tostring(value) .. "\n") end
+function print(value)
+    reaper.ShowConsoleMsg(tostring(value) .. "\n")
 end
 
-function table_max(t)
-    local mn = nil
-    for k, v in pairs(t) do
-        if (mn == nil) then mn = v end
-        if mn < v then mn = v end
+function getSystemLanguage()
+    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+    local os = reaper.GetOS()
+    local lang
+  
+    if os == "Win32" or os == "Win64" then -- Windows
+        if locale == 936 then -- Simplified Chinese
+            lang = "简体中文"
+        elseif locale == 950 then -- Traditional Chinese
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "OSX32" or os == "OSX64" then -- macOS
+        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+        if lang == "zh-CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh-TW" then -- 繁体中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "Linux" then -- Linux
+        local handle = io.popen("echo $LANG")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+        if lang == "zh_CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh_TW" then -- 繁體中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
     end
-    return mn
+  
+    return lang
 end
 
-function table_min(t)
-    local mn = nil
-    for k, v in pairs(t) do
-        if (mn == nil) then mn = v end
-        if mn > v then mn = v end
+reaper.PreventUIRefresh(1)
+reaper.Undo_BeginBlock()
+
+-- 获取选中的媒体项数量
+local count_selected_items = reaper.CountSelectedMediaItems(0)
+if count_selected_items == 0 then return end
+
+-- 清除控制台信息
+reaper.ClearConsole()
+
+-- 定义变量
+local length_sum = 0
+local position_sum = 0
+local length_start = {}
+local length_end = {}
+local take_names = {}
+local same_take_name = true
+
+-- 定义函数，用于查找数组中的最大值和最小值
+local function find_extreme_value(array, mode)
+    local extreme_value = array[1]
+    for i = 2, #array do
+        if mode == "max" and array[i] > extreme_value then
+            extreme_value = array[i]
+        elseif mode == "min" and array[i] < extreme_value then
+            extreme_value = array[i]
+        end
     end
-    return mn
+    return extreme_value
 end
 
-function Main()
-    count_sel_items = reaper.CountSelectedMediaItems(0)
-    reaper.ClearConsole()
+-- 遍历选中的媒体项，计算长度、位置和名称信息
+for i = 1, count_selected_items do
+    local item = reaper.GetSelectedMediaItem(0, i - 1)
 
-    local len_sum = 0 -- 長度
-    local len_pos = 0 -- 位置
-    local len_start = {}
-    local len_last = {}
-    local same_pos = {}
-    local len_end = {}
-    local take_name_tb = {} -- 將take名存入表中進行比較
+    local take = reaper.GetActiveTake(item)
+    local take_name = reaper.GetTakeName(take)
+    take_names[#take_names + 1] = take_name
 
-    if count_sel_items > 0 then
-        for i = 1, count_sel_items do
-            local item = reaper.GetSelectedMediaItem(0, i - 1)
+    length_sum = length_sum + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+    position_sum = position_sum + reaper.GetMediaItemInfo_Value(item, "D_POSITION")
 
-            local take = reaper.GetActiveTake(item)
-            local take_name = reaper.GetTakeName(take)
-            take_name_tb[#take_name_tb + 1] = take_name
+    local length_item = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+    local position_item = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local end_item = position_item + length_item
 
-            len_sum = len_sum + reaper.GetMediaItemInfo_Value(item, "D_LENGTH") -- 長度
-            len_pos = len_pos + reaper.GetMediaItemInfo_Value(item, "D_POSITION") -- 位置
+    length_start[#length_start + 1] = position_item
+    length_end[#length_end + 1] = end_item
+end
 
-            local len_last_item = reaper.GetMediaItemInfo_Value(item, "D_LENGTH") -- 每個item的長度
-            local len_pos_item = reaper.GetMediaItemInfo_Value(item, "D_POSITION") -- 每個item的位置
-            local len_end_item = len_pos_item + len_last_item -- 每個item的結束位置
+-- 计算选中媒体项的位置信息
+local near_start_pos = find_extreme_value(length_start, "min")
+local far_end_pos = find_extreme_value(length_end, "max")
+local length_total = far_end_pos - near_start_pos
 
-            len_start[#len_start + 1] = len_pos_item
-            len_last[#len_last + 1] = len_last_item
-            len_end[#len_end + 1] = len_end_item
-        end
-
-        far_start_pos = table_max(len_start) -- 最遠的開始位置
-        near_start_pos = table_min(len_start) -- 最近的開始位置
-        far_end_pos = table_max(len_end) -- 最遠的結束位置
-
-        local len_total = far_end_pos - near_start_pos -- 總長度
-
-        flag_nil = {}
-
-        for i = 1, #take_name_tb do
-            if (take_name_tb[1] == take_name_tb[i]) then
-                flag = 1
-            else
-                flag = 0
-                flag_nil[#flag_nil + 1] = flag
-            end
-        end
-
-        if count_sel_items > 1 then
-            if flag_nil[1] == 0 then
-                Msg("Take name:")
-                Msg("")
-                Msg("")
-            else
-                Msg("Take name:")
-                Msg(take_name_tb[1])
-                Msg("")
-            end
-        else
-            Msg("Take name:")
-            Msg(take_name_tb[1])
-            Msg("")
-        end
-
-        Msg("Number of items selected:")
-        Msg(count_sel_items)
-        Msg("")
-
-        Msg("Total length (h:m:s.ms)")
-        Msg(reaper.format_timestr(len_total, 5))
-        Msg("")
-
-        Msg("Position (h:m:s.ms)")
-        Msg(reaper.format_timestr(near_start_pos, 5) .. ' - ' .. reaper.format_timestr(far_end_pos, 5))
-        -- Msg("")
-
-        -- Msg("Total length sum (h:m:s.ms)")
-        -- Msg(reaper.format_timestr(len_sum, 5))
-        -- Msg("")
-
-        -- Msg("Average length by item (h:m:s.ms)")
-        -- Msg(reaper.format_timestr(len_sum / count_sel_items, 5))
-        -- Msg("")
+-- 判断选中媒体项是否具有相同的名称
+for i = 2, #take_names do
+    if take_names[1] ~= take_names[i] then
+        same_take_name = false
+        break
     end
 end
 
-reaper.defer(Main)
+-- 输出结果
+
+local language = getSystemLanguage()
+
+if language == "简体中文" then
+    title = "显示所选对象的总长度"
+    text_take_name = "对象名称:"
+    text_count_selected_items = "对象数量:"
+    text_total_duration = "总时长 (h:m:s.ms):"
+    text_total_length = "总长度 (h:m:s.ms):"
+    text_pos = "位置 (h:m:s.ms):"
+elseif language == "繁体中文" then
+    title = "顯示所選對象的總長度"
+    text_take_name = "對象名稱:"
+    text_count_selected_items = "對象數量:"
+    text_total_duration = "總時長 (h:m:s.ms):"
+    text_total_length = "總長度 (h:m:s.ms):"
+    text_pos = "位置 (h:m:s.ms):"
+else
+    title = "Display Total Length Of Selected Items"
+    text_take_name = "Take name:"
+    text_count_selected_items = "Number of items:"
+    text_total_duration = "Total duration (h:m:s.ms):"
+    text_total_length = "Total length (h:m:s.ms):"
+    text_pos = "Position (h:m:s.ms):"
+    text_sum_total_length = "The sum of total length (h:m:s.ms):"
+end
+
+print(text_take_name)
+if same_take_name then
+    print(take_names[1])
+else
+    print("")
+end
+print("")
+print(text_count_selected_items)
+print(count_selected_items)
+print("")
+print(text_total_duration)
+print(reaper.format_timestr(length_total, 5))
+print("")
+print(text_total_length)
+print(reaper.format_timestr(length_sum, 5))
+print("")
+print(text_pos)
+print(reaper.format_timestr(near_start_pos, 5) .. ' - ' .. reaper.format_timestr(far_end_pos, 5))
+reaper.Undo_EndBlock(title, -1)
+reaper.PreventUIRefresh(-1)
+reaper.UpdateArrange()
