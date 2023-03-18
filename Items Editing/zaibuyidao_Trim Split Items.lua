@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
@@ -529,7 +529,7 @@ if get == nil then    -- 默认预设
   MIN_SLICE_LEN = 100 -- 最小切片长度(将不会被删除)
   MIN_ITEM_LEN = 100  -- 最小item长度(ms)
   SNAP_OFFSET = 0     -- 吸附偏移(ms)
-  SKIP_SAMPLE = 0     -- 跳过采样点
+  SKIP_SAMPLE = 0     -- 采样点步进
   FADE = "n"          -- 是否淡变
   SPLIT = "y"         -- 是否切割item
   REMOVE = "del"      -- 保持静默
@@ -537,11 +537,11 @@ if get == nil then    -- 默认预设
   default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT ..','.. REMOVE
 
   if language == "简体中文" then
-    set = getMutiInput("修剪分割对象设置", 11, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),跳过采样点 (0为禁用),是否淡变 (y/n),是否切割 (y/n),保持静默 (del/keep/before)", default)
+    set = getMutiInput("修剪分割对象设置", 11, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n),是否切割 (y/n),静默模式 (del/keep/before)", default)
   elseif language == "繁体中文" then
-    set = getMutiInput("修剪分割對象設置", 11, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否淡變 (y/n),是否切割 (y/n),保持靜默 (del/keep/before)", default)
+    set = getMutiInput("修剪分割對象設置", 11, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n),是否切割 (y/n),靜默模式 (del/keep/before)", default)
   else
-    set = getMutiInput("Trim Split Items Settings", 11, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n),Keep silence (del/keep/before)", default)
+    set = getMutiInput("Trim Split Items Settings", 11, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n),Is it split? (y/n),Silence mode (del/keep/before)", default)
   end
 
   if not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SLICE_LEN) or not tonumber(MIN_ITEM_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) or not tostring(REMOVE) then return end

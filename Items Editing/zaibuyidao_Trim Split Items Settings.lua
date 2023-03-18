@@ -1,5 +1,5 @@
 -- @description Trim Split Items Settings
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
@@ -286,13 +286,13 @@ default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.
 
 if language == "简体中文" then
   title = "修剪分割对象设置"
-  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),跳过采样点 (0为禁用),是否淡变 (y/n),是否切割 (y/n),保持静默 (del/keep/before)"
+  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n),是否切割 (y/n),静默模式 (del/keep/before)"
 elseif language == "繁体中文" then
   title = "修剪分割對象設置"
-  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否淡變 (y/n),是否切割 (y/n),保持靜默 (del/keep/before)"
+  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n),是否切割 (y/n),靜默模式 (del/keep/before)"
 else
   title = "Trim Split Items Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n),Keep silence (del/keep/before)"
+  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n),Is it split? (y/n),Silence mode (del/keep/before)"
 end
 
 reaper.Undo_BeginBlock()

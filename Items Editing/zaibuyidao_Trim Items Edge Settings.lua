@@ -1,5 +1,5 @@
 -- @description Trim Items Edge Settings
--- @version 1.1.7
+-- @version 1.1.8
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
@@ -252,7 +252,7 @@ if get == nil then   -- 默认预设
   trailing_pad = 0   -- 尾部填充(ms)
   length_limit = 100 -- 长度限制(ms)
   snap_offset = 0    -- 吸附偏移(ms)
-  step = 0           -- 跳过采样点
+  step = 0           -- 采样点步进
   fade = "n"         -- 是否淡变
 else
   if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
@@ -277,13 +277,13 @@ default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_p
 
 if language == "简体中文" then
   title = "修剪对象边缘设置"
-  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),跳过采样点 (0为禁用),是否淡变 (y/n)"
+  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n)"
 elseif language == "繁体中文" then
   title = "修剪對象邊緣設置"
-  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否淡變 (y/n)"
+  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n)"
 else
   title = "Trim Items Edge Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n)"
+  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n)"
 end
 
 reaper.Undo_BeginBlock()

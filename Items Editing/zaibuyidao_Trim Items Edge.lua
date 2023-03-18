@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.2.3
+-- @version 1.2.4
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
@@ -516,17 +516,17 @@ if get == nil then   -- 默认预设
   trailing_pad = 0   -- 尾部填充(ms)
   length_limit = 100 -- 长度限制(ms)
   snap_offset = 0    -- 吸附偏移(ms)
-  step = 0           -- 跳过采样点
+  step = 0           -- 采样点步进
   fade = "n"         -- 是否淡变
 
   default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. length_limit ..','.. snap_offset ..','.. step ..','.. fade
 
   if language == "简体中文" then
-    set = getMutiInput("修剪对象边缘设置", 8, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),跳过采样点 (0为禁用),是否淡变 (y/n)", default)
+    set = getMutiInput("修剪对象边缘设置", 8, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n)", default)
   elseif language == "繁体中文" then
-    set = getMutiInput("修剪對象邊緣設置", 8, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否淡變 (y/n)", default)
+    set = getMutiInput("修剪對象邊緣設置", 8, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n)", default)
   else
-    set = getMutiInput("Trim Items Edge Settings", 8, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n)", default)
+    set = getMutiInput("Trim Items Edge Settings", 8, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n)", default)
   end
 
   if not tonumber(threshold_l) or not tonumber(threshold_r) or not tonumber(leading_pad) or not tonumber(trailing_pad) or not tonumber(length_limit) or not tonumber(snap_offset) or not tonumber(step) or not tostring(fade) then return end
