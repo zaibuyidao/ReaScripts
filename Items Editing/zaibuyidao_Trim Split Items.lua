@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
@@ -365,6 +365,60 @@ function trim_item(item, keep_ranges)
   end
 end
 
+function trim_item_keep_silence(item, keep_ranges)
+  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  -- print(item_pos, item_pos + item_len)
+  -- table.print(keep_ranges)
+  local left = item
+  for i, range in ipairs(keep_ranges) do
+    if not eq(range[1], item_pos) then
+      local right = reaper.SplitMediaItem(left, range[1])
+      --delete_item(left)
+      left = right
+    end
+
+    right = reaper.SplitMediaItem(left, range[2])
+
+    reaper.SetMediaItemInfo_Value(left, "D_FADEINLEN", range.fade[1])
+    reaper.SetMediaItemInfo_Value(left, "D_FADEOUTLEN", range.fade[2])
+
+    left = right
+    ::continue::
+  end
+
+  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_pos + item_len then
+    --delete_item(left)
+  end
+end
+
+function trim_item_before_silence(item, keep_ranges)
+  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  -- print(item_pos, item_pos + item_len)
+  -- table.print(keep_ranges)
+  local left = item
+  for i, range in ipairs(keep_ranges) do
+    if not eq(range[1], item_pos) then
+      --local right = reaper.SplitMediaItem(left, range[1])
+      --delete_item(left)
+      left = right
+    end
+
+    right = reaper.SplitMediaItem(left, range[2])
+
+    reaper.SetMediaItemInfo_Value(left, "D_FADEINLEN", range.fade[1])
+    reaper.SetMediaItemInfo_Value(left, "D_FADEOUTLEN", range.fade[2])
+
+    left = right
+    ::continue::
+  end
+
+  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_pos + item_len then
+    --delete_item(left)
+  end
+end
+
 -- 合并间隔较小的保留区域，如果item长度小于MIN_ITEM_LEN，则全部区域保留
 function merge_ranges(item, keep_ranges, min_len)
   local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
@@ -474,22 +528,23 @@ if get == nil then    -- 默认预设
   RIGHT_PAD = 0       -- 尾部填充(ms)
   MIN_SLICE_LEN = 100 -- 最小切片长度(将不会被删除)
   MIN_ITEM_LEN = 100  -- 最小item长度(ms)
-  SNAP_OFFSET = 50    -- 吸附偏移(ms)
+  SNAP_OFFSET = 0     -- 吸附偏移(ms)
   SKIP_SAMPLE = 0     -- 跳过采样点
   FADE = "n"          -- 是否淡变
   SPLIT = "y"         -- 是否切割item
+  REMOVE = "del"      -- 保持静默
 
-  default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT
+  default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT ..','.. REMOVE
 
   if language == "简体中文" then
-    set = getMutiInput("修剪分割对象设置", 10, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),跳过采样点 (0为禁用),是否淡变 (y/n),是否切割 (y/n)", default)
+    set = getMutiInput("修剪分割对象设置", 11, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),跳过采样点 (0为禁用),是否淡变 (y/n),是否切割 (y/n),保持静默 (del/keep/before)", default)
   elseif language == "繁体中文" then
-    set = getMutiInput("修剪分割對象設置", 10, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否淡變 (y/n),是否切割 (y/n)", default)
+    set = getMutiInput("修剪分割對象設置", 11, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),跳過采樣點 (0為禁用),是否淡變 (y/n),是否切割 (y/n),保持靜默 (del/keep/before)", default)
   else
-    set = getMutiInput("Trim Split Items Settings", 10, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n)", default)
+    set = getMutiInput("Trim Split Items Settings", 11, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample skip (0 to disable),Fade pad (y/n),Is it split? (y/n),Keep silence (del/keep/before)", default)
   end
 
-  if not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SLICE_LEN) or not tonumber(MIN_ITEM_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) then return end
+  if not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SLICE_LEN) or not tonumber(MIN_ITEM_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) or not tostring(REMOVE) then return end
   saveDataList("TRIM_SPLIT_ITEMS", "Parameters", set, true)
   get = getSavedDataList("TRIM_SPLIT_ITEMS", "Parameters")
   return
@@ -503,10 +558,11 @@ if get[3] == nil or not tonumber(get[3]) then get[3] = 0 end
 if get[4] == nil or not tonumber(get[4]) then get[4] = 0 end
 if get[5] == nil or not tonumber(get[5]) then get[5] = 100 end
 if get[6] == nil or not tonumber(get[6]) then get[6] = 100 end
-if get[7] == nil or not tonumber(get[7]) then get[7] = 50 end
+if get[7] == nil or not tonumber(get[7]) then get[7] = 0 end
 if get[8] == nil or not tonumber(get[8]) then get[8] = 0 end
 if get[9] == nil or not tostring(get[9]) then get[9] = "n" end
 if get[10] == nil or not tostring(get[10]) then get[10] = "y" end
+if get[11] == nil or not tostring(get[11]) then get[11] = "del" end
 
 THRESHOLD = tonumber(get[1])
 HYSTERESIS = tonumber(get[2])
@@ -518,6 +574,7 @@ SNAP_OFFSET = tonumber(get[7])
 SKIP_SAMPLE = tonumber(get[8])
 FADE = tostring(get[9])
 SPLIT = tostring(get[10])
+REMOVE = get[11]
 
 local count_sel_item = reaper.CountSelectedMediaItems(0)
 
@@ -580,7 +637,13 @@ for i = count_sel_item - 1, 0, -1 do
   keep_ranges = merge_ranges(item, keep_ranges, MIN_SLICE_LEN / 1000)
   expand_ranges(item, keep_ranges, LEFT_PAD / 1000, RIGHT_PAD / 1000, FADE_IN / 1000, FADE_OUT / 1000)
   -- print(keep_ranges[#keep_ranges][2])
-  trim_item(item, keep_ranges)
+  if REMOVE == "del" then
+    trim_item(item, keep_ranges)
+  elseif REMOVE == "keep" then
+    trim_item_keep_silence(item, keep_ranges)
+  elseif REMOVE == "before" then
+    trim_item_before_silence(item, keep_ranges)
+  end
   ::continue::
 end
 
