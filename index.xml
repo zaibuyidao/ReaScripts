@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="cabcba76cdbf5d1a44b7cb6869d6aac98e98579f">
+<index version="1" name="zaibuyidao Scripts" commit="6d1df8ed97506583ba15f51e26c71618cbc6c1fd">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7155,6 +7155,10 @@
       <version name="1.1.1" author="zaibuyidao" time="2023-03-18T16:18:25Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/cabcba76cdbf5d1a44b7cb6869d6aac98e98579f/Utility/zaibuyidao_Display%20Total%20Length%20Of%20Selected%20Items.lua</source>
+      </version>
+      <version name="1.1.2" author="zaibuyidao" time="2023-03-18T16:33:28Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/6d1df8ed97506583ba15f51e26c71618cbc6c1fd/Utility/zaibuyidao_Display%20Total%20Length%20Of%20Selected%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Explode Drums GM.lua" type="script" desc="Explode Drums GM">
