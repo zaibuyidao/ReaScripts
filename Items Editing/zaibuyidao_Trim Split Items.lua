@@ -1,7 +1,7 @@
 -- @description Trim Split Items
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
--- @changelog Fix fade pad
+-- @changelog Add silent mode
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -392,6 +392,19 @@ function trim_item_keep_silence(item, keep_ranges)
   end
 end
 
+function trim_item_before_nonsilence(item, keep_ranges)
+  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local left = item
+  for i, range in ipairs(keep_ranges) do
+    if not eq(range[1], item_pos) then
+      local right = reaper.SplitMediaItem(left, range[1])
+      left = right
+    end
+    ::continue::
+  end
+end
+
 function trim_item_before_silence(item, keep_ranges)
   local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
@@ -399,12 +412,6 @@ function trim_item_before_silence(item, keep_ranges)
   -- table.print(keep_ranges)
   local left = item
   for i, range in ipairs(keep_ranges) do
-    if not eq(range[1], item_pos) then
-      --local right = reaper.SplitMediaItem(left, range[1])
-      --delete_item(left)
-      left = right
-    end
-
     right = reaper.SplitMediaItem(left, range[2])
 
     reaper.SetMediaItemInfo_Value(left, "D_FADEINLEN", range.fade[1])
@@ -412,10 +419,6 @@ function trim_item_before_silence(item, keep_ranges)
 
     left = right
     ::continue::
-  end
-
-  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_pos + item_len then
-    --delete_item(left)
   end
 end
 
@@ -537,11 +540,11 @@ if get == nil then    -- 默认预设
   default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT ..','.. REMOVE
 
   if language == "简体中文" then
-    set = getMutiInput("修剪分割对象设置", 11, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n),是否切割 (y/n),静默模式 (del/keep/before)", default)
+    set = getMutiInput("修剪分割对象设置", 11, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n),是否切割 (y/n),模式 (del/keep/begin/end)", default)
   elseif language == "繁体中文" then
-    set = getMutiInput("修剪分割對象設置", 11, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n),是否切割 (y/n),靜默模式 (del/keep/before)", default)
+    set = getMutiInput("修剪分割對象設置", 11, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n),是否切割 (y/n),模式 (del/keep/begin/end)", default)
   else
-    set = getMutiInput("Trim Split Items Settings", 11, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n),Is it split? (y/n),Silence mode (del/keep/before)", default)
+    set = getMutiInput("Trim Split Items Settings", 11, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n),Is it split? (y/n),Mode (del/keep/begin/end)", default)
   end
 
   if not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SLICE_LEN) or not tonumber(MIN_ITEM_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) or not tostring(REMOVE) then return end
@@ -641,7 +644,9 @@ for i = count_sel_item - 1, 0, -1 do
     trim_item(item, keep_ranges)
   elseif REMOVE == "keep" then
     trim_item_keep_silence(item, keep_ranges)
-  elseif REMOVE == "before" then
+  elseif REMOVE == "begin" then
+    trim_item_before_nonsilence(item, keep_ranges)
+  elseif REMOVE == "end" then
     trim_item_before_silence(item, keep_ranges)
   end
   ::continue::

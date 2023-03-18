@@ -1,7 +1,7 @@
 -- @description Trim Split Items Settings
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
--- @changelog Fix fade pad
+-- @changelog Add silent mode
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -286,13 +286,13 @@ default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.
 
 if language == "简体中文" then
   title = "修剪分割对象设置"
-  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n),是否切割 (y/n),静默模式 (del/keep/before)"
+  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n),是否切割 (y/n),模式 (del/keep/begin/end)"
 elseif language == "繁体中文" then
   title = "修剪分割對象設置"
-  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n),是否切割 (y/n),靜默模式 (del/keep/before)"
+  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n),是否切割 (y/n),模式 (del/keep/begin/end)"
 else
   title = "Trim Split Items Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n),Is it split? (y/n),Silence mode (del/keep/before)"
+  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n),Is it split? (y/n),Mode (del/keep/begin/end)"
 end
 
 reaper.Undo_BeginBlock()
