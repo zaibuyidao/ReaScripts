@@ -1,5 +1,5 @@
 -- @description Display Total Length Of Selected Items
--- @version 1.1.1
+-- @version 1.1.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -144,7 +144,6 @@ else
     text_total_duration = "Total duration (h:m:s.ms):"
     text_total_length = "Total length (h:m:s.ms):"
     text_pos = "Position (h:m:s.ms):"
-    text_sum_total_length = "The sum of total length (h:m:s.ms):"
 end
 
 print(text_take_name)
