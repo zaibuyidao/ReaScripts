@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog Fix fade pad
 -- @links
@@ -261,7 +261,8 @@ function get_sample_pos_value(take, skip_sample)
   if skip_sample <= 0 or not tonumber(skip_sample) then
     skip_sample = 0
   elseif skip_sample > 0 then
-    skip_sample = samplerate / skip_sample -- 每秒处理几个样本
+    -- skip_sample = samplerate / skip_sample -- 每秒处理几个样本
+    skip_sample = samplerate / (samplerate / skip_sample) -- 跳过几个样本
   end
 
   skip_sample = math.floor(0.5 + skip_sample)
@@ -594,8 +595,7 @@ for i = count_sel_item - 1, 0, -1 do
       reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', r)
     end
   elseif SNAP_OFFSET == 0 then
-    local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-    reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', item_pos)
+    reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', 0)
   end
   ::continue::
 end
