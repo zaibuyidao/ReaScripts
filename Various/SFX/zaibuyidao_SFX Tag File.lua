@@ -1,4 +1,8 @@
 -- NoIndex: true
+EXCLUDE_DB_LIST =  { } -- 示例 exclude = { "DB: 00", "DB: 01" }
+EXCLUDE_LIST = { } -- 示例 exclude = { "File", "Custom Tags", "Description", "Keywords" }
+PARENT_FOLDER = true
+
 function print(...)
 	local args = {...}
 	local str = ""
@@ -115,7 +119,63 @@ LIP = require('LIP')
 CONFIG = require('config')
 ListView = require('ListView')
 
-setGlobalStateSection("SFX_TAG_SEARCH")
+setGlobalStateSection("SFX_TAG_SEARCH_FILE")
+
+function readViewModelFromReaperFileList(dbPath, config, async)
+    config = config or {}
+    local excludeOrigin = config.excludeOrigin or {}
+    local delimiters = config.delimiters or {}
+
+    local function iteratorOf(origin, source)
+        if not delimiters[origin] then
+            if not delimiters.default or #delimiters.default == 0 then
+                return source:gmatch(".+")
+            end
+            return source:gmatch("[^" .. table.concat(delimiters.default) .. "]+")
+        end
+        if #delimiters[origin] == 0 then
+            return source:gmatch(".+")
+        end
+        return source:gmatch("[^" .. table.concat(delimiters[origin]) .. "]+")
+    end
+
+    local path
+    local keywords = {}
+
+    local function processItem(itemType, content)
+        if itemType == "PATH" then
+            path = (parseCSVLine(content, " "))[1]
+        elseif itemType == "FILE" and not excludeOrigin["File"] then
+            local p = (parseCSVLine(content, " "))[1]
+            local matchPattern = "[^/%\\]+$"
+            if config.containsAllParentDirectories then
+                matchPattern = "[^/%\\]+"
+            end
+            -- read each part from path
+            for w in p:gmatch(matchPattern) do
+                -- not disk
+                if not w:match("^%w+:$") then
+                    local value = w:trimFileExtension()
+                    keywords[value] = keywords[value] or { value = value, from = {} }
+                    keywords[value].from["File"] = true
+                end
+            end
+        end
+        ::continue::
+    end
+
+    if async then
+        local hasNext, _nextItem = readReaperFileList(dbPath)
+        local function nextItem()
+            return processItem(_nextItem)
+        end
+        return hasNext, nextItem
+    end
+    
+    if readReaperFileList(dbPath, processItem) then
+        return path, keywords
+    end
+end
 
 function getConfig(configName, default, convert)
 	local cur = CONFIG
@@ -193,17 +253,20 @@ end
 
 local data = {}
 local readDBCount = 0
-local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
+local excludeDbName = table.arrayToTable(EXCLUDE_DB_LIST)-- getConfig("db.exclude_db", {}, table.arrayToTable)
+
 for _, db in ipairs(dbList) do
 	if not excludeDbName[db.name] then
 		local path, keywords = readViewModelFromReaperFileList(db.path, {
-			excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
+			excludeOrigin = table.arrayToTable(EXCLUDE_LIST), -- getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
 			delimiters = getConfig("db.delimiters", {}),
-			containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+			containsAllParentDirectories = PARENT_FOLDER -- getConfig("search.file.contains_all_parent_directories")
 		})
+	
 		if path and keywords then
 			readDBCount = readDBCount + 1
 			for v, keyword in pairs(keywords) do
+
 				table.insert(data, {
 					db = db.name,
 					path = path,
@@ -212,6 +275,10 @@ for _, db in ipairs(dbList) do
 					fromString = table.concat(table.keys(keyword.from), ", ")
 				})
 			end
+
+			table.sort(data, function(a, b)
+				return tostring(a.value) < tostring(b.value)
+			end)
 		end
 	end
 end
@@ -250,14 +317,14 @@ function searchKeyword(value, rating)
 		end
 	end
 	
-	table.sort(res, function(a, b)
-		local ra = getRating(a.value)
-		local rb = getRating(b.value)
-		if ra == rb then
-			return a.index < b.index
-		end
-		return ra > rb
-	end)
+	-- table.sort(res, function(a, b)
+	-- 	local ra = getRating(a.value)
+	-- 	local rb = getRating(b.value)
+	-- 	if ra == rb then
+	-- 		return a.index < b.index
+	-- 	end
+	-- 	return ra > rb
+	-- end)
 	return res
 end
 
@@ -311,7 +378,7 @@ end
 function init()
 	JProject:new()
 	window = jGui:new({
-        title = getConfig("ui.window.title"),
+        title = getConfig("ui.window.title") .. " - File",
         width = getState("WINDOW_WIDTH", getConfig("ui.window.width"), tonumber),
         height = getState("WINDOW_HEIGHT", getConfig("ui.window.height"), tonumber),
         x = getState("WINDOW_X", getConfig("ui.window.x"), tonumber),
@@ -486,7 +553,7 @@ function init()
 			c.focus_index = viewHolderIndex + 1 --gui:getFocusIndex()
 
 			function c:onMouseClick()
-				incRating(listView.data[dataIndex].value)
+				-- incRating(listView.data[dataIndex].value)
 				if getReaperExplorerPath() ~= listView.data[dataIndex].db and getConfig("search.switch_database") then
 					setReaperExplorerPath(listView.data[dataIndex].db)
 				end
@@ -514,8 +581,8 @@ function init()
 			resultListView:randomJump()
 		elseif key == 6697266 then --过滤关键词 f12
 			searchTextBox:promptForContent()
-		elseif key == 26162 then --编辑配置表 f2
-			openUrl(script_path .. "lib/config.lua")
+		-- elseif key == 26162 then --编辑配置表 f2
+		-- 	openUrl(script_path .. "lib/config.lua")
 		elseif key == 1752132965 then --HOME
 			resultListView:jump(1)
 		elseif key == 6647396 then --END
@@ -672,7 +739,7 @@ function init()
 			WINDOW_Y = math.tointeger(wy),
 			WINDOW_DOCK_STATE = dockstr,
 		})
-		writeRatings()
+		-- writeRatings()
 	end
 
 	window:onResize()
@@ -695,7 +762,7 @@ if init() then
 	loop()
 
 	if reaper.JS_Window_FindEx then
-		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title"), true)
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - File", true)
 		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
 	end
 end
