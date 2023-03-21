@@ -128,30 +128,47 @@ function openUrl(url)
     end
 end
 
+function countReaperFileList(reaper_explorer)
+    local count = {}
+    for k, v in pairs(reaper_explorer) do
+        if k:match("^Shortcut%d+$") and v:find("^%d+%.ReaperFileList$") then
+            count[v] = (count[v] or 0) + 1
+        end
+    end
+    return count
+end
+
 function getDbList()
     local reaperConfig = LIP.load(reaper.GetResourcePath() .. PATH_DELIMITER .. "reaper.ini")
     local i = 1
     local reaper_explorer = reaperConfig.reaper_explorer
     if reaper_explorer == nil then return false end
     local res = {}
+    local reaperFileListCount = countReaperFileList(reaper_explorer)
     for k, v in pairs(reaper_explorer) do
-        local i = k:match("^Shortcut(%d)$")
+        local i = k:match("^Shortcut(%d+)$")
         if i then
             i = tonumber(i)
             local name = reaper_explorer["ShortcutT" .. i]
             if name and #name > 0 and v:find("^%d+%.ReaperFileList$") then
-                table.insert(res, {
-                    path = reaper.GetResourcePath() .. PATH_DELIMITER .. "MediaDB" .. PATH_DELIMITER .. reaper_explorer["Shortcut" .. i],
-                    name = name,
-                    i = i
-                })
+                if reaperFileListCount[v] == 1 or (not res[v] or res[v].i > i) then
+                    res[v] = {
+                        path = reaper.GetResourcePath() .. PATH_DELIMITER .. "MediaDB" .. PATH_DELIMITER .. reaper_explorer["Shortcut" .. i],
+                        name = name,
+                        i = i
+                    }
+                end
             end
         end
     end
-    table.sort(res, function(a, b)
+    local sortedRes = {}
+    for _, v in pairs(res) do
+        table.insert(sortedRes, v)
+    end
+    table.sort(sortedRes, function(a, b)
         return a.i < b.i
     end)
-    return res
+    return sortedRes
 end
 
 local GLOBAL_STATE_SECTION
