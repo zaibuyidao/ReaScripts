@@ -1,4 +1,4 @@
--- @description Edit Metadata Tag Custom
+-- @description Edit Metadata Tag Custom Tags
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
@@ -314,10 +314,10 @@ reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 for k, v in pairs(path_sel) do
-  local chunk = mediadb:match('(FILE \"'..v..'\".-[\n\r])FILE ') or mediadb:match('(FILE \"'..v..'\".+)')  -- 文件对应的块
+  local chunk = mediadb:match('(FILE \"'..v..'\".-[\n\r])FILE ') or mediadb:match('(FILE \"'..v..'\".+)') -- 文件对应的块
   if chunk then
     local get_tag = chunk:match('\"'..'[Uu]'..':[^\"]+\"') or chunk:match('[Uu]'..':%S+') or chunk:match('[Uu]'..':')
-    local new_chunk --  = get_tag and chunk:gsub(esc(get_tag), '\"' .. tag .. ':'.. keyword ..'\"')
+    local new_chunk -- = get_tag and chunk:gsub(esc(get_tag), '\"' .. tag .. ':'.. keyword ..'\"')
 
     if get_tag then
       -- 如果存在U:或者u:标签，则直接替换
