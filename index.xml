@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f60e02fdd4b1362acf30a3e6cfe8abca894c236b">
+<index version="1" name="zaibuyidao Scripts" commit="c006ae4feb479208dbb3ab8d1807775b404a2a7d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7161,7 +7161,7 @@
         <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/6d1df8ed97506583ba15f51e26c71618cbc6c1fd/Utility/zaibuyidao_Display%20Total%20Length%20Of%20Selected%20Items.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Edit Metadata Tag Custom.lua" type="script" desc="Edit Metadata Tag Custom">
+    <reapack name="zaibuyidao_Edit Metadata Tag Custom Tags.lua" type="script" desc="Edit Metadata Tag Custom Tags">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -7174,9 +7174,9 @@
         <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2023-03-22T15:00:36Z">
+      <version name="1.0" author="zaibuyidao" time="2023-03-22T15:12:38Z">
         <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/f60e02fdd4b1362acf30a3e6cfe8abca894c236b/Utility/zaibuyidao_Edit%20Metadata%20Tag%20Custom.lua</source>
+        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/c006ae4feb479208dbb3ab8d1807775b404a2a7d/Utility/zaibuyidao_Edit%20Metadata%20Tag%20Custom%20Tags.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Explode Drums GM.lua" type="script" desc="Explode Drums GM">
