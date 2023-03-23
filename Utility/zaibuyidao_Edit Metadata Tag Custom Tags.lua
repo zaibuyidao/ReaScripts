@@ -1,5 +1,5 @@
 -- @description Edit Metadata Tag Custom Tags
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -125,31 +125,25 @@ function esc(s)
   return (s:gsub(".", matches))
 end
 
-function get_sel_item_path_from_me(hwnd) -- 获取选中文件的路径
-  local function get_selected_items(list)
-    local sel_count, sel_index = reaper.JS_ListView_ListAllSelItems(list)
-    if sel_count == 0 then return end
-    return sel_index
-  end
-
-  local function resume_me_path_options(resumeExt, resumePartpath, resumeNopath)
-    if resumeExt then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42091, 0, 0, 0) end -- Options: Show file extension even when file type displayed
-    if resumePartpath then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42134, 0, 0, 0) end -- Browser: Show leading path in databases and searches
-    if resumeNopath then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42026, 0, 0, 0) end -- Browser: Show full path in databases and searches
-  end
-
+-- 获取选中文件的路径(感谢noiZ的代码)
+function get_sel_item_path_from_me(hwnd) 
+  -- 查找窗口中的列表视图
   local list = reaper.JS_Window_FindChild(hwnd, 'List1', true)
-  local sel_index = get_selected_items(list)
-  if sel_index == nil then return end
-  local sel_index1 = tonumber(sel_index:match('[^,]+'))
-  if not sel_index1 then return end
   
+  -- 获取选中项的数量和索引
+  local sel_count, sel_index = reaper.JS_ListView_ListAllSelItems(list)
+  if sel_count == 0 then return end
+  local sel_index1 = tonumber(sel_index:match('[^,]+'))
+  
+  -- 检查ME是否有完整路径
   local name = reaper.JS_ListView_GetItem(list, sel_index1, 0)
   local isFull = name:match('[/\\]')
-  local resumeNopath, resumePartpath, resumeExt = false, false, false
+  local resumeNopath, resumePartpath = false, false
   local ext = name:match(".+%.(%w+)$")
+  local resumeExt = false
   
-  if not ext or not reaper.IsMediaExtension(ext, false) then
+  -- 检查扩展名是否有效
+  if not ext or not reaper.IsMediaExtension(ext, false) then  
     resumeExt = true
     reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42091, 0, 0, 0) -- Options: Show file extension even when file type displayed
     name = reaper.JS_ListView_GetItem(list, sel_index1, 0)
@@ -158,8 +152,9 @@ function get_sel_item_path_from_me(hwnd) -- 获取选中文件的路径
   local folderhwnd = reaper.JS_Window_FindChildByID(hwnd, 1002)
   local folder = reaper.JS_Window_GetTitle(folderhwnd)
   
-  if not folder:match('[/\\]') then
-    if not reaper.file_exists(name) then
+  -- 检查文件夹路径
+  if not folder:match('[/\\]') then  -- database
+    if not reaper.file_exists(name) then  -- 路径不完整或没有路径
       reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42026, 0, 0, 0) -- Browser: Show full path in databases and searches
       if isFull then
         resumePartpath = true
@@ -169,15 +164,19 @@ function get_sel_item_path_from_me(hwnd) -- 获取选中文件的路径
     end
   end
   
-  local outputs = {}
+  -- 获取ME中选中文件的路径
+  local outputs = {}  -- 储存ME中的文件路径
   for idx in sel_index:gmatch('[^,]+') do
     local fn = reaper.JS_ListView_GetItem(list, tonumber(idx), 0)
-    fn = fn:match('[/\\]') and fn or folder .. sep .. fn
-    if not reaper.file_exists(fn) then break end
+    fn = fn:match('[/\\]') and fn or folder..sep..fn
+    if not reaper.file_exists(fn) then reaper.MB('路径\n'..fn..'\n无效或为文件夹', '操作失败', 0) break end
     outputs[#outputs+1] = esc(fn)
   end
 
-  resume_me_path_options(resumeExt, resumePartpath, resumeNopath)
+  -- 恢复ME路径选项
+  if resumeExt then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42091, 0, 0, 0) end -- Options: Show file extension even when file type displayed
+  if resumePartpath then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42134, 0, 0, 0) end -- Browser: Show leading path in databases and searches
+  if resumeNopath then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42026, 0, 0, 0) end -- Browser: Show full path in databases and searches
   return outputs
 end
 
@@ -249,6 +248,7 @@ function build_name(build_pattern, i)
 end
 
 local function extract_label_value(text)
+  if text == nil then text = '' end
   local pattern = "[%u%l]%s*:%s*([^\"]+)"
   local value = text:match(pattern)
   return value
