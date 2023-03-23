@@ -1,5 +1,5 @@
 -- @description Edit Metadata Tag Custom Tags
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -125,126 +125,49 @@ function esc(s)
   return (s:gsub(".", matches))
 end
 
--- 获取选中文件的路径(感谢noiZ的代码)
-function get_sel_item_path_from_me(hwnd) 
-  -- 查找窗口中的列表视图
+function get_sel_item_path_from_me(hwnd) -- 获取选中文件的路径
   local list = reaper.JS_Window_FindChild(hwnd, 'List1', true)
-  
-  -- 获取选中项的数量和索引
-  local sel_count, sel_index = reaper.JS_ListView_ListAllSelItems(list)
+  local sel_count, sel_index = reaper.JS_ListView_ListAllSelItems(list) -- 获取选中项的数量和索引
   if sel_count == 0 then return end
-  local sel_index1 = tonumber(sel_index:match('[^,]+'))
-  
-  -- 检查ME是否有完整路径
-  local name = reaper.JS_ListView_GetItem(list, sel_index1, 0)
-  local isFull = name:match('[/\\]')
-  local resumeNopath, resumePartpath = false, false
-  local ext = name:match(".+%.(%w+)$")
-  local resumeExt = false
-  
-  -- 检查扩展名是否有效
-  if not ext or not reaper.IsMediaExtension(ext, false) then  
-    resumeExt = true
+  local sel_index1 = tonumber(sel_index:match('[^,]+')) -- 选中的第一个文件的序号
+  local name = reaper.JS_ListView_GetItem(list, sel_index1, 0) -- 选中的第一个文件的名称
+  local is_full_path = name:match('[/\\]') -- 检查是否显示完整文件路径
+  local ext = name:match(".+%.(%w+)$") -- 获取扩展名，比如 wav
+  local resume_ext, resume_full_path, resume_lead_path = false, false, false
+
+  if not ext or not reaper.IsMediaExtension(ext, false) then -- 如果显示扩展名没有开启，那么就开启
+    resume_ext = true
     reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42091, 0, 0, 0) -- Options: Show file extension even when file type displayed
     name = reaper.JS_ListView_GetItem(list, sel_index1, 0)
   end
   
   local folderhwnd = reaper.JS_Window_FindChildByID(hwnd, 1002)
-  local folder = reaper.JS_Window_GetTitle(folderhwnd)
-  
-  -- 检查文件夹路径
-  if not folder:match('[/\\]') then  -- database
-    if not reaper.file_exists(name) then  -- 路径不完整或没有路径
+  local folder = reaper.JS_Window_GetTitle(folderhwnd) -- 获取数据库名称
+
+  if not folder:match('[/\\]') then -- 路径中是否包含分隔符/或\
+    if not reaper.file_exists(name) then -- 检查路径是否有效
       reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42026, 0, 0, 0) -- Browser: Show full path in databases and searches
-      if isFull then
-        resumePartpath = true
+
+      if is_full_path then
+        resume_lead_path = true
       else
-        resumeNopath = true
+        resume_full_path = true
       end
     end
   end
-  
-  -- 获取ME中选中文件的路径
-  local outputs = {}  -- 储存ME中的文件路径
-  for idx in sel_index:gmatch('[^,]+') do
+
+  local outputs = {}  -- 储存路径
+  for idx in sel_index:gmatch('[^,]+') do -- 遍历 sel_index 中所有以逗号分隔的值
     local fn = reaper.JS_ListView_GetItem(list, tonumber(idx), 0)
-    fn = fn:match('[/\\]') and fn or folder..sep..fn
-    if not reaper.file_exists(fn) then reaper.MB('路径\n'..fn..'\n无效或为文件夹', '操作失败', 0) break end
+    fn = fn:match('[/\\]') and fn or folder .. sep.. fn
+    if not reaper.file_exists(fn) then break end -- 检查路径是否有效
     outputs[#outputs+1] = esc(fn)
   end
 
-  -- 恢复ME路径选项
-  if resumeExt then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42091, 0, 0, 0) end -- Options: Show file extension even when file type displayed
-  if resumePartpath then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42134, 0, 0, 0) end -- Browser: Show leading path in databases and searches
-  if resumeNopath then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42026, 0, 0, 0) end -- Browser: Show full path in databases and searches
+  if resume_ext then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42091, 0, 0, 0) end -- Options: Show file extension even when file type displayed
+  if resume_lead_path then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42134, 0, 0, 0) end -- Browser: Show leading path in databases and searches
+  if resume_full_path then reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42026, 0, 0, 0) end -- Browser: Show full path in databases and searches
   return outputs
-end
-
-function build_name(build_pattern, i)
-    if reverse == "1" then
-      build_pattern = build_pattern:gsub("v=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号
-        local len = #start_idx
-        start_idx = tonumber(start_idx)
-        end_idx = tonumber(end_idx)
-        if start_idx > end_idx then
-          return string.format("%0" .. len .. "d", start_idx - ((i - 1) % (start_idx - end_idx + 1)))
-        end
-        return string.format("%0" .. len .. "d", start_idx + ((i - 1) % (end_idx - start_idx + 1)))
-      end)
-    end
-  
-    build_pattern = build_pattern:gsub("v=(%d+)", function (start_idx) -- 匹配数字序号
-      return string.format("%0" .. #start_idx .. "d", tonumber(start_idx) + i - 1)
-    end)
-  
-    build_pattern = build_pattern:gsub("r=(%d+)", function (n)
-      local t = {
-        "0","1","2","3","4","5","6","7","8","9",
-        "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
-        "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
-      }
-      local s = ""
-      for i = 1, n do
-        s = s .. t[math.random(#t)]
-      end
-      return s
-    end)
-  
-    local ab = string.byte("a")
-    local zb = string.byte("z")
-    local Ab = string.byte("A")
-    local Zb = string.byte("Z")
-  
-    if reverse == "1" then
-      build_pattern = build_pattern:gsub("a=([A-Z])%-([A-Z])", function(c1, c2) -- 匹配循环大写字母
-        local c1b = c1:byte()
-        local c2b = c2:byte()
-        if c1b > c2b then
-          return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-        end
-        return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
-      end)
-    
-      build_pattern = build_pattern:gsub("a=([a-z])%-([a-z])", function(c1, c2) -- 匹配循环小写字母
-        local c1b = c1:byte()
-        local c2b = c2:byte()
-        if c1b > c2b then
-          return string.char(c1b - ((i - 1) % (c1b - c2b + 1)))
-        end
-        return string.char(c1b + ((i - 1) % (c2b - c1b + 1)))
-      end)
-    end
-  
-    build_pattern = build_pattern:gsub("a=([A-Za-z])", function(c) -- 匹配字母
-      local cb = c:byte()
-      if cb >= ab and cb <= zb then
-        return string.char(ab + ((cb - ab) + (i - 1)) % 26)
-      elseif cb >= Ab and cb <= Zb then
-        return string.char(Ab + ((cb - Ab) + (i - 1)) % 26)
-      end
-    end)
-  
-    return build_pattern
 end
 
 local function extract_label_value(text)
@@ -307,7 +230,7 @@ else
   custom = "Custom Tags"
 end
 
-local uok, keyword = reaper.GetUserInputs(script_title, 1, custom .. ', extrawidth=200', check_names(tag_names))
+local uok, uinput = reaper.GetUserInputs(script_title, 1, custom .. ', extrawidth=200', check_names(tag_names))
 if not uok then return end
 
 reaper.PreventUIRefresh(1)
@@ -317,23 +240,23 @@ for k, v in pairs(path_sel) do
   local chunk = mediadb:match('(FILE \"'..v..'\".-[\n\r])FILE ') or mediadb:match('(FILE \"'..v..'\".+)') -- 文件对应的块
   if chunk then
     local get_tag = chunk:match('\"'..'[Uu]'..':[^\"]+\"') or chunk:match('[Uu]'..':%S+') or chunk:match('[Uu]'..':')
-    local new_chunk -- = get_tag and chunk:gsub(esc(get_tag), '\"' .. tag .. ':'.. keyword ..'\"')
+    local new_chunk -- = get_tag and chunk:gsub(esc(get_tag), '\"' .. tag .. ':'.. uinput ..'\"')
 
     if get_tag then
       -- 如果存在U:或者u:标签，则直接替换
-      if keyword:find(" ") then
-        new_chunk = chunk:gsub(esc(get_tag), '\"' .. TAG .. ':' .. build_name(keyword, k) .. '\"')
+      if uinput:find(" ") then
+        new_chunk = chunk:gsub(esc(get_tag), '\"' .. TAG .. ':' .. uinput .. '\"')
       else
-        new_chunk = chunk:gsub(esc(get_tag), TAG .. ':' .. build_name(keyword, k))
+        new_chunk = chunk:gsub(esc(get_tag), TAG .. ':' .. uinput)
       end
     else
       -- 如果不存在U:或者u:标签，插入新标签到s:前面
       local s_tag_match = chunk:match("s:[%d:]+")
       if s_tag_match then
-        if keyword:find(" ") then
-          new_chunk = chunk:gsub("(%s*" .. s_tag_match .. ")", ' "' .. TAG .. ':' .. build_name(keyword, k) .. '"%1') -- 在 s: 标签前插入带引号的新标签
+        if uinput:find(" ") then
+          new_chunk = chunk:gsub("(%s*" .. s_tag_match .. ")", ' "' .. TAG .. ':' .. uinput .. '"%1') -- 在 s: 标签前插入带引号的新标签
         else
-          new_chunk = chunk:gsub("(%s*" .. s_tag_match .. ")", ' '.. TAG .. ':' .. build_name(keyword, k) .. '%1') -- 在 s: 标签前插入不带引号的新标签
+          new_chunk = chunk:gsub("(%s*" .. s_tag_match .. ")", ' '.. TAG .. ':' .. uinput .. '%1') -- 在 s: 标签前插入不带引号的新标签
         end
       end
     end
