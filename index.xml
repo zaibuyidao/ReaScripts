@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="aa33f3f571e84f0c37b6b25f9e123e5a0967737b">
+<index version="1" name="zaibuyidao Scripts" commit="28d56fbb810fcd5f33c82ca61c1f9714167b47bd">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7181,6 +7181,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2023-03-23T02:14:48Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/a81d1209619aac6ec9a4a801219aa8a37366e8ce/Utility/zaibuyidao_Edit%20Metadata%20Tag%20Custom%20Tags.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-03-23T14:12:46Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/28d56fbb810fcd5f33c82ca61c1f9714167b47bd/Utility/zaibuyidao_Edit%20Metadata%20Tag%20Custom%20Tags.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Explode Drums GM.lua" type="script" desc="Explode Drums GM">
