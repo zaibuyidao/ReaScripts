@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.1.8
+-- @version 1.1.9
 -- @changelog Initial release
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
@@ -11,6 +11,7 @@
 -- @provides
 --   [main] SFX/zaibuyidao_SFX Tag Search.lua
 --   [main] SFX/zaibuyidao_SFX Tag Album.lua
+--   [main] SFX/zaibuyidao_SFX Tag Comment.lua
 --   [main] SFX/zaibuyidao_SFX Tag Description.lua
 --   [main] SFX/zaibuyidao_SFX Tag File.lua
 --   [main] SFX/zaibuyidao_SFX Tag iXML CategoryFull.lua
