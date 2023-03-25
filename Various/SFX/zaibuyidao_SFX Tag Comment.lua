@@ -467,7 +467,7 @@ function init()
 			local c = jGuiHighlightControl:new()
 			c.height = listView.itemHeight
 			c.width = window.width - 20
-			c.label_fontsize = listView.itemHeight - 2
+			c.label_fontsize = listView.itemHeight - 2 -- 列表字体大小
 			c.label_align = "l"
 			c.label_font = getConfig("ui.global.font", "微软雅黑") -- "Calibri"
 			c.color_focus_border = getConfig("ui.result_list.color_focus_border", c.color_focus_border)
@@ -479,7 +479,7 @@ function init()
 			local info = jGuiText:new()
 			info.width = 40
 			info.height = listView.itemHeight
-			info.label_fontsize = math.floor((listView.itemHeight-2) / 2 + 5)
+			info.label_fontsize = listView.itemHeight - 2 -- math.floor((listView.itemHeight-2) / 2 + 5) -- 列表字体大小
 			info.label_font = getConfig("ui.global.font", "微软雅黑") -- "Calibri"
 			info.label_align = "r"
 			info.label_valign = "m"
@@ -666,7 +666,7 @@ function init()
 		end
 
 		if self.kb:control() then
-			resultListView:promptForJump()
+			searchTextBox:promptForContent()
 		end
 	end
 
