@@ -1,7 +1,6 @@
 -- NoIndex: true
 EXCLUDE_DB_LIST =  { } -- 示例 exclude = { "DB: 00", "DB: 01" }
 EXCLUDE_LIST = { } -- 示例 exclude = { "File", "Custom Tags", "Description", "Keywords" }
-PARENT_FOLDER = true
 
 function print(...)
 	local args = {...}
@@ -119,7 +118,7 @@ LIP = require('LIP')
 CONFIG = require('config')
 ListView = require('ListView')
 
-setGlobalStateSection("SFX_TAG_SEARCH_FILE")
+setGlobalStateSection("SFX_TAG_SEARCH_TITLE")
 
 function readViewModelFromReaperFileList(dbPath, config, async)
     config = config or {}
@@ -145,19 +144,20 @@ function readViewModelFromReaperFileList(dbPath, config, async)
     local function processItem(itemType, content)
         if itemType == "PATH" then
             path = (parseCSVLine(content, " "))[1]
-        elseif itemType == "FILE" and not excludeOrigin["File"] then
-            local p = (parseCSVLine(content, " "))[1]
-            local matchPattern = "[^/%\\]+$"
-            if config.containsAllParentDirectories then
-                matchPattern = "[^/%\\]+"
+        elseif itemType == "DATA" then
+            local ok, entries = pcall(parseCSVLine, content, " ")
+            if not ok then
+                -- print("parse DATA line failed:", content, entries)
+                goto continue
             end
-            -- read each part from path
-            for w in p:gmatch(matchPattern) do
-                -- not disk
-                if not w:match("^%w+:$") then
-                    local value = w:trimFileExtension()
-                    keywords[value] = keywords[value] or { value = value, from = {} }
-                    keywords[value].from["File"] = true
+            for _, entry in ipairs(entries) do
+                local k, v = readDataItemEntry(entry)
+                if k and v and k:lower() == 't' and not excludeOrigin["Title"] then
+                    for w in iteratorOf("Title", v) do
+                        local value = w:trim():trimFileExtension()
+                        keywords[value] = keywords[value] or { value = value, from = {} }
+                        keywords[value].from["Title"] = true
+                    end
                 end
             end
         end
@@ -260,7 +260,7 @@ for _, db in ipairs(dbList) do
 		local path, keywords = readViewModelFromReaperFileList(db.path, {
 			excludeOrigin = table.arrayToTable(EXCLUDE_LIST), -- getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
 			delimiters = getConfig("db.delimiters", {}),
-			containsAllParentDirectories = PARENT_FOLDER -- getConfig("search.file.contains_all_parent_directories")
+			containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
 		})
 	
 		if path and keywords then
@@ -378,7 +378,7 @@ end
 function init()
 	JProject:new()
 	window = jGui:new({
-        title = getConfig("ui.window.title") .. " - File",
+        title = getConfig("ui.window.title") .. " - Title",
         width = getState("WINDOW_WIDTH", getConfig("ui.window.width"), tonumber),
         height = getState("WINDOW_HEIGHT", getConfig("ui.window.height"), tonumber),
         x = getState("WINDOW_X", getConfig("ui.window.x"), tonumber),
@@ -762,7 +762,7 @@ if init() then
 	loop()
 
 	if reaper.JS_Window_FindEx then
-		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - File", true)
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - Title", true)
 		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
 	end
 end
