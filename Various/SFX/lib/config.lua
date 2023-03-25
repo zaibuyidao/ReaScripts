@@ -2,8 +2,8 @@
 return {
     ui = {
         global = {
-            font = "Calibri", -- 默认字体名
-            size_unit = 20, -- 控件单位大小，所有控件大小以此为基准
+            font = "宋体", -- 默认字体名："Calibri"、"宋体"、"微软雅黑"
+            size_unit = 14, -- 控件单位大小，所有控件大小以此为基准
         },
         window = {
             title = "SFX Tag Search", -- 窗口标题
