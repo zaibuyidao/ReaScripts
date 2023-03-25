@@ -758,4 +758,9 @@ end
 if init() then
 	window:setReaperFocus()
 	loop()
+
+	if reaper.JS_Window_FindEx then
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title"), true)
+		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
+	end
 end
