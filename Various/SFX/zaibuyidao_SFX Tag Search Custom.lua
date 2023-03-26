@@ -104,7 +104,7 @@ ListView = require('ListView')
 
 setGlobalStateSection("SFX_TAG_SEARCH_CUSTOM")
 
-function parseCSVLine(line, sep)
+function parseCSVLine(line, sep, lineNumber)
     if string.sub(line, 1, 1) == "#" or string.len(line) == 0 then-- 如果行以 # 开头，直接跳过
         return nil
     end
@@ -112,6 +112,35 @@ function parseCSVLine(line, sep)
     local res = {}
     local pos = 1
     sep = sep or ','
+
+    -- 增加一个检查分隔符数量的函数
+    local function countSeparator(line, sep)
+        local count = 0
+        for i = 1, string.len(line) do
+            if string.sub(line, i, i) == sep then
+                count = count + 1
+            end
+        end
+        return count
+    end
+
+    -- 检查分隔符数量是否为 1
+    if countSeparator(line, sep) ~= 2 then
+		local retval
+		if language == "简体中文" then
+			retval = reaper.MB(string.format("custom_keywords.csv 自定义关键词格式错误：第 %d 行的分隔符数量不正确。\n请修改自定义关键词文件，并重新启动脚本。\n\n要现在打开 custom_keywords.csv 吗？", lineNumber), '错误', 1)
+		elseif language == "繁体中文" then
+			retval = reaper.MB(string.format("custom_keywords.csv 自訂關鍵詞格式錯誤：第 %d 行的分隔符數量不正確。\n請修改自訂關鍵詞文件，並重新啟動腳本。\n\n要現在打開 custom_keywords.csv 嗎？", lineNumber), '錯誤', 1)
+		else
+			retval = reaper.MB(string.format("custom_keywords.csv custom keyword format error: The number of separators on line %d is incorrect.\nPlease modify the custom keyword file and restart the script.\n\nDo you want to open custom_keywords.csv now?", lineNumber), 'Error', 1)
+		end
+
+		if retval == 1 then
+			openUrl(script_path .. "custom_keywords.csv")
+		end
+        return false
+    end
+
     while true do
         local c = string.sub(line, pos, pos)
         if (c == "") then
@@ -160,7 +189,7 @@ function parseCSVLine(line, sep)
 		if language == "简体中文" then
 			reaper.MB("自定义关键词文件格式错误：第一列不能出现空值。\n请按快捷键 F1 打开自定义文件修改关键词内容，并重新启动脚本。", '错误', 0)
 		elseif language == "繁体中文" then
-			reaper.MB("自定義關鍵詞文件格式錯誤：第一列不能出現空值。\n請按快捷鍵 F1 打開自定義文件修改關鍵詞内容，並重新啓動脚本。", '錯誤', 0)
+			reaper.MB("自訂關鍵詞文件格式錯誤：第一列不能出現空值。\n請按快捷鍵 F1 打開自訂文件修改關鍵詞内容，並重新啓動脚本。", '錯誤', 0)
 		else
 			reaper.MB("Custom keywords file format error: the first column cannot have empty values. \nPlease press the F1 shortcut key to open the custom file and modify the keywords content, then restart the script.", 'Error', 0)
 		end
@@ -254,7 +283,7 @@ attack,攻击,Battle
 		if language == "简体中文" then
 			reaper.MB("找不到自定义关键词文件 custom_keywords.csv，已为您创建了一份新文件：\n"..script_path.."custom_keywords.csv\n\n".."请记住此文件路径，将来您可能需要对其进行备份。\n按快捷键 F1 或通过以上路径找到并打开文件，可以编辑自定义关键词。\n\n请注意，每次编辑完毕需要重新启动脚本才能生效！", '创建自定义关键词文件', 0)
 		elseif language == "繁体中文" then
-			reaper.MB("找不到自定義關鍵詞文件 custom_keywords.csv，已為您創建了一份新文件：\n"..script_path.."custom_keywords.csv\n\n".."請記住此文件路徑，將來您可能需要對其進行備份。\n按快捷鍵 F1 或通過以上路徑找到並打開文件，可以編輯自定義關鍵詞。\n\n請注意，每次編輯完畢需要重新啓動脚本才能生效！", '創建自定義關鍵詞文件', 0)
+			reaper.MB("找不到自訂關鍵詞文件 custom_keywords.csv，已為您創建了一份新文件：\n"..script_path.."custom_keywords.csv\n\n".."請記住此文件路徑，將來您可能需要對其進行備份。\n按快捷鍵 F1 或通過以上路徑找到並打開文件，可以編輯自訂關鍵詞。\n\n請注意，每次編輯完畢需要重新啓動脚本才能生效！", '創建自訂關鍵詞文件', 0)
 		else
 			reaper.MB("Cannot find the custom_keywords.csv file, a new file has been created for you: \n"..script_path.."custom_keywords.csv\n\n".."Please remember this file path, as you may need to back it up in the future.\nPress the F1 shortcut key or find and open the file through the above path to edit custom keywords.\n\nPlease note that you need to restart the script each time after editing for the changes to take effect!", 'Creating custom keywords file', 0)
 		end
@@ -263,12 +292,13 @@ attack,攻击,Battle
 	end
 
 	local sortResult = getConfig("search.sort_result") -- 加入排序
+	local lineNumber = 1
 	while true do
 		local line = f:read()
 		if line == nil then break end
-		if parseCSVLine(line, ",") == false then return end
+		if parseCSVLine(line, ",", lineNumber) == false then return end
 
-		local parts = parseCSVLine(line, ",")
+		local parts = parseCSVLine(line, ",", lineNumber)
 		if parts ~= nil and parts[1] ~= "" then -- 确保 parts[1]（key）不为空，增加关键词文件的注释行
 			table.insert(data, {
 				key = parts[1],
@@ -282,6 +312,8 @@ attack,攻击,Battle
 				return a.key < b.key
 			end)
 		end
+
+		lineNumber = lineNumber + 1
 	end
 end
 
