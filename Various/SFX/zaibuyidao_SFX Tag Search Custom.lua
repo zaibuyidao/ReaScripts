@@ -104,62 +104,6 @@ ListView = require('ListView')
 
 setGlobalStateSection("SFX_TAG_SEARCH_CUSTOM")
 
--- function parseCSVLine(line, sep)
---     local res = {}
---     local pos = 1
---     sep = sep or ','
---     while true do
---         local c = string.sub(line, pos, pos)
---         if (c == "") then
---             table.insert(res, "")
---             break
---         end
-
---         if (c == "`" or c == "'" or c == '"') then
---             local quoteChar = c
---             local txt = ""
---             pos = pos + 1
---             while true do
---                 local startp, endp = string.find(line, quoteChar, pos)
---                 if not startp then break end
---                 txt = txt .. string.sub(line, pos, startp - 1)
---                 pos = endp + 1
---                 c = string.sub(line, pos, pos)
---                 if (c == quoteChar) then
---                     txt = txt .. quoteChar
---                     pos = pos + 1
---                 else
---                     break
---                 end
---             end
---             table.insert(res, txt)
---             c = string.sub(line, pos, pos)
---             if (c == sep) then
---                 pos = pos + 1
---             end
---         elseif (c == sep) then
---             table.insert(res, "")
---             pos = pos + 1
---         else
---             local startp, endp = string.find(line, sep, pos)
---             if (startp) then
---                 table.insert(res, string.sub(line, pos, startp - 1))
---                 pos = endp + 1
---             else
---                 table.insert(res, string.sub(line, pos))
---                 break
---             end
---         end
---     end
-
--- 	if res[1] == "" then
--- 		reaper.MB("自定義關鍵詞文件格式錯誤：第一個值為空值 或 存在空白行。\n請按 F11 打開自定義文件修改。", '錯誤', 0)
--- 		return false
--- 	else
--- 		return res
---     end
--- end
-
 function parseCSVLine(line, sep)
     if string.sub(line, 1, 1) == "#" or string.len(line) == 0 then-- 如果行以 # 开头，直接跳过
         return nil
@@ -554,7 +498,7 @@ function init()
 			if string.isEmpty(data.name) then
 				c.label = listView.data[dataIndex].key
 			elseif getConfig("ui.result_list.include_key", false) then
-				c.label = listView.data[dataIndex].key .. " (⇧ " .. listView.data[dataIndex].name .. ")"
+				c.label = listView.data[dataIndex].key .. " (" .. listView.data[dataIndex].name .. ")"
 			else
 				c.label = listView.data[dataIndex].name
 			end
