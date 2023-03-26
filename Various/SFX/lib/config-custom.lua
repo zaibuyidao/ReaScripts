@@ -2,7 +2,7 @@
 return {
     ui = {
         global = {
-            font = "宋体", -- 默认字体名："Calibri"、"宋体"、"微软雅黑"
+            font = "SimSun", -- 字体名："Calibri"、"宋体"、"华文宋体"、"华文仿宋"、"微软雅黑"
             size_unit = 14, -- 控件单位大小，所有控件大小以此为基准
         },
         window = {
