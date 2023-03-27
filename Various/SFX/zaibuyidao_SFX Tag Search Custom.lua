@@ -262,21 +262,21 @@ function custom_sort(a, b, cn_first)
 			if a_pinyin ~= b_pinyin then
 				return a_pinyin < b_pinyin
 			else
-				return a_key < b_key
+				return return string.lower(a_key) < string.lower(b_key)
 			end
 		elseif not a_is_chinese and not b_is_chinese then
-			return a_key < b_key
+			return return string.lower(a_key) < string.lower(b_key)
 		else
 			return not a_is_chinese
 		end
 	else
 		if not a_is_chinese and not b_is_chinese then
-			return a_key < b_key
+			return return string.lower(a_key) < string.lower(b_key)
 		elseif a_is_chinese and b_is_chinese then
 			if a_pinyin ~= b_pinyin then
 				return a_pinyin < b_pinyin
 			else
-				return a_key < b_key
+				return return string.lower(a_key) < string.lower(b_key)
 			end
 		else
 			return not b_is_chinese
