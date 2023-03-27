@@ -224,7 +224,30 @@ function get_pinyin(text)
 	return pinyin(text, true, "") -- 使用空字符串作为连接符
 end
 
-function custom_sort(a, b) -- 默认先英文再中文
+-- function custom_sort(a, b) -- 默认先英文再中文
+-- 	local a_key = a.key
+-- 	local b_key = b.key
+
+-- 	local a_pinyin = get_pinyin(a_key)
+-- 	local b_pinyin = get_pinyin(b_key)
+
+-- 	local a_is_chinese = is_chinese_char(a_key:sub(1, 1))
+-- 	local b_is_chinese = is_chinese_char(b_key:sub(1, 1))
+
+-- 	if a_is_chinese and b_is_chinese then
+-- 		if a_pinyin ~= b_pinyin then
+-- 			return a_pinyin < b_pinyin
+-- 		else
+-- 			return string.lower(a_key) < string.lower(b_key)
+-- 		end
+-- 	elseif not a_is_chinese and not b_is_chinese then
+-- 		return string.lower(a_key) < string.lower(b_key)
+-- 	else
+-- 		return not a_is_chinese
+-- 	end
+-- end
+
+function custom_sort(a, b, cn_first)
 	local a_key = a.key
 	local b_key = b.key
 
@@ -234,16 +257,30 @@ function custom_sort(a, b) -- 默认先英文再中文
 	local a_is_chinese = is_chinese_char(a_key:sub(1, 1))
 	local b_is_chinese = is_chinese_char(b_key:sub(1, 1))
 
-	if a_is_chinese and b_is_chinese then
-		if a_pinyin ~= b_pinyin then
-			return a_pinyin < b_pinyin
+	if not cn_first then
+		if a_is_chinese and b_is_chinese then
+			if a_pinyin ~= b_pinyin then
+				return a_pinyin < b_pinyin
+			else
+				return a_key < b_key
+			end
+		elseif not a_is_chinese and not b_is_chinese then
+			return a_key < b_key
 		else
-			return string.lower(a_key) < string.lower(b_key)
+			return not a_is_chinese
 		end
-	elseif not a_is_chinese and not b_is_chinese then
-		return string.lower(a_key) < string.lower(b_key)
 	else
-		return not a_is_chinese
+		if not a_is_chinese and not b_is_chinese then
+			return a_key < b_key
+		elseif a_is_chinese and b_is_chinese then
+			if a_pinyin ~= b_pinyin then
+				return a_pinyin < b_pinyin
+			else
+				return a_key < b_key
+			end
+		else
+			return not b_is_chinese
+		end
 	end
 end
 
@@ -352,7 +389,11 @@ attack,攻击,Battle
 end
 
 if sortResult then
-    table.sort(data, custom_sort)
+    -- table.sort(data, custom_sort)
+	local cnFirst = getConfig("search.cn_first")
+	table.sort(data, function(a, b)
+		return custom_sort(a, b, cnFirst)
+	end)
 end
 
 local colorMap = getConfig("ui.result_list.remark_color", {})
@@ -399,7 +440,11 @@ function searchKeyword(value, rating)
 		-- table.sort(res, function(a, b) -- 最早的排序
 		-- 	return a.key < b.key
 		-- end)
-		table.sort(res, custom_sort)
+		-- table.sort(res, custom_sort)
+		local cnFirst = getConfig("search.cn_first")
+		table.sort(res, function(a, b)
+			return custom_sort(a, b, cnFirst)
+		end)
 	end
 
 	return res
