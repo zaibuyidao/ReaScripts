@@ -114,6 +114,7 @@ require('reaper-utils')
 LIP = require('LIP')
 CONFIG = require('config')
 ListView = require('ListView')
+pinyin = require('pinyin')
 
 setGlobalStateSection("SFX_TAG_SEARCH")
 
@@ -128,6 +129,53 @@ function getConfig(configName, default, convert)
 		return convert(cur)
 	end
 	return cur
+end
+
+-- 判断字符是否为中文
+function is_chinese_char(char)
+	local utf8_value = string.byte(char)
+	return utf8_value >= 0xE0 and utf8_value <= 0xEF
+end
+
+function get_pinyin(text)
+	return pinyin(text, true, "") -- 使用空字符串作为连接符
+end
+
+function custom_sort(a, b, cn_first)
+	local a_key = a.value
+	local b_key = b.value
+
+	local a_pinyin = get_pinyin(a_key)
+	local b_pinyin = get_pinyin(b_key)
+
+	local a_is_chinese = is_chinese_char(a_key:sub(1, 1))
+	local b_is_chinese = is_chinese_char(b_key:sub(1, 1))
+
+	if not cn_first then
+		if a_is_chinese and b_is_chinese then
+			if a_pinyin ~= b_pinyin then
+				return a_pinyin < b_pinyin
+			else
+				return string.lower(a_key) < string.lower(b_key)
+			end
+		elseif not a_is_chinese and not b_is_chinese then
+			return string.lower(a_key) < string.lower(b_key)
+		else
+			return not a_is_chinese
+		end
+	else
+		if not a_is_chinese and not b_is_chinese then
+			return string.lower(a_key) < string.lower(b_key)
+		elseif a_is_chinese and b_is_chinese then
+			if a_pinyin ~= b_pinyin then
+				return a_pinyin < b_pinyin
+			else
+				return string.lower(a_key) < string.lower(b_key)
+			end
+		else
+			return not b_is_chinese
+		end
+	end
 end
 
 SIZE_UNIT = getConfig("ui.global.size_unit", 20)
@@ -215,6 +263,11 @@ for _, db in ipairs(dbList) do
 		end
 	end
 end
+
+local cnFirst = getConfig("search.cn_first")
+table.sort(data, function(a, b) -- 中英文排序切换
+	return custom_sort(a, b, cnFirst)
+end)
 
 if readDBCount == 0 then
 	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
