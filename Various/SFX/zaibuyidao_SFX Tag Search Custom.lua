@@ -101,6 +101,7 @@ require('reaper-utils')
 LIP = require('LIP')
 CONFIG = require('config-custom')
 ListView = require('ListView')
+pinyin = require('pinyin')
 
 setGlobalStateSection("SFX_TAG_SEARCH_CUSTOM")
 
@@ -213,6 +214,39 @@ function getConfig(configName, default, convert)
 	return cur
 end
 
+-- 判断字符是否为中文
+function is_chinese_char(char)
+	local utf8_value = string.byte(char)
+	return utf8_value >= 0xE0 and utf8_value <= 0xEF
+end
+
+function get_pinyin(text)
+	return pinyin(text, true, "") -- 使用空字符串作为连接符
+end
+
+function custom_sort(a, b) -- 默认先英文再中文
+	local a_key = a.key
+	local b_key = b.key
+
+	local a_pinyin = get_pinyin(a_key)
+	local b_pinyin = get_pinyin(b_key)
+
+	local a_is_chinese = is_chinese_char(a_key:sub(1, 1))
+	local b_is_chinese = is_chinese_char(b_key:sub(1, 1))
+
+	if a_is_chinese and b_is_chinese then
+		if a_pinyin ~= b_pinyin then
+			return a_pinyin < b_pinyin
+		else
+			return string.lower(a_key) < string.lower(b_key)
+		end
+	elseif not a_is_chinese and not b_is_chinese then
+		return string.lower(a_key) < string.lower(b_key)
+	else
+		return not a_is_chinese
+	end
+end
+
 SIZE_UNIT = getConfig("ui.global.size_unit", 20)
 
 local data = {}
@@ -307,14 +341,18 @@ attack,攻击,Battle
 			})
 		end
 
-		if sortResult then
-			table.sort(data, function(a, b)
-				return a.key < b.key
-			end)
-		end
+		-- if sortResult then -- 最早的排序
+		-- 	table.sort(data, function(a, b)
+		-- 		return a.key < b.key
+		-- 	end)
+		-- end
 
 		lineNumber = lineNumber + 1
 	end
+end
+
+if sortResult then
+    table.sort(data, custom_sort)
 end
 
 local colorMap = getConfig("ui.result_list.remark_color", {})
@@ -358,9 +396,10 @@ function searchKeyword(value, rating)
 		end
 	end
 	if sortResult then
-		table.sort(res, function(a, b)
-			return a.key < b.key
-		end)
+		-- table.sort(res, function(a, b) -- 最早的排序
+		-- 	return a.key < b.key
+		-- end)
+		table.sort(res, custom_sort)
 	end
 
 	return res
