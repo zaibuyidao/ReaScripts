@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.2.7
+-- @version 1.2.8
 -- @changelog Initial release
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
@@ -30,6 +30,7 @@
 --   [nomain] SFX/lib/LIP.lua
 --   [nomain] SFX/lib/ListView.lua
 --   [nomain] SFX/lib/reaper-utils.lua
+--   [nomain] SFX/lib/pinyin.lua
 --   [nomain] SFX/lib/REQ/*.lua
 --   SFX/*.csv
 -- @donation http://www.paypal.me/zaibuyidao
