@@ -66,6 +66,7 @@ return {
     },
     search = {
         async = false, -- 是否开启异步搜索（不建议开启）
+        sort_result = true, -- 是否对列表进行排序
         cn_first = false, -- 是否中文优先
         switch_database = true, -- 点击关键词时，是否同时切换数据库
         case_sensitive = false, -- 搜索时是否区分大小写

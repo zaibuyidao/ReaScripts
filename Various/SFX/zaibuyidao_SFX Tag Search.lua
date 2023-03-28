@@ -239,6 +239,7 @@ function getColorForDb(dbName)
 	return jColor:new(colorMap[dbName])
 end
 
+local sortResult = getConfig("search.sort_result") -- 加入排序
 local data = {}
 local readDBCount = 0
 local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
@@ -264,10 +265,12 @@ for _, db in ipairs(dbList) do
 	end
 end
 
-local cnFirst = getConfig("search.cn_first")
-table.sort(data, function(a, b) -- 中英文排序切换
-	return custom_sort(a, b, cnFirst)
-end)
+if sortResult then
+	local cnFirst = getConfig("search.cn_first")
+	table.sort(data, function(a, b) -- 中英文排序切换
+		return custom_sort(a, b, cnFirst)
+	end)
+end
 
 if readDBCount == 0 then
 	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
