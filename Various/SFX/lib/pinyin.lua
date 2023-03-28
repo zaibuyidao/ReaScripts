@@ -467,18 +467,27 @@ function getPyTable()
 end
 getPyTable()
 
+function is_chinese_char(char)
+    local utf8_value = string.byte(char)
+    return utf8_value >= 0xE0 and utf8_value <= 0xEF
+end
+
 function pinyin(chars, isString, separator)
     separator = separator or ' '
     local pinyin, sp = {}, {}
     for i = 1, utf8.len(chars) do
         local char = utf8.sub(chars, i, 1)
-        --要寻找的字符串
-        if string.len(char) == 1 then
+        if is_chinese_char(char) then
+            if string.len(char) == 1 then
+                pinyin[i] = char
+                sp[i] = char
+            else
+                pinyin[i] = pyTable[char] or char
+                sp[i] = string.sub(pinyin[i], 1, 1)
+            end
+        else
             pinyin[i] = char
             sp[i] = char
-        else
-            pinyin[i] = pyTable[char]
-            sp[i] = string.sub(pinyin[i], 1, 1)
         end
     end
     if isString then
@@ -487,6 +496,7 @@ function pinyin(chars, isString, separator)
         return pinyin, sp
     end
 end
+
 -- 速度测试
 -- local begin = os.clock()
 -- for i = 1, 50000 do
@@ -494,4 +504,6 @@ end
 -- end
 -- print(string.format('total time:%.2fms\n', ((os.clock() - begin) * 1000)))
 -- --output: total time:75.00ms
+-- https://github.com/MissinA/pinyin
+
 return pinyin
