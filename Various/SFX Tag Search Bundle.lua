@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.3.8
+-- @version 1.3.9
 -- @changelog SFX tag search custom adds Chinese sorting feature
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
