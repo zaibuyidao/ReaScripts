@@ -721,7 +721,7 @@ function init()
 	end
 
 	resultListView:addScrollListener(function ()
-		-- stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条顶部计数
+		--stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条顶部计数
 		if resultListView.firstIndex + resultListView:getPageSize()-1 > #resultListView.data then
 			stateLabel.label = "(" .. #resultListView.data .. "/" .. #resultListView.data .. ")"
 		else
@@ -741,7 +741,7 @@ function init()
 
 	function refreshResultState()
 		resultListView:draw()
-		-- stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条顶部计数
+		--stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条顶部计数
 		if resultListView.firstIndex + resultListView:getPageSize()-1 > #resultListView.data then
 			stateLabel.label = "(" .. #resultListView.data .. "/" .. #resultListView.data .. ")"
 		else
