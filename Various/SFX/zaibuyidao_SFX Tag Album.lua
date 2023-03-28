@@ -612,7 +612,11 @@ function init()
 	end
 
 	resultListView:addScrollListener(function () 
-		stateLabel.label = "(" .. resultListView.firstIndex + resultListView:getPageSize()-1 .. "/" .. #resultListView.data .. ")"
+		if resultListView.firstIndex + resultListView:getPageSize()-1 > #resultListView.data then
+			stateLabel.label = "(" .. #resultListView.data .. "/" .. #resultListView.data .. ")"
+		else
+			stateLabel.label = "(" .. resultListView.firstIndex + resultListView:getPageSize()-1 .. "/" .. #resultListView.data .. ")"
+		end
 	end)
 
 	function window:onResize()
@@ -627,7 +631,11 @@ function init()
 
 	function refreshResultState()
 		resultListView:draw()
-		stateLabel.label = "(" .. resultListView.firstIndex + resultListView:getPageSize()-1 .. "/" .. #resultListView.data .. ")"
+		if resultListView.firstIndex + resultListView:getPageSize()-1 > #resultListView.data then
+			stateLabel.label = "(" .. #resultListView.data .. "/" .. #resultListView.data .. ")"
+		else
+			stateLabel.label = "(" .. resultListView.firstIndex + resultListView:getPageSize()-1 .. "/" .. #resultListView.data .. ")"
+		end
 		if remain > 0 then
 			stateLabel.label = stateLabel.label .. remaining .. remain
 		end
