@@ -193,52 +193,6 @@ end
 SIZE_UNIT = getConfig("ui.global.size_unit", 20)
 dbList = getDbList()
 if dbList == false then return end
-ratings = (function ()
-	local ratings = {}
-	local f = io.open(script_path .. getPathDelimiter() .. "rating.csv", "r")
-	if not f then return end
-	while true do
-        local line = f:read()
-        if line == nil then break end
-		local d = parseCSVLine(line, ",")
-		ratings[d[1]] = tonumber(d[2])
-    end
-	return ratings
-end)()
-
-function incRating(keyword)
-	ratings[keyword] = (ratings[keyword] or 0) + 1
-end
-
-function getRating(keyword)
-	return ratings[keyword] or 0
-end
-
-function writeRatings()
-	local tmp = {}
-	for k, v in pairs(ratings) do
-		table.insert(tmp, {
-			key = k,
-			value = v
-		})
-	end
-
-	table.sort(tmp, function (a, b)
-		return a.value > b.value
-	end)
-
-	local f = io.open(script_path .. getPathDelimiter() .. "rating.csv", "w")
-	local res = {}
-	for i=1, math.min(getConfig("rating.max_record", 50), #tmp) do
-		f:write("\"")
-		f:write(tostring(tmp[i].key))
-		f:write("\"")
-		f:write(",")
-		f:write(tostring(tmp[i].value))
-		f:write("\n")
-	end
-	f:close()
-end
 
 local colorMap = getConfig("ui.result_list.db_color", {})
 local defaultDbColors = getConfig("ui.result_list.default_colors", {{.6, .6, .6, 1}})
@@ -275,10 +229,6 @@ for _, db in ipairs(dbList) do
 					fromString = table.concat(table.keys(keyword.from), ", ")
 				})
 			end
-
-			table.sort(data, function(a, b)
-				return tostring(a.value) < tostring(b.value)
-			end)
 		end
 	end
 end
@@ -286,6 +236,10 @@ end
 if readDBCount == 0 then
 	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
 end
+
+table.sort(data, function(a, b)
+    return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
+end)
 
 -- -- 模拟插入大量数据
 -- for i=1, 50000 do
@@ -298,7 +252,7 @@ end
 -- 	})
 -- end
 
-function searchKeyword(value, rating)
+function searchKeyword(value)
 	local res = {}
 	local index = 1
 	local caseSensitive = getConfig("search.case_sensitive")
@@ -317,28 +271,12 @@ function searchKeyword(value, rating)
 		end
 	end
 	
-	-- table.sort(res, function(a, b)
-	-- 	local ra = getRating(a.value)
-	-- 	local rb = getRating(b.value)
-	-- 	if ra == rb then
-	-- 		return a.index < b.index
-	-- 	end
-	-- 	return ra > rb
-	-- end)
 	return res
 end
 
-function searchKeywordAsync(value, rating, result)
+function searchKeywordAsync(value, result)
 	local index = 1
 	local caseSensitive = getConfig("search.case_sensitive")
-	local function compare(a, b)
-		local ra = getRating(a.value)
-		local rb = getRating(b.value)
-		if ra == rb then
-			return a.index < b.index
-		end
-		return ra > rb
-	end
 	local function processItem(item, index)
 		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(value:lower())) then
 			-- table.insert(result, {
@@ -356,7 +294,7 @@ function searchKeywordAsync(value, rating, result)
 				value = item.value,
 				from = item.from,
 				fromString = item.fromString
-			}, compare)
+			})
 		end
 	end
 	local i = 1
@@ -553,7 +491,6 @@ function init()
 			c.focus_index = viewHolderIndex + 1 --gui:getFocusIndex()
 
 			function c:onMouseClick()
-				-- incRating(listView.data[dataIndex].value)
 				if getReaperExplorerPath() ~= listView.data[dataIndex].db and getConfig("search.switch_database") then
 					setReaperExplorerPath(listView.data[dataIndex].db)
 				end
@@ -675,7 +612,7 @@ function init()
 	end
 
 	resultListView:addScrollListener(function () 
-		stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")"
+		stateLabel.label = "(" .. resultListView.firstIndex + resultListView:getPageSize()-1 .. "/" .. #resultListView.data .. ")"
 	end)
 
 	function window:onResize()
@@ -690,7 +627,7 @@ function init()
 
 	function refreshResultState()
 		resultListView:draw()
-		stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")"
+		stateLabel.label = "(" .. resultListView.firstIndex + resultListView:getPageSize()-1 .. "/" .. #resultListView.data .. ")"
 		if remain > 0 then
 			stateLabel.label = stateLabel.label .. remaining .. remain
 		end
@@ -700,7 +637,7 @@ function init()
 		resultListView.firstIndex = 1
 		local data = {}
 		resultListView.data = data
-		local hasNext, fetchNext, getNextIndex, total = searchKeywordAsync(searchTextBox.value, ratings, data)
+		local hasNext, fetchNext, getNextIndex, total = searchKeywordAsync(searchTextBox.value, data)
 		local function fetch()
 			if not hasNext or resultListView.data ~= data then return end
 			fetchNext()
@@ -713,7 +650,7 @@ function init()
 
 	function startSearchSync(value)
 		resultListView.firstIndex = 1
-		resultListView.data = searchKeyword(searchTextBox.value, ratings)
+		resultListView.data = searchKeyword(searchTextBox.value)
 		refreshResultState()
 	end
 
@@ -739,7 +676,6 @@ function init()
 			WINDOW_Y = math.tointeger(wy),
 			WINDOW_DOCK_STATE = dockstr,
 		})
-		-- writeRatings()
 	end
 
 	window:onResize()

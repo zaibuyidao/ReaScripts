@@ -275,10 +275,6 @@ for _, db in ipairs(dbList) do
 					fromString = table.concat(table.keys(keyword.from), ", ")
 				})
 			end
-
-			table.sort(data, function(a, b)
-				return tostring(a.value) < tostring(b.value)
-			end)
 		end
 	end
 end
@@ -286,6 +282,10 @@ end
 if readDBCount == 0 then
 	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
 end
+
+table.sort(data, function(a, b)
+    return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
+end)
 
 -- -- 模拟插入大量数据
 -- for i=1, 50000 do
@@ -675,7 +675,7 @@ function init()
 	end
 
 	resultListView:addScrollListener(function () 
-		stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")"
+		stateLabel.label = "(" .. resultListView.firstIndex + resultListView:getPageSize()-1 .. "/" .. #resultListView.data .. ")"
 	end)
 
 	function window:onResize()
@@ -690,7 +690,7 @@ function init()
 
 	function refreshResultState()
 		resultListView:draw()
-		stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")"
+		stateLabel.label = "(" .. resultListView.firstIndex + resultListView:getPageSize()-1 .. "/" .. #resultListView.data .. ")"
 		if remain > 0 then
 			stateLabel.label = stateLabel.label .. remaining .. remain
 		end
