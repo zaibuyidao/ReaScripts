@@ -1,5 +1,5 @@
 -- @description Auto Trim Split Items Settings
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -209,36 +209,25 @@ end
 local language = getSystemLanguage()
 
 get = getSavedDataList("AUTO_TRIM_SPLIT_ITEMS", "Parameters")
-if get == nil then
-  THRESHOLD = -60 -- 阈值(dB)
-  HYSTERESIS = 0  -- 滯後(dB)
-  IGNORE_SILENCE_SHORTER = 100
-  NONSILENT_CLIPS_SHORTER = 100
-  LEADING_PAD = 3
-  TRAILING_PAD = 3
-  FADE_PAD = "y"
-  SNAP_OFFSET = 0
-  MODE = "del"
-else
-  if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
-  if get[2] == nil or not tonumber(get[2]) then get[2] = 0 end
-  if get[3] == nil or not tonumber(get[3]) then get[3] = 100 end
-  if get[4] == nil or not tonumber(get[4]) then get[4] = 100 end
-  if get[5] == nil or not tonumber(get[5]) then get[5] = 3 end
-  if get[6] == nil or not tonumber(get[6]) then get[6] = 3 end
-  if get[7] == nil or not tostring(get[7]) then get[7] = "y" end
-  if get[8] == nil or not tonumber(get[8]) then get[8] = 0 end
-  if get[9] == nil or not tostring(get[9]) then get[9] = "del" end
-  THRESHOLD = get[1]
-  HYSTERESIS = get[2]
-  IGNORE_SILENCE_SHORTER = get[3]
-  NONSILENT_CLIPS_SHORTER = get[4]
-  LEADING_PAD = get[5]
-  TRAILING_PAD = get[6]
-  FADE_PAD = get[7]
-  SNAP_OFFSET = get[8]
-  MODE = get[9]
+
+function set_default_value(value, default_value, is_number)
+  if value == nil or (is_number and not tonumber(value)) then
+    return default_value
+  end
+  return value
 end
+
+get = get or {}
+
+THRESHOLD = set_default_value(get[1], -60, true)
+HYSTERESIS = set_default_value(get[2], 0, true)
+IGNORE_SILENCE_SHORTER = set_default_value(get[3], 100, true)
+NONSILENT_CLIPS_SHORTER = set_default_value(get[4], 100, true)
+LEADING_PAD = set_default_value(get[5], 3, true)
+TRAILING_PAD = set_default_value(get[6], 3, true)
+FADE_PAD = set_default_value(get[7], "y", false)
+SNAP_OFFSET = set_default_value(get[8], 0, true)
+MODE = set_default_value(get[9], "del", false)
 
 default = THRESHOLD ..','.. HYSTERESIS ..','.. IGNORE_SILENCE_SHORTER ..','.. NONSILENT_CLIPS_SHORTER ..','.. LEADING_PAD ..','.. TRAILING_PAD ..','.. FADE_PAD ..','.. SNAP_OFFSET ..','.. MODE
 

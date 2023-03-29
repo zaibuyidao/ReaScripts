@@ -1,5 +1,5 @@
 -- @description Auto Trim Split Items
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -243,15 +243,22 @@ end
 
 -- THRESHOLD, HYSTERESIS, IGNORE_SILENCE_SHORTER, NONSILENT_CLIPS_SHORTER, LEADING_PAD, TRAILING_PAD, FADE_PAD, SNAP_OFFSET, MODE = tostring(THRESHOLD), tostring(HYSTERESIS), tostring(IGNORE_SILENCE_SHORTER), tostring(NONSILENT_CLIPS_SHORTER), tostring(LEADING_PAD), tostring(TRAILING_PAD), tostring(FADE_PAD), tostring(SNAP_OFFSET), tostring(HYSTERESIS), tostring(MODE)
 
-if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
-if get[2] == nil or not tonumber(get[2]) then get[2] = 0 end
-if get[3] == nil or not tonumber(get[3]) then get[3] = 100 end
-if get[4] == nil or not tonumber(get[4]) then get[4] = 100 end
-if get[5] == nil or not tonumber(get[5]) then get[5] = 3 end
-if get[6] == nil or not tonumber(get[6]) then get[6] = 3 end
-if get[7] == nil or not tostring(get[7]) then get[7] = "y" end
-if get[8] == nil or not tonumber(get[8]) then get[8] = 0 end
-if get[9] == nil or not tostring(get[9]) then get[9] = "del" end
+function set_default_value(index, default_value, is_number)
+  if get[index] == nil or (is_number and not tonumber(get[index])) then
+    get[index] = default_value
+  end
+end
+
+set_default_value(1, -60, true)
+set_default_value(2, 0, true)
+set_default_value(3, 100, true)
+set_default_value(4, 100, true)
+set_default_value(5, 3, true)
+set_default_value(6, 3, true)
+set_default_value(7, "y", false)
+set_default_value(8, 0, true)
+set_default_value(9, "del", false)
+
 THRESHOLD = get[1]
 HYSTERESIS = get[2]
 IGNORE_SILENCE_SHORTER = get[3]
