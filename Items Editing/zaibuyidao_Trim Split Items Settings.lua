@@ -1,5 +1,5 @@
 -- @description Trim Split Items Settings
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog Add silent mode
 -- @links
@@ -282,7 +282,7 @@ else
   MODE = tostring(get[11])
 end
 
-default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT ..','.. MODE
+default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SILENCE_LEN ..','.. MIN_CLIPS_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT ..','.. MODE
 
 if language == "简体中文" then
   title = "修剪分割对象设置"
@@ -297,7 +297,7 @@ end
 
 reaper.Undo_BeginBlock()
 set = getMutiInput(title, 11, lable, default)
-if set == nil or not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SLICE_LEN) or not tonumber(MIN_ITEM_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) or not tostring(MODE) then return end
+if set == nil or not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SILENCE_LEN) or not tonumber(MIN_CLIPS_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) or not tostring(MODE) then return end
 
 for i = 1, #set do
   if i == 11 then
