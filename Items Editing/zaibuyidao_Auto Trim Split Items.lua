@@ -1,5 +1,5 @@
 -- @description Auto Trim Split Items
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -279,7 +279,9 @@ function SetComboBoxIndex(hwnd, index)
 end
 
 function auto_trim()
-  local parent = reaper.JS_Window_FindTop('Auto trim/split items',true)
+  local title_top = reaper.JS_Localize("Auto trim/split items", "common")
+  local parent = reaper.JS_Window_Find(title_top, true)
+  
   if parent then
     reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1011), THRESHOLD) -- Threshold
     reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1010), HYSTERESIS) -- Hysteresis
