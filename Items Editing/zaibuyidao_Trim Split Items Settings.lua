@@ -1,5 +1,5 @@
 -- @description Trim Split Items Settings
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog Add silent mode
 -- @links
@@ -245,18 +245,18 @@ local language = getSystemLanguage()
 
 get = getSavedDataList("TRIM_SPLIT_ITEMS", "Parameters")
 
-if get == nil then    -- 默认预设
-  THRESHOLD = -60     -- 阈值(dB)
-  HYSTERESIS = -6     -- 滯後(dB)
-  LEFT_PAD = 0        -- 前导填充(ms)
-  RIGHT_PAD = 0       -- 尾部填充(ms)
-  MIN_SLICE_LEN = 100 -- 最小切片长度(将不会被删除)
-  MIN_ITEM_LEN = 100  -- 最小item长度(ms)
-  SNAP_OFFSET = 0     -- 吸附偏移(ms)
-  SKIP_SAMPLE = 0     -- 跳过采样点
-  FADE = "n"          -- 是否淡变
-  SPLIT = "y"         -- 是否切割item
-  REMOVE = "del"      -- 保持静默
+if get == nil then      -- 默认预设
+  THRESHOLD = -60       -- 阈值(dB)
+  HYSTERESIS = -6       -- 滯後(dB)
+  LEFT_PAD = 0          -- 前导填充(ms)
+  RIGHT_PAD = 0         -- 尾部填充(ms)
+  MIN_SILENCE_LEN = 100 -- 最小静默长度
+  MIN_CLIPS_LEN = 100   -- 最小片段长度
+  SNAP_OFFSET = 0       -- 吸附偏移(ms)
+  SKIP_SAMPLE = 0       -- 采样点步进
+  FADE = "n"            -- 是否淡变
+  SPLIT = "y"           -- 是否切割item
+  MODE = "del"          -- 保持静默
 else
   if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
   if get[2] == nil or not tonumber(get[2]) then get[2] = -6 end
@@ -269,27 +269,27 @@ else
   if get[9] == nil or not tostring(get[9]) then get[9] = "n" end
   if get[10] == nil or not tostring(get[10]) then get[10] = "y" end
   if get[11] == nil or not tostring(get[11]) then get[11] = "del" end
-  THRESHOLD = get[1]
-  HYSTERESIS = get[2]
-  LEFT_PAD = get[3]
-  RIGHT_PAD = get[4]
-  MIN_SLICE_LEN = get[5]
-  MIN_ITEM_LEN = get[6]
-  SNAP_OFFSET = get[7]
-  SKIP_SAMPLE = get[8]
-  FADE = get[9]
-  SPLIT = get[10]
-  REMOVE = get[11]
+  THRESHOLD = tonumber(get[1])
+  HYSTERESIS = tonumber(get[2])
+  LEFT_PAD = tonumber(get[3])
+  RIGHT_PAD = tonumber(get[4])
+  MIN_SILENCE_LEN = tonumber(get[5])
+  MIN_CLIPS_LEN = tonumber(get[6])
+  SNAP_OFFSET = tonumber(get[7])
+  SKIP_SAMPLE = tonumber(get[8])
+  FADE = tostring(get[9])
+  SPLIT = tostring(get[10])
+  MODE = tostring(get[11])
 end
 
-default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT ..','.. REMOVE
+default = THRESHOLD ..','.. HYSTERESIS ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. MIN_SLICE_LEN ..','.. MIN_ITEM_LEN ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. FADE ..','.. SPLIT ..','.. MODE
 
 if language == "简体中文" then
   title = "修剪分割对象设置"
-  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小切片长度 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n),是否切割 (y/n),模式 (del/keep/begin/end)"
+  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小静默长度 (ms),最小片段长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n),是否切割 (y/n),模式 (del/keep/begin/end)"
 elseif language == "繁体中文" then
   title = "修剪分割對象設置"
-  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小切片長度 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n),是否切割 (y/n),模式 (del/keep/begin/end)"
+  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小靜默長度 (ms),最小片段長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n),是否切割 (y/n),模式 (del/keep/begin/end)"
 else
   title = "Trim Split Items Settings"
   lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min slice length (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n),Is it split? (y/n),Mode (del/keep/begin/end)"
@@ -297,7 +297,7 @@ end
 
 reaper.Undo_BeginBlock()
 set = getMutiInput(title, 11, lable, default)
-if set == nil or not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SLICE_LEN) or not tonumber(MIN_ITEM_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) or not tostring(REMOVE) then return end
+if set == nil or not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tonumber(MIN_SLICE_LEN) or not tonumber(MIN_ITEM_LEN) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(FADE) or not tostring(SPLIT) or not tostring(MODE) then return end
 
 for i = 1, #set do
   if i == 11 then
