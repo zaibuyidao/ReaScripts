@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e09afc0fee51013adfe77be3082788fd8a0e43c7">
+<index version="1" name="zaibuyidao Scripts" commit="425ab71988d2f6048dc18341eaa26fca5b28408a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -144,6 +144,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2023-03-29T17:05:37Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e09afc0fee51013adfe77be3082788fd8a0e43c7/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-03-30T02:12:09Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/425ab71988d2f6048dc18341eaa26fca5b28408a/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Take.lua" type="script" desc="Batch Rename Take">
