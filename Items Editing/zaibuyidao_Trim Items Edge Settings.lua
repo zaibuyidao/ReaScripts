@@ -1,5 +1,5 @@
 -- @description Trim Items Edge Settings
--- @version 1.1.9
+-- @version 1.2.0
 -- @author zaibuyidao
 -- @changelog Preset parameter optimization
 -- @links
@@ -248,47 +248,47 @@ get = getSavedDataList("TRIM_ITEMS_EDGE", "Parameters")
 if get == nil then   -- 默认预设
   threshold_l = -60  -- 阈值(dB)
   threshold_r = -6   -- 滯後(dB)
+  length_limit = 100 -- 长度限制(ms)
   leading_pad = 0    -- 前导填充(ms)
   trailing_pad = 0   -- 尾部填充(ms)
   fade = "n"         -- 是否淡变
   snap_offset = 0    -- 吸附偏移(ms)
-  length_limit = 100 -- 长度限制(ms)
   step = 0           -- 采样点步进
 else
   if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
   if get[2] == nil or not tonumber(get[2]) then get[2] = -6 end
-  if get[3] == nil or not tonumber(get[3]) then get[3] = 0 end
+  if get[3] == nil or not tonumber(get[3]) then get[3] = 100 end
   if get[4] == nil or not tonumber(get[4]) then get[4] = 0 end
-  if get[5] == nil or not tostring(get[5]) then get[5] = "n" end
-  if get[6] == nil or not tonumber(get[6]) then get[6] = 0 end
-  if get[7] == nil or not tonumber(get[7]) then get[7] = 100 end
+  if get[5] == nil or not tonumber(get[5]) then get[5] = 0 end
+  if get[6] == nil or not tostring(get[6]) then get[6] = "n" end
+  if get[7] == nil or not tonumber(get[7]) then get[7] = 0 end
   if get[8] == nil or not tonumber(get[8]) then get[8] = 0 end
   threshold_l = get[1]
   threshold_r = get[2]
-  leading_pad = get[3]
-  trailing_pad = get[4]
-  fade = get[5]
-  snap_offset = get[6]
-  length_limit = get[7]
+  length_limit = get[3]
+  leading_pad = get[4]
+  trailing_pad = get[5]
+  fade = get[6]
+  snap_offset = get[7]
   step = get[8]
 end
 
-default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade ..','.. snap_offset ..','.. length_limit ..','.. step
+default = threshold_l ..','.. threshold_r ..','.. length_limit ..','.. leading_pad ..','.. trailing_pad ..','.. fade ..','.. snap_offset ..','.. step
 
 if language == "简体中文" then
   title = "修剪对象边缘设置"
-  lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),峰值吸附偏移 (ms),最小对象长度 (ms),采样点步进"
+  lable = "阈值 (dB),滞后 (dB),最小对象长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),峰值吸附偏移 (ms),采样点步进"
 elseif language == "繁体中文" then
   title = "修剪對象邊緣設置"
-  lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),峰值吸附偏移 (ms),最小對象長度 (ms),采樣點步進"
+  lable = "閾值 (dB),滯後 (dB),最小對象長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),峰值吸附偏移 (ms),采樣點步進"
 else
   title = "Trim Items Edge Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peak snap offset (ms),Min item length (ms),Sample step"
+  lable = "Threshold (dB),Hysteresis (dB),Min item length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peak snap offset (ms),Sample step"
 end
 
 reaper.Undo_BeginBlock()
 set = getMutiInput(title, 8, lable, default)
-if set == nil or not tonumber(threshold_l) or not tonumber(threshold_r) or not tonumber(leading_pad) or not tonumber(trailing_pad) or not tostring(fade) or not tonumber(snap_offset) or not tonumber(length_limit) or not tonumber(step) then return end
+if set == nil or not tonumber(threshold_l) or not tonumber(threshold_r) or not tonumber(length_limit) or not tonumber(leading_pad) or not tonumber(trailing_pad) or not tostring(fade) or not tonumber(snap_offset) or not tonumber(step) then return end
 
 saveDataList("TRIM_ITEMS_EDGE", "Parameters", set, true)
 reaper.Undo_EndBlock(title, -1)
