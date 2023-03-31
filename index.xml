@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a4970ef3348b5e92a2e4e4f6f0edd9b471a497c6">
+<index version="1" name="zaibuyidao Scripts" commit="32419a8b3d2902dba55be9e128868e66c1f3842f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1049,6 +1049,10 @@
         <changelog><![CDATA[Fix fade pad]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a3be888e0e3ea6b594ea599f6deea00086355580/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
       </version>
+      <version name="1.1.9" author="zaibuyidao" time="2023-03-31T09:38:08Z">
+        <changelog><![CDATA[Preset parameter optimization]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/32419a8b3d2902dba55be9e128868e66c1f3842f/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Items Edge.lua" type="script" desc="Trim Items Edge">
       <metadata>
@@ -1162,6 +1166,10 @@
       <version name="1.2.4" author="zaibuyidao" time="2023-03-18T12:00:15Z">
         <changelog><![CDATA[Fix fade pad]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a3be888e0e3ea6b594ea599f6deea00086355580/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
+      </version>
+      <version name="1.2.5" author="zaibuyidao" time="2023-03-31T09:38:08Z">
+        <changelog><![CDATA[Preset parameter optimization]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/32419a8b3d2902dba55be9e128868e66c1f3842f/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items Settings.lua" type="script" desc="Trim Split Items Settings">
