@@ -1,7 +1,7 @@
 -- @description Trim Split Items
--- @version 1.1.1
+-- @version 1.1.2
 -- @author zaibuyidao
--- @changelog Preset parameter optimization
+-- @changelog Optimize snap offset
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -338,7 +338,7 @@ function eq(a, b) return math.abs(a - b) < 0.000001 end
 
 -- 根据ranges保留item指定区域，并删除剩余区域
 -- 例：keep_ranges = { {1, 3}, {5, 8} } 代表将item中 1-3 与 5-8区域保留，其余地方删除
-function trim_item(item, keep_ranges, min_len)
+function trim_item(item, keep_ranges, min_len, snap_offset, left_pad)
   local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
   -- print(item_pos, item_pos + item_len)
@@ -362,6 +362,15 @@ function trim_item(item, keep_ranges, min_len)
     reaper.SetMediaItemInfo_Value(left, "D_FADEINLEN", range.fade[1])
     reaper.SetMediaItemInfo_Value(left, "D_FADEOUTLEN", range.fade[2])
 
+    if SNAP_OFFSET > 0 then
+      local r = max_peak_pos(left, SKIP_SAMPLE, (LEFT_PAD + SNAP_OFFSET) / 1000, LEFT_PAD / 1000)
+      if r then
+        reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', r)
+      end
+    elseif SNAP_OFFSET == 0 then
+      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', 0)
+    end
+
     left = right
     ::continue::
   end
@@ -371,7 +380,7 @@ function trim_item(item, keep_ranges, min_len)
   end
 end
 
-function trim_item_keep_silence(item, keep_ranges, min_len)
+function trim_item_keep_silence(item, keep_ranges, min_len, snap_offset, left_pad)
   local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
   -- print(item_pos, item_pos + item_len)
@@ -395,6 +404,15 @@ function trim_item_keep_silence(item, keep_ranges, min_len)
     reaper.SetMediaItemInfo_Value(left, "D_FADEINLEN", range.fade[1])
     reaper.SetMediaItemInfo_Value(left, "D_FADEOUTLEN", range.fade[2])
 
+    if SNAP_OFFSET > 0 then
+      local r = max_peak_pos(left, SKIP_SAMPLE, (LEFT_PAD + SNAP_OFFSET) / 1000, LEFT_PAD / 1000)
+      if r then
+        reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', r)
+      end
+    elseif SNAP_OFFSET == 0 then
+      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', 0)
+    end
+
     left = right
     ::continue::
   end
@@ -404,7 +422,7 @@ function trim_item_keep_silence(item, keep_ranges, min_len)
   end
 end
 
-function trim_item_before_nonsilence(item, keep_ranges)
+function trim_item_before_nonsilence(item, keep_ranges, snap_offset, left_pad)
   local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
   local left = item
@@ -413,6 +431,16 @@ function trim_item_before_nonsilence(item, keep_ranges)
       local right = reaper.SplitMediaItem(left, range[1])
       left = right
     end
+
+    if SNAP_OFFSET > 0 then
+      local r = max_peak_pos(left, SKIP_SAMPLE, (LEFT_PAD + SNAP_OFFSET) / 1000, LEFT_PAD / 1000)
+      if r then
+        reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', r)
+      end
+    elseif SNAP_OFFSET == 0 then
+      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', 0)
+    end
+
     ::continue::
   end
 end
@@ -652,29 +680,13 @@ for i = count_sel_item - 1, 0, -1 do
   expand_ranges(item, keep_ranges, LEFT_PAD / 1000, RIGHT_PAD / 1000, FADE_IN / 1000, FADE_OUT / 1000)
   -- print(keep_ranges[#keep_ranges][2])
   if MODE == "del" then
-    trim_item(item, keep_ranges, MIN_CLIPS_LEN / 1000)
+    trim_item(item, keep_ranges, MIN_CLIPS_LEN / 1000, SNAP_OFFSET, LEFT_PAD)
   elseif MODE == "keep" then
-    trim_item_keep_silence(item, keep_ranges, MIN_CLIPS_LEN / 1000)
+    trim_item_keep_silence(item, keep_ranges, MIN_CLIPS_LEN / 1000, SNAP_OFFSET, LEFT_PAD)
   elseif MODE == "begin" then
-    trim_item_before_nonsilence(item, keep_ranges)
+    trim_item_before_nonsilence(item, keep_ranges, SNAP_OFFSET, LEFT_PAD)
   elseif MODE == "end" then
     trim_item_before_silence(item, keep_ranges, MIN_CLIPS_LEN / 1000)
-  end
-  ::continue::
-end
-
-count_sel_item = reaper.CountSelectedMediaItems(0)
-for i = count_sel_item - 1, 0, -1 do
-  local item = reaper.GetSelectedMediaItem(0, i)
-  if reaper.GetActiveTake(item) == nil then goto continue end
-  -- if (LEFT_PAD - SNAP_OFFSET > 0 and SNAP_OFFSET > 0) or (SNAP_OFFSET - LEFT_PAD > 0 and SNAP_OFFSET > 0) then
-  if SNAP_OFFSET > 0 then
-    local r = max_peak_pos(item, SKIP_SAMPLE, (LEFT_PAD + SNAP_OFFSET) / 1000, LEFT_PAD / 1000)
-    if r then
-      reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', r)
-    end
-  elseif SNAP_OFFSET == 0 then
-    reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', 0)
   end
   ::continue::
 end

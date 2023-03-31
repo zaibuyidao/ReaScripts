@@ -1,7 +1,7 @@
 -- @description Trim Split Items Settings
--- @version 1.1.0
+-- @version 1.1.2
 -- @author zaibuyidao
--- @changelog Preset parameter optimization
+-- @changelog Optimize snap offset
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -290,7 +290,26 @@ end
 
 reaper.Undo_BeginBlock()
 set = getMutiInput(title, 11, lable, default)
-if set == nil or not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(MIN_SILENCE_LEN) or not tonumber(MIN_CLIPS_LEN) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tostring(FADE) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(SPLIT) or not tostring(MODE) then return end
+
+local parameters = {
+  {name = "THRESHOLD", func = tonumber},
+  {name = "HYSTERESIS", func = tonumber},
+  {name = "MIN_SILENCE_LEN", func = tonumber},
+  {name = "MIN_CLIPS_LEN", func = tonumber},
+  {name = "LEFT_PAD", func = tonumber},
+  {name = "RIGHT_PAD", func = tonumber},
+  {name = "FADE", func = tostring},
+  {name = "SNAP_OFFSET", func = tonumber},
+  {name = "SKIP_SAMPLE", func = tonumber},
+  {name = "SPLIT", func = tostring},
+  {name = "MODE", func = tostring}
+}
+
+for _, param in ipairs(parameters) do
+  if set == nil or not param.func(_G[param.name]) then
+    return
+  end
+end
 
 saveDataList("TRIM_SPLIT_ITEMS", "Parameters", set, true)
 reaper.Undo_EndBlock(title, -1)
