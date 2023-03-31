@@ -1,7 +1,7 @@
 -- @description Trim Items Edge
--- @version 1.2.9
+-- @version 1.3.0
 -- @author zaibuyidao
--- @changelog Preset parameter optimization
+-- @changelog Fixed the sample point offset error.
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -287,7 +287,6 @@ function trim_item(item, keep_ranges)
     reaper.SetMediaItemInfo_Value(left, "D_FADEOUTLEN", range.fade[2])
 
     left = right
-    ::continue::
   end
 
   if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_pos + item_len then
@@ -475,7 +474,7 @@ function max_peak_pos(item, step, pend, pstart)
   local channels = reaper.GetMediaSourceNumChannels(source)
   local startpos = 0
 
-  local samples_per_block = math.floor(0.5+samplerate*(pend*channels))
+  local samples_per_block = samplerate*(pend*channels)  -- local samples_per_block = math.floor(0.5+samplerate*(pend*channels))
   local samples_per_block_i = samplerate*(pstart*channels)
   if samples_per_block_i == 0 then samples_per_block_i = 1 end
 

@@ -1,7 +1,7 @@
 -- @description Trim Items Edge Settings
--- @version 1.2.1
+-- @version 1.3.0
 -- @author zaibuyidao
--- @changelog Preset parameter optimization
+-- @changelog Fixed the sample point offset error.
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
