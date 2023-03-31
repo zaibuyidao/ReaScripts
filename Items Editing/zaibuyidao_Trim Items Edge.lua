@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.2.7
+-- @version 1.2.8
 -- @author zaibuyidao
 -- @changelog Preset parameter optimization
 -- @links
@@ -299,6 +299,9 @@ function trim_edge(item, keep_ranges)
 
   for i, range in ipairs(keep_ranges) do
     reaper.BR_SetItemEdges(item, range[1], range[2])
+    
+    reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", range.fade[1])
+    reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", range.fade[2])
   end
 end
 
