@@ -345,21 +345,24 @@ attack,攻击,Battle
 			})
 		end
 
-		-- if sortResult then -- 最早的排序
-		-- 	table.sort(data, function(a, b)
-		-- 		return a.key < b.key
-		-- 	end)
-		-- end
-
 		lineNumber = lineNumber + 1
 	end
 end
 
+-- if sortResult then -- 早期排序
+--   table.sort(data, function(a, b)
+--     return a.key < b.key
+--   end)
+-- end
+
 if sortResult then
-    -- table.sort(data, custom_sort)
-	local cnFirst = getConfig("search.cn_first")
 	table.sort(data, function(a, b)
-		return custom_sort(a, b, cnFirst)
+		local cnFirst = getConfig("search.cn_first")
+		if cnFirst == true or cnFirst == false then
+			return custom_sort(a, b, cnFirst)
+		else
+			return string.lower(tostring(a.key)) < string.lower(tostring(b.key))
+		end
 	end)
 end
 
@@ -404,13 +407,13 @@ function searchKeyword(value, rating)
 		end
 	end
 	if sortResult then
-		-- table.sort(res, function(a, b) -- 最早的排序
-		-- 	return a.key < b.key
-		-- end)
-		-- table.sort(res, custom_sort)
-		local cnFirst = getConfig("search.cn_first")
 		table.sort(res, function(a, b)
-			return custom_sort(a, b, cnFirst)
+			local cnFirst = getConfig("search.cn_first")
+			if cnFirst == true or cnFirst == false then
+				return custom_sort(a, b, cnFirst)
+			else
+				return string.lower(tostring(a.key)) < string.lower(tostring(b.key))
+			end
 		end)
 	end
 
@@ -659,8 +662,14 @@ function init()
 				}
 			}
 		})
-		if args then
-			self:jump(args[1])
+		-- if args then
+		-- 	self:jump(args[1]) -- 以界面最顶部作为目标行
+		-- end
+		if args then -- 以界面底部作为目标行
+			local targetLine = args[1]
+			local compensation = resultListView:getPageSize() - 1
+			local adjustedTargetLine = targetLine - compensation
+			self:jump(adjustedTargetLine)
 		end
 		return 
 	end
@@ -721,7 +730,7 @@ function init()
 	end
 
 	resultListView:addScrollListener(function ()
-		--stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条顶部计数
+		--stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条以界面最顶部作为目标行计数
 		if resultListView.firstIndex + resultListView:getPageSize()-1 > #resultListView.data then
 			stateLabel.label = "(" .. #resultListView.data .. "/" .. #resultListView.data .. ")"
 		else
@@ -734,6 +743,7 @@ function init()
 		stateLabel.x = window.width - stateLabel.width - 12
 		resultListView.height = window.height - (SIZE_UNIT * 1.5 + 15) - 4
 		resultListView:draw()
+		refreshResultState() -- 每次窗口大小发生变化时，stateLabel.label 都会根据新的 resultListView:getPageSize() 值进行更新
 		self:controlInitAll()
 	end
 
@@ -741,7 +751,7 @@ function init()
 
 	function refreshResultState()
 		resultListView:draw()
-		--stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条顶部计数
+		--stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条以界面最顶部作为目标行计数
 		if resultListView.firstIndex + resultListView:getPageSize()-1 > #resultListView.data then
 			stateLabel.label = "(" .. #resultListView.data .. "/" .. #resultListView.data .. ")"
 		else

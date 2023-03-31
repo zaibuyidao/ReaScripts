@@ -256,15 +256,19 @@ for _, db in ipairs(dbList) do
 	end
 end
 
-if sortResult then
-	local cnFirst = getConfig("search.cn_first")
-	table.sort(data, function(a, b) -- 中英文排序切换
-		return custom_sort(a, b, cnFirst)
-	end)
-end
-
 if readDBCount == 0 then
 	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
+end
+
+if sortResult then
+	table.sort(data, function(a, b)
+		local cnFirst = getConfig("search.cn_first")
+		if cnFirst == true or cnFirst == false then
+			return custom_sort(a, b, cnFirst)
+		else
+			return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
+		end
+	end)
 end
 
 -- -- 模拟插入大量数据
@@ -589,8 +593,14 @@ function init()
 				}
 			}
 		})
-		if args then
-			self:jump(args[1])
+		-- if args then
+		-- 	self:jump(args[1])
+		-- end
+		if args then -- 以界面底部作为目标行
+			local targetLine = args[1]
+			local compensation = resultListView:getPageSize() - 1
+			local adjustedTargetLine = targetLine - compensation
+			self:jump(adjustedTargetLine)
 		end
 		reaper.defer(function()
 			window:setFocus(searchTextBox)
@@ -668,6 +678,7 @@ function init()
 		stateLabel.x = window.width - stateLabel.width - 12
 		resultListView.height = window.height - (SIZE_UNIT * 1.5 + 15) - 4
 		resultListView:draw()
+		refreshResultState() -- 每次窗口大小发生变化时，stateLabel.label 都会根据新的 resultListView:getPageSize() 值进行更新
 		self:controlInitAll()
 	end
 

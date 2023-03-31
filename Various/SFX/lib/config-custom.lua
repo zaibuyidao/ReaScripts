@@ -49,7 +49,7 @@ return {
     },
     search = {
         sort_result = true, -- 是否对列表进行排序
-        cn_first = false, -- 是否中文优先
+        cn_first = false, -- 排序时是否中文优先，可填参数: true, false, nil
         case_sensitive = false, -- 搜索时是否区分大小写
         include_name = true, -- 搜索是否包含第二列
         include_remark = true -- 搜索是否包含第三列

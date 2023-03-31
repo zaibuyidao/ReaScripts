@@ -205,6 +205,7 @@ function getColorForDb(dbName)
 	return jColor:new(colorMap[dbName])
 end
 
+local sortResult = getConfig("search.sort_result") -- 加入排序
 local data = {}
 local readDBCount = 0
 local excludeDbName = table.arrayToTable(EXCLUDE_DB_LIST)-- getConfig("db.exclude_db", {}, table.arrayToTable)
@@ -233,13 +234,16 @@ for _, db in ipairs(dbList) do
 	end
 end
 
+
 if readDBCount == 0 then
 	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
 end
 
-table.sort(data, function(a, b)
-    return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
-end)
+if sortResult then -- 加入排序
+	table.sort(data, function(a, b)
+		return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
+	end)
+end
 
 -- -- 模拟插入大量数据
 -- for i=1, 50000 do
@@ -624,6 +628,7 @@ function init()
 		stateLabel.x = window.width - stateLabel.width - 12
 		resultListView.height = window.height - (SIZE_UNIT * 1.5 + 15) - 4
 		resultListView:draw()
+		refreshResultState() -- 每次窗口大小发生变化时，stateLabel.label 都会根据新的 resultListView:getPageSize() 值进行更新
 		self:controlInitAll()
 	end
 

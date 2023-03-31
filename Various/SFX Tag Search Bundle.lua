@@ -1,7 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.3.9
--- @changelog SFX tag search custom adds Chinese sorting feature
+-- @version 1.4.0
+-- @changelog
+--   Optimized Chinese and English sorting function.
+--   Repair the problem of real-time displaying the number of lines when the interface is changed.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
