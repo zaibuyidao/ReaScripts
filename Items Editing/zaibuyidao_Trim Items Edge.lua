@@ -1,5 +1,5 @@
 -- @description Trim Items Edge
--- @version 1.2.8
+-- @version 1.2.9
 -- @author zaibuyidao
 -- @changelog Preset parameter optimization
 -- @links
@@ -475,8 +475,8 @@ function max_peak_pos(item, step, pend, pstart)
   local channels = reaper.GetMediaSourceNumChannels(source)
   local startpos = 0
 
-  local samples_per_block = math.floor(0.5+samplerate*(pend*2))
-  local samples_per_block_i = samplerate*(pstart*2)
+  local samples_per_block = math.floor(0.5+samplerate*(pend*channels))
+  local samples_per_block_i = samplerate*(pstart*channels)
   if samples_per_block_i == 0 then samples_per_block_i = 1 end
 
   local buffer = reaper.new_array(samples_per_block*channels)
