@@ -1,5 +1,5 @@
 -- @description Trim Split Items Settings
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
 -- @changelog Preset parameter optimization
 -- @links
@@ -298,7 +298,6 @@ end
 reaper.Undo_BeginBlock()
 set = getMutiInput(title, 11, lable, default)
 if set == nil or not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(MIN_SILENCE_LEN) or not tonumber(MIN_CLIPS_LEN) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tostring(FADE) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(SPLIT) or not tostring(MODE) then return end
-if MODE ~= "del" or MODE ~= "keep" or MODE ~= "begin" or MODE ~= "end" then return end
 
 saveDataList("TRIM_SPLIT_ITEMS", "Parameters", set, true)
 reaper.Undo_EndBlock(title, -1)
