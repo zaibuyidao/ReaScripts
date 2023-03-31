@@ -1,5 +1,5 @@
 -- @description Trim Split Items Settings
--- @version 1.0.9
+-- @version 1.1.0
 -- @author zaibuyidao
 -- @changelog Preset parameter optimization
 -- @links
@@ -241,6 +241,10 @@ function getMutiInput(title,num,lables,defaults)
   if uok then return string.split(uinput,",") end
 end
 
+function default_if_invalid(input, default, convert)
+  return (input == nil or not convert(input)) and default or convert(input)
+end
+
 local language = getSystemLanguage()
 
 get = getSavedDataList("TRIM_SPLIT_ITEMS", "Parameters")
@@ -258,28 +262,17 @@ if get == nil then      -- 默认预设
   SPLIT = "y"           -- 是否切割item
   MODE = "del"          -- 保持静默
 else
-  if get[1] == nil or not tonumber(get[1]) then get[1] = -24.1 end
-  if get[2] == nil or not tonumber(get[2]) then get[2] = 0 end
-  if get[5] == nil or not tonumber(get[3]) then get[3] = 100 end
-  if get[6] == nil or not tonumber(get[4]) then get[4] = 100 end
-  if get[3] == nil or not tonumber(get[5]) then get[5] = 3 end
-  if get[4] == nil or not tonumber(get[6]) then get[6] = 3 end
-  if get[9] == nil or not tostring(get[7]) then get[7] = "y" end
-  if get[7] == nil or not tonumber(get[8]) then get[8] = 50 end
-  if get[8] == nil or not tonumber(get[9]) then get[9] = 0 end
-  if get[10] == nil or not tostring(get[10]) then get[10] = "y" end
-  if get[11] == nil or not tostring(get[11]) then get[11] = "del" end
-  THRESHOLD = tonumber(get[1])
-  HYSTERESIS = tonumber(get[2])
-  MIN_SILENCE_LEN = tonumber(get[3])
-  MIN_CLIPS_LEN = tonumber(get[4])
-  LEFT_PAD = tonumber(get[5])
-  RIGHT_PAD = tonumber(get[6])
-  FADE = tostring(get[7])
-  SNAP_OFFSET = tonumber(get[8])
-  SKIP_SAMPLE = tonumber(get[9])
-  SPLIT = tostring(get[10])
-  MODE = tostring(get[11])
+  THRESHOLD = default_if_invalid(get[1], -24.1, tonumber)
+  HYSTERESIS = default_if_invalid(get[2], 0, tonumber)
+  MIN_SILENCE_LEN = default_if_invalid(get[3], 100, tonumber)
+  MIN_CLIPS_LEN = default_if_invalid(get[4], 100, tonumber)
+  LEFT_PAD = default_if_invalid(get[5], 3, tonumber)
+  RIGHT_PAD = default_if_invalid(get[6], 3, tonumber)
+  FADE = default_if_invalid(get[7], "y", tostring)
+  SNAP_OFFSET = default_if_invalid(get[8], 50, tonumber)
+  SKIP_SAMPLE = default_if_invalid(get[9], 0, tonumber)
+  SPLIT = default_if_invalid(get[10], "y", tostring)
+  MODE = default_if_invalid(get[11], "del", tostring)
 end
 
 default = THRESHOLD ..','.. HYSTERESIS ..','.. MIN_SILENCE_LEN ..','.. MIN_CLIPS_LEN ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. FADE ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. SPLIT ..','.. MODE

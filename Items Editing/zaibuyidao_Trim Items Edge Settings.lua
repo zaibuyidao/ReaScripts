@@ -1,5 +1,5 @@
 -- @description Trim Items Edge Settings
--- @version 1.2.0
+-- @version 1.2.1
 -- @author zaibuyidao
 -- @changelog Preset parameter optimization
 -- @links
@@ -241,6 +241,10 @@ function getMutiInput(title,num,lables,defaults)
   if uok then return string.split(uinput,",") end
 end
 
+function default_if_invalid(input, default, convert)
+  return (input == nil or not convert(input)) and default or convert(input)
+end
+
 local language = getSystemLanguage()
 
 get = getSavedDataList("TRIM_ITEMS_EDGE", "Parameters")
@@ -255,22 +259,14 @@ if get == nil then   -- 默认预设
   snap_offset = 0    -- 吸附偏移(ms)
   step = 0           -- 采样点步进
 else
-  if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
-  if get[2] == nil or not tonumber(get[2]) then get[2] = -6 end
-  if get[3] == nil or not tonumber(get[3]) then get[3] = 100 end
-  if get[4] == nil or not tonumber(get[4]) then get[4] = 0 end
-  if get[5] == nil or not tonumber(get[5]) then get[5] = 0 end
-  if get[6] == nil or not tostring(get[6]) then get[6] = "n" end
-  if get[7] == nil or not tonumber(get[7]) then get[7] = 0 end
-  if get[8] == nil or not tonumber(get[8]) then get[8] = 0 end
-  threshold_l = get[1]
-  threshold_r = get[2]
-  length_limit = get[3]
-  leading_pad = get[4]
-  trailing_pad = get[5]
-  fade = get[6]
-  snap_offset = get[7]
-  step = get[8]
+  threshold_l = default_if_invalid(get[1], -60, tonumber)
+  threshold_r = default_if_invalid(get[2], -6, tonumber)
+  length_limit = default_if_invalid(get[3], 100, tonumber)
+  leading_pad = default_if_invalid(get[4], 0, tonumber)
+  trailing_pad = default_if_invalid(get[5], 0, tonumber)
+  fade = default_if_invalid(get[6], "n", tostring)
+  snap_offset = default_if_invalid(get[7], 0, tonumber)
+  step = default_if_invalid(get[8], 0, tonumber)
 end
 
 default = threshold_l ..','.. threshold_r ..','.. length_limit ..','.. leading_pad ..','.. trailing_pad ..','.. fade ..','.. snap_offset ..','.. step

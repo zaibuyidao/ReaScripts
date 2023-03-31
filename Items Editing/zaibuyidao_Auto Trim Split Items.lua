@@ -1,5 +1,5 @@
 -- @description Auto Trim Split Items
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -238,10 +238,7 @@ if get == nil then
   
   saveDataList("AUTO_TRIM_SPLIT_ITEMS", "Parameters", set, true)
   get = getSavedDataList("AUTO_TRIM_SPLIT_ITEMS", "Parameters")
-  return
 end
-
--- THRESHOLD, HYSTERESIS, IGNORE_SILENCE_SHORTER, NONSILENT_CLIPS_SHORTER, LEADING_PAD, TRAILING_PAD, FADE_PAD, SNAP_OFFSET, MODE = tostring(THRESHOLD), tostring(HYSTERESIS), tostring(IGNORE_SILENCE_SHORTER), tostring(NONSILENT_CLIPS_SHORTER), tostring(LEADING_PAD), tostring(TRAILING_PAD), tostring(FADE_PAD), tostring(SNAP_OFFSET), tostring(HYSTERESIS), tostring(MODE)
 
 function set_default_value(index, default_value, is_number)
   if get[index] == nil or (is_number and not tonumber(get[index])) then
