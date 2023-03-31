@@ -1,5 +1,5 @@
 -- @description Auto Trim Split Items
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -210,27 +210,27 @@ local language = getSystemLanguage()
 
 get = getSavedDataList("AUTO_TRIM_SPLIT_ITEMS", "Parameters")
 if get == nil then
-  THRESHOLD = -60 -- 阈值(dB)
+  THRESHOLD = -24.1 -- 阈值(dB)
   HYSTERESIS = 0  -- 滯後(dB)
   IGNORE_SILENCE_SHORTER = 100
   NONSILENT_CLIPS_SHORTER = 100
-  LEADING_PAD = 0
-  TRAILING_PAD = 0
+  LEADING_PAD = 3
+  TRAILING_PAD = 3
   FADE_PAD = "y"
-  SNAP_OFFSET = 0
+  SNAP_OFFSET = 50
   MODE = "del"
 
   default = THRESHOLD ..','.. HYSTERESIS ..','.. IGNORE_SILENCE_SHORTER ..','.. NONSILENT_CLIPS_SHORTER ..','.. LEADING_PAD ..','.. TRAILING_PAD ..','.. FADE_PAD ..','.. SNAP_OFFSET ..','.. MODE
 
   if language == "简体中文" then
     title = "自动修剪分割对象设置"
-    lable = "阈值 (dB),滞后 (dB),最小静默长度 (ms),最小片段长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),吸附偏移到峰值 (ms),模式 (del/keep/begin/end)"
+    lable = "阈值 (dB),滞后 (dB),最小静默长度 (ms),最小片段长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),峰值吸附偏移 (ms),模式 (del/keep/begin/end)"
   elseif language == "繁体中文" then
     title = "自動修剪分割對象設置"
-    lable = "閾值 (dB),滯後 (dB),最小靜默長度 (ms),最小片段長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),吸附偏移到峰值 (ms),模式 (del/keep/begin/end)"
+    lable = "閾值 (dB),滯後 (dB),最小靜默長度 (ms),最小片段長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),峰值吸附偏移 (ms),模式 (del/keep/begin/end)"
   else
     title = "Auto Trim Split Items Settings"
-    lable = "Threshold (dB),Hysteresis (dB),Min slice length (ms),Min item length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Snap offset to peak (ms),Mode (del/keep/begin/end)"
+    lable = "Threshold (dB),Hysteresis (dB),Min silence length (ms),Min clips length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peak snap offset (ms),Mode (del/keep/begin/end)"
   end
 
   set = getMutiInput(title, 9, lable, default)
@@ -249,14 +249,14 @@ function set_default_value(index, default_value, is_number)
   end
 end
 
-set_default_value(1, -60, true)
+set_default_value(1, -24.1, true)
 set_default_value(2, 0, true)
 set_default_value(3, 100, true)
 set_default_value(4, 100, true)
 set_default_value(5, 3, true)
 set_default_value(6, 3, true)
 set_default_value(7, "y", false)
-set_default_value(8, 0, true)
+set_default_value(8, 50, true)
 set_default_value(9, "del", false)
 
 THRESHOLD = get[1]
@@ -295,12 +295,17 @@ function auto_trim()
     
     SetComboBoxIndex(reaper.JS_Window_FindChildByID(parent, 1000), MODE) -- 模式： 0 = 分割并删除静音区域 1 = 分割并保留静音区域 2 = 仅在非静音之前分割 3 = 仅在静音之前分割
     
-    chkBox = reaper.JS_Window_FindChildByID(parent, 1042) -- Split grouped items at times of selected item splits
-    reaper.JS_WindowMessage_Send(chkBox, "BM_SETCHECK", 0,0,0,0) -- 1,0,0,0 = 选中 0,0,0,0 = 非选中
-    chkBox = reaper.JS_Window_FindChildByID(parent, 1043) -- Preserve timing of non-silent areas
-    reaper.JS_WindowMessage_Send(chkBox, "BM_SETCHECK", 1,0,0,0) -- 默认选中，并且不加入设置
-    chkBox = reaper.JS_Window_FindChildByID(parent, 1057) -- Run signal through track FX for detection
-    reaper.JS_WindowMessage_Send(chkBox, "BM_SETCHECK", 0,0,0,0)
+    -- 以下三个勾选项的功能屏蔽，请直接打开操作列表的 Auto trim/split items 进行设置
+    -- Split grouped items at times of selected item splits
+    -- Preserve timing of non-silent areas
+    -- Run signal through track FX for detection
+
+    -- chkBox = reaper.JS_Window_FindChildByID(parent, 1042) -- Split grouped items at times of selected item splits
+    -- reaper.JS_WindowMessage_Send(chkBox, "BM_SETCHECK", 0,0,0,0) -- 1,0,0,0 = 选中 0,0,0,0 = 非选中
+    -- chkBox = reaper.JS_Window_FindChildByID(parent, 1043) -- Preserve timing of non-silent areas
+    -- reaper.JS_WindowMessage_Send(chkBox, "BM_SETCHECK", 1,0,0,0) -- 默认为选中
+    -- chkBox = reaper.JS_Window_FindChildByID(parent, 1057) -- Run signal through track FX for detection
+    -- reaper.JS_WindowMessage_Send(chkBox, "BM_SETCHECK", 0,0,0,0)
 
     reaper.JS_Window_OnCommand(parent, 1) -- Process = 1, Cancel = 2
   else

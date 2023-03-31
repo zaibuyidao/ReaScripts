@@ -1,5 +1,5 @@
 -- @description Auto Trim Split Items Settings
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -219,27 +219,27 @@ end
 
 get = get or {}
 
-THRESHOLD = set_default_value(get[1], -60, true)
+THRESHOLD = set_default_value(get[1], -24.1, true)
 HYSTERESIS = set_default_value(get[2], 0, true)
 IGNORE_SILENCE_SHORTER = set_default_value(get[3], 100, true)
 NONSILENT_CLIPS_SHORTER = set_default_value(get[4], 100, true)
 LEADING_PAD = set_default_value(get[5], 3, true)
 TRAILING_PAD = set_default_value(get[6], 3, true)
 FADE_PAD = set_default_value(get[7], "y", false)
-SNAP_OFFSET = set_default_value(get[8], 0, true)
+SNAP_OFFSET = set_default_value(get[8], 50, true)
 MODE = set_default_value(get[9], "del", false)
 
 default = THRESHOLD ..','.. HYSTERESIS ..','.. IGNORE_SILENCE_SHORTER ..','.. NONSILENT_CLIPS_SHORTER ..','.. LEADING_PAD ..','.. TRAILING_PAD ..','.. FADE_PAD ..','.. SNAP_OFFSET ..','.. MODE
 
 if language == "简体中文" then
   title = "自动修剪分割对象设置"
-  lable = "阈值 (dB),滞后 (dB),最小静默长度 (ms),最小片段长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),吸附偏移到峰值 (ms),模式 (del/keep/begin/end)"
+  lable = "阈值 (dB),滞后 (dB),最小静默长度 (ms),最小片段长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),峰值吸附偏移 (ms),模式 (del/keep/begin/end)"
 elseif language == "繁体中文" then
   title = "自動修剪分割對象設置"
-  lable = "閾值 (dB),滯後 (dB),最小靜默長度 (ms),最小片段長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),吸附偏移到峰值 (ms),模式 (del/keep/begin/end)"
+  lable = "閾值 (dB),滯後 (dB),最小靜默長度 (ms),最小片段長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),峰值吸附偏移 (ms),模式 (del/keep/begin/end)"
 else
   title = "Auto Trim Split Items Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Min slice length (ms),Min item length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Snap offset to peak (ms),Mode (del/keep/begin/end)"
+  lable = "Threshold (dB),Hysteresis (dB),Min silence length (ms),Min clips length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peak snap offset (ms),Mode (del/keep/begin/end)"
 end
 
 reaper.Undo_BeginBlock()
