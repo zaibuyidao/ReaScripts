@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8ed65993caf80bf12206cb313ee86b5d041dbda6">
+<index version="1" name="zaibuyidao Scripts" commit="12db1fb37bea53431e2b6174d554933957434308">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1209,6 +1209,10 @@
         <changelog><![CDATA[Add silent mode]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/364743f670c3d4d24491d6768b3bfbcc4df23d8f/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
       </version>
+      <version name="1.0.8" author="zaibuyidao" time="2023-03-31T05:39:51Z">
+        <changelog><![CDATA[Preset parameter optimization]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/12db1fb37bea53431e2b6174d554933957434308/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items.lua" type="script" desc="Trim Split Items">
       <metadata>
@@ -1262,6 +1266,10 @@
       <version name="1.0.9" author="zaibuyidao" time="2023-03-30T17:15:18Z">
         <changelog><![CDATA[Add silent mode]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/fd81dfd9affd1879d91f12e533cd4969daae181f/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="1.1.0" author="zaibuyidao" time="2023-03-31T05:39:51Z">
+        <changelog><![CDATA[Preset parameter optimization]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/12db1fb37bea53431e2b6174d554933957434308/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重新定位對象.lua" type="script" desc="重新定位對象">
