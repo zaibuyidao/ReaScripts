@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="862be7c92e16c43262e66235294a0ae28814147e">
+<index version="1" name="zaibuyidao Scripts" commit="a17137d48528565e8f37d0b6ea61c4581e0c439c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -156,6 +156,10 @@
       <version name="1.0.3" author="zaibuyidao" time="2023-03-31T03:52:01Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8ed65993caf80bf12206cb313ee86b5d041dbda6/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2023-03-31T13:10:56Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Take.lua" type="script" desc="Batch Rename Take">
@@ -1057,6 +1061,10 @@
         <changelog><![CDATA[Preset parameter optimization]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/862be7c92e16c43262e66235294a0ae28814147e/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
       </version>
+      <version name="1.2.1" author="zaibuyidao" time="2023-03-31T13:10:56Z">
+        <changelog><![CDATA[Preset parameter optimization]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Items Edge.lua" type="script" desc="Trim Items Edge">
       <metadata>
@@ -1179,6 +1187,10 @@
         <changelog><![CDATA[Preset parameter optimization]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/862be7c92e16c43262e66235294a0ae28814147e/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
       </version>
+      <version name="1.2.7" author="zaibuyidao" time="2023-03-31T13:10:56Z">
+        <changelog><![CDATA[Preset parameter optimization]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items Settings.lua" type="script" desc="Trim Split Items Settings">
       <metadata>
@@ -1232,6 +1244,10 @@
       <version name="1.0.9" author="zaibuyidao" time="2023-03-31T06:05:16Z">
         <changelog><![CDATA[Preset parameter optimization]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a4970ef3348b5e92a2e4e4f6f0edd9b471a497c6/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
+      </version>
+      <version name="1.1.0" author="zaibuyidao" time="2023-03-31T13:10:56Z">
+        <changelog><![CDATA[Preset parameter optimization]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items.lua" type="script" desc="Trim Split Items">
@@ -1290,6 +1306,10 @@
       <version name="1.1.0" author="zaibuyidao" time="2023-03-31T05:39:51Z">
         <changelog><![CDATA[Preset parameter optimization]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/12db1fb37bea53431e2b6174d554933957434308/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="1.1.1" author="zaibuyidao" time="2023-03-31T13:10:56Z">
+        <changelog><![CDATA[Preset parameter optimization]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_重新定位對象.lua" type="script" desc="重新定位對象">
