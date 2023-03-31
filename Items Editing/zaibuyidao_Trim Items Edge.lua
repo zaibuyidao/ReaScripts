@@ -1,7 +1,7 @@
 -- @description Trim Items Edge
--- @version 1.2.4
+-- @version 1.2.5
 -- @author zaibuyidao
--- @changelog Fix fade pad
+-- @changelog Preset parameter optimization
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -514,25 +514,34 @@ if get == nil then   -- 默认预设
   threshold_r = -6   -- 滯後(dB)
   leading_pad = 0    -- 前导填充(ms)
   trailing_pad = 0   -- 尾部填充(ms)
-  length_limit = 100 -- 长度限制(ms)
-  snap_offset = 0    -- 吸附偏移(ms)
-  step = 0           -- 采样点步进
   fade = "n"         -- 是否淡变
+  snap_offset = 0    -- 吸附偏移(ms)
+  length_limit = 100 -- 长度限制(ms)
+  step = 0           -- 采样点步进
 
-  default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. length_limit ..','.. snap_offset ..','.. step ..','.. fade
+  default = threshold_l ..','.. threshold_r ..','.. leading_pad ..','.. trailing_pad ..','.. fade ..','.. snap_offset ..','.. length_limit ..','.. step
 
   if language == "简体中文" then
-    set = getMutiInput("修剪对象边缘设置", 8, "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),最小对象长度 (ms),吸附偏移到峰值 (ms),采样点步进,是否淡变 (y/n)", default)
+    title = "修剪对象边缘设置"
+    lable = "阈值 (dB),滞后 (dB),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),峰值吸附偏移 (ms),最小对象长度 (ms),采样点步进"
+    set_complete = "设置完毕，请重新运行脚本。"
   elseif language == "繁体中文" then
-    set = getMutiInput("修剪對象邊緣設置", 8, "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),最小對象長度 (ms),吸附偏移到峰值 (ms),采樣點步進,是否淡變 (y/n)", default)
+    title = "修剪對象邊緣設置"
+    lable = "閾值 (dB),滯後 (dB),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),峰值吸附偏移 (ms),最小對象長度 (ms),采樣點步進"
+    set_complete = "設置完畢，請重新運行腳本。"
   else
-    set = getMutiInput("Trim Items Edge Settings", 8, "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Min item length (ms),Snap offset to peak (ms),Sample step,Fade pad (y/n)", default)
+    title = "Trim Items Edge Settings"
+    lable = "Threshold (dB),Hysteresis (dB),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peak snap offset (ms),Min item length (ms),Sample step"
+    set_complete = "Setup is complete, please re-run the script."
   end
 
-  if not tonumber(threshold_l) or not tonumber(threshold_r) or not tonumber(leading_pad) or not tonumber(trailing_pad) or not tonumber(length_limit) or not tonumber(snap_offset) or not tonumber(step) or not tostring(fade) then return end
+  set = getMutiInput(title, 8, lable, default)
+  if set == nil or not tonumber(threshold_l) or not tonumber(threshold_r) or not tonumber(leading_pad) or not tonumber(trailing_pad) or not tostring(fade) or not tonumber(snap_offset) or not tonumber(length_limit) or not tonumber(step) then return end
+  
   saveDataList("TRIM_ITEMS_EDGE", "Parameters", set, true)
   get = getSavedDataList("TRIM_ITEMS_EDGE", "Parameters")
-  return
+
+  return reaper.MB(set_complete, title, 0)
 end
 
 -- table.print(get)
@@ -541,19 +550,19 @@ if get[1] == nil or not tonumber(get[1]) then get[1] = -60 end
 if get[2] == nil or not tonumber(get[2]) then get[2] = -6 end
 if get[3] == nil or not tonumber(get[3]) then get[3] = 0 end
 if get[4] == nil or not tonumber(get[4]) then get[4] = 0 end
-if get[5] == nil or not tonumber(get[5]) then get[5] = 100 end
+if get[5] == nil or not tostring(get[5]) then get[5] = "n" end
 if get[6] == nil or not tonumber(get[6]) then get[6] = 0 end
-if get[7] == nil or not tonumber(get[7]) then get[7] = 0 end
-if get[8] == nil or not tostring(get[8]) then get[8] = "n" end
+if get[7] == nil or not tonumber(get[7]) then get[7] = 100 end
+if get[8] == nil or not tonumber(get[8]) then get[8] = 0 end
 
-threshold_l = tonumber(get[1])
-threshold_r = tonumber(get[2])
-leading_pad = tonumber(get[3])
-trailing_pad = tonumber(get[4])
-length_limit = tonumber(get[5])
-snap_offset = tonumber(get[6])
-step = tonumber(get[7])
-fade = tostring(get[8])
+threshold_l = get[1]
+threshold_r = get[2]
+leading_pad = get[3]
+trailing_pad = get[4]
+fade = get[5]
+snap_offset = get[6]
+length_limit = get[7]
+step = get[8]
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
