@@ -1,9 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.4.0
+-- @version 1.4.1
 -- @changelog
---   Optimized Chinese and English sorting function.
---   Repair the problem of real-time displaying the number of lines when the interface is changed.
+--   Optimizing Keyword Filtering Matching.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
