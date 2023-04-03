@@ -391,18 +391,25 @@ function string.contains(s, value, caseSensitive)
 	return s:lower():find(value:lower())
 end
 
-function searchKeyword(value, rating)
+function searchKeyword(value, rating) -- 过滤搜索
 	local res = {}
 	local caseSensitive = getConfig("search.case_sensitive")
 	local includeName = getConfig("search.include_name")
 	local includeRemark = getConfig("search.include_remark")
-	local sortResult = getConfig("search.sort_result") -- 加入排序
+	local sortResult = getConfig("search.sort_result")
+	local keywords = string.split(value, " ") -- 分割关键词
+
 	for i, item in ipairs(data) do
-		if value == "" 
-			or string.contains(item.key, value, caseSensitive)
-			or (includeName and string.contains(item.name, value, caseSensitive)) 
-			or (includeRemark and string.contains(item.remark, value, caseSensitive)) 
-		then
+		local match = true
+		for _, keyword in ipairs(keywords) do
+			if not (string.contains(item.key, keyword, caseSensitive)
+			or (includeName and string.contains(item.name, keyword, caseSensitive))
+			or (includeRemark and string.contains(item.remark, keyword, caseSensitive))) then
+			match = false
+			break
+	end
+		end
+		if match then
 			table.insert(res, item)
 		end
 	end
@@ -590,7 +597,7 @@ function init()
 			end
 			
 			info.label = listView.data[dataIndex].remark
-			c.highlight = { searchTextBox.value }
+			c.highlight = jStringExplode(searchTextBox.value, " ") -- 高亮不包含空格
 
 			local color = getColorForRemark(data.remark)
 			c.colors_label = {}
