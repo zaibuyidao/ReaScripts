@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.4.2
+-- @version 1.4.3
 -- @changelog
 --   Optimizing Keyword Filtering Matching.
 -- @reference
