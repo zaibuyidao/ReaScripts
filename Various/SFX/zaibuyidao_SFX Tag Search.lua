@@ -282,13 +282,50 @@ end
 -- 	})
 -- end
 
+-- function searchKeyword(value, rating)
+-- 	local res = {}
+-- 	local index = 1
+-- 	local caseSensitive = getConfig("search.case_sensitive")
+-- 	local lowerValue = value:lower()
+-- 	for _, item in ipairs(data) do
+-- 		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(lowerValue)) then
+-- 			res[index] = {
+-- 				index = index, -- for stable sort
+-- 				db = item.db,
+-- 				path = item.path,
+-- 				value = item.value,
+-- 				from = item.from,
+-- 				fromString = item.fromString
+-- 			}
+-- 			index = index + 1
+-- 		end
+-- 	end
+	
+-- 	table.sort(res, function(a, b)
+-- 		local ra = getRating(a.value)
+-- 		local rb = getRating(b.value)
+-- 		if ra == rb then
+-- 			return a.index < b.index
+-- 		end
+-- 		return ra > rb
+-- 	end)
+-- 	return res
+-- end
+
 function searchKeyword(value, rating)
 	local res = {}
 	local index = 1
 	local caseSensitive = getConfig("search.case_sensitive")
-	local lowerValue = value:lower()
+	local keywords = string.split(value, " ") -- 分割关键词
 	for _, item in ipairs(data) do
-		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(lowerValue)) then
+		local match = true
+		for _, keyword in ipairs(keywords) do
+			if not (caseSensitive and item.value:find(keyword)) and not (not caseSensitive and item.value:lower():find(keyword:lower())) then
+				match = false
+				break
+			end
+		end
+		if match then
 			res[index] = {
 				index = index, -- for stable sort
 				db = item.db,
@@ -527,7 +564,8 @@ function init()
 			end
 			
 			info.label = listView.data[dataIndex].db
-			c.highlight = { searchTextBox.value }
+			-- c.highlight = { searchTextBox.value }
+			c.highlight = jStringExplode(searchTextBox.value, " ") -- 高亮不包含空格
 
 			c.colors_label = {}
 			c.colors_label.normal = getColorForDb(listView.data[dataIndex].db)
