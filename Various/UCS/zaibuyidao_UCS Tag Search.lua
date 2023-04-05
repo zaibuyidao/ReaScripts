@@ -8,7 +8,7 @@ function print(...)
     reaper.ShowConsoleMsg(str .. "\n")
 end
 
-if not reaper.BR_GetCurrentTheme then
+if not reaper.SNM_GetIntConfigVar then
     local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
     if retval == 1 then
         if not OS then local OS = reaper.GetOS() end
@@ -17,7 +17,7 @@ if not reaper.BR_GetCurrentTheme then
         else
             os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
         end
-      end
+    end
     return
 end
 
@@ -26,10 +26,127 @@ if not reaper.APIExists("JS_Localize") then
     local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
     if ok then
         reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-      else
+    else
         reaper.MB(err, "錯誤", 0)
     end
     return reaper.defer(function() end)
+end
+
+function getPathDelimiter()
+    local os = reaper.GetOS()
+    if os ~= "Win32" and os ~= "Win64" then
+        return "/"
+    else
+        return "\\"
+    end
+end
+
+local delimiter = getPathDelimiter()
+local GUI_path = reaper.GetResourcePath() .. delimiter .. "Scripts" .. delimiter .. "zaibuyidao Scripts" .. delimiter .. "Development" .. delimiter .. "Lokasenna_GUI Library" .. delimiter .. "Set Lokasenna_GUI library.lua"
+local base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
+package.path = package.path .. ";" .. base_path .. "?.lua" .. ";" .. base_path .. "/lib/?.lua" .. ";" .. GUI_path
+
+local GLOBAL_STATE_SECTION
+
+function setGlobalStateSection(section)
+    GLOBAL_STATE_SECTION = section
+end
+
+function getState(key, default, convert)
+	local value = reaper.GetExtState(GLOBAL_STATE_SECTION, key)
+    if not value or value == "" then return default end
+    if convert then return convert(value) end
+    return value
+end
+
+function setState(tab)
+    for k, v in pairs(tab) do
+        reaper.SetExtState(GLOBAL_STATE_SECTION, k, v, true)
+    end
+end
+
+function onSaveWindowSizeAndPosition() -- 保存窗口尺寸和位置
+    local dockstate, wx, wy, ww, wh = gfx.dock(-1, 0, 0, 0, 0)
+    local dockstr = string.format("%d", dockstate)
+    setState({
+        WINDOW_WIDTH = math.tointeger(ww),
+        WINDOW_HEIGHT = math.tointeger(wh),
+        WINDOW_X = math.tointeger(wx),
+        WINDOW_Y = math.tointeger(wy),
+        WINDOW_DOCK_STATE = dockstr
+    })
+end
+
+setGlobalStateSection("UCS_TAG_SEARCH")
+
+function getSystemLanguage()
+	local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+	local os = reaper.GetOS()
+	local lang
+  
+	if os == "Win32" or os == "Win64" then -- Windows
+		if locale == 936 then -- Simplified Chinese
+			lang = "简体中文"
+		elseif locale == 950 then -- Traditional Chinese
+			lang = "繁體中文"
+		else -- English
+			lang = "English"
+		end
+	elseif os == "OSX32" or os == "OSX64" then -- macOS
+		local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+		local result = handle:read("*a")
+		handle:close()
+		lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+		if lang == "zh-CN" then -- 简体中文
+			lang = "简体中文"
+		elseif lang == "zh-TW" then -- 繁体中文
+			lang = "繁體中文"
+		else -- English
+			lang = "English"
+		end
+	elseif os == "Linux" then -- Linux
+		local handle = io.popen("echo $LANG")
+		local result = handle:read("*a")
+		handle:close()
+		lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+		if lang == "zh_CN" then -- 简体中文
+			lang = "简体中文"
+		elseif lang == "zh_TW" then -- 繁體中文
+		    lang = "繁體中文"
+		else -- English
+		    lang = "English"
+		end
+	end
+
+	return lang
+end
+
+local language = getSystemLanguage()
+
+if language == "简体中文" then
+    TITLE_NAME = "UCS 标签搜索器"
+    FONT_SANS = "SimSun" -- "SimSun"、"Microsoft YaHei"、"Calibri"、"华文中宋"、"华文宋体"、"华文细黑"
+    FONT_MONO = "SimSun"
+    FONT_SIZE_3 = 14
+    FONT_SIZE_4 = 14
+    FONT_SIZE_M = 14
+    FONT_SIZE_V = 12
+elseif language == "繁体中文" then
+    TITLE_NAME = "UCS 標簽搜索器"
+    FONT_SANS = "SimSun" -- "SimSun" "Microsoft YaHei" "Calibri"
+    FONT_MONO = "SimSun"
+    FONT_SIZE_3 = 14
+    FONT_SIZE_4 = 14
+    FONT_SIZE_M = 14
+    FONT_SIZE_V = 12
+else
+    TITLE_NAME = "UCS Tag Search"
+    FONT_SANS = "Calibri"
+    FONT_MONO = "Consolas"
+    FONT_SIZE_3 = 16
+    FONT_SIZE_4 = 16
+    FONT_SIZE_M = 14
+    FONT_SIZE_V = 12
 end
 
 KEYS = {
@@ -49,19 +166,32 @@ LANGS = {
     { id = "ja", name = '日本語' }
 }
 
-base_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
-os = reaper.GetOS()
-if os ~= "Win32" and os ~= "Win64" then
-    loadfile(reaper.GetResourcePath() .. "/Scripts/zaibuyidao Scripts/Development/Lokasenna_GUI Library/Set Lokasenna_GUI library.lua")()
-    loadfile(base_path .. "/lib/utils.lua")()
-    loadfile(base_path .. "/lib/ucs.lua")()
-    loadfile(base_path .. "/lib/guis.lua")()
-else
-    loadfile(reaper.GetResourcePath() .. "\\Scripts\\zaibuyidao Scripts\\Development\\Lokasenna_GUI Library\\Set Lokasenna_GUI library.lua")()
-    loadfile(base_path .. "\\lib\\utils.lua")()
-    loadfile(base_path .. "\\lib\\ucs.lua")()
-    loadfile(base_path .. "\\lib\\guis.lua")()
+-- loadfile(reaper.GetResourcePath() .. delimiter .. "Scripts" .. delimiter .. "zaibuyidao Scripts" .. delimiter .. "Development" .. delimiter .. "Lokasenna_GUI Library" .. delimiter .. "Set Lokasenna_GUI library.lua")()
+require('Set Lokasenna_GUI library')
+require('utils')
+require('ucs')
+require('guis')
+CONFIG = require('config')
+
+function getConfig(configName, default, convert)
+	local cur = CONFIG
+	for k in configName:gmatch("[^%.]+") do
+		if not cur then return default end
+		cur = cur[k]
+	end
+	if cur == nil then return default end
+	if convert then
+		return convert(cur)
+	end
+	return cur
 end
+
+GUI.name = TITLE_NAME
+GUI.x = getState("WINDOW_X", 50, tonumber)
+GUI.y = getState("WINDOW_Y", 50, tonumber)
+GUI.w = getState("WINDOW_WIDTH", 752, tonumber)
+GUI.h = getState("WINDOW_HEIGHT", 456, tonumber)
+dockstate = getState("WINDOW_DOCK_STATE")
 
 local full_usc_data
 local cur_usc_data
@@ -120,6 +250,7 @@ function send_search_text(text) -- 开始搜索
     search_text = text
     reaper.SetExtState("UCSTagSearch", "SearchText", search_text, false)
 
+    local os = reaper.GetOS()
     if os ~= "Win32" and os ~= "Win64" then
         reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
         reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
@@ -234,7 +365,7 @@ function display_usc_data(data)
         local locale = get_locale()
         if is_cat_short_enable() then
             GUI.elms.list_category.list = table.map(data, function(item)
-                return item.name:get(locale) .. "  [" .. item.name.cat_short .. "]"
+                return item.name:get(locale) .. " [" .. item.name.cat_short .. "]"
             end)
         else
             GUI.elms.list_category.list = table.map(data, function(item)
@@ -270,7 +401,7 @@ function display_usc_data(data)
         local locale = get_locale()
         if is_cat_id_enable() then
             GUI.elms.list_subcategory.list = table.map(data[category_index].children, function (item)
-                return item.name:get(locale) .. "  [" .. item.cat_id .. "]"
+                return item.name:get(locale) .. " [" .. item.cat_id .. "]"
             end)
         else
             GUI.elms.list_subcategory.list = table.map(data[category_index].children, function (item)
@@ -476,7 +607,7 @@ function display_usc_data(data)
         end
     end
 
-    function GUI.elms.edittext_filter:onr_doubleclick() -- onr_doubleclick() 双击过滤框
+    function GUI.elms.edittext_filter:onr_doubleclick() -- onr_doubleclick() 右键双击过滤框
         self:val("")
 
         GUI.elms.edittext_filter:val("")
@@ -491,7 +622,7 @@ function display_usc_data(data)
         GUI.elms.edittext_filter.focus = true
     end
 
-    function GUI.elms.edittext_search:onr_doubleclick() -- onr_doubleclick() 双击搜索框
+    function GUI.elms.edittext_search:onr_doubleclick() -- onr_doubleclick() 右键双击搜索框
         self:val("")
 
         --if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
@@ -499,7 +630,7 @@ function display_usc_data(data)
         GUI.elms.edittext_search.focus = true
     end
 
-    function GUI.elms.edittext_filter:onmouser_down() -- onmouser_down() 单击过滤框
+    function GUI.elms.edittext_filter:onmouser_down() -- onmouser_down() 右键单击过滤框
         self:val("")
 
         GUI.elms.edittext_filter:val("")
@@ -514,7 +645,7 @@ function display_usc_data(data)
         GUI.elms.edittext_filter.focus = true
     end
 
-    function GUI.elms.edittext_search:onmouser_down() -- onmouser_down() 单击搜索框
+    function GUI.elms.edittext_search:onmouser_down() -- onmouser_down() 右键单击搜索框
         self:val("")
 
         --if GUI.elms.edittext_filter.focus == true then GUI.elms.edittext_filter.focus = false end
@@ -549,10 +680,10 @@ function display_usc_data(data)
         GUI.elms.edittext_filter.focus = true
 
 
-        HWND_USC = reaper.JS_Window_Find("UCS Tag Search",0)
+        local title = reaper.JS_Localize("Media Explorer", "common")
+        HWND_USC = reaper.JS_Window_Find(title, 0)
         reaper.BR_Win32_SetFocus(HWND_USC)
     end
-
 
     -- function GUI.elms.edittext_search:onr_doubleclick()
     --     self:undo()
@@ -566,26 +697,12 @@ end
 
 GUI.Init()
 
-if reaper.APIExists("JS_Window_Find") then
-    hwnd = reaper.JS_Window_Find(GUI.name, true)
-    if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
-else
-    reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'. Then restart REAPER and run the script again. Thank you!\n\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。然後重新啟動 REAPER 並再次運行腳本。謝謝！", "你必須安裝 JS_ReaScriptAPI", 0)
-    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-    if ok then
-        reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-    else
-        reaper.MB(err, "Error", 0)
-    end
-    return reaper.defer(function() end)
-end
-
 GUI.font = function (fnt)
     local font, size, str = table.unpack( type(fnt) == "table" and fnt or  GUI.fonts[fnt])
     if not string.match( reaper.GetOS(), "Win") then
         size = math.floor(size * 0.8)
     else
-        size = math.floor(size+1)
+        size = math.floor(size)
     end
 
     local flags = 0
@@ -599,8 +716,8 @@ end
 
 GUI.OS_fonts = { -- 字体设置
     Windows = {
-        sans = "Calibri", -- "Arial", "Calibri"
-        mono = "Consolas" -- "Consolas", "Courier New", "Lucida Console"
+        sans = FONT_SANS, -- "Calibri"
+        mono = FONT_MONO -- "Consolas"
     },
     OSX = {
         sans = "Helvetica Neue",
@@ -624,14 +741,14 @@ GUI.get_OS_fonts = function()
 end
 
 local fonts = GUI.get_OS_fonts()
-GUI.fonts.monospace = {fonts.mono, 14}
-GUI.fonts[4] = {fonts.sans, 16}
-GUI.fonts[3] = {fonts.sans, 16}
-GUI.fonts.version = {fonts.sans, 12, "i"}
+GUI.fonts.monospace = {fonts.mono, FONT_SIZE_M}
+GUI.fonts[4] = {fonts.sans, FONT_SIZE_4}
+GUI.fonts[3] = {fonts.sans, FONT_SIZE_3}
+GUI.fonts.version = {fonts.sans, FONT_SIZE_V, "i"}
 GUI.colors.white = {225, 225, 225, 255} -- Set gui.lua [color = "white"]
 GUI.Draw_Version = function ()
     if not GUI.version then return 0 end
-    local str = "Script by 再補一刀  -  using Lokasenna_GUI " .. GUI.version
+    local str = "Script by 再補一刀 - using Lokasenna_GUI " .. GUI.version
     GUI.font("version")
     GUI.color("txt")
     local str_w, str_h = gfx.measurestr(str)
@@ -835,10 +952,12 @@ function GUI.func()
         GUI.elms.edittext_filter.focus = true
 
 
-        HWND_USC = reaper.JS_Window_Find("UCS Tag Search",0)
+        local title = reaper.JS_Localize("Media Explorer", "common")
+        HWND_USC = reaper.JS_Window_Find(title, 0)
         reaper.BR_Win32_SetFocus(HWND_USC)
     end
 
+    onSaveWindowSizeAndPosition()
     GUI.onresize = force_size
 end
 

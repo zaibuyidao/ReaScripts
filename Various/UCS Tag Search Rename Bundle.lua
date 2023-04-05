@@ -1,7 +1,7 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.4.0
--- @changelog Update: UCS v8.2
+-- @version 1.4.1
+-- @changelog Added feature to save window size and position
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
