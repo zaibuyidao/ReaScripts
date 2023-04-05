@@ -251,6 +251,51 @@ function send_search_text(text) -- 开始搜索
     end
 end
 
+function replace_cat_id(cat_id)
+    local et = GUI.elms.edittext_search
+    local orig = et:val() or ""
+
+    -- 获取连接符
+    local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
+
+    -- 如果存在现有的 cat_id，则将其替换为新的 cat_id
+    if et.cat_id then
+        local prefix_start, prefix_end = orig:find(et.cat_id, 1, true)
+        if prefix_start and prefix_end then
+            local new_val = orig:sub(1, prefix_start - 1) .. cat_id .. orig:sub(prefix_end + 1)
+            et:val(new_val)
+            et.cat_id = cat_id
+            et.caret = prefix_start + #cat_id
+            et:redraw()
+            return
+        end
+    end
+
+    -- 构造新的连接字符串
+    local append_after = ""
+    if connect == "Default" then
+        append_after = cat_id
+    elseif connect == "$" then
+        append_after = cat_id .. connect
+    elseif connect == "\"\"" then
+        append_after = "\"" .. cat_id .. "\""
+    elseif connect == "^" then
+        append_after = connect .. cat_id
+    else
+        append_after = connect .. " " .. cat_id
+    end
+
+    -- 将新的连接字符串添加到搜索文本中
+    if orig == "" then
+        et:val(cat_id)
+    else
+        et:val(orig .. " " .. append_after)
+    end
+    et.cat_id = cat_id
+    et.caret = et:carettoend()
+    et:redraw()
+end
+
 function append_search(text)
     local orig = GUI.elms.edittext_search:val()
     local append_pre = ""
@@ -479,7 +524,8 @@ function display_usc_data(data)
             elseif is_key_active(KEYS.ALT) then
                 append_search(self.cat_list[self:val()])
             else
-                append_search(self.cat_list[self:val()])
+                -- append_search(self.cat_list[self:val()])
+                replace_cat_id(self.cat_list[self:val()]) -- 替換cat_id
             end
         else
             if is_key_active(KEYS.SHIFT) then
