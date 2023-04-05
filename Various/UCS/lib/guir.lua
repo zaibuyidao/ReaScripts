@@ -18,9 +18,9 @@ GUI.req("Classes/Class - Menubar.lua")()
 -- If any of the requested libraries weren't found, abort the script.
 if missing_lib then return 0 end
 
-GUI.name = "UCS Tag Rename"
-GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 864, 456
-GUI.anchor, GUI.corner = "mouse", "C"
+-- GUI.name = "UCS Tag Rename"
+-- GUI.x, GUI.y, GUI.w, GUI.h = 0, 0, 864, 456
+-- GUI.anchor, GUI.corner = "mouse", "C"
 
 GUI.New("btn_filter", "Button", {
     z = 11,

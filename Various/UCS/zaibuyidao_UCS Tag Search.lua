@@ -171,20 +171,6 @@ require('Set Lokasenna_GUI library')
 require('utils')
 require('ucs')
 require('guis')
-CONFIG = require('config')
-
-function getConfig(configName, default, convert)
-	local cur = CONFIG
-	for k in configName:gmatch("[^%.]+") do
-		if not cur then return default end
-		cur = cur[k]
-	end
-	if cur == nil then return default end
-	if convert then
-		return convert(cur)
-	end
-	return cur
-end
 
 GUI.name = TITLE_NAME
 GUI.x = getState("WINDOW_X", 50, tonumber)
@@ -680,7 +666,7 @@ function display_usc_data(data)
         GUI.elms.edittext_filter.focus = true
 
 
-        local title = reaper.JS_Localize("Media Explorer", "common")
+        local title = reaper.JS_Localize(TITLE_NAME, "common")
         HWND_USC = reaper.JS_Window_Find(title, 0)
         reaper.BR_Win32_SetFocus(HWND_USC)
     end
@@ -951,8 +937,7 @@ function GUI.func()
         GUI.elms.edittext_search.focus = false
         GUI.elms.edittext_filter.focus = true
 
-
-        local title = reaper.JS_Localize("Media Explorer", "common")
+        local title = reaper.JS_Localize(TITLE_NAME, "common")
         HWND_USC = reaper.JS_Window_Find(title, 0)
         reaper.BR_Win32_SetFocus(HWND_USC)
     end
