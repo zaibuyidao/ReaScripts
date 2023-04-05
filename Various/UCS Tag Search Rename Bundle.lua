@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.4.2
+-- @version 1.4.3
 -- @changelog Added feature to save window size and position
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
