@@ -296,6 +296,51 @@ function replace_cat_id(cat_id)
     et:redraw()
 end
 
+function replace_cat_short(cat_short)
+    local et = GUI.elms.edittext_search
+    local orig = et:val() or ""
+
+    -- 获取连接符
+    local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
+
+    -- 如果存在现有的 cat_short，则将其替换为新的 cat_short
+    if et.cat_short then
+        local prefix_start, prefix_end = orig:find(et.cat_short, 1, true)
+        if prefix_start and prefix_end then
+            local new_val = orig:sub(1, prefix_start - 1) .. cat_short .. orig:sub(prefix_end + 1)
+            et:val(new_val)
+            et.cat_short = cat_short
+            et.caret = prefix_start + #cat_short
+            et:redraw()
+            return
+        end
+    end
+
+    -- 构造新的连接字符串
+    local append_after = ""
+    if connect == "Default" then
+        append_after = cat_short
+    elseif connect == "$" then
+        append_after = cat_short .. connect
+    elseif connect == "\"\"" then
+        append_after = "\"" .. cat_short .. "\""
+    elseif connect == "^" then
+        append_after = connect .. cat_short
+    else
+        append_after = connect .. " " .. cat_short
+    end
+
+    -- 将新的连接字符串添加到搜索文本中
+    if orig == "" then
+        et:val(cat_short)
+    else
+        et:val(orig .. " " .. append_after)
+    end
+    et.cat_short = cat_short
+    et.caret = et:carettoend()
+    et:redraw()
+end
+
 function append_search(text)
     local orig = GUI.elms.edittext_search:val()
     local append_pre = ""
@@ -491,15 +536,15 @@ function display_usc_data(data)
             elseif is_key_active(KEYS.SHIFT) then
                 append_search(self.cat_egory_list[self:val()])
             elseif is_key_active(KEYS.ALT) then
-                append_search(self.cat_short_list[self:val()])
+                replace_cat_short(self.cat_short_list[self:val()])
             else
-                append_search(self.cat_short_list[self:val()])
+                replace_cat_short(self.cat_short_list[self:val()])
             end
         else
             if is_key_active(KEYS.SHIFT) then
                 append_search(self.cat_egory_list[self:val()])
             elseif is_key_active(KEYS.ALT) then
-                append_search(self.cat_short_list[self:val()])
+                replace_cat_short(self.cat_short_list[self:val()])
             elseif is_key_active(KEYS.CONTROL) then
                 append_search(self.name_list[self:val()])
             else
@@ -522,7 +567,7 @@ function display_usc_data(data)
             elseif is_key_active(KEYS.SHIFT) then
                 append_search(self.subcategory_en_list[self:val()])
             elseif is_key_active(KEYS.ALT) then
-                append_search(self.cat_list[self:val()])
+                replace_cat_id(self.cat_list[self:val()])
             else
                 -- append_search(self.cat_list[self:val()])
                 replace_cat_id(self.cat_list[self:val()]) -- 替換cat_id
@@ -531,7 +576,7 @@ function display_usc_data(data)
             if is_key_active(KEYS.SHIFT) then
                 append_search(self.subcategory_en_list[self:val()])
             elseif is_key_active(KEYS.ALT) then
-                append_search(self.cat_list[self:val()])
+                replace_cat_id(self.cat_list[self:val()])
             else
                 append_search(self.name_list[self:val()])
             end
