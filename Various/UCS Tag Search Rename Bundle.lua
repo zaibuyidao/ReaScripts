@@ -1,7 +1,7 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.4.4
--- @changelog [UCS Tag Search] Added CatShort replacement feature to the search function.
+-- @version 1.4.5
+-- @changelog Added CatShort replacement feature to the search function.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
