@@ -1,9 +1,8 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.4.8
+-- @version 1.4.9
 -- @changelog
---   Fix the CatShort replacement issue
---   add pin
+--   Adjust UI layout
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts

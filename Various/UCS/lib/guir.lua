@@ -49,10 +49,22 @@ GUI.New("btn_clear", "Button", {
 GUI.New("btn_search", "Button", {
     z = 11,
     x = 640,
-    y = 336,
+    y = 374,
     w = 96,
-    h = 96,
-    caption = "ENTER",
+    h = 24,
+    caption = "Renaming",
+    font = 3,
+    col_txt = "txt",
+    col_fill = "elm_frame"
+})
+
+GUI.New("btn_search_close", "Button", {
+    z = 11,
+    x = 640,
+    y = 408,
+    w = 96,
+    h = 24,
+    caption = "Close",
     font = 3,
     col_txt = "txt",
     col_fill = "elm_frame"
@@ -61,7 +73,7 @@ GUI.New("btn_search", "Button", {
 GUI.New("radio_pro", "Radio", {
     z = 11,
     x = 640,
-    y = 32,
+    y = 48,
     w = 96,
     h = 160,
     caption = "Processing",
@@ -101,7 +113,7 @@ GUI.New("radio_connect", "Radio", {
 GUI.New("radio_order", "Radio", {
     z = 11,
     x = 640,
-    y = 224,
+    y = 232,
     w = 96,
     h = 88,
     caption = "Take order",
@@ -245,7 +257,7 @@ mnu_file = {
 GUI.New("menubar_wild", "Menubar", {
     z = 11,
     x = 752,
-    y = 336,
+    y = 374,
     w = 24,
     h = 24,
     menus = {{title = "    ", options = {

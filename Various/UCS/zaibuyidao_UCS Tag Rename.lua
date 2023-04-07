@@ -1406,7 +1406,7 @@ function send_search_text(text) -- 开始搜索
 end
 
 seperators = {
-    {name = "Underline", value = "_"},
+    {name = "Underscore", value = "_"},
     {name = "Hyphen", value = "-"},
     {name = "Space", value = " "},
     {name = "None", value = ""}
@@ -1972,6 +1972,10 @@ function display_usc_data(data)
 
     function GUI.elms.btn_search:func()
         renaming()
+    end
+
+    function GUI.elms.btn_search_close:func()
+        gfx.quit()
     end
 
     function GUI.elms.edittext_search:onmousedown()

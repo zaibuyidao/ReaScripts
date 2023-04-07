@@ -82,10 +82,22 @@ GUI.New("btn_clear", "Button", {
 GUI.New("btn_search", "Button", {
     z = 11,
     x = 640,
-    y = 336,
+    y = 376,
     w = 96,
-    h = 96,
-    caption = "ENTER",
+    h = 24,
+    caption = "Search",
+    font = 3,
+    col_txt = "txt",
+    col_fill = "elm_frame"
+})
+
+GUI.New("btn_search_close", "Button", {
+    z = 11,
+    x = 640,
+    y = 408,
+    w = 96,
+    h = 24,
+    caption = "Close",
     font = 3,
     col_txt = "txt",
     col_fill = "elm_frame"

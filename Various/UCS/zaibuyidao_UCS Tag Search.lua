@@ -685,6 +685,10 @@ function display_usc_data(data)
         GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
     end
 
+    function GUI.elms.btn_search_close:func()
+        gfx.quit()
+    end
+
     function GUI.elms.edittext_search:onmousedown()
         GUI.elms.edittext_search:_onmousedown()
         if is_key_active(KEYS.ALT) then
