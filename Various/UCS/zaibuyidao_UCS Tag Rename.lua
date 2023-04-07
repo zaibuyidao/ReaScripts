@@ -1462,53 +1462,76 @@ end
 function replace_cat_short(cat_short)
     local et = GUI.elms.edittext_search
     local orig = et:val()
-    local sep = get_seperator()
 
-    if sep ~= "" then
-        -- 用分隔符拆分原始字符串
-        local splitted = {}
-        for part in orig:gmatch("([^" .. sep .. "]+)") do
-            table.insert(splitted, part)
-        end
+    -- 定义分隔符
+    local separators = {"_", "-", " "}
     
-        -- 查找现有的 cat_short 并替换
+    -- 查找并替换 cat_short
+    local function replace_cat(orig, cat_short)
         local found = false
-        for i, part in ipairs(splitted) do
-            if part == et.cat_short then
-                splitted[i] = cat_short
-                found = true
+        for _, sep in ipairs(separators) do
+            local pattern = "([^" .. sep .. "]+)"
+            local splitted = {}
+            for part in orig:gmatch(pattern) do
+                table.insert(splitted, part)
+            end
+
+            for i, part in ipairs(splitted) do
+                if part == et.cat_short then
+                    splitted[i] = cat_short
+                    found = true
+                    break
+                end
+            end
+
+            if found then
+                local new_val = table.concat(splitted, sep)
+                et:val(new_val)
+                et.cat_short = cat_short
+                et.caret = new_val:find(cat_short, 1, true)
+                et:redraw()
                 break
             end
         end
-    
-        -- 如果找到并替换了现有的 cat_short，则重新组合字符串
-        if found then
-            local new_val = table.concat(splitted, sep)
-            et:val(new_val)
-            et.cat_short = cat_short
-            et.caret = new_val:find(cat_short, 1, true)
-            et:redraw()
+        return found
+    end
+
+    local replaced = false
+    -- 检查是否成功替换了 cat_short
+    if get_seperator() ~= "" then
+        replaced = replace_cat(orig, cat_short)
+    end
+
+    -- 如果没有找到并替换现有的 cat_short，则添加新的 cat_short
+    if not replaced then
+        -- 如果原始字符串为空，则直接添加 cat_short
+        if orig == "" then
+            et:val(cat_short)
+        -- 如果原始字符串等于 et.cat_short，则直接替换为新的 cat_short
+        elseif orig == et.cat_short then
+            et:val(cat_short)
+        -- 否则，在原始字符串后添加指定的分隔符和新的 cat_short
         else
-            -- 构造新的连接字符串
-            local append_after = sep .. cat_short
-    
-            -- 将新的连接字符串添加到搜索文本中
-            if orig == "" then
-                et:val(cat_short)
-            else
-                et:val(orig .. append_after)
+            local added = false
+            local current_sep = get_seperator()
+            for _, sep in ipairs(separators) do
+                if current_sep ~= "" and orig:find(sep) then
+                    et:val(orig .. sep .. cat_short) -- 三个分隔符的任何一个都作为通用分隔符，否则使用 current_sep
+                    added = true
+                    break
+                end
             end
-            et.cat_short = cat_short
-            et.caret = et:carettoend()
-            et:redraw()
+            if not added then
+                -- 使用指定的分隔符添加新的 cat_short
+                if current_sep ~= "" then
+                    et:val(orig .. current_sep .. cat_short)
+                else
+                    -- 如果分隔符为 None，则直接添加 cat_short，不添加连接符
+                    et:val(orig .. cat_short)
+                end
+            end
         end
-    else
-        local result = orig
-        if not is_sep(orig:sub(#orig, #orig)) and #orig > 0 then
-            result = result .. sep
-        end
-        result = result .. cat_short
-        et:val(result)
+        et.cat_short = cat_short
         et.caret = et:carettoend()
         et:redraw()
     end

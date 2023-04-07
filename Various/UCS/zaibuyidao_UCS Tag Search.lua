@@ -255,42 +255,61 @@ function replace_cat_id(cat_id)
     local et = GUI.elms.edittext_search
     local orig = et:val() or ""
 
-    -- 获取连接符
-    local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
+    -- 分割原始文本
+    local words = {}
+    for word in orig:gmatch("%S+") do
+        table.insert(words, word)
+    end
 
-    -- 如果存在现有的 cat_id，则将其替换为新的 cat_id
-    if et.cat_id then
-        local prefix_start, prefix_end = orig:find(et.cat_id, 1, true)
-        if prefix_start and prefix_end then
-            local new_val = orig:sub(1, prefix_start - 1) .. cat_id .. orig:sub(prefix_end + 1)
-            et:val(new_val)
-            et.cat_id = cat_id
-            et.caret = prefix_start + #cat_id
-            et:redraw()
-            return
+    -- 查找并替换旧的 cat_id
+    local replaced = false
+    for i, word in ipairs(words) do
+        local cat_word = word
+
+        -- 检查连接符并保存连接符
+        local prefix_connector = ""
+        local suffix_connector = ""
+
+        if cat_word:match("^\"") and cat_word:match("\"$") then
+            cat_word = cat_word:gsub("^\"", ""):gsub("\"$", "")
+            prefix_connector = "\""
+            suffix_connector = "\""
+        elseif cat_word:match("^%^") then
+            cat_word = cat_word:gsub("^%^", "")
+            prefix_connector = "^"
+        elseif cat_word:match("%$$") then
+            cat_word = cat_word:gsub("%$$", "")
+            suffix_connector = "$"
+        end
+
+        if cat_word == et.cat_id then
+            words[i] = prefix_connector .. cat_id .. suffix_connector
+            replaced = true
+            break
         end
     end
 
-    -- 构造新的连接字符串
-    local append_after = ""
-    if connect == "Default" then
-        append_after = cat_id
-    elseif connect == "$" then
-        append_after = cat_id .. connect
-    elseif connect == "\"\"" then
-        append_after = "\"" .. cat_id .. "\""
-    elseif connect == "^" then
-        append_after = connect .. cat_id
-    else
-        append_after = connect .. " " .. cat_id
+    -- 如果没有找到旧的 cat_id，将新的 cat_id 添加到末尾
+    if not replaced then
+        local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
+        local append_after = ""
+        if connect == "Default" then
+            append_after = cat_id
+        elseif connect == "$" then
+            append_after = cat_id .. connect
+        elseif connect == "\"\"" then
+            append_after = "\"" .. cat_id .. "\""
+        elseif connect == "^" then
+            append_after = connect .. cat_id
+        else
+            append_after = connect .. " " .. cat_id
+        end
+        table.insert(words, append_after)
     end
 
-    -- 将新的连接字符串添加到搜索文本中
-    if orig == "" then
-        et:val(cat_id)
-    else
-        et:val(orig .. " " .. append_after)
-    end
+    -- 更新搜索文本和 cat_id
+    local new_val = table.concat(words, " ")
+    et:val(new_val)
     et.cat_id = cat_id
     et.caret = et:carettoend()
     et:redraw()
@@ -300,42 +319,61 @@ function replace_cat_short(cat_short)
     local et = GUI.elms.edittext_search
     local orig = et:val() or ""
 
-    -- 获取连接符
-    local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
+    -- 分割原始文本
+    local words = {}
+    for word in orig:gmatch("%S+") do
+        table.insert(words, word)
+    end
 
-    -- 如果存在现有的 cat_short，则将其替换为新的 cat_short
-    if et.cat_short then
-        local prefix_start, prefix_end = orig:find(et.cat_short, 1, true)
-        if prefix_start and prefix_end then
-            local new_val = orig:sub(1, prefix_start - 1) .. cat_short .. orig:sub(prefix_end + 1)
-            et:val(new_val)
-            et.cat_short = cat_short
-            et.caret = prefix_start + #cat_short
-            et:redraw()
-            return
+    -- 查找并替换旧的 cat_short
+    local replaced = false
+    for i, word in ipairs(words) do
+        local cat_word = word
+
+        -- 检查连接符并保存连接符
+        local prefix_connector = ""
+        local suffix_connector = ""
+
+        if cat_word:match("^\"") and cat_word:match("\"$") then
+            cat_word = cat_word:gsub("^\"", ""):gsub("\"$", "")
+            prefix_connector = "\""
+            suffix_connector = "\""
+        elseif cat_word:match("^%^") then
+            cat_word = cat_word:gsub("^%^", "")
+            prefix_connector = "^"
+        elseif cat_word:match("%$$") then
+            cat_word = cat_word:gsub("%$$", "")
+            suffix_connector = "$"
+        end
+
+        if cat_word == et.cat_short then
+            words[i] = prefix_connector .. cat_short .. suffix_connector
+            replaced = true
+            break
         end
     end
 
-    -- 构造新的连接字符串
-    local append_after = ""
-    if connect == "Default" then
-        append_after = cat_short
-    elseif connect == "$" then
-        append_after = cat_short .. connect
-    elseif connect == "\"\"" then
-        append_after = "\"" .. cat_short .. "\""
-    elseif connect == "^" then
-        append_after = connect .. cat_short
-    else
-        append_after = connect .. " " .. cat_short
+    -- 如果没有找到旧的 cat_short，将新的 cat_short 添加到末尾
+    if not replaced then
+        local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
+        local append_after = ""
+        if connect == "Default" then
+            append_after = cat_short
+        elseif connect == "$" then
+            append_after = cat_short .. connect
+        elseif connect == "\"\"" then
+            append_after = "\"" .. cat_short .. "\""
+        elseif connect == "^" then
+            append_after = connect .. cat_short
+        else
+            append_after = connect .. " " .. cat_short
+        end
+        table.insert(words, append_after)
     end
 
-    -- 将新的连接字符串添加到搜索文本中
-    if orig == "" then
-        et:val(cat_short)
-    else
-        et:val(orig .. " " .. append_after)
-    end
+    -- 更新搜索文本和 cat_short
+    local new_val = table.concat(words, " ")
+    et:val(new_val)
     et.cat_short = cat_short
     et.caret = et:carettoend()
     et:redraw()
