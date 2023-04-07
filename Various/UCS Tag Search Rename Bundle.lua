@@ -1,8 +1,8 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.4.9
+-- @version 1.5.0
 -- @changelog
---   Adjust UI layout
+--   Added "search immediately" for Tag Search.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts

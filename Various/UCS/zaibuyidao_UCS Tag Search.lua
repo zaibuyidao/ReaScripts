@@ -199,6 +199,10 @@ function is_cat_short_enable() -- 启用CatShort
     return GUI.elms.check_cat:val()[2] == true
 end
 
+function is_immediately_enable() -- 启用立刻搜索
+    return GUI.elms.check_cat:val()[5] == true
+end
+
 function reload_usc_data()
     full_usc_data = {}
     if should_load_system_usc_data() then
@@ -231,10 +235,9 @@ function send_search_text(text) -- 开始搜索
     local hwnd = reaper.JS_Window_Find(title, true)
     local search = reaper.JS_Window_FindChildByID(hwnd, 1015)
     if search == nil then return end
+
     reaper.JS_Window_SetTitle(search, text)
-    
-    search_text = text
-    reaper.SetExtState("UCSTagSearch", "SearchText", search_text, false)
+    reaper.SetExtState("UCSTagSearch", "SearchText", text, false)
 
     local os = reaper.GetOS()
     if os ~= "Win32" and os ~= "Win64" then
@@ -242,12 +245,11 @@ function send_search_text(text) -- 开始搜索
         reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
     else
         if reaper.GetToggleCommandStateEx(32063, 42051) == 1 then
-            -- reaper.SetToggleCommandState(32063, 42051, 0) -- 无效
-            reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+            reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0) -- reaper.SetToggleCommandState(32063, 42051, 0) -- 无效
         end
         -- https://github.com/justinfrankel/WDL/blob/main/WDL/swell/swell-types.h
-        reaper.JS_WindowMessage_Post(search, "WM_KEYDOWN", 0x0020, 0, 0, 0) -- 空格
-        reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x0008, 0, 0, 0) -- 退格
+        -- reaper.JS_WindowMessage_Post(search, "WM_KEYDOWN", 0x20, 0, 0, 0) -- 空格
+        reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x20, 0,0,0)
     end
 end
 
@@ -569,24 +571,48 @@ function display_usc_data(data)
 
     function GUI.elms.list_category:ondoubleclick()
         if is_cat_short_enable() then
-            if is_key_active(KEYS.CONTROL) then
-                append_search(self.name_list[self:val()])
-            elseif is_key_active(KEYS.SHIFT) then
-                append_search(self.cat_egory_list[self:val()])
-            elseif is_key_active(KEYS.ALT) then
-                replace_cat_short(self.cat_short_list[self:val()])
+            if is_immediately_enable() then
+                if is_key_active(KEYS.CONTROL) then
+                    send_search_text(self.name_list[self:val()])
+                elseif is_key_active(KEYS.SHIFT) then
+                    send_search_text(self.cat_egory_list[self:val()])
+                elseif is_key_active(KEYS.ALT) then
+                    send_search_text(self.cat_short_list[self:val()])
+                else
+                    send_search_text(self.cat_short_list[self:val()])
+                end
             else
-                replace_cat_short(self.cat_short_list[self:val()])
+                if is_key_active(KEYS.CONTROL) then
+                    append_search(self.name_list[self:val()])
+                elseif is_key_active(KEYS.SHIFT) then
+                    append_search(self.cat_egory_list[self:val()])
+                elseif is_key_active(KEYS.ALT) then
+                    replace_cat_short(self.cat_short_list[self:val()])
+                else
+                    replace_cat_short(self.cat_short_list[self:val()])
+                end
             end
         else
-            if is_key_active(KEYS.SHIFT) then
-                append_search(self.cat_egory_list[self:val()])
-            elseif is_key_active(KEYS.ALT) then
-                replace_cat_short(self.cat_short_list[self:val()])
-            elseif is_key_active(KEYS.CONTROL) then
-                append_search(self.name_list[self:val()])
+            if is_immediately_enable() then
+                if is_key_active(KEYS.SHIFT) then
+                    send_search_text(self.cat_egory_list[self:val()])
+                elseif is_key_active(KEYS.ALT) then
+                    send_search_text(self.cat_short_list[self:val()])
+                elseif is_key_active(KEYS.CONTROL) then
+                    send_search_text(self.name_list[self:val()])
+                else
+                    send_search_text(self.name_list[self:val()])
+                end
             else
-                append_search(self.name_list[self:val()])
+                if is_key_active(KEYS.SHIFT) then
+                    append_search(self.cat_egory_list[self:val()])
+                elseif is_key_active(KEYS.ALT) then
+                    replace_cat_short(self.cat_short_list[self:val()])
+                elseif is_key_active(KEYS.CONTROL) then
+                    append_search(self.name_list[self:val()])
+                else
+                    append_search(self.name_list[self:val()])
+                end
             end
         end
     end
@@ -600,23 +626,45 @@ function display_usc_data(data)
 
     function GUI.elms.list_subcategory:ondoubleclick()
         if is_cat_id_enable() then
-            if is_key_active(KEYS.CONTROL) then
-                append_search(self.name_list[self:val()])
-            elseif is_key_active(KEYS.SHIFT) then
-                append_search(self.subcategory_en_list[self:val()])
-            elseif is_key_active(KEYS.ALT) then
-                replace_cat_id(self.cat_list[self:val()])
+            if is_immediately_enable() then
+                if is_key_active(KEYS.CONTROL) then
+                    send_search_text(self.name_list[self:val()])
+                elseif is_key_active(KEYS.SHIFT) then
+                    send_search_text(self.subcategory_en_list[self:val()])
+                elseif is_key_active(KEYS.ALT) then
+                    send_search_text(self.cat_list[self:val()])
+                else
+                    send_search_text(self.cat_list[self:val()]) -- 替換cat_id
+                end
             else
-                -- append_search(self.cat_list[self:val()])
-                replace_cat_id(self.cat_list[self:val()]) -- 替換cat_id
+                if is_key_active(KEYS.CONTROL) then
+                    append_search(self.name_list[self:val()])
+                elseif is_key_active(KEYS.SHIFT) then
+                    append_search(self.subcategory_en_list[self:val()])
+                elseif is_key_active(KEYS.ALT) then
+                    replace_cat_id(self.cat_list[self:val()])
+                else
+                    -- append_search(self.cat_list[self:val()])
+                    replace_cat_id(self.cat_list[self:val()]) -- 替換cat_id
+                end
             end
         else
-            if is_key_active(KEYS.SHIFT) then
-                append_search(self.subcategory_en_list[self:val()])
-            elseif is_key_active(KEYS.ALT) then
-                replace_cat_id(self.cat_list[self:val()])
+            if is_immediately_enable() then
+                if is_key_active(KEYS.SHIFT) then
+                    send_search_text(self.subcategory_en_list[self:val()])
+                elseif is_key_active(KEYS.ALT) then
+                    replace_cat_id(self.cat_list[self:val()])
+                else
+                    send_search_text(self.name_list[self:val()])
+                end
             else
-                append_search(self.name_list[self:val()])
+                if is_key_active(KEYS.SHIFT) then
+                    append_search(self.subcategory_en_list[self:val()])
+                elseif is_key_active(KEYS.ALT) then
+                    replace_cat_id(self.cat_list[self:val()])
+                else
+                    append_search(self.name_list[self:val()])
+                end
             end
         end
     end
@@ -628,10 +676,18 @@ function display_usc_data(data)
     end
 
     function GUI.elms.list_synonym:ondoubleclick()
-        if is_key_active(KEYS.SHIFT) then
-            append_search(self.synonyms_en_list[self:val()])
+        if is_immediately_enable() then
+            if is_key_active(KEYS.SHIFT) then
+                send_search_text(self.synonyms_en_list[self:val()])
+            else
+                send_search_text(self.list[self:val()])
+            end
         else
-            append_search(self.list[self:val()])
+            if is_key_active(KEYS.SHIFT) then
+                append_search(self.synonyms_en_list[self:val()])
+            else
+                append_search(self.list[self:val()])
+            end
         end
     end
 
@@ -878,7 +934,7 @@ GUI.Draw_Version = function ()
     gfx.drawstr(str)
 end
 
-GUI.elms.check_cat:val({[1] = true, [2] = false, [3] = true, [4] = true})
+GUI.elms.check_cat:val({[1] = true, [2] = false, [3] = true, [4] = true, [5] = false})
 switch_lang(1)
 
 local load_system_usc_data_enabled = should_load_system_usc_data()
@@ -1020,6 +1076,14 @@ function GUI.func()
             GUI.elms.check_cat:val({[4] = false})
         else
             GUI.elms.check_cat:val({[4] = true})
+        end
+    end
+
+    if char == 26166 then -- F6 键
+        if is_immediately_enable() then
+            GUI.elms.check_cat:val({[5] = false})
+        else
+            GUI.elms.check_cat:val({[5] = true})
         end
     end
 

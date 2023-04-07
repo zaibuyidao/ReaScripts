@@ -184,9 +184,9 @@ GUI.New("check_cat", "Checklist", {
     x = 640,
     y = 48,
     w = 96,
-    h = 104,
+    h = 128,
     caption = "",
-    optarray = {"CatID", "CatShort", "UCS list", "Custom"},
+    optarray = {"CatID", "CatShort", "UCS list", "Custom", "Send now"},
     dir = "v",
     pad = 4,
     font_a = 2,
@@ -203,7 +203,7 @@ GUI.New("check_cat", "Checklist", {
 GUI.New("radio_connect", "Radio", {
     z = 11,
     x = 640,
-    y = 152,
+    y = 176,
     w = 96,
     h = 176,
     caption = "", -- Condition
