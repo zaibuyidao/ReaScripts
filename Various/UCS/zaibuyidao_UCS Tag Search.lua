@@ -921,6 +921,11 @@ local function force_size() -- 锁定GUI边界
     GUI.cur_w, GUI.cur_h = GUI.w, GUI.h
 end
 
+if reaper.JS_Window_FindEx then
+    local hwnd = reaper.JS_Window_Find(TITLE_NAME, true)
+    if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
+end
+
 -- if reaper.GetToggleCommandStateEx(32063, 42051) == 1 then -- 获取切换Enter搜素的状态
 --     local title = reaper.JS_Localize("Media Explorer", "common")
 --     local hwnd = reaper.JS_Window_Find(title, true)

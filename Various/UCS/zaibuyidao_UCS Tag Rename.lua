@@ -2202,6 +2202,11 @@ local function force_size() -- 锁定GUI边界
     GUI.cur_w, GUI.cur_h = GUI.w, GUI.h
 end
 
+if reaper.JS_Window_FindEx then
+    local hwnd = reaper.JS_Window_Find(TITLE_NAME, true)
+    if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
+end
+
 function GUI.func()
     process = GUI.elms.radio_pro.optarray[GUI.elms.radio_pro:val()]
     take_order = GUI.elms.radio_order.optarray[GUI.elms.radio_order:val()]
