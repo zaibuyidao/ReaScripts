@@ -1459,6 +1459,50 @@ function prepend_cat_id(cat_id)
     et.cat_id = cat_id
 end
 
+function replace_cat_short(cat_short)
+    local et = GUI.elms.edittext_search
+    local orig = et:val()
+    local sep = get_seperator()
+
+    -- 用分隔符拆分原始字符串
+    local splitted = {}
+    for part in orig:gmatch("([^" .. sep .. "]+)") do
+        table.insert(splitted, part)
+    end
+
+    -- 查找现有的 cat_short 并替换
+    local found = false
+    for i, part in ipairs(splitted) do
+        if part == et.cat_short then
+            splitted[i] = cat_short
+            found = true
+            break
+        end
+    end
+
+    -- 如果找到并替换了现有的 cat_short，则重新组合字符串
+    if found then
+        local new_val = table.concat(splitted, sep)
+        et:val(new_val)
+        et.cat_short = cat_short
+        et.caret = new_val:find(cat_short, 1, true)
+        et:redraw()
+    else
+        -- 构造新的连接字符串
+        local append_after = sep .. cat_short
+
+        -- 将新的连接字符串添加到搜索文本中
+        if orig == "" then
+            et:val(cat_short)
+        else
+            et:val(orig .. append_after)
+        end
+        et.cat_short = cat_short
+        et.caret = et:carettoend()
+        et:redraw()
+    end
+end
+
 function append_search_underline(text)
     local et = GUI.elms.edittext_search
     local orig = et:val()
@@ -1774,9 +1818,9 @@ function display_usc_data(data)
                     append_search_none(self.cat_egory_list[self:val()])
                 end
             elseif is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) and not is_key_active(KEYS.CONTROL) then
-                append_search(self.cat_short_list[self:val()])
+                replace_cat_short(self.cat_short_list[self:val()])
             else
-                append_search(self.cat_short_list[self:val()])
+                replace_cat_short(self.cat_short_list[self:val()])
             end
         else
             if is_key_active(KEYS.SHIFT) then
@@ -1789,7 +1833,7 @@ function display_usc_data(data)
                     append_search_none(self.cat_egory_list[self:val()])
                 end
             elseif is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) and not is_key_active(KEYS.CONTROL) then
-                append_search(self.cat_short_list[self:val()])
+                replace_cat_short(self.cat_short_list[self:val()])
             elseif is_key_active(KEYS.CONTROL) and not is_key_active(KEYS.ALT) and not is_key_active(KEYS.SHIFT) then
                 append_search(self.name_list[self:val()])
             else
