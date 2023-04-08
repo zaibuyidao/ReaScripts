@@ -2307,12 +2307,24 @@ function GUI.func()
         end
     end
 
+    -- if char == 26166 then -- F6 键
+    --     GUI.elms.radio_connect:val(1)
+    -- elseif char == 26167 then -- F7 键
+    --     GUI.elms.radio_connect:val(2)
+    -- elseif char == 26168 then -- F8 键
+    --     GUI.elms.radio_connect:val(4)
+    -- end
+
     if char == 26166 then -- F6 键
-        GUI.elms.radio_connect:val(1)
-    elseif char == 26167 then -- F7 键
-        GUI.elms.radio_connect:val(2)
-    elseif char == 26168 then -- F8 键
-        GUI.elms.radio_connect:val(4)
+        switch_lang(1)
+    end
+
+    if char == 26167 then -- F7 键
+        switch_lang(2)
+    end
+
+    if char == 26168 then -- F8 键
+        switch_lang(3)
     end
 
     if char == 26169 then -- F9 键
