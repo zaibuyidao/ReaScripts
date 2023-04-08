@@ -2160,7 +2160,16 @@ GUI.Draw_Version = function ()
 end
 
 GUI.elms.check_cat:val({[1] = true, [2] = false, [3] = true, [4] = true, [5] = false})
-switch_lang(1)
+current_lang_index = 1
+switch_lang(current_lang_index)
+
+function auto_switch_language()
+    current_lang_index = current_lang_index + 1
+    if current_lang_index > #LANGS then
+        current_lang_index = 1
+    end
+    switch_lang(current_lang_index)
+end
 
 local load_system_usc_data_enabled = should_load_system_usc_data()
 local load_user_usc_data_enabled = should_load_user_usc_data()
@@ -2304,6 +2313,26 @@ function GUI.func()
         GUI.elms.radio_connect:val(2)
     elseif char == 26168 then -- F8 键
         GUI.elms.radio_connect:val(4)
+    end
+
+    if char == 26169 then -- F9 键
+        auto_switch_language()
+    end
+
+    if char == 6697264 then -- F10 键
+        current_function_index = GUI.elms.radio_connect:val()
+
+        GUI.elms.radio_connect:val(current_function_index)
+
+        function auto_switch_function()
+            current_function_index = current_function_index + 1
+            if current_function_index > #GUI.elms.radio_connect.optarray then -- 分隔符长度
+                current_function_index = 1
+            end
+            GUI.elms.radio_connect:val(current_function_index)
+        end
+
+        auto_switch_function()
     end
 
     if char == 9 then -- TAB 键
