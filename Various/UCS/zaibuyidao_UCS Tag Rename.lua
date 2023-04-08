@@ -1962,6 +1962,10 @@ function display_usc_data(data)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
 
+        GUI.elms.list_category:scroll_to_top()
+        GUI.elms.list_subcategory:scroll_to_top()
+        GUI.elms.list_synonym:scroll_to_top()
+
         GUI.elms.edittext_search.focus = false
         GUI.elms.edittext_filter.focus = true
     end
@@ -2009,6 +2013,10 @@ function display_usc_data(data)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
 
+        GUI.elms.list_category:scroll_to_top()
+        GUI.elms.list_subcategory:scroll_to_top()
+        GUI.elms.list_synonym:scroll_to_top()
+
         GUI.elms.edittext_search.focus = false
         GUI.elms.edittext_filter.focus = true
     end
@@ -2029,6 +2037,10 @@ function display_usc_data(data)
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
+
+        GUI.elms.list_category:scroll_to_top()
+        GUI.elms.list_subcategory:scroll_to_top()
+        GUI.elms.list_synonym:scroll_to_top()
 
         GUI.elms.edittext_search.focus = false
         GUI.elms.edittext_filter.focus = true
@@ -2245,6 +2257,22 @@ function GUI.func()
     -- 键值处理
     local char = GUI.char
     -- print(char)
+
+    local listboxes = {
+        GUI.elms.list_category,
+        GUI.elms.list_subcategory,
+        GUI.elms.list_synonym
+    }
+
+    if char == 1685026670 or char == 30064 then -- Up or Down arrow key
+        for _, listbox in ipairs(listboxes) do
+            if listbox.focus then
+                listbox:onkeydown(char)
+                break
+            end
+        end
+    end
+    
     if char == 13 then -- Enter 键
         if is_key_active(KEYS.CONTROL) then -- 同时按住Ctrl
             current_filter_pattern = GUI.elms.edittext_filter:val()
@@ -2266,6 +2294,10 @@ function GUI.func()
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
+
+        GUI.elms.list_category:scroll_to_top()
+        GUI.elms.list_subcategory:scroll_to_top()
+        GUI.elms.list_synonym:scroll_to_top()
 
         GUI.elms.edittext_search.focus = false
         GUI.elms.edittext_filter.focus = true

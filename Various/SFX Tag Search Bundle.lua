@@ -1,8 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.4.3
+-- @version 1.4.4
 -- @changelog
---   Optimizing Keyword Filtering Matching.
+--   Add up and down arrow key scrolling functionality to UCS list
+--   Add "scroll to top" feature to UCS list
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
