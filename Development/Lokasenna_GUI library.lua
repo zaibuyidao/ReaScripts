@@ -1,8 +1,8 @@
 --[[
 Description: Get Lokasenna_GUI library
-Version: 2.16.16
+Version: 2.16.17
 Changelog:
-    Fix listbox bug
+    Add up and down arrow key scrolling functionality to the Listbox
 Author: Lokasenna
 Provides:
     [main]   Lokasenna_GUI Library/Set Lokasenna_GUI library.lua

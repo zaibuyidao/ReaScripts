@@ -444,3 +444,23 @@ function GUI.Listbox:selectrange(mouse)
 	end
 
 end
+
+function GUI.Listbox:scroll_to_top() -- 跳转到顶部
+    self.wnd_y = 1
+    self:redraw()
+end
+
+function GUI.Listbox:onkeydown(key) -- 按键上下滚动
+    local dir
+    if key == 30064 then -- Up arrow key
+        dir = -1
+    elseif key == 1685026670 then -- Down arrow key 
+        dir = 1
+    else
+        return
+    end
+
+    self.wnd_y = GUI.clamp(1, self.wnd_y + dir, math.max(#self.list - self.wnd_h + 1, 1))
+
+    self:redraw()
+end
