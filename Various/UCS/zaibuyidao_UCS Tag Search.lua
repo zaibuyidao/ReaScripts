@@ -127,6 +127,7 @@ if language == "简体中文" then
     WINDOW_NAME = "UCS 标签搜索器"
     FONT_SANS = "SimSun" -- "SimSun"、"Microsoft YaHei"、"Calibri"、"华文中宋"、"华文宋体"、"华文细黑"
     FONT_MONO = "SimSun"
+    FONT_SIZE_2 = 14
     FONT_SIZE_3 = 14
     FONT_SIZE_4 = 14
     FONT_SIZE_M = 14
@@ -139,6 +140,7 @@ elseif language == "繁体中文" then
     WINDOW_NAME = "UCS 標簽搜索器"
     FONT_SANS = "SimSun" -- "SimSun" "Microsoft YaHei" "Calibri"
     FONT_MONO = "SimSun"
+    FONT_SIZE_2 = 14
     FONT_SIZE_3 = 14
     FONT_SIZE_4 = 14
     FONT_SIZE_M = 14
@@ -151,6 +153,7 @@ else
     WINDOW_NAME = "UCS Tag Search"
     FONT_SANS = "Calibri"
     FONT_MONO = "Consolas"
+    FONT_SIZE_2 = 16
     FONT_SIZE_3 = 16
     FONT_SIZE_4 = 16
     FONT_SIZE_M = 14
@@ -662,7 +665,6 @@ function display_usc_data(data)
     function GUI.elms.list_category:onvalchange()
         update_subcategory(self:val(), 1)
         update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), GUI.elms.list_synonym:val())
-
         --if is_key_active(KEYS.CONTROL) then append_search(self.list[self:val()]) end -- Ctrl+单击添加关键词进搜索框
     end
 
@@ -736,7 +738,6 @@ function display_usc_data(data)
 
     function GUI.elms.list_subcategory:onvalchange()
         update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), 1)
-
         --if is_key_active(KEYS.CONTROL) then self:ondoubleclick() end -- Ctrl+单击添加关键词进搜索框
     end
 
@@ -779,15 +780,6 @@ function display_usc_data(data)
         GUI.elms.edittext_filter.focus = true
     end
 
-    -- function GUI.elms.btn_filter:ondoubleclick() -- 双击过滤按钮 清除
-    --     GUI.elms.edittext_filter:val("")
-    --     current_filter_pattern = ""
-    --     GUI.elms.list_category:val(1)
-    --     GUI.elms.list_subcategory:val(1)
-    --     GUI.elms.list_synonym:val(1)
-    --     update_usc_data()
-    -- end
-
     function GUI.elms.btn_clear:func()
         GUI.elms.edittext_filter:val("")
         current_filter_pattern = ""
@@ -796,8 +788,8 @@ function display_usc_data(data)
         GUI.elms.list_synonym:val(1)
         update_usc_data()
 
-        -- GUI.elms.edittext_search.focus = false
-        -- GUI.elms.edittext_filter.focus = true
+        GUI.elms.edittext_search.focus = false
+        GUI.elms.edittext_filter.focus = true
     end
 
     function GUI.elms.menu_lang:onvalchange()
@@ -825,12 +817,14 @@ function display_usc_data(data)
             search_text = ""
             reaper.SetExtState("UCS_TAG_SEARCH", "SEARCH_TEXT", search_text, false)
         end
-        if is_key_active(KEYS.SHIFT) then
+        if is_key_active(KEYS.SHIFT) then -- 发送搜索
             send_search_text(GUI.elms.edittext_search:val())
 
-            GUI.elms.edittext_filter.focus = false
-            GUI.elms.edittext_search.focus = true
             GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+            GUI.elms.edittext_search:redraw()
+
+            GUI.elms.edittext_search.focus = true
+            GUI.elms.edittext_filter.focus = false
         end
     end
 
@@ -841,19 +835,7 @@ function display_usc_data(data)
         end
     end
 
-    -- function GUI.elms.edittext_search:ondoubleclick() -- 双击搜索框 复制内容
-    --     if is_key_active(KEYS.CONTROL) then
-    --         copy_text(self:val())
-    --     end
-    -- end
-
-    function GUI.elms.edittext_filter:ondoubleclick()
-        if is_key_active(KEYS.CONTROL) then
-            copy_text(self:val())
-        end
-    end
-
-    function GUI.elms.edittext_filter:onr_doubleclick() -- onr_doubleclick() 右键双击过滤框
+    function GUI.elms.edittext_filter:onr_doubleclick() -- 右键双击过滤框
         self:val("")
 
         GUI.elms.edittext_filter:val("")
@@ -867,14 +849,14 @@ function display_usc_data(data)
         GUI.elms.edittext_filter.focus = true
     end
 
-    function GUI.elms.edittext_search:onr_doubleclick() -- onr_doubleclick() 右键双击搜索框
+    function GUI.elms.edittext_search:onr_doubleclick() -- 右键双击搜索框
         self:val("")
 
         GUI.elms.edittext_filter.focus = false
         GUI.elms.edittext_search.focus = true
     end
 
-    function GUI.elms.edittext_filter:onmouser_down() -- onmouser_down() 右键单击过滤框
+    function GUI.elms.edittext_filter:onmouser_down() -- 右键单击过滤框
         self:val("")
 
         GUI.elms.edittext_filter:val("")
@@ -888,7 +870,7 @@ function display_usc_data(data)
         GUI.elms.edittext_filter.focus = true
     end
 
-    function GUI.elms.edittext_search:onmouser_down() -- onmouser_down() 右键单击搜索框
+    function GUI.elms.edittext_search:onmouser_down() -- 右键单击搜索框
         self:val("")
 
         GUI.elms.edittext_filter.focus = false
@@ -899,9 +881,9 @@ function display_usc_data(data)
         if is_key_active(KEYS.CONTROL) then
             copy_text(self:val())
         else
-            local text = GUI.elms.edittext_filter:val(text)
+            local text = GUI.elms.edittext_filter:val()
             local userok, text = reaper.GetUserInputs(FILTER_TITLE, 1, FILTER_TITLE_KEY .. ",extrawidth=200", text)
-            if not userok then return end
+            if not userok then return setFocusToWindow(WINDOW_NAME) end
     
             GUI.elms.edittext_filter:val(text)
             GUI.elms.edittext_filter.caret = GUI.elms.edittext_filter:carettoend()
@@ -922,9 +904,9 @@ function display_usc_data(data)
         if is_key_active(KEYS.CONTROL) then
             copy_text(self:val())
         else
-            local text = GUI.elms.edittext_search:val(text)
+            local text = GUI.elms.edittext_search:val()
             local userok, text = reaper.GetUserInputs(SEARCH_TITLE, 1, SEARCH_TITLE_KEY .. ",extrawidth=200", text)
-            if not userok then return end
+            if not userok then return setFocusToWindow(WINDOW_NAME) end
     
             GUI.elms.edittext_search:val(text)
             GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
@@ -996,6 +978,7 @@ local fonts = GUI.get_OS_fonts()
 GUI.fonts.monospace = {fonts.mono, FONT_SIZE_M}
 GUI.fonts[4] = {fonts.sans, FONT_SIZE_4}
 GUI.fonts[3] = {fonts.sans, FONT_SIZE_3}
+GUI.fonts[2] = {fonts.sans, FONT_SIZE_2}
 GUI.fonts.version = {fonts.sans, FONT_SIZE_V, "i"}
 GUI.colors.white = {225, 225, 225, 255} -- Set gui.lua [color = "white"]
 GUI.Draw_Version = function ()
@@ -1137,7 +1120,15 @@ function GUI.func()
         end
     end
 
-    if char == 26162 then -- F2 键
+    -- if char == 26162 then -- F2 键
+    --     if is_cat_short_enable() then
+    --         GUI.elms.check_cat:val({[2] = false})
+    --     else
+    --         GUI.elms.check_cat:val({[2] = true})
+    --     end
+    -- end
+
+    if char == 26163 then -- F3 键
         if should_load_system_usc_data() then
             GUI.elms.check_cat:val({[3] = false})
         else
@@ -1145,7 +1136,7 @@ function GUI.func()
         end
     end
 
-    if char == 26163 then -- F3 键
+    if char == 26164 then -- F4 键
         if should_load_user_usc_data() then
             GUI.elms.check_cat:val({[4] = false})
         else
@@ -1153,7 +1144,7 @@ function GUI.func()
         end
     end
 
-    if char == 26164 then -- F4 键
+    if char == 26162 then -- F2 键
         if is_immediately_enable() then
             GUI.elms.check_cat:val({[5] = false})
         else
@@ -1177,14 +1168,6 @@ function GUI.func()
         auto_switch_language()
     end
 
-    -- if char == 26162 then -- F2 键
-    --     if is_cat_short_enable() then
-    --         GUI.elms.check_cat:val({[2] = false})
-    --     else
-    --         GUI.elms.check_cat:val({[2] = true})
-    --     end
-    -- end
-
     if char == 6697264 then -- F10 键
         current_function_index = GUI.elms.radio_connect:val()
 
@@ -1201,20 +1184,8 @@ function GUI.func()
         auto_switch_function()
     end
     
-    if char == 9 then -- TAB 键
-        if GUI.elms.edittext_filter.focus == false then
-            GUI.elms.edittext_search.focus = false
-            GUI.elms.edittext_filter.focus = true
-            GUI.elms.edittext_filter.show_caret = true
-        else
-            GUI.elms.edittext_filter.focus = false
-            GUI.elms.edittext_search.focus = true
-            GUI.elms.edittext_search.show_caret = true
-        end
-    end
-
     if char == 6697265 then -- F11
-        local text = GUI.elms.edittext_filter:val(text)
+        local text = GUI.elms.edittext_filter:val()
         local userok, text = reaper.GetUserInputs(FILTER_TITLE, 1, FILTER_TITLE_KEY .. ",extrawidth=200", text)
         if not userok then return setFocusToWindow(WINDOW_NAME) end
 
@@ -1233,7 +1204,7 @@ function GUI.func()
     end
 
     if char == 6697266 then -- F12
-        local text = GUI.elms.edittext_search:val(text)
+        local text = GUI.elms.edittext_search:val()
         userok, text = reaper.GetUserInputs(SEARCH_TITLE, 1, SEARCH_TITLE_KEY .. ",extrawidth=200", text)
         if not userok then return setFocusToWindow(WINDOW_NAME) end
 
@@ -1256,6 +1227,18 @@ function GUI.func()
         end
 
         setFocusToWindow(WINDOW_NAME)
+    end
+
+    if char == 9 then -- TAB 键
+        if GUI.elms.edittext_filter.focus == false then
+            GUI.elms.edittext_search.focus = false
+            GUI.elms.edittext_filter.focus = true
+            GUI.elms.edittext_filter.show_caret = true
+        else
+            GUI.elms.edittext_filter.focus = false
+            GUI.elms.edittext_search.focus = true
+            GUI.elms.edittext_search.show_caret = true
+        end
     end
 
     onSaveWindowSizeAndPosition()

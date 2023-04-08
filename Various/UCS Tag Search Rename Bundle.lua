@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.5.3
+-- @version 1.5.4
 -- @changelog
 --   Optimize separator symbols and translation switching functionality
 -- @links
