@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="bbe8f218a0845cd6d0e46b346899e78694a4ea80">
+<index version="1" name="zaibuyidao Scripts" commit="5b2b9cf58d1ab32caa0fcba4da729d9039036e0c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -89,6 +89,25 @@
         <source file="Lokasenna_GUI Library/Classes/Class - Window.lua">https://github.com/zaibuyidao/ReaScripts/raw/5d71cf88709608e07bc71799f94b4b6b67cd0e5b/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Window.lua</source>
         <source file="Lokasenna_GUI Library/Core.lua">https://github.com/zaibuyidao/ReaScripts/raw/5d71cf88709608e07bc71799f94b4b6b67cd0e5b/Development/Lokasenna_GUI%20Library/Core.lua</source>
         <source file="Lokasenna_GUI Library/Modules/Window - GetUserInputs.lua">https://github.com/zaibuyidao/ReaScripts/raw/5d71cf88709608e07bc71799f94b4b6b67cd0e5b/Development/Lokasenna_GUI%20Library/Modules/Window%20-%20GetUserInputs.lua</source>
+      </version>
+      <version name="2.16.17" author="Lokasenna" time="2023-04-08T17:05:17Z">
+        <changelog><![CDATA[Add up and down arrow key scrolling functionality to the Listbox]]></changelog>
+        <source main="main" file="Lokasenna_GUI Library/Set Lokasenna_GUI library.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Set%20Lokasenna_GUI%20library.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Button.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Button.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Frame.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Frame.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Knob.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Knob.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Label.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Label.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Listbox.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Listbox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Menubar.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Menubar.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Menubox.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Menubox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Options.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Options.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Slider.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Slider.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Tabs.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Tabs.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - TextEditor.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20TextEditor.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Textbox.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Textbox.lua</source>
+        <source file="Lokasenna_GUI Library/Classes/Class - Window.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Window.lua</source>
+        <source file="Lokasenna_GUI Library/Core.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Core.lua</source>
+        <source file="Lokasenna_GUI Library/Modules/Window - GetUserInputs.lua">https://github.com/zaibuyidao/ReaScripts/raw/5b2b9cf58d1ab32caa0fcba4da729d9039036e0c/Development/Lokasenna_GUI%20Library/Modules/Window%20-%20GetUserInputs.lua</source>
       </version>
     </reapack>
   </category>
