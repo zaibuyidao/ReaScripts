@@ -1,8 +1,9 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.5.4
+-- @version 1.5.5
 -- @changelog
---   Optimize separator symbols and translation switching functionality
+--   Add up and down arrow key scrolling functionality to UCS list
+--   Add "scroll to top" feature to UCS list
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
