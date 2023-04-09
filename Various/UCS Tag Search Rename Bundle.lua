@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.5.5
+-- @version 1.5.6
 -- @changelog
 --   Add up and down arrow key scrolling functionality to UCS list
 --   Add "scroll to top" feature to UCS list

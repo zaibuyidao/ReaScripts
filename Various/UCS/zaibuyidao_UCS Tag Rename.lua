@@ -1883,6 +1883,8 @@ function display_usc_data(data)
         update_subcategory(self:val(), 1)
         update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), GUI.elms.list_synonym:val())
         --if is_key_active(KEYS.CONTROL) then append_search(self.list[self:val()]) end -- Ctrl+单击添加关键词进搜索框
+        GUI.elms.list_subcategory:scroll_to_top()
+        GUI.elms.list_synonym:scroll_to_top()
     end
 
     function GUI.elms.list_subcategory:ondoubleclick()
@@ -1924,6 +1926,7 @@ function display_usc_data(data)
     function GUI.elms.list_subcategory:onvalchange()
         update_synonym(GUI.elms.list_category:val(), GUI.elms.list_subcategory:val(), 1)
         --if is_key_active(KEYS.CONTROL) then self:ondoubleclick() end -- Ctrl+单击添加关键词进搜索框
+        GUI.elms.list_synonym:scroll_to_top()
     end
 
     function GUI.elms.list_synonym:ondoubleclick()
