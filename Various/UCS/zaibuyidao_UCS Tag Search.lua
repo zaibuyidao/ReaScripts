@@ -401,7 +401,7 @@ function replace_cat_id(cat_id)
     if not replaced then
         local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
         local append_after = ""
-        if connect == "Default" then
+        if connect == CONNECT_OPT then -- 默认连接符
             append_after = cat_id
         elseif connect == "$" then
             append_after = cat_id .. connect
@@ -465,7 +465,7 @@ function replace_cat_short(cat_short)
     if not replaced then
         local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
         local append_after = ""
-        if connect == "Default" then
+        if connect == CONNECT_OPT then -- 默认连接符
             append_after = cat_short
         elseif connect == "$" then
             append_after = cat_short .. connect
@@ -493,7 +493,7 @@ function append_search(text)
     if #orig > 0 then append_pre = " " end
     local connect = GUI.elms.radio_connect.optarray[GUI.elms.radio_connect:val()]
     local append_after = ""
-    if connect == "Default" then
+    if connect == CONNECT_OPT then -- 默认连接符
         append_after = text
     elseif connect == "$" then
         append_after = text .. connect
