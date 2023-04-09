@@ -1208,6 +1208,20 @@ function GUI.func()
         end
     end
 
+    -- if char == 1919379572 then -- 方向键右键获取选中项目的值
+    --     for _, listbox in ipairs(listboxes) do
+    --         if listbox.focus then
+    --             local selected_item_name = listbox:getselectitem(char)
+    --             if selected_item_name then
+    --                 print("选中项目的值: " .. selected_item_name)
+    --             else
+    --                 print("没有选中的项目")
+    --             end
+    --             break
+    --         end
+    --     end
+    -- end
+
     if char == 13 then -- Enter 键
         if is_key_active(KEYS.CONTROL) then -- 同时按住Ctrl
             current_filter_pattern = GUI.elms.edittext_filter:val()
