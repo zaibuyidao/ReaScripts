@@ -450,7 +450,7 @@ function GUI.Listbox:scroll_to_top() -- 跳转到顶部
     self:redraw()
 end
 
-function GUI.Listbox:onkeydown(key) -- 按键上下滚动
+function GUI.Listbox:onkeyscroll(key) -- 上下按键控制滚动条
     local dir
     if key == 30064 then -- Up arrow key
         dir = -1
@@ -464,3 +464,89 @@ function GUI.Listbox:onkeydown(key) -- 按键上下滚动
 
     self:redraw()
 end
+
+function GUI.Listbox:onkeydown(key) -- 上下按键滚动选中项目
+    local dir
+    if key == 30064 then -- Up arrow key
+        dir = -1
+    elseif key == 1685026670 then -- Down arrow key 
+        dir = 1
+    else
+        return
+    end
+
+    local selected_item = nil
+    for k, v in pairs(self.retval) do
+        if v then
+            selected_item = k
+            break
+        end
+    end
+
+    -- 如果当前没有选中的项目，则选中第一个或最后一个项目
+    if not selected_item then
+        if dir == -1 then
+            selected_item = 1
+        else
+            selected_item = #self.list
+        end
+    else
+        -- 上下移动选中项目
+        selected_item = GUI.clamp(1, selected_item + dir, #self.list)
+    end
+
+    self.retval = {[selected_item] = true}
+
+    if dir == -1 then
+        if selected_item < self.wnd_y + 1 then
+            self.wnd_y = math.max(selected_item, 1)
+        end
+    else
+        if selected_item > self.wnd_y + self.wnd_h - 1 then
+            self.wnd_y = math.min(selected_item - self.wnd_h + 1, #self.list - self.wnd_h + 1)
+        end
+    end
+
+    self:redraw()
+end
+
+-- function GUI.Listbox:onkeydown(key) -- 上下按键滚动选中项目 待优化
+--     local dir
+--     if key == 30064 then -- Up arrow key
+--         dir = -1
+--     elseif key == 1685026670 then -- Down arrow key 
+--         dir = 1
+--     else
+--         return
+--     end
+
+--     local selected_item = nil
+--     for k, v in pairs(self.retval) do
+--         if v then
+--             selected_item = k
+--             break
+--         end
+--     end
+
+--     -- 如果当前没有选中的项目，则选中第一个或最后一个项目
+--     if not selected_item then
+--         if dir == -1 then
+--             selected_item = 1
+--         else
+--             selected_item = #self.list
+--         end
+--     else
+--         -- 上下移动选中项目
+--         selected_item = GUI.clamp(1, selected_item + dir, #self.list)
+--     end
+
+--     self.retval = {[selected_item] = true}
+
+--     if dir == -1 then
+--         self.wnd_y = GUI.clamp(1, selected_item, math.max(#self.list - self.wnd_h + 1, 1))
+--     else
+--         self.wnd_y = GUI.clamp(1, selected_item - self.wnd_h + 1, math.max(#self.list - self.wnd_h + 1, 1))
+--     end
+
+--     self:redraw()
+-- end
