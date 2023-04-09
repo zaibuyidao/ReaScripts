@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.5.8
+-- @version 1.5.9
 -- @changelog
 --   Add text translation
 -- @links
