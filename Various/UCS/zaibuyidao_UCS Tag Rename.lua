@@ -126,7 +126,7 @@ end
 local language = getSystemLanguage()
 
 if language == "简体中文" then
-    WINDOW_NAME = "UCS 标签重命名"
+    WINDOW_NAME = "UCS 标签重命名 - UCS 更新（2023年2月1日）：版本 8.2"
     FONT_SANS = "SimSun" -- "SimSun"、"Microsoft YaHei"、"Calibri"、"华文中宋"、"华文宋体"、"华文细黑"
     FONT_MONO = "SimSun"
     FONT_SIZE_2 = 14
@@ -138,8 +138,33 @@ if language == "简体中文" then
     SEARCH_TITLE_KEY = "关键词"
     FILTER_TITLE = "过滤"
     FILTER_TITLE_KEY = "关键词"
+    OPT_NAME_1 = "CatID"
+    OPT_NAME_2 = "CatShort"
+    OPT_NAME_3 = "UCS 列表"
+    OPT_NAME_4 = "定制列表"
+    OPT_NAME_5 = "循环计数"
+    SEARCH_BTN = "搜索"
+    SEARCH_BTN_CLOSE = "关闭"
+    FILTER_BTN = "过滤"
+    CLEAR_BTN = "清除"
+    RD_PROCESSING = "处理"
+    RD_SEPARATOR = "连接符"
+    RD_TAKE_ORDER = "片段排序"
+    OPT_PROCESSING_1 = "区域管理器"
+    OPT_PROCESSING_2 = "区域选区"
+    OPT_PROCESSING_3 = "标记管理器"
+    OPT_PROCESSING_4 = "标记选区"
+    OPT_PROCESSING_5 = "对象/片段"
+    OPT_PROCESSING_6 = "轨道"
+    OPT_CONNECT_1 = "下横线"
+    OPT_CONNECT_2 = "短横线"
+    OPT_CONNECT_3 = "空格"
+    OPT_CONNECT_4 = "无"
+    OPT_TAKE_ORDER_1 = "轨道"
+    OPT_TAKE_ORDER_2 = "换行"
+    OPT_TAKE_ORDER_3 = "时间线"
 elseif language == "繁体中文" then
-    WINDOW_NAME = "UCS 標簽重命名"
+    WINDOW_NAME = "UCS 標簽重命名 - UCS 更新（2023年2月1日）：版本 8.2"
     FONT_SANS = "SimSun" -- "SimSun" "Microsoft YaHei" "Calibri"
     FONT_MONO = "SimSun"
     FONT_SIZE_2 = 14
@@ -148,11 +173,36 @@ elseif language == "繁体中文" then
     FONT_SIZE_M = 14
     FONT_SIZE_V = 12
     SEARCH_TITLE = "重命名"
-    SEARCH_TITLE_KEY = "关键词"
+    SEARCH_TITLE_KEY = "關鍵詞"
     FILTER_TITLE = "過濾"
-    FILTER_TITLE_KEY = "关键词"
+    FILTER_TITLE_KEY = "關鍵詞"
+    OPT_NAME_1 = "CatID"
+    OPT_NAME_2 = "CatShort"
+    OPT_NAME_3 = "UCS 列表"
+    OPT_NAME_4 = "自訂列表"
+    OPT_NAME_5 = "循環計數"
+    SEARCH_BTN = "搜索"
+    SEARCH_BTN_CLOSE = "關閉"
+    FILTER_BTN = "過濾"
+    CLEAR_BTN = "清除"
+    RD_PROCESSING = "處理"
+    RD_SEPARATOR = "連接符"
+    RD_TAKE_ORDER = "片段排序"
+    OPT_PROCESSING_1 = "區域管理器"
+    OPT_PROCESSING_2 = "區域選區"
+    OPT_PROCESSING_3 = "標記管理器"
+    OPT_PROCESSING_4 = "標記選區"
+    OPT_PROCESSING_5 = "對象/片段"
+    OPT_PROCESSING_6 = "軌道"
+    OPT_CONNECT_1 = "下橫綫"
+    OPT_CONNECT_2 = "短橫綫"
+    OPT_CONNECT_3 = "空格"
+    OPT_CONNECT_4 = "無"
+    OPT_TAKE_ORDER_1 = "軌道"
+    OPT_TAKE_ORDER_2 = "換行"
+    OPT_TAKE_ORDER_3 = "時間綫"
 else
-    WINDOW_NAME = "UCS Tag Rename"
+    WINDOW_NAME = "UCS Tag Rename - UCS Update (Feb 1st, 2023): Version 8.2"
     FONT_SANS = "Calibri"
     FONT_MONO = "Consolas"
     FONT_SIZE_2 = 16
@@ -164,6 +214,31 @@ else
     SEARCH_TITLE_KEY = "Keywords"
     FILTER_TITLE = "Filter"
     FILTER_TITLE_KEY = "Keywords"
+    OPT_NAME_1 = "CatID"
+    OPT_NAME_2 = "CatShort"
+    OPT_NAME_3 = "UCS list"
+    OPT_NAME_4 = "Custom"
+    OPT_NAME_5 = "Loop count"
+    SEARCH_BTN = "Search"
+    SEARCH_BTN_CLOSE = "Close"
+    FILTER_BTN = "Filter"
+    CLEAR_BTN = "Clear"
+    RD_PROCESSING = "Processing"
+    RD_SEPARATOR = "Separator"
+    RD_TAKE_ORDER = "Take order"
+    OPT_PROCESSING_1 = "Rgn manager"
+    OPT_PROCESSING_2 = "Rgn time"
+    OPT_PROCESSING_3 = "Mkr manager"
+    OPT_PROCESSING_4 = "Mkr time"
+    OPT_PROCESSING_5 = "Take"
+    OPT_PROCESSING_6 = "Track"
+    OPT_CONNECT_1 = "Underscore"
+    OPT_CONNECT_2 = "Hyphen"
+    OPT_CONNECT_3 = "Space"
+    OPT_CONNECT_4 = "None"
+    OPT_TAKE_ORDER_1 = "Track"
+    OPT_TAKE_ORDER_2 = "Wrap"
+    OPT_TAKE_ORDER_3 = "Timeline"
 end
 
 KEYS = {
@@ -1368,6 +1443,114 @@ function is_loop_count_enable() -- 启用Loop count
     return GUI.elms.check_cat:val()[5] == true
 end
 
+function update_optarray_names(new_names) -- CatID等开关
+    if #new_names ~= #GUI.elms.check_cat.optarray then
+        error("new_names size does not match the original optarray size")
+    end
+
+    for i, name in ipairs(new_names) do
+        GUI.elms.check_cat.optarray[i] = name
+    end
+
+    -- 刷新check_cat元素
+    GUI.elms.check_cat:init()
+end
+
+function update_processing_names(new_names) -- 处理切换
+    if #new_names ~= #GUI.elms.radio_pro.optarray then
+        error("new_names size does not match the original optarray size")
+    end
+
+    for i, name in ipairs(new_names) do
+        GUI.elms.radio_pro.optarray[i] = name
+    end
+
+    GUI.elms.radio_pro:init()
+end
+
+function update_take_order_names(new_names) -- 处理切换
+    if #new_names ~= #GUI.elms.radio_order.optarray then
+        error("new_names size does not match the original optarray size")
+    end
+
+    for i, name in ipairs(new_names) do
+        GUI.elms.radio_order.optarray[i] = name
+    end
+
+    GUI.elms.radio_order:init()
+end
+
+function get_btn_search_caption()
+    return GUI.elms.btn_search.caption
+end
+
+function set_btn_search_caption(new_caption)
+    GUI.elms.btn_search.caption = new_caption
+
+    -- 刷新btn_search元素
+    GUI.elms.btn_search:init()
+end
+
+function set_btn_search_close_caption(new_caption)
+    GUI.elms.btn_search_close.caption = new_caption
+
+    -- 刷新btn_search_close元素
+    GUI.elms.btn_search_close:init()
+end
+
+function set_btn_filter_caption(new_caption)
+    GUI.elms.btn_filter.caption = new_caption
+
+    -- 刷新btn_filter元素
+    GUI.elms.btn_filter:init()
+end
+
+function set_btn_clear_caption(new_caption)
+    GUI.elms.btn_clear.caption = new_caption
+
+    -- 刷新btn_clear元素
+    GUI.elms.btn_clear:init()
+end
+
+function set_radio_pro_caption(new_caption) -- 处理
+    GUI.elms.radio_pro.caption = new_caption
+
+    -- 刷新radio_pro元素
+    GUI.elms.radio_pro:init()
+end
+
+function set_radio_connect_caption(new_caption) -- 连接符
+    GUI.elms.radio_connect.caption = new_caption
+
+    -- 刷新radio_connect元素
+    GUI.elms.radio_connect:init()
+end
+
+function set_radio_order_caption(new_caption) -- 连接符
+    GUI.elms.radio_order.caption = new_caption
+
+    -- 刷新radio_order元素
+    GUI.elms.radio_order:init()
+end
+
+-- 翻译文本
+local new_optarray_names = {OPT_NAME_1, OPT_NAME_2, OPT_NAME_3, OPT_NAME_4, OPT_NAME_5} -- 开关
+update_optarray_names(new_optarray_names)
+
+local new_processing_names = {OPT_PROCESSING_1, OPT_PROCESSING_2, OPT_PROCESSING_3, OPT_PROCESSING_4, OPT_PROCESSING_5, OPT_PROCESSING_6} -- 处理切换
+update_processing_names(new_processing_names)
+
+local new_take_order_names = {OPT_TAKE_ORDER_1, OPT_TAKE_ORDER_2, OPT_TAKE_ORDER_3} -- 处理切换
+update_take_order_names(new_take_order_names)
+
+set_btn_search_caption(SEARCH_BTN)
+set_btn_search_close_caption(SEARCH_BTN_CLOSE)
+set_btn_filter_caption(FILTER_BTN)
+set_btn_clear_caption(CLEAR_BTN)
+set_radio_pro_caption(RD_PROCESSING)
+set_radio_connect_caption(RD_SEPARATOR)
+set_radio_order_caption(RD_TAKE_ORDER)
+
 function reload_usc_data()
     full_usc_data = {}
     if should_load_system_usc_data() then
@@ -1403,10 +1586,10 @@ function copy_text(text)  -- 复制关键词
 end
 
 seperators = {
-    {name = "Underscore", value = "_"},
-    {name = "Hyphen", value = "-"},
-    {name = "Space", value = " "},
-    {name = "None", value = ""}
+    {name = OPT_CONNECT_1, value = "_"}, --  "Underscore"
+    {name = OPT_CONNECT_2, value = "-"}, -- "Hyphen"
+    {name = OPT_CONNECT_3, value = " "}, -- "Space"
+    {name = OPT_CONNECT_4, value = ""} -- "None"
 }
 
 GUI.elms.radio_connect.optarray = table.map(seperators, function (item) return item.name end)

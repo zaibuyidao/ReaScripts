@@ -124,7 +124,7 @@ end
 local language = getSystemLanguage()
 
 if language == "简体中文" then
-    WINDOW_NAME = "UCS 标签搜索器"
+    WINDOW_NAME = "UCS 标签搜索器 - UCS 更新（2023年2月1日）：版本 8.2"
     FONT_SANS = "SimSun" -- "SimSun"、"Microsoft YaHei"、"Calibri"、"华文中宋"、"华文宋体"、"华文细黑"
     FONT_MONO = "SimSun"
     FONT_SIZE_2 = 14
@@ -136,8 +136,18 @@ if language == "简体中文" then
     SEARCH_TITLE_KEY = "关键词"
     FILTER_TITLE = "过滤"
     FILTER_TITLE_KEY = "关键词"
+    OPT_NAME_1 = "CatID"
+    OPT_NAME_2 = "CatShort"
+    OPT_NAME_3 = "UCS 列表"
+    OPT_NAME_4 = "定制列表"
+    OPT_NAME_5 = "立即发送"
+    SEARCH_BTN = "搜索"
+    SEARCH_BTN_CLOSE = "关闭"
+    FILTER_BTN = "过滤"
+    CLEAR_BTN = "清除"
+    CONNECT_OPT = "默认"
 elseif language == "繁体中文" then
-    WINDOW_NAME = "UCS 標簽搜索器"
+    WINDOW_NAME = "UCS 標簽搜索器 - UCS 更新（2023年2月1日）：版本 8.2"
     FONT_SANS = "SimSun" -- "SimSun" "Microsoft YaHei" "Calibri"
     FONT_MONO = "SimSun"
     FONT_SIZE_2 = 14
@@ -146,11 +156,21 @@ elseif language == "繁体中文" then
     FONT_SIZE_M = 14
     FONT_SIZE_V = 12
     SEARCH_TITLE = "搜索"
-    SEARCH_TITLE_KEY = "关键词"
+    SEARCH_TITLE_KEY = "關鍵詞"
     FILTER_TITLE = "過濾"
-    FILTER_TITLE_KEY = "关键词"
+    FILTER_TITLE_KEY = "關鍵詞"
+    OPT_NAME_1 = "CatID"
+    OPT_NAME_2 = "CatShort"
+    OPT_NAME_3 = "UCS 列表"
+    OPT_NAME_4 = "自訂列表"
+    OPT_NAME_5 = "立即發送"
+    SEARCH_BTN = "搜索"
+    SEARCH_BTN_CLOSE = "關閉"
+    FILTER_BTN = "過濾"
+    CLEAR_BTN = "清除"
+    CONNECT_OPT = "預設"
 else
-    WINDOW_NAME = "UCS Tag Search"
+    WINDOW_NAME = "UCS Tag Search - UCS Update (Feb 1st, 2023): Version 8.2"
     FONT_SANS = "Calibri"
     FONT_MONO = "Consolas"
     FONT_SIZE_2 = 16
@@ -162,6 +182,16 @@ else
     SEARCH_TITLE_KEY = "Keywords"
     FILTER_TITLE = "Filter"
     FILTER_TITLE_KEY = "Keywords"
+    OPT_NAME_1 = "CatID"
+    OPT_NAME_2 = "CatShort"
+    OPT_NAME_3 = "UCS list"
+    OPT_NAME_4 = "Custom"
+    OPT_NAME_5 = "Send now"
+    SEARCH_BTN = "Search"
+    SEARCH_BTN_CLOSE = "Close"
+    FILTER_BTN = "Filter"
+    CLEAR_BTN = "Clear"
+    CONNECT_OPT = "Default"
 end
 
 KEYS = {
@@ -217,6 +247,67 @@ end
 function is_immediately_enable() -- 启用立刻搜索
     return GUI.elms.check_cat:val()[5] == true
 end
+
+function update_optarray_names(new_names) -- CatID等开关
+    if #new_names ~= #GUI.elms.check_cat.optarray then
+        error("new_names size does not match the original optarray size")
+    end
+
+    for i, name in ipairs(new_names) do
+        GUI.elms.check_cat.optarray[i] = name
+    end
+
+    -- 刷新check_cat元素
+    GUI.elms.check_cat:init()
+end
+
+function get_btn_search_caption()
+    return GUI.elms.btn_search.caption
+end
+
+function set_btn_search_caption(new_caption)
+    GUI.elms.btn_search.caption = new_caption
+
+    -- 刷新btn_search元素
+    GUI.elms.btn_search:init()
+end
+
+function set_btn_search_close_caption(new_caption)
+    GUI.elms.btn_search_close.caption = new_caption
+
+    -- 刷新btn_search_close元素
+    GUI.elms.btn_search_close:init()
+end
+
+function set_btn_filter_caption(new_caption)
+    GUI.elms.btn_filter.caption = new_caption
+
+    -- 刷新btn_filter元素
+    GUI.elms.btn_filter:init()
+end
+
+function set_btn_clear_caption(new_caption)
+    GUI.elms.btn_clear.caption = new_caption
+
+    -- 刷新btn_clear元素
+    GUI.elms.btn_clear:init()
+end
+
+function set_radio_connect_optarray(new_optarray)
+    GUI.elms.radio_connect.optarray[1] = new_optarray
+
+    -- 刷新radio_connect_optarray元素
+    GUI.elms.radio_connect:init()
+end
+
+local new_optarray_names = {OPT_NAME_1, OPT_NAME_2, OPT_NAME_3, OPT_NAME_4, OPT_NAME_5}
+update_optarray_names(new_optarray_names)
+
+set_btn_search_caption(SEARCH_BTN) -- 翻译文本
+set_btn_search_close_caption(SEARCH_BTN_CLOSE)
+set_btn_filter_caption(FILTER_BTN)
+set_btn_clear_caption(CLEAR_BTN)
+set_radio_connect_optarray(CONNECT_OPT)
 
 function reload_usc_data()
     full_usc_data = {}
