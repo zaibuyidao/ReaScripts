@@ -510,43 +510,21 @@ function GUI.Listbox:onkeydown(key) -- 上下按键滚动选中项目
     self:redraw()
 end
 
--- function GUI.Listbox:onkeydown(key) -- 上下按键滚动选中项目 待优化
---     local dir
---     if key == 30064 then -- Up arrow key
---         dir = -1
---     elseif key == 1685026670 then -- Down arrow key 
---         dir = 1
---     else
---         return
---     end
+function GUI.Listbox:getselectitem(key) -- 方向键右键获取选中项目的值
+    if key == 1919379572 then -- Right arrow key
+        local selected_item = nil
+        for k, v in pairs(self.retval) do
+            if v then
+                selected_item = k
+                break
+            end
+        end
 
---     local selected_item = nil
---     for k, v in pairs(self.retval) do
---         if v then
---             selected_item = k
---             break
---         end
---     end
-
---     -- 如果当前没有选中的项目，则选中第一个或最后一个项目
---     if not selected_item then
---         if dir == -1 then
---             selected_item = 1
---         else
---             selected_item = #self.list
---         end
---     else
---         -- 上下移动选中项目
---         selected_item = GUI.clamp(1, selected_item + dir, #self.list)
---     end
-
---     self.retval = {[selected_item] = true}
-
---     if dir == -1 then
---         self.wnd_y = GUI.clamp(1, selected_item, math.max(#self.list - self.wnd_h + 1, 1))
---     else
---         self.wnd_y = GUI.clamp(1, selected_item - self.wnd_h + 1, math.max(#self.list - self.wnd_h + 1, 1))
---     end
-
---     self:redraw()
--- end
+        if selected_item then
+            local selected_item_name = self.list[selected_item]
+            return selected_item_name
+        else
+            return nil
+        end
+    end
+end
