@@ -2458,6 +2458,101 @@ function GUI.func()
             end
         end
     end
+
+    -- 上下左右按键发送关键词 与Listbox库关联
+    function get_list_category_value(self, mode) -- 主分类
+        if mode == "cat" then
+            return self.cat_short_list[self:val()]
+        elseif mode == "en" then
+            return self.category_en_list[self:val()]
+        elseif mode == "name" then
+            return self.name_list[self:val()]
+        end
+    end
+
+    function get_list_subcategory_value(self, mode) -- 子分类
+        if mode == "cat" then
+            return self.cat_list[self:val()]
+        elseif mode == "en" then
+            return self.subcategory_en_list[self:val()]
+        elseif mode == "name" then
+            return self.name_list[self:val()]
+        end
+    end
+
+    function get_list_synonym_value(self, mode) -- 子分类
+        if mode == "en" then
+            return self.synonyms_en_list[self:val()]
+        elseif mode == "name" then
+            return self.list[self:val()]
+        end
+    end
+
+    function on_list_left_arrow_send(char)
+        local selected_item_name = nil
+        local listbox = nil
+    
+        for _, box in ipairs(listboxes) do
+            if box.focus then
+                selected_item_name = box:getselectitem(char)
+                listbox = box
+                break
+            end
+        end
+
+        if selected_item_name then
+            if listbox.name == GUI.elms.list_category.name then -- 主分类
+                append_search(get_list_category_value(GUI.elms.list_category, "name"))
+            elseif listbox.name == GUI.elms.list_subcategory.name then -- 子分类
+                append_search(get_list_subcategory_value(GUI.elms.list_subcategory, "name"))
+            elseif listbox.name == GUI.elms.list_synonym.name then -- 同义词
+                append_search(get_list_synonym_value(GUI.elms.list_synonym, "name"))
+            end
+        else
+            print("没有选中的项目")
+        end
+    end
+
+    function on_list_right_arrow_send(char)
+        local selected_item_name = nil
+        local listbox = nil
+    
+        for _, box in ipairs(listboxes) do
+            if box.focus then
+                selected_item_name = box:getselectitem(char)
+                listbox = box
+                break
+            end
+        end
+
+        if selected_item_name then
+            if listbox.name == GUI.elms.list_category.name then -- 主分类
+                if is_cat_short_enable() then
+                    replace_cat_short(get_list_category_value(GUI.elms.list_category, "cat"))
+                else
+                    append_search(get_list_category_value(GUI.elms.list_category, "en"))
+                end
+            elseif listbox.name == GUI.elms.list_subcategory.name then -- 子分类
+                if is_cat_id_enable() then
+                    prepend_cat_id(get_list_subcategory_value(GUI.elms.list_subcategory, "cat"))
+                else
+                    append_search(get_list_subcategory_value(GUI.elms.list_subcategory, "en"))
+                end
+            elseif listbox.name == GUI.elms.list_synonym.name then -- 同义词
+                append_search(get_list_synonym_value(GUI.elms.list_synonym, "en"))
+            end
+        else
+            print("没有选中的项目")
+        end
+    end
+    
+    if char == 1818584692 then -- 方向键左键1818584692 获取选中项目的值
+        on_list_left_arrow_send(char)
+    end
+
+    if char == 1919379572 then -- 方向键右键1919379572 获取选中项目的值
+        on_list_right_arrow_send(char)
+    end
     
     if char == 13 then -- Enter 键
         if is_key_active(KEYS.CONTROL) then -- 同时按住Ctrl

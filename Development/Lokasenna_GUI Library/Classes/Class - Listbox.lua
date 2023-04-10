@@ -511,7 +511,7 @@ function GUI.Listbox:onkeydown(key) -- 上下按键滚动选中项目
 end
 
 function GUI.Listbox:getselectitem(key) -- 方向键右键获取选中项目的值
-    if key == 1919379572 then -- Right arrow key
+    if key == 1919379572 or key == 1818584692 or key == 6909555 then -- Right arrow key (1919379572) or left arrow key (1818584692) or insert key (1818584692)
         local selected_item = nil
         for k, v in pairs(self.retval) do
             if v then

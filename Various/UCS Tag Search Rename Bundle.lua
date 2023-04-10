@@ -1,8 +1,9 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.6.0
+-- @version 1.6.1
 -- @changelog
---   Add text translation
+--   Added scrolling functionality with arrow keys (up, down, left, and right) and the ability to enter keywords.
+--   Added the ability to immediately send entered keywords using the 'insert' key.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
