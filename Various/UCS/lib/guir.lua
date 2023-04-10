@@ -113,7 +113,7 @@ GUI.New("radio_connect", "Radio", {
 GUI.New("radio_order", "Radio", {
     z = 11,
     x = 640,
-    y = 232,
+    y = 240,
     w = 96,
     h = 88,
     caption = "Take order",
