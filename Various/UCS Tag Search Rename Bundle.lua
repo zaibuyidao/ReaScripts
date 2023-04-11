@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.6.3
+-- @version 1.6.4
 -- @changelog
 --   Added real-time input event response during filtering.
 -- @links

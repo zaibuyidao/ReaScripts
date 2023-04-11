@@ -1404,11 +1404,23 @@ function GUI.func()
         GUI.elms.edittext_filter.focus = true
     end
 
-    if char == 26161 then -- F1 键
+    if char == 26162 then --编辑配置表 f2
+        openUrl(base_path .. "lib" .. delimiter .. "config.lua")
+    end
+
+    if char == 26163 then -- F3 键 -- CatID
         if is_cat_id_enable() then
             GUI.elms.check_cat:val({[1] = false})
         else
             GUI.elms.check_cat:val({[1] = true})
+        end
+    end
+
+    if char == 26164 then -- F4 键 -- UCS list
+        if should_load_system_usc_data() then
+            GUI.elms.check_cat:val({[3] = false})
+        else
+            GUI.elms.check_cat:val({[3] = true})
         end
     end
 
@@ -1420,21 +1432,13 @@ function GUI.func()
     --     end
     -- end
 
-    if char == 26163 then -- F3 键
-        if should_load_system_usc_data() then
-            GUI.elms.check_cat:val({[3] = false})
-        else
-            GUI.elms.check_cat:val({[3] = true})
-        end
-    end
-
-    if char == 26164 then -- F4 键
-        if should_load_user_usc_data() then
-            GUI.elms.check_cat:val({[4] = false})
-        else
-            GUI.elms.check_cat:val({[4] = true})
-        end
-    end
+    -- if char == 26164 then -- F4 键
+    --     if should_load_user_usc_data() then
+    --         GUI.elms.check_cat:val({[4] = false})
+    --     else
+    --         GUI.elms.check_cat:val({[4] = true})
+    --     end
+    -- end
 
     -- if char == 26162 then -- F2 键
     --     if is_immediately_enable() then
@@ -1443,10 +1447,6 @@ function GUI.func()
     --         GUI.elms.check_cat:val({[5] = true})
     --     end
     -- end
-
-    if char == 26162 then --编辑配置表 f2
-        openUrl(base_path .. "lib" .. delimiter .. "config.lua")
-    end
 
     if char == 26166 then -- F6 键
         switch_lang(1)
