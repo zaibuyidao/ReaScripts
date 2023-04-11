@@ -123,17 +123,64 @@ function getSystemLanguage()
 	return lang
 end
 
+KEYS = {
+    LEFT_MOUSE = 1,
+    RIGHT_MOUSE = 2,
+    CONTROL = 4,
+    SHIFT = 8,
+    ALT = 16,
+    WINDOWS = 32,
+    MIDDLE_MOUSE = 64
+}
+
+LANGS = {
+    { id = "en", name = 'English' },
+    { id = "zh", name = '简体中文' },
+    { id = "tw", name = '正體中文' },
+    { id = "ja", name = '日本語' }
+}
+
+-- loadfile(reaper.GetResourcePath() .. delimiter .. "Scripts" .. delimiter .. "zaibuyidao Scripts" .. delimiter .. "Development" .. delimiter .. "Lokasenna_GUI Library" .. delimiter .. "Set Lokasenna_GUI library.lua")()
+require('Set Lokasenna_GUI library')
+require('utils')
+require('ucs')
+require('guir')
+CONFIG = require('config')
+
+function openUrl(url)
+    local osName = reaper.GetOS()
+    if osName:match("^OSX") then
+        os.execute('open "" "' .. url .. '"')
+    else
+        -- chcp 65001
+        os.execute('start "" "' .. url .. '"')
+    end
+end
+
+function getConfig(configName, default, convert)
+	local cur = CONFIG
+	for k in configName:gmatch("[^%.]+") do
+		if not cur then return default end
+		cur = cur[k]
+	end
+	if cur == nil then return default end
+	if convert then
+		return convert(cur)
+	end
+	return cur
+end
+
 local language = getSystemLanguage()
 
 if language == "简体中文" then
-    WINDOW_NAME = "UCS 标签重命名 - UCS 更新（2023年2月1日）：版本 8.2"
-    FONT_SANS = "SimSun" -- "SimSun"、"Microsoft YaHei"、"Calibri"、"华文中宋"、"华文宋体"、"华文细黑"
-    FONT_MONO = "SimSun"
-    FONT_SIZE_2 = 14
-    FONT_SIZE_3 = 14
-    FONT_SIZE_4 = 14
-    FONT_SIZE_M = 14
-    FONT_SIZE_V = 12
+    WINDOW_NAME = getConfig("ui.global.title.cn")
+    FONT_SANS = getConfig("ui.global.font_sans.cn")
+    FONT_MONO = getConfig("ui.global.font_mono.cn")
+    FONT_SIZE_4 = getConfig("ui.global.font_size_4", 18)
+    FONT_SIZE_3 = getConfig("ui.global.font_size_3", 18)
+    FONT_SIZE_2 = getConfig("ui.global.font_size_2", 18)
+    FONT_SIZE_M = getConfig("ui.global.font_size_m", 14)
+    FONT_SIZE_V = getConfig("ui.global.font_size_v", 14)
     SEARCH_TITLE = "重命名"
     SEARCH_TITLE_KEY = "关键词"
     FILTER_TITLE = "过滤"
@@ -164,14 +211,14 @@ if language == "简体中文" then
     OPT_TAKE_ORDER_2 = "换行"
     OPT_TAKE_ORDER_3 = "时间线"
 elseif language == "繁体中文" then
-    WINDOW_NAME = "UCS 標簽重命名 - UCS 更新（2023年2月1日）：版本 8.2"
-    FONT_SANS = "SimSun" -- "SimSun" "Microsoft YaHei" "Calibri"
-    FONT_MONO = "SimSun"
-    FONT_SIZE_2 = 14
-    FONT_SIZE_3 = 14
-    FONT_SIZE_4 = 14
-    FONT_SIZE_M = 14
-    FONT_SIZE_V = 12
+    WINDOW_NAME = getConfig("ui.global.title.tw")
+    FONT_SANS = getConfig("ui.global.font_sans.tw")
+    FONT_MONO = getConfig("ui.global.font_mono.tw")
+    FONT_SIZE_4 = getConfig("ui.global.font_size_4", 18)
+    FONT_SIZE_3 = getConfig("ui.global.font_size_3", 18)
+    FONT_SIZE_2 = getConfig("ui.global.font_size_2", 18)
+    FONT_SIZE_M = getConfig("ui.global.font_size_m", 14)
+    FONT_SIZE_V = getConfig("ui.global.font_size_v", 14)
     SEARCH_TITLE = "重命名"
     SEARCH_TITLE_KEY = "關鍵詞"
     FILTER_TITLE = "過濾"
@@ -202,14 +249,14 @@ elseif language == "繁体中文" then
     OPT_TAKE_ORDER_2 = "換行"
     OPT_TAKE_ORDER_3 = "時間綫"
 else
-    WINDOW_NAME = "UCS Tag Rename - UCS Update (Feb 1st, 2023): Version 8.2"
-    FONT_SANS = "Calibri"
-    FONT_MONO = "Consolas"
-    FONT_SIZE_2 = 16
-    FONT_SIZE_3 = 16
-    FONT_SIZE_4 = 16
-    FONT_SIZE_M = 14
-    FONT_SIZE_V = 12
+    WINDOW_NAME = getConfig("ui.global.title.en")
+    FONT_SANS = getConfig("ui.global.font_sans.en")
+    FONT_MONO = getConfig("ui.global.font_mono.en")
+    FONT_SIZE_4 = getConfig("ui.global.font_size_4", 18)
+    FONT_SIZE_3 = getConfig("ui.global.font_size_3", 18)
+    FONT_SIZE_2 = getConfig("ui.global.font_size_2", 18)
+    FONT_SIZE_M = getConfig("ui.global.font_size_m", 14)
+    FONT_SIZE_V = getConfig("ui.global.font_size_v", 14)
     SEARCH_TITLE = "Renaming"
     SEARCH_TITLE_KEY = "Keywords"
     FILTER_TITLE = "Filter"
@@ -240,29 +287,6 @@ else
     OPT_TAKE_ORDER_2 = "Wrap"
     OPT_TAKE_ORDER_3 = "Timeline"
 end
-
-KEYS = {
-    LEFT_MOUSE = 1,
-    RIGHT_MOUSE = 2,
-    CONTROL = 4,
-    SHIFT = 8,
-    ALT = 16,
-    WINDOWS = 32,
-    MIDDLE_MOUSE = 64
-}
-
-LANGS = {
-    { id = "en", name = 'English' },
-    { id = "zh", name = '简体中文' },
-    { id = "tw", name = '正體中文' },
-    { id = "ja", name = '日本語' }
-}
-
--- loadfile(reaper.GetResourcePath() .. delimiter .. "Scripts" .. delimiter .. "zaibuyidao Scripts" .. delimiter .. "Development" .. delimiter .. "Lokasenna_GUI Library" .. delimiter .. "Set Lokasenna_GUI library.lua")()
-require('Set Lokasenna_GUI library')
-require('utils')
-require('ucs')
-require('guir')
 
 GUI.name = WINDOW_NAME
 GUI.x = getState("WINDOW_X", 50, tonumber)
@@ -2509,7 +2533,7 @@ function GUI.func()
                 append_search(get_list_synonym_value(GUI.elms.list_synonym, "name"))
             end
         else
-            print("没有选中的项目")
+            -- print("没有选中的项目")
         end
     end
 
@@ -2542,7 +2566,7 @@ function GUI.func()
                 append_search(get_list_synonym_value(GUI.elms.list_synonym, "en"))
             end
         else
-            print("没有选中的项目")
+            -- print("没有选中的项目")
         end
     end
     
@@ -2592,12 +2616,16 @@ function GUI.func()
         end
     end
 
-    if char == 26162 then -- F2 键
-        if is_cat_short_enable() then
-            GUI.elms.check_cat:val({[2] = false})
-        else
-            GUI.elms.check_cat:val({[2] = true})
-        end
+    -- if char == 26162 then -- F2 键
+    --     if is_cat_short_enable() then
+    --         GUI.elms.check_cat:val({[2] = false})
+    --     else
+    --         GUI.elms.check_cat:val({[2] = true})
+    --     end
+    -- end
+
+    if char == 26162 then --编辑配置表 f2
+        openUrl(base_path .. "lib" .. delimiter .. "config.lua")
     end
 
     if char == 26163 then -- F3 键
