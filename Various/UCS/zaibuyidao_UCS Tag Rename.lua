@@ -1819,10 +1819,23 @@ end
 --     GUI.elms.edittext_search:redraw()
 -- end
 
-function filter_pattern_match(text, pattern)
-    -- 大小写敏感
-    -- text:find(pattern)
-    return text:lower():find(pattern:lower())
+function filter_pattern_match(keyword, pattern)
+    local keyword_lower = keyword:lower()
+    local pattern_words = {}
+
+    -- 将输入值按空格分割为单词
+    for word in pattern:lower():gmatch("%S+") do
+        table.insert(pattern_words, word)
+    end
+
+    -- 确保关键词包含输入中的所有单词
+    for _, word in ipairs(pattern_words) do
+        if not keyword_lower:find(word, 1, true) then
+            return false
+        end
+    end
+    -- print("Match found: keyword = " .. keyword .. ", pattern = " .. pattern) -- 调试输出
+    return true
 end
 
 function setFocusToWindow(name)
@@ -2427,7 +2440,7 @@ if search_text ~= "" then
 end
 
 GUI.freq = 0
--- GUI.elms.edittext_filter.focus = true -- 脚本启动时，默认聚焦过滤框
+GUI.elms.edittext_filter.focus = true -- 脚本启动时，默认聚焦过滤框
 
 local function force_size() -- 锁定GUI边界
     gfx.quit()
@@ -2438,6 +2451,26 @@ end
 if reaper.JS_Window_FindEx then
     local hwnd = reaper.JS_Window_Find(WINDOW_NAME, true)
     if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
+end
+
+local timer = reaper.time_precise()
+last_input_value = ""
+
+function check_filter_input() -- 实时响应输入事件
+    local current_value = GUI.elms.edittext_filter:val()
+    if current_value ~= last_input_value then
+        -- print("Input value changed to: " .. current_value) -- 调试输出
+        if #current_value < 1 then
+            if current_filter_pattern ~= "" then
+                current_filter_pattern = ""
+                update_usc_data()
+            end
+        else
+            current_filter_pattern = current_value
+            update_usc_data()
+        end
+        last_input_value = current_value
+    end
 end
 
 function GUI.func()
@@ -2504,7 +2537,7 @@ function GUI.func()
         end
     end
 
-    function get_list_synonym_value(self, mode) -- 子分类
+    function get_list_synonym_value(self, mode) -- 同义词
         if mode == "en" then
             return self.synonyms_en_list[self:val()]
         elseif mode == "name" then
@@ -2720,6 +2753,12 @@ function GUI.func()
             GUI.elms.edittext_search.focus = true
             GUI.elms.edittext_search.show_caret = true
         end
+    end
+
+    local now = reaper.time_precise() -- 实时响应输入事件
+    if now - timer >= 0.1 then
+        check_filter_input()
+        timer = now
     end
 
     onSaveWindowSizeAndPosition()

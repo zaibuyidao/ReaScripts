@@ -1,8 +1,8 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.6.2
+-- @version 1.6.3
 -- @changelog
---   Add configuration file. Please press the F2 key to open the editor.
+--   Added real-time input event response during filtering.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
