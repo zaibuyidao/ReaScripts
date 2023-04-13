@@ -146,6 +146,48 @@ if OPEN_RENDER_METADATA_WINDOW then
   reaper.Main_OnCommand(42397, 0) -- File: Show project render metadata window
 end
 
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  end
+
+  return lang
+end
+
 local function Msg(str)
   reaper.ShowConsoleMsg(tostring(str).."\n")
 end
@@ -221,14 +263,30 @@ function utf8_sub3(str,startChar)
   return str:sub(startIndex)
 end
 
+local language = getSystemLanguage()
+
 local show_msg = reaper.GetExtState("UCSMetadataItemTake", "ShowMsg")
 if (show_msg == "") then show_msg = "true" end
 
 if show_msg == "true" then
-  script_name = "UCS元數據對象"
-  text = "$takename: Region name 片段名稱\n$;: Comma 逗號。由於輸入框無法輸入逗號，該通配符用於轉換逗號\n$trackname: 軌道名稱\n$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: Take guid\n$fxname: FXName 簡短描述或標題\n$catid: CatID 分類和子分類的縮寫\n$vendorcat: VendorCategory 可選的FXName前綴\n$usercat: UserCategory 可選的CatID后綴\n$creatorid: CreatorID 聲音設計師、錄音師或者發行商的名字(縮寫)\n$sourceid: SourceID 項目或素材庫名(縮寫)\n\nv=01: Item count 對象計數\nv=01-05 or v=05-01: Loop item count 循環對象計數\na=a: Letter count 字母計數\na=a-e or a=e-a: Loop letter count 循環字母計數\nr=10: Random string length 隨機字符串長度\n\n"
-  text = text.."\nWill this list be displayed next time?\n下次還顯示此列表嗎？"
-  local box_ok = reaper.ShowMessageBox("Wildcards 通配符:\n\n"..text, script_name, 4)
+  if language == "简体中文" then
+    script_name = "UCS元数据对象-片段"
+    text = "$takename: 片段名称\n$;: 代替半角逗号\n$trackname: 轨道名称\n$foldername: 文件夹名称\n$tracknum: 轨道编号\n$GUID: 片段 GUID\n$fxname: FXName\n$catid: CatID\n$vendorcat: VendorCategory 可选的FXName前缀\n$usercat: UserCategory 可选的CatID后缀\n$creatorid: CreatorID 声音设计师、录音师或者发行商的名字(缩写)\n$sourceid: SourceID 项目或音效库名(缩写)\n\nv=01: 区域计数\nv=01-05 or v=05-01: 循环区域计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母计数\nr=10: 随机字符串长度\n\n"
+    text = text.."\n下次还显示此页面吗？"
+    heading = "通配符 :\n\n"
+  elseif language == "繁体中文" then
+    script_name = "UCS元數據對象-片段"
+    text = "$takename: 片段名稱\n$;: 代替半角逗號\n$trackname: 軌道名稱\n$foldername: 文件夾名稱\n$tracknum: 軌道編號\n$GUID: 片段 GUID\n$fxname: FXName\n$catid: CatID\n$vendorcat: VendorCategory 可選的FXName前綴\n$usercat: UserCategory 可選的CatID后綴\n$creatorid: CreatorID 聲音設計師、錄音師或者發行商的名字(縮寫)\n$sourceid: SourceID 項目或音效庫名(縮寫)\n\nv=01: 區域計數\nv=01-05 or v=05-01: 循環區域計數\na=a: 字母計數\na=a-e or a=e-a: 循環字母計數\nr=10: 隨機字符串長度\n\n"
+    text = text.."\n下次還顯示此頁面嗎？"
+    heading = "通配符 :\n\n"
+  else
+    script_name = "UCS Metadata Item-Take"
+    text = "$takename: Take name\n$;: Replace commas\n$trackname: Track name\n$foldername: Folder name\n$tracknum: Track number\n$GUID: Take GUID\n$fxname: FXName\n$catid: CatID\n$vendorcat: VendorCategory\n$usercat: UserCategory\n$creatorid: CreatorID\n$sourceid: SourceID\n\nv=01: Region count\nv=01-05 or v=05-01: Loop region count\na=a: Letter count\na=a-e or a=e-a: Loop letter count\nr=10: Random string length\n\n"
+    text = text.."\nWill this list be displayed next time?"
+    heading = "Wildcards :\n\n"
+  end
+
+  local box_ok = reaper.ShowMessageBox(heading .. text, script_name, 4)
 
   if box_ok == 7 then
     show_msg = "false"
@@ -267,8 +325,11 @@ end
 local order = "2"
 local reverse = "1"
 
-local retval, retvals_csv = reaper.GetUserInputs("UCS Metadata Item-Take", 16, "Title 標題,Description 描述,Keywords 關鍵詞,Microphone 麥克風,MicPerspective 麥克風視角,RecMedium 錄音設備,Designer 設計師,Library 素材庫,URL 網址,Location 地點,FXName 音效名稱,CatID UCS核心字段,VendorCategory FXName前綴,UserCategory CatID后綴,CreatorID 創造者ID(縮寫),SourceID 項目ID(縮寫),extrawidth=300", TrackTitle ..','.. Description ..','.. Keywords ..','.. Microphone ..','.. MicPerspective ..','.. RecMedium ..','.. Designer ..','.. Library ..','.. URL ..','.. Location ..','.. FXName ..','.. CatID ..','.. VendorCategory ..','.. UserCategory ..','..ShortID ..','.. Show)
-if not retval then return end
+title = "UCS Metadata Item-Take"
+lable = "Title,Description,Keywords,Microphone,MicPerspective,RecMedium,Designer,Library,URL,Location,FXName,CatID,VendorCategory,UserCategory,CreatorID,SourceID,extrawidth=300"
+default = TrackTitle ..','.. Description ..','.. Keywords ..','.. Microphone ..','.. MicPerspective ..','.. RecMedium ..','.. Designer ..','.. Library ..','.. URL ..','.. Location ..','.. FXName ..','.. CatID ..','.. VendorCategory ..','.. UserCategory ..','..ShortID ..','.. Show
+local uok, uinput = reaper.GetUserInputs(title, 16, lable, default)
+if not uok then return end
 
 TrackTitle, Description, Keywords, Microphone, MicPerspective, RecMedium, Designer, Library, URL, Location, FXName, CatID, VendorCategory, UserCategory, ShortID, Show = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
@@ -681,6 +742,6 @@ elseif order == "2" then -- 按時間綫順序排序
   end
 end
 
-reaper.Undo_EndBlock('UCS Metadata Item-Take', -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
