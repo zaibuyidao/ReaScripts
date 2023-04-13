@@ -62,6 +62,8 @@ function GUI.Listbox:new(name, z, x, y, w, h, list, multi, caption, pad)
 
 	GUI.redraw_z[lst.z] = true
 
+	lst.focus = lst.focus or false
+
 	setmetatable(lst, self)
 	self.__index = self
 	return lst
@@ -125,7 +127,8 @@ function GUI.Listbox:draw()
 
 	-- Vertical scrollbar
 	if #self.list > self.wnd_h then self:drawscrollbar() end
-
+	
+  if self.focus then self:drawfocus() end
 end
 
 
@@ -527,4 +530,14 @@ function GUI.Listbox:getselectitem(key) -- 加减键和插入键获取选中项�
             return nil
         end
     end
+end
+
+function GUI.Listbox:drawfocus() -- 列表框高亮
+	local x, y, w, h = self.x, self.y, self.w, self.h
+	local pad = 2
+	local focus_color = "elm_fill" -- elm_outline
+
+	-- 绘制聚焦边框
+	GUI.color(focus_color)
+	gfx.rect(x - pad, y - pad, w + 2 * pad, h + 2 * pad, 0)
 end
