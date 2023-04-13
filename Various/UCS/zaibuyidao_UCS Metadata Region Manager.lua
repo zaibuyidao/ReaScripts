@@ -517,7 +517,7 @@ default = TrackTitle ..','.. Description ..','.. Keywords ..','.. Microphone ..'
 local uok, uinput = reaper.GetUserInputs(title, 16, lable, default)
 if not uok then return end
 
-TrackTitle, Description, Keywords, Microphone, MicPerspective, RecMedium, Designer, Library, URL, Location, FXName, CatID, VendorCategory, UserCategory, ShortID, Show = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
+TrackTitle, Description, Keywords, Microphone, MicPerspective, RecMedium, Designer, Library, URL, Location, FXName, CatID, VendorCategory, UserCategory, ShortID, Show = uinput:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
 
 reaper.SetExtState("UCSMetadataRegion", "TrackTitle", TrackTitle, false)
 reaper.SetExtState("UCSMetadataRegion", "Description", Description, false)
