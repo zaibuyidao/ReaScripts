@@ -413,12 +413,12 @@ if (show_msg == "") then show_msg = "true" end
 if show_msg == "true" then
   if language == "简体中文" then
     script_name = "UCS元数据区域管理器"
-    text = "$regionname: 区域名称\n$;: 代替英文逗号\n$fxname: FXName\n$catid: CatID\n$vendorcat: VendorCategory 可选的FXName前缀\n$usercat: UserCategory 可选的CatID后缀\n$creatorid: CreatorID 声音设计师、录音师或者发行商的名字(缩写)\n$sourceid: SourceID 项目或素材库名(缩写)\n\nv=01: 区域计数\nv=01-05 or v=05-01: 循环区域计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母计数\nr=10: 随机字符串长度\n\n"
+    text = "$regionname: 区域名称\n$;: 代替半角逗号\n$fxname: FXName\n$catid: CatID\n$vendorcat: VendorCategory 可选的FXName前缀\n$usercat: UserCategory 可选的CatID后缀\n$creatorid: CreatorID 声音设计师、录音师或者发行商的名字(缩写)\n$sourceid: SourceID 项目或音效库名(缩写)\n\nv=01: 区域计数\nv=01-05 or v=05-01: 循环区域计数\na=a: 字母计数\na=a-e or a=e-a: 循环字母计数\nr=10: 随机字符串长度\n\n"
     text = text.."\n下次还显示此页面吗？"
     heading = "通配符 :\n\n"
   elseif language == "繁体中文" then
     script_name = "UCS元數據區域管理器"
-    text = "$regionname: 區域名稱\n$;: 代替英文逗號\n$fxname: FXName\n$catid: CatID\n$vendorcat: VendorCategory 可選的FXName前綴\n$usercat: UserCategory 可選的CatID后綴\n$creatorid: CreatorID 聲音設計師、錄音師或者發行商的名字(縮寫)\n$sourceid: SourceID 項目或素材庫名(縮寫)\n\nv=01: 區域計數\nv=01-05 or v=05-01: 循環區域計數\na=a: 字母計數\na=a-e or a=e-a: 循環字母計數\nr=10: 隨機字符串長度\n\n"
+    text = "$regionname: 區域名稱\n$;: 代替半角逗號\n$fxname: FXName\n$catid: CatID\n$vendorcat: VendorCategory 可選的FXName前綴\n$usercat: UserCategory 可選的CatID后綴\n$creatorid: CreatorID 聲音設計師、錄音師或者發行商的名字(縮寫)\n$sourceid: SourceID 項目或音效庫名(縮寫)\n\nv=01: 區域計數\nv=01-05 or v=05-01: 循環區域計數\na=a: 字母計數\na=a-e or a=e-a: 循環字母計數\nr=10: 隨機字符串長度\n\n"
     text = text.."\n下次還顯示此頁面嗎？"
     heading = "通配符 :\n\n"
   else

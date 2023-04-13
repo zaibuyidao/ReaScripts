@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.6.5
+-- @version 1.6.6
 -- @changelog
 --   UCS Metadata Region Scripts Optimization
 -- @links

@@ -192,6 +192,30 @@ local function Msg(str)
   reaper.ShowConsoleMsg(tostring(str).."\n")
 end
 
+if not reaper.SNM_GetIntConfigVar then
+  local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
+  if retval == 1 then
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
+  end
+  return
+end
+
+if not reaper.APIExists("JS_Localize") then
+  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, "錯誤", 0)
+  end
+  return reaper.defer(function() end)
+end
+
 function chsize(char)
   if not char then
     return 0
