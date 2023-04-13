@@ -2516,7 +2516,7 @@ function GUI.func()
         end
     end
 
-    -- 上下左右按键发送关键词 与Listbox库关联
+    -- 上下移动类别选中项 Num+ Num-按键发送关键词 与Listbox库关联
     function get_list_category_value(self, mode) -- 主分类
         if mode == "cat" then
             return self.cat_short_list[self:val()]
@@ -2603,12 +2603,37 @@ function GUI.func()
         end
     end
     
-    if char == 1818584692 then -- 方向键左键1818584692 获取选中项目的值
+    if char == 45 then -- -45 获取选中项目的值
         on_list_left_arrow_send(char)
     end
 
-    if char == 1919379572 then -- 方向键右键1919379572 获取选中项目的值
+    if char == 43 then -- +43 获取选中项目的值
         on_list_right_arrow_send(char)
+    end
+
+    -- 左右移动聚焦列表
+    function moveFocus(listboxes, dir)
+        local current_focused_index = nil
+        for i, listbox in ipairs(listboxes) do
+            if listbox.focus then
+                current_focused_index = i
+                break
+            end
+        end
+    
+        if current_focused_index then
+            local new_focused_index = current_focused_index + dir
+            if new_focused_index >= 1 and new_focused_index <= #listboxes then
+                listboxes[current_focused_index].focus = false
+                listboxes[new_focused_index].focus = true
+                listboxes[new_focused_index]:redraw()
+            end
+        end
+    end
+    
+    if char == 1818584692 or char == 1919379572 then -- Left or Right arrow key
+        local dir = (char == 1818584692) and -1 or 1 -- Determine direction (-1 for left, 1 for right)
+        moveFocus(listboxes, dir)
     end
     
     if char == 13 then -- Enter 键

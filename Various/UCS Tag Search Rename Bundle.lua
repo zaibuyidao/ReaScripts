@@ -1,8 +1,9 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.6.7
+-- @version 1.6.8
 -- @changelog
---   UCS Metadata Region/Take Scripts Optimization
+--   Optimized up, down, left, and right arrow key scrolling for selecting list items.
+--   Optimized adding keywords with Num+ and Num- keys
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
