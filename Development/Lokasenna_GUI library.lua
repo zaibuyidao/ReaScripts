@@ -1,8 +1,8 @@
 --[[
 Description: Get Lokasenna_GUI library
-Version: 2.16.21
+Version: 2.16.22
 Changelog:
-    Added scrolling functionality with arrow keys (up, down, left, and right) for selected items in Listbox.
+    Added highlighting when the listbox is selected.
 Author: Lokasenna
 Provides:
     [main]   Lokasenna_GUI Library/Set Lokasenna_GUI library.lua
