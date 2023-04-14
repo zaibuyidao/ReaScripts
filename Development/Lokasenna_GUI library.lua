@@ -1,6 +1,6 @@
 --[[
 Description: Get Lokasenna_GUI library
-Version: 2.16.22
+Version: 2.16.23
 Changelog:
     Added highlighting when the listbox is selected.
 Author: Lokasenna
