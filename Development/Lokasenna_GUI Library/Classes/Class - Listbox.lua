@@ -534,10 +534,18 @@ end
 
 function GUI.Listbox:drawfocus() -- 列表框高亮
 	local x, y, w, h = self.x, self.y, self.w, self.h
-	local pad = 2
-	local focus_color = "elm_fill" -- elm_outline
+	local pad = 1
+	local focus_color = self.focus_color or "teal"
 
 	-- 绘制聚焦边框
 	GUI.color(focus_color)
 	gfx.rect(x - pad, y - pad, w + 2 * pad, h + 2 * pad, 0)
+end
+
+function GUI.Listbox:get_focus_color() -- 获取聚焦边框颜色
+    return self.focus_color or "teal"
+end
+
+function GUI.Listbox:set_focus_color(color) -- 设置聚焦边框颜色
+    self.focus_color = color
 end
