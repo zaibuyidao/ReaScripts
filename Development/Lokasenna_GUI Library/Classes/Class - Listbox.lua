@@ -532,18 +532,33 @@ function GUI.Listbox:getselectitem(key) -- 加减键和插入键获取选中项�
     end
 end
 
-function GUI.Listbox:drawfocus() -- 列表框高亮
+-- function GUI.Listbox:drawfocus() -- 列表框高亮
+-- 	local x, y, w, h = self.x, self.y, self.w, self.h
+-- 	local pad = 1
+-- 	local focus_color = self.focus_color or "teal"
+
+-- 	-- 绘制聚焦边框
+-- 	GUI.color(focus_color)
+-- 	gfx.rect(x - pad, y - pad, w + 2 * pad, h + 2 * pad, 0)
+-- end
+
+function GUI.Listbox:drawfocus() -- 列表框高亮加粗版本
 	local x, y, w, h = self.x, self.y, self.w, self.h
-	local pad = 1
-	local focus_color = self.focus_color or "teal"
+	local pad = 2
+	local focus_color = self.focus_color or "elm_frame"
 
 	-- 绘制聚焦边框
 	GUI.color(focus_color)
-	gfx.rect(x - pad, y - pad, w + 2 * pad, h + 2 * pad, 0)
+
+	-- 绘制加粗的边框
+	for i = 1, pad do
+		local thickness = i - 2
+		gfx.rect(x - thickness, y - thickness, w + thickness * 2, h + thickness * 2, false)
+	end
 end
 
 function GUI.Listbox:get_focus_color() -- 获取聚焦边框颜色
-    return self.focus_color or "teal"
+    return self.focus_color or "elm_frame"
 end
 
 function GUI.Listbox:set_focus_color(color) -- 设置聚焦边框颜色
