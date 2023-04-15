@@ -1,6 +1,6 @@
 -- @description UCS Tag Search Rename Bundle
 -- @author zaibuyidao
--- @version 1.6.8
+-- @version 1.6.9
 -- @changelog
 --   Optimized up, down, left, and right arrow key scrolling for selecting list items.
 --   Optimized adding keywords with Num+ and Num- keys

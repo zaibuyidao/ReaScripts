@@ -2778,6 +2778,10 @@ function GUI.func()
             GUI.elms.edittext_search.focus = true
             GUI.elms.edittext_search.show_caret = true
         end
+
+        GUI.elms.list_category.focus = false
+        GUI.elms.list_subcategory.focus = false
+        GUI.elms.list_synonym.focus = false
     end
 
     local now = reaper.time_precise() -- 实时响应输入事件
