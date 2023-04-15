@@ -43,6 +43,7 @@ function GUI.Button:new(name, z, x, y, w, h, caption, func, ...)
 	Button.params = Button.params or {...}
 
 	Button.state = 0
+	Button.focus = focus
 
 	GUI.redraw_z[Button.z] = true
 
@@ -66,6 +67,11 @@ function GUI.Button:init()
 	GUI.color("elm_outline")
 	GUI.roundrect(1, 1, self.w, self.h, 4, 1, 0)
 
+	-- 绘制聚焦边框
+	if self.focus then
+		-- GUI.color("magenta")
+		GUI.roundrect(1, 1, self.w, self.h, 4, 1, 0)
+	end
 
 	local r, g, b, a = table.unpack(GUI.colors["shadow"])
 	gfx.set(r, g, b, 1)
