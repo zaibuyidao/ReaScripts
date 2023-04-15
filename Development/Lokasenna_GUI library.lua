@@ -1,8 +1,8 @@
 --[[
 Description: Get Lokasenna_GUI library
-Version: 2.16.24
+Version: 2.16.25
 Changelog:
-    Added highlighting when the listbox is selected.
+    Add button focus.
 Author: Lokasenna
 Provides:
     [main]   Lokasenna_GUI Library/Set Lokasenna_GUI library.lua
