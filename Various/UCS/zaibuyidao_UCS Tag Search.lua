@@ -903,17 +903,27 @@ function display_usc_data(data)
     end
 
     function GUI.elms.btn_filter:func()
+        -- 聚焦过滤文本框
+        GUI.elms.edittext_search.focus = false
+        reaper.defer(function ()
+            GUI.elms.edittext_filter.focus = true
+        end)
+
         if #GUI.elms.edittext_filter:val() < 1 then return end
         current_filter_pattern = GUI.elms.edittext_filter:val()
         update_usc_data()
-
-        GUI.elms.edittext_search.focus = false
-        GUI.elms.edittext_filter.focus = true
     end
 
     function GUI.elms.btn_clear:func()
         GUI.elms.edittext_filter:val("")
         current_filter_pattern = ""
+
+        -- 聚焦过滤文本框
+        GUI.elms.edittext_search.focus = false
+        reaper.defer(function ()
+            GUI.elms.edittext_filter.focus = true
+        end)
+
         GUI.elms.list_category:val(1)
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
@@ -922,9 +932,6 @@ function display_usc_data(data)
         GUI.elms.list_category:scroll_to_top()
         GUI.elms.list_subcategory:scroll_to_top()
         GUI.elms.list_synonym:scroll_to_top()
-
-        GUI.elms.edittext_search.focus = false
-        GUI.elms.edittext_filter.focus = true
     end
 
     function GUI.elms.menu_lang:onvalchange()
@@ -935,9 +942,12 @@ function display_usc_data(data)
     function GUI.elms.btn_search:func()
         send_search_text(GUI.elms.edittext_search:val())
 
+        -- 聚焦搜索文本框
         GUI.elms.edittext_filter.focus = false
-        GUI.elms.edittext_search.focus = true
-        GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+        reaper.defer(function ()
+            GUI.elms.edittext_search.focus = true
+            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+        end)
     end
 
     function GUI.elms.btn_search_close:func()

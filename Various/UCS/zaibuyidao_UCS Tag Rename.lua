@@ -1906,47 +1906,47 @@ function renaming()
     reaper.Undo_BeginBlock()
     if is_loop_count_enable() then
         reverse = true
-        if process == "Region mgr" then
+        if process == OPT_PROCESSING_1 then
             rename_region(GUI.elms.edittext_search:val()) -- 重命名区域
-        elseif process == "Region time" then
+        elseif process == OPT_PROCESSING_2 then
             rename_region_time(GUI.elms.edittext_search:val()) -- 重命名区域
-        elseif process == "Marker mgr" then
+        elseif process == OPT_PROCESSING_3 then
             rename_marker(GUI.elms.edittext_search:val()) -- 重命名标记
-        elseif process == "Marker time" then
+        elseif process == OPT_PROCESSING_4 then
             rename_marker_time(GUI.elms.edittext_search:val()) -- 重命名区域
-        elseif process == "Take" then
+        elseif process == OPT_PROCESSING_5 then
             order = GUI.elms.radio_order:val()
-            if take_order == "Track" then
+            if take_order == OPT_TAKE_ORDER_1 then
                 rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
-            elseif take_order == "Wrap" then
+            elseif take_order == OPT_TAKE_ORDER_2 then
                 rename_take(GUI.elms.edittext_search:val(), order)
-            elseif take_order == "Timeline" then
+            elseif take_order == OPT_TAKE_ORDER_3 then
                 rename_take(GUI.elms.edittext_search:val(), order)
             end
-        elseif process == "Track" then
+        elseif process == OPT_PROCESSING_6 then
             rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
         end
 
     else
         reverse = false
-        if process == "Region mgr" then
+        if process == OPT_PROCESSING_1 then
             rename_region(GUI.elms.edittext_search:val()) -- 重命名区域
-        elseif process == "Region time" then
+        elseif process == OPT_PROCESSING_2 then
             rename_region_time(GUI.elms.edittext_search:val()) -- 重命名区域
-        elseif process == "Marker mgr" then
+        elseif process == OPT_PROCESSING_3 then
             rename_marker(GUI.elms.edittext_search:val()) -- 重命名标记
-        elseif process == "Marker time" then
+        elseif process == OPT_PROCESSING_4 then
             rename_marker_time(GUI.elms.edittext_search:val()) -- 重命名区域
-        elseif process == "Take" then
+        elseif process == OPT_PROCESSING_5 then
             order = GUI.elms.radio_order:val()
-            if take_order == "Track" then
+            if take_order == OPT_TAKE_ORDER_1 then
                 rename_take(GUI.elms.edittext_search:val(), order) -- 重命名Take
-            elseif take_order == "Wrap" then
+            elseif take_order == OPT_TAKE_ORDER_2 then
                 rename_take(GUI.elms.edittext_search:val(), order)
-            elseif take_order == "Timeline" then
+            elseif take_order == OPT_TAKE_ORDER_3 then
                 rename_take(GUI.elms.edittext_search:val(), order)
             end
-        elseif process == "Track" then
+        elseif process == OPT_PROCESSING_6 then
             rename_track(GUI.elms.edittext_search:val()) -- 重命名轨道
         end
     end
@@ -1954,9 +1954,6 @@ function renaming()
     search_text = GUI.elms.edittext_search:val()
     reaper.SetExtState("UCSTagRename", "SearchText", search_text, false)
 
-    GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
-    GUI.elms.edittext_search.focus = true
-    GUI.elms.edittext_filter.focus = false
     reaper.Undo_EndBlock('', -1)
 end
 
@@ -2169,17 +2166,27 @@ function display_usc_data(data)
     end
 
     function GUI.elms.btn_filter:func()
+        -- 聚焦过滤文本框
+        GUI.elms.edittext_search.focus = false
+        reaper.defer(function ()
+            GUI.elms.edittext_filter.focus = true
+        end)
+
         if #GUI.elms.edittext_filter:val() < 1 then return end
         current_filter_pattern = GUI.elms.edittext_filter:val()
         update_usc_data()
-
-        GUI.elms.edittext_search.focus = false
-        GUI.elms.edittext_filter.focus = true
     end
     
     function GUI.elms.btn_clear:func()
         GUI.elms.edittext_filter:val("")
         current_filter_pattern = ""
+
+        -- 聚焦过滤文本框
+        GUI.elms.edittext_search.focus = false
+        reaper.defer(function ()
+            GUI.elms.edittext_filter.focus = true
+        end)
+
         GUI.elms.list_category:val(1)
         GUI.elms.list_subcategory:val(1)
         GUI.elms.list_synonym:val(1)
@@ -2188,9 +2195,6 @@ function display_usc_data(data)
         GUI.elms.list_category:scroll_to_top()
         GUI.elms.list_subcategory:scroll_to_top()
         GUI.elms.list_synonym:scroll_to_top()
-
-        GUI.elms.edittext_search.focus = false
-        GUI.elms.edittext_filter.focus = true
     end
 
     function GUI.elms.menu_lang:onvalchange()
@@ -2199,6 +2203,11 @@ function display_usc_data(data)
     end
 
     function GUI.elms.btn_search:func()
+        GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+        GUI.elms.edittext_filter.focus = false
+        reaper.defer(function ()
+            GUI.elms.edittext_search.focus = true
+        end)
         renaming()
     end
 
@@ -2216,6 +2225,10 @@ function display_usc_data(data)
         end
         if is_key_active(KEYS.SHIFT) then -- 发送重命名
             renaming()
+            -- 聚焦重命名文本框
+            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+            GUI.elms.edittext_filter.focus = false
+            GUI.elms.edittext_search.focus = true
         end
     end
 
@@ -2645,8 +2658,16 @@ function GUI.func()
             GUI.elms.edittext_filter.focus = true
         elseif is_key_active(KEYS.ALT) then -- 同时按住Alt
             renaming()
+            -- 聚焦重命名文本框
+            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+            GUI.elms.edittext_filter.focus = false
+            GUI.elms.edittext_search.focus = true
         else
             renaming()
+            -- 聚焦重命名文本框
+            GUI.elms.edittext_search.caret = GUI.elms.edittext_search:carettoend()
+            GUI.elms.edittext_filter.focus = false
+            GUI.elms.edittext_search.focus = true
         end
     end
 
