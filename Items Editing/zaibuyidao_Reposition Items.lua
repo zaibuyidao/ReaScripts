@@ -1,7 +1,7 @@
 --[[
  * ReaScript Name: Reposition Items
- * Version: 1.3.1
- * Author: zaibuyidao
+ * Version: 1.4
+ * Author: zaibuyidao & acendan
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository: GitHub > zaibuyidao > ReaScripts
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -11,6 +11,8 @@
 
 --[[
  * Changelog:
+ * v1.4 (2023-04-28)
+  + Support h:m:s:f intervals
  * v1.3.1 (2022-3-26)
   + 優化時間模式
  * v1.0 (2020-11-6)
@@ -62,14 +64,25 @@ if (interval == "") then interval = "0" end
 if (toggle == "") then toggle = "1" end
 if (mode == "") then mode = "2" end
 
-local retval, retvals_csv = reaper.GetUserInputs("Reposition Items", 3, "Time interval (s),0=Start 1=End,0=Track 1=Wrap 2=Timeline", interval .. ',' .. toggle .. ',' .. mode)
-if not retval or not tonumber(interval) or not tonumber(toggle) or not tonumber(mode) then return end
+local retval, retvals_csv = reaper.GetUserInputs("Reposition Items", 3, "Time Interval (s, h:m:s:f),0=Start 1=End,0=Track 1=Wrap 2=Timeline", interval .. ',' .. toggle .. ',' .. mode)
+if not retval then return end
 interval, toggle, mode = retvals_csv:match("(.*),(.*),(.*)")
-if not tonumber(interval) or not tonumber(toggle) or not tonumber(mode) then return end
 
-reaper.SetExtState("RepositionItems", "Interval", interval, false)
+-- parse toggle/mode
+if not tonumber(toggle) or not tonumber(mode) then return end
 reaper.SetExtState("RepositionItems", "Toggle", toggle, false)
 reaper.SetExtState("RepositionItems", "Mode", mode, false)
+
+-- parse interval, check h:m:s.f
+if interval:find(":") > 0 then 
+  local interval_to_sec = reaper.parse_timestr_len(interval, 0, 5)
+  if interval_to_sec == 0.0 then reaper.ShowMessageBox("Failed to parse interval as h:s:m:f!", "Reposition Items", 0); return end
+  reaper.SetExtState("RepositionItems", "Interval", interval, false)
+  interval = interval_to_sec
+else
+  if not tonumber(interval) then return end
+  reaper.SetExtState("RepositionItems", "Interval", interval, false)
+end
 
 if mode == '0' then
     for i = 0, count_sel_items - 1 do
