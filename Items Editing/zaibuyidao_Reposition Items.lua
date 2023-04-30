@@ -1,22 +1,12 @@
---[[
- * ReaScript Name: Reposition Items
- * Version: 1.3.4
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
- * About: Requires JS_ReaScriptAPI & SWS Extension
---]]
-
---[[
- * Changelog:
- * v1.3.4 (2023-4-30)
-  + Add multilingual support
- * v1.3.1 (2022-3-26)
-  + 優化時間模式
- * v1.0 (2020-11-6)
-  + Initial release
---]]
+-- @description Reposition Items
+-- @version 1.3.5
+-- @author zaibuyidao
+-- @changelog Add multilingual support
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(param)
     reaper.ShowConsoleMsg(tostring(param) .. "\n")
