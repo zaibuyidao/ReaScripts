@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8ffcd2e1263263ce94a5d4655e5fc3fcdc80b367">
+<index version="1" name="zaibuyidao Scripts" commit="6bafcadc95feb2c528c120231b6d5971b617431a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7118,6 +7118,10 @@
       <version name="1.0.4" author="zaibuyidao" time="2023-04-30T15:09:13Z">
         <changelog><![CDATA[Add multilingual support]]></changelog>
         <source main="main midi_editor midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/8ffcd2e1263263ce94a5d4655e5fc3fcdc80b367/Tracks%20Properties/zaibuyidao_Pick%20Track.lua</source>
+      </version>
+      <version name="1.0.5" author="zaibuyidao" time="2023-04-30T16:58:16Z">
+        <changelog><![CDATA[Add multilingual support]]></changelog>
+        <source main="main midi_editor midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/6bafcadc95feb2c528c120231b6d5971b617431a/Tracks%20Properties/zaibuyidao_Pick%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Track By Name.lua" type="script" desc="Select Track By Name">
