@@ -1,6 +1,6 @@
 --[[
  * ReaScript Name: Reposition Items
- * Version: 1.3.3
+ * Version: 1.3.4
  * Author: zaibuyidao
  * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
  * Repository URI: https://github.com/zaibuyidao/ReaScripts
@@ -10,8 +10,10 @@
 
 --[[
  * Changelog:
- * v1.3.3 (2023-4-30)
+ * v1.3.4 (2023-4-30)
   + Add multilingual support
+ * v1.3.1 (2022-3-26)
+  + 優化時間模式
  * v1.0 (2020-11-6)
   + Initial release
 --]]
