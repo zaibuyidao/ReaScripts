@@ -1,5 +1,5 @@
 -- @description Pick Track
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog Add multilingual support
 -- @links
@@ -152,7 +152,6 @@ local retval, retvals_csv = false, ""
 
 retvals_csv = reaper.GetExtState(extstate_section, "previous_values")
 
-all_numbers = true
 repeat
   retval, retvals_csv = reaper.GetUserInputs(title, num_inputs, captions_csv, retvals_csv)
   if not retval then return end
@@ -167,7 +166,7 @@ repeat
 
 until validateInput(retvals_csv) and checkOnlyNumbers(retvals_csv)
 
-reaper.SetExtState(extstate_section, "previous_values", retvals_csv, true)
+reaper.SetExtState(extstate_section, "previous_values", retvals_csv, false)
 
 local tracks_to_select = {}
 for num in retvals_csv:gmatch("%d+") do
