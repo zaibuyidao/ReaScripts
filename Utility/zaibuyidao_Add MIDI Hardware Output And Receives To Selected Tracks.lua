@@ -1,5 +1,5 @@
 -- @description Add MIDI Hardware Output And Receives To Selected Tracks
--- @version 1.5.1
+-- @version 1.5.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -169,7 +169,7 @@ function main()
         commandID_04 = reaper.NamedCommandLookup("_SWS_ENMPSEND") -- SWS: Enable master/parent send on selected track(s)
         reaper.Main_OnCommand(commandID_04, 0)
     end
-    reaper.Undo_EndBlock(title, -)
+    reaper.Undo_EndBlock(title, -1)
 end
 reaper.PreventUIRefresh(1)
 main()
