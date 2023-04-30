@@ -1,5 +1,5 @@
 -- @description Pick Track
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog Add multilingual support
 -- @links
@@ -80,65 +80,129 @@ function getSystemLanguage()
   return lang
 end
 
+function UnselectAllTracks() -- 反选所有轨道
+  local first_track = reaper.GetTrack(0, 0)
+  if first_track ~= nil then
+      reaper.SetOnlyTrackSelected(first_track)
+      reaper.SetTrackSelected(first_track, false)
+  end
+end
+
+function validateInput(input)
+  local nums = {}
+  for num in input:gmatch("%d+") do
+    local n = tonumber(num)
+    if nums[n] then
+      return false
+    end
+    nums[n] = true
+  end
+  return true
+end
+
+function checkOnlyNumbers(input)
+  local numbers = true
+  for num_str in string.gmatch(input, "([^,]+)") do
+    if not tonumber(num_str) then
+      numbers = false
+      break
+    end
+  end
+  return numbers
+end
+
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 local count_track = reaper.CountTracks(0)
-local count_sel_track = reaper.CountSelectedTracks(0)
-for i = 0, count_sel_track-1 do
-  selected_trk = reaper.GetSelectedTrack(0, 0) -- 當軌道為多選時限定只取第一軌
-  track_num = reaper.GetMediaTrackInfo_Value(selected_trk, 'IP_TRACKNUMBER')
-end
-
-track_num = math.floor(track_num)
-
 local language = getSystemLanguage()
+local num_inputs = math.min(10, count_track)
+local captions_csv = ""
+local extstate_section = "PICK_TRACK"
 
 if language == "简体中文" then
   title = "选择轨道"
-  uok, uinput = reaper.GetUserInputs("选择轨道, " .. "共计 " .. count_track .. " 条轨道.", 1, "轨道编号", track_num)
+  msgbox1 = "请勿输入重复的轨道编号."
+  msgbox2 = "请输入数字."
+  err = "错误"
+  ip_track = "轨道 "
 elseif language == "繁体中文" then
   title = "選擇軌道"
-  uok, uinput = reaper.GetUserInputs("選擇軌道, " .. "共計 " .. count_track .. " 條軌道.", 1, "軌道編號", track_num)
+  msgbox1 = "請勿輸入重複的軌道編號."
+  msgbox2 = "請輸入數字."
+  err = "錯誤"
+  ip_track = "軌道 "
 else
   title = "Pick Track"
-  uok, uinput = reaper.GetUserInputs("Pick Track, " .. "total " .. count_track .. " tracks.", 1, "Track number", track_num)
+  msgbox1 = "Please do not input duplicate track numbers."
+  msgbox2 = "Please enter the number."
+  err = "Error"
+  ip_track = "Track "
 end
 
-sel_only_num = uinput:match("(.*)")
-if not uok or not tonumber(sel_only_num) then return reaper.SN_FocusMIDIEditor() end
-sel_only_num = tonumber(sel_only_num)
-
-function UnselectAllTracks()
-	first_track = reaper.GetTrack(0, 0)
-	reaper.SetOnlyTrackSelected(first_track)
-	reaper.SetTrackSelected(first_track, false)
-end
-
-sel_only_num = sel_only_num-1
-
-for i = 0, count_track-1 do
-  if count_track > sel_only_num then
-    
-    UnselectAllTracks()
-    local sel_track = reaper.GetTrack(0, sel_only_num)
-    reaper.SetTrackSelected(sel_track, true)
-
-    local item_num = reaper.CountTrackMediaItems(sel_track)
-    if item_num == nil then return end
-
-    reaper.SelectAllMediaItems(0, false) -- 取消選擇所有對象
-
-    for i = 0, item_num-1 do
-      local item = reaper.GetTrackMediaItem(sel_track, i)
-      reaper.SetMediaItemSelected(item, true) -- 選中所有item
-      reaper.UpdateItemInProject(item)
-    end
-
+for i = 1, num_inputs do
+  if i == num_inputs then
+    captions_csv = captions_csv .. ip_track .. tostring(i)
+  else
+    captions_csv = captions_csv .. ip_track .. tostring(i) .. ","
   end
-  reaper.Main_OnCommand(40913,0) -- Track: Vertical scroll selected tracks into view
 end
 
+local retval, retvals_csv = false, ""
+
+retvals_csv = reaper.GetExtState(extstate_section, "previous_values")
+
+all_numbers = true
+repeat
+  retval, retvals_csv = reaper.GetUserInputs(title, num_inputs, captions_csv, retvals_csv)
+  if not retval then return end
+
+  if not validateInput(retvals_csv) then
+    reaper.ShowMessageBox(msgbox1, err, 0)
+  end
+
+  if not checkOnlyNumbers(retvals_csv) then
+    reaper.ShowMessageBox(msgbox2, err, 0)
+  end
+
+until validateInput(retvals_csv) and checkOnlyNumbers(retvals_csv)
+
+reaper.SetExtState(extstate_section, "previous_values", retvals_csv, true)
+
+local tracks_to_select = {}
+for num in retvals_csv:gmatch("%d+") do
+  local n = tonumber(num)
+  if n >= 1 and n <= count_track then
+    tracks_to_select[n] = true
+  end
+end
+
+UnselectAllTracks()
+
+reaper.SelectAllMediaItems(0, false) -- 取消選擇所有對象
+
+local sel_tracks = {} -- 记录选中轨道的表格
+for track_num, _ in pairs(tracks_to_select) do
+  local track = reaper.GetTrack(0, track_num - 1)
+  table.insert(sel_tracks, track) -- 把选中的轨道加入表格
+  reaper.SetTrackSelected(track, true)
+
+  local item_num = reaper.CountTrackMediaItems(track)
+  if item_num == nil then return end
+
+  for i = 0, item_num-1 do
+    local item = reaper.GetTrackMediaItem(track, i)
+    reaper.SetMediaItemSelected(item, true) -- 選中所有item
+    reaper.UpdateItemInProject(item)
+  end
+end
+
+-- 恢复选中的轨道
+for _, track in ipairs(sel_tracks) do
+  reaper.SetTrackSelected(track, true)
+end
+
+reaper.Main_OnCommand(40913,0) -- Track: Vertical scroll selected tracks into view
 reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
