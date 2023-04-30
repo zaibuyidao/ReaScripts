@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="01f5511d599f3f24de40e2e5727e465822538a2c">
+<index version="1" name="zaibuyidao Scripts" commit="814ea79352d31738a617f7687a2e8f06bd2779ad">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1657,110 +1657,6 @@
       <version name="1.0.1" author="zaibuyidao" time="2021-04-16T18:19:27Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/e240f1d0f853c4a83a82bc552ebb7d96fd356064/JSFX/MIDI%20Transform%20CC.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="MIDI路由CC到通道.jsfx" type="effect" desc="MIDI路由CC到通道">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 \u30435?\u32893?CC\u35373?\u32622?MIDI\u36890?\u36947?\u21040? 1 ... 16\par}
-}
-]]></description>
-        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2020-10-26T04:25:13Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/93f392b2b169831d2df33f3b6014105eae1c9550/JSFX/MIDI%E8%B7%AF%E7%94%B1CC%E5%88%B0%E9%80%9A%E9%81%93.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="MIDI路由PC到通道.jsfx" type="effect" desc="MIDI路由PC到通道">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 \u30435?\u32893?\u31243?\u24335?\u35722?\u25563?\u20449?\u24687?\u23559?MIDI\u36890?\u36947?\u35373?\u23450?\u28858?1...16\par}
-}
-]]></description>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2020-10-26T14:51:44Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/e75ce927ef620b4904dc92bfa290bb36ab7e4f4c/JSFX/MIDI%E8%B7%AF%E7%94%B1PC%E5%88%B0%E9%80%9A%E9%81%93.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="MIDI轉換CC.jsfx" type="effect" desc="MIDI轉換CC">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 \u23559? CC# A \u36681?\u28858? CC# B.\par}
-}
-]]></description>
-        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-04-16T16:39:40Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/ca91a2df55db96ef44b8b1a5e68303caefa347ff/JSFX/MIDI%E8%BD%89%E6%8F%9BCC.jsfx</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-04-16T18:19:27Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/e240f1d0f853c4a83a82bc552ebb7d96fd356064/JSFX/MIDI%E8%BD%89%E6%8F%9BCC.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="MIDI釋鍵限制器.jsfx" type="effect" desc="MIDI釋鍵限制器">
-      <metadata>
-        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2020-12-07T16:40:56Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/89e7c476dc525e3c77cd941503e3d431c9380f89/JSFX/MIDI%E9%87%8B%E9%8D%B5%E9%99%90%E5%88%B6%E5%99%A8.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="技法映射.jsfx" type="effect" desc="技法映射">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992? JSFX-\u25216?\u27861?\u26144?\u23556? \u23559?\u31243?\u24335?\u35722?\u25563?\u28040?\u24687?\u36681?\u25563?\u28858?\u37749?\u20301?\u20999?\u25563?\u37749?\u12290? \u22312?\u20219?\u20309?\u27169?\u24335?\u19979?\u65292?\u20351?\u29992?CC\u65283?119\u25511?\u21046?\u22120?\u25554?\u20837?0\u20540?\u21363?\u21487?\u31435?\u21363?\u30332?\u36865?Note-Off(\u25903?\u25345?\u33258?\u23450?\u32681?\u25511?\u21046?\u22120?\u32232?\u34399?)\u65307? \u24744?\u36996?\u21487?\u20197?\u20351?\u29992?CC\u65283?119\u22312?\u28151?\u21512?\u27169?\u24335?\u19979?\u25511?\u21046?\u38190?\u20301?\u20999?\u25442?\u38190?\u30340?\u38263?\u24230?\u12290?\u30070?\u20540?\u26159?64-127\u26178?\u65292?\u23559?\u28608?\u27963?\u36830?\u22863?\u27169?\u24335?\u20351?\u38899?\u31526?\u24310?\u38271?\u65292?\u32780?\u30070?\u20540?\u26159?0-63\u26178?\u65292?\u23559?\u28608?\u27963?\u26039?\u22863?\u27169?\u24335?\u24182?\u31435?\u21051?\u21457?\u36865?Note-Off\u12290?\par}
-}
-]]></description>
-        <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
-      </metadata>
-      <version name="1.0" author="再補一刀, Tale" time="2021-02-10T15:05:19Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/e1a08d566596b84d3bc2bd5e4e007a874d40b715/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
-      </version>
-      <version name="1.1" author="再補一刀, Tale" time="2021-08-02T15:59:32Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/3acf29e38fdafa0d3467a36e7a4948ff747fca90/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
-      </version>
-      <version name="1.1.1" author="再補一刀, Tale" time="2021-08-03T14:44:53Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/393d4124dfa4551094f6ffc0e65a03f0419a768a/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
-      </version>
-      <version name="1.1.2" author="再補一刀, Tale" time="2021-08-05T16:56:50Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/7d07ee9efc8e0d7609fd89649b99ee7b27b5999f/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
-      </version>
-      <version name="1.1.3" author="再補一刀, Tale" time="2021-08-11T16:05:43Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/36628467ac2ad91a6922f9199ea9a45cca10fcf5/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
-      </version>
-      <version name="1.1.4" author="再補一刀, Tale" time="2021-09-08T15:30:18Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/bb1caa7ebd0364a57580da788082b79f137b3cb0/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
-      </version>
-      <version name="1.1.5" author="再補一刀, Tale" time="2021-09-09T13:31:24Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/248c9a8e3545ab38d84fa293ceabad0bd534e980/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
-      </version>
-      <version name="1.1.6" author="再補一刀, Tale" time="2021-12-23T16:35:36Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/9c702b1ceeb88ab89c4bfee7e4af432c9ceb16ec/JSFX/%E6%8A%80%E6%B3%95%E6%98%A0%E5%B0%84.jsfx</source>
       </version>
     </reapack>
   </category>
