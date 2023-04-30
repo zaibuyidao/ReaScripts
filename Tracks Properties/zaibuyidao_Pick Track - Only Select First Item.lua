@@ -1,12 +1,13 @@
 -- @description Pick Track - Only Select First Item
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog Add multilingual support
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @provides [main=main,midi_editor,midi_eventlisteditor] .
+-- @provides
+--   [main=main,midi_editor,midi_eventlisteditor] .
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(param)
