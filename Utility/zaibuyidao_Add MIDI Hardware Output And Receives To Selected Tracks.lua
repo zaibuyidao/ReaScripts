@@ -1,5 +1,5 @@
 -- @description Add MIDI Hardware Output And Receives To Selected Tracks
--- @version 1.5.2
+-- @version 1.5.3
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -92,22 +92,22 @@ function main()
     local track_num = reaper.GetExtState("AddMIDIHardwareOutput", "Track")
     if (track_num == "") then track_num = "1" end
     local toggle = reaper.GetExtState("AddMIDIHardwareOutput", "Toggle")
-    if (toggle == "") then toggle = "0" end
+    if (toggle == "") then toggle = "dft" end
 
     if language == "简体中文" then
         title = "添加MIDI硬件输出和接收到选定轨道"
-        captions_csv = "MIDI硬件输出,MIDI通道开始,MIDI通道结束,接收轨道编号,0=默认 1=通道 2=接收 3=移除"
+        captions_csv = "MIDI硬件输出,MIDI通道开始,MIDI通道结束,接收轨道编号,模式 (dft/ch/recv/rmv)"
     elseif language == "繁体中文" then
         title = "添加MIDI硬件輸出和接收到選定軌道"
-        captions_csv = "MIDI硬件輸出,MIDI通道開始,MIDI通道結束,接收軌道編號,0=默認 1=通道 2=接收 3=移除"
+        captions_csv = "MIDI硬件輸出,MIDI通道開始,MIDI通道結束,接收軌道編號,模式 (dft/ch/recv/rmv)"
     else
         title = "Add MIDI Hardware Output And Receives To Selected Tracks"
-        captions_csv = "MIDI Hardware Output,Send To Min Channel,Send To Max Channel,Receive From Track,0=DEF 1=CH 2=RECV 3=RMV"
+        captions_csv = "MIDI Hardware Output,Send To Min Channel,Send To Max Channel,Receive From Track,Mode (dft/ch/recv/rmv)"
     end
 
     uok, uinput = reaper.GetUserInputs(title, 5, captions_csv, output_device ..','.. ordinal ..','.. maxval ..','.. track_num ..','.. toggle)
     output_device, ordinal, maxval, track_num, toggle = uinput:match("(.*),(.*),(.*),(.*),(.*)")
-    if not uok or not tonumber(output_device) or not tonumber(ordinal) or not tonumber(maxval) or not tonumber(track_num) or not tonumber(toggle) then return end
+    if not uok or not tonumber(output_device) or not tonumber(ordinal) or not tonumber(maxval) or not tonumber(track_num) or not tostring(toggle) then return end
 
     reaper.SetExtState("AddMIDIHardwareOutput", "Device", output_device, false)
     reaper.SetExtState("AddMIDIHardwareOutput", "Ordinal", ordinal, false)
@@ -118,7 +118,7 @@ function main()
     maxval = tonumber(maxval)
     ordinal = ordinal - 1
     reaper.Undo_BeginBlock()
-    if toggle == "0" then
+    if toggle == "dft" then
         commandID_03 = reaper.NamedCommandLookup("_S&M_SENDS5") -- SWS/S&M: Remove receives from selected tracks
         reaper.Main_OnCommand(commandID_03, 0)
         for i = 1, count_sel_track do
@@ -135,7 +135,7 @@ function main()
             commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
             reaper.Main_OnCommand(commandID_01, 0)
         end
-    elseif toggle == "1" then
+    elseif toggle == "ch" then
         for i = 1, count_sel_track do
             select_track = reaper.GetSelectedTrack(0, i - 1)
             channel = i + ordinal
@@ -146,7 +146,7 @@ function main()
         end
         -- commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
         -- reaper.Main_OnCommand(commandID_01, 0)
-    elseif toggle == "2" then
+    elseif toggle == "recv" then
         commandID_03 = reaper.NamedCommandLookup("_S&M_SENDS5") -- SWS/S&M: Remove receives from selected tracks
         reaper.Main_OnCommand(commandID_03, 0)
         for i = 1, count_sel_track do
