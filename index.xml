@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6bdb67f8f8d68525072e28cb730e78bf67078766">
+<index version="1" name="zaibuyidao Scripts" commit="82883acdcf06580e841b5a036d92b64f070c62b9">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2807,6 +2807,15 @@
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Note.lua" type="script" desc="Event Filter - Select Note">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-02-01T19:07:57Z">
@@ -2815,6 +2824,10 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Note.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-05-01T14:35:20Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/82883acdcf06580e841b5a036d92b64f070c62b9/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Note.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Wheel (Fast).lua" type="script" desc="Event Filter - Select Wheel (Fast)">
