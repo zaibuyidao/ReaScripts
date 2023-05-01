@@ -1,5 +1,5 @@
 -- @description Quantize
--- @version 1.2.2
+-- @version 1.2.3
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -132,17 +132,19 @@ end
 local grid = reaper.GetExtState("Quantize", "Grid")
 if (grid == "") then grid = "120" end
 local toggle = reaper.GetExtState("Quantize", "Toggle")
-if (toggle == "") then toggle = "dft" end
 
 if language == "简体中文" then
     title = "量化"
-    captions_csv = "输入嘀嗒数,量化 (dft/start/end/pos)"
+    captions_csv = "输入嘀嗒数,量化 (默认/开始/结束/位置)"
+    if (toggle == "") then toggle = "默认" end
 elseif language == "繁体中文" then
     title = "量化"
-    captions_csv = "輸入嘀嗒数,量化 (dft/start/end/pos)"
+    captions_csv = "輸入嘀嗒数,量化 (預設/開始/結束/位置)"
+    if (toggle == "") then toggle = "預設" end
 else
     title = "Quantize"
     captions_csv = "Enter A Tick,Qnz (dft/start/end/pos)"
+    if (toggle == "") then toggle = "dft" end
 end
 
 local uok, uinput = reaper.GetUserInputs(title, 2, captions_csv, grid ..','.. toggle)
@@ -151,6 +153,29 @@ if not uok or not tonumber(grid) or not tostring(toggle) then return reaper.SN_F
 
 reaper.SetExtState("Quantize", "Grid", grid, false)
 reaper.SetExtState("Quantize", "Toggle", toggle, false)
+
+if language == "简体中文" then
+    if toggle == "默认" then
+        toggle = "dft"
+    elseif toggle == "开始" then
+        toggle = "start"
+    elseif toggle == "结束" then
+        toggle = "end"
+    elseif toggle == "位置" then
+        toggle = "pos"
+    end
+elseif language == "繁体中文" then
+    if toggle == "預設" then
+        toggle = "dft"
+    elseif toggle == "開始" then
+        toggle = "start"
+    elseif toggle == "結束" then
+        toggle = "end"
+    elseif toggle == "位置" then
+        toggle = "pos"
+    end
+end
+
 grid = grid / tick
 
 function StartTimes()
