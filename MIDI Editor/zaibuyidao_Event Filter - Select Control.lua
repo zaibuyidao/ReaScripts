@@ -1,69 +1,103 @@
 -- @description Event Filter - Select Control
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
--- @changelog Optimized code
+-- @changelog Initial release
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires SWS Extensions
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
-function print(...)
-  local params = {...}
-  for i = 1, #params do
-    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-    reaper.ShowConsoleMsg(tostring(params[i]))
-  end
-  reaper.ShowConsoleMsg("\n")
+function print(param)
+  reaper.ShowConsoleMsg(tostring(param) .. "\n")
 end
 
-function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-    if (print_r_cache[tostring(t)]) then
-      print(indent .. "*" .. tostring(t))
-    else
-      print_r_cache[tostring(t)] = true
-      if (type(t) == "table") then
-        for pos, val in pairs(t) do
-          if (type(val) == "table") then
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-          elseif (type(val) == "string") then
-            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-          else
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-          end
-        end
-      else
-        print(indent .. tostring(t))
-      end
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
     end
   end
-  if (type(t) == "table") then
-    print(tostring(t) .. " {")
-    sub_print_r(t, "  ")
-    print("}")
-  else
-    sub_print_r(t, "  ")
-  end
+
+  return lang
 end
 
-function open_url(url)
-  if not OS then local OS = reaper.GetOS() end
-  if OS=="OSX32" or OS=="OSX64" then
-    os.execute("open ".. url)
-  else
-    os.execute("start ".. url)
-  end
+local language = getSystemLanguage()
+
+if language == "简体中文" then
+  swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+  swserr = "警告"
+  jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+  jstitle = "你必须安裝 JS_ReaScriptAPI"
+  jserr = "错误"
+elseif language == "繁体中文" then
+  swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+  swserr = "警告"
+  jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+  jstitle = "你必須安裝 JS_ReaScriptAPI"
+  jserr = "錯誤"
+else
+  swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+  swserr = "Warning"
+  jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+  jstitle = "You must install JS_ReaScriptAPI"
+  jserr = "Error"
 end
 
-if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+if not reaper.SNM_GetIntConfigVar then
+  local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
   if retval == 1 then
-    open_url("http://www.sws-extension.org/download/pre-release/")
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
   end
+  return
+end
+
+if not reaper.APIExists("JS_Localize") then
+  reaper.MB(jsmsg, jstitle, 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, jserr, 0)
+  end
+  return reaper.defer(function() end)
 end
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
@@ -91,13 +125,25 @@ if (min_tick == "") then min_tick = "0" end
 local max_tick = reaper.GetExtState("SelectControl", "MaxTick")
 if (max_tick == "") then max_tick = "1919" end
 local reset = reaper.GetExtState("SelectControl", "Reset")
-if (reset == "") then reset = "0" end
+if (reset == "") then reset = "n" end
 
-user_ok, dialog_ret_vals = reaper.GetUserInputs("Select Control", 11, "Number,,Value,,Channel,,Beat,,Tick,,Enter 1 to restore default settings,", min_num ..','.. max_num ..','.. min_val ..','.. max_val ..','.. min_chan ..','.. max_chan ..','.. min_meas ..','.. max_meas ..','.. min_tick ..','.. max_tick ..','.. reset)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-min_num, max_num, min_val, max_val, min_chan, max_chan, min_meas, max_meas, min_tick, max_tick, reset = dialog_ret_vals:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
-if not tonumber(min_num) or not tonumber(max_num) or not tonumber(min_val) or not tonumber(max_val) or not tonumber(min_chan) or not tonumber(max_chan) or not tonumber(min_meas) or not tonumber(max_meas) or not tonumber(min_tick) or not tonumber(max_tick) or not tonumber(reset) then return reaper.SN_FocusMIDIEditor() end
-min_num, max_num, min_val, max_val, min_chan, max_chan, min_meas, max_meas, min_tick, max_tick, reset = tonumber(min_num), tonumber(max_num), tonumber(min_val), tonumber(max_val), tonumber(min_chan), tonumber(max_chan), tonumber(min_meas), tonumber(max_meas), tonumber(min_tick), tonumber(max_tick), tonumber(reset)
+if language == "简体中文" then
+  title = "选择控制器"
+  captions_csv = "编号,,数值,,通道,,拍子,,嘀嗒,,重置 (y/n)"
+elseif language == "繁体中文" then
+  title = "選擇控制器"
+  captions_csv = "編號,,數值,,通道,,拍子,,嘀嗒,,重置 (y/n)"
+else
+  title = "Select Control"
+  captions_csv = "Number,,Value,,Channel,,Beat,,Tick,,Reset (y/n)"
+end
+
+retval_ok, retvals_csv = reaper.GetUserInputs(title, 11, captions_csv, min_num ..','.. max_num ..','.. min_val ..','.. max_val ..','.. min_chan ..','.. max_chan ..','.. min_meas ..','.. max_meas ..','.. min_tick ..','.. max_tick ..','.. reset)
+if not retval_ok then return reaper.SN_FocusMIDIEditor() end
+
+min_num, max_num, min_val, max_val, min_chan, max_chan, min_meas, max_meas, min_tick, max_tick, reset = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
+if not tonumber(min_num) or not tonumber(max_num) or not tonumber(min_val) or not tonumber(max_val) or not tonumber(min_chan) or not tonumber(max_chan) or not tonumber(min_meas) or not tonumber(max_meas) or not tonumber(min_tick) or not tonumber(max_tick) or not tostring(reset) then return reaper.SN_FocusMIDIEditor() end
+min_num, max_num, min_val, max_val, min_chan, max_chan, min_meas, max_meas, min_tick, max_tick, reset = tonumber(min_num), tonumber(max_num), tonumber(min_val), tonumber(max_val), tonumber(min_chan), tonumber(max_chan), tonumber(min_meas), tonumber(max_meas), tonumber(min_tick), tonumber(max_tick), tostring(reset)
 
 reaper.SetExtState("SelectControl", "MinNum", min_num, false)
 reaper.SetExtState("SelectControl", "MaxNum", max_num, false)
@@ -109,7 +155,38 @@ reaper.SetExtState("SelectControl", "MinMeas", min_meas, false)
 reaper.SetExtState("SelectControl", "MaxMeas", max_meas, false)
 reaper.SetExtState("SelectControl", "MinTick", min_tick, false)
 reaper.SetExtState("SelectControl", "MaxTick", max_tick, false)
--- reaper.SetExtState("SelectControl", "Reset", reset, false)
+
+if reset == "y" then
+  min_num = "0"
+  max_num = "127"
+  min_val = "0"
+  max_val = "127"
+  min_chan = "1"
+  max_chan = "16"
+  min_meas = "1"
+  max_meas = "99"
+  min_tick = "0"
+  max_tick = "1919"
+  reset = "n"
+
+  retval_ok, retvals_csv = reaper.GetUserInputs(title, 11, captions_csv, min_num ..','.. max_num ..','.. min_val ..','.. max_val ..','.. min_chan ..','.. max_chan ..','.. min_meas ..','.. max_meas ..','.. min_tick ..','.. max_tick ..','.. reset)
+  if not retval_ok then return reaper.SN_FocusMIDIEditor() end
+  
+  min_num, max_num, min_val, max_val, min_chan, max_chan, min_meas, max_meas, min_tick, max_tick, reset = retvals_csv:match("(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*),(.*)")
+  if not tonumber(min_num) or not tonumber(max_num) or not tonumber(min_val) or not tonumber(max_val) or not tonumber(min_chan) or not tonumber(max_chan) or not tonumber(min_meas) or not tonumber(max_meas) or not tonumber(min_tick) or not tonumber(max_tick) or not tostring(reset) then return reaper.SN_FocusMIDIEditor() end
+  min_num, max_num, min_val, max_val, min_chan, max_chan, min_meas, max_meas, min_tick, max_tick, reset = tonumber(min_num), tonumber(max_num), tonumber(min_val), tonumber(max_val), tonumber(min_chan), tonumber(max_chan), tonumber(min_meas), tonumber(max_meas), tonumber(min_tick), tonumber(max_tick), tostring(reset)
+  
+  reaper.SetExtState("SelectControl", "MinNum", min_num, false)
+  reaper.SetExtState("SelectControl", "MaxNum", max_num, false)
+  reaper.SetExtState("SelectControl", "MinVal", min_val, false)
+  reaper.SetExtState("SelectControl", "MaxVal", max_val, false)
+  reaper.SetExtState("SelectControl", "MinChan", min_chan, false)
+  reaper.SetExtState("SelectControl", "MaxChan", max_chan, false)
+  reaper.SetExtState("SelectControl", "MinMeas", min_meas, false)
+  reaper.SetExtState("SelectControl", "MaxMeas", max_meas, false)
+  reaper.SetExtState("SelectControl", "MinTick", min_tick, false)
+  reaper.SetExtState("SelectControl", "MaxTick", max_tick, false)
+end
 
 min_chan = min_chan - 1
 max_chan = max_chan - 1
@@ -123,41 +200,28 @@ function main()
     local tick = start_tick % midi_tick
     reaper.Undo_BeginBlock()
     reaper.MIDI_DisableSort(take)
-    if reset == 0 then
-      if selected == true then
-        if not (msg2 >= min_num and msg2 <= max_num) then -- Number
-          reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-        end
-        if not (msg3 >= min_val and msg3 <= max_val) then -- Value
-          reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-        end
-        if not (chan >= min_chan and chan <= max_chan) then -- Channel
-          reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-        end
-        if not (start_tick >= min_meas * midi_tick and start_tick < max_meas * midi_tick) then -- Beat
-          reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-        end
-        if not (tick >= min_tick and tick <= max_tick) then -- Tick
-          reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
-        end
+
+    if selected == true then
+      if not (msg2 >= min_num and msg2 <= max_num) then -- Number
+        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
       end
-    elseif reset == 1 then
-      reaper.SetExtState("SelectControl", "MinNum", "0", false)
-      reaper.SetExtState("SelectControl", "MaxNum", "127", false)
-      reaper.SetExtState("SelectControl", "MinVal", "0", false)
-      reaper.SetExtState("SelectControl", "MaxVal", "127", false)
-      reaper.SetExtState("SelectControl", "MinChan", "1", false)
-      reaper.SetExtState("SelectControl", "MaxChan", "16", false)
-      reaper.SetExtState("SelectControl", "MinMeas", "1", false)
-      reaper.SetExtState("SelectControl", "MaxMeas", "99", false)
-      reaper.SetExtState("SelectControl", "MinTick", "0", false)
-      reaper.SetExtState("SelectControl", "MaxTick", "1919", false)
-      reaper.SetExtState("SelectControl", "Reset", "0", false)
+      if not (msg3 >= min_val and msg3 <= max_val) then -- Value
+        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
+      end
+      if not (chan >= min_chan and chan <= max_chan) then -- Channel
+        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
+      end
+      if not (start_tick >= min_meas * midi_tick and start_tick < max_meas * midi_tick) then -- Beat
+        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
+      end
+      if not (tick >= min_tick and tick <= max_tick) then -- Tick
+        reaper.MIDI_SetCC(take, i, false, nil, nil, nil, nil, nil, nil, false)
+      end
     end
-    i=i+1
   end
+
   reaper.MIDI_Sort(take)
-  reaper.Undo_EndBlock("Select Control", -1)
+  reaper.Undo_EndBlock(title, -1)
   reaper.UpdateArrange()
 end
 
