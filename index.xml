@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="eb791bb4decc988c515c6fc92f4f92e597004a1d">
+<index version="1" name="zaibuyidao Scripts" commit="6bdb67f8f8d68525072e28cb730e78bf67078766">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2785,18 +2785,24 @@
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Note (Fast).lua" type="script" desc="Event Filter - Select Note (Fast)">
       <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-06-20T14:22:47Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/617e6a4ae77e623e3043a03039815378681f7a59/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Note%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-05-01T14:21:59Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6bdb67f8f8d68525072e28cb730e78bf67078766/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Note%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Note.lua" type="script" desc="Event Filter - Select Note">
