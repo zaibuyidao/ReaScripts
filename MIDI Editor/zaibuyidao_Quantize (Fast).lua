@@ -1,17 +1,12 @@
---[[
- * ReaScript Name: Quantize (Fast)
- * Version: 1.0.7
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * Donation: http://www.paypal.me/zaibuyidao
---]]
-
---[[
- * Changelog:
- * v1.0 (2021-2-15)
-  + Initial release
---]]
+-- @description Quantize (Fast)
+-- @version 1.0.8
+-- @author zaibuyidao
+-- @changelog Initial release
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 EVENT_NOTE_START = 9
 EVENT_NOTE_END = 8
@@ -59,20 +54,92 @@ function table.print(t)
     end
 end
 
-function open_url(url)
-    if not OS then local OS = reaper.GetOS() end
-    if OS=="OSX32" or OS=="OSX64" then
-        os.execute("open ".. url)
-    else
-        os.execute("start ".. url)
+function getSystemLanguage()
+    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+    local os = reaper.GetOS()
+    local lang
+
+    if os == "Win32" or os == "Win64" then -- Windows
+        if locale == 936 then -- Simplified Chinese
+            lang = "简体中文"
+        elseif locale == 950 then -- Traditional Chinese
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "OSX32" or os == "OSX64" then -- macOS
+        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+        if lang == "zh-CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh-TW" then -- 繁体中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "Linux" then -- Linux
+        local handle = io.popen("echo $LANG")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+        if lang == "zh_CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh_TW" then -- 繁體中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
     end
+
+    return lang
+end
+
+local language = getSystemLanguage()
+
+if language == "简体中文" then
+    swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+    swserr = "警告"
+    jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+    jstitle = "你必须安裝 JS_ReaScriptAPI"
+    jserr = "错误"
+elseif language == "繁体中文" then
+    swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+    swserr = "警告"
+    jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+    jstitle = "你必須安裝 JS_ReaScriptAPI"
+    jserr = "錯誤"
+else
+    swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+    swserr = "Warning"
+    jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+    jstitle = "You must install JS_ReaScriptAPI"
+    jserr = "Error"
 end
 
 if not reaper.SNM_GetIntConfigVar then
-    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+    local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
     if retval == 1 then
-        open_url("http://www.sws-extension.org/download/pre-release/")
+        if not OS then local OS = reaper.GetOS() end
+        if OS=="OSX32" or OS=="OSX64" then
+            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+        else
+            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+        end
     end
+    return
+end
+
+if not reaper.APIExists("JS_Localize") then
+    reaper.MB(jsmsg, jstitle, 0)
+    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+    if ok then
+      reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+    else
+      reaper.MB(err, jserr, 0)
+    end
+    return reaper.defer(function() end)
 end
 
 function getAllTakes()
@@ -153,22 +220,42 @@ if tonumber(swing) == 0 then
     gird = reaper.GetExtState("QuantizeFast", "Grid")
     if (gird == "") then gird = "240" end
     toggle = reaper.GetExtState("QuantizeFast", "Toggle")
-    if (toggle == "") then toggle = "0" end
+    if (toggle == "") then toggle = "dft" end
     qntick = reaper.GetExtState("QuantizeFast", "QNTick")
-    if (qntick == "") then qntick = "1" end
+    if (qntick == "") then qntick = "ticks" end
 
-    local user_ok, input_csv = reaper.GetUserInputs('Quantize (Fast)', 3, 'Enter A Value (0=Grid),0=Default 1=Start 2=End 3=Pos,Time Format: 0=100Ths 1=Ticks', gird ..','.. toggle ..','.. qntick)
-    gird, toggle, qntick = input_csv:match("(.*),(.*),(.*)")
+    if language == "简体中文" then
+        title = "量化(快速)"
+        captions_csv = "输入值 (0为量化网格),量化 (dft/start/end/pos),时间格式 (cths/ticks)"
+        captions_csv2 = "量化 (dft/start/end/pos)"
+        msgbox = "脚本造成事件位置位移，原始MIDI数据已恢复"
+        msgerr = "错误"
+    elseif language == "繁体中文" then
+        title = "量化(快速)"
+        captions_csv = "輸入值 (0為量化網格),量化 (dft/start/end/pos),時間格式 (cths/ticks)"
+        captions_csv2 = "量化 (dft/start/end/pos)"
+        msgbox = "腳本造成事件位置位移，原始MIDI數據已恢復"
+        msgerr = "錯誤"
+    else
+        title = "Quantize (Fast)"
+        captions_csv = "Enter A Value (0 for qnz grid),Qnz (dft/start/end/pos),Time Format (cths/ticks)"
+        captions_csv2 = "Qnz (dft/start/end/pos)"
+        msgbox = "The script caused event position displacement, but the original MIDI data has been restored."
+        msgerr = "Error"
+    end
 
-    if not user_ok or not tonumber(gird) or not tonumber(toggle) or not tonumber(qntick) then return reaper.SN_FocusMIDIEditor() end
+    local uok, uinput = reaper.GetUserInputs(title, 3, captions_csv, gird ..','.. toggle ..','.. qntick)
+    gird, toggle, qntick = uinput:match("(.*),(.*),(.*)")
+
+    if not uok or not tonumber(gird) or not tostring(toggle) or not tostring(qntick) then return reaper.SN_FocusMIDIEditor() end
     reaper.SetExtState("QuantizeFast", "Grid", gird, false)
     reaper.SetExtState("QuantizeFast", "Toggle", toggle, false)
     reaper.SetExtState("QuantizeFast", "QNTick", qntick, false)
 
-    if qntick == "1" then
+    if qntick == "ticks" then
         gird = gird / tick
         use_tick = true
-    elseif qntick == "0" then
+    elseif qntick == "cths" then
         if tonumber(gird) > 4 then return end
         use_tick = false
     end
@@ -179,11 +266,11 @@ if tonumber(swing) == 0 then
     end
 else
     toggle = reaper.GetExtState("QuantizeFast", "Toggle")
-    if (toggle == "") then toggle = "0" end
+    if (toggle == "") then toggle = "dft" end
 
-    local user_ok, input_cav = reaper.GetUserInputs('Quantize (Fast)', 1, '0=Default 1=Start 2=End 3=Pos', toggle)
+    local user_ok, input_cav = reaper.GetUserInputs(title, 1, captions_csv2, toggle)
     toggle = input_cav
-    if not user_ok or not tonumber(toggle) then return reaper.SN_FocusMIDIEditor() end
+    if not user_ok or not tostring(toggle) then return reaper.SN_FocusMIDIEditor() end
     reaper.SetExtState("QuantizeFast", "Toggle", toggle, false)
 
     gird = cur_gird
@@ -508,13 +595,13 @@ for take, _ in pairs(getAllTakes()) do
         lastPos = lastPos + offset
     end
 
-    if toggle == "3" then
+    if toggle == "pos" then
         Position(take, gird) -- 只移动音符的起始位置
-    elseif toggle == "2" then
+    elseif toggle == "end" then
         EndTimes(take, gird) -- 结束位置量化，仅音符
-    elseif toggle == "1" then
+    elseif toggle == "start" then
         StartTimes(take, gird) -- 起始位置量化，仅音符
-    elseif toggle == "0" then
+    elseif toggle == "dft" then
         StartTimes(take, gird) -- 默认起始位置量化，仅音符
         EndTimes(take, gird) -- 默认结束位置量化，仅音符
         CCEvents(take, gird) -- 默认量化CC事件
@@ -526,9 +613,9 @@ for take, _ in pairs(getAllTakes()) do
 
     if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
         reaper.MIDI_SetAllEvts(take, MIDI)
-        reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
+        reaper.ShowMessageBox(msgbox, msgerr, 0)
     end
 end
-reaper.Undo_EndBlock("Quantize (Fast)", -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
