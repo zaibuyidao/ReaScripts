@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a1de1dd8422a1e21cbd2ab168441079854395bc5">
+<index version="1" name="zaibuyidao Scripts" commit="eb791bb4decc988c515c6fc92f4f92e597004a1d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4177,6 +4177,10 @@
       <version name="1.2.3" author="zaibuyidao" time="2023-05-01T11:58:52Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a1de1dd8422a1e21cbd2ab168441079854395bc5/MIDI%20Editor/zaibuyidao_Quantize.lua</source>
+      </version>
+      <version name="1.2.4" author="zaibuyidao" time="2023-05-01T13:10:48Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/eb791bb4decc988c515c6fc92f4f92e597004a1d/MIDI%20Editor/zaibuyidao_Quantize.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random CC Position (Within Time Selection).lua" type="script" desc="Random CC Position (Within Time Selection)">
