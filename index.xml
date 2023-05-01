@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="807b52fb454ddd8cbdd881d6f8171a4b04662b3a">
+<index version="1" name="zaibuyidao Scripts" commit="35de512167165000e7e14c28dccefeb9af1cbbc3">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3122,11 +3122,24 @@
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events LR.lua" type="script" desc="Insert CC Events LR">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-01-25T18:39:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%20LR.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-05-01T08:06:20Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/35de512167165000e7e14c28dccefeb9af1cbbc3/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%20LR.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Expression (Set CC Shape).lua" type="script" desc="Insert Expression (Set CC Shape)">
