@@ -1,5 +1,5 @@
 -- @description Add MIDI Hardware Output And Receives To Selected Tracks
--- @version 1.5.3
+-- @version 1.5.4
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -102,10 +102,10 @@ function main()
         captions_csv = "MIDI硬件輸出,MIDI通道開始,MIDI通道結束,接收軌道編號,模式 (dft/ch/recv/rmv)"
     else
         title = "Add MIDI Hardware Output And Receives To Selected Tracks"
-        captions_csv = "MIDI Hardware Output,Send To Min Channel,Send To Max Channel,Receive From Track,Mode (dft/ch/recv/rmv)"
+        captions_csv = "MIDI Hardware Output,Send To Channel Start,Send To Channel End,Receive From Track,Mode (dft/ch/recv/rmv)"
     end
 
-    uok, uinput = reaper.GetUserInputs(title, 5, captions_csv, output_device ..','.. ordinal ..','.. maxval ..','.. track_num ..','.. toggle)
+    local uok, uinput = reaper.GetUserInputs(title, 5, captions_csv, output_device ..','.. ordinal ..','.. maxval ..','.. track_num ..','.. toggle)
     output_device, ordinal, maxval, track_num, toggle = uinput:match("(.*),(.*),(.*),(.*),(.*)")
     if not uok or not tonumber(output_device) or not tonumber(ordinal) or not tonumber(maxval) or not tonumber(track_num) or not tostring(toggle) then return end
 
@@ -158,7 +158,7 @@ function main()
         reaper.Main_OnCommand(commandID_02, 0)
         -- commandID_01 = reaper.NamedCommandLookup("_SWS_DISMPSEND") -- SWS: Disable master/parent send on selected track(s)
         -- reaper.Main_OnCommand(commandID_01, 0)
-    else
+    elseif toggle == "rmv" then
         for i = 1, count_sel_track do
             select_track = reaper.GetSelectedTrack(0, i - 1)
             number = 0 | -1 << 5
