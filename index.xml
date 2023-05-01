@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="82883acdcf06580e841b5a036d92b64f070c62b9">
+<index version="1" name="zaibuyidao Scripts" commit="f15e808ca4f6de60014dd66e3ec02ff892b5f26a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2742,7 +2742,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
         <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
@@ -2757,6 +2757,10 @@
         <changelog><![CDATA[Optimized code]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d71b7892713735891a7b3e3907cb4e6d78437137/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Control%20(Fast).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-05-01T15:20:54Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f15e808ca4f6de60014dd66e3ec02ff892b5f26a/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Control%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Control.lua" type="script" desc="Event Filter - Select Control">
       <metadata>
@@ -2764,7 +2768,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
         <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
@@ -2781,6 +2785,10 @@
       <version name="1.0.2" author="zaibuyidao" time="2022-08-23T17:06:28Z">
         <changelog><![CDATA[Optimized code]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0d88982bc2cec3bccb78fc17fb0f5d782632a0a8/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Control.lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2023-05-01T15:20:54Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f15e808ca4f6de60014dd66e3ec02ff892b5f26a/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Control.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Note (Fast).lua" type="script" desc="Event Filter - Select Note (Fast)">
