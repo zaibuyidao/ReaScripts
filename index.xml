@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f15e808ca4f6de60014dd66e3ec02ff892b5f26a">
+<index version="1" name="zaibuyidao Scripts" commit="de83d7a64c3154cf7f05ddd4772753dedaa68f59">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2840,15 +2840,37 @@
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Wheel (Fast).lua" type="script" desc="Event Filter - Select Wheel (Fast)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-06-21T14:20:04Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/94485d8c897e0f8a77a8706ef57dd41100204d42/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Wheel%20(Fast).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-05-01T16:45:24Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/de83d7a64c3154cf7f05ddd4772753dedaa68f59/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Wheel%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Wheel.lua" type="script" desc="Event Filter - Select Wheel">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-02-01T19:07:57Z">
@@ -2857,6 +2879,10 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Wheel.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-05-01T16:45:24Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/de83d7a64c3154cf7f05ddd4772753dedaa68f59/MIDI%20Editor/zaibuyidao_Event%20Filter%20-%20Select%20Wheel.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Value +01.lua" type="script" desc="Event Value +01">
