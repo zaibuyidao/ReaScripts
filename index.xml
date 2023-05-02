@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="10c944709195ce1f1fd7e35867deaeb23bd51518">
+<index version="1" name="zaibuyidao Scripts" commit="f8d65f18471e72a0ff62ef882da3aee5771cfca1">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1910,6 +1910,10 @@
       <version name="1.9.1" author="zaibuyidao" time="2023-05-02T17:22:41Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/10c944709195ce1f1fd7e35867deaeb23bd51518/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
+      </version>
+      <version name="1.9.2" author="zaibuyidao" time="2023-05-02T19:43:02Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f8d65f18471e72a0ff62ef882da3aee5771cfca1/MIDI%20Editor/zaibuyidao_Articulation%20Map%20-%20Patch%20Change%20GUI.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Articulation Map - Patch Change.lua" type="script" desc="Articulation Map - Patch Change">
