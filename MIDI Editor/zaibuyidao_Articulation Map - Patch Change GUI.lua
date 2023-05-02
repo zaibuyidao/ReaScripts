@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.0
+-- @version 1.9.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -1333,7 +1333,7 @@ local btn5 = Button:new(80,10,25,30, 0.7,0.7,0.7,0.3, "<",GLOBAL_FONT,FONT_SIZE,
 local btn6 = Button:new(115,10,25,30, 0.7,0.7,0.7,0.3, ">",GLOBAL_FONT,FONT_SIZE, 0)
 local btn7 = Button:new(150,10,25,30, 0.7,0.7,0.7,0.3, "NP",GLOBAL_FONT,FONT_SIZE, 0)
 local btn10 = Button:new(185,10,25,30, 0.7,0.7,0.7,0.3, "PC",GLOBAL_FONT,FONT_SIZE, 0)
-local btn9 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "RB",GLOBAL_FONT,FONT_SIZE, 0)
+local btn9 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "ED",GLOBAL_FONT,FONT_SIZE, 0)
 local btn11 = Button:new(255,10,75,30, 0.7,0.7,0.7,0.3, "Sus:CC#" .. gmem_cc_num,GLOBAL_FONT,FONT_SIZE, 0)
 local btn8 = Button:new(10,210,100,30, 0.8,0.8,0.8,0.8, patch_change_load,GLOBAL_FONT,FONT_SIZE, 0)
 local btn2 = Button:new(120,210,100,30, 0.8,0.8,0.8,0.8, patch_change_OK,GLOBAL_FONT,FONT_SIZE, 0)
@@ -1666,9 +1666,9 @@ function mainloop()
     if cur_w ~= default_Wnd_W or cur_h ~= default_Wnd_H then
         local pExtState = readExtState()
         if pExtState then
-            gfx.init(WINDOW_TITLE, default_Wnd_W, default_Wnd_H, pExtState.d, pExtState.x, pExtState.y)
+            gfx.init(nil, default_Wnd_W, default_Wnd_H, pExtState.d, pExtState.x, pExtState.y)
         else
-            gfx.init(WINDOW_TITLE, default_Wnd_W, default_Wnd_H, Wnd_Dock, Wnd_X, Wnd_Y)
+            gfx.init(nil, default_Wnd_W, default_Wnd_H, Wnd_Dock, Wnd_X, Wnd_Y)
         end
     end
 
