@@ -1,38 +1,20 @@
---[[
- * ReaScript Name: Articulation Map - Patch Change GUI
- * Version: 1.8.9
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0 or newer recommended
- * Donation: http://www.paypal.me/zaibuyidao
---]]
+-- @description Articulation Map - Patch Change GUI
+-- @version 1.9.0
+-- @author zaibuyidao
+-- @changelog Initial release
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
---[[
- * Changelog:
- * v1.0 (2021-7-22)
-  + Initial release
---]]
-
-SCRIPT_NAME = "INSERT_PATCH_GUI"
-
-local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-
-if not take or not reaper.TakeIsMIDI(take) then return end
-
-local miditick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
-
-function Msg(param) 
-    reaper.ShowConsoleMsg(tostring(param) .. "\n") 
-end
-
-local function parse_bank(bank_line)
-    return bank_line:match("Bank (%d+) (%d+) (.-)$")
-end
-
-local function parse_patch(bank_line)
-    return bank_line:match("^%s*(%d+) (.-)$")
+function print(...)
+    local params = {...}
+    for i = 1, #params do
+        if i ~= 1 then reaper.ShowConsoleMsg(" ") end
+        reaper.ShowConsoleMsg(tostring(params[i]))
+    end
+    reaper.ShowConsoleMsg("\n")
 end
 
 function table.print(t)
@@ -45,13 +27,13 @@ function table.print(t)
             if (type(t) == "table") then
                 for pos, val in pairs(t) do
                     if (type(val) == "table") then
-                        print(indent .. "[" .. pos .. "] => " .. tostring(t) .. " {")
-                        sub_print_r(val, indent .. string.rep(" ", string.len(pos) + 8))
-                        print(indent .. string.rep(" ", string.len(pos) + 6) .. "}")
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
+                        sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
+                        print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
                     elseif (type(val) == "string") then
-                        print(indent .. "[" .. pos .. '] => "' .. val .. '"')
+                        print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
                     else
-                        print(indent .. "[" .. pos .. "] => " .. tostring(val))
+                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
                     end
                 end
             else
@@ -66,6 +48,181 @@ function table.print(t)
     else
         sub_print_r(t, "  ")
     end
+end
+
+function getSystemLanguage()
+    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+    local os = reaper.GetOS()
+    local lang
+
+    if os == "Win32" or os == "Win64" then -- Windows
+        if locale == 936 then -- Simplified Chinese
+            lang = "简体中文"
+        elseif locale == 950 then -- Traditional Chinese
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "OSX32" or os == "OSX64" then -- macOS
+        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+        if lang == "zh-CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh-TW" then -- 繁体中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "Linux" then -- Linux
+        local handle = io.popen("echo $LANG")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+        if lang == "zh_CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh_TW" then -- 繁體中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    end
+
+    return lang
+end
+
+function getPathDelimiter()
+    local os = reaper.GetOS()
+    if os ~= "Win32" and os ~= "Win64" then
+        return "/"
+    else
+        return "\\"
+    end
+end
+
+SCRIPT_NAME = "PATCH_CHANGE_GUI"
+
+local delimiter = getPathDelimiter()
+local language = getSystemLanguage()
+
+if language == "简体中文" then
+    WINDOW_TITLE = "技法映射 - 音色更改"
+    GLOBAL_FONT = "SimSun"
+    FONT_SIZE = 12
+    swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+    swserr = "警告"
+    jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+    jstitle = "你必须安裝 JS_ReaScriptAPI"
+    jserr = "错误"
+    setbank_msg = "请选择后缀为 .reabank 的音色表。"
+    setbank_err = "错误"
+    setpc_title = "设置 乐器组/力度/音符"
+    setpc_retvals_csv = "乐器组,力度,音符"
+    setpc_msg = "必须选择PC事件"
+    setpc_err = "错误"
+    click_to_refresh = " (点击刷新)"
+    selbank_msg = "请选择一个音色表"
+    selbank_err = "找不到音色表"
+    selbank_path = "选择音色表"
+    selbank_patch_msg = "请选择后缀为 .reabank 的音色表."
+    selbank_patch_err = "错误"
+    patch_change_load = "导入文件"
+    patch_change_OK = "确定"
+    patch_change_Cancel = "取消"
+    patch_change_channel = "通道 :"
+    patch_change_bank = "库  :"
+    patch_change_patch = "音色:"
+elseif language == "繁体中文" then
+    WINDOW_TITLE = "技法映射 - 音色更改"
+    GLOBAL_FONT = "SimSun"
+    FONT_SIZE = 12
+    swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+    swserr = "警告"
+    jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+    jstitle = "你必須安裝 JS_ReaScriptAPI"
+    jserr = "錯誤"
+    setbank_msg = "請選擇後綴為 .reabank 的音色表。"
+    setbank_err = "錯誤"
+    setpc_title = "设置 樂器組/力度/音符"
+    setpc_retvals_csv = "樂器組,力度,音符"
+    setpc_msg = "必須選擇PC事件"
+    setpc_err = "錯誤"
+    click_to_refresh = " (點擊刷新)"
+    selbank_msg = "請選擇一個音色表"
+    selbank_err = "找不到音色表"
+    selbank_path = "選擇音色表"
+    selbank_patch_msg = "請選擇後綴為 .reabank 的音色表."
+    selbank_patch_err = "錯誤"
+    patch_change_load = "導入文件"
+    patch_change_OK = "確定"
+    patch_change_Cancel = "取消"
+    patch_change_channel = "通道 :"
+    patch_change_bank = "庫  :"
+    patch_change_patch = "音色:"
+else
+    WINDOW_TITLE = "Articulation Map - Patch Change"
+    GLOBAL_FONT = "Calibri"
+    FONT_SIZE = 16
+    swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+    swserr = "Warning"
+    jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+    jstitle = "You must install JS_ReaScriptAPI"
+    jserr = "Error"
+    setbank_msg = "Please select reabank file with the suffix .reabank."
+    setbank_err = "Error"
+    setpc_title = "Set Group/Velocity/Note"
+    setpc_retvals_csv = "Group,Velocity,Note"
+    setpc_msg = "PC event must be selected"
+    setpc_err = "Error"
+    click_to_refresh = " (Click to refresh)"
+    selbank_msg = "Please select a Reabank file"
+    selbank_err = "Can't find reabank"
+    selbank_path = "Choose a reabank"
+    selbank_patch_msg = "Please select reabank file with the suffix .reabank."
+    selbank_patch_err = "Error"
+    patch_change_load = "Load File"
+    patch_change_OK = "OK"
+    patch_change_Cancel = "Cancel"
+    patch_change_channel = "MIDI Channel :"
+    patch_change_bank = "Bank :"
+    patch_change_patch = "Patch:"
+end
+
+if not reaper.SNM_GetIntConfigVar then
+    local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+    if retval == 1 then
+        if not OS then local OS = reaper.GetOS() end
+        if OS=="OSX32" or OS=="OSX64" then
+            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+        else
+            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+        end
+    end
+    return
+end
+
+if not reaper.APIExists("JS_Localize") then
+    reaper.MB(jsmsg, jstitle, 0)
+    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+    if ok then
+      reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+    else
+      reaper.MB(err, jserr, 0)
+    end
+    return reaper.defer(function() end)
+end
+
+local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+if not take or not reaper.TakeIsMIDI(take) then return end
+local miditick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
+
+local function parse_bank(bank_line)
+    return bank_line:match("Bank (%d+) (%d+) (.-)$")
+end
+
+local function parse_patch(bank_line)
+    return bank_line:match("^%s*(%d+) (.-)$")
 end
 
 function string.split(input, delimiter)
@@ -109,22 +266,24 @@ function table.sortByKey(tab,key,ascend)
         return a[key]>b[key]
     end)
 end
-function string.split(szFullString, szSeparator)  
-    local nFindStartIndex = 1  
-    local nSplitIndex = 1  
-    local nSplitArray = {}  
-    while true do  
-       local nFindLastIndex = string.find(szFullString, szSeparator, nFindStartIndex)  
-       if not nFindLastIndex then  
-        nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, string.len(szFullString))  
-        break  
-       end  
-       nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, nFindLastIndex - 1)  
-       nFindStartIndex = nFindLastIndex + string.len(szSeparator)  
-       nSplitIndex = nSplitIndex + 1  
-    end  
-    return nSplitArray  
-end
+
+-- function string.split(szFullString, szSeparator)  
+--     local nFindStartIndex = 1  
+--     local nSplitIndex = 1  
+--     local nSplitArray = {}  
+--     while true do  
+--        local nFindLastIndex = string.find(szFullString, szSeparator, nFindStartIndex)  
+--        if not nFindLastIndex then  
+--         nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, string.len(szFullString))  
+--         break  
+--        end  
+--        nSplitArray[nSplitIndex] = string.sub(szFullString, nFindStartIndex, nFindLastIndex - 1)  
+--        nFindStartIndex = nFindLastIndex + string.len(szSeparator)  
+--        nSplitIndex = nSplitIndex + 1  
+--     end  
+--     return nSplitArray  
+-- end
+
 function getNote(sel) --根据传入的sel索引值，返回指定位置的含有音符信息的表
     local retval, selected, muted, startPos, endPos, channel, pitch, vel = reaper.MIDI_GetNote(take, sel)
     return {
@@ -139,9 +298,11 @@ function getNote(sel) --根据传入的sel索引值，返回指定位置的含�
         ["sel"]=sel
     }
 end
+
 function setNote(note,sel,arg) --传入一个音符信息表已经索引值，对指定索引位置的音符信息进行修改
     reaper.MIDI_SetNote(take,sel,note["selected"],note["muted"],note["startPos"],note["endPos"],note["channel"],note["pitch"],note["vel"],arg or false)
 end
+
 function selNoteIterator() --迭代器 用于返回选中的每一个音符信息表
     local sel=-1
     return function()
@@ -150,6 +311,7 @@ function selNoteIterator() --迭代器 用于返回选中的每一个音符信�
         return getNote(sel)
     end
 end
+
 function getMutiInput(title,num,lables,defaults)
     title=title or "Title"
     lables=lables or "Lable:"
@@ -346,26 +508,23 @@ end
 local reabank_path = reaper.GetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch")
 
 if (reabank_path == "") then 
-
-    reaper.ShowMessageBox("Please select a Reabank file!\n請選擇一個音色表！", "Can't find reabank", 0)
-    local retval, new_path = reaper.GetUserFileNameForRead("", "選擇音色表", "") -- 系统文件路径
+    reaper.ShowMessageBox(selbank_msg, selbank_path, 0)
+    local retval, new_path = reaper.GetUserFileNameForRead("", selbank, "") -- 系统文件路径
     if not retval then return 0 end
     local bank_num = new_path:reverse():find('[%/%\\]')
     local bank_name = new_path:sub(-bank_num + 1) .. "" -- 音色表名称
 
     if string.match(bank_name, "%..+$") ~= ".reabank" then
-        return reaper.MB("Please select reabank file with the suffix .reabank!\n請選擇後綴為 .reabank 的音色表！", "Error", 0),
+        return reaper.MB(selbank_patch_msg, selbank_patch_err, 0),
         reaper.SN_FocusMIDIEditor()
     end
     reabank_path = new_path
     reaper.SetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch", reabank_path, true)
-
 end
 
 set_reabank_file(reabank_path)
 
-function create_reabank_action(get_path)
-
+function create_reabank_action(get_path) -- 创建音色表
     local bank_num = get_path:reverse():find('[%/%\\]')
     local bank_name = get_path:sub(-bank_num + 1) .. "" -- 音色表名称
     
@@ -463,7 +622,7 @@ function inset_patch(bank, note, velocity, chan)
     if (reaper.SN_FocusMIDIEditor) then reaper.SN_FocusMIDIEditor() end
 end
 
-function slideF10()
+function slideF10() -- 选中事件向左移动 10 ticks
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
     _, notes, ccs, _ = reaper.MIDI_CountEvts(take)
@@ -491,7 +650,7 @@ function slideF10()
     reaper.SN_FocusMIDIEditor()
 end
 
-function slideZ10()
+function slideZ10() -- 选中事件向右移动 10 ticks
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
     _, notes, ccs, _ = reaper.MIDI_CountEvts(take)
@@ -555,6 +714,7 @@ function ToggleNotePC()
         reaper.SN_FocusMIDIEditor()
     end
 
+    -- 音符转PC
     local function NoteToPC()
         local MSB, LSB = {}
         
@@ -570,155 +730,58 @@ function ToggleNotePC()
     
         reaper.PreventUIRefresh(1)
         reaper.MIDI_DisableSort(take)
-
-        -- 由下往上向右自动错位
-        -- k,idx=2,-1
-
-        -- tbidx={}
-        -- tbst={}
-        -- tbend={}
-        -- tbchan={}
-        -- tbpitch={}
-        -- tbpitch2={}
-        -- tbvel={}
-        -- tempst=-1
-        -- TBinteger={}
-        -- integer = reaper.MIDI_EnumSelNotes(take, idx)
-        
-        -- while (integer ~= -1) do
-        --     integer = reaper.MIDI_EnumSelNotes(take, idx)
-        --     TBinteger[k]=integer
-        --     retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, integer)
-        
-        --     if startppqpos == tempst then
-        --         tbidx[k]=integer
-        --         tbst[k]=startppqpos
-        --         tbend[k]=endppqpos
-        --         tbchan[k]=chan
-        --         tbpitch[k]=pitch
-        --         tbpitch2[k]=pitch
-        --         tbvel[k]=vel
-        --         k=k+1
-        --     else
-        --         -- STRUM it
-        --         low=tbpitch[1]
-            
-        --         for k, v in ipairs(tbpitch) do
-        --             if (low < v) then low=low else low=v end
-        --         end -- get low note
-        --         table.sort(tbpitch)
-        --         tbp_new={}
-        --         for k, v in ipairs(tbpitch) do
-        --             tbp_new [ v ] = k
-        --         end
-
-        --         for k, vv in ipairs(tbidx) do
-        --             reaper.MIDI_SetNote(take, vv, true, false, (tbst[k] + (tbp_new[tbpitch2[k]]-1)*(-1)), tbend[k], nil, nil, nil, false) -- 乘 1 tick
-        --         end --strum it end
-        --         tbidx={}
-        --         tbst={}
-        --         tbend={}
-        --         tbchan={}
-        --         tbpitch={}
-        --         tbpitch2={}
-        --         tbvel={}
-        --         tbidx[1]=integer
-        --         tbst[1]=startppqpos
-        --         tbend[1]=endppqpos
-        --         tbchan[1]=chan
-        --         tbpitch[1]=pitch
-        --         tbpitch2[1]=pitch
-        --         tbvel[1]=vel
-        --         k=2
-        --     end--if end
-        --     tempst = startppqpos
-        --     idx=integer
-        -- end -- while end
-
-        -- 由上往下向右自动错位
-        i,idx=2,-1
-
-        tbidx={}
-        tbst={}
-        tbend={}
-        tbchan={}
-        tbpitch={}
-        tbpitch2={}
-        tbvel={}
-        tempst=0
-        TBinteger={}
-        integer = reaper.MIDI_EnumSelNotes(take,idx)
-
+    
+        local index, tempStart, integer = -1, 0, 0
+        local noteData = {}
+        integer = reaper.MIDI_EnumSelNotes(take, index)
+    
         while (integer ~= -1) do
-
-            integer = reaper.MIDI_EnumSelNotes(take,idx)
-            TBinteger[i]=integer
-            
-            retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, integer)
-            
-            if startppqpos == tempst then
-                tbidx[i]=integer
-                tbst[i]=startppqpos
-                tbend[i]=endppqpos
-                tbchan[i]=chan
-                tbpitch[i]=pitch
-                tbpitch2[i]=pitch
-                tbvel[i]=vel
-                i=i+1
-            else 
-                -- STRUM it
-                low=tbpitch[1]
-
-                for i, v in ipairs(tbpitch) do
-                    if (low < v) then low=low else low=v end
-                end -- get low note
-  
-                table.sort (tbpitch)
-                tbp_new={}
-                for i, v in ipairs(tbpitch) do
-                    tbp_new [ v ] = i
+            integer = reaper.MIDI_EnumSelNotes(take, index)
+    
+            local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, integer)
+    
+            if startppqpos == tempStart then
+                table.insert(noteData, {index = integer, start = startppqpos, endPos = endppqpos, channel = chan, pitch = pitch, velocity = vel})
+            else
+                if #noteData > 0 then
+                    -- STRUM it
+                    local lowestNote = noteData[1].pitch
+                    for _, note in ipairs(noteData) do
+                        lowestNote = math.min(lowestNote, note.pitch)
+                    end
+                
+                    table.sort(noteData, function(a, b) return a.pitch < b.pitch end)
+                
+                    for i, note in ipairs(noteData) do
+                        local offset = (i - 1) * -1
+                        reaper.MIDI_SetNote(take, note.index, true, false, note.start + offset, note.endPos, nil, nil, nil, false)
+                    end
                 end
-              
-                for i, vv in ipairs(tbidx) do
-                  reaper.MIDI_SetNote(take, vv, true, false, tbst[i] + (#tbpitch -tbp_new[tbpitch2[i]])*-1, tbend[i], nil, nil,nil, false)
-                end --strum it end
-                tbidx={}
-                tbst={}
-                tbend={}
-                tbchan={}
-                tbpitch={}
-                tbpitch2={}
-                tbvel={}
-                tbidx[1]=integer
-                tbst[1]=startppqpos
-                tbend[1]=endppqpos
-                tbchan[1]=chan
-                tbpitch[1]=pitch
-                tbpitch2[1]=pitch
-                tbvel[1]=vel
-                i=2
-                tempst = tbst[1]
-            end--if end
-            
-            idx=integer
-        end -- while end
-
+                
+                noteData = {}
+                table.insert(noteData, {index = integer, start = startppqpos, endPos = endppqpos, channel = chan, pitch = pitch, velocity = vel})
+                tempStart = startppqpos
+            end
+    
+            index = integer
+        end
+    
         for i = 1, #note_idx do
-            retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx[i])
+            local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, note_idx[i])
             if selected == true then
-                LSB = vel
+                local LSB = vel
                 reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 0, MSB[1])
                 reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, LSB)
                 reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0)
-
+    
                 if endppqpos - startppqpos > sustainnote then -- 如果音符长度大于半拍，那么插入CC119
-                    reaper.MIDI_InsertCC(take, true, muted, startppqpos-10, 0xB0, chan, gmem_cc_num, 127) -- 插入CC需提前于PC 默认10tick
+                    reaper.MIDI_InsertCC(take, true, muted, startppqpos - 10, 0xB0, chan, gmem_cc_num, 127) -- 插入CC需提前于PC 默认10tick
                     reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, gmem_cc_num, 0)
                 end
             end
         end
-      
-        i = reaper.MIDI_EnumSelNotes(take, -1)
+    
+        local i = reaper.MIDI_EnumSelNotes(take, -1)
         while i > -1 do
             reaper.MIDI_DeleteNote(take, i)
             i = reaper.MIDI_EnumSelNotes(take, -1)
@@ -728,6 +791,7 @@ function ToggleNotePC()
         reaper.PreventUIRefresh(-1)
     end
     
+    -- PC转音符
     local function PCToNote()
         local bank_msb = {}
     
@@ -881,7 +945,7 @@ function set_group_velocity()
 
     if cnt == 0 then
         return
-        reaper.MB("PC event must be selected\n必須選擇PC事件", "Error", 0),
+        reaper.MB(setpc_msg, setpc_err, 0),
         reaper.SN_FocusMIDIEditor()
     end
 
@@ -904,14 +968,9 @@ function set_group_velocity()
     end
 
     if bank_msb[1] == nil or note_vel[1] == nil then return reaper.SN_FocusMIDIEditor() end
-    -- local MSB = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MSB")
-    -- if (MSB == "") then MSB = "0" end
-    local user_ok, input_csv = reaper.GetUserInputs('Set Group/Velocity/Note', 3, 'Group 樂器組,Velocity 力度,Note 音符', bank_msb[1] ..','.. note_vel[1] ..','.. note_pitch[1])
-    -- if not user_ok then return reaper.SN_FocusMIDIEditor() end
+    local user_ok, input_csv = reaper.GetUserInputs(setpc_title, 3, setpc_retvals_csv, bank_msb[1] ..','.. note_vel[1] ..','.. note_pitch[1])
     local MSB, LSB, NOTE_P = input_csv:match("(.*),(.*),(.*)")
 
-    --if not (tonumber(MSB) or MSB == "") or not (tonumber(LSB) or LSB == "") or not (tonumber(NOTE_P) or NOTE_P == "") then return reaper.SN_FocusMIDIEditor() end
-    -- reaper.SetExtState("ArticulationMapPatchChangeGUI", "MSB", MSB, false)
     reaper.MIDI_DisableSort(take)
     for i = 1, #index do
         local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
@@ -932,7 +991,6 @@ function set_group_velocity()
                 reaper.MIDI_SetCC(take, index[i], nil, nil, nil, nil, nil, NOTE_P, nil, false)
             end
         end
-
     end
     reaper.MIDI_Sort(take)
     reaper.PreventUIRefresh(-1)
@@ -940,7 +998,7 @@ function set_group_velocity()
     reaper.SN_FocusMIDIEditor()
 end
 
-function add_fx()
+function add_jsfx()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
     local track = reaper.GetMediaItemTake_Track(take)
@@ -959,7 +1017,6 @@ end
 -- os.exit()
 
 -- For Saving ExtState
-
 function pickle(t)
 	return Pickle:clone():pickle_(t)
 end
@@ -1016,7 +1073,6 @@ function Pickle:ref_(t)
 end
 
 -- unpickle
-
 function unpickle(s)
 	if type(s) ~= "string" then
 		error("can't unpickle a " .. type(s) .. ", only strings")
@@ -1039,7 +1095,6 @@ function unpickle(s)
 end
 
 -- Simple Element Class
-
 local Element = {}
 function Element:new(x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val,norm_val2)
     local elm = {}
@@ -1056,13 +1111,11 @@ function Element:new(x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val,norm_val2)
 end
 
 -- Function for Child Classes(args = Child,Parent Class)
-
 function extended(Child, Parent)
     setmetatable(Child,{__index = Parent}) 
 end
 
 -- Element Class Methods(Main Methods)
-
 function Element:update_xywh()
     if not Z_w or not Z_h then return end -- return if zoom not defined
     self.x, self.w = math.ceil(self.def_xywh[1]* Z_w) , math.ceil(self.def_xywh[3]* Z_w) -- upd x,w
@@ -1274,56 +1327,50 @@ function Textbox:draw()
 end
 
 -- 按钮位置: 1-左 2-上 3-右 4-下
-local btn1 = Button:new(10,10,25,30, 0.7,0.7,0.7,0.3, "1","Arial",15, 0 )
-local btn4 = Button:new(45,10,25,30, 0.7,0.7,0.7,0.3, "2","Arial",15, 0 )
-local btn5 = Button:new(80,10,25,30, 0.7,0.7,0.7,0.3, "<","Arial",15, 0 )
-local btn6 = Button:new(115,10,25,30, 0.7,0.7,0.7,0.3, ">","Arial",15, 0 )
---local btn8 = Button:new(170,10,25,30, 0.7,0.7,0.7,0.3, "+","Arial",15, 0 )
-local btn7 = Button:new(150,10,25,30, 0.7,0.7,0.7,0.3, "NP","Arial",15, 0 )
-local btn10 = Button:new(185,10,25,30, 0.7,0.7,0.7,0.3, "PC","Arial",15, 0 )
-local btn9 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "ED","Arial",15, 0 )
-local btn11 = Button:new(255,10,75,30, 0.7,0.7,0.7,0.3, "JS:CC#" .. gmem_cc_num,"Arial",15, 0 )
-
-local btn8 = Button:new(10,210,100,30, 0.8,0.8,0.8,0.8, "Load File","Arial",15, 0 )
-local btn2 = Button:new(120,210,100,30, 0.8,0.8,0.8,0.8, "OK","Arial",15, 0 )
-local btn3 = Button:new(230,210,100,30, 0.8,0.8,0.8,0.8, "Cancel","Arial",15, 0 )
-
+local btn1 = Button:new(10,10,25,30, 178/255,178/255,178/255,0.3, "A",GLOBAL_FONT,FONT_SIZE, 0)
+local btn4 = Button:new(45,10,25,30, 0.7,0.7,0.7,0.3, "B",GLOBAL_FONT,FONT_SIZE, 0)
+local btn5 = Button:new(80,10,25,30, 0.7,0.7,0.7,0.3, "<",GLOBAL_FONT,FONT_SIZE, 0)
+local btn6 = Button:new(115,10,25,30, 0.7,0.7,0.7,0.3, ">",GLOBAL_FONT,FONT_SIZE, 0)
+local btn7 = Button:new(150,10,25,30, 0.7,0.7,0.7,0.3, "NP",GLOBAL_FONT,FONT_SIZE, 0)
+local btn10 = Button:new(185,10,25,30, 0.7,0.7,0.7,0.3, "PC",GLOBAL_FONT,FONT_SIZE, 0)
+local btn9 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "RB",GLOBAL_FONT,FONT_SIZE, 0)
+local btn11 = Button:new(255,10,75,30, 0.7,0.7,0.7,0.3, "Sus:CC#" .. gmem_cc_num,GLOBAL_FONT,FONT_SIZE, 0)
+local btn8 = Button:new(10,210,100,30, 0.8,0.8,0.8,0.8, patch_change_load,GLOBAL_FONT,FONT_SIZE, 0)
+local btn2 = Button:new(120,210,100,30, 0.8,0.8,0.8,0.8, patch_change_OK,GLOBAL_FONT,FONT_SIZE, 0)
+local btn3 = Button:new(230,210,100,30, 0.8,0.8,0.8,0.8, patch_change_Cancel,GLOBAL_FONT,FONT_SIZE, 0)
 local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11 }
 
 -- x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val = check, norm_val2 = checkbox table
-local ch_box1 = CheckBox:new(50,50,280,30,  0.8,0.8,0.8,0.3, "Bank :","Arial",15,  1, {})
-local ch_box2 = CheckBox:new(50,90,280,30,  0.8,0.8,0.8,0.3, "Patch:","Arial",15,  1, {})
-local ch_box3 = CheckBox:new(170,130,160,30,  0.8,0.8,0.8,0.3, "MIDI Channel :","Arial",15,  1, {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"})
---local ch_box3 = CheckBox:new(120,130,210,30,  0.8,0.8,0.8,0.3, "MIDI Channel :","Arial",15,  1, {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"})
-local CheckBox_TB = {ch_box1,ch_box2,ch_box3}
+local ch_box1 = CheckBox:new(50,50,280,30,  0.8,0.8,0.8,0.3, patch_change_bank,GLOBAL_FONT,FONT_SIZE, 1, {})
+local ch_box2 = CheckBox:new(50,90,280,30,  0.8,0.8,0.8,0.3, patch_change_patch,GLOBAL_FONT,FONT_SIZE, 1, {})
+local ch_box3 = CheckBox:new(170,130,160,30,  0.8,0.8,0.8,0.3, patch_change_channel,GLOBAL_FONT,FONT_SIZE, 1, {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"})
+local CheckBox_TB = {ch_box1, ch_box2, ch_box3}
 
-local W_Frame = Frame:new(10,10,320,230,  0,0.9,0,0.1 ) -- 虚线尺寸
+local W_Frame = Frame:new(10,10,320,230,  0,0.9,0,0.1 ) -- 边框虚线尺寸
 local Frame_TB = { W_Frame }
 
 -- 文本框
 local bank_num = reabank_path:reverse():find('[%/%\\]')
 local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
-local textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, "Arial", 15, 0)
+local textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name..click_to_refresh, GLOBAL_FONT, FONT_SIZE, 0)
 local Textbox_TB = { textb }
 
-btn3.onClick = function ()
+btn3.onClick = function () -- 按钮 退出
     gfx.quit()
     reaper.SN_FocusMIDIEditor()
-end   -- 退出按钮
-btn5.onClick = function () slideF10() end -- -10Tick
-btn6.onClick = function () slideZ10() end -- +10Tick
---btn7.onClick = function () create_reabank_action(reabank_path) end -- 创建音色表脚本
-btn7.onClick = function () ToggleNotePC() end   -- NOTE PC 来回切
-btn9.onClick = function () -- 编辑音色表
+end
+btn5.onClick = function () slideF10() end -- 按钮 -10Tick
+btn6.onClick = function () slideZ10() end -- 按钮 +10Tick
+-- btn7.onClick = function () create_reabank_action(reabank_path) end -- 创建音色表脚本
+btn7.onClick = function () ToggleNotePC() end -- 按钮 NOTE/PC 来回切
+btn9.onClick = function () -- 按钮 编辑音色表
     local rea_patch = '\"'..reabank_path..'\"'
     edit_reabank = 'start "" '..rea_patch
     os.execute(edit_reabank)
 end
-btn10.onClick = function () set_group_velocity() end -- 设置乐器组
-btn11.onClick = function () add_fx() end -- 添加表情映射插件
-
-textb.onClick = function () refresh_bank() end -- 左键点击刷新reabank
-
+btn10.onClick = function () set_group_velocity() end -- 按钮 设置乐器组参数
+btn11.onClick = function () add_jsfx() end -- 按钮 添加表情映射插件
+textb.onClick = function () refresh_bank() end -- 点击刷新reabank
 
 midi_chan = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MIDIChannel")
 if midi_chan == "" then midi_chan = 1 end
@@ -1511,7 +1558,7 @@ btn8.onClick = function () -- 选择音色表
     local bank_name = path:sub(-bank_num + 1) .. "" -- 音色表名称
 
     if string.match(bank_name, "%..+$") ~= ".reabank" then
-        return reaper.MB("Please select reabank file with the suffix .reabank!\n請選擇後綴為 .reabank 的音色表！", "Error", 0),
+        return reaper.MB(setbank_msg, setbank_err, 0),
         reaper.SN_FocusMIDIEditor()
     end
 
@@ -1528,7 +1575,7 @@ btn8.onClick = function () -- 选择音色表
 
     set_reabank_file(reabank_path)
 
-    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, "Arial", 15, 0)
+    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name..click_to_refresh, GLOBAL_FONT, FONT_SIZE, 0)
     Textbox_TB = { textb }
 end
 
@@ -1546,7 +1593,7 @@ btn8.onRClick = function () -- 右键点击刷新reabank
     local bank_num = reabank_path:reverse():find('[%/%\\]')
     local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
     
-    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, "Arial", 15, 0)
+    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name..click_to_refresh, GLOBAL_FONT, FONT_SIZE, 0)
     Textbox_TB = { textb }
 
     refresh_bank()
@@ -1558,7 +1605,7 @@ function DRAW()
     for key,btn     in pairs(Button_TB)   do btn:draw()    end
     for key,ch_box  in pairs(CheckBox_TB) do ch_box:draw() end
     for key, textb  in pairs(Textbox_TB)  do textb:draw()  end
-    --for key,frame   in pairs(Frame_TB)    do frame:draw()  end -- 启用外框线
+    -- for key,frame   in pairs(Frame_TB)    do frame:draw()  end -- 启用外框线
 end
 
 function saveExtState() -- 保存窗口信息
@@ -1581,19 +1628,20 @@ end
 
 function Init()
     -- Some gfx Wnd Default Values
-    local R,G,B = 240,240,240            -- 0..255 form
-    local Wnd_bgd = R + G*256 + B*65536  -- red+green*256+blue*65536  
-    local Wnd_Title = "Patch Change"
+    local R, G, B = 240,240,240 -- 0..255 form
+    local Wnd_bgd = R + G*256 + B*65536 -- red+green*256+blue*65536  
 
-    local Wnd_Dock,Wnd_X,Wnd_Y = 0,800,320
-    Wnd_W,Wnd_H = 340,250 -- global values(used for define zoom level) -- 脚本界面尺寸
+    local Wnd_Dock, Wnd_X, Wnd_Y = 0, 800, 320
+    default_Wnd_W, default_Wnd_H = 340, 250 -- 默认窗口尺寸
+    Wnd_W, Wnd_H = default_Wnd_W, default_Wnd_H -- 设置当前窗口尺寸为默认尺寸
+
     -- Init window
     gfx.clear = Wnd_bgd
     local pExtState = readExtState()
     if pExtState then
-        gfx.init(Wnd_Title, pExtState.w, pExtState.h, pExtState.d, pExtState.x, pExtState.y)
+        gfx.init(WINDOW_TITLE, pExtState.w, pExtState.h, pExtState.d, pExtState.x, pExtState.y)
     else 
-        gfx.init( Wnd_Title, Wnd_W,Wnd_H, Wnd_Dock, Wnd_X, Wnd_Y )
+        gfx.init(WINDOW_TITLE, Wnd_W, Wnd_H, Wnd_Dock, Wnd_X, Wnd_Y)
     end
 
     -- Init mouse last
@@ -1602,16 +1650,28 @@ function Init()
     mouse_ox, mouse_oy = -1, -1
 
     if reaper.JS_Window_FindEx then
-        hwnd = reaper.JS_Window_Find(Wnd_Title, true)
+        hwnd = reaper.JS_Window_Find(WINDOW_TITLE, true)
         if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
     end
 end
 
 function mainloop()
-    -- zoom level
-    Z_w, Z_h = gfx.w/Wnd_W, gfx.h/Wnd_H
-    if Z_w<0.6 then Z_w = 0.6 elseif Z_w>2 then Z_w = 2 end
-    if Z_h<0.6 then Z_h = 0.6 elseif Z_h>2 then Z_h = 2 end 
+    -- 缩放级别
+    -- Z_w, Z_h = gfx.w/Wnd_W, gfx.h/Wnd_H
+    -- if Z_w<0.6 then Z_w = 0.6 elseif Z_w>2 then Z_w = 2 end
+    -- if Z_h<0.6 then Z_h = 0.6 elseif Z_h>2 then Z_h = 2 end
+
+    -- 锁定界面尺寸
+    local cur_w, cur_h = gfx.w, gfx.h
+    if cur_w ~= default_Wnd_W or cur_h ~= default_Wnd_H then
+        local pExtState = readExtState()
+        if pExtState then
+            gfx.init(WINDOW_TITLE, default_Wnd_W, default_Wnd_H, pExtState.d, pExtState.x, pExtState.y)
+        else
+            gfx.init(WINDOW_TITLE, default_Wnd_W, default_Wnd_H, Wnd_Dock, Wnd_X, Wnd_Y)
+        end
+    end
+
     -- mouse and modkeys
     if gfx.mouse_cap&1==1   and last_mouse_cap&1==0  or   -- L mouse
        gfx.mouse_cap&2==2   and last_mouse_cap&2==0  or   -- R mouse
@@ -1622,13 +1682,14 @@ function mainloop()
     Shift = gfx.mouse_cap&8==8
     Alt   = gfx.mouse_cap&16==16 -- Shift state
 
-    DRAW() -- Main() 
+    DRAW() -- Main()
 
     last_mouse_cap = gfx.mouse_cap
     last_x, last_y = gfx.mouse_x, gfx.mouse_y
-    gfx.mouse_wheel = 0 -- reset gfx.mouse_wheel 
+    gfx.mouse_wheel = 0 -- reset gfx.mouse_wheel
+
     char = gfx.getchar()
-    if char == 13 then -- Enter 键
+    if char == 13 then -- Enter
         if current_mode == "1" then
             local bank_item = store[ch_box1.norm_val]
             local note_item = bank_item.notes[ch_box2.norm_val]
@@ -1639,8 +1700,19 @@ function mainloop()
         end
         gfx.quit()
     end
-    if char ~= -1 then reaper.defer(mainloop) end -- defer
+    if char == 26161 then -- F1
+        local rea_patch = '\"'..reabank_path..'\"'
+        if not OS then local OS = reaper.GetOS() end
+        if OS=="OSX32" or OS=="OSX64" then
+            edit_reabank = 'open "" '..rea_patch
+        else
+            edit_reabank = 'start "" '..rea_patch
+        end
+        os.execute(edit_reabank)
+    end
+
     if char == -1 or char == 27 then saveExtState() end -- saveState (window position)
+    if char ~= -1 then reaper.defer(mainloop) end -- defer
     gfx.update()
 end
 
