@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.1
+-- @version 1.9.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -1352,7 +1352,7 @@ local Frame_TB = { W_Frame }
 -- 文本框
 local bank_num = reabank_path:reverse():find('[%/%\\]')
 local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
-local textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name..click_to_refresh, GLOBAL_FONT, FONT_SIZE, 0)
+local textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, GLOBAL_FONT, FONT_SIZE, 0)
 local Textbox_TB = { textb }
 
 btn3.onClick = function () -- 按钮 退出
@@ -1370,7 +1370,6 @@ btn9.onClick = function () -- 按钮 编辑音色表
 end
 btn10.onClick = function () set_group_velocity() end -- 按钮 设置乐器组参数
 btn11.onClick = function () add_jsfx() end -- 按钮 添加表情映射插件
-textb.onClick = function () refresh_bank() end -- 点击刷新reabank
 
 midi_chan = reaper.GetExtState("ArticulationMapPatchChangeGUI", "MIDIChannel")
 if midi_chan == "" then midi_chan = 1 end
@@ -1593,10 +1592,34 @@ btn8.onRClick = function () -- 右键点击刷新reabank
     local bank_num = reabank_path:reverse():find('[%/%\\]')
     local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
     
-    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name..click_to_refresh, GLOBAL_FONT, FONT_SIZE, 0)
+    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, GLOBAL_FONT, FONT_SIZE, 0)
     Textbox_TB = { textb }
 
     refresh_bank()
+end
+
+textb.onClick = function () -- 点击刷新reabank (会失效)
+    if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
+    store = parse_banks(read_config_lines(reabank_path)) -- 模式1数据
+    store_grouped = group_banks(store)                   -- 模式2数据
+
+    state_getter = switch_mode_1()
+    current_mode = "1"
+    push_current_state()
+
+    set_reabank_file(reabank_path)
+
+    local bank_num = reabank_path:reverse():find('[%/%\\]')
+    local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
+    
+    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, GLOBAL_FONT, FONT_SIZE, 0)
+    Textbox_TB = { textb }
+
+    refresh_bank()
+end
+
+textb.onRClick = function () -- 打开 Insert bank/program select event...
+    reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 )
 end
 
 -- Main DRAW function
@@ -1700,6 +1723,7 @@ function mainloop()
         end
         gfx.quit()
     end
+    
     if char == 26161 then -- F1
         local rea_patch = '\"'..reabank_path..'\"'
         if not OS then local OS = reaper.GetOS() end
@@ -1709,6 +1733,36 @@ function mainloop()
             edit_reabank = 'start "" '..rea_patch
         end
         os.execute(edit_reabank)
+    end
+
+    if char == 26165 then -- F5
+        if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
+        store = parse_banks(read_config_lines(reabank_path)) -- 模式1数据
+        store_grouped = group_banks(store)                   -- 模式2数据
+    
+        state_getter = switch_mode_1()
+        current_mode = "1"
+        push_current_state()
+    
+        set_reabank_file(reabank_path)
+    
+        local bank_num = reabank_path:reverse():find('[%/%\\]')
+        local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
+        
+        textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, GLOBAL_FONT, FONT_SIZE, 0)
+        Textbox_TB = { textb }
+    
+        refresh_bank()
+    end
+
+    if char == 26166 then -- F6
+        reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- 打开 Insert bank/program select event...
+    end
+
+    btn8.onRClick = function ()
+        if Shift then
+            reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- 打开 Insert bank/program select event...
+        end
     end
 
     if char == -1 or char == 27 then saveExtState() end -- saveState (window position)
