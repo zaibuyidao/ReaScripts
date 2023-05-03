@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.3
+-- @version 1.9.4
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -1221,7 +1221,7 @@ function Button:draw()
           -- in element
           if self:mouseIN() then a=a-0.5 end
           -- in elm L_down
-          if self:mouseDown() then a=a+0.9 end
+          if self:mouseDown() then a=a+0.5 end
           -- in elm L_up(released and was previously pressed) --
           if self:mouseClick() and self.onClick then self.onClick() end
           if self:mouseRClick() and self.onRClick then self.onRClick() end -- if mouseR clicked and released, execute onRClick()
@@ -1283,9 +1283,9 @@ function CheckBox:draw()
     local fnt,fnt_sz = self.fnt, self.fnt_sz
     -- Get mouse state
           -- in element
-          if self:mouseIN() then a=a-0.8 end
+          if self:mouseIN() then a=a-0.5 end
           -- in elm L_down
-          if self:mouseDown() then a=a-0.8 end
+          if self:mouseDown() then a=a-0.5 end
           -- in elm L_up(released and was previously pressed) --
           if self:mouseClick() then self:set_norm_val()
              if self:mouseClick() and self.onClick then self.onClick() end
@@ -1339,8 +1339,8 @@ function Textbox:draw()
     self:update_xywh() -- Update xywh(if wind changed)
     --self:update_zoom() -- check and update if window resized
 
-    if self:mouseIN() then a=a-0.8 end
-    if self:mouseDown() then a=a-0.8 end
+    if self:mouseIN() then a=a-0.5 end
+    if self:mouseDown() then a=a-0.5 end
 
     if self:mouseRClick() and self.onRClick then self.onRClick() end -- if mouseR clicked and released, execute onRClick()
     --if self:mouseClick() and self.onClick then self.onClick() end -- if mouse clicked and released, execute onClick()
@@ -1609,7 +1609,7 @@ btn8.onClick = function () -- 选择音色表
 
     set_reabank_file(reabank_path)
 
-    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name..click_to_refresh, GLOBAL_FONT, FONT_SIZE, 0)
+    textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, bank_name, GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
     Textbox_TB = { textb }
 end
 
@@ -1627,7 +1627,7 @@ btn8.onRClick = function () -- 右键点击刷新reabank
     local bank_num = reabank_path:reverse():find('[%/%\\]')
     local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
     
-    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, GLOBAL_FONT, FONT_SIZE, 0)
+    textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, bank_name, GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
     Textbox_TB = { textb }
 
     refresh_bank()
@@ -1647,7 +1647,7 @@ textb.onClick = function () -- 点击刷新reabank (会失效)
     local bank_num = reabank_path:reverse():find('[%/%\\]')
     local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
     
-    textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, GLOBAL_FONT, FONT_SIZE, 0)
+    textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, bank_name, GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
     Textbox_TB = { textb }
 
     refresh_bank()
