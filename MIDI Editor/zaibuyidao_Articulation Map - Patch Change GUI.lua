@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.5
+-- @version 1.9.6
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -184,7 +184,7 @@ else
     patch_change_load = "Load File"
     patch_change_OK = "OK"
     patch_change_Cancel = "Cancel"
-    patch_change_channel = "MIDI Channel :"
+    patch_change_channel = "Channel :"
     patch_change_bank = "Bank :"
     patch_change_patch = "Patch:"
 end
@@ -1609,7 +1609,6 @@ btn8.onClick = function () -- 选择音色表
 
     set_reabank_file(reabank_path)
 
-    textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, bank_name, GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
     Textbox_TB = { textb }
 end
 
@@ -1627,7 +1626,6 @@ btn8.onRClick = function () -- 右键点击刷新reabank
     local bank_num = reabank_path:reverse():find('[%/%\\]')
     local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
     
-    textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, bank_name, GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
     Textbox_TB = { textb }
 
     refresh_bank()
@@ -1647,7 +1645,6 @@ textb.onClick = function () -- 点击刷新reabank (会失效)
     local bank_num = reabank_path:reverse():find('[%/%\\]')
     local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
     
-    textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, bank_name, GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
     Textbox_TB = { textb }
 
     refresh_bank()
@@ -1784,7 +1781,6 @@ function mainloop()
         local bank_num = reabank_path:reverse():find('[%/%\\]')
         local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
         
-        textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, GLOBAL_FONT, FONT_SIZE, 0)
         Textbox_TB = { textb }
     
         refresh_bank()
