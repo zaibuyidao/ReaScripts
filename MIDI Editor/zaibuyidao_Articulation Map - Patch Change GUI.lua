@@ -1,7 +1,7 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.2
+-- @version 1.9.3
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog UI adjustment
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -1096,7 +1096,7 @@ end
 
 -- Simple Element Class
 local Element = {}
-function Element:new(x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val,norm_val2)
+function Element:new(x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val,norm_val2,bty_bk)
     local elm = {}
     elm.def_xywh = {x,y,w,h,fnt_sz} -- its default coord,used for Zoom etc
     elm.x, elm.y, elm.w, elm.h = x, y, w, h
@@ -1104,6 +1104,7 @@ function Element:new(x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val,norm_val2)
     elm.lbl, elm.fnt, elm.fnt_sz  = lbl, fnt, fnt_sz
     elm.norm_val = norm_val
     elm.norm_val2 = norm_val2
+    elm.bty_bk = bty_bk -- 新增边框颜色
 
     setmetatable(elm, self)
     self.__index = self 
@@ -1158,8 +1159,18 @@ end
 function Element:draw_frame()
     local x,y,w,h  = self.x,self.y,self.w,self.h
     gfx.rect(x, y, w, h, false)            -- frame1
-    gfx.roundrect(x, y, w-1, h-1, 3, true) -- frame2         
+    -- gfx.roundrect(x, y, w-1, h-1, 3, true) -- frame2         
 end
+
+-- function Element:draw_frame()
+--     local x, y, w, h = self.x, self.y, self.w, self.h
+--     if self.bty_bk then -- set frame color
+--         gfx.set(self.bty_bk[1], self.bty_bk[2], self.bty_bk[3], self.bty_bk[4])
+--     end
+--     gfx.rect(x-1, y-1, w+2, h+2, false) -- frame1
+--     -- gfx.set(self.r, self.g, self.b, self.a) -- reset color for the roundrect
+--     -- gfx.roundrect(x + 1, y + 1, w - 2, h - 2, 3, true) -- frame2
+-- end
 
 function Element:mouseRClick()
     return gfx.mouse_cap & 2 == 0 and last_mouse_cap & 2 == 2 and
@@ -1208,16 +1219,23 @@ function Button:draw()
     local fnt,fnt_sz = self.fnt, self.fnt_sz
     -- Get mouse state
           -- in element
-          if self:mouseIN() then a=a+0.1 end
+          if self:mouseIN() then a=a-0.5 end
           -- in elm L_down
-          if self:mouseDown() then a=a+0.2 end
+          if self:mouseDown() then a=a+0.9 end
           -- in elm L_up(released and was previously pressed) --
           if self:mouseClick() and self.onClick then self.onClick() end
           if self:mouseRClick() and self.onRClick then self.onRClick() end -- if mouseR clicked and released, execute onRClick()
+    
+    -- Draw btn frame and body
+    -- if self.bty_bk then -- set frame color
+    --     gfx.set(self.bty_bk[1], self.bty_bk[2], self.bty_bk[3], self.bty_bk[4])
+    -- end
+    
     -- Draw btn body, frame
+    self:draw_frame()   -- frame
     gfx.set(r,g,b,a)    -- set body color
     self:draw_body()    -- body
-    self:draw_frame()   -- frame
+
     -- Draw label
     gfx.set(0, 0, 0, 1)   -- set label color gfx.set 按钮文字颜色
     gfx.setfont(1, fnt, fnt_sz) -- set label fnt
@@ -1265,17 +1283,24 @@ function CheckBox:draw()
     local fnt,fnt_sz = self.fnt, self.fnt_sz
     -- Get mouse state
           -- in element
-          if self:mouseIN() then a=a+0.1 end
+          if self:mouseIN() then a=a-0.8 end
           -- in elm L_down
-          if self:mouseDown() then a=a+0.2 end
+          if self:mouseDown() then a=a-0.8 end
           -- in elm L_up(released and was previously pressed) --
           if self:mouseClick() then self:set_norm_val()
              if self:mouseClick() and self.onClick then self.onClick() end
           end
+
+    -- Draw btn frame and body
+    -- if self.bty_bk then -- set frame color
+    --     gfx.set(self.bty_bk[1], self.bty_bk[2], self.bty_bk[3], self.bty_bk[4])
+    -- end
+
     -- Draw ch_box body, frame
+    self:draw_frame()   -- frame
     gfx.set(r,g,b,a)    -- set body color
     self:draw_body()    -- body
-    self:draw_frame()   -- frame
+
     -- Draw label
     gfx.set(0, 0, 0, 1)   -- set label,val color -- (0.7, 0.9, 0.4, 1) 下拉框颜色
     gfx.setfont(1, fnt, fnt_sz) -- set label,val fnt
@@ -1314,12 +1339,21 @@ function Textbox:draw()
     self:update_xywh() -- Update xywh(if wind changed)
     --self:update_zoom() -- check and update if window resized
 
-    -- in elm R_up (released and was previously pressed), run onRClick (user defined)
+    if self:mouseIN() then a=a-0.8 end
+    if self:mouseDown() then a=a-0.8 end
+
     if self:mouseRClick() and self.onRClick then self.onRClick() end -- if mouseR clicked and released, execute onRClick()
-    if self:mouseClick() and self.onClick then self.onClick() end -- if mouse clicked and released, execute onClick()
+    --if self:mouseClick() and self.onClick then self.onClick() end -- if mouse clicked and released, execute onClick()
+    
+    -- Draw btn frame and body
+    -- if self.bty_bk then -- set frame color
+    --     gfx.set(self.bty_bk[1], self.bty_bk[2], self.bty_bk[3], self.bty_bk[4])
+    -- end
+    
+    self:draw_frame()
     gfx.set(r,g,b,a) -- set the drawing colour for the e.Element
     self:draw_body()
-    self:draw_frame()
+
     -- Draw label
     gfx.set(0, 0, 0, 1) -- set label color
     gfx.setfont(1, fnt, fnt_sz) -- set label font
@@ -1327,23 +1361,24 @@ function Textbox:draw()
 end
 
 -- 按钮位置: 1-左 2-上 3-右 4-下
-local btn1 = Button:new(10,10,25,30, 178/255,178/255,178/255,0.3, "A",GLOBAL_FONT,FONT_SIZE, 0)
-local btn4 = Button:new(45,10,25,30, 0.7,0.7,0.7,0.3, "B",GLOBAL_FONT,FONT_SIZE, 0)
-local btn5 = Button:new(80,10,25,30, 0.7,0.7,0.7,0.3, "<",GLOBAL_FONT,FONT_SIZE, 0)
-local btn6 = Button:new(115,10,25,30, 0.7,0.7,0.7,0.3, ">",GLOBAL_FONT,FONT_SIZE, 0)
-local btn7 = Button:new(150,10,25,30, 0.7,0.7,0.7,0.3, "NP",GLOBAL_FONT,FONT_SIZE, 0)
-local btn10 = Button:new(185,10,25,30, 0.7,0.7,0.7,0.3, "PC",GLOBAL_FONT,FONT_SIZE, 0)
-local btn9 = Button:new(220,10,25,30, 0.7,0.7,0.7,0.3, "ED",GLOBAL_FONT,FONT_SIZE, 0)
-local btn11 = Button:new(255,10,75,30, 0.7,0.7,0.7,0.3, "Sus:CC#" .. gmem_cc_num,GLOBAL_FONT,FONT_SIZE, 0)
-local btn8 = Button:new(10,210,100,30, 0.8,0.8,0.8,0.8, patch_change_load,GLOBAL_FONT,FONT_SIZE, 0)
-local btn2 = Button:new(120,210,100,30, 0.8,0.8,0.8,0.8, patch_change_OK,GLOBAL_FONT,FONT_SIZE, 0)
-local btn3 = Button:new(230,210,100,30, 0.8,0.8,0.8,0.8, patch_change_Cancel,GLOBAL_FONT,FONT_SIZE, 0)
+bty_bk = {42/255,42/255,42/255,1}
+local btn1 = Button:new(10,10,25,25, 200/255,200/255,200/255,1, "A",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn4 = Button:new(45,10,25,25, 200/255,200/255,200/255,1, "B",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn5 = Button:new(80,10,25,25, 200/255,200/255,200/255,1, "<",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn6 = Button:new(115,10,25,25, 200/255,200/255,200/255,1, ">",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn7 = Button:new(150,10,25,25, 200/255,200/255,200/255,1, "NP",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn10 = Button:new(185,10,25,25, 200/255,200/255,200/255,1, "PC",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn9 = Button:new(220,10,25,25, 200/255,200/255,200/255,1, "ED",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn11 = Button:new(255,10,75,25, 200/255,200/255,200/255,1, "Sus:CC#" .. gmem_cc_num,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn8 = Button:new(10,185,100,25, 200/255,200/255,200/255,1, patch_change_load,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn2 = Button:new(120,185,100,25, 200/255,200/255,200/255,1, patch_change_OK,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn3 = Button:new(230,185,100,25, 200/255,200/255,200/255,1, patch_change_Cancel,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
 local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11 }
 
 -- x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val = check, norm_val2 = checkbox table
-local ch_box1 = CheckBox:new(50,50,280,30,  0.8,0.8,0.8,0.3, patch_change_bank,GLOBAL_FONT,FONT_SIZE, 1, {})
-local ch_box2 = CheckBox:new(50,90,280,30,  0.8,0.8,0.8,0.3, patch_change_patch,GLOBAL_FONT,FONT_SIZE, 1, {})
-local ch_box3 = CheckBox:new(170,130,160,30,  0.8,0.8,0.8,0.3, patch_change_channel,GLOBAL_FONT,FONT_SIZE, 1, {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"})
+local ch_box1 = CheckBox:new(50,45,280,25,  255/255,255/255,255/255,1, patch_change_bank,GLOBAL_FONT,FONT_SIZE, 1, {}, bty_bk)
+local ch_box2 = CheckBox:new(50,80,280,25,  255/255,255/255,255/255,1, patch_change_patch,GLOBAL_FONT,FONT_SIZE, 1, {}, bty_bk)
+local ch_box3 = CheckBox:new(170,115,160,25,  255/255,255/255,255/255,1, patch_change_channel,GLOBAL_FONT,FONT_SIZE, 1, {"1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"}, bty_bk)
 local CheckBox_TB = {ch_box1, ch_box2, ch_box3}
 
 local W_Frame = Frame:new(10,10,320,230,  0,0.9,0,0.1 ) -- 边框虚线尺寸
@@ -1352,7 +1387,7 @@ local Frame_TB = { W_Frame }
 -- 文本框
 local bank_num = reabank_path:reverse():find('[%/%\\]')
 local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
-local textb = Textbox:new(10,170,320,30, 0.8,0.8,0.8,0.3, bank_name, GLOBAL_FONT, FONT_SIZE, 0)
+local textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, bank_name, GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
 local Textbox_TB = { textb }
 
 btn3.onClick = function () -- 按钮 退出
@@ -1651,11 +1686,11 @@ end
 
 function Init()
     -- Some gfx Wnd Default Values
-    local R, G, B = 240,240,240 -- 0..255 form
-    local Wnd_bgd = R + G*256 + B*65536 -- red+green*256+blue*65536  
+    local R1, G1, B1 = 240,240,240 -- 0..255 form
+    local Wnd_bgd = R1 + G1*256 + B1*65536 -- red+green*256+blue*65536  
 
     local Wnd_Dock, Wnd_X, Wnd_Y = 0, 800, 320
-    default_Wnd_W, default_Wnd_H = 340, 250 -- 默认窗口尺寸
+    default_Wnd_W, default_Wnd_H = 340, 220 -- 默认窗口尺寸
     Wnd_W, Wnd_H = default_Wnd_W, default_Wnd_H -- 设置当前窗口尺寸为默认尺寸
 
     -- Init window
