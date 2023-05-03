@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.7
+-- @version 1.9.8
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -1797,6 +1797,27 @@ function mainloop()
     btn8.onRClick = function ()
         if Shift then
             reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- 打开 Insert bank/program select event...
+        end
+    end
+
+    textb.onRClick = function ()
+        if Shift then
+            if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
+            store = parse_banks(read_config_lines(reabank_path)) -- 模式1数据
+            store_grouped = group_banks(store)                   -- 模式2数据
+        
+            state_getter = switch_mode_1()
+            current_mode = "1"
+            push_current_state()
+        
+            set_reabank_file(reabank_path)
+        
+            local bank_num = reabank_path:reverse():find('[%/%\\]')
+            local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
+            
+            Textbox_TB = { textb }
+        
+            refresh_bank()
         end
     end
 
