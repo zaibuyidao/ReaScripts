@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.6
+-- @version 1.9.7
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -1362,17 +1362,17 @@ end
 
 -- 按钮位置: 1-左 2-上 3-右 4-下
 bty_bk = {42/255,42/255,42/255,1}
-local btn1 = Button:new(10,10,25,25, 200/255,200/255,200/255,1, "A",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn4 = Button:new(45,10,25,25, 200/255,200/255,200/255,1, "B",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn5 = Button:new(80,10,25,25, 200/255,200/255,200/255,1, "<",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn6 = Button:new(115,10,25,25, 200/255,200/255,200/255,1, ">",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn7 = Button:new(150,10,25,25, 200/255,200/255,200/255,1, "NP",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn10 = Button:new(185,10,25,25, 200/255,200/255,200/255,1, "PC",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn9 = Button:new(220,10,25,25, 200/255,200/255,200/255,1, "ED",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn11 = Button:new(255,10,75,25, 200/255,200/255,200/255,1, "Sus:CC#" .. gmem_cc_num,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn8 = Button:new(10,185,100,25, 200/255,200/255,200/255,1, patch_change_load,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn2 = Button:new(120,185,100,25, 200/255,200/255,200/255,1, patch_change_OK,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
-local btn3 = Button:new(230,185,100,25, 200/255,200/255,200/255,1, patch_change_Cancel,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn1 = Button:new(10,10,25,25, 210/255,210/255,210/255,1, "A",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn4 = Button:new(45,10,25,25, 210/255,210/255,210/255,1, "B",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn5 = Button:new(80,10,25,25, 210/255,210/255,210/255,1, "<",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn6 = Button:new(115,10,25,25, 210/255,210/255,210/255,1, ">",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn7 = Button:new(150,10,25,25, 210/255,210/255,210/255,1, "NP",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn10 = Button:new(185,10,25,25, 210/255,210/255,210/255,1, "PC",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn9 = Button:new(220,10,25,25, 210/255,210/255,210/255,1, "ED",GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn11 = Button:new(255,10,75,25, 210/255,210/255,210/255,1, "Sus:CC#" .. gmem_cc_num,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn8 = Button:new(10,185,100,25, 210/255,210/255,210/255,1, patch_change_load,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn2 = Button:new(120,185,100,25, 210/255,210/255,210/255,1, patch_change_OK,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
+local btn3 = Button:new(230,185,100,25, 210/255,210/255,210/255,1, patch_change_Cancel,GLOBAL_FONT,FONT_SIZE, 0, bty_bk)
 local Button_TB = { btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11 }
 
 -- x,y,w,h, r,g,b,a, lbl,fnt,fnt_sz, norm_val = check, norm_val2 = checkbox table
