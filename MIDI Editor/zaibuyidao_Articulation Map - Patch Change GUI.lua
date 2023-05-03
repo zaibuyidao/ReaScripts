@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.4
+-- @version 1.9.5
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -1792,6 +1792,10 @@ function mainloop()
 
     if char == 26166 then -- F6
         reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- 打开 Insert bank/program select event...
+    end
+
+    if char == 26167 then -- F7
+        add_jsfx()
     end
 
     btn8.onRClick = function ()
