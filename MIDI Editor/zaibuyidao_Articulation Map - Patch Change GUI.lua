@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.8
+-- @version 1.9.9
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -647,7 +647,7 @@ function slideF10() -- 选中事件向左移动 10 ticks
         i = i + 1
     end
     reaper.MIDI_Sort(take)
-    reaper.SN_FocusMIDIEditor()
+    --reaper.SN_FocusMIDIEditor()
 end
 
 function slideZ10() -- 选中事件向右移动 10 ticks
@@ -675,7 +675,7 @@ function slideZ10() -- 选中事件向右移动 10 ticks
         i = i + 1
     end
     reaper.MIDI_Sort(take)
-    reaper.SN_FocusMIDIEditor()
+    --reaper.SN_FocusMIDIEditor()
 end
 
 reaper.gmem_attach('gmem_articulation_map')
@@ -913,7 +913,7 @@ function ToggleNotePC()
         PCToNote()
     end
     reaper.UpdateArrange()
-    if (reaper.SN_FocusMIDIEditor) then reaper.SN_FocusMIDIEditor() end
+    -- if (reaper.SN_FocusMIDIEditor) then reaper.SN_FocusMIDIEditor() end
 end
 
 function set_group_velocity()
@@ -1767,7 +1767,15 @@ function mainloop()
         os.execute(edit_reabank)
     end
 
-    if char == 26165 then -- F5
+    if char == 26163 then -- F3 音符PC来回切
+        ToggleNotePC()
+    end
+
+    if char == 26164 then -- F4 设置PC参数
+        set_group_velocity()
+    end
+
+    if char == 26165 then -- F5 -- 刷新音色表内容
         if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
         store = parse_banks(read_config_lines(reabank_path)) -- 模式1数据
         store_grouped = group_banks(store)                   -- 模式2数据
@@ -1786,21 +1794,56 @@ function mainloop()
         refresh_bank()
     end
 
-    if char == 26166 then -- F6
+    if char == 26166 then -- F6 -- 打开REAPER自带的音色变更
         reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- 打开 Insert bank/program select event...
     end
 
-    if char == 26167 then -- F7
+    if char == 26167 then -- F7 -- 打开技法映射JS插件
         add_jsfx()
     end
 
-    btn8.onRClick = function ()
+    if char == 26168 then -- F8 -- 切换音色表显示模式
+        local function switch_mode_A()
+            -- 在这里实现 A 模式的功能
+            state_getter = switch_mode_1()
+            current_mode = "1"
+            push_current_state()
+        end
+        
+        local function switch_mode_B()
+            -- 在这里实现 B 模式的功能
+            state_getter = switch_mode_2()
+            current_mode = "2"
+            push_current_state()
+        end
+        
+        local function toggle_mode()
+            if current_mode == "A" then
+                switch_mode_B()
+                current_mode = "B"
+            else
+                switch_mode_A()
+                current_mode = "A"
+            end
+        end
+        toggle_mode()
+    end
+
+    if char == 26169 then -- F9 -- 打开技法映射JS插件
+        slideF10()
+    end
+
+    if char == 6697264 then -- F10 -- 打开技法映射JS插件
+        slideZ10()
+    end
+
+    btn8.onRClick = function () -- 打开REAPER自带的音色变更
         if Shift then
             reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- 打开 Insert bank/program select event...
         end
     end
 
-    textb.onRClick = function ()
+    textb.onRClick = function () -- 刷新音色表内容
         if Shift then
             if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
             store = parse_banks(read_config_lines(reabank_path)) -- 模式1数据
