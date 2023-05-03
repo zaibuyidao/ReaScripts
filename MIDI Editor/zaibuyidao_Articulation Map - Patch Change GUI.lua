@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 1.9.9
+-- @version 2.0.0
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -1838,9 +1838,9 @@ function mainloop()
     end
 
     btn8.onRClick = function () -- 打开REAPER自带的音色变更
-        if Shift then
+        --if Shift then
             reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- 打开 Insert bank/program select event...
-        end
+        --end
     end
 
     textb.onRClick = function () -- 刷新音色表内容
@@ -1861,6 +1861,8 @@ function mainloop()
             Textbox_TB = { textb }
         
             refresh_bank()
+        else
+            reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- 打开 Insert bank/program select event...
         end
     end
 
