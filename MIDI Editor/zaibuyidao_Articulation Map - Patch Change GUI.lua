@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 2.0.0
+-- @version 2.0.1
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -127,12 +127,13 @@ if language == "简体中文" then
     selbank_path = "选择音色表"
     selbank_patch_msg = "请选择后缀为 .reabank 的音色表."
     selbank_patch_err = "错误"
-    patch_change_load = "导入文件"
+    patch_change_load = "加载文件"
     patch_change_OK = "确定"
     patch_change_Cancel = "取消"
     patch_change_channel = "通道 :"
     patch_change_bank = "库  :"
     patch_change_patch = "音色:"
+    load_err = "<无音色配置文件加载>"
 elseif language == "繁体中文" then
     WINDOW_TITLE = "技法映射 - 音色更改"
     GLOBAL_FONT = "SimSun"
@@ -154,12 +155,13 @@ elseif language == "繁体中文" then
     selbank_path = "選擇音色表"
     selbank_patch_msg = "請選擇後綴為 .reabank 的音色表."
     selbank_patch_err = "錯誤"
-    patch_change_load = "導入文件"
+    patch_change_load = "加載文件"
     patch_change_OK = "確定"
     patch_change_Cancel = "取消"
     patch_change_channel = "通道 :"
     patch_change_bank = "庫  :"
     patch_change_patch = "音色:"
+    load_err = "<無音色配置文件加載>"
 else
     WINDOW_TITLE = "Articulation Map - Patch Change"
     GLOBAL_FONT = "Calibri"
@@ -187,6 +189,7 @@ else
     patch_change_channel = "Channel :"
     patch_change_bank = "Bank :"
     patch_change_patch = "Patch:"
+    load_err = "Reabank not imported"
 end
 
 if not reaper.SNM_GetIntConfigVar then
@@ -505,11 +508,32 @@ function get_script_path() -- 脚本路径
     return script_path
 end
 
-local reabank_path = reaper.GetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch")
+local function get_reabank_file_path()
+    local ini = read_file(reaper.get_ini_file())
+    local str = ini and ini:match("mididefbankprog=([^\n]*)")
+    if str then
+        return str
+    else
+        return ""
+    end
+end
+
+local function get_reabank_file_name()
+    local ini = read_file(reaper.get_ini_file())
+    local str = ini:match("mididefbankprog=([^\n]*)")
+    if str then
+        return str:match("[^\\]+$")
+    else
+        return load_err
+    end
+end
+
+local reabank_path = get_reabank_file_path()
+-- local reabank_path = reaper.GetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch")
 
 if (reabank_path == "") then 
-    reaper.ShowMessageBox(selbank_msg, selbank_path, 0)
-    local retval, new_path = reaper.GetUserFileNameForRead("", selbank, "") -- 系统文件路径
+    reaper.ShowMessageBox(selbank_msg, selbank_err, 0)
+    local retval, new_path = reaper.GetUserFileNameForRead("", selbank_path, "") -- 系统文件路径
     if not retval then return 0 end
     local bank_num = new_path:reverse():find('[%/%\\]')
     local bank_name = new_path:sub(-bank_num + 1) .. "" -- 音色表名称
@@ -519,7 +543,7 @@ if (reabank_path == "") then
         reaper.SN_FocusMIDIEditor()
     end
     reabank_path = new_path
-    reaper.SetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch", reabank_path, true)
+    -- reaper.SetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch", reabank_path, true)
 end
 
 set_reabank_file(reabank_path)
@@ -685,7 +709,7 @@ gmem_cc_num = math.floor(gmem_cc_num)
 local track = reaper.GetMediaItemTake_Track(take)
 local pand = reaper.TrackFX_AddByName(track, "Articulation Map", false, 0)
 if pand < 0 then
-    gmem_cc_num = 119
+    gmem_cc_num = "119"
 end
 
 function ToggleNotePC()
@@ -1385,9 +1409,9 @@ local W_Frame = Frame:new(10,10,320,230,  0,0.9,0,0.1 ) -- 边框虚线尺寸
 local Frame_TB = { W_Frame }
 
 -- 文本框
-local bank_num = reabank_path:reverse():find('[%/%\\]')
-local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
-local textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, bank_name, GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
+-- local bank_num = reabank_path:reverse():find('[%/%\\]')
+-- local bank_name = reabank_path:sub(-bank_num + 1) -- 音色表名称
+local textb = Textbox:new(10,150,320,25, 255/255,255/255,255/255,1, get_reabank_file_name(), GLOBAL_FONT, FONT_SIZE, 0, bty_bk)
 local Textbox_TB = { textb }
 
 btn3.onClick = function () -- 按钮 退出
@@ -1597,7 +1621,7 @@ btn8.onClick = function () -- 选择音色表
     end
 
     reabank_path = path
-    reaper.SetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch", reabank_path, true)
+    -- reaper.SetExtState("ArticulationMapPatchChangeGUI", "ReaBankPatch", reabank_path, true)
 
     if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
     store = parse_banks(read_config_lines(reabank_path)) -- 模式1数据
