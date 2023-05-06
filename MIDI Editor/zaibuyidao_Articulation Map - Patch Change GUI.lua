@@ -1,5 +1,5 @@
 -- @description Articulation Map - Patch Change GUI
--- @version 2.0.1
+-- @version 2.0.2
 -- @author zaibuyidao
 -- @changelog UI adjustment
 -- @links
@@ -134,6 +134,9 @@ if language == "简体中文" then
     patch_change_bank = "库  :"
     patch_change_patch = "音色:"
     load_err = "<无音色配置文件加载>"
+    setbank2_msg = "无法读取 REAPER 的 ini 文件"
+    setbank2_err = "错误"
+    setbank2_msg2 = "写入ini文件失败"
 elseif language == "繁体中文" then
     WINDOW_TITLE = "技法映射 - 音色更改"
     GLOBAL_FONT = "SimSun"
@@ -162,6 +165,9 @@ elseif language == "繁体中文" then
     patch_change_bank = "庫  :"
     patch_change_patch = "音色:"
     load_err = "<無音色配置文件加載>"
+    setbank2_msg = "無法讀取 REAPER 的 ini 文件"
+    setbank2_err = "錯誤"
+    setbank2_msg2 = "寫入ini文件失敗"
 else
     WINDOW_TITLE = "Articulation Map - Patch Change"
     GLOBAL_FONT = "Calibri"
@@ -190,6 +196,9 @@ else
     patch_change_bank = "Bank :"
     patch_change_patch = "Patch:"
     load_err = "Reabank not imported"
+    setbank2_msg = "Failed to read REAPER's ini file"
+    setbank2_err = "Error"
+    setbank2_msg2 = "Failed to write ini file"
 end
 
 if not reaper.SNM_GetIntConfigVar then
@@ -356,7 +365,7 @@ local function set_reabank_file(reabank_path)
 
     if err then
         return
-        reaper.MB("Failed to read REAPER's ini file\n無法讀取 REAPER 的 ini 文件", "Error", 0),
+        reaper.MB(setbank2_msg, setbank2_err, 0),
         reaper.SN_FocusMIDIEditor()
     end
 
@@ -376,7 +385,7 @@ local function set_reabank_file(reabank_path)
     err = write_file(ini_file, ini)
     if err then
         return
-        reaper.MB("Failed to write ini file\n寫入ini文件失敗", "Error", 0),
+        reaper.MB(setbank2_msg2, setbank2_err, 0),
         reaper.SN_FocusMIDIEditor()
     end
     refresh_bank()
@@ -1610,7 +1619,7 @@ btn4.onClick = function () -- 切换模式2
 end
 
 btn8.onClick = function () -- 选择音色表
-    local retval, path = reaper.GetUserFileNameForRead("", "選擇音色表", "") -- 系统文件路径
+    local retval, path = reaper.GetUserFileNameForRead("", selbank_path, "") -- 系统文件路径
     if not retval then return 0 end
     local bank_num = path:reverse():find('[%/%\\]')
     local bank_name = path:sub(-bank_num + 1) .. "" -- 音色表名称
