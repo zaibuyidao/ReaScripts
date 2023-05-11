@@ -98,7 +98,7 @@ local delimiter = getPathDelimiter()
 local language = getSystemLanguage()
 
 if language == "简体中文" then
-    WINDOW_TITLE = "技法映射音色更改"
+    WINDOW_TITLE = "技法映射"
     GLOBAL_FONT = "SimSun"
     FONT_SIZE = 12
     swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
@@ -131,7 +131,7 @@ if language == "简体中文" then
     setbank2_err = "错误"
     setbank2_msg2 = "写入ini文件失败"
 elseif language == "繁体中文" then
-    WINDOW_TITLE = "技法映射音色更改"
+    WINDOW_TITLE = "技法映射"
     GLOBAL_FONT = "SimSun"
     FONT_SIZE = 12
     swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
@@ -164,7 +164,7 @@ elseif language == "繁体中文" then
     setbank2_err = "錯誤"
     setbank2_msg2 = "寫入ini文件失敗"
 else
-    WINDOW_TITLE = "Articulation Map Patch Change"
+    WINDOW_TITLE = "Articulation Map"
     GLOBAL_FONT = "Calibri"
     FONT_SIZE = 16
     swsmsg = "This script requires the SWS Extension. Do you want to download it now?"

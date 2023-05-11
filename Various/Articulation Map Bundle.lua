@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0
+-- @version 1.0.1
 -- @changelog
 --   Initial release
 -- @links
@@ -8,9 +8,9 @@
 --   https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map (Without GUI).lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map Note To PC.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map Patch Change (Without GUI).lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map Patch Change.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map PC To Note.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map Toggle Note PC.lua
 -- @donation http://www.paypal.me/zaibuyidao
