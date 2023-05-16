@@ -1,7 +1,7 @@
 -- @description Reposition Items
--- @version 1.3.5
--- @author zaibuyidao
--- @changelog Add multilingual support
+-- @version 1.4.0
+-- @author zaibuyidao & acendan
+-- @changelog Support h:m:s:f intervals
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -123,21 +123,37 @@ if (mode == "") then mode = "timeline" end
 
 if language == "简体中文" then
     title = "重新定位对象"
-    uok, uinput = reaper.GetUserInputs(title, 3, "间隔 (秒),位置 (start/end),模式 (track/warp/timeline)", interval .. ',' .. toggle .. ',' .. mode)
+    uok, uinput = reaper.GetUserInputs(title, 3, "间隔 (秒, 时:分:秒:帧),位置 (start/end),模式 (track/warp/timeline)", interval .. ',' .. toggle .. ',' .. mode)
 elseif language == "繁体中文" then
     title = "重新定位對象"
-    uok, uinput = reaper.GetUserInputs(title, 3, "間隔 (秒),位置 (start/end),模式 (track/warp/timeline)", interval .. ',' .. toggle .. ',' .. mode)
+    uok, uinput = reaper.GetUserInputs(title, 3, "間隔 (秒, 時:分:秒:幀),位置 (start/end),模式 (track/warp/timeline)", interval .. ',' .. toggle .. ',' .. mode)
 else
     title = "Reposition Items"
-    uok, uinput = reaper.GetUserInputs(title, 3, "Time interval (s),Add to (start/end),Mode (track/warp/timeline)", interval .. ',' .. toggle .. ',' .. mode)
+    uok, uinput = reaper.GetUserInputs(title, 3, "Time interval (s, h:m:s:f),Add to (start/end),Mode (track/warp/timeline)", interval .. ',' .. toggle .. ',' .. mode)
 end
 
 interval, toggle, mode = uinput:match("(.*),(.*),(.*)")
-if not uok or not tonumber(interval) or not tostring(toggle) or not tostring(mode) then return end
+if not uok or not tostring(toggle) or not tostring(mode) then return end
 
-reaper.SetExtState("REPOSITION_ITEMS", "Interval", interval, false)
 reaper.SetExtState("REPOSITION_ITEMS", "Toggle", toggle, false)
 reaper.SetExtState("REPOSITION_ITEMS", "Mode", mode, false)
+
+-- parse interval, check h:m:s.f
+if interval:find(":") ~= nil then
+    -- 处理 h:m:s:f 类型的输入
+    local interval_to_sec = reaper.parse_timestr_len(interval, 0, 5)
+    if interval_to_sec == 0.0 then
+      reaper.ShowMessageBox("Failed to parse interval as h:m:s:f!", "Reposition Items", 0)
+      return
+    end
+    reaper.SetExtState("REPOSITION_ITEMS", "Interval", interval, false)
+    interval = interval_to_sec
+else
+    -- 处理秒（s）类型的输入
+    if not tonumber(interval) then return end
+    interval = tonumber(interval)
+    reaper.SetExtState("REPOSITION_ITEMS", "Interval", tostring(interval), false)
+end
 
 if mode == "track" then
     for i = 0, count_sel_items - 1 do
