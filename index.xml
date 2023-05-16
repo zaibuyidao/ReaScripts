@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0ed68473fcd32f72bf8bb09d452d826168c271d8">
+<index version="1" name="zaibuyidao Scripts" commit="e0cbf327dbed5ecbf82867b259250a356ecd4d7a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -894,6 +894,10 @@
       <version name="1.3.5" author="zaibuyidao" time="2023-04-30T14:01:47Z">
         <changelog><![CDATA[Add multilingual support]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01f5511d599f3f24de40e2e5727e465822538a2c/Items%20Editing/zaibuyidao_Reposition%20Items.lua</source>
+      </version>
+      <version name="1.4.0" author="zaibuyidao &amp; acendan" time="2023-05-16T05:58:03Z">
+        <changelog><![CDATA[Support h:m:s:f intervals]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e0cbf327dbed5ecbf82867b259250a356ecd4d7a/Items%20Editing/zaibuyidao_Reposition%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Item Volume.lua" type="script" desc="Scale Item Volume">
