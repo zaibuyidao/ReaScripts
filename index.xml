@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ce477e95096f6abb897d7eca2579d1beb1bacdbb">
+<index version="1" name="zaibuyidao Scripts" commit="273109965dcf31721c94334c01b74a1512fa0159">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -6337,11 +6337,6 @@
       <version name="1.0" author="再補一刀" time="2022-08-23T16:06:26Z">
         <changelog><![CDATA[首次发布]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b065e65d515fa5f39169232ec9865f72810eddc1/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%A8%E5%BC%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_插入哇音.lua" type="script" desc="插入哇音">
-      <version name="1.5" author="再補一刀" time="2021-01-19T19:51:41Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E5%93%87%E9%9F%B3.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入彎音(半音).lua" type="script" desc="插入彎音(半音)">
