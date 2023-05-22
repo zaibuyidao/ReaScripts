@@ -1,5 +1,5 @@
 -- @description Duplicate Musical (Fast)
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog Add support for triplet events.
 -- @links
@@ -457,7 +457,7 @@ if not copy_start_qn_from_head then
         end
         if cur_beat > 1 then
             cur_beat = cur_beat - 1
-        elseif ret_grid ~= 0.5 and ret_grid ~= 0.75 then
+        elseif reaper.GetToggleCommandStateEx(32060, 41004) == 1 then -- Grid: Set grid type to triplet
             cur_beat = cur_beat / 3
         else
             cur_beat = cur_beat / 2
