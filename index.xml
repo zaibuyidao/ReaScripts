@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="273109965dcf31721c94334c01b74a1512fa0159">
+<index version="1" name="zaibuyidao Scripts" commit="b313652ff96ea764c27181c46606478edab8b533">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2678,6 +2678,10 @@
       <version name="1.0.6" author="zaibuyidao" time="2023-05-01T18:14:47Z">
         <changelog><![CDATA[Add support for triplet events.]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c1d0cb75c9e3f80d10604426192660ac252b9619/MIDI%20Editor/zaibuyidao_Duplicate%20Musical%20(Fast).lua</source>
+      </version>
+      <version name="1.0.7" author="zaibuyidao" time="2023-05-22T13:36:24Z">
+        <changelog><![CDATA[Add support for triplet events.]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b313652ff96ea764c27181c46606478edab8b533/MIDI%20Editor/zaibuyidao_Duplicate%20Musical%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Duplicate Musical (Within Time Selection).lua" type="script" desc="Duplicate Musical (Within Time Selection)">
