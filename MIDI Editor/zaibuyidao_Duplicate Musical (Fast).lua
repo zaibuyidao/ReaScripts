@@ -1,16 +1,12 @@
 -- @description Duplicate Musical (Fast)
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
--- @changelog Add support for triplet events.
+-- @changelog Supporting the duplication of triplets.
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Requires SWS Extensions
-
-EVENT_NOTE_START = 9
-EVENT_NOTE_END = 8
-EVENT_ARTICULATION = 15
 
 function print(...)
     local params = {...}
@@ -346,7 +342,6 @@ function dup(take, copy_start_qn_from_head, global_range_qn)
     setAllEvents(take, events)
 end
 
-
 local tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local global_range = {head = math.huge, tail = -math.huge}
 local has_selected = false
@@ -445,7 +440,11 @@ elseif head_cdenom == 8 then
     end
 end
 
-local ret_grid, swing, _ = reaper.MIDI_GetGrid(take)
+-- local ret_grid, swing, _ = reaper.MIDI_GetGrid(take)
+function formatToDecimalPlaces(number, decimalPlaces)
+    local formatStr = "%." .. decimalPlaces .. "f"
+    return string.format(formatStr, number)
+end
 
 if not copy_start_qn_from_head then
     local cur_beat = head_cml
@@ -457,8 +456,55 @@ if not copy_start_qn_from_head then
         end
         if cur_beat > 1 then
             cur_beat = cur_beat - 1
-        elseif reaper.GetToggleCommandStateEx(32060, 41004) == 1 then -- Grid: Set grid type to triplet
-            cur_beat = cur_beat / 3
+        elseif reaper.GetToggleCommandStateEx(32060, 40193) == 1 then -- Grid: Set to 1/12 (1/8 triplet)
+            if cur_beat > 1 / 3 then  -- 新增的判断条件
+                cur_beat = cur_beat / 3
+            else
+                break -- 当 cur_beat 达到或低于 1/3 时，跳出循环
+            end
+        elseif reaper.GetToggleCommandStateEx(32060, 40191) == 1 then -- Grid: Set to 1/24 (1/16 triplet)
+            beat_length = formatToDecimalPlaces(range_qn.len, 10) -- 选中事件的长度
+            beat_grid = formatToDecimalPlaces(1/6, 10) -- 网格
+            
+            if beat_length <= beat_grid then
+                cur_beat = cur_beat / 6
+            elseif beat_length > beat_grid then
+                cur_beat = cur_beat / 2
+                copy_start_qn_from_head = 0.5
+            else
+                break
+            end
+        elseif reaper.GetToggleCommandStateEx(32060, 40189) == 1 then -- Grid: Set to 1/48 (1/32 triplet)
+            beat_length = formatToDecimalPlaces(range_qn.len, 10)
+            beat_grid_1 = formatToDecimalPlaces(1/12, 10)
+            beat_grid_2 = formatToDecimalPlaces(1/4, 10)
+            beat_grid_3 = formatToDecimalPlaces(1/2, 10)
+
+            if beat_length <= beat_grid_1 then
+                cur_beat = cur_beat / 12
+            elseif beat_length > beat_grid_1 and beat_length <= beat_grid_2 then
+                cur_beat = cur_beat / 2
+                copy_start_qn_from_head = 0.25
+            elseif beat_length > beat_grid_2 and beat_length <= beat_grid_3 then
+                cur_beat = cur_beat / 2
+                copy_start_qn_from_head = 0.5
+            else
+                break
+            end
+        elseif reaper.GetToggleCommandStateEx(32060, 40199) == 1 then -- Grid: Set to 1/6 (1/4 triplet)
+            cur_beat = cur_beat * 2
+            beat_length = formatToDecimalPlaces(range_qn.len, 10)
+            beat_grid = formatToDecimalPlaces(2/3, 10)
+
+            if beat_length <= beat_grid then
+                cur_beat = cur_beat / 3
+                copy_start_qn_from_head = beat_grid
+            elseif beat_length > beat_grid then
+                cur_beat = cur_beat / 3
+                copy_start_qn_from_head = 2
+            else
+                break
+            end
         else
             cur_beat = cur_beat / 2
         end
@@ -468,7 +514,6 @@ end
 -- print("copy_start_qn_from_head", copy_start_qn_from_head)
 
 reaper.PreventUIRefresh(1)
-reaper.Undo_BeginBlock()
 for take, _ in pairs(getAllTakes()) do
     -- local _, MIDIstring = reaper.MIDI_GetAllEvts(take, "")
     -- local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
@@ -483,7 +528,6 @@ for take, _ in pairs(getAllTakes()) do
     --     reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
     -- end
 end
-reaper.Undo_EndBlock("", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
 reaper.defer(function() end)
