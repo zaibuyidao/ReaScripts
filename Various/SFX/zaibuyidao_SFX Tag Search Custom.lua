@@ -585,6 +585,7 @@ function init()
 			local c = listView.viewHolders[viewHolderIndex][1]
 			local info = listView.viewHolders[viewHolderIndex][2]
 			local data = listView.data[dataIndex]
+			local currentKey = data.key
 			c.width = window.width - 20
 			info.x = 10 + c.width - info.width
 
@@ -607,12 +608,27 @@ function init()
 
 			c.focus_index = viewHolderIndex + 1 --gui:getFocusIndex()
 
+			function edit_tag(key)
+				local title_top = reaper.JS_Localize("Edit metadata tag", "common")
+				local parent = reaper.JS_Window_Find(title_top, true)
+				
+				if parent then
+					reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1007), key)
+					reaper.JS_Window_OnCommand(parent, 1) -- OK = 1, Cancel = 2
+				else
+					reaper.defer(function() edit_tag(key) end)
+				end
+			end
+
 			function c:onMouseClick()
 				if self.parentGui.kb:shift() then -- Shift+左键点击 发送第二个值
 					if data.name == "" then return end
 					reaper.defer(function ()
 						send_search_text(data.name or "")
 					end)
+					return
+				elseif self.parentGui.kb:control() then -- Control+左键点击
+					reaper.CF_SetClipboard(data.key)
 					return
 				end
 				reaper.defer(function ()
@@ -621,7 +637,8 @@ function init()
 			end
 
 			function c:onRightMouseClick()
-				reaper.CF_SetClipboard(data.key)
+				edit_tag(currentKey)
+				reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", 42053, 0, 0, 0) -- Edit metadata tag: Custom Tags
 			end
 		end
 	})
