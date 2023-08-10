@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.4.6
+-- @version 1.4.7
 -- @changelog
---   Optimizing Keyword Filtering Matching.
+--   Use SFX Tag Search Custom to right-click on keywords to add Custom Tags in bulk (when files in Media Explorer are selected).
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
