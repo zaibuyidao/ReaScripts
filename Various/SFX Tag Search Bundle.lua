@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.4.7
+-- @version 1.4.8
 -- @changelog
---   Use SFX Tag Search Custom to right-click on keywords to add Custom Tags in bulk (when files in Media Explorer are selected).
+--   The SFX Tag Search script now has a new feature for printing the keyword list. Simply press F6 to generate it.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
