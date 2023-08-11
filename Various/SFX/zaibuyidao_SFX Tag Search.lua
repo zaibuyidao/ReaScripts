@@ -617,9 +617,9 @@ function init()
 			resultListView:jump(resultListView.firstIndex + 1)
 		elseif key == 26165 then --F5
 			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
-		elseif key == 26166 then --F6
+		elseif key == 26166 then --F6 打印关键词列表
 			for _, item in ipairs(data) do
-				print(item.value)
+				print(item.value..",,"..item.db)
 			end
 		end
 	end
