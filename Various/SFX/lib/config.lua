@@ -62,7 +62,7 @@ return {
         }
     },
     rating = {
-        max_record = 50 -- 关键词排行保存条数限制
+        max_record = 20 -- 关键词排行保存条数限制
     },
     search = {
         async = false, -- 是否开启异步搜索（不建议开启）
