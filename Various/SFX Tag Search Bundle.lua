@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.4.8
+-- @version 1.4.9
 -- @changelog
---   The SFX Tag Search script now has a new feature for printing the keyword list. Simply press F6 to generate it.
+--   Optimized SFX Tag Search, now it can generate keywords.csv for quick loading in the next launch.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
