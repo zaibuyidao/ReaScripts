@@ -508,14 +508,14 @@ function searchKeyword(value, rating)
 		end
 	end
 
-	-- table.sort(res, function(a, b)
-	-- 	local ra = getRating(a.value)
-	-- 	local rb = getRating(b.value)
-	-- 	if ra == rb then
-	-- 		return a.index < b.index
-	-- 	end
-	-- 	return ra > rb
-	-- end)
+	table.sort(res, function(a, b)
+		local ra = getRating(a.value)
+		local rb = getRating(b.value)
+		if ra == rb then
+			return a.index < b.index
+		end
+		return ra > rb
+	end)
 	return res
 end
 
