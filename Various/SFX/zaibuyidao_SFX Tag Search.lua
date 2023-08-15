@@ -230,36 +230,100 @@ function getColorForDb(dbName)
 	return jColor:new(colorMap[dbName])
 end
 
-local sortResult = getConfig("search.sort_result") -- 加入排序
-local data = {}
-local readDBCount = 0
-local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
-for _, db in ipairs(dbList) do
-	if not excludeDbName[db.name] then
-		local path, keywords = readViewModelFromReaperFileList(db.path, {
-			excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
-			delimiters = getConfig("db.delimiters", {}),
-			containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
-		})
-		if path and keywords then
-			readDBCount = readDBCount + 1
-			for v, keyword in pairs(keywords) do
-				table.insert(data, {
-					db = db.name,
-					path = path,
-					value = keyword.value,
-					from = keyword.from,
-					fromString = table.concat(table.keys(keyword.from), ", ")
-				})
-			end
-		end
+function readFromCSV(csvFilePath)
+	local data = {}
+	local file = io.open(csvFilePath, "r")
+	
+	if not file then
+			print("Cannot open the CSV file!")
+			return nil
 	end
+	
+	local headers = file:read("*l")
+
+	for line in file:lines() do
+			local db, path, value, fromString, fromKeys = line:match("([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)")
+			
+			local fromTable = {}
+			for key in fromKeys:gmatch("[^;]+") do
+					fromTable[key] = true
+			end
+			
+			table.insert(data, {
+					db = db,
+					path = path,
+					value = value,
+					from = fromTable,
+					fromString = fromString
+			})
+	end
+	
+	io.close(file)
+	
+	return data
 end
 
-if readDBCount == 0 then
-	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
+local sortResult = getConfig("search.sort_result") -- 加入排序
+local csvFilePath = script_path .. getPathDelimiter() .. "keywords.csv"
+local data = {}
+local csvFile = io.open(csvFilePath, "r")
+
+if csvFile then
+	io.close(csvFile)
+	data = readFromCSV(csvFilePath)
+else
+	local readDBCount = 0
+	local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
+	
+	for _, db in ipairs(dbList) do
+			if not excludeDbName[db.name] then
+					local path, keywords = readViewModelFromReaperFileList(db.path, {
+							excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
+							delimiters = getConfig("db.delimiters", {}),
+							containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+					})
+					
+					if path and keywords then
+							readDBCount = readDBCount + 1
+							for v, keyword in pairs(keywords) do
+									table.insert(data, {
+											db = db.name,
+											path = path,
+											value = keyword.value,
+											from = keyword.from,
+											fromString = table.concat(table.keys(keyword.from), ", ")
+									})
+							end
+					end
+			end
+	end
+
+	local file, err = io.open(csvFilePath , "w+")
+
+	if not file then
+		print("Error opening file:", err)
+		return
+	end
+
+	-- 写入CSV头部(取决于data的结构)
+	file:write("db,path,value,from,fromString\n")
+
+	-- 遍历data，将其写入CSV文件
+	for _, entry in ipairs(data) do
+		file:write(string.format("%s,%s,%s,%s,%s\n",
+				entry.db,
+				entry.path,
+				entry.value,
+				table.concat(table.keys(entry.from), ";"),
+				entry.fromString
+		))
+  end
+
+	-- 关闭文件
+	io.close(file)
 end
 
+-- 对从数据库中生成的数据进行排序
 if sortResult then
 	table.sort(data, function(a, b)
 		local cnFirst = getConfig("search.cn_first")
@@ -269,6 +333,112 @@ if sortResult then
 			return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
 		end
 	end)
+end
+
+if #data == 0 then
+	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
+end
+
+function updateCSV(data, csvFilePath)
+	-- 1. 对data进行排序
+	local sortResult = getConfig("search.sort_result")
+	if sortResult then
+			table.sort(data, function(a, b)
+					local cnFirst = getConfig("search.cn_first")
+					if cnFirst == true or cnFirst == false then
+							return custom_sort(a, b, cnFirst)
+					else
+							return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
+					end
+			end)
+	end
+
+	-- 2. 打开keywords.csv以写模式
+	local file, err = io.open(csvFilePath, "w")
+
+	-- 检查文件是否成功打开
+	if not file then
+			print("Error: Unable to open or create the file for writing:", csvFilePath)
+			return
+	end
+
+	-- 3. 将data的内容写入keywords.csv
+
+	-- 写入CSV头部
+	file:write("db,path,value,from,fromString\n")
+
+	-- 遍历data，将其写入CSV文件
+	for _, entry in ipairs(data) do
+			file:write(string.format("%s,%s,%s,%s,%s\n",
+					entry.db,
+					entry.path,
+					entry.value,
+					table.concat(table.keys(entry.from), ";"),
+					entry.fromString
+			))
+	end
+
+	-- 关闭文件
+	io.close(file)
+end
+
+function regenerateCSV(dbList, csvFilePath)
+	local data = {}
+	local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
+	
+	for _, db in ipairs(dbList) do
+			if not excludeDbName[db.name] then
+					local path, keywords = readViewModelFromReaperFileList(db.path, {
+							excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
+							delimiters = getConfig("db.delimiters", {}),
+							containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+					})
+					
+					if path and keywords then
+							for v, keyword in pairs(keywords) do
+									table.insert(data, {
+											db = db.name,
+											path = path,
+											value = keyword.value,
+											from = keyword.from,
+											fromString = table.concat(table.keys(keyword.from), ", ")
+									})
+							end
+					end
+			end
+	end
+
+	if sortResult then
+			table.sort(data, function(a, b)
+					local cnFirst = getConfig("search.cn_first")
+					if cnFirst == true or cnFirst == false then
+							return custom_sort(a, b, cnFirst)
+					else
+							return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
+					end
+			end)
+	end
+
+	updateCSV(data, csvFilePath)
+end
+
+-- 生成CustomCSV
+function updateCustomCSV(data, csvFilePath)
+	local file, err = io.open(csvFilePath , "w+")
+	if not file then
+			print("Error when trying to open " .. csvFilePath .. " for writing: " .. err)
+			return
+	end
+
+	-- Write the headers for the CSV file
+	file:write("#db,,value\n")
+
+	-- Iterate over the data and write the required fields
+	for _, entry in ipairs(data) do
+			file:write(string.format("%s,,%s\n", entry.value, entry.db))
+	end
+
+	io.close(file)
 end
 
 -- -- 模拟插入大量数据
@@ -337,15 +507,15 @@ function searchKeyword(value, rating)
 			index = index + 1
 		end
 	end
-	
-	table.sort(res, function(a, b)
-		local ra = getRating(a.value)
-		local rb = getRating(b.value)
-		if ra == rb then
-			return a.index < b.index
-		end
-		return ra > rb
-	end)
+
+	-- table.sort(res, function(a, b)
+	-- 	local ra = getRating(a.value)
+	-- 	local rb = getRating(b.value)
+	-- 	if ra == rb then
+	-- 		return a.index < b.index
+	-- 	end
+	-- 	return ra > rb
+	-- end)
 	return res
 end
 
@@ -615,12 +785,13 @@ function init()
 			resultListView:jump(resultListView.firstIndex - 1)
 		elseif key == 1685026670 then --arrow down
 			resultListView:jump(resultListView.firstIndex + 1)
-		elseif key == 26165 then --F5
+		elseif key == 26165 then --F5 刷新keywords.csv
+			regenerateCSV(dbList, csvFilePath)
+		elseif key == 26166 then --F6 生成CustomCSV
+			local customCSVFilePath = script_path .. getPathDelimiter() .. "custom_keywords.csv"
+			updateCustomCSV(data, customCSVFilePath)
+		elseif key == 26167 then --F7
 			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
-		elseif key == 26166 then --F6 打印关键词列表
-			for _, item in ipairs(data) do
-				print(item.value..",,"..item.db)
-			end
 		end
 	end
 
