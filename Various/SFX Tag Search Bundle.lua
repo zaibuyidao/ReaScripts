@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.4.9
+-- @version 1.5.0
 -- @changelog
 --   Optimized SFX Tag Search, now it can generate keywords.csv for quick loading in the next launch.
 -- @reference
