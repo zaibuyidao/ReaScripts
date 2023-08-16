@@ -76,21 +76,18 @@ if language == "简体中文" then
 	search_title = "过滤"
 	search_title_key = "关键词"
 	remaining = "剩余: "
-	edit_metadata_tag = "编辑元数据标签"
 elseif language == "繁体中文" then
 	jump_title = "跳转目标"
 	jump_title_line = "行数"
 	search_title = "過濾"
 	search_title_key = "關鍵詞"
 	remaining = "剩餘: "
-	edit_metadata_tag = "編輯元數據標簽"
 else
 	jump_title = "Jump"
 	jump_title_line = "Ln"
 	search_title = "Filter"
 	search_title_key = "Keywords"
 	remaining = "Rem: "
-	edit_metadata_tag = "Edit metadata tag"
 end
 
 require('REQ.j_file_functions')
@@ -611,8 +608,8 @@ function init()
 
 			c.focus_index = viewHolderIndex + 1 --gui:getFocusIndex()
 
-			function edit_tag(key)
-				local title_top = reaper.JS_Localize(edit_metadata_tag, "common")
+			function edit_tag1(key) -- common无法被准确识别
+				local title_top = reaper.JS_Localize("Edit metadata tag", "common")
 				local parent = reaper.JS_Window_Find(title_top, true)
 				
 				if parent then
@@ -622,6 +619,31 @@ function init()
 					reaper.defer(function() edit_tag(key) end)
 				end
 			end
+
+			function edit_tag(key)
+				local titles = {
+						"Edit metadata tag",
+						"编辑元数据标签",
+						"編輯元數據標簽"
+				}
+				
+				local parent = nil
+				local title_top = nil
+		
+				-- 遍历所有可能的标题，尝试查找窗口
+				for _, title in ipairs(titles) do
+						title_top = reaper.JS_Localize(title, "common")
+						parent = reaper.JS_Window_Find(title_top, true)
+						if parent then break end
+				end
+				
+				if parent then
+						reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1007), key)
+						reaper.JS_Window_OnCommand(parent, 1) -- OK = 1, Cancel = 2
+				else
+						reaper.defer(function() edit_tag(key) end)
+				end
+		  end
 
 			function c:onMouseClick()
 				if self.parentGui.kb:shift() then -- Shift+左键点击 发送第二个值
