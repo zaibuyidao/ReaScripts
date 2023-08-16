@@ -71,23 +71,26 @@ end
 local language = getSystemLanguage()
 
 if language == "简体中文" then
-    jump_title = "跳转目标"
-    jump_title_line = "行数"
-    search_title = "过滤"
-    search_title_key = "关键词"
-    remaining = "剩余: "
+	jump_title = "跳转目标"
+	jump_title_line = "行数"
+	search_title = "过滤"
+	search_title_key = "关键词"
+	remaining = "剩余: "
+	edit_metadata_tag = "编辑元数据标签"
 elseif language == "繁体中文" then
-    jump_title = "跳转目标"
-    jump_title_line = "行数"
-    search_title = "過濾"
-    search_title_key = "關鍵詞"
-    remaining = "剩餘: "
+	jump_title = "跳转目标"
+	jump_title_line = "行数"
+	search_title = "過濾"
+	search_title_key = "關鍵詞"
+	remaining = "剩餘: "
+	edit_metadata_tag = "編輯元數據標簽"
 else
-    jump_title = "Jump"
-    jump_title_line = "Ln"
-    search_title = "Filter"
-    search_title_key = "Keywords"
-    remaining = "Rem: "
+	jump_title = "Jump"
+	jump_title_line = "Ln"
+	search_title = "Filter"
+	search_title_key = "Keywords"
+	remaining = "Rem: "
+	edit_metadata_tag = "Edit metadata tag"
 end
 
 require('REQ.j_file_functions')
@@ -609,7 +612,7 @@ function init()
 			c.focus_index = viewHolderIndex + 1 --gui:getFocusIndex()
 
 			function edit_tag(key)
-				local title_top = reaper.JS_Localize("Edit metadata tag", "common")
+				local title_top = reaper.JS_Localize(edit_metadata_tag, "common")
 				local parent = reaper.JS_Window_Find(title_top, true)
 				
 				if parent then
