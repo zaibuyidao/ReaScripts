@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.5.3
+-- @version 1.5.4
 -- @changelog
---   Optimized SFX Tag Search, now it can generate keywords.csv for quick loading in the next launch.
+--   Add SFX Tag Search UCS
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
@@ -12,6 +12,7 @@
 -- @provides
 --   [main] SFX/zaibuyidao_SFX Tag Search.lua
 --   [main] SFX/zaibuyidao_SFX Tag Search Custom.lua
+--   [main] SFX/zaibuyidao_SFX Tag Search UCS.lua
 --   [main] SFX/zaibuyidao_SFX Tag Album.lua
 --   [main] SFX/zaibuyidao_SFX Tag Comment.lua
 --   [main] SFX/zaibuyidao_SFX Tag Description.lua

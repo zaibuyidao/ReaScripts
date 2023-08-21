@@ -41,6 +41,11 @@ function table.print(t)
     end
 end
 
+function getCmdID(offset)
+    local base_cmd_id = 42193
+    return base_cmd_id + offset
+end
+
 function send_search_text(text) -- 开始搜索
     local title = reaper.JS_Localize("Media Explorer", "common")
     local hwnd = reaper.JS_Window_Find(title, true)
