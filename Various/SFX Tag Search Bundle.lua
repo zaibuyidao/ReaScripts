@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.5.5
+-- @version 1.5.6
 -- @changelog
 --   Add SFX Tag Search UCS
 -- @reference
