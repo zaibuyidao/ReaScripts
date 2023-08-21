@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.5.4
+-- @version 1.5.5
 -- @changelog
 --   Add SFX Tag Search UCS
 -- @reference
@@ -28,6 +28,7 @@
 --   [main] SFX/zaibuyidao_SFX Tag iXML Library.lua
 --   [nomain] SFX/lib/config.lua
 --   [nomain] SFX/lib/config-custom.lua
+--   [nomain] SFX/lib/config-ucs.lua
 --   [nomain] SFX/lib/core.lua
 --   [nomain] SFX/lib/LIP.lua
 --   [nomain] SFX/lib/ListView.lua
