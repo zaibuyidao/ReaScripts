@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.5.6
+-- @version 1.5.7
 -- @changelog
---   Add SFX Tag Search UCS
+--   Added the content of the search box to clear the media explorer.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
