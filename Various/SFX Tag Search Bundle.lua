@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.5.7
+-- @version 1.5.8
 -- @changelog
 --   Added the content of the search box to clear the media explorer.
 -- @reference

@@ -596,10 +596,14 @@ function init()
 		focus_index = window:getFocusIndex(),
 		label_padding = 3
 	})
-	-- function searchTextBox:onRightMouseClick() 
-	-- 	self.value = ""
-	-- 	self.label = ""
-	-- end
+	function searchTextBox:onRightMouseClick() -- Alt+右键单击 清空 Media Explorer 的搜索框
+		if self.parentGui.kb:alt() then
+			send_search_text(" ")
+		else
+			self.value = ""
+			self.label = ""
+		end
+	end
 	window:controlAdd(searchTextBox)
 
 	local stateLabel = jGuiControl:new()
@@ -752,15 +756,6 @@ function init()
 				reaper.defer(function ()
 					send_search_text(listView.data[dataIndex].value)
 				end)
-			end
-
-			function searchTextBox:onRightMouseClick() -- Alt+右键单击 清空 Media Explorer 的搜索框
-				if self.parentGui.kb:alt() then
-					send_search_text(" ")
-				else
-					self.value = ""
-					self.label = ""
-				end
 			end
 
 			function c:onRightMouseClick()
