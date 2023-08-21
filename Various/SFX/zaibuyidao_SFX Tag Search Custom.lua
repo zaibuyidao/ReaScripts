@@ -661,6 +661,12 @@ function init()
 				end)
 			end
 
+			function searchTextBox:onRightMouseClick() -- Alt+右键单击 清空 Media Explorer 的搜索框
+				if self.parentGui.kb:alt() then
+					send_search_text(" ")
+				end
+			end
+
 			function c:onRightMouseClick()
 				edit_tag(currentKey)
 				reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", 42053, 0, 0, 0) -- Edit metadata tag: Custom Tags
@@ -669,10 +675,10 @@ function init()
 	})
 
 	function onKeyboardGlobal(key)
-		if key == 1885828464 then
+		if key == 1818584692 or key == 1885828464 then
 			-- print("page up")
 			resultListView:scroll(0-getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
-		elseif key == 1885824110 then
+		elseif key == 1919379572 or key == 1885824110 then
 			-- print("page down")
 			resultListView:scroll(getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
 		elseif key == 26161 then --编辑关键词 f1

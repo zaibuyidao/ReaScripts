@@ -754,6 +754,12 @@ function init()
 				end)
 			end
 
+			function searchTextBox:onRightMouseClick() -- Alt+右键单击 清空 Media Explorer 的搜索框
+				if self.parentGui.kb:alt() then
+					send_search_text(" ")
+				end
+			end
+
 			function c:onRightMouseClick()
 				reaper.CF_SetClipboard(listView.data[dataIndex].value)
 			end
@@ -761,10 +767,10 @@ function init()
 	})
 
 	function onKeyboardGlobal(key)
-		if key == 1885828464 then
+		if key == 1818584692 or key == 1885828464 then
 			-- print("page up")
 			resultListView:scroll(0-getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
-		elseif key == 1885824110 then
+		elseif key == 1919379572 or key == 1885824110 then
 			-- print("page down")
 			resultListView:scroll(getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
 		elseif key == 26164 then --跳转目标 f4
@@ -785,13 +791,13 @@ function init()
 			resultListView:jump(resultListView.firstIndex - 1)
 		elseif key == 1685026670 then --arrow down
 			resultListView:jump(resultListView.firstIndex + 1)
-		elseif key == 26165 then --F5 刷新keywords.csv
-			regenerateCSV(dbList, csvFilePath)
-		elseif key == 26166 then --F6 生成CustomCSV
+		elseif key == 26165 then --F5
+			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
+		elseif key == 26166 then --F6 生成 custom_keywords.csv
 			local customCSVFilePath = script_path .. getPathDelimiter() .. "custom_keywords.csv"
 			updateCustomCSV(data, customCSVFilePath)
-		elseif key == 26167 then --F7
-			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
+		elseif key == 26167 then --F7 刷新 keywords.csv
+			regenerateCSV(dbList, csvFilePath)
 		end
 	end
 
