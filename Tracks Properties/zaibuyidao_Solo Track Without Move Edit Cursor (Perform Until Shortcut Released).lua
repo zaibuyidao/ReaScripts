@@ -1,5 +1,5 @@
--- @description Name: Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)
--- @version 1.0
+-- @description Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
