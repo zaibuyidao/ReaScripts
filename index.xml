@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="779998370c9548732391d522877f82db7844946e">
+<index version="1" name="zaibuyidao Scripts" commit="91f7b7e3cd073075c538413ae1201d857edc3983">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7116,7 +7116,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Mouse%20Position.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Solo Track Without Move Edit Cursor (Perform Until Shortcut Released).lua" type="script" desc="Name: Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)">
+    <reapack name="zaibuyidao_Solo Track Without Move Edit Cursor (Perform Until Shortcut Released).lua" type="script" desc="Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -7132,6 +7132,10 @@
       <version name="1.0" author="zaibuyidao" time="2023-08-22T02:07:26Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/779998370c9548732391d522877f82db7844946e/Tracks%20Properties/zaibuyidao_Solo%20Track%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-08-22T03:23:05Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/91f7b7e3cd073075c538413ae1201d857edc3983/Tracks%20Properties/zaibuyidao_Solo%20Track%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Solo Track (Auto Solo).lua" type="script" desc="Toggle Solo Track (Auto Solo)">
