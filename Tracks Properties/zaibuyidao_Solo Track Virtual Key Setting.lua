@@ -1,5 +1,5 @@
 -- @description Solo Track Virtual Key Setting
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -103,23 +103,17 @@ key_map = generateKeyMap()
 
 local language = getSystemLanguage()
 if language == "简体中文" then
-  title = "独奏轨道虚拟键设置"
+  title = "独奏轨道快捷键设置"
   lable = "输入 (0-9, A-Z, 使用';;'代替','或.)"
   err_title = "不能设置这个按键，请改其他按键"
-  okk_title = "设置完毕，请重新激活 Solo Track 脚本"
-  okk_box = "成功！"
 elseif language == "繁体中文" then
-  title = "獨奏軌道虚拟键設置"
+  title = "獨奏軌道快捷鍵設置"
   lable = "輸入 (0-9,A-Z,使用';;'代替','或.)"
   err_title = "不能設置這個按鍵，請改其他按鍵"
-  okk_title = "設置完畢，請重新激活 Solo Track 脚本"
-  okk_box = "成功！"
 else
-  title = "Solo Track Virtual Key Settings"
+  title = "Solo Track Shortcut Key Settings"
   lable = "Enter (0-9, A-Z, use ';;' for ',' or .)"
   err_title = "This key can't be set. Please choose another."
-  okk_title = "Settings applied. Please reactivate the Solo Track script."
-  okk_box = "Completed!"
 end
 
 reaper.Undo_BeginBlock()
@@ -127,9 +121,9 @@ shift_key = 0x10
 state = reaper.JS_VKeys_GetState(0) -- 获取按键的状态
 if state:byte(shift_key) ~= 0 then -- 检查Shift键是否被按下
   if key == ',' then
-      VirtualKeyCode = key_map['<']
+    VirtualKeyCode = key_map['<']
   elseif key == '.' then
-      VirtualKeyCode = key_map['>']
+    VirtualKeyCode = key_map['>']
   end
 else
   VirtualKeyCode = key_map[key]
@@ -137,30 +131,43 @@ end
 
 local key = reaper.GetExtState("SOLO_TRACK_VIRTUAL_KEY_SETTING", "VirtualKey")
 if (key == "") then 
-    key = "9" 
+  key = "9" 
 elseif (key == ",") then
-    key = ";;" -- Replace comma with ;;
+  key = ";;" -- Replace comma with ;;
 end
 
 local retval, retvals_csv = reaper.GetUserInputs(title, 1, lable, key)
 
 if retval == nil or retval == false then 
-    return 
+  return
 end
 
 -- If the user entered ";;", interpret it as ","
 if retvals_csv == ";;" then
-    retvals_csv = ","
+  retvals_csv = ","
 end
 
 if (not key_map[retvals_csv]) then
-    reaper.MB(err_title, "Error", 0)
-    return
+  reaper.MB(err_title, "Error", 0)
+  return
 end
 
 key = retvals_csv
 VirtualKeyCode = key_map[key]
 reaper.SetExtState("SOLO_TRACK_VIRTUAL_KEY_SETTING", "VirtualKey", key, true)
-reaper.MB(okk_title, okk_box, 0)
+
+if language == "简体中文" then
+  okk_title = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Solo Track 脚本，並使用快捷键 ".. key .." 进行独奏。"
+  okk_box = "继续下一步"
+elseif language == "繁体中文" then
+  okk_title = "虛擬鍵 ".. key .." 設置完畢。接下來，你需要將按鍵 ".. key .." 設置為無動作，以避免觸發系統警報聲。\n點擊【確定】將會彈出操作列表的快捷鍵設置，請將快捷鍵設置為按鍵 ".. key .." 。\n\n最後，請重新運行 Solo Track 腳本，並使用快捷鍵 ".. key .." 進行獨奏。"
+  okk_box = "繼續下一步"
+else
+  okk_title = "The virtual key " .. key .. " has been set up. Next, you need to configure the key " .. key .. " to 'No Action' to prevent triggering system alert sounds.\nClicking [OK] will open the action list's shortcut settings. Please set the shortcut to key " .. key .. ".\n\nLastly, please rerun the Solo Track script and use the shortcut " .. key .. " to solo."
+  okk_box = "Proceed to the next step."
+end
+
+reaper.MB(okk_title, okk_box, 0) -- 继续下一步
+reaper.DoActionShortcutDialog(0, 0, 65535, -1) -- No-op (no action)
 reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
