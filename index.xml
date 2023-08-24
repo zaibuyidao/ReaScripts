@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3c4d2c6b90ff14cb10c77a1caba492061a657223">
+<index version="1" name="zaibuyidao Scripts" commit="33047d00cbe9f27d97c5aa2a0dcb87ce8d183367">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7136,6 +7136,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2023-08-24T06:11:07Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3c4d2c6b90ff14cb10c77a1caba492061a657223/Tracks%20Properties/zaibuyidao_Solo%20Track%20Virtual%20Key%20Setting.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-08-24T15:36:44Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/33047d00cbe9f27d97c5aa2a0dcb87ce8d183367/Tracks%20Properties/zaibuyidao_Solo%20Track%20Virtual%20Key%20Setting.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Without Move Edit Cursor (Perform Until Shortcut Released - Exclude Item Selection).lua" type="script" desc="Solo Track Without Move Edit Cursor (Perform Until Shortcut Released - Exclude Item Selection)">
