@@ -1,5 +1,5 @@
--- @description Solo Track Virtual Key Setting
--- @version 1.0.2
+-- @description Solo Track Shortcut Setting
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -104,7 +104,7 @@ key_map = generateKeyMap()
 local language = getSystemLanguage()
 if language == "简体中文" then
   title = "独奏轨道快捷键设置"
-  lable = "输入 (0-9, A-Z, 使用';;'代替','或.)"
+  lable = "输入 (0-9,A-Z,使用';;'代替','或.)"
   err_title = "不能设置这个按键，请改其他按键"
 elseif language == "繁体中文" then
   title = "獨奏軌道快捷鍵設置"
@@ -129,7 +129,7 @@ else
   VirtualKeyCode = key_map[key]
 end
 
-local key = reaper.GetExtState("SOLO_TRACK_VIRTUAL_KEY_SETTING", "VirtualKey")
+local key = reaper.GetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey")
 if (key == "") then 
   key = "9" 
 elseif (key == ",") then
@@ -154,7 +154,7 @@ end
 
 key = retvals_csv
 VirtualKeyCode = key_map[key]
-reaper.SetExtState("SOLO_TRACK_VIRTUAL_KEY_SETTING", "VirtualKey", key, true)
+reaper.SetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey", key, true)
 
 if language == "简体中文" then
   okk_title = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Solo Track 脚本，並使用快捷键 ".. key .." 进行独奏。"
