@@ -1,5 +1,5 @@
 -- @description Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -22,30 +22,6 @@ function print(...)
         reaper.ShowConsoleMsg(tostring(v) .. " ")
     end
     reaper.ShowConsoleMsg("\n")
-end
-
-if not reaper.SNM_GetIntConfigVar then
-    local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
-    if retval == 1 then
-        if not OS then local OS = reaper.GetOS() end
-        if OS=="OSX32" or OS=="OSX64" then
-            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
-        else
-            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
-        end
-    end
-    return
-end
-
-if not reaper.APIExists("JS_Localize") then
-    reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
-    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-    if ok then
-        reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-    else
-        reaper.MB(err, "錯誤", 0)
-    end
-    return reaper.defer(function() end)
 end
 
 function getSystemLanguage()
@@ -91,18 +67,55 @@ function getSystemLanguage()
 end
 
 local language = getSystemLanguage()
+
 if language == "简体中文" then
+    swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+    swserr = "警告"
+    jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+    jstitle = "你必须安裝 JS_ReaScriptAPI"
     title = "独奏轨道快捷键设置"
     lable = "输入 (0-9,A-Z,使用';;'代替','或.)"
     err_title = "不能设置这个按键，请改其他按键"
 elseif language == "繁体中文" then
+    swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+    swserr = "警告"
+    jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+    jstitle = "你必須安裝 JS_ReaScriptAPI"
     title = "獨奏軌道快捷鍵設置"
     lable = "輸入 (0-9,A-Z,使用';;'代替','或.)"
     err_title = "不能設置這個按鍵，請改其他按鍵"
 else
+    swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+    swserr = "Warning"
+    jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+    jstitle = "You must install JS_ReaScriptAPI"
     title = "Solo Track Shortcut Key Settings"
     lable = "Enter (0-9, A-Z, use ';;' for ',' or .)"
     err_title = "This key can't be set. Please choose another."
+end
+
+if not reaper.SNM_GetIntConfigVar then
+    local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+    if retval == 1 then
+        if not OS then local OS = reaper.GetOS() end
+        if OS=="OSX32" or OS=="OSX64" then
+            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+        else
+            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+        end
+    end
+    return
+end
+
+if not reaper.APIExists("JS_Localize") then
+    reaper.MB(jsmsg, jstitle, 0)
+    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+    if ok then
+      reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+    else
+      reaper.MB(err, jserr, 0)
+    end
+    return reaper.defer(function() end)
 end
 
 local function generateKeyMap()
@@ -126,6 +139,8 @@ end
 key_map = generateKeyMap()
 local key = reaper.GetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey")
 shift_key = 0x10
+ctrl_key = 0x11
+alt_key = 0x12
 
 if (not key or not key_map[key]) then
     key = "9"
