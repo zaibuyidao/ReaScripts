@@ -1,5 +1,5 @@
 -- @description Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -125,18 +125,7 @@ end
 
 key_map = generateKeyMap()
 local key = reaper.GetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey")
-
 shift_key = 0x10
-state = reaper.JS_VKeys_GetState(0) -- 获取按键的状态
-if state:byte(shift_key) ~= 0 then -- 检查Shift键是否被按下
-    if key == ',' then
-        VirtualKeyCode = key_map['<']
-    elseif key == '.' then
-        VirtualKeyCode = key_map['>']
-    end
-else
-    VirtualKeyCode = key_map[key]
-end
 
 if (not key or not key_map[key]) then
     key = "9"
@@ -222,10 +211,19 @@ flag = 0
 function main()
     reaper.PreventUIRefresh(1)
     cur_pos = reaper.GetCursorPosition()
-
     count_sel_items = reaper.CountSelectedMediaItems(0)
     count_sel_track = reaper.CountSelectedTracks(0)
-    state = reaper.JS_VKeys_GetState(0) -- 獲取按鍵的狀態
+
+    state = reaper.JS_VKeys_GetState(0) -- 获取按键的状态
+    if state:byte(shift_key) ~= 0 then -- 检查Shift键是否被按下
+        if key == ',' then
+            VirtualKeyCode = key_map['<']
+        elseif key == '.' then
+            VirtualKeyCode = key_map['>']
+        end
+    else
+        VirtualKeyCode = key_map[key]
+    end
 
     if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
 
@@ -288,7 +286,6 @@ function main()
     reaper.defer(main)
 end
 
-reaper.ClearConsole()
 local _, _, sectionId, cmdId = reaper.get_action_context()
 if sectionId ~= -1 then
     reaper.SetToggleCommandState(sectionId, cmdId, 1)
