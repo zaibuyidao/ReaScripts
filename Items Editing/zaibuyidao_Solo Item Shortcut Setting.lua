@@ -1,5 +1,5 @@
--- @description Solo Track Shortcut Setting
--- @version 1.0.1
+-- @description Solo Item Shortcut Setting
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -64,7 +64,7 @@ if language == "简体中文" then
   swserr = "警告"
   jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
   jstitle = "你必须安裝 JS_ReaScriptAPI"
-  title = "独奏轨道快捷键设置"
+  title = "独奏对象快捷键设置"
   lable = "输入 (0-9,A-Z,使用';;'代替','或.)"
   err_title = "不能设置这个按键，请改其他按键"
 elseif language == "繁体中文" then
@@ -72,7 +72,7 @@ elseif language == "繁体中文" then
   swserr = "警告"
   jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
   jstitle = "你必須安裝 JS_ReaScriptAPI"
-  title = "獨奏軌道快捷鍵設置"
+  title = "獨奏對象快捷鍵設置"
   lable = "輸入 (0-9,A-Z,使用';;'代替','或.)"
   err_title = "不能設置這個按鍵，請改其他按鍵"
 else
@@ -80,7 +80,7 @@ else
   swserr = "Warning"
   jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
   jstitle = "You must install JS_ReaScriptAPI"
-  title = "Solo Track Shortcut Key Settings"
+  title = "Solo Item Shortcut Key Settings"
   lable = "Enter (0-9, A-Z, use ';;' for ',' or .)"
   err_title = "This key can't be set. Please choose another."
 end
@@ -135,7 +135,7 @@ ctrl_key = 0x11
 alt_key = 0x12
 state = reaper.JS_VKeys_GetState(0) -- 获取按键的状态
 
-local key = reaper.GetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey")
+local key = reaper.GetExtState("SOLO_ITEM_SHORTCUT_SETTING", "VirtualKey")
 if (key == "") then 
   key = "9" 
 elseif (key == ",") then
@@ -160,7 +160,7 @@ end
 
 key = retvals_csv
 VirtualKeyCode = key_map[key]
-reaper.SetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey", key, true)
+reaper.SetExtState("SOLO_ITEM_SHORTCUT_SETTING", "VirtualKey", key, true)
 
 if language == "简体中文" then
   okk_title = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Solo Track 脚本，並使用快捷键 ".. key .." 进行独奏。"
