@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="4a7a8c9f5bda126c308916b08340789a580ecf64">
+<index version="1" name="zaibuyidao Scripts" commit="994767741fb8fa1ff8206961441eb813a8d0e306">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1164,6 +1164,10 @@
       <version name="1.0" author="zaibuyidao" time="2023-08-31T04:29:06Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4a7a8c9f5bda126c308916b08340789a580ecf64/Items%20Editing/zaibuyidao_Solo%20Item%20Shortcut%20Setting.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-08-31T04:34:46Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/994767741fb8fa1ff8206961441eb813a8d0e306/Items%20Editing/zaibuyidao_Solo%20Item%20Shortcut%20Setting.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Without Move Edit Cursor (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Without Move Edit Cursor (Perform Until Shortcut Released)">
