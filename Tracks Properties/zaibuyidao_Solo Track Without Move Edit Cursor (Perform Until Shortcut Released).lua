@@ -1,5 +1,5 @@
 -- @description Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -131,13 +131,15 @@ local function generateKeyMap()
     end
     map[','] = 0xBC
     map['.'] = 0xBE
-    map['<'] = 0xBC
-    map['>'] = 0xBE
+    -- map['<'] = 0xBC
+    -- map['>'] = 0xBE
     return map
 end
 
 key_map = generateKeyMap()
+
 local key = reaper.GetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey")
+VirtualKeyCode = key_map[key]
 shift_key = 0x10
 ctrl_key = 0x11
 alt_key = 0x12
@@ -230,15 +232,6 @@ function main()
     count_sel_track = reaper.CountSelectedTracks(0)
 
     state = reaper.JS_VKeys_GetState(0) -- 获取按键的状态
-    if state:byte(shift_key) ~= 0 then -- 检查Shift键是否被按下
-        if key == ',' then
-            VirtualKeyCode = key_map['<']
-        elseif key == '.' then
-            VirtualKeyCode = key_map['>']
-        end
-    else
-        VirtualKeyCode = key_map[key]
-    end
 
     if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
 
