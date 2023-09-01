@@ -1,5 +1,5 @@
 -- @description Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -89,7 +89,7 @@ else
     swserr = "Warning"
     jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
     jstitle = "You must install JS_ReaScriptAPI"
-    title = "Solo Track Shortcut Key Settings"
+    title = "Solo Track Shortcut Settings"
     lable = "Enter (0-9, A-Z, use ';;' for ',' or .)"
     err_title = "This key can't be set. Please choose another."
 end

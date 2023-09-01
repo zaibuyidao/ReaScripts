@@ -1,5 +1,5 @@
 -- @description Solo Item Shortcut Setting
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -80,7 +80,7 @@ else
   swserr = "Warning"
   jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
   jstitle = "You must install JS_ReaScriptAPI"
-  title = "Solo Item Shortcut Key Settings"
+  title = "Solo Item Shortcut Settings"
   lable = "Enter (0-9, A-Z, use ';;' for ',' or .)"
   err_title = "This key can't be set. Please choose another."
 end
