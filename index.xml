@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="befc08f5cb3c1929f26ddcdd5d8fa846f0cd2934">
+<index version="1" name="zaibuyidao Scripts" commit="69b9d3bb3e2916c663645ea9c5129b1e59b80b23">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1069,6 +1069,15 @@
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Play From Edit Cursor Position (Perform Until Shortcut Released)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-09-21T11:34:38Z">
@@ -1080,6 +1089,10 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position.lua" type="script" desc="Solo Item Play From Edit Cursor Position">
@@ -1096,6 +1109,15 @@
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From First Item Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Play From First Item Position (Perform Until Shortcut Released)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-09-21T11:34:38Z">
@@ -1107,6 +1129,10 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20First%20Item%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20First%20Item%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From First Item Position.lua" type="script" desc="Solo Item Play From First Item Position">
@@ -1123,6 +1149,15 @@
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Play From Mouse Position (Perform Until Shortcut Released)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-09-21T11:34:38Z">
@@ -1134,6 +1169,10 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2022-04-09T15:55:08Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/70867c7e94014659d9dea5d0abe9851fb20b6d5a/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Mouse Position.lua" type="script" desc="Solo Item Play From Mouse Position">
@@ -1169,6 +1208,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/994767741fb8fa1ff8206961441eb813a8d0e306/Items%20Editing/zaibuyidao_Solo%20Item%20Shortcut%20Setting.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Items%20Editing/zaibuyidao_Solo%20Item%20Shortcut%20Setting.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Without Move Edit Cursor (Perform Until Shortcut Released).lua" type="script" desc="Solo Item Without Move Edit Cursor (Perform Until Shortcut Released)">
       <metadata>
@@ -1186,6 +1229,10 @@
       <version name="1.0" author="zaibuyidao" time="2023-08-11T02:02:02Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8b7164503cf26089b8a7d92989962bf76279ce09/Items%20Editing/zaibuyidao_Solo%20Item%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Items%20Editing/zaibuyidao_Solo%20Item%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Swap Items Of Two Tracks.lua" type="script" desc="Swap Items Of Two Tracks">
@@ -7101,6 +7148,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/befc08f5cb3c1929f26ddcdd5d8fa846f0cd2934/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released%20-%20Exclude%20Item%20Selection).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released%20-%20Exclude%20Item%20Selection).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released)">
       <metadata>
@@ -7128,6 +7179,10 @@
       <version name="1.0.3" author="zaibuyidao" time="2023-08-31T03:56:59Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/06cd4ccee763ab01483c9332ea00d9ca1d5a9fc0/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Edit Cursor Position.lua" type="script" desc="Solo Track Play From Edit Cursor Position">
@@ -7159,6 +7214,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/befc08f5cb3c1929f26ddcdd5d8fa846f0cd2934/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released%20-%20Exclude%20Item%20Selection).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released%20-%20Exclude%20Item%20Selection).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo Track Play From Mouse Position (Perform Until Shortcut Released)">
       <metadata>
@@ -7186,6 +7245,10 @@
       <version name="1.0.3" author="zaibuyidao" time="2023-08-31T03:56:59Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/06cd4ccee763ab01483c9332ea00d9ca1d5a9fc0/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Tracks%20Properties/zaibuyidao_Solo%20Track%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Mouse Position.lua" type="script" desc="Solo Track Play From Mouse Position">
@@ -7221,6 +7284,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4a7a8c9f5bda126c308916b08340789a580ecf64/Tracks%20Properties/zaibuyidao_Solo%20Track%20Shortcut%20Setting.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Tracks%20Properties/zaibuyidao_Solo%20Track%20Shortcut%20Setting.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Without Move Edit Cursor (Perform Until Shortcut Released - Exclude Item Selection).lua" type="script" desc="Solo Track Without Move Edit Cursor (Perform Until Shortcut Released - Exclude Item Selection)">
       <metadata>
@@ -7242,6 +7309,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2023-08-31T03:56:59Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/06cd4ccee763ab01483c9332ea00d9ca1d5a9fc0/Tracks%20Properties/zaibuyidao_Solo%20Track%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released%20-%20Exclude%20Item%20Selection).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Tracks%20Properties/zaibuyidao_Solo%20Track%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released%20-%20Exclude%20Item%20Selection).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Without Move Edit Cursor (Perform Until Shortcut Released).lua" type="script" desc="Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)">
@@ -7280,6 +7351,10 @@
       <version name="1.0.5" author="zaibuyidao" time="2023-08-31T03:56:59Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/06cd4ccee763ab01483c9332ea00d9ca1d5a9fc0/Tracks%20Properties/zaibuyidao_Solo%20Track%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.6" author="zaibuyidao" time="2023-09-01T15:59:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/69b9d3bb3e2916c663645ea9c5129b1e59b80b23/Tracks%20Properties/zaibuyidao_Solo%20Track%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Solo Track (Auto Solo).lua" type="script" desc="Toggle Solo Track (Auto Solo)">
