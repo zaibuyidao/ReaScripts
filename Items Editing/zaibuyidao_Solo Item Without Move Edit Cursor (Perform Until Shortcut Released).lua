@@ -1,5 +1,5 @@
 -- @description Solo Item Without Move Edit Cursor (Perform Until Shortcut Released)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -167,13 +167,13 @@ if (not key or not key_map[key]) then
     reaper.SetExtState("SOLO_ITEM_SHORTCUT_SETTING", "VirtualKey", key, true)
 
     if language == "简体中文" then
-        okk_title = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Solo Track 脚本，並使用快捷键 ".. key .." 进行独奏。"
+        okk_title = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Solo Item 脚本，並使用快捷键 ".. key .." 进行独奏。"
         okk_box = "继续下一步"
     elseif language == "繁体中文" then
-        okk_title = "虛擬鍵 ".. key .." 設置完畢。接下來，你需要將按鍵 ".. key .." 設置為無動作，以避免觸發系統警報聲。\n點擊【確定】將會彈出操作列表的快捷鍵設置，請將快捷鍵設置為按鍵 ".. key .." 。\n\n最後，請重新運行 Solo Track 腳本，並使用快捷鍵 ".. key .." 進行獨奏。"
+        okk_title = "虛擬鍵 ".. key .." 設置完畢。接下來，你需要將按鍵 ".. key .." 設置為無動作，以避免觸發系統警報聲。\n點擊【確定】將會彈出操作列表的快捷鍵設置，請將快捷鍵設置為按鍵 ".. key .." 。\n\n最後，請重新運行 Solo Item 腳本，並使用快捷鍵 ".. key .." 進行獨奏。"
         okk_box = "繼續下一步"
     else
-        okk_title = "The virtual key " .. key .. " has been set up. Next, you need to configure the key " .. key .. " to 'No Action' to prevent triggering system alert sounds.\nClicking [OK] will open the action list's shortcut settings. Please set the shortcut to key " .. key .. ".\n\nLastly, please rerun the Solo Track script and use the shortcut " .. key .. " to solo."
+        okk_title = "The virtual key " .. key .. " has been set up. Next, you need to configure the key " .. key .. " to 'No Action' to prevent triggering system alert sounds.\nClicking [OK] will open the action list's shortcut settings. Please set the shortcut to key " .. key .. ".\n\nLastly, please rerun the Solo Item script and use the shortcut " .. key .. " to solo."
         okk_box = "Proceed to the next step."
     end
 
