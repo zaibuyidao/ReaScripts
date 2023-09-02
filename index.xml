@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6bace1c80d7d6e98883fab9da2e5bf31f55ea67d">
+<index version="1" name="zaibuyidao Scripts" commit="8ee1e2efda274888dc6386c821364ee583ed38ad">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -6855,6 +6855,10 @@
       <version name="1.1.1" author="zaibuyidao" time="2023-03-15T05:42:07Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b2d57e0664a2f02caa848dacd656ebc776908be3/Regions/zaibuyidao_Set%20Region%20Name%20From%20Clipboard.lua</source>
+      </version>
+      <version name="1.1.2" author="zaibuyidao" time="2023-09-02T05:49:37Z">
+        <changelog><![CDATA[Fixed undo bug]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8ee1e2efda274888dc6386c821364ee583ed38ad/Regions/zaibuyidao_Set%20Region%20Name%20From%20Clipboard.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Region Name.lua" type="script" desc="Set Region Name">
