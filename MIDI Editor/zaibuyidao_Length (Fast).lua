@@ -1,5 +1,5 @@
 -- @description Length (Fast)
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Resolve the error in MIDI event scaling.
 -- @links
@@ -319,13 +319,13 @@ function scaleEvents(take, all_events, note_events, events, qn_range, percent, s
 end
 
 if language == "简体中文" then
-    title = "长度"
+    title = "长度(快速)"
     lable = "百分比,0=起始+持续 1=起始 2=持续"
 elseif language == "繁体中文" then
-    title = "長度"
+    title = "長度(快速)"
     lable = "百分比,0=起始+持續 1=起始 2=持續"
 else
-    title = "Length"
+    title = "Length (Fast)"
     lable = "Percent,0=Start+Dur 1=Start 2=Durations"
 end
 
