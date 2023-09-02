@@ -1,7 +1,7 @@
 -- @description Set Region Name From Clipboard
--- @version 1.1.1
+-- @version 1.1.2
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog Fixed undo bug
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -9,36 +9,10 @@
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(...)
-  local args = {...}
-  local str = ""
-  for i = 1, #args do
-    str = str .. tostring(args[i]) .. "\t"
+  for _, v in ipairs({...}) do
+    reaper.ShowConsoleMsg(tostring(v) .. " ")
   end
-  reaper.ShowConsoleMsg(str .. "\n")
-end
-
-if not reaper.SNM_GetIntConfigVar then
-  local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
-  if retval == 1 then
-    if not OS then local OS = reaper.GetOS() end
-    if OS=="OSX32" or OS=="OSX64" then
-      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
-    else
-      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
-    end
-  end
-  return
-end
-
-if not reaper.APIExists("JS_Localize") then
-  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
-  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-  if ok then
-    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-  else
-    reaper.MB(err, "錯誤", 0)
-  end
-  return reaper.defer(function() end)
+  reaper.ShowConsoleMsg("\n")
 end
 
 function getSystemLanguage()
@@ -81,6 +55,49 @@ function getSystemLanguage()
   end
 
   return lang
+end
+
+local language = getSystemLanguage()
+
+if language == "简体中文" then
+  swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+  swserr = "警告"
+  jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+  jstitle = "你必须安裝 JS_ReaScriptAPI"
+elseif language == "繁体中文" then
+  swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+  swserr = "警告"
+  jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+  jstitle = "你必須安裝 JS_ReaScriptAPI"
+else
+  swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+  swserr = "Warning"
+  jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+  jstitle = "You must install JS_ReaScriptAPI"
+end
+
+if not reaper.SNM_GetIntConfigVar then
+  local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+  if retval == 1 then
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
+  end
+  return
+end
+
+if not reaper.APIExists("JS_Localize") then
+  reaper.MB(jsmsg, jstitle, 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, jserr, 0)
+  end
+  return reaper.defer(function() end)
 end
 
 function max(a,b)
@@ -157,21 +174,22 @@ for text in clipboard:gmatch('[^\r\n]+') do -- 包含空行：clipboard:gmatch('
   rgntext[cnt] = text
 end
 
-if #regions ~= #rgntext then
-  if language == "简体中文" then
-    script_name = "从剪切板设置区域名称"
-    text = '选定区域：' .. #regions .. '\n区域名称：' .. #rgntext
-    text = text..'\n\n仍然要继续吗？'
-  elseif language == "繁体中文" then
-    script_name = "從剪切板設置區域名稱"
-    text = '選定區域：' .. #regions .. '\n區域名稱：' .. #rgntext
-    text = text..'\n\n仍然要繼續嗎？'
-  else
-    script_name = "Set Region Name From Clipboard"
-    text = 'Selected region: ' .. #regions .. '\nRegion name: ' .. #rgntext
-    text = text..'\n\nStill want to continue?'
-  end
+local script_name
+if language == "简体中文" then
+  script_name = "从剪切板设置区域名称"
+  text = '选定区域：' .. #regions .. '\n区域名称：' .. #rgntext
+  text = text..'\n\n仍然要继续吗？'
+elseif language == "繁体中文" then
+  script_name = "從剪切板設置區域名稱"
+  text = '選定區域：' .. #regions .. '\n區域名稱：' .. #rgntext
+  text = text..'\n\n仍然要繼續嗎？'
+else
+  script_name = "Set Region Name From Clipboard"
+  text = 'Selected region: ' .. #regions .. '\nRegion name: ' .. #rgntext
+  text = text..'\n\nDo you still want to continue?'
+end
 
+if #regions ~= #rgntext then
   local box_ok = reaper.ShowMessageBox(text, script_name, 4)
   
   if box_ok == 7 then
