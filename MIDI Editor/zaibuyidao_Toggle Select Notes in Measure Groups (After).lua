@@ -1,5 +1,5 @@
 -- @description Toggle Select Notes in Measure Groups (After)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -68,21 +68,21 @@ if language == "简体中文" then
     jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
     jstitle = "你必须安裝 JS_ReaScriptAPI"
     title = "切换音符选择"
-    lable = "输入小节数："
+    lable = "输入小节数"
 elseif language == "繁体中文" then
     swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
     swserr = "警告"
     jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
     jstitle = "你必須安裝 JS_ReaScriptAPI"
     title = "切換音符選擇"
-    lable = "輸入小節數："
+    lable = "輸入小節數"
 else
     swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
     swserr = "Warning"
     jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
     jstitle = "You must install JS_ReaScriptAPI"
     title = "Toggle Note Selection"
-    lable = "Enter measure count:"
+    lable = "Enter measure count"
 end
 
 if not reaper.SNM_GetIntConfigVar then
@@ -151,7 +151,7 @@ end
 
 -- 主函数
 local startMeasure, endMeasure = getStartEndMeasures()
-local retval, userCount = reaper.GetUserInputs(title, 1, lable, "")
+local retval, userCount = reaper.GetUserInputs(title, 1, lable, "2")
 userCount = tonumber(userCount)
 
 reaper.Undo_BeginBlock()
