@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1a4b9c59da9d54933d362ae58011ce1e73dfb5de">
+<index version="1" name="zaibuyidao Scripts" commit="22fcd3848ac0a39451f361989af960cab62f5aeb">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5669,6 +5669,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a4b9c59da9d54933d362ae58011ce1e73dfb5de/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups%20(After).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-09-05T08:39:28Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/22fcd3848ac0a39451f361989af960cab62f5aeb/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups%20(After).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Select Notes in Measure Groups (Before).lua" type="script" desc="Toggle Select Notes in Measure Groups (Before)">
       <metadata>
@@ -5687,6 +5691,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a4b9c59da9d54933d362ae58011ce1e73dfb5de/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups%20(Before).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-09-05T08:39:28Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/22fcd3848ac0a39451f361989af960cab62f5aeb/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups%20(Before).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Select Notes in Measure Groups.lua" type="script" desc="Toggle Select Notes in Measure Groups">
       <metadata>
@@ -5704,6 +5712,10 @@
       <version name="1.0" author="zaibuyidao" time="2023-09-05T08:19:39Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a4b9c59da9d54933d362ae58011ce1e73dfb5de/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-09-05T08:39:28Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/22fcd3848ac0a39451f361989af960cab62f5aeb/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Transform CC (For Selected CC).lua" type="script" desc="Transform CC (For Selected CC)">
