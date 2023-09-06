@@ -1,5 +1,5 @@
 -- @description Toggle Select Notes in Measure Groups (After)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -138,15 +138,33 @@ function selectNotesBasedOnUserInput(startMeasure, endMeasure, userCount)
     local _, numNotes = reaper.MIDI_CountEvts(take)
     local cycle = userCount * 2
     for i = 0, numNotes - 1 do
-        local _, _, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
-        local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+        local _, selected, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
 
-        if (measure - 1) % cycle >= userCount then
-            reaper.MIDI_SetNote(take, i, true, nil, nil, nil, nil, nil, nil, false)
-        else
-            reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+        if selected then  -- 仅对已选中的音符操作
+            local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+
+            if (measure - 1) % cycle >= userCount then
+                reaper.MIDI_SetNote(take, i, true, nil, nil, nil, nil, nil, nil, false)
+            else
+                reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+            end
         end
     end
+end
+
+-- 检查指定的小节范围内是否有音符被选中
+function areNotesSelectedInSpecifiedMeasures(startMeasure, endMeasure, userCount)
+    local _, numNotes = reaper.MIDI_CountEvts(take)
+    local cycle = userCount * 2
+    for i = 0, numNotes - 1 do
+        local _, selected, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
+        local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+
+        if selected and (measure - 1) % cycle >= userCount then
+            return true
+        end
+    end
+    return false
 end
 
 -- 主函数
@@ -155,11 +173,9 @@ local retval, userCount = reaper.GetUserInputs(title, 1, lable, "2")
 userCount = tonumber(userCount)
 
 reaper.Undo_BeginBlock()
-
-if retval and userCount then
+if retval and userCount and areNotesSelectedInSpecifiedMeasures(startMeasure, endMeasure, userCount) then
     selectNotesBasedOnUserInput(startMeasure, endMeasure, userCount)
 end
-
 reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

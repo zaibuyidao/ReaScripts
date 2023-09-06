@@ -1,5 +1,5 @@
 -- @description Toggle Select Notes in Measure Groups (Before)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -137,13 +137,16 @@ end
 function selectNotesBasedOnUserInput(startMeasure, endMeasure, selectLength)
     local _, numNotes = reaper.MIDI_CountEvts(take)
     for i = 0, numNotes - 1 do
-        local _, _, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
-        local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+        local _, selected, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
 
-        if measure % (2 * selectLength) <= selectLength and measure % (2 * selectLength) > 0 then
-            reaper.MIDI_SetNote(take, i, true, nil, nil, nil, nil, nil, nil, false)
-        else
-            reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+        if selected then  -- 仅对已选中的音符操作
+            local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+
+            if measure % (2 * selectLength) <= selectLength and measure % (2 * selectLength) > 0 then
+                reaper.MIDI_SetNote(take, i, true, nil, nil, nil, nil, nil, nil, false)
+            else
+                reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+            end
         end
     end
 end
