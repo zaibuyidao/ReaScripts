@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="dbfa2e8304d606de29467db34fabab07ab75e0d8">
+<index version="1" name="zaibuyidao Scripts" commit="cf753afab753a55f934bf0aec735977790ab4256">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5681,6 +5681,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/22fcd3848ac0a39451f361989af960cab62f5aeb/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups%20(After).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-09-06T04:19:59Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cf753afab753a55f934bf0aec735977790ab4256/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups%20(After).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Select Notes in Measure Groups (Before).lua" type="script" desc="Toggle Select Notes in Measure Groups (Before)">
       <metadata>
@@ -5702,6 +5706,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2023-09-05T08:39:28Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/22fcd3848ac0a39451f361989af960cab62f5aeb/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups%20(Before).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-09-06T04:19:59Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cf753afab753a55f934bf0aec735977790ab4256/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups%20(Before).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Select Notes in Measure Groups.lua" type="script" desc="Toggle Select Notes in Measure Groups">
