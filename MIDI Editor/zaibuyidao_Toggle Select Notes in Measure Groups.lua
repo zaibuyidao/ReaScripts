@@ -1,5 +1,5 @@
 -- @description Toggle Select Notes in Measure Groups
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -138,18 +138,36 @@ function selectNotesBasedOnUserInput(startMeasure, endMeasure, userCount, direct
     local _, numNotes = reaper.MIDI_CountEvts(take)
     local cycle = userCount * 2
     for i = 0, numNotes - 1 do
-        local _, _, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
+        local _, selected, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
+
+        if selected then -- 仅对已选中的音符操作
+            local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+
+            local isSelected = false
+            if direction == "0" then
+                isSelected = (measure - 1) % cycle < userCount
+            else -- direction == "After"
+                isSelected = (measure - 1) % cycle >= userCount
+            end
+    
+            reaper.MIDI_SetNote(take, i, isSelected, nil, nil, nil, nil, nil, nil, false)
+        end
+    end
+end
+
+-- 检查指定的小节范围内是否有音符被选中
+function areNotesSelectedInSpecifiedMeasures(startMeasure, endMeasure, userCount)
+    local _, numNotes = reaper.MIDI_CountEvts(take)
+    local cycle = userCount * 2
+    for i = 0, numNotes - 1 do
+        local _, selected, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
         local measure = getNoteMeasureStart(startppq) - startMeasure + 1
 
-        local isSelected = false
-        if direction == "0" then
-            isSelected = (measure - 1) % cycle < userCount
-        else -- direction == "After"
-            isSelected = (measure - 1) % cycle >= userCount
+        if selected and (measure - 1) % cycle >= userCount then
+            return true
         end
-
-        reaper.MIDI_SetNote(take, i, isSelected, nil, nil, nil, nil, nil, nil, false)
     end
+    return false
 end
 
 -- 主函数
@@ -160,6 +178,10 @@ local userCount, direction = userInput:match("([^,]+),([^,]+)")
 reaper.Undo_BeginBlock()
 userCount = tonumber(userCount)
 if retval and userCount and (direction == "0" or direction == "1") then
+    if direction == "1" and not areNotesSelectedInSpecifiedMeasures(startMeasure, endMeasure, userCount) then
+        -- reaper.ShowMessageBox("在指定的小节范围内没有选中的音符！", "警告", 0)
+        return -- 退出函数
+    end
     selectNotesBasedOnUserInput(startMeasure, endMeasure, userCount, direction)
 end
 
