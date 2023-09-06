@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="cf753afab753a55f934bf0aec735977790ab4256">
+<index version="1" name="zaibuyidao Scripts" commit="ffc9c435326149037e650c07508c3a589c98fb8d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5732,6 +5732,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2023-09-05T08:39:28Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/22fcd3848ac0a39451f361989af960cab62f5aeb/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2023-09-06T04:39:17Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ffc9c435326149037e650c07508c3a589c98fb8d/MIDI%20Editor/zaibuyidao_Toggle%20Select%20Notes%20in%20Measure%20Groups.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Transform CC (For Selected CC).lua" type="script" desc="Transform CC (For Selected CC)">
