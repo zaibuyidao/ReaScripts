@@ -1,5 +1,5 @@
 -- @description Select Notes In Even Measures
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -17,7 +17,7 @@ function print(...)
     end
     reaper.ShowConsoleMsg("\n")
 end
-  
+
 function getSystemLanguage()
     local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
     local os = reaper.GetOS()
@@ -130,25 +130,39 @@ function getStartEndMeasures()
     return startMeasure, endMeasure
 end
 
--- 在指定的小节范围内选中奇数小节的音符
-function selectOddMeasuresNotes(startMeasure, endMeasure)
+-- 检查偶数小节中是否有被选中的音符
+function hasSelectedNotesInEvenMeasures(startMeasure, endMeasure)
     local _, numNotes = reaper.MIDI_CountEvts(take)
     for i = 0, numNotes - 1 do
-        local _, _, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
+        local _, selected, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
         local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+        
+        if measure % 2 == 0 and selected and measure <= (endMeasure - startMeasure + 1) then
+            return true
+        end
+    end
+    return false
+end
 
-        if measure % 2 == 0 and measure <= (endMeasure - startMeasure + 1) then
-            reaper.MIDI_SetNote(take, i, true, nil, nil, nil, nil, nil, nil, false)
-        else
+-- 在指定的小节范围内选中偶数小节的音符
+function selectEvenMeasuresNotes(startMeasure, endMeasure)
+    local _, numNotes = reaper.MIDI_CountEvts(take)
+    for i = 0, numNotes - 1 do
+        local _, selected, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
+        local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+        
+        if measure % 2 == 1 and selected and measure <= (endMeasure - startMeasure + 1) then
             reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
         end
     end
 end
 
 reaper.Undo_BeginBlock()
--- 主函数
 local startMeasure, endMeasure = getStartEndMeasures()
-selectOddMeasuresNotes(startMeasure, endMeasure)
+
+if hasSelectedNotesInEvenMeasures(startMeasure, endMeasure) then
+    selectEvenMeasuresNotes(startMeasure, endMeasure)
+end
 
 reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()

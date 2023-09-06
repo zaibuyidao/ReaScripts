@@ -1,5 +1,5 @@
 -- @description Select Notes In Odd Measures
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -130,23 +130,24 @@ function getStartEndMeasures()
     return startMeasure, endMeasure
 end
 
--- 在指定的小节范围内选中奇数小节的音符
+-- 在指定的小节范围内选中奇数小节的音符，但仅对已选中的音符操作
 function selectOddMeasuresNotes(startMeasure, endMeasure)
     local _, numNotes = reaper.MIDI_CountEvts(take)
     for i = 0, numNotes - 1 do
-        local _, _, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
-        local measure = getNoteMeasureStart(startppq) - startMeasure + 1
-
-        if measure % 2 == 1 and measure <= (endMeasure - startMeasure + 1) then
-            reaper.MIDI_SetNote(take, i, true, nil, nil, nil, nil, nil, nil, false)
-        else
-            reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+        local _, selected, _, startppq, _, _, _, _ = reaper.MIDI_GetNote(take, i)
+        
+        if selected then  -- 仅对已选中的音符操作
+            local measure = getNoteMeasureStart(startppq) - startMeasure + 1
+            if measure % 2 == 1 and measure <= (endMeasure - startMeasure + 1) then
+                reaper.MIDI_SetNote(take, i, true, nil, nil, nil, nil, nil, nil, false)
+            else
+                reaper.MIDI_SetNote(take, i, false, nil, nil, nil, nil, nil, nil, false)
+            end
         end
     end
 end
 
 reaper.Undo_BeginBlock()
--- 主函数
 local startMeasure, endMeasure = getStartEndMeasures()
 selectOddMeasuresNotes(startMeasure, endMeasure)
 
