@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="22fcd3848ac0a39451f361989af960cab62f5aeb">
+<index version="1" name="zaibuyidao Scripts" commit="dbfa2e8304d606de29467db34fabab07ab75e0d8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4928,6 +4928,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a4b9c59da9d54933d362ae58011ce1e73dfb5de/MIDI%20Editor/zaibuyidao_Select%20Notes%20In%20Even%20Measures.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-09-06T03:44:18Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dbfa2e8304d606de29467db34fabab07ab75e0d8/MIDI%20Editor/zaibuyidao_Select%20Notes%20In%20Even%20Measures.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Select Notes In Odd Measures.lua" type="script" desc="Select Notes In Odd Measures">
       <metadata>
@@ -4945,6 +4949,10 @@
       <version name="1.0" author="zaibuyidao" time="2023-09-05T08:19:39Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1a4b9c59da9d54933d362ae58011ce1e73dfb5de/MIDI%20Editor/zaibuyidao_Select%20Notes%20In%20Odd%20Measures.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-09-06T03:44:18Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dbfa2e8304d606de29467db34fabab07ab75e0d8/MIDI%20Editor/zaibuyidao_Select%20Notes%20In%20Odd%20Measures.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select Odd Events.lua" type="script" desc="Select Odd Events">
