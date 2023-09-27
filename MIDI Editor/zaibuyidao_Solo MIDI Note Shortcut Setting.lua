@@ -1,5 +1,5 @@
 -- @description Solo MIDI Item Shortcut Setting
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -131,8 +131,8 @@ local function generateKeyMap()
   end
   map[','] = 0xBC
   map['.'] = 0xBE
-  -- map['<'] = 0xBC
-  -- map['>'] = 0xBE
+  map['<'] = 0xE2
+  map['>'] = 0xE2
   return map
 end
 

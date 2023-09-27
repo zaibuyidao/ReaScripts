@@ -1,5 +1,5 @@
 -- @description Solo Item Shortcut Setting
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -122,8 +122,8 @@ local function generateKeyMap()
   end
   map[','] = 0xBC
   map['.'] = 0xBE
-  -- map['<'] = 0xBC
-  -- map['>'] = 0xBE
+  map['<'] = 0xE2
+  map['>'] = 0xE2
   return map
 end
 
