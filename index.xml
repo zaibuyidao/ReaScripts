@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e5fac7e3de56a01aa3a177768ef3d4f82360c8e4">
+<index version="1" name="zaibuyidao Scripts" commit="a9df3f6751a2acad4272767b5c1521b314896f7f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7713,6 +7713,26 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:23:50Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e01076f9c04ff1142c19832d5a62c735a12fb560/Tracks%20Properties/zaibuyidao_Toggle%20Solo%20Track.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Translations">
+    <reapack name="Chinese Simplified (简体中文).ReaperLangPack" type="langpack" desc="Chinese Simplified (简体中文)">
+      <metadata>
+        <link rel="website">https://soundengine.cn/topic/1297</link>
+      </metadata>
+      <version name="1.0" author="再補一刀" time="2023-11-25T19:09:25Z">
+        <changelog><![CDATA[+ 1.0 Init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/a9df3f6751a2acad4272767b5c1521b314896f7f/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
+    </reapack>
+    <reapack name="Chinese Traditional (繁体中文).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁体中文)">
+      <metadata>
+        <link rel="website">https://soundengine.cn/topic/1297</link>
+      </metadata>
+      <version name="1.0" author="再補一刀" time="2023-11-25T19:09:25Z">
+        <changelog><![CDATA[+ 1.0 Init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/a9df3f6751a2acad4272767b5c1521b314896f7f/Translations/Chinese%20Traditional%20(%E7%B9%81%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
