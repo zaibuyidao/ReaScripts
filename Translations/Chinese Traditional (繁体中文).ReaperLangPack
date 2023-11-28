@@ -1,12 +1,10 @@
-#NAME:Chinese Traditional (繁体中文)
-;Version: 1.0.1
+#NAME:Chinese Simplified (繁體中文)
+;Version: 1.0.2
 ;Author: zaibuyidao (再補一刀)
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47851/Chinese%20Simplified%20%28%26%2331616%3B%26%2320307%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
-;REAPER: 7.05
-;SWS: 2.13.2.0
 ;changelog:
-;  Init
+;  Brand new REAPER: 7.06, SWS: 2.13.2.0
 
 [common]
 DCEF2B4D03DE723C=名稱
@@ -708,14 +706,14 @@ CC64F05E5E298084=縮小
 0EE7D967B88BFC63=FX(&F) 插件設置...
 ED9D4CD707DD43C6=粘貼 FX(&P)\tCtrl+V, Ctrl+Insert
 A7702CFDA3C1F8E6=移除選定的 FX(&R)\tDelete
-BBDA863D4D8B16DD=(如果鏈的過採樣被啟用, 將使用實例和鏈中的最大值)
+BBDA863D4D8B16DD=(如果鏈的過採樣被啟用，將使用實例和鏈中的最大值)
 1666831FB7290315=(需要播放停止/開始才能生效)
 4BB3333A13123CE6=添加 FX...
 BF5B216DD3B96A5D=添加容器
 5B982DEEA8952FF4=自動浮動新的 FX 窗口
 C7317FFF2A84005C=為此軌道構建 16 個 MIDI 路由通道
-84FADFAA8CD497E1=為選定的 FX 輸出構建多通道路由...
-A564BFA603B3928B=選定的 FX(&U)\tCtrl+X
+84FADFAA8CD497E1=為所選 FX 輸出構建多通道路由...
+A564BFA603B3928B=剪切選定的 FX(&U)\tCtrl+X
 98FC3630864819E4=鏈 PDC 模式
 28895A60DE891ABF=鏈過採樣
 82EE5475CB6FCE9F=關閉窗口
@@ -726,12 +724,17 @@ B7E90584A70A56CB=複製選定的 FX (包括自動化)
 386E80D3AED15B5D=複製選定的 FX (包括自動化)\tCtrl+Alt+C
 51B6457C06E865F4=剪切選定的 FX
 39397A39236773C2=剪切選定的 FX (包括自動化)
-530F79AA9092B1BE=將 CPU 利用率顯示為 1.0! = 最長的塊是實時處理的 (最壞情況)
-5E0DED8D9E063003=將 CPU 利用率顯示為 1.0c = 一個核心被完全使用
+530F79AA9092B1BE=將 CPU 利用率顯示為 1.0! = 最長塊是實時處理的 (最壞情況)
+5E0DED8D9E063003=將 CPU 利用率顯示為 1.0c = 單個核心被完全使用
 9BB51D16B3CDD603=將 CPU 利用率顯示為 100% = 所有核心被完全使用
+33CCC4B796525C58=將 CPU 利用率顯示為 100%c = 單個核心被完全使用
 CC1F02E05223C02F=將 FX 窗口停靠在泊塢窗
 91C05340E1D72E6F=FX 插件設置...
+18DCF9819CD01A77=FX 旁通
+5C9B4AC859E9BFEE=FX 旁通\tCtrl+B
 6532320E725A4903=FX 實例過採樣
+10DD7D264A556502=FX 離線
+E7A996ECD9441DB9=FX 離線\tCtrl+Alt+B
 1ECFBDD1C7B244B0=強製為選定效果器在無聲時啟用自動旁通
 F07B8BF09056DBC7=凍結軌道
 B9450FA5B73E0242=將軌道凍結為單聲道, 直到最後一個非離線 FX
@@ -763,10 +766,6 @@ CD9DE212764F150E=將選定的 FX 保存為鏈...
 10AA715E679A1188=將所有鍵盤輸入發送到插件
 D7B29E9AA6329895=在 MCP 中顯示嵌入式 UI
 27621D9AD3D28A8A=在 TCP 中顯示嵌入式 UI
-90788E770202C34E=切換選定的 FX 旁通
-3821C0F763D1850D=切換選定的 FX 旁通\tCtrl+B
-64F4A9D95C4E316D=切換選定的 FX 離線
-685BE17D4DA686FC=切換選定的 FX 離線\tCtrl+Alt+B
 43EF57CE3ADA8A28=解凍軌道
 024457DEEDAF4C2C=窗口浮動選定的 FX
 3683BEB2CD7D7896=編輯 JS FX(&E)...
@@ -833,9 +832,10 @@ B0A42D963CEF845C=插入多條軌道...
 7D82EC3419C2A0DA=<磁盤上的自動化對象>
 271F989089915585=預備包絡用於錄音
 558EC42D6AC40A92=此包絡的自動化對象選項
+5749253589C89852=平均
 051CA74B46992E79=旁通包絡
 B4247305029ECD51=在自動化對象外旁通基礎包絡
-864C6684E0624C71=當基礎包絡被旁通時, 追逐非 FX 包絡到自動化對象
+864C6684E0624C71=當基礎包絡被旁通時，追逐非 FX 包絡到自動化對象
 A6EF93273B597A8D=清除或移除包絡...
 0D521319E895BADD=複製點
 E801B83593C3DB47=創建池化克隆
@@ -844,9 +844,11 @@ A2FAC659F6C6EC6C=創建非池化克隆
 3F38FAD4A92F4B30=此包絡的默認點形狀
 974BF434A2393C3D=刪除自動化對象, 保留點
 F1C5C2EC7C56CF0D=在時間選區中刪除點
+CDC1C47012275EE0=FX 包絡: 重疊自動化對象組合模式
 4EFA5E888C26F6BA=粘合
 CD674FEA536FDABD=隱藏包絡
 A221F0C79D56397A=插入新的自動化對象
+FCA60AD8EFD1FE3F=乘法
 7A13F82CEDFD20A9=音高包絡: 範圍/捕捉...
 176C5452D56FF52A=自動化對象之外的工程默認行為
 1A62BA3FE4EDC314=屬性...
@@ -856,6 +858,8 @@ D4FA2BE840D22DA1=此包絡的範圍/縮放
 2504EFBB70A00BF0=將點重置為零/中心
 C038339424CBD482=選擇包絡 (包絡名稱)
 727B7F2EB869FFD5=在車道中顯示包絡
+7D182E7E05A64BCA=和
+8633B7FDAAC9319B=帶有中點偏置的和
 63567E39331B4BBD=速度包絡: 範圍...
 E23E7C59E700D167=音量包絡: 幅度縮放
 15441270F2148E26=音量包絡: 推子縮放
@@ -919,13 +923,13 @@ A35385C769502F3F=向上移動
 4523D3871D7D7B77=處理所有通知
 888CF2A8F9990B9E=重命名預置...
 C35B6227A5807B01=保存最小撤銷狀態
-77D4606E1E255B38=將預置保存為默認...
+77D4606E1E255B38=將預置保存為默認設置...
 37E1C985732EDDC1=保存預置...
 D52E0DFA3EAEDD2D=使用自動尾部檢測 (允許工程範圍內的插件自動旁通)
 5F00BE84E91B6C9B=轉到上一個標記
 94D3B132B355DDD4=使用走帶的起始/終止作為標記
 51B4B159DD69FD3B=轉到下一個標記
-3460E53D021E70FE=關閉所有工程, 但保留當前工程
+3460E53D021E70FE=關閉所有工程，但保留當前工程
 213CDB1B65EA8A91=監聽 FX...
 E66161E882C570BC=選擇時間
 C5B3CE5C6E29439A=編輯拍號標記...
@@ -954,6 +958,8 @@ DC099AA68B8D894C=刪除複合區域 (包括源媒體)
 C39EC00F8E6AAAD5=播放所有車道
 E3EAC8304C4BCC75=錄製到第一個可用的車道
 A01B449A34C33E50=關閉複合
+81D7E6162319FD03=框選
+AD81A52B1BF91AB5=剃刀編輯
 3E6F5B4FF4F5BC43=創建新文件夾...
 D86C7175F627BC38=選擇所有對象
 271D7187C80C7F43=MIDI 編輯器
@@ -966,6 +972,7 @@ D489C67E376967C8=I/O
 FC55E4C505C541DE=參數
 0687FB850B209D99=參數調製/鏈接/MIDI 鏈接
 FA08A03DC81EC720=插件名稱
+09E83C256B15AF0F=搜索過濾器
 B8A56B8F77C88B77=搖擺
 09F51D13C4C28C6A=軌道通道
 DD0CE22D75D36ED1=軌道名稱
@@ -1008,14 +1015,6 @@ FDFF2C38C037D04E=無操作 (無動作)
 887AC55D66DDCCA9=選項: MIDI 編輯器鼠標修飾鍵首選項...
 DCFEAB8BD451EB5C=顯示操作列表
 23CA90FBC72F010D=切換顯示主控軌道和速度包絡
-12C3FAD652693FD1=工具欄: 在鼠標光標處打開 MIDI 工具欄 1
-BBE9B04C60CAD394=工具欄: 在鼠標光標處打開 MIDI 工具欄 2
-BF0E1DB8639E5D8F=工具欄: 在鼠標光標處打開 MIDI 工具欄 3
-4A717A29C667E83A=工具欄: 在鼠標光標處打開 MIDI 工具欄 4
-38FDB8540DCC8CE5=工具欄: 在鼠標光標處打開 MIDI 工具欄 5
-E0C2BFFA3E68A1C8=工具欄: 在鼠標光標處打開 MIDI 工具欄 6
-9DE34C2D25A9E7C3=工具欄: 在鼠標光標處打開 MIDI 工具欄 7
-C1284F3D2876ADCE=工具欄: 在鼠標光標處打開 MIDI 工具欄 8
 84EFD288FCD3D0A3=軌道: 將媒體播放偏移應用到接收源軌道
 B12DCB764FB6F550=走帶: 暫停
 EE7C68EF6C212F98=走帶: 播放
@@ -1037,7 +1036,7 @@ EF2E4D6B32E12F9F=視圖: 向上滾動視圖
 0BE297C8D70E44F6=MIDI 輸入
 93244D3BB94E6F33=無預置
 17B3AE10A9CC3695=插件狀態數據大小:
-274E7C84B3E58DB8=重置為出廠默認
+274E7C84B3E58DB8=重置為出廠默認設置
 BA2E51CA750060F6=輸入 %d
 9314927F387AB957=輸出 %d
 F420AC1723391ECE=主控軌道
@@ -1060,10 +1059,11 @@ F0CDBE121A8CBFA9=批量轉換器
 BABD655B2A5AED87=選擇一個目錄:
 21D9AFD3561EE5AB=立體聲
 3A43A253FE2BECE6=文件
+1F548D6D0107E049=CPU:
 E53622684802B745=主控
 9747AB7E1489B5C8=PDC
 36A965ABAC0E2CF3=性能
-FE54809EE740B495=(除非您知道自己在做什麼, 否則保留為 9)
+FE54809EE740B495=(除非您知道自己在做什麼，否則保留為 9)
 28B58959477A4C84=MIDI 輸入:
 8E37CA9F4D4DE00B=MIDI 輸出:
 18CD0ED91946CEB8=大小調整:
@@ -1281,7 +1281,7 @@ ED3B2E348AB4097C=空
 7C21CDD2AEBBA4D6=被包圍的對象替換包圍它們的對象
 5BA4387FA574D390=對象始終混合
 DD2984E0D3995E66=對象始終替換較早的對象
-94DEF1C233373209=工程默認
+94DEF1C233373209=工程默認設置
 AD6ADC4BDE973BA3=選擇替換文件:
 7C0BD7F6D6C1126C=代碼錯誤
 3DC3C3589C65D706=MIDI
@@ -1752,7 +1752,7 @@ FCE435FD0C037E2E=分段:
 FE52885EB65C3114=刪除所有標記
 
 [DLG_102] ; IDD_MAIN
-246546A2AD3EB0B4=REAPER (初始化中)
+246546A2AD3EB0B4=REAPER (正在初始化)
 360EA1C1D674566F=軌道視圖
 9320B43CE8F50284=時間線
 
@@ -1827,7 +1827,7 @@ D754112382628869=從源開始:
 
 [DLG_126] ; IDD_PROJECTSETTINGS_SETTINGS
 2874B5A9A972DA56=工程採樣率:
-1B33637BF4614F23=Hz (如果未設置, 將使用硬件默認值)
+1B33637BF4614F23=Hz (如未設置，將使用硬件默認值)
 8FEAABC006D1F98D=強制工程的速度/拍號變化在整個採樣上發生
 658C937BDBE2A0A1=工程 BPM:
 16F11A004E847DE0=拍號
@@ -1859,8 +1859,8 @@ F491EC85CC245A7C=自動 .wav (推薦)
 B51253B86D90D327=使用全局首選項 (不複製媒體到工程路徑)
 824F5F99CC24896D=複製媒體到工程路徑
 0E4768BB51B92D8B=不複製媒體到工程路徑
-DC49DC62BD4643CF=保存媒體文件的路徑 (可以是相對路徑, 留空為與工程文件相同的路徑):
-6B91E28B685614B2=次要錄音路徑 (留空為無, 可按軌道啟用):
+DC49DC62BD4643CF=保存媒體文件的路徑 (可以是相對路徑，留空為與工程文件相同的路徑):
+6B91E28B685614B2=次要錄音路徑 (留空為無，可按軌道啟用):
 26952E15FB6FAB2E=導入媒體到工程時:
 E9AE30152DA09181=新錄音的音頻格式:
 E185A4164E1A47FD=應用 FX, 粘合, 凍結等格式:
@@ -1973,10 +1973,10 @@ DD50F7CC82200C55=兆字節 (0 表示禁用撤銷/提示保存)
 45EA335BA4DECD2B=包括選擇:
 134D38AC942D1CD5=包絡點
 CEC70644299ECD14=光標位置
-D4CCB32B535550F6=接近滿撤銷內存時, 保留最新的撤銷狀態
+D4CCB32B535550F6=接近滿撤銷內存時，保留最新的撤銷狀態
 6B02132585D23245=與工程文件一起保存撤銷歷史 (在 .RPP-UNDO 文件中)
 27843DF0E31CB0D7=允許加載撤銷歷史
-1DC49DE353C8BF2C=儘可能存儲多個重做路徑 (可能使用大量 RAM)
+1DC49DE353C8BF2C=儘可能存儲多個重做路徑 (可能使用大量內存)
 7F0AEC85D5651080=在啟動時打開工程:
 D0B6A7F445E961F2=啟動時自動檢查 REAPER 的新版本
 FDC0E0D9342BD62F=從資源管理器/訪達打開媒體時創建新工程選項卡
@@ -2064,8 +2064,8 @@ D5D0203E4FFCD927=MIDI 硬件設置
 028C731BC0576362=限制 MIDI 輸出到一個線程
 751EA016639ED40A=所有音符關閉
 E16CBE842A37B395=音高/持續
-B7CB4986C15E8D4B=複位依照:
-9EC74E86B379FB1B=重置:
+B7CB4986C15E8D4B=重置由:
+9EC74E86B379FB1B=重置在:
 82AB49B39099AD8F=停止/停止尋軌
 
 [DLG_154] ; IDD_PREFS_PLUGINS
@@ -2088,11 +2088,12 @@ C7B479203D71CE7C=一次只允許打開一個 FX 鏈窗口
 4DFA4EECE5BCD99F=在 FX 鏈窗口的右側顯示 FX 列表
 8DD751BEEF8C6CD7=在 FX 列表上方顯示 FX 鏈按鈕
 85494A154E9F7B8E=在 FX UI 上方顯示註釋字段
+93AB0A51C603D260=將 FX 狀態顯示為名稱中的可訪問文本
 20D2538F88926BA7=在 FX 按鈕右鍵菜單中顯示當前軌道 FX
 69380E9888485D32=關閉 FX 窗口時不創建撤銷點
 BC7E46D8B652D860=最近使用列表最大值:
 8E5AEF0B57EBCA22=只顯示與過濾字符串匹配的 FX:
-C7B549E0E6B82FD1=重置為推薦的默認值
+C7B549E0E6B82FD1=重置為推薦的默認設置
 
 [DLG_155] ; IDD_WAVESINK_CFG
 35DF1AFCAFFB37CD=WAV 位深:
@@ -2124,7 +2125,7 @@ F67D1FDC9D0ABC37=主輸出
 [DLG_157] ; IDD_PREFS_CSURF
 2494101BD051C898=控制面板/OSC/網絡控制
 82A49039D1782EAE=控制面板顯示更新頻率:
-D5AD81A3A8A8050D=Hz (默認值: 15)
+D5AD81A3A8A8050D=Hz (默認: 15)
 9F6C638411280BB3=打開面板 MIDI 設備時發出警告
 0E6F8D5A50F68297=當停止且不是活躍應用程序時關閉控制面板設備
 1BD0786A46F8FDAB=(更改將立即生效)
@@ -2203,10 +2204,10 @@ AF239E1DB5AA0E08=瞬態檢測
 8EB832E42FDC2501=將媒體對象邊緣視為瞬態
 2EB90B46315D20B6=鎖定對象的紋波編輯行為:
 E11DAEF2BBEB112C=僅當選擇兩個對象時允許雙重修剪 (編輯共享媒體對象邊緣)
-32B5CB1F9A8B8705=當啟用修剪媒體對象后的內容時, 交叉淡化在淡化編輯期間保持一致
+32B5CB1F9A8B8705=當啟用修剪媒體對象后的內容時，交叉淡化在淡化編輯期間保持一致
 AA5A7A99565E6043=自動刪除通過將對象拖到最後一條軌道下方並返回而創建的空軌道
 93565C719250C592=拖動活躍片段的源開始偏移量會調整所有片段的偏移量
-6F6DCD0B40734C2E=如果沒有選擇任何對象, 某些分割/修剪/刪除操作會影響編輯光標處的所有對象
+6F6DCD0B40734C2E=如果沒有選擇任何對象，某些分割/修剪/刪除操作會影響編輯光標處的所有對象
 97C7A665BF565738=拉伸剃刀編輯區域會在音頻對象中添加拉伸標記
 
 [DLG_173] ; IDD_LTCITEMINFO
@@ -2229,7 +2230,7 @@ EFFE206ECF958DFF=保存 FX 預置
 32E7301766154408=區域渲染矩陣...
 
 [DLG_178] ; IDD_PREFS_DEFS_TRACK
-00BEC948D3FFC09A=新軌道/發送/軌道硬件輸出的默認值
+00BEC948D3FFC09A=新軌道/發送/軌道硬件輸出的默認設置
 137F383180C8C7DB=軌道音量推子增益:
 DFAE18AB665A2C0A=啟用主 (父級) 發送
 6AFE4A787F679734=可見的包絡:
@@ -2239,7 +2240,7 @@ F838F04E07ED4986=包絡點形狀:
 062FABF640E027BC=預備新包絡
 E61DCE0EF7CA6BEE=新工程中的軌道高度:
 580A497A940808A8=在調音台中顯示
-8AF46F2727A3966B=固定車道默認值
+8AF46F2727A3966B=固定車道默認設置
 4E462B362D2C3662=錄製配置:
 CE6B20605FC62E9A=按鈕1
 B4940BDB9BBA9666=新音量包絡的縮放:
@@ -2378,7 +2379,7 @@ F4C9BD52F8CC3225=RMS 窗口:
 FD6CB597F81A51BE=音頻緩衝設置
 A209F590DEBF0FAE=自動檢測所需的音頻處理線程數量
 61BEF8CE252BFBF0=音頻讀取/處理線程:
-164AAD0DE75983A4=(推薦: 每顆 CPU 核心 1 個, 也可以是 0)
+164AAD0DE75983A4=(推薦: 每顆 CPU 核心 1 個，也可以是 0)
 CE81FD6CDFB4B2A1=線程優先級:
 FC932B76ACB875B9=行為:
 2C527E4BC4E1E850=媒體緩衝大小:
@@ -2390,7 +2391,7 @@ C0B78103DE8BAEC1=對帶有打開的 MIDI 編輯器的軌道禁用媒體緩衝 (�
 BEB8AEBD84C1A90D=ms (默認為 200ms)
 51AB61DBF5CB4A76=FX 處理/多進程設置
 A8D66160635DD938=預處理 FX - 優越的多進程和較低的界面延遲
-9C72AF76953C2AA7=[可能與某些 FX (如 UAD) 不兼容, 實時監聽不是多進程的]
+9C72AF76953C2AA7=[可能與某些 FX (如 UAD) 不兼容，實時監聽不是多進程的]
 A0C79D72277D6F0F=提前渲染:
 3DA7AD6DA60B893B=ms (默認: 200)
 D3F56CEFCFB9B99E=允許在沒有 FX 的軌道上進行 (可能會提高多處理器的利用率)
@@ -2398,7 +2399,7 @@ D3F56CEFCFB9B99E=允許在沒有 FX 的軌道上進行 (可能會提高多處理
 1E34C617E5353F03=允許實時 FX 多進程在:
 A6EE14AB8179B8D8=CPUs
 281759C8AD758D95=高級磁盤 I/O 選項...
-3CF333030AFB4087=[啟用實時輸入的多進程, 但在低延遲下可能會降低性能]
+3CF333030AFB4087=[啟用實時輸入的多進程，但在低延遲下可能會降低性能]
 
 [DLG_204] ; IDD_ABOUT_LICENSE
 F06854788A1D9107=授權給:
@@ -2415,10 +2416,10 @@ FCF3913D3BF1D3E1=發送到軌道 X
 [DLG_209] ; IDD_PREFS_PLUGINS_DX
 3843E8618CE5C964=ReWire 設置
 99AA745451FB03DE=ReWire/Direct-X 插件設置
-3D0D0CE24C134644=ReWire 調音台支持 (作為 ReWire 調音台, 在插件瀏覽器中顯示 ReWire 設備)
+3D0D0CE24C134644=ReWire 調音台支持 (作為 ReWire 調音台，在插件瀏覽器中顯示 ReWire 設備)
 2F509ABA2BB63239=打開 ReWire 設備時自動打開面板
 F1DA4A4F0E2A1E52=當 ReWire 設備活躍時停止運行 FX
-CFFC69503B85B08D=啟動時檢查 ReWire 調音台/設備 (如果存在, 則自動進入客戶端模式)
+CFFC69503B85B08D=啟動時檢查 ReWire 調音台/設備 (如果存在，則自動進入客戶端模式)
 7E36CB7319E2A638=在客戶端模式下使用備選配置文件 (reaper-rewire.ini)
 F4398683B50A8B88=ReWire 客戶端工程設置
 253441B2FCA18BE2=Direct-X (DX)
@@ -2442,7 +2443,7 @@ EF9F2D3E3EEF2505=停止/重置時不發送音符關閉或音高重置消息
 F27EE9EB697AD546=通知插件離線渲染狀態
 EB5AD63A75E962D6=打開插件配置窗口時旁通音頻 (適用於在多線程中可能出現問題的 VST)
 9AFB50287E6BE13A=UAD-1 同步模式 (減少 CPU 消耗) - 需要禁用預處理 FX
-D7D5E6EF54BF3AAB=允許完全卸載 VST 插件 (減少內存使用, 但可能不兼容)
+D7D5E6EF54BF3AAB=允許完全卸載 VST 插件 (減少內存使用，但可能不兼容)
 40D2555271B4D0B9=參數自動化通知:
 
 [DLG_212] ; IDD_PREFS_PROJECT
@@ -2534,7 +2535,7 @@ C38622521AF10C6B=拍號標記
 4F3654C5B59115AD=當錄製時使用備選鍵盤區段
 025B90FA447C6C83=防止 ALT 鍵聚焦主菜單
 CB03E0C93574765E=允許在多個窗口中使用空格鍵進行導航
-FF385158D216E0FD=當在插件文本字段中按下空格鍵時, 發送到主窗口
+FF385158D216E0FD=當在插件文本字段中按下空格鍵時，發送到主窗口
 CE44064C1605950D=瞬時鍵盤區段覆蓋的超時時長:
 E6999CD562DABC49=為操作分配鍵盤快捷鍵或更改現有的快捷鍵
 E6B1DF361BBAF9D5=查看可打印/可搜索的鍵盤快捷鍵網頁
@@ -2628,8 +2629,8 @@ EE921297CB511CD9=KB (更快, 使用更多地址空間)
 34AA37802DFE1CD4=顯示媒體對象音高/播放速率 (如果設置)
 935A2F245953B5FD=在不透明背景上顯示標籤以便於閱讀
 F3A483F6782AC452=當對象邊緣不可見時顯示標籤
-B8EB0572152C2FAB=當媒體對象高度超過設定值時, 在對象上方繪製標籤:
-C391457FF967B9AA=當媒體對象高度低於設定值時, 隱藏標籤:
+B8EB0572152C2FAB=當媒體對象高度超過設定值時，在對象上方繪製標籤:
+C391457FF967B9AA=當媒體對象高度低於設定值時，隱藏標籤:
 97D9C4A892786BD0=片段播放速率/音高:
 304B9DC9DED916AF=標準標籤
 7A853E8E494A5476=縮寫
@@ -2646,7 +2647,7 @@ CE6DFBAB9235015B=無活躍包絡
 9C0E7F7043985A17=音量旋鈕
 42F8EF5BB3B65CDC=池化的 MIDI/ARA
 9284455D75FB9907=已編組
-81446DD96A434032=當片段高度低於設定值時, 隱藏按鈕:
+81446DD96A434032=當片段高度低於設定值時，隱藏按鈕:
 6299F379BCF4015F=在對象上繪製選擇指示器
 2F1F4144014A4016=對象音量手柄:
 
@@ -2757,7 +2758,7 @@ AF1BA6057E9FEB1B=PPQ (默認: 32)
 14EF3AA1E739B5F8=(ms)
 5DC7053F3C314EAE=導入多通道 MIDI 文件:
 8199F55C57F15C9E=處理包含元事件的格式 0 MIDI 文件，就好像它們是多通道 MIDI 文件
-B466B9F6A8F80E2B=總是提示從帶有簡單速度映射的 MIDI 文件導入速度 (按住 ctrl 鍵切換)
+B466B9F6A8F80E2B=始終提示從帶有簡單速度映射的 MIDI 文件導入速度 (按住 ctrl 鍵切換)
 440F1C332D682150=導入 MIDI 文件時將拍號變化事件吸附到整個小節
 6DFAC1A8823DBDB3=導入 MIDI 文件時將速度變化事件吸附到整個節拍
 0F3D48F72EB91BCE=導出 .MID 文本事件的字符集:
@@ -2843,7 +2844,7 @@ C412A266B462CD69=查找圖片:
 F39EB4BC3304012B=注意:並非所有的顏色和圖片都會始終可見！
 
 [DLG_270] ; IDD_GLUEDLG
-E1CA5A9A5CE93078=未進行渲染, 預計時間無窮大
+E1CA5A9A5CE93078=未渲染，預計時間無窮大
 511EAD28BA4AE493=格式規範
 
 [DLG_273] ; IDD_OPENPROJECT
@@ -3198,7 +3199,7 @@ F4981427F70572B6=移動音頻對象時，視頻幀尋軌到:
 B5CF8BA44C2A22BC=導入時使用方向標籤自動旋轉視頻和圖片
 93ABB433C5184D67=靜態圖片縮略圖顯示模式:
 768439BADEEEE063=默認長度 (ms):
-8C5A726AC2E24BE2=為視頻代碼編輯器使用標準編輯控制 (為了可訪問性, 缺少許多功能)
+8C5A726AC2E24BE2=為視頻代碼編輯器使用標準編輯控制 (為了可訪問性，缺少許多功能)
 
 [DLG_451] ; IDD_PREFS_MEDIA_IMPORT
 A8F7CB99AD073D2A=媒體導入
@@ -3362,7 +3363,7 @@ A7BA0064C3A88716=輸出設備:
 [DLG_474] ; IDD_PREFS_PATH
 81BBA2B36371EDB5=路徑設置
 8F307CE5C88DF54B=新工程默認保存路徑:
-973B67107DB3B77C=默認渲染路徑 (如果留空, 將使用當前工程目錄(如果有)):
+973B67107DB3B77C=默認渲染路徑 (若未指定，則使用當前工程目錄，前提是存在該目錄):
 E19AF0FCD67934A5=當工程未保存且沒有配置錄音路徑時的默認錄音路徑:
 55FF305FB05C16EA=將所有峰值緩存 (.reapeaks) 存儲在另一個路徑:
 6934246FDA04EE9E=以下路徑使用備選峰值緩存路徑 (多個路徑由分號分隔):
@@ -3403,7 +3404,7 @@ E0A50F2BFF5F6CA0=屬性(&P)...
 7B0B201A05B78C88=交叉淡化時間
 
 [DLG_477] ; IDD_PREFS_DEFS_ITEM
-945B1F62AEA42574=默認媒體對象淡化/交叉淡化
+945B1F62AEA42574=媒體對象淡化/交叉淡化的默認設置
 8F23EC8285835C86=默認淡入/淡出:
 AA194B48239ACDA4=默認交叉淡化:
 E7DA02B3D72195E5=默認淡入/淡出形狀:
@@ -3590,7 +3591,7 @@ D5FC3581D08FD781=Python dll 目錄的自定義路徑:
 
 [DLG_516] ; IDD_LANG
 6C5B59EF704E3CB9=REAPER 選擇語言
-60F1A9BC3DC0E3F4=總是加載
+60F1A9BC3DC0E3F4=始終加載
 3B76403C5F6D3B14=加載一次
 
 [DLG_517] ; IDD_PREFS_SEEK
@@ -3613,13 +3614,13 @@ BD2850523C80580D=在尋軌前，播放到下一個工程標記，當前區域的
 E94B4846A2ABAF90=循環/車道錄音設置
 4F2B31BBF3D2C295=在循環錄音中，如果錄製了至少一個完整的循環，丟棄不完整的第一個或最後一個片段
 376DE05863AFD4A7=完整片段的閾值:
-AEF2A1CEFBD11981=MIDI 堆疊/替換錄音時總是生成與所選長度相同的媒體對象
+AEF2A1CEFBD11981=MIDI 堆疊/替換錄音時始終生成與所選長度相同的媒體對象
 208EE71E50F7ABCB=錄音且循環時，將錄製的媒體加入工程:
 86CDD3047B701541=停止時 (默認, 推薦)
 C5B9E0F7E2858D5B=循環時創建新文件
-04B1EA7C5BB5F4F8=每個循環 (創建新文件, 適用於即時錄製多個音頻層等)
+04B1EA7C5BB5F4F8=每個循環 (創建新文件，適用於即時錄製多個音頻層等)
 F6F73FA676A25958=錄製到固定的車道軌道
-2D2339043C050BB9=當自動切錄錄音至新車道時，添加整個錄音
+AAFDD239DB19560C=當自動切錄錄音至固定車道軌道時，添加整個錄音
 
 [DLG_519] ; IDD_PREFS_AUTOMATION
 2774BF0E396FA6EA=自動化錄音返回速度:
@@ -3632,7 +3633,7 @@ A034ABCC948D1990=隱藏包絡線:
 28BEB3FF40AEB890=添加音量/聲像包絡線時，應用修整到包絡線並重置修整:
 D53F5AD8EB230214=在寫入模式下錄製自動化，重複/尋軌/停止時:
 FAF6019D4C87F0AD=循環時重置鎖存狀態
-0B424BBCE8CC663B=總是錄製到自動化對象中
+0B424BBCE8CC663B=始終錄製到自動化對象中
 A0CD2C74E79AEDFA=錄製到現有的未選擇的自動化對象中
 553CF5385ED037A6=默認情況下循環新的自動化對象
 5E51BC4C073B3DC8=在屬性對話框中編輯基線/幅度會影響到池中的副本
@@ -3693,7 +3694,7 @@ EB961EBF9974196F=以下 MIDI 輸出設備未響應:\r\n\r\n\t%s\r\n\r\nREAPER �
 
 [DLG_524] ; IDD_PREFS_APPEAR_FADES
 543781076A1C8193=媒體對象淡化/交叉淡化外觀
-63881AD1B89057EB=防止編輯淡入/淡出, 當對象小於:
+63881AD1B89057EB=防止編輯淡入/淡出，當對象小於:
 3835FCCD4FE00102=像素寬或
 AB160C292520C435=像素高
 C069535E9D8BB671=允許鼠標選擇或操作:
@@ -3792,7 +3793,7 @@ C961AC2601ECA18A=新實例
 [DLG_571] ; IDD_FX_FOLDER_RENAME
 4C2D7725EDBCDEC9=編輯文件夾
 D4EC5A82932B5414=智能文件夾
-8DBD59617BDD6D1F=過濾器包含一系列 (可選地加引號的) 字符串, 這些字符串必須匹配。還可以使用關鍵字 OR 和 NOT。
+8DBD59617BDD6D1F=過濾器包含一系列 (可選地加引號的) 字符串，這些字符串必須匹配。還可以使用關鍵字 OR 和 NOT。
 
 [DLG_575] ; IDD_WARPMARKER_EDIT
 7F7D4B6A51C24C9D=起始速率:
@@ -3842,13 +3843,13 @@ CE0D75895E3F6560=使用 mlockall() 鎖定進程內存 (小心)
 9C4F9E297401BE7F=製表符
 37BBEEDCE2DE6F68=任何空白
 4FDC1EFF5C6004A7=歌詞應在文本文件中，每行一個小節，用空格或製表符分隔。
-94FB231FB797C408=歌詞將被導入到最後觸碰的軌道, 作為 MIDI 歌詞事件。
+94FB231FB797C408=歌詞將被導入到最後觸碰的軌道，作為 MIDI 歌詞事件。
 67B478FBAAAE55DA=如有需要，將在該軌道上創建一個新的 MIDI 對象。
 1196B16C194B9363=將歌詞劃分為:
 2D34054801CD4D52=每隔
 
 [DLG_580] ; IDD_LYRICEXPORT
-265F8C42D8F617CB=歌詞將被導出到文本文件, 每行一個小節, 用空格或製表符分隔。
+265F8C42D8F617CB=歌詞將被導出到文本文件，每行一個小節，用空格或製表符分隔。
 8D7322DC72C4E917=歌詞將從最後觸碰的軌道的 MIDI 歌詞事件中導出。
 B28A52B58A4A4E89=用製表符劃分歌詞每隔
 
@@ -4013,7 +4014,7 @@ FD0551FF7D52847C=為支持它的插件啟用 ARA (需要重新啟動 REAPER)
 B2DC752899C6788C=請參閱 '首選項/外觀/媒體' 以顯示或隱藏池化編輯按鈕。
 
 [DLG_609] ; IDD_PREFS_DEFS_ITEMLOOP
-C3CD417ED056158B=媒體對象循環默認值
+C3CD417ED056158B=媒體對象循環默認設置
 2D4761A633BFF25D=設置循環源:
 029D13A4E4B66A57=導入的對象
 9555D15F0FC2BC6E=MIDI 對象
@@ -4150,7 +4151,7 @@ EF23E440CDB08FB9=強制選定對象的不活躍片段媒體離線
 CF7B9F5A9CAA1F10=分割現有對象並添加片段 (默認)
 E8B16B535591DB8E=修剪現有對象 (磁帶模式)
 1A9C1BED518B61F1=按層添加媒體對象
-6287E692CC0D7E99=循環錄製總是添加片段
+6287E692CC0D7E99=循環錄製始終添加片段
 5F29BB8ACAC6683C=垂直偏移重疊的媒體對象
 1D8D51A335CC2747=顯示所有片段 (有空間時)
 A85F9EB500D28126=片段行為
@@ -4241,7 +4242,7 @@ E85949C4173AD547=掃描新插件(&S)\tF5
 04D688D70D3C0F39=關閉\tEsc
 
 [MENU_300] ; IDR_CONTEXTS_0
-5BD74D193D4FB34D=0TrackCtl
+;5BD74D193D4FB34D=0TrackCtl
 7A28ADA77FABEBC1=可視分隔帶
 1BA41741E6E843BB=在軌道前插入分隔帶
 FD9248443C5B2CD0=在軌道后插入分隔帶
@@ -4257,7 +4258,7 @@ CB796832F14A03CA=刪除選定包絡點
 7E5922C933467DB9=刪除時間選區內的包絡點
 
 [MENU_301] ; IDR_CONTEXTS_1
-B2B766E2DE1404E6=1MediaItems
+;B2B766E2DE1404E6=1MediaItems
 0445CE0F3B805BEA=片段通道模式: 反轉立體聲
 AD41E4C5F1E6E2B6=片段通道模式: 單聲道 (縮混)
 99DA3FD9B4724DED=片段通道模式: 單聲道 (左)
@@ -4397,7 +4398,7 @@ CC58BDDA63312D76=複製對象
 4E68549A5EFD26D8=在前一個零交叉點處分割對象
 
 [MENU_302] ; IDR_CONTEXTS_2
-4332D8BB1ED787A3=2LoopSel
+;4332D8BB1ED787A3=2LoopSel
 864F12EC431E3535=移除選區(&R)
 F88B2541FF78AC41=移除選區
 8E28144057BCB82E=縮放選區
@@ -4414,53 +4415,53 @@ BC7D14E8A0C0A671=在車道中顯示工程區域
 7AEB6371856548A9=顯示速度變化
 C434EFFB957464DF=顯示拍號變化
 7CB34621789AEA3E=在單獨的車道中顯示速度和拍號變化
-AAEE59115FD38950=即使區域被命名, 也顯示區域編號
+AAEE59115FD38950=即使區域被命名，也顯示區域編號
 E5E4251355DCA108=當區域邊緣不可見時顯示區域編號/名稱
 E4AAD54D49F7DB30=從時間選區設置工程速度 (檢測速度, 對齊對象)
 349F55EF86232987=從時間選區創建小節 (檢測速度)
 
 [MENU_303] ; IDR_CONTEXTS_3
-A3FA5A822CC7D898=3TrackEmpty
+;A3FA5A822CC7D898=3TrackEmpty
 BB1E22C4CE52BD4B=顯示主控軌道
 B9D58A6FF2858C18=在編排視圖的右側顯示 TCP
 
 [MENU_304] ; IDR_CONTEXTS_4
-7E677F97CEBA3077=4EnvelopeItemCtx
+;7E677F97CEBA3077=4EnvelopeItemCtx
 639D27DB1B0A2208=設置包絡點的值...
 F0A2A2F707D939B6=設置包絡點的形狀
 A82A9554C79824AA=刪除包絡點
 AC4B7D06A00FB424=刪除選定點
 
 [MENU_305] ; IDR_CONTEXTS_5
-8A354CEBCC0207C4=5EnvelopeItemCtx2
+;8A354CEBCC0207C4=5EnvelopeItemCtx2
 79E306F884A774F4=插入包絡點
 E9D34B3745E6649D=選擇時間選區內的所有點
 5880980F27869CBB=刪除包絡點
 0ABF4CDD8331C92E=反轉包絡點
 
 [MENU_306] ; IDR_CONTEXTS_6
-D01D0F925E9AC2F4=6Automationmodes
+;D01D0F925E9AC2F4=6Automationmodes
 5E293FAC1EC4D199=全局自動化覆蓋:
 D0FA771D463FBE0D=無全局覆蓋 (為每條軌道設置自動化模式)
 3A2E1BB307417335=旁通所有包絡
 8532ABD7CF5DF918=修剪/讀取 (默認, 推子用於修剪但不被錄製)
-97C9225E101F0032=鎖存預覽 (允許臨時覆蓋預備包絡, 但不寫入更改)
+97C9225E101F0032=鎖存預覽 (允許臨時覆蓋預備包絡，但不寫入更改)
 
 [MENU_307] ; IDR_CONTEXTS_7
-7D7546841B933986=7TransportRecMenu
+;7D7546841B933986=7TransportRecMenu
 
 [MENU_308] ; IDR_CONTEXTS_8
-F05A50F8DEFF9FD1=8envctx
+;F05A50F8DEFF9FD1=8envctx
 
 [MENU_309] ; IDR_CONTEXTS_9
-854F23643057608E=9monoctx
+;854F23643057608E=9monoctx
 190FB54671D9F002=單聲道模式: L+R
 43F6D751F81560E7=單聲道模式: L
 43F6BD51F81534B9=單聲道模式: R
 1908C54671D3EC84=單聲道模式: L-R
 
 [MENU_310] ; IDR_CONTEXTS_10
-571D72F8566C1E8C=10was0FxCtx
+;571D72F8566C1E8C=10was0FxCtx
 7D3F4578BF3A7F37=添加 FX...\tInsert, A
 AB4F7C7D3711EDB4=替換 FX...\tCtrl+R
 C8A928842C8BAF25=加載 FX 鏈...\tShift+Insert, Shift+A
@@ -4473,10 +4474,10 @@ E1EBB4B48C8D4114=將所有 FX 保存為鏈...\tCtrl+S
 F5404D2DC6D9C463=關閉 FX 窗口
 
 [MENU_311] ; IDR_CONTEXTS_11
-2480B38FA0706196=11PlayrateCtx
+;2480B38FA0706196=11PlayrateCtx
 
 [MENU_312] ; IDR_CONTEXTS_12
-90EE71234A070984=12PerfCtx
+;90EE71234A070984=12PerfCtx
 1E06E4405DEA8BB9=顯示 CPU 圖表
 A92306A0DFCF9F5C=在圖表上顯示實時 (RT) CPU
 B262FAD75BA8BA4A=顯示 CPU 使用情況
@@ -4485,15 +4486,15 @@ B262FAD75BA8BA4A=顯示 CPU 使用情況
 B7F32A9F98A13DBE=保持 RT 最長塊處理時間
 BDCA3CD61B25F6F5=顯示 xrun 計數器
 1D8E0673D38702E7=顯示磁盤使用情況
-7B7E834E49D135B0=顯示 RAM 使用情況
-EC37BCC6C18B2137=顯示空閑系統 RAM 而非使用量
+7B7E834E49D135B0=顯示內存使用情況
+EC37BCC6C18B2137=顯示空閑系統內存而非使用量
 0E1582F9AD466D68=顯示視頻負載
 6366F69EC06B6F04=顯示 FX 和媒體對象 CPU 使用情況
 1A64FFC5FC821B62=重置圖表
 EEB77FAA4A9ACCDA=將性能監測儀停靠在泊塢窗
 
 [MENU_314] ; IDR_CONTEXTS_14
-4F1AB2C4B16A7E52=14was1FxMixerCtx
+;4F1AB2C4B16A7E52=14was1FxMixerCtx
 E5EC9FB6412B6909=快速添加 FX
 D3063B43F9DA5F98=快速替換 FX
 23A84719ED8EB139=剪切 FX
@@ -4508,7 +4509,7 @@ A7C1D5504532C214=離線 FX
 B880D4A96E9537CA=刪除 FX
 
 [MENU_315] ; IDR_CONTEXTS_15
-4D20578AB111ACF0=15was2SendMixerCtx
+;4D20578AB111ACF0=15was2SendMixerCtx
 B75CC57A4B1F89C5=顯示發送參數\t(單擊)
 AB3A6BCE325A5628=顯示發送參數
 A3128BC4BBE6C116=靜音發送\tShift+單擊
@@ -4519,7 +4520,7 @@ B19A3615EADF772D=顯示軌道路由窗口
 F0411A69BCF40C1B=轉到發送目標軌道
 
 [MENU_316] ; IDR_CONTEXTS_16
-8B40215284201C6A=16TransportCtx
+;8B40215284201C6A=16TransportCtx
 1D2B99D34B81AA37=跳轉到標記/區域
 DB44A9B33A447245=無標記/區域
 DBB3EF92ECE93AF0=播放/暫停
@@ -4540,21 +4541,21 @@ C580F95ADDC7E1A0=在主窗口頂部
 A2D5D0CC8AC3255A=隱藏走帶
 
 [MENU_317] ; IDR_CONTEXTS_17
-D518DD15730D0992=17FxFloatCtx
+;D518DD15730D0992=17FxFloatCtx
 68FF5FCC175E2929=取消浮動窗口
 
 [MENU_318] ; IDR_CONTEXTS_18
-922768F1528B9C30=18NavCtx
+;922768F1528B9C30=18NavCtx
 FD95107AE618F7DA=將導航窗口停靠在泊塢窗
 5BA532B79E210468=關閉導航
 
 [MENU_319] ; IDR_CONTEXTS_19
-08B4634CC77FCE14=19FxBrowseCtx2
+;08B4634CC77FCE14=19FxBrowseCtx2
 53DC5790656E0F99=重命名 FX(&R)...
 49DCAE59C5BD3783=掃描新插件(&S)
 
 [MENU_321] ; IDR_CONTEXTS_21
-54F057E66DAB6A2E=21DockCtx
+;54F057E66DAB6A2E=21DockCtx
 F44B3B65D54ABF39=附着泊塢窗位置: 底部
 2380E7FD8149F997=附着泊塢窗位置: 左側
 D8FAB2121646193D=附着泊塢窗位置: 頂部
@@ -4593,13 +4594,13 @@ D35FA18E2911A6BE=添加環回 MIDI 設備
 E5D80D1C40705421=添加硬件控制器 MIDI 設備
 
 [MENU_324] ; IDR_CONTEXTS_24
-08F71B928F2055DD=24vkbCtx
+;08F71B928F2055DD=24vkbCtx
 003BBBD75A6F3E50=將虛擬 MIDI 鍵盤停靠在泊塢窗
 C82A15933756388D=將所有鍵盤輸入發送到虛擬 MIDI 鍵盤 (即使其他窗口處於活躍狀態)
 29ADE871FA5ECAEC=關閉虛擬 MIDI 鍵盤
 
 [MENU_325] ; IDR_CONTEXTS_25
-E6CB9B19F8657AA3=25bigClockCtx
+;E6CB9B19F8657AA3=25bigClockCtx
 11C2A8EF2D4D0B89=將大時鐘停靠在泊塢窗
 99E596DF7A76F683=分鐘:秒
 244F88679EDC8725=小節.節拍
@@ -4632,11 +4633,11 @@ C6DE2094804C0180=圖片長度: 16 拍
 BBD1E9E9B1450DAD=關閉大時鐘
 
 [MENU_327] ; IDR_CONTEXTS_27
-C9DCDC64EE0A50C6=27ScreensetsCtx
+;C9DCDC64EE0A50C6=27ScreensetsCtx
 B80C8E5B6971AE30=將屏幕設置停靠在泊塢窗
 
 [MENU_328] ; IDR_CONTEXTS_28
-BAA07801AA1C048F=28PerfListCtx
+;BAA07801AA1C048F=28PerfListCtx
 F53ED82DF3FD2828=顯示 FX 對話框
 3D90226E6ACF7B65=切換 FX 旁通
 B2FBA7309089EE8E=當為空時顯示軌道 FX
@@ -4655,13 +4656,13 @@ DF45382BC646671C=無鏈接
 B1B7B32725E2D65E=將狀態保存為 VST 預置庫
 
 [MENU_330] ; IDR_CONTEXTS_30
-9EC3AAA915D3F3AF=30TransportHomeCtx
+;9EC3AAA915D3F3AF=30TransportHomeCtx
 
 [MENU_331] ; IDR_CONTEXTS_31
-556582869CFDFD1A=31TransportEndCtx
+;556582869CFDFD1A=31TransportEndCtx
 
 [MENU_332] ; IDR_CONTEXTS_32
-B2834EEA2AA93E9E=32MultiProjOpts
+;B2834EEA2AA93E9E=32MultiProjOpts
 80E1706B6AD3A6D6=始終顯示工程選項卡
 A41C7E22C204C9CD=在窗口的左側顯示工程選項卡
 DE78E244B23E9BF7=隱藏後台工程 FX/MIDI 窗口
@@ -4680,7 +4681,7 @@ C82CC5ADCA93D3A7=在自動打開和渲染后，將子工程保留在選項卡中
 DE82404B7BA815CF=在使用監聽 FX 時強制工程選項卡可見
 
 [MENU_333] ; IDR_CONTEXTS_33
-882F568C84ED25FD=33_0MarkerCtx
+;882F568C84ED25FD=33_0MarkerCtx
 718C7AF7F67B6389=編輯標記...\t雙擊
 E9213C417C9F07F7=編輯標記...
 F686AE0AE333E622=移除標記\tAlt+單擊
@@ -4688,7 +4689,7 @@ F686AE0AE333E622=移除標記\tAlt+單擊
 D28556DFC2F12B22=在區域/標記管理器中選擇標記
 
 [MENU_334] ; IDR_CONTEXTS_34
-E2D5F7E4A9D9BD25=34_1regionctx
+;E2D5F7E4A9D9BD25=34_1regionctx
 C17D7169D375F184=編輯區域...\tShift+雙擊
 0DF698328A46B3B5=編輯區域...
 75615834477BEDC2=選擇時間\t雙擊
@@ -4698,12 +4699,12 @@ B9CB30CE74265C80=移除區域\tAlt+單擊
 8446FCD57E3108B5=渲染區域...
 
 [MENU_335] ; IDR_CONTEXTS_35
-F2DA99EC7E8315CD=35_2tlMarkerCtx
+;F2DA99EC7E8315CD=35_2tlMarkerCtx
 F3794F93A2DBC89C=編輯拍號標記...\t雙擊
 C6EA5D6FC216DE25=移除拍號標記\tAlt+單擊
 
 [MENU_336] ; IDR_CONTEXTS_36
-39579E420F84FC07=36_3actiownd
+;39579E420F84FC07=36_3actiownd
 A508BE50144DDB02=導入快捷鍵/自定義操作, 導入所有區段...
 A301D53E8C541E7C=導入快捷鍵/自定義操作, 忽略其他區段...
 AE1100472EECD1A6=導入快捷鍵/自定義操作, 映射到此區段...
@@ -4712,12 +4713,12 @@ BE1EEEA7EBA058A7=僅為此區段導出快捷鍵/自定義操作...
 6EBDD7A9F323D878=導出選定的快捷鍵/自定義操作...
 8530E81B0593F337=重命名當前區段
 A71D4E6CCAF0CF7A=將主部分快捷鍵複製到當前區段
-A1B39B94666BEC3F=將所有區段中的所有快捷鍵重置為默認值
-0C5C7D4E0D7CF429=將此區段中的所有快捷鍵重置為默認值
+A1B39B94666BEC3F=將所有區段中的所有快捷鍵重置為默認設置
+0C5C7D4E0D7CF429=將此區段中的所有快捷鍵重置為默認設置
 6F53C11A88B62D80=從此區段中移除所有快捷鍵
 
 [MENU_337] ; IDR_CONTEXTS_37
-3DE84120820B85CE=37_4SoloCtx
+;3DE84120820B85CE=37_4SoloCtx
 D3DE6686B4D9602C=獨奏2\tAlt
 9B76234E6926EE7E=獨奏2
 C3D8EFE45F703F1E=取消所有獨奏\tCtrl
@@ -4726,16 +4727,16 @@ FD1704F2BC83F2D8=獨奏失效\tCtrl+Shift
 80933A364CB8729B=獨奏失效
 
 [MENU_338] ; IDR_CONTEXTS_38
-B0F397F2E3D4090E=38_5MuteCtx
+;B0F397F2E3D4090E=38_5MuteCtx
 23237C73B0B284D4=取消所有靜音\tCtrl
 A6C4062EE7DAE214=獨佔靜音\tCtrl+Alt
 2A8FBC3E8B12D0D2=靜音所有其他\tAlt
 028CB419E53B3F7C=靜音所有其他
 
 [MENU_339] ; IDR_CONTEXTS_39
-224F214718A59CE4=39_HelpCtx
+;224F214718A59CE4=39_HelpCtx
 7C5F9CD63D02797C=選定的軌道/對象/包絡詳情
-887622B09469C795=CPU/RAM use, time since last save
+887622B09469C795=CPU/內存使用情況，距上次保存時間
 D1D35C65C6B83D9C=不顯示信息
 B8C33ECCB30AE714=顯示鼠標編輯幫助
 
@@ -4749,9 +4750,9 @@ B7F5A33C6B443EBA=分隔符
 0D8429DC1D3A785A=複製\tCtrl+C
 6D87C1CA6B74FD85=粘貼\tCtrl+V
 E62C127D8E57826D=重置菜單
-40C2B30220B6B29A=將當前菜單/工具欄重置為默認值
-5AB19C9C9F1E5320=將所有菜單重置為默認值
-4B511B83E1912702=將所有工具欄重置為默認值
+40C2B30220B6B29A=將當前菜單/工具欄重置為默認設置
+5AB19C9C9F1E5320=將所有菜單重置為默認設置
+4B511B83E1912702=將所有工具欄重置為默認設置
 66B5F95E57AC691C=導入/導出菜單
 6C71A82BB8F8529C=將所有菜單/工具欄導出到 ReaperMenuSet 文件...
 D9A206BCE996E764=將當前菜單/工具欄導出到 ReaperMenu 文件...
@@ -4761,7 +4762,7 @@ CE2F0C4F975A25BA=工具欄上下文菜單
 9E75FDFABCE5A4DF=更改操作...
 13268988F2D2D6A2=更改圖標...
 4D8F9175C9D8DC8D=文字圖標...
-98791BA57BAEDAF6=將圖標設置為默認
+98791BA57BAEDAF6=將圖標設置為默認值
 836A75906077B0A8=根據切換狀態以動畫方式突出顯示
 76D89F050F6855A4=不顯示動畫
 08F070D393C0C20F=如果切換狀態已啟用，則顯示動畫
@@ -4787,12 +4788,12 @@ BA643005EA6CA5ED=41_ConvertCtx
 8E07889A2F7AAFE4=此菜單未使用
 
 [MENU_342] ; IDR_CONTEXTS_42
-D459051830243DFE=42_GroupCtx
+;D459051830243DFE=42_GroupCtx
 EB446AE89713DE5E=選擇一個對象即選擇整個編組
 406764046253E6BA=軌道媒體/剃刀編輯編組僅影響開始和結束時間相同的對象
 
 [MENU_343] ; IDR_CONTEXTS_43
-A5321DCC2F678529=43_ProjBayCtx
+;A5321DCC2F678529=43_ProjBayCtx
 D9CBC40C0B67A0B5=在元素管理器和工程中鏡像選擇
 34BADD89C1F25031=在鏡像選擇時縮放/滾動到選定的媒體對象
 8A3DB06688BF01E5=使用最後選定的對象作為 \"繪製副本\" 鼠標操作的源
@@ -4809,7 +4810,7 @@ FD61EBC59AC32FAE=在軌道列中顯示軌道索引
 848DD5C419E4EDA4=將工程元素管理器停靠在泊塢窗
 
 [MENU_344] ; IDR_CONTEXTS_44
-A1ECEA29C444236B=44_FxAddVstFolderCtx
+;A1ECEA29C444236B=44_FxAddVstFolderCtx
 88F334DEA91EE003=包含子文件夾中找到的插件
 2CE99B208A9CC604=在 VST 文件夾視圖中包含 Cockos 插件
 A77977CDCE6B436E=顯示指向 VST 的完整路徑
@@ -4830,15 +4831,15 @@ F86DA01979DBF767=複製選定的操作命令 ID
 9B042869A79FA02B=將操作窗口停靠在泊塢窗
 
 [MENU_346] ; IDR_CONTEXTS_46
-AAEE4EDFF8BD6BEA=46_ReplaceModeCtx
+;AAEE4EDFF8BD6BEA=46_ReplaceModeCtx
 
 [MENU_347] ; IDR_CONTEXTS_47
-1F8AB71E475E4064=47_ItemPropsDlgCtx
+;1F8AB71E475E4064=47_ItemPropsDlgCtx
 3D3F09D279B09D88=不活動 2 秒后應用更改
 955759B7BDB8B435=將對象屬性窗口停靠在泊塢窗
 
 [MENU_348] ; IDR_CONTEXTS_48
-3FC01DE4F18CE67D=48_TrackMgrDlgCtx
+;3FC01DE4F18CE67D=48_TrackMgrDlgCtx
 AC72775A423346DF=刪除選定軌道
 F2A09386DF1BC176=在軌道管理器中顯示主控軌道
 B7CCCC2B737AFE13=在文件夾中縮進軌道
@@ -4855,14 +4856,14 @@ A0C4F5072F8ED0D9=在調音台中隱藏被過濾掉的軌道
 996C6D986C53776D=將軌道管理器窗口停靠在泊塢窗
 
 [MENU_350] ; IDR_CONTEXTS_50
-1ABF84C7BAF8A71B=50DXCtx
+;1ABF84C7BAF8A71B=50DXCtx
 
 [MENU_351] ; IDR_CONTEXTS_51
-6CBA6D3187C4E27C=51AUCtx
+;6CBA6D3187C4E27C=51AUCtx
 6EC184D0BA9D086C=導出 AU 預置 (.aupreset)...
 
 [MENU_352] ; IDR_CONTEXTS_52
-0FE28B53D7BDC953=52RegionMgrCtx
+;0FE28B53D7BDC953=52RegionMgrCtx
 A5702B77A90FF044=刪除選定的標記/區域
 54D592EE2F283306=選擇所有區域進行渲染
 043AE1AC506F3B9D=按時間線順序重新編號 (先標記, 再區域)
@@ -4878,7 +4879,7 @@ ECFB52799234A524=在選擇標記或區域時尋軌播放
 7EA6A49B50794E5A=將區域管理器停靠在泊塢窗
 
 [MENU_353] ; IDR_CONTEXTS_53
-8CB1DC85A67CC4C9=53FadeEditorCtx
+;8CB1DC85A67CC4C9=53FadeEditorCtx
 85F217D7911726E0=播放開始時的自動行為:
 14973110A54729FC=  獨奏軌道
 E07423F09C9BFDE9=  設置播放重複
@@ -4886,32 +4887,32 @@ E07423F09C9BFDE9=  設置播放重複
 87D709358F3B4432=將交叉淡化編輯器停靠在泊塢窗
 
 [MENU_354] ; IDR_CONTEXTS_54
-DFDD2BFC0EC8C7D3=54IOCtx
+;DFDD2BFC0EC8C7D3=54IOCtx
 58463C0CA9EE47E1=按回車鍵關閉窗口
 
 [MENU_355] ; IDR_CONTEXTS_55
-B337DFB5190F3DA3=ripctx
+;B337DFB5190F3DA3=ripctx
 6CC47CED6D4E106B=波紋編輯所有內容會影響速度映射
 
 [MENU_356] ; IDR_CONTEXTS_56
-982EF0AB42B0F06D=56AutomationItemCtx
+;982EF0AB42B0F06D=56AutomationItemCtx
 
 [MENU_357] ; IDR_CONTEXTS_57
-62024610B4447C6A=57LV2Ctx
-6F9B8C269150F15C=57,1containerCtx
+;62024610B4447C6A=57LV2Ctx
+;6F9B8C269150F15C=57,1containerCtx
 
 [MENU_358] ; IDR_CONTEXTS_58
-FFEAEC7B2FE5D149=58ClapCtx
+;FFEAEC7B2FE5D149=58ClapCtx
 
 [MENU_359] ; IDR_CONTEXTS_59
-4DEB4808D64B205C=59TrackGroupMgrCtx
+;4DEB4808D64B205C=59TrackGroupMgrCtx
 B0B97D77AC940716=選擇編組時同時選擇該編組內的所有軌道
 03F1A48DC6E1160C=添加/刪除父級文件夾時，同時添加/刪除其下的子軌道
 6CAE5D74BBADF96F=顯示按文件夾嵌套的軌道下拉列表
 ABAABBBF49BA9874=將軌道編組管理器停靠在泊塢窗
 
 [MENU_360] ; IDR_CONTEXTS_60
-E5A3954336F8CA21=60TrackSpacerCtx
+;E5A3954336F8CA21=60TrackSpacerCtx
 00822BD8ECF08421=移除分隔帶
 
 [MENU_361] ; IDR_CONTEXTS_61
@@ -4957,11 +4958,9 @@ FA183511BDBBC440=次要路徑:
 [MENU_428] ; IDR_TOOLBARS
 FD994A8441A52701=主工具欄
 31EA0D9166E92914=新建工程...
-20D402A48B92C098=覆蓋用於框選的鼠標修飾鍵 (編排視圖 A)
 7CE64A834287F5A0=啟用自動交叉淡化
 AB9A2766519667D6=啟用波紋編輯
 CEC3D5DF2AA40AD1=顯示編排視圖網格
-88D26A7FBBD4A17D=覆蓋用於剃刀編輯的鼠標修飾鍵 (編排視圖 B)
 C6255BD28268CF21=浮動工具欄 1
 6DB45DF1779991EB=編輯
 C62558D28268CA08=浮動工具欄 2
@@ -5063,6 +5062,8 @@ F112CE558C181981=主要 (備選錄音)
 DF0D7BFB65057A35=主要 (%s)
 
 [access]
+C28553A4E293A9BA=操作區段
+37252CA118C4BE79=定製操作名稱
 14ED31EEE61B5194=發送音量值
 BF4E0A08A3F44DAF=發送聲像值
 867BE45A06BB40B5=音量推子
@@ -5117,7 +5118,6 @@ E0E6240BD14093B3=LFO 脈衝寬度
 75F935603B2A5F60=LFO 周期 (頻率)
 4C73912F12098836=LFO 頻率歪斜
 A9E7C6AB46E56EA9=LFO 傾斜
-7CB4F79A1C4F648A=媒體資源管理器音量推子
 9FE75CFAAEEA191D=硬件輸出
 937125681D148DE0=上級目錄
 2E1803974E3A251A=導航返回
@@ -5149,6 +5149,7 @@ BDBB78010BEB1808=瞬態靈敏度
 944228561E280534=瞬態閾值
 C3449D100A418FE1=主節拍音量
 AE166C9E5312232D=次節拍音量
+6717FA4AEEC94415=搜索首選項
 C8B367B5542B2A26=屏幕設置
 DCCF2D2F7B9D84A4=伽馬
 B439AA405D79F1B7=陰影增益
@@ -5412,7 +5413,7 @@ ACFDD0F8CDB1E0AB=選項: 編輯時自動交叉淡化媒體對象 ⇌ Options: Au
 5B59867D5C459C1E=選項: 禁用自動交叉淡化 ⇌ Options: Disable auto-crossfades
 48D99C016D9464DB=選項: 在編輯時啟用修剪媒體對象后的內容 ⇌ Options: Enable trim content behind media items when editing
 B4FA1E3DD697E394=選項: 在編輯時禁用修剪媒體對象后的內容 ⇌ Options: Disable trim content behind media items when editing
-B0F7E61A28DFED79=選項: 始終修剪剃刀編輯后的內容 (否則, 按照媒體對象編輯的首選項處理) ⇌ Options: Always trim content behind razor edits (otherwise, follow media item editing preferences)
+B0F7E61A28DFED79=選項: 始終修剪剃刀編輯后的內容 (否則，按照媒體對象編輯的首選項處理) ⇌ Options: Always trim content behind razor edits (otherwise, follow media item editing preferences)
 6137A4BCD2B46E84=選項: 在分割時切換自動交叉淡化 ⇌ Options: Toggle auto-crossfade on split
 824C74C8CEBF519B=選項: 在分割時啟用自動交叉淡化 ⇌ Options: Enable auto-crossfade on split
 FF7112FE99086902=選項: 在分割時禁用自動交叉淡化 ⇌ Options: Disable auto-crossfade on split
@@ -5579,7 +5580,7 @@ ED90AF0F05839DF9=速度包絡: 所有速度標記減少 0.1% ⇌ Tempo envelope:
 1BEF0D7C4ED48025=速度包絡: 所有速度標記增加 0.001% ⇌ Tempo envelope: Increase all tempo markers 0.001%
 06012059B01020D1=速度包絡: 所有速度標記減少 0.001% ⇌ Tempo envelope: Decrease all tempo markers 0.001%
 6DB67B890334F14C=調整整個速度包絡... ⇌ Adjust entire tempo envelope...
-DB023531356CDCFA=速度包絡: 在編輯光標處插入速度標記, 不打開速度編輯對話框 ⇌ Tempo envelope: Insert tempo marker at edit cursor, without opening tempo edit dialog
+DB023531356CDCFA=速度包絡: 在編輯光標處插入速度標記，不打開速度編輯對話框 ⇌ Tempo envelope: Insert tempo marker at edit cursor, without opening tempo edit dialog
 45BF4D3EB7A0A047=速度包絡: 設置顯示範圍... ⇌ Tempo envelope: Set display range...
 435DA45D02DDAD34=速度包絡: 將顯示範圍設置為當前工程的最小/最大 bpm ⇌ Tempo envelope: Set display range to current project min/max bpm
 448CAF9331DAE0D3=走帶: 停止 (保存所有已錄製的媒體) ⇌ Transport: Stop (save all recorded media)
@@ -5949,7 +5950,7 @@ BF1C8F1ED2DB0EAB=對象: 顯示對象片段的 FX 鏈 ⇌ Item: Show FX chain fo
 83FB6C8F56713AF5=對象: 移除對象片段的 FX ⇌ Item: Remove FX for item take
 890986C082B073EE=對象: 在時間選區中靜音多片段對象的活躍片段 ⇌ Item: Mute active take of multitake item within time selection
 C9F5027F4B9F0718=對象: 在時間選區中獨奏多片段對象的活躍片段 ⇌ Item: Solo active take of multitake item within time selection
-36B08F4124D4075C=對象: 將對象混合行為設置為工程默認 ⇌ Item: Set item mix behavior to project default
+36B08F4124D4075C=對象: 將對象混合行為設置為工程默認設置 ⇌ Item: Set item mix behavior to project default
 FBE56727B15F487D=對象: 將對象混合行為設置為內層對象替換外層對象 ⇌ Item: Set item mix behavior to enclosed items replace enclosing items
 587FAA756CE718ED=對象: 將對象混合行為設置為始終替換 ⇌ Item: Set item mix behavior to always replace
 D79795F60C44BB63=對象: 將對象混合行為設置為始終混合 ⇌ Item: Set item mix behavior to always mix
@@ -6035,7 +6036,7 @@ C98283ABDFC921B2=鼠標修飾鍵: 設置編排視圖覆蓋鼠標修飾鍵 A 直�
 DBA2B06BEE130ED4=鼠標修飾鍵: 設置編排視圖覆蓋鼠標修飾鍵 C 直到下一次鼠標抬起 ⇌ Mouse modifiers: Set arrange view override mouse modifiers C until next mouseup
 48B3E706051E45F7=鼠標修飾鍵: 設置編排視圖覆蓋鼠標修飾鍵 D 直到下一次鼠標抬起 ⇌ Mouse modifiers: Set arrange view override mouse modifiers D until next mouseup
 05F248CEFEF5F6D9=鼠標修飾鍵: 清除編排視圖覆蓋鼠標修飾鍵 ⇌ Mouse modifiers: Clear arrange view override mouse modifiers
-B1F2728A9F257075=選項: 當自動切錄錄音至新的固定車道時, 添加整個錄音 ⇌ Options: When auto-punch recording into a new fixed lane, add the whole recording
+2B791CD4CAE39F5E=選項: 當自動切錄錄音至固定車道軌道時，添加整個錄音 ⇌ Options: When auto-punch recording into a fixed lane track, add the whole recording
 D64F30D1AA3B1FDE=選項: 點擊空軌道空間時不更改複合區域的源車道 ⇌ Options: Do not change comp area source lane when clicking empty track space
 F85BCA9A0D5174D9=選項: 避免在複合區域中包含空軌道空間 ⇌ Options: Avoid including empty track space in comp areas
 543C86346EFB03E5=鼠標修飾鍵: 交換編排視圖右鍵拖動修飾鍵，用於框選對象選擇和選擇剃刀編輯區域 ⇌ Mouse modifiers: Swap arrange view right-drag modifiers for marquee item selection and select razor edit area
@@ -6191,14 +6192,14 @@ DB63656B8F94FDD6=對象屬性: 切換鎖定 ⇌ Item properties: Toggle lock
 454F9A9841E5FCD4=對象屬性: 鎖定到活躍片段 (鼠標點擊不會更改活躍片段) ⇌ Item properties: Lock to active take (mouse click will not change active take)
 B04AE083D2892BA6=對象屬性: 解鎖片段 (鼠標點擊將更改活躍片段) ⇌ Item properties: Unlock takes (mouse click will change active take)
 62B0C9687B514E74=對象屬性: 切換鎖定到活躍片段 (切換鼠標點擊更改活躍片段) ⇌ Item properties: Toggle lock to active take (toggle mouse click changes active take)
-C9ED572935F2A1E5=對象屬性: 將對象時基設置為工程/軌道默認 ⇌ Item properties: Set item timebase to project/track default
+C9ED572935F2A1E5=對象屬性: 將對象時基設置為工程/軌道默認值 ⇌ Item properties: Set item timebase to project/track default
 ED415083E66CF2D6=對象屬性: 將對象時基設置為時間 ⇌ Item properties: Set item timebase to time
 E8124C72C53D3490=對象屬性: 將對象時基設置為節拍 (位置, 長度, 速率) ⇌ Item properties: Set item timebase to beats (position, length, rate)
 70838D9BD1F6785E=對象屬性: 將對象時基設置為節拍 (僅位置) ⇌ Item properties: Set item timebase to beats (position only)
 BA17BC4F4E4BE1B9=對象屬性: 將對象時基設置為節拍 (在速度變化時自動拉伸) ⇌ Item properties: Set item timebase to beats (auto-stretch at tempo changes)
 85E052AD90F00262=媒體對象: 清除並重新計算在工程速度變化時的自動拉伸 ⇌ Media item: Clear and recalculate auto-stretch at project tempo changes
 D2E152925A6DD153=媒體對象: 在工程速度變化時添加拉伸標記 ⇌ Media item: Add stretch markers at project tempo changes
-CC0B9BEC667C8269=軌道屬性: 將軌道時基設為工程默認 ⇌ Track properties: Set track timebase to project default
+CC0B9BEC667C8269=軌道屬性: 將軌道時基設為工程默認設置 ⇌ Track properties: Set track timebase to project default
 FBECE4010CFB26AE=軌道屬性: 將軌道時基設為時間 ⇌ Track properties: Set track timebase to time
 00BA15BE62CF1F68=軌道屬性: 將軌道時基設為節拍 (位置, 長度, 速率) ⇌ Track properties: Set track timebase to beats (position, length, rate)
 65CD50D4A21C04D6=軌道屬性: 將軌道時基設為節拍 (僅位置) ⇌ Track properties: Set track timebase to beats (position only)
@@ -6518,7 +6519,7 @@ E816CED6DBB7AE77=軌道: 查看當前/最後觸碰軌道的路由和 I/O ⇌ Tra
 CE18E4F4EB544EF2=軌道: 循環切換文件夾摺疊狀態 ⇌ Track: Cycle folder collapsed state
 565D4F5F0262CFE6=軌道: 選擇鼠標下方的軌道 ⇌ Track: Select track under mouse
 E2F1E269F575BF50=軌道: 旁通媒體播放偏移 ⇌ Track: Bypass media playback offset
-CEA44C222CAA7EAD=選項: 當文件夾完全摺疊時, 不顯示文件夾中的軌道 ⇌ Options: do not display tracks in folder when folder is fully collapsed
+CEA44C222CAA7EAD=選項: 當文件夾完全摺疊時，不顯示文件夾中的軌道 ⇌ Options: do not display tracks in folder when folder is fully collapsed
 86E3E12BD4B6B036=軌道: 將所有媒體對象移動到新的隱藏子軌道 ⇌ Track: Move all media items to new hidden child track
 A02404F80B383267=軌道: 從所有隱藏子軌道移動所有媒體對象 ⇌ Track: Move all media items from all hidden child tracks
 9C0BDAEA42533A8B=取消選擇所有軌道/對象/包絡點 (清除所有軌道/對象/包絡點的選定狀態) ⇌ Unselect (clear selection of) all tracks/items/envelope points
@@ -6552,7 +6553,7 @@ EFAC62541238E2A3=軌道: 將軌道錄製模式設置為 MIDI 觸碰替換 ⇌ Tr
 FFCFED6478D0E3DC=軌道: 將軌道錄製輸出模式設置為推子后 ⇌ Track: Set track record output mode to post-fader
 0577C3FB2ABD685D=軌道: 將軌道錄製輸出模式設置為前置-FX ⇌ Track: Set track record output mode to pre-FX
 556A1724E610C5E2=軌道: 將軌道錄製輸出模式設置為後端-FX, 推子前 ⇌ Track: Set track record output mode to post-FX, pre-fader
-8D502986B5317F92=軌道: 查看最後觸碰的軌道的錄音設置 (MIDI量化, 文件格式/路徑) ⇌ Track: View track recording settings (MIDI quantize, file format/path) for last touched track
+8D502986B5317F92=軌道: 查看最後觸碰的軌道的錄音設置 (MIDI 量化, 文件格式/路徑) ⇌ Track: View track recording settings (MIDI quantize, file format/path) for last touched track
 DB8B2F93E46F4F0F=軌道: 將錄音路徑設置為主要 ⇌ Track: Set record path to primary
 943DDFD9F914058B=軌道: 將錄音路徑設置為次要 ⇌ Track: Set record path to secondary
 A6AA2C5B723F54F6=軌道: 將錄音路徑設置為主要+次要 ⇌ Track: Set record path to primary+secondary
@@ -7223,6 +7224,14 @@ A531508FF0B5DB63=工具欄: 在鼠標光標處打開工具欄 28 ⇌ Toolbar: Op
 937E0792C6368D9E=工具欄: 在鼠標光標處打開工具欄 30 ⇌ Toolbar: Open toolbar 30 at mouse cursor
 C0BF86FE89B9C179=工具欄: 在鼠標光標處打開工具欄 31 ⇌ Toolbar: Open toolbar 31 at mouse cursor
 31FD8C1AEED5967C=工具欄: 在鼠標光標處打開工具欄 32 ⇌ Toolbar: Open toolbar 32 at mouse cursor
+12C3FAD652693FD1=工具欄: 在鼠標光標處打開 MIDI 工具欄 1 ⇌ Toolbar: Open MIDI toolbar 1 at mouse cursor
+BBE9B04C60CAD394=工具欄: 在鼠標光標處打開 MIDI 工具欄 2 ⇌ Toolbar: Open MIDI toolbar 2 at mouse cursor
+BF0E1DB8639E5D8F=工具欄: 在鼠標光標處打開 MIDI 工具欄 3 ⇌ Toolbar: Open MIDI toolbar 3 at mouse cursor
+4A717A29C667E83A=工具欄: 在鼠標光標處打開 MIDI 工具欄 4 ⇌ Toolbar: Open MIDI toolbar 4 at mouse cursor
+38FDB8540DCC8CE5=工具欄: 在鼠標光標處打開 MIDI 工具欄 5 ⇌ Toolbar: Open MIDI toolbar 5 at mouse cursor
+E0C2BFFA3E68A1C8=工具欄: 在鼠標光標處打開 MIDI 工具欄 6 ⇌ Toolbar: Open MIDI toolbar 6 at mouse cursor
+9DE34C2D25A9E7C3=工具欄: 在鼠標光標處打開 MIDI 工具欄 7 ⇌ Toolbar: Open MIDI toolbar 7 at mouse cursor
+C1284F3D2876ADCE=工具欄: 在鼠標光標處打開 MIDI 工具欄 8 ⇌ Toolbar: Open MIDI toolbar 8 at mouse cursor
 B437F79D7FAA3C29=工具欄: 打開 MIDI 工具欄 9 ⇌ Toolbar: Open MIDI toolbar 9 at mouse cursor
 AD3CE1CD10ACDAE7=工具欄: 打開 MIDI 工具欄 10 ⇌ Toolbar: Open MIDI toolbar 10 at mouse cursor
 B27E942B77D455AC=工具欄: 打開 MIDI 工具欄 11 ⇌ Toolbar: Open MIDI toolbar 11 at mouse cursor
@@ -7323,6 +7332,7 @@ FA0B428203BB8C66=工程選項卡: 移動工程選項卡到位置 %d ⇌ Project 
 CB200276D7732D3B=ReaScript: 運行/編輯最近的 ReaScript (EEL2 或 Lua) ⇌ ReaScript: Run/edit last ReaScript (EEL2 or Lua)
 108C6B5D2F6D3897=視頻: 顯示/隱藏視頻窗口 ⇌ Video: Show/hide Video window
 F5C536D74FD8A737=視頻: 清除視頻緩存/重新渲染幀 ⇌ Video: clear video cache/re-render frames
+C4EFFF45F8AD0D19=視頻: 全屏 ⇌ Video: fullscreen
 
 [actions_fmt]
 6A859719FE602A01=軌道: 為 %s 設置音量 (僅限 MIDI CC/OSC) ⇌ Track: Set volume for ※s (MIDI CC/OSC only)
@@ -7624,8 +7634,6 @@ EE1268CA4B845A22=# FX
 8B7DC1C51EA16751=媒體核心
 07BB6BDD279F1E8F=媒體 CPU
 AC9CE5BD66CC273B=監聽 FX
-1B23661F1BBB9A19=%sCPU: %.1lf%%\n
-80BBA832AF9858E2=%sCPU: %.1lfc\n
 93279AF94ECAFA8D=實時 CPU: %.1lf%%\n
 868A798CE5F667E2=實時最長塊: %.2fms/%.2fms%s\n
 B317B78EE0D46E89=實時 L/B: %.2fms/%.2fms%s\n
@@ -7638,15 +7646,13 @@ B51284AD5C63F7E1=視頻負載: 空閑\r\n
 5C1F58AE2C17CDBD=視頻: 空閑\r\n
 B9A9937766A29768=磁盤讀取:
 A87379FE917563C7=磁盤寫入:
-770B69EEFA83809E=RAM 使用: %uMB\r\n
+770B69EEFA83809E=內存使用: %uMB\r\n
 FC19414CC54B044B=系統 %s: %uMB/%uMB\r\n\r\n
 86963CED3263ABD5=系統 %s: %uMB/%uMB\r\n\r\n
 74E4179B6447E89D=空閑
 8168147E99383416=使用
-23DFDEDC9CF04735=%d FX: %.2f%% CPU
-3905A2A8D4280516=%d FX: %.2fc
-03FE510EABF0FB26=, 媒體 %.2f%%
-55A6694A2F795941=, 媒體 %.2fc
+D8128C13D5E8572E=%d FX:
+F75B0B480604FAB7=, 媒體
 4CF6043E6041E61E=當前/平均:
 01FDED75265EB99E=範圍:
 
@@ -7759,8 +7765,8 @@ BB8DEF4452154BCD=切換菜單
 DB43122089698013=添加子菜單
 8AE6DD57CA93AB8F=重命名菜單項
 5BF2418D54B41EC9=文本圖標
-56CCAC0E8900FBFD=將所有自定義工具欄重置為默認值？注意: 此操作不可撤銷！
-601D766EE84F0CA9=將所有自定義菜單重置為默認值？注意: 此操作不可撤銷！
+56CCAC0E8900FBFD=將所有自定義工具欄重置為默認設置？注意: 此操作不可撤銷！
+601D766EE84F0CA9=將所有自定義菜單重置為默認設置？注意: 此操作不可撤銷！
 E3EA8486EB10C973=確認菜單重置
 462C331AD48CE1D6=加載菜單 [設置]:
 D33FECDC0798C273=ReaperMenu 文件中沒有 '%s' 的菜單
@@ -7879,6 +7885,8 @@ D15BC93ABD1F68D8= (已停靠)
 [dsplit]
 20F90FF8D46C94CE=分割選定的對象
 1A900F68165FDC25=分割選定和編組的對象
+B82A34C1131245BF=替換所選對象中的拉伸標記 >>> Replace stretch markers in selected items
+D534B836E2E23DF0=替換所選對象中的拉伸標記, 並添加到編組對象中 >>> Replace stretch markers in selected items and add to grouped items
 36DB16F9DEA007BA=為選定對象添加拉伸標記
 990145DF16A64619=為選定和編組的對象添加拉伸標記
 FCF39C74E18E1ACD=為選定對象添加瞬態參考線
@@ -7916,7 +7924,7 @@ DFCA919D6A234509=接收包絡
 [envmenu]
 567F0D273842FAC4=全局覆蓋自動化模式:
 4036F87897378B46=軌道自動化模式:
-E81A578EDE83B19C=修剪/讀取 (包絡處於活躍狀態, 但所有推子都用於修剪)
+E81A578EDE83B19C=修剪/讀取 (包絡處於活躍狀態，但所有推子都用於修剪)
 4F0FF8C68174EB99=顯示軌道自動化包絡
 38EB36F18A7A3BB5=主控自動化包絡
 0DE47D3FF7101E90=軌道自動化包絡
@@ -8101,6 +8109,16 @@ AAF6790D36B0FF1F=匹配速度
 536D074EDEEC428F=速度匹配半速
 64B6651DCB1D575C=變速時保留音高
 3084E13EDAE17E23=停靠媒體資源管理器
+
+[explorer_access]
+54497FDA023820F9=預覽音量推子
+1BD524C935075525=視圖模式
+35F6C8502D636466=路徑和數據庫
+23FFBAF27416F886=文件
+8144E0D3803243E7=檢測到的音高
+F33D6D7F8FE16CBB=變調
+2A0ECA75D9D51DC4=速率調整
+CC3D359A487EE575=預覽音量
 
 [explorer_actions]
 C69F308758F2C001=預覽: 播放 ⇌ Preview: Play
@@ -8391,7 +8409,7 @@ E3E61CC95F7730F1=預覽: 將音高設置為 +12 半音 ⇌ Preview: set pitch to
 20139BA8160F4F96=預覽: 調整音高 +1 個半音 ⇌ Preview: adjust pitch by +1 semitones
 1F05C79874475A88=預覽: 調整音高 -1 音分 ⇌ Preview: adjust pitch by -1 cents
 66493E0D7E1E3C5A=預覽: 調整音高 +1 音分 ⇌ Preview: adjust pitch by +1 cents
-9B0E15ACDE726BCA=將列的順序和寬度重置為默認值 ⇌ Reset column order and widths to default
+9B0E15ACDE726BCA=將列的順序和寬度重置為默認設置 ⇌ Reset column order and widths to default
 BDC2FA62CFB400D8=添加用戶元數據列 ⇌ Add user metadata column
 597F705EF4A8AF97=預覽: 將音量增加 1 dB ⇌ Preview: increase volume by 1 dB
 F5AFDFA844A5E867=預覽: 將音量減少 1 dB ⇌ Preview: decrease volume by 1 dB
@@ -8570,9 +8588,9 @@ DD3C5BA8B643D747=差值
 4C14A4A79E6B2248=標準
 57A9ECCC155566C4=啟用
 B1BC9261E098D7B6=以下效果設置為離線:
-4A6B1B183C261FBB=注意: 僅有 %d 個 FLS 和 %d 個 TLS 插槽可用, 這可能導致該插件無法加載
-AAD54A79E89629B0=注意: 僅有 %d 個 TLS 插槽可用, 這可能導致該插件無法加載
-4C6E1E852C2714C6=注意: 僅有 %d 個 FLS 插槽可用, 這可能導致該插件無法加載
+4A6B1B183C261FBB=注意: 僅有 %d 個 FLS 和 %d 個 TLS 插槽可用，這可能導致該插件無法加載
+AAD54A79E89629B0=注意: 僅有 %d 個 TLS 插槽可用，這可能導致該插件無法加載
+4C6E1E852C2714C6=注意: 僅有 %d 個 FLS 插槽可用，這可能導致該插件無法加載
 5147D35333DBEFE5=由於嵌套窗口過多，容器不可見
 4EBA2376DB13772D=將 '%s' 的預置庫加載到 '%s' 中？
 8A0CEC6B3975A79A=將預置庫加載到 '%s' 中？
@@ -8584,6 +8602,8 @@ DAF16654F60CC4B8=寫入預置庫文件時出錯！磁盤已滿？
 A812A7FC8E6BC23F=離線 -
 F5BFBD4D49BA078B=旁通 -
 B9135ED276E19946=[parallel]
+6D871F9268A5ECFE=旁通
+C22B73042B86836A=離線
 F025E1B89F09259C=重命名參數:
 4A10D846929E1CBE=[未命名參數]
 9B59D38F2B061628=為參數 %s 導入文件
@@ -8591,12 +8611,15 @@ D9A9B8F7F03C1A59=保存 FX 鏈:
 DBBC46B2994004C6=在加載軌道默認鏈之前刪除所有現有的 FX ？\r\n(如果選擇否，軌道默認鏈將添加到您的 FX 列表中)
 4A3E3CE6B990FCAA=REAPER FX 詢問
 F17BD15BC982BD69=添加 FX 鏈:
-D462029E1AAA4F13= CPU %s 採樣
 B4B75DDF26006835= %s 採樣
 CA77BF9C4BB8EA0A=軌道 %d: %s: 在不可自動化的參數 %d %s 上應用參數包絡
 763DC4A00D8B29B1=主控軌道: %s: 在不可自動化的參數 %d %s 上應用參數包絡
+575CF292492BDC48=并行
+DE8B46FD7FF45F1A=第一個并行
 594ED5358BEC24B4=以下效果在已加載的模板中，但不可用。
 315D2C8D511050B7=以下效果位於已加載的鏈中，但不可用。
+0838F63F9BDDB67B=空容器
+710E2763B6EB062C=(無法顯示)
 
 [fxadd]
 25C0DF3AC2495257=描述: 新效果
@@ -8607,7 +8630,7 @@ FE5E9B6E50ED8C3C=[無開發者]
 2DC1911CC68E6A50=[無類別]
 DA80669002CB9364=收藏
 E33F89747343BB89=添加到
-B14AFA7C53603382=出廠默認
+B14AFA7C53603382=出廠默認設置
 27340805DCB9AF08=默認
 62EA016195C43A0D=使用預置添加
 91185323ACEB1CC4=添加到選定軌道
@@ -8625,7 +8648,7 @@ BF46C6C80B9DB149=添加到文件夾
 72C4EBEA9DDD2213=獨立進程
 F981E3B335D7F379=專用進程
 CB9615092774721D=僅本機 (防止橋接)
-E10B632AE7A16400=嵌入橋接 UI (可能不適用於所有插件, 抵抗崩潰能力較差)
+E10B632AE7A16400=嵌入橋接 UI (可能不適用於所有插件，抵抗崩潰能力較差)
 AEF8DD6798933C08=運行為
 BBDE6BF4C5F2447C=影響新創建的實例和已加載工程中的實例
 54BE0C4F3DB86B76=將狀態保存為 VST 預置庫 (默認)
@@ -8700,8 +8723,8 @@ F33AE4F80A099F04=顯示媒體對象片段包絡
 9F66A6D7642154DF=顯示包絡 (通過父級容器映射)
 A43AAABF3635CD48=參數調製/MIDI 鏈接
 6B9F0525BEF49CB7=默認控制器映射
-FFF230108C9B32AF=使用默認
-3FCAEED5D3E37C0D=清除默認
+FFF230108C9B32AF=使用默認設置
+3FCAEED5D3E37C0D=清除默認設置
 
 [glue]
 1A25676C984ACD9A=粘合
@@ -8777,10 +8800,7 @@ C2D0BF51F256377C=編組軌道列表
 4B96C14084BE1CF7=編組屬性
 
 [help]
-8533AB228EB0396A=CPU: %.1fc - RAM: %uMB
-8243A873936A3273=CPU: %.1f%% - RAM: %uMB
-12CF1C8CC6BE7686=CPU: %.1fc
-B3913235B4F0264B=CPU: %.1f%%
+C732DDC0C3D90A5F= - 內存: %uMB
 9846D0326C0027FE=  最後自動保存:
 6561DE4499D14662=  最後保存:
 E32DD9995A334A64=[重採樣]
@@ -8968,8 +8988,8 @@ CBF06458395B9896=數字鍵盤
 AB568D974B74DE38=軌道面板
 FEE8A62E69DDCB78=主控軌道面板
 BF34751E35ECBCB9=包絡面板
-40C7EDD5EE3E3BEB=全局布局默認
-D1F396965D25C688=布局默認
+40C7EDD5EE3E3BEB=全局布局默認設置
+D1F396965D25C688=布局默認設置
 0C5F2002CAF148B3= (DPI-轉換為 %s)
 
 [lfo]
@@ -9019,8 +9039,8 @@ F6BCB3EDA55C49B6=快捷鍵未找到。
 8116409C63CD0C4E=錯誤地重複自定義操作，加載了太多的自定義操作/ReaScripts。 \r\n\r\n嘗試移除未使用的自定義操作或 ReaScript, 並重新啟動 REAPER 以繼續。
 185A453E832340E9=創建 ReaScript 錯誤，加載了太多的自定義操作/ReaScripts。 \r\n\r\n嘗試移除未使用的自定義操作或 ReaScript, 並重新啟動 REAPER 以繼續。
 E17EDF164D8FBB8D=從此區段移除所有快捷鍵？
-7E1D01A0EB52C162=將此區段中的所有快捷鍵重置為默認值？
-A4991C959E5C4B60=將所有區段中的所有快捷鍵重置為默認值？
+7E1D01A0EB52C162=將此區段中的所有快捷鍵重置為默認設置？
+A4991C959E5C4B60=將所有區段中的所有快捷鍵重置為默認設置？
 96227292DE8DAA1D=寫入鍵映射文件時出錯！磁盤滿了？
 C90AF6BF6253BD9E=未選擇自定義對象
 339112863A5B6F2D=錯誤: 您必須為新操作命名。
@@ -9758,7 +9778,7 @@ A6BEBD80AC902C6A=編輯修改音符位置
 [midi_DLG_141] ; IDD_DISPQUANT
 C51D8835A6D16CFC=記號顯示量化
 2056413EF6F383A5=量化音符/休止符:
-D8C2F344D60F082A=使用工程默認值
+D8C2F344D60F082A=使用工程默認設置
 91C0802F16BBA7E3=最小音符長度:
 AC1439E2AB694673=關於顯示量化...
 
@@ -10036,7 +10056,7 @@ CE40E975CE701B8B=編輯: 將 CC 事件向左移動 1 個像素 ⇌ Edit: Move CC
 5091B7695533410E=編輯: 按網格將 CC 事件向右移動 ⇌ Edit: Move CC events right by grid
 E2B741EFE36922C2=編輯: 將 CC 事件的值增加一點點 ⇌ Edit: Increase value a little bit for CC events
 C83A79FC5097997E=編輯: 將 CC 事件的值減少一點點 ⇌ Edit: Decrease value a little bit for CC events
-C2080C4A5EC4ACAB=編輯: 在時間選區內克隆事件, 如果有 (智能克隆) ⇌ Edit: Duplicate events within time selection, if any (smart duplicate)
+C2080C4A5EC4ACAB=編輯: 在時間選區內克隆事件, 如有 (智能克隆) ⇌ Edit: Duplicate events within time selection, if any (smart duplicate)
 BC28E44B58070ABF=編輯: 將編輯光標向左移動一個像素 ⇌ Edit: Move edit cursor left one pixel
 A8143169848E0614=編輯: 將編輯光標向右移動一個像素 ⇌ Edit: Move edit cursor right one pixel
 AD9A344F4583115D=導航: 按網格將編輯光標向左移動 ⇌ Navigate: Move edit cursor left by grid
@@ -10237,22 +10257,6 @@ E316D591135360EC=內容: 在鼠標位置顯示編輯器內容菜單 ⇌ Contents
 83DFCF5852873345=內容: 顯示此軌道上的所有 MIDI 媒體對象 ⇌ Contents: Display all MIDI media items on this track
 23F06A2946CBC4D0=內容: 激活此軌道上的上一個MIDI媒體對象, 保留現有編輯器內容 ⇌ Contents: Activate previous MIDI media item on this track, preserving existing editor contents
 AADDE6D4F2D27B08=內容: 激活此軌道上的下一個MIDI媒體對象, 保留現有編輯器內容 ⇌ Contents: Activate next MIDI media item on this track, preserving existing editor contents
-962848F025ECFD51=工具欄: 打開 MIDI 工具欄 1 ⇌ Toolbar: Open MIDI toolbar 1
-962845F025ECF838=工具欄: 打開 MIDI 工具欄 2 ⇌ Toolbar: Open MIDI toolbar 2
-962846F025ECF9EB=工具欄: 打開 MIDI 工具欄 3 ⇌ Toolbar: Open MIDI toolbar 3
-96284BF025ED026A=工具欄: 打開 MIDI 工具欄 4 ⇌ Toolbar: Open MIDI toolbar 4
-96284CF025ED041D=工具欄: 打開 MIDI 工具欄 5 ⇌ Toolbar: Open MIDI toolbar 5
-962849F025ECFF04=工具欄: 打開 MIDI 工具欄 6 ⇌ Toolbar: Open MIDI toolbar 6
-96284AF025ED00B7=工具欄: 打開 MIDI 工具欄 7 ⇌ Toolbar: Open MIDI toolbar 7
-96283FF025ECEE06=工具欄: 打開 MIDI 工具欄 8 ⇌ Toolbar: Open MIDI toolbar 8
-3F64431803D34C32=工具欄: 切換到 MIDI 工具欄 1 ⇌ Toolbar: Switch to MIDI toolbar 1
-3F64421803D34A7F=工具欄: 切換到 MIDI 工具欄 2 ⇌ Toolbar: Switch to MIDI toolbar 2
-3F64411803D348CC=工具欄: 切換到 MIDI 工具欄 3 ⇌ Toolbar: Switch to MIDI toolbar 3
-3F64401803D34719=工具欄: 切換到 MIDI 工具欄 4 ⇌ Toolbar: Switch to MIDI toolbar 4
-3F643F1803D34566=工具欄: 切換到 MIDI 工具欄 5 ⇌ Toolbar: Switch to MIDI toolbar 5
-3F643E1803D343B3=工具欄: 切換到 MIDI 工具欄 6 ⇌ Toolbar: Switch to MIDI toolbar 6
-3F643D1803D34200=工具欄: 切換到 MIDI 工具欄 7 ⇌ Toolbar: Switch to MIDI toolbar 7
-3F644C1803D35B7D=工具欄: 切換到 MIDI 工具欄 8 ⇌ Toolbar: Switch to MIDI toolbar 8
 3F1DFB1C709350C1=工具欄: 切換到 MIDI 鋼琴捲簾工具欄 ⇌ Toolbar: Switch to MIDI piano roll toolbar
 1CC9EE8D33B2887F=編輯: 將事件通道設置為更高 ⇌ Edit: Set event channel higher
 A4D498E1663634B1=編輯: 將事件通道設置為更低 ⇌ Edit: Set event channel lower
@@ -10413,14 +10417,14 @@ C07E878C3D113A94=模式: 樂譜 ⇌ Mode: Notation
 945441FD8B425C9F=編輯: 選擇所有音符 ⇌ Edit: Select all notes
 82CAAB53A8A40F5F=編輯: 複製時間選區內的事件 ⇌ Edit: Copy events within time selection
 41299E7AB0354A16=編輯: 剪切時間選區內的事件 ⇌ Edit: Cut events within time selection
-205CF4EE42078517=編輯: 如果有, 複製時間選區內的事件 (智能複製) ⇌ Edit: Copy events within time selection, if any (smart copy)
-477261822D58CA23=編輯: 如果有, 剪切時間選區內的事件 (智能剪切) ⇌ Edit: Cut events within time selection, if any (smart cut)
+205CF4EE42078517=編輯: 複製時間選區內的事件, 如有 (智能複製) ⇌ Edit: Copy events within time selection, if any (smart copy)
+477261822D58CA23=編輯: 剪切時間選區內的事件, 如有 (智能剪切) ⇌ Edit: Cut events within time selection, if any (smart cut)
 B95BB1766DD36453=編輯: 克隆事件 ⇌ Edit: Duplicate events
 D9833E8E8B0FC364=編輯: 將事件克隆高一個八度 ⇌ Edit: Duplicate events one octave higher
 93DE8D5E91073930=編輯: 將事件克隆低一個八度 ⇌ Edit: Duplicate events one octave lower
 FCA9247B5F784401=編輯: 克隆時間選區內的事件 ⇌ Edit: Duplicate events within time selection
 2795FD472712D7F5=編輯: 克隆時間選區內的事件 (不修剪音符) ⇌ Edit: Duplicate events within time selection (do not trim notes)
-BAE5BBE281FEAC4B=編輯: 如果有, 克隆時間選區內的事件 (智能克隆) (不修剪音符) ⇌ Edit: Duplicate events within time selection, if any (smart duplicate) (do not trim notes)
+BAE5BBE281FEAC4B=編輯: 克隆時間選區內的事件, 如有 (智能克隆) (不修剪音符) ⇌ Edit: Duplicate events within time selection, if any (smart duplicate) (do not trim notes)
 652378F394ED7074=編輯: 取消靜音事件 ⇌ Edit: Unmute events
 85712914E6BCC16B=量化音符位置到網格 ⇌ Quantize notes position to grid
 9F2237C4D6CADCAB=量化音符起止位置到網格 ⇌ Quantize notes position and end to grid
@@ -10562,6 +10566,9 @@ E6103AA4FC9BFB33=顯示原始 MIDI 數據 ⇌ Show raw MIDI data
 A5D34A5237534CE2=編輯: 調整事件值 (僅限鼠標滾輪/MIDI 控制器) ⇌ Edit: Adjust value for events (mousewheel/MIDI controller only)
 262D4B2C72F13C33=重新加載軌道支持數據 (音色庫/程序文件, 樂譜等) ⇌ Reload track support data (bank/program files, notation, etc)
 8CA3F2F588D18073=切換在媒體對象起始時間將 MIDI 鎖定到工程速度 ⇌ Toggle locking MIDI to project tempo at media item start time
+13B5151071EBF2AB=工具欄: 打開 MIDI 工具欄 %d ⇌ Toolbar: Open MIDI toolbar ※d
+56B5072DEB34C6CF=工具欄: 在鼠標光標處打開 MIDI 工具欄 %d ⇌ Toolbar: Open MIDI toolbar ※d at mouse cursor
+8AD357CE802DBB36=工具欄: 切換到 MIDI 工具欄 %d ⇌ Toolbar: Switch to MIDI toolbar ※d
 7CF5F2A40C38AFD5=CC: 將 CC 車道設置為力度 ⇌ CC: Set CC lane to Velocity
 31DCEF6B43DC07D4=CC: 將 CC 車道設置為音高 ⇌ CC: Set CC lane to Pitch
 222C965F1127B576=CC: 將 CC 車道設置為程序 ⇌ CC: Set CC lane to Program
@@ -11040,7 +11047,7 @@ D9FF1A097D91EEAC=設置全局錄音輪次計數器
 8DA59183F3C1BF8B=設置為隨機顏色
 A1F00016223C4D56=設置為一個隨機顏色
 ECD1EDA0F724EEBA=設置為隨機顏色
-2B9CAECB8EF1B67B=將顏色重置為默認
+2B9CAECB8EF1B67B=將顏色重置為默認值
 FE1A9C4B05BD3094=加載圖片資源:
 D7DE3AAB536FF9E7=工程已打開但已修改:\r\n%s\r\n\r\n複製工程或其媒體時是否保存更改？選擇 '確定' 保存，或 '取消' 終止保存/複製進程。
 6E1BF9B33FF01DCE=保存/導出 - 工程已修改
@@ -11080,8 +11087,6 @@ BABB523832F9AE4F=搜索出錯
 63F6D385957D048A=調音台主控
 
 [mouse]
-81D7E6162319FD03=框選
-AD81A52B1BF91AB5=剃刀編輯
 E1FCB46BE3962402=固定車道複合
 
 [mousemaps]
@@ -11933,10 +11938,10 @@ C8DA9526030E326C=正弦衰減
 3EBBFB1914C8EB44=線性衰減
 9A17190E1103712F=混合衰減
 041B2B4496DA7859=[已棄用的舊式衰減]
-7006FC40958447F8=工程默認 (立體聲平衡)
-82F7D1EB412DAF11=工程默認 (立體聲像)
-65A4F91A332E37E3=工程默認 (雙聲像)
-A4A2B926D6457694=工程默認 (REAPER 3.x 平衡)
+7006FC40958447F8=工程默認設置 (立體聲平衡)
+82F7D1EB412DAF11=工程默認設置 (立體聲像)
+65A4F91A332E37E3=工程默認設置 (雙聲像)
+A4A2B926D6457694=工程默認設置 (REAPER 3.x 平衡)
 4511943B57827F5E=立體聲平衡 / 單聲像 (默認)
 EA57FBCCFD419668=立體聲像
 87CF7CB71772CAC2=雙聲像
@@ -11978,7 +11983,7 @@ FA36F381B025CDAE= [%d 剩餘]
 A1A1AB5C5B218311=JS 輸出
 
 [pitchenvcfg]
-9A8091FE0AFEA024=遵循全局默認
+9A8091FE0AFEA024=遵循全局默認設置
 
 [pitchshift]
 2C9FDF4101D8E2FF=簡單窗口化 (快速)
@@ -12088,10 +12093,11 @@ AE04609BFAC1BE7B=移除:
 E7A570E78D955BDB=重新掃描 VST 路徑以查找新的/修改的插件
 32DE03A9CDDE213E=重新掃描 VST 路徑 (跳過新的/修改的插件)
 9695FA41F7B15128=清除緩存並重新掃描所有插件的 VST 路徑
-D662770F22A1F66B=允許多個插件具有相同的 VST3 UID (不推薦)
 ABC6CA494F664332=掃描失敗的插件
 1DD89599AC634A3B=已更新但未被掃描的插件
 34C52CFC88897840=新增但未被掃描的插件
+D662770F22A1F66B=允許多個插件具有相同的 VST3 UID (不推薦)
+77FEDCAED8DF7D25=禁止進程外掃描插件 (不推薦)
 F79A16D3F6F59E80=重新掃描 CLAP 路徑以查找新的/已修改的插件
 FC01B4E7A42BD3FD=清除緩存並重新掃描 CLAP 路徑的所有插件
 3BECE4815452DB14=重新掃描 LV2 路徑
@@ -12259,7 +12265,7 @@ CAF2BD75C8084664= - 非常積極
 DB46AD1EC81087FA=要創建的音頻處理線程的數量。這通常設置為系統中的 CPU 數量。
 88ED4AE8DA0B9791=用於音頻處理的相對線程優先級。這是一個高級性能調整，應該保留為默認值。
 CBDC58413A534831=音頻處理線程的積極程度。更放鬆的設置將使用較少的 CPU，但在低延遲下穩定性較差。
-CD7C691E80E72934=媒體緩衝使用 RAM 和 CPU 以避免等待磁盤 IO。對於磁盤較慢的系統，應該設置得更高。零禁用緩衝。
+CD7C691E80E72934=媒體緩衝使用內存和 CPU 以避免等待磁盤 IO。對於磁盤較慢的系統，應該設置得更高。零禁用緩衝。
 41E5ED5B864C805A=在帶有 MIDI 編輯器的軌道上禁用緩衝，這允許 MIDI 編輯更快的播放響應 (推薦)。
 3F29804EB743FBAD=源媒體緩衝應達到的滿載程度才開始播放。較低的數字會提供更快的響應時間。
 E565AD880D79DFEF=當顯示每個片段的 FX 時，使用較低的媒體緩衝大小以減少音頻播放與插件視覺響應之間的延遲。
@@ -12468,9 +12474,9 @@ C41402DEBD47E168=在檢測到多點觸控手勢后的短時間內忽略不同類
 D61B178BCBC28C11=路徑
 1A898A131B917D7B=鍵盤/多點觸控
 E23148074D7C62C2=備份
-0F28C70F6D5B8981=軌道/發送默認值
-B5BBD9B3DA22D31C=對象淡化默認值
-0CF52F20D6054A34=對象循環默認值
+0F28C70F6D5B8981=軌道/發送默認設置
+B5BBD9B3DA22D31C=對象淡化默認設置
+0CF52F20D6054A34=對象循環默認設置
 5E1EE8B2642F9F1B=音頻
 BB844E058DECEFE5=MIDI 設備
 A8617B784628DEDC=靜音/獨奏
@@ -12562,8 +12568,8 @@ D6E7E19AE630BE59=在文件導入時生成對象峰值緩存文件 (推薦)。
 FA14F6695C42A6BE=在峰值緩存文件中生成的最高分辨率峰值。推薦使用 300。更高或更低可能會在不同的場景中導致性能降低。
 0AFC077605BAFB72=如果無法寫入媒體目錄，請使用 '首選項/常規/路徑' 中設置的備選路徑存儲峰值緩存文件。
 22D88B25908D6899=更喜歡將新創建的峰值緩存文件存儲在與媒體文件相關的名為 \"peaks\" 的目錄中。
-3E30281017B53D27=使用片段 FX 時，分割時克隆片段 FX (這樣新的分割對象可以獲得 FX 的副本)。如果您不小心，這可能會使用大量的 RAM。
-AE36413831419F9D=即使未啟用頻譜峰值，也為峰值文件計算頻譜信息 (更大的峰值文件, 更高的 RAM 使用)。
+3E30281017B53D27=使用片段 FX 時，分割時克隆片段 FX (這樣新的分割對象可以獲得 FX 的副本)。如果您不小心，這可能會使用大量的內存。
+AE36413831419F9D=即使未啟用頻譜峰值，也為峰值文件計算頻譜信息 (更大的峰值文件, 更高的內存使用)。
 5EF284FB2B799EF0=啟用頻譜峰值時自動重新生成帶有頻譜信息的峰值文件。
 
 [prefs_mediafades_help]
@@ -12724,7 +12730,7 @@ BD77360516B83B36=在編排視圖中選擇媒體對象可以決定一個 MIDI 對
 DE1875B6CABFB266=當同時顯示多個 MIDI 媒體對象時，選擇如何在 MIDI 編輯器中切換活躍的媒體對象。
 9B2ACE664429DF8D=在不活躍的媒體對象中的 MIDI 音符/CC 可以被繪製得更加淡或更加深。
 C486CCEB98553CDB=用於在 MIDI 編輯器中繪製音符的色彩映射圖片。如果此處沒有指定色彩映射，將使用當前顏色主題中的色彩映射。
-644B168704079A8D=瀏覽以選擇一個色彩映射圖片，作為在 MIDI 編輯器中繪製音符的默認值。
+644B168704079A8D=瀏覽以選擇一個色彩映射圖片，作為在 MIDI 編輯器中繪製音符的默認設置。
 
 [prefs_mouse]
 4CE46F5A24183C85=在中間/右側上方, 或在文件夾圖標上方
@@ -12810,10 +12816,10 @@ A0ED57BB424B0CE3=操作列表...
 DEEBF67EF93F14BF=在當前上下文中交換 cmd/opt
 BFCC81D509FBB3A0=保存此上下文的修飾鍵...
 AD8AC583FD04975D=加載此上下文的修飾鍵...
-8A50E612D4BBB618=在此上下文中將修飾鍵重置為出廠默認
+8A50E612D4BBB618=在此上下文中將修飾鍵重置為出廠默認設置
 3DA24D613ABD51E2=保存所有上下文的修飾鍵...
 37B9137F96BA7827=加載所有上下文的修飾鍵...
-02DFD40B36B7B8EA=在所有上下文中將修飾鍵重置為出廠默認
+02DFD40B36B7B8EA=在所有上下文中將修飾鍵重置為出廠默認設置
 3B0C21E969E897AE=導出腳本以設置此上下文的這些修飾鍵
 AD985065F925D3E0=設置鼠標修飾鍵
 2AF7697E4282AA90=導出腳本
@@ -12890,6 +12896,7 @@ BB613AF1318E2B21=在此指定過濾字符串以允許從 FX 瀏覽器中刪除�
 7B1273C4F41EF16F=在 FX 列表上方顯示 FX 鏈窗口的添加/刪除按鈕。
 A27232CED0378863=在鏈視圖中的 FX UIs 上方顯示 FX 註釋字段 (用戶可以根據需要編輯註釋)。
 0BE08FFBC9CFE501=關閉 FX 窗口時可能會添加撤消點，以捕獲插件可能未報告的插件狀態中的更改。
+DAA6C01C423886BA=在并行/離線/旁路 FX 的 FX 名稱中包含描述性文本，以提高屏幕閱讀器的易用性。
 
 [prefs_plugin_knob]
 1D75478FD209EC92=圓形
@@ -12987,7 +12994,7 @@ B2AA56B82FB82DE0=循環錄製可以創建一個或多個音頻文件，這些文
 33AC466648B3C9CA=在每個循環后將錄製的媒體添加到工程中，這可以用來構建分層錄製。
 D2E172FC0C79F1D4=只在錄製停止時將錄製的媒體添加到工程中 (默認)。
 4570CCEE54B6D772=為每個循環在磁盤上創建一個單獨的文件 (默認為錄製到一個單一的, 連續的文件)。
-643B48CBBB04CE19=時間選區的自動切錄錄製可以將新軌道中的錄音媒體修剪到時間選區，或添加整個錄音。
+FFFD36BE066ACFAC=如果啟用了複合，自動切錄錄音將始終添加整個錄音，但只複合自動切錄區域。
 
 [prefs_render_help]
 91CB7FE93510C1F4=設置渲染時使用的音頻塊大小。建議您保留此空白，這將自動使用上次使用的音頻塊大小。
@@ -13063,7 +13070,7 @@ A06640FC98DC6287=為新軌道自動顯示音量包絡。
 9DB02CA9A1AAEE43=為新軌道自動顯示前置-FX 音量包絡。
 16F5F8078D3F839C=為新軌道自動顯示前置-FX 聲像包絡。
 46293FD16449C446=新軌道包絡的默認點形狀。
-798A8BC8BB77A088=新軌道的默認自動化模式。出廠默認值為修剪/讀取模式。
+798A8BC8BB77A088=新軌道的默認自動化模式。出廠默認設置為修剪/讀取模式。
 01966E3463989F62=新工程中的默認軌道高度。這也可以通過 '文件/工程設置/保存為默認工程設置' 進行設置。
 7D71B6C52AB0A7DE=啟用時，新軌道包絡將自動啟用以錄製自動化。
 D2AC005A798FA430=為新軌道自動啟用自由對象定位。
@@ -13076,7 +13083,7 @@ B3B008304E94DF56=新硬件輸出的默認增益。
 AA0925ABD83BC541=新發送和硬件輸出的默認發送類型。
 5B0472B23A6FDB71=啟用時，新發送將從源軌道發送 MIDI。
 4EB8C05F0CB68BBA=啟用時，新發送將從源軌道發送音頻。
-710294D0227188C6=新創建軌道的軌道儀錶默認值。現有工程中的現有軌道不會受到影響。
+710294D0227188C6=新創建軌道的軌道儀錶默認設置。現有工程中的現有軌道不會受到影響。
 
 [prefs_video]
 3DF78C7ADF54BF4C=較低編號的軌道中的對象替換較高的
@@ -13107,7 +13114,7 @@ A33160A83CBD4DE3=使用通用推桿視圖，而不是 VST 的自定義 UI。您�
 062E0C5C05471D20=設置如何處理來自 VST 插件的自動化通知。您還可以為每個插件單獨覆蓋此設置，大多數人可能希望保持此設置為默認。
 2EAA3B50A18F889D=不通知 VSTi 播放已停止。大多數合成器（尤其是音序器）需要知道播放已停止以避免音符掛起/粘住。
 5709C6930F8F1BE9=重置 VSTi 時保留持續的音符和當前音高。在禁用 '首選項/音頻/回放/重置 MIDI CC/音高' 時可能需要這個設置。
-1DE74C0937316C7F=某些 VST 在離線渲染 (非實時) 時表現不同。當取消選中時，插件總是認為它們處於在線狀態。
+1DE74C0937316C7F=某些 VST 在離線渲染 (非實時) 時表現不同。當取消選中時，插件始終認為它們處於在線狀態。
 FAC0CB28431DC2EC=當另一個線程正在處理音頻時打開 GUI，某些有問題的插件會崩潰。此設置通過中斷音頻來避免崩潰。
 A91F48CD20B8FDCE=允許卸載 VST DLL，這將它們完全從內存中刪除，但也可能導致兼容性問題。
 DB1AD925D830A08C=特殊模式，僅適用於 UAD 插件，減少并行處理的好處以避免 UAD-1 崩潰。
@@ -13285,7 +13292,7 @@ F1E4CF9D444F2E8E=時基時間:
 9BF9B3C72DA9AA9D=不論工程時基如何，速度和拍號變化標記默認都是時基節拍。
 AE7BB4D8A52481FB=此行為也可以在 '文件/工程設置' 中更改。
 ABB2015608E8899E=單條軌道和媒體對象的時基可以獨立於工程時基進行設置。
-6BF51A7CD81FAB00=MIDI 媒體對象總是有時基節拍 (位置, 長度, 速率)。
+6BF51A7CD81FAB00=MIDI 媒體對象始終有時基節拍 (位置, 長度, 速率)。
 F95AEE56B041FBEA=在媒體對象源屬性中，單個 MIDI 媒體對象的時基可以鎖定到特定的速度，而不受工程速度的影響。
 66C99ED0CD0E0C90=節拍
 E67991FAF404D160=64 bit 浮點數 (默認)
@@ -14349,7 +14356,7 @@ ABE1C16582D5A33C=<SUB>%d 通道
 8D08ECC391DB96EA=<SUB>總線 %d
 11CFDE7E5A4CFD86= B%d
 D3E9B5C2991E4175=(軌道自動化模式)
-550F547AB6B8077C=修剪/讀取 (包絡處於活躍狀態, 但所有推子都用於修剪)
+550F547AB6B8077C=修剪/讀取 (包絡處於活躍狀態，但所有推子都用於修剪)
 EF365B9BFF4DA771=發送到軌道
 2BE64718FFEA8B8E=主控硬件輸出控制
 28F54690D2483CE9=軌道控制
@@ -15000,18 +15007,17 @@ E1E7CECE4F2F45CE=編組 #9
 
 [themeblend]
 D64ABE7656056465=覆蓋
-FCA60AD8EFD1FE3F=正片疊底
 A91837FC641E00F6=濾色
 0E7BED71200DE9DB=HSV 調整
 44B8F722EAF5F19A=HSV 調整 (損壞已棄用)
 08328907B4EB71A0=?
 442703CBF9806FF4=混合顏色被繪製在基色上。透明度越接近零，基色顯示得越多。
 E12CE2B25CC52833=CPU 消耗: \r\n最低
-DBD31747391089F2=混合顏色被加到底層顏色上。深色變淺，淺色影響較小。黑色的混合顏色無效果，白色的混合顏色總是呈現為白色。
+DBD31747391089F2=混合顏色被加到底層顏色上。深色變淺，淺色影響較小。黑色的混合顏色無效果，白色的混合顏色始終呈現為白色。
 66F7A1C2A36F1349=CPU 消耗: \r\n低
 369F5B8F8989777D=混合顏色被覆蓋在基色上。深基色變淺，淺色變深。透明度越接近零，覆蓋的效果越小。
 9E7000DF2A21A7A5=CPU 消耗: \r\n高
-1833A600140DC7CB=混合顏色與基色相乘。黑色的混合顏色總是呈現為黑色，白色的混合顏色無效果。
+1833A600140DC7CB=混合顏色與基色相乘。黑色的混合顏色始終呈現為黑色，白色的混合顏色無效果。
 8705C5E4122C1ED8=CPU成本: \r\n適中
 67943E106FB37E22=混合顏色與基色進行顏色減淡。基色中的深色區域將變淺，趨向混合顏色，基色中的淺色區域受影響較小。黑色的混合顏色無效果。
 016DF84757A0601A=混合顏色中的每個 RGB 元素都被解釋為從 128 開始的偏移。R 旋轉色調，G 調整飽和度，B 調整色值。灰色的混合顏色 (128,128,128) 無效果。(192,96,255) 將旋轉基色的色調 +1/4 圈，從基色飽和度中減去 1/2，並將基色值增加到滿。
@@ -15020,8 +15026,6 @@ DBD31747391089F2=混合顏色被加到底層顏色上。深色變淺，淺色影
 [title]
 
 [toolbar]
-9931AB6898582FFD=選框
-22BACE7845F52315=剃刀
 D5A501B764C3031A=鎖定:
 1D220B8A48E6DBC2=時間選區
 30AE77BA6378D158=循環點
@@ -15276,6 +15280,8 @@ B1CBBBC86D855EB0=設置將影響在軌道管理器中選定的 %d 條軌道
 CBEA465578399251=在此處分割複合區域
 5B342FB75A12C94D=刪除複合區域邊緣
 5F330485551B7B36=在時間選區處添加複合區域
+B5336F927E3FCD5C=將媒體對象複製到新車道並重新複合
+1615E94003529BFB=將所有已編輯媒體對象複製到新車道並重新複合
 992AE2BDE5FF0A9B=新軌道 /
 
 [trackmgr]
@@ -15409,7 +15415,6 @@ C13C461E3A37057A=將對象移動到新子工程 (非破壞性粘合)
 7EB64A8C1655BEA6=將工程自動化轉換為自動化對象
 AD3E67E49FEB7C24=將媒體對象移動到隱藏的子軌道
 AEF47418ABFCBC57=從所有隱藏的子軌道中移動媒體對象
-815FC2C9452967D9=同步固定車道複合區域
 EAF773E88D69D4B6=更改軌道包絡自動化模式
 B331DB67F5235DC7=剪切軌道
 15925B83F3562B39=移除軌道
@@ -15581,7 +15586,6 @@ FC09A3DEB59A7D1F=將車道上的對象拆分到新軌道
 FB335EC314388F3C=將跨軌對象合併到一條軌道
 869058AD7BBABF89=將固定車道合併到片段
 6C9E508F7C50C364=將片段拆分到固定車道
-772C4DA1AFAE0962=標記最後一次錄音輪次
 A94C53F61F3730F4=刪除標記的片段
 495F726C388E4FB5=微調軌道音量
 09AEB0DA36657788=添加/移動標記
@@ -15626,7 +15630,7 @@ F3E96BE80392C97D=刪除剃刀編輯區域
 5ADD048692B8293C=將選定對象的混合行為設置為內層對象替換外層對象
 A92F4BBC7A73D542=將選定對象的混合行為設置為始終混合
 160147C05D065C44=將選定對象的混合行為設置為始終替換
-F13342CF555C4E07=將選定對象的混合行為設置為工程默認
+F13342CF555C4E07=將選定對象的混合行為設置為工程默認設置
 AB70B744B213BA77=將對象吸附偏移設置為鼠標
 73021D8D0602CFEF=將對象吸附偏移設置為光標
 DB3D5A9C33FC41AC=將對象淡化到光標
@@ -16174,6 +16178,7 @@ A3821BE23B457DA2=刪除硬件發送
 C2F3BD0289D46803=刪除軌道發送
 86329E9A7C4A515E=解鎖軌道控制
 E6B338A0F899CFC6=轉換包絡音量刻度
+1B207B016AFA4EC0=設置 FX 包絡 AI 組合類型
 FAB671E710EBC778=設置包絡點形狀
 9F180DCCD8B3FD9B=編輯包絡點
 9F7FB4C6868D8B46=在車道中顯示/隱藏包絡
@@ -16190,7 +16195,7 @@ E959E048B5419A48=重置頻譜編輯壓縮器閾值
 F8C8D27FE894F2D4=重置頻譜編輯壓縮器比率
 A83C19BF283ABD3A=重置頻譜編輯門限閾值
 1EAF997E80D1DF73=重置頻譜編輯門限底限
-9202E2BD7E7A1FE0=將交叉淡化重置為默認
+9202E2BD7E7A1FE0=將交叉淡化重置為默認值
 BFB7EACA4F188583=框選包絡點選擇
 F63BC3A1331502EE=框選對象選擇
 8F21539CA7C413D6=通過拖放更新媒體
@@ -16335,7 +16340,7 @@ F9B606FDC46A8F9B=保留透明度
 F4343F0700595BAF=禁用音頻
 E8BDDD7C5863FD80=高分辨率峰值
 F6BFC2B001FED6AC=低分辨率峰值
-4F84FB110B4E13D0=使用全局默認值
+4F84FB110B4E13D0=使用全局默認設置
 1AF16DFBC1985174=高分辨率峰值
 52BDDB0D780F6038=低分辨率峰值
 A44BDD7A5EEA710E=更改所有視頻源的所有音頻設置
@@ -16382,7 +16387,7 @@ DA3AFBB0ED0A8F69=編碼視頻格式:
 06664C290CBC0FC4=幀速率:
 
 [video2_DLG_156] ; IDD_GIF_SINK_CFG
-D2204C20B4E2FC1C=編碼透明度 (對常規視頻不利, 但對某些情況可能有益)
+D2204C20B4E2FC1C=編碼透明度 (對常規視頻不利，但對某些情況可能有益)
 C134703B1C276C93=忽略顏色低位的變化 (0-7, 0 = 全質量):
 
 [video2_DLG_157] ; IDD_ITEMINFO2
@@ -16457,6 +16462,19 @@ F8853C9137A8D5F9=25fps
 A0DA2B1E6655A814=60fps
 FDD673B12EE98AB4=從當前視頻對象獲取寬/高/幀率
 B8F37664711499FA=從工程獲取寬/高/幀率
+
+[video_enc_access]
+9DA817481928C2A8=視頻容器格式
+27DAC6BF9C633962=視頻編碼器
+E0F4DF1BF3B9024B=音頻編碼器
+82338E1BFDD91F20=高度
+B360B7BABB041F66=每秒幀數
+DA4540F1AA4B195F=將寬度, 高度, 每秒幀數設置為常用值
+5D64BB65793FCBE3=視頻比特率
+035E91EE22A06FC2=視頻質量係數
+2778E0A6809B085E=音頻比特率
+EADC32372EFAEC28=視頻編碼器選項
+6B82F4E950CE72A9=音頻編碼器選項
 
 [video_processing]
 DB9EF2872E47B399=已加載的預置
@@ -16539,7 +16557,7 @@ B84FCD1DF1AA5035=無法在軌道上插入 FX
 46726F4E2ED035C5=ARA 錯誤
 C2735E8EA9D56BD5=MIDI 總線 %d-%d
 3B0F03168DFDAFF8=重命名預置
-BE281CD925A3942A=將預置保存為默認
+BE281CD925A3942A=將預置保存為默認設置
 2B74B8A9175B98AD=保存預置
 90EC908C46375577=容器輸入 %d
 5B7C448530265B4C=泊塢窗輸出 %d
@@ -16861,7 +16879,7 @@ E84A27AC75C036DE=如果預備則左
 F357AED81F1CAD3C=如果調音台 # 可見
 6405C14909FBEEAA=如果軌道 # 未選定
 C4CC07C35BEDFC6A=如果軌道 # 未預備
-94CF2D931B7F5687=總是 # 隱藏
+94CF2D931B7F5687=始終 # 隱藏
 4355C9B4AFCCC954=預備錄製
 0D321E2C9EDC622F=監聽
 DA35805B1B64BF51=軌道名稱
@@ -19233,7 +19251,7 @@ CC3CE8486F974DD7=相對模式遞增步進:
 652FDBE4978DC084=SWS: 使用 'i' 打開控制台以設置軌道輸入 ⇌ SWS: Open console with 'i' to set track(s) input
 653FFA330201E57D=SWS/FNG: 切換律動標記 8x ⇌ SWS/FNG: Toggle groove markers 8x
 656EF6AEAB2519B8=SWS/S&M: 聚焦主窗口 (關閉其他) ⇌ SWS/S&M: Focus main window (close others)
-657114317D747C41=SWS/wol: 將選定的包絡高度設置為默認 ⇌ SWS/wol: Set selected envelope height to default
+657114317D747C41=SWS/wol: 將選定的包絡高度設置為默認值 ⇌ SWS/wol: Set selected envelope height to default
 6587D2A019164ACA=Xenakios/SWS: 切換對象源文件到文件夾中的上一個 ⇌ Xenakios/SWS: Switch item source file to previous in folder
 6599C0D02BB870C7=SWS/S&M: 現場配置 #%d - 禁用選項 '切換配置時發送所有音符關閉' ⇌ SWS/S&M: Live Config #※d - Disable option 'Send all notes off when switching configs'
 659A2BAF6504D264=SWS: 將對象的開始位置吸附到網格 (更改長度) ⇌ SWS: Quantize item's start to grid (change length)

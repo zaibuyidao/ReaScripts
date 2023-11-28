@@ -1,12 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 1.0.1
+;Version: 1.0.2
 ;Author: zaibuyidao (再補一刀)
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47851/Chinese%20Simplified%20%28%26%2331616%3B%26%2320307%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
-;REAPER: 7.05
-;SWS: 2.13.2.0
 ;changelog:
-;  Init
+;  Brand new REAPER: 7.06, SWS: 2.13.2.0
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -708,14 +706,14 @@ CC64F05E5E298084=缩小
 0EE7D967B88BFC63=FX(&F) 插件设置...
 ED9D4CD707DD43C6=粘贴 FX(&P)\tCtrl+V, Ctrl+Insert
 A7702CFDA3C1F8E6=移除选定的 FX(&R)\tDelete
-BBDA863D4D8B16DD=(如果链的过采样被启用, 将使用实例和链中的最大值)
+BBDA863D4D8B16DD=(如果链的过采样被启用，将使用实例和链中的最大值)
 1666831FB7290315=(需要播放停止/开始才能生效)
 4BB3333A13123CE6=添加 FX...
 BF5B216DD3B96A5D=添加容器
 5B982DEEA8952FF4=自动浮动新的 FX 窗口
 C7317FFF2A84005C=为此轨道构建 16 个 MIDI 路由通道
-84FADFAA8CD497E1=为选定的 FX 输出构建多通道路由...
-A564BFA603B3928B=选定的 FX(&U)\tCtrl+X
+84FADFAA8CD497E1=为所选 FX 输出构建多通道路由...
+A564BFA603B3928B=剪切选定的 FX(&U)\tCtrl+X
 98FC3630864819E4=链 PDC 模式
 28895A60DE891ABF=链过采样
 82EE5475CB6FCE9F=关闭窗口
@@ -726,12 +724,17 @@ B7E90584A70A56CB=复制选定的 FX (包括自动化)
 386E80D3AED15B5D=复制选定的 FX (包括自动化)\tCtrl+Alt+C
 51B6457C06E865F4=剪切选定的 FX
 39397A39236773C2=剪切选定的 FX (包括自动化)
-530F79AA9092B1BE=将 CPU 利用率显示为 1.0! = 最长的块是实时处理的 (最坏情况)
-5E0DED8D9E063003=将 CPU 利用率显示为 1.0c = 一个核心被完全使用
+530F79AA9092B1BE=将 CPU 利用率显示为 1.0! = 最长块是实时处理的 (最坏情况)
+5E0DED8D9E063003=将 CPU 利用率显示为 1.0c = 单个核心被完全使用
 9BB51D16B3CDD603=将 CPU 利用率显示为 100% = 所有核心被完全使用
+33CCC4B796525C58=将 CPU 利用率显示为 100%c = 单个核心被完全使用
 CC1F02E05223C02F=将 FX 窗口停靠在泊坞窗
 91C05340E1D72E6F=FX 插件设置...
+18DCF9819CD01A77=FX 旁通
+5C9B4AC859E9BFEE=FX 旁通\tCtrl+B
 6532320E725A4903=FX 实例过采样
+10DD7D264A556502=FX 离线
+E7A996ECD9441DB9=FX 离线\tCtrl+Alt+B
 1ECFBDD1C7B244B0=强制为选定效果器在无声时启用自动旁通
 F07B8BF09056DBC7=冻结轨道
 B9450FA5B73E0242=将轨道冻结为单声道, 直到最后一个非离线 FX
@@ -763,10 +766,6 @@ CD9DE212764F150E=将选定的 FX 保存为链...
 10AA715E679A1188=将所有键盘输入发送到插件
 D7B29E9AA6329895=在 MCP 中显示嵌入式 UI
 27621D9AD3D28A8A=在 TCP 中显示嵌入式 UI
-90788E770202C34E=切换选定的 FX 旁通
-3821C0F763D1850D=切换选定的 FX 旁通\tCtrl+B
-64F4A9D95C4E316D=切换选定的 FX 离线
-685BE17D4DA686FC=切换选定的 FX 离线\tCtrl+Alt+B
 43EF57CE3ADA8A28=解冻轨道
 024457DEEDAF4C2C=窗口浮动选定的 FX
 3683BEB2CD7D7896=编辑 JS FX(&E)...
@@ -833,9 +832,10 @@ B0A42D963CEF845C=插入多条轨道...
 7D82EC3419C2A0DA=<磁盘上的自动化对象>
 271F989089915585=预备包络用于录音
 558EC42D6AC40A92=此包络的自动化对象选项
+5749253589C89852=平均
 051CA74B46992E79=旁通包络
 B4247305029ECD51=在自动化对象外旁通基础包络
-864C6684E0624C71=当基础包络被旁通时, 追逐非 FX 包络到自动化对象
+864C6684E0624C71=当基础包络被旁通时，追逐非 FX 包络到自动化对象
 A6EF93273B597A8D=清除或移除包络...
 0D521319E895BADD=复制点
 E801B83593C3DB47=创建池化克隆
@@ -844,9 +844,11 @@ A2FAC659F6C6EC6C=创建非池化克隆
 3F38FAD4A92F4B30=此包络的默认点形状
 974BF434A2393C3D=删除自动化对象, 保留点
 F1C5C2EC7C56CF0D=在时间选区中删除点
+CDC1C47012275EE0=FX 包络: 重叠自动化对象组合模式
 4EFA5E888C26F6BA=粘合
 CD674FEA536FDABD=隐藏包络
 A221F0C79D56397A=插入新的自动化对象
+FCA60AD8EFD1FE3F=乘法
 7A13F82CEDFD20A9=音高包络: 范围/捕捉...
 176C5452D56FF52A=自动化对象之外的工程默认行为
 1A62BA3FE4EDC314=属性...
@@ -856,6 +858,8 @@ D4FA2BE840D22DA1=此包络的范围/缩放
 2504EFBB70A00BF0=将点重置为零/中心
 C038339424CBD482=选择包络 (包络名称)
 727B7F2EB869FFD5=在车道中显示包络
+7D182E7E05A64BCA=和
+8633B7FDAAC9319B=带有中点偏置的和
 63567E39331B4BBD=速度包络: 范围...
 E23E7C59E700D167=音量包络: 幅度缩放
 15441270F2148E26=音量包络: 推子缩放
@@ -919,13 +923,13 @@ A35385C769502F3F=向上移动
 4523D3871D7D7B77=处理所有通知
 888CF2A8F9990B9E=重命名预置...
 C35B6227A5807B01=保存最小撤销状态
-77D4606E1E255B38=将预置保存为默认...
+77D4606E1E255B38=将预置保存为默认设置...
 37E1C985732EDDC1=保存预置...
 D52E0DFA3EAEDD2D=使用自动尾部检测 (允许工程范围内的插件自动旁通)
 5F00BE84E91B6C9B=转到上一个标记
 94D3B132B355DDD4=使用走带的起始/终止作为标记
 51B4B159DD69FD3B=转到下一个标记
-3460E53D021E70FE=关闭所有工程, 但保留当前工程
+3460E53D021E70FE=关闭所有工程，但保留当前工程
 213CDB1B65EA8A91=监听 FX...
 E66161E882C570BC=选择时间
 C5B3CE5C6E29439A=编辑拍号标记...
@@ -954,6 +958,8 @@ DC099AA68B8D894C=删除复合区域 (包括源媒体)
 C39EC00F8E6AAAD5=播放所有车道
 E3EAC8304C4BCC75=录制到第一个可用的车道
 A01B449A34C33E50=关闭复合
+81D7E6162319FD03=框选
+AD81A52B1BF91AB5=剃刀编辑
 3E6F5B4FF4F5BC43=创建新文件夹...
 D86C7175F627BC38=选择所有对象
 271D7187C80C7F43=MIDI 编辑器
@@ -966,6 +972,7 @@ D489C67E376967C8=I/O
 FC55E4C505C541DE=参数
 0687FB850B209D99=参数调制/链接/MIDI 链接
 FA08A03DC81EC720=插件名称
+09E83C256B15AF0F=搜索过滤器
 B8A56B8F77C88B77=摇摆
 09F51D13C4C28C6A=轨道通道
 DD0CE22D75D36ED1=轨道名称
@@ -1008,14 +1015,6 @@ FDFF2C38C037D04E=无操作 (无动作)
 887AC55D66DDCCA9=选项: MIDI 编辑器鼠标修饰键首选项...
 DCFEAB8BD451EB5C=显示操作列表
 23CA90FBC72F010D=切换显示主控轨道和速度包络
-12C3FAD652693FD1=工具栏: 在鼠标光标处打开 MIDI 工具栏 1
-BBE9B04C60CAD394=工具栏: 在鼠标光标处打开 MIDI 工具栏 2
-BF0E1DB8639E5D8F=工具栏: 在鼠标光标处打开 MIDI 工具栏 3
-4A717A29C667E83A=工具栏: 在鼠标光标处打开 MIDI 工具栏 4
-38FDB8540DCC8CE5=工具栏: 在鼠标光标处打开 MIDI 工具栏 5
-E0C2BFFA3E68A1C8=工具栏: 在鼠标光标处打开 MIDI 工具栏 6
-9DE34C2D25A9E7C3=工具栏: 在鼠标光标处打开 MIDI 工具栏 7
-C1284F3D2876ADCE=工具栏: 在鼠标光标处打开 MIDI 工具栏 8
 84EFD288FCD3D0A3=轨道: 将媒体播放偏移应用到接收源轨道
 B12DCB764FB6F550=走带: 暂停
 EE7C68EF6C212F98=走带: 播放
@@ -1037,7 +1036,7 @@ EF2E4D6B32E12F9F=视图: 向上滚动视图
 0BE297C8D70E44F6=MIDI 输入
 93244D3BB94E6F33=无预置
 17B3AE10A9CC3695=插件状态数据大小:
-274E7C84B3E58DB8=重置为出厂默认
+274E7C84B3E58DB8=重置为出厂默认设置
 BA2E51CA750060F6=输入 %d
 9314927F387AB957=输出 %d
 F420AC1723391ECE=主控轨道
@@ -1060,10 +1059,11 @@ F0CDBE121A8CBFA9=批量转换器
 BABD655B2A5AED87=选择一个目录:
 21D9AFD3561EE5AB=立体声
 3A43A253FE2BECE6=文件
+1F548D6D0107E049=CPU:
 E53622684802B745=主控
 9747AB7E1489B5C8=PDC
 36A965ABAC0E2CF3=性能
-FE54809EE740B495=(除非您知道自己在做什么, 否则保留为 9)
+FE54809EE740B495=(除非您知道自己在做什么，否则保留为 9)
 28B58959477A4C84=MIDI 输入:
 8E37CA9F4D4DE00B=MIDI 输出:
 18CD0ED91946CEB8=大小调整:
@@ -1281,7 +1281,7 @@ ED3B2E348AB4097C=空
 7C21CDD2AEBBA4D6=被包围的对象替换包围它们的对象
 5BA4387FA574D390=对象始终混合
 DD2984E0D3995E66=对象始终替换较早的对象
-94DEF1C233373209=工程默认
+94DEF1C233373209=工程默认设置
 AD6ADC4BDE973BA3=选择替换文件:
 7C0BD7F6D6C1126C=代码错误
 3DC3C3589C65D706=MIDI
@@ -1752,7 +1752,7 @@ FCE435FD0C037E2E=分段:
 FE52885EB65C3114=删除所有标记
 
 [DLG_102] ; IDD_MAIN
-246546A2AD3EB0B4=REAPER (初始化中)
+246546A2AD3EB0B4=REAPER (正在初始化)
 360EA1C1D674566F=轨道视图
 9320B43CE8F50284=时间线
 
@@ -1827,7 +1827,7 @@ D754112382628869=从源开始:
 
 [DLG_126] ; IDD_PROJECTSETTINGS_SETTINGS
 2874B5A9A972DA56=工程采样率:
-1B33637BF4614F23=Hz (如果未设置, 将使用硬件默认值)
+1B33637BF4614F23=Hz (如未设置，将使用硬件默认值)
 8FEAABC006D1F98D=强制工程的速度/拍号变化在整个采样上发生
 658C937BDBE2A0A1=工程 BPM:
 16F11A004E847DE0=拍号
@@ -1859,8 +1859,8 @@ F491EC85CC245A7C=自动 .wav (推荐)
 B51253B86D90D327=使用全局首选项 (不复制媒体到工程路径)
 824F5F99CC24896D=复制媒体到工程路径
 0E4768BB51B92D8B=不复制媒体到工程路径
-DC49DC62BD4643CF=保存媒体文件的路径 (可以是相对路径, 留空为与工程文件相同的路径):
-6B91E28B685614B2=次要录音路径 (留空为无, 可按轨道启用):
+DC49DC62BD4643CF=保存媒体文件的路径 (可以是相对路径，留空为与工程文件相同的路径):
+6B91E28B685614B2=次要录音路径 (留空为无，可按轨道启用):
 26952E15FB6FAB2E=导入媒体到工程时:
 E9AE30152DA09181=新录音的音频格式:
 E185A4164E1A47FD=应用 FX, 粘合, 冻结等格式:
@@ -1973,10 +1973,10 @@ DD50F7CC82200C55=兆字节 (0 表示禁用撤销/提示保存)
 45EA335BA4DECD2B=包括选择:
 134D38AC942D1CD5=包络点
 CEC70644299ECD14=光标位置
-D4CCB32B535550F6=接近满撤销内存时, 保留最新的撤销状态
+D4CCB32B535550F6=接近满撤销内存时，保留最新的撤销状态
 6B02132585D23245=与工程文件一起保存撤销历史 (在 .RPP-UNDO 文件中)
 27843DF0E31CB0D7=允许加载撤销历史
-1DC49DE353C8BF2C=尽可能存储多个重做路径 (可能使用大量 RAM)
+1DC49DE353C8BF2C=尽可能存储多个重做路径 (可能使用大量内存)
 7F0AEC85D5651080=在启动时打开工程:
 D0B6A7F445E961F2=启动时自动检查 REAPER 的新版本
 FDC0E0D9342BD62F=从资源管理器/访达打开媒体时创建新工程选项卡
@@ -2064,8 +2064,8 @@ D5D0203E4FFCD927=MIDI 硬件设置
 028C731BC0576362=限制 MIDI 输出到一个线程
 751EA016639ED40A=所有音符关闭
 E16CBE842A37B395=音高/持续
-B7CB4986C15E8D4B=复位依照:
-9EC74E86B379FB1B=重置:
+B7CB4986C15E8D4B=重置由:
+9EC74E86B379FB1B=重置在:
 82AB49B39099AD8F=停止/停止寻轨
 
 [DLG_154] ; IDD_PREFS_PLUGINS
@@ -2088,11 +2088,12 @@ C7B479203D71CE7C=一次只允许打开一个 FX 链窗口
 4DFA4EECE5BCD99F=在 FX 链窗口的右侧显示 FX 列表
 8DD751BEEF8C6CD7=在 FX 列表上方显示 FX 链按钮
 85494A154E9F7B8E=在 FX UI 上方显示注释字段
+93AB0A51C603D260=将 FX 状态显示为名称中的可访问文本
 20D2538F88926BA7=在 FX 按钮右键菜单中显示当前轨道 FX
 69380E9888485D32=关闭 FX 窗口时不创建撤销点
 BC7E46D8B652D860=最近使用列表最大值:
 8E5AEF0B57EBCA22=只显示与过滤字符串匹配的 FX:
-C7B549E0E6B82FD1=重置为推荐的默认值
+C7B549E0E6B82FD1=重置为推荐的默认设置
 
 [DLG_155] ; IDD_WAVESINK_CFG
 35DF1AFCAFFB37CD=WAV 位深:
@@ -2124,7 +2125,7 @@ F67D1FDC9D0ABC37=主输出
 [DLG_157] ; IDD_PREFS_CSURF
 2494101BD051C898=控制面板/OSC/网络控制
 82A49039D1782EAE=控制面板显示更新频率:
-D5AD81A3A8A8050D=Hz (默认值: 15)
+D5AD81A3A8A8050D=Hz (默认: 15)
 9F6C638411280BB3=打开面板 MIDI 设备时发出警告
 0E6F8D5A50F68297=当停止且不是活跃应用程序时关闭控制面板设备
 1BD0786A46F8FDAB=(更改将立即生效)
@@ -2203,10 +2204,10 @@ AF239E1DB5AA0E08=瞬态检测
 8EB832E42FDC2501=将媒体对象边缘视为瞬态
 2EB90B46315D20B6=锁定对象的纹波编辑行为:
 E11DAEF2BBEB112C=仅当选择两个对象时允许双重修剪 (编辑共享媒体对象边缘)
-32B5CB1F9A8B8705=当启用修剪媒体对象后的内容时, 交叉淡化在淡化编辑期间保持一致
+32B5CB1F9A8B8705=当启用修剪媒体对象后的内容时，交叉淡化在淡化编辑期间保持一致
 AA5A7A99565E6043=自动删除通过将对象拖到最后一条轨道下方并返回而创建的空轨道
 93565C719250C592=拖动活跃片段的源开始偏移量会调整所有片段的偏移量
-6F6DCD0B40734C2E=如果没有选择任何对象, 某些分割/修剪/删除操作会影响编辑光标处的所有对象
+6F6DCD0B40734C2E=如果没有选择任何对象，某些分割/修剪/删除操作会影响编辑光标处的所有对象
 97C7A665BF565738=拉伸剃刀编辑区域会在音频对象中添加拉伸标记
 
 [DLG_173] ; IDD_LTCITEMINFO
@@ -2229,7 +2230,7 @@ EFFE206ECF958DFF=保存 FX 预置
 32E7301766154408=区域渲染矩阵...
 
 [DLG_178] ; IDD_PREFS_DEFS_TRACK
-00BEC948D3FFC09A=新轨道/发送/轨道硬件输出的默认值
+00BEC948D3FFC09A=新轨道/发送/轨道硬件输出的默认设置
 137F383180C8C7DB=轨道音量推子增益:
 DFAE18AB665A2C0A=启用主 (父级) 发送
 6AFE4A787F679734=可见的包络:
@@ -2239,7 +2240,7 @@ F838F04E07ED4986=包络点形状:
 062FABF640E027BC=预备新包络
 E61DCE0EF7CA6BEE=新工程中的轨道高度:
 580A497A940808A8=在调音台中显示
-8AF46F2727A3966B=固定车道默认值
+8AF46F2727A3966B=固定车道默认设置
 4E462B362D2C3662=录制配置:
 CE6B20605FC62E9A=按钮1
 B4940BDB9BBA9666=新音量包络的缩放:
@@ -2378,7 +2379,7 @@ F4C9BD52F8CC3225=RMS 窗口:
 FD6CB597F81A51BE=音频缓冲设置
 A209F590DEBF0FAE=自动检测所需的音频处理线程数量
 61BEF8CE252BFBF0=音频读取/处理线程:
-164AAD0DE75983A4=(推荐: 每颗 CPU 核心 1 个, 也可以是 0)
+164AAD0DE75983A4=(推荐: 每颗 CPU 核心 1 个，也可以是 0)
 CE81FD6CDFB4B2A1=线程优先级:
 FC932B76ACB875B9=行为:
 2C527E4BC4E1E850=媒体缓冲大小:
@@ -2390,7 +2391,7 @@ C0B78103DE8BAEC1=对带有打开的 MIDI 编辑器的轨道禁用媒体缓冲 (�
 BEB8AEBD84C1A90D=ms (默认为 200ms)
 51AB61DBF5CB4A76=FX 处理/多进程设置
 A8D66160635DD938=预处理 FX - 优越的多进程和较低的界面延迟
-9C72AF76953C2AA7=[可能与某些 FX (如 UAD) 不兼容, 实时监听不是多进程的]
+9C72AF76953C2AA7=[可能与某些 FX (如 UAD) 不兼容，实时监听不是多进程的]
 A0C79D72277D6F0F=提前渲染:
 3DA7AD6DA60B893B=ms (默认: 200)
 D3F56CEFCFB9B99E=允许在没有 FX 的轨道上进行 (可能会提高多处理器的利用率)
@@ -2398,7 +2399,7 @@ D3F56CEFCFB9B99E=允许在没有 FX 的轨道上进行 (可能会提高多处理
 1E34C617E5353F03=允许实时 FX 多进程在:
 A6EE14AB8179B8D8=CPUs
 281759C8AD758D95=高级磁盘 I/O 选项...
-3CF333030AFB4087=[启用实时输入的多进程, 但在低延迟下可能会降低性能]
+3CF333030AFB4087=[启用实时输入的多进程，但在低延迟下可能会降低性能]
 
 [DLG_204] ; IDD_ABOUT_LICENSE
 F06854788A1D9107=授权给:
@@ -2415,10 +2416,10 @@ FCF3913D3BF1D3E1=发送到轨道 X
 [DLG_209] ; IDD_PREFS_PLUGINS_DX
 3843E8618CE5C964=ReWire 设置
 99AA745451FB03DE=ReWire/Direct-X 插件设置
-3D0D0CE24C134644=ReWire 调音台支持 (作为 ReWire 调音台, 在插件浏览器中显示 ReWire 设备)
+3D0D0CE24C134644=ReWire 调音台支持 (作为 ReWire 调音台，在插件浏览器中显示 ReWire 设备)
 2F509ABA2BB63239=打开 ReWire 设备时自动打开面板
 F1DA4A4F0E2A1E52=当 ReWire 设备活跃时停止运行 FX
-CFFC69503B85B08D=启动时检查 ReWire 调音台/设备 (如果存在, 则自动进入客户端模式)
+CFFC69503B85B08D=启动时检查 ReWire 调音台/设备 (如果存在，则自动进入客户端模式)
 7E36CB7319E2A638=在客户端模式下使用备选配置文件 (reaper-rewire.ini)
 F4398683B50A8B88=ReWire 客户端工程设置
 253441B2FCA18BE2=Direct-X (DX)
@@ -2442,7 +2443,7 @@ EF9F2D3E3EEF2505=停止/重置时不发送音符关闭或音高重置消息
 F27EE9EB697AD546=通知插件离线渲染状态
 EB5AD63A75E962D6=打开插件配置窗口时旁通音频 (适用于在多线程中可能出现问题的 VST)
 9AFB50287E6BE13A=UAD-1 同步模式 (减少 CPU 消耗) - 需要禁用预处理 FX
-D7D5E6EF54BF3AAB=允许完全卸载 VST 插件 (减少内存使用, 但可能不兼容)
+D7D5E6EF54BF3AAB=允许完全卸载 VST 插件 (减少内存使用，但可能不兼容)
 40D2555271B4D0B9=参数自动化通知:
 
 [DLG_212] ; IDD_PREFS_PROJECT
@@ -2534,7 +2535,7 @@ C38622521AF10C6B=拍号标记
 4F3654C5B59115AD=当录制时使用备选键盘区段
 025B90FA447C6C83=防止 ALT 键聚焦主菜单
 CB03E0C93574765E=允许在多个窗口中使用空格键进行导航
-FF385158D216E0FD=当在插件文本字段中按下空格键时, 发送到主窗口
+FF385158D216E0FD=当在插件文本字段中按下空格键时，发送到主窗口
 CE44064C1605950D=瞬时键盘区段覆盖的超时时长:
 E6999CD562DABC49=为操作分配键盘快捷键或更改现有的快捷键
 E6B1DF361BBAF9D5=查看可打印/可搜索的键盘快捷键网页
@@ -2628,8 +2629,8 @@ EE921297CB511CD9=KB (更快, 使用更多地址空间)
 34AA37802DFE1CD4=显示媒体对象音高/播放速率 (如果设置)
 935A2F245953B5FD=在不透明背景上显示标签以便于阅读
 F3A483F6782AC452=当对象边缘不可见时显示标签
-B8EB0572152C2FAB=当媒体对象高度超过设定值时, 在对象上方绘制标签:
-C391457FF967B9AA=当媒体对象高度低于设定值时, 隐藏标签:
+B8EB0572152C2FAB=当媒体对象高度超过设定值时，在对象上方绘制标签:
+C391457FF967B9AA=当媒体对象高度低于设定值时，隐藏标签:
 97D9C4A892786BD0=片段播放速率/音高:
 304B9DC9DED916AF=标准标签
 7A853E8E494A5476=缩写
@@ -2646,7 +2647,7 @@ CE6DFBAB9235015B=无活跃包络
 9C0E7F7043985A17=音量旋钮
 42F8EF5BB3B65CDC=池化的 MIDI/ARA
 9284455D75FB9907=已编组
-81446DD96A434032=当片段高度低于设定值时, 隐藏按钮:
+81446DD96A434032=当片段高度低于设定值时，隐藏按钮:
 6299F379BCF4015F=在对象上绘制选择指示器
 2F1F4144014A4016=对象音量手柄:
 
@@ -2757,7 +2758,7 @@ AF1BA6057E9FEB1B=PPQ (默认: 32)
 14EF3AA1E739B5F8=(ms)
 5DC7053F3C314EAE=导入多通道 MIDI 文件:
 8199F55C57F15C9E=处理包含元事件的格式 0 MIDI 文件，就好像它们是多通道 MIDI 文件
-B466B9F6A8F80E2B=总是提示从带有简单速度映射的 MIDI 文件导入速度 (按住 ctrl 键切换)
+B466B9F6A8F80E2B=始终提示从带有简单速度映射的 MIDI 文件导入速度 (按住 ctrl 键切换)
 440F1C332D682150=导入 MIDI 文件时将拍号变化事件吸附到整个小节
 6DFAC1A8823DBDB3=导入 MIDI 文件时将速度变化事件吸附到整个节拍
 0F3D48F72EB91BCE=导出 .MID 文本事件的字符集:
@@ -2843,7 +2844,7 @@ C412A266B462CD69=查找图片:
 F39EB4BC3304012B=注意:并非所有的颜色和图片都会始终可见！
 
 [DLG_270] ; IDD_GLUEDLG
-E1CA5A9A5CE93078=未进行渲染, 预计时间无穷大
+E1CA5A9A5CE93078=未渲染，预计时间无穷大
 511EAD28BA4AE493=格式规范
 
 [DLG_273] ; IDD_OPENPROJECT
@@ -3198,7 +3199,7 @@ F4981427F70572B6=移动音频对象时，视频帧寻轨到:
 B5CF8BA44C2A22BC=导入时使用方向标签自动旋转视频和图片
 93ABB433C5184D67=静态图片缩略图显示模式:
 768439BADEEEE063=默认长度 (ms):
-8C5A726AC2E24BE2=为视频代码编辑器使用标准编辑控制 (为了可访问性, 缺少许多功能)
+8C5A726AC2E24BE2=为视频代码编辑器使用标准编辑控制 (为了可访问性，缺少许多功能)
 
 [DLG_451] ; IDD_PREFS_MEDIA_IMPORT
 A8F7CB99AD073D2A=媒体导入
@@ -3362,7 +3363,7 @@ A7BA0064C3A88716=输出设备:
 [DLG_474] ; IDD_PREFS_PATH
 81BBA2B36371EDB5=路径设置
 8F307CE5C88DF54B=新工程默认保存路径:
-973B67107DB3B77C=默认渲染路径 (如果留空, 将使用当前工程目录(如果有)):
+973B67107DB3B77C=默认渲染路径 (若未指定，则使用当前工程目录，前提是存在该目录):
 E19AF0FCD67934A5=当工程未保存且没有配置录音路径时的默认录音路径:
 55FF305FB05C16EA=将所有峰值缓存 (.reapeaks) 存储在另一个路径:
 6934246FDA04EE9E=以下路径使用备选峰值缓存路径 (多个路径由分号分隔):
@@ -3403,7 +3404,7 @@ E0A50F2BFF5F6CA0=属性(&P)...
 7B0B201A05B78C88=交叉淡化时间
 
 [DLG_477] ; IDD_PREFS_DEFS_ITEM
-945B1F62AEA42574=默认媒体对象淡化/交叉淡化
+945B1F62AEA42574=媒体对象淡化/交叉淡化的默认设置
 8F23EC8285835C86=默认淡入/淡出:
 AA194B48239ACDA4=默认交叉淡化:
 E7DA02B3D72195E5=默认淡入/淡出形状:
@@ -3590,7 +3591,7 @@ D5FC3581D08FD781=Python dll 目录的自定义路径:
 
 [DLG_516] ; IDD_LANG
 6C5B59EF704E3CB9=REAPER 选择语言
-60F1A9BC3DC0E3F4=总是加载
+60F1A9BC3DC0E3F4=始终加载
 3B76403C5F6D3B14=加载一次
 
 [DLG_517] ; IDD_PREFS_SEEK
@@ -3613,13 +3614,13 @@ BD2850523C80580D=在寻轨前，播放到下一个工程标记，当前区域的
 E94B4846A2ABAF90=循环/车道录音设置
 4F2B31BBF3D2C295=在循环录音中，如果录制了至少一个完整的循环，丢弃不完整的第一个或最后一个片段
 376DE05863AFD4A7=完整片段的阈值:
-AEF2A1CEFBD11981=MIDI 堆叠/替换录音时总是生成与所选长度相同的媒体对象
+AEF2A1CEFBD11981=MIDI 堆叠/替换录音时始终生成与所选长度相同的媒体对象
 208EE71E50F7ABCB=录音且循环时，将录制的媒体加入工程:
 86CDD3047B701541=停止时 (默认, 推荐)
 C5B9E0F7E2858D5B=循环时创建新文件
-04B1EA7C5BB5F4F8=每个循环 (创建新文件, 适用于即时录制多个音频层等)
+04B1EA7C5BB5F4F8=每个循环 (创建新文件，适用于即时录制多个音频层等)
 F6F73FA676A25958=录制到固定的车道轨道
-2D2339043C050BB9=当自动切录录音至新车道时，添加整个录音
+AAFDD239DB19560C=当自动切录录音至固定车道轨道时，添加整个录音
 
 [DLG_519] ; IDD_PREFS_AUTOMATION
 2774BF0E396FA6EA=自动化录音返回速度:
@@ -3632,7 +3633,7 @@ A034ABCC948D1990=隐藏包络线:
 28BEB3FF40AEB890=添加音量/声像包络线时，应用修整到包络线并重置修整:
 D53F5AD8EB230214=在写入模式下录制自动化，重复/寻轨/停止时:
 FAF6019D4C87F0AD=循环时重置锁存状态
-0B424BBCE8CC663B=总是录制到自动化对象中
+0B424BBCE8CC663B=始终录制到自动化对象中
 A0CD2C74E79AEDFA=录制到现有的未选择的自动化对象中
 553CF5385ED037A6=默认情况下循环新的自动化对象
 5E51BC4C073B3DC8=在属性对话框中编辑基线/幅度会影响到池中的副本
@@ -3693,7 +3694,7 @@ EB961EBF9974196F=以下 MIDI 输出设备未响应:\r\n\r\n\t%s\r\n\r\nREAPER �
 
 [DLG_524] ; IDD_PREFS_APPEAR_FADES
 543781076A1C8193=媒体对象淡化/交叉淡化外观
-63881AD1B89057EB=防止编辑淡入/淡出, 当对象小于:
+63881AD1B89057EB=防止编辑淡入/淡出，当对象小于:
 3835FCCD4FE00102=像素宽或
 AB160C292520C435=像素高
 C069535E9D8BB671=允许鼠标选择或操作:
@@ -3792,7 +3793,7 @@ C961AC2601ECA18A=新实例
 [DLG_571] ; IDD_FX_FOLDER_RENAME
 4C2D7725EDBCDEC9=编辑文件夹
 D4EC5A82932B5414=智能文件夹
-8DBD59617BDD6D1F=过滤器包含一系列 (可选地加引号的) 字符串, 这些字符串必须匹配。还可以使用关键字 OR 和 NOT。
+8DBD59617BDD6D1F=过滤器包含一系列 (可选地加引号的) 字符串，这些字符串必须匹配。还可以使用关键字 OR 和 NOT。
 
 [DLG_575] ; IDD_WARPMARKER_EDIT
 7F7D4B6A51C24C9D=起始速率:
@@ -3842,13 +3843,13 @@ CE0D75895E3F6560=使用 mlockall() 锁定进程内存 (小心)
 9C4F9E297401BE7F=制表符
 37BBEEDCE2DE6F68=任何空白
 4FDC1EFF5C6004A7=歌词应在文本文件中，每行一个小节，用空格或制表符分隔。
-94FB231FB797C408=歌词将被导入到最后触碰的轨道, 作为 MIDI 歌词事件。
+94FB231FB797C408=歌词将被导入到最后触碰的轨道，作为 MIDI 歌词事件。
 67B478FBAAAE55DA=如有需要，将在该轨道上创建一个新的 MIDI 对象。
 1196B16C194B9363=将歌词划分为:
 2D34054801CD4D52=每隔
 
 [DLG_580] ; IDD_LYRICEXPORT
-265F8C42D8F617CB=歌词将被导出到文本文件, 每行一个小节, 用空格或制表符分隔。
+265F8C42D8F617CB=歌词将被导出到文本文件，每行一个小节，用空格或制表符分隔。
 8D7322DC72C4E917=歌词将从最后触碰的轨道的 MIDI 歌词事件中导出。
 B28A52B58A4A4E89=用制表符划分歌词每隔
 
@@ -4013,7 +4014,7 @@ FD0551FF7D52847C=为支持它的插件启用 ARA (需要重新启动 REAPER)
 B2DC752899C6788C=请参阅 '首选项/外观/媒体' 以显示或隐藏池化编辑按钮。
 
 [DLG_609] ; IDD_PREFS_DEFS_ITEMLOOP
-C3CD417ED056158B=媒体对象循环默认值
+C3CD417ED056158B=媒体对象循环默认设置
 2D4761A633BFF25D=设置循环源:
 029D13A4E4B66A57=导入的对象
 9555D15F0FC2BC6E=MIDI 对象
@@ -4150,7 +4151,7 @@ EF23E440CDB08FB9=强制选定对象的不活跃片段媒体离线
 CF7B9F5A9CAA1F10=分割现有对象并添加片段 (默认)
 E8B16B535591DB8E=修剪现有对象 (磁带模式)
 1A9C1BED518B61F1=按层添加媒体对象
-6287E692CC0D7E99=循环录制总是添加片段
+6287E692CC0D7E99=循环录制始终添加片段
 5F29BB8ACAC6683C=垂直偏移重叠的媒体对象
 1D8D51A335CC2747=显示所有片段 (有空间时)
 A85F9EB500D28126=片段行为
@@ -4241,7 +4242,7 @@ E85949C4173AD547=扫描新插件(&S)\tF5
 04D688D70D3C0F39=关闭\tEsc
 
 [MENU_300] ; IDR_CONTEXTS_0
-5BD74D193D4FB34D=0TrackCtl
+;5BD74D193D4FB34D=0TrackCtl
 7A28ADA77FABEBC1=可视分隔带
 1BA41741E6E843BB=在轨道前插入分隔带
 FD9248443C5B2CD0=在轨道后插入分隔带
@@ -4257,7 +4258,7 @@ CB796832F14A03CA=删除选定包络点
 7E5922C933467DB9=删除时间选区内的包络点
 
 [MENU_301] ; IDR_CONTEXTS_1
-B2B766E2DE1404E6=1MediaItems
+;B2B766E2DE1404E6=1MediaItems
 0445CE0F3B805BEA=片段通道模式: 反转立体声
 AD41E4C5F1E6E2B6=片段通道模式: 单声道 (缩混)
 99DA3FD9B4724DED=片段通道模式: 单声道 (左)
@@ -4397,7 +4398,7 @@ CC58BDDA63312D76=复制对象
 4E68549A5EFD26D8=在前一个零交叉点处分割对象
 
 [MENU_302] ; IDR_CONTEXTS_2
-4332D8BB1ED787A3=2LoopSel
+;4332D8BB1ED787A3=2LoopSel
 864F12EC431E3535=移除选区(&R)
 F88B2541FF78AC41=移除选区
 8E28144057BCB82E=缩放选区
@@ -4414,53 +4415,53 @@ BC7D14E8A0C0A671=在车道中显示工程区域
 7AEB6371856548A9=显示速度变化
 C434EFFB957464DF=显示拍号变化
 7CB34621789AEA3E=在单独的车道中显示速度和拍号变化
-AAEE59115FD38950=即使区域被命名, 也显示区域编号
+AAEE59115FD38950=即使区域被命名，也显示区域编号
 E5E4251355DCA108=当区域边缘不可见时显示区域编号/名称
 E4AAD54D49F7DB30=从时间选区设置工程速度 (检测速度, 对齐对象)
 349F55EF86232987=从时间选区创建小节 (检测速度)
 
 [MENU_303] ; IDR_CONTEXTS_3
-A3FA5A822CC7D898=3TrackEmpty
+;A3FA5A822CC7D898=3TrackEmpty
 BB1E22C4CE52BD4B=显示主控轨道
 B9D58A6FF2858C18=在编排视图的右侧显示 TCP
 
 [MENU_304] ; IDR_CONTEXTS_4
-7E677F97CEBA3077=4EnvelopeItemCtx
+;7E677F97CEBA3077=4EnvelopeItemCtx
 639D27DB1B0A2208=设置包络点的值...
 F0A2A2F707D939B6=设置包络点的形状
 A82A9554C79824AA=删除包络点
 AC4B7D06A00FB424=删除选定点
 
 [MENU_305] ; IDR_CONTEXTS_5
-8A354CEBCC0207C4=5EnvelopeItemCtx2
+;8A354CEBCC0207C4=5EnvelopeItemCtx2
 79E306F884A774F4=插入包络点
 E9D34B3745E6649D=选择时间选区内的所有点
 5880980F27869CBB=删除包络点
 0ABF4CDD8331C92E=反转包络点
 
 [MENU_306] ; IDR_CONTEXTS_6
-D01D0F925E9AC2F4=6Automationmodes
+;D01D0F925E9AC2F4=6Automationmodes
 5E293FAC1EC4D199=全局自动化覆盖:
 D0FA771D463FBE0D=无全局覆盖 (为每条轨道设置自动化模式)
 3A2E1BB307417335=旁通所有包络
 8532ABD7CF5DF918=修剪/读取 (默认, 推子用于修剪但不被录制)
-97C9225E101F0032=锁存预览 (允许临时覆盖预备包络, 但不写入更改)
+97C9225E101F0032=锁存预览 (允许临时覆盖预备包络，但不写入更改)
 
 [MENU_307] ; IDR_CONTEXTS_7
-7D7546841B933986=7TransportRecMenu
+;7D7546841B933986=7TransportRecMenu
 
 [MENU_308] ; IDR_CONTEXTS_8
-F05A50F8DEFF9FD1=8envctx
+;F05A50F8DEFF9FD1=8envctx
 
 [MENU_309] ; IDR_CONTEXTS_9
-854F23643057608E=9monoctx
+;854F23643057608E=9monoctx
 190FB54671D9F002=单声道模式: L+R
 43F6D751F81560E7=单声道模式: L
 43F6BD51F81534B9=单声道模式: R
 1908C54671D3EC84=单声道模式: L-R
 
 [MENU_310] ; IDR_CONTEXTS_10
-571D72F8566C1E8C=10was0FxCtx
+;571D72F8566C1E8C=10was0FxCtx
 7D3F4578BF3A7F37=添加 FX...\tInsert, A
 AB4F7C7D3711EDB4=替换 FX...\tCtrl+R
 C8A928842C8BAF25=加载 FX 链...\tShift+Insert, Shift+A
@@ -4473,10 +4474,10 @@ E1EBB4B48C8D4114=将所有 FX 保存为链...\tCtrl+S
 F5404D2DC6D9C463=关闭 FX 窗口
 
 [MENU_311] ; IDR_CONTEXTS_11
-2480B38FA0706196=11PlayrateCtx
+;2480B38FA0706196=11PlayrateCtx
 
 [MENU_312] ; IDR_CONTEXTS_12
-90EE71234A070984=12PerfCtx
+;90EE71234A070984=12PerfCtx
 1E06E4405DEA8BB9=显示 CPU 图表
 A92306A0DFCF9F5C=在图表上显示实时 (RT) CPU
 B262FAD75BA8BA4A=显示 CPU 使用情况
@@ -4485,15 +4486,15 @@ B262FAD75BA8BA4A=显示 CPU 使用情况
 B7F32A9F98A13DBE=保持 RT 最长块处理时间
 BDCA3CD61B25F6F5=显示 xrun 计数器
 1D8E0673D38702E7=显示磁盘使用情况
-7B7E834E49D135B0=显示 RAM 使用情况
-EC37BCC6C18B2137=显示空闲系统 RAM 而非使用量
+7B7E834E49D135B0=显示内存使用情况
+EC37BCC6C18B2137=显示空闲系统内存而非使用量
 0E1582F9AD466D68=显示视频负载
 6366F69EC06B6F04=显示 FX 和媒体对象 CPU 使用情况
 1A64FFC5FC821B62=重置图表
 EEB77FAA4A9ACCDA=将性能监测仪停靠在泊坞窗
 
 [MENU_314] ; IDR_CONTEXTS_14
-4F1AB2C4B16A7E52=14was1FxMixerCtx
+;4F1AB2C4B16A7E52=14was1FxMixerCtx
 E5EC9FB6412B6909=快速添加 FX
 D3063B43F9DA5F98=快速替换 FX
 23A84719ED8EB139=剪切 FX
@@ -4508,7 +4509,7 @@ A7C1D5504532C214=离线 FX
 B880D4A96E9537CA=删除 FX
 
 [MENU_315] ; IDR_CONTEXTS_15
-4D20578AB111ACF0=15was2SendMixerCtx
+;4D20578AB111ACF0=15was2SendMixerCtx
 B75CC57A4B1F89C5=显示发送参数\t(单击)
 AB3A6BCE325A5628=显示发送参数
 A3128BC4BBE6C116=静音发送\tShift+单击
@@ -4519,7 +4520,7 @@ B19A3615EADF772D=显示轨道路由窗口
 F0411A69BCF40C1B=转到发送目标轨道
 
 [MENU_316] ; IDR_CONTEXTS_16
-8B40215284201C6A=16TransportCtx
+;8B40215284201C6A=16TransportCtx
 1D2B99D34B81AA37=跳转到标记/区域
 DB44A9B33A447245=无标记/区域
 DBB3EF92ECE93AF0=播放/暂停
@@ -4540,21 +4541,21 @@ C580F95ADDC7E1A0=在主窗口顶部
 A2D5D0CC8AC3255A=隐藏走带
 
 [MENU_317] ; IDR_CONTEXTS_17
-D518DD15730D0992=17FxFloatCtx
+;D518DD15730D0992=17FxFloatCtx
 68FF5FCC175E2929=取消浮动窗口
 
 [MENU_318] ; IDR_CONTEXTS_18
-922768F1528B9C30=18NavCtx
+;922768F1528B9C30=18NavCtx
 FD95107AE618F7DA=将导航窗口停靠在泊坞窗
 5BA532B79E210468=关闭导航
 
 [MENU_319] ; IDR_CONTEXTS_19
-08B4634CC77FCE14=19FxBrowseCtx2
+;08B4634CC77FCE14=19FxBrowseCtx2
 53DC5790656E0F99=重命名 FX(&R)...
 49DCAE59C5BD3783=扫描新插件(&S)
 
 [MENU_321] ; IDR_CONTEXTS_21
-54F057E66DAB6A2E=21DockCtx
+;54F057E66DAB6A2E=21DockCtx
 F44B3B65D54ABF39=附着泊坞窗位置: 底部
 2380E7FD8149F997=附着泊坞窗位置: 左侧
 D8FAB2121646193D=附着泊坞窗位置: 顶部
@@ -4593,13 +4594,13 @@ D35FA18E2911A6BE=添加环回 MIDI 设备
 E5D80D1C40705421=添加硬件控制器 MIDI 设备
 
 [MENU_324] ; IDR_CONTEXTS_24
-08F71B928F2055DD=24vkbCtx
+;08F71B928F2055DD=24vkbCtx
 003BBBD75A6F3E50=将虚拟 MIDI 键盘停靠在泊坞窗
 C82A15933756388D=将所有键盘输入发送到虚拟 MIDI 键盘 (即使其他窗口处于活跃状态)
 29ADE871FA5ECAEC=关闭虚拟 MIDI 键盘
 
 [MENU_325] ; IDR_CONTEXTS_25
-E6CB9B19F8657AA3=25bigClockCtx
+;E6CB9B19F8657AA3=25bigClockCtx
 11C2A8EF2D4D0B89=将大时钟停靠在泊坞窗
 99E596DF7A76F683=分钟:秒
 244F88679EDC8725=小节.节拍
@@ -4632,11 +4633,11 @@ C6DE2094804C0180=图片长度: 16 拍
 BBD1E9E9B1450DAD=关闭大时钟
 
 [MENU_327] ; IDR_CONTEXTS_27
-C9DCDC64EE0A50C6=27ScreensetsCtx
+;C9DCDC64EE0A50C6=27ScreensetsCtx
 B80C8E5B6971AE30=将屏幕设置停靠在泊坞窗
 
 [MENU_328] ; IDR_CONTEXTS_28
-BAA07801AA1C048F=28PerfListCtx
+;BAA07801AA1C048F=28PerfListCtx
 F53ED82DF3FD2828=显示 FX 对话框
 3D90226E6ACF7B65=切换 FX 旁通
 B2FBA7309089EE8E=当为空时显示轨道 FX
@@ -4655,13 +4656,13 @@ DF45382BC646671C=无链接
 B1B7B32725E2D65E=将状态保存为 VST 预置库
 
 [MENU_330] ; IDR_CONTEXTS_30
-9EC3AAA915D3F3AF=30TransportHomeCtx
+;9EC3AAA915D3F3AF=30TransportHomeCtx
 
 [MENU_331] ; IDR_CONTEXTS_31
-556582869CFDFD1A=31TransportEndCtx
+;556582869CFDFD1A=31TransportEndCtx
 
 [MENU_332] ; IDR_CONTEXTS_32
-B2834EEA2AA93E9E=32MultiProjOpts
+;B2834EEA2AA93E9E=32MultiProjOpts
 80E1706B6AD3A6D6=始终显示工程选项卡
 A41C7E22C204C9CD=在窗口的左侧显示工程选项卡
 DE78E244B23E9BF7=隐藏后台工程 FX/MIDI 窗口
@@ -4680,7 +4681,7 @@ C82CC5ADCA93D3A7=在自动打开和渲染后，将子工程保留在选项卡中
 DE82404B7BA815CF=在使用监听 FX 时强制工程选项卡可见
 
 [MENU_333] ; IDR_CONTEXTS_33
-882F568C84ED25FD=33_0MarkerCtx
+;882F568C84ED25FD=33_0MarkerCtx
 718C7AF7F67B6389=编辑标记...\t双击
 E9213C417C9F07F7=编辑标记...
 F686AE0AE333E622=移除标记\tAlt+单击
@@ -4688,7 +4689,7 @@ F686AE0AE333E622=移除标记\tAlt+单击
 D28556DFC2F12B22=在区域/标记管理器中选择标记
 
 [MENU_334] ; IDR_CONTEXTS_34
-E2D5F7E4A9D9BD25=34_1regionctx
+;E2D5F7E4A9D9BD25=34_1regionctx
 C17D7169D375F184=编辑区域...\tShift+双击
 0DF698328A46B3B5=编辑区域...
 75615834477BEDC2=选择时间\t双击
@@ -4698,12 +4699,12 @@ B9CB30CE74265C80=移除区域\tAlt+单击
 8446FCD57E3108B5=渲染区域...
 
 [MENU_335] ; IDR_CONTEXTS_35
-F2DA99EC7E8315CD=35_2tlMarkerCtx
+;F2DA99EC7E8315CD=35_2tlMarkerCtx
 F3794F93A2DBC89C=编辑拍号标记...\t双击
 C6EA5D6FC216DE25=移除拍号标记\tAlt+单击
 
 [MENU_336] ; IDR_CONTEXTS_36
-39579E420F84FC07=36_3actiownd
+;39579E420F84FC07=36_3actiownd
 A508BE50144DDB02=导入快捷键/自定义操作, 导入所有区段...
 A301D53E8C541E7C=导入快捷键/自定义操作, 忽略其他区段...
 AE1100472EECD1A6=导入快捷键/自定义操作, 映射到此区段...
@@ -4712,12 +4713,12 @@ BE1EEEA7EBA058A7=仅为此区段导出快捷键/自定义操作...
 6EBDD7A9F323D878=导出选定的快捷键/自定义操作...
 8530E81B0593F337=重命名当前区段
 A71D4E6CCAF0CF7A=将主部分快捷键复制到当前区段
-A1B39B94666BEC3F=将所有区段中的所有快捷键重置为默认值
-0C5C7D4E0D7CF429=将此区段中的所有快捷键重置为默认值
+A1B39B94666BEC3F=将所有区段中的所有快捷键重置为默认设置
+0C5C7D4E0D7CF429=将此区段中的所有快捷键重置为默认设置
 6F53C11A88B62D80=从此区段中移除所有快捷键
 
 [MENU_337] ; IDR_CONTEXTS_37
-3DE84120820B85CE=37_4SoloCtx
+;3DE84120820B85CE=37_4SoloCtx
 D3DE6686B4D9602C=独奏2\tAlt
 9B76234E6926EE7E=独奏2
 C3D8EFE45F703F1E=取消所有独奏\tCtrl
@@ -4726,16 +4727,16 @@ FD1704F2BC83F2D8=独奏失效\tCtrl+Shift
 80933A364CB8729B=独奏失效
 
 [MENU_338] ; IDR_CONTEXTS_38
-B0F397F2E3D4090E=38_5MuteCtx
+;B0F397F2E3D4090E=38_5MuteCtx
 23237C73B0B284D4=取消所有静音\tCtrl
 A6C4062EE7DAE214=独占静音\tCtrl+Alt
 2A8FBC3E8B12D0D2=静音所有其他\tAlt
 028CB419E53B3F7C=静音所有其他
 
 [MENU_339] ; IDR_CONTEXTS_39
-224F214718A59CE4=39_HelpCtx
+;224F214718A59CE4=39_HelpCtx
 7C5F9CD63D02797C=选定的轨道/对象/包络详情
-887622B09469C795=CPU/RAM use, time since last save
+887622B09469C795=CPU/内存使用情况，距上次保存时间
 D1D35C65C6B83D9C=不显示信息
 B8C33ECCB30AE714=显示鼠标编辑帮助
 
@@ -4749,9 +4750,9 @@ B7F5A33C6B443EBA=分隔符
 0D8429DC1D3A785A=复制\tCtrl+C
 6D87C1CA6B74FD85=粘贴\tCtrl+V
 E62C127D8E57826D=重置菜单
-40C2B30220B6B29A=将当前菜单/工具栏重置为默认值
-5AB19C9C9F1E5320=将所有菜单重置为默认值
-4B511B83E1912702=将所有工具栏重置为默认值
+40C2B30220B6B29A=将当前菜单/工具栏重置为默认设置
+5AB19C9C9F1E5320=将所有菜单重置为默认设置
+4B511B83E1912702=将所有工具栏重置为默认设置
 66B5F95E57AC691C=导入/导出菜单
 6C71A82BB8F8529C=将所有菜单/工具栏导出到 ReaperMenuSet 文件...
 D9A206BCE996E764=将当前菜单/工具栏导出到 ReaperMenu 文件...
@@ -4761,7 +4762,7 @@ CE2F0C4F975A25BA=工具栏上下文菜单
 9E75FDFABCE5A4DF=更改操作...
 13268988F2D2D6A2=更改图标...
 4D8F9175C9D8DC8D=文字图标...
-98791BA57BAEDAF6=将图标设置为默认
+98791BA57BAEDAF6=将图标设置为默认值
 836A75906077B0A8=根据切换状态以动画方式突出显示
 76D89F050F6855A4=不显示动画
 08F070D393C0C20F=如果切换状态已启用，则显示动画
@@ -4787,12 +4788,12 @@ BA643005EA6CA5ED=41_ConvertCtx
 8E07889A2F7AAFE4=此菜单未使用
 
 [MENU_342] ; IDR_CONTEXTS_42
-D459051830243DFE=42_GroupCtx
+;D459051830243DFE=42_GroupCtx
 EB446AE89713DE5E=选择一个对象即选择整个编组
 406764046253E6BA=轨道媒体/剃刀编辑编组仅影响开始和结束时间相同的对象
 
 [MENU_343] ; IDR_CONTEXTS_43
-A5321DCC2F678529=43_ProjBayCtx
+;A5321DCC2F678529=43_ProjBayCtx
 D9CBC40C0B67A0B5=在元素管理器和工程中镜像选择
 34BADD89C1F25031=在镜像选择时缩放/滚动到选定的媒体对象
 8A3DB06688BF01E5=使用最后选定的对象作为 \"绘制副本\" 鼠标操作的源
@@ -4809,7 +4810,7 @@ FD61EBC59AC32FAE=在轨道列中显示轨道索引
 848DD5C419E4EDA4=将工程元素管理器停靠在泊坞窗
 
 [MENU_344] ; IDR_CONTEXTS_44
-A1ECEA29C444236B=44_FxAddVstFolderCtx
+;A1ECEA29C444236B=44_FxAddVstFolderCtx
 88F334DEA91EE003=包含子文件夹中找到的插件
 2CE99B208A9CC604=在 VST 文件夹视图中包含 Cockos 插件
 A77977CDCE6B436E=显示指向 VST 的完整路径
@@ -4830,15 +4831,15 @@ F86DA01979DBF767=复制选定的操作命令 ID
 9B042869A79FA02B=将操作窗口停靠在泊坞窗
 
 [MENU_346] ; IDR_CONTEXTS_46
-AAEE4EDFF8BD6BEA=46_ReplaceModeCtx
+;AAEE4EDFF8BD6BEA=46_ReplaceModeCtx
 
 [MENU_347] ; IDR_CONTEXTS_47
-1F8AB71E475E4064=47_ItemPropsDlgCtx
+;1F8AB71E475E4064=47_ItemPropsDlgCtx
 3D3F09D279B09D88=不活动 2 秒后应用更改
 955759B7BDB8B435=将对象属性窗口停靠在泊坞窗
 
 [MENU_348] ; IDR_CONTEXTS_48
-3FC01DE4F18CE67D=48_TrackMgrDlgCtx
+;3FC01DE4F18CE67D=48_TrackMgrDlgCtx
 AC72775A423346DF=删除选定轨道
 F2A09386DF1BC176=在轨道管理器中显示主控轨道
 B7CCCC2B737AFE13=在文件夹中缩进轨道
@@ -4855,14 +4856,14 @@ A0C4F5072F8ED0D9=在调音台中隐藏被过滤掉的轨道
 996C6D986C53776D=将轨道管理器窗口停靠在泊坞窗
 
 [MENU_350] ; IDR_CONTEXTS_50
-1ABF84C7BAF8A71B=50DXCtx
+;1ABF84C7BAF8A71B=50DXCtx
 
 [MENU_351] ; IDR_CONTEXTS_51
-6CBA6D3187C4E27C=51AUCtx
+;6CBA6D3187C4E27C=51AUCtx
 6EC184D0BA9D086C=导出 AU 预置 (.aupreset)...
 
 [MENU_352] ; IDR_CONTEXTS_52
-0FE28B53D7BDC953=52RegionMgrCtx
+;0FE28B53D7BDC953=52RegionMgrCtx
 A5702B77A90FF044=删除选定的标记/区域
 54D592EE2F283306=选择所有区域进行渲染
 043AE1AC506F3B9D=按时间线顺序重新编号 (先标记, 再区域)
@@ -4878,7 +4879,7 @@ ECFB52799234A524=在选择标记或区域时寻轨播放
 7EA6A49B50794E5A=将区域管理器停靠在泊坞窗
 
 [MENU_353] ; IDR_CONTEXTS_53
-8CB1DC85A67CC4C9=53FadeEditorCtx
+;8CB1DC85A67CC4C9=53FadeEditorCtx
 85F217D7911726E0=播放开始时的自动行为:
 14973110A54729FC=  独奏轨道
 E07423F09C9BFDE9=  设置播放重复
@@ -4886,32 +4887,32 @@ E07423F09C9BFDE9=  设置播放重复
 87D709358F3B4432=将交叉淡化编辑器停靠在泊坞窗
 
 [MENU_354] ; IDR_CONTEXTS_54
-DFDD2BFC0EC8C7D3=54IOCtx
+;DFDD2BFC0EC8C7D3=54IOCtx
 58463C0CA9EE47E1=按回车键关闭窗口
 
 [MENU_355] ; IDR_CONTEXTS_55
-B337DFB5190F3DA3=ripctx
+;B337DFB5190F3DA3=ripctx
 6CC47CED6D4E106B=波纹编辑所有内容会影响速度映射
 
 [MENU_356] ; IDR_CONTEXTS_56
-982EF0AB42B0F06D=56AutomationItemCtx
+;982EF0AB42B0F06D=56AutomationItemCtx
 
 [MENU_357] ; IDR_CONTEXTS_57
-62024610B4447C6A=57LV2Ctx
-6F9B8C269150F15C=57,1containerCtx
+;62024610B4447C6A=57LV2Ctx
+;6F9B8C269150F15C=57,1containerCtx
 
 [MENU_358] ; IDR_CONTEXTS_58
-FFEAEC7B2FE5D149=58ClapCtx
+;FFEAEC7B2FE5D149=58ClapCtx
 
 [MENU_359] ; IDR_CONTEXTS_59
-4DEB4808D64B205C=59TrackGroupMgrCtx
+;4DEB4808D64B205C=59TrackGroupMgrCtx
 B0B97D77AC940716=选择编组时同时选择该编组内的所有轨道
 03F1A48DC6E1160C=添加/删除父级文件夹时，同时添加/删除其下的子轨道
 6CAE5D74BBADF96F=显示按文件夹嵌套的轨道下拉列表
 ABAABBBF49BA9874=将轨道编组管理器停靠在泊坞窗
 
 [MENU_360] ; IDR_CONTEXTS_60
-E5A3954336F8CA21=60TrackSpacerCtx
+;E5A3954336F8CA21=60TrackSpacerCtx
 00822BD8ECF08421=移除分隔带
 
 [MENU_361] ; IDR_CONTEXTS_61
@@ -4957,11 +4958,9 @@ FA183511BDBBC440=次要路径:
 [MENU_428] ; IDR_TOOLBARS
 FD994A8441A52701=主工具栏
 31EA0D9166E92914=新建工程...
-20D402A48B92C098=覆盖用于框选的鼠标修饰键 (编排视图 A)
 7CE64A834287F5A0=启用自动交叉淡化
 AB9A2766519667D6=启用波纹编辑
 CEC3D5DF2AA40AD1=显示编排视图网格
-88D26A7FBBD4A17D=覆盖用于剃刀编辑的鼠标修饰键 (编排视图 B)
 C6255BD28268CF21=浮动工具栏 1
 6DB45DF1779991EB=编辑
 C62558D28268CA08=浮动工具栏 2
@@ -5063,6 +5062,8 @@ F112CE558C181981=主要 (备选录音)
 DF0D7BFB65057A35=主要 (%s)
 
 [access]
+C28553A4E293A9BA=操作区段
+37252CA118C4BE79=定制操作名称
 14ED31EEE61B5194=发送音量值
 BF4E0A08A3F44DAF=发送声像值
 867BE45A06BB40B5=音量推子
@@ -5117,7 +5118,6 @@ E0E6240BD14093B3=LFO 脉冲宽度
 75F935603B2A5F60=LFO 周期 (频率)
 4C73912F12098836=LFO 频率歪斜
 A9E7C6AB46E56EA9=LFO 倾斜
-7CB4F79A1C4F648A=媒体资源管理器音量推子
 9FE75CFAAEEA191D=硬件输出
 937125681D148DE0=上级目录
 2E1803974E3A251A=导航返回
@@ -5149,6 +5149,7 @@ BDBB78010BEB1808=瞬态灵敏度
 944228561E280534=瞬态阈值
 C3449D100A418FE1=主节拍音量
 AE166C9E5312232D=次节拍音量
+6717FA4AEEC94415=搜索首选项
 C8B367B5542B2A26=屏幕设置
 DCCF2D2F7B9D84A4=伽马
 B439AA405D79F1B7=阴影增益
@@ -5412,7 +5413,7 @@ ACFDD0F8CDB1E0AB=选项: 编辑时自动交叉淡化媒体对象 ⇌ Options: Au
 5B59867D5C459C1E=选项: 禁用自动交叉淡化 ⇌ Options: Disable auto-crossfades
 48D99C016D9464DB=选项: 在编辑时启用修剪媒体对象后的内容 ⇌ Options: Enable trim content behind media items when editing
 B4FA1E3DD697E394=选项: 在编辑时禁用修剪媒体对象后的内容 ⇌ Options: Disable trim content behind media items when editing
-B0F7E61A28DFED79=选项: 始终修剪剃刀编辑后的内容 (否则, 按照媒体对象编辑的首选项处理) ⇌ Options: Always trim content behind razor edits (otherwise, follow media item editing preferences)
+B0F7E61A28DFED79=选项: 始终修剪剃刀编辑后的内容 (否则，按照媒体对象编辑的首选项处理) ⇌ Options: Always trim content behind razor edits (otherwise, follow media item editing preferences)
 6137A4BCD2B46E84=选项: 在分割时切换自动交叉淡化 ⇌ Options: Toggle auto-crossfade on split
 824C74C8CEBF519B=选项: 在分割时启用自动交叉淡化 ⇌ Options: Enable auto-crossfade on split
 FF7112FE99086902=选项: 在分割时禁用自动交叉淡化 ⇌ Options: Disable auto-crossfade on split
@@ -5579,7 +5580,7 @@ ED90AF0F05839DF9=速度包络: 所有速度标记减少 0.1% ⇌ Tempo envelope:
 1BEF0D7C4ED48025=速度包络: 所有速度标记增加 0.001% ⇌ Tempo envelope: Increase all tempo markers 0.001%
 06012059B01020D1=速度包络: 所有速度标记减少 0.001% ⇌ Tempo envelope: Decrease all tempo markers 0.001%
 6DB67B890334F14C=调整整个速度包络... ⇌ Adjust entire tempo envelope...
-DB023531356CDCFA=速度包络: 在编辑光标处插入速度标记, 不打开速度编辑对话框 ⇌ Tempo envelope: Insert tempo marker at edit cursor, without opening tempo edit dialog
+DB023531356CDCFA=速度包络: 在编辑光标处插入速度标记，不打开速度编辑对话框 ⇌ Tempo envelope: Insert tempo marker at edit cursor, without opening tempo edit dialog
 45BF4D3EB7A0A047=速度包络: 设置显示范围... ⇌ Tempo envelope: Set display range...
 435DA45D02DDAD34=速度包络: 将显示范围设置为当前工程的最小/最大 bpm ⇌ Tempo envelope: Set display range to current project min/max bpm
 448CAF9331DAE0D3=走带: 停止 (保存所有已录制的媒体) ⇌ Transport: Stop (save all recorded media)
@@ -5949,7 +5950,7 @@ BF1C8F1ED2DB0EAB=对象: 显示对象片段的 FX 链 ⇌ Item: Show FX chain fo
 83FB6C8F56713AF5=对象: 移除对象片段的 FX ⇌ Item: Remove FX for item take
 890986C082B073EE=对象: 在时间选区中静音多片段对象的活跃片段 ⇌ Item: Mute active take of multitake item within time selection
 C9F5027F4B9F0718=对象: 在时间选区中独奏多片段对象的活跃片段 ⇌ Item: Solo active take of multitake item within time selection
-36B08F4124D4075C=对象: 将对象混合行为设置为工程默认 ⇌ Item: Set item mix behavior to project default
+36B08F4124D4075C=对象: 将对象混合行为设置为工程默认设置 ⇌ Item: Set item mix behavior to project default
 FBE56727B15F487D=对象: 将对象混合行为设置为内层对象替换外层对象 ⇌ Item: Set item mix behavior to enclosed items replace enclosing items
 587FAA756CE718ED=对象: 将对象混合行为设置为始终替换 ⇌ Item: Set item mix behavior to always replace
 D79795F60C44BB63=对象: 将对象混合行为设置为始终混合 ⇌ Item: Set item mix behavior to always mix
@@ -6035,7 +6036,7 @@ C98283ABDFC921B2=鼠标修饰键: 设置编排视图覆盖鼠标修饰键 A 直�
 DBA2B06BEE130ED4=鼠标修饰键: 设置编排视图覆盖鼠标修饰键 C 直到下一次鼠标抬起 ⇌ Mouse modifiers: Set arrange view override mouse modifiers C until next mouseup
 48B3E706051E45F7=鼠标修饰键: 设置编排视图覆盖鼠标修饰键 D 直到下一次鼠标抬起 ⇌ Mouse modifiers: Set arrange view override mouse modifiers D until next mouseup
 05F248CEFEF5F6D9=鼠标修饰键: 清除编排视图覆盖鼠标修饰键 ⇌ Mouse modifiers: Clear arrange view override mouse modifiers
-B1F2728A9F257075=选项: 当自动切录录音至新的固定车道时, 添加整个录音 ⇌ Options: When auto-punch recording into a new fixed lane, add the whole recording
+2B791CD4CAE39F5E=选项: 当自动切录录音至固定车道轨道时，添加整个录音 ⇌ Options: When auto-punch recording into a fixed lane track, add the whole recording
 D64F30D1AA3B1FDE=选项: 点击空轨道空间时不更改复合区域的源车道 ⇌ Options: Do not change comp area source lane when clicking empty track space
 F85BCA9A0D5174D9=选项: 避免在复合区域中包含空轨道空间 ⇌ Options: Avoid including empty track space in comp areas
 543C86346EFB03E5=鼠标修饰键: 交换编排视图右键拖动修饰键，用于框选对象选择和选择剃刀编辑区域 ⇌ Mouse modifiers: Swap arrange view right-drag modifiers for marquee item selection and select razor edit area
@@ -6191,14 +6192,14 @@ DB63656B8F94FDD6=对象属性: 切换锁定 ⇌ Item properties: Toggle lock
 454F9A9841E5FCD4=对象属性: 锁定到活跃片段 (鼠标点击不会更改活跃片段) ⇌ Item properties: Lock to active take (mouse click will not change active take)
 B04AE083D2892BA6=对象属性: 解锁片段 (鼠标点击将更改活跃片段) ⇌ Item properties: Unlock takes (mouse click will change active take)
 62B0C9687B514E74=对象属性: 切换锁定到活跃片段 (切换鼠标点击更改活跃片段) ⇌ Item properties: Toggle lock to active take (toggle mouse click changes active take)
-C9ED572935F2A1E5=对象属性: 将对象时基设置为工程/轨道默认 ⇌ Item properties: Set item timebase to project/track default
+C9ED572935F2A1E5=对象属性: 将对象时基设置为工程/轨道默认值 ⇌ Item properties: Set item timebase to project/track default
 ED415083E66CF2D6=对象属性: 将对象时基设置为时间 ⇌ Item properties: Set item timebase to time
 E8124C72C53D3490=对象属性: 将对象时基设置为节拍 (位置, 长度, 速率) ⇌ Item properties: Set item timebase to beats (position, length, rate)
 70838D9BD1F6785E=对象属性: 将对象时基设置为节拍 (仅位置) ⇌ Item properties: Set item timebase to beats (position only)
 BA17BC4F4E4BE1B9=对象属性: 将对象时基设置为节拍 (在速度变化时自动拉伸) ⇌ Item properties: Set item timebase to beats (auto-stretch at tempo changes)
 85E052AD90F00262=媒体对象: 清除并重新计算在工程速度变化时的自动拉伸 ⇌ Media item: Clear and recalculate auto-stretch at project tempo changes
 D2E152925A6DD153=媒体对象: 在工程速度变化时添加拉伸标记 ⇌ Media item: Add stretch markers at project tempo changes
-CC0B9BEC667C8269=轨道属性: 将轨道时基设为工程默认 ⇌ Track properties: Set track timebase to project default
+CC0B9BEC667C8269=轨道属性: 将轨道时基设为工程默认设置 ⇌ Track properties: Set track timebase to project default
 FBECE4010CFB26AE=轨道属性: 将轨道时基设为时间 ⇌ Track properties: Set track timebase to time
 00BA15BE62CF1F68=轨道属性: 将轨道时基设为节拍 (位置, 长度, 速率) ⇌ Track properties: Set track timebase to beats (position, length, rate)
 65CD50D4A21C04D6=轨道属性: 将轨道时基设为节拍 (仅位置) ⇌ Track properties: Set track timebase to beats (position only)
@@ -6518,7 +6519,7 @@ E816CED6DBB7AE77=轨道: 查看当前/最后触碰轨道的路由和 I/O ⇌ Tra
 CE18E4F4EB544EF2=轨道: 循环切换文件夹折叠状态 ⇌ Track: Cycle folder collapsed state
 565D4F5F0262CFE6=轨道: 选择鼠标下方的轨道 ⇌ Track: Select track under mouse
 E2F1E269F575BF50=轨道: 旁通媒体播放偏移 ⇌ Track: Bypass media playback offset
-CEA44C222CAA7EAD=选项: 当文件夹完全折叠时, 不显示文件夹中的轨道 ⇌ Options: do not display tracks in folder when folder is fully collapsed
+CEA44C222CAA7EAD=选项: 当文件夹完全折叠时，不显示文件夹中的轨道 ⇌ Options: do not display tracks in folder when folder is fully collapsed
 86E3E12BD4B6B036=轨道: 将所有媒体对象移动到新的隐藏子轨道 ⇌ Track: Move all media items to new hidden child track
 A02404F80B383267=轨道: 从所有隐藏子轨道移动所有媒体对象 ⇌ Track: Move all media items from all hidden child tracks
 9C0BDAEA42533A8B=取消选择所有轨道/对象/包络点 (清除所有轨道/对象/包络点的选定状态) ⇌ Unselect (clear selection of) all tracks/items/envelope points
@@ -6552,7 +6553,7 @@ EFAC62541238E2A3=轨道: 将轨道录制模式设置为 MIDI 触碰替换 ⇌ Tr
 FFCFED6478D0E3DC=轨道: 将轨道录制输出模式设置为推子后 ⇌ Track: Set track record output mode to post-fader
 0577C3FB2ABD685D=轨道: 将轨道录制输出模式设置为前置-FX ⇌ Track: Set track record output mode to pre-FX
 556A1724E610C5E2=轨道: 将轨道录制输出模式设置为后端-FX, 推子前 ⇌ Track: Set track record output mode to post-FX, pre-fader
-8D502986B5317F92=轨道: 查看最后触碰的轨道的录音设置 (MIDI量化, 文件格式/路径) ⇌ Track: View track recording settings (MIDI quantize, file format/path) for last touched track
+8D502986B5317F92=轨道: 查看最后触碰的轨道的录音设置 (MIDI 量化, 文件格式/路径) ⇌ Track: View track recording settings (MIDI quantize, file format/path) for last touched track
 DB8B2F93E46F4F0F=轨道: 将录音路径设置为主要 ⇌ Track: Set record path to primary
 943DDFD9F914058B=轨道: 将录音路径设置为次要 ⇌ Track: Set record path to secondary
 A6AA2C5B723F54F6=轨道: 将录音路径设置为主要+次要 ⇌ Track: Set record path to primary+secondary
@@ -7223,6 +7224,14 @@ A531508FF0B5DB63=工具栏: 在鼠标光标处打开工具栏 28 ⇌ Toolbar: Op
 937E0792C6368D9E=工具栏: 在鼠标光标处打开工具栏 30 ⇌ Toolbar: Open toolbar 30 at mouse cursor
 C0BF86FE89B9C179=工具栏: 在鼠标光标处打开工具栏 31 ⇌ Toolbar: Open toolbar 31 at mouse cursor
 31FD8C1AEED5967C=工具栏: 在鼠标光标处打开工具栏 32 ⇌ Toolbar: Open toolbar 32 at mouse cursor
+12C3FAD652693FD1=工具栏: 在鼠标光标处打开 MIDI 工具栏 1 ⇌ Toolbar: Open MIDI toolbar 1 at mouse cursor
+BBE9B04C60CAD394=工具栏: 在鼠标光标处打开 MIDI 工具栏 2 ⇌ Toolbar: Open MIDI toolbar 2 at mouse cursor
+BF0E1DB8639E5D8F=工具栏: 在鼠标光标处打开 MIDI 工具栏 3 ⇌ Toolbar: Open MIDI toolbar 3 at mouse cursor
+4A717A29C667E83A=工具栏: 在鼠标光标处打开 MIDI 工具栏 4 ⇌ Toolbar: Open MIDI toolbar 4 at mouse cursor
+38FDB8540DCC8CE5=工具栏: 在鼠标光标处打开 MIDI 工具栏 5 ⇌ Toolbar: Open MIDI toolbar 5 at mouse cursor
+E0C2BFFA3E68A1C8=工具栏: 在鼠标光标处打开 MIDI 工具栏 6 ⇌ Toolbar: Open MIDI toolbar 6 at mouse cursor
+9DE34C2D25A9E7C3=工具栏: 在鼠标光标处打开 MIDI 工具栏 7 ⇌ Toolbar: Open MIDI toolbar 7 at mouse cursor
+C1284F3D2876ADCE=工具栏: 在鼠标光标处打开 MIDI 工具栏 8 ⇌ Toolbar: Open MIDI toolbar 8 at mouse cursor
 B437F79D7FAA3C29=工具栏: 打开 MIDI 工具栏 9 ⇌ Toolbar: Open MIDI toolbar 9 at mouse cursor
 AD3CE1CD10ACDAE7=工具栏: 打开 MIDI 工具栏 10 ⇌ Toolbar: Open MIDI toolbar 10 at mouse cursor
 B27E942B77D455AC=工具栏: 打开 MIDI 工具栏 11 ⇌ Toolbar: Open MIDI toolbar 11 at mouse cursor
@@ -7323,6 +7332,7 @@ FA0B428203BB8C66=工程选项卡: 移动工程选项卡到位置 %d ⇌ Project 
 CB200276D7732D3B=ReaScript: 运行/编辑最近的 ReaScript (EEL2 或 Lua) ⇌ ReaScript: Run/edit last ReaScript (EEL2 or Lua)
 108C6B5D2F6D3897=视频: 显示/隐藏视频窗口 ⇌ Video: Show/hide Video window
 F5C536D74FD8A737=视频: 清除视频缓存/重新渲染帧 ⇌ Video: clear video cache/re-render frames
+C4EFFF45F8AD0D19=视频: 全屏 ⇌ Video: fullscreen
 
 [actions_fmt]
 6A859719FE602A01=轨道: 为 %s 设置音量 (仅限 MIDI CC/OSC) ⇌ Track: Set volume for ※s (MIDI CC/OSC only)
@@ -7624,8 +7634,6 @@ EE1268CA4B845A22=# FX
 8B7DC1C51EA16751=媒体核心
 07BB6BDD279F1E8F=媒体 CPU
 AC9CE5BD66CC273B=监听 FX
-1B23661F1BBB9A19=%sCPU: %.1lf%%\n
-80BBA832AF9858E2=%sCPU: %.1lfc\n
 93279AF94ECAFA8D=实时 CPU: %.1lf%%\n
 868A798CE5F667E2=实时最长块: %.2fms/%.2fms%s\n
 B317B78EE0D46E89=实时 L/B: %.2fms/%.2fms%s\n
@@ -7638,15 +7646,13 @@ B51284AD5C63F7E1=视频负载: 空闲\r\n
 5C1F58AE2C17CDBD=视频: 空闲\r\n
 B9A9937766A29768=磁盘读取:
 A87379FE917563C7=磁盘写入:
-770B69EEFA83809E=RAM 使用: %uMB\r\n
+770B69EEFA83809E=内存使用: %uMB\r\n
 FC19414CC54B044B=系统 %s: %uMB/%uMB\r\n\r\n
 86963CED3263ABD5=系统 %s: %uMB/%uMB\r\n\r\n
 74E4179B6447E89D=空闲
 8168147E99383416=使用
-23DFDEDC9CF04735=%d FX: %.2f%% CPU
-3905A2A8D4280516=%d FX: %.2fc
-03FE510EABF0FB26=, 媒体 %.2f%%
-55A6694A2F795941=, 媒体 %.2fc
+D8128C13D5E8572E=%d FX:
+F75B0B480604FAB7=, 媒体
 4CF6043E6041E61E=当前/平均:
 01FDED75265EB99E=范围:
 
@@ -7759,8 +7765,8 @@ BB8DEF4452154BCD=切换菜单
 DB43122089698013=添加子菜单
 8AE6DD57CA93AB8F=重命名菜单项
 5BF2418D54B41EC9=文本图标
-56CCAC0E8900FBFD=将所有自定义工具栏重置为默认值？注意: 此操作不可撤销！
-601D766EE84F0CA9=将所有自定义菜单重置为默认值？注意: 此操作不可撤销！
+56CCAC0E8900FBFD=将所有自定义工具栏重置为默认设置？注意: 此操作不可撤销！
+601D766EE84F0CA9=将所有自定义菜单重置为默认设置？注意: 此操作不可撤销！
 E3EA8486EB10C973=确认菜单重置
 462C331AD48CE1D6=加载菜单 [设置]:
 D33FECDC0798C273=ReaperMenu 文件中没有 '%s' 的菜单
@@ -7879,6 +7885,8 @@ D15BC93ABD1F68D8= (已停靠)
 [dsplit]
 20F90FF8D46C94CE=分割选定的对象
 1A900F68165FDC25=分割选定和编组的对象
+B82A34C1131245BF=替换所选对象中的拉伸标记 >>> Replace stretch markers in selected items
+D534B836E2E23DF0=替换所选对象中的拉伸标记, 并添加到编组对象中 >>> Replace stretch markers in selected items and add to grouped items
 36DB16F9DEA007BA=为选定对象添加拉伸标记
 990145DF16A64619=为选定和编组的对象添加拉伸标记
 FCF39C74E18E1ACD=为选定对象添加瞬态参考线
@@ -7916,7 +7924,7 @@ DFCA919D6A234509=接收包络
 [envmenu]
 567F0D273842FAC4=全局覆盖自动化模式:
 4036F87897378B46=轨道自动化模式:
-E81A578EDE83B19C=修剪/读取 (包络处于活跃状态, 但所有推子都用于修剪)
+E81A578EDE83B19C=修剪/读取 (包络处于活跃状态，但所有推子都用于修剪)
 4F0FF8C68174EB99=显示轨道自动化包络
 38EB36F18A7A3BB5=主控自动化包络
 0DE47D3FF7101E90=轨道自动化包络
@@ -8101,6 +8109,16 @@ AAF6790D36B0FF1F=匹配速度
 536D074EDEEC428F=速度匹配半速
 64B6651DCB1D575C=变速时保留音高
 3084E13EDAE17E23=停靠媒体资源管理器
+
+[explorer_access]
+54497FDA023820F9=预览音量推子
+1BD524C935075525=视图模式
+35F6C8502D636466=路径和数据库
+23FFBAF27416F886=文件
+8144E0D3803243E7=检测到的音高
+F33D6D7F8FE16CBB=变调
+2A0ECA75D9D51DC4=速率调整
+CC3D359A487EE575=预览音量
 
 [explorer_actions]
 C69F308758F2C001=预览: 播放 ⇌ Preview: Play
@@ -8391,7 +8409,7 @@ E3E61CC95F7730F1=预览: 将音高设置为 +12 半音 ⇌ Preview: set pitch to
 20139BA8160F4F96=预览: 调整音高 +1 个半音 ⇌ Preview: adjust pitch by +1 semitones
 1F05C79874475A88=预览: 调整音高 -1 音分 ⇌ Preview: adjust pitch by -1 cents
 66493E0D7E1E3C5A=预览: 调整音高 +1 音分 ⇌ Preview: adjust pitch by +1 cents
-9B0E15ACDE726BCA=将列的顺序和宽度重置为默认值 ⇌ Reset column order and widths to default
+9B0E15ACDE726BCA=将列的顺序和宽度重置为默认设置 ⇌ Reset column order and widths to default
 BDC2FA62CFB400D8=添加用户元数据列 ⇌ Add user metadata column
 597F705EF4A8AF97=预览: 将音量增加 1 dB ⇌ Preview: increase volume by 1 dB
 F5AFDFA844A5E867=预览: 将音量减少 1 dB ⇌ Preview: decrease volume by 1 dB
@@ -8570,9 +8588,9 @@ DD3C5BA8B643D747=差值
 4C14A4A79E6B2248=标准
 57A9ECCC155566C4=启用
 B1BC9261E098D7B6=以下效果设置为离线:
-4A6B1B183C261FBB=注意: 仅有 %d 个 FLS 和 %d 个 TLS 插槽可用, 这可能导致该插件无法加载
-AAD54A79E89629B0=注意: 仅有 %d 个 TLS 插槽可用, 这可能导致该插件无法加载
-4C6E1E852C2714C6=注意: 仅有 %d 个 FLS 插槽可用, 这可能导致该插件无法加载
+4A6B1B183C261FBB=注意: 仅有 %d 个 FLS 和 %d 个 TLS 插槽可用，这可能导致该插件无法加载
+AAD54A79E89629B0=注意: 仅有 %d 个 TLS 插槽可用，这可能导致该插件无法加载
+4C6E1E852C2714C6=注意: 仅有 %d 个 FLS 插槽可用，这可能导致该插件无法加载
 5147D35333DBEFE5=由于嵌套窗口过多，容器不可见
 4EBA2376DB13772D=将 '%s' 的预置库加载到 '%s' 中？
 8A0CEC6B3975A79A=将预置库加载到 '%s' 中？
@@ -8584,6 +8602,8 @@ DAF16654F60CC4B8=写入预置库文件时出错！磁盘已满？
 A812A7FC8E6BC23F=离线 -
 F5BFBD4D49BA078B=旁通 -
 B9135ED276E19946=[parallel]
+6D871F9268A5ECFE=旁通
+C22B73042B86836A=离线
 F025E1B89F09259C=重命名参数:
 4A10D846929E1CBE=[未命名参数]
 9B59D38F2B061628=为参数 %s 导入文件
@@ -8591,12 +8611,15 @@ D9A9B8F7F03C1A59=保存 FX 链:
 DBBC46B2994004C6=在加载轨道默认链之前删除所有现有的 FX ？\r\n(如果选择否，轨道默认链将添加到您的 FX 列表中)
 4A3E3CE6B990FCAA=REAPER FX 询问
 F17BD15BC982BD69=添加 FX 链:
-D462029E1AAA4F13= CPU %s 采样
 B4B75DDF26006835= %s 采样
 CA77BF9C4BB8EA0A=轨道 %d: %s: 在不可自动化的参数 %d %s 上应用参数包络
 763DC4A00D8B29B1=主控轨道: %s: 在不可自动化的参数 %d %s 上应用参数包络
+575CF292492BDC48=并行
+DE8B46FD7FF45F1A=第一个并行
 594ED5358BEC24B4=以下效果在已加载的模板中，但不可用。
 315D2C8D511050B7=以下效果位于已加载的链中，但不可用。
+0838F63F9BDDB67B=空容器
+710E2763B6EB062C=(无法显示)
 
 [fxadd]
 25C0DF3AC2495257=描述: 新效果
@@ -8607,7 +8630,7 @@ FE5E9B6E50ED8C3C=[无开发者]
 2DC1911CC68E6A50=[无类别]
 DA80669002CB9364=收藏
 E33F89747343BB89=添加到
-B14AFA7C53603382=出厂默认
+B14AFA7C53603382=出厂默认设置
 27340805DCB9AF08=默认
 62EA016195C43A0D=使用预置添加
 91185323ACEB1CC4=添加到选定轨道
@@ -8625,7 +8648,7 @@ BF46C6C80B9DB149=添加到文件夹
 72C4EBEA9DDD2213=独立进程
 F981E3B335D7F379=专用进程
 CB9615092774721D=仅本机 (防止桥接)
-E10B632AE7A16400=嵌入桥接 UI (可能不适用于所有插件, 抵抗崩溃能力较差)
+E10B632AE7A16400=嵌入桥接 UI (可能不适用于所有插件，抵抗崩溃能力较差)
 AEF8DD6798933C08=运行为
 BBDE6BF4C5F2447C=影响新创建的实例和已加载工程中的实例
 54BE0C4F3DB86B76=将状态保存为 VST 预置库 (默认)
@@ -8700,8 +8723,8 @@ F33AE4F80A099F04=显示媒体对象片段包络
 9F66A6D7642154DF=显示包络 (通过父级容器映射)
 A43AAABF3635CD48=参数调制/MIDI 链接
 6B9F0525BEF49CB7=默认控制器映射
-FFF230108C9B32AF=使用默认
-3FCAEED5D3E37C0D=清除默认
+FFF230108C9B32AF=使用默认设置
+3FCAEED5D3E37C0D=清除默认设置
 
 [glue]
 1A25676C984ACD9A=粘合
@@ -8777,10 +8800,7 @@ C2D0BF51F256377C=编组轨道列表
 4B96C14084BE1CF7=编组属性
 
 [help]
-8533AB228EB0396A=CPU: %.1fc - RAM: %uMB
-8243A873936A3273=CPU: %.1f%% - RAM: %uMB
-12CF1C8CC6BE7686=CPU: %.1fc
-B3913235B4F0264B=CPU: %.1f%%
+C732DDC0C3D90A5F= - 内存: %uMB
 9846D0326C0027FE=  最后自动保存:
 6561DE4499D14662=  最后保存:
 E32DD9995A334A64=[重采样]
@@ -8968,8 +8988,8 @@ CBF06458395B9896=数字键盘
 AB568D974B74DE38=轨道面板
 FEE8A62E69DDCB78=主控轨道面板
 BF34751E35ECBCB9=包络面板
-40C7EDD5EE3E3BEB=全局布局默认
-D1F396965D25C688=布局默认
+40C7EDD5EE3E3BEB=全局布局默认设置
+D1F396965D25C688=布局默认设置
 0C5F2002CAF148B3= (DPI-转换为 %s)
 
 [lfo]
@@ -9019,8 +9039,8 @@ F6BCB3EDA55C49B6=快捷键未找到。
 8116409C63CD0C4E=错误地重复自定义操作，加载了太多的自定义操作/ReaScripts。 \r\n\r\n尝试移除未使用的自定义操作或 ReaScript, 并重新启动 REAPER 以继续。
 185A453E832340E9=创建 ReaScript 错误，加载了太多的自定义操作/ReaScripts。 \r\n\r\n尝试移除未使用的自定义操作或 ReaScript, 并重新启动 REAPER 以继续。
 E17EDF164D8FBB8D=从此区段移除所有快捷键？
-7E1D01A0EB52C162=将此区段中的所有快捷键重置为默认值？
-A4991C959E5C4B60=将所有区段中的所有快捷键重置为默认值？
+7E1D01A0EB52C162=将此区段中的所有快捷键重置为默认设置？
+A4991C959E5C4B60=将所有区段中的所有快捷键重置为默认设置？
 96227292DE8DAA1D=写入键映射文件时出错！磁盘满了？
 C90AF6BF6253BD9E=未选择自定义对象
 339112863A5B6F2D=错误: 您必须为新操作命名。
@@ -9758,7 +9778,7 @@ A6BEBD80AC902C6A=编辑修改音符位置
 [midi_DLG_141] ; IDD_DISPQUANT
 C51D8835A6D16CFC=记号显示量化
 2056413EF6F383A5=量化音符/休止符:
-D8C2F344D60F082A=使用工程默认值
+D8C2F344D60F082A=使用工程默认设置
 91C0802F16BBA7E3=最小音符长度:
 AC1439E2AB694673=关于显示量化...
 
@@ -10036,7 +10056,7 @@ CE40E975CE701B8B=编辑: 将 CC 事件向左移动 1 个像素 ⇌ Edit: Move CC
 5091B7695533410E=编辑: 按网格将 CC 事件向右移动 ⇌ Edit: Move CC events right by grid
 E2B741EFE36922C2=编辑: 将 CC 事件的值增加一点点 ⇌ Edit: Increase value a little bit for CC events
 C83A79FC5097997E=编辑: 将 CC 事件的值减少一点点 ⇌ Edit: Decrease value a little bit for CC events
-C2080C4A5EC4ACAB=编辑: 在时间选区内克隆事件, 如果有 (智能克隆) ⇌ Edit: Duplicate events within time selection, if any (smart duplicate)
+C2080C4A5EC4ACAB=编辑: 在时间选区内克隆事件, 如有 (智能克隆) ⇌ Edit: Duplicate events within time selection, if any (smart duplicate)
 BC28E44B58070ABF=编辑: 将编辑光标向左移动一个像素 ⇌ Edit: Move edit cursor left one pixel
 A8143169848E0614=编辑: 将编辑光标向右移动一个像素 ⇌ Edit: Move edit cursor right one pixel
 AD9A344F4583115D=导航: 按网格将编辑光标向左移动 ⇌ Navigate: Move edit cursor left by grid
@@ -10237,22 +10257,6 @@ E316D591135360EC=内容: 在鼠标位置显示编辑器内容菜单 ⇌ Contents
 83DFCF5852873345=内容: 显示此轨道上的所有 MIDI 媒体对象 ⇌ Contents: Display all MIDI media items on this track
 23F06A2946CBC4D0=内容: 激活此轨道上的上一个MIDI媒体对象, 保留现有编辑器内容 ⇌ Contents: Activate previous MIDI media item on this track, preserving existing editor contents
 AADDE6D4F2D27B08=内容: 激活此轨道上的下一个MIDI媒体对象, 保留现有编辑器内容 ⇌ Contents: Activate next MIDI media item on this track, preserving existing editor contents
-962848F025ECFD51=工具栏: 打开 MIDI 工具栏 1 ⇌ Toolbar: Open MIDI toolbar 1
-962845F025ECF838=工具栏: 打开 MIDI 工具栏 2 ⇌ Toolbar: Open MIDI toolbar 2
-962846F025ECF9EB=工具栏: 打开 MIDI 工具栏 3 ⇌ Toolbar: Open MIDI toolbar 3
-96284BF025ED026A=工具栏: 打开 MIDI 工具栏 4 ⇌ Toolbar: Open MIDI toolbar 4
-96284CF025ED041D=工具栏: 打开 MIDI 工具栏 5 ⇌ Toolbar: Open MIDI toolbar 5
-962849F025ECFF04=工具栏: 打开 MIDI 工具栏 6 ⇌ Toolbar: Open MIDI toolbar 6
-96284AF025ED00B7=工具栏: 打开 MIDI 工具栏 7 ⇌ Toolbar: Open MIDI toolbar 7
-96283FF025ECEE06=工具栏: 打开 MIDI 工具栏 8 ⇌ Toolbar: Open MIDI toolbar 8
-3F64431803D34C32=工具栏: 切换到 MIDI 工具栏 1 ⇌ Toolbar: Switch to MIDI toolbar 1
-3F64421803D34A7F=工具栏: 切换到 MIDI 工具栏 2 ⇌ Toolbar: Switch to MIDI toolbar 2
-3F64411803D348CC=工具栏: 切换到 MIDI 工具栏 3 ⇌ Toolbar: Switch to MIDI toolbar 3
-3F64401803D34719=工具栏: 切换到 MIDI 工具栏 4 ⇌ Toolbar: Switch to MIDI toolbar 4
-3F643F1803D34566=工具栏: 切换到 MIDI 工具栏 5 ⇌ Toolbar: Switch to MIDI toolbar 5
-3F643E1803D343B3=工具栏: 切换到 MIDI 工具栏 6 ⇌ Toolbar: Switch to MIDI toolbar 6
-3F643D1803D34200=工具栏: 切换到 MIDI 工具栏 7 ⇌ Toolbar: Switch to MIDI toolbar 7
-3F644C1803D35B7D=工具栏: 切换到 MIDI 工具栏 8 ⇌ Toolbar: Switch to MIDI toolbar 8
 3F1DFB1C709350C1=工具栏: 切换到 MIDI 钢琴卷帘工具栏 ⇌ Toolbar: Switch to MIDI piano roll toolbar
 1CC9EE8D33B2887F=编辑: 将事件通道设置为更高 ⇌ Edit: Set event channel higher
 A4D498E1663634B1=编辑: 将事件通道设置为更低 ⇌ Edit: Set event channel lower
@@ -10413,14 +10417,14 @@ C07E878C3D113A94=模式: 乐谱 ⇌ Mode: Notation
 945441FD8B425C9F=编辑: 选择所有音符 ⇌ Edit: Select all notes
 82CAAB53A8A40F5F=编辑: 复制时间选区内的事件 ⇌ Edit: Copy events within time selection
 41299E7AB0354A16=编辑: 剪切时间选区内的事件 ⇌ Edit: Cut events within time selection
-205CF4EE42078517=编辑: 如果有, 复制时间选区内的事件 (智能复制) ⇌ Edit: Copy events within time selection, if any (smart copy)
-477261822D58CA23=编辑: 如果有, 剪切时间选区内的事件 (智能剪切) ⇌ Edit: Cut events within time selection, if any (smart cut)
+205CF4EE42078517=编辑: 复制时间选区内的事件, 如有 (智能复制) ⇌ Edit: Copy events within time selection, if any (smart copy)
+477261822D58CA23=编辑: 剪切时间选区内的事件, 如有 (智能剪切) ⇌ Edit: Cut events within time selection, if any (smart cut)
 B95BB1766DD36453=编辑: 克隆事件 ⇌ Edit: Duplicate events
 D9833E8E8B0FC364=编辑: 将事件克隆高一个八度 ⇌ Edit: Duplicate events one octave higher
 93DE8D5E91073930=编辑: 将事件克隆低一个八度 ⇌ Edit: Duplicate events one octave lower
 FCA9247B5F784401=编辑: 克隆时间选区内的事件 ⇌ Edit: Duplicate events within time selection
 2795FD472712D7F5=编辑: 克隆时间选区内的事件 (不修剪音符) ⇌ Edit: Duplicate events within time selection (do not trim notes)
-BAE5BBE281FEAC4B=编辑: 如果有, 克隆时间选区内的事件 (智能克隆) (不修剪音符) ⇌ Edit: Duplicate events within time selection, if any (smart duplicate) (do not trim notes)
+BAE5BBE281FEAC4B=编辑: 克隆时间选区内的事件, 如有 (智能克隆) (不修剪音符) ⇌ Edit: Duplicate events within time selection, if any (smart duplicate) (do not trim notes)
 652378F394ED7074=编辑: 取消静音事件 ⇌ Edit: Unmute events
 85712914E6BCC16B=量化音符位置到网格 ⇌ Quantize notes position to grid
 9F2237C4D6CADCAB=量化音符起止位置到网格 ⇌ Quantize notes position and end to grid
@@ -10562,6 +10566,9 @@ E6103AA4FC9BFB33=显示原始 MIDI 数据 ⇌ Show raw MIDI data
 A5D34A5237534CE2=编辑: 调整事件值 (仅限鼠标滚轮/MIDI 控制器) ⇌ Edit: Adjust value for events (mousewheel/MIDI controller only)
 262D4B2C72F13C33=重新加载轨道支持数据 (音色库/程序文件, 乐谱等) ⇌ Reload track support data (bank/program files, notation, etc)
 8CA3F2F588D18073=切换在媒体对象起始时间将 MIDI 锁定到工程速度 ⇌ Toggle locking MIDI to project tempo at media item start time
+13B5151071EBF2AB=工具栏: 打开 MIDI 工具栏 %d ⇌ Toolbar: Open MIDI toolbar ※d
+56B5072DEB34C6CF=工具栏: 在鼠标光标处打开 MIDI 工具栏 %d ⇌ Toolbar: Open MIDI toolbar ※d at mouse cursor
+8AD357CE802DBB36=工具栏: 切换到 MIDI 工具栏 %d ⇌ Toolbar: Switch to MIDI toolbar ※d
 7CF5F2A40C38AFD5=CC: 将 CC 车道设置为力度 ⇌ CC: Set CC lane to Velocity
 31DCEF6B43DC07D4=CC: 将 CC 车道设置为音高 ⇌ CC: Set CC lane to Pitch
 222C965F1127B576=CC: 将 CC 车道设置为程序 ⇌ CC: Set CC lane to Program
@@ -11040,7 +11047,7 @@ D9FF1A097D91EEAC=设置全局录音轮次计数器
 8DA59183F3C1BF8B=设置为随机颜色
 A1F00016223C4D56=设置为一个随机颜色
 ECD1EDA0F724EEBA=设置为随机颜色
-2B9CAECB8EF1B67B=将颜色重置为默认
+2B9CAECB8EF1B67B=将颜色重置为默认值
 FE1A9C4B05BD3094=加载图片资源:
 D7DE3AAB536FF9E7=工程已打开但已修改:\r\n%s\r\n\r\n复制工程或其媒体时是否保存更改？选择 '确定' 保存，或 '取消' 终止保存/复制进程。
 6E1BF9B33FF01DCE=保存/导出 - 工程已修改
@@ -11080,8 +11087,6 @@ BABB523832F9AE4F=搜索出错
 63F6D385957D048A=调音台主控
 
 [mouse]
-81D7E6162319FD03=框选
-AD81A52B1BF91AB5=剃刀编辑
 E1FCB46BE3962402=固定车道复合
 
 [mousemaps]
@@ -11933,10 +11938,10 @@ C8DA9526030E326C=正弦衰减
 3EBBFB1914C8EB44=线性衰减
 9A17190E1103712F=混合衰减
 041B2B4496DA7859=[已弃用的旧式衰减]
-7006FC40958447F8=工程默认 (立体声平衡)
-82F7D1EB412DAF11=工程默认 (立体声像)
-65A4F91A332E37E3=工程默认 (双声像)
-A4A2B926D6457694=工程默认 (REAPER 3.x 平衡)
+7006FC40958447F8=工程默认设置 (立体声平衡)
+82F7D1EB412DAF11=工程默认设置 (立体声像)
+65A4F91A332E37E3=工程默认设置 (双声像)
+A4A2B926D6457694=工程默认设置 (REAPER 3.x 平衡)
 4511943B57827F5E=立体声平衡 / 单声像 (默认)
 EA57FBCCFD419668=立体声像
 87CF7CB71772CAC2=双声像
@@ -11978,7 +11983,7 @@ FA36F381B025CDAE= [%d 剩余]
 A1A1AB5C5B218311=JS 输出
 
 [pitchenvcfg]
-9A8091FE0AFEA024=遵循全局默认
+9A8091FE0AFEA024=遵循全局默认设置
 
 [pitchshift]
 2C9FDF4101D8E2FF=简单窗口化 (快速)
@@ -12088,10 +12093,11 @@ AE04609BFAC1BE7B=移除:
 E7A570E78D955BDB=重新扫描 VST 路径以查找新的/修改的插件
 32DE03A9CDDE213E=重新扫描 VST 路径 (跳过新的/修改的插件)
 9695FA41F7B15128=清除缓存并重新扫描所有插件的 VST 路径
-D662770F22A1F66B=允许多个插件具有相同的 VST3 UID (不推荐)
 ABC6CA494F664332=扫描失败的插件
 1DD89599AC634A3B=已更新但未被扫描的插件
 34C52CFC88897840=新增但未被扫描的插件
+D662770F22A1F66B=允许多个插件具有相同的 VST3 UID (不推荐)
+77FEDCAED8DF7D25=禁止进程外扫描插件 (不推荐)
 F79A16D3F6F59E80=重新扫描 CLAP 路径以查找新的/已修改的插件
 FC01B4E7A42BD3FD=清除缓存并重新扫描 CLAP 路径的所有插件
 3BECE4815452DB14=重新扫描 LV2 路径
@@ -12259,7 +12265,7 @@ CAF2BD75C8084664= - 非常积极
 DB46AD1EC81087FA=要创建的音频处理线程的数量。这通常设置为系统中的 CPU 数量。
 88ED4AE8DA0B9791=用于音频处理的相对线程优先级。这是一个高级性能调整，应该保留为默认值。
 CBDC58413A534831=音频处理线程的积极程度。更放松的设置将使用较少的 CPU，但在低延迟下稳定性较差。
-CD7C691E80E72934=媒体缓冲使用 RAM 和 CPU 以避免等待磁盘 IO。对于磁盘较慢的系统，应该设置得更高。零禁用缓冲。
+CD7C691E80E72934=媒体缓冲使用内存和 CPU 以避免等待磁盘 IO。对于磁盘较慢的系统，应该设置得更高。零禁用缓冲。
 41E5ED5B864C805A=在带有 MIDI 编辑器的轨道上禁用缓冲，这允许 MIDI 编辑更快的播放响应 (推荐)。
 3F29804EB743FBAD=源媒体缓冲应达到的满载程度才开始播放。较低的数字会提供更快的响应时间。
 E565AD880D79DFEF=当显示每个片段的 FX 时，使用较低的媒体缓冲大小以减少音频播放与插件视觉响应之间的延迟。
@@ -12468,9 +12474,9 @@ C41402DEBD47E168=在检测到多点触控手势后的短时间内忽略不同类
 D61B178BCBC28C11=路径
 1A898A131B917D7B=键盘/多点触控
 E23148074D7C62C2=备份
-0F28C70F6D5B8981=轨道/发送默认值
-B5BBD9B3DA22D31C=对象淡化默认值
-0CF52F20D6054A34=对象循环默认值
+0F28C70F6D5B8981=轨道/发送默认设置
+B5BBD9B3DA22D31C=对象淡化默认设置
+0CF52F20D6054A34=对象循环默认设置
 5E1EE8B2642F9F1B=音频
 BB844E058DECEFE5=MIDI 设备
 A8617B784628DEDC=静音/独奏
@@ -12562,8 +12568,8 @@ D6E7E19AE630BE59=在文件导入时生成对象峰值缓存文件 (推荐)。
 FA14F6695C42A6BE=在峰值缓存文件中生成的最高分辨率峰值。推荐使用 300。更高或更低可能会在不同的场景中导致性能降低。
 0AFC077605BAFB72=如果无法写入媒体目录，请使用 '首选项/常规/路径' 中设置的备选路径存储峰值缓存文件。
 22D88B25908D6899=更喜欢将新创建的峰值缓存文件存储在与媒体文件相关的名为 \"peaks\" 的目录中。
-3E30281017B53D27=使用片段 FX 时，分割时克隆片段 FX (这样新的分割对象可以获得 FX 的副本)。如果您不小心，这可能会使用大量的 RAM。
-AE36413831419F9D=即使未启用频谱峰值，也为峰值文件计算频谱信息 (更大的峰值文件, 更高的 RAM 使用)。
+3E30281017B53D27=使用片段 FX 时，分割时克隆片段 FX (这样新的分割对象可以获得 FX 的副本)。如果您不小心，这可能会使用大量的内存。
+AE36413831419F9D=即使未启用频谱峰值，也为峰值文件计算频谱信息 (更大的峰值文件, 更高的内存使用)。
 5EF284FB2B799EF0=启用频谱峰值时自动重新生成带有频谱信息的峰值文件。
 
 [prefs_mediafades_help]
@@ -12724,7 +12730,7 @@ BD77360516B83B36=在编排视图中选择媒体对象可以决定一个 MIDI 对
 DE1875B6CABFB266=当同时显示多个 MIDI 媒体对象时，选择如何在 MIDI 编辑器中切换活跃的媒体对象。
 9B2ACE664429DF8D=在不活跃的媒体对象中的 MIDI 音符/CC 可以被绘制得更加淡或更加深。
 C486CCEB98553CDB=用于在 MIDI 编辑器中绘制音符的色彩映射图片。如果此处没有指定色彩映射，将使用当前颜色主题中的色彩映射。
-644B168704079A8D=浏览以选择一个色彩映射图片，作为在 MIDI 编辑器中绘制音符的默认值。
+644B168704079A8D=浏览以选择一个色彩映射图片，作为在 MIDI 编辑器中绘制音符的默认设置。
 
 [prefs_mouse]
 4CE46F5A24183C85=在中间/右侧上方, 或在文件夹图标上方
@@ -12810,10 +12816,10 @@ A0ED57BB424B0CE3=操作列表...
 DEEBF67EF93F14BF=在当前上下文中交换 cmd/opt
 BFCC81D509FBB3A0=保存此上下文的修饰键...
 AD8AC583FD04975D=加载此上下文的修饰键...
-8A50E612D4BBB618=在此上下文中将修饰键重置为出厂默认
+8A50E612D4BBB618=在此上下文中将修饰键重置为出厂默认设置
 3DA24D613ABD51E2=保存所有上下文的修饰键...
 37B9137F96BA7827=加载所有上下文的修饰键...
-02DFD40B36B7B8EA=在所有上下文中将修饰键重置为出厂默认
+02DFD40B36B7B8EA=在所有上下文中将修饰键重置为出厂默认设置
 3B0C21E969E897AE=导出脚本以设置此上下文的这些修饰键
 AD985065F925D3E0=设置鼠标修饰键
 2AF7697E4282AA90=导出脚本
@@ -12890,6 +12896,7 @@ BB613AF1318E2B21=在此指定过滤字符串以允许从 FX 浏览器中删除�
 7B1273C4F41EF16F=在 FX 列表上方显示 FX 链窗口的添加/删除按钮。
 A27232CED0378863=在链视图中的 FX UIs 上方显示 FX 注释字段 (用户可以根据需要编辑注释)。
 0BE08FFBC9CFE501=关闭 FX 窗口时可能会添加撤消点，以捕获插件可能未报告的插件状态中的更改。
+DAA6C01C423886BA=在并行/离线/旁路 FX 的 FX 名称中包含描述性文本，以提高屏幕阅读器的易用性。
 
 [prefs_plugin_knob]
 1D75478FD209EC92=圆形
@@ -12987,7 +12994,7 @@ B2AA56B82FB82DE0=循环录制可以创建一个或多个音频文件，这些文
 33AC466648B3C9CA=在每个循环后将录制的媒体添加到工程中，这可以用来构建分层录制。
 D2E172FC0C79F1D4=只在录制停止时将录制的媒体添加到工程中 (默认)。
 4570CCEE54B6D772=为每个循环在磁盘上创建一个单独的文件 (默认为录制到一个单一的, 连续的文件)。
-643B48CBBB04CE19=时间选区的自动切录录制可以将新轨道中的录音媒体修剪到时间选区，或添加整个录音。
+FFFD36BE066ACFAC=如果启用了复合，自动切录录音将始终添加整个录音，但只复合自动切录区域。
 
 [prefs_render_help]
 91CB7FE93510C1F4=设置渲染时使用的音频块大小。建议您保留此空白，这将自动使用上次使用的音频块大小。
@@ -13063,7 +13070,7 @@ A06640FC98DC6287=为新轨道自动显示音量包络。
 9DB02CA9A1AAEE43=为新轨道自动显示前置-FX 音量包络。
 16F5F8078D3F839C=为新轨道自动显示前置-FX 声像包络。
 46293FD16449C446=新轨道包络的默认点形状。
-798A8BC8BB77A088=新轨道的默认自动化模式。出厂默认值为修剪/读取模式。
+798A8BC8BB77A088=新轨道的默认自动化模式。出厂默认设置为修剪/读取模式。
 01966E3463989F62=新工程中的默认轨道高度。这也可以通过 '文件/工程设置/保存为默认工程设置' 进行设置。
 7D71B6C52AB0A7DE=启用时，新轨道包络将自动启用以录制自动化。
 D2AC005A798FA430=为新轨道自动启用自由对象定位。
@@ -13076,7 +13083,7 @@ B3B008304E94DF56=新硬件输出的默认增益。
 AA0925ABD83BC541=新发送和硬件输出的默认发送类型。
 5B0472B23A6FDB71=启用时，新发送将从源轨道发送 MIDI。
 4EB8C05F0CB68BBA=启用时，新发送将从源轨道发送音频。
-710294D0227188C6=新创建轨道的轨道仪表默认值。现有工程中的现有轨道不会受到影响。
+710294D0227188C6=新创建轨道的轨道仪表默认设置。现有工程中的现有轨道不会受到影响。
 
 [prefs_video]
 3DF78C7ADF54BF4C=较低编号的轨道中的对象替换较高的
@@ -13107,7 +13114,7 @@ A33160A83CBD4DE3=使用通用推杆视图，而不是 VST 的自定义 UI。您�
 062E0C5C05471D20=设置如何处理来自 VST 插件的自动化通知。您还可以为每个插件单独覆盖此设置，大多数人可能希望保持此设置为默认。
 2EAA3B50A18F889D=不通知 VSTi 播放已停止。大多数合成器（尤其是音序器）需要知道播放已停止以避免音符挂起/粘住。
 5709C6930F8F1BE9=重置 VSTi 时保留持续的音符和当前音高。在禁用 '首选项/音频/回放/重置 MIDI CC/音高' 时可能需要这个设置。
-1DE74C0937316C7F=某些 VST 在离线渲染 (非实时) 时表现不同。当取消选中时，插件总是认为它们处于在线状态。
+1DE74C0937316C7F=某些 VST 在离线渲染 (非实时) 时表现不同。当取消选中时，插件始终认为它们处于在线状态。
 FAC0CB28431DC2EC=当另一个线程正在处理音频时打开 GUI，某些有问题的插件会崩溃。此设置通过中断音频来避免崩溃。
 A91F48CD20B8FDCE=允许卸载 VST DLL，这将它们完全从内存中删除，但也可能导致兼容性问题。
 DB1AD925D830A08C=特殊模式，仅适用于 UAD 插件，减少并行处理的好处以避免 UAD-1 崩溃。
@@ -13285,7 +13292,7 @@ F1E4CF9D444F2E8E=时基时间:
 9BF9B3C72DA9AA9D=不论工程时基如何，速度和拍号变化标记默认都是时基节拍。
 AE7BB4D8A52481FB=此行为也可以在 '文件/工程设置' 中更改。
 ABB2015608E8899E=单条轨道和媒体对象的时基可以独立于工程时基进行设置。
-6BF51A7CD81FAB00=MIDI 媒体对象总是有时基节拍 (位置, 长度, 速率)。
+6BF51A7CD81FAB00=MIDI 媒体对象始终有时基节拍 (位置, 长度, 速率)。
 F95AEE56B041FBEA=在媒体对象源属性中，单个 MIDI 媒体对象的时基可以锁定到特定的速度，而不受工程速度的影响。
 66C99ED0CD0E0C90=节拍
 E67991FAF404D160=64 bit 浮点数 (默认)
@@ -14349,7 +14356,7 @@ ABE1C16582D5A33C=<SUB>%d 通道
 8D08ECC391DB96EA=<SUB>总线 %d
 11CFDE7E5A4CFD86= B%d
 D3E9B5C2991E4175=(轨道自动化模式)
-550F547AB6B8077C=修剪/读取 (包络处于活跃状态, 但所有推子都用于修剪)
+550F547AB6B8077C=修剪/读取 (包络处于活跃状态，但所有推子都用于修剪)
 EF365B9BFF4DA771=发送到轨道
 2BE64718FFEA8B8E=主控硬件输出控制
 28F54690D2483CE9=轨道控制
@@ -15000,18 +15007,17 @@ E1E7CECE4F2F45CE=编组 #9
 
 [themeblend]
 D64ABE7656056465=覆盖
-FCA60AD8EFD1FE3F=正片叠底
 A91837FC641E00F6=滤色
 0E7BED71200DE9DB=HSV 调整
 44B8F722EAF5F19A=HSV 调整 (损坏已弃用)
 08328907B4EB71A0=?
 442703CBF9806FF4=混合颜色被绘制在基色上。透明度越接近零，基色显示得越多。
 E12CE2B25CC52833=CPU 消耗: \r\n最低
-DBD31747391089F2=混合颜色被加到底层颜色上。深色变浅，浅色影响较小。黑色的混合颜色无效果，白色的混合颜色总是呈现为白色。
+DBD31747391089F2=混合颜色被加到底层颜色上。深色变浅，浅色影响较小。黑色的混合颜色无效果，白色的混合颜色始终呈现为白色。
 66F7A1C2A36F1349=CPU 消耗: \r\n低
 369F5B8F8989777D=混合颜色被覆盖在基色上。深基色变浅，浅色变深。透明度越接近零，覆盖的效果越小。
 9E7000DF2A21A7A5=CPU 消耗: \r\n高
-1833A600140DC7CB=混合颜色与基色相乘。黑色的混合颜色总是呈现为黑色，白色的混合颜色无效果。
+1833A600140DC7CB=混合颜色与基色相乘。黑色的混合颜色始终呈现为黑色，白色的混合颜色无效果。
 8705C5E4122C1ED8=CPU成本: \r\n适中
 67943E106FB37E22=混合颜色与基色进行颜色减淡。基色中的深色区域将变浅，趋向混合颜色，基色中的浅色区域受影响较小。黑色的混合颜色无效果。
 016DF84757A0601A=混合颜色中的每个 RGB 元素都被解释为从 128 开始的偏移。R 旋转色调，G 调整饱和度，B 调整色值。灰色的混合颜色 (128,128,128) 无效果。(192,96,255) 将旋转基色的色调 +1/4 圈，从基色饱和度中减去 1/2，并将基色值增加到满。
@@ -15020,8 +15026,6 @@ DBD31747391089F2=混合颜色被加到底层颜色上。深色变浅，浅色影
 [title]
 
 [toolbar]
-9931AB6898582FFD=选框
-22BACE7845F52315=剃刀
 D5A501B764C3031A=锁定:
 1D220B8A48E6DBC2=时间选区
 30AE77BA6378D158=循环点
@@ -15276,6 +15280,8 @@ B1CBBBC86D855EB0=设置将影响在轨道管理器中选定的 %d 条轨道
 CBEA465578399251=在此处分割复合区域
 5B342FB75A12C94D=删除复合区域边缘
 5F330485551B7B36=在时间选区处添加复合区域
+B5336F927E3FCD5C=将媒体对象复制到新车道并重新复合
+1615E94003529BFB=将所有已编辑媒体对象复制到新车道并重新复合
 992AE2BDE5FF0A9B=新轨道 /
 
 [trackmgr]
@@ -15409,7 +15415,6 @@ C13C461E3A37057A=将对象移动到新子工程 (非破坏性粘合)
 7EB64A8C1655BEA6=将工程自动化转换为自动化对象
 AD3E67E49FEB7C24=将媒体对象移动到隐藏的子轨道
 AEF47418ABFCBC57=从所有隐藏的子轨道中移动媒体对象
-815FC2C9452967D9=同步固定车道复合区域
 EAF773E88D69D4B6=更改轨道包络自动化模式
 B331DB67F5235DC7=剪切轨道
 15925B83F3562B39=移除轨道
@@ -15581,7 +15586,6 @@ FC09A3DEB59A7D1F=将车道上的对象拆分到新轨道
 FB335EC314388F3C=将跨轨对象合并到一条轨道
 869058AD7BBABF89=将固定车道合并到片段
 6C9E508F7C50C364=将片段拆分到固定车道
-772C4DA1AFAE0962=标记最后一次录音轮次
 A94C53F61F3730F4=删除标记的片段
 495F726C388E4FB5=微调轨道音量
 09AEB0DA36657788=添加/移动标记
@@ -15626,7 +15630,7 @@ F3E96BE80392C97D=删除剃刀编辑区域
 5ADD048692B8293C=将选定对象的混合行为设置为内层对象替换外层对象
 A92F4BBC7A73D542=将选定对象的混合行为设置为始终混合
 160147C05D065C44=将选定对象的混合行为设置为始终替换
-F13342CF555C4E07=将选定对象的混合行为设置为工程默认
+F13342CF555C4E07=将选定对象的混合行为设置为工程默认设置
 AB70B744B213BA77=将对象吸附偏移设置为鼠标
 73021D8D0602CFEF=将对象吸附偏移设置为光标
 DB3D5A9C33FC41AC=将对象淡化到光标
@@ -16174,6 +16178,7 @@ A3821BE23B457DA2=删除硬件发送
 C2F3BD0289D46803=删除轨道发送
 86329E9A7C4A515E=解锁轨道控制
 E6B338A0F899CFC6=转换包络音量刻度
+1B207B016AFA4EC0=设置 FX 包络 AI 组合类型
 FAB671E710EBC778=设置包络点形状
 9F180DCCD8B3FD9B=编辑包络点
 9F7FB4C6868D8B46=在车道中显示/隐藏包络
@@ -16190,7 +16195,7 @@ E959E048B5419A48=重置频谱编辑压缩器阈值
 F8C8D27FE894F2D4=重置频谱编辑压缩器比率
 A83C19BF283ABD3A=重置频谱编辑门限阈值
 1EAF997E80D1DF73=重置频谱编辑门限底限
-9202E2BD7E7A1FE0=将交叉淡化重置为默认
+9202E2BD7E7A1FE0=将交叉淡化重置为默认值
 BFB7EACA4F188583=框选包络点选择
 F63BC3A1331502EE=框选对象选择
 8F21539CA7C413D6=通过拖放更新媒体
@@ -16335,7 +16340,7 @@ F9B606FDC46A8F9B=保留透明度
 F4343F0700595BAF=禁用音频
 E8BDDD7C5863FD80=高分辨率峰值
 F6BFC2B001FED6AC=低分辨率峰值
-4F84FB110B4E13D0=使用全局默认值
+4F84FB110B4E13D0=使用全局默认设置
 1AF16DFBC1985174=高分辨率峰值
 52BDDB0D780F6038=低分辨率峰值
 A44BDD7A5EEA710E=更改所有视频源的所有音频设置
@@ -16382,7 +16387,7 @@ DA3AFBB0ED0A8F69=编码视频格式:
 06664C290CBC0FC4=帧速率:
 
 [video2_DLG_156] ; IDD_GIF_SINK_CFG
-D2204C20B4E2FC1C=编码透明度 (对常规视频不利, 但对某些情况可能有益)
+D2204C20B4E2FC1C=编码透明度 (对常规视频不利，但对某些情况可能有益)
 C134703B1C276C93=忽略颜色低位的变化 (0-7, 0 = 全质量):
 
 [video2_DLG_157] ; IDD_ITEMINFO2
@@ -16457,6 +16462,19 @@ F8853C9137A8D5F9=25fps
 A0DA2B1E6655A814=60fps
 FDD673B12EE98AB4=从当前视频对象获取宽/高/帧率
 B8F37664711499FA=从工程获取宽/高/帧率
+
+[video_enc_access]
+9DA817481928C2A8=视频容器格式
+27DAC6BF9C633962=视频编码器
+E0F4DF1BF3B9024B=音频编码器
+82338E1BFDD91F20=高度
+B360B7BABB041F66=每秒帧数
+DA4540F1AA4B195F=将宽度, 高度, 每秒帧数设置为常用值
+5D64BB65793FCBE3=视频比特率
+035E91EE22A06FC2=视频质量系数
+2778E0A6809B085E=音频比特率
+EADC32372EFAEC28=视频编码器选项
+6B82F4E950CE72A9=音频编码器选项
 
 [video_processing]
 DB9EF2872E47B399=已加载的预置
@@ -16539,7 +16557,7 @@ B84FCD1DF1AA5035=无法在轨道上插入 FX
 46726F4E2ED035C5=ARA 错误
 C2735E8EA9D56BD5=MIDI 总线 %d-%d
 3B0F03168DFDAFF8=重命名预置
-BE281CD925A3942A=将预置保存为默认
+BE281CD925A3942A=将预置保存为默认设置
 2B74B8A9175B98AD=保存预置
 90EC908C46375577=容器输入 %d
 5B7C448530265B4C=泊坞窗输出 %d
@@ -16861,7 +16879,7 @@ E84A27AC75C036DE=如果预备则左
 F357AED81F1CAD3C=如果调音台 # 可见
 6405C14909FBEEAA=如果轨道 # 未选定
 C4CC07C35BEDFC6A=如果轨道 # 未预备
-94CF2D931B7F5687=总是 # 隐藏
+94CF2D931B7F5687=始终 # 隐藏
 4355C9B4AFCCC954=预备录制
 0D321E2C9EDC622F=监听
 DA35805B1B64BF51=轨道名称
@@ -19233,7 +19251,7 @@ CC3CE8486F974DD7=相对模式递增步进:
 652FDBE4978DC084=SWS: 使用 'i' 打开控制台以设置轨道输入 ⇌ SWS: Open console with 'i' to set track(s) input
 653FFA330201E57D=SWS/FNG: 切换律动标记 8x ⇌ SWS/FNG: Toggle groove markers 8x
 656EF6AEAB2519B8=SWS/S&M: 聚焦主窗口 (关闭其他) ⇌ SWS/S&M: Focus main window (close others)
-657114317D747C41=SWS/wol: 将选定的包络高度设置为默认 ⇌ SWS/wol: Set selected envelope height to default
+657114317D747C41=SWS/wol: 将选定的包络高度设置为默认值 ⇌ SWS/wol: Set selected envelope height to default
 6587D2A019164ACA=Xenakios/SWS: 切换对象源文件到文件夹中的上一个 ⇌ Xenakios/SWS: Switch item source file to previous in folder
 6599C0D02BB870C7=SWS/S&M: 现场配置 #%d - 禁用选项 '切换配置时发送所有音符关闭' ⇌ SWS/S&M: Live Config #※d - Disable option 'Send all notes off when switching configs'
 659A2BAF6504D264=SWS: 将对象的开始位置吸附到网格 (更改长度) ⇌ SWS: Quantize item's start to grid (change length)
