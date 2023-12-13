@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5087adf1a850ec1b156e22d462421643e5232915">
+<index version="1" name="zaibuyidao Scripts" commit="a9cb990cba35bbe940911aa15e2cc7bd9d8da53b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7733,22 +7733,18 @@
         <changelog><![CDATA[Brand new REAPER: 7.06, SWS: 2.13.2.0]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/5087adf1a850ec1b156e22d462421643e5232915/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
+      <version name="1.0.3" author="zaibuyidao (再補一刀)" time="2023-12-13T06:41:23Z">
+        <changelog><![CDATA[Brand new REAPER: 7.07, SWS: 2.13.2.0]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/a9cb990cba35bbe940911aa15e2cc7bd9d8da53b/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
     </reapack>
-    <reapack name="Chinese Traditional (繁体中文).ReaperLangPack" type="langpack" desc="Chinese Simplified (繁體中文)">
+    <reapack name="Chinese Traditional (繁體中文).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁體中文)">
       <metadata>
-        <link rel="website">https://stash.reaper.fm/v/47851/Chinese%20Simplified%20%28%26%2331616%3B%26%2320307%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack</link>
+        <link rel="website">https://stash.reaper.fm/v/47865/Chinese%20Traditional%20%28%26%2332321%3B%26%2339636%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack</link>
       </metadata>
-      <version name="1.0" author="再補一刀" time="2023-11-25T19:09:25Z">
-        <changelog><![CDATA[+ 1.0 Init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/a9df3f6751a2acad4272767b5c1521b314896f7f/Translations/Chinese%20Traditional%20(%E7%B9%81%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao (再補一刀)" time="2023-11-26T12:05:06Z">
-        <changelog><![CDATA[Init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/33ad1c0b163ec39ae32b2ce16d85bbcc5d036bf3/Translations/Chinese%20Traditional%20(%E7%B9%81%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao (再補一刀)" time="2023-11-28T14:56:09Z">
-        <changelog><![CDATA[Brand new REAPER: 7.06, SWS: 2.13.2.0]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/5087adf1a850ec1b156e22d462421643e5232915/Translations/Chinese%20Traditional%20(%E7%B9%81%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      <version name="1.0.3" author="zaibuyidao (再補一刀)" time="2023-12-13T06:41:23Z">
+        <changelog><![CDATA[Brand new REAPER: 7.07, SWS: 2.13.2.0]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/a9cb990cba35bbe940911aa15e2cc7bd9d8da53b/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
