@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d8db211a52d1c609cc098eab5c4da14017d9b79b">
+<index version="1" name="zaibuyidao Scripts" commit="986ade95797be5e1b20f53e11f47392a0e904694">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -271,6 +271,9 @@
       <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Add%20Take%20Marker%20At%20Snap%20Offset.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2023-12-15T06:36:19Z">
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/986ade95797be5e1b20f53e11f47392a0e904694/Items%20Editing/zaibuyidao_Add%20Take%20Marker%20At%20Snap%20Offset.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Trim Split Items Settings.lua" type="script" desc="Auto Trim Split Items Settings">
