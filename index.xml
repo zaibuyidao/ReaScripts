@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a9cb990cba35bbe940911aa15e2cc7bd9d8da53b">
+<index version="1" name="zaibuyidao Scripts" commit="d8db211a52d1c609cc098eab5c4da14017d9b79b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7796,6 +7796,10 @@
       <version name="1.5.4" author="zaibuyidao" time="2023-05-01T06:39:09Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/807b52fb454ddd8cbdd881d6f8171a4b04662b3a/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
+      </version>
+      <version name="1.5.5" author="zaibuyidao" time="2023-12-15T06:10:01Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d8db211a52d1c609cc098eab5c4da14017d9b79b/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Channel Routing To Selected Tracks.lua" type="script" desc="Build MIDI Channel Routing To Selected Tracks">
