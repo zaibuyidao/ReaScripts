@@ -1,5 +1,5 @@
 -- @description Add MIDI Hardware Output And Receives To Selected Tracks
--- @version 1.5.4
+-- @version 1.5.5
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -115,7 +115,7 @@ function main()
     reaper.SetExtState("AddMIDIHardwareOutput", "Track", track_num, false)
     reaper.SetExtState("AddMIDIHardwareOutput", "Toggle", toggle, false)
 
-    maxval = tonumber(maxval)
+    maxval, output_device = tonumber(maxval), tonumber(output_device)
     ordinal = ordinal - 1
     reaper.Undo_BeginBlock()
     if toggle == "dft" then
