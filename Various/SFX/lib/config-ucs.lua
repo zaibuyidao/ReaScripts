@@ -6,7 +6,7 @@ return {
             size_unit = 14, -- 控件单位大小, 所有控件大小以此为基准
         },
         window = {
-            title = "SFX Tag Search UCS", -- 窗口标题
+            title = "SFX Tag Search (UCS)", -- 窗口标题
             background_color = { r = 220, g = 222, b = 222 }, -- 窗口背景颜色
             width = 250, -- 初次启动时的窗口宽度
             height = 500, -- 初次启动时的窗口高度

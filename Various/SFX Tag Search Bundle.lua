@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.5.8
+-- @version 1.5.9
 -- @changelog
 --   Added the content of the search box to clear the media explorer.
 -- @reference
@@ -12,7 +12,7 @@
 -- @provides
 --   [main] SFX/zaibuyidao_SFX Tag Search.lua
 --   [main] SFX/zaibuyidao_SFX Tag Search Custom.lua
---   [main] SFX/zaibuyidao_SFX Tag Search UCS.lua
+--   [main] SFX/zaibuyidao_SFX Tag Search (UCS).lua
 --   [main] SFX/zaibuyidao_SFX Tag Album.lua
 --   [main] SFX/zaibuyidao_SFX Tag Comment.lua
 --   [main] SFX/zaibuyidao_SFX Tag Description.lua
