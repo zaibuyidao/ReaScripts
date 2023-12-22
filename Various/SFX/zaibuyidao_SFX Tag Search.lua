@@ -791,10 +791,10 @@ function init()
 			resultListView:jump(resultListView.firstIndex + 1)
 		elseif key == 26165 then --F5
 			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
-		elseif key == 26166 then --F6 生成 custom_keywords.csv
-			local customCSVFilePath = script_path .. getPathDelimiter() .. "custom_keywords.csv"
-			updateCustomCSV(data, customCSVFilePath)
-		elseif key == 26167 then --F7 刷新 keywords.csv
+		-- elseif key == 26166 then --F6 生成 custom_keywords.csv
+		-- 	local customCSVFilePath = script_path .. getPathDelimiter() .. "custom_keywords.csv"
+		-- 	updateCustomCSV(data, customCSVFilePath)
+		elseif key == 26166 then --F6 刷新 keywords.csv
 			regenerateCSV(dbList, csvFilePath)
 		end
 	end

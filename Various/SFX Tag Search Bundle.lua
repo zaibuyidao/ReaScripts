@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.6.1
+-- @version 1.6.2
 -- @changelog
 --   Add Database List Script.
 -- @reference
