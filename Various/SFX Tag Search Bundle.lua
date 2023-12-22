@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.6.0
+-- @version 1.6.1
 -- @changelog
---   Added the content of the search box to clear the media explorer.
+--   Add Database List Script.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links

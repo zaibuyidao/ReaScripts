@@ -374,25 +374,14 @@ function set_explorer_path(hwnd, folder)
 	local combo_box = reaper.JS_Window_FindChildByID(hwnd, 1002)
 	local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
 	-- https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-	reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0,0,0) -- Space key 模拟用户按下空格键
-	reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x20, 0,0,0) -- Space key
-	local time = reaper.time_precise()
-	function delayed_update_explorer_title()
-		local time_check = reaper.time_precise()
-		if time_check - time >= 0.1 then
-			reaper.JS_Window_SetTitle(edit, "")
-			reaper.JS_Window_SetTitle(edit, folder)
-			reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER key 模拟用户按下回车键
-			reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x0D, 0,0,0) -- ENTER key
-			return
-		end
-		reaper.defer(delayed_update_explorer_title)
-	  end
-	if edit then
-		delayed_update_explorer_title()
-	end
+	reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0,0,0) -- SPACE 模拟用户按下空格键
+	reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE 模拟用户按下退格键
+	reaper.JS_Window_SetTitle(edit, "")
+	reaper.JS_Window_SetTitle(edit, folder)
+	reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER 模拟用户按下回车键
+	-- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x0D, 0,0,0) -- ENTER
 end
-  
+
 function set_reaper_explorer_path(f)
 	local title = reaper.JS_Localize("Media Explorer", "common")
 	local hwnd = reaper.JS_Window_Find(title, true)
