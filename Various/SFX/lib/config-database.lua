@@ -6,7 +6,7 @@ return {
             size_unit = 14, -- 控件单位大小，所有控件大小以此为基准
         },
         window = {
-            title = "SFX Tag Search (Custom)", -- 窗口标题
+            title = "SFX Tag Search (Database)", -- 窗口标题
             background_color = { r = 220, g = 222, b = 222 }, -- 窗口背景颜色
             width = 250, -- 初次启动时的窗口宽度
             height = 500, -- 初次启动时的窗口高度
@@ -46,6 +46,9 @@ return {
             color_highlight = {0/255, 120/255, 212/255, 0.3}, -- 关键词高亮颜色
             color_focus_border = {105/255, 105/255, 105/255, 1},  -- 选中项边框的颜色
         }
+    },
+	db = {
+        exclude_db = {} -- 排除加载的数据库，示例 exclude = { "DB: 00", "DB: 01" }
     },
     search = {
         sort_result = true, -- 是否对列表进行排序
