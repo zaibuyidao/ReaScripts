@@ -145,27 +145,39 @@ end
 
 function getDbList()
     local reaperConfig = LIP.load(reaper.GetResourcePath() .. PATH_DELIMITER .. "reaper.ini")
-    local i = 1
     local reaper_explorer = reaperConfig.reaper_explorer
-    if reaper_explorer == nil then return false end
+    if reaper_explorer == nil then 
+        print("reaper_explorer is nil")
+        return false 
+    end
+
     local res = {}
-    local reaperFileListCount = countReaperFileList(reaper_explorer)
-    for k, v in pairs(reaper_explorer) do
-        local i = k:match("^Shortcut(%d+)$")
-        if i then
-            i = tonumber(i)
-            local name = reaper_explorer["ShortcutT" .. i]
-            if name and #name > 0 and v:find("^%d+%.ReaperFileList$") then
-                if reaperFileListCount[v] == 1 or (not res[v] or res[v].i > i) then
-                    res[v] = {
-                        path = reaper.GetResourcePath() .. PATH_DELIMITER .. "MediaDB" .. PATH_DELIMITER .. reaper_explorer["Shortcut" .. i],
-                        name = name,
-                        i = i
-                    }
-                end
+
+    for i = 0, tonumber(reaper_explorer.NbShortcuts) - 1 do
+        local shortcutKey = string.format("Shortcut%d", i)
+        local shortcutTKey = string.format("ShortcutT%d", i)
+        local shortcutValue = reaper_explorer[shortcutKey]
+        local shortcutTValue = reaper_explorer[shortcutTKey]
+
+        -- 排除特定的项
+        if (shortcutValue == "<Track Templates>" or shortcutValue == "<Project Directory>") then
+            goto continue
+        end
+
+        if shortcutValue and shortcutTValue then
+            if shortcutValue:find("^.+%.ReaperFileList$") or shortcutValue:find("^<.+>$") then
+                res[shortcutValue] = {
+                    path = reaper.GetResourcePath() .. PATH_DELIMITER .. "MediaDB" .. PATH_DELIMITER .. shortcutValue,
+                    name = shortcutTValue,
+                    i = i
+                }
             end
         end
+
+        ::continue::
     end
+
+    -- 对结果进行排序
     local sortedRes = {}
     for _, v in pairs(res) do
         table.insert(sortedRes, v)
@@ -173,6 +185,7 @@ function getDbList()
     table.sort(sortedRes, function(a, b)
         return a.i < b.i
     end)
+    
     return sortedRes
 end
 

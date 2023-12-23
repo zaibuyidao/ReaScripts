@@ -232,21 +232,16 @@ function readViewModelFromReaperFileList(dbPath, config, async)
         return source:gmatch("[^" .. table.concat(delimiters[origin]) .. "]+")
     end
 
-    local path
     local keywords = {}
 
     local function processItem(itemType, content)
-        if itemType == "PATH" then
-            path = (parseCSVLine(content, " "))[1]
-        elseif itemType == "FILE" and not excludeOrigin["File"] then
+        if itemType == "FILE" and not excludeOrigin["File"] then
             local p = (parseCSVLine(content, " "))[1]
             local matchPattern = "[^/%\\]+$"
             if config.containsAllParentDirectories then
                 matchPattern = "[^/%\\]+"
             end
-            -- read each part from path
             for w in p:gmatch(matchPattern) do
-                -- not disk
                 if not w:match("^%w+:$") then
                     local value = w:trimFileExtension()
                     keywords[value] = keywords[value] or { value = value, from = {} }
@@ -256,7 +251,6 @@ function readViewModelFromReaperFileList(dbPath, config, async)
         elseif itemType == "DATA" then
             local ok, entries = pcall(parseCSVLine, content, " ")
             if not ok then
-                -- print("parse DATA line failed:", content, entries)
                 goto continue
             end
             for _, entry in ipairs(entries) do
@@ -278,7 +272,6 @@ function readViewModelFromReaperFileList(dbPath, config, async)
         elseif itemType == "USER" and not excludeOrigin["Keywords"] then
             local ok, entries = pcall(parseCSVLine, content, " ")
             if not ok then
-                -- print("parse DATA line failed:", content, entries)
                 goto continue
             end
             if entries[1] and entries[1]:find("IXML:USER:Keywords") and entries[2] then
@@ -301,6 +294,6 @@ function readViewModelFromReaperFileList(dbPath, config, async)
     end
     
     if readReaperFileList(dbPath, processItem) then
-        return path, keywords
+        return keywords
     end
 end

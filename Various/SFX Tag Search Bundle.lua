@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.6.2
+-- @version 1.6.3
 -- @changelog
---   Add Database List Script.
+--   # Fix the problem that the database list can't be fetched in its entirety.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links

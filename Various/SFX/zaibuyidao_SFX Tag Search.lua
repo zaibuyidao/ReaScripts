@@ -171,6 +171,10 @@ end
 SIZE_UNIT = getConfig("ui.global.size_unit", 20)
 
 dbList = getDbList()
+-- print("Database List from getDbList function:")
+-- 	for i, db in ipairs(dbList) do
+-- 		print("Database " .. i .. ": " .. db.name .. ", Path: " .. db.path)
+-- 	end
 if dbList == false then return end
 ratings = (function ()
 	local ratings = {}
@@ -242,7 +246,7 @@ function readFromCSV(csvFilePath)
 	local headers = file:read("*l")
 
 	for line in file:lines() do
-			local db, path, value, fromString, fromKeys = line:match("([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)")
+			local db, value, fromString, fromKeys = line:match("([^,]+),([^,]+),([^,]+),([^,]+)")
 			
 			local fromTable = {}
 			for key in fromKeys:gmatch("[^;]+") do
@@ -251,7 +255,6 @@ function readFromCSV(csvFilePath)
 			
 			table.insert(data, {
 					db = db,
-					path = path,
 					value = value,
 					from = fromTable,
 					fromString = fromString
@@ -277,18 +280,17 @@ else
 	
 	for _, db in ipairs(dbList) do
 			if not excludeDbName[db.name] then
-					local path, keywords = readViewModelFromReaperFileList(db.path, {
+					local keywords = readViewModelFromReaperFileList(db.path, {
 							excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
 							delimiters = getConfig("db.delimiters", {}),
 							containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
 					})
 					
-					if path and keywords then
+					if keywords then
 							readDBCount = readDBCount + 1
 							for v, keyword in pairs(keywords) do
 									table.insert(data, {
 											db = db.name,
-											path = path,
 											value = keyword.value,
 											from = keyword.from,
 											fromString = table.concat(table.keys(keyword.from), ", ")
@@ -306,13 +308,12 @@ else
 	end
 
 	-- 写入CSV头部(取决于data的结构)
-	file:write("db,path,value,from,fromString\n")
+	file:write("db,value,from,fromString\n")
 
 	-- 遍历data，将其写入CSV文件
 	for _, entry in ipairs(data) do
-		file:write(string.format("%s,%s,%s,%s,%s\n",
+		file:write(string.format("%s,%s,%s,%s\n",
 				entry.db,
-				entry.path,
 				entry.value,
 				table.concat(table.keys(entry.from), ";"),
 				entry.fromString
@@ -388,17 +389,16 @@ function regenerateCSV(dbList, csvFilePath)
 	
 	for _, db in ipairs(dbList) do
 			if not excludeDbName[db.name] then
-					local path, keywords = readViewModelFromReaperFileList(db.path, {
+					local keywords = readViewModelFromReaperFileList(db.path, {
 							excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
 							delimiters = getConfig("db.delimiters", {}),
 							containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
 					})
 					
-					if path and keywords then
+					if keywords then
 							for v, keyword in pairs(keywords) do
 									table.insert(data, {
 											db = db.name,
-											path = path,
 											value = keyword.value,
 											from = keyword.from,
 											fromString = table.concat(table.keys(keyword.from), ", ")
@@ -543,7 +543,6 @@ function searchKeywordAsync(value, rating, result)
 			table.bininsert(result, {
 				index = index, -- for stable sort
 				db = item.db,
-				path = item.path,
 				value = item.value,
 				from = item.from,
 				fromString = item.fromString
