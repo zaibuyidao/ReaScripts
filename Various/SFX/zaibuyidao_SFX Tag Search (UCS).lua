@@ -219,31 +219,95 @@ local data = {}
 
 function loadCSVData(columns)
 	data = {} -- 清空旧数据
-	local f = io.open(script_path .. getPathDelimiter() .. "ucs_keywords.csv", "r")
+    local filePath = script_path .. getPathDelimiter() .. "ucs_keywords.csv"
+    local f = io.open(filePath, "r")
+    if not f then
+        print("Failed to open file: " .. filePath)
+        return
+    end
+	
+	local lineNumber = 1
+	while true do
+		local line = f:read()
+		if line == nil then break end
+
+		-- 如果是第一行，跳过处理
+		local parts = parseCSVLine(line, ",", lineNumber)
+		if parts == nil then return end
+
+		if lineNumber ~= 1 and parts[1] ~= "" then
+			table.insert(data, {
+				key = parts[columns[1]],
+				name = parts[columns[2]],
+				remark = parts[columns[3]],
+				name2 = parts[columns[4]],
+				remark2 = parts[columns[5]],
+				name3 = parts[columns[6]],
+				remark3 = parts[columns[7]]
+			})
+		end
+
+		lineNumber = lineNumber + 1
+	end
+
+	f:close()
+end
+
+function reloadDataAndUpdateUI(columns)
+	local currentMode = getConfig("ui.global.ucs_language", 2)
+    local columns
+    if currentMode == 1 then
+        columns = {1, 2, 3, 4, 5, 6, 7} -- 英文
+    elseif currentMode == 2 then
+        columns = {1, 4, 5, 2, 3, 6, 7} -- 简体中文
+    elseif currentMode == 3 then
+        columns = {1, 6, 7, 2, 3, 4, 5} -- 繁体中文
+    else
+        print("Invalid language mode")
+        return
+    end
+
+	data = {} -- 清空旧数据
+    local filePath = script_path .. getPathDelimiter() .. "ucs_keywords.csv"
+    local f = io.open(filePath, "r")
+    if not f then
+        print("Failed to open file: " .. filePath)
+        return
+    end
 
 	local lineNumber = 1
 	while true do
-			local line = f:read()
-			if line == nil then break end
+		local line = f:read()
+		if line == nil then break end
 
-			-- 如果是第一行，跳过处理
-			local parts = parseCSVLine(line, ",", lineNumber)
-			if parts == nil then return end
+		-- 如果是第一行，跳过处理
+		local parts = parseCSVLine(line, ",", lineNumber)
+		if parts == nil then return end
 
-			if lineNumber ~= 1 and parts[1] ~= "" then
-					table.insert(data, {
-							key = parts[columns[1]],
-							name = parts[columns[2]],
-							remark = parts[columns[3]],
-							name2 = parts[columns[4]],
-							remark2 = parts[columns[5]],
-							name3 = parts[columns[6]],
-							remark3 = parts[columns[7]]
-					})
-			end
+		if lineNumber ~= 1 and parts[1] ~= "" then
+			table.insert(data, {
+				key = parts[columns[1]],
+				name = parts[columns[2]],
+				remark = parts[columns[3]],
+				name2 = parts[columns[4]],
+				remark2 = parts[columns[5]],
+				name3 = parts[columns[6]],
+				remark3 = parts[columns[7]]
+			})
+		end
 
-			lineNumber = lineNumber + 1
+		lineNumber = lineNumber + 1
 	end
+
+	f:close()
+
+    if data and #data > 0 then
+        resultListView.data = data
+        refreshResultState()
+        -- print("resultListView data updated and UI refreshed.")
+    else
+        print("No data to display.")
+    end
 end
 
 local currentMode = getConfig("ui.global.ucs_language", 2)
@@ -307,6 +371,7 @@ end
 
 --local timer = reaper.time_precise() -- 定时器
 local executeSecondCommand = false
+resultListView = nil
 
 function init()
 	JProject:new()
@@ -393,7 +458,7 @@ function init()
 		gfx.drawstr(tostring(self.label))
 	end
 
-	local resultListView = ListView.new({
+	resultListView = ListView.new({
 		window = window,
 		x = 10,
 		y = SIZE_UNIT * 1.5 + 15,
@@ -655,100 +720,7 @@ function init()
 				-- reaper.CF_SetClipboard(data.key) -- 复制
 			end
 
-			-- function c:onRightMouseClick() -- Defer版本无效
-			-- 	edit_tag(currentCatID)
-			-- 	reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", getConfig("ucs.catid"), 0, 0, 0) -- Edit metadata tag: CatID
-
-			-- 	reaper.defer(function ()
-			-- 		edit_tag(currentCatFull)
-			-- 		reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", getConfig("ucs.category_full"), 0, 0, 0) -- Edit metadata tag: CategoryFull
-			-- 	end)
-			-- end
-
-			-- function c:onRightMouseClick() -- 定时器版本 V1
-			-- 	timer = reaper.time_precise()  -- 重置timer的值
-		
-			-- 	edit_tag(currentCatID)
-			-- 	reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", getConfig("ucs.catid"), 0, 0, 0) -- Edit metadata tag: CatID
-		
-			-- 	local function executeSecondOperation()
-			-- 			local now = reaper.time_precise()
-			-- 			if now - timer >= 0.3 then -- 检查是否已经过去了0.1秒
-			-- 					edit_tag(currentCatFull)
-			-- 					reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", getConfig("ucs.category_full"), 0, 0, 0) -- Edit metadata tag: CategoryFull
-			-- 			else
-			-- 					reaper.defer(executeSecondOperation) -- 如果还没有过去0.1秒，再次延迟执行
-			-- 			end
-			-- 	end
-		
-			-- 	reaper.defer(executeSecondOperation)
-			-- end
-
-			-- function c:onRightMouseClick() -- 定时器版本 V2
-			-- 	timer = reaper.time_precise()  -- 重置timer的值
-			-- 	local function sendCommandToMediaExplorer(commandID, tagValue)
-			-- 		local mediaExplorerWindow = reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true)
-			-- 		if mediaExplorerWindow then
-			-- 				edit_tag(tagValue)
-			-- 				reaper.JS_WindowMessage_Post(mediaExplorerWindow, "WM_COMMAND", commandID, 0, 0, 0)
-			-- 		end
-			-- 	end
-		
-			-- 	-- 发送第一个命令
-			-- 	sendCommandToMediaExplorer(getConfig("ucs.catid"), currentCatID)
-		
-			-- 	local function executeSecondOperation()
-			-- 			local now = reaper.time_precise()
-			-- 			local delay = getConfig("ucs.delay_time")
-			-- 			if now - timer >= delay then -- 检查是否已经过去了 delay 秒
-			-- 				sendCommandToMediaExplorer(getConfig("ucs.category_full"), currentCatFull)
-			-- 			else
-			-- 					reaper.defer(executeSecondOperation) -- 如果还没有过去0.3秒，再次延迟执行
-			-- 			end
-			-- 	end
-		
-			-- 	reaper.defer(executeSecondOperation)
-			-- end
-
-			-- function c:onRightMouseClick() -- 定时器版本 V4
-			-- 	timer = reaper.time_precise()  -- 重置timer的值
-		
-			-- 	local function sendCommandToMediaExplorer(commandID, tagValue)
-			-- 			local mediaExplorerWindow = reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true)
-			-- 			if mediaExplorerWindow then
-			-- 					edit_tag(tagValue)
-			-- 					reaper.JS_WindowMessage_Post(mediaExplorerWindow, "WM_COMMAND", commandID, 0, 0, 0)
-			-- 			end
-			-- 	end
-		
-			-- 	-- 发送第一个命令
-			-- 	sendCommandToMediaExplorer(getConfig("ucs.catid"), currentCatID)
-		
-			-- 	local commandQueue = {
-			-- 			{getConfig("ucs.category_full"), currentCatFull},
-			-- 			{getConfig("ucs.category"), currentCategory},
-			-- 			{getConfig("ucs.sub_category"), currentSubCategory}
-			-- 	}
-		
-			-- 	local function executeNextOperation()
-			-- 			local now = reaper.time_precise()
-			-- 			local delay = getConfig("ucs.tag_write_delay")
-			-- 			if now - timer >= delay then
-			-- 					if #commandQueue > 0 then
-			-- 							local nextCommand = table.remove(commandQueue, 1)
-			-- 							sendCommandToMediaExplorer(nextCommand[1], nextCommand[2])
-			-- 							timer = reaper.time_precise()  -- 重置timer的值
-			-- 							reaper.defer(executeNextOperation) -- 继续执行下一个命令
-			-- 					end
-			-- 			else
-			-- 					reaper.defer(executeNextOperation) -- 如果还没有过去指定的延迟时间，再次延迟执行
-			-- 			end
-			-- 	end
-		
-			-- 	reaper.defer(executeNextOperation)
-			-- end
-
-			function c:onRightMouseClick() -- 定时器版本 V5
+			function c:onRightMouseClick() -- 右键单击将UCS标签写入媒体资源管理器中的媒体, 定时器版本 V5
 				-- 创建一个命令队列
 				local commandQueue = {}
 		
@@ -815,29 +787,33 @@ function init()
 		elseif key == 1919379572 or key == 1885824110 then -- right arrow 1919379572 page down 1885824110
 			-- print("page down")
 			resultListView:scroll(getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
-		elseif key == 26161 then --编辑关键词 f1
+		elseif key == 26161 then --F1 编辑关键词
 			openUrl(script_path .. "ucs_keywords.csv")
-		elseif key == 26162 then --编辑配置表 f2
+		elseif key == 26162 then --F2 编辑配置表
 			openUrl(script_path .. "lib/config-ucs.lua")
-		elseif key == 26163 then --随机行 f3
+		elseif key == 26163 then --F3 随机行
 			resultListView:randomJump()
-		elseif key == 26164 then --跳转目标 f4
+		elseif key == 26164 then --F4 跳转目标
 			resultListView:promptForJump()
-		elseif key == 26165 then --F5
-			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
+		elseif key == 26165 then --F5 刷新列表
+			if resultListView then
+				reloadDataAndUpdateUI({1, 2, 3, 4, 5, 6, 7})
+			else
+				print("Error: resultListView is not initialized.")
+			end
 		elseif key == 26166 then --F6
 			loadCSVData({1, 2, 3, 4, 5, 6, 7})
-			startSearch(searchTextBox.value) -- 刷新列表
+			startSearch(searchTextBox.value) -- 英文
 			resultListView:jump(originalPosition)
 			currentMode = 1
 		elseif key == 26167 then --F7
 			loadCSVData({1, 4, 5, 2, 3, 6, 7})
-			startSearch(searchTextBox.value) -- 刷新列表
+			startSearch(searchTextBox.value) -- 简体中文
 			resultListView:jump(originalPosition)
 			currentMode = 2
 		elseif key == 26168 then --F8
 			loadCSVData({1, 6, 7, 2, 3, 4, 5})
-			startSearch(searchTextBox.value) -- 刷新列表
+			startSearch(searchTextBox.value) -- 繁体中文
 			resultListView:jump(originalPosition)
 			currentMode = 3
 		elseif key == 26169 then --F9
@@ -851,10 +827,12 @@ function init()
 				loadCSVData({1, 2, 3, 4, 5, 6, 7})
 					currentMode = 1
 			end
-			startSearch(searchTextBox.value) -- 刷新列表
+			startSearch(searchTextBox.value) -- 多语言切换
 			resultListView:jump(originalPosition)
-		elseif key == 6697266 then --过滤关键词 f12
-			searchTextBox:promptForContent()
+		elseif key == 6697265 then --F11
+			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
+		elseif key == 6697266 then --F12
+			searchTextBox:promptForContent() --过滤关键词
 		elseif key == 1752132965 then --HOME
 			resultListView:jump(1)
 		elseif key == 6647396 then --END

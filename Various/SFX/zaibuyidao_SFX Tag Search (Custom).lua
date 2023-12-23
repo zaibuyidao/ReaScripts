@@ -427,6 +427,52 @@ function searchKeyword(value, rating) -- 过滤搜索
 	return res
 end
 
+function reloadDataAndUpdateUI()
+	local data = {}
+	do
+		local f = io.open(script_path .. getPathDelimiter() .. "custom_keywords.csv", "r")
+		local lineNumber = 1
+		while true do
+			local line = f:read()
+			if line == nil then break end
+			if parseCSVLine(line, ",", lineNumber) == false then return end
+	
+			local parts = parseCSVLine(line, ",", lineNumber)
+			if parts ~= nil and parts[1] ~= "" then -- 确保 parts[1]（key）不为空，增加关键词文件的注释行
+				table.insert(data, {
+					key = parts[1],
+					name = parts[2],
+					remark = parts[3]
+				})
+			end
+	
+			lineNumber = lineNumber + 1
+		end
+	end
+
+    local sortResult = getConfig("search.sort_result") -- 加入排序
+	if sortResult then
+		table.sort(data, function(a, b)
+			local cnFirst = getConfig("search.cn_first")
+			if cnFirst == true or cnFirst == false then
+				return custom_sort(a, b, cnFirst)
+			else
+				return string.lower(tostring(a.key)) < string.lower(tostring(b.key))
+			end
+		end)
+	end
+
+    if data and #data > 0 then
+        resultListView.data = data
+        refreshResultState()
+        -- print("resultListView data updated and UI refreshed.")
+    else
+        print("No data to display.")
+    end
+end
+
+resultListView = nil
+
 function init()
 	JProject:new()
 	window = jGui:new({
@@ -512,7 +558,7 @@ function init()
 		gfx.drawstr(tostring(self.label))
 	end
 
-	local resultListView = ListView.new({
+	resultListView = ListView.new({
 		window = window,
 		x = 10,
 		y = SIZE_UNIT * 1.5 + 15,
@@ -679,18 +725,24 @@ function init()
 		elseif key == 1919379572 or key == 1885824110 then
 			-- print("page down")
 			resultListView:scroll(getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
-		elseif key == 26161 then --编辑关键词 f1
+		elseif key == 26161 then --F1 编辑关键词
 			openUrl(script_path .. "custom_keywords.csv")
-		elseif key == 26162 then --编辑配置表 f2
+		elseif key == 26162 then --F2 编辑配置表
 			openUrl(script_path .. "lib/config-custom.lua")
-		elseif key == 26163 then --随机行 f3
+		elseif key == 26163 then --F3 随机行
 			resultListView:randomJump()
-		elseif key == 26164 then --跳转目标 f4
+		elseif key == 26164 then --F4 跳转目标
 			resultListView:promptForJump()
-		elseif key == 26165 then --F5
+		elseif key == 26165 then --F5 刷新列表
+			if resultListView then
+				reloadDataAndUpdateUI()
+			else
+				print("Error: resultListView is not initialized.")
+			end
+		elseif key == 6697265 then --F11
 			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
-		elseif key == 6697266 then --过滤关键词 f12
-			searchTextBox:promptForContent()
+		elseif key == 6697266 then --F12
+			searchTextBox:promptForContent() --过滤关键词
 		elseif key == 1752132965 then --HOME
 			resultListView:jump(1)
 		elseif key == 6647396 then --END

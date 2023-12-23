@@ -1,9 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.6.7
+-- @version 1.6.8
 -- @changelog
---   + Press F5 to refresh the database list of the SFX Tag Search (Database) script in real time.
---   + 按 F5 以实时刷新 SFX Tag Search (Database) 脚本的数据库列表.
+--   + Press F5 to refresh the tag list of the SFX Tag Search (UCS & Custom) script in real time.
+--   + 按 F5 以实时刷新 SFX Tag Search (UCS & Custom) 脚本的标签列表.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
