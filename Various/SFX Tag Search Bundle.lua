@@ -1,9 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.6.5
+-- @version 1.6.6
 -- @changelog
---   + Add UCS language settings to SFX Tag Search (UCS) scripts.
---   + 对 SFX Tag Search (UCS) 脚本增加UCS语言设置功能.
+--   + Press F5 to refresh the tag list of the SFX Tag Search script in real time.
+--   + 按 F5 以实时刷新 SFX Tag Search 脚本的标签列表.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links

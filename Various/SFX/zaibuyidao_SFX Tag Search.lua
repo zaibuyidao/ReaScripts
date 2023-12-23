@@ -279,25 +279,25 @@ else
 	local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
 	
 	for _, db in ipairs(dbList) do
-			if not excludeDbName[db.name] then
-					local keywords = readViewModelFromReaperFileList(db.path, {
-							excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
-							delimiters = getConfig("db.delimiters", {}),
-							containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+		if not excludeDbName[db.name] then
+			local keywords = readViewModelFromReaperFileList(db.path, {
+				excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
+				delimiters = getConfig("db.delimiters", {}),
+				containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+			})
+			
+			if keywords then
+				readDBCount = readDBCount + 1
+				for v, keyword in pairs(keywords) do
+					table.insert(data, {
+						db = db.name,
+						value = keyword.value,
+						from = keyword.from,
+						fromString = table.concat(table.keys(keyword.from), ", ")
 					})
-					
-					if keywords then
-							readDBCount = readDBCount + 1
-							for v, keyword in pairs(keywords) do
-									table.insert(data, {
-											db = db.name,
-											value = keyword.value,
-											from = keyword.from,
-											fromString = table.concat(table.keys(keyword.from), ", ")
-									})
-							end
-					end
+				end
 			end
+		end
 	end
 
 	local file, err = io.open(csvFilePath , "w+")
@@ -313,12 +313,12 @@ else
 	-- 遍历data，将其写入CSV文件
 	for _, entry in ipairs(data) do
 		file:write(string.format("%s,%s,%s,%s\n",
-				entry.db,
-				entry.value,
-				table.concat(table.keys(entry.from), ";"),
-				entry.fromString
-		))
-  end
+			entry.db,
+			entry.value,
+			table.concat(table.keys(entry.from), ";"),
+			entry.fromString
+	    ))
+	end
 
 	-- 关闭文件
 	io.close(file)
@@ -344,14 +344,14 @@ function updateCSV(data, csvFilePath)
 	-- 1. 对data进行排序
 	local sortResult = getConfig("search.sort_result")
 	if sortResult then
-			table.sort(data, function(a, b)
-					local cnFirst = getConfig("search.cn_first")
-					if cnFirst == true or cnFirst == false then
-							return custom_sort(a, b, cnFirst)
-					else
-							return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
-					end
-			end)
+		table.sort(data, function(a, b)
+			local cnFirst = getConfig("search.cn_first")
+			if cnFirst == true or cnFirst == false then
+				return custom_sort(a, b, cnFirst)
+			else
+				return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
+			end
+		end)
 	end
 
 	-- 2. 打开keywords.csv以写模式
@@ -359,24 +359,23 @@ function updateCSV(data, csvFilePath)
 
 	-- 检查文件是否成功打开
 	if not file then
-			print("Error: Unable to open or create the file for writing:", csvFilePath)
-			return
+		print("Error: Unable to open or create the file for writing:", csvFilePath)
+		return
 	end
 
 	-- 3. 将data的内容写入keywords.csv
 
 	-- 写入CSV头部
-	file:write("db,path,value,from,fromString\n")
+	file:write("db,value,from,fromString\n")
 
 	-- 遍历data，将其写入CSV文件
 	for _, entry in ipairs(data) do
-			file:write(string.format("%s,%s,%s,%s,%s\n",
-					entry.db,
-					entry.path,
-					entry.value,
-					table.concat(table.keys(entry.from), ";"),
-					entry.fromString
-			))
+		file:write(string.format("%s,%s,%s,%s\n",
+			entry.db,
+			entry.value,
+			table.concat(table.keys(entry.from), ";"),
+			entry.fromString
+		))
 	end
 
 	-- 关闭文件
@@ -388,35 +387,24 @@ function regenerateCSV(dbList, csvFilePath)
 	local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
 	
 	for _, db in ipairs(dbList) do
-			if not excludeDbName[db.name] then
-					local keywords = readViewModelFromReaperFileList(db.path, {
-							excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
-							delimiters = getConfig("db.delimiters", {}),
-							containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+		if not excludeDbName[db.name] then
+			local keywords = readViewModelFromReaperFileList(db.path, {
+				excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
+				delimiters = getConfig("db.delimiters", {}),
+				containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+			})
+			
+			if keywords then
+				for v, keyword in pairs(keywords) do
+					table.insert(data, {
+						db = db.name,
+						value = keyword.value,
+						from = keyword.from,
+						fromString = table.concat(table.keys(keyword.from), ", ")
 					})
-					
-					if keywords then
-							for v, keyword in pairs(keywords) do
-									table.insert(data, {
-											db = db.name,
-											value = keyword.value,
-											from = keyword.from,
-											fromString = table.concat(table.keys(keyword.from), ", ")
-									})
-							end
-					end
+				end
 			end
-	end
-
-	if sortResult then
-			table.sort(data, function(a, b)
-					local cnFirst = getConfig("search.cn_first")
-					if cnFirst == true or cnFirst == false then
-							return custom_sort(a, b, cnFirst)
-					else
-							return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
-					end
-			end)
+		end
 	end
 
 	updateCSV(data, csvFilePath)
@@ -439,6 +427,20 @@ function updateCustomCSV(data, csvFilePath)
 	end
 
 	io.close(file)
+end
+
+function reloadDataAndUpdateUI(csvFilePath)
+    -- 从 CSV 文件中读取数据
+    local newData = readFromCSV(csvFilePath)
+    if newData then
+        -- 更新数据源
+		-- print("Data loaded successfully. Number of items: " .. #newData)
+        data = newData
+
+        -- 刷新结果列表视图
+        resultListView.data = newData
+        refreshResultState()  -- 更新状态标签等 UI 组件
+    end
 end
 
 -- -- 模拟插入大量数据
@@ -565,6 +567,8 @@ function searchKeywordAsync(value, rating, result)
 	return hasNext, fetchNext, getNextIndex, #data
 end
 
+resultListView = nil
+
 function init()
 	JProject:new()
 	window = jGui:new({
@@ -650,7 +654,7 @@ function init()
 		gfx.drawstr(tostring(self.label))
 	end
 
-	local resultListView = ListView.new({
+	resultListView = ListView.new({
 		window = window,
 		x = 10,
 		y = SIZE_UNIT * 1.5 + 15,
@@ -788,13 +792,20 @@ function init()
 			resultListView:jump(resultListView.firstIndex - 1)
 		elseif key == 1685026670 then --arrow down
 			resultListView:jump(resultListView.firstIndex + 1)
-		elseif key == 26165 then --F5
+		elseif key == 26165 then --F5 刷新 keywords.csv
+			if resultListView then
+				regenerateCSV(dbList, csvFilePath)
+				reloadDataAndUpdateUI(csvFilePath)
+			else
+				print("Error: resultListView is not initialized.")
+			end
+		elseif key == 26166 then --F6 生成 custom_keywords.csv
+			local customCSVFilePath = script_path .. getPathDelimiter() .. "custom_keywords (generated by SFX Tag Search).csv"
+			updateCustomCSV(data, customCSVFilePath)
+			-- 打开 csv 文件所在的文件夹
+			openUrl(script_path)
+		elseif key == 6697265 then --F11 打开媒体资源浏览器
 			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
-		-- elseif key == 26166 then --F6 生成 custom_keywords.csv
-		-- 	local customCSVFilePath = script_path .. getPathDelimiter() .. "custom_keywords.csv"
-		-- 	updateCustomCSV(data, customCSVFilePath)
-		elseif key == 26166 then --F6 刷新 keywords.csv
-			regenerateCSV(dbList, csvFilePath)
 		end
 	end
 
