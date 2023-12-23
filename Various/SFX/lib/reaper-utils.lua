@@ -158,7 +158,8 @@ function getDbList()
         local shortcutTKey = string.format("ShortcutT%d", i)
         local shortcutValue = reaper_explorer[shortcutKey]
         local shortcutTValue = reaper_explorer[shortcutTKey]
-
+        shortcutTValue = tostring(shortcutTValue)
+        
         -- 排除特定的项
         if (shortcutValue == "<Track Templates>" or shortcutValue == "<Project Directory>") then
             goto continue

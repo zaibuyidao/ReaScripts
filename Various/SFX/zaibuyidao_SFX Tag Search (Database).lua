@@ -298,8 +298,9 @@ local excludeTpName = getConfig("tp.exclude_tp", {}, table.arrayToTable)
 for _, db in ipairs(dbList) do
 	local dbType = db.name:find("^GP:") and "GROUP" or db.name:find("^FD:") and "FOLDER" or "DATABASE"
 	if not excludeTpName[dbType] then
+		local modifiedName = db.name:gsub('"', '')
 		table.insert(data, {
-			key = db.name,
+			key = modifiedName,
 			name = "",  -- 预留空列
 			remark = dbType
 		})
@@ -323,8 +324,9 @@ end
 --     for _, db in ipairs(dbList) do
 --         if not excludeDbName[db.name] then
 --             local dbType = db.name:find("^GP:") and "Group" or "Database"
+--             local modifiedName = db.name:gsub('"', '')
 --             table.insert(data, {
---                 key = db.name,
+--                 key = modifiedName,
 --                 name = "",  -- 预留空列
 --                 remark = dbType
 --             })
@@ -440,6 +442,50 @@ function searchKeyword(value, rating) -- 过滤搜索
 	return res
 end
 
+function reloadDataAndUpdateUI()
+	local dbList = getDbList()
+	if dbList == false then return end
+	
+	-- 实时创建数据库列表版本
+	local data = {}
+	local excludeTpName = getConfig("tp.exclude_tp", {}, table.arrayToTable)
+	
+	for _, db in ipairs(dbList) do
+		local dbType = db.name:find("^GP:") and "GROUP" or db.name:find("^FD:") and "FOLDER" or "DATABASE"
+		if not excludeTpName[dbType] then
+			-- 移除 db.name 中的引号，并用方括号包围
+			local modifiedName = db.name:gsub('"', '')
+			table.insert(data, {
+				key = modifiedName,
+				name = "",  -- 预留空列
+				remark = dbType
+			})
+		end
+	end
+
+    local sortResult = getConfig("search.sort_result")
+	if sortResult then
+		table.sort(data, function(a, b)
+			local cnFirst = getConfig("search.cn_first")
+			if cnFirst == true or cnFirst == false then
+				return custom_sort(a, b, cnFirst)
+			else
+				return string.lower(tostring(a.key)) < string.lower(tostring(b.key))
+			end
+		end)
+	end
+
+    if data and #data > 0 then
+        resultListView.data = data
+        refreshResultState()
+        -- print("resultListView data updated and UI refreshed.")
+    else
+        print("No data to display.")
+    end
+end
+
+resultListView = nil
+
 function init()
 	JProject:new()
 	window = jGui:new({
@@ -525,7 +571,7 @@ function init()
 		gfx.drawstr(tostring(self.label))
 	end
 
-	local resultListView = ListView.new({
+	resultListView = ListView.new({
 		window = window,
 		x = 10,
 		y = SIZE_UNIT * 1.5 + 15,
@@ -700,34 +746,41 @@ function init()
 			resultListView:randomJump()
 		elseif key == 26164 then --跳转目标 f4
 			resultListView:promptForJump()
-		elseif key == 26165 then --F5
+		elseif key == 26165 then --F5 刷新列表
+			if resultListView then
+				reloadDataAndUpdateUI()
+			else
+				print("Error: resultListView is not initialized.")
+			end
+		elseif key == 26166 then --F6 删除 custom_database.csv 文件
+			-- local csvFilePath = script_path .. getPathDelimiter() .. "custom_database.csv"
+
+			-- if language == "简体中文" then
+			-- 	err1 = "custom_database.csv 文件已被删除。重新启动脚本将会创建最新的 custom_database.csv 文件。"
+			-- 	err2 = "文件已删除"
+			-- 	err3 = "该操作将删除 " ..csvFilePath .." 文件！"
+			-- 	err4 = "警告"
+			-- elseif language == "繁体中文" then
+			-- 	err1 = "custom_database.csv 文件已被刪除。重新啓動脚本將會創建最新的 custom_database.csv 文件。"
+			-- 	err2 = "文件已刪除"
+			-- 	err3 = "該操作將會刪除 " ..csvFilePath .." 文件！"
+			-- 	err4 = "警告"
+			-- else
+			-- 	err1 = "The 'custom_database.csv' file has been deleted. Restarting the script will create the latest custom_database.csv file."
+			-- 	err2 = "File Deleted"
+			-- 	err3 = "This action will delete  " ..csvFilePath .." !"
+			-- 	err4 = "Warning"
+			-- end
+
+			-- local retval = reaper.ShowMessageBox(err3, err4, 1)
+			-- if retval == 1 then
+			-- 	os.remove(csvFilePath)
+			-- 	-- 显示消息框
+			-- 	reaper.MB(err1, err2, 0)
+			-- end
+
+		elseif key == 6697265 then --过滤关键词 f11
 			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
-		-- elseif key == 26166 then --F6 删除 custom_database.csv 文件
-		-- 	local csvFilePath = script_path .. getPathDelimiter() .. "custom_database.csv"
-
-		-- 	if language == "简体中文" then
-		-- 		err1 = "custom_database.csv 文件已被删除。重新启动脚本将会创建最新的 custom_database.csv 文件。"
-		-- 		err2 = "文件已删除"
-		-- 		err3 = "该操作将删除 " ..csvFilePath .." 文件！"
-		-- 		err4 = "警告"
-		-- 	elseif language == "繁体中文" then
-		-- 		err1 = "custom_database.csv 文件已被刪除。重新啓動脚本將會創建最新的 custom_database.csv 文件。"
-		-- 		err2 = "文件已刪除"
-		-- 		err3 = "該操作將會刪除 " ..csvFilePath .." 文件！"
-		-- 		err4 = "警告"
-		-- 	else
-		-- 		err1 = "The 'custom_database.csv' file has been deleted. Restarting the script will create the latest custom_database.csv file."
-		-- 		err2 = "File Deleted"
-		-- 		err3 = "This action will delete  " ..csvFilePath .." !"
-		-- 		err4 = "Warning"
-		-- 	end
-
-		-- 	local retval = reaper.ShowMessageBox(err3, err4, 1)
-		-- 	if retval == 1 then
-		-- 		os.remove(csvFilePath)
-		-- 		-- 显示消息框
-		-- 		reaper.MB(err1, err2, 0)
-		-- 	end
 		elseif key == 6697266 then --过滤关键词 f12
 			searchTextBox:promptForContent()
 		elseif key == 1752132965 then --HOME
