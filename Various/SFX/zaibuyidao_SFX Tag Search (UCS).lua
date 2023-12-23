@@ -246,10 +246,14 @@ function loadCSVData(columns)
 	end
 end
 
---loadCSVData({1, 2, 3, 4, 5, 6, 7}) -- 英文
-loadCSVData({1, 4, 5, 2, 3, 6, 7}) -- 默认简中
---loadCSVData({1, 6, 7, 2, 3, 4, 5}) -- 繁中
-local currentMode = 2 -- 1 英文 2 简中 3 繁中
+local currentMode = getConfig("ui.global.ucs_language", 2)
+if currentMode == 1 then
+    loadCSVData({1, 2, 3, 4, 5, 6, 7}) -- 英文
+elseif currentMode == 2 then
+    loadCSVData({1, 4, 5, 2, 3, 6, 7}) -- 简体中文
+elseif currentMode == 3 then
+    loadCSVData({1, 6, 7, 2, 3, 4, 5}) -- 繁体中文
+end
 
 local colorMap = getConfig("ui.result_list.remark_color", {})
 local defaultColors = getConfig("ui.result_list.default_colors", {{.6, .6, .6, 1}})

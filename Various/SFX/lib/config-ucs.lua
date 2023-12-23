@@ -2,6 +2,7 @@
 return {
     ui = {
         global = {
+            ucs_language = 2, -- 1=英文, 2=简体中文, 3=繁体中文
             font = "SimSun", -- 字体名："Calibri"、"宋体"、"华文宋体"、"华文仿宋"、"微软雅黑"
             size_unit = 14, -- 控件单位大小, 所有控件大小以此为基准
         },
@@ -54,12 +55,12 @@ return {
     },
     ucs = {
         write_catid = true, -- 是否写入 CatID
-        write_category = true, -- 是否写入 Category
-        write_sub_category = true, -- 是否写入 SubCategory
+        write_category = false, -- 是否写入 Category
+        write_sub_category = false, -- 是否写入 SubCategory
         write_category_full = false, -- 是否写入 CategoryFull
         write_category_ch = false, -- 是否写入中文标签 Category_ch
         write_sub_category_ch = false, -- 是否写入中文标签 SubCategory_ch
-        write_category_full_ch = true, -- 是否写入中文标签 CategoryFull_ch
+        write_category_full_ch = false, -- 是否写入中文标签 CategoryFull_ch
         -- 对于用户创建列的编号的动作命令(请注意 REAPER只支持10个用户创建列):
         -- 从上往下排序 1 = 42194, 2 = 42195, 3 = 42196, 4 = 42197, 5 = 42198, 6 = 42199, 7 = 42200, 8 = 42201, 9 = 42202, 10 = 42203
         cmd_id_catid = getCmdID(1), -- CatID 对于用户创建列的编号
