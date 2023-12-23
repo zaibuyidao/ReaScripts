@@ -1,9 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.6.8
+-- @version 1.6.9
 -- @changelog
---   + Press F5 to refresh the tag list of the SFX Tag Search (UCS & Custom) script in real time.
---   + 按 F5 以实时刷新 SFX Tag Search (UCS & Custom) 脚本的标签列表.
+--   + SFX Tag Search script adds Ctrl+Left click to copy tag content to clipboard.
+--   + SFX Tag Search 脚本新增Ctrl+左键单击复制标签内容到剪贴板.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links

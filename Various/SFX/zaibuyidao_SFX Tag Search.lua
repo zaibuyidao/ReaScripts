@@ -731,6 +731,7 @@ function init()
 			local c = listView.viewHolders[viewHolderIndex][1]
 			local info = listView.viewHolders[viewHolderIndex][2]
 			local data = listView.data[dataIndex]
+			local currentKey = listView.data[dataIndex].value
 			c.width = window.width - 20
 			info.x = 10 + c.width - info.width
 
@@ -751,10 +752,40 @@ function init()
 
 			c.focus_index = viewHolderIndex + 1 --gui:getFocusIndex()
 
+			function edit_tag(key)
+				local titles = {
+					"Edit metadata tag",
+					"编辑元数据标签",
+					"編輯元數據標簽"
+				}
+				
+				local parent = nil
+				local title_top = nil
+		
+				-- 遍历所有可能的标题，尝试查找窗口
+				for _, title in ipairs(titles) do
+					title_top = reaper.JS_Localize(title, "common")
+					parent = reaper.JS_Window_Find(title_top, true)
+					if parent then break end
+				end
+				
+				if parent then
+					reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1007), key)
+					reaper.JS_Window_OnCommand(parent, 1) -- OK = 1, Cancel = 2
+				else
+					reaper.defer(function() edit_tag(key) end)
+				end
+			end
+
 			function c:onMouseClick()
-				incRating(listView.data[dataIndex].value)
-				if getReaperExplorerPath() ~= listView.data[dataIndex].db and getConfig("search.switch_database") then
-					setReaperExplorerPath(listView.data[dataIndex].db)
+				if self.parentGui.kb:control() then -- Control+左键点击
+					reaper.CF_SetClipboard(listView.data[dataIndex].value)
+					return
+				else
+					incRating(listView.data[dataIndex].value)
+					if getReaperExplorerPath() ~= listView.data[dataIndex].db and getConfig("search.switch_database") then
+						setReaperExplorerPath(listView.data[dataIndex].db)
+					end
 				end
 				reaper.defer(function ()
 					send_search_text(listView.data[dataIndex].value)
@@ -762,7 +793,8 @@ function init()
 			end
 
 			function c:onRightMouseClick()
-				reaper.CF_SetClipboard(listView.data[dataIndex].value)
+				edit_tag(currentKey)
+				reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", 42053, 0, 0, 0) -- Edit metadata tag: Custom Tags
 			end
 		end
 	})
