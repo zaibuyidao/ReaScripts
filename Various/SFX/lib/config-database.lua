@@ -47,8 +47,8 @@ return {
             color_focus_border = {105/255, 105/255, 105/255, 1},  -- 选中项边框的颜色
         }
     },
-	db = {
-        exclude_db = {} -- 排除加载的数据库，示例 exclude = { "DB: 00", "DB: 01" }
+	tp = {
+        exclude_tp = {} -- 排除加载的类型，示例 exclude = { "DATABASE", "FOLDER", "GROUP" }
     },
     search = {
         sort_result = true, -- 是否对列表进行排序

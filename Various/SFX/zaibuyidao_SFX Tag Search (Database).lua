@@ -113,7 +113,7 @@ CONFIG = require('config-database')
 ListView = require('ListView')
 pinyin = require('pinyin')
 
-setGlobalStateSection("SFX_TAG_SEARCH_CUSTOM")
+setGlobalStateSection("SFX_TAG_SEARCH_DATABASE")
 
 function getConfig(configName, default, convert)
 	local cur = CONFIG
@@ -291,48 +291,64 @@ end
 dbList = getDbList()
 if dbList == false then return end
 
-local csvFilePath = script_path .. getPathDelimiter() .. "custom_database.csv"
+-- 实时创建数据库列表版本
 local data = {}
-local csvFile = io.open(csvFilePath, "r")
+local excludeTpName = getConfig("tp.exclude_tp", {}, table.arrayToTable)
 
--- 检查是否已存在 custom_database.csv 文件
-if csvFile then
-    io.close(csvFile)
-    -- 如果文件已存在，则读取内容
-    data = readFromCSV(csvFilePath)
-else
-    -- 如果文件不存在，则遍历数据库列表并创建新的 custom_database.csv 文件
-    local excludeDbName = getConfig("db.exclude_db", {})
-    
-    for _, db in ipairs(dbList) do
-        if not excludeDbName[db.name] then
-            local dbType = db.name:find("^GP:") and "Group" or "Database"
-            table.insert(data, {
-                key = db.name,
-                name = "",  -- 预留空列
-                remark = dbType
-            })
-        end
-    end
-
-    -- 打开 custom_database.csv 文件进行写入
-    local file, err = io.open(csvFilePath , "w+")
-    if file then
-        -- 写入 CSV 头部
-        file:write("key,name,remark\n")
-
-        -- 遍历 data 数组，将其内容写入 CSV 文件
-        for _, entry in ipairs(data) do
-            file:write(string.format("%s,%s,%s\n", entry.key, entry.name, entry.remark))
-        end
-
-        -- 关闭文件
-        io.close(file)
-    else
-        print("Error creating file:", err)
-        return
-    end
+for _, db in ipairs(dbList) do
+	local dbType = db.name:find("^GP:") and "GROUP" or db.name:find("^FD:") and "FOLDER" or "DATABASE"
+	if not excludeTpName[dbType] then
+		table.insert(data, {
+			key = db.name,
+			name = "",  -- 预留空列
+			remark = dbType
+		})
+	end
 end
+
+-- 创建 custom_database.csv 版本
+-- local csvFilePath = script_path .. getPathDelimiter() .. "custom_database.csv"
+-- local data = {}
+-- local csvFile = io.open(csvFilePath, "r")
+
+-- -- 检查是否已存在 custom_database.csv 文件
+-- if csvFile then
+--     io.close(csvFile)
+--     -- 如果文件已存在，则读取内容
+--     data = readFromCSV(csvFilePath)
+-- else
+--     -- 如果文件不存在，则遍历数据库列表并创建新的 custom_database.csv 文件
+--     local excludeDbName = getConfig("db.exclude_db", {})
+    
+--     for _, db in ipairs(dbList) do
+--         if not excludeDbName[db.name] then
+--             local dbType = db.name:find("^GP:") and "Group" or "Database"
+--             table.insert(data, {
+--                 key = db.name,
+--                 name = "",  -- 预留空列
+--                 remark = dbType
+--             })
+--         end
+--     end
+
+--     -- 打开 custom_database.csv 文件进行写入
+--     local file, err = io.open(csvFilePath , "w+")
+--     if file then
+--         -- 写入 CSV 头部
+--         file:write("key,name,remark\n")
+
+--         -- 遍历 data 数组，将其内容写入 CSV 文件
+--         for _, entry in ipairs(data) do
+--             file:write(string.format("%s,%s,%s\n", entry.key, entry.name, entry.remark))
+--         end
+
+--         -- 关闭文件
+--         io.close(file)
+--     else
+--         print("Error creating file:", err)
+--         return
+--     end
+-- end
 
 if sortResult then
 	table.sort(data, function(a, b)
@@ -662,10 +678,10 @@ function init()
 				end)
 			end
 
-			function c:onRightMouseClick()
-				edit_tag(currentKey)
-				reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", 42053, 0, 0, 0) -- Edit metadata tag: Custom Tags
-			end
+			-- function c:onRightMouseClick()
+			-- 	edit_tag(currentKey)
+			-- 	reaper.JS_WindowMessage_Post(reaper.JS_Window_Find(reaper.JS_Localize("Media Explorer", "common"), true), "WM_COMMAND", 42053, 0, 0, 0) -- Edit metadata tag: Custom Tags
+			-- end
 		end
 	})
 
@@ -676,42 +692,42 @@ function init()
 		elseif key == 1919379572 or key == 1885824110 then
 			-- print("page down")
 			resultListView:scroll(getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
-		elseif key == 26161 then --编辑关键词 f1
-			openUrl(script_path .. "custom_database.csv")
+		-- elseif key == 26161 then --编辑关键词 f1
+		-- 	openUrl(script_path .. "custom_database.csv")
 		elseif key == 26162 then --编辑配置表 f2
-			openUrl(script_path .. "lib/config-custom.lua")
+			openUrl(script_path .. "lib/config-database.lua")
 		elseif key == 26163 then --随机行 f3
 			resultListView:randomJump()
 		elseif key == 26164 then --跳转目标 f4
 			resultListView:promptForJump()
 		elseif key == 26165 then --F5
 			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
-		elseif key == 26166 then --F6 删除 custom_database.csv 文件
-			local csvFilePath = script_path .. getPathDelimiter() .. "custom_database.csv"
+		-- elseif key == 26166 then --F6 删除 custom_database.csv 文件
+		-- 	local csvFilePath = script_path .. getPathDelimiter() .. "custom_database.csv"
 
-			if language == "简体中文" then
-				err1 = "custom_database.csv 文件已被删除。重新启动脚本将会创建最新的 custom_database.csv 文件。"
-				err2 = "文件已删除"
-				err3 = "该操作将删除 " ..csvFilePath .." 文件！"
-				err4 = "警告"
-			elseif language == "繁体中文" then
-				err1 = "custom_database.csv 文件已被刪除。重新啓動脚本將會創建最新的 custom_database.csv 文件。"
-				err2 = "文件已刪除"
-				err3 = "該操作將會刪除 " ..csvFilePath .." 文件！"
-				err4 = "警告"
-			else
-				err1 = "The 'custom_database.csv' file has been deleted. Restarting the script will create the latest custom_database.csv file."
-				err2 = "File Deleted"
-				err3 = "This action will delete  " ..csvFilePath .." !"
-				err4 = "Warning"
-			end
+		-- 	if language == "简体中文" then
+		-- 		err1 = "custom_database.csv 文件已被删除。重新启动脚本将会创建最新的 custom_database.csv 文件。"
+		-- 		err2 = "文件已删除"
+		-- 		err3 = "该操作将删除 " ..csvFilePath .." 文件！"
+		-- 		err4 = "警告"
+		-- 	elseif language == "繁体中文" then
+		-- 		err1 = "custom_database.csv 文件已被刪除。重新啓動脚本將會創建最新的 custom_database.csv 文件。"
+		-- 		err2 = "文件已刪除"
+		-- 		err3 = "該操作將會刪除 " ..csvFilePath .." 文件！"
+		-- 		err4 = "警告"
+		-- 	else
+		-- 		err1 = "The 'custom_database.csv' file has been deleted. Restarting the script will create the latest custom_database.csv file."
+		-- 		err2 = "File Deleted"
+		-- 		err3 = "This action will delete  " ..csvFilePath .." !"
+		-- 		err4 = "Warning"
+		-- 	end
 
-			local retval = reaper.ShowMessageBox(err3, err4, 1)
-			if retval == 1 then
-				os.remove(csvFilePath)
-				-- 显示消息框
-				reaper.MB(err1, err2, 0)
-			end
+		-- 	local retval = reaper.ShowMessageBox(err3, err4, 1)
+		-- 	if retval == 1 then
+		-- 		os.remove(csvFilePath)
+		-- 		-- 显示消息框
+		-- 		reaper.MB(err1, err2, 0)
+		-- 	end
 		elseif key == 6697266 then --过滤关键词 f12
 			searchTextBox:promptForContent()
 		elseif key == 1752132965 then --HOME

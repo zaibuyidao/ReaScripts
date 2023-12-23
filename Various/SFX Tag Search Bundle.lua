@@ -1,8 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.6.3
+-- @version 1.6.4
 -- @changelog
---   # Fix the problem that the database list can't be fetched in its entirety.
+--   + Add database list type exclusions.
+--   + 增加数据库列表类型排除项.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
