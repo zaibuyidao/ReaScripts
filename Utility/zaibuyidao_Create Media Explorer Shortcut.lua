@@ -1,5 +1,5 @@
--- @description Switch Media Explorer Shortcut
--- @version 1.1.1
+-- @description Create Media Explorer Shortcut (New Action)
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -95,25 +95,30 @@ function normalize_path(path)
 end
 
 function replace_invalid_chars(path)
-  local new_path = string.gsub(path, "[\\/:*?\"<>|]+", "_") -- 或同时处理空格 local new_path = string.gsub(path, "[\\/:*?\"<>|%s]+", "_")
-  new_path = string.gsub(new_path, "_([%.%s])", "%1") -- 移除下划线后面的点号或空格
-  new_path = string.gsub(new_path, "^%s+|_+$", "") -- 移除开头和结尾的空格和下划线
+  -- 将冒号替换为其他字符，例如下划线
+  local new_path = path:gsub(":", "_")
+
+  -- 替换其他非法文件名字符
+  new_path = new_path:gsub("[\\/*?\"<>|]+", "_")
+
+  -- 移除下划线后面的点号或空格
+  new_path = new_path:gsub("_([%.%s])", "_")
+  -- new_path = new_path:gsub("_([%.%s])", "%0")
+
+  -- 移除开头和结尾的空格和下划线
+  new_path = new_path:gsub("^%s+|_+$", "")
+
   return new_path
 end
 
 function get_last_folder_name(path)
   local os = reaper.GetOS()
-  if os == "Win32" or os == "Win64" then -- Windows
-    if path:sub(-1) == "\\" then -- 去除路径末尾的反斜杠
-      path = path:sub(1, -2)
-    end
-    return string.match(path, "[^\\]+$") or ""
-  elseif os == "OSX32" or os == "OSX64" then -- macOS
-    if path:sub(-1) == "/" then -- 去除路径末尾的斜杠
-      path = path:sub(1, -2)
-    end
-    return string.match(path, "[^/]+$") or ""
+  local separator = os:find('Win') and '\\' or '/'
+  if path:sub(-1) == separator then
+    path = path:sub(1, -2)
   end
+  path = replace_invalid_chars(path)
+  return path:match("[^" .. separator .. "]+$") or ""
 end
 
 function escape_if_needed(str)
@@ -137,10 +142,10 @@ function create_explorer_path(get_path)
 
   if language == "简体中文" then
     str = "切换快捷方式 - "
-    uok, uinput = reaper.GetUserInputs("创建一个切换快捷方式的动作", 2, "脚本路径:,脚本別名:,extrawidth=200", get_path .. new_path .. "," .. str .. shortcut)
+    uok, uinput = reaper.GetUserInputs("创建一个切换快捷方式的操作", 2, "脚本路径:,脚本別名:,extrawidth=200", get_path .. new_path .. "," .. str .. shortcut)
   elseif language == "繁体中文" then
     str = "切換快捷方式 - "
-    uok, uinput = reaper.GetUserInputs("創建一個切換快捷方式的動作", 2, "脚本路徑:,脚本別名:,extrawidth=200", get_path .. new_path .. "," .. str .. shortcut)
+    uok, uinput = reaper.GetUserInputs("創建一個切換快捷方式的操作", 2, "脚本路徑:,脚本別名:,extrawidth=200", get_path .. new_path .. "," .. str .. shortcut)
   else
     str = "Switch shortcut - "
     uok, uinput = reaper.GetUserInputs("Create an action to switch shortcut", 2, "Script path:,Script alias:,extrawidth=200", get_path .. new_path .. "," .. str .. shortcut)
@@ -177,12 +182,14 @@ function create_explorer_path(get_path)
 function set_explorer_path(hwnd, folder)
   local combo_box = reaper.JS_Window_FindChildByID(hwnd, 1002)
   local edit = reaper.JS_Window_FindChildByID(combo_box, 1001)
+  -- https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+  reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0,0,0) -- SPACE 模拟用户按下空格键
+  reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE 模拟用户按下退格键
   if edit then
     reaper.JS_Window_SetTitle(edit, "")
     reaper.JS_Window_SetTitle(edit, folder)
-    -- https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-    reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER key 模拟用户按下回车键
-    -- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x0D, 0,0,0) -- ENTER key
+    reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER 模拟用户按下回车键
+    -- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x0D, 0,0,0) -- ENTER
   end
 end
 
@@ -213,12 +220,20 @@ set_reaper_explorer_path("]] .. escape_if_needed(origin_shortcut) .. [[")
   reaper.AddRemoveReaScript(true, 32063, file_path, true)
 end
 
+if language == "简体中文" then
+  script_title = "创建媒体资源管理器快捷方式(新建操作)"
+elseif language == "繁体中文" then
+  script_title = "創建媒體資源管理器快捷方式(新建操作)"
+else
+  script_title = "Create Media Explorer Shortcut (New Action)"
+end
+
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 local iswin = reaper.GetOS():find('^Win')
 if not iswin then return end
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 create_explorer_path(script_path)
-reaper.Undo_EndBlock('Switch Media Explorer Shortcut', -1)
+reaper.Undo_EndBlock(script_title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
