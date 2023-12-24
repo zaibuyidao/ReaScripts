@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="67068044983a758a234c97587d950415a865e4b2">
+<index version="1" name="zaibuyidao Scripts" commit="02da4c3aeb98fa9cc0cd319f0a2de03be4631d72">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7854,6 +7854,24 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a5f295eea93b2c74ad2960310dd11794b7acc338/Utility/zaibuyidao_Cakewalk%20Style%20Cursor%20Follow%20(MIDI%20Editor).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Create Media Explorer Shortcut.lua" type="script" desc="Create Media Explorer Shortcut (New Action)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2023-12-24T05:58:37Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/02da4c3aeb98fa9cc0cd319f0a2de03be4631d72/Utility/zaibuyidao_Create%20Media%20Explorer%20Shortcut.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Date &amp; Time.lua" type="script" desc="Date &amp; Time">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -8190,68 +8208,6 @@
       <version name="1.1.1" author="zaibuyidao" time="2023-03-08T13:40:21Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a94fa93be2afd6e8a5ccd4425de389539a6af3c7/Utility/zaibuyidao_Set%20Project%20Grid.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Switch Media Explorer Shortcut.lua" type="script" desc="Switch Media Explorer Shortcut">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2023-03-04T11:50:44Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/53aa4f5dcfd0018cad253db9189e877ce9287f36/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2023-03-04T13:21:17Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cee3e95a9f59af896f54b9bed0cd5f1c95b13499/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao" time="2023-03-04T14:31:39Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0ac52d1e3e70042cf4b231d04f543db27a0dd234/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.3" author="zaibuyidao" time="2023-03-04T15:22:42Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/fd3841bcf1945badc11c100378818b69ca0a8595/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.4" author="zaibuyidao" time="2023-03-05T04:07:32Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/edc0c7eb799b91c8aefb225094f59024f10d778d/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.5" author="zaibuyidao" time="2023-03-05T04:13:05Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/ad3ac05682408b3ff3750d3594309256ebe1ce77/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.6" author="zaibuyidao" time="2023-03-05T04:30:31Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/8f39210abfbe3df4f0bfc0fe4717a06291d32d5d/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.7" author="zaibuyidao" time="2023-03-05T04:37:30Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/b1a1164f0a07efc515feac61fbaa7e75500dd7d2/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.8" author="zaibuyidao" time="2023-03-05T06:16:24Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/8b2de2a9d918e48f94c708ce0ef91b26c67e5a48/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.0.9" author="zaibuyidao" time="2023-03-05T06:23:06Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/5722252610c10dea26d3498afea0a346d9b5697b/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.1.0" author="zaibuyidao" time="2023-03-06T03:51:17Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/c5f8492dbd8b1b586ff84b8a1279c7ba8fbdd1ac/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
-      </version>
-      <version name="1.1.1" author="zaibuyidao" time="2023-03-08T12:53:09Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/c8bd1d68a1da1507ef90f894464be372bed3fbd4/Utility/zaibuyidao_Switch%20Media%20Explorer%20Shortcut.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Toggle Mute PC CC6.lua" type="script" desc="Toggle Mute PC CC6">
