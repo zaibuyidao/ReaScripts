@@ -235,35 +235,61 @@ function getColorForDb(dbName)
 end
 
 function readFromCSV(csvFilePath)
-	local data = {}
-	local file = io.open(csvFilePath, "r")
-	
-	if not file then
-			print("Cannot open the CSV file!")
-			return nil
-	end
-	
-	local headers = file:read("*l")
+    local data = {}
+    local file = io.open(csvFilePath, "r")
 
-	for line in file:lines() do
-			local db, value, fromString, fromKeys = line:match("([^,]+),([^,]+),([^,]+),([^,]+)")
-			
-			local fromTable = {}
-			for key in fromKeys:gmatch("[^;]+") do
-					fromTable[key] = true
-			end
-			
-			table.insert(data, {
-					db = db,
-					value = value,
-					from = fromTable,
-					fromString = fromString
-			})
-	end
-	
-	io.close(file)
-	
-	return data
+    if not file then
+        print("Cannot open the CSV file!")
+        return nil
+    end
+
+    -- 跳过头部行
+    local headers = file:read("*l")
+
+    for line in file:lines() do
+        local fields = {}
+        local fieldStart = 1
+        local inQuotes = false
+        local currentField = ""
+
+        for i = 1, #line do
+            local char = line:sub(i, i)
+
+            if char == '"' then
+                inQuotes = not inQuotes
+                -- Optional: Keep quotes as part of field value
+                -- currentField = currentField .. char
+            elseif char == ',' and not inQuotes then
+                -- Optional: Remove quotes around field value
+                -- currentField = currentField:gsub('^"(.*)"$', '%1')
+                table.insert(fields, currentField)
+                currentField = ""
+            else
+                currentField = currentField .. char
+            end
+        end
+        -- 添加最后一个字段
+        -- Optional: Remove quotes around field value
+        -- currentField = currentField:gsub('^"(.*)"$', '%1')
+        table.insert(fields, currentField)
+
+        if #fields >= 4 then
+            local fromTable = {}
+            for key in fields[4]:gmatch("[^;]+") do
+                fromTable[key] = true
+            end
+
+            table.insert(data, {
+                db = fields[1],
+                value = fields[2],
+                from = fromTable,
+                fromString = fields[3]
+            })
+        end
+    end
+
+    io.close(file)
+    return data
 end
 
 local sortResult = getConfig("search.sort_result") -- 加入排序
@@ -312,12 +338,21 @@ else
 
 	-- 遍历data，将其写入CSV文件
 	for _, entry in ipairs(data) do
+		local db = entry.db
+		local value = entry.value
+		local fromString = entry.fromString
+	
+		-- 如果字段包含逗号，则将其包裹在引号内
+		if value:find(",") then
+			value = '"' .. value .. '"'
+		end
+	
 		file:write(string.format("%s,%s,%s,%s\n",
-			entry.db,
-			entry.value,
+			db,
+			value,
 			table.concat(table.keys(entry.from), ";"),
-			entry.fromString
-	    ))
+			fromString
+		))
 	end
 
 	-- 关闭文件
@@ -370,11 +405,20 @@ function updateCSV(data, csvFilePath)
 
 	-- 遍历data，将其写入CSV文件
 	for _, entry in ipairs(data) do
+		local db = entry.db
+		local value = entry.value
+		local fromString = entry.fromString
+	
+		-- 如果字段包含逗号，则将其包裹在引号内
+		if value:find(",") then
+			value = '"' .. value .. '"'
+		end
+	
 		file:write(string.format("%s,%s,%s,%s\n",
-			entry.db,
-			entry.value,
+			db,
+			value,
 			table.concat(table.keys(entry.from), ";"),
-			entry.fromString
+			fromString
 		))
 	end
 
@@ -423,7 +467,7 @@ function updateCustomCSV(data, csvFilePath)
 
 	-- Iterate over the data and write the required fields
 	for _, entry in ipairs(data) do
-			file:write(string.format("%s,,%s\n", entry.value, entry.db))
+		file:write(string.format("%s,,%s\n", entry.value, entry.db))
 	end
 
 	io.close(file)

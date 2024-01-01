@@ -1,9 +1,11 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.6.9
+-- @version 1.7.0
 -- @changelog
---   + SFX Tag Search script adds Ctrl+Left click to copy tag content to clipboard.
---   + SFX Tag Search 脚本新增Ctrl+左键单击复制标签内容到剪贴板.
+--   + Configuration files optimized for bilingualism
+--   # Fix SFX Tag Search Separator Issue
+--   + 配置文件优化为中英双语
+--   # 修复 SFX Tag Search 分隔符问题
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
