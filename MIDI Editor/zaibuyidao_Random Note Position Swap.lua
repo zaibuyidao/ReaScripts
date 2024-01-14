@@ -1,60 +1,70 @@
 -- @description Random Note Position Swap
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires SWS Extensions
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(...)
-    local params = {...}
-    for i = 1, #params do
-        if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-        reaper.ShowConsoleMsg(tostring(params[i]))
+    for _, v in ipairs({...}) do
+        reaper.ShowConsoleMsg(tostring(v) .. " ")
     end
     reaper.ShowConsoleMsg("\n")
 end
 
-function table.print(t)
-    local print_r_cache = {}
-    local function sub_print_r(t, indent)
-        if (print_r_cache[tostring(t)]) then
-            print(indent .. "*" .. tostring(t))
-        else
-            print_r_cache[tostring(t)] = true
-            if (type(t) == "table") then
-                for pos, val in pairs(t) do
-                    if (type(val) == "table") then
-                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-                        sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-                        print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-                    elseif (type(val) == "string") then
-                        print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-                    else
-                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-                    end
-                end
-            else
-                print(indent .. tostring(t))
-            end
+function getSystemLanguage()
+    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+    local os = reaper.GetOS()
+    local lang
+  
+    if os == "Win32" or os == "Win64" then -- Windows
+        if locale == 936 then -- Simplified Chinese
+            lang = "简体中文"
+        elseif locale == 950 then -- Traditional Chinese
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "OSX32" or os == "OSX64" then -- macOS
+        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+        if lang == "zh-CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh-TW" then -- 繁体中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "Linux" then -- Linux
+        local handle = io.popen("echo $LANG")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+        if lang == "zh_CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh_TW" then -- 繁體中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
         end
     end
-    if (type(t) == "table") then
-        print(tostring(t) .. " {")
-        sub_print_r(t, "  ")
-        print("}")
-    else
-        sub_print_r(t, "  ")
-    end
+  
+    return lang
 end
-
-if not reaper.SN_FocusMIDIEditor then
-    local retval = reaper.ShowMessageBox("This script requires the SWS extension, would you like to download it now?\n\n這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
-    if retval == 1 then
-        open_url("http://www.sws-extension.org/download/pre-release/")
-    end
+  
+local language = getSystemLanguage()
+  
+if language == "简体中文" then
+    title = "随机音符位置交换"
+elseif language == "繁体中文" then
+    title = "隨機音符位置交換"
+else
+    title = "Random Note Position Swap"
 end
 
 function getAllTakes() -- 获取所有take
@@ -136,106 +146,60 @@ function insertNote(take, note) -- 插入音符
     reaper.MIDI_InsertNote(take, note.selected, note.muted, note.startPos, note.endPos, note.channel, note.pitch, note.vel, true)
 end
 
--- 区间随机放置算法
--- 1.将所有 sn 收缩为零长度
--- 2.为 lenG-lenS 中的每个 sn 选择随机位置
--- 3.将 sn 扩展回原来的长度
-function randomReplacement(interval, subIntervals)
-    local intervalLength = interval.r - interval.l
-    local emptyPlaceAvailable = intervalLength
-    for _, subInterval in ipairs(subIntervals) do
-        emptyPlaceAvailable = emptyPlaceAvailable - (subInterval.r - subInterval.l)
-    end
-    local positions = {}
-    for _=1, #subIntervals do
-        table.insert(positions, math.random(0, emptyPlaceAvailable))
-    end
-    -- 打乱
-    for i = #subIntervals, 2, -1 do
-		local j = math.random(i)
-		subIntervals[i], subIntervals[j] = subIntervals[j], subIntervals[i]
-	end
-    local start = interval.l
-    for i=1, #positions do
-        local len = subIntervals[i].r - subIntervals[i].l
-        subIntervals[i].l = positions[i] + start
-        subIntervals[i].r = subIntervals[i].l + len
-        start = start + len
-    end
-end
-
--- 随机放置法
-function main_randomReplacement()
-    for take, _ in pairs(getAllTakes()) do
-        local newNotes = {}
-        local interval = { l = math.huge, r = -math.huge }
-        local noteGroups = {}
-        for note in selNoteIterator(take) do
-            interval.l = math.min(interval.l, note.startPos)
-            interval.r = math.max(interval.r, note.endPos)
-    
-            noteGroups[note.pitch] = noteGroups[note.pitch] or {}
-            table.insert(noteGroups[note.pitch], note)
-        end
-    
-        for _, group in pairs(noteGroups) do
-            local subIntervals = {}
-            for _, note in ipairs(group) do
-                table.insert(subIntervals, {
-                    l = note.startPos,
-                    r = note.endPos,
-                    note = note
-                })
-            end
-            randomReplacement(interval, subIntervals)
-            for _, subInterval in ipairs(subIntervals) do
-                subInterval.note.startPos = subInterval.l
-                subInterval.note.endPos = subInterval.r
-                table.insert(newNotes, subInterval.note)
-            end
-        end
-    
-        deleteSelNote()
-    
-        for _, note in ipairs(newNotes) do
-            insertNote(take, note)
-        end
-    end
-end
-
--- 交换法，仅适用于选中音符长度均相同情况
 function main_exchange()
     for take, _ in pairs(getAllTakes()) do
         local newNotes = {}
         local positions = {}
         local noteGroups = {}
+        local posTaken = {} -- 用于记录每个音高的音符占据的位置范围
+
         for note in selNoteIterator(take) do
-            table.insert(positions, note.startPos)
+            table.insert(positions, {startPos = note.startPos, endPos = note.endPos})
             noteGroups[note.pitch] = noteGroups[note.pitch] or {}
             table.insert(noteGroups[note.pitch], note)
         end
-        
+
+        -- 随机交换位置
         for i = #positions, 2, -1 do
             local j = math.random(i)
             positions[i], positions[j] = positions[j], positions[i]
         end
 
-        local curPosIdx = 1
+        for pitch, group in pairs(noteGroups) do
+            posTaken[pitch] = posTaken[pitch] or {}
 
-        for _, group in pairs(noteGroups) do
             for _, note in ipairs(group) do
-                local len = note.endPos - note.startPos
-                note.startPos = positions[curPosIdx]
-                note.endPos = note.startPos + len
-                table.insert(newNotes, note)
-                curPosIdx = curPosIdx + 1
+                local noteLength = note.endPos - note.startPos
+                local isPosAvailable, newPos, idx = false, nil, 1
+
+                while not isPosAvailable and idx <= #positions do
+                    newPos = positions[idx].startPos
+                    isPosAvailable = true
+                    for _, existingPos in pairs(posTaken[pitch]) do
+                        if not (newPos + noteLength <= existingPos.startPos or newPos >= existingPos.endPos) then
+                            isPosAvailable = false
+                            break
+                        end
+                    end
+                    if not isPosAvailable then idx = idx + 1 end
+                end
+
+                if isPosAvailable then
+                    note.startPos = newPos
+                    note.endPos = newPos + noteLength
+                    table.insert(newNotes, note)
+                    posTaken[pitch][newPos] = {startPos = newPos, endPos = note.endPos}
+                    table.remove(positions, idx)
+                end
             end
         end
-    
-        deleteSelNote2(take)
-    
-        for _, note in ipairs(newNotes) do
-            insertNote(take, note)
+
+        -- 更新MIDI条目
+        if #newNotes > 0 then
+            deleteSelNote2(take)
+            for _, note in ipairs(newNotes) do
+                insertNote(take, note)
+            end
         end
     end
 end
@@ -243,5 +207,5 @@ end
 math.randomseed(os.clock())
 reaper.Undo_BeginBlock()
 main_exchange()
-reaper.Undo_EndBlock("Random Note Position Swap", -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
