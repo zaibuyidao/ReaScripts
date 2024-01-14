@@ -1,5 +1,5 @@
--- @description Random Note Position By Grid (Within Time Selection)
--- @version 2.0.1
+-- @description Random Note Position By Grid (Single Line) (Within Time Selection)
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -7,14 +7,6 @@
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
-
--- USER AREA
--- Settings that the user can customize.
-
-local enableRandomPositioning = true -- 新增加的开关
-local grid_enabled = true -- 新增加的开关，用于控制是否按网格对齐
-
--- End of USER AREA
 
 function print(...)
     for _, v in ipairs({...}) do
@@ -66,20 +58,21 @@ function getSystemLanguage()
 end
 
 local language = getSystemLanguage()
-
+  
 if language == "简体中文" then
-    title = "按网格随机音符位置"
+    title = "按网格随机音符位置(单旋律)"
 elseif language == "繁体中文" then
-    title = "按網格隨機音符位置"
+    title = "按網格隨機音符位置(單旋律)"
 else
-    title = "Random Note Position By Grid"
+    title = "Random Note Position By Grid (Single Line)"
 end
 
-function isOverlap(take, rand_pos, notelen, pitch, notecnt, currentIndex)
+function isOverlap(take, rand_pos, notelen, notecnt, currentIndex)
     for j = 0, notecnt - 1 do
         if j ~= currentIndex then
-            _, _, _, startppqpos, endppqpos, _, notePitch, _ = reaper.MIDI_GetNote(take, j)
-            if pitch == notePitch and (rand_pos < endppqpos and rand_pos + notelen > startppqpos) then
+            _, _, _, startppqpos, endppqpos = reaper.MIDI_GetNote(take, j)
+            -- 检查随机位置是否与任何现有音符重叠
+            if (rand_pos < endppqpos and rand_pos + notelen > startppqpos) then
                 return true
             end
         end
@@ -140,29 +133,28 @@ function main()
     for i = 1, notecnt do
         _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i - 1)
         notelen = endppqpos - startppqpos
-        if selected and enableRandomPositioning then
+        if selected then
             local retry_count = 0
             local max_retries = 50
             local rand_pos
-    
+
             repeat
-                if grid_enabled then
-                    local rand_grid = math.random(0, times) * grid
-                    rand_pos = new_loop_start + rand_grid
-                    if rand_pos + notelen > loop_end then
-                        rand_pos = loop_end - notelen
-                    end
-                else
-                    rand_pos = math.random(loop_start, loop_end - notelen) -- 完全随机位置
+                local rand_grid = math.random(times) * grid
+                rand_pos = new_loop_start + rand_grid - grid
+
+                if rand_pos + notelen > loop_end then
+                    rand_pos = loop_end - notelen
                 end
-    
+
                 retry_count = retry_count + 1
                 if retry_count > max_retries then
+                    -- reaper.ShowConsoleMsg("Max retries reached for note " .. i .. "\n")
                     break
                 end
-            until not isOverlap(take, rand_pos, notelen, pitch, notecnt, i - 1)
-    
+            until not isOverlap(take, rand_pos, notelen, notecnt, i - 1)
+
             if retry_count <= max_retries then
+                -- reaper.ShowConsoleMsg("Moving note " .. i .. " to position " .. rand_pos .. "\n")
                 reaper.MIDI_SetNote(take, i - 1, nil, nil, rand_pos, rand_pos + notelen, nil, nil, nil, false)
             end
         end
