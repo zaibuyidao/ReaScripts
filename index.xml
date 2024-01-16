@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f9e251518052dbf512858ec749db202e01a47dcc">
+<index version="1" name="zaibuyidao Scripts" commit="6649195f86ec1ea324f838a2e46b5f748512510f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -10929,6 +10929,50 @@ Add "scroll to top" feature to UCS list]]></changelog>
         <source file="SFX/lib/REQ/mouse.lua">https://github.com/zaibuyidao/ReaScripts/raw/f9e251518052dbf512858ec749db202e01a47dcc/Various/SFX/lib/REQ/mouse.lua</source>
         <source file="SFX/rating.csv">https://github.com/zaibuyidao/ReaScripts/raw/f9e251518052dbf512858ec749db202e01a47dcc/Various/SFX/rating.csv</source>
         <source file="SFX/ucs_keywords.csv">https://github.com/zaibuyidao/ReaScripts/raw/f9e251518052dbf512858ec749db202e01a47dcc/Various/SFX/ucs_keywords.csv</source>
+      </version>
+      <version name="1.7.2" author="zaibuyidao" time="2024-01-16T13:20:16Z">
+        <changelog><![CDATA[+ The UCS version now includes the ability to create user columns through a script (Press Ctrl+F10 (F10) on the main interface to open the settings window).]]></changelog>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Search.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Search.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Search (Custom).lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Search%20(Custom).lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Search (Database).lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Search%20(Database).lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Search (UCS).lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Search%20(UCS).lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Album.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Album.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Comment.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Comment.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Description.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Description.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag File Name.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20File%20Name.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Genre.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Genre.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag Title.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20Title.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag iXML CatID.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20iXML%20CatID.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag iXML FXName.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20iXML%20FXName.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag iXML Category.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20iXML%20Category.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag iXML SubCategory.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20iXML%20SubCategory.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag iXML CategoryFull.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20iXML%20CategoryFull.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag iXML Keywords.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20iXML%20Keywords.lua</source>
+        <source main="main" file="SFX/zaibuyidao_SFX Tag iXML Library.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/zaibuyidao_SFX%20Tag%20iXML%20Library.lua</source>
+        <source file="SFX/lib/config.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/config.lua</source>
+        <source file="SFX/lib/config-custom.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/config-custom.lua</source>
+        <source file="SFX/lib/config-database.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/config-database.lua</source>
+        <source file="SFX/lib/config-ucs.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/config-ucs.lua</source>
+        <source file="SFX/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/core.lua</source>
+        <source file="SFX/lib/LIP.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/LIP.lua</source>
+        <source file="SFX/lib/ListView.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/ListView.lua</source>
+        <source file="SFX/lib/reaper-utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/reaper-utils.lua</source>
+        <source file="SFX/lib/pinyin.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/pinyin.lua</source>
+        <source file="SFX/lib/REQ/JGui.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/JGui.lua</source>
+        <source file="SFX/lib/REQ/JGuiColors.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/JGuiColors.lua</source>
+        <source file="SFX/lib/REQ/JGuiControls.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/JGuiControls.lua</source>
+        <source file="SFX/lib/REQ/JGuiFunctions.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/JGuiFunctions.lua</source>
+        <source file="SFX/lib/REQ/JProjectClass.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/JProjectClass.lua</source>
+        <source file="SFX/lib/REQ/JProjectClassReq.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/JProjectClassReq.lua</source>
+        <source file="SFX/lib/REQ/jKeyboard.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/jKeyboard.lua</source>
+        <source file="SFX/lib/REQ/j_file_functions.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/j_file_functions.lua</source>
+        <source file="SFX/lib/REQ/j_settings_functions.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/j_settings_functions.lua</source>
+        <source file="SFX/lib/REQ/j_string_functions.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/j_string_functions.lua</source>
+        <source file="SFX/lib/REQ/j_tables.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/j_tables.lua</source>
+        <source file="SFX/lib/REQ/j_trackstatechunk_functions.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/j_trackstatechunk_functions.lua</source>
+        <source file="SFX/lib/REQ/mouse.lua">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/lib/REQ/mouse.lua</source>
+        <source file="SFX/rating.csv">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/rating.csv</source>
+        <source file="SFX/ucs_keywords.csv">https://github.com/zaibuyidao/ReaScripts/raw/6649195f86ec1ea324f838a2e46b5f748512510f/Various/SFX/ucs_keywords.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
