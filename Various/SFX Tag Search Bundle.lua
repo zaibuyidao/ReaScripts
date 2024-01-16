@@ -1,9 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.7.1
+-- @version 1.7.2
 -- @changelog
---   + The UCS version now includes the ability to create user columns through a script. Press F10 on the main interface to open the settings window.
---   + UCS 版本新增通过脚本创建用户列, 在主界面按 F10 可以打开设置窗口.
+--   + The UCS version now includes the ability to create user columns through a script (Press Ctrl+F10 (F10) on the main interface to open the settings window).
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links

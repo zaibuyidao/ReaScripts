@@ -850,170 +850,229 @@ function init()
 			startSearch(searchTextBox.value) -- 多语言切换
 			resultListView:jump(originalPosition)
 		elseif key ==  6697264 then --F10
-			-- 显示用户输入对话框并获取设置
-			function getUserInputs()
-				if language == "简体中文" then
-					column_title = "设置用户列"
-				elseif language == "繁体中文" then
-					column_title = "設定用戶列"
-				else
-					column_title = "Set User Columns"
-				end
-
-				local num_inputs = 7
-				local captions = "CatID (y/n): ,Category (y/n): ,SubCategory (y/n): ,CategoryFull (y/n): ,Category_ch (y/n): ,SubCategory_ch (y/n): ,CategoryFull_ch (y/n): "
-				local defaults = "y,n,n,n,n,n,n"
-				local retval, inputs = reaper.GetUserInputs(column_title, num_inputs, captions, defaults)
-			
-				if retval then
-					local results = {}
-					for value in string.gmatch(inputs, "[^,]+") do
-						table.insert(results, value:lower() == "y")
-					end
-					return results
-				else
-					return nil -- 用户取消了对话框
-				end
+			-- 检测 Control 键是否按下
+			function isControlKeyDown()
+				-- JS_Mouse_GetState(掩码) 返回当前按下的鼠标和键盘修饰键的状态
+				-- 4 是 Control 键的掩码值
+				local state = reaper.JS_Mouse_GetState(4)
+				return state == 4
+			end
+			function isShiftKeyDown()
+				-- JS_Mouse_GetState(掩码) 返回当前按下的鼠标和键盘修饰键的状态
+				-- 8 是 Shift 键的掩码值
+				local state = reaper.JS_Mouse_GetState(8)
+				return state == 8
+			end
+			function isAltKeyDown()
+				-- JS_Mouse_GetState(掩码) 返回当前按下的鼠标和键盘修饰键的状态
+				-- 8 是 Shift 键的掩码值
+				local state = reaper.JS_Mouse_GetState(16)
+				return state == 16
 			end
 
-			local inputResults = getUserInputs()
-			if inputResults then
-				-- 用户创建的列
-				local ucs = {} 
-				if inputResults[1] then ucs["CatID"] = "CatID" end
-				if inputResults[2] then ucs["Category"] = "Category" end
-				if inputResults[3] then ucs["SubCategory"] = "SubCategory" end
-				if inputResults[4] then ucs["CategoryFull"] = "CategoryFull" end
-				if inputResults[5] then ucs["Category_ch"] = "Category_ch" end
-				if inputResults[6] then ucs["SubCategory_ch"] = "SubCategory_ch" end
-				if inputResults[7] then ucs["CategoryFull_ch"] = "CategoryFull_ch" end
-				
-				function getOS()
-					local win = string.find(reaper.GetOS(), "Win") ~= nil
-					local sep = win and '\\' or '/'
-					return win, sep
+			-- 新增函数：检查并显示user0到user9的val值
+			function checkAndDisplayUserColumns()
+				local ini_file = reaper.get_ini_file()
+				local message = ""
+				local title = ""
+				local columnSet = false
+			
+				for i = 0, 9 do
+					local ret, val = reaper.BR_Win32_GetPrivateProfileString("reaper_explorer", "user" .. tostring(i) .. "_key", "", ini_file)
+					if val == "" then
+						if language == "简体中文" then
+							message = message .. "user" .. tostring(i) .. ": 未设置\n"
+						elseif language == "繁体中文" then
+							message = message .. "user" .. tostring(i) .. ": 未設置\n"
+						else
+							message = message .. "user" .. tostring(i) .. ": Not set\n"
+						end
+					else
+						message = message .. "user" .. tostring(i) .. ": " .. val .. "\n"
+						columnSet = true
+					end
 				end
-				
-				-- 检查一个表是否包含一个Key, 返回布尔值
-				function tableContainsKey(table, key)
-					return table[key] ~= nil
+
+				if language == "简体中文" then
+					title = "用户列状态"
+				elseif language == "繁体中文" then
+					title = "用戶列狀態"
+				else
+					title = "User Columns Status"
 				end
 			
-				-- 获取非数字键的表长
-				function tableLength(table)
-					local i = 0
-					for _ in pairs(table) do
-						i = i + 1
+				reaper.MB(message, title, 0)
+			end
+
+			if isControlKeyDown() then
+				-- 显示用户输入对话框并获取设置
+				function getUserInputs()
+					if language == "简体中文" then
+						column_title = "设置用户列"
+					elseif language == "繁体中文" then
+						column_title = "設定用戶列"
+					else
+						column_title = "Set User Columns"
 					end
-					return i
+	
+					local num_inputs = 7
+					local captions = "CatID (y/n): ,Category (y/n): ,SubCategory (y/n): ,CategoryFull (y/n): ,Category_ch (y/n): ,SubCategory_ch (y/n): ,CategoryFull_ch (y/n): "
+					local defaults = "y,n,n,n,n,n,n"
+					local retval, inputs = reaper.GetUserInputs(column_title, num_inputs, captions, defaults)
+				
+					if retval then
+						local results = {}
+						for value in string.gmatch(inputs, "[^,]+") do
+							table.insert(results, value:lower() == "y")
+						end
+						return results
+					else
+						return nil -- 用户取消了对话框
+					end
 				end
+	
+				local inputResults = getUserInputs()
+				if inputResults then
+					-- 用户创建的列
+					local ucs = {} 
+					if inputResults[1] then ucs["CatID"] = "CatID" end
+					if inputResults[2] then ucs["Category"] = "Category" end
+					if inputResults[3] then ucs["SubCategory"] = "SubCategory" end
+					if inputResults[4] then ucs["CategoryFull"] = "CategoryFull" end
+					if inputResults[5] then ucs["Category_ch"] = "Category_ch" end
+					if inputResults[6] then ucs["SubCategory_ch"] = "SubCategory_ch" end
+					if inputResults[7] then ucs["CategoryFull_ch"] = "CategoryFull_ch" end
+					
+					function getOS()
+						local win = string.find(reaper.GetOS(), "Win") ~= nil
+						local sep = win and '\\' or '/'
+						return win, sep
+					end
+					
+					-- 检查一个表是否包含一个Key, 返回布尔值
+					function tableContainsKey(table, key)
+						return table[key] ~= nil
+					end
 				
-				local win, sep = getOS()
-				local ini_section = win and "reaper_explorer" or "reaper_sexplorer"
-				
-				-- 将列添加到媒体浏览器中
-				function addColumn()
-					local ini_file = reaper.get_ini_file()
-					local i = 0
-					local message = "" -- 初始化用于累积消息的字符串
-					local title = ""  -- 初始化消息框标题
-					repeat
-						-- 检查.ini文件中的自定义用户列
-						local ret, val = reaper.BR_Win32_GetPrivateProfileString(ini_section,"user" .. tostring(i) .. "_key", "", ini_file)
-						-- 检查自定义用户列是否已经存在于表中
-						if tableContainsKey(ucs, val) then
-							if language == "简体中文" then
-                message = message .. "用户列已存在: " .. val .. " 在 user" .. tostring(i) .. "\n"
-                title = ""
-							elseif language == "繁体中文" then
-                message = message .. "用戶列已存在: " .. val .. " 在 user" .. tostring(i) .. "\n"
-                title = ""
-							else
-                message = message .. "User column already exist: " .. val .. " in user" .. tostring(i) .. "\n"
-                title = ""
-							end
-							ucs[val] = nil -- 移除已存在的列
+					-- 获取非数字键的表长
+					function tableLength(table)
+						local i = 0
+						for _ in pairs(table) do
+							i = i + 1
 						end
-						i = i + 1
-						if i > 9 then
-							if language == "简体中文" then
-								column_ett1 = "错误"
-								column_err1 = "你必须使用用户创建列的前10个。"
-							elseif language == "繁体中文" then
-								column_ett1 = "錯誤"
-								column_err1 = "你必須使用用戶創建列的前10個。"
-							else
-								column_ett1 = "Error"
-								column_err1 = "You must use the first 10 user-created columns."
-							end
-
-							reaper.MB(column_err1, column_ett1, 0)
-							return
-						end
-					until ret == 0 or i > 9
-				
-					i = i - 1
-					local isCreat = false
-				
-					if tableLength(ucs) > 0 then
-						for k, v in pairs(ucs) do
-							-- 写入新列
-							reaper.BR_Win32_WritePrivateProfileString(ini_section, "user" .. tostring(i) .. "_key", k, ini_file)
-							reaper.BR_Win32_WritePrivateProfileString(ini_section, "user" .. tostring(i) .. "_desc", v, ini_file)
-							reaper.BR_Win32_WritePrivateProfileString(ini_section, "user" .. tostring(i) .. "_flags", "1", ini_file)
-
-							if language == "简体中文" then
-                message = message .. "创建用户列: " .. k .. " 在 user" .. tostring(i) .. "\n"
-              elseif language == "繁体中文" then
-                message = message .. "創建用戶列: " .. k .. " 在 user" .. tostring(i) .. "\n"
-							else
-								message = message .. "Creating user column: " .. k .. " in user" .. tostring(i) .. "\n"
+						return i
+					end
+					
+					local win, sep = getOS()
+					local ini_section = win and "reaper_explorer" or "reaper_sexplorer"
+					
+					-- 将列添加到媒体浏览器中
+					function addColumn()
+						local ini_file = reaper.get_ini_file()
+						local i = 0
+						local message = "" -- 初始化用于累积消息的字符串
+						local title = ""  -- 初始化消息框标题
+						repeat
+							-- 检查.ini文件中的自定义用户列
+							local ret, val = reaper.BR_Win32_GetPrivateProfileString(ini_section,"user" .. tostring(i) .. "_key", "", ini_file)
+							-- 检查自定义用户列是否已经存在于表中
+							if tableContainsKey(ucs, val) then
+								if language == "简体中文" then
+									message = message .. "用户列已存在: " .. val .. " 在 user" .. tostring(i) .. "\n"
+									title = ""
+								elseif language == "繁体中文" then
+									message = message .. "用戶列已存在: " .. val .. " 在 user" .. tostring(i) .. "\n"
+									title = ""
+								else
+									message = message .. "User column already exist: " .. val .. " in user" .. tostring(i) .. "\n"
+									title = ""
+								end
+								ucs[val] = nil -- 移除已存在的列
 							end
 							i = i + 1
-							if i > 9 then
+							if i > 10 then
 								if language == "简体中文" then
-									column_ett2 = "错误"
-									column_err2 = "已达到列的最大数量。"
+									column_ett1 = "错误"
+									column_err1 = "你必须使用用户创建列的前10个。"
 								elseif language == "繁体中文" then
-									column_ett2 = "錯誤"
-									column_err2 = "已達到列的最大數量。"
+									column_ett1 = "錯誤"
+									column_err1 = "你必須使用用戶創建列的前10個。"
 								else
-									column_ett2 = "Error"
-									column_err2 = "Maximum number of columns reached."
+									column_ett1 = "Error"
+									column_err1 = "You must use the first 10 user-created columns."
 								end
-								reaper.MB(column_err2, column_ett2, 0)
-							  break
+	
+								reaper.MB(column_err1, column_ett1, 0)
+								return
 							end
+						until ret == 0 or i > 10 -- 确保在处理完第10个元素后停止
+					
+						i = i - 1
+						local isCreat = false
+					
+						if tableLength(ucs) > 0 then
+							for k, v in pairs(ucs) do
+								-- 写入新列
+								reaper.BR_Win32_WritePrivateProfileString(ini_section, "user" .. tostring(i) .. "_key", k, ini_file)
+								reaper.BR_Win32_WritePrivateProfileString(ini_section, "user" .. tostring(i) .. "_desc", v, ini_file)
+								reaper.BR_Win32_WritePrivateProfileString(ini_section, "user" .. tostring(i) .. "_flags", "1", ini_file)
+	
+								if language == "简体中文" then
+									message = message .. "创建新用户列: " .. k .. " 在 user" .. tostring(i) .. "\n"
+								elseif language == "繁体中文" then
+									message = message .. "創建新用戶列: " .. k .. " 在 user" .. tostring(i) .. "\n"
+								else
+									message = message .. "Creating user column: " .. k .. " in user" .. tostring(i) .. "\n"
+								end
+								i = i + 1
+								if i > 10 then
+									if language == "简体中文" then
+										column_ett2 = "错误"
+										column_err2 = "已达到列的最大数量。"
+									elseif language == "繁体中文" then
+										column_ett2 = "錯誤"
+										column_err2 = "已達到列的最大數量。"
+									else
+										column_ett2 = "Error"
+										column_err2 = "Maximum number of columns reached."
+									end
+									reaper.MB(column_err2, column_ett2, 0)
+								  break
+								end
+							end
+	
+							isCreat = true
 						end
-
-						isCreat = true
-					end
-
-					-- 如果有消息需要显示，则使用一个弹窗显示所有累积的消息
-					if message ~= "" then
-						reaper.MB(message, title, 0)
-					end
-					if isCreat then
-						if language == "简体中文" then
-							column_msg3 = "用户列已成功更新。\n\nREAPER 将自动关闭。请您手动重新启动 REAPER 以应用更改。"
-							column_tt3 = "警告"
-						elseif language == "繁体中文" then
-							column_msg3 = "用戶列已成功更新。\n\nREAPER 將自動關閉。請您手動重新啟動 REAPER 以應用更改。"
-							column_tt3 = "警告"
-						else
-							column_msg3 = "User columns have been successfully updated.\n\nREAPER will automatically close. Please manually restart REAPER to apply the changes."
-							column_tt3 = "Warning"
+	
+						-- 如果有消息需要显示，则使用一个弹窗显示所有累积的消息
+						if message ~= "" then
+							reaper.MB(message, title, 0)
 						end
-
-						reaper.MB(column_msg3, column_tt3, 0)
-						reaper.Main_OnCommand(40004, 0) -- File: Quit REAPER
+						if isCreat then
+							if language == "简体中文" then
+								column_msg3 = "用户列已成功更新。\n\nREAPER 将自动关闭。请您手动重新启动 REAPER 以应用更改。"
+								column_tt3 = "警告"
+							elseif language == "繁体中文" then
+								column_msg3 = "用戶列已成功更新。\n\nREAPER 將自動關閉。請您手動重新啟動 REAPER 以應用更改。"
+								column_tt3 = "警告"
+							else
+								column_msg3 = "User columns have been successfully updated.\n\nREAPER will automatically close. Please manually restart REAPER to apply the changes."
+								column_tt3 = "Warning"
+							end
+	
+							reaper.MB(column_msg3, column_tt3, 0)
+							reaper.Main_OnCommand(40004, 0) -- File: Quit REAPER
+						end
 					end
+					
+					addColumn()
+				else
+					window:setFocus(searchTextBox) --reaper.ShowConsoleMsg("用户取消了操作。\n")
 				end
-				
-				addColumn()
 			else
-				--reaper.ShowConsoleMsg("用户取消了操作。\n")
+				checkAndDisplayUserColumns()
 			end
+			window:setReaperFocus()
 		elseif key == 6697265 then --F11
 			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
 		elseif key == 6697266 then --F12
