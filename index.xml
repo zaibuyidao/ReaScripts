@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="742ec8971f8c6fa6d76fc70c751a668b3de1c9cd">
+<index version="1" name="zaibuyidao Scripts" commit="d640681d02dda21ae0798c52dbde76c7b1d97c45">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5136,7 +5136,7 @@
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58f6e10a33307e789724b3c455901e701c3e00ff/MIDI%20Editor/zaibuyidao_Set%20Events%20Channel.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Set MIDI Editor Grid To First Selected Note.lua" type="script" desc="Set MIDI Editor Grid To First Selected Note">
+    <reapack name="zaibuyidao_Set MIDI Editor Grid From First Selected Note.lua" type="script" desc="Set MIDI Editor Grid From First Selected Note (Length)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -5149,9 +5149,9 @@
         <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-01-16T13:49:32Z">
+      <version name="1.0" author="zaibuyidao" time="2024-01-16T14:46:12Z">
         <changelog><![CDATA[Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/742ec8971f8c6fa6d76fc70c751a668b3de1c9cd/MIDI%20Editor/zaibuyidao_Set%20MIDI%20Editor%20Grid%20To%20First%20Selected%20Note.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d640681d02dda21ae0798c52dbde76c7b1d97c45/MIDI%20Editor/zaibuyidao_Set%20MIDI%20Editor%20Grid%20From%20First%20Selected%20Note.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set MIDI Note Shape.lua" type="script" desc="Set MIDI Note Shape">
