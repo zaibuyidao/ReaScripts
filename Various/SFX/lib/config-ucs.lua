@@ -58,6 +58,7 @@ return {
         include_name = true, -- Whether the second column is included in the search ⇌ 搜索时是否包含第二列
         include_remark = true -- Whether the third column is included in the search ⇌ 搜索时是否包含第三列
     },
+    -- When UCS user columns are created, the following settings will be effective (press F10 in the script interface to set up user columns). ⇌ 当创建了 UCS 用户列, 以下设置将生效(在脚本界面按 F10 可设置用户列)
     ucs = {
         write_catid = true, -- Whether to write CatID ⇌ 是否写入 CatID
         write_category = false, -- Whether to write Category ⇌ 是否写入 Category
@@ -66,15 +67,6 @@ return {
         write_category_ch = false, -- Whether to write Chinese tags Category_ch ⇌ 是否写入中文标签 Category_ch
         write_sub_category_ch = false, -- Whether to write Chinese tags SubCategory_ch ⇌ 是否写入中文标签 SubCategory_ch
         write_category_full_ch = false, -- Whether to write Chinese tags CategoryFull_ch ⇌ 是否写入中文标签 CategoryFull_ch
-        -- Action command for numbering user-created columns: ⇌ 对于用户创建列的编号的操作命令:
-        -- Sort from top to bottom: 1 = 42194, 2 = 42195, 3 = 42196, 4 = 42197, 5 = 42198, 6 = 42199, 7 = 42200, 8 = 42201, 9 = 42202, 10 = 42203 ⇌ 从上往下排序: 1 = 42194, 2 = 42195, 3 = 42196, 4 = 42197, 5 = 42198, 6 = 42199, 7 = 42200, 8 = 42201, 9 = 42202, 10 = 42203
-        cmd_id_catid = getCmdID(1), -- CatID The number for the user-created column ⇌ CatID 对于用户创建列的编号
-        cmd_id_category = getCmdID(2), -- Category The number for the user-created column ⇌ Category 对于用户创建列的编号
-        cmd_id_sub_category = getCmdID(3), -- SubCategory The number for the user-created column ⇌ SubCategory 对于用户创建列的编号
-        cmd_id_category_full = getCmdID(4), -- CategoryFull The number for the user-created column ⇌ CategoryFull 对于用户创建列的编号
-        cmd_id_category_ch = getCmdID(5), -- Category_ch The number for the user-created column ⇌ Category_ch 对于用户创建列的编号
-        cmd_id_sub_category_ch = getCmdID(6), -- SubCategory_ch The number for the user-created column ⇌ SubCategory_ch 对于用户创建列的编号
-        cmd_id_category_full_ch = getCmdID(7), -- CategoryFull_ch The number for the user-created column ⇌ CategoryFull_ch 对于用户创建列的编号
         tag_write_delay = 0.1 -- Unit: seconds. The processing time between each tag. If you can't write a tag successfully, you need to increase the delay time. ⇌ 单位: 秒. 每个标签之间的处理时间间隔. 如果无法顺利写入标签, 则需要将延迟时间调大.
     }
 }

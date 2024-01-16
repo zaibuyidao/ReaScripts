@@ -1,11 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.7.0
+-- @version 1.7.1
 -- @changelog
---   + Configuration files optimized for bilingualism
---   # Fix SFX Tag Search Separator Issue
---   + 配置文件优化为中英双语
---   # 修复 SFX Tag Search 分隔符问题
+--   + The UCS version now includes the ability to create user columns through a script. Press F10 on the main interface to open the settings window.
+--   + UCS 版本新增通过脚本创建用户列, 在主界面按 F10 可以打开设置窗口.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links

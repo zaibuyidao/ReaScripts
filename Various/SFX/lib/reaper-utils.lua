@@ -41,6 +41,34 @@ function table.print(t)
     end
 end
 
+-- 储存已知的user列和它们对应的初始命令ID
+local userCmdIds = {
+    ["user0"] = 42194,
+    ["user1"] = 42195,
+    ["user2"] = 42196,
+    ["user3"] = 42197,
+    ["user4"] = 42198,
+    ["user5"] = 42199,
+    ["user6"] = 42200,
+    ["user7"] = 42201,
+    ["user8"] = 42202,
+    ["user9"] = 42203,
+}
+
+-- 获取指定列名称对应的命令ID
+function getCmdIDForColumn(columnName)
+    local ini_file = reaper.get_ini_file()
+    local i = 0
+    while i <= 9 do
+        local ret, val = reaper.BR_Win32_GetPrivateProfileString("reaper_explorer", "user" .. tostring(i) .. "_key", "", ini_file)
+        if val == columnName then
+            return userCmdIds["user" .. tostring(i)]
+        end
+        i = i + 1
+    end
+    return nil -- 如果没有找到对应的列，则返回nil
+end
+
 function getCmdID(offset)
     local base_cmd_id = 42193
     return base_cmd_id + offset
