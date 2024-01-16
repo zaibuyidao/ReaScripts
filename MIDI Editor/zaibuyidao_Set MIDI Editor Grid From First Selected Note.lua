@@ -1,4 +1,4 @@
--- @description Set MIDI Editor Grid To First Selected Note
+-- @description Set MIDI Editor Grid From First Selected Note (Length)
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog Initial release
@@ -60,11 +60,11 @@ end
 local language = getSystemLanguage()
 
 if language == "简体中文" then
-    title = "将MIDI编辑器网格设置为第一个选定的音符"
+    title = "根据第一个选定的音符(长度)设置MIDI编辑器网格"
 elseif language == "繁体中文" then
-    title = "將MIDI編輯器網格設定為第一個選取的音符"
+    title = "根據第一個選取的音符(長度)設定MIDI編輯器網格"
 else
-    title = "Set MIDI Editor Grid To First Selected Note"
+    title = "Set MIDI Editor Grid From First Selected Note (Length)"
 end
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
