@@ -1,5 +1,5 @@
 -- @description Insert Pitch Bend
--- @version 1.5.0
+-- @version 1.5.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -113,7 +113,6 @@ if pitchbend < -8192 or pitchbend > 8191 then
 end
 
 reaper.Undo_BeginBlock()
-pitchbend = pitchbend + 8192
 local LSB = pitchbend & 0x7F
 local MSB = (pitchbend >> 7) + 64
 reaper.MIDI_InsertCC(take, false, false, ppq, 224, 0, LSB, MSB)
