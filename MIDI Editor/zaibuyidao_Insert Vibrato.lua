@@ -1,69 +1,84 @@
 -- @description Insert Vibrato
--- @version 2.0.4
+-- @version 2.0.5
 -- @author zaibuyidao
--- @changelog Optimized code
+-- @changelog Initial release
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires SWS Extensions
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(...)
-  local params = {...}
-  for i = 1, #params do
-    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-    reaper.ShowConsoleMsg(tostring(params[i]))
+  for _, v in ipairs({...}) do
+    reaper.ShowConsoleMsg(tostring(v) .. " ")
   end
   reaper.ShowConsoleMsg("\n")
 end
 
-function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-    if (print_r_cache[tostring(t)]) then
-      print(indent .. "*" .. tostring(t))
-    else
-      print_r_cache[tostring(t)] = true
-      if (type(t) == "table") then
-        for pos, val in pairs(t) do
-          if (type(val) == "table") then
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-          elseif (type(val) == "string") then
-            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-          else
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-          end
-        end
-      else
-        print(indent .. tostring(t))
-      end
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
     end
   end
-  if (type(t) == "table") then
-    print(tostring(t) .. " {")
-    sub_print_r(t, "  ")
-    print("}")
-  else
-    sub_print_r(t, "  ")
-  end
+
+  return lang
 end
 
-function open_url(url)
-  if not OS then local OS = reaper.GetOS() end
-  if OS=="OSX32" or OS=="OSX64" then
-    os.execute("open ".. url)
-  else
-    os.execute("start ".. url)
-  end
+local language = getSystemLanguage()
+local title = ""
+
+if language == "简体中文" then
+  title = "插入揉弦"
+elseif language == "繁体中文" then
+  title = "插入揉弦"
+else
+  title = "Insert Vibrato"
 end
 
 if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+  local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
   if retval == 1 then
-    open_url("http://www.sws-extension.org/download/pre-release/")
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
   end
+  return
 end
 
 local _SN_FocusMIDIEditor = reaper.SN_FocusMIDIEditor
@@ -161,12 +176,21 @@ if (num == "") then num = "12" end
 local shape = reaper.GetExtState("InsterVibrato", "Shape")
 if (shape == "") then shape = "0" end
 
-local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Vibrato", 6, "Starting value 起始點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數,0=Sine 1=Triangle", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-bottom, top, times, length, num, shape = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*),(.*)")
+local captions_csv = ""
+if language == "简体中文" then
+  captions_csv = "起始点,最高点,重复,长度,点数,0=正弦波 1=三角波"
+elseif language == "繁体中文" then
+  captions_csv = "起始點,最高點,重複,長度,點數,0=正弦波 1=三角波"
+else
+  captions_csv = "Starting value,Highest value,Repetitions,Length,Points,0=Sine 1=Triangle"
+end
+
+local uok, uinput = reaper.GetUserInputs(title, 6, captions_csv, bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
+if not uok then return reaper.SN_FocusMIDIEditor() end
+bottom, top, times, length, num, shape = uinput:match("(.*),(.*),(.*),(.*),(.*),(.*)")
 if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) or not tonumber(shape) then return reaper.SN_FocusMIDIEditor() end
 bottom, top, times, length, num, shape = tonumber(bottom), tonumber(top), tonumber(times), tonumber(length), tonumber(num), tonumber(shape)
-if times < 1  or shape > 1 then return reaper.SN_FocusMIDIEditor() end
+if times < 1 or shape > 1 then return reaper.SN_FocusMIDIEditor() end
 
 reaper.SetExtState("InsterVibrato", "Bottom", bottom, false)
 reaper.SetExtState("InsterVibrato", "Top", top, false)
@@ -236,7 +260,7 @@ elseif shape == 2 or shape == 3 then
 end
 
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Insert Vibrato", -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
 reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 40366) -- CC: Set CC lane to Pitch
