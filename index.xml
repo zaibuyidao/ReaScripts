@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="91606e0e9ade7d18731738d0ac97c3806e235a38">
+<index version="1" name="zaibuyidao Scripts" commit="c2aa83a5b6b42f90da26bd8f776770884a0eaab6">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3254,6 +3254,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/894c71928ad2f922848474b8c20fd1a27972d10a/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20(Semitone).lua</source>
       </version>
+      <version name="1.5.1" author="zaibuyidao" time="2024-01-17T15:51:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c2aa83a5b6b42f90da26bd8f776770884a0eaab6/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20(Semitone).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend Curve (Sawtooth).lua" type="script" desc="Insert Pitch Bend Curve (Sawtooth)">
       <metadata>
@@ -3386,6 +3390,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/91606e0e9ade7d18731738d0ac97c3806e235a38/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend.lua</source>
       </version>
+      <version name="1.5.2" author="zaibuyidao" time="2024-01-17T15:51:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c2aa83a5b6b42f90da26bd8f776770884a0eaab6/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Random CC Events (For Selected Notes).lua" type="script" desc="Insert Random CC Events (For Selected Notes)">
       <metadata>
@@ -3463,15 +3471,22 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/61a198f97763e85b3144e1b00ad3a86fec79ba8c/MIDI%20Editor/zaibuyidao_Insert%20Sustain%20Pedal.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Insert SysEx.lua" type="script" desc="Insert SysEx">
+    <reapack name="zaibuyidao_Insert SysEx Message.lua" type="script" desc="Insert SysEx Message">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.2" author="zaibuyidao" time="2020-11-01T09:10:53Z">
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/843708e47c22265d9b89d0a23a4e90b7545bbe94/MIDI%20Editor/zaibuyidao_Insert%20SysEx.lua</source>
-      </version>
-      <version name="1.2.1" author="zaibuyidao" time="2022-02-05T11:23:33Z">
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/zaibuyidao_Insert%20SysEx.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-01-17T15:51:27Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main midi_editor midi_inlineeditor">https://github.com/zaibuyidao/ReaScripts/raw/c2aa83a5b6b42f90da26bd8f776770884a0eaab6/MIDI%20Editor/zaibuyidao_Insert%20SysEx%20Message.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Tremolo.lua" type="script" desc="Insert Tremolo">
@@ -6508,15 +6523,6 @@
       <version name="1.0" author="再補一刀" time="2022-08-23T16:06:26Z">
         <changelog><![CDATA[首次发布]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b065e65d515fa5f39169232ec9865f72810eddc1/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%A8%E5%BC%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_插入系統專用信息.lua" type="script" desc="插入系統專用信息">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2022-02-05T11:23:33Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E7%B3%BB%E7%B5%B1%E5%B0%88%E7%94%A8%E4%BF%A1%E6%81%AF.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入音色(庫MSB LSB).lua" type="script" desc="插入音色(庫MSB/LSB)">
