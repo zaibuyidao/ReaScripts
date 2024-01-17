@@ -1,5 +1,5 @@
 -- @description Insert Pitch Bend (Semitone)
--- @version 1.5.0
+-- @version 1.5.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -101,9 +101,9 @@ else
   err = "Error"
 end
 
-local pitch = reaper.GetExtState("Insert_Pitch_Bend_Semitone", "Pitch")
+local pitch = reaper.GetExtState("INSERT_PITCHBEND_SEMITONE", "Pitch")
 if (pitch == "") then pitch = "0" end
-local range = reaper.GetExtState("InsertPitchBendSemitone", "Range")
+local range = reaper.GetExtState("INSERT_PITCHBEND_SEMITONE", "Range")
 if (range == "") then range = "12" end
 
 local uok, uinput = reaper.GetUserInputs(title, 2, captions_csv, pitch ..','.. range)
@@ -120,8 +120,8 @@ if pitch > range then
   return reaper.MB(msg2, err, 0), reaper.SN_FocusMIDIEditor()
 end
 
-reaper.SetExtState("InsertPitchBendSemitone", "Pitch", pitch, false)
-reaper.SetExtState("InsertPitchBendSemitone", "Range", range, false)
+reaper.SetExtState("INSERT_PITCHBEND_SEMITONE", "Pitch", pitch, false)
+reaper.SetExtState("INSERT_PITCHBEND_SEMITONE", "Range", range, false)
 
 function getSegments(n)
   local x = 8192

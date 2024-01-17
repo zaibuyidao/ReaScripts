@@ -1,5 +1,5 @@
 -- @description Insert Pitch Bend
--- @version 1.5.1
+-- @version 1.5.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -97,7 +97,7 @@ else
   err = "Error"
 end
 
-local pitchbend = reaper.GetExtState("InsertPitchBend", "Pitch")
+local pitchbend = reaper.GetExtState("INSERT_PITCHBEND", "Pitchbend")
 if (pitchbend == "") then pitchbend = "0" end
 
 local uok, uinput = reaper.GetUserInputs(title, 1, captions_csv, pitchbend)
@@ -106,7 +106,7 @@ pitchbend = uinput:match("(.*)")
 if not tonumber(pitchbend) then return reaper.SN_FocusMIDIEditor() end
 pitchbend = tonumber(pitchbend)
 
-reaper.SetExtState("InsertPitchBend", "Pitchbend", pitchbend, false)
+reaper.SetExtState("INSERT_PITCHBEND", "Pitchbend", pitchbend, false)
 
 if pitchbend < -8192 or pitchbend > 8191 then
   return reaper.MB(msg, err, 0), reaper.SN_FocusMIDIEditor()
