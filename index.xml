@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7249b0d15174a943f2d2f28c8ef716bc1b48a4ee">
+<index version="1" name="zaibuyidao Scripts" commit="894c71928ad2f922848474b8c20fd1a27972d10a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3223,7 +3223,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
         <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
@@ -3249,6 +3249,10 @@
       <version name="1.4.1" author="zaibuyidao" time="2022-08-23T08:55:09Z">
         <changelog><![CDATA[Optimised pitch bend]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/12934f35140cfed386f1a181f0395910c1e894a1/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20(Semitone).lua</source>
+      </version>
+      <version name="1.5.0" author="zaibuyidao" time="2024-01-17T15:23:37Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/894c71928ad2f922848474b8c20fd1a27972d10a/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20(Semitone).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend Curve (Sawtooth).lua" type="script" desc="Insert Pitch Bend Curve (Sawtooth)">
@@ -3347,7 +3351,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
         <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
@@ -3373,6 +3377,10 @@
       <version name="1.4.1" author="zaibuyidao" time="2022-08-23T09:51:09Z">
         <changelog><![CDATA[Optimised pitch bend]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4dedbaca6f296e2e521f2c674c4ccb9bba5c905c/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend.lua</source>
+      </version>
+      <version name="1.5.0" author="zaibuyidao" time="2024-01-17T15:23:37Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/894c71928ad2f922848474b8c20fd1a27972d10a/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Random CC Events (For Selected Notes).lua" type="script" desc="Insert Random CC Events (For Selected Notes)">
@@ -6496,48 +6504,6 @@
       <version name="1.0" author="再補一刀" time="2022-08-23T16:06:26Z">
         <changelog><![CDATA[首次发布]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b065e65d515fa5f39169232ec9865f72810eddc1/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%A8%E5%BC%A6.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_插入彎音(半音).lua" type="script" desc="插入彎音(半音)">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.4" author="再補一刀" time="2021-01-11T13:06:36Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58185d8f06c64b37b558aeddc52e91b93b6a5f5d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E5%BD%8E%E9%9F%B3(%E5%8D%8A%E9%9F%B3).lua</source>
-      </version>
-      <version name="1.4.1" author="再補一刀" time="2022-08-23T08:55:09Z">
-        <changelog><![CDATA[優化彎音]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/12934f35140cfed386f1a181f0395910c1e894a1/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E5%BD%8E%E9%9F%B3(%E5%8D%8A%E9%9F%B3).lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_插入彎音.lua" type="script" desc="插入彎音">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.4" author="再補一刀" time="2021-01-11T13:06:36Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58185d8f06c64b37b558aeddc52e91b93b6a5f5d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E5%BD%8E%E9%9F%B3.lua</source>
-      </version>
-      <version name="1.4.1" author="再補一刀" time="2022-08-23T09:51:09Z">
-        <changelog><![CDATA[優化彎音]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/4dedbaca6f296e2e521f2c674c4ccb9bba5c905c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8F%92%E5%85%A5%E5%BD%8E%E9%9F%B3.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_插入系統專用信息.lua" type="script" desc="插入系統專用信息">
