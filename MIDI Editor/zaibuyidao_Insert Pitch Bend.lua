@@ -1,78 +1,106 @@
 -- @description Insert Pitch Bend
--- @version 1.4.1
+-- @version 1.5.0
 -- @author zaibuyidao
--- @changelog Optimised pitch bend
+-- @changelog Initial release
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires SWS Extensions
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function print(...)
-  local params = {...}
-  for i = 1, #params do
-    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-    reaper.ShowConsoleMsg(tostring(params[i]))
+  for _, v in ipairs({...}) do
+    reaper.ShowConsoleMsg(tostring(v) .. " ")
   end
   reaper.ShowConsoleMsg("\n")
 end
 
-function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-    if (print_r_cache[tostring(t)]) then
-      print(indent .. "*" .. tostring(t))
-    else
-      print_r_cache[tostring(t)] = true
-      if (type(t) == "table") then
-        for pos, val in pairs(t) do
-          if (type(val) == "table") then
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-          elseif (type(val) == "string") then
-            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-          else
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-          end
-        end
-      else
-        print(indent .. tostring(t))
-      end
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
     end
   end
-  if (type(t) == "table") then
-    print(tostring(t) .. " {")
-    sub_print_r(t, "  ")
-    print("}")
-  else
-    sub_print_r(t, "  ")
-  end
+
+  return lang
 end
 
-function open_url(url)
-  if not OS then local OS = reaper.GetOS() end
-  if OS=="OSX32" or OS=="OSX64" then
-    os.execute("open ".. url)
-  else
-    os.execute("start ".. url)
-  end
-end
+local language = getSystemLanguage()
 
 if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+  local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
   if retval == 1 then
-    open_url("http://www.sws-extension.org/download/pre-release/")
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
   end
+  return
 end
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 local pos = reaper.GetCursorPositionEx()
 local ppq = reaper.MIDI_GetPPQPosFromProjTime(take, pos)
+local title = ""
+local captions_csv = ""
+local msg = ""
+local err = ""
+
+if language == "简体中文" then
+  title = "插入弯音"
+  captions_csv = "值"
+  msg = "请输入一个介于 -8192 到 8191 之间的值"
+  err = "错误"
+elseif language == "繁体中文" then
+  title = "插入彎音"
+  captions_csv = "值"
+  msg = "請輸入一個介於 -8192 到 8191 之間的值"
+  err = "錯誤"
+else
+  title = "'Insert Pitch Bend"
+  captions_csv = "Value"
+  msg = "Please enter a value between -8192 and 8191"
+  err = "Error"
+end
 
 local pitchbend = reaper.GetExtState("InsertPitchBend", "Pitch")
 if (pitchbend == "") then pitchbend = "0" end
-local uok, uinput = reaper.GetUserInputs('Insert Pitch Bend', 1, 'Value', pitchbend)
+
+local uok, uinput = reaper.GetUserInputs(title, 1, captions_csv, pitchbend)
 if not uok then return reaper.SN_FocusMIDIEditor() end
 pitchbend = uinput:match("(.*)")
 if not tonumber(pitchbend) then return reaper.SN_FocusMIDIEditor() end
@@ -81,7 +109,7 @@ pitchbend = tonumber(pitchbend)
 reaper.SetExtState("InsertPitchBend", "Pitchbend", pitchbend, false)
 
 if pitchbend < -8192 or pitchbend > 8191 then
-  return reaper.MB("Please enter a value from -8192 through 8191", "Error", 0), reaper.SN_FocusMIDIEditor()
+  return reaper.MB(msg, err, 0), reaper.SN_FocusMIDIEditor()
 end
 
 reaper.Undo_BeginBlock()
@@ -89,6 +117,6 @@ pitchbend = pitchbend + 8192
 local LSB = pitchbend & 0x7F
 local MSB = (pitchbend >> 7) + 64
 reaper.MIDI_InsertCC(take, false, false, ppq, 224, 0, LSB, MSB)
-reaper.Undo_EndBlock("Insert Pitch Bend", -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
