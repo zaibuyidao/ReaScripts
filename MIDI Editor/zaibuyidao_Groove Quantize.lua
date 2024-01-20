@@ -1,65 +1,123 @@
---[[
- * ReaScript Name: Groove Quantize
- * Version: 1.6.1
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
---]]
+-- @description Groove Quantize
+-- @version 1.6.2
+-- @author zaibuyidao
+-- @changelog
+--   + Add Multi-Language Support
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
---[[
- * Changelog:
- * v1.0 (2019-12-12)
-  + Initial release
---]]
-
-function Main()
-  local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-  local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
-  local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
-
-  local fudu = reaper.GetExtState("GrooveQuantize", "Amount")
-  if (fudu == "") then fudu = "3" end
-
-  local user_ok, user_input_csv = reaper.GetUserInputs("Groove Quantize", 1, "Amount", fudu)
-  if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  fudu = user_input_csv:match("(.*)")
-  if not tonumber(fudu) then return reaper.SN_FocusMIDIEditor() end
-  fudu = tonumber(fudu)
-  reaper.SetExtState("GrooveQuantize", "Amount", fudu, false)
-  reaper.Undo_BeginBlock()
-  reaper.MIDI_DisableSort(take)
-  for i = 0,  notecnt-1 do
-    local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-    local start_meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, startppqpos)
-    local start_tick = startppqpos - start_meas
-    local tick = start_tick % midi_tick
-    if selected == true then
-      if tick == 0 then
-        local x = vel - 1 + math.random(fudu + 1)
-        if x > 127 then x = 127 end
-        if x < 1 then x = 1 end
-        reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, x, false)
-      elseif tick == midi_tick/2 then
-        local y = vel - 1 - fudu + math.random(fudu + 1)
-        if y > 127 then y = 127 end
-        if y < 1 then y = 1 end
-        reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, y, false)
-      else
-        vel = vel - fudu*2
-        local z = vel - 1 + math.random(fudu*2 + 1)
-        if z > 127 then z = 127 end
-        if z < 1 then z = 1 end
-        reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, z, false)
-      end
-    end
-    i=i+1
+function print(...)
+  for _, v in ipairs({...}) do
+    reaper.ShowConsoleMsg(tostring(v) .. " ")
   end
-  reaper.MIDI_Sort(take)
-  reaper.Undo_EndBlock("Groove Quantize", -1)
-  reaper.UpdateArrange()
+  reaper.ShowConsoleMsg("\n")
 end
 
-Main()
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  end
+
+  return lang
+end
+
+local language = getSystemLanguage()
+
+if not reaper.SN_FocusMIDIEditor then
+  local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+  if retval == 1 then
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
+  end
+  return
+end
+
+local title, captions_csv = "", ""
+if language == "简体中文" then
+  title = "律动量化"
+  captions_csv = "数量:"
+elseif language == "繁体中文" then
+  title = "律動量化"
+  captions_csv = "數量:"
+else
+  title = "Groove Quantize"
+  captions_csv = "Amount:"
+end
+
+local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
+local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+local fudu = reaper.GetExtState("GROOVE_QUANTIZE", "Amount")
+if (fudu == "") then fudu = "3" end
+
+local uok, uinput = reaper.GetUserInputs(title, 1, captions_csv, fudu)
+if not uok then return reaper.SN_FocusMIDIEditor() end
+fudu = uinput:match("(.*)")
+if not tonumber(fudu) then return reaper.SN_FocusMIDIEditor() end
+fudu = tonumber(fudu)
+reaper.SetExtState("GROOVE_QUANTIZE", "Amount", fudu, false)
+
+reaper.Undo_BeginBlock()
+reaper.MIDI_DisableSort(take)
+for i = 0,  notecnt-1 do
+  local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+  local start_meas = reaper.MIDI_GetPPQPos_StartOfMeasure(take, startppqpos)
+  local start_tick = startppqpos - start_meas
+  local tick = start_tick % midi_tick
+  if selected then
+    local new_velocity
+    if tick == 0 then
+      new_velocity = math.min(math.max(vel - 1 + math.random(fudu + 1), 1), 127)
+    elseif tick == midi_tick/2 then
+      new_velocity = math.min(math.max(vel - 1 - fudu + math.random(fudu + 1), 1), 127)
+    else
+      new_velocity = math.min(math.max(vel - fudu*2 - 1 + math.random(fudu*2 + 1), 1), 127)
+    end
+    reaper.MIDI_SetNote(take, i, nil, nil, nil, nil, nil, nil, new_velocity, false)
+  end
+end
+reaper.MIDI_Sort(take)
+reaper.Undo_EndBlock(title, -1)
+reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
