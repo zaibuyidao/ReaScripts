@@ -1,7 +1,8 @@
 -- @description Insert Pitch Bend (Semitone)
--- @version 1.5.1
+-- @version 1.5.2
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   + Add Multi-Language Support
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -59,6 +60,23 @@ end
 
 local language = getSystemLanguage()
 
+if language == "简体中文" then
+  swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+  swserr = "警告"
+  jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+  jstitle = "你必须安裝 JS_ReaScriptAPI"
+elseif language == "繁体中文" then
+  swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+  swserr = "警告"
+  jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+  jstitle = "你必須安裝 JS_ReaScriptAPI"
+else
+  swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+  swserr = "Warning"
+  jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+  jstitle = "You must install JS_ReaScriptAPI"
+end
+
 if not reaper.SN_FocusMIDIEditor then
   local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
   if retval == 1 then
@@ -70,6 +88,17 @@ if not reaper.SN_FocusMIDIEditor then
     end
   end
   return
+end
+
+if not reaper.APIExists("JS_Window_Find") then
+  reaper.MB(jsmsg, jstitle, 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, jserr, 0)
+  end
+  return reaper.defer(function() end)
 end
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
@@ -97,7 +126,7 @@ else
   title = "'Insert Pitch Bend (Semitone)"
   captions_csv = "Semitone (0=Reset),Pitch Range"
   msg1 = "Please enter a value between -12 and 12"
-  msg2 = "The pitch interval cannot be greater than the pitch range"
+  msg2 = "The pitch interval cannot be greater than the pitch range."
   err = "Error"
 end
 
