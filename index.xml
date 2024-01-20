@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c7ebfaf29bbfc50593cdf084afce46dd49236edb">
+<index version="1" name="zaibuyidao Scripts" commit="e21908c3bd0d51d14ae0f40f88535addc809dee0">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3146,6 +3146,10 @@
       <version name="1.0.2" author="zaibuyidao" time="2024-01-20T05:58:42Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f9d88b5b17dc5ed638aeba64b3ba7ab4adb6592d/MIDI%20Editor/zaibuyidao_Harmony.lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2024-01-20T16:52:21Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e21908c3bd0d51d14ae0f40f88535addc809dee0/MIDI%20Editor/zaibuyidao_Harmony.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Humanize Velocity (Customize).lua" type="script" desc="Humanize Velocity (Customize)">
