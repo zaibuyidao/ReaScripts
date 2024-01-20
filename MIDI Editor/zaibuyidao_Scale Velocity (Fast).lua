@@ -1,5 +1,5 @@
 -- @description Scale Velocity (Fast)
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog
 --   + Add Multi-Language Support
@@ -64,6 +64,23 @@ end
 
 local language = getSystemLanguage()
 
+if language == "简体中文" then
+  swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+  swserr = "警告"
+  jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+  jstitle = "你必须安裝 JS_ReaScriptAPI"
+elseif language == "繁体中文" then
+  swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+  swserr = "警告"
+  jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+  jstitle = "你必須安裝 JS_ReaScriptAPI"
+else
+  swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+  swserr = "Warning"
+  jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+  jstitle = "You must install JS_ReaScriptAPI"
+end
+
 if not reaper.SN_FocusMIDIEditor then
   local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
   if retval == 1 then
@@ -75,6 +92,17 @@ if not reaper.SN_FocusMIDIEditor then
     end
   end
   return
+end
+
+if not reaper.APIExists("JS_Window_Find") then
+  reaper.MB(jsmsg, jstitle, 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, jserr, 0)
+  end
+  return reaper.defer(function() end)
 end
 
 function getAllTakes()
@@ -213,13 +241,13 @@ curve_fun_builders["4"] = compress_builder(curve_fun_builders["4"], 0.8)
 
 local title, captions_csv = "", ""
 if language == "简体中文" then
-  title = "力度缩放(快速)"
+  title = "力度缩放"
   captions_csv = "开始,结束,模式:直线-百分比-正弦-凹-凸"
 elseif language == "繁体中文" then
-  title = "力度縮放(快速)"
+  title = "力度縮放"
   captions_csv = "開始,結束,模式:直綫-百分比-正弦-凹-凸"
 else
-  title = "Scale Velocity (Fast)"
+  title = "Scale Velocity"
   captions_csv = "Begin,End,Mode:Line-Percent-Sine-In-Out"
 end
 
@@ -313,6 +341,7 @@ for take, _ in pairs(getAllTakes()) do
   local sourceLengthTicks = reaper.BR_GetMidiSourceLenPPQ(take)
   if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
     reaper.MIDI_SetAllEvts(take, MIDIstring)
+    local msgbox, errbox = "", ""
     if language == "简体中文" then
       msgbox = "脚本造成事件位置位移，原始MIDI数据已恢复"
       errbox = "错误"
