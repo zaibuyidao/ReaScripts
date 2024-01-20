@@ -1,5 +1,5 @@
 -- @description Glissando
--- @version 1.2.1
+-- @version 1.2.2
 -- @author zaibuyidao
 -- @changelog
 --   + Add Multi-Language Support
@@ -212,8 +212,7 @@ function main()
     end
     if #index < 1 then return reaper.SN_FocusMIDIEditor() end
 
-    local msgbox = ""
-    local errbox = ""
+    local title, captions_csv = "", ""
 
     if language == "简体中文" then
         title = "刮奏"

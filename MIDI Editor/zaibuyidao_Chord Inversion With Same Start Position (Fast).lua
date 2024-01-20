@@ -1,7 +1,8 @@
 -- @description Chord Inversion With Same Start Position (Fast)
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
--- @changelog Optimised articulation
+-- @changelog
+--   + Add Multi-Language Support
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -13,45 +14,67 @@ EVENT_NOTE_END = 8
 EVENT_ARTICULATION = 15
 
 function print(...)
-    local params = {...}
-    for i = 1, #params do
-        if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-        reaper.ShowConsoleMsg(tostring(params[i]))
+    for _, v in ipairs({...}) do
+        reaper.ShowConsoleMsg(tostring(v) .. " ")
     end
     reaper.ShowConsoleMsg("\n")
 end
 
-function table.print(t)
-    local print_r_cache = {}
-    local function sub_print_r(t, indent)
-        if (print_r_cache[tostring(t)]) then
-            print(indent .. "*" .. tostring(t))
-        else
-            print_r_cache[tostring(t)] = true
-            if (type(t) == "table") then
-                for pos, val in pairs(t) do
-                    if (type(val) == "table") then
-                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-                        sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-                        print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-                    elseif (type(val) == "string") then
-                        print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-                    else
-                        print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-                    end
-                end
-            else
-                print(indent .. tostring(t))
-            end
+function getSystemLanguage()
+    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+    local os = reaper.GetOS()
+    local lang
+
+    if os == "Win32" or os == "Win64" then -- Windows
+        if locale == 936 then -- Simplified Chinese
+            lang = "简体中文"
+        elseif locale == 950 then -- Traditional Chinese
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "OSX32" or os == "OSX64" then -- macOS
+        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+        if lang == "zh-CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh-TW" then -- 繁体中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "Linux" then -- Linux
+        local handle = io.popen("echo $LANG")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+        if lang == "zh_CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh_TW" then -- 繁體中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
         end
     end
-    if (type(t) == "table") then
-        print(tostring(t) .. " {")
-        sub_print_r(t, "  ")
-        print("}")
-    else
-        sub_print_r(t, "  ")
+
+    return lang
+end
+
+local language = getSystemLanguage()
+
+if not reaper.SN_FocusMIDIEditor then
+    local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+    if retval == 1 then
+        if not OS then local OS = reaper.GetOS() end
+        if OS=="OSX32" or OS=="OSX64" then
+            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+        else
+            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+        end
     end
+    return
 end
 
 function getAllTakes()
@@ -82,22 +105,6 @@ function getAllTakes()
     end
     if not next(tTake) then return end
     return tTake
-end
-
-function Open_URL(url)
-    if not OS then local OS = reaper.GetOS() end
-    if OS=="OSX32" or OS=="OSX64" then
-        os.execute("open ".. url)
-    else
-        os.execute("start ".. url)
-    end
-end
-
-if not reaper.BR_GetMidiSourceLenPPQ then
-    local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
-    if retval == 1 then
-        Open_URL("http://www.sws-extension.org/download/pre-release/")
-    end
 end
 
 function min(a,b) if a>b then return b end return a end
@@ -214,11 +221,23 @@ function move(eventPairs, up)
     end
 end
 
-local times = reaper.GetExtState("ChordInversionWithSameStartPositionFast", "Times")
+local title, captions_csv = "", ""
+if language == "简体中文" then
+    title = "相同开始位置的和弦转位(快速)"
+    captions_csv = "次数(±):"
+elseif language == "繁体中文" then
+    title = "相同開始位置的和弦轉位(快速)"
+    captions_csv = "次數(±):"
+else
+    title = "Chord Inversion With Same Start Position (Fast)"
+    captions_csv = "Times(±):"
+end
+
+local times = reaper.GetExtState("CHORD_INVERSION_WITH_SAME_START_POS", "Times")
 if (times == "") then times = "1" end
-times = getInput("Chord Inversion With Same Start Position (Fast)", "Times(±)", times) -- 获得翻转次数
+times = getInput(title, captions_csv, times) -- 获得翻转次数
 if times == nil then return end
-reaper.SetExtState("ChordInversionWithSameStartPositionFast", "Times", times, false)
+reaper.SetExtState("CHORD_INVERSION_WITH_SAME_START_POS", "Times", times, false)
 times = tonumber(times) --将文本型的次数转换为整数型的次数
 if times == nil then return end
 
@@ -259,8 +278,16 @@ for take, _ in pairs(getAllTakes()) do
             if status == EVENT_NOTE_START then
                 noteStartEventAtPitch[getEventPitch(event)] = event
             elseif status == EVENT_NOTE_END then
+                local showmsg = ""
+                if language == "简体中文" then
+                    showmsg = "音符有重叠无法解析"
+                elseif language == "繁体中文" then
+                    showmsg = "音符有重叠無法解析"
+                else
+                    showmsg = "Notes are overlapping and cannot be resolved."
+                end
                 local start = noteStartEventAtPitch[getEventPitch(event)]
-                if start == nil then error("音符有重叠無法解析") end
+                if start == nil then error(showmsg) end
                 -- local groupPos = reaper.MIDI_GetPPQPos_StartOfMeasure(take, start.pos) -- 每个小节起始位置
                 local groupPos = start.pos
                 if not groupEventPairs[groupPos] then groupEventPairs[groupPos] = {} end
@@ -295,11 +322,21 @@ for take, _ in pairs(getAllTakes()) do
     
         if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
             reaper.MIDI_SetAllEvts(take, MIDIstring)
-            reaper.ShowMessageBox("腳本造成事件位置位移，原始MIDI數據已恢復", "錯誤", 0)
+            if language == "简体中文" then
+                msgbox = "脚本造成事件位置位移，原始MIDI数据已恢复"
+                errbox = "错误"
+            elseif language == "繁体中文" then
+                msgbox = "腳本造成事件位置位移，原始MIDI數據已恢復"
+                errbox = "錯誤"
+            else
+                msgbox = "The script caused event position displacement, original MIDI data has been restored."
+                errbox = "Error"
+            end
+            reaper.ShowMessageBox(msgbox, errbox, 0)
         end
     end
 end
 
-reaper.Undo_EndBlock("Chord Inversion With Same Start Position (Fast)", -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
