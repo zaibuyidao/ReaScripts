@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e17cb7fc8b79fdf64ed3aa229a2d77e8e2b3f055">
+<index version="1" name="zaibuyidao Scripts" commit="ad9ad48443372e0d004b37eaa4c8c6a609529a98">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5313,6 +5313,15 @@
     </reapack>
     <reapack name="zaibuyidao_Set CC Curve Shape (Dynamic Menu).lua" type="script" desc="Set CC Curve Shape (Dynamic Menu)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-07-18T12:12:35Z">
@@ -5321,6 +5330,10 @@
       </version>
       <version name="1.0.1" author="zaibuyidao" time="2021-12-19T15:17:05Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/MIDI%20Editor/zaibuyidao_Set%20CC%20Curve%20Shape%20(Dynamic%20Menu).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-01-20T15:08:20Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ad9ad48443372e0d004b37eaa4c8c6a609529a98/MIDI%20Editor/zaibuyidao_Set%20CC%20Curve%20Shape%20(Dynamic%20Menu).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Lane.lua" type="script" desc="Set CC Lane">
@@ -6697,18 +6710,6 @@
       </version>
       <version name="1.2.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_設置CC曲綫形狀(動態菜單).lua" type="script" desc="設置CC曲綫形狀(動態菜單)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2021-07-18T12:12:35Z">
-        <changelog><![CDATA[+ 初始發行]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AECC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
-      </version>
-      <version name="1.0.1" author="再補一刀" time="2021-12-19T15:17:05Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AECC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_設置事件通道.lua" type="script" desc="設置事件通道">
