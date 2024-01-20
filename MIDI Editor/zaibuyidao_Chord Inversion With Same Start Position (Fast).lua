@@ -1,5 +1,5 @@
 -- @description Chord Inversion With Same Start Position (Fast)
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
 --   + Add Multi-Language Support
@@ -24,7 +24,7 @@ function getSystemLanguage()
     local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
     local os = reaper.GetOS()
     local lang
-
+  
     if os == "Win32" or os == "Win64" then -- Windows
         if locale == 936 then -- Simplified Chinese
             lang = "简体中文"
@@ -64,7 +64,24 @@ end
 
 local language = getSystemLanguage()
 
-if not reaper.SN_FocusMIDIEditor then
+if language == "简体中文" then
+    swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+    swserr = "警告"
+    jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+    jstitle = "你必须安裝 JS_ReaScriptAPI"
+elseif language == "繁体中文" then
+    swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+    swserr = "警告"
+    jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+    jstitle = "你必須安裝 JS_ReaScriptAPI"
+else
+    swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+    swserr = "Warning"
+    jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+    jstitle = "You must install JS_ReaScriptAPI"
+end
+
+if not reaper.SNM_GetIntConfigVar then
     local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
     if retval == 1 then
         if not OS then local OS = reaper.GetOS() end
@@ -75,6 +92,17 @@ if not reaper.SN_FocusMIDIEditor then
         end
     end
     return
+end
+
+if not reaper.APIExists("JS_Window_Find") then
+    reaper.MB(jsmsg, jstitle, 0)
+    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+    if ok then
+        reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+    else
+        reaper.MB(err, jserr, 0)
+    end
+    return reaper.defer(function() end)
 end
 
 function getAllTakes()
@@ -223,13 +251,13 @@ end
 
 local title, captions_csv = "", ""
 if language == "简体中文" then
-    title = "相同开始位置的和弦转位(快速)"
+    title = "相同开始位置的和弦转位"
     captions_csv = "次数(±):"
 elseif language == "繁体中文" then
-    title = "相同開始位置的和弦轉位(快速)"
+    title = "相同開始位置的和弦轉位"
     captions_csv = "次數(±):"
 else
-    title = "Chord Inversion With Same Start Position (Fast)"
+    title = "Chord Inversion With Same Start Position"
     captions_csv = "Times(±):"
 end
 
@@ -322,6 +350,7 @@ for take, _ in pairs(getAllTakes()) do
     
         if not (sourceLengthTicks == reaper.BR_GetMidiSourceLenPPQ(take)) then
             reaper.MIDI_SetAllEvts(take, MIDIstring)
+            local msgbox, errbox = "", ""
             if language == "简体中文" then
                 msgbox = "脚本造成事件位置位移，原始MIDI数据已恢复"
                 errbox = "错误"
