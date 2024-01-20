@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="affdff24f2f16fda1b2377a78f230a0ddc5cf126">
+<index version="1" name="zaibuyidao Scripts" commit="09ef3582763770ae48a772a43ba26ae85e767c9a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5114,6 +5114,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/65e1e6376cd14b2d0c667e8a4cdba1039df2aa29/MIDI%20Editor/zaibuyidao_Scale%20Control.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-01-20T16:55:58Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/91d93823e8c82e8eaebf07baf645e20fbb19398b/MIDI%20Editor/zaibuyidao_Scale%20Control.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity (Fast).lua" type="script" desc="Scale Velocity (Fast)">
       <metadata>
@@ -5147,6 +5151,10 @@
       <version name="1.0.5" author="zaibuyidao" time="2024-01-20T07:54:16Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3317548de0f511000441fa72c87b75838acd842b/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Fast).lua</source>
+      </version>
+      <version name="1.0.6" author="zaibuyidao" time="2024-01-20T16:58:02Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/09ef3582763770ae48a772a43ba26ae85e767c9a/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity (Multitrack).lua" type="script" desc="Scale Velocity (Multitrack)">
