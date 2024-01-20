@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a9575ae77e4a4d511787932bf0cf37e12953d445">
+<index version="1" name="zaibuyidao Scripts" commit="e9665992679d6505110b0faba250bb2c87a93c8b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2022,7 +2022,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
         <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
@@ -2036,6 +2036,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2022-08-23T06:32:58Z">
         <changelog><![CDATA[Optimised pitch bend interval]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f2c0b2cdc8d2def7fa42e9c8cf8263ed13100e0c/MIDI%20Editor/zaibuyidao_Bend.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-01-20T16:19:31Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e9665992679d6505110b0faba250bb2c87a93c8b/MIDI%20Editor/zaibuyidao_Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion (Fast).lua" type="script" desc="Chord Inversion (Fast)">
@@ -6619,24 +6623,6 @@
       <version name="1.4.3" author="再補一刀" time="2022-08-25T02:00:43Z">
         <changelog><![CDATA[優化彎音]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6f2f17c58950af9baa541327d7714319fa3b0acb/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%87%BA.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_推弦.lua" type="script" desc="推弦">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2022-08-23T16:06:26Z">
-        <changelog><![CDATA[首次发布]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b065e65d515fa5f39169232ec9865f72810eddc1/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%A8%E5%BC%A6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_移調.lua" type="script" desc="移調">
