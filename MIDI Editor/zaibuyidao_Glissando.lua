@@ -1,64 +1,81 @@
---[[
- * ReaScript Name: Glissando
- * Version: 1.2
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
---]]
-
---[[
- * Changelog:
- * v1.2 (2021-1-1)
-  + Support selected multi-note operation
- * v1.0 (2020-3-11)
-  + Initial release
---]]
+-- @description Glissando
+-- @version 1.2.1
+-- @author zaibuyidao
+-- @changelog
+--   + Add Multi-Language Support
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive()) -- 全局take值
 if not take or not reaper.TakeIsMIDI(take) then return end
 
-function print(param)
-    if type(param) == "table" then
-        table.print(param)
-        return
+function print(...)
+    for _, v in ipairs({...}) do
+        reaper.ShowConsoleMsg(tostring(v) .. " ")
     end
-    reaper.ShowConsoleMsg(tostring(param) .. "\n")
+    reaper.ShowConsoleMsg("\n")
 end
-function table.print(t)
-    local print_r_cache = {}
-    local function sub_print_r(t, indent)
-        if (print_r_cache[tostring(t)]) then
-            print(indent .. "*" .. tostring(t))
-        else
-            print_r_cache[tostring(t)] = true
-            if (type(t) == "table") then
-                for pos, val in pairs(t) do
-                    if (type(val) == "table") then
-                        print(indent .. "[" .. pos .. "] => " .. tostring(t) .. " {")
-                        sub_print_r(val, indent .. string.rep(" ", string.len(pos) + 8))
-                        print(indent .. string.rep(" ", string.len(pos) + 6) .. "}")
-                    elseif (type(val) == "string") then
-                        print(indent .. "[" .. pos .. '] => "' .. val .. '"')
-                    else
-                        print(indent .. "[" .. pos .. "] => " .. tostring(val))
-                    end
-                end
-            else
-                print(indent .. tostring(t))
-            end
+
+function getSystemLanguage()
+    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+    local os = reaper.GetOS()
+    local lang
+
+    if os == "Win32" or os == "Win64" then -- Windows
+        if locale == 936 then -- Simplified Chinese
+            lang = "简体中文"
+        elseif locale == 950 then -- Traditional Chinese
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "OSX32" or os == "OSX64" then -- macOS
+        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+        if lang == "zh-CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh-TW" then -- 繁体中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "Linux" then -- Linux
+        local handle = io.popen("echo $LANG")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+        if lang == "zh_CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh_TW" then -- 繁體中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
         end
     end
-    if (type(t) == "table") then
-        print(tostring(t) .. " {")
-        sub_print_r(t, "  ")
-        print("}")
-    else
-        sub_print_r(t, "  ")
-    end
+
+    return lang
 end
+
+local language = getSystemLanguage()
+
+if not reaper.SN_FocusMIDIEditor then
+    local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+    if retval == 1 then
+        if not OS then local OS = reaper.GetOS() end
+        if OS=="OSX32" or OS=="OSX64" then
+            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+        else
+            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+        end
+    end
+    return
+end
+
 function getNote(sel) -- 根據傳入的sel索引值, 返回指定位置的含有音符信息的表
     local retval, selected, muted, startPos, endPos, channel, pitch, vel = reaper.MIDI_GetNote(take, sel)
     return {
@@ -73,6 +90,7 @@ function getNote(sel) -- 根據傳入的sel索引值, 返回指定位置的含�
         ["sel"]=sel
     }
 end
+
 function selNoteIterator() -- 迭代器 用於返回選中的每一個音符信息表
     local sel=-1
     return function()
@@ -81,6 +99,7 @@ function selNoteIterator() -- 迭代器 用於返回選中的每一個音符信�
         return getNote(sel)
     end
 end
+
 local function getSelNotes() -- 獲得選中的音符 返回notes表
     local notes={}
     for note in selNoteIterator() do
@@ -88,9 +107,11 @@ local function getSelNotes() -- 獲得選中的音符 返回notes表
     end
     return notes
 end
+
 function insertNote(note) -- 插入音符
   reaper.MIDI_InsertNote(take, note.selected, note.muted, note.startPos, note.endPos,note.channel,note.pitch, note.vel, true)
 end
+
 function getOverlayPitchsMajor(baseScale,ordinal,origPitch) -- 核心計算函數, 三個參數分別代表調號(CDEFGAB), 偏移值, 原音符音高, 返回疊加後的音符音高
     if ordinal>8 then ordinal=8 end
     if ordinal<-8 then ordinal=-8 end
@@ -135,6 +156,7 @@ function getOverlayPitchsMajor(baseScale,ordinal,origPitch) -- 核心計算函�
     if result>=0 and result<=127 then return result end -- 判斷是否越界
     return -1
 end
+
 function getOverlayPitchsMinor(baseScale,ordinal,origPitch) -- 核心計算函數, 三個參數分別代表調號(cdefgab), 偏移值, 原音符音高, 返回疊加後的音符音高
     if ordinal>8 then ordinal=8 end
     if ordinal<-8 then ordinal=-8 end
@@ -190,17 +212,30 @@ function main()
     end
     if #index < 1 then return reaper.SN_FocusMIDIEditor() end
 
+    local msgbox = ""
+    local errbox = ""
+
+    if language == "简体中文" then
+        title = "刮奏"
+        captions_csv = "调号,数量,间隔(滴答),0=左下 1=左上 2=右下 3=右上"
+    elseif language == "繁体中文" then
+        title = "刮奏"
+        captions_csv = "調號,數量,間隔(嘀答),0=左下 1=左上 2=右下 3=右上"
+    else
+        title = "Glissando"
+        captions_csv = "key Signature,Amount,Interval (tick),0=LD 1=LU 2=RD 3=RU"
+    end
+
     key_signature = reaper.GetExtState("Glissando", "Key")
-    times = reaper.GetExtState("Glissando", "Times")
-    ticks = reaper.GetExtState("Glissando", "Ticks")
-    state_toggle = reaper.GetExtState("Glissando", "Toggle")
-    
     if (key_signature == "") then key_signature = "C" end
+    times = reaper.GetExtState("Glissando", "Times")
     if (times == "") then times = "8" end
+    ticks = reaper.GetExtState("Glissando", "Ticks")
     if (ticks == "") then ticks = "60" end
+    state_toggle = reaper.GetExtState("Glissando", "Toggle")
     if (state_toggle == "") then state_toggle = "0" end
     
-    local userOK, userInputsCSV = reaper.GetUserInputs("Glissando", 4, "key Signature,Amount,Interval (tick),0=LD 1=LU 2=RD 3=RU", key_signature..','.. times..','.. ticks..','.. state_toggle)
+    local userOK, userInputsCSV = reaper.GetUserInputs(title, 4, captions_csv, key_signature..','.. times..','.. ticks..','.. state_toggle)
     if not userOK then return reaper.SN_FocusMIDIEditor() end
     key_signature, times, ticks, state_toggle = userInputsCSV:match("(.*),(.*),(.*),(.*)")
     if not tostring(key_signature) or not tonumber(times) or not tonumber(ticks) or not tonumber(state_toggle) then return reaper.SN_FocusMIDIEditor() end
@@ -289,6 +324,6 @@ reaper.Undo_BeginBlock()
 reaper.MIDI_DisableSort(take)
 main()
 reaper.MIDI_Sort(take)
-reaper.Undo_EndBlock("Glissando", -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
