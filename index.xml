@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8581cad167f1070a879e2f5a41d71eefda0ec365">
+<index version="1" name="zaibuyidao Scripts" commit="c7ebfaf29bbfc50593cdf084afce46dd49236edb">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2321,6 +2321,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2f64187660155805bc7676e064a1d84bd6c133de/MIDI%20Editor/zaibuyidao_Chord%20Inversion.lua</source>
       </version>
+      <version name="1.1.2" author="zaibuyidao" time="2024-01-20T16:48:16Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/672c1e81ea8639cb727797e922a426afb4b93948/MIDI%20Editor/zaibuyidao_Chord%20Inversion.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Color Notes (Dynamic Menu).lua" type="script" desc="Color Notes (Dynamic Menu)">
       <version name="1.0" author="zaibuyidao" time="2020-12-29T17:23:12Z">
@@ -3019,6 +3023,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/166e7db568977146ac5779761bd5a73de1583b45/MIDI%20Editor/zaibuyidao_Generate%20Chord%20By%20Root.lua</source>
       </version>
+      <version name="1.1.4" author="zaibuyidao" time="2024-01-20T16:49:52Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ca90bdeed34f763eb67d5222d5c66d24505c666f/MIDI%20Editor/zaibuyidao_Generate%20Chord%20By%20Root.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Glissando.lua" type="script" desc="Glissando">
       <metadata>
@@ -3051,6 +3059,10 @@
       <version name="1.2.2" author="zaibuyidao" time="2024-01-20T06:43:46Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e092aa5331fd782cb17e6c9cf0903acedfb94af9/MIDI%20Editor/zaibuyidao_Glissando.lua</source>
+      </version>
+      <version name="1.2.3" author="zaibuyidao" time="2024-01-20T16:50:48Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c7ebfaf29bbfc50593cdf084afce46dd49236edb/MIDI%20Editor/zaibuyidao_Glissando.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Grid (Dynamic Menu).lua" type="script" desc="Grid (Dynamic Menu)">
