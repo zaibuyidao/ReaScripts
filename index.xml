@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8d267f6b121a0568a20d63d976c0f38aa1c8b570">
+<index version="1" name="zaibuyidao Scripts" commit="e17cb7fc8b79fdf64ed3aa229a2d77e8e2b3f055">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5325,6 +5325,15 @@
     </reapack>
     <reapack name="zaibuyidao_Set CC Lane.lua" type="script" desc="Set CC Lane">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2020-07-28T20:22:16Z">
@@ -5339,6 +5348,10 @@
       </version>
       <version name="1.2.1" author="zaibuyidao" time="2021-07-10T17:04:10Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/239ebd6a73cf5e7b124ef6f65b21e8eae63acd61/MIDI%20Editor/zaibuyidao_Set%20CC%20Lane.lua</source>
+      </version>
+      <version name="1.2.2" author="zaibuyidao" time="2024-01-20T14:37:24Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e17cb7fc8b79fdf64ed3aa229a2d77e8e2b3f055/MIDI%20Editor/zaibuyidao_Set%20CC%20Lane.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value (Percentages).lua" type="script" desc="Set CC Value (Percentages)">
@@ -6696,17 +6709,6 @@
       </version>
       <version name="1.0.1" author="再補一刀" time="2021-12-19T15:17:05Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/90536a96c095f1c8b96b334fbaaa53a038351326/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AECC%E6%9B%B2%E7%B6%AB%E5%BD%A2%E7%8B%80(%E5%8B%95%E6%85%8B%E8%8F%9C%E5%96%AE).lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_設置CC車道.lua" type="script" desc="設置CC車道">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.2" author="再補一刀" time="2021-01-11T13:06:36Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58185d8f06c64b37b558aeddc52e91b93b6a5f5d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AECC%E8%BB%8A%E9%81%93.lua</source>
-      </version>
-      <version name="1.2.1" author="再補一刀" time="2021-07-10T17:04:10Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/239ebd6a73cf5e7b124ef6f65b21e8eae63acd61/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AECC%E8%BB%8A%E9%81%93.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_設置事件通道.lua" type="script" desc="設置事件通道">
