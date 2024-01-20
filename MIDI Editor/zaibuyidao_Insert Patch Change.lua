@@ -1,5 +1,5 @@
 -- @description Insert Patch Change
--- @version 1.1.4
+-- @version 1.1.5
 -- @author zaibuyidao
 -- @changelog
 --   + Add Multi-Language Support
@@ -249,6 +249,7 @@ function main()
   elseif (PC == "G8") then PC = "127"
   end
 
+  reaper.Undo_BeginBlock()
   local MSB = math.modf(BANK / 128)
   local LSB = math.fmod(BANK, 128)
   reaper.MIDI_DisableSort(take)
@@ -271,10 +272,9 @@ function main()
   end
   reaper.MIDI_Sort(take)
   reaper.UpdateItemInProject(item)
+  reaper.Undo_EndBlock(title, -1)
 end
 
-reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

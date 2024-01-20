@@ -1,5 +1,5 @@
 -- @description Insert Patch Change (Bank MSB/LSB)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   + Add Multi-Language Support
@@ -250,6 +250,7 @@ function main()
   elseif (PC == "G8") then PC = "127"
   end
 
+  reaper.Undo_BeginBlock()
   if #index > 0 then
     for i = 1, #index do
       retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
@@ -268,10 +269,9 @@ function main()
     reaper.MIDI_InsertCC(take, selected, muted, ppqpos+Tick, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
+  reaper.Undo_EndBlock(title, -1)
 end
 
-reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
