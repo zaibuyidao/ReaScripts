@@ -1,28 +1,81 @@
---[[
- * ReaScript Name: Insert Patch Change
- * Version: 1.1.3
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
- * Donation: http://www.paypal.me/zaibuyidao
---]]
-
---[[
- * Changelog:
- * v1.0 (2020-8-10)
-  + Initial release
---]]
+-- @description Insert Patch Change
+-- @version 1.1.4
+-- @author zaibuyidao
+-- @changelog
+--   + Add Multi-Language Support
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 -- Use the formula bank = MSB × 128 + LSB to find the bank number to use in script.
 
-function Msg(param)
-  reaper.ShowConsoleMsg(tostring(param) .. "\n")
+function print(...)
+  for _, v in ipairs({...}) do
+    reaper.ShowConsoleMsg(tostring(v) .. " ")
+  end
+  reaper.ShowConsoleMsg("\n")
+end
+
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  end
+
+  return lang
+end
+
+local language = getSystemLanguage()
+
+if not reaper.SN_FocusMIDIEditor then
+  local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+  if retval == 1 then
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
+  end
+  return
 end
 
 function main()
-  reaper.Undo_BeginBlock()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if take == nil then return end
   local item = reaper.GetMediaItemTake_Item(take)
@@ -36,21 +89,35 @@ function main()
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
 
-  local BANK = reaper.GetExtState("InsertPatchChange", "BANK")
+  local title = ""
+  local captions_csv = ""
+
+  if language == "简体中文" then
+    title = "插入音色"
+    captions_csv = "音色库,音色编号,偏移"
+  elseif language == "繁体中文" then
+    title = "插入音色"
+    captions_csv = "音色庫,音色編號,偏移"
+  else
+    title = "Insert Patch Change"
+    captions_csv = "Bank,Program number,Offset"
+  end
+
+  local BANK = reaper.GetExtState("INSERT_PATCH_CHANGE", "BANK")
   if (BANK == "") then BANK = "259" end
-  local PC = reaper.GetExtState("InsertPatchChange", "PC")
+  local PC = reaper.GetExtState("INSERT_PATCH_CHANGE", "PC")
   if (PC == "") then PC = "27" end
-  local Tick = reaper.GetExtState("PatchChange", "Tick")
+  local Tick = reaper.GetExtState("INSERT_PATCH_CHANGE", "Tick")
   if (Tick == "") then Tick = "-10" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Insert Patch Change", 3, "Bank,Program number,Offset", BANK ..','.. PC ..','.. Tick)
-  if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local BANK, PC, Tick = user_input_csv:match("(.*),(.*),(.*)")
+  local uok, uinput = reaper.GetUserInputs(title, 3, captions_csv, BANK ..','.. PC ..','.. Tick)
+  if not uok then return reaper.SN_FocusMIDIEditor() end
+  local BANK, PC, Tick = uinput:match("(.*),(.*),(.*)")
   if not tonumber(BANK) or not (tonumber(PC) or tostring(PC)) or not tonumber(Tick) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("PatchChange", "BANK", BANK, false)
-  reaper.SetExtState("PatchChange", "PC", PC, false)
-  reaper.SetExtState("PatchChange", "Tick", Tick, false)
+  reaper.SetExtState("INSERT_PATCH_CHANGE", "BANK", BANK, false)
+  reaper.SetExtState("INSERT_PATCH_CHANGE", "PC", PC, false)
+  reaper.SetExtState("INSERT_PATCH_CHANGE", "Tick", Tick, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -188,7 +255,7 @@ function main()
   if #index > 0 then
     for i = 1, #index do
       retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, index[i])
-      if selected == true then
+      if selected then
         reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xB0, chan, 0, MSB) -- CC#00
         reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xB0, chan, 32, LSB) -- CC#32
         reaper.MIDI_InsertCC(take, selected, muted, startppqpos+Tick, 0xC0, chan, PC, 0) -- Program Change
@@ -204,9 +271,10 @@ function main()
   end
   reaper.MIDI_Sort(take)
   reaper.UpdateItemInProject(item)
-  reaper.Undo_EndBlock("Insert Patch Change", -1)
-  reaper.UpdateArrange()
 end
 
+reaper.Undo_BeginBlock()
 main()
+reaper.Undo_EndBlock(title, -1)
+reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()
