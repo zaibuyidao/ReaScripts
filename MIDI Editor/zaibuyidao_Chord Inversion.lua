@@ -1,26 +1,87 @@
---[[
- * ReaScript Name: Chord Inversion
- * Version: 1.1
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0
---]]
-
---[[
- * Changelog:
- * v1.0 (2020-3-3)
-  + Initial release
---]]
+-- @description Chord Inversion
+-- @version 1.1.1
+-- @author zaibuyidao
+-- @changelog
+--   + Add Multi-Language Support
+-- @links
+--   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   repo https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 midiEditor=reaper.MIDIEditor_GetActive()
 take = reaper.MIDIEditor_GetTake(midiEditor) --全局take值
 if not take or not reaper.TakeIsMIDI(take) then return end
+
+function print(...)
+    for _, v in ipairs({...}) do
+        reaper.ShowConsoleMsg(tostring(v) .. " ")
+    end
+    reaper.ShowConsoleMsg("\n")
+end
+
+function getSystemLanguage()
+    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+    local os = reaper.GetOS()
+    local lang
+
+    if os == "Win32" or os == "Win64" then -- Windows
+        if locale == 936 then -- Simplified Chinese
+            lang = "简体中文"
+        elseif locale == 950 then -- Traditional Chinese
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "OSX32" or os == "OSX64" then -- macOS
+        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+        if lang == "zh-CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh-TW" then -- 繁体中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    elseif os == "Linux" then -- Linux
+        local handle = io.popen("echo $LANG")
+        local result = handle:read("*a")
+        handle:close()
+        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+        if lang == "zh_CN" then -- 简体中文
+            lang = "简体中文"
+        elseif lang == "zh_TW" then -- 繁體中文
+            lang = "繁體中文"
+        else -- English
+            lang = "English"
+        end
+    end
+
+    return lang
+end
+
+local language = getSystemLanguage()
+
+if not reaper.SN_FocusMIDIEditor then
+    local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+    if retval == 1 then
+        if not OS then local OS = reaper.GetOS() end
+        if OS=="OSX32" or OS=="OSX64" then
+            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+        else
+            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+        end
+    end
+    return
+end
+
 function countEvts() --获取选中音符数量
     local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
     return notecnt
 end
+
 function getNote(sel) --根据传入的sel索引值，返回指定位置的含有音符信息的表
     local retval, selected, muted, startPos, endPos, channel, pitch, vel = reaper.MIDI_GetNote(take, sel)
     return {
@@ -35,6 +96,7 @@ function getNote(sel) --根据传入的sel索引值，返回指定位置的含�
         ["sel"]=sel
     }
 end
+
 function selNoteIterator() --迭代器 用于返回选中的每一个音符信息表
     local sel=-1
     return function()
@@ -43,17 +105,21 @@ function selNoteIterator() --迭代器 用于返回选中的每一个音符信�
         return getNote(sel)
     end
 end
+
 function deleteSelNote() --删除选中音符
   reaper.MIDIEditor_OnCommand(midiEditor, 40002)
 end
+
 function insertNote(note) --插入音符
   reaper.MIDI_InsertNote(take, note.selected, note.muted, note.startPos, note.endPos,note.channel,note.pitch, note.vel, false)
 end
+
 function insertNotes(notes) --插入音符组
     for k,note in pairs(notes) do
         reaper.MIDI_InsertNote(take, note.selected, note.muted, note.startPos, note.endPos,note.channel,note.pitch, note.vel, false)
     end
 end
+
 function moveUpNotes(notes)
     if #notes<=1 then return end --如果音符组数量不大于1则不处理
     
@@ -135,6 +201,7 @@ function moveUpNotes(notes)
         notes[i].pitch=appiledInfos[ notes[i].pitch ]
     end
 end
+
 function moveDownNotes(notes) 
     if #notes<=1 then return end --如果音符组数量不大于1则不处理
 
@@ -214,32 +281,51 @@ function moveDownNotes(notes)
         notes[i].pitch=appiledInfos[ notes[i].pitch ]
     end
 end
+
 function getPPQStartOfMeasure(note) --获取音符所在小节起始位置
   if type(note)=="number" then return reaper.MIDI_GetPPQPos_StartOfMeasure(take, note) end
   return reaper.MIDI_GetPPQPos_StartOfMeasure(take, note.startPos)
 end
+
 function getInput(title,lable,default)
     title=title or "Title"
     lable=lable or "Lable:"
     local userOK, get_value = reaper.GetUserInputs(title, 1, lable, default)
     if userOK then return get_value end
 end
+
 function main()
-    local times = reaper.GetExtState("ChordInversion", "Times")
+    local title, captions_csv = "", ""
+    if language == "简体中文" then
+        title = "和弦转位"
+        captions_csv = "次数(±):"
+    elseif language == "繁体中文" then
+        title = "和弦轉位"
+        captions_csv = "次數(±):"
+    else
+        title = "Chord Inversion"
+        captions_csv = "Times(±):"
+    end
+
+    local times = reaper.GetExtState("CHORD_INVERSION", "Times")
     if (times == "") then times = "1" end
-    times = getInput("Chord Inversion", "Times", times) --获得翻转次数
+    times = getInput(title, captions_csv, times) --获得翻转次数
     if times == nil then return end
-    reaper.SetExtState("ChordInversion", "Times", times, false)
+    reaper.SetExtState("CHORD_INVERSION", "Times", times, false)
+
     local noteGroups={} --音符组表
     local tempStartMeasure=0
+
     for note in selNoteIterator() do  --将全部选中音符按照小节位置进行分组，并储存在noteGroups表中，即 音符组表=noteGroups[小节位置] ，音符组表中储存着多个音符
         tempStartMeasure=getPPQStartOfMeasure(note) --获取当前音符的小节位置
         if noteGroups[tempStartMeasure]==nil then noteGroups[tempStartMeasure]={} end  
         table.insert(noteGroups[tempStartMeasure],note)
     end
     if tonumber(times)==nil then return reaper.SN_FocusMIDIEditor() end
+
     reaper.Undo_BeginBlock()
     deleteSelNote() --将选中音符全部删除
+
     for k,notes in pairs(noteGroups)  do --遍历音符组表，逐个获取音符组，notes即当前遍历的音符组
         times=tonumber(times) --将文本型的次数转换为整数型的次数
         if times==nil then return end
@@ -258,21 +344,11 @@ function main()
         if up==false then times=-times end
         insertNotes(notes) --将移动过的音符组重新加入
     end
-    reaper.Undo_EndBlock("Chord Inversion", -1)
+    reaper.Undo_EndBlock(title, -1)
 end
-function checkForNewVersion(newVersion)
-    local appVersion = reaper.GetAppVersion()
-    appVersion = tonumber(appVersion:match('[%d%.]+'))
-    if newVersion > appVersion then
-        reaper.MB('Update REAPER to newer version '..'('..newVersion..' or newer)', '', 0)
-        return
-    else
-        return true
-    end
-end
+
 reaper.MIDI_DisableSort(take)
-local CFNV = checkForNewVersion(6.03)
-if CFNV then main() end
+main()
 reaper.MIDI_Sort(take)
 reaper.UpdateArrange()
 reaper.SN_FocusMIDIEditor()

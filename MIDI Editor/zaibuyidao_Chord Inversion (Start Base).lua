@@ -1,5 +1,5 @@
 -- @description Chord Inversion (Start Base)
--- @version 1.1.1
+-- @version 1.1.2
 -- @author zaibuyidao
 -- @changelog
 --   + Add Multi-Language Support
@@ -293,13 +293,13 @@ function main()
     local title, captions_csv = "", ""
     if language == "简体中文" then
         title = "和弦转位(基于开始位置)"
-        captions_csv = "次数"
+        captions_csv = "次数(±):"
     elseif language == "繁体中文" then
         title = "和弦轉位(基於開始位置)"
-        captions_csv = "次數"
+        captions_csv = "次數(±):"
     else
         title = "Chord Inversion (Start Base)"
-        captions_csv = "Times"
+        captions_csv = "Times(±):"
     end
 
     local times = reaper.GetExtState("CHORD_INVERSION_START_BASE", "Times")
