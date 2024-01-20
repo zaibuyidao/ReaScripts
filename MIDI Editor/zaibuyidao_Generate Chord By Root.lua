@@ -1,5 +1,5 @@
 -- @description Generate Chord By Root
--- @version 1.1.2
+-- @version 1.1.3
 -- @author zaibuyidao
 -- @changelog
 --   + Add Multi-Language Support
@@ -328,9 +328,9 @@ if (key_signature == "") then key_signature = "C" end
 state_toggle = reaper.GetExtState("GENERATE_CHORD_BY_ROOT", "Toggle")
 if (state_toggle == "") then state_toggle = "0" end
 
-local user_ok, user_input_csv = reaper.GetUserInputs(title, 2, captions_csv, key_signature..','.. state_toggle)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-key_signature, state_toggle = user_input_csv:match("(%a*),(%d*)")
+local uok, uinput = reaper.GetUserInputs(title, 2, captions_csv, key_signature..','.. state_toggle)
+if not uok then return reaper.SN_FocusMIDIEditor() end
+key_signature, state_toggle = uinput:match("(%a*),(%d*)")
 if not key_signature:match('[%a%.]+') or not state_toggle:match('[%d%.]+') then return reaper.SN_FocusMIDIEditor() end
 
 reaper.SetExtState("GENERATE_CHORD_BY_ROOT", "Key", key_signature, false)
