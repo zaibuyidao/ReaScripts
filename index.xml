@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7ead2115081a68b1b30959738d430a2bbec34c6e">
+<index version="1" name="zaibuyidao Scripts" commit="8581cad167f1070a879e2f5a41d71eefda0ec365">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2076,6 +2076,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e092aa5331fd782cb17e6c9cf0903acedfb94af9/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20(Fast).lua</source>
       </version>
+      <version name="1.0.7" author="zaibuyidao" time="2024-01-20T16:47:02Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8581cad167f1070a879e2f5a41d71eefda0ec365/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion (Start Base) +01.lua" type="script" desc="Chord Inversion (Start Base) +01">
       <version name="1.0" author="zaibuyidao" time="2020-03-02T17:05:34Z">
@@ -2122,6 +2126,10 @@
       <version name="1.1.2" author="zaibuyidao" time="2024-01-20T06:54:41Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2f64187660155805bc7676e064a1d84bd6c133de/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20(Start%20Base).lua</source>
+      </version>
+      <version name="1.1.3" author="zaibuyidao" time="2024-01-20T16:47:02Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8581cad167f1070a879e2f5a41d71eefda0ec365/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20(Start%20Base).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion +01 (Fast).lua" type="script" desc="Chord Inversion +01 (Fast)">
@@ -2233,6 +2241,10 @@
       <version name="1.0.3" author="zaibuyidao" time="2024-01-20T06:43:46Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e092aa5331fd782cb17e6c9cf0903acedfb94af9/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20With%20Same%20Start%20Position%20(Fast).lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2024-01-20T16:47:02Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8581cad167f1070a879e2f5a41d71eefda0ec365/MIDI%20Editor/zaibuyidao_Chord%20Inversion%20With%20Same%20Start%20Position%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion With Same Start Position +01 (Fast).lua" type="script" desc="Chord Inversion With Same Start Position +01 (Fast)">
@@ -3093,6 +3105,10 @@
       <version name="1.6.2" author="zaibuyidao" time="2024-01-20T13:32:34Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c286f51c467709838edf3d99f95534b5ea05cd02/MIDI%20Editor/zaibuyidao_Groove%20Quantize.lua</source>
+      </version>
+      <version name="1.6.3" author="zaibuyidao" time="2024-01-20T16:47:02Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8581cad167f1070a879e2f5a41d71eefda0ec365/MIDI%20Editor/zaibuyidao_Groove%20Quantize.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Harmony.lua" type="script" desc="Harmony">
