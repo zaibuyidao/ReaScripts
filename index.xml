@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e21908c3bd0d51d14ae0f40f88535addc809dee0">
+<index version="1" name="zaibuyidao Scripts" commit="affdff24f2f16fda1b2377a78f230a0ddc5cf126">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3382,6 +3382,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/45d63f779be30790a58716d25f6e66f73bf2a1f8/MIDI%20Editor/zaibuyidao_Insert%20Patch%20Change%20(Bank%20MSB%20LSB).lua</source>
       </version>
+      <version name="1.0.3" author="zaibuyidao" time="2024-01-20T16:54:20Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/affdff24f2f16fda1b2377a78f230a0ddc5cf126/MIDI%20Editor/zaibuyidao_Insert%20Patch%20Change%20(Bank%20MSB%20LSB).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Patch Change.lua" type="script" desc="Insert Patch Change">
       <metadata>
@@ -3419,6 +3423,10 @@
       <version name="1.1.5" author="zaibuyidao" time="2024-01-20T02:58:00Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/45d63f779be30790a58716d25f6e66f73bf2a1f8/MIDI%20Editor/zaibuyidao_Insert%20Patch%20Change.lua</source>
+      </version>
+      <version name="1.1.6" author="zaibuyidao" time="2024-01-20T16:54:20Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/affdff24f2f16fda1b2377a78f230a0ddc5cf126/MIDI%20Editor/zaibuyidao_Insert%20Patch%20Change.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend (Semitone).lua" type="script" desc="Insert Pitch Bend (Semitone)">
