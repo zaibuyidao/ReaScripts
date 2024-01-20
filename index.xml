@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1f98bc9732f556ff22a84c7eeb72df01cfd935d3">
+<index version="1" name="zaibuyidao Scripts" commit="a9575ae77e4a4d511787932bf0cf37e12953d445">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5449,11 +5449,24 @@
     </reapack>
     <reapack name="zaibuyidao_Set Note Length (Fast).lua" type="script" desc="Set Note Length (Fast)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-06-22T14:39:23Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/28f9e13ba32c99f1e1bc96cca14e610921dbcbb1/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Fast).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-01-20T15:57:37Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a9575ae77e4a4d511787932bf0cf37e12953d445/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Fast).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Note Length (Under Mouse).lua" type="script" desc="Set Note Length (Under Mouse)">
@@ -5479,6 +5492,15 @@
     </reapack>
     <reapack name="zaibuyidao_Set Note Length.lua" type="script" desc="Set Note Length">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
@@ -5500,6 +5522,10 @@
       </version>
       <version name="1.5" author="zaibuyidao" time="2020-04-01T14:56:01Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/41afbc7635b9ef2a882b4be2168bc52525e3d1d9/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
+      </version>
+      <version name="1.5.1" author="zaibuyidao" time="2024-01-20T15:57:37Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="main midi_editor midi_inlineeditor">https://github.com/zaibuyidao/ReaScripts/raw/a9575ae77e4a4d511787932bf0cf37e12953d445/MIDI%20Editor/zaibuyidao_Set%20Note%20Length.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Off Velocity.lua" type="script" desc="Set Off Velocity">
@@ -6723,26 +6749,6 @@
       </version>
       <version name="1.2.1" author="再補一刀" time="2021-07-18T12:12:35Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%87%AA%E5%8B%95%E8%A1%A8%E6%83%85%E5%BD%A2%E7%8B%80.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_設置音符長度(快速).lua" type="script" desc="設置音符長度(快速)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="再補一刀" time="2022-06-22T14:39:23Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/28f9e13ba32c99f1e1bc96cca14e610921dbcbb1/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AE%E9%9F%B3%E7%AC%A6%E9%95%B7%E5%BA%A6(%E5%BF%AB%E9%80%9F).lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_設置音符長度.lua" type="script" desc="設置音符長度">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.5" author="再補一刀" time="2021-01-25T19:27:40Z">
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/41c382d8a76bcc829ba340cddd4af6b2d2d352a6/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AE%E9%9F%B3%E7%AC%A6%E9%95%B7%E5%BA%A6.lua</source>
-      </version>
-      <version name="1.5.1" author="再補一刀" time="2021-07-18T12:12:35Z">
-        <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E8%A8%AD%E7%BD%AE%E9%9F%B3%E7%AC%A6%E9%95%B7%E5%BA%A6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_轉換CC(對於選定CC).lua" type="script" desc="轉換CC(對於選定CC)">
