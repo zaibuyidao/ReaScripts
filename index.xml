@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="09ef3582763770ae48a772a43ba26ae85e767c9a">
+<index version="1" name="zaibuyidao Scripts" commit="de6f28ec42517f44d13383898429c7602d7356c9">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3217,6 +3217,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/22f195074d75597e2464ab9b2e8becc631092e8b/MIDI%20Editor/zaibuyidao_Humanize%20Velocity.lua</source>
       </version>
+      <version name="1.5.3" author="zaibuyidao" time="2024-01-20T17:09:43Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/de6f28ec42517f44d13383898429c7602d7356c9/MIDI%20Editor/zaibuyidao_Humanize%20Velocity.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert All Sound Off.lua" type="script" desc="Insert All Sound Off">
       <metadata>
@@ -5187,6 +5191,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3317548de0f511000441fa72c87b75838acd842b/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
       </version>
+      <version name="1.3.2" author="zaibuyidao" time="2024-01-20T17:02:01Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/497726d829f8791b2f0d145262492508bf811c8f/MIDI%20Editor/zaibuyidao_Scale%20Velocity%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Scale Velocity.lua" type="script" desc="Scale Velocity">
       <metadata>
@@ -5245,6 +5253,10 @@
       <version name="2.3.1" author="zaibuyidao" time="2024-01-20T07:54:16Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3317548de0f511000441fa72c87b75838acd842b/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
+      </version>
+      <version name="2.3.2" author="zaibuyidao" time="2024-01-20T17:02:48Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/68dd9d19a4f512ce8f79306ff8e2cb22c5e2a3e2/MIDI%20Editor/zaibuyidao_Scale%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Select All Events.lua" type="script" desc="Select All Events">
@@ -6038,6 +6050,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32889622a8ca4c641e53efbaa8187fe6398bc1c6/MIDI%20Editor/zaibuyidao_Split%20Notes%20(Fast).lua</source>
       </version>
+      <version name="1.0.6" author="zaibuyidao" time="2024-01-20T17:06:14Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1261310ce3c19b37e269d59392d3fbe26ea5a5b0/MIDI%20Editor/zaibuyidao_Split%20Notes%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Split Notes.lua" type="script" desc="Split Notes">
       <metadata>
@@ -6072,6 +6088,10 @@
       <version name="1.4.1" author="zaibuyidao" time="2024-01-20T03:57:28Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/32889622a8ca4c641e53efbaa8187fe6398bc1c6/MIDI%20Editor/zaibuyidao_Split%20Notes.lua</source>
+      </version>
+      <version name="1.4.2" author="zaibuyidao" time="2024-01-20T17:07:31Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/42a945aa5baa104593569e6d01cc90227b0eb8de/MIDI%20Editor/zaibuyidao_Split%20Notes.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum It (Fast).lua" type="script" desc="Strum It (Fast)">
