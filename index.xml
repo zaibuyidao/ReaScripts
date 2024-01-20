@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c286f51c467709838edf3d99f95534b5ea05cd02">
+<index version="1" name="zaibuyidao Scripts" commit="8d267f6b121a0568a20d63d976c0f38aa1c8b570">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5951,7 +5951,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
         <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
@@ -5982,9 +5982,22 @@
         <changelog><![CDATA[Optimised articulation]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e463e4095f708e15681f7f32977b6de8a77a0925/MIDI%20Editor/zaibuyidao_Strum%20It%20(Fast).lua</source>
       </version>
+      <version name="1.0.8" author="zaibuyidao" time="2024-01-20T14:20:12Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8d267f6b121a0568a20d63d976c0f38aa1c8b570/MIDI%20Editor/zaibuyidao_Strum%20It%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Strum It.lua" type="script" desc="Strum It">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2020-02-27T17:34:53Z">
@@ -5999,6 +6012,10 @@
       </version>
       <version name="1.3" author="zaibuyidao" time="2021-01-11T13:06:36Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58185d8f06c64b37b558aeddc52e91b93b6a5f5d/MIDI%20Editor/zaibuyidao_Strum%20It.lua</source>
+      </version>
+      <version name="1.3.1" author="zaibuyidao" time="2024-01-20T14:20:12Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8d267f6b121a0568a20d63d976c0f38aa1c8b570/MIDI%20Editor/zaibuyidao_Strum%20It.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum Rebuilding.lua" type="script" desc="Strum Rebuilding">
@@ -6537,51 +6554,6 @@
       <version name="1.4.3" author="再補一刀" time="2022-08-25T02:00:43Z">
         <changelog><![CDATA[優化彎音]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6f2f17c58950af9baa541327d7714319fa3b0acb/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E5%BD%8E%E9%9F%B3%E6%BB%91%E5%87%BA.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_掃弦(快速).lua" type="script" desc="掃弦(快速)">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0.3" author="zaibuyidao" time="2022-05-12T16:49:16Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a26729ae09e1becaeda9f9ef201b9a077c60979d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6(%E5%BF%AB%E9%80%9F).lua</source>
-      </version>
-      <version name="1.0.4" author="再補一刀" time="2022-05-20T17:26:52Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6883f6869f766bf47da63e02fe2c9dbd21a861cd/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6(%E5%BF%AB%E9%80%9F).lua</source>
-      </version>
-      <version name="1.0.5" author="再補一刀" time="2022-05-22T13:22:38Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8d69b1d0593742bbc15f7dbb85a01d5c4c2a75ad/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6(%E5%BF%AB%E9%80%9F).lua</source>
-      </version>
-      <version name="1.0.6" author="zaibuyidao" time="2022-08-22T03:57:52Z">
-        <changelog><![CDATA[Optimised articulation]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/897ff62e95eccfbbce8d12b513177f1171d0f273/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6(%E5%BF%AB%E9%80%9F).lua</source>
-      </version>
-      <version name="1.0.7" author="再補一刀" time="2022-08-22T05:01:27Z">
-        <changelog><![CDATA[Optimised articulation]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/e463e4095f708e15681f7f32977b6de8a77a0925/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6(%E5%BF%AB%E9%80%9F).lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_掃弦.lua" type="script" desc="掃弦">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.2" author="再補一刀" time="2021-01-11T04:44:18Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/55b0a124c89b9c44470200022585eaf48327a46b/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6.lua</source>
-      </version>
-      <version name="1.3" author="再補一刀" time="2021-01-11T13:06:36Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58185d8f06c64b37b558aeddc52e91b93b6a5f5d/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6.lua</source>
-      </version>
-      <version name="1.3.1" author="再補一刀" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E6%8E%83%E5%BC%A6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_推弦.lua" type="script" desc="推弦">
