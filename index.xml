@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b3d1d950ee8f100399a0d9708a18107617e2e41e">
+<index version="1" name="zaibuyidao Scripts" commit="7ead2115081a68b1b30959738d430a2bbec34c6e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -6067,6 +6067,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8d267f6b121a0568a20d63d976c0f38aa1c8b570/MIDI%20Editor/zaibuyidao_Strum%20It%20(Fast).lua</source>
       </version>
+      <version name="1.0.9" author="zaibuyidao" time="2024-01-20T16:41:05Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7ead2115081a68b1b30959738d430a2bbec34c6e/MIDI%20Editor/zaibuyidao_Strum%20It%20(Fast).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Strum It.lua" type="script" desc="Strum It">
       <metadata>
@@ -6097,6 +6101,10 @@
       <version name="1.3.1" author="zaibuyidao" time="2024-01-20T14:20:12Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8d267f6b121a0568a20d63d976c0f38aa1c8b570/MIDI%20Editor/zaibuyidao_Strum%20It.lua</source>
+      </version>
+      <version name="1.3.2" author="zaibuyidao" time="2024-01-20T16:41:05Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7ead2115081a68b1b30959738d430a2bbec34c6e/MIDI%20Editor/zaibuyidao_Strum%20It.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Strum Rebuilding.lua" type="script" desc="Strum Rebuilding">
