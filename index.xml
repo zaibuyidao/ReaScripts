@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a3e9ddfa7183b13065e58973facdfcbf5698ad5b">
+<index version="1" name="zaibuyidao Scripts" commit="f6d2776898d238e0ab7e19bdff8117cb324418c1">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3935,6 +3935,15 @@
     </reapack>
     <reapack name="zaibuyidao_Linear Ramp CC Events (Multitrack).lua" type="script" desc="Linear Ramp CC Events (Multitrack)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2020-08-25T19:34:38Z">
@@ -3947,9 +3956,22 @@
       <version name="1.7" author="zaibuyidao" time="2021-01-25T18:39:19Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events%20(Multitrack).lua</source>
       </version>
+      <version name="1.7.1" author="zaibuyidao" time="2024-01-21T08:52:28Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fbff932d30caebb2baa3d9c1e5287dc147dd5789/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events%20(Multitrack).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Linear Ramp CC Events.lua" type="script" desc="Linear Ramp CC Events">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
@@ -3977,6 +3999,10 @@
       </version>
       <version name="1.7" author="zaibuyidao" time="2021-01-25T18:39:19Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events.lua</source>
+      </version>
+      <version name="1.7.1" author="zaibuyidao" time="2024-01-21T08:52:28Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fbff932d30caebb2baa3d9c1e5287dc147dd5789/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20CC%20Events.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Item List (Dynamic Menu).lua" type="script" desc="MIDI Item List (Dynamic Menu)">
@@ -6694,34 +6720,6 @@
       <version name="1.3.3" author="再補一刀" time="2022-09-02T15:30:33Z">
         <changelog><![CDATA[優化代碼]]></changelog>
         <source main="main midi_editor midi_inlineeditor">https://github.com/zaibuyidao/ReaScripts/raw/f56dfb04de90d20fa0b13b98be4faaba6f5fb090/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%A7%BB%E8%AA%BF.lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_線性斜坡CC事件(多軌).lua" type="script" desc="線性斜坡CC事件(多軌)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.1" author="zaibuyidao" time="2021-01-19T19:51:41Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%B7%9A%E6%80%A7%E6%96%9C%E5%9D%A1CC%E4%BA%8B%E4%BB%B6(%E5%A4%9A%E8%BB%8C).lua</source>
-      </version>
-      <version name="1.7" author="再補一刀" time="2021-01-25T18:39:19Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%B7%9A%E6%80%A7%E6%96%9C%E5%9D%A1CC%E4%BA%8B%E4%BB%B6(%E5%A4%9A%E8%BB%8C).lua</source>
-      </version>
-      <version name="1.7.1" author="再補一刀" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%B7%9A%E6%80%A7%E6%96%9C%E5%9D%A1CC%E4%BA%8B%E4%BB%B6(%E5%A4%9A%E8%BB%8C).lua</source>
-      </version>
-    </reapack>
-    <reapack name="再補一刀_線性斜坡CC事件.lua" type="script" desc="線性斜坡CC事件">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.6" author="再補一刀" time="2021-01-19T19:51:41Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6c636758cd170409cade9d9e74cc245d7f83145c/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%B7%9A%E6%80%A7%E6%96%9C%E5%9D%A1CC%E4%BA%8B%E4%BB%B6.lua</source>
-      </version>
-      <version name="1.7" author="再補一刀" time="2021-01-25T18:39:19Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%B7%9A%E6%80%A7%E6%96%9C%E5%9D%A1CC%E4%BA%8B%E4%BB%B6.lua</source>
-      </version>
-      <version name="1.7.1" author="再補一刀" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80_%E7%B7%9A%E6%80%A7%E6%96%9C%E5%9D%A1CC%E4%BA%8B%E4%BB%B6.lua</source>
       </version>
     </reapack>
     <reapack name="再補一刀_自動表情(多軌).lua" type="script" desc="自動表情(多軌)">
