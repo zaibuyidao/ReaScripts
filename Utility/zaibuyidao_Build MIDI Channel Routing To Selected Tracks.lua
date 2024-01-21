@@ -1,39 +1,19 @@
 -- @description Build MIDI Channel Routing To Selected Tracks
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   + Add Multi-Language Support
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
-function print(param)
-    reaper.ShowConsoleMsg(tostring(param) .. "\n")
-end
-
-if not reaper.SNM_GetIntConfigVar then
-    local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
-    if retval == 1 then
-        if not OS then local OS = reaper.GetOS() end
-        if OS=="OSX32" or OS=="OSX64" then
-            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
-        else
-            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
-        end
+function print(...)
+    for _, v in ipairs({...}) do
+        reaper.ShowConsoleMsg(tostring(v) .. " ")
     end
-    return
-end
-
-if not reaper.APIExists("JS_Localize") then
-    reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
-    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-    if ok then
-      reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-    else
-      reaper.MB(err, "錯誤", 0)
-    end
-    return reaper.defer(function() end)
+    reaper.ShowConsoleMsg("\n")
 end
 
 function getSystemLanguage()
@@ -80,6 +60,47 @@ end
 
 local language = getSystemLanguage()
 
+if language == "简体中文" then
+    swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+    swserr = "警告"
+    jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+    jstitle = "你必须安裝 JS_ReaScriptAPI"
+elseif language == "繁體中文" then
+    swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+    swserr = "警告"
+    jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+    jstitle = "你必須安裝 JS_ReaScriptAPI"
+else
+    swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+    swserr = "Warning"
+    jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+    jstitle = "You must install JS_ReaScriptAPI"
+end
+
+if not reaper.SNM_GetIntConfigVar then
+    local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
+    if retval == 1 then
+        if not OS then local OS = reaper.GetOS() end
+        if OS=="OSX32" or OS=="OSX64" then
+            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+        else
+            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+        end
+    end
+    return
+end
+
+if not reaper.APIExists("JS_Window_Find") then
+    reaper.MB(jsmsg, jstitle, 0)
+    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+    if ok then
+        reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+    else
+        reaper.MB(err, jserr, 0)
+    end
+    return reaper.defer(function() end)
+end
+
 count_sel_track = reaper.CountSelectedTracks(0)
 if count_sel_track == 0 then return end
 
@@ -97,27 +118,36 @@ for i = 0, count_sel_track-1 do
     local select_track = reaper.GetSelectedTrack(0, i)
     local select_track_num = reaper.GetMediaTrackInfo_Value(select_track,'IP_TRACKNUMBER')
     local isVSTi = reaper.TrackFX_GetInstrument(select_track) -- 判斷是否為VSTi
-    if isVSTi == -1 then goto continue end
+
+    if language == "简体中文" then
+        title = "建立MIDI通道路由到选定轨道"
+        utitle = "建立MIDI通道路由到 "
+        captions_csv = "通道总数,通道顺序"
+        msgvst = "未能检测到 VSTi 插件。请确保已正确加载了 VSTi 插件。"
+        msgerr = "错误"
+    elseif language == "繁體中文" then
+        title = "建立MIDI通道路由到選定軌道"
+        utitle = "建立MIDI通道路由到 "
+        captions_csv = "通道總數,通道順序"
+        msgvst = "未能檢測到 VSTi 插件。請確保已正確加載了 VSTi 插件。"
+        msgerr = "錯誤"
+    else
+        title = "Build MIDI Channel Routing To Selected Tracks"
+        utitle = "Build MIDI Routing To "
+        captions_csv = "Total number of channels,Channel ordinal"
+        msgvst = "VSTi plugin not detected. Please ensure that a VSTi plugin is correctly loaded."
+        msgerr = "Error"
+    end
+
+    if isVSTi == -1 then
+        return reaper.ShowMessageBox(msgvst, msgerr, 0)
+    end
 
     local channel_total = reaper.GetExtState("BuildMIDIChannelRouting", "Total")
     if (channel_total == "") then channel_total = "16" end
     local channel_ordinal = reaper.GetExtState("BuildMIDIChannelRouting", "Ordinal")
     if (channel_ordinal == "") then channel_ordinal = "1" end
     
-    if language == "简体中文" then
-        title = "建立MIDI通道路由到选定轨道"
-        utitle = "建立MIDI通道路由到 "
-        captions_csv = "通道总数,通道顺序"
-    elseif language == "繁体中文" then
-        title = "建立MIDI通道路由到選定軌道"
-        utitle = "建立MIDI通道路由到 "
-        captions_csv = "通道總數,通道順序"
-    else
-        title = "Build MIDI Channel Routing To Selected Tracks"
-        utitle = "Build MIDI Routing To "
-        captions_csv = "Total number of channels,Channel ordinal"
-    end
-
     local uok, uinput = reaper.GetUserInputs(utitle .. sel_track_name[i+1], 2, captions_csv, channel_total ..','.. channel_ordinal)
 
     channel_total, channel_ordinal = uinput:match("(.*),(.*)")
@@ -144,8 +174,6 @@ for i = 0, count_sel_track-1 do
         if channel == '0' then channel = 'All' end
         reaper.SetTrackSendInfo_Value(track_to_send, 0, 0, 'I_MIDIFLAGS', channel << 5)
     end
-
-    ::continue::
 end
 reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
