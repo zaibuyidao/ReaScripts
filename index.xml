@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="54eb01d8d0bd924894c644843ce36b16b23ec949">
+<index version="1" name="zaibuyidao Scripts" commit="22af0a853417fd52df9b8d9c30eefa01e20f2f0c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7863,6 +7863,42 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d8db211a52d1c609cc098eab5c4da14017d9b79b/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20And%20Receives%20To%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Add VSTi Track And Set Receives (Settings).lua" type="script" desc="Add VSTi Track And Set Receives (Settings)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-01-21T15:34:46Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d1b57c2c0adb07cf95e748aa56d921400f09806c/Utility/zaibuyidao_Add%20VSTi%20Track%20And%20Set%20Receives%20(Settings).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Add VSTi Track And Set Receives.lua" type="script" desc="Add VSTi Track And Set Receives">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-01-21T15:34:46Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d1b57c2c0adb07cf95e748aa56d921400f09806c/Utility/zaibuyidao_Add%20VSTi%20Track%20And%20Set%20Receives.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Build MIDI Channel Routing To Selected Tracks.lua" type="script" desc="Build MIDI Channel Routing To Selected Tracks">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -7883,6 +7919,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2023-04-30T20:05:17Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e2392811dceba58618fd758112226c3fc6ca0511/Utility/zaibuyidao_Build%20MIDI%20Channel%20Routing%20To%20Selected%20Tracks.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-01-21T15:56:18Z">
+        <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/22af0a853417fd52df9b8d9c30eefa01e20f2f0c/Utility/zaibuyidao_Build%20MIDI%20Channel%20Routing%20To%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Cakewalk Style Cursor Follow (Main Or MIDI Editor).lua" type="script" desc="Cakewalk Style Cursor Follow (Main Or MIDI Editor)">
