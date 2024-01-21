@@ -1,13 +1,14 @@
 -- @description Transpose
--- @version 1.3.3
+-- @version 1.3.4
 -- @author zaibuyidao
--- @changelog Optimized code
+-- @changelog
+--   + Add Multi-Language Support
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repository https://github.com/zaibuyidao/ReaScripts
+--   repo https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
 -- @provides [main=main,midi_editor,midi_inlineeditor] .
--- @about Requires SWS Extensions
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 EVENT_NOTE_START = 9 -- Note-on 音符开
 EVENT_NOTE_END = 8 -- Note-off 音符关
@@ -23,61 +24,95 @@ EVENT_ARTICULATION = 15 -- Articulation 符号
 --EVENT_SYSEX = 0xF and not (msg:byte(1) == 0xFF) -- 系统码事件
 
 function print(...)
-  local params = {...}
-  for i = 1, #params do
-    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-    reaper.ShowConsoleMsg(tostring(params[i]))
+  for _, v in ipairs({...}) do
+    reaper.ShowConsoleMsg(tostring(v) .. " ")
   end
   reaper.ShowConsoleMsg("\n")
 end
 
-function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-    if (print_r_cache[tostring(t)]) then
-      print(indent .. "*" .. tostring(t))
-    else
-      print_r_cache[tostring(t)] = true
-      if (type(t) == "table") then
-        for pos, val in pairs(t) do
-          if (type(val) == "table") then
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-          elseif (type(val) == "string") then
-            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-          else
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-          end
-        end
-      else
-        print(indent .. tostring(t))
-      end
+function getSystemLanguage()
+  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
+  local os = reaper.GetOS()
+  local lang
+
+  if os == "Win32" or os == "Win64" then -- Windows
+    if locale == 936 then -- Simplified Chinese
+      lang = "简体中文"
+    elseif locale == 950 then -- Traditional Chinese
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "OSX32" or os == "OSX64" then -- macOS
+    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
+    if lang == "zh-CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh-TW" then -- 繁体中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
+    end
+  elseif os == "Linux" then -- Linux
+    local handle = io.popen("echo $LANG")
+    local result = handle:read("*a")
+    handle:close()
+    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
+    if lang == "zh_CN" then -- 简体中文
+      lang = "简体中文"
+    elseif lang == "zh_TW" then -- 繁體中文
+      lang = "繁體中文"
+    else -- English
+      lang = "English"
     end
   end
-  if (type(t) == "table") then
-    print(tostring(t) .. " {")
-    sub_print_r(t, "  ")
-    print("}")
-  else
-    sub_print_r(t, "  ")
-  end
+
+  return lang
 end
 
-function open_url(url)
-  if not OS then local OS = reaper.GetOS() end
-  if OS=="OSX32" or OS=="OSX64" then
-    os.execute("open ".. url)
-  else
-    os.execute("start ".. url)
-  end
+local language = getSystemLanguage()
+
+if language == "简体中文" then
+  swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
+  swserr = "警告"
+  jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
+  jstitle = "你必须安裝 JS_ReaScriptAPI"
+elseif language == "繁体中文" then
+  swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
+  swserr = "警告"
+  jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
+  jstitle = "你必須安裝 JS_ReaScriptAPI"
+else
+  swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
+  swserr = "Warning"
+  jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+  jstitle = "You must install JS_ReaScriptAPI"
 end
 
 if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
+  local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
   if retval == 1 then
-    open_url("http://www.sws-extension.org/download/pre-release/")
+    if not OS then local OS = reaper.GetOS() end
+    if OS=="OSX32" or OS=="OSX64" then
+      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
+    else
+      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
+    end
   end
+  return
+end
+
+if not reaper.APIExists("JS_Window_Find") then
+  reaper.MB(jsmsg, jstitle, 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, jserr, 0)
+  end
+  return reaper.defer(function() end)
 end
 
 function setAllEvents(take, events)
@@ -223,13 +258,22 @@ end
 local window, _, _ = reaper.BR_GetMouseCursorContext()
 local _, inline_editor, _, _, _, _ = reaper.BR_GetMouseCursorContext_MIDI()
 
+if language == "简体中文" then
+  title = "移调"
+  captions_csv = "半音(±):"
+elseif language == "繁体中文" then
+  title = "移調"
+  captions_csv = "半音(±):"
+else
+  title = "Transpose"
+  captions_csv = "Semitone (±):"
+end
+
 local semitone = reaper.GetExtState("Transpose", "Semitone")
 if (semitone == "") then semitone = "0" end
-
-uok, uinput = reaper.GetUserInputs("Transpose", 1, "Semitone (±)", semitone)
+uok, uinput = reaper.GetUserInputs(title, 1, captions_csv, semitone)
 if not uok or not tonumber(semitone) then return reaper.SN_FocusMIDIEditor() end
 semitone = uinput:match("(.*)")
-
 semitone = tonumber(semitone)
 reaper.SetExtState("Transpose", "Semitone", semitone, false)
 
@@ -333,6 +377,6 @@ else
   -- end
 end
 
-reaper.Undo_EndBlock("Transpose", -1)
+reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
