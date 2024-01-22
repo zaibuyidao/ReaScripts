@@ -1,4 +1,4 @@
--- @description Add VSTi Track And Set Receives
+-- @description Auto Load VSTi For MIDI Playback
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -101,7 +101,7 @@ if not reaper.APIExists("JS_Window_Find") then
     return reaper.defer(function() end)
 end
 
-local section = "AddVSTiTrackAndSetReceives"
+local section = "AutoLoadVSTiForMIDIPlayback"
 local key = "VSTiName"
 
 -- 尝试获取保存的 VSTi 名称
@@ -119,16 +119,16 @@ reaper.InsertTrackAtIndex(new_track_idx, true)
 local new_track = reaper.GetTrack(0, new_track_idx)
 
 if language == "简体中文" then
-    title = "添加 VSTi 轨道并设置发送(设置)"
-    msgset = "无法找到指定的 VSTi 插件。\n\n请通过脚本 'zaibuyidao_Add Track With VSTi And Set Receives (Settings).lua' 设置 VSTi 名称。"
+    title = "自动加载 VSTi 以进行 MIDI 回放"
+    msgset = "无法找到指定的 VSTi 插件。\n\n请通过脚本 'zaibuyidao_Auto Load VSTi For MIDI Playback (Settings).lua' 设置 VSTi 名称。"
     msgerr = "错误"
 elseif language == "繁體中文" then
-    title = "添加 VSTi 軌道並設置發送(設置)"
-    msgset = "無法找到指定的 VSTi 插件。\n\n請通過腳本 'zaibuyidao_Add Track With VSTi And Set Receives (Settings).lua' 設置 VSTi 名稱。"
+    title = "自動加載 VSTi 以進行 MIDI 回放"
+    msgset = "無法找到指定的 VSTi 插件。\n\n請通過腳本 'zaibuyidao_Auto Load VSTi For MIDI Playback (Settings).lua' 設置 VSTi 名稱。"
     msgerr = "錯誤"
 else
-    title = "Add VSTi Track And Set Receives (Settings)"
-    msgset = "Unable to find the specified VSTi plugin.\n\nPlease set the VSTi name through the script 'zaibuyidao_Add Track With VSTi And Set Receives (Settings).lua'."
+    title = "Auto Load VSTi For MIDI Playback"
+    msgset = "Unable to find the specified VSTi plugin.\n\nPlease set the VSTi name through the script 'zaibuyidao_Auto Load VSTi For MIDI Playback (Settings).lua'."
     msgerr = "Error"
 end
 
@@ -136,7 +136,7 @@ end
 local fxIdx = reaper.TrackFX_AddByName(new_track, vstiName, false, 1)
 
 if fxIdx == -1 then
-    reaper.ShowMessageBox("无法找到指定的 VSTi 插件。\n\n请通过脚本 'zaibuyidao_Add Track With VSTi And Set Receives (Settings).lua' 设置 VSTi 名称。", "错误", 0)
+    reaper.ShowMessageBox(msgset, msgerr, 0)
 else
     -- 去除名称中的 "VSTi: " 前缀并设置为轨道名称
     local trackName = string.gsub(vstiName, "VSTi: ", "")

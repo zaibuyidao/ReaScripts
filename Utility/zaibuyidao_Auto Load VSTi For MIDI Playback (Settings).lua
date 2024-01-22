@@ -1,4 +1,4 @@
--- @description Add VSTi Track And Set Receives (Settings)
+-- @description Auto Load VSTi For MIDI Playback (Settings)
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -103,19 +103,19 @@ end
 
 reaper.Undo_BeginBlock() -- 撤销块开始
 
-local section = "AddVSTiTrackAndSetReceives"
+local section = "AutoLoadVSTiForMIDIPlayback"
 local key = "VSTiName"
 
 if language == "简体中文" then
-    title = "添加 VSTi 轨道并设置发送"
+    title = "自动加载 VSTi 以进行 MIDI 回放(设置)"
     ip_title = "VSTi 设置"
     ip_caption = "输入 VSTi 名称:,extrawidth=150"
 elseif language == "繁體中文" then
-    title = "添加 VSTi 軌道並設置發送"
+    title = "自動加載 VSTi 以進行 MIDI 回放(設置)"
     ip_title = "VSTi 設置"
     ip_caption = "輸入 VSTi 名稱:extrawidth=150"
 else
-    title = "Add VSTi Track And Set Receives (Settings)"
+    title = "Auto Load VSTi For MIDI Playback (Settings)"
     ip_title = "VSTi Settings"
     ip_caption = "Enter VSTi name:extrawidth=150"
 end
