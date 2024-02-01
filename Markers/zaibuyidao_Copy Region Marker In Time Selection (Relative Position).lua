@@ -1,5 +1,5 @@
--- @description Copy Content And Region/Marker In Razor Edit Area
--- @version 1.0.1
+-- @description Copy Region Marker In Time Selection (Relative Position)
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -101,7 +101,7 @@ if not reaper.APIExists("JS_Window_Find") then
     return reaper.defer(function() end)
 end
 
-local EXT_SECTION = 'COPY_PASTE_CONTENT_IN_RAZOR_EDIT_AREA'
+local EXT_SECTION = 'COPY_PASTE_REGION_MARKER_IN_TIME_SELECTION'
 
 -- 生成键名
 local function makeKey(index)
@@ -124,48 +124,11 @@ local function serialize(marker)
     return str
 end
 
-function GetFirstRazorEdit()
-    local trackCount = reaper.CountTracks(0)
-  
-    for i = 0, trackCount - 1 do
-        local track = reaper.GetTrack(0, i)
-        local _, razorEditData = reaper.GetSetMediaTrackInfo_String(track, 'P_RAZOREDITS', '', false)
-  
-        if razorEditData ~= '' then
-            local startPos, endPos = razorEditData:match("([%d%.]+) ([%d%.]+)")
-            if startPos and endPos then
-                return tonumber(startPos), tonumber(endPos)
-            end
-        end
-    end
-end
-
-function GetAllRazorEdits()
-    local trackCount = reaper.CountTracks(0)
-    local razorEdits = {}
-  
-    for i = 0, trackCount - 1 do
-        local track = reaper.GetTrack(0, i)
-        local _, razorEditData = reaper.GetSetMediaTrackInfo_String(track, 'P_RAZOREDITS', '', false)
-  
-        if razorEditData ~= '' then
-            for startPos, endPos in razorEditData:gmatch("([%d%.]+) ([%d%.]+)") do
-                table.insert(razorEdits, {track = i + 1, start = tonumber(startPos), ["end"] = tonumber(endPos)})
-            end
-        end
-    end
-  
-    return razorEdits
-end
-
 -- 复制标记和区域
 local function copyMarkersAndRegions()
     clearExtState()  -- 清除旧数据
 
-    local timeSelectionStart, timeSelectionEnd = GetFirstRazorEdit()
-    if not timeSelectionStart or not timeSelectionEnd then return end
-
-    -- local timeSelectionStart, timeSelectionEnd = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+    local timeSelectionStart, timeSelectionEnd = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
     local numMarkers = reaper.CountProjectMarkers(0)
     local copied = 0
 
@@ -188,8 +151,6 @@ local function copyMarkersAndRegions()
     end
   
     -- print("复制完成, 总共复制了 " .. copied .. " 个标记/区域")
-
-    reaper.Main_OnCommand(40057, 0) -- 复制
 end
 
 -- 执行复制操作

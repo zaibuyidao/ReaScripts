@@ -1,5 +1,5 @@
--- @description Paste Content And Region/Marker In Razor Edit Area
--- @version 1.0.1
+-- @description Paste Region Marker In Time Selection (Relative Position)
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -101,7 +101,7 @@ if not reaper.APIExists("JS_Window_Find") then
   return reaper.defer(function() end)
 end
 
-local EXT_SECTION = 'COPY_PASTE_CONTENT_IN_RAZOR_EDIT_AREA'
+local EXT_SECTION = 'COPY_PASTE_REGION_MARKER_IN_TIME_SELECTION'
 
 -- 反序列化标记/区域数据
 local function unserialize(str)
@@ -180,9 +180,7 @@ local function pasteMarkersAndRegions()
     reaper.AddProjectMarker2(0, marker[1], newStart, newEnd, name, marker[5], marker[6])
   end
 
-  reaper.Main_OnCommand(42398, 0) -- 对象: 粘贴对象/轨道 ⇌ Item: Paste items/tracks
-
-  reaper.Undo_EndBlock("Paste Content And Region Marker In Razor Edit Area", -1)
+  reaper.Undo_EndBlock("Paste Region Marker In Time Selection (Relative Position)", -1)
 end
 
 -- 执行粘贴操作
