@@ -1,5 +1,5 @@
 -- @description Copy Items And Region/Marker/Tempo In Time Selection (Relative Position)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -141,7 +141,18 @@ function main()
     -- 检查是否存在时间选区
     local startTime, endTime = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
     if startTime == endTime then
-        reaper.ShowMessageBox("未进行时间选择。请先选择一个时间范围以进行复制。", "错误", 0)
+        if language == "简体中文" then
+            msgTitle = "未进行时间选择。请先选择一个时间范围以进行复制。"
+            msgError = "错误"
+        elseif language == "繁體中文" then
+            msgTitle = "未進行時間選擇。請先選擇一個時間範圍以進行複製。"
+            msgError = "錯誤"
+        else
+            msgTitle = "No time selection made. Please select a time range to copy first."
+            msgError = "Error"
+        end
+
+        reaper.ShowMessageBox(msgTitle, msgError, 0)
         return
     end
 
