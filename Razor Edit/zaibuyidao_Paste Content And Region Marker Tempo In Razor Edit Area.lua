@@ -1,5 +1,5 @@
--- @description Paste Content And Region/Marker In Razor Edit Area
--- @version 1.0.3
+-- @description Paste Content And Region/Marker/Tempo In Razor Edit Area
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -118,6 +118,52 @@ local function unserialize(str)
   return tbl
 end
 
+-- 反序列化拍号/速度信息
+local function unserializeTempoMarker(str)
+  local tempoMarker = {}
+  for typeStr, value in str:gmatch('(.-)\31(.-)\30') do
+    if typeStr == 'number' then
+      table.insert(tempoMarker, tonumber(value))
+    elseif typeStr == 'boolean' then
+      table.insert(tempoMarker, value == 'true')
+    else
+      table.insert(tempoMarker, value)
+    end
+  end
+  return tempoMarker
+end
+
+-- 读取并反序列化所有拍号/速度信息
+local function readTempoMarkers()
+  local tempoMarkers = {}
+  local index = 0
+  repeat
+    index = index + 1
+    local key = string.format("tempo%03d", index)
+    if reaper.HasExtState(EXT_SECTION, key) then
+      local str = reaper.GetExtState(EXT_SECTION, key)
+      table.insert(tempoMarkers, unserializeTempoMarker(str))
+    else
+      break
+    end
+  until false
+  return tempoMarkers
+end
+
+-- 粘贴拍号和速度信息
+local function pasteTempoMarkers()
+  local tempoMarkers = readTempoMarkers()
+  local editCursorPos = reaper.GetCursorPosition()
+  local startTime = tonumber(reaper.GetExtState(EXT_SECTION, "timeSelectionStart")) or editCursorPos
+  local offset = editCursorPos - startTime
+
+  for _, tm in ipairs(tempoMarkers) do
+    local newPos = tm[1] + offset
+    -- tm[1] 是时间位置, tm[4] 是BPM, tm[5] 和 tm[6] 是时间签名的分子和分母, tm[7] 是线性/非线性
+    reaper.SetTempoTimeSigMarker(0, -1, newPos, -1, -1, tm[4], tm[5], tm[6], tm[7])
+  end
+end
+
 -- 生成剪贴板迭代器
 local function clipboardIterator()
   local index = 0
@@ -184,7 +230,8 @@ end
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
-pasteMarkersAndRegions()
-reaper.Undo_EndBlock("Paste Content And Region Marker In Razor Edit Area", -1)
+pasteTempoMarkers() -- 先粘贴拍号和速度信息
+pasteMarkersAndRegions() -- 再粘贴区域/标记
+reaper.Undo_EndBlock("Paste Content And Region/Marker/Tempo In Razor Edit Area", -1)
 reaper.PreventUIRefresh(-1)
 reaper.defer(function() end) -- 禁用自动撤销点
