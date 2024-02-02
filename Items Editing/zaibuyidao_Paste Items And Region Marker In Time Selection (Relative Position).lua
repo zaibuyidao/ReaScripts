@@ -1,4 +1,4 @@
--- @description Paste Items And Region Marker In Time Selection (Relative Position)
+-- @description Paste Items And Region/Marker In Time Selection (Relative Position)
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -230,5 +230,5 @@ reaper.Undo_BeginBlock()
 main()
 -- 执行粘贴操作
 pasteMarkersAndRegions()
-reaper.Undo_EndBlock("Paste Items And Region Marker In Time Selection (Relative Position)", -1)
+reaper.Undo_EndBlock("Paste Items And Region/Marker In Time Selection (Relative Position)", -1)
 reaper.defer(function() end) -- 禁用自动撤销点

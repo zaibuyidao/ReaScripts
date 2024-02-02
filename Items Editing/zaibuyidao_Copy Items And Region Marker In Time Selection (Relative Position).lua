@@ -1,4 +1,4 @@
--- @description Copy Items And Region Marker In Time Selection (Relative Position)
+-- @description Copy Items And Region/Marker In Time Selection (Relative Position)
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
