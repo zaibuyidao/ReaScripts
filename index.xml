@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="eda6cfb6c82a51170be9b50bf7d85e67f34a62ca">
+<index version="1" name="zaibuyidao Scripts" commit="f9411295723e57d41601c79fb01de9af91ecf11d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -883,6 +883,10 @@
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/eda6cfb6c82a51170be9b50bf7d85e67f34a62ca/Items%20Editing/zaibuyidao_Paste%20Items%20And%20Region%20Marker%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-02-02T07:44:16Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9411295723e57d41601c79fb01de9af91ecf11d/Items%20Editing/zaibuyidao_Paste%20Items%20And%20Region%20Marker%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Items And Region Marker Tempo In Time Selection (Relative Position).lua" type="script" desc="Paste Items And Region/Marker/Tempo In Time Selection (Relative Position)">
       <metadata>
@@ -905,6 +909,10 @@
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/eda6cfb6c82a51170be9b50bf7d85e67f34a62ca/Items%20Editing/zaibuyidao_Paste%20Items%20And%20Region%20Marker%20Tempo%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-02-02T07:44:16Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9411295723e57d41601c79fb01de9af91ecf11d/Items%20Editing/zaibuyidao_Paste%20Items%20And%20Region%20Marker%20Tempo%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Items In Time Selection (Relative Position).lua" type="script" desc="Paste Items In Time Selection (Relative Position)">
       <metadata>
@@ -926,6 +934,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2024-02-02T06:51:57Z">
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/eda6cfb6c82a51170be9b50bf7d85e67f34a62ca/Items%20Editing/zaibuyidao_Paste%20Items%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-02-02T07:44:16Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9411295723e57d41601c79fb01de9af91ecf11d/Items%20Editing/zaibuyidao_Paste%20Items%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Play Stop From First Selected Item Position.lua" type="script" desc="Play Stop From First Selected Item Position">
@@ -8184,6 +8196,24 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a5f295eea93b2c74ad2960310dd11794b7acc338/Utility/zaibuyidao_Cakewalk%20Style%20Cursor%20Follow%20(MIDI%20Editor).lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Copy Tempo Time Signature In Time Selection (Relative Position).lua" type="script" desc="Copy Tempo/Time Signature In Time Selection (Relative Position)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-02-02T07:41:13Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2cb69e8f0d98267ab14439e8b64ece8634592d8d/Utility/zaibuyidao_Copy%20Tempo%20Time%20Signature%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Create Media Explorer Shortcut (New Action).lua" type="script" desc="Create Media Explorer Shortcut (New Action)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -8433,6 +8463,24 @@
       <version name="1.0" author="zaibuyidao" time="2021-08-29T08:41:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4e06c45b98b415f8cbdd4aa37fea710e4c3a3cd0/Utility/zaibuyidao_MIDI%20File%20Track%20Name%20Fix.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Paste Tempo Time Signature In Time Selection (Relative Position).lua" type="script" desc="Paste Tempo/Time Signature In Time Selection (Relative Position)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-02-02T07:41:13Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2cb69e8f0d98267ab14439e8b64ece8634592d8d/Utility/zaibuyidao_Paste%20Tempo%20Time%20Signature%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
