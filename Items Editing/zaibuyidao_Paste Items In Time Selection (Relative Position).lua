@@ -1,5 +1,5 @@
 -- @description Paste Items In Time Selection (Relative Position)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -121,5 +121,7 @@ function main()
   reaper.UpdateArrange()
 end
 
+reaper.PreventUIRefresh(1)
 main()
+reaper.PreventUIRefresh(-1)
 reaper.defer(function() end) -- 禁用自动撤销点
