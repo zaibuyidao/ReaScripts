@@ -1,5 +1,5 @@
 -- @description Paste Items In Time Selection (Relative Position)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -101,41 +101,15 @@ if not reaper.APIExists("JS_Window_Find") then
   return reaper.defer(function() end)
 end
 
+local EXT_SECTION = 'COPY_ITEMS_IN_TIME_SELECTION'
+
 function main()
-  -- 获取存储的时间选择开始时间
-  local startTime, endTime = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
-  if startTime == endTime then
-    reaper.ShowMessageBox("未进行时间选择。请先选择一个时间范围以进行复制。", "错误", 0)
-    return
-  end
-
-  local trackCount = reaper.CountTracks(0)
-  local earliestItemStart = nil -- 用于存储时间选区内最靠前的项目的开始位置
-
-  -- 检查项目相对于时间选择的选中状态
-  for i = 0, trackCount - 1 do
-    local track = reaper.GetTrack(0, i)
-    local itemCount = reaper.CountTrackMediaItems(track)
-    for j = 0, itemCount - 1 do
-      local item = reaper.GetTrackMediaItem(track, j)
-      local itemStart = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-      local itemEnd = itemStart + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-      if reaper.IsMediaItemSelected(item) then
-        if itemStart < endTime and itemEnd > startTime then
-          if earliestItemStart == nil or itemStart < earliestItemStart then
-            earliestItemStart = itemStart
-          end
-        end
-      end
-    end
-  end
-
   -- 获取当前光标位置
   local cursorPosition = reaper.GetCursorPosition()
 
   -- 根据偏移量调整光标位置，以便粘贴操作可以在正确的位置进行
   -- 光标位置现在应该反映从原始复制点到新的粘贴点的偏移
-  local offset = earliestItemStart and earliestItemStart - startTime or 0
+  local offset = tonumber(reaper.GetExtState(EXT_SECTION, "Offset")) or 0
   reaper.SetEditCurPos(cursorPosition + offset, false, false)
 
   -- 粘贴复制的项目到调整后的光标位置

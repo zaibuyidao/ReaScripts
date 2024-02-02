@@ -1,5 +1,5 @@
 -- @description Copy Items In Time Selection (Relative Position)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -101,7 +101,23 @@ if not reaper.APIExists("JS_Window_Find") then
     return reaper.defer(function() end)
 end
 
+local EXT_SECTION = 'COPY_ITEMS_IN_TIME_SELECTION'
+
+-- 生成键名
+local function makeKey(index)
+    return string.format("marker%03d", index)
+end
+
+-- 清除扩展状态中的旧数据
+local function clearExtState()
+    for i = 1, reaper.CountProjectMarkers(0) do
+        reaper.DeleteExtState(EXT_SECTION, makeKey(i), false)
+    end
+end
+
 function main()
+    clearExtState() -- 清除旧数据
+
     -- 检查是否存在时间选区
     local startTime, endTime = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
     if startTime == endTime then
@@ -166,6 +182,27 @@ function main()
                 -- 时间选区内的项目不做更改
             end
         end
+    end
+
+    -- 重新检查以确定最靠前的选中项目的开始位置
+    for i = 0, trackCount - 1 do
+        local track = reaper.GetTrack(0, i)
+        local itemCount = reaper.CountTrackMediaItems(track)
+        for j = 0, itemCount - 1 do
+            local item = reaper.GetTrackMediaItem(track, j)
+            if reaper.IsMediaItemSelected(item) then
+                local itemStart = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+                if earliestItemStart == nil or itemStart < earliestItemStart then
+                    earliestItemStart = itemStart
+                end
+            end
+        end
+    end
+
+    -- 计算差值并存储
+    if earliestItemStart ~= nil then
+        local diff = earliestItemStart - startTime
+        reaper.SetExtState(EXT_SECTION, "Offset", tostring(diff), true)
     end
 
     -- 执行复制操作

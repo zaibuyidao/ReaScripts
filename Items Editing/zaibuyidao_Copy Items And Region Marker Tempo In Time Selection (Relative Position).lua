@@ -1,5 +1,5 @@
 -- @description Copy Items And Region/Marker/Tempo In Time Selection (Relative Position)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -202,6 +202,27 @@ function main()
                 -- 时间选区内的项目不做更改
             end
         end
+    end
+
+    -- 重新检查以确定最靠前的选中项目的开始位置
+    for i = 0, trackCount - 1 do
+        local track = reaper.GetTrack(0, i)
+        local itemCount = reaper.CountTrackMediaItems(track)
+        for j = 0, itemCount - 1 do
+            local item = reaper.GetTrackMediaItem(track, j)
+            if reaper.IsMediaItemSelected(item) then
+                local itemStart = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+                if earliestItemStart == nil or itemStart < earliestItemStart then
+                    earliestItemStart = itemStart
+                end
+            end
+        end
+    end
+
+    -- 计算差值并存储
+    if earliestItemStart ~= nil then
+        local diff = earliestItemStart - startTime
+        reaper.SetExtState(EXT_SECTION, "Offset", tostring(diff), true)
     end
 
     -- 执行复制操作
