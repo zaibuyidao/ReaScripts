@@ -1,5 +1,5 @@
 -- @description Paste Content And Region/Marker In Razor Edit Area
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -157,6 +157,7 @@ local function pasteMarkersAndRegions()
   local offset = editCursorPos - timeSelectionStart
 
   local _, markerId, regionId = reaper.CountProjectMarkers(0)
+  reaper.PreventUIRefresh(1)
   reaper.Undo_BeginBlock()
 
   for _, marker in ipairs(markers) do
@@ -183,6 +184,7 @@ local function pasteMarkersAndRegions()
   reaper.Main_OnCommand(42398, 0) -- 对象: 粘贴对象/轨道 ⇌ Item: Paste items/tracks
 
   reaper.Undo_EndBlock("Paste Content And Region Marker In Razor Edit Area", -1)
+  reaper.PreventUIRefresh(-1)
 end
 
 -- 执行粘贴操作

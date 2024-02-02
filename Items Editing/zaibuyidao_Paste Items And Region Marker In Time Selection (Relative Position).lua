@@ -1,5 +1,5 @@
 -- @description Paste Items And Region/Marker In Time Selection (Relative Position)
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -200,9 +200,8 @@ end
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
-main()
--- 执行粘贴操作
-pasteMarkersAndRegions()
+pasteMarkersAndRegions() -- 先粘贴区域/标记
+main() -- 再粘贴媒体对象
 reaper.Undo_EndBlock("Paste Items And Region/Marker In Time Selection (Relative Position)", -1)
 reaper.PreventUIRefresh(-1)
 reaper.defer(function() end) -- 禁用自动撤销点
