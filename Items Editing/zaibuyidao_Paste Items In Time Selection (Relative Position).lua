@@ -1,5 +1,5 @@
 -- @description Paste Items In Time Selection (Relative Position)
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -107,6 +107,8 @@ function main()
   -- 获取当前光标位置
   local cursorPosition = reaper.GetCursorPosition()
 
+  local timeSelectionStart = tonumber(reaper.GetExtState(EXT_SECTION, "timeSelectionStart")) or 0
+  local timeSelectionEnd = tonumber(reaper.GetExtState(EXT_SECTION, "timeSelectionEnd")) or 0
   -- 根据偏移量调整光标位置，以便粘贴操作可以在正确的位置进行
   -- 光标位置现在应该反映从原始复制点到新的粘贴点的偏移
   local offset = tonumber(reaper.GetExtState(EXT_SECTION, "Offset")) or 0
@@ -116,6 +118,12 @@ function main()
   reaper.Main_OnCommand(42398, 0) -- 项目: 粘贴项目/轨道
   -- 粘贴完成后，恢复光标到原始位置
   reaper.SetEditCurPos(cursorPosition, false, false)
+
+  -- 调整时间选区的开始和结束时间，应用偏移量
+  local newTimeSelectionStart = timeSelectionStart + offset
+  local newTimeSelectionEnd = timeSelectionEnd + offset
+  -- 设置新的时间选区
+  reaper.GetSet_LoopTimeRange(true, false, newTimeSelectionStart, newTimeSelectionEnd, false)
 
   -- 刷新REAPER视图
   reaper.UpdateArrange()

@@ -1,5 +1,5 @@
 -- @description Copy Items In Time Selection (Relative Position)
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -218,6 +218,14 @@ function main()
 
     -- 执行复制操作
     reaper.Main_OnCommand(40698, 0) -- 编辑: 复制项目
+
+    local timeSelectionStart, timeSelectionEnd = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+
+    -- print("时间选区开始: " .. timeSelectionStart .. ", 结束: " .. timeSelectionEnd)
+
+    -- 保存时间选区的起点和终点
+    reaper.SetExtState(EXT_SECTION, "timeSelectionStart", tostring(timeSelectionStart), false)
+    reaper.SetExtState(EXT_SECTION, "timeSelectionEnd", tostring(timeSelectionEnd), false)
 end
 
 main()
