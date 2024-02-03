@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6da326dbb2a8c04861c3935a5a1459f64e7c81d3">
+<index version="1" name="zaibuyidao Scripts" commit="b4dd7c8e307edd6f1900a47dd414fb43c79202a9">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -558,6 +558,10 @@
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/17d75ae49d00b14e7fafac2bc91961552ef67b44/Items%20Editing/zaibuyidao_Copy%20Items%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
+      <version name="1.0.3" author="zaibuyidao" time="2024-02-03T15:14:13Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b4dd7c8e307edd6f1900a47dd414fb43c79202a9/Items%20Editing/zaibuyidao_Copy%20Items%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Source File Name Of Selected Active Take To Clipboard.lua" type="script" desc="Copy Source File Name Of Selected Active Take To Clipboard">
       <metadata>
@@ -1038,6 +1042,10 @@
       <version name="1.0.2" author="zaibuyidao" time="2024-02-02T07:44:16Z">
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9411295723e57d41601c79fb01de9af91ecf11d/Items%20Editing/zaibuyidao_Paste%20Items%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2024-02-03T15:14:13Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b4dd7c8e307edd6f1900a47dd414fb43c79202a9/Items%20Editing/zaibuyidao_Paste%20Items%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Play Stop From First Selected Item Position.lua" type="script" desc="Play Stop From First Selected Item Position">
