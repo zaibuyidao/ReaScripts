@@ -1,5 +1,5 @@
--- @description Copy Region Marker In Time Selection (Relative Position)
--- @version 1.0
+-- @description Copy Region/Marker In Time Selection (Relative Position)
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script

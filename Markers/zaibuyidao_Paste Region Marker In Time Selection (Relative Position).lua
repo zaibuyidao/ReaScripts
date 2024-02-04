@@ -1,5 +1,5 @@
--- @description Paste Region Marker In Time Selection (Relative Position)
--- @version 1.0
+-- @description Paste Region/Marker In Time Selection (Relative Position)
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -180,7 +180,13 @@ local function pasteMarkersAndRegions()
     reaper.AddProjectMarker2(0, marker[1], newStart, newEnd, name, marker[5], marker[6])
   end
 
-  reaper.Undo_EndBlock("Paste Region Marker In Time Selection (Relative Position)", -1)
+  -- 调整时间选区的开始和结束时间，应用偏移量
+  local newTimeSelectionStart = timeSelectionStart + offset
+  local newTimeSelectionEnd = timeSelectionEnd + offset
+  -- 设置新的时间选区
+  reaper.GetSet_LoopTimeRange(true, false, newTimeSelectionStart, newTimeSelectionEnd, false)
+
+  reaper.Undo_EndBlock("Paste Region/Marker In Time Selection (Relative Position)", -1)
 end
 
 -- 执行粘贴操作
