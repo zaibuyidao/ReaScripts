@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="cb9dc4ff532d52adcab42ca17c1204d9fbb92dfd">
+<index version="1" name="zaibuyidao Scripts" commit="c32f33b3155289c347451956cdd7880149fda476">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2117,7 +2117,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7f7ab8345d8093997746c479419b55edaedd5cb3/Markers/zaibuyidao_Batch%20Rename%20Marker%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Copy Region Marker In Time Selection (Relative Position).lua" type="script" desc="Copy Region Marker In Time Selection (Relative Position)">
+    <reapack name="zaibuyidao_Copy Region Marker In Time Selection (Relative Position).lua" type="script" desc="Copy Region/Marker In Time Selection (Relative Position)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -2134,6 +2134,10 @@
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a1e0a8194a2c13c2169835dc0fce7ebf2f48a4ab/Markers/zaibuyidao_Copy%20Region%20Marker%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-02-04T02:21:56Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c32f33b3155289c347451956cdd7880149fda476/Markers/zaibuyidao_Copy%20Region%20Marker%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Delete Marker Within Time Selection.lua" type="script" desc="Delete Marker Within Time Selection">
       <metadata>
@@ -2144,7 +2148,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/873d5bafd6544f8b3c14c9f37a7368c088a89c65/Markers/zaibuyidao_Delete%20Marker%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Paste Region Marker In Time Selection (Relative Position).lua" type="script" desc="Paste Region Marker In Time Selection (Relative Position)">
+    <reapack name="zaibuyidao_Paste Region Marker In Time Selection (Relative Position).lua" type="script" desc="Paste Region/Marker In Time Selection (Relative Position)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -2160,6 +2164,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-02-01T08:46:38Z">
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a1e0a8194a2c13c2169835dc0fce7ebf2f48a4ab/Markers/zaibuyidao_Paste%20Region%20Marker%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-02-04T02:21:56Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c32f33b3155289c347451956cdd7880149fda476/Markers/zaibuyidao_Paste%20Region%20Marker%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Marker Color.lua" type="script" desc="Random Marker Color">
