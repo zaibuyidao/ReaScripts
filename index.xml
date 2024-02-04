@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c32f33b3155289c347451956cdd7880149fda476">
+<index version="1" name="zaibuyidao Scripts" commit="2073e5a4d03ffad7a16f27078636a9035dce969b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2117,6 +2117,42 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7f7ab8345d8093997746c479419b55edaedd5cb3/Markers/zaibuyidao_Batch%20Rename%20Marker%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Copy Marker In Time Selection (Relative Position).lua" type="script" desc="Copy Marker In Time Selection (Relative Position)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-02-04T02:45:57Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2073e5a4d03ffad7a16f27078636a9035dce969b/Markers/zaibuyidao_Copy%20Marker%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Copy Region In Time Selection (Relative Position).lua" type="script" desc="Copy Region In Time Selection (Relative Position)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-02-04T02:45:57Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2073e5a4d03ffad7a16f27078636a9035dce969b/Markers/zaibuyidao_Copy%20Region%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Copy Region Marker In Time Selection (Relative Position).lua" type="script" desc="Copy Region/Marker In Time Selection (Relative Position)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -2146,6 +2182,42 @@
       <version name="1.0" author="zaibuyidao" time="2021-07-19T13:06:10Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/873d5bafd6544f8b3c14c9f37a7368c088a89c65/Markers/zaibuyidao_Delete%20Marker%20Within%20Time%20Selection.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Paste Marker In Time Selection (Relative Position).lua" type="script" desc="Paste Marker In Time Selection (Relative Position)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-02-04T02:45:57Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2073e5a4d03ffad7a16f27078636a9035dce969b/Markers/zaibuyidao_Paste%20Marker%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Paste Region In Time Selection (Relative Position).lua" type="script" desc="Paste Region In Time Selection (Relative Position)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-02-04T02:45:57Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2073e5a4d03ffad7a16f27078636a9035dce969b/Markers/zaibuyidao_Paste%20Region%20In%20Time%20Selection%20(Relative%20Position).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Region Marker In Time Selection (Relative Position).lua" type="script" desc="Paste Region/Marker In Time Selection (Relative Position)">
