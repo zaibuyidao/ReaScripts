@@ -1,7 +1,8 @@
 -- @description Solo Item Without Move Edit Cursor (Perform Until Shortcut Released)
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   # Fixed brief audio burst when stopping playback
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -11,7 +12,7 @@
 --[[
 1.Once activated, the script will operate in the background. To deactivate it, simply run the script once more, or alternatively, configure the script as a toolbar button to conveniently toggle its activation status.
 2.If the virtual key activates a system alert, please bind the key to 'Action: No-op (no action)
-3.If you want to reset the shortcut key, please run the script: zaibuyidao_Solo Track Shortcut Setting.lua
+3.If you want to reset the shortcut key, please run the script: zaibuyidao_Solo Item Shortcut Setting.lua
 4.To remove the shortcut key, navigate to the REAPER installation folder, locate the 'reaper-extstate.ini' file, and then find and delete the following lines:
 [SOLO_ITEM_SHORTCUT_SETTING]
 VirtualKey=the key you set
@@ -76,7 +77,7 @@ if language == "简体中文" then
     title = "独奏对象快捷键设置"
     lable = "输入 (0-9,A-Z,使用';;'代替','或.)"
     err_title = "不能设置这个按键，请改其他按键"
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
     swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
     swserr = "警告"
     jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
@@ -169,7 +170,7 @@ if (not key or not key_map[key]) then
     if language == "简体中文" then
         okk_title = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Solo Item 脚本，並使用快捷键 ".. key .." 进行独奏。"
         okk_box = "继续下一步"
-    elseif language == "繁体中文" then
+    elseif language == "繁體中文" then
         okk_title = "虛擬鍵 ".. key .." 設置完畢。接下來，你需要將按鍵 ".. key .." 設置為無動作，以避免觸發系統警報聲。\n點擊【確定】將會彈出操作列表的快捷鍵設置，請將快捷鍵設置為按鍵 ".. key .." 。\n\n最後，請重新運行 Solo Item 腳本，並使用快捷鍵 ".. key .." 進行獨奏。"
         okk_box = "繼續下一步"
     else
@@ -263,7 +264,9 @@ function main()
     state = reaper.JS_VKeys_GetState(0) -- 獲取按鍵的狀態
 
     if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
-        -- reaper.ShowConsoleMsg("按键按下" .. "\n")
+        -- 取消主控轨道静音状态
+        local masterTrack = reaper.GetMasterTrack(0)
+        reaper.SetMediaTrackInfo_Value(masterTrack, 'B_MUTE', 0)
 
         local screen_x, screen_y = reaper.GetMousePosition()
         local item_ret, take = reaper.GetItemFromPoint(screen_x, screen_y, true)
@@ -322,13 +325,35 @@ function main()
         end
         flag = 1
     elseif state:byte(VirtualKeyCode) == 0 and flag == 1 then
-        -- reaper.ShowConsoleMsg("按键释放" .. "\n")
-
+        reaper.Main_OnCommand(18, 0) -- Track: Set mute for master track (MIDI CC/OSC only)
         RestoreSelectedItems(init_sel_items) -- 恢复选中的item状态
         --RestoreSelectedTracks(init_sel_tracks) -- 恢復選中的軌道狀態
         RestoreSoloTracks(init_solo_tracks) -- 恢復Solo的軌道狀態
         restore_items() -- 恢复item静音状态
+        reaper.Main_OnCommand(14, 0) -- Track: Toggle mute for master track
         flag = 0
+
+        -- 延迟取消主控轨道静音，否则会出现短暂的音频爆发
+        local function checkTimeAndUnMute()
+            if not startTime then startTime = reaper.time_precise() end  -- 初始化开始时间
+            local now = reaper.time_precise()
+            local playState = reaper.GetPlayState()
+            -- 检查当前时间是否已经超过延迟时间，以及播放状态是否不是播放中（值为1表示正在播放）
+            if now - startTime >= 0.07 and playState ~= 1 then
+                -- 取消主控轨道静音状态
+                local masterTrack = reaper.GetMasterTrack(0)
+                reaper.SetMediaTrackInfo_Value(masterTrack, 'B_MUTE', 0)
+                startTime = nil -- 重置计时器
+            elseif playState == 1 then
+                -- 如果已经在播放，则不执行取消静音，直接重置计时器
+                startTime = nil
+            else
+                -- 如果还没到时间，且播放没开始，再次延迟执行
+                reaper.defer(checkTimeAndUnMute)
+            end
+        end
+    
+        checkTimeAndUnMute()
     end
     reaper.SetEditCurPos(cur_pos, 0, 0) -- 恢復光標位置
     reaper.PreventUIRefresh(-1)
