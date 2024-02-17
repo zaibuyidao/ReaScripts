@@ -1,5 +1,5 @@
 -- @description Solo MIDI Item Shortcut Setting
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -11,7 +11,7 @@
 --[[
 1.Once activated, the script will operate in the background. To deactivate it, simply run the script once more, or alternatively, configure the script as a toolbar button to conveniently toggle its activation status.
 2.If the virtual key activates a system alert, please bind the key to 'Action: No-op (no action)
-3.If you want to reset the shortcut key, please run the script: zaibuyidao_Solo Track Shortcut Setting.lua
+3.If you want to reset the shortcut key, please run the script: zaibuyidao_Solo MIDI Item Shortcut Setting.lua
 4.To remove the shortcut key, navigate to the REAPER installation folder, locate the 'reaper-extstate.ini' file, and then find and delete the following lines:
 [SOLO_MIDI_ITEM_SHORTCUT_SETTING]
 VirtualKey=the key you set
@@ -76,7 +76,7 @@ if language == "简体中文" then
   title = "独奏MIDI对象快捷键设置"
   lable = "输入 (0-9,A-Z,使用';;'代替','或.)"
   err_title = "不能设置这个按键，请改其他按键"
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
   swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
   swserr = "警告"
   jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"

@@ -1,8 +1,8 @@
 -- @description Solo MIDI Note Play From Edit Cursor Position (Perform Until Shortcut Released)
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @changelog
---   # Fixed brief audio burst when stopping playback
+--   # Optimized playback speed when soloing MIDI notes.
 -- @links
 --   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   repo https://github.com/zaibuyidao/ReaScripts
@@ -182,90 +182,18 @@ if (not key or not key_map[key]) then
   reaper.DoActionShortcutDialog(0, 0, 65535, -1) -- No-op (no action)
 end
 
-local function encodeBase64(source_str)
-  local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-  local s64 = ''
-  local str = source_str
-
-  while #str > 0 do
-    local bytes_num = 0
-    local buf = 0
-
-    for byte_cnt=1,3 do
-      buf = (buf * 256)
-      if #str > 0 then
-        buf = buf + string.byte(str, 1, 1)
-        str = string.sub(str, 2)
-        bytes_num = bytes_num + 1
-      end
-    end
-
-    for group_cnt=1,(bytes_num+1) do
-      local b64char = math.fmod(math.floor(buf/262144), 64) + 1
-      s64 = s64 .. string.sub(b64chars, b64char, b64char)
-      buf = buf * 64
-    end
-
-    for fill_cnt=1,(3-bytes_num) do
-      s64 = s64 .. '='
-    end
-  end
-
-  return s64
-end
-  
-local function decodeBase64(str64)
-  local b64chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-  local temp={}
-  for i=1,64 do
-    temp[string.sub(b64chars,i,i)] = i
-  end
-  temp['=']=0
-  local str=""
-  for i=1,#str64,4 do
-    if i>#str64 then
-      break
-    end
-    local data = 0
-    local str_count=0
-    for j=0,3 do
-      local str1=string.sub(str64,i+j,i+j)
-      if not temp[str1] then
-        return
-      end
-      if temp[str1] < 1 then
-        data = data * 64
-      else
-        data = data * 64 + temp[str1]-1
-        str_count = str_count + 1
-      end
-    end
-    for j=16,0,-8 do
-      if str_count > 0 then
-        str=str..string.char(math.floor(data/(2^j)))
-        data=data%(2^j)
-        str_count = str_count - 1
-      end
-    end
-  end
-
-  local last = tonumber(string.byte(str, string.len(str), string.len(str)))
-  if last == 0 then
-    str = string.sub(str, 1, string.len(str) - 1)
-  end
-  return str
-end
-
 local function stash_save_take_events(take)
   local _, MIDI = reaper.MIDI_GetAllEvts(take, "")
-  MIDI = encodeBase64(MIDI)
-  reaper.SetExtState("SoloMIDINotePlayFromMousePosition", tostring(take), MIDI, false)
+  local encodedStr = reaper.NF_Base64_Encode(MIDI, true) -- 使用REAPER的函数进行Base64编码
+  reaper.SetExtState("SoloMIDINotePlayFromEditCursorPosition", tostring(take), encodedStr, false)
 end
 
 local function stash_apply_take_events(take)
-  local MIDI = reaper.GetExtState("SoloMIDINotePlayFromMousePosition", tostring(take))
-  MIDI = decodeBase64(MIDI)
-  reaper.MIDI_SetAllEvts(take, MIDI)
+  local base64Str = reaper.GetExtState("SoloMIDINotePlayFromEditCursorPosition", tostring(take))
+  local retval, decodedStr = reaper.NF_Base64_Decode(base64Str) -- 使用REAPER的函数进行Base64解码
+  if retval then
+    reaper.MIDI_SetAllEvts(take, decodedStr)
+  end
 end
 
 function set_note_mute(take) -- 将音符设置为静音
@@ -295,14 +223,13 @@ function set_unselect_note_mute(take)
 end
 
 function get_all_takes()
-  tTake = {}
-  if reaper.MIDIEditor_EnumTakes then
-    local editor = reaper.MIDIEditor_GetActive()
+  local tTake = {}
+  local editor = reaper.MIDIEditor_GetActive()
+  if editor then
     for i = 0, math.huge do
-      take = reaper.MIDIEditor_EnumTakes(editor, i, false)
+      local take = reaper.MIDIEditor_EnumTakes(editor, i, false)
       if take and reaper.ValidatePtr2(0, take, "MediaItem_Take*") then 
         tTake[take] = true
-        tTake[take] = {item = reaper.GetMediaItemTake_Item(take)}
       else
         break
       end
@@ -310,27 +237,24 @@ function get_all_takes()
   else
     for i = 0, reaper.CountMediaItems(0)-1 do
       local item = reaper.GetMediaItem(0, i)
-      local take = reaper.GetActiveTake(item)
-      if reaper.ValidatePtr2(0, take, "MediaItem_Take*") and reaper.TakeIsMIDI(take) and reaper.MIDI_EnumSelNotes(take, -1) == 0 then -- Get potential takes that contain notes. NB == 0 
-        tTake[take] = true
+      for j = 0, reaper.CountTakes(item)-1 do
+        local take = reaper.GetTake(item, j)
+        if reaper.ValidatePtr2(0, take, "MediaItem_Take*") and reaper.TakeIsMIDI(take) then
+          tTake[take] = true
+        end
       end
     end
-  
-    for take in next, tTake do
-      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tT[take] = nil end -- Remove takes that were not affected by deselection
-    end
   end
-  if not next(tTake) then return end
   return tTake
 end
 
-all_takes = get_all_takes()
 play_flag = false
 cur_pos = reaper.GetCursorPosition()
 
 function main()
   editor = reaper.MIDIEditor_GetActive()
   state = reaper.JS_VKeys_GetState(0)
+  all_takes = get_all_takes()
   reaper.Undo_BeginBlock()
 
   if state:byte(VirtualKeyCode) ~= 0 and play_flag == false then
