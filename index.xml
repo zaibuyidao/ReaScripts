@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="23ce5b040f68c0147309bace8eaf5d0d1531ded3">
+<index version="1" name="zaibuyidao Scripts" commit="866aae75a18253b0bf226f1066194611250870b0">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1369,6 +1369,10 @@
         <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/19cca93e3443944607ec3943f9e6256facebe1cc/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.8" author="zaibuyidao" time="2024-02-17T11:02:32Z">
+        <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/866aae75a18253b0bf226f1066194611250870b0/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Edit Cursor Position.lua" type="script" desc="Solo Item Play From Edit Cursor Position">
       <metadata>
@@ -1425,6 +1429,10 @@
         <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/19cca93e3443944607ec3943f9e6256facebe1cc/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20First%20Item%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.8" author="zaibuyidao" time="2024-02-17T11:02:32Z">
+        <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/866aae75a18253b0bf226f1066194611250870b0/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20First%20Item%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From First Item Position.lua" type="script" desc="Solo Item Play From First Item Position">
       <metadata>
@@ -1480,6 +1488,10 @@
       <version name="1.0.7" author="zaibuyidao" time="2024-02-17T07:09:25Z">
         <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/19cca93e3443944607ec3943f9e6256facebe1cc/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.8" author="zaibuyidao" time="2024-02-17T11:02:32Z">
+        <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/866aae75a18253b0bf226f1066194611250870b0/Items%20Editing/zaibuyidao_Solo%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Item Play From Mouse Position.lua" type="script" desc="Solo Item Play From Mouse Position">
@@ -1564,6 +1576,10 @@
       <version name="1.0.5" author="zaibuyidao" time="2024-02-17T07:09:25Z">
         <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/19cca93e3443944607ec3943f9e6256facebe1cc/Items%20Editing/zaibuyidao_Solo%20Item%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.6" author="zaibuyidao" time="2024-02-17T11:02:32Z">
+        <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/866aae75a18253b0bf226f1066194611250870b0/Items%20Editing/zaibuyidao_Solo%20Item%20Without%20Move%20Edit%20Cursor%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Swap Items Of Two Tracks.lua" type="script" desc="Swap Items Of Two Tracks">
