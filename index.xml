@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="dd26b14b662255c4114c3565325d96c66a674cb6">
+<index version="1" name="zaibuyidao Scripts" commit="1ea143699fb56920607355a52d37e587f0db2c86">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8402,6 +8402,10 @@
         <changelog><![CDATA[Brand new REAPER: 7.11, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/51cfacdd7a02aa0c38ac6eafcff2065766bf0f6c/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
+      <version name="1.0.9" author="zaibuyidao" time="2024-02-17T05:09:52Z">
+        <changelog><![CDATA[Brand new REAPER: 7.11, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/1ea143699fb56920607355a52d37e587f0db2c86/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
     </reapack>
     <reapack name="Chinese Traditional (繁體中文).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁體中文)">
       <metadata>
@@ -8430,6 +8434,10 @@
       <version name="1.0.8" author="zaibuyidao" time="2024-02-15T17:10:48Z">
         <changelog><![CDATA[Brand new REAPER: 7.11, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/51cfacdd7a02aa0c38ac6eafcff2065766bf0f6c/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
+      <version name="1.0.9" author="zaibuyidao" time="2024-02-17T05:09:52Z">
+        <changelog><![CDATA[Brand new REAPER: 7.11, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/1ea143699fb56920607355a52d37e587f0db2c86/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
