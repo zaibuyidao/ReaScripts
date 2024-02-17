@@ -1,5 +1,5 @@
 -- @description Solo MIDI Item Play From Edit Cursor Position (Perform Until Shortcut Released)
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog
 --   # Fixed brief audio burst when stopping playback
@@ -219,10 +219,6 @@ function main()
         end
 
         if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
-            -- 取消主控轨道静音状态
-            local masterTrack = reaper.GetMasterTrack(0)
-            reaper.SetMediaTrackInfo_Value(masterTrack, 'B_MUTE', 0)
-
             if count_sel_items > 0 then
                 --reaper.ShowConsoleMsg("按键按下" .. "\n")
                 for i = 0, count_tracks -1 do
@@ -244,41 +240,13 @@ function main()
             flag = 1
         elseif state:byte(VirtualKeyCode) == 0 and flag == 1 then
             -- reaper.ShowConsoleMsg("按键释放" .. "\n")
-            reaper.Main_OnCommand(18, 0) -- Track: Set mute for master track (MIDI CC/OSC only)
             reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 1142) -- Transport: Stop
             restore_items() -- 恢复item静音状态
-            reaper.Main_OnCommand(14, 0) -- Track: Toggle mute for master track
             flag = 0
         end
         -- if not inline_editor then reaper.SN_FocusMIDIEditor() end
-
-        -- 延迟取消主控轨道静音，否则会出现短暂的音频爆发
-        local function checkTimeAndUnMute()
-            if not startTime then startTime = reaper.time_precise() end  -- 初始化开始时间
-            local now = reaper.time_precise()
-            local playState = reaper.GetPlayState()
-            -- 检查当前时间是否已经超过延迟时间，以及播放状态是否不是播放中（值为1表示正在播放）
-            if now - startTime >= 0.07 and playState ~= 1 then
-                -- 取消主控轨道静音状态
-                local masterTrack = reaper.GetMasterTrack(0)
-                reaper.SetMediaTrackInfo_Value(masterTrack, 'B_MUTE', 0)
-                startTime = nil -- 重置计时器
-            elseif playState == 1 then
-                -- 如果已经在播放，则不执行取消静音，直接重置计时器
-                startTime = nil
-            else
-                -- 如果还没到时间，且播放没开始，再次延迟执行
-                reaper.defer(checkTimeAndUnMute)
-            end
-        end
-    
-        checkTimeAndUnMute()
     else
         if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
-            -- 取消主控轨道静音状态
-            local masterTrack = reaper.GetMasterTrack(0)
-            reaper.SetMediaTrackInfo_Value(masterTrack, 'B_MUTE', 0)
-
             if count_sel_items > 0 then
                 --reaper.ShowConsoleMsg("按键按下" .. "\n")
                 for i = 0, count_tracks -1 do
@@ -300,33 +268,9 @@ function main()
             flag = 1
         elseif state:byte(VirtualKeyCode) == 0 and flag == 1 then
             -- reaper.ShowConsoleMsg("按键释放" .. "\n")
-            reaper.Main_OnCommand(18, 0) -- Track: Set mute for master track (MIDI CC/OSC only)
             reaper.Main_OnCommand(1016, 0) -- Transport: Stop
             restore_items() -- 恢复item静音状态
-            reaper.Main_OnCommand(14, 0) -- Track: Toggle mute for master track
             flag = 0
-
-            -- 延迟取消主控轨道静音，否则会出现短暂的音频爆发
-            local function checkTimeAndUnMute()
-                if not startTime then startTime = reaper.time_precise() end  -- 初始化开始时间
-                local now = reaper.time_precise()
-                local playState = reaper.GetPlayState()
-                -- 检查当前时间是否已经超过延迟时间，以及播放状态是否不是播放中（值为1表示正在播放）
-                if now - startTime >= 0.07 and playState ~= 1 then
-                    -- 取消主控轨道静音状态
-                    local masterTrack = reaper.GetMasterTrack(0)
-                    reaper.SetMediaTrackInfo_Value(masterTrack, 'B_MUTE', 0)
-                    startTime = nil -- 重置计时器
-                elseif playState == 1 then
-                    -- 如果已经在播放，则不执行取消静音，直接重置计时器
-                    startTime = nil
-                else
-                    -- 如果还没到时间，且播放没开始，再次延迟执行
-                    reaper.defer(checkTimeAndUnMute)
-                end
-            end
-        
-            checkTimeAndUnMute()
         end
     end
 

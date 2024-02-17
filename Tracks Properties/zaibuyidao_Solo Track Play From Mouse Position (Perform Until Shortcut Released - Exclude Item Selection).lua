@@ -1,5 +1,5 @@
 -- @description Solo Track Play From Mouse Position (Perform Until Shortcut Released - Exclude Item Selection)
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
 --   # Fixed brief audio burst when stopping playback
@@ -237,6 +237,19 @@ local function RestoreSoloTracks(t) -- 恢復Solo的軌道状态
     end
 end
 
+-- 检查选中的items中是否存在MIDI takes
+function checkForMidiTakes()
+    local count = reaper.CountSelectedMediaItems(0)
+    for i = 0, count - 1 do
+        local item = reaper.GetSelectedMediaItem(0, i)
+        local take = reaper.GetActiveTake(item)
+        if take and reaper.TakeIsMIDI(take) then
+            return true -- 找到MIDI take
+        end
+    end
+    return false -- 没找到MIDI take
+end
+
 flag = 0
 
 function main()
@@ -304,7 +317,11 @@ function main()
             end
         end
     
-        checkTimeAndUnMute()
+        if not checkForMidiTakes() then -- 如果没有MIDI takes
+            checkTimeAndUnMute()
+        else
+            reaper.Main_OnCommand(14, 0) -- Track: Toggle mute for master track
+        end
     end
 
     reaper.SetEditCurPos(cur_pos, 0, 0)
