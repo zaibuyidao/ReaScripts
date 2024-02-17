@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="faa3e7a3e37682363b6151c92ffd6caa7d0cc27e">
+<index version="1" name="zaibuyidao Scripts" commit="8f5d0d36d2ae6eb0302a797c43040c420c3ae91e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -6392,6 +6392,10 @@
         <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/19cca93e3443944607ec3943f9e6256facebe1cc/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.8" author="zaibuyidao" time="2024-02-17T11:18:22Z">
+        <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8f5d0d36d2ae6eb0302a797c43040c420c3ae91e/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released).lua" type="script" desc="Solo MIDI Item Play From Mouse Position (Perform Until Shortcut Released)">
       <metadata>
@@ -6434,6 +6438,10 @@
       <version name="1.0.7" author="zaibuyidao" time="2024-02-17T07:09:25Z">
         <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/19cca93e3443944607ec3943f9e6256facebe1cc/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.0.8" author="zaibuyidao" time="2024-02-17T11:18:22Z">
+        <changelog><![CDATA[# Fixed brief audio burst when stopping playback]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8f5d0d36d2ae6eb0302a797c43040c420c3ae91e/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Item%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Item Shortcut Setting.lua" type="script" desc="Solo MIDI Item Shortcut Setting">
@@ -6512,6 +6520,10 @@
         <changelog><![CDATA[# Optimized playback speed when soloing MIDI notes.]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/92485da75894e7c20c06d6fa2a0881d46f0d202c/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
+      <version name="1.0.9" author="zaibuyidao" time="2024-02-17T11:18:22Z">
+        <changelog><![CDATA[# Optimized playback speed when soloing MIDI notes.]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8f5d0d36d2ae6eb0302a797c43040c420c3ae91e/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Edit%20Cursor%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Note Play From Edit Cursor Position.lua" type="script" desc="Solo MIDI Note Play From Edit Cursor Position">
       <metadata>
@@ -6589,6 +6601,10 @@
       <version name="1.1.0" author="zaibuyidao" time="2024-02-17T09:40:12Z">
         <changelog><![CDATA[# Optimized playback speed when soloing MIDI notes.]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/92485da75894e7c20c06d6fa2a0881d46f0d202c/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
+      </version>
+      <version name="1.1.1" author="zaibuyidao" time="2024-02-17T11:18:22Z">
+        <changelog><![CDATA[# Optimized playback speed when soloing MIDI notes.]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8f5d0d36d2ae6eb0302a797c43040c420c3ae91e/MIDI%20Editor/zaibuyidao_Solo%20MIDI%20Note%20Play%20From%20Mouse%20Position%20(Perform%20Until%20Shortcut%20Released).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo MIDI Note Play From Mouse Position.lua" type="script" desc="Solo MIDI Note Play From Mouse Position">
