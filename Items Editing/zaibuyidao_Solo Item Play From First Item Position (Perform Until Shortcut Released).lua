@@ -1,5 +1,5 @@
 -- @description Solo Item Play From First Item Position (Perform Until Shortcut Released)
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
 -- @changelog
 --   # Fixed brief audio burst when stopping playback
@@ -239,6 +239,21 @@ function checkForMidiTakes()
         end
     end
     return false -- 没找到MIDI take
+end
+
+function CheckShortcutSetting()
+    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Items Editing/zaibuyidao_Solo Item Shortcut Setting.lua'
+  
+    if reaper.file_exists(shortcutSetting) then
+        dofile(shortcutSetting)
+    else
+        reaper.MB(shortcutSetting:gsub('%\\', '/')..' not found. Please ensure the script is correctly placed.', '', 0)
+        if reaper.APIExists('ReaPack_BrowsePackages') then
+            reaper.ReaPack_BrowsePackages('zaibuyidao Solo Item Shortcut Setting')
+        else
+            reaper.MB('ReaPack extension not found', '', 0)
+        end
+    end
 end
 
 local key = reaper.GetExtState("SOLO_ITEM_SHORTCUT_SETTING", "VirtualKey")

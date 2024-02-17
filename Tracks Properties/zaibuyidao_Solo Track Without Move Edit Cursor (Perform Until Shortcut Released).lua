@@ -1,5 +1,5 @@
 -- @description Solo Track Without Move Edit Cursor (Perform Until Shortcut Released)
--- @version 1.1.0
+-- @version 1.1.1
 -- @author zaibuyidao
 -- @changelog
 --   # Fixed brief audio burst when stopping playback
@@ -190,6 +190,21 @@ function checkForMidiTakes()
         end
     end
     return false -- 没找到MIDI take
+end
+
+function CheckShortcutSetting()
+    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Tracks Properties/zaibuyidao_Solo Track Shortcut Setting.lua'
+  
+    if reaper.file_exists(shortcutSetting) then
+        dofile(shortcutSetting)
+    else
+        reaper.MB(shortcutSetting:gsub('%\\', '/')..' not found. Please ensure the script is correctly placed.', '', 0)
+        if reaper.APIExists('ReaPack_BrowsePackages') then
+            reaper.ReaPack_BrowsePackages('zaibuyidao Solo Track Shortcut Setting')
+        else
+            reaper.MB('ReaPack extension not found', '', 0)
+        end
+    end
 end
 
 local key = reaper.GetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey")
