@@ -1,5 +1,5 @@
 -- @description Solo Track Shortcut Setting
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -67,7 +67,7 @@ if language == "简体中文" then
   title = "独奏轨道快捷键设置"
   lable = "输入 (0-9,A-Z,使用';;'代替','或.)"
   err_title = "不能设置这个按键，请改其他按键"
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
   swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
   swserr = "警告"
   jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
@@ -165,7 +165,7 @@ reaper.SetExtState("SOLO_TRACK_SHORTCUT_SETTING", "VirtualKey", key, true)
 if language == "简体中文" then
   okk_title = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Solo Track 脚本，並使用快捷键 ".. key .." 进行独奏。"
   okk_box = "继续下一步"
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
   okk_title = "虛擬鍵 ".. key .." 設置完畢。接下來，你需要將按鍵 ".. key .." 設置為無動作，以避免觸發系統警報聲。\n點擊【確定】將會彈出操作列表的快捷鍵設置，請將快捷鍵設置為按鍵 ".. key .." 。\n\n最後，請重新運行 Solo Track 腳本，並使用快捷鍵 ".. key .." 進行獨奏。"
   okk_box = "繼續下一步"
 else
