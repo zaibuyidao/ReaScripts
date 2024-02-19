@@ -129,15 +129,15 @@ function parseCSVLine(line, sep, lineNumber)
     if countSeparator(line, sep) ~= 7 then
 		local retval
 		if language == "简体中文" then
-			retval = reaper.MB(string.format("ucs_keywords.csv 自定义关键词格式错误：第 %d 行的分隔符数量不正确。\n请修改自定义关键词文件，并重新启动脚本。\n\n要现在打开 ucs_keywords.csv 吗？", lineNumber), '错误', 1)
+			retval = reaper.MB(string.format("keywords_ucs.csv 自定义关键词格式错误：第 %d 行的分隔符数量不正确。\n请修改自定义关键词文件，并重新启动脚本。\n\n要现在打开 keywords_ucs.csv 吗？", lineNumber), '错误', 1)
 		elseif language == "繁体中文" then
-			retval = reaper.MB(string.format("ucs_keywords.csv 自訂關鍵詞格式錯誤：第 %d 行的分隔符數量不正確。\n請修改自訂關鍵詞文件，並重新啟動腳本。\n\n要現在打開 ucs_keywords.csv 嗎？", lineNumber), '錯誤', 1)
+			retval = reaper.MB(string.format("keywords_ucs.csv 自訂關鍵詞格式錯誤：第 %d 行的分隔符數量不正確。\n請修改自訂關鍵詞文件，並重新啟動腳本。\n\n要現在打開 keywords_ucs.csv 嗎？", lineNumber), '錯誤', 1)
 		else
-			retval = reaper.MB(string.format("ucs_keywords.csv custom keyword format error: The number of separators on line %d is incorrect.\nPlease modify the custom keyword file and restart the script.\n\nDo you want to open ucs_keywords.csv now?", lineNumber), 'Error', 1)
+			retval = reaper.MB(string.format("keywords_ucs.csv custom keyword format error: The number of separators on line %d is incorrect.\nPlease modify the custom keyword file and restart the script.\n\nDo you want to open keywords_ucs.csv now?", lineNumber), 'Error', 1)
 		end
 
 		if retval == 1 then
-			openUrl(script_path .. "ucs_keywords.csv")
+			openUrl(script_path .. "keywords_ucs.csv")
 		end
         return false
     end
@@ -219,7 +219,7 @@ local data = {}
 
 function loadCSVData(columns)
 	data = {} -- 清空旧数据
-    local filePath = script_path .. getPathDelimiter() .. "ucs_keywords.csv"
+    local filePath = script_path .. getPathDelimiter() .. "keywords_ucs.csv"
     local f = io.open(filePath, "r")
     if not f then
         print("Failed to open file: " .. filePath)
@@ -268,7 +268,7 @@ function reloadDataAndUpdateUI(columns)
     end
 
 	data = {} -- 清空旧数据
-    local filePath = script_path .. getPathDelimiter() .. "ucs_keywords.csv"
+    local filePath = script_path .. getPathDelimiter() .. "keywords_ucs.csv"
     local f = io.open(filePath, "r")
     if not f then
         print("Failed to open file: " .. filePath)
@@ -808,7 +808,7 @@ function init()
 			-- print("page down")
 			resultListView:scroll(getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
 		elseif key == 26161 then --F1 编辑关键词
-			openUrl(script_path .. "ucs_keywords.csv")
+			openUrl(script_path .. "keywords_ucs.csv")
 		elseif key == 26162 then --F2 编辑配置表
 			openUrl(script_path .. "lib/config-ucs.lua")
 		elseif key == 26163 then --F3 随机行

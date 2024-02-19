@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.7.3
+-- @version 1.7.4
 -- @changelog
 --   # Renamed "SFX Tag Search" to "SFX Tag Search (Custom Tags)" for more accurate searching of custom tag sound effects.
 --   # Renamed "SFX Tag Search (Custom)" to "SFX Tag Search (Favorite)" for easier access to user-favorite tag sound effects.
