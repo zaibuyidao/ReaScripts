@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.7.5
+-- @version 1.7.6
 -- @changelog
 --   # Renamed "SFX Tag Search" to "SFX Tag Search (Custom Tags)" for more accurate searching of custom tag sound effects.
 --   # Renamed "SFX Tag Search (Custom)" to "SFX Tag Search (Favorite)" for easier access to user-favorite tag sound effects.
@@ -15,19 +15,19 @@
 --   [main] SFX/zaibuyidao_SFX Tag Search (Database).lua
 --   [main] SFX/zaibuyidao_SFX Tag Search (Favorite).lua
 --   [main] SFX/zaibuyidao_SFX Tag Search (UCS).lua
---   [main] SFX/zaibuyidao_SFX Tag Album.lua
---   [main] SFX/zaibuyidao_SFX Tag Comment.lua
---   [main] SFX/zaibuyidao_SFX Tag Description.lua
---   [main] SFX/zaibuyidao_SFX Tag File Name.lua
---   [main] SFX/zaibuyidao_SFX Tag Genre.lua
---   [main] SFX/zaibuyidao_SFX Tag Title.lua
---   [main] SFX/zaibuyidao_SFX Tag iXML CatID.lua
---   [main] SFX/zaibuyidao_SFX Tag iXML FXName.lua
---   [main] SFX/zaibuyidao_SFX Tag iXML Category.lua
---   [main] SFX/zaibuyidao_SFX Tag iXML SubCategory.lua
---   [main] SFX/zaibuyidao_SFX Tag iXML CategoryFull.lua
---   [main] SFX/zaibuyidao_SFX Tag iXML Keywords.lua
---   [main] SFX/zaibuyidao_SFX Tag iXML Library.lua
+--   [main] SFX/zaibuyidao_SFX Tag - Album.lua
+--   [main] SFX/zaibuyidao_SFX Tag - Comment.lua
+--   [main] SFX/zaibuyidao_SFX Tag - Description.lua
+--   [main] SFX/zaibuyidao_SFX Tag - File Name.lua
+--   [main] SFX/zaibuyidao_SFX Tag - Genre.lua
+--   [main] SFX/zaibuyidao_SFX Tag - Title.lua
+--   [main] SFX/zaibuyidao_SFX Tag iXML - CatID.lua
+--   [main] SFX/zaibuyidao_SFX Tag iXML - FXName.lua
+--   [main] SFX/zaibuyidao_SFX Tag iXML - Category.lua
+--   [main] SFX/zaibuyidao_SFX Tag iXML - SubCategory.lua
+--   [main] SFX/zaibuyidao_SFX Tag iXML - CategoryFull.lua
+--   [main] SFX/zaibuyidao_SFX Tag iXML - Keywords.lua
+--   [main] SFX/zaibuyidao_SFX Tag iXML - Library.lua
 --   [nomain] SFX/lib/config-custom.lua
 --   [nomain] SFX/lib/config-tags.lua
 --   [nomain] SFX/lib/config-favorite.lua
