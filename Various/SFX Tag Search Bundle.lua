@@ -1,8 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.7.2
+-- @version 1.7.3
 -- @changelog
---   + The UCS version now includes the ability to create user columns through a script (Press Ctrl+F10 (F10) on the main interface to open the settings window).
+--   # Renamed "SFX Tag Search" to "SFX Tag Search (Custom Tags)" for more accurate searching of custom tag sound effects.
+--   # Renamed "SFX Tag Search (Custom)" to "SFX Tag Search (Favorite)" for easier access to user-favorite tag sound effects.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
@@ -10,9 +11,9 @@
 --   https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
---   [main] SFX/zaibuyidao_SFX Tag Search.lua
---   [main] SFX/zaibuyidao_SFX Tag Search (Custom).lua
+--   [main] SFX/zaibuyidao_SFX Tag Search (Custom Tags).lua
 --   [main] SFX/zaibuyidao_SFX Tag Search (Database).lua
+--   [main] SFX/zaibuyidao_SFX Tag Search (Favorite).lua
 --   [main] SFX/zaibuyidao_SFX Tag Search (UCS).lua
 --   [main] SFX/zaibuyidao_SFX Tag Album.lua
 --   [main] SFX/zaibuyidao_SFX Tag Comment.lua
@@ -27,8 +28,8 @@
 --   [main] SFX/zaibuyidao_SFX Tag iXML CategoryFull.lua
 --   [main] SFX/zaibuyidao_SFX Tag iXML Keywords.lua
 --   [main] SFX/zaibuyidao_SFX Tag iXML Library.lua
---   [nomain] SFX/lib/config.lua
---   [nomain] SFX/lib/config-custom.lua
+--   [nomain] SFX/lib/config-tags.lua
+--   [nomain] SFX/lib/config-favorite.lua
 --   [nomain] SFX/lib/config-database.lua
 --   [nomain] SFX/lib/config-ucs.lua
 --   [nomain] SFX/lib/core.lua

@@ -1,6 +1,16 @@
 -- NoIndex: true
-local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
-package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
+function print(...)
+	local args = {...}
+	local str = ""
+	for i = 1, #args do
+		if type(args[i]) == "table" then
+			str = str .. table.tostring(args[i]) .. "\n"
+		else
+			str = str .. tostring(args[i]) .. "\t"
+		end
+	  end
+	reaper.ShowConsoleMsg(str .. "\n")
+end
 
 if not reaper.SNM_GetIntConfigVar then
 	local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
@@ -71,24 +81,27 @@ end
 local language = getSystemLanguage()
 
 if language == "简体中文" then
-	jump_title = "跳转目标"
-	jump_title_line = "行数"
-	search_title = "过滤"
-	search_title_key = "关键词"
-	remaining = "剩余: "
+    jump_title = "跳转目标"
+    jump_title_line = "行数"
+    search_title = "过滤"
+    search_title_key = "关键词"
+    remaining = "剩余: "
 elseif language == "繁体中文" then
-	jump_title = "跳转目标"
-	jump_title_line = "行数"
-	search_title = "過濾"
-	search_title_key = "關鍵詞"
-	remaining = "剩餘: "
+    jump_title = "跳转目标"
+    jump_title_line = "行数"
+    search_title = "過濾"
+    search_title_key = "關鍵詞"
+    remaining = "剩餘: "
 else
-	jump_title = "Jump"
-	jump_title_line = "Ln"
-	search_title = "Filter"
-	search_title_key = "Keywords"
-	remaining = "Rem: "
+    jump_title = "Jump"
+    jump_title_line = "Ln"
+    search_title = "Filter"
+    search_title_key = "Keywords"
+    remaining = "Rem: "
 end
+
+local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
+package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
 require('REQ.j_file_functions')
 require('REQ.JProjectClass')
@@ -99,107 +112,11 @@ require('REQ.j_settings_functions')
 require('core')
 require('reaper-utils')
 LIP = require('LIP')
-CONFIG = require('config-custom')
+CONFIG = require('config-tags')
 ListView = require('ListView')
 pinyin = require('pinyin')
 
-setGlobalStateSection("SFX_TAG_SEARCH_CUSTOM")
-
-function parseCSVLine(line, sep, lineNumber)
-    if string.sub(line, 1, 1) == "#" or string.len(line) == 0 then-- 如果行以 # 开头，直接跳过
-        return nil
-    end
-
-    local res = {}
-    local pos = 1
-    sep = sep or ','
-
-    -- 增加一个检查分隔符数量的函数
-    local function countSeparator(line, sep)
-        local count = 0
-        for i = 1, string.len(line) do
-            if string.sub(line, i, i) == sep then
-                count = count + 1
-            end
-        end
-        return count
-    end
-
-    -- 检查分隔符数量是否为 1
-    if countSeparator(line, sep) ~= 2 then
-		local retval
-		if language == "简体中文" then
-			retval = reaper.MB(string.format("custom_keywords.csv 自定义关键词格式错误：第 %d 行的分隔符数量不正确。\n请修改自定义关键词文件，并重新启动脚本。\n\n要现在打开 custom_keywords.csv 吗？", lineNumber), '错误', 1)
-		elseif language == "繁体中文" then
-			retval = reaper.MB(string.format("custom_keywords.csv 自訂關鍵詞格式錯誤：第 %d 行的分隔符數量不正確。\n請修改自訂關鍵詞文件，並重新啟動腳本。\n\n要現在打開 custom_keywords.csv 嗎？", lineNumber), '錯誤', 1)
-		else
-			retval = reaper.MB(string.format("custom_keywords.csv custom keyword format error: The number of separators on line %d is incorrect.\nPlease modify the custom keyword file and restart the script.\n\nDo you want to open custom_keywords.csv now?", lineNumber), 'Error', 1)
-		end
-
-		if retval == 1 then
-			openUrl(script_path .. "custom_keywords.csv")
-		end
-        return false
-    end
-
-    while true do
-        local c = string.sub(line, pos, pos)
-        if (c == "") then
-            table.insert(res, "")
-            break
-        end
-
-        if (c == "`" or c == "'" or c == '"') then
-            local quoteChar = c
-            local txt = ""
-            pos = pos + 1
-            while true do
-                local startp, endp = string.find(line, quoteChar, pos)
-                if not startp then break end
-                txt = txt .. string.sub(line, pos, startp - 1)
-                pos = endp + 1
-                c = string.sub(line, pos, pos)
-                if (c == quoteChar) then
-                    txt = txt .. quoteChar
-                    pos = pos + 1
-                else
-                    break
-                end
-            end
-            table.insert(res, txt)
-            c = string.sub(line, pos, pos)
-            if (c == sep) then
-                pos = pos + 1
-            end
-        elseif (c == sep) then
-            table.insert(res, "")
-            pos = pos + 1
-        else
-            local startp, endp = string.find(line, sep, pos)
-            if (startp) then
-                table.insert(res, string.sub(line, pos, startp - 1))
-                pos = endp + 1
-            else
-                table.insert(res, string.sub(line, pos))
-                break
-            end
-        end
-    end
-
-    if res[1] == "" then
-		if language == "简体中文" then
-			reaper.MB("自定义关键词文件格式错误：第一列不能出现空值。\n请按快捷键 F1 打开自定义文件修改关键词内容，并重新启动脚本。", '错误', 0)
-		elseif language == "繁体中文" then
-			reaper.MB("自訂關鍵詞文件格式錯誤：第一列不能出現空值。\n請按快捷鍵 F1 打開自訂文件修改關鍵詞内容，並重新啓動脚本。", '錯誤', 0)
-		else
-			reaper.MB("Custom keywords file format error: the first column cannot have empty values. \nPlease press the F1 shortcut key to open the custom file and modify the keywords content, then restart the script.", 'Error', 0)
-		end
-
-        return false
-    else
-        return res
-    end
-end
+setGlobalStateSection("SFX_TAG_SEARCH")
 
 function getConfig(configName, default, convert)
 	local cur = CONFIG
@@ -225,8 +142,8 @@ function get_pinyin(text)
 end
 
 function custom_sort(a, b, cn_first) -- 根据cn_first参数决定中英文顺序
-	local a_key = a.key or ""
-	local b_key = b.key or ""
+	local a_key = a.value or ""
+	local b_key = b.value or ""
 
 	local a_pinyin = get_pinyin(a_key)
 	local b_pinyin = get_pinyin(b_key)
@@ -253,222 +170,445 @@ end
 
 SIZE_UNIT = getConfig("ui.global.size_unit", 20)
 
-local data = {}
-do
-	local f = io.open(script_path .. getPathDelimiter() .. "custom_keywords.csv", "r")
-	if not f then -- 创建自定义关键词文件
-		local file_path = script_path  .. "custom_keywords.csv"
-		local file, err = io.open(file_path , "w+")
-
-		if not file then
-			local err_msg
-			if language == "简体中文" then
-				err_msg = "不能创建文件:\n" .. file_path .. "\n\n错误: " .. tostring(err)
-				reaper.ShowMessageBox(err_msg, "见鬼了: ", 0)
-			elseif language == "繁体中文" then
-				err_msg = "不能創建文件:\n" .. file_path .. "\n\n錯誤: " .. tostring(err)
-				reaper.ShowMessageBox(err_msg, "見鬼了: ", 0)
-			else
-				err_msg = "Couldn't create file:\n" .. file_path .. "\n\nError: " .. tostring(err)
-				reaper.ShowMessageBox(err_msg, "Whoops", 0)
-			end
-			return
-		end
-
-		if language == "简体中文" then
-			file:write([[
-#格式要求:
-#按照 "ab,cd,ef" 的格式将关键词用英文逗号隔开，它们将被拆分为 3 列，例如：pokemon,宝可梦,我最喜欢
-#第 1 列为音效关键词；第 2 列为音效关键词的别名(非必须)；第 3 列为分组或备注(非必须)
-#如果第 2 列和第 3 列写入值，它们可以通过设置显示到脚本界面中。其中，第 2 列关键词可以通过 Shift+鼠标左键点击 发送搜索。
-
-pokemon,宝可梦,我最喜欢
-master sword,塞尔达 大师之剑,我最喜欢
-monster attack,怪物 攻击,技能
-magic voice,魔法 施法,语音
-attack,攻击,战斗
-]])
-		elseif language == "繁体中文" then
-			file:write([[
-#格式要求:
-#按照 "ab,cd,ef" 的格式將關鍵詞用英文逗號隔開，它们将被拆分為 3 列，例如：pokemon,宝可梦,我最喜欢
-#第 1 列為音效關鍵詞；第 2 列為音效關鍵詞的別名(非必須)；第 3 列為分組或備注(非必須)
-#如果第 2 列和第 3 列寫入值，它们可以通過設置顯示到脚本界面中。其中，第 2 列關鍵詞可以通過 Shift+鼠標左鍵點擊 發送搜索。
-
-pokemon,宝可梦,我最喜欢
-master sword,塞尔达 大师之剑,我最喜欢
-monster attack,怪物 攻击,技能
-magic voice,魔法 施法,语音
-attack,攻击,战斗
-]])
-		else
-			file:write([[
-#Formatting Requirements:
-#Separate keywords with English commas in the format of "ab,cd,ef", which will be split into three columns. For example: pokemon,宝可梦,My favorite
-#Column 1 is the sound effect keyword; Column 2 is the alias of the sound effect keyword (not mandatory); Column 3 is the grouping or note (not mandatory).
-#If values are written in columns 2 and 3, they can be displayed in the script interface. Among them, the keyword in column 2 can be searched by clicking Shift + left mouse button.
-
-pokemon,宝可梦,My favorite
-master sword,塞尔达 大师之剑,My favorite
-monster attack,怪物 攻击,Skill
-magic voice,魔法 施法,Voice
-attack,攻击,Battle
-]])
-		end
-
-		io.close(file)
-
-		if language == "简体中文" then
-			reaper.MB("找不到自定义关键词文件 custom_keywords.csv，已为您创建了一份新文件：\n"..script_path.."custom_keywords.csv\n\n".."请记住此文件路径，将来您可能需要对其进行备份。\n按快捷键 F1 或通过以上路径找到并打开文件，可以编辑自定义关键词。\n\n请注意，每次编辑完毕需要重新启动脚本才能生效！", '创建自定义关键词文件', 0)
-		elseif language == "繁体中文" then
-			reaper.MB("找不到自訂關鍵詞文件 custom_keywords.csv，已為您創建了一份新文件：\n"..script_path.."custom_keywords.csv\n\n".."請記住此文件路徑，將來您可能需要對其進行備份。\n按快捷鍵 F1 或通過以上路徑找到並打開文件，可以編輯自訂關鍵詞。\n\n請注意，每次編輯完畢需要重新啓動脚本才能生效！", '創建自訂關鍵詞文件', 0)
-		else
-			reaper.MB("Cannot find the custom_keywords.csv file, a new file has been created for you: \n"..script_path.."custom_keywords.csv\n\n".."Please remember this file path, as you may need to back it up in the future.\nPress the F1 shortcut key or find and open the file through the above path to edit custom keywords.\n\nPlease note that you need to restart the script each time after editing for the changes to take effect!", 'Creating custom keywords file', 0)
-		end
-
-		f = io.open(script_path .. getPathDelimiter() .. "custom_keywords.csv", "r")
-	end
-
-	local sortResult = getConfig("search.sort_result") -- 加入排序
-	local lineNumber = 1
+dbList = getDbList()
+-- print("Database List from getDbList function:")
+-- 	for i, db in ipairs(dbList) do
+-- 		print("Database " .. i .. ": " .. db.name .. ", Path: " .. db.path)
+-- 	end
+if dbList == false then return end
+ratings = (function ()
+	local ratings = {}
+	local f = io.open(script_path .. getPathDelimiter() .. "rating.csv", "r")
+	if not f then return end
 	while true do
-		local line = f:read()
-		if line == nil then break end
-		if parseCSVLine(line, ",", lineNumber) == false then return end
+        local line = f:read()
+        if line == nil then break end
+		local d = parseCSVLine(line, ",")
+		ratings[d[1]] = tonumber(d[2])
+    end
+	return ratings
+end)()
 
-		local parts = parseCSVLine(line, ",", lineNumber)
-		if parts ~= nil and parts[1] ~= "" then -- 确保 parts[1]（key）不为空，增加关键词文件的注释行
-			table.insert(data, {
-				key = parts[1],
-				name = parts[2],
-				remark = parts[3]
-			})
-		end
-
-		lineNumber = lineNumber + 1
-	end
+function incRating(keyword)
+	ratings[keyword] = (ratings[keyword] or 0) + 1
 end
 
--- if sortResult then -- 早期排序
---   table.sort(data, function(a, b)
---     return a.key < b.key
---   end)
--- end
+function getRating(keyword)
+	return ratings[keyword] or 0
+end
 
+function writeRatings()
+	local tmp = {}
+	for k, v in pairs(ratings) do
+		table.insert(tmp, {
+			key = k,
+			value = v
+		})
+	end
+
+	table.sort(tmp, function (a, b)
+		return a.value > b.value
+	end)
+
+	local f = io.open(script_path .. getPathDelimiter() .. "rating.csv", "w")
+	local res = {}
+	for i=1, math.min(getConfig("rating.max_record", 50), #tmp) do
+		f:write("\"")
+		f:write(tostring(tmp[i].key))
+		f:write("\"")
+		f:write(",")
+		f:write(tostring(tmp[i].value))
+		f:write("\n")
+	end
+	f:close()
+end
+
+local colorMap = getConfig("ui.result_list.db_color", {})
+local defaultDbColors = getConfig("ui.result_list.default_colors", {{.6, .6, .6, 1}})
+local nextColor = 1
+
+function getColorForDb(dbName)
+	if colorMap[dbName] then return jColor:new(colorMap[dbName]) end
+	colorMap[dbName] = defaultDbColors[nextColor]
+	nextColor = (((nextColor + 1) - 1) % #defaultDbColors) + 1
+	return jColor:new(colorMap[dbName])
+end
+
+function readFromCSV(csvFilePath)
+    local data = {}
+    local file = io.open(csvFilePath, "r")
+
+    if not file then
+        print("Cannot open the CSV file!")
+        return nil
+    end
+
+    -- 跳过头部行
+    local headers = file:read("*l")
+
+    for line in file:lines() do
+        local fields = {}
+        local fieldStart = 1
+        local inQuotes = false
+        local currentField = ""
+
+        for i = 1, #line do
+            local char = line:sub(i, i)
+
+            if char == '"' then
+                inQuotes = not inQuotes
+                -- Optional: Keep quotes as part of field value
+                -- currentField = currentField .. char
+            elseif char == ',' and not inQuotes then
+                -- Optional: Remove quotes around field value
+                -- currentField = currentField:gsub('^"(.*)"$', '%1')
+                table.insert(fields, currentField)
+                currentField = ""
+            else
+                currentField = currentField .. char
+            end
+        end
+        -- 添加最后一个字段
+        -- Optional: Remove quotes around field value
+        -- currentField = currentField:gsub('^"(.*)"$', '%1')
+        table.insert(fields, currentField)
+
+        if #fields >= 4 then
+            local fromTable = {}
+            for key in fields[4]:gmatch("[^;]+") do
+                fromTable[key] = true
+            end
+
+            table.insert(data, {
+                db = fields[1],
+                value = fields[2],
+                from = fromTable,
+                fromString = fields[3]
+            })
+        end
+    end
+
+    io.close(file)
+    return data
+end
+
+local sortResult = getConfig("search.sort_result") -- 加入排序
+local csvFilePath = script_path .. getPathDelimiter() .. "keywords_tags.csv"
+local data = {}
+local csvFile = io.open(csvFilePath, "r")
+
+if csvFile then
+	io.close(csvFile)
+	data = readFromCSV(csvFilePath)
+else
+	local readDBCount = 0
+	local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
+	
+	for _, db in ipairs(dbList) do
+		if not excludeDbName[db.name] then
+			local keywords = readViewModelFromReaperFileList(db.path, {
+				excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
+				delimiters = getConfig("db.delimiters", {}),
+				containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+			})
+			
+			if keywords then
+				readDBCount = readDBCount + 1
+				for v, keyword in pairs(keywords) do
+					table.insert(data, {
+						db = db.name,
+						value = keyword.value,
+						from = keyword.from,
+						fromString = table.concat(table.keys(keyword.from), ", ")
+					})
+				end
+			end
+		end
+	end
+
+	local file, err = io.open(csvFilePath , "w+")
+
+	if not file then
+		print("Error opening file:", err)
+		return
+	end
+
+	-- 写入CSV头部(取决于data的结构)
+	file:write("db,value,from,fromString\n")
+
+	-- 遍历data，将其写入CSV文件
+	for _, entry in ipairs(data) do
+		local db = entry.db
+		local value = entry.value
+		local fromString = entry.fromString
+	
+		-- 如果字段包含逗号，则将其包裹在引号内
+		if value:find(",") then
+			value = '"' .. value .. '"'
+		end
+	
+		file:write(string.format("%s,%s,%s,%s\n",
+			db,
+			value,
+			table.concat(table.keys(entry.from), ";"),
+			fromString
+		))
+	end
+
+	-- 关闭文件
+	io.close(file)
+end
+
+-- 对从数据库中生成的数据进行排序
 if sortResult then
 	table.sort(data, function(a, b)
 		local cnFirst = getConfig("search.cn_first")
 		if cnFirst == true or cnFirst == false then
 			return custom_sort(a, b, cnFirst)
 		else
-			return string.lower(tostring(a.key)) < string.lower(tostring(b.key))
+			return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
 		end
 	end)
 end
 
-local colorMap = getConfig("ui.result_list.remark_color", {})
-local defaultColors = getConfig("ui.result_list.default_colors", {{.6, .6, .6, 1}})
-local nextColor = 1
-
-function getColorForRemark(remark)
-	if colorMap[remark] then return jColor:new(colorMap[remark]) end
-	colorMap[remark] = defaultColors[nextColor]
-	nextColor = (((nextColor + 1) - 1) % #defaultColors) + 1
-	return jColor:new(colorMap[remark])
+if #data == 0 then
+	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
 end
 
-function string.isEmpty(s)
-	return s == nil or #s == 0
-end
-
-function string.contains(s, value, caseSensitive)
-	if s == nil then
-		return false
-	end
-	if caseSensitive then
-		return s:find(value)
-	end
-	return s:lower():find(value:lower())
-end
-
-function searchKeyword(value, rating) -- 过滤搜索
-	local res = {}
-	local caseSensitive = getConfig("search.case_sensitive")
-	local includeName = getConfig("search.include_name")
-	local includeRemark = getConfig("search.include_remark")
+function updateCSV(data, csvFilePath)
+	-- 1. 对data进行排序
 	local sortResult = getConfig("search.sort_result")
-	local keywords = string.split(value, " ") -- 分割关键词
-
-	for i, item in ipairs(data) do
-		local match = true
-		for _, keyword in ipairs(keywords) do
-			if not (string.contains(item.key, keyword, caseSensitive)
-			or (includeName and string.contains(item.name, keyword, caseSensitive))
-			or (includeRemark and string.contains(item.remark, keyword, caseSensitive))) then
-			match = false
-			break
-	end
-		end
-		if match then
-			table.insert(res, item)
-		end
-	end
-	if sortResult then
-		table.sort(res, function(a, b)
-			local cnFirst = getConfig("search.cn_first")
-			if cnFirst == true or cnFirst == false then
-				return custom_sort(a, b, cnFirst)
-			else
-				return string.lower(tostring(a.key)) < string.lower(tostring(b.key))
-			end
-		end)
-	end
-
-	return res
-end
-
-function reloadDataAndUpdateUI()
-	local data = {}
-	do
-		local f = io.open(script_path .. getPathDelimiter() .. "custom_keywords.csv", "r")
-		local lineNumber = 1
-		while true do
-			local line = f:read()
-			if line == nil then break end
-			if parseCSVLine(line, ",", lineNumber) == false then return end
-	
-			local parts = parseCSVLine(line, ",", lineNumber)
-			if parts ~= nil and parts[1] ~= "" then -- 确保 parts[1]（key）不为空，增加关键词文件的注释行
-				table.insert(data, {
-					key = parts[1],
-					name = parts[2],
-					remark = parts[3]
-				})
-			end
-	
-			lineNumber = lineNumber + 1
-		end
-	end
-
-    local sortResult = getConfig("search.sort_result") -- 加入排序
 	if sortResult then
 		table.sort(data, function(a, b)
 			local cnFirst = getConfig("search.cn_first")
 			if cnFirst == true or cnFirst == false then
 				return custom_sort(a, b, cnFirst)
 			else
-				return string.lower(tostring(a.key)) < string.lower(tostring(b.key))
+				return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
 			end
 		end)
 	end
 
-    if data and #data > 0 then
-        resultListView.data = data
-        refreshResultState()
-        -- print("resultListView data updated and UI refreshed.")
-    else
-        print("No data to display.")
+	-- 2. 打开keywords_tags.csv以写模式
+	local file, err = io.open(csvFilePath, "w")
+
+	-- 检查文件是否成功打开
+	if not file then
+		print("Error: Unable to open or create the file for writing:", csvFilePath)
+		return
+	end
+
+	-- 3. 将data的内容写入keywords_tags.csv
+
+	-- 写入CSV头部
+	file:write("db,value,from,fromString\n")
+
+	-- 遍历data，将其写入CSV文件
+	for _, entry in ipairs(data) do
+		local db = entry.db
+		local value = entry.value
+		local fromString = entry.fromString
+	
+		-- 如果字段包含逗号，则将其包裹在引号内
+		if value:find(",") then
+			value = '"' .. value .. '"'
+		end
+	
+		file:write(string.format("%s,%s,%s,%s\n",
+			db,
+			value,
+			table.concat(table.keys(entry.from), ";"),
+			fromString
+		))
+	end
+
+	-- 关闭文件
+	io.close(file)
+end
+
+function regenerateCSV(dbList, csvFilePath)
+	local data = {}
+	local excludeDbName = getConfig("db.exclude_db", {}, table.arrayToTable)
+	
+	for _, db in ipairs(dbList) do
+		if not excludeDbName[db.name] then
+			local keywords = readViewModelFromReaperFileList(db.path, {
+				excludeOrigin = getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
+				delimiters = getConfig("db.delimiters", {}),
+				containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+			})
+			
+			if keywords then
+				for v, keyword in pairs(keywords) do
+					table.insert(data, {
+						db = db.name,
+						value = keyword.value,
+						from = keyword.from,
+						fromString = table.concat(table.keys(keyword.from), ", ")
+					})
+				end
+			end
+		end
+	end
+
+	updateCSV(data, csvFilePath)
+end
+
+-- 生成CustomCSV
+function updateCustomCSV(data, csvFilePath)
+	local file, err = io.open(csvFilePath , "w+")
+	if not file then
+			print("Error when trying to open " .. csvFilePath .. " for writing: " .. err)
+			return
+	end
+
+	-- Write the headers for the CSV file
+	file:write("#db,,value\n")
+
+	-- Iterate over the data and write the required fields
+	for _, entry in ipairs(data) do
+		file:write(string.format("%s,,%s\n", entry.value, entry.db))
+	end
+
+	io.close(file)
+end
+
+function reloadDataAndUpdateUI(csvFilePath)
+    -- 从 CSV 文件中读取数据
+    local newData = readFromCSV(csvFilePath)
+    if newData then
+        -- 更新数据源
+		-- print("Data loaded successfully. Number of items: " .. #newData)
+        data = newData
+
+        -- 刷新结果列表视图
+        resultListView.data = newData
+        refreshResultState()  -- 更新状态标签等 UI 组件
     end
+end
+
+-- -- 模拟插入大量数据
+-- for i=1, 50000 do
+-- 	table.insert(data, {
+-- 		db = "db.name",
+-- 		path = "path",
+-- 		value = "keyword.value" .. i,
+-- 		from = "keyword.from",
+-- 		fromString = "AAA" 
+-- 	})
+-- end
+
+-- function searchKeyword(value, rating)
+-- 	local res = {}
+-- 	local index = 1
+-- 	local caseSensitive = getConfig("search.case_sensitive")
+-- 	local lowerValue = value:lower()
+-- 	for _, item in ipairs(data) do
+-- 		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(lowerValue)) then
+-- 			res[index] = {
+-- 				index = index, -- for stable sort
+-- 				db = item.db,
+-- 				path = item.path,
+-- 				value = item.value,
+-- 				from = item.from,
+-- 				fromString = item.fromString
+-- 			}
+-- 			index = index + 1
+-- 		end
+-- 	end
+	
+-- 	table.sort(res, function(a, b)
+-- 		local ra = getRating(a.value)
+-- 		local rb = getRating(b.value)
+-- 		if ra == rb then
+-- 			return a.index < b.index
+-- 		end
+-- 		return ra > rb
+-- 	end)
+-- 	return res
+-- end
+
+function searchKeyword(value, rating)
+	local res = {}
+	local index = 1
+	local caseSensitive = getConfig("search.case_sensitive")
+	local keywords = string.split(value, " ") -- 分割关键词
+	for _, item in ipairs(data) do
+		local match = true
+		for _, keyword in ipairs(keywords) do
+			if not (caseSensitive and item.value:find(keyword)) and not (not caseSensitive and item.value:lower():find(keyword:lower())) then
+				match = false
+				break
+			end
+		end
+		if match then
+			res[index] = {
+				index = index, -- for stable sort
+				db = item.db,
+				path = item.path,
+				value = item.value,
+				from = item.from,
+				fromString = item.fromString
+			}
+			index = index + 1
+		end
+	end
+
+	table.sort(res, function(a, b)
+		local ra = getRating(a.value)
+		local rb = getRating(b.value)
+		if ra == rb then
+			return a.index < b.index
+		end
+		return ra > rb
+	end)
+	return res
+end
+
+function searchKeywordAsync(value, rating, result)
+	local index = 1
+	local caseSensitive = getConfig("search.case_sensitive")
+	local function compare(a, b)
+		local ra = getRating(a.value)
+		local rb = getRating(b.value)
+		if ra == rb then
+			return a.index < b.index
+		end
+		return ra > rb
+	end
+	local function processItem(item, index)
+		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(value:lower())) then
+			-- table.insert(result, {
+			-- 	index = index, -- for stable sort
+			-- 	db = item.db,
+			-- 	path = item.path,
+			-- 	value = item.value,
+			-- 	from = item.from,
+			-- 	fromString = item.fromString
+			-- })
+			table.bininsert(result, {
+				index = index, -- for stable sort
+				db = item.db,
+				value = item.value,
+				from = item.from,
+				fromString = item.fromString
+			}, compare)
+		end
+	end
+	local i = 1
+	local function hasNext()
+		return i <= #data
+	end
+	local function fetchNext()
+		if i > #data then return end
+		local res = processItem(data[i], i)
+		i = i + 1
+		return res
+	end
+	local function getNextIndex()
+		return i
+	end
+	return hasNext, fetchNext, getNextIndex, #data
 end
 
 resultListView = nil
@@ -484,7 +624,7 @@ function init()
         dockstate = getState("WINDOW_DOCK_STATE"),
 		background_color = getConfig("ui.window.background_color", 0, function (t) return t.r+t.g*256+t.b*65536 end)
     })
-	
+
 	local lastSearchText
 
 	local searchTextBox = jGuiTextInput:new()
@@ -518,7 +658,7 @@ function init()
 		width = SIZE_UNIT * 2.5,
 		x = window.width - stateLabel.width - 12,
 		y = 10,
-		label_fontsize = math.floor(SIZE_UNIT * 0.75), -- 右上角状态字体大小
+		label_fontsize = math.floor(SIZE_UNIT * 0.75), -- 右上角标签字体大小
 		label_align = "r",
 		label_font = getConfig("ui.global.font", "微软雅黑"),
 		border = getConfig("ui.search_box.state_label.border", false),
@@ -635,32 +775,43 @@ function init()
 			local c = listView.viewHolders[viewHolderIndex][1]
 			local info = listView.viewHolders[viewHolderIndex][2]
 			local data = listView.data[dataIndex]
-			local currentKey = data.key
+			local currentKey = listView.data[dataIndex].value
 			c.width = window.width - 20
 			info.x = 10 + c.width - info.width
 
-			if string.isEmpty(data.name) then
-				c.label = listView.data[dataIndex].key
-			elseif getConfig("ui.result_list.include_key", false) then
-				c.label = listView.data[dataIndex].key .. " (" .. listView.data[dataIndex].name .. ")"
+			if getConfig("ui.result_list.show_keyword_origin", false) then
+				c.label = listView.data[dataIndex].value .. " (" .. listView.data[dataIndex].fromString .. ")"
 			else
-				c.label = listView.data[dataIndex].name
+				c.label = listView.data[dataIndex].value
 			end
 			
-			info.label = listView.data[dataIndex].remark
+			info.label = listView.data[dataIndex].db
+			-- c.highlight = { searchTextBox.value }
 			c.highlight = jStringExplode(searchTextBox.value, " ") -- 高亮不包含空格
 
-			local color = getColorForRemark(data.remark)
 			c.colors_label = {}
-			c.colors_label.normal = color
-			c.colors_label.hover = color:lighter(0.2)
-			info.colors_label = color
+			c.colors_label.normal = getColorForDb(listView.data[dataIndex].db)
+			c.colors_label.hover = getColorForDb(listView.data[dataIndex].db):lighter(0.2)
+			info.colors_label = getColorForDb(listView.data[dataIndex].db)
 
 			c.focus_index = viewHolderIndex + 1 --gui:getFocusIndex()
 
-			function edit_tag1(key) -- common无法被准确识别
-				local title_top = reaper.JS_Localize("Edit metadata tag", "common")
-				local parent = reaper.JS_Window_Find(title_top, true)
+			function edit_tag(key)
+				local titles = {
+					"Edit metadata tag",
+					"编辑元数据标签",
+					"編輯元數據標簽"
+				}
+				
+				local parent = nil
+				local title_top = nil
+		
+				-- 遍历所有可能的标题，尝试查找窗口
+				for _, title in ipairs(titles) do
+					title_top = reaper.JS_Localize(title, "common")
+					parent = reaper.JS_Window_Find(title_top, true)
+					if parent then break end
+				end
 				
 				if parent then
 					reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1007), key)
@@ -670,44 +821,18 @@ function init()
 				end
 			end
 
-			function edit_tag(key)
-				local titles = {
-						"Edit metadata tag",
-						"编辑元数据标签",
-						"編輯元數據標簽"
-				}
-				
-				local parent = nil
-				local title_top = nil
-		
-				-- 遍历所有可能的标题，尝试查找窗口
-				for _, title in ipairs(titles) do
-						title_top = reaper.JS_Localize(title, "common")
-						parent = reaper.JS_Window_Find(title_top, true)
-						if parent then break end
-				end
-				
-				if parent then
-						reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1007), key)
-						reaper.JS_Window_OnCommand(parent, 1) -- OK = 1, Cancel = 2
-				else
-						reaper.defer(function() edit_tag(key) end)
-				end
-		  end
-
 			function c:onMouseClick()
-				if self.parentGui.kb:shift() then -- Shift+左键点击 发送第二个值
-					if data.name == "" then return end
-					reaper.defer(function ()
-						send_search_text(data.name or "")
-					end)
+				if self.parentGui.kb:control() then -- Control+左键点击
+					reaper.CF_SetClipboard(listView.data[dataIndex].value)
 					return
-				elseif self.parentGui.kb:control() then -- Control+左键点击
-					reaper.CF_SetClipboard(data.key)
-					return
+				else
+					incRating(listView.data[dataIndex].value)
+					if getReaperExplorerPath() ~= listView.data[dataIndex].db and getConfig("search.switch_database") then
+						setReaperExplorerPath(listView.data[dataIndex].db)
+					end
 				end
 				reaper.defer(function ()
-					send_search_text(data.key)
+					send_search_text(listView.data[dataIndex].value)
 				end)
 			end
 
@@ -725,24 +850,14 @@ function init()
 		elseif key == 1919379572 or key == 1885824110 then
 			-- print("page down")
 			resultListView:scroll(getConfig("ui.result_list.page_up_down_size", resultListView:getPageSize()))
-		elseif key == 26161 then --F1 编辑关键词
-			openUrl(script_path .. "custom_keywords.csv")
-		elseif key == 26162 then --F2 编辑配置表
-			openUrl(script_path .. "lib/config-custom.lua")
-		elseif key == 26163 then --F3 随机行
-			resultListView:randomJump()
-		elseif key == 26164 then --F4 跳转目标
+		elseif key == 26164 then --跳转目标 f4
 			resultListView:promptForJump()
-		elseif key == 26165 then --F5 刷新列表
-			if resultListView then
-				reloadDataAndUpdateUI()
-			else
-				print("Error: resultListView is not initialized.")
-			end
-		elseif key == 6697265 then --F11
-			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
-		elseif key == 6697266 then --F12
-			searchTextBox:promptForContent() --过滤关键词
+		elseif key == 26163 then --随机行 f3
+			resultListView:randomJump()
+		elseif key == 6697266 then --过滤关键词 f12
+			searchTextBox:promptForContent()
+		elseif key == 26162 then --编辑配置表 f2
+			openUrl(script_path .. "lib/config-tags.lua")
 		elseif key == 1752132965 then --HOME
 			resultListView:jump(1)
 		elseif key == 6647396 then --END
@@ -753,6 +868,20 @@ function init()
 			resultListView:jump(resultListView.firstIndex - 1)
 		elseif key == 1685026670 then --arrow down
 			resultListView:jump(resultListView.firstIndex + 1)
+		elseif key == 26165 then --F5 刷新 keywords_tags.csv
+			if resultListView then
+				regenerateCSV(dbList, csvFilePath)
+				reloadDataAndUpdateUI(csvFilePath)
+			else
+				print("Error: resultListView is not initialized.")
+			end
+		elseif key == 26166 then --F6 生成 keywords_favorite.csv
+			local customCSVFilePath = script_path .. getPathDelimiter() .. "keywords_favorite (generated by SFX Tag Search).csv"
+			updateCustomCSV(data, customCSVFilePath)
+			-- 打开 csv 文件所在的文件夹
+			openUrl(script_path)
+		elseif key == 6697265 then --F11 打开媒体资源浏览器
+			reaper.Main_OnCommand(50124, 0) -- Media explorer: Show/hide media explorer
 		end
 	end
 
@@ -768,7 +897,7 @@ function init()
 			}
 		})
 		-- if args then
-		-- 	self:jump(args[1]) -- 以界面最顶部作为目标行
+		-- 	self:jump(args[1])
 		-- end
 		if args then -- 以界面底部作为目标行
 			local targetLine = args[1]
@@ -776,6 +905,10 @@ function init()
 			local adjustedTargetLine = targetLine - compensation
 			self:jump(adjustedTargetLine)
 		end
+		reaper.defer(function()
+			window:setFocus(searchTextBox)
+			window:setReaperFocus()
+		end)
 		return 
 	end
 
@@ -834,8 +967,8 @@ function init()
 		self:promptForContent()
 	end
 
-	resultListView:addScrollListener(function ()
-		--stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条以界面最顶部作为目标行计数
+	resultListView:addScrollListener(function () 
+		-- stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条顶部计数
 		if resultListView.firstIndex + resultListView:getPageSize()-1 > #resultListView.data then
 			stateLabel.label = "(" .. #resultListView.data .. "/" .. #resultListView.data .. ")"
 		else
@@ -856,7 +989,7 @@ function init()
 
 	function refreshResultState()
 		resultListView:draw()
-		--stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条以界面最顶部作为目标行计数
+		-- stateLabel.label = "(" .. resultListView.firstIndex .. "/" .. #resultListView.data .. ")" -- 滚动条顶部计数
 		if resultListView.firstIndex + resultListView:getPageSize()-1 > #resultListView.data then
 			stateLabel.label = "(" .. #resultListView.data .. "/" .. #resultListView.data .. ")"
 		else
@@ -867,10 +1000,30 @@ function init()
 		end
 	end
 
-	function startSearch(value)
+	function startSearchAsync(value)
 		resultListView.firstIndex = 1
-		resultListView.data = searchKeyword(searchTextBox.value)
+		local data = {}
+		resultListView.data = data
+		local hasNext, fetchNext, getNextIndex, total = searchKeywordAsync(searchTextBox.value, ratings, data)
+		local function fetch()
+			if not hasNext or resultListView.data ~= data then return end
+			fetchNext()
+			remain = total - getNextIndex() + 1
+			refreshResultState()
+			reaper.defer(fetch)
+		end
+		reaper.defer(fetch)
+	end
+
+	function startSearchSync(value)
+		resultListView.firstIndex = 1
+		resultListView.data = searchKeyword(searchTextBox.value, ratings)
 		refreshResultState()
+	end
+
+	local startSearch = startSearchSync
+	if getConfig("search.async") then
+		startSearch = startSearchAsync
 	end
 
 	function window:update()
@@ -890,6 +1043,7 @@ function init()
 			WINDOW_Y = math.tointeger(wy),
 			WINDOW_DOCK_STATE = dockstr,
 		})
+		writeRatings()
 	end
 
 	window:onResize()
