@@ -116,7 +116,7 @@ require('REQ.j_settings_functions')
 require('core')
 require('reaper-utils')
 LIP = require('LIP')
-CONFIG = require('config')
+CONFIG = require('config-custom')
 ListView = require('ListView')
 
 setGlobalStateSection("SFX_TAG_SEARCH_FILE_NAME")
