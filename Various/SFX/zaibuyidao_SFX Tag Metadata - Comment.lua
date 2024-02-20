@@ -86,19 +86,19 @@ local language = getSystemLanguage()
 if language == "简体中文" then
     jump_title = "跳转目标"
     jump_title_line = "行数"
-    search_title = "搜索"
+    search_title = "过滤"
     search_title_key = "关键词"
     remaining = "剩余: "
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
     jump_title = "跳转目标"
     jump_title_line = "行数"
-    search_title = "搜索"
+    search_title = "過濾"
     search_title_key = "關鍵詞"
     remaining = "剩餘: "
 else
     jump_title = "Jump"
     jump_title_line = "Ln"
-    search_title = "Search"
+    search_title = "Filter"
     search_title_key = "Keywords"
     remaining = "Rem: "
 end
@@ -115,10 +115,10 @@ require('REQ.j_settings_functions')
 require('core')
 require('reaper-utils')
 LIP = require('LIP')
-CONFIG = require('config-custom')
+CONFIG = require('config-metadata')
 ListView = require('ListView')
 
-setGlobalStateSection("SFX_TAG_SEARCH_IXML_CATID")
+setGlobalStateSection("SFX_TAG_SEARCH_COMMENT")
 
 function readViewModelFromReaperFileList(dbPath, config, async)
     config = config or {}
@@ -144,17 +144,20 @@ function readViewModelFromReaperFileList(dbPath, config, async)
     local function processItem(itemType, content)
         if itemType == "PATH" then
             path = (parseCSVLine(content, " "))[1]
-        elseif itemType == "USER" and not excludeOrigin["CatID"] then
+        elseif itemType == "DATA" then
             local ok, entries = pcall(parseCSVLine, content, " ")
             if not ok then
                 -- print("parse DATA line failed:", content, entries)
                 goto continue
             end
-            if entries[1] and entries[1]:find("IXML:USER:CatID") and entries[2] then
-                for w in iteratorOf("CatID", entries[2]) do
-                    local value = w:trim():trimFileExtension()
-                    keywords[value] = keywords[value] or { value = value, from = {} }
-                    keywords[value].from["CatID"] = true
+            for _, entry in ipairs(entries) do
+                local k, v = readDataItemEntry(entry)
+                if k and v and k:lower() == 'b' and not excludeOrigin["Comment"] then
+                    for w in iteratorOf("Comment", v) do
+                        local value = w:trim():trimFileExtension()
+                        keywords[value] = keywords[value] or { value = value, from = {} }
+                        keywords[value].from["Comment"] = true
+                    end
                 end
             end
         end
@@ -281,7 +284,7 @@ if readDBCount == 0 then
 	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
 end
 
-if sortResult then -- 加入排序
+if sortResult then
 	table.sort(data, function(a, b)
 		return string.lower(tostring(a.value)) < string.lower(tostring(b.value))
 	end)
@@ -377,7 +380,7 @@ end
 function init()
 	JProject:new()
 	window = jGui:new({
-        title = getConfig("ui.window.title") .. " - iXML CatID",
+        title = getConfig("ui.window.title") .. " - Comment",
         width = getState("WINDOW_WIDTH", getConfig("ui.window.width"), tonumber),
         height = getState("WINDOW_HEIGHT", getConfig("ui.window.height"), tonumber),
         x = getState("WINDOW_X", getConfig("ui.window.x"), tonumber),
@@ -770,7 +773,7 @@ if init() then
 	loop()
 
 	if reaper.JS_Window_FindEx then
-		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - iXML CatID", true)
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - Comment", true)
 		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
 	end
 end

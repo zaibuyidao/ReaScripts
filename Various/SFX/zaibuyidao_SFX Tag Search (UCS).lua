@@ -76,7 +76,7 @@ if language == "简体中文" then
 	search_title = "过滤"
 	search_title_key = "关键词"
 	remaining = "剩余: "
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
 	jump_title = "跳转目标"
 	jump_title_line = "行数"
 	search_title = "過濾"
@@ -130,7 +130,7 @@ function parseCSVLine(line, sep, lineNumber)
 		local retval
 		if language == "简体中文" then
 			retval = reaper.MB(string.format("keywords_ucs.csv 自定义关键词格式错误：第 %d 行的分隔符数量不正确。\n请修改自定义关键词文件，并重新启动脚本。\n\n要现在打开 keywords_ucs.csv 吗？", lineNumber), '错误', 1)
-		elseif language == "繁体中文" then
+		elseif language == "繁體中文" then
 			retval = reaper.MB(string.format("keywords_ucs.csv 自訂關鍵詞格式錯誤：第 %d 行的分隔符數量不正確。\n請修改自訂關鍵詞文件，並重新啟動腳本。\n\n要現在打開 keywords_ucs.csv 嗎？", lineNumber), '錯誤', 1)
 		else
 			retval = reaper.MB(string.format("keywords_ucs.csv custom keyword format error: The number of separators on line %d is incorrect.\nPlease modify the custom keyword file and restart the script.\n\nDo you want to open keywords_ucs.csv now?", lineNumber), 'Error', 1)
@@ -189,7 +189,7 @@ function parseCSVLine(line, sep, lineNumber)
     if res[1] == "" then
 		if language == "简体中文" then
 			reaper.MB("自定义关键词文件格式错误：第一列不能出现空值。\n请按快捷键 F1 打开自定义文件修改关键词内容，并重新启动脚本。", '错误', 0)
-		elseif language == "繁体中文" then
+		elseif language == "繁體中文" then
 			reaper.MB("自訂關鍵詞文件格式錯誤：第一列不能出現空值。\n請按快捷鍵 F1 打開自訂文件修改關鍵詞内容，並重新啓動脚本。", '錯誤', 0)
 		else
 			reaper.MB("Custom keywords file format error: the first column cannot have empty values. \nPlease press the F1 shortcut key to open the custom file and modify the keywords content, then restart the script.", 'Error', 0)
@@ -882,7 +882,7 @@ function init()
 					if val == "" then
 						if language == "简体中文" then
 							message = message .. "user" .. tostring(i) .. ": 未设置\n"
-						elseif language == "繁体中文" then
+						elseif language == "繁體中文" then
 							message = message .. "user" .. tostring(i) .. ": 未設置\n"
 						else
 							message = message .. "user" .. tostring(i) .. ": Not set\n"
@@ -895,7 +895,7 @@ function init()
 
 				if language == "简体中文" then
 					title = "用户列状态"
-				elseif language == "繁体中文" then
+				elseif language == "繁體中文" then
 					title = "用戶列狀態"
 				else
 					title = "User Columns Status"
@@ -909,7 +909,7 @@ function init()
 				function getUserInputs()
 					if language == "简体中文" then
 						column_title = "设置用户列"
-					elseif language == "繁体中文" then
+					elseif language == "繁體中文" then
 						column_title = "設定用戶列"
 					else
 						column_title = "Set User Columns"
@@ -980,7 +980,7 @@ function init()
 								if language == "简体中文" then
 									message = message .. "用户列已存在: " .. val .. " 在 user" .. tostring(i) .. "\n"
 									title = ""
-								elseif language == "繁体中文" then
+								elseif language == "繁體中文" then
 									message = message .. "用戶列已存在: " .. val .. " 在 user" .. tostring(i) .. "\n"
 									title = ""
 								else
@@ -994,7 +994,7 @@ function init()
 								if language == "简体中文" then
 									column_ett1 = "错误"
 									column_err1 = "你必须使用用户创建列的前10个。"
-								elseif language == "繁体中文" then
+								elseif language == "繁體中文" then
 									column_ett1 = "錯誤"
 									column_err1 = "你必須使用用戶創建列的前10個。"
 								else
@@ -1019,7 +1019,7 @@ function init()
 	
 								if language == "简体中文" then
 									message = message .. "创建新用户列: " .. k .. " 在 user" .. tostring(i) .. "\n"
-								elseif language == "繁体中文" then
+								elseif language == "繁體中文" then
 									message = message .. "創建新用戶列: " .. k .. " 在 user" .. tostring(i) .. "\n"
 								else
 									message = message .. "Creating user column: " .. k .. " in user" .. tostring(i) .. "\n"
@@ -1029,7 +1029,7 @@ function init()
 									if language == "简体中文" then
 										column_ett2 = "错误"
 										column_err2 = "已达到列的最大数量。"
-									elseif language == "繁体中文" then
+									elseif language == "繁體中文" then
 										column_ett2 = "錯誤"
 										column_err2 = "已達到列的最大數量。"
 									else
@@ -1052,7 +1052,7 @@ function init()
 							if language == "简体中文" then
 								column_msg3 = "用户列已成功更新。\n\nREAPER 将自动关闭。请您手动重新启动 REAPER 以应用更改。"
 								column_tt3 = "警告"
-							elseif language == "繁体中文" then
+							elseif language == "繁體中文" then
 								column_msg3 = "用戶列已成功更新。\n\nREAPER 將自動關閉。請您手動重新啟動 REAPER 以應用更改。"
 								column_tt3 = "警告"
 							else

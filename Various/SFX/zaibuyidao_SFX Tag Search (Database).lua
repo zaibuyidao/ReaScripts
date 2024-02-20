@@ -86,7 +86,7 @@ if language == "简体中文" then
 	search_title = "过滤"
 	search_title_key = "关键词"
 	remaining = "剩余: "
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
 	jump_title = "跳转目标"
 	jump_title_line = "行数"
 	search_title = "過濾"
@@ -153,7 +153,7 @@ function parseCSVLine(line, sep, lineNumber)
 		local retval
 		if language == "简体中文" then
 			retval = reaper.MB(string.format("custom_database.csv 自定义关键词格式错误：第 %d 行的分隔符数量不正确。\n请修改自定义关键词文件，并重新启动脚本。\n\n要现在打开 custom_database.csv 吗？", lineNumber), '错误', 1)
-		elseif language == "繁体中文" then
+		elseif language == "繁體中文" then
 			retval = reaper.MB(string.format("custom_database.csv 自訂關鍵詞格式錯誤：第 %d 行的分隔符數量不正確。\n請修改自訂關鍵詞文件，並重新啟動腳本。\n\n要現在打開 custom_database.csv 嗎？", lineNumber), '錯誤', 1)
 		else
 			retval = reaper.MB(string.format("custom_database.csv custom keyword format error: The number of separators on line %d is incorrect.\nPlease modify the custom keyword file and restart the script.\n\nDo you want to open custom_database.csv now?", lineNumber), 'Error', 1)
@@ -212,7 +212,7 @@ function parseCSVLine(line, sep, lineNumber)
     if res[1] == "" then
 		if language == "简体中文" then
 			reaper.MB("自定义关键词文件格式错误：第一列不能出现空值。\n请按快捷键 F1 打开自定义文件修改关键词内容，并重新启动脚本。", '错误', 0)
-		elseif language == "繁体中文" then
+		elseif language == "繁體中文" then
 			reaper.MB("自訂關鍵詞文件格式錯誤：第一列不能出現空值。\n請按快捷鍵 F1 打開自訂文件修改關鍵詞内容，並重新啓動脚本。", '錯誤', 0)
 		else
 			reaper.MB("Custom keywords file format error: the first column cannot have empty values. \nPlease press the F1 shortcut key to open the custom file and modify the keywords content, then restart the script.", 'Error', 0)
@@ -760,7 +760,7 @@ function init()
 			-- 	err2 = "文件已删除"
 			-- 	err3 = "该操作将删除 " ..csvFilePath .." 文件！"
 			-- 	err4 = "警告"
-			-- elseif language == "繁体中文" then
+			-- elseif language == "繁體中文" then
 			-- 	err1 = "custom_database.csv 文件已被刪除。重新啓動脚本將會創建最新的 custom_database.csv 文件。"
 			-- 	err2 = "文件已刪除"
 			-- 	err3 = "該操作將會刪除 " ..csvFilePath .." 文件！"

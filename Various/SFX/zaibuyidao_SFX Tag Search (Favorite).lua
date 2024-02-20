@@ -76,7 +76,7 @@ if language == "简体中文" then
 	search_title = "过滤"
 	search_title_key = "关键词"
 	remaining = "剩余: "
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
 	jump_title = "跳转目标"
 	jump_title_line = "行数"
 	search_title = "過濾"
@@ -130,7 +130,7 @@ function parseCSVLine(line, sep, lineNumber)
 		local retval
 		if language == "简体中文" then
 			retval = reaper.MB(string.format("keywords_favorite.csv 自定义关键词格式错误：第 %d 行的分隔符数量不正确。\n请修改自定义关键词文件，并重新启动脚本。\n\n要现在打开 keywords_favorite.csv 吗？", lineNumber), '错误', 1)
-		elseif language == "繁体中文" then
+		elseif language == "繁體中文" then
 			retval = reaper.MB(string.format("keywords_favorite.csv 自訂關鍵詞格式錯誤：第 %d 行的分隔符數量不正確。\n請修改自訂關鍵詞文件，並重新啟動腳本。\n\n要現在打開 keywords_favorite.csv 嗎？", lineNumber), '錯誤', 1)
 		else
 			retval = reaper.MB(string.format("keywords_favorite.csv custom keyword format error: The number of separators on line %d is incorrect.\nPlease modify the custom keyword file and restart the script.\n\nDo you want to open keywords_favorite.csv now?", lineNumber), 'Error', 1)
@@ -189,7 +189,7 @@ function parseCSVLine(line, sep, lineNumber)
     if res[1] == "" then
 		if language == "简体中文" then
 			reaper.MB("自定义关键词文件格式错误：第一列不能出现空值。\n请按快捷键 F1 打开自定义文件修改关键词内容，并重新启动脚本。", '错误', 0)
-		elseif language == "繁体中文" then
+		elseif language == "繁體中文" then
 			reaper.MB("自訂關鍵詞文件格式錯誤：第一列不能出現空值。\n請按快捷鍵 F1 打開自訂文件修改關鍵詞内容，並重新啓動脚本。", '錯誤', 0)
 		else
 			reaper.MB("Custom keywords file format error: the first column cannot have empty values. \nPlease press the F1 shortcut key to open the custom file and modify the keywords content, then restart the script.", 'Error', 0)
@@ -265,7 +265,7 @@ do
 			if language == "简体中文" then
 				err_msg = "不能创建文件:\n" .. file_path .. "\n\n错误: " .. tostring(err)
 				reaper.ShowMessageBox(err_msg, "见鬼了: ", 0)
-			elseif language == "繁体中文" then
+			elseif language == "繁體中文" then
 				err_msg = "不能創建文件:\n" .. file_path .. "\n\n錯誤: " .. tostring(err)
 				reaper.ShowMessageBox(err_msg, "見鬼了: ", 0)
 			else
@@ -288,7 +288,7 @@ monster attack,怪物 攻击,技能
 magic voice,魔法 施法,语音
 attack,攻击,战斗
 ]])
-		elseif language == "繁体中文" then
+		elseif language == "繁體中文" then
 			file:write([[
 #格式要求:
 #按照 "ab,cd,ef" 的格式將關鍵詞用英文逗號隔開，它们将被拆分為 3 列，例如：pokemon,宝可梦,我最喜欢
@@ -320,7 +320,7 @@ attack,攻击,Battle
 
 		if language == "简体中文" then
 			reaper.MB("找不到自定义关键词文件 keywords_favorite.csv，已为您创建了一份新文件：\n"..script_path.."keywords_favorite.csv\n\n".."请记住此文件路径，将来您可能需要对其进行备份。\n按快捷键 F1 或通过以上路径找到并打开文件，可以编辑自定义关键词。\n\n请注意，每次编辑完毕需要重新启动脚本才能生效！", '创建自定义关键词文件', 0)
-		elseif language == "繁体中文" then
+		elseif language == "繁體中文" then
 			reaper.MB("找不到自訂關鍵詞文件 keywords_favorite.csv，已為您創建了一份新文件：\n"..script_path.."keywords_favorite.csv\n\n".."請記住此文件路徑，將來您可能需要對其進行備份。\n按快捷鍵 F1 或通過以上路徑找到並打開文件，可以編輯自訂關鍵詞。\n\n請注意，每次編輯完畢需要重新啓動脚本才能生效！", '創建自訂關鍵詞文件', 0)
 		else
 			reaper.MB("Cannot find the keywords_favorite.csv file, a new file has been created for you: \n"..script_path.."keywords_favorite\n\n".."Please remember this file path, as you may need to back it up in the future.\nPress the F1 shortcut key or find and open the file through the above path to edit custom keywords.\n\nPlease note that you need to restart the script each time after editing for the changes to take effect!", 'Creating custom keywords file', 0)

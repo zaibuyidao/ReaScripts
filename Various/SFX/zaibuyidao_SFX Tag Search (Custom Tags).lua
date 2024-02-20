@@ -86,7 +86,7 @@ if language == "简体中文" then
     search_title = "过滤"
     search_title_key = "关键词"
     remaining = "剩余: "
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
     jump_title = "跳转目标"
     jump_title_line = "行数"
     search_title = "過濾"

@@ -6,7 +6,7 @@ return {
             size_unit = 14, -- Control Unit Size ⇌ 控件单位大小, 所有控件大小以此为基准
         },
         window = {
-            title = "SFX Tag Search", -- Title (标题)
+            title = "SFX Tag Metadata", -- Title (标题)
             background_color = { r = 220, g = 222, b = 222 }, -- Background color ⇌ 背景颜色
             width = 250, -- Initial width ⇌ 初始宽度
             height = 500, -- Initial height ⇌ 初始高度

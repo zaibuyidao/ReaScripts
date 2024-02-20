@@ -1,6 +1,7 @@
 -- NoIndex: true
 EXCLUDE_DB_LIST =  { } -- 示例 exclude = { "DB: 00", "DB: 01" }
 EXCLUDE_LIST = { } -- 示例 exclude = { "File", "Custom Tags", "Description", "Keywords" }
+PARENT_FOLDER = true
 
 function print(...)
 	local args = {...}
@@ -86,19 +87,19 @@ local language = getSystemLanguage()
 if language == "简体中文" then
     jump_title = "跳转目标"
     jump_title_line = "行数"
-    search_title = "搜索"
+    search_title = "过滤"
     search_title_key = "关键词"
     remaining = "剩余: "
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
     jump_title = "跳转目标"
     jump_title_line = "行数"
-    search_title = "搜索"
+    search_title = "過濾"
     search_title_key = "關鍵詞"
     remaining = "剩餘: "
 else
     jump_title = "Jump"
     jump_title_line = "Ln"
-    search_title = "Search"
+    search_title = "Filter"
     search_title_key = "Keywords"
     remaining = "Rem: "
 end
@@ -115,10 +116,10 @@ require('REQ.j_settings_functions')
 require('core')
 require('reaper-utils')
 LIP = require('LIP')
-CONFIG = require('config-custom')
+CONFIG = require('config-metadata')
 ListView = require('ListView')
 
-setGlobalStateSection("SFX_TAG_SEARCH_IXML_KEYWAORDS")
+setGlobalStateSection("SFX_TAG_SEARCH_FILE_NAME")
 
 function readViewModelFromReaperFileList(dbPath, config, async)
     config = config or {}
@@ -144,17 +145,19 @@ function readViewModelFromReaperFileList(dbPath, config, async)
     local function processItem(itemType, content)
         if itemType == "PATH" then
             path = (parseCSVLine(content, " "))[1]
-        elseif itemType == "USER" and not excludeOrigin["Keywords"] then
-            local ok, entries = pcall(parseCSVLine, content, " ")
-            if not ok then
-                -- print("parse DATA line failed:", content, entries)
-                goto continue
+        elseif itemType == "FILE" and not excludeOrigin["File"] then
+            local p = (parseCSVLine(content, " "))[1]
+            local matchPattern = "[^/%\\]+$"
+            if config.containsAllParentDirectories then
+                matchPattern = "[^/%\\]+"
             end
-            if entries[1] and entries[1]:find("IXML:USER:Keywords") and entries[2] then
-                for w in iteratorOf("Keywords", entries[2]) do
-                    local value = w:trim():trimFileExtension()
+            -- read each part from path
+            for w in p:gmatch(matchPattern) do
+                -- not disk
+                if not w:match("^%w+:$") then
+                    local value = w:trimFileExtension()
                     keywords[value] = keywords[value] or { value = value, from = {} }
-                    keywords[value].from["Keywords"] = true
+                    keywords[value].from["File"] = true
                 end
             end
         end
@@ -258,7 +261,7 @@ for _, db in ipairs(dbList) do
 		local path, keywords = readViewModelFromReaperFileList(db.path, {
 			excludeOrigin = table.arrayToTable(EXCLUDE_LIST), -- getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
 			delimiters = getConfig("db.delimiters", {}),
-			containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
+			containsAllParentDirectories = PARENT_FOLDER -- getConfig("search.file.contains_all_parent_directories")
 		})
 	
 		if path and keywords then
@@ -377,7 +380,7 @@ end
 function init()
 	JProject:new()
 	window = jGui:new({
-        title = getConfig("ui.window.title") .. " - iXML Keywords",
+        title = getConfig("ui.window.title") .. " - File Name",
         width = getState("WINDOW_WIDTH", getConfig("ui.window.width"), tonumber),
         height = getState("WINDOW_HEIGHT", getConfig("ui.window.height"), tonumber),
         x = getState("WINDOW_X", getConfig("ui.window.x"), tonumber),
@@ -770,7 +773,7 @@ if init() then
 	loop()
 
 	if reaper.JS_Window_FindEx then
-		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - iXML Keywords", true)
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - File Name", true)
 		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
 	end
 end

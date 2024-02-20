@@ -1,7 +1,6 @@
 -- NoIndex: true
 EXCLUDE_DB_LIST =  { } -- 示例 exclude = { "DB: 00", "DB: 01" }
 EXCLUDE_LIST = { } -- 示例 exclude = { "File", "Custom Tags", "Description", "Keywords" }
-PARENT_FOLDER = true
 
 function print(...)
 	local args = {...}
@@ -90,7 +89,7 @@ if language == "简体中文" then
     search_title = "过滤"
     search_title_key = "关键词"
     remaining = "剩余: "
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
     jump_title = "跳转目标"
     jump_title_line = "行数"
     search_title = "過濾"
@@ -116,10 +115,10 @@ require('REQ.j_settings_functions')
 require('core')
 require('reaper-utils')
 LIP = require('LIP')
-CONFIG = require('config-custom')
+CONFIG = require('config-metadata')
 ListView = require('ListView')
 
-setGlobalStateSection("SFX_TAG_SEARCH_FILE_NAME")
+setGlobalStateSection("SFX_TAG_SEARCH_ALBUM")
 
 function readViewModelFromReaperFileList(dbPath, config, async)
     config = config or {}
@@ -145,19 +144,20 @@ function readViewModelFromReaperFileList(dbPath, config, async)
     local function processItem(itemType, content)
         if itemType == "PATH" then
             path = (parseCSVLine(content, " "))[1]
-        elseif itemType == "FILE" and not excludeOrigin["File"] then
-            local p = (parseCSVLine(content, " "))[1]
-            local matchPattern = "[^/%\\]+$"
-            if config.containsAllParentDirectories then
-                matchPattern = "[^/%\\]+"
+        elseif itemType == "DATA" then
+            local ok, entries = pcall(parseCSVLine, content, " ")
+            if not ok then
+                -- print("parse DATA line failed:", content, entries)
+                goto continue
             end
-            -- read each part from path
-            for w in p:gmatch(matchPattern) do
-                -- not disk
-                if not w:match("^%w+:$") then
-                    local value = w:trimFileExtension()
-                    keywords[value] = keywords[value] or { value = value, from = {} }
-                    keywords[value].from["File"] = true
+            for _, entry in ipairs(entries) do
+                local k, v = readDataItemEntry(entry)
+                if k and v and k:lower() == 'b' and not excludeOrigin["Album"] then
+                    for w in iteratorOf("Album", v) do
+                        local value = w:trim():trimFileExtension()
+                        keywords[value] = keywords[value] or { value = value, from = {} }
+                        keywords[value].from["Album"] = true
+                    end
                 end
             end
         end
@@ -193,52 +193,6 @@ end
 SIZE_UNIT = getConfig("ui.global.size_unit", 20)
 dbList = getDbList()
 if dbList == false then return end
-ratings = (function ()
-	local ratings = {}
-	local f = io.open(script_path .. getPathDelimiter() .. "rating.csv", "r")
-	if not f then return end
-	while true do
-        local line = f:read()
-        if line == nil then break end
-		local d = parseCSVLine(line, ",")
-		ratings[d[1]] = tonumber(d[2])
-    end
-	return ratings
-end)()
-
-function incRating(keyword)
-	ratings[keyword] = (ratings[keyword] or 0) + 1
-end
-
-function getRating(keyword)
-	return ratings[keyword] or 0
-end
-
-function writeRatings()
-	local tmp = {}
-	for k, v in pairs(ratings) do
-		table.insert(tmp, {
-			key = k,
-			value = v
-		})
-	end
-
-	table.sort(tmp, function (a, b)
-		return a.value > b.value
-	end)
-
-	local f = io.open(script_path .. getPathDelimiter() .. "rating.csv", "w")
-	local res = {}
-	for i=1, math.min(getConfig("rating.max_record", 50), #tmp) do
-		f:write("\"")
-		f:write(tostring(tmp[i].key))
-		f:write("\"")
-		f:write(",")
-		f:write(tostring(tmp[i].value))
-		f:write("\n")
-	end
-	f:close()
-end
 
 local colorMap = getConfig("ui.result_list.db_color", {})
 local defaultDbColors = getConfig("ui.result_list.default_colors", {{.6, .6, .6, 1}})
@@ -261,7 +215,7 @@ for _, db in ipairs(dbList) do
 		local path, keywords = readViewModelFromReaperFileList(db.path, {
 			excludeOrigin = table.arrayToTable(EXCLUDE_LIST), -- getConfig("db.exclude_keyword_origin", {}, table.arrayToTable),
 			delimiters = getConfig("db.delimiters", {}),
-			containsAllParentDirectories = PARENT_FOLDER -- getConfig("search.file.contains_all_parent_directories")
+			containsAllParentDirectories = getConfig("search.file.contains_all_parent_directories")
 		})
 	
 		if path and keywords then
@@ -279,6 +233,7 @@ for _, db in ipairs(dbList) do
 		end
 	end
 end
+
 
 if readDBCount == 0 then
 	return reaper.MB("找不到數據庫，請創建一個數據庫，並重新運行該腳本。", "錯誤", 0)
@@ -330,17 +285,9 @@ function searchKeyword(value, rating)
 	return res
 end
 
-function searchKeywordAsync(value, rating, result)
+function searchKeywordAsync(value, result)
 	local index = 1
 	local caseSensitive = getConfig("search.case_sensitive")
-	local function compare(a, b)
-		local ra = getRating(a.value)
-		local rb = getRating(b.value)
-		if ra == rb then
-			return a.index < b.index
-		end
-		return ra > rb
-	end
 	local function processItem(item, index)
 		if value == "" or (caseSensitive and item.value:find(value)) or (not caseSensitive and item.value:lower():find(value:lower())) then
 			-- table.insert(result, {
@@ -358,7 +305,7 @@ function searchKeywordAsync(value, rating, result)
 				value = item.value,
 				from = item.from,
 				fromString = item.fromString
-			}, compare)
+			})
 		end
 	end
 	local i = 1
@@ -380,7 +327,7 @@ end
 function init()
 	JProject:new()
 	window = jGui:new({
-        title = getConfig("ui.window.title") .. " - File Name",
+        title = getConfig("ui.window.title") .. " - Album",
         width = getState("WINDOW_WIDTH", getConfig("ui.window.width"), tonumber),
         height = getState("WINDOW_HEIGHT", getConfig("ui.window.height"), tonumber),
         x = getState("WINDOW_X", getConfig("ui.window.x"), tonumber),
@@ -555,7 +502,6 @@ function init()
 			c.focus_index = viewHolderIndex + 1 --gui:getFocusIndex()
 
 			function c:onMouseClick()
-				-- incRating(listView.data[dataIndex].value)
 				if getReaperExplorerPath() ~= listView.data[dataIndex].db and getConfig("search.switch_database") then
 					setReaperExplorerPath(listView.data[dataIndex].db)
 				end
@@ -711,7 +657,7 @@ function init()
 		resultListView.firstIndex = 1
 		local data = {}
 		resultListView.data = data
-		local hasNext, fetchNext, getNextIndex, total = searchKeywordAsync(searchTextBox.value, ratings, data)
+		local hasNext, fetchNext, getNextIndex, total = searchKeywordAsync(searchTextBox.value, data)
 		local function fetch()
 			if not hasNext or resultListView.data ~= data then return end
 			fetchNext()
@@ -724,7 +670,7 @@ function init()
 
 	function startSearchSync(value)
 		resultListView.firstIndex = 1
-		resultListView.data = searchKeyword(searchTextBox.value, ratings)
+		resultListView.data = searchKeyword(searchTextBox.value)
 		refreshResultState()
 	end
 
@@ -750,7 +696,6 @@ function init()
 			WINDOW_Y = math.tointeger(wy),
 			WINDOW_DOCK_STATE = dockstr,
 		})
-		-- writeRatings()
 	end
 
 	window:onResize()
@@ -773,7 +718,7 @@ if init() then
 	loop()
 
 	if reaper.JS_Window_FindEx then
-		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - File Name", true)
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - Album", true)
 		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
 	end
 end

@@ -89,7 +89,7 @@ if language == "简体中文" then
     search_title = "搜索"
     search_title_key = "关键词"
     remaining = "剩余: "
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
     jump_title = "跳转目标"
     jump_title_line = "行数"
     search_title = "搜索"
@@ -118,7 +118,7 @@ LIP = require('LIP')
 CONFIG = require('config-custom')
 ListView = require('ListView')
 
-setGlobalStateSection("SFX_TAG_SEARCH_IXML_LIBRARY")
+setGlobalStateSection("SFX_TAG_SEARCH_IXML_CATID")
 
 function readViewModelFromReaperFileList(dbPath, config, async)
     config = config or {}
@@ -144,17 +144,17 @@ function readViewModelFromReaperFileList(dbPath, config, async)
     local function processItem(itemType, content)
         if itemType == "PATH" then
             path = (parseCSVLine(content, " "))[1]
-        elseif itemType == "USER" and not excludeOrigin["Library"] then
+        elseif itemType == "USER" and not excludeOrigin["CatID"] then
             local ok, entries = pcall(parseCSVLine, content, " ")
             if not ok then
                 -- print("parse DATA line failed:", content, entries)
                 goto continue
             end
-            if entries[1] and entries[1]:find("IXML:USER:Library") and entries[2] then
-                for w in iteratorOf("Library", entries[2]) do
+            if entries[1] and entries[1]:find("IXML:USER:CatID") and entries[2] then
+                for w in iteratorOf("CatID", entries[2]) do
                     local value = w:trim():trimFileExtension()
                     keywords[value] = keywords[value] or { value = value, from = {} }
-                    keywords[value].from["Library"] = true
+                    keywords[value].from["CatID"] = true
                 end
             end
         end
@@ -377,7 +377,7 @@ end
 function init()
 	JProject:new()
 	window = jGui:new({
-        title = getConfig("ui.window.title") .. " - iXML Library",
+        title = getConfig("ui.window.title") .. " - iXML CatID",
         width = getState("WINDOW_WIDTH", getConfig("ui.window.width"), tonumber),
         height = getState("WINDOW_HEIGHT", getConfig("ui.window.height"), tonumber),
         x = getState("WINDOW_X", getConfig("ui.window.x"), tonumber),
@@ -770,7 +770,7 @@ if init() then
 	loop()
 
 	if reaper.JS_Window_FindEx then
-		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - iXML Library", true)
+		local hwnd = reaper.JS_Window_Find(getConfig("ui.window.title") .. " - iXML CatID", true)
 		if hwnd then reaper.JS_Window_AttachTopmostPin(hwnd) end
 	end
 end
