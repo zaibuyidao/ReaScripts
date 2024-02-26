@@ -1,5 +1,5 @@
 -- @description Paste Item Position (Move Selected Items)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -134,13 +134,12 @@ for i = 0, items-1 do
 end
 
 if #t > #pos then
-  return
   if language == "简体中文" then
-    reaper.ShowMessageBox("粘贴的对象数量不能超过复制的对象数量。", "错误", 0)
+    return reaper.ShowMessageBox("粘贴的对象数量不能超过复制的对象数量。", "错误", 0)
   elseif language == "繁體中文" then
-    reaper.ShowMessageBox("貼上的對象數量不能超過複製的對象數量。", "錯誤", 0)
+    return reaper.ShowMessageBox("貼上的對象數量不能超過複製的對象數量。", "錯誤", 0)
   else
-    reaper.ShowMessageBox("The number of pasted items cannot exceed the number of copied items.", "Error", 0)
+    return reaper.ShowMessageBox("The number of pasted items cannot exceed the number of copied items.", "Error", 0)
   end
 end
 
