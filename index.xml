@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="301f7b7e93cf47ab4d8be21ce88ab643fa76a7bc">
+<index version="1" name="zaibuyidao Scripts" commit="4abc480023762a3364b88becb1222583f178e5a6">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -438,11 +438,24 @@
     </reapack>
     <reapack name="zaibuyidao_Copy Item Position.lua" type="script" desc="Copy Item Position">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Copy%20Item%20Position.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-02-26T14:55:03Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4abc480023762a3364b88becb1222583f178e5a6/Items%20Editing/zaibuyidao_Copy%20Item%20Position.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Items And Marker In Time Selection (Relative Position).lua" type="script" desc="Copy Items And Marker In Time Selection (Relative Position)">
@@ -896,22 +909,58 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/bbd1779cf860cdc48a0b171144634f95cef81b3a/Items%20Editing/zaibuyidao_Paste%20Item%20Length.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Paste Item Position (Move Only).lua" type="script" desc="Paste Item Position (Move Only)">
+    <reapack name="zaibuyidao_Paste Item Position (Duplicate Selected Items).lua" type="script" desc="Paste Item Position (Duplicate Selected Items)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Paste%20Item%20Position%20(Move%20Only).lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-02-26T14:55:03Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4abc480023762a3364b88becb1222583f178e5a6/Items%20Editing/zaibuyidao_Paste%20Item%20Position%20(Duplicate%20Selected%20Items).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Paste Item Position.lua" type="script" desc="Paste Item Position">
+    <reapack name="zaibuyidao_Paste Item Position (Move Selected Items).lua" type="script" desc="Paste Item Position (Move Selected Items)">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Paste%20Item%20Position.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-02-26T14:55:03Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4abc480023762a3364b88becb1222583f178e5a6/Items%20Editing/zaibuyidao_Paste%20Item%20Position%20(Move%20Selected%20Items).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Paste Item Position (Select One Item And Duplicate).lua" type="script" desc="Paste Item Position (Select One Item And Duplicate)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-02-26T14:55:03Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4abc480023762a3364b88becb1222583f178e5a6/Items%20Editing/zaibuyidao_Paste%20Item%20Position%20(Select%20One%20Item%20And%20Duplicate).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Items And Marker In Time Selection (Relative Position).lua" type="script" desc="Paste Items And Marker In Time Selection (Relative Position)">
