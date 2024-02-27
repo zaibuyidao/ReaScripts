@@ -1,4 +1,4 @@
--- @description Paste Item Position (Select One Item And Duplicate)
+-- @description Paste Align Item Position (Select One Item And Duplicate)
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -146,9 +146,9 @@ end
 
 reaper.SetEditCurPos(cur_pos, 0, 0)
 if language == "简体中文" then
-  reaper.Undo_EndBlock("粘贴对象位置(选择一个对象并重复)", -1)
+  reaper.Undo_EndBlock("粘贴对齐对象位置(选择一个对象并重复)", -1)
 elseif language == "繁體中文" then
-  reaper.Undo_EndBlock("貼上對象位置(選擇一個對象並重複)", -1)
+  reaper.Undo_EndBlock("貼上對齊對象位置(選擇一個對象並重複)", -1)
 else
-  reaper.Undo_EndBlock("Paste Item Position (Select One Item And Duplicate)", -1)
+  reaper.Undo_EndBlock("Paste Align Item Position (Select One Item And Duplicate)", -1)
 end

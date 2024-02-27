@@ -1,4 +1,4 @@
--- @description Paste Item Position (Duplicate Selected Items)
+-- @description Paste Align Item Position (Duplicate Selected Items)
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -167,9 +167,9 @@ end
 
 reaper.SetEditCurPos(cur_pos, false, false)
 if language == "简体中文" then
-    reaper.Undo_EndBlock("粘贴对象位置(重复选定对象)", -1)
+    reaper.Undo_EndBlock("粘贴对齐对象位置(重复选定对象)", -1)
 elseif language == "繁體中文" then
-    reaper.Undo_EndBlock("貼上對象位置(重複選取對象)", -1)
+    reaper.Undo_EndBlock("貼上對齊對象位置(重複選取對象)", -1)
 else
-    reaper.Undo_EndBlock("Paste Item Position (Duplicate Selected Items)", -1)
+    reaper.Undo_EndBlock("Paste Align Item Position (Duplicate Selected Items)", -1)
 end

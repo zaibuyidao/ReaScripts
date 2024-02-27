@@ -1,5 +1,5 @@
--- @description Paste Item Position (Move Selected Items)
--- @version 1.0.1
+-- @description Paste Align Item Position (Move Selected Items)
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -149,9 +149,9 @@ end
 
 reaper.SetEditCurPos(cur_pos, 0, 0)
 if language == "简体中文" then
-  reaper.Undo_EndBlock("粘贴对象位置(移动选定对象)", -1)
+  reaper.Undo_EndBlock("粘贴对齐对象位置(移动选定对象)", -1)
 elseif language == "繁體中文" then
-  reaper.Undo_EndBlock("貼上對象位置(移動選取對象)", -1)
+  reaper.Undo_EndBlock("貼上對齊對象位置(移動選取對象)", -1)
 else
-  reaper.Undo_EndBlock("Paste Item Position (Move Selected Items)", -1)
+  reaper.Undo_EndBlock("Paste Align Item Position (Move Selected Items)", -1)
 end
