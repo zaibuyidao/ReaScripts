@@ -1,5 +1,5 @@
 -- @description Paste Align Item Position (Select One Item And Duplicate)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -121,6 +121,7 @@ function getSavedData(key1, key2)
 end
 
 reaper.Undo_BeginBlock()
+local EXT_SECTION = 'COPY_ITEM_POSITION'
 
 local items = reaper.CountSelectedMediaItems()
 if items > 1 then
@@ -133,7 +134,7 @@ if items > 1 then
   end
 end
 
-local item_pos = getSavedData("CopyItemPosition", "Position")
+local item_pos = getSavedData(EXT_SECTION, "Position")
 local cur_pos = reaper.GetCursorPosition()
 
 reaper.Main_OnCommand(40698, 0) -- Edit: Copy items
