@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="21ccd6c12f21533cd8e91196d83ff1724632370d">
+<index version="1" name="zaibuyidao Scripts" commit="1b77d7aa9b6233a16473b997132617e9d0080003">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -935,6 +935,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-02-27T02:10:16Z">
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/21ccd6c12f21533cd8e91196d83ff1724632370d/Items%20Editing/zaibuyidao_Paste%20Align%20Item%20Position%20(Select%20One%20Item%20And%20Duplicate).lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-02-27T02:16:05Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1b77d7aa9b6233a16473b997132617e9d0080003/Items%20Editing/zaibuyidao_Paste%20Align%20Item%20Position%20(Select%20One%20Item%20And%20Duplicate).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Item Length.lua" type="script" desc="Paste Item Length">
