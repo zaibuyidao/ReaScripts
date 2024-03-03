@@ -1,0 +1,99 @@
+desc: MIDI Bank/Program on Specific Note (File-Based)
+version 1.0
+changelog: init
+author: zaibuyidao
+links:
+  webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+  github https://github.com/zaibuyidao/ReaScripts
+donate: http://www.paypal.me/zaibuyidao
+provides: [data] zaibuyidao_midi_bank_program/*.txt
+about:
+  This script allows users to specify Bank and Program for a particular MIDI note based on settings in a configuration file (located in /REAPER/Data/zaibuyidao_midi_bank_program).
+  When the specified MIDI note is received, the script reads the corresponding Bank and Program settings from a text file and applies these settings to the MIDI output.
+
+slider1:0<0,15,1{Any,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}>Input Channel:
+slider2:12<0,127,1>Trigger Note:
+slider3:0<0,127,1>Bank MSB:
+slider4:0<0,127,1>Bank LSB:
+slider5:0<0,127,1>Program:
+slider6:/zaibuyidao_midi_bank_program:none:Config file:
+slider7:1<0,1,1{Off,On}>Trigger Sound:
+
+@init
+noteon_cnt = 0;
+file_selected = -1;
+MAX_NUM_NOTES = 128;
+note_config_size = MAX_NUM_NOTES * 3;
+note_config[note_config_size]; // Declare the array with fixed size
+memset(note_config, -1, note_config_size); // Initialize array elements to -1
+last_note_in_file = -1;
+lines_read = 0;
+
+@slider
+file_selected != slider6 ? (
+    file_selected = slider6;
+    handle = file_open(slider6);
+    handle > 0 ? (
+        line = #;
+        lines_read = 0; // Reset lines_read
+        while(file_string(handle, line) > 0) (
+            lines_read += 1; // Increment for each line read
+            note = 0; bank_MSB = 0; bank_LSB = 0; program = 0;
+            str_pos = 0; field = 0;
+            // Manually parse the line
+            while (str_pos < strlen(line)) (
+                c = str_getchar(line, str_pos);
+                c == ',' ? field += 1 : 0; // Next field
+                c >= '0' && c <= '9' ? (
+                    // Build the number
+                    field == 0 ? note = note * 10 + (c - '0') : 0;
+                    field == 1 ? bank_MSB = bank_MSB * 10 + (c - '0') : 0;
+                    field == 2 ? bank_LSB = bank_LSB * 10 + (c - '0') : 0;
+                    field == 3 ? program = program * 10 + (c - '0') : 0;
+                ) : 0;
+                str_pos += 1;
+            );
+            // Check if note is in range and update array
+            note >= 0 && note < MAX_NUM_NOTES ? (
+                note_config[note*3] = bank_MSB;
+                note_config[note*3 + 1] = bank_LSB;
+                note_config[note*3 + 2] = program;
+                last_note_in_file = note; // Update the last note in file
+            ) : 0;
+        );
+        file_close(handle);
+    ) : 0;
+) : 0;
+
+@block
+while(midirecv(offset, msg1, msg2, msg3)) (
+    status = (msg1 & 0xF0); // Get the message type
+    channel = (msg1 & 0x0F); // Get the MIDI channel
+
+    (channel == (slider1 - 1)) || (slider1 == 0) ? (
+        (status == 0x90 && msg3 != 0) ? (
+            noteon_cnt += 1;
+            note_index = msg2 * 3;
+            note_config[note_index] != -1 ? (
+                slider2 = msg2; // Update Trigger Note slider
+                slider3 = note_config[note_index]; // Update Bank MSB slider
+                slider4 = note_config[note_index + 1]; // Update Bank LSB slider
+                slider5 = note_config[note_index + 2]; // Update Program slider
+    
+                midisend(offset, 0xB0, 0x00, slider3); // Bank Select MSB
+                midisend(offset, 0xB0, 0x20, slider4); // Bank Select LSB
+                midisend(offset, 0xC0, slider5, 0); // Program Change
+            ); 0;
+            // Check if the note is the trigger note and slider7 is on
+            msg2 == slider2 ? (
+                slider7 == 1 ? (
+                    midisend(offset, msg1, msg2, msg3) // Send note-on if sound is enabled for trigger note
+                ) : 0; // Do nothing for trigger note if slider7 is off
+            ) : (
+               midisend(offset, msg1, msg2, msg3) // Always send note-on for non-trigger notes
+            );
+        ) : (
+            midisend(offset, msg1, msg2, msg3) // passthrough other events
+        );
+    );
+);

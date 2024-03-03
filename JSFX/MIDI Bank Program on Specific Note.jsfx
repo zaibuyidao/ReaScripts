@@ -1,0 +1,52 @@
+desc: MIDI Bank/Program on Specific Note (By zaibuyidao)
+version 1.0
+changelog: init
+author: zaibuyidao
+links:
+  webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+  github https://github.com/zaibuyidao/ReaScripts
+donate: http://www.paypal.me/zaibuyidao
+about:
+  This script allows users to specify Bank and Program for a particular MIDI note. 
+  When the specified MIDI note is received, the script applies the corresponding Bank and Program settings to the MIDI output based on the predefined parameter settings.
+
+slider1:0<0,15,1{Any,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}>Input Channel:
+slider2:12<0,127,1>Trigger Note:
+slider3:0<0,127,1>Bank MSB:
+slider4:0<0,127,1>Bank LSB:
+slider5:0<0,127,1>Program:
+slider6:1<0,1,1{Off,On}>Trigger Sound:
+
+@init
+noteon_cnt = 0;
+
+@block
+while(midirecv(offset, msg1, msg2, msg3)) (
+    status = (msg1 & 0xF0); // Get the message type
+    channel = (msg1 & 0x0F); // Get the MIDI channel
+
+    // Check if the received channel matches the slider1 value or any channel
+    (channel == (slider1 - 1)) || (slider1 == 0) ? (
+        // Check if it's a Note On message and velocity is not zero
+        (status == 0x90 && msg3 != 0) ? (
+            noteon_cnt += 1; // Increment note-on count
+
+            // Check if the note matches the trigger note
+            (msg2 == slider2) ? (
+                midisend(offset, 0xB0, 0x00, slider3); // Send Bank Select MSB
+                midisend(offset, 0xB0, 0x20, slider4); // Send Bank Select LSB
+                midisend(offset, 0xC0, slider5, 0); // Send Program Change
+
+                // If sound is enabled, send the note-on message
+                (slider6 == 1) ? (
+                    midisend(offset, msg1, msg2, msg3)
+                );
+            ) : (
+                midisend(offset, msg1, msg2, msg3) // If it's not the trigger note, pass through the event
+            )
+        ) : (
+            
+            midisend(offset, msg1, msg2, msg3) // Pass through other MIDI events
+        )
+    );
+);
