@@ -1,18 +1,29 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.1
+-- @version 1.0.2
 -- @changelog
---   Initial release
+--   + Added a Bank/Program display box; automatically matches timbre selection when Bank MSB/LSB changes
+--   + Immediate MIDI message sending
+--   + Selection of PC retrieves Bank/Program information to GUI
+--   + Updated sound bank list (useful when editing Reabank)
+--   + User configuration file, with support for multiple languages
+--   # Fixed Reabank loading status to support real-time switching
+--   # Fixed refresh of sound bank information in MIDI editor
+--   # Fixed feedback on JSFX loading status
+--   # Fixed real-time feedback for SC sustain (CC) controller
+--   # Optimized arrangement of F1-F11 editors
+--   # Modified GUI color scheme and fixed related component functions
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map (Without GUI).lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map Note To PC.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map PC To Note.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map Toggle Note PC.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Note To PC.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle Note PC.lua
+--   [nomain] Articulation Map/lib/*.lua
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
