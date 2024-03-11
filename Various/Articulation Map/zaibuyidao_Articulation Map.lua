@@ -6,7 +6,7 @@ require('core')
 require('utils')
 CONFIG = require('config')
 gui = require('gui')
--- 导入 gui 类
+-- 导入gui类
 local Button = gui.Button
 local Knob = gui.Knob
 local Slider = gui.Slider
@@ -336,14 +336,19 @@ function unpickle(s)
 	return tables[1]
 end
 
--- 主题颜色配置
-local theme_bt = getConfig("ui.global.color.theme_bt")
-local theme_txt = getConfig("ui.global.color.theme_txt")
-local theme_frame = getConfig("ui.global.color.theme_frame")
-local theme_jsfx = getConfig("ui.global.color.theme_jsfx") -- 检查jsfx插件未加载的颜色
+-- 设置当前的界面风格
+style = CONFIG.ui.global.style
+local colorConfig = CONFIG.ui.global.color[style]
 
--- 更新按钮创建
+if colorConfig then
+    theme_bt = colorConfig.theme_bt
+    theme_txt = colorConfig.theme_txt
+    theme_frame = colorConfig.theme_frame
+    theme_jsfx = colorConfig.theme_jsfx
+end
+
 -- 边框位置顺时钟左, 上, 右, 下
+-- 更新按钮创建
 local btn1 = Button:new(10,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "A", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 A
 local btn4 = Button:new(45,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "B", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 B
 local btn5 = Button:new(80,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "<", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 左移
@@ -1213,7 +1218,9 @@ end
 
 function Init()
     -- Some gfx Wnd Default Values
-    local R1, G1, B1 = table.unpack(CONFIG.ui.global.color.theme_background) -- getConfig("ui.global.theme_background") table.unpack(CONFIG.ui.global.theme_background)
+    local style = CONFIG.ui.global.style
+    local theme_background = CONFIG.ui.global.color[style].theme_background
+    local R1, G1, B1 = table.unpack(theme_background)
     local Wnd_bgd = R1 + G1*256 + B1*65536 -- red+green*256+blue*65536
 
     local Wnd_Dock, Wnd_X, Wnd_Y = 0, 800, 320

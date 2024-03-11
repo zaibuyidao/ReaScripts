@@ -4,8 +4,13 @@ package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_pa
 
 require('core')
 CONFIG = require('config')
-theme_font = CONFIG.ui.global.color.theme_font
-theme_brd = CONFIG.ui.global.color.theme_brd
+style = CONFIG.ui.global.style
+
+local colorConfig = CONFIG.ui.global.color[style]
+if colorConfig then
+    theme_font = colorConfig.theme_font
+    theme_brd = colorConfig.theme_brd
+end
 theme_toggle = CONFIG.ui.global.theme_toggle
 
 -- Simple Element Class

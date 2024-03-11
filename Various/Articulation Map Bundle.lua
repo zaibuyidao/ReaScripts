@@ -1,7 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.2
+-- @version 1.0.3
 -- @changelog
+--   + Added feature to switch theme style colors
 --   + Added a Bank/Program display box; automatically matches timbre selection when Bank MSB/LSB changes
 --   + Immediate MIDI message sending
 --   + Selection of PC retrieves Bank/Program information to GUI
@@ -24,6 +25,7 @@
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle Note PC.lua
 --   [nomain] Articulation Map/lib/*.lua
+--   [nomain] Articulation Map/Articulation Map Factory.reabank
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
