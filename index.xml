@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="49dc9fe62596f79962948b240282f91a21bcba3a">
+<index version="1" name="zaibuyidao Scripts" commit="4c0426f70078464a41fe57e61d2334ef75a87125">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9464,6 +9464,30 @@
         <source file="Articulation Map/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/49dc9fe62596f79962948b240282f91a21bcba3a/Various/Articulation%20Map/lib/core.lua</source>
         <source file="Articulation Map/lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/49dc9fe62596f79962948b240282f91a21bcba3a/Various/Articulation%20Map/lib/gui.lua</source>
         <source file="Articulation Map/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/49dc9fe62596f79962948b240282f91a21bcba3a/Various/Articulation%20Map/lib/utils.lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2024-03-11T15:11:36Z">
+        <changelog><![CDATA[+ Added feature to switch theme style colors
++ Added a Bank/Program display box; automatically matches timbre selection when Bank MSB/LSB changes
++ Immediate MIDI message sending
++ Selection of PC retrieves Bank/Program information to GUI
++ Updated sound bank list (useful when editing Reabank)
++ User configuration file, with support for multiple languages
+# Fixed Reabank loading status to support real-time switching
+# Fixed refresh of sound bank information in MIDI editor
+# Fixed feedback on JSFX loading status
+# Fixed real-time feedback for SC sustain (CC) controller
+# Optimized arrangement of F1-F11 editors
+# Modified GUI color scheme and fixed related component functions]]></changelog>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/zaibuyidao_Articulation%20Map.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - No GUI.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20No%20GUI.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - Note To PC.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20Note%20To%20PC.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20PC%20To%20Note.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - Toggle Note PC.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20Toggle%20Note%20PC.lua</source>
+        <source file="Articulation Map/lib/config.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/lib/config.lua</source>
+        <source file="Articulation Map/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/lib/core.lua</source>
+        <source file="Articulation Map/lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/lib/gui.lua</source>
+        <source file="Articulation Map/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/lib/utils.lua</source>
+        <source file="Articulation Map/Articulation Map Factory.reabank">https://github.com/zaibuyidao/ReaScripts/raw/4c0426f70078464a41fe57e61d2334ef75a87125/Various/Articulation%20Map/Articulation%20Map%20Factory.reabank</source>
       </version>
     </reapack>
     <reapack name="SFX Tag Search Bundle.lua" type="script" desc="SFX Tag Search Bundle">
