@@ -85,6 +85,8 @@ if language == "简体中文" then
     send_now_mode_bttl = "确认"
     not_loaded = "JS 未加载"
     line_velocity = "力度"
+    reabank_load_msg = "Reabank 未加载，请选择一个 Reabank。\n可以选择按快捷键 F10 设置 Reabank 为默认音色表，将不会再弹出该窗口。"
+    reabank_load_ttl = "找不到 Reabank"
 elseif language == "繁體中文" then
     WINDOW_TITLE = getConfig("ui.global.title.tw")
     GLOBAL_FONT = getConfig("ui.global.font.tw")
@@ -127,6 +129,8 @@ elseif language == "繁體中文" then
     send_now_mode_bttl = "確認"
     not_loaded = "JS 未加載"
     line_velocity = "力度"
+    reabank_load_msg = "Reabank 未載入，請選擇一個 Reabank。\n可以選擇按快捷鍵 F10 設置 Reabank 為預設音色表，將不會再彈出該視窗。"
+    reabank_load_ttl = "找不到 Reabank"
 else
     WINDOW_TITLE = getConfig("ui.global.title.en")
     GLOBAL_FONT = getConfig("ui.global.font.en")
@@ -169,6 +173,8 @@ else
     send_now_mode_bttl = "Confirmation"
     not_loaded = "JS Not Load"
     line_velocity = "Vel "
+    reabank_load_msg = "Reabank not loaded, please select a Reabank.\nYou can set Reabank as the default bank/program file by pressing the F10 key, which will prevent this window from popping up again."
+    reabank_load_ttl = "Reabank not found"
 end
 
 vel_show = getConfig("ui.global.vel_show")

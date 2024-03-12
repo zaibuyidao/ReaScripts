@@ -449,6 +449,7 @@ function selectReaBankFile()
         end
     end
 
+    reaper.MB(reabank_load_msg, reabank_load_ttl, 0)
     local retval, filePath = reaper.GetUserFileNameForRead("", selbank_path, ".reabank")
     if retval then
         return filePath, extractFileName(filePath)
