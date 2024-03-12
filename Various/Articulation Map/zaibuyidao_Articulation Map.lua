@@ -432,12 +432,25 @@ end
 
 local function switch_mode_1() -- 模式1 切换
     local function update_current_state()
+        if not store or not ch_box1 or not ch_box2 or
+            not store[ch_box1.norm_val] or 
+            not store[ch_box1.norm_val].bank or
+            not store[ch_box1.norm_val].notes or 
+            not store[ch_box1.norm_val].notes[ch_box2.norm_val] then
+            return -- 如果相关数据不存在，直接返回
+        end
         current_state = {
             velocity = store[ch_box1.norm_val].bank.velocity,
             note = store[ch_box1.norm_val].notes[ch_box2.norm_val].note,
             bank = store[ch_box1.norm_val].bank.bank
         }
         push_current_state()
+    end
+
+    -- 检查并更新 ch_box1 和 ch_box2（如果需要）
+    if store[1] and store[1].bank and store[1].bank.full_name == "未选择音色库" then
+        ch_box1.norm_val2 = {"未选择程序"}
+        ch_box1.norm_val = 1
     end
 
     local bank_titles = {}
@@ -464,7 +477,14 @@ local function switch_mode_1() -- 模式1 切换
 
     local function update_patch_box()
         local bank_index = ch_box1.norm_val
-        if not store[bank_index] then bank_index = 1 end
+        if not store[bank_index] or (store[1] and store[1].bank and store[1].bank.full_name == "未选择音色库") then
+            -- 如果 store[bank_index] 不存在或者是 '未选择音色库' 情况
+            ch_box2.norm_val = 1
+            ch_box2.norm_val2 = {"未选择程序"}  -- 或者任何合适的提示
+            textb_3.lbl = "N/A"
+            return -- 提前结束函数
+        end
+    
         local selected = 1
         local note_titles = {}
         for i, note_item in ipairs(store[bank_index].notes) do
@@ -473,21 +493,23 @@ local function switch_mode_1() -- 模式1 切换
                 selected = i
             end
         end
-
+    
         ch_box2.norm_val = selected
         ch_box2.norm_val2 = note_titles
-
+    
         -- 更新 textb_3 的标签
         if store[bank_index] and store[bank_index].notes[selected] then
             textb_3.lbl = store[bank_index].notes[selected].note
         else
-            textb_3.lbl = "N/A" -- 或者其他默认值
+            textb_3.lbl = "N/A"
         end
     end
+    
     
     update_patch_box()
 
     ch_box1.onClick = function()
+        if not store or not ch_box1 then return end -- 添加检查
         -- 更新每个 bank_item 的 msb 和 lsb 属性
         local bank_item = store[ch_box1.norm_val]
         if bank_item and bank_item.bank then
@@ -504,6 +526,13 @@ local function switch_mode_1() -- 模式1 切换
     end
 
     ch_box2.onClick = function()
+        if not store or not ch_box1 or not ch_box2 or
+            not store[ch_box1.norm_val] or
+            not store[ch_box1.norm_val].notes or 
+            not store[ch_box1.norm_val].notes[ch_box2.norm_val] then
+                return -- 如果相关数据不存在，直接返回
+        end
+
         -- 更新 textb_3 的标签
         local selected_note = store[ch_box1.norm_val].notes[ch_box2.norm_val]
         if selected_note then
@@ -515,27 +544,46 @@ local function switch_mode_1() -- 模式1 切换
 
     btn2.onClick = function () -- 插入音色
         local bank_item = store[ch_box1.norm_val]
+        -- 检查是否有选中的bank_item和note_item
+        if not bank_item or not bank_item.notes or not bank_item.notes[ch_box2.norm_val] then
+            -- reaper.ShowMessageBox("没有选中有效的音色库或程序。", "错误", 0)
+            return
+        end
+    
         local note_item = bank_item.notes[ch_box2.norm_val]
+        -- 这里bank_item和note_item都已经验证为非nil
         inset_patch(bank_item.bank.bank, note_item.note, bank_item.bank.velocity, midi_chan)
         -- gfx.quit()
     end
 
     btn12.onClick = function () -- 立即发送
         local bank_item = store[ch_box1.norm_val]
+        -- 检查是否有选中的bank_item和note_item
+        if not bank_item or not bank_item.notes or not bank_item.notes[ch_box2.norm_val] then
+            -- reaper.ShowMessageBox("没有选中有效的音色库或程序。", "错误", 0)
+            return
+        end
+
         local note_item = bank_item.notes[ch_box2.norm_val]
         local channel = ch_box3.norm_val
 
-        reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x00, bank_item.bank.bank) -- MSB
-        reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x20, bank_item.bank.velocity) -- LSB
-        reaper.StuffMIDIMessage(0, 0xC0 + (channel - 1), note_item.note, 0) -- Program
+        reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x00, tonumber(bank_item.bank.bank)) -- MSB
+        reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x20, tonumber(bank_item.bank.velocity)) -- LSB
+        reaper.StuffMIDIMessage(0, 0xC0 + (channel - 1), tonumber(note_item.note), 0) -- Program
 
         reaper.MB(send_now_mode_amsg, send_now_mode_attl, 0)
     end
-
 end
 
 local function switch_mode_2() -- 模式2 切换
     local function update_current_state()
+        if not store_grouped or not ch_box1 or not ch_box2 or
+            not store_grouped[ch_box1.norm_val] or
+            not store_grouped[ch_box1.norm_val].notes or
+            not store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val] then
+            return -- 如果相关数据不存在，直接返回
+        end
+
         current_state = {
             velocity = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].velocity,
             note = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].note,
@@ -543,6 +591,15 @@ local function switch_mode_2() -- 模式2 切换
         }
         push_current_state()
     end
+
+    -- 检查并更新 ch_box1 和 ch_box2（如果需要）
+    if store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name == "未选择音色库" then
+        ch_box1.norm_val2 = {"未选择音色库"}
+        ch_box1.norm_val = 1
+        ch_box2.norm_val2 = {"未选择音色库"}  -- 如果ch_box2也需要更新
+        ch_box2.norm_val = 1
+    end
+
     local bank_titles = {}
     local box1_index = 1
     for i, bank_item in ipairs(store_grouped) do
@@ -567,7 +624,16 @@ local function switch_mode_2() -- 模式2 切换
 
     local function update_patch_box()
         local bank_index = ch_box1.norm_val
-        if not store_grouped[bank_index] then bank_index = 1 end
+        if not store_grouped[bank_index] or (store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name == "未选择音色库") then
+            -- 没有有效的银行数据或未选择音色库
+            ch_box2.norm_val = 1
+            ch_box2.norm_val2 = {"未选择程序"}
+            textb_1.lbl = "N/A"  -- MSB
+            textb_2.lbl = "N/A"  -- LSB
+            textb_3.lbl = "N/A"  -- Program
+            return
+        end
+
         local selected = 1
         local note_titles = {}
         for i, note_item in ipairs(store_grouped[bank_index].notes) do
@@ -595,6 +661,7 @@ local function switch_mode_2() -- 模式2 切换
     update_patch_box()
 
     ch_box1.onClick = function()
+        if not store_grouped or not ch_box1 then return end -- 添加检查
         -- 更新每个 bank_item 的 msb 和 lsb 属性
         local bank_item = store_grouped[ch_box1.norm_val]
         if bank_item and bank_item.bank then
@@ -606,6 +673,12 @@ local function switch_mode_2() -- 模式2 切换
     end
 
     ch_box2.onClick = function()
+        if not store_grouped or not ch_box1 or not ch_box2 or
+            not store_grouped[ch_box1.norm_val] or
+            not store_grouped[ch_box1.norm_val].notes or
+            not store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val] then
+                return -- 如果相关数据不存在，直接返回
+        end
         -- 更新 textb_3 的标签和 textb_2.lbl（LSB）
         local selected_note = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val]
         if selected_note then
@@ -624,17 +697,25 @@ local function switch_mode_2() -- 模式2 切换
 
     btn2.onClick = function ()
         local note_item = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val]
+        if not note_item then
+            -- reaper.ShowMessageBox("没有选中有效的音色。", "错误", 0)
+            return
+        end
         inset_patch(note_item.bank, note_item.note, note_item.velocity, midi_chan)
         -- gfx.quit()
     end
 
     btn12.onClick = function () -- 立即发送
         local note_item = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val]
+        if not note_item then
+            -- reaper.ShowMessageBox("没有选中有效的音色。", "错误", 0)
+            return
+        end
         local channel = ch_box3.norm_val
 
-        reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x00, note_item.bank) -- MSB
-        reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x20, note_item.velocity) -- LSB
-        reaper.StuffMIDIMessage(0, 0xC0 + (channel - 1), note_item.note, 0) -- Program
+        reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x00, tonumber(note_item.bank)) -- MSB
+        reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x20, tonumber(note_item.velocity)) -- LSB
+        reaper.StuffMIDIMessage(0, 0xC0 + (channel - 1), tonumber(note_item.note), 0) -- Program
 
         reaper.MB(send_now_mode_bmsg, send_now_mode_bttl, 0)
     end
@@ -1098,38 +1179,32 @@ function setBankProgram2()
     end
 end
 
-function update_reabank_file() -- 测试加载的库名称是否更新
+function update_reabank_file()
     local track = getActiveMIDITrack()
-    local nonexistent_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "nonexistent.reabank"
-    
-    -- 创建一个临时 reabank
-    local file = io.open(nonexistent_path, "w+")
-    if not file then
-        reaper.ShowMessageBox("Couldn't create file:\n" .. nonexistent_path, "Error", 0)
-        return
+    if not track then return end
+
+    -- 重新读取和解析 reabank 文件
+    if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then 
+        return 
     end
-
-    file:write("Bank 0 1 1\n0 1\n")
-    file:close()
-
-    -- 应用临时的reabank
-    applyReaBankToTrack(track, nonexistent_path)
-
-    if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
     store = parse_banks(read_config_lines(reabank_path), vel_show, bnk_show) -- 模式1数据
     store_grouped = group_banks(store, vel_show)                             -- 模式2数据
 
-    state_getter = switch_mode_1()
-    current_mode = "1"
-    push_current_state()
-
-    -- 使用真实的 reabank 文件路径
+    -- 应用更新后的 reabank
     applyReaBankToTrack(track, reabank_path)
-    os.remove(nonexistent_path) -- 删除临时 reabank
 
+    -- 根据当前模式刷新界面
+    if current_mode == "1" then
+        switch_mode_1()
+    else
+        switch_mode_2()
+    end
+
+    -- 更新界面上的 bank 名称
     bank_name = getFileName(reabank_path)
-    -- Textbox_TB = { text_bank, textb_1, textb_2, textb_3 }
     text_bank.lbl = bank_name .. update_bnk_right
+
+    -- 刷新 bank
     refresh_bank()
 end
 
@@ -1438,6 +1513,16 @@ function mainloop()
     -- end
 
     text_bank.onRClick = function () -- 刷新音色表
+        -- 检查模式1和模式2是否有有效的银行数据
+        local isBankLoaded = (store and store[1] and store[1].bank and store[1].bank.full_name ~= "未选择音色库") or
+        (store_grouped and store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name ~= "未选择音色库")
+    
+        -- 如果没有加载任何银行数据，则直接返回
+        if not isBankLoaded then
+            -- reaper.MB("没有加载任何音色库文件，无法更新。", "提示", 0)
+            return
+        end
+
         if Shift then
             reaper.MIDIEditor_OnCommand( reaper.MIDIEditor_GetActive(), 40950 ) -- Insert bank/program select event...
         else

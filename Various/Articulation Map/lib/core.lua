@@ -233,6 +233,10 @@ function set_reabank_file(reabank_path)
 end
 
 function parse_banks(lines, vel_show, bnk_show) -- 音色名称
+    if #lines == 0 then
+        -- 没有行数据时，返回默认项
+        return {{bank = {full_name = "未选择音色库", bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
+    end
     local result = {}
     for _, line in ipairs(lines) do
         if #line == 0 or line:match("^%s-$") then
@@ -277,6 +281,10 @@ function parse_banks(lines, vel_show, bnk_show) -- 音色名称
 end
 
 function group_banks(banks, vel_show)
+    if #banks == 0 or (banks[1] and banks[1].bank and banks[1].bank.full_name == "未选择音色库") then
+        -- 没有银行数据时，返回默认项
+        return {{bank = {full_name = "未选择音色库", bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
+    end
     local result = {}
     for _, bank_item in ipairs(banks) do
         if not result[bank_item.bank.bank] then
@@ -424,6 +432,9 @@ end
 
 function selectReaBankFile()
     local function extractFileName(filePath)
+        if type(filePath) ~= "string" or not filePath:find('[%/%\\]') then
+            return "<未知文件>"
+        end
         local bankNum = filePath:reverse():find('[%/%\\]')
         local bankName = filePath:sub(-bankNum + 1)
         return bankName
@@ -449,11 +460,8 @@ function selectReaBankFile()
         end
     end
 
-    reaper.MB(reabank_load_msg, reabank_load_ttl, 0)
-    local retval, filePath = reaper.GetUserFileNameForRead("", selbank_path, ".reabank")
-    if retval then
-        return filePath, extractFileName(filePath)
-    end
+    -- 如果找不到 reabank 文件，返回空表
+    return "NoReabank", "<无音色配置文件>"
 end
 
 function reSelectReaBankFile() -- 重新选择reabank
@@ -487,7 +495,17 @@ function applyReaBankToTrack(track, reabankPath)
     return false
 end
 
-function getFileName(filePath) -- 获取文件名
-    local bankNum = filePath:reverse():find('[%/%\\]')
-    return filePath:sub(-bankNum + 1)
+function getFileName(filePath)
+    -- 检查 filePath 是否为字符串
+    if type(filePath) == "string" and filePath ~= "" then
+        local bankNum = filePath:reverse():find('[%/%\\]')
+        if bankNum then
+            return filePath:sub(-bankNum + 1)
+        else
+            return filePath
+        end
+    else
+        -- 如果 filePath 不是字符串或为空字符串，则返回默认文件名
+        return "<无音色配置文件>"
+    end
 end
