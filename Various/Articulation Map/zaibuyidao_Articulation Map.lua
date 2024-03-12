@@ -775,6 +775,11 @@ local function setCheckBox()
         end
     end
 
+    -- 检查是否有有效的 bank、velocity 和 program
+    if textb_1.lbl == "N/A" or textb_2.lbl == "N/A" or textb_3.lbl == "N/A" then
+        return -- 没有有效的 bank、velocity 和 program，直接返回
+    end
+
     local uok, uinput = reaper.GetUserInputs(setpc_title, 3, setpc_retvals_csv, textb_1.lbl ..','.. textb_2.lbl ..','.. textb_3.lbl)
 
     if uok then
@@ -890,6 +895,11 @@ local function setCheckBox2()
             textb_2.lbl = "N/A"
             textb_3.lbl = "N/A"
         end
+    end
+
+    -- 检查是否有有效的 bank、velocity 和 program
+    if textb_1.lbl == "N/A" or textb_2.lbl == "N/A" or textb_3.lbl == "N/A" then
+        return -- 没有有效的 bank、velocity 和 program，直接返回
     end
 
     local uok, uinput = reaper.GetUserInputs(setpc_title, 3, setpc_retvals_csv, textb_1.lbl ..','.. textb_2.lbl ..','.. textb_3.lbl)
