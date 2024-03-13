@@ -4,7 +4,10 @@ function inset_patch(bank, note, velocity, chan) -- 插入音色
   reaper.PreventUIRefresh(1)
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if not take or not reaper.TakeIsMIDI(take) then return end
-  item = reaper.GetMediaItemTake_Item(take)
+
+  local currentTrack = reaper.GetMediaItemTake_Track(take)
+  if currentTrack ~= initialTrack then return end
+  local item = reaper.GetMediaItemTake_Item(take)
   local cur_pos = reaper.GetCursorPositionEx()
   local ppq_pos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
   local count, index = 0, {}
@@ -27,7 +30,6 @@ function inset_patch(bank, note, velocity, chan) -- 插入音色
   else
     local selected = true
     local muted = false
-    --local chan = 0
     reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 0, bank)
     reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xB0, chan, 32, velocity)
     reaper.MIDI_InsertCC(take, selected, muted, ppq_pos, 0xC0, chan, note, 0)

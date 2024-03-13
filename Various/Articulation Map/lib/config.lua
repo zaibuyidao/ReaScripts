@@ -42,7 +42,7 @@ return {
                     theme_bt = {30/255, 57/255, 92/255, 1}, -- Button Color ⇌ 按钮颜色
                     theme_txt = {35/255, 69/255, 112/255, 1}, -- Textbox/Checkbox Color ⇌ 文本框/复选框颜色
                     theme_brd = {66/255, 150/255, 250/255, 1}, -- Border Color ⇌ 边框颜色
-                    theme_jsfx = {29/255, 47/255, 76/255, 1}, -- Default Color when JSFX is Not Loaded ⇌ JSFX未加载的默认颜色
+                    theme_jsfx = {79/255, 79/255, 79/255, 1}, -- Default Color when JSFX is Not Loaded ⇌ JSFX未加载的默认颜色
                     theme_frame = {62/255, 62/255, 74/255, 0.1}, -- Outer Frame Color ⇌ 外框颜色
                 },
                 lokasenna = {

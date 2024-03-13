@@ -15,6 +15,7 @@ local Frame = gui.Frame
 local CheckBox = gui.CheckBox
 local Textbox = gui.Textbox
 
+initialTrack = getActiveMIDITrack()
 EXT_SECTION = 'ARTICULATION_MAP'
 
 local delimiter = getPathDelimiter()
@@ -212,8 +213,8 @@ if not take or not reaper.TakeIsMIDI(take) then return end
 
 reabank_path, bank_name = selectReaBankFile() -- 全局REABANK
 if not reabank_path then return end
-if getActiveMIDITrack() then
-    if not applyReaBankToTrack(getActiveMIDITrack(), reabank_path) then
+if initialTrack then
+    if not applyReaBankToTrack(initialTrack, reabank_path) then
         print("Failed to apply ReaBank to the active MIDI track.")
     end
 end

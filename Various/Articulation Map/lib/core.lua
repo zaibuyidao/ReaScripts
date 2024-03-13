@@ -420,6 +420,9 @@ function normalize_color(r, g, b, a)
 end
 
 function getActiveMIDITrack()
+    if initialTrack then
+        return initialTrack
+    end
     local midiEditor = reaper.MIDIEditor_GetActive()
     if midiEditor then
         local take = reaper.MIDIEditor_GetTake(midiEditor)
