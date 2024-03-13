@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.7
+-- @version 1.0.8
 -- @changelog
 --   + Added feature to switch theme style colors
 --   + Added a Bank/Program display box; automatically matches timbre selection when Bank MSB/LSB changes

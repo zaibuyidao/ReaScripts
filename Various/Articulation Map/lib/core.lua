@@ -234,8 +234,8 @@ end
 
 function parse_banks(lines, vel_show, bnk_show) -- 音色名称
     if #lines == 0 then
-        -- 没有行数据时，返回默认项
-        return {{bank = {full_name = "未选择音色库", bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
+        -- 没有bank数据时，返回默认项
+        return {{bank = {full_name = no_bank_sel, bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
     end
     local result = {}
     for _, line in ipairs(lines) do
@@ -281,9 +281,9 @@ function parse_banks(lines, vel_show, bnk_show) -- 音色名称
 end
 
 function group_banks(banks, vel_show)
-    if #banks == 0 or (banks[1] and banks[1].bank and banks[1].bank.full_name == "未选择音色库") then
-        -- 没有银行数据时，返回默认项
-        return {{bank = {full_name = "未选择音色库", bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
+    if #banks == 0 or (banks[1] and banks[1].bank and banks[1].bank.full_name == no_bank_sel) then
+        -- 没有bank数据时，返回默认项
+        return {{bank = {full_name = no_bank_sel, bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
     end
     local result = {}
     for _, bank_item in ipairs(banks) do
@@ -481,7 +481,11 @@ function reSelectReaBankFile() -- 重新选择reabank
 end
 
 function applyReaBankToTrack(track, reabankPath)
-    local track = getActiveMIDITrack()
+    -- 检查是否加载了有效的 reabank 文件
+    if reabankPath == "NoReabank" then
+        return false
+    end
+
     if not track then return false end
 
     local ret, trackStateChunk = reaper.GetTrackStateChunk(track, "", false)

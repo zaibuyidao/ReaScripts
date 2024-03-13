@@ -55,14 +55,10 @@ if language == "简体中文" then
     checkamjs_msg = "请右键单击並安裝 'Articulation Map.jsfx' (请注意分类为JSFX)。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
     checkamjs_title = "你必须安裝 Articulation Map.jsfx"
     jserr = "错误"
-    setbank_msg = "请选择后缀为 .reabank 的音色表。"
-    setbank_err = "错误"
     setpc_title = "设置音色库/程序选择"
-    setpc_retvals_csv = "音色库 MSB (组):,音色库 LSB (力度):,程序编号 (音符):"
+    setpc_retvals_csv = "音色库 MSB (分组):,音色库 LSB (力度):,程序编号 (音符):"
     setpc_msg = "必须选择 PC 事件！"
     setpc_err = "错误"
-    selbank_msg = "请选择一个音色表"
-    selbank_err = "找不到音色表"
     selbank_path = "选择音色表"
     patch_change_load = "加载文件"
     patch_change_OK = "确定"
@@ -70,7 +66,6 @@ if language == "简体中文" then
     patch_change_channel = "MIDI 通道:"
     patch_change_bank = "乐库:"
     patch_change_patch = "音色:"
-    load_err = "<无音色配置文件加载>"
     setbank2_msg = "无法读取 REAPER 的 ini 文件"
     setbank2_err = "错误"
     setbank2_msg2 = "写入 ini 文件失败"
@@ -79,15 +74,11 @@ if language == "简体中文" then
     bank_msb_lsb = "音色库 MSB/LSB:"
     bank_program_num = "程序编号:"
     send_now_ttl = "立即发送"
-    update_bnk_right = " (右键更新)"
-    send_now_mode_amsg = "音色库和程序已成功发送 (模式 A)。"
-    send_now_mode_attl = "确认"
-    send_now_mode_bmsg = "音色库和程序已成功发送 (模式 B)。"
-    send_now_mode_bttl = "确认"
     not_loaded = "JS 未加载"
     line_velocity = "力度"
-    reabank_load_msg = "Reabank 未加载，请选择一个 Reabank。\n可以选择按快捷键 F10 设置 Reabank 为默认音色表，将不会再弹出该窗口。"
-    reabank_load_ttl = "找不到 Reabank"
+    no_patch_load = "未加载音色文件"
+    no_bank_sel = "未选择音色库"
+    no_patch_sel = "未选择音色"
 elseif language == "繁體中文" then
     WINDOW_TITLE = getConfig("ui.global.title.tw")
     GLOBAL_FONT = getConfig("ui.global.font.tw")
@@ -99,14 +90,10 @@ elseif language == "繁體中文" then
     checkamjs_msg = "請右鍵單擊並安裝 'Articulation Map.jsfx' (請注意分類為JSFX)。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
     checkamjs_title = "你必须安裝 Articulation Map.jsfx"
     jserr = "錯誤"
-    setbank_msg = "請選擇後綴為 .reabank 的音色表。"
-    setbank_err = "錯誤"
     setpc_title = "设置音色庫/程式選擇"
-    setpc_retvals_csv = "音色庫 MSB (組):,音色庫 LSB (力度):,程式編號 (音符):"
+    setpc_retvals_csv = "音色庫 MSB (分組):,音色庫 LSB (力度):,程式編號 (音符):"
     setpc_msg = "必須選擇 PC 事件！"
     setpc_err = "錯誤"
-    selbank_msg = "請選擇一個音色表"
-    selbank_err = "找不到音色表"
     selbank_path = "選擇音色表"
     patch_change_load = "加載文件"
     patch_change_OK = "確定"
@@ -114,7 +101,6 @@ elseif language == "繁體中文" then
     patch_change_channel = "MIDI 通道:"
     patch_change_bank = "樂庫:"
     patch_change_patch = "音色:"
-    load_err = "<無音色配置文件加載>"
     setbank2_msg = "無法讀取 REAPER 的 ini 文件"
     setbank2_err = "錯誤"
     setbank2_msg2 = "寫入 ini 文件失敗"
@@ -123,15 +109,11 @@ elseif language == "繁體中文" then
     bank_msb_lsb = "音色庫 MSB/LSB:"
     bank_program_num = "程式编号:"
     send_now_ttl = "立即發送"
-    update_bnk_right = " (右键更新)"
-    send_now_mode_amsg = "音色庫和程式已成功發送 (模式 A)"
-    send_now_mode_attl = "確認"
-    send_now_mode_bmsg = "音色庫和程式已成功發送 (模式 B)"
-    send_now_mode_bttl = "確認"
     not_loaded = "JS 未加載"
     line_velocity = "力度"
-    reabank_load_msg = "Reabank 未載入，請選擇一個 Reabank。\n可以選擇按快捷鍵 F10 設置 Reabank 為預設音色表，將不會再彈出該視窗。"
-    reabank_load_ttl = "找不到 Reabank"
+    no_patch_load = "未加載音色文件"
+    no_bank_sel = "未選擇音色庫"
+    no_patch_sel = "未選擇音色"
 else
     WINDOW_TITLE = getConfig("ui.global.title.en")
     GLOBAL_FONT = getConfig("ui.global.font.en")
@@ -143,14 +125,10 @@ else
     checkamjs_msg = "Please right-click and install 'Articulation Map.jsfx' (Please note the category should be JSFX).\nThen restart REAPER and run the script again, thank you!\n"
     checkamjs_title = "You must install Articulation Map.jsfx"
     jserr = "Error"
-    setbank_msg = "Please select reabank file with the suffix .reabank."
-    setbank_err = "Error"
     setpc_title = "Set Bank/Program select"
     setpc_retvals_csv = "Bank MSB (Group):,Bank LSB (Velocity):,Program number (Note):"
     setpc_msg = "PC events must be selected!"
     setpc_err = "Error"
-    selbank_msg = "Please select a Reabank file"
-    selbank_err = "Can't find reabank"
     selbank_path = "Choose a reabank"
     patch_change_load = "Load File"
     patch_change_OK = "OK"
@@ -158,7 +136,6 @@ else
     patch_change_channel = "MIDI channel:"
     patch_change_bank = "Bank :"
     patch_change_patch = "Patch:"
-    load_err = "Reabank not imported"
     setbank2_msg = "Failed to read REAPER's ini file"
     setbank2_err = "Error"
     setbank2_msg2 = "Failed to write ini file"
@@ -167,15 +144,11 @@ else
     bank_msb_lsb = "Bank MSB/LSB:"
     bank_program_num = "Program number:"
     send_now_ttl = "Send Now"
-    update_bnk_right = " (Right-click to Update)"
-    send_now_mode_amsg = "Bank and Program have been sent successfully (Mode A)."
-    send_now_mode_attl = "Confirmation"
-    send_now_mode_bmsg = "Bank and Program have been sent successfully (Mode B)."
-    send_now_mode_bttl = "Confirmation"
     not_loaded = "JS Not Load"
     line_velocity = "Vel "
-    reabank_load_msg = "Reabank not loaded, please select a Reabank.\nYou can set Reabank as the default bank/program file by pressing the F10 key, which will prevent this window from popping up again."
-    reabank_load_ttl = "Reabank not found"
+    no_patch_load = "no patch file loaded"
+    no_bank_sel = "no bank selected"
+    no_patch_sel = "no patch selected"
 end
 
 vel_show = getConfig("ui.global.vel_show")
@@ -214,8 +187,14 @@ if not take or not reaper.TakeIsMIDI(take) then return end
 reabank_path, bank_name = selectReaBankFile() -- 全局REABANK
 if not reabank_path then return end
 if initialTrack then
-    if not applyReaBankToTrack(initialTrack, reabank_path) then
-        print("Failed to apply ReaBank to the active MIDI track.")
+    local result = applyReaBankToTrack(initialTrack, reabank_path)
+    if not result then
+        -- 如果 reabankPath 是 "NoReabank"，则显示特定的提示
+        if reabank_path == "NoReabank" then
+            bank_name = no_patch_load -- 设置提示信息
+        else
+            print("Failed to apply ReaBank to the active MIDI track.")
+        end
     end
 end
 
@@ -381,7 +360,7 @@ local W_Frame = Frame:new(10,10,320,270, theme_frame[1], theme_frame[2], theme_f
 local Frame_TB = { W_Frame }
 
 -- 更新文本框创建
-local text_bank = Textbox:new(10,220,320,25, theme_txt[1], theme_txt[2], theme_txt[3], theme_txt[4], getFileName(reabank_path) .. update_bnk_right, GLOBAL_FONT, FONT_SIZE, 1, 0, "")
+local text_bank = Textbox:new(10,220,320,25, theme_txt[1], theme_txt[2], theme_txt[3], theme_txt[4], bank_name, GLOBAL_FONT, FONT_SIZE, 1, 0, "")
 local textb_1 = Textbox:new(170,150,75,25, theme_txt[1], theme_txt[2], theme_txt[3], theme_txt[4], "", GLOBAL_FONT, FONT_SIZE, 1, 0, bank_msb_lsb) -- "Bank MSB"
 local textb_2 = Textbox:new(255,150,75,25, theme_txt[1], theme_txt[2], theme_txt[3], theme_txt[4], "", GLOBAL_FONT, FONT_SIZE, 1, 0, "") -- "Bank LSB"
 local textb_3 = Textbox:new(170,185,75,25, theme_txt[1], theme_txt[2], theme_txt[3], theme_txt[4], "", GLOBAL_FONT, FONT_SIZE, 1, 0, bank_program_num) -- "Program number"
@@ -448,9 +427,9 @@ local function switch_mode_1() -- 模式1 切换
         push_current_state()
     end
 
-    -- 检查并更新 ch_box1 和 ch_box2（如果需要）
-    if store[1] and store[1].bank and store[1].bank.full_name == "未选择音色库" then
-        ch_box1.norm_val2 = {"未选择程序"}
+    -- 检查并更新 ch_box1 和 ch_box2
+    if store[1] and store[1].bank and store[1].bank.full_name == no_bank_sel then
+        ch_box1.norm_val2 = {no_patch_sel}
         ch_box1.norm_val = 1
     end
 
@@ -478,10 +457,10 @@ local function switch_mode_1() -- 模式1 切换
 
     local function update_patch_box()
         local bank_index = ch_box1.norm_val
-        if not store[bank_index] or (store[1] and store[1].bank and store[1].bank.full_name == "未选择音色库") then
+        if not store[bank_index] or (store[1] and store[1].bank and store[1].bank.full_name == no_bank_sel) then
             -- 如果 store[bank_index] 不存在或者是 '未选择音色库' 情况
             ch_box2.norm_val = 1
-            ch_box2.norm_val2 = {"未选择程序"}  -- 或者任何合适的提示
+            ch_box2.norm_val2 = {no_patch_sel}  -- 或者任何合适的提示
             textb_3.lbl = "N/A"
             return -- 提前结束函数
         end
@@ -572,7 +551,7 @@ local function switch_mode_1() -- 模式1 切换
         reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x20, tonumber(bank_item.bank.velocity)) -- LSB
         reaper.StuffMIDIMessage(0, 0xC0 + (channel - 1), tonumber(note_item.note), 0) -- Program
 
-        reaper.MB(send_now_mode_amsg, send_now_mode_attl, 0)
+        -- reaper.MB("Bank and Program have been sent successfully", "Confirmation", 0)
     end
 end
 
@@ -594,10 +573,10 @@ local function switch_mode_2() -- 模式2 切换
     end
 
     -- 检查并更新 ch_box1 和 ch_box2（如果需要）
-    if store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name == "未选择音色库" then
-        ch_box1.norm_val2 = {"未选择音色库"}
+    if store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name == no_bank_sel then
+        ch_box1.norm_val2 = {no_bank_sel}
         ch_box1.norm_val = 1
-        ch_box2.norm_val2 = {"未选择音色库"}  -- 如果ch_box2也需要更新
+        ch_box2.norm_val2 = {no_bank_sel}  -- 如果ch_box2也需要更新
         ch_box2.norm_val = 1
     end
 
@@ -625,10 +604,10 @@ local function switch_mode_2() -- 模式2 切换
 
     local function update_patch_box()
         local bank_index = ch_box1.norm_val
-        if not store_grouped[bank_index] or (store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name == "未选择音色库") then
-            -- 没有有效的银行数据或未选择音色库
+        if not store_grouped[bank_index] or (store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name == no_bank_sel) then
+            -- 没有有效的bank数据或未选择音色库
             ch_box2.norm_val = 1
-            ch_box2.norm_val2 = {"未选择程序"}
+            ch_box2.norm_val2 = {no_patch_sel}
             textb_1.lbl = "N/A"  -- MSB
             textb_2.lbl = "N/A"  -- LSB
             textb_3.lbl = "N/A"  -- Program
@@ -718,7 +697,7 @@ local function switch_mode_2() -- 模式2 切换
         reaper.StuffMIDIMessage(0, 0xB0 + (channel - 1), 0x20, tonumber(note_item.velocity)) -- LSB
         reaper.StuffMIDIMessage(0, 0xC0 + (channel - 1), tonumber(note_item.note), 0) -- Program
 
-        reaper.MB(send_now_mode_bmsg, send_now_mode_bttl, 0)
+        -- reaper.MB("Bank and Program have been sent successfully", "Confirmation", 0)
     end
 end
 
@@ -1213,7 +1192,7 @@ function update_reabank_file()
 
     -- 更新界面上的 bank 名称
     bank_name = getFileName(reabank_path)
-    text_bank.lbl = bank_name .. update_bnk_right
+    text_bank.lbl = bank_name
 
     -- 刷新 bank
     refresh_bank()
@@ -1504,7 +1483,7 @@ function mainloop()
             push_current_state()
     
             applyReaBankToTrack(track, reabank_path)
-            text_bank.lbl = getFileName(reabank_path) .. update_bnk_right
+            text_bank.lbl = getFileName(reabank_path)
         end
     end
 
@@ -1525,8 +1504,8 @@ function mainloop()
 
     text_bank.onRClick = function () -- 刷新音色表
         -- 检查模式1和模式2是否有有效的银行数据
-        local isBankLoaded = (store and store[1] and store[1].bank and store[1].bank.full_name ~= "未选择音色库") or
-        (store_grouped and store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name ~= "未选择音色库")
+        local isBankLoaded = (store and store[1] and store[1].bank and store[1].bank.full_name ~= no_bank_sel) or
+        (store_grouped and store_grouped[1] and store_grouped[1].bank and store_grouped[1].bank.full_name ~= no_bank_sel)
     
         -- 如果没有加载任何银行数据，则直接返回
         if not isBankLoaded then
@@ -1559,7 +1538,7 @@ function mainloop()
                 push_current_state()
     
                 applyReaBankToTrack(track, reabank_path)
-                text_bank.lbl = getFileName(reabank_path) .. update_bnk_right
+                text_bank.lbl = getFileName(reabank_path)
             end
         else
             local track = getActiveMIDITrack()
@@ -1575,8 +1554,7 @@ function mainloop()
             push_current_state()
         
             applyReaBankToTrack(track, reabank_path)
-            -- Textbox_TB = { text_bank, textb_1, textb_2, textb_3 }
-            text_bank.lbl = bank_name .. update_bnk_right -- 更新文本框 textb 的标签的音色表名称
+            text_bank.lbl = bank_name -- 更新文本框 textb 的标签的音色表名称
         end
         refresh_bank()
     end
