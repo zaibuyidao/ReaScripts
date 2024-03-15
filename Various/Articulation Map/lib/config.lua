@@ -23,7 +23,7 @@ return {
             style = "imgui", -- GUI Interface style settings, options: 'default', 'imgui', 'lokasenna'" ⇌ 界面风格设置, 可选项: "default", "imgui", "lokasenna"
             lock_gui = false, -- Lock GUI Interface ⇌ 是否锁定GUI界面
             vel_show = true, -- Whether or not to include Velocity information in Patch ⇌ 是否在音色名称中包含Velocity信息
-            bnk_show = true, -- Whether or not to display Bank number information in Patch ⇌ 是否在音色名称中显示Bank number信息
+            bnk_show = false, -- Whether or not to display Bank number information in Patch ⇌ 是否在音色名称中显示Bank number信息
             theme_toggle = true, -- Use rounded button style ⇌ 是否使用圆弧形的按钮样式
             -- Interface style color configuration ⇌ 界面风格颜色配置
             color = {

@@ -57,6 +57,7 @@ if language == "简体中文" then
     jserr = "错误"
     setpc_title = "设置音色库/程序选择"
     setpc_retvals_csv = "音色库 MSB (分组):,音色库 LSB (力度):,程序编号 (音符):"
+    shift_retvals_csv = "音色库编号:,程序编号:"
     setpc_msg = "必须选择 PC 事件！"
     setpc_err = "错误"
     selbank_path = "选择音色表"
@@ -76,7 +77,7 @@ if language == "简体中文" then
     send_now_ttl = "立即发送"
     not_loaded = "JS 未加载"
     line_velocity = "力度"
-    no_patch_load = "未加载音色文件"
+    no_patch_load = "<未加载音色文件>"
     no_bank_sel = "未选择音色库"
     no_patch_sel = "未选择音色"
 elseif language == "繁體中文" then
@@ -92,6 +93,7 @@ elseif language == "繁體中文" then
     jserr = "錯誤"
     setpc_title = "设置音色庫/程式選擇"
     setpc_retvals_csv = "音色庫 MSB (分組):,音色庫 LSB (力度):,程式編號 (音符):"
+    shift_retvals_csv = "音色庫編號:,程式編號:"
     setpc_msg = "必須選擇 PC 事件！"
     setpc_err = "錯誤"
     selbank_path = "選擇音色表"
@@ -111,7 +113,7 @@ elseif language == "繁體中文" then
     send_now_ttl = "立即發送"
     not_loaded = "JS 未加載"
     line_velocity = "力度"
-    no_patch_load = "未加載音色文件"
+    no_patch_load = "<未加載音色文件>"
     no_bank_sel = "未選擇音色庫"
     no_patch_sel = "未選擇音色"
 else
@@ -127,6 +129,7 @@ else
     jserr = "Error"
     setpc_title = "Set Bank/Program select"
     setpc_retvals_csv = "Bank MSB (Group):,Bank LSB (Velocity):,Program number (Note):"
+    shift_retvals_csv = "Bank number:,Program number:"
     setpc_msg = "PC events must be selected!"
     setpc_err = "Error"
     selbank_path = "Choose a reabank"
@@ -146,7 +149,7 @@ else
     send_now_ttl = "Send Now"
     not_loaded = "JS Not Load"
     line_velocity = "Vel "
-    no_patch_load = "no patch file loaded"
+    no_patch_load = "<no patch file loaded>"
     no_bank_sel = "no bank selected"
     no_patch_sel = "no patch selected"
 end
@@ -701,7 +704,7 @@ local function switch_mode_2() -- 模式2 切换
     end
 end
 
-local function setCheckBox()
+local function setCheckBoxMode1()
     local function update_current_state()
         current_state = {
             velocity = store[ch_box1.norm_val].bank.velocity,
@@ -818,7 +821,126 @@ local function setCheckBox()
     end
 end
 
-local function setCheckBox2()
+local function setCheckBoxMode1Shift()
+    local function update_current_state()
+        current_state = {
+            velocity = store[ch_box1.norm_val].bank.velocity,
+            note = store[ch_box1.norm_val].notes[ch_box2.norm_val].note,
+            bank = store[ch_box1.norm_val].bank.bank
+        }
+        push_current_state()
+    end
+
+    local bank_titles = {}
+    local box1_index = 1
+    for i, bank_item in ipairs(store) do
+        table.insert(bank_titles, bank_item.bank.full_name)
+        if current_state and tonumber(bank_item.bank.velocity)==tonumber(current_state.velocity) and tonumber(bank_item.bank.bank)==tonumber(current_state.bank) then
+            box1_index = i
+        end
+    end
+
+    ch_box1.norm_val = box1_index
+    ch_box1.norm_val2 = bank_titles
+
+    -- 在初始化时更新 textb_1 和 textb_2 的标签为 MSB 和 LSB
+    local bank_item = store[ch_box1.norm_val]
+    if bank_item and bank_item.bank then
+        textb_1.lbl = tostring(bank_item.bank.bank) -- MSB
+        textb_2.lbl = tostring(bank_item.bank.velocity) -- LSB
+    else
+        textb_1.lbl = "N/A"
+        textb_2.lbl = "N/A"
+    end
+
+    local function update_patch_box()
+        local bank_index = ch_box1.norm_val
+        if not store[bank_index] then bank_index = 1 end
+        local selected = 1
+        local note_titles = {}
+        for i, note_item in ipairs(store[bank_index].notes) do
+            table.insert(note_titles, note_item.full_name)
+            if current_state and tonumber(note_item.note) == tonumber(current_state.note) then
+                selected = i
+            end
+        end
+        ch_box2.norm_val = selected
+        ch_box2.norm_val2 = note_titles
+    
+        -- 更新 textb_3 的标签
+        if store[bank_index] and store[bank_index].notes[selected] then
+            textb_3.lbl = store[bank_index].notes[selected].note
+        else
+            textb_3.lbl = "N/A" -- 或者其他默认值
+        end
+    end
+
+    -- 检查是否有有效的 bank、velocity 和 program
+    if textb_1.lbl == "N/A" or textb_2.lbl == "N/A" or textb_3.lbl == "N/A" then
+        return -- 没有有效的 bank、velocity 和 program，直接返回
+    end
+
+    local bankNumber = tonumber(textb_1.lbl) * 128 + tonumber(textb_2.lbl)
+    local uok, uinput = reaper.GetUserInputs(setpc_title, 2, shift_retvals_csv, tostring(bankNumber) .. ',' .. textb_3.lbl)
+
+    if uok then
+        bankNumber, note = uinput:match("([^,]+),([^,]+)")
+        bankNumber = tonumber(bankNumber)
+        note = tonumber(note)
+        msb = math.floor(bankNumber / 128)
+        lsb = bankNumber % 128
+
+        -- 查找匹配的 bank_item
+        local new_bank_index
+        for i, bank_item in ipairs(store) do
+            if tonumber(bank_item.bank.bank) == msb and tonumber(bank_item.bank.velocity) == lsb then
+                new_bank_index = i
+                break
+            end
+        end
+
+        -- 查找匹配的 note_item
+        local new_note_index
+        if new_bank_index and store[new_bank_index] and store[new_bank_index].notes then
+            for i, note_item in ipairs(store[new_bank_index].notes) do
+                if tonumber(note_item.note) == note then
+                    new_note_index = i
+                    break
+                end
+            end
+        end
+
+        -- 更新 ch_box1 和 ch_box2
+        if new_bank_index and new_note_index then
+            ch_box1.norm_val = new_bank_index
+            ch_box2.norm_val = new_note_index
+
+            -- 更新 textb_1 和 textb_2 的标签为新的 MSB 和 LSB
+            local new_bank_item = store[new_bank_index]
+            if new_bank_item and new_bank_item.bank then
+                textb_1.lbl = tostring(new_bank_item.bank.bank) -- MSB
+                textb_2.lbl = tostring(new_bank_item.bank.velocity) -- LSB
+            else
+                textb_1.lbl = "N/A"
+                textb_2.lbl = "N/A"
+            end
+
+            -- 更新 textb_3 的标签
+            local new_note_item = store[new_bank_index].notes[new_note_index]
+            if new_note_item then
+                textb_3.lbl = tostring(new_note_item.note)
+            else
+                textb_3.lbl = "N/A"
+            end
+
+            -- 可以在这里调用 update_current_state 和其他更新界面的函数
+            update_current_state()
+            update_patch_box() -- 假设这是更新UI的函数
+        end
+    end
+end
+
+local function setCheckBoxMode2()
     local function update_current_state()
         current_state = {
             velocity = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].velocity,
@@ -889,6 +1011,123 @@ local function setCheckBox2()
         msb = tonumber(msb)
         lsb = tonumber(lsb)
         note = tonumber(note)
+
+        -- 查找匹配的 bank_item (根据 MSB)
+        local new_bank_index
+        for i, bank_item in ipairs(store_grouped) do
+            if tonumber(bank_item.bank.bank) == msb then
+                new_bank_index = i
+                break
+            end
+        end
+    
+        -- 查找匹配的 note_item (根据 LSB 和 Note)
+        local new_note_index
+        if new_bank_index and store_grouped[new_bank_index] and store_grouped[new_bank_index].notes then
+            for i, note_item in ipairs(store_grouped[new_bank_index].notes) do
+                if tonumber(note_item.note) == note and tonumber(note_item.velocity) == lsb then
+                    new_note_index = i
+                    break
+                end
+            end
+        end
+    
+        -- 更新 ch_box1 和 ch_box2
+        if new_bank_index and new_note_index then
+            ch_box1.norm_val = new_bank_index
+            ch_box2.norm_val = new_note_index
+    
+            -- 更新 textb_1 和 textb_2 的标签为新的 MSB 和 LSB
+            local new_note_item = store_grouped[new_bank_index].notes[new_note_index]
+            if new_note_item then
+                textb_1.lbl = tostring(new_note_item.bank) -- MSB
+                textb_2.lbl = tostring(new_note_item.velocity) -- LSB
+                textb_3.lbl = tostring(new_note_item.note) -- Note
+            else
+                textb_1.lbl = "N/A"
+                textb_2.lbl = "N/A"
+                textb_3.lbl = "N/A"
+            end
+    
+            update_current_state()
+            update_patch_box() -- 更新UI
+        end
+    end
+end
+
+local function setCheckBoxMode2Shift()
+    local function update_current_state()
+        current_state = {
+            velocity = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].velocity,
+            note = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].note,
+            bank = store_grouped[ch_box1.norm_val].notes[ch_box2.norm_val].bank
+        }
+        push_current_state()
+    end
+
+    local bank_titles = {}
+    local box1_index = 1
+    for i, bank_item in ipairs(store_grouped) do
+        table.insert(bank_titles, bank_item.bank.full_name)
+        if current_state and tonumber(bank_item.bank.bank)==tonumber(current_state.bank) then
+            box1_index = i
+        end
+    end
+
+    ch_box1.norm_val = box1_index
+    ch_box1.norm_val2 = bank_titles
+
+    -- 在初始化时更新 textb_1 和 textb_2 的标签为 MSB 和 LSB
+    -- local bank_item = store_grouped[ch_box1.norm_val]
+    -- if bank_item and bank_item.bank then
+    --     textb_1.lbl = tostring(bank_item.bank.bank) -- MSB
+    --     --textb_2.lbl = tostring(bank_item.bank.velocity) -- LSB
+    -- else
+    --     textb_1.lbl = "N/A"
+    --     --textb_2.lbl = "N/A"
+    -- end
+
+    local function update_patch_box() -- 1
+        local bank_index = ch_box1.norm_val
+        if not store_grouped[bank_index] then bank_index = 1 end
+        local selected = 1
+        local note_titles = {}
+        for i, note_item in ipairs(store_grouped[bank_index].notes) do
+            table.insert(note_titles, note_item.full_name)
+            if current_state and tonumber(note_item.note) == tonumber(current_state.note) and tonumber(note_item.velocity) == tonumber(current_state.velocity) then
+                selected = i
+            end
+        end
+
+        ch_box2.norm_val = selected
+        ch_box2.norm_val2 = note_titles
+
+        local selected_note = store_grouped[bank_index].notes[selected]
+        if selected_note then
+            textb_1.lbl = tostring(selected_note.bank)      -- MSB
+            textb_2.lbl = tostring(selected_note.velocity)  -- LSB
+            textb_3.lbl = tostring(selected_note.note)      -- Note
+        else
+            textb_1.lbl = "N/A"
+            textb_2.lbl = "N/A"
+            textb_3.lbl = "N/A"
+        end
+    end
+
+    -- 检查是否有有效的 bank、velocity 和 program
+    if textb_1.lbl == "N/A" or textb_2.lbl == "N/A" or textb_3.lbl == "N/A" then
+        return -- 没有有效的 bank、velocity 和 program，直接返回
+    end
+
+    local bankNumber = tonumber(textb_1.lbl) * 128 + tonumber(textb_2.lbl)
+    local uok, uinput = reaper.GetUserInputs(setpc_title, 2, shift_retvals_csv, tostring(bankNumber) .. ',' .. textb_3.lbl)
+
+    if uok then
+        bankNumber, note = uinput:match("([^,]+),([^,]+)")
+        bankNumber = tonumber(bankNumber)
+        note = tonumber(note)
+        msb = math.floor(bankNumber / 128)
+        lsb = bankNumber % 128
 
         -- 查找匹配的 bank_item (根据 MSB)
         local new_bank_index
@@ -1225,30 +1464,6 @@ end
 -- text_bank.onClick = function () -- 音色表左键点击
 -- end
 
-textb_1.onRClick = function () -- MSB
-    if current_mode == "2" then
-        setCheckBox2()
-    else
-        setCheckBox()
-    end
-end
-
-textb_2.onRClick = function () -- LSB
-    if current_mode == "2" then
-        setCheckBox2()
-    else
-        setCheckBox()
-    end
-end
-
-textb_3.onRClick = function () -- Program
-    if current_mode == "2" then
-        setCheckBox2()
-    else
-        setCheckBox()
-    end
-end
-
 function DRAW()
     -- 绘制所有按钮
     for key, btn in pairs(Button_TB) do
@@ -1557,6 +1772,54 @@ function mainloop()
             text_bank.lbl = bank_name -- 更新文本框 textb 的标签的音色表名称
         end
         refresh_bank()
+    end
+
+    textb_1.onRClick = function () -- MSB
+        if Shift then
+            if current_mode == "2" then
+                setCheckBoxMode2Shift()
+            else
+                setCheckBoxMode1Shift()
+            end
+        else
+            if current_mode == "2" then
+                setCheckBoxMode2()
+            else
+                setCheckBoxMode1()
+            end
+        end
+    end
+    
+    textb_2.onRClick = function () -- LSB
+        if Shift then
+            if current_mode == "2" then
+                setCheckBoxMode2Shift()
+            else
+                setCheckBoxMode1Shift()
+            end
+        else
+            if current_mode == "2" then
+                setCheckBoxMode2()
+            else
+                setCheckBoxMode1()
+            end
+        end
+    end
+    
+    textb_3.onRClick = function () -- Program
+        if Shift then
+            if current_mode == "2" then
+                setCheckBoxMode2Shift()
+            else
+                setCheckBoxMode1Shift()
+            end
+        else
+            if current_mode == "2" then
+                setCheckBoxMode2()
+            else
+                setCheckBoxMode1()
+            end
+        end
     end
     
     if char == -1 or char == 27 then saveExtState() end -- saveState (window position)
