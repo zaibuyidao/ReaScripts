@@ -1,19 +1,9 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.9
+-- @version 1.1.0
 -- @changelog
---   + Added feature to switch theme style colors
---   + Added a Bank/Program display box; automatically matches timbre selection when Bank MSB/LSB changes
---   + Immediate MIDI message sending
---   + Selection of PC retrieves Bank/Program information to GUI
---   + Updated sound bank list (useful when editing Reabank)
---   + User configuration file, with support for multiple languages
---   # Fixed Reabank loading status to support real-time switching
---   # Fixed refresh of sound bank information in MIDI editor
---   # Fixed feedback on JSFX loading status
---   # Fixed real-time feedback for SC sustain (CC) controller
---   # Optimized arrangement of F1-F11 editors
---   # Modified GUI color scheme and fixed related component functions
+--   # Update articulation_map_factory.reabank
+--   # Fix refresh of patch table to also refresh take's reabank reload
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts

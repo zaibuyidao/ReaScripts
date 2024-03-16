@@ -1412,14 +1412,35 @@ function update_reabank_file()
     local track = getActiveMIDITrack()
     if not track then return end
 
-    -- 重新读取和解析 reabank 文件
+    local nonexistent_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "nonexistent.reabank"
+    
+    -- 创建一个临时 reabank
+    local file = io.open(nonexistent_path, "w+")
+    if not file then
+        reaper.ShowMessageBox("Couldn't create file:\n" .. nonexistent_path, "Error", 0)
+        return
+    end
+
+    file:write("Bank 0 1 1\n0 1\n")
+    file:close()
+
+    -- 应用临时的reabank
+    applyReaBankToTrack(track, nonexistent_path)
+
+    -- 暂停一段时间以确保REAPER处理了切换
+    reaper.defer(function() end)
+
+    -- 删除临时的reabank
+    os.remove(nonexistent_path)
+
+    -- 重新读取和解析reabank文件
     if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then 
         return 
     end
     store = parse_banks(read_config_lines(reabank_path), vel_show, bnk_show) -- 模式1数据
     store_grouped = group_banks(store, vel_show)                             -- 模式2数据
 
-    -- 应用更新后的 reabank
+    -- 应用更新后的reabank
     applyReaBankToTrack(track, reabank_path)
 
     -- 根据当前模式刷新界面
