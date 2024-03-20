@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8e5c85a937c033629c5772103028f45c765b5148">
+<index version="1" name="zaibuyidao Scripts" commit="fac9dd35379f2f382e245eeb23c286ccd1334aff">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2149,6 +2149,23 @@
       <version name="1.0" author="zaibuyidao" time="2024-03-03T10:36:03Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/2ce374311bda43f683998d6ed14891a1e25abb99/JSFX/MIDI%20Bank%20Program%20on%20Specific%20Note.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="MIDI CC Events First.jsfx" type="effect" desc="MIDI CC Events First [zaibuyidao]">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 This script allows for the advance sending of specified CC (Control Change) events. \u35813?\u33050?\u26412?\u20801?\u35768?\u25552?\u21069?\u21457?\u36865?\u25351?\u23450?\u30340? CC (\u25511?\u21046?\u26356?\u25913?) \u20107?\u20214?.\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-03-20T09:42:57Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/fac9dd35379f2f382e245eeb23c286ccd1334aff/JSFX/MIDI%20CC%20Events%20First.jsfx</source>
       </version>
     </reapack>
     <reapack name="MIDI Off Velocity Limiter.jsfx" type="effect" desc="MIDI Off Velocity Limiter">
