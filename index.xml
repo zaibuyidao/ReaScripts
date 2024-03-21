@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d1fde0d1a8d95775a2b8ab227f377df745ec04f9">
+<index version="1" name="zaibuyidao Scripts" commit="dd5d829d51a8f37a92e49e96a78c8ba23d99ee46">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9431,7 +9431,7 @@
     </reapack>
   </category>
   <category name="Various">
-    <reapack name="a_test.lua" type="script" desc="zaibuyidao_TEST">
+    <reapack name="a_test.lua" type="script" desc="a_test">
       <version name="1.0" author="zaibuyidao" time="2024-03-21T02:50:05Z">
         <source file="test/a_test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/6c062906114ee8a2f14e714ea984c52d05e35cf0/Various/test/a_test.jsfx</source>
       </version>
@@ -9440,6 +9440,9 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2024-03-21T02:52:24Z">
         <source file="test/a_test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/d1fde0d1a8d95775a2b8ab227f377df745ec04f9/Various/test/a_test.jsfx</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2024-03-21T03:11:51Z">
+        <source file="test/a_test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/722de66071c0bbbcaf47a6240d1ea19971bdd7b6/Various/test/a_test.jsfx</source>
       </version>
     </reapack>
     <reapack name="Articulation Map Bundle.lua" type="script" desc="Articulation Map Bundle">
@@ -13668,11 +13671,11 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
       </version>
     </reapack>
   </category>
-  <category name="Various/test">
+  <category name="Various/test/jsfx">
     <reapack name="a_test.jsfx" type="effect" desc="a_test">
-      <version name="1.0" author="test" time="2024-03-21T02:47:51Z">
+      <version name="1.0" author="test" time="2024-03-21T05:44:25Z">
         <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/50d0f0427f2f41abbe5adec52f094b63dfd37054/Various/test/a_test.jsfx</source>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/dd5d829d51a8f37a92e49e96a78c8ba23d99ee46/Various/test/jsfx/a_test.jsfx</source>
       </version>
     </reapack>
   </category>
