@@ -1,6 +1,6 @@
 -- @description a_test
 -- @author zaibuyidao
--- @version 1.0.9
+-- @version 1.0.10
 -- @metapackage
 -- @provides
---  test/jsfx/*.jsfx > JSFX/
+--  test/jsfx/*.jsfx > ABC/
