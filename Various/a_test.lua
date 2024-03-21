@@ -3,4 +3,4 @@
 -- @version 1.0
 -- @metapackage
 -- @provides
---  TEST/zaibuyidao_test.jsfx
+--  test/a_test.jsfx
