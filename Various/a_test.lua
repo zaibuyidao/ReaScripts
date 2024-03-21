@@ -1,6 +1,6 @@
 -- @description a_test
 -- @author zaibuyidao
--- @version 1.0.11
+-- @version 1.0.13
 -- @metapackage
 -- @provides
---  test/jsfx/*.jsfx > . > Effects/
+-- [jsfx] test/jsfx/*.jsfx
