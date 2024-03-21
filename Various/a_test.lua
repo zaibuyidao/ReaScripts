@@ -1,6 +1,6 @@
--- @description zaibuyidao_TEST
+-- @description a_test
 -- @author zaibuyidao
--- @version 1.0.2
+-- @version 1.0.3
 -- @metapackage
 -- @provides
---  test/a_test.jsfx
+--  [jsfx] test/a_test.jsfx
