@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c0e30dd6daf1671614712eca12108778b6b36d64">
+<index version="1" name="zaibuyidao Scripts" commit="613f710deaa8b2f79e4c717bad19a875391fc99c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9452,6 +9452,9 @@
       </version>
       <version name="1.0.10" author="zaibuyidao" time="2024-03-21T06:09:37Z">
         <source file="ABC/a_test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/c0e30dd6daf1671614712eca12108778b6b36d64/Various/test/jsfx/a_test.jsfx</source>
+      </version>
+      <version name="1.0.11" author="zaibuyidao" time="2024-03-21T06:14:34Z">
+        <source file=". &gt; Effects/a_test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/613f710deaa8b2f79e4c717bad19a875391fc99c/Various/test/jsfx/a_test.jsfx</source>
       </version>
     </reapack>
     <reapack name="Articulation Map Bundle.lua" type="script" desc="Articulation Map Bundle">
