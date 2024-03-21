@@ -1,5 +1,5 @@
 -- @description a_test
--- @version 1.0.23
+-- @version 1.0.24
 -- @metapackage
 -- @provides
---  [effect] a_test.jsfx
+--  [effect] test/a_test.jsfx
