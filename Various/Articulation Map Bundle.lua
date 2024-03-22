@@ -1,0 +1,23 @@
+-- @description Articulation Map Bundle
+-- @author zaibuyidao
+-- @version 1.0
+-- @changelog
+--   + Integrated Script Bundle
+-- @links
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
+-- @metapackage
+-- @provides
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Note To PC.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle Note PC.lua
+--   [nomain] Articulation Map/lib/*.lua
+--   [nomain] Articulation Map/articulation_map_factory.reabank
+--   [effect] Articulation Map/jsfx/Articulation Map.jsfx
+--   [effect] Articulation Map/jsfx/Pre-trigger CC Event.jsfx
+-- @donation http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
+
+-- Licensed under the GNU GPL v3
