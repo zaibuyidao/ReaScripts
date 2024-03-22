@@ -1,7 +1,7 @@
 -- @description test bundle
--- @version 1.0.27
+-- @version 1.0.28
 -- @metapackage
 -- @provides
 --  [effect] test/test.jsfx
 --  [effect] test/articulation_map.jsfx
---  [effect] test/test.jsfx
+--  [effect] test/pre_trigger_cc_event.jsfx
