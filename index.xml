@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="73adef76c3c86e206d34c35e054b8cf9a5e19870">
+<index version="1" name="zaibuyidao Scripts" commit="33b91bb6fec87bde61850676fa2627f7ed8bd764">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -12293,6 +12293,10 @@ Add "scroll to top" feature to UCS list]]></changelog>
       <version name="1.0.40" time="2024-03-22T09:09:14Z">
         <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/73adef76c3c86e206d34c35e054b8cf9a5e19870/Various/test/test.jsfx</source>
         <source type="effect" file="amjs/test2.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/73adef76c3c86e206d34c35e054b8cf9a5e19870/Various/amjs/test2.jsfx</source>
+      </version>
+      <version name="1.0.41" time="2024-03-22T09:11:03Z">
+        <source type="effect" file="anjs/anjs.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/33b91bb6fec87bde61850676fa2627f7ed8bd764/Various/anjs/anjs.jsfx</source>
+        <source type="effect" file="amjs/amjs.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/33b91bb6fec87bde61850676fa2627f7ed8bd764/Various/amjs/amjs.jsfx</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
