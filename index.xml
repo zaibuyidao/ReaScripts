@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ccc33c59dce1b4570e9d5434c4bd36ad92c4987b">
+<index version="1" name="zaibuyidao Scripts" commit="62d1ac2be9407a767eee7b372e731ca937bf4e1a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -13380,20 +13380,15 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
     </reapack>
   </category>
   <category name="Various/amjs">
-    <reapack name="test_test.jsfx" type="effect" desc="Articulation Map">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Use JSFX-Articulation Map to convert Program Change message to Keyswitches. In any mode, use the CC#119 controller to insert a value of 0 to immediately send Note-Off; You can also use CC#119 to control the length of the keyswitches in the blend mode. When the value is 64-127, the Legato mode will be activated to extend the note, and when the value is 0-63, the staccato mode will be activated and Note-Off will be sent immediately.\par}
-}
-]]></description>
-        <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
-      </metadata>
+    <reapack name="test_test.jsfx" type="effect" desc="MIDI Events First">
+      <metadata/>
       <version name="1.1.6" author="zaibuyidao, Tale" time="2024-03-22T09:45:53Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/e7e61df0415cff394b4a3842ccb5dd42459e4887/Various/amjs/test_test.jsfx</source>
+      </version>
+      <version name="1.0" author="test" time="2024-03-22T12:13:18Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/62d1ac2be9407a767eee7b372e731ca937bf4e1a/Various/amjs/test_test.jsfx</source>
       </version>
     </reapack>
   </category>
