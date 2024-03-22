@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.1.5.4
+-- @version 1.1.5.5
 -- @changelog
 --   + Integrated Script Bundle
 -- @links
