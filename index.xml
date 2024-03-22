@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3320f27da9030db777bd131831579f128adb4f34">
+<index version="1" name="zaibuyidao Scripts" commit="0794f97ab6269bf969221ea10b4ba6de2ea943df">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9387,6 +9387,33 @@
     </reapack>
   </category>
   <category name="Various">
+    <reapack name="Articulation Map Bundle.lua" type="script" desc="Articulation Map Bundle">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://forum.cockos.com/showthread.php?t=289373</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-03-22T12:58:54Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - No GUI.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20No%20GUI.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - Note To PC.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20Note%20To%20PC.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20PC%20To%20Note.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - Toggle Note PC.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20Toggle%20Note%20PC.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/zaibuyidao_Articulation%20Map.lua</source>
+        <source file="Articulation Map/lib/config.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/lib/config.lua</source>
+        <source file="Articulation Map/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/lib/core.lua</source>
+        <source file="Articulation Map/lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/lib/gui.lua</source>
+        <source file="Articulation Map/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/lib/utils.lua</source>
+        <source file="Articulation Map/articulation_map_factory.reabank">https://github.com/zaibuyidao/ReaScripts/raw/0794f97ab6269bf969221ea10b4ba6de2ea943df/Various/Articulation%20Map/articulation_map_factory.reabank</source>
+      </version>
+    </reapack>
     <reapack name="SFX Tag Search Bundle.lua" type="script" desc="SFX Tag Search Bundle">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
