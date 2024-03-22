@@ -1,5 +1,5 @@
 -- @description test bundle
--- @version 1.0.48
+-- @version 1.0.49
 -- @metapackage
 -- @provides
 --  [effect] amjs/articulation_map.jsfx
