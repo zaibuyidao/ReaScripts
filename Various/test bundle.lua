@@ -1,6 +1,7 @@
+-- @noindex
 -- @description test bundle
--- @version 1.0.49
+-- @version 1.0.50
 -- @metapackage
+
 -- @provides
 --  [effect] amjs/articulation_map.jsfx
---  [effect] amjs/pre_trigger_cc_event.jsfx
