@@ -1,5 +1,6 @@
 -- @description test bundle
--- @version 1.0.33
+-- @version 1.0.34
 -- @metapackage
 -- @provides
 --  [effect] test/test.jsfx
+--  [effect] test/articulation_map.jsfx
