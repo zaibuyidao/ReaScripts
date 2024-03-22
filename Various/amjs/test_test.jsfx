@@ -1,4 +1,6 @@
 desc: MIDI Events First
+changelog: init
+author: test
 @init
 DELAY = 0.001; // 延迟时间为0.1秒
 PC_MSG = 0xC0; // PC事件的MIDI消息类型
