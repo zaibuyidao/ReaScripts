@@ -1,6 +1,6 @@
 -- @noindex
 -- @description test bundle
--- @version 1.0.53
+-- @version 1.0.54
 -- @metapackage
 
 -- @provides
