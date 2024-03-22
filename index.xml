@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="dac271fac430e9bdbe279c845f617e132a76b52a">
+<index version="1" name="zaibuyidao Scripts" commit="1fc043bbab3b8e7fb4bd0893c07c287ac1806df6">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -12282,6 +12282,10 @@ Add "scroll to top" feature to UCS list]]></changelog>
       </version>
       <version name="1.0.67" time="2024-03-22T12:35:18Z">
         <source type="effect" file="Articulation Map.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/dac271fac430e9bdbe279c845f617e132a76b52a/Various/Articulation%20Map.jsfx</source>
+      </version>
+      <version name="1.0.68" time="2024-03-22T12:39:46Z">
+        <source type="effect" file="Articulation Map.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/1fc043bbab3b8e7fb4bd0893c07c287ac1806df6/Various/Articulation%20Map.jsfx</source>
+        <source type="effect" file="Pre-trigger CC Event.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/1fc043bbab3b8e7fb4bd0893c07c287ac1806df6/Various/Pre-trigger%20CC%20Event.jsfx</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
