@@ -1,4 +1,11 @@
 -- NoIndex: true
+local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
+package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
+
+CONFIG = require('config')
+short_note = CONFIG.pc_to_note.short_note
+sustain_note = CONFIG.pc_to_note.sustain_note
+
 function inset_patch(bank, note, velocity, chan) -- 插入音色
   local chan = chan - 1
   reaper.PreventUIRefresh(1)
@@ -39,7 +46,7 @@ function inset_patch(bank, note, velocity, chan) -- 插入音色
   if (reaper.SN_FocusMIDIEditor) then reaper.SN_FocusMIDIEditor() end
 end
 
-function slideF10() -- 选中事件向左移动 10 ticks
+function slideF10() -- 选中事件向左移动 1 ticks
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
   if not take or not reaper.TakeIsMIDI(take) then return end
   _, notes, ccs, _ = reaper.MIDI_CountEvts(take)
@@ -48,10 +55,10 @@ function slideF10() -- 选中事件向左移动 10 ticks
       local retval, sel, muted, cc_ppq, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
       if sel == true then
           if chanmsg == 176 then -- and (msg2 == 0 or msg2 == 32) 
-              reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq-10, nil, nil, nil, nil, false)
+              reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq-1, nil, nil, nil, nil, false)
           end
           if chanmsg == 192 then
-              reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq-10, nil, nil, nil, nil, false)
+              reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq-1, nil, nil, nil, nil, false)
           end
       end
       i = i + 1
@@ -59,7 +66,7 @@ function slideF10() -- 选中事件向左移动 10 ticks
   for i = 0,  notes - 1 do
       local retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
       if sel == true then
-          reaper.MIDI_SetNote(take, i, sel, muted, ppq_start-10, ppq_end-10, nil, nil, nil, false)
+          reaper.MIDI_SetNote(take, i, sel, muted, ppq_start-1, ppq_end-1, nil, nil, nil, false)
       end
       i = i + 1
   end
@@ -75,10 +82,10 @@ function slideZ10() -- 选中事件向右移动 10 ticks
       local retval, sel, muted, cc_ppq, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
       if sel == true then
           if chanmsg == 176 then -- and (msg2 == 0 or msg2 == 32)
-              reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+10, nil, nil, nil, nil, false)
+              reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+1, nil, nil, nil, nil, false)
           end
           if chanmsg == 192 then
-              reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+10, nil, nil, nil, nil, false)
+              reaper.MIDI_SetCC(take, i, sel, muted, cc_ppq+1, nil, nil, nil, nil, false)
           end
       end
       i = i + 1
@@ -86,7 +93,7 @@ function slideZ10() -- 选中事件向右移动 10 ticks
   for i = 0,  notes - 1 do
       local retval, sel, muted, ppq_start, ppq_end, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
       if sel == true then
-          reaper.MIDI_SetNote(take, i, sel, muted, ppq_start+10, ppq_end+10, nil, nil, nil, false)
+          reaper.MIDI_SetNote(take, i, sel, muted, ppq_start+1, ppq_end+1, nil, nil, nil, false)
       end
       i = i + 1
   end
@@ -98,7 +105,7 @@ function ToggleNotePC()
   if not take or not reaper.TakeIsMIDI(take) then return end
   local miditick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 
-  local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, miditick/2, miditick/8, 2
+  local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, sustain_note, short_note, 2 -- sustainnote = miditick/2, shortnote = miditick/8
   local note_val = reaper.MIDI_EnumSelNotes(take, -1)
   while note_val ~= -1 do
       note_cnt = note_cnt + 1
@@ -181,7 +188,8 @@ function ToggleNotePC()
               reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pitch, 0)
   
               if endppqpos - startppqpos > sustainnote then -- 如果音符长度大于半拍，那么插入CC119
-                  reaper.MIDI_InsertCC(take, true, muted, startppqpos - 10, 0xB0, chan, gmem_cc_num, 127) -- 插入CC需提前于PC 默认10tick
+                  -- reaper.MIDI_InsertCC(take, true, muted, startppqpos - 10, 0xB0, chan, gmem_cc_num, 127) -- 插入CC需提前于PC 默认10tick【为了补偿CC119晚于PC】
+                  reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, gmem_cc_num, 127)
                   reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, gmem_cc_num, 0)
               end
           end
@@ -394,10 +402,12 @@ function add_or_toggle_articulation_map_jsfx()
 
   local track = reaper.GetMediaItemTake_Track(take)
   local fxIndex = reaper.TrackFX_GetByName(track, "Articulation Map", false)
+  local fxFirst = reaper.TrackFX_GetByName(track, "Pre-trigger CC Event", false)
 
   if fxIndex < 0 then
       -- 如果插件不存在，则添加它到顶部
-      fxIndex = reaper.TrackFX_AddByName(track, "Articulation Map", false, -1000)
+      fxFirst = reaper.TrackFX_AddByName(track, "Pre-trigger CC Event", false, -1000)
+      fxIndex = reaper.TrackFX_AddByName(track, "Articulation Map", false, -1001)
   end
 
   -- 检查浮动窗口是否打开
