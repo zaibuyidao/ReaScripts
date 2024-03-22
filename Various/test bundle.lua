@@ -1,0 +1,5 @@
+-- @description test bundle
+-- @version 1.0.26
+-- @metapackage
+-- @provides
+--  [effect] test/test.jsfx
