@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d5f541f836e01760773ca920bfd74f74ec9bf16c">
+<index version="1" name="zaibuyidao Scripts" commit="b8a73ac1f4af2be53a39216390a407bf158c23fa">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -12279,6 +12279,9 @@ Add "scroll to top" feature to UCS list]]></changelog>
       </version>
       <version name="1.0.35" time="2024-03-22T08:53:19Z">
         <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/d5f541f836e01760773ca920bfd74f74ec9bf16c/Various/test/test.jsfx</source>
+      </version>
+      <version name="1.0.36" time="2024-03-22T08:56:46Z">
+        <source file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/b8a73ac1f4af2be53a39216390a407bf158c23fa/Various/test/test.jsfx</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
