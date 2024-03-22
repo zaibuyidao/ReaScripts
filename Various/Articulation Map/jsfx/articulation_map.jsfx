@@ -1,3 +1,4 @@
+desc: Articulation Map
 desc: Articulation Map [zaibuyidao, Tale]
 //Use JSFX-Articulation Map to convert Program Change message to Keyswitches.
 //In any mode, use the CC#119 controller to insert a value of 0 to immediately send Note-Off;
