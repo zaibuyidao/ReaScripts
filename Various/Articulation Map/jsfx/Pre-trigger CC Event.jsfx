@@ -1,7 +1,7 @@
+desc: Pre-trigger CC Event [zaibuyidao]
 //This script allows for the advance sending of specified CC (Control Change) events.
 //该脚本允许提前发送指定的 CC (控制更改) 事件.
 
-desc: Pre-trigger CC Event [zaibuyidao]
 slider1:119<0,127,1>CC number:
 slider2:1<0,10,1>Advance time (ms):
 
