@@ -1,6 +1,6 @@
 -- @description test bundle
--- @version 1.0.47
+-- @version 1.0.48
 -- @metapackage
 -- @provides
---  [effect] amjs/Articulation Map.jsfx
---  [effect] amjs/Pre-trigger CC Event.jsfx
+--  [effect] amjs/articulation_map.jsfx
+--  [effect] amjs/pre_trigger_cc_event.jsfx
