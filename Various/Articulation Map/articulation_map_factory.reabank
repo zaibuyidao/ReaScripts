@@ -307,7 +307,7 @@ Bank 4 96 Ample Sound Erhu 二胡凝月
 //----------------------------------------------------------------------
 //Instrument 5, Default Articulations, KS Velocity 96 (REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1)
 //乐器 5, 默认技法, 键位切换键力度 96 (REAPER首选项-媒体-MIDI设置-八度名称显示偏移: -1)
-Bank 4 96 Ample Sound Qudi 曲笛風逸
+Bank 5 96 Ample Sound Qudi 曲笛風逸
 24 長音
 25 單吐
 26 上倚音
