@@ -1,9 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.1.3
+-- @version 1.1.4
 -- @changelog
---   # Update articulation_map_factory.reabank
---   # Fix refresh of patch table to also refresh take's reabank reload
+--   + Integrated jsfx / lua Script Bundle
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
