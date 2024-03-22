@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6a335e5dd445370234dee626a60090f704cf673a">
+<index version="1" name="zaibuyidao Scripts" commit="c93e0df071fff4867edf06cf13416d5e4951a276">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -13416,6 +13416,41 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
         <source file="UCS/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/d1fd7a031678f209f0bd3b83cb86bddfccf5c687/Various/UCS/lib/utils.lua</source>
         <source file="UCS/UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/d1fd7a031678f209f0bd3b83cb86bddfccf5c687/Various/UCS/UCS_list.csv</source>
         <source file="UCS/UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/d1fd7a031678f209f0bd3b83cb86bddfccf5c687/Various/UCS/UCS_list_custom.csv</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Various/amjs">
+    <reapack name="Articulation Map.jsfx" type="effect" desc="Articulation Map">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Use JSFX-Articulation Map to convert Program Change message to Keyswitches. In any mode, use the CC#119 controller to insert a value of 0 to immediately send Note-Off; You can also use CC#119 to control the length of the keyswitches in the blend mode. When the value is 64-127, the Legato mode will be activated to extend the note, and when the value is 0-63, the staccato mode will be activated and Note-Off will be sent immediately.\par}
+}
+]]></description>
+        <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
+      </metadata>
+      <version name="1.1.6" author="zaibuyidao, Tale" time="2024-03-22T09:31:57Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/c93e0df071fff4867edf06cf13416d5e4951a276/Various/amjs/Articulation%20Map.jsfx</source>
+      </version>
+    </reapack>
+    <reapack name="Pre-trigger CC Event.jsfx" type="effect" desc="Pre-trigger CC Event [zaibuyidao]">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 This script allows for the advance sending of specified CC (Control Change) events. \u35813?\u33050?\u26412?\u20801?\u35768?\u25552?\u21069?\u21457?\u36865?\u25351?\u23450?\u30340? CC (\u25511?\u21046?\u26356?\u25913?) \u20107?\u20214?.\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-03-22T09:31:57Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/c93e0df071fff4867edf06cf13416d5e4951a276/Various/amjs/Pre-trigger%20CC%20Event.jsfx</source>
       </version>
     </reapack>
   </category>
