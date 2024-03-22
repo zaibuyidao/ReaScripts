@@ -1,7 +1,7 @@
 -- @noindex
 -- @description test bundle
--- @version 1.0.51
+-- @version 1.0.52
 -- @metapackage
 
 -- @provides
---  [effect] amjs/articulation_map.jsfx
+--  [effect] amjs/test_test.jsfx
