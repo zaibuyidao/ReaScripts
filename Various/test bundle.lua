@@ -1,6 +1,6 @@
 -- @description test bundle
--- @version 1.0.43
+-- @version 1.0.44
 -- @metapackage
 -- @provides
---  [effect] amjs/anjs.jsfx
---  [effect] amjs/amjs.jsfx
+--  [effect] amjs/Articulation Map.jsfx
+--  [effect] amjs/Pre-trigger CC Event.jsfx
