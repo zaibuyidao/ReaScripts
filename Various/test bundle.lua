@@ -1,6 +1,6 @@
 -- @description test bundle
--- @version 1.0.42
+-- @version 1.0.43
 -- @metapackage
 -- @provides
---  [effect] anjs/anjs.jsfx
+--  [effect] amjs/anjs.jsfx
 --  [effect] amjs/amjs.jsfx
