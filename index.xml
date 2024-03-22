@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2c77bd5d36b8a3f3f4fe30449994663c6229162f">
+<index version="1" name="zaibuyidao Scripts" commit="bec1fde2e33b00c8b1f6bdcafc52ddd03a498dc2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2070,50 +2070,6 @@
     </reapack>
   </category>
   <category name="JSFX">
-    <reapack name="Articulation Map.jsfx" type="effect" desc="Articulation Map">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Use JSFX-Articulation Map to convert Program Change message to Keyswitches. In any mode, use the CC#119 controller to insert a value of 0 to immediately send Note-Off; You can also use CC#119 to control the length of the keyswitches in the blend mode. When the value is 64-127, the Legato mode will be activated to extend the note, and when the value is 0-63, the staccato mode will be activated and Note-Off will be sent immediately.\par}
-}
-]]></description>
-        <link rel="website">https://forum.cockos.com/showthread.php?t=240598</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao, Tale" time="2021-01-25T18:39:19Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/ce78b9da98e5022718c00a9fc43492fa1103d9bf/JSFX/Articulation%20Map.jsfx</source>
-      </version>
-      <version name="1.1" author="zaibuyidao, Tale" time="2021-08-02T15:59:32Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/3acf29e38fdafa0d3467a36e7a4948ff747fca90/JSFX/Articulation%20Map.jsfx</source>
-      </version>
-      <version name="1.1.1" author="zaibuyidao, Tale" time="2021-08-03T14:44:53Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/393d4124dfa4551094f6ffc0e65a03f0419a768a/JSFX/Articulation%20Map.jsfx</source>
-      </version>
-      <version name="1.1.2" author="zaibuyidao, Tale" time="2021-08-05T16:56:50Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/7d07ee9efc8e0d7609fd89649b99ee7b27b5999f/JSFX/Articulation%20Map.jsfx</source>
-      </version>
-      <version name="1.1.3" author="zaibuyidao, Tale" time="2021-08-11T16:05:43Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/36628467ac2ad91a6922f9199ea9a45cca10fcf5/JSFX/Articulation%20Map.jsfx</source>
-      </version>
-      <version name="1.1.4" author="zaibuyidao, Tale" time="2021-09-08T15:30:18Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/bb1caa7ebd0364a57580da788082b79f137b3cb0/JSFX/Articulation%20Map.jsfx</source>
-      </version>
-      <version name="1.1.5" author="zaibuyidao, Tale" time="2021-09-09T13:31:24Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/248c9a8e3545ab38d84fa293ceabad0bd534e980/JSFX/Articulation%20Map.jsfx</source>
-      </version>
-      <version name="1.1.6" author="zaibuyidao, Tale" time="2021-12-23T16:35:36Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/9c702b1ceeb88ab89c4bfee7e4af432c9ceb16ec/JSFX/Articulation%20Map.jsfx</source>
-      </version>
-    </reapack>
     <reapack name="MIDI Bank Program on Specific Note (File-Based).jsfx" type="effect" desc="MIDI Bank/Program on Specific Note (File-Based)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
