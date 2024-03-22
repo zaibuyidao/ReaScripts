@@ -1,6 +1,5 @@
 -- @description test bundle
--- @version 1.0.31
+-- @version 1.0.32
 -- @metapackage
 -- @provides
 --  [effect] test/test.jsfx
---  [effect] test/pre_trigger_cc_event.jsfx
