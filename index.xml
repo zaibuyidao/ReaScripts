@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="88c715d48f720961138de32dc6835f73a11e9a21">
+<index version="1" name="zaibuyidao Scripts" commit="0f85282fb6ca625264498db679c38612e4406ad0">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -13619,7 +13619,7 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
     </reapack>
   </category>
   <category name="Various/JS">
-    <reapack name="Articulation Map.jsfx" type="effect" desc="Articulation Map [zaibuyidao, Tale]">
+    <reapack name="Articulation Map.jsfx" type="effect" desc="Articulation Map">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -13635,7 +13635,7 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/0640e21b6654062347eb1b77e562bab04ad0a434/Various/JS/Articulation%20Map.jsfx</source>
       </version>
     </reapack>
-    <reapack name="Pre-trigger CC Event.jsfx" type="effect" desc="Pre-trigger CC Event [zaibuyidao]">
+    <reapack name="Pre-trigger CC Event.jsfx" type="effect" desc="Pre-trigger CC Event">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
