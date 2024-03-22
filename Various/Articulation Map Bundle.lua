@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.1.5.1
+-- @version 1.1.5.2
 -- @changelog
 --   + Integrated jsfx / lua Script Bundle
 -- @links
@@ -15,8 +15,8 @@
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle Note PC.lua
 --   [nomain] Articulation Map/lib/*.lua
 --   [nomain] Articulation Map/articulation_map_factory.reabank
---   [effect] Articulation Map/Articulation Map.jsfx
---   [effect] Articulation Map/Pre-trigger CC Event.jsfx
+--   [effect] JS/Articulation Map.jsfx
+--   [effect] JS/Pre-trigger CC Event.jsfx
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
