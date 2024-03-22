@@ -1,4 +1,5 @@
 desc: MIDI Events First
+version: 1.0
 changelog: init
 author: test
 @init
