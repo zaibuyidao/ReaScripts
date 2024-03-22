@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.3
+-- @version 1.0.4
 -- @changelog
 --   + New Script
 -- @links
@@ -8,8 +8,8 @@
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
---  [jsfx] Articulation Map/jsfx/Articulation Map.jsfx
---  [jsfx] Articulation Map/jsfx/Pre-trigger CC Event.jsfx
+--  [jsfx] Articulation Map/jsfx/articulation_map.jsfx
+--  [jsfx] Articulation Map/jsfx/pre_trigger_cc_event.jsfx
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Note To PC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua

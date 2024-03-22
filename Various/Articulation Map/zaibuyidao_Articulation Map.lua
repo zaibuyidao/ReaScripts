@@ -182,7 +182,7 @@ if not reaper.APIExists("JS_Window_Find") then
     return reaper.defer(function() end)
 end
 
-checkArticulationMapJSFX() -- 检查是否安装 JSFX
+-- checkArticulationMapJSFX() -- 检查是否安装 JSFX
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if not take or not reaper.TakeIsMIDI(take) then return end

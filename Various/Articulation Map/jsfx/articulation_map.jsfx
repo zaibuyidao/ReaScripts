@@ -1,4 +1,4 @@
-desc: Articulation Map
+desc: Articulation Map [zaibuyidao, Tale]
 //Use JSFX-Articulation Map to convert Program Change message to Keyswitches.
 //In any mode, use the CC#119 controller to insert a value of 0 to immediately send Note-Off;
 //You can also use CC#119 to control the length of the keyswitches in the blend mode. When the value is 64-127, the Legato mode will be activated to extend the note, and when the value is 0-63, the staccato mode will be activated and Note-Off will be sent immediately.
