@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="62d1ac2be9407a767eee7b372e731ca937bf4e1a">
+<index version="1" name="zaibuyidao Scripts" commit="9a12813b839c7cb72f19a5edf8f73d1386a452f8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -12267,6 +12267,11 @@ Add "scroll to top" feature to UCS list]]></changelog>
         <source file="SFX/rating.csv">https://github.com/zaibuyidao/ReaScripts/raw/301f7b7e93cf47ab4d8be21ce88ab643fa76a7bc/Various/SFX/rating.csv</source>
       </version>
     </reapack>
+    <reapack name="test bundle.lua" type="script" desc="test bundle">
+      <version name="1.0.62" time="2024-03-22T12:14:59Z">
+        <source type="effect" file="amjs/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/9a12813b839c7cb72f19a5edf8f73d1386a452f8/Various/amjs/test.jsfx</source>
+      </version>
+    </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -13376,19 +13381,6 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
         <source file="UCS/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/d1fd7a031678f209f0bd3b83cb86bddfccf5c687/Various/UCS/lib/utils.lua</source>
         <source file="UCS/UCS_list.csv">https://github.com/zaibuyidao/ReaScripts/raw/d1fd7a031678f209f0bd3b83cb86bddfccf5c687/Various/UCS/UCS_list.csv</source>
         <source file="UCS/UCS_list_custom.csv">https://github.com/zaibuyidao/ReaScripts/raw/d1fd7a031678f209f0bd3b83cb86bddfccf5c687/Various/UCS/UCS_list_custom.csv</source>
-      </version>
-    </reapack>
-  </category>
-  <category name="Various/amjs">
-    <reapack name="test_test.jsfx" type="effect" desc="MIDI Events First">
-      <metadata/>
-      <version name="1.1.6" author="zaibuyidao, Tale" time="2024-03-22T09:45:53Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/e7e61df0415cff394b4a3842ccb5dd42459e4887/Various/amjs/test_test.jsfx</source>
-      </version>
-      <version name="1.0" author="test" time="2024-03-22T12:13:18Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/62d1ac2be9407a767eee7b372e731ca937bf4e1a/Various/amjs/test_test.jsfx</source>
       </version>
     </reapack>
   </category>
