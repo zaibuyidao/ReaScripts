@@ -1,8 +1,7 @@
 desc: Pre-trigger CC Event
-desc: Pre-trigger CC Event [zaibuyidao]
 //version: 1.0
-//changelog: New Script
-//author: zaibuyidao
+changelog: init
+author: zaibuyidao
 //links:
 //  webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 //  repo https://github.com/zaibuyidao/ReaScripts

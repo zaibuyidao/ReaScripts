@@ -1,8 +1,7 @@
 desc: Articulation Map
-desc: Articulation Map [zaibuyidao, Tale]
 //version: 1.0
-//changelog: New Script
-//author: zaibuyidao, Tale
+changelog: init
+author: zaibuyidao, Tale
 //links: https://forum.cockos.com/showthread.php?t=289373
 //about:
 //  Use JSFX-Articulation Map to convert Program Change message to Keyswitches.

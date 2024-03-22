@@ -1,8 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.1.5.2
+-- @version 1.1.5.4
 -- @changelog
---   + Integrated jsfx / lua Script Bundle
+--   + Integrated Script Bundle
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
