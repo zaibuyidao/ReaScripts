@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="efbcacbad50b4c8068d2625299928dc91d1b5e7e">
+<index version="1" name="zaibuyidao Scripts" commit="c988ac0aa53c9e50eccf659a7cf795e51a8455ed">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -12267,46 +12267,6 @@ Add "scroll to top" feature to UCS list]]></changelog>
         <source file="SFX/rating.csv">https://github.com/zaibuyidao/ReaScripts/raw/301f7b7e93cf47ab4d8be21ce88ab643fa76a7bc/Various/SFX/rating.csv</source>
       </version>
     </reapack>
-    <reapack name="test bundle.lua" type="script" desc="test bundle">
-      <version name="1.0.26" time="2024-03-22T07:19:41Z">
-        <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/88c715d48f720961138de32dc6835f73a11e9a21/Various/test/test.jsfx</source>
-      </version>
-      <version name="1.0.32" time="2024-03-22T08:05:20Z">
-        <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/fb2a71f26c16f2bd99adf1239c90fcf0a584f46b/Various/test/test.jsfx</source>
-      </version>
-      <version name="1.0.33" time="2024-03-22T08:06:45Z">
-        <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/862e6f838815e765897fa30f88a406dc6f2a0e6e/Various/test/test.jsfx</source>
-      </version>
-      <version name="1.0.35" time="2024-03-22T08:53:19Z">
-        <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/d5f541f836e01760773ca920bfd74f74ec9bf16c/Various/test/test.jsfx</source>
-      </version>
-      <version name="1.0.36" time="2024-03-22T08:56:46Z">
-        <source file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/b8a73ac1f4af2be53a39216390a407bf158c23fa/Various/test/test.jsfx</source>
-      </version>
-      <version name="1.0.37" time="2024-03-22T09:05:25Z">
-        <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/d76cfd525fb6dab6d532fede630339f8ef7379b9/Various/test/test.jsfx</source>
-      </version>
-      <version name="1.0.39" time="2024-03-22T09:08:04Z">
-        <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/6bb0234891a71fd4f4457c1be1644c222e9f9e00/Various/test/test.jsfx</source>
-        <source type="effect" file="amjs/test2.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/6bb0234891a71fd4f4457c1be1644c222e9f9e00/Various/amjs/test2.jsfx</source>
-      </version>
-      <version name="1.0.40" time="2024-03-22T09:09:14Z">
-        <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/73adef76c3c86e206d34c35e054b8cf9a5e19870/Various/test/test.jsfx</source>
-        <source type="effect" file="amjs/test2.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/73adef76c3c86e206d34c35e054b8cf9a5e19870/Various/amjs/test2.jsfx</source>
-      </version>
-      <version name="1.0.41" time="2024-03-22T09:11:03Z">
-        <source type="effect" file="anjs/anjs.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/33b91bb6fec87bde61850676fa2627f7ed8bd764/Various/anjs/anjs.jsfx</source>
-        <source type="effect" file="amjs/amjs.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/33b91bb6fec87bde61850676fa2627f7ed8bd764/Various/amjs/amjs.jsfx</source>
-      </version>
-      <version name="1.0.42" time="2024-03-22T09:12:09Z">
-        <source type="effect" file="anjs/anjs.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/5b99bee95ab494834aa442d78b56c8bb70693017/Various/anjs/anjs.jsfx</source>
-        <source type="effect" file="amjs/amjs.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/5b99bee95ab494834aa442d78b56c8bb70693017/Various/amjs/amjs.jsfx</source>
-      </version>
-      <version name="1.0.43" time="2024-03-22T09:14:31Z">
-        <source type="effect" file="amjs/anjs.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/6a335e5dd445370234dee626a60090f704cf673a/Various/amjs/anjs.jsfx</source>
-        <source type="effect" file="amjs/amjs.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/6a335e5dd445370234dee626a60090f704cf673a/Various/amjs/amjs.jsfx</source>
-      </version>
-    </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -13434,23 +13394,6 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
       <version name="1.1.6" author="zaibuyidao, Tale" time="2024-03-22T09:36:00Z">
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/efbcacbad50b4c8068d2625299928dc91d1b5e7e/Various/amjs/articulation_map.jsfx</source>
-      </version>
-    </reapack>
-    <reapack name="pre_trigger_cc_event.jsfx" type="effect" desc="Pre-trigger CC Event [zaibuyidao]">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 This script allows for the advance sending of specified CC (Control Change) events. \u35813?\u33050?\u26412?\u20801?\u35768?\u25552?\u21069?\u21457?\u36865?\u25351?\u23450?\u30340? CC (\u25511?\u21046?\u26356?\u25913?) \u20107?\u20214?.\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-03-22T09:36:00Z">
-        <changelog><![CDATA[init]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/efbcacbad50b4c8068d2625299928dc91d1b5e7e/Various/amjs/pre_trigger_cc_event.jsfx</source>
       </version>
     </reapack>
   </category>
