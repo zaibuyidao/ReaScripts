@@ -1,5 +1,6 @@
 -- @description test bundle
--- @version 1.0.67
+-- @version 1.0.68
 -- @metapackage
 -- @provides
 --  [jsfx] Articulation Map.jsfx
+--  [jsfx] Pre-trigger CC Event.jsfx
