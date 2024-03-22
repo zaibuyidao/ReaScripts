@@ -1,5 +1,5 @@
 -- @description test bundle
--- @version 1.0.61
+-- @version 1.0.62
 -- @metapackage
 -- @provides
---  [jsfx] amjs/test_test.jsfx
+--  [jsfx] amjs/test.jsfx
