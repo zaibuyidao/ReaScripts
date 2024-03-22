@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0f85282fb6ca625264498db679c38612e4406ad0">
+<index version="1" name="zaibuyidao Scripts" commit="dd5db1f3f77dce16f08ed88bcf2e9b13a08839a2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -13618,8 +13618,8 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
       </version>
     </reapack>
   </category>
-  <category name="Various/JS">
-    <reapack name="Articulation Map.jsfx" type="effect" desc="Articulation Map">
+  <category name="Various/Articulation Map/jsfx">
+    <reapack name="Articulation Map.jsfx" type="effect" desc="Articulation Map [zaibuyidao, Tale]">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -13630,12 +13630,12 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
 ]]></description>
         <link rel="website">https://forum.cockos.com/showthread.php?t=289373</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao, Tale" time="2024-03-22T07:16:24Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/0640e21b6654062347eb1b77e562bab04ad0a434/Various/JS/Articulation%20Map.jsfx</source>
+      <version name="1.0" author="zaibuyidao, Tale" time="2024-03-22T07:35:49Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/dd5db1f3f77dce16f08ed88bcf2e9b13a08839a2/Various/Articulation%20Map/jsfx/Articulation%20Map.jsfx</source>
       </version>
     </reapack>
-    <reapack name="Pre-trigger CC Event.jsfx" type="effect" desc="Pre-trigger CC Event">
+    <reapack name="Pre-trigger CC Event.jsfx" type="effect" desc="Pre-trigger CC Event [zaibuyidao]">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -13647,9 +13647,9 @@ Optimized adding keywords with Num+ and Num- keys]]></changelog>
         <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
         <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-03-22T07:16:24Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source>https://github.com/zaibuyidao/ReaScripts/raw/0640e21b6654062347eb1b77e562bab04ad0a434/Various/JS/Pre-trigger%20CC%20Event.jsfx</source>
+      <version name="1.0" author="zaibuyidao" time="2024-03-22T07:35:49Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/dd5db1f3f77dce16f08ed88bcf2e9b13a08839a2/Various/Articulation%20Map/jsfx/Pre-trigger%20CC%20Event.jsfx</source>
       </version>
     </reapack>
   </category>
