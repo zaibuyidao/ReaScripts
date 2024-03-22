@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d76cfd525fb6dab6d532fede630339f8ef7379b9">
+<index version="1" name="zaibuyidao Scripts" commit="6bb0234891a71fd4f4457c1be1644c222e9f9e00">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -12285,6 +12285,10 @@ Add "scroll to top" feature to UCS list]]></changelog>
       </version>
       <version name="1.0.37" time="2024-03-22T09:05:25Z">
         <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/d76cfd525fb6dab6d532fede630339f8ef7379b9/Various/test/test.jsfx</source>
+      </version>
+      <version name="1.0.39" time="2024-03-22T09:08:04Z">
+        <source type="effect" file="test/test.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/6bb0234891a71fd4f4457c1be1644c222e9f9e00/Various/test/test.jsfx</source>
+        <source type="effect" file="amjs/test2.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/6bb0234891a71fd4f4457c1be1644c222e9f9e00/Various/amjs/test2.jsfx</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
