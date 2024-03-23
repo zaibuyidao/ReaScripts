@@ -1,8 +1,9 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.5
+-- @version 1.0.6
 -- @changelog
---   + New Script
+--   + Added PC to Keyswitch CC functionality
+--   + Updated articulation_map_factory.reabank
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts

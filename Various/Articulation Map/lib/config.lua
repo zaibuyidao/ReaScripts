@@ -58,7 +58,7 @@ return {
         }
     },
     pc_to_note = {
-        short_note = 60, -- Non-holding note length (tick) ⇌ 非保持音长度
-        sustain_note = 240, -- Holding note length (tick) ⇌ 保持音长度
+        short_note = 60, -- Short note length (tick) ⇌ 非保持音长度 (滴答数)
+        sustain_note = 240, -- Holding note length (tick) ⇌ 保持音长度 (滴答数)
     }
 }
