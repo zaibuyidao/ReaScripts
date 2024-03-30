@@ -2,9 +2,11 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
+require('core')
 CONFIG = require('config')
 short_note = CONFIG.pc_to_note.short_note
 sustain_note = CONFIG.pc_to_note.sustain_note
+delimiter = getPathDelimiter()
 
 function inset_patch(bank, note, velocity, chan) -- 插入音色
     local chan = chan - 1
@@ -104,7 +106,7 @@ function process_bnkprg_lines(lines)
     local bankMappings = {}
     for i=1,#lines do
         -- 首先确保行以“//”开始
-        if lines[i]:match("^//") then
+        if not lines[i]:match("^//") then
             -- 删除行中的“//”和行尾的空格
             local cleanLine = lines[i]:gsub("//", ""):gsub("%s*$", "")
             -- 提取并处理bank-velocity-name映射
@@ -124,7 +126,7 @@ end
 function process_bnkprg_r_lines(lines)
     local bankMappings = {}
     for i=1,#lines do
-        if lines[i]:match("^//") then
+        if not lines[i]:match("^//") then
             local cleanLine = lines[i]:gsub("//", ""):gsub("%s*$", "")
             local key, value = cleanLine:match("^(%d+-%d+-%d+)=(.+)")
             if key and value then
@@ -171,9 +173,9 @@ function read_bnkprg_r_lines(reabank_path)
     return process_bnkprg_r_lines(lines)
 end
 
-reabank_path, bank_name = selectReaBankFile()
-local bankMappings = read_bnkprg_lines(reabank_path)
-local bankMappingsRev = read_bnkprg_r_lines(reabank_path)
+local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
+local bankMappings = read_bnkprg_lines(txt_path)
+local bankMappingsRev = read_bnkprg_r_lines(txt_path)
 -- 打印
 -- for k, v in pairs(bankMappings) do
 --     print("Key: " .. k)
@@ -446,7 +448,7 @@ function toggleNoteToPC()
             table_events[#table_events+1] = pack("i4Bs4", offset, flags, msg)
         end
         reaper.MIDI_SetAllEvts(take, table.concat(table_events))
-  
+
         --修复错位
         local decreaseValue=2
         local rangeL=0 --起始范围
