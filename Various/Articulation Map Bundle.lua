@@ -1,16 +1,17 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.6
+-- @version 1.0.7
 -- @changelog
---   + Added PC to Keyswitch CC functionality
---   + Updated articulation_map_factory.reabank
+--   + Added Simultaneous Articulation Mapping feature
+--   + Added pre_trigger_events.jsfx
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
 --  [jsfx] Articulation Map/jsfx/articulation_map.jsfx
---  [jsfx] Articulation Map/jsfx/pre_trigger_cc_event.jsfx
+--  [jsfx] Articulation Map/jsfx/pre_trigger_event.jsfx
+--  [data] Articulation Map/jsfx/zaibuyidao_articulation_map/*.txt
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Note To PC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua

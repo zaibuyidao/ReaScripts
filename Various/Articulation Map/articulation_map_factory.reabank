@@ -7,7 +7,12 @@
 //Bank LSB: Velocity of Keyswitch. Recommended: 96 (default), 127 (on), 1 (off)
 //Program number: Note Number of Keyswitch
 
+//Simultaneous Articulations mapping:
+//同时多键位映射:
+//127-100-100=127-100-67,127-100-74,127-100-79
 
+
+//----------------------------------------------------------------------
 //Instrument 0, Default Articulations, KS Velocity 96
 //乐器 0, 默认技法, 键位切换键力度 96
 Bank 0 96 Three-Body Whisper of Loong
@@ -77,6 +82,7 @@ Bank 1 96 三体新雨
 65 F3: 下滑止音
 66 F#3: 赠音
 99 D#6: 呼吸噪声
+
 
 //----------------------------------------------------------------------
 //Instrument 2, Default Articulations, KS Velocity 96

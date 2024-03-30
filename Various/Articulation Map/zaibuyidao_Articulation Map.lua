@@ -58,8 +58,6 @@ if language == "简体中文" then
     setpc_title = "设置音色库/程序选择"
     setpc_retvals_csv = "音色库 MSB (分组):,音色库 LSB (力度):,程序编号 (音符):"
     shift_retvals_csv = "音色库编号:,程序编号:"
-    setpc_msg = "必须选择 PC 事件！"
-    setpc_err = "错误"
     selbank_path = "选择音色表"
     patch_change_load = "加载文件"
     patch_change_OK = "确定"
@@ -94,8 +92,6 @@ elseif language == "繁體中文" then
     setpc_title = "设置音色庫/程式選擇"
     setpc_retvals_csv = "音色庫 MSB (分組):,音色庫 LSB (力度):,程式編號 (音符):"
     shift_retvals_csv = "音色庫編號:,程式編號:"
-    setpc_msg = "必須選擇 PC 事件！"
-    setpc_err = "錯誤"
     selbank_path = "選擇音色表"
     patch_change_load = "加載文件"
     patch_change_OK = "確定"
@@ -130,8 +126,6 @@ else
     setpc_title = "Set Bank/Program select"
     setpc_retvals_csv = "Bank MSB (Group):,Bank LSB (Velocity):,Program number (Note):"
     shift_retvals_csv = "Bank number:,Program number:"
-    setpc_msg = "PC events must be selected!"
-    setpc_err = "Error"
     selbank_path = "Choose a reabank"
     patch_change_load = "Load File"
     patch_change_OK = "OK"
@@ -374,9 +368,7 @@ btn3.onClick = function () -- 按钮 退出
     reaper.SN_FocusMIDIEditor()
 end
 
-btn5.onClick = function () slideF10() end -- 按钮 -10Tick
-btn6.onClick = function () slideZ10() end -- 按钮 +10Tick
-btn7.onClick = function () ToggleNotePC() end -- 按钮 NOTE/PC 来回切
+btn7.onClick = function () toggleNoteToPC() end -- 按钮 NOTE/PC 来回切
 btn9.onClick = function () -- 按钮 编辑音色表
     local rea_patch = '\"'..reabank_path..'\"'
     edit_reabank = 'start "" '..rea_patch
@@ -1665,7 +1657,7 @@ function mainloop()
     end
 
     if char == 26166 then -- F6 音符-PC模式切换
-        ToggleNotePC()
+        toggleNoteToPC()
     end
 
     if char == 26167 then -- F7 设置PC事件
@@ -1735,8 +1727,10 @@ function mainloop()
         end
     end
 
-    -- if char == 6697266 then -- F12
-    -- end
+    if char == 6697266 then -- F12 打开simul-arts.txt
+        local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
+        openUrl(txt_path)
+    end
 
     text_bank.onRClick = function () -- 刷新音色表
         -- 检查模式1和模式2是否有有效的银行数据
@@ -1794,6 +1788,22 @@ function mainloop()
         end
         refresh_bank()
     end
+
+    btn5.onClick = function ()
+        if Shift then
+            move_evnet_to_left(1)
+        else
+            move_evnet_to_left(10)
+        end
+    end -- 按钮 -x Tick
+
+    btn6.onClick = function ()
+        if Shift then
+            move_evnet_to_right(1)
+        else
+            move_evnet_to_right(10)
+        end
+    end -- 按钮 +x Tick
 
     textb_1.onRClick = function () -- MSB
         if Shift then

@@ -29,7 +29,19 @@ program = -1;
 start_ons = 1024;
 note_ons = start_ons;
 end_ons = note_ons + 128;
-memset(start_ons, -1, 128); 
+memset(start_ons, -1, 128);
+
+last_pc_time = 0;
+pc_group_count = 0;
+pc_group_buf = 1024 + 128;
+pc_group = pc_group_buf;
+vel_group_buf = 1152 + 128;
+vel_group = vel_group_buf;
+last_pc_group_count = 0;
+last_pc_group_buf = 1280 + 128;
+last_pc_group = last_pc_group_buf;
+last_vel_group_buf = 1408 + 128;
+last_vel_group = last_vel_group_buf;
 
 @slider
 delay = floor(slider3 / 1000 * srate + 0.5);
@@ -74,8 +86,12 @@ while (midirecv(offset, msg1, msg2, msg3)) (
   
   status == cc && (msg2 == sustain) ? (
     ccval = msg3;
-    ccval == 0 ? (
-      midisend(offset, note_off + channel, slider1, 0);
+    ccval >= 0 && ccval <= 63 ? (
+      i = 0;
+      loop(last_pc_group_count,
+        midisend(offset, note_off + channel, last_pc_group[i], 0);
+        i += 1;
+      );
     );
   );
   
@@ -96,11 +112,37 @@ while (midirecv(offset, msg1, msg2, msg3)) (
       
       program = -1;
     );
-    
+
     // Sustain Mode
     slider4 == 1 ? (
-      last ? midisend(offset, note_off + channel, last, 0);
-      last = program;
+      current_time = time_precise();
+      pc_interval = current_time - last_pc_time;
+      last_pc_time = current_time;
+      
+      pc_interval > 0.1 ? (
+        i = 0;
+        loop(last_pc_group_count,
+          midisend(offset, note_off + channel, last_pc_group[i], 0);
+          i += 1;
+        );
+        
+        pc_group = pc_group_buf;
+        vel_group = vel_group_buf;
+        pc_group_count = 0;
+      );
+      
+      pc_group[pc_group_count] = program;
+      vel_group[pc_group_count] = bank_lsb;
+      pc_group_count += 1;
+      
+      last_pc_group_count = pc_group_count;
+      i = 0;
+      loop(last_pc_group_count,
+        last_pc_group[i] = pc_group[i];
+        last_vel_group[i] = vel_group[i];
+        i += 1;  
+      );
+      
       midisend(offset, note_on + channel, program, bank_lsb);
     );
     
@@ -120,9 +162,36 @@ while (midirecv(offset, msg1, msg2, msg3)) (
       );
 
       ccval >= 64 && ccval <= 127 ? (
-      last ? midisend(offset, note_off + channel, last, 0);
-      last = program;
-      midisend(offset, note_on + channel, program, bank_lsb);
+
+        current_time = time_precise();
+        pc_interval = current_time - last_pc_time;
+        last_pc_time = current_time;
+      
+        pc_interval > 0.1 ? (
+          i = 0;
+          loop(last_pc_group_count,
+            midisend(offset, note_off + channel, last_pc_group[i], 0);
+            i += 1;
+          );
+        
+          pc_group = pc_group_buf;
+          vel_group = vel_group_buf;
+          pc_group_count = 0;
+        );
+      
+        pc_group[pc_group_count] = program;
+        vel_group[pc_group_count] = bank_lsb;
+        pc_group_count += 1;
+      
+        last_pc_group_count = pc_group_count;
+        i = 0;
+        loop(last_pc_group_count,
+          last_pc_group[i] = pc_group[i];
+          last_vel_group[i] = vel_group[i];
+          i += 1;  
+        );
+      
+        midisend(offset, note_on + channel, program, bank_lsb);
       );
     );
     
@@ -130,7 +199,7 @@ while (midirecv(offset, msg1, msg2, msg3)) (
     slider4 == 3 ? (
       midisend(offset, cc + channel, slider7, program);
     );
-
+  
     status = 0; // don't passthrough
   );
   
