@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.11
+-- @version 1.0.12
 -- @changelog
 --   + Added Simultaneous Articulation Mapping feature
 --   + Added pre_trigger_events.jsfx
