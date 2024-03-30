@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.8
+-- @version 1.0.10
 -- @changelog
 --   + Added Simultaneous Articulation Mapping feature
 --   + Added pre_trigger_events.jsfx
@@ -9,9 +9,9 @@
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
---  [jsfx] Articulation Map/jsfx/articulation_map.jsfx
---  [jsfx] Articulation Map/jsfx/pre_trigger_events.jsfx
---  [data] Articulation Map/jsfx/zaibuyidao_articulation_map/*.txt
+--  [jsfx] Articulation Map/articulation_map.jsfx
+--  [jsfx] Articulation Map/pre_trigger_events.jsfx
+--  [data] zaibuyidao_articulation_map/*.txt
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Note To PC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua
