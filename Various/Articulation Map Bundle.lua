@@ -1,8 +1,9 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.16
+-- @version 1.0.17
 -- @changelog
 --   + Added PC to CC toggle functionality, hold Shift and click the PC button to toggle.
+--   + Added support for "PC to Note" and "PC to CC" scripts.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
@@ -13,7 +14,6 @@
 --  [data] zaibuyidao_articulation_map/*.txt
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - CC to PC.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Note to PC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to CC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to Note.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle PC to CC.lua
