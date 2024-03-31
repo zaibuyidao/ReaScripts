@@ -1,13 +1,11 @@
 -- NoIndex: true
-function Msg(param)
-  reaper.ShowConsoleMsg(tostring(param) .. "\n")
-end
 
 function main()
   reaper.PreventUIRefresh(1)
   reaper.Undo_BeginBlock()
   local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-  if take == nil then return end
+  if not take or not reaper.TakeIsMIDI(take) then return end
+
   item = reaper.GetMediaItemTake_Item(take)
   local cur_pos = reaper.GetCursorPositionEx()
   local ppq_pos = reaper.MIDI_GetPPQPosFromProjTime(take, cur_pos)
@@ -19,24 +17,24 @@ function main()
     value = reaper.MIDI_EnumSelNotes(take, value)
   end
 
-  local MSB = reaper.GetExtState("ArticulationMap", "MSB")
+  local MSB = reaper.GetExtState("ARTICULATION_MAP", "nogui")
   if (MSB == "") then MSB = "0" end
-    local PC = reaper.GetExtState("ArticulationMap", "PC")
+    local PC = reaper.GetExtState("ARTICULATION_MAP", "noguiPC")
   if (PC == "") then PC = "C-1" end
-  local LSB = reaper.GetExtState("ArticulationMap", "LSB")
+  local LSB = reaper.GetExtState("ARTICULATION_MAP", "noguiLSB")
   if (LSB == "") then LSB = "96" end
-  local Tick = reaper.GetExtState("ArticulationMap", "Tick")
-  if (Tick == "") then Tick = "-10" end
+  local Tick = reaper.GetExtState("ARTICULATION_MAP", "noguiTick")
+  if (Tick == "") then Tick = "0" end
 
-  local user_ok, user_input_csv = reaper.GetUserInputs("Patch Change", 4, "Instrument Group,Velocity,Note,Offset", MSB ..','.. LSB ..','.. PC ..','.. Tick)
-  if not user_ok then return reaper.SN_FocusMIDIEditor() end
-  local MSB, LSB, PC, Tick = user_input_csv:match("(.*),(.*),(.*),(.*)")
+  local uok, uinput = reaper.GetUserInputs("Articulation Map", 4, "Group,Velocity,Note,Offset", MSB ..','.. LSB ..','.. PC ..','.. Tick)
+  if not uok then return reaper.SN_FocusMIDIEditor() end
+  local MSB, LSB, PC, Tick = uinput:match("([^,]+),([^,]+),([^,]+),([^,]+)")
   if not tonumber(MSB) or not (tonumber(PC) or tostring(PC)) or not tonumber(LSB) or not tonumber(Tick) then return reaper.SN_FocusMIDIEditor() end
 
-  reaper.SetExtState("ArticulationMap", "MSB", MSB, false)
-  reaper.SetExtState("ArticulationMap", "PC", PC, false)
-  reaper.SetExtState("ArticulationMap", "LSB", LSB, false)
-  reaper.SetExtState("ArticulationMap", "Tick", Tick, false)
+  reaper.SetExtState("ARTICULATION_MAP", "noguiMSB", MSB, false)
+  reaper.SetExtState("ARTICULATION_MAP", "noguiPC", PC, false)
+  reaper.SetExtState("ARTICULATION_MAP", "noguiLSB", LSB, false)
+  reaper.SetExtState("ARTICULATION_MAP", "noguiTick", Tick, false)
 
   if (PC == "C-2") then PC = "0"
   elseif (PC == "C#-2") then PC = "1"
@@ -186,7 +184,7 @@ function main()
     reaper.MIDI_InsertCC(take, selected, muted, ppq_pos+Tick, 0xC0, chan, PC, 0) -- Program Change
   end
   reaper.UpdateItemInProject(item)
-  reaper.Undo_EndBlock("Patch Change", -1)
+  reaper.Undo_EndBlock("Articulation Map - No GUI", -1)
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
 end

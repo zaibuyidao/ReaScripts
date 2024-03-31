@@ -1612,6 +1612,9 @@ function mainloop()
         btn11.lbl = "SC:CC#" .. gmem_cc_num
     end
 
+    gmem_cc58_num = reaper.gmem_read(2)
+    gmem_cc58_num = math.floor(gmem_cc58_num)
+
     last_mouse_cap = gfx.mouse_cap
     last_x, last_y = gfx.mouse_x, gfx.mouse_y
     gfx.mouse_wheel = 0 -- reset gfx.mouse_wheel
