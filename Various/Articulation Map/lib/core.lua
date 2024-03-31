@@ -41,6 +41,12 @@ function table.print(t)
     end
 end
 
+function setFocusToWindow(name)
+    local title = reaper.JS_Localize(name, "common")
+    local hwnd = reaper.JS_Window_Find(title, 0)
+    reaper.BR_Win32_SetFocus(hwnd)
+end
+
 function getSystemLanguage()
     local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
     local os = reaper.GetOS()

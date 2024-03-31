@@ -1,9 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.12
+-- @version 1.0.13
 -- @changelog
---   + Added Simultaneous Articulation Mapping feature
---   + Added pre_trigger_events.jsfx
+--   + Added PC to CC toggle functionality, hold Shift and click the PC button to toggle.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts

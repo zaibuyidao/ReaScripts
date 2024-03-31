@@ -375,7 +375,6 @@ btn9.onClick = function () -- 按钮 编辑音色表
     os.execute(edit_reabank)
 end
 
-btn10.onClick = function () set_group_velocity() end -- 按钮 设置乐器组参数
 btn11.onClick = function () add_or_toggle_articulation_map_jsfx() end -- 按钮 添加表情映射插件
 
 if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
@@ -1804,6 +1803,14 @@ function mainloop()
             move_evnet_to_right(10)
         end
     end -- 按钮 +x Tick
+
+    btn10.onClick = function ()
+        if Shift then
+            togglePCToCC() -- 切换PC转CC
+        else
+            set_group_velocity() -- 按钮 设置乐器组参数
+        end
+    end
 
     textb_1.onRClick = function () -- MSB
         if Shift then
