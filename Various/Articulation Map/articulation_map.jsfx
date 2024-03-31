@@ -47,7 +47,8 @@ last_vel_group = last_vel_group_buf;
 delay = floor(slider3 / 1000 * srate + 0.5);
 sustain = slider5;
 route_channel = slider6;
-gmem[1] = slider5; // get cc number
+gmem[1] = slider5; // get cc119 number
+gmem[2] = slider7; // get cc58 number
 
 @block
 while (midirecv(offset, msg1, msg2, msg3)) (

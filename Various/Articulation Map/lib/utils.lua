@@ -530,7 +530,7 @@ function togglePCToCC()
         -- 遍历所有选中的CC事件
         for i = 1, #ccs_idx do
             retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, ccs_idx[i])
-            if chanmsg == 176 and msg2 == 58 then
+            if chanmsg == 176 and msg2 == gmem_cc58_num then
                 cc58Selected = true
             end
             -- 检查是否为CC0或CC32
@@ -588,7 +588,7 @@ function togglePCToCC()
         while i > -1 do
             local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
             -- 检查是否为CC58
-            if chanmsg == 176 and selected and (msg2 == 58) then
+            if chanmsg == 176 and selected and (msg2 == gmem_cc58_num) then
                 table.insert(eventIdxToDelete, i)
             end
 
@@ -625,7 +625,7 @@ function togglePCToCC()
         -- 遍历所有选中的MIDI事件
         for i = 1, #ccs_idx do
             local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, ccs_idx[i])
-            if chanmsg == 176 and msg2 == 58 then -- 延音控制器
+            if chanmsg == 176 and msg2 == gmem_cc58_num then -- CC58控制器
                 local program = msg3
                 reaper.MIDI_InsertCC(take, true, muted, ppqpos, 0xB0, chan, 0, bankMSB or 0)
                 reaper.MIDI_InsertCC(take, true, muted, ppqpos, 0xB0, chan, 32, bankLSB)
@@ -648,7 +648,7 @@ function togglePCToCC()
             local retval, selected, muted, ppqpos, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, ccs_idx[i])
             if chanmsg == 192 then
                 local program = msg2
-                reaper.MIDI_InsertCC(take, true, muted, ppqpos, 0xB0, chan, 58, program)
+                reaper.MIDI_InsertCC(take, true, muted, ppqpos, 0xB0, chan, gmem_cc58_num, program)
             end
         end
 

@@ -234,6 +234,8 @@ end
 reaper.gmem_attach('gmem_articulation_map')
 gmem_cc_num = reaper.gmem_read(1)
 gmem_cc_num = math.floor(gmem_cc_num)
+gmem_cc58_num = reaper.gmem_read(2)
+gmem_cc58_num = math.floor(gmem_cc58_num)
 
 local track = reaper.GetMediaItemTake_Track(take)
 local pand = reaper.TrackFX_AddByName(track, "Articulation Map", false, 0)

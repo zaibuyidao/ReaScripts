@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.13
+-- @version 1.0.14
 -- @changelog
 --   + Added PC to CC toggle functionality, hold Shift and click the PC button to toggle.
 -- @links
