@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.15
+-- @version 1.0.16
 -- @changelog
 --   + Added PC to CC toggle functionality, hold Shift and click the PC button to toggle.
 -- @links
@@ -12,12 +12,12 @@
 --  [jsfx] Articulation Map/pre_trigger_events.jsfx
 --  [data] zaibuyidao_articulation_map/*.txt
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - CC to PC.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Note to PC.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to CC.lua
+--   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to Note.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle PC to CC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle PC to Note.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - CC to PC.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to CC.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Note to PC.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to Note.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map.lua
 --   [nomain] Articulation Map/lib/*.lua
 --   Articulation Map/articulation_map_factory.reabank
