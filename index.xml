@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fd31085ee906558b86b52292c9f2353babd348e1">
+<index version="1" name="zaibuyidao Scripts" commit="96abfd08bb0783dd0f09fa44dcf8ff0f7094032e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9558,6 +9558,22 @@
         <source file="Articulation Map/lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/fd31085ee906558b86b52292c9f2353babd348e1/Various/Articulation%20Map/lib/gui.lua</source>
         <source file="Articulation Map/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/fd31085ee906558b86b52292c9f2353babd348e1/Various/Articulation%20Map/lib/utils.lua</source>
         <source file="Articulation Map/articulation_map_factory.reabank">https://github.com/zaibuyidao/ReaScripts/raw/fd31085ee906558b86b52292c9f2353babd348e1/Various/Articulation%20Map/articulation_map_factory.reabank</source>
+      </version>
+      <version name="1.0.13" author="zaibuyidao" time="2024-03-31T10:56:10Z">
+        <changelog><![CDATA[+ Added PC to CC toggle functionality, hold Shift and click the PC button to toggle.]]></changelog>
+        <source type="effect" file="Articulation Map/articulation_map.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/articulation_map.jsfx</source>
+        <source type="effect" file="Articulation Map/pre_trigger_events.jsfx">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/pre_trigger_events.jsfx</source>
+        <source type="data" file="zaibuyidao_articulation_map/simul-arts.txt">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/zaibuyidao_articulation_map/simul-arts.txt</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - No GUI.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20No%20GUI.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - Note To PC.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20Note%20To%20PC.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - PC To Note.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20PC%20To%20Note.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map - Toggle Note PC.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/zaibuyidao_Articulation%20Map%20-%20Toggle%20Note%20PC.lua</source>
+        <source main="midi_editor" file="Articulation Map/zaibuyidao_Articulation Map.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/zaibuyidao_Articulation%20Map.lua</source>
+        <source file="Articulation Map/lib/config.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/lib/config.lua</source>
+        <source file="Articulation Map/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/lib/core.lua</source>
+        <source file="Articulation Map/lib/gui.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/lib/gui.lua</source>
+        <source file="Articulation Map/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/lib/utils.lua</source>
+        <source file="Articulation Map/articulation_map_factory.reabank">https://github.com/zaibuyidao/ReaScripts/raw/96abfd08bb0783dd0f09fa44dcf8ff0f7094032e/Various/Articulation%20Map/articulation_map_factory.reabank</source>
       </version>
     </reapack>
     <reapack name="SFX Tag Search Bundle.lua" type="script" desc="SFX Tag Search Bundle">
