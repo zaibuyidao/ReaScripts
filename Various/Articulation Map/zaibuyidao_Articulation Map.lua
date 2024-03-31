@@ -336,11 +336,11 @@ end
 -- 更新按钮创建
 local btn1 = Button:new(10,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "A", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 A
 local btn4 = Button:new(45,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "B", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 B
-local btn5 = Button:new(80,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "<", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 左移
-local btn6 = Button:new(115,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], ">", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 右移
+local btn5 = Button:new(80,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "<⁺", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 左移
+local btn6 = Button:new(115,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], ">⁺", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 右移
 local btn7 = Button:new(150,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "NP", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 Toggle Between Note and PC, Note-PC Toggle
-local btn10 = Button:new(185,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "PC", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 程序更改
-local btn9 = Button:new(220,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "ER", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 Editing Reabank
+local btn10 = Button:new(185,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "PC⁺", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 程序更改
+local btn9 = Button:new(220,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "ER⁺", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 Editing Reabank
 local btn11 = Button:new(255,10,75,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "SC:CC#" .. gmem_cc_num, GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 JSFX
 local btn12 = Button:new(255,185,75,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], send_now_ttl, GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 Send Now
 local btn8 = Button:new(10,255,100,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], patch_change_load, GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 加载文件
@@ -371,12 +371,6 @@ btn3.onClick = function () -- 按钮 退出
 end
 
 btn7.onClick = function () toggleNoteToPC() end -- 按钮 NOTE/PC 来回切
-btn9.onClick = function () -- 按钮 编辑音色表
-    local rea_patch = '\"'..reabank_path..'\"'
-    edit_reabank = 'start "" '..rea_patch
-    os.execute(edit_reabank)
-end
-
 btn11.onClick = function () add_or_toggle_articulation_map_jsfx() end -- 按钮 添加表情映射插件
 
 if read_config_lines(reabank_path) == 1 or read_config_lines(reabank_path) == 0 then return end
@@ -1808,6 +1802,17 @@ function mainloop()
             move_evnet_to_right(10)
         end
     end -- 按钮 +x Tick
+
+    btn9.onClick = function () -- 按钮 编辑音色表, 按住Shift编辑键位映射表
+        if Shift then
+            local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
+            openUrl(txt_path)
+        else
+            local rea_patch = '\"'..reabank_path..'\"'
+            edit_reabank = 'start "" '..rea_patch
+            os.execute(edit_reabank)
+        end
+    end
 
     btn10.onClick = function ()
         if Shift then

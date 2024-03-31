@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.19
+-- @version 1.0.20
 -- @changelog
 --   + Added PC to CC toggle functionality, hold Shift and click the PC button to toggle.
 --   + Added support for "PC to Note" and "PC to CC" scripts.
