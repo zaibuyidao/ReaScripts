@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.17
+-- @version 1.0.18
 -- @changelog
 --   + Added PC to CC toggle functionality, hold Shift and click the PC button to toggle.
 --   + Added support for "PC to Note" and "PC to CC" scripts.
@@ -15,7 +15,6 @@
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - CC to PC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to CC.lua
---   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to Note.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle PC to CC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - Toggle PC to Note.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map.lua
