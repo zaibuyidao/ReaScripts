@@ -755,3 +755,21 @@ function add_or_toggle_articulation_map_jsfx()
         reaper.TrackFX_Show(track, fxIndex, 3)
     end
 end
+
+function toggle_pre_trigger_jsfx()
+    local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+    if not take or not reaper.TakeIsMIDI(take) then return end
+
+    local track = reaper.GetMediaItemTake_Track(take)
+    local fxFirst = reaper.TrackFX_GetByName(track, "Pre-trigger Events", false)
+
+    -- 检查浮动窗口是否打开
+    local isFloating = reaper.TrackFX_GetFloatingWindow(track, fxFirst) ~= nil
+    if isFloating then
+        -- 如果浮动窗口打开，则关闭它
+        reaper.TrackFX_Show(track, fxFirst, 2)
+    else
+        -- 如果浮动窗口关闭，则打开它
+        reaper.TrackFX_Show(track, fxFirst, 3)
+    end
+end
