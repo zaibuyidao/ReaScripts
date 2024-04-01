@@ -313,7 +313,7 @@ function toggleNoteToPC()
                     reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pc, 0)
         
                     if endppqpos - startppqpos > sustainnote then -- 如果音符长度大于半拍
-                        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, gmem_cc_num, 127)
+                        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, gmem_cc_num, 96)
                         reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, gmem_cc_num, 32)
                     end
                 end
@@ -346,7 +346,7 @@ function toggleNoteToPC()
                 if retval and selected then
                     -- 如果音符长度大于设定的sustainnote阈值，则插入CC119
                     if endppqpos - startppqpos > sustainnote then
-                        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, gmem_cc_num, 127)
+                        reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, gmem_cc_num, 96)
                         reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, gmem_cc_num, 32)
                     end
                 end

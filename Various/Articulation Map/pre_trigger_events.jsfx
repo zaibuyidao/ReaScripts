@@ -1,5 +1,6 @@
 desc: Pre-trigger Events
 desc: Pre-trigger Events [zaibuyidao]
+provides: [data] zaibuyidao_articulation_map/*.txt
 
 slider1:119<0,127,1>Advance CC number:
 slider2:/zaibuyidao_articulation_map:simul-arts:Simultaneous Articulations Cfg:
