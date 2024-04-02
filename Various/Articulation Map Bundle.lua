@@ -1,9 +1,9 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.23
+-- @version 1.0.24
 -- @changelog
---   + Added PC to CC toggle functionality, hold Shift and click the PC button to toggle.
---   + Added support for "PC to Note" and "PC to CC" scripts.
+--   + Add UACC support.
+--   + Add more *.reabank files.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
@@ -21,6 +21,7 @@
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to Note.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map.lua
 --   [nomain] Articulation Map/lib/*.lua
+--   Articulation Map/banks/*.reabank
 --   Articulation Map/articulation_map_factory.reabank
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension

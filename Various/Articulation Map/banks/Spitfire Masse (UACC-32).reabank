@@ -1,0 +1,65 @@
+//Instructions for use: Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
+//使用说明: 将 Articulation-Map-JSFX 的 Mode 设置为 Keyswitch CC (UACC), 并将 Keyswitch CC 的编号设置为 32.
+
+
+//----------------------------------------------------------------------------
+Bank 66 50 Masse - Tutti
+1 long
+40 staccato
+9 beast long
+54 beast short
+3 brass/string choir long
+4 brass/string choir short
+6 low brass string stab
+7 low wood string stab
+8 nutcracker
+10 woods/string 1 long
+11 woods/string 1 short
+12 woods/string 2 long
+13 woods/string 2 short
+
+
+//----------------------------------------------------------------------------
+Bank 66 51 Masse - Strings
+1 cool strings 1
+2 cool strings 2
+3 cool strings 3
+4 cool strings 4
+5 giant epic long
+42 giant epic short
+8 ligeti strings
+56 mondo plucks
+13 slow strings 1
+14 slow strings 2
+15 super slow strings 1
+16 super slow strings 2
+9 super cool strings 1
+10 super cool strings 2
+11 super cool strings 3
+12 super cool strings 4
+
+
+//----------------------------------------------------------------------------
+Bank 66 52 Masse - Brass
+1 beast long
+42 beast short
+3 choir long
+4 choir short
+9 power long
+8 super choir long
+48 super choir short
+6 slow choir long
+7 super slow choir
+
+
+//----------------------------------------------------------------------------
+Bank 66 53 Masse - Woodwinds
+1 beast long
+42 beast short
+3 chorus long
+4 chorus short
+5 light short
+6 orchestrator long
+7 orchestrator shorts
+8 slow chorus long
+9 slow orchestrator

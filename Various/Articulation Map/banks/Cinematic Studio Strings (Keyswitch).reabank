@@ -1,0 +1,45 @@
+//REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1
+//REAPER首选项-媒体-MIDI设置-八度名称显示偏移: -1
+
+
+//----------------------------------------------------------------------------
+//  Instrument 70, 乐器 70
+//
+//KS Velocity 64, 键位切换键力度 64
+Bank 70 64 Cinematic Studio Strings
+12 Standard Legato
+18 Spiccato Overlay Off
+22 Legato Off
+23 Con Sordino Off
+
+//KS Velocity 65, 键位切换键力度 65
+Bank 70 65 Cinematic Studio Strings
+12 Advanced Legato
+17 Staccato
+18 Spiccato Overlay On
+22 Legato On
+23 Con Sordino On
+
+//KS Velocity 97, 键位切换键力度 97
+Bank 70 97 Cinematic Studio Strings
+17 Sfz
+
+//KS Velocity 32, 键位切换键力度 32
+Bank 70 32 Cinematic Studio Strings
+17 Spiccato
+
+//KS Velocity 33, 键位切换键力度 33
+Bank 70 33 Cinematic Studio Strings
+17 Staccatissimo
+
+//KS Velocity 41, 键位切换键力度 41
+Bank 70 41 Cinematic Studio Strings
+19 Pizzicato
+
+//KS Velocity 42, 键位切换键力度 42
+Bank 70 42 Cinematic Studio Strings
+19 Bartok Snap
+
+//KS Velocity 85, 键位切换键力度 85
+Bank 70 85 Cinematic Studio Strings
+19 Col Legno

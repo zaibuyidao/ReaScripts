@@ -1,0 +1,69 @@
+//Instructions for use: Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
+//使用说明: 将 Articulation-Map-JSFX 的 Mode 设置为 Keyswitch CC (UACC), 并将 Keyswitch CC 的编号设置为 32.
+
+
+//----------------------------------------------------------------------------
+Bank 66 60 Albion 2 - Recorder
+40 short
+1 long
+20 legato
+
+
+//----------------------------------------------------------------------------
+Bank 66 61 Albion 2 - HornEuph
+40 short
+42 very short
+1 long
+20 legato
+
+
+//----------------------------------------------------------------------------
+Bank 66 62 Albion 2 - Sackbutt Hi
+40 short
+42 very short
+52 marcato(short)
+55 marcato(long)
+1 long
+20 legato
+
+
+//----------------------------------------------------------------------------
+Bank 66 63 Albion 2 - Sackbutt Lo
+40 short
+42 very short
+1 long
+20 legato
+
+
+//----------------------------------------------------------------------------
+Bank 66 64 Albion 2 - String Hi
+40 short
+47 short cs
+56 pizzicato
+58 col legno
+1 long
+5 long (half)
+7 long cs
+20 legato
+24 legato (half)
+11 tremolo
+10 long harmonics
+70 trill (minor)
+71 trill (major)
+8 long flautando
+
+
+//----------------------------------------------------------------------------
+Bank 66 65 Albion 2 - String Lo
+40 short
+47 short cs (quiet)
+44 short cs (longer)
+56 pizzicato
+58 col legno
+1 long
+5 long (half)
+7 long cs
+20 legato
+24 legato (half)
+11 tremolo
+8 long flautando

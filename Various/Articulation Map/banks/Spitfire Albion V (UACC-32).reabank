@@ -1,0 +1,208 @@
+//Instructions for use: Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
+//使用说明: 将 Articulation-Map-JSFX 的 Mode 设置为 Keyswitch CC (UACC), 并将 Keyswitch CC 的编号设置为 32.
+
+
+//----------------------------------------------------------------------------
+Bank 66 30 Albion V - Legato
+20 legato
+
+
+//----------------------------------------------------------------------------
+Bank 66 31 Albion V - Brass High
+2 air
+1 bursts
+3 doodle tonguing
+4 doodle tonguing mute
+5 finger trills
+6 fluttered
+7 granular flutter a
+8 granular flutter b
+9 hollow
+10 mini cresc
+11 multiphonics
+12 overblown fff
+13 slight bend
+14 stifled
+114 super air
+16 vibrato
+40 short
+17 tuning slide taken out
+
+
+//----------------------------------------------------------------------------
+Bank 66 32 Albion V - Brass Low
+2 air
+1 bursts
+3 doodle tonguing
+4 doodle tonguing mute
+5 finger trills
+6 fluttered
+7 granular flutter a
+8 granular flutter b
+9 hollow
+10 mini cresc
+11 multiphonics
+12 overblown fff
+13 slight bend
+14 stifled
+114 super air
+16 vibrato
+40 short
+
+
+//----------------------------------------------------------------------------
+Bank 66 33 Albion V - Strings High - Main
+5 flautando cs long
+44 flautando cs short
+6 frozen long
+45 frozen short
+8 gypsy long
+46 gypsy short
+4 dbl stop 5ths long
+43 dbl stop 5ths short
+114 super tasto long
+50 super tasto short
+1 air and ice
+2 air ice and tratto
+10 gypsy harmonics
+32 gypsy harm trem
+19 cs sul pont
+62 brushed sul pont cs
+7 silken cs long
+47 silken cs short
+
+
+//----------------------------------------------------------------------------
+Bank 66 34 Albion V - Strings High - Soft and Wild
+56 brushed pizz cs
+3 col leg tratto
+11 harmonic trems
+58 light loose col leg
+1 no rosin long
+10 harmonics
+48 pizz sul pont
+49 pizz sp/legno mix
+7 pulsing con sord
+12 pulsing cs sul pont
+112 sul g
+31 travelling trems
+
+
+//----------------------------------------------------------------------------
+Bank 66 35 Albion V - Strings Low - Main
+5 flautando cs long
+44 flautando cs short
+6 frozen long
+45 frozen short
+8 gypsy long
+46 gypsy short
+4 dbl stop 5ths long
+43 dbl stop 5ths short
+114 super tasto long
+50 super tasto short
+1 air and ice
+2 air ice and tratto
+10 gypsy harmonics
+32 gypsy harm trem
+19 cs sul pont
+62 brushed sul pont cs
+7 silken cs long
+47 silken cs short
+
+
+//----------------------------------------------------------------------------
+Bank 66 36 Albion V - Strings Low - Soft and Wild
+56 brushed pizz cs
+3 col leg tratto
+11 harmonic trems
+58 light loose col leg
+1 no rosin long
+10 harmonics
+48 pizz harmonic bass
+49 pizz harmonic cello
+7 pulsing con sord
+12 pulsing cs sul pont
+112 sul c
+31 travelling trems
+
+
+//----------------------------------------------------------------------------
+Bank 66 37 Albion V - Strings Low + High - Main
+5 flautando cs long
+44 flautando cs short
+6 frozen long
+45 frozen short
+8 gypsy long
+46 gypsy short
+4 dbl stop 5ths long
+43 dbl stop 5ths short
+114 super tasto long
+50 super tasto short
+1 air and ice
+2 air ice and tratto
+10 gypsy harmonics
+32 gypsy harm trem
+19 cs sul pont
+62 brushed sul pont cs
+7 silken cs long
+47 silken cs short
+
+
+//----------------------------------------------------------------------------
+Bank 66 40 Albion V - Strings Low + High - Soft and Wild
+56 brushed pizz cs
+3 col leg tratto
+11 harmonic trems
+58 light loose col leg
+1 no rosin long
+10 harmonics
+48 pizz harmonic bass
+49 pizz harmonic cello
+7 pulsing con sord
+12 pulsing cs sul pont
+112 sul iv
+31 travelling trems
+
+
+//----------------------------------------------------------------------------
+Bank 66 38 Albion V - Woods High
+2 air
+14 aleatoric overblown
+1 bursts
+3 doodle tonguing
+4 finger trills
+11 flutter
+6 hollow
+7 mini cresc
+8 multiphonics
+9 overblowing
+10 overblown
+15 pulsing semi cresc
+5 slight bend
+114 super air
+16 vibrato
+40 short
+54 overblown
+42 v short
+
+
+//----------------------------------------------------------------------------
+Bank 66 39 Albion V - Woods Low
+2 air
+14 aleatoric overblown
+1 bursts
+3 doodle tonguing
+4 finger trills
+11 flutter
+6 hollow
+7 mini cresc
+8 multiphonics
+9 overblowing
+10 overblown
+15 pulsing semi cresc
+5 slight bend
+114 super air
+16 vibrato
+40 short
+54 overblown
+42 v short

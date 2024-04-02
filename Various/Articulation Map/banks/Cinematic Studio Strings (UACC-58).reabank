@@ -1,0 +1,25 @@
+//Instructions for use: Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 58.
+//使用说明: 将 Articulation-Map-JSFX 的 Mode 设置为 Keyswitch CC (UACC), 并将 Keyswitch CC 的编号设置为 58.
+
+
+//----------------------------------------------------------------------------
+Bank 70 1 Cinematic Studio Strings
+0 Standard Legato
+6 Advanced Legato
+11 Spiccato
+16 Staccatissimo
+21 Staccato
+26 Sforzando
+31 Pizzicato
+36 Bartok Snap
+41 Col Legno
+46 Trills
+51 Harmonics
+56 Tremolo
+61 Measured Tremolo
+66 Marcato without overlay
+71 Marcato with overlay
+76 Legato On
+81 Legato Off
+86 Con Sordino On
+91 Con Sordino Off

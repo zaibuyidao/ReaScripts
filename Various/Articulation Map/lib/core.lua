@@ -286,7 +286,7 @@ function parse_banks(lines, vel_show, bnk_show) -- 音色名称
     return result
 end
 
-function group_banks(banks, vel_show)
+function group_banks_one(banks, vel_show) -- 一个bank编号一个分组
     if #banks == 0 or (banks[1] and banks[1].bank and banks[1].bank.full_name == no_bank_sel) then
         -- 没有bank数据时，返回默认项
         return {{bank = {full_name = no_bank_sel, bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
@@ -357,6 +357,83 @@ function group_banks(banks, vel_show)
     end
     table.sort(new_result, function(a,b)
         return tonumber(a.bank.bank) < tonumber(b.bank.bank)
+    end)
+    return new_result
+end
+
+function group_banks(banks, vel_show) -- 相同bank编号下按不同名称再分组
+    if #banks == 0 or (banks[1] and banks[1].bank and banks[1].bank.full_name == no_bank_sel) then
+        -- 没有bank数据时，返回默认项
+        return {{bank = {full_name = no_bank_sel, bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
+    end
+    local result = {}
+    for _, bank_item in ipairs(banks) do
+        local bank_key = tostring(bank_item.bank.bank) .. " " .. bank_item.bank.name -- 使用bank编号和名称作为键
+        if not result[bank_key] then
+            result[bank_key] = {
+                banks = {},
+                notes = {}
+            }
+        end
+        table.insert(result[bank_key].banks, bank_item.bank)
+        for _, note_item in ipairs(bank_item.notes) do
+            local full_name
+            if vel_show then
+                full_name = note_item.note .. " " .. note_item.name .. " (" .. line_velocity .. bank_item.bank.velocity .. ")" -- 当velocity show为true时显示velocity
+            else
+                full_name = note_item.note .. " " .. note_item.name -- 当velocity show为false时不显示velocity
+            end
+            table.insert(result[bank_key].notes, {
+                full_name = full_name,
+                name = note_item.name,
+                bank = bank_item.bank.bank,
+                velocity = bank_item.bank.velocity,
+                note = note_item.note,
+            })
+        end
+    end
+    local function find_best_bank(banks)
+        for _, bank in ipairs(banks) do
+            if tonumber(bank.velocity) == 96 then 
+                return {
+                    name = bank.name,
+                    velocity = bank.velocity,
+                    bank = bank.bank,
+                    full_name = "" .. tostring(bank.bank) .. " : " .. bank.name
+                }
+            end
+        end
+        for _, bank in ipairs(banks) do
+            if tonumber(bank.velocity) == 0 then 
+                return {
+                    name = bank.name,
+                    velocity = bank.velocity,
+                    bank = bank.bank,
+                    full_name = "" .. tostring(bank.bank) .. " : " .. bank.name
+                }
+            end
+        end
+        return {
+            name = banks[1].name,
+            velocity = banks[1].velocity,
+            bank = banks[1].bank,
+            full_name = "" .. tostring(banks[1].bank) .. " : " .. banks[1].name
+        }
+    end
+
+    local new_result = {}
+    for _, result_item in pairs(result) do
+        table.sort(result_item.notes, function(a, b)
+            return tonumber(a.note) < tonumber(b.note)
+        end)
+        local best_bank = find_best_bank(result_item.banks)
+        table.insert(new_result, {
+            notes = result_item.notes,
+            bank = best_bank
+        })
+    end
+    table.sort(new_result, function(a,b)
+        return tonumber(a.bank.bank) < tonumber(b.bank.bank) or (tonumber(a.bank.bank) == tonumber(b.bank.bank) and a.bank.name < b.bank.name)
     end)
     return new_result
 end

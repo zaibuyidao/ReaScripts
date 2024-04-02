@@ -1,0 +1,87 @@
+//Instructions for use: Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
+//使用说明: 将 Articulation-Map-JSFX 的 Mode 设置为 Keyswitch CC (UACC), 并将 Keyswitch CC 的编号设置为 32.
+
+
+//----------------------------------------------------------------------------
+Bank 66 70 Albion 3 - Woodwind Lo
+43 short
+42 short extra
+1 long
+21 legato
+123 fall
+122 rip
+111 fx1
+112 fx2
+113 fx3
+114 fx4
+
+
+//----------------------------------------------------------------------------
+Bank 66 71 Albion 3 - Wall of Woodwind
+41 short
+43 short extra
+1 long
+
+
+//----------------------------------------------------------------------------
+Bank 66 72 Albion 3 - Brass Lo
+40 short
+1 long
+9 long nasty
+20 legato
+101 fall
+100 rip
+90 fx1
+91 fx2
+92 fx3
+93 fx4
+
+
+//----------------------------------------------------------------------------
+Bank 66 73 Albion 3 - Brutish Brass
+43 short
+1 long
+15 long nasty
+45 short (octave)
+3 long (octave)
+9 long nasty (octave)
+
+
+//----------------------------------------------------------------------------
+Bank 66 74 Albion 3 - String Lo (Celli)
+40 short A & B
+1 long A & B
+7 con sord
+20 legato A
+31 portamento A
+21 legato B
+32 portamento B
+
+
+//----------------------------------------------------------------------------
+Bank 66 75 Albion 3 - String Lo
+40 short
+41 staccato
+1 long
+20 legato
+31 portamento
+
+
+//----------------------------------------------------------------------------
+Bank 66 76 Albion 3 - Chunderous Cellos
+43 short
+1 long
+7 long cs
+45 short (octave)
+3 long (octave)
+4 long cs (octave)
+
+
+//----------------------------------------------------------------------------
+Bank 66 77 Albion 3 - Siege of Strings
+1 long
+3 long (octave)
+40 short
+41 staccato
+45 short (octave)
+62 staccato (octave)
