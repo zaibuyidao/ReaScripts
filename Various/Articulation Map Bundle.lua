@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.27
+-- @version 1.0.28
 -- @changelog
 --   + Add Keyswitch CC/UACC support.
 --   + Add more *.reabank files.
@@ -9,9 +9,9 @@
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
---  [jsfx] Articulation Map/articulation_map.jsfx
---  [jsfx] Articulation Map/pre_trigger_events.jsfx
---  [data] Articulation Map/zaibuyidao_articulation_map/simul-arts.txt > zaibuyidao_articulation_map/simul-arts.txt
+--  [jsfx] Articulation Map/jsfx/articulation_map.jsfx > Articulation Map/articulation_map.jsfx
+--  [jsfx] Articulation Map/jsfx/pre_trigger_events.jsfx > Articulation Map/pre_trigger_events.jsfx
+--  [data] Articulation Map/jsfx/zaibuyidao_articulation_map/simul-arts.txt > zaibuyidao_articulation_map/simul-arts.txt
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - CC to PC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to CC.lua
