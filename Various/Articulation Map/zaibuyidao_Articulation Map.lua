@@ -1641,11 +1641,19 @@ function mainloop()
     end
 
     if char == 26163 then -- F3 向左移动MIDI事件 10 ticks
-        slideF10()
+        if Shift then
+            move_evnet_to_left(1)
+        else
+            move_evnet_to_left(10)
+        end
     end
 
     if char == 26164 then -- F4 向右移动MIDI事件 10 ticks
-        slideZ10()
+        if Shift then
+            move_evnet_to_right(1)
+        else
+            move_evnet_to_right(10)
+        end
     end
 
     if char == 26165 then -- F5 刷新音色表

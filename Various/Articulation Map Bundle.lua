@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.25
+-- @version 1.0.26
 -- @changelog
 --   + Add Keyswitch CC/UACC support.
 --   + Add more *.reabank files.

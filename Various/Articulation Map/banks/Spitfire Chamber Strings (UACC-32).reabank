@@ -1,7 +1,4 @@
-//Instructions for use: Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
-//使用说明: 将 Articulation-Map-JSFX 的 Mode 设置为 Keyswitch CC (UACC), 并将 Keyswitch CC 的编号设置为 32.
-
-
+//Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 64 1 SCS - Basic Articulations
 20 legato

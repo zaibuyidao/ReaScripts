@@ -1,9 +1,4 @@
-//Set MIDI octave name display offset:
 //REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1
-//设置 MIDI 八度名称显示偏移:
-//REAPER首选项-媒体-MIDI设置-八度名称显示偏移: -1
-
-
 //----------------------------------------------------------------------
 //Default KS Velocity 96, 默认键位切换键力度 96
 Bank 72 96 Ample Sound Erhu (二胡凝月)
