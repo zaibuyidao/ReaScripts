@@ -1,0 +1,86 @@
+//Set MIDI octave name display offset:
+//REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1
+//设置 MIDI 八度名称显示偏移:
+//REAPER首选项-媒体-MIDI设置-八度名称显示偏移: -1
+
+
+//----------------------------------------------------------------------
+//Default KS Velocity 96, 默认键位切换键力度 96
+Bank 70 96 Ample Metal Eclipse
+18 6弦指定
+19 5弦指定
+20 4弦指定
+21 3弦指定
+22 2弦指定
+23 1弦指定
+24 标准音
+25 自然泛音
+26 手掌闷音(力度越小，压制程度越大)
+27 无头与无尾滑音
+28 连奏滑音(同弦)
+29 击勾弦
+30 点指
+32 把位指定
+36 0把位指定
+37 1把位指定
+38 2把位指定
+39 3把位指定
+40 4把位指定
+41 5把位指定
+42 6把位指定
+43 7把位指定
+44 8把位指定
+45 9把位指定
+46 10把位指定
+47 11把位指定
+48 12把位指定
+49 13把位指定
+50 14把位指定
+51 15把位指定
+52 16把位指定
+53 17把位指定
+54 18把位指定
+89 滑弦噪音(Scratch)
+90 拍弦(Slap)
+91 护弦制音(Press)
+92 扫弦制音(Stroke Muting)
+93 下扫噪音 1(Downstroke 1)
+94 上扫噪音 1(Upstroke 1)
+95 下扫噪音 2(Downstroke 2)
+96 上扫噪音 2(Upstroke 2)
+101 刮弦噪音(Pick Scrape)
+102 效果滑音 1(FX Slide 1)
+103 效果滑音 2(FX Slide 2)
+
+//KS Velocity 1, 键位切换键力度 1
+Bank 70 1 Ample Metal Eclipse
+24 标准音-Full Mute
+28 连奏滑音-不改变把位
+29 击勾弦-不改变把位
+18 6弦指定-不改变把位
+19 5弦指定-不改变把位
+20 4弦指定-不改变把位
+21 3弦指定-不改变把位
+22 2弦指定-不改变把位
+23 1弦指定-不改变把位
+99 自动连奏-开启自动击勾弦
+104 空弦优先 关
+
+//KS Velocity 22, 键位切换键力度 22
+Bank 70 22 Ample Metal Eclipse
+24 标准音-3/4 Mute
+
+//KS Velocity 43, 键位切换键力度 43
+Bank 70 43 Ample Metal Eclipse
+24 标准音-Half Mute
+
+//KS Velocity 64, 键位切换键力度 64
+Bank 1 64 Ample Metal Eclipse
+24 标准音-Sustain
+
+//KS Velocity 127, 键位切换键力度 127
+Bank 70 127 Ample Metal Eclipse
+24 标准音-重勾或搓泛音
+25 自然泛音-搓泛音
+99 自动连奏-开启自动滑音
+104 空弦优先 开

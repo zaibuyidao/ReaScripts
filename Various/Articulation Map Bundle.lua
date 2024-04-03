@@ -1,8 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.24
+-- @version 1.0.25
 -- @changelog
---   + Add UACC support.
+--   + Add Keyswitch CC/UACC support.
 --   + Add more *.reabank files.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
