@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="cafed43bdc2e2ccd4f293b67ff913e63ebdbfcbb">
+<index version="1" name="zaibuyidao Scripts" commit="b0caebabfd2c22298da032a43fe0cab21c80f9fa">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -412,6 +412,10 @@
       <version name="1.5.1" author="zaibuyidao" time="2023-03-16T01:20:18Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/48d1f995090790a219c89041a1e09f7e1b0b0154/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
+      </version>
+      <version name="1.5.2" author="zaibuyidao" time="2024-04-03T08:11:39Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b0caebabfd2c22298da032a43fe0cab21c80f9fa/Items%20Editing/zaibuyidao_Batch%20Rename%20Take.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Align Item Position.lua" type="script" desc="Copy Align Item Position">
