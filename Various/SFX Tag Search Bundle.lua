@@ -1,9 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 1.7.7
+-- @version 2.0
 -- @changelog
---   # Renamed "SFX Tag Search" to "SFX Tag Search (Custom Tags)" for more accurate searching of custom tag sound effects.
---   # Renamed "SFX Tag Search (Custom)" to "SFX Tag Search (Favorite)" for easier access to user-favorite tag sound effects.
+--   # New Script
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
@@ -11,33 +10,14 @@
 --   https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
---   [main] SFX/zaibuyidao_SFX Tag Search (Custom Tags).lua
---   [main] SFX/zaibuyidao_SFX Tag Search (Database).lua
---   [main] SFX/zaibuyidao_SFX Tag Search (Favorite).lua
---   [main] SFX/zaibuyidao_SFX Tag Search (UCS).lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - Album.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - Comment.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - Description.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - File Name.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - Genre.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - Title.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - iXML CatID.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - iXML FXName.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - iXML Category.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - iXML SubCategory.lua
---   [main] SFX/zaibuyidao_SFX Tag Metadata - iXML CategoryFull.lua
---   [nomain] SFX/lib/config-metadata.lua
---   [nomain] SFX/lib/config-tags.lua
---   [nomain] SFX/lib/config-favorite.lua
---   [nomain] SFX/lib/config-database.lua
---   [nomain] SFX/lib/config-ucs.lua
---   [nomain] SFX/lib/core.lua
---   [nomain] SFX/lib/LIP.lua
---   [nomain] SFX/lib/ListView.lua
---   [nomain] SFX/lib/reaper-utils.lua
---   [nomain] SFX/lib/pinyin.lua
---   [nomain] SFX/lib/REQ/*.lua
---   SFX/*.csv
+--   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Custom Tags.lua
+--   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Database.lua
+--   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Favorite.lua
+--   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS.lua
+--   [nomain] SFX Tag Search/lib/*.lua
+--   [nomain] SFX Tag Search/req/*.lua
+--   SFX Tag Search/*.csv
+--   SFX Tag Search/lib/*.ini
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 

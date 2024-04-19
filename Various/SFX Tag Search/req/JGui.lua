@@ -102,24 +102,24 @@ function jGui:processKeyboard()
 			else
 				self:focusNext()
 			end
-		-- elseif self.lastChar == self.kb.arrow_down then -- ARROW DOWN
-		-- 	if self.focus then
-		-- 		self.focus:_onArrowDown()
-		-- 	else
-		-- 		self:focusNext()
-		-- 	end
+		elseif self.lastChar == self.kb.arrow_down then -- ARROW DOWN
+			if self.focus then
+				self.focus:_onArrowDown()
+			else
+				self:focusNext()
+			end
 		elseif (self.lastChar == self.kb.tab and self.kb.shift()) then -- SHIFT TAB
 			if self.focus then
 				self.focus:_onShiftTab()
 			else
 				self:focusPrev()
 			end		
-		-- elseif self.lastChar == self.kb.arrow_up then --   ARROW UP
-		-- 	if self.focus then
-		-- 		self.focus:_onArrowUp()
-		-- 	else
-		-- 		self:focusPrev()
-		-- 	end			
+		elseif self.lastChar == self.kb.arrow_up then --   ARROW UP
+			if self.focus then
+				self.focus:_onArrowUp()
+			else
+				self:focusPrev()
+			end			
 		else -- A key was pressed. Send it to the control with keyboard focus
 			if self.focus then
 				self.focus:_onKeyboard(self.lastChar)
@@ -138,6 +138,35 @@ end
 
 function jGui:focusPrev()
 	self:setFocus(self:getNextFocus(true))
+end
+
+function jGui:nextPage()
+	if SCROLL_RESULTS + RESULTS_PER_PAGE < RESULT_COUNT then
+		SCROLL_RESULTS = SCROLL_RESULTS + RESULTS_PER_PAGE
+		UPDATE_RESULTS = true
+	end
+end
+
+function jGui:prevPage()
+	if SCROLL_RESULTS - RESULTS_PER_PAGE >= 0 then
+		SCROLL_RESULTS = SCROLL_RESULTS - RESULTS_PER_PAGE
+		UPDATE_RESULTS = true
+	else
+		SCROLL_RESULTS = 0 -- 回到第一页
+	end
+end
+
+function jGui:firstPage()
+    SCROLL_RESULTS = 0 -- 设置滚动结果为0，即列表的顶部
+    UPDATE_RESULTS = true -- 标记需要更新结果
+end
+
+function jGui:lastPage()
+    -- 计算可以滚动的最大值
+    local maxScroll = RESULT_COUNT - RESULTS_PER_PAGE
+    if maxScroll < 0 then maxScroll = 0 end -- 确保不会得到负数
+    SCROLL_RESULTS = maxScroll
+    UPDATE_RESULTS = true -- 标记需要更新结果
 end
 
 function jGui:update()
@@ -316,7 +345,7 @@ function jGui:OnMouseDown(x, y, lmb_down, rmb_down)
 		mouse.last_RMB_state = true
 		mouse.ox_r, mouse.oy_r = x, y
 		mouse.last_pressed_button = mouse.RB
-		-- msg("rmb click")
+		--msg("rmb click")
 		if self.controlHover then
 			self.controlHover:_onRightMouseDown()
 			self.controlActive = self.controlHover
@@ -343,15 +372,15 @@ function jGui:OnMouseUp(x, y, lmb_down, rmb_down)
 		self.controlActive:_onMouseUp()
     end
   end
-  if not rmb_down and self.mouse.last_RMB_state then 
-	self.mouse.last_RMB_state = false 
-  	 if self.controlHover and self.controlHover == self.controlActive then
-    	self.controlHover:_onRightMouseUp()
-    elseif self.controlActive and self.controlDrag == self.controlActive then
-		self.controlActive:_onRightMouseUp()
-    end
-  end
-  
+	if not rmb_down and self.mouse.last_RMB_state then
+		self.mouse.last_RMB_state = false
+		if self.controlHover and self.controlHover == self.controlActive then
+			self.controlHover:_onRightMouseUp()
+		elseif self.controlActive and self.controlDrag == self.controlActive then
+			self.controlActive:_onRightMouseUp()
+		end
+	end
+
   self.controlActive = false
 end
 

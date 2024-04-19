@@ -13,12 +13,27 @@ local jKeyboard = {
 	arrow_up = 30064,
 	arrow_down = 1685026670,
 	arrow_left = 1818584692,
-	arrow_right = 1919379572,	
+	arrow_right = 1919379572,
 
+	page_up = 1885828464,
+	page_down = 1885824110,
+  
 	home = 1752132965,
 	_end = 6647396,
 	
-	
+	f1 = 26161,
+	f2 = 26162,
+	f3 = 26163,
+	f4 = 26164,
+	f5 = 26165,
+	f6 = 26166,
+	f7 = 26167,
+	f8 = 26168,
+	f9 = 26169,
+	f10 = 6697264,
+	f11 = 6697265,
+	f12 = 6697266,
+
 	space = 32, 
 	exclamation = 33, -- !
 	double_quote = 34, -- "

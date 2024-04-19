@@ -28,6 +28,7 @@ jGuiControl = {
 		active = {1, .9, 0, .5}
 	},
 	color_focus_border = {1, .9, 0, .5},
+	color_background = {.2, .2, .2, 1},  -- 新增背景颜色属性，默认设置为深灰色
 
 	label_fontsize = 10,
 	label_font = "Calibri",
@@ -438,6 +439,7 @@ jGuiTextInput = jGuiControl:new(
 	border_focus = true,
 	-- color_focus_border = {1, .9, 0, .5},
 	color_focus_border = jGuiColors:get("yellow", 0.5),
+	color_border = {0.8, 0.8, 0.8, .5}, -- 默认边框颜色
 
 	carret_pos = 0,
 	carret_draw = true,
@@ -446,13 +448,40 @@ jGuiTextInput = jGuiControl:new(
 	_carret_blink = false
 })
 
+function dynamicDecode(num)
+	local baseOffset = 1962954240 - 0x4E00  -- 这里采用第一个校准点
+
+	local adjustedNum = num - baseOffset
+	local finalCode = adjustedNum  -- 直接使用调整后的数字作为Unicode码点
+
+	if finalCode >= 0x4E00 and finalCode <= 0x9FFF then  -- 检查码点是否在汉字范围内
+			return utf8.char(finalCode)
+	else
+			return "?"  -- 超出常用汉字范围时返回问号
+	end
+end
+
 function jGuiTextInput:_onKeyboard(key)
-	-- print(key)
-	if key == self.kb.backspace and not self.kb.control() then
-		if self.carret_pos > 0 then -- Can't backspace when at the beginning of the string
-			self.value = self.value:sub(0, self.carret_pos - 1) .. self.value:sub(self.carret_pos + 1, -1)
-			self:__setCarretPos(self.carret_pos - 1)
+	if type(key) == "number" then
+    local decodedChar = dynamicDecode(key)
+
+    if decodedChar ~= "?" then
+			self.value = (self.value or "") .. decodedChar
+    else
+      --print("Failed conversion or invalid encoding sequence.")
+    end
+    self:__setCarretPos(self.carret_pos + 4)
+	end
+
+if key == self.kb.backspace and not self.kb.control() then
+	if self.carret_pos > 0 then
+		-- 确定删除前一个字符的正确位置
+		local bytepos = utf8.offset(self.value, -1, self.carret_pos + 1)
+		if bytepos then
+			self.value = self.value:sub(1, bytepos - 1) .. self.value:sub(self.carret_pos + 1, -1)
+			self:__setCarretPos(bytepos - 1)
 		end
+	end
 	elseif key == self.kb.delete then
 		self.value = self.value:sub(0, self.carret_pos) .. self.value:sub(self.carret_pos + 2, -1)
 	elseif key == self.kb.backspace and self.kb.shift() and self.kb.control() then
@@ -477,7 +506,7 @@ function jGuiTextInput:_onKeyboard(key)
 		self:__setCarretPos(0)
 	elseif key == self.kb._end then
 		self:__setCarretPos(#self.value)
-	elseif key >= 0 and key <= 255 then -- if self.kb:isChar(key) then
+	elseif self.kb:isChar(key) then
 		self.value = self.value:sub(0, self.carret_pos) .. string.char(key) .. self.value:sub(self.carret_pos + 1, -1)
 		self:__setCarretPos(self.carret_pos + 1)
 	end
@@ -495,6 +524,10 @@ function jGuiTextInput:_draw()
 	if not self.visible then
 		return false
 	end
+
+
+	self:__setGfxColor(self.color_background)  -- 设置背景颜色
+	gfx.rect(self.x, self.y, self.width, self.height, 1)  -- 绘制填充矩形作为背景
 	
 	-- gfx.setfont(1, self.label_font, self.label_fontsize)
 	
@@ -506,6 +539,7 @@ function jGuiTextInput:_draw()
 	
 	-- Draw a border around the control
 	if self.border then
+		self:__setGfxColor(self.color_border) -- 使用默认边框颜色
 		gfx.rect(self.x, self.y, self.width, self.height, 0)
 	end
 
