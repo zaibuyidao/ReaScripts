@@ -522,7 +522,7 @@ function showSearchResults(tButtons, tResults)
 			local fx = tResults[iStart]
 			-- b.label = fx.name  -- 使用fx的名称作为主要显示文本
 			-- 在这里同时显示name和alias
-			if SHOW_DB_ALIAS then
+			if SHOW_TAG_ALIAS then
 				b.label = fx.value .. (fx.fromString and " (" .. fx.fromString .. ")" or "")
 			else
 				b.label = fx.value
@@ -1143,7 +1143,7 @@ function loadSettings()
 	FILTER_NAME = jSettingsGet(SETTINGS, 'filter_name', "boolean")
 	FILTER_ALIAS = jSettingsGet(SETTINGS, 'filter_alias', "boolean")
 	FILTER_CATEGORY = jSettingsGet(SETTINGS, 'filter_category', "boolean")
-	SHOW_DB_ALIAS = jSettingsGet(SETTINGS, 'show_db_alias', "boolean")
+	SHOW_TAG_ALIAS = jSettingsGet(SETTINGS, 'show_tag_alias', "boolean")
 
 	COLOR_ROW_HIGHLIGHT_01 = jSettingsGet(SETTINGS, 'color_row_highlight_01', "string")
 	COLOR_ROW_HIGHLIGHT_02 = jSettingsGet(SETTINGS, 'color_row_highlight_02', "string")
