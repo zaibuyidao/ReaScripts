@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.29
+-- @version 1.0.30
 -- @changelog
 --   + Support for writing simultaneous articulations mapping in reabank, and automatically updating to simul-arts.txt.
 --   + Update articulation_map_factory.reabank.

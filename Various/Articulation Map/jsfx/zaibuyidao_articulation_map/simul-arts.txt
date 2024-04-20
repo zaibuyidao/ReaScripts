@@ -1,3 +1,4 @@
+// @noindex
 //This settings file is used to store simultaneous articulations mapping information, that is, associating a specific keyswitch with one or more different keyswitches. Each line defines a mapping, in the format:
 //original keyswitch=target keyswitch1,target keyswitch2,...
 //Here, the keyswitch is represented by the format [group number-velocity-note number]. For example:
