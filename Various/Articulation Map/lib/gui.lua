@@ -11,7 +11,7 @@ if colorConfig then
     theme_font = colorConfig.theme_font
     theme_brd = colorConfig.theme_brd
 end
-theme_toggle = CONFIG.ui.global.theme_toggle
+rounded_button = CONFIG.ui.global.rounded_button
 
 -- Simple Element Class
 local Element = {}
@@ -136,7 +136,7 @@ function Button:draw()
     if self:mouseClick() and self.onClick then self.onClick() end
     if self:mouseRClick() and self.onRClick then self.onRClick() end
 
-    if theme_toggle then
+    if rounded_button then
         -- 定义边框宽度
         local border_width = 1
 

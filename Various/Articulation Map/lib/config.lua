@@ -2,29 +2,23 @@
 return {
     ui = {
         global = {
-            -- Script Name ⇌ 脚本名称
-            title = {
-                cn = "技法映射 (Script by 再補一刀)",
-                tw = "技法映射 (Script by 再補一刀)",
-                en = "Articulation Map (Script by zaibuyidao)"
-            },
             -- Change Font ⇌ 更改字体
             font = {
-                cn = "SimSun", -- 可选项: "Microsoft YaHei", "SimSun", "华文宋体", "华文仿宋", "微软雅黑"
-                tw = "PMingLiU", -- 可選項: "PMingLiU", "Microsoft JhengHei", "DFKai-SB", "Apple LiGothic Medium", "LiHei Pro"
-                en = "Arial" -- Option: "Arial", "Verdana", "Helvetica", "Times New Roman", "Calibri", "Roboto"
+                en = "Calibri", -- Option: "Arial", "Verdana", "Helvetica", "Times New Roman", "Calibri", "Roboto"
+                zh = "SimSun", -- 可选项: "Microsoft YaHei", "SimSun", "华文宋体", "华文仿宋", "微软雅黑"
+                tw = "PMingLiU" -- 可選項: "PMingLiU", "Microsoft JhengHei", "DFKai-SB", "Apple LiGothic Medium", "LiHei Pro"
             },
             -- Change Font Size ⇌ 更改字体大小
             font_size = {
-                cn = 12,
-                tw = 12,
-                en = 14
+                en = 14,
+                zh = 12,
+                tw = 12
             },
-            style = "imgui", -- GUI Interface style settings, options: 'default', 'imgui', 'lokasenna'" ⇌ 界面风格设置, 可选项: "default", "imgui", "lokasenna"
-            lock_gui = false, -- Lock GUI Interface ⇌ 是否锁定GUI界面
             vel_show = true, -- Whether or not to include Velocity information in Patch ⇌ 是否在音色名称中包含Velocity信息
             bnk_show = false, -- Whether or not to display Bank number information in Patch ⇌ 是否在音色名称中显示Bank number信息
-            theme_toggle = true, -- Use rounded button style ⇌ 是否使用圆弧形的按钮样式
+            lock_gui = false, -- Lock GUI Interface ⇌ 是否锁定GUI界面
+            style = "imgui", -- GUI Interface style settings, options: 'default', 'imgui', 'lokasenna'" ⇌ 界面风格设置, 可选项: "default", "imgui", "lokasenna"
+            rounded_button = true, -- Use rounded button style ⇌ 是否使用圆弧形的按钮样式
             -- Interface style color configuration ⇌ 界面风格颜色配置
             color = {
                 default = {
@@ -58,7 +52,7 @@ return {
         }
     },
     pc_to_note = {
-        short_note = 60, -- Short note length (tick) ⇌ 非保持音长度 (滴答数)
-        sustain_note = 240, -- Holding note length (tick) ⇌ 保持音长度 (滴答数)
+        short_note = 60, -- Default short note length (tick) ⇌ 默认短音长度 (滴答数)
+        long_note = 240, -- Default long note length (tick) ⇌ 默认长音长度 (滴答数)
     }
 }

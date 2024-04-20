@@ -1,9 +1,9 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.28
+-- @version 1.0.29
 -- @changelog
---   + Add Keyswitch CC/UACC support.
---   + Add more *.reabank files.
+--   + Support for writing simultaneous articulations mapping in reabank, and automatically updating to simul-arts.txt.
+--   + Update articulation_map_factory.reabank.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts

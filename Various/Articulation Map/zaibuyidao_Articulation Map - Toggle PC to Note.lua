@@ -3,17 +3,22 @@ local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
 require('core')
+require('utils')
 CONFIG = require('config')
 short_note = CONFIG.pc_to_note.short_note
-sustain_note = CONFIG.pc_to_note.sustain_note
+long_note = CONFIG.pc_to_note.long_note
 delimiter = getPathDelimiter()
 
 function togglePCToNote()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
     local miditick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
-  
-    local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, sustain_note, short_note, 2 -- sustainnote = miditick/2, shortnote = miditick/8
+
+    local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
+    local bankMappings = read_bnkprg_lines(txt_path)
+    local bankMappingsRev = read_bnkprg_r_lines(txt_path)
+
+    local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, long_note, short_note, 2 -- sustainnote = miditick/2, shortnote = miditick/8
     local note_val = reaper.MIDI_EnumSelNotes(take, -1)
     while note_val ~= -1 do
         note_cnt = note_cnt + 1

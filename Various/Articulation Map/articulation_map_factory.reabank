@@ -1,6 +1,6 @@
 //Reabank Format Requirements:
-//Bank MSB(0-127) LSB(1-127)
-//Program number(0-127)
+//Bank MSB (0-127) LSB (1-127)
+//Program number (0-127)
 
 //Articulation Map Reabank Explanation:
 //Bank MSB: Virtual Instrument Group Number (Up to 128 sets of virtual instruments)
@@ -9,8 +9,20 @@
 
 
 //----------------------------------------------------------------------
-//Instrument 0, Default Articulations, KS Velocity 96
-//乐器 0, 默认技法, 键位切换键力度 96
+//This settings is used to store simultaneous articulations mapping information, that is, associating a specific keyswitch with one or more different keyswitches. Each line defines a mapping, in the format:
+//original keyswitch=target keyswitch1,target keyswitch2,...
+//Here, the keyswitch is represented by the format [group number-velocity-note number]. For example:
+//0-100-97=0-100-67,0-100-74,0-100-79
+//indicates that 0-100-97 is mapped to three different keyswitches: 0-100-67, 0-100-74, and 0-100-79.
+//Please note, the keyswitches corresponding to [group number-velocity] must remain consistent.
+
+//Simultaneous Articulations Mapping Definition:
+//! 127-127-1=127-127-3, 127-127-5, 127-127-7
+//! 127-127-100 = 127-127-101, 127-127-105
+
+
+//----------------------------------------------------------------------
+//Instrument 0, KS Velocity 96
 Bank 0 96 Three-Body Whisper of Loong
 38 D1: Staccato ON
 39 D#1: Staccato OFF
@@ -45,8 +57,7 @@ Bank 0 96 Three-Body Whisper of Loong
 
 
 //----------------------------------------------------------------------
-//Instrument 1, Default Articulations, KS Velocity 96
-//乐器 1, 默认技法, 键位切换键力度 96
+//Instrument 1, KS Velocity 96
 Bank 1 96 三体新雨
 38 D1: 吐音奏法 ON
 39 D#1: 吐音奏法 OFF
@@ -81,9 +92,8 @@ Bank 1 96 三体新雨
 
 
 //----------------------------------------------------------------------
-//Instrument 2, Default Articulations, KS Velocity 96
-//乐器 2, 默认技法, 键位切换键力度 96
-Bank 2 96 Ample Metal Eclipse
+//Instrument 2, KS Velocity 96
+Bank 2 96 Ample Metal Eclipse (通用技法)
 18 6弦指定
 19 5弦指定
 20 4弦指定
@@ -130,8 +140,7 @@ Bank 2 96 Ample Metal Eclipse
 103 效果滑音 2(FX Slide 2)
 
 //KS Velocity 1
-//键位切换键力度 1
-Bank 2 1 Ample Metal Eclipse
+Bank 2 1 Ample Metal Eclipse (其他技法)
 24 标准音-Full Mute
 28 连奏滑音-不改变把位
 29 击勾弦-不改变把位
@@ -145,23 +154,19 @@ Bank 2 1 Ample Metal Eclipse
 104 空弦优先 关
 
 //KS Velocity 22
-//键位切换键力度 22
-Bank 2 22 Ample Metal Eclipse
+Bank 2 22 Ample Metal Eclipse (其他技法)
 24 标准音-3/4 Mute
 
 //KS Velocity 43
-//键位切换键力度 43
-Bank 2 43 Ample Metal Eclipse
+Bank 2 43 Ample Metal Eclipse (其他技法)
 24 标准音-Half Mute
 
 //KS Velocity 64
-//键位切换键力度 64
-Bank 2 64 Ample Metal Eclipse
+Bank 2 64 Ample Metal Eclipse (其他技法)
 24 标准音-Sustain
 
 //KS Velocity 127
-//键位切换键力度 127
-Bank 2 127 Ample Metal Eclipse
+Bank 2 127 Ample Metal Eclipse (其他技法)
 24 标准音-重勾或搓泛音
 25 自然泛音-搓泛音
 99 自动连奏-开启自动滑音
@@ -169,9 +174,8 @@ Bank 2 127 Ample Metal Eclipse
 
 
 //----------------------------------------------------------------------
-//Instrument 3, Default Articulations, KS Velocity 96
-//乐器 3, 默认技法, 键位切换键力度 96
-Bank 3 96 Ample Metal Hellrazer
+//Instrument 3, KS Velocity 96
+Bank 3 96 Ample Metal Hellrazer (通用技法)
 3 9弦指定
 4 8弦指定
 5 7弦指定
@@ -223,8 +227,7 @@ Bank 3 96 Ample Metal Hellrazer
 103 效果滑音 2(FX Slide 2)
 
 //KS Velocity 1
-//键位切换键力度 1
-Bank 3 1 Ample Metal Hellrazer
+Bank 3 1 Ample Metal Hellrazer (其他技法)
 3 9弦指定-不改变把位
 4 8弦指定-不改变把位
 5 7弦指定-不改变把位
@@ -241,23 +244,19 @@ Bank 3 1 Ample Metal Hellrazer
 104 空弦优先 关
 
 //KS Velocity 22
-//键位切换键力度 22
-Bank 3 22 Ample Metal Hellrazer
+Bank 3 22 Ample Metal Hellrazer (其他技法)
 12 标准音-3/4 Mute
 
 //KS Velocity 43
-//键位切换键力度 43
-Bank 3 43 Ample Metal Hellrazer
+Bank 3 43 Ample Metal Hellrazer (其他技法)
 12 标准音-Half Mute
 
 //KS Velocity 64
-//键位切换键力度 64
-Bank 3 64 Ample Metal Hellrazer
+Bank 3 64 Ample Metal Hellrazer (其他技法)
 12 标准音- Sustain
 
 //KS Velocity 127
-//键位切换键力度 127
-Bank 3 127 Ample Metal Hellrazer
+Bank 3 127 Ample Metal Hellrazer (其他技法)
 12 标准音-重勾或搓泛音
 13 自然泛音-搓泛音
 99 自动连奏-开启自动滑音
@@ -265,8 +264,7 @@ Bank 3 127 Ample Metal Hellrazer
 
 
 //----------------------------------------------------------------------
-//Instrument 4, Default Articulations, KS Velocity 96 (REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1)
-//乐器 4, 默认技法, 键位切换键力度 96 (REAPER首选项-媒体-MIDI设置-八度名称显示偏移: -1)
+//Instrument 4, KS Velocity 96
 Bank 4 96 Ample Sound Erhu 二胡凝月
 24 長弓
 25 頓弓
@@ -307,8 +305,7 @@ Bank 4 96 Ample Sound Erhu 二胡凝月
 
 
 //----------------------------------------------------------------------
-//Instrument 5, Default Articulations, KS Velocity 96 (REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1)
-//乐器 5, 默认技法, 键位切换键力度 96 (REAPER首选项-媒体-MIDI设置-八度名称显示偏移: -1)
+//Instrument 5, KS Velocity 96
 Bank 5 96 Ample Sound Qudi 曲笛風逸
 24 長音
 25 單吐
@@ -346,9 +343,8 @@ Bank 5 96 Ample Sound Qudi 曲笛風逸
 
 
 //----------------------------------------------------------------------
-//Instrument 6, Keyswitch CC, KS-CC LSB 44 (default)
-//乐器 6, CC控制器技法, KS-CC LSB 44 (默认值)
-Bank 6 44 Cinematic Studio Strings (KS-CC)
+//Instrument 6, Keyswitch CC#58
+Bank 6 96 Cinematic Studio Strings (KSCC)
 0 Sustain: Standard Leaato (标准连奏)
 6 Sustain: Advanced Legato (高级连奏)
 11 Spiccato (跳弓)

@@ -5,7 +5,7 @@ package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_pa
 require('core')
 CONFIG = require('config')
 short_note = CONFIG.pc_to_note.short_note
-sustain_note = CONFIG.pc_to_note.sustain_note
+long_note = CONFIG.pc_to_note.long_note
 delimiter = getPathDelimiter()
 
 function inset_patch(bank, note, velocity, chan) -- 插入音色
@@ -173,9 +173,6 @@ function read_bnkprg_r_lines(reabank_path)
     return process_bnkprg_r_lines(lines)
 end
 
-local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
-local bankMappings = read_bnkprg_lines(txt_path)
-local bankMappingsRev = read_bnkprg_r_lines(txt_path)
 -- 打印
 -- for k, v in pairs(bankMappings) do
 --     print("Key: " .. k)
@@ -227,7 +224,11 @@ function toggleNoteToPC()
     if not take or not reaper.TakeIsMIDI(take) then return end
     local miditick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
   
-    local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, sustain_note, short_note, 2 -- sustainnote = miditick/2, shortnote = miditick/8
+    local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
+    local bankMappings = read_bnkprg_lines(txt_path)
+    local bankMappingsRev = read_bnkprg_r_lines(txt_path)
+
+    local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, long_note, short_note, 2 -- sustainnote = miditick/2, shortnote = miditick/8
     local note_val = reaper.MIDI_EnumSelNotes(take, -1)
     while note_val ~= -1 do
         note_cnt = note_cnt + 1
@@ -505,7 +506,7 @@ function toggleNoteToPC()
     reaper.UpdateArrange()
 end
 
-function togglePCToCC()
+function togglePCToCC(msb, lsb)
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
 
@@ -607,9 +608,9 @@ function togglePCToCC()
 
         bankMSB = reaper.GetExtState("ARTICULATION_MAP", "bankMSB")
         bankLSB = reaper.GetExtState("ARTICULATION_MAP", "bankLSB")
-        if (bankMSB == "") then bankMSB = "" end
-        if (bankLSB == "") then bankLSB = "" end
-    
+        if (bankMSB == "") then bankMSB = msb or "" end
+        if (bankLSB == "") then bankLSB = lsb or "" end
+
         -- 请求用户输入Bank MSB和LSB
         local retval, userInput = reaper.GetUserInputs("Bank Select", 2, "Enter Bank MSB:,Enter Bank LSB:", bankMSB .. ','.. bankLSB)
         if not retval then return end
@@ -772,4 +773,52 @@ function toggle_pre_trigger_jsfx()
         -- 如果浮动窗口关闭，则打开它
         reaper.TrackFX_Show(track, fxFirst, 3)
     end
+end
+
+function process_and_save_reabank_mappings(reabank_path)
+    local delimiter = package.config:sub(1,1)  -- 获取系统路径分隔符 ('\' for Windows, '/' for Unix)
+    local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
+
+    local file = io.open(reabank_path, "r")
+    if not file then
+        print("Failed to open file: " .. reabank_path)
+        return {}  -- 文件打不开时返回空表
+    end
+
+    local lines = {}
+    for line in file:lines() do
+        local trimmed = line:match("^%s*//!%s*(.-)%s*$")  -- 提前清理并检查是否为目标行，删除行首尾空格
+        if trimmed and trimmed ~= "" then
+            table.insert(lines, trimmed)
+        end
+    end
+    file:close()  -- 关闭文件
+
+    local f = io.open(txt_path, "w")  -- 打开文件用于写入, 'w' 会创建新文件或清空已有文件
+    if not f then
+        print("Cannot open file to write: " .. txt_path)
+        return {}
+        -- local file = io.open(txt_path , "w")
+        -- file:write([[]])
+        -- file:close()
+        -- f = io.open(txt_path, "r")
+    end
+
+    for i = 1,#lines do
+        local cleanLine = lines[i]
+        local key, value = cleanLine:match("^(%d+-%d+-%d+)%s*=%s*(.*)")  -- 处理等号前后的空格
+        if key and value then
+            local valueTable = {}
+            for bankVelocityName in value:gmatch("(%d+-%d+-%d+)") do
+                bankVelocityName = bankVelocityName:gsub("%s*", "")  -- 删除数字间的所有空格
+                table.insert(valueTable, bankVelocityName)
+            end
+            table.sort(valueTable)
+            local sortedValue = table.concat(valueTable, ",")
+
+            f:write(key .. "=" .. sortedValue .. "\n")
+        end
+    end
+
+    f:close()  -- 关闭文件
 end

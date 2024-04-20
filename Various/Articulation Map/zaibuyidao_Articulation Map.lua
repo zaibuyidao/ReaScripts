@@ -45,9 +45,9 @@ function getConfig(configName, default, convert)
 end
 
 if language == "简体中文" then
-    WINDOW_TITLE = getConfig("ui.global.title.cn")
-    GLOBAL_FONT = getConfig("ui.global.font.cn")
-    FONT_SIZE = getConfig("ui.global.font_size.cn", 12)
+    WINDOW_TITLE = "技法映射 (Script by 再補一刀)"
+    GLOBAL_FONT = getConfig("ui.global.font.zh")
+    FONT_SIZE = getConfig("ui.global.font_size.zh", 12)
     swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
     swserr = "警告"
     jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
@@ -79,7 +79,7 @@ if language == "简体中文" then
     no_bank_sel = "未选择音色库"
     no_patch_sel = "未选择音色"
 elseif language == "繁體中文" then
-    WINDOW_TITLE = getConfig("ui.global.title.tw")
+    WINDOW_TITLE = "技法映射 (Script by 再補一刀)"
     GLOBAL_FONT = getConfig("ui.global.font.tw")
     FONT_SIZE = getConfig("ui.global.font_size.tw", 12)
     swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
@@ -113,7 +113,7 @@ elseif language == "繁體中文" then
     no_bank_sel = "未選擇音色庫"
     no_patch_sel = "未選擇音色"
 else
-    WINDOW_TITLE = getConfig("ui.global.title.en")
+    WINDOW_TITLE = "Articulation Map (Script by zaibuyidao)"
     GLOBAL_FONT = getConfig("ui.global.font.en")
     FONT_SIZE = getConfig("ui.global.font_size.en", 14)
     swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
@@ -183,6 +183,7 @@ if not take or not reaper.TakeIsMIDI(take) then return end
 
 reabank_path, bank_name = selectReaBankFile() -- 全局REABANK
 if not reabank_path then return end
+process_and_save_reabank_mappings(reabank_path) -- 更新 simul-arts.txt 文件
 if initialTrack then
     local result = applyReaBankToTrack(initialTrack, reabank_path)
     if not result then
@@ -1442,6 +1443,7 @@ function update_reabank_file()
 
     -- 刷新 bank
     refresh_bank()
+    process_and_save_reabank_mappings(reabank_path) -- 更新 simul-arts.txt 文件
 end
 
 pop_current_state() -- 读取数据
@@ -1717,6 +1719,8 @@ function mainloop()
     
             applyReaBankToTrack(track, reabank_path)
             text_bank.lbl = getFileName(reabank_path)
+
+            process_and_save_reabank_mappings(reabank_path) -- 更新 simul-arts.txt 文件
         end
     end
 
@@ -1792,6 +1796,7 @@ function mainloop()
             text_bank.lbl = bank_name -- 更新文本框 textb 的标签的音色表名称
         end
         refresh_bank()
+        process_and_save_reabank_mappings(reabank_path) -- 更新 simul-arts.txt 文件
     end
 
     btn5.onClick = function ()
@@ -1823,7 +1828,11 @@ function mainloop()
 
     btn10.onClick = function ()
         if Shift then
-            togglePCToCC() -- 切换PC转CC
+            local current_msb = textb_1.lbl
+            local current_lsb = textb_2.lbl
+            -- local current_program = textb_3.lbl
+
+            togglePCToCC(current_msb, current_lsb) -- 切换PC转CC
         else
             set_group_velocity() -- 设置乐器组参数
         end
