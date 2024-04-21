@@ -5,8 +5,8 @@ package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_pa
 require('core')
 require('utils')
 CONFIG = require('config')
-short_note = CONFIG.pc_to_note.short_note
-long_note = CONFIG.pc_to_note.long_note
+short_note_length = CONFIG.pc_to_note.short_note_length
+min_long_note_length = CONFIG.pc_to_note.min_long_note_length
 delimiter = getPathDelimiter()
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
@@ -17,7 +17,7 @@ local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter ..
 local bankMappings = read_bnkprg_lines(txt_path)
 local bankMappingsRev = read_bnkprg_r_lines(txt_path)
 
-local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, long_note, short_note, 2 -- sustainnote = miditick/2, shortnote = miditick/8
+local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, min_long_note_length, short_note_length, 2 -- sustainnote = miditick/2, shortnote = miditick/8
 local note_val = reaper.MIDI_EnumSelNotes(take, -1)
 while note_val ~= -1 do
     note_cnt = note_cnt + 1

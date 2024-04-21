@@ -17,8 +17,9 @@ return {
             vel_show = true, -- Whether or not to include Velocity information in Patch ⇌ 是否在音色名称中包含Velocity信息
             bnk_show = false, -- Whether or not to display Bank number information in Patch ⇌ 是否在音色名称中显示Bank number信息
             lock_gui = false, -- Lock GUI Interface ⇌ 是否锁定GUI界面
-            style = "imgui", -- GUI Interface style settings, options: 'default', 'imgui', 'lokasenna'" ⇌ 界面风格设置, 可选项: "default", "imgui", "lokasenna"
             rounded_button = true, -- Use rounded button style ⇌ 是否使用圆弧形的按钮样式
+            -- GUI Interface style settings, options: 'default', 'imgui', 'lokasenna'" ⇌ 界面风格设置, 可选项: "default", "imgui", "lokasenna"
+            style = "imgui",
             -- Interface style color configuration ⇌ 界面风格颜色配置
             color = {
                 default = {
@@ -52,7 +53,7 @@ return {
         }
     },
     pc_to_note = {
-        short_note = 60, -- Default short note length (tick) ⇌ 默认短音长度 (滴答数)
-        long_note = 240, -- Default long note length (tick) ⇌ 默认长音长度 (滴答数)
+        short_note_length = 60, -- Short note length (tick) ⇌ 短音长度 (滴答数)
+        min_long_note_length = 240, -- Min long note length (tick) ⇌ 最小长音长度 (滴答数)
     }
 }
