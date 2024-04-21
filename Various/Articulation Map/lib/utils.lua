@@ -4,8 +4,8 @@ package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_pa
 
 require('core')
 CONFIG = require('config')
-short_note = CONFIG.pc_to_note.short_note
-long_note = CONFIG.pc_to_note.long_note
+short_note_length = CONFIG.pc_to_note.short_note_length
+min_long_note_length = CONFIG.pc_to_note.min_long_note_length
 delimiter = getPathDelimiter()
 
 function inset_patch(bank, note, velocity, chan) -- 插入音色
@@ -228,7 +228,7 @@ function toggleNoteToPC()
     local bankMappings = read_bnkprg_lines(txt_path)
     local bankMappingsRev = read_bnkprg_r_lines(txt_path)
 
-    local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, long_note, short_note, 2 -- sustainnote = miditick/2, shortnote = miditick/8
+    local note_cnt, note_idx, sustainnote, shortnote, preoffset = 0, {}, min_long_note_length, short_note_length, 2 -- sustainnote = miditick/2, shortnote = miditick/8
     local note_val = reaper.MIDI_EnumSelNotes(take, -1)
     while note_val ~= -1 do
         note_cnt = note_cnt + 1
@@ -313,7 +313,7 @@ function toggleNoteToPC()
                     reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, 32, lsb)
                     reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xC0, chan, pc, 0)
         
-                    if endppqpos - startppqpos > sustainnote then -- 如果音符长度大于半拍
+                    if endppqpos - startppqpos >= sustainnote then -- 如果音符长度大于半拍
                         reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, gmem_cc_num, 96)
                         reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, gmem_cc_num, 32)
                     end
@@ -346,7 +346,7 @@ function toggleNoteToPC()
                 local retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, lastNoteInfo.index)
                 if retval and selected then
                     -- 如果音符长度大于设定的sustainnote阈值，则插入CC119
-                    if endppqpos - startppqpos > sustainnote then
+                    if endppqpos - startppqpos >= sustainnote then
                         reaper.MIDI_InsertCC(take, true, muted, startppqpos, 0xB0, chan, gmem_cc_num, 96)
                         reaper.MIDI_InsertCC(take, true, muted, endppqpos, 0xB0, chan, gmem_cc_num, 32)
                     end
