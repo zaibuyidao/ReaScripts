@@ -25,16 +25,22 @@ if language == "简体中文" then
 	MEDIA_EXPLORER_NOT_OPEN = "媒体资源管理器未打开。"
 	INPUT_TITLE = "过滤器"
 	INPUT_CAPTION = "标签:"
+	FIRST_TIME_MSG = "未找到数据库。请创建数据库以继续。"
+	FIRST_TIME_TITLE = "错误"
 elseif language == "繁體中文: 數據庫" then
 	SFX_TAG_TITLE = "音效標簽搜索器 (Script by 再補一刀)"
 	MEDIA_EXPLORER_NOT_OPEN = "媒體資源總管未打開。"
 	INPUT_TITLE = "過濾器"
 	INPUT_CAPTION = "標簽:"
+	FIRST_TIME_MSG = "未找到數據庫。請創建數據庫以繼續。"
+	FIRST_TIME_TITLE = "錯誤"
 else
 	SFX_TAG_TITLE = "SFX Tag Search: Database (Script by zaibuyidao)"
 	MEDIA_EXPLORER_NOT_OPEN = "Media Explorer is not opened."
 	INPUT_TITLE = "Filter"
 	INPUT_CAPTION = "Tags:"
+	FIRST_TIME_MSG = "No database found. Please create a database to continue."
+	FIRST_TIME_TITLE = "Error"
 end
 
 -- 10组高亮文本颜色
@@ -649,7 +655,12 @@ function init()
 	end
 
 	dbList = getDbList()
-	if dbList == false then return end
+	-- if dbList == false then return end
+	if dbList == false or #dbList == 0 then  -- 检查数据库列表是否为空
+        -- 如果没有数据库，显示错误消息并提供创建数据库的选项
+        reaper.MB(FIRST_TIME_MSG, FIRST_TIME_TITLE, 0)  -- 显示消息框
+        return false
+    end
 	
 	-- 实时创建数据库列表版本
 	tTagData = {}

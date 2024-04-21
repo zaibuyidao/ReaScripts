@@ -25,16 +25,22 @@ if language == "简体中文" then
 	MEDIA_EXPLORER_NOT_OPEN = "媒体资源管理器未打开。"
 	INPUT_TITLE = "过滤器"
 	INPUT_CAPTION = "标签:"
+	FIRST_TIME_MSG = "这是您第一次运行脚本，必需的文件 'keywords_custom_tags.csv' 不存在。\n\n您现在要创建这个文件吗？"
+	FIRST_TIME_TITLE = "需要初始设置"
 elseif language == "繁體中文" then
 	SFX_TAG_TITLE = "音效標簽搜索器: 自訂標簽 (Script by 再補一刀)"
 	MEDIA_EXPLORER_NOT_OPEN = "媒體資源總管未打開。"
 	INPUT_TITLE = "過濾器"
 	INPUT_CAPTION = "標簽:"
+	FIRST_TIME_MSG = "這是您第一次運行腳本，必需的檔案 'keywords_custom_tags.csv' 不存在。\n\n您現在要創建這個檔案嗎？"
+	FIRST_TIME_TITLE = "需要初始設置"
 else
 	SFX_TAG_TITLE = "SFX Tag Search: Custom Tags (Script by zaibuyidao)"
 	MEDIA_EXPLORER_NOT_OPEN = "Media Explorer is not opened."
 	INPUT_TITLE = "Filter"
 	INPUT_CAPTION = "Tags:"
+	FIRST_TIME_MSG = "This is the first time you are running the script and a necessary file 'keywords_custom_tags.csv' does not exist. \n\nWould you like to create it now?"
+	FIRST_TIME_TITLE = "Initial Setup Required"
 end
 
 -- 10组高亮文本颜色
@@ -719,6 +725,8 @@ function init()
 		io.close(csvFile)
 		tTagData = readFromCSV(KEYWORDS_CSV_FILE)
 	else
+		local retval = reaper.MB(FIRST_TIME_MSG, FIRST_TIME_TITLE, 1)
+		if retval == 2 then return end
 		local readDBCount = 0
 
 		for _, db in ipairs(dbList) do

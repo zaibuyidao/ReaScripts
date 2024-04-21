@@ -765,11 +765,11 @@ attack,攻击,Battle
 			io.close(file)
 	
 			if language == "简体中文" then
-				reaper.MB("找不到自定义关键词文件 keywords_favorite.csv，已为您创建了一份新文件：\n"..script_path.."keywords_favorite.csv\n\n".."请记住此文件路径，将来您可能需要对其进行备份。\n按快捷键 F1 或通过以上路径找到并打开文件，可以编辑自定义关键词。\n\n请注意，每次编辑完毕需要重新启动脚本才能生效！", '创建自定义关键词文件', 0)
+				reaper.MB("找不到自定义关键词文件 keywords_favorite.csv，已为您创建了一份新文件：\n"..script_path.."keywords_favorite.csv\n\n".."请记住此文件路径，将来您可能需要对其进行备份。\n按快捷键 F1 或通过以上路径找到并打开文件，可以编辑自定义关键词。", '创建自定义关键词文件', 0)
 			elseif language == "繁體中文" then
-				reaper.MB("找不到自訂關鍵詞文件 keywords_favorite.csv，已為您創建了一份新文件：\n"..script_path.."keywords_favorite.csv\n\n".."請記住此文件路徑，將來您可能需要對其進行備份。\n按快捷鍵 F1 或通過以上路徑找到並打開文件，可以編輯自訂關鍵詞。\n\n請注意，每次編輯完畢需要重新啓動脚本才能生效！", '創建自訂關鍵詞文件', 0)
+				reaper.MB("找不到自訂關鍵詞文件 keywords_favorite.csv，已為您創建了一份新文件：\n"..script_path.."keywords_favorite.csv\n\n".."請記住此文件路徑，將來您可能需要對其進行備份。\n按快捷鍵 F1 或通過以上路徑找到並打開文件，可以編輯自訂關鍵詞。", '創建自訂關鍵詞文件', 0)
 			else
-				reaper.MB("Cannot find the keywords_favorite.csv file, a new file has been created for you: \n"..script_path.."keywords_favorite\n\n".."Please remember this file path, as you may need to back it up in the future.\nPress the F1 shortcut key or find and open the file through the above path to edit custom keywords.\n\nPlease note that you need to restart the script each time after editing for the changes to take effect!", 'Creating custom keywords file', 0)
+				reaper.MB("Cannot find the keywords_favorite.csv file, a new file has been created for you: \n"..script_path.."keywords_favorite\n\n".."Please remember this file path, as you may need to back it up in the future.\nPress the F1 shortcut key or find and open the file through the above path to edit custom keywords.", 'Creating custom keywords file', 0)
 			end
 	
 			f = io.open(KEYWORDS_CSV_FILE, "r")

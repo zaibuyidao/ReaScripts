@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.1
+-- @version 2.0.2
 -- @changelog
 --   # New Script
 -- @reference
