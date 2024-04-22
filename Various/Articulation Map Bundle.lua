@@ -1,9 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.32
+-- @version 1.0.33
 -- @changelog
---   + Support for writing simultaneous articulations mapping in reabank, and automatically updating to simul-arts.txt.
---   + Update articulation_map_factory.reabank.
+--   + Optimized the simul-arts.txt update logic
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts

@@ -779,44 +779,77 @@ function process_and_save_reabank_mappings(reabank_path)
     local delimiter = package.config:sub(1,1)  -- 获取系统路径分隔符 ('\' for Windows, '/' for Unix)
     local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
 
+    -- 读取原始 simul-arts.txt 文件内容到表
+    local original_content = {}
+    local f = io.open(txt_path, "r")
+    if f then
+        local current_bank_name = nil
+        for line in f:lines() do
+            local bank_comment = line:match("^//(.+)$")
+            if bank_comment then
+                current_bank_name = "//" .. bank_comment
+                original_content[current_bank_name] = {}
+            elseif current_bank_name and line:match("^%d+-%d+-%d+=") then
+                table.insert(original_content[current_bank_name], line)
+            end
+        end
+        f:close()
+    end
+
+    -- 处理 reabank 文件，更新或添加新的 articulations
+    local updates = {}
     local file = io.open(reabank_path, "r")
     if not file then
         print("Failed to open file: " .. reabank_path)
-        return {}  -- 文件打不开时返回空表
+        return {}
     end
 
-    local lines = {}
+    local current_bank_name = nil
     for line in file:lines() do
-        local trimmed = line:match("^%s*//!%s*(.-)%s*$")  -- 提前清理并检查是否为目标行，删除行首尾空格
-        if trimmed and trimmed ~= "" then
-            table.insert(lines, trimmed)
+        local bank_header = line:match("^(Bank %d+ %d+ .+)$")  -- 捕获整个Bank行
+        if bank_header then
+            current_bank_name = "//" .. bank_header
+            updates[current_bank_name] = {}  -- 初始化，即使没有//!也初始化防止错误
+        elseif current_bank_name and line:match("^//!") then
+            local key, values = line:match("^//!%s*(%d+-%d+-%d+)%s*=%s*(.+)%s*$")
+            if key and values then
+                values = values:gsub("%s+", "")  -- 移除数字间的空格
+                updates[current_bank_name] = updates[current_bank_name] or {}
+                table.insert(updates[current_bank_name], key .. "=" .. values)
+            end
         end
     end
-    file:close()  -- 关闭文件
+    file:close()
 
-    local f = io.open(txt_path, "w")  -- 打开文件用于写入, 'w' 会创建新文件或清空已有文件
+    -- 将更新写回 simul-arts.txt，覆盖或添加新项
+    f = io.open(txt_path, "w")
     if not f then
         print("Cannot open file to write: " .. txt_path)
         return {}
-        -- local file = io.open(txt_path , "w")
-        -- file:write([[]])
-        -- file:close()
-        -- f = io.open(txt_path, "r")
     end
 
-    for i = 1,#lines do
-        local cleanLine = lines[i]
-        local key, value = cleanLine:match("^(%d+-%d+-%d+)%s*=%s*(.*)")  -- 处理等号前后的空格
-        if key and value then
-            local valueTable = {}
-            for bankVelocityName in value:gmatch("(%d+-%d+-%d+)") do
-                bankVelocityName = bankVelocityName:gsub("%s*", "")  -- 删除数字间的所有空格
-                table.insert(valueTable, bankVelocityName)
+    -- 首先写入那些在 updates 中有提及并且存在 //! 行的内容
+    for bank_name, lines in pairs(updates) do
+        if #lines > 0 then  -- 仅处理有//!行的bank
+            f:write(bank_name .. "\n")
+            for _, line in ipairs(lines) do
+                f:write(line .. "\n")
             end
-            table.sort(valueTable)
-            local sortedValue = table.concat(valueTable, ",")
+        elseif original_content[bank_name] then
+            -- 对于 updates 中提到但无有效 //! 行的bank，保留原始内容
+            for _, line in ipairs(original_content[bank_name]) do
+                f:write(line .. "\n")
+            end
+        end
+    end
 
-            f:write(key .. "=" .. sortedValue .. "\n")
+    -- 写入未在 updates 中提及的原始内容
+    for bank_name, lines in pairs(original_content) do
+        if not updates[bank_name] then
+            f:write(bank_name .. "\n")
+            for _, line in ipairs(lines) do
+                f:write(line .. "\n")
+            end
         end
     end
 
