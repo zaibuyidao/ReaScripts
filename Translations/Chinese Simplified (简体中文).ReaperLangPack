@@ -1,10 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 1.0.10
+;Version: 1.0.11
 ;Author: zaibuyidao
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47851/Chinese%20Simplified%20%28%26%2331616%3B%26%2320307%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.12, SWS: 2.14.0.1
+;  Brand new REAPER: 7.15, SWS: 2.14.0.1
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -1217,11 +1217,13 @@ DC232FE59F662690=当启用 '从小节开始' 时，等待下一小节再开始�
 8B5A889ADCE5D728=媒体资源管理器(&M)
 E7B63BC14820F88E=显示(&S)
 945C03D8A0B833B8=为媒体计算峰值音量和响度 (LUFS-I)
+507B67F19A3899C7=显示图像元数据...
 1AA7BFBA524B24FA=重新读取媒体元数据
 DA93338F06D3E461=设置为收藏夹
 26DB177BC7B24D73=设置临时标记
 8B6AF9AC93B99233=通道
 1F7997A0644DE09B=日期
+14CB51269FB62764=图片
 0A8BAF4C6945400F=长度
 40D9EE40B7696EB4=将列重置为默认排序/宽度
 502001D7ACECC754=起始偏移
@@ -1241,11 +1243,11 @@ B2C13E7E2485F09F=MTC
 4789C5332441688D=找不到未使用的输出文件名。源文件:\r\n\t
 6A8323D4A2DF56E0=拆分多通道媒体
 A1BB777BE5203666=打开复制错误
+61E626F1B6348FB2=无法创建文件
 FEAA833C7533B5D0=文件未找到
 1091E0FE22106AFC=通道: %d
 CD2E4AA3231DEC4D=文件未打开
 71831478CADD789A=文件离线
-14CB51269FB62764=图片
 439CE51FC4707DDD=长度:
 9570937682166424=采样率: %d
 D730907ADC00D444=未知错误/状态
@@ -2884,7 +2886,7 @@ A06018BD1D8D0851=活跃或不确定
 
 [DLG_280] ; IDD_DYNAMIC_SPLIT
 FE116402CB3788B9=生成指引
-1E6F2B307693DFF0=添加伸缩标记
+1E6F2B307693DFF0=添加拉伸标记
 48867AD65E380310=动态分割对象
 510C378B5623AFE4=分割点
 2C4C3A5A957AA431=在瞬态处
@@ -6018,13 +6020,13 @@ BB3B934D43F8B413=对象: 在编辑或播放光标处分割对象 (忽略编组) 
 548C3464DD99645E=对象: 在编辑或播放光标处分割对象 ⇌ Item: Split items at edit or play cursor
 39E1CD46D8D6FE6E=对象: 在时间选区处分割对象 ⇌ Item: Split items at time selection
 4156588963373513=对象: 在编辑光标处分割对象 (不更改选择) ⇌ Item: Split items at edit cursor (no change selection)
-8BDE5509553119C5=对象: 在编辑光标处分割对象 (选择左边) ⇌ Item: Split items at edit cursor (select left)
+033FDC72372E8948=对象: 在编辑光标处分割对象 (选择/交叉淡化左边) ⇌ Item: Split items at edit cursor (select/crossfade left)
 ACBAFCDBD5254A5E=对象: 在编辑光标处分割对象 (选择右边) ⇌ Item: Split items at edit cursor (select right)
 E61AC4A06953B1BA=对象: 在鼠标光标下方分割对象 ⇌ Item: Split item under mouse cursor
-C05A22E4B8A62706=对象: 在鼠标光标下方分割对象 (选择左边) ⇌ Item: Split item under mouse cursor (select left)
+FFD13BCF4508750F=对象: 在鼠标光标下方分割对象 (选择/交叉淡化左边) ⇌ Item: Split item under mouse cursor (select/crossfade left)
 6263726A1E193C67=对象: 在鼠标光标下方分割对象 (选择右边) ⇌ Item: Split item under mouse cursor (select right)
 9AE183D16E79F8B0=对象: 在鼠标光标下方分割对象 (忽略编组) ⇌ Item: Split item under mouse cursor (ignore grouping)
-C81E9B36A8B7D859=对象: 在鼠标光标下方分割对象 (选择左边, 忽略编组) ⇌ Item: Split item under mouse cursor (select left, ignore grouping)
+7D45E4279D4E5D6A=对象: 在鼠标光标下方分割对象 (选择/交叉淡化左边, 忽略编组) ⇌ Item: Split item under mouse cursor (select/crossfade left, ignore grouping)
 ABBE4B2AEBAC9CA2=对象: 在鼠标光标下方分割对象 (选择右边, 忽略编组) ⇌ Item: Split item under mouse cursor (select right, ignore grouping)
 BF1C8F1ED2DB0EAB=对象: 显示对象片段的 FX 链 ⇌ Item: Show FX chain for item take
 83FB6C8F56713AF5=对象: 移除对象片段的 FX ⇌ Item: Remove FX for item take
@@ -8239,6 +8241,9 @@ A1EA0160AAEC30D1=+ %d 更多文件
 BB4AB6B66771B736=创建新数据库
 910A78124523911D=创建文件夹
 4C7AFD4281A8D8BA=最多支持 %d 个用户列。
+6E11793408AC4705=错误: 一次只支持显示一个文件的图像元数据。
+85E9C8E14E466153=图像元数据错误
+6122A43ED20E5B8B=错误: 媒体不包含图像元数据。
 330FCBCEAB194567=可能:
 7800ECC7AFD0F2E5=分配 MIDI 音符 %s (%d) 并在新轨道中递增...
 BD627BDE5F9EBC6D=Cmd+opt+拖动选择以渲染新文件
@@ -8593,6 +8598,7 @@ D80A0F95C8BEE0D1=将预览音量应用于插入的媒体对象 ⇌ Apply preview
 3C07E0BF56562116=如果已计算峰值音量，则将预览音量标准化为 -0dB ⇌ Normalize preview volume to -0dB if peak volume has been calculated
 1A8D56550F54B39E=如果已计算响度，则将预览音量标准化为 -12LU ⇌ Normalize preview volume to -12LU if loudness has been calculated
 F7263C459FDBFBEA=将标准化音量应用于插入的媒体对象 ⇌ Apply normalized volume to inserted media item
+507B67F19A3899C7=显示图像元数据... ⇌ Display image metadata...
 8E406E28E10A0D7D=在浏览文件列表时自动展开快捷方式 ⇌ Automatically expand shortcuts while browsing file list
 DA93338F06D3E461=设置为收藏夹 ⇌ Set as favorite
 26DB177BC7B24D73=设置临时标记 ⇌ Set temporary mark
@@ -8724,6 +8730,9 @@ F7D8461DCF28DB58=单个音高对象
 1ACD08E5EF42F8CA=拆分多通道媒体对象时出错
 
 [flac]
+132D6E5D7EDE72E8=FLAC 不支持此通道数
+AEFD03BD880E7836=FLAC 不支持此位深
+D84DBA02E2CE7F44=FLAC 不支持此采样率
 2592AA17A3AD044D=FLAC %d/24 bit %dHz %dch
 D396B383CAF3056A=FLAC %d bit %dHz %dch
 D84F7690441E9F2D=FLAC
@@ -14190,7 +14199,7 @@ DECD2310B73C439D=插图
 C1785570C5305FE7=出版商/工作室标志
 0E035AC2D4828900=未设置
 383BA19367FC60C9=无图片
-DC2046D9B406B60C=ID3 图片文件
+9808E2B8B8A65ED7=元数据图像文件
 
 [render_month]
 E299BC7ED0CFEACC=一月

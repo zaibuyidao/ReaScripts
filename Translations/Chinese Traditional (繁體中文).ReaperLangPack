@@ -1,10 +1,10 @@
 #NAME:Chinese Traditional (繁體中文)
-;Version: 1.0.10
+;Version: 1.0.11
 ;Author: zaibuyidao
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47865/Chinese%20Traditional%20%28%26%2332321%3B%26%2339636%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.12, SWS: 2.14.0.1
+;  Brand new REAPER: 7.15, SWS: 2.14.0.1
 
 [common]
 DCEF2B4D03DE723C=名稱
@@ -1217,11 +1217,13 @@ DC232FE59F662690=當啟用 '從小節開始' 時，等待下一小節再開始�
 8B5A889ADCE5D728=媒體資源總管(&M)
 E7B63BC14820F88E=顯示(&S)
 945C03D8A0B833B8=為媒體計算峰值音量和響度 (LUFS-I)
+507B67F19A3899C7=顯示圖像元資料...
 1AA7BFBA524B24FA=重新讀取媒體元資料
 DA93338F06D3E461=設置為收藏夾
 26DB177BC7B24D73=設置臨時標記
 8B6AF9AC93B99233=通道
 1F7997A0644DE09B=日期
+14CB51269FB62764=圖片
 0A8BAF4C6945400F=長度
 40D9EE40B7696EB4=將列重設為預設排序/寬度
 502001D7ACECC754=起始偏移
@@ -1241,11 +1243,11 @@ B2C13E7E2485F09F=MTC
 4789C5332441688D=找不到未使用的輸出檔案名。源檔案:\r\n\t
 6A8323D4A2DF56E0=拆分多通道媒體
 A1BB777BE5203666=打開複製錯誤
+61E626F1B6348FB2=無法創建檔案
 FEAA833C7533B5D0=檔案未找到
 1091E0FE22106AFC=通道: %d
 CD2E4AA3231DEC4D=檔案未打開
 71831478CADD789A=檔案離線
-14CB51269FB62764=圖片
 439CE51FC4707DDD=長度:
 9570937682166424=採樣率: %d
 D730907ADC00D444=未知錯誤/狀態
@@ -2884,7 +2886,7 @@ A06018BD1D8D0851=活躍或不確定
 
 [DLG_280] ; IDD_DYNAMIC_SPLIT
 FE116402CB3788B9=生成指引
-1E6F2B307693DFF0=添加伸縮標記
+1E6F2B307693DFF0=添加拉伸標記
 48867AD65E380310=動態分割對象
 510C378B5623AFE4=分割點
 2C4C3A5A957AA431=在瞬態處
@@ -6018,13 +6020,13 @@ BB3B934D43F8B413=對象: 在編輯或播放游標處分割對象 (忽略編組) 
 548C3464DD99645E=對象: 在編輯或播放游標處分割對象 ⇌ Item: Split items at edit or play cursor
 39E1CD46D8D6FE6E=對象: 在時間選區處分割對象 ⇌ Item: Split items at time selection
 4156588963373513=對象: 在編輯游標處分割對象 (不更改選擇) ⇌ Item: Split items at edit cursor (no change selection)
-8BDE5509553119C5=對象: 在編輯游標處分割對象 (選擇左邊) ⇌ Item: Split items at edit cursor (select left)
+033FDC72372E8948=對象: 在編輯游標處分割對象 (選擇/交疊淡變左邊) ⇌ Item: Split items at edit cursor (select/crossfade left)
 ACBAFCDBD5254A5E=對象: 在編輯游標處分割對象 (選擇右邊) ⇌ Item: Split items at edit cursor (select right)
 E61AC4A06953B1BA=對象: 在滑鼠游標下方分割對象 ⇌ Item: Split item under mouse cursor
-C05A22E4B8A62706=對象: 在滑鼠游標下方分割對象 (選擇左邊) ⇌ Item: Split item under mouse cursor (select left)
+FFD13BCF4508750F=對象: 在滑鼠游標下方分割對象 (選擇/交疊淡變左邊) ⇌ Item: Split item under mouse cursor (select/crossfade left)
 6263726A1E193C67=對象: 在滑鼠游標下方分割對象 (選擇右邊) ⇌ Item: Split item under mouse cursor (select right)
 9AE183D16E79F8B0=對象: 在滑鼠游標下方分割對象 (忽略編組) ⇌ Item: Split item under mouse cursor (ignore grouping)
-C81E9B36A8B7D859=對象: 在滑鼠游標下方分割對象 (選擇左邊, 忽略編組) ⇌ Item: Split item under mouse cursor (select left, ignore grouping)
+7D45E4279D4E5D6A=對象: 在滑鼠游標下方分割對象 (選擇/交疊淡變左邊, 忽略編組) ⇌ Item: Split item under mouse cursor (select/crossfade left, ignore grouping)
 ABBE4B2AEBAC9CA2=對象: 在滑鼠游標下方分割對象 (選擇右邊, 忽略編組) ⇌ Item: Split item under mouse cursor (select right, ignore grouping)
 BF1C8F1ED2DB0EAB=對象: 顯示對象片段的 FX 鏈 ⇌ Item: Show FX chain for item take
 83FB6C8F56713AF5=對象: 移除對象片段的 FX ⇌ Item: Remove FX for item take
@@ -8239,6 +8241,9 @@ A1EA0160AAEC30D1=+ %d 更多檔案
 BB4AB6B66771B736=創建新資料庫
 910A78124523911D=創建資料夾
 4C7AFD4281A8D8BA=最多支援 %d 個使用者列。
+6E11793408AC4705=錯誤: 一次只支援顯示一個檔案的圖像元資料。
+85E9C8E14E466153=圖像元資料錯誤
+6122A43ED20E5B8B=錯誤: 媒體不包含圖像元資料。
 330FCBCEAB194567=可能:
 7800ECC7AFD0F2E5=分配 MIDI 音符 %s (%d) 並在新軌道中遞增...
 BD627BDE5F9EBC6D=Cmd+opt+拖動選擇以渲染新檔案
@@ -8593,6 +8598,7 @@ D80A0F95C8BEE0D1=將預覽音量套用於插入的媒體對象 ⇌ Apply preview
 3C07E0BF56562116=如果已計算峰值音量，則將預覽音量標準化為 -0dB ⇌ Normalize preview volume to -0dB if peak volume has been calculated
 1A8D56550F54B39E=如果已計算響度，則將預覽音量標準化為 -12LU ⇌ Normalize preview volume to -12LU if loudness has been calculated
 F7263C459FDBFBEA=將標準化音量套用於插入的媒體對象 ⇌ Apply normalized volume to inserted media item
+507B67F19A3899C7=顯示圖像元資料... ⇌ Display image metadata...
 8E406E28E10A0D7D=在瀏覽檔案列表時自動展開快捷方式 ⇌ Automatically expand shortcuts while browsing file list
 DA93338F06D3E461=設置為收藏夾 ⇌ Set as favorite
 26DB177BC7B24D73=設置臨時標記 ⇌ Set temporary mark
@@ -8724,6 +8730,9 @@ F7D8461DCF28DB58=單個音高對象
 1ACD08E5EF42F8CA=拆分多通道媒體對象時出錯
 
 [flac]
+132D6E5D7EDE72E8=FLAC 不支援此通道數
+AEFD03BD880E7836=FLAC 不支援此位深
+D84DBA02E2CE7F44=FLAC 不支援此採樣率
 2592AA17A3AD044D=FLAC %d/24 bit %dHz %dch
 D396B383CAF3056A=FLAC %d bit %dHz %dch
 D84F7690441E9F2D=FLAC
@@ -14190,7 +14199,7 @@ DECD2310B73C439D=插圖
 C1785570C5305FE7=出版商/工作室標誌
 0E035AC2D4828900=未設置
 383BA19367FC60C9=無圖片
-DC2046D9B406B60C=ID3 圖片檔案
+9808E2B8B8A65ED7=元資料圖像檔案
 
 [render_month]
 E299BC7ED0CFEACC=一月
