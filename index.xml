@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="30911a6cbcceb554142429666c0fbe5367a670f0">
+<index version="1" name="zaibuyidao Scripts" commit="6b13f2f7e2dd2f01c7af2a06428040486b1caa23">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8770,6 +8770,10 @@
         <changelog><![CDATA[Brand new REAPER: 7.12, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/646b1732bcbea42c5c99c3be8ad9d937a76800c7/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
+      <version name="1.0.11" author="zaibuyidao" time="2024-04-23T02:26:21Z">
+        <changelog><![CDATA[Brand new REAPER: 7.15, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/6b13f2f7e2dd2f01c7af2a06428040486b1caa23/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
     </reapack>
     <reapack name="Chinese Traditional (繁體中文).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁體中文)">
       <metadata>
@@ -8806,6 +8810,10 @@
       <version name="1.0.10" author="zaibuyidao" time="2024-03-28T08:31:02Z">
         <changelog><![CDATA[Brand new REAPER: 7.12, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/646b1732bcbea42c5c99c3be8ad9d937a76800c7/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
+      <version name="1.0.11" author="zaibuyidao" time="2024-04-23T02:26:21Z">
+        <changelog><![CDATA[Brand new REAPER: 7.15, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/6b13f2f7e2dd2f01c7af2a06428040486b1caa23/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
