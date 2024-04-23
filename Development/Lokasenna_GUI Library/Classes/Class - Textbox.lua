@@ -220,6 +220,7 @@ end
 function GUI.Textbox:ontype()
 
 	local char = GUI.char
+    local utf8_char = dynamicDecode(char)  -- 解码可能的UTF-8字符
 
     -- Navigation keys, Return, clipboard stuff, etc
     if self.keys[char] then
@@ -250,6 +251,11 @@ function GUI.Textbox:ontype()
         if self.sel_s then self:deleteselection() end
 
         self:insertchar(char)
+    elseif utf8_char ~= "?" then  -- 使用解码的UTF-8字符进行处理
+        if self.sel_s then
+            self:deleteselection()
+        end
+        self:insertstring(utf8_char, true)  -- 插入UTF-8字符串
 
     end
     self:windowtocaret()
@@ -260,6 +266,18 @@ function GUI.Textbox:ontype()
     -- Reset the caret so the visual change isn't laggy
     self.blink = 0
 
+end
+
+-- 动态解码函数
+function dynamicDecode(num)
+    local baseOffset = 1962954240 - 0x4E00  -- 第一个校准点
+    local adjustedNum = num - baseOffset
+    local finalCode = adjustedNum  -- 使用调整后的数字作为Unicode码点
+    if finalCode >= 0x4E00 and finalCode <= 0x9FFF then  -- 码点在汉字范围
+        return utf8.char(finalCode)
+    else
+        return "?"  -- 超出范围时返回问号
+    end
 end
 
 

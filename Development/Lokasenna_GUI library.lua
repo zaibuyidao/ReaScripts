@@ -1,8 +1,8 @@
 --[[
 Description: Get Lokasenna_GUI library
-Version: 2.16.25
+Version: 2.16.26
 Changelog:
-    Add button focus.
+    Add IME Chinese input support.
 Author: Lokasenna
 Provides:
     [main]   Lokasenna_GUI Library/Set Lokasenna_GUI library.lua
