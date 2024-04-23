@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.2
+-- @version 2.0.3
 -- @changelog
---   # New Script
+--   # Fixed the issue with sending search queries for Custom Tags.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links

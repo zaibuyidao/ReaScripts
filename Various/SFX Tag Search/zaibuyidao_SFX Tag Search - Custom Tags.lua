@@ -756,12 +756,15 @@ function init()
 				if keywords then
 					readDBCount = readDBCount + 1
 					for v, keyword in pairs(keywords) do
-						table.insert(tTagData, {
-							db = db.name,
-							value = keyword.value,
-							from = keyword.from,
-							fromString = table.concat(table.keys(keyword.from), ", ")
-						})
+						-- 跳过只包含空白字符的 value
+						if not string.match(keyword.value, "^%s*$") then
+							table.insert(tTagData, {
+								db = db.name,
+								value = keyword.value,
+								from = keyword.from,
+								fromString = table.concat(table.keys(keyword.from), ", ")
+							})
+						end
 					end
 				end
 			end

@@ -132,9 +132,12 @@ function send_search_text(text) -- 开始搜索
     local hwnd = reaper.JS_Window_Find(title, true)
     local search = reaper.JS_Window_FindChildByID(hwnd, 1015)
     if search == nil then return end
-    reaper.JS_Window_SetTitle(search, text)
-    reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
-    reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+    
+    reaper.defer(function ()
+        reaper.JS_Window_SetTitle(search, text)
+        reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+        reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+    end)
 end
 
 function openUrl(url)
