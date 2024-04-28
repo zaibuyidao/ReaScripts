@@ -1,8 +1,9 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.3
+-- @version 2.0.4
 -- @changelog
---   # Fixed the issue with sending search queries for Custom Tags.
+--   + Added UCS Synonym Index script.
+--   # Optimized UCS CSV loading logic.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
@@ -13,6 +14,7 @@
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Custom Tags.lua
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Database.lua
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Favorite.lua
+--   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS Synonym Index.lua
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS.lua
 --   [nomain] SFX Tag Search/lib/*.lua
 --   [nomain] SFX Tag Search/req/*.lua

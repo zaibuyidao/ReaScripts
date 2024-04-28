@@ -186,23 +186,6 @@ function jReadTagData(file_name)
     return tagData
 end
 
-function _getRating(tRatingsData, sName)
-	if tRatingsData[sName] then
-		return math.floor(tRatingsData[sName].rating)
-	else
-		return 0
-	end
-end
-
-function _nameOnBlacklist(tBlacklist, name)
-	for _, skipName in ipairs(tBlacklist) do
-		if (name):find(skipName) then
-			return true
-		end
-	end
-	return false
-end
-
 function findTag(tagTable, sPattern, iInstance, iMaxResults, find_plain)
 	local iInstance = iInstance or false
 	local find_plain = find_plain or true

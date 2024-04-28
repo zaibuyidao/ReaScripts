@@ -20,17 +20,17 @@ SETTINGS_INI_FILE = script_path .. "config-ucs.ini"
 SETTINGS_DEFAULT_FILE = script_path .. "lib/config-ucs-default.ini"
 
 if language == "简体中文" then
-	SFX_TAG_TITLE = "音效标签搜索器: UCS (Script by 再補一刀)"
+	SFX_TAG_TITLE = "音效标签搜索器: UCS 同义词索引 (Script by 再補一刀)"
 	MEDIA_EXPLORER_NOT_OPEN = "媒体资源管理器未打开。"
 	INPUT_TITLE = "过滤器"
 	INPUT_CAPTION = "标签:"
 elseif language == "繁體中文" then
-	SFX_TAG_TITLE = "音效標簽搜索器: UCS (Script by 再補一刀)"
+	SFX_TAG_TITLE = "音效標簽搜索器: UCS 同義詞索引 (Script by 再補一刀)"
 	MEDIA_EXPLORER_NOT_OPEN = "媒體資源總管未打開。"
 	INPUT_TITLE = "過濾器"
 	INPUT_CAPTION = "標簽:"
 else
-	SFX_TAG_TITLE = "SFX Tag Search: UCS (Script by zaibuyidao)"
+	SFX_TAG_TITLE = "SFX Tag Search: UCS Synonym Index (Script by zaibuyidao)"
 	MEDIA_EXPLORER_NOT_OPEN = "Media Explorer is not opened."
 	INPUT_TITLE = "Filter"
 	INPUT_CAPTION = "Tags:"
@@ -64,7 +64,7 @@ local themes = {
 	imgui = {
 		theme_background = { 18, 18, 18 }, -- 背景颜色
 		cursor_focus_border = {57/255, 124/255, 204/255, .5}, -- 光标聚焦颜色
-		default_text_color = {1, 1, 1, 1}, -- 默认文本颜色
+		default_text_color = {.8, .8, .8, 1}, -- 默认文本颜色
 		text_box_label_normal = {1, 1, 1, 1}, -- 文本框文字正常
 		text_box_label_hover = {.8, .8, .8, 1}, -- 文本框文字悬停
 		text_box_label_focus = {1, 1, 1, 1}, -- 文本框文字聚焦
@@ -154,21 +154,35 @@ function jReadTagData(file_name)
 	return tagData
 end
 
+function containsToken(synonyms, token, find_plain)
+    for _, synonym in ipairs(synonyms) do
+        if synonym:lower():find(token, 1, find_plain) then
+            return true
+        end
+    end
+    return false
+end
+
 function findTag(tagTable, sPattern, iInstance, iMaxResults, find_plain)
 	local iInstance = iInstance or false
 	local find_plain = find_plain or true
 	local iMaxResults = iMaxResults or false
+
+	-- 当三者都关闭时，默认两者都开
+	if not FILTER_NAME and not FILTER_ALIAS and not FILTER_CATEGORY then
+		FILTER_NAME, FILTER_ALIAS = true, true
+	end
 
 	local tResult = {}
     local iCount = 0
 
 	for i, t in ipairs(tagTable) do
 		local bMatch = true
+
 		for token in string.gmatch(sPattern, "[^%s]+") do
-
 			token = token:lower()
-			if token:sub(1, 1) == "@" then  -- 如果token以@开头
 
+			if token:sub(1, 1) == "@" then  -- 如果token以@开头
 				local filterAtCategory = token:sub(2)
 				-- 预处理输入，将下划线和空格统一替换为特定的占位符，这里用下划线作为占位符
 				filterAtCategory = filterAtCategory:gsub("[ _]", "_")
@@ -186,53 +200,32 @@ function findTag(tagTable, sPattern, iInstance, iMaxResults, find_plain)
 					bMatch = false
 					break
 				end
-
 			else
 				token = token:gsub("\\@", "@") -- 替换转义的'@'
 
-				-- 当三者都关闭时，默认两者都开
-				if not FILTER_NAME and not FILTER_ALIAS and not FILTER_CATEGORY then
-					FILTER_NAME, FILTER_ALIAS = true, true
+				-- 根据当前语言选择正确的同义词列表进行匹配
+				local synonyms = {}
+				local category = ""
+				local subCategory = ""
+
+				if CURRENT_LANGUAGE == "ZH" then
+					synonyms = t.Synonyms_zh or {}
+					category = t.Category_zh or ""
+					subCategory = t.SubCategory_zh or ""
+				elseif CURRENT_LANGUAGE == "TW" then
+					synonyms = t.Synonyms_tw or {}
+					category = t.Category_tw or ""
+					subCategory = t.SubCategory_tw or ""
+				else
+					synonyms = t.Synonyms or {}
+					category = t.Category or ""
+					subCategory = t.SubCategory or ""
 				end
 
-				-- 根据开关状态匹配catid或SubCategory或Category
-				if CURRENT_LANGUAGE == "EN" then
-					if FILTER_NAME and FILTER_ALIAS and FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true) or t.SubCategory:lower():find(token, 1, true) or t.Category:lower():find(token, 1, true)
-					elseif FILTER_NAME and FILTER_ALIAS and not FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true) or t.SubCategory:lower():find(token, 1, true)
-					elseif FILTER_NAME and not FILTER_ALIAS and not FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true)
-					elseif FILTER_ALIAS and not FILTER_NAME and not FILTER_CATEGORY then
-						bMatch = t.SubCategory:lower():find(token, 1, true)
-					elseif FILTER_CATEGORY and not FILTER_NAME and not FILTER_ALIAS then
-						bMatch = t.Category:lower():find(token, 1, true)
-					end
-				elseif CURRENT_LANGUAGE == "ZH" then
-					if FILTER_NAME and FILTER_ALIAS and FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true) or t.SubCategory_zh:lower():find(token, 1, true) or t.Category_zh:lower():find(token, 1, true)
-					elseif FILTER_NAME and FILTER_ALIAS and not FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true) or t.SubCategory_zh:lower():find(token, 1, true)
-					elseif FILTER_NAME and not FILTER_ALIAS and not FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true)
-					elseif FILTER_ALIAS and not FILTER_NAME and not FILTER_CATEGORY then
-						bMatch = t.SubCategory_zh:lower():find(token, 1, true)
-					elseif FILTER_CATEGORY and not FILTER_NAME and not FILTER_ALIAS then
-						bMatch = t.Category_zh:lower():find(token, 1, true)
-					end
-				elseif CURRENT_LANGUAGE == "TW" then
-					if FILTER_NAME and FILTER_ALIAS and FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true) or t.SubCategory_tw:lower():find(token, 1, true) or t.Category_tw:lower():find(token, 1, true)
-					elseif FILTER_NAME and FILTER_ALIAS and not FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true) or t.SubCategory_tw:lower():find(token, 1, true)
-					elseif FILTER_NAME and not FILTER_ALIAS and not FILTER_CATEGORY then
-						bMatch = t.CatID:lower():find(token, 1, true)
-					elseif FILTER_ALIAS and not FILTER_NAME and not FILTER_CATEGORY then
-						bMatch = t.SubCategory_tw:lower():find(token, 1, true)
-					elseif FILTER_CATEGORY and not FILTER_NAME and not FILTER_ALIAS then
-						bMatch = t.Category_tw:lower():find(token, 1, true)
-					end
-				end
+				bMatch = (FILTER_CATEGORY and subCategory and subCategory:lower():find(token, 1, find_plain)) or
+				(FILTER_NAME and synonyms and containsToken(synonyms, token, find_plain)) or
+				-- (FILTER_ALIAS and t.CatID and t.CatID:lower():find(token, 1, find_plain)) or
+				(FILTER_ALIAS and category and category:lower():find(token, 1, find_plain))
 
 				if not bMatch then
 					break
@@ -318,6 +311,9 @@ function createResultButtons(gui, tControls, n, height, y_start)
 	local n_to_remove = 0
 	
 	for i = 1, math.max(#tControls, n) do
+
+		local fxIndex = flattenedResultIndices[i] and i or nil  -- Fetch correct index if available
+
 		if i > #tControls and i <= n then
 			local c = jGuiHighlightControl:new()
 			c.height = height
@@ -328,6 +324,7 @@ function createResultButtons(gui, tControls, n, height, y_start)
 			c.border = false
 			c.focus_index = i+1 --gui:getFocusIndex()
 			c.border_focus = true
+			c.fxIndex = i  -- 确保这里正确设置 fxIndex
 
 			c.x = x_start
 			c.y = y_start + (i-1) * (c.height + y_space)
@@ -341,9 +338,9 @@ function createResultButtons(gui, tControls, n, height, y_start)
 			info.label_valign = "m"
 			info.border = false
 			info.y = c.y
-			
+
 			function c:onMouseClick()
-				local fx = tSearchResults[self.fxIndex]  -- 使用self.fxIndex来访问对应的FX条目
+				local fx = self.fxData
 				if fx then
 					if UPDATE_RATINGS then
 						fx.rating = fx.rating + 1  -- 增加评分
@@ -368,35 +365,35 @@ function createResultButtons(gui, tControls, n, height, y_start)
 						if CURRENT_LANGUAGE == "EN" then
 							-- 英语模式下的键盘修饰键操作
 							if gui.kb.shift() then
-								send_search_text(fx.SubCategory)
+								send_search_text(fx.CatID)
 							elseif gui.kb.control() then
-								send_search_text(fx.Category.. " " .. fx.SubCategory)
+								send_search_text(fx.SubCategory)
 							elseif gui.kb.alt() then
 								send_search_text(fx.Category)
 							else
-								send_search_text(fx.CatID)
+								send_search_text(fx.Synonym)
 							end
 						elseif CURRENT_LANGUAGE == "ZH" then
 							-- 简体中文模式下的键盘修饰键操作
 							if gui.kb.shift() then
-								send_search_text(fx.SubCategory_zh)
+								send_search_text(fx.CatID)
 							elseif gui.kb.control() then
-								send_search_text(fx.Category_zh.. " " .. fx.SubCategory_zh)
+								send_search_text(fx.SubCategory_zh)
 							elseif gui.kb.alt() then
 								send_search_text(fx.Category_zh)
 							else
-								send_search_text(fx.CatID)
+								send_search_text(fx.Synonym_zh)
 							end
 						elseif CURRENT_LANGUAGE == "TW" then
 							-- 繁体中文模式下的键盘修饰键操作
 							if gui.kb.shift() then
-								send_search_text(fx.SubCategory_tw)
+								send_search_text(fx.CatID)
 							elseif gui.kb.control() then
-								send_search_text(fx.Category_tw.. " " .. fx.SubCategory_tw)
+								send_search_text(fx.SubCategory_tw)
 							elseif gui.kb.alt() then
 								send_search_text(fx.Category_tw)
 							else
-								send_search_text(fx.CatID)
+								send_search_text(fx.Synonym_tw)
 							end
 						end
 					end
@@ -404,7 +401,7 @@ function createResultButtons(gui, tControls, n, height, y_start)
 			end
 
 			function c:onRightMouseClick()
-				local fx = tSearchResults[self.fxIndex]
+				local fx = self.fxData
 				if fx then
 					if gui.kb.control() then
 
@@ -463,8 +460,7 @@ function createResultButtons(gui, tControls, n, height, y_start)
 
 						return
 					elseif gui.kb.shift() then -- SHIFT+右键单击将UCS标签写入媒体资源管理器中的媒体, 定时器版本 V5
-
-						local fx = tSearchResults[self.fxIndex]
+						local fx = self.fxData
 						if fx then
 							-- 创建一个命令队列
 							local commandQueue = {}
@@ -629,79 +625,125 @@ function _makeColorsCatagory(b, info, color)
 	info.colors_label = color
 end
 
-function showSearchResults(tButtons, tResults)
-	local lastDisplayedCategoryLabel = nil
-	for i, cIds in ipairs(tButtons) do
-		local b = cIds[1]  -- 主要文本显示控件，用于显示描述等
-		local info = cIds[2]  -- 右侧辅助文本控件，用于显示类型等额外信息
-		local iStart = _round(i + SCROLL_RESULTS)
-	
-		local showing
-		if iStart <= #tResults then 
-			showing = iStart 
-		else 
-			showing = #tResults 
-		end
-		LABEL_STATS.label = "(" .. showing  .. "/" .. #tResults .. ")"
-	
-		if tResults and iStart <= #tResults then
-			b.fxIndex = iStart  -- 标记此按钮对应的tSearchResults中的项
-			local fx = tResults[iStart]
-	
-			if CURRENT_LANGUAGE == "EN" then
-				b.label = fx.CatID .. (fx.SubCategory and " (" .. fx.SubCategory .. ")" or "")
-				b.visible = true
-				
-				if lastDisplayedCategoryLabel ~= fx.Category then
-					info.label = fx.Category
-				else
-					info.label = ""  -- Do not repeat if already displayed
-				end
-				lastDisplayedCategoryLabel = fx.Category
-				--info.label = fx.Category
-				info.visible = true
+function getLocalString(baseString, currentLanguage)
+    if currentLanguage == "EN" then
+        return baseString  -- 英文是默认，无需后缀
+    else
+        return baseString .. "_" .. currentLanguage:lower()
+    end
+end
 
+function showSearchResults(tButtons, tResults)
+    local totalSynonyms = 0
+    local flattenedResults = {}
+    local visibleCount = 0  -- Reset at each call
+
+    for _, fx in ipairs(tResults) do
+		local synonyms = fx.Synonyms or {}
+        local synonyms_zh = fx.Synonyms_zh or {}
+        local synonyms_tw = fx.Synonyms_tw or {}
+
+		if CURRENT_LANGUAGE == "ZH" then
+			synonyms = fx.Synonyms_zh or {}
+		elseif CURRENT_LANGUAGE == "TW" then
+			synonyms = fx.Synonyms_tw or {}
+		end
+
+        for index, currentSynonym in ipairs(synonyms) do
+			local synonym_zh = synonyms_zh[index] or ""
+			local synonym_tw = synonyms_tw[index] or ""
+
+			local currentSynonymLocalized
+			if CURRENT_LANGUAGE == "ZH" then
+				currentSynonymLocalized = synonym_zh
+			elseif CURRENT_LANGUAGE == "TW" then
+				currentSynonymLocalized = synonym_tw
+			else
+				currentSynonymLocalized = currentSynonym
+			end
+
+			local entry = {
+				categoryLabel = fx[getLocalString("Category", CURRENT_LANGUAGE)] ..
+								(fx[getLocalString("SubCategory", CURRENT_LANGUAGE)] and "-" .. 
+								fx[getLocalString("SubCategory", CURRENT_LANGUAGE)] or ""),
+				synonymLabel = currentSynonymLocalized,
+				fullData = {
+					Category = fx.Category,
+					SubCategory = fx.SubCategory,
+					Synonym =  currentSynonym,
+					Category_zh = fx.Category_zh,
+					SubCategory_zh = fx.SubCategory_zh,
+					Synonym_zh =  synonyms_zh[index],
+					Category_tw = fx.Category_tw,
+					SubCategory_tw = fx.SubCategory_tw,
+					Synonym_tw = synonyms_tw[index],
+					CatID = fx.CatID
+				}
+			}
+			table.insert(flattenedResults, entry)
+			totalSynonyms = totalSynonyms + 1
+        end
+    end
+
+    RESULT_COUNT = totalSynonyms
+    RESULTS_PER_PAGE = #tButtons
+
+    local iStart = _round(1 + SCROLL_RESULTS)
+    local iEnd = iStart + RESULTS_PER_PAGE - 1
+    iEnd = math.min(iEnd, totalSynonyms)
+
+    for _, cIds in ipairs(tButtons) do
+        local b = cIds[1]
+        local info = cIds[2]
+        b.visible = false
+        info.visible = false
+    end
+
+    local index = 1
+    local lastDisplayedCategoryLabel = nil
+    for i = iStart, iEnd do
+        if index <= RESULTS_PER_PAGE and i <= #flattenedResults then
+            local entry = flattenedResults[i]
+            local b = tButtons[index][1]
+            local info = tButtons[index][2]
+
+			b.label = entry.synonymLabel .. " (" .. entry.fullData.CatID .. ")"
+            b.visible = true
+			b.fxData = entry.fullData  -- 存储完整的数据对象到按钮
+
+            -- Check if this entry's category label has already been displayed
+            if lastDisplayedCategoryLabel ~= entry.categoryLabel then
+                info.label = entry.categoryLabel
+            else
+                info.label = ""  -- Do not repeat if already displayed
+            end
+			lastDisplayedCategoryLabel = entry.categoryLabel
+
+            info.visible = true
+
+            visibleCount = visibleCount + 1
+            index = index + 1
+
+			if CURRENT_LANGUAGE == "EN" then
 				-- 根据分类设置不同的颜色
-				local color = getColorForType(fx.Category) -- 基于分类返回相应的颜色
+				local color = getColorForType(entry.fullData.Category) -- 基于分类返回相应的颜色
 				_makeColorsCatagory(b, info, color)  -- 确保函数名和变量名正确
 			elseif CURRENT_LANGUAGE == "ZH" then
-				b.label = fx.CatID .. (fx.SubCategory_zh and " (" .. fx.SubCategory_zh .. ")" or "")
-				b.visible = true
-				
-				if lastDisplayedCategoryLabel ~= fx.Category_zh then
-					info.label = fx.Category_zh
-				else
-					info.label = ""  -- Do not repeat if already displayed
-				end
-				lastDisplayedCategoryLabel = fx.Category_zh
-				--info.label = fx.Category_zh
-				info.visible = true
-
 				-- 根据分类设置不同的颜色
-				local color = getColorForType(fx.Category_zh) -- 基于分类返回相应的颜色
+				local color = getColorForType(entry.fullData.Category_zh) -- 基于分类返回相应的颜色
 				_makeColorsCatagory(b, info, color)  -- 确保函数名和变量名正确
 			elseif CURRENT_LANGUAGE == "TW" then
-				b.label = fx.CatID .. (fx.SubCategory_tw and " (" .. fx.SubCategory_tw .. ")" or "")
-				b.visible = true
-				
-				if lastDisplayedCategoryLabel ~= fx.Category_tw then
-					info.label = fx.Category_tw
-				else
-					info.label = ""  -- Do not repeat if already displayed
-				end
-				lastDisplayedCategoryLabel = fx.Category_tw
-				-- info.label = fx.Category_tw
-				info.visible = true
-
 				-- 根据分类设置不同的颜色
-				local color = getColorForType(fx.Category_tw) -- 基于分类返回相应的颜色
+				local color = getColorForType(entry.fullData.Category_tw) -- 基于分类返回相应的颜色
 				_makeColorsCatagory(b, info, color)  -- 确保函数名和变量名正确
 			end
-		else
-			b.visible = false
-			info.visible = false
-		end
-	end
+
+        else
+            break
+        end
+    end
+
+    LABEL_STATS.label = "(" .. iEnd .. "/" .. totalSynonyms .. ")"
 end
 
 function getColorForType(type)
@@ -753,6 +795,64 @@ function _jPath(p)
 	else
 		local r = p:gsub("\\", "/"):gsub("/+","/")
 		return r
+	end
+end
+
+function switchLanguage(lang)
+	CURRENT_LANGUAGE = lang
+end
+
+-- 获取当前语言对应的标签数据
+function getLanguageData()
+	local data = {}
+	for _, v in ipairs(tTagData) do
+		if CURRENT_LANGUAGE == "ZH" then
+			table.insert(data, {v.CatID, v.SubCategory_zh, v.Category_zh})
+		elseif CURRENT_LANGUAGE == "TW" then
+			table.insert(data, {v.CatID, v.SubCategory_tw, v.Category_tw})
+		else  -- 默认为英文
+			table.insert(data, {v.CatID, v.SubCategory, v.Category})
+		end
+	end
+	return data
+end
+
+-- 获取指定项的所有语言数据
+function getEntryData(catID)
+	for _, v in ipairs(tTagData) do
+		if v.CatID == catID then
+			return {
+				EN = {v.CatID, v.SubCategory, v.Category},
+				ZH = {v.CatID, v.SubCategory_zh, v.Category_zh},
+				TW = {v.CatID, v.SubCategory_tw, v.Category_tw}
+			}
+		end
+	end
+	return nil  -- 如果没有找到对应的CatID
+end
+
+function edit_tag(key)
+	local titles = {
+		"Edit metadata tag",
+		"编辑元数据标签",
+		"編輯元數據標簽"
+	}
+	
+	local parent = nil
+	local title_top = nil
+
+	-- 遍历所有可能的标题，尝试查找窗口
+	for _, title in ipairs(titles) do
+		title_top = reaper.JS_Localize(title, "common")
+		parent = reaper.JS_Window_Find(title_top, true)
+		if parent then break end
+	end
+	
+	if parent then
+		reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1007), key)
+		reaper.JS_Window_OnCommand(parent, 1) -- OK = 1, Cancel = 2
+	else
+		reaper.defer(function() edit_tag(key) end)
 	end
 end
 
@@ -829,64 +929,34 @@ function loadCSV(filePath)
     return true
 end
 
-function switchLanguage(lang)
-	CURRENT_LANGUAGE = lang
+function printSynonyms()
+    for _, entry in ipairs(tTagData) do
+        print("CatID: " .. entry.CatID)
+        print("  English Synonyms:")
+        for _, synonym in ipairs(entry.Synonyms) do
+            print("    - " .. synonym)
+        end
+        print("  Simplified Chinese Synonyms:")
+        for _, synonym in ipairs(entry.Synonyms_zh) do
+            print("    - " .. synonym)
+        end
+        print("  Traditional Chinese Synonyms:")
+        for _, synonym in ipairs(entry.Synonyms_tw) do
+            print("    - " .. synonym)
+        end
+    end
 end
 
--- 获取当前语言对应的标签数据
-function getLanguageData()
-	local data = {}
-	for _, v in ipairs(tTagData) do
-		if CURRENT_LANGUAGE == "ZH" then
-			table.insert(data, {v.CatID, v.SubCategory_zh, v.Category_zh})
-		elseif CURRENT_LANGUAGE == "TW" then
-			table.insert(data, {v.CatID, v.SubCategory_tw, v.Category_tw})
-		else  -- 默认为英文
-			table.insert(data, {v.CatID, v.SubCategory, v.Category})
-		end
-	end
-	return data
+function findFxByCatId(tSearchResults, catId)
+    for _, fx in ipairs(tSearchResults) do
+        if fx.CatID == catId then
+            return fx
+        end
+    end
+    return nil
 end
 
--- 获取指定项的所有语言数据
-function getEntryData(catID)
-	for _, v in ipairs(tTagData) do
-		if v.CatID == catID then
-			return {
-				EN = {v.CatID, v.SubCategory, v.Category},
-				ZH = {v.CatID, v.SubCategory_zh, v.Category_zh},
-				TW = {v.CatID, v.SubCategory_tw, v.Category_tw}
-			}
-		end
-	end
-	return nil  -- 如果没有找到对应的CatID
-end
-
-function edit_tag(key)
-	local titles = {
-		"Edit metadata tag",
-		"编辑元数据标签",
-		"編輯元數據標簽"
-	}
-	
-	local parent = nil
-	local title_top = nil
-
-	-- 遍历所有可能的标题，尝试查找窗口
-	for _, title in ipairs(titles) do
-		title_top = reaper.JS_Localize(title, "common")
-		parent = reaper.JS_Window_Find(title_top, true)
-		if parent then break end
-	end
-	
-	if parent then
-		reaper.JS_Window_SetTitle(reaper.JS_Window_FindChildByID(parent, 1007), key)
-		reaper.JS_Window_OnCommand(parent, 1) -- OK = 1, Cancel = 2
-	else
-		reaper.defer(function() edit_tag(key) end)
-	end
-end
-
+flattenedResultIndices = {}
 tTagData = {}
 
 function init()
@@ -911,6 +981,9 @@ function init()
 
 	-- 从评分文件读取评分信息
 	local ratings = jReadTagData(DATA_INI_FILE) -- 确保这是评分信息存储的正确路径
+
+	-- 打印同义词以验证数据
+	-- printSynonyms()
 
 	-- 更新tTagData中的评分信息
 	for _, item in ipairs(tTagData) do
