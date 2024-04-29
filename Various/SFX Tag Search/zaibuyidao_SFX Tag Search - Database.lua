@@ -377,26 +377,7 @@ function createResultButtons(gui, tControls, n, height, y_start)
 					elseif gui.kb.control() then
 						--send_search_text(name .. " ".. alias)
 					elseif gui.kb.alt() then
-						reaper.CF_SetClipboard(name)
-
-						local message
-						local title = 'Information'  -- Default title in English
-					
-						if language == "简体中文" then
-							message = "复制成功。"
-							title = "信息"
-							reaper.MB(message, title, 0)  -- 0 for OK button only
-						elseif language == "繁體中文" then
-							message = "複製成功。"
-							title = "信息"
-							reaper.MB(message, title, 0)
-						else  -- Default to English
-							message = "Copy successful."
-							title = "Information"
-							reaper.MB(message, title, 0)
-						end
-
-						return
+						-- reaper.CF_SetClipboard(name)
 					else
 						reaper.defer(function ()
 							set_reaper_explorer_path(name or "")
@@ -448,6 +429,25 @@ function createResultButtons(gui, tControls, n, height, y_start)
 					elseif gui.kb.alt() then
 						-- 右键单击+alt 复制内容: name, alias, type
 						reaper.CF_SetClipboard(fx.type)
+
+						local message
+						local title = 'Information'  -- Default title in English
+					
+						if language == "简体中文" then
+							message = "复制成功。"
+							title = "信息"
+							reaper.MB(message, title, 0)  -- 0 for OK button only
+						elseif language == "繁體中文" then
+							message = "複製成功。"
+							title = "信息"
+							reaper.MB(message, title, 0)
+						else  -- Default to English
+							message = "Copy successful."
+							title = "Information"
+							reaper.MB(message, title, 0)
+						end
+
+						return
 					end
 				end
 			end
