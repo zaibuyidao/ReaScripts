@@ -224,7 +224,7 @@ function findTag(tagTable, sPattern, iInstance, iMaxResults, find_plain)
 
 				bMatch = (FILTER_CATEGORY and subCategory and subCategory:lower():find(token, 1, find_plain)) or
 				(FILTER_NAME and synonyms and containsToken(synonyms, token, find_plain)) or
-				-- (FILTER_ALIAS and t.CatID and t.CatID:lower():find(token, 1, find_plain)) or
+				(FILTER_ALIAS and t.CatID and t.CatID:lower():find(token, 1, find_plain)) or
 				(FILTER_ALIAS and category and category:lower():find(token, 1, find_plain))
 
 				if not bMatch then
