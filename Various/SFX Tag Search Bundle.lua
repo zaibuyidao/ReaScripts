@@ -1,9 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.4
+-- @version 2.0.5
 -- @changelog
---   + Added UCS Synonym Index script.
---   # Optimized UCS CSV loading logic.
+--   + Added a separate configuration file for the UCS synonym index script.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links

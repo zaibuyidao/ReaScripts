@@ -16,8 +16,8 @@ local language = getSystemLanguage()
 
 -- SOME SETUP
 SETTINGS_BASE_FOLDER = script_path
-SETTINGS_INI_FILE = script_path .. "config-ucs.ini"
-SETTINGS_DEFAULT_FILE = script_path .. "lib/config-ucs-default.ini"
+SETTINGS_INI_FILE = script_path .. "config-ucs-synonym-index.ini"
+SETTINGS_DEFAULT_FILE = script_path .. "lib/config-ucs-synonym-index-default.ini"
 
 if language == "简体中文" then
 	SFX_TAG_TITLE = "音效标签搜索器: UCS 同义词索引 (Script by 再補一刀)"
