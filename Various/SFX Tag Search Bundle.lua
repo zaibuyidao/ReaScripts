@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.5
+-- @version 2.0.6
 -- @changelog
 --   + Added a separate configuration file for the UCS synonym index script.
 -- @reference
