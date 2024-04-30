@@ -64,11 +64,11 @@ local themes = {
 	imgui = {
 		theme_background = { 18, 18, 18 }, -- 背景颜色
 		cursor_focus_border = {57/255, 124/255, 204/255, .5}, -- 光标聚焦颜色
-		default_text_color = {236/255, 236/255, 236/255, 1}, -- 默认文本颜色
-		text_box_label_normal = {236/255, 236/255, 236/255, 1}, -- 文本框文字正常
+		default_text_color = {215/255, 215/255, 215/255, 1}, -- 默认文本颜色
+		text_box_label_normal = {215/255, 215/255, 215/255, 1}, -- 文本框文字正常
 		text_box_label_hover = {.8, .8, .8, 1}, -- 文本框文字悬停
-		text_box_label_focus = {236/255, 236/255, 236/255, 1}, -- 文本框文字聚焦
-		text_box_label_active = {236/255, 236/255, 236/255, 1}, -- 文本框文字激活
+		text_box_label_focus = {215/255, 215/255, 215/255, 1}, -- 文本框文字聚焦
+		text_box_label_active = {215/255, 215/255, 215/255, 1}, -- 文本框文字激活
 		text_box_background = {31/255, 48/255, 74/255, .5}, -- 文本框背景颜色
 		text_box_border = {31/255, 48/255, 74/255, .1}, -- 文本框边框颜色
 		text_box_carret = {.8, .8, .8, 1}, -- 文本框光标颜色
@@ -1118,7 +1118,7 @@ function loadSettings()
 	end
 
 	CURSOR_FOCUS_STYLE = jSettingsGet(SETTINGS, 'cursor_focus_style', "number")
-	SET_THEME = jSettingsGet(SETTINGS, 'set_theme', "string")
+	SET_THEME = jSettingsGet(SETTINGS, 'default_theme', "string")
 	ENGLISH_FIRST = jSettingsGet(SETTINGS, 'english_first', "boolean")
 
 	-- if true then return false end

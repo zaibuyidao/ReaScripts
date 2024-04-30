@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.7
+-- @version 2.0.8
 -- @changelog
---   # Fixed a minor error in the UCS synonym index script configuration file.
+--   # Adjusted some configuration information only.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
