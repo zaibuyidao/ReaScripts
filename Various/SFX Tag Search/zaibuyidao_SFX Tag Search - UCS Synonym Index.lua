@@ -333,7 +333,7 @@ function createResultButtons(gui, tControls, n, height, y_start)
 			info.width = 40
 			info.height = height
 			info.label_fontsize = math.tointeger( (height-2) / 2 + FONT_SIZE_ADJUSTMENT) -- math.tointeger( (height-2) / 2 + 3)
-			c.label_font = DEFALUT_FONT
+			info.label_font = DEFALUT_FONT
 			info.label_align = "r"
 			info.label_valign = "m"
 			info.border = false
@@ -1060,7 +1060,7 @@ function init()
 	LABEL_STATS.width = 50
 	LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
 	LABEL_STATS.y = 10
-	LABEL_STATS.label_fontsize = math.tointeger( GUI_SIZE * 0.75 )
+	LABEL_STATS.label_fontsize = math.floor( GUI_SIZE * 0.75 )
 	LABEL_STATS.label_align = "r"
 	LABEL_STATS.border = false
 

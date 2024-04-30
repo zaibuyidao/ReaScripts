@@ -1,7 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.9
+-- @version 2.0.10
 -- @changelog
+--   # Fix font settings for category columns.
 --   # Adjusted some configuration information. Please back up the configuration files (*.ini) in the script directory and delete them. Running the script again will recreate the configuration files.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
