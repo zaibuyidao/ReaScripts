@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.8
+-- @version 2.0.9
 -- @changelog
---   # Adjusted some configuration information only.
+--   # Adjusted some configuration information. Please back up the configuration files (*.ini) in the script directory and delete them. Running the script again will recreate the configuration files.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
