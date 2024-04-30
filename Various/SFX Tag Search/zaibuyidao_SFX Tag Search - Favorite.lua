@@ -410,7 +410,7 @@ function createResultButtons(gui, tControls, n, height, y_start)
 			local info = jGuiText:new()
 			info.width = 40
 			info.height = height
-			info.label_fontsize = math.tointeger( (height-2) / 2 + FONT_SIZE_ADJUSTMENT) -- math.tointeger( (height-2) / 2 + 3)
+			info.label_fontsize = math.floor( ((height-2) / 2 + FONT_SIZE_ADJUSTMENT) + 0.5 ) -- math.tointeger( (height-2) / 2 + 3)
 			info.label_font = DEFALUT_FONT
 			info.label_align = "r"
 			info.label_valign = "m"
@@ -827,8 +827,8 @@ attack,攻击,Battle
 	textBox.x = 10
 	textBox.y = 10
 	textBox.width = 480
-	textBox.height = math.tointeger( GUI_SIZE * 1.5 ) -- 文本框高度
-	textBox.label_fontsize = math.tointeger( GUI_SIZE * 1.5 ) -- 文本框字体大小
+	textBox.height = math.floor( GUI_SIZE * 1.5 + 0.5 ) -- 文本框高度
+	textBox.label_fontsize = math.floor( GUI_SIZE * 1.5 + 0.5 ) -- 文本框字体大小
 	textBox.label_align = "l"
 	textBox.label_font = DEFALUT_FONT -- "Calibri"
 	textBox.focus_index = GUI:getFocusIndex()
@@ -865,7 +865,7 @@ attack,攻击,Battle
 	LABEL_STATS.width = 50
 	LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
 	LABEL_STATS.y = 10
-	LABEL_STATS.label_fontsize = math.floor( GUI_SIZE * 0.75 )
+	LABEL_STATS.label_fontsize = math.floor( GUI_SIZE * 0.75 + 0.5 )
 	LABEL_STATS.label_align = "r"
 	LABEL_STATS.border = false
 
@@ -882,7 +882,7 @@ attack,攻击,Battle
 		LABEL_STATS.x = GUI.width - LABEL_STATS.width - 12
 
 		local buttonsSpaceH = GUI.height - BUTTON_Y_START - 4
-		RESULTS_PER_PAGE = math.tointeger(buttonsSpaceH // GUI_SIZE)
+		RESULTS_PER_PAGE = buttonsSpaceH // GUI_SIZE -- math.tointeger(buttonsSpaceH // GUI_SIZE)
 		-- msg(buttonsSpaceN)
 		createResultButtons(GUI, tResultButtons, RESULTS_PER_PAGE, GUI_SIZE, BUTTON_Y_START)
 		UPDATE_RESULTS = true
