@@ -1,5 +1,5 @@
 -- @description Solo Specific Track Setting
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog Initial release
 -- @links
@@ -9,97 +9,32 @@
 -- @provides [main=main,midi_editor,midi_eventlisteditor] .
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
-function print(...)
-    for _, v in ipairs({...}) do
-        reaper.ShowConsoleMsg(tostring(v) .. " ")
-    end
-    reaper.ShowConsoleMsg("\n")
-end
-
-function getSystemLanguage()
-    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-    local os = reaper.GetOS()
-    local lang
-  
-    if os == "Win32" or os == "Win64" then -- Windows
-        if locale == 936 then -- Simplified Chinese
-            lang = "简体中文"
-        elseif locale == 950 then -- Traditional Chinese
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    elseif os == "OSX32" or os == "OSX64" then -- macOS
-        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
-        local result = handle:read("*a")
-        handle:close()
-        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
-        if lang == "zh-CN" then -- 简体中文
-            lang = "简体中文"
-        elseif lang == "zh-TW" then -- 繁体中文
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    elseif os == "Linux" then -- Linux
-        local handle = io.popen("echo $LANG")
-        local result = handle:read("*a")
-        handle:close()
-        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
-        if lang == "zh_CN" then -- 简体中文
-            lang = "简体中文"
-        elseif lang == "zh_TW" then -- 繁體中文
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    end
-
-    return lang
-end
-
-local language = getSystemLanguage()
-
-if language == "简体中文" then
-    swsmsg = "该脚本需要 SWS 扩展，您想现在就下载它吗？"
-    swserr = "警告"
-    jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
-    jstitle = "您必须安裝 JS_ReaScriptAPI"
-elseif language == "繁體中文" then
-    swsmsg = "該脚本需要 SWS 擴展，您想現在就下載它嗎？"
-    swserr = "警告"
-    jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
-    jstitle = "您必須安裝 JS_ReaScriptAPI"
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+    dofile(ZBYDFuncPath)
+    if not checkSWSExtension() or not checkJSAPIExtension() then return end
 else
-    swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
-    swserr = "Warning"
-    jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
-    jstitle = "You must install JS_ReaScriptAPI"
-end
+    local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+    "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+    ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+    "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+    ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
 
-if not reaper.SNM_GetIntConfigVar then
-    local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
-    if retval == 1 then
-        if not OS then local OS = reaper.GetOS() end
-        if OS=="OSX32" or OS=="OSX64" then
-            os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
-        else
-            os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
-        end
+    reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+    if reaper.APIExists('ReaPack_BrowsePackages') then
+        reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
+    else
+        local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+        "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+        "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
+
+        reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
     end
     return
 end
 
-if not reaper.APIExists("JS_Window_Find") then
-    reaper.MB(jsmsg, jstitle, 0)
-    local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-    if ok then
-        reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-    else
-        reaper.MB(err, "Something went wrong...", 0)
-    end
-    return reaper.defer(function() end)
-end
+local language = getSystemLanguage()
 
 if language == "简体中文" then
     title = "独奏指定轨道"
@@ -113,9 +48,7 @@ else
 end
 
 local num = reaper.GetExtState("SOLO_SPECIFIC_TRACK_SETTING", "Number")
-if num == "" then
-    num = 1
-end
+if num == "" then num = 1 end
 local retval, retvals_csv = reaper.GetUserInputs(title, 1, captions_csv, num)
 if not retval then return end
 num = retvals_csv:match("(.*)")
