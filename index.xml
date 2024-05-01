@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1b1edd12280786b39d29933489169ca4d595a857">
+<index version="1" name="zaibuyidao Scripts" commit="fe7eebcb93e28149e40269c8b068230d5949a3ea">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8262,18 +8262,6 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7167d57c831bf0a6071540338d38aa5eaf012d90/Tracks%20Properties/zaibuyidao_Select%20Track%20By%20Name.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Set Solo Track.lua" type="script" desc="Set Solo Track">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-09-21T11:34:38Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b7a3ffc837f21314e501eca4276c77d1f323f6db/Tracks%20Properties/zaibuyidao_Set%20Solo%20Track.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-09-21T14:23:54Z">
-        <source main="main midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ba16f8f0d890f5d70cd6991c6f3ff823b2295dfa/Tracks%20Properties/zaibuyidao_Set%20Solo%20Track.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Set Track Name.lua" type="script" desc="Set Track Name">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -8341,6 +8329,42 @@
       </version>
       <version name="1.0.2" author="zaibuyidao" time="2021-10-31T06:16:34Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/eef140ba21e17105c106df886864e71871e31c12/Tracks%20Properties/zaibuyidao_Show%20FX%20Chain%20For%20Selected%20Track.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo Specific Track Setting.lua" type="script" desc="Solo Specific Track Setting">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-01T06:35:39Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main midi_editor midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/fe7eebcb93e28149e40269c8b068230d5949a3ea/Tracks%20Properties/zaibuyidao_Solo%20Specific%20Track%20Setting.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Solo Specific Track.lua" type="script" desc="Solo Specific Track">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-01T06:35:39Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main midi_editor midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/fe7eebcb93e28149e40269c8b068230d5949a3ea/Tracks%20Properties/zaibuyidao_Solo%20Specific%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released - Exclude Item Selection).lua" type="script" desc="Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released - Exclude Item Selection)">
