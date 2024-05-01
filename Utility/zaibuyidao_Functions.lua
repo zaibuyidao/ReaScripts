@@ -1,4 +1,3 @@
--- @noindex
 -- @description Functions
 -- @version 1.0
 -- @author zaibuyidao
