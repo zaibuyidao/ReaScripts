@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fe7eebcb93e28149e40269c8b068230d5949a3ea">
+<index version="1" name="zaibuyidao Scripts" commit="e7385574e291c3c22c68bd3069785593546bbc97">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8348,6 +8348,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main midi_editor midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/fe7eebcb93e28149e40269c8b068230d5949a3ea/Tracks%20Properties/zaibuyidao_Solo%20Specific%20Track%20Setting.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-01T15:52:01Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main midi_editor midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/e7385574e291c3c22c68bd3069785593546bbc97/Tracks%20Properties/zaibuyidao_Solo%20Specific%20Track%20Setting.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Specific Track.lua" type="script" desc="Solo Specific Track">
       <metadata>
@@ -8365,6 +8369,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-01T06:35:39Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main midi_editor midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/fe7eebcb93e28149e40269c8b068230d5949a3ea/Tracks%20Properties/zaibuyidao_Solo%20Specific%20Track.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-01T15:52:01Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source main="main midi_editor midi_eventlisteditor">https://github.com/zaibuyidao/ReaScripts/raw/e7385574e291c3c22c68bd3069785593546bbc97/Tracks%20Properties/zaibuyidao_Solo%20Specific%20Track.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released - Exclude Item Selection).lua" type="script" desc="Solo Track Play From Edit Cursor Position (Perform Until Shortcut Released - Exclude Item Selection)">
