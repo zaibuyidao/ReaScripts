@@ -1,13 +1,13 @@
--- @description Solo Specific Track
--- @version 1.0.1
+-- @description Toggle Solo for Specific Track Setting
+-- @version 1.0
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   New Script
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @provides [main=main,midi_editor,midi_eventlisteditor] .
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
 
 local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
@@ -36,64 +36,21 @@ end
 
 local language = getSystemLanguage()
 
-function CheckShortcutSetting()
-    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Items Editing/zaibuyidao_Solo Specific Track Setting.lua'
-
-    if reaper.file_exists(shortcutSetting) then
-        dofile(shortcutSetting)
-    else
-        reaper.MB(shortcutSetting:gsub('%\\', '/')..' not found. Please ensure the script is correctly placed.', '', 0)
-        if reaper.APIExists('ReaPack_BrowsePackages') then
-            reaper.ReaPack_BrowsePackages('zaibuyidao Solo Specific Track Setting')
-        else
-            reaper.MB('ReaPack extension not found', '', 0)
-        end
-    end
-end
-
-function unSoloTrack(n)
-  track = reaper.GetTrack(0, n)
-  reaper.CSurf_OnSoloChange(track, 0)
-end
-
-function soloTrack(n)
-  local cntTracks = reaper.CountTracks(0)
-  for i = 0, cntTracks - 1 do
-    local track = reaper.GetTrack(0, i)
-    if i == n then
-        reaper.CSurf_OnSoloChange(track, 1)
-    -- else
-    --     reaper.CSurf_OnSoloChange(track, 0) -- 排除SOLO轨道
-    end
-  end
-end
-
-local num = reaper.GetExtState("SOLO_SPECIFIC_TRACK_SETTING", "Number")
-if num == "" then
-    CheckShortcutSetting()
-    reaper.defer(function() end)
-    num = reaper.GetExtState("SOLO_SPECIFIC_TRACK_SETTING", "Number")
-end
-num = tonumber(num) - 1
-
-cntTracks = reaper.CountTracks(0)
-for i = 0, cntTracks - 1 do
-  track = reaper.GetTrack(0, i)
-  if i == num then
-    iSOLO = reaper.GetMediaTrackInfo_Value(track, 'I_SOLO')
-    if iSOLO == 1 or iSOLO == 2 then
-        flag = true
-    elseif iSOLO == 0 then
-        flag = false
-    end
-  end
-end
-
-function noUndoPoint() end
-if flag then
-    unSoloTrack(num)
+if language == "简体中文" then
+    title = "切换指定轨道独奏"
+    captions_csv = "轨道编号:"
+elseif language == "繁體中文" then
+    title = "切換指定軌道獨奏"
+    captions_csv = "軌道編號:"
 else
-    soloTrack(num)
+    title = "Toggle Solo for Specific Track"
+    captions_csv = "Track number:"
 end
-reaper.defer(noUndoPoint)
-reaper.UpdateArrange()
+
+local num = reaper.GetExtState("TOGGLE_SOLO_FOR_SPECIFIC_TRACK_SETTING", "Number")
+if num == "" then num = 1 end
+local retval, retvals_csv = reaper.GetUserInputs(title, 1, captions_csv, num)
+if not retval then return end
+num = retvals_csv:match("(.*)")
+if not retval or not tonumber(num) then return end
+reaper.SetExtState("TOGGLE_SOLO_FOR_SPECIFIC_TRACK_SETTING", "Number", num, 1)
