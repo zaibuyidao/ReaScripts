@@ -1,12 +1,11 @@
 -- @description Functions
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
 -- @about Core Function Library
--- @changelog
---   New Script
+-- @changelog New Script
 
 function print(param)
   if type(param) == "table" then
@@ -175,4 +174,167 @@ function normalizePathDelimiter(p)
     local r = p:gsub("\\", "/"):gsub("/+","/")
     return r
   end
+end
+
+-- 用于智能SOLO脚本
+function createVirtualKeyMap()
+  local map = {}
+
+  -- Number keys 0-9
+  for i = 0, 9 do
+    map[tostring(i)] = 0x30 + i
+  end
+
+  -- Alphabetic keys A-Z (and a-z as VK codes are the same for upper and lower case)
+  for i = 0, 25 do
+    local charUpper = string.char(65 + i) -- Uppercase A-Z
+    map[charUpper] = 0x41 + i
+    local charLower = string.char(97 + i) -- Lowercase a-z
+    map[charLower] = 0x41 + i
+  end
+
+  -- Other character keys
+  map[','] = 0xBC
+  map['.'] = 0xBE
+  map['<'] = 0xE2
+  map['>'] = 0xE2 -- The <> keys on the US standard keyboard, or the \\| key on the non-US 102-key keyboard
+  map[';'] = 0xBA
+  map[':'] = 0xBA
+  map['"'] = 0xDE
+  map["'"] = 0xDE
+  map['['] = 0xDB
+  map[']'] = 0xDD
+  map['\\'] = 0xDC
+  map['|'] = 0xDC
+  map['/'] = 0xBF
+  map['?'] = 0xBF
+  map['`'] = 0xC0
+  map['~'] = 0xC0 -- Used for miscellaneous characters; it can vary by keyboard. For the US standard keyboard, the `~ key
+  map['-'] = 0xBD
+  map['='] = 0xBB
+  map['+'] = 0xBB
+
+  -- Function keys F1-F24
+  for i = 1, 24 do
+    local key = 'F' .. i
+    map[key] = 0x6F + i
+    map[string.lower(key)] = 0x6F + i
+    map[string.upper(key)] = 0x6F + i
+  end
+
+  -- Special keys and their VK codes
+  local specialKeys = {
+    ['BACKSPACE'] = 0x08,
+    ['TAB'] = 0x09,
+    ['CLEAR'] = 0x0C,
+    ['ENTER'] = 0x0D,
+    ['SHIFT'] = 0x10,
+    ['CTRL'] = 0x11,
+    ['ALT'] = 0x12,
+    ['PAUSE'] = 0x13,
+    ['CAPSLOCK'] = 0x14,
+    ['ESCAPE'] = 0x1B,
+    ['SPACE'] = 0x20,
+    ['PAGEUP'] = 0x21,
+    ['PAGEDOWN'] = 0x22,
+    ['END'] = 0x23,
+    ['HOME'] = 0x24,
+    ['LEFT'] = 0x25,
+    ['UP'] = 0x26,
+    ['RIGHT'] = 0x27,
+    ['DOWN'] = 0x28,
+    ['SELECT'] = 0x29,
+    ['PRINT'] = 0x2A,
+    ['EXECUTE'] = 0x2B,
+    ['PRINTSCREEN'] = 0x2C,
+    ['INSERT'] = 0x2D,
+    ['DELETE'] = 0x2E,
+    ['HELP'] = 0x2F
+  }
+
+  -- Merge special keys into the map
+  for key, value in pairs(specialKeys) do
+    map[string.lower(key)] = value
+    map[string.upper(key)] = value
+    map[key] = value
+  end
+
+  -- Numeric keypad keys 0-9
+  for i = 0, 9 do
+    local key = 'NUMPAD' .. i
+    map[key] = 0x60 + i
+    map[string.lower(key)] = 0x60 + i
+    map[string.upper(key)] = 0x60 + i
+  end
+
+  -- Add additional specific keys
+  local specificKeys = {
+    ['MULTIPLY'] = 0x6A,
+    ['ADD'] = 0x6B,
+    ['SEPARATOR'] = 0x6C,
+    ['SUBTRACT'] = 0x6D,
+    ['DECIMAL'] = 0x6E,
+    ['DIVIDE'] = 0x6F
+  }
+
+  -- Merge specific keys into the map
+  for key, value in pairs(specificKeys) do
+    map[string.lower(key)] = value
+    map[string.upper(key)] = value
+    map[key] = value
+  end
+
+  -- System keys
+  local systemKeys = {
+    ['LWIN'] = 0x5B,
+    ['RWIN'] = 0x5C,
+    ['APPS'] = 0x5D,
+    ['SLEEP'] = 0x5F,
+    ['NUMLOCK'] = 0x90,
+    ['SCROLLLOCK'] = 0x91,
+    ['LSHIFT'] = 0xA0,
+    ['RSHIFT'] = 0xA1,
+    ['LCONTROL'] = 0xA2,
+    ['RCONTROL'] = 0xA3,
+    ['LMENU'] = 0xA4,
+    ['RMENU'] = 0xA5
+  }
+
+  -- Merge specific keys into the map
+  for key, value in pairs(systemKeys) do
+    map[string.lower(key)] = value
+    map[string.upper(key)] = value
+    map[key] = value
+  end
+
+  -- Media keys
+  local mediaKeys = {
+    ['BROWSER_BACK'] = 0xA6,
+    ['BROWSER_FORWARD'] = 0xA7,
+    ['BROWSER_REFRESH'] = 0xA8,
+    ['BROWSER_STOP'] = 0xA9,
+    ['BROWSER_SEARCH'] = 0xAA,
+    ['BROWSER_FAVORITES'] = 0xAB,
+    ['BROWSER_HOME'] = 0xAC,
+    ['VOLUME_MUTE'] = 0xAD,
+    ['VOLUME_DOWN'] = 0xAE,
+    ['VOLUME_UP'] = 0xAF,
+    ['MEDIA_NEXT_TRACK'] = 0xB0,
+    ['MEDIA_PREV_TRACK'] = 0xB1,
+    ['MEDIA_STOP'] = 0xB2,
+    ['MEDIA_PLAY_PAUSE'] = 0xB3,
+    ['LAUNCH_MAIL'] = 0xB4,
+    ['LAUNCH_MEDIA_SELECT'] = 0xB5,
+    ['LAUNCH_APP1'] = 0xB6,
+    ['LAUNCH_APP2'] = 0xB7
+  }
+
+  -- Merge media keys into the map
+  for key, value in pairs(mediaKeys) do
+    map[string.lower(key)] = value
+    map[string.upper(key)] = value
+    map[key] = value
+  end
+
+  return map
 end
