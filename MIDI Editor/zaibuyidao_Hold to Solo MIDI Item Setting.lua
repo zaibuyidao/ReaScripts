@@ -1,5 +1,5 @@
 -- @description Hold to Solo MIDI Item Setting
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -45,40 +45,21 @@ else
 end
 
 local language = getSystemLanguage()
+local key_map = createVirtualKeyMap()
 
 if language == "简体中文" then
   title = "持续独奏MIDI对象设置"
-  lable = "输入 (0-9,A-Z,使用';;'代替','或.)"
+  lable = "虚拟键 (使用';;'代替',')"
   err_title = "不能设置这个按键，请改其他按键"
 elseif language == "繁體中文" then
   title = "持續獨奏MIDI對象設置"
-  lable = "輸入 (0-9,A-Z,使用';;'代替','或.)"
+  lable = "虛擬鍵 (使用';;'代替',')"
   err_title = "不能設置這個按鍵，請改其他按鍵"
 else
   title = "Hold to Solo MIDI Item Settings"
-  lable = "Enter (0-9, A-Z, use ';;' for ',' or .)"
+  lable = "Virtual key (use ';;' for ',')"
   err_title = "This key can't be set. Please choose another."
 end
-
-local function generateKeyMap()
-  local map = {}
-  for i = 0, 9 do
-    map[tostring(i)] = 0x30 + i
-  end
-  for i = 0, 25 do
-    local char = string.char(65 + i)  -- Uppercase A-Z
-    map[char] = 0x41 + i
-    char = string.char(97 + i)  -- Lowercase a-z
-    map[char] = 0x41 + i  -- Virtual Key Codes are the same for uppercase
-  end
-  map[','] = 0xBC
-  map['.'] = 0xBE
-  map['<'] = 0xE2
-  map['>'] = 0xE2
-  return map
-end
-
-key_map = generateKeyMap()
 
 reaper.Undo_BeginBlock()
 shift_key = 0x10

@@ -1,5 +1,5 @@
 -- @description Hold to Solo Item from Edit Cursor
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -44,24 +44,7 @@ else
 end
 
 local language = getSystemLanguage()
-
-local function generateKeyMap()
-    local map = {}
-    for i = 0, 9 do
-        map[tostring(i)] = 0x30 + i
-    end
-    for i = 0, 25 do
-        local char = string.char(65 + i)  -- Uppercase A-Z
-        map[char] = 0x41 + i
-        char = string.char(97 + i)  -- Lowercase a-z
-        map[char] = 0x41 + i  -- Virtual Key Codes are the same for uppercase
-    end
-    map[','] = 0xBC
-    map['.'] = 0xBE
-    map['<'] = 0xE2
-    map['>'] = 0xE2
-    return map
-end
+local key_map = createVirtualKeyMap()
 
 function UnSoloAllTrack() -- 取消所有轨道独奏状态
     for i = 0, reaper.CountTracks(0)-1 do
@@ -171,7 +154,6 @@ if key == "" then
     key = reaper.GetExtState("HOLD_TO_SOLO_ITEM_SETTING", "VirtualKey")
 end
 
-key_map = generateKeyMap()
 VirtualKeyCode = key_map[key]
 flag = 0
 
