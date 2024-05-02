@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ce59dc115e3335597aca9721a18c0ae5f7a4bf53">
+<index version="1" name="zaibuyidao Scripts" commit="642218ab4bd77f5fbc95929610df6be640179ecc">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -633,6 +633,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01b56715e99f93d6b0033ef81267e05e5c19392d/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20Edit%20Cursor.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20Edit%20Cursor.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Item from First Selected Item.lua" type="script" desc="Hold to Solo Item from First Selected Item">
       <metadata>
@@ -650,6 +654,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-02T07:17:25Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01b56715e99f93d6b0033ef81267e05e5c19392d/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20First%20Selected%20Item.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20First%20Selected%20Item.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Item from Mouse Position.lua" type="script" desc="Hold to Solo Item from Mouse Position">
@@ -669,6 +677,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01b56715e99f93d6b0033ef81267e05e5c19392d/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20Mouse%20Position.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20Mouse%20Position.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Item Setting.lua" type="script" desc="Hold to Solo Item Setting">
       <metadata>
@@ -687,6 +699,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01b56715e99f93d6b0033ef81267e05e5c19392d/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20Setting.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20Setting.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Item Without Moving Edit Cursor.lua" type="script" desc="Hold to Solo Item Without Moving Edit Cursor">
       <metadata>
@@ -704,6 +720,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-02T07:17:25Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01b56715e99f93d6b0033ef81267e05e5c19392d/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20Without%20Moving%20Edit%20Cursor.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20Without%20Moving%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Humanize Item Volume.lua" type="script" desc="Humanize Item Volume">
@@ -3663,6 +3683,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/519efa8e0c3345a40703a0e538cd05ee1f8cfa98/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Edit%20Cursor.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Edit%20Cursor.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo MIDI Item from Mouse Position.lua" type="script" desc="Hold to Solo MIDI Item from Mouse Position">
       <metadata>
@@ -3680,6 +3704,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-02T07:22:15Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/519efa8e0c3345a40703a0e538cd05ee1f8cfa98/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Mouse%20Position.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Mouse%20Position.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo MIDI Item Setting.lua" type="script" desc="Hold to Solo MIDI Item Setting">
@@ -3699,6 +3727,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/519efa8e0c3345a40703a0e538cd05ee1f8cfa98/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20Setting.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20Setting.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Note from Edit Cursor.lua" type="script" desc="Hold to Solo Note from Edit Cursor">
       <metadata>
@@ -3716,6 +3748,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-02T07:22:15Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/519efa8e0c3345a40703a0e538cd05ee1f8cfa98/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Edit%20Cursor.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Note from Mouse Position.lua" type="script" desc="Hold to Solo Note from Mouse Position">
@@ -3735,6 +3771,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/519efa8e0c3345a40703a0e538cd05ee1f8cfa98/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Mouse%20Position.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Mouse%20Position.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Note Setting.lua" type="script" desc="Hold to Solo Note Setting">
       <metadata>
@@ -3752,6 +3792,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-02T07:22:15Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/519efa8e0c3345a40703a0e538cd05ee1f8cfa98/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20Setting.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20Setting.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Humanize Velocity (Customize).lua" type="script" desc="Humanize Velocity (Customize)">
@@ -7772,6 +7816,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/196cd72b1ca748f6b1d5e79052a4ceb7c8ca56f7/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Edit%20Cursor%20(Exclude%20Item%20Selection).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Edit%20Cursor%20(Exclude%20Item%20Selection).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Track from Edit Cursor.lua" type="script" desc="Hold to Solo Track from Edit Cursor">
       <metadata>
@@ -7789,6 +7837,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-02T07:30:38Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/196cd72b1ca748f6b1d5e79052a4ceb7c8ca56f7/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Edit%20Cursor.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Track from Mouse Position (Exclude Item Selection).lua" type="script" desc="Hold to Solo Track from Mouse Position (Exclude Item Selection)">
@@ -7808,6 +7860,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/196cd72b1ca748f6b1d5e79052a4ceb7c8ca56f7/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Mouse%20Position%20(Exclude%20Item%20Selection).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Mouse%20Position%20(Exclude%20Item%20Selection).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Track from Mouse Position.lua" type="script" desc="Hold to Solo Track from Mouse Position">
       <metadata>
@@ -7825,6 +7881,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-02T07:30:38Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/196cd72b1ca748f6b1d5e79052a4ceb7c8ca56f7/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Mouse%20Position.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Mouse%20Position.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Track Setting.lua" type="script" desc="Hold to Solo Track Setting">
@@ -7844,6 +7904,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/196cd72b1ca748f6b1d5e79052a4ceb7c8ca56f7/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20Setting.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20Setting.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Track Without Moving Edit Cursor (Exclude Item Selection).lua" type="script" desc="Hold to Solo Track Without Moving Edit Cursor (Exclude Item Selection)">
       <metadata>
@@ -7862,6 +7926,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/196cd72b1ca748f6b1d5e79052a4ceb7c8ca56f7/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20Without%20Moving%20Edit%20Cursor%20(Exclude%20Item%20Selection).lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20Without%20Moving%20Edit%20Cursor%20(Exclude%20Item%20Selection).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Track Without Moving Edit Cursor.lua" type="script" desc="Hold to Solo Track Without Moving Edit Cursor">
       <metadata>
@@ -7879,6 +7947,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-02T07:30:38Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/196cd72b1ca748f6b1d5e79052a4ceb7c8ca56f7/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20Without%20Moving%20Edit%20Cursor.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/Tracks%20Properties/zaibuyidao_Hold%20to%20Solo%20Track%20Without%20Moving%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Instant Solo Track from Edit Cursor.lua" type="script" desc="Instant Solo Track from Edit Cursor">
