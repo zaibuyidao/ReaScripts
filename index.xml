@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5ccc981d54a97b57376e1cd67039cb8007a2746b">
+<index version="1" name="zaibuyidao Scripts" commit="8763366c63d92b19d78ea2aa111c7e025817ad0f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -353,6 +353,42 @@
       <version name="1.0.4" author="zaibuyidao" time="2023-03-31T13:10:56Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Rename Items.lua" type="script" desc="Batch Rename Items">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Items%20Editing/zaibuyidao_Batch%20Rename%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Set Item Names.lua" type="script" desc="Batch Set Item Names">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Items%20Editing/zaibuyidao_Batch%20Set%20Item%20Names.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Align Item Position.lua" type="script" desc="Copy Align Item Position">
@@ -1976,6 +2012,60 @@
     </reapack>
   </category>
   <category name="Markers">
+    <reapack name="zaibuyidao_Batch Rename Markers in Marker Manager.lua" type="script" desc="Batch Rename Markers in Marker Manager">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Markers/zaibuyidao_Batch%20Rename%20Markers%20in%20Marker%20Manager.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Rename Markers Within Time Selection.lua" type="script" desc="Batch Rename Markers Within Time Selection">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Markers/zaibuyidao_Batch%20Rename%20Markers%20Within%20Time%20Selection.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Set Marker Names for Selected Items.lua" type="script" desc="Batch Set Marker Names for Selected Items">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Markers/zaibuyidao_Batch%20Set%20Marker%20Names%20for%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Copy Marker In Time Selection (Relative Position).lua" type="script" desc="Copy Marker In Time Selection (Relative Position)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -7178,6 +7268,78 @@
     </reapack>
   </category>
   <category name="Regions">
+    <reapack name="zaibuyidao_Batch Rename Regions for Selected Items.lua" type="script" desc="Batch Rename Regions for Selected Items">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Regions/zaibuyidao_Batch%20Rename%20Regions%20for%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Rename Regions in Region Manager.lua" type="script" desc="Batch Rename Regions in Region Manager">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Regions/zaibuyidao_Batch%20Rename%20Regions%20in%20Region%20Manager.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Rename Regions Within Time Selection.lua" type="script" desc="Batch Rename Regions Within Time Selection">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Regions/zaibuyidao_Batch%20Rename%20Regions%20Within%20Time%20Selection.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Set Region Names for Selected Items.lua" type="script" desc="Batch Set Region Names for Selected Items">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Regions/zaibuyidao_Batch%20Set%20Region%20Names%20for%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Delete Region Within Time Selection.lua" type="script" desc="Delete Region Within Time Selection">
       <metadata>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
@@ -7275,6 +7437,42 @@
     </reapack>
   </category>
   <category name="Tracks Properties">
+    <reapack name="zaibuyidao_Batch Rename Tracks.lua" type="script" desc="Batch Rename Tracks">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Tracks%20Properties/zaibuyidao_Batch%20Rename%20Tracks.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Set Track Names.lua" type="script" desc="Batch Set Track Names">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Batch Rename Script Series - Use the filter "zaibuyidao batch" in ReaPack or Actions to access all related scripts.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T11:18:46Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Tracks%20Properties/zaibuyidao_Batch%20Set%20Track%20Names.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Hold to Solo Track from Edit Cursor (Exclude Item Selection).lua" type="script" desc="Hold to Solo Track from Edit Cursor (Exclude Item Selection)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
