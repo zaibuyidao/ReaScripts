@@ -1,4 +1,4 @@
--- @description Set Region Names for Selected Items from Clipboard
+-- @description Set Region Names of Selected Items from Clipboard
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -118,7 +118,7 @@ elseif language == "繁體中文" then
   text = '選定區域：' .. #regions .. '\n區域名稱：' .. #rgntext
   text = text..'\n\n仍然要繼續嗎？'
 else
-  script_name = "Set Region Names for Selected Items from Clipboard"
+  script_name = "Set Region Names of Selected Items from Clipboard"
   text = 'Selected region: ' .. #regions .. '\nRegion name: ' .. #rgntext
   text = text..'\n\nDo you still want to continue?'
 end

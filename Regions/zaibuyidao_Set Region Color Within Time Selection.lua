@@ -1,19 +1,13 @@
---[[
- * ReaScript Name: Set Region Color Within Time Selection
- * Version: 1.0
- * Author: zaibuyidao
- * Author URI: https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
- * Repository: GitHub > zaibuyidao > ReaScripts
- * Repository URI: https://github.com/zaibuyidao/ReaScripts
- * REAPER: 6.0 or newer recommended
- * Donation: http://www.paypal.me/zaibuyidao
---]]
-
---[[
- * Changelog:
- * v1.0 (2021-7-18)
-  + Initial release
---]]
+-- @description Set Region Color Within Time Selection
+-- @version 1.0.1
+-- @author zaibuyidao
+-- @changelog
+--   New Script
+-- @links
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
+-- @donate http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
 
 function Msg(param) 
   reaper.ShowConsoleMsg(tostring(param) .. "\n") 
