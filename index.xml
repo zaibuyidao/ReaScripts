@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5a8cc6e934ee8050cee041e53cc01e53a72ede7d">
+<index version="1" name="zaibuyidao Scripts" commit="3cbed1425623a99054b1bc3f703858d8455b6ebf">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7364,55 +7364,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8763366c63d92b19d78ea2aa111c7e025817ad0f/Regions/zaibuyidao_Batch%20Set%20Region%20Names%20for%20Selected%20Items.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Delete Region Within Time Selection.lua" type="script" desc="Delete Region Within Time Selection">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-07-19T13:06:10Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/873d5bafd6544f8b3c14c9f37a7368c088a89c65/Regions/zaibuyidao_Delete%20Region%20Within%20Time%20Selection.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Delete Selected Region.lua" type="script" desc="Delete Selected Region">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-07-10T17:04:10Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/239ebd6a73cf5e7b124ef6f65b21e8eae63acd61/Regions/zaibuyidao_Delete%20Selected%20Region.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-04-23T12:17:11Z">
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1bf60bf80e3ad1b2caa18e004cfe5c6754d591f3/Regions/zaibuyidao_Delete%20Selected%20Region.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Random Region Color.lua" type="script" desc="Random Region Color">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-07-18T10:38:30Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9ef65ab3daa6e91649c8170b880c7a8c73aca739/Regions/zaibuyidao_Random%20Region%20Color.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Set Region Color Within Time Selection.lua" type="script" desc="Set Region Color Within Time Selection">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-07-18T10:38:30Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9ef65ab3daa6e91649c8170b880c7a8c73aca739/Regions/zaibuyidao_Set%20Region%20Color%20Within%20Time%20Selection.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Set Region Color.lua" type="script" desc="Set Region Color">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-07-10T17:04:10Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/239ebd6a73cf5e7b124ef6f65b21e8eae63acd61/Regions/zaibuyidao_Set%20Region%20Color.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Set Region Names for Selected Items from Clipboard.lua" type="script" desc="Set Region Names for Selected Items from Clipboard">
+    <reapack name="zaibuyidao_Delete Regions of Selected Items.lua" type="script" desc="Delete Regions of Selected Items">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -7425,27 +7377,139 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-05T13:50:55Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T15:08:27Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5a8cc6e934ee8050cee041e53cc01e53a72ede7d/Regions/zaibuyidao_Set%20Region%20Names%20for%20Selected%20Items%20from%20Clipboard.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3cbed1425623a99054b1bc3f703858d8455b6ebf/Regions/zaibuyidao_Delete%20Regions%20of%20Selected%20Items.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Set Region Tail.lua" type="script" desc="Set Region Tail">
+    <reapack name="zaibuyidao_Delete Regions Within Time Selection.lua" type="script" desc="Delete Regions Within Time Selection">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2021-06-10T17:20:11Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e41fcc8cf742d9caf17816d018f38a4984af7ed9/Regions/zaibuyidao_Set%20Region%20Tail.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-03-22T15:51:08Z">
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f9be32e192f147903f59cf3d05652951e11c91b5/Regions/zaibuyidao_Set%20Region%20Tail.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T15:08:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3cbed1425623a99054b1bc3f703858d8455b6ebf/Regions/zaibuyidao_Delete%20Regions%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Set Selected Items To Region Color.lua" type="script" desc="Set Selected Items To Region Color">
+    <reapack name="zaibuyidao_Randomize Region Colors.lua" type="script" desc="Randomize Region Colors">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T15:08:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3cbed1425623a99054b1bc3f703858d8455b6ebf/Regions/zaibuyidao_Randomize%20Region%20Colors.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Region Color of Selected Items.lua" type="script" desc="Set Region Color of Selected Items">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T15:08:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3cbed1425623a99054b1bc3f703858d8455b6ebf/Regions/zaibuyidao_Set%20Region%20Color%20of%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Region Color Within Time Selection.lua" type="script" desc="Set Region Color Within Time Selection">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
       <version name="1.0" author="zaibuyidao" time="2021-07-18T10:38:30Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9ef65ab3daa6e91649c8170b880c7a8c73aca739/Regions/zaibuyidao_Set%20Selected%20Items%20To%20Region%20Color.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9ef65ab3daa6e91649c8170b880c7a8c73aca739/Regions/zaibuyidao_Set%20Region%20Color%20Within%20Time%20Selection.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-05T15:08:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3cbed1425623a99054b1bc3f703858d8455b6ebf/Regions/zaibuyidao_Set%20Region%20Color%20Within%20Time%20Selection.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Region Names of Selected Items from Clipboard.lua" type="script" desc="Set Region Names of Selected Items from Clipboard">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T15:08:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3cbed1425623a99054b1bc3f703858d8455b6ebf/Regions/zaibuyidao_Set%20Region%20Names%20of%20Selected%20Items%20from%20Clipboard.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Region Tails of Selected Items.lua" type="script" desc="Set Region Tails of Selected Items">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T15:08:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3cbed1425623a99054b1bc3f703858d8455b6ebf/Regions/zaibuyidao_Set%20Region%20Tails%20of%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Selected Items to Matching Region Colors.lua" type="script" desc="Set Selected Items to Matching Region Colors">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-05-05T15:08:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3cbed1425623a99054b1bc3f703858d8455b6ebf/Regions/zaibuyidao_Set%20Selected%20Items%20to%20Matching%20Region%20Colors.lua</source>
       </version>
     </reapack>
   </category>
