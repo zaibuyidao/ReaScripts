@@ -1,4 +1,4 @@
--- @description Set Region Names of Selected Items from Clipboard
+-- @description Set Region Names for Selected Items from Clipboard
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -110,16 +110,16 @@ end
 
 local script_name
 if language == "简体中文" then
-  script_name = "从剪切板设置选定对象的区域名称"
+  script_name = "从剪切板为选定对象设置区域名称"
   text = '选定区域：' .. #regions .. '\n区域名称：' .. #rgntext
   text = text..'\n\n仍然要继续吗？'
 elseif language == "繁體中文" then
-  script_name = "從剪切板設置選定對象的區域名稱"
+  script_name = "從剪切板為選定對象設置區域名稱"
   text = '選定區域：' .. #regions .. '\n區域名稱：' .. #rgntext
   text = text..'\n\n仍然要繼續嗎？'
 else
-  script_name = "Set Region Names of Selected Items from Clipboard"
-  text = 'Selected region: ' .. #regions .. '\nRegion name: ' .. #rgntext
+  script_name = "Set Region Names for Selected Items from Clipboard"
+  text = 'Selected regions: ' .. #regions .. '\nRegion name: ' .. #rgntext
   text = text..'\n\nDo you still want to continue?'
 end
 
