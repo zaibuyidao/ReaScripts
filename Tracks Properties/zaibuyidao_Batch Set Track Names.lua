@@ -1,5 +1,5 @@
 -- @description Batch Set Track Names
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -141,17 +141,17 @@ if (show_msg == "") then show_msg = "true" end
 if show_msg == "true" then
   if language == "简体中文" then
     script_name = "批量设置轨道名称"
-    text = "通配符:\n$track: 轨道名称\n$folders: 文件夹名称\n$tracknumber: 轨道编号\n$GUID: 轨道 GUID\n\n标记:\nd=01: 数字计数\nd=01-05 or d=05-01: 循环数字\na=a: 字母计数\na=a-e or a=e-a: 循环字母\nr=10: 随机字符串长度\n\n"
+    text = "通配符:\n$folders: 文件夹名称\n$trknumber: 轨道编号\n$GUID: 轨道 GUID\n\n标记:\nd=01: 数字计数\nd=01-05 or d=05-01: 循环数字\na=a: 字母计数\na=a-e or a=e-a: 循环字母\nr=10: 随机字符串长度\n\n"
     text = text.."功能说明：\n\n1.仅设置名称:\n   - 轨道名称\n\n2.循环模式:\n   - 启用或禁用循环数字/字母。输入 'y' 表示是，'n' 表示否。\n"
     text = text.."\n下次还显示此页面吗？"
   elseif language == "繁體中文" then
     script_name = "批量設置軌道名稱"
-    text = "通配符:\n$track: 軌道名稱\n$folders: 文件夾名稱\n$tracknumber: 軌道編號\n$GUID: 軌道 GUID\n\n標記:\nd=01: 數字計數\nd=01-05 or d=05-01: 循環數字\na=a: 字母計數\na=a-e or a=e-a: 循環字母\nr=10: 隨機字符串長度\n\n"
+    text = "通配符:\n$folders: 文件夾名稱\n$trknumber: 軌道編號\n$GUID: 軌道 GUID\n\n標記:\nd=01: 數字計數\nd=01-05 or d=05-01: 循環數字\na=a: 字母計數\na=a-e or a=e-a: 循環字母\nr=10: 隨機字符串長度\n\n"
     text = text.."功能説明：\n\n1.僅設置名稱:\n   - 軌道名稱\n\n2.循環模式:\n   - 啟用或禁用循環數字/字母。輸入 'y' 表示是，'n' 表示否。\n"
     text = text.."\n下次還顯示此頁面嗎？"
   else
     script_name = "Batch Set Track Names"
-    text = "Wildcards:\n$track: Track name\n$folders: Folder name\n$tracknumber: Track number\n$GUID: Track GUID\n\nTags:\nd=01: Number count\nd=01-05 or d=05-01: Cycle number\na=a: Letter count\na=a-e or a=e-a: Cycle letter\nr=10: Random string length\n\n"
+    text = "Wildcards:\n$folders: Folder name\n$trknumber: Track number\n$GUID: Track GUID\n\nTags:\nd=01: Number count\nd=01-05 or d=05-01: Cycle number\na=a: Letter count\na=a-e or a=e-a: Cycle letter\nr=10: Random string length\n\n"
     text = text.."Function description:\n\n1.Set name only:\n   - Track name\n\n2.Cycle Mode:\n   - Enable or disable cycle number/letter. Enter 'y' for yes or 'n' for no.\n"
     text = text.."\nWill this list be displayed next time?"
   end
@@ -195,7 +195,7 @@ reaper.SetExtState("BATCH_SET_TRACK_NAMES", "Name", pattern, false)
 reaper.SetExtState("BATCH_SET_TRACK_NAMES", "Reverse", reverse, false)
 
 function build_name(build_pattern, i)
-  build_pattern = build_pattern:gsub('%$track', track_num)
+  build_pattern = build_pattern:gsub('%$trknumber', track_num)
   build_pattern = build_pattern:gsub('%$GUID', track_guid)
   build_pattern = build_pattern:gsub('%$folders', parent_buf)
 

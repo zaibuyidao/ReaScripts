@@ -1,5 +1,5 @@
 -- @description Batch Set Item Names
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -113,17 +113,17 @@ if (show_msg == "") then show_msg = "true" end
 if show_msg == "true" then
   if language == "简体中文" then
     script_name = "批量设置对象名称"
-    text = "通配符:\n$track: 轨道名称\n$folders: 文件夹名称\n$tracknumber: 轨道编号\n$GUID: 对象 GUID\n\n标记:\nd=01: 数字计数\nd=01-05 or d=05-01: 循环数字\na=a: 字母计数\na=a-e or a=e-a: 循环字母\nr=10: 随机字符串长度\n\n"
+    text = "通配符:\n$track: 轨道名称\n$folders: 文件夹名称\n$trknumber: 轨道编号\n$GUID: 对象 GUID\n\n标记:\nd=01: 数字计数\nd=01-05 or d=05-01: 循环数字\na=a: 字母计数\na=a-e or a=e-a: 循环字母\nr=10: 随机字符串长度\n\n"
     text = text.."功能说明：\n\n1.仅设置名称:\n   - 对象名称\n\n2.循环模式:\n   - 启用或禁用循环数字/字母。输入 'y' 表示是，'n' 表示否。\n\n3.对象排序:\n   - 选择对象的排序选项: 'track', 'sequential', 或 'timeline'\n"
     text = text.."\n下次还显示此页面吗？"
   elseif language == "繁體中文" then
     script_name = "批量設置對象名稱"
-    text = "通配符:\n$track: 軌道名稱\n$folders: 文件夾名稱\n$tracknumber: 軌道編號\n$GUID: 對象 GUID\n\n標記:\nd=01: 數字計數\nd=01-05 or d=05-01: 循環數字\na=a: 字母計數\na=a-e or a=e-a: 循環字母\nr=10: 隨機字符串長度\n\n"
+    text = "通配符:\n$track: 軌道名稱\n$folders: 文件夾名稱\n$trknumber: 軌道編號\n$GUID: 對象 GUID\n\n標記:\nd=01: 數字計數\nd=01-05 or d=05-01: 循環數字\na=a: 字母計數\na=a-e or a=e-a: 循環字母\nr=10: 隨機字符串長度\n\n"
     text = text.."功能説明：\n\n1.僅設置名稱:\n   - 對象名稱\n\n2.循環模式:\n   - 啟用或禁用循環數字/字母。輸入 'y' 表示是，'n' 表示否。\n\n3.對象排序:\n   - 選擇對象的排序選項: 'track', 'sequential', 或 'timeline'\n"
     text = text.."\n下次還顯示此頁面嗎？"
   else
     script_name = "Batch Set Item Names"
-    text = "Wildcards:\n$item: Item name\n$folders: Folder name\n$tracknumber: Track number\n$GUID: Item GUID\n\nTags:\nd=01: Number count\nd=01-05 or d=05-01: Cycle number\na=a: Letter count\na=a-e or a=e-a: Cycle letter\nr=10: Random string length\n\n"
+    text = "Wildcards:\n$item: Item name\n$folders: Folder name\n$trknumber: Track number\n$GUID: Item GUID\n\nTags:\nd=01: Number count\nd=01-05 or d=05-01: Cycle number\na=a: Letter count\na=a-e or a=e-a: Cycle letter\nr=10: Random string length\n\n"
     text = text.."Function description:\n\n1.Set name only:\n   - Item name\n\n2.Cycle Mode:\n   - Enable or disable cycle number/letter. Enter 'y' for yes or 'n' for no.\n\n3.Items Sorting:\n   - Choose sorting options for items: 'track', 'sequential', or 'timeline'.\n"
     text = text.."\nWill this list be displayed next time?"
   end
@@ -171,7 +171,7 @@ reaper.SetExtState("BATCH_SET_ITEM_NAMES", "Order", order, false)
 
 function build_name(build_pattern, i)
   build_pattern = build_pattern:gsub('%$track', track_name)
-  build_pattern = build_pattern:gsub('%$tracknumber', track_num)
+  build_pattern = build_pattern:gsub('%$trknumber', track_num)
   build_pattern = build_pattern:gsub('%$GUID', take_guid)
   build_pattern = build_pattern:gsub('%$folders', parent_buf)
 

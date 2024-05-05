@@ -1,5 +1,5 @@
 -- @description Batch Rename Markers in Marker Manager
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -422,7 +422,7 @@ reaper.SetExtState("BATCH_RENAME_MARKERS_IN_MARKER_MANAGER", "InsertFrom", inser
 reaper.SetExtState("BATCH_RENAME_MARKERS_IN_MARKER_MANAGER", "Cycle", cycle, false)
 
 function build_name(build_pattern, origin_name, i)
-  build_pattern = build_pattern:gsub("$maeker", origin_name)
+  build_pattern = build_pattern:gsub("$marker", origin_name)
 
   if cycle == "y" then
     build_pattern = build_pattern:gsub("d=(%d+)%-(%d+)", function (start_idx, end_idx) -- 匹配循环数字序号

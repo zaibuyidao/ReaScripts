@@ -1,5 +1,5 @@
 -- @description Batch Rename Items
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -166,17 +166,17 @@ if (show_msg == "") then show_msg = "true" end
 if show_msg == "true" then
   if language == "简体中文" then
     script_name = "批量重命名对象"
-    text = "通配符:\n$item: 对象名称\n$track: 轨道名称\n$folders: 文件夹名称\n$tracknumber: 轨道编号\n$GUID: 对象 GUID\n\n标记:\nd=01: 数字计数\nd=01-05 or d=05-01: 循环数字\na=a: 字母计数\na=a-e or a=e-a: 循环字母\nr=10: 随机字符串长度\n\n"
+    text = "通配符:\n$item: 对象名称\n$track: 轨道名称\n$folders: 文件夹名称\n$trknumber: 轨道编号\n$GUID: 对象 GUID\n\n标记:\nd=01: 数字计数\nd=01-05 or d=05-01: 循环数字\na=a: 字母计数\na=a-e or a=e-a: 循环字母\nr=10: 随机字符串长度\n\n"
     text = text.."功能说明：\n\n1.仅重命名:\n   - 重命名\n\n2.替换内容:\n   - 查找\n   - 替换\n\n支持两种模式修饰符：* 和 ?\n\n3.移除内容:\n   - 移除数量\n   - 定位\n   - 从首尾索引\n\n4.插入内容:\n   - 插入文本\n   - 定位\n   - 从首尾索引\n\n5.循环模式:\n   - 启用或禁用循环数字/字母。输入 'y' 表示是，'n' 表示否。\n\n6.对象排序:\n   - 选择对象的排序选项: 'track', 'sequential', 或 'timeline'\n"
     text = text.."\n下次还显示此页面吗？"
   elseif language == "繁體中文" then
     script_name = "批量重命名對象"
-    text = "通配符:\n$item: 对象名稱\n$track: 軌道名稱\n$folders: 文件夾名稱\n$tracknumber: 軌道編號\n$GUID: 對象 GUID\n\n標記:\nd=01: 數字計數\nd=01-05 or d=05-01: 循環數字\na=a: 字母計數\na=a-e or a=e-a: 循環字母\nr=10: 隨機字符串長度\n\n"
+    text = "通配符:\n$item: 对象名稱\n$track: 軌道名稱\n$folders: 文件夾名稱\n$trknumber: 軌道編號\n$GUID: 對象 GUID\n\n標記:\nd=01: 數字計數\nd=01-05 or d=05-01: 循環數字\na=a: 字母計數\na=a-e or a=e-a: 循環字母\nr=10: 隨機字符串長度\n\n"
     text = text.."功能説明：\n\n1.僅重命名:\n   - 重命名\n\n2.替換内容:\n   - 查找\n   - 替換\n\n支持兩種模式修飾符：* 和 ?\n\n3.移除内容:\n   - 移除數量\n   - 定位\n   - 從首尾索引\n\n4.插入内容:\n   - 插入文本\n   - 定位\n   - 從首尾索引\n\n5.循環模式:\n   - 啟用或禁用循環數字/字母。輸入 'y' 表示是，'n' 表示否。\n\n6.對象排序:\n   - 選擇對象的排序選項: 'track', 'sequential', 或 'timeline'\n"
     text = text.."\n下次還顯示此頁面嗎？"
   else
     script_name = "Batch Rename Items"
-    text = "Wildcards:\n$item: Item name\n$track: Track name\n$folders: Folder name\n$tracknumber: Track number\n$GUID: Item GUID\n\nTags:\nd=01: Number count\nd=01-05 or d=05-01: Cycle number\na=a: Letter count\na=a-e or a=e-a: Cycle letter\nr=10: Random string length\n\n"
+    text = "Wildcards:\n$item: Item name\n$track: Track name\n$folders: Folder name\n$trknumber: Track number\n$GUID: Item GUID\n\nTags:\nd=01: Number count\nd=01-05 or d=05-01: Cycle number\na=a: Letter count\na=a-e or a=e-a: Cycle letter\nr=10: Random string length\n\n"
     text = text.."Function description:\n\n1.Renaming:\n   - Renaming only\n\n2.Replacing content:\n   - Find what\n   - Replace with\n\nSupports two pattern modifiers: * and ?\n\n3.Removing content:\n   - Count\n   - At position\n   - From\n\n4.Inserting content:\n   - To insert\n   - At position\n   - From\n\n5.Cycle Mode:\n   - Enable or disable cycle number/letter. Enter 'y' for yes or 'n' for no.\n\n6.Items Sorting:\n   - Choose sorting options for items: 'track', 'sequential', or 'timeline'.\n"
     text = text.."\nWill this list be displayed next time?"
   end
@@ -261,7 +261,7 @@ reaper.SetExtState("BATCH_RENAME_ITEMS", "Order", order, false)
 function build_name(build_pattern, origin_name, i)
   build_pattern = build_pattern:gsub("%$item", origin_name)
   build_pattern = build_pattern:gsub('%$track', track_name)
-  build_pattern = build_pattern:gsub('%$tracknumber', track_num)
+  build_pattern = build_pattern:gsub('%$trknumber', track_num)
   build_pattern = build_pattern:gsub('%$GUID', take_guid)
   build_pattern = build_pattern:gsub('%$folders', parent_buf)
 
