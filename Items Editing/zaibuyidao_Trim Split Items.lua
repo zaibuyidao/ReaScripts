@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 2.0
+-- @version 2.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -348,7 +348,7 @@ function trim_item(item, keep_ranges, min_len, snap_offset, left_pad)
         reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', r)
       end
     elseif SNAP_OFFSET == 0 then
-      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', 0)
+      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', LEFT_PAD / 1000)
     end
 
     left = right
@@ -409,7 +409,7 @@ function trim_item_keep_silence(item, keep_ranges, min_len, snap_offset, left_pa
         reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', r)
       end
     elseif SNAP_OFFSET == 0 then
-      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', 0)
+      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', LEFT_PAD / 1000)
     end
 
     left = right
@@ -436,7 +436,7 @@ function trim_item_before_nonsilence(item, keep_ranges, snap_offset, left_pad)
         reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', r)
       end
     elseif SNAP_OFFSET == 0 then
-      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', 0)
+      reaper.SetMediaItemInfo_Value(left, 'D_SNAPOFFSET', LEFT_PAD / 1000)
     end
 
     ::continue::

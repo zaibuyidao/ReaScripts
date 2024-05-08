@@ -1,5 +1,5 @@
 -- @description Trim Item Edges
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -585,7 +585,7 @@ for _, items in pairs(track_items) do
       if snap_offset > 0 then
         reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000))
       elseif snap_offset == 0 then
-        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', 0)
+        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', leading_pad / 1000)
       end
     end
   end
