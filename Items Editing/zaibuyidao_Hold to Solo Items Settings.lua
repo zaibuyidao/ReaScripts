@@ -1,5 +1,5 @@
--- @description Hold to Solo Item Setting
--- @version 1.0.2
+-- @description Hold to Solo Items Settings
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   + Added support for deleting virtual key settings.
@@ -7,7 +7,7 @@
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
+-- @about Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
 
 local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
@@ -81,12 +81,12 @@ function remove_specific_section(filepath, section_to_remove)
       reaper.MB("Specified section has been successfully removed.", "Notification", 0)
     end
 
-    reaper.SetExtState("HOLD_TO_SOLO_ITEM_SETTING", "VirtualKey", "", true)
+    reaper.SetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey", "", true)
   end
 end
 
 reaper.Undo_BeginBlock()
-local key = reaper.GetExtState("HOLD_TO_SOLO_ITEM_SETTING", "VirtualKey")
+local key = reaper.GetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey")
 if (key == "") then 
   key = "F1"
 elseif (key == ",") then
@@ -122,7 +122,7 @@ end
 if remove == "y" then
   local res_path = reaper.GetResourcePath()
   local ext_ini_path = ConcatPath(res_path, 'reaper-extstate.ini')
-  remove_specific_section(ext_ini_path, 'HOLD_TO_SOLO_ITEM_SETTING')
+  remove_specific_section(ext_ini_path, 'HOLD_TO_SOLO_ITEMS_SETTINGS')
   return
 end
 
@@ -133,7 +133,7 @@ if (not key_map[key]) then
   return
 end
 
-reaper.SetExtState("HOLD_TO_SOLO_ITEM_SETTING", "VirtualKey", key, true)
+reaper.SetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey", key, true)
 
 if language == "简体中文" then
   mb2_msg = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Hold to Solo Item 脚本，並使用快捷键 ".. key .." 进行独奏。"

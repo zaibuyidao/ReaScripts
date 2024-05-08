@@ -1,4 +1,4 @@
--- @description Instant Solo Item from Mouse Position
+-- @description Instant Solo Items from Mouse Position
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -7,7 +7,7 @@
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
+-- @about Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
 
 local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
