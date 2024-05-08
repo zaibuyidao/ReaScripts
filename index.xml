@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fc79ad359b99c5babe2c0ed01f7aac96ea74f240">
+<index version="1" name="zaibuyidao Scripts" commit="7aab26fcce01b5330b1180e182c087f7c1a1009b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -301,11 +301,11 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2023-03-29T16:57:19Z">
@@ -320,6 +320,10 @@
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8ed65993caf80bf12206cb313ee86b5d041dbda6/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items%20Settings.lua</source>
       </version>
+      <version name="2.0" author="zaibuyidao" time="2024-05-08T04:08:55Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items%20Settings.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Trim Split Items.lua" type="script" desc="Auto Trim Split Items">
       <metadata>
@@ -327,11 +331,11 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2023-03-29T16:57:19Z">
@@ -353,6 +357,10 @@
       <version name="1.0.4" author="zaibuyidao" time="2023-03-31T13:10:56Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="2.0" author="zaibuyidao" time="2024-05-08T04:08:55Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Auto%20Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Items.lua" type="script" desc="Batch Rename Items">
@@ -1554,248 +1562,40 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5c875a1d1321cc04f48f50288109d2640346d9fe/Items%20Editing/zaibuyidao_Swap%20Items%20Of%20Two%20Tracks.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Trim Items Edge Settings.lua" type="script" desc="Trim Items Edge Settings">
+    <reapack name="zaibuyidao_Trim Item Edges Settings.lua" type="script" desc="Trim Item Edges Settings">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-09-26T08:36:43Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2cf89749523a17609e6e53e2ab6fe501fd046be3/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-09-26T16:47:34Z">
-        <changelog><![CDATA[Optimize speed]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9e73159610ee92a5345005756d8ced45aedbcb11/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao" time="2022-09-27T03:28:57Z">
-        <changelog><![CDATA[Optimize speed]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/09494d948ba9bb565dfcd00ce90ff1ec703bbb4c/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.3" author="zaibuyidao" time="2022-09-27T15:03:43Z">
-        <changelog><![CDATA[Optimize speed]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8fedd274451c983a2ddbb9cfa42afc9a0d0a13fd/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.4" author="zaibuyidao" time="2022-09-27T15:15:09Z">
-        <changelog><![CDATA[Adjusting the pre-programmed parameters]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/bf4c4f18c3111d163c9fc30e66a9da8b91bf90bd/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.5" author="zaibuyidao" time="2022-09-27T15:31:48Z">
-        <changelog><![CDATA[Adjusting the pre-programmed parameters]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/66c9f4270a83e944f37e4b0e5649841f25227d66/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.6" author="zaibuyidao" time="2022-09-28T14:13:13Z">
-        <changelog><![CDATA[Add snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e7d1d14982fab9c27781eb5e9e0d3a9e02a59dec/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.7" author="zaibuyidao" time="2022-09-28T14:16:38Z">
-        <changelog><![CDATA[Add snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e7090bc8408b40c17b31d24611a510ebeb42a6a5/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.8" author="zaibuyidao" time="2022-09-28T14:32:49Z">
-        <changelog><![CDATA[Add snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/497c96b55c59e4f488c9a9ab73dd14565dc2c167/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.0.9" author="zaibuyidao" time="2022-09-29T03:08:46Z">
-        <changelog><![CDATA[Fixing the save state]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/42995cbb2e8ec7009882fdacde3b1fe98945ca0c/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.0" author="zaibuyidao" time="2022-09-29T03:46:14Z">
-        <changelog><![CDATA[Fixing the save state]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5dcb59eeadb768cc05b5b4b299fd95414ea72f7a/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.1" author="zaibuyidao" time="2022-09-30T15:53:42Z">
-        <changelog><![CDATA[Fixed snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ee95d6813a7416894b7621c3b272f23258ef00e3/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.2" author="zaibuyidao" time="2022-10-07T09:51:51Z">
-        <changelog><![CDATA[Fixed snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7f5cb38f17d252b72422c788f5513cf355498450/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.3" author="zaibuyidao" time="2022-10-08T14:52:04Z">
-        <changelog><![CDATA[Fixed item edge]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cb2d0dce6228e865e946d9c8e9ca0e20dbea1ae8/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.4" author="zaibuyidao" time="2022-10-09T06:19:59Z">
-        <changelog><![CDATA[Fix snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0ddda10c24c6d1c3de742a8a597154f0fd0fdf35/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.5" author="zaibuyidao" time="2022-10-11T14:44:30Z">
-        <changelog><![CDATA[Fix fade pad]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/323beddf11af7b9b7990101df8c4f12718a8971a/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.6" author="zaibuyidao" time="2023-03-15T16:15:09Z">
-        <changelog><![CDATA[Fix fade pad]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5df5f33bbaaa3750045acb7ac9126f58f22d9235/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.7" author="zaibuyidao" time="2023-03-18T09:23:55Z">
-        <changelog><![CDATA[Fix fade pad]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/092cb0cbf82776a7596333088649974d9b9d797b/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.8" author="zaibuyidao" time="2023-03-18T12:00:15Z">
-        <changelog><![CDATA[Fix fade pad]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a3be888e0e3ea6b594ea599f6deea00086355580/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.1.9" author="zaibuyidao" time="2023-03-31T09:38:08Z">
-        <changelog><![CDATA[Preset parameter optimization]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/32419a8b3d2902dba55be9e128868e66c1f3842f/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.2.0" author="zaibuyidao" time="2023-03-31T09:51:46Z">
-        <changelog><![CDATA[Preset parameter optimization]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/862be7c92e16c43262e66235294a0ae28814147e/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.2.1" author="zaibuyidao" time="2023-03-31T13:10:56Z">
-        <changelog><![CDATA[Preset parameter optimization]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
-      </version>
-      <version name="1.3.0" author="zaibuyidao" time="2023-03-31T17:41:57Z">
-        <changelog><![CDATA[Fixed the sample point offset error.]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1bda3af000f223de7fbc49d21e106b365940554f/Items%20Editing/zaibuyidao_Trim%20Items%20Edge%20Settings.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-05-08T04:08:55Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Trim%20Item%20Edges%20Settings.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Trim Items Edge.lua" type="script" desc="Trim Items Edge">
+    <reapack name="zaibuyidao_Trim Item Edges.lua" type="script" desc="Trim Item Edges">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-09-26T08:36:43Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2cf89749523a17609e6e53e2ab6fe501fd046be3/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-09-26T16:47:34Z">
-        <changelog><![CDATA[Optimize speed]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9e73159610ee92a5345005756d8ced45aedbcb11/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao" time="2022-09-26T17:17:11Z">
-        <changelog><![CDATA[Optimize speed]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/fb650bd18f1781c4022a8792098b0f561d0d2f81/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.3" author="zaibuyidao" time="2022-09-27T15:03:43Z">
-        <changelog><![CDATA[Optimize speed]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8fedd274451c983a2ddbb9cfa42afc9a0d0a13fd/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.4" author="zaibuyidao" time="2022-09-27T15:15:09Z">
-        <changelog><![CDATA[Adjusting the pre-programmed parameters]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/bf4c4f18c3111d163c9fc30e66a9da8b91bf90bd/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.5" author="zaibuyidao" time="2022-09-27T15:31:48Z">
-        <changelog><![CDATA[Adjusting the pre-programmed parameters]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/66c9f4270a83e944f37e4b0e5649841f25227d66/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.6" author="zaibuyidao" time="2022-09-28T14:13:13Z">
-        <changelog><![CDATA[Add snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e7d1d14982fab9c27781eb5e9e0d3a9e02a59dec/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.7" author="zaibuyidao" time="2022-09-28T14:16:38Z">
-        <changelog><![CDATA[Add snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e7090bc8408b40c17b31d24611a510ebeb42a6a5/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.8" author="zaibuyidao" time="2022-09-28T14:32:49Z">
-        <changelog><![CDATA[Add snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/497c96b55c59e4f488c9a9ab73dd14565dc2c167/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.0.9" author="zaibuyidao" time="2022-09-29T03:08:46Z">
-        <changelog><![CDATA[Fixing the save state]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/42995cbb2e8ec7009882fdacde3b1fe98945ca0c/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.0" author="zaibuyidao" time="2022-09-29T03:46:14Z">
-        <changelog><![CDATA[Fixing the save state]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5dcb59eeadb768cc05b5b4b299fd95414ea72f7a/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.1" author="zaibuyidao" time="2022-09-29T05:58:31Z">
-        <changelog><![CDATA[Fixing the save state]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ac497ab489e98ff34afd0b29ad125a7289c4ea34/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.2" author="zaibuyidao" time="2022-09-29T18:40:58Z">
-        <changelog><![CDATA[Fixed snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d5129bcc2dc1015a58f9a6789b3bdbf9b214f1c8/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.3" author="zaibuyidao" time="2022-09-30T06:41:12Z">
-        <changelog><![CDATA[Fixed snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/93687ac572f75794387e52a848a8d60740cd1eef/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.4" author="zaibuyidao" time="2022-09-30T15:53:42Z">
-        <changelog><![CDATA[Fixed snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ee95d6813a7416894b7621c3b272f23258ef00e3/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.5" author="zaibuyidao" time="2022-10-07T09:51:51Z">
-        <changelog><![CDATA[Fixed snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7f5cb38f17d252b72422c788f5513cf355498450/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.6" author="zaibuyidao" time="2022-10-08T14:52:04Z">
-        <changelog><![CDATA[Fixed item edge]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cb2d0dce6228e865e946d9c8e9ca0e20dbea1ae8/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.7" author="zaibuyidao" time="2022-10-09T06:19:59Z">
-        <changelog><![CDATA[Fix snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0ddda10c24c6d1c3de742a8a597154f0fd0fdf35/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.8" author="zaibuyidao" time="2022-10-09T06:41:00Z">
-        <changelog><![CDATA[Fix snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b0d8e07ec39e32ae86cebe9058c1a40d76063a9/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.1.9" author="zaibuyidao" time="2022-10-10T02:04:53Z">
-        <changelog><![CDATA[Fix snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4cfae676851a570338c4ee11a446a258dd15ce11/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.0" author="zaibuyidao" time="2022-10-10T02:08:34Z">
-        <changelog><![CDATA[Fix snap offset]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1b05e03358cdaf8283660a580928394949ab4c21/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.1" author="zaibuyidao" time="2022-10-11T14:44:30Z">
-        <changelog><![CDATA[Fix fade pad]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/323beddf11af7b9b7990101df8c4f12718a8971a/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.2" author="zaibuyidao" time="2023-03-15T16:15:09Z">
-        <changelog><![CDATA[Fix fade pad]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5df5f33bbaaa3750045acb7ac9126f58f22d9235/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.3" author="zaibuyidao" time="2023-03-18T09:23:55Z">
-        <changelog><![CDATA[Fix fade pad]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/092cb0cbf82776a7596333088649974d9b9d797b/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.4" author="zaibuyidao" time="2023-03-18T12:00:15Z">
-        <changelog><![CDATA[Fix fade pad]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a3be888e0e3ea6b594ea599f6deea00086355580/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.5" author="zaibuyidao" time="2023-03-31T09:38:08Z">
-        <changelog><![CDATA[Preset parameter optimization]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/32419a8b3d2902dba55be9e128868e66c1f3842f/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.6" author="zaibuyidao" time="2023-03-31T09:51:46Z">
-        <changelog><![CDATA[Preset parameter optimization]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/862be7c92e16c43262e66235294a0ae28814147e/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.7" author="zaibuyidao" time="2023-03-31T13:10:56Z">
-        <changelog><![CDATA[Preset parameter optimization]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a17137d48528565e8f37d0b6ea61c4581e0c439c/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.8" author="zaibuyidao" time="2023-03-31T14:01:50Z">
-        <changelog><![CDATA[Preset parameter optimization]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8207a641b993775d75003824dccc51d303b639a7/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.2.9" author="zaibuyidao" time="2023-03-31T14:27:09Z">
-        <changelog><![CDATA[Preset parameter optimization]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d83ec353baaebb8179afa2832f47297b030894a6/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
-      </version>
-      <version name="1.3.0" author="zaibuyidao" time="2023-03-31T17:41:57Z">
-        <changelog><![CDATA[Fixed the sample point offset error.]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1bda3af000f223de7fbc49d21e106b365940554f/Items%20Editing/zaibuyidao_Trim%20Items%20Edge.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-05-08T04:08:55Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items Settings.lua" type="script" desc="Trim Split Items Settings">
@@ -1804,11 +1604,11 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-10-10T15:34:42Z">
@@ -1859,6 +1659,10 @@
         <changelog><![CDATA[Optimize snap offset]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/027c7db81df929f9685477045cb647a92cc6bc21/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
       </version>
+      <version name="2.0" author="zaibuyidao" time="2024-05-08T04:08:55Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items.lua" type="script" desc="Trim Split Items">
       <metadata>
@@ -1866,11 +1670,11 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-10-10T15:34:42Z">
@@ -1924,6 +1728,10 @@
       <version name="1.1.2" author="zaibuyidao" time="2023-03-31T19:25:56Z">
         <changelog><![CDATA[Optimize snap offset]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/027c7db81df929f9685477045cb647a92cc6bc21/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="2.0" author="zaibuyidao" time="2024-05-08T04:08:55Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
   </category>
