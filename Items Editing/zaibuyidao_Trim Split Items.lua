@@ -1,120 +1,40 @@
 -- @description Trim Split Items
--- @version 1.1.2
+-- @version 2.0
 -- @author zaibuyidao
--- @changelog Optimize snap offset
+-- @changelog
+--   New Script
 -- @links
---   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repo https://github.com/zaibuyidao/ReaScripts
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.
 
-function print(...)
-  local params = {...}
-  for i = 1, #params do
-    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-    reaper.ShowConsoleMsg(tostring(params[i]))
-  end
-  reaper.ShowConsoleMsg("\n")
-end
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+  dofile(ZBYDFuncPath)
+  if not checkSWSExtension() or not checkJSAPIExtension() then return end
+else
+  local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+  "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+  "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
 
-function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-    if (print_r_cache[tostring(t)]) then
-      print(indent .. "*" .. tostring(t))
-    else
-      print_r_cache[tostring(t)] = true
-      if (type(t) == "table") then
-        for pos, val in pairs(t) do
-          if (type(val) == "table") then
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-          elseif (type(val) == "string") then
-            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-          else
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-          end
-        end
-      else
-        print(indent .. tostring(t))
-      end
-    end
-  end
-  if (type(t) == "table") then
-    print(tostring(t) .. " {")
-    sub_print_r(t, "  ")
-    print("}")
+  reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
   else
-    sub_print_r(t, "  ")
-  end
-end
+    local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+    "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+    "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
 
-if not reaper.SNM_GetIntConfigVar then
-  local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
-  if retval == 1 then
-    if not OS then local OS = reaper.GetOS() end
-    if OS=="OSX32" or OS=="OSX64" then
-      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
-    else
-      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
-    end
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
   end
   return
 end
 
-if not reaper.APIExists("JS_Localize") then
-  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
-  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-  if ok then
-    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-  else
-    reaper.MB(err, "錯誤", 0)
-  end
-  return reaper.defer(function() end)
-end
-
-function getSystemLanguage()
-  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-  local os = reaper.GetOS()
-  local lang
-
-  if os == "Win32" or os == "Win64" then -- Windows
-    if locale == 936 then -- Simplified Chinese
-      lang = "简体中文"
-    elseif locale == 950 then -- Traditional Chinese
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "OSX32" or os == "OSX64" then -- macOS
-    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
-    if lang == "zh-CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh-TW" then -- 繁体中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "Linux" then -- Linux
-    local handle = io.popen("echo $LANG")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
-    if lang == "zh_CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh_TW" then -- 繁體中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  end
-
-  return lang
-end
+local language = getSystemLanguage()
 
 function table.serialize(obj)
   local lua = ""
@@ -241,19 +161,41 @@ function getMutiInput(title,num,lables,defaults)
   if uok then return string.split(uinput,",") end
 end
 
-function get_sample_pos_value(take, skip_sample)
+function get_sample_pos_value(take, skip_sample, item)
   if not take or reaper.TakeIsMIDI(take) then
     return false, false, false
   end
 
-  local item = reaper.GetMediaItemTake_Item(take)
+  -- local item = reaper.GetMediaItemTake_Item(take)
+  -- 获取item的起始位置和长度
+  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
+  -- 如果loopsource为0，调整aa_end为源item的结束位置
+  if loop_source == 0 then
+    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+    local source = reaper.GetMediaItemTake_Source(take)
+    local source_length, is_section = reaper.GetMediaSourceLength(source)
+    -- 计算绝对左边界和右边界
+    local source_absolute_start = item_start - item_start_offset
+    local source_absolute_end = source_absolute_start + source_length
+
+    -- 计算循环偏移值
+    local left_offset = (item_start - source_absolute_start) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    
+    if item_start + item_length > source_absolute_end then
+      item_length = source_absolute_end
+      reaper.BR_SetItemEdges(item, item_start, item_length)
+      --item_len_ori = item_start + item_length
+    end
+  end
+
   local playrate_ori = reaper.GetMediaItemTakeInfo_Value(take, "D_PLAYRATE")
   local item_len_ori = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
   reaper.SetMediaItemInfo_Value(item, "D_LENGTH", item_len_ori * playrate_ori)
   reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", 1)
 
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
   local accessor = reaper.CreateTakeAudioAccessor(take)
   local source = reaper.GetMediaItemTake_Source(take)
   local samplerate = reaper.GetMediaSourceSampleRate(source)
@@ -268,7 +210,7 @@ function get_sample_pos_value(take, skip_sample)
   skip_sample = math.floor(0.5 + skip_sample)
 
   local channels = reaper.GetMediaSourceNumChannels(source)
-  local item_len_idx = math.ceil(item_len)
+  local item_len_idx = math.ceil(item_length)
 
   local sample_min = {}
   local sample_max = {}
@@ -295,8 +237,8 @@ function get_sample_pos_value(take, skip_sample)
       sample_min[#sample_min+1] = sample_min_chan
       sample_max[#sample_max+1] = sample_max_chan
 
-      time_sample[#time_sample + 1] = sample_point_num / samplerate / playrate_ori + item_pos
-      if time_sample[#time_sample] > item_len_ori + item_pos then breakX = 1 break end
+      time_sample[#time_sample + 1] = sample_point_num / samplerate / playrate_ori + item_start
+      if time_sample[#time_sample] > item_len_ori + item_start then breakX = 1 break end
     end
     buffer.clear()
     if breakX == 1 then break end
@@ -305,11 +247,11 @@ function get_sample_pos_value(take, skip_sample)
   reaper.DestroyAudioAccessor(accessor)
 
   -- 恢复播放速率
-  reaper.SetMediaItemInfo_Value(item, "D_LENGTH", item_len / playrate_ori)
+  reaper.SetMediaItemInfo_Value(item, "D_LENGTH", item_length / playrate_ori)
   reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", playrate_ori)
 
-  time_sample[1] = item_pos
-  time_sample[#time_sample] = item_pos + item_len_ori
+  time_sample[1] = item_start
+  time_sample[#time_sample] = item_start + item_len_ori
 
   return sample_min, sample_max, time_sample
 end
@@ -323,15 +265,35 @@ end
 
 -- 扩展item边界, limit_left/right代表未分割前的item区域，如果最左边或最右边大于等于阈值那么不需要扩展边界
 function expand_item(item, left, right, limit_left, limit_right)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  if eq(limit_left, item_pos - left) then
+  local take = reaper.GetActiveTake(item)
+  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
+  if loop_source == 0 then
+    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+    local source = reaper.GetMediaItemTake_Source(take)
+    local source_length, is_section = reaper.GetMediaSourceLength(source)
+    -- 计算绝对左边界和右边界
+    local source_absolute_start = item_start - item_start_offset
+    local source_absolute_end = source_absolute_start + source_length
+
+    -- 计算循环偏移值
+    local left_offset = (item_start - source_absolute_start) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    
+    if item_start + item_length > source_absolute_end then
+      item_length = source_absolute_end
+      -- reaper.BR_SetItemEdges(item, item_start, item_length)
+    end
+  end
+
+  if eq(limit_left, item_start - left) then
     left = 0
   end
-  if eq(limit_right, item_pos + right) then
+  if eq(limit_right, item_start + right) then
     right = 0
   end
-  reaper.BR_SetItemEdges(item, item_pos - left, item_pos + item_len + right)
+  reaper.BR_SetItemEdges(item, item_start - left, item_start + item_length + right)
 end
 
 function eq(a, b) return math.abs(a - b) < 0.000001 end
@@ -339,15 +301,33 @@ function eq(a, b) return math.abs(a - b) < 0.000001 end
 -- 根据ranges保留item指定区域，并删除剩余区域
 -- 例：keep_ranges = { {1, 3}, {5, 8} } 代表将item中 1-3 与 5-8区域保留，其余地方删除
 function trim_item(item, keep_ranges, min_len, snap_offset, left_pad)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  -- print(item_pos, item_pos + item_len)
+  local take = reaper.GetActiveTake(item)
+  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
+  if loop_source == 0 then
+    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+    local source = reaper.GetMediaItemTake_Source(take)
+    local source_length, is_section = reaper.GetMediaSourceLength(source)
+    -- 计算绝对左边界和右边界
+    local source_absolute_start = item_start - item_start_offset
+    local source_absolute_end = source_absolute_start + source_length
+
+    -- 计算循环偏移值
+    local left_offset = (item_start - source_absolute_start) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    
+    if item_start + item_length > source_absolute_end then
+      item_length = source_absolute_end
+      -- reaper.BR_SetItemEdges(item, item_start, item_length)
+    end
+  end
   -- table.print(keep_ranges)
   local left = item
   for i, range in ipairs(keep_ranges) do
     -- local range_len = range[2] - range[1]
     -- reaper.ShowConsoleMsg(string.format("Range %d: start = %.6f, end = %.6f, length = %.6f\n", i, range[1], range[2], range_len))
-    if not eq(range[1], item_pos) then
+    if not eq(range[1], item_start) then
       local right = reaper.SplitMediaItem(left, range[1])
       delete_item(left)
       left = right
@@ -375,21 +355,40 @@ function trim_item(item, keep_ranges, min_len, snap_offset, left_pad)
     ::continue::
   end
 
-  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_pos + item_len then
+  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_start + item_length then
     delete_item(left)
   end
 end
 
 function trim_item_keep_silence(item, keep_ranges, min_len, snap_offset, left_pad)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  -- print(item_pos, item_pos + item_len)
+  local take = reaper.GetActiveTake(item)
+  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
+  if loop_source == 0 then
+    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+    local source = reaper.GetMediaItemTake_Source(take)
+    local source_length, is_section = reaper.GetMediaSourceLength(source)
+    -- 计算绝对左边界和右边界
+    local source_absolute_start = item_start - item_start_offset
+    local source_absolute_end = source_absolute_start + source_length
+
+    -- 计算循环偏移值
+    local left_offset = (item_start - source_absolute_start) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    
+    if item_start + item_length > source_absolute_end then
+      item_length = source_absolute_end
+      -- reaper.BR_SetItemEdges(item, item_start, item_length)
+    end
+  end
+
   -- table.print(keep_ranges)
   local left = item
   for i, range in ipairs(keep_ranges) do
     -- local range_len = range[2] - range[1]
     -- reaper.ShowConsoleMsg(string.format("Range %d: start = %.6f, end = %.6f, length = %.6f\n", i, range[1], range[2], range_len))
-    if not eq(range[1], item_pos) then
+    if not eq(range[1], item_start) then
       local right = reaper.SplitMediaItem(left, range[1])
       --delete_item(left)
       left = right
@@ -417,17 +416,16 @@ function trim_item_keep_silence(item, keep_ranges, min_len, snap_offset, left_pa
     ::continue::
   end
 
-  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_pos + item_len then
+  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_start + item_length then
     --delete_item(left)
   end
 end
 
 function trim_item_before_nonsilence(item, keep_ranges, snap_offset, left_pad)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local left = item
   for i, range in ipairs(keep_ranges) do
-    if not eq(range[1], item_pos) then
+    if not eq(range[1], item_start) then
       local right = reaper.SplitMediaItem(left, range[1])
       left = right
     end
@@ -446,10 +444,7 @@ function trim_item_before_nonsilence(item, keep_ranges, snap_offset, left_pad)
 end
 
 function trim_item_before_silence(item, keep_ranges, min_len)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  -- print(item_pos, item_pos + item_len)
-  -- table.print(keep_ranges)
+  -- print(keep_ranges)
   local left = item
   for i, range in ipairs(keep_ranges) do
     if range[2] - range[1] < min_len then
@@ -467,10 +462,30 @@ end
 
 -- 合并间隔较小的保留区域，如果item长度小于MIN_CLIPS_LEN，则全部区域保留
 function merge_ranges(item, keep_ranges, min_len)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  if item_len < MIN_CLIPS_LEN / 1000 then -- 对象长度限制
-    return { { item_pos, item_pos + item_len } }
+  local take = reaper.GetActiveTake(item)
+  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
+  if loop_source == 0 then
+    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+    local source = reaper.GetMediaItemTake_Source(take)
+    local source_length, is_section = reaper.GetMediaSourceLength(source)
+    -- 计算绝对左边界和右边界
+    local source_absolute_start = item_start - item_start_offset
+    local source_absolute_end = source_absolute_start + source_length
+
+    -- 计算循环偏移值
+    local left_offset = (item_start - source_absolute_start) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    
+    if item_start + item_length > source_absolute_end then
+      item_length = source_absolute_end
+      -- reaper.BR_SetItemEdges(item, item_start, item_length)
+    end
+  end
+
+  if item_length < MIN_CLIPS_LEN / 1000 then -- 对象长度限制
+    return { { item_start, item_start + item_length } }
   end
   local r = {}
   for i = 1, #keep_ranges do
@@ -526,8 +541,27 @@ end
 -- 指定长度范围内最大峰值位置
 function max_peak_pos(item, skip, right, left)
   local take = reaper.GetActiveTake(item)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local source = reaper.GetMediaItemTake_Source(take)
+  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
+  if loop_source == 0 then
+    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+    local source = reaper.GetMediaItemTake_Source(take)
+    local source_length, is_section = reaper.GetMediaSourceLength(source)
+    -- 计算绝对左边界和右边界
+    local source_absolute_start = item_start - item_start_offset
+    local source_absolute_end = source_absolute_start + source_length
+
+    -- 计算循环偏移值
+    local left_offset = (item_start - source_absolute_start) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    
+    if item_start + item_length > source_absolute_end then
+      item_length = source_absolute_end
+      -- reaper.BR_SetItemEdges(item, item_start, item_length)
+    end
+  end
 
   if skip <= 0 then
     skip = 0
@@ -535,11 +569,11 @@ function max_peak_pos(item, skip, right, left)
     skip = reaper.GetMediaSourceSampleRate(source) / skip -- 每秒处理几个样本
   end
 
-  local sample_min, sample_max, time_sample = get_sample_pos_value(take, skip)
+  local sample_min, sample_max, time_sample = get_sample_pos_value(take, skip, item)
   if not time_sample then return nil end
 
-  local right_bound = item_pos + right
-  local left_bound = item_pos + left
+  local right_bound = item_start + right
+  local left_bound = item_start + left
   -- print(left_bound,right_bound)
   local max_value
   local max_pos
@@ -556,9 +590,9 @@ function max_peak_pos(item, skip, right, left)
     end
   end
   if max_pos == nil then
-    max_pos = item_pos
+    max_pos = item_start
   else
-    max_pos = max_pos - item_pos
+    max_pos = max_pos - item_start
   end
   return max_pos
 end
@@ -567,44 +601,28 @@ function default_if_invalid(input, default, convert)
   return (input == nil or not convert(input)) and default or convert(input)
 end
 
-local language = getSystemLanguage()
+function checkTrimSetting()
+  local trimSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Items Editing/zaibuyidao_Trim Split Items Settings.lua'
 
-get = getSavedDataList("TRIM_SPLIT_ITEMS", "Parameters")
-
-if get == nil then      -- 默认预设
-  THRESHOLD = -24.1     -- 阈值(dB)
-  HYSTERESIS = 0        -- 滯後(dB)
-  MIN_SILENCE_LEN = 100 -- 最小静默长度
-  MIN_CLIPS_LEN = 100   -- 最小片段长度
-  LEFT_PAD = 3          -- 前导填充(ms)
-  RIGHT_PAD = 3         -- 尾部填充(ms)
-  FADE = "y"            -- 是否淡变
-  SNAP_OFFSET = 50      -- 峰值吸附偏移(ms)
-  SKIP_SAMPLE = 0       -- 采样点步进
-  SPLIT = "y"           -- 是否切割item
-  MODE = "del"          -- 保持静默
-
-  default = THRESHOLD ..','.. HYSTERESIS ..','.. MIN_SILENCE_LEN ..','.. MIN_CLIPS_LEN ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. FADE ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. SPLIT ..','.. MODE
-
-  if language == "简体中文" then
-    title = "修剪分割对象设置"
-    lable = "阈值 (dB),滞后 (dB),最小静默长度 (ms),最小片段长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),峰值吸附偏移 (ms),采样点步进,是否切割 (y/n),模式 (del/keep/begin/end)"
-  elseif language == "繁体中文" then
-    title = "修剪分割對象設置"
-    lable = "閾值 (dB),滯後 (dB),最小靜默長度 (ms),最小片段長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),峰值吸附偏移 (ms),采樣點步進,是否切割 (y/n),模式 (del/keep/begin/end)"
+  if reaper.file_exists(trimSetting) then
+    dofile(trimSetting)
   else
-    title = "Trim Split Items Settings"
-    lable = "Threshold (dB),Hysteresis (dB),Min silence length (ms),Min clips length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peak snap offset (ms),Sample step,Is it split? (y/n),Mode (del/keep/begin/end)"
+    reaper.MB(trimSetting:gsub('%\\', '/')..' not found. Please ensure the script is correctly placed.', '', 0)
+    if reaper.APIExists('ReaPack_BrowsePackages') then
+      reaper.ReaPack_BrowsePackages('zaibuyidao _Trim Split Items Settings')
+    else
+      reaper.MB('ReaPack extension not found', '', 0)
+    end
   end
-
-  set = getMutiInput(title, 11, lable, default)
-  if set == nil or not tonumber(THRESHOLD) or not tonumber(HYSTERESIS) or not tonumber(MIN_SILENCE_LEN) or not tonumber(MIN_CLIPS_LEN) or not tonumber(LEFT_PAD) or not tonumber(RIGHT_PAD) or not tostring(FADE) or not tonumber(SNAP_OFFSET) or not tonumber(SKIP_SAMPLE) or not tostring(SPLIT) or not tostring(MODE) then return end
-  
-  saveDataList("TRIM_SPLIT_ITEMS", "Parameters", set, true)
-  get = getSavedDataList("TRIM_SPLIT_ITEMS", "Parameters")
 end
 
--- table.print(get)
+local get = getSavedDataList("TRIM_SPLIT_ITEMS_SETTINGS", "Parameters")
+if get == nil then
+  checkTrimSetting()
+  reaper.defer(function() end) -- 终止执行
+  get = getSavedDataList("TRIM_SPLIT_ITEMS_SETTINGS", "Parameters")
+end
+--print(get)
 
 THRESHOLD = default_if_invalid(get[1], -24.1, tonumber)
 HYSTERESIS = default_if_invalid(get[2], 0, tonumber)
@@ -638,13 +656,11 @@ reaper.Undo_BeginBlock()
 
 for i = count_sel_item - 1, 0, -1 do
   local item = reaper.GetSelectedMediaItem(0, i)
-  local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
 
   local take = reaper.GetActiveTake(item)
   if take == nil then goto continue end
 
-  local sample_min, sample_max, time_sample = get_sample_pos_value(take, SKIP_SAMPLE)
+  local sample_min, sample_max, time_sample = get_sample_pos_value(take, SKIP_SAMPLE, item)
   if not time_sample then goto continue end
 
   local keep_ranges = {}
@@ -692,13 +708,13 @@ for i = count_sel_item - 1, 0, -1 do
 end
 
 if language == "简体中文" then
-  title = "修剪分割对象"
+  script_title = "修剪分割对象"
 elseif language == "繁体中文" then
-  title = "修剪分割對象"
+  script_title = "修剪分割對象"
 else
-  title = "Trim Split Items"
+  script_title = "Trim Split Items"
 end
 
-reaper.Undo_EndBlock(title, -1)
+reaper.Undo_EndBlock(script_title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()

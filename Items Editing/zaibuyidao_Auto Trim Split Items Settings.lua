@@ -1,85 +1,40 @@
 -- @description Auto Trim Split Items Settings
--- @version 1.0.2
+-- @version 2.0
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   New Script
 -- @links
---   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repo https://github.com/zaibuyidao/ReaScripts
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.
 
-function print(...)
-  for _, v in ipairs({...}) do
-    reaper.ShowConsoleMsg(tostring(v) .. " ") 
-  end
-  reaper.ShowConsoleMsg("\n")
-end
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+  dofile(ZBYDFuncPath)
+  if not checkSWSExtension() or not checkJSAPIExtension() then return end
+else
+  local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+  "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+  "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
 
-if not reaper.SNM_GetIntConfigVar then
-  local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
-  if retval == 1 then
-    if not OS then local OS = reaper.GetOS() end
-    if OS=="OSX32" or OS=="OSX64" then
-      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
-    else
-      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
-    end
+  reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
+  else
+    local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+    "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+    "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
+
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
   end
   return
 end
 
-if not reaper.APIExists("JS_Localize") then
-  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
-  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-  if ok then
-    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-  else
-    reaper.MB(err, "錯誤", 0)
-  end
-  return reaper.defer(function() end)
-end
-
-function getSystemLanguage()
-  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-  local os = reaper.GetOS()
-  local lang
-
-  if os == "Win32" or os == "Win64" then -- Windows
-    if locale == 936 then -- Simplified Chinese
-      lang = "简体中文"
-    elseif locale == 950 then -- Traditional Chinese
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "OSX32" or os == "OSX64" then -- macOS
-    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
-    if lang == "zh-CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh-TW" then -- 繁体中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "Linux" then -- Linux
-    local handle = io.popen("echo $LANG")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
-    if lang == "zh_CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh_TW" then -- 繁體中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  end
-
-  return lang
-end
+local language = getSystemLanguage()
 
 function table.serialize(obj)
   local lua = ""
@@ -206,8 +161,6 @@ function getMutiInput(title,num,lables,defaults)
   if uok then return string.split(uinput,",") end
 end
 
-local language = getSystemLanguage()
-
 get = getSavedDataList("AUTO_TRIM_SPLIT_ITEMS", "Parameters")
 
 function set_default_value(value, default_value, is_number)
@@ -233,10 +186,10 @@ default = THRESHOLD ..','.. HYSTERESIS ..','.. IGNORE_SILENCE_SHORTER ..','.. NO
 
 if language == "简体中文" then
   title = "自动修剪分割对象设置"
-  lable = "阈值 (dB),滞后 (dB),最小静默长度 (ms),最小片段长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),峰值吸附偏移 (ms),模式 (del/keep/begin/end)"
+  lable = "阈值 (dB),滞后 (dB),最小无声长度 (ms),最小剪辑长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡化 (y/n),峰值吸附偏移 (ms),模式 (del/keep/begin/end)"
 elseif language == "繁体中文" then
   title = "自動修剪分割對象設置"
-  lable = "閾值 (dB),滯後 (dB),最小靜默長度 (ms),最小片段長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),峰值吸附偏移 (ms),模式 (del/keep/begin/end)"
+  lable = "閾值 (dB),滯後 (dB),最小無聲長度 (ms),最小剪輯長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡化 (y/n),峰值吸附偏移 (ms),模式 (del/keep/begin/end)"
 else
   title = "Auto Trim Split Items Settings"
   lable = "Threshold (dB),Hysteresis (dB),Min silence length (ms),Min clips length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peak snap offset (ms),Mode (del/keep/begin/end)"

@@ -1,120 +1,40 @@
--- @description Trim Items Edge Settings
--- @version 1.3.0
+-- @description Trim Item Edges Settings
+-- @version 1.0
 -- @author zaibuyidao
--- @changelog Fixed the sample point offset error.
+-- @changelog
+--   New Script
 -- @links
---   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repo https://github.com/zaibuyidao/ReaScripts
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about Trim Items Script Series, filter "zaibuyidao trim item" in ReaPack or Actions to access all scripts.
 
-function print(...)
-  local params = {...}
-  for i = 1, #params do
-    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-    reaper.ShowConsoleMsg(tostring(params[i]))
-  end
-  reaper.ShowConsoleMsg("\n")
-end
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+  dofile(ZBYDFuncPath)
+  if not checkSWSExtension() or not checkJSAPIExtension() then return end
+else
+  local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+  "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+  "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
 
-function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-    if (print_r_cache[tostring(t)]) then
-      print(indent .. "*" .. tostring(t))
-    else
-      print_r_cache[tostring(t)] = true
-      if (type(t) == "table") then
-        for pos, val in pairs(t) do
-          if (type(val) == "table") then
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-          elseif (type(val) == "string") then
-            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-          else
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-          end
-        end
-      else
-        print(indent .. tostring(t))
-      end
-    end
-  end
-  if (type(t) == "table") then
-    print(tostring(t) .. " {")
-    sub_print_r(t, "  ")
-    print("}")
+  reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
   else
-    sub_print_r(t, "  ")
-  end
-end
+    local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+    "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+    "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
 
-if not reaper.SNM_GetIntConfigVar then
-  local retval = reaper.ShowMessageBox("This script requires the SWS Extension.\n該脚本需要 SWS 擴展。\n\nDo you want to download it now? \n你想現在就下載它嗎？", "Warning 警告", 1)
-  if retval == 1 then
-    if not OS then local OS = reaper.GetOS() end
-    if OS=="OSX32" or OS=="OSX64" then
-      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
-    else
-      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
-    end
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
   end
   return
 end
 
-if not reaper.APIExists("JS_Localize") then
-  reaper.MB("Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\n請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n\nThen restart REAPER and run the script again, thank you!\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n", "You must install JS_ReaScriptAPI 你必須安裝JS_ReaScriptAPI", 0)
-  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-  if ok then
-    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-  else
-    reaper.MB(err, "錯誤", 0)
-  end
-  return reaper.defer(function() end)
-end
-
-function getSystemLanguage()
-  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-  local os = reaper.GetOS()
-  local lang
-
-  if os == "Win32" or os == "Win64" then -- Windows
-    if locale == 936 then -- Simplified Chinese
-      lang = "简体中文"
-    elseif locale == 950 then -- Traditional Chinese
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "OSX32" or os == "OSX64" then -- macOS
-    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
-    if lang == "zh-CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh-TW" then -- 繁体中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "Linux" then -- Linux
-    local handle = io.popen("echo $LANG")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
-    if lang == "zh_CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh_TW" then -- 繁體中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  end
-
-  return lang
-end
+local language = getSystemLanguage()
 
 function table.serialize(obj)
   local lua = ""
@@ -245,9 +165,7 @@ function default_if_invalid(input, default, convert)
   return (input == nil or not convert(input)) and default or convert(input)
 end
 
-local language = getSystemLanguage()
-
-get = getSavedDataList("TRIM_ITEMS_EDGE", "Parameters")
+get = getSavedDataList("TRIM_ITEM_EDGES_SETTINGS", "Parameters")
 
 if get == nil then   -- 默认预设
   threshold_l = -60  -- 阈值(dB)
@@ -273,19 +191,19 @@ default = threshold_l ..','.. threshold_r ..','.. length_limit ..','.. leading_p
 
 if language == "简体中文" then
   title = "修剪对象边缘设置"
-  lable = "阈值 (dB),滞后 (dB),最小对象长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡变 (y/n),峰值吸附偏移 (ms),采样点步进"
-elseif language == "繁体中文" then
+  lable = "阈值 (dB),滞后 (dB),最小对象长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡化 (y/n),峰值吸附偏移 (ms),采样点步长"
+elseif language == "繁體中文" then
   title = "修剪對象邊緣設置"
-  lable = "閾值 (dB),滯後 (dB),最小對象長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡變 (y/n),峰值吸附偏移 (ms),采樣點步進"
+  lable = "閾值 (dB),滯後 (dB),最小對象長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡化 (y/n),峰值吸附偏移 (ms),采樣點步長"
 else
-  title = "Trim Items Edge Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Min item length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peak snap offset (ms),Sample step"
+  title = "Trim Item Edges Settings"
+  lable = "Threshold (dB),Hysteresis (dB),Min item length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peaks snap offset (ms),Samples step size"
 end
 
 reaper.Undo_BeginBlock()
 set = getMutiInput(title, 8, lable, default)
 if set == nil or not tonumber(threshold_l) or not tonumber(threshold_r) or not tonumber(length_limit) or not tonumber(leading_pad) or not tonumber(trailing_pad) or not tostring(fade) or not tonumber(snap_offset) or not tonumber(step) then return end
 
-saveDataList("TRIM_ITEMS_EDGE", "Parameters", set, true)
+saveDataList("TRIM_ITEM_EDGES_SETTINGS", "Parameters", set, true)
 reaper.Undo_EndBlock(title, -1)
 reaper.UpdateArrange()
