@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7aab26fcce01b5330b1180e182c087f7c1a1009b">
+<index version="1" name="zaibuyidao Scripts" commit="ae95d1ef4d3be238e9a1f3632a09ebf66b401f72">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1597,6 +1597,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-08T05:44:29Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ae95d1ef4d3be238e9a1f3632a09ebf66b401f72/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items Settings.lua" type="script" desc="Trim Split Items Settings">
       <metadata>
@@ -1732,6 +1736,10 @@
       <version name="2.0" author="zaibuyidao" time="2024-05-08T04:08:55Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="2.0.1" author="zaibuyidao" time="2024-05-08T05:44:29Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ae95d1ef4d3be238e9a1f3632a09ebf66b401f72/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
   </category>
