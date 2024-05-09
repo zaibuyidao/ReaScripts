@@ -1,4 +1,4 @@
--- @description Hold to Solo Items from Mouse Position
+-- @description Hold to Solo Item Without Moving Edit Cursor
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -14,7 +14,7 @@
 2.If the virtual key activates a system alert, please bind the key to 'Action: No-op (no action)
 3.If you want to reset the shortcut key, please run the script: zaibuyidao_Hold to Solo Item Setting.lua
 4.To remove the shortcut key, navigate to the REAPER installation folder, locate the 'reaper-extstate.ini' file, and then find and delete the following lines:
-[HOLD_TO_SOLO_ITEMS_SETTINGS]
+[HOLD_TO_SOLO_ITEM_SETTINGS]
 VirtualKey=the key you set
 --]]
 
@@ -133,25 +133,25 @@ function checkForMidiTakes()
 end
 
 function CheckShortcutSetting()
-    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Items Editing/zaibuyidao_Hold to Solo Items Settings.lua'
+    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Items Editing/zaibuyidao_Hold to Solo Item Settings.lua'
   
     if reaper.file_exists(shortcutSetting) then
         dofile(shortcutSetting)
     else
         reaper.MB(shortcutSetting:gsub('%\\', '/')..' not found. Please ensure the script is correctly placed.', '', 0)
         if reaper.APIExists('ReaPack_BrowsePackages') then
-            reaper.ReaPack_BrowsePackages('zaibuyidao Hold to Solo Items Settings')
+            reaper.ReaPack_BrowsePackages('zaibuyidao Hold to Solo Item Settings')
         else
             reaper.MB('ReaPack extension not found', '', 0)
         end
     end
 end
 
-local key = reaper.GetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey")
+local key = reaper.GetExtState("HOLD_TO_SOLO_ITEM_SETTINGS", "VirtualKey")
 if key == "" then
     CheckShortcutSetting()
     reaper.defer(function() end) -- 终止执行
-    key = reaper.GetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey")
+    key = reaper.GetExtState("HOLD_TO_SOLO_ITEM_SETTINGS", "VirtualKey")
 end
 
 VirtualKeyCode = key_map[key]
@@ -167,7 +167,7 @@ function main()
         -- 取消主控轨道静音状态
         local masterTrack = reaper.GetMasterTrack(0)
         reaper.SetMediaTrackInfo_Value(masterTrack, 'B_MUTE', 0)
-        
+
         local screen_x, screen_y = reaper.GetMousePosition()
         local item_ret, take = reaper.GetItemFromPoint(screen_x, screen_y, true)
         local track_ret, info_out = reaper.GetTrackFromPoint(screen_x, screen_y)
@@ -223,14 +223,9 @@ function main()
                 end
             end
         end
-        reaper.Main_OnCommand(40514, 0) -- View: Move edit cursor to mouse cursor (no snapping)
-        -- reaper.SetEditCurPos(cur_pos, 0, 0)
-        reaper.Main_OnCommand(1007, 0) -- Transport: Play
         flag = 1
     elseif state:byte(VirtualKeyCode) == 0 and flag == 1 then
         reaper.Main_OnCommand(18, 0) -- Track: Set mute for master track (MIDI CC/OSC only)
-        reaper.Main_OnCommand(1016, 0) -- Transport: Stop
-        --reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
         RestoreSelectedItems(init_sel_items) -- 恢复选中的item状态
         --RestoreSelectedTracks(init_sel_tracks) -- 恢復選中的軌道狀態
         RestoreSoloTracks(init_solo_tracks) -- 恢復Solo的軌道狀態

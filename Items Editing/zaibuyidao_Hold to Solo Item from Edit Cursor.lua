@@ -1,4 +1,4 @@
--- @description Hold to Solo Items from First Selected Item
+-- @description Hold to Solo Item from Edit Cursor
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -14,7 +14,7 @@
 2.If the virtual key activates a system alert, please bind the key to 'Action: No-op (no action)
 3.If you want to reset the shortcut key, please run the script: zaibuyidao_Hold to Solo Item Setting.lua
 4.To remove the shortcut key, navigate to the REAPER installation folder, locate the 'reaper-extstate.ini' file, and then find and delete the following lines:
-[HOLD_TO_SOLO_ITEMS_SETTINGS]
+[HOLD_TO_SOLO_ITEM_SETTINGS]
 VirtualKey=the key you set
 --]]
 
@@ -46,14 +46,14 @@ end
 local language = getSystemLanguage()
 local key_map = createVirtualKeyMap()
 
-local function UnSoloAllTrack()
+function UnSoloAllTrack() -- 取消所有轨道独奏状态
     for i = 0, reaper.CountTracks(0)-1 do
         local track = reaper.GetTrack(0, i)
         reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 0)
     end
 end
 
-local function UnselAllTrack() -- 反選所有軌道
+function UnselAllTrack() -- 反选所有轨道
     local first_track = reaper.GetTrack(0, 0)
     if first_track ~= nil then
         reaper.SetOnlyTrackSelected(first_track)
@@ -61,58 +61,40 @@ local function UnselAllTrack() -- 反選所有軌道
     end
 end
 
-local function TableMax(t)
-    local mn = nil
-    for k, v in pairs(t) do
-        if (mn == nil) then mn = v end
-        if mn < v then mn = v end
-    end
-    return mn
-end
-
-local function TableMin(t)
-    local mn = nil
-    for k, v in pairs(t) do
-        if (mn == nil) then mn = v end
-        if mn > v then mn = v end
-    end
-    return mn
-end
-
-local function SaveSelectedItems(t) -- 保存選中的item
+function SaveSelectedItems(t) -- 保存选中的item
     for i = 0, reaper.CountSelectedMediaItems(0)-1 do
         t[i+1] = reaper.GetSelectedMediaItem(0, i)
     end
 end
 
-local function RestoreSelectedItems(t) -- 恢復選中的item
+function RestoreSelectedItems(t) -- 恢復选中的item
     reaper.Main_OnCommand(40289, 0) -- Item: Unselect all items
     for _, item in ipairs(t) do
         reaper.SetMediaItemSelected(item, true)
     end
 end
 
-local function SaveSelectedTracks(t) -- 保存選中的軌道
+function SaveSelectedTracks(t) -- 保存选中的轨道
     for i = 0, reaper.CountSelectedTracks(0)-1 do
         t[i+1] = reaper.GetSelectedTrack(0, i)
     end
 end
 
-local function RestoreSelectedTracks(t) -- 恢復選中的軌道
+function RestoreSelectedTracks(t) -- 恢復选中的轨道
     UnselAllTrack()
     for _, track in ipairs(t) do
         reaper.SetTrackSelected(track, true)
     end
 end
 
-local function SaveSoloTracks(t) -- 保存Solo的軌道
+function SaveSoloTracks(t) -- 保存Solo的轨道
     for i = 1, reaper.CountTracks(0) do 
       local tr= reaper.GetTrack(0, i-1)
       t[#t+1] = {tr_ptr = tr, GUID = reaper.GetTrackGUID(tr), solo = reaper.GetMediaTrackInfo_Value(tr, "I_SOLO") }
     end
 end
 
-local function RestoreSoloTracks(t) -- 恢復Solo的軌道
+function RestoreSoloTracks(t) -- 恢復Solo的轨道状态
     for i = 1, #t do
         local src_tr = reaper.BR_GetMediaTrackByGUID(0, t[i].GUID)
         reaper.SetMediaTrackInfo_Value(src_tr, "I_SOLO", t[i].solo)
@@ -121,7 +103,7 @@ end
 
 item_restores = {}
 
-function restore_items() -- 恢復item狀態
+function restore_items() -- 恢復item状态
     for i=#item_restores,1,-1  do
         item_restores[i]()
     end
@@ -151,25 +133,25 @@ function checkForMidiTakes()
 end
 
 function CheckShortcutSetting()
-    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Items Editing/zaibuyidao_Hold to Solo Items Settings.lua'
+    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Items Editing/zaibuyidao_Hold to Solo Item Settings.lua'
   
     if reaper.file_exists(shortcutSetting) then
         dofile(shortcutSetting)
     else
         reaper.MB(shortcutSetting:gsub('%\\', '/')..' not found. Please ensure the script is correctly placed.', '', 0)
         if reaper.APIExists('ReaPack_BrowsePackages') then
-            reaper.ReaPack_BrowsePackages('zaibuyidao Hold to Solo Items Settings')
+            reaper.ReaPack_BrowsePackages('zaibuyidao Hold to Solo Item Settings')
         else
             reaper.MB('ReaPack extension not found', '', 0)
         end
     end
 end
 
-local key = reaper.GetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey")
+local key = reaper.GetExtState("HOLD_TO_SOLO_ITEM_SETTINGS", "VirtualKey")
 if key == "" then
     CheckShortcutSetting()
     reaper.defer(function() end) -- 终止执行
-    key = reaper.GetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey")
+    key = reaper.GetExtState("HOLD_TO_SOLO_ITEM_SETTINGS", "VirtualKey")
 end
 
 VirtualKeyCode = key_map[key]
@@ -177,10 +159,9 @@ flag = 0
 
 function main()
     reaper.PreventUIRefresh(1)
-    cur_pos = reaper.GetCursorPosition() -- 獲取光標位置
-    count_sel_items = reaper.CountSelectedMediaItems(0) -- 計算選中的item
-    state = reaper.JS_VKeys_GetState(0) -- 獲取按鍵的狀態
-
+    cur_pos = reaper.GetCursorPosition() -- 获取光标位置
+    count_sel_items = reaper.CountSelectedMediaItems(0) -- 计算选中的item
+    state = reaper.JS_VKeys_GetState(0) -- 获取按鍵的状态
 
     if state:byte(VirtualKeyCode) ~= 0 and flag == 0 then
         -- 取消主控轨道静音状态
@@ -191,61 +172,33 @@ function main()
         local item_ret, take = reaper.GetItemFromPoint(screen_x, screen_y, true)
         local track_ret, info_out = reaper.GetTrackFromPoint(screen_x, screen_y)
 
-        snap_t = {}
-        if count_sel_items > 0 then
-            for i = 0, count_sel_items-1 do
-                local item = reaper.GetSelectedMediaItem(0, i)
-                local take = reaper.GetActiveTake(item)
-                local take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-                local item_snap = reaper.GetMediaItemInfo_Value(item, "D_SNAPOFFSET")
-                local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-                local snap = item_pos + item_snap
-                snap_t[#snap_t + 1] = snap
-            end
-            snap_pos = TableMin(snap_t)
-        end
-    
-        if item_ret then
-            take = reaper.GetActiveTake(item_ret)
-            -- take_tarck = reaper.GetMediaItemTake_Track(take)
-            -- check_track = reaper.GetMediaTrackInfo_Value(take_tarck, 'I_SELECTED')
-            -- take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-            item_snap = reaper.GetMediaItemInfo_Value(item_ret, "D_SNAPOFFSET")
-            item_pos = reaper.GetMediaItemInfo_Value(item_ret, "D_POSITION")
-            snap = item_pos + item_snap
-        end
-
         init_sel_items = {}
-        SaveSelectedItems(init_sel_items) -- 保存選中的item
+        SaveSelectedItems(init_sel_items) -- 保存选中的item
         --init_sel_tracks = {}
         --SaveSelectedTracks(init_sel_tracks)
         init_solo_tracks = {}
-        SaveSoloTracks(init_solo_tracks) -- 保存選中的軌道
+        SaveSoloTracks(init_solo_tracks) -- 保存选中的轨道
 
-        if count_sel_items == 0 then -- 沒有item被選中
+        if count_sel_items == 0 then -- 沒有item被选中
             if item_ret then
                 reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
-                local track = reaper.GetMediaItem_Track(item_ret) -- 獲取鼠標下item對應的軌道
-                reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2) -- 激活軌道的SOLO按鈕
-                local item_num = reaper.CountTrackMediaItems(track) -- 計算item的總數
+                local track = reaper.GetMediaItem_Track(item_ret) -- 获取鼠标下item对应的轨道
+                reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2) -- 激活轨道的SOLO按鈕
+                local item_num = reaper.CountTrackMediaItems(track) -- 计算item的总数
 
                 for i = 0, item_num-1 do
-                    local item = reaper.GetTrackMediaItem(track, i) -- 獲取軌道下的所有item
-                    set_item_mute(item, 1) -- 設置為靜音
+                    local item = reaper.GetTrackMediaItem(track, i) -- 获取轨道下的所有item
+                    set_item_mute(item, 1) -- 设置为静音
                 end
                 if reaper.GetMediaItemInfo_Value(item_ret, "B_MUTE") == 1 then
-                    set_item_mute(item_ret, 0) -- 設置為非靜音
+                    set_item_mute(item_ret, 0) -- 设置为非静音
                 end
-                reaper.SetEditCurPos(snap, 0, 0)
-                reaper.Main_OnCommand(1007, 0) -- Transport: Play
             else
                 if track_ret then
                     reaper.SetMediaTrackInfo_Value(track_ret, 'I_SOLO', 2)
                 end
-                reaper.Main_OnCommand(40514, 0) -- View: Move edit cursor to mouse cursor (no snapping)
-                reaper.Main_OnCommand(1007, 0) -- Transport: Play
             end
-        else -- 如果選中item大於0
+        else -- 如果选中item大於0
             reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
             local selected_track = {} -- 选中的轨道
 
@@ -257,7 +210,7 @@ function main()
                 end
             end
             for track, _ in pairs(selected_track) do
-                --reaper.SetTrackSelected(track, true) -- 將軌道設置為選中
+                --reaper.SetTrackSelected(track, true) -- 将轨道设置为选中
                 reaper.SetMediaTrackInfo_Value(track, 'I_SOLO', 2)
                 local item_num = reaper.CountTrackMediaItems(track)
 
@@ -269,17 +222,18 @@ function main()
                     end
                 end
             end
-            reaper.SetEditCurPos(snap_pos, 0, 0)
-            reaper.Main_OnCommand(1007, 0) -- Transport: Play
         end
+        -- reaper.Main_OnCommand(40514, 0) -- View: Move edit cursor to mouse cursor (no snapping)
+        reaper.SetEditCurPos(cur_pos, 0, 0)
+        reaper.Main_OnCommand(1007, 0) -- Transport: Play
         flag = 1
     elseif state:byte(VirtualKeyCode) == 0 and flag == 1 then
         reaper.Main_OnCommand(18, 0) -- Track: Set mute for master track (MIDI CC/OSC only)
         reaper.Main_OnCommand(1016, 0) -- Transport: Stop
         --reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
         RestoreSelectedItems(init_sel_items) -- 恢复选中的item状态
-        --RestoreSelectedTracks(init_sel_tracks) -- 恢復選中的軌道狀態
-        RestoreSoloTracks(init_solo_tracks) -- 恢復Solo的軌道
+        --RestoreSelectedTracks(init_sel_tracks) -- 恢復选中的轨道状态
+        RestoreSoloTracks(init_solo_tracks) -- 恢復Solo的轨道状态
         restore_items() -- 恢复item静音状态
         reaper.Main_OnCommand(14, 0) -- Track: Toggle mute for master track
         flag = 0
@@ -310,8 +264,7 @@ function main()
             reaper.Main_OnCommand(14, 0) -- Track: Toggle mute for master track
         end
     end
-
-    reaper.SetEditCurPos(cur_pos, 0, 0) -- 恢復光標位置
+    reaper.SetEditCurPos(cur_pos, 0, 0) -- 恢复光标位置
     reaper.PreventUIRefresh(-1)
     reaper.UpdateArrange()
     reaper.defer(main)

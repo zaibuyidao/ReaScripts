@@ -1,8 +1,8 @@
--- @description Hold to Solo Items Settings
--- @version 1.0.1
+-- @description Hold to Solo Item Settings
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
---   + Added support for deleting virtual key settings.
+--   New Script
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -81,12 +81,12 @@ function remove_specific_section(filepath, section_to_remove)
       reaper.MB("Specified section has been successfully removed.", "Notification", 0)
     end
 
-    reaper.SetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey", "", true)
+    reaper.SetExtState("HOLD_TO_SOLO_ITEM_SETTINGS", "VirtualKey", "", true)
   end
 end
 
 reaper.Undo_BeginBlock()
-local key = reaper.GetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey")
+local key = reaper.GetExtState("HOLD_TO_SOLO_ITEM_SETTINGS", "VirtualKey")
 if (key == "") then 
   key = "F1"
 elseif (key == ",") then
@@ -104,7 +104,7 @@ elseif language == "繁體中文" then
   mb_msg = "不能設置這個按鍵，請改其他按鍵。"
   mb_title = "錯誤"
 else
-  title = "Hold to Solo Items Settings"
+  title = "Hold to Solo Item Settings"
   lable = "Virtual key" .. ',' .. "Remove key (y/n)"
   mb_msg = "This key can't be set. Please choose another."
   mb_title = "Error"
@@ -122,7 +122,7 @@ end
 if remove == "y" then
   local res_path = reaper.GetResourcePath()
   local ext_ini_path = ConcatPath(res_path, 'reaper-extstate.ini')
-  remove_specific_section(ext_ini_path, 'HOLD_TO_SOLO_ITEMS_SETTINGS')
+  remove_specific_section(ext_ini_path, 'HOLD_TO_SOLO_ITEM_SETTINGS')
   return
 end
 
@@ -133,7 +133,7 @@ if (not key_map[key]) then
   return
 end
 
-reaper.SetExtState("HOLD_TO_SOLO_ITEMS_SETTINGS", "VirtualKey", key, true)
+reaper.SetExtState("HOLD_TO_SOLO_ITEM_SETTINGS", "VirtualKey", key, true)
 
 if language == "简体中文" then
   mb2_msg = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Hold to Solo Item 脚本，並使用快捷键 ".. key .." 进行独奏。"

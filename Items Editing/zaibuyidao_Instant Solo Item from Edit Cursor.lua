@@ -1,4 +1,4 @@
--- @description Instant Solo Items from Mouse Position
+-- @description Instant Solo Item from Edit Cursor
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -121,11 +121,11 @@ function SaveMutedItems(t)
         local item = reaper.GetMediaItem(0, i)
         t[#t+1] = {GUID = reaper.BR_GetMediaItemGUID(item), mute = reaper.GetMediaItemInfo_Value(item, "B_MUTE") }
     end
-    reaper.SetExtState("InstantSoloItemfromMousePosition", "MutedItemRestores", table.serialize(t), false)
+    reaper.SetExtState("InstantSoloItemfromEditCursor", "MutedItemRestores", table.serialize(t), false)
 end
 
 function RestoreMutedItems(t)
-    t = getSavedData("InstantSoloItemfromMousePosition", "MutedItemRestores")
+    t = getSavedData("InstantSoloItemfromEditCursor", "MutedItemRestores")
     for i = 1, #t do
         local item = reaper.BR_GetMediaItemByGUID(0, t[i].GUID)
         reaper.SetMediaItemInfo_Value(item, "B_MUTE", t[i].mute)
@@ -137,11 +137,11 @@ function SaveSoloTracks(t)
       local tr= reaper.GetTrack(0, i-1)
       t[#t+1] = { GUID = reaper.GetTrackGUID(tr), solo = reaper.GetMediaTrackInfo_Value(tr, "I_SOLO") }
     end
-    reaper.SetExtState("InstantSoloItemfromMousePosition", "SoloTrackRestores", table.serialize(t), false)
+    reaper.SetExtState("InstantSoloItemfromEditCursor", "SoloTrackRestores", table.serialize(t), false)
 end
 
 function RestoreSoloTracks(t)
-    t = getSavedData("InstantSoloItemfromMousePosition", "SoloTrackRestores")
+    t = getSavedData("InstantSoloItemfromEditCursor", "SoloTrackRestores")
     for i = 1, #t do
         local src_tr = reaper.BR_GetMediaTrackByGUID(0, t[i].GUID)
         reaper.SetMediaTrackInfo_Value(src_tr, "I_SOLO", t[i].solo)
@@ -227,8 +227,8 @@ if isPlay == 0 then
         end
     end
     
-    reaper.Main_OnCommand(40514, 0) -- View: Move edit cursor to mouse cursor (no snapping)
-    -- reaper.SetEditCurPos(cur_pos, 0, 0)
+    -- reaper.Main_OnCommand(40514, 0) -- View: Move edit cursor to mouse cursor (no snapping)
+    reaper.SetEditCurPos(cur_pos, 0, 0)
     reaper.Main_OnCommand(1007, 0) -- Transport: Play
 end
 

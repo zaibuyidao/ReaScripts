@@ -1,4 +1,4 @@
--- @description Instant Solo Items from Edit Cursor
+-- @description Instant Solo Item from First Selected Item
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -32,6 +32,24 @@ else
         reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
     end
     return
+end
+
+local function TableMax(t)
+    local mn = nil
+    for k, v in pairs(t) do
+        if (mn == nil) then mn = v end
+        if mn < v then mn = v end
+    end
+    return mn
+end
+
+local function TableMin(t)
+    local mn = nil
+    for k, v in pairs(t) do
+        if (mn == nil) then mn = v end
+        if mn > v then mn = v end
+    end
+    return mn
 end
 
 local function UnselAllTrack()
@@ -121,11 +139,11 @@ function SaveMutedItems(t)
         local item = reaper.GetMediaItem(0, i)
         t[#t+1] = {GUID = reaper.BR_GetMediaItemGUID(item), mute = reaper.GetMediaItemInfo_Value(item, "B_MUTE") }
     end
-    reaper.SetExtState("InstantSoloItemfromEditCursor", "MutedItemRestores", table.serialize(t), false)
+    reaper.SetExtState("InstantSoloItemfromFirstSelectedItem", "MutedItemRestores", table.serialize(t), false)
 end
 
 function RestoreMutedItems(t)
-    t = getSavedData("InstantSoloItemfromEditCursor", "MutedItemRestores")
+    t = getSavedData("InstantSoloItemfromFirstSelectedItem", "MutedItemRestores")
     for i = 1, #t do
         local item = reaper.BR_GetMediaItemByGUID(0, t[i].GUID)
         reaper.SetMediaItemInfo_Value(item, "B_MUTE", t[i].mute)
@@ -137,11 +155,11 @@ function SaveSoloTracks(t)
       local tr= reaper.GetTrack(0, i-1)
       t[#t+1] = { GUID = reaper.GetTrackGUID(tr), solo = reaper.GetMediaTrackInfo_Value(tr, "I_SOLO") }
     end
-    reaper.SetExtState("InstantSoloItemfromEditCursor", "SoloTrackRestores", table.serialize(t), false)
+    reaper.SetExtState("InstantSoloItemfromFirstSelectedItem", "SoloTrackRestores", table.serialize(t), false)
 end
 
 function RestoreSoloTracks(t)
-    t = getSavedData("InstantSoloItemfromEditCursor", "SoloTrackRestores")
+    t = getSavedData("InstantSoloItemfromFirstSelectedItem", "SoloTrackRestores")
     for i = 1, #t do
         local src_tr = reaper.BR_GetMediaTrackByGUID(0, t[i].GUID)
         reaper.SetMediaTrackInfo_Value(src_tr, "I_SOLO", t[i].solo)
@@ -169,10 +187,27 @@ local count_sel_items = reaper.CountSelectedMediaItems(0)
 isPlay = reaper.GetPlayState()
 init_muted_items = {}
 init_Solo_Tracks = {}
+
 -- init_sel_items = {}
 -- init_sel_tracks = {}
 -- SaveSelectedItems(init_sel_items)
 -- SaveSelectedTracks(init_sel_tracks)
+
+isPlay = reaper.GetPlayState()
+snap_t = {}
+
+if count_sel_items > 0 then 
+    for i = 0, count_sel_items-1 do
+        local item = reaper.GetSelectedMediaItem(0, i)
+        local take = reaper.GetActiveTake(item)
+        local take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+        local item_snap = reaper.GetMediaItemInfo_Value(item, "D_SNAPOFFSET")
+        local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+        local snap = item_pos + item_snap
+        snap_t[#snap_t + 1] = snap
+    end
+    snap_pos = TableMin(snap_t)
+end
 
 if isPlay == 0 then
     SaveMutedItems(init_muted_items)
@@ -181,6 +216,37 @@ if isPlay == 0 then
     local screen_x, screen_y = reaper.GetMousePosition()
     local item_ret, take = reaper.GetItemFromPoint(screen_x, screen_y, true)
     local track_ret, info_out = reaper.GetTrackFromPoint(screen_x, screen_y)
+
+    snap_t = {}
+    if count_sel_items > 0 then
+        for i = 0, count_sel_items-1 do
+            local item = reaper.GetSelectedMediaItem(0, i)
+            local take = reaper.GetActiveTake(item)
+            local take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+            local item_snap = reaper.GetMediaItemInfo_Value(item, "D_SNAPOFFSET")
+            local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+            local snap = item_pos + item_snap
+            snap_t[#snap_t + 1] = snap
+        end
+        snap_pos = TableMin(snap_t)
+    end
+
+    if item_ret then
+        take = reaper.GetActiveTake(item_ret)
+        -- take_tarck = reaper.GetMediaItemTake_Track(take)
+        -- check_track = reaper.GetMediaTrackInfo_Value(take_tarck, 'I_SELECTED')
+        -- take_start = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
+        item_snap = reaper.GetMediaItemInfo_Value(item_ret, "D_SNAPOFFSET")
+        item_pos = reaper.GetMediaItemInfo_Value(item_ret, "D_POSITION")
+        snap = item_pos + item_snap
+    end
+
+    init_sel_items = {}
+    SaveSelectedItems(init_sel_items) -- 保存選中的item
+    --init_sel_tracks = {}
+    --SaveSelectedTracks(init_sel_tracks)
+    init_solo_tracks = {}
+    SaveSoloTracks(init_solo_tracks) -- 保存選中的軌道
 
     if count_sel_items == 0 then -- 沒有item被選中
         if item_ret then
@@ -196,10 +262,14 @@ if isPlay == 0 then
             if reaper.GetMediaItemInfo_Value(item_ret, "B_MUTE") == 1 then
                 set_item_mute(item_ret, 0) -- 設置為非靜音
             end
+            reaper.SetEditCurPos(snap, 0, 0)
+            reaper.Main_OnCommand(1007, 0) -- Transport: Play
         else
             if track_ret then
                 reaper.SetMediaTrackInfo_Value(track_ret, 'I_SOLO', 2)
             end
+            reaper.Main_OnCommand(40514, 0) -- View: Move edit cursor to mouse cursor (no snapping)
+            reaper.Main_OnCommand(1007, 0) -- Transport: Play
         end
     else -- 如果選中item大於0
         reaper.Main_OnCommand(40340, 0) -- Track: Unsolo all tracks
@@ -225,11 +295,9 @@ if isPlay == 0 then
                 end
             end
         end
+        reaper.SetEditCurPos(snap_pos, 0, 0)
+        reaper.Main_OnCommand(1007, 0) -- Transport: Play
     end
-    
-    -- reaper.Main_OnCommand(40514, 0) -- View: Move edit cursor to mouse cursor (no snapping)
-    reaper.SetEditCurPos(cur_pos, 0, 0)
-    reaper.Main_OnCommand(1007, 0) -- Transport: Play
 end
 
 if isPlay == 1 then
