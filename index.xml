@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2b36930cc06a5ad46127c28f789c36c4940ef009">
+<index version="1" name="zaibuyidao Scripts" commit="cc19a8a3810ae6f57b2d5a85eed27ee33f64b2c9">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3350,7 +3350,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
         <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
@@ -3365,6 +3365,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Edit%20Cursor.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-05-09T01:49:36Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc19a8a3810ae6f57b2d5a85eed27ee33f64b2c9/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Edit%20Cursor.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo MIDI Item from Mouse Position.lua" type="script" desc="Hold to Solo MIDI Item from Mouse Position">
       <metadata>
@@ -3372,7 +3376,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
         <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
@@ -3387,31 +3391,27 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Mouse%20Position.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-05-09T01:49:36Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc19a8a3810ae6f57b2d5a85eed27ee33f64b2c9/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Mouse%20Position.lua</source>
+      </version>
     </reapack>
-    <reapack name="zaibuyidao_Hold to Solo MIDI Item Setting.lua" type="script" desc="Hold to Solo MIDI Item Setting">
+    <reapack name="zaibuyidao_Hold to Solo MIDI Item Settings.lua" type="script" desc="Hold to Solo MIDI Item Settings">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
         <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-02T07:22:15Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:49:36Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/519efa8e0c3345a40703a0e538cd05ee1f8cfa98/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20Setting.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20Setting.lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao" time="2024-05-02T16:16:51Z">
-        <changelog><![CDATA[+ Added support for deleting virtual key settings.]]></changelog>
-        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63e353fbbc4a43d22aa6497a752a9734a718aa75/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20Setting.lua</source>
+        <source main="main midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc19a8a3810ae6f57b2d5a85eed27ee33f64b2c9/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20Settings.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Note from Edit Cursor.lua" type="script" desc="Hold to Solo Note from Edit Cursor">
@@ -3420,7 +3420,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
         <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
@@ -3435,6 +3435,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Edit%20Cursor.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-05-09T01:49:36Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc19a8a3810ae6f57b2d5a85eed27ee33f64b2c9/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Edit%20Cursor.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Note from Mouse Position.lua" type="script" desc="Hold to Solo Note from Mouse Position">
       <metadata>
@@ -3442,7 +3446,7 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
         <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
@@ -3457,31 +3461,27 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Mouse%20Position.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-05-09T01:49:36Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc19a8a3810ae6f57b2d5a85eed27ee33f64b2c9/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Mouse%20Position.lua</source>
+      </version>
     </reapack>
-    <reapack name="zaibuyidao_Hold to Solo Note Setting.lua" type="script" desc="Hold to Solo Note Setting">
+    <reapack name="zaibuyidao_Hold to Solo Note Settings.lua" type="script" desc="Hold to Solo Note Settings">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
         <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-02T07:22:15Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:49:36Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/519efa8e0c3345a40703a0e538cd05ee1f8cfa98/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20Setting.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2024-05-02T12:45:50Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/642218ab4bd77f5fbc95929610df6be640179ecc/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20Setting.lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao" time="2024-05-02T16:16:51Z">
-        <changelog><![CDATA[+ Added support for deleting virtual key settings.]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63e353fbbc4a43d22aa6497a752a9734a718aa75/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20Setting.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc19a8a3810ae6f57b2d5a85eed27ee33f64b2c9/MIDI%20Editor/zaibuyidao_Hold%20to%20Solo%20Note%20Settings.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Humanize Velocity (Customize).lua" type="script" desc="Humanize Velocity (Customize)">
