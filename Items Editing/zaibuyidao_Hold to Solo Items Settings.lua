@@ -1,5 +1,5 @@
 -- @description Hold to Solo Items Settings
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + Added support for deleting virtual key settings.
@@ -104,7 +104,7 @@ elseif language == "繁體中文" then
   mb_msg = "不能設置這個按鍵，請改其他按鍵。"
   mb_title = "錯誤"
 else
-  title = "Hold to Solo Item Settings"
+  title = "Hold to Solo Items Settings"
   lable = "Virtual key" .. ',' .. "Remove key (y/n)"
   mb_msg = "This key can't be set. Please choose another."
   mb_title = "Error"
