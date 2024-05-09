@@ -1,5 +1,5 @@
 -- @description Hold to Solo Track from Mouse Position (Exclude Item Selection)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -7,14 +7,14 @@
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
+-- @about Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
 
 --[[
 1.Once activated, the script will operate in the background. To deactivate it, simply run the script once more, or alternatively, configure the script as a toolbar button to conveniently toggle its activation status.
 2.If the virtual key activates a system alert, please bind the key to 'Action: No-op (no action)
 3.If you want to reset the shortcut key, please run the script: zaibuyidao_Hold to Solo Track Setting.lua
 4.To remove the shortcut key, navigate to the REAPER installation folder, locate the 'reaper-extstate.ini' file, and then find and delete the following lines:
-[HOLD_TO_SOLO_TRACK_SETTING]
+[HOLD_TO_SOLO_TRACK_SETTINGS]
 VirtualKey=the key you set
 --]]
 
@@ -115,25 +115,25 @@ function checkForMidiTakes()
 end
 
 function CheckShortcutSetting()
-    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Tracks Properties/zaibuyidao_Hold to Solo Track Setting.lua'
+    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Tracks Properties/zaibuyidao_Hold to Solo Track Settings.lua'
   
     if reaper.file_exists(shortcutSetting) then
         dofile(shortcutSetting)
     else
         reaper.MB(shortcutSetting:gsub('%\\', '/')..' not found. Please ensure the script is correctly placed.', '', 0)
         if reaper.APIExists('ReaPack_BrowsePackages') then
-            reaper.ReaPack_BrowsePackages('zaibuyidao Hold to Solo Track Setting')
+            reaper.ReaPack_BrowsePackages('zaibuyidao Hold to Solo Track Settings')
         else
             reaper.MB('ReaPack extension not found', '', 0)
         end
     end
 end
 
-local key = reaper.GetExtState("HOLD_TO_SOLO_TRACK_SETTING", "VirtualKey")
+local key = reaper.GetExtState("HOLD_TO_SOLO_TRACK_SETTINGS", "VirtualKey")
 if key == "" then
     CheckShortcutSetting()
     reaper.defer(function() end) -- 终止执行
-    key = reaper.GetExtState("HOLD_TO_SOLO_TRACK_SETTING", "VirtualKey")
+    key = reaper.GetExtState("HOLD_TO_SOLO_TRACK_SETTINGS", "VirtualKey")
 end
 
 VirtualKeyCode = key_map[key]
