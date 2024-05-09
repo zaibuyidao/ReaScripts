@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="126d761826ab5a060789759a23f1df5ecbd4fa3e">
+<index version="1" name="zaibuyidao Scripts" commit="2b36930cc06a5ad46127c28f789c36c4940ef009">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -595,7 +595,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Equal%20Cut.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Hold to Solo Items from Edit Cursor.lua" type="script" desc="Hold to Solo Items from Edit Cursor">
+    <reapack name="zaibuyidao_Hold to Solo Item from Edit Cursor.lua" type="script" desc="Hold to Solo Item from Edit Cursor">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -608,12 +608,12 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:38:02Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Items%20from%20Edit%20Cursor.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b36930cc06a5ad46127c28f789c36c4940ef009/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Hold to Solo Items from First Selected Item.lua" type="script" desc="Hold to Solo Items from First Selected Item">
+    <reapack name="zaibuyidao_Hold to Solo Item from First Selected Item.lua" type="script" desc="Hold to Solo Item from First Selected Item">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -626,12 +626,12 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:38:02Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Items%20from%20First%20Selected%20Item.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b36930cc06a5ad46127c28f789c36c4940ef009/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20First%20Selected%20Item.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Hold to Solo Items from Mouse Position.lua" type="script" desc="Hold to Solo Items from Mouse Position">
+    <reapack name="zaibuyidao_Hold to Solo Item from Mouse Position.lua" type="script" desc="Hold to Solo Item from Mouse Position">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -644,12 +644,12 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:38:02Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Items%20from%20Mouse%20Position.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b36930cc06a5ad46127c28f789c36c4940ef009/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20from%20Mouse%20Position.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Hold to Solo Items Settings.lua" type="script" desc="Hold to Solo Items Settings">
+    <reapack name="zaibuyidao_Hold to Solo Item Settings.lua" type="script" desc="Hold to Solo Item Settings">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -662,16 +662,12 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
-        <changelog><![CDATA[+ Added support for deleting virtual key settings.]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Items%20Settings.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2024-05-09T01:13:25Z">
-        <changelog><![CDATA[+ Added support for deleting virtual key settings.]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/126d761826ab5a060789759a23f1df5ecbd4fa3e/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Items%20Settings.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:38:02Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b36930cc06a5ad46127c28f789c36c4940ef009/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20Settings.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Hold to Solo Items Without Moving Edit Cursor.lua" type="script" desc="Hold to Solo Items Without Moving Edit Cursor">
+    <reapack name="zaibuyidao_Hold to Solo Item Without Moving Edit Cursor.lua" type="script" desc="Hold to Solo Item Without Moving Edit Cursor">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -684,9 +680,9 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:38:02Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Items%20Without%20Moving%20Edit%20Cursor.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b36930cc06a5ad46127c28f789c36c4940ef009/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Item%20Without%20Moving%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Humanize Item Volume.lua" type="script" desc="Humanize Item Volume">
@@ -793,7 +789,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/83cbdf2bb32fbce9faf83ea05ffe18bbc8268a45/Items%20Editing/zaibuyidao_Humanize%20Take%20Volume.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Instant Solo Items from Edit Cursor.lua" type="script" desc="Instant Solo Items from Edit Cursor">
+    <reapack name="zaibuyidao_Instant Solo Item from Edit Cursor.lua" type="script" desc="Instant Solo Item from Edit Cursor">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -806,12 +802,12 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:38:02Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Instant%20Solo%20Items%20from%20Edit%20Cursor.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b36930cc06a5ad46127c28f789c36c4940ef009/Items%20Editing/zaibuyidao_Instant%20Solo%20Item%20from%20Edit%20Cursor.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Instant Solo Items from First Selected Item.lua" type="script" desc="Instant Solo Items from First Selected Item">
+    <reapack name="zaibuyidao_Instant Solo Item from First Selected Item.lua" type="script" desc="Instant Solo Item from First Selected Item">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -824,12 +820,12 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:38:02Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Instant%20Solo%20Items%20from%20First%20Selected%20Item.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b36930cc06a5ad46127c28f789c36c4940ef009/Items%20Editing/zaibuyidao_Instant%20Solo%20Item%20from%20First%20Selected%20Item.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Instant Solo Items from Mouse Position.lua" type="script" desc="Instant Solo Items from Mouse Position">
+    <reapack name="zaibuyidao_Instant Solo Item from Mouse Position.lua" type="script" desc="Instant Solo Item from Mouse Position">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -842,9 +838,9 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
+      <version name="1.0" author="zaibuyidao" time="2024-05-09T01:38:02Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Instant%20Solo%20Items%20from%20Mouse%20Position.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2b36930cc06a5ad46127c28f789c36c4940ef009/Items%20Editing/zaibuyidao_Instant%20Solo%20Item%20from%20Mouse%20Position.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Link Selected Item FX Parameter (For Selected FX).lua" type="script" desc="Link Selected Item FX Parameter (For Selected FX)">
