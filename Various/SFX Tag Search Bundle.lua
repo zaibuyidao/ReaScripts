@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.11
+-- @version 2.0.12
 -- @changelog
---   # Fixed the control scaling error.
+--   + Added new Thesaurus feature.
 --   # Adjusted some configuration information.
 --     Please back up the configuration files (*.ini) in the script directory and delete them.
 --     Running the script again will recreate the configuration files.
@@ -16,6 +16,7 @@
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Custom Tags.lua
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Database.lua
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Favorite.lua
+--   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Thesaurus.lua
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS Synonym Index.lua
 --   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS.lua
 --   [nomain] SFX Tag Search/lib/*.lua
