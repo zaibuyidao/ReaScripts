@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1a97a758db090275457db0f00a9c9241031ced7a">
+<index version="1" name="zaibuyidao Scripts" commit="126d761826ab5a060789759a23f1df5ecbd4fa3e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -665,6 +665,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-08T09:53:32Z">
         <changelog><![CDATA[+ Added support for deleting virtual key settings.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1a97a758db090275457db0f00a9c9241031ced7a/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Items%20Settings.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-05-09T01:13:25Z">
+        <changelog><![CDATA[+ Added support for deleting virtual key settings.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/126d761826ab5a060789759a23f1df5ecbd4fa3e/Items%20Editing/zaibuyidao_Hold%20to%20Solo%20Items%20Settings.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Hold to Solo Items Without Moving Edit Cursor.lua" type="script" desc="Hold to Solo Items Without Moving Edit Cursor">
