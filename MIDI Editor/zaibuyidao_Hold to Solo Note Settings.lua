@@ -1,21 +1,20 @@
--- @description Hold to Solo MIDI Item Setting
--- @version 1.0.2
+-- @description Hold to Solo Note Settings
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
---   + Added support for deleting virtual key settings.
+--   New Script
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @provides [main=main,midi_editor] .
--- @about Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
+-- @about Smart SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts.
 
 --[[
 1.Once activated, the script will operate in the background. To deactivate it, simply run the script once more, or alternatively, configure the script as a toolbar button to conveniently toggle its activation status.
 2.If the virtual key activates a system alert, please bind the key to 'Action: No-op (no action)
-3.If you want to reset the shortcut key, please run the script: zaibuyidao_Hold to Solo MIDI Item Setting.lua
+3.If you want to reset the shortcut key, please run the script: zaibuyidao_Hold to Solo Note Setting.lua
 4.To remove the shortcut key, navigate to the REAPER installation folder, locate the 'reaper-extstate.ini' file, and then find and delete the following lines:
-[HOLD_TO_SOLO_MIDI_ITEM_SETTING]
+[HOLD_TO_SOLO_NOTE_SETTINGS]
 VirtualKey=the key you set
 --]]
 
@@ -91,12 +90,12 @@ function remove_specific_section(filepath, section_to_remove)
       reaper.MB("Specified section has been successfully removed.", "Notification", 0)
     end
 
-    reaper.SetExtState("HOLD_TO_SOLO_MIDI_ITEM_SETTING", "VirtualKey", "", true)
+    reaper.SetExtState("HOLD_TO_SOLO_NOTE_SETTINGS", "VirtualKey", "", true)
   end
 end
 
 reaper.Undo_BeginBlock()
-local key = reaper.GetExtState("HOLD_TO_SOLO_MIDI_ITEM_SETTING", "VirtualKey")
+local key = reaper.GetExtState("HOLD_TO_SOLO_NOTE_SETTINGS", "VirtualKey")
 if (key == "") then 
   key = "F1"
 elseif (key == ",") then
@@ -104,17 +103,17 @@ elseif (key == ",") then
 end
 
 if language == "简体中文" then
-  title = "持续独奏MIDI对象设置"
+  title = "持续独奏音符设置"
   lable = "虚拟键" .. ',' .. "移除键 (y/n)"
   mb_msg = "不能设置这个按键，请改其他按键。"
   mb_title = "错误"
 elseif language == "繁體中文" then
-  title = "持續獨奏MIDI對象設置"
+  title = "持續獨奏音符設置"
   lable = "虛擬鍵" .. ',' .. "移除鍵 (y/n)"
   mb_msg = "不能設置這個按鍵，請改其他按鍵。"
   mb_title = "錯誤"
 else
-  title = "Hold to Solo MIDI Item Settings"
+  title = "Hold to Solo Note Settings"
   lable = "Virtual key" .. ',' .. "Remove key (y/n)"
   mb_msg = "This key can't be set. Please choose another."
   mb_title = "Error"
@@ -130,7 +129,7 @@ if remove ~= "y" and remove ~= "n" then return end
 if remove == "y" then
   local res_path = reaper.GetResourcePath()
   local ext_ini_path = ConcatPath(res_path, 'reaper-extstate.ini')
-  remove_specific_section(ext_ini_path, 'HOLD_TO_SOLO_MIDI_ITEM_SETTING')
+  remove_specific_section(ext_ini_path, 'HOLD_TO_SOLO_NOTE_SETTINGS')
   return
 end
 
@@ -141,16 +140,16 @@ if (not key_map[key]) then
   return
 end
 
-reaper.SetExtState("HOLD_TO_SOLO_MIDI_ITEM_SETTING", "VirtualKey", key, true)
+reaper.SetExtState("HOLD_TO_SOLO_NOTE_SETTINGS", "VirtualKey", key, true)
 
 if language == "简体中文" then
-  mb2_msg = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Hold to Solo MIDI Item 脚本，並使用快捷键 ".. key .." 进行独奏。"
+  mb2_msg = "虚拟键 ".. key .." 设置完毕。接下来，你需要将按键 ".. key .." 设置为无动作，以避免触发系统警报声。\n点击【确定】将会弹出操作列表的快捷键设置，请将快捷键设置为按键 ".. key .." 。\n\n最后，请重新运行 Hold to Solo Note 脚本，並使用快捷键 ".. key .." 进行独奏。"
   mb2_title = "继续下一步"
 elseif language == "繁體中文" then
-  mb2_msg = "虛擬鍵 ".. key .." 設置完畢。接下來，你需要將按鍵 ".. key .." 設置為無動作，以避免觸發系統警報聲。\n點擊【確定】將會彈出操作列表的快捷鍵設置，請將快捷鍵設置為按鍵 ".. key .." 。\n\n最後，請重新運行 Hold to Solo MIDI Item 腳本，並使用快捷鍵 ".. key .." 進行獨奏。"
+  mb2_msg = "虛擬鍵 ".. key .." 設置完畢。接下來，你需要將按鍵 ".. key .." 設置為無動作，以避免觸發系統警報聲。\n點擊【確定】將會彈出操作列表的快捷鍵設置，請將快捷鍵設置為按鍵 ".. key .." 。\n\n最後，請重新運行 Hold to Solo Note 腳本，並使用快捷鍵 ".. key .." 進行獨奏。"
   mb2_title = "繼續下一步"
 else
-  mb2_msg = "The virtual key " .. key .. " has been set up. Next, you need to configure the key " .. key .. " to 'No Action' to prevent triggering system alert sounds.\nClicking [OK] will open the action list's shortcut settings. Please set the shortcut to key " .. key .. ".\n\nLastly, please rerun the Hold to Solo MIDI Item script and use the shortcut " .. key .. " to solo."
+  mb2_msg = "The virtual key " .. key .. " has been set up. Next, you need to configure the key " .. key .. " to 'No Action' to prevent triggering system alert sounds.\nClicking [OK] will open the action list's shortcut settings. Please set the shortcut to key " .. key .. ".\n\nLastly, please rerun the Hold to Solo Note script and use the shortcut " .. key .. " to solo."
   mb2_title = "Proceed to the next step."
 end
 
