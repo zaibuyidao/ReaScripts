@@ -1,5 +1,5 @@
 -- @description Functions
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -337,4 +337,47 @@ function createVirtualKeyMap()
   end
 
   return map
+end
+
+function table.serialize(obj)
+  local lua = ""
+  local t = type(obj)
+  if t == "number" or t == "boolean" then
+    lua = tostring(obj)
+  elseif t == "string" then
+    lua = string.format("%q", obj)
+  elseif t == "table" then
+    lua = "{\n"
+    for k, v in pairs(obj) do
+      lua = lua .. "[" .. table.serialize(k) .. "]=" .. table.serialize(v) .. ",\n"
+    end
+    lua = lua .. "}"
+  else
+    error("cannot serialize a " .. t)
+  end
+  return lua
+end
+
+function table.unserialize(lua)
+  if lua == nil or lua == "" then
+    return nil
+  else
+    local func, err = load("return " .. lua)
+    if not func then error(err) end
+    return func()
+  end
+end
+
+function getExtState(key1, key2)
+  local stateString = reaper.GetExtState(key1, key2)
+  if stateString == "" then
+    return nil  -- Handle the case where no state is found.
+  else
+    return table.unserialize(stateString)
+  end
+end
+
+function setExtState(key1, key2, data, persist)
+  local serializedData = table.serialize(data)
+  reaper.SetExtState(key1, key2, serializedData, persist)
 end
