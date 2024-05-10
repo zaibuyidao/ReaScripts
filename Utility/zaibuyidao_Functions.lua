@@ -1,5 +1,5 @@
 -- @description Functions
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -368,6 +368,65 @@ function table.unserialize(lua)
   end
 end
 
+function to_string_ex(value)
+  if type(value)=='table' then
+    return table_to_str(value)
+  elseif type(value)=='string' then
+    return value
+  else
+    return tostring(value)
+  end
+end
+
+function table_to_str(t)
+  if t == nil then return "" end
+  local retstr= ""
+
+  local i = 1
+  for key,value in pairs(t) do
+    local signal = "" .. ','
+    if i == 1 then
+      signal = ""
+    end
+
+    if key == i then
+      retstr = retstr .. signal .. to_string_ex(value)
+    else
+      if type(key) == 'number' or type(key) == 'string' then
+        retstr = retstr .. signal .. to_string_ex(value)
+      else
+        if type(key) == 'userdata' then
+          retstr = retstr .. signal .. "*s" .. table_to_str(getmetatable(key)) .. "*e" .. "=" .. to_string_ex(value)
+        else
+          retstr = retstr .. signal .. key .. "=" .. to_string_ex(value)
+        end
+      end
+    end
+    i = i + 1
+  end
+
+  retstr = retstr .. ""
+  return retstr
+end
+
+function string.split(input, delimiter)
+  input = tostring(input)
+  delimiter = tostring(delimiter)
+  if (delimiter == "") then return false end
+  local pos, arr = 0, {}
+  for st, sp in function() return string.find(input, delimiter, pos, true) end do
+    table.insert(arr, string.sub(input, pos, st - 1))
+    pos = sp + 1
+  end
+  table.insert(arr, string.sub(input, pos))
+  return arr
+end
+
+function setExtState(key1, key2, data, persist)
+  local serializedData = table.serialize(data)
+  reaper.SetExtState(key1, key2, serializedData, persist)
+end
+
 function getExtState(key1, key2)
   local stateString = reaper.GetExtState(key1, key2)
   if stateString == "" then
@@ -377,7 +436,14 @@ function getExtState(key1, key2)
   end
 end
 
-function setExtState(key1, key2, data, persist)
-  local serializedData = table.serialize(data)
-  reaper.SetExtState(key1, key2, serializedData, persist)
+function setExtStateList(key1, key2, data, persist)
+  reaper.SetExtState(key1, key2, table_to_str(data), persist)
+end
+
+function getExtStateList(key1, key2)
+  local check_state = reaper.GetExtState(key1, key2)
+  if check_state == nil or check_state == "" then
+    return nil
+  end
+  return string.split(reaper.GetExtState(key1, key2), ",")
 end
