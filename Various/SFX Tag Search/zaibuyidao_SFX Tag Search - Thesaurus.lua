@@ -60,6 +60,7 @@ local themes = {
 		text_box_background = {222/255, 224/255, 224/255, 1}, -- 文本框背景颜色
 		text_box_border = {0/255, 103/255, 192/255, .3}, -- 文本框边框颜色
 		text_box_carret = {30/255, 34/255, 34/255, 1}, -- 文本框光标颜色
+		text_highlight = {37/255, 70/255, 110/255, .5}, -- 高亮过滤词
 	},
 	imgui = {
 		theme_background = { 18, 18, 18 }, -- 背景颜色
@@ -72,6 +73,7 @@ local themes = {
 		text_box_background = {31/255, 48/255, 74/255, .5}, -- 文本框背景颜色
 		text_box_border = {31/255, 48/255, 74/255, .1}, -- 文本框边框颜色
 		text_box_carret = {.8, .8, .8, 1}, -- 文本框光标颜色
+		text_highlight = {43/255, 76/255, 116/255, 1}, -- 高亮过滤词
 	},
 	n0ne = {
 		theme_background = { 51, 51, 51 }, -- 背景颜色
@@ -84,6 +86,7 @@ local themes = {
 		text_box_background = {.5, .5, .5, .2}, -- 文本框背景颜色
 		text_box_border = {1, 1, 0, 0.2}, -- 文本框边框颜色
 		text_box_carret = {1, .9, .5, 1}, -- 文本框光标颜色
+		text_highlight = {1, .9, 0, .2}, -- 高亮过滤词
 	}
 }
 
@@ -104,6 +107,7 @@ function setTheme(themeName)
 	text_box_label_active = theme.text_box_label_active
 	text_box_carret = theme.text_box_carret
 	text_box_border = theme.text_box_border
+	text_highlight = theme.text_highlight
 end
 
 function msg(m)
@@ -244,40 +248,6 @@ function findTag(tagTable, sPattern, iInstance, iMaxResults, find_plain)
     	-- 指定的实例编号没有找到匹配项
 		return false
 	end
-end
-
-jGuiHighlightControl = jGuiControl:new({highlight = {}, color_highlight = {1, .9, 0, .2},})
-
-function jGuiHighlightControl:_drawLabel()
-	-- msg(self.label)
-	
-	-- gfx.setfont(1, self.label_font, self.label_fontsize)
-	gfx.setfont(1, DEFALUT_FONT, DEFALUT_FONT_SIZE)
-	self:__setLabelXY()
-
-	if self.highlight and #self.highlight > 0 then
-		for _, word in pairs(self.highlight) do
-			if word and word ~= "" then
-				local parts, r = jStringExplode(self.label, word, true)
-				local totalX = 0
-				if #parts>1 then
-					local highLightW, highLightH = gfx.measurestr(word)
-					for i = 1, #parts - 1 do -- do all but the last
-						local noLightW, noLightH = gfx.measurestr(parts[i])
-						-- Draw highlight
-						self:__setGfxColor(self.color_highlight)
-						gfx.rect(gfx.x + totalX + noLightW, gfx.y, highLightW + 1, highLightH, 1)
-
-						totalX = totalX + noLightW + highLightW
-					end
-					-- tablePrint(parts)
-				end
-			end
-		end
-	end
-
-	self:_setStateColor()
-	gfx.drawstr(tostring(self.label))
 end
 
 function _jScroll(amount)
@@ -520,10 +490,12 @@ function showSearchResults(tButtons, tResults)
 			local entry = flattenedResults[i]
 			local b = tButtons[index][1]
 			local info = tButtons[index][2]
+			local highlights = jStringExplode(textBox.value, " ")
 
 			b.label = entry.synonymLabel
 			b.visible = true
 			b.fxData = entry.fullData  -- 存储完整的数据对象到按钮
+			b.highlight = highlights
 
 			-- Check if this entry's category label has already been displayed
 			if lastDisplayedCategoryLabel ~= entry.categoryLabel then
@@ -732,6 +704,40 @@ function init()
 	end
 
 	setTheme(SET_THEME) -- 设置主题
+
+	jGuiHighlightControl = jGuiControl:new({highlight = {}, color_highlight = text_highlight,})
+
+	function jGuiHighlightControl:_drawLabel()
+		-- msg(self.label)
+		
+		-- gfx.setfont(1, self.label_font, self.label_fontsize)
+		gfx.setfont(1, DEFALUT_FONT, DEFALUT_FONT_SIZE)
+		self:__setLabelXY()
+	
+		if self.highlight and #self.highlight > 0 then
+			for _, word in pairs(self.highlight) do
+				if word and word ~= "" then
+					local parts, r = jStringExplode(self.label, word, true)
+					local totalX = 0
+					if #parts>1 then
+						local highLightW, highLightH = gfx.measurestr(word)
+						for i = 1, #parts - 1 do -- do all but the last
+							local noLightW, noLightH = gfx.measurestr(parts[i])
+							-- Draw highlight
+							self:__setGfxColor(self.color_highlight)
+							gfx.rect(gfx.x + totalX + noLightW, gfx.y, highLightW + 1, highLightH, 1)
+	
+							totalX = totalX + noLightW + highLightW
+						end
+						-- tablePrint(parts)
+					end
+				end
+			end
+		end
+	
+		self:_setStateColor()
+		gfx.drawstr(tostring(self.label))
+	end
 
 	-- 从CSV加载数据
 	loadCSV(KEYWORDS_CSV_FILE)

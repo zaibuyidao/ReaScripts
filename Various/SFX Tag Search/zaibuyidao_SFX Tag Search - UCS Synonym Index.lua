@@ -60,6 +60,7 @@ local themes = {
 		text_box_background = {222/255, 224/255, 224/255, 1}, -- 文本框背景颜色
 		text_box_border = {0/255, 103/255, 192/255, .3}, -- 文本框边框颜色
 		text_box_carret = {30/255, 34/255, 34/255, 1}, -- 文本框光标颜色
+		text_highlight = {37/255, 70/255, 110/255, .5}, -- 高亮过滤词
 	},
 	imgui = {
 		theme_background = { 18, 18, 18 }, -- 背景颜色
@@ -72,6 +73,7 @@ local themes = {
 		text_box_background = {31/255, 48/255, 74/255, .5}, -- 文本框背景颜色
 		text_box_border = {31/255, 48/255, 74/255, .1}, -- 文本框边框颜色
 		text_box_carret = {.8, .8, .8, 1}, -- 文本框光标颜色
+		text_highlight = {43/255, 76/255, 116/255, 1}, -- 高亮过滤词
 	},
 	n0ne = {
 		theme_background = { 51, 51, 51 }, -- 背景颜色
@@ -84,6 +86,7 @@ local themes = {
 		text_box_background = {.5, .5, .5, .2}, -- 文本框背景颜色
 		text_box_border = {1, 1, 0, 0.2}, -- 文本框边框颜色
 		text_box_carret = {1, .9, .5, 1}, -- 文本框光标颜色
+		text_highlight = {1, .9, 0, .2}, -- 高亮过滤词
 	}
 }
 
@@ -104,6 +107,7 @@ function setTheme(themeName)
 	text_box_label_active = theme.text_box_label_active
 	text_box_carret = theme.text_box_carret
 	text_box_border = theme.text_box_border
+	text_highlight = theme.text_highlight
 end
 
 function msg(m)
@@ -155,12 +159,12 @@ function jReadTagData(file_name)
 end
 
 function containsToken(synonyms, token, find_plain)
-    for _, synonym in ipairs(synonyms) do
-        if synonym:lower():find(token, 1, find_plain) then
-            return true
-        end
-    end
-    return false
+	for _, synonym in ipairs(synonyms) do
+		if synonym:lower():find(token, 1, find_plain) then
+			return true
+		end
+	end
+	return false
 end
 
 function findTag(tagTable, sPattern, iInstance, iMaxResults, find_plain)
@@ -174,7 +178,7 @@ function findTag(tagTable, sPattern, iInstance, iMaxResults, find_plain)
 	end
 
 	local tResult = {}
-    local iCount = 0
+	local iCount = 0
 
 	for i, t in ipairs(tagTable) do
 		local bMatch = true
@@ -258,43 +262,9 @@ function findTag(tagTable, sPattern, iInstance, iMaxResults, find_plain)
 			return tResult
 		end
 	else
-    	-- 指定的实例编号没有找到匹配项
+    -- 指定的实例编号没有找到匹配项
 		return false
 	end
-end
-
-jGuiHighlightControl = jGuiControl:new({highlight = {}, color_highlight = {1, .9, 0, .2},})
-
-function jGuiHighlightControl:_drawLabel()
-	-- msg(self.label)
-	
-	-- gfx.setfont(1, self.label_font, self.label_fontsize)
-	gfx.setfont(1, DEFALUT_FONT, DEFALUT_FONT_SIZE)
-	self:__setLabelXY()
-
-	if self.highlight and #self.highlight > 0 then
-		for _, word in pairs(self.highlight) do
-			if word and word ~= "" then
-				local parts, r = jStringExplode(self.label, word, true)
-				local totalX = 0
-				if #parts>1 then
-					local highLightW, highLightH = gfx.measurestr(word)
-					for i = 1, #parts - 1 do -- do all but the last
-						local noLightW, noLightH = gfx.measurestr(parts[i])
-						-- Draw highlight
-						self:__setGfxColor(self.color_highlight)
-						gfx.rect(gfx.x + totalX + noLightW, gfx.y, highLightW + 1, highLightH, 1)
-
-						totalX = totalX + noLightW + highLightW
-					end
-					-- tablePrint(parts)
-				end
-			end
-		end
-	end
-
-	self:_setStateColor()
-	gfx.drawstr(tostring(self.label))
 end
 
 function _jScroll(amount)
@@ -626,22 +596,22 @@ function _makeColorsCatagory(b, info, color)
 end
 
 function getLocalString(baseString, currentLanguage)
-    if currentLanguage == "EN" then
-        return baseString  -- 英文是默认，无需后缀
-    else
-        return baseString .. "_" .. currentLanguage:lower()
-    end
+	if currentLanguage == "EN" then
+		return baseString  -- 英文是默认，无需后缀
+	else
+		return baseString .. "_" .. currentLanguage:lower()
+	end
 end
 
 function showSearchResults(tButtons, tResults)
-    local totalSynonyms = 0
-    local flattenedResults = {}
-    local visibleCount = 0  -- Reset at each call
+	local totalSynonyms = 0
+	local flattenedResults = {}
+	local visibleCount = 0  -- Reset at each call
 
-    for _, fx in ipairs(tResults) do
+	for _, fx in ipairs(tResults) do
 		local synonyms = fx.Synonyms or {}
-        local synonyms_zh = fx.Synonyms_zh or {}
-        local synonyms_tw = fx.Synonyms_tw or {}
+		local synonyms_zh = fx.Synonyms_zh or {}
+		local synonyms_tw = fx.Synonyms_tw or {}
 
 		if CURRENT_LANGUAGE == "ZH" then
 			synonyms = fx.Synonyms_zh or {}
@@ -649,7 +619,7 @@ function showSearchResults(tButtons, tResults)
 			synonyms = fx.Synonyms_tw or {}
 		end
 
-        for index, currentSynonym in ipairs(synonyms) do
+		for index, currentSynonym in ipairs(synonyms) do
 			local synonym_zh = synonyms_zh[index] or ""
 			local synonym_tw = synonyms_tw[index] or ""
 
@@ -663,9 +633,9 @@ function showSearchResults(tButtons, tResults)
 			end
 
 			local entry = {
-				categoryLabel = fx[getLocalString("Category", CURRENT_LANGUAGE)] ..
-								(fx[getLocalString("SubCategory", CURRENT_LANGUAGE)] and "-" .. 
-								fx[getLocalString("SubCategory", CURRENT_LANGUAGE)] or ""),
+				categoryLabel = fx[getLocalString("Category", CURRENT_LANGUAGE)] .. 
+												(fx[getLocalString("SubCategory", CURRENT_LANGUAGE)] and "-" .. 
+												fx[getLocalString("SubCategory", CURRENT_LANGUAGE)] or ""),
 				synonymLabel = currentSynonymLocalized,
 				fullData = {
 					Category = fx.Category,
@@ -682,47 +652,49 @@ function showSearchResults(tButtons, tResults)
 			}
 			table.insert(flattenedResults, entry)
 			totalSynonyms = totalSynonyms + 1
-        end
-    end
+		end
+	end
 
-    RESULT_COUNT = totalSynonyms
-    RESULTS_PER_PAGE = #tButtons
+	RESULT_COUNT = totalSynonyms
+	RESULTS_PER_PAGE = #tButtons
 
-    local iStart = _round(1 + SCROLL_RESULTS)
-    local iEnd = iStart + RESULTS_PER_PAGE - 1
-    iEnd = math.min(iEnd, totalSynonyms)
+	local iStart = _round(1 + SCROLL_RESULTS)
+	local iEnd = iStart + RESULTS_PER_PAGE - 1
+	iEnd = math.min(iEnd, totalSynonyms)
 
-    for _, cIds in ipairs(tButtons) do
-        local b = cIds[1]
-        local info = cIds[2]
-        b.visible = false
-        info.visible = false
-    end
+	for _, cIds in ipairs(tButtons) do
+		local b = cIds[1]
+		local info = cIds[2]
+		b.visible = false
+		info.visible = false
+	end
 
-    local index = 1
-    local lastDisplayedCategoryLabel = nil
-    for i = iStart, iEnd do
-        if index <= RESULTS_PER_PAGE and i <= #flattenedResults then
-            local entry = flattenedResults[i]
-            local b = tButtons[index][1]
-            local info = tButtons[index][2]
+	local index = 1
+	local lastDisplayedCategoryLabel = nil
+	for i = iStart, iEnd do
+		if index <= RESULTS_PER_PAGE and i <= #flattenedResults then
+			local entry = flattenedResults[i]
+			local b = tButtons[index][1]
+			local info = tButtons[index][2]
+			local highlights = jStringExplode(textBox.value, " ")
 
-			b.label = entry.synonymLabel .. " (" .. entry.fullData.CatID .. ")"
-            b.visible = true
+			b.label = entry.synonymLabel
+			b.visible = true
 			b.fxData = entry.fullData  -- 存储完整的数据对象到按钮
+			b.highlight = highlights
 
-            -- Check if this entry's category label has already been displayed
-            if lastDisplayedCategoryLabel ~= entry.categoryLabel then
-                info.label = entry.categoryLabel
-            else
-                info.label = ""  -- Do not repeat if already displayed
-            end
+			-- Check if this entry's category label has already been displayed
+			if lastDisplayedCategoryLabel ~= entry.categoryLabel then
+				info.label = entry.categoryLabel .. " (" .. entry.fullData.CatID .. ")"
+			else
+				info.label = ""  -- Do not repeat if already displayed
+			end
 			lastDisplayedCategoryLabel = entry.categoryLabel
 
-            info.visible = true
+			info.visible = true
 
-            visibleCount = visibleCount + 1
-            index = index + 1
+			visibleCount = visibleCount + 1
+			index = index + 1
 
 			if CURRENT_LANGUAGE == "EN" then
 				-- 根据分类设置不同的颜色
@@ -738,12 +710,12 @@ function showSearchResults(tButtons, tResults)
 				_makeColorsCatagory(b, info, color)  -- 确保函数名和变量名正确
 			end
 
-        else
-            break
-        end
-    end
+		else
+			break
+		end
+	end
 
-    LABEL_STATS.label = "(" .. iEnd .. "/" .. totalSynonyms .. ")"
+	LABEL_STATS.label = "(" .. iEnd .. "/" .. totalSynonyms .. ")"
 end
 
 function getColorForType(type)
@@ -772,9 +744,9 @@ function getColorForType(type)
     -- 使用处理后的类型进行匹配，并返回对应的颜色
     local color = normalizedTypes[type]
     if color then
-		return color
+			return color
     else
-		return default_text_color  -- 如果没有匹配项，返回默认颜色
+			return default_text_color  -- 如果没有匹配项，返回默认颜色
     end
 end
 
@@ -872,88 +844,88 @@ function splitSynonyms(synonymsStr)
 end
 
 function loadCSV(filePath)
-    tTagData = {}
-    local file = io.open(filePath, "r")  -- 打开文件
-    if not file then return false end  -- 如果文件不存在，返回false
+	tTagData = {}
+	local file = io.open(filePath, "r")  -- 打开文件
+	if not file then return false end  -- 如果文件不存在，返回false
 
-    local firstLine = true  -- 添加标志以跳过第一行
-    for line in file:lines() do
-        if firstLine then
-            firstLine = false  -- 将标志设为false，之后不再跳过行
-        else
-            local cols = {}
-            -- 使用模式匹配处理带引号和不带引号的字段
-            local pattern = '([^,]*),?' -- 匹配逗号分隔的字段，包括空字段
-            local s = 1
-            local quotePattern = '"(.-)"' -- 匹配双引号内的字段
-            while true do
-                local startQuote, endQuote, quotedPart = line:find(quotePattern, s)
-                if startQuote then
-                    if startQuote ~= s then -- 检查引号前是否有非引号内容
-                        local nonQuotedPart = line:sub(s, startQuote-1)
-                        for value in nonQuotedPart:gmatch(pattern) do
-                            table.insert(cols, value)
-                        end
-                    end
-                    table.insert(cols, quotedPart)
-                    s = endQuote + 1
-                    if line:sub(s, s) == ',' then s = s + 1 end -- 跳过字段后的逗号
-                else
-                    local nonQuotedPart = line:sub(s)
-                    for value in nonQuotedPart:gmatch(pattern) do
-                        table.insert(cols, value)
-                    end
-                    break
-                end
-            end
+	local firstLine = true  -- 添加标志以跳过第一行
+	for line in file:lines() do
+		if firstLine then
+			firstLine = false  -- 将标志设为false，之后不再跳过行
+		else
+			local cols = {}
+			-- 使用模式匹配处理带引号和不带引号的字段
+			local pattern = '([^,]*),?' -- 匹配逗号分隔的字段，包括空字段
+			local s = 1
+			local quotePattern = '"(.-)"' -- 匹配双引号内的字段
+			while true do
+				local startQuote, endQuote, quotedPart = line:find(quotePattern, s)
+				if startQuote then
+					if startQuote ~= s then -- 检查引号前是否有非引号内容
+						local nonQuotedPart = line:sub(s, startQuote-1)
+						for value in nonQuotedPart:gmatch(pattern) do
+							table.insert(cols, value)
+						end
+					end
+					table.insert(cols, quotedPart)
+					s = endQuote + 1
+					if line:sub(s, s) == ',' then s = s + 1 end -- 跳过字段后的逗号
+				else
+					local nonQuotedPart = line:sub(s)
+					for value in nonQuotedPart:gmatch(pattern) do
+						table.insert(cols, value)
+					end
+					break
+				end
+			end
 
-            if #cols >= 11 then  -- 确保行数据列数正确
-                local entry = {
-                    Category = cols[1],
-                    SubCategory = cols[2],
-                    CatID = cols[3],
-                    CatShort = cols[4],
-                    Synonyms = splitSynonyms(cols[5]),  -- 将字符串转换为同义词列表
-                    Category_zh = cols[6],
-                    SubCategory_zh = cols[7],
-                    Synonyms_zh = splitSynonyms(cols[8]),
+			if #cols >= 11 then  -- 确保行数据列数正确
+				local entry = {
+					Category = cols[1],
+					SubCategory = cols[2],
+					CatID = cols[3],
+					CatShort = cols[4],
+					Synonyms = splitSynonyms(cols[5]),  -- 将字符串转换为同义词列表
+					Category_zh = cols[6],
+					SubCategory_zh = cols[7],
+					Synonyms_zh = splitSynonyms(cols[8]),
 					Category_tw = cols[9],
 					SubCategory_tw = cols[10],
-                    Synonyms_tw = splitSynonyms(cols[11])
-                }
-                table.insert(tTagData, entry)
-            end
-        end
-    end
-    file:close()
-    return true
+					Synonyms_tw = splitSynonyms(cols[11])
+				}
+				table.insert(tTagData, entry)
+			end
+		end
+	end
+	file:close()
+	return true
 end
 
 function printSynonyms()
-    for _, entry in ipairs(tTagData) do
-        print("CatID: " .. entry.CatID)
-        print("  English Synonyms:")
-        for _, synonym in ipairs(entry.Synonyms) do
-            print("    - " .. synonym)
-        end
-        print("  Simplified Chinese Synonyms:")
-        for _, synonym in ipairs(entry.Synonyms_zh) do
-            print("    - " .. synonym)
-        end
-        print("  Traditional Chinese Synonyms:")
-        for _, synonym in ipairs(entry.Synonyms_tw) do
-            print("    - " .. synonym)
-        end
-    end
+	for _, entry in ipairs(tTagData) do
+		print("CatID: " .. entry.CatID)
+		print("  English Synonyms:")
+		for _, synonym in ipairs(entry.Synonyms) do
+			print("    - " .. synonym)
+		end
+		print("  Simplified Chinese Synonyms:")
+		for _, synonym in ipairs(entry.Synonyms_zh) do
+			print("    - " .. synonym)
+		end
+		print("  Traditional Chinese Synonyms:")
+		for _, synonym in ipairs(entry.Synonyms_tw) do
+			print("    - " .. synonym)
+		end
+	end
 end
 
 function findFxByCatId(tSearchResults, catId)
-    for _, fx in ipairs(tSearchResults) do
-        if fx.CatID == catId then
-            return fx
-        end
-    end
-    return nil
+	for _, fx in ipairs(tSearchResults) do
+		if fx.CatID == catId then
+			return fx
+		end
+	end
+	return nil
 end
 
 flattenedResultIndices = {}
@@ -975,6 +947,40 @@ function init()
 	end
 
 	setTheme(SET_THEME) -- 设置主题
+
+	jGuiHighlightControl = jGuiControl:new({highlight = {}, color_highlight = text_highlight,})
+
+	function jGuiHighlightControl:_drawLabel()
+		-- msg(self.label)
+		
+		-- gfx.setfont(1, self.label_font, self.label_fontsize)
+		gfx.setfont(1, DEFALUT_FONT, DEFALUT_FONT_SIZE)
+		self:__setLabelXY()
+	
+		if self.highlight and #self.highlight > 0 then
+			for _, word in pairs(self.highlight) do
+				if word and word ~= "" then
+					local parts, r = jStringExplode(self.label, word, true)
+					local totalX = 0
+					if #parts>1 then
+						local highLightW, highLightH = gfx.measurestr(word)
+						for i = 1, #parts - 1 do -- do all but the last
+							local noLightW, noLightH = gfx.measurestr(parts[i])
+							-- Draw highlight
+							self:__setGfxColor(self.color_highlight)
+							gfx.rect(gfx.x + totalX + noLightW, gfx.y, highLightW + 1, highLightH, 1)
+	
+							totalX = totalX + noLightW + highLightW
+						end
+						-- tablePrint(parts)
+					end
+				end
+			end
+		end
+	
+		self:_setStateColor()
+		gfx.drawstr(tostring(self.label))
+	end
 
 	-- 从CSV加载数据
 	loadCSV(KEYWORDS_CSV_FILE) -- script_path .. getPathDelimiter() .. "keywords_ucs.csv"

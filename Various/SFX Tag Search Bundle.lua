@@ -1,8 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.12
+-- @version 2.0.13
 -- @changelog
---   + Added new Thesaurus feature.
+--   + Added keyword highlighting when filtering through the textbox.
 --   # Adjusted some configuration information.
 --     Please back up the configuration files (*.ini) in the script directory and delete them.
 --     Running the script again will recreate the configuration files.
