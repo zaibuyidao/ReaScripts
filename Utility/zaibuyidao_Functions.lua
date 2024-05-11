@@ -1,5 +1,5 @@
 -- @description Functions
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -144,6 +144,58 @@ function checkJSAPIExtension()
   else
     return true
   end
+end
+
+-- 检查MIDI音符是否被选中
+function checkMidiNoteSelected()
+  local scriptShouldContinue = true
+
+  -- 获取当前活跃的MIDI编辑器
+  local midiEditor = reaper.MIDIEditor_GetActive()
+  if not midiEditor then
+    if language == "简体中文" then
+      reaper.ShowMessageBox("没有找到活跃的MIDI编辑器", "错误", 0)
+    elseif language == "繁體中文" then
+      reaper.ShowMessageBox("沒有找到活躍的MIDI編輯器", "錯誤", 0)
+    else
+      reaper.ShowMessageBox("No active MIDI editor found", "Error", 0)
+    end
+
+    scriptShouldContinue = false
+    return scriptShouldContinue
+  end
+
+  -- 获取活跃MIDI编辑器中的第一个take
+  local take = reaper.MIDIEditor_EnumTakes(midiEditor, 0, false)
+  if not take then
+    if language == "简体中文" then
+      reaper.ShowMessageBox("没有找到MIDI take", "错误", 0)
+    elseif language == "繁體中文" then
+      reaper.ShowMessageBox("沒有找到MIDI take", "錯誤", 0)
+    else
+      reaper.ShowMessageBox("No MIDI take found", "Error", 0)
+    end
+
+    scriptShouldContinue = false
+    return scriptShouldContinue
+  end
+
+  -- 检查是否有选中的MIDI音符
+  local noteIndex = reaper.MIDI_EnumSelNotes(take, -1)
+  if noteIndex == -1 then
+    if language == "简体中文" then
+      reaper.ShowMessageBox("没有MIDI音符被选中", "错误", 0)
+    elseif language == "繁體中文" then
+      reaper.ShowMessageBox("沒有MIDI音符被選中", "錯誤", 0)
+    else
+      reaper.ShowMessageBox("No MIDI notes are selected", "Error", 0)
+    end
+
+    scriptShouldContinue = false
+    return scriptShouldContinue
+  end
+
+  return scriptShouldContinue
 end
 
 function openUrl(url)
