@@ -114,6 +114,7 @@ function setTheme(themeName)
 	text_box_label_active = theme.text_box_label_active
 	text_box_carret = theme.text_box_carret
 	text_box_border = theme.text_box_border
+	text_highlight = theme.text_highlight
 end
 
 function set_explorer_path(hwnd, folder)

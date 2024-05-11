@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.13
+-- @version 2.0.14
 -- @changelog
 --   + Added keyword highlighting when filtering through the textbox.
 --   # Adjusted some configuration information.
