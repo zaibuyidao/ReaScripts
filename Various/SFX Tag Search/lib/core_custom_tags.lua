@@ -195,7 +195,7 @@ function reloadData() -- 重新加载数据
         end
     end
     
-    local file, err = io.open(csvFilePath , "w+")
+    local file, err = io.open(KEYWORDS_CSV_FILE , "w+")
 
     if not file then
         print("Error opening file:", err)
