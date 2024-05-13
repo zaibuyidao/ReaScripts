@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e1ed16543d7bfdfccdfca935739298311d9d574d">
+<index version="1" name="zaibuyidao Scripts" commit="391b7e3b579a4a0ce6151a2efd3a58e4ef600e85">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8383,6 +8383,10 @@
       <version name="1.0.4" author="zaibuyidao" time="2024-05-11T09:46:18Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/783504f7115e5edf4fe913da85d70a4d0c8c073c/Utility/zaibuyidao_Functions.lua</source>
+      </version>
+      <version name="1.0.5" author="zaibuyidao" time="2024-05-13T05:50:30Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/391b7e3b579a4a0ce6151a2efd3a58e4ef600e85/Utility/zaibuyidao_Functions.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Implode Drums.lua" type="script" desc="Implode Drums">
