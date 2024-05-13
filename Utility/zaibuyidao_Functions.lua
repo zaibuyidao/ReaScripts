@@ -1,5 +1,5 @@
 -- @description Functions
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -146,58 +146,6 @@ function checkJSAPIExtension()
   end
 end
 
--- 检查MIDI音符是否被选中
-function checkMidiNoteSelected()
-  local scriptShouldContinue = true
-
-  -- 获取当前活跃的MIDI编辑器
-  local midiEditor = reaper.MIDIEditor_GetActive()
-  if not midiEditor then
-    if language == "简体中文" then
-      reaper.ShowMessageBox("没有找到活跃的MIDI编辑器", "错误", 0)
-    elseif language == "繁體中文" then
-      reaper.ShowMessageBox("沒有找到活躍的MIDI編輯器", "錯誤", 0)
-    else
-      reaper.ShowMessageBox("No active MIDI editor found", "Error", 0)
-    end
-
-    scriptShouldContinue = false
-    return scriptShouldContinue
-  end
-
-  -- 获取活跃MIDI编辑器中的第一个take
-  local take = reaper.MIDIEditor_EnumTakes(midiEditor, 0, false)
-  if not take then
-    if language == "简体中文" then
-      reaper.ShowMessageBox("没有找到MIDI take", "错误", 0)
-    elseif language == "繁體中文" then
-      reaper.ShowMessageBox("沒有找到MIDI take", "錯誤", 0)
-    else
-      reaper.ShowMessageBox("No MIDI take found", "Error", 0)
-    end
-
-    scriptShouldContinue = false
-    return scriptShouldContinue
-  end
-
-  -- 检查是否有选中的MIDI音符
-  local noteIndex = reaper.MIDI_EnumSelNotes(take, -1)
-  if noteIndex == -1 then
-    if language == "简体中文" then
-      reaper.ShowMessageBox("没有MIDI音符被选中", "错误", 0)
-    elseif language == "繁體中文" then
-      reaper.ShowMessageBox("沒有MIDI音符被選中", "錯誤", 0)
-    else
-      reaper.ShowMessageBox("No MIDI notes are selected", "Error", 0)
-    end
-
-    scriptShouldContinue = false
-    return scriptShouldContinue
-  end
-
-  return scriptShouldContinue
-end
-
 function openUrl(url)
   local os = reaper.GetOS()
   if os:match("^OSX") then
@@ -228,7 +176,119 @@ function normalizePathDelimiter(p)
   end
 end
 
--- 用于智能SOLO脚本
+function table.serialize(obj)
+  local lua = ""
+  local t = type(obj)
+  if t == "number" or t == "boolean" then
+    lua = tostring(obj)
+  elseif t == "string" then
+    lua = string.format("%q", obj)
+  elseif t == "table" then
+    lua = "{\n"
+    for k, v in pairs(obj) do
+      lua = lua .. "[" .. table.serialize(k) .. "]=" .. table.serialize(v) .. ",\n"
+    end
+    lua = lua .. "}"
+  else
+    error("cannot serialize a " .. t)
+  end
+  return lua
+end
+
+function table.unserialize(lua)
+  if lua == nil or lua == "" then
+    return nil
+  else
+    local func, err = load("return " .. lua)
+    if not func then error(err) end
+    return func()
+  end
+end
+
+function to_string_ex(value)
+  if type(value)=='table' then
+    return table_to_str(value)
+  elseif type(value)=='string' then
+    return value
+  else
+    return tostring(value)
+  end
+end
+
+function table_to_str(t)
+  if t == nil then return "" end
+  local retstr= ""
+
+  local i = 1
+  for key,value in pairs(t) do
+    local signal = "" .. ','
+    if i == 1 then
+      signal = ""
+    end
+
+    if key == i then
+      retstr = retstr .. signal .. to_string_ex(value)
+    else
+      if type(key) == 'number' or type(key) == 'string' then
+        retstr = retstr .. signal .. to_string_ex(value)
+      else
+        if type(key) == 'userdata' then
+          retstr = retstr .. signal .. "*s" .. table_to_str(getmetatable(key)) .. "*e" .. "=" .. to_string_ex(value)
+        else
+          retstr = retstr .. signal .. key .. "=" .. to_string_ex(value)
+        end
+      end
+    end
+    i = i + 1
+  end
+
+  retstr = retstr .. ""
+  return retstr
+end
+
+function string.split(input, delimiter)
+  input = tostring(input)
+  delimiter = tostring(delimiter)
+  if (delimiter == "") then return false end
+  local pos, arr = 0, {}
+  for st, sp in function() return string.find(input, delimiter, pos, true) end do
+    table.insert(arr, string.sub(input, pos, st - 1))
+    pos = sp + 1
+  end
+  table.insert(arr, string.sub(input, pos))
+  return arr
+end
+
+function setExtState(key1, key2, data, persist)
+  local serializedData = table.serialize(data)
+  reaper.SetExtState(key1, key2, serializedData, persist)
+end
+
+function getExtState(key1, key2)
+  local stateString = reaper.GetExtState(key1, key2)
+  if stateString == "" then
+    return nil  -- Handle the case where no state is found.
+  else
+    return table.unserialize(stateString)
+  end
+end
+
+function setExtStateList(key1, key2, data, persist)
+  reaper.SetExtState(key1, key2, table_to_str(data), persist)
+end
+
+function getExtStateList(key1, key2)
+  local check_state = reaper.GetExtState(key1, key2)
+  if check_state == nil or check_state == "" then
+    return nil
+  end
+  return string.split(reaper.GetExtState(key1, key2), ",")
+end
+
+-----------------------------------------------------------------------------
+------------------------------- Smart Solo ----------------------------------
+-----------------------------------------------------------------------------
+
 function createVirtualKeyMap()
   local map = {}
 
@@ -391,111 +451,95 @@ function createVirtualKeyMap()
   return map
 end
 
-function table.serialize(obj)
-  local lua = ""
-  local t = type(obj)
-  if t == "number" or t == "boolean" then
-    lua = tostring(obj)
-  elseif t == "string" then
-    lua = string.format("%q", obj)
-  elseif t == "table" then
-    lua = "{\n"
-    for k, v in pairs(obj) do
-      lua = lua .. "[" .. table.serialize(k) .. "]=" .. table.serialize(v) .. ",\n"
-    end
-    lua = lua .. "}"
-  else
-    error("cannot serialize a " .. t)
-  end
-  return lua
-end
+-----------------------------------------------------------------------------
+---------------------------------- MIDI -------------------------------------
+-----------------------------------------------------------------------------
 
-function table.unserialize(lua)
-  if lua == nil or lua == "" then
-    return nil
-  else
-    local func, err = load("return " .. lua)
-    if not func then error(err) end
-    return func()
-  end
-end
+-- 检查MIDI音符是否被选中
+function checkMidiNoteSelected()
+  local scriptShouldContinue = true
 
-function to_string_ex(value)
-  if type(value)=='table' then
-    return table_to_str(value)
-  elseif type(value)=='string' then
-    return value
-  else
-    return tostring(value)
-  end
-end
-
-function table_to_str(t)
-  if t == nil then return "" end
-  local retstr= ""
-
-  local i = 1
-  for key,value in pairs(t) do
-    local signal = "" .. ','
-    if i == 1 then
-      signal = ""
-    end
-
-    if key == i then
-      retstr = retstr .. signal .. to_string_ex(value)
+  -- 获取当前活跃的MIDI编辑器
+  local midiEditor = reaper.MIDIEditor_GetActive()
+  if not midiEditor then
+    if language == "简体中文" then
+      reaper.ShowMessageBox("没有找到活跃的MIDI编辑器", "错误", 0)
+    elseif language == "繁體中文" then
+      reaper.ShowMessageBox("沒有找到活躍的MIDI編輯器", "錯誤", 0)
     else
-      if type(key) == 'number' or type(key) == 'string' then
-        retstr = retstr .. signal .. to_string_ex(value)
-      else
-        if type(key) == 'userdata' then
-          retstr = retstr .. signal .. "*s" .. table_to_str(getmetatable(key)) .. "*e" .. "=" .. to_string_ex(value)
+      reaper.ShowMessageBox("No active MIDI editor found", "Error", 0)
+    end
+
+    scriptShouldContinue = false
+    return scriptShouldContinue
+  end
+
+  -- 获取活跃MIDI编辑器中的第一个take
+  local take = reaper.MIDIEditor_EnumTakes(midiEditor, 0, false)
+  if not take then
+    if language == "简体中文" then
+      reaper.ShowMessageBox("没有找到MIDI take", "错误", 0)
+    elseif language == "繁體中文" then
+      reaper.ShowMessageBox("沒有找到MIDI take", "錯誤", 0)
+    else
+      reaper.ShowMessageBox("No MIDI take found", "Error", 0)
+    end
+
+    scriptShouldContinue = false
+    return scriptShouldContinue
+  end
+
+  -- 检查是否有选中的MIDI音符
+  local noteIndex = reaper.MIDI_EnumSelNotes(take, -1)
+  if noteIndex == -1 then
+    if language == "简体中文" then
+      reaper.ShowMessageBox("没有MIDI音符被选中", "错误", 0)
+    elseif language == "繁體中文" then
+      reaper.ShowMessageBox("沒有MIDI音符被選中", "錯誤", 0)
+    else
+      reaper.ShowMessageBox("No MIDI notes are selected", "Error", 0)
+    end
+
+    scriptShouldContinue = false
+    return scriptShouldContinue
+  end
+
+  return scriptShouldContinue
+end
+
+function getAllTakes()
+  local takes = {}
+
+  -- 如果支持 MIDI 编辑器的 takes 枚举
+  if reaper.MIDIEditor_EnumTakes then
+    local editor = reaper.MIDIEditor_GetActive()
+    for i = 0, math.huge do
+        local take = reaper.MIDIEditor_EnumTakes(editor, i, false)
+        -- 检查 take 是否有效，并获取其关联的 media item
+        if take and reaper.ValidatePtr2(0, take, "MediaItem_Take*") then 
+          takes[take] = {item = reaper.GetMediaItemTake_Item(take)}
         else
-          retstr = retstr .. signal .. key .. "=" .. to_string_ex(value)
+          break
         end
+    end
+  else
+    -- 如果不支持枚举，遍历项目中所有 media items
+    for i = 0, reaper.CountMediaItems(0) - 1 do
+      local item = reaper.GetMediaItem(0, i)
+      local take = reaper.GetActiveTake(item)
+      -- 只关注 MIDI takes 且没有选中的 MIDI notes
+      if take and reaper.ValidatePtr2(0, take, "MediaItem_Take*") and reaper.TakeIsMIDI(take) and reaper.MIDI_EnumSelNotes(take, -1) == 0 then
+        takes[take] = true
       end
     end
-    i = i + 1
+  
+    -- 移除未被选择的 takes
+    for take, _ in pairs(takes) do
+      if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then takes[take] = nil end
+    end
   end
 
-  retstr = retstr .. ""
-  return retstr
-end
-
-function string.split(input, delimiter)
-  input = tostring(input)
-  delimiter = tostring(delimiter)
-  if (delimiter == "") then return false end
-  local pos, arr = 0, {}
-  for st, sp in function() return string.find(input, delimiter, pos, true) end do
-    table.insert(arr, string.sub(input, pos, st - 1))
-    pos = sp + 1
-  end
-  table.insert(arr, string.sub(input, pos))
-  return arr
-end
-
-function setExtState(key1, key2, data, persist)
-  local serializedData = table.serialize(data)
-  reaper.SetExtState(key1, key2, serializedData, persist)
-end
-
-function getExtState(key1, key2)
-  local stateString = reaper.GetExtState(key1, key2)
-  if stateString == "" then
-    return nil  -- Handle the case where no state is found.
-  else
-    return table.unserialize(stateString)
-  end
-end
-
-function setExtStateList(key1, key2, data, persist)
-  reaper.SetExtState(key1, key2, table_to_str(data), persist)
-end
-
-function getExtStateList(key1, key2)
-  local check_state = reaper.GetExtState(key1, key2)
-  if check_state == nil or check_state == "" then
-    return nil
-  end
-  return string.split(reaper.GetExtState(key1, key2), ",")
+  -- 如果没有取得任何 takes，则返回 nil
+  if not next(takes) then return nil end
+  return takes
 end
