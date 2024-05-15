@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3529a89285d5bb2e1592411b6212d21901885b6a">
+<index version="1" name="zaibuyidao Scripts" commit="cc91eebdf327b0dfcf87a9bfa5d26133091e9c9e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2069,6 +2069,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3529a89285d5bb2e1592411b6212d21901885b6a/MIDI%20Editor/zaibuyidao_Automate%20Expression%20for%20Selected%20Notes.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao, YS" time="2024-05-15T12:28:18Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc91eebdf327b0dfcf87a9bfa5d26133091e9c9e/MIDI%20Editor/zaibuyidao_Automate%20Expression%20for%20Selected%20Notes.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Automate Expression Shapes for Selected Notes.lua" type="script" desc="Automate Expression Shapes for Selected Notes">
       <metadata>
@@ -2090,6 +2094,10 @@
       <version name="1.0.1" author="zaibuyidao, YS" time="2024-05-15T08:23:09Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7bbe55ee5b0b818c598d6260d2a60108770713c6/MIDI%20Editor/zaibuyidao_Automate%20Expression%20Shapes%20for%20Selected%20Notes.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao, YS" time="2024-05-15T12:28:18Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/cc91eebdf327b0dfcf87a9bfa5d26133091e9c9e/MIDI%20Editor/zaibuyidao_Automate%20Expression%20Shapes%20for%20Selected%20Notes.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Bend.lua" type="script" desc="Bend">
