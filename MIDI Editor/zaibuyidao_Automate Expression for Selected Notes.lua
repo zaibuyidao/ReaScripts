@@ -1,5 +1,5 @@
 -- @description Automate Expression for Selected Notes
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao, YS
 -- @changelog
 --   New Script
@@ -321,13 +321,13 @@ end
 
 if language == "简体中文" then
   title = "自动表情 (平均速度: " .. bpm_average ..")"
-  captions_csv = "CC编号,最小值,最大值,速度 (1=慢速 2=快速 3=自动),开始弧度 (0 至 1),结束弧度 (0 至 1),嘀嗒间隔,extrawidth=5"
+  captions_csv = "CC编号,最小值,最大值,速度 (1=慢速 2=快速 3=自动),开始弧度 (0 至 1),结束弧度 (0 至 1),嘀嗒间隔,extrawidth=20"
 elseif language == "繁体中文 " then
   title = "自動表情 (平均速度: " .. bpm_average ..")"
-  captions_csv = "CC編號,最小值,最大值,速度 (1=慢速 2=快速 3=自動),開始弧度 (0 至 1),結束弧度 (0 至 1),嘀嗒間隔,extrawidth=5"
+  captions_csv = "CC編號,最小值,最大值,速度 (1=慢速 2=快速 3=自動),開始弧度 (0 至 1),結束弧度 (0 至 1),嘀嗒間隔,extrawidth=20"
 else
-  title = "Automate Expression (Average Speed: " .. bpm_average ..")"
-  captions_csv = "CC Number,Minimum,Maximum,Speed (1=Slow 2=Fast 3=Auto),Bezier In (0 to 1),Bezier Out (0 to 1),Intervals (tick),extrawidth=5"
+  title = "Automate Expression (Avg Speed: " .. bpm_average ..")"
+  captions_csv = "CC number,Minimum,Maximum,Speed (1=slow 2=fast 3=auto),Arc in (0 to 1),Arc out (0 to 1),Intervals (tick),extrawidth=20"
 end
 
 cc_number = reaper.GetExtState("AutomateExpressionforSelectedNotes", "CC")

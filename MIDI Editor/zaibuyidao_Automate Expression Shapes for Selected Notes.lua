@@ -1,5 +1,5 @@
 -- @description Automate Expression Shapes for Selected Notes
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao, YS
 -- @changelog
 --   New Script
@@ -113,13 +113,13 @@ bpm_average = bpm_average()
 
 if language == "简体中文" then
   title = "自动表情形狀 (平均速度: " .. bpm_average ..")"
-  captions_csv = "CC编号,最小值,最大值,速度 (1=慢速 2=快速 3=自动),开始弧度 (-100 至 100),结束弧度 (-100 至 100),extrawidth=5"
+  captions_csv = "CC编号,最小值,最大值,速度 (1=慢速 2=快速 3=自动),开始弧度 (-100 至 100),结束弧度 (-100 至 100),extrawidth=20"
 elseif language == "繁体中文 " then
-  title = "自動表情形狀 - (平均速度: " .. bpm_average ..")"
-  captions_csv = "CC編號,最小值,最大值,速度 (1=慢速 2=快速 3=自動),開始弧度 (-100 至 100),結束弧度 (-100 至 100),extrawidth=5"
+  title = "自動表情形狀 (平均速度: " .. bpm_average ..")"
+  captions_csv = "CC編號,最小值,最大值,速度 (1=慢速 2=快速 3=自動),開始弧度 (-100 至 100),結束弧度 (-100 至 100),extrawidth=20"
 else
-  title = "Automate Expression Shapes - (Average Speed: " .. bpm_average ..")"
-  captions_csv = "CC Number,Minimum,Maximum,Speed (1=Slow 2=Fast 3=Auto),Bezier In (-100 to 100),Bezier Out (-100 to 100),extrawidth=5"
+  title = "Automate Expression Shapes (BPM: " .. bpm_average ..")"
+  captions_csv = "CC number,Minimum,Maximum,Speed (1=alow 2=fast 3=auto),Bezier in (-100 to 100),Bezier out (-100 to 100),extrawidth=20"
 end
 
 local cc_num = reaper.GetExtState("AutomateExpressionShapesforSelectedNotes", "CC")
