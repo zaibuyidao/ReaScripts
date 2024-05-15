@@ -1,5 +1,5 @@
 -- @description Automate Expression for Selected Notes
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao, YS
 -- @changelog
 --   New Script
@@ -229,7 +229,7 @@ function autoExp(take, mode, bezier_in, bezier_out)
           end
         else
           quaver = false
-          min_val = minmin2
+          min_val = minmin
         end
 
         if ppq_len > 0 and ppq_len < tick/2 then -- 大于 0 并且 小于 240
@@ -256,7 +256,7 @@ function autoExp(take, mode, bezier_in, bezier_out)
             end
           else
             quaver = false
-            min_val = minmin2
+            min_val = minmin
           end
         end
         if bpm_average < 96 then dur = tick/2 else dur = tick end
