@@ -1,5 +1,5 @@
 -- @description Automate Expression Shapes for Selected Notes
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao, YS
 -- @changelog
 --   New Script
@@ -149,7 +149,7 @@ reaper.SetExtState("AutomateExpressionShapesforSelectedNotes", "Speed", speed, f
 reaper.SetExtState("AutomateExpressionShapesforSelectedNotes", "BezierIn", bezier_in, false)
 reaper.SetExtState("AutomateExpressionShapesforSelectedNotes", "BezierOut", bezier_out, false)
 
-function StartInsert()
+function StartInsert(take)
   reaper.MIDI_DisableSort(take)
   i = reaper.MIDI_EnumSelNotes(take, -1)
   quaver = false
@@ -218,7 +218,7 @@ function StartInsert()
   reaper.MIDI_Sort(take)
 end
 
-function EndInsert()
+function EndInsert(take)
   reaper.MIDI_DisableSort(take)
   i = reaper.MIDI_EnumSelNotes(take, -1)
   while i ~= -1 do
@@ -265,8 +265,8 @@ reaper.Undo_BeginBlock()
 
 for take, _ in pairs(getTakes) do
   reaper.MIDI_DisableSort(take)
-  StartInsert()
-  EndInsert()
+  StartInsert(take)
+  EndInsert(take)
   reaper.MIDI_Sort(take)
 end
 
