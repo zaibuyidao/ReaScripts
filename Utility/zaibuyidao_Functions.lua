@@ -1,5 +1,5 @@
 -- @description Functions
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
@@ -457,6 +457,7 @@ end
 
 -- 检查MIDI音符是否被选中
 function checkMidiNoteSelected()
+  local language = getSystemLanguage()
   local scriptShouldContinue = true
 
   -- 获取当前活跃的MIDI编辑器
