@@ -1,5 +1,5 @@
 -- @description Trim Item Edges
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
 --   # Fixed an issue where passing non-integer values to reaper.new_array() would cause an error.
@@ -234,11 +234,40 @@ function trim_item(item, keep_ranges)
   end
 end
 
+-- function trim_edge(item, keep_ranges)
+--   for i, range in ipairs(keep_ranges) do
+--     reaper.BR_SetItemEdges(item, range[1], range[2])
+--     reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", range.fade[1])
+--     reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", range.fade[2])
+--   end
+-- end
+
 function trim_edge(item, keep_ranges)
+  -- 获取原始的淡入淡出设置
+  local orig_fade_in = reaper.GetMediaItemInfo_Value(item, "D_FADEINLEN")
+  local orig_fade_out = reaper.GetMediaItemInfo_Value(item, "D_FADEOUTLEN")
+
   for i, range in ipairs(keep_ranges) do
+    -- 获取处理前的左右边界
+    local orig_left = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local orig_right = orig_left + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+
+    -- 设置新的左右边界
     reaper.BR_SetItemEdges(item, range[1], range[2])
-    reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", range.fade[1])
-    reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", range.fade[2])
+
+    -- 获取处理后的左右边界
+    local new_left = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local new_right = new_left + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+
+    -- 如果左边界有变动且左边界没有与淡入设置相同，则修改淡入设置
+    if not eq(range[1], orig_left) and not eq(range.fade[1], orig_fade_in) then
+      reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", range.fade[1])
+    end
+
+    -- 如果右边界有变动且右边界没有与淡出设置相同，则修改淡出设置
+    if not eq(range[2], orig_right) and not eq(range.fade[2], orig_fade_out) then
+      reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", range.fade[2])
+    end
   end
 end
 
