@@ -1,8 +1,8 @@
 -- @description Trim Item Edges
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   # Fixed an issue where passing non-integer values to reaper.new_array() would cause an error.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -455,8 +455,8 @@ function max_peak_pos(item, step, pend, pstart)
   local channels = reaper.GetMediaSourceNumChannels(source)
   local startpos = 0
 
-  local samples_per_block = samplerate*(pend*channels)  -- local samples_per_block = math.floor(0.5+samplerate*(pend*channels))
-  local samples_per_block_i = samplerate*(pstart*channels)
+  local samples_per_block = math.floor(samplerate * pend * channels)  
+  local samples_per_block_i = math.floor(samplerate * pstart * channels)
   if samples_per_block_i == 0 then samples_per_block_i = 1 end
 
   local buffer = reaper.new_array(samples_per_block*channels)
