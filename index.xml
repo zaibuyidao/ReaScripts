@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f3ab24c0f15d12cfd959e8556923284ae3549b3d">
+<index version="1" name="zaibuyidao Scripts" commit="42b52a86b96780705412141dbd3920adfd370165">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1580,6 +1580,10 @@
       <version name="1.0.2" author="zaibuyidao" time="2024-05-21T02:00:51Z">
         <changelog><![CDATA[# Fixed an issue where passing non-integer values to reaper.new_array() would cause an error.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f3ab24c0f15d12cfd959e8556923284ae3549b3d/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2024-05-21T02:23:18Z">
+        <changelog><![CDATA[# Fixed an issue where passing non-integer values to reaper.new_array() would cause an error.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1ce47ce6897de9129b97341b0bc33b9d744f697f/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items Settings.lua" type="script" desc="Trim Split Items Settings">
@@ -7871,6 +7875,10 @@
         <changelog><![CDATA[Brand new REAPER: 7.15, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/6b13f2f7e2dd2f01c7af2a06428040486b1caa23/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
+      <version name="1.0.12" author="zaibuyidao" time="2024-06-11T09:01:00Z">
+        <changelog><![CDATA[Brand new REAPER: 7.16, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/42b52a86b96780705412141dbd3920adfd370165/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
     </reapack>
     <reapack name="Chinese Traditional (繁體中文).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁體中文)">
       <metadata>
@@ -7911,6 +7919,10 @@
       <version name="1.0.11" author="zaibuyidao" time="2024-04-23T02:26:21Z">
         <changelog><![CDATA[Brand new REAPER: 7.15, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/6b13f2f7e2dd2f01c7af2a06428040486b1caa23/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
+      <version name="1.0.12" author="zaibuyidao" time="2024-06-11T09:01:00Z">
+        <changelog><![CDATA[Brand new REAPER: 7.16, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/42b52a86b96780705412141dbd3920adfd370165/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
