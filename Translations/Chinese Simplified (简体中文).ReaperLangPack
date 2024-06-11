@@ -1,10 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 1.0.11
+;Version: 1.0.12
 ;Author: zaibuyidao
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47851/Chinese%20Simplified%20%28%26%2331616%3B%26%2320307%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.15, SWS: 2.14.0.1
+;  Brand new REAPER: 7.16, SWS: 2.14.0.1
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -230,7 +230,7 @@ D26FE1B4C8988F96=静音
 2B7EEDEAE2DA5D5C=启用节拍器
 B420EF3AC9B07180=预卷
 0B61CC7E6E2E017D=MIDI 通道:
-3D9702905AC5B44C=虚拟 MIDI 键盘
+D3B242D430A5DB6C=虚拟 MIDI 键盘
 38F9B35CED04D04D=大时钟
 DDD50B6B9C96D4AA=仅在效果配置处于焦点时启用
 780AC67AB2044E79=仅在效果配置可见时启用
@@ -298,7 +298,10 @@ AF427D96E302B145=自定义菜单:
 38EAAB594661F05F=默认菜单:
 2772A8367A8BAE5D=添加新元数据
 F33EC3BF0909E19D=批量文件/对象转换器
+EAC3236C52A59642=元数据
 60D567E3F589B0A1=标准化/限制/淡化
+C06990BC3CFF91ED=尽可能保留:
+89A5AA6E37BDCA34=起始偏移
 2746237EF788A7A8=bpm
 DAFC8FBBDCAFABD6=工具栏
 BDB27E5D914EF9E2=视频
@@ -327,7 +330,6 @@ BEE3F1BDC2A992A1=媒体对象属性
 18D0284FCA66EF48=片段 FX...
 A1A721902449610D=片段媒体源
 ADFC12BF930BBFC9=片段属性
-268986373F235EF0=节拍
 4645A0C0BE8944CC=渲染时计算统计信息
 BD7850245F5A79EE=导入
 472B99EE9A28AFB0=避免自动设置来自其他轨道的 MIDI 对象为可编辑
@@ -370,6 +372,7 @@ F47146FFAED94D96=新建工程
 20F7E9591DA69ED6=移动
 7AF19CA985602750=注意: 其中一些选项现在或曾被认为是实验性的。
 FA904550054D55C7=位深:
+268986373F235EF0=节拍
 4866C29B8CF7BEF3=瞬态响度 (LUFS-M)
 B7198C6865BD82A9=峰值
 661759053D17D58C=峰值显示设置
@@ -705,7 +708,6 @@ E80224910029CDEC=修剪/读取
 EE5CF20F98160706=解冻轨道 (恢复先前的对象和 FX)
 58EB14692B28F25A=取消选择所有点
 C2EA750B659102CA=查看
-D3B242D430A5DB6C=虚拟 MIDI 键盘
 C9D51236E5A04162=写入
 CC64F05E5E298084=缩小
 62473318FFD2829F=[录音设置]
@@ -1092,11 +1094,13 @@ F3238895531F739E=通道
 0C22C8DDBED380C3=清除全部
 39B8A8053FCFA39B=多立体声
 DBFC480F845291B3=多通道
+EFA75D43B72E443E=保留
 5181B7110326CFAB=添加元数据列
 44D502BC3E71FBB7=通道
 0630D27A518EADFB=删除 %d 个文件？
 1EF69AD1CE2EBA7C=删除 1 个文件？
 A752FB9BC4EC6C8C=正在初始化...
+9808E2B8B8A65ED7=元数据图像文件
 5D3E4AAB7C030AF2=峰值音量
 8E44092098A00B7A=重命名数据库
 A281F8F3044B9C7B=重命名文件夹
@@ -1218,6 +1222,7 @@ DC232FE59F662690=当启用 '从小节开始' 时，等待下一小节再开始�
 E7B63BC14820F88E=显示(&S)
 945C03D8A0B833B8=为媒体计算峰值音量和响度 (LUFS-I)
 507B67F19A3899C7=显示图像元数据...
+774D371D634866EB=编辑图像元数据...
 1AA7BFBA524B24FA=重新读取媒体元数据
 DA93338F06D3E461=设置为收藏夹
 26DB177BC7B24D73=设置临时标记
@@ -1269,6 +1274,7 @@ BA1A25DF2A11E99B=重命名文件夹
 3322AA333AEE590E=显示包络
 EDD67828D248E210=在轨道控件中显示
 D726E2A6E8466B26=创建新 MIDI 文件:
+FC7C5BB198567CED=小节
 2ED22F7EFB7E2C2A=全部
 49EE42D3465CDA6E=所选
 C92094118C504736=重命名编组
@@ -1290,6 +1296,7 @@ ED3B2E348AB4097C=空
 57F28E456CC0FEEB=音高
 2C5B8309D9FC8004=片段
 63ACD193C4316F68=标准
+66C99ED0CD0E0C90=节拍
 7C21CDD2AEBBA4D6=被包围的对象替换包围它们的对象
 5BA4387FA574D390=对象始终混合
 DD2984E0D3995E66=对象始终替换较早的对象
@@ -1299,6 +1306,9 @@ AD6ADC4BDE973BA3=选择替换文件:
 3DC3C3589C65D706=MIDI
 C31D08554C93D81A=ReaJS
 33C1474459264CBC=预置按钮
+F7B45F7E4B7A392C=结束
+5086F582D5199414=起点
+85801996C596A70B=空格
 2AF10D61DA454203=三角形
 A159C77E1AA46F0C=关闭
 D8C1A6186B98A8C4=in
@@ -1338,7 +1348,6 @@ E4DA54B8178F9F4F=编辑系统专用事件
 EBBFDA9189F52B3B=编辑三连音
 B686BA8838F18A6F=调号更改影响所有轨道
 0245229F78012A00=从文件加载音符/CC 名称...
-FC7C5BB198567CED=小节
 652EF93F64A683F6=媒体对象车道
 E733F90D010E8468=乐谱: 在编辑器网格上识别和弦
 DC1BFC2EC50777D8=乐谱: 移除所有和弦记号
@@ -1648,7 +1657,6 @@ DE99D08FB71B46E9=快速
 988C99144976855B=ReaRoute %d
 BA66149397E5F1AE=所有通道
 081CECC31B65E0C4=当选择时设置轨道自动预备录制
-F7B45F7E4B7A392C=结束
 73235A4845CE69AF=主控混音
 C7B7708D1F9B3C8C=区域
 719B2E5CDAD2E067=轨道
@@ -2092,6 +2100,7 @@ C7B479203D71CE7C=一次只允许打开一个 FX 链窗口
 93AB0A51C603D260=将 FX 状态显示为名称中的可访问文本
 20D2538F88926BA7=在 FX 按钮右键菜单中显示当前轨道 FX
 69380E9888485D32=关闭 FX 窗口时不创建撤销点
+ED946A49E2104081=渲染时禁用 FX 窗口
 BC7E46D8B652D860=最近使用列表最大值:
 8E5AEF0B57EBCA22=只显示与过滤字符串匹配的 FX:
 C7B549E0E6B82FD1=重置为推荐的默认设置
@@ -2125,11 +2134,12 @@ F67D1FDC9D0ABC37=主输出
 
 [DLG_157] ; IDD_PREFS_CSURF
 2494101BD051C898=控制面板/OSC/网络控制
+1BD0786A46F8FDAB=(更改将立即生效)
 82A49039D1782EAE=控制面板显示更新频率:
 D5AD81A3A8A8050D=Hz (默认: 15)
 9F6C638411280BB3=打开面板 MIDI 设备时发出警告
 0E6F8D5A50F68297=当停止且不是活跃应用程序时关闭控制面板设备
-1BD0786A46F8FDAB=(更改将立即生效)
+78D21756BCA540A4=渲染时关闭控制面板设备
 
 [DLG_158] ; IDD_SURFACEEDIT
 ED0AE3021E21F18C=控制面板设置
@@ -2653,6 +2663,9 @@ CE6DFBAB9235015B=无活跃包络
 9284455D75FB9907=已编组
 81446DD96A434032=当片段高度低于设定值时，隐藏按钮:
 6299F379BCF4015F=在对象上绘制选择指示器
+1CA2C5CE047F9737=最大拉伸标记手柄大小:
+47D8FDC2B396D03B=像素, 或:
+7725DBF64BCDCBCD=片段高度的 %
 2F1F4144014A4016=对象音量手柄:
 
 [DLG_238] ; IDD_METRONOMECFG
@@ -2675,8 +2688,9 @@ FBA75D9853D48260=播放前预卷
 
 [DLG_239] ; IDD_VKEY
 46740455C8438A31=虚拟键盘按键
-C66260A5E9840B6E=中心音符 (右键单击一个按键进行设置):
+7F86512DE62B2E13=将所有键盘输入发送到 VKB
 D43F8897F4277454=方向键更改八度/通道
+A217F2E98E32EE98=中心音符:
 
 [DLG_240] ; IDD_BIGCLOCK
 
@@ -2885,7 +2899,7 @@ A06018BD1D8D0851=活跃或不确定
 [DLG_278] ; IDD_RENAME_SMALL
 
 [DLG_280] ; IDD_DYNAMIC_SPLIT
-FE116402CB3788B9=生成指引
+FE116402CB3788B9=生成参考线
 1E6F2B307693DFF0=添加拉伸标记
 48867AD65E380310=动态分割对象
 510C378B5623AFE4=分割点
@@ -3146,9 +3160,6 @@ E3A550B7DF8959EF=打开...
 ED23EA1FACCC7A09=使用源文件目录结构
 7B21C9863AA04D13=抖动
 1D5AC868CE7FE785=噪音整形
-C06990BC3CFF91ED=尽可能保留:
-89A5AA6E37BDCA34=起始偏移量
-EAC3236C52A59642=元数据
 6882EA606C9A4C9C=使用 FX
 90F06D85BD777AC0=FX 链
 E4139254E08617B6=尾部 (ms):
@@ -3217,6 +3228,7 @@ E64FC9552B0BA98B=在媒体导入时自动命名未命名的轨道
 3DAC2560CF5B60EA=在元数据或文件名中带有速度信息的媒体
 8278E8B28B810DDD=如果速度可靠:
 6D1CB645EBF0E4B0=如果速度是建议的:
+B0BEF33EB6DBBAA4=如果工程为空:
 1AA4198DCD5FD638=调整速度后，将导入的媒体设置为在速度变化时自动拉伸
 5297592F118C7274=在导入原始 PCM 音频 (.SD2 文件等) 时，警告可能的错误播放
 
@@ -3372,7 +3384,6 @@ E19AF0FCD67934A5=当工程未保存且没有配置录音路径时的默认录音
 6934246FDA04EE9E=以下路径使用备选峰值缓存路径 (多个路径由分号分隔):
 
 [DLG_475] ; IDD_MEDIAITEMPROPS
-2BB176822FB6A485=HMSF
 8A7A99B055B2BC0E=淡入:
 406C7BB36CE42B0D=淡出:
 40CFF38DB7E3BBF0=吸附偏移:
@@ -3493,6 +3504,9 @@ CE6B1F605FC62CE7=按钮2
 323A73E4A444C161=插件兼容性
 EDA0C6E598F85DA1=预先将插件的输出缓冲区清零
 A8C678D44921F2AE=减少来自插件的非正规化 (推荐)
+01B820C5931A5565=在点之间插值时的自动化速率:
+282A5D8398FF0FC8=ms (0=每个缓冲块一次)
+A80F21E1A9E93B0C=注意: 仅影响支持采样精确自动化的插件。
 8F87D2EAD1659D21=禁用保存插件的完整状态 (不推荐, 建议为插件设置最小化撤销功能)
 A8951FCFD25B68DF=注意: 某些插件 (尤其是合成器和采样器) 会与工程存储大量数据，这可能导致当 REAPER 为插件参数调整保存撤销点时出现中断。
 D43728829B5F35B2=禁用完整插件状态保存可以防止这些中断，但也可能导致插件在重新打开工程时无法完全按照保存时的状态加载。
@@ -3523,7 +3537,6 @@ C7502BAD2630C160=分轨噪声塑形
 1D0338C3F6B44D89=推子前渲染分轨
 1C82D349AC8CB02A=嵌入拉伸标记
 CC8B7D7B05B79D60=嵌入片段标记
-68E761CF022B996B=尽可能保留源媒体元数据
 529A671FEBBC78D0=元数据...
 86C55D176585B2A2=输出格式
 C781F39457E72180=不渲染可能是无声的文件
@@ -3577,18 +3590,19 @@ B4C1E26DF9714E86=所有编组
 61EED2907714E9FF=自动编组媒体/剃刀编辑:
 
 [DLG_515] ; IDD_PREFS_PLUGINS_REASCRIPT
-58B4A8EDF08F1F9A=双击函数名跳转到函数定义 (命令切换)
+58B4A8EDF08F1F9A=双击函数名跳转到函数定义 (command 键切换)
 D9F6926ED9CBF7A9=Python
-F20359390E0CC35E=ReaScript 可用于创建简单宏来执行经常重复的任务，或创建复杂的 REAPER 扩展。
+F20359390E0CC35E=ReaScript 可用于创建简单宏来执行经常重复的任务, 或创建复杂的 REAPER 扩展。
 E6D764D466D14077=在线查看 ReaScript 概述
 C5BD660AE06DB168=查看本地 ReaScript 文档
+CCE5AF9B4CD69393=IDE 颜色...
 3F944C5A8A234435=在 ShowConsoleMsg(\"\") 上清除 ReaScript 控制台
 0A982E468D5F454F=运行任何 ReaScript 前清除 ReaScript 控制台
+806BC82F9B2933A1=IDE 打开时，将 ReaScript 错误信息输出到控制台
+E02350C4AD40AAF3=双击函数名跳转到函数定义 (control 键切换)
 2613C40B070714CE=Lua ReaScripts 的超时限制:
 8E74AFA00234F07A=IDE 监视窗口更新间隔:
 BF81EC1A2B542208=最大可见自动完成建议:
-2A12E2D3327E2A2E=双击函数名跳转到函数定义 (control 键切换)
-CCE5AF9B4CD69393=IDE 颜色...
 BFF5EC3F089E6751=启用 Python 以用于 ReaScript
 29F2655C1595AEC9=Python:
 1B226BA06F503D1D=Python 状态
@@ -4015,7 +4029,7 @@ ED4DC44C5FB86256=淡出:
 [DLG_607] ; IDD_PREFS_SCRUB
 AC26191C42FBEB16=擦洗/轻推设置
 5705FAACAE6DC64F=在擦洗/轻推时仅播放选定轨道
-59B3B7CB1091EC00=通过操作或控制面移动编辑光标时进行擦洗/轻推
+59B3B7CB1091EC00=通过操作或控制面板移动编辑光标时进行擦洗/轻推
 83598BE24A366D5C=(注意: 在编辑行为/鼠标修饰键中设置鼠标擦洗/轻推行为)
 C2BD0EBD477726F3=最大轻推速率:
 F7AB56EC6A4F9C68=当接近光标时限制轻推速率
@@ -4653,9 +4667,10 @@ E5D80D1C40705421=添加硬件控制器 MIDI 设备
 
 [MENU_324] ; IDR_CONTEXTS_24
 ;08F71B928F2055DD=24vkbCtx
-003BBBD75A6F3E50=将虚拟 MIDI 键盘停靠在泊坞窗
-C82A15933756388D=将所有键盘输入发送到虚拟 MIDI 键盘 (即使其他窗口处于活跃状态)
-29ADE871FA5ECAEC=关闭虚拟 MIDI 键盘
+59BE268243412BB0=将虚拟 MIDI 键盘停靠在泊坞窗
+57189D8A41564E1D=方向键更改 VKB 八度/通道
+9723D172B8B6042D=将所有键盘输入发送到虚拟 MIDI 键盘 (即使其他窗口处于活跃状态)
+9392A82E247EA3CC=关闭虚拟 MIDI 键盘
 
 [MENU_325] ; IDR_CONTEXTS_25
 ;E6CB9B19F8657AA3=25bigClockCtx
@@ -4744,7 +4759,6 @@ DE82404B7BA815CF=在使用监听 FX 时强制工程选项卡可见
 E9213C417C9F07F7=编辑标记...
 F686AE0AE333E622=移除标记\tAlt+单击
 2F7AA014B1F3AA7B=移除标记
-D28556DFC2F12B22=在区域/标记管理器中选择标记
 
 [MENU_334] ; IDR_CONTEXTS_34
 ;E2D5F7E4A9D9BD25=34_1regionctx
@@ -4754,7 +4768,6 @@ C17D7169D375F184=编辑区域...\tShift+双击
 D4B7550437E24C1C=设置循环点
 B9CB30CE74265C80=移除区域\tAlt+单击
 3E1F22F843D34B01=移除区域
-377FD206524E1614=在区域/标记管理器中选择标记
 8446FCD57E3108B5=渲染区域...
 
 [MENU_335] ; IDR_CONTEXTS_35
@@ -4934,7 +4947,7 @@ A0C4F5072F8ED0D9=在调音台中隐藏被过滤掉的轨道
 [MENU_352] ; IDR_CONTEXTS_52
 ;0FE28B53D7BDC953=52RegionMgrCtx
 A5702B77A90FF044=删除选定的标记/区域
-54D592EE2F283306=选择所有区域进行渲染
+E802D112ABF5F9F5=选择/取消选择所有区域
 043AE1AC506F3B9D=按时间线顺序重新编号 (先标记, 再区域)
 6FC3CC167E4D798D=导入区域/标记 (替换现有的)...
 CC51D6C141A77257=导入区域/标记 (与现有的合并)...
@@ -5293,7 +5306,7 @@ E4850748DBD946C8=创建自定义操作
 
 [actions]
 1546F599C0716CE8=脚本
-1A75352B0F400785=未知或已弃用 ⇌ unknown or deprecated
+95F138C369060E25=未知或已弃用 ⇌ Unknown or deprecated
 94D7CE5B9AFFBCB6=对象: 将轨道/片段 FX 应用到对象 ⇌ Item: Apply track/take FX to items
 0ACE45AC861D5AC5=对象: 将轨道/片段 FX 应用到对象 (单声道输出) ⇌ Item: Apply track/take FX to items (mono output)
 1C36DF6B264EE2DE=对象: 将轨道/片段 FX 应用到对象 (多通道输出) ⇌ Item: Apply track/take FX to items (multichannel output)
@@ -5588,7 +5601,7 @@ BC7AA5A7AA5D8DAA=轨道: 锁定轨道控件 ⇌ Track: Lock track controls
 591FD0534E6084E3=轨道: 切换锁定/解锁轨道控件 ⇌ Track: Toggle lock/unlock track controls
 132F905CC961F134=轨道: 选择已锁定控件的所有轨道 ⇌ Track: Select all tracks that have controls locked
 983DC166AEFEBF8A=轨道: 锁定/解锁轨道高度 ⇌ Track: lock/unlock track height
-BE8E71E68F96D9B8=视图: 显示虚拟 MIDI 键盘 ⇌ View: Show Virtual MIDI keyboard
+155C648BC37E4098=视图: 显示虚拟 MIDI 键盘 ⇌ View: Show Virtual MIDI Keyboard
 503BD57793C8F423=虚拟 MIDI 键盘: 将所有输入发送到 VKB ⇌ Virtual MIDI Keyboard: Send all input to VKB
 2FC12DF4E5922DE7=视图: 显示F X 浏览窗口 ⇌ View: Show FX browser window
 CC389AE1ACD62478=视图: 显示监听 FX 链 ⇌ View: Show monitoring FX chain
@@ -5770,7 +5783,7 @@ E2486EA26A42EE61=区域: 在当前区域播放完毕后转到下一个区域 (�
 C749AE2E5D8AD5DB=区域: 将循环点设置为上一个区域 ⇌ Regions: Set loop points to previous region
 18C96B32596269F7=区域: 将循环点设置为下一个区域 ⇌ Regions: Set loop points to next region
 37C7C760644B66ED=区域: 为渲染选择/取消选择所有区域 ⇌ Regions: Select/unselect all regions for rendering
-9117BF3BC0456BEE=标记: 按时间线顺序重新编号所有标记 ⇌ Markers: Renumber all markers in timeline order
+A9B6D118C833786E=标记: 按时间线顺序对所有标记和区域重新编号 ⇌ Markers: Renumber all markers and regions in timeline order
 AB89775C42E2C276=标记: 在播放/编辑光标处添加/移动标记 10 ⇌ Markers: Add/move marker 10 to play/edit cursor
 C7447B1E67C18D52=标记: 在播放/编辑光标处添加/移动标记 1 ⇌ Markers: Add/move marker 1 to play/edit cursor
 B1D1DC6070DD8CF3=标记: 在播放/编辑光标处添加/移动标记 2 ⇌ Markers: Add/move marker 2 to play/edit cursor
@@ -6580,6 +6593,8 @@ FA359457B58C2BD9=轨道: 在 TCP 中显示/隐藏选定文件夹轨道的子轨�
 9869A915C2015110=轨道: 在 TCP 和调音台中隐藏轨道 ⇌ Track: hide tracks in TCP and Mixer
 88B41E9ECE814577=轨道: 在 TCP 和调音台中显示所有轨道 ⇌ Track: make all tracks visible in TCP and Mixer
 FA4AF9872E4C5BC9=视图: 在编排的右侧显示 TCP ⇌ View: Show TCP on right side of arrange
+485967F29075FF4B=视图: 切换显示 TCP 区域 ⇌ View: Toggle show TCP area
+3B74CCED3E32458C=视图: 切换到备选 TCP 区域宽度 (默认备选宽度为零) ⇌ View: Toggle to alternate TCP area width (alternate is zero by default)
 293D4AED6CD88FF6=视图: 切换显示 MIDI 编辑器窗口 ⇌ View: toggle show MIDI editor windows
 6DDCFFD0DED744A7=自动化: 将所有轨道的自动化模式设置为 '修剪/读取' ⇌ Automation: Set all tracks automation mode to trim/read
 7E740F592E677C16=自动化: 将所有轨道的自动化模式设置为 '读取' ⇌ Automation: Set all tracks automation mode to read
@@ -8167,6 +8182,10 @@ F52D0B97953978BF=媒体通道映射器
 3682649808D0BC02=容器引脚连接器
 410558C833CA32E2=片段通道:
 DFDD08507C708C0A=反馈通道:
+38D7EFC7B65CD301=为每个媒体文件单独设置通道映射
+B638A2E9CB9C5F9D=为每个通道数单独设置通道映射
+12FDDDD27C6A57BB=所有文件使用相同的通道映射
+D10B29090DA57C81=不保留通道映射
 9AE521A5E147F19E=重置输入
 C837366CE0A940FB=重置输出
 8FD7C620F4697F54=清除输入
@@ -8210,6 +8229,7 @@ F929ED9B10754F1E=<光驱>
 E53A7C519014147D=模板
 6171888952027543=自动对象
 58B7992D8B49FFB7=显示/隐藏列
+FE6A18EFBAD835C1=将列移动到最左边
 1BA8B535C6016EE3=保存列预置
 D25BFBF394F65363=+ %d 更多文件发生错误
 017AD8DB18B854D5=写入元数据时发生错误:\r\n
@@ -8228,6 +8248,10 @@ AF0B0F38EB8B86EC=请参阅主要的工程渲染元数据对话框以获取更多
 ED001A35CE53CCB9=运行 \"重新从媒体读取元数据\" 以便为所选的媒体文件重新填充添加/编辑过的列。
 E8EDC38B6D327A4C=只读
 AD19026B4FC8E3F6=分配的音符将在每次使用后递增，当高音符被分配后，将重置为低音符。
+F2FB5987AA073FD4=删除媒体文件中的现有图像元数据？
+17DA63C3D4FD11EB=确认删除图像
+3029EA48A1B10A98=替换媒体文件中的现有图像元数据？
+B43B8688D482E788=确认替换图像
 6B6D6A315D1A4DBA=某些文件的元数据已手动编辑。保留编辑过的数据？
 B66F42CE04A87D3A=元数据警告
 49C5599426E1EDA9=回收文件夹？
@@ -8244,6 +8268,10 @@ BB4AB6B66771B736=创建新数据库
 6E11793408AC4705=错误: 一次只支持显示一个文件的图像元数据。
 85E9C8E14E466153=图像元数据错误
 6122A43ED20E5B8B=错误: 媒体不包含图像元数据。
+8DF00A32EBB3062C=错误: 一次只能为一个文件添加图像元数据。
+7A344B26B772359A=错误: 此文件类型不支持添加图像元数据。
+D88345C66E7244C9=写入元数据错误:\r\n
+B7CE5F33B6618667=无法更新文件 %s
 330FCBCEAB194567=可能:
 7800ECC7AFD0F2E5=分配 MIDI 音符 %s (%d) 并在新轨道中递增...
 BD627BDE5F9EBC6D=Cmd+opt+拖动选择以渲染新文件
@@ -8278,6 +8306,11 @@ FB270840FB940643=交叉淡化:
 696A412FD4A19F9F=开始音符:
 1B938F36A67382AD=低音符:
 AA37A34B39AD9C21=高音符:
+
+[explorer_DLG_139] ; IDD_IMG_METADATA
+0C1AA77FB4ED665B=图像文件元数据
+1A41C453655C341A=图像类型:
+48B17911A89D74AE=删除图像元数据
 
 [explorer_MENU_103] ; IDR_CONTEXTMENU
 02F53425A72D971D=CtxMenu-树形快捷方式
@@ -8628,6 +8661,7 @@ D7F25B8AB3B08ABD=采样率
 E08EFD4B28CE3B67=将文件夹分组置于顶部
 16A09735B32F07F6=设置日期/时间格式...
 68E9B203A241D55C=显示/隐藏用户列
+8C16AE68E72C7CE4=将用户列移动到最左边
 CB51CD61E9DC4DB0=编辑用户列
 D8B1C3522A2A1CB7=删除用户列
 3C7A9791B64DD759=添加用户列
@@ -8950,6 +8984,9 @@ E905C4762023137B=MIDI 导出失败！\r\n
 9D2C9A909EC17B79=当前输出文件
 78AB0BF3A75982CD=合并状态
 
+[grid]
+040769A4DF94A124=帧
+
 [gridsnap]
 59FC81FA7C61DF25=鼠标位置依赖
 4613D6FB04BC9724=仅在开始/结束偏移处吸附
@@ -9025,7 +9062,9 @@ F4A5B7402829DE55=编辑网格
 FA7C612AB981A126=擦洗
 
 [import]
-165F8BC068A39039=媒体建议 %g bpm:
+7D49E7B776503977=媒体报告 %s bpm:
+98E246AD5509EF5D=媒体建议 %s bpm:
+337A4424E610EBDF=媒体可能是 %s bpm, 但也可能不是:
 75C55F7F18E25742=NINJAM 导入选项
 9C0CBF91B3A756B8=从 %d 个分段文件中连接并制作无缝媒体 (强烈推荐)
 F2DB7183BF18E607=将 %d 条 MIDI 轨道扩展到新的 REAPER 轨道
@@ -9043,6 +9082,8 @@ F26A716BDE6F6E3D=媒体包含嵌入式的速度信息:
 5267FAD4364EECB7=将媒体调整到工程速度
 4C312A6BF9B1A258=忽略嵌入式的速度信息
 E79737BE62385ECF=媒体建议速度:
+BB8E4F3FB9B6D41D=调整工程以匹配媒体速度
+E8AE07DE23B58FCB=不调整工程以匹配媒体速度
 510535767F09F57F=根据此速度调整媒体
 1C2D4CFFB10D1CC6=忽略媒体建议的速度
 12E33FA9E65BF2FA=将目标媒体中所有 %d 处的内容替换为源媒体
@@ -9090,6 +9131,7 @@ CBE458B8A675A6A8=将 %d-通道 %s 导入为 %d 单声道轨道？
 
 [itemprop]
 943504C358764A1E=已选择 %d 个媒体对象。\r\n是否一次编辑多个对象属性，还是逐一编辑？
+42DC9C714456C0E3=H:M:S:F
 6130D9898B5B94EB=轨道/工程默认时基
 C4DC9407BD313431=节拍 (在速度变化时自动拉伸)
 734385B8B6365178=工程默认对象混合行为
@@ -9173,7 +9215,46 @@ D5B3CEB34955D699=将未保存的更改保存到:\r\n\r\n%s\r\n\r\n关闭前？
 2681A9306FB38F95=保存 JS 修改？
 
 [kb]
-CBF06458395B9896=数字键盘
+3037F1F3279BC591=Mousewheel
+06DDA07F32A8E6AE=HorizWheel
+71042DD55677B815=MultiHorz
+59F9A9C82758C4EB=MultiVert
+9E9EF662D9174533=MultiZoom
+D8B6AD3F80C87747=MultiRotate
+9AF0F2325EA21841=MediaKbd+
+AA6C706FD344F31E=Backspace
+75F2167E02076616=Tab
+CBF06458395B9896=NumPad
+3E8E3D710688A8E0=NumPad Enter
+58984B43F2E73B9D=Return
+43F8F31C37B7B32B=Enter
+776BDC4857002424=Raw %d
+D82BC4186B1904CA=Up
+9707B0A0A788F20B=Down
+6AAAAE5EFE8DC776=Left
+7E1A7DBA9A84DCCB=Right
+7C104398601B9618=Page Down
+245F427A1798276A=PrintScreen
+ECB19169001DCCF1=Page Up
+CDAEC57AFDF81EAA=NumLock
+E5133CE976A485C1=NumPad -
+E51339E976A480A8=NumPad .
+E5133AE976A4825B=NumPad /
+E5133DE976A48774=NumPad *
+E5132CE976A46A91=NumPad =
+E5133EE976A48927=NumPad +
+E51327E976A46212=NumPad 0
+E51328E976A463C5=NumPad 1
+E51325E976A45EAC=NumPad 2
+E51326E976A4605F=NumPad 3
+E51323E976A45B46=NumPad 4
+E51324E976A45CF9=NumPad 5
+E51321E976A457E0=NumPad 6
+E51322E976A45993=NumPad 7
+E5132FE976A46FAA=NumPad 8
+E51330E976A4715D=NumPad 9
+F883867E4C2A17AC=ESC
+513020CCC14EE575=CapsLock
 
 [knob]
 3F5B4E2B242194A4=差异独奏 (dry 和 wet 的区别)
@@ -10572,6 +10653,7 @@ CA518615C734C1CA=取消选择最后点击车道中的所有 CC 事件 ⇌ Unsele
 A4937C8EFAFA04CD=导航: 将编辑光标移动到活跃的 MIDI 媒体对象中选定事件的结束 ⇌ Navigate: Move edit cursor to end of selected events in active MIDI media item
 9712F192F383C39D=导航: 将编辑光标移动到可见钢琴卷帘左边缘 ⇌ Navigate: Move edit cursor to left edge of visible piano roll
 79BAE013AA7E4B51=编辑: 在鼠标光标处设置或插入 CC 事件 ⇌ Edit: Set or insert CC event at mouse cursor
+D32133FD903B80C9=编辑: 在当前车道的编辑光标处插入 CC 事件 ⇌ Edit: Insert CC event at edit cursor in current lane
 199EFD592E7BE892=时基: 节拍 (工程) ⇌ Timebase: Beats (project)
 5B420CACEF163E3E=时基: 节拍 (源) ⇌ Timebase: Beats (source)
 BC47512B47A7E0D4=时基: 时间 (工程) ⇌ Timebase: Time (project)
@@ -11176,6 +11258,7 @@ E15DF529704AB25D=选择所有事件
 4A2C9B3DEA76EED8=从音符设置 CC 选择
 5E1FCEE1531F0066=选择时间选区内的事件
 70B5E67A63C914AA=剪切事件
+17CB0E8037195E6F=在车道中插入 CC 事件
 BFD65E0CF645B4A4=微调选定的 CC 事件
 23D340AE480AF26E=更改 CC 形状
 761283CA54E4A41E=编辑 MIDI 编辑器设置
@@ -12720,6 +12803,7 @@ DE2D329EDB565919=当 REAPER 的内存使用超过列出的数量时发出警告�
 B8209A80E5196B5F=如果您希望继续修改工程速度，请导入为节拍片段。如果您想立即循环文件，请作为单个对象导入。
 D6B3258358646B98=每个切片可能包含尾部音频，这可以在后面的切片之下播放。这些尾部可以播放，或在导入时被剪切掉。
 7ED160FF65BD9401=如果媒体文件名或元数据建议一个速度，那么可以使用该速度来自动调整媒体的播放速率。
+1DD197CA28C32C5B=将包含嵌入式或建议的速度信息的媒体导入空工程时，工程速度可以根据媒体设置。
 F72F91B3C56C2B0E=包含嵌入式速度信息的媒体可以自动调整播放速率。媒体资源管理器速度匹配设置将覆盖。
 F8E3EF53B1BDD6A3=包含嵌入式速度信息的媒体可以设置为在媒体对象跨越工程速度变化标记时自动拉伸。
 5C706D7979AC5D7E=原始 PCM 文件可以使用最佳猜测音频参数 (例如采样率) 导入。在导入时，说明如何修复不正确的参数。
@@ -12862,6 +12946,7 @@ B1E6855EF0EF358C=除最后的切片尾部外，切除所有切片尾部
 FC0E08250AD06B61=切除所有切片尾部
 426508C2321AA6AA=自动调整媒体以适应工程速度
 3C4124923C0D536C=提示调整媒体以适应工程速度
+A2F7B7E0F0E33756=提示调整工程以匹配媒体速度
 AAA11519CE4B6D78=分别插入到不同的轨道
 7C780A1AEAE75643=在单条轨道上按顺序插入
 52ED394E44E8AE09=自动决定 (通过观察长度)
@@ -12964,6 +13049,7 @@ DDC7D8ED91A4A91D=为对象的音高和播放速率调整绘制完整的文本标
 B929A0E4AA3BB893=对于对象音高和播放速率的调整，仅绘制数字而不显示文本标签 (启用时)。
 DFF7B5859424545D=当标签是在媒体对象内部绘制而不是在其上方时，如果媒体对象太小，则隐藏媒体对象按钮 (除了锁定按钮)。
 872F5022381EC3B3=在选定的媒体对象上绘制主题指示器。默认的指示器是一个小点。
+1E8D325940E50344=将片段/瞬态手柄的宽度限制为至少一个 DPI 调整后的像素大小 (默认 6), 或片段高度的百分比 (默认 12%)。
 
 [prefs_meter_help]
 C497A4E2AD4CC7CA=仪表的刷新率。速率越高，仪表重绘的速度越快。
@@ -13212,6 +13298,7 @@ BB613AF1318E2B21=在此指定过滤字符串以允许从 FX 浏览器中删除�
 A27232CED0378863=在链视图中的 FX UIs 上方显示 FX 注释字段 (用户可以根据需要编辑注释)。
 0BE08FFBC9CFE501=关闭 FX 窗口时可能会添加撤消点，以捕获插件可能未报告的插件状态中的更改。
 DAA6C01C423886BA=在并行/离线/旁路 FX 的 FX 名称中包含描述性文本，以提高屏幕阅读器的易用性。
+BC02C62B6866C230=如果勾选，则在渲染期间防止用户与 FX 插件交互 (这可能会根据插件导致渲染错误)
 
 [prefs_plugin_knob]
 1D75478FD209EC92=圆形
@@ -13224,6 +13311,7 @@ B150A2F1CC68BBAF=插件窗口未打开时忽略 [默认]
 811F90A56BF55F69=测试所有插件输入和输出的非正规化采样值 (意味着非常小的值，可能会导致非常高的 CPU 使用率)。
 749C7A00C3C0114E=在将它们传递给插件之前清除插件的输出缓冲区。有些插件可能偶尔输出未初始化的缓冲区，这会产生很大的噪声。
 054AFFC8FC04D334=保存插件的所有内部状态，而不仅仅是旋钮的位置。建议这样做，因为许多插件存储额外的设置。
+EAB0A76C4CBF62FF=在非方形包络点之间插值时，可选择在每个缓冲区块内发送多于一次的自动化信息。
 91B420B42CE40B7E=如果有故障或恶意的插件破坏了内存，REAPER 可以立即退出，或者尝试继续运行，但有很高的崩溃或后续出错的风险。
 D05E96383C39FA84=附加设置，如有问题的插件兼容性模式以及保存/撤销选项，可以通过在 FX 浏览器中右击插件名称来设置。
 
@@ -13274,8 +13362,9 @@ D242C2C87F79C121=EEL2 和 Lua 的 ReaScript 将始终有效。Python 必须在�
 8D0DE2F7EBEE6514=如果 REAPER 不能自动找到 Python，则输入路径。更多信息请参阅 Python 安装程序的 readme。
 AD1401A586D43E2D=如果您安装了多个 Python 版本，如有需要，可以强制 REAPER 使用特定的动态库。
 4B36F58C7AA1704F=仅显示此数量的自动完成建议列表 (您仍然可以使用方向键导航更长的列表)。设置为 0 以禁用建议。
-2D12ADB4794B2985=点击更改 ReaScript/JSFX/Video Processor IDEs 的颜色主题
-268DA5DAB1A33884=如果启用，双击用户定义的函数名称将跳转到该函数的实现
+E904999114534048=默认情况下，ReaScript 编译时错误信息会显示在 IDE 底部。该信息也可以输出到控制台。
+E1E6D4AA1AB7CD91=点击以更改 ReaScript/JSFX/视频处理器 IDE 的颜色主题。
+25E97C9BD85948DE=如果启用，双击用户定义的函数名称将跳转到该函数的实现。
 
 [prefs_record_help]
 F1E406C6866C1FE5=在录制时，按照选项菜单设置，当录制光标移出屏幕时，自动滚动编排视图。
@@ -13441,7 +13530,6 @@ DB1AD925D830A08C=特殊模式，仅适用于 UAD 插件，减少并行处理的�
 ECDBB74C1B43A388=对象编组
 4F2D327AF8BC0B38=片段复合
 DE8C2727D599C9C8=文件名
-EFA75D43B72E443E=保留
 AD645A7EB24016DD=采样率
 9D93956603C54634=源详情
 9007BD4650E2DD83=活跃片段名
@@ -13609,7 +13697,7 @@ AE7BB4D8A52481FB=此行为也可以在 '文件/工程设置' 中更改。
 ABB2015608E8899E=单条轨道和媒体对象的时基可以独立于工程时基进行设置。
 6BF51A7CD81FAB00=MIDI 媒体对象始终有时基节拍 (位置, 长度, 速率)。
 F95AEE56B041FBEA=在媒体对象源属性中，单个 MIDI 媒体对象的时基可以锁定到特定的速度，而不受工程速度的影响。
-66C99ED0CD0E0C90=节拍
+D66687582BC019A5=拍号:节拍, 速度:时间
 E67991FAF404D160=64 bit 浮点数 (默认)
 E3FB583A2F8F5147=32 bit 浮点数
 8F8A57D1AEE90E6A=39 bit 整数
@@ -14199,7 +14287,6 @@ DECD2310B73C439D=插图
 C1785570C5305FE7=出版商/工作室标志
 0E035AC2D4828900=未设置
 383BA19367FC60C9=无图片
-9808E2B8B8A65ED7=元数据图像文件
 
 [render_month]
 E299BC7ED0CFEACC=一月
@@ -14807,7 +14894,6 @@ ABD7CD31052E10CB=噪音 (Noise)
 D59295A61D7AB578=另类摇滚 (AlternRock)
 03CBAC237D4FA7A0=灵魂 (Soul)
 F231313BF769AFEB=朋克 (Punk)
-85801996C596A70B=太空 (Space)
 227829CC3F7D0FBB=冥想 (Meditative)
 D115677928CECCC8=器乐流行 (Instrumental Pop)
 71657DED1CEB80AC=器乐摇滚 (Instrumental Rock)
@@ -14908,6 +14994,7 @@ B579021978E2DE9D=莎莎舞 (Salsa)
 65ACF5DC05E9E2D9=动漫 (Anime)
 5AAAD371C1A6B9C2=日式流行 (JPop)
 275D3833EA36F132=合成器流行 (SynthPop)
+85801996C596A70B=太空 (Space)
 
 [tcpfx]
 FC2DF531D928B2B9= (已旁通)
@@ -15093,9 +15180,12 @@ B070DA74BE889013=网格线 (在节拍之间) - 绘制模式
 08EC1AB0075E7F9E=编辑参考线颜色
 916AE65E81752D61=编辑参考线填充模式
 3E08779201232AB5=区域车道背景
-90348B53A1271FB6=区域车道文本
+69AAA7C60EE63428=区域文本和边缘
+AEE98D3498376CF0=区域文本和边缘 (已选定)
 EAE17BDD6A6A69DB=标记车道背景
-1A03824363F301D0=标记车道文本
+676E8A459EC67C80=标记编号和边缘
+1D0FA83CFECA5168=标记编号和边缘 (已选定)
+48A5D636FA2F2140=标记文本
 B56E0937C64A1082=拍号变化标记
 A6B1F6423A3C917E=拍号车道背景
 EE261603A59EC7C5=拍号车道文本
@@ -15687,7 +15777,6 @@ D5410F7694BE5A88=计算对象 %d/%d: %s
 B6BBE51A70CB8100=暂停录制
 1DB44E91D2CCBB61=暂停
 455B12DE92C1A943=等待时码
-5086F582D5199414=起点
 4E45CA229B084583=选择:
 6413E5E8A8CC3003=选择开始
 B0113A49F4AF3516=选择结束
