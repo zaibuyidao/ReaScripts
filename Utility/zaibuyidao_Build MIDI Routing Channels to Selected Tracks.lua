@@ -1,5 +1,5 @@
 -- @description Build MIDI Routing Channels to Selected Tracks
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -68,7 +68,7 @@ for i = 0, count_sel_track-1 do
         msgerr = "錯誤"
     else
         title = "Build MIDI Routing Channels to Selected Tracks"
-        utitle = "Build MIDI Routing Channels To "
+        utitle = "Build MIDI Routing Channels to "
         captions_csv = "Total number of channels:,Starting channel:"
         msgvst = "VSTi plugin not detected. Please ensure that a VSTi plugin is correctly loaded."
         msgerr = "Error"
