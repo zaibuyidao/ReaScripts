@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="add11797581aa7f89ddbef1c0f054071d5d422bf">
+<index version="1" name="zaibuyidao Scripts" commit="f2cd4d7b9c270ca956889da2389238587b28ad9c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7997,6 +7997,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-06-18T09:20:45Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2cddd2d7d43a564f06e9e69a6b92138142504f38/Utility/zaibuyidao_Build%20MIDI%20Routing%20Channels%20to%20Selected%20Tracks.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-06-18T16:20:51Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f2cd4d7b9c270ca956889da2389238587b28ad9c/Utility/zaibuyidao_Build%20MIDI%20Routing%20Channels%20to%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Cakewalk Style Cursor Follow (Main Or MIDI Editor).lua" type="script" desc="Cakewalk Style Cursor Follow (Main Or MIDI Editor)">
