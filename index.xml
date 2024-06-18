@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c2c03685290f1ff18d6b715cc8e066c37108be50">
+<index version="1" name="zaibuyidao Scripts" commit="06ba11d19223faf1a7cf643fc412f8bd5db0aebd">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7927,7 +7927,7 @@
     </reapack>
   </category>
   <category name="Utility">
-    <reapack name="zaibuyidao_Add MIDI Hardware Outputs &amp; Receives to Selected Tracks (Transcription).lua" type="script" desc="Add MIDI Hardware Output &amp; Receives to Selected Tracks (Transcription)">
+    <reapack name="zaibuyidao_Add MIDI Hardware Output &amp; Receives to Selected Tracks (Transcription).lua" type="script" desc="Add MIDI Hardware Output &amp; Receives to Selected Tracks (Transcription)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -7940,9 +7940,9 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-06-18T13:21:54Z">
+      <version name="1.0" author="zaibuyidao" time="2024-06-18T14:10:30Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f8aa30a0b22646a67e134cde3a5f3bf1ff25b32c/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Outputs%20&amp;%20Receives%20to%20Selected%20Tracks%20(Transcription).lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/06ba11d19223faf1a7cf643fc412f8bd5db0aebd/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20&amp;%20Receives%20to%20Selected%20Tracks%20(Transcription).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Auto Load VSTi For MIDI Playback (Settings).lua" type="script" desc="Auto Load VSTi For MIDI Playback (Settings)">
