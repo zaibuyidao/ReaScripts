@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="eeffbae1be8b1ece26fb0a998cd5ca3faaf8539c">
+<index version="1" name="zaibuyidao Scripts" commit="d9535d9344341c7158840a16b8218bfd83e9bb0d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4681,7 +4681,7 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8742662b503bd3b10516717d087319df4f4b6080/MIDI%20Editor/zaibuyidao_Note%20Off%20Velocity%20-10.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Notes to Pitch Bend1.lua" type="script" desc="Notes to Pitch Bend">
+    <reapack name="zaibuyidao_Notes to Pitch Bend.lua" type="script" desc="Notes to Pitch Bend">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -4694,9 +4694,9 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-06-19T09:46:51Z">
+      <version name="1.0" author="zaibuyidao" time="2024-06-19T09:47:37Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/eeffbae1be8b1ece26fb0a998cd5ca3faaf8539c/MIDI%20Editor/zaibuyidao_Notes%20to%20Pitch%20Bend1.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d9535d9344341c7158840a16b8218bfd83e9bb0d/MIDI%20Editor/zaibuyidao_Notes%20to%20Pitch%20Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Notes to Smooth Pitch Bend.lua" type="script" desc="Notes to Smooth Pitch Bend">
