@@ -1,70 +1,42 @@
 -- @description Insert Pitch Bend Curve (Triangle)
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   New Script
 -- @links
---   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repo https://github.com/zaibuyidao/ReaScripts
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires SWS Extensions
+-- @about
+--   Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts.
+--   Requires JS_ReaScriptAPI & SWS Extension
 
-function print(...)
-  local params = {...}
-  for i = 1, #params do
-    if i ~= 1 then reaper.ShowConsoleMsg(" ") end
-    reaper.ShowConsoleMsg(tostring(params[i]))
-  end
-  reaper.ShowConsoleMsg("\n")
-end
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+  dofile(ZBYDFuncPath)
+  if not checkSWSExtension() or not checkJSAPIExtension() then return end
+else
+  local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+  "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+  "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
 
-function table.print(t)
-  local print_r_cache = {}
-  local function sub_print_r(t, indent)
-    if (print_r_cache[tostring(t)]) then
-      print(indent .. "*" .. tostring(t))
-    else
-      print_r_cache[tostring(t)] = true
-      if (type(t) == "table") then
-        for pos, val in pairs(t) do
-          if (type(val) == "table") then
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(t) .. " {")
-            sub_print_r(val, indent .. string.rep(" ", string.len(tostring(pos)) + 8))
-            print(indent .. string.rep(" ", string.len(tostring(pos)) + 6) .. "}")
-          elseif (type(val) == "string") then
-            print(indent .. "[" .. tostring(pos) .. '] => "' .. val .. '"')
-          else
-            print(indent .. "[" .. tostring(pos) .. "] => " .. tostring(val))
-          end
-        end
-      else
-        print(indent .. tostring(t))
-      end
-    end
-  end
-  if (type(t) == "table") then
-    print(tostring(t) .. " {")
-    sub_print_r(t, "  ")
-    print("}")
+  reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
   else
-    sub_print_r(t, "  ")
+    local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+    "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+    "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
+
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
   end
+  return
 end
 
-function open_url(url)
-  if not OS then local OS = reaper.GetOS() end
-  if OS=="OSX32" or OS=="OSX64" then
-    os.execute("open ".. url)
-  else
-    os.execute("start ".. url)
-  end
-end
-
-if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox("這個脚本需要SWS擴展，你想現在就下載它嗎？", "Warning", 1)
-  if retval == 1 then
-    open_url("http://www.sws-extension.org/download/pre-release/")
-  end
-end
+local language = getSystemLanguage()
 
 local _SN_FocusMIDIEditor = reaper.SN_FocusMIDIEditor
 reaper.SN_FocusMIDIEditor = function(...) if _SN_FocusMIDIEditor then _SN_FocusMIDIEditor(...) end end
@@ -140,7 +112,18 @@ function Main()
   local num = reaper.GetExtState("InsertPitchBendCurveTriangle", "Num")
   if (num == "") then num = "12" end
 
-  local user_ok, user_input_CSV = reaper.GetUserInputs("Insert Pitch Bend Curve (Triangle)", 5, "Starting value 起始點,Highest value 最高點,Repetitions 重複,Length 長度,Points 點數", bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
+  if language == "简体中文" then
+    title = "插入弯音曲线(三角)"
+    captions_csv = "起始点,最高点,重复,长度,点数"
+  elseif language == "繁體中文" then
+    title = "插入彎音曲綫(三角)"
+    captions_csv = "起始點,最高點,重複,長度,點數"
+  else
+    title = "'Insert Pitch Bend Curve (Triangle)"
+    captions_csv = "Starting value,Highest value,Repetitions,Length,Points"
+  end
+
+  local user_ok, user_input_CSV = reaper.GetUserInputs(title, 5, captions_csv, bottom ..','.. top ..','.. times .. "," .. length .. "," .. num)
   if not user_ok then return reaper.SN_FocusMIDIEditor() end
   bottom, top, times, length, num = user_input_CSV:match("(.*),(.*),(.*),(.*),(.*)")
   if not tonumber(bottom) or not tonumber(top) or not tonumber(times) or not tonumber(length) or not tonumber(num) then return reaper.SN_FocusMIDIEditor() end
@@ -196,7 +179,7 @@ function Main()
   end
   
   reaper.MIDI_Sort(take)
-  reaper.Undo_EndBlock("Insert Pitch Bend Curve (Triangle)", -1)
+  reaper.Undo_EndBlock(title, -1)
   reaper.UpdateArrange()
 end
 
