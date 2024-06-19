@@ -1,5 +1,5 @@
 -- @description Insert Pitch Bend Curve
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -140,7 +140,7 @@ elseif language == "繁體中文" then
   title = "插入彎音曲綫"
   captions_csv = "起始點,最高點,重複,長度,點數,1=正弦 2=三角 3=方波 4=鋸齒"
 else
-  title = "'Insert Pitch Bend Curve"
+  title = "Insert Pitch Bend Curve"
   captions_csv = "Starting value,Highest value,Repetitions,Length,Points,1=SIN 2=TRI 3=SQR 4=SAW"
 end
 

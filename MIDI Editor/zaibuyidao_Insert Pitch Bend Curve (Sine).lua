@@ -1,5 +1,5 @@
 -- @description Insert Pitch Bend Curve (Sine)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -104,7 +104,7 @@ function Main()
     title = "插入彎音曲綫(正弦)"
     captions_csv = "起始點,最高點,重複,長度,點數"
   else
-    title = "'Insert Pitch Bend Curve (Sine)"
+    title = "Insert Pitch Bend Curve (Sine)"
     captions_csv = "Starting value,Highest value,Repetitions,Length,Points"
   end
 

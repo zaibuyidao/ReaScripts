@@ -1,5 +1,5 @@
 -- @description Insert Pitch Bend Curve (Square)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -130,7 +130,7 @@ function Main()
     title = "插入彎音曲綫(方波)"
     captions_csv = "起始點,最高點,重複,長度,點數"
   else
-    title = "'Insert Pitch Bend Curve (Square)"
+    title = "Insert Pitch Bend Curve (Square)"
     captions_csv = "Starting value,Highest value,Repetitions,Length,Points"
   end
 
