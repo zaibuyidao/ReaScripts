@@ -1,90 +1,57 @@
--- @description Notes To Pitch Bend (Pre-Grid Point)
+-- @description Notes to Pitch Bend
 -- @version 1.0
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   New Script
 -- @links
---   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repo https://github.com/zaibuyidao/ReaScripts
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about
+--   Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts.
+--   Requires JS_ReaScriptAPI & SWS Extension
 
-range = 12
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+  dofile(ZBYDFuncPath)
+  if not checkSWSExtension() or not checkJSAPIExtension() then return end
+else
+  local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+  "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+  "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
 
-function print(...)
-  for _, v in ipairs({...}) do
-      reaper.ShowConsoleMsg(tostring(v) .. " ")
+  reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
+  else
+    local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+    "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+    "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
+
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
   end
-  reaper.ShowConsoleMsg("\n")
-end
-
-function getSystemLanguage()
-  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-  local os = reaper.GetOS()
-  local lang
-
-  if os == "Win32" or os == "Win64" then -- Windows
-    if locale == 936 then -- Simplified Chinese
-      lang = "简体中文"
-    elseif locale == 950 then -- Traditional Chinese
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "OSX32" or os == "OSX64" then -- macOS
-    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
-    if lang == "zh-CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh-TW" then -- 繁体中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "Linux" then -- Linux
-    local handle = io.popen("echo $LANG")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
-    if lang == "zh_CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh_TW" then -- 繁體中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  end
-
-  return lang
+  return
 end
 
 local language = getSystemLanguage()
 
+range = 12
+
 if language == "简体中文" then
-  swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
-  swserr = "警告"
-  jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
-  jstitle = "你必须安裝 JS_ReaScriptAPI"
-  title = "音符变弯音"
+  title = "音符转弯音"
   err_title = "错误"
   err_msg1 = "请检查音符间隔，并将其限制在一个八度内"
   err_msg2 = "请选择两个或更多音符"
-elseif language == "繁体中文" then
-  swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
-  swserr = "警告"
-  jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
-  jstitle = "你必須安裝 JS_ReaScriptAPI"
-  title = "音符變彎音"
+elseif language == "繁體中文" then
+  title = "音符轉彎音"
   err_title = "錯誤"
   err_msg1 = "請檢查音符間隔，並將其限制在一個八度内"
   err_msg2 = "請選擇兩個或更多音符"
 else
-  swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
-  swserr = "Warning"
-  jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
-  jstitle = "You must install JS_ReaScriptAPI"
-  title = "Notes Become Pitch Bend"
+  title = "Notes to Pitch Bend"
   err_title = "Error"
   err_msg1 = "Please check the note interval and limit it to one octave."
   err_msg2 = "Please select two or more notes."
@@ -165,23 +132,14 @@ local pitch = {}
 local startppqpos = {}
 local endppqpos = {}
 local vel = {}
-local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
-local cur_gird, swing = reaper.MIDI_GetGrid(take)
-local tick_gird = midi_tick * cur_gird
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
 if #index > 1 then
-  local prevLSB, prevMSB = 0, 64  -- 初始化前一个音符的弯音值为（0, 64）
-
   for i = 1, #index do
     retval, selected, muted, startppqpos[i], endppqpos[i], chan, pitch[i], vel[i] = reaper.MIDI_GetNote(take, index[i])
     if selected then
-      if i > 1 then  -- 从第二个音符开始插入网格点
-        reaper.MIDI_InsertCC(take, true, false, startppqpos[i]-tick_gird, 224, 0, prevLSB, prevMSB)
-      end
-
       if pitch[i-1] then
         local pitchnote = (pitch[i]-pitch[1])
         local seg = getSegments(range)
@@ -197,11 +155,8 @@ if #index > 1 then
         LSB = pitchbend & 0x7F
         MSB = (pitchbend >> 7) + 64
 
-        prevLSB, prevMSB = LSB, MSB  -- 更新前一个音符的弯音值
-
         reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, LSB, MSB)
       end
-
       if i == #index then
         j = reaper.MIDI_EnumSelNotes(take, -1)
         while j > -1 do
@@ -212,13 +167,6 @@ if #index > 1 then
           reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
         end
         reaper.MIDI_InsertNote(take, selected, muted, startppqpos[1], endppqpos[i], chan, pitch[1], vel[1], true)
-      end
-
-      j = reaper.MIDI_EnumSelCC(take, -1) -- 选中CC设置形状
-      while j ~= -1 do
-        reaper.MIDI_SetCCShape(take, j, 1, 0, false)
-        reaper.MIDI_SetCC(take, j, false, false, nil, nil, nil, nil, nil, false)
-        j = reaper.MIDI_EnumSelCC(take, j)
       end
     end
   end
