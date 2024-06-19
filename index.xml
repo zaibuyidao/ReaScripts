@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="367563e651cd6393d950a9a031ab8ece38253b06">
+<index version="1" name="zaibuyidao Scripts" commit="1bb161e88e6973b389cd26f8570cc0fc2e34cb21">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3704,6 +3704,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/367563e651cd6393d950a9a031ab8ece38253b06/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Sawtooth).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-06-19T09:01:51Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1bb161e88e6973b389cd26f8570cc0fc2e34cb21/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Sawtooth).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend Curve (Sine).lua" type="script" desc="Insert Pitch Bend Curve (Sine)">
       <metadata>
@@ -3725,6 +3729,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2024-06-19T08:49:48Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/367563e651cd6393d950a9a031ab8ece38253b06/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Sine).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-06-19T09:01:51Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1bb161e88e6973b389cd26f8570cc0fc2e34cb21/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Sine).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend Curve (Square).lua" type="script" desc="Insert Pitch Bend Curve (Square)">
@@ -3748,6 +3756,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/367563e651cd6393d950a9a031ab8ece38253b06/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Square).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-06-19T09:01:51Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1bb161e88e6973b389cd26f8570cc0fc2e34cb21/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Square).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend Curve (Triangle).lua" type="script" desc="Insert Pitch Bend Curve (Triangle)">
       <metadata>
@@ -3770,6 +3782,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/367563e651cd6393d950a9a031ab8ece38253b06/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Triangle).lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-06-19T09:01:51Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1bb161e88e6973b389cd26f8570cc0fc2e34cb21/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve%20(Triangle).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend Curve.lua" type="script" desc="Insert Pitch Bend Curve">
       <metadata>
@@ -3791,6 +3807,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2024-06-19T08:49:48Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/367563e651cd6393d950a9a031ab8ece38253b06/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-06-19T09:01:51Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1bb161e88e6973b389cd26f8570cc0fc2e34cb21/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend Reset.lua" type="script" desc="Insert Pitch Bend Reset">
