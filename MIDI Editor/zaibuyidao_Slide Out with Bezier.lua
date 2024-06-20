@@ -1,5 +1,5 @@
--- @description Notes to Pitch Bend
--- @version 1.0.1
+-- @description Slide Out with Bezier
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -38,36 +38,44 @@ end
 
 local language = getSystemLanguage()
 
-range = 12
-
-if language == "简体中文" then
-  title = "音符转弯音"
-  err_title = "错误"
-  err_msg1 = "请检查音符间隔，并将其限制在一个八度内"
-  err_msg2 = "请选择两个或更多音符"
-elseif language == "繁體中文" then
-  title = "音符轉彎音"
-  err_title = "錯誤"
-  err_msg1 = "請檢查音符間隔，並將其限制在一個八度内"
-  err_msg2 = "請選擇兩個或更多音符"
-else
-  title = "Notes to Pitch Bend"
-  err_title = "Error"
-  err_msg1 = "Please check the note interval and limit it to one octave."
-  err_msg2 = "Please select two or more notes."
-end
-
 local editor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(editor)
-if take == nil then return end
+local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
+local loop_start = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_start))
+local loop_end = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_end))
+if loop_start == loop_end then return reaper.SN_FocusMIDIEditor() end
 
-local cnt, index = 0, {}
-local val = reaper.MIDI_EnumSelNotes(take, -1)
-while val ~= - 1 do
-  cnt = cnt + 1
-  index[cnt] = val
-  val = reaper.MIDI_EnumSelNotes(take, val)
+local pitch = reaper.GetExtState("SlideOutwithBezier", "Pitch")
+if (pitch == "") then pitch = "-2" end
+local range = reaper.GetExtState("SlideOutwithBezier", "Range")
+if (range == "") then range = "12" end
+local bezier = reaper.GetExtState("SlideOutwithBezier", "Bezier")
+if (bezier == "") then bezier = "-20" end
+
+if language == "简体中文" then
+  title = "带贝塞尔曲线的弯音滑出"
+  captions_csv = "弯音间隔:,弯音范围:,贝塞尔(-100 至 100):"
+elseif language == "繁體中文" then
+  title = "帶貝塞爾曲綫的彎音滑出"
+  captions_csv = "彎音間隔:,彎音範圍:,貝塞爾(-100 至 100):"
+else
+  title = "Slide Out with Bezier"
+  captions_csv = "Pitch Interval:,Pitchwheel Range:,Bezier (-100 to 100):"
 end
+
+uok, uinput = reaper.GetUserInputs(title, 3, captions_csv, pitch ..','.. range ..','.. bezier)
+if not uok then return reaper.SN_FocusMIDIEditor() end
+pitch, range, bezier = uinput:match("(.*),(.*),(.*)")
+
+if not tonumber(pitch) or not tonumber(range) or not tonumber(bezier) or tonumber(pitch) < -12 or tonumber(pitch) > 12 or tonumber(pitch) == 0 or tonumber(bezier) < -100 or tonumber(bezier) > 100 then
+  return reaper.SN_FocusMIDIEditor()
+end
+
+pitch, range, bezier = tonumber(pitch), tonumber(range),tonumber(bezier)
+
+reaper.SetExtState("SlideOutwithBezier", "Pitch", pitch, false)
+reaper.SetExtState("SlideOutwithBezier", "Range", range, false)
+reaper.SetExtState("SlideOutwithBezier", "Bezier", bezier, false)
 
 function getSegments(n)
   local x = 8192
@@ -104,53 +112,29 @@ function pitchDown(p, targets)
   end
 end
 
-local pitch = {}
-local startppqpos = {}
-local endppqpos = {}
-local vel = {}
-
-reaper.PreventUIRefresh(1)
-reaper.Undo_BeginBlock()
-
-if #index > 1 then
-  for i = 1, #index do
-    retval, selected, muted, startppqpos[i], endppqpos[i], chan, pitch[i], vel[i] = reaper.MIDI_GetNote(take, index[i])
-    if selected then
-      if pitch[i-1] then
-        local pitchnote = (pitch[i]-pitch[1])
-        local seg = getSegments(range)
-        
-        if pitchnote > 0 then
-          pitchbend = pitchUp(pitchnote, seg)
-        else
-          pitchbend = pitchDown(pitchnote, seg)
-        end
-        
-        if pitchbend == nil then return reaper.MB(err_msg1, err_title, 0) end
-
-        LSB = pitchbend & 0x7F
-        MSB = (pitchbend >> 7) + 64
-
-        reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, LSB, MSB)
-      end
-      if i == #index then
-        j = reaper.MIDI_EnumSelNotes(take, -1)
-        while j > -1 do
-          reaper.MIDI_DeleteNote(take, j)
-          j = reaper.MIDI_EnumSelNotes(take, -1)
-        end
-        if (pitch[1] ~= pitch[i]) then
-          reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
-        end
-        reaper.MIDI_InsertNote(take, selected, muted, startppqpos[1], endppqpos[i], chan, pitch[1], vel[1], true)
-      end
-    end
+local function set_cc_shape(take, bezier, shape)
+  local i = reaper.MIDI_EnumSelCC(take, -1)
+  while i ~= -1 do
+    reaper.MIDI_SetCCShape(take, i, shape, bezier / 100, true)
+    reaper.MIDI_SetCC(take, i, false, false, nil, nil, nil, nil, nil, true)
+    i = reaper.MIDI_EnumSelCC(take, i)
   end
-else
-  reaper.MB(err_msg2, err_title, 0)
 end
 
+reaper.Undo_BeginBlock()
+local seg = getSegments(range)
+if pitch > 0 then
+  pitchbend = pitchUp(pitch, seg)
+else
+  pitchbend = pitchDown(pitch, seg)
+end
+
+LSB = pitchbend & 0x7F
+MSB = (pitchbend >> 7) + 64
+reaper.MIDI_InsertCC(take, true, false, loop_start, 224, 0, 0, 64)
+set_cc_shape(take, bezier, 5)
+reaper.MIDI_InsertCC(take, false, false, loop_start+(loop_end-loop_start)*0.96, 224, 0, LSB, MSB)
+reaper.MIDI_InsertCC(take, false, false, loop_end, 224, 0, 0, 64)
 reaper.Undo_EndBlock(title, -1)
-reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.MIDIEditor_OnCommand(editor, 40366) -- CC: Set CC lane to Pitch
+reaper.SN_FocusMIDIEditor()
