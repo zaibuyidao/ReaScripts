@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1b4145bf6d88ba576aff8a1578972a991978175c">
+<index version="1" name="zaibuyidao Scripts" commit="f8a6b35b03e59b4cddacb8373ef02d6f32e87448">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4716,6 +4716,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d9535d9344341c7158840a16b8218bfd83e9bb0d/MIDI%20Editor/zaibuyidao_Notes%20to%20Pitch%20Bend.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-06-20T12:05:34Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f8a6b35b03e59b4cddacb8373ef02d6f32e87448/MIDI%20Editor/zaibuyidao_Notes%20to%20Pitch%20Bend.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Notes to Smooth Pitch Bend.lua" type="script" desc="Notes to Smooth Pitch Bend">
       <metadata>
@@ -6033,26 +6037,22 @@
         <source main="midi_eventlisteditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Slide%20-10.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Slide In Shape.lua" type="script" desc="Slide In Shape">
+    <reapack name="zaibuyidao_Slide In with Bezier.lua" type="script" desc="Slide In with Bezier">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts. Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-09-08T16:24:13Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Slide%20In%20Shape.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-08-25T01:55:07Z">
-        <changelog><![CDATA[Optimised pitch bend]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/02547674fe0700dabf6e7f4c2a5a5f7c8831b5c7/MIDI%20Editor/zaibuyidao_Slide%20In%20Shape.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-06-20T12:05:34Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f8a6b35b03e59b4cddacb8373ef02d6f32e87448/MIDI%20Editor/zaibuyidao_Slide%20In%20with%20Bezier.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide In.lua" type="script" desc="Slide In">
@@ -6103,27 +6103,27 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1b4145bf6d88ba576aff8a1578972a991978175c/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
       </version>
+      <version name="1.5.1" author="zaibuyidao" time="2024-06-20T12:05:34Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f8a6b35b03e59b4cddacb8373ef02d6f32e87448/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
+      </version>
     </reapack>
-    <reapack name="zaibuyidao_Slide Out Shape.lua" type="script" desc="Slide Out Shape">
+    <reapack name="zaibuyidao_Slide Out with Bezier.lua" type="script" desc="Slide Out with Bezier">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts. Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-09-08T16:24:13Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/416f227487a4023a314f1b4e2df63f2035433e4d/MIDI%20Editor/zaibuyidao_Slide%20Out%20Shape.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-08-25T01:55:07Z">
-        <changelog><![CDATA[Optimised pitch bend]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/02547674fe0700dabf6e7f4c2a5a5f7c8831b5c7/MIDI%20Editor/zaibuyidao_Slide%20Out%20Shape.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-06-20T12:05:34Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f8a6b35b03e59b4cddacb8373ef02d6f32e87448/MIDI%20Editor/zaibuyidao_Slide%20Out%20with%20Bezier.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide Out.lua" type="script" desc="Slide Out">
@@ -6173,6 +6173,10 @@
       <version name="1.5" author="zaibuyidao" time="2024-06-20T11:20:26Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1b4145bf6d88ba576aff8a1578972a991978175c/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
+      </version>
+      <version name="1.5.1" author="zaibuyidao" time="2024-06-20T12:05:34Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f8a6b35b03e59b4cddacb8373ef02d6f32e87448/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Split Notes (Fast).lua" type="script" desc="Split Notes (Fast)">
