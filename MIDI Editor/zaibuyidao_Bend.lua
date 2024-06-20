@@ -1,5 +1,5 @@
 -- @description Bend
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -37,7 +37,7 @@ else
 end
 
 local language = getSystemLanguage()
-language = ""
+
 local editor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(editor)
 local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
