@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="79c794f4b96d3892e66c41c1117fb8d9aeb02836">
+<index version="1" name="zaibuyidao Scripts" commit="688c78c8d559a8b0d7ae53e7b832bc27bdf472ce">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3812,6 +3812,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1bb161e88e6973b389cd26f8570cc0fc2e34cb21/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve.lua</source>
       </version>
+      <version name="1.0.3" author="zaibuyidao" time="2024-06-20T07:07:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/688c78c8d559a8b0d7ae53e7b832bc27bdf472ce/MIDI%20Editor/zaibuyidao_Insert%20Pitch%20Bend%20Curve.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Pitch Bend Reset.lua" type="script" desc="Insert Pitch Bend Reset">
       <metadata>
@@ -4642,6 +4646,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/79c794f4b96d3892e66c41c1117fb8d9aeb02836/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Up-Down%20by%20Semitones.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-06-20T07:07:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/688c78c8d559a8b0d7ae53e7b832bc27bdf472ce/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Up-Down%20by%20Semitones.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Note Length To End.lua" type="script" desc="Note Length To End">
       <metadata>
@@ -4803,21 +4811,22 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/466a7d7cbc3e03d03613231895d9748db0fe0f2f/MIDI%20Editor/zaibuyidao_Quantize%20(Fast).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Quantize Pitch Bend In Semitones.lua" type="script" desc="Quantize Pitch Bend In Semitones">
+    <reapack name="zaibuyidao_Quantize Pitch Bend to Semitones.lua" type="script" desc="Quantize Pitch Bend to Semitones">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Quantize Pitch Bend In Semitones\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 Quantize the selected pitch bend to an equal value of the pitch range\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts. Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
         <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-08-26T03:48:23Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2923df69e171cd81dfe87ccd8f08e6dd70459dbb/MIDI%20Editor/zaibuyidao_Quantize%20Pitch%20Bend%20In%20Semitones.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-06-20T07:07:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/688c78c8d559a8b0d7ae53e7b832bc27bdf472ce/MIDI%20Editor/zaibuyidao_Quantize%20Pitch%20Bend%20to%20Semitones.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Quantize.lua" type="script" desc="Quantize">
