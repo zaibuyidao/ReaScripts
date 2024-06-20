@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ab6f5f4bc9b47d556cb76866081e65f9b055c54c">
+<index version="1" name="zaibuyidao Scripts" commit="ac025f968dffead2df2e92e760c0bc3922278454">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4308,6 +4308,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-06-20T07:37:23Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab6f5f4bc9b47d556cb76866081e65f9b055c54c/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20Pitch%20Bend%20Within%20Time%20Selection.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-06-20T07:44:51Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ac025f968dffead2df2e92e760c0bc3922278454/MIDI%20Editor/zaibuyidao_Linear%20Ramp%20Pitch%20Bend%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_MIDI Item List (Dynamic Menu).lua" type="script" desc="MIDI Item List (Dynamic Menu)">
