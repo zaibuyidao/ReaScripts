@@ -1,105 +1,42 @@
 -- @description Slide In
--- @version 1.4.4
+-- @version 1.5
 -- @author zaibuyidao
 -- @changelog
---   + Add Multi-Language Support
+--   New Script
 -- @links
---   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repo https://github.com/zaibuyidao/ReaScripts
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about
+--   Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts.
+--   Requires JS_ReaScriptAPI & SWS Extension
 
-function print(...)
-  for _, v in ipairs({...}) do
-    reaper.ShowConsoleMsg(tostring(v) .. " ")
-  end
-  reaper.ShowConsoleMsg("\n")
-end
-
-function getSystemLanguage()
-  local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-  local os = reaper.GetOS()
-  local lang
-
-  if os == "Win32" or os == "Win64" then -- Windows
-    if locale == 936 then -- Simplified Chinese
-      lang = "简体中文"
-    elseif locale == 950 then -- Traditional Chinese
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "OSX32" or os == "OSX64" then -- macOS
-    local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
-    if lang == "zh-CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh-TW" then -- 繁体中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  elseif os == "Linux" then -- Linux
-    local handle = io.popen("echo $LANG")
-    local result = handle:read("*a")
-    handle:close()
-    lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
-    if lang == "zh_CN" then -- 简体中文
-      lang = "简体中文"
-    elseif lang == "zh_TW" then -- 繁體中文
-      lang = "繁體中文"
-    else -- English
-      lang = "English"
-    end
-  end
-
-  return lang
-end
-
-local language = getSystemLanguage()
-
-if language == "简体中文" then
-  swsmsg = "该脚本需要 SWS 扩展，你想现在就下载它吗？"
-  swserr = "警告"
-  jsmsg = "请右键单击並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然后重新启动 REAPER 並再次运行脚本，谢谢！\n"
-  jstitle = "你必须安裝 JS_ReaScriptAPI"
-elseif language == "繁体中文" then
-  swsmsg = "該脚本需要 SWS 擴展，你想現在就下載它嗎？"
-  swserr = "警告"
-  jsmsg = "請右鍵單擊並安裝 'js_ReaScriptAPI: API functions for ReaScripts'。\n然後重新啟動 REAPER 並再次運行腳本，謝謝！\n"
-  jstitle = "你必須安裝 JS_ReaScriptAPI"
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+  dofile(ZBYDFuncPath)
+  if not checkSWSExtension() or not checkJSAPIExtension() then return end
 else
-  swsmsg = "This script requires the SWS Extension. Do you want to download it now?"
-  swserr = "Warning"
-  jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
-  jstitle = "You must install JS_ReaScriptAPI"
-end
+  local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+  "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+  "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
 
-if not reaper.SN_FocusMIDIEditor then
-  local retval = reaper.ShowMessageBox(swsmsg, swserr, 1)
-  if retval == 1 then
-    if not OS then local OS = reaper.GetOS() end
-    if OS=="OSX32" or OS=="OSX64" then
-      os.execute("open " .. "http://www.sws-extension.org/download/pre-release/")
-    else
-      os.execute("start " .. "http://www.sws-extension.org/download/pre-release/")
-    end
+  reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
+  else
+    local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+    "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+    "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
+
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
   end
   return
 end
 
-if not reaper.APIExists("JS_Window_Find") then
-  reaper.MB(jsmsg, jstitle, 0)
-  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
-  if ok then
-    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
-  else
-    reaper.MB(err, jserr, 0)
-  end
-  return reaper.defer(function() end)
-end
+local language = getSystemLanguage()
 
 local editor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(editor)
@@ -110,13 +47,13 @@ if loop_start == loop_end then return reaper.SN_FocusMIDIEditor() end
 
 if language == "简体中文" then
   title = "弯音滑入"
-  captions_csv = "弯音间隔,弯音范围,贝塞尔 (-100,100),0=SMO 1=LIN 2=FRE 3=REV"
-elseif language == "繁体中文" then
+  captions_csv = "弯音间隔:,弯音范围:,贝塞尔(-100,100):,1=SMO 2=LIN 3=FRE 4=REV"
+elseif language == "繁體中文" then
   title = "彎音滑入"
-  captions_csv = "彎音間隔,彎音範圍,貝塞爾 (-100,100),0=SMO 1=LIN 2=FRE 3=REV"
+  captions_csv = "彎音間隔:,彎音範圍:,貝塞爾(-100,100):,1=SMO 2=LIN 3=FRE 4=REV"
 else
   title = "Slide In"
-  captions_csv = "Pitch interval,Pitch Range,Bezier (-100,100),0=SMO 1=LIN 2=FRE 3=REV"
+  captions_csv = "Pitch Interval:,Pitchwheel Range:,Bezier (-100,100):,1=SMO 2=LIN 3=FRE 4=REV"
 end
 
 local pitch = reaper.GetExtState("SLIDE_IN", "Pitch")
@@ -126,13 +63,13 @@ if (range == "") then range = "12" end
 local bezier = reaper.GetExtState("SLIDE_IN", "Bezier")
 if (bezier == "") then bezier = "20" end
 local toggle = reaper.GetExtState("SLIDE_IN", "Toggle")
-if (toggle == "") then toggle = "2" end
+if (toggle == "") then toggle = "3" end
 
 uok, uinput = reaper.GetUserInputs(title, 4, captions_csv, pitch ..','.. range ..','.. bezier ..','.. toggle)
 if not uok then return reaper.SN_FocusMIDIEditor() end
 pitch, range, bezier, toggle = uinput:match("(.*),(.*),(.*),(.*)")
 
-if not tonumber(pitch) or not tonumber(range) or not tonumber(bezier) or not tonumber(toggle) or tonumber(pitch) < -12 or tonumber(pitch) > 12 or tonumber(pitch) == 0 or tonumber(bezier) < -100 or tonumber(bezier) > 100 or tonumber(toggle) > 3 then
+if not tonumber(pitch) or not tonumber(range) or not tonumber(bezier) or not tonumber(toggle) or tonumber(pitch) < -12 or tonumber(pitch) > 12 or tonumber(pitch) == 0 or tonumber(bezier) < -100 or tonumber(bezier) > 100 or tonumber(toggle) > 4 then
   return reaper.SN_FocusMIDIEditor()
 end
 
@@ -188,7 +125,7 @@ local function set_cc_shape(take, bezier, shape)
 end
 
 reaper.Undo_BeginBlock()
-if toggle == 0 then
+if toggle == 1 then
   local seg = getSegments(range)
   if pitch > 0 then
     pitchbend = pitchUp(pitch, seg)
@@ -201,7 +138,7 @@ if toggle == 0 then
   reaper.MIDI_InsertCC(take, true, false, loop_start, 224, 0, LSB, MSB)
   set_cc_shape(take, bezier, 5)
   reaper.MIDI_InsertCC(take, false, false, loop_end, 224, 0, 0, 64) -- 在LOOP结尾插入弯音值归零
-elseif toggle == 1 then
+elseif toggle == 2 then
   for i = 0, math.abs(pitch) do
     local seg = getSegments(range)
     if pitch > 0 then
@@ -214,7 +151,7 @@ elseif toggle == 1 then
     MSB = (pitchbend >> 7) + 64
     reaper.MIDI_InsertCC(take, false, false, loop_start + (loop_end-loop_start) * (i/(math.abs(pitch))), 224, 0, LSB, MSB)
   end
-elseif toggle == 2 then
+elseif toggle == 3 then
   for i = 0, math.abs(pitch) do
     local seg = getSegments(range)
     if pitch > 0 then
@@ -227,7 +164,7 @@ elseif toggle == 2 then
     MSB = (pitchbend >> 7) + 64
     reaper.MIDI_InsertCC(take, false, false, loop_start + (loop_end-loop_start) * ((i+i)/(math.abs(pitch)+i)), 224, 0, LSB, MSB)
   end
-elseif toggle == 3 then
+elseif toggle == 4 then
   for i = 0, math.abs(pitch) do
     local seg = getSegments(range)
     if pitch > 0 then
