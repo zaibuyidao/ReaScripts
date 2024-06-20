@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a70460ef84ca9f9f3abd1212fa564b665a22a906">
+<index version="1" name="zaibuyidao Scripts" commit="1b4145bf6d88ba576aff8a1578972a991978175c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -6061,11 +6061,11 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts. Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
@@ -6099,6 +6099,10 @@
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80f91e3c6fcb7f4c135b7739d0594616a5b194ea/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
       </version>
+      <version name="1.5" author="zaibuyidao" time="2024-06-20T11:20:26Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1b4145bf6d88ba576aff8a1578972a991978175c/MIDI%20Editor/zaibuyidao_Slide%20In.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Slide Out Shape.lua" type="script" desc="Slide Out Shape">
       <metadata>
@@ -6128,11 +6132,11 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts. Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2019-12-12T14:28:10Z">
@@ -6165,6 +6169,10 @@
       <version name="1.4.4" author="zaibuyidao" time="2024-01-20T16:33:53Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/80f91e3c6fcb7f4c135b7739d0594616a5b194ea/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
+      </version>
+      <version name="1.5" author="zaibuyidao" time="2024-06-20T11:20:26Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1b4145bf6d88ba576aff8a1578972a991978175c/MIDI%20Editor/zaibuyidao_Slide%20Out.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Split Notes (Fast).lua" type="script" desc="Split Notes (Fast)">
