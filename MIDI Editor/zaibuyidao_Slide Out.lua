@@ -1,5 +1,5 @@
 -- @description Slide Out
--- @version 1.5.1
+-- @version 1.5.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -47,13 +47,13 @@ if loop_start == loop_end then return reaper.SN_FocusMIDIEditor() end
 
 if language == "简体中文" then
   title = "弯音滑出"
-  captions_csv = "弯音间隔:,弯音范围:,贝塞尔(-100,100):,1=SMO 2=LIN 3=FRE 4=REV"
+  captions_csv = "弯音间隔:,弯音范围:,贝塞尔(-100 至 100):,1=SMO 2=LIN 3=FRE 4=REV"
 elseif language == "繁體中文" then
   title = "彎音滑出"
-  captions_csv = "彎音間隔:,彎音範圍:,貝塞爾(-100,100):,1=SMO 2=LIN 3=FRE 4=REV"
+  captions_csv = "彎音間隔:,彎音範圍:,貝塞爾(-100 至 100):,1=SMO 2=LIN 3=FRE 4=REV"
 else
   title = "Slide Out"
-  captions_csv = "Pitch Interval:,Pitchwheel Range:,Bezier (-100,100):,1=SMO 2=LIN 3=FRE 4=REV"
+  captions_csv = "Pitch Interval:,Pitchwheel Range:,Bezier (-100 to 100):,1=SMO 2=LIN 3=FRE 4=REV"
 end
 
 local pitch = reaper.GetExtState("SLIDE_OUT", "Pitch")
