@@ -1,5 +1,5 @@
--- @description Move Pitch Bend Up/Down by Semitones
--- @version 1.0.1
+-- @description Quantize Pitch Bend to Semitones
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -63,38 +63,32 @@ function getSegments(n)
     return res
 end
 
-function moveUp(origin, targets, steps)
+function alignTo(origin, targets)
     if #targets == 0 then error() end
-    for j = 1, steps do
-        for i = 1, #targets do
-            if (not equals(origin, targets[i])) and targets[i] > origin then
-                origin = targets[i]
-                break
-            end
-        end
-    end
-    return origin
-end
+    if origin < targets[1] then return targets[1] end
+    for i = 2, #targets do
+        if equals(origin, targets[i - 1]) then return targets[i - 1] end
+        if (origin < targets[i - 1]) then goto continue end
+        if equals(origin, targets[i]) then return targets[i] end
 
-function moveDown(origin, targets, steps)
-    if #targets == 0 then error() end
-    for j = 1, steps do
-        for i = #targets, 1, -1 do
-            if (not equals(origin, targets[i])) and targets[i] < origin then
-                origin = targets[i]
-                break
+        if origin > targets[i - 1] and origin < targets[i] then
+            local mid = (targets[i] + targets[i-1]) / 2
+            if equals(origin, mid) then
+                if mid < 0 then return targets[i-1] end
+                return targets[i]
             end
+            if origin < mid then return targets[i-1] end
+            return targets[i]
         end
+        ::continue::
     end
-    return origin
+    return targets[#targets]
 end
 
 -- a = getSegments(6)
 -- table.print(a)
 -- b = 4096
 -- print(alignTo(b, a))
--- print(moveUp(b, a))
--- print(moveDown(b, a))
 -- os.exit()
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
@@ -108,32 +102,25 @@ while val ~= -1 do
 end
 
 if #index > 0 then
-    n = reaper.GetExtState("MovePitchBendbySemitones", "PitchRange")
-    if (n == "") then n = "12" end
-    steps = reaper.GetExtState("MovePitchBendbySemitones", "Steps")
-    if (steps == "") then steps = "1" end
+    local n = reaper.GetExtState("QuantizePitchBendtoSemitones", "PitchRange")
+    if (n == "") then n = "2" end
 
     if language == "简体中文" then
-        title = "按半音上下移动弯音"
-        captions_csv = "弯音范围:,移动次数(正数上移负数下移):"
+        title = "将弯音量化为半音"
+        captions_csv = "弯音范围:"
     elseif language == "繁體中文" then
-        title = "按半音上下移動彎音"
-        captions_csv = "彎音範圍:,移動次數(正數上移負數下移):"
+        title = "將彎音量化為半音"
+        captions_csv = "彎音範圍:"
     else
-        title = "Move Pitch Bend Up/Down by Semitones"
-        captions_csv = "Pitchwheel Range:,Steps (+/-):"
+        title = "Quantize Pitch Bend to Semitones"
+        captions_csv = "Pitchwheel Range:"
     end
 
-    local uok, uinput = reaper.GetUserInputs(title, 2, captions_csv, n ..','.. steps)
-    n, steps = uinput:match("(.*),(.*)")
-
-    if not uok or not tonumber(n) or not tonumber(steps) then return reaper.SN_FocusMIDIEditor() end
-    reaper.SetExtState("MovePitchBendbySemitones", "PitchRange", n, false)
-    reaper.SetExtState("MovePitchBendbySemitones", "Steps", steps, false)
-
+    local uok, n = reaper.GetUserInputs(title, 1, captions_csv, n)
+    
+    if not uok or not tonumber(n) then return reaper.SN_FocusMIDIEditor() end
+    reaper.SetExtState("QuantizePitchBendtoSemitones", "PitchRange", n, false)
     n = tonumber(n)
-    steps = tonumber(steps)
-
     local seg = getSegments(n)
 
     reaper.Undo_BeginBlock()
@@ -147,18 +134,14 @@ if #index > 0 then
 
         -- print(pitch, alignTo(pitch, seg))
 
-        if steps > 0 then
-            pitch = moveUp(pitch, seg, steps)
-        elseif steps < 0 then
-            pitch = moveDown(pitch, seg, -steps)
-        end
+        pitch = alignTo(pitch, seg)
         
         LSB = pitch & 0x7F
         MSB = (pitch >> 7) + 64
-        
+
         reaper.MIDI_SetCC(take, index[i], selected, muted, ppqpos, chanmsg, chan, LSB, MSB, false)
+        reaper.Undo_EndBlock(title, -1)
     end
-    reaper.Undo_EndBlock(title, -1)
 end
 
 reaper.UpdateArrange()

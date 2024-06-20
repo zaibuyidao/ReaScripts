@@ -1,5 +1,5 @@
 -- @description Insert Pitch Bend Curve
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -135,13 +135,13 @@ if (shape == "") then shape = "1" end
 
 if language == "简体中文" then
   title = "插入弯音曲线"
-  captions_csv = "起始点,最高点,重复,长度,点数,1=正弦 2=三角 3=方波 4=锯齿"
+  captions_csv = "起始点:,最高点:,重复:,长度:,点数:,1=正弦 2=三角 3=方波 4=锯齿"
 elseif language == "繁體中文" then
   title = "插入彎音曲綫"
-  captions_csv = "起始點,最高點,重複,長度,點數,1=正弦 2=三角 3=方波 4=鋸齒"
+  captions_csv = "起始點:,最高點:,重複:,長度:,點數:,1=正弦 2=三角 3=方波 4=鋸齒"
 else
   title = "Insert Pitch Bend Curve"
-  captions_csv = "Starting value,Highest value,Repetitions,Length,Points,1=SIN 2=TRI 3=SQR 4=SAW"
+  captions_csv = "Starting value:,Highest value:,Repetitions:,Length:,Points:,1=SIN 2=TRI 3=SQR 4=SAW"
 end
 
 local user_ok, user_input_CSV = reaper.GetUserInputs(title, 6, captions_csv, bottom ..','.. top ..','.. times .. "," .. length .. "," .. num .. "," .. shape)
