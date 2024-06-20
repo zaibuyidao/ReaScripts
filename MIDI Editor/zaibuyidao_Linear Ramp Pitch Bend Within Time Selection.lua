@@ -1,5 +1,5 @@
 -- @description Linear Ramp Pitch Bend Within Time Selection
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -37,7 +37,7 @@ else
 end
 
 local language = getSystemLanguage()
-language = ""
+
 step = 128
 selected = true
 muted = false
