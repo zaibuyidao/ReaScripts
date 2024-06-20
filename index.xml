@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="44044de8f2e0cc09280f07bcd9fed7578d4c22dd">
+<index version="1" name="zaibuyidao Scripts" commit="39a7e20d1b0b7e272bc8db45c0e939a6fac966fd">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2136,6 +2136,10 @@
       <version name="1.0.3" author="zaibuyidao" time="2024-06-20T08:02:07Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/44044de8f2e0cc09280f07bcd9fed7578d4c22dd/MIDI%20Editor/zaibuyidao_Bend.lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2024-06-20T08:07:23Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/39a7e20d1b0b7e272bc8db45c0e939a6fac966fd/MIDI%20Editor/zaibuyidao_Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Chord Inversion (Fast).lua" type="script" desc="Chord Inversion (Fast)">
