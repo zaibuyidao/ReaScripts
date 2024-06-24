@@ -1,5 +1,5 @@
 -- @description Set CC Lane
--- @version 1.2.4
+-- @version 1.2.5
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -41,13 +41,13 @@ function main()
     local title, captions_csv = "", ""
     if language == "简体中文" then
         title = "设置CC车道"
-        captions_csv = "参数 (CC编号 或 v, p, g, c, b, t, s):"
+        captions_csv = "输入(CC编号 或 v,p,g,c,b,t,s):"
     elseif language == "繁體中文" then
         title = "設置CC車道"
-        captions_csv = "參數 (CC編號 或 v, p, g, c, b, t, s):"
+        captions_csv = "輸入(CC編號 或 v,p,g,c,b,t,s):"
     else
         title = "Set CC Lane"
-        captions_csv = "Parameter (CC# or v, p, g, c, b, t, s):"
+        captions_csv = "Enter (CC# or v,p,g,c,b,t,s):"
     end
 
     cc_lane = reaper.GetExtState("SET_CC_LANE", "Parameter")
