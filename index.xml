@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c00ccc79dda474bd8aa418ac2ffc86396212c4fc">
+<index version="1" name="zaibuyidao Scripts" commit="85a032e0b395fc5706ddc6a3f0d18451e9a30cfc">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5772,8 +5772,8 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2020-07-28T20:22:16Z">
@@ -5796,6 +5796,10 @@
       <version name="1.2.3" author="zaibuyidao" time="2024-01-20T16:37:26Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b3d1d950ee8f100399a0d9708a18107617e2e41e/MIDI%20Editor/zaibuyidao_Set%20CC%20Lane.lua</source>
+      </version>
+      <version name="1.2.4" author="zaibuyidao" time="2024-06-24T03:17:17Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/85a032e0b395fc5706ddc6a3f0d18451e9a30cfc/MIDI%20Editor/zaibuyidao_Set%20CC%20Lane.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value (Percentages).lua" type="script" desc="Set CC Value (Percentages)">
