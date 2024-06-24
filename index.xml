@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="85a032e0b395fc5706ddc6a3f0d18451e9a30cfc">
+<index version="1" name="zaibuyidao Scripts" commit="7a450f3c781962e758226f53350e2d7b2914ea97">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5800,6 +5800,10 @@
       <version name="1.2.4" author="zaibuyidao" time="2024-06-24T03:17:17Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/85a032e0b395fc5706ddc6a3f0d18451e9a30cfc/MIDI%20Editor/zaibuyidao_Set%20CC%20Lane.lua</source>
+      </version>
+      <version name="1.2.5" author="zaibuyidao" time="2024-06-24T05:52:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7a450f3c781962e758226f53350e2d7b2914ea97/MIDI%20Editor/zaibuyidao_Set%20CC%20Lane.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set CC Value (Percentages).lua" type="script" desc="Set CC Value (Percentages)">
