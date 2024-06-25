@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0fa24c5d2e11ad009f08fed789173a40e3eea767">
+<index version="1" name="zaibuyidao Scripts" commit="68534ca85e7a9369930d071f361da11afd481fcc">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8026,7 +8026,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/06ba11d19223faf1a7cf643fc412f8bd5db0aebd/Utility/zaibuyidao_Add%20MIDI%20Hardware%20Output%20&amp;%20Receives%20to%20Selected%20Tracks%20(Transcription).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Automatic Load VSTi for MIDI Playback (Settings).lua" type="script" desc="Automatic Load VSTi for MIDI Playback (Settings)">
+    <reapack name="zaibuyidao_Auto-Load VSTi for MIDI Playback (Settings).lua" type="script" desc="Auto-Load VSTi for MIDI Playback (Settings)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -8039,12 +8039,12 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-06-24T02:38:34Z">
+      <version name="1.0" author="zaibuyidao" time="2024-06-25T02:07:11Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c00ccc79dda474bd8aa418ac2ffc86396212c4fc/Utility/zaibuyidao_Automatic%20Load%20VSTi%20for%20MIDI%20Playback%20(Settings).lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/68534ca85e7a9369930d071f361da11afd481fcc/Utility/zaibuyidao_Auto-Load%20VSTi%20for%20MIDI%20Playback%20(Settings).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Automatic Load VSTi for MIDI Playback.lua" type="script" desc="Automatic Load VSTi for MIDI Playback">
+    <reapack name="zaibuyidao_Auto-Load VSTi for MIDI Playback.lua" type="script" desc="Auto-Load VSTi for MIDI Playback">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -8057,9 +8057,9 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-06-24T02:38:34Z">
+      <version name="1.0" author="zaibuyidao" time="2024-06-25T02:07:11Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c00ccc79dda474bd8aa418ac2ffc86396212c4fc/Utility/zaibuyidao_Automatic%20Load%20VSTi%20for%20MIDI%20Playback.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/68534ca85e7a9369930d071f361da11afd481fcc/Utility/zaibuyidao_Auto-Load%20VSTi%20for%20MIDI%20Playback.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
