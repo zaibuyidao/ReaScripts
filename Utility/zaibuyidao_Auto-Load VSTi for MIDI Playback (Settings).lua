@@ -1,4 +1,4 @@
--- @description Automatic Load VSTi for MIDI Playback
+-- @description Auto-Load VSTi for MIDI Playback (Settings)
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -36,54 +36,35 @@ end
 
 local language = getSystemLanguage()
 
-local section = "AutomaticLoadVSTiForMIDIPlayback"
+reaper.Undo_BeginBlock() -- 撤销块开始
+
+local section = "AutoLoadVSTiForMIDIPlayback"
 local key = "VSTiName"
 
--- 尝试获取保存的 VSTi 名称
-local vstiName = reaper.GetExtState(section, key)
-
-if vstiName == "" then
-    vstiName = "SOUND Canvas VA"
-end
-
-reaper.PreventUIRefresh(1) -- 防止界面更新
-reaper.Undo_BeginBlock() -- 撤销块开始
--- 插入一条新的音轨
-local new_track_idx = reaper.CountTracks(0)
-reaper.InsertTrackAtIndex(new_track_idx, true)
-local new_track = reaper.GetTrack(0, new_track_idx)
-
 if language == "简体中文" then
-    title = "自动加载 VSTi 以进行 MIDI 回放"
-    msgset = "无法找到指定的 VSTi 插件。\n\n请通过脚本 'zaibuyidao_Automatic Load VSTi For MIDI Playback (Settings).lua' 设置 VSTi 名称。"
-    msgerr = "错误"
+  title = "自动加载 VSTi 以进行 MIDI 回放(设置)"
+  ip_title = "VSTi 设置"
+  ip_caption = "输入 VSTi 名称:,extrawidth=150"
 elseif language == "繁體中文" then
-    title = "自動加載 VSTi 以進行 MIDI 回放"
-    msgset = "無法找到指定的 VSTi 插件。\n\n請通過腳本 'zaibuyidao_Automatic Load VSTi For MIDI Playback (Settings).lua' 設置 VSTi 名稱。"
-    msgerr = "錯誤"
+  title = "自動加載 VSTi 以進行 MIDI 回放(設置)"
+  ip_title = "VSTi 設置"
+  ip_caption = "輸入 VSTi 名稱:extrawidth=150"
 else
-    title = "Automatic Load VSTi for MIDI Playback"
-    msgset = "Unable to find the specified VSTi plugin.\n\nPlease set the VSTi name through the script 'zaibuyidao_Automatic Load VSTi For MIDI Playback (Settings).lua'."
-    msgerr = "Error"
+  title = "Auto-Load VSTi for MIDI Playback (Settings)"
+  ip_title = "VSTi Settings"
+  ip_caption = "Enter VSTi name:extrawidth=150"
 end
 
--- 在新音轨上添加 VSTi 插件
-local fxIdx = reaper.TrackFX_AddByName(new_track, vstiName, false, 1)
+-- 尝试获取已保存的 VSTi 名称
+local savedVSTiName = reaper.GetExtState(section, key)
+if not savedVSTiName then savedVSTiName = "SOUND Canvas VA" end
 
-if fxIdx == -1 then
-    reaper.ShowMessageBox(msgset, msgerr, 0)
-else
-    -- 去除名称中的 "VSTi: " 前缀并设置为轨道名称
-    local trackName = string.gsub(vstiName, "VSTi: ", "")
-    reaper.GetSetMediaTrackInfo_String(new_track, "P_NAME", trackName, true)
-    -- 为除新音轨外的所有音轨添加接收
-    for i = 0, reaper.CountTracks(0) - 1 do
-        local track = reaper.GetTrack(0, i)
-        if track ~= new_track then
-            reaper.SNM_AddReceive(track, new_track, -1) -- 添加接收，类型为默认
-        end
-    end
+-- 获取用户输入的 VSTi 名称，显示已保存的名称作为默认值
+local retval, vstiName = reaper.GetUserInputs(ip_title, 1, ip_caption, savedVSTiName)
+
+if retval then
+  -- 保存用户输入的 VSTi 名称为扩展状态
+  reaper.SetExtState(section, key, vstiName, true)
 end
+
 reaper.Undo_EndBlock(title, -1) -- 撤销块结束
-reaper.PreventUIRefresh(-1) -- 恢复界面更新
-reaper.UpdateArrange() -- 更新界面显示
