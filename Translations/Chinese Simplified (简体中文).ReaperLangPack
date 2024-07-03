@@ -1,5 +1,5 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 1.0.13-717
+;Version: 1.0.14-717
 ;Author: zaibuyidao
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47851/Chinese%20Simplified%20%28%26%2331616%3B%26%2320307%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
@@ -481,8 +481,8 @@ AB2A3D4EF1C9D1A8=默认
 BEEE7CF3DE686A0A=在光标处删除片段标记
 1ED92D38E448056A=在对象中删除片段标记
 E2AAAD97AAF04D76=删除时间选区内的片段标记
-556FBB4B4D837F9F=删除评级下降的片段
-1D0295F7C96E6DD5=删除未评级上升的片段
+556FBB4B4D837F9F=删除评级降低的片段
+1D0295F7C96E6DD5=删除评级未提升的片段
 FD49B39AFE275ABA=为支持增益减少的插件显示增益减少
 3D94F2E35FA064D2=显示对象标尺
 522F483C3BDD4C72=不将轨道的音量/声像与 MIDI 链接
@@ -1958,7 +1958,7 @@ CDDF7830EBD06132=当录制多条轨道时，偏移文件切换以获得更好的
 E947E7DF20257706=防止在没有轨道预备时开始录音
 9A0462E8A5BBF231=录制的文件名:
 0F72DD9F7332390D=工程中的 MIDI 对象:
-F2D5C17837573D29=录制开始时检查可用磁盘空间，若低于设定值则警告:
+F2D5C17837573D29=录制开始时检查可用磁盘空间，若低于以下值则警告:
 B370916AFE9C7028=MB
 85B69F498013C4A0=在菜单栏中显示可用磁盘空间
 B397655E827DB001=在菜单栏中显示主要录音路径
@@ -1993,7 +1993,7 @@ A631DBBF7B137EAB=启动时检查多个实例
 5B30B36BF2DA4858=使用工程/媒体启动时
 FE1F26B1104E7C16=最近工程列表中的最大工程数:
 8175BEFBAA2C34E1=最近工程列表显示
-6D7AA73D3A28F079=当 REAPER 的内存使用量达到设定值时发出警告
+6D7AA73D3A28F079=当 REAPER 的内存使用量达到以下值时发出警告
 7D1D922B32762880=MB (0 表示从不警告)
 60167E72AEC44586=高级 UI/系统调整...
 
@@ -2536,13 +2536,13 @@ D8E0BE34ECCD7051=片段包络
 C38622521AF10C6B=拍号标记
 
 [DLG_219] ; IDD_PREFS_KBD
-1075019A504F73BB=在某些编辑字段中，停止输入后 1 秒自动提交更改
-4F3654C5B59115AD=当录制时使用备选键盘区段
+1075019A504F73BB=在停止输入 1 秒后提交对某些编辑字段的更改
+4F3654C5B59115AD=录制时使用备选键盘区段
 025B90FA447C6C83=防止 ALT 键聚焦主菜单
-CB03E0C93574765E=允许在多个窗口中使用空格键进行导航
-FF385158D216E0FD=当在插件文本字段中按下空格键时，发送到主窗口
-CE44064C1605950D=瞬时键盘区段覆盖的超时时长:
-E6999CD562DABC49=为操作分配键盘快捷键或更改现有的快捷键
+CB03E0C93574765E=允许在各种窗口中使用空格键进行导航
+FF385158D216E0FD=在插件文本字段中按下空格键时，发送到主窗口
+CE44064C1605950D=临时键盘区段覆盖的超时时长:
+E6999CD562DABC49=为操作分配键盘快捷键或更改现有快捷键
 E6B1DF361BBAF9D5=查看可打印/可搜索的键盘快捷键网页
 ABD51E23C802FC6F=多点触控
 3C82B663A0BB09CA=启用多点触控滑动
@@ -2554,7 +2554,7 @@ B02E94B4388280CB=启用多点触控缩放
 DAD8BA85F7F9ED5C=反向垂直滚动
 E809E6F14FF782A9=多点触控操作后忽略新的手势:
 ADAB85F9EE55B656=反向水平滚动
-5C5BB11B55E65C1F=为多点触控手势分配操作或更改现有的快捷键
+5C5BB11B55E65C1F=为多点触控手势分配操作或更改现有快捷键
 
 [DLG_221] ; IDD_PREFS_KBDFIND
 F433E22A84FF458F=查找按键或 MIDI 控制器
@@ -2634,8 +2634,8 @@ EE921297CB511CD9=KB (更快, 使用更多地址空间)
 34AA37802DFE1CD4=显示媒体对象音高/播放速率 (如果设置)
 935A2F245953B5FD=在不透明背景上显示标签以便于阅读
 F3A483F6782AC452=当对象边缘不可见时显示标签
-B8EB0572152C2FAB=当媒体对象高度超过设定值时，在对象上方绘制标签:
-C391457FF967B9AA=当媒体对象高度低于设定值时，隐藏标签:
+B8EB0572152C2FAB=当媒体对象高度超过以下值时，在对象上方绘制标签:
+C391457FF967B9AA=当媒体对象高度低于以下值时，隐藏标签:
 97D9C4A892786BD0=片段播放速率/音高:
 304B9DC9DED916AF=标准标签
 7A853E8E494A5476=缩写
@@ -2652,7 +2652,7 @@ CE6DFBAB9235015B=无活跃包络
 9C0E7F7043985A17=音量旋钮
 42F8EF5BB3B65CDC=池化的 MIDI/ARA
 9284455D75FB9907=已编组
-81446DD96A434032=当片段高度低于设定值时，隐藏按钮:
+81446DD96A434032=当片段高度低于以下值时，隐藏按钮:
 6299F379BCF4015F=在对象上绘制选择指示器
 1CA2C5CE047F9737=最大拉伸标记控制点大小:
 47D8FDC2B396D03B=像素, 或:
@@ -2698,7 +2698,7 @@ BBA1029B1D147679=注意: 在 '首选项/音频/MIDI 设备' 中，MIDI 设备必
 86C526176585552D=输出格式:
 B3D229CC512D97AE=仅在播放或录制时保存输出
 5259502ECA6BB18D=首次停止时停止保存输出
-7554B3A3441F4F9D=低于设定值时不保存
+7554B3A3441F4F9D=低于以下值时不保存
 5BF30DAB1B327ADE=dB 持续时间
 
 [DLG_243] ; IDD_SCREENSETS
@@ -3184,7 +3184,7 @@ F70B20FAE441D488=音量包络范围:
 2DBB79A909F46E00=半音, 吸附:
 44B420DD4F3AB656=默认的速度映射包络显示范围:
 A1FC4F4522BBAEC4=在单独的包络车道中显示新的包络
-A74C3D45F9D47CA9=当在媒体上绘制时，如果每个包络小于设定值，则重叠包络
+A74C3D45F9D47CA9=当在媒体上绘制时，如果每个包络小于以下值，则重叠包络
 38ECE60A1799A076=像素高
 DD15146F76480C15=添加包络或设置为可见时，将焦点设置为包络
 A5C24439F53E90FE=活跃包络的包络点选择随时间选区
@@ -4070,21 +4070,21 @@ AA0C81725300640C=导入...
 21212E8B679876E1=导出...
 
 [DLG_611] ; IDD_PREFS_PROJECT_BACKUPS
-962E2D784E8DA25D=工程保存时的备份
+962E2D784E8DA25D=保存工程时的备份
 C385092563013C0F=将先前保存的工程版本保存为 <工程>.rpp-bak
 D5B238039276CECA=将所有先前保存的工程版本保存在一个 (较大的) <工程>.rpp-bak 文件中
-BA2468F3D73596DB=将先前保存的工程版本按时间戳保存为 <工程>-[时间戳].rpp-bak
-B28ABDD718790A68=将带有时间戳的备份保存到 Backups 工程子目录中
-DA69B1685CF4FC08=仅限于最近备份
+BA2468F3D73596DB=将先前保存的工程版本保存为 <工程>-[时间戳].rpp-bak
+B28ABDD718790A68=将带时间戳的备份保存到工程的 Backups 子目录
+DA69B1685CF4FC08=将备份限制为最近的备份
 F7A4A21B3D02F6CE=自动保存
-C929BD8F585E3029=在工程目录中按时间戳自动保存文件
-FE3E0443E5E5AB7D=将自动保存的工程备份保存到工程的 AutoSaves 子目录中
-6C7293326A65EB5F=仅限于最近自动保存的备份
-913A322332306D2F=在附加目录中按时间戳自动保存文件:
-8B3C13D678C546B1=直接自动保存到工程文件 (不推荐)
+C929BD8F585E3029=自动保存到工程目录中的带时间戳的文件
+FE3E0443E5E5AB7D=将自动保存的工程备份保存到工程的 AutoSaves 子目录
+6C7293326A65EB5F=将自动保存的备份限制为最近的备份
+913A322332306D2F=自动保存到附加目录中的带时间戳的文件:
+8B3C13D678C546B1=自动保存到工程文件 (不推荐)
 4A282EB1D04FD39F=自动保存间隔:
 4E3D0AC225186474=分钟
-5BA2DEF904F54D0D=与自动保存的工程一起保存撤销历史记录 (RPP-UNDO) (如果在常规首选项中启用)
+5BA2DEF904F54D0D=与自动保存的工程一起保存撤销历史 (RPP-UNDO) (如果在常规首选项中启用)
 750889D8A85C46A0=未保存工程的自动保存路径:
 
 [DLG_616] ; IDD_PREFS_AUTOMATION_ITEMS
@@ -9858,7 +9858,7 @@ FDB578659538E420=选择触碰过的音符
 0E20B188F8964553=网格
 13BD7B6CBDDF067E=MIDI 文件:
 EAACD8794B0458D9=MIDI 片段
-5B1F0064C6DCBDD5=平直
+5B1F0064C6DCBDD5=等分
 0AF9E3975E109E45=三连音
 AEEA4E75D9D1139B=附点
 786552F5E9DDDDD7=摇摆
@@ -10675,7 +10675,7 @@ D4747CD4D3FF8CF1=网格: 将网格设置为 1/2, 保持网格类型 ⇌ Grid: Se
 ED1DD91EEB151F82=网格: 将网格设置为 1, 保持网格类型 ⇌ Grid: Set to 1 preserving grid type
 0700088D07CCD84D=网格: 将网格设置为 2, 保持网格类型 ⇌ Grid: Set to 2 preserving grid type
 67C29A92BEF6543F=网格: 将网格设置为 4, 保持网格类型 ⇌ Grid: Set to 4 preserving grid type
-6E0ACAE294F315B6=网格: 将网格类型设置为平直 ⇌ Grid: Set grid type to straight
+6E0ACAE294F315B6=网格: 将网格类型设置为等分 ⇌ Grid: Set grid type to straight
 2E339FA463E1E08C=网格: 将网格类型设置为三连音 ⇌ Grid: Set grid type to triplet
 7CC986B297E518C0=网格: 将网格类型设置为附点 ⇌ Grid: Set grid type to dotted
 7C6D2292F8F10176=网格: 将网格类型设置为摇摆 ⇌ Grid: Set grid type to swing
@@ -10688,9 +10688,9 @@ C3F59FDFA5A35609=设置下一个插入音符的长度: 1/8, 保持划分类型 �
 B751C8875FCB92BD=设置下一个插入音符的长度: 1/4, 保持划分类型 ⇌ Set length for next inserted note: 1/4 preserving division type
 8DF89F16148673CF=设置下一个插入音符的长度: 1/2, 保持划分类型 ⇌ Set length for next inserted note: 1/2 preserving division type
 B8393FEB8AC4CF78=设置下一个插入音符的长度: 1, 保持划分类型 ⇌ Set length for next inserted note: 1 preserving division type
-567A3D20B373BDD1=设置下一个插入音符的长度: 平直, 保持划分长度 ⇌ Set length for next inserted note: straight preserving division length
+567A3D20B373BDD1=设置下一个插入音符的长度: 等分, 保持划分长度 ⇌ Set length for next inserted note: straight preserving division length
 3F86410D66C2DEE3=设置下一个插入音符的长度: 附点, 保持划分长度 ⇌ Set length for next inserted note: dotted preserving division length
-A44EC3A8F429A871=设置下一个插入音符的长度: 三连音, 保持分割长度 ⇌ Set length for next inserted note: triplet preserving division length
+A44EC3A8F429A871=设置下一个插入音符的长度: 三连音, 保持划分长度 ⇌ Set length for next inserted note: triplet preserving division length
 FD2B899D51A3DCA9=编辑: 使用当前音符长度划分类型将音符长度设置为 1/128 ⇌ Edit: Set note length to 1/128 using current note length division type
 CC922B75178FC732=编辑: 使用当前音符长度划分类型将音符长度设置为 1/64 ⇌ Edit: Set note length to 1/64 using current note length division type
 DECB2969C44DF489=编辑: 使用当前音符长度划分类型将音符长度设置为 1/32 ⇌ Edit: Set note length to 1/32 using current note length division type
@@ -12792,7 +12792,7 @@ A517977E3C29D1AD=时间选区和循环点可以链接，或取消链接，以便
 6D66B24C4A76886C=使用退出键清除时间选区，或者在编排视图中的鼠标点击移动编辑光标时选择。
 E614E9D196A9F7D5=在拉伸落在音频媒体对象内的剃刀编辑区域边缘时，可以添加拉伸标记，或者可以分割对象。
 9130B852E29BD8E0=片段标记可以提升评级或降低评级。评级级别的最大数量在此设置。
-8574B15AB5D55AA0=提升评级、降低评级或循环评级的操作可以包括或跳过将片段设置为无评级。
+8574B15AB5D55AA0=提升评级, 降低评级或循环评级的操作可以包括或跳过将片段设置为无评级。
 
 [prefs_env]
 EAB629CC2E152545=为新轨道设置默认的录音设置
