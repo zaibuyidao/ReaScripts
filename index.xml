@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="34163513a69d309971f6eff7c1ff62477d5308b8">
+<index version="1" name="zaibuyidao Scripts" commit="387a3302b304f1a711657f1d1aab1ac80bd48aa5">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -6003,6 +6003,15 @@
     </reapack>
     <reapack name="zaibuyidao_Set Velocity.lua" type="script" desc="Set Velocity">
       <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.1" author="zaibuyidao" time="2019-12-16T14:12:01Z">
@@ -6023,6 +6032,10 @@
       </version>
       <version name="1.6" author="zaibuyidao" time="2020-05-04T05:32:12Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f7ffbae7c0176dba465dc2d6987763cfa6978fe4/MIDI%20Editor/zaibuyidao_Set%20Velocity.lua</source>
+      </version>
+      <version name="1.7" author="zaibuyidao" time="2024-07-04T09:58:39Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main midi_editor midi_inlineeditor">https://github.com/zaibuyidao/ReaScripts/raw/387a3302b304f1a711657f1d1aab1ac80bd48aa5/MIDI%20Editor/zaibuyidao_Set%20Velocity.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Slide +01.lua" type="script" desc="Slide +01">
