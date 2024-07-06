@@ -1,5 +1,5 @@
 -- @description Set Velocity
--- @version 1.7
+-- @version 1.7.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -80,24 +80,24 @@ function main()
             for take, _ in pairs(getTakes) do
                 reaper.MIDI_DisableSort(take)
                 
-                _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
-                for i = 1, notecnt do
-                    _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i - 1)
+                local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+                for i = 0, notecnt - 1 do
+                    _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
                     if selected == true then
-                        reaper.MIDI_SetNote(take, i - 1, selected, muted, startppqpos, endppqpos, chan, pitch, velo, false)
+                        reaper.MIDI_SetNote(take, i, selected, muted, startppqpos, endppqpos, chan, pitch, velo, false)
                     end
                 end
                 reaper.MIDI_Sort(take)
             end
         else
-            take = reaper.BR_GetMouseCursorContext_Take()
-            _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+            local take = reaper.BR_GetMouseCursorContext_Take()
+            local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
             reaper.MIDI_DisableSort(take)
 
-            for i = 1, notecnt do
-                _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i - 1)
+            for i = 0, notecnt - 1 do
+                _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
                 if selected == true then
-                    reaper.MIDI_SetNote(take, i - 1, selected, muted, startppqpos, endppqpos, chan, pitch, velo, false)
+                    reaper.MIDI_SetNote(take, i, selected, muted, startppqpos, endppqpos, chan, pitch, velo, false)
                 end
             end
             reaper.MIDI_Sort(take)
@@ -105,18 +105,18 @@ function main()
 
         if not inline_editor then reaper.SN_FocusMIDIEditor() end
     else
-        count_sel_items = reaper.CountSelectedMediaItems(0)
+        local count_sel_items = reaper.CountSelectedMediaItems(0)
         if count_sel_items == 0 then return end
-        for i = 1, count_sel_items do
-            item = reaper.GetSelectedMediaItem(0, count_sel_items - i)
-            take = reaper.GetTake(item, 0)
+        for i = 0, count_sel_items - 1 do
+            local item = reaper.GetSelectedMediaItem(0, i)
+            local take = reaper.GetTake(item, 0)
             reaper.MIDI_DisableSort(take)
 
             if reaper.TakeIsMIDI(take) then
-                _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
-                for i = 1, notecnt do
-                    _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i - 1)
-                    reaper.MIDI_SetNote(take, i - 1, selected, muted, startppqpos, endppqpos, chan, pitch, velo, false)
+                local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+                for i = 0, notecnt - 1 do
+                    local _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+                    reaper.MIDI_SetNote(take, i, selected, muted, startppqpos, endppqpos, chan, pitch, velo, false)
                 end
             end
             reaper.MIDI_Sort(take)
