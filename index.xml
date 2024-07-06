@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c94a5020e95e0fd28bbe414dc4debeac16378144">
+<index version="1" name="zaibuyidao Scripts" commit="b38796fab3afa4821f2891e5bb78197ba7bc2845">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5902,18 +5902,6 @@
       <version name="1.0" author="zaibuyidao" time="2024-07-06T15:15:00Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main midi_editor midi_inlineeditor">https://github.com/zaibuyidao/ReaScripts/raw/dd8f5426713b67b7e9cc559f28b2e8ed926000c7/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Legacy).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Set Note Length (Under Mouse).lua" type="script" desc="Set Note Length (Under Mouse)">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-06-07T10:08:56Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/fc0784b7753f7d6a7956434c2b7ec8a2993914a7/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Under%20Mouse).lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-06-07T10:34:09Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1bf37788467aad17d4b0c646e0dc9b5552438ec8/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Under%20Mouse).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Note Length.lua" type="script" desc="Set Note Length">
