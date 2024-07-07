@@ -1,4 +1,4 @@
--- @description Set Note Length to End of Last Note
+-- @description Set Note Ends to End of Last Note
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -79,5 +79,5 @@ for take, _ in pairs(getTakes) do
   reaper.FNG_FreeMidiTake(fng_take)
   reaper.MIDI_Sort(take)
 end
-reaper.Undo_EndBlock("Set Note Length to End of Last Note", -1)
+reaper.Undo_EndBlock("Set Note Ends to End of Last Note", -1)
 reaper.UpdateArrange()
