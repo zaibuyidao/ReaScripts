@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="11d9ab1d8815f47192fd5f63b955711b1f4f1a08">
+<index version="1" name="zaibuyidao Scripts" commit="23928e51de92b5c56500929d74e82100bd456874">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4666,15 +4666,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/688c78c8d559a8b0d7ae53e7b832bc27bdf472ce/MIDI%20Editor/zaibuyidao_Move%20Pitch%20Bend%20Up-Down%20by%20Semitones.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Note Length To End.lua" type="script" desc="Note Length To End">
-      <metadata>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2020-09-07T14:17:05Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/33420f1538025518502a860806e4232698845e1c/MIDI%20Editor/zaibuyidao_Note%20Length%20To%20End.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Note Off Velocity +01.lua" type="script" desc="Note Off Velocity +01">
       <version name="1.0" author="zaibuyidao" time="2020-08-17T19:17:01Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
@@ -5902,6 +5893,24 @@
       <version name="1.0" author="zaibuyidao" time="2024-07-06T15:15:00Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main midi_editor midi_inlineeditor">https://github.com/zaibuyidao/ReaScripts/raw/dd8f5426713b67b7e9cc559f28b2e8ed926000c7/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Legacy).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Note Length to End of Last Note.lua" type="script" desc="Set Note Length to End of Last Note">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-07-07T07:16:51Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/23928e51de92b5c56500929d74e82100bd456874/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20to%20End%20of%20Last%20Note.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Note Length to First Selected Note.lua" type="script" desc="Set Note Length to First Selected Note">
