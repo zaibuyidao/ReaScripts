@@ -1,100 +1,48 @@
 -- @description Random Note Position Swap
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   New Script
 -- @links
---   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repo https://github.com/zaibuyidao/ReaScripts
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about Random Note Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.
 
-function print(...)
-    for _, v in ipairs({...}) do
-        reaper.ShowConsoleMsg(tostring(v) .. " ")
-    end
-    reaper.ShowConsoleMsg("\n")
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+  dofile(ZBYDFuncPath)
+  if not checkSWSExtension() or not checkJSAPIExtension() then return end
+else
+  local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+  "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+  "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
+
+  reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
+  else
+    local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+    "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+    "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
+
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
+  end
+  return
 end
 
-function getSystemLanguage()
-    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-    local os = reaper.GetOS()
-    local lang
-  
-    if os == "Win32" or os == "Win64" then -- Windows
-        if locale == 936 then -- Simplified Chinese
-            lang = "简体中文"
-        elseif locale == 950 then -- Traditional Chinese
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    elseif os == "OSX32" or os == "OSX64" then -- macOS
-        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
-        local result = handle:read("*a")
-        handle:close()
-        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
-        if lang == "zh-CN" then -- 简体中文
-            lang = "简体中文"
-        elseif lang == "zh-TW" then -- 繁体中文
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    elseif os == "Linux" then -- Linux
-        local handle = io.popen("echo $LANG")
-        local result = handle:read("*a")
-        handle:close()
-        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
-        if lang == "zh_CN" then -- 简体中文
-            lang = "简体中文"
-        elseif lang == "zh_TW" then -- 繁體中文
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    end
-  
-    return lang
-end
-  
 local language = getSystemLanguage()
+local getTakes = getAllTakes()
   
 if language == "简体中文" then
-    title = "随机音符位置交换"
+    title = "随机交换音符位置"
 elseif language == "繁体中文" then
-    title = "隨機音符位置交換"
+    title = "隨機交換音符位置"
 else
     title = "Random Note Position Swap"
-end
-
-function getAllTakes() -- 获取所有take
-    tTake = {}
-    if reaper.MIDIEditor_EnumTakes then
-        local editor = reaper.MIDIEditor_GetActive()
-        for i = 0, math.huge do
-            take = reaper.MIDIEditor_EnumTakes(editor, i, false)
-            if take and reaper.ValidatePtr2(0, take, "MediaItem_Take*") then 
-                tTake[take] = true
-                tTake[take] = {item = reaper.GetMediaItemTake_Item(take)}
-            else
-                break
-            end
-        end
-    else
-        for i = 0, reaper.CountMediaItems(0)-1 do
-            local item = reaper.GetMediaItem(0, i)
-            local take = reaper.GetActiveTake(item)
-            if reaper.ValidatePtr2(0, take, "MediaItem_Take*") and reaper.TakeIsMIDI(take) and reaper.MIDI_EnumSelNotes(take, -1) == 0 then -- Get potential takes that contain notes. NB == 0 
-                tTake[take] = true
-            end
-        end
-        
-        for take in next, tTake do
-            if reaper.MIDI_EnumSelNotes(take, -1) ~= -1 then tTake[take] = nil end
-        end
-    end
-    if not next(tTake) then return end
-    return tTake
 end
 
 function getNote(take, id) -- 根据传入的id索引值，返回指定位置的含有音符信息的表
@@ -147,7 +95,7 @@ function insertNote(take, note) -- 插入音符
 end
 
 function main_exchange()
-    for take, _ in pairs(getAllTakes()) do
+    for take, _ in pairs(getTakes) do
         local newNotes = {}
         local positions = {}
         local noteGroups = {}
