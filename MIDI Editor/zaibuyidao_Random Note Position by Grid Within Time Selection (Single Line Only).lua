@@ -1,70 +1,48 @@
--- @description Random Note Position By Grid (Single Line) (Within Time Selection)
+-- @description Random Note Position by Grid Within Time Selection (Single Line Only)
 -- @version 1.0
 -- @author zaibuyidao
--- @changelog Initial release
+-- @changelog
+--   New Script
 -- @links
---   webpage https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
---   repo https://github.com/zaibuyidao/ReaScripts
+--   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about Random Note Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.
 
-function print(...)
-    for _, v in ipairs({...}) do
-        reaper.ShowConsoleMsg(tostring(v) .. " ")
-    end
-    reaper.ShowConsoleMsg("\n")
-end
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+if reaper.file_exists(ZBYDFuncPath) then
+  dofile(ZBYDFuncPath)
+  if not checkSWSExtension() or not checkJSAPIExtension() then return end
+else
+  local errorMsg = "Error - Missing Script (错误 - 缺失脚本)\n\n" ..
+  "[English]\nThe required 'zaibuyidao Functions' script file was not found. Please ensure the file is correctly placed at:\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\nIf the file is missing, you can install it via ReaPack by searching for 'zaibuyidao Functions' in the ReaPack package browser.\n\n" ..
+  "[中文]\n必需的 'zaibuyidao Functions' 脚本文件未找到。请确保文件正确放置在以下位置：\n" ..
+  ZBYDFuncPath:gsub('%\\', '/') .. "\n\n如果文件缺失，您可以通过 ReaPack 包浏览器搜索并安装 'zaibuyidao Functions'。\n"
 
-function getSystemLanguage()
-    local locale = tonumber(string.match(os.setlocale(), "(%d+)$"))
-    local os = reaper.GetOS()
-    local lang
-  
-    if os == "Win32" or os == "Win64" then -- Windows
-        if locale == 936 then -- Simplified Chinese
-            lang = "简体中文"
-        elseif locale == 950 then -- Traditional Chinese
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    elseif os == "OSX32" or os == "OSX64" then -- macOS
-        local handle = io.popen("/usr/bin/defaults read -g AppleLocale")
-        local result = handle:read("*a")
-        handle:close()
-        lang = result:gsub("_", "-"):match("[a-z]+%-[A-Z]+")
-        if lang == "zh-CN" then -- 简体中文
-            lang = "简体中文"
-        elseif lang == "zh-TW" then -- 繁体中文
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    elseif os == "Linux" then -- Linux
-        local handle = io.popen("echo $LANG")
-        local result = handle:read("*a")
-        handle:close()
-        lang = result:gsub("%\n", ""):match("[a-z]+%-[A-Z]+")
-        if lang == "zh_CN" then -- 简体中文
-            lang = "简体中文"
-        elseif lang == "zh_TW" then -- 繁體中文
-            lang = "繁體中文"
-        else -- English
-            lang = "English"
-        end
-    end
-  
-    return lang
+  reaper.MB(errorMsg, "Missing Script Error/脚本文件缺失错误", 0)
+
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('zaibuyidao Functions')
+  else
+    local reapackErrorMsg = "Error - ReaPack Not Found (错误 - 未找到 ReaPack)\n\n" ..
+    "[English]\nThe ReaPack extension is not found. Please install ReaPack to manage and install REAPER scripts and extensions easily. Visit https://reapack.com for installation instructions.\n\n" ..
+    "[中文]\n未找到 ReaPack 扩展。请安装 ReaPack 来便捷地管理和安装 REAPER 脚本及扩展。访问 https://reapack.com 获取安装指南。\n"
+
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found/未找到 ReaPack", 0)
+  end
+  return
 end
 
 local language = getSystemLanguage()
-  
+local getTakes = getAllTakes()
+
 if language == "简体中文" then
-    title = "按网格随机音符位置(单旋律)"
+    title = "在时间选区内按网格随机音符位置(仅限单旋律)"
 elseif language == "繁体中文" then
-    title = "按網格隨機音符位置(單旋律)"
+    title = "在時間選區内按網格隨機音符位置(僅限單旋律)"
 else
-    title = "Random Note Position By Grid (Single Line)"
+    title = "Random Note Position by Grid Within Time Selection (Single Line Only)"
 end
 
 function isOverlap(take, rand_pos, notelen, notecnt, currentIndex)
