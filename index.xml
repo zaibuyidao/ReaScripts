@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c949769842293b071d25d164b0ba2f14c5e53bd1">
+<index version="1" name="zaibuyidao Scripts" commit="5ebc89918c82d0a72f2066ee29854a6c452c6eb0">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -2789,98 +2789,6 @@
       </version>
       <version name="1.2.2" author="zaibuyidao" time="2021-08-13T15:47:54Z">
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/39d21f6f5636881fb9b439d24e28bae3160e83aa/MIDI%20Editor/zaibuyidao_Duplicate%20Musical.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_End Time (Fast).lua" type="script" desc="End Time (Fast)">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-01-02T17:08:17Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/df41f8a4b1d8f27e8e916e6e56e8f39aeb8fc112/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-01-24T16:40:59Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/63ce39f115c5904960e8fcadd88709fd789a1313/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao" time="2022-02-05T11:23:33Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/0104b4605af12daa7128e3e54b786353df4320b7/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
-      </version>
-      <version name="1.0.3" author="zaibuyidao" time="2022-02-15T14:18:15Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/18fd5ee1dcef1fa5e8f09fa932d4e1a641ac9071/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
-      </version>
-      <version name="1.0.4" author="zaibuyidao" time="2022-05-11T16:00:14Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d91ff81c243e2df3d071363e38d73160931f31dc/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
-      </version>
-      <version name="1.0.5" author="zaibuyidao" time="2022-05-22T13:22:38Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8d69b1d0593742bbc15f7dbb85a01d5c4c2a75ad/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
-      </version>
-      <version name="1.0.6" author="zaibuyidao" time="2022-10-27T02:56:20Z">
-        <changelog><![CDATA[Fix note pos integer]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/03e213226d8d8593b956a2b6e794d8c276dd9fbd/MIDI%20Editor/zaibuyidao_End%20Time%20(Fast).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_End Time (Multitrack).lua" type="script" desc="End Time (Multitrack)">
-      <metadata/>
-      <version name="1.0" author="zaibuyidao" time="2020-09-04T18:05:46Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ebd87fc2794c02cf163e6dd1c655cbce38c93e57/MIDI%20Editor/zaibuyidao_End%20Time%20(Multitrack).lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-09-27T16:42:27Z">
-        <changelog><![CDATA[+ Code rewrite]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a741eba7e71f7f988f89a905b09103d4301621c2/MIDI%20Editor/zaibuyidao_End%20Time%20(Multitrack).lua</source>
-      </version>
-      <version name="2.0.1" author="zaibuyidao" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_End%20Time%20(Multitrack).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_End Time FNG (Multitrack).lua" type="script" desc="End Time FNG (Multitrack)">
-      <version name="1.0" author="zaibuyidao" time="2020-09-17T20:42:41Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/MIDI%20Editor/zaibuyidao_End%20Time%20FNG%20(Multitrack).lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_End%20Time%20FNG%20(Multitrack).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_End Time FNG.lua" type="script" desc="End Time FNG">
-      <version name="1.0" author="zaibuyidao" time="2020-09-17T20:42:41Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/MIDI%20Editor/zaibuyidao_End%20Time%20FNG.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_End%20Time%20FNG.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_End Time.lua" type="script" desc="End Time">
-      <metadata/>
-      <version name="1.0" author="zaibuyidao" time="2020-04-25T05:45:50Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/58f6e10a33307e789724b3c455901e701c3e00ff/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-05-19T18:56:20Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ac1a8103c47f892992bac6bbe9a087fd48edaead/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
-      </version>
-      <version name="1.2" author="zaibuyidao" time="2020-08-25T19:34:38Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/dd455f4924a2371b2f560b0e7cbd1546def39cdd/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
-      </version>
-      <version name="1.3" author="zaibuyidao" time="2020-09-04T18:05:46Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ebd87fc2794c02cf163e6dd1c655cbce38c93e57/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-09-17T20:42:41Z">
-        <changelog><![CDATA[+ Code rewrite]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b90a2c953420ab4e53a394a3765bef6a4b1cf6bd/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
-      </version>
-      <version name="2.0.1" author="zaibuyidao" time="2021-07-18T12:12:35Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/3cd3d7d786cae21ad492f921d986023ab0facab3/MIDI%20Editor/zaibuyidao_End%20Time.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Event Filter - Select Control (Fast).lua" type="script" desc="Event Filter - Select Control (Fast)">
@@ -5816,6 +5724,78 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8391675c45e56d3491c6fa2e477dbc179fef5e8b/MIDI%20Editor/zaibuyidao_Set%20MIDI%20Note%20Shape.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Set Note Ends to Edit Cursor (FNG).lua" type="script" desc="Set Note Ends to Edit Cursor (FNG)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-07-07T11:07:35Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5ebc89918c82d0a72f2066ee29854a6c452c6eb0/MIDI%20Editor/zaibuyidao_Set%20Note%20Ends%20to%20Edit%20Cursor%20(FNG).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Note Ends to Edit Cursor (Legacy).lua" type="script" desc="Set Note Ends to Edit Cursor (Legacy)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-07-07T11:07:35Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5ebc89918c82d0a72f2066ee29854a6c452c6eb0/MIDI%20Editor/zaibuyidao_Set%20Note%20Ends%20to%20Edit%20Cursor%20(Legacy).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Note Ends to Edit Cursor.lua" type="script" desc="Set Note Ends to Edit Cursor">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-07-07T11:07:35Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5ebc89918c82d0a72f2066ee29854a6c452c6eb0/MIDI%20Editor/zaibuyidao_Set%20Note%20Ends%20to%20Edit%20Cursor.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Note Ends to End of Last Note.lua" type="script" desc="Set Note Ends to End of Last Note">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-07-07T11:07:35Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5ebc89918c82d0a72f2066ee29854a6c452c6eb0/MIDI%20Editor/zaibuyidao_Set%20Note%20Ends%20to%20End%20of%20Last%20Note.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Set Note Length (Legacy).lua" type="script" desc="Set Note Length (Legacy)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -5868,24 +5848,6 @@
       <version name="1.0" author="zaibuyidao" time="2024-07-07T09:15:30Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c949769842293b071d25d164b0ba2f14c5e53bd1/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20by%20Percentage.lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Set Note Length to End of Last Note.lua" type="script" desc="Set Note Length to End of Last Note">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
-}
-]]></description>
-        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
-        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2024-07-07T07:16:51Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/23928e51de92b5c56500929d74e82100bd456874/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20to%20End%20of%20Last%20Note.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Note Length to First Selected Note.lua" type="script" desc="Set Note Length to First Selected Note">
