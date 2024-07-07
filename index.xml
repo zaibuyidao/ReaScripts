@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="708dc294ffaeed735e8657c3d1bebe5df2d96ad0">
+<index version="1" name="zaibuyidao Scripts" commit="c22b485da675509f0e7e60f7fabf49c3d79c69f2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5085,6 +5085,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2024-07-07T15:18:37Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/708dc294ffaeed735e8657c3d1bebe5df2d96ad0/MIDI%20Editor/zaibuyidao_Random%20Note%20Position%20by%20Grid%20Within%20Time%20Selection%20(Single%20Line%20Only).lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-07-07T15:21:01Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c22b485da675509f0e7e60f7fabf49c3d79c69f2/MIDI%20Editor/zaibuyidao_Random%20Note%20Position%20by%20Grid%20Within%20Time%20Selection%20(Single%20Line%20Only).lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Note Position by Grid Within Time Selection.lua" type="script" desc="Random Note Position by Grid Within Time Selection">
