@@ -1,5 +1,5 @@
 -- @description Random Note Position by Grid Within Time Selection (Single Line Only)
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -8,14 +8,6 @@
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Random Note Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.
-
--- USER AREA
--- Settings that the user can customize.
-
-local enableRandomPositioning = true -- 新增加的开关
-local grid_enabled = true -- 新增加的开关，用于控制是否按网格对齐
-
--- End of USER AREA
 
 local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
@@ -53,24 +45,11 @@ else
     title = "Random Note Position by Grid Within Time Selection (Single Line Only)"
 end
 
-function isOverlap(take, rand_pos, notelen, pitch, notecnt, currentIndex)
+function isOverlap(take, rand_pos, notelen, pitch, notecnt, currentIndex, checkPitch)
     for j = 0, notecnt - 1 do
         if j ~= currentIndex then
-            _, _, _, startppqpos, endppqpos, _, notePitch, _ = reaper.MIDI_GetNote(take, j)
-            if pitch == notePitch and (rand_pos < endppqpos and rand_pos + notelen > startppqpos) then
-                return true
-            end
-        end
-    end
-    return false
-end
-
-function isOverlapLine(take, rand_pos, notelen, notecnt, currentIndex)
-    for j = 0, notecnt - 1 do
-        if j ~= currentIndex then
-            _, _, _, startppqpos, endppqpos = reaper.MIDI_GetNote(take, j)
-            -- 检查随机位置是否与任何现有音符重叠
-            if (rand_pos < endppqpos and rand_pos + notelen > startppqpos) then
+            local _, _, _, startppqpos, endppqpos, _, notePitch, _ = reaper.MIDI_GetNote(take, j)
+            if (not checkPitch or pitch == notePitch) and (rand_pos < endppqpos and rand_pos + notelen > startppqpos) then
                 return true
             end
         end
@@ -82,26 +61,21 @@ function main()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
     local grid_qn = reaper.MIDI_GetGrid(take)
-    local grid = math.floor(midi_tick*grid_qn)
+    local grid = math.floor(midi_tick * grid_qn)
 
-    _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+    local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
     if notecnt == 0 then return end
 
     local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
     local loop_start, loop_end, loop_len
 
     if time_start == time_end then
-        -- 没有时间选区，寻找选中音符的范围
         local min_start, max_end
         for i = 0, notecnt - 1 do
             local _, selected, _, startppqpos, endppqpos = reaper.MIDI_GetNote(take, i)
             if selected then
-                if not min_start or startppqpos < min_start then
-                    min_start = startppqpos
-                end
-                if not max_end or endppqpos > max_end then
-                    max_end = endppqpos
-                end
+                min_start = min_start and math.min(min_start, startppqpos) or startppqpos
+                max_end = max_end and math.max(max_end, endppqpos) or endppqpos
             end
         end
         if min_start and max_end then
@@ -109,62 +83,53 @@ function main()
             time_end = reaper.MIDI_GetProjTimeFromPPQPos(take, max_end)
             reaper.GetSet_LoopTimeRange2(0, true, false, time_start, time_end, false)
         else
-            return -- 没有选中的音符
+            return
         end
     end
 
-    loop_start = math.floor(0.5+reaper.MIDI_GetPPQPosFromProjTime(take, time_start))
-    loop_end = math.floor(0.5+reaper.MIDI_GetPPQPosFromProjTime(take, time_end))
-    loop_len = math.floor(loop_end - loop_start)
-    local times = math.floor(loop_len/grid)
+    loop_start = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_start))
+    loop_end = math.floor(0.5 + reaper.MIDI_GetPPQPosFromProjTime(take, time_end))
+    loop_len = loop_end - loop_start
+    local times = math.floor(loop_len / grid)
     local new_loop_start = loop_start - loop_start % grid
 
     reaper.MIDI_DisableSort(take)
-    sel = reaper.MIDI_EnumSelNotes(take, -1)
-    if sel ~= -1 then sel_note = true end
     local flag
     if reaper.GetToggleCommandStateEx(32060, 40681) == 1 then
-        reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
+        reaper.MIDIEditor_LastFocused_OnCommand(40681, 0)
         flag = true
     end
 
-    -- 第一次随机位置-打乱音符位置
     for i = 0, notecnt - 1 do
-        _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-        notelen = endppqpos - startppqpos
-        if selected and enableRandomPositioning then
+        local _, selected, _, startppqpos, endppqpos, _, pitch, _ = reaper.MIDI_GetNote(take, i)
+        local notelen = endppqpos - startppqpos
+        if selected then
             local retry_count = 0
             local max_retries = 50
             local rand_pos
-    
+
             repeat
-                if grid_enabled then
-                    local rand_grid = math.random(0, times) * grid
-                    rand_pos = new_loop_start + rand_grid
-                    if rand_pos + notelen > loop_end then
-                        rand_pos = loop_end - notelen
-                    end
-                else
-                    rand_pos = math.random(loop_start, loop_end - notelen) -- 完全随机位置
+                local rand_grid = math.random(0, times) * grid
+                rand_pos = new_loop_start + rand_grid
+                if rand_pos + notelen > loop_end then
+                    rand_pos = loop_end - notelen
                 end
-    
+
                 retry_count = retry_count + 1
                 if retry_count > max_retries then
                     break
                 end
-            until not isOverlap(take, rand_pos, notelen, pitch, notecnt, i)
-    
+            until not isOverlap(take, rand_pos, notelen, pitch, notecnt, i, true)
+
             if retry_count <= max_retries then
                 reaper.MIDI_SetNote(take, i, nil, nil, rand_pos, rand_pos + notelen, nil, nil, nil, false)
             end
         end
     end
 
-    -- 第二次随机位置-保持单旋律
-    local _, notecnt2, _, _ = reaper.MIDI_CountEvts(take)
-    for i = 1, notecnt2 do
-        _, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i - 1)
-        notelen = endppqpos - startppqpos
+    for i = 0, notecnt - 1 do
+        local _, selected, _, startppqpos, endppqpos, _, _, _ = reaper.MIDI_GetNote(take, i)
+        local notelen = endppqpos - startppqpos
         if selected then
             local retry_count = 0
             local max_retries = 50
@@ -173,21 +138,18 @@ function main()
             repeat
                 local rand_grid = math.random(times) * grid
                 rand_pos = new_loop_start + rand_grid - grid
-
                 if rand_pos + notelen > loop_end then
                     rand_pos = loop_end - notelen
                 end
 
                 retry_count = retry_count + 1
                 if retry_count > max_retries then
-                    -- reaper.ShowConsoleMsg("Max retries reached for note " .. i .. "\n")
                     break
                 end
-            until not isOverlapLine(take, rand_pos, notelen, notecnt2, i - 1)
+            until not isOverlap(take, rand_pos, notelen, _, notecnt, i, false)
 
             if retry_count <= max_retries then
-                -- reaper.ShowConsoleMsg("Moving note " .. i .. " to position " .. rand_pos .. "\n")
-                reaper.MIDI_SetNote(take, i - 1, nil, nil, rand_pos, rand_pos + notelen, nil, nil, nil, false)
+                reaper.MIDI_SetNote(take, i, nil, nil, rand_pos, rand_pos + notelen, nil, nil, nil, false)
             end
         end
     end
@@ -195,7 +157,7 @@ function main()
     reaper.MIDI_Sort(take)
 
     if flag then
-        reaper.MIDIEditor_LastFocused_OnCommand(40681,0) -- Options: Correct overlapping notes while editing
+        reaper.MIDIEditor_LastFocused_OnCommand(40681, 0) -- Options: Correct overlapping notes while editing
     end
 end
 
