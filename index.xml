@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="23928e51de92b5c56500929d74e82100bd456874">
+<index version="1" name="zaibuyidao Scripts" commit="c949769842293b071d25d164b0ba2f14c5e53bd1">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4171,67 +4171,6 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d9efd7b3dc7f4a53983fabb535a45f3afcb8245d/MIDI%20Editor/zaibuyidao_Legato.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Length (Fast).lua" type="script" desc="Length (Fast)">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-06-20T14:22:47Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/617e6a4ae77e623e3043a03039815378681f7a59/MIDI%20Editor/zaibuyidao_Length%20(Fast).lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-09-02T15:30:33Z">
-        <changelog><![CDATA[Optimized code]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f56dfb04de90d20fa0b13b98be4faaba6f5fb090/MIDI%20Editor/zaibuyidao_Length%20(Fast).lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao" time="2023-09-02T12:40:25Z">
-        <changelog><![CDATA[Resolve the error in MIDI event scaling.]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5cac91463f2a1e3b7cda8c46b39f883fbd0cc93f/MIDI%20Editor/zaibuyidao_Length%20(Fast).lua</source>
-      </version>
-      <version name="1.0.3" author="zaibuyidao" time="2023-09-02T13:19:32Z">
-        <changelog><![CDATA[Resolve the error in MIDI event scaling.]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/1b8ae3eff8b5f2216a9e6f5d0a58598455f5a09c/MIDI%20Editor/zaibuyidao_Length%20(Fast).lua</source>
-      </version>
-    </reapack>
-    <reapack name="zaibuyidao_Length.lua" type="script" desc="Length">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
-}
-]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
-        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2019-12-19T20:09:22Z">
-        <changelog><![CDATA[+ Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/5f6fa4a564996413f4e83d9406f71ade825d68dd/MIDI%20Editor/zaibuyidao_Length.lua</source>
-      </version>
-      <version name="1.1" author="zaibuyidao" time="2020-02-16T14:56:24Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/15ef6644c9177cb40170f37ebc05e2122d7f9f49/MIDI%20Editor/zaibuyidao_Length.lua</source>
-      </version>
-      <version name="2.0" author="zaibuyidao" time="2020-08-27T17:37:17Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/8bbaab36540f1ca0e6311e6adfc9891c964d6d9a/MIDI%20Editor/zaibuyidao_Length.lua</source>
-      </version>
-      <version name="2.1" author="zaibuyidao" time="2020-08-27T19:34:44Z">
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ae4c39098340856981d41a54cf6976dfe5c2188d/MIDI%20Editor/zaibuyidao_Length.lua</source>
-      </version>
-      <version name="2.2" author="zaibuyidao" time="2023-09-02T13:10:47Z">
-        <changelog><![CDATA[Optimize code.]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/71d650d1a744d29baa2432edf234b84fd33f41bd/MIDI%20Editor/zaibuyidao_Length.lua</source>
-      </version>
-    </reapack>
     <reapack name="zaibuyidao_Linear Ramp CC Events (Multitrack).lua" type="script" desc="Linear Ramp CC Events (Multitrack)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -5893,6 +5832,42 @@
       <version name="1.0" author="zaibuyidao" time="2024-07-06T15:15:00Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main midi_editor midi_inlineeditor">https://github.com/zaibuyidao/ReaScripts/raw/dd8f5426713b67b7e9cc559f28b2e8ed926000c7/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20(Legacy).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Note Length by Percentage (Legacy).lua" type="script" desc="Set Note Length by Percentage (Legacy)">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-07-07T09:15:30Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c949769842293b071d25d164b0ba2f14c5e53bd1/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20by%20Percentage%20(Legacy).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Set Note Length by Percentage.lua" type="script" desc="Set Note Length by Percentage">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-07-07T09:15:30Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c949769842293b071d25d164b0ba2f14c5e53bd1/MIDI%20Editor/zaibuyidao_Set%20Note%20Length%20by%20Percentage.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Note Length to End of Last Note.lua" type="script" desc="Set Note Length to End of Last Note">
