@@ -1,4 +1,4 @@
--- @description Random Notes to Arpeggio
+-- @description Random Note to Arpeggio
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -7,7 +7,7 @@
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
--- @about Random Notes Script Series, filter "zaibuyidao random notes" in ReaPack or Actions to access all scripts.
+-- @about Random Notes Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.
 
 local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
@@ -300,7 +300,7 @@ elseif language == "繁體中文" then
         }
     }
 else
-    title_param = "Random Notes to Arpeggio"
+    title_param = "Random Note to Arpeggio"
     inputs_param = {
         {
             label = "Enter A Tick:",
@@ -320,7 +320,7 @@ local args = prompt({
     inputs = inputs_param,
     remember = {
         enable = true,
-        section = "RandomNotestoArpeggio",
+        section = "RandomNotetoArpeggio",
         key = "Parameters",
         persist = true,
         preValidation = argsCheck
