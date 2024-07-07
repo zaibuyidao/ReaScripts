@@ -1,5 +1,5 @@
 -- @description Random Note Position by Grid Within Time Selection
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -73,6 +73,9 @@ function main()
 
     _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
     if notecnt == 0 then return end
+
+    -- 清除现有的时间选区
+    reaper.GetSet_LoopTimeRange2(0, true, false, 0, 0, false)
 
     local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
     local loop_start, loop_end, loop_len
