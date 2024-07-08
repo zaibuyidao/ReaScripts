@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="324e5a31e02ac12da99d0ff1b2f8125c8be31904">
+<index version="1" name="zaibuyidao Scripts" commit="86bee5dd4b41fbe74369e4bcf6627cbdce62c632">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7954,6 +7954,10 @@
         <changelog><![CDATA[Brand new REAPER: 7.17, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/34163513a69d309971f6eff7c1ff62477d5308b8/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
+      <version name="1.0.15-718" author="zaibuyidao" time="2024-07-08T07:51:04Z">
+        <changelog><![CDATA[Brand new REAPER: 7.18, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/86bee5dd4b41fbe74369e4bcf6627cbdce62c632/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
     </reapack>
     <reapack name="Chinese Traditional (繁體中文).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁體中文)">
       <metadata>
@@ -8006,6 +8010,10 @@
       <version name="1.0.14-717" author="zaibuyidao" time="2024-07-03T09:49:32Z">
         <changelog><![CDATA[Brand new REAPER: 7.17, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/34163513a69d309971f6eff7c1ff62477d5308b8/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
+      <version name="1.0.15-718" author="zaibuyidao" time="2024-07-08T07:51:04Z">
+        <changelog><![CDATA[Brand new REAPER: 7.18, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/86bee5dd4b41fbe74369e4bcf6627cbdce62c632/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
