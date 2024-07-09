@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="435495c2c68d93c7c27b0ab0e89193cb6f7f63c2">
+<index version="1" name="zaibuyidao Scripts" commit="d34059e5552c767aa649dd5d9e7631af6e30fdf8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5003,48 +5003,40 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/674070cdc17d46e3fb8f287f3e7a4f6cfb044328/MIDI%20Editor/zaibuyidao_Random%20Note%20Mute.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Random Note Pitch (Customize).lua" type="script" desc="Random Note Pitch (Customize)">
+    <reapack name="zaibuyidao_Random Note Pitch (Customizable).lua" type="script" desc="Random Note Pitch (Customizable)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Random Note Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-12-07T14:31:05Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/11c65bacf0cac4b2f25f83599ba91d96e2b16dc3/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20(Customize).lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-07-09T14:26:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6a6cc7fcb487c415f079bea1192246a0c35db160/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20(Customizable).lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Random Note Pitch By Key.lua" type="script" desc="Random Note Pitch By Key">
+    <reapack name="zaibuyidao_Random Note Pitch by Key.lua" type="script" desc="Random Note Pitch by Key">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Random Note Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2022-12-07T13:26:49Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/9b3ffbd8bf1dcdffa50a95ad83f2afda39662e11/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20By%20Key.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2022-12-07T14:31:05Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/11c65bacf0cac4b2f25f83599ba91d96e2b16dc3/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20By%20Key.lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao" time="2022-12-07T14:55:51Z">
-        <changelog><![CDATA[Initial release]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/43b5f6cc0d4ac60d958c54338cf2c9be192cf2f3/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20By%20Key.lua</source>
+      <version name="1.0" author="zaibuyidao" time="2024-07-09T14:30:04Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d34059e5552c767aa649dd5d9e7631af6e30fdf8/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch%20by%20Key.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Note Pitch.lua" type="script" desc="Random Note Pitch">
@@ -5053,16 +5045,20 @@
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 Requires SWS Extensions\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Random Note Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.\par}
 }
 ]]></description>
-        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
-        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">repo</link>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
       <version name="1.0" author="zaibuyidao" time="2022-12-07T14:31:05Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/11c65bacf0cac4b2f25f83599ba91d96e2b16dc3/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-07-09T14:26:27Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6a6cc7fcb487c415f079bea1192246a0c35db160/MIDI%20Editor/zaibuyidao_Random%20Note%20Pitch.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Note Position by Grid Within Time Selection (Single Line Only).lua" type="script" desc="Random Note Position by Grid Within Time Selection (Single Line Only)">
