@@ -1,5 +1,5 @@
--- @description Random Note Pitch
--- @version 1.0.1
+-- @description Random Note Pitch (Customizable)
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -8,6 +8,14 @@
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Random Note Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.
+
+-- USER AREA
+-- Settings that the user can customize.
+
+min_val = 60
+max_val = 72
+
+-- End of USER AREA
 
 local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
@@ -34,36 +42,12 @@ else
   return
 end
 
-local language = getSystemLanguage()
-local getTakes = getAllTakes()
+-- local language = getSystemLanguage()
+-- local getTakes = getAllTakes()
 
 function main()
     local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
     if not take or not reaper.TakeIsMIDI(take) then return end
-
-    local min_val = reaper.GetExtState("RandomNotePitch", "Min")
-    if (min_val == "") then min_val = "60" end
-    local max_val = reaper.GetExtState("RandomNotePitch", "Max")
-    if (max_val == "") then max_val = "72" end
-
-    if language == "简体中文" then
-        title = "随机音符音高"
-        captions_csv = "最小音高:,最大音高:"
-    elseif language == "繁體中文" then
-        title = "隨機音符音高"
-        captions_csv = "最小音高:,最大音高:"
-    else
-        title = "Random Note Pitch"
-        captions_csv = "Pitch Min:,Pitch Max:"
-    end
-
-    local uok, uinput = reaper.GetUserInputs(title, 2, captions_csv, min_val ..','.. max_val)
-    if not uok then return reaper.SN_FocusMIDIEditor() end
-
-    min_val, max_val = uinput:match("(.*),(.*)")
-    min_val, max_val = tonumber(min_val), tonumber(max_val)
-    reaper.SetExtState("RandomNotePitch", "Min", min_val, false)
-    reaper.SetExtState("RandomNotePitch", "Max", max_val, false)
 
     if min_val > 127 then
         min_val = 127
@@ -118,6 +102,5 @@ end
 
 reaper.Undo_BeginBlock()
 main()
-reaper.Undo_EndBlock(title, -1)
+reaper.Undo_EndBlock("Random Note Pitch (Customizable)", -1)
 reaper.UpdateArrange()
-reaper.SN_FocusMIDIEditor()
