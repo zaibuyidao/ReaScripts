@@ -1,5 +1,5 @@
--- @description Random Note Key
--- @version 1.0.2
+-- @description Random Note Key (Customizable)
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -8,6 +8,16 @@
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Random Note Script Series, filter "zaibuyidao random note" in ReaPack or Actions to access all scripts.
+
+-- USER AREA
+-- Settings that the user can customize.
+
+key_min = "C5"
+key_max = "C6"
+key_signature = "C" -- Use # : C C# D D#...
+octave_offset = 0
+
+-- End of USER AREA
 
 local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
@@ -34,44 +44,15 @@ else
   return
 end
 
-local language = getSystemLanguage()
-local getTakes = getAllTakes()
+-- local language = getSystemLanguage()
+-- local getTakes = getAllTakes()
 
 reaper.Undo_BeginBlock()
 
 local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
 if not take or not reaper.TakeIsMIDI(take) then return end
 
-local key_min = reaper.GetExtState("RandomNoteKey", "Min")
-if (key_min == "") then key_min = "C5" end
-local key_max = reaper.GetExtState("RandomNoteKey", "Max")
-if (key_max == "") then key_max = "C6" end
-local key_signature = reaper.GetExtState("RandomNoteKey", "Key")
-if (key_signature == "") then key_signature = "C" end
-local octave_display_offset = reaper.GetExtState("RandomNoteKey", "Offset")
-if (octave_display_offset == "") then octave_display_offset = "0" end
-
-if language == "简体中文" then
-    title = "随机音符调号"
-    captions_csv = "最小音符:,最大音符:,调号:,八度偏移 (+/-):"
-elseif language == "繁體中文" then
-    title = "隨機音符調號"
-    captions_csv = "最小音符:,最大音符:,調號:,八度偏移 (+/-):"
-else
-    title = "Random Note Key"
-    captions_csv = "Key Min:,Key Max:,Key Signature:,Octave Offset (+/-):"
-end
-
-local uok, uinput = reaper.GetUserInputs(title, 4, captions_csv,  key_min ..','.. key_max ..','.. key_signature ..','.. octave_display_offset)
-if not uok then return reaper.SN_FocusMIDIEditor() end
-key_min, key_max, key_signature, octave_display_offset = uinput:match("(.*),(.*),(.*),(.*)")
-
-reaper.SetExtState("RandomNoteKey", "Min", key_min, false)
-reaper.SetExtState("RandomNoteKey", "Max", key_max, false)
-reaper.SetExtState("RandomNoteKey", "Key", key_signature, false)
-reaper.SetExtState("RandomNoteKey", "Offset", octave_display_offset, false)
-
-local offsetValue = octave_display_offset * 12
+local offsetValue = octave_offset * 12
 local key_map = {} --音名和键位表
 local octave, key --音名和键位，用于插入键值对
 
@@ -155,7 +136,7 @@ for i = 0, notecnt - 1 do
     local scales_map = {[0]=1,[2]=2,[4]=3,[5]=4,[7]=5,[9]=6,[11]=7} --大调音阶表的查询表，可以得到音高在音阶表中的位置
     local scales_pos = {[0]=0,[1]=0,[2]=2,[3]=2,[4]=4,[5]=5,[6]=5,[7]=7,[8]=7,[9]=9,[10]=9,[11]=11} --12半音的音阶表，可以通过0-11的数字得到一个在音阶中的数字
     local tones_map = {["C"]=0, ["C#"]=1, ["D"]=2, ["D#"]=3, ["E"]=4, ["F"]=5, ["F#"]=6, ["G"]=7, ["G#"]=8, ["A"]=9, ["A#"]=10, ["B"]=11} --音名所对应的数字
-
+    
     if selected or not sel_note then
         pitch = tonumber(key_map[key_min]+math.random(diff))-1
         local tempPitch=pitch-tones_map[key_signature]+offsetValue+12
@@ -169,10 +150,9 @@ for i = 0, notecnt - 1 do
 end
 
 reaper.MIDI_Sort(take)
+
 if flag then
     reaper.MIDIEditor_LastFocused_OnCommand(40681, 0)
 end
-
-reaper.Undo_EndBlock(title, -1)
+reaper.Undo_EndBlock("Random Note Key (Customizable)", -1)
 reaper.UpdateArrange()
-reaper.SN_FocusMIDIEditor()
