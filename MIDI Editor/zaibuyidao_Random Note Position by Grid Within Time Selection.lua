@@ -1,5 +1,5 @@
 -- @description Random Note Position by Grid Within Time Selection
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -75,10 +75,14 @@ function main()
     if notecnt == 0 then return end
 
     -- 清除现有的时间选区
-    reaper.GetSet_LoopTimeRange2(0, true, false, 0, 0, false)
+    -- reaper.GetSet_LoopTimeRange2(0, true, false, 0, 0, false)
 
     local time_start, time_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
     local loop_start, loop_end, loop_len
+
+    -- https://forum.cockos.com/showthread.php?t=293115
+    -- save the existing time selection
+    local time_start_original, time_end_original = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, 0)
 
     if time_start == time_end then
         -- 没有时间选区，寻找选中音符的范围
@@ -148,6 +152,9 @@ function main()
             end
         end
     end
+    -- restore the existing time selection
+    reaper.GetSet_LoopTimeRange2(0, true, false, time_start_original, time_end_original, false)
+
     reaper.MIDI_Sort(take)
 
     if flag then
