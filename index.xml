@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d1b1faec1434b15a30bc14fdf627e042bcbe4670">
+<index version="1" name="zaibuyidao Scripts" commit="3e674246572cbe515821e1ea04c45333c79928d2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -5094,6 +5094,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/324e5a31e02ac12da99d0ff1b2f8125c8be31904/MIDI%20Editor/zaibuyidao_Random%20Note%20Position%20by%20Grid%20Within%20Time%20Selection%20(Single%20Line%20Only).lua</source>
       </version>
+      <version name="1.0.4" author="zaibuyidao" time="2024-07-26T01:56:05Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eadcba956f019aad99e45694d7f9b8bb5cca434/MIDI%20Editor/zaibuyidao_Random%20Note%20Position%20by%20Grid%20Within%20Time%20Selection%20(Single%20Line%20Only).lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Random Note Position by Grid Within Time Selection.lua" type="script" desc="Random Note Position by Grid Within Time Selection">
       <metadata>
@@ -5115,6 +5119,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2024-07-07T15:44:54Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/324e5a31e02ac12da99d0ff1b2f8125c8be31904/MIDI%20Editor/zaibuyidao_Random%20Note%20Position%20by%20Grid%20Within%20Time%20Selection.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2024-07-26T01:56:05Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6eadcba956f019aad99e45694d7f9b8bb5cca434/MIDI%20Editor/zaibuyidao_Random%20Note%20Position%20by%20Grid%20Within%20Time%20Selection.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Random Note Position Swap.lua" type="script" desc="Random Note Position Swap">
@@ -7958,6 +7966,10 @@
         <changelog><![CDATA[Brand new REAPER: 7.18, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/86bee5dd4b41fbe74369e4bcf6627cbdce62c632/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
+      <version name="1.0.16-719" author="zaibuyidao" time="2024-07-26T04:31:20Z">
+        <changelog><![CDATA[Brand new REAPER: 7.19, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/3e674246572cbe515821e1ea04c45333c79928d2/Translations/Chinese%20Simplified%20(%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
     </reapack>
     <reapack name="Chinese Traditional (繁體中文).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁體中文)">
       <metadata>
@@ -8014,6 +8026,10 @@
       <version name="1.0.15-718" author="zaibuyidao" time="2024-07-08T07:51:04Z">
         <changelog><![CDATA[Brand new REAPER: 7.18, SWS: 2.14.0.1]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/86bee5dd4b41fbe74369e4bcf6627cbdce62c632/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
+      </version>
+      <version name="1.0.16-719" author="zaibuyidao" time="2024-07-26T04:31:20Z">
+        <changelog><![CDATA[Brand new REAPER: 7.19, SWS: 2.14.0.1]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/3e674246572cbe515821e1ea04c45333c79928d2/Translations/Chinese%20Traditional%20(%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
