@@ -1,9 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.34
+-- @version 1.0.35
 -- @changelog
---   # Optimized the simul-arts.txt update logic.
---   # Remove simul-arts.txt content.
+--   # Fix MIDI event delay logic.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
