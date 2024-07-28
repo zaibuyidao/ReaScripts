@@ -1,8 +1,9 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.35
+-- @version 1.0.36
 -- @changelog
 --   # Fix MIDI event delay logic.
+--   # Slider labels modified to ensure that the purpose of each slider is more clear.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
