@@ -1,0 +1,62 @@
+Bank 100 0 LASS 3 Full (CC Stack)
+1 Legato
+2 Sustain
+3 Sordino
+//! 100-0-4=100-0-6
+4 Shorts
+//! 100-0-5=100-0-7
+5 Pizzicato
+//! 100-0-6=100-0-9
+6 Bartok Pizz
+//! 100-0-7=100-0-12
+7 Tremolo
+//! 100-0-8=100-0-13
+8 Trills
+//! 100-0-9=100-0-14
+9 Harmonics
+//! 100-0-10=100-0-32
+10 Staccato
+//! 100-0-11=100-0-33
+11 Staccato (Tight)
+//! 100-0-12=100-0-34
+12 Staccato (Tightest)
+//! 100-0-13=100-0-38
+13 Spiccato
+//! 100-0-14=100-0-39
+14 Spiccato (Tight)
+//! 100-0-15=100-0-40
+15 Spiccato (Tightest)
+//! 100-0-16=100-0-41
+16 Pizzicato
+//! 100-0-17=100-0-42
+17 Pizzicato (Tight)
+//! 100-0-18=100-0-43
+18 Pizzicato (Tightest)
+//! 100-0-19=100-0-47
+19 Bartok Pizz
+//! 100-0-20=100-0-48
+20 Bartok Pizz (Tight)
+//! 100-0-21=100-0-49
+21 Bartok Pizz (Tightest)
+//! 100-0-22=100-0-72
+22 Tremolo
+//! 100-0-23=100-0-73
+23 Tremolo: Legato
+//! 100-0-24=100-0-75
+24 Trills: Diat
+//! 100-0-25=100-0-76
+25 Trills: Diat Legato
+//! 100-0-26=100-0-77
+26 Trills: Half
+//! 100-0-27=100-0-78
+27 Trills: Half Legato
+//! 100-0-28=100-0-79
+28 Trills: Whole
+//! 100-0-29=100-0-80
+29 Trills: Whole Legato
+//! 100-0-30=100-0-81
+30 Harmonics
+//! 100-0-31=100-0-125
+31 Marcato (Stac+Sus)
+//! 100-0-32=100-0-127
+32 Marcato (Spic+Sus)

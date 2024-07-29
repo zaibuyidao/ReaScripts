@@ -1,10 +1,11 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.37
+-- @version 1.0.38
 -- @changelog
---   # Fix MIDI event delay logic.
---   # Slider labels modified to ensure that the purpose of each slider is more clear.
+--   + Added Bank-100-0 LASS 3 Full (CC Stack).reabank.
 --   # Enhanced KSCC (UACC) mode to read the bank LSB from reabank files as the KSCC value.
+--   # Slider labels modified to ensure that the purpose of each slider is more clear.
+--   # Fix MIDI event delay logic.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
