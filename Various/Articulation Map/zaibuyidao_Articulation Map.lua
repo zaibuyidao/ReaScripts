@@ -73,7 +73,7 @@ if language == "简体中文" then
     bank_msb_lsb = "音色库 MSB/LSB:"
     bank_program_num = "程序编号:"
     send_now_ttl = "立即发送"
-    not_loaded = "JS 未加载"
+    not_loaded = "JS 可加载"
     line_velocity = "力度"
     no_patch_load = "<未加载音色文件>"
     no_bank_sel = "未选择音色库"
@@ -107,7 +107,7 @@ elseif language == "繁體中文" then
     bank_msb_lsb = "音色庫 MSB/LSB:"
     bank_program_num = "程式编号:"
     send_now_ttl = "立即發送"
-    not_loaded = "JS 未加載"
+    not_loaded = "JS 可加載"
     line_velocity = "力度"
     no_patch_load = "<未加載音色文件>"
     no_bank_sel = "未選擇音色庫"
@@ -141,7 +141,7 @@ else
     bank_msb_lsb = "Bank MSB/LSB:"
     bank_program_num = "Program number:"
     send_now_ttl = "Send Now"
-    not_loaded = "JS Not Load"
+    not_loaded = "JS Optional"
     line_velocity = "Vel "
     no_patch_load = "<no patch file loaded>"
     no_bank_sel = "no bank selected"
@@ -339,10 +339,10 @@ local btn1 = Button:new(10,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], them
 local btn4 = Button:new(45,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "B", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 B
 local btn5 = Button:new(80,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "<", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 左移
 local btn6 = Button:new(115,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], ">", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 右移
-local btn7 = Button:new(150,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "PN", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 Toggle Between Note and PC, Note-PC Toggle
+local btn7 = Button:new(150,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "PK", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 Toggle Between Note and PC, Note-PC Toggle
 local btn10 = Button:new(185,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "PC", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 程序更改
 local btn9 = Button:new(220,10,25,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "ER", GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 Editing Reabank
-local btn11 = Button:new(255,10,75,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "SC:CC#" .. gmem_cc_num, GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 JSFX
+local btn11 = Button:new(255,10,75,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], "LC:CC#" .. gmem_cc_num, GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 JSFX
 local btn12 = Button:new(255,185,75,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], send_now_ttl, GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 Send Now
 local btn8 = Button:new(10,255,100,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], patch_change_load, GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 加载文件
 local btn2 = Button:new(120,255,100,25, theme_bt[1], theme_bt[2], theme_bt[3], theme_bt[4], patch_change_OK, GLOBAL_FONT, FONT_SIZE, 0, 0) -- 按钮 OK
@@ -1604,7 +1604,7 @@ function mainloop()
         btn11.g = theme_bt[2]
         btn11.b = theme_bt[3]
         btn11.a = theme_bt[4]
-        btn11.lbl = "SC:CC#" .. gmem_cc_num
+        btn11.lbl = "LC:CC#" .. gmem_cc_num
     end
 
     gmem_cc58_num = reaper.gmem_read(2)

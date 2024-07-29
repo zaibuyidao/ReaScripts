@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.38
+-- @version 1.0.39
 -- @changelog
 --   + Added Bank-100-0 LASS 3 Full (CC Stack).reabank.
 --   # Enhanced KSCC (UACC) mode to read the bank LSB from reabank files as the KSCC value.
