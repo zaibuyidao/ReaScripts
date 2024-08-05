@@ -17,6 +17,8 @@ local Textbox = gui.Textbox
 
 initialTrack = getActiveMIDITrack()
 EXT_SECTION = 'ARTICULATION_MAP'
+local jsfx_slider = 4 -- 当前 AM-JSFX 控件切换 Mode 模式的滑块编号
+local jsfx_mode = 2 -- 当前 AM-JSFX 控件Mode 模式的默认值
 
 local delimiter = getPathDelimiter()
 local language = getSystemLanguage()
@@ -74,7 +76,7 @@ if language == "简体中文" then
     bank_program_num = "程序编号:"
     send_now_ttl = "立即发送"
     not_loaded = "JS 可加载"
-    line_velocity = "力度"
+    line_velocity = ""
     no_patch_load = "<未加载音色文件>"
     no_bank_sel = "未选择音色库"
     no_patch_sel = "未选择音色"
@@ -108,7 +110,7 @@ elseif language == "繁體中文" then
     bank_program_num = "程式编号:"
     send_now_ttl = "立即發送"
     not_loaded = "JS 可加載"
-    line_velocity = "力度"
+    line_velocity = ""
     no_patch_load = "<未加載音色文件>"
     no_bank_sel = "未選擇音色庫"
     no_patch_sel = "未選擇音色"
@@ -142,7 +144,7 @@ else
     bank_program_num = "Program number:"
     send_now_ttl = "Send Now"
     not_loaded = "JS Optional"
-    line_velocity = "Vel "
+    line_velocity = ""
     no_patch_load = "<no patch file loaded>"
     no_bank_sel = "no bank selected"
     no_patch_sel = "no patch selected"
@@ -400,6 +402,15 @@ local function pop_current_state()  -- 读出当前状态
     end
 end
 
+-- 打印库名以及匹配的模式
+function print_all_modes(store)
+    for _, bank in ipairs(store) do
+        local mode = bank.bank.mode or "N/A"
+        print("Bank: " .. bank.bank.full_name .. " | Mode: " .. mode)
+    end
+end
+--print_all_modes(store)
+
 local function switch_mode_1() -- 模式1 切换
     local function update_current_state()
         if not store or not ch_box1 or not ch_box2 or
@@ -440,6 +451,12 @@ local function switch_mode_1() -- 模式1 切换
     if bank_item and bank_item.bank then
         textb_1.lbl = tostring(bank_item.bank.bank) -- MSB
         textb_2.lbl = tostring(bank_item.bank.velocity) -- LSB
+
+        -- 自动切换 JSFX 模式
+        jsfx_mode = tostring(bank_item.bank.mode)
+        if jsfx_mode ~= "N/A" and jsfx_mode ~= nil then
+            setJSFXParameter(jsfx_slider, jsfx_mode)
+        end
     else
         textb_1.lbl = "N/A"
         textb_2.lbl = "N/A"
@@ -486,6 +503,12 @@ local function switch_mode_1() -- 模式1 切换
             -- 更新 textb_1 和 textb_2 的标签为 MSB 和 LSB
             textb_1.lbl = tostring(bank_item.bank.bank) -- MSB
             textb_2.lbl = tostring(bank_item.bank.velocity) -- LSB
+
+            -- 自动切换 JSFX 模式
+            jsfx_mode = tostring(bank_item.bank.mode)
+            if jsfx_mode ~= "N/A" and jsfx_mode ~= nil then
+                setJSFXParameter(jsfx_slider, jsfx_mode)
+            end
         else
             textb_1.lbl = "N/A"
             textb_2.lbl = "N/A"
@@ -572,10 +595,22 @@ local function switch_mode_2() -- 模式2 切换
 
     local bank_titles = {}
     local box1_index = 1
+    local previous_mode = "N/A" -- 初始化 previous_mode
     for i, bank_item in ipairs(store_grouped) do
         table.insert(bank_titles, bank_item.bank.full_name)
         if current_state and tonumber(bank_item.bank.bank)==tonumber(current_state.bank) then
             box1_index = i
+
+            ch_box1.norm_val2 = bank_titles
+            local selected_bank_name = ch_box1.norm_val2[ch_box1.norm_val]
+            -- print("当前选中的 bank 名称:", selected_bank_name)
+
+            -- 自动切换 JSFX 模式
+            jsfx_mode = bank_item.bank.mode
+            if jsfx_mode ~= "N/A" and jsfx_mode ~= nil and jsfx_mode ~= previous_mode then
+                setJSFXParameter(jsfx_slider, tonumber(jsfx_mode))
+                previous_mode = jsfx_mode -- 更新 previous_mode
+            end
         end
     end
 
@@ -640,6 +675,13 @@ local function switch_mode_2() -- 模式2 切换
 
         update_patch_box() -- 更新 patch box 和 textb_3.lbl
         update_current_state()
+
+        -- 自动切换 JSFX 模式
+        jsfx_mode = bank_item.bank.mode
+        if jsfx_mode ~= "N/A" and jsfx_mode ~= nil and jsfx_mode ~= previous_mode then
+            setJSFXParameter(jsfx_slider, tonumber(jsfx_mode))
+            previous_mode = jsfx_mode -- 更新 previous_mode
+        end
     end
 
     ch_box2.onClick = function()

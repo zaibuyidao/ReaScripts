@@ -1,11 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.39
+-- @version 1.0.40
 -- @changelog
---   + Added Bank-100-0 LASS 3 Full (CC Stack).reabank.
---   # Enhanced KSCC (UACC) mode to read the bank LSB from reabank files as the KSCC value.
---   # Slider labels modified to ensure that the purpose of each slider is more clear.
---   # Fix MIDI event delay logic.
+--   + Automatically switch JSFX plugin modes based on the currently selected bank name for smarter mode management.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
