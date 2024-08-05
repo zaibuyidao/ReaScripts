@@ -1,7 +1,7 @@
 //REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1
 //----------------------------------------------------------------------
-//Default KS Velocity 96, 默认键位切换键力度 96
 Bank 74 96 Three-Body Whisper of Loong
+//! mode=short-long
 38 D1: Staccato ON
 39 D#1: Staccato OFF
 40 E1: Flt. Arti.

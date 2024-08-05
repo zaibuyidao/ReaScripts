@@ -791,7 +791,9 @@ function setJSFXParameter(param_index, value)
         -- add_or_toggle_articulation_map_jsfx()
     end
 
-    reaper.TrackFX_SetParam(track, fx_index, param_index, value)
+    if type(value) == "number" then
+        reaper.TrackFX_SetParam(track, fx_index, param_index, value)
+    end
 end
 
 function process_and_save_reabank_mappings(reabank_path)
@@ -819,7 +821,7 @@ function process_and_save_reabank_mappings(reabank_path)
     local updates = {}
     local file = io.open(reabank_path, "r")
     if not file then
-        print("Failed to open file: " .. reabank_path)
+        -- print("Failed to open file: " .. reabank_path)
         return {}
     end
 
