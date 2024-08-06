@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.41
+-- @version 1.0.42
 -- @changelog
 --   + Automatically switch JSFX plugin modes based on the currently selected bank name for smarter mode management.
 -- @links
