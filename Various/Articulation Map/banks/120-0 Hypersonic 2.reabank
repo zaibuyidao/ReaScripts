@@ -1,0 +1,3025 @@
+// ------------------------------------------------------------------
+// Cakewalk Instrument Definition File
+// Hypersonic 2
+// 
+// Created by kuchi YeeL  2022-06-14, Rev1
+// 
+// ------------------------------------------------------------------
+// Converted by zaibuyidao to Reabank file
+
+Bank 120 0 0 - HS1 Preview Patches
+0 Select Patch...
+1 Black Hole
+2 Natural Grand Piano
+3 Dark Pulsator
+4 Nylon + Harmonics + Hammers
+5 Vintage Electric Piano
+6 Swoosh Pad
+7 Legato-Tremolo MW
+8 21st Century Live Drums
+9 Pick Bass 1
+10 Hindukush Soundtrack
+11 Rising Star Pad
+12 Concert Hall Grand Piano
+13 Perc Chime Arpeggio
+14 Strat Jimmy Riff Double
+15 LA Piano Soft
+16 Sanctuary Phaze Pad
+17 Spaced Choir
+18 21st Century Beatbox
+19 Thump Bass
+20 Hippie Flashback Sitar
+21 Tempest
+22 Piano + Strings
+23 Pypa Arpeggio
+24 1 Finger Plucker
+25 Full Wurli
+26 Vangelis Sweep
+27 Sad Strings Velo Swell
+28 Kicks + Snares Menu
+29 Bright Fat Acoustic Bass
+30 Mallets Atmos
+31 Worried Dave Pad
+32 Rock Organ
+33 Dark Driver Arp
+34 Atmos Lead + Pad
+35 El Piano + Big Pad
+36 Analogy
+37 Digital Choir
+38 Combo
+39 Cyclops Bass
+40 Koto + Shamisen + Pad
+41 Lost Souls
+42 Harpsichord
+43 Fried + Wide + Pride
+44 Warm Vibes + Soft Choral
+45 Gangsta Whine
+46 Digital Theme Park
+47 Legato-Spicc MW
+48 Trip Hop 2
+49 Slap + Shot Bass Velo
+50 Glass Menagerie
+51 Soft Groove Pad
+52 Subsonic Church Organ
+53 Dirty + Wicked Synth
+54 Harmonic Atmosphere
+55 Modern Lead
+56 Pulsing Wave Pad
+57 Soft Choral Strings
+58 Acoustic Percussion Set
+59 Motown  Bass
+60 Cascading
+61 Glassy
+62 Perc Organ
+63 Dirty Dozen Arp
+64 Rich Stereo Vibes
+65 5th Pulse Lead
+66 El Piano + Synth Sweep
+67 Legato-Pizz MW
+68 Ethno Drums
+69 Finger Jazz Bass
+70 Skating Whale
+71 Forestal
+72 Clavinet
+73 Wannabe TB
+74 Strat Wah
+75 Theremin
+76 Stryngi B
+77 Atmos Strings Velo Swell
+78 New Groove RnB Kit 1
+79 Tee Bee
+80 Bang
+81 Epic Pad
+82 Atmos Piano
+83 Bassline Style
+84 Power Chords TalkBox
+85 Kitchen Sync Lead
+86 Mega Pad
+87 Heaven Piano
+88 Hip Hop American 1
+89 Fretless Bass
+90 Wind Atmos
+91 Is Anyone There
+92 Soft Grand Piano
+93 Dark Driver
+94 24 String Guitar
+95 Alfreds Filter Solo
+96 Long Sweep
+97 Minor Strings Velo Swell
+98 Underwater Funk
+99 Polating Bass
+100 Auto Menu
+
+Bank 120 1 1 - Natural Drums
+0 21st Century Live Drums
+1 Bright Natural Drums
+2 Classic Natural Drums
+3 Jazz Drums
+4 Gated Kit
+5 Stadium Kit
+6 Light Natural Drums
+7 Reggae 1 Drums
+8 Reggae 2 Drums
+9 Soul 1 Drums
+10 Soul 2 Drums
+11 Funk 1 Drums
+12 Funk 2 Drums
+13 Disco 1 Drums
+14 Ethno Drums
+15 LoFi Natural Drums
+16 Reversed Drums
+17 GM Drums
+18 New Rock Drums
+19 Pop Kit
+20 80s Drums
+21 Natural Punchy Drums
+
+Bank 120 2 2 - Natural Percussion
+0 Acoustic Percussion Set
+1 Jazz Percussion
+2 Disco 1 Percussion
+3 Disco 2 Percussion
+4 Ethno Percussion
+5 Lofi Natural Percussion
+6 Bongos+Congas+Timbales
+7 Metallic + Wooden Perc
+8 Shaken Percussion
+9 Windchimes
+10 Acoustic Percussion Set 2
+11 Bongos+Congas+Timbales 2
+12 Metallic + Wooden Perc 2
+13 Shaken Percussion 2
+14 Windchimes 2 Up
+15 Lofi Natural Percussion
+16 Windchimes Down+Up
+
+Bank 120 3 3 - Contemporary Kits
+0 21st Century Beatbox
+1 21st Century Pop Kit 1
+2 21st Century Pop Kit 2
+3 New Groove RnB Kit 1
+4 New Groove RnB Kit 2
+5 Trip Hop 1
+6 Trip Hop 2
+7 Tribal Kit 1
+8 Tribal Kit 2
+9 Hip Hop American 1
+10 Hip Hop American 2
+11 Hip Hop German 1
+12 Hip Hop German 2
+13 Disco 2 Drums
+14 Ambient Kit 1
+15 Ambient Kit 2
+16 Industrial Kit 1
+17 Industrial Kit 2
+18 LoFi Kit 1
+19 LoFi Kit 2
+20 Analog Kit 1
+21 Analog Kit 2
+22 Trance Kit 1
+23 Trance Kit 2
+24 Techno Kit 1
+25 Techno Kit 2
+26 Elektro Kit 1
+27 Elektro Kit 2
+28 House Kit 1
+29 House Kit 2
+30 Drum n Bass Kit 1
+31 Drum n Bass Kit 2
+32 2Pac Constructor
+33 Parliament Constructor
+34 RnB Constructor
+35 HipHop Constructor
+36 G-Funk Constructor
+37 TagTeam Constructor
+38 Trance Constructor 1
+39 Trance Constructor 2
+40 Trance Constructor 3
+41 Trance Constructor 4
+42 Lame Drums
+43 Maedchen Drums
+44 Old House Kit
+45 Fusion Kit
+46 Electro Quirker
+47 Heavylectro
+48 Fat Snap Kit
+49 RnB Kit 1
+50 RnB Kit 2
+51 Klang Kit
+52 Heavylectro 2
+64 Real Analog Kit
+65 M Drums 1
+66 J Drums 1
+67 M Drums 2
+68 J Drums 2
+
+Bank 120 4 4 - Contemporary Percussion
+0 Loop Factory
+1 Scratch Set
+2 Elektro Percussion Set
+3 RnB Percussion 1
+4 RnB Percussion 2
+5 Tribal Percussion
+6 Hip Hop American Perc
+7 Hip Hop Scratch Kit
+8 Spooky Ambient Construction
+9 Ambient Percussion1
+10 Industrial Percussion 1
+11 Industrial Percussion 2
+12 LoFi Percussion 1
+13 LoFi Percussion 2
+14 Analog Percussion
+15 Trance Percussion
+16 Techno Percussion
+17 Elektro Congas + Bongos
+18 House Percussion
+19 DnB Drums n Perc
+20 DnB Percussion Set
+21 Ambient Percussion 1
+22 Ambient Percussion 2
+23 RnB Percussion
+
+Bank 120 5 5 - Drum Menus
+0 Kicks + Snares Menu
+1 HiHats Menu
+2 Toms Menu
+3 Cymbals Menu
+4 Clap + Tamb + Cow Menu
+5 Acoustic Perc Kit Maker
+6 Elektro Perc Maker
+7 Kicks + Snares Menu HS2
+8 HiHats Menu HS2
+9 Toms Menu HS2
+10 Electro Toms Menu HS2
+11 Cymbals  Menu HS2
+12 Acoustic Perc Kit Maker
+13 Elektro Perc Maker
+
+Bank 120 6 6 - Drum Loops
+0 Combo
+1 Hot Potato Groove
+2 Hot Potato Fill
+3 Snappy Snare
+4 Underwater Funk
+5 Tite Room Funk 1
+6 Tite Room Funk 2
+7 Big Kick Groove
+8 Early Elektro
+9 Elektro Can
+10 Hippo
+11 Lo Pulse
+12 Packman
+13 Tite Loop
+14 Elektro Slap
+15 Elektro Bounce
+16 Fast Funk
+17 Funky Chap
+18 Indo Clang
+19 Loose Loop
+20 Princess Loop
+21 Blippo
+22 Elektro Bonk Groove
+23 Grungy Groove
+24 Lite Loop
+25 Pulse Zap Groove
+26 Pulse Zap Perc
+27 Res Groove
+28 Squeaker
+29 Two Snares Snap
+30 Electro 01
+31 Electro 02
+32 Electro 03
+33 Electro 04
+34 Lo Fi
+35 DrumnBass
+36 Techno 01
+37 Techno 02
+38 Techno 03
+39 Techno 04
+40 Techno 05
+41 Techno 06
+42 Techno 07
+43 Techno 08
+44 Techno 09
+45 Techno 10
+46 Techno 11
+47 Techno 12
+48 NuGroove 01
+49 NuGroove 02
+50 NuGroove 03
+51 NuGroove 04
+52 NuGroove 05
+53 NuGroove 06
+54 NuGroove 07
+55 NuGroove 08
+56 NuGroove 09
+57 NuGroove 10
+58 NuGroove 11
+59 NuGroove 12
+60 NuGroove 13 MW Select
+61 NuGroove 14 MW Select
+62 NuGroove 15 MW Select
+63 Hip Hop 01
+64 Hip Hop 02
+65 Hip Hop 03
+66 Hip Hop 04
+67 Hip Hop 05 MW Select
+68 Hip Hop 06 MW Select
+69 Hip Hop 07 MW Select
+70 Hip Hop 08 MW Select
+71 Pop 01 MW Select
+72 Pop 02 MW Select
+73 Pop 03 MW Select
+74 Pop 04 MW Select
+75 Pop 05 MW Select
+76 Pop 06 MW Select
+77 Pop 07 MW Select
+78 Pop 08 MW Select
+79 Pop 09
+80 Pop 10
+81 Rock 01 MW Select
+82 Rock 02 MW Select
+83 Rock 03 MW Select
+84 Rock 04 MW Select
+85 Rock 05 MW Select
+86 Rock 06 MW Select
+87 Rock 07
+88 Soul 01 MW Select
+89 Soul 02
+90 Soul 03
+91 Soul 04
+92 Soul 05
+93 RnB 01
+94 RnB 02 MW Select
+95 Ethnic Drums 01 MW Select
+96 Ethnic Drums 02 MW Select
+97 Latin Perc 01 MW Select
+98 Latin Perc 02 MW Select
+99 Latin Perc 03 MW Select
+100 Latin Perc 04 MW Select
+101 Latin Perc 05 MW Select
+102 Latin Perc 06 MW Select
+103 Electro Perc 01
+104 Electro Perc 02
+105 Electro Perc 03
+106 Electro Perc 04
+107 Electro Perc 05
+108 Electro Perc 06
+109 Electro Perc 07
+110 Electro Perc 08
+
+Bank 120 7 7 - Acoustic Pianos
+0 Natural Grand Piano
+1 Bright Grand Piano
+2 Soft Grand Piano
+3 Hard Grand Piano
+4 Concert Hall Grand Piano
+5 Atmos Piano
+6 Mono Grand Piano
+7 Simple Grand
+8 Ol Upright Piano
+9 Honky Tonk  Piano
+10 Phaser Piano
+11 Electric Grand Piano
+12 Soft Electric Grand
+13 Electric Grand Atmos
+14 Crushed Piano
+15 Hi Piano Resonance
+16 GM Grand Piano
+17 GM Bright Piano
+18 GM Honky-tonk Piano
+19 Grand Piano 2 Natural
+20 Grand Piano 2 Soft
+21 Natural Grand XXL
+22 Bright Grand XXL
+23 Soft Grand XXL
+24 Hard Grand XXL
+25 Concert Hall Grand XXL
+26 Room Piano
+27 Rehearsal Room Piano
+28 LA Piano Soft
+29 LA Piano Hard
+30 Grand Piano + Soft EP
+31 California Grand
+32 Piano + Strings
+33 Heaven Piano
+34 Steel Hammer Piano
+35 Piano + Marimba
+36 House Piano
+37 Piano + Steel Drums
+38 Hi Harm Piano
+39 El Grand + El Piano
+40 Piano + Strings XXL
+41 Piano + Strings MID
+42 Piano 2 + Strings XXL
+43 Piano 2 + Strings MID
+
+Bank 120 8 8 - Electric Pianos
+0 Vintage Electric Piano
+1 Gentle Vintage EP
+2 Soft Vintage EP
+3 Med Vintage EP
+4 Hard Vintage EP
+5 Ultra Hard Vintage EP
+6 Vintage Amped EP
+7 Fusion
+8 Full Wurli
+9 Wurli Soft
+10 Wurli Hard
+11 Amped Wurli
+12 Hybrid Stage Piano
+13 EP + Wurli + Tines
+14 Dyno Stage
+15 Synth Wurli
+16 Dyno Chorus
+17 FM Electric Piano
+18 Sweet EP
+19 Nice Tyne
+20 Metal Tyne
+21 Belly
+22 Pintine Piano
+23 Tines n Guts
+24 Thesis Piano
+25 Octa Dee Aggs
+26 Spectral E Piano
+27 GM Electric Piano 1
+28 GM Electric Piano 2
+29 GM Electric Grand
+30 Electric Piano 2
+31 Warm E Piano Double
+32 Soft EP 2
+33 Med EP 2
+34 Hard EP 2
+35 Ultra Hard EP 2
+36 Analog Suitcase
+37 Flexible Suitcase
+38 El Piano + Big Pad
+39 El Piano + Synth Sweep
+40 El Piano + Strings
+41 El Piano + Gtr Harmonics
+42 El Piano + Ac Guitar
+43 El Grand + El Piano
+44 Digi Roads + Pad
+45 Ice Tyne + DigiVox
+46 Celestial Tines + Strings
+47 LA Piano Soft
+48 LA Piano Hard
+49 Grand Piano + Soft EP
+50 Warm Vibes + Roads
+51 EPs + Gentle Moving Pad
+64 Bubble Wave Electro EP
+65 Ano Rhodes
+66 Warm EE Piano
+67 Electrhodes
+
+Bank 120 9 9 - Clavinets
+0 Clavinet
+1 Stereo Clav
+2 Chorus Clav
+3 Phaser Clav
+4 Wah Clav
+5 Hyper Clav
+6 Grungy Clav
+7 Claviduck
+8 Velo Rez Clav
+9 Compressed Clav
+10 Digi Clav
+11 GM Clavinet
+12 Clavinet XXL
+13 Fat Clav
+14 Bright Clav
+15 Toy Clav
+16 Acoustic Gtr + Clav
+17 Harpsi Clav
+
+Bank 120 10 10 - Organs
+0 Perc Organ
+1 Full Bars
+2 70ties Rock Organ
+3 Variable Bars
+4 Rock Organ
+5 Jazz Organ
+6 60ties Organ
+7 Analog Organ
+8 FM Jazz Organ
+9 Subsonic Church Organ
+10 Large Church Organ
+11 Transylvania Pipes
+12 Harmonium
+13 Tronic Church Organ
+14 GM Percussive Organ
+15 GM Drawbar Organ
+16 GM Rock Organ
+17 GM Church Organ
+18 GM Reed Organ
+19 Perc Organ 2
+20 Classic B
+21 Quite Righty So
+22 Whiter Shade Of U
+23 Warm Four Up
+24 Jimmy Smith
+25 Full Bars
+26 Child In Time
+27 Rock Solo
+28 Smokey Blues
+29 Bright and Silky
+30 60ies Solo Organ
+31 Dennerlein Organ
+32 Hammond B5
+33 Percy Jimmy
+34 Perc Organ + Choral Pad
+35 Perc Organ + Rotor Choir
+36 Swoosh Organ Pad
+37 Soft Organ + Pad
+38 Breathy Rotor
+39 Bright Wow Organ
+40 Soft Swoosh Organ
+41 Harmonium + Strings
+42 60s Vibe Organ
+43 Full Breath Bars
+44 House Piano
+
+Bank 120 11 11 - Harpsichord
+0 Harpsichord
+1 Harpsichord + Octave
+2 Nastichord
+3 Phaserichord
+4 GM Harpsichord
+5 Harpsi Choir
+6 Harpsi Strings
+7 Harpsi Clav
+8 Steel Hammer Piano
+
+Bank 120 12 12 - Mallets
+0 Warm Vibraphone
+1 Rich Stereo Vibes
+2 Marimba
+3 Bass Marimba
+4 Xylophone
+5 Octave Xylophone
+6 Smooth Steeldrums
+7 Bright Harmonic Steeldrums
+8 GM Vibraphone
+9 GM Marimba
+10 GM Xylophone
+11 GM Steel Drums
+12 GM Celesta
+13 GM Music Box
+14 GM Dulcimer
+15 Vibraphone 2 XXL
+16 Vibraphone 2 MID
+17 Vibraphone 2 Soft XXL
+18 Vibraphone 2 Soft MID
+19 Marimba 2 XXL
+20 Marimba 2 MID
+21 Xylophone 2 XXL
+22 Xylophone 2 MID
+23 Rhythmic Metal Guy
+24 Tinny Vibes
+25 Bent Mallets
+26 Smoke One
+27 Wooden Mallets
+28 Warm Vibes + Soft Strings
+29 Warm Vibes + Soft Choral
+30 Steamer Vibes
+31 Mallets Atmos
+32 Marimba Delays
+33 Xylophone Licks
+34 Warm Vibes + Phaser Pad
+35 Warm Vibes + Roads
+36 Marimba + Kalimba
+37 Marimba + Xylophone
+38 Marimba + Warm Vibes
+39 Gamelan Set
+40 Steamer Vibes Pad
+41 Bells n Vibes
+42 Piano + Marimba
+43 60s Vibe Organ
+44 Piano + Steel Drums
+45 Celestial Music Box
+46 Mallet Band
+
+Bank 120 13 13 - Bells
+0 All Bellz
+1 Simple Tubular Bells
+2 Hard Tubular Bell
+3 Chimey Tubular Bells
+4 Melody Bells
+5 Hold Bell Layer
+6 Wheel Adjust Bell
+7 Tinker Bells
+8 Pretty Bells
+9 Pretty Bells Chorus
+10 Pretty Bells Too
+11 Chime Bells
+12 Soft Chimey Bells
+13 Sticky Bells
+14 Spectorbellz
+15 Viborbellz Cascade
+16 Viborbellz
+17 Digi Bells
+18 Digi Bells Octave
+19 Spectral Bells
+20 Spectral Bells Octave
+21 Vibrabellz
+22 Vibrabellz Octave
+23 Wavebellz
+24 Wavebellz Octave
+25 Elegant Wave Bells
+26 GM Tubular Bells
+27 GM Glockenspiel
+28 GM Tinkle Bell
+29 Glockenspiel 2 XXL
+30 Glockenspiel 2 MID
+31 Bright FM Bells
+32 Discordant Bell
+33 Sweet Bells
+34 Light Bells Wash
+35 7 Years In Tibet
+36 Blackwood Castle
+37 Dreambell
+38 Swirly Bells Pad
+39 Floating Chimes + Breath
+40 Elegant Wavepad
+41 Steamer Bells
+42 Sweeping Pad + Bells
+43 Bells n Vibes
+44 Tack Tube Bell
+45 Metallic Poly Combi Bellz
+64 Soft Bell Mallets
+65 Chorus Bells
+66 VS Bells
+67 Square Bells
+68 Big Wave Bells
+69 Bright Chimes
+70 Dark Bell
+
+Bank 120 14 14 - Percussive
+0 Big Timpani
+1 Medium Timpani
+2 Orchestral Perc
+3 Planet Mort
+4 Boooom
+5 Depeche Mord
+6 Taped Hit
+7 Metal Perc 1
+8 Metal Perc 2
+9 Metal FX1
+10 Windchimes
+11 Jingle Bell
+12 Tambourine
+13 Agogo 1
+14 Agogo 2
+15 Triangle Short
+16 Triangle Long
+17 Cowbell
+18 Timbale
+19 Clave
+20 Castanet
+21 Woodblock 1
+22 Woodblock 2
+23 Shaker
+24 Cabasa
+25 Electro Zaps
+26 Elektro Blip
+27 Elektro Cowbell
+28 Acoustic Kick
+29 Elektro Kik 1
+30 Elektro Kik 2
+31 Acoustic Snare
+32 Elektro Tom
+33 Reverse Crash
+34 Reverse Ride
+35 Red Noise
+36 Pink Noise
+37 White Noise
+38 Azure Noise
+39 Blue Noise
+40 Phaser Noise
+41 Echolot
+42 GM Agogo
+43 GM Melodic Tom
+44 GM Reverse Cymbal
+45 GM Synth Drum
+46 GM Taiko
+47 GM Woodblock
+48 Vibratone
+49 Glockenspiel Gliss Down
+50 Glockenspiel Gliss Up
+51 Glass Blipper
+52 Roomy Tonal Perc
+53 The Quacker
+54 Percy Breath
+55 Percy Pipes
+64 Drums Of Death
+65 Atonal Percussachap
+66 Elektro Res Congas
+67 Elektro Noise Crash
+68 Fat Analog Bass Slapper
+69 Percy RezNoiseInator
+70 Analog Metal Perc
+71 Velo Perculator
+
+Bank 120 15 15 - Synth Basses
+0 Thump Bass
+1 Soft Rubber Bass
+2 Perc Sync Bass
+3 SH Bass
+4 Syn Bass
+5 Hamm + Bass
+6 FM Bass
+7 Tube Bass
+8 Cinema Bass
+9 Sub Bass
+10 Dark Mono Bass
+11 Percussive Sub Bass
+12 House Bass
+13 Octave Bass
+14 Tech Bass
+15 Polating Bass
+16 WT Mini Bass
+17 Disco Bass
+18 Reso Bass
+19 2600 Bass
+20 Juicy Bass
+21 Robo Bass
+22 Tee Bee
+23 Classic Resonance Bass
+24 Perc PWM  Bass
+25 Stomper Bass
+26 Wicked Bass
+27 Velocity Drive Bass
+28 Cyclops Bass
+29 PhaZe Bass
+30 Motown  Bass
+31 Tamper Bass
+32 Sync Bass
+33 Noisy Bass
+34 Mondeo Bass
+35 Kinky Bass
+36 80s HiFi Bass
+37 Flange Bass
+38 Stevie Bass
+39 GM Synth Bass 1
+40 GM Synth Bass 2
+41 Rave Sweeper Bass
+42 Jan Hammer Bass
+43 80s Sequencer Bass
+44 Moroder Bass
+45 Pulse Sequencer
+46 Hollow Filter Bass
+47 Club Bass 01
+48 Knock Bass
+49 Massive Bass
+50 Electro Bass
+51 Noise Sequencer
+52 PPG Like Bass
+53 Pressure Bass
+54 Fifth Bass
+55 Squared Bass
+56 The 5th Bass
+57 Thump That Bass
+58 UK 106 Bass
+59 Fuzz Aftertouch Bass
+60 Zapping Bass
+61 Club Bass 02
+64 Thumper Bass
+65 CineIntroBass
+66 Hairy Bass
+67 Rubber Reso Bass
+68 Buzz Bass
+69 UltraMoog Bass
+70 Thick Pulse Bass
+71 Jupiter Thump
+72 Fuzzy Chap
+73 LoFi Sinus
+74 Chorused E-Bass
+75 Bumper Bass
+76 FuzzaFizzle Bass
+77 Reso Smack Bass
+78 Hollow Bass
+79 Sub Bass Fattener
+80 DnB Square
+81 Low Hangin Mumma
+82 Overtone Solo Bass
+83 Single Osc Bass
+84 Thumpy Stud Bass
+85 Filling Rattler
+86 Classic Moog Bass
+87 LFO Bass
+88 DnB Sub Bass
+89 Phat Pwm Bass
+90 OrgaThump Bass
+91 Velocity BandBass
+92 Unitea Bass
+93 Bass Of Death
+94 M-Bassy
+95 Transistor Bass
+96 TriStar Bass
+97 UK Breakz Bass
+98 Bouw Bass
+99 Fuzzy Bass Riff
+100 Metal BandBass
+101 Bad Black Bass
+102 Fuzzy Sync Bass
+
+Bank 120 16 16 - Acoustic Basses
+0 Bright Fat Acoustic Bass
+1 Punchy Acoustic Bass
+2 GM Acoustic Bass
+3 Expanded Acoustic Bass XXL
+4 Expanded Acoustic Bass MID
+
+Bank 120 17 17 - Electric Basses
+0 Pick Bass 1
+1 Pick Bass 1 + Slap Velo
+2 Pick Bass 2
+3 Pick Bass 2 + Slap Velo
+4 Finger Jazz Bass
+5 Finger Jazz + Slap Velo
+6 Finger P Bass
+7 Finger P Bass + Slap Velo
+8 Slap Bass
+9 Slap Bass Pull
+10 Slap Bass Shots
+11 Slap + Shot Bass Velo
+12 Slap + Pull Bass Velo
+13 Pull + Shot Bass Velo
+14 Slap Bass + Delay
+15 Fretless Bass
+16 Fretless Bass Wet
+17 Bass Slide
+18 Bass Sweep
+19 Deadnotes
+20 GM Pick Bass
+21 GM Finger Bass
+22 GM Slap Bass 1
+23 GM Slap Bass 2
+24 GM Fretless Bass
+25 Pick Bass New
+26 Amped Pick Bass New
+27 Finger Bass New
+28 Amped Finger Bass New
+29 Slap Bass New
+30 Amped Slap Bass New
+31 Fretless Bass New
+32 Dirty Fretless Bass New
+
+Bank 120 18 18 - Acoustic Guitars
+0 Nylon Finger Acoustic Guitar
+1 Nylon Finger + Harmonics
+2 Nylon + Hammers
+3 Nylon + Harmonics + Hammers
+4 Nylon Finger Acoustic Soft
+5 Nylon Finger Soft + Harm
+6 Nylon Finger Acoustic Bright
+7 Nylon Finger Bright + Harm
+8 Nylon Finger Harmonics
+9 Harmonic Atmosphere
+10 1 Finger Plucker
+11 Jazzy Plucker
+12 Nylon Pick
+13 Nylon Pick + Harmonics
+14 Nylon Pick + Hammers
+15 Nylon + Harmonics + Hammers
+16 Steel String Acoustic Guitar
+17 Steel String + Harmonics
+18 Steel String + Hammers
+19 St String + Harmonics + Hammers
+20 Steel String Harmonics
+21 Steel Harm Atmos
+22 Nylon + Steel Hybrid
+23 Acoustic Guitar Stack
+24 12 String Washy
+25 12 String Percussive
+26 24 String Guitar
+27 Ac Guitar Fretnoises
+28 GM Nylon Ac Guitar
+29 GM Steel String  Ac Guitar
+30 Steel String Acoustic XXL
+31 Steel String Acoustic MID
+32 Steel String + Harmonics XXL
+33 Steel String + Harmonics MID
+34 12 String Acoustic XXL
+35 12 String Acoustic MID
+36 12 String + Harmonics XXL
+37 12 String + Harmonics MID
+38 Muted Steel String Acoustic
+39 Steel String + Muted XXL
+40 Steel String Deadnotes
+41 Steel String + Muted MID
+42 Steel String + Dead Notes XXL
+43 Steel String + Dead Notes MID
+44 12 String + Dead Notes XXL
+45 12 String + Dead Notes MID
+46 Nylon Picked Acoustic XXL
+47 Nylon Picked Acoustic MID
+48 Nylon Acoustic + Harmonics XXL
+49 Nylon Acoustic + Harmonics MID
+50 Harmonics Atmos 1
+51 Harmonics Atmos 2
+52 Nylon Finger + Soft Pad
+53 Nylon Finger + Strings
+54 Nylon Finger + Flute
+55 Steel String + Atmos Pad
+56 12 String Atmos Pad
+57 Seawash Melody
+58 El Piano + Ac Guitar
+59 El Piano + Gtr Harmonics
+60 Hi Harm Piano
+61 Acoustic Gtr + Clav
+62 Steel + Nylon Acoustics XXL
+63 Steel + Nylon Acoustics MID
+
+Bank 120 19 19 - Electric Guitars Clean
+0 Strat Clean
+1 Strat Clean + Harmonics
+2 Strat Clean + Hammers
+3 Strat + Harmonics + Hammers
+4 Strat Chorus
+5 Strat Wah
+6 Strat Tremolo
+7 Strat Rotary
+8 Strat Harmonics
+9 Strat Mutes + Pops Velo
+10 Strat Mutes + Pops Wah
+11 Strat Muted Velo
+12 Strat Muted Wah
+13 Synth Guitar
+14 FM Jazz Guitar
+15 GM Clean Electric Guitar
+16 GM Muted Electric Guitar
+17 GM Electric Jazz Guitar
+18 GM Guitar Fret Noise
+19 Clean Strat 2 XXL
+20 Clean Strat 2 MID
+21 Strat 2 Auto Wah XXL
+22 Strat 2 Auto Wah MID
+23 Strat 2 Wah MW XXL
+24 Strat 2 Wah MW MID
+25 Rotary Strat 2 XXL
+26 Rotary Strat 2 MID
+27 Tremolo Strat 2 XXL
+28 Tremolo Strat 2 MID
+29 Strat + Synth Combi
+
+Bank 120 20 20 - Electric Guitars Distorted
+0 Strat Glam
+1 Strat Jimmy Riff Double
+2 Strat Grunge
+3 Strat Rock Chug
+4 Strat Grunge 5ths
+5 Power Chords
+6 Power Chords TalkBox
+7 Power Chords Wah
+8 Power Chords Phaser
+9 Power Chords Tremolo
+10 Power Chords Overdriven
+11 NuMetal Stack
+12 Lead Guitar
+13 Lead Guitar Wah
+14 Lead Guitar Talkbox
+15 Lead Guitar Phaser
+16 Lead Guitar Tremolo
+17 Lead Guitar Rotary
+18 Atmos Lead Guitar
+19 Lead Guitar Licks
+20 GM Distorted Guitar
+21 GM Overdriven Guitar
+22 GM Guitar Harmonics
+23 Strat Double
+24 Atmos Lead + Pad
+
+Bank 120 21 21 - Strings
+0 Soft Legato Strings
+1 Soft Strings Velo Attack
+2 Bright Legato Strings
+3 Bright Strings Velo Attack
+4 Soft + Bright Legato Strings
+5 Soft + Bright Velo Attack
+6 Octave Legato Strings
+7 Octave Strings Velo Attack
+8 2 Octave Legato Strings
+9 2 Octave Strings Velo Attack
+10 Tremolo Strings
+11 Tremolo Strings Velo Attack
+12 Spiccato Strings
+13 Pizzicato Strings
+14 Bass Pizzicato Strings
+15 Marcato Strings
+16 Legato-Tremolo MW
+17 Legato-Spicc MW
+18 Legato-Pizz MW
+19 Warm Strings Pad
+20 Atmos Strings Velo Swell
+21 Sad Strings
+22 Sad Strings Velo Swell
+23 Minor Strings
+24 Minor Strings Velo Swell
+25 GM Violin
+26 GM Viola
+27 GM Cello
+28 GM Contrabass
+29 GM Strings Ensemble 1
+30 GM Strings Ensemble 2
+31 GM Tremolo Strings
+32 GM Pizzicato Strings
+33 GM Synth Strings 1
+34 GM Synth Strings 2
+35 Legato Strings XXL
+36 Legato Strings MID
+37 Octave Legato Strings XXL
+38 Octave Legato Strings MID
+39 2 Octave Legato Strings XXL
+40 2 Octave Legato Strings MID
+41 Tremolo Strings XXL
+42 Tremolo Strings MID
+43 Spiccato Strings Up + Down XXL
+44 Spiccato Strings Up + Down MID
+45 Spiccato Strings Up XXL
+46 Spiccato Strings Up MID
+47 Spiccato Strings Down XXL
+48 Spiccato Strings Down MID
+49 Pizzicato Strings XXL
+50 Pizzicato Strings MID
+51 Whole Tone Trills XXL
+52 Whole Tone Trills MID
+53 Marcato Strings XXL
+54 Marcato Strings MID
+55 Legato-Tremolo MW XXL
+56 Legato-Tremolo MW MID
+57 Legato-Spicc Up MW XXL
+58 Legato-Spicc Up MW MID
+59 Legato-Spicc Down MW XXL
+60 Legato-Spicc Down MW MID
+61 Legato-Pizzicato MW XXL
+62 Legato-Pizzicato MW MID
+63 Suspense Cue XXL
+64 Suspense Cue MID
+65 Sad Strings 2 XXL
+66 Sad Strings 2 MID
+67 Breathy String Ambience
+68 Soft Choral Strings
+69 Strings + Choir
+70 Piano + Strings
+71 El Piano + Strings
+72 Nylon Finger + Strings
+73 Warm Vibes + Soft Strings
+74 Harpsi Strings
+75 Celestial Tines + Strings
+76 Harmonium + Strings
+77 Piano + Strings XXL
+78 Piano + Strings MID
+79 Piano 2 + Strings XXL
+80 Piano 2 + Strings MID
+
+Bank 120 22 22 - Orchestral
+0 Strings + Horns
+1 Brassy Orchestra
+2 Bright Orchestra
+3 Big Strings + Wood
+4 Small Strings + Wood
+5 Section Strings + Perc
+6 Atmos Strings Velo Swell
+7 Sad Strings Velo Swell
+8 Section Horns
+9 Section Brass
+10 Section Brass Octaves
+11 Section Woods Octaves Loose
+12 Section Woods Octaves Tight
+13 Section Woods Small
+14 Harp
+15 Soft Harp
+16 Harp Gliss 1
+17 Harp Gliss 2
+18 Orchestral Perc
+19 GM Timpani
+20 GM Harp
+21 Strings + Horns XXL
+22 Strings + Horns MID
+23 Brassy Orchestra XXL
+24 Brassy Orchestra MID
+25 Bright Orchestra XXL
+26 Bright Orchestra MID
+27 Big Strings + Wood XXL
+28 Big Strings + Wood MID
+29 Small Strings + Wood XXL
+30 Small Strings + Wood MID
+31 Section Strings + Perc XXL
+32 Section Strings + Perc MID
+33 Section Brass XXL
+34 Section Brass MID
+35 Section Brass Octaves XXL
+36 Section Brass Octaves MID
+37 Section Woods Octaves XXL
+38 Section Woods Octaves MID
+39 Section Woods Small  XXL
+40 Section Woods Small  MID
+
+Bank 120 23 23 - Hits
+0 Big Orchestra Hit
+1 Long Orchestra Hit
+2 Fat Hit
+3 Hit Cluster
+4 Italo Hit
+5 Orchestra Hit Delayed
+6 Orchestra Hit Gated
+7 Orchestra Hit Glide
+8 Orchestra Hit Release
+9 Orchestra Hit Sustain
+10 Taped Hit
+11 Orchestra Hit 1
+12 Orchestra Hit 2
+13 Orchestra Hit 3
+14 Orchestra Hit 4
+15 Orchestra Hit 5
+16 Orchestra Hit 6
+17 Orchestra Hit 7
+18 Orchestra Hit 8
+19 Orchestra Hit 9
+20 GM Orchestra Hit
+21 The End
+
+Bank 120 24 24 - Vocal
+0 Digital Choir
+1 Spaced Choir
+2 Heaven Choir
+3 Thin Air Pad
+4 Dark Vox
+5 Reverse Choir
+6 Art Of Choir
+7 Arial
+8 Attack Choir
+9 Bell Choir
+10 GM Choir Aahs
+11 GM Choir Oohs
+12 GM Pad 4 Choir
+13 GM Synth Vox
+14 GM Solo Voice
+15 Female Aah Choir XXL
+16 Female Aah Choir MID
+17 Male Aah Choir XXL
+18 Male Aah Choir MID
+19 Female Ooh Choir XXL
+20 Female Ooh Choir MID
+21 Male Ooh Choir XXL
+22 Male Ooh Choir MID
+23 Breathy Hybrid
+24 Swirly Hybrid Choir
+25 Formant Choir
+26 Phaserchoir
+27 Supernatural
+28 Strings + Choir
+29 Soft Sweeper Choir
+30 Percy Breath
+31 Steamer Vibes Pad
+32 Heaven Piano
+33 Soft Choral Strings
+34 Breathy String Ambience
+35 Warm Vibes + Soft Choral
+36 Ice Tyne + DigiVox
+37 Floating Chimes + Breath
+38 Harpsi Choir
+39 Dulcimer + Choral Pad
+40 Perc Organ + Choral Pad
+41 Perc Organ + Rotor Choir
+42 Breathy Rotor
+43 Full Breath Bars
+44 Ooh To Aah Morph MW XXL
+45 Ooh To Aah Morph MW MID
+46 Aah To Ooh Morph MW XXL
+47 Aah To Ooh Morph MW MID
+48 Ooh To Aah Synced XXL
+49 Ooh To Aah Synced MID
+50 Aah To Ooh Synced XXL
+51 Aah To Ooh Synced MID
+
+Bank 120 25 25 - Brass Sections
+0 Ultimate Brass Section
+1 Real Brass Section 1 Loose
+2 Real Brass Section 1 Tight
+3 Real Brass Section 2 Loose
+4 Real Brass Section 2 Tight
+5 Small Brass Section Loose
+6 Small Brass Section Tight
+7 Soul Section Loose
+8 Soul Section Tight
+9 Bright Brass Section
+10 Hybrid Stabs
+11 Velo Stabs
+12 French Horn Section
+13 Hybrid Horn Section
+14 GM Brass 1
+15 GM French Horns
+16 Miami Brass
+17 Miami Octave Brass
+18 Bigger Brass
+19 Biggest Brass Low Octave
+20 Biggest Brass Hi Octave
+21 Hybrid Horn + Synth
+22 Brass + Woodwinds
+
+Bank 120 26 26 - Solo Brass
+0 Solo Trumpet
+1 Soft Solo Trumpet
+2 Small Trumpet
+3 3 Trumpets Loose
+4 3 Trumpets Tight
+5 Duck Trumpet
+6 Muted Trumpet
+7 3 Muted Trumpets Loose
+8 3 Muted Trumpets Tight
+9 Phased Muted Trumpet
+10 Overdriven Muted Trumpet
+11 Trombone
+12 Soft Trombone
+13 Small Trombone
+14 3 Trombones Loose
+15 3 Trombones Tight
+16 Tuba
+17 GM Trumpet
+18 GM Muted Trumpet
+19 GM Trombone
+20 GM English Horn
+21 GM Tuba
+22 Solo Trumpet 2
+23 3 Trumpets Unison
+24 Trombone 2
+25 3 Trombones Unison
+26 Tuba + Trum + Trom Loose
+27 Tuba + Trum + Trom Tight
+28 Trumpet + Synth Lead
+29 Mute + Synth
+30 Trumpet + Trombone
+31 3 Trumpets + 3 Trombones
+
+Bank 120 27 27 - Saxes
+0 Tenor Sax
+1 Alto Sax
+2 Baritone Sax
+3 Soft Sax Section Loose
+4 Soft Sax Section Tight
+5 Alto + Tenor Sax Loose
+6 Alto + Tenor Sax Tight
+7 Baritone + Tenor Loose
+8 Baritone + Tenor Tight
+9 Brighter Section Loose
+10 Brighter Section Tight
+11 Alto + Tenor Chorus Loose
+12 Alto + Tenor Chorus Tight
+13 GM Tenor Sax
+14 GM Alto Sax
+15 GM Baritone Sax
+16 GM Soprano Sax
+17 Tenor Sax 2
+18 Alto Sax 2
+19 Baritone Sax 2
+20 Soprano Sax 2
+21 Sax Section XXL
+22 Sax Section MID
+23 Saxes Natural Range XXL
+24 Saxes Natural Range MID
+25 Sax Section Doubled XXL
+26 Sax Section Doubled MID
+27 Saxes Doubled Natural XXL
+28 Saxes Doubled Natural MID
+
+Bank 120 28 28 - Woodwinds
+0 Clarinet Loose
+1 Clarinet Tuned
+2 Thin Clarinet
+3 Bassoon
+4 Thin Bassoon
+5 Flute
+6 Flute Tremolo
+7 Flute Tremolo Fade
+8 Flute Tremolo Switch
+9 Flute 5th
+10 Flute Vibrato
+11 Piccolo 1
+12 Piccolo 2
+13 Chiffy Whistle
+14 GM Clarinet
+15 GM Bassoon
+16 GM Flute
+17 GM Piccolo
+18 GM Oboe
+19 GM Pan Flute
+20 GM Recorder
+21 Clarinet 2
+22 Woodwinds Section Loose
+23 Woodwinds Section Tight
+24 Clarinet + Bassoon Loose
+25 Clarinet + Bassoon Tight
+26 Nylon Finger + Flute
+27 Brass + Woodwinds
+
+Bank 120 29 29 - Ethnic
+0 Sitar
+1 Hippie Flashback Sitar
+2 Koto
+3 Shamisen
+4 Dulcimer
+5 Ethnic Strummer
+6 Banjo
+7 Natural Kalimba
+8 Soft Kalimba
+9 Small Kalimba
+10 Unclear Kalimba
+11 Underwater Bass Kalimba
+12 Panpipes
+13 Percussive Panpipes
+14 Steel Pipes
+15 Blown Bottle Soft
+16 Blown Bottle Attack
+17 Doo Bottle Soft
+18 Doo Bottle Attack
+19 Shakuhachi Soft
+20 Shakuhachi Attack
+21 GM Sitar
+22 GM Koto
+23 GM Shamisen
+24 GM Banjo
+25 GM Kalimba
+26 GM Shakuhachi
+27 GM Bottle Blow
+28 GM Ocarina
+29 GM Shanai
+30 GM Bagpipes
+31 GM Fiddle
+32 GM Whistle
+33 GM Charang
+34 Sitar 2 XXL
+35 Sitar 2 MID
+36 Mini Sitar
+37 Kalimba 2 XXL
+38 Kalimba 2 MID
+39 Kalimba Auto Arp
+40 Panpipes 2
+41 Panpipes Attack
+42 Soft Panpipes
+43 Gentle Pipes Pad
+44 African Mallets
+45 Jamaican Steeldrums
+46 Hindukush Soundtrack
+47 Koto + Shamisen
+48 Koto + Shamisen + Pad
+49 Lofi Koto + Shamisen
+50 Koto + Sham + Shak
+51 Koto + Sham + Shak 2
+52 Dulcimer + Choral Pad
+53 Dulcimer + Sitar
+54 Dulcimer + Sitar 2
+55 Dulcimer + Shamisen
+56 Boxy Ethno Stringed
+57 Percy Pipes
+58 Panpipes + Blown Bottle
+59 Small Pipes + Bottle
+60 Blown Bottle + Shak
+61 Small Bottle + Shak
+62 Mallets Atmos
+63 Gamelan Set
+64 Steamer Bells
+65 Marimba + Kalimba
+
+Bank 120 30 30 - Accordions + Harmonicas
+0 German Accordion
+1 Russian Accordion
+2 Tango Accordion
+3 Parisian
+4 Musette Accordion
+5 Synth Harmonica
+6 Blues Harp Distorted
+7 Harmonica Toots
+8 GM Accordion
+9 GM Tango Accordion
+10 GM Harmonica
+
+Bank 120 31 31 - Soft Pads
+0 Analogy
+1 Soft Phaser Pad
+2 Mega Pad
+3 Ghost Wave
+4 Pulsing Wave Pad
+5 Long Sweep
+6 Cascade Pad
+7 Harmonics Pad
+8 Sanctuary Phaze Pad
+9 Seal Driver Pad
+10 Ultra Wide Pad
+11 Basic Blue Pad
+12 Wide Analog Soft Pad
+13 The Carpet
+14 French Horn Pad
+15 Shine
+16 Choir Pad
+17 Holy Grail Pad
+18 Soft Attack Pad
+19 Soft Pad
+20 24dB LP Sweep
+21 Mellow Bell Pad
+22 Gregorian Waves
+23 Slow Synth Strings
+24 Edgy Harmony Pad
+25 Texture Pad
+26 Soft Synth Choir
+27 Tape Choir
+28 Tape Strings
+29 Deep Pad
+30 GM Pad 2 Warm
+31 GM FX 2 Soundtrack
+32 GM Pad 8 Sweep
+33 GM Pad 5 Bowed Glass
+34 80s Metallic Sweep
+35 Analog Soft Pad
+36 Bending Partial Pad
+37 Drifting Sweeper
+38 Smooth Noisy Pad
+39 Tinkling Pad
+40 Dark N Spooky
+41 Dark Moving Pad
+42 Dark Pad
+43 Octave Dark Pad
+44 Spooky Pad
+45 Digital 80s Pad
+46 Digital Pad
+47 Octave Digital Pad
+48 Digital Performer
+49 Fat Pad
+50 Metallic Sweep Pad
+51 Motion Pad
+52 Rich Pad
+53 Silk Pad
+54 Soft Sweeper Choir
+55 Nylon Finger + Soft Pad
+56 Warm Vibes + Phaser Pad
+57 El Piano + Big Pad
+58 El Piano + Synth Sweep
+59 Digi Roads + Pad
+60 12 String Atmos Pad
+61 Sweeping Pad + Bells
+62 Koto + Shamisen + Pad
+63 Soft Organ + Pad
+64 Big Ass Pad
+65 Oceanarium
+66 Space Rescue Mission
+67 Digi Echo Pad
+68 Big Dark Mega Pad
+69 Rich Wave Bells Pad
+70 Square & Hold Pad
+71 Deep Sea
+72 Analog Pad
+73 Softly Softly Pad
+74 Days Gone By
+75 Memory Pad
+76 Soft Rotor Sparkle Pad
+77 Jet Pad
+78 Saw Pad Sweep
+79 Calorizer Pad
+80 Big Octave Pad
+81 VS Choir Pad
+82 Soft Super Saw
+
+Bank 120 32 32 - Bright Pads
+0 Swoosh Pad
+1 Retro
+2 Bright Sweep Pad
+3 Ceremonial
+4 Power Swell Pad
+5 Stardust Pad
+6 Sacrifice
+7 HP Wailings
+8 Arctic Poly
+9 String Machine
+10 Vangelis Sweep
+11 Fat Analog Pad
+12 Sizzle
+13 Space Pad
+14 Moving
+15 Fluting Atmosphere
+16 Wood n Strings Pad
+17 Bright Pad
+18 80s Arpeggio Pad
+19 Emotional Pad
+20 Strato Pad
+21 Formantos Pad
+22 Syn Pad
+23 HP Sweep
+24 Synth Chamber Pad
+25 PWM Pad
+26 Pulse PWM Layer
+27 80s Pop Pad
+28 Tron Pad
+29 Gentle Sweep
+30 HP Pad
+31 GM Pad 6 Metallic
+32 GM Pad 7 Halo
+33 70s Stringmachine
+34 Analog Glitter Swell
+35 Big Sweepie
+36 Desperately Flanged
+37 Megasweeper
+38 Reso Mover
+39 Nice Degrader
+40 Cold Sweep Pad
+41 Fair Choresque
+42 FM Me
+43 Glassy Heaven
+44 Welcome ToThe Matrix
+45 Lovely MKS Pad
+46 Metalized
+47 Additive Coloured Pad
+48 Octave Fat Pad
+49 Slow Jupiter
+50 Spacey Bell
+51 Superslow FM
+52 Octave Silk Pad
+53 Hollow Me
+54 Massive Octave
+56 Steel String + Atmos Pad
+57 Soft Swoosh Organ
+64 The Swarm
+65 Tinkling Wavetable Pad
+66 The Greek Pad
+67 Release Shatter Pad
+68 Worlds Apart
+69 Astral Strings
+70 Sad Motion Pad
+71 Big Pwm Strings
+72 Falling Star Pad
+73 Mega Sweep Pad
+74 HP Dirty Sweep
+75 Rich Sync Pad
+76 Touchy Sweep Pad
+77 Digi Bell
+78 Century Pad
+79 Mars n Venus
+80 Vocalizing
+81 Wavetable Sweeper Pad
+82 Sync Sweep
+83 Ambient Mind
+84 Sweeping Worlds
+85 Intro HighPass Pad
+
+Bank 120 33 33 - Moving Pads
+0 Soft Groove Pad
+1 Glassy
+2 Chase 4
+3 Sizzle 2
+4 Rhythmic Pad
+5 Urban
+6 Forestal
+7 Sweeper
+8 Chase 1
+9 Sample + Noise
+10 Hades
+11 Tempest
+12 Square Angels
+13 Power Swell + Loop
+14 Black Hole Squared
+15 Glacier
+16 Aquamarines Synth FX
+17 Flame
+18 High Flyer
+19 Mirage Pad
+20 Whisper Pad
+21 Pulsar
+22 Tropics
+23 Black Hole
+24 FM Swirl
+25 Action Man
+26 As In Age Pad
+27 Dream Sequence
+28 Nucleus Pad
+29 Wave Organ
+30 Vowel Phaser Pad
+31 Bubbling
+32 Chase 2
+33 Chase 3
+34 Rev Texture
+35 GM FX 6 Goblins
+36 Gater Aid
+37 Is It You Arielle
+38 Aliased Movement
+39 Alone
+40 Brainwash Sweep
+41 Constant Move
+42 Cousteaus Inheritance
+43 Deckards Dream
+44 Deepest Dreams
+45 Dream Pad
+46 Equinoxe
+47 Flanging Dream
+48 Gandalfs Vision
+49 Hypnotic Movement
+50 Massive Emotion
+51 Oldschool String Pad
+52 Superswell Pad
+53 Waterlove
+54 We're Not Alone Mike
+55 Harmonics Atmos 1
+56 Harmonics Atmos 2
+64 Milkyway Pad
+65 S+H Worlds
+66 Ice Cold Sweep
+67 Polyrhythm Pad
+68 Chaser Pad
+69 Bubble Sweep
+70 Ethnic Pluck Loop
+71 Wave Pattern Pad
+72 Aurora
+73 HP Dirty Sweep Arp
+74 BP Dreams
+75 Caldera
+76 Hyper Sweep Pad
+77 Stutter Pad
+78 Glocken Loop
+79 Curves
+80 Square Dance
+81 Wave Line
+82 Reso Gater
+83 Trance Worlds
+84 Vowelscapes
+85 Traveller
+86 LFO Move
+87 Prophet Arp
+
+Bank 120 34 34 - Soundscapes
+0 Lost Souls
+1 Worried Dave Pad
+2 Ghost Ship
+3 Rising Star Pad
+4 Bright Moving Pad
+5 Slave Camp
+6 Hall Of Mirrors
+7 Cinema Startup
+8 Thin Line
+9 Tundra 1
+10 Epic Pad
+11 Is Anyone There
+12 Icy Pad
+13 Chimetime
+14 The Spoil
+15 Winds Whispers
+16 Arctic Pad
+17 Ghostly
+18 Tundra 2
+19 Vanishing Texture
+20 Ice Res
+21 Infinite Touch
+22 Oscillate
+23 Sweet S+H
+24 Tibet Texture
+25 Tundra 3
+26 Wave Scape
+27 Winter
+28 The Majestic
+29 Artificial Sweep
+30 Atonal Beauty
+31 Dreamweaver
+32 Frogs In Space
+33 Fx To Come
+34 Hold A Chord
+35 Massive Chord Drone
+36 Slowly Coming
+37 Splitting Images
+38 Super Sweller
+39 Or The Yellow Ones
+40 The Rise
+41 They're Coming
+42 Those Little Orange Ones
+43 Wavedreamer
+44 What The F
+45 Metallurgical
+46 Reso Dirt
+47 Cold Steel
+48 Space Bees
+49 Glass Pearls
+50 Spooky Space
+51 Orbiter
+52 Plattennbau
+53 Reso Plane
+54 Spooky Bender
+55 Temple Bells
+56 The Thing
+57 Warlords
+58 Sparkler
+59 Hindukush Soundtrack
+60 Atmos Lead + Pad
+64 Lunar Eclipse
+65 Outback
+66 Bell Tinkle Pad
+67 Welcome
+68 Compu Pad
+69 Auto Synth
+70 Sundown
+71 Arctic Circle
+72 Salthar
+
+Bank 120 35 35 - Techno Synths
+0 Dark Driver
+1 Elektro Perc
+2 Bassline Style
+3 Dance Stabs
+4 Rave Synth
+5 Super Synth
+6 Analog Sequence
+7 Goa Lead
+8 Trance Lead
+9 Aggressive FM
+10 Rude Patch
+11 Modern Lead
+12 Fried + Wide + Pride
+13 Techno Drive
+14 Phaser Dance
+15 Elektro Lead
+16 LoFi Lead
+17 Pulse Bassline
+18 Trance Floor Lead
+19 Analog Lead
+20 Classic Synth
+21 Dance Sawteeth
+22 Dirty + Wicked Synth
+23 Mega Pulse
+24 Pulse No Drive
+25 Super Saw
+26 Trance Sequencer
+27 90s Are Back
+28 All In Sync
+29 Being Terminator
+30 Bottle Leader
+31 Degraded One
+32 Detuned Trance Stack
+33 Drone Lead
+34 FFM Trancelead
+35 Hollow Man
+36 How Sweet The Trance
+37 J+S Stella
+38 LSG
+39 Mega Sharp Lead
+40 Move The Modwheel
+41 O Lieb
+42 Play The Lower Tones
+43 Pulse It
+44 Rozzer
+45 Sync Me
+46 The Attack
+47 The Legendary 12
+48 Megaraver
+49 Swarm 2
+50 Uber Wide
+51 Way Low
+64 Club Rotation
+65 Synchronas
+66 Monster Rave Bass
+67 Melody Maker
+68 Tech Siren
+69 Mind Machine
+70 Dance Solo
+71 Aggressor Bass
+72 Fuzz Melody
+73 Quaeko
+74 Techno Attack
+75 Karma Lead
+76 Phaser HP Sequencer
+77 Firus
+78 Ringtone Lead
+79 Big Drive Lead
+80 Rave Signal Squares
+81 Filter Keys
+82 Industrialised
+83 Phased Leader
+
+Bank 120 36 36 - Poly Synths
+0 Digital Theme Park
+1 Bend Poly
+2 Bigger Than Life
+3 Syncerator
+4 Shootin Stars
+5 Bright Buzzer Poly
+6 Propaganda
+7 Stryngi B
+8 Poly Soft
+9 Poly Slap
+10 Punchy
+11 Celesta
+12 Wave Astoria
+13 Road Poly
+14 Inharmonic
+15 HP Bells
+16 Cascade
+17 Phase Poly
+18 Sync Poly
+19 Big Key Layer
+20 Wave Layer
+21 Sweep
+22 Western Style
+23 2.3 Reso Poly
+24 Band Pass Poly
+25 Die Nasty
+26 Digital 50
+27 Digital 70
+28 Fifth Dimension Poly
+29 Flange Poly
+30 Old Bell Poly
+31 Organic
+32 Overtone Scape
+33 PPG 2003
+34 Rubber Backing
+35 Solid Backing
+36 Wired Heaven
+37 Basic Poly
+38 90s RnB Poly
+39 Dynamic Metal Poly
+40 Direct Poly
+41 Fantasy
+42 Meta Poly
+43 Fat Poly
+44 Formant Poly
+45 Tabloidz
+46 Polysynth 1
+47 PPG Alike
+48 Ultimate
+49 Polysynth 2
+50 Vocal Pluck Poly
+51 Pulse Poly
+52 Vocalish
+53 Wave Choir
+54 GM FX 4 Atmosphere
+55 GM Pad 1 New Age
+56 GM Pad 3 Polysynth
+57 GM FX 3 Crystal
+58 GM FX 1 Rain
+59 GM FX 5 Brightness
+60 GM FX 7 Echoes
+61 GM FX 8 Sci Fi
+62 Sakamoto Poly Lead
+63 Spacey Poly
+64 Wavypan
+65 Roundabout
+66 Ambient Chord
+67 Trance Orchestra
+68 Velo Perc Chordulator
+69 Power Squared
+70 Wavebend Poly
+71 Fat Sync Poly
+72 Super Fizzy String Synth
+73 Worlds Biggest Sweep
+74 Hypersonic vs PPG
+75 Humble Stance
+76 Big Reso Bell
+77 Dirty Dance Organ
+78 Clavimogue
+79 Smacky PWM
+80 Rich Square Bell
+81 Pure Wet Fat
+82 Time For Flange
+83 Numan Strings
+84 Detuned Stage Saws
+85 PPG Vox Bell
+86 SawPluck
+87 Jupiter Keys
+88 Muckiphonic Pulse Strings
+89 Proph 2
+90 Silky Synth Orchestra
+91 Juicy PWM Poly
+92 Velo Polysynth
+93 Belly Keys
+94 Chiffy 80s
+95 Cretu Stack
+96 Ethnic Plucker
+97 Phased N Dreamy
+98 Poly Man
+99 Remember That
+100 Sync That
+101 The Riser
+102 Tinkle Keys
+103 California Grand
+104 Seawash Melody
+105 Elegant Wavepad
+106 Bright Wow Organ
+107 Strat + Synth Combi
+
+Bank 120 37 37 - Arpeggios
+0 Dark Driver Arp
+1 Perc Chime Arpeggio
+2 Sub Metal Arpeggio
+3 Dark Pulsator
+4 Pypa Arpeggio
+5 Speech Sequencer
+6 Dream Harp
+7 Dirty Dozen Arp
+8 Sine Bell Arpeggio
+9 Dirty Arp
+10 Sine Perc Arpeggio
+11 Elektro Arp
+12 Melodic Arp
+13 Pypa Auto Riff
+14 Basic Tri Arpeggio
+15 Ageless Arp
+16 Vocodo Arpeggio
+17 Classic Arpeggio
+18 Analog Arp
+19 Eppgiano
+20 Perky Arp
+21 Basic Arpeggio
+22 Distorted Talk
+23 Double Arp
+24 Noise Band Arpeggio 1
+25 Noise Band Arpeggio 2
+26 Noise Band Arpeggio 3
+27 Raindrops Arpeggio
+28 Stryngi Arpeggio
+29 Tipi Arpeggio
+30 Klanger Arpeggio
+31 Wave Arp
+32 Delays Arp
+33 Rubbery Arp
+34 Metal Pipes
+35 A Thin One
+36 Ahh The Softie
+37 Be It Classic 1
+38 Be It Classic 2
+39 Be It Classic 3
+40 Be It Classic 4
+41 Belly Ringer
+42 Cheers
+43 Chiff Chiff
+44 Chorded Arp
+45 FFM Sine
+46 Glassy Arp
+47 Hard Syncer
+48 Morphine
+49 Oh So Beatiful
+50 Random Arp
+51 Scrapy Sine
+52 Super Ringer
+53 Superphaser Arp
+54 The Chaser 1
+55 The Chaser 2
+56 Thinner
+57 Tubie
+58 Wooden Glass
+59 Zippered Noise
+60 Classic Wavesequence
+61 Muted Gtrs + Metal WS
+62 Percy Wavesequence
+63 Techy Wavesequence
+64 Fuzzy Gurgler
+65 Creamy Arpeggio
+66 Euro Chase Bass
+67 Jupiter Arp
+68 Soft Ambi Sweeps
+69 Classic Dance Saws
+70 HS Bassline
+71 Beaver Attack Formation
+72 Metalliga
+73 Phaser Sequence
+74 Triangle Arpeggio
+75 Filter Super Drivio
+76 Good Vibes
+77 Hi Tone Bell
+78 Stereo Sync Arp
+79 Simple Saw Arpeggio
+80 Wicked Square Arp
+81 Transistor Bass Line
+82 Sweet Square Bell
+83 Pinhead Arp
+84 Punchy Sequence
+85 Noise Zap Arp
+86 Automotif Bass
+87 Journey To Pluto
+88 Kraftworks
+89 Old School Tune
+90 Repeat Bass
+91 Sparse Wavesequence
+92 Dynamic Screamer
+
+Bank 120 38 38 - Synth Brass
+0 Ana Synth Brass
+1 8 Voice Synth Horns
+2 HP Synth Brass
+3 Oberhype Brass
+4 Soft Synth Brass
+5 Punch Brass
+6 Soft Res Brass
+7 Synth Brass Pad
+8 Synth Brass 1
+9 Synth Brass 2
+10 Synth Brass 3
+11 Fat Horn Synth
+12 Ageless
+13 Res Horns
+14 Soft Synth Brass
+15 Hybrid Brass Section
+16 GM Synth Brass 1
+17 GM Synth Brass 2
+18 Fusion Synth Brass
+19 Hancock Synth Brass
+20 Hybrid Horn + Synth
+64 Unison Bend Poly
+65 Soft Sweeper Replay
+66 Bright Brass Section
+67 Horny
+68 Late Synbrass
+69 Warm Horn
+70 OBlike
+71 Soft Synth Brass
+72 BP Brass
+
+Bank 120 39 39 - Soft Leads
+0 Gangsta Whine
+1 Dull Square Solo
+2 Soloing
+3 Super Mini Lead
+4 Alfreds Filter Solo
+5 Theremin
+6 Bend Lead
+7 Perc Lead
+8 Bright Square Lead
+9 Hip Hop Leadline 1
+10 Hip Hop Leadline 2
+11 Porta Square Lead
+12 Tri 2 Saw Lo
+13 Attack Theremin
+14 Capsular Lead
+15 Square Lead
+16 GM Square Lead
+17 GM Bass + Lead
+18 GM Calliope Lead
+19 70s Analog Lead 1
+20 70s Analog Lead 2
+21 Bandpassed Lead
+22 Breathe Me
+23 Chiff It
+24 Coloured Noise Lead
+25 Creamy Lead
+26 CS80 Lead
+27 Deep 5th FM Lead
+28 Hollow Noise Lead
+29 Hymn
+30 Moogy Lead
+31 Octaver
+32 PinkFloyd
+33 Prophet Lead
+34 Scream It
+35 Sine FM Lead
+36 Swimming FM
+37 The Noiser
+38 The Scream Leader
+39 Thin Sync Lead
+40 Those Were The Days
+64 UltraMoog Lead
+65 A Classic
+66 Joan's Lead
+67 Ghost Rave
+68 Vocality
+69 Classic Square Lead
+70 Binder Lead
+71 TV Mystery
+72 Aah Soloist
+73 Sandy Solo
+74 Square Bend Lead
+
+Bank 120 40 40 - Hard Leads
+0 Wannabe TB
+1 5th Saw Lead
+2 808 State Lead
+3 Analog Heaven
+4 Drum n Bass
+5 5th Pulse Lead
+6 Fat Analog Lead
+7 Fat SQ Lead
+8 FM Mini
+9 Dry Fat Pulse Solo
+10 Kitchen Sync Lead
+11 Modular Sync Lead
+12 Osc Sync Solo
+13 Ravers Edge Lead
+14 Voice Box
+15 Harsh Lead
+16 BP Saw Sync Solo
+17 Hoover
+18 Insomnia Lead
+19 S+H Driven
+20 Speaking Solo
+21 Dragnet Lead
+22 LoFi Strings
+23 Pitch EG Lead
+24 BP Bassline
+25 Saw Lead
+26 Pulse Lead
+27 Screamer Lead
+28 Sync O Monic Lead
+29 Wheel Morpher Lead
+30 Pulse Hammer Lead
+31 GM Sawtooth Lead
+32 GM Fifth Lead
+33 GM Chiff Lead
+34 Afterburner
+35 Band Pass Lead
+36 Cutting The Edge
+37 Detune Lead
+38 Hard Sync Lead
+39 Most Massive Stack
+40 Overdrive Lead
+41 Paul Hardcastle Lead
+42 Peak Pass Lead
+43 Ring The Noise
+44 Saturator Lead
+45 Shmurgl
+46 Styrofoam Filter
+47 Talk To Me
+48 Uber Stack
+49 WestBam
+50 Trumpet + Synth Lead
+51 Mute + Synth
+64 Quad Saw Solo
+65 Phat Solo Sync
+66 Develish Syncer
+67 Disto Sweep Lead
+68 Ear Killer
+69 Miss HipHop
+70 Interval Moog
+71 Organic Lead
+72 Nightmare Lead
+73 Itchy Saws
+74 Brassy Saw Lead
+75 Self Oscillator
+76 Computer Games
+77 Heart Solo
+78 Square Sync Solo
+79 Sweepy Pulse Lead
+80 Drug Solo
+
+Bank 120 41 41 - Synth FX
+0 Glass Menagerie
+1 Cascading
+2 Chaos
+3 Wind Atmos
+4 Tension
+5 In Need Of Oil
+6 Comb FX
+7 Gravitational
+8 Weirdoz
+9 Unreal FX
+10 Atmos FX
+11 Landing
+12 Echo Platform
+13 R2D2
+14 Tar
+15 SciFi LFO FX
+16 Shortwave
+17 Total Space
+18 Mosquito
+19 Emergency
+20 Dentists Kick
+21 Bird Tweet
+22 Yeah Yeah Frog
+23 GM Breath Noise
+24 GM Bird Tweet
+25 4D Glass FX
+26 Anybody Out There
+27 Arp Noise Atmos
+28 Arp Reso Noise
+29 Bladerunner Atmos
+30 Chimes On Drugs
+31 Drunken Billiard
+32 FFM Flex FX
+33 Garden Of Eden
+34 Good Morning Dave
+35 Heli Drone FX
+36 JMJ Noise FX
+37 LSD Bell FX
+38 Noise Rattler
+39 Reverse Chatter FX
+40 Space Insects
+41 Starfall
+42 The Space Diver
+43 Underwater FX
+44 Welcome Onboard ISS
+64 Fishsex
+65 Paranoia
+66 Grain Brain
+67 S&H Noise
+68 Swirling Sync Keys
+69 Space Phase
+70 Doom+Chaos
+
+Bank 120 42 42 - Sound FX
+0 Auto Menu
+1 Car Door Close
+2 Car Start
+3 Car Screech + Away
+4 Truck Drive By
+5 Freeway Car Drive By
+6 Small Crowd Laugh
+7 Large Crowd Laugh
+8 Small Applause
+9 Large Applause
+10 City Bells
+11 Alarm
+12 Train Whistle
+13 Water Dive
+14 Footsteps
+15 Cave Drips
+16 Skating Whale
+17 Bang
+18 Record Crackles
+19 Record Crackles+Clunks
+20 Water Running
+21 Phone Ringing
+22 Phone Tone
+23 Phone Click
+24 GM Applause
+25 GM Helicopter
+26 GM Seashore
+27 GM Telephone
+28 GM Gunshot
+
+Bank 120 43 43 - Test Patches
+0 Channel Identifier 1 to 8
+1 Sine Wave -18dB 6th Octave
+2 Noise Band -18dB 6th Oct
+3 Pink Noise -18dB
+4 White Noise -18dB
+5 20Hz - 20kHz Log Sweep
+6 997Hz Slow Rise To 0dB FS
+7 Tuning Reference A3 = 440Hz
+8 Velocity Test Patch
+9 Aftertouch Test Patch
+
+Bank 120 78 78 - GM Patches
+0 001 Grand Piano
+1 002 Bright Piano
+2 003 Electric Grand
+3 004 Honky-tonk Piano
+4 005 Electric Piano 1
+5 006 Electric Piano 2
+6 007 Harpsichord
+7 008 Clavinet
+8 009 Celesta
+9 010 Glockenspiel
+10 011 Music Box
+11 012 Vibraphone
+12 013 Marimba
+13 014 Xylophone
+14 015 Tubular Bells
+15 016 Dulcimer
+16 017 Drawbar Organ
+17 018 Percussive Organ
+18 019 Rock Organ
+19 020 Church Organ
+20 021 Reed Organ
+21 022 Accordion
+22 023 Harmonica
+23 024 Tango Accordion
+24 025 Nylon Ac Guitar
+25 026 Steel String  Ac Guitar
+26 027 Electric Jazz Guitar
+27 028 Clean Electric Guitar
+28 029 Muted Electric Guitar
+29 030 Overdriven Guitar
+30 031 Distorted Guitar
+31 032 Guitar Harmonics
+32 033 Acoustic Bass
+33 034 Finger Bass
+34 035 Pick Bass
+35 036 Fretless Bass
+36 037 Slap Bass 1
+37 038 Slap Bass 2
+38 039 Synth Bass 1
+39 040 Synth Bass 2
+40 041 Violin
+41 042 Viola
+42 043 Cello
+43 044 Contrabass
+44 045 Tremolo Strings
+45 046 Pizzicato Strings
+46 047 Harp
+47 048 Timpani
+48 049 Strings Ensemble 1
+49 050 Strings Ensemble 2
+50 051 Synth Strings 1
+51 052 Synth Strings 2
+52 053 Choir Aahs
+53 054 Choir Oohs
+54 055 Synth Vox
+55 056 Orchestra Hit
+56 057 Trumpet
+57 058 Trombone
+58 059 Tuba
+59 060 Muted Trumpet
+60 061 French Horns
+61 062 Brass 1
+62 063 Synth Brass 1
+63 064 Synth Brass 2
+64 065 Soprano Sax
+65 066 Alto Sax
+66 067 Tenor Sax
+67 068 Baritone Sax
+68 069 Oboe
+69 070 English Horn
+70 071 Bassoon
+71 072 Clarinet
+72 073 Piccolo
+73 074 Flute
+74 075 Recorder
+75 076 Pan Flute
+76 077 Bottle Blow
+77 078 Shakuhachi
+78 079 Whistle
+79 080 Ocarina
+80 081 Square Lead
+81 082 Sawtooth Lead
+82 083 Calliope Lead
+83 084 Chiff Lead
+84 085 Charang
+85 086 Solo Voice
+86 087 Fifth Lead
+87 088 Bass + Lead
+88 089 Pad 1 New Age
+89 090 Pad 2 Warm
+90 091 Pad 3 Polysynth
+91 092 Pad 4 Choir
+92 093 Pad 5 Bowed Glass
+93 094 Pad 6 Metallic
+94 095 Pad 7 Halo
+95 096 Pad 8 Sweep
+96 097 FX 1 Rain
+97 098 FX 2 Soundtrack
+98 099 FX 3 Crystal
+99 100 FX 4 Atmosphere
+100 101 FX 5 Brightness
+101 102 FX 6 Goblins
+102 103 FX 7 Echoes
+103 104 FX 8 Sci Fi
+104 105 Sitar
+105 106 Banjo
+106 107 Shamisen
+107 108 Koto
+108 109 Kalimba
+109 110 Bagpipes
+110 111 Fiddle
+111 112 Shanai
+112 113 Tinkle Bell
+113 114 Agogo
+114 115 Steel Drums
+115 116 Woodblock
+116 117 Taiko
+117 118 Melodic Tom
+118 119 Synth Drum
+119 120 Reverse Cymbal
+120 121 Guitar Fret Noise
+121 122 Breath Noise
+122 123 Seashore
+123 124 Bird Tweet
+124 125 Telephone
+125 126 Helicopter
+126 127 Applause
+127 128 Gunshot
+
+Bank 120 79 79 - GM Drums
+0 GM Drums
+
+Bank 120 80 80 - Ultra Synth
+0 Worlds Apart
+1 Good Vibes
+2 Thumper Bass
+3 Oceanarium
+4 Heart Solo
+5 Club Rotation
+6 Auto Synth
+7 Unison Bend Poly
+8 Ice Cold Sweep
+9 Atonal Percussachap
+10 The Swarm
+11 Soft Ambi Sweeps
+12 UltraMoog Bass
+13 Big Dark Mega Pad
+14 Ear Killer
+15 Aggressor Bass
+16 Outback
+17 Worlds Biggest Sweep
+18 Polyrhythm Pad
+19 Real Analog Kit
+20 Tinkling Wavetable Pad
+21 Metalliga
+22 Hairy Bass
+23 Big Ass Pad
+24 Ghost Rave
+25 Rave Signal Squares
+26 Sundown
+27 Ambient Chord
+28 Chaser Pad
+29 Fat Analog Bass Slapper
+30 The Greek Pad
+31 Beaver Attack Formation
+32 CineIntroBass
+33 Softly Softly Pad
+34 TV Mystery
+35 Tech Siren
+36 Welcome
+37 Wavypan
+38 S+H Worlds
+39 Bubble Wave Electro EP
+40 Release Shatter Pad
+41 Creamy Arpeggio
+42 Rubber Reso Bass
+43 Space Rescue Mission
+44 Sandy Solo
+45 Monster Rave Bass
+46 Salthar
+47 Numan Strings
+48 Milkyway Pad
+49 Dark Bell
+50 Astral Strings
+51 Fuzzy Gurgler
+52 Buzz Bass
+53 Digi Echo Pad
+54 UltraMoog Lead
+55 Synchronas
+56 Lunar Eclipse
+57 Roundabout
+58 Bubble Sweep
+59 Drums Of Death
+60 Sad Motion Pad
+61 Euro Chase Bass
+62 Thick Pulse Bass
+63 Rich Wave Bells Pad
+64 A Classic
+65 Melody Maker
+66 Bell Tinkle Pad
+67 Trance Orchestra
+68 Ethnic Pluck Loop
+69 Elektro Res Congas
+70 Big Pwm Strings
+71 Jupiter Arp
+72 Jupiter Thump
+73 Square & Hold Pad
+74 Joan's Lead
+75 Mind Machine
+76 Compu Pad
+77 Soft Sweeper Replay
+78 Wave Pattern Pad
+79 M Drums 1
+80 Falling Star Pad
+81 Classic Dance Saws
+82 Fuzzy Chap
+83 Deep Sea
+84 Vocality
+85 Dance Solo
+86 Arctic Circle
+87 Velo Perc Chordulator
+88 Aurora
+89 Elektro Noise Crash
+90 Mega Sweep Pad
+91 HS Bassline
+92 LoFi Sinus
+93 Analog Pad
+94 Classic Square Lead
+95 Fuzz Melody
+96 Fishsex
+97 Power Squared
+98 HP Dirty Sweep Arp
+99 Soft Bell Mallets
+100 HP Dirty Sweep
+101 Phaser Sequence
+102 Chorused E-Bass
+103 Days Gone By
+104 Binder Lead
+105 Quaeko
+106 Paranoia
+107 Bright Brass Section
+108 BP Dreams
+109 Ano Rhodes
+110 Rich Sync Pad
+111 Triangle Arpeggio
+112 Bumper Bass
+113 Memory Pad
+114 Aah Soloist
+115 Techno Attack
+116 Grain Brain
+117 Wavebend Poly
+118 Caldera
+119 J Drums 1
+120 Touchy Sweep Pad
+121 Filter Super Drivio
+122 FuzzaFizzle Bass
+123 Soft Rotor Sparkle Pad
+124 Square Bend Lead
+125 Karma Lead
+126 S&H Noise
+127 Fat Sync Poly
+
+Bank 120 81 81 - Ultra Synth
+0 Hyper Sweep Pad
+1 Percy RezNoiseInator
+2 Digi Bell
+3 Hi Tone Bell
+4 Reso Smack Bass
+5 Jet Pad
+6 Quad Saw Solo
+7 Phaser HP Sequencer
+8 Swirling Sync Keys
+9 Horny
+10 Stutter Pad
+11 Analog Metal Perc
+12 Century Pad
+13 Stereo Sync Arp
+14 Hollow Bass
+15 Saw Pad Sweep
+16 Phat Solo Sync
+17 Firus
+18 Space Phase
+19 Super Fizzy String Synth
+20 Glocken Loop
+21 Chorus Bells
+22 Mars n Venus
+23 Simple Saw Arpeggio
+24 Sub Bass Fattener
+25 Calorizer Pad
+26 Develish Syncer
+27 Ringtone Lead
+28 Doom+Chaos
+29 Hypersonic vs PPG
+30 Curves
+31 Velo Perculator
+32 Vocalizing
+33 Wicked Square Arp
+34 DnB Square
+35 Big Octave Pad
+36 Disto Sweep Lead
+37 Big Drive Lead
+38 Late Synbrass
+39 Square Dance
+40 Warm EE Piano
+41 Wavetable Sweeper Pad
+42 Transistor Bass Line
+43 Low Hangin Mumma
+44 VS Choir Pad
+45 Miss HipHop
+46 Filter Keys
+47 Humble Stance
+48 Wave Line
+49 M Drums 2
+50 Sync Sweep
+51 Sweet Square Bell
+52 Overtone Solo Bass
+53 Soft Super Saw
+54 Interval Moog
+55 Industrialised
+56 Big Reso Bell
+57 Reso Gater
+58 VS Bells
+59 Ambient Mind
+60 Pinhead Arp
+61 Single Osc Bass
+62 Organic Lead
+63 Phased Leader
+64 Warm Horn
+65 Trance Worlds
+66 Electrhodes
+67 Sweeping Worlds
+68 Punchy Sequence
+69 Thumpy Stud Bass
+70 Nightmare Lead
+71 Dirty Dance Organ
+72 Vowelscapes
+73 J Drums 2
+74 Intro HighPass Pad
+75 Noise Zap Arp
+76 Filling Rattler
+77 Itchy Saws
+78 Clavimogue
+79 Traveller
+80 Square Bells
+81 Automotif Bass
+82 Classic Moog Bass
+83 Brassy Saw Lead
+84 OBlike
+85 LFO Move
+86 Big Wave Bells
+87 Journey To Pluto
+88 LFO Bass
+89 Self Oscillator
+90 Smacky PWM
+91 Prophet Arp
+92 Bright Chimes
+93 Kraftworks
+94 DnB Sub Bass
+95 Computer Games
+96 Rich Square Bell
+97 Old School Tune
+98 Phat Pwm Bass
+99 Square Sync Solo
+100 Soft Synth Brass
+101 Repeat Bass
+102 OrgaThump Bass
+103 Sweepy Pulse Lead
+104 Pure Wet Fat
+105 Velocity BandBass
+106 Drug Solo
+107 BP Brass
+108 Unitea Bass
+109 Time For Flange
+110 Bass Of Death
+111 Detuned Stage Saws
+112 M-Bassy
+113 PPG Vox Bell
+114 Transistor Bass
+115 SawPluck
+116 TriStar Bass
+117 Jupiter Keys
+118 UK Breakz Bass
+119 Muckiphonic Pulse Strings
+120 Bouw Bass
+121 Proph 2
+122 Fuzzy Bass Riff
+123 Silky Synth Orchestra
+124 Metal BandBass
+125 Juicy PWM Poly
+126 Bad Black Bass
+127 US-1 Init Patch
+
+Bank 120 82 82 - Grand Pianos
+0 Natural Grand Piano
+1 Bright Grand Piano
+2 Soft Grand Piano
+3 Hard Grand Piano
+4 Concert Hall Grand Piano
+5 Atmos Piano
+6 Mono Grand Piano
+7 Simple Grand
+8 Ol Upright Piano
+9 Honky Tonk  Piano
+10 Phaser Piano
+11 Euro ArPiano
+12 Gater Piano
+13 Sparkle Piano
+14 True Sustain As Reverb
+15 Gramophone Piano
+16 Underwater Piano
+17 Gurgler Pulse Piano
+18 Rotor Piano
+19 Depressed Mode
+20 Trents Piano
+21 Toy Piano
+22 Asian Box Piano
+23 Wah Piano
+24 Basic Reverb Piano
+25 Basic Echo Piano
+26 Basic Chorus Piano
+27 Basic Synth Piano
+28 LA Piano Soft
+29 LA Piano Hard
+30 Grand Piano + Soft EP
+31 California Grand
+32 Piano + Strings
+33 Heaven Piano
+34 Steel Hammer Piano
+35 Piano + Marimba
+36 House Piano
+37 Piano + Steel Drums
+38 Hi Harm Piano
+39 Piano + Soft Sweeper Pad
+
+Bank 120 83 83 - Tonewheel Organs
+0 Perc Organ
+1 Full Bars
+2 70ties Rock Organ
+3 Rock Organ
+4 Jazz Organ
+5 Medium Rock Organ
+6 THE Cat
+7 Lucy In The B
+8 Davy On The Road
+9 Bass Pedal Sustain
+10 St Peters
+11 888000000 Soft
+12 Swish Come True
+13 Big Theatre
+14 Screaming NB
+15 Jazz Leader
+16 Whiter Shade Of U
+17 Orpeggian
+18 EnDoorsEr
+19 Bass Pedal Decay
+20 Riff Bender
+21 Holy Night
+22 Cheesy
+23 Classical  Full Stops
+24 Super Clean
+25 Silk n Roses
+26 Soft Atmos Organ
+27 Good Vibrations
+28 House Organ Bass
+29 Ambatron
+30 Dusty Bee
+31 Transistor Organ
+32 Classical  Full Organ
+33 Jazz Rock Lead
+34 Capt n Jack
+35 Morriconifier
+36 Je Taime 2004
+37 House Bass Sequence
+38 Soft Toaster
+39 Wet Screams
+40 Classical  Vox Humana
+41 Manhood Xtension
+42 Dirty Old Cat
+43 Glass Organ
+44 Oh No Not Again!
+45 House Drive Bass
+46 Hollow Odd
+47 Classical Flute
+48 Flower Power
+49 Cicada Swish
+50 Child In Time
+51 Space Pipes
+52 Classical  Oboe
+53 Smokin Rock
+54 Nirvana Lead
+55 Suppers Ready
+56 Superstrings
+57 Classical  Full Theatre
+58 Smoke Gets In Your Ears
+59 Frozen Tonewheels
+60 Reso Pluck Dream
+61 Good Vibes
+62 Hoe Down
+63 Kantor
+64 Sacral
+65 Init Patch
+
+Bank 120 84 84 - HS2 Preview Patches
+0 Welcome ToThe Matrix
+1 Natural Grand Phrase
+2 90s Are Back
+3 Gater Aid
+4 12 String Acoustic XXL
+5 Miami Octave Brass
+6 Techy Wavesequence
+7 Suspense Cue XXL
+8 Kalimba Auto Arp
+9 Finger Bass New
+10 70s Analog Lead 1
+11 Parliament Constructor
+12 Ooh To Aah Morph MW XXL
+13 Steel String Phrase
+14 Grand Piano 2 Natural
+15 Atonal Beauty
+16 Sakamoto Poly Lead
+17 Tenor Sax 2
+18 Bladerunner Atmos
+19 Octave Legato Strings XXL
+20 Marimba 2 XXL
+21 Jan Hammer Bass
+22 Breathe Me
+23 New Rock Drums
+24 Megasweeper
+25 Clavinet Phrase
+26 Move The Modwheel
+27 Massive Chord Drone
+28 Steel String + Harmonics XXL
+29 Biggest Brass Hi Octave
+30 Superphaser Arp
+31 Spiccato Strings Up + Down XXL
+32 Panpipes 2
+33 Pick Bass New
+34 Shmurgl
+35 Lame Drums
+36 70s Stringmachine
+37 Steel String Phrase
+38 Whiter Shade Of U
+39 The Majestic
+40 Cretu Stack
+41 Solo Trumpet 2
+42 The Space Diver
+43 Legato-Tremolo MW XXL
+44 Vibraphone 2 XXL
+45 Rave Sweeper Bass
+46 WestBam
+47 Acoustic Percussion Set 2
+48 Phaserchoir
+49 Marimba Phrase
+50 Warm E Piano Double
+51 Cousteaus Inheritance
+52 Nylon Picked Acoustic XXL
+53 Saxes Natural Range XXL
+54 Scrapy Sine
+55 Strings + Horns XXL
+56 Sitar 2 XXL
+57 Expanded Acoustic Bass XXL
+58 Hard Sync Lead
+59 Fat Snap Kit
+60 Aah To Ooh Morph MW XXL
+61 Hammer Piano Phrase
+62 Hollow Man
+63 Plattennbau
+64 Sync That
+65 Alto Sax 2
+66 Anybody Out There
+67 Sad Strings 2 XXL
+68 Swirly Bells Pad
+69 Pulse Sequencer
+70 Moogy Lead
+71 Pop Kit
+72 Motion Pad
+73 Pick Bass Phrase
+74 FFM Trancelead
+75 Deepest Dreams
+76 Hancock Synth Brass
+77 Clarinet 2
+78 Classic Wavesequence
+79 Whole Tone Trills XXL
+80 Rhythmic Metal Guy
+81 Fretless Bass New
+82 Uber Stack
+83 HipHop Constructor
+84 80s Metallic Sweep
+85 Accordion Phrase
+86 Natural Grand XXL
+87 Space Bees
+88 Tinkle Keys
+89 Miami Brass
+90 Legato Strings XXL
+91 7 Years In Tibet
+92 Massive Bass
+93 Coloured Noise Lead
+94 Digital Performer
+95 Leg Strings Phrase
+96 Perc Organ 2
+97 Alone
+98 Velo Polysynth
+99 Trombone 2
+100 Be It Classic 1
+101 Brassy Orchestra XXL
+102 Glockenspiel 2 XXL
+103 Slap Bass New
+104 Prophet Lead
+105 Superslow FM
+106 Clean Strat Phrase
+107 Clavinet XXL
+108 Baritone Sax 2
+109 Metal Pipes
+110 Xylophone 2 XXL
+111 The Noiser
+112 Rock Solo
+113 Soprano Sax 2
+114 Be It Classic 3
+115 HS2 Init Patch
+
+Bank 120 86 86 - Phrases
+0 Latin Piano
+1 Steel String Strumming
+2 Funky Clavinet
+3 Strat Clean
+4 Picking Steel String
+5 Busy Marimba
+6 Marching Piano
+7 Triplet Bass
+8 Accordion Tango
+9 String Section
+10 Brass Section
+11 Funky Phaser Clav
+12 Busy Mallets
+13 Techno Piano
+14 Percussive Organ
+15 8th Finger Bass
+16 Latin Vintage EP
+17 Strumming Steel+Nylon
+18 Muted 16th
+19 4th Grand Piano
+20 Funky Wah Clav
+21 Rhythmic Organ
+22 Walking Acoustic Bass
+23 8th Spiccato Strings
+24 Synth Brass Section
+25 Synth Strat Arp
+26 Jolly E Piano
+27 Fretless
+28 Romantic Nylon+Steel
+29 Walking Grand Piano
+30 Hi Octave Section
+31 Techno Piano+Strings
+32 Strat Muted 16th
+33 Picking Nylon
+34 Funky Electric Piano
+35 Fat Horn Section
+36 Strumming 12 String
+37 Woodwinds Section
+38 Heavy Pick Bass
+39 Soft Synth Section
+40 Busy Picking Nylon
+41 Musette Chords
+42 Latin Grand
+43 Busy Electric Piano
+44 Nylon Finger + Soft Pad
+45 House Piano
+46 Tremolo Strat
+47 Baroque Harpsi
+48 Horn Section
+49 Analog Sequence
+
+Bank 120 120 120 - Combis
+0 Arctic Bubbles Scape
+1 High Whispers Scape
+2 Down To Earth
+3 Filmscape 1
+4 The Sanctuary
+5 The Big Pad
+6 Venice
+7 Filmscape 2
+8 Manhattan
+9 Drum Kit Constructor
+10 Chaotic Drum Selector
+11 Chaotic Loop Selector
+12 Orchestral Symphony
+13 Orchestral Starter
+14 Filmscore Starter 1
+15 Filmscore Starter 2
+16 Japanese Starter
+17 Pop Starter
+18 RnB Starter
+19 Downbeat Starter
+20 Trip Hop Starter
+21 Tribal Techno Starter
+22 Ethno Starter
+23 HipHop US Starter
+24 HipHop German Starter
+25 Disco Starter
+26 Ambient Starter 1
+27 Ambient Starter 2
+28 60s Pop Starter
+29 Funk Starter 
+30 Jazz Starter
+31 Reggae Starter
+32 Rock Starter
+33 Soul Starter
+34 Industrial Starter
+35 Beatbox Starter
+36 Analog Synth Starter
+37 Trance Starter
+38 EuroTechno Starter
+39 Techno Starter
+40 Electro Starter
+41 House Starter
+42 Drum n Bass Starter
+43 Piano-Strings XFade
+44 Pizz-Piano XFade
+45 Soft Ep-Nyl Gtr XFade
+46 Sitar-Panpipes XFade
+47 Soft Pad-Harm Xfade
+48 Swoosh-Big Pad XFade
+49 Soft Pad-String XFade
+50 Soft Pad-Sweep XFade
+51 Soft-Bright Pad Xfade
+52 Soft-Brightscape XFade
+53 Perc Morpher XFade
+54 7th Driven Layer
+55 Deep Core Sonic Layer
+56 Filmscape 3
+57 Bouncy HP Layer
+58 Hollywood
+59 Keep Still Pad
+60 Layer 5th
+61 Nirvana Guitar Layer
+62 Phantastica
+63 Spherosonic
+64 Sweep It
+65 Sweeping World
+66 Sweet Sizzle Layer
+67 Standards XSplit
+68 Keyboarders XSplit
+69 Jazz XSplit
+70 House Stack XSplit
+71 Stab XSplit
+72 Big Joe Split
+73 Pop RnB Split
+74 RnB Jam Split
+75 Dble Bass+Piano Split
+76 Dble Bass+Vibes Split
+77 Bass+Organ Split
+78 Bass+Wah Guitar Split
+79 Dream Split
+80 Techno Split 1
+81 Techno Split 2
+82 Techno Split 3
+83 Analog Split
+84 Bassline+Saw Lead
+85 Syn Bass+Lead 1 Split
+86 Syn Bass+Lead 2 Split
+87 Lost In Space
+88 Hurricane
+89 FX Menu
+90 Space FX Fades
+91 Frontal Rear
+92 Sacral Room
+93 Lunatic Room
+94 Surround About
+95 Raum Zeitlos
+96 Quadroloops n Noises
+97 Downtown
+98 Surrounded By Crowd
+99 Wind + Water

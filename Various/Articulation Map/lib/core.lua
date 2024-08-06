@@ -252,7 +252,8 @@ function parse_mode(line)
             ["short"] = 0,
             ["long"] = 1,
             ["short-long"] = 2,
-            ["kscc"] = 3
+            ["kscc"] = 3,
+            ["uacc"] = 3
         }
         return mode_map[mode_str]
     -- else
