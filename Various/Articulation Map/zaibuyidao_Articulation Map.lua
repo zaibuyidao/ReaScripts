@@ -17,8 +17,12 @@ local Textbox = gui.Textbox
 
 initialTrack = getActiveMIDITrack()
 EXT_SECTION = 'ARTICULATION_MAP'
-local jsfx_slider = 4 -- 当前 AM-JSFX 控件切换 Mode 模式的滑块编号
-local jsfx_mode = 2 -- 当前 AM-JSFX 控件Mode 模式的默认值
+local jsfx_mode_slider = 4 -- 当前 AM-JSFX 控件 Mode 模式的滑块编号
+local jsfx_mode = 2 -- 当前 AM-JSFX 控件 Mode 模式的默认值
+local jsfx_ori_lsb_slider = 5 -- 当前 AM-JSFX 控件 ORI LSB 滑块编号
+local jsfx_ori_lsb = 96 -- 当前 AM-JSFX 控件 ORI LSB 滑块的默认值
+local jsfx_map_lsb_slider = 6 -- 当前 AM-JSFX 控件 MAP LSB 滑块编号
+local jsfx_map_lsb = 96 -- 当前 AM-JSFX 控件 MAP LSB 滑块的默认值
 
 local delimiter = getPathDelimiter()
 local language = getSystemLanguage()
@@ -455,7 +459,17 @@ local function switch_mode_1() -- 模式1 切换
         -- 自动切换 JSFX 模式
         jsfx_mode = tostring(bank_item.bank.mode)
         if jsfx_mode ~= "N/A" and jsfx_mode ~= nil then
-            setJSFXParameter(jsfx_slider, jsfx_mode)
+            setJSFXParameter(jsfx_mode_slider, tonumber(jsfx_mode))
+        end
+        -- 设置 ORI LSB 值
+        jsfx_ori_lsb = tostring(bank_item.bank.velocity)
+        if jsfx_ori_lsb ~= "N/A" and jsfx_ori_lsb ~= nil then
+            setJSFXParameter(jsfx_ori_lsb_slider, tonumber(jsfx_ori_lsb))
+        end
+        -- 设置 MAP LSB 值
+        jsfx_map_lsb = tostring(bank_item.bank.bank_vel)
+        if jsfx_map_lsb ~= "N/A" and jsfx_map_lsb ~= nil then
+            setJSFXParameter(jsfx_map_lsb_slider, tonumber(jsfx_map_lsb))
         end
     else
         textb_1.lbl = "N/A"
@@ -492,7 +506,6 @@ local function switch_mode_1() -- 模式1 切换
         end
     end
     
-    
     update_patch_box()
 
     ch_box1.onClick = function()
@@ -507,7 +520,17 @@ local function switch_mode_1() -- 模式1 切换
             -- 自动切换 JSFX 模式
             jsfx_mode = tostring(bank_item.bank.mode)
             if jsfx_mode ~= "N/A" and jsfx_mode ~= nil then
-                setJSFXParameter(jsfx_slider, jsfx_mode)
+                setJSFXParameter(jsfx_mode_slider, tonumber(jsfx_mode))
+            end
+            -- 设置 ORI LSB 值
+            jsfx_ori_lsb = tostring(bank_item.bank.velocity)
+            if jsfx_ori_lsb ~= "N/A" and jsfx_ori_lsb ~= nil then
+                setJSFXParameter(jsfx_ori_lsb_slider, tonumber(jsfx_ori_lsb))
+            end
+            -- 设置 MAP LSB 值
+            jsfx_map_lsb = tostring(bank_item.bank.bank_vel)
+            if jsfx_map_lsb ~= "N/A" and jsfx_map_lsb ~= nil then
+                setJSFXParameter(jsfx_map_lsb_slider, tonumber(jsfx_map_lsb))
             end
         else
             textb_1.lbl = "N/A"
@@ -608,8 +631,18 @@ local function switch_mode_2() -- 模式2 切换
             -- 自动切换 JSFX 模式
             jsfx_mode = bank_item.bank.mode
             if jsfx_mode ~= "N/A" and jsfx_mode ~= nil and jsfx_mode ~= previous_mode then
-                setJSFXParameter(jsfx_slider, tonumber(jsfx_mode))
+                setJSFXParameter(jsfx_mode_slider, tonumber(jsfx_mode))
                 previous_mode = jsfx_mode -- 更新 previous_mode
+            end
+            -- 设置 ORI LSB 值
+            jsfx_ori_lsb = tostring(bank_item.bank.velocity)
+            if jsfx_ori_lsb ~= "N/A" and jsfx_ori_lsb ~= nil then
+                setJSFXParameter(jsfx_ori_lsb_slider, tonumber(jsfx_ori_lsb))
+            end
+            -- 设置 MAP LSB 值
+            jsfx_map_lsb = tostring(bank_item.bank.bank_vel)
+            if jsfx_map_lsb ~= "N/A" and jsfx_map_lsb ~= nil then
+                setJSFXParameter(jsfx_map_lsb_slider, tonumber(jsfx_map_lsb))
             end
         end
     end
@@ -679,8 +712,18 @@ local function switch_mode_2() -- 模式2 切换
         -- 自动切换 JSFX 模式
         jsfx_mode = bank_item.bank.mode
         if jsfx_mode ~= "N/A" and jsfx_mode ~= nil and jsfx_mode ~= previous_mode then
-            setJSFXParameter(jsfx_slider, tonumber(jsfx_mode))
+            setJSFXParameter(jsfx_mode_slider, tonumber(jsfx_mode))
             previous_mode = jsfx_mode -- 更新 previous_mode
+        end
+        -- 设置 ORI LSB 值
+        jsfx_ori_lsb = tostring(bank_item.bank.velocity)
+        if jsfx_ori_lsb ~= "N/A" and jsfx_ori_lsb ~= nil then
+            setJSFXParameter(jsfx_ori_lsb_slider, tonumber(jsfx_ori_lsb))
+        end
+        -- 设置 MAP LSB 值
+        jsfx_map_lsb = tostring(bank_item.bank.bank_vel)
+        if jsfx_map_lsb ~= "N/A" and jsfx_map_lsb ~= nil then
+            setJSFXParameter(jsfx_map_lsb_slider, tonumber(jsfx_map_lsb))
         end
     end
 

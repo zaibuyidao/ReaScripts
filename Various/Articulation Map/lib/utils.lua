@@ -791,7 +791,7 @@ function setJSFXParameter(param_index, value)
         -- add_or_toggle_articulation_map_jsfx()
     end
 
-    if type(value) == "number" then
+    if value ~= nil then
         reaper.TrackFX_SetParam(track, fx_index, param_index, value)
     end
 end

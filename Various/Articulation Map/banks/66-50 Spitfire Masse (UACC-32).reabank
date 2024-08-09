@@ -1,6 +1,7 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 66 50 Masse - Tutti
+//! m=uacc v=32
 1 long
 40 staccato
 9 beast long
@@ -18,6 +19,7 @@ Bank 66 50 Masse - Tutti
 
 //----------------------------------------------------------------------------
 Bank 66 51 Masse - Strings
+//! m=uacc v=32
 1 cool strings 1
 2 cool strings 2
 3 cool strings 3
@@ -38,6 +40,7 @@ Bank 66 51 Masse - Strings
 
 //----------------------------------------------------------------------------
 Bank 66 52 Masse - Brass
+//! m=uacc v=32
 1 beast long
 42 beast short
 3 choir long
@@ -51,6 +54,7 @@ Bank 66 52 Masse - Brass
 
 //----------------------------------------------------------------------------
 Bank 66 53 Masse - Woodwinds
+//! m=uacc v=32
 1 beast long
 42 beast short
 3 chorus long

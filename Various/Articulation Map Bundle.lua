@@ -1,8 +1,9 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.43
+-- @version 1.0.44
 -- @changelog
---   + Automatically switch JSFX plugin modes based on the currently selected bank name for smarter mode management.
+--   # Fixed an issue where Mode switching was not working.
+--   + Added the "Mapping Bank LSB" feature, which allows the original bank LSB to be mapped to a specified value. This enables more flexible definition of both bank MSB and LSB.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts

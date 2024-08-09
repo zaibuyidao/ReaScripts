@@ -1,10 +1,11 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
-Bank 64 1 SCS - Basic Articulations
-20 legato
+Bank 64 30 SSS - Basic Articulations
+//! m=uacc v=32
 1 long
+7 con sord
 42 spiccato
-40 staccato
+50 short 0.5
 56 pizz
 58 col legno
 11 tremolo
@@ -13,265 +14,243 @@ Bank 64 1 SCS - Basic Articulations
 
 
 //----------------------------------------------------------------------------
-Bank 64 2 SCS - Ensembles
+Bank 64 31 SSS - Ensembles Core
+//! m=uacc v=32
 1 long
 7 con sord
-18 sul pont
-17 sul tasto
 8 flautando
 10 harmonics
+9 marcato
 42 spiccato
-40 staccato
+50 short 0.5
+56 pizz
+57 bartok pizz
+58 col legno
+61 short harmonics
+48 brushed
+62 brushed con sord
+47 spiccato con sord
+
+
+//----------------------------------------------------------------------------
+Bank 64 32 SSS - Ensembles Decorative
+//! m=uacc v=32
+5 cs blend
+18 sul pont
+112 sul g
+114 super sul tasto
+11 tremolo
+12 trem cs
+13 trem sul pont
+70 trill m2
+71 trill M2
+
+
+//----------------------------------------------------------------------------
+Bank 64 33 SSS - V1 Core
+//! m=uacc v=32
+1 long
+7 con sord
+10 harmonics
+8 flautando
+18 sul pont
+17 sul tasto
+112 sul g
+9 marcato
+42 spiccato
+50 short 0.5
+52 short 1.0
+48 brushed
+62 brushed con sord
+61 short harmonics
 47 short con sord
 56 pizz
 57 bartok pizz
 58 col legno
-11 tremolo
-70 trill m2
-71 trill M2
 
 
 //----------------------------------------------------------------------------
-Bank 64 3 SCS - V1 Core
-1 long
-7 con sord
-10 harmonics
-8 flautando
-18 sul pont
-113 sul pont dist
-17 sul tasto
-112 sul g
-9 marcato
-42 spiccato
-48 spiccato feathered
-40 staccato
-49 staccato dig
-47 staccato con sord
-56 pizz
-57 bartok pizz
-58 col legno
-
-
-//----------------------------------------------------------------------------
-Bank 64 4 SCS - V1 Decorative
+Bank 64 34 SSS - V1 Decorative
+//! m=uacc v=32
 19 cs sul pont
+114 super sul tasto
+16 rach
+5 cs blend
 11 tremolo
 13 trem sul pont
-12 trem cs
-15 trem cs sul pont
+84 trem 150 cs
 81 trem 150
 82 trem 180
 70 trill m2
 71 trill M2
 72 trill m3
-74 trill P4
-105 fx slide
-100 fx run
-111 disco fall
-91 tense long
+73 trill M3
 90 fx
 
 
 //----------------------------------------------------------------------------
-Bank 64 5 SCS - V1 Legato Performance
-
+Bank 64 35 SSS - V1 Legato Performance
+//! m=uacc v=32
 20 legato (fingered)
 34 legato (bowed)
 31 legato (port)
-32 legato (fast)
 33 legato (runs)
 
 
 //----------------------------------------------------------------------------
-Bank 64 6 SCS - V1 Legato Decorative
-30 legato tremolo
-37 legato sul g
-26 legato (con sord)
-38 legato (cs port)
-27 legato (flautando)
-39 legato (flaut port)
-36 legato (sul pont)
-
-
-//----------------------------------------------------------------------------
-Bank 64 7 SCS - V2 Core
+Bank 64 36 SSS - V2 Core
+//! m=uacc v=32
 1 long
 7 con sord
 10 harmonics
 8 flautando
 18 sul pont
-17 sul tasto
 112 sul g
-42 spiccato
-40 staccato
-47 staccato con sord
-56 pizz
-57 bartok pizz
-58 col legno
-
-
-//----------------------------------------------------------------------------
-Bank 64 8 SCS - V2 Decorative
-19 cs sul pont
-11 tremolo
-81 trem 150
-82 trem 180
-70 trill m2
-71 trill M2
-105 fx slide
-100 fx run
-111 disco fall
-91 tense long
-90 fx
-
-
-//----------------------------------------------------------------------------
-//Bank 64 9 SCS - V2 Legato Performance
-
-
-//----------------------------------------------------------------------------
-Bank 64 10 SCS - V2 Legato Decorative
-30 legato tremolo
-37 legato sul g
-26 legato (con sord)
-38 legato (cs port)
-27 legato (flautando)
-36 legato (sul pont)
-
-
-
-//----------------------------------------------------------------------------
-Bank 64 11 SCS - Va Core
-1 long
-7 con sord
-10 harmonics
-8 flautando
-18 sul pont
-17 sul tasto
-112 sul c
-42 spiccato
-40 staccato
-47 staccato con sord
-56 pizz
-57 bartok pizz
-58 col legno
-
-
-//----------------------------------------------------------------------------
-Bank 64 12 SCS - Va Decorative
-19 cs sul pont
-11 tremolo
-12 trem cs
-81 trem 150
-82 trem 180
-70 trill m2
-71 trill M2
-105 fx slide
-100 fx run
-111 disco fall
-91 tense long
-90 fx
-
-
-//----------------------------------------------------------------------------
-Bank 64 13 SCS - Va Legato Performance
-20 legato (fingered)
-31 legato (port)
-32 legato (fast)
-33 legato (runs)
-
-
-//----------------------------------------------------------------------------
-Bank 64 14 SCS - Va Legato Decorative
-30 legato tremolo
-37 legato sul c
-26 legato (con sord)
-38 legato (cs port)
-27 legato (flautando)
-36 legato (sul pont)
-
-
-//----------------------------------------------------------------------------
-Bank 64 15 SCS - Vc Core
-1 long
-7 con sord
-10 harmonics
-8 flautando
-18 sul pont
-113 sul pont dist
-17 sul tasto
-112 sul c
 9 marcato
 42 spiccato
-40 staccato
-47 staccato con sord
+50 short 0.5
+52 short 1.0
+48 brushed
+62 brushed con sord
+61 short harmonics
+47 short con sord
 56 pizz
 57 bartok pizz
 58 col legno
 
 
 //----------------------------------------------------------------------------
-Bank 64 16 SCS - Vc Decorative
+Bank 64 37 SSS - V2 Decorative
+//! m=uacc v=32
 19 cs sul pont
+114 super sul tasto
+16 rach
+5 cs blend
 11 tremolo
 13 trem sul pont
 12 trem cs
-15 trem cs sul pont
 81 trem 150
 82 trem 180
+18 sul pont
+70 trill m2
+71 trill M2
+90 fx
+
+
+//----------------------------------------------------------------------------
+//Bank 64 38 SSS - V2 Legato Performance
+
+
+//----------------------------------------------------------------------------
+Bank 64 39 SSS - Va Core
+//! m=uacc v=32
+1 long
+7 con sord
+10 harmonics
+8 flautando
+18 sul pont
+9 marcato
+42 spiccato
+50 short 0.5
+52 short 1.0
+48 brushed
+62 brushed con sord
+61 short harmonics
+47 short con sord
+56 pizz
+57 bartok pizz
+58 col legno
+
+
+//----------------------------------------------------------------------------
+Bank 64 40 SSS - Va Decorative
+//! m=uacc v=32
+19 cs sul pont
+114 super sul tasto
+16 rach
+5 cs blend
+11 tremolo
+13 trem sul pont
+12 trem cs
+81 trem 150
+82 trem 180
+18 sul pont
+70 trill m2
+71 trill M2
+90 fx
+
+
+//----------------------------------------------------------------------------
+//Bank 64 41 SSS - Va Legato Performance
+
+
+//----------------------------------------------------------------------------
+//Bank 64 42 SSS - Vc Core
+
+
+//----------------------------------------------------------------------------
+Bank 64 43 SSS - Vc Decorative
+//! m=uacc v=32
+19 cs sul pont
+114 super sul tasto
+16 rach
+5 cs blend
+11 tremolo
+13 trem sul pont
+12 trem con sord
+84 trem 150 cs
+81 trem 150
+82 trem 180
+18 sul pont
 70 trill m2
 71 trill M2
 72 trill m3
-74 trill P4
-105 fx slide
-100 fx run
-111 disco fall
-91 tense long
+73 trill M3
 90 fx
 
 
 //----------------------------------------------------------------------------
-//Bank 64 17 SCS - Vc Legato Performance
+Bank 64 44 SSS - Vc Legato Performance
 
 
 //----------------------------------------------------------------------------
-Bank 64 18 SCS - Cb Core
+Bank 64 45 SSS - Cb Core
+//! m=uacc v=32
 1 long
 10 harmonics
 8 flautando
 18 sul pont
-113 sul pont dist
+9 marcato
 42 spiccato
-40 staccato
+50 short 0.5
+52 short 1.0
 49 staccato dig
+41 1/2 pizz
+61 short harmonics
 56 pizz
 57 bartok pizz
 58 col legno
 
 
 //----------------------------------------------------------------------------
-Bank 64 19 SCS - Cb Decorative
+Bank 64 46 SSS - Cb Decorative
+//! m=uacc v=32
+114 super sul tasto
 11 tremolo
 13 trem sul pont
 81 trem 150
 82 trem 180
+18 sul pont
 70 trill m2
 71 trill M2
-105 fx slide
-100 fx run
-91 tense long
 90 fx
 
 
 //----------------------------------------------------------------------------
-Bank 64 20 SCS - Cb Legato Performance
-20 legato (fingered)
+//Bank 64 47 SSS - Cb Legato Performance
 
 
 //----------------------------------------------------------------------------
-Bank 64 21 SCS - Performance Legato
+//Bank 64 48 SSS - Performance Legato
+//! m=uacc v=32
 20 legato
-
-
-//----------------------------------------------------------------------------
-//Bank 64 22 SCS - Vc Legato Decorative
