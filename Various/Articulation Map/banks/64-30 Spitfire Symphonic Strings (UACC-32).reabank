@@ -1,7 +1,7 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 64 30 SSS - Basic Articulations
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 42 spiccato
@@ -15,7 +15,7 @@ Bank 64 30 SSS - Basic Articulations
 
 //----------------------------------------------------------------------------
 Bank 64 31 SSS - Ensembles Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 8 flautando
@@ -34,7 +34,7 @@ Bank 64 31 SSS - Ensembles Core
 
 //----------------------------------------------------------------------------
 Bank 64 32 SSS - Ensembles Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 5 cs blend
 18 sul pont
 112 sul g
@@ -48,7 +48,7 @@ Bank 64 32 SSS - Ensembles Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 33 SSS - V1 Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 10 harmonics
@@ -71,7 +71,7 @@ Bank 64 33 SSS - V1 Core
 
 //----------------------------------------------------------------------------
 Bank 64 34 SSS - V1 Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 19 cs sul pont
 114 super sul tasto
 16 rach
@@ -90,7 +90,7 @@ Bank 64 34 SSS - V1 Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 35 SSS - V1 Legato Performance
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato (fingered)
 34 legato (bowed)
 31 legato (port)
@@ -99,7 +99,7 @@ Bank 64 35 SSS - V1 Legato Performance
 
 //----------------------------------------------------------------------------
 Bank 64 36 SSS - V2 Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 10 harmonics
@@ -121,7 +121,7 @@ Bank 64 36 SSS - V2 Core
 
 //----------------------------------------------------------------------------
 Bank 64 37 SSS - V2 Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 19 cs sul pont
 114 super sul tasto
 16 rach
@@ -143,7 +143,7 @@ Bank 64 37 SSS - V2 Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 39 SSS - Va Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 10 harmonics
@@ -164,7 +164,7 @@ Bank 64 39 SSS - Va Core
 
 //----------------------------------------------------------------------------
 Bank 64 40 SSS - Va Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 19 cs sul pont
 114 super sul tasto
 16 rach
@@ -190,7 +190,7 @@ Bank 64 40 SSS - Va Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 43 SSS - Vc Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 19 cs sul pont
 114 super sul tasto
 16 rach
@@ -215,7 +215,7 @@ Bank 64 44 SSS - Vc Legato Performance
 
 //----------------------------------------------------------------------------
 Bank 64 45 SSS - Cb Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 10 harmonics
 8 flautando
@@ -234,7 +234,7 @@ Bank 64 45 SSS - Cb Core
 
 //----------------------------------------------------------------------------
 Bank 64 46 SSS - Cb Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 114 super sul tasto
 11 tremolo
 13 trem sul pont
@@ -252,5 +252,5 @@ Bank 64 46 SSS - Cb Decorative
 
 //----------------------------------------------------------------------------
 //Bank 64 48 SSS - Performance Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato

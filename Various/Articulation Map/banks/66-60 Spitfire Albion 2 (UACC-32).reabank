@@ -1,7 +1,7 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 66 60 Albion 2 - Recorder
-//! m=uacc v=32
+//! m=uacc l=32
 40 short
 1 long
 20 legato
@@ -9,7 +9,7 @@ Bank 66 60 Albion 2 - Recorder
 
 //----------------------------------------------------------------------------
 Bank 66 61 Albion 2 - HornEuph
-//! m=uacc v=32
+//! m=uacc l=32
 40 short
 42 very short
 1 long
@@ -18,7 +18,7 @@ Bank 66 61 Albion 2 - HornEuph
 
 //----------------------------------------------------------------------------
 Bank 66 62 Albion 2 - Sackbutt Hi
-//! m=uacc v=32
+//! m=uacc l=32
 40 short
 42 very short
 52 marcato(short)
@@ -29,7 +29,7 @@ Bank 66 62 Albion 2 - Sackbutt Hi
 
 //----------------------------------------------------------------------------
 Bank 66 63 Albion 2 - Sackbutt Lo
-//! m=uacc v=32
+//! m=uacc l=32
 40 short
 42 very short
 1 long
@@ -38,7 +38,7 @@ Bank 66 63 Albion 2 - Sackbutt Lo
 
 //----------------------------------------------------------------------------
 Bank 66 64 Albion 2 - String Hi
-//! m=uacc v=32
+//! m=uacc l=32
 40 short
 47 short cs
 56 pizzicato
@@ -57,7 +57,7 @@ Bank 66 64 Albion 2 - String Hi
 
 //----------------------------------------------------------------------------
 Bank 66 65 Albion 2 - String Lo
-//! m=uacc v=32
+//! m=uacc l=32
 40 short
 47 short cs (quiet)
 44 short cs (longer)

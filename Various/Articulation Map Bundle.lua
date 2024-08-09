@@ -1,6 +1,6 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.44
+-- @version 1.0.45
 -- @changelog
 --   # Fixed an issue where Mode switching was not working.
 --   + Added the "Mapping Bank LSB" feature, which allows the original bank LSB to be mapped to a specified value. This enables more flexible definition of both bank MSB and LSB.

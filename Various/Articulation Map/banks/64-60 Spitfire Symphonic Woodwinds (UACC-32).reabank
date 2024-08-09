@@ -1,7 +1,7 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 64 60 SSW - Piccolo Flute
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 11 flutter
@@ -15,7 +15,7 @@ Bank 64 60 SSW - Piccolo Flute
 
 //----------------------------------------------------------------------------
 Bank 64 61 SSW - Piccolo Flute - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 10 harmonics
@@ -29,7 +29,7 @@ Bank 64 61 SSW - Piccolo Flute - Full
 
 //----------------------------------------------------------------------------
 Bank 64 62 SSW - Piccolo Flute - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
@@ -39,7 +39,7 @@ Bank 64 63 SSW - Flute Solo
 
 //----------------------------------------------------------------------------
 Bank 64 64 SSW - Flute Solo - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 10 harmonics
@@ -55,7 +55,7 @@ Bank 64 64 SSW - Flute Solo - Full
 
 //----------------------------------------------------------------------------
 Bank 64 65 SSW - Flute Solo - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
@@ -65,7 +65,7 @@ Bank 64 66 SSW - Flutes a2
 
 //----------------------------------------------------------------------------
 Bank 64 67 SSW - Flutes a2 - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 10 harmonics
@@ -83,7 +83,7 @@ Bank 64 67 SSW - Flutes a2 - Full
 
 //----------------------------------------------------------------------------
 Bank 64 68 SSW - Flutes a2 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 21 legato detache
 
@@ -94,7 +94,7 @@ Bank 64 69 SSW - Alto Flute
 
 //----------------------------------------------------------------------------
 Bank 64 70 SSW - Alto Flute - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 10 harmonics
@@ -109,13 +109,13 @@ Bank 64 70 SSW - Alto Flute - Full
 
 //----------------------------------------------------------------------------
 Bank 64 71 SSW - Alto Flute - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 72 SSW - Bass Flute
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 11 flutter
@@ -127,7 +127,7 @@ Bank 64 72 SSW - Bass Flute
 
 //----------------------------------------------------------------------------
 Bank 64 73 SSW - Bass Flute - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 9 long overblown
@@ -138,13 +138,13 @@ Bank 64 73 SSW - Bass Flute - Full
 
 //----------------------------------------------------------------------------
 Bank 64 74 SSW - Bass Flute - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 75 SSW - Oboe Solo
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 11 flutter
@@ -157,7 +157,7 @@ Bank 64 75 SSW - Oboe Solo
 
 //----------------------------------------------------------------------------
 Bank 64 76 SSW - Oboe Solo - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 75 multitongued
@@ -170,13 +170,13 @@ Bank 64 76 SSW - Oboe Solo - Full
 
 //----------------------------------------------------------------------------
 Bank 64 77 SSW - Oboe Solo - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 78 SSW - Oboes a2
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 11 flutter
@@ -188,7 +188,7 @@ Bank 64 78 SSW - Oboes a2
 
 //----------------------------------------------------------------------------
 Bank 64 79 SSW - Oboes a2 - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 52 marcato
@@ -199,13 +199,13 @@ Bank 64 79 SSW - Oboes a2 - Full
 
 //----------------------------------------------------------------------------
 Bank 64 80 SSW - Oboes a2 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 81 SSW - Cor Anglais
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 52 marcato
@@ -215,7 +215,7 @@ Bank 64 81 SSW - Cor Anglais
 
 //----------------------------------------------------------------------------
 Bank 64 82 SSW - Cor Anglais - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 52 marcato
 50 tenuto
@@ -224,13 +224,13 @@ Bank 64 82 SSW - Cor Anglais - Full
 
 //----------------------------------------------------------------------------
 Bank 64 83 SSW - Cor Anglais - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 84 SSW - Clarinet Solo
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 11 flutter
@@ -241,7 +241,7 @@ Bank 64 84 SSW - Clarinet Solo
 
 //----------------------------------------------------------------------------
 Bank 64 85 SSW - Clarinet Solo - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 75 multitongued
@@ -252,13 +252,13 @@ Bank 64 85 SSW - Clarinet Solo - Full
 
 //----------------------------------------------------------------------------
 Bank 64 86 SSW - Clarinet Solo - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 87 SSW - Clarinets a2
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 52 marcato
@@ -270,7 +270,7 @@ Bank 64 87 SSW - Clarinets a2
 
 //----------------------------------------------------------------------------
 Bank 64 88 SSW - Clarinets a2 - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 75 multitongued
 52 marcato
@@ -282,13 +282,13 @@ Bank 64 88 SSW - Clarinets a2 - Full
 
 //----------------------------------------------------------------------------
 Bank 64 89 SSW - Clarinets a2 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 90 SSW - Bass Clarinet
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 50 tenuto
@@ -299,7 +299,7 @@ Bank 64 90 SSW - Bass Clarinet
 
 //----------------------------------------------------------------------------
 Bank 64 91 SSW - Bass Clarinet - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 50 tenuto
 40 staccato
@@ -309,13 +309,13 @@ Bank 64 91 SSW - Bass Clarinet - Full
 
 //----------------------------------------------------------------------------
 Bank 64 92 SSW - Bass Clarinet - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 93 SSW - Contrabass Clarinet
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 52 marcato
@@ -325,7 +325,7 @@ Bank 64 93 SSW - Contrabass Clarinet
 
 //----------------------------------------------------------------------------
 Bank 64 94 SSW - Contrabass Clarinet - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 52 marcato
 50 tenuto
@@ -334,7 +334,7 @@ Bank 64 94 SSW - Contrabass Clarinet - Full
 
 //----------------------------------------------------------------------------
 Bank 64 95 SSW - Contrabass Clarinet - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
@@ -344,7 +344,7 @@ Bank 64 95 SSW - Contrabass Clarinet - Legato
 
 //----------------------------------------------------------------------------
 Bank 64 97 SSW - Bassoon Solo - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 10 harmonics
@@ -358,13 +358,13 @@ Bank 64 97 SSW - Bassoon Solo - Full
 
 //----------------------------------------------------------------------------
 Bank 64 98 SSW - Bassoon Solo - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 99 SSW - Bassoon a2
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 11 flutter
@@ -377,7 +377,7 @@ Bank 64 99 SSW - Bassoon a2
 
 //----------------------------------------------------------------------------
 Bank 64 100 SSW - Bassoon a2 - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 11 flutter
 75 multitongued
@@ -390,13 +390,13 @@ Bank 64 100 SSW - Bassoon a2 - Full
 
 //----------------------------------------------------------------------------
 Bank 64 101 SSW - Bassoon a2 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 64 102 SSW - Contrabassoon
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 52 marcato
@@ -406,7 +406,7 @@ Bank 64 102 SSW - Contrabassoon
 
 //----------------------------------------------------------------------------
 Bank 64 103 SSW - Contrabassoon - Full
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 52 marcato
 50 tenuto
@@ -415,5 +415,5 @@ Bank 64 103 SSW - Contrabassoon - Full
 
 //----------------------------------------------------------------------------
 Bank 64 104 SSW - Contrabassoon - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato

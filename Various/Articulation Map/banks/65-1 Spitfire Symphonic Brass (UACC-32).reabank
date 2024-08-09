@@ -1,7 +1,7 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 65 1 SSB - Horn Solo
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 52 marcato
@@ -15,7 +15,7 @@ Bank 65 1 SSB - Horn Solo
 
 //----------------------------------------------------------------------------
 Bank 65 2 SSB - Horn Solo - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 52 marcato
 50 tenuto
@@ -26,7 +26,7 @@ Bank 65 2 SSB - Horn Solo - Core
 
 //----------------------------------------------------------------------------
 Bank 65 3 SSB - Horn Solo - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 11 flutter
 100 rip
 101 fall
@@ -34,13 +34,13 @@ Bank 65 3 SSB - Horn Solo - Decorative
 
 //----------------------------------------------------------------------------
 Bank 65 4 SSB - Horn Solo - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 5 SSB - Horns a2
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 7 stopped
@@ -54,7 +54,7 @@ Bank 65 5 SSB - Horns a2
 
 //----------------------------------------------------------------------------
 Bank 65 6 SSB - Horns a2 - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 7 stopped
@@ -69,7 +69,7 @@ Bank 65 6 SSB - Horns a2 - Core
 
 //----------------------------------------------------------------------------
 Bank 65 7 SSB - Horns a2 - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 11 flutter
 59 bells up staccato
 54 bells up quaver
@@ -81,13 +81,13 @@ Bank 65 7 SSB - Horns a2 - Decorative
 
 //----------------------------------------------------------------------------
 Bank 65 8 SSB - Horns a2 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 9 SSB - Horns a6
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 9 cuivre
@@ -101,7 +101,7 @@ Bank 65 9 SSB - Horns a6
 
 //----------------------------------------------------------------------------
 Bank 65 10 SSB - Horns a6 - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -111,20 +111,20 @@ Bank 65 10 SSB - Horns a6 - Core
 
 //----------------------------------------------------------------------------
 Bank 65 11 SSB - Horns a6 - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 100 rip
 101 fall
 
 
 //----------------------------------------------------------------------------
 Bank 65 12 SSB - Horns a6 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 13 SSB - Tenor Trombone Solo
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 long muted
 52 marcato
@@ -137,7 +137,7 @@ Bank 65 13 SSB - Tenor Trombone Solo
 
 //----------------------------------------------------------------------------
 Bank 65 14 SSB - Tenor Trombone Solo - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 7 long muted
@@ -151,7 +151,7 @@ Bank 65 14 SSB - Tenor Trombone Solo - Core
 
 //----------------------------------------------------------------------------
 Bank 65 15 SSB - Tenor Trombone Solo - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 11 flutter
 100 rip
 101 fall
@@ -159,7 +159,7 @@ Bank 65 15 SSB - Tenor Trombone Solo - Decorative
 
 //----------------------------------------------------------------------------
 Bank 65 16 SSB - Tenor Trombones a2
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 9 cuivre
@@ -172,7 +172,7 @@ Bank 65 16 SSB - Tenor Trombones a2
 
 //----------------------------------------------------------------------------
 Bank 65 17 SSB - Tenor Trombones a2 - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -182,7 +182,7 @@ Bank 65 17 SSB - Tenor Trombones a2 - Core
 
 //----------------------------------------------------------------------------
 Bank 65 18 SSB - Tenor Trombones a2 - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 90 fx glissandi
 100 rip
 101 fall
@@ -190,13 +190,13 @@ Bank 65 18 SSB - Tenor Trombones a2 - Decorative
 
 //----------------------------------------------------------------------------
 Bank 65 19 SSB - Tenor Trombones a2 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 20 SSB - Bass Trombone Solo
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -209,7 +209,7 @@ Bank 65 20 SSB - Bass Trombone Solo
 
 //----------------------------------------------------------------------------
 Bank 65 21 SSB - Bass Trombone Solo - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -219,7 +219,7 @@ Bank 65 21 SSB - Bass Trombone Solo - Core
 
 //----------------------------------------------------------------------------
 Bank 65 22 SSB - Bass Trombone Solo - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 11 flutter
 100 rip
 101 fall
@@ -227,7 +227,7 @@ Bank 65 22 SSB - Bass Trombone Solo - Decorative
 
 //----------------------------------------------------------------------------
 Bank 65 23 SSB - Bass Trombones a2
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 9 cuivre
@@ -241,7 +241,7 @@ Bank 65 23 SSB - Bass Trombones a2
 
 //----------------------------------------------------------------------------
 Bank 65 24 SSB - Bass Trombones a2 - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -251,7 +251,7 @@ Bank 65 24 SSB - Bass Trombones a2 - Core
 
 //----------------------------------------------------------------------------
 Bank 65 25 SSB - Bass Trombones a2 - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 90 fx glissandi
 100 rip
 101 fall
@@ -259,13 +259,13 @@ Bank 65 25 SSB - Bass Trombones a2 - Decorative
 
 //----------------------------------------------------------------------------
 Bank 65 26 SSB - Bass Trombones a2 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 27 SSB - Contrabass Trombone Solo
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 stopped
 52 marcato
@@ -277,7 +277,7 @@ Bank 65 27 SSB - Contrabass Trombone Solo
 
 //----------------------------------------------------------------------------
 Bank 65 28 SSB - Contrabass Trombone Solo - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 7 stopped
@@ -289,14 +289,14 @@ Bank 65 28 SSB - Contrabass Trombone Solo - Core
 
 //----------------------------------------------------------------------------
 Bank 65 29 SSB - Contrabass Trombone Solo - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 100 rip
 101 fall
 
 
 //----------------------------------------------------------------------------
 Bank 65 30 SSB - Trombones a6
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 9 cuivre
@@ -310,7 +310,7 @@ Bank 65 30 SSB - Trombones a6
 
 //----------------------------------------------------------------------------
 Bank 65 31 SSB - Trombones a6 - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -320,20 +320,20 @@ Bank 65 31 SSB - Trombones a6 - Core
 
 //----------------------------------------------------------------------------
 Bank 65 32 SSB - Trombones a6 - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 100 rip
 101 fall
 
 
 //----------------------------------------------------------------------------
 Bank 65 33 SSB - Trombones a6 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 34 SSB - Trumpet Solo
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 7 long muted
@@ -347,7 +347,7 @@ Bank 65 34 SSB - Trumpet Solo
 
 //----------------------------------------------------------------------------
 Bank 65 35 SSB - Trumpet Solo - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 long muted
 52 marcato
@@ -362,7 +362,7 @@ Bank 65 35 SSB - Trumpet Solo - Core
 
 //----------------------------------------------------------------------------
 Bank 65 36 SSB - Trumpet Solo - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 11 flutter
 2 long mariachi
 90 fx glissandi
@@ -370,13 +370,13 @@ Bank 65 36 SSB - Trumpet Solo - Decorative
 
 //----------------------------------------------------------------------------
 Bank 65 37 SSB - Trumpet Solo - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 38 SSB - Trumpets a2
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 7 long muted
@@ -390,7 +390,7 @@ Bank 65 38 SSB - Trumpets a2
 
 //----------------------------------------------------------------------------
 Bank 65 39 SSB - Trumpets a2 - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 long muted
 52 marcato
@@ -402,7 +402,7 @@ Bank 65 39 SSB - Trumpets a2 - Core
 
 //----------------------------------------------------------------------------
 Bank 65 40 SSB - Trumpets a2 - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 2 long mariachi
 100 rip
 101 fall
@@ -410,13 +410,13 @@ Bank 65 40 SSB - Trumpets a2 - Decorative
 
 //----------------------------------------------------------------------------
 Bank 65 41 SSB - Trumpets a2 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 42 SSB - Trumpets a6
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 9 cuivre
@@ -430,7 +430,7 @@ Bank 65 42 SSB - Trumpets a6
 
 //----------------------------------------------------------------------------
 Bank 65 43 SSB - Trumpets a6 - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -440,20 +440,20 @@ Bank 65 43 SSB - Trumpets a6 - Core
 
 //----------------------------------------------------------------------------
 Bank 65 44 SSB - Trumpets a6 - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 100 rip
 101 fall
 
 
 //----------------------------------------------------------------------------
 Bank 65 45 SSB - Trumpets a6 - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 46 SSB - Tuba Solo
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 7 stopped
@@ -466,7 +466,7 @@ Bank 65 46 SSB - Tuba Solo
 
 //----------------------------------------------------------------------------
 Bank 65 47 SSB - Tuba Solo - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 stopped
 52 marcato
@@ -476,20 +476,20 @@ Bank 65 47 SSB - Tuba Solo - Core
 
 //----------------------------------------------------------------------------
 Bank 65 48 SSB - Tuba Solo - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 100 rip
 101 fall
 
 
 //----------------------------------------------------------------------------
 Bank 65 49 SSB - Tuba Solo - Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 65 50 SSB - Contrabass Tuba Solo
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 52 marcato
 50 tenuto
@@ -500,7 +500,7 @@ Bank 65 50 SSB - Contrabass Tuba Solo
 
 //----------------------------------------------------------------------------
 Bank 65 51 SSB - Contrabass Tuba Solo - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 52 marcato
 50 tenuto
@@ -509,14 +509,14 @@ Bank 65 51 SSB - Contrabass Tuba Solo - Core
 
 //----------------------------------------------------------------------------
 Bank 65 52 SSB - Contrabass Tuba Solo - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 100 rip
 101 fall
 
 
 //----------------------------------------------------------------------------
 Bank 65 53 SSB - Cimbasso Solo
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -528,7 +528,7 @@ Bank 65 53 SSB - Cimbasso Solo
 
 //----------------------------------------------------------------------------
 Bank 65 54 SSB - Cimbasso Solo - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -538,14 +538,14 @@ Bank 65 54 SSB - Cimbasso Solo - Core
 
 //----------------------------------------------------------------------------
 Bank 65 55 SSB - Cimbasso Solo - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 100 rip
 101 fall
 
 
 //----------------------------------------------------------------------------
 Bank 65 56 SSB - Cimbassi a2
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -557,7 +557,7 @@ Bank 65 56 SSB - Cimbassi a2
 
 //----------------------------------------------------------------------------
 Bank 65 57 SSB - Cimbassi a2 - Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 9 cuivre
 52 marcato
@@ -567,82 +567,82 @@ Bank 65 57 SSB - Cimbassi a2 - Core
 
 //----------------------------------------------------------------------------
 Bank 65 58 SSB - Cimbassi a2 - Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 100 rip
 101 fall
 
 
 //----------------------------------------------------------------------------
 Bank 65 60 SSB - Horn Solo - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 42 staccatissimo
 
 
 //----------------------------------------------------------------------------
 Bank 65 61 SSB - Horns a2 - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 49 bells up staccatissimo
 
 
 //----------------------------------------------------------------------------
 Bank 65 62 SSB - Horns a6 - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 77 fanfare
 
 
 //----------------------------------------------------------------------------
 Bank 65 63 SSB - Tenor Trombone Solo - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 12 flutter muted
 
 
 //----------------------------------------------------------------------------
 Bank 65 64 SSB - Tenor Trombones a2 - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 
 
 //----------------------------------------------------------------------------
 Bank 65 65 SSB - Trombones a6 - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 77 fanfare
 
 
 //----------------------------------------------------------------------------
 Bank 65 66 SSB - Bass Trombone Solo - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 
 
 //----------------------------------------------------------------------------
 Bank 65 67 SSB - Bass Trombones a2 - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 
 
 //----------------------------------------------------------------------------
 Bank 65 68 SSB - Trumpet Solo - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 
 
 //----------------------------------------------------------------------------
 Bank 65 69 SSB - Trumpets a2 - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 
 
 //----------------------------------------------------------------------------
 Bank 65 70 SSB - Trumpets a6 - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 75 multitongued
 77 fanfare
 
 
 //----------------------------------------------------------------------------
 Bank 65 71 SSB - Tuba Solo - Extras
-//! m=uacc v=32
+//! m=uacc l=32
 47 short stopped

@@ -1,7 +1,7 @@
 //REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1
 //----------------------------------------------------------------------------
 Bank 67 1 Cinematic Studio Strings
-//! m=short-long v=96
+//! m=short-long l=96
 //! 67-1-1=67-64-12
 1 Standard Legato
 //! 67-1-2=67-65-12

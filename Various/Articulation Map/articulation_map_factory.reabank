@@ -14,11 +14,13 @@
 //Here, the keyswitch is represented by the format [group number-velocity-note number]. For example:
 //0-100-97 = 0-101-67, 0-102-74, 0-103-79
 //indicates that 0-100-97 is mapped to three different keyswitches: 0-101-67, 0-102-74, and 0-103-79.
+//
+// If a mapping conflict occurs, please clear the contents of simul-arts.txt and reload the *.reabank file.
 
 
 //----------------------------------------------------------------------
 Bank 0 1 Three-Body Whisper of Loong
-//! m=short-long v=96
+//! m=short-long l=96
 38 D1: Staccato ON
 39 D#1: Staccato OFF
 40 E1: Flt. Arti.
@@ -53,7 +55,7 @@ Bank 0 1 Three-Body Whisper of Loong
 
 //----------------------------------------------------------------------
 Bank 0 2 三体新雨
-//! m=short v=96
+//! m=short l=96
 38 D1: 吐音奏法 ON
 39 D#1: 吐音奏法 OFF
 40 E1: 花舌音头/吐音1
@@ -88,7 +90,7 @@ Bank 0 2 三体新雨
 
 //----------------------------------------------------------------------
 Bank 0 3 LASS 3 Full (CC Stack-0)
-//! m=kscc v=0
+//! m=kscc l=0
 1 Legato
 2 Sustain
 3 Sordino
@@ -154,7 +156,7 @@ Bank 0 3 LASS 3 Full (CC Stack-0)
 
 //----------------------------------------------------------------------
 Bank 0 4 Cinematic Studio Strings (KSCC)
-//! m=kscc v=58
+//! m=kscc l=58
 0 Sustain: Standard Leaato (标准连奏)
 6 Sustain: Advanced Legato (高级连奏)
 11 Spiccato (跳弓)
@@ -178,7 +180,7 @@ Bank 0 4 Cinematic Studio Strings (KSCC)
 
 //----------------------------------------------------------------------
 Bank 1 1 Ample Sound Erhu 二胡凝月
-//! m=short-long v=96
+//! m=short-long l=96
 24 長弓
 25 頓弓
 26 抛弓
@@ -219,7 +221,7 @@ Bank 1 1 Ample Sound Erhu 二胡凝月
 
 //----------------------------------------------------------------------
 Bank 1 2 Ample Sound Qudi 曲笛風逸
-//! m=short-long v=96
+//! m=short-long l=96
 24 長音
 25 單吐
 26 上倚音
@@ -257,7 +259,7 @@ Bank 1 2 Ample Sound Qudi 曲笛風逸
 
 //----------------------------------------------------------------------
 Bank 1 3 Ample Metal Eclipse
-//! m=short-long v=96
+//! m=short-long l=96
 18 6弦指定
 19 5弦指定
 20 4弦指定
@@ -342,7 +344,7 @@ Bank 1 3 Ample Metal Eclipse
 
 //----------------------------------------------------------------------
 Bank 1 4 Ample Metal Hellrazer
-//! m=short-long v=96
+//! m=short-long l=96
 3 9弦指定
 4 8弦指定
 5 7弦指定

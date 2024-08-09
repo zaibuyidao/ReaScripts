@@ -1,7 +1,7 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 64 1 SCS - Basic Articulations
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 1 long
 42 spiccato
@@ -15,7 +15,7 @@ Bank 64 1 SCS - Basic Articulations
 
 //----------------------------------------------------------------------------
 Bank 64 2 SCS - Ensembles
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 18 sul pont
@@ -35,7 +35,7 @@ Bank 64 2 SCS - Ensembles
 
 //----------------------------------------------------------------------------
 Bank 64 3 SCS - V1 Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 10 harmonics
@@ -57,7 +57,7 @@ Bank 64 3 SCS - V1 Core
 
 //----------------------------------------------------------------------------
 Bank 64 4 SCS - V1 Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 19 cs sul pont
 11 tremolo
 13 trem sul pont
@@ -78,7 +78,7 @@ Bank 64 4 SCS - V1 Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 5 SCS - V1 Legato Performance
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato (fingered)
 34 legato (bowed)
 31 legato (port)
@@ -88,7 +88,7 @@ Bank 64 5 SCS - V1 Legato Performance
 
 //----------------------------------------------------------------------------
 Bank 64 6 SCS - V1 Legato Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 30 legato tremolo
 37 legato sul g
 26 legato (con sord)
@@ -100,7 +100,7 @@ Bank 64 6 SCS - V1 Legato Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 7 SCS - V2 Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 10 harmonics
@@ -118,7 +118,7 @@ Bank 64 7 SCS - V2 Core
 
 //----------------------------------------------------------------------------
 Bank 64 8 SCS - V2 Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 19 cs sul pont
 11 tremolo
 81 trem 150
@@ -138,7 +138,7 @@ Bank 64 8 SCS - V2 Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 10 SCS - V2 Legato Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 30 legato tremolo
 37 legato sul g
 26 legato (con sord)
@@ -150,7 +150,7 @@ Bank 64 10 SCS - V2 Legato Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 11 SCS - Va Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 10 harmonics
@@ -168,7 +168,7 @@ Bank 64 11 SCS - Va Core
 
 //----------------------------------------------------------------------------
 Bank 64 12 SCS - Va Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 19 cs sul pont
 11 tremolo
 12 trem cs
@@ -185,7 +185,7 @@ Bank 64 12 SCS - Va Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 13 SCS - Va Legato Performance
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato (fingered)
 31 legato (port)
 32 legato (fast)
@@ -194,7 +194,7 @@ Bank 64 13 SCS - Va Legato Performance
 
 //----------------------------------------------------------------------------
 Bank 64 14 SCS - Va Legato Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 30 legato tremolo
 37 legato sul c
 26 legato (con sord)
@@ -205,7 +205,7 @@ Bank 64 14 SCS - Va Legato Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 15 SCS - Vc Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 7 con sord
 10 harmonics
@@ -225,7 +225,7 @@ Bank 64 15 SCS - Vc Core
 
 //----------------------------------------------------------------------------
 Bank 64 16 SCS - Vc Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 19 cs sul pont
 11 tremolo
 13 trem sul pont
@@ -250,7 +250,7 @@ Bank 64 16 SCS - Vc Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 18 SCS - Cb Core
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 10 harmonics
 8 flautando
@@ -266,7 +266,7 @@ Bank 64 18 SCS - Cb Core
 
 //----------------------------------------------------------------------------
 Bank 64 19 SCS - Cb Decorative
-//! m=uacc v=32
+//! m=uacc l=32
 11 tremolo
 13 trem sul pont
 81 trem 150
@@ -281,13 +281,13 @@ Bank 64 19 SCS - Cb Decorative
 
 //----------------------------------------------------------------------------
 Bank 64 20 SCS - Cb Legato Performance
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato (fingered)
 
 
 //----------------------------------------------------------------------------
 Bank 64 21 SCS - Performance Legato
-//! m=uacc v=32
+//! m=uacc l=32
 20 legato
 
 

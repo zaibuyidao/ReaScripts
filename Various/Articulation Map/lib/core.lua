@@ -242,7 +242,7 @@ function parse_mode(line)
     line = line:match("^%s*(.-)%s*$")
     -- 使用模式匹配来捕捉模式行
     local mode_str = line:match("^%s*//!%s*m%s*=%s*([%w%-]+)%s*")
-    local vel_str = line:match("v%s*=%s*(%d+)%s*$")
+    local vel_str = line:match("l%s*=%s*(%d+)%s*$")
 
     if mode_str then
         -- 根据模式字符串映射到相应的编号

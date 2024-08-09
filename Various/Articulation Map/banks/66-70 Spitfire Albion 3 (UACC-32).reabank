@@ -1,7 +1,7 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 66 70 Albion 3 - Woodwind Lo
-//! m=uacc v=32
+//! m=uacc l=32
 43 short
 42 short extra
 1 long
@@ -16,7 +16,7 @@ Bank 66 70 Albion 3 - Woodwind Lo
 
 //----------------------------------------------------------------------------
 Bank 66 71 Albion 3 - Wall of Woodwind
-//! m=uacc v=32
+//! m=uacc l=32
 41 short
 43 short extra
 1 long
@@ -24,7 +24,7 @@ Bank 66 71 Albion 3 - Wall of Woodwind
 
 //----------------------------------------------------------------------------
 Bank 66 72 Albion 3 - Brass Lo
-//! m=uacc v=32
+//! m=uacc l=32
 40 short
 1 long
 9 long nasty
@@ -39,7 +39,7 @@ Bank 66 72 Albion 3 - Brass Lo
 
 //----------------------------------------------------------------------------
 Bank 66 73 Albion 3 - Brutish Brass
-//! m=uacc v=32
+//! m=uacc l=32
 43 short
 1 long
 15 long nasty
@@ -50,7 +50,7 @@ Bank 66 73 Albion 3 - Brutish Brass
 
 //----------------------------------------------------------------------------
 Bank 66 74 Albion 3 - String Lo (Celli)
-//! m=uacc v=32
+//! m=uacc l=32
 40 short A & B
 1 long A & B
 7 con sord
@@ -62,7 +62,7 @@ Bank 66 74 Albion 3 - String Lo (Celli)
 
 //----------------------------------------------------------------------------
 Bank 66 75 Albion 3 - String Lo
-//! m=uacc v=32
+//! m=uacc l=32
 40 short
 41 staccato
 1 long
@@ -72,7 +72,7 @@ Bank 66 75 Albion 3 - String Lo
 
 //----------------------------------------------------------------------------
 Bank 66 76 Albion 3 - Chunderous Cellos
-//! m=uacc v=32
+//! m=uacc l=32
 43 short
 1 long
 7 long cs
@@ -83,7 +83,7 @@ Bank 66 76 Albion 3 - Chunderous Cellos
 
 //----------------------------------------------------------------------------
 Bank 66 77 Albion 3 - Siege of Strings
-//! m=uacc v=32
+//! m=uacc l=32
 1 long
 3 long (octave)
 40 short
