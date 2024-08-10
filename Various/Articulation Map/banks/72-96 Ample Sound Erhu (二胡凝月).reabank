@@ -1,7 +1,7 @@
 //REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1
 //----------------------------------------------------------------------
+//Default KS Velocity 96, 默认键位切换键力度 96
 Bank 72 96 Ample Sound Erhu (二胡凝月)
-//! m=short-long
 24 長弓
 25 頓弓
 26 抛弓

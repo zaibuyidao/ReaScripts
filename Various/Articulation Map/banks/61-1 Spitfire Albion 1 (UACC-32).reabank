@@ -1,7 +1,6 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 66 1 Albion 1 - Brass Hi
-//! m=uacc l=32
 40 staccato
 1 long
 20 legato
@@ -15,7 +14,6 @@ Bank 66 1 Albion 1 - Brass Hi
 
 //----------------------------------------------------------------------------
 Bank 66 3 Albion 1 - Brass Mid
-//! m=uacc l=32
 40 staccato
 1 long
 20 legato
@@ -23,7 +21,6 @@ Bank 66 3 Albion 1 - Brass Mid
 
 //----------------------------------------------------------------------------
 Bank 66 4 Albion 1 - Piano
-//! m=uacc l=32
 40 short
 42 short muted
 90 fx cluster
@@ -32,7 +29,6 @@ Bank 66 4 Albion 1 - Piano
 
 //----------------------------------------------------------------------------
 Bank 66 5 Albion 1 - String Hi
-//! m=uacc l=32
 40 short
 56 pizz
 1 long
@@ -52,7 +48,6 @@ Bank 66 5 Albion 1 - String Hi
 
 //----------------------------------------------------------------------------
 Bank 66 6 Albion 1 - String Lo
-//! m=uacc l=32
 40 short
 56 pizz
 1 long
@@ -69,7 +64,6 @@ Bank 66 6 Albion 1 - String Lo
 
 //----------------------------------------------------------------------------
 Bank 66 7 Albion 1 - Woodwind Hi
-//! m=uacc l=32
 40 short
 41 short alt
 1 long
@@ -82,7 +76,6 @@ Bank 66 7 Albion 1 - Woodwind Hi
 
 //----------------------------------------------------------------------------
 Bank 66 8 Albion 1 - Woodwind Lo
-//! m=uacc l=32
 40 short
 1 long
 20 legato

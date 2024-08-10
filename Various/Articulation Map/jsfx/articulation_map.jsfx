@@ -10,9 +10,7 @@ slider2:96<0,127,1>Velocity (read-only)
 slider3:300<0,1000,1>Short-Mode Duration (ms)
 slider4:119<0,127,1>Long-Mode Controller
 slider5:2<0,4,1{Short,Long,Short-Long,Keyswitch CC (UACC)}>Mode
-slider6:96<0,127,1>Original Bank LSB (read-only)
-slider7:96<0,127,1>Mapping Bank LSB (read-only)
-slider8:118<0,127,1>Routing Channel Controller
+slider6:118<0,127,1>Routing Channel Controller
 
 options:gmem=gmem_articulation_map
 
@@ -49,7 +47,7 @@ last_vel_group = last_vel_group_buf;
 @slider
 delay = floor(slider3 / 1000 * srate + 0.5);
 sustain = slider4;
-route_channel = slider8;
+route_channel = slider6;
 gmem[1] = slider4; // get cc119 number
 
 @block
@@ -104,11 +102,7 @@ while (midirecv(offset, msg1, msg2, msg3)) (
       );
       slider2 = bank_lsb;
       
-      bank_lsb == slider6 ? (
-        midisend(offset, note_on + channel, program, slider7);
-      ) : (
-        midisend(offset, note_on + channel, program, bank_lsb);
-      );
+      midisend(offset, note_on + channel, program, bank_lsb);
       
       // delay note off
       tail[0] = offset + delay;
@@ -155,11 +149,7 @@ while (midirecv(offset, msg1, msg2, msg3)) (
         i += 1;  
       );
       
-      bank_lsb == slider6 ? (
-        midisend(offset, note_on + channel, program, slider7);
-      ) : (
-        midisend(offset, note_on + channel, program, bank_lsb);
-      );
+      midisend(offset, note_on + channel, program, bank_lsb);
     );
     
     // Blend Mode
@@ -170,11 +160,7 @@ while (midirecv(offset, msg1, msg2, msg3)) (
       slider2 = bank_lsb;
 
       ccval >= 0 && ccval <= 63 ? (
-        bank_lsb == slider6 ? (
-          midisend(offset, note_on + channel, program, slider7);
-        ) : (
-          midisend(offset, note_on + channel, program, bank_lsb);
-        );
+      midisend(offset, note_on + channel, program, bank_lsb);
 
       // delay note off
       tail[0] = offset + delay;
@@ -216,11 +202,7 @@ while (midirecv(offset, msg1, msg2, msg3)) (
           i += 1;  
         );
       
-        bank_lsb == slider6 ? (
-          midisend(offset, note_on + channel, program, slider7);
-        ) : (
-          midisend(offset, note_on + channel, program, bank_lsb);
-        );
+        midisend(offset, note_on + channel, program, bank_lsb);
       );
     );
     
@@ -229,11 +211,7 @@ while (midirecv(offset, msg1, msg2, msg3)) (
       gmem[2] = bank_lsb; // get cc58 number, 当同时触发不同CC#时, 该值可能不稳定
       slider2 = bank_lsb;
       
-      bank_lsb == slider6 ? (
-        midisend(offset, cc + channel, slider7, program);
-      ) : (
-        midisend(offset, cc + channel, bank_lsb, program);
-      );
+      midisend(offset, cc + channel, bank_lsb, program);
     );
   
     status = 0; // don't passthrough

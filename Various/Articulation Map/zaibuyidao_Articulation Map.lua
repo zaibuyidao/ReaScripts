@@ -17,12 +17,6 @@ local Textbox = gui.Textbox
 
 initialTrack = getActiveMIDITrack()
 EXT_SECTION = 'ARTICULATION_MAP'
-local jsfx_mode_slider = 4 -- 当前 AM-JSFX 控件 Mode 模式的滑块编号
-local jsfx_mode = 2 -- 当前 AM-JSFX 控件 Mode 模式的默认值
-local jsfx_ori_lsb_slider = 5 -- 当前 AM-JSFX 控件 ORI LSB 滑块编号
-local jsfx_ori_lsb = 96 -- 当前 AM-JSFX 控件 ORI LSB 滑块的默认值
-local jsfx_map_lsb_slider = 6 -- 当前 AM-JSFX 控件 MAP LSB 滑块编号
-local jsfx_map_lsb = 96 -- 当前 AM-JSFX 控件 MAP LSB 滑块的默认值
 
 local delimiter = getPathDelimiter()
 local language = getSystemLanguage()
@@ -406,15 +400,6 @@ local function pop_current_state()  -- 读出当前状态
     end
 end
 
--- 打印库名以及匹配的模式
-function print_all_modes(store)
-    for _, bank in ipairs(store) do
-        local mode = bank.bank.mode or "N/A"
-        print("Bank: " .. bank.bank.full_name .. " | Mode: " .. mode)
-    end
-end
---print_all_modes(store)
-
 local function switch_mode_1() -- 模式1 切换
     local function update_current_state()
         if not store or not ch_box1 or not ch_box2 or
@@ -455,22 +440,6 @@ local function switch_mode_1() -- 模式1 切换
     if bank_item and bank_item.bank then
         textb_1.lbl = tostring(bank_item.bank.bank) -- MSB
         textb_2.lbl = tostring(bank_item.bank.velocity) -- LSB
-
-        -- 自动切换 JSFX 模式
-        jsfx_mode = tostring(bank_item.bank.mode)
-        if jsfx_mode ~= "N/A" and jsfx_mode ~= nil then
-            setJSFXParameter(jsfx_mode_slider, tonumber(jsfx_mode))
-        end
-        -- 设置 ORI LSB 值
-        jsfx_ori_lsb = tostring(bank_item.bank.velocity)
-        if jsfx_ori_lsb ~= "N/A" and jsfx_ori_lsb ~= nil then
-            setJSFXParameter(jsfx_ori_lsb_slider, tonumber(jsfx_ori_lsb))
-        end
-        -- 设置 MAP LSB 值
-        jsfx_map_lsb = tostring(bank_item.bank.bank_vel)
-        if jsfx_map_lsb ~= "N/A" and jsfx_map_lsb ~= nil then
-            setJSFXParameter(jsfx_map_lsb_slider, tonumber(jsfx_map_lsb))
-        end
     else
         textb_1.lbl = "N/A"
         textb_2.lbl = "N/A"
@@ -506,6 +475,7 @@ local function switch_mode_1() -- 模式1 切换
         end
     end
     
+    
     update_patch_box()
 
     ch_box1.onClick = function()
@@ -516,22 +486,6 @@ local function switch_mode_1() -- 模式1 切换
             -- 更新 textb_1 和 textb_2 的标签为 MSB 和 LSB
             textb_1.lbl = tostring(bank_item.bank.bank) -- MSB
             textb_2.lbl = tostring(bank_item.bank.velocity) -- LSB
-
-            -- 自动切换 JSFX 模式
-            jsfx_mode = tostring(bank_item.bank.mode)
-            if jsfx_mode ~= "N/A" and jsfx_mode ~= nil then
-                setJSFXParameter(jsfx_mode_slider, tonumber(jsfx_mode))
-            end
-            -- 设置 ORI LSB 值
-            jsfx_ori_lsb = tostring(bank_item.bank.velocity)
-            if jsfx_ori_lsb ~= "N/A" and jsfx_ori_lsb ~= nil then
-                setJSFXParameter(jsfx_ori_lsb_slider, tonumber(jsfx_ori_lsb))
-            end
-            -- 设置 MAP LSB 值
-            jsfx_map_lsb = tostring(bank_item.bank.bank_vel)
-            if jsfx_map_lsb ~= "N/A" and jsfx_map_lsb ~= nil then
-                setJSFXParameter(jsfx_map_lsb_slider, tonumber(jsfx_map_lsb))
-            end
         else
             textb_1.lbl = "N/A"
             textb_2.lbl = "N/A"
@@ -618,32 +572,10 @@ local function switch_mode_2() -- 模式2 切换
 
     local bank_titles = {}
     local box1_index = 1
-    local previous_mode = "N/A" -- 初始化 previous_mode
     for i, bank_item in ipairs(store_grouped) do
         table.insert(bank_titles, bank_item.bank.full_name)
         if current_state and tonumber(bank_item.bank.bank)==tonumber(current_state.bank) then
             box1_index = i
-
-            ch_box1.norm_val2 = bank_titles
-            local selected_bank_name = ch_box1.norm_val2[ch_box1.norm_val]
-            -- print("当前选中的 bank 名称:", selected_bank_name)
-
-            -- 自动切换 JSFX 模式
-            jsfx_mode = bank_item.bank.mode
-            if jsfx_mode ~= "N/A" and jsfx_mode ~= nil and jsfx_mode ~= previous_mode then
-                setJSFXParameter(jsfx_mode_slider, tonumber(jsfx_mode))
-                previous_mode = jsfx_mode -- 更新 previous_mode
-            end
-            -- 设置 ORI LSB 值
-            jsfx_ori_lsb = tostring(bank_item.bank.velocity)
-            if jsfx_ori_lsb ~= "N/A" and jsfx_ori_lsb ~= nil then
-                setJSFXParameter(jsfx_ori_lsb_slider, tonumber(jsfx_ori_lsb))
-            end
-            -- 设置 MAP LSB 值
-            jsfx_map_lsb = tostring(bank_item.bank.bank_vel)
-            if jsfx_map_lsb ~= "N/A" and jsfx_map_lsb ~= nil then
-                setJSFXParameter(jsfx_map_lsb_slider, tonumber(jsfx_map_lsb))
-            end
         end
     end
 
@@ -708,23 +640,6 @@ local function switch_mode_2() -- 模式2 切换
 
         update_patch_box() -- 更新 patch box 和 textb_3.lbl
         update_current_state()
-
-        -- 自动切换 JSFX 模式
-        jsfx_mode = bank_item.bank.mode
-        if jsfx_mode ~= "N/A" and jsfx_mode ~= nil and jsfx_mode ~= previous_mode then
-            setJSFXParameter(jsfx_mode_slider, tonumber(jsfx_mode))
-            previous_mode = jsfx_mode -- 更新 previous_mode
-        end
-        -- 设置 ORI LSB 值
-        jsfx_ori_lsb = tostring(bank_item.bank.velocity)
-        if jsfx_ori_lsb ~= "N/A" and jsfx_ori_lsb ~= nil then
-            setJSFXParameter(jsfx_ori_lsb_slider, tonumber(jsfx_ori_lsb))
-        end
-        -- 设置 MAP LSB 值
-        jsfx_map_lsb = tostring(bank_item.bank.bank_vel)
-        if jsfx_map_lsb ~= "N/A" and jsfx_map_lsb ~= nil then
-            setJSFXParameter(jsfx_map_lsb_slider, tonumber(jsfx_map_lsb))
-        end
     end
 
     ch_box2.onClick = function()

@@ -1,0 +1,32 @@
+//REAPER Preferences - Media - MIDI - MIDI octave name display offset: -1
+//----------------------------------------------------------------------------
+Bank 67 64 Cinematic Studio Strings
+12 Standard Legato
+18 Spiccato Overlay Off
+22 Legato Off
+23 Con Sordino Off
+
+Bank 67 65 Cinematic Studio Strings
+12 Advanced Legato
+17 Staccato
+18 Spiccato Overlay On
+22 Legato On
+23 Con Sordino On
+
+Bank 67 97 Cinematic Studio Strings
+17 Sfz
+
+Bank 67 32 Cinematic Studio Strings
+17 Spiccato
+
+Bank 67 33 Cinematic Studio Strings
+17 Staccatissimo
+
+Bank 67 41 Cinematic Studio Strings
+19 Pizzicato
+
+Bank 67 42 Cinematic Studio Strings
+19 Bartok Snap
+
+Bank 67 85 Cinematic Studio Strings
+19 Col Legno

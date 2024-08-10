@@ -775,27 +775,6 @@ function toggle_pre_trigger_jsfx()
     end
 end
 
--- AM-JSFX插件参数设置
-function setJSFXParameter(param_index, value)
-    local active_take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-    if not active_take or not reaper.TakeIsMIDI(active_take) then return end
-
-    local track = reaper.GetMediaItemTake_Track(active_take)
-    local fx_name = "Articulation Map"
-
-    -- 查找指定名称的插件
-    local fx_index = reaper.TrackFX_GetByName(track, fx_name, false)
-    if fx_index == -1 then
-        -- reaper.ShowMessageBox("JSFX plugin '" .. fx_name .. "' not found on track.", "Error", 0)
-        return
-        -- add_or_toggle_articulation_map_jsfx()
-    end
-
-    if value ~= nil then
-        reaper.TrackFX_SetParam(track, fx_index, param_index, value)
-    end
-end
-
 function process_and_save_reabank_mappings(reabank_path)
     local delimiter = package.config:sub(1,1)  -- 获取系统路径分隔符 ('\' for Windows, '/' for Unix)
     local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"

@@ -238,79 +238,19 @@ function set_reabank_file(reabank_path)
     end
 end
 
-function parse_mode(line)
-    line = line:match("^%s*(.-)%s*$")
-    -- 使用模式匹配来捕捉模式行
-    local mode_str = line:match("^%s*//!%s*m%s*=%s*([%w%-]+)%s*")
-    local vel_str = line:match("l%s*=%s*(%d+)%s*$")
-
-    if mode_str then
-        -- 根据模式字符串映射到相应的编号
-        local mode_map = {
-            ["short"] = 0,
-            ["long"] = 1,
-            ["short-long"] = 2,
-            ["kscc"] = 3,
-            ["uacc"] = 3
-        }
-        local mode_value = mode_map[mode_str]
-        if vel_str then
-            return mode_value, tonumber(vel_str)
-        else
-            return mode_value, nil
-        end
-    end
-    return nil, nil
-end
-
 function parse_banks(lines, vel_show, bnk_show) -- 音色名称
     if #lines == 0 then
         -- 没有bank数据时，返回默认项
         return {{bank = {full_name = no_bank_sel, bank = "N/A", velocity = "N/A", name = "N/A"}, notes = {}}}
     end
     local result = {}
-    local current_mode = "N/A" -- 初始化当前模式
-    local current_vel = nil
-
-    for i, line in ipairs(lines) do
+    for _, line in ipairs(lines) do
         if #line == 0 or line:match("^%s-$") then
-            goto continue
-        end
-
-        -- 解析模式行
-        local mode, rb_vel = parse_mode(line)
-        if mode then
-            current_mode = mode
-            current_vel = rb_vel
-            -- print("Set current_mode to:", current_mode)  -- 调试输出
             goto continue
         end
 
         local bank, velocity, name = parse_bank(line)
         if bank and velocity and name then
-            -- 初始化 bank_mode 为当前模式
-            local bank_mode = current_mode
-            local bank_vel = velocity
-
-            -- 查找当前行之后的模式行
-            for j = i + 1, #lines do
-                local next_line = lines[j]:match("^%s*(.-)%s*$")
-                local next_mode, next_vel = parse_mode(next_line)
-                if next_mode then
-                    bank_mode = next_mode
-                    if next_vel then
-                        bank_vel = next_vel
-                    end
-                    -- print("Updated bank_mode to:", bank_mode, "from line:", next_line)  -- 调试输出
-                    break
-                elseif next_line:match("^Bank (%d+) (%d+) (.-)$") then
-                    -- 遇到下一个Bank行时停止查找
-                    break
-                end
-            end
-
-            -- print("Processed Bank:", bank, "Original Velocity:", velocity, "Final Velocity:", bank_vel, "Name:", name)
-
             local full_name
             if vel_show and bnk_show then
                 full_name = "" .. bank .. " : " .. bank*128+velocity .. " - " .. name .. " (" .. line_velocity .. velocity .. ")"
@@ -321,21 +261,15 @@ function parse_banks(lines, vel_show, bnk_show) -- 音色名称
             else -- vel_show = false ，bnk_show = false
                 full_name = "" .. bank .. " : " .. name
             end
-
             table.insert(result, {
                 bank = {
                     full_name = full_name,
                     bank = bank,
                     velocity = velocity,
-                    name = name,
-                    mode = bank_mode, -- 将当前模式添加到bank信息中
-                    bank_vel = bank_vel
+                    name = name
                 },
                 notes = {}
             })
-
-            current_vel = nil
-            
             goto continue
         end
 
@@ -455,8 +389,6 @@ function group_banks(banks, vel_show) -- 相同bank编号下按不同名称再�
                 bank = bank_item.bank.bank,
                 velocity = bank_item.bank.velocity,
                 note = note_item.note,
-                mode = bank_item.bank.mode, -- 添加 mode
-                bank_vel = bank_item.bank.bank_vel -- 添加 bank_vel
             })
         end
     end
@@ -467,9 +399,7 @@ function group_banks(banks, vel_show) -- 相同bank编号下按不同名称再�
                     name = bank.name,
                     velocity = bank.velocity,
                     bank = bank.bank,
-                    full_name = "" .. tostring(bank.bank) .. " : " .. bank.name,
-                    mode = bank.mode, -- 添加 mode
-                    bank_vel = bank.bank_vel -- 添加 bank_vel
+                    full_name = "" .. tostring(bank.bank) .. " : " .. bank.name
                 }
             end
         end
@@ -479,9 +409,7 @@ function group_banks(banks, vel_show) -- 相同bank编号下按不同名称再�
                     name = bank.name,
                     velocity = bank.velocity,
                     bank = bank.bank,
-                    full_name = "" .. tostring(bank.bank) .. " : " .. bank.name,
-                    mode = bank.mode, -- 添加 mode
-                    bank_vel = bank.bank_vel -- 添加 bank_vel
+                    full_name = "" .. tostring(bank.bank) .. " : " .. bank.name
                 }
             end
         end
@@ -489,9 +417,7 @@ function group_banks(banks, vel_show) -- 相同bank编号下按不同名称再�
             name = banks[1].name,
             velocity = banks[1].velocity,
             bank = banks[1].bank,
-            full_name = "" .. tostring(banks[1].bank) .. " : " .. banks[1].name,
-            mode = banks[1].mode, -- 添加 mode
-            bank_vel = banks[1].bank_vel -- 添加 bank_vel
+            full_name = "" .. tostring(banks[1].bank) .. " : " .. banks[1].name
         }
     end
 
@@ -512,20 +438,9 @@ function group_banks(banks, vel_show) -- 相同bank编号下按不同名称再�
     return new_result
 end
 
--- function process_lines(lines)
---     for i=1,#lines do
---         lines[i] = lines[i]:gsub("%s*//.-$", "")
---     end
---     return lines
--- end
-
--- 新增对于 jsfx mode 模式行的处理
 function process_lines(lines)
-    for i = 1, #lines do
-        -- 如果行不包含 '//! mode='，则删除 '//' 后面的注释
-        if not lines[i]:match("^%s*//!%s*m%s*=") then
-            lines[i] = lines[i]:gsub("%s*//.-$", "")
-        end
+    for i=1,#lines do
+        lines[i] = lines[i]:gsub("%s*//.-$", "")
     end
     return lines
 end

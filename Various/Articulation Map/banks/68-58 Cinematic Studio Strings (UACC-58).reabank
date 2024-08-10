@@ -1,5 +1,6 @@
-Bank 67 2 Cinematic Studio Strings (UACC-58)
-//! m=kscc l=58
+//Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 58.
+//----------------------------------------------------------------------------
+Bank 67 58 Cinematic Studio Strings (UACC-58)
 0 Standard Legato
 6 Advanced Legato
 11 Spiccato

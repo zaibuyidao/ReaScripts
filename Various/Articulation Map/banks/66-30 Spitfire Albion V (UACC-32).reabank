@@ -1,13 +1,11 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 66 30 Albion V - Legato
-//! m=uacc l=32
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 66 31 Albion V - Brass High
-//! m=uacc l=32
 2 air
 1 bursts
 3 doodle tonguing
@@ -30,7 +28,6 @@ Bank 66 31 Albion V - Brass High
 
 //----------------------------------------------------------------------------
 Bank 66 32 Albion V - Brass Low
-//! m=uacc l=32
 2 air
 1 bursts
 3 doodle tonguing
@@ -52,7 +49,6 @@ Bank 66 32 Albion V - Brass Low
 
 //----------------------------------------------------------------------------
 Bank 66 33 Albion V - Strings High - Main
-//! m=uacc l=32
 5 flautando cs long
 44 flautando cs short
 6 frozen long
@@ -75,7 +71,6 @@ Bank 66 33 Albion V - Strings High - Main
 
 //----------------------------------------------------------------------------
 Bank 66 34 Albion V - Strings High - Soft and Wild
-//! m=uacc l=32
 56 brushed pizz cs
 3 col leg tratto
 11 harmonic trems
@@ -92,7 +87,6 @@ Bank 66 34 Albion V - Strings High - Soft and Wild
 
 //----------------------------------------------------------------------------
 Bank 66 35 Albion V - Strings Low - Main
-//! m=uacc l=32
 5 flautando cs long
 44 flautando cs short
 6 frozen long
@@ -115,7 +109,6 @@ Bank 66 35 Albion V - Strings Low - Main
 
 //----------------------------------------------------------------------------
 Bank 66 36 Albion V - Strings Low - Soft and Wild
-//! m=uacc l=32
 56 brushed pizz cs
 3 col leg tratto
 11 harmonic trems
@@ -132,7 +125,6 @@ Bank 66 36 Albion V - Strings Low - Soft and Wild
 
 //----------------------------------------------------------------------------
 Bank 66 37 Albion V - Strings Low + High - Main
-//! m=uacc l=32
 5 flautando cs long
 44 flautando cs short
 6 frozen long
@@ -155,7 +147,6 @@ Bank 66 37 Albion V - Strings Low + High - Main
 
 //----------------------------------------------------------------------------
 Bank 66 40 Albion V - Strings Low + High - Soft and Wild
-//! m=uacc l=32
 56 brushed pizz cs
 3 col leg tratto
 11 harmonic trems
@@ -172,7 +163,6 @@ Bank 66 40 Albion V - Strings Low + High - Soft and Wild
 
 //----------------------------------------------------------------------------
 Bank 66 38 Albion V - Woods High
-//! m=uacc l=32
 2 air
 14 aleatoric overblown
 1 bursts
@@ -195,7 +185,6 @@ Bank 66 38 Albion V - Woods High
 
 //----------------------------------------------------------------------------
 Bank 66 39 Albion V - Woods Low
-//! m=uacc l=32
 2 air
 14 aleatoric overblown
 1 bursts
