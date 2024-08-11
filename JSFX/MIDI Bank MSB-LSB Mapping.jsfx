@@ -1,6 +1,6 @@
 desc: MIDI Bank MSB/LSB Mapping
 desc: MIDI Bank MSB/LSB Mapping [zaibuyidao]
-version: 1.0
+version: 1.0.1
 changelog: init
 author: zaibuyidao
 links:
