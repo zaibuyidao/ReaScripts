@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="622c766f902a2bf27adb510d3f5f09cebe0c1f93">
+<index version="1" name="zaibuyidao Scripts" commit="e0d9ab678160d721c7f45c0b46f373fc8e6ba8e7">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1728,6 +1728,26 @@
     </reapack>
   </category>
   <category name="JSFX">
+    <reapack name="MIDI Bank MSB-LSB Mapping.jsfx" type="effect" desc="MIDI Bank MSB/LSB Mapping [zaibuyidao]">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 This script processes incoming MIDI Bank MSB (Controller 0) and LSB (Controller 32) messages and maps them to new MSB and LSB values based on a user-defined configuration file. Create a bank mapping file with lines formatted as follows: <source_MSB>-<source_LSB>=<target_MSB>-<target_LSB> Example: 0-100=0-96 // Maps incoming Bank MSB 0 and LSB 100 to new Bank MSB 0 and LSB 96 1-10=2-77 // Maps incoming Bank MSB 1 and LSB 10 to new Bank MSB 2 and LSB 77\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 When a matching Bank MSB and LSB is received, the script will output the corresponding mapped MSB and LSB values. If no match is found, the original values will be passed through unchanged. Note: Ensure that your bank mapping file is correctly formatted to avoid unexpected results.\par}
+}
+]]></description>
+        <link rel="website" href="https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80">webpage</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">github</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-08-11T11:03:38Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/e0d9ab678160d721c7f45c0b46f373fc8e6ba8e7/JSFX/MIDI%20Bank%20MSB-LSB%20Mapping.jsfx</source>
+        <source type="data" file="zaibuyidao_bank_msb_lsb_mapping/bank-map.txt">https://github.com/zaibuyidao/ReaScripts/raw/e0d9ab678160d721c7f45c0b46f373fc8e6ba8e7/JSFX/zaibuyidao_bank_msb_lsb_mapping/bank-map.txt</source>
+      </version>
+    </reapack>
     <reapack name="MIDI Bank Program on Specific Note (File-Based).jsfx" type="effect" desc="MIDI Bank/Program on Specific Note (File-Based)">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
