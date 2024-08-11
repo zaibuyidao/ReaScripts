@@ -1,6 +1,6 @@
 desc: MIDI Bank MSB/LSB Mapping
 desc: MIDI Bank MSB/LSB Mapping [zaibuyidao]
-version: 1.0.1
+version: 1.0.2
 changelog: init
 author: zaibuyidao
 links:
@@ -129,6 +129,9 @@ while(midirecv(offset, msg1, msg2, msg3)) (
         bank_msb = -1;
         bank_lsb = -1;
       );
+    ) : (
+      // 对于其他控制器消息，直接透传
+      midisend(offset, msg1, msg2, msg3);
     );
   ) : (
     // 透传其他MIDI事件
