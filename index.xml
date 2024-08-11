@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e0d9ab678160d721c7f45c0b46f373fc8e6ba8e7">
+<index version="1" name="zaibuyidao Scripts" commit="f48482a3b5dfec0b142742efc51d788ea8a744a9">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1746,6 +1746,11 @@
         <changelog><![CDATA[init]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/e0d9ab678160d721c7f45c0b46f373fc8e6ba8e7/JSFX/MIDI%20Bank%20MSB-LSB%20Mapping.jsfx</source>
         <source type="data" file="zaibuyidao_bank_msb_lsb_mapping/bank-map.txt">https://github.com/zaibuyidao/ReaScripts/raw/e0d9ab678160d721c7f45c0b46f373fc8e6ba8e7/JSFX/zaibuyidao_bank_msb_lsb_mapping/bank-map.txt</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2024-08-11T11:07:30Z">
+        <changelog><![CDATA[init]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/f48482a3b5dfec0b142742efc51d788ea8a744a9/JSFX/MIDI%20Bank%20MSB-LSB%20Mapping.jsfx</source>
+        <source type="data" file="zaibuyidao_bank_msb_lsb_mapping/bank-map.txt">https://github.com/zaibuyidao/ReaScripts/raw/f48482a3b5dfec0b142742efc51d788ea8a744a9/JSFX/zaibuyidao_bank_msb_lsb_mapping/bank-map.txt</source>
       </version>
     </reapack>
     <reapack name="MIDI Bank Program on Specific Note (File-Based).jsfx" type="effect" desc="MIDI Bank/Program on Specific Note (File-Based)">
