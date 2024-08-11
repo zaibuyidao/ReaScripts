@@ -1,8 +1,9 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.46
+-- @version 1.0.47
 -- @changelog
---   # Version reverted to 1.0.39 to maintain simplicity.
+--   # Improved the array management logic by dynamically expanding the array size, preventing data loss caused by array overflow.
+--   # Optimized the file reading and configuration processing logic, enhancing the stability and performance of the pre_trigger_events jsfx.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts

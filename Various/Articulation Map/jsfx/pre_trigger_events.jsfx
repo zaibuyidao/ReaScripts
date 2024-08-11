@@ -7,36 +7,46 @@ slider2:/zaibuyidao_articulation_map:simul-arts:Simultaneous Articulations Cfg:
 
 @init
 file_selected = -1;
-MAX_NUM_NOTES = 128;
-note_config_size = MAX_NUM_NOTES * 6; // Increase the size to accommodate both input and output
-note_config[note_config_size]; // Declare the array with fixed size
-memset(note_config, -1, note_config_size); // Initialize array elements to -1
+MAX_NUM_NOTES = 512; // 增加初始音符数量以支持更多数据
+note_config_size = MAX_NUM_NOTES * 6; // 增加数组大小
+note_config[note_config_size]; // 声明具有固定大小的数组
+memset(note_config, -1, note_config_size); // 将数组元素初始化为-1
+config_index = 0; // 用于跟踪配置索引
 last_note_in_file = -1;
 lines_read = 0;
 
 advance_samples = 1/1000 * srate; // 1毫秒, 将提前秒数转换为样本数
 delay_samples = 1/1000 * srate; // 1毫秒的延迟,转换为样本数
 
+// 动态扩展数组大小的函数
+function increase_note_config_size() (
+    temp = note_config_size;
+    note_config_size += MAX_NUM_NOTES * 6; // 扩展数组大小
+    note_config[temp] = 0; // 调整数组大小
+    memset(note_config + temp, -1, MAX_NUM_NOTES * 6); // 初始化新扩展的部分
+);
+
 @slider
 file_selected != slider2 ? (
   file_selected = slider2;
-  handle = file_open(slider2); // "/simul-arts.txt" 使用此路径将可以从插件根目录读取txt
+  handle = file_open(slider2); // 打开文件
   handle > 0 ? (
     line = #;
-    lines_read = 0;
-    config_index = 0; // 新增一个单独的计数器作为note_config的索引
+    config_index = 0; // 配置索引归零
+
     while(file_string(handle, line) > 0) (
-      skip_line = strncmp(line, "//", 2) == 0 ? 1 : 0;
+      skip_line = strncmp(line, "//", 2) == 0 || line == ""; // 跳过注释和空行
       !skip_line ? (
         lines_read += 1;
         match_bank_MSB = 0; match_bank_LSB = 0; match_program = 0;
         bank_MSB = 0; bank_LSB = 0; program = 0;
         str_pos = 0; field = 0;
+
         while (str_pos < strlen(line)) (
           c = str_getchar(line, str_pos);
           c == '=' ? field = 1 : 0;
           c == ',' ? (
-            // 使用config_index作为note_config的索引,确保每个条目都有唯一的位置
+            (config_index + 6 >= note_config_size) ? increase_note_config_size(); // 检查并扩展数组
             note_config[config_index] = match_bank_MSB;
             note_config[config_index + 1] = match_bank_LSB;
             note_config[config_index + 2] = match_program;
@@ -91,6 +101,7 @@ file_selected != slider2 ? (
           ) : 0;
           str_pos += 1;
         );
+        (config_index + 6 >= note_config_size) ? increase_note_config_size(); // 再次检查并扩展数组
         note_config[config_index] = match_bank_MSB;
         note_config[config_index + 1] = match_bank_LSB;
         note_config[config_index + 2] = match_program;
@@ -101,7 +112,7 @@ file_selected != slider2 ? (
         last_note_in_file = match_program;
       );
     );
-    file_close(handle);
+    file_close(handle); // 处理完文件后关闭
   ) : 0;
 ) : 0;
 
@@ -112,16 +123,16 @@ program = -1;
 match_found = 0;
 
 while(midirecv(offset, msg1, msg2, msg3)) (
-  status = (msg1 & 0xF0); // Get the message type
-  channel = (msg1 & 0x0F); // Get the MIDI channel
+  status = (msg1 & 0xF0); // 获取消息类型
+  channel = (msg1 & 0x0F); // 获取MIDI通道
 
-  // Check if the received message is a Control Change or Program Change
+  // 检查是否接收到控制变更或程序变更消息
   (status == 0xB0 || status == 0xC0) ? (
-    // Extract the controller number and value for Control Change messages
+    // 提取控制器编号和控制变更消息的值
     controller = status == 0xB0 ? msg2 : -1;
     value = status == 0xB0 ? msg3 : msg2;
 
-    // Update the bank and program values based on the received messages
+    // 更新基于接收到的消息的库和程序值
     controller == 0 ? (
       bank_msb = value;
     ) : controller == 32 ? (
@@ -129,50 +140,49 @@ while(midirecv(offset, msg1, msg2, msg3)) (
     ) : status == 0xC0 ? (
       program = value;
 
-      // Check if we have received a complete bank and program combination
+      // 检查是否接收到完整的库和程序组合
       (bank_msb != -1 && bank_lsb != -1 && program != -1) ? (
-        // Check if the received bank/program matches any entry in the config file
         matched_indices = 10000;
         match_count = 0;
         i = 0;
-        while (i <= last_note_in_file) (
-          note_index = i * 6;
+        while (i < config_index) ( // 遍历有效配置
+          note_index = i;
           (note_config[note_index] == bank_msb && note_config[note_index + 1] == bank_lsb && note_config[note_index + 2] == program) ? (
             matched_indices[match_count] = i;
             match_count += 1;
           );
-          i += 1;
+          i += 6;
         );
 
-        // Send the matched bank/program combinations in order
+        // 发送匹配的库/程序组合
         match_count > 0 ? (
           j = 0;
           while (j < match_count) (
-            note_index = matched_indices[j] * 6;
+            note_index = matched_indices[j];
             midisend(offset + j * delay_samples, 0xB0 | channel, 0, note_config[note_index + 3]); // Bank MSB
             midisend(offset + j * delay_samples, 0xB0 | channel, 32, note_config[note_index + 4]); // Bank LSB
             midisend(offset + j * delay_samples, 0xC0 | channel, note_config[note_index + 5], 0); // Program Change
             j += 1;
           );
-          match_found = 1; // Set the flag to indicate a match was found
+          match_found = 1; // 设置标志，指示已找到匹配项
         ) : (
-          // If no match found, passthrough the original Bank Select and Program Change events
+          // 如果未找到匹配项，则透传原始的库选择和程序变更事件
           midisend(offset, 0xB0 | channel, 0, bank_msb);
           midisend(offset, 0xB0 | channel, 32, bank_lsb);
           midisend(offset, msg1, msg2, msg3);
         );
 
-        // Reset the bank and program values
+        // 重置库和程序值
         bank_msb = -1;
         bank_lsb = -1;
         program = -1;
       ) : (
-        // If the combination is not complete, passthrough the CC message
+        // 如果组合不完整，则透传CC消息
         midisend(offset, msg1, msg2, msg3);
       );
     ) : (
-      // Passthrough other CC messages
-      ((msg1 & 0xF0) == $xB0 && msg2 == slider1) ? (
+      // 透传其他CC消息
+      ((msg1 & 0xF0) == 0xB0 && msg2 == slider1) ? (
         // 计算新的偏移量, 确保不会小于0
         new_offset = max(offset - advance_samples, 0);
         // 提前发送指定的CC消息
@@ -182,19 +192,40 @@ while(midirecv(offset, msg1, msg2, msg3)) (
       );
     );
   ) : (
-    // Passthrough other MIDI events
+    // 透传其他MIDI事件
     midisend(offset, msg1, msg2, msg3);
   );
 );
 
 @gfx
 gfx_set(1.0);
-gfx_x = gfx_y = 8;
+gfx_x = 8; // X轴起点设置
+gfx_y = -4; // Y轴起点设置
+
 i = 0;
+current_match = -1;
+
 while (i < config_index && i < note_config_size) (
-  gfx_printf("Received: %d-%d-%d, Sent: %d-%d-%d\n", 
-    note_config[i], note_config[i+1], note_config[i+2],
+  new_match = note_config[i] * 10000 + note_config[i+1] * 100 + note_config[i+2];
+
+  (current_match != new_match) ? (
+    // 每次打印新匹配项时，重置X坐标并增加Y坐标，以确保在新行显示
+    gfx_x = 8; // 每行起始位置
+    gfx_y += 12; // 控制行间距
+
+    // 打印匹配项和首次的 "Sent"
+    gfx_printf("Matched: %d-%d-%d -> Sent: ",
+      note_config[i], note_config[i+1], note_config[i+2]);
+    current_match = new_match;
+  ) : (
+    // 在同一行上追加，但避免重复 "Sent"
+    gfx_printf(", ");
+  );
+  
+  gfx_printf("%d-%d-%d",
     note_config[i+3], note_config[i+4], note_config[i+5]);
-  gfx_y += 2;
+  
   i += 6;
 );
+
+gfx_printf("\n"); // 最后换行
