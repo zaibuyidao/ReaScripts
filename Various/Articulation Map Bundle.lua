@@ -1,8 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.48
+-- @version 1.0.49
 -- @changelog
---   + Added support for dynamic Bank MSB/LSB mapping through a configuration file, enabling flexible MIDI bank remapping.
+--   + 1.0.47 Regression.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
@@ -11,7 +11,6 @@
 --  [jsfx] Articulation Map/jsfx/articulation_map.jsfx > Articulation Map/articulation_map.jsfx
 --  [jsfx] Articulation Map/jsfx/pre_trigger_events.jsfx > Articulation Map/pre_trigger_events.jsfx
 --  [data] Articulation Map/jsfx/zaibuyidao_articulation_map/simul-arts.txt > zaibuyidao_articulation_map/simul-arts.txt
---  [data] Articulation Map/jsfx/zaibuyidao_articulation_map/bank-map.txt > zaibuyidao_articulation_map/bank-map.txt
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - No GUI.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - CC to PC.lua
 --   [main=midi_editor] Articulation Map/zaibuyidao_Articulation Map - PC to CC.lua

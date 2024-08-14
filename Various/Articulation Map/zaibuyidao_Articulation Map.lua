@@ -184,7 +184,6 @@ if not take or not reaper.TakeIsMIDI(take) then return end
 reabank_path, bank_name = selectReaBankFile() -- 全局REABANK
 if not reabank_path then return end
 process_and_save_reabank_mappings(reabank_path) -- 更新 simul-arts.txt 文件
-process_and_save_bank_number_mapping(reabank_path) -- 更新 bank-map.txt 文件
 if initialTrack then
     local result = applyReaBankToTrack(initialTrack, reabank_path)
     if not result then
@@ -1445,7 +1444,6 @@ function update_reabank_file()
     -- 刷新 bank
     refresh_bank()
     process_and_save_reabank_mappings(reabank_path) -- 更新 simul-arts.txt 文件
-    process_and_save_bank_number_mapping(reabank_path) -- 更新 bank-map.txt 文件
 end
 
 pop_current_state() -- 读取数据
@@ -1723,7 +1721,6 @@ function mainloop()
             text_bank.lbl = getFileName(reabank_path)
 
             process_and_save_reabank_mappings(reabank_path) -- 更新 simul-arts.txt 文件
-            process_and_save_bank_number_mapping(reabank_path) -- 更新 bank-map.txt 文件
         end
     end
 
@@ -1800,7 +1797,6 @@ function mainloop()
         end
         refresh_bank()
         process_and_save_reabank_mappings(reabank_path) -- 更新 simul-arts.txt 文件
-        process_and_save_bank_number_mapping(reabank_path) -- 更新 bank-map.txt 文件
     end
 
     btn5.onClick = function ()
@@ -1822,9 +1818,6 @@ function mainloop()
     btn9.onClick = function () -- 编辑音色表, 按住Shift编辑键位映射表
         if Shift then
             local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "simul-arts.txt"
-            openUrl(txt_path)
-        elseif Ctrl then
-            local txt_path = reaper.GetResourcePath() .. delimiter .. "Data" .. delimiter .. "zaibuyidao_articulation_map" .. delimiter .. "bank-map.txt"
             openUrl(txt_path)
         else
             local rea_patch = '\"'..reabank_path..'\"'
