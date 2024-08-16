@@ -1,8 +1,8 @@
 -- @description Articulation Map Bundle
 -- @author zaibuyidao
--- @version 1.0.49
+-- @version 1.0.50
 -- @changelog
---   + 1.0.47 Regression.
+--   + The reabank file has been updated to support the latest mapping rules.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=289373
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts

@@ -1,62 +1,109 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 66 50 Masse - Tutti
+//! 66-50-1=66-32-1
 1 long
+//! 66-50-40=66-32-40
 40 staccato
+//! 66-50-9=66-32-9
 9 beast long
+//! 66-50-54=66-32-54
 54 beast short
+//! 66-50-3=66-32-3
 3 brass/string choir long
+//! 66-50-4=66-32-4
 4 brass/string choir short
+//! 66-50-6=66-32-6
 6 low brass string stab
+//! 66-50-7=66-32-7
 7 low wood string stab
+//! 66-50-8=66-32-8
 8 nutcracker
+//! 66-50-10=66-32-10
 10 woods/string 1 long
+//! 66-50-11=66-32-11
 11 woods/string 1 short
+//! 66-50-12=66-32-12
 12 woods/string 2 long
+//! 66-50-13=66-32-13
 13 woods/string 2 short
 
 
 //----------------------------------------------------------------------------
 Bank 66 51 Masse - Strings
+//! 66-51-1=66-32-1
 1 cool strings 1
+//! 66-51-2=66-32-2
 2 cool strings 2
+//! 66-51-3=66-32-3
 3 cool strings 3
+//! 66-51-4=66-32-4
 4 cool strings 4
+//! 66-51-5=66-32-5
 5 giant epic long
+//! 66-51-42=66-32-42
 42 giant epic short
+//! 66-51-8=66-32-8
 8 ligeti strings
+//! 66-51-56=66-32-56
 56 mondo plucks
+//! 66-51-13=66-32-13
 13 slow strings 1
+//! 66-51-14=66-32-14
 14 slow strings 2
+//! 66-51-15=66-32-15
 15 super slow strings 1
+//! 66-51-16=66-32-16
 16 super slow strings 2
+//! 66-51-9=66-32-9
 9 super cool strings 1
+//! 66-51-10=66-32-10
 10 super cool strings 2
+//! 66-51-11=66-32-11
 11 super cool strings 3
+//! 66-51-12=66-32-12
 12 super cool strings 4
 
 
 //----------------------------------------------------------------------------
 Bank 66 52 Masse - Brass
+//! 66-52-1=66-32-1
 1 beast long
+//! 66-52-42=66-32-42
 42 beast short
+//! 66-52-3=66-32-3
 3 choir long
+//! 66-52-4=66-32-4
 4 choir short
+//! 66-52-9=66-32-9
 9 power long
+//! 66-52-8=66-32-8
 8 super choir long
+//! 66-52-48=66-32-48
 48 super choir short
+//! 66-52-6=66-32-6
 6 slow choir long
+//! 66-52-7=66-32-7
 7 super slow choir
 
 
 //----------------------------------------------------------------------------
 Bank 66 53 Masse - Woodwinds
+//! 66-53-1=66-32-1
 1 beast long
+//! 66-53-42=66-32-42
 42 beast short
+//! 66-53-3=66-32-3
 3 chorus long
+//! 66-53-4=66-32-4
 4 chorus short
+//! 66-53-5=66-32-5
 5 light short
+//! 66-53-6=66-32-6
 6 orchestrator long
+//! 66-53-7=66-32-7
 7 orchestrator shorts
+//! 66-53-8=66-32-8
 8 slow chorus long
+//! 66-53-9=66-32-9
 9 slow orchestrator

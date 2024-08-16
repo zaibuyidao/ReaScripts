@@ -1,205 +1,367 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 32.
 //----------------------------------------------------------------------------
 Bank 66 30 Albion V - Legato
+//! 66-30-20=66-32-20
 20 legato
 
 
 //----------------------------------------------------------------------------
 Bank 66 31 Albion V - Brass High
+//! 66-31-2=66-32-2
 2 air
+//! 66-31-1=66-32-1
 1 bursts
+//! 66-31-3=66-32-3
 3 doodle tonguing
+//! 66-31-4=66-32-4
 4 doodle tonguing mute
+//! 66-31-5=66-32-5
 5 finger trills
+//! 66-31-6=66-32-6
 6 fluttered
+//! 66-31-7=66-32-7
 7 granular flutter a
+//! 66-31-8=66-32-8
 8 granular flutter b
+//! 66-31-9=66-32-9
 9 hollow
+//! 66-31-10=66-32-10
 10 mini cresc
+//! 66-31-11=66-32-11
 11 multiphonics
+//! 66-31-12=66-32-12
 12 overblown fff
+//! 66-31-13=66-32-13
 13 slight bend
+//! 66-31-14=66-32-14
 14 stifled
+//! 66-31-114=66-32-114
 114 super air
+//! 66-31-16=66-32-16
 16 vibrato
+//! 66-31-40=66-32-40
 40 short
+//! 66-31-17=66-32-17
 17 tuning slide taken out
 
 
 //----------------------------------------------------------------------------
 Bank 66 32 Albion V - Brass Low
+//! 66-32-2=66-32-2
 2 air
+//! 66-32-1=66-32-1
 1 bursts
+//! 66-32-3=66-32-3
 3 doodle tonguing
+//! 66-32-4=66-32-4
 4 doodle tonguing mute
+//! 66-32-5=66-32-5
 5 finger trills
+//! 66-32-6=66-32-6
 6 fluttered
+//! 66-32-7=66-32-7
 7 granular flutter a
+//! 66-32-8=66-32-8
 8 granular flutter b
+//! 66-32-9=66-32-9
 9 hollow
+//! 66-32-10=66-32-10
 10 mini cresc
+//! 66-32-11=66-32-11
 11 multiphonics
+//! 66-32-12=66-32-12
 12 overblown fff
+//! 66-32-13=66-32-13
 13 slight bend
+//! 66-32-14=66-32-14
 14 stifled
+//! 66-32-114=66-32-114
 114 super air
+//! 66-32-16=66-32-16
 16 vibrato
+//! 66-32-40=66-32-40
 40 short
 
 
 //----------------------------------------------------------------------------
 Bank 66 33 Albion V - Strings High - Main
+//! 66-33-5=66-32-5
 5 flautando cs long
+//! 66-33-44=66-32-44
 44 flautando cs short
+//! 66-33-6=66-32-6
 6 frozen long
+//! 66-33-45=66-32-45
 45 frozen short
+//! 66-33-8=66-32-5
 8 gypsy long
+//! 66-33-46=66-32-46
 46 gypsy short
+//! 66-33-4=66-32-4
 4 dbl stop 5ths long
+//! 66-33-43=66-32-43
 43 dbl stop 5ths short
+//! 66-33-114=66-32-114
 114 super tasto long
+//! 66-33-50=66-32-50
 50 super tasto short
+//! 66-33-1=66-32-1
 1 air and ice
+//! 66-33-2=66-32-2
 2 air ice and tratto
+//! 66-33-10=66-32-10
 10 gypsy harmonics
+//! 66-33-32=66-32-32
 32 gypsy harm trem
+//! 66-33-19=66-32-19
 19 cs sul pont
+//! 66-33-62=66-32-62
 62 brushed sul pont cs
+//! 66-33-7=66-32-7
 7 silken cs long
+//! 66-33-47=66-32-47
 47 silken cs short
 
 
 //----------------------------------------------------------------------------
 Bank 66 34 Albion V - Strings High - Soft and Wild
+//! 66-34-56=66-32-56
 56 brushed pizz cs
+//! 66-34-3=66-32-3
 3 col leg tratto
+//! 66-34-11=66-32-11
 11 harmonic trems
+//! 66-34-58=66-32-58
 58 light loose col leg
+//! 66-34-1=66-32-1
 1 no rosin long
+//! 66-34-10=66-32-10
 10 harmonics
+//! 66-34-48=66-32-48
 48 pizz sul pont
+//! 66-34-49=66-32-49
 49 pizz sp/legno mix
+//! 66-34-7=66-32-7
 7 pulsing con sord
+//! 66-34-12=66-32-12
 12 pulsing cs sul pont
+//! 66-34-112=66-32-112
 112 sul g
+//! 66-34-31=66-32-31
 31 travelling trems
 
 
 //----------------------------------------------------------------------------
 Bank 66 35 Albion V - Strings Low - Main
+//! 66-35-5=66-32-5
 5 flautando cs long
+//! 66-35-44=66-32-44
 44 flautando cs short
+//! 66-35-6=66-32-6
 6 frozen long
+//! 66-35-45=66-32-45
 45 frozen short
+//! 66-35-8=66-32-8
 8 gypsy long
+//! 66-35-46=66-32-46
 46 gypsy short
+//! 66-35-4=66-32-4
 4 dbl stop 5ths long
+//! 66-35-43=66-32-43
 43 dbl stop 5ths short
+//! 66-35-114=66-32-114
 114 super tasto long
+//! 66-35-50=66-32-50
 50 super tasto short
+//! 66-35-1=66-32-1
 1 air and ice
+//! 66-35-2=66-32-2
 2 air ice and tratto
+//! 66-35-10=66-32-10
 10 gypsy harmonics
+//! 66-35-32=66-32-32
 32 gypsy harm trem
+//! 66-35-19=66-32-19
 19 cs sul pont
+//! 66-35-62=66-32-62
 62 brushed sul pont cs
+//! 66-35-7=66-32-7
 7 silken cs long
+//! 66-35-47=66-32-47
 47 silken cs short
 
 
 //----------------------------------------------------------------------------
 Bank 66 36 Albion V - Strings Low - Soft and Wild
+//! 66-36-56=66-32-56
 56 brushed pizz cs
+//! 66-36-3=66-32-3
 3 col leg tratto
+//! 66-36-11=66-32-11
 11 harmonic trems
+//! 66-36-58=66-32-58
 58 light loose col leg
+//! 66-36-1=66-32-1
 1 no rosin long
+//! 66-36-10=66-32-10
 10 harmonics
+//! 66-36-48=66-32-48
 48 pizz harmonic bass
+//! 66-36-49=66-32-49
 49 pizz harmonic cello
+//! 66-36-7=66-32-7
 7 pulsing con sord
+//! 66-36-12=66-32-12
 12 pulsing cs sul pont
+//! 66-36-112=66-32-112
 112 sul c
+//! 66-36-31=66-32-31
 31 travelling trems
 
 
 //----------------------------------------------------------------------------
 Bank 66 37 Albion V - Strings Low + High - Main
+//! 66-37-5=66-32-5
 5 flautando cs long
+//! 66-37-44=66-32-44
 44 flautando cs short
+//! 66-37-6=66-32-6
 6 frozen long
+//! 66-37-45=66-32-45
 45 frozen short
+//! 66-37-8=66-32-8
 8 gypsy long
+//! 66-37-46=66-32-46
 46 gypsy short
+//! 66-37-4=66-32-4
 4 dbl stop 5ths long
+//! 66-37-43=66-32-43
 43 dbl stop 5ths short
+//! 66-37-114=66-32-114
 114 super tasto long
+//! 66-37-50=66-32-50
 50 super tasto short
+//! 66-37-1=66-32-1
 1 air and ice
+//! 66-37-2=66-32-2
 2 air ice and tratto
+//! 66-37-10=66-32-10
 10 gypsy harmonics
+//! 66-37-32=66-32-32
 32 gypsy harm trem
+//! 66-37-19=66-32-19
 19 cs sul pont
+//! 66-37-62=66-32-62
 62 brushed sul pont cs
+//! 66-37-7=66-32-7
 7 silken cs long
+//! 66-37-47=66-32-47
 47 silken cs short
 
 
 //----------------------------------------------------------------------------
 Bank 66 40 Albion V - Strings Low + High - Soft and Wild
+//! 66-40-56=66-32-56
 56 brushed pizz cs
+//! 66-40-3=66-32-3
 3 col leg tratto
+//! 66-40-1=66-32-11
 11 harmonic trems
+//! 66-40-58=66-32-58
 58 light loose col leg
+//! 66-40-1=66-32-1
 1 no rosin long
+//! 66-40-10=66-32-10
 10 harmonics
+//! 66-40-48=66-32-48
 48 pizz harmonic bass
+//! 66-40-49=66-32-49
 49 pizz harmonic cello
+//! 66-40-7=66-32-7
 7 pulsing con sord
+//! 66-40-12=66-32-12
 12 pulsing cs sul pont
+//! 66-40-12=66-32-112
 112 sul iv
+//! 66-40-31=66-32-31
 31 travelling trems
 
 
 //----------------------------------------------------------------------------
 Bank 66 38 Albion V - Woods High
+//! 66-38-2=66-32-2
 2 air
+//! 66-38-14=66-32-14
 14 aleatoric overblown
+//! 66-38-1=66-32-1
 1 bursts
+//! 66-38-3=66-32-3
 3 doodle tonguing
+//! 66-38-4=66-32-4
 4 finger trills
+//! 66-38-11=66-32-11
 11 flutter
+//! 66-38-6=66-32-6
 6 hollow
+//! 66-38-7=66-32-7
 7 mini cresc
+//! 66-38-8=66-32-8
 8 multiphonics
+//! 66-38-9=66-32-9
 9 overblowing
+//! 66-38-10=66-32-10
 10 overblown
+//! 66-38-15=66-32-15
 15 pulsing semi cresc
+//! 66-38-5=66-32-5
 5 slight bend
+//! 66-38-114=66-32-114
 114 super air
+//! 66-38-16=66-32-16
 16 vibrato
+//! 66-38-40=66-32-40
 40 short
+//! 66-38-54=66-32-54
 54 overblown
+//! 66-38-42=66-32-42
 42 v short
 
 
 //----------------------------------------------------------------------------
 Bank 66 39 Albion V - Woods Low
+//! 66-39-2=66-32-2
 2 air
+//! 66-39-14=66-32-14
 14 aleatoric overblown
+//! 66-39-1=66-32-1
 1 bursts
+//! 66-39-3=66-32-3
 3 doodle tonguing
+//! 66-39-4=66-32-4
 4 finger trills
+//! 66-39-11=66-32-11
 11 flutter
+//! 66-39-6=66-32-6
 6 hollow
+//! 66-39-7=66-32-7
 7 mini cresc
+//! 66-39-8=66-32-8
 8 multiphonics
+//! 66-39-9=66-32-9
 9 overblowing
+//! 66-39-10=66-32-10
 10 overblown
+//! 66-39-15=66-32-15
 15 pulsing semi cresc
+//! 66-39-5=66-32-5
 5 slight bend
+//! 66-39-114=66-32-114
 114 super air
+//! 66-39-16=66-32-16
 16 vibrato
+//! 66-39-40=66-32-40
 40 short
+//! 66-39-54=66-32-54
 54 overblown
+//! 66-39-42=66-32-42
 42 v short

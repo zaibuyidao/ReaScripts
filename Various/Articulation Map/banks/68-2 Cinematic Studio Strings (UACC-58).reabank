@@ -1,22 +1,41 @@
 //Set the Mode of Articulation-Map-JSFX to Keyswitch CC (UACC) and set the number of Keyswitch CC to 58.
 //----------------------------------------------------------------------------
-Bank 67 58 Cinematic Studio Strings (UACC-58)
+Bank 67 2 Cinematic Studio Strings (UACC-58)
+//! 67-2-0=67-58-0
 0 Standard Legato
+//! 67-2-6=67-58-6
 6 Advanced Legato
+//! 67-2-11=67-58-11
 11 Spiccato
+//! 67-2-16=67-58-16
 16 Staccatissimo
+//! 67-2-21=67-58-21
 21 Staccato
+//! 67-2-26=67-58-26
 26 Sforzando
+//! 67-2-31=67-58-31
 31 Pizzicato
+//! 67-2-36=67-58-36
 36 Bartok Snap
+//! 67-2-41=67-58-41
 41 Col Legno
+//! 67-2-46=67-58-46
 46 Trills
+//! 67-2-51=67-58-51
 51 Harmonics
+//! 67-2-56=67-58-56
 56 Tremolo
+//! 67-2-61=67-58-61
 61 Measured Tremolo
+//! 67-2-66=67-58-66
 66 Marcato without overlay
+//! 67-2-71=67-58-71
 71 Marcato with overlay
+//! 67-2-76=67-58-76
 76 Legato On
+//! 67-2-81=67-58-81
 81 Legato Off
+//! 67-2-86=67-58-86
 86 Con Sordino On
+//! 67-2-91=67-58-91
 91 Con Sordino Off

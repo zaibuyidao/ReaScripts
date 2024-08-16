@@ -292,7 +292,49 @@ Bank 0 5 Ample Sound Qudi 曲笛風逸
 
 
 //----------------------------------------------------------------------
-Bank 0 58 Cinematic Studio Strings (KSCC)
+Bank 0 6 Cinematic Studio Strings (KSCC-58)
+//! 0-6-0=0-58-0
+0 Sustain: Standard Leaato
+//! 0-6-6=0-58-6
+6 Sustain: Advanced Legato
+//! 0-6-11=0-58-11
+11 Spiccato
+//! 0-6-16=0-58-16
+16 Staccatissimo
+//! 0-6-21=0-58-21
+21 Staccato
+//! 0-6-26=0-58-26
+26 Sforzando
+//! 0-6-31=0-58-31
+31 Pizzicato
+//! 0-6-36=0-58-36
+36 Bartok snap
+//! 0-6-41=0-58-41
+41 Col Legno
+//! 0-6-46=0-58-46
+46 Trills
+//! 0-6-51=0-58-51
+51 Harmonics
+//! 0-6-56=0-58-56
+56 Tremolo
+//! 0-6-61=0-58-61
+61 Measured Tremolo
+//! 0-6-66=0-58-66
+66 Marcato without overlay
+//! 0-6-71=0-58-71
+71 Marcato with overlay
+//! 0-6-76=0-58-76
+76 Legato On
+//! 0-6-81=0-58-81
+81 Legato Off
+//! 0-6-86=0-58-86
+86 Con Sordino On
+//! 0-6-91=0-58-91
+91 Con Sordino Off
+
+
+//----------------------------------------------------------------------
+Bank 0 58 Cinematic Studio Strings (KSCC-58)
 0 Sustain: Standard Leaato (标准连奏)
 6 Sustain: Advanced Legato (高级连奏)
 11 Spiccato (跳弓)
@@ -312,93 +354,3 @@ Bank 0 58 Cinematic Studio Strings (KSCC)
 81 Legato Off (关闭连奏)
 86 Con Sordino On (打开弱音器)
 91 Con Sordino Off (关闭弱音器)
-
-
-//----------------------------------------------------------------------
-Bank 3 96 Ample Metal Hellrazer (通用技法)
-//KS Velocity 96
-3 9弦指定
-4 8弦指定
-5 7弦指定
-6 6弦指定
-7 5弦指定
-8 4弦指定
-9 3弦指定
-10 2弦指定
-11 1弦指定
-12 标准音
-13 自然泛音
-14 手掌闷音(力度越小，压制程度越大)
-15 无头与无尾滑音
-16 连奏滑音
-17 击勾弦
-18 点指
-20 把位指定
-25 0把位指定
-26 1把位指定
-27 2把位指定
-28 3把位指定
-29 4把位指定
-30 5把位指定
-31 6把位指定
-32 7把位指定
-33 8把位指定
-34 9把位指定
-35 10把位指定
-36 11把位指定
-37 12把位指定
-38 13把位指定
-39 14把位指定
-40 15把位指定
-41 16把位指定
-42 17把位指定
-43 18把位指定
-44 19把位指定
-45 20把位指定
-89 滑弦噪音(Scratch)
-90 拍弦(Slap)
-91 护弦制音(Press)
-92 扫弦制音(Stroke Muting)
-93 下扫噪音 1(Downstroke 1)
-94 上扫噪音 1(Upstroke 1)
-95 下扫噪音 2(Downstroke 2)
-96 上扫噪音 2(Upstroke 2)
-101 刮弦噪音(Pick Scrape)
-102 效果滑音 1(FX Slide 1)
-103 效果滑音 2(FX Slide 2)
-
-//KS Velocity 1
-Bank 3 1 Ample Metal Hellrazer (其他技法)
-3 9弦指定-不改变把位
-4 8弦指定-不改变把位
-5 7弦指定-不改变把位
-6 6弦指定-不改变把位
-7 5弦指定-不改变把位
-8 4弦指定-不改变把位
-9 3弦指定-不改变把位
-10 2弦指定-不改变把位
-11 1弦指定-不改变把位
-12 标准音-Full Mute
-16 连奏滑音-不改变把位
-17 击勾弦-不改变把位
-99 自动连奏-开启自动击勾弦
-104 空弦优先 关
-
-//KS Velocity 22
-Bank 3 22 Ample Metal Hellrazer (其他技法)
-12 标准音-3/4 Mute
-
-//KS Velocity 43
-Bank 3 43 Ample Metal Hellrazer (其他技法)
-12 标准音-Half Mute
-
-//KS Velocity 64
-Bank 3 64 Ample Metal Hellrazer (其他技法)
-12 标准音- Sustain
-
-//KS Velocity 127
-Bank 3 127 Ample Metal Hellrazer (其他技法)
-12 标准音-重勾或搓泛音
-13 自然泛音-搓泛音
-99 自动连奏-开启自动滑音
-104 空弦优先 开
