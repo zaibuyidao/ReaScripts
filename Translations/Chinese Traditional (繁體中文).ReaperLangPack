@@ -1,10 +1,10 @@
 #NAME:Chinese Traditional (繁體中文)
-;Version: 1.0.16-719
+;Version: 1.0.17-720
 ;Author: zaibuyidao
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47865/Chinese%20Traditional%20%28%26%2332321%3B%26%2339636%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.19, SWS: 2.14.0.1
+;  Brand new REAPER: 7.20, SWS: 2.14.0.1
 
 [common]
 DCEF2B4D03DE723C=名稱
@@ -19,7 +19,6 @@ D8B3B3186B8C817F=ms
 99FA828F906D3EE4=查找
 D43B88702E996ED9=過濾:
 6D0BCBC7DDDC55E7=類型:
-3D9CBC3C216900AD=播放
 941DEA15C4817EEC=設置顏色...
 18C90F7E5DC51FCA=全部
 97D6D411868C112C=時間選區
@@ -43,6 +42,7 @@ D89CC7186B79C49A=到
 7DA8EA3426CA11D3=描述
 1616D990C579771C=秒
 3890BE5EE2B48715=循環
+3D9CBC3C216900AD=播放
 B2BB1E7719F22B98=對象
 90AF657379F9511D=標記
 DDDBC4B59922776E=主控軌道
@@ -136,7 +136,8 @@ ABEC79059CAD0B0E=別名:
 D66D409D600C2D04=混音器
 D82BED186B194A75=UI
 E9B5F27ED466AEF5=插入
-F8E6A0B81A77C5E9=重設所有 MIDI 設備
+56DEFE1989CA58D5=MIDI 輸入設備
+F8E6A0B81A77C5E9=復位所有 MIDI 設備
 04CC1A2793006D9A=自動
 1EEF91D385882BBE=插件
 46B10D8B633443CD=在 BWF 資料中包含工程檔案名
@@ -226,6 +227,7 @@ D26FE1B4C8988F96=靜音
 272E5D69D552CDA7=未靜音
 2B7EEDEAE2DA5D5C=啟用節拍器
 B420EF3AC9B07180=預卷
+044A88A9BCBC5EE0=工程網格遵循節拍器拍點定式
 0B61CC7E6E2E017D=MIDI 通道:
 D3B242D430A5DB6C=虛擬 MIDI 鍵盤
 38F9B35CED04D04D=大時鐘
@@ -397,6 +399,7 @@ A2596B858F081DFB=標準化為:
 E39C26BBF74C7E96=副本
 DD491F831B629F78=對象
 A840EDCD015BA702=固定車道複合
+7A447FA73C4DA2DC=MIDI 輸出設備
 6BE8B83EA0A1A15E=操作(&A)
 386DCB7A24A75D67=編輯(&E)
 3AF66241CE595B8C=包絡(&E)
@@ -2079,16 +2082,7 @@ D95776186C182E28==>
 [DLG_152] ; IDD_VSTHOST
 
 [DLG_153] ; IDD_PREFS_MIDI
-A4F5378A569069D6=MIDI 輸入可用 (可作為軌道輸入, 或用於學習模式, 或綁定到操作):
-2067FD051A93CC68=MIDI 輸出可用 (可作為軌道輸出):
-D5D0203E4FFCD927=MIDI 硬體設置
 59E07251B3B64C5C=添加虛擬 MIDI...
-028C731BC0576362=限制 MIDI 輸出到一個線程
-751EA016639ED40A=所有音符關閉
-E16CBE842A37B395=音高/持續
-B7CB4986C15E8D4B=重設由:
-9EC74E86B379FB1B=重設在:
-82AB49B39099AD8F=停止/停止尋軌
 
 [DLG_154] ; IDD_PREFS_PLUGINS
 C23F311E1AFC4997=層疊
@@ -3166,8 +3160,6 @@ C4E47B80C2B49F76=命名為:
 
 [DLG_441] ; IDD_CUSTOMMENURENAME
 1C7C93F3D30ADA2A=重命名自定義功能表對象
-62D0F774D07D5D6C=雙寬工具欄按鈕
-E6EA590267C70D81=用作工具提示
 
 [DLG_443] ; IDD_CONSOLE
 2F78A0EE7C16A283=調試主控台
@@ -4159,6 +4151,14 @@ FA5A06D098B92198=複合車道中的媒體對象邊緣編輯可以擴展源車道
 51B15BED5FC535DA=編輯複合區域邊緣
 B1DEFA3F456CA790=複合 MIDI 對象會創建池化副本
 
+[DLG_620] ; IDD_PREFS_MIDI2
+028C731BC0576362=限制 MIDI 輸出為單線程
+751EA016639ED40A=所有音符關閉
+E16CBE842A37B395=音高/延音
+82AB49B39099AD8F=停止/停止尋軌
+B7CB4986C15E8D4B=復位由:
+9EC74E86B379FB1B=復位在:
+
 [MENU_102] ; IDR_MENU1
 76AC8A0EF584639A=新建工程(&N)
 5CDF6E6E2108FF5C=打開工程(&O)...
@@ -4858,27 +4858,35 @@ D1D35C65C6B83D9C=不顯示信息
 B8C33ECCB30AE714=顯示滑鼠編輯幫助
 
 [MENU_340] ; IDR_TOOLBAR_CONTEXT
+D2E55C6C18E154F0=將當前工具欄重設為預設
+A00CEAC685D3BE6B=恢復當前工具欄未儲存的更改
+290C1ADA061748D3=恢復 %d 個不活躍功能表/工具欄未儲存的更改...
+03C2790CA60B15E0=恢復 %d 個功能表/工具欄未儲存的更改...
+8BDFDB4586466ABD=將 %d 個自定義功能表重設為預設...
+F63FD38F36097A49=將 %d 個自定義工具欄重設為預設...
 A1A9B1D944B5CD55=上下文功能表
-5D115FD605AB32B9=操作...
-B7F5A33C6B443EBA=分隔符
-5C47011789302AE3=標籤...
-115AC8A0007A019A=子功能表...
+8873F6AC4C349AF6=插入操作...
+5B4A7F3DF7771A45=插入分隔符
+A6D7CEA750BAAF1E=插入標籤...
+A2B2883A7100B963=插入子功能表...
+9E75FDFABCE5A4DF=更改操作...
+FD0DBFE94A64C757=重命名...\t雙擊
 391FAE28F4EC41AE=剪下\tCtrl+X
 0D8429DC1D3A785A=複製\tCtrl+C
 6D87C1CA6B74FD85=貼上\tCtrl+V
 E62C127D8E57826D=重設功能表
-40C2B30220B6B29A=將當前功能表/工具欄重設為預設設置
+A49F77FDB250429E=將當前功能表重設為預設
 5AB19C9C9F1E5320=將所有功能表重設為預設設置
 4B511B83E1912702=將所有工具欄重設為預設設置
+DFE1AEC6EB8CE537=恢復當前功能表未儲存的更改
+BC0E2B6866C8FEF3=恢復所有不活躍功能表/工具欄未儲存的更改
+3C4EB2CCA70EAD86=恢復所有功能表/工具欄未儲存的更改
 66B5F95E57AC691C=導入/導出功能表
 6C71A82BB8F8529C=將所有功能表/工具欄導出到 ReaperMenuSet 檔案...
 D9A206BCE996E764=將當前功能表/工具欄導出到 ReaperMenu 檔案...
 CE2F0C4F975A25BA=工具欄上下文功能表
-8873F6AC4C349AF6=插入操作...
-5B4A7F3DF7771A45=插入分隔符
-9E75FDFABCE5A4DF=更改操作...
-13268988F2D2D6A2=更改圖標...
-4D8F9175C9D8DC8D=文字圖標...
+85D0CD27C273152C=設置圖標...
+8334D7945B6B7B91=設置工具提示/文檔圖標...
 98791BA57BAEDAF6=將圖標設置為預設值
 836A75906077B0A8=根據切換狀態以動畫方式突出顯示
 76D89F050F6855A4=不顯示動畫
@@ -4891,6 +4899,7 @@ B24CBE6D368A882F=快速閃爍
 A1B720A4ACAB32A1=工具欄空白空間上下文不再使用
 0EDB78ECDD1F48E1=自定義此工具欄...
 19AEDAA933A733CD=圖標功能表
+FC2D0EA728E4213B=添加上下文功能表
 
 [MENU_341] ; IDR_CONTEXTS_41
 F693834CABA4C9E3=添加對象...\tA, Insert
@@ -5303,8 +5312,6 @@ D8BB57F7D0DA12AF=每小節拍數
 3D1532A93D800EC6=生成的波形形狀
 B53658EFB9EE1E8A=生成的波形長度 (毫秒)
 6717FA4AEEC94415=搜索偏好設定
-56DEFE1989CA58D5=MIDI 輸入設備
-7A447FA73C4DA2DC=MIDI 輸出設備
 C8B367B5542B2A26=螢幕設置
 DCCF2D2F7B9D84A4=伽馬
 B439AA405D79F1B7=陰影增益
@@ -6891,7 +6898,7 @@ DDC3CF5C36AE1229=對象: 禁用預設淡入/淡出 ⇌ Item: Disable default fad
 8BFF16FEBF8FE2DE=對象: 將吸附偏移設置到最近的網格線 ⇌ Item: Set snap offset to nearest grid line
 46A71810AD291ED8=對象: 將吸附偏移設置到游標處 ⇌ Item: Set snap offset to cursor
 93548C6BE2BC8E41=對象: 將滑鼠下方對象的吸附偏移設置到滑鼠位置 ⇌ Item: Set snap offset for item under mouse to mouse position
-E99FFEA6817458C1=檢視: 將停靠區附着/取消附着於主視窗 ⇌ View: Attach/unattach Docker to/from main window
+E99FFEA6817458C1=檢視: 將停靠區附着/分離於主視窗 ⇌ View: Attach/unattach Docker to/from main window
 48EF1F056FD34FBE=停靠區: 當小且僅有單個選項卡時緊湊顯示 ⇌ Dockers: compact when small and single tab
 E6F55259EE18AB70=停靠區: 在主視窗底部顯示 ⇌ Docker: show in bottom of main window
 E833908572C512EA=停靠區: 在主視窗頂部顯示 ⇌ Docker: show in top of main window
@@ -7058,7 +7065,7 @@ DD9F5EE6DF45D828=片段: 將同一錄音輪次中創建的所有片段設置為�
 8E0D9A4A8F47E786=向所有 MIDI 輸出/插件發送所有音符關閉和所有聲音關閉 ⇌ Send all-notes-off and all-sounds-off to all MIDI outputs/plug-ins
 2558616332EF90D4=切換全螢幕 ⇌ Toggle fullscreen
 8533008EAB2DF95A=最小化 REAPER ⇌ Minimize REAPER
-7E5F3749473BBBFA=停靠/取消停靠當前焦點的視窗 ⇌ Dock/undock currently focused window
+80473B6D30C02EA1=停靠/取消停靠當前聚焦的可停靠視窗，或附着/分離聚焦的停靠區 ⇌ Dock/undock currently focused dockable window, or attach/unattach focused docker
 60AD1F76C6C8AD26=檢視: 標尺時間單位: 分鐘:秒 ⇌ View: Time unit for ruler: Minutes:Seconds
 CDCBA879B3193E85=檢視: 標尺時間單位: 小節.節拍 / 分鐘:秒 ⇌ View: Time unit for ruler: Measures.Beats / Minutes:Seconds
 C1066B3840DB5CAA=檢視: 標尺時間單位: 小節.節拍 ⇌ View: Time unit for ruler: Measures.Beats
@@ -7637,7 +7644,7 @@ A724F6AA892C6837=網格: 設置為 1/16 ⇌ Grid: Set to 1/16
 43BC756F21CDCFDD=網格: 設置為 3 ⇌ Grid: Set to 3
 43BC6E6F21CDC3F8=網格: 設置為 4 ⇌ Grid: Set to 4
 322A7281794EFF1B=網格: 在編排檢視和 MIDI 編輯器中使用相同的網格劃分 ⇌ Grid: Use the same grid division in arrange view and MIDI editor
-F8E6A0B81A77C5E9=重設所有 MIDI 設備 ⇌ Reset all MIDI devices
+F8E6A0B81A77C5E9=復位所有 MIDI 設備 ⇌ Reset all MIDI devices
 
 [actions_fmt]
 6A859719FE602A01=軌道: 為 %s 設置音量 (僅限 MIDI CC/OSC) ⇌ Track: Set volume for %%s (MIDI CC/OSC only)
@@ -8062,18 +8069,30 @@ BFC3306F54935DAB=繼續自定義操作
 78759B7EBE0076EF= 從步驟
 
 [customizemenu]
+7E498D834316533D=圖像圖標
+BD441EE808368F29=文檔圖標, 預設工具提示
+5BF2418D54B41EC9=文檔圖標
+80E5A792BB20AA42=文檔雙寬圖標, 預設工具提示
+2989CC7E8F4BEFC0=文檔雙寬圖標
 60761F79AE7C6D51=自定義工具欄:
 743D5DE682B2520B=預設工具欄:
-3381436A5275FC2C=圖標...
-BB8DEF4452154BCD=切換功能表
+CC59D4245D04139A=[分隔符]
+9C29677AF0127DA4=[子功能表]
+30664CADB69ADE77=[子功能表結束]
+D324B77C70D88D45=[標籤]
+C8807D9DDAF199E9=[未知]
 3AD566171AC38A07=重命名功能表
 75E33EAFA782FD04=添加標籤
 DB43122089698013=添加子功能表
 8AE6DD57CA93AB8F=重命名功能表項
-5BF2418D54B41EC9=文檔圖標
-56CCAC0E8900FBFD=將所有自定義工具欄重設為預設設置？注意: 此操作不可撤銷！
-601D766EE84F0CA9=將所有自定義功能表重設為預設設置？注意: 此操作不可撤銷！
-E3EA8486EB10C973=確認功能表重設
+0B3572235D005DB9=設置工具欄對象的工具提示/文檔圖標
+21E5B8EABFCE0240=恢復以下功能表/工具欄未儲存的更改:\r\n\r\n
+863FD206CDDA71A1=  [活躍]
+06485C94D5A86D5F=將以下工具欄重設為預設值:\r\n\r\n
+60369E0E7744DEC3=將以下功能表重設為預設值:\r\n\r\n
+92B8C5A009E0CF85=\r\n這些上下文中任何未儲存的更改都將丟失，但已儲存的更改可以恢復。
+FA06C8A3BF09D44B=確認重設為預設值
+88D8C405D2B99F3D=確認恢復未儲存的更改
 462C331AD48CE1D6=加載功能表 [設置]:
 D33FECDC0798C273=ReaperMenu 檔案中沒有 '%s' 的功能表
 32F9F5B3AA189E84=導入 ReaperMenu 出錯
@@ -9407,7 +9426,7 @@ DC93F0F219EC8413=LV2 高級路由
 DA90960B601B6CFA=MIDI 輸出端口
 952E4E84C447F0CD=MIDI 輸入端口
 D3047D3ACE816387=未連接
-D21D5570902CD1AD=%d 插件已掃描 [%d lv2 捆綁] [%d UIs] [%d 失敗]
+67F9ED6A30F77B94=已掃描 %d 個插件 [%d 個 lv2 包] [%d 個 UI] [%d 個預置] [%d 個失敗]
 
 [lyrics]
 E6F0110D73CCC5BD=未選擇歌詞目標軌道
@@ -9569,8 +9588,6 @@ E469C2406A17223C=以下 MIDI 輸出無法打開:
 4EF943653BC1F32A=檔案已存在 - 覆蓋？
 0850FB29DC6ABA64=輸出寫入錯誤
 DE4EC48FB6DB470B=失敗
-2D12ED89184508AE=在 %s 之前將自定義功能表更改儲存到 '%s'？
-477A053235E7F30C=儲存更改？
 DF65194974DB1E99=無法導入 REAPER 功能表檔案 \"%s\"
 EAE6AD15A17728CD=REAPER 自定義功能表導入錯誤
 948B5857800727B3=導入自定義 \"%s\"？\r\n\r\n如果您先前已自定義過 \"%s\", 除非您先導出它們，否則您的更改將會丟失！\r\n\r\n(要導出，請從選項功能表選擇 \"自定義功能表/工具欄\" 。)
@@ -9887,7 +9904,7 @@ F14D9A44B2F1F156=硬體輸出 (選擇無以使用所有主控輸出):
 ABF1E33D5B8A95F5=直拍
 51D216B3FC77A288=三連音 3 比 2
 51D21CB3FC77ACBA=三連音 3 比 4
-AB69B234F1A5F9CC=將定式重設為預設
+F79F843F9EEFC237=將定式重設為 %d/%d 預設
 9BF09565B3B813E0=工程中的其他定式
 
 [midi]
@@ -10856,7 +10873,7 @@ BAE5BBE281FEAC4B=編輯: 克隆時間選區內的事件, 如有 (智能克隆) (
 85712914E6BCC16B=量化音符位置到網格 ⇌ Quantize notes position to grid
 9F2237C4D6CADCAB=量化音符起止位置到網格 ⇌ Quantize notes position and end to grid
 166E8EFCDF72DC0B=檔案: 儲存檔案 (僅限 MIDI 檔案模式) 或工程 (工程內 MIDI 模式) ⇌ File: Save file (MIDI file mode only) or project (in-project MIDI mode)
-D2445C53ED158E0C=檔案: 還原檔案 (僅限 MIDI 檔案模式) ⇌ File: Revert file (MIDI file mode only)
+D2445C53ED158E0C=檔案: 恢復檔案 (僅限 MIDI 檔案模式) ⇌ File: Revert file (MIDI file mode only)
 0FE56FA767BC8173=檢視: 轉到檔案末尾 ⇌ View: Go to end of file
 497100F1540AE4AE=檢視: 轉到檔案開頭 ⇌ View: Go to start of file
 D4DC18550F10CE58=清除所有音符/CC 名稱 ⇌ Clear all note/CC names
@@ -11077,7 +11094,7 @@ D321986FA347603D=插入文檔事件... ⇌ Insert text event...
 6B9A1E235CAF7E24=導出軌道歌詞... ⇌ Export track lyrics...
 3595163B199DC483=選擇所有 CC 事件 ⇌ Select all CC events
 9EBC00F62F9F9F8C=取消選擇所有 CC 事件 ⇌ Unselect all CC events
-F8E6A0B81A77C5E9=重設所有 MIDI 設備 ⇌ Reset all MIDI devices
+F8E6A0B81A77C5E9=復位所有 MIDI 設備 ⇌ Reset all MIDI devices
 
 [midi_artic]
 9311DE55FD827361=斷音 (Staccato)
@@ -13049,7 +13066,8 @@ E23148074D7C62C2=備份
 B5BBD9B3DA22D31C=對象淡變預設設置
 0CF52F20D6054A34=對象循環預設設置
 5E1EE8B2642F9F1B=音訊
-BB844E058DECEFE5=MIDI 設備
+404C6F456D3E6DFF=MIDI 輸入
+FF17E9D16C26C7A0=MIDI 輸出
 A8617B784628DEDC=靜音/獨奏
 ED8F18A436F25E29=擦洗/輕推
 002801EF0D94419F=循環/車道錄音
@@ -13286,12 +13304,16 @@ ECF3D7AF70A281F4=(忽略)
 
 [prefs_mididev_help]
 7D7C7A462897B852=MIDI 輸入設備可以被啟用用於軌道輸入或控制消息 (可在操作列表中分配), 或兩者都啟用。
-A6AC82E8EEFF54EA=MIDI 輸出設備可以啟用，可選的帶有 MIDI 時鐘和 SPP 發送。重設信息也可以被禁用。
-EB1FB6B6F4F4C813=這將在停止/播放期間發送 MIDI 所有音符關閉和所有聲音關閉消息。
-8C3BC63E5CE56671=這將在停止/播放期間發送 MIDI 音高和延音 (CC#64) 重設消息。
-744D44D8300A6F70=啟用此功能可以通過單個線程驅動所有 MIDI 硬體，這對性能來說並不理想，但可能與某些硬體更加相容。
 F334C433C938F542=關閉並重新打開所有 MIDI 設備，如果可能的話，重新掃描新設備。
 66215CF8EEA7719C=允許創建新的虛擬 MIDI 設備 (例如，環回或硬體控制器)。
+7F4A8D184035277E=過濾可見的 MIDI 輸入設備列表 - 可以使用設備名稱 and/or <avail> <enabled> <all> <control> <ignored>
+A49B9B12A7B92C25=MIDI 輸出設備可以啟用為軌道輸出，選擇性地發送 MIDI 時鐘和 SPP。也可以禁用復位消息。
+5B312BE7F408E7AB=這將發送 MIDI 所有音符關閉和所有聲音關閉消息以進行復位。
+A12784088927EE75=這將發送 MIDI 音高和延音 (CC#64) 復位消息以進行復位。
+744D44D8300A6F70=啟用此功能可以通過單個線程驅動所有 MIDI 硬體，這對性能來說並不理想，但可能與某些硬體更加相容。
+DF43844308F546F1=在回放開始或尋軌回放時發送復位消息 (根據偏好設定)。
+7032E80387B1028D=在停止或停止進行尋軌時發送復位消息 (根據偏好設定)。
+C092B59429C8480F=過濾可見的 MIDI 輸出設備列表 - 可以使用設備名稱 and/or <avail> <enabled> <ll> <noreset> <clock> <nospp> <ignored>
 
 [prefs_midiedit_help]
 B903973979C81B00=當軌道接收到 MIDI 音符輸入時，在 MIDI 編輯器鍵盤上顯示簡短的顏色閃爍。
