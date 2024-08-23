@@ -1,5 +1,5 @@
 #NAME:Chinese Traditional (繁體中文)
-;Version: 1.0.17-720
+;Version: 1.0.18-720
 ;Author: zaibuyidao
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47865/Chinese%20Traditional%20%28%26%2332321%3B%26%2339636%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
@@ -7970,15 +7970,15 @@ F75B0B480604FAB7=, 媒體
 01FDED75265EB99E=範圍:
 
 [csurf]
-19F3DA19EB7796C9=YAMAHA 01X (設備 %d,%d)
-E2D68C95698E9C75=Frontier AlphaTrack (設備 %d,%d)
-76A38BCB9CC73BB1=HUI(partial) (設備 %d,%d)
-83379772EF578BD8=BCF 2000 (設備 %d,%d)
-DA6DC7FC8493B59F=PreSonus FaderPort (設備 %d,%d)
-6E1410226ADE5B93=PreSonus FaderPort FP2 (設備 %d,%d)
-81E863DA635540B1=Mackie Control Extended (設備 %d,%d)
-D9276AAE1F2BAAFC=Mackie Control (設備 %d,%d)
-1C872E3891E474E8=Frontier TranzPort (設備 %d,%d)
+;19F3DA19EB7796C9=YAMAHA 01X (設備 %d,%d)
+;E2D68C95698E9C75=Frontier AlphaTrack (設備 %d,%d)
+;76A38BCB9CC73BB1=HUI(partial) (設備 %d,%d)
+;83379772EF578BD8=BCF 2000 (設備 %d,%d)
+;DA6DC7FC8493B59F=PreSonus FaderPort (設備 %d,%d)
+;6E1410226ADE5B93=PreSonus FaderPort FP2 (設備 %d,%d)
+;81E863DA635540B1=Mackie Control Extended (設備 %d,%d)
+;D9276AAE1F2BAAFC=Mackie Control (設備 %d,%d)
+;1C872E3891E474E8=Frontier TranzPort (設備 %d,%d)
 
 [csurf_DLG_102] ; IDD_OSC_LISTEN
 CD157481BA03EF15=OSC 偵聽
@@ -8039,17 +8039,17 @@ D0F681DA8CBE07E7=(刷新列表)
 1C8C0CA509E44299=(打開配置目錄)
 
 [csurf_type]
-D72D35942B75A505=YAMAHA 01X
-10881BCDD88796D1=Frontier AlphaTrack
-803BFEAF23F20DC3=HUI (部分支援)
-E399564E58F138A9=Behringer BCF2000 (使用預置 1)
-DF249D69F709EDAF=PreSonus FaderPort
-789C954A015F4BD9=PreSonus FaderPort v2 (2018)
-570E4608A519946D=Mackie Control Universal
-EAD02982B9759BDB=Mackie Control Extender
-56DC84781C5106BF=OSC (打開聲音控制)
-3B480EA7AA22E148=Frontier Tranzport
-0A2E68C3B74ED940=網頁瀏覽器界面
+;D72D35942B75A505=YAMAHA 01X
+;10881BCDD88796D1=Frontier AlphaTrack
+;803BFEAF23F20DC3=HUI (部分支援)
+;E399564E58F138A9=Behringer BCF2000 (使用預置 1)
+;DF249D69F709EDAF=PreSonus FaderPort
+;789C954A015F4BD9=PreSonus FaderPort v2 (2018)
+;570E4608A519946D=Mackie Control Universal
+;EAD02982B9759BDB=Mackie Control Extender
+;56DC84781C5106BF=OSC (打開聲音控制)
+;3B480EA7AA22E148=Frontier Tranzport
+;0A2E68C3B74ED940=網頁瀏覽器界面
 
 [csurf_www]
 0941B224A9884835=網頁瀏覽器界面: %s%shttp://%s:%d
@@ -8069,11 +8069,11 @@ BFC3306F54935DAB=繼續自定義操作
 78759B7EBE0076EF= 從步驟
 
 [customizemenu]
-7E498D834316533D=圖像圖標
-BD441EE808368F29=文檔圖標, 預設工具提示
-5BF2418D54B41EC9=文檔圖標
-80E5A792BB20AA42=文檔雙寬圖標, 預設工具提示
-2989CC7E8F4BEFC0=文檔雙寬圖標
+;7E498D834316533D=圖像圖標
+;BD441EE808368F29=文檔圖標, 預設工具提示
+;5BF2418D54B41EC9=文檔圖標
+;80E5A792BB20AA42=文檔雙寬圖標, 預設工具提示
+;2989CC7E8F4BEFC0=文檔雙寬圖標
 60761F79AE7C6D51=自定義工具欄:
 743D5DE682B2520B=預設工具欄:
 CC59D4245D04139A=[分隔符]
@@ -12867,7 +12867,7 @@ AC7DA40A71A28A0C=滑鼠游標
 36D2B335DF906511=鎖定的對象逐軌中斷波紋
 080E32BDDCA4B887=鎖定的對象不受波紋影響
 895C922ED3E9E77C=鎖定的對象受到波紋影響 (忽略鎖定)
-10FCCDC84492FD7E=上升 %d, 下降 %d
+;10FCCDC84492FD7E=上升 %d, 下降 %d
 
 [prefs_edit_help]
 3994D33CE89A8920=在執行某些編輯後，移動編輯游標 (回放將從此開始) 的各種選項。
