@@ -1,10 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 1.0.19-720
+;Version: 1.0.20-721
 ;Author: zaibuyidao
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47851/Chinese%20Simplified%20%28%26%2331616%3B%26%2320307%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.20, SWS: 2.14.0.1
+;  Brand new REAPER: 7.21, SWS: 2.14.0.1
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -4864,7 +4864,6 @@ A00CEAC685D3BE6B=恢复当前工具栏未保存的更改
 03C2790CA60B15E0=恢复 %d 个菜单/工具栏未保存的更改...
 8BDFDB4586466ABD=将 %d 个自定义菜单重置为默认...
 F63FD38F36097A49=将 %d 个自定义工具栏重置为默认...
-A1A9B1D944B5CD55=上下文菜单
 8873F6AC4C349AF6=插入操作...
 5B4A7F3DF7771A45=插入分隔符
 A6D7CEA750BAAF1E=插入标签...
@@ -4874,17 +4873,14 @@ FD0DBFE94A64C757=重命名...\t双击
 391FAE28F4EC41AE=剪切\tCtrl+X
 0D8429DC1D3A785A=复制\tCtrl+C
 6D87C1CA6B74FD85=粘贴\tCtrl+V
-E62C127D8E57826D=重置菜单
 A49F77FDB250429E=将当前菜单重置为默认
 5AB19C9C9F1E5320=将所有菜单重置为默认设置
 4B511B83E1912702=将所有工具栏重置为默认设置
 DFE1AEC6EB8CE537=恢复当前菜单未保存的更改
 BC0E2B6866C8FEF3=恢复所有不活跃菜单/工具栏未保存的更改
 3C4EB2CCA70EAD86=恢复所有菜单/工具栏未保存的更改
-66B5F95E57AC691C=导入/导出菜单
 6C71A82BB8F8529C=将所有菜单/工具栏导出到 ReaperMenuSet 文件...
 D9A206BCE996E764=将当前菜单/工具栏导出到 ReaperMenu 文件...
-CE2F0C4F975A25BA=工具栏上下文菜单
 85D0CD27C273152C=设置图标...
 8334D7945B6B7B91=设置工具提示/文本图标...
 98791BA57BAEDAF6=将图标设置为默认值
@@ -4896,10 +4892,7 @@ C144A4FD3210D85A=如果切换状态已禁用，则显示动画
 547384BC4810E8E8=预备动画
 4CBB075AE9074A60=慢速闪烁
 B24CBE6D368A882F=快速闪烁
-A1B720A4ACAB32A1=工具栏空白空间上下文不再使用
 0EDB78ECDD1F48E1=自定义此工具栏...
-19AEDAA933A733CD=图标菜单
-FC2D0EA728E4213B=添加上下文菜单
 
 [MENU_341] ; IDR_CONTEXTS_41
 F693834CABA4C9E3=添加对象...\tA, Insert
@@ -5077,6 +5070,7 @@ D5854E08E1FFB220=将所有使用相同源媒体的对象设置为相同的随机
 92CDF3A2D93107EA=将所有车道中的对象设置每个车道一个随机颜色
 B4CFF138C47C676E=录制到车道
 3A40CDD1009F1A37=选择对象
+7E7EBDD321D7EB44=如可能，将对象向上移动以减少车道使用 (保留相对车道位置)
 82D49E425315D533=如可能，将对象向上移动以减少车道使用
 B2D54886F57E4B00=在此车道上方插入空车道
 17E1C69478F1C66F=在底部添加空车道
@@ -6601,6 +6595,7 @@ D87BD1D5548BE059=选项: 显示所有片段 (有空间时) ⇌ Options: Show all
 FABD9D27418DBAB2=轨道车道: 移动对象到顶部车道 ⇌ Track lanes: Move items to top lane
 3C09C8FD1EFE6B70=轨道车道: 移动对象到底部车道 ⇌ Track lanes: Move items to bottom lane
 35319FE07FC43947=轨道车道: 将对象移动到第一个可用的车道，如有需要则添加车道 ⇌ Track lanes: Move items down to first available lane, add lane if needed
+4713FAB4D6894D58=轨道车道: 如可能，将对象向上移动以减少车道使用 (保留相对车道位置) ⇌ Track lanes: Move items up if possible to minimize lane usage (preserve relative lane positions)
 7B5FDD35C4165F8F=轨道车道: 如可能，将对象向上移动以减少车道使用 ⇌ Track lanes: Move items up if possible to minimize lane usage
 5877AD5DBDB5AE33=轨道车道: 在轨道底部添加空车道 ⇌ Track lanes: Add empty lane at bottom of track
 E151D0C08B65D65F=轨道车道: 在轨道顶部插入空车道 ⇌ Track lanes: Insert empty lane at top of track
@@ -8093,6 +8088,8 @@ DB43122089698013=添加子菜单
 92B8C5A009E0CF85=\r\n这些上下文中任何未保存的更改都将丢失，但已保存的更改可以恢复。
 FA06C8A3BF09D44B=确认重置为默认值
 88D8C405D2B99F3D=确认恢复未保存的更改
+EAC5CBBDB2EF3D92=您必须在导入前保存未保存的更改。\r\n\r\n现在保存更改吗？
+253A61E2396F9708=ReaperMenu 导入
 462C331AD48CE1D6=加载菜单 [设置]:
 D33FECDC0798C273=ReaperMenu 文件中没有 '%s' 的菜单
 32F9F5B3AA189E84=导入 ReaperMenu 出错
@@ -14570,6 +14567,7 @@ D438218A8258E7E8=轨道上的第一个媒体对象为 1, 第二个为 2...
 D05426FE6CE7D5FA=媒体对象片段标记 (对象内的第一个片段标记)
 7955BAE993AFFFD0=匹配 name=value 的媒体对象片段标记的值部分
 CB03693AED979FA9=匹配 name=value 的媒体对象片段标记的值部分, 由 s 分隔
+49D76AA82C27D46F=媒体对象车道编号
 0277AA78F6F4F7F4=开始时间为 M-SS.TTT
 07AD367A3918138B=结束时间为 M-SS.TTT
 4F310C9C48CF2BE5=长度为 M-SS.TTT

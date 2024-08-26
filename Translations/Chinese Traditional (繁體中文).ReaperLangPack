@@ -1,10 +1,10 @@
 #NAME:Chinese Traditional (繁體中文)
-;Version: 1.0.19-720
+;Version: 1.0.20-721
 ;Author: zaibuyidao
 ;Link: https://soundengine.cn/topic/1297
 ;Link: https://stash.reaper.fm/v/47865/Chinese%20Traditional%20%28%26%2332321%3B%26%2339636%3B%26%2320013%3B%26%2325991%3B%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.20, SWS: 2.14.0.1
+;  Brand new REAPER: 7.21, SWS: 2.14.0.1
 
 [common]
 DCEF2B4D03DE723C=名稱
@@ -4864,7 +4864,6 @@ A00CEAC685D3BE6B=恢復當前工具欄未儲存的更改
 03C2790CA60B15E0=恢復 %d 個功能表/工具欄未儲存的更改...
 8BDFDB4586466ABD=將 %d 個自定義功能表重設為預設...
 F63FD38F36097A49=將 %d 個自定義工具欄重設為預設...
-A1A9B1D944B5CD55=上下文功能表
 8873F6AC4C349AF6=插入操作...
 5B4A7F3DF7771A45=插入分隔符
 A6D7CEA750BAAF1E=插入標籤...
@@ -4874,17 +4873,14 @@ FD0DBFE94A64C757=重命名...\t雙擊
 391FAE28F4EC41AE=剪下\tCtrl+X
 0D8429DC1D3A785A=複製\tCtrl+C
 6D87C1CA6B74FD85=貼上\tCtrl+V
-E62C127D8E57826D=重設功能表
 A49F77FDB250429E=將當前功能表重設為預設
 5AB19C9C9F1E5320=將所有功能表重設為預設設置
 4B511B83E1912702=將所有工具欄重設為預設設置
 DFE1AEC6EB8CE537=恢復當前功能表未儲存的更改
 BC0E2B6866C8FEF3=恢復所有不活躍功能表/工具欄未儲存的更改
 3C4EB2CCA70EAD86=恢復所有功能表/工具欄未儲存的更改
-66B5F95E57AC691C=導入/導出功能表
 6C71A82BB8F8529C=將所有功能表/工具欄導出到 ReaperMenuSet 檔案...
 D9A206BCE996E764=將當前功能表/工具欄導出到 ReaperMenu 檔案...
-CE2F0C4F975A25BA=工具欄上下文功能表
 85D0CD27C273152C=設置圖標...
 8334D7945B6B7B91=設置工具提示/文檔圖標...
 98791BA57BAEDAF6=將圖標設置為預設值
@@ -4896,10 +4892,7 @@ C144A4FD3210D85A=如果切換狀態已禁用，則顯示動畫
 547384BC4810E8E8=預備動畫
 4CBB075AE9074A60=慢速閃爍
 B24CBE6D368A882F=快速閃爍
-A1B720A4ACAB32A1=工具欄空白空間上下文不再使用
 0EDB78ECDD1F48E1=自定義此工具欄...
-19AEDAA933A733CD=圖標功能表
-FC2D0EA728E4213B=添加上下文功能表
 
 [MENU_341] ; IDR_CONTEXTS_41
 F693834CABA4C9E3=添加對象...\tA, Insert
@@ -5077,6 +5070,7 @@ D5854E08E1FFB220=將所有使用相同源媒體的對象設置為相同的隨機
 92CDF3A2D93107EA=將所有車道中的對象設置每個車道一個隨機顏色
 B4CFF138C47C676E=錄製到車道
 3A40CDD1009F1A37=選擇對象
+7E7EBDD321D7EB44=如可能，將對象向上移動以減少車道使用 (保留相對車道位置)
 82D49E425315D533=如可能，將對象向上移動以減少車道使用
 B2D54886F57E4B00=在此車道上方插入空車道
 17E1C69478F1C66F=在底部添加空車道
@@ -6601,6 +6595,7 @@ D87BD1D5548BE059=選項: 顯示所有片段 (有空間時) ⇌ Options: Show all
 FABD9D27418DBAB2=軌道車道: 移動對象到頂部車道 ⇌ Track lanes: Move items to top lane
 3C09C8FD1EFE6B70=軌道車道: 移動對象到底部車道 ⇌ Track lanes: Move items to bottom lane
 35319FE07FC43947=軌道車道: 將對象移動到第一個可用的車道，如有需要則添加車道 ⇌ Track lanes: Move items down to first available lane, add lane if needed
+4713FAB4D6894D58=軌道車道: 如可能，將對象向上移動以減少車道使用 (保留相對車道位置) ⇌ Track lanes: Move items up if possible to minimize lane usage (preserve relative lane positions)
 7B5FDD35C4165F8F=軌道車道: 如可能，將對象向上移動以減少車道使用 ⇌ Track lanes: Move items up if possible to minimize lane usage
 5877AD5DBDB5AE33=軌道車道: 在軌道底部添加空車道 ⇌ Track lanes: Add empty lane at bottom of track
 E151D0C08B65D65F=軌道車道: 在軌道頂部插入空車道 ⇌ Track lanes: Insert empty lane at top of track
@@ -8093,6 +8088,8 @@ DB43122089698013=添加子功能表
 92B8C5A009E0CF85=\r\n這些上下文中任何未儲存的更改都將丟失，但已儲存的更改可以恢復。
 FA06C8A3BF09D44B=確認重設為預設值
 88D8C405D2B99F3D=確認恢復未儲存的更改
+EAC5CBBDB2EF3D92=您必須在導入前儲存未儲存的更改。\r\n\r\n現在儲存更改嗎？
+253A61E2396F9708=ReaperMenu 導入
 462C331AD48CE1D6=加載功能表 [設置]:
 D33FECDC0798C273=ReaperMenu 檔案中沒有 '%s' 的功能表
 32F9F5B3AA189E84=導入 ReaperMenu 出錯
@@ -14570,6 +14567,7 @@ D438218A8258E7E8=軌道上的第一個媒體對象為 1, 第二個為 2...
 D05426FE6CE7D5FA=媒體對象片段標記 (對象內的第一個片段標記)
 7955BAE993AFFFD0=匹配 name=value 的媒體對象片段標記的值部分
 CB03693AED979FA9=匹配 name=value 的媒體對象片段標記的值部分, 由 s 分隔
+49D76AA82C27D46F=媒體對象車道編號
 0277AA78F6F4F7F4=開始時間為 M-SS.TTT
 07AD367A3918138B=結束時間為 M-SS.TTT
 4F310C9C48CF2BE5=長度為 M-SS.TTT
