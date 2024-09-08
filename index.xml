@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="816697ab9404948641817e1f7b8ae3bf9479edc5">
+<index version="1" name="zaibuyidao Scripts" commit="b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8703,6 +8703,51 @@
     </reapack>
   </category>
   <category name="Various">
+    <reapack name="Advanced Solo Bundle.lua" type="script" desc="Advanced Solo Bundle">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Intelligent SOLO Script Series, filter "zaibuyidao solo" in ReaPack or Actions to access all scripts. Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website" href="https://forum.cockos.com/showthread.php?t=290856">Forum Thread</link>
+        <link rel="website" href="https://github.com/zaibuyidao/ReaScripts">GitHub repository</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-09-08T10:45:40Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Item from Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Item%20from%20Edit%20Cursor.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Item from First Selected Item.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Item%20from%20First%20Selected%20Item.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Item from Mouse Position.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Item%20from%20Mouse%20Position.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Item Without Moving Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Item%20Without%20Moving%20Edit%20Cursor.lua</source>
+        <source main="main midi_editor" file="Advanced Solo/zaibuyidao_Hold to Solo MIDI Item from Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Edit%20Cursor.lua</source>
+        <source main="main midi_editor" file="Advanced Solo/zaibuyidao_Hold to Solo MIDI Item from Mouse Position.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20MIDI%20Item%20from%20Mouse%20Position.lua</source>
+        <source main="midi_editor" file="Advanced Solo/zaibuyidao_Hold to Solo Note from Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Edit%20Cursor.lua</source>
+        <source main="midi_editor" file="Advanced Solo/zaibuyidao_Hold to Solo Note from Mouse Position.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Note%20from%20Mouse%20Position.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Track from Edit Cursor (Exclude Item Selection).lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Edit%20Cursor%20(Exclude%20Item%20Selection).lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Track from Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Edit%20Cursor.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Track from Mouse Position (Exclude Item Selection).lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Mouse%20Position%20(Exclude%20Item%20Selection).lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Track from Mouse Position.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Track%20from%20Mouse%20Position.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Track Without Moving Edit Cursor (Exclude Item Selection).lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Track%20Without%20Moving%20Edit%20Cursor%20(Exclude%20Item%20Selection).lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Hold to Solo Track Without Moving Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Hold%20to%20Solo%20Track%20Without%20Moving%20Edit%20Cursor.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Instant Solo Item from Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Instant%20Solo%20Item%20from%20Edit%20Cursor.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Instant Solo Item from First Selected Item.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Instant%20Solo%20Item%20from%20First%20Selected%20Item.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Instant Solo Item from Mouse Position.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Instant%20Solo%20Item%20from%20Mouse%20Position.lua</source>
+        <source main="midi_editor" file="Advanced Solo/zaibuyidao_Instant Solo Note from Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Instant%20Solo%20Note%20from%20Edit%20Cursor.lua</source>
+        <source main="midi_editor" file="Advanced Solo/zaibuyidao_Instant Solo Note from Mouse Position.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Instant%20Solo%20Note%20from%20Mouse%20Position.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Instant Solo Track from Edit Cursor.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Instant%20Solo%20Track%20from%20Edit%20Cursor.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Instant Solo Track from Mouse Position.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Instant%20Solo%20Track%20from%20Mouse%20Position.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Toggle Solo Automatically for Selected Tracks.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Toggle%20Solo%20Automatically%20for%20Selected%20Tracks.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Toggle Solo for Selected Tracks or Track Under Mouse.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Toggle%20Solo%20for%20Selected%20Tracks%20or%20Track%20Under%20Mouse.lua</source>
+        <source main="main" file="Advanced Solo/zaibuyidao_Toggle Solo for Selected Tracks.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Toggle%20Solo%20for%20Selected%20Tracks.lua</source>
+        <source main="main midi_editor" file="Advanced Solo/zaibuyidao_Toggle Solo for Specific Track (Settings).lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Toggle%20Solo%20for%20Specific%20Track%20(Settings).lua</source>
+        <source main="main midi_editor" file="Advanced Solo/zaibuyidao_Toggle Solo for Specific Track.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/zaibuyidao_Toggle%20Solo%20for%20Specific%20Track.lua</source>
+        <source file="Advanced Solo/lib/speaker.cur">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/lib/speaker.cur</source>
+        <source file="Advanced Solo/lib/serpent.lua">https://github.com/zaibuyidao/ReaScripts/raw/b93d5f96a5bbbddcdd4cf71cb0137602dcc50e5c/Various/Advanced%20Solo/lib/serpent.lua</source>
+      </version>
+    </reapack>
     <reapack name="Articulation Map Bundle.lua" type="script" desc="Articulation Map Bundle">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
