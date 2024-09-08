@@ -1,6 +1,6 @@
 -- @description Advanced Solo Bundle
 -- @author zaibuyidao
--- @version 1.0
+-- @version 1.0.1
 -- @changelog
 --   + New Script
 -- @links
@@ -25,6 +25,8 @@
 --   [main=main] Advanced Solo/zaibuyidao_Instant Solo Item from Edit Cursor.lua
 --   [main=main] Advanced Solo/zaibuyidao_Instant Solo Item from First Selected Item.lua
 --   [main=main] Advanced Solo/zaibuyidao_Instant Solo Item from Mouse Position.lua
+--   [main=main,midi_editor] Advanced Solo/zaibuyidao_Instant Solo MIDI Item from Edit Cursor.lua
+--   [main=main,midi_editor] Advanced Solo/zaibuyidao_Instant Solo MIDI Item from Mouse Position.lua
 --   [main=midi_editor] Advanced Solo/zaibuyidao_Instant Solo Note from Edit Cursor.lua
 --   [main=midi_editor] Advanced Solo/zaibuyidao_Instant Solo Note from Mouse Position.lua
 --   [main=main] Advanced Solo/zaibuyidao_Instant Solo Track from Edit Cursor.lua
