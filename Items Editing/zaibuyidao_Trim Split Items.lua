@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 2.0.1
+-- @version 2.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -166,7 +166,6 @@ function get_sample_pos_value(take, skip_sample, item)
     return false, false, false
   end
 
-  -- local item = reaper.GetMediaItemTake_Item(take)
   -- 获取item的起始位置和长度
   local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
@@ -182,12 +181,11 @@ function get_sample_pos_value(take, skip_sample, item)
 
     -- 计算循环偏移值
     local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length
     
     if item_start + item_length > source_absolute_end then
       item_length = source_absolute_end
       reaper.BR_SetItemEdges(item, item_start, item_length)
-      --item_len_ori = item_start + item_length
     end
   end
 
@@ -203,7 +201,6 @@ function get_sample_pos_value(take, skip_sample, item)
   if skip_sample <= 0 or not tonumber(skip_sample) then
     skip_sample = 0
   elseif skip_sample > 0 then
-    -- skip_sample = samplerate / skip_sample -- 每秒处理几个样本
     skip_sample = samplerate / (samplerate / skip_sample) -- 跳过几个样本
   end
 
@@ -279,11 +276,10 @@ function expand_item(item, left, right, limit_left, limit_right)
 
     -- 计算循环偏移值
     local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length
     
     if item_start + item_length > source_absolute_end then
       item_length = source_absolute_end
-      -- reaper.BR_SetItemEdges(item, item_start, item_length)
     end
   end
 
@@ -315,18 +311,15 @@ function trim_item(item, keep_ranges, min_len, snap_offset, left_pad)
 
     -- 计算循环偏移值
     local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length
     
     if item_start + item_length > source_absolute_end then
       item_length = source_absolute_end
-      -- reaper.BR_SetItemEdges(item, item_start, item_length)
     end
   end
-  -- table.print(keep_ranges)
+
   local left = item
   for i, range in ipairs(keep_ranges) do
-    -- local range_len = range[2] - range[1]
-    -- reaper.ShowConsoleMsg(string.format("Range %d: start = %.6f, end = %.6f, length = %.6f\n", i, range[1], range[2], range_len))
     if not eq(range[1], item_start) then
       local right = reaper.SplitMediaItem(left, range[1])
       delete_item(left)
@@ -375,22 +368,18 @@ function trim_item_keep_silence(item, keep_ranges, min_len, snap_offset, left_pa
 
     -- 计算循环偏移值
     local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length
     
     if item_start + item_length > source_absolute_end then
       item_length = source_absolute_end
-      -- reaper.BR_SetItemEdges(item, item_start, item_length)
     end
   end
 
   -- table.print(keep_ranges)
   local left = item
   for i, range in ipairs(keep_ranges) do
-    -- local range_len = range[2] - range[1]
-    -- reaper.ShowConsoleMsg(string.format("Range %d: start = %.6f, end = %.6f, length = %.6f\n", i, range[1], range[2], range_len))
     if not eq(range[1], item_start) then
       local right = reaper.SplitMediaItem(left, range[1])
-      --delete_item(left)
       left = right
     end
 
@@ -414,10 +403,6 @@ function trim_item_keep_silence(item, keep_ranges, min_len, snap_offset, left_pa
 
     left = right
     ::continue::
-  end
-
-  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_start + item_length then
-    --delete_item(left)
   end
 end
 
@@ -444,7 +429,6 @@ function trim_item_before_nonsilence(item, keep_ranges, snap_offset, left_pad)
 end
 
 function trim_item_before_silence(item, keep_ranges, min_len)
-  -- print(keep_ranges)
   local left = item
   for i, range in ipairs(keep_ranges) do
     if range[2] - range[1] < min_len then
@@ -476,11 +460,10 @@ function merge_ranges(item, keep_ranges, min_len)
 
     -- 计算循环偏移值
     local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length
     
     if item_start + item_length > source_absolute_end then
       item_length = source_absolute_end
-      -- reaper.BR_SetItemEdges(item, item_start, item_length)
     end
   end
 
@@ -555,11 +538,10 @@ function max_peak_pos(item, skip, right, left)
 
     -- 计算循环偏移值
     local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
+    local right_offset = (item_start + item_length - source_absolute_end) % source_length
     
     if item_start + item_length > source_absolute_end then
       item_length = source_absolute_end
-      -- reaper.BR_SetItemEdges(item, item_start, item_length)
     end
   end
 
@@ -574,7 +556,6 @@ function max_peak_pos(item, skip, right, left)
 
   local right_bound = item_start + right
   local left_bound = item_start + left
-  -- print(left_bound,right_bound)
   local max_value
   local max_pos
 
@@ -622,7 +603,6 @@ if get == nil then
   reaper.defer(function() end) -- 终止执行
   get = getSavedDataList("TRIM_SPLIT_ITEMS_SETTINGS", "Parameters")
 end
---print(get)
 
 THRESHOLD = default_if_invalid(get[1], -24.1, tonumber)
 HYSTERESIS = default_if_invalid(get[2], 0, tonumber)
@@ -633,8 +613,7 @@ RIGHT_PAD = default_if_invalid(get[6], 3, tonumber)
 FADE = default_if_invalid(get[7], "y", tostring)
 SNAP_OFFSET = default_if_invalid(get[8], 50, tonumber)
 SKIP_SAMPLE = default_if_invalid(get[9], 0, tonumber)
-SPLIT = default_if_invalid(get[10], "y", tostring)
-MODE = default_if_invalid(get[11], "del", tostring)
+MODE = default_if_invalid(get[10], "del", tostring)
 
 local count_sel_item = reaper.CountSelectedMediaItems(0)
 
@@ -670,7 +649,6 @@ for i = count_sel_item - 1, 0, -1 do
       l = i
     elseif sample_min[i] < dB_to_val2 and l ~= nil then
       table.insert(keep_ranges, { time_sample[l], time_sample[i], l, i, sample_min[l], sample_max[i]})
-      -- table.insert(keep_ranges, { time_sample[l], time_sample[i - 1], l, i - 1, sample_min[l], sample_max[i - 1]})
       l = nil
     elseif sample_max[i] >= dB_to_val2 and l == nil and #keep_ranges > 0 and time_sample[i] - keep_ranges[#keep_ranges][2] < MIN_SILENCE_LEN / 1000 then
       l = keep_ranges[#keep_ranges][3]
@@ -682,19 +660,8 @@ for i = count_sel_item - 1, 0, -1 do
     table.insert(keep_ranges, { time_sample[l], time_sample[#time_sample]})
   end
 
-  if SPLIT == "n" and #keep_ranges > 0 then
-    keep_ranges = { { keep_ranges[1][1], keep_ranges[#keep_ranges][2]} }
-  end
-
-  -- table.print(keep_ranges)
-  -- print(#keep_ranges)
-  -- for i = 1, 10 do
-  --   table.print(keep_ranges[i])
-  -- end
-  -- print(keep_ranges[#keep_ranges][2])
   keep_ranges = merge_ranges(item, keep_ranges, MIN_SILENCE_LEN / 1000)
   expand_ranges(item, keep_ranges, LEFT_PAD / 1000, RIGHT_PAD / 1000, FADE_IN / 1000, FADE_OUT / 1000)
-  -- print(keep_ranges[#keep_ranges][2])
   if MODE == "del" then
     trim_item(item, keep_ranges, MIN_CLIPS_LEN / 1000, SNAP_OFFSET, LEFT_PAD)
   elseif MODE == "keep" then

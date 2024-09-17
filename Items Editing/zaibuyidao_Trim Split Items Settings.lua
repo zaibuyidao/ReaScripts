@@ -1,5 +1,5 @@
 -- @description Trim Split Items Settings
--- @version 2.0
+-- @version 2.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -177,7 +177,6 @@ if get == nil then      -- 默认预设
   FADE = "y"            -- 是否淡变
   SNAP_OFFSET = 50      -- 峰值吸附偏移(ms)
   SKIP_SAMPLE = 0       -- 采样点步进
-  SPLIT = "y"           -- 是否切割item
   MODE = "del"          -- 保持静默
 else
   THRESHOLD = default_if_invalid(get[1], -24.1, tonumber)
@@ -189,25 +188,24 @@ else
   FADE = default_if_invalid(get[7], "y", tostring)
   SNAP_OFFSET = default_if_invalid(get[8], 50, tonumber)
   SKIP_SAMPLE = default_if_invalid(get[9], 0, tonumber)
-  SPLIT = default_if_invalid(get[10], "y", tostring)
-  MODE = default_if_invalid(get[11], "del", tostring)
+  MODE = default_if_invalid(get[10], "del", tostring)
 end
 
-default = THRESHOLD ..','.. HYSTERESIS ..','.. MIN_SILENCE_LEN ..','.. MIN_CLIPS_LEN ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. FADE ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. SPLIT ..','.. MODE
+default = THRESHOLD ..','.. HYSTERESIS ..','.. MIN_SILENCE_LEN ..','.. MIN_CLIPS_LEN ..','.. LEFT_PAD ..','.. RIGHT_PAD ..','.. FADE ..','.. SNAP_OFFSET ..','.. SKIP_SAMPLE ..','.. MODE
 
 if language == "简体中文" then
   title = "修剪分割对象设置"
-  lable = "阈值 (dB),滞后 (dB),最小无声长度 (ms),最小剪辑长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡化 (y/n),峰值吸附偏移 (ms),采样点步长,是否切割 (y/n),模式 (del/keep/begin/end)"
+  lable = "阈值 (dB),滞后 (dB),最小无声长度 (ms),最小剪辑长度 (ms),前导填充 (ms),尾部填充 (ms),是否淡化 (y/n),峰值吸附偏移 (ms),采样点步长,模式 (del/keep/begin/end)"
 elseif language == "繁体中文" then
   title = "修剪分割對象設置"
-  lable = "閾值 (dB),滯後 (dB),最小無聲長度 (ms),最小剪輯長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡化 (y/n),峰值吸附偏移 (ms),采樣點步長,是否切割 (y/n),模式 (del/keep/begin/end)"
+  lable = "閾值 (dB),滯後 (dB),最小無聲長度 (ms),最小剪輯長度 (ms),前導填充 (ms),尾部填充 (ms),是否淡化 (y/n),峰值吸附偏移 (ms),采樣點步長,模式 (del/keep/begin/end)"
 else
   title = "Trim Split Items Settings"
-  lable = "Threshold (dB),Hysteresis (dB),Min silence length (ms),Min clips length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peaks snap offset (ms),Samples step size,Enable splitting (y/n),Mode (del/keep/begin/end)"
+  lable = "Threshold (dB),Hysteresis (dB),Min silence length (ms),Min clips length (ms),Leading pad (ms),Trailing pad (ms),Fade pad (y/n),Peaks snap offset (ms),Samples step size,Mode (del/keep/begin/end)"
 end
 
 reaper.Undo_BeginBlock()
-set = getMutiInput(title, 11, lable, default)
+set = getMutiInput(title, 10, lable, default)
 
 local parameters = {
   {name = "THRESHOLD", func = tonumber},
@@ -219,7 +217,6 @@ local parameters = {
   {name = "FADE", func = tostring},
   {name = "SNAP_OFFSET", func = tonumber},
   {name = "SKIP_SAMPLE", func = tonumber},
-  {name = "SPLIT", func = tostring},
   {name = "MODE", func = tostring}
 }
 
