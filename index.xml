@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="174846daf5efd64c741b54f1fb56517a3456c3b3">
+<index version="1" name="zaibuyidao Scripts" commit="96e3f758246c35b9ca34420f1dd7ba99e65c984e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1462,6 +1462,10 @@
       <version name="1.0.4" author="zaibuyidao" time="2024-09-17T14:03:07Z">
         <changelog><![CDATA[# Optimize sampling point calculation and improve floating-point processing accuracy.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/174846daf5efd64c741b54f1fb56517a3456c3b3/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
+      </version>
+      <version name="1.0.5" author="zaibuyidao" time="2024-09-17T14:35:47Z">
+        <changelog><![CDATA[# Optimize sampling point calculation and improve floating-point processing accuracy.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/96e3f758246c35b9ca34420f1dd7ba99e65c984e/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items Settings.lua" type="script" desc="Trim Split Items Settings">
