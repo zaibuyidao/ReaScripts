@@ -1,8 +1,8 @@
 -- @description Trim Item Edges
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
---   # Fixed an issue where passing non-integer values to reaper.new_array() would cause an error.
+--   # Optimize sampling point calculation and improve floating-point processing accuracy.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -161,86 +161,14 @@ function getMutiInput(title,num,lables,defaults)
   if uok then return string.split(uinput,",") end
 end
 
-function eq(a, b) return math.abs(a - b) < 0.000001 end
+function eq(a, b, epsilon)
+  epsilon = epsilon or 1e-5  -- 将 epsilon 增大到 1e-5
+  return math.abs(a - b) < epsilon
+end
+
 function log10(x) if not x then return end return math.log(x, 10) end
 function todb(x) if not x then return end return 20 * log10(x) end
 function topower(x) if not x then return end return 10 ^ (x / 20) end
-
-local print2_count = 0
-function print2(...)
-  if print2_count == 0 then
-    print(...)
-  end
-  print2_count = print2_count + 1
-  if print2_count >= 5000 then
-    print2_count = 0
-  end
-end
-
-function delete_item(item)
-  if item then
-    local track = reaper.GetMediaItem_Track(item)
-    reaper.DeleteTrackMediaItem(track, item)
-  end
-end
-
---根据ranges保留item指定区域，并删除剩余区域
---例：keep_ranges = { {1, 3}, {5, 8} } 代表将item中 1-3 与 5-8区域保留，其余地方删除
-function trim_item(item, keep_ranges)
-  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
-
-  if loop_source == 0 then
-    -- 获取item的起始位置和长度
-    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-    local source = reaper.GetMediaItemTake_Source(take)
-    local source_length, is_section = reaper.GetMediaSourceLength(source)
-    -- 计算绝对左边界和右边界
-    local source_absolute_start = item_start - item_start_offset
-    local source_absolute_end = source_absolute_start + source_length
-
-    -- 计算循环偏移值
-    local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length
-
-    if item_start + item_length > source_absolute_end then
-      item_length = source_absolute_end
-    end
-  end
-
-  -- print(item_start, item_start + item_length)
-  -- table.print(keep_ranges)
-  local left = item
-  for i, range in ipairs(keep_ranges) do
-    if not eq(range[1], item_start) then
-      -- print("sl", left)
-      local right = reaper.SplitMediaItem(left, range[1])
-      -- print("rr", right)
-      delete_item(left)
-      left = right
-    end
-    -- print("ll", left)
-    right = reaper.SplitMediaItem(left, range[2])
-
-    reaper.SetMediaItemInfo_Value(left, "D_FADEINLEN", range.fade[1])
-    reaper.SetMediaItemInfo_Value(left, "D_FADEOUTLEN", range.fade[2])
-
-    left = right
-  end
-
-  if #keep_ranges > 0 and keep_ranges[#keep_ranges][2] < item_start + item_length then
-    delete_item(left)
-  end
-end
-
--- function trim_edge(item, keep_ranges)
---   for i, range in ipairs(keep_ranges) do
---     reaper.BR_SetItemEdges(item, range[1], range[2])
---     reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", range.fade[1])
---     reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", range.fade[2])
---   end
--- end
 
 function trim_edge(item, keep_ranges)
   -- 获取原始的淡入淡出设置
@@ -249,23 +177,19 @@ function trim_edge(item, keep_ranges)
 
   for i, range in ipairs(keep_ranges) do
     -- 获取处理前的左右边界
-    local orig_left = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-    local orig_right = orig_left + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+    local item_left = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local item_right = item_left + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
 
     -- 设置新的左右边界
     reaper.BR_SetItemEdges(item, range[1], range[2])
 
-    -- 获取处理后的左右边界
-    local new_left = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-    local new_right = new_left + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-
     -- 如果左边界有变动且左边界没有与淡入设置相同，则修改淡入设置
-    if not eq(range[1], orig_left) and not eq(range.fade[1], orig_fade_in) then
+    if not eq(range[1], item_left) and not eq(range.fade[1], orig_fade_in) then
       reaper.SetMediaItemInfo_Value(item, "D_FADEINLEN", range.fade[1])
     end
 
     -- 如果右边界有变动且右边界没有与淡出设置相同，则修改淡出设置
-    if not eq(range[2], orig_right) and not eq(range.fade[2], orig_fade_out) then
+    if not eq(range[2], item_right) and not eq(range.fade[2], orig_fade_out) then
       reaper.SetMediaItemInfo_Value(item, "D_FADEOUTLEN", range.fade[2])
     end
   end
@@ -275,49 +199,37 @@ end
 function expand_ranges(item, keep_ranges, left_pad, right_pad, fade_in, fade_out)
   local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
-  
-  if loop_source == 0 then
-    -- 获取item的起始位置和长度
-    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-    local source = reaper.GetMediaItemTake_Source(take)
-    local source_length, is_section = reaper.GetMediaSourceLength(source)
-    -- 计算绝对左边界和右边界
-    local source_absolute_start = item_start - item_start_offset
-    local source_absolute_end = source_absolute_start + source_length
+  local item_end = item_start + item_length
+  local epsilon = 1e-5
 
-    -- 计算循环偏移值
-    local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length
-    
-    if item_start + item_length > source_absolute_end then
-      item_length = source_absolute_end
-    end
+  -- 获取采样率，用于将时间转换为采样点
+  local take = reaper.GetActiveTake(item)
+  local source = reaper.GetMediaItemTake_Source(take)
+  local samplerate = reaper.GetMediaSourceSampleRate(source)
+  if not samplerate or samplerate == 0 then
+    samplerate = 44100  -- 默认采样率
   end
 
-  -- table.print(keep_ranges)
   for i = 1, #keep_ranges do
-    local left_inc = left_pad
-    local right_inc = right_pad
-    local actual_fade_in = fade_in
-    local actual_fade_out = fade_out
-    if (i > 1 and keep_ranges[i][1] - left_inc < keep_ranges[i - 1][2]) then
-      left_inc = 0
-      actual_fade_in = 0
+    -- 将时间转换为采样点，避免浮点误差
+    local left_sample = math.floor((keep_ranges[i][1] - left_pad - item_start) * samplerate + 0.5)
+    local right_sample = math.floor((keep_ranges[i][2] + right_pad - item_start) * samplerate + 0.5)
+
+    -- 确保不会超出 item 的范围
+    if left_sample < 0 then
+      left_sample = 0
+      fade_in = 0
     end
-    if (i < #keep_ranges and keep_ranges[i][2] + right_inc > keep_ranges[i + 1][1]) then
-      right_inc = 0
-      actual_fade_out = 0
+    if right_sample > item_length * samplerate then
+      right_sample = item_length * samplerate
+      fade_out = 0
     end
-    if keep_ranges[i][1] - left_inc <= item_start + 0.000001 then
-      left_inc = keep_ranges[i][1] - item_start
-      actual_fade_in = 0
-    end
-    if keep_ranges[i][2] + right_inc >= item_start + item_length - 0.000001 then
-      right_inc = item_start + item_length - keep_ranges[i][2]
-      actual_fade_out = 0
-    end
-    keep_ranges[i] = { keep_ranges[i][1] - left_inc, keep_ranges[i][2] + right_inc, fade = { actual_fade_in, actual_fade_out } }
+
+    -- 将采样点转换回时间
+    local new_left = item_start + left_sample / samplerate
+    local new_right = item_start + right_sample / samplerate
+
+    keep_ranges[i] = { new_left, new_right, fade = { fade_in, fade_out } }
   end
   return keep_ranges
 end
@@ -336,37 +248,14 @@ function get_sample_val_and_pos(take, step, threshold, hysteresis)
   if accessor == nil then return end
 
   local aa_start = reaper.GetAudioAccessorStartTime(accessor)
-  local aa_end = reaper.GetAudioAccessorEndTime(accessor) -- 测试数值同 item_length
+  local aa_end = reaper.GetAudioAccessorEndTime(accessor)
 
-  -- 获取item的起始位置和长度
-  local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-  local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-  local loop_source = reaper.GetMediaItemInfo_Value(item, "B_LOOPSRC")
-  -- 如果loopsource为0，调整aa_end为源item的结束位置
-  if loop_source == 0 then
-    local item_start_offset = reaper.GetMediaItemTakeInfo_Value(take, "D_STARTOFFS")
-    local source = reaper.GetMediaItemTake_Source(take)
-    local source_length, is_section = reaper.GetMediaSourceLength(source)
-    -- 计算绝对左边界和右边界
-    local source_absolute_start = item_start - item_start_offset
-    local source_absolute_end = source_absolute_start + source_length
-
-    -- 计算循环偏移值
-    local left_offset = (item_start - source_absolute_start) % source_length
-    local right_offset = (item_start + item_length - source_absolute_end) % source_length -- 或 (item_start + item_length - source_absolute_end) % source_length
-    
-    -- 计算新的aa_end
-    if item_start + item_length > source_absolute_end then
-      aa_end = source_absolute_end
-    end
-  end
-
-  local take_source_len, length_is_QN = reaper.GetMediaSourceLength(source)
-  if length_is_QN then return end
-
-  local channels = reaper.GetMediaSourceNumChannels(source)
+  -- 获取采样率和通道数
   local samplerate = reaper.GetMediaSourceSampleRate(source)
-  if samplerate == 0 then return end
+  if not samplerate or samplerate == 0 then
+    samplerate = 44100  -- 默认采样率
+  end
+  local channels = reaper.GetMediaSourceNumChannels(source)
 
   local left_min = topower(threshold)
   local right_min = topower(threshold + hysteresis)
@@ -375,150 +264,111 @@ function get_sample_val_and_pos(take, step, threshold, hysteresis)
   local l, r
 
   local samples_per_channel = math.ceil((aa_end - aa_start) * samplerate)
-  local sample_index
-  local offset
-  local samples_per_block = samplerate
+  local buffer = reaper.new_array(samples_per_channel * channels)
 
-  if step <= 0 then
-    step = 1
-  elseif step > 0 then
-    -- step = reaper.GetMediaSourceSampleRate(source) / step -- 每秒处理几个样本
-    step = samplerate / (samplerate / step) -- 跳过几个样本
+  -- 读取所有样本
+  local aa_ret = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, aa_start, samples_per_channel, buffer)
+  if aa_ret <= 0 then
+    reaper.DestroyAudioAccessor(accessor)
+    return nil
   end
 
-  step = math.floor(0.5 + step)
-
-  -- print("aa start", aa_start)
-  -- print("aa end", aa_end)
-  -- print("samples_per_channel", samples_per_channel)
-  -- print("samples_per_block", samples_per_block)
-  -- Find left bound
-  sample_index = 0
-  offset = aa_start
-  -- print("offset l start", offset)
-  while sample_index < samples_per_channel do
-    -- print("block in find l", offset)
-    local buffer = reaper.new_array(samples_per_block * channels)
-    local aa_ret = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, offset, samples_per_block, buffer)
-    if aa_ret <= 0 then
-      goto next_block
-    end
-    -- print("samples_per_block", samples_per_block)
-    for i = 0, samples_per_block - 1, step do
-      if sample_index + i >= samples_per_channel then
-        return
-      end
-      for j = 0, channels - 1 do
-        local v = math.abs(buffer[channels * i + j + 1])
-        if v > left_min then
-          lv = v
-          l = sample_index + i
-          goto found_l
-        end
+  -- 查找左边界
+  for i = 0, samples_per_channel - 1 do
+    for j = 0, channels - 1 do
+      local idx = i * channels + j + 1
+      local v = math.abs(buffer[idx])
+      if v > left_min then
+        lv = v
+        l = i
+        goto found_l
       end
     end
-    ::next_block::
-    sample_index = sample_index + samples_per_block
-    offset = offset + samples_per_block / samplerate
-    buffer.clear()
   end
   ::found_l::
-  
-  -- print("found l", lv, l, l / samplerate)
-  -- print("sample_index", sample_index)
-  -- Find right bound
-  sample_index = samples_per_channel - 1
-  offset = aa_end - samples_per_block / samplerate
-  -- print("offset r start", offset)
-  while sample_index >= 0 do
-    -- print("block in find r", offset)
-    local buffer = reaper.new_array(samples_per_block * channels)
-    local aa_ret = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, offset, samples_per_block, buffer)
-    -- print("aa_ret", aa_ret)
-    if aa_ret <= 0 then 
-      goto next_block 
-    end
-    -- print("start sample index", sample_index)
-    for i = samples_per_block - 1, 0, -step do
-      if sample_index - (samples_per_block - 1 - i) < 0 then
-        return
-      end
 
-      for j = 0, channels - 1 do
-        local v = math.abs(buffer[channels * i + j + 1])
-        -- print(v, sample_index, i, j)
-        if v > right_min and v < 1 then
-          -- print("found", v, sample_index)
-          -- print("buffer index", channels, i, j, channels * i + j + 1)
-          rv = v
-          r = sample_index - (samples_per_block - 1 - i)
-          -- print(r)
-          goto found_r
-        end
+  -- 查找右边界
+  for i = samples_per_channel - 1, 0, -1 do
+    for j = 0, channels - 1 do
+      local idx = i * channels + j + 1
+      local v = math.abs(buffer[idx])
+      if v > right_min then
+        rv = v
+        r = i
+        goto found_r
       end
     end
-    ::next_block::
-    sample_index = sample_index - samples_per_block
-    -- print("sample_index", sample_index)
-    offset = offset - samples_per_block / samplerate
-    buffer.clear()
   end
   ::found_r::
-  -- print("found r", rv, r, r/ samplerate)
 
   reaper.DestroyAudioAccessor(accessor)
-  
+
   if lv and rv then
-    return lv and rv, todb(lv), l / samplerate, todb(rv), r / samplerate
+    return true, todb(lv), l / samplerate, todb(rv), r / samplerate
   end
   return nil
 end
 
 function max_peak_pos(item, step, pend, pstart)
-  local ret = false
-  -- if reaper.TakeIsMIDI(take) then return end
+  if not item then return nil end
+
   local take = reaper.GetActiveTake(item)
+  if not take then return nil end
+
   local source = reaper.GetMediaItemTake_Source(take)
+  if not source then return nil end
+
   local accessor = reaper.CreateTakeAudioAccessor(take)
+  if not accessor then return nil end
+
   local samplerate = reaper.GetMediaSourceSampleRate(source)
+  if not samplerate or samplerate == 0 then
+    samplerate = 44100  -- 默认采样率
+  end
   local channels = reaper.GetMediaSourceNumChannels(source)
-  local startpos = 0
 
-  local samples_per_block = math.floor(samplerate * pend * channels)  
-  local samples_per_block_i = math.floor(samplerate * pstart * channels)
-  if samples_per_block_i == 0 then samples_per_block_i = 1 end
+  local aa_start = reaper.GetAudioAccessorStartTime(accessor)
+  local aa_end = reaper.GetAudioAccessorEndTime(accessor)
 
-  local buffer = reaper.new_array(samples_per_block*channels)
-  reaper.GetAudioAccessorSamples(accessor, samplerate, channels, startpos, samples_per_block, buffer)
+  local start_sample = math.floor((aa_start + pstart) * samplerate + 0.5)
+  local end_sample = math.floor((aa_start + pend) * samplerate + 0.5)
+  local samples_per_channel = end_sample - start_sample
 
-  local v_max, max_peak, max_zero = 0
-
-  if step <= 0 then
-    step = 1
-  elseif step > 0 then
-    step = reaper.GetMediaSourceSampleRate(source) / step
+  local buffer = reaper.new_array(samples_per_channel * channels)
+  local aa_ret = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, aa_start + pstart, samples_per_channel, buffer)
+  if aa_ret <= 0 then
+    reaper.DestroyAudioAccessor(accessor)
+    return nil
   end
 
-  for i = samples_per_block_i, samples_per_block, step do -- 设定采样点范围和步数
-    local v = math.abs(buffer[i])
-    v_max = math.max(v, v_max)
-    if v_max ~= max_zero then
-      max_peak = i / channels
+  local max_val = -math.huge
+  local max_pos = 0
+
+  for i = 0, samples_per_channel - 1 do
+    for j = 0, channels - 1 do
+      local idx = i * channels + j + 1
+      local v = math.abs(buffer[idx])
+      if v > max_val then
+        max_val = v
+        max_pos = i
+      end
     end
-    max_zero = v_max
   end
 
-  local snap_offset_pos = max_peak / samplerate
   reaper.DestroyAudioAccessor(accessor)
 
-  if max_peak then
-    return snap_offset_pos
+  if max_val > -math.huge then
+    return (start_sample + max_pos) / samplerate - reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   end
   return nil
 end
 
 function default_if_invalid(input, default, convert)
-  return (input == nil or not convert(input)) and default or convert(input)
+  local status, result = pcall(convert, input)
+  if not status or result == nil then
+    return default
+  end
+  return result
 end
 
 function checkTrimSetting()
@@ -542,7 +392,6 @@ if get == nil then
   reaper.defer(function() end) -- 终止执行
   get = getSavedDataList("TRIM_ITEM_EDGES_SETTINGS", "Parameters")
 end
---print(get)
 
 threshold_l = default_if_invalid(get[1], -60, tonumber)
 threshold_r = default_if_invalid(get[2], -6, tonumber)
@@ -564,14 +413,19 @@ else
   fade_out = trailing_pad
 end
 
-local count_sel_items = reaper.CountSelectedMediaItems(0)
 local track_items = {}
 
-for i = 0, count_sel_items - 1  do
-  local item = reaper.GetSelectedMediaItem(0, i)
-  local track = reaper.GetMediaItem_Track(item)
-  if not track_items[track] then track_items[track] = {} end
-  table.insert(track_items[track], item)
+-- 缓存所有选中的媒体项到对应的轨道
+local total_items = reaper.CountMediaItems(0)
+for i = 0, total_items - 1 do
+  local item = reaper.GetMediaItem(0, i)
+  if reaper.IsMediaItemSelected(item) then
+    local track = reaper.GetMediaItem_Track(item)
+    if not track_items[track] then 
+      track_items[track] = {} 
+    end
+    table.insert(track_items[track], item)
+  end
 end
 
 for _, items in pairs(track_items) do
@@ -590,32 +444,23 @@ for _, items in pairs(track_items) do
       local source_absolute_start = item_start - item_start_offset
       local source_absolute_end = source_absolute_start + source_length
   
-      -- 计算循环偏移值
-      local left_offset = (item_start - source_absolute_start) % source_length
-      local right_offset = (item_start + item_length - source_absolute_end) % source_length
-      
       if item_start + item_length > source_absolute_end then
-        item_length = source_absolute_end
+        item_length = source_absolute_end - item_start
         -- 对于超出左右边界的item直接将其复位
-        reaper.BR_SetItemEdges(item, item_start, item_length)
-        -- reaper.BR_SetItemEdges(item, item_start + fade_in / 1000, item_length + fade_out / 1000)
+        reaper.BR_SetItemEdges(item, item_start, item_start + item_length)
       end
     end
 
     local ret, peak_value_L, peak_pos_L, peak_value_R, peak_pos_R = get_sample_val_and_pos(take, step, threshold_l, threshold_r)
-
     if ret and item_length > length_limit / 1000 then
       local ranges = { { item_start + peak_pos_L, item_start + peak_pos_R } }
+      
       ranges = expand_ranges(item, ranges, leading_pad / 1000, trailing_pad / 1000, fade_in / 1000, fade_out / 1000)
 
-      --trim_item(item, ranges) -- 切割item并删除
       trim_edge(item, ranges)
 
-      if snap_offset > 0 then
-        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000))
-      elseif snap_offset == 0 then
-        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', leading_pad / 1000)
-      end
+      local snap_offset_value = (snap_offset > 0) and max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000) or leading_pad / 1000
+      reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', snap_offset_value)
     end
   end
 end
