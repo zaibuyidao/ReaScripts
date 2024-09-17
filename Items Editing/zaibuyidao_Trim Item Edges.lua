@@ -1,5 +1,5 @@
 -- @description Trim Item Edges
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog
 --   # Optimize sampling point calculation and improve floating-point processing accuracy.
@@ -327,38 +327,39 @@ function max_peak_pos(item, step, pend, pstart)
   end
   local channels = reaper.GetMediaSourceNumChannels(source)
 
-  local aa_start = reaper.GetAudioAccessorStartTime(accessor)
-  local aa_end = reaper.GetAudioAccessorEndTime(accessor)
+  -- 计算起始和结束的采样块
+  local samples_per_block = math.max(1, math.floor(samplerate * pend * channels)) -- 确保至少有一个样本
+  local samples_per_block_i = math.max(1, math.floor(samplerate * pstart * channels))
 
-  local start_sample = math.floor((aa_start + pstart) * samplerate + 0.5)
-  local end_sample = math.floor((aa_start + pend) * samplerate + 0.5)
-  local samples_per_channel = end_sample - start_sample
+  -- 创建缓冲区并读取样本
+  local buffer = reaper.new_array(samples_per_block * channels)
+  reaper.GetAudioAccessorSamples(accessor, samplerate, channels, 0, samples_per_block, buffer)
 
-  local buffer = reaper.new_array(samples_per_channel * channels)
-  local aa_ret = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, aa_start + pstart, samples_per_channel, buffer)
-  if aa_ret <= 0 then
-    reaper.DestroyAudioAccessor(accessor)
-    return nil
+  local v_max, max_peak, max_zero = 0, 0, 0
+
+  -- 确保步长设置合理
+  if step <= 0 then
+    step = 1
+  else
+    step = math.max(1, math.floor(samplerate / step))
   end
 
-  local max_val = -math.huge
-  local max_pos = 0
-
-  for i = 0, samples_per_channel - 1 do
-    for j = 0, channels - 1 do
-      local idx = i * channels + j + 1
-      local v = math.abs(buffer[idx])
-      if v > max_val then
-        max_val = v
-        max_pos = i
-      end
+  -- 遍历样本数据，查找最大峰值
+  for i = samples_per_block_i, samples_per_block, step do
+    local v = math.abs(buffer[i])
+    if v > v_max then
+      v_max = v
+      max_peak = i / channels  -- 记录最大峰值位置
     end
+    max_zero = v_max
   end
 
+  -- 计算snap_offset_pos
+  local snap_offset_pos = max_peak / samplerate
   reaper.DestroyAudioAccessor(accessor)
 
-  if max_val > -math.huge then
-    return (start_sample + max_pos) / samplerate - reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  if max_peak > 0 then
+    return snap_offset_pos
   end
   return nil
 end
