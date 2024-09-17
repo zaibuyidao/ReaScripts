@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="288d27c23c78ffad683b4c4e058fecccc288fc2f">
+<index version="1" name="zaibuyidao Scripts" commit="174846daf5efd64c741b54f1fb56517a3456c3b3">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1458,6 +1458,10 @@
       <version name="1.0.3" author="zaibuyidao" time="2024-05-21T02:23:18Z">
         <changelog><![CDATA[# Fixed an issue where passing non-integer values to reaper.new_array() would cause an error.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1ce47ce6897de9129b97341b0bc33b9d744f697f/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2024-09-17T14:03:07Z">
+        <changelog><![CDATA[# Optimize sampling point calculation and improve floating-point processing accuracy.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/174846daf5efd64c741b54f1fb56517a3456c3b3/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items Settings.lua" type="script" desc="Trim Split Items Settings">
