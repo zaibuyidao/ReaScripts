@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 2.0.2
+-- @version 2.0.3
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -648,7 +648,7 @@ for i = count_sel_item - 1, 0, -1 do
     if sample_max[i] >= dB_to_val and l == nil then
       l = i
     elseif sample_min[i] < dB_to_val2 and l ~= nil then
-      table.insert(keep_ranges, { time_sample[l], time_sample[i], l, i, sample_min[l], sample_max[i]})
+      table.insert(keep_ranges, { time_sample[l], time_sample[i-1], l, i, sample_min[l], sample_max[i]})
       l = nil
     elseif sample_max[i] >= dB_to_val2 and l == nil and #keep_ranges > 0 and time_sample[i] - keep_ranges[#keep_ranges][2] < MIN_SILENCE_LEN / 1000 then
       l = keep_ranges[#keep_ranges][3]
