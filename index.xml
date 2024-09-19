@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="96e3f758246c35b9ca34420f1dd7ba99e65c984e">
+<index version="1" name="zaibuyidao Scripts" commit="ac3e76d8fd34cc2043b3fbbc4a70a46cd2c05ae6">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1614,6 +1614,10 @@
       <version name="2.0.2" author="zaibuyidao" time="2024-09-17T13:23:30Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/288d27c23c78ffad683b4c4e058fecccc288fc2f/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="2.0.3" author="zaibuyidao" time="2024-09-19T06:07:20Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ac3e76d8fd34cc2043b3fbbc4a70a46cd2c05ae6/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
   </category>
