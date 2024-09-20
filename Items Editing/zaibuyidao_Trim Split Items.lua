@@ -1,5 +1,5 @@
 -- @description Trim Split Items
--- @version 2.0.3
+-- @version 2.0.4
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -615,8 +615,6 @@ SNAP_OFFSET = default_if_invalid(get[8], 50, tonumber)
 SKIP_SAMPLE = default_if_invalid(get[9], 0, tonumber)
 MODE = default_if_invalid(get[10], "del", tostring)
 
-local count_sel_item = reaper.CountSelectedMediaItems(0)
-
 if FADE == "n" then
   FADE_IN = 0
   FADE_OUT = 0
@@ -633,45 +631,47 @@ dB_to_val2 = 10 ^ ((THRESHOLD + HYSTERESIS) / 20)
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
-for i = count_sel_item - 1, 0, -1 do
-  local item = reaper.GetSelectedMediaItem(0, i)
-
-  local take = reaper.GetActiveTake(item)
-  if take == nil then goto continue end
-
-  local sample_min, sample_max, time_sample = get_sample_pos_value(take, SKIP_SAMPLE, item)
-  if not time_sample then goto continue end
-
-  local keep_ranges = {}
-  local l
-  for i = 1, #time_sample do
-    if sample_max[i] >= dB_to_val and l == nil then
-      l = i
-    elseif sample_min[i] < dB_to_val2 and l ~= nil then
-      table.insert(keep_ranges, { time_sample[l], time_sample[i-1], l, i, sample_min[l], sample_max[i]})
-      l = nil
-    elseif sample_max[i] >= dB_to_val2 and l == nil and #keep_ranges > 0 and time_sample[i] - keep_ranges[#keep_ranges][2] < MIN_SILENCE_LEN / 1000 then
-      l = keep_ranges[#keep_ranges][3]
-      table.remove(keep_ranges, #keep_ranges)
-    end
-  end
+local total_items = reaper.CountMediaItems(0)
+for i = 0, total_items - 1 do
+  local item = reaper.GetMediaItem(0, i)
+  if reaper.IsMediaItemSelected(item) then
+    local take = reaper.GetActiveTake(item)
+    if take == nil then goto continue end
   
-  if l ~= nil then
-    table.insert(keep_ranges, { time_sample[l], time_sample[#time_sample]})
+    local sample_min, sample_max, time_sample = get_sample_pos_value(take, SKIP_SAMPLE, item)
+    if not time_sample then goto continue end
+  
+    local keep_ranges = {}
+    local l
+    for i = 1, #time_sample do
+      if sample_max[i] >= dB_to_val and l == nil then
+        l = i
+      elseif sample_min[i] < dB_to_val2 and l ~= nil then
+        table.insert(keep_ranges, { time_sample[l], time_sample[i-1], l, i, sample_min[l], sample_max[i]})
+        l = nil
+      elseif sample_max[i] >= dB_to_val2 and l == nil and #keep_ranges > 0 and time_sample[i] - keep_ranges[#keep_ranges][2] < MIN_SILENCE_LEN / 1000 then
+        l = keep_ranges[#keep_ranges][3]
+        table.remove(keep_ranges, #keep_ranges)
+      end
+    end
+    
+    if l ~= nil then
+      table.insert(keep_ranges, { time_sample[l], time_sample[#time_sample]})
+    end
+  
+    keep_ranges = merge_ranges(item, keep_ranges, MIN_SILENCE_LEN / 1000)
+    expand_ranges(item, keep_ranges, LEFT_PAD / 1000, RIGHT_PAD / 1000, FADE_IN / 1000, FADE_OUT / 1000)
+    if MODE == "del" then
+      trim_item(item, keep_ranges, MIN_CLIPS_LEN / 1000, SNAP_OFFSET, LEFT_PAD)
+    elseif MODE == "keep" then
+      trim_item_keep_silence(item, keep_ranges, MIN_CLIPS_LEN / 1000, SNAP_OFFSET, LEFT_PAD)
+    elseif MODE == "begin" then
+      trim_item_before_nonsilence(item, keep_ranges, SNAP_OFFSET, LEFT_PAD)
+    elseif MODE == "end" then
+      trim_item_before_silence(item, keep_ranges, MIN_CLIPS_LEN / 1000)
+    end
+    ::continue::
   end
-
-  keep_ranges = merge_ranges(item, keep_ranges, MIN_SILENCE_LEN / 1000)
-  expand_ranges(item, keep_ranges, LEFT_PAD / 1000, RIGHT_PAD / 1000, FADE_IN / 1000, FADE_OUT / 1000)
-  if MODE == "del" then
-    trim_item(item, keep_ranges, MIN_CLIPS_LEN / 1000, SNAP_OFFSET, LEFT_PAD)
-  elseif MODE == "keep" then
-    trim_item_keep_silence(item, keep_ranges, MIN_CLIPS_LEN / 1000, SNAP_OFFSET, LEFT_PAD)
-  elseif MODE == "begin" then
-    trim_item_before_nonsilence(item, keep_ranges, SNAP_OFFSET, LEFT_PAD)
-  elseif MODE == "end" then
-    trim_item_before_silence(item, keep_ranges, MIN_CLIPS_LEN / 1000)
-  end
-  ::continue::
 end
 
 if language == "简体中文" then
