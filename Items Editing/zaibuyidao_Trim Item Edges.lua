@@ -1,5 +1,5 @@
 -- @description Trim Item Edges
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog
 --   # Optimize sampling point calculation and improve floating-point processing accuracy.
@@ -349,7 +349,7 @@ function max_peak_pos(item, step, pend, pstart)
     local v = math.abs(buffer[i])
     if v > v_max then
       v_max = v
-      max_peak = i / channels  -- 记录最大峰值位置
+      max_peak = i / channels - 1  -- 记录最大峰值位置
     end
     max_zero = v_max
   end
