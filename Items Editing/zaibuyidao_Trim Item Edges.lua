@@ -1,5 +1,5 @@
 -- @description Trim Item Edges
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog
 --   # Optimize sampling point calculation and improve floating-point processing accuracy.
@@ -460,8 +460,9 @@ for _, items in pairs(track_items) do
 
       trim_edge(item, ranges)
 
-      local snap_offset_value = (snap_offset > 0) and max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000) or leading_pad / 1000
-      reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', snap_offset_value)
+      if snap_offset > 0 and step == 0 then
+        reaper.SetMediaItemInfo_Value(item, 'D_SNAPOFFSET', max_peak_pos(item, step, (leading_pad + snap_offset) / 1000, leading_pad / 1000))
+      end
     end
   end
 end
