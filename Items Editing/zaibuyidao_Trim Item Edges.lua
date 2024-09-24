@@ -1,8 +1,8 @@
 -- @description Trim Item Edges
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @changelog
---   # Optimize sampling point calculation and improve floating-point processing accuracy.
+--   # Updated item start position and length after edge trimming to ensure accurate processing.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -175,11 +175,11 @@ function trim_edge(item, keep_ranges)
   local orig_fade_in = reaper.GetMediaItemInfo_Value(item, "D_FADEINLEN")
   local orig_fade_out = reaper.GetMediaItemInfo_Value(item, "D_FADEOUTLEN")
 
-  for i, range in ipairs(keep_ranges) do
-    -- 获取处理前的左右边界
-    local item_left = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-    local item_right = item_left + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  -- 获取处理前的左右边界
+  local item_left = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_right = item_left + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
 
+  for i, range in ipairs(keep_ranges) do
     -- 设置新的左右边界
     reaper.BR_SetItemEdges(item, range[1], range[2])
 
