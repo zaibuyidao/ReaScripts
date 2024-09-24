@@ -1,5 +1,5 @@
 -- @description Trim Item Edges
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
 -- @changelog
 --   # Updated item start position and length after edge trimming to ensure accurate processing.
@@ -335,9 +335,8 @@ function max_peak_pos(item, step, pend, pstart)
   local buffer = reaper.new_array(samples_per_block * channels)
   reaper.GetAudioAccessorSamples(accessor, samplerate, channels, 0, samples_per_block, buffer)
 
-  local v_max, max_peak, max_zero = 0, 0, 0
-
-  -- 确保步长设置合理
+  local v_max, max_peak, unique_max = 0, 0, {}
+  
   if step <= 0 then
     step = 1
   else
@@ -349,16 +348,24 @@ function max_peak_pos(item, step, pend, pstart)
     local v = math.abs(buffer[i])
     if v > v_max then
       v_max = v
-      max_peak = i / channels - 1  -- 记录最大峰值位置
+      max_peak = i / channels - 1 -- 记录最大峰值位置
     end
-    max_zero = v_max
+    unique_max[v] = true
+  end
+
+  -- 计算唯一的最大值数量
+  local unique_count = 0
+  for _ in pairs(unique_max) do
+    unique_count = unique_count + 1
   end
 
   -- 计算snap_offset_pos
   local snap_offset_pos = max_peak / samplerate
   reaper.DestroyAudioAccessor(accessor)
 
-  if max_peak > 0 then
+  if unique_count == 1 then
+    return pend  -- 如果所有sample_max值相同，则返回指定的最大范围值
+  elseif max_peak > 0 then
     return snap_offset_pos
   end
   return nil
