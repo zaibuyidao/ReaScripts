@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="41507c1f83a53f36c82a54c40538e1c0fe95b4c3">
+<index version="1" name="zaibuyidao Scripts" commit="9e239ec49bfbdc22a1f05084ab198906510a311a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8134,9 +8134,22 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0fa24c5d2e11ad009f08fed789173a40e3eea767/Utility/zaibuyidao_Toggle%20VSTi%20Floating%20for%20Selected%20Tracks.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Track Follows Item Razor Selection.lua" type="script" desc="Track Follows Item/Razor Selection">
-      <version name="1.0" author="zaibuyidao" time="2021-05-22T11:22:43Z">
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Utility/zaibuyidao_Track%20Follows%20Item%20Razor%20Selection.lua</source>
+    <reapack name="zaibuyidao_Track Follows Item-Razor Selection.lua" type="script" desc="Track Follows Item/Razor Selection">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2024-09-24T03:06:07Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9e239ec49bfbdc22a1f05084ab198906510a311a/Utility/zaibuyidao_Track%20Follows%20Item-Razor%20Selection.lua</source>
       </version>
     </reapack>
   </category>
