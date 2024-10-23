@@ -1,5 +1,5 @@
 -- @description Mouse Modifiers - Toggle Time Selection
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -37,8 +37,8 @@ end
 local marquee_selection = reaper.NamedCommandLookup('_RSe26d413e28a889ec8384d643aeb592b204e5e7e9')
 local time_selection = reaper.NamedCommandLookup('_RSa7b6a0054a56c6f5822b24ee2b398cd4488b449c')
 local is_new_value, filename, sectionID, cmdID,mode, resolution, val = reaper.get_action_context()
-reaper.SetToggleCommandState(sectionID, marquee_selection, 1)
-reaper.SetToggleCommandState(sectionID, time_selection, 0)
+reaper.SetToggleCommandState(sectionID, marquee_selection, 0)
+reaper.SetToggleCommandState(sectionID, time_selection, 1)
 reaper.RefreshToolbar2(sectionID, cmdID)
 
 reaper.SetMouseModifier('MM_CTX_ITEM',0,'13 m') -- Move item ignoring time selection
