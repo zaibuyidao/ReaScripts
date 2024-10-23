@@ -1,5 +1,5 @@
--- @description Mouse Modifiers - Toggle Move Edit Cursor
--- @version 1.0.1
+-- @description Mouse Modifiers - Toggle Marquee Selection
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -34,43 +34,12 @@ else
   return
 end
 
--- 检查并取消官方覆盖功能
-local official_ids = {42616, 42618, 42620, 42633}
-for _, id in ipairs(official_ids) do
-  if reaper.GetToggleCommandState(id) == 1 then
-    reaper.Main_OnCommand(id, 0) -- 取消激活官方覆盖功能
-  end
-end
+local marquee_selection = reaper.NamedCommandLookup('_RSe26d413e28a889ec8384d643aeb592b204e5e7e9')
+local time_selection = reaper.NamedCommandLookup('_RSa7b6a0054a56c6f5822b24ee2b398cd4488b449c')
+local is_new_value, filename, sectionID, cmdID,mode, resolution, val = reaper.get_action_context()
+reaper.SetToggleCommandState(sectionID, marquee_selection, 1)
+reaper.SetToggleCommandState(sectionID, time_selection, 0)
+reaper.RefreshToolbar2(sectionID, cmdID)
 
-local was_set = -1
-
-local function UpdateState()
-  local is_set = reaper.GetMouseModifier('MM_CTX_TRACK_CLK', 0) == '1 m' -- 检查是否为 '移动光标' 状态
-  if is_set ~= was_set then
-    was_set = is_set
-    -- if is_set then
-    --     reaper.set_action_options(4) -- 设置脚本切换状态为 '开'
-    --     reaper.SetExtState("MouseModifiersToggleMoveEditCursor", "Toggle", "On", false)
-    -- else
-    --     reaper.set_action_options(8) -- 设置脚本切换状态为 '关'
-    --     reaper.SetExtState("MouseModifiersToggleMoveEditCursor", "Toggle", "Off", false)
-    -- end
-    reaper.set_action_options(is_set and 4 or 8) -- 设置脚本切换状态
-    reaper.RefreshToolbar(0) -- 刷新工具栏
-  end
-end
-
-local function ToggleMoveCursorState()
-  local current_state = reaper.GetMouseModifier('MM_CTX_TRACK_CLK', 0)
-  if current_state == '1 m' then
-    reaper.SetMouseModifier('MM_CTX_TRACK_CLK', 0, '3 m') -- 切换到 '不移动光标' 状态
-    reaper.SetMouseModifier('MM_CTX_ITEM_CLK',0,'3 m') -- 切换到 选择对象
-  else
-    reaper.SetMouseModifier('MM_CTX_TRACK_CLK', 0, '1 m') -- 切换到 '移动光标' 状态
-    reaper.SetMouseModifier('MM_CTX_ITEM_CLK',0,'1 m') -- 切换到 选择对象并切换编辑光标
-  end
-  UpdateState()
-end
-
-ToggleMoveCursorState()
-reaper.defer(UpdateState)
+reaper.SetMouseModifier('MM_CTX_ITEM',0,'13 m') -- Move item ignoring time selection
+reaper.SetMouseModifier('MM_CTX_TRACK',0,'9 m') -- Marquee select items
