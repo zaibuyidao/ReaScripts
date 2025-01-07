@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9df9aca64f24b1ca105cf2f8aa36af4b63d5f95a">
+<index version="1" name="zaibuyidao Scripts" commit="7945e5d4285216b4796ee269dc5a4195fd2263d5">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7398,6 +7398,10 @@
         <changelog><![CDATA[Brand new REAPER: 7.28, SWS: 2.14.0.3]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/9df9aca64f24b1ca105cf2f8aa36af4b63d5f95a/Translations/Chinese%20(Simplified).ReaperLangPack</source>
       </version>
+      <version name="1.1.4-729" author="zaibuyidao" time="2025-01-07T05:46:13Z">
+        <changelog><![CDATA[Brand new REAPER: 7.29, SWS: 2.14.0.3]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/7945e5d4285216b4796ee269dc5a4195fd2263d5/Translations/Chinese%20(Simplified).ReaperLangPack</source>
+      </version>
     </reapack>
     <reapack name="Chinese (Traditional).ReaperLangPack" type="langpack" desc="Chinese Traditional (繁體中文)">
       <metadata>
@@ -7426,6 +7430,10 @@
       <version name="1.1.3-728" author="zaibuyidao" time="2024-12-10T03:35:43Z">
         <changelog><![CDATA[Brand new REAPER: 7.28, SWS: 2.14.0.3]]></changelog>
         <source>https://github.com/zaibuyidao/ReaScripts/raw/9df9aca64f24b1ca105cf2f8aa36af4b63d5f95a/Translations/Chinese%20(Traditional).ReaperLangPack</source>
+      </version>
+      <version name="1.1.4-729" author="zaibuyidao" time="2025-01-07T05:46:13Z">
+        <changelog><![CDATA[Brand new REAPER: 7.29, SWS: 2.14.0.3]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/7945e5d4285216b4796ee269dc5a4195fd2263d5/Translations/Chinese%20(Traditional).ReaperLangPack</source>
       </version>
     </reapack>
   </category>
