@@ -1,10 +1,10 @@
 #NAME:Chinese Traditional (繁體中文)
-;Version: 1.1.4-729
+;Version: 1.1.5-730
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49375/Chinese%20%28Traditional%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.29, SWS: 2.14.0.3
+;  Brand new REAPER: 7.30, SWS: 2.14.0.3
 
 [common]
 DCEF2B4D03DE723C=名稱
@@ -65,7 +65,6 @@ C499FEFB8CC28F79=過濾
 F1645A05AF505BE7=未知
 65DF96C788943FB1=對象
 4A47B5FB012F8EBE=發送
-E044BDDEB9333E54=媒體對象
 042F4DCA75E1BE47=16 bit
 CC85D146650F3E66=24 bit
 5188BC03D80E2D31=32 bit
@@ -331,6 +330,7 @@ ADFC12BF930BBFC9=片段屬性
 BD7850245F5A79EE=匯入
 6B715267FFEB9F05=選擇與可編輯性相關聯
 321684ACEE9D0E75=選擇與可見性相關聯
+E044BDDEB9333E54=媒體對象
 90803304EBE7C40E=音軌
 B36DBB640BD652AA=音符:
 200265593F330955=音階查找器
@@ -1824,8 +1824,6 @@ FB13D526673DCE9D=取消(&C)
 FCE435FD0C037E2E=分段:
 FE52885EB65C3114=刪除所有標記
 
-[Convert]
-
 [DLG_102] ; IDD_MAIN
 246546A2AD3EB0B4=REAPER (正在初始化)
 360EA1C1D674566F=音軌檢視
@@ -2193,8 +2191,8 @@ DFD1209B13D93BA2=外部編輯器
 [DLG_161] ; IDD_EDITORITEM
 33A92C8FA5438A7C=編輯器配置
 64B7B388D17F971F=檔案類型 (擴展名):
-15A9DE70DEE257AE=主要編輯器:
 3367C07971B9528E=(留空表示設定默認預設編輯器)
+15A9DE70DEE257AE=主要編輯器:
 8AD3CF43B42E168A=次要編輯器:
 
 [DLG_163] ; IDD_AUXSENDVIEW
@@ -4071,7 +4069,7 @@ AEAD3FE261A95C2B=追加 (維護者名稱)
 4A56B9B7B845E9CB=CLAP 插件路徑 (可以用分號隔開多個路徑):
 
 [DLG_594] ; IDD_RENDER_NORMALIZE
-254542EBFE1FED8E=後處理渲染
+254542EBFE1FED8E=後期處理渲染
 077E90DA0AE66C82=僅標準化以下檔案:
 ABBB697150095B05=音量過大
 E53F38D7C8AC1ECF=音量過小
@@ -6504,8 +6502,8 @@ D09A59097B61CE95=音軌屬性: 顯示固定車道按鈕 ⇌ Track properties: Sh
 326F2ED305F81F19=對象屬性: 使用最近設定標準化對象 ⇌ Item properties: Normalize items using most recent settings
 658AFF545BCC5BE7=對象屬性: 使用最近設定標準化對象 (如果已標準化則重設為初始狀態) ⇌ Item properties: Normalize items using most recent settings (reset to unity if already normalized)
 754E9B686B619C54=對象屬性: 使用最近的設定標準化對象 (強制如同一個長對象進行標準化) ⇌ Item properties: Normalize items using most recent settings (force normalize as if one long item)
-5B4DD1230EE40D22=對象屬性: 使用最近的設定標準化對象 (強制標準化為最響的對象)  ⇌ Item properties: Normalize items using most recent settings (force normalize to loudest item)
-23FD6476261FD0DE=對象屬性: 使用最近的設定標準化對象 (強制分別標準化每個對象)  ⇌ Item properties: Normalize items using most recent settings (force normalize each item separately)
+5B4DD1230EE40D22=對象屬性: 使用最近的設定標準化對象 (強制標準化為最響的對象) ⇌ Item properties: Normalize items using most recent settings (force normalize to loudest item)
+23FD6476261FD0DE=對象屬性: 使用最近的設定標準化對象 (強制分別標準化每個對象) ⇌ Item properties: Normalize items using most recent settings (force normalize each item separately)
 CFEF6AC8E437E9A0=對象屬性: 標準化對象 (分別標準化每個對象) 到 +0dB 峰值 ⇌ Item properties: Normalize items (each item separately) to +0dB peak
 00658154239C3586=對象屬性: 標準化對象 (到最響的對象) 到 +0dB 峰值 ⇌ Item properties: Normalize items (to loudest item) to +0dB peak
 F457B882761F8CDD=對象屬性: 將對象標準化為 +0dB 峰值 (如果已標準化則重設為初始狀態) ⇌ Item properties: Normalize items to +0dB peak (reset to unity if already normalized)
@@ -10889,13 +10887,13 @@ F0BF7B5535B45C45=編輯: 將音高游標升高一個八度 ⇌ Edit: Increase pi
 BA5F9C60B1303CD3=網格: 將網格大小乘以 1/2 ⇌ Grid: Multiply grid size by 1/2
 BA5F9B60B1303B20=網格: 將網格大小乘以 1/3 ⇌ Grid: Multiply grid size by 1/3
 CFAF7D21B7BC227A=網格: 設定為 1/48 (1/32 音符三連音) ⇌ Grid: Set to 1/48 (1/32 note triplet)
-FF45055435571312=網格: 設定為 1/24 (1/16 音符三連音)  ⇌ Grid: Set to 1/24 (1/16 note triplet)
-FF9F24C0E3624DF2=網格: 設定為 1/12 (1/8 音符三連音)  ⇌ Grid: Set to 1/12 (1/8 note triplet)
-C53C5DC5D147AF0F=網格: 設定為 1/10 (1/8 音符五連音)  ⇌ Grid: Set to 1/10 (1/8 note quintuplet)
-CE71E263FD7D7CB6=網格: 設定為 1/7 (1/4 音符七連音)  ⇌ Grid: Set to 1/7 (1/4 note septuplet)
-F5291BDA83D45EE1=網格: 設定為 1/6 (1/4 音符三連音)  ⇌ Grid: Set to 1/6 (1/4 note triplet)
-6A15A61539D7CF51=網格: 設定為 1/5 (1/4 音符五連音)  ⇌ Grid: Set to 1/5 (1/4 note quintuplet)
-FDCEB5EF4CD9A2AE=網格: 設定為 1/3 (1/2 音符三連音)  ⇌ Grid: Set to 1/3 (1/2 note triplet)
+FF45055435571312=網格: 設定為 1/24 (1/16 音符三連音) ⇌ Grid: Set to 1/24 (1/16 note triplet)
+FF9F24C0E3624DF2=網格: 設定為 1/12 (1/8 音符三連音) ⇌ Grid: Set to 1/12 (1/8 note triplet)
+C53C5DC5D147AF0F=網格: 設定為 1/10 (1/8 音符五連音) ⇌ Grid: Set to 1/10 (1/8 note quintuplet)
+CE71E263FD7D7CB6=網格: 設定為 1/7 (1/4 音符七連音) ⇌ Grid: Set to 1/7 (1/4 note septuplet)
+F5291BDA83D45EE1=網格: 設定為 1/6 (1/4 音符三連音) ⇌ Grid: Set to 1/6 (1/4 note triplet)
+6A15A61539D7CF51=網格: 設定為 1/5 (1/4 音符五連音) ⇌ Grid: Set to 1/5 (1/4 note quintuplet)
+FDCEB5EF4CD9A2AE=網格: 設定為 1/3 (1/2 音符三連音) ⇌ Grid: Set to 1/3 (1/2 note triplet)
 71D5560AD6537744=網格: 設定為小節 ⇌ Grid: Set to measure
 6E288265E5E5D830=網格: 將網格設定為 1/128, 保持網格類型 ⇌ Grid: Set to 1/128 preserving grid type
 E513C0F0BD4DED0D=網格: 將網格設定為 1/64, 保持網格類型 ⇌ Grid: Set to 1/64 preserving grid type
@@ -20324,7 +20322,7 @@ CC3CE8486F974DD7=相對模式遞增步進:
 483B196257119EAD=SWS/S&M: 在播放游標處插入標記 ⇌ SWS/S&M: Insert marker at play cursor
 485CC9505A242A38=SWS/S&M: 將選取對象的活躍片段聲像調到 25% (左側) ⇌ SWS/S&M: Pan active takes of selected items to 25% left
 4888ACA92119D61E=SWS: 在當前和儲存的音軌選擇之間切換 ⇌ SWS: Toggle between current and saved track selection
-48934484BF0DE78B=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 450 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 450 pixel)
+48934484BF0DE78B=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 450 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 450 pixel)
 48C426EDCD1663B0=SWS/BR: 選項 - 將 \"停止之後運行 FX 的時間\" 設定為 7000 ms ⇌ SWS/BR: Options - Set \"Run FX after stopping for\" to 7000 ms
 48D40FC4B723D723=SWS/BR: 選項 - 切換 \"在工程結束處停止/重複播放\" ⇌ SWS/BR: Options - Toggle \"Stop/repeat playback at end of project\"
 48DC3CF516154ECF=SWS/S&M: 工具欄 - 切換螢幕外對象選擇 (下) ⇌ SWS/S&M: Toolbar - Toggle offscreen item selection (bottom)
@@ -20553,7 +20551,7 @@ CC3CE8486F974DD7=相對模式遞增步進:
 61C27803C4506E10=SWS/BR: 將所有 CC 車道的高度設定為 110 像素 ⇌ SWS/BR: Set all CC lanes' height to 110 pixel
 61C6623A68828BFD=SWS: 設定所有選取音軌的輸入以匹配第一個選取音軌 ⇌ SWS: Set all selected tracks inputs to match first selected track
 623393F88AD007B3=SWS/S&M: 現場配置 #%d - 啟用選項 '除活躍音軌外所有都取消預備' ⇌ SWS/S&M: Live Config #%%d - Enable option 'Disarm all but active track'
-62610AAEAA8DE45E=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 200 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 200 pixel)
+62610AAEAA8DE45E=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 200 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 200 pixel)
 6274DA41BA4E76EF=SWS/BR: 切換在音軌推子音量處預覽滑鼠下方的媒體對象並在預覽期間暫停 ⇌ SWS/BR: Toggle preview media item under mouse at track fader volume and pause during preview
 6292ECC38588A772=SWS: 將選取的音軌設定為上一條音軌的顏色 ⇌ SWS: Set selected track(s) to previous track's color
 629A618E318AC55D=SWS: 切換快照音量 ⇌ SWS: Toggle snapshot vol
@@ -20613,7 +20611,7 @@ CC3CE8486F974DD7=相對模式遞增步進:
 668C84155131A2C8=SWS/S&M: 切換自動音軌佈局啟用 ⇌ SWS/S&M: Toggle auto track layout enable
 669A943E300221B9=SWS/BR: 在滑鼠游標處選擇包絡並設定最近的包絡點的值為滑鼠游標的值 (直到快捷鍵釋放) ⇌ SWS/BR: Select envelope at mouse cursor and set closest envelope point's value to mouse cursor (perform until shortcut released)
 66B4DF894762E1B2=SWS/S&M: 打開/關閉區域播放列表視窗 ⇌ SWS/S&M: Open/close Region Playlist window
-66D22C26B3BD904D=SWS/BR: 切換在音軌推子音量處預覽滑鼠下方的媒體對象  ⇌ SWS/BR: Toggle preview media item under mouse at track fader volume
+66D22C26B3BD904D=SWS/BR: 切換在音軌推子音量處預覽滑鼠下方的媒體對象 ⇌ SWS/BR: Toggle preview media item under mouse at track fader volume
 66D8173148EF753F=SWS/AW: 將網格設定為 2, 保持網格類型 ⇌ SWS/AW: Set grid to 2 preserving grid type
 66F631D514C0831D=SWS: 將選取的音軌添加到當前快照 ⇌ SWS: Add selected track(s) to current snapshot
 672AA2491F760CF8=SWS/S&M: 現場配置 #%d - 套用配置 (僅限MIDI/OSC) ⇌ SWS/S&M: Live Config #%%d - Apply config (MIDI/OSC only)
@@ -20781,7 +20779,7 @@ CC3CE8486F974DD7=相對模式遞增步進:
 78DD0D73AE0B3796=SWS/BR: 將所有 CC 車道的高度增加 020 像素 ⇌ SWS/BR: Increase all CC lanes' height by 020 pixel
 792653EC3128B5B8=SWS/BR: 將活躍的浮動視窗移動到滑鼠游標處 (水平: 右, 垂直: 中部) ⇌ SWS/BR: Move active floating window to mouse cursor (horizontal: right, vertical: middle)
 796ED9362289842C=SWS: 選擇選取音軌上最左下方的對象 ⇌ SWS: Select lower-leftmost item on selected track(s)
-797D4F0DA4ADABEE=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 150 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 150 pixel)
+797D4F0DA4ADABEE=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 150 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 150 pixel)
 7992F72F03706046=SWS: 在選取音軌上選擇已靜音的對象 ⇌ SWS: Select muted items on selected track(s)
 79B3BBB63909701E=SWS: 從當前快照中刪除選取的音軌 ⇌ SWS: Delete selected track(s) from current snapshot
 79F224E74B66E347=Xenakios/SWS: 設定選取片段的音量和聲像... ⇌ Xenakios/SWS: Set volume and pan of selected takes...
@@ -21053,7 +21051,7 @@ CC3CE8486F974DD7=相對模式遞增步進:
 96D165DD35A89D3C=SWS: 將選取音軌的聲像法則設定為 3.0 dB ⇌ SWS: Set selected tracks pan law to 3.0 dB
 96D8909D75B94F29=SWS/PADRE: 縮短選取對象: 減少 2048 個取樣點 ⇌ SWS/PADRE: Shrink selected items: -2048 samples
 96DE50BD62803F54=SWS/BR: 將活躍的浮動音軌 FX 視窗移動到滑鼠游標 (水平: 中, 垂直: 頂部) ⇌ SWS/BR: Move active floating track FX window to mouse cursor (horizontal: middle, vertical: top)
-96F0962C1386FB74=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 350 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 350 pixel)
+96F0962C1386FB74=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 350 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 350 pixel)
 972D2BF443640744=SWS: 僅選擇預備錄製的音軌 ⇌ SWS: Select only rec armed track(s)
 97749E70B0788D7B=SWS/S&M: 為選取音軌聚焦下一個浮動 FX (循環切換) ⇌ SWS/S&M: Focus next floating FX for selected tracks (cycle)
 97A1204D80A7AB25=Xenakios/SWS: 向右移動游標配置的像素 ⇌ Xenakios/SWS: Move cursor right configured pixels
@@ -21409,7 +21407,7 @@ BDE7D44EDB5F195A=SWS/S&M: 貼上片段 ⇌ SWS/S&M: Paste takes
 BDEA44D4F819E55C=Xenakios/SWS: 將游標向右移動 10 像素, 建立時間選區 ⇌ Xenakios/SWS: Move cursor right 10 pixels, creating time selection
 BDF5CAE75D4B8E0A=SWS: 選擇下一個對象, 保持當前選擇 (跨音軌) ⇌ SWS: Select next item, keeping current selection (across tracks)
 BE070186B6B1B249=SWS/S&M: 資源 - 清除媒體檔案插槽 %d ⇌ SWS/S&M: Resources - Clear media file slot %%d
-BE3009AE2CDA5A54=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 400 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 400 pixel)
+BE3009AE2CDA5A54=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 400 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 400 pixel)
 BE4547160407BE3F=SWS/FNG: 在活躍的 MIDI 編輯器中循環切換 CC 車道 ⇌ SWS/FNG: Cycle through CC lanes in active MIDI editor
 BE651770A7E3AC50=SWS: 將選取音軌的聲像法則設定為默認預設 ⇌ SWS: Set selected tracks pan law to default
 BE6B71499A8AECEF=SWS/FNG: 選擇靜音的 MIDI 音符 ⇌ SWS/FNG: Select muted MIDI notes
@@ -21488,7 +21486,7 @@ C51F2E564D6823B5=SWS/BR: 獨佔切換滑鼠下的上下文工具欄, 預設 2 �
 C51F34564D682DE7=SWS/BR: 獨佔切換滑鼠下的上下文工具欄, 預設 8 ⇌ SWS/BR: Exclusive toggle contextual toolbar under mouse cursor, preset 8
 C535291EE817B8E3=SWS/S&M: 資源 - 打開工程, 提示插槽 ⇌ SWS/S&M: Resources - Open project, prompt for slot
 C56972B891D9E7AA=SWS/S&M: 區域播放列表 - 切換監聽/編輯模式 ⇌ SWS/S&M: Region Playlist - Toggle monitoring/edition mode
-C57AD95DC375C4AB=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 300 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 300 pixel)
+C57AD95DC375C4AB=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 300 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 300 pixel)
 C5AB9E2BCFF7AFA7=SWS/AW: 禁用在標尺上點擊時清除循環點 ⇌ SWS/AW: Disable clear loop points on click in ruler
 C5CBD2F596AD2277=SWS/BR: 選項 - 切換 \"顯示媒體片段名稱\" ⇌ SWS/BR: Options - Toggle \"Display media item take name\"
 C5E200BCDD79AF28=SWS/BR: 將選取的包絡點設定為最後選取點的值 ⇌ SWS/BR: Set selected envelope points to last selected point's value
@@ -21553,7 +21551,7 @@ CC6C59913739B2E2=SWS: 切換 (反轉) 音軌選擇 ⇌ SWS: Toggle (invert) trac
 CCD97F9EAB94443E=SWS: 選擇未靜音音軌 ⇌ SWS: Select unmuted tracks
 CCE51530DE78BD0D=SWS: 錄音時切換標尺為紅色 ⇌ SWS: Toggle ruler red while recording
 CD1B07529E45DE1D=SWS/BR: 從右側縮小包絡點選擇 ⇌ SWS/BR: Shrink envelope point selection from the right
-CD2E7FFB9C00C519=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 500 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 500 pixel)
+CD2E7FFB9C00C519=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 500 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 500 pixel)
 CD41C8CA5E64FFE0=SWS/BR: 切換在音軌推子音量處預覽滑鼠下方的片段並在預覽期間暫停 (從滑鼠游標位置開始) ⇌ SWS/BR: Toggle preview take under mouse at track fader volume and pause during preview (start from mouse cursor position)
 CD6414B13B585CD4=SWS/PADRE: 縮短選取對象: 減少 1024 個取樣點 ⇌ SWS/PADRE: Shrink selected items: -1024 samples
 CD966A1CBB44A1E5=SWS/S&M: 打開/關閉備註視窗 (區域字幕) ⇌ SWS/S&M: Open/close Notes window (region subtitles)
@@ -21609,7 +21607,7 @@ D4985479DA21ED31=SWS/BR: 增加速度標記 0.001% (保持整體速度不變) �
 D4BB9BFC000E1151=SWS: 設定選取資料夾為展開狀態 ⇌ SWS: Set selected folder(s) uncollapsed
 D4D134C29ABFA476=SWS/BR: 選項 - 將 \"添加音量/聲像包絡時套用修剪\" 設定為 \"始終\" ⇌ SWS/BR: Options - Set \"Apply trim when adding volume/pan envelopes\" to \"Always\"
 D501D0B29F457F12=SWS/S&M: 資源 - 清除主題插槽 %d ⇌ SWS/S&M: Resources - Clear theme slot %%d
-D50A6B587F334DB5=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 250 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 250 pixel)
+D50A6B587F334DB5=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 250 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 250 pixel)
 D51B9C545DFC85F6=SWS/wol: 在時間選區中全螢幕縮放選取的包絡 (僅在媒體車道中) 到上半部分 ⇌ SWS/wol: Full zoom selected envelope (in media lane only) to upper half in time selection
 D51F774396923C5C=SWS: 清除所有片段的保持音高 ⇌ SWS: Clear all takes preserve pitch
 D564F12FDF22D409=SWS/wol: 調整選取的包絡或最後觸碰的音軌高度, 縮放中心到中間編排 (MIDI CC 相對/滑鼠滾輪) ⇌ SWS/wol: Adjust selected envelope or last touched track height, zoom center to middle arrange (MIDI CC relative/mousewheel)
@@ -21892,7 +21890,7 @@ F6E6DDA9790958E7=Xenakios/SWS: 隨機化對象位置... ⇌ Xenakios/SWS: Random
 F6EF60EDBDF324B0=SWS: 複製新快照 (選取的音軌) ⇌ SWS: Copy new snapshot (selected track(s))
 F6F23C8AB2BC6B2D=SWS/S&M: 為選取對象旁通所有片段 FX ⇌ SWS/S&M: Bypass all take FX for selected items
 F71A88C3620F130B=SWS: 將選取音軌的聲像法則設定為 -4.5 dB ⇌ SWS: Set selected tracks pan law to -4.5 dB
-F71D575FADDA6EC5=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 100 像素)  ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 100 pixel)
+F71D575FADDA6EC5=SWS/BR: 切換隱藏所有 CC 車道, 除了最後點擊的車道 (將車道高度設定為 100 像素) ⇌ SWS/BR: Toggle hide all CC lanes except last clicked lane (set lane height to 100 pixel)
 F737259438E6F022=SWS: 將選取的對象設定為顏色漸變 ⇌ SWS: Set selected item(s) to color gradient
 F758912C38734206=SWS/BR: 將選取的包絡點設定為第一個選取點的值 ⇌ SWS/BR: Set selected envelope points to first selected point's value
 F75B0E6E1D607C01=SWS/BR: 將所有 CC 車道的高度減少 003 像素 ⇌ SWS/BR: Decrease all CC lanes' height by 003 pixel
@@ -22100,7 +22098,7 @@ E0F3195EB0CC1A15=LU K
 1B7D99A5491AD478=添加相關工程
 1DC8CA6D20F97185=自動渲染 - 錯誤
 1E01609B0B2F8462=抱歉，目前僅支援 PNG 檔案。
-1E9605E60525F032=新的對象長度 (s)  ⇌ New item length (s)
+1E9605E60525F032=新的對象長度 (s)
 2075D8AD374C746B=片段源媒體沒有廣播訊息描述
 2395AFDB588364D8=選擇檔案
 248EE95076803736=SWS 快照 - 錯誤
