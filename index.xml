@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3bf402f626d4e059ffd3f2279085cdd7050fdf24">
+<index version="1" name="zaibuyidao Scripts" commit="9fef4c76fe4e1eb12b786d3a3d7261d791cdba96">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7506,6 +7506,24 @@
       <version name="1.0" author="zaibuyidao" time="2024-06-25T02:07:11Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/68534ca85e7a9369930d071f361da11afd481fcc/Utility/zaibuyidao_Auto-Load%20VSTi%20for%20MIDI%20Playback.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Batch Folder Media Importer.lua" type="script" desc="Batch Folder Media Importer">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao, ChangoW" time="2025-02-11T09:21:12Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9fef4c76fe4e1eb12b786d3a3d7261d791cdba96/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
