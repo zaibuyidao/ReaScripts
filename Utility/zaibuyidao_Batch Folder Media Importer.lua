@@ -1,5 +1,5 @@
 -- @description Batch Folder Media Importer
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao, ChangoW
 -- @changelog
 --   New Script
@@ -237,41 +237,42 @@ local function importMediaFromDirectories(baseDirectory, subdirectories)
   reaper.PreventUIRefresh(1)
 
   local trackOffset = 0
+  local initialCursorPosition = reaper.GetCursorPosition()
 
   -- 遍历每个子目录，并根据选中的轨道进行处理
   for i, subdir in ipairs(subdirectories) do
     if activeDirs[i] then
       local files = getAudioFilesInDirectory(subdir)
-      for fileIndex, fileName in ipairs(files) do
-        local fullPath = joinPaths(subdir, fileName)
-        if fileIndex == 1 then
-          -- 插入首个文件时创建新轨道，并命名为子目录名称
-          trackOffset = trackOffset + 1
-          reaper.InsertMedia(fullPath, 1)
-          local newTrack = reaper.GetTrack(0, (firstSelectedTrackNumber - 1) + trackOffset)
-
-          if newTrack then
-            -- 获取基目录名称
-            local baseDirName = inputPath:match("([^/\\]+)$")
-            -- 获取相对路径部分
-            local relativeSubdir = subdir:sub(#baseDirectory + 1)
-          
-            -- 如果相对路径部分为空，表示只是基目录本身
-            if relativeSubdir == "" then
-              relativeSubdir = baseDirName  -- 只保留基目录名，不加反斜杠
-            else
-              relativeSubdir = baseDirName .. "\\" .. relativeSubdir  -- 拼接基目录和子目录
-            end
-          
-            -- 设置轨道名称
-            reaper.GetSetMediaTrackInfo_String(newTrack, "P_NAME", relativeSubdir, true)
+      if #files > 0 then
+        -- 新建轨道：在每个子目录内处理前先创建一个新的轨道
+        trackOffset = trackOffset + 1
+        reaper.InsertTrackAtIndex((firstSelectedTrackNumber - 1) + trackOffset, true)
+        local newTrack = reaper.GetTrack(0, (firstSelectedTrackNumber - 1) + trackOffset)
+        if newTrack then
+          local baseDirName = inputPath:match("([^/\\]+)$")
+          -- 获取相对路径部分
+          local relativeSubdir = subdir:sub(#baseDirectory + 1)
+        
+          -- 如果相对路径部分为空，表示只是基目录本身
+          if relativeSubdir == "" then
+            relativeSubdir = baseDirName  -- 只保留基目录名，不加反斜杠
+          else
+            relativeSubdir = baseDirName .. "\\" .. relativeSubdir  -- 拼接基目录和子目录
           end
-
-          reaper.Main_OnCommand(41174, 0)  -- 激活新轨道
-        else
-          reaper.InsertMedia(fullPath, 0)
+          -- 设置轨道名称
+          reaper.GetSetMediaTrackInfo_String(newTrack, "P_NAME", relativeSubdir, true)
+          -- 将新轨道设置为唯一选中轨道
+          reaper.SetOnlyTrackSelected(newTrack)
+          -- 将编辑光标移动到新轨道的起始位置
+          -- reaper.SetEditCurPos(initialCursorPosition, true, true)
         end
-        moveEditCursorByTime(importInterval)
+
+        -- 在当前新创建的轨道中逐个导入子目录的媒体文件
+        for _, fileName in ipairs(files) do
+          local fullPath = joinPaths(subdir, fileName)
+          reaper.InsertMedia(fullPath, 0)
+          moveEditCursorByTime(importInterval)
+        end
       end
     end
   end
@@ -279,7 +280,7 @@ local function importMediaFromDirectories(baseDirectory, subdirectories)
   -- 结束UI刷新锁定和 Undo 块
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
-  reaper.Undo_EndBlock("Batch Import Media", -1)
+  reaper.Undo_EndBlock("Batch Folder Media Importer", -1)
 end
 
 -----------------------------------------------------------
