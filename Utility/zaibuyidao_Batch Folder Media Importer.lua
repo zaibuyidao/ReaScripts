@@ -1,5 +1,5 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao, ChangoW
 -- @changelog
 --   New Script
@@ -306,7 +306,7 @@ local showSelectAll = false  -- 控制 "Select All" 复选框的显示
 local function mainLoop(currentSubdirectories)
   return function()
     ImGui.PushFont(ctx, sans_serif)
-    ImGui.SetNextWindowSizeConstraints(ctx, 446, 146, FLT_MAX, FLT_MAX)
+    ImGui.SetNextWindowSizeConstraints(ctx, 456, 146, FLT_MAX, FLT_MAX)
     local visible, open = ImGui.Begin(ctx, "Batch Folder Media Importer", true)
     if visible then
       -- 显示“Folder”标签和路径输入框，合并为一行
