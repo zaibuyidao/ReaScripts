@@ -1,5 +1,5 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao, ChangoW
 -- @changelog
 --   New Script
@@ -39,7 +39,10 @@ local language = getSystemLanguage()
 -- 设置 package.path 以加载 REAPER 内置 ImGui 库
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
 local ImGui = require 'imgui' '0.9.3.2'
+local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
 local ctx = ImGui.CreateContext('Batch Folder Media Importer')
+local sans_serif = ImGui.CreateFont('sans-serif', 13)
+ImGui.Attach(ctx, sans_serif)
 
 -----------------------------------------------------------
 -- 脚本状态变量（必须在所有使用它们的函数之前声明）
@@ -293,13 +296,23 @@ local showSelectAll = false  -- 控制 "Select All" 复选框的显示
 
 local function mainLoop(currentSubdirectories)
   return function()
+    ImGui.PushFont(ctx, sans_serif)
+    ImGui.SetNextWindowSizeConstraints(ctx, 200, 100, FLT_MAX, FLT_MAX)
     local visible, open = ImGui.Begin(ctx, "Batch Folder Media Importer", true)
     if visible then
-      teext = reaper.ImGui_Button(ctx, "Browse...", -1)
-      ImGui.SetItemTooltip(ctx, 'Select import folder')
-      if teext then
-        local retval, folder = reaper.JS_Dialog_BrowseForFolder("Select import folder:", "")
-        if retval then
+      -- 显示“Folder”标签和路径输入框，合并为一行
+      ImGui.PushItemWidth(ctx, -65)
+      ImGui.AlignTextToFramePadding(ctx)
+      ImGui.Text(ctx, 'Folder:')
+      ImGui.SameLine(ctx)
+
+      local changed, new_inputPath = ImGui.InputText(ctx, '##path', inputPath, 256)
+      ImGui.SameLine(ctx)
+
+      -- 显示“Browse...”按钮
+      if ImGui.Button(ctx, 'Browse...') then
+        local retval, folder = reaper.JS_Dialog_BrowseForFolder("Select folder:", "")
+        if retval and folder:len() > 0 then
           inputPath = normalizePathDelimiters(folder)
           currentSubdirectories = getAllSubdirectories(inputPath, "")
           -- 如果子目录列表不为空，则显示 "Select All" 复选框
@@ -312,11 +325,12 @@ local function mainLoop(currentSubdirectories)
         end
       end
 
-      local changed, new_inputPath = reaper.ImGui_InputText(ctx, "Import Path", inputPath, 256)
+      -- 监测输入框内容变化，更新路径
       if changed then
         inputPath = new_inputPath
       end
 
+      -- 按下 Enter 键时更新路径和子目录
       local keys = reaper.JS_VKeys_GetState(0)
       if keys:byte(0xD) ~= 0 then
         inputPath = normalizePathDelimiters(inputPath)
@@ -329,6 +343,7 @@ local function mainLoop(currentSubdirectories)
         activeDirs = {}  -- 粘贴路径时重置各子目录复选状态
       end
 
+      ImGui.PushItemWidth(ctx, -65)
       _, importInterval = ImGui.InputInt(ctx, "Interval (ms)", importInterval, 1, 100)
       
       -- 只有当 showSelectAll 为 true 时才显示 "Select All" 复选框
@@ -388,6 +403,7 @@ local function mainLoop(currentSubdirectories)
       ImGui.End(ctx)
     end
 
+    ImGui.PopFont(ctx)
     if open then
       reaper.defer(mainLoop(currentSubdirectories))
     end
