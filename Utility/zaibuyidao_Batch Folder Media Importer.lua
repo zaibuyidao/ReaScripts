@@ -1,5 +1,5 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao, ChangoW
 -- @changelog
 --   New Script
@@ -52,7 +52,7 @@ local inputPath      = ""    -- 导入的基目录路径
 local importInterval = 0   -- 每个媒体项之间编辑光标前移的时间（毫秒）
 local selectAll      = false -- “全选”复选框状态
 local subdirectories = {}    -- 基目录下的所有子目录列表
-
+local oneFile        = false
 -----------------------------------------------------------
 -- 工具函数
 -----------------------------------------------------------
@@ -249,7 +249,7 @@ local function importMediaFromDirectories(baseDirectory, subdirectories, pos)
       if #files > 0 then
         -- 新建轨道：在每个子目录内处理前先创建一个新的轨道
         trackOffset = trackOffset + 1
-        reaper.InsertTrackAtIndex((firstSelectedTrackNumber - 1) + trackOffset, true)
+        if not oneFile then reaper.InsertTrackAtIndex((firstSelectedTrackNumber - 1) + trackOffset, true) end
         local newTrack = reaper.GetTrack(0, (firstSelectedTrackNumber - 1) + trackOffset)
         if newTrack then
           local baseDirName = inputPath:match("([^/\\]+)$")
@@ -263,9 +263,11 @@ local function importMediaFromDirectories(baseDirectory, subdirectories, pos)
             relativeSubdir = baseDirName .. "\\" .. relativeSubdir  -- 拼接基目录和子目录
           end
           -- 设置轨道名称
-          reaper.GetSetMediaTrackInfo_String(newTrack, "P_NAME", relativeSubdir, true)
-          -- 将新轨道设置为唯一选中轨道
-          reaper.SetOnlyTrackSelected(newTrack)
+          if not oneFile then
+            reaper.GetSetMediaTrackInfo_String(newTrack, "P_NAME", relativeSubdir, true)
+            -- 将新轨道设置为唯一选中轨道
+            reaper.SetOnlyTrackSelected(newTrack)
+          end
           -- 将编辑光标移动到新轨道的起始位置
           -- 如果这里选择是，那么就勾选从光标位置导入的选项（相同时间位置），否则只勾选顺序导入(连续时间位置)的关系
           if pos == 1 then
@@ -276,7 +278,11 @@ local function importMediaFromDirectories(baseDirectory, subdirectories, pos)
         -- 在当前新创建的轨道中逐个导入子目录的媒体文件
         for _, fileName in ipairs(files) do
           local fullPath = joinPaths(subdir, fileName)
-          reaper.InsertMedia(fullPath, 0)
+          if oneFile then
+            reaper.InsertMedia(fullPath, 1)
+          else
+            reaper.InsertMedia(fullPath, 0)
+          end
           moveEditCursorByTime(importInterval)
         end
       end
@@ -300,7 +306,7 @@ local showSelectAll = false  -- 控制 "Select All" 复选框的显示
 local function mainLoop(currentSubdirectories)
   return function()
     ImGui.PushFont(ctx, sans_serif)
-    ImGui.SetNextWindowSizeConstraints(ctx, 470, 100, FLT_MAX, FLT_MAX)
+    ImGui.SetNextWindowSizeConstraints(ctx, 446, 146, FLT_MAX, FLT_MAX)
     local visible, open = ImGui.Begin(ctx, "Batch Folder Media Importer", true)
     if visible then
       -- 显示“Folder”标签和路径输入框，合并为一行
@@ -359,12 +365,23 @@ local function mainLoop(currentSubdirectories)
 
       -- 设置时间间隔
       _, importInterval = ImGui.InputInt(ctx, "Interval (ms)", importInterval, 1, 100)
-      
+
+      -- 显示 "Select All" 复选框
+      local changed_selectAll, new_selectAll = ImGui.Checkbox(ctx, "Select All", selectAll)
+      ImGui.SameLine(ctx, nil, 20)
+      rv, oneFile = ImGui.Checkbox(ctx, 'Import each file onto a separate track.', oneFile)
+
+      local totalFiles = getTotalAudioFiles(inputPath)
+      ImGui.SeparatorText(ctx, totalFiles ..' Audio Files, '.. #currentSubdirectories .." Folders.")
+
       -- 只有当 showSelectAll 为 true 时才显示 "Select All" 复选框
       if showSelectAll then
-        local changed_selectAll, new_selectAll = reaper.ImGui_Checkbox(ctx, "Select All", selectAll)
-        local totalFiles = getTotalAudioFiles(inputPath)
-        ImGui.SeparatorText(ctx, totalFiles ..' Audio Files, '.. #currentSubdirectories .." Folders.")
+        -- local changed_selectAll, new_selectAll = ImGui.Checkbox(ctx, "Select All", selectAll)
+        -- ImGui.SameLine(ctx, nil, 20)
+        -- rv, oneFile = ImGui.Checkbox(ctx, 'Import each file onto a separate track.', oneFile)
+        
+        -- local totalFiles = getTotalAudioFiles(inputPath)
+        -- ImGui.SeparatorText(ctx, totalFiles ..' Audio Files, '.. #currentSubdirectories .." Folders.")
         if changed_selectAll then
           selectAll = new_selectAll
           for i = 1, #currentSubdirectories do
@@ -410,7 +427,7 @@ local function mainLoop(currentSubdirectories)
         _, activeDirs[i] = ImGui.Checkbox(ctx, relativeSubdir, activeDirs[i])
       end
 
-      if ImGui.Button(ctx, "Import now") then
+      if ImGui.Button(ctx, "Import Now", -1) then
         importMediaFromDirectories(joinPaths(inputPath, ""), currentSubdirectories, val)
       end
 
