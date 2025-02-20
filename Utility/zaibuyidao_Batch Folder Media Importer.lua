@@ -1,5 +1,5 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao, ChangoW
 -- @changelog
 --   New Script
@@ -233,7 +233,7 @@ local function getFirstSelectedTrackNumber()
   return 0
 end
 
-local function importMediaFromDirectories(baseDirectory, subdirectories)
+local function importMediaFromDirectories(baseDirectory, subdirectories, pos)
   local firstSelectedTrackNumber = getFirstSelectedTrackNumber()
   -- 开始 Undo 块和UI刷新锁定
   reaper.Undo_BeginBlock()
@@ -267,7 +267,10 @@ local function importMediaFromDirectories(baseDirectory, subdirectories)
           -- 将新轨道设置为唯一选中轨道
           reaper.SetOnlyTrackSelected(newTrack)
           -- 将编辑光标移动到新轨道的起始位置
-          -- reaper.SetEditCurPos(initialCursorPosition, true, true)
+          -- 如果这里选择是，那么就勾选从光标位置导入的选项（相同时间位置），否则只勾选顺序导入(连续时间位置)的关系
+          if pos == 1 then
+            reaper.SetEditCurPos(initialCursorPosition, true, true)
+          end
         end
 
         -- 在当前新创建的轨道中逐个导入子目录的媒体文件
@@ -297,7 +300,7 @@ local showSelectAll = false  -- 控制 "Select All" 复选框的显示
 local function mainLoop(currentSubdirectories)
   return function()
     ImGui.PushFont(ctx, sans_serif)
-    ImGui.SetNextWindowSizeConstraints(ctx, 200, 100, FLT_MAX, FLT_MAX)
+    ImGui.SetNextWindowSizeConstraints(ctx, 470, 100, FLT_MAX, FLT_MAX)
     local visible, open = ImGui.Begin(ctx, "Batch Folder Media Importer", true)
     if visible then
       -- 显示“Folder”标签和路径输入框，合并为一行
@@ -343,7 +346,18 @@ local function mainLoop(currentSubdirectories)
         activeDirs = {}  -- 粘贴路径时重置各子目录复选状态
       end
 
+      -- 选择导入方式（连续时间位置/相同时间位置）
       ImGui.PushItemWidth(ctx, -65)
+      local rv = false
+      if not val then val = 0 end
+      
+      -- 使用 ImGui_RadioButtonEx 来创建互斥的单选按钮
+      rv, val = ImGui.RadioButtonEx(ctx, 'Sequential time postions', val, 0)
+      ImGui.SameLine(ctx)
+      rv, val = ImGui.RadioButtonEx(ctx, 'Same time position', val, 1)
+      ImGui.SameLine(ctx)
+
+      -- 设置时间间隔
       _, importInterval = ImGui.InputInt(ctx, "Interval (ms)", importInterval, 1, 100)
       
       -- 只有当 showSelectAll 为 true 时才显示 "Select All" 复选框
@@ -393,11 +407,11 @@ local function mainLoop(currentSubdirectories)
         end
       
         -- 显示复选框
-        _, activeDirs[i] = reaper.ImGui_Checkbox(ctx, relativeSubdir, activeDirs[i])
+        _, activeDirs[i] = ImGui.Checkbox(ctx, relativeSubdir, activeDirs[i])
       end
 
-      if reaper.ImGui_Button(ctx, "OK", -1) then
-        importMediaFromDirectories(joinPaths(inputPath, ""), currentSubdirectories)
+      if ImGui.Button(ctx, "Import now") then
+        importMediaFromDirectories(joinPaths(inputPath, ""), currentSubdirectories, val)
       end
 
       ImGui.End(ctx)
