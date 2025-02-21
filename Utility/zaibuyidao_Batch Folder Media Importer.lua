@@ -1,5 +1,5 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao, ChangoW
 -- @changelog
 --   New Script
@@ -324,32 +324,14 @@ local function mainLoop(currentSubdirectories)
         if retval and folder:len() > 0 then
           inputPath = normalizePathDelimiters(folder)
           currentSubdirectories = getAllSubdirectories(inputPath, "")
-          -- 如果子目录列表不为空，则显示 "Select All" 复选框
-          if #currentSubdirectories > 0 then
-            showSelectAll = true
-          else
-            showSelectAll = false
-          end
-          activeDirs = {}  -- 选择新目录时重置各子目录复选状态
         end
       end
 
-      -- 监测输入框内容变化，更新路径
+      -- 路径编辑框内容变化时立即更新路径
       if changed then
-        inputPath = new_inputPath
-      end
-
-      -- 按下 Enter 键时更新路径和子目录
-      local keys = reaper.JS_VKeys_GetState(0)
-      if keys:byte(0xD) ~= 0 then
-        inputPath = normalizePathDelimiters(inputPath)
+        inputPath = normalizePathDelimiters(new_inputPath)  -- 确保路径格式化处理
+        -- 更新子目录并设置"Select All"复选框
         currentSubdirectories = getAllSubdirectories(inputPath, "")
-        if #currentSubdirectories > 0 then
-          showSelectAll = true
-        else
-          showSelectAll = false
-        end
-        activeDirs = {}  -- 粘贴路径时重置各子目录复选状态
       end
 
       -- 选择导入方式（连续时间位置/相同时间位置）
@@ -357,7 +339,7 @@ local function mainLoop(currentSubdirectories)
       local rv = false
       if not val then val = 0 end
       
-      -- 使用 ImGui_RadioButtonEx 来创建互斥的单选按钮
+      -- 创建导入选项
       rv, val = ImGui.RadioButtonEx(ctx, 'Sequential time postions', val, 0)
       ImGui.SameLine(ctx)
       rv, val = ImGui.RadioButtonEx(ctx, 'Same time position', val, 1)
@@ -366,29 +348,28 @@ local function mainLoop(currentSubdirectories)
       -- 设置时间间隔
       _, importInterval = ImGui.InputInt(ctx, "Interval (ms)", importInterval, 1, 100)
 
+      -- 仅在有子目录时显示 "Select All" 复选框
+      -- local showSelectAll = #currentSubdirectories > 0  -- 如果有子目录则显示 "Select All"
+      -- if showSelectAll then
+      --   local changed_selectAll, new_selectAll = ImGui.Checkbox(ctx, "Select all files", selectAll)
+      --   if changed_selectAll then
+      --     selectAll = new_selectAll
+      --     for i = 1, #currentSubdirectories do
+      --       activeDirs[i] = selectAll  -- 更新所有子目录的复选框状态
+      --     end
+      --   end
+      --   ImGui.SameLine(ctx)
+      -- end
+
       -- 显示 "Select All" 复选框
-      local changed_selectAll, new_selectAll = ImGui.Checkbox(ctx, "Select All", selectAll)
-      ImGui.SameLine(ctx, nil, 20)
-      rv, oneFile = ImGui.Checkbox(ctx, 'Import each file onto a separate track.', oneFile)
-
-      local totalFiles = getTotalAudioFiles(inputPath)
-      ImGui.SeparatorText(ctx, totalFiles ..' Audio Files, '.. #currentSubdirectories .." Folders.")
-
-      -- 只有当 showSelectAll 为 true 时才显示 "Select All" 复选框
-      if showSelectAll then
-        -- local changed_selectAll, new_selectAll = ImGui.Checkbox(ctx, "Select All", selectAll)
-        -- ImGui.SameLine(ctx, nil, 20)
-        -- rv, oneFile = ImGui.Checkbox(ctx, 'Import each file onto a separate track.', oneFile)
-        
-        -- local totalFiles = getTotalAudioFiles(inputPath)
-        -- ImGui.SeparatorText(ctx, totalFiles ..' Audio Files, '.. #currentSubdirectories .." Folders.")
-        if changed_selectAll then
-          selectAll = new_selectAll
-          for i = 1, #currentSubdirectories do
-            activeDirs[i] = selectAll
-          end
+      local changed_selectAll, new_selectAll = ImGui.Checkbox(ctx, "Select all files", selectAll)
+      if changed_selectAll then
+        selectAll = new_selectAll
+        for i = 1, #currentSubdirectories do
+          activeDirs[i] = selectAll  -- 更新所有子目录的复选框状态
         end
       end
+      ImGui.SameLine(ctx)
 
       -- 显示子目录复选框
       -- for i, subdir in ipairs(currentSubdirectories) do
@@ -401,32 +382,31 @@ local function mainLoop(currentSubdirectories)
       --   _, activeDirs[i] = reaper.ImGui_Checkbox(ctx, relativeSubdir, activeDirs[i])
       -- end
 
-      -- 获取 inputPath 的基目录名称
-      local baseDirName = inputPath:match("([^/\\]+)$")
+      -- 选择 "Import each file onto a separate track" 复选框
+      rv, oneFile = ImGui.Checkbox(ctx, 'Import each file onto a separate track.', oneFile)
 
-      -- 显示子目录时保留基目录名称并隐藏inputPath部分
-      -- for i, subdir in ipairs(currentSubdirectories) do
-      --   -- 获取相对路径（去掉inputPath部分），并与基目录名称拼接
-      --   local relativeSubdir = baseDirName .. "\\" .. subdir:sub(#inputPath + 2)  -- 加入反斜杠
-      --   _, activeDirs[i] = reaper.ImGui_Checkbox(ctx, relativeSubdir, activeDirs[i])
-      -- end
+      -- 显示总文件数量
+      local totalFiles = getTotalAudioFiles(inputPath)
+      ImGui.SeparatorText(ctx, totalFiles ..' Audio Files, '.. #currentSubdirectories .." Folders.")
 
-      -- 显示子目录时保留基目录名称并隐藏inputPath部分
+      local function remove_last_folder(path)
+        if path:sub(-1) == "\\" then path = path:sub(1, -2) end
+        return path:match("^(.*)\\")  -- 匹配并去掉最后一个文件夹
+      end
+
+      local newHeadPath = remove_last_folder(inputPath)
+
       for i, subdir in ipairs(currentSubdirectories) do
-        -- 获取相对路径（去掉inputPath部分），并与基目录名称拼接
-        local relativeSubdir = subdir:sub(#inputPath + 2)  -- 去掉inputPath部分
-      
-        -- 如果相对路径为空，表示只是基目录
-        if relativeSubdir == "" then
-          relativeSubdir = baseDirName  -- 只保留基目录名称
-        else
-          relativeSubdir = baseDirName .. "\\" .. relativeSubdir  -- 拼接基目录和子目录
+        -- 获取相对路径（去掉inputPath部分）
+        local relativeSubdir = subdir:sub(#newHeadPath + 2)  -- 去掉inputPath部分
+        if relativeSubdir:sub(-1) == "\\" then
+          relativeSubdir = relativeSubdir:sub(1, -2)
         end
-      
-        -- 显示复选框
+        -- 显示复选框和子目录名称
         _, activeDirs[i] = ImGui.Checkbox(ctx, relativeSubdir, activeDirs[i])
       end
 
+      -- 导入按钮
       if ImGui.Button(ctx, "Import Now", -1) then
         importMediaFromDirectories(joinPaths(inputPath, ""), currentSubdirectories, val)
       end
