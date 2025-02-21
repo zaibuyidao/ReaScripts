@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2281a5c1d7514e02fb71fe2954d63f840aa6c437">
+<index version="1" name="zaibuyidao Scripts" commit="a961b70d8afe6580a044e26d2660da5c9a2c4705">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7943,6 +7943,10 @@
       <version name="1.0" author="zaibuyidao" time="2025-02-21T15:37:48Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2281a5c1d7514e02fb71fe2954d63f840aa6c437/Utility/zaibuyidao_Mouse%20Modifiers%20-%20Toggle%20Default%20Settings.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-02-21T15:44:06Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a961b70d8afe6580a044e26d2660da5c9a2c4705/Utility/zaibuyidao_Mouse%20Modifiers%20-%20Toggle%20Default%20Settings.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Mouse Modifiers - Toggle Marquee Selection.lua" type="script" desc="Mouse Modifiers - Toggle Marquee Selection">
