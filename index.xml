@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0766590a662b3a800bc4c5f66f9e87f02c31ed2a">
+<index version="1" name="zaibuyidao Scripts" commit="2281a5c1d7514e02fb71fe2954d63f840aa6c437">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7925,6 +7925,24 @@
       <version name="1.0" author="zaibuyidao" time="2021-08-29T08:41:19Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4e06c45b98b415f8cbdd4aa37fea710e4c3a3cd0/Utility/zaibuyidao_MIDI%20File%20Track%20Name%20Fix.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Mouse Modifiers - Toggle Default Settings.lua" type="script" desc="Mouse Modifiers - Toggle Default Settings">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2025-02-21T15:37:48Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2281a5c1d7514e02fb71fe2954d63f840aa6c437/Utility/zaibuyidao_Mouse%20Modifiers%20-%20Toggle%20Default%20Settings.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Mouse Modifiers - Toggle Marquee Selection.lua" type="script" desc="Mouse Modifiers - Toggle Marquee Selection">
