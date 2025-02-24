@@ -52,7 +52,9 @@ function restore_selected_items(t)
     -- 恢复之前保存的选中的items
     reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
     for _, item in ipairs(t) do
-        reaper.SetMediaItemSelected(item, true)
+        if item then
+            reaper.SetMediaItemSelected(item, true)
+        end
     end
 end
 
@@ -67,7 +69,9 @@ function restore_selected_tracks(t)
     -- 恢复之前保存的选中的轨道
     un_sel_all_tracks() -- 先取消选择所有轨道
     for _, track in ipairs(t) do
-        reaper.SetTrackSelected(track, true)
+        if track then
+            reaper.SetTrackSelected(track, true)
+        end
     end
 end
 
@@ -75,7 +79,9 @@ function save_solo_tracks(t)
     -- 保存所有轨道的Solo状态到表t
     for i = 1, reaper.CountTracks(0) do
         local tr = reaper.GetTrack(0, i - 1)
-        t[#t + 1] = {tr_ptr = tr, GUID = reaper.GetTrackGUID(tr), solo = reaper.GetMediaTrackInfo_Value(tr, "I_SOLO")}
+        if tr then
+            t[#t + 1] = {tr_ptr = tr, GUID = reaper.GetTrackGUID(tr), solo = reaper.GetMediaTrackInfo_Value(tr, "I_SOLO")}
+        end
     end
 end
 
@@ -83,7 +89,9 @@ function restore_solo_tracks(t)
     -- 恢复之前保存的轨道Solo状态
     for i = 1, #t do
         local src_tr = reaper.BR_GetMediaTrackByGUID(0, t[i].GUID)
-        reaper.SetMediaTrackInfo_Value(src_tr, "I_SOLO", t[i].solo)
+        if src_tr then
+            reaper.SetMediaTrackInfo_Value(src_tr, "I_SOLO", t[i].solo)
+        end
     end
 end
 
@@ -220,7 +228,7 @@ local function main()
             for m = 0, count_sel_items - 1 do
                 local item = reaper.GetSelectedMediaItem(0, m)
                 local track = reaper.GetMediaItem_Track(item)
-                if (not selected_track[track]) then
+                if (track and not selected_track[track]) then
                     selected_track[track] = true
                 end
             end
