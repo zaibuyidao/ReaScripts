@@ -1,5 +1,5 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao, ChangoW
 -- @changelog
 --   # Fixed issue with incorrect root directory path.
@@ -454,10 +454,19 @@ local function mainLoop(currentSubdirectories)
         _, activeDirs[i] = ImGui.Checkbox(ctx, relativeSubdir, activeDirs[i])
       end
 
+      -- 检测 Ctrl + Enter 快捷键
+      local ctrlPressed = ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl)  -- 判断 Ctrl 是否按下
+      local enterPressed = ImGui.IsKeyDown(ctx, ImGui.Key_Enter)  -- 判断 Enter 是否按下
+      
+      -- 按下 Ctrl + Enter 快捷键
+      if ctrlPressed and enterPressed then
+        importMediaFromDirectories(joinPaths(inputPath, ""), currentSubdirectories, val)
+      end
+
       -- 导入按钮
       -- local buttonWidth = ImGui.CalcTextSize(ctx, "Start Import")  -- 计算按钮文本的宽度
       -- ImGui.SetCursorPosX(ctx, ImGui.GetWindowWidth(ctx) - buttonWidth - 18)  -- 设置按钮位置为右边
-      if ImGui.Button(ctx, "Start Import!", -1) then
+      if ImGui.Button(ctx, "Start Import (Ctrl+Enter)", -1) then
         importMediaFromDirectories(joinPaths(inputPath, ""), currentSubdirectories, val)
       end
 
