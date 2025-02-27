@@ -1,8 +1,8 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao, ChangoW
 -- @changelog
---   New Script
+--   # Fixed issue with incorrect root directory path.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -295,6 +295,19 @@ local function importMediaFromDirectories(baseDirectory, subdirectories, pos)
   reaper.Undo_EndBlock("Batch Folder Media Importer", -1)
 end
 
+-- 判断路径是否为根目录
+local function isRootDirectory(path)
+  -- Windows 根目录 (例如 "C:\" 或 "D:\")
+  if path:match("^[A-Za-z]:\\$") or path:match("^[A-Za-z]:$") then
+    return true
+  end
+  -- Unix-like 系统根目录 ("/")
+  if path == "/" then
+    return true
+  end
+  return false
+end
+
 -----------------------------------------------------------
 -- ImGui 界面循环
 -----------------------------------------------------------
@@ -312,7 +325,7 @@ local function mainLoop(currentSubdirectories)
       -- 显示“Folder”标签和路径输入框，合并为一行
       ImGui.PushItemWidth(ctx, -65)
       ImGui.AlignTextToFramePadding(ctx)
-      ImGui.Text(ctx, 'Folder:')
+      ImGui.Text(ctx, 'Path:')
       ImGui.SameLine(ctx)
 
       local changed, new_inputPath = ImGui.InputText(ctx, '##path', inputPath, 256)
@@ -322,16 +335,51 @@ local function mainLoop(currentSubdirectories)
       if ImGui.Button(ctx, 'Browse...') then
         local retval, folder = reaper.JS_Dialog_BrowseForFolder("Select folder:", "")
         if retval and folder:len() > 0 then
-          inputPath = normalizePathDelimiters(folder)
-          currentSubdirectories = getAllSubdirectories(inputPath, "")
+          -- 格式化路径
+          folder = normalizePathDelimiters(folder)
+          -- 如果是根目录，给出提示并停止继续
+          if isRootDirectory(folder) then
+            if language == "简体中文" then
+              reaper.ShowMessageBox(
+                "根目录（例如 Windows 上的 C:\\, D:\\, 或类 Unix 系统上的 /）不支持。\n" ..
+                "请选择一个有效目录下的子目录继续操作。",
+                "无效的目录选择",
+                0
+              )
+            elseif language == "繁體中文" then
+              reaper.ShowMessageBox(
+                "根目錄（例如 Windows 上的 C:\\, D:\\, 或類 Unix 系統上的 /）不支持。\n" ..
+                "請選擇一個有效目錄下的子目錄繼續操作。",
+                "無效的目錄選擇",
+                0
+              )
+            else
+              reaper.ShowMessageBox(
+                "Root directories (e.g., C:\\, D:\\ on Windows, or / on Unix-like systems) are not supported.\n" ..
+                "Please select a subdirectory within a valid directory to proceed.",
+                "Invalid Directory Selection",
+                0
+              )
+            end
+          else
+            inputPath = folder
+            currentSubdirectories = getAllSubdirectories(inputPath, "")
+          end
         end
       end
 
       -- 路径编辑框内容变化时立即更新路径
       if changed then
         inputPath = normalizePathDelimiters(new_inputPath)  -- 确保路径格式化处理
-        -- 更新子目录并设置"Select All"复选框
-        currentSubdirectories = getAllSubdirectories(inputPath, "")
+        -- 如果是根目录，给出提示并停止更新路径
+        if isRootDirectory(inputPath) then
+          --reaper.ShowMessageBox("Root directory is not supported!", "Warning", 0)  -- 显示消息框
+          inputPath = ""  -- 清空输入框，避免选择根目录
+          currentSubdirectories = {}  -- 清空子目录列表
+        else
+          -- 更新子目录并设置"Select All"复选框
+          currentSubdirectories = getAllSubdirectories(inputPath, "")
+        end
       end
 
       -- 选择导入方式（连续时间位置/相同时间位置）
@@ -407,7 +455,9 @@ local function mainLoop(currentSubdirectories)
       end
 
       -- 导入按钮
-      if ImGui.Button(ctx, "Import Now", -1) then
+      -- local buttonWidth = ImGui.CalcTextSize(ctx, "Start Import")  -- 计算按钮文本的宽度
+      -- ImGui.SetCursorPosX(ctx, ImGui.GetWindowWidth(ctx) - buttonWidth - 18)  -- 设置按钮位置为右边
+      if ImGui.Button(ctx, "Start Import!", -1) then
         importMediaFromDirectories(joinPaths(inputPath, ""), currentSubdirectories, val)
       end
 
