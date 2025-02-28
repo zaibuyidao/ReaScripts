@@ -1,8 +1,8 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao, ChangoW
 -- @changelog
---   # Fixed issue with incorrect root directory path.
+--   # Fixed the issue with numerical sorting
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -121,9 +121,33 @@ local function getAllSubdirectories(directory, parentPath)
   return subdirs
 end
 
+-- 自然排序比较函数
 function naturalSortCompare(a, b)
-  local function padnum(d) return ("%012d"):format(tonumber(d)) end
-  return tostring(a):gsub("%d+", padnum) < tostring(b):gsub("%d+", padnum)
+  -- 提取文件名中的数字部分
+  local function extractNumbers(str)
+    local numbers = {}
+    -- 使用 gmatch 提取所有数字块
+    for number in str:gmatch("%d+") do
+      table.insert(numbers, tonumber(number)) -- 提取数字并转换为数字类型
+    end
+    return numbers
+  end
+
+  -- 比较两个字符串中的数字部分
+  local function compareNumbers(numbersA, numbersB)
+    for i = 1, math.min(#numbersA, #numbersB) do
+      if numbersA[i] ~= numbersB[i] then
+        return numbersA[i] < numbersB[i]
+      end
+    end
+    return #numbersA < #numbersB -- 如果数字相等，比较长度
+  end
+
+  local numbersA = extractNumbers(a)
+  local numbersB = extractNumbers(b)
+
+  -- 比较数字部分
+  return compareNumbers(numbersA, numbersB)
 end
 
 --- 获取指定目录下的所有文件名称（按自然排序）
