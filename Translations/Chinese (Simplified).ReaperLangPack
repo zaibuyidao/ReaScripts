@@ -1,10 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 1.1.6-733
+;Version: 1.1.7-734
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49376/Chinese%20%28Simplified%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.33, SWS: 2.14.0.3
+;  Brand new REAPER: 7.34, SWS: 2.14.0.3
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -1085,8 +1085,8 @@ EF2E4D6B32E12F9F=视图: 向上滚动视图
 93244D3BB94E6F33=无预设
 17B3AE10A9CC3695=插件状态数据大小:
 274E7C84B3E58DB8=重置为出厂默认设置
-BA2E51CA750060F6=输入 %d
-9314927F387AB957=输出 %d
+;BA2E51CA750060F6=输入 %d
+;9314927F387AB957=输出 %d
 F420AC1723391ECE=主控轨道
 629548803B048F00= -
 7110EEEF2B77963B=持续时间
@@ -1316,7 +1316,10 @@ BA1A25DF2A11E99B=重命名文件夹
 3322AA333AEE590E=显示包络
 EDD67828D248E210=在轨道控件中显示
 D726E2A6E8466B26=创建新 MIDI 文件:
-;FC7C5BB198567CED=小节
+CE95BB7FE6FAD617=1/2
+CE95B97FE6FAD2B1=1/4
+CE95B57FE6FACBE5=1/8
+FC7C5BB198567CED=小节
 2ED22F7EFB7E2C2A=全部
 49EE42D3465CDA6E=所选
 C92094118C504736=重命名编组
@@ -2154,6 +2157,7 @@ A3E497C30F573907=当设备处于不活跃状态且轨道处于预备录制状态
 8C97F85C4C9FE0F2=当无法打开音频设备时发出警告
 C33F7F4B6513187B=当无法打开 MIDI 设备时发出警告
 CB2AA5F907FD5B5E=当启用的 MIDI 设备不存在时发出警告
+B92BE092F8E45CDC=自动旁通受预备录制影响且其 PDC 超过以下值的轨道上的 FX:
 1627FE7A787821C7=暂时旁通受预备录制影响的轨道上的过采样
 B146A161A883B7B2=即使 FX 配置打开时也自动旁通 FX (通过工程或手动设置)
 70F8916AE115DDD9=在警告磁盘写入失败/磁盘已满时停止处理音频
@@ -3249,9 +3253,9 @@ CCA504D42501588F=当媒体对象在轨道之间移动时自动显示受影响的
 86E13A2814E261D6=波纹编辑或插入时间
 628E8029B7D80755=自动创建的包络边缘点的转换时间:
 EC6E55BC826C501F=ms (最小 0.1)
+13327D5E18BF9D77=使用相对鼠标编辑:
 6454EA820B08ADA9=推子比例的音量包络
 226B6B5C768820AE=其他包络
-13327D5E18BF9D77=使用相对鼠标编辑:
 
 [DLG_448] ; IDD_TOOLBAR_FLOATING
 
@@ -3505,6 +3509,7 @@ FF077D0854B674D7=这些设置也会影响渲染窗口中的默认尾部选项 (�
 363E7FC94526FBB0=当冻结时，如果有轨道或片段级 FX, 则渲染整条轨道长度
 35A79557A5DF99E2=冻结整条轨道时包括尾部
 23094615606E8BF9=将静音的对象冻结为静音的无声对象
+8671361D6CDD79A6=自动递增文件名格式:
 C25DAC3F8B7737FB=渲染后:
 60F56F374676C4DE=关闭渲染窗口
 AE5F0A2D4D42B9CB=返回到渲染设置
@@ -6482,6 +6487,9 @@ FBECE4010CFB26AE=轨道属性: 将轨道时基设置为时间 ⇌ Track properti
 270EB47D5742DA6F=工程: 将工程时基设置为时间 ⇌ Project: Set project timebase to time
 EAA13A2FC4672FC9=工程: 将工程时基设置为节拍 (位置, 长度, 速率) ⇌ Project: Set project timebase to beats (position, length, rate)
 97EBD174D51B453D=工程: 将工程时基设置为节拍 (仅位置) ⇌ Project: Set project timebase to beats (position only)
+215DDA10749F3CF7=工程: 将速度/拍号包络的时基设置为时间 ⇌ Project: Set tempo/time signature envelope timebase to time
+93DAD4FEB14DD81F=工程: 将速度/拍号包络的时基设置为节拍 ⇌ Project: Set tempo/time signature envelope timebase to beats
+C4E83BDD669BEA22=工程: 将速度/拍号包络的时基设置为拍号使用节拍, 速度使用时间 ⇌ Project: Set tempo/time signature envelope timebase to beats for time signature, time for tempo
 E6B957F2343807A7=轨道属性: 自由对象定位 ⇌ Track properties: Free item positioning
 6B9CC87A7E0E7163=轨道属性: 设置自由对象定位 ⇌ Track properties: Set free item positioning
 896ACF81751F2CAD=轨道属性: 取消设置自由对象定位/固定对象车道 ⇌ Track properties: Unset free item positioning/fixed item lanes
@@ -7063,6 +7071,7 @@ B09CD709AAA9205B=包络: 在时间选区处插入 4 个包络点 ⇌ Envelope: I
 BA875024203505A0=包络: 切换选定包络预备录制状态 ⇌ Envelope: Toggle record arm for selected envelope
 4AEF7636A3F30595=包络: 切换隐藏/显示选定的包络 ⇌ Envelope: Toggle hide/display selected envelope
 ED93A30C550B43FF=包络: 切换选定包络旁通状态 ⇌ Envelope: Toggle bypass for selected envelope
+2B5B72EB0A5FA880=FX: 切换首选项: 自动旁通受预备录制影响轨道上需要 PDC 的 FX ⇌ FX: toggle preference: auto-bypass FX that require PDC on record arm-affected tracks
 40D32B8B1ECD25E3=包络: 显示轨道的所有活跃包络 ⇌ Envelope: Show all active envelopes for tracks
 1D64B42D29B0A62B=包络: 显示轨道的所有包络 ⇌ Envelope: Show all envelopes for tracks
 84B297D6092B7E90=包络: 隐藏轨道的所有包络 ⇌ Envelope: Hide all envelopes for tracks
@@ -7827,7 +7836,7 @@ A0F6586BD617A0C9=WASAPI 错误分配缓冲区
 F15B367F9C392DDF=环回输入 %d
 D1A411F9C53584D4=环回输出 %d
 04240CF987D5AB18= [%d 条通道]
-649C58262CFFA72B=备用 %d
+;649C58262CFFA72B=备用 %d
 
 [audiodevmenu]
 845598FB8D89B86A=[ERR] ReaScript 控制台有错误信息
@@ -8186,7 +8195,7 @@ D0F681DA8CBE07E7=(刷新列表)
 ;0A2E68C3B74ED940=网页浏览器界面
 
 [csurf_www]
-0941B224A9884835=网页浏览器界面: %s%shttp://%s:%d
+;0941B224A9884835=网页浏览器界面: %s%shttp://%s:%d
 656CF7ADC46F60EE=正在请求...
 7558B91CD0E1C9A1=获取本地 IP 出错
 5548ECDC84C64F5B=获取本地端口出错
@@ -8203,11 +8212,11 @@ BFC3306F54935DAB=继续自定义操作
 78759B7EBE0076EF= 从步骤
 
 [customizemenu]
-;7E498D834316533D=图像图标
-;BD441EE808368F29=文本图标, 默认工具提示
-;5BF2418D54B41EC9=文本图标
-;80E5A792BB20AA42=文本双宽图标, 默认工具提示
-;2989CC7E8F4BEFC0=文本双宽图标
+7E498D834316533D=图像图标
+BD441EE808368F29=文本图标, 默认工具提示
+5BF2418D54B41EC9=文本图标
+80E5A792BB20AA42=文本双宽图标, 默认工具提示
+2989CC7E8F4BEFC0=文本双宽图标
 E1E1EA0F93520770=ReaperMenu 文件没有与 '%s' 兼容的菜单/工具栏
 A6F4DB178256CD10=从 ReaperMenuSet 文件导入了 %d 个区段。
 60761F79AE7C6D51=自定义工具栏:
@@ -9102,6 +9111,7 @@ DAF16654F60CC4B8=写入预设库文件时出错！磁盘已满？
 C5B8FA05AC83AB35=FX 注释: %s
 A812A7FC8E6BC23F=离线 -
 F5BFBD4D49BA078B=旁通 -
+853DD4458613E834=PDC 自动旁通 -
 B9135ED276E19946=[parallel]
 17E7264672EB4EC9=FX 注释:
 6D871F9268A5ECFE=旁通
@@ -9109,6 +9119,7 @@ C22B73042B86836A=离线
 F025E1B89F09259C=重命名参数:
 4A10D846929E1CBE=[未命名参数]
 9B59D38F2B061628=为参数 %s 导入文件
+0471AAC5AFC4A5DF=自动 PDC-旁通
 D9A9B8F7F03C1A59=保存 FX 链:
 DBBC46B2994004C6=在加载轨道默认链之前删除所有现有的 FX ？\r\n(如果选择否，轨道默认链将添加到您的 FX 列表中)
 4A3E3CE6B990FCAA=REAPER FX 询问
@@ -9116,6 +9127,7 @@ F17BD15BC982BD69=添加 FX 链:
 B4B75DDF26006835= %s 采样点
 CA77BF9C4BB8EA0A=轨道 %d: %s: 在不可自动化的参数 %d %s 上应用参数包络
 763DC4A00D8B29B1=主控轨道: %s: 在不可自动化的参数 %d %s 上应用参数包络
+807947BD993816AF= [PDC 自动旁通]
 575CF292492BDC48=并行
 DE8B46FD7FF45F1A=第一个并行
 594ED5358BEC24B4=以下效果在已加载的模板中，但不可用。
@@ -9155,6 +9167,7 @@ AEF8DD6798933C08=运行为
 BBDE6BF4C5F2447C=影响新创建的实例和已加载工程中的实例
 54BE0C4F3DB86B76=将状态保存为 VST 预设库 (默认)
 6E2A89AB8DA62509=有错误的插件兼容模式
+35E74365EE6F6322=禁用 ARA (如果插件支持 ARA)
 9C7F7ADF5C6E6C35=忽略插件报告的尾部大小 (防止工程范围内的插件自动旁通)
 2444F2A60DC81176=在 TCP 中显示嵌入式 UI (如果支持)
 798FD1AEB66AE513=在 MCP 中显示嵌入式 UI (如果支持)
@@ -9255,8 +9268,17 @@ E905C4762023137B=MIDI 导出失败！\r\n
 78AB0BF3A75982CD=合并状态
 
 [grid]
-;040769A4DF94A124=帧
-;149BA23D44963A89=节拍器
+CF1520421B9D55F0=1/128
+03364D557C2E94CD=1/64
+03403D557C36CE22=1/32
+034749557C3D0134=1/16
+040769A4DF94A124=帧
+149BA23D44963A89=节拍器
+C5F4F5421650B8D0=1/256
+BCF6AE421120D282=1/32T
+CF22FC421BA95620=1/16T
+032F19557C281DC3=1/8T
+033D19557C345B1F=1/4T
 
 [gridsnap]
 59FC81FA7C61DF25=鼠标位置依赖
@@ -13271,6 +13293,7 @@ BE05D38CB8F64567=在此处更改语言包和选项后，可能需要重新启动
 7B7BEA801A74C641=在菜单中将未翻译的文本显示在已翻译文本之后
 2AA070B39704320A=忽略语言包指定的对话框缩放
 3E741E5D61AC63F2=鼠标悬停在已翻译控件上时显示工具提示
+DE56A58CFE57C80B=鼠标悬停时显示控件 ID
 80BE1395BCF8C169=下载语言包
 
 [prefs_lv2_help]
@@ -13810,6 +13833,7 @@ D63A4C5E2504D8E6=在渲染时可以计算和显示各种统计信息。
 C0879623E749667F=如果冻结带有静音对象的轨道，生成无声对象以便知道存在静音对象。
 8A5F82807AA87897=防止在离线渲染期间使用自动旁通工程/FX 设置, 应用 FX, 片段渲染, 等等。
 BB61383397CF6480=渲染完成后，渲染输出/统计窗口可以阻止焦点返回到工程，或以无模式重新打开以允许焦点更改。
+9D8E117ADEB63307=在渲染或转换文件时，可能会通过在文件名中添加后缀来解决文件名冲突。
 
 [prefs_scrub_help]
 C6CEC38A2A4BE6CD=可以擦洗/轻推主混音或仅选定的轨道。
@@ -14287,10 +14311,12 @@ FE858E515D2832A0=输出模式: 推子后
 CB583F872ABE35DD=输入: %d 条通道
 9FBD3B7C7D482A63=输入: 多通道
 8B6B47A8BE35ED96=输入: MIDI
-145E67C5F043EBA4=MIDI (顺序输入或通道)
-4DD9C390E127A0E6=通道 %d 到 %d
+8BDDCB2018E2EC25=MIDI (顺序输入)
+8EAF3B533471D9EE=MIDI (顺序通道)
 301435B0001182A3=将输入映射到通道
+9B327D30B989FE27=将 MIDI 输入映射到顺序目标通道
 B332C15E45DB07B9=源通道
+4DD9C390E127A0E6=通道 %d 到 %d
 56C59DA37A313EB1=输入: 无
 1E071B9647C6E815=顺序分配输入
 ECAF11E2B0ADF073=轨道录音设置 (输入量化, 格式, 等等)...
@@ -15443,6 +15469,7 @@ B579021978E2DE9D=莎莎舞 (Salsa)
 
 [tcpfx]
 FC2DF531D928B2B9= (已旁通)
+0274921E5D2C6C86= (PDC-旁通)
 
 [theme]
 3739053E6FEEBE2F=经典_1.x
@@ -15982,6 +16009,7 @@ CEAB8B27F69686C1=发送/硬件输出
 04753C90CE2C6050= [并行]
 FBCE7FD896917E60= [离线]
 48576B8E22F18006= [旁通]
+7743EB5E9338EFEF= [PDC 自动旁通]
 ACC5AD24A62EF595= [轨道 FX 旁通]
 4DE59B56641E0660=FX/发送/硬件输出
 B05BCC16D0581578=FX/FX 参数
