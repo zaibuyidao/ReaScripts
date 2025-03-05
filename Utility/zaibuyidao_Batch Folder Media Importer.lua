@@ -1,8 +1,8 @@
 -- @description Batch Folder Media Importer
--- @version 1.1.1
+-- @version 1.1.2
 -- @author zaibuyidao, ChangoW
 -- @changelog
---   # Fixed the issue with numerical sorting (1.0.8 regression)
+--   # Fix natural number sorting issue
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -121,6 +121,7 @@ local function getAllSubdirectories(directory, parentPath)
     end
     i = i + 1
   end
+  table.sort(subdirs, naturalSortCompare)
   return subdirs
 end
 
