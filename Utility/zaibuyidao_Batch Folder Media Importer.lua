@@ -1,8 +1,8 @@
 -- @description Batch Folder Media Importer
--- @version 1.0.9
+-- @version 1.1.0
 -- @author zaibuyidao, ChangoW
 -- @changelog
---   # Fixed the issue with numerical sorting
+--   # Fixed the issue with numerical sorting (1.0.8 regression)
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -114,7 +114,10 @@ local function getAllSubdirectories(directory, parentPath)
         table.insert(subdirs, subsubdir)
       end
     else
-      table.insert(subdirs, fullPath)
+      -- 仅当该子目录包含音频文件时才添加
+      if #getAudioFilesInDirectory(fullPath) > 0 then
+        table.insert(subdirs, fullPath)
+      end
     end
     i = i + 1
   end
