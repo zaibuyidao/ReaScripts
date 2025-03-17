@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a9b768e25477487a870eaf54e0c825bae8093817">
+<index version="1" name="zaibuyidao Scripts" commit="33988506c1bb8c2897779180b7f1bb21e501e4e9">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -595,6 +595,24 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/01df275ef728fa89df9bcde94f2af1ff1d51ddc5/Items%20Editing/zaibuyidao_Equal%20Cut.lua</source>
       </version>
     </reapack>
+    <reapack name="zaibuyidao_Find Duplicate Items.lua" type="script" desc="Find Duplicate Items">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2025-03-17T09:16:39Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/33988506c1bb8c2897779180b7f1bb21e501e4e9/Items%20Editing/zaibuyidao_Find%20Duplicate%20Items.lua</source>
+      </version>
+    </reapack>
     <reapack name="zaibuyidao_Humanize Item Volume.lua" type="script" desc="Humanize Item Volume">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
@@ -865,6 +883,24 @@
       <version name="1.0" author="zaibuyidao" time="2024-05-05T12:35:54Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/80b5e842ab7331f07ad36aac52942b670a771f28/Items%20Editing/zaibuyidao_List%20Names%20of%20Selected%20Items.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Locate Items.lua" type="script" desc="Locate Items">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2025-03-17T09:16:39Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/33988506c1bb8c2897779180b7f1bb21e501e4e9/Items%20Editing/zaibuyidao_Locate%20Items.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Move Items To Track In Track Row Order.lua" type="script" desc="Move Items To Track In Track Row Order">
