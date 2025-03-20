@@ -1,4 +1,4 @@
--- @description Insert Sustain Pedal CC Events
+-- @description Insert CC Events at Selected Note Edges
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -61,7 +61,7 @@ local function getExtStateOrDefault(section, key, default)
   return state
 end
 
-local section = "InsertSustainPedalCCEvents"
+local section = "InsertCCEventsatSelectedNoteEdges"
 local ccNumDefault      = "64"
 local ccValueOnDefault  = "127"
 local ccValueOffDefault = "0"
@@ -75,13 +75,13 @@ local firstOffset  = getExtStateOrDefault(section, "FirstOffset", firstOffsetDef
 local secondOffset = getExtStateOrDefault(section, "SecondOffset", secondOffsetDefault)
 
 if language == "简体中文" then
-  scriptTitle = "插入延音踏板CC事件"
+  scriptTitle = "在选定音符边缘插入CC事件"
   captionsCsv = "CC编号,按下数值,松开数值,开始偏移,结束偏移"
 elseif language == "繁體中文" then
-  scriptTitle = "插入延音踏板CC事件"
+  scriptTitle = "在選定音符邊緣插入CC事件"
   captionsCsv = "CC編號,按下數值,松開數值,開始偏移,結束偏移"
 else
-  scriptTitle = "Insert Sustain Pedal CC Events"
+  scriptTitle = "Insert CC Events at Selected Note Edges"
   captionsCsv = "CC Number,Value On,Value Off,Start Offset,End Offset"
 end
 
