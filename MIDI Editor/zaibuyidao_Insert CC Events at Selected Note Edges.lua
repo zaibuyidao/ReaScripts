@@ -1,5 +1,5 @@
 -- @description Insert CC Events at Selected Note Edges
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -76,13 +76,13 @@ local secondOffset = getExtStateOrDefault(section, "SecondOffset", secondOffsetD
 
 if language == "简体中文" then
   scriptTitle = "在选定音符边缘插入CC事件"
-  captionsCsv = "CC编号,按下数值,松开数值,开始偏移,结束偏移"
+  captionsCsv = "CC编号:,按下数值:,松开数值:,开始偏移:,结束偏移:"
 elseif language == "繁體中文" then
   scriptTitle = "在選定音符邊緣插入CC事件"
-  captionsCsv = "CC編號,按下數值,松開數值,開始偏移,結束偏移"
+  captionsCsv = "CC編號:,按下數值:,松開數值:,開始偏移:,結束偏移:"
 else
   scriptTitle = "Insert CC Events at Selected Note Edges"
-  captionsCsv = "CC Number,Value On,Value Off,Start Offset,End Offset"
+  captionsCsv = "CC number:,Value on:,Value off:,Start offset:,End offset:"
 end
 
 local uOK, uInput = reaper.GetUserInputs(scriptTitle, 5, captionsCsv, ccNum .. "," .. ccValueOn .. "," .. ccValueOff .. "," .. firstOffset .. "," .. secondOffset)
@@ -103,7 +103,7 @@ reaper.SetExtState(section, "Msg4", ccValueOff, false)
 reaper.SetExtState(section, "FirstOffset", firstOffset, false)
 reaper.SetExtState(section, "SecondOffset", secondOffset, false)
 
-reaper.MIDIEditor_OnCommand(midiEditor, 40214) -- Unselect all events
+reaper.MIDIEditor_OnCommand(midiEditor, 40671) -- Unselect all CC events
 
 -- 在指定音符上插入CC事件
 local function insertCCForNote(noteIdx)

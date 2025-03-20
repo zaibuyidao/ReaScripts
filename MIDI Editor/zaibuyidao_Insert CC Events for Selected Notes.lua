@@ -1,5 +1,5 @@
 -- @description Insert CC Events for Selected Notes
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -69,13 +69,13 @@ local ccNumStr = getDefaultExtState(extSection, "CC_Num", defaultCCNum)
 
 if language == "简体中文" then
   promptTitle = "为选定音符插入CC事件"
-  promptCaption = "数值,CC编号"
+  promptCaption = "数值:,CC编号:"
 elseif language == "繁體中文" then
   promptTitle = "為選定音符插入CC事件"
-  promptCaption = "數值,CC編號"
+  promptCaption = "數值:,CC編號:"
 else
   promptTitle = "Insert CC Events for Selected Notes"
-  promptCaption = "Value,CC Number"
+  promptCaption = "Value:,CC number:"
 end
 
 local uOK, uInput = reaper.GetUserInputs(promptTitle, 2, promptCaption, valueStr .. "," .. ccNumStr)
@@ -95,7 +95,7 @@ end
 reaper.SetExtState(extSection, "Value", tostring(valueInput), false)
 reaper.SetExtState(extSection, "CC_Num", tostring(ccNumInput), false)
 
-reaper.MIDIEditor_OnCommand(midiEditor, 40214) -- Unselect all events
+reaper.MIDIEditor_OnCommand(midiEditor, 40671) -- Unselect all CC events
 
 if #index > 0 then
   -- 在选定音符起始位置插入CC事件

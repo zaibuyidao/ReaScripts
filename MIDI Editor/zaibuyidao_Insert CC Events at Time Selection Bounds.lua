@@ -1,5 +1,5 @@
 -- @description Insert CC Events at Time Selection Bounds
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -42,17 +42,17 @@ local muted = false             -- 插入的事件是否静音
 
 if language == "简体中文" then
   title = "在时间选区边界处插入CC事件"
-  captionsCsv = "CC编号,起始值,结束值"
+  captionsCsv = "CC编号:,起始值:,结束值:"
   TXT_1 = "请先设置时间选区范围"
   TXT_2 = "错误"
 elseif language == "繁體中文" then
   title = "在時間選區邊界處插入CC事件"
-  captionsCsv = "CC編號,起始值,結束值"
+  captionsCsv = "CC編號:,起始值:,結束值:"
   TXT_1 = "請先設置時間選區範圍"
   TXT_2 = "錯誤"
 else
   title = "Insert CC Events at Time Selection Bounds"
-  captionsCsv = "CC Number,Value at Start,Value at End"
+  captionsCsv = "CC number:,Value at Start:,Value at End:"
   TXT_1 = "Please set the time selection range first."
   TXT_2 = "Error"
 end
@@ -99,7 +99,7 @@ local ccNumber = tonumber(ccNumberStr)
 local ccValueAtStart = tonumber(valueStartStr)
 local ccValueAtEnd = tonumber(valueEndStr)
 
-reaper.MIDIEditor_OnCommand(midiEditor, 40214) -- Unselect all events
+reaper.MIDIEditor_OnCommand(midiEditor, 40671) -- Unselect all CC events
 reaper.MIDI_InsertCC(take, selected, muted, ppqStart, 0xB0, chan, ccNumber, ccValueAtStart)
 reaper.MIDI_InsertCC(take, selected, muted, ppqEnd,   0xB0, chan, ccNumber, ccValueAtEnd)
 

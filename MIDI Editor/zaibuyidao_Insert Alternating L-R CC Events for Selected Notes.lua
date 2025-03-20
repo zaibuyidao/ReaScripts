@@ -1,5 +1,5 @@
 -- @description Insert Alternating L/R CC Events for Selected Notes
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -141,7 +141,7 @@ elseif language == "繁體中文" then
     captions_csv = "CC編號:,左值:,右值:"
 else
     title = "Insert Alternating L/R CC Events"
-    captions_csv = "CC Number:,Left Value:,Right Value:"
+    captions_csv = "CC number:,Left value:,Right value:"
 end
 
 local uok, uinput = reaper.GetUserInputs(title, 3, captions_csv, msg2..','..msg3..','..msg4)
