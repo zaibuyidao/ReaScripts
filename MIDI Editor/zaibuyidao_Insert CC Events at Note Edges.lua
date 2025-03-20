@@ -1,5 +1,5 @@
--- @description Insert CC Events at Selected Note Edges
--- @version 1.0.1
+-- @description Insert CC Events at Note Edges
+-- @version 1.0
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -61,7 +61,7 @@ local function getExtStateOrDefault(section, key, default)
   return state
 end
 
-local section = "InsertCCEventsatSelectedNoteEdges"
+local section = "InsertCCEventsAtNoteEdges"
 local ccNumDefault      = "64"
 local ccValueOnDefault  = "127"
 local ccValueOffDefault = "0"
@@ -75,14 +75,14 @@ local firstOffset  = getExtStateOrDefault(section, "FirstOffset", firstOffsetDef
 local secondOffset = getExtStateOrDefault(section, "SecondOffset", secondOffsetDefault)
 
 if language == "简体中文" then
-  scriptTitle = "在选定音符边缘插入CC事件"
-  captionsCsv = "CC编号:,按下数值:,松开数值:,开始偏移:,结束偏移:"
+  scriptTitle = "在音符边缘插入CC事件"
+  captionsCsv = "CC编号:,起始数值:,结束数值:,起始偏移:,结束偏移:"
 elseif language == "繁體中文" then
-  scriptTitle = "在選定音符邊緣插入CC事件"
-  captionsCsv = "CC編號:,按下數值:,松開數值:,開始偏移:,結束偏移:"
+  scriptTitle = "在音符邊緣插入CC事件"
+  captionsCsv = "CC編號:,起始數值:,結束數值:,起始偏移:,結束偏移:"
 else
-  scriptTitle = "Insert CC Events at Selected Note Edges"
-  captionsCsv = "CC number:,Value on:,Value off:,Start offset:,End offset:"
+  scriptTitle = "Insert CC Events at Note Edges"
+  captionsCsv = "CC number:,Start value:,End value:,Start offset:,End offset:"
 end
 
 local uOK, uInput = reaper.GetUserInputs(scriptTitle, 5, captionsCsv, ccNum .. "," .. ccValueOn .. "," .. ccValueOff .. "," .. firstOffset .. "," .. secondOffset)
