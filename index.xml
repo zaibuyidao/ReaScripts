@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2987aff203574cfc5892a6197d0bfb2fe5eea4c7">
+<index version="1" name="zaibuyidao Scripts" commit="ab4777bb684081383c9c0359aa213bdce27c96a2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3265,6 +3265,10 @@
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/2987aff203574cfc5892a6197d0bfb2fe5eea4c7/MIDI%20Editor/zaibuyidao_Insert%20Alternating%20L-R%20CC%20Events%20for%20Selected%20Notes.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-03-20T16:19:36Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab4777bb684081383c9c0359aa213bdce27c96a2/MIDI%20Editor/zaibuyidao_Insert%20Alternating%20L-R%20CC%20Events%20for%20Selected%20Notes.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Curve (Sawtooth).lua" type="script" desc="Insert CC Curve (Sawtooth)">
       <metadata>
@@ -3328,6 +3332,10 @@
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/b7be414044e68681c18dd3025869149e3dd0d640/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%20at%20Selected%20Note%20Edges.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-03-20T16:19:36Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab4777bb684081383c9c0359aa213bdce27c96a2/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%20at%20Selected%20Note%20Edges.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events at Time Selection Bounds.lua" type="script" desc="Insert CC Events at Time Selection Bounds">
       <metadata>
@@ -3346,6 +3354,10 @@
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7383249757942085773538e76792b796cb9536d0/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%20at%20Time%20Selection%20Bounds.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-03-20T16:19:36Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab4777bb684081383c9c0359aa213bdce27c96a2/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%20at%20Time%20Selection%20Bounds.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Insert CC Events for Selected Notes.lua" type="script" desc="Insert CC Events for Selected Notes">
       <metadata>
@@ -3363,6 +3375,10 @@
       <version name="1.0" author="zaibuyidao" time="2025-03-20T15:38:18Z">
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/993ecfa7fa83c52937373d404292fc3ed725fd11/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%20for%20Selected%20Notes.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-03-20T16:19:36Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/ab4777bb684081383c9c0359aa213bdce27c96a2/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events%20for%20Selected%20Notes.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Expression (Set CC Shape).lua" type="script" desc="Insert Expression (Set CC Shape)">
