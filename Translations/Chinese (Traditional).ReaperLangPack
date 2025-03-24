@@ -1,10 +1,10 @@
 #NAME:Chinese Traditional (繁體中文)
-;Version: 1.1.7-734
+;Version: 7.35
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49375/Chinese%20%28Traditional%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.34, SWS: 2.14.0.3
+;  Brand new REAPER: 7.35, SWS: 2.14.0.3
 
 [common]
 DCEF2B4D03DE723C=名稱
@@ -14,8 +14,8 @@ D840E3186B2B9581=確定
 D8D27C186BA6D499=dB
 D8B3B3186B8C817F=ms
 F09E4B5C35AA14B9=取消
-D7323C887B0A2951=套用
 08329907B4EB8CD0=/
+D7323C887B0A2951=套用
 99FA828F906D3EE4=查找
 D43B88702E996ED9=過濾:
 6D0BCBC7DDDC55E7=類型:
@@ -110,8 +110,6 @@ E2A06DC9314AAFD1=未使用樣本時:
 A27E076F9E7EA1E3=進程1
 FDE95463547E83EB=渲染狀態
 BAFCE81B12CE0626=統計/圖表
-309B13D6E0AC1A0F=長度:
-8D96C4FE778D9CA7=源屬性...
 D6120A6699DC844C=BPM 基準:
 802D08856B21D96E=拍號:
 F8E8A9C19CDE7A59=工程設定
@@ -159,6 +157,7 @@ E5566C4604653F75=撤銷歷史
 67EF32DE1BAE7097=通道:
 61B7599A40AF0062=結束:
 79DCBE1CDE37B4F3=整個工程
+309B13D6E0AC1A0F=長度:
 2555373B75AA89B2=輸出
 0629736B3FAE9E4C=處理
 D1717A5C482193AF=重取樣模式:
@@ -688,6 +687,7 @@ A0CB20A955DAF552=顯示操作列表...
 FD06ABC366DA801A=平滑尋軌 (在小節結束時尋軌)
 8BD3DE8B5B83C01C=吸附到網格
 0814EFA066F6B891=源屬性(P)...
+8D96C4FE778D9CA7=源屬性...
 40C8007578BEB3CE=頻譜編輯
 B1ED617A9A6CCE79=在片段標記處分割對象 (僅活躍片段)
 5944E79DAA5B2639=在片段標記處分割對象 (所有片段)
@@ -768,7 +768,7 @@ B7E90584A70A56CB=複製選取的 FX (包括自動化)
 386E80D3AED15B5D=複製選取的 FX (包括自動化)\tCtrl+Alt+C
 51B6457C06E865F4=剪下選取的 FX
 39397A39236773C2=剪下選取的 FX (包括自動化)
-530F79AA9092B1BE=將 CPU 利用率顯示為 1.0! = 最長塊是實時處理的 (最壞情況)
+530F79AA9092B1BE=將 CPU 利用率顯示為 1.0! = 最長塊是即時處理的 (最壞情況)
 5E0DED8D9E063003=將 CPU 利用率顯示為 1.0c = 單個核心被完全使用
 9BB51D16B3CDD603=將 CPU 利用率顯示為 100% = 所有核心被完全使用
 33CCC4B796525C58=將 CPU 利用率顯示為 100%c = 單個核心被完全使用
@@ -1719,6 +1719,7 @@ BA66149397E5F1AE=所有通道
 73235A4845CE69AF=主控混音
 C7B7708D1F9B3C8C=區域
 719B2E5CDAD2E067=音軌
+08323B07B4EAED16=M
 A037053743F47D99=作曲家
 7349DC4C0B10751C=指揮
 125D328B422FE52F=音樂性
@@ -1898,12 +1899,6 @@ FF006CD478B651B3=格式說明
 2B63C89DFBD5DDE2=渲染進程
 C126E6146A0781FD=打開資料夾...
 4738E366E029F574=啟動檔案...
-
-[DLG_125] ; IDD_SECTIONITEMINFO
-8769B7639BCAC7E0=源可循環區段屬性
-407A0A698C0F3330=源訊息
-D754112382628869=從源開始:
-25E3AFE507E594FC=淡變長度 (ms):
 
 [DLG_126] ; IDD_PROJECTSETTINGS_SETTINGS
 2874B5A9A972DA56=工程取樣率:
@@ -2447,10 +2442,10 @@ A0C79D72277D6F0F=提前渲染:
 D3F56CEFCFB9B99E=允許在沒有 FX 的音軌上使用 (可能會提高多核處理器的利用率)
 331BA087EACA0798=允許在打開 MIDI 編輯器的音軌上使用 (將增加 MIDI 預覽延遲)
 99F69DE06F81739A=允許在觸碰/鎖存/寫入自動化模式下的音軌上使用
-1E34C617E5353F03=允許實時 FX 多核處理在:
+1E34C617E5353F03=允許即時 FX 多核處理在:
 A6EE14AB8179B8D8=CPU
 281759C8AD758D95=高級磁碟 I/O 選項...
-3CF333030AFB4087=[啟用實時輸入的多核處理，但在低延遲下可能會降低性能]
+3CF333030AFB4087=[啟用即時輸入的多核處理，但在低延遲下可能會降低性能]
 
 [DLG_204] ; IDD_ABOUT_LICENSE
 F06854788A1D9107=授權給:
@@ -2740,7 +2735,7 @@ BECD011FF0FC55E8=為選取參數預備包絡
 BBA1029B1D147679=注意: 在 '偏好設定/音訊/MIDI 設備' 中，MIDI 設備必須被啟用並設定為 \"控制\"。 在 '偏好設定/控制面板' 中，OSC 設備必須被啟用以學習綁定。
 
 [DLG_242] ; IDD_BOUNCEDLG
-617F42B9C4DC5662=將實時輸出儲存到磁碟 (並軌)
+617F42B9C4DC5662=將即時輸出儲存到磁碟 (並軌)
 86C526176585552D=輸出格式:
 B3D229CC512D97AE=僅在播放或錄製時儲存輸出
 5259502ECA6BB18D=首次停止時停止儲存輸出
@@ -3498,7 +3493,7 @@ E3B848564BAED1D6=將淡變/交疊淡變的偏好設定套用於 MIDI 對象
 BA67DC3729684BA7=渲染時使用的塊大小:
 89FA007253087E1E=取樣點 (留空 = 使用音訊設備緩衝區大小)
 EC400AB11F1ABACB=允許在渲染時預處理 FX (優化多核處理)
-45BB0225F77E6549=限制套用 FX/渲染分軌為實時處理 (對某些插件較好)
+45BB0225F77E6549=限制套用 FX/渲染分軌為即時處理 (對某些插件較好)
 789CC946B6370D63=在分軌渲染期間處理所有音軌 (某些基於硬體的插件可能需要這個)
 4E521A8A0B73C91C=使用離線渲染/套用FX/渲染分軌時禁用 FX 自動旁通
 733EA0FFFFA8C4A0=默認預設尾部長度:
@@ -3914,7 +3909,7 @@ B8AC798F77CEC1EF=滑動
 [DLG_578] ; IDD_PREFS_AUDIOCONFIG_LINUX
 FFAE57EC0BA56FE1=塊大小:
 F143541CC4FBB847=週期數:
-9AFDF664A489933B=實時優先級:
+9AFDF664A489933B=即時優先級:
 8C576A763B47579A=自動啟動 jackd, 啟動命令 (blank=libjack):
 EC20FB93DB548DE3=將 jack 音訊通道自動連接到硬體
 0D398FDF1B7A12A0=MIDI 輸入端口:
@@ -4238,7 +4233,7 @@ DCDA157A6EE89D43=按住 shift 鍵在新工程選項卡中打開, 按住 alt/opt 
 3426BEEBB70AE42C=(最近工程列表)
 BBB3FBBEB5329C39=工程設定(&P)...
 9180A3744F8583A3=渲染(&E)...
-B633F1942B15AC70=將實時輸出儲存到磁碟 (並軌)...
+B633F1942B15AC70=將即時輸出儲存到磁碟 (並軌)...
 7628366676B4E4DB=合併/匯出音軌(&X)...
 19B757EC3665DA01=合併/匯出音軌...
 1D979EA89D498269=匯出工程 MIDI...
@@ -4653,9 +4648,9 @@ F5404D2DC6D9C463=關閉 FX 視窗
 [MENU_312] ; IDR_CONTEXTS_12
 ;90EE71234A070984=12PerfCtx
 1E06E4405DEA8BB9=顯示 CPU 圖表
-A92306A0DFCF9F5C=在圖表上顯示實時 (RT) CPU
+A92306A0DFCF9F5C=在圖表上顯示即時 (RT) CPU
 B262FAD75BA8BA4A=顯示 CPU 使用情況
-27A29CDA117BD72F=顯示實時 (RT) CPU
+27A29CDA117BD72F=顯示即時 (RT) CPU
 15F8208C8ADE370D=顯示 RT 最長塊處理時間
 B7F32A9F98A13DBE=保持 RT 最長塊處理時間
 BDCA3CD61B25F6F5=顯示 xrun 計數器
@@ -5084,8 +5079,12 @@ E07423F09C9BFDE9=  設定播放重複
 
 [MENU_355] ; IDR_CONTEXTS_55
 ;B337DFB5190F3DA3=ripctx
-6CC47CED6D4E106B=波紋編輯所有內容會影響速度映射
-62886D8C87DD1C81=波紋編輯會影響所有音軌的包絡線
+AB9A2766519667D6=啟用波紋編輯
+B6BBA0712C15ACA6=當啟用波紋編輯時:
+5A2DF1C4A8891506=編輯媒體對象邊緣時進行波紋編輯
+7C86FF0806E90F92=波紋編輯逐軌分別影響每條音軌車道
+6CC47CED6D4E106B=波紋編輯所有會影響速度映射
+62886D8C87DD1C81=波紋編輯所有會影響所有音軌的包絡線
 
 [MENU_356] ; IDR_CONTEXTS_56
 ;982EF0AB42B0F06D=56AutomationItemCtx
@@ -5154,7 +5153,7 @@ FA183511BDBBC440=次要路徑:
 FD994A8441A52701=主工具欄
 31EA0D9166E92914=新建工程...
 7CE64A834287F5A0=啟用自動交疊淡變
-AB9A2766519667D6=啟用波紋編輯
+6074D3382A7E300B=切換波紋編輯
 CEC3D5DF2AA40AD1=顯示編排檢視網格
 C6255BD28268CF21=浮動工具欄 1
 6DB45DF1779991EB=編輯
@@ -5243,6 +5242,7 @@ E1724295AF0E72B0=累計時長
 8B9A76F494C70F92=您確定要移除當前的許可密鑰嗎？\r\n\r\n(您必須擁有密鑰檔案的副本才能重新授權此安裝)
 63A8748786CE1342=確認移除許可密鑰
 28E12469A3271389=謝謝您！
+11D0035B08672868=關於 REAPER v%s%s (%s)
 D03DC131AB7C4B2C=為我買單 [%d]
 32EE0E776F726A01=仍在評估中
 D38A26905AC66F97=製作團隊
@@ -5566,8 +5566,8 @@ E5C8534DE096DD8B=MIDI: 為已預備的音軌插入所有可用的追溯錄製的
 9C1AE6C136586F49=錄製: 在錄製過程中建立新的錄音檔案 ⇌ Record: Start new files during recording
 14CD7C34000BB61F=錄製: 移除尚未在工程中的已錄製媒體 ⇌ Record: Remove recorded media not yet in project
 D986D79A9D8DD5F3=錄製: 將已錄製的媒體添加到工程 ⇌ Record: Add recorded media to project
-9190649ABDED94B4=檔案: 儲存實時輸出到磁碟 (並軌)... ⇌ File: Save live output to disk (bounce)...
-CF846BE2325D2986=檔案: 使用最近並軌設定將實時輸出儲存到磁碟 (並軌) ⇌ File: Save live output to disk (bounce), using the most recent bounce settings
+9190649ABDED94B4=檔案: 儲存即時輸出到磁碟 (並軌)... ⇌ File: Save live output to disk (bounce)...
+CF846BE2325D2986=檔案: 使用最近並軌設定將即時輸出儲存到磁碟 (並軌) ⇌ File: Save live output to disk (bounce), using the most recent bounce settings
 E82139AC2B494143=檔案: 退出 REAPER ⇌ File: Quit REAPER
 1F6C05DD4FC3F55F=檔案: 啟動 REAPER 的新實例 ⇌ File: Spawn new instance of REAPER
 F8E16F797AA9F981=檔案: 工程設定... ⇌ File: Project settings...
@@ -5633,11 +5633,17 @@ EBBBA9CCD30C478D=選項: 切換對象編組和音軌媒體/剃刀編輯編組 �
 DB28D820D336FAFA=選項: 選擇一個編組對象將選擇整個編組 ⇌ Options: Selecting one grouped item selects group
 629266A5E11965C0=選項: 音軌媒體/剃刀編輯編組僅影響開始和結束時間相同的對象 ⇌ Options: Track media/razor edit grouping affects only items that start and end at the same time
 9F2D62C28DA80120=選項: 循環切換波紋編輯模式 ⇌ Options: Cycle ripple editing mode
+FEDF6BB4D5D002AE=切換波紋編輯開啟/關閉 ⇌ Toggle ripple editing on/off
+3F29B30147CC866A=設定波紋編輯開啟 ⇌ Set ripple editing on
 2046472D007119DC=關閉波紋編輯 ⇌ Set ripple editing off
 6C3794C4573061E0=設定波紋編輯逐軌 ⇌ Set ripple editing per-track
 5AB3B62C69DA6B8A=設定波紋編輯所有音軌 ⇌ Set ripple editing all tracks
 B490CBB6F4CE8676=切換波紋編輯逐軌 ⇌ Toggle ripple editing per-track
 74BFB051CF39D084=切換波紋編輯所有音軌 ⇌ Toggle ripple editing all tracks
+A5734D38C673E1D7=選項: 啟動波紋編輯時波紋所有音軌 ⇌ Options: Ripple all tracks when ripple is enabled
+93F66BD3B526E79D=選項: 啟動波紋編輯時波紋逐軌 ⇌ Options: Ripple per-track when ripple is enabled
+FD70F52538FC14BA=選項: 波紋編輯逐軌分別影響每條音軌車道 ⇌ Options: Ripple per-track affects each track lane separately
+AC0A7C0910A89138=選項: 編輯媒體對象邊緣時進行波紋編輯 ⇌ Options: Ripple edit when editing media item edges
 64A8A7D4AA1B1B6B=選項: 在工程回放中追逐 MIDI 音符開/CC/PC/音高 ⇌ Options: Chase MIDI note-on/CC/PC/pitch in project playback
 0A247156E053DD4B=選項: 循環切換編輯模式: 關閉自動交疊淡變, 開啟自動交疊淡變, 修剪媒體對象後的內容 ⇌ Options: Cycle through editing modes: auto-crossfade off, auto-crossfade on, trim content behind media items
 ACFDD0F8CDB1E0AB=選項: 編輯時自動交疊淡變媒體對象 ⇌ Options: Auto-crossfade media items when editing
@@ -6816,6 +6822,14 @@ EFC69A298EA35677=自動化: 將音軌自動化模式設定為 '觸碰' ⇌ Autom
 408274D53C8DC51A=自動化: 切換音軌的 '觸碰' 和 '修剪/讀取' 模式 ⇌ Automation: Toggle track between touch and trim/read modes
 245781D7BC5A8DA7=自動化: 清除所有音軌包絡鎖存 ⇌ Automation: Clear all track envelope latches
 EEA7BF781654FAE6=自動化: 清除音軌包絡鎖存 ⇌ Automation: Clear track envelope latches
+4B486F85901BC99D=自動化: 儲存並清除所有音軌包絡鎖存 ⇌ Automation: Save and clear all track envelope latches
+5973FD9DC654E35F=自動化: 恢復所有已儲存的音軌包絡鎖存 ⇌ Automation: Restore all saved track envelope latches
+68DD89A02A2ECC2E=自動化: 儲存並清除音軌包絡鎖存 ⇌ Automation: Save and clear track envelope latches
+543BB01AB5E3AD4E=自動化: 恢復已儲存的音軌包絡鎖存 ⇌ Automation: Restore saved track envelope latches
+B7BE9EC9670C8861=自動化: 如果存在則儲存並清除所有音軌包絡鎖存, 否則恢復已儲存的鎖存 ⇌ Automation: Save and clear all track envelope latches if any, otherwise restore saved latches
+C2FB9D976C8A33E0=自動化: 如果存在則儲存並清除音軌包絡鎖存, 否則恢復已儲存的鎖存 ⇌ Automation: Save and clear track envelope latches if any, otherwise restore saved latches
+13F521DF5DA99AEE=自動化: 清除所有已儲存的音軌包絡鎖存 ⇌ Automation: Clear all saved track envelope latches
+D2920CA248A8094F=自動化: 清除已儲存的音軌包絡鎖存 ⇌ Automation: Clear saved track envelope latches
 5D739DFD3A755BC2=全局自動化覆蓋: 無覆蓋 (按音軌設定自動化模式) ⇌ Global automation override: No override (set automation modes per track)
 0F6B7CBEEFDF9A63=全局自動化覆蓋: 旁通所有自動化 ⇌ Global automation override: Bypass all automation
 3D7619ECFA796EF8=全局自動化覆蓋: 所有自動化處於修剪/讀取模式 ⇌ Global automation override: All automation in trim/read mode
@@ -7851,7 +7865,7 @@ A565C29A3016483F=(無音軌自動靜音)
 
 [bounce]
 22DC9809A08117E3=必須有一個檔案名才能並軌！
-BCF24F6C993EDD8E=音訊設備未打開，無法儲存實時輸出！
+BCF24F6C993EDD8E=音訊設備未打開，無法儲存即時輸出！
 D417AA471DE3A0C9=在路徑中寫入檔案:
 
 [caption]
@@ -8090,12 +8104,12 @@ EE1268CA4B845A22=# FX
 8B7DC1C51EA16751=媒體核心
 07BB6BDD279F1E8F=媒體 CPU
 AC9CE5BD66CC273B=監聽 FX
-93279AF94ECAFA8D=實時 CPU: %.1lf%%\n
-868A798CE5F667E2=實時最長塊: %.2fms/%.2fms%s\n
-B317B78EE0D46E89=實時 L/B: %.2fms/%.2fms%s\n
+93279AF94ECAFA8D=即時 CPU: %.1lf%%\n
+868A798CE5F667E2=即時最長塊: %.2fms/%.2fms%s\n
+B317B78EE0D46E89=即時 L/B: %.2fms/%.2fms%s\n
 D3B5EF10274FAA3D= (保持)
-52FF096F9E845E90=實時 xruns: %u - 媒體 xruns: %u\n
-9E9F497C03C1EF00=實時 x/r: %u 媒體 x/r: %u\n
+52FF096F9E845E90=即時 xruns: %u - 媒體 xruns: %u\n
+9E9F497C03C1EF00=即時 x/r: %u 媒體 x/r: %u\n
 859665AF26B7C5D2=視訊負載: %.1f%% (峰值 %.1f%%)\n
 B51284AD5C63F7E1=視訊負載: 空閒\r\n
 9934C71F3DAAF114=視訊: %.1f%% (pk %.1f%%)\n
@@ -8165,10 +8179,10 @@ ED18E10A5F8ADCD1=未知的操作 \"%s\" 在第 %d 行
 D9D6B42A61F1F4C5=定式 \"%s\" 在第 %d 行以未知標記 '%c' 開始 (allowed: [nfbtrsi])
 BFED4B3ABB427F4C=定式 \"%s\" 在第 %d 行未以 '/' 開始
 6A1E3BA4E67042FB=第 %d 行的定式太長
-956B2EDD33997D2B=從目標接收
+956B2EDD33997D2B=接收自目標
 2258412401973058=接收 %d
 5CD5767121BD815A=發送到上一個源
-432C78D3148F0F22=發送到 %s:%d
+432C78D3148F0F22=發送 %s:%d
 36FD34C499AA2E46=OSC: 偵聽端口 %d
 B6EAC3AFD3B9AD9F=錯誤: 無法建立 OSC 偵聽器
 22CDAF58A584E9B4=設備 IP/端口
@@ -8455,7 +8469,8 @@ E04DC7D6BD4E538C=容器通道:
 0F09179EC6EBED60=輸入:
 893C393123F7EB8B=輸出:
 F52D0B97953978BF=媒體通道映射器
-3682649808D0BC02=容器引腳連接器
+230D29DAE4A1D868=媒體資源管理器通道映射器
+4D2FF73AB517BF70= (插件引腳連接器)
 410558C833CA32E2=片段通道:
 DFDD08507C708C0A=反饋通道:
 38D7EFC7B65CD301=為每個媒體檔案單獨設定通道映射
@@ -9745,7 +9760,7 @@ AC0BE4D1E4964245=沒有對象帶有 (可用的) 位置訊息，無法移動它�
 3BD56312855E9245=某些對象沒有 (可用的) 位置訊息
 059597B3333FE8D2=循環點已鎖定，現在解鎖並移除？
 15150E9E3A687122=時間選區已鎖定，現在解鎖並移除？
-C3707F61E24A961C=實時輸出儲存完成！
+C3707F61E24A961C=即時輸出儲存完成！
 6CFBE6010F005CD1=在渲染到新片段之前停止錄製
 85AF1E98BF2F4CFE=在套用音軌 FX 之前停止錄製
 B5AEE049B9F8FED1=在合併之前停止錄製...
@@ -11740,6 +11755,8 @@ E6057A870030CABC=Command
 2FE8D5FE04238B47=切換 (>0=切換)
 
 [misc]
+AEBEBFFC82B98290=自動化鎖存值只能在鎖存或鎖存預覽模式下儲存/恢復
+7173DEADF46E053D=包絡錯誤
 D9FF1A097D91EEAC=設定全局錄音輪次計數器
 628988D16E7CA278=新值:
 8DA59183F3C1BF8B=設定為隨機顏色
@@ -12935,8 +12952,8 @@ C71F29716DFFC020=JACK
 F86B2EB9F35979C6=ALSA
 32B6A866216B55D2=PulseAudio
 8507A7EA023AF513=PulseAudio [系統未安裝]
-61605C281C172E72= (非實時)
-DC524F263483B189= (建議的實時使用設定)
+61605C281C172E72= (非即時)
+DC524F263483B189= (建議的即時使用設定)
 07531569388B6383= (默認預設硬體優先級)
 BB9D155CE82F9870= (最大優先級)
 
@@ -13022,8 +13039,8 @@ CD7C691E80E72934=媒體緩衝使用內存和 CPU 以避免等待磁碟 IO。對�
 41E5ED5B864C805A=在帶有 MIDI 編輯器的音軌上禁用緩衝，這允許 MIDI 編輯更快的播放響應 (推薦)。
 3F29804EB743FBAD=源媒體緩衝應達到的滿載程度才開始播放。較低的數字會提供更快的響應時間。
 E565AD880D79DFEF=當片段級 FX 顯示時，使用較低的媒體緩衝大小以減少音訊播放與插件視覺響應之間的延遲。
-F2A0039FE6DFC2E5=實時 FX 多核處理允許實時監聽除媒體/FX 之外的多核處理，但對低延遲性能來說並不理想。
-7A0294314A050740=用於實時 FX 多核處理的線程數。
+F2A0039FE6DFC2E5=即時 FX 多核處理允許即時監聽除媒體/FX 之外的多核處理，但對低延遲性能來說並不理想。
+7A0294314A050740=用於即時 FX 多核處理的線程數。
 8675235AE1C1D1F9=使用空閒的 CPU 提前渲染 FX。這對 CPU 數量無論多少都是有益的，但可能需要對某些插件 (如 UAD) 禁用。
 008F35D03C09AE19=更高的預渲染時間將更有效地使用多個處理器。較低的預渲染時間將減少 FX 調整的響應時間。
 85CC0E1AA9B38417=對所有音軌使用預 (提前渲染) 處理 (即使是沒有 FX 的音軌)。這可以在最低的延遲下幫助性能，但會使用更多的 CPU。
@@ -13822,7 +13839,7 @@ D2E172FC0C79F1D4=只在錄製停止時將錄製的媒體添加到工程中 (默�
 [prefs_render_help]
 450CD9BA5AC8A6CD=設定渲染時使用的音訊塊大小。如果留空，渲染將使用音訊設備塊大小 (推薦以保持 FX 播放的一致性)。
 B8630E9E7BA232E0=當選中時，配置的多核處理設定將用於渲染。如果未選中，渲染速度將較慢，但對某些插件可能更為可靠。
-EB16C6EA76EEC12B=當選中時，將實時套用 FX/渲染片段操作。對於某些在實時快速運行時失敗的插件，這是很好的。
+EB16C6EA76EEC12B=當選中時，將即時套用 FX/渲染片段操作。對於某些在即時快速運行時失敗的插件，這是很好的。
 3694C4CB232416C4=渲染工程或片段，或凍結音軌，可以運行超出工程中的最後一個媒體對象，以確保錄製任何 FX 尾部 (如混響)。
 ABF1A1194368E588=當為整個工程渲染片段時，套用尾部長度設定。這也影響渲染視窗中的默認預設尾部設定。
 5182449DA30570C3=當為時間選區渲染片段時，套用尾部長度設定。這也影響渲染視窗中的默認預設尾部設定。
@@ -13858,7 +13875,7 @@ A679F6E2ECA9D19D=默認預設情況下，當您編輯該對象的位置, 長度�
 67B3D55ACD31588D=默認預設情況下，如果工程時基是節拍，則調整速度 (包括打點定速) 將保留基於節拍的播放位置。
 F2E47DB3ECD725D3=平滑尋軌使過渡聽起來更自然。此設定也可以通過操作列表切換。
 79A89EFDC71E002C=在當前小節結束之前更改播放位置，以實現更平滑的過渡聲音。
-44DB7EC0EF2A942C=此設定可以用於啟用音訊塊的實時播放排序。還可以在操作列表中搜索 \"尋軌\"。
+44DB7EC0EF2A942C=此設定可以用於啟用音訊塊的即時播放排序。還可以在操作列表中搜索 \"尋軌\"。
 
 [prefs_tcp_help]
 C13265BE35DAEB85=如果音軌設定了自定義顏色，將音軌標籤欄位的背景顏色設定為音軌顏色。顏色主題可能會覆蓋此偏好設定。
@@ -13937,7 +13954,7 @@ A33160A83CBD4DE3=使用通用推桿檢視，而不是 VST 的自定義 UI。您�
 062E0C5C05471D20=設定如何處理來自 VST 插件的自動化通知。您還可以為每個插件單獨覆蓋此設定，大多數人可能希望保持此設定為默認預設。
 2EAA3B50A18F889D=不通知 VSTi 播放已停止。大多數合成器（尤其是音序器）需要知道播放已停止以避免音符掛起/粘住。
 5709C6930F8F1BE9=重設 VSTi 時保留持續的音符和當前音高。在禁用 '偏好設定/音訊/回放/重設 MIDI CC/音高' 時可能需要這個設定。
-1DE74C0937316C7F=某些 VST 在離線渲染 (非實時) 時表現不同。當取消選中時，插件始終認為它們處於在線狀態。
+1DE74C0937316C7F=某些 VST 在離線渲染 (非即時) 時表現不同。當取消選中時，插件始終認為它們處於在線狀態。
 FAC0CB28431DC2EC=當另一個線程正在處理音訊時打開 GUI，某些有問題的插件會崩潰。此設定通過中斷音訊來避免崩潰。
 A91F48CD20B8FDCE=允許卸載 VST DLL，這將它們完全從內存中刪除，但也可能導致相容性問題。
 DB1AD925D830A08C=特殊模式，僅適用於 UAD 插件，減少並行處理的好處以避免 UAD-1 崩潰。
@@ -14383,6 +14400,9 @@ EA33E60991BEED3E=開始時間
 58FDFCE4E548647F=在此區域內渲染的音軌
 3ED1D8FF10CEA01C=片段標記訊息
 
+[regmgr_idx]
+08323407B4EAE131=T
+
 [render]
 FF988786A3DBA5E1=渲染到檔案名:
 FDA7DF8BA581C475=RMS-I
@@ -14682,7 +14702,7 @@ ACE51CE3A0283976=真實峰值
 CDE4EAA3EEC17066=完成:
 49EC68EBB394EAF7=耗時:
 A6D0F32CC811267B=剩餘:
-A429CCD0AE500AF2=實時
+A429CCD0AE500AF2=即時
 0F77EFC9CA96C87E=在網頁瀏覽器中打開渲染統計圖表
 6AE543DB1BC66A68=在網頁瀏覽器中打開最近渲染的渲染統計圖表
 A89994413557ED4B=隱藏檔案路徑
@@ -14954,21 +14974,23 @@ FCBF2A5B01E951F7=ReCycle 檔案
 
 [routdlg]
 60302508A9F7F502=%d 通道
-DD096F9E880C0C96=發送到
+DD096F9E880C0C96=發送至
 998074CE650BE8E4=接收自
 8A1BF18F1F9B40A5=主控音軌輸出
 B821BAE9983182E7=音軌路由
 53A9DD6B9038AD34=父級音軌
-23DFA68EFB18E685=父級音軌發送通道 從/到:
-2FFB5AFB31BE5F8F=主控發送通道 從/到:
+23DFA68EFB18E685=父級音軌發送通道自/至:
+2FFB5AFB31BE5F8F=主控發送通道自/至:
 892EE6A6A9935F84=添加新發送...
-32842BAD35BDAEFF=為所有音軌添加發送
+7712D5C91E8626B4=添加發送至新音軌
+32842BAD35BDAEFF=添加發送至所有音軌
 4AD7BB994A552771=添加新硬體輸出...
 2500FCB3124BFE9F=<無輸出>
-6A5150FAF8777EE3=發送到原始通道
-2E834509D3A06745=發送到通道
+6A5150FAF8777EE3=發送至原始通道
+2E834509D3A06745=發送至通道
 1D3E6E5BC5E522D9=添加新接收...
-47C76CA5AEADC0E1=從所有音軌添加接收
+4E9D2D9B40BCF208=添加接收自新音軌
+47C76CA5AEADC0E1=添加接收自所有音軌
 
 [routdlg_heading]
 E585C664AC364DDB=音訊硬體輸出
@@ -15234,7 +15256,7 @@ ABE1C16582D5A33C=<SUB>%d 通道
 11CFDE7E5A4CFD86= B%d
 D3E9B5C2991E4175=(音軌自動化模式)
 550F547AB6B8077C=修剪/讀取 (包絡處於活躍狀態，但所有推子都用於修剪)
-EF365B9BFF4DA771=發送到音軌
+EF365B9BFF4DA771=發送至音軌
 2BE64718FFEA8B8E=主控硬體輸出控制
 28F54690D2483CE9=音軌控制
 8C70A063D586EEF8=聲像 L:
@@ -15315,8 +15337,8 @@ DB4EC9AD23B997E9=正在掃描 VST 插件...
 8E37237DA775FC83= - 子工程
 11ACF64D3C045BD0=子工程
 25D740E7EFE65829=音軌包含非瑣碎的路由，這將受移動到子工程的影響:\r\n
-D7C85BCC6A47FEEE=\r\n\t%d 發送到父級工程的音軌
-13DB22FBB5459E24=\r\n\t%d 從父級工程的音軌接收
+D7C85BCC6A47FEEE=\r\n\t%d 發送至父級工程的音軌
+13DB22FBB5459E24=\r\n\t%d 接收自父級工程的音軌
 EF9F2FF5FDEE972E=\r\n\t%d 硬體音訊輸出
 95BC62C61C25CA49=\r\n\t%d 硬體 MIDI 輸出
 E45B3CD9A4E7BC0F=\r\n\r\n您希望繼續嗎？
@@ -15928,9 +15950,6 @@ ACF174C3CB1AF658=拍號標記
 28DBCC1B74A0C2B0=對象編組和音軌媒體/剃刀編輯編組已啟用
 E0A54DFB2F63271B=對象編組和音軌媒體/剃刀編輯編組已禁用
 CCE190C7AE6BBD3B=節拍器已禁用
-96F2AEB2390E2A8A=波紋編輯所有音軌
-CE9E42F28D3826E0=波紋編輯逐軌
-E218A610F0629FBF=波紋編輯已禁用
 11260A5DD06C5455=不隨媒體對象移動包絡點
 93613FC362687988=剃刀在媒體對象車道的編輯不影響所有音軌包絡
 14D9DC771BDA37A1=網格線已啟用
@@ -15941,14 +15960,20 @@ CC13C9461AA171A4=相對吸附已啟用
 CB3D0509C3C2F8C5=吸附已禁用
 506DBBE39B2B4C3E=自動交疊淡變已啟用
 72EA637C8221D845=自動交疊淡變已禁用
+CE9E42F28D3826E0=波紋編輯逐軌
+96F2AEB2390E2A8A=波紋編輯所有音軌
+E218A610F0629FBF=波紋編輯已禁用
 5887B9D4E3A9EEA1=波紋編輯逐軌已啟用
-02C3F037C46F5E34=波紋編輯逐軌 -- 當前處於波紋編輯所有音軌模式
+02C3F037C46F5E34=波紋編輯逐軌 -- 當前為波紋編輯所有音軌模式
 8ABBFAA8F3119188=波紋編輯逐軌已禁用
-B09F22B03F15966C=波紋編輯所有音軌已啟用
-59A02964B78D2B49=波紋編輯所有音軌 -- 當前處於紋波編輯逐軌模式
+408F85AB062C122C=波紋編輯所有音軌 -- 當前為波紋編輯逐軌模式
+1A05E3B037812DBB=波紋編輯所有音軌已啟用
 8EDD52D7D6476E67=波紋編輯所有音軌已禁用
-A9CE3D8FA60CFB5B=關閉禁用編輯 - 當前處於紋波編輯所有音軌模式
-947D36A65102068A=關閉禁用編輯 - 當前處於紋波編輯逐軌模式
+24BCA336C41DCEA8=開啟波紋編輯逐軌
+C0AC396A17C99692=開啟波紋編輯所有音軌
+80E92435FA910ECA=開啟波紋編輯
+947D36A65102068A=關閉波紋編輯 - 當前為紋波編輯逐軌模式
+6AD561FA44603750=關閉波紋編輯 - 當前為波紋編輯所有音軌模式
 9D1C43B8C46541BC=關閉波紋編輯
 1C41444A340A9829=撤銷:
 98224C5534538E53=重做:
@@ -16177,7 +16202,6 @@ EA24945773960719=將已編輯的媒體對象複製回源車道並重新複合
 
 [trackmgr]
 BAD1B71AF376A4DD=IN-FX
-08323B07B4EAED16=M
 08323507B4EAE2E4=S
 27B42181A67A6366=Ht 鎖定
 2292B847F745C9E2=車道
@@ -16963,8 +16987,10 @@ B0A6F7F8D9C415D4=禁用音軌 MIDI 輸出
 B449080B163423DF=更改音軌主控/父級發送通道數量
 2E12B4D1B3744958=更改音軌主控發送
 9A8A00315FEBCD7F=為所有音軌添加發送
-A3A930540F3417E1=從所有音軌添加接收
+7D51A91D63ABE874=添加發送至新音軌
+A3A930540F3417E1=添加接收自所有音軌
 2A27C4BA01E5D81C=添加音軌接收
+CF6E4B425B6B9748=添加接收自新音軌
 97A90981E12A1B43=在音軌面板中切換 FX 參數
 CFA2188BA0AEA84B=移除容器參數
 ACD1CBD9CC8F3526=添加容器參數
@@ -17232,6 +17258,7 @@ C5E89D555E6388C2=LCF %dx%d %.2f fps
 9E59637CB9818F62=視訊 (LCF)
 E272BC36856482E4=無效檔案
 8A99D5BB7363953A=注意: .CAF 檔案被 REAPER 傳遞給視訊解碼器
+9887934DFFA47EB8=NV12
 FBE6CA251A12814C=%dx%d@%.2ffps, 寬高比=%.2f, 解碼格式=%s
 6072C327FB3BE9E0=音訊: %dHz %dch %dbps
 F9ACDD29C54A2C8A=用於視訊和音訊
@@ -17256,12 +17283,11 @@ F6BFC2B001FED6AC=低分辨率峰值
 A44BDD7A5EEA710E=更改所有視訊源的所有音訊設定
 10C37E06D4D247A3=AVI 視訊檔案
 A7F12DBA570C593B=MPG 視訊檔案
-41C29D53ED9BEE04=Windows Media 視訊檔案
-F5AA6EDFCD3A48A1=Windows Media 音訊檔案
-7D434F7214C06E67=MKV 視訊檔案
+796FF4026AC3265D=Windows Media 視訊/音訊檔案
+D2FB2DE99E80ABB8=Matroska 視訊/音訊檔案
 4A85585A82C0D55E=LCF 捕獲視訊檔案
 1DEB42FBE8D82BE4=Quicktime 檔案
-D0216D32830E37E6=WebM/OGG 視訊檔案
+DC039EFC9FA204C6=WebM/OGG 視訊檔案
 5AD73751F4EFDFD8=GIF 檔案
 DFA7D7C102936D13=%s - 視訊處理器
 30F02939FBCECDBA=查看 EEL2 語言文檔 (HTML)
@@ -17510,8 +17536,8 @@ BE281CD925A3942A=將預設儲存為默認預設
 90EC908C46375577=容器輸入 %d
 5B7C448530265B4C=容器輸出 %d
 CBFA46ADF22F0077=in+out
-3B81164C60603F70=從音軌通道接收
-392427982DB47FCA=發送到音軌通道
+3B81164C60603F70=接收自音軌通道
+392427982DB47FCA=發送至音軌通道
 74AEA8F16BAF8A04=----  VST3 預設 (.vstpreset)  ----
 B722995F85F3376D=----  VST 內置程序  ----
 6B56C6139B732C73=VST 輸入
@@ -20057,7 +20083,7 @@ CC3CE8486F974DD7=相對模式遞增步進:
 22078FF50221103D=SWS/BR: 選擇所有拍點源對象 (如有時間選區則遵循) ⇌ SWS/BR: Select all click source items (obey time selection, if any)
 220DAC332A4DFC4E=SWS: 恢復主控 FX 啟用狀態 ⇌ SWS: Restore master FX enabled state
 221A4ECFC2E640A8=SWS/BR: 顯示選取音軌的靜音發送包絡 ⇌ SWS/BR: Show mute send envelopes for selected tracks
-22611FFECA822185=SWS/NF: 切換渲染速度 (套用 FX/渲染分軌) 實時/不受限制 ⇌ SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited
+22611FFECA822185=SWS/NF: 切換渲染速度 (套用 FX/渲染分軌) 即時/不受限制 ⇌ SWS/NF: Toggle render speed (apply FX/render stems) realtime/not limited
 22769B221812C8C6=SWS/AW: 將選取的音軌時基設定為節拍 (僅位置) ⇌ SWS/AW: Set selected tracks timebase to beats (position only)
 22CC3AF09F8EA58A=SWS/BR: 向左移動包絡點選擇 ⇌ SWS/BR: Shift envelope point selection left
 22DAD060E8F05929=Xenakios/SWS: 將游標向左移動 10 像素, 建立時間選區 ⇌ Xenakios/SWS: Move cursor left 10 pixels, creating time selection
@@ -21937,7 +21963,7 @@ F4853974216FB8CB=SWS/BR: 將選取包絡中選取的點轉換為滑鼠游標處 
 F49CF16D9CE43367=SWS/AW: 播放之前啟用預數拍 ⇌ SWS/AW: Enable count-in before playback
 F4ED6ED8F711009B=SWS: 恢復走帶重複狀態 ⇌ SWS: Restore transport repeat state
 F4F859A8E17379CE=Xenakios/SWS: 打亂選取對象的排序 (保持相對位置) ⇌ Xenakios/SWS: Shuffle order of selected items (keep relative positions)
-F52B7BD7A5EA3580=Xenakios/SWS: 將渲染速度設定為實時 ⇌ Xenakios/SWS: Set render speed to realtime
+F52B7BD7A5EA3580=Xenakios/SWS: 將渲染速度設定為即時 ⇌ Xenakios/SWS: Set render speed to realtime
 F530A1291D9CEE48=SWS/BR: 分析響度... ⇌ SWS/BR: Analyze loudness...
 F538D9EFD28C9BB7=SWS: 將選取的音軌/對象設定為一個隨機顏色 ⇌ SWS: Set selected track(s)/item(s) to one random color
 F567B99BCCE14B03=SWS: 切換選擇一個編組對象時選擇編組 ⇌ SWS: Toggle selecting one grouped item selects group

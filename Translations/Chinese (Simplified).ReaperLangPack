@@ -1,10 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 1.1.7-734
+;Version: 7.35
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49376/Chinese%20%28Simplified%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.34, SWS: 2.14.0.3
+;  Brand new REAPER: 7.35, SWS: 2.14.0.3
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -14,8 +14,8 @@ D840E3186B2B9581=确定
 D8D27C186BA6D499=dB
 D8B3B3186B8C817F=ms
 F09E4B5C35AA14B9=取消
-D7323C887B0A2951=应用
 08329907B4EB8CD0=/
+D7323C887B0A2951=应用
 99FA828F906D3EE4=查找
 D43B88702E996ED9=过滤:
 6D0BCBC7DDDC55E7=类型:
@@ -110,8 +110,6 @@ E2A06DC9314AAFD1=未使用样本时:
 A27E076F9E7EA1E3=进程1
 FDE95463547E83EB=渲染状态
 BAFCE81B12CE0626=统计/图表
-309B13D6E0AC1A0F=长度:
-8D96C4FE778D9CA7=源属性...
 D6120A6699DC844C=BPM 基准:
 802D08856B21D96E=拍号:
 F8E8A9C19CDE7A59=工程设置
@@ -159,6 +157,7 @@ E5566C4604653F75=撤销历史
 67EF32DE1BAE7097=通道:
 61B7599A40AF0062=结束:
 79DCBE1CDE37B4F3=整个工程
+309B13D6E0AC1A0F=长度:
 2555373B75AA89B2=输出
 0629736B3FAE9E4C=处理
 D1717A5C482193AF=重采样模式:
@@ -688,6 +687,7 @@ A0CB20A955DAF552=显示操作列表...
 FD06ABC366DA801A=平滑寻轨 (在小节结束时寻轨)
 8BD3DE8B5B83C01C=吸附到网格
 0814EFA066F6B891=源属性(P)...
+8D96C4FE778D9CA7=源属性...
 40C8007578BEB3CE=频谱编辑
 B1ED617A9A6CCE79=在片段标记处分割对象 (仅活跃片段)
 5944E79DAA5B2639=在片段标记处分割对象 (所有片段)
@@ -1719,6 +1719,7 @@ BA66149397E5F1AE=所有通道
 73235A4845CE69AF=主控混音
 C7B7708D1F9B3C8C=区域
 719B2E5CDAD2E067=轨道
+08323B07B4EAED16=M
 A037053743F47D99=作曲家
 7349DC4C0B10751C=指挥
 125D328B422FE52F=音乐性
@@ -1898,12 +1899,6 @@ FF006CD478B651B3=格式说明
 2B63C89DFBD5DDE2=渲染进程
 C126E6146A0781FD=打开文件夹...
 4738E366E029F574=启动文件...
-
-[DLG_125] ; IDD_SECTIONITEMINFO
-8769B7639BCAC7E0=源可循环区段属性
-407A0A698C0F3330=源信息
-D754112382628869=从源开始:
-25E3AFE507E594FC=淡化长度 (ms):
 
 [DLG_126] ; IDD_PROJECTSETTINGS_SETTINGS
 2874B5A9A972DA56=工程采样率:
@@ -5084,8 +5079,12 @@ E07423F09C9BFDE9=  设置播放重复
 
 [MENU_355] ; IDR_CONTEXTS_55
 ;B337DFB5190F3DA3=ripctx
-6CC47CED6D4E106B=波纹编辑所有内容会影响速度映射
-62886D8C87DD1C81=波纹编辑会影响所有轨道的包络线
+AB9A2766519667D6=启用波纹编辑
+B6BBA0712C15ACA6=当启用波纹编辑时:
+5A2DF1C4A8891506=编辑媒体对象边缘时进行波纹编辑
+7C86FF0806E90F92=波纹编辑逐轨分别影响每条轨道车道
+6CC47CED6D4E106B=波纹编辑所有轨道会影响速度映射
+62886D8C87DD1C81=波纹编辑所有轨道会影响所有轨道的包络线
 
 [MENU_356] ; IDR_CONTEXTS_56
 ;982EF0AB42B0F06D=56AutomationItemCtx
@@ -5154,7 +5153,7 @@ FA183511BDBBC440=次要路径:
 FD994A8441A52701=主工具栏
 31EA0D9166E92914=新建工程...
 7CE64A834287F5A0=启用自动交叉淡化
-AB9A2766519667D6=启用波纹编辑
+6074D3382A7E300B=切换波纹编辑
 CEC3D5DF2AA40AD1=显示编排视图网格
 C6255BD28268CF21=浮动工具栏 1
 6DB45DF1779991EB=编辑
@@ -5243,6 +5242,7 @@ E1724295AF0E72B0=累计时长
 8B9A76F494C70F92=您确定要移除当前的许可密钥吗？\r\n\r\n(您必须拥有密钥文件的副本才能重新授权此安装)
 63A8748786CE1342=确认移除许可密钥
 28E12469A3271389=谢谢您！
+11D0035B08672868=关于 REAPER v%s%s (%s)
 D03DC131AB7C4B2C=为我买单 [%d]
 32EE0E776F726A01=仍在评估中
 D38A26905AC66F97=制作团队
@@ -5633,11 +5633,17 @@ EBBBA9CCD30C478D=选项: 切换对象编组和轨道媒体/剃刀编辑编组 �
 DB28D820D336FAFA=选项: 选择一个编组对象将选择整个编组 ⇌ Options: Selecting one grouped item selects group
 629266A5E11965C0=选项: 轨道媒体/剃刀编辑编组仅影响开始和结束时间相同的对象 ⇌ Options: Track media/razor edit grouping affects only items that start and end at the same time
 9F2D62C28DA80120=选项: 循环切换波纹编辑模式 ⇌ Options: Cycle ripple editing mode
+FEDF6BB4D5D002AE=切换波纹编辑开启/关闭 ⇌ Toggle ripple editing on/off
+3F29B30147CC866A=设置波纹编辑开启 ⇌ Set ripple editing on
 2046472D007119DC=关闭波纹编辑 ⇌ Set ripple editing off
 6C3794C4573061E0=设置波纹编辑逐轨 ⇌ Set ripple editing per-track
 5AB3B62C69DA6B8A=设置波纹编辑所有轨道 ⇌ Set ripple editing all tracks
 B490CBB6F4CE8676=切换波纹编辑逐轨 ⇌ Toggle ripple editing per-track
 74BFB051CF39D084=切换波纹编辑所有轨道 ⇌ Toggle ripple editing all tracks
+A5734D38C673E1D7=选项: 启动波纹编辑时波纹所有轨道 ⇌ Options: Ripple all tracks when ripple is enabled
+93F66BD3B526E79D=选项: 启动波纹编辑时波纹逐轨 ⇌ Options: Ripple per-track when ripple is enabled
+FD70F52538FC14BA=选项: 波纹编辑逐轨分别影响每条轨道车道 ⇌ Options: Ripple per-track affects each track lane separately
+AC0A7C0910A89138=选项: 编辑媒体对象边缘时进行波纹编辑 ⇌ Options: Ripple edit when editing media item edges
 64A8A7D4AA1B1B6B=选项: 在工程回放中追逐 MIDI 音符开/CC/PC/音高 ⇌ Options: Chase MIDI note-on/CC/PC/pitch in project playback
 0A247156E053DD4B=选项: 循环切换编辑模式: 关闭自动交叉淡化, 开启自动交叉淡化, 修剪媒体对象后的内容 ⇌ Options: Cycle through editing modes: auto-crossfade off, auto-crossfade on, trim content behind media items
 ACFDD0F8CDB1E0AB=选项: 编辑时自动交叉淡化媒体对象 ⇌ Options: Auto-crossfade media items when editing
@@ -6816,6 +6822,14 @@ EFC69A298EA35677=自动化: 将轨道自动化模式设置为 '触碰' ⇌ Autom
 408274D53C8DC51A=自动化: 切换轨道的 '触碰' 和 '修剪/读取' 模式 ⇌ Automation: Toggle track between touch and trim/read modes
 245781D7BC5A8DA7=自动化: 清除所有轨道包络锁存 ⇌ Automation: Clear all track envelope latches
 EEA7BF781654FAE6=自动化: 清除轨道包络锁存 ⇌ Automation: Clear track envelope latches
+4B486F85901BC99D=自动化: 保存并清除所有轨道包络锁存 ⇌ Automation: Save and clear all track envelope latches
+5973FD9DC654E35F=自动化: 恢复所有已保存的轨道包络锁存 ⇌ Automation: Restore all saved track envelope latches
+68DD89A02A2ECC2E=自动化: 保存并清除轨道包络锁存 ⇌ Automation: Save and clear track envelope latches
+543BB01AB5E3AD4E=自动化: 恢复已保存的轨道包络锁存 ⇌ Automation: Restore saved track envelope latches
+B7BE9EC9670C8861=自动化: 如果存在则保存并清除所有轨道包络锁存, 否则恢复已保存的锁存 ⇌ Automation: Save and clear all track envelope latches if any, otherwise restore saved latches
+C2FB9D976C8A33E0=自动化: 如果存在则保存并清除轨道包络锁存, 否则恢复已保存的锁存 ⇌ Automation: Save and clear track envelope latches if any, otherwise restore saved latches
+13F521DF5DA99AEE=自动化: 清除所有已保存的轨道包络锁存 ⇌ Automation: Clear all saved track envelope latches
+D2920CA248A8094F=自动化: 清除已保存的轨道包络锁存 ⇌ Automation: Clear saved track envelope latches
 5D739DFD3A755BC2=全局自动化覆盖: 无覆盖 (按轨道设置自动化模式) ⇌ Global automation override: No override (set automation modes per track)
 0F6B7CBEEFDF9A63=全局自动化覆盖: 旁通所有自动化 ⇌ Global automation override: Bypass all automation
 3D7619ECFA796EF8=全局自动化覆盖: 所有自动化处于修剪/读取模式 ⇌ Global automation override: All automation in trim/read mode
@@ -8165,10 +8179,10 @@ ED18E10A5F8ADCD1=未知的操作 \"%s\" 在第 %d 行
 D9D6B42A61F1F4C5=定式 \"%s\" 在第 %d 行以未知标记 '%c' 开始 (allowed: [nfbtrsi])
 BFED4B3ABB427F4C=定式 \"%s\" 在第 %d 行未以 '/' 开始
 6A1E3BA4E67042FB=第 %d 行的定式太长
-956B2EDD33997D2B=从目标接收
+956B2EDD33997D2B=接收自目标
 2258412401973058=接收 %d
 5CD5767121BD815A=发送到上一个源
-432C78D3148F0F22=发送到 %s:%d
+432C78D3148F0F22=发送 %s:%d
 36FD34C499AA2E46=OSC: 侦听端口 %d
 B6EAC3AFD3B9AD9F=错误: 无法创建 OSC 侦听器
 22CDAF58A584E9B4=设备 IP/端口
@@ -8455,7 +8469,8 @@ E04DC7D6BD4E538C=容器通道:
 0F09179EC6EBED60=输入:
 893C393123F7EB8B=输出:
 F52D0B97953978BF=媒体通道映射器
-3682649808D0BC02=容器引脚连接器
+230D29DAE4A1D868=媒体资源管理器通道映射器
+4D2FF73AB517BF70= (插件引脚连接器)
 410558C833CA32E2=片段通道:
 DFDD08507C708C0A=反馈通道:
 38D7EFC7B65CD301=为每个媒体文件单独设置通道映射
@@ -11740,6 +11755,8 @@ E6057A870030CABC=Command
 2FE8D5FE04238B47=切换 (>0=切换)
 
 [misc]
+AEBEBFFC82B98290=自动化锁存值只能在锁存或锁存预览模式下保存/恢复
+7173DEADF46E053D=包络错误
 D9FF1A097D91EEAC=设置全局录音轮次计数器
 628988D16E7CA278=新值:
 8DA59183F3C1BF8B=设置为随机颜色
@@ -14383,6 +14400,9 @@ EA33E60991BEED3E=开始时间
 58FDFCE4E548647F=在此区域内渲染的轨道
 3ED1D8FF10CEA01C=片段标记信息
 
+[regmgr_idx]
+08323407B4EAE131=T
+
 [render]
 FF988786A3DBA5E1=渲染到文件名:
 FDA7DF8BA581C475=RMS-I
@@ -14954,21 +14974,23 @@ FCBF2A5B01E951F7=ReCycle 文件
 
 [routdlg]
 60302508A9F7F502=%d 通道
-DD096F9E880C0C96=发送到
+DD096F9E880C0C96=发送至
 998074CE650BE8E4=接收自
 8A1BF18F1F9B40A5=主控轨道输出
 B821BAE9983182E7=轨道路由
 53A9DD6B9038AD34=父级轨道
-23DFA68EFB18E685=父级轨道发送通道 从/到:
-2FFB5AFB31BE5F8F=主控发送通道 从/到:
+23DFA68EFB18E685=父级轨道发送通道自/至:
+2FFB5AFB31BE5F8F=主控发送通道自/至:
 892EE6A6A9935F84=添加新发送...
-32842BAD35BDAEFF=为所有轨道添加发送
+7712D5C91E8626B4=添加发送至新轨道
+32842BAD35BDAEFF=添加发送至所有轨道
 4AD7BB994A552771=添加新硬件输出...
 2500FCB3124BFE9F=<无输出>
-6A5150FAF8777EE3=发送到原始通道
-2E834509D3A06745=发送到通道
+6A5150FAF8777EE3=发送至原始通道
+2E834509D3A06745=发送至通道
 1D3E6E5BC5E522D9=添加新接收...
-47C76CA5AEADC0E1=从所有轨道添加接收
+4E9D2D9B40BCF208=添加接收自新轨道
+47C76CA5AEADC0E1=添加接收自所有轨道
 
 [routdlg_heading]
 E585C664AC364DDB=音频硬件输出
@@ -15234,7 +15256,7 @@ ABE1C16582D5A33C=<SUB>%d 通道
 11CFDE7E5A4CFD86= B%d
 D3E9B5C2991E4175=(轨道自动化模式)
 550F547AB6B8077C=修剪/读取 (包络处于活跃状态，但所有推子都用于修剪)
-EF365B9BFF4DA771=发送到轨道
+EF365B9BFF4DA771=发送至轨道
 2BE64718FFEA8B8E=主控硬件输出控制
 28F54690D2483CE9=轨道控制
 8C70A063D586EEF8=声像 L:
@@ -15315,8 +15337,8 @@ DB4EC9AD23B997E9=正在扫描 VST 插件...
 8E37237DA775FC83= - 子工程
 11ACF64D3C045BD0=子工程
 25D740E7EFE65829=音轨包含非琐碎的路由，这将受移动到子工程的影响:\r\n
-D7C85BCC6A47FEEE=\r\n\t%d 发送到父级工程的轨道
-13DB22FBB5459E24=\r\n\t%d 从父级工程的轨道接收
+D7C85BCC6A47FEEE=\r\n\t%d 发送至父级工程的轨道
+13DB22FBB5459E24=\r\n\t%d 接收自父级工程的轨道
 EF9F2FF5FDEE972E=\r\n\t%d 硬件音频输出
 95BC62C61C25CA49=\r\n\t%d 硬件 MIDI 输出
 E45B3CD9A4E7BC0F=\r\n\r\n您希望继续吗？
@@ -15928,9 +15950,6 @@ ACF174C3CB1AF658=拍号标记
 28DBCC1B74A0C2B0=对象编组和轨道媒体/剃刀编辑编组已启用
 E0A54DFB2F63271B=对象编组和轨道媒体/剃刀编辑编组已禁用
 CCE190C7AE6BBD3B=节拍器已禁用
-96F2AEB2390E2A8A=波纹编辑所有轨道
-CE9E42F28D3826E0=波纹编辑逐轨
-E218A610F0629FBF=波纹编辑已禁用
 11260A5DD06C5455=不随媒体对象移动包络点
 93613FC362687988=剃刀在媒体对象车道的编辑不影响所有轨道包络
 14D9DC771BDA37A1=网格线已启用
@@ -15941,14 +15960,20 @@ CC13C9461AA171A4=相对吸附已启用
 CB3D0509C3C2F8C5=吸附已禁用
 506DBBE39B2B4C3E=自动交叉淡化已启用
 72EA637C8221D845=自动交叉淡化已禁用
+CE9E42F28D3826E0=波纹编辑逐轨
+96F2AEB2390E2A8A=波纹编辑所有轨道
+E218A610F0629FBF=波纹编辑已禁用
 5887B9D4E3A9EEA1=波纹编辑逐轨已启用
-02C3F037C46F5E34=波纹编辑逐轨 -- 当前处于波纹编辑所有轨道模式
+02C3F037C46F5E34=波纹编辑逐轨 -- 当前为波纹编辑所有轨道模式
 8ABBFAA8F3119188=波纹编辑逐轨已禁用
-B09F22B03F15966C=波纹编辑所有轨道已启用
-59A02964B78D2B49=波纹编辑所有轨道 -- 当前处于纹波编辑逐轨模式
+408F85AB062C122C=波纹编辑所有轨道 -- 当前为波纹编辑逐轨模式
+1A05E3B037812DBB=波纹编辑所有轨道已启用
 8EDD52D7D6476E67=波纹编辑所有轨道已禁用
-A9CE3D8FA60CFB5B=关闭禁用编辑 - 当前处于纹波编辑所有轨道模式
-947D36A65102068A=关闭禁用编辑 - 当前处于纹波编辑逐轨模式
+24BCA336C41DCEA8=开启波纹编辑逐轨
+C0AC396A17C99692=开启波纹编辑所有轨道
+80E92435FA910ECA=开启波纹编辑
+947D36A65102068A=关闭波纹编辑 - 当前为纹波编辑逐轨模式
+6AD561FA44603750=关闭波纹编辑 - 当前为波纹编辑所有轨道模式
 9D1C43B8C46541BC=关闭波纹编辑
 1C41444A340A9829=撤销:
 98224C5534538E53=重做:
@@ -16177,7 +16202,6 @@ EA24945773960719=将已编辑的媒体对象复制回源车道并重新复合
 
 [trackmgr]
 BAD1B71AF376A4DD=IN-FX
-08323B07B4EAED16=M
 08323507B4EAE2E4=S
 27B42181A67A6366=Ht 锁定
 2292B847F745C9E2=车道
@@ -16963,8 +16987,10 @@ B0A6F7F8D9C415D4=禁用轨道 MIDI 输出
 B449080B163423DF=更改轨道主控/父级发送通道数量
 2E12B4D1B3744958=更改轨道主控发送
 9A8A00315FEBCD7F=为所有轨道添加发送
-A3A930540F3417E1=从所有轨道添加接收
+7D51A91D63ABE874=添加发送至新轨道
+A3A930540F3417E1=添加接收自所有轨道
 2A27C4BA01E5D81C=添加轨道接收
+CF6E4B425B6B9748=添加接收自新轨道
 97A90981E12A1B43=在轨道面板中切换 FX 参数
 CFA2188BA0AEA84B=移除容器参数
 ACD1CBD9CC8F3526=添加容器参数
@@ -17232,6 +17258,7 @@ C5E89D555E6388C2=LCF %dx%d %.2f fps
 9E59637CB9818F62=视频 (LCF)
 E272BC36856482E4=无效文件
 8A99D5BB7363953A=注意: .CAF 文件被 REAPER 传递给视频解码器
+9887934DFFA47EB8=NV12
 FBE6CA251A12814C=%dx%d@%.2ffps, 宽高比=%.2f, 解码格式=%s
 6072C327FB3BE9E0=音频: %dHz %dch %dbps
 F9ACDD29C54A2C8A=用于视频和音频
@@ -17256,12 +17283,11 @@ F6BFC2B001FED6AC=低分辨率峰值
 A44BDD7A5EEA710E=更改所有视频源的所有音频设置
 10C37E06D4D247A3=AVI 视频文件
 A7F12DBA570C593B=MPG 视频文件
-41C29D53ED9BEE04=Windows Media 视频文件
-F5AA6EDFCD3A48A1=Windows Media 音频文件
-7D434F7214C06E67=MKV 视频文件
+796FF4026AC3265D=Windows Media 视频/音频文件
+D2FB2DE99E80ABB8=Matroska 视频/音频文件
 4A85585A82C0D55E=LCF 捕获视频文件
 1DEB42FBE8D82BE4=Quicktime 文件
-D0216D32830E37E6=WebM/OGG 视频文件
+DC039EFC9FA204C6=WebM/OGG 视频文件
 5AD73751F4EFDFD8=GIF 文件
 DFA7D7C102936D13=%s - 视频处理器
 30F02939FBCECDBA=查看 EEL2 语言文档 (HTML)
@@ -17510,8 +17536,8 @@ BE281CD925A3942A=将预设保存为默认
 90EC908C46375577=容器输入 %d
 5B7C448530265B4C=容器输出 %d
 CBFA46ADF22F0077=in+out
-3B81164C60603F70=从轨道通道接收
-392427982DB47FCA=发送到轨道通道
+3B81164C60603F70=接收自轨道通道
+392427982DB47FCA=发送至轨道通道
 74AEA8F16BAF8A04=----  VST3 预设 (.vstpreset)  ----
 B722995F85F3376D=----  VST 内置程序  ----
 6B56C6139B732C73=VST 输入
