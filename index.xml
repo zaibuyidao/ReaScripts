@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="039c6b7ca33e34d56cf0c8e516b209ddc859b2c0">
+<index version="1" name="zaibuyidao Scripts" commit="a87ec195acb8009d5feeeaa0f38c8e82384298f4">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3389,6 +3389,10 @@
       <version name="1.0" author="zaibuyidao" time="2025-04-05T12:57:18Z">
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/039c6b7ca33e34d56cf0c8e516b209ddc859b2c0/MIDI%20Editor/zaibuyidao_Insert%20Expression%20CC%20Events%20and%20Set%20CC%20Shape.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-04-05T12:59:27Z">
+        <changelog><![CDATA[+ New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a87ec195acb8009d5feeeaa0f38c8e82384298f4/MIDI%20Editor/zaibuyidao_Insert%20Expression%20CC%20Events%20and%20Set%20CC%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Patch Change (Bank MSB LSB).lua" type="script" desc="Insert Patch Change (Bank MSB/LSB)">
