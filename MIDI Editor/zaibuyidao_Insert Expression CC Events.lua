@@ -1,5 +1,5 @@
 -- @description Insert Expression CC Events
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -34,121 +34,146 @@ else
   return
 end
 
-take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
-if take == nil then return end
-tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
-local _, notecnt, _, _ = reaper.MIDI_CountEvts(take)
+local language = getSystemLanguage()
 
-local cc_num = reaper.GetExtState("InsertExpressionCCEvents", "CC")
-local val_01 = reaper.GetExtState("InsertExpressionCCEvents", "Val1")
-local val_02 = reaper.GetExtState("InsertExpressionCCEvents", "Val2")
-local val_03 = reaper.GetExtState("InsertExpressionCCEvents", "Val3")
-if (cc_num == "") then cc_num = "11" end
-if (val_01 == "") then val_01 = "90" end
-if (val_02 == "") then val_02 = "127" end
-if (val_03 == "") then val_03 = "95" end
+local take = reaper.MIDIEditor_GetTake(reaper.MIDIEditor_GetActive())
+if not take then return end
 
-local user_ok, user_input_csv = reaper.GetUserInputs("Insert Expression", 4, "CC number,Point 1,Point 2 and 3,Point 4", cc_num..','..val_01..','.. val_02..','.. val_03)
-if not user_ok then return reaper.SN_FocusMIDIEditor() end
-cc_num, val_01, val_02, val_03 = user_input_csv:match("(.*),(.*),(.*),(.*)")
-if not tonumber(cc_num) or not tonumber(val_01) or not tonumber(val_02) or not tonumber(val_03) then return reaper.SN_FocusMIDIEditor() end
-cc_num, val_01, val_02, val_03 = tonumber(cc_num), tonumber(val_01), tonumber(val_02), tonumber(val_03)
+local ticks_per_beat = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
+local _, note_count, _, _ = reaper.MIDI_CountEvts(take)
 
-reaper.SetExtState("InsertExpressionCCEvents", "CC", cc_num, false)
-reaper.SetExtState("InsertExpressionCCEvents", "Val1", val_01, false)
-reaper.SetExtState("InsertExpressionCCEvents", "Val2", val_02, false)
-reaper.SetExtState("InsertExpressionCCEvents", "Val3", val_03, false)
+local cc_number      = reaper.GetExtState("InsertExpressionCCEvents", "CC")
+local fast_start_val = reaper.GetExtState("InsertExpressionCCEvents", "Val1")
+local square_val     = reaper.GetExtState("InsertExpressionCCEvents", "Val2")
+local square_end_val = reaper.GetExtState("InsertExpressionCCEvents", "Val3")
 
-function INST1() -- 音符开头插入
-  for i = 0,  notecnt - 1 do
-    retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-    if selected == true then
-      local len = endppqpos - startppqpos
-      if len > (tick / 4) and len <= ((tick / 4) + (tick / 2))  then -- 如果长度大于 120 并且 长度小于等于 360
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, cc_num, val_01)
-      elseif len > ((tick / 4) + (tick / 2)) and len <= tick then -- 如果长度大于 360 并且 长度小于等于 480
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, cc_num, val_01)
-      elseif len > tick and len <= tick * 2 then -- 如果长度大于 480 并且 长度小于等于 960
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, cc_num, val_01)
-      elseif len > tick * 2 then -- 如果长度大于 960
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, cc_num, val_01)
+if cc_number == "" then cc_number = "11" end
+if fast_start_val == "" then fast_start_val = "90" end
+if square_val == "" then square_val = "127" end
+if square_end_val == "" then square_end_val = "95" end
+
+if language == "简体中文" then
+  scriptTitle = "插入表情CC事件"
+  captionsCsv = "CC 编号,点 1,点 2 与 3,点 4"
+elseif language == "繁體中文" then
+  scriptTitle = "插入表情CC事件"
+  captionsCsv = "CC 编號,點 1,點 2 與 3,點 4"
+else
+  scriptTitle = "Insert Expression CC Events"
+  captionsCsv = "CC number,Point 1,Point 2 and 3,Point 4"
+end
+
+local uok, uinput = reaper.GetUserInputs(scriptTitle, 4, captionsCsv, cc_number .. "," .. fast_start_val .. "," .. square_val .. "," .. square_end_val)
+if not uok then return reaper.SN_FocusMIDIEditor() end
+
+cc_number, fast_start_val, square_val, square_end_val = uinput:match("([^,]+),([^,]+),([^,]+),([^,]+)")
+if not (tonumber(cc_number) and tonumber(fast_start_val) and tonumber(square_val) and tonumber(square_end_val)) then return reaper.SN_FocusMIDIEditor() end
+
+cc_number, fast_start_val, square_val, square_end_val = tonumber(cc_number), tonumber(fast_start_val), tonumber(square_val), tonumber(square_end_val)
+
+reaper.SetExtState("InsertExpressionCCEvents", "CC", cc_number, false)
+reaper.SetExtState("InsertExpressionCCEvents", "Val1", fast_start_val, false)
+reaper.SetExtState("InsertExpressionCCEvents", "Val2", square_val, false)
+reaper.SetExtState("InsertExpressionCCEvents", "Val3", square_end_val, false)
+
+local function insertFastStartCC()
+  for i = 0, note_count - 1 do
+    local retval, selected, muted, startppqpos, endppqpos, channel, pitch, velocity = reaper.MIDI_GetNote(take, i)
+    if selected then
+      local note_length = endppqpos - startppqpos
+      if note_length > (ticks_per_beat / 4) then -- 当音符长度大于 1/4 拍 (ticksPerBeat/4) 时插入 CC 事件
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, channel, cc_number, fast_start_val)
       end
       reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42083) -- Set CC shape to fast start
     end
-    i=i+1
   end
   reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
 end
 
-function INST2() -- 音符开头插入
-  for i = 0,  notecnt - 1 do
-    retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-    if selected == true then
-      local len = endppqpos - startppqpos
-      if len > (tick / 4) and len <= ((tick / 4) + (tick / 2)) then -- 如果长度大于 120 并且 长度小于等于 360
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + (tick / 16) * 3, 0xB0, chan, cc_num, val_02) -- 90
-      elseif len > ((tick / 4) + (tick / 2)) and len <= tick then -- 如果长度大于 360 并且 长度小于等于 480
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + (tick / 2), 0xB0, chan, cc_num, val_02) -- 240
-      elseif len > tick and len <= (tick + tick / 2) then -- 如果长度大于 480 并且 长度小于等于 720
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + (tick - tick / 4), 0xB0, chan, cc_num, val_02) -- 360
-      elseif len > (tick + tick / 2) and len <= tick * 2 then -- 如果长度大于 720 并且 长度小于等于 960
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + tick, 0xB0, chan, cc_num, val_02) -- 480
-      elseif len > tick * 2 and len <= tick * 6 then -- 如果长度大于 960 并且 长度小于等于 2880
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + tick, 0xB0, chan, cc_num, val_02) -- 480
-      elseif len > tick * 6 then -- 如果长度大于 2880
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + (tick + (tick / 2)), 0xB0, chan, cc_num, val_02) -- 720
-      elseif len <= (tick / 4) then -- 如果长度小于等于 120
-        reaper.MIDI_InsertCC(take, selected, muted, startppqpos, 0xB0, chan, cc_num, val_02)
-      end
-        reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42081) -- Set CC shape to square
-    end
-    i=i+1
-  end
-  reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
-end
+local function insertSquareStartCC()
+  for j = 0, note_count - 1 do
+    local retval, selected, muted, startppqpos, endppqpos, channel, pitch, velocity = reaper.MIDI_GetNote(take, j)
+    if selected then
+      local note_length = endppqpos - startppqpos
+      local offset = nil
 
-function INST3() -- 音符结尾插入
-  for i = 0,  notecnt - 1 do
-    retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-    if selected == true then
-      local len = endppqpos - startppqpos
-      if len > tick and len <= tick * 2 then -- 如果长度大于 480 并且 长度小于等于 960
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - tick / 2, 0xB0, chan, cc_num, val_02) -- 240
-      elseif len > tick * 2 and len <= tick * 6 then -- 如果长度大于 960 并且 长度小于等于 2880
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - tick, 0xB0, chan, cc_num, val_02) -- 480
-      elseif len >  tick * 6 then -- 如果长度大于 2880
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - tick * 2, 0xB0, chan, cc_num, val_02) -- 960
+      if note_length <= (ticks_per_beat / 4) then -- 当音符长度小于等于 1/4 拍 (480/4 = 120), 直接在音符起始位置插入
+        offset = 0
+      elseif note_length <= ((ticks_per_beat / 4) + (ticks_per_beat / 2)) then -- 当音符长度介于 1/4 拍与 3/4 拍之间 (120 到 360)
+        offset = (ticks_per_beat / 16) * 3 -- ticksPerBeat/16 = 480/16 = 30, 乘以 3 得到 90
+      elseif note_length <= ticks_per_beat then -- 当音符长度介于 3/4 拍与 1 拍之间 (360 到 480), 偏移量设为 1/2 拍
+        offset = ticks_per_beat / 2 -- ticksPerBeat/2 = 240
+      elseif note_length <= (ticks_per_beat + (ticks_per_beat / 2)) then -- 当音符长度介于 1 拍与 1.5 拍之间 (480 到 720)
+        offset = ticks_per_beat - (ticks_per_beat / 4) -- ticksPerBeat/4 = 120, 所以偏移量 = 480 - 120 = 360
+      elseif note_length <= ticks_per_beat * 2 then -- 当音符长度介于 1.5 拍与 2 拍之间 (720 到 960 ticks)
+        offset = ticks_per_beat -- 偏移量设为 1 拍 (480)
+      elseif note_length <= ticks_per_beat * 6 then -- 当音符长度介于 2 拍与 6 拍之间 (960 到 2880), 同样设为 1 拍偏移
+        offset = ticks_per_beat
+      elseif note_length > ticks_per_beat * 6 then -- 当音符长度大于 6 拍 ( > 2880), 偏移量设为 1 拍半
+        offset = ticks_per_beat + (ticks_per_beat / 2) -- 480 + 240 = 720
       end
-      reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42084) -- Set CC shape to fast end
-    end
-    i=i+1
-  end
-  reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
-end
 
-function INST4() -- 音符结尾插入
-  for i = 0,  notecnt - 1 do
-    retval, selected, muted, startppqpos, endppqpos, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-    if selected == true then
-      local len = endppqpos - startppqpos
-      if len >= tick  + (tick / 2) and len <= tick * 2 then -- 如果长度大于等于 720 并且 长度小于等于 960
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - ((tick / 16) / 3), 0xB0, chan, cc_num, val_03) -- 10
-      elseif len > tick * 2 then -- 如果长度大于 960
-        reaper.MIDI_InsertCC(take, selected, muted, endppqpos - ((tick / 16) / 3), 0xB0, chan, cc_num, val_03) -- 10
+      if offset then
+        reaper.MIDI_InsertCC(take, selected, muted, startppqpos + offset, 0xB0, channel, cc_number, square_val)
       end
+
       reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42081) -- Set CC shape to square
     end
-    i=i+1
   end
   reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
 end
 
-script_title = "Insert Expression CC Events"
+local function insertFastEndCC()
+  for m = 0, note_count - 1 do
+    local retval, selected, muted, startppqpos, endppqpos, channel, pitch, velocity = reaper.MIDI_GetNote(take, m)
+    if selected then
+      local note_length = endppqpos - startppqpos
+      local insert_point = nil
+
+      if note_length > ticks_per_beat and note_length <= ticks_per_beat * 2 then -- 当音符长度介于 1 拍与 2 拍之间 (480 到 960)
+        insert_point = endppqpos - (ticks_per_beat / 2) -- 音符结束位置减去半拍 (ticksPerBeat/2), 480/2 = 240
+      elseif note_length > ticks_per_beat * 2 and note_length <= ticks_per_beat * 6 then -- 当音符长度介于 2 拍与 6 拍之间 (960 到 2880)
+        insert_point = endppqpos - ticks_per_beat -- 音符结束位置减去 1 拍 (480)
+      elseif note_length > ticks_per_beat * 6 then -- 当音符长度大于 6 拍 (> 2880)
+        insert_point = endppqpos - (ticks_per_beat * 2) -- 音符结束位置减去 2 拍 (480*2 = 960)
+      end
+
+      if insert_point then
+        reaper.MIDI_InsertCC(take, selected, muted, insert_point, 0xB0, channel, cc_number, square_val)
+      end
+
+      reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42084) -- Set CC shape to fast end
+    end
+  end
+  reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
+end
+
+local function insertSquareEndCC()
+  for n = 0, note_count - 1 do
+    local retval, selected, muted, startppqpos, endppqpos, channel, pitch, velocity = reaper.MIDI_GetNote(take, n)
+    if selected then
+      local note_length = endppqpos - startppqpos
+      local insert_point = nil
+      
+      if note_length >= (ticks_per_beat + (ticks_per_beat / 2)) then -- 当音符长度大于等于 1 拍半时 (ticksPerBeat + ticksPerBeat/2, 即480+240=720)
+        insert_point = endppqpos - ((ticks_per_beat / 16) / 3) -- ticksPerBeat/16 = 480/16 = 30, 再除以 3 得到 10
+      end
+
+      if insert_point then
+        reaper.MIDI_InsertCC(take, selected, muted, insert_point, 0xB0, channel, cc_number, square_end_val)
+      end
+
+      reaper.MIDIEditor_OnCommand(reaper.MIDIEditor_GetActive(), 42081) -- Set CC shape to square
+    end
+  end
+  reaper.MIDIEditor_LastFocused_OnCommand(40671, 0) -- Unselect all CC events
+end
+
 reaper.Undo_BeginBlock()
-INST1()
-INST2()
-INST3()
-INST4()
+insertFastStartCC()
+insertSquareStartCC()
+insertFastEndCC()
+insertSquareEndCC()
 reaper.UpdateArrange()
-reaper.Undo_EndBlock(script_title, 0)
+reaper.Undo_EndBlock(scriptTitle, -1)
 reaper.SN_FocusMIDIEditor()
