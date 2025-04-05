@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6dc3629031d0d16b36cce4a9cf4de47fe1f2d8d2">
+<index version="1" name="zaibuyidao Scripts" commit="039c6b7ca33e34d56cf0c8e516b209ddc859b2c0">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -3373,7 +3373,7 @@
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f37b18ddc17bf6feee28830327c5244796188a0a/MIDI%20Editor/zaibuyidao_Insert%20CC%20Events.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Insert Expression CC Events.lua" type="script" desc="Insert Expression CC Events">
+    <reapack name="zaibuyidao_Insert Expression CC Events and Set CC Shape.lua" type="script" desc="Insert Expression CC Events and Set CC Shape">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -3386,13 +3386,9 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2025-04-05T12:13:53Z">
+      <version name="1.0" author="zaibuyidao" time="2025-04-05T12:57:18Z">
         <changelog><![CDATA[+ New Script]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/d29023c1d691fe28e9f5722d15d98c3cd9a6fada/MIDI%20Editor/zaibuyidao_Insert%20Expression%20CC%20Events.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao" time="2025-04-05T12:15:19Z">
-        <changelog><![CDATA[+ New Script]]></changelog>
-        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/6dc3629031d0d16b36cce4a9cf4de47fe1f2d8d2/MIDI%20Editor/zaibuyidao_Insert%20Expression%20CC%20Events.lua</source>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/039c6b7ca33e34d56cf0c8e516b209ddc859b2c0/MIDI%20Editor/zaibuyidao_Insert%20Expression%20CC%20Events%20and%20Set%20CC%20Shape.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Insert Patch Change (Bank MSB LSB).lua" type="script" desc="Insert Patch Change (Bank MSB/LSB)">
