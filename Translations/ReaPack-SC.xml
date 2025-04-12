@@ -916,7 +916,8 @@ Changed:
     </reapack>
   </category>
   <metadata>
-    <description><![CDATA[{\rtf1\ansi\ansicpg65001\deff0{\fonttbl{\f0 \fswiss SimHei;}{\f1 \fmodern Courier;}}
+    <description><![CDATA[{\rtf1\ansi\ansicpg65001\deff0
+{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fnil Heiti SC;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
@@ -933,7 +934,7 @@ Changed:
 \line
 访问 <http://www.gnu.org/licenses/> 获取 GNU 较宽松公共许可证的副本。\line
 \line
-{\b再补一刀} 译\par}
+{\b再補一刀} 译\par}
 }
 ]]></description>
     <link rel="website" href="https://reapack.com">网站</link>
