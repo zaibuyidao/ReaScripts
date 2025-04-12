@@ -916,25 +916,23 @@ Changed:
     </reapack>
   </category>
   <metadata>
-    <description><![CDATA[{\rtf1\ansi\ansicpg65001\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
+    <description><![CDATA[
+# **ReaPack: REAPER 的包管理器**
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 ReaPack: REAPER 的包管理器\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 这是 {\b ReaPack v[[REAPACK_VERSION]]} [[REAPACK_REVISION]] 构建于 [[REAPACK_BUILDTIME]]\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 \f1 版权所有 (C) 2015-2025  Christian Fillion\line
-\line
-本程序是自由软件：您可以根据自由软件基金会发布的 GNU 较宽松通用公共\line
-许可证的条款重新发布和修改本程序，可以使用许可证第 3 版，或（由您选\line
-择）任何更新的版本。\line
-\line
-本程序发布的目的是期望它能对您有所帮助，但不附带任何担保；甚至不提供\line
-适销性或特定用途适用性的暗示担保。详情请参阅 GNU 较宽松公共许可证。\line
-\line
-访问 <http://www.gnu.org/licenses/> 获取 GNU 较宽松公共许可证的副本。\line
-\line
-{\b再補一刀} 译\par}
-}
+这是 **ReaPack v[[REAPACK_VERSION]]** [[REAPACK_REVISION]] 构建于 [[REAPACK_BUILDTIME]]
+
+版权所有 (C) 2015-2025  Christian Fillion
+
+本程序是自由软件：您可以根据自由软件基金会发布的 GNU 较宽松通用公共
+许可证的条款重新发布和修改本程序，可以使用许可证第 3 版，或（由您选
+择）任何更新的版本。
+
+本程序发布的目的是期望它能对您有所帮助，但不附带任何担保；甚至不提供
+适销性或特定用途适用性的暗示担保。详情请参阅 GNU 较宽松公共许可证。
+
+访问 <http://www.gnu.org/licenses/> 获取 GNU 较宽松公共许可证的副本。
+
+**再補一刀** 译
 ]]></description>
     <link rel="website" href="https://reapack.com">网站</link>
     <link rel="website" href="https://reapack.com/user-guide">用户指南</link>
