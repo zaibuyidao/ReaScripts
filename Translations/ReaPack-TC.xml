@@ -916,13 +916,13 @@ Changed:
     </reapack>
   </category>
   <metadata>
-    <description><![CDATA[{\rtf1\ansi\ansicpg65001\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \Heiti SC;}}
+    <description><![CDATA[{\rtf1\ansi\ansicpg65001\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \Songti SC;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
 \widowctrl\hyphauto
 
-{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 ReaPack: REAPER 的包管理器\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 這是 {\b ReaPack v[[REAPACK_VERSION]]} [[REAPACK_REVISION]] 構建於 [[REAPACK_BUILDTIME]]\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 \f1 版權所有 (C) 2015-2025  Christian Fillion\line
+{\pard \ql \f1 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 ReaPack: REAPER 的包管理器\par}
+{\pard \ql \f1 \sa180 \li0 \fi0 這是 {\b ReaPack v[[REAPACK_VERSION]]} [[REAPACK_REVISION]] 構建於 [[REAPACK_BUILDTIME]]\par}
+{\pard \ql \f1 \sa180 \li0 \fi0 版權所有 (C) 2015-2025  Christian Fillion\line
 \line
 本程序是自由軟件：您可以根據自由軟件基金會發布的 GNU 較寬鬆通用公共\line
 許可證的條款重新發布和修改本程序，可以使用許可證第 3 版，或（由您選\line
