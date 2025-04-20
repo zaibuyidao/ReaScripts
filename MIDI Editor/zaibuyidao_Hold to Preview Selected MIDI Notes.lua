@@ -1,5 +1,5 @@
 -- @description Hold to Preview Selected MIDI Notes
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -36,64 +36,12 @@ end
 
 local language = getSystemLanguage()
 local temporary_arm = false -- 跟踪是否打开了ARM
-local has_played = false
-local was_key_held = false
-local key = nil
-
-function SetTrackInput_AllMIDIInputsAllChannels(track, enable_monitor)
-  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then
-    return false, "无效轨道"
-  end
-
-  local ALL_MIDI_INPUTS_INDEX = 63
-  local ALL_CHANNELS = 0
-  local I_RECINPUT = 4096 + (ALL_MIDI_INPUTS_INDEX << 5) + ALL_CHANNELS
-  
-  -- 设置轨道 MIDI 输入为 All MIDI Inputs + All Channels
-  reaper.SetMediaTrackInfo_Value(track, "I_RECINPUT", I_RECINPUT)
-  
-  -- 开启录音监听
-  if enable_monitor then
-    reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 1)
-    reaper.SetMediaTrackInfo_Value(track, "I_RECMON", 1)
-  end
-  
-  return true
-end
-
-function EnsureTrackArmed(track)
-  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return false end
-
-  local is_armed = reaper.GetMediaTrackInfo_Value(track, "I_RECARM")
-  if is_armed == 1 then
-    temporary_arm = false
-    return true
-  else
-    reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 1)
-    temporary_arm = true
-    return true
-  end
-end
-
-function RestoreTrackArmIfTemporary(track)
-  if temporary_arm and track and reaper.ValidatePtr(track, "MediaTrack*") then
-    reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 0)
-    temporary_arm = false
-  end
-end
-
-local editor = reaper.MIDIEditor_GetActive()
-if editor == nil then return end
-
-local take = reaper.MIDIEditor_GetTake(editor)
-if take == nil then return end
-
-local track = reaper.GetMediaItemTake_Track(take)
+local playedNotes = {} -- 记录已触发过 Note‑On 的音高
 
 -- 检查是否首次运行脚本
 local section = "PreviewSelectedMIDINotes"
-local key1 = "initial_prompt_shown"
-local shown = reaper.GetExtState(section, key1)
+local key_init = "initial_prompt_shown"
+local shown = reaper.GetExtState(section, key_init)
 
 if language == "简体中文" then
   title = "预览选中的MIDI音符"
@@ -111,9 +59,9 @@ end
 
 if shown ~= "1" then
   local ret = reaper.ShowMessageBox(TEXT1, TEXT2, 4) -- MB_YESNO
-  
+
   if ret == 6 then -- 用户选择“是”
-    reaper.SetExtState(section, key1, "1", true) -- 永久存储
+    reaper.SetExtState(section, key_init, "1", true) -- 永久存储
     reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 1)
     reaper.SetMediaTrackInfo_Value(track, "I_RECMON", 1)
   else
@@ -121,8 +69,56 @@ if shown ~= "1" then
   end
 end
 
-local ok, msg = SetTrackInput_AllMIDIInputsAllChannels(track, false)
--- EnsureTrackArmed(track) -- 配合 RestoreTrackArmIfTemporary 工作, 暂不启用
+function SetTrackInput_AllMIDIInputsAllChannels(track, enable_monitor)
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then
+    return false, "无效轨道"
+  end
+
+  local ALL_MIDI_INPUTS_INDEX = 62 -- 63为所有MIDI输入，62为虚拟MIDI键盘
+  local ALL_CHANNELS = 0
+  local I_RECINPUT = 4096 + (ALL_MIDI_INPUTS_INDEX << 5) + ALL_CHANNELS
+  
+  -- 设置轨道 MIDI 输入为 All MIDI Inputs + All Channels
+  reaper.SetMediaTrackInfo_Value(track, "I_RECINPUT", I_RECINPUT)
+  
+  -- 开启录音监听
+  if enable_monitor then
+    reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 1)
+    reaper.SetMediaTrackInfo_Value(track, "I_RECMON", 1)
+  end
+
+  return true
+end
+
+function EnsureTrackArmed(track)
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return false end
+
+  local is_armed = reaper.GetMediaTrackInfo_Value(track, "I_RECARM")
+  if is_armed == 1 then
+    temporary_arm = false
+  else
+    reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 1)
+    temporary_arm = true
+  end
+  
+  return true
+end
+
+function RestoreTrackArmIfTemporary(track)
+  if temporary_arm and track and reaper.ValidatePtr(track, "MediaTrack*") then
+    reaper.SetMediaTrackInfo_Value(track, "I_RECARM", 0)
+    temporary_arm = false
+  end
+end
+
+local editor = reaper.MIDIEditor_GetActive()
+if not editor then return end
+local take = reaper.MIDIEditor_GetTake(editor)
+if not take then return end
+local track = reaper.GetMediaItemTake_Track(take)
+
+SetTrackInput_AllMIDIInputsAllChannels(track, false)
+EnsureTrackArmed(track)
 
 local start_time = reaper.time_precise()
 local key_state = reaper.JS_VKeys_GetState(start_time - 2)
@@ -142,7 +138,6 @@ end
 
 local key = detect_key_press()
 if not key then return end -- 如果没有检测到按键，结束脚本
-reaper.JS_VKeys_Intercept(key, 1) -- 1 代表让脚本拦截并独占这个键的输入
 
 local function is_key_held()
   -- 检测按键是否持续被按下
@@ -155,18 +150,16 @@ local function release()
   reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(32512)) -- 加载默认光标（箭头）
   reaper.JS_VKeys_Intercept(key, -1)
 
-  local _, noteCount, _, _ = reaper.MIDI_CountEvts(take)
-  if noteCount == 0 then return end
-  
+  local _, noteCount = reaper.MIDI_CountEvts(take)
   for i = 0, noteCount-1 do
-    local retval, selected, muted, startPPQ, endPPQ, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+    local retval, selected, _, _, _, chan, pitch = reaper.MIDI_GetNote(take, i)
     if retval and selected then
-      reaper.StuffMIDIMessage(0, 0x80 + chan, pitch, 0) -- 发送 Note-Off: 0x80 为 Note-Off 状态字节
+      reaper.StuffMIDIMessage(0, 0x80 + chan, pitch, 0)
     end
   end
 
+  playedNotes = {} -- 清空已触发 Note-On 记录
   RestoreTrackArmIfTemporary(track)
-  has_played = false
   reaper.UpdateArrange()
 end
 
@@ -182,48 +175,21 @@ end
 
 local function main()
   reaper.PreventUIRefresh(1)
+  if not is_key_held() then return end
 
-  local key_held = is_key_held()
-  
-  if key_held and not was_key_held then
-    -- 按键按下时播放 Note-On
-    local _, noteCount = reaper.MIDI_CountEvts(take)
-    if noteCount > 0 then
-      for i = 0, noteCount - 1 do
-        local retval, selected, muted, startPPQ, endPPQ, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-        if retval and selected then
-          reaper.StuffMIDIMessage(0, 0x90 + chan, pitch, vel)
-        end
-      end
-      has_played = true
-
-      local cursor = reaper.JS_Mouse_LoadCursorFromFile(custom_cursor_path)
-      if cursor then
-        reaper.JS_Mouse_SetCursor(cursor)
-      end
+  local _, noteCount = reaper.MIDI_CountEvts(take)
+  for i = 0, noteCount-1 do
+    local retval, selected, _, _, _, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+    if retval and selected and not playedNotes[pitch] then
+      reaper.StuffMIDIMessage(0, 0x90 + chan, pitch, vel)
+      playedNotes[pitch] = true
     end
-  elseif not key_held and was_key_held and has_played then
-    -- 按键松开时播放 Note-Off
-    local _, noteCount = reaper.MIDI_CountEvts(take)
-    if noteCount > 0 then
-      for i = 0, noteCount - 1 do
-        local retval, selected, muted, startPPQ, endPPQ, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
-        if retval and selected then
-          reaper.StuffMIDIMessage(0, 0x80 + chan, pitch, 0)
-        end
-      end
-    end
-    RestoreTrackArmIfTemporary(track)
-    has_played = false
-    reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(32512)) -- 恢复默认箭头
   end
 
-  was_key_held = key_held
+  update_cursor_on_hold()
   reaper.defer(main)
   reaper.PreventUIRefresh(-1)
 end
 
 reaper.defer(main)
-reaper.atexit(function()
-  if key then reaper.JS_VKeys_Intercept(key, -1) end -- -1 代表取消按键拦截
-end)
+reaper.atexit(release)
