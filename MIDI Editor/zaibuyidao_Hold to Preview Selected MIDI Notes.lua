@@ -1,5 +1,5 @@
 -- @description Hold to Preview Selected MIDI Notes
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -37,8 +37,8 @@ end
 local language = getSystemLanguage()
 local temporary_arm = false -- 跟踪是否打开了ARM
 local playedNotes = {} -- 记录已触发过 Note‑On 的音高
-local armedTime = 0
-local armedDelayPassed = false
+-- local armedTime = 0
+-- local armedDelayPassed = false
 
 -- 检查是否首次运行脚本
 local section = "PreviewSelectedMIDINotes"
@@ -122,7 +122,7 @@ local take = reaper.MIDIEditor_GetTake(editor)
 if not take then return end
 local track = reaper.GetMediaItemTake_Track(take)
 
-SetTrackInput_AllMIDIInputsAllChannels(track, false)
+-- SetTrackInput_AllMIDIInputsAllChannels(track, false)
 -- EnsureTrackArmed(track) -- 暂时关闭自动启用预备录音
 
 local start_time = reaper.time_precise()
@@ -183,14 +183,14 @@ local function main()
   if not is_key_held() then return end
 
   -- 如果刚启用 Arm，给 REAPER 至少 0.03 秒的缓冲，然后再开始发送 Note-On
-  if temporary_arm and not armedDelayPassed then
-    if reaper.time_precise() - armedTime < 0.03 then
-      reaper.defer(main)
-      return
-    else
-      armedDelayPassed = true
-    end
-  end
+  -- if temporary_arm and not armedDelayPassed then
+  --   if reaper.time_precise() - armedTime < 0.03 then
+  --     reaper.defer(main)
+  --     return
+  --   else
+  --     armedDelayPassed = true
+  --   end
+  -- end
 
   local _, noteCount = reaper.MIDI_CountEvts(take)
   for i = 0, noteCount-1 do
