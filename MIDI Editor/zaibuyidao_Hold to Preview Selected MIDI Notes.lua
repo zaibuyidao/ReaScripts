@@ -1,5 +1,5 @@
 -- @description Hold to Preview Selected MIDI Notes
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -123,7 +123,7 @@ if not take then return end
 local track = reaper.GetMediaItemTake_Track(take)
 
 SetTrackInput_AllMIDIInputsAllChannels(track, false)
-EnsureTrackArmed(track)
+-- EnsureTrackArmed(track) -- 暂时关闭自动启用预备录音
 
 local start_time = reaper.time_precise()
 local key_state = reaper.JS_VKeys_GetState(start_time - 2)
@@ -164,7 +164,7 @@ local function release()
   end
 
   playedNotes = {} -- 清空已触发 Note-On 记录
-  RestoreTrackArmIfTemporary(track)
+  -- RestoreTrackArmIfTemporary(track) -- 暂时关闭自动启用预备录音
   reaper.UpdateArrange()
 end
 
@@ -182,7 +182,7 @@ local function main()
   reaper.PreventUIRefresh(1)
   if not is_key_held() then return end
 
-  -- 如果刚启用 Arm，给 REAPER 至少 0.03 秒的缓冲，然后再开始发送 Note‑On
+  -- 如果刚启用 Arm，给 REAPER 至少 0.03 秒的缓冲，然后再开始发送 Note-On
   if temporary_arm and not armedDelayPassed then
     if reaper.time_precise() - armedTime < 0.03 then
       reaper.defer(main)
