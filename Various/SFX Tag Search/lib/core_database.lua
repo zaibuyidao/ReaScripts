@@ -150,15 +150,16 @@ function send_search_text(text) -- 开始搜索
     reaper.SetExtState("UCS_TAG_SEARCH", "SEARCH_TEXT", text, false)
 
     local os = reaper.GetOS()
-    if os ~= "Win32" and os ~= "Win64" then
-        reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
-        reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
-    else
-        -- if reaper.GetToggleCommandStateEx(32063, 42051) == 1 then
-        --     reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0) -- reaper.SetToggleCommandState(32063, 42051, 0) -- 无效
-        -- end
+    if os:match("^Win") then
+        if reaper.GetToggleCommandStateEx(32063, 42051) == 1 then
+            reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+        end
         -- https://github.com/justinfrankel/WDL/blob/main/WDL/swell/swell-types.h
-        reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x20, 0,0,0) -- SPACEBAR
+        reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x20, 0, 0, 0) -- SPACEBAR
+        reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE
+    else
+        reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+        reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
     end
 end
 

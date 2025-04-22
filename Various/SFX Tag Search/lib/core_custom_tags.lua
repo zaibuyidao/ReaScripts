@@ -133,11 +133,32 @@ function send_search_text(text) -- 开始搜索
     local search = reaper.JS_Window_FindChildByID(hwnd, 1015)
     if search == nil then return end
     
-    reaper.defer(function ()
-        reaper.JS_Window_SetTitle(search, text)
+    -- 旧方案保留，WIN速度慢但MAC快
+    -- reaper.defer(function ()
+    --     reaper.JS_Window_SetTitle(search, text)
+    --     reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+    --     reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
+    -- end)
+
+    reaper.JS_Window_SetTitle(search, text)
+    local os = reaper.GetOS()
+    if os:match("^Win") then
+        -- 使用空格和回车，当前无效
+        -- https://github.com/justinfrankel/WDL/blob/main/WDL/swell/swell-types.h
+        -- reaper.JS_WindowMessage_Post(search, "WM_KEYUP", 0x20, 0,0,0) -- SPACEBAR
+        -- reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x08, 0, 0, 0) -- BACKSPACE
+        -- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE
+
+        if reaper.GetToggleCommandStateEx(32063, 42051) == 1 then
+            reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0) -- reaper.SetToggleCommandState(32063, 42051, 0) -- 无效
+        end
+        -- SetExplorerPath 已触发的虚拟键 ENTER 可不用重复触发
+        -- reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER
+        reaper.JS_WindowMessage_Post(edit, "WM_KEYUP",   0x0D, 0,0,0) -- ENTER
+    else
         reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
         reaper.JS_WindowMessage_Send(hwnd, "WM_COMMAND", 42051, 0, 0, 0)
-    end)
+    end
 end
 
 function openUrl(url)
@@ -691,8 +712,8 @@ function SetExplorerPath(hwnd, folder)
         reaper.JS_Window_SetTitle(edit, folder)
         -- https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
         reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0, 0, 0) -- SPACEBAR
-        reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0, 0, 0) -- SPACEBAR
-        reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE
+        reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x20, 0, 0, 0) -- SPACEBAR
+        reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x08, 0, 0, 0) -- BACKSPACE
         reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE
         reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER
         -- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x0D, 0,0,0) -- ENTER

@@ -1,9 +1,8 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.15
+-- @version 2.0.16
 -- @changelog
---   + Added keyword highlighting when filtering through the textbox.
---   # Adjusted some configuration information.
+--   + Optimized search term sending.
 --     Please back up the configuration files (*.ini) in the script directory and delete them.
 --     Running the script again will recreate the configuration files.
 -- @reference

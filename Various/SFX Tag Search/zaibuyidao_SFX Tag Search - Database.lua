@@ -126,8 +126,8 @@ function set_explorer_path(hwnd, folder)
 		reaper.JS_Window_SetTitle(edit, folder)
 		-- -- https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 		reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0, 0, 0) -- SPACEBAR
-		reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x20, 0, 0, 0) -- SPACEBAR
-		reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE
+		reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x20, 0, 0, 0) -- SPACEBAR
+		reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x08, 0, 0, 0) -- BACKSPACE
 		reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x08, 0, 0, 0) -- BACKSPACE
 		reaper.JS_WindowMessage_Post(edit, "WM_KEYDOWN", 0x0D, 0,0,0) -- ENTER
 		-- reaper.JS_WindowMessage_Post(edit, "WM_KEYUP", 0x0D, 0,0,0) -- ENTER
