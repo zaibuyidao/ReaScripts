@@ -1,8 +1,8 @@
--- @description Batch Folder Media Importer
--- @version 1.1.2
+-- @description Batch Import Audio from Folder as Tracks
+-- @version 1.0
 -- @author zaibuyidao, ChangoW
 -- @changelog
---   # Fix natural number sorting issue
+--   New Script
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -40,7 +40,7 @@ local language = getSystemLanguage()
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
 local ImGui = require 'imgui' '0.9.3.2'
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
-local ctx = ImGui.CreateContext('Batch Folder Media Importer')
+local ctx = ImGui.CreateContext('Batch Import Audio from Folder as Tracks')
 local sans_serif = ImGui.CreateFont('sans-serif', 13)
 ImGui.Attach(ctx, sans_serif)
 
@@ -84,7 +84,7 @@ local function getAudioFilesInDirectory(directory)
   local files = getFilesInDirectory(directory)
   for _, file in ipairs(files) do
     -- 假设音频文件以 ".wav", ".mp3", ".flac" 等为扩展名
-    if file:match("%.wav$") or file:match("%.mp3$") or file:match("%.flac$") then
+    if file:match("%.wav$") or file:match("%.mp3$") or file:match("%.ogg$") or file:match("%.flac$") then
       table.insert(audioFiles, file)
     end
   end
@@ -296,7 +296,7 @@ local function importMediaFromDirectories(baseDirectory, subdirectories, pos)
   -- 结束UI刷新锁定和 Undo 块
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
-  reaper.Undo_EndBlock("Batch Folder Media Importer", -1)
+  reaper.Undo_EndBlock("Batch Import Audio from Folder as Tracks", -1)
 end
 
 -- 判断路径是否为根目录
@@ -324,7 +324,7 @@ local function mainLoop(currentSubdirectories)
   return function()
     ImGui.PushFont(ctx, sans_serif)
     ImGui.SetNextWindowSizeConstraints(ctx, 456, 146, FLT_MAX, FLT_MAX)
-    local visible, open = ImGui.Begin(ctx, "Batch Folder Media Importer", true)
+    local visible, open = ImGui.Begin(ctx, "Batch Import Audio from Folder as Tracks", true)
     if visible then
       -- 显示“Folder”标签和路径输入框，合并为一行
       ImGui.PushItemWidth(ctx, -65)
