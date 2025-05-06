@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   + Optimize global expand/collapse for table preview
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -189,6 +189,7 @@ end
 local function render_preview_table(ctx, id, realCount, row_builder)
   preview_mode = true
   local cnt = realCount
+  id = "Global_Expand_Collapse_All" -- 这里使用全局折叠或展开，不要时直接删除或注释该行
   reaper.ImGui_PushID(ctx, id)
   if not reaper.ImGui_CollapsingHeader(ctx, "Preview", nil, flags) then
     reaper.ImGui_SameLine(ctx)
