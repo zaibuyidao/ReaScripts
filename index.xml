@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e1e98da656f5dffceea9082c01660bb1b973fee4">
+<index version="1" name="zaibuyidao Scripts" commit="5b963f2fb4b72025ec3451b4631e3992b78c7969">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7684,7 +7684,7 @@
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/68534ca85e7a9369930d071f361da11afd481fcc/Utility/zaibuyidao_Auto-Load%20VSTi%20for%20MIDI%20Playback.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Batch Folder Media Importer.lua" type="script" desc="Batch Folder Media Importer">
+    <reapack name="zaibuyidao_Batch Import Audio from Folder as Tracks.lua" type="script" desc="Batch Import Audio from Folder as Tracks">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -7697,57 +7697,9 @@
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao, ChangoW" time="2025-02-11T09:21:12Z">
+      <version name="1.0" author="zaibuyidao, ChangoW" time="2025-05-06T05:54:57Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9fef4c76fe4e1eb12b786d3a3d7261d791cdba96/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.1" author="zaibuyidao, ChangoW" time="2025-02-20T03:03:07Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/af4aa8f24b328e7e7cac0675051fa5942beb197f/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.2" author="zaibuyidao, ChangoW" time="2025-02-20T08:12:15Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/db966c3cb1b0ac323d82d1567d2d7c9c0719e06a/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.3" author="zaibuyidao, ChangoW" time="2025-02-20T09:43:39Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c310b8b942899f1c815e9ddfba3d43b42bc276ca/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.4" author="zaibuyidao, ChangoW" time="2025-02-20T14:34:14Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/491ae036d8ccf1fc4ea0169923b67bb2ead69df7/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.5" author="zaibuyidao, ChangoW" time="2025-02-20T14:55:01Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/22334ccb2f091e6830d4c302e08575c02fa79e47/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.6" author="zaibuyidao, ChangoW" time="2025-02-21T08:22:54Z">
-        <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0766590a662b3a800bc4c5f66f9e87f02c31ed2a/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.7" author="zaibuyidao, ChangoW" time="2025-02-27T09:30:22Z">
-        <changelog><![CDATA[# Fixed issue with incorrect root directory path.]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/51a55a29c51610c5458bd0bb3ce7c09ff594b300/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.8" author="zaibuyidao, ChangoW" time="2025-02-27T09:57:29Z">
-        <changelog><![CDATA[# Fixed issue with incorrect root directory path.]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/11634d7ccea07e7f3c41d058b5fcd25fb1926156/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.0.9" author="zaibuyidao, ChangoW" time="2025-02-28T06:32:25Z">
-        <changelog><![CDATA[# Fixed the issue with numerical sorting]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0acc0c12c4508221c8c17341f5e33e7633206b6f/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.1.0" author="zaibuyidao, ChangoW" time="2025-03-05T06:58:16Z">
-        <changelog><![CDATA[# Fixed the issue with numerical sorting (1.0.8 regression)]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0d8ca13d0692a04f84af86bbbb2a3c277999db04/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.1.1" author="zaibuyidao, ChangoW" time="2025-03-05T07:20:03Z">
-        <changelog><![CDATA[# Fixed the issue with numerical sorting (1.0.8 regression)]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7278b8001b31e5e828449df9f5d7c48a4c8f83c7/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
-      </version>
-      <version name="1.1.2" author="zaibuyidao, ChangoW" time="2025-03-05T08:57:56Z">
-        <changelog><![CDATA[# Fix natural number sorting issue]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a9b768e25477487a870eaf54e0c825bae8093817/Utility/zaibuyidao_Batch%20Folder%20Media%20Importer.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5b963f2fb4b72025ec3451b4631e3992b78c7969/Utility/zaibuyidao_Batch%20Import%20Audio%20from%20Folder%20as%20Tracks.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Batch Rename Plus.lua" type="script" desc="Batch Rename Plus">
