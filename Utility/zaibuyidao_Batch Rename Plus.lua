@@ -1,5 +1,5 @@
 -- @description Batch Rename Plus
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -69,14 +69,12 @@ local use_cycle_mode    = true  -- cycle mode checkbox
 local sort_index        = 0     -- 0 = Track, 1 = Sequence, 2 = Timeline
 show_list_window = show_list_window or false
 local show_list_data = show_list_data or {}
-local bias = 0.003 -- 区域模式的补偿偏差值
 local preview_mode = false
 -- 预览表格
 local flags = reaper.ImGui_TreeNodeFlags_DefaultOpen()
 -- 预览表格的 flags1 初始值。如果全部不勾选，则使用flags1 = 0
 local tables = {
   disable_indent = false,
-  preview_open = false,
   horizontal = {
     flags1 = reaper.ImGui_TableFlags_Resizable()
     -- + reaper.ImGui_TableFlags_ScrollX()
@@ -187,6 +185,7 @@ local function apply_modifiers(name, i)
   return name
 end
 
+--表格预览
 local function render_preview_table(ctx, id, realCount, row_builder)
   preview_mode = true
   local cnt = realCount
@@ -211,11 +210,11 @@ local function render_preview_table(ctx, id, realCount, row_builder)
 
   local tblFlags1 = tables.horizontal.flags1 or 0
   local ok
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Resize", tblFlags1, reaper.ImGui_TableFlags_Resizable())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Column resizing", tblFlags1, reaper.ImGui_TableFlags_Resizable())
   reaper.ImGui_SameLine(ctx)
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Horizontal scroll", tblFlags1, reaper.ImGui_TableFlags_ScrollX())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Horizontal scrolling", tblFlags1, reaper.ImGui_TableFlags_ScrollX())
   reaper.ImGui_SameLine(ctx)
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Vertical scroll", tblFlags1, reaper.ImGui_TableFlags_ScrollY())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Vertical scrolling", tblFlags1, reaper.ImGui_TableFlags_ScrollY())
   tables.horizontal.flags1 = tblFlags1
 
   -- 恢复复选框样式
@@ -226,7 +225,7 @@ local function render_preview_table(ctx, id, realCount, row_builder)
   local displayCount = math.max(cnt, 10)
   local errorCount = 0
   local tableFlags = tblFlags1 + reaper.ImGui_TableFlags_RowBg()
-  if reaper.ImGui_BeginTable(ctx, id .. "_table", 3, tableFlags, -1, 130) then
+  if reaper.ImGui_BeginTable(ctx, id .. "_table", 3, tableFlags, -1, 127) then
     reaper.ImGui_TableSetupColumn(ctx, "Before", reaper.ImGui_TableColumnFlags_NoHide())
     reaper.ImGui_TableSetupColumn(ctx, "After", reaper.ImGui_TableColumnFlags_NoHide())
     reaper.ImGui_TableSetupColumn(ctx, "Message", 0)
@@ -271,9 +270,9 @@ local function render_preview_table(ctx, id, realCount, row_builder)
 end
 
 --------------------------------------------------------------------------------
--- 区域相关函数
+-- 区域/标记相关函数
 --------------------------------------------------------------------------------
-function GetRegionManager()
+function GetRegionMarkerManager()
   local title = reaper.JS_Localize("Region/Marker Manager", "common")
   local arr = reaper.new_array({}, 1024)
   reaper.JS_Window_ArrayFind(title, true, arr)
@@ -329,7 +328,7 @@ function get_all_markers_mgr()
 end
 
 function get_sel_regions_mgr()
-  local hwnd = GetRegionManager()
+  local hwnd = GetRegionMarkerManager()
   if not hwnd then return {} end
   local container = reaper.JS_Window_FindChildByID(hwnd, 1071) -- ListView 控件
   local sel_count, sel_indexes = reaper.JS_ListView_ListAllSelItems(container)
@@ -357,7 +356,7 @@ function get_sel_regions_mgr()
 end
 
 function get_sel_markers_mgr()
-  local hwnd = GetRegionManager()
+  local hwnd = GetRegionMarkerManager()
   if not hwnd then return {} end
   local container = reaper.JS_Window_FindChildByID(hwnd, 1071) -- ListView 控件
   local sel_count, sel_indexes = reaper.JS_ListView_ListAllSelItems(container)
@@ -979,7 +978,7 @@ end
 -- 2 批量重命名 Regions Manager
 --------------------------------------------------------------------------------
 function apply_batch_region_manager()
-  local hWnd = GetRegionManager()
+  local hWnd = GetRegionMarkerManager()
   if not hWnd then
     reaper.ShowMessageBox(
       "Please open the Region/Marker Manager window first.\n\n" ..
@@ -1266,7 +1265,7 @@ end
 -- 5 批量重命名 Markers Manager
 --------------------------------------------------------------------------------
 function apply_batch_marker_manager()
-  local hWnd = GetRegionManager()
+  local hWnd = GetRegionMarkerManager()
   if not hWnd then
     reaper.ShowMessageBox(
       "Please open the Region/Marker Manager window first.\n\n" ..
@@ -1652,7 +1651,8 @@ local function item_vs_source()
 
   if show_list_window then
     reaper.ImGui_SetNextWindowSize(ctx, 600, 300, reaper.ImGui_Cond_FirstUseEver())
-    local visible, open = reaper.ImGui_Begin(ctx, "Item vs Source List", show_list_window)
+    local title = string.format("Item vs Source List - %d Object(s)", #show_list_data)
+    local visible, open = reaper.ImGui_Begin(ctx, title, show_list_window)
     show_list_window = open
     if visible then
       -- 把可拖拽标志合入 table_flags
@@ -1825,8 +1825,10 @@ local function frame()
   local ch_n, new_n = reaper.ImGui_Checkbox(ctx, "Enable Renaming", enable_rename)
   if ch_n then enable_rename = new_n end
 
-  draw_wildcards(ctx, 'Wildcards##1', 'wildcards_popup##1', 'rename')
-  draw_specifiers(ctx, 'Specifiers##1', 'item_mode_specifiers##1', 'rename')
+  if enable_rename then
+    draw_wildcards(ctx, 'Wildcards##1', 'wildcards_popup##1', 'rename')
+    draw_specifiers(ctx, 'Specifiers##1', 'item_mode_specifiers##1', 'rename')
+  end
 
   reaper.ImGui_BeginDisabled(ctx, not enable_rename)
   local ch_p, newPattern = reaper.ImGui_InputTextWithHint(
@@ -1944,7 +1946,7 @@ local function frame()
   -- eaper.ImGui_SeparatorText(ctx, 'Options')
   reaper.ImGui_Separator(ctx)
 
-  local changed7, newCycle = reaper.ImGui_Checkbox(ctx, "Use cycle mode", use_cycle_mode)
+  local changed7, newCycle = reaper.ImGui_Checkbox(ctx, "Cycle mode", use_cycle_mode)
   if changed7 then use_cycle_mode = newCycle end
   reaper.ImGui_SameLine(ctx)
   -- 帮助
@@ -1957,7 +1959,7 @@ local function frame()
   if process_mode == 0 then
     reaper.ImGui_SameLine(ctx)
     -- reaper.ImGui_SetNextItemWidth(ctx, 100)
-    if reaper.ImGui_BeginCombo(ctx, "Take sort", (sort_index == 0 and "Track") or (sort_index == 1 and "Sequence") or "Timeline") then
+    if reaper.ImGui_BeginCombo(ctx, "Sort by", (sort_index == 0 and "Track") or (sort_index == 1 and "Sequence") or "Timeline") then
       local sort_options = { "Track", "Sequence", "Timeline" }
       for i = 0, #sort_options-1 do
         local is_selected = (i == sort_index)
@@ -2459,11 +2461,11 @@ local function frame()
     "Tracks",
     "Region Manager",
     "Regions (Time Selection)",
-    "Regions for Selected Items",
+    "Regions (Selected Items)",
     "Marker Manager",
     "Markers (Time Selection)",
   }
-  
+
   -- 逐个绘制 RadioButton，超出右边界时自动换行
   for i, label in ipairs(mode_labels) do
     -- 在绘制前测量下一项的宽度
