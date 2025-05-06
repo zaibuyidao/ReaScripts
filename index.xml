@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ebfaf7657820781793840356be63063f212cfb4d">
+<index version="1" name="zaibuyidao Scripts" commit="ba1d679d97af141f646f4e3854b199d54e4dcfe8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7722,6 +7722,10 @@
       <version name="1.0.1" author="zaibuyidao" time="2025-05-06T14:34:05Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ebfaf7657820781793840356be63063f212cfb4d/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2025-05-06T14:51:22Z">
+        <changelog><![CDATA[+ Optimize global expand/collapse for table preview]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ba1d679d97af141f646f4e3854b199d54e4dcfe8/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
