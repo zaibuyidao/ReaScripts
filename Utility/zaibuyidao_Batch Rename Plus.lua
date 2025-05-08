@@ -1,5 +1,5 @@
 -- @description Batch Rename Plus
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
 --   + Optimize global expand/collapse for table preview
@@ -48,7 +48,7 @@ reaper.ImGui_Attach(ctx, font_large)
 reaper.ImGui_Attach(ctx, font_medium)
 reaper.ImGui_Attach(ctx, font_botton)
 reaper.ImGui_Attach(ctx, font_small)
-reaper.ImGui_SetNextWindowSize(ctx, 440, 875, reaper.ImGui_Cond_FirstUseEver())
+reaper.ImGui_SetNextWindowSize(ctx, 355, 868, reaper.ImGui_Cond_FirstUseEver())
 
 -- 状态变量
 local process_mode      = 0     -- 0 = Items, 1 = Tracks
@@ -71,7 +71,10 @@ show_list_window = show_list_window or false
 local show_list_data = show_list_data or {}
 local preview_mode = false
 -- 预览表格
-local flags = reaper.ImGui_TreeNodeFlags_DefaultOpen()
+local default_preview_open = false
+local ext = reaper.GetExtState("BatchRenamePlus", "PreviewOpen")
+local preview_open = default_preview_open
+if ext == "true" then preview_open = true elseif ext == "false" then preview_open = false end
 -- 预览表格的 flags1 初始值。如果全部不勾选，则使用flags1 = 0
 local tables = {
   disable_indent = false,
@@ -190,11 +193,18 @@ local function render_preview_table(ctx, id, realCount, row_builder)
   preview_mode = true
   local cnt = realCount
   id = "Global_Expand_Collapse_All" -- 这里使用全局折叠或展开，不要时直接删除或注释该行
+
+  local hdr_flags = preview_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
   reaper.ImGui_PushID(ctx, id)
-  if not reaper.ImGui_CollapsingHeader(ctx, "Preview", nil, flags) then
+  local is_open = reaper.ImGui_CollapsingHeader(ctx, "Preview##" .. id, nil, hdr_flags)
+  preview_open = is_open
+  reaper.SetExtState("BatchRenamePlus", "PreviewOpen", tostring(preview_open), true)
+
+  if not is_open then
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_Text(ctx, string.format("- %d Object(s)", cnt))
     reaper.ImGui_PopID(ctx)
+    preview_mode = false
     return
   end
 
@@ -211,11 +221,11 @@ local function render_preview_table(ctx, id, realCount, row_builder)
 
   local tblFlags1 = tables.horizontal.flags1 or 0
   local ok
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Column resizing", tblFlags1, reaper.ImGui_TableFlags_Resizable())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Resize Columns", tblFlags1, reaper.ImGui_TableFlags_Resizable())
   reaper.ImGui_SameLine(ctx)
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Horizontal scrolling", tblFlags1, reaper.ImGui_TableFlags_ScrollX())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Horizontal Scroll", tblFlags1, reaper.ImGui_TableFlags_ScrollX())
   reaper.ImGui_SameLine(ctx)
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Vertical scrolling", tblFlags1, reaper.ImGui_TableFlags_ScrollY())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Vertical Scroll", tblFlags1, reaper.ImGui_TableFlags_ScrollY())
   tables.horizontal.flags1 = tblFlags1
 
   -- 恢复复选框样式
@@ -1823,7 +1833,7 @@ local function frame()
   end
 
   -- 1) Rename
-  local ch_n, new_n = reaper.ImGui_Checkbox(ctx, "Enable Renaming", enable_rename)
+  local ch_n, new_n = reaper.ImGui_Checkbox(ctx, "Rename", enable_rename)
   if ch_n then enable_rename = new_n end
 
   if enable_rename then
@@ -1854,7 +1864,7 @@ local function frame()
   )
 
   -- 2) Replace
-  local ch_rp, new_rp = reaper.ImGui_Checkbox(ctx, "Enable Replacement", enable_replace)
+  local ch_rp, new_rp = reaper.ImGui_Checkbox(ctx, "Replace", enable_replace)
   if ch_rp then enable_replace = new_rp end
 
   if enable_replace then
@@ -1870,7 +1880,7 @@ local function frame()
   reaper.ImGui_EndDisabled(ctx)
 
   -- 3) Remove
-  local ch_rm, new_rm = reaper.ImGui_Checkbox(ctx, "Enable Removal", enable_remove)
+  local ch_rm, new_rm = reaper.ImGui_Checkbox(ctx, "Remove", enable_remove)
   if ch_rm then enable_remove = new_rm end
   reaper.ImGui_BeginDisabled(ctx, not enable_remove)
   reaper.ImGui_PushItemWidth(ctx, -90)
@@ -1909,7 +1919,7 @@ local function frame()
   reaper.ImGui_EndDisabled(ctx)
 
   -- 4) Insert
-  local ch_i, new_i = reaper.ImGui_Checkbox(ctx, "Enable Insertion", enable_insert)
+  local ch_i, new_i = reaper.ImGui_Checkbox(ctx, "Insert", enable_insert)
   if ch_i then enable_insert = new_i end
 
   if enable_insert then
@@ -1947,7 +1957,7 @@ local function frame()
   -- eaper.ImGui_SeparatorText(ctx, 'Options')
   reaper.ImGui_Separator(ctx)
 
-  local changed7, newCycle = reaper.ImGui_Checkbox(ctx, "Cycle mode", use_cycle_mode)
+  local changed7, newCycle = reaper.ImGui_Checkbox(ctx, "Range Cycle Mode", use_cycle_mode)
   if changed7 then use_cycle_mode = newCycle end
   reaper.ImGui_SameLine(ctx)
   -- 帮助
@@ -1976,7 +1986,7 @@ local function frame()
   if process_mode == 2 or process_mode == 5 then
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushFont(ctx, font_small)
-    open_region_marker_manager(ctx, "Open Region Manager")
+    open_region_marker_manager(ctx, "Open Region/Marker Manager")
     reaper.ImGui_PopFont(ctx)
   end
 
