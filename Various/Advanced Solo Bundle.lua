@@ -1,6 +1,6 @@
 -- @description Advanced Solo Bundle
 -- @author zaibuyidao
--- @version 1.0.2
+-- @version 1.0.3
 -- @changelog
 --   # Fixed the "attempt to index a nil value" issue.
 -- @links

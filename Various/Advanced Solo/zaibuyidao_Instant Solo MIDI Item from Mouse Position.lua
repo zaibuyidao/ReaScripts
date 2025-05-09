@@ -118,7 +118,7 @@ reaper.PreventUIRefresh(1)
 local count_sel_items = reaper.CountSelectedMediaItems(0) -- 计算选中的items数量
 local count_tracks = reaper.CountTracks(0)
 local play_state = reaper.GetPlayState() -- 1 = playing, 2 = paused, 0 = stopped
-cursor_pos = reaper.GetCursorPosition()
+local cursor_pos = reaper.GetCursorPosition()
 init_muted_items = {}
 
 if play_state == 0 then

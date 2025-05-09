@@ -134,6 +134,8 @@ local key_state = reaper.JS_VKeys_GetState(start_time - 2)
 local custom_cursor_path = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Various/Advanced Solo/lib/speaker.cur'
 -- local custom_cursor_path = debug.getinfo(1, 'S').source:match[[^@?(.*[\/])[^\/]-$]] .. '/speaker.cur'
 local is_playing = false
+local custom_cursor = reaper.JS_Mouse_LoadCursorFromFile(custom_cursor_path)
+local cursor_pos = 0
 
 local function detect_key_press()
     -- 检测被按下的按键
