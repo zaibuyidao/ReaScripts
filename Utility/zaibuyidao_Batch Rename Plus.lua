@@ -1,8 +1,9 @@
 -- @description Batch Rename Plus
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
---   + Optimize global expand/collapse for table preview
+--   +  The Replace mode now offers an “Occurrence” setting, letting you target the first, last, or all matches—and supports case-insensitive searching.
+--   +  The Item vs Source list now includes a quick-copy feature: simply Ctrl+LeftClick any table cell to instantly copy its content to the clipboard.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -48,7 +49,7 @@ reaper.ImGui_Attach(ctx, font_large)
 reaper.ImGui_Attach(ctx, font_medium)
 reaper.ImGui_Attach(ctx, font_botton)
 reaper.ImGui_Attach(ctx, font_small)
-reaper.ImGui_SetNextWindowSize(ctx, 355, 868, reaper.ImGui_Cond_FirstUseEver())
+reaper.ImGui_SetNextWindowSize(ctx, 355, 920, reaper.ImGui_Cond_FirstUseEver())
 
 -- 状态变量
 local process_mode      = 0     -- 0 = Items, 1 = Tracks
@@ -67,9 +68,11 @@ local insert_position   = 0     -- position for insertion
 local insert_side_index = 0     -- 0 = beginning, 1 = end
 local use_cycle_mode    = true  -- cycle mode checkbox
 local sort_index        = 0     -- 0 = Track, 1 = Sequence, 2 = Timeline
+local preview_mode      = false -- 预览模式默认值
+local ignore_case       = false -- 是否忽略大小写
+local occurrence_mode   = 2     -- Occurrence 模式：0=First,1=Last,2=All
 show_list_window = show_list_window or false
 local show_list_data = show_list_data or {}
-local preview_mode = false
 -- 预览表格
 local default_preview_open = false
 local ext = reaper.GetExtState("BatchRenamePlus", "PreviewOpen")
@@ -95,8 +98,22 @@ function help_marker(desc)
   end
 end
 
+local function make_case_insensitive_pattern(str)
+  return str:gsub("(%a)", function(c)
+    return "["..c:lower()..c:upper().."]"
+  end)
+end
+
+local function replace_last(s, pat, repl)
+  return s:gsub("^(.*)("..pat..")", function(a,b) return a..repl end)
+end
+
 local function escape_pattern(str)
-  return str:gsub("(%W)","%%%1")
+  -- 正则元字符转义 ^ $ ( ) % . [ ] + - |
+  str = str:gsub("([%^%$%(%)%%%.%[%]%+%-%|])", "%%%1")
+  str = str:gsub("%*", ".*")
+  str = str:gsub("%?", ".")
+  return str
 end
 
 local function apply_modifiers(name, i)
@@ -807,7 +824,10 @@ local function apply_batch_items()
 
     -- 5.2 Replace 也用 build_items 先展开 replace_text
     if enable_replace and find_text ~= "" then
-      local pat  = escape_pattern(find_text)
+      local pat = escape_pattern(find_text)
+      if ignore_case then
+        pat = make_case_insensitive_pattern(pat)
+      end
       local repl = build_items(
         replace_text or "",
         data.orig_name,
@@ -817,7 +837,17 @@ local function apply_batch_items()
         data.take,
         seq
       )
-      new_name = new_name:gsub(pat, repl)
+      -- 根据 Occurrence 模式执行替换
+      if occurrence_mode == 0 then
+        -- First: 仅替换首个匹配
+        new_name = new_name:gsub(pat, repl, 1)
+      elseif occurrence_mode == 1 then
+        -- Last: 仅替换最后一个匹配
+        new_name = replace_last(new_name, pat, repl)
+      else
+        -- All: 默认替换所有匹配
+        new_name = new_name:gsub(pat, repl)
+      end
     end
 
     -- 5.3 Remove
@@ -922,10 +952,19 @@ local function apply_batch_tracks()
       new_name = build_tracks(rename_pattern, origin, guid, track_num, parent, i + 1)
     end
     -- 2) Replace
-    if enable_replace and find_text~="" then
+    if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      local rep = build_tracks(replace_text, origin, guid, track_num, parent, i + 1)
-      new_name = new_name:gsub(pat, rep)
+      if ignore_case then
+        pat = make_case_insensitive_pattern(pat)
+      end
+      local repl = build_tracks(replace_text, origin, guid, track_num, parent, i + 1)
+      if occurrence_mode == 0 then
+        new_name = new_name:gsub(pat, repl, 1)
+      elseif occurrence_mode == 1 then
+        new_name = replace_last(new_name, pat, repl)
+      else
+        new_name = new_name:gsub(pat, repl)
+      end
     end
     -- 3) Remove
     if enable_remove and remove_count > 0 then
@@ -1022,9 +1061,18 @@ function apply_batch_region_manager()
     end
     -- 2) Replace
     if enable_replace and find_text ~= "" then
-      local pat  = escape_pattern(find_text)
+      local pat = escape_pattern(find_text)
+      if ignore_case then
+        pat = make_case_insensitive_pattern(pat)
+      end
       local repl = build_region_manager(replace_text or "", orig, region.index, idx)
-      new_name = new_name:gsub(pat, repl)
+      if occurrence_mode == 0 then
+        new_name = new_name:gsub(pat, repl, 1)
+      elseif occurrence_mode == 1 then
+        new_name = replace_last(new_name, pat, repl)
+      else
+        new_name = new_name:gsub(pat, repl)
+      end
     end
     -- 3) Remove
     if enable_remove and remove_count > 0 then
@@ -1120,9 +1168,18 @@ local function apply_batch_region_time()
     end
     -- 2) Replace
     if enable_replace and find_text ~= "" then
-      local pat  = escape_pattern(find_text)
+      local pat = escape_pattern(find_text)
+      if ignore_case then
+        pat = make_case_insensitive_pattern(pat)
+      end
       local repl = build_region_time(replace_text or "", orig, region.index, idx)
-      new_name = new_name:gsub(pat, repl)
+      if occurrence_mode == 0 then
+        new_name = new_name:gsub(pat, repl, 1)
+      elseif occurrence_mode == 1 then
+        new_name = replace_last(new_name, pat, repl)
+      else
+        new_name = new_name:gsub(pat, repl)
+      end
     end
     -- 3) Remove
     if enable_remove and remove_count > 0 then
@@ -1209,9 +1266,18 @@ function apply_batch_regions_for_items()
     end
     -- 2) Replace
     if enable_replace and find_text ~= "" then
-      local pat  = escape_pattern(find_text)
+      local pat = escape_pattern(find_text)
+      if ignore_case then
+        pat = make_case_insensitive_pattern(pat)
+      end
       local repl = build_region_for_items(replace_text or "", orig, region.index, idx)
-      new_name = new_name:gsub(pat, repl)
+      if occurrence_mode == 0 then
+        new_name = new_name:gsub(pat, repl, 1)
+      elseif occurrence_mode == 1 then
+        new_name = replace_last(new_name, pat, repl)
+      else
+        new_name = new_name:gsub(pat, repl)
+      end
     end
     -- 3) Remove
     if enable_remove and remove_count > 0 then
@@ -1310,9 +1376,18 @@ function apply_batch_marker_manager()
     end
     -- 2) Replace
     if enable_replace and find_text ~= "" then
-      local pat  = escape_pattern(find_text)
+      local pat = escape_pattern(find_text)
+      if ignore_case then
+        pat = make_case_insensitive_pattern(pat)
+      end
       local repl = build_marker_manager(replace_text or "", orig, marker.index, idx)
-      new_name = new_name:gsub(pat, repl)
+      if occurrence_mode == 0 then
+        new_name = new_name:gsub(pat, repl, 1)
+      elseif occurrence_mode == 1 then
+        new_name = replace_last(new_name, pat, repl)
+      else
+        new_name = new_name:gsub(pat, repl)
+      end
     end
     -- 3) Remove
     if enable_remove and remove_count > 0 then
@@ -1406,9 +1481,18 @@ local function apply_batch_marker_time()
 
     -- 2) Replace
     if enable_replace and find_text ~= "" then
-      local pat  = escape_pattern(find_text)
+      local pat = escape_pattern(find_text)
+      if ignore_case then
+        pat = make_case_insensitive_pattern(pat)
+      end
       local repl = build_marker_time(replace_text or "", orig, marker.index, idx)
-      new_name = new_name:gsub(pat, repl)
+      if occurrence_mode == 0 then
+        new_name = new_name:gsub(pat, repl, 1)
+      elseif occurrence_mode == 1 then
+        new_name = replace_last(new_name, pat, repl)
+      else
+        new_name = new_name:gsub(pat, repl)
+      end
     end
 
     -- 3) Remove
@@ -1607,35 +1691,60 @@ local function get_file_name(path)
   end
 end
 
+-- 修复 Item vs Source 列表空文件名问题，兼容 SECTION 类型
 local function gather_show_list_data()
   local data = {}
   local count_sel = reaper.CountSelectedMediaItems(0)
   -- 按开始位置分组
   local startEvents = {}
   for i = 0, count_sel - 1 do
-    local item     = reaper.GetSelectedMediaItem(0, i)
-    local startPos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-    local take     = reaper.GetActiveTake(item)
+    local item = reaper.GetSelectedMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
     if take and not reaper.TakeIsMIDI(take) then
-      local name     = reaper.GetTakeName(take)
-      startEvents[startPos] = startEvents[startPos] or {}
-      table.insert(startEvents[startPos], { item = item, take_name = name })
+      local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+      local name = reaper.GetTakeName(take)
+      startEvents[pos] = startEvents[pos] or {}
+      table.insert(startEvents[pos], { item = item, take_name = name })
     end
   end
+
   -- 对开始位置排序
   local starts = {}
   for pos in pairs(startEvents) do table.insert(starts, pos) end
   table.sort(starts)
+
+  -- 自定义函数：获取真实文件路径，兼容 SECTION 类型和 SWS
+  local function get_full_path(src)
+    -- 核心 API
+    local full = reaper.GetMediaSourceFileName(src, "") or ""
+    -- SECTION 类型：取父源
+    if full == "" then
+      local st = reaper.GetMediaSourceType(src, "") or ""
+      if st == "SECTION" and reaper.GetMediaSourceParent then
+        local parent = reaper.GetMediaSourceParent(src)
+        if parent then
+          full = reaper.GetMediaSourceFileName(parent, "") or ""
+        end
+      end
+    end
+    -- SWS 扩展回退
+    if full == "" and reaper.BR_GetMediaSourceFileName then
+      full = reaper.BR_GetMediaSourceFileName(src) or ""
+    end
+    return full
+  end
+
   -- 扁平化并提取文件名
   for _, pos in ipairs(starts) do
     for _, ev in ipairs(startEvents[pos]) do
       local take   = reaper.GetActiveTake(ev.item)
       local source = reaper.GetMediaItemTake_Source(take)
-      local full   = reaper.GetMediaSourceFileName(source, "")
+      local full   = get_full_path(source)
       local filename = get_file_name(full)
       table.insert(data, { take_name = ev.take_name, file_name = filename })
     end
   end
+
   return data
 end
 
@@ -1683,19 +1792,70 @@ local function item_vs_source()
   
         reaper.ImGui_TableHeadersRow(ctx)
   
-        for i, entry in ipairs(show_list_data) do
+        -- for i, entry in ipairs(show_list_data) do
+        --   reaper.ImGui_TableNextRow(ctx)
+        --   reaper.ImGui_TableNextColumn(ctx)
+        --   reaper.ImGui_Text(ctx, tostring(i))
+        --   reaper.ImGui_TableNextColumn(ctx)
+        --   reaper.ImGui_Text(ctx, entry.take_name)
+        --   reaper.ImGui_TableNextColumn(ctx)
+        --   reaper.ImGui_Text(ctx, entry.file_name)
+        -- end
+        
+        k = tostring(#show_list_data)
+        k = #k
+        -- 支持Ctrl+鼠标左键点击复制栏目内容
+        for i, entry in ipairs(show_list_window and show_list_data or {}) do
           reaper.ImGui_TableNextRow(ctx)
+          -- 序号列
           reaper.ImGui_TableNextColumn(ctx)
-          reaper.ImGui_Text(ctx, tostring(i))
+          local idx_str = string.format("%0" .. k .. "d", i)
+          reaper.ImGui_Text(ctx, idx_str)
+          if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl()) and reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Left()) then
+            reaper.CF_SetClipboard(idx_str)
+          end
+
+          -- Item Name 列
           reaper.ImGui_TableNextColumn(ctx)
           reaper.ImGui_Text(ctx, entry.take_name)
+          if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl()) and reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Left()) then
+            reaper.CF_SetClipboard(entry.take_name)
+          end
+
+          -- Source Name 列
           reaper.ImGui_TableNextColumn(ctx)
           reaper.ImGui_Text(ctx, entry.file_name)
+          if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl()) and reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Left()) then
+            reaper.CF_SetClipboard(entry.file_name)
+          end
         end
   
         reaper.ImGui_EndTable(ctx)
       end
-  
+
+      if reaper.ImGui_Button(ctx, "Copy to Clipboard") then
+        local lines = {}
+        for i, entry in ipairs(show_list_data) do
+          -- 格式：[序号]   项目名称   源文件名称
+          lines[#lines+1] = string.format("[%d]\t%s\t%s", i, entry.take_name, entry.file_name)
+        end
+        local clip = table.concat(lines, "\n")
+        reaper.CF_SetClipboard(clip)
+      end
+
+      reaper.ImGui_SameLine(ctx)
+      if reaper.ImGui_Button(ctx, "Copy Items Only") then
+        local lines = {}
+        for _, entry in ipairs(show_list_data) do
+          lines[#lines+1] = entry.take_name
+        end
+        reaper.CF_SetClipboard(table.concat(lines, "\n"))
+      end
+      reaper.ImGui_SameLine(ctx)
+      help_marker(
+        "Use Ctrl+LeftClick to copy cell content\n"
+      )
+
       reaper.ImGui_End(ctx)
     end
   end
@@ -1862,6 +2022,7 @@ local function frame()
     "General tags: d=n for number increment, d=start-end for number cycle, a=c for letter increment, a=start-end for letter cycle, r=n for random string.\n\n" ..
     "Modes: rename, replace, remove or insert. Enable cycle mode to loop numbers or letters. Sorting options: track, sequential or timeline."
   )
+  reaper.ImGui_Separator(ctx)
 
   -- 2) Replace
   local ch_rp, new_rp = reaper.ImGui_Checkbox(ctx, "Replace", enable_replace)
@@ -1877,7 +2038,30 @@ local function frame()
   if ch_f then find_text = new_find end
   local ch_w, new_repl = reaper.ImGui_InputText(ctx, "Replace with##repl", replace_text or "")
   if ch_w then replace_text = new_repl end
+
+  -- 忽略大小写选项
+  local fp_x, fp_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
+  local is_x, is_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), fp_x, math.floor(fp_y * 0.5))
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), is_x, math.floor(is_y * 0.5))
+
+  local ch_ic, new_ic = reaper.ImGui_Checkbox(ctx, "Ignore case##ic", ignore_case)
+  if ch_ic then ignore_case = new_ic end
+  reaper.ImGui_PopStyleVar(ctx, 2)
+
+  reaper.ImGui_SameLine(ctx)
+  -- Occurrence 列表: First, Last, All
+  if reaper.ImGui_BeginCombo(ctx, "Occurrence##occ", (occurrence_mode==0 and "First") or (occurrence_mode==1 and "Last") or "All") then
+    local occ_opts = {"First", "Last", "All"}
+    for i = 0, 2 do
+      local sel = (i == occurrence_mode)
+      if reaper.ImGui_Selectable(ctx, occ_opts[i+1], sel) then occurrence_mode = i end
+      if sel then reaper.ImGui_SetItemDefaultFocus(ctx) end
+    end
+    reaper.ImGui_EndCombo(ctx)
+  end
   reaper.ImGui_EndDisabled(ctx)
+  reaper.ImGui_Separator(ctx)
 
   -- 3) Remove
   local ch_rm, new_rm = reaper.ImGui_Checkbox(ctx, "Remove", enable_remove)
@@ -1917,6 +2101,7 @@ local function frame()
     reaper.ImGui_EndCombo(ctx)
   end
   reaper.ImGui_EndDisabled(ctx)
+  reaper.ImGui_Separator(ctx)
 
   -- 4) Insert
   local ch_i, new_i = reaper.ImGui_Checkbox(ctx, "Insert", enable_insert)
@@ -2012,9 +2197,18 @@ local function frame()
       end
       -- 2) Replace
       if enable_replace and find_text ~= "" then
-        local pat  = escape_pattern(find_text)
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
         local repl = build_items(replace_text or "", orig, tname, tnum, folders, take, seq)
-        new_name   = new_name:gsub(pat, repl)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
       end
       -- 3) Remove
       if enable_remove and remove_count > 0 then
@@ -2078,9 +2272,18 @@ local function frame()
       end
       -- 2) Replace
       if enable_replace and find_text ~= "" then
-        local pat  = escape_pattern(find_text)
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
         local repl = build_tracks(replace_text, orig, guid, num, parent, seq)
-        new_name = new_name:gsub(pat, repl)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
       end
       -- 3) Remove
       if enable_remove and remove_count > 0 then
@@ -2146,9 +2349,18 @@ local function frame()
   
       -- 2) Replace
       if enable_replace and find_text ~= "" then
-        local pat  = escape_pattern(find_text)
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
         local repl = build_region_manager(replace_text or "", orig, region.index, i)
-        new_name = new_name:gsub(pat, repl)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
       end
 
       -- 3) Remove
@@ -2216,9 +2428,18 @@ local function frame()
 
       -- 2) Replace
       if enable_replace and find_text ~= "" then
-        local pat  = escape_pattern(find_text)
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
         local repl = build_region_time(replace_text or "", orig, region.index, i)
-        new_name = new_name:gsub(pat, repl)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
       end
       -- 3) Remove
       if enable_remove and remove_count > 0 then
@@ -2280,9 +2501,18 @@ local function frame()
   
       -- 2) Replace
       if enable_replace and find_text ~= "" then
-        local pat  = escape_pattern(find_text)
-        local rep  = build_region_for_items(replace_text or "", orig, region.index, i)
-        new_name = new_name:gsub(pat, rep)
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_region_for_items(replace_text or "", orig, region.index, i)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
       end
   
       -- 3) Remove
@@ -2345,9 +2575,18 @@ local function frame()
   
       -- 2) Replace
       if enable_replace and find_text ~= "" then
-        local pat  = escape_pattern(find_text)
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
         local repl = build_marker_manager(replace_text or "", orig, marker.index, i)
-        new_name = new_name:gsub(pat, repl)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
       end
   
       -- 3) Remove
@@ -2414,9 +2653,18 @@ local function frame()
       end
       -- 2) Replace
       if enable_replace and find_text ~= "" then
-        local pat  = escape_pattern(find_text)
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
         local repl = build_marker_time(replace_text or "", orig, marker.index, i)
-        new_name = new_name:gsub(pat, repl)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
       end
       -- 3) Remove
       if enable_remove and remove_count > 0 then
@@ -2575,7 +2823,7 @@ local function frame()
   reaper.ImGui_PopFont(ctx)
   -- 帮助
   reaper.ImGui_SameLine(ctx)
-  help_marker("Ctrl+Enter\n")
+  help_marker("Press Ctrl+Enter to instantly perform the “Rename All” action.")
 
   if tables.disable_indent then
     reaper.ImGui_PopStyleVar(ctx)
