@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d98dba3b95c568ce5ef99940bcd2c002861632f3">
+<index version="1" name="zaibuyidao Scripts" commit="d6548275c563edb3959e42e7916f60d53d49fec0">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7738,6 +7738,11 @@
       <version name="1.0.3" author="zaibuyidao" time="2025-05-08T15:47:32Z">
         <changelog><![CDATA[+ Optimize global expand/collapse for table preview]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ef8c3f97b886f6036d331abb5362cba70e89f8e5/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2025-05-10T07:48:31Z">
+        <changelog><![CDATA[+  The Replace mode now offers an “Occurrence” setting, letting you target the first, last, or all matches—and supports case-insensitive searching.
++  The Item vs Source list now includes a quick-copy feature: simply Ctrl+LeftClick any table cell to instantly copy its content to the clipboard.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d6548275c563edb3959e42e7916f60d53d49fec0/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
