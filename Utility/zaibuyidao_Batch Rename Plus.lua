@@ -1,9 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog
---   +  The Replace mode now offers an “Occurrence” setting, letting you target the first, last, or all matches—and supports case-insensitive searching.
---   +  The Item vs Source list now includes a quick-copy feature: simply Ctrl+LeftClick any table cell to instantly copy its content to the clipboard.
+--   +  Improved the Items-mode table preview to honor the “Sort by” setting, ensuring the preview order always matches the actual renaming results.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -729,6 +728,65 @@ end
 --------------------------------------------------------------------------------
 -- 0 批量重命名Items
 --------------------------------------------------------------------------------
+local function get_sorted_items_data()
+  local cnt = reaper.CountSelectedMediaItems(0)
+  local items = {}
+  -- 1. 收集原始数据
+  for i = 0, cnt-1 do
+    local item   = reaper.GetSelectedMediaItem(0, i)
+    local take = item and reaper.GetActiveTake(item)
+    local orig = take and reaper.GetTakeName(take) or ""
+    local track = reaper.GetMediaItem_Track(item)
+    local _, tname = reaper.GetTrackName(track, "")
+    local tnum = math.floor(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") or 0)
+    local parent = reaper.GetParentTrack(track)
+    local folders = parent and select(2, reaper.GetTrackName(parent, "")) or ""
+    local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    table.insert(items, {
+      item       = item,
+      take       = take,
+      orig_name  = orig,
+      tname      = tname,
+      track_num  = tnum,
+      folders    = folders,
+      position   = pos
+    })
+  end
+  -- 2. 排序逻辑统一处理
+  if sort_index == 0 then
+    -- 按轨道排序
+    local groups = {}
+    for _, d in ipairs(items) do
+      groups[d.track_num] = groups[d.track_num] or {}
+      table.insert(groups[d.track_num], d)
+    end
+    local tnums = {}
+    for tn in pairs(groups) do table.insert(tnums, tn) end
+    table.sort(tnums)
+    local sorted = {}
+    for _, tn in ipairs(tnums) do
+      local grp = groups[tn]
+      table.sort(grp, function(a,b) return a.position < b.position end)
+      for seq, d in ipairs(grp) do
+        d.seqIndex = seq
+        table.insert(sorted, d)
+      end
+    end
+    items = sorted
+  elseif sort_index == 2 then
+    -- 按时间线排序
+    table.sort(items, function(a,b)
+      if a.position == b.position then return a.track_num < b.track_num end
+      return a.position < b.position
+    end)
+    for i, d in ipairs(items) do d.seqIndex = i end
+  else
+    -- 按原始 Selection 顺序
+    for i, d in ipairs(items) do d.seqIndex = i end
+  end
+  return items
+end
+
 local function apply_batch_items()
   -- 1. 基本检查
   local item_count = reaper.CountSelectedMediaItems(0)
@@ -742,63 +800,7 @@ local function apply_batch_items()
   end
 
   -- 2. 收集数据
-  local items = {}
-  for i = 0, item_count-1 do
-    local item     = reaper.GetSelectedMediaItem(0, i)
-    local take     = item and reaper.GetActiveTake(item)
-    local orig     = take and (reaper.GetTakeName(take) or "") or ""
-    local track    = reaper.GetMediaItem_Track(item)
-    local track    = reaper.GetMediaItem_Track(item)
-    local _, tname = reaper.GetTrackName(track, "")
-    local tnum     = track and math.floor(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") or 0) or 0
-
-    local parent_track = reaper.GetParentTrack(track)
-    if parent_track ~= nil then
-      _, parent_buf = reaper.GetTrackName(parent_track)
-    else
-      parent_buf = ''
-    end
-
-    table.insert(items, {
-      item       = item,
-      take       = take,
-      orig_name  = orig,
-      tname      = tname or "",
-      track_num  = tnum,
-      folders    = parent_buf,
-      position   = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-    })
-  end
-
-  -- 3. 排序
-  if sort_index == 0 then
-    local groups = {}
-    for _, d in ipairs(items) do
-      groups[d.track_num] = groups[d.track_num] or {}
-      table.insert(groups[d.track_num], d)
-    end
-
-    local tnums = {}
-    for tn in pairs(groups) do table.insert(tnums, tn) end
-    table.sort(tnums)
-
-    local sorted = {}
-    for _, tn in ipairs(tnums) do
-      local grp = groups[tn]
-      table.sort(grp, function(a,b) return a.position < b.position end)
-      for seq,d in ipairs(grp) do
-        d.seqIndex = seq
-        table.insert(sorted, d)
-      end
-    end
-
-    items = sorted
-  elseif sort_index == 2 then
-    table.sort(items, function(a,b)
-      if a.position == b.position then return a.track_num < b.track_num end
-      return a.position < b.position
-    end)
-  end
+  local items = get_sorted_items_data()
 
   -- 4. 开始 Undo
   reaper.Undo_BeginBlock()
@@ -2177,23 +2179,16 @@ local function frame()
 
   -- 预览表格 - Items
   if process_mode == 0 then
-    local cnt = reaper.CountSelectedMediaItems(0)
-    render_preview_table(ctx, "itemspreview", cnt, function(i)
-      local item  = reaper.GetSelectedMediaItem(0, i-1)
-      local take  = reaper.GetActiveTake(item)
-      local _, orig = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
-      local track = reaper.GetMediaItem_Track(item)
-      local _, tname = reaper.GetTrackName(track, "")
-      local tnum  = math.floor(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") or 0)
-      local folders = ""
-      local parent  = reaper.GetParentTrack(track)
-      if parent then _, folders = reaper.GetTrackName(parent, "") end
-      local seq   = i
+    local items = get_sorted_items_data()
+    render_preview_table(ctx, "itemspreview", #items, function(i)
+      local data     = items[i]
+      local orig     = data.orig_name
+      local seq      = data.seqIndex
       local new_name = orig
 
       -- 1) Rename
       if enable_rename then
-        new_name = build_items(rename_pattern, orig, tname, tnum, folders, take, seq)
+        new_name = build_items(rename_pattern, orig, data.tname, data.track_num, data.folders, data.take, seq)
       end
       -- 2) Replace
       if enable_replace and find_text ~= "" then
@@ -2201,7 +2196,7 @@ local function frame()
         if ignore_case then
           pat = make_case_insensitive_pattern(pat)
         end
-        local repl = build_items(replace_text or "", orig, tname, tnum, folders, take, seq)
+        local repl = build_items(replace_text or "", orig, data.tname, data.track_num, data.folders, data.take, seq)
         if occurrence_mode == 0 then
           new_name = new_name:gsub(pat, repl, 1)
         elseif occurrence_mode == 1 then
@@ -2235,7 +2230,7 @@ local function frame()
       end
       -- 4) Insert
       if enable_insert and insert_text ~= "" then
-        local insert_str = build_items(insert_text, orig, tname, tnum, folders, take, seq)
+        local insert_str = build_items(insert_text, orig, data.tname, data.track_num, data.folders, data.take, seq)
         local name_length = utf8.len(new_name) or #new_name
         local safe_insert_pos = math.max(0, math.min(insert_position, 100))
         local insert_i
