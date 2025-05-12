@@ -1,5 +1,5 @@
 -- @description Batch Rename Source Files of Selected Items
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -133,9 +133,11 @@ sel_cnt = CountSelectedItems(0)
 
 -- 获取用户输入的命名模式
 local title = "Rename Source Files"
-local prompt = "Enter naming pattern:" -- (supports: $source, d=START[-END], a=LETTER[-LETTER], r=LENGTH)
-local ok, baseName = reaper.GetUserInputs(title, 1, prompt, "")
+local prompt = "Enter naming pattern:,extrawidth=200" -- (supports: $source, d=START[-END], a=LETTER[-LETTER], r=LENGTH)
+local pattern = "$source_d=001_a=C-A_r=3"
+local ok, baseName = reaper.GetUserInputs(title, 1, prompt, pattern)
 if not ok or baseName == "" then return end
+if baseName == "$source_d=001_a=C-A_r=3" then baseName = "" end
 
 -- 分离文件名和扩展名
 local function SplitNameExt(filename)
