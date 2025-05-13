@@ -1,5 +1,5 @@
 -- @description Batch Rename Source Files of Selected Items
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   + New Script
@@ -78,7 +78,7 @@ reaper.Undo_BeginBlock()
 
 local write_take_name = true -- true 将新文件名写入 Take 名称，false 保持原 Take 名称
 
--- 步骤1：检查是否选中至少一个媒体对象
+-- 检查是否选中至少一个媒体对象
 local sel_cnt = CountSelectedItems(0)
 if sel_cnt == 0 then
   reaper.ShowMessageBox("请先选中至少一个媒体对象！", "Error", 0)
@@ -134,10 +134,10 @@ sel_cnt = CountSelectedItems(0)
 -- 获取用户输入的命名模式
 local title = "Rename Source Files"
 local prompt = "Enter naming pattern:,extrawidth=200" -- (supports: $source, d=START[-END], a=LETTER[-LETTER], r=LENGTH)
-local pattern = "$source_d=001_a=C-A_r=3"
+local pattern = "$source_d=0001_a=D-A_r=4"
 local ok, baseName = reaper.GetUserInputs(title, 1, prompt, pattern)
 if not ok or baseName == "" then return end
-if baseName == "$source_d=001_a=C-A_r=3" then baseName = "" end
+if baseName == "$source_d=0001_a=D-A_r=4" then baseName = "" end
 
 -- 分离文件名和扩展名
 local function SplitNameExt(filename)
@@ -212,6 +212,48 @@ local function ShowResult2(uniqueList, errors)
     for _, e in ipairs(errors) do table.insert(lines, "  - "..e) end
   end
   reaper.ShowMessageBox(table.concat(lines, "\n"), "重命名完成", 0)
+end
+
+local function DisplayRenameLog(uniqueList, nameMap, errors, useDialog)
+  reaper.ShowConsoleMsg("---- 开始重命名 ----\n")
+  -- Console 每条尝试信息
+  for _, oldPath in ipairs(uniqueList) do
+    local newName = nameMap[oldPath] or ""
+    reaper.ShowConsoleMsg(string.format("尝试: %s -> %s\n", oldPath, newName))
+  end
+
+  -- Console 汇总
+  local total = #uniqueList
+  local fail  = #errors
+  local succ  = total - fail
+  reaper.ShowConsoleMsg(string.format("\n共处理 %d 个文件。成功 %d 个，失败 %d 个。\n", total, succ, fail))
+
+  -- Console 失败详情
+  if fail > 0 then
+    reaper.ShowConsoleMsg("\n失败详情:\n")
+    for _, e in ipairs(errors) do
+      reaper.ShowConsoleMsg("  - " .. e .. "\n")
+    end
+  end
+
+  reaper.ShowConsoleMsg("---- 重命名结束 ----\n")
+
+  -- 如果需要弹窗，再用对话框展示一次
+  if useDialog then
+    local lines = {
+      string.format("共处理 %d 个文件", total),
+      string.format(" • 成功 %d 个", succ),
+      string.format(" • 失败 %d 个", fail),
+    }
+    if fail > 0 then
+      table.insert(lines, "")
+      table.insert(lines, "失败详情：")
+      for _, e in ipairs(errors) do
+        table.insert(lines, "  - " .. e)
+      end
+    end
+    reaper.ShowMessageBox(table.concat(lines, "\n"), "重命名完成", 0)
+  end
 end
 
 -- 构造新的文件名映射
@@ -346,8 +388,6 @@ end
 -- 重命名并更新文件和引用
 local function RenameAndUpdate(uniqueList, nameMap, items)
   reaper.ClearConsole()
-  reaper.ShowConsoleMsg("---- 开始重命名 ----\n")
-
   local errors = {}
 
   for _, oldPath in ipairs(uniqueList) do
@@ -355,7 +395,6 @@ local function RenameAndUpdate(uniqueList, nameMap, items)
     local dir     = oldPath:match("^(.*[\\/])") or ""
     local newPath = dir .. newName
 
-    reaper.ShowConsoleMsg(string.format("尝试: %s -> %s\n", oldPath, newName))
     if not FileExists(oldPath) then
       table.insert(errors, "不存在: " .. oldPath)
     else
@@ -366,7 +405,7 @@ local function RenameAndUpdate(uniqueList, nameMap, items)
         ok, err = os.rename(oldPath:gsub("\\","/"), newPath:gsub("\\","/"))
       end
       if not ok then
-        table.insert(errors, string.format("重命名失败: %s -> %s (%s)", oldPath, newName, err or "未知"))
+        table.insert(errors, string.format("失败: %s -> %s (%s)", oldPath, newName, err or "未知"))
       else
         -- 更新每个引用此文件的 Take
         for _, rec in ipairs(items) do
@@ -380,9 +419,6 @@ local function RenameAndUpdate(uniqueList, nameMap, items)
       end
     end
   end
-
-  reaper.ShowConsoleMsg("---- 重命名结束 ----\n")
-  ShowResult(uniqueList, errors)
 
   return errors
 end
@@ -402,11 +438,11 @@ for _, rec in ipairs(items) do
 end
 reaper.Main_OnCommand(40441, 0) -- Peaks: Rebuild peaks for selected items
 
--- ShowResult2(uniqueList, errors)
-
 -- 恢复选中的对象
 RestoreSelectedItems(init_sel_items)
 reaper.MarkProjectDirty(0)
 reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
+
+DisplayRenameLog(uniqueList, nameMap, errors, false)
