@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog
---   +  Improved the Items-mode table preview to honor the “Sort by” setting, ensuring the preview order always matches the actual renaming results.
+--   + New Source File Renaming Added
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -70,6 +70,7 @@ local sort_index        = 0     -- 0 = Track, 1 = Sequence, 2 = Timeline
 local preview_mode      = false -- 预览模式默认值
 local ignore_case       = false -- 是否忽略大小写
 local occurrence_mode   = 2     -- Occurrence 模式：0=First,1=Last,2=All
+local write_take_name   = true  -- true 将新文件名写入 Take 名称，false 保持原 Take 名称
 show_list_window = show_list_window or false
 local show_list_data = show_list_data or {}
 -- 预览表格
@@ -294,6 +295,141 @@ local function render_preview_table(ctx, id, realCount, row_builder)
   end
   reaper.ImGui_PopID(ctx)
   preview_mode = false
+end
+
+--------------------------------------------------------------------------------
+-- 源文件 相关函数
+--------------------------------------------------------------------------------
+-- 遍历所有媒体对象，检查是否有选中的
+function CountSelectedItems(proj)
+  local sel_cnt = 0
+  local item_count = reaper.CountMediaItems(proj)
+
+  for i = 0, item_count - 1 do
+    local item = reaper.GetMediaItem(proj, i)
+    if reaper.IsMediaItemSelected(item) then
+      sel_cnt = sel_cnt + 1
+    end
+  end
+
+  return sel_cnt
+end
+
+-- 保存当前选中的媒体对象
+function SaveSelectedItems(t)
+  local proj = 0 -- 获取当前工程
+  local cnt = reaper.CountMediaItems(proj) -- 获取媒体对象的数量
+  for i = 0, cnt - 1 do
+    local item = reaper.GetMediaItem(proj, i)
+    if reaper.IsMediaItemSelected(item) then
+      table.insert(t, item) -- 仅保存选中的对象
+    end
+  end
+end
+
+-- 恢复选中的媒体对象
+function RestoreSelectedItems(t)
+  reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+  for _, item in ipairs(t) do
+    if item then
+      reaper.SetMediaItemSelected(item, true) -- 恢复选中的对象
+    end
+  end
+end
+
+-- 获取 Take 的源文件路径
+local function GetTakeSourceFilePath(take)
+  if not take then return nil end
+  local source = reaper.GetMediaItemTake_Source(take)
+  if not source then return nil end
+  local path = reaper.GetMediaSourceFileName(source, "")
+  return path
+end
+
+-- 收集选中对象的源文件路径
+local function CollectSelectedSourcePaths()
+  local selected_paths = {}
+  local cnt = CountSelectedItems(0)
+  for i = 0, cnt-1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
+    local path = GetTakeSourceFilePath(take)
+    if path then
+      selected_paths[path] = true -- 记录路径，便于查找
+    end
+  end
+  return selected_paths
+end
+
+-- 根据源路径选中对应的媒体对象
+local function SelectItemsBySourcePaths(selected_paths)
+  local cnt = reaper.CountMediaItems(0)
+  for i = 0, cnt-1 do
+    local item = reaper.GetMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
+    local path = GetTakeSourceFilePath(take)
+    if path and selected_paths[path] then
+      reaper.SetMediaItemSelected(item, true)
+    end
+  end
+end
+
+-- 分离文件名和扩展名
+local function SplitNameExt(filename)
+  local ext = filename:match("%.[^%.]+$") or ""
+  if ext ~= "" then
+    return filename:sub(1, #filename - #ext), ext
+  else
+    return filename, ""
+  end
+end
+
+local function OfflineSources(items)
+  local state = {} -- key: take 对象, value: 离线前是否在线
+  for _, rec in ipairs(items) do
+    local take = rec.take
+    local src  = reaper.GetMediaItemTake_Source(take)
+    -- 对每个 take 独立记录并离线
+    local wasOnline = reaper.CF_GetMediaSourceOnline(src)
+    state[take] = wasOnline
+    if wasOnline then
+      reaper.CF_SetMediaSourceOnline(src, false)
+    end
+  end
+  return state
+end
+
+-- 检测文件是否存在
+local function FileExists(path)
+  local f = io.open(path, "rb")
+  if f then f:close() return true end
+  return false
+end
+
+-- 收集选中媒体对象及其源路径
+local function CollectAudioSources()
+  local cnt = CountSelectedItems(0)
+  local items, uniqueList, seen = {}, {}, {}
+  for i = 0, cnt - 1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
+    if take and not reaper.TakeIsMIDI(take) then
+      local src = reaper.GetMediaItemTake_Source(take)
+      local path = reaper.GetMediaSourceFileName(src, "")
+      if path ~= "" then
+        table.insert(items, { item = item, take = take, oldPath = path })
+        if not seen[path] then
+          seen[path] = true
+          table.insert(uniqueList, path)
+        end
+      end
+    end
+  end
+  if #uniqueList == 0 then
+    reaper.ShowMessageBox("选中的媒体对象没有音频源或均为 MIDI!", "Error", 0)
+    return nil
+  end
+  return items, uniqueList
 end
 
 --------------------------------------------------------------------------------
@@ -720,6 +856,20 @@ local function build_marker_time(pattern, origin_name, marker_id, i)
   name = name:gsub("%$markeridx", tostring(i))
   name = name:gsub("%$markerid",  tostring(marker_id))
   name = name:gsub("%$marker",    origin_name)
+
+  name = apply_modifiers(name, i)
+  return name
+end
+
+function build_sources(build_pattern, origin_name, track_num, i)
+  build_pattern = build_pattern or ""
+  origin_name   = origin_name   or ""
+  track_num     = track_num     or 0
+  i             = tonumber(i)   or 1
+
+  -- 通用 token 替换
+  local name = build_pattern
+  name = name:gsub("%$source", origin_name)
 
   name = apply_modifiers(name, i)
   return name
@@ -1556,6 +1706,275 @@ local function apply_batch_marker_time()
   end
 end
 
+--------------------------------------------------------------------------------
+-- 7 批量重命名 源文件
+--------------------------------------------------------------------------------
+local function get_sorted_sources_data()
+  local cnt   = CountSelectedItems(0)
+  local items = {}
+
+  -- 1. 收集原始数据
+  for i = 0, cnt-1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+    if not item then goto continue end
+
+    local take = reaper.GetActiveTake(item)
+    if not take or reaper.TakeIsMIDI(take) then goto continue end
+
+    -- 源文件对象及路径
+    local src  = reaper.GetMediaItemTake_Source(take)
+    local path = reaper.GetMediaSourceFileName(src, "")
+
+    -- 轨道信息
+    local track   = reaper.GetMediaItem_Track(item)
+    local tnum   = math.floor(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") or 0)
+
+    -- item 在时间线上的位置
+    local pos    = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+
+    table.insert(items, {
+      item      = item,
+      take      = take,
+      src       = src,
+      path      = path,
+      orig_name = path:match("[^\\/]+$") or "",
+      track_num = tnum,
+      position  = pos,
+      seqIndex  = 0,   -- 占位，后面会填
+    })
+
+    ::continue::
+  end
+
+  -- 2. 排序逻辑
+  if sort_index == 0 then
+    -- 按轨道分组，再按同轨道内时间线排序
+    local groups = {}
+    for _, d in ipairs(items) do
+      groups[d.track_num] = groups[d.track_num] or {}
+      table.insert(groups[d.track_num], d)
+    end
+
+    local tnums = {}
+    for tn in pairs(groups) do table.insert(tnums, tn) end
+    table.sort(tnums)
+
+    local sorted = {}
+    for _, tn in ipairs(tnums) do
+      local grp = groups[tn]
+      table.sort(grp, function(a,b) return a.position < b.position end)
+      for seq, d in ipairs(grp) do
+        d.seqIndex = seq
+        table.insert(sorted, d)
+      end
+    end
+    items = sorted
+
+  elseif sort_index == 2 then
+    -- 跨轨道时间线排序
+    table.sort(items, function(a,b)
+      if a.position == b.position then return a.track_num < b.track_num end
+      return a.position < b.position
+    end)
+    for i, d in ipairs(items) do d.seqIndex = i end
+
+  else
+    -- 原始选中顺序
+    for i, d in ipairs(items) do d.seqIndex = i end
+  end
+
+  return items
+end
+
+local function apply_batch_sources()
+  -- 基本检查
+  local sel_cnt = CountSelectedItems(0)
+  if sel_cnt == 0 then
+    reaper.ShowMessageBox("No media items selected.", "Batch Rename Plus", 0)
+    return
+  end
+  if not (enable_rename or enable_replace or enable_remove or enable_insert) then
+    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    return
+  end
+
+  -- 保存当前选中状态，禁用界面刷新并开始 Undo
+  local init_sel_items = {}
+  SaveSelectedItems(init_sel_items)
+  reaper.PreventUIRefresh(1)
+  reaper.Undo_BeginBlock()
+
+  local src_paths = CollectSelectedSourcePaths()
+  SelectItemsBySourcePaths(src_paths)
+
+  -- 收集并排序所有源文件数据
+  local items = get_sorted_sources_data()
+
+  -- 构建唯一源列表（每条路径只保留一次）
+  local seen_paths = {}
+  local uniqueRecs = {}
+  for _, d in ipairs(items) do
+    if not seen_paths[d.path] then
+      seen_paths[d.path] = true
+      table.insert(uniqueRecs, d)
+    end
+  end
+
+  -- 轨道和时间线排序，基于选中的item的源文件数量。
+  if sort_index == 1 or sort_index == 2 then
+    for i, rec in ipairs(uniqueRecs) do
+      rec.seqIndex = i
+    end
+  end
+
+  -- 用 build_sources + replace/删除/插入 生成 nameMap
+  local nameMap = {}
+  for _, rec in ipairs(uniqueRecs) do
+    -- 拆分文件名/扩展
+    local filename = rec.path:match("[^\\/]+$") or ""
+    local base, ext = filename:match("(.+)(%.[^%.]+)$")
+    local seq = rec.seqIndex
+    if not base then base, ext = filename, "" end
+
+    -- Rename
+    local new_base = base
+    if enable_rename and rename_pattern ~= "" then
+      new_base = build_sources(rename_pattern, base, rec.track_num, seq)
+    end
+
+    -- Replace
+    if enable_replace and find_text ~= "" then
+      local pat = escape_pattern(find_text)
+      if ignore_case then
+        pat = make_case_insensitive_pattern(pat)
+      end
+      local repl = build_sources(replace_text, base, rec.track_num, seq)
+      if occurrence_mode == 0 then
+        new_base = new_base:gsub(pat, repl, 1)
+      elseif occurrence_mode == 1 then
+        new_base = replace_last(new_base, pat, repl)
+      else
+        new_base = new_base:gsub(pat, repl)
+      end
+    end
+
+    -- Remove
+    if enable_remove and remove_count > 0 then
+      local name_length = utf8.len(new_base) or #new_base
+      local safe_remove_cnt = math.min(remove_count, 100)
+      local safe_remove_pos = math.min(remove_position, 100)
+      if safe_remove_pos < 0 then safe_remove_pos = 0 end
+
+      local s_i, e_i
+      if remove_side_index == 0 then
+        if safe_remove_pos < name_length then
+          s_i = safe_remove_pos
+          e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
+        end
+      else
+        if safe_remove_pos < name_length then
+          e_i = name_length - safe_remove_pos - 1
+          s_i = e_i - safe_remove_cnt + 1
+          if s_i < 0 then s_i = 0 end
+        end
+      end
+
+      if s_i then
+        local b1 = utf8.offset(new_base, s_i + 1) or 1
+        local b2 = utf8.offset(new_base, e_i + 2) or (#new_base + 1)
+        new_base = string.sub(new_base, 1, b1 - 1) .. string.sub(new_base, b2)
+      end
+    end
+
+    -- Insert
+    if enable_insert and insert_text ~= "" then
+      local insert_str = build_sources(insert_text, base, rec.track_num, seq)
+      local name_length = utf8.len(new_base) or #new_base
+      local safe_insert_pos = math.min(insert_position, 100)
+      if safe_insert_pos < 0 then safe_insert_pos = 0 end
+      local insert_i
+
+      if insert_side_index == 0 then
+        insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+      else
+        insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+      end
+
+      local b = utf8.offset(new_base, insert_i + 1) or (#new_base + 1)
+      new_base = string.sub(new_base, 1, b - 1) .. insert_str .. string.sub(new_base, b)
+    end
+
+    nameMap[rec.path] = new_base .. ext
+  end
+
+  -- 冲突修复(同名加 -001, -002...)
+  local count_seen = {}
+  for _, rec in ipairs(uniqueRecs) do
+    local nm = nameMap[rec.path]
+    count_seen[nm] = (count_seen[nm] or 0) + 1
+    if count_seen[nm] > 1 then
+      local ext = nm:match("(%.[^%.]+)$") or ""
+      local base = nm:sub(1, #nm - #ext)
+      nameMap[rec.path] = base .. string.format("-%03d", count_seen[nm]-1) .. ext
+    end
+  end
+
+  -- 离线所有源、执行重命名并更新引用
+  local origState = OfflineSources(items)
+  local errors = {}
+  for _, rec in ipairs(uniqueRecs) do
+    local oldPath = rec.path
+    local newName = nameMap[oldPath]
+    local dir     = oldPath:match("^(.*[\\/])") or ""
+    local newPath = dir .. newName
+
+    if not FileExists(oldPath) then
+      table.insert(errors, "Does not exist: " .. oldPath)
+    else
+      local ok, err = os.rename(oldPath, newPath)
+      if not ok then
+        ok, err = os.rename(oldPath:gsub("\\","/"), newPath:gsub("\\","/"))
+      end
+      if ok then
+        -- 更新所有引用相同源的 take
+        for _, d in ipairs(items) do
+          if d.path == oldPath then
+            reaper.BR_SetTakeSourceFromFile(d.take, newPath, false)
+            if write_take_name then
+              -- 使用没有后缀的命名
+              -- local onlyName = newName:gsub("%.[^%.]+$", "")
+              -- reaper.GetSetMediaItemTakeInfo_String(d.take, "P_NAME", onlyName, true)
+              reaper.GetSetMediaItemTakeInfo_String(d.take, "P_NAME", newName, true)
+            end
+          end
+        end
+      else
+        table.insert(errors, string.format("Failed: %s <--> %s (%s)", oldPath, newName, err or "Unknown"))
+      end
+    end
+  end
+
+  -- 恢复在线状态、重建波形、还原选中、结束 Undo、刷新
+  for _, d in ipairs(items) do
+    local src = reaper.GetMediaItemTake_Source(d.take)
+    reaper.CF_SetMediaSourceOnline(src, origState[d.take])
+  end
+  reaper.Main_OnCommand(40441, 0) -- Peaks: Rebuild peaks for selected items
+  RestoreSelectedItems(init_sel_items)
+  reaper.Undo_EndBlock("Batch Rename Plus", -1)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
+  reaper.MarkProjectDirty(0) -- 工程改动提示
+
+  -- 打印错误日志
+  if #errors > 0 then
+    reaper.ShowConsoleMsg("\n---- Renaming completed, the following errors occurred: ----\n")
+    for _, e in ipairs(errors) do
+      reaper.ShowConsoleMsg(e .. "\n")
+    end
+  end
+end
+
 local function apply_batch_rename()
   if process_mode == 0 then
     -- Items 模式
@@ -1595,6 +2014,8 @@ local function apply_batch_rename()
     apply_batch_marker_manager()
   elseif process_mode == 6 then
     apply_batch_marker_time()
+  elseif process_mode == 7 then
+    apply_batch_sources()
   end
 end
 
@@ -1696,7 +2117,7 @@ end
 -- 修复 Item vs Source 列表空文件名问题，兼容 SECTION 类型
 local function gather_show_list_data()
   local data = {}
-  local count_sel = reaper.CountSelectedMediaItems(0)
+  local count_sel = CountSelectedItems(0) -- reaper.CountSelectedMediaItems(0)
   -- 按开始位置分组
   local startEvents = {}
   for i = 0, count_sel - 1 do
@@ -1870,12 +2291,14 @@ local function draw_wildcards(ctx, button_label, popup_id, target)
     "Tracks",
     "Regions",
     "Markers",
+    "Sourse Files",
   }
   local wildcards_by_mode = {
     [0] = { "$item", "$track", "$tracknumber", "$folders", "$GUID" },
     [1] = { "$track", "$tracknumber", "$folders", "$GUID" },
     [2] = { "$region", "$regionid", "$regionidx" },
     [3] = { "$marker", "$markerid", "$markeridx" },
+    [4] = { "$source" },
   }
 
   reaper.ImGui_SameLine(ctx)
@@ -2154,7 +2577,7 @@ local function frame()
     "You can also specify a reverse range like 'a=Z-X' or 'd=9-7' to cycle in descending order."
   )
 
-  if process_mode == 0 then
+  if process_mode == 0 or process_mode == 7 then
     reaper.ImGui_SameLine(ctx)
     -- reaper.ImGui_SetNextItemWidth(ctx, 100)
     if reaper.ImGui_BeginCombo(ctx, "Sort by", (sort_index == 0 and "Track") or (sort_index == 1 and "Sequence") or "Timeline") then
@@ -2706,18 +3129,91 @@ local function frame()
     end)
   end
 
+  -- 表格预览 - Source Files (Selected Items)
+  if process_mode == 7 then
+    local items = get_sorted_sources_data()
+    render_preview_table(ctx, "sourcespreview", #items, function(i)
+      local data     = items[i]
+      local orig     = data.orig_name
+      local seq      = data.seqIndex
+      local new_name = orig
+
+      -- 1) Rename
+      if enable_rename then
+        new_name = build_sources(rename_pattern, orig, data.track_num, seq)
+      end
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_sources(replace_text or "", orig, data.track_num, seq)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
+        local s_i, e_i
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s_i = safe_remove_pos
+            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e_i = name_length - safe_remove_pos - 1
+            s_i = math.max(0, e_i - safe_remove_cnt + 1)
+          end
+        end
+        if s_i then
+          local b1 = utf8.offset(new_name, s_i + 1) or 1
+          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_sources(insert_text, orig, data.track_num, seq)
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_insert_pos = math.max(0, math.min(insert_position, 100))
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+
+      return orig, new_name
+    end)
+  end
+
   -- Process 标题
   reaper.ImGui_SeparatorText(ctx, "Batch Mode")
 
   -- 模式标签与对应值
   local mode_labels = {
-    "Items",
+    "Media Items",
     "Tracks",
     "Region Manager",
     "Regions (Time Selection)",
     "Regions (Selected Items)",
     "Marker Manager",
     "Markers (Time Selection)",
+    "Source Files (Selected Items)",
   }
 
   -- 逐个绘制 RadioButton，超出右边界时自动换行
@@ -2751,7 +3247,7 @@ local function frame()
   -- 帮助
   reaper.ImGui_SameLine(ctx)
   help_marker(
-    "Select a batch mode to rename items, tracks, regions, or markers."
+    "Select a batch mode to rename items, tracks, regions, markers, or source files."
   )
   
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
@@ -2769,6 +3265,8 @@ local function frame()
     reaper.ImGui_Text(ctx, "Tip: Open the Marker Manager and select a marker.")
   elseif process_mode == 6 then
     reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for markers.")
+  elseif process_mode == 7 then
+    reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your media items.")
   end
   
   reaper.ImGui_PopStyleColor(ctx)
