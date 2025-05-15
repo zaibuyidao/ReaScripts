@@ -1,10 +1,10 @@
 -- @description Batch Rename Plus
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog
---   + New Source File Renaming Added
+--   + After clicking the “Preview” button, a preview popup appears. You can drag it and dock it to any side of the main script interface for a more flexible workflow.
 -- @links
---   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
@@ -35,7 +35,7 @@ else
 end
 
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.9.3.2'
+-- local ImGui = require 'imgui' '0.9.3.2'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext('Batch Rename Plus')
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
@@ -43,36 +43,76 @@ local font_large = reaper.ImGui_CreateFont("", 20)
 local font_medium = reaper.ImGui_CreateFont("", 14)
 local font_botton = reaper.ImGui_CreateFont("", 16)
 local font_small = reaper.ImGui_CreateFont("", 12)
+
 reaper.ImGui_Attach(ctx, sans_serif)
 reaper.ImGui_Attach(ctx, font_large)
 reaper.ImGui_Attach(ctx, font_medium)
 reaper.ImGui_Attach(ctx, font_botton)
 reaper.ImGui_Attach(ctx, font_small)
-reaper.ImGui_SetNextWindowSize(ctx, 355, 920, reaper.ImGui_Cond_FirstUseEver())
+
+local preview_font_size  = 14 -- 当前预览字体大小（像素）
+local preview_font_sizes = { 8, 10, 12, 14, 16, 18, 20, 22, 24 }
+local preview_fonts      = {}
+for _, sz in ipairs(preview_font_sizes) do
+  preview_fonts[sz] = reaper.ImGui_CreateFont("", sz)
+  reaper.ImGui_Attach(ctx, preview_fonts[sz])
+end
+
+reaper.ImGui_SetNextWindowSize(ctx, 355, 763, reaper.ImGui_Cond_FirstUseEver())
 
 -- 状态变量
-local process_mode      = 0     -- 0 = Items, 1 = Tracks
-local enable_rename     = false -- true = enable rename
-local enable_replace    = false -- true = enable rename
-local enable_remove     = false -- true = enable rename
-local enable_insert     = false -- true = enable rename
-local rename_pattern    = ""    -- pattern input
-local find_text         = ""    -- find string
-local replace_text      = ""    -- replace string
-local remove_count      = 0     -- number of chars to remove
-local remove_position   = 0     -- position for removal
-local remove_side_index = 0     -- 0 = beginning, 1 = end
-local insert_text       = ""    -- text to insert
-local insert_position   = 0     -- position for insertion
-local insert_side_index = 0     -- 0 = beginning, 1 = end
-local use_cycle_mode    = true  -- cycle mode checkbox
-local sort_index        = 0     -- 0 = Track, 1 = Sequence, 2 = Timeline
-local preview_mode      = false -- 预览模式默认值
-local ignore_case       = false -- 是否忽略大小写
-local occurrence_mode   = 2     -- Occurrence 模式：0=First,1=Last,2=All
-local write_take_name   = true  -- true 将新文件名写入 Take 名称，false 保持原 Take 名称
+local process_mode           = 0                     -- 0 = Items, 1 = Tracks
+local enable_rename          = false                 -- true = enable rename
+local enable_replace         = false                 -- true = enable rename
+local enable_remove          = false                 -- true = enable rename
+local enable_insert          = false                 -- true = enable rename
+local rename_pattern         = ""                    -- pattern input
+local find_text              = ""                    -- find string
+local replace_text           = ""                    -- replace string
+local remove_count           = 0                     -- number of chars to remove
+local remove_position        = 0                     -- position for removal
+local remove_side_index      = 0                     -- 0 = beginning, 1 = end
+local insert_text            = ""                    -- text to insert
+local insert_position        = 0                     -- position for insertion
+local insert_side_index      = 0                     -- 0 = beginning, 1 = end
+local use_cycle_mode         = true                  -- cycle mode checkbox
+local sort_index             = 0                     -- 0 = Track, 1 = Sequence, 2 = Timeline
+local preview_mode           = false                 -- 预览模式默认值
+local ignore_case            = false                 -- 是否忽略大小写
+local occurrence_mode        = 2                     -- Occurrence 模式：0=First,1=Last,2=All
+local write_take_name        = true                  -- true 将新文件名写入 Take 名称，false 保持原 Take 名称
+local PREVIEW_TABLE_ID       = "preview_table"       -- 主脚本里共用
+local PREVIEW_POPUP_TABLE_ID = "preview_popup_table" -- 弹窗里共用
 show_list_window = show_list_window or false
 local show_list_data = show_list_data or {}
+local show_preview_window = false
+local preview_items = {}
+
+-- 完全透明
+local transparent = 0x00000000  -- R=00 G=00 B=00 A=00
+local yellow      = 0xFFFF00FF  -- 纯黄，RGBA 全不透明
+-- 基本色 (100% 不透明)
+local white       = 0xFFFFFFFF  -- 白色
+local black       = 0x000000FF  -- 黑色
+local red         = 0xFF0000FF  -- 红色
+local green       = 0x00FF00FF  -- 绿色
+local blue        = 0x0000FFFF  -- 蓝色
+local yellow      = 0xFFFF00FF  -- 黄色
+local cyan        = 0x00FFFFFF  -- 青色
+local magenta     = 0xFF00FFFF  -- 品红
+-- 灰度
+local gray        = 0x808080FF  -- 中灰
+local lightGray   = 0xC0C0C0FF  -- 浅灰
+local darkGray    = 0x404040FF  -- 深灰
+-- 其他常用色
+local orange      = 0xFFA500FF  -- 橙色
+local purple      = 0x800080FF  -- 紫色
+local pink        = 0xFFC0CBFF  -- 粉色
+local brown       = 0xA52A2AFF  -- 棕色
+local lime        = 0x32CD32FF  -- 酸橙绿
+local gold        = 0xFFD700FF  -- 金色
+local silver      = 0xC0C0C0FF  -- 银色
+
 -- 预览表格
 local default_preview_open = false
 local ext = reaper.GetExtState("BatchRenamePlus", "PreviewOpen")
@@ -84,7 +124,10 @@ local tables = {
   horizontal = {
     flags1 = reaper.ImGui_TableFlags_Resizable()
     -- + reaper.ImGui_TableFlags_ScrollX()
-    + reaper.ImGui_TableFlags_ScrollY()
+    + reaper.ImGui_TableFlags_ScrollY(),
+    flags2 = reaper.ImGui_TableFlags_Resizable(),
+    -- + reaper.ImGui_TableFlags_ScrollX()
+    -- + reaper.ImGui_TableFlags_ScrollY()
   },
 }
 
@@ -209,7 +252,6 @@ end
 local function render_preview_table(ctx, id, realCount, row_builder)
   preview_mode = true
   local cnt = realCount
-  id = "Global_Expand_Collapse_All" -- 这里使用全局折叠或展开，不要时直接删除或注释该行
 
   local hdr_flags = preview_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
   reaper.ImGui_PushID(ctx, id)
@@ -274,7 +316,7 @@ local function render_preview_table(ctx, id, realCount, row_builder)
         if #after == 0 then
           errorCount = errorCount + 1
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-          reaper.ImGui_Text(ctx, "Error: empty name")
+          reaper.ImGui_Text(ctx, "Error: empty name.")
           reaper.ImGui_PopStyleColor(ctx)
         end
       else
@@ -282,7 +324,7 @@ local function render_preview_table(ctx, id, realCount, row_builder)
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
         reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
         reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
-        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "Empty slot")
+        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "Empty slot.")
         reaper.ImGui_PopStyleColor(ctx)
       end
     end
@@ -295,6 +337,70 @@ local function render_preview_table(ctx, id, realCount, row_builder)
   end
   reaper.ImGui_PopID(ctx)
   preview_mode = false
+end
+
+local function render_preview_table_popup(ctx, id, realCount, row_builder)
+  preview_mode = true
+  local cnt = realCount
+  -- reaper.ImGui_SeparatorText(ctx, string.format("Preview - %d Object(s)", cnt))
+
+  -- 压缩复选框样式
+  local fp_x, fp_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
+  local is_x, is_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), fp_x, math.floor(fp_y * 0.5))
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), is_x, math.floor(is_y * 0.5))
+
+  local tblFlags2 = tables.horizontal.flags2 or 0
+  tables.horizontal.flags2 = tblFlags2
+
+  -- 恢复复选框样式
+  reaper.ImGui_PopStyleVar(ctx, 2)
+  reaper.ImGui_Separator(ctx)
+
+  -- 开始统计错误数, 如果没有任何选中项就显示 10 行空白
+  local displayCount = math.max(cnt, 0)
+  local errorCount = 0
+  local tableFlags = tblFlags2 + reaper.ImGui_TableFlags_RowBg()
+  if reaper.ImGui_BeginTable(ctx, id .. "_table", 3, tableFlags, -1, 0) then
+    reaper.ImGui_TableSetupColumn(ctx, "Before", reaper.ImGui_TableColumnFlags_NoHide())
+    reaper.ImGui_TableSetupColumn(ctx, "After", reaper.ImGui_TableColumnFlags_NoHide())
+    reaper.ImGui_TableSetupColumn(ctx, "Message", 0)
+    reaper.ImGui_TableHeadersRow(ctx)
+
+    for i = 1, displayCount do
+      local before, after = "", ""
+      if i <= cnt then
+        before, after = row_builder(i)
+      end
+
+      -- 输出行
+      reaper.ImGui_TableNextRow(ctx)
+      if i <= cnt then
+        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, before)
+        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, after)
+        reaper.ImGui_TableNextColumn(ctx)
+        if #after == 0 then
+          errorCount = errorCount + 1
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+          reaper.ImGui_Text(ctx, "Error: empty name.")
+          reaper.ImGui_PopStyleColor(ctx)
+        end
+      else
+        -- placeholder row
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
+        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
+        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "Empty slot.")
+        reaper.ImGui_PopStyleColor(ctx)
+      end
+    end
+
+    reaper.ImGui_EndTable(ctx)
+    -- 显示错误统计
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+    reaper.ImGui_Text(ctx, string.format("%d error(s) detected.", errorCount))
+    reaper.ImGui_PopStyleColor(ctx)
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -2019,6 +2125,612 @@ local function apply_batch_rename()
   end
 end
 
+--------------------------------------------------------------------------------
+-- 表格预览和构建
+--------------------------------------------------------------------------------
+local function get_preview_data_and_builder()
+  local data, builder
+  if process_mode == 0 then
+    data = get_sorted_items_data()
+    builder =  function(i)
+      local rec     = data[i]
+      local orig     = rec.orig_name
+      local seq      = rec.seqIndex
+      local new_name = orig
+
+      -- 1) Rename
+      if enable_rename then
+        new_name = build_items(rename_pattern, orig, rec.tname, rec.track_num, rec.folders, rec.take, seq)
+      end
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_items(replace_text or "", orig, rec.tname, rec.track_num, rec.folders, rec.take, seq)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
+        local s_i, e_i
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s_i = safe_remove_pos
+            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e_i = name_length - safe_remove_pos - 1
+            s_i = math.max(0, e_i - safe_remove_cnt + 1)
+          end
+        end
+        if s_i then
+          local b1 = utf8.offset(new_name, s_i + 1) or 1
+          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_items(insert_text, orig, rec.tname, rec.track_num, rec.folders, rec.take, seq)
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_insert_pos = math.max(0, math.min(insert_position, 100))
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+
+      return orig, new_name
+    end
+
+  -- 表格预览 - Tracks
+  elseif process_mode == 1 then
+    data = {}
+    for ti = 0, reaper.CountSelectedTracks(0)-1 do
+      data[#data+1] = reaper.GetSelectedTrack(0, ti)
+    end
+    builder = function(i)
+      local track    = data[i]
+      local _, orig  = reaper.GetSetMediaTrackInfo_String(track, "P_NAME", "", false)
+      local guid     = reaper.BR_GetMediaTrackGUID(track)
+      local num      = math.floor(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") + 0.5)
+      local parent = reaper.GetParentTrack(track) and select(2, reaper.GetTrackName(reaper.GetParentTrack(track), "")) or ""
+      local seq      = i
+      local new_name  = orig
+
+      -- 1) Rename
+      if enable_rename and rename_pattern ~= "" then
+        new_name = build_tracks(rename_pattern, orig, guid, num, parent, seq)
+      end
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_tracks(replace_text, orig, guid, num, parent, seq)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name)
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.min(remove_position, 100)
+        if safe_remove_pos < 0 then safe_remove_pos = 0 end
+        local s, e
+
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s = safe_remove_pos
+            e = math.min(name_length - 1, s + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e = name_length - safe_remove_pos - 1
+            s = e - safe_remove_cnt + 1
+            if s < 0 then s = 0 end
+          end
+        end
+
+        if s then
+          local b1 = utf8.offset(new_name, s + 1) or 1
+          local b2 = utf8.offset(new_name, e + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_tracks(insert_text, orig, guid, num, parent, seq)
+        local name_length = utf8.len(new_name)
+        local safe_insert_pos = math.min(insert_position, 100)
+        if safe_insert_pos < 0 then safe_insert_pos = 0 end
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+
+      return orig, new_name
+    end
+
+  -- 表格预览 - Region Manager
+  elseif process_mode == 2 then
+    data = get_sel_regions_mgr()
+    builder = function(i)
+      local region   = preview_regions[i]
+      local orig     = region.name
+      local new_name = orig
+  
+      -- 1) Rename
+      if enable_rename and rename_pattern ~= "" then
+        new_name = build_region_manager(rename_pattern, orig, region.index, i)
+      end
+  
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_region_manager(replace_text or "", orig, region.index, i)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name)
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.min(remove_position, 100)
+        if safe_remove_pos < 0 then safe_remove_pos = 0 end
+        local s, e
+
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s = safe_remove_pos
+            e = math.min(name_length - 1, s + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e = name_length - safe_remove_pos - 1
+            s = e - safe_remove_cnt + 1
+            if s < 0 then s = 0 end
+          end
+        end
+
+        if s then
+          local b1 = utf8.offset(new_name, s + 1) or 1
+          local b2 = utf8.offset(new_name, e + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_region_manager(insert_text, orig, region.index, i)
+        local name_length = utf8.len(new_name)
+        local safe_insert_pos = math.min(insert_position, 100)
+        if safe_insert_pos < 0 then safe_insert_pos = 0 end
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+  
+      return orig, new_name
+    end
+
+  -- 表格预览 - Regions (Time Selection)
+  elseif process_mode == 3 then
+    data = get_sel_regions()
+    builder = function(i)
+      local region = preview_regions[i]
+      local orig = region.name
+      local new_name  = orig
+  
+      -- 1) Rename
+      if enable_rename and rename_pattern ~= "" then
+        new_name = build_region_time(rename_pattern, orig, region.index, i)
+      end
+
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_region_time(replace_text or "", orig, region.index, i)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
+        local s_i, e_i
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s_i = safe_remove_pos
+            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e_i = name_length - safe_remove_pos - 1
+            s_i = math.max(0, e_i - safe_remove_cnt + 1)
+          end
+        end
+        if s_i then
+          local b1 = utf8.offset(new_name, s_i + 1) or 1
+          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_region_time(insert_text, orig, region.index, i)
+        local name_length = utf8.len(new_name)
+        local safe_insert_pos = math.min(insert_position, 100)
+        if safe_insert_pos < 0 then safe_insert_pos = 0 end
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+  
+      return orig, new_name
+    end
+
+  -- 表格预览 - Regions for Selected Items
+  elseif process_mode == 4 then
+    data = get_sel_regions_for_items()
+    builder = function(i)
+      local region   = preview_regions[i]
+      local orig     = region.name
+      local new_name = orig
+  
+      -- 1) Rename
+      if enable_rename and rename_pattern ~= "" then
+        new_name = build_region_for_items(rename_pattern, orig, region.index, i)
+      end
+  
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_region_for_items(replace_text or "", orig, region.index, i)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+  
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
+        local s_i, e_i
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s_i = safe_remove_pos
+            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e_i = name_length - safe_remove_pos - 1
+            s_i = math.max(0, e_i - safe_remove_cnt + 1)
+          end
+        end
+        if s_i then
+          local b1 = utf8.offset(new_name, s_i + 1) or 1
+          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+  
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_region_for_items(insert_text, orig, region.index, i)
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_insert_pos = math.max(0, math.min(insert_position, 100))
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+  
+      return orig, new_name
+    end
+
+  -- 表格预览 - Marker Manager
+  elseif process_mode == 5 then
+    data = get_sel_markers_mgr()
+    builder = function(i)
+      local marker   = preview_markers[i]
+      local orig     = marker.name
+      local new_name = orig
+  
+      -- 1) Rename
+      if enable_rename and rename_pattern ~= "" then
+        new_name = build_marker_manager(rename_pattern, orig, marker.index, i)
+      end
+  
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_marker_manager(replace_text or "", orig, marker.index, i)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+  
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name)
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.min(remove_position, 100)
+        if safe_remove_pos < 0 then safe_remove_pos = 0 end
+        local s, e
+
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s = safe_remove_pos
+            e = math.min(name_length - 1, s + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e = name_length - safe_remove_pos - 1
+            s = e - safe_remove_cnt + 1
+            if s < 0 then s = 0 end
+          end
+        end
+
+        if s then
+          local b1 = utf8.offset(new_name, s + 1) or 1
+          local b2 = utf8.offset(new_name, e + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+  
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_marker_manager(insert_text, orig, region.index, i)
+        local name_length = utf8.len(new_name)
+        local safe_insert_pos = math.min(insert_position, 100)
+        if safe_insert_pos < 0 then safe_insert_pos = 0 end
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+  
+      return orig, new_name
+    end
+
+  -- 表格预览 - Marker (Time Selection)
+  elseif process_mode == 6 then
+    data = get_sel_markers()
+    builder = function(i)
+      local marker   = preview_markers[i]
+      local orig     = marker.name
+      local new_name = orig
+
+      -- 1) Rename
+      if enable_rename and rename_pattern ~= "" then
+        new_name = build_marker_time(rename_pattern, orig, marker.index, i)
+      end
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_marker_time(replace_text or "", orig, marker.index, i)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
+        local s_i, e_i
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s_i = safe_remove_pos
+            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e_i = name_length - safe_remove_pos - 1
+            s_i = math.max(0, e_i - safe_remove_cnt + 1)
+          end
+        end
+        if s_i then
+          local b1 = utf8.offset(new_name, s_i + 1) or 1
+          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_marker_time(insert_text, orig, marker.index, i)
+        local name_length = utf8.len(new_name)
+        local safe_insert_pos = math.min(insert_position, 100)
+        if safe_insert_pos < 0 then safe_insert_pos = 0 end
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+
+      return orig, new_name
+    end
+
+  -- 表格预览 - Source Files (Selected Items)
+  elseif process_mode == 7 then
+    data = get_sorted_sources_data()
+    builder = function(i)
+      local data     = items[i]
+      local orig     = data.orig_name
+      local seq      = data.seqIndex
+      local new_name = orig
+
+      -- 1) Rename
+      if enable_rename then
+        new_name = build_sources(rename_pattern, orig, data.track_num, seq)
+      end
+      -- 2) Replace
+      if enable_replace and find_text ~= "" then
+        local pat = escape_pattern(find_text)
+        if ignore_case then
+          pat = make_case_insensitive_pattern(pat)
+        end
+        local repl = build_sources(replace_text or "", orig, data.track_num, seq)
+        if occurrence_mode == 0 then
+          new_name = new_name:gsub(pat, repl, 1)
+        elseif occurrence_mode == 1 then
+          new_name = replace_last(new_name, pat, repl)
+        else
+          new_name = new_name:gsub(pat, repl)
+        end
+      end
+      -- 3) Remove
+      if enable_remove and remove_count > 0 then
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_remove_cnt = math.min(remove_count, 100)
+        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
+        local s_i, e_i
+        if remove_side_index == 0 then
+          if safe_remove_pos < name_length then
+            s_i = safe_remove_pos
+            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
+          end
+        else
+          if safe_remove_pos < name_length then
+            e_i = name_length - safe_remove_pos - 1
+            s_i = math.max(0, e_i - safe_remove_cnt + 1)
+          end
+        end
+        if s_i then
+          local b1 = utf8.offset(new_name, s_i + 1) or 1
+          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
+          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
+        end
+      end
+      -- 4) Insert
+      if enable_insert and insert_text ~= "" then
+        local insert_str = build_sources(insert_text, orig, data.track_num, seq)
+        local name_length = utf8.len(new_name) or #new_name
+        local safe_insert_pos = math.max(0, math.min(insert_position, 100))
+        local insert_i
+
+        if insert_side_index == 0 then
+          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
+        else
+          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
+        end
+
+        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
+        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
+      end
+
+      return orig, new_name
+    end
+  else
+    data = {}
+    builder = function() return "", "" end
+  end
+  return data, builder
+end
+
 -- function transparent_link(ctx, label, url)
 --   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)
 --   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x00000000)
@@ -2091,6 +2803,63 @@ function support_popup(ctx)
     end
 
     reaper.ImGui_EndPopup(ctx)
+  end
+end
+
+-- 旧版手动管理flag
+local function preview_popup(ctx)
+  -- “Preview” 按钮
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x00000000)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x00000000)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),          yellow)
+
+  local _, pad_y  = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
+  local _, text_h = reaper.ImGui_CalcTextSize(ctx, label)
+  local button_h  = text_h + pad_y * 3.5
+
+  if reaper.ImGui_Button(ctx, "Preview##Menu", 0, button_h) then
+    show_preview_window = true
+  end
+  reaper.ImGui_PopStyleColor(ctx, 4)
+
+  -- 弹窗逻辑
+  if show_preview_window then
+    -- 首次打开时设置尺寸
+    reaper.ImGui_SetNextWindowSize(ctx, 600, 400, reaper.ImGui_Cond_FirstUseEver())
+    local data, builder = get_preview_data_and_builder()
+    local visible, open = reaper.ImGui_Begin(ctx, "Preview Panel", show_preview_window)
+    --reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_Text(ctx, string.format("Preview - %d Object(s)", #data))
+    show_preview_window = open
+    if visible then
+      -- 字体大小输入框（只能选预设尺寸）
+      reaper.ImGui_PushItemWidth(ctx, -60)
+      local changed, new_sz = reaper.ImGui_InputInt(
+        ctx,
+        "Font px",
+        preview_font_size,
+        2,   -- step
+        10   -- fast step (Ctrl+箭头)
+      )
+      if changed then
+        -- 限制为预设列表中的值
+        for _, v in ipairs(preview_font_sizes) do
+          if v == new_sz then preview_font_size = v break end
+        end
+      end
+
+      -- 选用已 attach 的字体
+      local f = preview_fonts[preview_font_size] or preview_fonts[12]
+      reaper.ImGui_PushFont(ctx, f)
+
+      -- 渲染预览表格
+      -- local data, builder = get_preview_data_and_builder()
+      render_preview_table_popup(ctx, PREVIEW_POPUP_TABLE_ID, #data, builder)
+
+      reaper.ImGui_PopFont(ctx)
+      reaper.ImGui_End(ctx)
+    end
   end
 end
 
@@ -2378,9 +3147,13 @@ local function frame()
 
   -- Item vs Source List 弹窗
   reaper.ImGui_SameLine(ctx)
-
   reaper.ImGui_PushFont(ctx, font_small)
   item_vs_source()
+  reaper.ImGui_PopFont(ctx)
+
+  reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_PushFont(ctx, font_small)
+  preview_popup(ctx)
   reaper.ImGui_PopFont(ctx)
 
   -- reaper.ImGui_PushFont(ctx, font_small)
@@ -2600,606 +3373,8 @@ local function frame()
     reaper.ImGui_PopFont(ctx)
   end
 
-  -- 预览表格 - Items
-  if process_mode == 0 then
-    local items = get_sorted_items_data()
-    render_preview_table(ctx, "itemspreview", #items, function(i)
-      local data     = items[i]
-      local orig     = data.orig_name
-      local seq      = data.seqIndex
-      local new_name = orig
-
-      -- 1) Rename
-      if enable_rename then
-        new_name = build_items(rename_pattern, orig, data.tname, data.track_num, data.folders, data.take, seq)
-      end
-      -- 2) Replace
-      if enable_replace and find_text ~= "" then
-        local pat = escape_pattern(find_text)
-        if ignore_case then
-          pat = make_case_insensitive_pattern(pat)
-        end
-        local repl = build_items(replace_text or "", orig, data.tname, data.track_num, data.folders, data.take, seq)
-        if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
-        elseif occurrence_mode == 1 then
-          new_name = replace_last(new_name, pat, repl)
-        else
-          new_name = new_name:gsub(pat, repl)
-        end
-      end
-      -- 3) Remove
-      if enable_remove and remove_count > 0 then
-        local name_length = utf8.len(new_name) or #new_name
-        local safe_remove_cnt = math.min(remove_count, 100)
-        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
-        local s_i, e_i
-        if remove_side_index == 0 then
-          if safe_remove_pos < name_length then
-            s_i = safe_remove_pos
-            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
-          end
-        else
-          if safe_remove_pos < name_length then
-            e_i = name_length - safe_remove_pos - 1
-            s_i = math.max(0, e_i - safe_remove_cnt + 1)
-          end
-        end
-        if s_i then
-          local b1 = utf8.offset(new_name, s_i + 1) or 1
-          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
-          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
-        end
-      end
-      -- 4) Insert
-      if enable_insert and insert_text ~= "" then
-        local insert_str = build_items(insert_text, orig, data.tname, data.track_num, data.folders, data.take, seq)
-        local name_length = utf8.len(new_name) or #new_name
-        local safe_insert_pos = math.max(0, math.min(insert_position, 100))
-        local insert_i
-
-        if insert_side_index == 0 then
-          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
-        else
-          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
-        end
-
-        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
-        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
-      end
-
-      return orig, new_name
-    end)
-  end
-
-  -- 表格预览 - Tracks
-  if process_mode == 1 then
-    local cnt = reaper.CountSelectedTracks(0)
-    render_preview_table(ctx, "trackspreview", cnt, function(i)
-      local track    = reaper.GetSelectedTrack(0, i - 1)
-      local _, orig  = reaper.GetSetMediaTrackInfo_String(track, "P_NAME", "", false)
-      local guid     = reaper.BR_GetMediaTrackGUID(track)
-      local num      = math.floor(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") + 0.5)
-      local parent = reaper.GetParentTrack(track) and select(2, reaper.GetTrackName(reaper.GetParentTrack(track), "")) or ""
-      local seq      = i
-      local new_name  = orig
-
-      -- 1) Rename
-      if enable_rename and rename_pattern ~= "" then
-        new_name = build_tracks(rename_pattern, orig, guid, num, parent, seq)
-      end
-      -- 2) Replace
-      if enable_replace and find_text ~= "" then
-        local pat = escape_pattern(find_text)
-        if ignore_case then
-          pat = make_case_insensitive_pattern(pat)
-        end
-        local repl = build_tracks(replace_text, orig, guid, num, parent, seq)
-        if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
-        elseif occurrence_mode == 1 then
-          new_name = replace_last(new_name, pat, repl)
-        else
-          new_name = new_name:gsub(pat, repl)
-        end
-      end
-      -- 3) Remove
-      if enable_remove and remove_count > 0 then
-        local name_length = utf8.len(new_name)
-        local safe_remove_cnt = math.min(remove_count, 100)
-        local safe_remove_pos = math.min(remove_position, 100)
-        if safe_remove_pos < 0 then safe_remove_pos = 0 end
-        local s, e
-
-        if remove_side_index == 0 then
-          if safe_remove_pos < name_length then
-            s = safe_remove_pos
-            e = math.min(name_length - 1, s + safe_remove_cnt - 1)
-          end
-        else
-          if safe_remove_pos < name_length then
-            e = name_length - safe_remove_pos - 1
-            s = e - safe_remove_cnt + 1
-            if s < 0 then s = 0 end
-          end
-        end
-
-        if s then
-          local b1 = utf8.offset(new_name, s + 1) or 1
-          local b2 = utf8.offset(new_name, e + 2) or (#new_name + 1)
-          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
-        end
-      end
-      -- 4) Insert
-      if enable_insert and insert_text ~= "" then
-        local insert_str = build_tracks(insert_text, orig, guid, num, parent, seq)
-        local name_length = utf8.len(new_name)
-        local safe_insert_pos = math.min(insert_position, 100)
-        if safe_insert_pos < 0 then safe_insert_pos = 0 end
-        local insert_i
-
-        if insert_side_index == 0 then
-          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
-        else
-          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
-        end
-
-        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
-        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
-      end
-
-      return orig, new_name
-    end)
-  end
-
-  -- 表格预览 - Region Manager
-  if process_mode == 2 then
-    local preview_regions = get_sel_regions_mgr()
-    render_preview_table(ctx, "region_mgr_preview", #preview_regions, function(i)
-      local region   = preview_regions[i]
-      local orig     = region.name
-      local new_name = orig
-  
-      -- 1) Rename
-      if enable_rename and rename_pattern ~= "" then
-        new_name = build_region_manager(rename_pattern, orig, region.index, i)
-      end
-  
-      -- 2) Replace
-      if enable_replace and find_text ~= "" then
-        local pat = escape_pattern(find_text)
-        if ignore_case then
-          pat = make_case_insensitive_pattern(pat)
-        end
-        local repl = build_region_manager(replace_text or "", orig, region.index, i)
-        if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
-        elseif occurrence_mode == 1 then
-          new_name = replace_last(new_name, pat, repl)
-        else
-          new_name = new_name:gsub(pat, repl)
-        end
-      end
-
-      -- 3) Remove
-      if enable_remove and remove_count > 0 then
-        local name_length = utf8.len(new_name)
-        local safe_remove_cnt = math.min(remove_count, 100)
-        local safe_remove_pos = math.min(remove_position, 100)
-        if safe_remove_pos < 0 then safe_remove_pos = 0 end
-        local s, e
-
-        if remove_side_index == 0 then
-          if safe_remove_pos < name_length then
-            s = safe_remove_pos
-            e = math.min(name_length - 1, s + safe_remove_cnt - 1)
-          end
-        else
-          if safe_remove_pos < name_length then
-            e = name_length - safe_remove_pos - 1
-            s = e - safe_remove_cnt + 1
-            if s < 0 then s = 0 end
-          end
-        end
-
-        if s then
-          local b1 = utf8.offset(new_name, s + 1) or 1
-          local b2 = utf8.offset(new_name, e + 2) or (#new_name + 1)
-          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
-        end
-      end
-
-      -- 4) Insert
-      if enable_insert and insert_text ~= "" then
-        local insert_str = build_region_manager(insert_text, orig, region.index, i)
-        local name_length = utf8.len(new_name)
-        local safe_insert_pos = math.min(insert_position, 100)
-        if safe_insert_pos < 0 then safe_insert_pos = 0 end
-        local insert_i
-
-        if insert_side_index == 0 then
-          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
-        else
-          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
-        end
-
-        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
-        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
-      end
-  
-      return orig, new_name
-    end)
-  end
-
-  -- 表格预览 - Regions (Time Selection)
-  if process_mode == 3 then
-    local preview_regions = get_sel_regions()
-    render_preview_table(ctx, "region_ts_preview", #preview_regions, function(i)
-      local region = preview_regions[i]
-      local orig = region.name
-      local new_name  = orig
-  
-      -- 1) Rename
-      if enable_rename and rename_pattern ~= "" then
-        new_name = build_region_time(rename_pattern, orig, region.index, i)
-      end
-
-      -- 2) Replace
-      if enable_replace and find_text ~= "" then
-        local pat = escape_pattern(find_text)
-        if ignore_case then
-          pat = make_case_insensitive_pattern(pat)
-        end
-        local repl = build_region_time(replace_text or "", orig, region.index, i)
-        if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
-        elseif occurrence_mode == 1 then
-          new_name = replace_last(new_name, pat, repl)
-        else
-          new_name = new_name:gsub(pat, repl)
-        end
-      end
-      -- 3) Remove
-      if enable_remove and remove_count > 0 then
-        local name_length = utf8.len(new_name) or #new_name
-        local safe_remove_cnt = math.min(remove_count, 100)
-        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
-        local s_i, e_i
-        if remove_side_index == 0 then
-          if safe_remove_pos < name_length then
-            s_i = safe_remove_pos
-            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
-          end
-        else
-          if safe_remove_pos < name_length then
-            e_i = name_length - safe_remove_pos - 1
-            s_i = math.max(0, e_i - safe_remove_cnt + 1)
-          end
-        end
-        if s_i then
-          local b1 = utf8.offset(new_name, s_i + 1) or 1
-          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
-          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
-        end
-      end
-      -- 4) Insert
-      if enable_insert and insert_text ~= "" then
-        local insert_str = build_region_time(insert_text, orig, region.index, i)
-        local name_length = utf8.len(new_name)
-        local safe_insert_pos = math.min(insert_position, 100)
-        if safe_insert_pos < 0 then safe_insert_pos = 0 end
-        local insert_i
-
-        if insert_side_index == 0 then
-          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
-        else
-          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
-        end
-
-        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
-        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
-      end
-  
-      return orig, new_name
-    end)
-  end
-
-  -- 表格预览 - Regions for Selected Items
-  if process_mode == 4 then
-    local preview_regions = get_sel_regions_for_items()
-    render_preview_table(ctx, "region_items_preview", #preview_regions, function(i)
-      local region   = preview_regions[i]
-      local orig     = region.name
-      local new_name = orig
-  
-      -- 1) Rename
-      if enable_rename and rename_pattern ~= "" then
-        new_name = build_region_for_items(rename_pattern, orig, region.index, i)
-      end
-  
-      -- 2) Replace
-      if enable_replace and find_text ~= "" then
-        local pat = escape_pattern(find_text)
-        if ignore_case then
-          pat = make_case_insensitive_pattern(pat)
-        end
-        local repl = build_region_for_items(replace_text or "", orig, region.index, i)
-        if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
-        elseif occurrence_mode == 1 then
-          new_name = replace_last(new_name, pat, repl)
-        else
-          new_name = new_name:gsub(pat, repl)
-        end
-      end
-  
-      -- 3) Remove
-      if enable_remove and remove_count > 0 then
-        local name_length = utf8.len(new_name) or #new_name
-        local safe_remove_cnt = math.min(remove_count, 100)
-        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
-        local s_i, e_i
-        if remove_side_index == 0 then
-          if safe_remove_pos < name_length then
-            s_i = safe_remove_pos
-            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
-          end
-        else
-          if safe_remove_pos < name_length then
-            e_i = name_length - safe_remove_pos - 1
-            s_i = math.max(0, e_i - safe_remove_cnt + 1)
-          end
-        end
-        if s_i then
-          local b1 = utf8.offset(new_name, s_i + 1) or 1
-          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
-          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
-        end
-      end
-  
-      -- 4) Insert
-      if enable_insert and insert_text ~= "" then
-        local insert_str = build_region_for_items(insert_text, orig, region.index, i)
-        local name_length = utf8.len(new_name) or #new_name
-        local safe_insert_pos = math.max(0, math.min(insert_position, 100))
-        local insert_i
-
-        if insert_side_index == 0 then
-          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
-        else
-          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
-        end
-
-        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
-        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
-      end
-  
-      return orig, new_name
-    end)
-  end
-
-  -- 表格预览 - Marker Manager
-  if process_mode == 5 then
-    local preview_markers = get_sel_markers_mgr()
-    render_preview_table(ctx, "marker_mgr_preview", #preview_markers, function(i)
-      local marker   = preview_markers[i]
-      local orig     = marker.name
-      local new_name = orig
-  
-      -- 1) Rename
-      if enable_rename and rename_pattern ~= "" then
-        new_name = build_marker_manager(rename_pattern, orig, marker.index, i)
-      end
-  
-      -- 2) Replace
-      if enable_replace and find_text ~= "" then
-        local pat = escape_pattern(find_text)
-        if ignore_case then
-          pat = make_case_insensitive_pattern(pat)
-        end
-        local repl = build_marker_manager(replace_text or "", orig, marker.index, i)
-        if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
-        elseif occurrence_mode == 1 then
-          new_name = replace_last(new_name, pat, repl)
-        else
-          new_name = new_name:gsub(pat, repl)
-        end
-      end
-  
-      -- 3) Remove
-      if enable_remove and remove_count > 0 then
-        local name_length = utf8.len(new_name)
-        local safe_remove_cnt = math.min(remove_count, 100)
-        local safe_remove_pos = math.min(remove_position, 100)
-        if safe_remove_pos < 0 then safe_remove_pos = 0 end
-        local s, e
-
-        if remove_side_index == 0 then
-          if safe_remove_pos < name_length then
-            s = safe_remove_pos
-            e = math.min(name_length - 1, s + safe_remove_cnt - 1)
-          end
-        else
-          if safe_remove_pos < name_length then
-            e = name_length - safe_remove_pos - 1
-            s = e - safe_remove_cnt + 1
-            if s < 0 then s = 0 end
-          end
-        end
-
-        if s then
-          local b1 = utf8.offset(new_name, s + 1) or 1
-          local b2 = utf8.offset(new_name, e + 2) or (#new_name + 1)
-          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
-        end
-      end
-  
-      -- 4) Insert
-      if enable_insert and insert_text ~= "" then
-        local insert_str = build_marker_manager(insert_text, orig, region.index, i)
-        local name_length = utf8.len(new_name)
-        local safe_insert_pos = math.min(insert_position, 100)
-        if safe_insert_pos < 0 then safe_insert_pos = 0 end
-        local insert_i
-
-        if insert_side_index == 0 then
-          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
-        else
-          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
-        end
-
-        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
-        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
-      end
-  
-      return orig, new_name
-    end)
-  end
-
-  -- 表格预览 - Marker (Time Selection)
-  if process_mode == 6 then
-    local preview_markers = get_sel_markers()
-    render_preview_table(ctx, "marker_ts_preview", #preview_markers, function(i)
-      local marker   = preview_markers[i]
-      local orig     = marker.name
-      local new_name = orig
-
-      -- 1) Rename
-      if enable_rename and rename_pattern ~= "" then
-        new_name = build_marker_time(rename_pattern, orig, marker.index, i)
-      end
-      -- 2) Replace
-      if enable_replace and find_text ~= "" then
-        local pat = escape_pattern(find_text)
-        if ignore_case then
-          pat = make_case_insensitive_pattern(pat)
-        end
-        local repl = build_marker_time(replace_text or "", orig, marker.index, i)
-        if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
-        elseif occurrence_mode == 1 then
-          new_name = replace_last(new_name, pat, repl)
-        else
-          new_name = new_name:gsub(pat, repl)
-        end
-      end
-      -- 3) Remove
-      if enable_remove and remove_count > 0 then
-        local name_length = utf8.len(new_name) or #new_name
-        local safe_remove_cnt = math.min(remove_count, 100)
-        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
-        local s_i, e_i
-        if remove_side_index == 0 then
-          if safe_remove_pos < name_length then
-            s_i = safe_remove_pos
-            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
-          end
-        else
-          if safe_remove_pos < name_length then
-            e_i = name_length - safe_remove_pos - 1
-            s_i = math.max(0, e_i - safe_remove_cnt + 1)
-          end
-        end
-        if s_i then
-          local b1 = utf8.offset(new_name, s_i + 1) or 1
-          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
-          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
-        end
-      end
-      -- 4) Insert
-      if enable_insert and insert_text ~= "" then
-        local insert_str = build_marker_time(insert_text, orig, marker.index, i)
-        local name_length = utf8.len(new_name)
-        local safe_insert_pos = math.min(insert_position, 100)
-        if safe_insert_pos < 0 then safe_insert_pos = 0 end
-        local insert_i
-
-        if insert_side_index == 0 then
-          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
-        else
-          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
-        end
-
-        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
-        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
-      end
-
-      return orig, new_name
-    end)
-  end
-
-  -- 表格预览 - Source Files (Selected Items)
-  if process_mode == 7 then
-    local items = get_sorted_sources_data()
-    render_preview_table(ctx, "sourcespreview", #items, function(i)
-      local data     = items[i]
-      local orig     = data.orig_name
-      local seq      = data.seqIndex
-      local new_name = orig
-
-      -- 1) Rename
-      if enable_rename then
-        new_name = build_sources(rename_pattern, orig, data.track_num, seq)
-      end
-      -- 2) Replace
-      if enable_replace and find_text ~= "" then
-        local pat = escape_pattern(find_text)
-        if ignore_case then
-          pat = make_case_insensitive_pattern(pat)
-        end
-        local repl = build_sources(replace_text or "", orig, data.track_num, seq)
-        if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
-        elseif occurrence_mode == 1 then
-          new_name = replace_last(new_name, pat, repl)
-        else
-          new_name = new_name:gsub(pat, repl)
-        end
-      end
-      -- 3) Remove
-      if enable_remove and remove_count > 0 then
-        local name_length = utf8.len(new_name) or #new_name
-        local safe_remove_cnt = math.min(remove_count, 100)
-        local safe_remove_pos = math.max(0, math.min(remove_position, 100))
-        local s_i, e_i
-        if remove_side_index == 0 then
-          if safe_remove_pos < name_length then
-            s_i = safe_remove_pos
-            e_i = math.min(name_length - 1, s_i + safe_remove_cnt - 1)
-          end
-        else
-          if safe_remove_pos < name_length then
-            e_i = name_length - safe_remove_pos - 1
-            s_i = math.max(0, e_i - safe_remove_cnt + 1)
-          end
-        end
-        if s_i then
-          local b1 = utf8.offset(new_name, s_i + 1) or 1
-          local b2 = utf8.offset(new_name, e_i + 2) or (#new_name + 1)
-          new_name = new_name:sub(1, b1 - 1) .. new_name:sub(b2)
-        end
-      end
-      -- 4) Insert
-      if enable_insert and insert_text ~= "" then
-        local insert_str = build_sources(insert_text, orig, data.track_num, seq)
-        local name_length = utf8.len(new_name) or #new_name
-        local safe_insert_pos = math.max(0, math.min(insert_position, 100))
-        local insert_i
-
-        if insert_side_index == 0 then
-          insert_i = (safe_insert_pos <= name_length) and safe_insert_pos or name_length
-        else
-          insert_i = (safe_insert_pos >= name_length) and 0 or (name_length - safe_insert_pos)
-        end
-
-        local b = utf8.offset(new_name, insert_i + 1) or (#new_name + 1)
-        new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
-      end
-
-      return orig, new_name
-    end)
-  end
+  local data, builder = get_preview_data_and_builder()
+  render_preview_table(ctx, PREVIEW_TABLE_ID, #data, builder)
 
   -- Process 标题
   reaper.ImGui_SeparatorText(ctx, "Batch Mode")
