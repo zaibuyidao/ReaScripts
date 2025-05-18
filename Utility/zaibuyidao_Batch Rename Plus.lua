@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.9
+-- @version 1.0.10
 -- @author zaibuyidao
 -- @changelog
---   + Introduced user preset management - allowing users to save, rename, and delete presets, with full import/export support.
+--   * Fix: nil indexing error in Batch Mode.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -2447,7 +2447,7 @@ local function get_preview_data_and_builder()
   elseif process_mode == 2 then
     data = get_sel_regions_mgr()
     builder = function(i)
-      local region   = preview_regions[i]
+      local region   = data[i]
       local orig     = region.name
       local new_name = orig
   
@@ -2525,7 +2525,7 @@ local function get_preview_data_and_builder()
   elseif process_mode == 3 then
     data = get_sel_regions()
     builder = function(i)
-      local region = preview_regions[i]
+      local region = data[i]
       local orig = region.name
       local new_name  = orig
   
@@ -2597,7 +2597,7 @@ local function get_preview_data_and_builder()
   elseif process_mode == 4 then
     data = get_sel_regions_for_items()
     builder = function(i)
-      local region   = preview_regions[i]
+      local region   = data[i]
       local orig     = region.name
       local new_name = orig
   
@@ -2670,7 +2670,7 @@ local function get_preview_data_and_builder()
   elseif process_mode == 5 then
     data = get_sel_markers_mgr()
     builder = function(i)
-      local marker   = preview_markers[i]
+      local marker   = data[i]
       local orig     = marker.name
       local new_name = orig
   
@@ -2748,7 +2748,7 @@ local function get_preview_data_and_builder()
   elseif process_mode == 6 then
     data = get_sel_markers()
     builder = function(i)
-      local marker   = preview_markers[i]
+      local marker   = data[i]
       local orig     = marker.name
       local new_name = orig
 
@@ -2819,7 +2819,7 @@ local function get_preview_data_and_builder()
   elseif process_mode == 7 then
     data = get_sorted_sources_data()
     builder = function(i)
-      local data     = items[i]
+      local data     = data[i]
       local orig     = data.orig_name
       local seq      = data.seqIndex
       local new_name = orig
