@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @changelog
---   + After clicking the “Preview” button, a preview popup appears. You can drag it and dock it to any side of the main script interface for a more flexible workflow.
+--   + Introduced user preset management - allowing users to save, rename, and delete presets, with full import/export support.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -88,30 +88,186 @@ local show_list_data = show_list_data or {}
 local show_preview_window = false
 local preview_items = {}
 
+--------------------------------------------------------------------------------
+-- 用户预设
+--------------------------------------------------------------------------------
+local presetNames = {}
+local selectedPreset = 1 -- 默认为 Reset to factory default
+local newPresetName = ""
+local showSavePopup = false
+
+-- 重置到初始状态
+local function ResetState()
+  rename_pattern    = ""
+  find_text         = ""
+  replace_text      = ""
+  remove_count      = 0
+  remove_position   = 0
+  remove_side_index = 0
+  insert_text       = ""
+  insert_position   = 0
+  insert_side_index = 0
+  enable_rename     = false
+  enable_replace    = false
+  enable_remove     = false
+  enable_insert     = false
+  ignore_case       = false
+  occurrence_mode   = 2 -- All 模式
+end
+
+-- 判断表中是否包含某值
+local function TableContains(t, val)
+  for _,v in ipairs(t) do if v == val then return true end end
+  return false
+end
+
+-- 读取所有用户预设名
+local function LoadPresetList()
+  presetNames = {}
+  local listStr = reaper.GetExtState("BatchRenamePresets", "__list") or ""
+  for name in listStr:gmatch("([^,]+)") do
+    if name ~= "" then table.insert(presetNames, name) end
+  end
+  -- 终把 No preset 放到最前面
+  table.insert(presetNames, 1, "No preset")
+end
+
+-- 保存用户预设名列表
+local function SavePresetList()
+  local userNames = {}
+  for i=2, #presetNames do -- skip index 1 (恢复出厂设置)
+    userNames[#userNames+1] = presetNames[i]
+  end
+  local listStr = table.concat(userNames, ",")
+  reaper.SetExtState("BatchRenamePresets", "__list", listStr, true)
+end
+
+-- 将当前状态编码为字符串
+local function EncodePreset()
+  local data = {
+    rename_pattern,
+    find_text,
+    replace_text,
+    tostring(remove_count),
+    tostring(remove_position),
+    tostring(remove_side_index),
+    insert_text,
+    tostring(insert_position),
+    tostring(insert_side_index),
+    enable_rename  and "1" or "0",
+    enable_replace and "1" or "0",
+    enable_remove  and "1" or "0",
+    enable_insert  and "1" or "0",
+    ignore_case    and "1" or "0",
+    tostring(occurrence_mode),
+  }
+  return table.concat(data, "\t")
+end
+
+-- 应用某条预设（解码并赋值）
+local function ApplyPreset(dataStr)
+  local params = {}
+  for v in dataStr:gmatch("([^\t]*)") do table.insert(params, v) end
+  rename_pattern    = params[1] or ""
+  find_text         = params[2] or ""
+  replace_text      = params[3] or ""
+  remove_count      = tonumber(params[4]) or 0
+  remove_position   = tonumber(params[5]) or 0
+  remove_side_index = tonumber(params[6]) or 0
+  insert_text       = params[7] or ""
+  insert_position   = tonumber(params[8]) or 0
+  insert_side_index = tonumber(params[9]) or 0
+  enable_rename     = params[10]=="1"
+  enable_replace    = params[11]=="1"
+  enable_remove     = params[12]=="1"
+  enable_insert     = params[13]=="1"
+  ignore_case       = params[14]=="1"
+  occurrence_mode   = tonumber(params[15]) or 2
+end
+
+-- 通用 ImGui 文本输入对话框
+local function ImGui_TextPrompt(ctx, prompt, buf_label, buf_size, callback)
+  -- 如果 show 被置为 true 就打开弹窗一次
+  if prompt.show then
+    reaper.ImGui_OpenPopup(ctx, prompt.id)
+    prompt.show = false
+  end
+
+  -- 居中弹窗
+  local vp = reaper.ImGui_GetWindowViewport(ctx)
+  local cx, cy = reaper.ImGui_Viewport_GetCenter(vp)
+  reaper.ImGui_SetNextWindowPos(ctx, cx, cy, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
+
+  -- 真正绘制 Modal
+  if reaper.ImGui_BeginPopupModal(ctx, prompt.id, nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+    -- 标题文字
+    reaper.ImGui_Text(ctx, prompt.title)
+    -- 文本输入框
+    local changed
+    changed, prompt.buffer = reaper.ImGui_InputText(ctx, buf_label, prompt.buffer, buf_size)
+    -- 确定按钮
+    if reaper.ImGui_Button(ctx, "OK") then -- ctx, "OK", 120, 0
+      callback(prompt.buffer)
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+
+    reaper.ImGui_SameLine(ctx)
+    -- 取消按钮
+    if reaper.ImGui_Button(ctx, "Cancel") then -- ctx, "OK", 120, 0
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+
+    reaper.ImGui_EndPopup(ctx)
+  end
+end
+
+-- 用于保存预设和重命名预设的两个 prompt 对象
+local savePresetPrompt = {
+  id     = "Save Preset",
+  title  = "Enter a name for the new preset:",
+  buffer = "",
+  show   = false
+}
+
+local renamePresetPrompt = {
+  id      = "Rename Preset",
+  title   = "Enter a new name for the preset:",
+  buffer  = "",
+  show    = false,
+  oldName = "" -- 用来暂存旧名字
+}
+
+-- 预设初始加载
+LoadPresetList()
+ResetState()
+
+--------------------------------------------------------------------------------
+-- 颜色相关
+--------------------------------------------------------------------------------
 -- 完全透明
-local transparent = 0x00000000  -- R=00 G=00 B=00 A=00
-local yellow      = 0xFFFF00FF  -- 纯黄，RGBA 全不透明
+local transparent = 0x00000000 -- R=00 G=00 B=00 A=00
+local yellow      = 0xFFFF00FF -- 纯黄，RGBA 全不透明
 -- 基本色 (100% 不透明)
-local white       = 0xFFFFFFFF  -- 白色
-local black       = 0x000000FF  -- 黑色
-local red         = 0xFF0000FF  -- 红色
-local green       = 0x00FF00FF  -- 绿色
-local blue        = 0x0000FFFF  -- 蓝色
-local yellow      = 0xFFFF00FF  -- 黄色
-local cyan        = 0x00FFFFFF  -- 青色
-local magenta     = 0xFF00FFFF  -- 品红
+local white       = 0xFFFFFFFF -- 白色
+local black       = 0x000000FF -- 黑色
+local red         = 0xFF0000FF -- 红色
+local green       = 0x00FF00FF -- 绿色
+local blue        = 0x0000FFFF -- 蓝色
+local yellow      = 0xFFFF00FF -- 黄色
+local cyan        = 0x00FFFFFF -- 青色
+local magenta     = 0xFF00FFFF -- 品红
 -- 灰度
-local gray        = 0x808080FF  -- 中灰
-local lightGray   = 0xC0C0C0FF  -- 浅灰
-local darkGray    = 0x404040FF  -- 深灰
+local gray        = 0x808080FF -- 中灰
+local lightGray   = 0xC0C0C0FF -- 浅灰
+local darkGray    = 0x404040FF -- 深灰
 -- 其他常用色
-local orange      = 0xFFA500FF  -- 橙色
-local purple      = 0x800080FF  -- 紫色
-local pink        = 0xFFC0CBFF  -- 粉色
-local brown       = 0xA52A2AFF  -- 棕色
-local lime        = 0x32CD32FF  -- 酸橙绿
-local gold        = 0xFFD700FF  -- 金色
-local silver      = 0xC0C0C0FF  -- 银色
+local orange      = 0xFFA500FF -- 橙色
+local purple      = 0x800080FF -- 紫色
+local pink        = 0xFFC0CBFF -- 粉色
+local brown       = 0xA52A2AFF -- 棕色
+local lime        = 0x32CD32FF -- 酸橙绿
+local gold        = 0xFFD700FF -- 金色
+local silver      = 0xC0C0C0FF -- 银色
 
 -- 预览表格
 local default_preview_open = false
@@ -280,7 +436,7 @@ local function render_preview_table(ctx, id, realCount, row_builder)
 
   local tblFlags1 = tables.horizontal.flags1 or 0
   local ok
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Resize Columns", tblFlags1, reaper.ImGui_TableFlags_Resizable())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Resize", tblFlags1, reaper.ImGui_TableFlags_Resizable())
   reaper.ImGui_SameLine(ctx)
   ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Horizontal Scroll", tblFlags1, reaper.ImGui_TableFlags_ScrollX())
   reaper.ImGui_SameLine(ctx)
@@ -2834,6 +2990,7 @@ local function preview_popup(ctx)
     show_preview_window = open
     if visible then
       -- 字体大小输入框（只能选预设尺寸）
+      -- reaper.ImGui_SameLine(ctx)
       reaper.ImGui_PushItemWidth(ctx, -60)
       local changed, new_sz = reaper.ImGui_InputInt(
         ctx,
@@ -3173,6 +3330,170 @@ local function frame()
   -- reaper.ImGui_PopFont(ctx)
 
   reaper.ImGui_PushItemWidth(ctx, -90)
+
+  -- 用户预设
+  local comboLabel = (selectedPreset == 1) and "No preset" or presetNames[selectedPreset]
+  if reaper.ImGui_BeginCombo(ctx, "##Presets", comboLabel) then
+    -- 1. Reset to factory default
+    if reaper.ImGui_Selectable(ctx, "Reset to factory default", false) then
+      selectedPreset = 1
+      ResetState()
+    end
+
+    -- 2. 如果当前选中 Reset to factory default, 就在下面显示提示文本 No preset
+    -- if selectedPreset == 1 then
+    --   reaper.ImGui_TextDisabled(ctx, "No preset") -- 灰色
+    --   -- reaper.ImGui_Text(ctx, "No preset")
+    -- end
+
+    -- 3. 列出所有用户预设（从 index=2 开始）
+    for i = 2, #presetNames do
+      local name = presetNames[i]
+      local isSel = (selectedPreset == i)
+      if reaper.ImGui_Selectable(ctx, name, isSel) then
+        selectedPreset = i
+        local dataStr = reaper.GetExtState("BatchRenamePresets", name)
+        if dataStr and dataStr ~= "" then
+          ApplyPreset(dataStr)
+        end
+      end
+    end
+
+    reaper.ImGui_EndCombo(ctx)
+  end
+
+  reaper.ImGui_SameLine(ctx)
+  -- 管理预设按钮
+  if reaper.ImGui_Button(ctx, " + ##PresetManagerBtn") then
+    reaper.ImGui_OpenPopup(ctx, "PresetManagerPopup")
+  end
+
+  -- 管理预设列表
+  if reaper.ImGui_BeginPopup(ctx, "PresetManagerPopup") then
+    local canModify = (selectedPreset > 1)
+
+    -- 1. 保存预设，始终可用
+    -- if reaper.ImGui_MenuItem(ctx, "Save Preset...", nil, false, true) then
+    --   newPresetName = ""
+    --   showSavePopup = true
+    -- end
+
+    if reaper.ImGui_MenuItem(ctx, "Save Preset...", nil, false, true) then
+      savePresetPrompt.buffer = ""
+      savePresetPrompt.show   = true
+    end
+
+    -- 2. 删除预设
+    if reaper.ImGui_MenuItem(ctx, "Delete Preset", nil, false, canModify) then
+      local nameToDel = presetNames[selectedPreset]
+      table.remove(presetNames, selectedPreset)
+      SavePresetList()
+      reaper.DeleteExtState("BatchRenamePresets", nameToDel, true)
+      selectedPreset = 1
+      ResetState()
+    end
+
+    -- 3. 重命名预设
+    if reaper.ImGui_MenuItem(ctx, "Rename Preset...", nil, false, canModify) then
+      renamePresetPrompt.oldName = presetNames[selectedPreset]
+      renamePresetPrompt.buffer  = renamePresetPrompt.oldName
+      renamePresetPrompt.show    = true
+    end
+
+    -- 4. 导出所有用户预设
+    reaper.ImGui_Separator(ctx)
+    if reaper.ImGui_MenuItem(ctx, "Export Presets") then
+      local filter = "Text Files (*.txt)\0*.txt\0All Files\0*.*\0"
+      local retval, file = reaper.JS_Dialog_BrowseForSaveFile(
+        "Export Presets", -- 标题
+        "",               -- 初始路径
+        filter,           -- 过滤器
+        "txt"             -- 默认后缀，不含点
+      )
+      -- retval==1 表示用户点了保存
+      if retval == 1 and file and file ~= "" then
+        -- 如果用户没加后缀就补 .txt
+        if not file:match("%.[^%.]+$") then file = file .. ".txt" end
+        local f, err = io.open(file, "w")
+        if not f then
+          reaper.MB("Failed to open file for writing:\n" .. err, "Error", 0)
+        else
+          for i = 2, #presetNames do
+            local name = presetNames[i]
+            local data = reaper.GetExtState("BatchRenamePresets", name) or ""
+            f:write(name, "\t", data, "\n")
+          end
+          f:close()
+          reaper.MB("Exported "..(#presetNames-1).." presets to:\n"..file, "Export Presets", 0)
+        end
+      end
+    end
+    -- 5. 导入用户预设
+    if reaper.ImGui_MenuItem(ctx, "Import Presets") then
+      local r1, r2 = reaper.GetUserFileNameForRead("", "Import Presets", "*.txt")
+      local file
+      if type(r1)=="string" then
+        file = r1
+      elseif type(r2)=="string" then
+        file = r2
+      end
+      -- 如果用户取消或结果不是字符串就跳过
+      if not file or file == "" then
+        -- 无操作
+      else
+        local f, err = io.open(file, "r")
+        if not f then
+          reaper.MB("Failed to open file for reading:\n" .. err, "Error", 0)
+        else
+          local count = 0
+          for line in f:lines() do
+            local name, data = line:match("([^\t]+)\t?(.*)")
+            if name and name ~= "" and name ~= presetNames[1] then
+              if not TableContains(presetNames, name) then
+                table.insert(presetNames, name)
+              end
+              reaper.SetExtState("BatchRenamePresets", name, data or "", true)
+              count = count + 1
+            end
+          end
+          f:close()
+          SavePresetList()
+          reaper.MB("Imported "..count.." presets from:\n"..file, "Import Presets", 0)
+        end
+      end
+    end
+
+    reaper.ImGui_EndPopup(ctx)
+  end
+
+  -- Save Preset 对话框
+  ImGui_TextPrompt(ctx, savePresetPrompt, "##savePresetInput", 128, function(name)
+    -- 确认保存时的回调
+    -- 1. 插入新预设名
+    table.insert(presetNames, name)
+    SavePresetList()
+    -- 2. 写入当前设置
+    local dataStr = EncodePreset()
+    reaper.SetExtState("BatchRenamePresets", name, dataStr, true)
+    -- 3. 选中刚创建的预设
+    for i,n in ipairs(presetNames) do
+      if n == name then selectedPreset = i; break end
+    end
+  end)
+  -- Rename Preset 对话框
+  ImGui_TextPrompt(ctx, renamePresetPrompt, "##renamePresetInput", 128, function(name)
+    local old = renamePresetPrompt.oldName
+    if old and old ~= name then
+      -- 1. 读取并迁移数据
+      local dataStr = reaper.GetExtState("BatchRenamePresets", old)
+      reaper.DeleteExtState("BatchRenamePresets", old, true)
+      reaper.SetExtState("BatchRenamePresets", name, dataStr or "", true)
+      -- 2. 更新列表
+      presetNames[selectedPreset] = name
+      SavePresetList()
+    end
+  end)
+
   reaper.ImGui_SeparatorText(ctx, 'Settings')
   if process_mode == 0 then
     example_text = "Example: $item_d=0001_a=E-A_r=4"
@@ -3188,6 +3509,8 @@ local function frame()
     example_text = "Example: $marker_d=0001_a=E-A_r=4"
   elseif process_mode == 6 then
     example_text = "Example: $marker_d=0001_a=E-A_r=4"
+  elseif process_mode == 7 then
+    example_text = "Example: $source_d=0001_a=E-A_r=4"
   end
 
   -- 1) Rename
@@ -3337,7 +3660,7 @@ local function frame()
   end
   reaper.ImGui_EndDisabled(ctx)
 
-  -- eaper.ImGui_SeparatorText(ctx, 'Options')
+  -- reaper.ImGui_SeparatorText(ctx, 'Options')
   reaper.ImGui_Separator(ctx)
 
   local changed7, newCycle = reaper.ImGui_Checkbox(ctx, "Range Cycle Mode", use_cycle_mode)
@@ -3376,10 +3699,79 @@ local function frame()
   local data, builder = get_preview_data_and_builder()
   render_preview_table(ctx, PREVIEW_TABLE_ID, #data, builder)
 
-  -- Process 标题
-  reaper.ImGui_SeparatorText(ctx, "Batch Mode")
+  -- Process 标题旧版本保留(设置预留)
+  -- reaper.ImGui_SeparatorText(ctx, "Batch Mode")
 
-  -- 模式标签与对应值
+  -- -- 模式标签与对应值
+  -- local mode_labels = {
+  --   "Media Items",
+  --   "Tracks",
+  --   "Region Manager",
+  --   "Regions (Time Selection)",
+  --   "Regions (Selected Items)",
+  --   "Marker Manager",
+  --   "Markers (Time Selection)",
+  --   "Source Files (Selected Items)",
+  -- }
+
+  -- -- 逐个绘制 RadioButton，超出右边界时自动换行
+  -- for i, label in ipairs(mode_labels) do
+  --   -- 在绘制前测量下一项的宽度
+  --   local tw, th = reaper.ImGui_CalcTextSize(ctx, label)
+  --   -- 加上一些内边距，确保不会紧贴边框
+  --   local item_width = tw + th -- 高度近似为宽度的 padding
+    
+  --   -- 可用宽度
+  --   local avail_x, _ = reaper.ImGui_GetContentRegionAvail(ctx)
+  --   -- 如果剩余宽度不足以容下下一项，就换行
+  --   if i > 1 and avail_x < item_width then
+  --     reaper.ImGui_NewLine(ctx)
+  --   end
+  
+  --   -- 绘制 RadioButton
+  --   local clicked
+  --   clicked, process_mode = reaper.ImGui_RadioButtonEx(
+  --     ctx,
+  --     label,
+  --     process_mode,
+  --     i-1
+  --   )
+  --   -- 绘制后再同一行
+  --   if i < #mode_labels then
+  --     reaper.ImGui_SameLine(ctx)
+  --   end
+  -- end
+  
+  -- -- 帮助
+  -- reaper.ImGui_SameLine(ctx)
+  -- help_marker(
+  --   "Select a batch mode to rename items, tracks, regions, markers, or source files."
+  -- )
+  
+  -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+  -- if process_mode == 0 then
+  --   reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your items.")
+  -- elseif process_mode == 1 then
+  --   reaper.ImGui_Text(ctx, "Tip: In the Track Control Panel, select a track.")
+  -- elseif process_mode == 2 then
+  --   reaper.ImGui_Text(ctx, "Tip: Open the Region Manager and select a region.")
+  -- elseif process_mode == 3 then
+  --   reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for regions.")
+  -- elseif process_mode == 4 then
+  --   reaper.ImGui_Text(ctx, "Tip: Select items in the Arrange view to target their regions.")
+  -- elseif process_mode == 5 then
+  --   reaper.ImGui_Text(ctx, "Tip: Open the Marker Manager and select a marker.")
+  -- elseif process_mode == 6 then
+  --   reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for markers.")
+  -- elseif process_mode == 7 then
+  --   reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your media items.")
+  -- end
+  -- reaper.ImGui_PopStyleColor(ctx)
+
+  -- Process 标题下拉菜单版本
+  reaper.ImGui_SeparatorText(ctx, "Batch Mode")
+  
+  -- 模式列表
   local mode_labels = {
     "Media Items",
     "Tracks",
@@ -3391,59 +3783,40 @@ local function frame()
     "Source Files (Selected Items)",
   }
 
-  -- 逐个绘制 RadioButton，超出右边界时自动换行
-  for i, label in ipairs(mode_labels) do
-    -- 在绘制前测量下一项的宽度
-    local tw, th = reaper.ImGui_CalcTextSize(ctx, label)
-    -- 加上一些内边距，确保不会紧贴边框
-    local item_width = tw + th -- 高度近似为宽度的 padding
-    
-    -- 可用宽度
-    local avail_x, _ = reaper.ImGui_GetContentRegionAvail(ctx)
-    -- 如果剩余宽度不足以容下下一项，就换行
-    if i > 1 and avail_x < item_width then
-      reaper.ImGui_NewLine(ctx)
-    end
+  -- 当前选中项文字
+  local current_label = mode_labels[process_mode + 1] or ""
   
-    -- 绘制 RadioButton
-    local clicked
-    clicked, process_mode = reaper.ImGui_RadioButtonEx(
-      ctx,
-      label,
-      process_mode,
-      i-1
-    )
-    -- 绘制后再同一行
-    if i < #mode_labels then
-      reaper.ImGui_SameLine(ctx)
+  -- 下拉菜单（隐藏 Combo 自身的标签，只显示当前选中项）
+  if reaper.ImGui_BeginCombo(ctx, "Apply To##batch_mode_combo", current_label) then
+    for i, label in ipairs(mode_labels) do
+      local is_selected = (process_mode == i - 1)
+      if reaper.ImGui_Selectable(ctx, label, is_selected) then
+        process_mode = i - 1
+      end
+      if is_selected then
+        reaper.ImGui_SetItemDefaultFocus(ctx)
+      end
     end
+    reaper.ImGui_EndCombo(ctx)
   end
-  
-  -- 帮助
+
+  -- 帮助图标
   reaper.ImGui_SameLine(ctx)
   help_marker(
     "Select a batch mode to rename items, tracks, regions, markers, or source files."
   )
   
+  -- 提示文字
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-  if process_mode == 0 then
-    reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your items.")
-  elseif process_mode == 1 then
-    reaper.ImGui_Text(ctx, "Tip: In the Track Control Panel, select a track.")
-  elseif process_mode == 2 then
-    reaper.ImGui_Text(ctx, "Tip: Open the Region Manager and select a region.")
-  elseif process_mode == 3 then
-    reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for regions.")
-  elseif process_mode == 4 then
-    reaper.ImGui_Text(ctx, "Tip: Select items in the Arrange view to target their regions.")
-  elseif process_mode == 5 then
-    reaper.ImGui_Text(ctx, "Tip: Open the Marker Manager and select a marker.")
-  elseif process_mode == 6 then
-    reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for markers.")
-  elseif process_mode == 7 then
-    reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your media items.")
+  if     process_mode == 0 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your items.")
+  elseif process_mode == 1 then reaper.ImGui_Text(ctx, "Tip: In the Track Control Panel, select a track.")
+  elseif process_mode == 2 then reaper.ImGui_Text(ctx, "Tip: Open the Region Manager and select a region.")
+  elseif process_mode == 3 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for regions.")
+  elseif process_mode == 4 then reaper.ImGui_Text(ctx, "Tip: Select items in the Arrange view to target their regions.")
+  elseif process_mode == 5 then reaper.ImGui_Text(ctx, "Tip: Open the Marker Manager and select a marker.")
+  elseif process_mode == 6 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for markers.")
+  elseif process_mode == 7 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your media items.")
   end
-  
   reaper.ImGui_PopStyleColor(ctx)
 
   -- 检测/按下 Ctrl + Enter 快捷键
@@ -3480,6 +3853,8 @@ local function frame()
     insert_position   = 0
     insert_side_index = 0
     use_cycle_mode    = true
+    ignore_case       = false
+    occurrence_mode   = 2 -- All 模式
   end
   
   reaper.ImGui_SameLine(ctx)
