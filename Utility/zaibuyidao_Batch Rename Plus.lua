@@ -1,5 +1,5 @@
 -- @description Batch Rename Plus
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
 -- @changelog
 --   + Introduced user preset management - allowing users to save, rename, and delete presets, with full import/export support.
@@ -268,6 +268,11 @@ local brown       = 0xA52A2AFF -- 棕色
 local lime        = 0x32CD32FF -- 酸橙绿
 local gold        = 0xFFD700FF -- 金色
 local silver      = 0xC0C0C0FF -- 银色
+
+-- 预览弹窗
+local ext_popup = reaper.GetExtState("BatchRenamePlus", "PopupPreviewOpen")
+if ext_popup == "true" then show_preview_window = true
+elseif ext_popup == "false" then show_preview_window = false end
 
 -- 预览表格
 local default_preview_open = false
@@ -2988,6 +2993,8 @@ local function preview_popup(ctx)
     --reaper.ImGui_SameLine(ctx)
     reaper.ImGui_Text(ctx, string.format("Preview - %d Object(s)", #data))
     show_preview_window = open
+    -- 保存当前状态到 ExtState，下次脚本启动时恢复
+    reaper.SetExtState("BatchRenamePlus", "PopupPreviewOpen", tostring(show_preview_window), true)
     if visible then
       -- 字体大小输入框（只能选预设尺寸）
       -- reaper.ImGui_SameLine(ctx)
@@ -3330,7 +3337,7 @@ local function frame()
   -- reaper.ImGui_PopFont(ctx)
 
   reaper.ImGui_PushItemWidth(ctx, -90)
-
+  reaper.ImGui_Separator(ctx)
   -- 用户预设
   local comboLabel = (selectedPreset == 1) and "No preset" or presetNames[selectedPreset]
   if reaper.ImGui_BeginCombo(ctx, "##Presets", comboLabel) then
