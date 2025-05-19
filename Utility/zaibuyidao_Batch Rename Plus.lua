@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.10
+-- @version 1.0.11
 -- @author zaibuyidao
 -- @changelog
---   * Fix: nil indexing error in Batch Mode.
+--   Add: Mouse-wheel support for switching batch modes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -58,7 +58,7 @@ for _, sz in ipairs(preview_font_sizes) do
   reaper.ImGui_Attach(ctx, preview_fonts[sz])
 end
 
-reaper.ImGui_SetNextWindowSize(ctx, 355, 763, reaper.ImGui_Cond_FirstUseEver())
+reaper.ImGui_SetNextWindowSize(ctx, 365, 800, reaper.ImGui_Cond_FirstUseEver())
 
 -- 状态变量
 local process_mode           = 0                     -- 0 = Items, 1 = Tracks
@@ -3706,12 +3706,12 @@ local function frame()
   local data, builder = get_preview_data_and_builder()
   render_preview_table(ctx, PREVIEW_TABLE_ID, #data, builder)
 
-  -- Process 标题旧版本保留(设置预留)
+  -- Process 第一版 非列表
   -- reaper.ImGui_SeparatorText(ctx, "Batch Mode")
 
-  -- -- 模式标签与对应值
+  -- -- 模式列表
   -- local mode_labels = {
-  --   "Media Items",
+  --   "Items",
   --   "Tracks",
   --   "Region Manager",
   --   "Regions (Time Selection)",
@@ -3748,39 +3748,82 @@ local function frame()
   --     reaper.ImGui_SameLine(ctx)
   --   end
   -- end
-  
+
   -- -- 帮助
   -- reaper.ImGui_SameLine(ctx)
   -- help_marker(
   --   "Select a batch mode to rename items, tracks, regions, markers, or source files."
   -- )
-  
+
   -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-  -- if process_mode == 0 then
-  --   reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your items.")
-  -- elseif process_mode == 1 then
-  --   reaper.ImGui_Text(ctx, "Tip: In the Track Control Panel, select a track.")
-  -- elseif process_mode == 2 then
-  --   reaper.ImGui_Text(ctx, "Tip: Open the Region Manager and select a region.")
-  -- elseif process_mode == 3 then
-  --   reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for regions.")
-  -- elseif process_mode == 4 then
-  --   reaper.ImGui_Text(ctx, "Tip: Select items in the Arrange view to target their regions.")
-  -- elseif process_mode == 5 then
-  --   reaper.ImGui_Text(ctx, "Tip: Open the Marker Manager and select a marker.")
-  -- elseif process_mode == 6 then
-  --   reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for markers.")
-  -- elseif process_mode == 7 then
-  --   reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your media items.")
+  -- if     process_mode == 0 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your items.")
+  -- elseif process_mode == 1 then reaper.ImGui_Text(ctx, "Tip: In the Track Control Panel, select a track.")
+  -- elseif process_mode == 2 then reaper.ImGui_Text(ctx, "Tip: Open the Region Manager and select a region.")
+  -- elseif process_mode == 3 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for regions.")
+  -- elseif process_mode == 4 then reaper.ImGui_Text(ctx, "Tip: Select items in the Arrange view to target their regions.")
+  -- elseif process_mode == 5 then reaper.ImGui_Text(ctx, "Tip: Open the Marker Manager and select a marker.")
+  -- elseif process_mode == 6 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for markers.")
+  -- elseif process_mode == 7 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your media items.")
   -- end
   -- reaper.ImGui_PopStyleColor(ctx)
 
-  -- Process 标题下拉菜单版本
+  -- Process 第二版 下拉菜单版本
+  -- reaper.ImGui_SeparatorText(ctx, "Batch Mode")
+
+  -- 模式列表
+  -- local mode_labels = {
+  --   "Media Items",
+  --   "Tracks",
+  --   "Region Manager",
+  --   "Regions (Time Selection)",
+  --   "Regions (Selected Items)",
+  --   "Marker Manager",
+  --   "Markers (Time Selection)",
+  --   "Source Files (Selected Items)",
+  -- }
+
+  -- -- 当前选中项文字
+  -- local current_label = mode_labels[process_mode + 1] or ""
+
+  -- -- 下拉菜单（隐藏 Combo 自身的标签，只显示当前选中项）
+  -- if reaper.ImGui_BeginCombo(ctx, "Apply To##batch_mode_combo", current_label) then
+  --   for i, label in ipairs(mode_labels) do
+  --     local is_selected = (process_mode == i - 1)
+  --     if reaper.ImGui_Selectable(ctx, label, is_selected) then
+  --       process_mode = i - 1
+  --     end
+  --     if is_selected then
+  --       reaper.ImGui_SetItemDefaultFocus(ctx)
+  --     end
+  --   end
+  --   reaper.ImGui_EndCombo(ctx)
+  -- end
+
+  -- -- 帮助图标
+  -- reaper.ImGui_SameLine(ctx)
+  -- help_marker(
+  --   "Select a batch mode to rename items, tracks, regions, markers, or source files."
+  -- )
+
+  -- -- 提示文字
+  -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+  -- if     process_mode == 0 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your items.")
+  -- elseif process_mode == 1 then reaper.ImGui_Text(ctx, "Tip: In the Track Control Panel, select a track.")
+  -- elseif process_mode == 2 then reaper.ImGui_Text(ctx, "Tip: Open the Region Manager and select a region.")
+  -- elseif process_mode == 3 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for regions.")
+  -- elseif process_mode == 4 then reaper.ImGui_Text(ctx, "Tip: Select items in the Arrange view to target their regions.")
+  -- elseif process_mode == 5 then reaper.ImGui_Text(ctx, "Tip: Open the Marker Manager and select a marker.")
+  -- elseif process_mode == 6 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, drag to make a time selection for markers.")
+  -- elseif process_mode == 7 then reaper.ImGui_Text(ctx, "Tip: In the Arrange view, select your media items.")
+  -- end
+  -- reaper.ImGui_PopStyleColor(ctx)
+
+  -- Process 第三版 批量模式支持鼠标滚轮
   reaper.ImGui_SeparatorText(ctx, "Batch Mode")
   
   -- 模式列表
   local mode_labels = {
-    "Media Items",
+    "Items",
     "Tracks",
     "Region Manager",
     "Regions (Time Selection)",
@@ -3789,28 +3832,46 @@ local function frame()
     "Markers (Time Selection)",
     "Source Files (Selected Items)",
   }
-
-  -- 当前选中项文字
-  local current_label = mode_labels[process_mode + 1] or ""
   
-  -- 下拉菜单（隐藏 Combo 自身的标签，只显示当前选中项）
-  if reaper.ImGui_BeginCombo(ctx, "Apply To##batch_mode_combo", current_label) then
-    for i, label in ipairs(mode_labels) do
-      local is_selected = (process_mode == i - 1)
-      if reaper.ImGui_Selectable(ctx, label, is_selected) then
-        process_mode = i - 1
-      end
-      if is_selected then
-        reaper.ImGui_SetItemDefaultFocus(ctx)
-      end
+  -- 鼠标滚轮支持 Batch Mode 前后切换
+  if reaper.ImGui_IsWindowHovered(ctx) then
+    local wheel = reaper.ImGui_GetMouseWheel(ctx)
+    if wheel ~= 0 then
+      -- process_mode = (process_mode + wheel) % #mode_labels -- 反向
+      process_mode = (process_mode - wheel + #mode_labels) % #mode_labels
     end
-    reaper.ImGui_EndCombo(ctx)
+  end
+  
+  -- 逐个绘制 RadioButton，超出右边界时自动换行
+  for i, label in ipairs(mode_labels) do
+    -- 在绘制前测量下一项的宽度
+    local tw, th = reaper.ImGui_CalcTextSize(ctx, label)
+    local item_width = tw + th -- 高度近似为宽度的 padding
+    
+    -- 可用宽度
+    local avail_x, _ = reaper.ImGui_GetContentRegionAvail(ctx)
+    if i > 1 and avail_x < item_width then
+      reaper.ImGui_NewLine(ctx)
+    end
+  
+    -- 绘制 RadioButton
+    local clicked
+    clicked, process_mode = reaper.ImGui_RadioButtonEx(
+      ctx,
+      label,
+      process_mode,
+      i-1
+    )
+    if i < #mode_labels then
+      reaper.ImGui_SameLine(ctx)
+    end
   end
 
-  -- 帮助图标
+  -- 帮助
   reaper.ImGui_SameLine(ctx)
   help_marker(
-    "Select a batch mode to rename items, tracks, regions, markers, or source files."
+    "Select a batch mode to rename items, tracks, regions, markers, or source files.\n" ..
+    "Hover over this area and use the mouse wheel to switch modes."
   )
   
   -- 提示文字
