@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.11
+-- @version 1.0.12
 -- @author zaibuyidao
 -- @changelog
---   Add: Mouse-wheel support for switching batch modes.
+--   Added mouse-wheel support for switching batch modes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -3833,15 +3833,8 @@ local function frame()
     "Source Files (Selected Items)",
   }
   
-  -- 鼠标滚轮支持 Batch Mode 前后切换
-  if reaper.ImGui_IsWindowHovered(ctx) then
-    local wheel = reaper.ImGui_GetMouseWheel(ctx)
-    if wheel ~= 0 then
-      -- process_mode = (process_mode + wheel) % #mode_labels -- 反向
-      process_mode = (process_mode - wheel + #mode_labels) % #mode_labels
-    end
-  end
-  
+  local wheel = reaper.ImGui_GetMouseWheel(ctx)
+
   -- 逐个绘制 RadioButton，超出右边界时自动换行
   for i, label in ipairs(mode_labels) do
     -- 在绘制前测量下一项的宽度
@@ -3862,6 +3855,14 @@ local function frame()
       process_mode,
       i-1
     )
+
+    -- 鼠标滚轮支持 Batch Mode 前后切换
+    if wheel ~= 0 and reaper.ImGui_IsItemHovered(ctx) then
+      -- process_mode = (process_mode + wheel) % #mode_labels -- 反向
+      process_mode = (process_mode - wheel + #mode_labels) % #mode_labels
+      wheel = 0
+    end
+
     if i < #mode_labels then
       reaper.ImGui_SameLine(ctx)
     end
