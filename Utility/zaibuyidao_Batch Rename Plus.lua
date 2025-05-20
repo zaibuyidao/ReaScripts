@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.12
+-- @version 1.0.13
 -- @author zaibuyidao
 -- @changelog
---   Added mouse-wheel support for switching batch modes.
+--   Added text filtering to the preview panel.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -87,6 +87,7 @@ show_list_window = show_list_window or false
 local show_list_data = show_list_data or {}
 local show_preview_window = false
 local preview_items = {}
+local preview_filter
 
 --------------------------------------------------------------------------------
 -- 用户预设
@@ -519,7 +520,7 @@ local function render_preview_table_popup(ctx, id, realCount, row_builder)
   reaper.ImGui_Separator(ctx)
 
   -- 开始统计错误数, 如果没有任何选中项就显示 10 行空白
-  local displayCount = math.max(cnt, 0)
+  local displayCount = math.max(cnt, 0) -- 当前设置为 0，不显示空白行
   local errorCount = 0
   local tableFlags = tblFlags2 + reaper.ImGui_TableFlags_RowBg()
   if reaper.ImGui_BeginTable(ctx, id .. "_table", 3, tableFlags, -1, 0) then
@@ -533,26 +534,28 @@ local function render_preview_table_popup(ctx, id, realCount, row_builder)
       if i <= cnt then
         before, after = row_builder(i)
       end
-
-      -- 输出行
-      reaper.ImGui_TableNextRow(ctx)
-      if i <= cnt then
-        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, before)
-        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, after)
-        reaper.ImGui_TableNextColumn(ctx)
-        if #after == 0 then
-          errorCount = errorCount + 1
+      -- 传 filter 和文字内容
+      if reaper.ImGui_TextFilter_PassFilter(preview_filter, before) or reaper.ImGui_TextFilter_PassFilter(preview_filter, after) then
+        -- 输出行，拿掉if reaper.ImGui_TextFilter_PassFilter则不过滤
+        reaper.ImGui_TableNextRow(ctx)
+        if i <= cnt then
+          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, before)
+          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, after)
+          reaper.ImGui_TableNextColumn(ctx)
+          if #after == 0 then
+            errorCount = errorCount + 1
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+            reaper.ImGui_Text(ctx, "Error: empty name.")
+            reaper.ImGui_PopStyleColor(ctx)
+          end
+        else
+          -- placeholder row
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-          reaper.ImGui_Text(ctx, "Error: empty name.")
+          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
+          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
+          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "Empty slot.")
           reaper.ImGui_PopStyleColor(ctx)
         end
-      else
-        -- placeholder row
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
-        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
-        reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "Empty slot.")
-        reaper.ImGui_PopStyleColor(ctx)
       end
     end
 
@@ -2996,12 +2999,19 @@ local function preview_popup(ctx)
     -- 保存当前状态到 ExtState，下次脚本启动时恢复
     reaper.SetExtState("BatchRenamePlus", "PopupPreviewOpen", tostring(show_preview_window), true)
     if visible then
-      -- 字体大小输入框（只能选预设尺寸）
-      -- reaper.ImGui_SameLine(ctx)
+      -- 创建并绘制文本过滤器
+      if not preview_filter then
+        preview_filter = reaper.ImGui_CreateTextFilter()
+        reaper.ImGui_Attach(ctx, preview_filter)
+      end
+      reaper.ImGui_TextFilter_Draw(preview_filter, ctx, "Filter")
+
+      -- 字体大小输入框
+      reaper.ImGui_SameLine(ctx)
       reaper.ImGui_PushItemWidth(ctx, -60)
       local changed, new_sz = reaper.ImGui_InputInt(
         ctx,
-        "Font px",
+        "Font size",
         preview_font_size,
         2,   -- step
         10   -- fast step (Ctrl+箭头)
