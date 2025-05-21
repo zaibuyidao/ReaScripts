@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.13
+-- @version 1.0.14
 -- @author zaibuyidao
 -- @changelog
---   Added text filtering to the preview panel.
+--   Added case‐transform wildcard support (e.g. `$item` / `$Item` / `$ITEM`, `$region` / `$Region` / `$REGION`).
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -407,6 +407,24 @@ local function apply_modifiers(name, i)
     return vals[idx]
   end)
 
+  return name
+end
+
+-- 根据通配符的大小写模式，对原始名称做相应大小写变换
+local function apply_case_transform(name, token)
+  -- 全部大写
+  if token:match("^%u+$") then
+    return name:upper()
+  end
+  -- 全部小写
+  if token:match("^%l%u+$") then
+    return name:lower()
+  end
+  -- 首字母大写，其它小写
+  if token:match("^[%u]%l+$") then
+    return name:gsub("^%l", string.upper)
+  end
+  -- 原样输出
   return name
 end
 
@@ -998,9 +1016,12 @@ function build_items(build_pattern, origin_name, tname, track_num, folders, take
   -- 通用 token 替换
   local name = build_pattern
   name = name:gsub("%$tracknumber", tostring(track_num))
-  name = name:gsub("%$item", origin_name)
   name = name:gsub("%$track", tname)
   name = name:gsub("%$folders", folders)
+  -- name = name:gsub("%$item", origin_name)
+  name = name:gsub("(%$[Ii][Tt][Ee][Mm])", function(tok)
+    return apply_case_transform(origin_name, tok:sub(2))
+  end)
 
   local guid = ""
   if take then
@@ -1009,6 +1030,7 @@ function build_items(build_pattern, origin_name, tname, track_num, folders, take
   end
   name = name:gsub("%$GUID", guid)
 
+  -- 继承循环/累加/随机等功能
   name = apply_modifiers(name, i)
   return name
 end
@@ -1023,9 +1045,12 @@ local function build_tracks(pat, origin, guid, num, parent, i)
   -- 通用 token 替换
   local name = pat
   name = name:gsub("%$tracknumber", tostring(num))
-  name = name:gsub("%$track", origin)
   name = name:gsub("%$GUID", guid)
   name = name:gsub("%$folders", parent or "")
+  -- name = name:gsub("%$track", origin)
+  name = name:gsub("(%$[Tt][Rr][Aa][Cc][Kk])", function(tok)
+    return apply_case_transform(origin, tok:sub(2))
+  end)
 
   name = apply_modifiers(name, i)
   return name
@@ -1041,9 +1066,11 @@ function build_region_manager(pattern, origin_name, region_id, i)
   local name = pattern
   name = name:gsub("%$regionidx", tostring(i))
   name = name:gsub("%$regionid",  tostring(region_id))
-  name = name:gsub("%$region",    origin_name)
+  -- name = name:gsub("%$region", origin_name)
+  name = name:gsub("(%$[Rr][Ee][Gg][Ii][Oo][Nn])", function(tok)
+    return apply_case_transform(origin_name, tok:sub(2))
+  end)
 
-  -- 调用 apply_modifiers 支持 d=, a=, r=, e=… 等所有格式化
   name = apply_modifiers(name, i)
   return name
 end
@@ -1058,9 +1085,11 @@ local function build_region_time(pattern, origin_name, region_id, i)
   local name = pattern
   name = name:gsub("%$regionidx", tostring(i))
   name = name:gsub("%$regionid",  tostring(region_id))
-  name = name:gsub("%$region",    origin_name)
+  -- name = name:gsub("%$region", origin_name)
+  name = name:gsub("(%$[Rr][Ee][Gg][Ii][Oo][Nn])", function(tok)
+    return apply_case_transform(origin_name, tok:sub(2))
+  end)
 
-  -- 继承循环/累加/随机等功能
   name = apply_modifiers(name, i)
   return name
 end
@@ -1075,9 +1104,11 @@ local function build_region_for_items(pattern, origin_name, region_id, i)
   local name = pattern
   name = name:gsub("%$regionidx", tostring(i))
   name = name:gsub("%$regionid",  tostring(region_id))
-  name = name:gsub("%$region",    origin_name)
+  -- name = name:gsub("%$region", origin_name)
+  name = name:gsub("(%$[Rr][Ee][Gg][Ii][Oo][Nn])", function(tok)
+    return apply_case_transform(origin_name, tok:sub(2))
+  end)
 
-  -- 继承循环/累加/随机等功能
   name = apply_modifiers(name, i)
   return name
 end
@@ -1092,9 +1123,11 @@ function build_marker_manager(pattern, origin_name, marker_id, i)
   local name = pattern
   name = name:gsub("%$markeridx", tostring(i))
   name = name:gsub("%$markerid",  tostring(marker_id))
-  name = name:gsub("%$marker",    origin_name)
+  -- name = name:gsub("%$marker", origin_name)
+  name = name:gsub("(%$[Mm][Aa][Rr][Kk][Ee][Rr])", function(tok)
+    return apply_case_transform(origin_name, tok:sub(2))
+  end)
 
-  -- 调用 apply_modifiers 支持 d=, a=, r=, e=… 等所有格式化
   name = apply_modifiers(name, i)
   return name
 end
@@ -1109,23 +1142,10 @@ local function build_marker_time(pattern, origin_name, region_id, i)
   local name = pattern
   name = name:gsub("%$markeridx", tostring(i))
   name = name:gsub("%$markerid",  tostring(marker_id))
-  name = name:gsub("%$marker",    origin_name)
-
-  name = apply_modifiers(name, i)
-  return name
-end
-
-local function build_marker_time(pattern, origin_name, marker_id, i)
-  pattern     = pattern     or ""
-  origin_name = origin_name or ""
-  marker_id   = marker_id   or 0
-  i           = tonumber(i) or 1
-
-  -- 通用 token 替换
-  local name = pattern
-  name = name:gsub("%$markeridx", tostring(i))
-  name = name:gsub("%$markerid",  tostring(marker_id))
-  name = name:gsub("%$marker",    origin_name)
+  -- name = name:gsub("%$marker", origin_name)
+  name = name:gsub("(%$[Mm][Aa][Rr][Kk][Ee][Rr])", function(tok)
+    return apply_case_transform(origin_name, tok:sub(2))
+  end)
 
   name = apply_modifiers(name, i)
   return name
@@ -1139,7 +1159,10 @@ function build_sources(build_pattern, origin_name, track_num, i)
 
   -- 通用 token 替换
   local name = build_pattern
-  name = name:gsub("%$source", origin_name)
+  -- name = name:gsub("%$source", origin_name)
+  name = name:gsub("(%$[Ss][Oo][Uu][Rr][Cc][Ee])", function(tok)
+    return apply_case_transform(origin_name, tok:sub(2))
+  end)
 
   name = apply_modifiers(name, i)
   return name
