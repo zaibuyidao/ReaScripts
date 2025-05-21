@@ -1,8 +1,9 @@
 -- @description Batch Rename Plus
--- @version 1.0.14
+-- @version 1.0.15
 -- @author zaibuyidao
 -- @changelog
---   Added case‐transform wildcard support (e.g. `$item` / `$Item` / `$ITEM`, `$region` / `$Region` / `$REGION`).
+--   Added a status bar to the preview panel to display error counts, duplicate-name warnings, and the current batch mode.
+--   Added Ctrl+MouseWheel support in the preview panel to adjust the preview font size on the fly.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -86,7 +87,6 @@ local PREVIEW_POPUP_TABLE_ID = "preview_popup_table" -- 弹窗里共用
 show_list_window = show_list_window or false
 local show_list_data = show_list_data or {}
 local show_preview_window = false
-local preview_items = {}
 local preview_filter
 
 --------------------------------------------------------------------------------
@@ -523,6 +523,8 @@ local function render_preview_table_popup(ctx, id, realCount, row_builder)
   preview_mode = true
   local cnt = realCount
   -- reaper.ImGui_SeparatorText(ctx, string.format("Preview - %d Object(s)", cnt))
+  local wheel = reaper.ImGui_GetMouseWheel(ctx)
+  local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
 
   -- 压缩复选框样式
   local fp_x, fp_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
@@ -537,52 +539,110 @@ local function render_preview_table_popup(ctx, id, realCount, row_builder)
   reaper.ImGui_PopStyleVar(ctx, 2)
   reaper.ImGui_Separator(ctx)
 
+  -- 计算留给状态栏的高度
+  local line_h = reaper.ImGui_GetTextLineHeight(ctx)
+  local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
+  local child_h = avail_y - line_h - 10
+
   -- 开始统计错误数, 如果没有任何选中项就显示 10 行空白
   local displayCount = math.max(cnt, 0) -- 当前设置为 0，不显示空白行
   local errorCount = 0
   local tableFlags = tblFlags2 + reaper.ImGui_TableFlags_RowBg()
-  if reaper.ImGui_BeginTable(ctx, id .. "_table", 3, tableFlags, -1, 0) then
-    reaper.ImGui_TableSetupColumn(ctx, "Before", reaper.ImGui_TableColumnFlags_NoHide())
-    reaper.ImGui_TableSetupColumn(ctx, "After", reaper.ImGui_TableColumnFlags_NoHide())
-    reaper.ImGui_TableSetupColumn(ctx, "Message", 0)
-    reaper.ImGui_TableHeadersRow(ctx)
-
-    for i = 1, displayCount do
-      local before, after = "", ""
-      if i <= cnt then
-        before, after = row_builder(i)
-      end
-      -- 传 filter 和文字内容
-      if reaper.ImGui_TextFilter_PassFilter(preview_filter, before) or reaper.ImGui_TextFilter_PassFilter(preview_filter, after) then
-        -- 输出行，拿掉if reaper.ImGui_TextFilter_PassFilter则不过滤
-        reaper.ImGui_TableNextRow(ctx)
-        if i <= cnt then
-          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, before)
-          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, after)
-          reaper.ImGui_TableNextColumn(ctx)
-          if #after == 0 then
-            errorCount = errorCount + 1
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-            reaper.ImGui_Text(ctx, "Error: empty name.")
-            reaper.ImGui_PopStyleColor(ctx)
-          end
-        else
-          -- placeholder row
-          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
-          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
-          reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "Empty slot.")
-          reaper.ImGui_PopStyleColor(ctx)
+  if reaper.ImGui_BeginChild(ctx, id .. "_child", -1, child_h, 0) then
+    if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
+      -- 找到当前字号在列表中的索引
+      local cur_idx = 1
+      for i, v in ipairs(preview_font_sizes) do
+        if v == preview_font_size then
+          cur_idx = i
+          break
         end
       end
+      cur_idx = cur_idx + wheel
+      cur_idx = math.max(1, math.min(#preview_font_sizes, cur_idx))
+      preview_font_size = preview_font_sizes[cur_idx]
+      wheel = 0
     end
+    if reaper.ImGui_BeginTable(ctx, id .. "_table", 3, tableFlags, -1, 0) then
+      reaper.ImGui_TableSetupColumn(ctx, "Before", reaper.ImGui_TableColumnFlags_NoHide())
+      reaper.ImGui_TableSetupColumn(ctx, "After", reaper.ImGui_TableColumnFlags_NoHide())
+      reaper.ImGui_TableSetupColumn(ctx, "Message", 0)
+      reaper.ImGui_TableHeadersRow(ctx)
 
-    reaper.ImGui_EndTable(ctx)
-    -- 显示错误统计
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-    reaper.ImGui_Text(ctx, string.format("%d error(s) detected.", errorCount))
-    reaper.ImGui_PopStyleColor(ctx)
+      for i = 1, displayCount do
+        local before, after = "", ""
+        if i <= cnt then
+          before, after = row_builder(i)
+        end
+        -- 传 filter 和文字内容
+        if reaper.ImGui_TextFilter_PassFilter(preview_filter, before) or reaper.ImGui_TextFilter_PassFilter(preview_filter, after) then
+          -- 输出行，拿掉if reaper.ImGui_TextFilter_PassFilter则不过滤
+          reaper.ImGui_TableNextRow(ctx)
+          if i <= cnt then
+            reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, before)
+            reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, after)
+            reaper.ImGui_TableNextColumn(ctx)
+            if #after == 0 then
+              errorCount = errorCount + 1
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+              reaper.ImGui_Text(ctx, "Error: empty name.")
+              reaper.ImGui_PopStyleColor(ctx)
+            end
+          else
+            -- placeholder row
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+            reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
+            reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "--")
+            reaper.ImGui_TableNextColumn(ctx); reaper.ImGui_Text(ctx, "Empty slot.")
+            reaper.ImGui_PopStyleColor(ctx)
+          end
+        end
+      end
+      reaper.ImGui_EndTable(ctx)
+    end
+    reaper.ImGui_EndChild(ctx)
   end
+  -- 显示状态栏信息
+  local dupCount = 0
+  local name_counts = {}
+
+  for i = 1, cnt do
+    local _, after = row_builder(i)
+    if after ~= "" then
+      name_counts[after] = (name_counts[after] or 0) + 1
+    end
+  end
+  for _, c in pairs(name_counts) do
+    if c > 1 then dupCount = dupCount + (c - 1) end
+  end
+
+  local mode_labels = {
+    "Media Items",
+    "Tracks",
+    "Region Manager",
+    "Regions (Time Selection)",
+    "Regions (Selected Items)",
+    "Marker Manager",
+    "Markers (Time Selection)",
+    "Source Files (Selected Items)",
+  }
+  
+  local modeName = mode_labels[process_mode + 1] or ""
+  local status = string.format(
+    "%d error(s) detected. %d duplicate(s) detected.",
+    errorCount, dupCount
+  )
+  status = status .. " Mode: " .. modeName
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+  reaper.ImGui_Text(ctx, status)
+  reaper.ImGui_PopStyleColor(ctx)
+
+  preview_mode = false
+  -- 旧版显示错误信息
+  -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
+  -- reaper.ImGui_Text(ctx, string.format("%d error(s) detected.", errorCount))
+  -- reaper.ImGui_PopStyleColor(ctx)
 end
 
 --------------------------------------------------------------------------------
@@ -3031,13 +3091,17 @@ local function preview_popup(ctx)
 
       -- 字体大小输入框
       reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -60)
+      reaper.ImGui_PushItemWidth(ctx, -70)
       local changed, new_sz = reaper.ImGui_InputInt(
         ctx,
         "Font size",
         preview_font_size,
         2,   -- step
         10   -- fast step (Ctrl+箭头)
+      )
+      reaper.ImGui_SameLine(ctx)
+      help_marker(
+        "Hold Ctrl and scroll the mouse wheel here to change the preview font size."
       )
       if changed then
         -- 限制为预设列表中的值
