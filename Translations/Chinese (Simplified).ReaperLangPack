@@ -1,10 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 7.38
+;Version: 7.39
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49376/Chinese%20%28Simplified%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.38, SWS: 2.14.0.3
+;  Brand new REAPER: 7.39, SWS: 2.14.0.3
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -1352,6 +1352,7 @@ ED3B2E348AB4097C=空
 DD2984E0D3995E66=对象始终替换较早的对象
 94DEF1C233373209=工程默认
 AD6ADC4BDE973BA3=选择替换文件:
+BFA2F665F3A989FF=片段名称
 7C0BD7F6D6C1126C=代码错误
 3DC3C3589C65D706=MIDI
 C31D08554C93D81A=ReaJS
@@ -5543,7 +5544,8 @@ D2AB4A224117B0ED=文件: 将工程另存为模板... ⇌ File: Save project as t
 541355726B969B96=文件: 保存工程并渲染 RPP-PROX ⇌ File: Save project and render RPP-PROX
 6426A1BCC25552FF=文件: 保存工程的新版本 (自动递增工程名称) ⇌ File: Save new version of project (automatically increment project name)
 16D8780030BA51E0=文件: 保存工程的副本 (自动递增工程名称) ⇌ File: Save copy of project (automatically increment project name)
-EC70DC52C7297E0F=文件: 将工程的副本另存为 ⇌ File: Save copy of project as...
+9C87C27E3199E02A=文件: 将工程副本另存为 (提示递增的工程名称)... ⇌ File: Save copy of project as (prompt with incremented project name)...
+749A0CCA845953FE=文件: 将工程副本另存为 (提示当前名称)... ⇌ File: Save copy of project as (prompt with current name)...
 7CDA8088D20ECBAF=在访达中显示 REAPER 资源路径 ⇌ Show REAPER resource path in finder
 8AFA422C588E9DCF=在访达中显示录音路径 ⇌ Show record path in finder
 998CE1539E8B1985=在访达中显示次要录音路径 ⇌ Show secondary record path in finder
@@ -9513,6 +9515,29 @@ B1A936F97892FB24=确认多个选定片段
 [itemprops]
 76717C885F96A963=打开通道映射器 (更改将立即生效)
 
+[itemprops_access]
+91B9DD118CCEE17B=对象位置
+A2AF12785417D694=对象长度
+4C7578D252ECE03C=淡入长度
+965A110E77EC0F1B=淡入曲线
+DDF5B6B482BD0695=淡入形状
+0B95689C85CC74EF=淡出长度
+232BB95074F74BAE=淡出曲线
+B161029E690659A8=淡出形状
+FF4EC1FE8F6DFC6A=吸附偏移
+B985EDD336258569=源起始位置
+DBD9C33FD1F21252=音高调整
+44D6A88B4F728EAC=回放速率
+023C1564D4A82BB6=片段音量
+9204F6B6DCE0584B=片段声像
+30661C0E03F6D937=片段音量 (dB)
+2C48BD135570DD33=片段声像 (百分比)
+7CEEFA9515D59F27=片段变调模式选项
+57FCB544A6B3C80D=拉伸标记淡化长度
+1EF86BF90DD42AFB=片段区段起始位置
+F03174CA1DD3C041=片段区段长度
+BE19A6F7E92913DF=片段区段淡化
+
 [joystick]
 133B50C3D3FC7CF5=没有加载转换器
 C6E94E5DE48F0F51=编译错误:
@@ -10767,6 +10792,8 @@ BB440603F4AEAFDB=添加 CC/力度车道预设... ⇌ Add CC/velocity lane preset
 6452F761F8A1EA19=加载 CC/力度车道预设 9 ⇌ Load CC/velocity lane preset 9
 1AFF74797B379033=加载 CC/力度车道预设 10 ⇌ Load CC/velocity lane preset 10
 489313C0DFD58061=选择鼠标时间位置的所有音符 ⇌ Select all notes at mouse time position
+45D877CA588619CD=保存默认配置 (并禁用自动保存默认配置) ⇌ Save default configuration (and disable auto-save default configuration)
+618F05BD7A787BDC=更改选项时自动保存默认配置 ⇌ Auto-save default configuration when changing options
 924D72EDE00E3D9D=设置弯音车道半音吸附 (如果已定义弯音范围) ⇌ Set pitchwheel lane semitone snap (if pitchwheel range has been defined)
 47FDC77AA8376763=设置弯音车道半音范围 ⇌ Set pitchwheel lane semitone range
 7B51B977AE631DA9=文件/乐谱: 导出 (PDF, MusicXML)... ⇌ File/Notation: Export (PDF, MusicXML)...
@@ -14055,7 +14082,6 @@ AD645A7EB24016DD=采样率
 D2869C227E2EDDA3=包络
 57F6F53C4FAAD179=调制
 9C70A65A4A4187D2=参数链接
-BFA2F665F3A989FF=片段名称
 34E1AFED2E371412=片段详情
 66A4D7ACD4CE6446=自动化对象名称
 8B94098F4C037237=保存工程元素管理器:
@@ -14484,9 +14510,6 @@ EA33E60991BEED3E=开始时间
 [regmgr_idx]
 08323407B4EAE131=T
 
-[remder]
-F2102A682160B365=保存未完成渲染的文件？
-
 [render]
 FF988786A3DBA5E1=渲染到文件名:
 FDA7DF8BA581C475=RMS-I
@@ -14733,7 +14756,7 @@ ACB3311F029AB36C=Mono-3
 1BB45110B7150F4E='目录' 字段中不支持通配符。
 8C7B122ACEBF865E=您可以在 '文件名' 字段中使用通配符和目录分隔符字符 (斜杠) 将文件渲染到子目录，如果需要，子目录将会自动创建。
 8648FAB64EA8961B=渲染警告
-9FC91214F0C036B5=并行渲染是指同时渲染多条轨道以加快渲染速度。除非渲染源下拉菜单设置为\"通过主控,\" ，否则通常会自动启用。
+9FC91214F0C036B5=并行渲染是指同时渲染多条轨道以加快渲染速度。除非渲染源下拉菜单设置为 \"通过主控,\" ，否则通常会自动启用。
 4DF24E7AAAE0B4E3=通过主控并行渲染需要在渲染过程中隐式复制工程 FX. 如果工程资源受限，或者某些插件加载时间较长，那么通过主控进行并行渲染可能会耗时较长，或者会错误地渲染为无声。
 B795943A46CD66E0=如果启用通过主控并行渲染，请务必验证所有文件是否按预期渲染。
 17604DA0D224B60B=并行渲染帮助
@@ -14769,24 +14792,24 @@ ECEF5A49F432EB7D=1x 离线
 942DA131FFBCFCF4=渲染文件的相对音量将保持不变。
 A10ED063A9520D14=具有不同开始/结束时间的渲染文件的相对音量可能会发生变化。
 D2981C99560AEBAD=渲染文件的相对音量可能会发生变化。
-DCCE3795845DED7E=在像文件一起播放一样标准化时，\"保留源媒体采样率\" 将被忽略。
-95F6167E3DFC8B89=在像文件一起播放一样限制时，\"保留源媒体采样率\" 将被忽略。
+DCCE3795845DED7E=在按文件同时播放方式进行标准化时，\"保留源媒体采样率\" 将被忽略。
+95F6167E3DFC8B89=在按同时播放方式进行限制时，\"保留源媒体采样率\" 将被忽略。
 F5AFD8B8A38D6051=标准化到过高的响度目标可能会导致削波。
 C8E3E26DE9839E15=在标准化后应用限制，可能会降低最终响度。
 C10592B86A7F5FC7=分别标准化每个文件
 BB633B8C5F19AE97=标准化到最响的文件
-9070C70E93BFACEA=像文件一起播放一样标准化
-3DBED4A2C4A70039=像文件一起播放一样标准化 (共同增益)
+9070C70E93BFACEA=按文件同时播放方式进行标准化
+3DBED4A2C4A70039=按文件同时播放方式进行标准化 (共同增益)
 E59CB296B069CDC7=分别限制每个文件
-C3CF3A04A0F436EA=像文件一起播放一样限制
+C3CF3A04A0F436EA=按同时播放方式进行限制
 517B0FA96BCC131C=标准化: 调整渲染文件的增益，以匹配峰值或响度目标。
 4FA3B644B5675ACC=分别标准化每个文件: 为每个文件调整不同的增益，以便每个文件都能匹配峰值或响度目标。
 55C91892900AF29D=标准化到最响文件: 为每个文件调整相同的增益，以便最响的文件匹配峰值或响度目标。
-B394848FB7F0356D=像文件一起播放一样标准化: 调整增益，使得如果所有文件在它们的工程时间位置同时播放，每个渲染时间线范围内的总输出与峰值或响度目标匹配。相同的增益调整适用于所有在相同时间开始和结束的文件，但不同的增益调整可能适用于在不同时间开始和结束的文件。
-6ECA7E945A5C4867=像文件一起播放一样标准化 (共同增益): 调整增益，使得如果所有文件在它们的工程时间位置同时播放，总输出与峰值或响度目标匹配。相同的增益调整适用于所有文件。
+B394848FB7F0356D=按文件同时播放方式进行标准化: 调整增益，使得如果所有文件在它们的工程时间位置同时播放，每个渲染时间线范围内的总输出与峰值或响度目标匹配。相同的增益调整适用于所有在相同时间开始和结束的文件，但不同的增益调整可能适用于在不同时间开始和结束的文件。
+6ECA7E945A5C4867=按文件同时播放方式进行标准化 (共同增益): 调整增益，使得如果所有文件在它们的工程时间位置同时播放，总输出与峰值或响度目标匹配。相同的增益调整适用于所有文件。
 894C14E46EA7FAAA=砖墙限制: 对渲染文件应用增益削减配置文件，以确保最高音量不超过峰值目标
 6C0FB3DE9E1BAEBF=分别限制每个文件: 为每个文件计算并应用单独的增益削减配置文件。
-1C9211CB5FB47F92=像文件一起播放一样限制: 计算增益削减配置文件，假设所有文件在其工程时间位置同时播放，并将相同的配置文件应用于每个文件。
+1C9211CB5FB47F92=按同时播放方式进行限制: 计算增益削减配置文件，假设所有文件在其工程时间位置同时播放，并将相同的配置文件应用于每个文件。
 D939F502ED56C080=额外调整单声道文件 3dB: 同时通过两个通道播放的单声道文件比仅通过一个通道播放的文件响 3dB。如果该文件将通过两个声道以双单声道方式播放，或将其混入立体声/多声道文件，则标准化时应降低 3dB。如果监听或混音时将该单声道素材与立体声/多声道素材同时处理，而渲染后的文件只通过一个声道播放，则应提升 3dB。
 055C3777312D4CFC=后期处理顺序:
 F2A4EEF7FB2A76C8=1. 修剪前导/尾部无声
@@ -14838,6 +14861,8 @@ BA8B55C637352DE2=写入文件:
 75E8E24FF650FCC8=后期处理:
 88F05070C85C276B=REAPER 渲染完成
 37F6A411C66E7D98=完成于
+5F1914D542E56C90= + %d 更多
+F2102A682160B365=是否保存未完成渲染的文件？
 5B278D5AAF716CEB=REAPER 渲染未完成！
 E18473B08E506F38=共同增益混音 (未渲染)
 815013077990FFC8=混音 (未渲染)
@@ -14943,22 +14968,27 @@ C825A7B4B074870C=工程备注 (来自 '工程设置/备注' 对话框)
 5ACB584BCFCEF5B1=轨道名称
 A10E65A5570F945B=轨道名称, 包含斜杠字符
 570771071E5A6FAD=第一条轨道为 1, 第二条轨道为 2...
-2CD5C64B09834BE4=如果轨道有名称，则显示轨道名称，否则显示轨道编号
+A8084339B1EFAA37=如果轨道有名称则使用该名称，否则显示 \"轨道 N\"
 AFC975840BFE930F=轨道文件夹结构
 67839EFFE4DABC53=轨道文件夹结构, 由 X 分隔
 133D302694CE5BB7=父级轨道名称
-422B4E49B44767A3=播放时为 \"text\", 否则为空
-B9719134B152A264=停止播放时为 \"text\", 否则为空
-78B5D0E38BD0F339=录音时为 \"text\", 否则为空
+422B4E49B44767A3=播放时为 \"文本\", 否则为空
+B9719134B152A264=停止播放时为 \"文本\", 否则为空
+78B5D0E38BD0F339=录音时为 \"文本\", 否则为空
+6261ECB9046AB0FB=当前预滚 (节拍)
+09AE81B93F4D0E1B=当前预滚, 自定义格式
 1250D9E690F34100=工程时间位置, 标尺时间格式
 38FA64C0953A773E=工程时间位置, 自定义格式
 D818C89927B9EBCC=工程长度, 标尺时间格式
 8C992C64EE88DC4A=工程长度, 自定义格式
+464B1317E8900D45=工程时间选区, 标尺时间格式
+42037B3E40212647=工程时间选区, 自定义格式
 7D27420174C43C67=工程速度
 ED6A7533A1E35BE8=工程拍号, 格式为 4-4
 ED70E933A1E88CB2=工程拍号, 格式为 4/4
 A54B83C77112A240=工程拍号分子
 9E9673674CDB5A9F=工程拍号分母
+61A76AAF1C1B6A88=工程播放速率
 F016657745229BE3=FX 列表
 A7ED57DDF64CE39F=FX 列表, 由 X 分隔
 0E64B79CB41C63C6=最近主控轨道峰值电平
@@ -15017,7 +15047,7 @@ C5E297D4F9C6A9A6=第一个渲染的文件为 N, 第二个文件为 N+1...
 EAC7D0A41D1A4661=第一个渲染的文件为 C0, 第二个为 C#0...
 2BC4663E8DB83036=第一个渲染的文件为 X (例如: B2), 第二个为 X+1 (例如: C3)...
 F4E00D6FE0F5368B=第一个渲染的文件为 C0, 第二个为 D0...
-D025DDD4F673D9ED=同名的第一个对象或区域为 1, 第二个为 2...
+0CDC89DD7C972AB6=1 表示第一个同名区域或对象, 2 表示第二个...
 E8F607F516866C57=时间线上的第一个对象或区域为 1, 第二个为 2...
 ABA8B5A5A8C0EA12=时间线上的第一个对象或区域为 N, 第二个为 N+1...
 D4C140F52CCA422B=这条轨道上时间线的第一个对象或区域为 1, 第二个为 2...
@@ -15045,6 +15075,8 @@ A64ACEE1DC315855=周的天数
 F49637487591C1AB=如果前一个通配符解析为任何内容，则为 \"文本\"，否则为空
 F7B5AB8FB18A8D2D=如果后一个通配符解析为任何内容，则为 \"文本\"，否则为空
 07F63279A1AC3D6D=如果前后通配符解析为任何内容，则为 \"文本\"，否则为空
+90A04580CE49FF6B=如果通配符解析为 \"条件\", 则将上一个通配符替换为 \"文本\"
+E301E7DB065103C3=如果通配符解析结果为 \"条件\", 则将下一个通配符替换为 \"文本\"
 98D702913EE77A9F=用户名
 29AE5A86A0624341=计算机名
 EE38F39D428A5FF8=通配符的第一个字符大写将使替代内容的第一个字母大写。
@@ -15073,12 +15105,12 @@ EF48806770BF6E03=$marker(last)[;] 解析为 \"doe\"
 C95E7D9935B89171= (将自动创建目录)
 
 [render_wildcards]
-20BD4EE2F1EF76E5=$projectlength(格式) 的自定义时间格式:
-08BDFB33E1A2D4C7=$projectpos(格式) 和 $projectlength(格式) 的自定义时间格式:
+71F8F9962E86AFF3=$projectlength 的自定义时间格式:
+48D8C0C623DF201F=$projectpos, $projectlength, $timesel, $preroll 的自定义时间格式:
 5DAFA823BDD9E407=请参阅上文以获取 name=value 语法的帮助。
 36E9CA096DEA4645=要更改分隔符字符，请使用替换通配符。
-33ECD482EEEDA166=请参阅上文以获取 $projectlength(格式) 的自定义格式。
-A626EE9C752B859C=请参阅上文以获取 $projectpos(格式) 和 $projectlength(格式) 的自定义格式。
+99F2DDCE37EBC404=参阅上文关于 $projectlength 的自定义时间格式.
+B8F8E12875B0B21A=参阅上文关于 $projectpos, $projectlength, $timesel, $preroll 的自定义时间格式.
 
 [render_wildercard]
 1516DC2329E75565=磁盘上的工程目录
