@@ -1,7 +1,8 @@
 -- @description Functions
--- @version 1.0.9
+-- @version 1.0.10
 -- @author zaibuyidao
 -- @noindex
+-- @provides [nomain] Functions.lua
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
