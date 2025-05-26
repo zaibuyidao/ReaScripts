@@ -1,8 +1,9 @@
 -- @description Functions
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
+-- @noindex
 -- @links
---   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
 -- @about Core Function Library
 -- @changelog New Script
