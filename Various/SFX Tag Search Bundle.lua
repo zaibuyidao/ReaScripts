@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.16
+-- @version 2.0.17
 -- @changelog
 --   + Optimized search term sending.
 --     Please back up the configuration files (*.ini) in the script directory and delete them.
@@ -8,7 +8,7 @@
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=229807
 -- @links
---   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
+--   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
@@ -22,6 +22,7 @@
 --   [nomain] SFX Tag Search/req/*.lua
 --   SFX Tag Search/*.csv
 --   SFX Tag Search/lib/*.ini
+--   [main=main,mediaexplorer] .
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
