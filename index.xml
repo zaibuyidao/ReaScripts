@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="bd4ffe397fcb6b4445f2dfedbfc84b0059ccfeb2">
+<index version="1" name="zaibuyidao Scripts" commit="2abbeae9997b824436ec9ae6733052c61d4a3c0b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -13553,6 +13553,45 @@ Add "scroll to top" feature to UCS list]]></changelog>
         <source file="SFX Tag Search/lib/config-ucs-default.ini">https://github.com/zaibuyidao/ReaScripts/raw/58616059591d330292e04df7e8b11d09197953b8/Various/SFX%20Tag%20Search/lib/config-ucs-default.ini</source>
         <source file="SFX Tag Search/lib/config-ucs-synonym-index-default.ini">https://github.com/zaibuyidao/ReaScripts/raw/58616059591d330292e04df7e8b11d09197953b8/Various/SFX%20Tag%20Search/lib/config-ucs-synonym-index-default.ini</source>
         <source main="main mediaexplorer">https://github.com/zaibuyidao/ReaScripts/raw/58616059591d330292e04df7e8b11d09197953b8/Various/SFX%20Tag%20Search%20Bundle.lua</source>
+      </version>
+      <version name="2.0.18" author="zaibuyidao" time="2025-05-26T16:25:31Z">
+        <changelog><![CDATA[+ Optimized search term sending.
+  Please back up the configuration files (*.ini) in the script directory and delete them.
+  Running the script again will recreate the configuration files.]]></changelog>
+        <source main="main mediaexplorer" file="SFX Tag Search/zaibuyidao_SFX Tag Search - Custom Tags.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/zaibuyidao_SFX%20Tag%20Search%20-%20Custom%20Tags.lua</source>
+        <source main="main mediaexplorer" file="SFX Tag Search/zaibuyidao_SFX Tag Search - Database.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/zaibuyidao_SFX%20Tag%20Search%20-%20Database.lua</source>
+        <source main="main mediaexplorer" file="SFX Tag Search/zaibuyidao_SFX Tag Search - Favorite.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/zaibuyidao_SFX%20Tag%20Search%20-%20Favorite.lua</source>
+        <source main="main mediaexplorer" file="SFX Tag Search/zaibuyidao_SFX Tag Search - Thesaurus.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/zaibuyidao_SFX%20Tag%20Search%20-%20Thesaurus.lua</source>
+        <source main="main mediaexplorer" file="SFX Tag Search/zaibuyidao_SFX Tag Search - UCS Synonym Index.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/zaibuyidao_SFX%20Tag%20Search%20-%20UCS%20Synonym%20Index.lua</source>
+        <source main="main mediaexplorer" file="SFX Tag Search/zaibuyidao_SFX Tag Search - UCS.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/zaibuyidao_SFX%20Tag%20Search%20-%20UCS.lua</source>
+        <source file="SFX Tag Search/lib/LIP.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/LIP.lua</source>
+        <source file="SFX Tag Search/lib/core_custom_tags.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/core_custom_tags.lua</source>
+        <source file="SFX Tag Search/lib/core_database.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/core_database.lua</source>
+        <source file="SFX Tag Search/lib/core_favorite.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/core_favorite.lua</source>
+        <source file="SFX Tag Search/lib/core_thesaurus.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/core_thesaurus.lua</source>
+        <source file="SFX Tag Search/lib/core_ucs.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/core_ucs.lua</source>
+        <source file="SFX Tag Search/lib/pinyin.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/pinyin.lua</source>
+        <source file="SFX Tag Search/req/JGui.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/JGui.lua</source>
+        <source file="SFX Tag Search/req/JGuiColors.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/JGuiColors.lua</source>
+        <source file="SFX Tag Search/req/JGuiControls.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/JGuiControls.lua</source>
+        <source file="SFX Tag Search/req/JGuiFunctions.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/JGuiFunctions.lua</source>
+        <source file="SFX Tag Search/req/JProjectClass.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/JProjectClass.lua</source>
+        <source file="SFX Tag Search/req/JProjectClassReq.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/JProjectClassReq.lua</source>
+        <source file="SFX Tag Search/req/jKeyboard.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/jKeyboard.lua</source>
+        <source file="SFX Tag Search/req/j_file_functions.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/j_file_functions.lua</source>
+        <source file="SFX Tag Search/req/j_settings_functions.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/j_settings_functions.lua</source>
+        <source file="SFX Tag Search/req/j_string_functions.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/j_string_functions.lua</source>
+        <source file="SFX Tag Search/req/j_tables.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/j_tables.lua</source>
+        <source file="SFX Tag Search/req/j_trackstatechunk_functions.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/j_trackstatechunk_functions.lua</source>
+        <source file="SFX Tag Search/req/mouse.lua">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/req/mouse.lua</source>
+        <source file="SFX Tag Search/keywords_thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/keywords_thesaurus.csv</source>
+        <source file="SFX Tag Search/keywords_ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/keywords_ucs.csv</source>
+        <source file="SFX Tag Search/lib/config-custom-tags-default.ini">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/config-custom-tags-default.ini</source>
+        <source file="SFX Tag Search/lib/config-database-default.ini">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/config-database-default.ini</source>
+        <source file="SFX Tag Search/lib/config-favorite-default.ini">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/config-favorite-default.ini</source>
+        <source file="SFX Tag Search/lib/config-thesaurus-default.ini">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/config-thesaurus-default.ini</source>
+        <source file="SFX Tag Search/lib/config-ucs-default.ini">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/config-ucs-default.ini</source>
+        <source file="SFX Tag Search/lib/config-ucs-synonym-index-default.ini">https://github.com/zaibuyidao/ReaScripts/raw/2abbeae9997b824436ec9ae6733052c61d4a3c0b/Various/SFX%20Tag%20Search/lib/config-ucs-synonym-index-default.ini</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
