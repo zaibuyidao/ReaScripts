@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="58616059591d330292e04df7e8b11d09197953b8">
+<index version="1" name="zaibuyidao Scripts" commit="7eeaa4f7044dba8d49182a99a2cd33ae57893b32">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8103,6 +8103,10 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
       <version name="1.0.6" author="zaibuyidao" time="2024-05-15T07:37:58Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9d10d322e2f16d93ec517c3532268283c2759739/Utility/zaibuyidao_Functions.lua</source>
+      </version>
+      <version name="1.0.7" author="zaibuyidao" time="2025-05-26T14:56:07Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source>https://github.com/zaibuyidao/ReaScripts/raw/7eeaa4f7044dba8d49182a99a2cd33ae57893b32/Utility/zaibuyidao_Functions.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Implode Drums.lua" type="script" desc="Implode Drums">
