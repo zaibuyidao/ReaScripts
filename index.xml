@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="26fa1b34d3e0ba3c4e60a6b1f40779ba0b97a479">
+<index version="1" name="zaibuyidao Scripts" commit="5a66817f5cb9a656ef8e6168160717bc20e52e65">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8062,6 +8062,23 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
       </version>
       <version name="1.3.2" author="zaibuyidao" time="2021-03-03T13:59:40Z">
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/de83ecede084c72d4da65d86b37cf8cd9d5c0196/Utility/zaibuyidao_Explode%20Drums.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Functions.lua" type="script" desc="Functions">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Core Function Library\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/u/zaibuyidao</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+      </metadata>
+      <version name="1.0.11" author="zaibuyidao" time="2025-05-26T16:42:33Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5a66817f5cb9a656ef8e6168160717bc20e52e65/Utility/zaibuyidao_Functions.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Implode Drums.lua" type="script" desc="Implode Drums">
