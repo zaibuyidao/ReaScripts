@@ -1,6 +1,6 @@
 -- @description SFX Tag Search Bundle
 -- @author zaibuyidao
--- @version 2.0.17
+-- @version 2.0.18
 -- @changelog
 --   + Optimized search term sending.
 --     Please back up the configuration files (*.ini) in the script directory and delete them.
@@ -12,17 +12,16 @@
 --   https://github.com/zaibuyidao/ReaScripts
 -- @metapackage
 -- @provides
---   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Custom Tags.lua
---   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Database.lua
---   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Favorite.lua
---   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - Thesaurus.lua
---   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS Synonym Index.lua
---   [main] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS.lua
+--   [main=main,mediaexplorer] SFX Tag Search/zaibuyidao_SFX Tag Search - Custom Tags.lua
+--   [main=main,mediaexplorer] SFX Tag Search/zaibuyidao_SFX Tag Search - Database.lua
+--   [main=main,mediaexplorer] SFX Tag Search/zaibuyidao_SFX Tag Search - Favorite.lua
+--   [main=main,mediaexplorer] SFX Tag Search/zaibuyidao_SFX Tag Search - Thesaurus.lua
+--   [main=main,mediaexplorer] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS Synonym Index.lua
+--   [main=main,mediaexplorer] SFX Tag Search/zaibuyidao_SFX Tag Search - UCS.lua
 --   [nomain] SFX Tag Search/lib/*.lua
 --   [nomain] SFX Tag Search/req/*.lua
 --   SFX Tag Search/*.csv
 --   SFX Tag Search/lib/*.ini
---   [main=main,mediaexplorer] .
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
