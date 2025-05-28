@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5a66817f5cb9a656ef8e6168160717bc20e52e65">
+<index version="1" name="zaibuyidao Scripts" commit="c4c06b56a8809f440e04c562317b52fcf47818ea">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4472,6 +4472,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/f8a6b35b03e59b4cddacb8373ef02d6f32e87448/MIDI%20Editor/zaibuyidao_Notes%20to%20Pitch%20Bend.lua</source>
       </version>
+      <version name="1.0.2" author="zaibuyidao" time="2025-05-28T09:42:45Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c4c06b56a8809f440e04c562317b52fcf47818ea/MIDI%20Editor/zaibuyidao_Notes%20to%20Pitch%20Bend.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Notes to Smooth Pitch Bend.lua" type="script" desc="Notes to Smooth Pitch Bend">
       <metadata>
@@ -4489,6 +4493,10 @@
       <version name="1.0" author="zaibuyidao" time="2024-06-19T09:46:51Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/eeffbae1be8b1ece26fb0a998cd5ca3faaf8539c/MIDI%20Editor/zaibuyidao_Notes%20to%20Smooth%20Pitch%20Bend.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-05-28T09:42:45Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c4c06b56a8809f440e04c562317b52fcf47818ea/MIDI%20Editor/zaibuyidao_Notes%20to%20Smooth%20Pitch%20Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Selected Arpeggio.lua" type="script" desc="Paste Selected Arpeggio">
