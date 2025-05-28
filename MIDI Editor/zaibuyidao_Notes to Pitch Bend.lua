@@ -1,5 +1,5 @@
 -- @description Notes to Pitch Bend
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -36,10 +36,11 @@ else
   return
 end
 
-local language = getSystemLanguage()
+local language       = getSystemLanguage() -- Detect the system language to display messages in Chinese or English
+local range          = 12                  -- Pitch bend range in semitones (±12 semitones)
+local autoSwitchLane = true                -- Set to false to preserve the user's original CC lane
 
-range = 12
-
+local title, err_title, err_msg1, err_msg2
 if language == "简体中文" then
   title = "音符转弯音"
   err_title = "错误"
@@ -61,14 +62,20 @@ local editor = reaper.MIDIEditor_GetActive()
 local take = reaper.MIDIEditor_GetTake(editor)
 if take == nil then return end
 
-local cnt, index = 0, {}
+-- 获取选中音符索引
+local index = {}
 local val = reaper.MIDI_EnumSelNotes(take, -1)
-while val ~= - 1 do
-  cnt = cnt + 1
-  index[cnt] = val
+while val ~= -1 do
+  table.insert(index, val)
   val = reaper.MIDI_EnumSelNotes(take, val)
 end
 
+if #index < 2 then
+  reaper.MB(err_msg2, err_title, 0)
+  return
+end
+
+-- 插值表
 function getSegments(n)
   local x = 8192
   local p = math.floor((x / n) + 0.5) -- 四舍五入
@@ -90,67 +97,106 @@ function getSegments(n)
   return res
 end
 
-function pitchUp(o, targets)
-  if #targets == 0 then error() end
-  for i = 1, #targets do
-    return targets[o + (range + 1)]
+local function pitchUp(o, targets)
+  return targets[o + (range + 1)]
+end
+
+local function pitchDown(p, targets)
+  return targets[p + (range + 1)]
+end
+
+local seg = getSegments(range)
+local notes = {}
+
+-- 获取音符数据并排序
+for _, idx in ipairs(index) do
+  local retval, sel, mut, s_ppq, e_ppq, chan, pitch, vel = reaper.MIDI_GetNote(take, idx)
+  if sel then
+    table.insert(notes, {
+      index = idx,
+      startppq = s_ppq,
+      endppq = e_ppq,
+      pitch = pitch,
+      vel = vel,
+      chan = chan,
+      selected = sel,
+      muted = mut
+    })
   end
 end
 
-function pitchDown(p, targets)
-  if #targets == 0 then error() end
-  for i = #targets, 1, -1 do
-    return targets[p + (range + 1)]
+table.sort(notes, function(a, b) return a.startppq < b.startppq end)
+
+-- 主音符
+local main = notes[1]
+
+-- 查找选中音符中最末尾的结束位置
+local last_endppq = 0
+for _, n in ipairs(notes) do
+  if n.endppq > last_endppq then
+    last_endppq = n.endppq
   end
 end
-
-local pitch = {}
-local startppqpos = {}
-local endppqpos = {}
-local vel = {}
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
-if #index > 1 then
-  for i = 1, #index do
-    retval, selected, muted, startppqpos[i], endppqpos[i], chan, pitch[i], vel[i] = reaper.MIDI_GetNote(take, index[i])
-    if selected then
-      if pitch[i-1] then
-        local pitchnote = (pitch[i]-pitch[1])
-        local seg = getSegments(range)
-        
-        if pitchnote > 0 then
-          pitchbend = pitchUp(pitchnote, seg)
-        else
-          pitchbend = pitchDown(pitchnote, seg)
-        end
-        
-        if pitchbend == nil then return reaper.MB(err_msg1, err_title, 0) end
+local max_endppq = 0
+local LSB_list = {}
+local MSB_list = {}
+LSB_list[1] = 0
+MSB_list[1] = 64
 
-        LSB = pitchbend & 0x7F
-        MSB = (pitchbend >> 7) + 64
+for i = 2, #notes do
+  local n = notes[i]
+  local interval = n.pitch - main.pitch
+  if math.abs(interval) > range then
+    reaper.MB(err_msg1, err_title, 0)
+    return
+  end
 
-        reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, LSB, MSB)
-      end
-      if i == #index then
-        j = reaper.MIDI_EnumSelNotes(take, -1)
-        while j > -1 do
-          reaper.MIDI_DeleteNote(take, j)
-          j = reaper.MIDI_EnumSelNotes(take, -1)
-        end
-        if (pitch[1] ~= pitch[i]) then
-          reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
-        end
-        reaper.MIDI_InsertNote(take, selected, muted, startppqpos[1], endppqpos[i], chan, pitch[1], vel[1], true)
-      end
+  local bend = interval >= 0 and pitchUp(interval, seg) or pitchDown(interval, seg)
+  if not bend then
+    reaper.MB(err_msg1, err_title, 0)
+    return
+  end
+
+  local LSB = bend & 0x7F
+  local MSB = (bend >> 7) + 64
+  LSB_list[i] = LSB
+  MSB_list[i] = MSB
+  if notes[i].endppq > max_endppq then max_endppq = notes[i].endppq end
+
+  reaper.MIDI_InsertCC(take, false, false, n.startppq, 224, 0, LSB, MSB)
+
+  if notes[i].endppq < max_endppq then
+    if i > 1 and LSB_list[i - 1] and MSB_list[i - 1] then
+      reaper.MIDI_InsertCC(take, false, false, n.endppq, 224, 0, LSB_list[i - 1], MSB_list[i - 1])
+    else
+      reaper.MIDI_InsertCC(take, false, false, n.endppq + 10, 224, 0, 0, 64)
     end
   end
-else
-  reaper.MB(err_msg2, err_title, 0)
 end
+
+-- 删除所有选中音符 v1
+for i = #index, 1, -1 do
+  reaper.MIDI_DeleteNote(take, index[i])
+end
+-- 删除所有选中音符 v2
+-- j = reaper.MIDI_EnumSelNotes(take, -1)
+-- while j > -1 do
+--   reaper.MIDI_DeleteNote(take, j)
+--   j = reaper.MIDI_EnumSelNotes(take, -1)
+-- end
+
+-- 重插主音符，延长结束位置
+reaper.MIDI_InsertNote(take, true, main.muted, main.startppq, last_endppq, main.chan, main.pitch, main.vel, true)
+-- 在最后位置插入归零
+reaper.MIDI_InsertCC(take, false, false, last_endppq, 224, 0, 0, 64)
 
 reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-reaper.MIDIEditor_OnCommand(editor, 40366) -- CC: Set CC lane to Pitch
+if autoSwitchLane then
+  reaper.MIDIEditor_OnCommand(editor, 40366) -- CC: Set CC lane to Pitch
+end
