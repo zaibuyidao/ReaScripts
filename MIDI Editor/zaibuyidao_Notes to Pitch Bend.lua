@@ -1,5 +1,5 @@
 -- @description Notes to Pitch Bend
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -111,6 +111,15 @@ reaper.Undo_BeginBlock()
 
 local LSB_list = {}
 local MSB_list = {}
+local LSB_list, MSB_list = {}, {}
+local last_LSB, last_MSB = -1, -1
+
+local function insertUniquePitchBend(ppq, LSB, MSB)
+  if LSB ~= last_LSB or MSB ~= last_MSB then
+    reaper.MIDI_InsertCC(take, false, false, ppq, 224, 0, LSB, MSB)
+    last_LSB, last_MSB = LSB, MSB
+  end
+end
 
 if #index > 1 then
   local prevLSB, prevMSB = 0, 64
@@ -141,10 +150,12 @@ if #index > 1 then
         MSB_list[i] = MSB
         prevLSB, prevMSB = LSB, MSB
   
-        reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, LSB, MSB)
+        insertUniquePitchBend(startppqpos[i], LSB, MSB)
+        -- reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, LSB, MSB)
         -- 交错音符
         if endppqpos[i] < max_endppq then
-          reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
+          insertUniquePitchBend(endppqpos[i], 0, 64)
+          -- reaper.MIDI_InsertCC(take, false, false, endppqpos[i], 224, 0, 0, 64)
         end
       end
     end
@@ -164,7 +175,8 @@ if #index > 1 then
   -- 插入延长的主音符
   reaper.MIDI_InsertNote(take, true, muted, startppqpos[1], max_endppq, chan, pitch[1], vel[1], true)
   -- 在最后位置插入归零
-  reaper.MIDI_InsertCC(take, false, false, max_endppq, 224, 0, 0, 64)
+  insertUniquePitchBend(max_endppq, 0, 64)
+  -- reaper.MIDI_InsertCC(take, false, false, max_endppq, 224, 0, 0, 64)
 else
   reaper.MB(err_msg2, err_title, 0)
 end
