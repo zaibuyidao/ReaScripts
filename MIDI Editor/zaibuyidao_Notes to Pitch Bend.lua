@@ -1,8 +1,9 @@
 -- @description Notes to Pitch Bend
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   Optimized inserted pitch bend shape
+--   Added feature: automatically removes consecutive pitch bend reset events, keeping only the first one
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -154,7 +155,7 @@ local pitch, startppqpos, endppqpos, vel = {}, {}, {}, {}
 
 local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local cur_grid, swing = reaper.MIDI_GetGrid(take)
-local tick_grid = midi_tick * cur_grid * grid_scale
+local tick_grid = midi_tick * cur_grid
 
 -- 插入弯音设置形状
 local function insertUniquePitchBend(ppq, LSB, MSB, shape_type)
