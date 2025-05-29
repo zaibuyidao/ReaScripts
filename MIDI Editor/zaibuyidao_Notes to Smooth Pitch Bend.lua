@@ -1,8 +1,9 @@
 -- @description Notes to Smooth Pitch Bend
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   Optimized inserted pitch bend shape
+--   Added feature: automatically removes consecutive pitch bend reset events, keeping only the first one
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -47,7 +48,7 @@ if language == "简体中文" then
   err_title = "错误"
   err_msg1 = "请检查音符间隔，并将其限制在一个八度内"
   err_msg2 = "请选择两个或更多音符"
-elseif language == "繁体中文" then
+elseif language == "繁體中文" then
   title = "音符轉平滑彎音"
   err_title = "錯誤"
   err_msg1 = "請檢查音符間隔，並將其限制在一個八度内"
@@ -101,11 +102,76 @@ local function pitchDown(p, targets)
   return targets[p + (range + 1)]
 end
 
+local function DeselectAllPitchBendCC(take)
+  local _, _, cc_cnt, _ = reaper.MIDI_CountEvts(take)
+  for i = 0, cc_cnt - 1 do
+    local retval, selected, muted, ppq, chanmsg, chan, msg2, msg3 = reaper.MIDI_GetCC(take, i)
+    if chanmsg == 224 and selected then
+      reaper.MIDI_SetCC(take, i, false, muted, ppq, chanmsg, chan, msg2, msg3)
+    end
+  end
+end
+
+function RemoveConsecutiveZeroPitchBends(take)
+  if not take then return end
+
+  local cnt, index = 0, {}
+  local val = reaper.MIDI_EnumSelCC(take, -1)
+  while val ~= -1 do
+    cnt = cnt + 1
+    index[cnt] = val
+    val = reaper.MIDI_EnumSelCC(take, val)
+  end
+
+  local idx = -1
+  local lastWasZero = false
+
+  reaper.MIDI_DisableSort(take)
+
+  for i = 1, #index do
+    index[i] = reaper.MIDI_EnumSelCC(take, idx)
+    local _, _, _, _, chanmsg, _, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
+    if chanmsg == 224 then
+      local pitchbend = msg2 + msg3 * 128
+      if pitchbend == 8192 then
+        if lastWasZero then
+          reaper.MIDI_DeleteCC(take, index[i])
+        else
+          lastWasZero = true
+          idx = index[i]
+        end
+      else
+        lastWasZero = false
+        idx = index[i]
+      end
+    else
+      idx = index[i]
+    end
+  end
+
+  reaper.MIDI_Sort(take)
+end
+
 local pitch, startppqpos, endppqpos, vel = {}, {}, {}, {}
 
 local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local cur_grid, swing = reaper.MIDI_GetGrid(take)
 local tick_grid = midi_tick * cur_grid * grid_scale
+
+-- 插入弯音设置形状
+local function insertUniquePitchBend(ppq, LSB, MSB, shape_type)
+  shape_type = shape_type or 0 -- 默认线性
+
+  -- 插入新的 pitch bend 事件
+  reaper.MIDI_InsertCC(take, true, false, ppq, 224, 0, LSB, MSB)
+
+  -- 获取插入后的事件索引
+  local _, _, new_cc_cnt, _ = reaper.MIDI_CountEvts(take)
+  local last_idx = new_cc_cnt - 1
+
+  -- 设置该事件的形状
+  reaper.MIDI_SetCCShape(take, last_idx, shape_type, 0, false)
+end
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
@@ -122,6 +188,8 @@ if #index > 1 then
   for i = 1, #index do
     local retval, selected, m, s_ppq, e_ppq, c, p, v = reaper.MIDI_GetNote(take, index[i])
     if selected then
+      DeselectAllPitchBendCC(take)
+
       pitch[i] = p
       startppqpos[i] = s_ppq
       endppqpos[i] = e_ppq
@@ -131,7 +199,8 @@ if #index > 1 then
       if e_ppq > max_endppq then max_endppq = e_ppq end
 
       if i > 1 then
-        reaper.MIDI_InsertCC(take, true, false, startppqpos[i] - tick_grid, 224, 0, prevLSB, prevMSB)
+        insertUniquePitchBend(startppqpos[i] - tick_grid, prevLSB, prevMSB, 1)
+        -- reaper.MIDI_InsertCC(take, true, false, startppqpos[i] - tick_grid, 224, 0, prevLSB, prevMSB)
       end
 
       if pitch[i - 1] then
@@ -146,15 +215,19 @@ if #index > 1 then
         MSB_list[i] = MSB
         prevLSB, prevMSB = LSB, MSB
   
-        reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, LSB, MSB)
+        insertUniquePitchBend(startppqpos[i], LSB, MSB, 0)
+        -- reaper.MIDI_InsertCC(take, false, false, startppqpos[i], 224, 0, LSB, MSB)
         -- 交错音符
         if endppqpos[i] < max_endppq then
-          reaper.MIDI_InsertCC(take, true, false, endppqpos[i], 224, 0, LSB, MSB)
+          insertUniquePitchBend(endppqpos[i], LSB, MSB, 1)
+          -- reaper.MIDI_InsertCC(take, true, false, endppqpos[i], 224, 0, LSB, MSB)
           -- 插入返回前一个 pitch
           if i > 1 and LSB_list[i - 1] and MSB_list[i - 1] then
-            reaper.MIDI_InsertCC(take, false, false, endppqpos[i] + tick_grid, 224, 0, LSB_list[i - 1], MSB_list[i - 1])
+            insertUniquePitchBend(endppqpos[i] + tick_grid, LSB_list[i - 1], MSB_list[i - 1], 0)
+            -- reaper.MIDI_InsertCC(take, false, false, endppqpos[i] + tick_grid, 224, 0, LSB_list[i - 1], MSB_list[i - 1])
           else
-            reaper.MIDI_InsertCC(take, false, false, endppqpos[i] + tick_grid, 224, 0, 0, 64)
+            insertUniquePitchBend(endppqpos[i] + tick_grid, 0, 64, 0)
+            -- reaper.MIDI_InsertCC(take, false, false, endppqpos[i] + tick_grid, 224, 0, 0, 64)
           end
           -- 重设为主音 pitch
           -- prevLSB = 0
@@ -178,14 +251,17 @@ if #index > 1 then
   -- 插入延长的主音符
   reaper.MIDI_InsertNote(take, true, muted, startppqpos[1], max_endppq, chan, pitch[1], vel[1], true)
   -- 在最后位置插入归零
-  reaper.MIDI_InsertCC(take, false, false, max_endppq, 224, 0, 0, 64)
+  insertUniquePitchBend(max_endppq, 0, 64, 0)
+  -- reaper.MIDI_InsertCC(take, false, false, max_endppq, 224, 0, 0, 64)
 
-  -- 设置所有弯音为线性
-  local cc_idx = reaper.MIDI_EnumSelCC(take, -1)
-  while cc_idx ~= -1 do
-    reaper.MIDI_SetCCShape(take, cc_idx, 1, 0, false)
-    cc_idx = reaper.MIDI_EnumSelCC(take, cc_idx)
-  end
+  -- 设置所有选中的弯音为线性
+  -- local cc_idx = reaper.MIDI_EnumSelCC(take, -1)
+  -- while cc_idx ~= -1 do
+  --   reaper.MIDI_SetCCShape(take, cc_idx, 1, 0, false)
+  --   cc_idx = reaper.MIDI_EnumSelCC(take, cc_idx)
+  -- end
+  RemoveConsecutiveZeroPitchBends(take) -- 移除连续的0弯音
+  DeselectAllPitchBendCC(take)
 else
   reaper.MB(err_msg2, err_title, 0)
 end
