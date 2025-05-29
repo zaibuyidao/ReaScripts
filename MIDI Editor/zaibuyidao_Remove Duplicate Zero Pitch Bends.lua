@@ -1,5 +1,5 @@
 -- @description Remove Duplicate Zero Pitch Bends
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -39,38 +39,34 @@ end
 function RemoveDuplicateZeroPitchBends(take)
   if not take then return end
 
-  local cnt, index = 0, {}
-  local val = reaper.MIDI_EnumSelCC(take, -1)
-  while val ~= -1 do
-    cnt = cnt + 1
-    index[cnt] = val
-    val = reaper.MIDI_EnumSelCC(take, val)
-  end
-
-  local idx = -1
-  local lastWasZero = false
-
   reaper.MIDI_DisableSort(take)
 
-  for i = 1, #index do
-    index[i] = reaper.MIDI_EnumSelCC(take, idx)
-    local _, _, _, _, chanmsg, _, msg2, msg3 = reaper.MIDI_GetCC(take, index[i])
+  -- 收集所有 pitch bend 0 事件
+  local _, _, cc_cnt, _ = reaper.MIDI_CountEvts(take)
+  local del = {}
+  local lastWasZero = false
+
+  -- 所有事件扫一遍, 收集pitch bend 0的顺序
+  local pb_idx = {}
+  for i = 0, cc_cnt - 1 do
+    local _, _, _, _, chanmsg, _, msg2, msg3 = reaper.MIDI_GetCC(take, i)
     if chanmsg == 224 then
       local pitchbend = msg2 + msg3 * 128
-      if pitchbend == 8192 then
-        if lastWasZero then
-          reaper.MIDI_DeleteCC(take, index[i])
-        else
-          lastWasZero = true
-          idx = index[i]
-        end
-      else
-        lastWasZero = false
-        idx = index[i]
-      end
-    else
-      idx = index[i]
+      table.insert(pb_idx, {idx = i, val = pitchbend})
     end
+  end
+
+  -- 找到所有连续的8192, 并记录要删的index
+  for i = 2, #pb_idx do
+    if pb_idx[i].val == 8192 and pb_idx[i-1].val == 8192 then
+      table.insert(del, pb_idx[i].idx)
+    end
+  end
+
+  -- 从大到小删
+  table.sort(del, function(a, b) return a > b end)
+  for _, idx in ipairs(del) do
+    reaper.MIDI_DeleteCC(take, idx)
   end
 
   reaper.MIDI_Sort(take)
@@ -78,7 +74,11 @@ end
 
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
-RemoveDuplicateZeroPitchBends()
+local editor = reaper.MIDIEditor_GetActive()
+if editor then
+  local take = reaper.MIDIEditor_GetTake(editor)
+  RemoveDuplicateZeroPitchBends(take)
+end
 reaper.Undo_EndBlock("Remove Duplicate Zero Pitch Bends", -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()

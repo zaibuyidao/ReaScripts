@@ -1,5 +1,5 @@
 -- @description Notes to Pitch Bend
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog
 --   Optimized inserted pitch bend shape
@@ -37,9 +37,9 @@ else
   return
 end
 
-local language       = getSystemLanguage() -- Detect the system language to display messages in Chinese or English
-local range          = 12                  -- Pitch bend range in semitones (±12 semitones)
-local autoSwitchLane = true                -- Set to false to preserve the user's original CC lane
+local language         = getSystemLanguage() -- Detect the system language to display messages in Chinese or English
+local range            = 12                  -- Pitch bend range in semitones (±12 semitones)
+local auto_switch_lane = true                -- Set to false to preserve the user's original CC lane
 
 local title, err_title, err_msg1, err_msg2
 if language == "简体中文" then
@@ -152,7 +152,6 @@ function RemoveConsecutiveZeroPitchBends(take)
 end
 
 local pitch, startppqpos, endppqpos, vel = {}, {}, {}, {}
-
 local midi_tick = reaper.SNM_GetIntConfigVar("MidiTicksPerBeat", 480)
 local cur_grid, swing = reaper.MIDI_GetGrid(take)
 local tick_grid = midi_tick * cur_grid
@@ -160,14 +159,11 @@ local tick_grid = midi_tick * cur_grid
 -- 插入弯音设置形状
 local function insertUniquePitchBend(ppq, LSB, MSB, shape_type)
   shape_type = shape_type or 0 -- 默认线性
-
   -- 插入新的 pitch bend 事件
   reaper.MIDI_InsertCC(take, true, false, ppq, 224, 0, LSB, MSB)
-
   -- 获取插入后的事件索引
   local _, _, new_cc_cnt, _ = reaper.MIDI_CountEvts(take)
   local last_idx = new_cc_cnt - 1
-
   -- 设置该事件的形状
   reaper.MIDI_SetCCShape(take, last_idx, shape_type, 0, false)
 end
@@ -175,49 +171,85 @@ end
 reaper.PreventUIRefresh(1)
 reaper.Undo_BeginBlock()
 
-local LSB_list = {}
-local MSB_list = {}
-
 if #index > 1 then
-  local prevLSB, prevMSB = 0, 64
-  local chan, muted
-  local seg = getSegments(range)
-  local max_endppq = 0
-
+  local note_events = {}
+  local notes = {}
+  
   for i = 1, #index do
     local retval, selected, m, s_ppq, e_ppq, c, p, v = reaper.MIDI_GetNote(take, index[i])
     if selected then
-      DeselectAllPitchBendCC(take)
+      table.insert(notes, {
+        i = i,
+        s = s_ppq,
+        e = e_ppq,
+        pitch = p,
+        chan = c,
+        vel = v,
+        muted = m,
+      })
+      note_events[#note_events + 1] = {ppq = s_ppq, type = "on", idx = i}
+      note_events[#note_events + 1] = {ppq = e_ppq, type = "off", idx = i}
+    end
+  end
+  
+  table.sort(note_events, function(a, b)
+    if a.ppq ~= b.ppq then
+      return a.ppq < b.ppq
+    elseif a.type ~= b.type then
+      -- 先 off 再 on (off < on)
+      return a.type == "off"
+    else
+      return false
+    end
+  end)
+  
+  local active_notes = {}
+  local prev_pitch = nil
+  local prevLSB, prevMSB = 0, 64
+  local seg = getSegments(range)
+  local max_endppq = 0
+  local chan, muted
+  
+  local is_first_event = true
+  
+  for _, e in ipairs(note_events) do
+    local n = notes[e.idx]
+    if e.type == "on" then
+      active_notes[#active_notes + 1] = n
+      if n.e > (max_endppq or 0) then max_endppq = n.e end
+    elseif e.type == "off" then
+      -- 移除
+      for j = #active_notes, 1, -1 do
+        if active_notes[j].i == e.idx then
+          table.remove(active_notes, j)
+          break
+        end
+      end
+    end
 
-      pitch[i] = p
-      startppqpos[i] = s_ppq
-      endppqpos[i] = e_ppq
-      vel[i] = v
-      chan = c
-      muted = m
-      if e_ppq > max_endppq then max_endppq = e_ppq end
-
-      if pitch[i - 1] then
-        local pitchnote = pitch[i] - pitch[1]
-        local pitchbend = pitchnote > 0 and pitchUp(pitchnote, seg) or pitchDown(pitchnote, seg)
-        if not pitchbend then return reaper.MB(err_msg1, err_title, 0) end
+    -- 当前最上层音符, 永远是active_notes最后一个
+    local main_note = active_notes[#active_notes]
+    local main_pitch = main_note and main_note.pitch or prev_pitch
+  
+    if is_first_event then
+      -- 首事件不插弯音
+      is_first_event = false
+      prev_pitch = main_pitch
+    else
+      if main_note then
+        -- 计算bend到的音高
+        local bend_val = main_pitch - notes[1].pitch
+        local pitchbend = bend_val > 0 and pitchUp(bend_val, seg) or pitchDown(bend_val, seg)
         local LSB = pitchbend & 0x7F
         local MSB = (pitchbend >> 7) + 64
-  
-        -- 保存 pitch bend 值
-        LSB_list[i] = LSB
-        MSB_list[i] = MSB
+        insertUniquePitchBend(e.ppq, LSB, MSB, 0)
         prevLSB, prevMSB = LSB, MSB
-  
-        insertUniquePitchBend(startppqpos[i], LSB, MSB, false, 0)
-        -- 交错音符
-        if endppqpos[i] < max_endppq then
-          if i > 1 and LSB_list[i - 1] and MSB_list[i - 1] then
-            insertUniquePitchBend(endppqpos[i], LSB_list[i - 1], MSB_list[i - 1], false, 0)
-          else
-            insertUniquePitchBend(endppqpos[i], 0, 64, false, 0)
-          end
-        end
+        prev_pitch = main_pitch
+      else
+        -- 没有音符时归零
+        -- insertUniquePitchBend(e.ppq, 0, 64, 0)
+        prevLSB, prevMSB = 0, 64
+        prev_pitch = nil
       end
     end
   end
@@ -232,20 +264,15 @@ if #index > 1 then
   --   reaper.MIDI_DeleteNote(take, j)
   --   j = reaper.MIDI_EnumSelNotes(take, -1)
   -- end
-
+  
   -- 插入延长的主音符
-  reaper.MIDI_InsertNote(take, true, muted, startppqpos[1], max_endppq, chan, pitch[1], vel[1], true)
+  local first = notes[1]
+  if first then
+    reaper.MIDI_InsertNote(take, true, first.muted or false, first.s, max_endppq, first.chan, first.pitch, first.vel, true)
+  end
   -- 在最后位置插入归零
-  insertUniquePitchBend(max_endppq, 0, 64, false, 0)
-  -- reaper.MIDI_InsertCC(take, false, false, max_endppq, 224, 0, 0, 64)
-
-  -- 设置所有选中的弯音为线性
-  -- local cc_idx = reaper.MIDI_EnumSelCC(take, -1)
-  -- while cc_idx ~= -1 do
-  --   reaper.MIDI_SetCCShape(take, cc_idx, 1, 0, false)
-  --   cc_idx = reaper.MIDI_EnumSelCC(take, cc_idx)
-  -- end
-  RemoveConsecutiveZeroPitchBends(take) -- 移除连续的0弯音
+  insertUniquePitchBend(max_endppq, 0, 64, 0)
+  -- RemoveConsecutiveZeroPitchBends(take)
   DeselectAllPitchBendCC(take)
 else
   reaper.MB(err_msg2, err_title, 0)
@@ -254,6 +281,6 @@ end
 reaper.Undo_EndBlock(title, -1)
 reaper.PreventUIRefresh(-1)
 reaper.UpdateArrange()
-if autoSwitchLane then
+if auto_switch_lane then
   reaper.MIDIEditor_OnCommand(editor, 40366) -- CC: Set CC lane to Pitch
 end
