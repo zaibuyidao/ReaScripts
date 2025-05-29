@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7cacc95d129dfc1f23319e1cb7a96b2c5af4a1d7">
+<index version="1" name="zaibuyidao Scripts" commit="987303b07c60c2e6eb22ae2feb1e87c74a8c2fcf">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -4484,6 +4484,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/7cacc95d129dfc1f23319e1cb7a96b2c5af4a1d7/MIDI%20Editor/zaibuyidao_Notes%20to%20Pitch%20Bend.lua</source>
       </version>
+      <version name="1.0.5" author="zaibuyidao" time="2025-05-29T03:29:41Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/987303b07c60c2e6eb22ae2feb1e87c74a8c2fcf/MIDI%20Editor/zaibuyidao_Notes%20to%20Pitch%20Bend.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Notes to Smooth Pitch Bend.lua" type="script" desc="Notes to Smooth Pitch Bend">
       <metadata>
@@ -4505,6 +4509,11 @@
       <version name="1.0.1" author="zaibuyidao" time="2025-05-28T09:42:45Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/c4c06b56a8809f440e04c562317b52fcf47818ea/MIDI%20Editor/zaibuyidao_Notes%20to%20Smooth%20Pitch%20Bend.lua</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2025-05-29T03:29:41Z">
+        <changelog><![CDATA[Optimized inserted pitch bend shape
+Added feature: automatically removes consecutive pitch bend reset events, keeping only the first one]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/987303b07c60c2e6eb22ae2feb1e87c74a8c2fcf/MIDI%20Editor/zaibuyidao_Notes%20to%20Smooth%20Pitch%20Bend.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Paste Selected Arpeggio.lua" type="script" desc="Paste Selected Arpeggio">
@@ -5226,6 +5235,24 @@
       </version>
       <version name="1.6" author="zaibuyidao" time="2021-01-07T16:43:56Z">
         <source main="main midi_inlineeditor midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/201cd3b960bcb9ff1d35bafa9e7a270a02563d85/MIDI%20Editor/zaibuyidao_Random%20Velocity.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Remove Duplicate Zero Pitch Bends.lua" type="script" desc="Remove Duplicate Zero Pitch Bends">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Pitch Bend Script Series, filter "zaibuyidao pitch bend" in ReaPack or Actions to access all scripts. Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/u/zaibuyidao</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2025-05-29T03:29:41Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/987303b07c60c2e6eb22ae2feb1e87c74a8c2fcf/MIDI%20Editor/zaibuyidao_Remove%20Duplicate%20Zero%20Pitch%20Bends.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Remove Redundant CCs.lua" type="script" desc="Remove Redundant CCs">
