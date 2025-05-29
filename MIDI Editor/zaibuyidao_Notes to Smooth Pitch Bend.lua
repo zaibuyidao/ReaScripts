@@ -1,9 +1,8 @@
 -- @description Notes to Smooth Pitch Bend
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
---   Optimized inserted pitch bend shape
---   Added feature: automatically removes consecutive pitch bend reset events, keeping only the first one
+--   Optimized the logic for inserting the final pitch bend reset (value 0).
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -292,9 +291,31 @@ if #index > 1 then
   if first then
     reaper.MIDI_InsertNote(take, true, first.muted or false, first.s, max_endppq, first.chan, first.pitch, first.vel, true)
   end
-  -- 在最后位置插入归零
-  insertUniquePitchBend(max_endppq, 0, 64, 0)
-  --RemoveConsecutiveZeroPitchBends(take)
+  -- insertUniquePitchBend(max_endppq, 0, 64, 0) -- 在最后位置插入归零
+
+  -- 如果提前归零，则不用再最好位置归零。
+  local last_sel_ppq = nil
+  local last_sel_val = nil
+  local val = reaper.MIDI_EnumSelCC(take, -1)
+  while val ~= -1 do
+    local _, _, _, ppq, chanmsg, _, msg2, msg3 = reaper.MIDI_GetCC(take, val)
+    if chanmsg == 224 then
+      if (not last_sel_ppq) or (ppq > last_sel_ppq) then
+        last_sel_ppq = ppq
+        last_sel_val = msg2 + msg3 * 128
+      end
+    end
+    val = reaper.MIDI_EnumSelCC(take, val)
+  end
+  -- print(string.format("last_sel_ppq = %.2f, last_sel_val = %d\n", last_sel_ppq or -1, last_sel_val or -1))
+  -- if not (last_sel_val and last_sel_val == 8192) then
+  --   print(">> 插入归零 pitch bend\n")
+  --   insertUniquePitchBend(max_endppq, 0, 64, 0)
+  -- else
+  --   print(">> 不插入归零\n")
+  -- end
+
+  -- RemoveConsecutiveZeroPitchBends(take)
   DeselectAllPitchBendCC(take)
 else
   reaper.MB(err_msg2, err_title, 0)
