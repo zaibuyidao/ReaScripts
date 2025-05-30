@@ -1,5 +1,5 @@
 -- @description Notes to Smooth Pitch Bend
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog
 --   Optimized the logic for inserting the final pitch bend reset (value 0).
@@ -142,6 +142,48 @@ function RemoveConsecutiveZeroPitchBends(take)
   end
 
   reaper.MIDI_Sort(take)
+end
+
+function CleanAndInsertPitchBendReset(take, max_endppq)
+  -- 收集所有选中的 pitch bend
+  local pb = {}  -- {idx, ppq, value}
+  local val = reaper.MIDI_EnumSelCC(take, -1)
+  while val ~= -1 do
+    local _, _, _, ppq, chanmsg, _, msg2, msg3 = reaper.MIDI_GetCC(take, val)
+    if chanmsg == 224 then
+      table.insert(pb, {idx = val, ppq = ppq, value = msg2 + msg3 * 128})
+    end
+    val = reaper.MIDI_EnumSelCC(take, val)
+  end
+
+  -- reaper.ShowConsoleMsg("---- 原始选中弯音 ----\n")
+  -- for i, v in ipairs(pb) do
+  --   reaper.ShowConsoleMsg(string.format("idx=%d, ppq=%.2f, value=%d\n", v.idx, v.ppq, v.value))
+  -- end
+
+  -- if #pb == 0 then
+  --   reaper.ShowConsoleMsg("无选中弯音，结束处理。\n")
+  --   return
+  -- end
+
+  -- 按 ppq 升序排序
+  table.sort(pb, function(a, b) return a.ppq < b.ppq end)
+
+  -- 找到最后一段连续0的起点
+  local last_nonzero = #pb
+  while last_nonzero > 0 and pb[last_nonzero].value == 8192 do
+    last_nonzero = last_nonzero - 1
+  end
+
+  -- 是否需要插入归零
+  if pb[#pb].value ~= 8192 then
+    -- reaper.ShowConsoleMsg(string.format(">> 最后一个弯音不是归零，插入归零到 ppq=%.2f\n", max_endppq))
+    reaper.MIDI_InsertCC(take, true, false, max_endppq, 224, 0, 0, 64)
+    local _, _, new_cc_cnt, _ = reaper.MIDI_CountEvts(take)
+    reaper.MIDI_SetCCShape(take, new_cc_cnt - 1, 0, 0, false)
+  else
+    -- reaper.ShowConsoleMsg(">> 最后一个弯音已归零，无需插入归零\n")
+  end
 end
 
 local pitch, startppqpos, endppqpos, vel = {}, {}, {}, {}
@@ -292,29 +334,7 @@ if #index > 1 then
     reaper.MIDI_InsertNote(take, true, first.muted or false, first.s, max_endppq, first.chan, first.pitch, first.vel, true)
   end
   -- insertUniquePitchBend(max_endppq, 0, 64, 0) -- 在最后位置插入归零
-
-  -- 如果提前归零，则不用再最好位置归零。
-  local last_sel_ppq = nil
-  local last_sel_val = nil
-  local val = reaper.MIDI_EnumSelCC(take, -1)
-  while val ~= -1 do
-    local _, _, _, ppq, chanmsg, _, msg2, msg3 = reaper.MIDI_GetCC(take, val)
-    if chanmsg == 224 then
-      if (not last_sel_ppq) or (ppq > last_sel_ppq) then
-        last_sel_ppq = ppq
-        last_sel_val = msg2 + msg3 * 128
-      end
-    end
-    val = reaper.MIDI_EnumSelCC(take, val)
-  end
-  -- print(string.format("last_sel_ppq = %.2f, last_sel_val = %d\n", last_sel_ppq or -1, last_sel_val or -1))
-  -- if not (last_sel_val and last_sel_val == 8192) then
-  --   print(">> 插入归零 pitch bend\n")
-  --   insertUniquePitchBend(max_endppq, 0, 64, 0)
-  -- else
-  --   print(">> 不插入归零\n")
-  -- end
-
+  CleanAndInsertPitchBendReset(take, max_endppq)
   -- RemoveConsecutiveZeroPitchBends(take)
   DeselectAllPitchBendCC(take)
 else
