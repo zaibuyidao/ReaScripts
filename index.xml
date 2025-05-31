@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2e527b0f5000e4fe6142aed0fe7868117d12fe94">
+<index version="1" name="zaibuyidao Scripts" commit="c7e455060110d941d7ccfe54ce21ba5caa10c21c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8381,6 +8381,24 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
       <version name="1.0" author="zaibuyidao" time="2024-02-02T07:41:13Z">
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2cb69e8f0d98267ab14439e8b64ece8634592d8d/Utility/zaibuyidao_Paste%20Tempo%20Time%20Signature%20In%20Time%20Selection%20(Relative%20Position).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Project Audio File Explorer.lua" type="script" desc="Project Audio File Explorer">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI, SWS Extension, and ReaImGui.\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/u/zaibuyidao</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2025-05-31T18:45:33Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c7e455060110d941d7ccfe54ce21ba5caa10c21c/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
