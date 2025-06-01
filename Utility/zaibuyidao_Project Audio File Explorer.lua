@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -35,12 +35,12 @@ else
 end
 
 -- local SCRIPT_NAME = 'Project Audio File Explorer - Browse, search and preview all audio files referenced by or located in the current project.'
-local SCRIPT_NAME = 'Project Audio File Explorer - Browse, Search, and Preview Project Audio'
+local SCRIPT_NAME = 'Project Audio File Explorer - Browse, Search, and Preview Project Audio Files'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext('SCRIPT_NAME')
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
 reaper.ImGui_Attach(ctx, sans_serif)
-reaper.ImGui_SetNextWindowSize(ctx, 947, 447, reaper.ImGui_Cond_FirstUseEver())
+reaper.ImGui_SetNextWindowSize(ctx, 950, 430, reaper.ImGui_Cond_FirstUseEver())
 
 -- 状态变量
 local selected_row      = -1
@@ -911,7 +911,7 @@ function loop()
     -- 格式化时间标签
     local label = string.format("%s / %s", reaper.format_timestr(position, ""), reaper.format_timestr(length, ""))
     -- 大宽度进度条（铺满采用-FLT_MIN）
-    reaper.ImGui_PushItemWidth(ctx, -FLT_MIN)
+    reaper.ImGui_PushItemWidth(ctx, -65)
     local changed, want_pos = reaper.ImGui_SliderDouble(ctx, "##position", seek_pos or position, 0, length, label)
     reaper.ImGui_PopItemWidth(ctx)
     -- 拖动跳转逻辑，只有播放状态下才能跳转
@@ -929,21 +929,48 @@ function loop()
       end
     end
 
-    -- 电平信号
-    local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-    local spacing_x, spacing_h = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
-    local meter_h = math.max(spacing_h, ((avail_h + spacing_h) / peak_chans) - spacing_h)
-    for i = 0, peak_chans - 1 do
-      local valid, peak = false, 0
-      if playing_preview and reaper.CF_Preview_GetPeak then
-        valid, peak = reaper.CF_Preview_GetPeak(playing_preview, i)
-      end
-      reaper.ImGui_BeginDisabled(ctx, not valid)
-      reaper.ImGui_ProgressBar(ctx, peak or 0, -FLT_MIN, meter_h, ' ')
-      reaper.ImGui_EndDisabled(ctx)
-    end
+    -- 电平信号旧版备留
+    -- local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
+    -- local spacing_x, spacing_h = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
+    -- local meter_h = math.max(spacing_h, ((avail_h + spacing_h) / peak_chans) - spacing_h)
+    -- for i = 0, peak_chans - 1 do
+    --   local valid, peak = false, 0
+    --   if playing_preview and reaper.CF_Preview_GetPeak then
+    --     valid, peak = reaper.CF_Preview_GetPeak(playing_preview, i)
+    --   end
+    --   reaper.ImGui_BeginDisabled(ctx, not valid)
+    --   reaper.ImGui_ProgressBar(ctx, peak or 0, -FLT_MIN, meter_h, ' ')
+    --   reaper.ImGui_EndDisabled(ctx)
+    -- end
 
-    -- 自动停止非Loop播放。只要没勾选Loop且快播完就自动Stop
+    -- 竖直电平条竖版
+    reaper.ImGui_SameLine(ctx, nil, 5)
+    local bar_height = 20 -- 或 reaper.ImGui_GetFrameHeight(ctx) * 2
+    local bar_width = 7
+    local spacing = 2
+    local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+    local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    for i = 0, peak_chans-1 do
+      local peak = 0
+      if playing_preview and reaper.CF_Preview_GetPeak then
+        local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
+        if valid then peak = value end
+      end
+      -- 画竖直电平条（底灰、顶色高亮）
+      local bar_x1 = x + i * (bar_width + spacing)
+      local bar_x2 = bar_x1 + bar_width
+      local bar_y1 = y
+      local bar_y2 = y + bar_height
+      -- 先画底
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, bar_y1, bar_x2, bar_y2, 0x222222ff)
+      -- 再画峰值
+      local peak_y = bar_y2 - peak * bar_height
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, peak_y, bar_x2, bar_y2, 0x33dd33ff)
+    end
+    -- Dummy 占位
+    reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
+
+    -- 自动停止非Loop播放，只要没勾选Loop且快播完就自动Stop
     if playing_preview and not loop_enabled then
       local ok_pos, position = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
       local ok_len, length   = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
