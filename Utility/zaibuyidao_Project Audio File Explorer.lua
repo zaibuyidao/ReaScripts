@@ -1,8 +1,15 @@
 -- @description Project Audio File Explorer
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   + Added settings for:
+--     1. Double-click action (insert, preview, or do nothing)
+--     2. Auto-play selected media
+--     3. Adjustable window background alpha
+--   + Added support for spacebar to play/stop preview.
+--   + Added support for Up/Down arrow keys to select and scroll through the table.
+--   + Improved scroll-following behavior for selected row.
+--   + UI and usability enhancements.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -57,7 +64,7 @@ local pitch             = 0     -- 音高调节（半音，正负）
 local preserve_pitch    = true  -- 变速时是否保持音高
 local is_paused         = false -- 是否处于暂停状态
 local paused_position   = 0     -- 暂停时的进度
--- 表格列表排序 
+-- 表格列表排序
 local COL_FILENAME      = 2
 local COL_SIZE          = 3
 local COL_TYPE          = 4
@@ -70,7 +77,7 @@ local COL_CHANNELS      = 10
 local COL_SAMPLERATE    = 11
 local COL_BITS          = 12
 local files_idx_cache   = nil   -- 文件缓存
--- 表格高度
+-- 表格高度相关
 local file_table_height = 300   -- 文件表格初始高度（可根据需要设定默认值）
 local min_table_height  = 80    -- 最小高度
 local max_table_height  = 800   -- 最大高度
@@ -83,18 +90,24 @@ local filename_filter   = nil
 local previewed_files   = {}
 local function MarkPreviewed(path) previewed_files[path] = true end
 local function IsPreviewed(path) return previewed_files[path] == true end
-
 -- 读取ExtState
 local last_height = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT))
 if last_height then
   file_table_height = math.min(math.max(last_height, min_table_height), max_table_height)
 end
+-- 设置相关
+local auto_play_selected  = true
+local DOUBLECLICK_INSERT  = 0
+local DOUBLECLICK_PREVIEW = 1
+local DOUBLECLICK_NONE    = 2
+local doubleclick_action  = DOUBLECLICK_NONE -- 默认 Do Do nothing
+local bg_alpha            = 1.0              -- 默认背景不透明
 
--- 收集音频方式（0=Items, 1=RPP, 2=Directory）
-local collect_mode = 0
-local COLLECT_MODE_ITEMS = 0
-local COLLECT_MODE_RPP = 1
-local COLLECT_MODE_DIR = 2
+-- 默认收集模式（0=Items, 1=RPP, 2=Directory）
+local collect_mode        = 1
+local COLLECT_MODE_ITEMS  = 0
+local COLLECT_MODE_RPP    = 1
+local COLLECT_MODE_DIR    = 2
 
 -- 收集工程音频文件
 local function CollectAllUniqueSources_FromItems()
@@ -360,6 +373,7 @@ function loop()
     CollectFiles()
   end
   reaper.ImGui_PushFont(ctx, sans_serif)
+  reaper.ImGui_SetNextWindowBgAlpha(ctx, bg_alpha) -- 背景不透明度
   -- 以下会进行每帧调用，导致脚本卡顿。所以用 files_idx_cache 作为唯一音频列表的数据表
   -- local files, files_idx = CollectAllUniqueSources()
   -- local files, files_idx = CollectAllUniqueSources_FromRPP()
@@ -367,12 +381,6 @@ function loop()
 
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
   if visible then
-    reaper.ImGui_Text(ctx, ("%d audio files found."):format(#files_idx_cache))
-    if playing_preview and playing_path then
-      reaper.ImGui_SameLine(ctx, nil, 1)
-      reaper.ImGui_Text(ctx, " Now playing: " .. playing_path)
-    end
-
     -- 过滤器
     reaper.ImGui_Text(ctx, "Filter:")
     reaper.ImGui_SameLine(ctx)
@@ -412,13 +420,17 @@ function loop()
     if reaper.ImGui_Button(ctx, "Rescan") then
       CollectFiles()
     end
+    -- F5
+    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F5()) then
+      CollectFiles()
+    end
 
     -- 使用Slider调整表格可视高度
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_PushItemWidth(ctx, -65)
     local changed, new_height = reaper.ImGui_SliderInt(ctx, "Height", file_table_height, min_table_height, max_table_height, "%d px")
     reaper.ImGui_SameLine(ctx)
-    HelpMarker("Adjust the table height by dragging.\nCtrl + left-click to input a value directly.\n\n" .. "Click 'Rescan' to refresh the file list.")
+    HelpMarker("Adjust the table height by dragging.\nCtrl + left-click to input a value directly.\n\n" .. "Click 'Rescan' or press F5 to refresh the file list.")
     reaper.ImGui_PopItemWidth(ctx)
     if changed then
       file_table_height = new_height
@@ -575,6 +587,67 @@ function loop()
         end)
       end
 
+      -- 空格播放/停止播放
+      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Space()) then
+        if playing_preview then
+          -- 正在播放，空格则停止
+          StopPlay()
+          is_paused = false
+          paused_position = 0
+        elseif selected_row > 0 and files_idx_cache and files_idx_cache[selected_row] then
+          -- 未播放且有选中，空格则播放
+          local info = files_idx_cache[selected_row]
+          PlayFile(info.source, info.path, loop_enabled)
+          is_paused = false
+          paused_position = 0
+        end
+      end
+
+      -- 上下方向键选中文件
+      local num_files = files_idx_cache and #files_idx_cache or 0
+      if num_files > 0 then
+        local played = false
+      
+        if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_DownArrow()) then
+          if not selected_row or selected_row < 1 then
+            selected_row = 1
+            played = true
+          elseif selected_row < num_files then
+            selected_row = selected_row + 1
+            played = true
+          end
+        end
+        if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_UpArrow()) then
+          if not selected_row or selected_row < 1 then
+            selected_row = 1
+            played = true
+          elseif selected_row > 1 then
+            selected_row = selected_row - 1
+            played = true
+          end
+        end
+
+        -- 若勾选auto_play_selected，且确实有移动，则自动播放
+        if auto_play_selected and played and selected_row and files_idx_cache[selected_row] then
+          local info = files_idx_cache[selected_row]
+          PlayFile(info.source, info.path, loop_enabled)
+          is_paused = false
+          paused_position = 0
+        end
+      end
+
+      -- 上下按键滚动表格项，上一帧选中的行号
+      local prev_selected_row = _G.prev_selected_row or -1
+      -- 滚动目标，nil表示不滚动
+      _G.scroll_target = nil
+      -- 检查上下键并设置滚动目标
+      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_DownArrow()) and selected_row ~= prev_selected_row then
+        _G.scroll_target = 0.5 -- 1.0=底部
+      end
+      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_UpArrow()) and selected_row ~= prev_selected_row then
+        _G.scroll_target = 0.5 -- 0.0=顶部
+      end
+
       for i, info in ipairs(files_idx_cache) do
         local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
         -- 拆分为多个关键词
@@ -617,10 +690,30 @@ function loop()
           if reaper.ImGui_IsItemHovered(ctx) then
             row_hovered = true
           end
+
           -- 双击播放
-          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            PlayFile(info.source, info.path, loop_enabled)
+          -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
+          --   PlayFile(info.source, info.path, loop_enabled)
+          -- end
+
+          -- 单击播放勾选项 Auto-play selected media
+          if auto_play_selected then
+            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 0) then 
+              PlayFile(info.source, info.path, loop_enabled)
+            end
           end
+
+          -- 双击操作
+          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
+            if doubleclick_action == DOUBLECLICK_INSERT then
+              reaper.InsertMedia(info.path, 0)
+            elseif doubleclick_action == DOUBLECLICK_PREVIEW then
+              PlayFile(info.source, info.path, loop_enabled)
+            elseif doubleclick_action == DOUBLECLICK_NONE then
+              -- Do nothing
+            end
+          end
+
           -- Ctrl+左键 或 Ctrl+I 插入到工程
           local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
           local is_ctrl_click = reaper.ImGui_IsItemClicked(ctx, 0) and ctrl
@@ -731,16 +824,25 @@ function loop()
           if row_hovered or selected_row == i then
             reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_RowBg1(), 0x2d83ec66)
           end
+
+          -- 上下按键自动滚动到可见
+          if selected_row == i and _G.scroll_target ~= nil then
+            reaper.ImGui_SetScrollHereY(ctx, _G.scroll_target)
+            _G.scroll_target = nil -- 只滚动一次
+          end
         end
       end
 
       reaper.ImGui_EndTable(ctx)
     end
+    -- 上下按键滚动保存选中项
+    _G.prev_selected_row = selected_row
+
     reaper.ImGui_EndChild(ctx)
     reaper.ImGui_Separator(ctx)
     -- 播放控制按钮
     -- Play 按钮
-    if reaper.ImGui_Button(ctx, "Play") then
+    if reaper.ImGui_Button(ctx, "Play ") then
       if selected_row > 0 and files_idx_cache[selected_row] then
         PlayFile(files_idx_cache[selected_row].source, files_idx_cache[selected_row].path, loop_enabled)
         is_paused = false
@@ -780,7 +882,7 @@ function loop()
     end
     -- Stop 按钮
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "Stop") then
+    if reaper.ImGui_Button(ctx, "Stop ") then
       StopPlay()
       is_paused = false
       paused_position = 0
@@ -825,7 +927,10 @@ function loop()
     if reaper.ImGui_Button(ctx, "Settings##Popup") then
       reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
     end
-    if reaper.ImGui_BeginPopupModal(ctx, "Settings##Popup", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+    if reaper.ImGui_IsPopupOpen(ctx, "Settings##Popup") then
+      reaper.ImGui_SetNextWindowSize(ctx, 480, 400, reaper.ImGui_Cond_Appearing())
+    end
+    if reaper.ImGui_BeginPopupModal(ctx, "Settings##Popup", nil) then
       -- 收集切换
       reaper.ImGui_Text(ctx, "Audio file source:")
       local changed_collect_mode = false
@@ -845,6 +950,22 @@ function loop()
         CollectFiles()
       end
 
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Double-click action:")
+      if reaper.ImGui_RadioButton(ctx, "Insert media file to arrange", doubleclick_action == DOUBLECLICK_INSERT) then
+        doubleclick_action = DOUBLECLICK_INSERT
+      end
+      if reaper.ImGui_RadioButton(ctx, "Preview media", doubleclick_action == DOUBLECLICK_PREVIEW) then
+        doubleclick_action = DOUBLECLICK_PREVIEW
+      end
+      if reaper.ImGui_RadioButton(ctx, "Do nothing", doubleclick_action == DOUBLECLICK_NONE) then
+        doubleclick_action = DOUBLECLICK_NONE
+      end
+
+      reaper.ImGui_Separator(ctx)
+      local changed
+      changed, auto_play_selected = reaper.ImGui_Checkbox(ctx, "Auto-play selected media", auto_play_selected)
+
       -- 更改速率是否保持音高
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Playback settings:")
@@ -852,6 +973,32 @@ function loop()
       changed_pp, preserve_pitch = reaper.ImGui_Checkbox(ctx, "Preserve pitch when changing rate", preserve_pitch)
       if changed_pp and playing_preview and reaper.CF_Preview_SetValue then
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+      end
+      
+      -- 背景不透明度
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Window background alpha:")
+      reaper.ImGui_SameLine(ctx)
+      reaper.ImGui_PushItemWidth(ctx, -65)
+      local changed, new_bg_alpha = reaper.ImGui_InputDouble(ctx, "##bg_alpha", bg_alpha, 0.05, 0.1, "%.2f")
+      reaper.ImGui_PopItemWidth(ctx)
+      if changed then
+        -- 范围在 0 ~ 1
+        bg_alpha = math.max(0, math.min(1, new_bg_alpha or 1))
+      end
+
+      -- 表格高度
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Table height:")
+      reaper.ImGui_SameLine(ctx)
+      reaper.ImGui_PushItemWidth(ctx, -65)
+      local changed, new_height = reaper.ImGui_SliderInt(ctx, "Height", file_table_height, min_table_height, max_table_height, "%d px")
+      reaper.ImGui_SameLine(ctx)
+      HelpMarker("Adjust the table height by dragging.\nCtrl + left-click to input a value directly.\n\nClick 'Rescan' to refresh the file list.")
+      reaper.ImGui_PopItemWidth(ctx)
+      if changed then
+        file_table_height = new_height
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
       end
 
       -- 关闭按钮
@@ -969,6 +1116,13 @@ function loop()
     end
     -- Dummy 占位
     reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
+
+    -- 状态栏行
+    reaper.ImGui_Text(ctx, ("%d audio files found."):format(#files_idx_cache))
+    if playing_preview and playing_path then
+      reaper.ImGui_SameLine(ctx, nil, 1)
+      reaper.ImGui_Text(ctx, " Now playing: " .. playing_path)
+    end
 
     -- 自动停止非Loop播放，只要没勾选Loop且快播完就自动Stop
     if playing_preview and not loop_enabled then
