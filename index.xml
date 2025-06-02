@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1af4fa3b9097080fb149ea0633591f150565b0a7">
+<index version="1" name="zaibuyidao Scripts" commit="1112020a252b132e8e7827fd6f3bd4712ade3772">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8436,6 +8436,13 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
 + Improved table text color scheme to better distinguish previewed items.
 + Enhanced overall interaction to better match the REAPER Media Explorer experience.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1af4fa3b9097080fb149ea0633591f150565b0a7/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.6" author="zaibuyidao" time="2025-06-02T13:30:58Z">
+        <changelog><![CDATA[+ Added support for saving and restoring settings via the Settings dialog.
++ Added option to adjust progress bar height for easier interaction.
++ Improved table text color scheme to better distinguish previewed items.
++ Enhanced overall interaction to better match the REAPER Media Explorer experience.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1112020a252b132e8e7827fd6f3bd4712ade3772/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
