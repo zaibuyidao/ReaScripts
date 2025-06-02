@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3997408c6f6fc9641a6287be45ebebde5b638214">
+<index version="1" name="zaibuyidao Scripts" commit="be67feb3e48b2b995d3fae54ba23a0ea663d4e44">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8418,6 +8418,17 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
 + Improved scroll-following behavior for selected row.
 + UI and usability enhancements.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3997408c6f6fc9641a6287be45ebebde5b638214/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2025-06-02T11:08:04Z">
+        <changelog><![CDATA[+ Added settings for:
+  1. Double-click action (insert, preview, or do nothing)
+  2. Auto-play selected media
+  3. Adjustable window background alpha
++ Added support for spacebar to play/stop preview.
++ Added support for Up/Down arrow keys to select and scroll through the table.
++ Improved scroll-following behavior for selected row.
++ UI and usability enhancements.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/be67feb3e48b2b995d3fae54ba23a0ea663d4e44/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
