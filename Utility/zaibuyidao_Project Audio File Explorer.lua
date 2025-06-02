@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.8
+-- @version 1.0.9
 -- @author zaibuyidao
 -- @changelog
 --   + Added rotary knob controls for both playback rate and pitch adjustment.
@@ -444,64 +444,10 @@ function HelpMarker(desc)
   end
 end
 
--- 简易旋钮控件，跟着旋转
--- function ImGui_Knob_v1(ctx, label, value, v_min, v_max, size)
---   -- 参数说明：label(唯一)、当前值、最小值、最大值、大小(像素)
---   local radius = size * 0.5
---   local center_x, center_y = reaper.ImGui_GetCursorScreenPos(ctx)
---   center_x = center_x + radius
---   center_y = center_y + radius
-
---   -- 角度：-135度~+135度映射到最小值~最大值
---   local ANGLE_MIN = -3 * math.pi / 4
---   local ANGLE_MAX =  3 * math.pi / 4
---   local t = (value - v_min) / (v_max - v_min)
---   -- local angle = ANGLE_MIN + (ANGLE_MAX - ANGLE_MIN) * t -- 向右旋转 90 度
---   local angle = ANGLE_MIN + (ANGLE_MAX - ANGLE_MIN) * t - math.pi/2
-
---   -- 绘制
---   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
---   reaper.ImGui_DrawList_AddCircleFilled(draw_list, center_x, center_y, radius, 0x294773FF) -- 0x333333FF
---   -- 指针
---   local hand_x = center_x + math.cos(angle) * (radius * 0.75)
---   local hand_y = center_y + math.sin(angle) * (radius * 0.75)
---   reaper.ImGui_DrawList_AddLine(draw_list, center_x, center_y, hand_x, hand_y, 0x3D85E0FF, 3) -- 0xFFAA00FF
---   -- 外圈
---   reaper.ImGui_DrawList_AddCircle(draw_list, center_x, center_y, radius, 0x294773FF, 32, 2) --0x888888FF
---   -- Label
---   reaper.ImGui_SetCursorScreenPos(ctx, center_x - radius, center_y + radius + 4)
---   reaper.ImGui_Text(ctx, label)
-
---   -- 交互
---   reaper.ImGui_SetCursorScreenPos(ctx, center_x - radius, center_y - radius)
---   reaper.ImGui_InvisibleButton(ctx, label .. "_knob", size, size + 18)
---   local active = reaper.ImGui_IsItemActive(ctx)
---   local hovered = reaper.ImGui_IsItemHovered(ctx)
---   local changed = false
---   if active then
---     local mx, my = reaper.ImGui_GetMousePos(ctx)
---     local dx = mx - center_x
---     local dy = my - center_y
---     local drag_angle = math.atan(dy, dx)
---     local norm = (drag_angle - ANGLE_MIN) / (ANGLE_MAX - ANGLE_MIN)
---     norm = math.max(0, math.min(1, norm))
---     local new_value = v_min + (v_max - v_min) * norm
---     if new_value ~= value then
---       value = new_value
---       changed = true
---     end
---   elseif hovered and reaper.ImGui_IsMouseClicked(ctx, 1) then
---     -- 右键恢复1.0
---     value = 1.0
---     changed = true
---   end
---   return changed, value
--- end
-
--- 简易旋钮控件，在函数最前面加静态表存储drag偏移
+-- 旋钮控件，在函数最前面加静态表存储drag偏移
 ImGui_Knob_drag_y = ImGui_Knob_drag_y or {}
 
-function ImGui_Knob(ctx, label, value, v_min, v_max, size)
+function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   local radius = size * 0.5
   local center_x, center_y = reaper.ImGui_GetCursorScreenPos(ctx)
   center_x = center_x + radius
@@ -551,7 +497,7 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size)
 
   -- 右键单击恢复默认
   if hovered and reaper.ImGui_IsMouseClicked(ctx, 1) then
-    value = 1.0
+    value = default_value or v_min
     changed = true
   end
   return changed, value
@@ -1102,9 +1048,11 @@ function loop()
     end
     -- 音量
     reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_Text(ctx, "Volume:")
+    reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 200)
     local rv2
-    rv2, volume = reaper.ImGui_SliderDouble(ctx, "Volume", volume, 0, 2, string.format("%.2f dB", VAL2DB(volume)), reaper.ImGui_SliderFlags_Logarithmic())
+    rv2, volume = reaper.ImGui_SliderDouble(ctx, "##volume", volume, 0, 2, string.format("%.2f dB", VAL2DB(volume)), reaper.ImGui_SliderFlags_Logarithmic())
     reaper.ImGui_PopItemWidth(ctx)
     if rv2 and playing_preview and reaper.CF_Preview_SetValue then
       reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
@@ -1112,9 +1060,11 @@ function loop()
 
     -- 音高旋钮
     reaper.ImGui_SameLine(ctx, nil, 10)
-    local pitch_knob_min, pitch_knob_max = -6, 6 -- ±12 半音
+    reaper.ImGui_Text(ctx, "Pitch:")
+    reaper.ImGui_SameLine(ctx)
+    local pitch_knob_min, pitch_knob_max = -6, 6 -- ±6 半音
     local pitch_knob_size = 20
-    local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size)
+    local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size, 0)
     if pitch_knob_changed then
       pitch = pitch_knob_value
       if playing_preview and reaper.CF_Preview_SetValue then
@@ -1141,7 +1091,7 @@ function loop()
     reaper.ImGui_SameLine(ctx)
     local knob_size = 20
     local rate_min, rate_max = 0.25, 4.0
-    local knob_changed, knob_value = ImGui_Knob(ctx, "##rate_knob", play_rate, rate_min, rate_max, knob_size)
+    local knob_changed, knob_value = ImGui_Knob(ctx, "##rate_knob", play_rate, rate_min, rate_max, knob_size, 1)
     if knob_changed then
       play_rate = knob_value
       if playing_preview and reaper.CF_Preview_SetValue then
