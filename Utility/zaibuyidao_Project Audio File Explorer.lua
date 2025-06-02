@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog
 --   + Added support for saving and restoring settings via the Settings dialog.
@@ -46,6 +46,10 @@ reaper.ImGui_Attach(ctx, sans_serif)
 reaper.ImGui_SetNextWindowSize(ctx, 1400, 548, reaper.ImGui_Cond_FirstUseEver())
 
 -- 状态变量
+local font_size         = 14  -- 默认字体大小
+local need_refresh_font = false
+local FONT_SIZE_MIN     = 10
+local FONT_SIZE_MAX     = 20
 local selected_row      = -1
 local playing_preview   = nil
 local playing_path      = nil
@@ -81,16 +85,26 @@ local max_table_height  = 800   -- 最大高度
 -- ExtState持久化设置
 local EXT_SECTION = "ProjectAudioFileExplorer"
 local EXT_KEY_TABLE_HEIGHT = "FileTableHeight"
+local EXT_KEY_PEAKS = "PeakChans"
+local EXT_KEY_FONT_SIZE = "FontSize"
 -- 列表过滤
 local filename_filter   = nil
 -- 预览已读标记
 local previewed_files   = {}
 local function MarkPreviewed(path) previewed_files[path] = true end
 local function IsPreviewed(path) return previewed_files[path] == true end
--- 读取ExtState
+-- 恢复ExtState
 local last_height = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT))
 if last_height then
   file_table_height = math.min(math.max(last_height, min_table_height), max_table_height)
+end
+local last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_PEAKS))
+if last_peak_chans then
+  peak_chans = math.min(math.max(last_peak_chans, 2), 128)
+end
+local last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE))
+if last_font_size then
+  font_size = math.min(math.max(last_font_size, FONT_SIZE_MIN), FONT_SIZE_MAX)
 end
 -- 设置相关
 local auto_play_selected  = true
@@ -114,7 +128,10 @@ local function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
   reaper.SetExtState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
 end
+
 -- 恢复设置
 local last_collect_mode = tonumber(reaper.GetExtState(EXT_SECTION, "collect_mode"))
 if last_collect_mode then collect_mode = last_collect_mode end
@@ -411,6 +428,15 @@ local function VAL2DB(x)
   end
 end
 
+local function RefreshFont()
+  sans_serif = reaper.ImGui_CreateFont('sans-serif', font_size)
+  reaper.ImGui_Attach(ctx, sans_serif)
+end
+
+local function MarkFontDirty()
+  need_refresh_font = true
+end
+
 function HelpMarker(desc)
   reaper.ImGui_TextDisabled(ctx, '(?)')
   if reaper.ImGui_BeginItemTooltip(ctx) then
@@ -425,6 +451,11 @@ function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
     CollectFiles()
+  end
+  if need_refresh_font then
+    sans_serif = reaper.ImGui_CreateFont('sans-serif', font_size)
+    reaper.ImGui_Attach(ctx, sans_serif)
+    need_refresh_font = false
   end
   reaper.ImGui_PushFont(ctx, sans_serif)
   reaper.ImGui_SetNextWindowBgAlpha(ctx, bg_alpha) -- 背景不透明度
@@ -988,14 +1019,28 @@ function loop()
     end
 
     -- 设置弹窗
-    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_SameLine(ctx, nil, 10)
     if reaper.ImGui_Button(ctx, "Settings##Popup") then
       reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
     end
     if reaper.ImGui_IsPopupOpen(ctx, "Settings##Popup") then
-      reaper.ImGui_SetNextWindowSize(ctx, 480, 400, reaper.ImGui_Cond_Appearing())
+      reaper.ImGui_SetNextWindowSize(ctx, 480, 427, reaper.ImGui_Cond_Appearing())
     end
     if reaper.ImGui_BeginPopupModal(ctx, "Settings##Popup", nil) then
+      -- 字体大小
+      reaper.ImGui_Text(ctx, "Font size:")
+      reaper.ImGui_SameLine(ctx)
+      reaper.ImGui_PushItemWidth(ctx, -65)
+      local changed_font, new_font_size = reaper.ImGui_SliderInt(ctx, "##font_size_slider", font_size, FONT_SIZE_MIN, FONT_SIZE_MAX, "%d px")
+      reaper.ImGui_PopItemWidth(ctx)
+      if changed_font then
+        font_size = new_font_size
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
+        MarkFontDirty()
+      end
+      reaper.ImGui_SameLine(ctx)
+      HelpMarker("Adjust the font size for the interface. Range: 10-20 px.")
+
       -- 收集切换
       reaper.ImGui_Text(ctx, "Audio file source:")
       local changed_collect_mode = false
@@ -1066,6 +1111,22 @@ function loop()
         reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
       end
 
+      -- Peaks
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Peaks meter channels:")
+      reaper.ImGui_SameLine(ctx)
+      reaper.ImGui_PushItemWidth(ctx, -65)
+      local changed_peaks, new_peaks = reaper.ImGui_InputDouble(ctx, "##peaks_input", peak_chans, 1, 10, "%.0f")
+      reaper.ImGui_PopItemWidth(ctx)
+      if changed_peaks then
+        peak_chans = math.floor((new_peaks or 2) + 0.5)
+        if peak_chans < 2 then peak_chans = 2 end
+        if peak_chans > 128 then peak_chans = 128 end
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
+      end
+      reaper.ImGui_SameLine(ctx)
+      HelpMarker("Number of peak meter channels to show. Range: 2~128.")
+
       -- 关闭按钮
       reaper.ImGui_Separator(ctx)
       if reaper.ImGui_Button(ctx, "Save and Close##Rate_close") then
@@ -1081,6 +1142,8 @@ function loop()
         preserve_pitch = true,
         bg_alpha = 1.0,
         file_table_height = 400,
+        peak_chans = 2,
+        font_size = 14,
       }
 
       reaper.ImGui_SameLine(ctx)
@@ -1092,7 +1155,12 @@ function loop()
         preserve_pitch = DEFAULTS.preserve_pitch
         bg_alpha = DEFAULTS.bg_alpha
         file_table_height = DEFAULTS.file_table_height
+        peak_chans = DEFAULTS.peak_chans
+        font_size = DEFAULTS.font_size -- 字体大小
         reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
+        MarkFontDirty()
         CollectFiles()
       end
       if reaper.ImGui_IsItemHovered(ctx) then
