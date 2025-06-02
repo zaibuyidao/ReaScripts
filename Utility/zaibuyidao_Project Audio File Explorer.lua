@@ -1,15 +1,11 @@
 -- @description Project Audio File Explorer
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog
---   + Added settings for:
---     1. Double-click action (insert, preview, or do nothing)
---     2. Auto-play selected media
---     3. Adjustable window background alpha
---   + Added support for spacebar to play/stop preview.
---   + Added support for Up/Down arrow keys to select and scroll through the table.
---   + Improved scroll-following behavior for selected row.
---   + UI and usability enhancements.
+--   + Added support for saving and restoring settings via the Settings dialog.
+--   + Added option to adjust progress bar height for easier interaction.
+--   + Improved table text color scheme to better distinguish previewed items.
+--   + Enhanced overall interaction to better match the REAPER Media Explorer experience.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -136,6 +132,34 @@ elseif last_preserve_pitch == "0" then preserve_pitch = false end
 
 local last_bg_alpha = tonumber(reaper.GetExtState(EXT_SECTION, "bg_alpha"))
 if last_bg_alpha then bg_alpha = last_bg_alpha end
+
+-- 完全透明
+local transparent = 0x00000000 -- R=00 G=00 B=00 A=00
+local yellow      = 0xFFFF00FF -- 纯黄，RGBA 全不透明
+-- 基本色 (100% 不透明)
+local white       = 0xFFFFFFFF -- 白色
+local black       = 0x000000FF -- 黑色
+local red         = 0xFF0000FF -- 红色
+local green       = 0x00FF00FF -- 绿色
+local blue        = 0x0000FFFF -- 蓝色
+local yellow      = 0xFFFF00FF -- 黄色
+local cyan        = 0x00FFFFFF -- 青色
+local magenta     = 0xFF00FFFF -- 品红
+-- 灰度
+local gray        = 0x808080FF -- 中灰
+local lightGray   = 0xC0C0C0FF -- 浅灰
+local darkGray    = 0x404040FF -- 深灰
+-- 其他常用色
+local orange      = 0xFFA500FF -- 橙色
+local purple      = 0x800080FF -- 紫色
+local pink        = 0xFFC0CBFF -- 粉色
+local brown       = 0xA52A2AFF -- 棕色
+local lime        = 0x32CD32FF -- 酸橙绿
+local gold        = 0xFFD700FF -- 金色
+local silver      = 0xC0C0C0FF -- 银色
+local normal_text = 0xCCCCCCFF  -- 柔和灰白
+local previewed_text = 0x888888FF  -- 已预览过的更暗
+
 -- 收集工程音频文件
 local function CollectAllUniqueSources_FromItems()
   local files, files_idx = {}, {}
@@ -694,6 +718,12 @@ function loop()
 
         if match then
           reaper.ImGui_TableNextRow(ctx)
+          -- 设置文字颜色
+          if IsPreviewed(info.path) then
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), previewed_text)
+          else
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text)
+          end
           local row_hovered = false
         
           -- mark
@@ -846,11 +876,13 @@ function loop()
           if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
             PlayFile(info.source, info.path, loop_enabled)
           end
+
+          reaper.ImGui_PopStyleColor(ctx) -- 恢复默认颜色
   
-          -- 在所有列渲染之后，再设置背景色
-          if row_hovered or selected_row == i then
-            reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_RowBg1(), 0x2d83ec66)
-          end
+          -- 在所有列渲染之后，再设置背景色 -- 此处设置无效
+          -- if row_hovered or selected_row == i then
+          --   reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_RowBg1(), 0x2d83ec66)
+          -- end
 
           -- 上下按键自动滚动到可见
           if selected_row == i and _G.scroll_target ~= nil then
