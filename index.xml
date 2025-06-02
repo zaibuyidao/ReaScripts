@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2c15f62c602c74c33a30a520f00b016182d4335f">
+<index version="1" name="zaibuyidao Scripts" commit="7a29675c9f96c204c25ba614670dc3a1d23de0d4">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8450,6 +8450,10 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
 + Improved table text color scheme to better distinguish previewed items.
 + Enhanced overall interaction to better match the REAPER Media Explorer experience.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2c15f62c602c74c33a30a520f00b016182d4335f/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.8" author="zaibuyidao" time="2025-06-02T16:13:10Z">
+        <changelog><![CDATA[+ Added rotary knob controls for both playback rate and pitch adjustment.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7a29675c9f96c204c25ba614670dc3a1d23de0d4/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
