@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
 --   + Added settings for:
@@ -44,10 +44,10 @@ end
 -- local SCRIPT_NAME = 'Project Audio File Explorer - Browse, search and preview all audio files referenced by or located in the current project.'
 local SCRIPT_NAME = 'Project Audio File Explorer - Browse, Search, and Preview Project Audio Files'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
-local ctx = reaper.ImGui_CreateContext('SCRIPT_NAME')
+local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
 reaper.ImGui_Attach(ctx, sans_serif)
-reaper.ImGui_SetNextWindowSize(ctx, 950, 430, reaper.ImGui_Cond_FirstUseEver())
+reaper.ImGui_SetNextWindowSize(ctx, 1400, 548, reaper.ImGui_Cond_FirstUseEver())
 
 -- 状态变量
 local selected_row      = -1
@@ -64,6 +64,7 @@ local pitch             = 0     -- 音高调节（半音，正负）
 local preserve_pitch    = true  -- 变速时是否保持音高
 local is_paused         = false -- 是否处于暂停状态
 local paused_position   = 0     -- 暂停时的进度
+local base_height       = reaper.ImGui_GetFrameHeight(ctx) * 2 -- 底部进度条和电平条一致的高度控制
 -- 表格列表排序
 local COL_FILENAME      = 2
 local COL_SIZE          = 3
@@ -78,7 +79,7 @@ local COL_SAMPLERATE    = 11
 local COL_BITS          = 12
 local files_idx_cache   = nil   -- 文件缓存
 -- 表格高度相关
-local file_table_height = 300   -- 文件表格初始高度（可根据需要设定默认值）
+local file_table_height = 400   -- 文件表格初始高度（可根据需要设定默认值）
 local min_table_height  = 80    -- 最小高度
 local max_table_height  = 800   -- 最大高度
 -- ExtState持久化设置
@@ -109,6 +110,32 @@ local COLLECT_MODE_ITEMS  = 0
 local COLLECT_MODE_RPP    = 1
 local COLLECT_MODE_DIR    = 2
 
+-- 保存设置
+local function SaveSettings()
+  reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
+  reaper.SetExtState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
+  reaper.SetExtState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
+  reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
+  reaper.SetExtState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
+end
+-- 恢复设置
+local last_collect_mode = tonumber(reaper.GetExtState(EXT_SECTION, "collect_mode"))
+if last_collect_mode then collect_mode = last_collect_mode end
+
+local last_doubleclick_action = tonumber(reaper.GetExtState(EXT_SECTION, "doubleclick_action"))
+if last_doubleclick_action then doubleclick_action = last_doubleclick_action end
+
+local last_auto_play = reaper.GetExtState(EXT_SECTION, "auto_play_selected")
+if last_auto_play == "1" then auto_play_selected = true
+elseif last_auto_play == "0" then auto_play_selected = false end
+
+local last_preserve_pitch = reaper.GetExtState(EXT_SECTION, "preserve_pitch")
+if last_preserve_pitch == "1" then preserve_pitch = true
+elseif last_preserve_pitch == "0" then preserve_pitch = false end
+
+local last_bg_alpha = tonumber(reaper.GetExtState(EXT_SECTION, "bg_alpha"))
+if last_bg_alpha then bg_alpha = last_bg_alpha end
 -- 收集工程音频文件
 local function CollectAllUniqueSources_FromItems()
   local files, files_idx = {}, {}
@@ -400,7 +427,7 @@ function loop()
     -- 音频源下拉菜单
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_SetNextItemWidth(ctx, 120)
-    local collect_mode_options = { "From Items", "From RPP", "Project Directory" }
+    local collect_mode_options = { "From Items", "Project File (RPP)", "Project Directory" }
     if reaper.ImGui_BeginCombo(ctx, "Source##collect_mode_combo", collect_mode_options[collect_mode + 1]) then
       for i = 0, #collect_mode_options - 1 do
         local is_selected = (i == collect_mode)
@@ -462,7 +489,7 @@ function loop()
       reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
       reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
       reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
-      -- 此处新增时，记得累加 filelist 的列表数量
+      -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectAllUniqueSources_FromProjectDirectory()
       reaper.ImGui_TableHeadersRow(ctx)
 
       -- 排序，只对缓存排序一次
@@ -934,11 +961,11 @@ function loop()
       -- 收集切换
       reaper.ImGui_Text(ctx, "Audio file source:")
       local changed_collect_mode = false
-      if reaper.ImGui_RadioButton(ctx, "From Items (Default)", collect_mode == COLLECT_MODE_ITEMS) then
+      if reaper.ImGui_RadioButton(ctx, "From Items", collect_mode == COLLECT_MODE_ITEMS) then
         if collect_mode ~= COLLECT_MODE_ITEMS then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_ITEMS
       end
-      if reaper.ImGui_RadioButton(ctx, "From RPP (All in project state)", collect_mode == COLLECT_MODE_RPP) then
+      if reaper.ImGui_RadioButton(ctx, "From Project File (RPP)", collect_mode == COLLECT_MODE_RPP) then
         if collect_mode ~= COLLECT_MODE_RPP then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_RPP
       end
@@ -1003,9 +1030,37 @@ function loop()
 
       -- 关闭按钮
       reaper.ImGui_Separator(ctx)
-      if reaper.ImGui_Button(ctx, "Close##Rate_close") then
+      if reaper.ImGui_Button(ctx, "Save and Close##Rate_close") then
+        SaveSettings()
         reaper.ImGui_CloseCurrentPopup(ctx)
       end
+
+      -- 默认值定义
+      local DEFAULTS = {
+        collect_mode = COLLECT_MODE_RPP,
+        doubleclick_action = DOUBLECLICK_NONE,
+        auto_play_selected = true,
+        preserve_pitch = true,
+        bg_alpha = 1.0,
+        file_table_height = 400,
+      }
+
+      reaper.ImGui_SameLine(ctx)
+      if reaper.ImGui_Button(ctx, "Reset##Settings_reset") then
+        -- 恢复各项设置为默认值
+        collect_mode = DEFAULTS.collect_mode
+        doubleclick_action = DEFAULTS.doubleclick_action
+        auto_play_selected = DEFAULTS.auto_play_selected
+        preserve_pitch = DEFAULTS.preserve_pitch
+        bg_alpha = DEFAULTS.bg_alpha
+        file_table_height = DEFAULTS.file_table_height
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
+        CollectFiles()
+      end
+      if reaper.ImGui_IsItemHovered(ctx) then
+        reaper.ImGui_SetTooltip(ctx, "Reset all settings to default values")
+      end
+
       reaper.ImGui_EndPopup(ctx)
     end
     
@@ -1057,10 +1112,12 @@ function loop()
     end
     -- 格式化时间标签
     local label = string.format("%s / %s", reaper.format_timestr(position, ""), reaper.format_timestr(length, ""))
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 0, (base_height - reaper.ImGui_GetFontSize(ctx))/2) -- 第二个值为进度条高度控制，只要调整顶部的base_height值可改变高度
     -- 大宽度进度条（铺满采用-FLT_MIN）
     reaper.ImGui_PushItemWidth(ctx, -65)
     local changed, want_pos = reaper.ImGui_SliderDouble(ctx, "##position", seek_pos or position, 0, length, label)
     reaper.ImGui_PopItemWidth(ctx)
+    reaper.ImGui_PopStyleVar(ctx)
     -- 拖动跳转逻辑，只有播放状态下才能跳转
     if reaper.ImGui_IsItemDeactivatedAfterEdit(ctx) and playing_preview and reaper.CF_Preview_SetValue and not is_paused then
       reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", seek_pos)
@@ -1092,7 +1149,7 @@ function loop()
 
     -- 竖直电平条竖版
     reaper.ImGui_SameLine(ctx, nil, 5)
-    local bar_height = 20 -- 或 reaper.ImGui_GetFrameHeight(ctx) * 2
+    local bar_height = base_height -- 或 reaper.ImGui_GetFrameHeight(ctx)
     local bar_width = 7
     local spacing = 2
     local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
