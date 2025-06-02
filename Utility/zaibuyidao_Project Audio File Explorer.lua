@@ -1,11 +1,8 @@
 -- @description Project Audio File Explorer
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @changelog
---   + Added support for saving and restoring settings via the Settings dialog.
---   + Added option to adjust progress bar height for easier interaction.
---   + Improved table text color scheme to better distinguish previewed items.
---   + Enhanced overall interaction to better match the REAPER Media Explorer experience.
+--   + Added rotary knob controls for both playback rate and pitch adjustment.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -43,7 +40,7 @@ local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
 reaper.ImGui_Attach(ctx, sans_serif)
-reaper.ImGui_SetNextWindowSize(ctx, 1400, 548, reaper.ImGui_Cond_FirstUseEver())
+reaper.ImGui_SetNextWindowSize(ctx, 1400, 689, reaper.ImGui_Cond_FirstUseEver())
 
 -- 状态变量
 local font_size         = 14  -- 默认字体大小
@@ -64,7 +61,7 @@ local pitch             = 0     -- 音高调节（半音，正负）
 local preserve_pitch    = true  -- 变速时是否保持音高
 local is_paused         = false -- 是否处于暂停状态
 local paused_position   = 0     -- 暂停时的进度
-local base_height       = reaper.ImGui_GetFrameHeight(ctx) * 2 -- 底部进度条和电平条一致的高度控制
+local base_height       = reaper.ImGui_GetFrameHeight(ctx) * 1.5 -- 底部进度条和电平条一致的高度控制
 -- 表格列表排序
 local COL_FILENAME      = 2
 local COL_SIZE          = 3
@@ -79,7 +76,7 @@ local COL_SAMPLERATE    = 11
 local COL_BITS          = 12
 local files_idx_cache   = nil   -- 文件缓存
 -- 表格高度相关
-local file_table_height = 400   -- 文件表格初始高度（可根据需要设定默认值）
+local file_table_height = 550   -- 文件表格初始高度（可根据需要设定默认值）
 local min_table_height  = 80    -- 最小高度
 local max_table_height  = 800   -- 最大高度
 -- ExtState持久化设置
@@ -447,6 +444,119 @@ function HelpMarker(desc)
   end
 end
 
+-- 简易旋钮控件，跟着旋转
+-- function ImGui_Knob_v1(ctx, label, value, v_min, v_max, size)
+--   -- 参数说明：label(唯一)、当前值、最小值、最大值、大小(像素)
+--   local radius = size * 0.5
+--   local center_x, center_y = reaper.ImGui_GetCursorScreenPos(ctx)
+--   center_x = center_x + radius
+--   center_y = center_y + radius
+
+--   -- 角度：-135度~+135度映射到最小值~最大值
+--   local ANGLE_MIN = -3 * math.pi / 4
+--   local ANGLE_MAX =  3 * math.pi / 4
+--   local t = (value - v_min) / (v_max - v_min)
+--   -- local angle = ANGLE_MIN + (ANGLE_MAX - ANGLE_MIN) * t -- 向右旋转 90 度
+--   local angle = ANGLE_MIN + (ANGLE_MAX - ANGLE_MIN) * t - math.pi/2
+
+--   -- 绘制
+--   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+--   reaper.ImGui_DrawList_AddCircleFilled(draw_list, center_x, center_y, radius, 0x294773FF) -- 0x333333FF
+--   -- 指针
+--   local hand_x = center_x + math.cos(angle) * (radius * 0.75)
+--   local hand_y = center_y + math.sin(angle) * (radius * 0.75)
+--   reaper.ImGui_DrawList_AddLine(draw_list, center_x, center_y, hand_x, hand_y, 0x3D85E0FF, 3) -- 0xFFAA00FF
+--   -- 外圈
+--   reaper.ImGui_DrawList_AddCircle(draw_list, center_x, center_y, radius, 0x294773FF, 32, 2) --0x888888FF
+--   -- Label
+--   reaper.ImGui_SetCursorScreenPos(ctx, center_x - radius, center_y + radius + 4)
+--   reaper.ImGui_Text(ctx, label)
+
+--   -- 交互
+--   reaper.ImGui_SetCursorScreenPos(ctx, center_x - radius, center_y - radius)
+--   reaper.ImGui_InvisibleButton(ctx, label .. "_knob", size, size + 18)
+--   local active = reaper.ImGui_IsItemActive(ctx)
+--   local hovered = reaper.ImGui_IsItemHovered(ctx)
+--   local changed = false
+--   if active then
+--     local mx, my = reaper.ImGui_GetMousePos(ctx)
+--     local dx = mx - center_x
+--     local dy = my - center_y
+--     local drag_angle = math.atan(dy, dx)
+--     local norm = (drag_angle - ANGLE_MIN) / (ANGLE_MAX - ANGLE_MIN)
+--     norm = math.max(0, math.min(1, norm))
+--     local new_value = v_min + (v_max - v_min) * norm
+--     if new_value ~= value then
+--       value = new_value
+--       changed = true
+--     end
+--   elseif hovered and reaper.ImGui_IsMouseClicked(ctx, 1) then
+--     -- 右键恢复1.0
+--     value = 1.0
+--     changed = true
+--   end
+--   return changed, value
+-- end
+
+-- 简易旋钮控件，在函数最前面加静态表存储drag偏移
+ImGui_Knob_drag_y = ImGui_Knob_drag_y or {}
+
+function ImGui_Knob(ctx, label, value, v_min, v_max, size)
+  local radius = size * 0.5
+  local center_x, center_y = reaper.ImGui_GetCursorScreenPos(ctx)
+  center_x = center_x + radius
+  center_y = center_y + radius
+
+  local ANGLE_MIN = -3 * math.pi / 4
+  local ANGLE_MAX =  3 * math.pi / 4
+  local t = (value - v_min) / (v_max - v_min)
+  local angle = ANGLE_MIN + (ANGLE_MAX - ANGLE_MIN) * t - math.pi/2
+
+  -- 绘制
+  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+  reaper.ImGui_DrawList_AddCircleFilled(draw_list, center_x, center_y, radius, 0x294773FF)
+  local hand_x = center_x + math.cos(angle) * (radius * 0.75)
+  local hand_y = center_y + math.sin(angle) * (radius * 0.75)
+  reaper.ImGui_DrawList_AddLine(draw_list, center_x, center_y, hand_x, hand_y, 0x3D85E0FF, 3)
+  reaper.ImGui_DrawList_AddCircle(draw_list, center_x, center_y, radius, 0x294773FF, 32, 2)
+
+  local show_label = label and (label ~= "") and (not label:match("^##"))
+  if show_label then
+    reaper.ImGui_SameLine(ctx) -- 在旋钮右侧显示
+    reaper.ImGui_Text(ctx, label:gsub("##.*", "")) -- 只显示"##"前的内容
+  end
+  -- 交互
+  reaper.ImGui_SetCursorScreenPos(ctx, center_x - radius, center_y - radius)
+  reaper.ImGui_InvisibleButton(ctx, label .. "_knob", size, size)
+  local active = reaper.ImGui_IsItemActive(ctx)
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  local changed = false
+  local step = (v_max - v_min) / 100 -- 灵敏度：拖动100像素，参数变最大范围
+
+  -- 上下拖动改变参数
+  if reaper.ImGui_IsItemActivated(ctx) then
+    ImGui_Knob_drag_y[label] = { y = select(2, reaper.ImGui_GetMousePos(ctx)), start_value = value }
+  elseif active and ImGui_Knob_drag_y[label] then
+    local cur_y = select(2, reaper.ImGui_GetMousePos(ctx))
+    local delta = ImGui_Knob_drag_y[label].y - cur_y  -- 上移为正，下移为负
+    local new_value = ImGui_Knob_drag_y[label].start_value + delta * step
+    new_value = math.max(v_min, math.min(v_max, new_value))
+    if math.abs(new_value - value) > 1e-6 then
+      value = new_value
+      changed = true
+    end
+  elseif not active then
+    ImGui_Knob_drag_y[label] = nil
+  end
+
+  -- 右键单击恢复默认
+  if hovered and reaper.ImGui_IsMouseClicked(ctx, 1) then
+    value = 1.0
+    changed = true
+  end
+  return changed, value
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -534,19 +644,19 @@ function loop()
       | reaper.ImGui_TableFlags_Hideable()
     ) then
       reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
-      reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 20)
-      reaper.ImGui_TableSetupColumn(ctx, "File",        reaper.ImGui_TableColumnFlags_WidthFixed(), 150, COL_FILENAME)
-      reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SIZE)
+      reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
+      reaper.ImGui_TableSetupColumn(ctx, "File",        reaper.ImGui_TableColumnFlags_WidthFixed(), 250, COL_FILENAME)
+      reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
       reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
-      reaper.ImGui_TableSetupColumn(ctx, "Date",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_DATE)
-      reaper.ImGui_TableSetupColumn(ctx, "Genre",       reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_GENRE)
+      reaper.ImGui_TableSetupColumn(ctx, "Date",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_DATE)
+      reaper.ImGui_TableSetupColumn(ctx, "Genre",       reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_GENRE)
       reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_COMMENT)
-      reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 100, COL_DESCRIPTION)
+      reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_DESCRIPTION)
       reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, COL_LENGTH)
       reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
       reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
       reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
-      reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+      reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
       -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectAllUniqueSources_FromProjectDirectory()
       reaper.ImGui_TableHeadersRow(ctx)
 
@@ -999,20 +1109,54 @@ function loop()
     if rv2 and playing_preview and reaper.CF_Preview_SetValue then
       reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
     end
-    -- 音高
+
+    -- 音高旋钮
     reaper.ImGui_SameLine(ctx, nil, 10)
+    local pitch_knob_min, pitch_knob_max = -6, 6 -- ±12 半音
+    local pitch_knob_size = 20
+    local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size)
+    if pitch_knob_changed then
+      pitch = pitch_knob_value
+      if playing_preview and reaper.CF_Preview_SetValue then
+        reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
+      end
+    end
+    -- 防止手动输入越界
+    if pitch < pitch_knob_min then pitch = pitch_knob_min end
+    if pitch > pitch_knob_max then pitch = pitch_knob_max end
+
+    -- 音高输入框
+    reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 40)
     local rv3
-    rv3, pitch = reaper.ImGui_InputDouble(ctx, "Pitch", pitch) -- (ctx, "Pitch", pitch, 1, 12, "%.3f")
+    rv3, pitch = reaper.ImGui_InputDouble(ctx, "##Pitch", pitch) -- (ctx, "Pitch", pitch, 1, 12, "%.3f")
     reaper.ImGui_PopItemWidth(ctx)
     if rv3 and playing_preview and reaper.CF_Preview_SetValue then
       reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
     end
-    -- 播放速率输入框
+
+    -- 播放速率旋钮
     reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_Text(ctx, "Rate:")
+    reaper.ImGui_SameLine(ctx)
+    local knob_size = 20
+    local rate_min, rate_max = 0.25, 4.0
+    local knob_changed, knob_value = ImGui_Knob(ctx, "##rate_knob", play_rate, rate_min, rate_max, knob_size)
+    if knob_changed then
+      play_rate = knob_value
+      if playing_preview and reaper.CF_Preview_SetValue then
+        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+      end
+    end
+    -- 双向同步（输入框改了也会更新旋钮，下次刷新界面）
+    if play_rate < rate_min then play_rate = rate_min end
+    if play_rate > rate_max then play_rate = rate_max end
+
+    -- 播放速率输入框
+    reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 40)
     local rv4
-    rv4, play_rate = reaper.ImGui_InputDouble(ctx, "Rate##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
+    rv4, play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
     reaper.ImGui_PopItemWidth(ctx)
     if rv4 and playing_preview and reaper.CF_Preview_SetValue then
       reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
