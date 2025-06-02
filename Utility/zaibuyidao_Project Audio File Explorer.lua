@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog
 --   + Added support for saving and restoring settings via the Settings dialog.
@@ -157,8 +157,11 @@ local brown       = 0xA52A2AFF -- 棕色
 local lime        = 0x32CD32FF -- 酸橙绿
 local gold        = 0xFFD700FF -- 金色
 local silver      = 0xC0C0C0FF -- 银色
-local normal_text = 0xCCCCCCFF  -- 柔和灰白
-local previewed_text = 0x888888FF  -- 已预览过的更暗
+-- 表格标题字体、悬停与激活颜色
+local table_header_hovered = 0x404040FF -- 鼠标悬停时表头颜色
+local table_header_active  = 0x303030FF -- 鼠标点击时表头颜色
+local normal_text          = 0xCCCCCCFF -- 柔和灰白
+local previewed_text       = 0x888888FF -- 已预览过的更暗
 
 -- 收集工程音频文件
 local function CollectAllUniqueSources_FromItems()
@@ -718,12 +721,15 @@ function loop()
 
         if match then
           reaper.ImGui_TableNextRow(ctx)
-          -- 设置文字颜色
+          -- 表格标题文字颜色
           if IsPreviewed(info.path) then
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), previewed_text)
           else
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text)
           end
+          -- 表格标题悬停及激活时颜色
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), table_header_hovered)
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(), table_header_active)
           local row_hovered = false
         
           -- mark
@@ -877,7 +883,7 @@ function loop()
             PlayFile(info.source, info.path, loop_enabled)
           end
 
-          reaper.ImGui_PopStyleColor(ctx) -- 恢复默认颜色
+          reaper.ImGui_PopStyleColor(ctx, 3) -- 恢复默认颜色, Popx3
   
           -- 在所有列渲染之后，再设置背景色 -- 此处设置无效
           -- if row_hovered or selected_row == i then
