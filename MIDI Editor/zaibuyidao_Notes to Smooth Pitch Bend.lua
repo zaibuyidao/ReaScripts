@@ -44,7 +44,7 @@ local range            = 12   -- Pitch bend range in semitones (±12 semitones)
 local auto_switch_lane = true -- Set to false to preserve the user's original CC lane
 local grid_scale       = 1    -- User-adjustable factor: 1 = normal grid spacing, 0.5 = half spacing (denser interpolation)
 local offset_factor    = 0    -- Pitch bend insertion offset factor: 0 = no offset, 1 = offset by one grid unit, 0.5 = offset by half a grid.
-local mode             = 1    -- 1 = Move selected notes to target channel; 2 = Delete selected notes
+local mode             = 2    -- 1 = Move selected notes to target channel; 2 = Delete selected notes
 local target_chan      = 1    -- Target MIDI channel (0-15), default is 1 (which means Channel 2, since MIDI channels are zero-based)
 ------------------------------------------------------
 

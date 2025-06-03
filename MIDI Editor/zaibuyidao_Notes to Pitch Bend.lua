@@ -42,7 +42,7 @@ end
 -- Configuration Section -----------------------------
 local range            = 12   -- Pitch bend range in semitones (±12 semitones)
 local auto_switch_lane = true -- Set to false to preserve the user's original CC lane
-local mode             = 1    -- 1 = Move selected notes to target channel; 2 = Delete selected notes
+local mode             = 2    -- 1 = Move selected notes to target channel; 2 = Delete selected notes
 local target_chan      = 1    -- Target MIDI channel (0-15), default is 1 (which means Channel 2, since MIDI channels are zero-based)
 ------------------------------------------------------
 
