@@ -1,8 +1,10 @@
 -- @description Project Audio File Explorer
--- @version 1.0.10
+-- @version 1.0.11
 -- @author zaibuyidao
 -- @changelog
---   + Added rotary knob controls for both playback rate and pitch adjustment.
+--   + Added "All Items (Per Take)" mode for listing all items with per-take detail and multi-instance merging.
+--   + Optimized rotary knobs for volume, pitch, and rate controls.
+--   + Added fine and ultra-fine adjustment for pitch and rate knobs: hold Shift for fine tuning, hold Ctrl for ultra-fine tuning.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
