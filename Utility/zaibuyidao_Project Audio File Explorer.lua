@@ -35,7 +35,7 @@ else
 end
 
 -- local SCRIPT_NAME = 'Project Audio File Explorer - Browse, search and preview all audio files referenced by or located in the current project.'
-local SCRIPT_NAME = 'Project Audio File Explorer - Browse, Search, and Preview Project Audio Files-1-1'
+local SCRIPT_NAME = 'Project Audio File Explorer - Browse, Search, and Preview Project Audio Files'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
