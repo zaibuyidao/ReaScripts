@@ -1,8 +1,11 @@
 -- @description Notes to Smooth Pitch Bend
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog
 --   Optimized the logic for inserting the final pitch bend reset (value 0).
+--   Added mode selection:
+--     1. Set selected notes to the target channel and mute them.
+--     2. Delete selected notes.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -36,12 +39,16 @@ else
   return
 end
 
-local language         = getSystemLanguage() -- Detect the system language to display messages in Chinese or English
-local range            = 12                  -- Pitch bend range in semitones (±12 semitones)
-local auto_switch_lane = true                -- Set to false to preserve the user's original CC lane
-local grid_scale       = 1                   -- User-adjustable factor: 1 = normal grid spacing, 0.5 = half spacing (denser interpolation)
-local offset_factor    = 0                   -- Pitch bend insertion offset factor: 0 = no offset, 1 = offset by one grid unit, 0.5 = offset by half a grid.
+-- Configuration Section -----------------------------
+local range            = 12   -- Pitch bend range in semitones (±12 semitones)
+local auto_switch_lane = true -- Set to false to preserve the user's original CC lane
+local grid_scale       = 1    -- User-adjustable factor: 1 = normal grid spacing, 0.5 = half spacing (denser interpolation)
+local offset_factor    = 0    -- Pitch bend insertion offset factor: 0 = no offset, 1 = offset by one grid unit, 0.5 = offset by half a grid.
+local mode             = 1    -- 1 = Move selected notes to target channel; 2 = Delete selected notes
+local target_chan      = 1    -- Target MIDI channel (0-15), default is 1 (which means Channel 2, since MIDI channels are zero-based)
+------------------------------------------------------
 
+local language = getSystemLanguage() -- Detect the system language to display messages in Chinese or English
 local title, err_title, err_msg1, err_msg2
 if language == "简体中文" then
   title = "音符转平滑弯音"
@@ -319,9 +326,21 @@ if #index > 1 then
     end
   end
 
-  -- 删除所有选中音符
-  for i = #index, 1, -1 do
-    reaper.MIDI_DeleteNote(take, index[i])
+  if mode == 1 then
+    for i = 1 , #notes do
+      local _, noteCount, _, _ = reaper.MIDI_CountEvts(take)
+      for i = 0, noteCount - 1 do
+        local retval, selected, muted, startppq, endppq, chan, pitch, vel = reaper.MIDI_GetNote(take, i)
+        if selected then
+          reaper.MIDI_SetNote(take, i, false, true, nil, nil, target_chan, nil, nil, false)
+        end
+      end
+    end
+  elseif mode == 2 then
+    -- 删除所有选中音符
+    for i = #notes, 1, -1 do
+      reaper.MIDI_DeleteNote(take, notes[i])
+    end
   end
 
   -- 插入延长的主音符
