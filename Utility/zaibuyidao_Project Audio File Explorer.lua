@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.9
+-- @version 1.0.10
 -- @author zaibuyidao
 -- @changelog
 --   + Added rotary knob controls for both playback rate and pitch adjustment.
@@ -35,7 +35,7 @@ else
 end
 
 -- local SCRIPT_NAME = 'Project Audio File Explorer - Browse, search and preview all audio files referenced by or located in the current project.'
-local SCRIPT_NAME = 'Project Audio File Explorer - Browse, Search, and Preview Project Audio Files'
+local SCRIPT_NAME = 'Project Audio File Explorer - Browse, Search, and Preview Project Audio Files-1-1'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
@@ -55,14 +55,19 @@ local loop_enabled      = false -- 是否自动循环
 local preview_play_len  = 0     -- 当前预览音频长度
 local peak_chans        = 2     -- 默认显示2路电平
 local seek_pos          = nil   -- 拖动时记住目标位置
-local volume            = 1     -- 线性音量（1=0dB，0.5=-6dB，2=+6dB）
 local play_rate         = 1     -- 默认速率1.0
 local pitch             = 0     -- 音高调节（半音，正负）
 local preserve_pitch    = true  -- 变速时是否保持音高
 local is_paused         = false -- 是否处于暂停状态
 local paused_position   = 0     -- 暂停时的进度
 local base_height       = reaper.ImGui_GetFrameHeight(ctx) * 1.5 -- 底部进度条和电平条一致的高度控制
--- 表格列表排序
+local volume            = 1     -- 线性音量（1=0dB，0.5=-6dB，2=+6dB）
+local max_db            = 12
+local min_db            = -150
+local max_gain          = 10 ^ (max_db / 20)
+local min_gain          = 0
+
+-- 表格排序常量
 local COL_FILENAME      = 2
 local COL_SIZE          = 3
 local COL_TYPE          = 4
@@ -116,6 +121,7 @@ local collect_mode        = 1
 local COLLECT_MODE_ITEMS  = 0
 local COLLECT_MODE_RPP    = 1
 local COLLECT_MODE_DIR    = 2
+local COLLECT_MODE_ALL_ITEMS = 3
 
 -- 保存设置
 local function SaveSettings()
@@ -224,6 +230,60 @@ local function CollectAllUniqueSources_FromItems()
     end
   end
   return files, files_idx
+end
+
+function CollectAllItems_Detail()
+  local files_idx = {}
+  local item_cnt = reaper.CountMediaItems(0)
+  for i = 0, item_cnt - 1 do
+    local item = reaper.GetMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
+    local src, path, typ, size, bits, samplerate, channels, length = nil, "", "", 0, "-", "-", "-", "-"
+    local description, comment = "", ""
+    if take then
+      src = reaper.GetMediaItemTake_Source(take)
+      path = reaper.GetMediaSourceFileName(src, "")
+      typ = reaper.GetMediaSourceType(src, "")
+      bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
+      samplerate = reaper.GetMediaSourceSampleRate(src)
+      channels = reaper.GetMediaSourceNumChannels(src)
+      length = reaper.GetMediaSourceLength(src)
+      -- 文件大小
+      local f = io.open(path, "rb")
+      if f then
+        f:seek("end")
+        size = f:seek()
+        f:close()
+      end
+      local _, desc = reaper.GetMediaFileMetadata(src, "BWF:Description")
+      local _, comm = reaper.GetMediaFileMetadata(src, "MP:dm/logComment")  -- 兼容BWF/MP3
+      description = desc or ""
+      comment = comm or ""
+    end
+    local track = reaper.GetMediaItem_Track(item)
+    local _, track_name = reaper.GetTrackName(track)
+    local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local _, take_name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
+    table.insert(files_idx, {
+      item = item,
+      take = take,
+      source = src,
+      path = path,
+      filename = take_name ~= "" and take_name or (path:match("[^/\\]+$") or path),
+      type = typ,
+      samplerate = samplerate,
+      channels = channels,
+      length = length,
+      bits = bits,
+      size = size,
+      description = description,
+      comment = comment,
+      track = track,
+      track_name = track_name,
+      position = pos,
+    })
+  end
+  return files_idx
 end
 
 -- 基于当前工程RPP内容，收集所有音频文件
@@ -338,14 +398,6 @@ function CollectAllUniqueSources_FromProjectDirectory()
   return files, files_idx
 end
 
--- 收集音频文件旧版本
--- function CollectFiles()
---   local files, files_idx = CollectAllUniqueSources_FromProjectDirectory()
---   files_idx_cache = files_idx
---   -- 清空已预览标记
---   previewed_files = {}
--- end
-
 -- 按文件名排序
 local function SortFilesByFilenameAsc()
   if files_idx_cache then
@@ -359,19 +411,20 @@ function CollectFiles()
   local files, files_idx
   if collect_mode == COLLECT_MODE_ITEMS then
     files, files_idx = CollectAllUniqueSources_FromItems()
+    files_idx_cache = files_idx
   elseif collect_mode == COLLECT_MODE_RPP then
     files, files_idx = CollectAllUniqueSources_FromRPP()
+    files_idx_cache = files_idx
   elseif collect_mode == COLLECT_MODE_DIR then
     files, files_idx = CollectAllUniqueSources_FromProjectDirectory()
+    files_idx_cache = files_idx
+  elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
+    files_idx = CollectAllItems_Detail()
+    files_idx_cache = MergeSameNameItems(files_idx)
   end
-  files_idx_cache = files_idx
+
   previewed_files = {}
-
-  SortFilesByFilenameAsc() -- 自从按文件名排序
-
-  -- if do_sort then
-  --   SortFilesByFilenameAsc()
-  -- end
+  SortFilesByFilenameAsc()
 end
 
 -- 资源释放函数
@@ -434,6 +487,26 @@ local function MarkFontDirty()
   need_refresh_font = true
 end
 
+-- 合并所有同名item，并记录usages
+function MergeSameNameItems(files_idx)
+  local merged = {}
+  local map = {}
+  for _, info in ipairs(files_idx) do
+    local key = info.filename or ""
+    if not map[key] then
+      -- 公共字段取第一个
+      local newinfo = {}
+      for k, v in pairs(info) do newinfo[k] = v end
+      newinfo.usages = {info} -- 先放第一个
+      map[key] = newinfo
+      table.insert(merged, newinfo)
+    else
+      table.insert(map[key].usages, info)
+    end
+  end
+  return merged
+end
+
 function HelpMarker(desc)
   reaper.ImGui_TextDisabled(ctx, '(?)')
   if reaper.ImGui_BeginItemTooltip(ctx) then
@@ -477,7 +550,14 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   local active = reaper.ImGui_IsItemActive(ctx)
   local hovered = reaper.ImGui_IsItemHovered(ctx)
   local changed = false
-  local step = (v_max - v_min) / 100 -- 灵敏度：拖动100像素，参数变最大范围
+  local step
+  if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()) then
+    step = (v_max - v_min) / 2000 -- 按住Ctrl超精细
+  elseif reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift()) then
+    step = (v_max - v_min) / 1000 -- 按住Shift精细
+  else
+    step = (v_max - v_min) / 100 -- 默认灵敏度，拖动100像素
+  end
 
   -- 上下拖动改变参数
   if reaper.ImGui_IsItemActivated(ctx) then
@@ -499,6 +579,12 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   if hovered and reaper.ImGui_IsMouseClicked(ctx, 1) then
     value = default_value or v_min
     changed = true
+  end
+  -- 左键双击恢复默认
+  if hovered and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
+    value = default_value or v_min
+    changed = true
+    ImGui_Knob_drag_y[label] = nil -- 重置drag偏移
   end
   return changed, value
 end
@@ -541,7 +627,7 @@ function loop()
     -- 音频源下拉菜单
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_SetNextItemWidth(ctx, 120)
-    local collect_mode_options = { "From Items", "Project File (RPP)", "Project Directory" }
+    local collect_mode_options = { "Used Items", "Referenced", "Project Directory", "All Items" }
     if reaper.ImGui_BeginCombo(ctx, "Source##collect_mode_combo", collect_mode_options[collect_mode + 1]) then
       for i = 0, #collect_mode_options - 1 do
         local is_selected = (i == collect_mode)
@@ -590,19 +676,35 @@ function loop()
       | reaper.ImGui_TableFlags_Hideable()
     ) then
       reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
-      reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
-      reaper.ImGui_TableSetupColumn(ctx, "File",        reaper.ImGui_TableColumnFlags_WidthFixed(), 250, COL_FILENAME)
-      reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
-      reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
-      reaper.ImGui_TableSetupColumn(ctx, "Date",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_DATE)
-      reaper.ImGui_TableSetupColumn(ctx, "Genre",       reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_GENRE)
-      reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_COMMENT)
-      reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_DESCRIPTION)
-      reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, COL_LENGTH)
-      reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
-      reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
-      reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
-      reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
+      if collect_mode == COLLECT_MODE_ALL_ITEMS then -- All Items
+        reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
+        reaper.ImGui_TableSetupColumn(ctx, "Take Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_FILENAME)
+        reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
+        reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
+        reaper.ImGui_TableSetupColumn(ctx, "Track",       reaper.ImGui_TableColumnFlags_WidthFixed(), 100, COL_DATE)
+        reaper.ImGui_TableSetupColumn(ctx, "Position",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, COL_GENRE)
+        reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_COMMENT)
+        reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_DESCRIPTION)
+        reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, COL_LENGTH)
+        reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
+        reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
+        reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+        reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
+      else
+        reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
+        reaper.ImGui_TableSetupColumn(ctx, "File Name",        reaper.ImGui_TableColumnFlags_WidthFixed(), 250, COL_FILENAME)
+        reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
+        reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
+        reaper.ImGui_TableSetupColumn(ctx, "Date",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_DATE)
+        reaper.ImGui_TableSetupColumn(ctx, "Genre",       reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_GENRE)
+        reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_COMMENT)
+        reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_DESCRIPTION)
+        reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, COL_LENGTH)
+        reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
+        reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
+        reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+        reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
+      end
       -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectAllUniqueSources_FromProjectDirectory()
       reaper.ImGui_TableHeadersRow(ctx)
 
@@ -658,12 +760,24 @@ function loop()
                   return (a.bwf_orig_date or "") < (b.bwf_orig_date or "")
                 end
               end
-            elseif spec.user_id == COL_GENRE then -- Genre 列排序
-              if (a.genre or "") ~= (b.genre or "") then
-                if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                  return (a.genre or "") > (b.genre or "")
-                else
-                  return (a.genre or "") < (b.genre or "")
+            elseif spec.user_id == COL_GENRE then -- Genre & Position 列排序
+              if collect_mode == COLLECT_MODE_ALL_ITEMS then
+                local apos = tonumber(a.position) or 0
+                local bpos = tonumber(b.position) or 0
+                if apos ~= bpos then
+                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                    return apos > bpos
+                  else
+                    return apos < bpos
+                  end
+                end
+              else
+                if (a.genre or "") ~= (b.genre or "") then
+                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                    return (a.genre or "") > (b.genre or "")
+                  else
+                    return (a.genre or "") < (b.genre or "")
+                  end
                 end
               end
             elseif spec.user_id == COL_COMMENT then -- Comment 列排序
@@ -832,11 +946,113 @@ function loop()
             reaper.ImGui_Dummy(ctx, 10, 10)
           end
 
-          -- File
-          reaper.ImGui_TableSetColumnIndex(ctx, 1)
-          if reaper.ImGui_Selectable(ctx, info.filename, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
-            selected_row = i
+          -- File & Teak name
+          if collect_mode == COLLECT_MODE_ALL_ITEMS then -- All items
+            reaper.ImGui_TableSetColumnIndex(ctx, 1)
+            local selectable_label = (info.filename or "-") .. "##ALLITEMS_" .. tostring(i)
+            if reaper.ImGui_Selectable(ctx, selectable_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+              selected_row = i
+            end
+            -- 右键菜单定位item/静音/重命名/插入到工程中
+            local popup_id = "item_context_menu_" .. tostring(i)
+            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+              reaper.ImGui_OpenPopup(ctx, popup_id)
+            end
+            
+            if reaper.ImGui_BeginPopup(ctx, popup_id) then
+              if reaper.ImGui_BeginMenu(ctx, "Usage") then
+                for _, usage in ipairs(info.usages or {}) do
+                  local label = string.format("Track %d - %s [%s]",
+                    reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
+                    usage.track_name or "-",
+                    reaper.format_timestr(usage.position or 0, "")
+                  )
+                  if reaper.ImGui_MenuItem(ctx, label) then
+                    reaper.Main_OnCommand(40289, 0)
+                    reaper.SetMediaItemSelected(usage.item, true)
+                    reaper.UpdateArrange()
+                    reaper.SetEditCurPos(usage.position, true, false)
+                    reaper.ImGui_CloseCurrentPopup(ctx)
+                  end
+                end
+                reaper.ImGui_EndMenu(ctx)
+              end
+
+              if reaper.ImGui_MenuItem(ctx, "Mute/Unmute Item") then
+                local mute = reaper.GetMediaItemInfo_Value(info.item, "B_MUTE")
+                reaper.SetMediaItemInfo_Value(info.item, "B_MUTE", mute == 1 and 0 or 1)
+                reaper.UpdateArrange()
+                reaper.ImGui_CloseCurrentPopup(ctx)
+              end
+              if reaper.ImGui_MenuItem(ctx, "Rename Item (Take)") then
+                local ok, new_name = reaper.GetUserInputs("Rename Take", 1, "New Take Name:", info.filename)
+                if ok and new_name and new_name ~= "" then
+                  reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
+                  CollectFiles() -- 刷新显示
+                end
+                reaper.ImGui_CloseCurrentPopup(ctx)
+              end
+              if reaper.ImGui_MenuItem(ctx, "Insert To Project") then
+                if info.path and info.path ~= "" then
+                  reaper.InsertMedia(info.path, 0)
+                end
+                reaper.ImGui_CloseCurrentPopup(ctx)
+              end
+              if reaper.ImGui_MenuItem(ctx, "Delete Item") then
+                if info.track and info.item then
+                  reaper.DeleteTrackMediaItem(info.track, info.item)
+                  CollectFiles() -- 删除后刷新列表
+                  reaper.UpdateArrange()
+                end
+                reaper.ImGui_CloseCurrentPopup(ctx)
+              end
+              reaper.ImGui_EndPopup(ctx)
+            end
+
+            if selected_row == i then
+              -- Q: 定位item并选中
+              if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Q()) then
+                reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+                reaper.SetMediaItemSelected(info.item, true)
+                reaper.UpdateArrange()
+                local pos = reaper.GetMediaItemInfo_Value(info.item, "D_POSITION")
+                reaper.SetEditCurPos(pos, true, false)
+              end
+
+              -- F2: 更改item名称
+              if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F2()) then
+                local ok, new_name = reaper.GetUserInputs("Rename Take", 1, "New Take Name:", info.filename)
+                if ok and new_name and new_name ~= "" then
+                  reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
+                  -- 刷新以显示新名字
+                  CollectFiles()
+                end
+              end
+            
+              -- M: mute item
+              if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_M()) then
+                local mute = reaper.GetMediaItemInfo_Value(info.item, "B_MUTE")
+                reaper.SetMediaItemInfo_Value(info.item, "B_MUTE", mute==1 and 0 or 1)
+                reaper.UpdateArrange()
+              end
+            
+              -- Ctrl+D: 删除item
+              if (reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()))
+                and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_D()) then
+                reaper.DeleteTrackMediaItem(info.track, info.item)
+                -- 行号防止越界
+                if selected_row > 1 then selected_row = selected_row - 1 else selected_row = 1 end
+                CollectFiles()
+                reaper.UpdateArrange()
+              end
+            end
+          else
+            reaper.ImGui_TableSetColumnIndex(ctx, 1)
+            if reaper.ImGui_Selectable(ctx, info.filename, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+              selected_row = i
+            end
           end
+
           if reaper.ImGui_IsItemHovered(ctx) then
             row_hovered = true
           end
@@ -864,10 +1080,10 @@ function loop()
             end
           end
 
-          -- Ctrl+左键 或 Ctrl+I 插入到工程
+          -- Ctrl+左键 或 Ctrl+S 插入到工程
           local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
           local is_ctrl_click = reaper.ImGui_IsItemClicked(ctx, 0) and ctrl
-          local is_ctrl_I = ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_I())
+          local is_ctrl_I = ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S())
           if (is_ctrl_click or (selected_row == i and is_ctrl_I)) then
             reaper.InsertMedia(info.path, 0)
           end
@@ -896,20 +1112,50 @@ function loop()
             PlayFile(info.source, info.path, loop_enabled)
           end
 
-          -- Date
-          reaper.ImGui_TableSetColumnIndex(ctx, 4)
-          reaper.ImGui_Text(ctx, info.bwf_orig_date or "-")
-          if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            PlayFile(info.source, info.path, loop_enabled)
+          -- Date & Track name
+          if collect_mode == COLLECT_MODE_ALL_ITEMS then -- All items
+            reaper.ImGui_TableSetColumnIndex(ctx, 4)
+            if info.usages and #info.usages > 1 then
+              reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
+            else
+              reaper.ImGui_Text(ctx, info.track_name or "-")
+            end
+            if reaper.ImGui_BeginPopup(ctx, popup_id) then
+              if reaper.ImGui_MenuItem(ctx, "Locate Item") then
+                reaper.Main_OnCommand(40289, 0) -- Unselect all items
+                reaper.SetMediaItemSelected(info.item, true)
+                reaper.UpdateArrange()
+                local pos = reaper.GetMediaItemInfo_Value(info.item, "D_POSITION")
+                reaper.SetEditCurPos(pos, true, false)
+                reaper.ImGui_CloseCurrentPopup(ctx)
+              end
+              reaper.ImGui_EndPopup(ctx)
+            end
+          else
+            reaper.ImGui_TableSetColumnIndex(ctx, 4)
+            reaper.ImGui_Text(ctx, info.bwf_orig_date or "-")
+            if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
+            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
+              PlayFile(info.source, info.path, loop_enabled)
+            end
           end
 
-          -- Genre
-          reaper.ImGui_TableSetColumnIndex(ctx, 5)
-          reaper.ImGui_Text(ctx, info.genre or "-")
-          if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            PlayFile(info.source, info.path, loop_enabled)
+          -- Genre & Position
+          if collect_mode == COLLECT_MODE_ALL_ITEMS then -- All items
+            reaper.ImGui_TableSetColumnIndex(ctx, 5)
+            if info.usages and #info.usages > 1 then
+              reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
+            else
+              local pos_str = reaper.format_timestr(info.position or 0, "") or "-"
+              reaper.ImGui_Text(ctx, pos_str)
+            end
+          else
+            reaper.ImGui_TableSetColumnIndex(ctx, 5)
+            reaper.ImGui_Text(ctx, info.genre or "-")
+            if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
+            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
+              PlayFile(info.source, info.path, loop_enabled)
+            end
           end
 
           -- Comment
@@ -926,7 +1172,7 @@ function loop()
           if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
           if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
             PlayFile(info.source, info.path, loop_enabled)
-          end 
+          end
 
           -- Length
           reaper.ImGui_TableSetColumnIndex(ctx, 8)
@@ -995,6 +1241,7 @@ function loop()
     -- 播放控制按钮
     -- Play 按钮
     if reaper.ImGui_Button(ctx, "Play ") then
+    -- if reaper.ImGui_ArrowButton(ctx, "Play", reaper.ImGui_Dir_Right()) then -- 箭头按钮
       if selected_row > 0 and files_idx_cache[selected_row] then
         PlayFile(files_idx_cache[selected_row].source, files_idx_cache[selected_row].path, loop_enabled)
         is_paused = false
@@ -1051,11 +1298,18 @@ function loop()
     reaper.ImGui_Text(ctx, "Volume:")
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 200)
-    local rv2
-    rv2, volume = reaper.ImGui_SliderDouble(ctx, "##volume", volume, 0, 2, string.format("%.2f dB", VAL2DB(volume)), reaper.ImGui_SliderFlags_Logarithmic())
+    local rv2 -- 0.0000000316 -150, 0.00001 -100
+    rv2, volume = reaper.ImGui_SliderDouble(ctx, "##volume", volume, 0.0000000316, max_gain, string.format("%.2f dB", VAL2DB(volume)), reaper.ImGui_SliderFlags_Logarithmic())
     reaper.ImGui_PopItemWidth(ctx)
     if rv2 and playing_preview and reaper.CF_Preview_SetValue then
       reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+    end
+    -- 右键归零
+    if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+      volume = 1 -- 0dB
+      if playing_preview and reaper.CF_Preview_SetValue then
+        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+      end
     end
 
     -- 音高旋钮
@@ -1117,9 +1371,9 @@ function loop()
     if reaper.ImGui_Button(ctx, "Settings##Popup") then
       reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
     end
-    if reaper.ImGui_IsPopupOpen(ctx, "Settings##Popup") then
-      reaper.ImGui_SetNextWindowSize(ctx, 480, 427, reaper.ImGui_Cond_Appearing())
-    end
+    -- if reaper.ImGui_IsPopupOpen(ctx, "Settings##Popup") then
+    --   reaper.ImGui_SetNextWindowSize(ctx, 480, 427, reaper.ImGui_Cond_Appearing())
+    -- end
     if reaper.ImGui_BeginPopupModal(ctx, "Settings##Popup", nil) then
       -- 字体大小
       reaper.ImGui_Text(ctx, "Font size:")
@@ -1138,17 +1392,21 @@ function loop()
       -- 收集切换
       reaper.ImGui_Text(ctx, "Audio file source:")
       local changed_collect_mode = false
-      if reaper.ImGui_RadioButton(ctx, "From Items", collect_mode == COLLECT_MODE_ITEMS) then
+      if reaper.ImGui_RadioButton(ctx, "Used Items", collect_mode == COLLECT_MODE_ITEMS) then
         if collect_mode ~= COLLECT_MODE_ITEMS then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_ITEMS
       end
-      if reaper.ImGui_RadioButton(ctx, "From Project File (RPP)", collect_mode == COLLECT_MODE_RPP) then
+      if reaper.ImGui_RadioButton(ctx, "Referenced", collect_mode == COLLECT_MODE_RPP) then
         if collect_mode ~= COLLECT_MODE_RPP then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_RPP
       end
-      if reaper.ImGui_RadioButton(ctx, "From Project Directory", collect_mode == COLLECT_MODE_DIR) then
+      if reaper.ImGui_RadioButton(ctx, "Project Directory", collect_mode == COLLECT_MODE_DIR) then
         if collect_mode ~= COLLECT_MODE_DIR then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_DIR
+      end
+      if reaper.ImGui_RadioButton(ctx, "All Items (Per Take)", collect_mode == COLLECT_MODE_ALL_ITEMS) then
+        if collect_mode ~= COLLECT_MODE_ALL_ITEMS then changed_collect_mode = true end
+        collect_mode = COLLECT_MODE_ALL_ITEMS
       end
       if changed_collect_mode then
         CollectFiles()
@@ -1235,7 +1493,7 @@ function loop()
         auto_play_selected = true,
         preserve_pitch = true,
         bg_alpha = 1.0,
-        file_table_height = 400,
+        file_table_height = 550,
         peak_chans = 2,
         font_size = 14,
       }
