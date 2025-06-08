@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5d50ff53121e54d70b0ef755c20b7b8c04981235">
+<index version="1" name="zaibuyidao Scripts" commit="03446c92c4b526409154e13c3dbecdac6f119dff">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8482,6 +8482,12 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
 + Optimized rotary knobs for volume, pitch, and rate controls.
 + Added fine and ultra-fine adjustment for pitch and rate knobs: hold Shift for fine tuning, hold Ctrl for ultra-fine tuning.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/5d50ff53121e54d70b0ef755c20b7b8c04981235/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.12" author="zaibuyidao" time="2025-06-08T14:53:39Z">
+        <changelog><![CDATA[+ Added waveform preview window.
++ Optimized mouse playback interactions in the waveform preview window.
++ Improved audio playback controls.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/03446c92c4b526409154e13c3dbecdac6f119dff/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
