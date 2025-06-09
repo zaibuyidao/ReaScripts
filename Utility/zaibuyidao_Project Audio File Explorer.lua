@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.14
+-- @version 1.0.15
 -- @author zaibuyidao
 -- @changelog
 --   + Added waveform preview window.
@@ -2346,7 +2346,7 @@ function loop()
       end
 
       -- 绘制播放游标
-      if Wave.play_cursor then
+      if Wave.play_cursor and Wave.src_len and Wave.zoom and Wave.zoom ~= 0 then
         local px = (Wave.play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
         reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, 0x404040FF, 1) -- 0xFF2222FF
