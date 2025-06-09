@@ -1,10 +1,11 @@
 -- @description Project Audio File Explorer
--- @version 1.0.12
+-- @version 1.0.13
 -- @author zaibuyidao
 -- @changelog
 --   + Added waveform preview window.
 --   + Optimized mouse playback interactions in the waveform preview window.
 --   + Improved audio playback controls.
+--   + Optimized waveform sampling for short audio to prevent display issues caused by sparse sampling.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -208,7 +209,7 @@ local normal_text          = 0xFFF0F0F0 -- -- 0xCCCCCCFF -- 柔和灰白
 local previewed_text       = 0x888888FF -- 已预览过的更暗
 
 -- 波形预览状态变量
-local wf_step = 100
+local wf_step = 400
 local img_w, img_h = 1200, 120
 local timeline_height = 20             -- 时间线高度
 local max_sec = nil
@@ -702,6 +703,20 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
   for ch = 1, channels do peaks[ch] = {} end
   local buf = reaper.new_array(samples_per_pixel * channels)
 
+  -- 动态计算实际步长
+  local function calcAdaptiveStep(read_samples)
+    -- read_samples 当前像素对应的采样点数量。例如1秒音频采样率为44100Hz，波形窗口宽度是 1200 Px，那么samples_per_pixel = floor(44100 / 1200) ≈ 36.75，表示每个像素对应 36.75 个采样点
+    if read_samples >= 1000 then
+      return step -- 使用原始step
+    elseif read_samples >= 100 then
+      return math.max(1, math.floor(read_samples / 20))
+    elseif read_samples >= 10 then
+      return 1
+    else
+      return 1
+    end
+  end
+
   for px = 1, pixel_cnt do
     local sample_start = (px - 1) * samples_per_pixel
     local read_samples = math.min(samples_per_pixel, total_samples - sample_start)
@@ -711,14 +726,18 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
       buf.clear()
       local offset = start_time + sample_start / srate
       reaper.GetAudioAccessorSamples(accessor, srate, channels, offset, read_samples, buf)
+      local actual_step = calcAdaptiveStep(read_samples)
       for ch = 1, channels do
         local min, max = math.huge, -math.huge
-        for i = 0, read_samples - 1, step do
+        for i = 0, read_samples - 1, actual_step do
           local v = buf[(i * channels) + ch]
           if v then
             if v < min then min = v end
             if v > max then max = v end
           end
+        end
+        if min == math.huge or max == -math.huge then
+          min, max = 0, 0
         end
         peaks[ch][px] = {min, max}
       end
@@ -748,6 +767,20 @@ function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
   for ch = 1, channel_count do peaks[ch] = {} end
   local buf = reaper.new_array(samples_per_pixel * channel_count)
   local accessor = reaper.CreateTakeAudioAccessor(take)
+
+  -- 动态计算实际步长
+  local function calcAdaptiveStep(read_samples)
+    if read_samples >= 1000 then
+      return step
+    elseif read_samples >= 100 then
+      return math.max(1, math.floor(read_samples / 20))
+    elseif read_samples >= 10 then
+      return 1
+    else
+      return 1
+    end
+  end
+
   for px = 1, pixel_cnt do
     local sample_start = (px - 1) * samples_per_pixel
     local read_samples = math.min(samples_per_pixel, total_samples - sample_start)
@@ -757,14 +790,18 @@ function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
       buf.clear()
       local offset = start_time + sample_start / srate
       reaper.GetAudioAccessorSamples(accessor, srate, channel_count, offset, read_samples, buf)
+      local actual_step = calcAdaptiveStep(read_samples)
       for ch = 1, channel_count do
         local min, max = math.huge, -math.huge
-        for i = 0, read_samples - 1, step do
+        for i = 0, read_samples - 1, actual_step do
           local v = buf[(i * channel_count) + ch]
           if v then
             if v < min then min = v end
             if v > max then max = v end
           end
+        end
+        if min == math.huge or max == -math.huge then
+          min, max = 0, 0
         end
         peaks[ch][px] = {min, max}
       end
@@ -773,34 +810,6 @@ function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
   reaper.DestroyAudioAccessor(accessor)
   return peaks, pixel_cnt, src_len, channel_count
 end
-
--- function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
---   -- 分配一个可画区域
---   reaper.ImGui_InvisibleButton(ctx, "##wave", img_w, img_h)
---   local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
---   local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
---   local drawlist = reaper.ImGui_GetWindowDrawList(ctx)
---   -- 在 drawlist 画波形
---   if peaks then
---     local w = img_w
---     local h = img_h
---     -- 对每个声道绘制波形
---     for ch = 1, channel_count do
---       local ch_y = min_y + (ch - 1) * h / channel_count
---       local ch_h = h / channel_count
---       -- 遍历每一个像素点绘制
---       for i = 1, w do
---         local frac = (i - 1) / (w - 1)
---         local idx = math.floor(frac * #peaks[ch]) + 1
---         local p = peaks[ch][idx] or {0, 0}
-
---         local y1 = ch_y + ch_h / 2 - p[1] * ch_h / 2
---         local y2 = ch_y + ch_h / 2 - p[2] * ch_h / 2
---         reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, 0x80C0FFFF, 1.0)
---       end
---     end
---   end
--- end
 
 function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count) 
   reaper.ImGui_InvisibleButton(ctx, "##wave", img_w, img_h)
@@ -1097,7 +1106,7 @@ function loop()
 
     -- 设置表格线条颜色为红色
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderStrong(), 0xFF404040) -- 边框线，深灰0xFF404040 透明0x00000000
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderLight(),  0x00000000) -- 列表线/分割线，深灰0xFF404040 透明0x00000000
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderLight(),  0xFF404040) -- 列表线/分割线，深灰0xFF404040 透明0x00000000
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBg(),        0xFF0F0F0F) -- 表格行背景色 0xFF0F0F0F
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     0xFF0F0F0F)
     -- 支持表格排序和冻结首行
