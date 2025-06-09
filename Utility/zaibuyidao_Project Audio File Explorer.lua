@@ -1,11 +1,12 @@
 -- @description Project Audio File Explorer
--- @version 1.0.13
+-- @version 1.0.14
 -- @author zaibuyidao
 -- @changelog
 --   + Added waveform preview window.
 --   + Optimized mouse playback interactions in the waveform preview window.
 --   + Improved audio playback controls.
 --   + Optimized waveform sampling for short audio to prevent display issues caused by sparse sampling.
+--   + Fixed waveform preview display for item mode.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -757,7 +758,7 @@ function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
   if not srate or srate == 0 then srate = 44100 end
   local channel_count = math.min(reaper.GetMediaSourceNumChannels(source), 2)
   local src_len = reaper.GetMediaSourceLength(source)
-
+  -- 强制读取媒体源完整长度，而不是take修剪区段
   start_time = start_time or 0
   end_time = math.min(end_time or src_len, src_len)
   local win_len = end_time - start_time
@@ -766,7 +767,16 @@ function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
   local peaks = {}
   for ch = 1, channel_count do peaks[ch] = {} end
   local buf = reaper.new_array(samples_per_pixel * channel_count)
-  local accessor = reaper.CreateTakeAudioAccessor(take)
+
+  -- 临时插入 item/take 访问 full source
+  local track_idx = reaper.CountTracks(0)
+  reaper.InsertTrackAtIndex(track_idx, true)
+  local track = reaper.GetTrack(0, track_idx)
+  local item = reaper.AddMediaItemToTrack(track)
+  reaper.SetMediaItemLength(item, src_len, false)
+  local tmp_take = reaper.AddTakeToMediaItem(item)
+  reaper.SetMediaItemTake_Source(tmp_take, source)
+  local accessor = reaper.CreateTakeAudioAccessor(tmp_take)
 
   -- 动态计算实际步长
   local function calcAdaptiveStep(read_samples)
@@ -807,7 +817,12 @@ function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
       end
     end
   end
+
+  -- 清理
   reaper.DestroyAudioAccessor(accessor)
+  reaper.DeleteTrackMediaItem(track, item)
+  reaper.DeleteTrack(track)
+
   return peaks, pixel_cnt, src_len, channel_count
 end
 
