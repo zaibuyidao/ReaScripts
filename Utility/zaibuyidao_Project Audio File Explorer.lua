@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.17
+-- @version 1.0.18
 -- @author zaibuyidao
 -- @changelog
 --   Added waveform preview caching to improve performance and avoid redundant peak calculations.
@@ -2839,6 +2839,15 @@ function loop()
     if playing_preview and info and info.path then
       reaper.ImGui_SameLine(ctx, nil, 1)
       reaper.ImGui_Text(ctx, " Now playing: " .. info.path)
+    end
+
+    -- 自动停止非Loop播放，只要没勾选Loop且快播完就自动Stop
+    if playing_preview and not loop_enabled then
+      local ok_pos, position = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+      local ok_len, length   = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+      if ok_pos and ok_len and (length - position) < 0.03 then -- 距离结尾小于0.03秒
+        StopPlay()
+      end
     end
 
     reaper.ImGui_End(ctx)
