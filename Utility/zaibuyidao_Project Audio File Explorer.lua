@@ -1,12 +1,10 @@
 -- @description Project Audio File Explorer
--- @version 1.0.15
+-- @version 1.0.16
 -- @author zaibuyidao
 -- @changelog
---   + Added waveform preview window.
---   + Optimized mouse playback interactions in the waveform preview window.
---   + Improved audio playback controls.
---   + Optimized waveform sampling for short audio to prevent display issues caused by sparse sampling.
---   + Fixed waveform preview display for item mode.
+--   Added waveform preview caching to improve performance and avoid redundant peak calculations.
+--   Cached waveform data is stored in the script's "waveform_cache" folder using file path and modification time hash.
+--   Loading a previously viewed audio file now uses cached data for faster preview.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -45,7 +43,19 @@ local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
 reaper.ImGui_Attach(ctx, sans_serif)
 reaper.ImGui_SetNextWindowSize(ctx, 1400, 834, reaper.ImGui_Cond_FirstUseEver())
 
+-- 波形缓存文件夹创建
+local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
+local cache_dir = script_path .. "waveform_cache/"
+local function EnsureCacheDir()
+  local sep = package.config:sub(1,1)
+  if not reaper.EnumerateFiles(cache_dir, 0) then
+    os.execute((sep == "/" and "mkdir -p " or "mkdir ") .. '"' .. cache_dir .. '"')
+  end
+end
+EnsureCacheDir()
+
 -- 状态变量
+local CACHE_PIXEL_WIDTH = 2048
 local font_size         = 14    -- 默认字体大小
 local need_refresh_font = false
 local FONT_SIZE_MIN     = 10
@@ -234,6 +244,131 @@ local Wave = {
   zoom = 1,
   w = 0, -- 波形宽度
 }
+
+--------------------------------------------- 波形缓存相关函数 ---------------------------------------------
+
+local function get_file_size(filepath)
+  local f = io.open(filepath, "rb")
+  if not f then return 0 end
+  f:seek("end")
+  local sz = f:seek()
+  f:close()
+  return sz or 0
+end
+
+local function simple_hash(str)
+  local hash = 0
+  for i = 1, #str do
+    hash = (hash * 31 + str:byte(i)) % 2^32
+  end
+  return ("%08x"):format(hash)
+end
+
+local function cache_filename(filepath)
+  local size = tostring(get_file_size(filepath))
+  return cache_dir .. simple_hash(filepath .. "@" .. size) .. ".wfc"
+end
+
+-- 保存缓存
+local function save_waveform_cache(filepath, data)
+  local f = io.open(cache_filename(filepath), "w+b")
+  if not f then return end
+  -- 第一行info，后面每行为每个像素的峰值
+  f:write(string.format("%d,%d,%f\n", data.pixel_cnt, data.channel_count, data.src_len))
+  for px = 1, data.pixel_cnt do
+    for ch = 1, data.channel_count do
+      local minv, maxv = data.peaks[ch][px][1], data.peaks[ch][px][2]
+      f:write(string.format("%f,%f", minv, maxv))
+      if ch < data.channel_count then f:write(",") end
+    end
+    f:write("\n")
+  end
+  f:close()
+end
+
+-- 读取缓存
+local function load_waveform_cache(filepath)
+  local f = io.open(cache_filename(filepath), "rb")
+  if not f then return nil end
+  local line = f:read("*l")
+  if not line then f:close() return nil end
+  local pixel_cnt, channel_count, src_len = line:match("^(%d+),(%d+),([%d%.]+)")
+  pixel_cnt, channel_count, src_len = tonumber(pixel_cnt), tonumber(channel_count), tonumber(src_len)
+  local peaks = {}
+  for ch = 1, channel_count do peaks[ch] = {} end
+  local px = 1
+  for l in f:lines() do
+    local vals = {}
+    for v in l:gmatch("([%-%d%.]+)") do table.insert(vals, tonumber(v)) end
+    for ch = 1, channel_count do
+      peaks[ch][px] = {vals[(ch-1)*2+1], vals[(ch-1)*2+2]}
+    end
+    px = px + 1
+  end
+  f:close()
+  return {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len}
+end
+
+local function remap_waveform_to_window(cache, pixel_cnt, start_time, end_time)
+  local cache_len = cache.src_len
+  local cache_pixel_cnt = cache.pixel_cnt
+  local chs = cache.channel_count
+  local peaks_new = {}
+  for ch = 1, chs do peaks_new[ch] = {} end
+  local window_len = end_time - start_time
+  -- 对每个显示像素，找到在缓存中的位置做插值
+  for px = 1, pixel_cnt do
+    -- 当前像素在窗口中的时间
+    local t = (px-1)/(pixel_cnt-1) * window_len + start_time
+    -- 时间 t 在缓存中的采样点位置
+    local src_px = t / cache_len * (cache_pixel_cnt-1) + 1
+    local i = math.floor(src_px)
+    local frac = src_px - i
+    for ch = 1, chs do
+      local v1 = cache.peaks[ch][i] or {0,0}
+      local v2 = cache.peaks[ch][i+1] or v1
+      local minv = v1[1] + (v2[1] - v1[1]) * frac
+      local maxv = v1[2] + (v2[2] - v1[2]) * frac
+      peaks_new[ch][px] = {minv, maxv}
+    end
+  end
+  return peaks_new, pixel_cnt, window_len, chs
+end
+
+-- 获取波形数据
+function GetPeaksWithCache(info, wf_step, pixel_cnt, start_time, end_time)
+  if not info or not info.path or info.path == "" then return end
+  local cache = load_waveform_cache(info.path)
+  if not cache then
+    -- 第一次采样，直接全量采样最大宽度
+    local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, CACHE_PIXEL_WIDTH, start_time, end_time)
+    if peaks and src_len and channel_count then
+      save_waveform_cache(info.path, {peaks=peaks, pixel_cnt=CACHE_PIXEL_WIDTH, channel_count=channel_count, src_len=src_len})
+      cache = {peaks=peaks, pixel_cnt=CACHE_PIXEL_WIDTH, channel_count=channel_count, src_len=src_len}
+    end
+  end
+  if not cache then return end
+
+  -- 波形放大/缩小时，直接对缓存数据做插值采样。例如pixel_cnt=窗口宽度
+  local peaks_new = {}
+  for ch = 1, cache.channel_count do peaks_new[ch] = {} end
+  for px = 1, pixel_cnt do
+    local src_px = (px-1) / (pixel_cnt-1) * (cache.pixel_cnt-1) + 1
+    local i = math.floor(src_px)
+    local frac = src_px - i
+    for ch = 1, cache.channel_count do
+      local v1 = cache.peaks[ch][i] or {0, 0}
+      local v2 = cache.peaks[ch][i+1] or v1  -- 越界时用v1
+      -- 线性插值
+      local minv = v1[1] + (v2[1] - v1[1]) * frac
+      local maxv = v1[2] + (v2[2] - v1[2]) * frac
+      peaks_new[ch][px] = {minv, maxv}
+    end
+  end
+  return peaks_new, pixel_cnt, cache.src_len, cache.channel_count
+end
+
+--------------------------------------------- 收集工程音频相关函数 ---------------------------------------------
 
 -- 收集工程音频文件
 local function CollectAllUniqueSources_FromItems()
@@ -840,7 +975,7 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
       local ch_h = h / channel_count
       local y_mid = ch_y + ch_h / 2
       -- 先画一条横线，作为静音参考线
-      reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, 0x80C0FFFF, 1.0)
+      reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, 0x525F6FFF, 1.0) -- 波形颜色-中心线 0x868C82FF 0x80C0FFFF
       -- 再画波形竖线
       for i = 1, w do
         local frac = (i - 1) / (w - 1)
@@ -852,7 +987,7 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
         local y2 = y_mid - maxv * ch_h / 2
 
         -- 波形覆盖在中线上
-        reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, 0x80C0FFFF, 1.0)
+        reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, 0xA8CBD2FF, 1.0) -- 波形颜色 0xBBE1E9FF 0xA8CBD2FF 0x96B4BBFF 0x87A2A8FF 0x96A688FF 0x80C0FFFF
       end
     end
   end
@@ -2127,8 +2262,17 @@ function loop()
             or (last_view_len ~= view_len)
             or (last_scroll ~= Wave.scroll)
           then
-            peaks, pixel_cnt, src_len, channel_count = GetPeaksForInfo(cur_info, wf_step, pw_region_w, window_start, window_end)
-            Wave.src_len = src_len
+
+          local cache = load_waveform_cache(cur_info.path)
+          if not cache then
+            local peaks_raw, pixel_cnt_raw, src_len_raw, channel_count_raw = GetPeaksForInfo(cur_info, wf_step, CACHE_PIXEL_WIDTH, 0, nil)
+            save_waveform_cache(cur_info.path, {
+              peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw
+            })
+            cache = {peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw}
+          end
+            peaks, pixel_cnt, _, channel_count = remap_waveform_to_window(cache, pw_region_w, window_start, window_end)
+            Wave.src_len = cache.src_len
             last_wave_info = cur_key
             last_pixel_cnt = pw_region_w
             last_view_len = view_len
