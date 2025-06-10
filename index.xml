@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="758162b6a2c9dd92d8a6bbee1c520d3b725a799f">
+<index version="1" name="zaibuyidao Scripts" commit="988fb7e8515ab92c3a0abb0b7165d43152aed31f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8517,6 +8517,13 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
 Cached waveform data is stored in the script's "waveform_cache" folder using file path and modification time hash.
 Loading a previously viewed audio file now uses cached data for faster preview.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/758162b6a2c9dd92d8a6bbee1c520d3b725a799f/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.17" author="zaibuyidao" time="2025-06-10T16:30:35Z">
+        <changelog><![CDATA[Added waveform preview caching to improve performance and avoid redundant peak calculations.
+Cached waveform data is stored in the script's "waveform_cache" folder using file path and modification time hash.
+Loading a previously viewed audio file now uses cached data for faster preview.
+Enhanced the Media Items mode: added right-click context menu and keyboard shortcut support for more efficient file management.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/988fb7e8515ab92c3a0abb0b7165d43152aed31f/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
