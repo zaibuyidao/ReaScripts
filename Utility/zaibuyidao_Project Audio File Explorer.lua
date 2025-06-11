@@ -1,9 +1,10 @@
 -- @description Project Audio File Explorer
--- @version 1.0.19
+-- @version 1.0.20
 -- @author zaibuyidao
 -- @changelog
 --   Fixed the issue where clicking the waveform could not accurately locate the play cursor after changing the playback rate.
 --   Fixed an issue where changing the playback rate caused inaccurate play cursor positioning when clicking the waveform.
+--   Refined and optimized the user interface experience.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -2332,23 +2333,15 @@ function loop()
 
       reaper.ImGui_EndPopup(ctx)
     end
-    
-    -- 保持音高勾选项，代码备留
-    -- reaper.ImGui_SameLine(ctx, nil, 10)
-    -- local rv6
-    -- rv6, preserve_pitch = reaper.ImGui_Checkbox(ctx, "Preserve pitch when changing rate", preserve_pitch)
-    -- if rv6 and playing_preview and reaper.CF_Preview_SetValue then
-    --   reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-    -- end
 
-    -- 电平表通道选项，代码备留
+    -- 电平表通道选项
     -- reaper.ImGui_Separator(ctx)
-    -- reaper.ImGui_SameLine(ctx, nil, 10)
-    -- reaper.ImGui_SetNextItemWidth(ctx, -65)
-    -- local rv5, new_peaks = reaper.ImGui_InputInt(ctx, 'Peaks', peak_chans, 1, 1)
-    -- if rv5 then
-    --   peak_chans = math.max(2, math.min(128, new_peaks or 2))
-    -- end
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SetNextItemWidth(ctx, 100)
+    local rv5, new_peaks = reaper.ImGui_InputInt(ctx, 'Peaks', peak_chans, 1, 1)
+    if rv5 then
+      peak_chans = math.max(2, math.min(128, new_peaks or 2))
+    end
     -- reaper.ImGui_SameLine(ctx)
     -- HelpMarker("Open settings to adjust playback and audio file collection options.\n\n" .. 
     -- "Audio file source modes:\n" ..
@@ -2360,10 +2353,46 @@ function loop()
     -- "   Scans and lists all audio files in the project directory, whether or not they are used or referenced in the project.\n\n" ..
     -- "You can change file source and enable pitch preservation.")
 
+    -- 竖直电平条 mini
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    local bar_height = reaper.ImGui_GetFrameHeight(ctx) -- base_height -- 或 reaper.ImGui_GetFrameHeight(ctx)
+    local bar_width = 7
+    local spacing = 2
+    local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+    local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    for i = 0, peak_chans-1 do
+      local peak = 0
+      if playing_preview and reaper.CF_Preview_GetPeak then
+        local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
+        if valid then peak = value end
+      end
+      -- 画竖直电平条（底灰、顶色高亮）
+      local bar_x1 = x + i * (bar_width + spacing)
+      local bar_x2 = bar_x1 + bar_width
+      local bar_y1 = y
+      local bar_y2 = y + bar_height
+      -- 先画底
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, bar_y1, bar_x2, bar_y2, 0x222222ff)
+      -- 再画峰值
+      local peak_y = bar_y2 - peak * bar_height
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, peak_y, bar_x2, bar_y2, 0x33dd33ff) -- 0x33dd33ff
+    end
+    -- Dummy 占位
+    reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
+
+    -- 保持音高勾选项，代码备留
+    -- reaper.ImGui_SameLine(ctx, nil, 10)
+    -- local rv6
+    -- rv6, preserve_pitch = reaper.ImGui_Checkbox(ctx, "Preserve pitch when changing rate", preserve_pitch)
+    -- if rv6 and playing_preview and reaper.CF_Preview_SetValue then
+    --   reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+    -- end
+
     -- 波形预览
     reaper.ImGui_Separator(ctx)
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-    if reaper.ImGui_BeginChild(ctx, "waveform", avail_w-75, img_h+24) then -- 微调波形宽度和高度
+    -- 右侧区域预留用于放置专辑图片
+    if reaper.ImGui_BeginChild(ctx, "waveform", avail_w, img_h+24) then -- 微调波形宽度（预留右侧空间-75）和高度（补偿时间线+24）
       local pw_min_x, pw_min_y = reaper.ImGui_GetItemRectMin(ctx)
       local pw_max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local pw_region_w = math.max(64, math.floor(pw_max_x - pw_min_x))
@@ -2701,65 +2730,65 @@ function loop()
 
       reaper.ImGui_EndChild(ctx)
 
-      -- 竖直电平条竖版
-      reaper.ImGui_SameLine(ctx, nil, 5)
-      local bar_height = 140 -- 或 base_height -- 微调电平表高度
-      local bar_width = 30 -- 微调电平表宽度
-      local spacing = 2
-      local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-      local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+      -- 竖直电平条 大
+      -- reaper.ImGui_SameLine(ctx, nil, 5)
+      -- local bar_height = 140 -- 或 base_height -- 微调电平表高度
+      -- local bar_width = 30 -- 微调电平表宽度
+      -- local spacing = 2
+      -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+      -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
 
-      for i = 0, peak_chans-1 do
-        local peak = 0
-        if playing_preview and reaper.CF_Preview_GetPeak then
-          local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
-          if valid then peak = value end
-        end
+      -- for i = 0, peak_chans-1 do
+      --   local peak = 0
+      --   if playing_preview and reaper.CF_Preview_GetPeak then
+      --     local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
+      --     if valid then peak = value end
+      --   end
 
-        -- 更新本声道峰值保持
-        peak_hold[i+1] = math.max(peak_hold[i+1] or 0, peak)
+      --   -- 更新本声道峰值保持
+      --   peak_hold[i+1] = math.max(peak_hold[i+1] or 0, peak)
 
-        -- 使用peak_hold显示峰值
-        local show_peak = peak_hold[i+1]
-        local db_str
-        if show_peak > 0 then
-          local db = 20 * math.log(show_peak, 10)
-          db_str = string.format("%.1f", db)
-        else
-          db_str = "-inf"
-        end
+      --   -- 使用peak_hold显示峰值
+      --   local show_peak = peak_hold[i+1]
+      --   local db_str
+      --   if show_peak > 0 then
+      --     local db = 20 * math.log(show_peak, 10)
+      --     db_str = string.format("%.1f", db)
+      --   else
+      --     db_str = "-inf"
+      --   end
 
-        -- 计算文本坐标
-        local bar_x1 = x + i * (bar_width + spacing)
-        local bar_x2 = bar_x1 + bar_width
-        local bar_y1 = y
-        local bar_y2 = y + bar_height
-        local bar_center_x = (bar_x1 + bar_x2) / 2
+      --   -- 计算文本坐标
+      --   local bar_x1 = x + i * (bar_width + spacing)
+      --   local bar_x2 = bar_x1 + bar_width
+      --   local bar_y1 = y
+      --   local bar_y2 = y + bar_height
+      --   local bar_center_x = (bar_x1 + bar_x2) / 2
 
-        -- 文本宽度/高度
-        local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, db_str)
-        local text_x = bar_center_x - text_w / 2
-        local text_y = bar_y1 - text_h - 4 -- 上方留4像素
-        reaper.ImGui_DrawList_AddText(draw_list, text_x, text_y, 0xFFFFFFFF, db_str) -- 画dB文本
-        -- 文本区域透明按钮，便于鼠标点击
-        reaper.ImGui_SetCursorScreenPos(ctx, text_x, text_y)
-        local btn_id = string.format("##db_reset_%d", i)
-        if reaper.ImGui_InvisibleButton(ctx, btn_id, text_w, text_h) then
-          peak_hold[i+1] = 0
-        end
+      --   -- 文本宽度/高度
+      --   local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, db_str)
+      --   local text_x = bar_center_x - text_w / 2
+      --   local text_y = bar_y1 - text_h - 4 -- 上方留4像素
+      --   reaper.ImGui_DrawList_AddText(draw_list, text_x, text_y, 0xFFFFFFFF, db_str) -- 画dB文本
+      --   -- 文本区域透明按钮，便于鼠标点击
+      --   reaper.ImGui_SetCursorScreenPos(ctx, text_x, text_y)
+      --   local btn_id = string.format("##db_reset_%d", i)
+      --   if reaper.ImGui_InvisibleButton(ctx, btn_id, text_w, text_h) then
+      --     peak_hold[i+1] = 0
+      --   end
 
-        -- 鼠标悬停时提示
-        if reaper.ImGui_IsItemHovered(ctx) then
-          reaper.ImGui_SetTooltip(ctx, "Click to reset peak hold")
-          reaper.ImGui_DrawList_AddRect(draw_list, text_x, text_y, text_x + text_w, text_y + text_h, 0xFF66FFFF) -- 高亮提示
-        end
-        -- 画电平条
-        reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, bar_y1, bar_x2, bar_y2, 0x222222ff) -- 画底
-        local peak_y = bar_y2 - peak * bar_height
-        reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, peak_y, bar_x2, bar_y2, 0xFFC0CBFF) -- 画峰值
-      end
-      -- Dummy 占位
-      reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
+      --   -- 鼠标悬停时提示
+      --   if reaper.ImGui_IsItemHovered(ctx) then
+      --     reaper.ImGui_SetTooltip(ctx, "Click to reset peak hold")
+      --     reaper.ImGui_DrawList_AddRect(draw_list, text_x, text_y, text_x + text_w, text_y + text_h, 0xFF66FFFF) -- 高亮提示
+      --   end
+      --   -- 画电平条
+      --   reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, bar_y1, bar_x2, bar_y2, 0x222222ff) -- 画底
+      --   local peak_y = bar_y2 - peak * bar_height
+      --   reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, peak_y, bar_x2, bar_y2, 0xFFC0CBFF) -- 画峰值
+      -- end
+      -- -- Dummy 占位
+      -- reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
 
       reaper.ImGui_Separator(ctx)
 
