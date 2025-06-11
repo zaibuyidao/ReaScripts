@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="33c65627be4fc86a1a548de7423861b64dfe7e62">
+<index version="1" name="zaibuyidao Scripts" commit="0b27147666a7584da2a65e6ac27a881394340bf3">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8548,6 +8548,11 @@ Refined and optimized the user interface experience.]]></changelog>
 Fixed an issue where changing the playback rate caused inaccurate play cursor positioning when clicking the waveform.
 Refined and optimized the user interface experience.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/33c65627be4fc86a1a548de7423861b64dfe7e62/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.22" author="zaibuyidao" time="2025-06-11T15:58:40Z">
+        <changelog><![CDATA[Improved "Referenced from RPP" mode.
+Fixed incomplete display of track name, position, and usages information in some modes.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0b27147666a7584da2a65e6ac27a881394340bf3/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
