@@ -1,10 +1,9 @@
 -- @description Project Audio File Explorer
--- @version 1.0.21
+-- @version 1.0.22
 -- @author zaibuyidao
 -- @changelog
---   Fixed the issue where clicking the waveform could not accurately locate the play cursor after changing the playback rate.
---   Fixed an issue where changing the playback rate caused inaccurate play cursor positioning when clicking the waveform.
---   Refined and optimized the user interface experience.
+--   Improved "Referenced from RPP" mode.
+--   Fixed incomplete display of track name, position, and usages information in some modes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -150,7 +149,7 @@ local DOUBLECLICK_NONE    = 2
 local doubleclick_action  = DOUBLECLICK_NONE -- 默认 Do Do nothing
 local bg_alpha            = 1.0              -- 默认背景不透明
 
--- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=All Items）
+-- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items）
 local collect_mode        = 3
 local COLLECT_MODE_ITEMS  = 0
 local COLLECT_MODE_RPP    = 1
@@ -373,7 +372,7 @@ end
 
 --------------------------------------------- 收集工程音频相关函数 ---------------------------------------------
 
--- 收集工程音频文件
+-- Items 收集工程中当前使用的音频文件
 local function CollectAllUniqueSources_FromItems()
   local files, files_idx = {}, {}
   local item_cnt = reaper.CountMediaItems(0)
@@ -422,6 +421,7 @@ local function CollectAllUniqueSources_FromItems()
   return files, files_idx
 end
 
+-- Media Items 收集所有工程对象
 function CollectMediaItemsDetail()
   local files_idx = {}
   local item_cnt = reaper.CountMediaItems(0)
@@ -488,58 +488,89 @@ function CollectMediaItemsDetail()
   return files_idx
 end
 
--- 基于当前工程RPP内容，收集所有音频文件
+-- RPP 收集所有引用的音频文件
 function CollectAllUniqueSources_FromRPP()
-  local files, files_idx = {}, {}
+  local files_idx = {}
+  local path_set = {}
+
+  -- 先获取RPP所有引用路径（防止重复）
   local tracks = {}
   local track_count = reaper.CountTracks(0)
   for i = 0, track_count-1 do
     tracks[#tracks+1] = reaper.GetTrack(0, i)
   end
-
   for _, track in ipairs(tracks) do
     local ret, chunk = reaper.GetTrackStateChunk(track, "", false)
     if ret and chunk then
       for path in chunk:gmatch('FILE%s+"(.-)"') do
-        if not files[path] then
-          local info = { path = path, filename = path:match("[^\\/]+$") or path }
-          -- 获取文件大小
-          local f = io.open(path, "rb")
-          if f then
-            f:seek("end")
-            info.size = f:seek()
-            f:close()
-          else
-            info.size = 0
-          end
-
-          local src = reaper.PCM_Source_CreateFromFile(path)
-          if src then
-            info.source = src
-            info.type = reaper.GetMediaSourceType(src, "")
-            info.length = reaper.GetMediaSourceLength(src)
-            info.samplerate = reaper.GetMediaSourceSampleRate(src)
-            info.channels = reaper.GetMediaSourceNumChannels(src)
-            info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
-            local _, genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
-            local _, comment = reaper.GetMediaFileMetadata(src, "MP:dm/logComment")
-            local _, description = reaper.GetMediaFileMetadata(src, "BWF:Description")
-            local _, orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
-            info.genre = genre or ""
-            info.comment = comment or ""
-            info.description = description or ""
-            info.bwf_orig_date = orig_date or ""
-          end
-          files[path] = info
-          files_idx[#files_idx+1] = info
+        if path and path ~= "" then
+          path_set[path] = true
         end
       end
     end
   end
-  return files, files_idx
+
+  -- 遍历所有item，只有path属于RPP引用路径才收集
+  local item_cnt = reaper.CountMediaItems(0)
+  for i = 0, item_cnt - 1 do
+    local item = reaper.GetMediaItem(0, i)
+    local take = reaper.GetActiveTake(item)
+    if take then
+      local src = reaper.GetMediaItemTake_Source(take)
+      local path = reaper.GetMediaSourceFileName(src, "")
+      if path and path_set[path] then
+        local typ, bits, samplerate, channels, length, size = "", "-", "-", "-", "-", 0
+        local description, comment = "", ""
+        -- 获取元数据
+        local real_src = reaper.PCM_Source_CreateFromFile(path)
+        if real_src then
+          typ = reaper.GetMediaSourceType(real_src, "")
+          samplerate = reaper.GetMediaSourceSampleRate(real_src)
+          channels = reaper.GetMediaSourceNumChannels(real_src)
+          length = reaper.GetMediaSourceLength(real_src)
+          bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(real_src) or "-"
+          local f = io.open(path, "rb")
+          if f then
+            f:seek("end")
+            size = f:seek()
+            f:close()
+          end
+          local _, desc = reaper.GetMediaFileMetadata(real_src, "BWF:Description")
+          local _, comm = reaper.GetMediaFileMetadata(real_src, "MP:dm/logComment")
+          description = desc or ""
+          comment = comm or ""
+          reaper.PCM_Source_Destroy(real_src)
+        end
+        local track = reaper.GetMediaItem_Track(item)
+        local _, track_name = reaper.GetTrackName(track)
+        local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+        local _, take_name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
+        table.insert(files_idx, {
+          item = item,
+          take = take,
+          source = src,
+          path = path,
+          filename = path:match("[^/\\]+$") or path,
+          type = typ,
+          samplerate = samplerate,
+          channels = channels,
+          length = length,
+          bits = bits,
+          size = size,
+          description = description,
+          comment = comment,
+          track = track,
+          track_name = track_name,
+          position = pos,
+        })
+      end
+    end
+  end
+
+  return files_idx
 end
 
--- 从工程目录收集音频文件
+-- Project Directory 收集工程目录的音频文件
 function CollectAllUniqueSources_FromProjectDirectory()
   local files, files_idx = {}, {}
   -- 获取当前工程路径
@@ -631,12 +662,12 @@ function CollectFiles()
   if collect_mode == COLLECT_MODE_ITEMS then
     files, files_idx = CollectAllUniqueSources_FromItems()
     files_idx_cache = files_idx
-  elseif collect_mode == COLLECT_MODE_RPP then
-    files, files_idx = CollectAllUniqueSources_FromRPP()
-    files_idx_cache = files_idx
   elseif collect_mode == COLLECT_MODE_DIR then
     files, files_idx = CollectAllUniqueSources_FromProjectDirectory()
     files_idx_cache = files_idx
+  elseif collect_mode == COLLECT_MODE_RPP then
+    files_idx = CollectAllUniqueSources_FromRPP()
+    files_idx_cache = MergeUsagesByPath(files_idx)
   elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
     files_idx = CollectMediaItemsDetail()
     files_idx_cache = MergeUsagesByPath(files_idx)
@@ -1284,9 +1315,23 @@ function loop()
       | reaper.ImGui_TableFlags_Hideable()
     ) then
       reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
-      if collect_mode == COLLECT_MODE_ALL_ITEMS then -- All Items
+      if collect_mode == COLLECT_MODE_ALL_ITEMS then -- Media Items
         reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
         reaper.ImGui_TableSetupColumn(ctx, "Take Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_FILENAME)
+        reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
+        reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
+        reaper.ImGui_TableSetupColumn(ctx, "Track",       reaper.ImGui_TableColumnFlags_WidthFixed(), 100, COL_DATE)
+        reaper.ImGui_TableSetupColumn(ctx, "Position",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, COL_GENRE)
+        reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_COMMENT)
+        reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_DESCRIPTION)
+        reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, COL_LENGTH)
+        reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
+        reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
+        reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+        reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
+      elseif collect_mode == COLLECT_MODE_RPP then -- RPP
+        reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
+        reaper.ImGui_TableSetupColumn(ctx, "File Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_FILENAME)
         reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
         reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
         reaper.ImGui_TableSetupColumn(ctx, "Track",       reaper.ImGui_TableColumnFlags_WidthFixed(), 100, COL_DATE)
@@ -1369,7 +1414,7 @@ function loop()
                 end
               end
             elseif spec.user_id == COL_GENRE then -- Genre & Position 列排序
-              if collect_mode == COLLECT_MODE_ALL_ITEMS then
+              if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
                 local apos = tonumber(a.position) or 0
                 local bpos = tonumber(b.position) or 0
                 if apos ~= bpos then
@@ -1540,7 +1585,7 @@ function loop()
 
           -- File & Teak name
           reaper.ImGui_TableSetColumnIndex(ctx, 1)
-          if collect_mode == COLLECT_MODE_ALL_ITEMS then -- All items
+          if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
             local selectable_label = (info.filename or "-") .. "##ALLITEMS_" .. tostring(i)
             if reaper.ImGui_Selectable(ctx, selectable_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
               selected_row = i
@@ -1592,28 +1637,67 @@ function loop()
                 reaper.ImGui_EndMenu(ctx)
               end
 
-              if reaper.ImGui_MenuItem(ctx, "Rename active take") then
-                local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename)
-                if ok and new_name and new_name ~= "" then
-                  -- 遍历当前组的所有usages，全部一起重命名
-                  if info.usages and #info.usages > 0 then
-                    for _, usage in ipairs(info.usages) do
-                      reaper.GetSetMediaItemTakeInfo_String(usage.take, "P_NAME", new_name, true)
+              if collect_mode == COLLECT_MODE_RPP then
+                if reaper.ImGui_MenuItem(ctx, "Rename file...") then
+                  local old_path = info.path
+                  local dir = old_path:match("^(.*)[/\\][^/\\]+$")
+                  local old_filename = old_path:match("[^/\\]+$")
+                  local ext = old_filename:match("%.[^%.]+$") or "" -- 提取原始后缀
+
+                  local ok, new_filename = reaper.GetUserInputs("Rename File", 1, "New Name:,extrawidth=200", old_filename)
+                  if ok and new_filename and new_filename ~= "" and new_filename ~= old_filename then
+                    -- 如果新文件名没有后缀，自动补全原后缀
+                    if not new_filename:lower():match("%.[a-z0-9]+$") and ext ~= "" then
+                      new_filename = new_filename .. ext
                     end
-                  else
-                    -- 单个
-                    reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
+                    local new_path = dir .. "/" .. new_filename
+
+                    -- 拷贝物理文件
+                    local srcfile = io.open(old_path, "rb")
+                    local dstfile = io.open(new_path, "wb")
+                    if srcfile and dstfile then
+                      dstfile:write(srcfile:read("*a"))
+                      srcfile:close()
+                      dstfile:close()
+                      -- 替换所有usages的source
+                      for _, usage in ipairs(info.usages or {}) do
+                        reaper.BR_SetTakeSourceFromFile(usage.take, new_path, true)
+                      end
+                      -- 刷新
+                      CollectFiles()
+                      reaper.ShowMessageBox("File copied and relinked!", "OK", 0)
+                    else
+                      reaper.ShowMessageBox("Copy failed!", "Error", 0)
+                    end
                   end
-                  CollectFiles()
+                  reaper.ImGui_CloseCurrentPopup(ctx)
                 end
-                reaper.ImGui_CloseCurrentPopup(ctx)
+              else
+                if reaper.ImGui_MenuItem(ctx, "Rename active take") then
+                  local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename)
+                  if ok and new_name and new_name ~= "" then
+                    -- 遍历所有usages
+                    if info.usages and #info.usages > 0 then
+                      for _, usage in ipairs(info.usages) do
+                        reaper.GetSetMediaItemTakeInfo_String(usage.take, "P_NAME", new_name, true)
+                      end
+                    else
+                      reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
+                    end
+                    CollectFiles()
+                  end
+                  reaper.ImGui_CloseCurrentPopup(ctx)
+                end
               end
+
               if reaper.ImGui_MenuItem(ctx, "Insert into project") then
+                reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
                 if info.path and info.path ~= "" then
                   reaper.InsertMedia(info.path, 0)
                 end
                 reaper.ImGui_CloseCurrentPopup(ctx)
               end
+
               if reaper.ImGui_MenuItem(ctx, "Remove from project") then
                 if info.usages and #info.usages > 0 then
                   for _, usage in ipairs(info.usages) do
@@ -1672,21 +1756,54 @@ function loop()
 
               -- F2: 更改item名称
               if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F2()) then
-                local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename)
-                if ok and new_name and new_name ~= "" then
-                  -- 遍历当前组的所有usages，全部一起重命名
-                  if info.usages and #info.usages > 0 then
-                    for _, usage in ipairs(info.usages) do
-                      reaper.GetSetMediaItemTakeInfo_String(usage.take, "P_NAME", new_name, true)
+                if collect_mode == COLLECT_MODE_RPP then
+                  local old_path = info.path
+                  local dir = old_path:match("^(.*)[/\\][^/\\]+$")
+                  local old_filename = old_path:match("[^/\\]+$")
+                  local ext = old_filename:match("%.[^%.]+$") or "" -- 提取原始后缀
+
+                  local ok, new_filename = reaper.GetUserInputs("Rename File", 1, "New Name:,extrawidth=200", old_filename)
+                  if ok and new_filename and new_filename ~= "" and new_filename ~= old_filename then
+                    -- 如果新文件名没有后缀，自动补全原后缀
+                    if not new_filename:lower():match("%.[a-z0-9]+$") and ext ~= "" then
+                      new_filename = new_filename .. ext
                     end
-                  else
-                    -- 单个
-                    reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
+                    local new_path = dir .. "/" .. new_filename
+
+                    -- 拷贝物理文件
+                    local srcfile = io.open(old_path, "rb")
+                    local dstfile = io.open(new_path, "wb")
+                    if srcfile and dstfile then
+                      dstfile:write(srcfile:read("*a"))
+                      srcfile:close()
+                      dstfile:close()
+                      -- 替换所有usages的source
+                      for _, usage in ipairs(info.usages or {}) do
+                        reaper.BR_SetTakeSourceFromFile(usage.take, new_path, true)
+                      end
+                      -- 刷新
+                      CollectFiles()
+                      reaper.ShowMessageBox("File copied and relinked!", "OK", 0)
+                    else
+                      reaper.ShowMessageBox("Copy failed!", "Error", 0)
+                    end
                   end
-                  CollectFiles()
+                elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
+                  local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename)
+                  if ok and new_name and new_name ~= "" then
+                    -- 遍历所有usages
+                    if info.usages and #info.usages > 0 then
+                      for _, usage in ipairs(info.usages) do
+                        reaper.GetSetMediaItemTakeInfo_String(usage.take, "P_NAME", new_name, true)
+                      end
+                    else
+                      reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
+                    end
+                    CollectFiles()
+                  end
                 end
               end
-            
+
               -- M: mute item
               if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_M()) then
                 if info.usages and #info.usages > 0 then
@@ -1777,10 +1894,12 @@ function loop()
           end
 
           -- Date & Track name
-          if collect_mode == COLLECT_MODE_ALL_ITEMS then -- All items
+          if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
             reaper.ImGui_TableSetColumnIndex(ctx, 4)
             if info.usages and #info.usages > 1 then
               reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
+            -- elseif info.usages and #info.usages == 1 then
+            --   reaper.ImGui_Text(ctx, info.usages[1].track_name or "-")
             else
               reaper.ImGui_Text(ctx, info.track_name or "-")
             end
@@ -1817,7 +1936,7 @@ function loop()
           end
 
           -- Genre & Position
-          if collect_mode == COLLECT_MODE_ALL_ITEMS then -- All items
+          if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
             reaper.ImGui_TableSetColumnIndex(ctx, 5)
             if info.usages and #info.usages > 1 then
               reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
