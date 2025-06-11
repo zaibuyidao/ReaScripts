@@ -1,11 +1,9 @@
 -- @description Project Audio File Explorer
--- @version 1.0.18
+-- @version 1.0.19
 -- @author zaibuyidao
 -- @changelog
---   Added waveform preview caching to improve performance and avoid redundant peak calculations.
---   Cached waveform data is stored in the script's "waveform_cache" folder using file path and modification time hash.
---   Loading a previously viewed audio file now uses cached data for faster preview.
---   Enhanced the Media Items mode: added right-click context menu and keyboard shortcut support for more efficient file management.
+--   Fixed the issue where clicking the waveform could not accurately locate the play cursor after changing the playback rate.
+--   Fixed an issue where changing the playback rate caused inaccurate play cursor positioning when clicking the waveform.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -2483,7 +2481,9 @@ function loop()
         local rel_x = mouse_x - min_x
         local frac = rel_x / region_w
         frac = math.max(0, math.min(1, frac))
-        local mouse_time = Wave.scroll + frac * (Wave.src_len / Wave.zoom)
+        -- 速率变化时调整光标位置
+        local visible_len = Wave.src_len / play_rate
+        local mouse_time = Wave.scroll + frac * (visible_len / Wave.zoom)
 
         -- 鼠标滚轮缩放
         local mouse_wheel = reaper.ImGui_GetMouseWheel(ctx)
@@ -2595,8 +2595,10 @@ function loop()
 
       -- 选区高亮
       if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
-        local a = (select_start_time - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
-        local b = (select_end_time - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
+        -- 速率变化时调整选区位置
+        local visible_len = Wave.src_len / play_rate
+        local a = (select_start_time - Wave.scroll) / (visible_len / Wave.zoom) * region_w + min_x
+        local b = (select_end_time - Wave.scroll) / (visible_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
         reaper.ImGui_DrawList_AddRectFilled(dl, a, min_y, b, max_y, 0x1844FF44 ) -- 0x10101040
       end
@@ -2613,9 +2615,11 @@ function loop()
         end
       end
 
-      -- 绘制播放游标
+      -- 绘制播放光标
       if Wave.play_cursor and Wave.src_len and Wave.zoom and Wave.zoom ~= 0 then
-        local px = (Wave.play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
+        -- 速率变化时调整光标位置
+        local adjusted_play_cursor = Wave.play_cursor * play_rate
+        local px = (adjusted_play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
         reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, 0x404040FF, 1) -- 0xFF2222FF
       end
