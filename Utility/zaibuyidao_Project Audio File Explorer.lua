@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.20
+-- @version 1.0.21
 -- @author zaibuyidao
 -- @changelog
 --   Fixed the issue where clicking the waveform could not accurately locate the play cursor after changing the playback rate.
@@ -422,7 +422,7 @@ local function CollectAllUniqueSources_FromItems()
   return files, files_idx
 end
 
-function CollectAllItems_Detail()
+function CollectMediaItemsDetail()
   local files_idx = {}
   local item_cnt = reaper.CountMediaItems(0)
   for i = 0, item_cnt - 1 do
@@ -433,7 +433,19 @@ function CollectAllItems_Detail()
     if take then
       src = reaper.GetMediaItemTake_Source(take)
       path = reaper.GetMediaSourceFileName(src, "")
-      typ = reaper.GetMediaSourceType(src, "")
+      -- 通过源文件路径获取type，保证类型准确
+      if path and path ~= "" then
+        local real_src = reaper.PCM_Source_CreateFromFile(path)
+        if real_src then
+          typ = reaper.GetMediaSourceType(real_src, "")
+          reaper.PCM_Source_Destroy(real_src)
+        else
+          typ = ""
+        end
+      else
+        typ = ""
+      end
+      -- typ = reaper.GetMediaSourceType(src, "") -- 通过take获取type，无法保证类型准确。会混入SECTION 等非音频类型
       bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
       samplerate = reaper.GetMediaSourceSampleRate(src)
       channels = reaper.GetMediaSourceNumChannels(src)
@@ -479,12 +491,10 @@ end
 -- 基于当前工程RPP内容，收集所有音频文件
 function CollectAllUniqueSources_FromRPP()
   local files, files_idx = {}, {}
-  local proj = 0
   local tracks = {}
-  tracks[#tracks+1] = reaper.GetMasterTrack(proj)
-  local track_count = reaper.CountTracks(proj)
+  local track_count = reaper.CountTracks(0)
   for i = 0, track_count-1 do
-    tracks[#tracks+1] = reaper.GetTrack(proj, i)
+    tracks[#tracks+1] = reaper.GetTrack(0, i)
   end
 
   for _, track in ipairs(tracks) do
@@ -533,7 +543,7 @@ end
 function CollectAllUniqueSources_FromProjectDirectory()
   local files, files_idx = {}, {}
   -- 获取当前工程路径
-  local proj_path = reaper.GetProjectPath("")
+  local proj_path = reaper.GetProjectPath()
   if not proj_path or proj_path == "" then return files, files_idx end
   -- 支持的扩展名
   local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true}
@@ -628,7 +638,7 @@ function CollectFiles()
     files, files_idx = CollectAllUniqueSources_FromProjectDirectory()
     files_idx_cache = files_idx
   elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
-    files_idx = CollectAllItems_Detail()
+    files_idx = CollectMediaItemsDetail()
     files_idx_cache = MergeUsagesByPath(files_idx)
   end
 
