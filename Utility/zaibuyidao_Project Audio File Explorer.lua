@@ -1,10 +1,11 @@
 -- @description Project Audio File Explorer
--- @version 1.0.24
+-- @version 1.0.25
 -- @author zaibuyidao
 -- @changelog
 --   New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
 --   Added support for clearing the selection by pressing the ESC key.
 --   Enhanced selection clearing logic—selection will only be cleared after releasing the mouse button when clicking outside the selection area, for a smoother workflow.
+--   Moved drag-and-drop insertion logic outside the table row loop.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -1913,28 +1914,9 @@ function loop()
 
           -- 拖动音频到REAPER
           if reaper.ImGui_BeginDragDropSource(ctx) then
-            -- reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATH", info.path)
             reaper.ImGui_Text(ctx, "Drag to REAPER to insert")
-            reaper.ImGui_EndDragDropSource(ctx)
-          end
-
-          if reaper.ImGui_IsItemActive(ctx) and reaper.ImGui_IsMouseDragging(ctx, 0) then
             dragging_audio = info.path
-          end
-
-          if dragging_audio then
-            reaper.PreventUIRefresh(1) -- 防止UI刷新
-            local window, segment, details = reaper.BR_GetMouseCursorContext()
-            if window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
-              local insert_time = reaper.BR_GetMouseCursorContext_Position()
-              reaper.SetEditCurPos(insert_time, true, false)
-              local tr = reaper.BR_GetMouseCursorContext_Track()
-              if tr then reaper.SetOnlyTrackSelected(tr) end
-              reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-              reaper.InsertMedia(dragging_audio, 0)
-              dragging_audio = nil
-            end
-            reaper.PreventUIRefresh(-1)
+            reaper.ImGui_EndDragDropSource(ctx)
           end
 
           -- Ctrl+左键 或 Ctrl+S 插入文件到工程
@@ -2129,6 +2111,22 @@ function loop()
     end
     -- 上下按键滚动保存选中项
     _G.prev_selected_row = selected_row
+
+    -- 拖动音频到REAPER
+    if dragging_audio then
+      reaper.PreventUIRefresh(1) -- 防止UI刷新
+      local window, segment, details = reaper.BR_GetMouseCursorContext()
+      if window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
+        local insert_time = reaper.BR_GetMouseCursorContext_Position()
+        reaper.SetEditCurPos(insert_time, true, false)
+        local tr = reaper.BR_GetMouseCursorContext_Track()
+        if tr then reaper.SetOnlyTrackSelected(tr) end
+        reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+        reaper.InsertMedia(dragging_audio, 0)
+        dragging_audio = nil
+      end
+      reaper.PreventUIRefresh(-1)
+    end
 
     reaper.ImGui_EndChild(ctx)
     reaper.ImGui_PopStyleColor(ctx, 3) -- 恢复颜色
