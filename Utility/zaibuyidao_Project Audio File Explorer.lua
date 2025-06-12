@@ -1,11 +1,12 @@
 -- @description Project Audio File Explorer
--- @version 1.0.25
+-- @version 1.0.26
 -- @author zaibuyidao
 -- @changelog
 --   New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
 --   Added support for clearing the selection by pressing the ESC key.
 --   Enhanced selection clearing logic—selection will only be cleared after releasing the mouse button when clicking outside the selection area, for a smoother workflow.
 --   Moved drag-and-drop insertion logic outside the table row loop.
+--   Fixed unintended audio insertion when dragging in waveform area.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -1258,6 +1259,7 @@ function GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
 end
 
 -- 鼠标框选相关变量
+local drag_release_in_waveform = false
 local pending_clear_selection = pending_clear_selection or false
 local function has_selection()
   return select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01
@@ -2833,6 +2835,14 @@ function loop()
           end
         end
 
+        -- 选区拖拽到REAPER - 框选/拖拽释放是否在选区内
+        if dragging_selection and reaper.ImGui_IsMouseReleased(ctx, 0) then -- 松开时仍在本窗口
+          if reaper.ImGui_IsWindowHovered(ctx) then
+            drag_release_in_waveform = true
+            dragging_selection = nil
+          end
+        end
+
         -- 鼠标释放时，清空选区
         if reaper.ImGui_IsMouseReleased(ctx, 0) then
           if pending_clear_selection then
@@ -2999,7 +3009,7 @@ function loop()
         if dragging_selection then
           reaper.PreventUIRefresh(1)
           local window, segment, details = reaper.BR_GetMouseCursorContext()
-          if window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
+          if not drag_release_in_waveform and window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
             local insert_time = reaper.BR_GetMouseCursorContext_Position()
             reaper.SetEditCurPos(insert_time, true, false)
             local tr = reaper.BR_GetMouseCursorContext_Track()
@@ -3015,7 +3025,9 @@ function loop()
       -- 绘制时间线
       local view_start = Wave.scroll
       local view_end = math.min(Wave.scroll + Wave.src_len / Wave.zoom, Wave.src_len)
-      DrawTimeLine(ctx, Wave, view_start, view_end)
+      if Wave.src_len and Wave.src_len > 0 then
+        DrawTimeLine(ctx, Wave, view_start, view_end)
+      end
       reaper.ImGui_Dummy(ctx, 0, timeline_height)
 
       reaper.ImGui_EndChild(ctx)
@@ -3172,6 +3184,8 @@ function loop()
         StopPlay()
       end
     end
+
+    drag_release_in_waveform = false
 
     reaper.ImGui_End(ctx)
   end
