@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.26
+-- @version 1.0.27
 -- @author zaibuyidao
 -- @changelog
 --   New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
@@ -7,6 +7,7 @@
 --   Enhanced selection clearing logic—selection will only be cleared after releasing the mouse button when clicking outside the selection area, for a smoother workflow.
 --   Moved drag-and-drop insertion logic outside the table row loop.
 --   Fixed unintended audio insertion when dragging in waveform area.
+--   Refined and optimized the user interface.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -43,18 +44,11 @@ local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
 reaper.ImGui_Attach(ctx, sans_serif)
-reaper.ImGui_SetNextWindowSize(ctx, 1400, 834, reaper.ImGui_Cond_FirstUseEver())
+reaper.ImGui_SetNextWindowSize(ctx, 1400, 873, reaper.ImGui_Cond_FirstUseEver())
 
 -- 波形缓存文件夹创建
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
-local cache_dir = script_path .. "waveform_cache/"
-local function EnsureCacheDir()
-  local sep = package.config:sub(1,1)
-  if not reaper.EnumerateFiles(cache_dir, 0) then
-    os.execute((sep == "/" and "mkdir -p " or "mkdir ") .. '"' .. cache_dir .. '"')
-  end
-end
-EnsureCacheDir()
+-- local cache_dir = script_path .. "waveform_cache/"
 
 -- 状态变量
 local CACHE_PIXEL_WIDTH = 2048
@@ -68,7 +62,7 @@ local playing_path      = nil
 local playing_source    = nil
 local loop_enabled      = false -- 是否自动循环
 local preview_play_len  = 0     -- 当前预览音频长度
-local peak_chans        = 2     -- 默认显示2路电平
+local peak_chans        = 6     -- 默认显示6路电平
 local seek_pos          = nil   -- 拖动时记住目标位置
 local play_rate         = 1     -- 默认速率1.0
 local pitch             = 0     -- 音高调节（半音，正负）
@@ -113,12 +107,26 @@ local EXT_KEY_PITCH_MAX = "PitchKnobMax"
 local EXT_KEY_RATE_MIN = "RateMin"
 local EXT_KEY_RATE_MAX = "RateMax"
 local EXT_KEY_VOLUME = "Volume"
+local EXT_KEY_CACHE_DIR = "CacheDir"
 -- 列表过滤
 local filename_filter   = nil
 -- 预览已读标记
 local previewed_files   = {}
 local function MarkPreviewed(path) previewed_files[path] = true end
 local function IsPreviewed(path) return previewed_files[path] == true end
+-- 波形缓存路径
+local DEFAULT_CACHE_DIR = script_path .. "waveform_cache/"
+local cache_dir = reaper.GetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR)
+if not cache_dir or cache_dir == "" then
+  cache_dir = DEFAULT_CACHE_DIR
+end
+local function EnsureCacheDir()
+  local sep = package.config:sub(1,1)
+  if not reaper.EnumerateFiles(cache_dir, 0) then
+    os.execute((sep == "/" and "mkdir -p " or "mkdir ") .. '"' .. cache_dir .. '"')
+  end
+end
+EnsureCacheDir()
 -- 恢复ExtState
 local last_height = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT))
 if last_height then
@@ -126,7 +134,7 @@ if last_height then
 end
 local last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_PEAKS))
 if last_peak_chans then
-  peak_chans = math.min(math.max(last_peak_chans, 2), 128)
+  peak_chans = math.min(math.max(last_peak_chans, 6), 128)
 end
 local last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE))
 if last_font_size then
@@ -1285,15 +1293,19 @@ function loop()
   reaper.ImGui_PushFont(ctx, sans_serif)
   reaper.ImGui_SetNextWindowBgAlpha(ctx, bg_alpha) -- 背景不透明度
 
-  -- 圆角处理: 弹出菜单、子区域、滚动条、滑块
-  -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_PopupRounding(),     10.0)
-  -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ScrollbarRounding(), 10.0)
-  -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_GrabRounding(),      10.0)
-  -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ChildRounding(),     10.0)
-  -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(),    10.0)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), 6.0)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(),  4.0)
 
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
   if visible then
+    -- 圆角处理: 弹出菜单、子区域、滚动条、滑块
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_PopupRounding(),     4.0) -- 弹窗
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ScrollbarRounding(), 4.0) -- 滚动条
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_GrabRounding(),      4.0) -- 滑块
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ChildRounding(),     0.0) -- 子窗口
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(),    4.0) -- 主窗口
+    local ix, iy = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), ix, iy * 2.0)
     -- 过滤器
     reaper.ImGui_Text(ctx, "Filter:")
     reaper.ImGui_SameLine(ctx)
@@ -2257,7 +2269,7 @@ function loop()
 
     -- 音高输入框
     reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_PushItemWidth(ctx, 40)
+    reaper.ImGui_PushItemWidth(ctx, 50)
     local rv3
     rv3, pitch = reaper.ImGui_InputDouble(ctx, "##Pitch", pitch) -- (ctx, "Pitch", pitch, 1, 12, "%.3f")
     reaper.ImGui_PopItemWidth(ctx)
@@ -2281,7 +2293,7 @@ function loop()
 
     -- 播放速率输入框
     reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_PushItemWidth(ctx, 40)
+    reaper.ImGui_PushItemWidth(ctx, 50)
     local rv4
     rv4, play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
     reaper.ImGui_PopItemWidth(ctx)
@@ -2484,6 +2496,25 @@ function loop()
         rate_max = new_rmax
       end
 
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Waveform cache folder:")
+      reaper.ImGui_PushItemWidth(ctx, -65)
+      local changed_cache_dir, new_cache_dir = reaper.ImGui_InputText(ctx, "##cache_dir", cache_dir, 512)
+      reaper.ImGui_PopItemWidth(ctx)
+      if changed_cache_dir then
+        cache_dir = new_cache_dir
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
+      end
+      reaper.ImGui_SameLine(ctx)
+      if reaper.ImGui_Button(ctx, "Browse##SelectCacheDir") then
+        local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", cache_dir)
+        if rv == 1 and out and out ~= "" then
+          cache_dir = out
+          if not cache_dir:match("[/\\]$") then cache_dir = cache_dir .. "/" end
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
+        end
+      end
+
       -- 关闭按钮
       reaper.ImGui_Separator(ctx)
       if reaper.ImGui_Button(ctx, "Save and Close##Rate_close") then
@@ -2499,13 +2530,14 @@ function loop()
         preserve_pitch = true,
         bg_alpha = 1.0,
         file_table_height = 550,
-        peak_chans = 2,
+        peak_chans = 6,
         font_size = 14,
         max_db = 12,         -- 音量最大值
         pitch_knob_min = -6, -- 音高旋钮最低
         pitch_knob_max = 6,  -- 音高旋钮最高
         rate_min = 0.25,     -- 速率旋钮最低
         rate_max = 4.0,      -- 速率旋钮最高
+        cache_dir = DEFAULT_CACHE_DIR
       }
 
       reaper.ImGui_SameLine(ctx)
@@ -2525,10 +2557,12 @@ function loop()
         pitch_knob_max = DEFAULTS.pitch_knob_max
         rate_min = DEFAULTS.rate_min
         rate_max = DEFAULTS.rate_max
+        cache_dir = DEFAULTS.cache_dir
         -- 保存设置到ExtState
         reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
         MarkFontDirty()
         CollectFiles()
       end
@@ -2583,7 +2617,7 @@ function loop()
     local spacing = 2
     local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
     local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-    for i = 0, peak_chans-1 do
+    for i = 0, peak_chans - 1 do
       local peak = 0
       if playing_preview and reaper.CF_Preview_GetPeak then
         local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
@@ -2614,8 +2648,8 @@ function loop()
     -- 波形预览
     reaper.ImGui_Separator(ctx)
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-    -- 右侧区域预留用于放置专辑图片
-    if reaper.ImGui_BeginChild(ctx, "waveform", avail_w, img_h+24) then -- 微调波形宽度（预留右侧空间-75）和高度（补偿时间线+24）
+    -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+24）
+    if reaper.ImGui_BeginChild(ctx, "waveform", avail_w, img_h+28) then
       local pw_min_x, pw_min_y = reaper.ImGui_GetItemRectMin(ctx)
       local pw_max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local pw_region_w = math.max(64, math.floor(pw_max_x - pw_min_x))
@@ -3137,7 +3171,7 @@ function loop()
 
       -- - 按钮
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Out") then
+      if reaper.ImGui_Button(ctx, " - ") then -- Zoom Out
         local prev_zoom = Wave.zoom
         Wave.zoom = math.max(Wave.zoom / 1.25, 1)
         if Wave.zoom ~= prev_zoom then
@@ -3151,9 +3185,9 @@ function loop()
         end
       end
 
-      reaper.ImGui_SameLine(ctx)
       -- + 按钮
-      if reaper.ImGui_Button(ctx, "In") then
+      reaper.ImGui_SameLine(ctx)
+      if reaper.ImGui_Button(ctx, " + ") then  -- Zoom In
         local prev_zoom = Wave.zoom
         Wave.zoom = math.min(Wave.zoom * 1.25, 16)
         if Wave.zoom ~= prev_zoom then
@@ -3187,10 +3221,12 @@ function loop()
 
     drag_release_in_waveform = false
 
+    reaper.ImGui_PopStyleVar(ctx, 6) --ImGui_End 内 6 次圆角
     reaper.ImGui_End(ctx)
   end
+  reaper.ImGui_PopStyleVar(ctx, 2)
   reaper.ImGui_PopFont(ctx)
-  -- reaper.ImGui_PopStyleVar(ctx, 5) -- 5 次圆角
+
   if open then reaper.defer(loop) else StopPlay() end
 end
 
