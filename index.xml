@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3f0cb4c881f04d845613422e36bcf8355b6f176a">
+<index version="1" name="zaibuyidao Scripts" commit="b881fc57c91d9f4e4cd66cac3fbf9f3989da44ce">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8570,6 +8570,14 @@ Added support for clearing the selection by pressing the ESC key.
 Enhanced selection clearing logic—selection will only be cleared after releasing the mouse button when clicking outside the selection area, for a smoother workflow.
 Moved drag-and-drop insertion logic outside the table row loop.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3f0cb4c881f04d845613422e36bcf8355b6f176a/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.26" author="zaibuyidao" time="2025-06-12T14:59:25Z">
+        <changelog><![CDATA[New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
+Added support for clearing the selection by pressing the ESC key.
+Enhanced selection clearing logic—selection will only be cleared after releasing the mouse button when clicking outside the selection area, for a smoother workflow.
+Moved drag-and-drop insertion logic outside the table row loop.
+Fixed unintended audio insertion when dragging in waveform area.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b881fc57c91d9f4e4cd66cac3fbf9f3989da44ce/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
