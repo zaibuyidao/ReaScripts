@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="331ec6c636af6fa2a423a66423e42d6ef622e98e">
+<index version="1" name="zaibuyidao Scripts" commit="29977557fc351c73cae0b348d9d0d0b6384fdccf">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8557,6 +8557,12 @@ Fixed incomplete display of track name, position, and usages information in some
       <version name="1.0.23" author="zaibuyidao" time="2025-06-12T05:53:18Z">
         <changelog><![CDATA[Audio files can now be dragged directly from the table to the REAPER arrange window for quick insertion.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/331ec6c636af6fa2a423a66423e42d6ef622e98e/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.24" author="zaibuyidao" time="2025-06-12T07:48:09Z">
+        <changelog><![CDATA[New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
+Added support for clearing the selection by pressing the ESC key.
+Enhanced selection clearing logic—selection will only be cleared after releasing the mouse button when clicking outside the selection area, for a smoother workflow.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/29977557fc351c73cae0b348d9d0d0b6384fdccf/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
