@@ -1,8 +1,10 @@
 -- @description Project Audio File Explorer
--- @version 1.0.23
+-- @version 1.0.24
 -- @author zaibuyidao
 -- @changelog
---   Audio files can now be dragged directly from the table to the REAPER arrange window for quick insertion.
+--   New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
+--   Added support for clearing the selection by pressing the ESC key.
+--   Enhanced selection clearing logic—selection will only be cleared after releasing the mouse button when clicking outside the selection area, for a smoother workflow.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -1252,6 +1254,19 @@ function GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
     -- 没有 take，用 PCM_Source_CreateFromFile 的方式
     return GetWavPeaks(info.path, wf_step, pixel_cnt, start_time, end_time)
   end
+end
+
+-- 鼠标框选相关变量
+local pending_clear_selection = pending_clear_selection or false
+local function has_selection()
+  return select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01
+end
+local function mouse_in_selection()
+  if not mouse_time then return false end
+  if not select_start_time or not select_end_time then return false end
+  local sel_min = math.min(select_start_time, select_end_time)
+  local sel_max = math.max(select_start_time, select_end_time)
+  return mouse_time >= sel_min and mouse_time <= sel_max
 end
 
 function loop()
@@ -2766,15 +2781,41 @@ function loop()
           end
         end
 
-        -- 鼠标拖拽/定位/选区
+        -- 鼠标左键点击
         if reaper.ImGui_IsMouseClicked(ctx, 0) then
-          selecting = true
-          drag_start_x = mouse_x
-          select_start_time = mouse_time
-          select_end_time = mouse_time
+          if has_selection() then
+            if mouse_in_selection() then
+              pending_clear_selection = false
+            else
+              pending_clear_selection = true -- 只挂起，不做任何清空
+            end
+          else
+            selecting = true
+            drag_start_x = mouse_x
+            select_start_time = mouse_time
+            select_end_time = mouse_time
+            pending_clear_selection = false
+          end
         end
+
+        -- 框选/拖拽
         if selecting and reaper.ImGui_IsMouseDown(ctx, 0) then
           select_end_time = mouse_time
+        end
+
+        -- 框选松开
+        if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) then
+          selecting = false
+          if has_selection() then
+            local select_min = math.min(select_start_time, select_end_time)
+            Wave.play_cursor = select_min
+            wf_play_start_cursor = select_min
+            if playing_preview then
+              if reaper.CF_Preview_SetValue then
+                PlayFromCursor(cur_info)
+              end
+            end
+          end
         end
 
         -- 框选自动跳转到起始位置
@@ -2794,33 +2835,47 @@ function loop()
           end
         end
 
-        if reaper.ImGui_IsMouseReleased(ctx, 0) and math.abs(mouse_x - (drag_start_x or mouse_x)) < 3 then
-          Wave.play_cursor = mouse_time
-          if playing_preview then
-            -- 如果正在播放，立即跳到新位置并重启播放
-            StopPreview()
-            wf_play_start_cursor = mouse_time
-            PlayFromCursor(cur_info)
+        -- 鼠标释放时，清空选区
+        if reaper.ImGui_IsMouseReleased(ctx, 0) then
+          if pending_clear_selection then
+            select_start_time = nil
+            select_end_time = nil
+            pending_clear_selection = false
           end
-          -- 暂停时跳转立即恢复播放
-          if is_paused and playing_source then
-            playing_preview = reaper.CF_CreatePreview(playing_source)
+          -- 单击跳转光标
+          if not selecting and (not has_selection or not mouse_in_selection()) and math.abs(mouse_x - (drag_start_x or mouse_x)) < 3 then
+            Wave.play_cursor = mouse_time
             if playing_preview then
-              if reaper.CF_Preview_SetValue then
-                reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-                reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-                reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
-                reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
-                reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-                reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
+              StopPreview()
+              wf_play_start_cursor = mouse_time
+              PlayFromCursor(cur_info)
+            end
+            if is_paused and playing_source then
+              playing_preview = reaper.CF_CreatePreview(playing_source)
+              if playing_preview then
+                if reaper.CF_Preview_SetValue then
+                  reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
+                  reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+                  reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+                  reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
+                  reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+                  reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
+                end
+                reaper.CF_Preview_Play(playing_preview)
+                wf_play_start_time = os.clock()
+                wf_play_start_cursor = Wave.play_cursor or 0
+                is_paused = false
               end
-              reaper.CF_Preview_Play(playing_preview)
-              wf_play_start_time = os.clock()
-              wf_play_start_cursor = Wave.play_cursor or 0
-              is_paused = false
             end
           end
         end
+      end
+
+      -- ESC按键，清除选区内容
+      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Escape()) then
+        select_start_time = nil
+        select_end_time = nil
+        pending_clear_selection = false
       end
 
       -- 切换源时清除选区高亮
@@ -2928,6 +2983,35 @@ function loop()
         end
       else
         prev_play_cursor = nil
+      end
+
+      -- 选区拖拽到REAPER
+      if has_selection and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
+        -- 拖拽起点，按下右键时才允许拖动
+        if reaper.ImGui_BeginDragDropSource(ctx) then
+          reaper.ImGui_Text(ctx, "Drag selection to REAPER to insert")
+          dragging_selection = { -- 记录拖拽的音频及区间
+            path = cur_info and cur_info.path,
+            start_time = math.min(select_start_time, select_end_time) * play_rate,
+            end_time = math.max(select_start_time, select_end_time) * play_rate
+          }
+          reaper.ImGui_EndDragDropSource(ctx)
+        end
+        -- 拖拽释放检测
+        if dragging_selection then
+          reaper.PreventUIRefresh(1)
+          local window, segment, details = reaper.BR_GetMouseCursorContext()
+          if window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
+            local insert_time = reaper.BR_GetMouseCursorContext_Position()
+            reaper.SetEditCurPos(insert_time, true, false)
+            local tr = reaper.BR_GetMouseCursorContext_Track()
+            if tr then reaper.SetOnlyTrackSelected(tr) end
+            reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+            InsertSelectedAudioSection(dragging_selection.path, dragging_selection.start_time, dragging_selection.end_time)
+            dragging_selection = nil
+          end
+          reaper.PreventUIRefresh(-1)
+        end
       end
 
       -- 绘制时间线
