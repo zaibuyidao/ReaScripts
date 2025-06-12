@@ -1,9 +1,8 @@
 -- @description Project Audio File Explorer
--- @version 1.0.22
+-- @version 1.0.23
 -- @author zaibuyidao
 -- @changelog
---   Improved "Referenced from RPP" mode.
---   Fixed incomplete display of track name, position, and usages information in some modes.
+--   Audio files can now be dragged directly from the table to the REAPER arrange window for quick insertion.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -761,6 +760,42 @@ end
 
 local function MarkFontDirty()
   need_refresh_font = true
+end
+
+function InsertSelectedAudioSection(path, sel_start, sel_end)
+  -- local old_cursor = reaper.GetCursorPosition()
+  reaper.PreventUIRefresh(1) -- 防止UI刷新
+  local before = {}
+  for i=0, reaper.CountMediaItems(0) - 1 do
+    before[reaper.GetMediaItem(0, i)] = true
+  end
+  reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+  reaper.InsertMedia(path, 0)
+  -- reaper.SetEditCurPos(old_cursor, true, false) -- 恢复光标到插入前
+  local new_item = nil
+  for i=0, reaper.CountMediaItems(0)-1 do
+    local item = reaper.GetMediaItem(0, i)
+    if not before[item] then new_item = item break end
+  end
+  if not new_item then
+    reaper.ShowMessageBox("Insert Media failed.", "Insert Error", 0)
+    return
+  end
+  local take = reaper.GetActiveTake(new_item)
+  if not take then
+    reaper.ShowMessageBox("Take error.", "Insert Error", 0)
+    return
+  end
+  -- 设置偏移和长度
+  local sel_len = math.abs(sel_end - sel_start)
+  local src_offset = math.min(sel_start, sel_end)
+  reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
+  reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
+    local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
+  -- 移动光标到插入item的结尾
+  reaper.SetEditCurPos(pos + sel_len, true, false)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
 end
 
 function HelpMarker(desc)
@@ -1861,6 +1896,32 @@ function loop()
             end
           end
 
+          -- 拖动音频到REAPER
+          if reaper.ImGui_BeginDragDropSource(ctx) then
+            -- reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATH", info.path)
+            reaper.ImGui_Text(ctx, "Drag to REAPER to insert")
+            reaper.ImGui_EndDragDropSource(ctx)
+          end
+
+          if reaper.ImGui_IsItemActive(ctx) and reaper.ImGui_IsMouseDragging(ctx, 0) then
+            dragging_audio = info.path
+          end
+
+          if dragging_audio then
+            reaper.PreventUIRefresh(1) -- 防止UI刷新
+            local window, segment, details = reaper.BR_GetMouseCursorContext()
+            if window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
+              local insert_time = reaper.BR_GetMouseCursorContext_Position()
+              reaper.SetEditCurPos(insert_time, true, false)
+              local tr = reaper.BR_GetMouseCursorContext_Track()
+              if tr then reaper.SetOnlyTrackSelected(tr) end
+              reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+              reaper.InsertMedia(dragging_audio, 0)
+              dragging_audio = nil
+            end
+            reaper.PreventUIRefresh(-1)
+          end
+
           -- Ctrl+左键 或 Ctrl+S 插入文件到工程
           local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
           local is_ctrl_click = reaper.ImGui_IsItemClicked(ctx, 0) and ctrl
@@ -2481,6 +2542,24 @@ function loop()
     -- "3. From Project Directory:\n" ..
     -- "   Scans and lists all audio files in the project directory, whether or not they are used or referenced in the project.\n\n" ..
     -- "You can change file source and enable pitch preservation.")
+
+    -- 插入选区音频到REAPER
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
+      local cur_info = files_idx_cache and files_idx_cache[selected_row]
+      local do_insert = false
+      -- Shift+S
+      local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
+      if shift and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S()) then
+        do_insert = true
+      end
+      if reaper.ImGui_Button(ctx, "Insert Selection Into Project (Shift+S)") then
+        do_insert = true
+      end
+      if do_insert and cur_info and cur_info.path then
+        InsertSelectedAudioSection(cur_info.path, select_start_time * play_rate, select_end_time * play_rate)
+      end
+    end
 
     -- 竖直电平条 mini
     reaper.ImGui_SameLine(ctx, nil, 10)
