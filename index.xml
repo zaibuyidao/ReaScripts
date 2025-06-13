@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="277e5afb37f7d0f9f56da447472e826830c9f5ab">
+<index version="1" name="zaibuyidao Scripts" commit="1584fd5e572b55181d25060f96cf32f8b0eedb18">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8593,6 +8593,15 @@ Refined and optimized the user interface.]]></changelog>
 Refined and optimized the user interface.
 Fixed the issue of auto-crossfade when inserting audio.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/277e5afb37f7d0f9f56da447472e826830c9f5ab/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.29" author="zaibuyidao" time="2025-06-13T18:32:26Z">
+        <changelog><![CDATA[New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
+Fixed the issue of auto-crossfade when inserting audio.
+Waveform preview now fully supports multichannel audio files. All channels are displayed independently instead of being limited to 2.
+Added a toggle for automatic waveform scrolling during playback. The setting can be enabled or disabled in the settings dialog and is remembered by the script.
+Pitch, playback rate, and volume parameters will only restart preview playback when changed during playback.
+Added "Auto Play Next" feature: audio files in the table can now be played in sequence automatically.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1584fd5e572b55181d25060f96cf32f8b0eedb18/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
