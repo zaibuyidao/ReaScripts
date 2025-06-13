@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="1584fd5e572b55181d25060f96cf32f8b0eedb18">
+<index version="1" name="zaibuyidao Scripts" commit="0e60bfc4e91f06af8c9d1a8bbe01983db02cfb94">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7914,6 +7914,13 @@ Added mode selection:
         <changelog><![CDATA[Added a status bar to the preview panel to display error counts, duplicate-name warnings, and the current batch mode.
 Added Ctrl+MouseWheel support in the preview panel to adjust the preview font size on the fly.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/925832c26e3bb1977332af59bdc53c7a200168e1/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
+      </version>
+      <version name="1.0.16" author="zaibuyidao" time="2025-06-13T19:23:59Z">
+        <changelog><![CDATA[Added a status bar to the preview panel to display error counts, duplicate-name warnings, and the current batch mode.
+Added Ctrl+MouseWheel support in the preview panel to adjust the preview font size on the fly.
+Added a new options menu for easier access to settings.
+Added automatic check for ReaImGui dependency. The script now guides users to install or update ReaImGui if it is missing or outdated.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0e60bfc4e91f06af8c9d1a8bbe01983db02cfb94/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
