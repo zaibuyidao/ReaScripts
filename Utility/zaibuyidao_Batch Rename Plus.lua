@@ -1,9 +1,11 @@
 -- @description Batch Rename Plus
--- @version 1.0.15
+-- @version 1.0.16
 -- @author zaibuyidao
 -- @changelog
 --   Added a status bar to the preview panel to display error counts, duplicate-name warnings, and the current batch mode.
 --   Added Ctrl+MouseWheel support in the preview panel to adjust the preview font size on the fly.
+--   Added a new options menu for easier access to settings.
+--   Added automatic check for ReaImGui dependency. The script now guides users to install or update ReaImGui if it is missing or outdated.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -35,8 +37,31 @@ else
   return
 end
 
-package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
--- local ImGui = require 'imgui' '0.9.3.2'
+-- Check for ReaImGui dependency
+if not reaper.ImGui_GetBuiltinPath then
+  if reaper.APIExists('ReaPack_BrowsePackages') then
+    reaper.ReaPack_BrowsePackages('ReaImGui: ReaScript binding for Dear ImGui')
+    reaper.MB(
+      "ReaImGui is not installed or is out of date.\n\n" ..
+      "The ReaPack package browser has been opened. Please search for 'ReaImGui' and install or update it before running this script.",
+      "Batch Rename Plus", 0)
+  else
+    local reapackErrorMsg = 
+      "ReaPack is not installed.\n\n" ..
+      "To use this script, please install ReaPack first:\n" ..
+      "https://reapack.com\n\n" ..
+      "After installing ReaPack, use it to install 'ReaImGui: ReaScript binding for Dear ImGui'."
+    reaper.MB(reapackErrorMsg, "ReaPack Not Found", 0)
+  end
+  return
+end
+
+local ImGui
+if reaper.ImGui_GetBuiltinPath then
+  package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
+  ImGui = require 'imgui' '0.9'
+end
+
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext('Batch Rename Plus')
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
@@ -52,12 +77,16 @@ reaper.ImGui_Attach(ctx, font_botton)
 reaper.ImGui_Attach(ctx, font_small)
 
 local preview_font_size  = 14 -- 当前预览字体大小（像素）
-local preview_font_sizes = { 8, 10, 12, 14, 16, 18, 20, 22, 24 }
+local preview_font_sizes = { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 }
 local preview_fonts      = {}
 for _, sz in ipairs(preview_font_sizes) do
   preview_fonts[sz] = reaper.ImGui_CreateFont("", sz)
   reaper.ImGui_Attach(ctx, preview_fonts[sz])
 end
+
+-- 设置菜单
+local show_main_preview  = true -- 是否显示主脚本的表格预览
+local show_settings_popup = false
 
 reaper.ImGui_SetNextWindowSize(ctx, 365, 800, reaper.ImGui_Cond_FirstUseEver())
 
@@ -3065,9 +3094,11 @@ local function preview_popup(ctx)
   local _, text_h = reaper.ImGui_CalcTextSize(ctx, label)
   local button_h  = text_h + pad_y * 3.5
 
+  reaper.ImGui_PushFont(ctx, font_small)
   if reaper.ImGui_Button(ctx, "Preview##Menu", 0, button_h) then
     show_preview_window = true
   end
+  reaper.ImGui_PopFont(ctx)
   reaper.ImGui_PopStyleColor(ctx, 4)
 
   -- 弹窗逻辑
@@ -3121,6 +3152,63 @@ local function preview_popup(ctx)
       reaper.ImGui_PopFont(ctx)
       reaper.ImGui_End(ctx)
     end
+  end
+end
+
+-- 设置菜单
+local stored_font = tonumber(reaper.GetExtState("BatchRenamePlus", "PreviewFontSize") or "")
+if stored_font and stored_font >= 10 and stored_font <= 24 then
+  preview_font_size = stored_font
+end
+
+local stored_show = reaper.GetExtState("BatchRenamePlus", "ShowMainPreview")
+if stored_show == "true" then
+  show_main_preview = true
+elseif stored_show == "false" then
+  show_main_preview = false
+end
+
+local function DrawSettings(ctx)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x00000000)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x00000000)
+
+  local _, pad_y  = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
+  local _, text_h = reaper.ImGui_CalcTextSize(ctx, label)
+  local button_h  = text_h + pad_y * 3.5
+
+  reaper.ImGui_PushFont(ctx, font_small)
+  if reaper.ImGui_Button(ctx, "Options", 0, button_h) then
+    show_settings_popup = true
+    reaper.ImGui_OpenPopup(ctx, "Options##SettingsPopup")
+  end
+  reaper.ImGui_PopFont(ctx)
+  reaper.ImGui_PopStyleColor(ctx, 3)
+
+  if reaper.ImGui_BeginPopupModal(ctx, "Options##SettingsPopup", show_settings_popup, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+    -- 默认字体大小
+    -- reaper.ImGui_Text(ctx, "Default Font Size")
+    local changed_font, new_font = reaper.ImGui_SliderInt(ctx, "Font size##font_size", preview_font_size, 10, 24)
+    if changed_font then preview_font_size = new_font end
+  
+    -- 是否显示主脚本的表格预览
+    local changed_prev, new_prev = reaper.ImGui_Checkbox(ctx, "Show main preview table", show_main_preview)
+    if changed_prev then show_main_preview = new_prev end
+  
+    reaper.ImGui_Separator(ctx)
+    if reaper.ImGui_Button(ctx, "Save and Close##settings_save") then
+      reaper.SetExtState("BatchRenamePlus", "PreviewFontSize",    tostring(preview_font_size),  true)
+      reaper.SetExtState("BatchRenamePlus", "ShowMainPreview", tostring(show_main_preview), true)
+      show_settings_popup = false
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "Reset##settings_reset") then
+      preview_font_size = 14
+      show_main_preview = true
+    end
+
+    reaper.ImGui_EndPopup(ctx)
   end
 end
 
@@ -3211,6 +3299,7 @@ local function item_vs_source()
   local _, text_h = reaper.ImGui_CalcTextSize(ctx, label)
   local button_h  = text_h + pad_y * 3.5
 
+  reaper.ImGui_PushFont(ctx, font_small)
   if reaper.ImGui_Button(ctx, "Item vs Source", 0, button_h) then
     local cnt = reaper.CountSelectedMediaItems(0)
     if cnt > 0 then
@@ -3220,6 +3309,7 @@ local function item_vs_source()
       reaper.ShowMessageBox("No items selected.\nPlease select at least one media item.", "Batch Rename Plus", 0)
     end
   end
+  reaper.ImGui_PopFont(ctx)
   reaper.ImGui_PopStyleColor(ctx, 3)
 
   if show_list_window then
@@ -3408,14 +3498,13 @@ local function frame()
 
   -- Item vs Source List 弹窗
   reaper.ImGui_SameLine(ctx)
-  reaper.ImGui_PushFont(ctx, font_small)
   item_vs_source()
-  reaper.ImGui_PopFont(ctx)
 
   reaper.ImGui_SameLine(ctx)
-  reaper.ImGui_PushFont(ctx, font_small)
   preview_popup(ctx)
-  reaper.ImGui_PopFont(ctx)
+
+  reaper.ImGui_SameLine(ctx)
+  DrawSettings(ctx)
 
   -- reaper.ImGui_PushFont(ctx, font_small)
   -- reaper.ImGui_SameLine(ctx)
@@ -3801,7 +3890,9 @@ local function frame()
   end
 
   local data, builder = get_preview_data_and_builder()
-  render_preview_table(ctx, PREVIEW_TABLE_ID, #data, builder)
+  if show_main_preview then
+    render_preview_table(ctx, PREVIEW_TABLE_ID, #data, builder)
+  end
 
   -- Process 第一版 非列表
   -- reaper.ImGui_SeparatorText(ctx, "Batch Mode")
