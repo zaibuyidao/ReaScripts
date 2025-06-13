@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c96e2ee88eca693ea8467a05a6509258393047c0">
+<index version="1" name="zaibuyidao Scripts" commit="277e5afb37f7d0f9f56da447472e826830c9f5ab">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8587,6 +8587,12 @@ Moved drag-and-drop insertion logic outside the table row loop.
 Fixed unintended audio insertion when dragging in waveform area.
 Refined and optimized the user interface.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c96e2ee88eca693ea8467a05a6509258393047c0/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.28" author="zaibuyidao" time="2025-06-13T08:29:03Z">
+        <changelog><![CDATA[New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
+Refined and optimized the user interface.
+Fixed the issue of auto-crossfade when inserting audio.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/277e5afb37f7d0f9f56da447472e826830c9f5ab/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
