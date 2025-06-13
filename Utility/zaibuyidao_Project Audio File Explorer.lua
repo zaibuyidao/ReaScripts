@@ -1,13 +1,10 @@
 -- @description Project Audio File Explorer
--- @version 1.0.27
+-- @version 1.0.28
 -- @author zaibuyidao
 -- @changelog
 --   New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
---   Added support for clearing the selection by pressing the ESC key.
---   Enhanced selection clearing logic—selection will only be cleared after releasing the mouse button when clicking outside the selection area, for a smoother workflow.
---   Moved drag-and-drop insertion logic outside the table row loop.
---   Fixed unintended audio insertion when dragging in waveform area.
 --   Refined and optimized the user interface.
+--   Fixed the issue of auto-crossfade when inserting audio.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -774,8 +771,17 @@ local function MarkFontDirty()
   need_refresh_font = true
 end
 
-function InsertSelectedAudioSection(path, sel_start, sel_end)
-  -- local old_cursor = reaper.GetCursorPosition()
+function InsertSelectedAudioSection(path, sel_start, sel_end) -- 该函数需要在外部定义处理前后光标恢复
+  -- 保存Arrange视图状态 - 避免滚屏
+  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+  -- 检查自动交叉淡化状态
+  local crossfade_state = reaper.GetToggleCommandStateEx(0, 40041) -- Options: Auto-crossfade media items when editing
+  local need_restore = false
+  if crossfade_state == 1 then
+    reaper.Main_OnCommand(40041, 0) -- 当前激活，先关闭
+    need_restore = true
+  end
+
   reaper.PreventUIRefresh(1) -- 防止UI刷新
   local before = {}
   for i=0, reaper.CountMediaItems(0) - 1 do
@@ -783,7 +789,6 @@ function InsertSelectedAudioSection(path, sel_start, sel_end)
   end
   reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
   reaper.InsertMedia(path, 0)
-  -- reaper.SetEditCurPos(old_cursor, true, false) -- 恢复光标到插入前
   local new_item = nil
   for i=0, reaper.CountMediaItems(0)-1 do
     local item = reaper.GetMediaItem(0, i)
@@ -791,6 +796,8 @@ function InsertSelectedAudioSection(path, sel_start, sel_end)
   end
   if not new_item then
     reaper.ShowMessageBox("Insert Media failed.", "Insert Error", 0)
+    -- 恢复交叉淡化
+    if need_restore then reaper.Main_OnCommand(40041, 0) end
     return
   end
   local take = reaper.GetActiveTake(new_item)
@@ -803,11 +810,14 @@ function InsertSelectedAudioSection(path, sel_start, sel_end)
   local src_offset = math.min(sel_start, sel_end)
   reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
   reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
-    local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
+  local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
   -- 移动光标到插入item的结尾
-  reaper.SetEditCurPos(pos + sel_len, true, false)
+  -- reaper.SetEditCurPos(pos + sel_len, false, false)
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
+  -- 恢复交叉淡化
+  if need_restore then reaper.Main_OnCommand(40041, 0) end
+  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
 end
 
 function HelpMarker(desc)
@@ -1233,7 +1243,7 @@ local function DrawTimeLine(ctx, wave, view_start, view_end)
   local sub_divs = 20 -- 主刻度之间分20份
   local sub_tick_step = tick_step / sub_divs
 
-  if sub_tick_step >= 0.01 then
+  if sub_tick_step >= 0.00001 then
     local sub_start_tick = math.ceil(view_start / sub_tick_step) * sub_tick_step
     for t = sub_start_tick, view_end, sub_tick_step do
       -- 判断是不是主刻度
@@ -1263,6 +1273,20 @@ function GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
   else
     -- 没有 take，用 PCM_Source_CreateFromFile 的方式
     return GetWavPeaks(info.path, wf_step, pixel_cnt, start_time, end_time)
+  end
+end
+
+-- 禁用自动交叉淡化
+function WithAutoCrossfadeDisabled(fn)
+  local crossfade_state = reaper.GetToggleCommandStateEx(0, 40041) -- Options: Auto-crossfade media items when editing
+  local need_restore = false
+  if crossfade_state == 1 then
+    reaper.Main_OnCommand(40041, 0)
+    need_restore = true
+  end
+  fn()
+  if need_restore then
+    reaper.Main_OnCommand(40041, 0)
   end
 end
 
@@ -1756,11 +1780,20 @@ function loop()
               end
 
               if reaper.ImGui_MenuItem(ctx, "Insert into project") then
-                reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-                if info.path and info.path ~= "" then
-                  reaper.InsertMedia(info.path, 0)
-                end
-                reaper.ImGui_CloseCurrentPopup(ctx)
+                WithAutoCrossfadeDisabled(function()
+                  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+                  local old_cursor = reaper.GetCursorPosition()
+                  reaper.PreventUIRefresh(1) -- 防止UI刷新
+                  reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+                  if info.path and info.path ~= "" then
+                    reaper.InsertMedia(info.path, 0)
+                    reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+                  end
+                  reaper.PreventUIRefresh(-1)
+                  reaper.UpdateArrange()
+                  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+                  reaper.ImGui_CloseCurrentPopup(ctx)
+                end)
               end
 
               if reaper.ImGui_MenuItem(ctx, "Remove from project") then
@@ -1918,7 +1951,16 @@ function loop()
           -- 双击播放
           if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
             if doubleclick_action == DOUBLECLICK_INSERT then
-              reaper.InsertMedia(info.path, 0)
+              WithAutoCrossfadeDisabled(function()
+                reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+                local old_cursor = reaper.GetCursorPosition()
+                reaper.PreventUIRefresh(1) -- 防止UI刷新
+                reaper.InsertMedia(info.path, 0)
+                reaper.SetEditCurPos(old_cursor, true, false) -- 恢复光标到插入前
+                reaper.PreventUIRefresh(-1)
+                reaper.UpdateArrange()
+                reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+              end)
             elseif doubleclick_action == DOUBLECLICK_PREVIEW then
               PlayFromStart(info)
             elseif doubleclick_action == DOUBLECLICK_NONE then
@@ -1938,7 +1980,16 @@ function loop()
           local is_ctrl_click = reaper.ImGui_IsItemClicked(ctx, 0) and ctrl
           local is_ctrl_I = ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S())
           if (is_ctrl_click or (selected_row == i and is_ctrl_I)) then
-            reaper.InsertMedia(info.path, 0)
+            WithAutoCrossfadeDisabled(function()
+              reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+              local old_cursor = reaper.GetCursorPosition()
+              reaper.PreventUIRefresh(1) -- 防止UI刷新
+              reaper.InsertMedia(info.path, 0)
+              reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+              reaper.PreventUIRefresh(-1)
+              reaper.UpdateArrange()
+              reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+            end)
           end
 
           -- Size
@@ -2128,18 +2179,25 @@ function loop()
 
     -- 拖动音频到REAPER
     if dragging_audio then
-      reaper.PreventUIRefresh(1) -- 防止UI刷新
-      local window, segment, details = reaper.BR_GetMouseCursorContext()
-      if window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
-        local insert_time = reaper.BR_GetMouseCursorContext_Position()
-        reaper.SetEditCurPos(insert_time, true, false)
-        local tr = reaper.BR_GetMouseCursorContext_Track()
-        if tr then reaper.SetOnlyTrackSelected(tr) end
-        reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-        reaper.InsertMedia(dragging_audio, 0)
-        dragging_audio = nil
-      end
-      reaper.PreventUIRefresh(-1)
+      WithAutoCrossfadeDisabled(function()
+        reaper.PreventUIRefresh(1) -- 防止UI刷新
+        local window, segment, details = reaper.BR_GetMouseCursorContext()
+        if window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
+          reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+          local old_cursor = reaper.GetCursorPosition()
+          local insert_time = reaper.BR_GetMouseCursorContext_Position()
+          reaper.SetEditCurPos(insert_time, false, false)
+          local tr = reaper.BR_GetMouseCursorContext_Track()
+          if tr then reaper.SetOnlyTrackSelected(tr) end
+          reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+          reaper.InsertMedia(dragging_audio, 0)
+          reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+          dragging_audio = nil
+          reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+        end
+        reaper.PreventUIRefresh(-1)
+        reaper.UpdateArrange()
+      end)
     end
 
     reaper.ImGui_EndChild(ctx)
@@ -2606,7 +2664,9 @@ function loop()
         do_insert = true
       end
       if do_insert and cur_info and cur_info.path then
+        local old_cursor = reaper.GetCursorPosition()
         InsertSelectedAudioSection(cur_info.path, select_start_time * play_rate, select_end_time * play_rate)
+        reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
       end
     end
 
@@ -3044,13 +3104,15 @@ function loop()
           reaper.PreventUIRefresh(1)
           local window, segment, details = reaper.BR_GetMouseCursorContext()
           if not drag_release_in_waveform and window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
+            local old_cursor = reaper.GetCursorPosition()
             local insert_time = reaper.BR_GetMouseCursorContext_Position()
-            reaper.SetEditCurPos(insert_time, true, false)
+            reaper.SetEditCurPos(insert_time, false, false)
             local tr = reaper.BR_GetMouseCursorContext_Track()
             if tr then reaper.SetOnlyTrackSelected(tr) end
-            reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+            -- reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
             InsertSelectedAudioSection(dragging_selection.path, dragging_selection.start_time, dragging_selection.end_time)
             dragging_selection = nil
+            reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
           end
           reaper.PreventUIRefresh(-1)
         end
