@@ -1,10 +1,13 @@
 -- @description Project Audio File Explorer
--- @version 1.0.28
+-- @version 1.0.29
 -- @author zaibuyidao
 -- @changelog
 --   New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
---   Refined and optimized the user interface.
 --   Fixed the issue of auto-crossfade when inserting audio.
+--   Waveform preview now fully supports multichannel audio files. All channels are displayed independently instead of being limited to 2.
+--   Added a toggle for automatic waveform scrolling during playback. The setting can be enabled or disabled in the settings dialog and is remembered by the script.
+--   Pitch, playback rate, and volume parameters will only restart preview playback when changed during playback.
+--   Added "Auto Play Next" feature: audio files in the table can now be played in sequence automatically.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -48,67 +51,70 @@ local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 -- local cache_dir = script_path .. "waveform_cache/"
 
 -- 状态变量
-local CACHE_PIXEL_WIDTH = 2048
-local font_size         = 14    -- 默认字体大小
-local need_refresh_font = false
-local FONT_SIZE_MIN     = 10
-local FONT_SIZE_MAX     = 20
-local selected_row      = -1
-local playing_preview   = nil
-local playing_path      = nil
-local playing_source    = nil
-local loop_enabled      = false -- 是否自动循环
-local preview_play_len  = 0     -- 当前预览音频长度
-local peak_chans        = 6     -- 默认显示6路电平
-local seek_pos          = nil   -- 拖动时记住目标位置
-local play_rate         = 1     -- 默认速率1.0
-local pitch             = 0     -- 音高调节（半音，正负）
-local preserve_pitch    = true  -- 变速时是否保持音高
-local is_paused         = false -- 是否处于暂停状态
-local paused_position   = 0     -- 暂停时的进度
-local base_height       = reaper.ImGui_GetFrameHeight(ctx) * 1.5 -- 底部进度条和电平条一致的高度控制
-local volume            = 1     -- 线性音量默认值（1=0dB，0.5=-6dB，2=+6dB）
-local max_db            = 12    -- 音量最大值
-local min_db            = -150  -- 音量最小值
-local pitch_knob_min    = -6    -- 音高旋钮最低
-local pitch_knob_max    = 6     -- 音高旋钮最高
-local rate_min          = 0.25  -- 速率旋钮最低
-local rate_max          = 4.0   -- 速率旋钮最高
-local last_audio_idx    = nil
-
+local CACHE_PIXEL_WIDTH    = 2048
+local font_size            = 14    -- 默认字体大小
+local need_refresh_font    = false
+local FONT_SIZE_MIN        = 10
+local FONT_SIZE_MAX        = 20
+local selected_row         = -1
+local playing_preview      = nil
+local playing_path         = nil
+local playing_source       = nil
+local loop_enabled         = false -- 是否自动循环
+local preview_play_len     = 0     -- 当前预览音频长度
+local peak_chans           = 6     -- 默认显示6路电平
+local seek_pos             = nil   -- 拖动时记住目标位置
+local play_rate            = 1     -- 默认速率1.0
+local pitch                = 0     -- 音高调节（半音，正负）
+local preserve_pitch       = true  -- 变速时是否保持音高
+local is_paused            = false -- 是否处于暂停状态
+local paused_position      = 0     -- 暂停时的进度
+local base_height          = reaper.ImGui_GetFrameHeight(ctx) * 1.5 -- 底部进度条和电平条一致的高度控制
+local volume               = 1     -- 线性音量默认值（1=0dB，0.5=-6dB，2=+6dB）
+local max_db               = 12    -- 音量最大值
+local min_db               = -150  -- 音量最小值
+local pitch_knob_min       = -6    -- 音高旋钮最低
+local pitch_knob_max       = 6     -- 音高旋钮最高
+local rate_min             = 0.25  -- 速率旋钮最低
+local rate_max             = 4.0   -- 速率旋钮最高
+local last_audio_idx       = nil
+local auto_scroll_enabled  = false -- 自动滚屏
+local auto_play_next       = false -- 连续播放勾选
+local auto_play_next_pending = nil
 -- 表格排序常量
-local COL_FILENAME      = 2
-local COL_SIZE          = 3
-local COL_TYPE          = 4
-local COL_DATE          = 5
-local COL_GENRE         = 6
-local COL_COMMENT       = 7
-local COL_DESCRIPTION   = 8
-local COL_LENGTH        = 9
-local COL_CHANNELS      = 10
-local COL_SAMPLERATE    = 11
-local COL_BITS          = 12
-local files_idx_cache   = nil   -- 文件缓存
+local COL_FILENAME         = 2
+local COL_SIZE             = 3
+local COL_TYPE             = 4
+local COL_DATE             = 5
+local COL_GENRE            = 6
+local COL_COMMENT          = 7
+local COL_DESCRIPTION      = 8
+local COL_LENGTH           = 9
+local COL_CHANNELS         = 10
+local COL_SAMPLERATE       = 11
+local COL_BITS             = 12
+local files_idx_cache      = nil   -- 文件缓存
 -- 表格高度相关
-local file_table_height = 550   -- 文件表格初始高度（可根据需要设定默认值）
-local min_table_height  = 80    -- 最小高度
-local max_table_height  = 800   -- 最大高度
+local file_table_height    = 550   -- 文件表格初始高度（可根据需要设定默认值）
+local min_table_height     = 80    -- 最小高度
+local max_table_height     = 800   -- 最大高度
 -- ExtState持久化设置
-local EXT_SECTION = "ProjectAudioFileExplorer"
+local EXT_SECTION          = "ProjectAudioFileExplorer"
 local EXT_KEY_TABLE_HEIGHT = "FileTableHeight"
-local EXT_KEY_PEAKS = "PeakChans"
-local EXT_KEY_FONT_SIZE = "FontSize"
-local EXT_KEY_MAX_DB = "MaxDB"
-local EXT_KEY_PITCH_MIN = "PitchKnobMin"
-local EXT_KEY_PITCH_MAX = "PitchKnobMax"
-local EXT_KEY_RATE_MIN = "RateMin"
-local EXT_KEY_RATE_MAX = "RateMax"
-local EXT_KEY_VOLUME = "Volume"
-local EXT_KEY_CACHE_DIR = "CacheDir"
+local EXT_KEY_PEAKS        = "PeakChans"
+local EXT_KEY_FONT_SIZE    = "FontSize"
+local EXT_KEY_MAX_DB       = "MaxDB"
+local EXT_KEY_PITCH_MIN    = "PitchKnobMin"
+local EXT_KEY_PITCH_MAX    = "PitchKnobMax"
+local EXT_KEY_RATE_MIN     = "RateMin"
+local EXT_KEY_RATE_MAX     = "RateMax"
+local EXT_KEY_VOLUME       = "Volume"
+local EXT_KEY_CACHE_DIR    = "CacheDir"
+local EXT_KEY_AUTOSCROLL   = "AutoScroll"
 -- 列表过滤
-local filename_filter   = nil
+local filename_filter      = nil
 -- 预览已读标记
-local previewed_files   = {}
+local previewed_files = {}
 local function MarkPreviewed(path) previewed_files[path] = true end
 local function IsPreviewed(path) return previewed_files[path] == true end
 -- 波形缓存路径
@@ -124,7 +130,7 @@ local function EnsureCacheDir()
   end
 end
 EnsureCacheDir()
--- 恢复ExtState
+-- 读取ExtState
 local last_height = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT))
 if last_height then
   file_table_height = math.min(math.max(last_height, min_table_height), max_table_height)
@@ -149,6 +155,9 @@ local last_rate_max = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_RATE_MAX)
 if last_rate_max then rate_max = last_rate_max end
 local last_volume = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_VOLUME))
 if last_volume then volume = last_volume end
+local last_auto_scroll = reaper.GetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL)
+if last_auto_scroll == "0" then auto_scroll_enabled = false end
+if last_auto_scroll == "1" then auto_scroll_enabled = true end
 -- 设置相关
 local auto_play_selected  = true
 local DOUBLECLICK_INSERT  = 0
@@ -158,10 +167,10 @@ local doubleclick_action  = DOUBLECLICK_NONE -- 默认 Do Do nothing
 local bg_alpha            = 1.0              -- 默认背景不透明
 
 -- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items）
-local collect_mode        = 3
-local COLLECT_MODE_ITEMS  = 0
-local COLLECT_MODE_RPP    = 1
-local COLLECT_MODE_DIR    = 2
+local collect_mode           = 3
+local COLLECT_MODE_ITEMS     = 0
+local COLLECT_MODE_RPP       = 1
+local COLLECT_MODE_DIR       = 2
 local COLLECT_MODE_ALL_ITEMS = 3
 
 -- 保存设置
@@ -179,6 +188,8 @@ local function SaveSettings()
   reaper.SetExtState(EXT_SECTION, EXT_KEY_PITCH_MAX, tostring(pitch_knob_max), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MIN, tostring(rate_min), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MAX, tostring(rate_max), true)
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
 end
 
 -- 恢复设置
@@ -224,8 +235,8 @@ local lime        = 0x32CD32FF -- 酸橙绿
 local gold        = 0xFFD700FF -- 金色
 local silver      = 0xC0C0C0FF -- 银色
 -- 表格标题字体、悬停与激活颜色
-local table_header_hovered = 0x404040FF -- 鼠标悬停时表头颜色
-local table_header_active  = 0x303030FF -- 鼠标点击时表头颜色
+local table_header_hovered = 0x294A7A60 -- 鼠标悬停时表头颜色 0x404040FF
+local table_header_active  = 0x294A7AFF -- 鼠标点击时表头颜色 0x303030FF
 local normal_text          = 0xFFF0F0F0 -- -- 0xCCCCCCFF -- 柔和灰白
 local previewed_text       = 0x888888FF -- 已预览过的更暗
 
@@ -772,6 +783,7 @@ local function MarkFontDirty()
 end
 
 function InsertSelectedAudioSection(path, sel_start, sel_end) -- 该函数需要在外部定义处理前后光标恢复
+  reaper.PreventUIRefresh(1) -- 防止UI刷新
   -- 保存Arrange视图状态 - 避免滚屏
   reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
   -- 检查自动交叉淡化状态
@@ -782,7 +794,6 @@ function InsertSelectedAudioSection(path, sel_start, sel_end) -- 该函数需要
     need_restore = true
   end
 
-  reaper.PreventUIRefresh(1) -- 防止UI刷新
   local before = {}
   for i=0, reaper.CountMediaItems(0) - 1 do
     before[reaper.GetMediaItem(0, i)] = true
@@ -813,11 +824,61 @@ function InsertSelectedAudioSection(path, sel_start, sel_end) -- 该函数需要
   local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
   -- 移动光标到插入item的结尾
   -- reaper.SetEditCurPos(pos + sel_len, false, false)
-  reaper.PreventUIRefresh(-1)
-  reaper.UpdateArrange()
   -- 恢复交叉淡化
   if need_restore then reaper.Main_OnCommand(40041, 0) end
   reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
+end
+
+function InsertSelectedAudioSectionEnd(path, sel_start, sel_end)
+  -- 保存Arrange视图状态 - 避免滚屏
+  reaper.PreventUIRefresh(1) -- 防止UI刷新
+  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+  -- 检查自动交叉淡化状态
+  local crossfade_state = reaper.GetToggleCommandStateEx(0, 40041) -- Options: Auto-crossfade media items when editing
+  local need_restore = false
+  if crossfade_state == 1 then
+    reaper.Main_OnCommand(40041, 0) -- 当前激活，先关闭
+    need_restore = true
+  end
+
+  local before = {}
+  for i=0, reaper.CountMediaItems(0) - 1 do
+    before[reaper.GetMediaItem(0, i)] = true
+  end
+  reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+  reaper.InsertMedia(path, 0)
+  local new_item = nil
+  for i=0, reaper.CountMediaItems(0)-1 do
+    local item = reaper.GetMediaItem(0, i)
+    if not before[item] then new_item = item break end
+  end
+  if not new_item then
+    reaper.ShowMessageBox("Insert Media failed.", "Insert Error", 0)
+    -- 恢复交叉淡化
+    if need_restore then reaper.Main_OnCommand(40041, 0) end
+    return
+  end
+  local take = reaper.GetActiveTake(new_item)
+  if not take then
+    reaper.ShowMessageBox("Take error.", "Insert Error", 0)
+    return
+  end
+  -- 设置偏移和长度
+  local sel_len = math.abs(sel_end - sel_start)
+  local src_offset = math.min(sel_start, sel_end)
+  reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
+  reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
+  local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
+  -- 移动光标到插入item的结尾
+  reaper.SetEditCurPos(pos + sel_len, false, false)
+
+  -- 恢复交叉淡化
+  if need_restore then reaper.Main_OnCommand(40041, 0) end
+  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
 end
 
 function HelpMarker(desc)
@@ -847,9 +908,9 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   -- 绘制
   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
   reaper.ImGui_DrawList_AddCircleFilled(draw_list, center_x, center_y, radius, 0x294773FF)
-  local hand_x = center_x + math.cos(angle) * (radius * 0.75)
-  local hand_y = center_y + math.sin(angle) * (radius * 0.75)
-  reaper.ImGui_DrawList_AddLine(draw_list, center_x, center_y, hand_x, hand_y, 0x3D85E0FF, 3)
+  local hand_x = center_x + math.cos(angle) * (radius * 0.87)
+  local hand_y = center_y + math.sin(angle) * (radius * 0.87)
+  reaper.ImGui_DrawList_AddLine(draw_list, center_x, center_y, hand_x, hand_y, 0x3D85E0FF, 1.5)
   reaper.ImGui_DrawList_AddCircle(draw_list, center_x, center_y, radius, 0x294773FF, 32, 2)
 
   local show_label = label and (label ~= "") and (not label:match("^##"))
@@ -912,7 +973,7 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
   if not src then return end
   local srate = reaper.GetMediaSourceSampleRate(src)
   if not srate or srate == 0 then srate = 44100 end
-  local channels = math.min(reaper.GetMediaSourceNumChannels(src), 2)
+  local channels = math.min(reaper.GetMediaSourceNumChannels(src), 6)
   local src_len = reaper.GetMediaSourceLength(src)
 
   -- 支持整段还是窗口
@@ -988,11 +1049,11 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
 end
 
 function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
-  local source = reaper.GetMediaItemTake_Source(take)
-  local srate = reaper.GetMediaSourceSampleRate(source)
+  local src = reaper.GetMediaItemTake_Source(take)
+  local srate = reaper.GetMediaSourceSampleRate(src)
   if not srate or srate == 0 then srate = 44100 end
-  local channel_count = math.min(reaper.GetMediaSourceNumChannels(source), 2)
-  local src_len = reaper.GetMediaSourceLength(source)
+  local channel_count = math.min(reaper.GetMediaSourceNumChannels(src), 6)
+  local src_len = reaper.GetMediaSourceLength(src)
   -- 强制读取媒体源完整长度，而不是take修剪区段
   start_time = start_time or 0
   end_time = math.min(end_time or src_len, src_len)
@@ -1010,7 +1071,7 @@ function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
   local item = reaper.AddMediaItemToTrack(track)
   reaper.SetMediaItemLength(item, src_len, false)
   local tmp_take = reaper.AddTakeToMediaItem(item)
-  reaper.SetMediaItemTake_Source(tmp_take, source)
+  reaper.SetMediaItemTake_Source(tmp_take, src)
   local accessor = reaper.CreateTakeAudioAccessor(tmp_take)
 
   -- 动态计算实际步长
@@ -1075,7 +1136,7 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
       local ch_h = h / channel_count
       local y_mid = ch_y + ch_h / 2
       -- 先画一条横线，作为静音参考线
-      reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, 0x525F6FFF, 1.0) -- 波形颜色-中心线 0x868C82FF 0x80C0FFFF
+      reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, 0x808004FF, 1.0) -- 波形颜色-中心线 0x525F6FFF, 0x868C82FF 0x80C0FFFF
       -- 再画波形竖线
       for i = 1, w do
         local frac = (i - 1) / (w - 1)
@@ -1087,7 +1148,7 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
         local y2 = y_mid - maxv * ch_h / 2
 
         -- 波形覆盖在中线上
-        reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, 0xA8CBD2FF, 1.0) -- 波形颜色 0xBBE1E9FF 0xA8CBD2FF 0x96B4BBFF 0x87A2A8FF 0x96A688FF 0x80C0FFFF
+        reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, 0xCCCC06FF, 1.0) -- 波形颜色 0xFFFF08FF, 0xBBE1E9FF 0x96B4BBFF 0x87A2A8FF 0x96A688FF 0x80C0FFFF
       end
     end
   end
@@ -1147,6 +1208,9 @@ local function PlayFromStart(info)
       wf_play_start_cursor = 0
     end
     MarkPreviewed(info.path)
+    -- 顺序播放新增
+    preview_play_len = reaper.GetMediaSourceLength(source) or 0
+    playing_path = info.path or ""
   end
 end
 
@@ -1291,7 +1355,6 @@ function WithAutoCrossfadeDisabled(fn)
 end
 
 -- 鼠标框选相关变量
-local drag_release_in_waveform = false
 local pending_clear_selection = pending_clear_selection or false
 local function has_selection()
   return select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01
@@ -1386,9 +1449,9 @@ function loop()
       reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
     end
 
-    -- 设置表格线条颜色为红色
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderStrong(), 0xFF404040) -- 边框线，深灰0xFF404040 透明0x00000000
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderLight(),  0xFF404040) -- 列表线/分割线，深灰0xFF404040 透明0x00000000
+    -- 设置表格线条颜色为红色 - 表格颜色
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderStrong(), 0x07192EFF) -- 边框线，深灰0xFF404040 透明0x00000000
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderLight(),  0x07192EFF) -- 列表线/分割线，深灰0xFF404040 透明0x00000000
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBg(),        0xFF0F0F0F) -- 表格行背景色 0xFF0F0F0F
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     0xFF0F0F0F)
     -- 支持表格排序和冻结首行
@@ -1648,13 +1711,13 @@ function loop()
 
         if match then
           reaper.ImGui_TableNextRow(ctx)
-          -- 表格标题文字颜色
+          -- 表格标题文字颜色 -- 文字颜色
           if IsPreviewed(info.path) then
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), previewed_text)
           else
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text)
           end
-          -- 表格标题悬停及激活时颜色
+          -- 表格标题悬停及激活时颜色 -- 表格颜色 悬停颜色 激活颜色
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), table_header_hovered)
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(), table_header_active)
           local row_hovered = false
@@ -2170,6 +2233,23 @@ function loop()
             _G.scroll_target = nil -- 只滚动一次
           end
         end
+
+        -- 自动播放切换表格中的音频文件
+        if auto_play_next_pending and type(auto_play_next_pending) == "table" then
+          local next_idx = -1
+          for i, info in ipairs(files_idx_cache or {}) do
+            if info.path == auto_play_next_pending.path then
+              next_idx = i
+              break
+            end
+          end
+          if next_idx > 0 then
+            selected_row = next_idx
+            _G.scroll_target = 0.5  -- 下一帧表格自动滚动到中间
+          end
+          PlayFromStart(auto_play_next_pending)
+          auto_play_next_pending = nil
+        end
       end
 
       reaper.ImGui_EndTable(ctx)
@@ -2179,25 +2259,27 @@ function loop()
 
     -- 拖动音频到REAPER
     if dragging_audio then
-      WithAutoCrossfadeDisabled(function()
-        reaper.PreventUIRefresh(1) -- 防止UI刷新
-        local window, segment, details = reaper.BR_GetMouseCursorContext()
-        if window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
-          reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
-          local old_cursor = reaper.GetCursorPosition()
-          local insert_time = reaper.BR_GetMouseCursorContext_Position()
-          reaper.SetEditCurPos(insert_time, false, false)
-          local tr = reaper.BR_GetMouseCursorContext_Track()
-          if tr then reaper.SetOnlyTrackSelected(tr) end
-          reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-          reaper.InsertMedia(dragging_audio, 0)
-          reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
-          dragging_audio = nil
-          reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+      local window, _, _ = reaper.BR_GetMouseCursorContext()
+      if not reaper.ImGui_IsMouseDown(ctx, 0) then -- 鼠标释放
+        if window == "arrange" then -- 只允许在arrange窗口松开时插入
+          WithAutoCrossfadeDisabled(function()
+            reaper.PreventUIRefresh(1) -- 防止UI刷新
+            reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+            local old_cursor = reaper.GetCursorPosition()
+            local insert_time = reaper.BR_GetMouseCursorContext_Position()
+            reaper.SetEditCurPos(insert_time, false, false)
+            local tr = reaper.BR_GetMouseCursorContext_Track()
+            if tr then reaper.SetOnlyTrackSelected(tr) end
+            reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+            reaper.InsertMedia(dragging_audio, 0)
+            reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+            reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+            reaper.PreventUIRefresh(-1)
+            reaper.UpdateArrange()
+          end)
         end
-        reaper.PreventUIRefresh(-1)
-        reaper.UpdateArrange()
-      end)
+        dragging_audio = nil -- 鼠标释放时重置
+      end
     end
 
     reaper.ImGui_EndChild(ctx)
@@ -2205,7 +2287,7 @@ function loop()
     reaper.ImGui_Separator(ctx)
     -- 播放控制按钮
     -- Play 按钮
-    if reaper.ImGui_Button(ctx, "Play") then
+    if reaper.ImGui_Button(ctx, "Play", 45) then
       if is_paused and playing_source then
         -- 以Wave.play_cursor为准恢复播放
         playing_preview = reaper.CF_CreatePreview(playing_source)
@@ -2247,7 +2329,7 @@ function loop()
     if highlight_resume then
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x2ee72eff)
     end
-    local clicked = reaper.ImGui_Button(ctx, label)
+    local clicked = reaper.ImGui_Button(ctx, label, 45)
     if highlight_resume then
       reaper.ImGui_PopStyleColor(ctx)
     end
@@ -2286,7 +2368,7 @@ function loop()
 
     -- Stop 按钮
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "Stop") then
+    if reaper.ImGui_Button(ctx, "Stop", 45) then
       StopPreview()
       is_paused = false
       paused_position = 0
@@ -2310,6 +2392,29 @@ function loop()
       end
     end
 
+    -- 自动播放切换按钮
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_Text(ctx, "Auto Play Next:")
+    reaper.ImGui_SameLine(ctx)
+    local rv6
+    rv6, auto_play_next = reaper.ImGui_Checkbox(ctx, "##AutoPlayNext", auto_play_next)
+
+    if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
+      local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+      if ok and preview_play_len and pos >= preview_play_len - 0.01 then
+        local cur_idx = -1
+        for i, info in ipairs(files_idx_cache or {}) do
+          if info.path == playing_path then cur_idx = i break end
+        end
+        if cur_idx > 0 and cur_idx < #files_idx_cache then
+          auto_play_next_pending = files_idx_cache[cur_idx + 1]
+        else
+          auto_play_next_pending = false
+          StopPreview()
+        end
+      end
+    end
+
     -- 音高旋钮
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_Text(ctx, "Pitch:")
@@ -2319,7 +2424,7 @@ function loop()
     local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size, 0)
     if pitch_knob_changed then
       pitch = pitch_knob_value
-      RestartPreviewWithParams()
+      if playing_preview then RestartPreviewWithParams() end
     end
     -- 防止手动输入越界
     if pitch < pitch_knob_min then pitch = pitch_knob_min end
@@ -2332,7 +2437,7 @@ function loop()
     rv3, pitch = reaper.ImGui_InputDouble(ctx, "##Pitch", pitch) -- (ctx, "Pitch", pitch, 1, 12, "%.3f")
     reaper.ImGui_PopItemWidth(ctx)
     if rv3 then
-      RestartPreviewWithParams()
+      if playing_preview then RestartPreviewWithParams() end
     end
 
     -- 播放速率旋钮
@@ -2343,7 +2448,7 @@ function loop()
     local knob_changed, knob_value = ImGui_Knob(ctx, "##rate_knob", play_rate, rate_min, rate_max, knob_size, 1)
     if knob_changed then
       play_rate = knob_value
-      RestartPreviewWithParams()
+      if playing_preview then RestartPreviewWithParams() end
     end
     -- 双向同步（输入框改了也会更新旋钮，下次刷新界面）
     if play_rate < rate_min then play_rate = rate_min end
@@ -2356,7 +2461,7 @@ function loop()
     rv4, play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
     reaper.ImGui_PopItemWidth(ctx)
     if rv4 then
-      RestartPreviewWithParams()
+      if playing_preview then RestartPreviewWithParams() end
     end
 
     -- 音量
@@ -2369,13 +2474,13 @@ function loop()
     rv2, volume = reaper.ImGui_SliderDouble(ctx, "##volume", volume, 0.0000000316, max_gain, string.format("%.2f dB", VAL2DB(volume)), reaper.ImGui_SliderFlags_Logarithmic())
     reaper.ImGui_PopItemWidth(ctx)
     if rv2 then
-      RestartPreviewWithParams()
+      if playing_preview then RestartPreviewWithParams() end
       reaper.SetExtState(EXT_SECTION, EXT_KEY_VOLUME, tostring(volume), true)
     end
     -- 右键归零
     if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
       volume = 1 -- 0dB
-      RestartPreviewWithParams()
+      if playing_preview then RestartPreviewWithParams() end
       reaper.SetExtState(EXT_SECTION, EXT_KEY_VOLUME, tostring(volume), true)
     end
 
@@ -2445,6 +2550,13 @@ function loop()
       changed_pp, preserve_pitch = reaper.ImGui_Checkbox(ctx, "Preserve pitch when changing rate", preserve_pitch)
       if changed_pp and playing_preview and reaper.CF_Preview_SetValue then
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+      end
+
+      -- 波形预览自动滚屏
+      reaper.ImGui_Separator(ctx)
+      local changed_scroll, new_scroll = reaper.ImGui_Checkbox(ctx, "Auto scroll waveform during playback", auto_scroll_enabled)
+      if changed_scroll then
+        auto_scroll_enabled = new_scroll
       end
       
       -- 背景不透明度
@@ -2586,6 +2698,7 @@ function loop()
         doubleclick_action = DOUBLECLICK_NONE,
         auto_play_selected = true,
         preserve_pitch = true,
+        auto_scroll_enabled = false,
         bg_alpha = 1.0,
         file_table_height = 550,
         peak_chans = 6,
@@ -2616,11 +2729,13 @@ function loop()
         rate_min = DEFAULTS.rate_min
         rate_max = DEFAULTS.rate_max
         cache_dir = DEFAULTS.cache_dir
+        auto_scroll_enabled = DEFAULTS.auto_scroll_enabled
         -- 保存设置到ExtState
         reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_HEIGHT, tostring(file_table_height), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
+        reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
         MarkFontDirty()
         CollectFiles()
       end
@@ -2664,9 +2779,7 @@ function loop()
         do_insert = true
       end
       if do_insert and cur_info and cur_info.path then
-        local old_cursor = reaper.GetCursorPosition()
-        InsertSelectedAudioSection(cur_info.path, select_start_time * play_rate, select_end_time * play_rate)
-        reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+        InsertSelectedAudioSectionEnd(cur_info.path, select_start_time * play_rate, select_end_time * play_rate)
       end
     end
 
@@ -2932,7 +3045,6 @@ function loop()
         -- 选区拖拽到REAPER - 框选/拖拽释放是否在选区内
         if dragging_selection and reaper.ImGui_IsMouseReleased(ctx, 0) then -- 松开时仍在本窗口
           if reaper.ImGui_IsWindowHovered(ctx) then
-            drag_release_in_waveform = true
             dragging_selection = nil
           end
         end
@@ -2980,21 +3092,23 @@ function loop()
         pending_clear_selection = false
       end
 
-      -- 切换源时清除选区高亮
+      -- 切换源时清除选区高亮和重置波形的缩放与滚动位置
       if selected_row ~= last_audio_idx then
         select_start_time = nil
         select_end_time = nil
         last_audio_idx = selected_row
+          Wave.zoom = 1
+          Wave.scroll = 0
       end
 
-      -- 选区高亮
+      -- 选区高亮 - 框选颜色
       if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
         -- 速率变化时调整选区位置
         local visible_len = Wave.src_len / play_rate
         local a = (select_start_time - Wave.scroll) / (visible_len / Wave.zoom) * region_w + min_x
         local b = (select_end_time - Wave.scroll) / (visible_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
-        reaper.ImGui_DrawList_AddRectFilled(dl, a, min_y, b, max_y, 0x1844FF44 ) -- 0x10101040
+        reaper.ImGui_DrawList_AddRectFilled(dl, a, min_y, b, max_y, 0x294A7A44 ) -- 0x192e4680 0x1844FF44
       end
 
       -- loop循环选区
@@ -3015,7 +3129,7 @@ function loop()
         local adjusted_play_cursor = Wave.play_cursor * play_rate
         local px = (adjusted_play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
-        reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, 0x404040FF, 1) -- 0xFF2222FF
+        reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, 0x808080FF, 1) -- 0xFF2222FF
       end
 
       -- 光标跟随播放，速率变化时失败
@@ -3066,8 +3180,8 @@ function loop()
       --   prev_play_cursor = nil
       -- end
 
-      -- 自动滚屏
-      if playing_preview then
+      -- 波形预览自动滚屏
+      if playing_preview and auto_scroll_enabled then
         -- 当前视野长度（秒）
         local view_len = Wave.src_len / Wave.zoom
         -- 如果光标超出可见区域，自动滚动窗口
@@ -3102,17 +3216,18 @@ function loop()
         -- 拖拽释放检测
         if dragging_selection then
           reaper.PreventUIRefresh(1)
-          local window, segment, details = reaper.BR_GetMouseCursorContext()
-          if not drag_release_in_waveform and window == "arrange" and not reaper.ImGui_IsMouseDown(ctx, 0) then
-            local old_cursor = reaper.GetCursorPosition()
-            local insert_time = reaper.BR_GetMouseCursorContext_Position()
-            reaper.SetEditCurPos(insert_time, false, false)
-            local tr = reaper.BR_GetMouseCursorContext_Track()
-            if tr then reaper.SetOnlyTrackSelected(tr) end
-            -- reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-            InsertSelectedAudioSection(dragging_selection.path, dragging_selection.start_time, dragging_selection.end_time)
-            dragging_selection = nil
-            reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+          local window, _, _ = reaper.BR_GetMouseCursorContext()
+          if not reaper.ImGui_IsMouseDown(ctx, 0) then
+            if window == "arrange" then
+              local old_cursor = reaper.GetCursorPosition()
+              local insert_time = reaper.BR_GetMouseCursorContext_Position()
+              reaper.SetEditCurPos(insert_time, false, false)
+              local tr = reaper.BR_GetMouseCursorContext_Track()
+              if tr then reaper.SetOnlyTrackSelected(tr) end
+              InsertSelectedAudioSection(dragging_selection.path, dragging_selection.start_time, dragging_selection.end_time)
+              reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+            end
+            dragging_selection = nil -- 不管插入与否都要清除
           end
           reaper.PreventUIRefresh(-1)
         end
@@ -3231,11 +3346,11 @@ function loop()
       if Wave.scroll < 0 then Wave.scroll = 0 end
       if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
 
-      -- - 按钮
+      -- + 按钮
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, " - ") then -- Zoom Out
+      if reaper.ImGui_Button(ctx, "+", 20) then  -- Zoom In
         local prev_zoom = Wave.zoom
-        Wave.zoom = math.max(Wave.zoom / 1.25, 1)
+        Wave.zoom = math.min(Wave.zoom * 1.25, 16)
         if Wave.zoom ~= prev_zoom then
           local old_view_len = Wave.src_len / prev_zoom
           local center = Wave.scroll + old_view_len / 2
@@ -3247,11 +3362,11 @@ function loop()
         end
       end
 
-      -- + 按钮
+      -- - 按钮
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, " + ") then  -- Zoom In
+      if reaper.ImGui_Button(ctx, "-", 20) then -- Zoom Out
         local prev_zoom = Wave.zoom
-        Wave.zoom = math.min(Wave.zoom * 1.25, 16)
+        Wave.zoom = math.max(Wave.zoom / 1.25, 1)
         if Wave.zoom ~= prev_zoom then
           local old_view_len = Wave.src_len / prev_zoom
           local center = Wave.scroll + old_view_len / 2
@@ -3273,15 +3388,13 @@ function loop()
     end
 
     -- 自动停止非Loop播放，只要没勾选Loop且快播完就自动Stop
-    if playing_preview and not loop_enabled then
+    if playing_preview and not loop_enabled and not auto_play_next  then
       local ok_pos, position = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
       local ok_len, length   = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
-      if ok_pos and ok_len and (length - position) < 0.03 then -- 距离结尾小于0.03秒
+      if ok_pos and ok_len and (length - position) < 0.01 then -- 距离结尾小于0.03秒
         StopPlay()
       end
     end
-
-    drag_release_in_waveform = false
 
     reaper.ImGui_PopStyleVar(ctx, 6) --ImGui_End 内 6 次圆角
     reaper.ImGui_End(ctx)
