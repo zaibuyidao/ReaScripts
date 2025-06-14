@@ -1,13 +1,11 @@
 -- @description Project Audio File Explorer
--- @version 1.0.29
+-- @version 1.0.30
 -- @author zaibuyidao
 -- @changelog
---   New: Added drag-and-drop support for inserting selected regions directly into the REAPER arrange view.
---   Fixed the issue of auto-crossfade when inserting audio.
---   Waveform preview now fully supports multichannel audio files. All channels are displayed independently instead of being limited to 2.
---   Added a toggle for automatic waveform scrolling during playback. The setting can be enabled or disabled in the settings dialog and is remembered by the script.
---   Pitch, playback rate, and volume parameters will only restart preview playback when changed during playback.
---   Added "Auto Play Next" feature: audio files in the table can now be played in sequence automatically.
+--   New: Hold Ctrl and scroll mouse wheel up/down to vertically zoom in/out the waveform preview.
+--   Fixed: The play cursor now always moves to the selection start when first selecting a range, rather than the end point.
+--   New: Now you can click anywhere inside the selection to set the play cursor, and clicking outside the selection will immediately clear the selection.
+--   New: When playing a waveform selection (with loop disabled), playback now automatically stops at the end of the selection and the play cursor returns to the selection start.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -257,6 +255,11 @@ local peaks, pixel_cnt, src_len, channel_count
 local last_pixel_cnt, last_view_len, last_scroll
 local last_wave_info -- 记录上次渲染的info
 local peak_hold = {} -- 存放各通道的峰值保持
+local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
+local VERTICAL_ZOOM_MIN = 0.25
+local VERTICAL_ZOOM_MAX = 4.0
+local show_vertical_zoom = false
+local show_vertical_zoom_timer = 0
 -- 定义Wave类
 local Wave = {
   play_cursor = 0,
@@ -1144,8 +1147,8 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
         local p = (peaks[ch] and peaks[ch][idx]) or {0, 0}
         local minv = p[1] or 0
         local maxv = p[2] or 0
-        local y1 = y_mid - minv * ch_h / 2
-        local y2 = y_mid - maxv * ch_h / 2
+        local y1 = y_mid - minv * ch_h / 2 * waveform_vertical_zoom
+        local y2 = y_mid - maxv * ch_h / 2 * waveform_vertical_zoom
 
         -- 波形覆盖在中线上
         reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, 0xCCCC06FF, 1.0) -- 波形颜色 0xFFFF08FF, 0xBBE1E9FF 0x96B4BBFF 0x87A2A8FF 0x96A688FF 0x80C0FFFF
@@ -1264,7 +1267,7 @@ local function DrawTimeLine(ctx, wave, view_start, view_end)
   local drawlist = reaper.ImGui_GetWindowDrawList(ctx)
 
   -- 设置基础线颜色
-  reaper.ImGui_DrawList_AddLine(drawlist, x0, y0, x1, y0, 0xA9A9A9FF, 1.0) -- 0xA6B3C0FF
+  reaper.ImGui_DrawList_AddLine(drawlist, x0, y0, x1, y0, 0x3F3F48FF, 1.0) -- 0xA9A9A9FF 0xA6B3C0FF
 
   -- 智能自适应主刻度数
   local avail_w = max_x - min_x
@@ -1292,14 +1295,14 @@ local function DrawTimeLine(ctx, wave, view_start, view_end)
     local frac = (t - view_start) / view_len
     local x = min_x + frac * (max_x - min_x)
     -- 主刻度线
-    reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_long, 0xA9A9A9FF, 1.0) -- 0xD8E1F2FF
+    reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_long, 0x3F3F48FF, 1.0) -- 0xA9A9A9FF 0xD8E1F2FF
     -- 时间标签
     local text = reaper.format_timestr(t or 0, "")
     -- 计算文字高度
     local text = reaper.format_timestr(t or 0, "")
     local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
     local text_y = y0 + tick_long - text_h + 0  -- 最后一个值是细调，当前已改为0
-    reaper.ImGui_DrawList_AddText(drawlist, x + 4, text_y, 0xA9A9A9FF, text) -- 0xE6ECFFFF
+    reaper.ImGui_DrawList_AddText(drawlist, x + 4, text_y, 0x3F3F48FF, text) -- 0xA9A9A9FF 0xE6ECFFFF
     -- reaper.ImGui_DrawList_AddText(drawlist, x + 2, y0 + tick_long + 1, 0xE6ECFFFF, reaper.format_timestr(t or 0, ""))
   end
 
@@ -1319,10 +1322,10 @@ local function DrawTimeLine(ctx, wave, view_start, view_end)
         local frac = (t - view_start) / view_len
         local x = min_x + frac * (max_x - min_x)
         if sub_index == 10 then -- 中间刻度线
-          reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_middle, 0xA9A9A9FF, 1.0) -- 0xA6B3C0FF
+          reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_middle, 0x3F3F48FF, 1.0) -- 0xA9A9A9FF 0xA6B3C0FF
         else
           -- 次刻度
-          reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_short, 0xA9A9A9FF, 1.0) -- 0xBFC6D1FF
+          reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_short, 0x3F3F48FF, 1.0) -- 0xA9A9A9FF 0xBFC6D1FF
         end
       end
     end
@@ -2945,46 +2948,60 @@ function loop()
         local mouse_time = Wave.scroll + frac * (visible_len / Wave.zoom)
 
         -- 鼠标滚轮缩放
-        local mouse_wheel = reaper.ImGui_GetMouseWheel(ctx)
-        if mouse_wheel ~= 0 then
-          local min_zoom, max_zoom = 1, 16
+        if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()) then
+          -- Ctrl+鼠标滚轮纵向缩放波形
+          local mouse_wheel = reaper.ImGui_GetMouseWheel(ctx)
+          if mouse_wheel ~= 0 then
+            waveform_vertical_zoom = waveform_vertical_zoom + (mouse_wheel > 0 and 0.1 or -0.1)
+            if waveform_vertical_zoom < VERTICAL_ZOOM_MIN then waveform_vertical_zoom = VERTICAL_ZOOM_MIN end
+            if waveform_vertical_zoom > VERTICAL_ZOOM_MAX then waveform_vertical_zoom = VERTICAL_ZOOM_MAX end
 
-          if (mouse_wheel > 0 and Wave.zoom >= max_zoom) or (mouse_wheel < 0 and Wave.zoom <= min_zoom) then
-            -- 判断是否到缩放边界
-          else
-            local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
-            local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
-            local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
-            local region_w = max_x - min_x
+            show_vertical_zoom = true
+            show_vertical_zoom_timer = reaper.time_precise() -- 记录当前时间
+          end
+        else
+          -- 鼠标滚轮横向缩放
+          local mouse_wheel = reaper.ImGui_GetMouseWheel(ctx)
+          if mouse_wheel ~= 0 then
+            local min_zoom, max_zoom = 1, 16
 
-            -- 获取当前鼠标位置在波形上的时间
-            local rel_x = mouse_x - min_x
-            local frac = rel_x / region_w
-            frac = math.max(0, math.min(1, frac))
-            local mouse_time = Wave.scroll + frac * (Wave.src_len / Wave.zoom)
-
-            -- 向上滚动放大
-            if mouse_wheel > 0 then
-              Wave.zoom = math.min(Wave.zoom * 1.25, 16) -- 最大放大倍数16
-            -- 向下滚动缩小
+            if (mouse_wheel > 0 and Wave.zoom >= max_zoom) or (mouse_wheel < 0 and Wave.zoom <= min_zoom) then
+              -- 判断是否到缩放边界
             else
-              Wave.zoom = math.max(Wave.zoom / 1.25, 1) -- 最小缩小倍数1
+              local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
+              local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+              local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+              local region_w = max_x - min_x
+
+              -- 获取当前鼠标位置在波形上的时间
+              local rel_x = mouse_x - min_x
+              local frac = rel_x / region_w
+              frac = math.max(0, math.min(1, frac))
+              local mouse_time = Wave.scroll + frac * (Wave.src_len / Wave.zoom)
+
+              -- 向上滚动放大
+              if mouse_wheel > 0 then
+                Wave.zoom = math.min(Wave.zoom * 1.25, 16) -- 最大放大倍数16
+              -- 向下滚动缩小
+              else
+                Wave.zoom = math.max(Wave.zoom / 1.25, 1) -- 最小缩小倍数1
+              end
+
+              -- 缩放后，保持当前鼠标位置不变
+              local view_len = Wave.src_len / Wave.zoom
+              Wave.scroll = mouse_time - frac * view_len
+
+              -- 保证滚动不会超出音频范围
+              if Wave.scroll < 0 then Wave.scroll = 0 end
+              if Wave.scroll > Wave.src_len - view_len then Wave.scroll = Wave.src_len - view_len end
+
+              -- 最小缩放时，显示整条音频
+              if Wave.zoom == 1 then
+                Wave.scroll = 0
+              end
+
+              last_view_len = nil
             end
-
-            -- 缩放后，保持当前鼠标位置不变
-            local view_len = Wave.src_len / Wave.zoom
-            Wave.scroll = mouse_time - frac * view_len
-
-            -- 保证滚动不会超出音频范围
-            if Wave.scroll < 0 then Wave.scroll = 0 end
-            if Wave.scroll > Wave.src_len - view_len then Wave.scroll = Wave.src_len - view_len end
-
-            -- 最小缩放时，显示整条音频
-            if Wave.zoom == 1 then
-              Wave.scroll = 0
-            end
-
-            last_view_len = nil
           end
         end
 
@@ -3015,12 +3032,16 @@ function loop()
           selecting = false
           if has_selection() then
             local select_min = math.min(select_start_time, select_end_time)
+            just_selected_range = true
             Wave.play_cursor = select_min
             wf_play_start_cursor = select_min
             if playing_preview then
-              if reaper.CF_Preview_SetValue then
-                PlayFromCursor(cur_info)
+              if reaper.CF_Preview_SetValue then -- 移动播放位置
+                reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", select_min)
               end
+              -- if reaper.CF_Preview_SetValue then
+              --   PlayFromCursor(cur_info)
+              -- end
             end
           end
         end
@@ -3042,6 +3063,23 @@ function loop()
           end
         end
 
+        -- 框选松开后自动播放并跳转起始位置 未激活LOOP时
+        if playing_preview and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 and not loop_enabled then
+          local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+          if ok then
+            local select_max = math.max(select_start_time, select_end_time)
+            local select_min = math.min(select_start_time, select_end_time)
+            if prev_play_cursor and prev_play_cursor >= select_min and prev_play_cursor <= select_max then
+              if pos >= select_max then
+                StopPreview(cur_info)
+                Wave.play_cursor = select_min
+                wf_play_start_cursor = select_min
+              end
+            end
+            prev_play_cursor = pos
+          end
+        end
+
         -- 选区拖拽到REAPER - 框选/拖拽释放是否在选区内
         if dragging_selection and reaper.ImGui_IsMouseReleased(ctx, 0) then -- 松开时仍在本窗口
           if reaper.ImGui_IsWindowHovered(ctx) then
@@ -3049,36 +3087,51 @@ function loop()
           end
         end
 
-        -- 鼠标释放时，清空选区
-        if reaper.ImGui_IsMouseReleased(ctx, 0) then
-          if pending_clear_selection then
-            select_start_time = nil
-            select_end_time = nil
-            pending_clear_selection = false
-          end
-          -- 单击跳转光标
-          if not selecting and (not has_selection or not mouse_in_selection()) and math.abs(mouse_x - (drag_start_x or mouse_x)) < 3 then
-            Wave.play_cursor = mouse_time
-            if playing_preview then
-              StopPreview()
-              wf_play_start_cursor = mouse_time
-              PlayFromCursor(cur_info)
-            end
-            if is_paused and playing_source then
-              playing_preview = reaper.CF_CreatePreview(playing_source)
-              if playing_preview then
-                if reaper.CF_Preview_SetValue then
-                  reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-                  reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-                  reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
-                  reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
-                  reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-                  reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
+        -- 鼠标释放时，鼠标定位/清空选区
+        if not selecting and reaper.ImGui_IsMouseReleased(ctx, 0) and reaper.ImGui_IsItemHovered(ctx) then
+          if just_selected_range then
+            just_selected_range = false  -- 跳过这次，防止和画选区的行为冲突
+          else
+            -- 重新计算mouse_time，确保为释放时的准确位置
+            local mouse_x = select(1, reaper.ImGui_GetMousePos(ctx))
+            local min_x = select(1, reaper.ImGui_GetItemRectMin(ctx))
+            local max_x = select(1, reaper.ImGui_GetItemRectMax(ctx))
+            local region_w = max_x - min_x
+            local rel_x = mouse_x - min_x
+            local frac = rel_x / region_w
+            frac = math.max(0, math.min(1, frac))
+            local visible_len = Wave.src_len / play_rate
+            local mouse_time = Wave.scroll + frac * (visible_len / Wave.zoom)
+
+            if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
+              local select_min = math.min(select_start_time, select_end_time)
+              local select_max = math.max(select_start_time, select_end_time)
+              if mouse_time >= select_min and mouse_time <= select_max then
+                -- 选区内 - 定位
+                Wave.play_cursor = mouse_time
+                wf_play_start_cursor = mouse_time
+                if playing_preview then
+                  StopPreview()
+                  PlayFromCursor(cur_info)
                 end
-                reaper.CF_Preview_Play(playing_preview)
-                wf_play_start_time = os.clock()
-                wf_play_start_cursor = Wave.play_cursor or 0
-                is_paused = false
+              else
+                -- 选区外 - 清空选区
+                select_start_time = nil
+                select_end_time = nil
+                Wave.play_cursor = mouse_time
+                wf_play_start_cursor = mouse_time
+                if playing_preview then
+                  StopPreview()
+                  PlayFromCursor(cur_info)
+                end
+              end
+            else
+              -- 无选区 - 正常定位
+              Wave.play_cursor = mouse_time
+              wf_play_start_cursor = mouse_time
+              if playing_preview then
+                StopPreview()
+                PlayFromCursor(cur_info)
               end
             end
           end
@@ -3099,6 +3152,7 @@ function loop()
         last_audio_idx = selected_row
           Wave.zoom = 1
           Wave.scroll = 0
+          waveform_vertical_zoom = 1
       end
 
       -- 选区高亮 - 框选颜色
@@ -3385,6 +3439,18 @@ function loop()
     if playing_preview and info and info.path then
       reaper.ImGui_SameLine(ctx, nil, 1)
       reaper.ImGui_Text(ctx, " Now playing: " .. info.path)
+    end
+
+    -- 显示波形缩放百分比
+    reaper.ImGui_SameLine(ctx)
+    if show_vertical_zoom and (reaper.time_precise() - show_vertical_zoom_timer < 1.1) then -- 1.1秒内显示
+      local window_width = reaper.ImGui_GetWindowWidth(ctx)
+      local text = string.format("Vertical Zoom: %.0f%%", waveform_vertical_zoom * 100)
+      local text_width = reaper.ImGui_CalcTextSize(ctx, text)
+      reaper.ImGui_SetCursorPosX(ctx, window_width - text_width - 16)
+      reaper.ImGui_Text(ctx, text)
+    elseif show_vertical_zoom and (reaper.time_precise() - show_vertical_zoom_timer >= 1.2) then
+      show_vertical_zoom = false
     end
 
     -- 自动停止非Loop播放，只要没勾选Loop且快播完就自动Stop
