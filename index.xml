@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="0e60bfc4e91f06af8c9d1a8bbe01983db02cfb94">
+<index version="1" name="zaibuyidao Scripts" commit="b0494180dbc9ff1fb252f51ca9c1beb6007d3794">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8609,6 +8609,13 @@ Added a toggle for automatic waveform scrolling during playback. The setting can
 Pitch, playback rate, and volume parameters will only restart preview playback when changed during playback.
 Added "Auto Play Next" feature: audio files in the table can now be played in sequence automatically.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/1584fd5e572b55181d25060f96cf32f8b0eedb18/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.30" author="zaibuyidao" time="2025-06-14T16:58:45Z">
+        <changelog><![CDATA[New: Hold Ctrl and scroll mouse wheel up/down to vertically zoom in/out the waveform preview.
+Fixed: The play cursor now always moves to the selection start when first selecting a range, rather than the end point.
+New: Now you can click anywhere inside the selection to set the play cursor, and clicking outside the selection will immediately clear the selection.
+New: When playing a waveform selection (with loop disabled), playback now automatically stops at the end of the selection and the play cursor returns to the selection start.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b0494180dbc9ff1fb252f51ca9c1beb6007d3794/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
