@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.31
+-- @version 1.0.32
 -- @author zaibuyidao
 -- @changelog
 --   New: The table area now automatically resizes when dragging the window or resizing the interface, providing a more flexible and user-friendly browsing experience.
@@ -2758,6 +2758,7 @@ function loop()
         rate_max = DEFAULTS.rate_max
         cache_dir = DEFAULTS.cache_dir
         auto_scroll_enabled = DEFAULTS.auto_scroll_enabled
+        img_h_offset = DEFAULTS.img_h_offset
         -- 保存设置到ExtState
         reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
