@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b0494180dbc9ff1fb252f51ca9c1beb6007d3794">
+<index version="1" name="zaibuyidao Scripts" commit="ffd1b7cf5350bce5dbb1a1f36c9150d73b3594b6">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8616,6 +8616,12 @@ Fixed: The play cursor now always moves to the selection start when first select
 New: Now you can click anywhere inside the selection to set the play cursor, and clicking outside the selection will immediately clear the selection.
 New: When playing a waveform selection (with loop disabled), playback now automatically stops at the end of the selection and the play cursor returns to the selection start.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b0494180dbc9ff1fb252f51ca9c1beb6007d3794/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.31" author="zaibuyidao" time="2025-06-15T12:58:30Z">
+        <changelog><![CDATA[New: The table area now automatically resizes when dragging the window or resizing the interface, providing a more flexible and user-friendly browsing experience.
+New: Added "Waveform Height Offset" option. Users can now adjust the waveform preview height in real time in settings. The value is saved automatically and restored when reopening the script.
+Fixed: Corrected an issue where the progress bar time display was inaccurate when changing the playback rate.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ffd1b7cf5350bce5dbb1a1f36c9150d73b3594b6/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
