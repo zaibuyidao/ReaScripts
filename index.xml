@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2d3d048993d91c205c9deb833eb6fd2156f1c4fe">
+<index version="1" name="zaibuyidao Scripts" commit="79a0b5deea50cc75bdc6506867a1df53b64101e4">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8628,6 +8628,11 @@ Fixed: Corrected an issue where the progress bar time display was inaccurate whe
 New: Added "Waveform Height Offset" option. Users can now adjust the waveform preview height in real time in settings. The value is saved automatically and restored when reopening the script.
 Fixed: Corrected an issue where the progress bar time display was inaccurate when changing the playback rate.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2d3d048993d91c205c9deb833eb6fd2156f1c4fe/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.33" author="zaibuyidao" time="2025-06-19T14:40:10Z">
+        <changelog><![CDATA[New: Added support for merging and grouping audio resources by "file path + section offset and length".
+Optimization: The original path-based merging method no longer ignores SECTION segments and can handle both entire files and multiple section references simultaneously.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/79a0b5deea50cc75bdc6506867a1df53b64101e4/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
