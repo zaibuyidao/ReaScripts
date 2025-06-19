@@ -1,10 +1,9 @@
 -- @description Project Audio File Explorer
--- @version 1.0.32
+-- @version 1.0.33
 -- @author zaibuyidao
 -- @changelog
---   New: The table area now automatically resizes when dragging the window or resizing the interface, providing a more flexible and user-friendly browsing experience.
---   New: Added "Waveform Height Offset" option. Users can now adjust the waveform preview height in real time in settings. The value is saved automatically and restored when reopening the script.
---   Fixed: Corrected an issue where the progress bar time display was inaccurate when changing the playback rate.
+--   New: Added support for merging and grouping audio resources by "file path + section offset and length".
+--   Optimization: The original path-based merging method no longer ignores SECTION segments and can handle both entire files and multiple section references simultaneously.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -416,6 +415,73 @@ end
 
 --------------------------------------------- 收集工程音频相关函数 ---------------------------------------------
 
+function GetItemSectionStartPos(item)
+  local take = reaper.GetActiveTake(item)
+  if not take then return 0 end
+  local src = reaper.GetMediaItemTake_Source(take)
+  local src_type = reaper.GetMediaSourceType(src, "")
+  if src_type ~= "SECTION" then return 0 end
+
+  local track = reaper.GetMediaItem_Track(item)
+  local rv, chunk = reaper.GetTrackStateChunk(track, "", false)
+  if not rv then return 0 end
+
+  local item_count = reaper.CountTrackMediaItems(track)
+  local item_idx = -1
+  for j = 0, item_count - 1 do
+    if reaper.GetTrackMediaItem(track, j) == item then
+      item_idx = j + 1
+      break
+    end
+  end
+
+  if item_idx == -1 then return 0 end
+  local cur = 0
+  for block in chunk:gmatch("<ITEM.-\n>") do
+    cur = cur + 1
+    if cur == item_idx then
+      local source_section = block:match("<SOURCE SECTION(.-)\n>")
+      if source_section then
+        local startpos = source_section:match("STARTPOS ([%d%.]+)")
+        if startpos then
+          return tonumber(startpos)
+        else
+          return 0
+        end
+      else
+        return 0
+      end
+    end
+  end
+  return 0
+end
+
+function GetTakeSectionStartPos(take)
+  if not take then return 0 end
+  local item = reaper.GetMediaItemTake_Item(take)
+  return GetItemSectionStartPos(item)
+end
+
+function GetSectionInfo(item, src)
+  local start_offset, length = 0, 0
+  if reaper.GetMediaSourceType(src, "") == "SECTION" then
+    start_offset = GetItemSectionStartPos(item) or 0
+    length = reaper.GetMediaSourceLength(src) or 0
+  else
+    length = reaper.GetMediaSourceLength(src) or 0
+  end
+  return start_offset, length
+end
+
+local function GetRootSource(src)
+  while reaper.GetMediaSourceType(src, "") == "SECTION" do
+    local parent = reaper.GetMediaSourceParent(src)
+    if not parent then break end
+    src = parent
+  end
+  return src
+end
+
 -- Items 收集工程中当前使用的音频文件
 local function CollectAllUniqueSources_FromItems()
   local files, files_idx = {}, {}
@@ -476,6 +542,8 @@ function CollectMediaItemsDetail()
     local description, comment = "", ""
     if take then
       src = reaper.GetMediaItemTake_Source(take)
+      local take_offset = GetItemSectionStartPos(item) or 0
+      local take_length = reaper.GetMediaSourceLength(src) or 0
       path = reaper.GetMediaSourceFileName(src, "")
       -- 通过源文件路径获取type，保证类型准确
       if path and path ~= "" then
@@ -488,6 +556,9 @@ function CollectMediaItemsDetail()
         end
       else
         typ = ""
+      end
+      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE") then
+        goto continue
       end
       -- typ = reaper.GetMediaSourceType(src, "") -- 通过take获取type，无法保证类型准确。会混入SECTION 等非音频类型
       bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
@@ -527,7 +598,10 @@ function CollectMediaItemsDetail()
       track = track,
       track_name = track_name,
       position = pos,
+      section_offset = take_offset,
+      section_length = take_length,
     })
+    ::continue::
   end
   return files_idx
 end
@@ -537,7 +611,7 @@ function CollectAllUniqueSources_FromRPP()
   local files_idx = {}
   local path_set = {}
 
-  -- 先获取RPP所有引用路径（防止重复）
+  -- 获取RPP所有引用路径
   local tracks = {}
   local track_count = reaper.CountTracks(0)
   for i = 0, track_count-1 do
@@ -554,14 +628,14 @@ function CollectAllUniqueSources_FromRPP()
     end
   end
 
-  -- 遍历所有item，只有path属于RPP引用路径才收集
   local item_cnt = reaper.CountMediaItems(0)
   for i = 0, item_cnt - 1 do
     local item = reaper.GetMediaItem(0, i)
     local take = reaper.GetActiveTake(item)
     if take then
       local src = reaper.GetMediaItemTake_Source(take)
-      local path = reaper.GetMediaSourceFileName(src, "")
+      local root_src = GetRootSource(src) -- 统一获取音频源
+      local path = reaper.GetMediaSourceFileName(root_src, "")
       if path and path_set[path] then
         local typ, bits, samplerate, channels, length, size = "", "-", "-", "-", "-", 0
         local description, comment = "", ""
@@ -701,6 +775,38 @@ function MergeUsagesByPath(files_idx)
   return merged
 end
 
+function MergeUsagesBySection(files_idx)
+  local merged = {}
+  local map = {}
+  for _, info in ipairs(files_idx) do
+    -- 先得到原始path，再判断区段
+    local root_src = GetRootSource(info.source)
+    local path = reaper.GetMediaSourceFileName(root_src, "")
+    local start_offset, length = 0, 0
+    if reaper.GetMediaSourceType(info.source, "") == "SECTION" then
+      start_offset, length = GetSectionInfo(info.item, info.source)
+    else
+      length = reaper.GetMediaSourceLength(root_src) or 0
+      start_offset = 0
+    end
+    -- key 由 path, start_offset, length 唯一确定
+    local key = string.format("%s|%0.9f|%0.9f", path, start_offset, length)
+    if not map[key] then
+      local newinfo = {}
+      for k, v in pairs(info) do newinfo[k] = v end
+      newinfo.path = path
+      newinfo.section_offset = start_offset
+      newinfo.section_length = length
+      newinfo.usages = {info}
+      map[key] = newinfo
+      table.insert(merged, newinfo)
+    else
+      table.insert(map[key].usages, info)
+    end
+  end
+  return merged
+end
+
 function CollectFiles()
   local files, files_idx
   if collect_mode == COLLECT_MODE_ITEMS then
@@ -714,7 +820,7 @@ function CollectFiles()
     files_idx_cache = MergeUsagesByPath(files_idx)
   elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
     files_idx = CollectMediaItemsDetail()
-    files_idx_cache = MergeUsagesByPath(files_idx)
+    files_idx_cache = MergeUsagesBySection(files_idx)
   end
 
   previewed_files = {}
@@ -807,10 +913,21 @@ local function MarkFontDirty()
   need_refresh_font = true
 end
 
-function InsertSelectedAudioSection(path, sel_start, sel_end) -- 该函数需要在外部定义处理前后光标恢复
-  reaper.PreventUIRefresh(1) -- 防止UI刷新
+local function GetPhysicalPath(path_or_source)
+  if type(path_or_source) == "string" then
+    return path_or_source
+  elseif type(path_or_source) == "userdata" then
+    return reaper.GetMediaSourceFileName(path_or_source, "")
+  else
+    return nil
+  end
+end
+
+function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end)
   -- 保存Arrange视图状态 - 避免滚屏
+  reaper.PreventUIRefresh(1) -- 防止UI刷新
   reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+
   -- 检查自动交叉淡化状态
   local crossfade_state = reaper.GetToggleCommandStateEx(0, 40041) -- Options: Auto-crossfade media items when editing
   local need_restore = false
@@ -820,40 +937,49 @@ function InsertSelectedAudioSection(path, sel_start, sel_end) -- 该函数需要
   end
 
   local before = {}
-  for i=0, reaper.CountMediaItems(0) - 1 do
-    before[reaper.GetMediaItem(0, i)] = true
-  end
+  for i = 0, reaper.CountMediaItems(0) - 1 do before[reaper.GetMediaItem(0, i)] = true end
   reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
   reaper.InsertMedia(path, 0)
   local new_item = nil
-  for i=0, reaper.CountMediaItems(0)-1 do
+  for i = 0, reaper.CountMediaItems(0) - 1 do
     local item = reaper.GetMediaItem(0, i)
     if not before[item] then new_item = item break end
   end
   if not new_item then
     reaper.ShowMessageBox("Insert Media failed.", "Insert Error", 0)
-    -- 恢复交叉淡化
     if need_restore then reaper.Main_OnCommand(40041, 0) end
+    reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+    reaper.PreventUIRefresh(-1)
     return
   end
   local take = reaper.GetActiveTake(new_item)
   if not take then
     reaper.ShowMessageBox("Take error.", "Insert Error", 0)
+    if need_restore then reaper.Main_OnCommand(40041, 0) end
+    reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+    reaper.PreventUIRefresh(-1)
     return
   end
-  -- 设置偏移和长度
+
+  -- 偏移和长度
   local sel_len = math.abs(sel_end - sel_start)
   local src_offset = math.min(sel_start, sel_end)
+  if section_offset then src_offset = src_offset + section_offset end
+
   reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
   reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
   local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
-  -- 移动光标到插入item的结尾
-  -- reaper.SetEditCurPos(pos + sel_len, false, false)
+  -- 是否移动光标到结尾
+  if move_cursor_to_end then
+    reaper.SetEditCurPos(pos + sel_len, false, false)
+  end
+
   -- 恢复交叉淡化
   if need_restore then reaper.Main_OnCommand(40041, 0) end
   reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
+  return new_item
 end
 
 function InsertSelectedAudioSectionEnd(path, sel_start, sel_end)
@@ -1211,7 +1337,9 @@ local function PlayFromStart(info)
   StopPreview()
   Wave.play_cursor = 0
   local source
-  if info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
+  if collect_mode == COLLECT_MODE_RPP and info and info.path then -- RPP模式下强制用源音频路径
+    source = reaper.PCM_Source_CreateFromFile(info.path)
+  elseif info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
     source = reaper.GetMediaItemTake_Source(info.take)
   elseif info and info.path then
     source = reaper.PCM_Source_CreateFromFile(info.path)
@@ -1248,7 +1376,9 @@ local function PlayFromCursor(info)
   end
   StopPreview()
   local source
-  if info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
+  if collect_mode == COLLECT_MODE_RPP and info and info.path then -- RPP模式下强制用源音频路径
+    source = reaper.PCM_Source_CreateFromFile(info.path)
+  elseif info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
     source = reaper.GetMediaItemTake_Source(info.take)
   elseif info and info.path then
     source = reaper.PCM_Source_CreateFromFile(info.path)
@@ -1454,7 +1584,7 @@ function loop()
     reaper.ImGui_Text(ctx, "Source:")
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_SetNextItemWidth(ctx, -1)
-    local collect_mode_options = { "Audio Assets", "Referenced", "Project Directory", "Media Items" }
+    local collect_mode_options = { "Audio Assets", "Source Media", "Project Directory", "Media Items" }
     if reaper.ImGui_BeginCombo(ctx, "##collect_mode_combo", collect_mode_options[collect_mode + 1]) then
       for i = 0, #collect_mode_options - 1 do
         local is_selected = (i == collect_mode)
@@ -2060,7 +2190,12 @@ function loop()
             -- 拖动音频到REAPER
             if reaper.ImGui_BeginDragDropSource(ctx) then
               reaper.ImGui_Text(ctx, "Drag to REAPER to insert")
-              dragging_audio = info.path
+              dragging_audio = {
+                path = info and info.path,
+                start_time = 0,
+                end_time = info and info.section_length or 0,
+                section_offset = info and info.section_offset or 0
+              }
               reaper.ImGui_EndDragDropSource(ctx)
             end
 
@@ -2297,7 +2432,19 @@ function loop()
               local tr = reaper.BR_GetMouseCursorContext_Track()
               if tr then reaper.SetOnlyTrackSelected(tr) end
               reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-              reaper.InsertMedia(dragging_audio, 0)
+              -- 判断是全长源音频还是item区段
+              if dragging_audio.start_time and dragging_audio.end_time and math.abs(dragging_audio.end_time - dragging_audio.start_time) > 0.01 then
+                InsertSelectedAudioSection(
+                  dragging_audio.path,
+                  dragging_audio.start_time,
+                  dragging_audio.end_time,
+                  dragging_audio.section_offset or 0,
+                  false
+                )
+              else
+                -- 只插入全长源音频
+                reaper.InsertMedia(dragging_audio.path, 0)
+              end
               reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
               reaper.PreventUIRefresh(-1)
@@ -2539,7 +2686,7 @@ function loop()
         if collect_mode ~= COLLECT_MODE_ITEMS then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_ITEMS
       end
-      if reaper.ImGui_RadioButton(ctx, "Referenced", collect_mode == COLLECT_MODE_RPP) then
+      if reaper.ImGui_RadioButton(ctx, "Source Media", collect_mode == COLLECT_MODE_RPP) then
         if collect_mode ~= COLLECT_MODE_RPP then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_RPP
       end
@@ -2778,8 +2925,10 @@ function loop()
     -- 电平表通道选项
     -- reaper.ImGui_Separator(ctx)
     reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_Text(ctx, "Peaks:")
+    reaper.ImGui_SameLine(ctx)
     reaper.ImGui_SetNextItemWidth(ctx, 100)
-    local rv5, new_peaks = reaper.ImGui_InputInt(ctx, 'Peaks', peak_chans, 1, 1)
+    local rv5, new_peaks = reaper.ImGui_InputInt(ctx, '##Peaks', peak_chans, 1, 1)
     if rv5 then
       peak_chans = math.max(2, math.min(128, new_peaks or 2))
     end
@@ -2808,7 +2957,7 @@ function loop()
         do_insert = true
       end
       if do_insert and cur_info and cur_info.path then
-        InsertSelectedAudioSectionEnd(cur_info.path, select_start_time * play_rate, select_end_time * play_rate)
+        InsertSelectedAudioSection(cur_info.path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true)
       end
       if reaper.ImGui_IsItemHovered(ctx) then
           reaper.ImGui_BeginTooltip(ctx)
@@ -2871,29 +3020,69 @@ function loop()
       if cur_info then
         -- 限制只有在选中表格项或双击预览播放时加载波形，但效果不佳。目前默认只要选中就会加载波形。
         -- if (auto_play_selected and last_selected_row ~= selected_row) or (doubleclick_action == DOUBLECLICK_PREVIEW and reaper.ImGui_IsMouseDoubleClicked(ctx, 0)) then
-          local cur_key = cur_info.take or cur_info.path
-          if (not peaks)
-            or (last_wave_info ~= cur_key)
-            or (last_pixel_cnt ~= pw_region_w)
-            or (last_view_len ~= view_len)
-            or (last_scroll ~= Wave.scroll)
-          then
+        -- 获取完整源音频及区段参数
+        local section_offset = cur_info.section_offset or 0
+        local section_length = cur_info.section_length or 0
 
-          local cache = LoadWaveformCache(cur_info.path)
+        -- 用完整源音频路径
+        local root_src = cur_info.source
+        if reaper.GetMediaSourceType(root_src, "") == "SECTION" then
+          if GetRootSource then
+            root_src = GetRootSource(cur_info.source)
+          end
+        end
+        local root_path = reaper.GetMediaSourceFileName(root_src, "")
+        local cur_key = (root_path or cur_info.path) .. "|" .. tostring(section_offset) .. "|" .. tostring(section_length)
+        if (not peaks)
+          or (last_wave_info ~= cur_key)
+          or (last_pixel_cnt ~= pw_region_w)
+          or (last_view_len ~= view_len)
+          or (last_scroll ~= Wave.scroll)
+        then
+          local cache = LoadWaveformCache(root_path)
           if not cache then
-            local peaks_raw, pixel_cnt_raw, src_len_raw, channel_count_raw = GetPeaksForInfo(cur_info, wf_step, CACHE_PIXEL_WIDTH, 0, nil)
-            SaveWaveformCache(cur_info.path, {
+            local peaks_raw, pixel_cnt_raw, src_len_raw, channel_count_raw = GetPeaksForInfo(
+              { path = root_path }, wf_step, CACHE_PIXEL_WIDTH, 0, nil)
+            SaveWaveformCache(root_path, {
               peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw
             })
             cache = {peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw}
           end
-            peaks, pixel_cnt, _, channel_count = RemapWaveformToWindow(cache, pw_region_w, window_start, window_end)
-            Wave.src_len = cache.src_len
-            last_wave_info = cur_key
-            last_pixel_cnt = pw_region_w
-            last_view_len = view_len
-            last_scroll = Wave.scroll
+
+          if collect_mode == COLLECT_MODE_ALL_ITEMS and section_length > 0 then
+            -- 区段音频
+            local zoom = Wave.zoom or 1
+            local section_len = section_length
+            local visible_len = math.max(section_len / zoom, 0.01)
+            if visible_len > section_len then visible_len = section_len end
+
+            local max_scroll = math.max(0, section_len - visible_len)
+            local scroll = math.max(0, math.min(Wave.scroll or 0, max_scroll))
+
+            window_start = section_offset + scroll
+            window_end = window_start + visible_len
+            Wave.src_len = section_len -- 始终用区段长度
+          else
+            -- 全音频
+            local audio_len = cache.src_len
+            local zoom = Wave.zoom or 1
+            local visible_len = math.max(audio_len / zoom, 0.01)
+            if visible_len > audio_len then visible_len = audio_len end
+
+            local max_scroll = math.max(0, audio_len - visible_len)
+            local scroll = math.max(0, math.min(Wave.scroll or 0, max_scroll))
+
+            window_start = scroll
+            window_end = window_start + visible_len
+            Wave.src_len = audio_len -- 始终用源音频长度
           end
+
+          peaks, pixel_cnt, _, channel_count = RemapWaveformToWindow(cache, pw_region_w, window_start, window_end)
+          last_wave_info = cur_key
+          last_pixel_cnt = pw_region_w
+          last_view_len = view_len
+          last_scroll = Wave.scroll
+        end
         -- end
       end
 
@@ -3241,16 +3430,28 @@ function loop()
 
       -- 选区拖拽到REAPER
       if has_selection and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
-        -- 拖拽起点，按下右键时才允许拖动
         if reaper.ImGui_BeginDragDropSource(ctx) then
           reaper.ImGui_Text(ctx, "Drag selection to REAPER to insert")
-          dragging_selection = { -- 记录拖拽的音频及区间
-            path = cur_info and cur_info.path,
-            start_time = math.min(select_start_time, select_end_time) * play_rate,
-            end_time = math.max(select_start_time, select_end_time) * play_rate
+          -- 判断区段还是源音频
+          local drag_path = cur_info.path
+          local start_time = math.min(select_start_time, select_end_time) * play_rate
+          local end_time = math.max(select_start_time, select_end_time) * play_rate
+          -- 如果是SECTION，直接用区段路径和相对区段起点时间
+          if reaper.GetMediaSourceType(cur_info.source, "") == "SECTION" then
+            drag_path = cur_info.source
+            start_time = start_time
+            end_time = end_time
+          end
+
+          dragging_selection = {
+            path = drag_path,
+            start_time = start_time,
+            end_time = end_time,
+            section_offset = cur_info.section_offset or 0
           }
           reaper.ImGui_EndDragDropSource(ctx)
         end
+
         -- 拖拽释放检测
         if dragging_selection then
           reaper.PreventUIRefresh(1)
@@ -3262,7 +3463,8 @@ function loop()
               reaper.SetEditCurPos(insert_time, false, false)
               local tr = reaper.BR_GetMouseCursorContext_Track()
               if tr then reaper.SetOnlyTrackSelected(tr) end
-              InsertSelectedAudioSection(dragging_selection.path, dragging_selection.start_time, dragging_selection.end_time)
+              path = GetPhysicalPath(cur_info and cur_info.path)
+              InsertSelectedAudioSection(path, dragging_selection.start_time, dragging_selection.end_time, dragging_selection.section_offset, false)
               reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
             end
             dragging_selection = nil -- 不管插入与否都要清除
