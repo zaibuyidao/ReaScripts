@@ -1,9 +1,10 @@
 -- @description Project Audio File Explorer
--- @version 1.0.33
+-- @version 1.0.34
 -- @author zaibuyidao
 -- @changelog
 --   New: Added support for merging and grouping audio resources by "file path + section offset and length".
 --   Optimization: The original path-based merging method no longer ignores SECTION segments and can handle both entire files and multiple section references simultaneously.
+--   New: Play button now starts playback from the play cursor if set; otherwise, from the beginning.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -1120,6 +1121,7 @@ end
 
 -- 波形峰值采样
 function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
+  reaper.PreventUIRefresh(1) -- 防止UI刷新
   local src = reaper.PCM_Source_CreateFromFile(filepath)
   if not src then return end
   local srate = reaper.GetMediaSourceSampleRate(src)
@@ -1196,10 +1198,13 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
   reaper.DestroyAudioAccessor(accessor)
   reaper.DeleteTrackMediaItem(track, item)
   reaper.DeleteTrack(track)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
   return peaks, pixel_cnt, src_len, channels
 end
 
 function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
+  reaper.PreventUIRefresh(1) -- 防止UI刷新
   local src = reaper.GetMediaItemTake_Source(take)
   local srate = reaper.GetMediaSourceSampleRate(src)
   if not srate or srate == 0 then srate = 44100 end
@@ -1269,7 +1274,8 @@ function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
   reaper.DestroyAudioAccessor(accessor)
   reaper.DeleteTrackMediaItem(track, item)
   reaper.DeleteTrack(track)
-
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
   return peaks, pixel_cnt, src_len, channel_count
 end
 
@@ -2482,8 +2488,13 @@ function loop()
           wf_play_start_cursor = Wave.play_cursor or 0
         end
       elseif selected_row > 0 and files_idx_cache[selected_row] then
-        -- 非暂停时，从头开始（或当前位置）
-        PlayFromStart(files_idx_cache[selected_row])
+        -- 非暂停时，从头开始或当前位置
+        -- if Wave and Wave.play_cursor and Wave.play_cursor > 0 then
+        --   PlayFromCursor(files_idx_cache[selected_row])
+        -- else
+        --   PlayFromStart(files_idx_cache[selected_row])
+        -- end
+        PlayFromCursor(files_idx_cache[selected_row])
         is_paused = false
         paused_position = 0
       end
