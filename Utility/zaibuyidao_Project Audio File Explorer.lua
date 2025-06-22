@@ -1,5 +1,5 @@
 -- @description Project Audio File Explorer
--- @version 1.0.34
+-- @version 1.0.35
 -- @author zaibuyidao
 -- @changelog
 --   New: Added support for merging and grouping audio resources by "file path + section offset and length".
@@ -1590,7 +1590,7 @@ function loop()
     reaper.ImGui_Text(ctx, "Source:")
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_SetNextItemWidth(ctx, -1)
-    local collect_mode_options = { "Audio Assets", "Source Media", "Project Directory", "Media Items" }
+    local collect_mode_options = { "Audio Assets", "Referenced", "Project Directory", "Media Items" }
     if reaper.ImGui_BeginCombo(ctx, "##collect_mode_combo", collect_mode_options[collect_mode + 1]) then
       for i = 0, #collect_mode_options - 1 do
         local is_selected = (i == collect_mode)
@@ -1889,7 +1889,7 @@ function loop()
             if IsPreviewed(info.path) then
               local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
               local cx, cy = reaper.ImGui_GetCursorScreenPos(ctx)
-              local radius = 2
+              local radius = 1.5
               local color = 0xFFF0F0F0 -- 0x00FFFFFF -- 0x22ff22ff
               reaper.ImGui_DrawList_AddCircleFilled(draw_list, cx + radius + 10, cy + radius + 5, radius, color)
               reaper.ImGui_Dummy(ctx, radius*2+4, radius*2+4)
@@ -2697,7 +2697,7 @@ function loop()
         if collect_mode ~= COLLECT_MODE_ITEMS then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_ITEMS
       end
-      if reaper.ImGui_RadioButton(ctx, "Source Media", collect_mode == COLLECT_MODE_RPP) then
+      if reaper.ImGui_RadioButton(ctx, "Referenced", collect_mode == COLLECT_MODE_RPP) then
         if collect_mode ~= COLLECT_MODE_RPP then changed_collect_mode = true end
         collect_mode = COLLECT_MODE_RPP
       end
