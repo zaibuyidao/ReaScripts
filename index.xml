@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8865114bc0f2849e5c4cda9209ee3c4c65b94bdb">
+<index version="1" name="zaibuyidao Scripts" commit="f19034e6ff3aacd24b00a7d10c823c77a43d6dc4">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8639,6 +8639,12 @@ Optimization: The original path-based merging method no longer ignores SECTION s
 Optimization: The original path-based merging method no longer ignores SECTION segments and can handle both entire files and multiple section references simultaneously.
 New: Play button now starts playback from the play cursor if set; otherwise, from the beginning.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8865114bc0f2849e5c4cda9209ee3c4c65b94bdb/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.0.35" author="zaibuyidao" time="2025-06-22T10:37:33Z">
+        <changelog><![CDATA[New: Added support for merging and grouping audio resources by "file path + section offset and length".
+Optimization: The original path-based merging method no longer ignores SECTION segments and can handle both entire files and multiple section references simultaneously.
+New: Play button now starts playback from the play cursor if set; otherwise, from the beginning.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f19034e6ff3aacd24b00a7d10c823c77a43d6dc4/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
