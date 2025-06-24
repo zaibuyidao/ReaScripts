@@ -1,10 +1,12 @@
 -- @description Project Audio Explorer
--- @version 1.5
+-- @version 1.5.1
 -- @author zaibuyidao
 -- @changelog
---   Added mode switching on the left panel for quickly toggling different audio resource browsing modes.
---   Added "This Computer" entry, supporting tree view access to all local drives and browsing audio resources from any location.
---   Added "Folder Shortcuts" feature—users can bookmark any local folder path for quick access to frequently used audio directories.
+--   New: Added "Custom Folders" feature—users can now create and manage custom folders to organize and classify audio assets freely.
+--   New: Audio selection, waveform preview, and drag-insertion remain available after switching folders or modes. Selection and insertion now work even if the file table is refreshed or cleared.
+--   Fix: All PCM_source-related errors (e.g., GetMediaSourceType) in custom folder mode are resolved; drag-in and section operations now support both standard and custom files robustly.
+--   Fix: Improved playback state management—audio preview and selection are now decoupled, ensuring reliable UI feedback and accurate Now playing display at all times.
+--   Change: Switching between any folders or modes now clears the file table selection for consistent user experience across all modes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -76,36 +78,39 @@ reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 
 -- 状态变量
-local CACHE_PIXEL_WIDTH    = 2048
-local font_size            = 14    -- 默认字体大小
-local need_refresh_font    = false
-local FONT_SIZE_MIN        = 10
-local FONT_SIZE_MAX        = 20
-local selected_row         = -1
-local playing_preview      = nil
-local playing_path         = nil
-local playing_source       = nil
-local loop_enabled         = false -- 是否自动循环
-local preview_play_len     = 0     -- 当前预览音频长度
-local peak_chans           = 6     -- 默认显示6路电平
-local seek_pos             = nil   -- 拖动时记住目标位置
-local play_rate            = 1     -- 默认速率1.0
-local pitch                = 0     -- 音高调节（半音，正负）
-local preserve_pitch       = true  -- 变速时是否保持音高
-local is_paused            = false -- 是否处于暂停状态
-local paused_position      = 0     -- 暂停时的进度
-local base_height          = reaper.ImGui_GetFrameHeight(ctx) * 1.5 -- 底部进度条和电平条一致的高度控制
-local volume               = 1     -- 线性音量默认值（1=0dB，0.5=-6dB，2=+6dB）
-local max_db               = 12    -- 音量最大值
-local min_db               = -150  -- 音量最小值
-local pitch_knob_min       = -6    -- 音高旋钮最低
-local pitch_knob_max       = 6     -- 音高旋钮最高
-local rate_min             = 0.25  -- 速率旋钮最低
-local rate_max             = 4.0   -- 速率旋钮最高
-local last_audio_idx       = nil
-local auto_scroll_enabled  = false -- 自动滚屏
-local auto_play_next       = false -- 连续播放勾选
+local CACHE_PIXEL_WIDTH      = 2048
+local font_size              = 14    -- 默认字体大小
+local need_refresh_font      = false
+local FONT_SIZE_MIN          = 10
+local FONT_SIZE_MAX          = 20
+local selected_row           = -1
+local playing_preview        = nil
+local playing_path           = nil
+local playing_source         = nil
+local loop_enabled           = false -- 是否自动循环
+local preview_play_len       = 0     -- 当前预览音频长度
+local peak_chans             = 6     -- 默认显示6路电平
+local seek_pos               = nil   -- 拖动时记住目标位置
+local play_rate              = 1     -- 默认速率1.0
+local pitch                  = 0     -- 音高调节（半音，正负）
+local preserve_pitch         = true  -- 变速时是否保持音高
+local is_paused              = false -- 是否处于暂停状态
+local paused_position        = 0     -- 暂停时的进度
+local base_height            = reaper.ImGui_GetFrameHeight(ctx) * 1.5 -- 底部进度条和电平条一致的高度控制
+local volume                 = 1     -- 线性音量默认值（1=0dB，0.5=-6dB，2=+6dB）
+local max_db                 = 12    -- 音量最大值
+local min_db                 = -150  -- 音量最小值
+local pitch_knob_min         = -6    -- 音高旋钮最低
+local pitch_knob_max         = 6     -- 音高旋钮最高
+local rate_min               = 0.25  -- 速率旋钮最低
+local rate_max               = 4.0   -- 速率旋钮最高
+local last_audio_idx         = nil
+local auto_scroll_enabled    = false -- 自动滚屏
+local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
+local last_selected_info     = last_selected_info or nil -- 上次选中的音频信息
+local last_playing_info      = last_playing_info or nil  -- 上次播放的音频信息
+local files_idx_cache        = nil   -- 文件缓存
 -- 表格排序常量
 local COL_FILENAME         = 2
 local COL_SIZE             = 3
@@ -118,7 +123,6 @@ local COL_LENGTH           = 9
 local COL_CHANNELS         = 10
 local COL_SAMPLERATE       = 11
 local COL_BITS             = 12
-local files_idx_cache      = nil   -- 文件缓存
 -- ExtState持久化设置
 local EXT_SECTION          = "ProjectAudioFileExplorer"
 local EXT_KEY_PEAKS        = "PeakChans"
@@ -213,6 +217,7 @@ local COLLECT_MODE_DIR       = 2
 local COLLECT_MODE_ALL_ITEMS = 3
 local COLLECT_MODE_TREE      = 4
 local COLLECT_MODE_SHORTCUT  = 5
+local COLLECT_MODE_CUSTOMFOLDER = 1000 -- 自定义文件夹模式
 
 -- 设置相关
 local auto_play_selected  = true
@@ -224,7 +229,7 @@ local bg_alpha            = 1.0              -- 默认背景不透明
 
 -- 保存设置
 local function SaveSettings()
-  reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
+  -- reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
   reaper.SetExtState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
   reaper.SetExtState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
   reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
@@ -242,8 +247,8 @@ local function SaveSettings()
 end
 
 -- 恢复设置
-local last_collect_mode = tonumber(reaper.GetExtState(EXT_SECTION, "collect_mode"))
-if last_collect_mode then collect_mode = last_collect_mode end
+-- local last_collect_mode = tonumber(reaper.GetExtState(EXT_SECTION, "collect_mode"))
+-- if last_collect_mode then collect_mode = last_collect_mode end
 
 local last_doubleclick_action = tonumber(reaper.GetExtState(EXT_SECTION, "doubleclick_action"))
 if last_doubleclick_action then doubleclick_action = last_doubleclick_action end
@@ -530,7 +535,7 @@ local function CollectAllUniqueSources_FromItems()
       local source = reaper.GetMediaItemTake_Source(take)
       local path = reaper.GetMediaSourceFileName(source, "")
       local typ = reaper.GetMediaSourceType(source, "")
-      if path and path ~= "" and not files[path] and (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE") then
+      if path and path ~= "" and not files[path] and (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
         -- 获取文件大小并格式化
         local size = 0
         local size_str = "0 B"
@@ -594,7 +599,7 @@ function CollectMediaItemsDetail()
       else
         typ = ""
       end
-      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE") then
+      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
         goto continue
       end
       -- typ = reaper.GetMediaSourceType(src, "") -- 通过take获取type，无法保证类型准确。会混入SECTION 等非音频类型
@@ -732,7 +737,7 @@ function CollectAllUniqueSources_FromProjectDirectory()
   local proj_path = reaper.GetProjectPath()
   if not proj_path or proj_path == "" then return files, files_idx end
   -- 支持的扩展名
-  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true}
+  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true}
   local i = 0
   while true do
     local file = reaper.EnumerateFiles(proj_path, i)
@@ -782,6 +787,73 @@ function CollectAllUniqueSources_FromProjectDirectory()
   end
 
   return files, files_idx
+end
+
+function CollectFiles_FromCustomFolder(paths)
+  local files_idx = {}
+  for _, path in ipairs(paths or {}) do
+    if type(path) == "string" and path ~= "" then
+      local typ, size, bits, samplerate, channels, length = "", 0, "-", "-", "-", "-"
+      local genre, description, comment, orig_date = "", "", "", ""
+
+      -- 通过PCM_Source采集属性
+      if reaper.file_exists and reaper.file_exists(path) then
+        local src = reaper.PCM_Source_CreateFromFile(path)
+        if src then
+          typ = reaper.GetMediaSourceType(src, "")
+          bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
+          samplerate = reaper.GetMediaSourceSampleRate(src)
+          channels = reaper.GetMediaSourceNumChannels(src)
+          length = reaper.GetMediaSourceLength(src)
+          -- 直接赋值到外部变量
+          local _, _genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
+          local _, _comment = reaper.GetMediaFileMetadata(src, "XMP:dm/logComment")
+          local _, _description = reaper.GetMediaFileMetadata(src, "BWF:Description")
+          local _, _orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
+          genre = _genre or ""
+          comment = _comment or ""
+          description = _description or ""
+          orig_date = _orig_date or ""
+          reaper.PCM_Source_Destroy(src)
+        end
+      end
+
+      -- 音频格式
+      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
+        goto continue
+      end
+
+      -- 文件大小
+      local f = io.open(path, "rb")
+      if f then
+        f:seek("end")
+        size = f:seek()
+        f:close()
+      end
+
+      local filename = path:match("[^/\\]+$") or path
+
+      table.insert(files_idx, {
+        path = path,
+        filename = filename,
+        type = typ,
+        samplerate = samplerate,
+        channels = channels,
+        length = length,
+        bits = bits,
+        size = size,
+        genre = genre,
+        description = description,
+        comment = comment,
+        bwf_orig_date = orig_date,
+        position = 0,
+        section_offset = 0,
+        section_length = length,
+      })
+    end
+    ::continue::
+  end
+  return files_idx
 end
 
 -- 按文件名排序
@@ -865,6 +937,11 @@ function CollectFiles()
   elseif collect_mode == COLLECT_MODE_SHORTCUT then
     local dir = tree_state.cur_path or ""
     files_idx_cache = GetAudioFilesFromDirCached(dir)
+    selected_row = nil
+  elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
+    local folder = tree_state.cur_custom_folder or ""
+    local paths = (folder ~= "" and custom_folders_content[folder]) or {}
+    files_idx_cache = CollectFiles_FromCustomFolder(paths)
     selected_row = nil
   else
     files_idx_cache = {} -- collect_mode全部清空
@@ -1029,56 +1106,6 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
   return new_item
 end
 
-function InsertSelectedAudioSectionEnd(path, sel_start, sel_end)
-  -- 保存Arrange视图状态 - 避免滚屏
-  reaper.PreventUIRefresh(1) -- 防止UI刷新
-  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
-  -- 检查自动交叉淡化状态
-  local crossfade_state = reaper.GetToggleCommandStateEx(0, 40041) -- Options: Auto-crossfade media items when editing
-  local need_restore = false
-  if crossfade_state == 1 then
-    reaper.Main_OnCommand(40041, 0) -- 当前激活，先关闭
-    need_restore = true
-  end
-
-  local before = {}
-  for i=0, reaper.CountMediaItems(0) - 1 do
-    before[reaper.GetMediaItem(0, i)] = true
-  end
-  reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-  reaper.InsertMedia(path, 0)
-  local new_item = nil
-  for i=0, reaper.CountMediaItems(0)-1 do
-    local item = reaper.GetMediaItem(0, i)
-    if not before[item] then new_item = item break end
-  end
-  if not new_item then
-    reaper.ShowMessageBox("Insert Media failed.", "Insert Error", 0)
-    -- 恢复交叉淡化
-    if need_restore then reaper.Main_OnCommand(40041, 0) end
-    return
-  end
-  local take = reaper.GetActiveTake(new_item)
-  if not take then
-    reaper.ShowMessageBox("Take error.", "Insert Error", 0)
-    return
-  end
-  -- 设置偏移和长度
-  local sel_len = math.abs(sel_end - sel_start)
-  local src_offset = math.min(sel_start, sel_end)
-  reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
-  reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
-  local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
-  -- 移动光标到插入item的结尾
-  reaper.SetEditCurPos(pos + sel_len, false, false)
-
-  -- 恢复交叉淡化
-  if need_restore then reaper.Main_OnCommand(40041, 0) end
-  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
-  reaper.PreventUIRefresh(-1)
-  reaper.UpdateArrange()
-end
-
 function HelpMarker(desc)
   reaper.ImGui_TextDisabled(ctx, '(?)')
   if reaper.ImGui_BeginItemTooltip(ctx) then
@@ -1102,14 +1129,30 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   local ANGLE_MAX =  3 * math.pi / 4
   local t = (value - v_min) / (v_max - v_min)
   local angle = ANGLE_MIN + (ANGLE_MAX - ANGLE_MIN) * t - math.pi/2
-
+  -- 交互
+  reaper.ImGui_SetCursorScreenPos(ctx, center_x - radius, center_y - radius)
+  reaper.ImGui_InvisibleButton(ctx, label .. "_knob", size, size)
+  local active = reaper.ImGui_IsItemActive(ctx)
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  -- 颜色
+  local col_idle = 0x1D2F49FF -- 未经过
+  local col_hovered = 0x23456DFF -- 悬停
+  local col_active = 0x316AADFF -- 拖动
+  local col_fill
+  if active then
+    col_fill = col_active
+  elseif hovered then
+    col_fill = col_hovered
+  else
+    col_fill = col_idle
+  end
   -- 绘制
   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-  reaper.ImGui_DrawList_AddCircleFilled(draw_list, center_x, center_y, radius, 0x294773FF)
+  reaper.ImGui_DrawList_AddCircleFilled(draw_list, center_x, center_y, radius, col_fill)
   local hand_x = center_x + math.cos(angle) * (radius * 0.87)
   local hand_y = center_y + math.sin(angle) * (radius * 0.87)
-  reaper.ImGui_DrawList_AddLine(draw_list, center_x, center_y, hand_x, hand_y, 0x3D85E0FF, 1.5)
-  reaper.ImGui_DrawList_AddCircle(draw_list, center_x, center_y, radius, 0x294773FF, 32, 2)
+  reaper.ImGui_DrawList_AddLine(draw_list, center_x, center_y, hand_x, hand_y, 0x3D85E0FF, 2)
+  reaper.ImGui_DrawList_AddCircle(draw_list, center_x, center_y, radius, 0x23456DFF, 32, 1)
 
   local show_label = label and (label ~= "") and (not label:match("^##"))
   if show_label then
@@ -1411,6 +1454,9 @@ local function PlayFromStart(info)
       wf_play_start_cursor = 0
     end
     MarkPreviewed(info.path)
+    -- 保存最后播放的信息
+    last_playing_info = {}
+    for k, v in pairs(info) do last_playing_info[k] = v end
     -- 顺序播放新增
     preview_play_len = reaper.GetMediaSourceLength(source) or 0
     playing_path = info.path or ""
@@ -1450,6 +1496,9 @@ local function PlayFromCursor(info)
       wf_play_start_cursor = Wave.play_cursor or 0
     end
     MarkPreviewed(info.path)
+    -- 保存最后播放的信息
+    last_playing_info = {}
+    for k, v in pairs(info) do last_playing_info[k] = v end
   end
 end
 
@@ -1599,7 +1648,7 @@ splitter_drag_offset = splitter_drag_offset or 0
 
 local collect_mode_labels = {
   {label = "Audio Assets", value = COLLECT_MODE_ITEMS},
-  {label = "Referenced", value = COLLECT_MODE_RPP},
+  {label = "Source Media", value = COLLECT_MODE_RPP},
   {label = "Project Directory", value = COLLECT_MODE_DIR},
   {label = "Media Items", value = COLLECT_MODE_ALL_ITEMS},
 }
@@ -1620,7 +1669,7 @@ end
 -- 获取指定目录下所有有效音频文件
 function CollectAllUniqueSources_FromDirectory(dir_path)
   local files, files_idx = {}, {}
-  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true}
+  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true}
   if not dir_path or dir_path == "" then return files, files_idx end
   local i = 0
   while true do
@@ -1807,7 +1856,7 @@ local function draw_shortcut_tree(sc, base_path)
     end
     if is_root_shortcut then
       if reaper.ImGui_MenuItem(ctx, "Rename") then
-        local ret, newname = reaper.GetUserInputs("Rename Shortcut", 1, "New name:", sc.name)
+        local ret, newname = reaper.GetUserInputs("Rename Shortcut", 1, "New Name:,extrawidth=200", sc.name)
         if ret and newname and newname ~= "" then
           sc.name = newname
           SaveFolderShortcuts()
@@ -1853,6 +1902,110 @@ local function draw_shortcut_tree(sc, base_path)
     end
   end
 end
+
+--------------------------------------------- 自定义文件夹节点 ---------------------------------------------
+
+local EXT_KEY_CUSTOM_FOLDERS = "CustomFolders"
+local EXT_KEY_CUSTOM_CONTENT = "CustomFoldersContent"
+custom_folders = custom_folders or {} -- { "monster", "bgm", ... }
+custom_folders_content = custom_folders_content or {} -- { ["monster"] = { path1, path2 }, ... }
+
+function SaveCustomFolders()
+  local segments = {}
+  for _, folder in ipairs(custom_folders) do
+    local exist = {}
+    local paths = {}
+    for _, v in ipairs(custom_folders_content[folder] or {}) do
+      if type(v) == "string" and v ~= "" and not exist[v] then
+        table.insert(paths, v)
+        exist[v] = true
+      end
+    end
+    if #paths > 0 then
+      table.insert(segments, folder .. "|" .. table.concat(paths, ";"))
+    end
+  end
+  local plain = table.concat(segments, "||")
+  local encoded = reaper.NF_Base64_Encode(plain, true)
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_CUSTOM_CONTENT, encoded, true)
+end
+
+function split_by_delimiter(str, delimiter)
+  local result = {}
+  local from = 1
+  local delim_from, delim_to = string.find(str, delimiter, from, true)
+  while delim_from do
+    table.insert(result, string.sub(str, from, delim_from - 1))
+    from = delim_to + 1
+    delim_from, delim_to = string.find(str, delimiter, from, true)
+  end
+  if from <= #str then
+    table.insert(result, string.sub(str, from))
+  end
+  return result
+end
+
+function LoadCustomFolders()
+  local content_str = reaper.GetExtState(EXT_SECTION, EXT_KEY_CUSTOM_CONTENT)
+  local decoded = ""
+  if content_str and content_str ~= "" then
+    local ret, dec = reaper.NF_Base64_Decode(content_str)
+    if ret and dec and dec ~= "" then
+      decoded = dec
+    end
+  end
+  local contents = {}
+  local folders = {}
+  if decoded ~= "" then
+    local segments = split_by_delimiter(decoded, "||")
+    for _, segment in ipairs(segments) do
+      local folder, items = segment:match("^([^|]+)|(.+)$")
+      if folder then
+        table.insert(folders, folder)
+        local exist = {}
+        local paths = {}
+        for path in items:gmatch("[^;]+") do
+          if path ~= "" and not exist[path] then
+            table.insert(paths, path)
+            exist[path] = true
+          end
+        end
+        contents[folder] = paths
+      end
+    end
+  end
+  custom_folders = folders
+  custom_folders_content = contents
+end
+
+-- 清除自定义文件夹内容
+function clear_custom_folders_content_key()
+  local extstate_ini = reaper.get_ini_file():gsub("reaper%.ini$", "reaper-extstate.ini")
+  local file = io.open(extstate_ini, "r")
+  if not file then
+    reaper.MB("无法打开 reaper-extstate.ini 文件", "错误", 0)
+    return
+  end
+  local lines = {}
+  for line in file:lines() do
+    if not line:match("^CustomFoldersContent=") then
+      table.insert(lines, line)
+    end
+  end
+  file:close()
+  local filew = io.open(extstate_ini, "w+")
+  if not filew then
+    reaper.MB("无法写入 reaper-extstate.ini 文件", "错误", 0)
+    return
+  end
+  for _, l in ipairs(lines) do
+    filew:write(l, "\n")
+  end
+  filew:close()
+end
+
+-- 启动时加载自定义文件夹
+LoadCustomFolders()
 
 function loop()
   -- 首次使用时收集音频文件
@@ -1937,6 +2090,8 @@ function loop()
 
     -- 左侧树状目录(此处需要使用 if 才有效，否则报错)
     if reaper.ImGui_BeginChild(ctx, "##left", left_w, child_h, 0, reaper.ImGui_WindowFlags_HorizontalScrollbar()) then
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 文本颜色
+      
       -- 渲染单选列表
       local sel_mode = reaper.ImGui_TreeNode(ctx, "Audio Collection", reaper.ImGui_TreeNodeFlags_DefaultOpen())
       if sel_mode then
@@ -1977,7 +2132,7 @@ function loop()
           draw_shortcut_tree(folder_shortcuts[i])
         end
         -- 添加新快捷方式按钮
-        if reaper.ImGui_Button(ctx, "Create shortcut##add_folder_shortcut") then
+        if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut") then
           local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
           if rv == 1 and folder and folder ~= "" then
             local exists = false
@@ -1994,6 +2149,87 @@ function loop()
         reaper.ImGui_TreePop(ctx)
       end
 
+      -- 自定义文件夹节点
+      local custom_folder_open = reaper.ImGui_TreeNode(ctx, "Custom Folders", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      if custom_folder_open then
+        for i, folder in ipairs(custom_folders) do
+          local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
+          if reaper.ImGui_Selectable(ctx, folder, is_selected) then
+            collect_mode = COLLECT_MODE_CUSTOMFOLDER
+            tree_state.cur_custom_folder = folder
+            files_idx_cache = nil
+            CollectFiles()
+          end
+          -- 右键菜单
+          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+            reaper.ImGui_OpenPopup(ctx, "CustomFolderMenu_" .. folder)
+          end
+          if reaper.ImGui_BeginPopup(ctx, "CustomFolderMenu_" .. folder) then
+            if reaper.ImGui_MenuItem(ctx, "Rename") then
+              local ret, newname = reaper.GetUserInputs("Rename Folder", 1, "New Name:,extrawidth=200", folder)
+              if ret and newname and newname ~= "" then
+                custom_folders[i] = newname
+                custom_folders_content[newname] = custom_folders_content[folder] or {}
+                custom_folders_content[folder] = nil
+                if tree_state.cur_custom_folder == folder then
+                  tree_state.cur_custom_folder = newname
+                end
+                SaveCustomFolders()
+              end
+            end
+            if reaper.ImGui_MenuItem(ctx, "Remove") then
+              table.remove(custom_folders, i)
+              custom_folders_content[folder] = nil
+              if tree_state.cur_custom_folder == folder then
+                tree_state.cur_custom_folder = ""
+                files_idx_cache = {}
+              end
+              SaveCustomFolders()
+            end
+            reaper.ImGui_EndPopup(ctx)
+          end
+          -- 拖拽目标
+          if reaper.ImGui_BeginDragDropTarget(ctx) then
+            if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATH") then
+              local retval, dtype, payload, is_preview, is_delivery = reaper.ImGui_GetDragDropPayload(ctx)
+              if retval and dtype == "AUDIO_PATH" and type(payload) == "string" and payload ~= "" then
+                local drag_path = payload
+                custom_folders_content[folder] = custom_folders_content[folder] or {}
+                local exists = false
+                for _, p in ipairs(custom_folders_content[folder]) do
+                  if p == drag_path then exists = true break end
+                end
+                if not exists then
+                  table.insert(custom_folders_content[folder], drag_path)
+                  SaveCustomFolders()
+                  if collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder then
+                    CollectFiles()
+                  end
+                end
+              end
+            end
+            reaper.ImGui_EndDragDropTarget(ctx)
+          end
+        end
+        -- 新建自定义文件夹按钮
+        if reaper.ImGui_Button(ctx, "Create Folder##add_custom_folder") then
+          local ret, name = reaper.GetUserInputs("Create Custom Folder", 1, "Folder Name:,extrawidth=200", "")
+          if ret and name and name ~= "" then
+            local exists = false
+            for _, v in ipairs(custom_folders) do
+              if v == name then exists = true break end
+            end
+            if not exists then
+              table.insert(custom_folders, name)
+              custom_folders_content[name] = {}
+              SaveCustomFolders()
+            end
+          end
+        end
+
+        reaper.ImGui_TreePop(ctx)
+      end
+      reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本颜色
       reaper.ImGui_EndChild(ctx)
     end
 
@@ -2620,15 +2856,21 @@ function loop()
               end
             end
 
-            -- 拖动音频到REAPER
+            -- 拖动音频到REAPER或自定义文件夹
             if reaper.ImGui_BeginDragDropSource(ctx) then
-              reaper.ImGui_Text(ctx, "Drag to REAPER to insert")
+              reaper.ImGui_Text(ctx, "Drag to insert or collect")
               dragging_audio = {
                 path = info and info.path,
                 start_time = 0,
                 end_time = info and info.section_length or 0,
                 section_offset = info and info.section_offset or 0
               }
+              -- 自定义文件夹，用 AUDIO_PATH 作为类型
+              local path = info and info.path
+              if path and path ~= "" then
+                -- reaper.ImGui_Text(ctx, "Drag to collect")
+                reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATH", path)
+              end
               reaper.ImGui_EndDragDropSource(ctx)
             end
 
@@ -3118,35 +3360,35 @@ function loop()
       HelpMarker("Adjust the font size for the interface. Range: 10-20 px.")
 
       -- 收集切换
-      reaper.ImGui_Text(ctx, "Audio File Source:")
-      local changed_collect_mode = false
-      if reaper.ImGui_RadioButton(ctx, "None", collect_mode == -1) then
-        if collect_mode ~= -1 then changed_collect_mode = true end
-        collect_mode = -1 -- None/未选中选项
-      end
-      if reaper.ImGui_RadioButton(ctx, "Audio Assets", collect_mode == COLLECT_MODE_ITEMS) then
-        if collect_mode ~= COLLECT_MODE_ITEMS then changed_collect_mode = true end
-        collect_mode = COLLECT_MODE_ITEMS
-      end
-      if reaper.ImGui_RadioButton(ctx, "Referenced", collect_mode == COLLECT_MODE_RPP) then
-        if collect_mode ~= COLLECT_MODE_RPP then changed_collect_mode = true end
-        collect_mode = COLLECT_MODE_RPP
-      end
-      if reaper.ImGui_RadioButton(ctx, "Project Directory", collect_mode == COLLECT_MODE_DIR) then
-        if collect_mode ~= COLLECT_MODE_DIR then changed_collect_mode = true end
-        collect_mode = COLLECT_MODE_DIR
-      end
-      if reaper.ImGui_RadioButton(ctx, "Media Items", collect_mode == COLLECT_MODE_ALL_ITEMS) then
-        if collect_mode ~= COLLECT_MODE_ALL_ITEMS then changed_collect_mode = true end
-        collect_mode = COLLECT_MODE_ALL_ITEMS
-      end
-      if reaper.ImGui_RadioButton(ctx, "This Computer", collect_mode == COLLECT_MODE_TREE) then
-        if collect_mode ~= COLLECT_MODE_TREE then changed_collect_mode = true end
-        collect_mode = COLLECT_MODE_TREE
-      end
-      if changed_collect_mode and collect_mode >= 0 then
-        CollectFiles()
-      end
+      -- reaper.ImGui_Text(ctx, "Audio File Source:")
+      -- local changed_collect_mode = false
+      -- if reaper.ImGui_RadioButton(ctx, "None", collect_mode == -1) then
+      --   if collect_mode ~= -1 then changed_collect_mode = true end
+      --   collect_mode = -1 -- None/未选中选项
+      -- end
+      -- if reaper.ImGui_RadioButton(ctx, "Audio Assets", collect_mode == COLLECT_MODE_ITEMS) then
+      --   if collect_mode ~= COLLECT_MODE_ITEMS then changed_collect_mode = true end
+      --   collect_mode = COLLECT_MODE_ITEMS
+      -- end
+      -- if reaper.ImGui_RadioButton(ctx, "Source Media", collect_mode == COLLECT_MODE_RPP) then
+      --   if collect_mode ~= COLLECT_MODE_RPP then changed_collect_mode = true end
+      --   collect_mode = COLLECT_MODE_RPP
+      -- end
+      -- if reaper.ImGui_RadioButton(ctx, "Project Directory", collect_mode == COLLECT_MODE_DIR) then
+      --   if collect_mode ~= COLLECT_MODE_DIR then changed_collect_mode = true end
+      --   collect_mode = COLLECT_MODE_DIR
+      -- end
+      -- if reaper.ImGui_RadioButton(ctx, "Media Items", collect_mode == COLLECT_MODE_ALL_ITEMS) then
+      --   if collect_mode ~= COLLECT_MODE_ALL_ITEMS then changed_collect_mode = true end
+      --   collect_mode = COLLECT_MODE_ALL_ITEMS
+      -- end
+      -- if reaper.ImGui_RadioButton(ctx, "This Computer", collect_mode == COLLECT_MODE_TREE) then
+      --   if collect_mode ~= COLLECT_MODE_TREE then changed_collect_mode = true end
+      --   collect_mode = COLLECT_MODE_TREE
+      -- end
+      -- if changed_collect_mode and collect_mode >= 0 then
+      --   CollectFiles()
+      -- end
 
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Double-Click Action:")
@@ -3393,6 +3635,9 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
       local cur_info = files_idx_cache and files_idx_cache[selected_row]
+      if not cur_info then
+        cur_info = last_selected_info
+      end
       local do_insert = false
       -- Shift+S
       local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
@@ -3455,6 +3700,9 @@ function loop()
 
       -- 获取峰值
       local cur_info = files_idx_cache and files_idx_cache[selected_row]
+      if not cur_info then
+        cur_info = last_selected_info
+      end
       if cur_info then
         -- 限制只有在选中表格项或双击预览播放时加载波形，但效果不佳。目前默认只要选中就会加载波形。
         -- if (auto_play_selected and last_selected_row ~= selected_row) or (doubleclick_action == DOUBLECLICK_PREVIEW and reaper.ImGui_IsMouseDoubleClicked(ctx, 0)) then
@@ -3464,12 +3712,19 @@ function loop()
 
         -- 用完整源音频路径
         local root_src = cur_info.source
-        if reaper.GetMediaSourceType(root_src, "") == "SECTION" then
-          if GetRootSource then
-            root_src = GetRootSource(cur_info.source)
+        if root_src and type(root_src) == "userdata" then
+          if reaper.GetMediaSourceType(root_src, "") == "SECTION" then
+            if GetRootSource then
+              root_src = GetRootSource(cur_info.source)
+            end
           end
         end
-        local root_path = reaper.GetMediaSourceFileName(root_src, "")
+        local root_path
+        if root_src and type(root_src) == "userdata" then
+          root_path = reaper.GetMediaSourceFileName(root_src, "")
+        else
+          root_path = cur_info.path
+        end
         local cur_key = (root_path or cur_info.path) .. "|" .. tostring(section_offset) .. "|" .. tostring(section_length)
         if (not peaks)
           or (last_wave_info ~= cur_key)
@@ -3586,7 +3841,11 @@ function loop()
       if auto_play_selected and selected_row and selected_row > 0 and files_idx_cache then
         if last_selected_row ~= selected_row then
           local cur_info = files_idx_cache[selected_row]
-          if cur_info then PlayFromStart(cur_info) end
+          if cur_info then
+            PlayFromStart(cur_info)
+            last_selected_info = {}
+            for k,v in pairs(cur_info) do last_selected_info[k]=v end
+          end
           last_selected_row = selected_row
         end
       else
@@ -3867,7 +4126,7 @@ function loop()
       end
 
       -- 选区拖拽到REAPER
-      if has_selection and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
+      if cur_info and has_selection and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
         if reaper.ImGui_BeginDragDropSource(ctx) then
           reaper.ImGui_Text(ctx, "Drag selection to REAPER to insert")
           -- 判断区段还是源音频
@@ -3875,10 +4134,12 @@ function loop()
           local start_time = math.min(select_start_time, select_end_time) * play_rate
           local end_time = math.max(select_start_time, select_end_time) * play_rate
           -- 如果是SECTION，直接用区段路径和相对区段起点时间
-          if reaper.GetMediaSourceType(cur_info.source, "") == "SECTION" then
-            drag_path = cur_info.source
-            start_time = start_time
-            end_time = end_time
+          if cur_info.source and type(cur_info.source) == "userdata" then
+            if reaper.GetMediaSourceType(cur_info.source, "") == "SECTION" then
+              drag_path = cur_info.source
+              start_time = start_time
+              end_time = end_time
+            end
           end
 
           dragging_selection = {
@@ -3987,11 +4248,14 @@ function loop()
     end
 
     -- 状态栏行
-    local info = files_idx_cache[selected_row]
+    local info = files_idx_cache and selected_row and files_idx_cache[selected_row]
     reaper.ImGui_Text(ctx, ("%d audio files found."):format(#files_idx_cache))
-    if playing_preview and info and info.path then
-      reaper.ImGui_SameLine(ctx, nil, 1)
-      reaper.ImGui_Text(ctx, " Now playing: " .. info.path)
+    if playing_preview then
+      local show_path = info and info.path or (last_playing_info and last_playing_info.path)
+      if show_path then
+        reaper.ImGui_SameLine(ctx, nil, 1)
+        reaper.ImGui_Text(ctx, " Now playing: " .. show_path)
+      end
     end
 
     -- 显示波形缩放百分比
