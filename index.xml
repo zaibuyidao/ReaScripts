@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3c1c810c86a5a2e8a619973b6bd85b573863dcfd">
+<index version="1" name="zaibuyidao Scripts" commit="6c919b33083b820f56da685a2c37354e27cbf5fc">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8651,6 +8651,14 @@ New: Play button now starts playback from the play cursor if set; otherwise, fro
 Added "This Computer" entry, supporting tree view access to all local drives and browsing audio resources from any location.
 Added "Folder Shortcuts" feature—users can bookmark any local folder path for quick access to frequently used audio directories.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3c1c810c86a5a2e8a619973b6bd85b573863dcfd/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.1" author="zaibuyidao" time="2025-06-24T04:03:38Z">
+        <changelog><![CDATA[New: Added "Custom Folders" feature—users can now create and manage custom folders to organize and classify audio assets freely.
+New: Audio selection, waveform preview, and drag-insertion remain available after switching folders or modes. Selection and insertion now work even if the file table is refreshed or cleared.
+Fix: All PCM_source-related errors (e.g., GetMediaSourceType) in custom folder mode are resolved; drag-in and section operations now support both standard and custom files robustly.
+Fix: Improved playback state management—audio preview and selection are now decoupled, ensuring reliable UI feedback and accurate Now playing display at all times.
+Change: Switching between any folders or modes now clears the file table selection for consistent user experience across all modes.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c919b33083b820f56da685a2c37354e27cbf5fc/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
