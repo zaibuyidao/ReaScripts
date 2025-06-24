@@ -1,12 +1,9 @@
 -- @description Project Audio Explorer
--- @version 1.5.1
+-- @version 1.5.2
 -- @author zaibuyidao
 -- @changelog
---   New: Added "Custom Folders" feature—users can now create and manage custom folders to organize and classify audio assets freely.
---   New: Audio selection, waveform preview, and drag-insertion remain available after switching folders or modes. Selection and insertion now work even if the file table is refreshed or cleared.
---   Fix: All PCM_source-related errors (e.g., GetMediaSourceType) in custom folder mode are resolved; drag-in and section operations now support both standard and custom files robustly.
---   Fix: Improved playback state management—audio preview and selection are now decoupled, ensuring reliable UI feedback and accurate Now playing display at all times.
---   Change: Switching between any folders or modes now clears the file table selection for consistent user experience across all modes.
+--   Fix: Completely exclude .rpp project files to prevent unintended generation of .rpp-PROX cache files.
+--   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -217,7 +214,7 @@ local COLLECT_MODE_DIR       = 2
 local COLLECT_MODE_ALL_ITEMS = 3
 local COLLECT_MODE_TREE      = 4
 local COLLECT_MODE_SHORTCUT  = 5
-local COLLECT_MODE_CUSTOMFOLDER = 1000 -- 自定义文件夹模式
+local COLLECT_MODE_CUSTOMFOLDER = 6 -- 自定义文件夹模式
 
 -- 设置相关
 local auto_play_selected  = true
@@ -457,6 +454,14 @@ end
 
 --------------------------------------------- 收集工程音频相关函数 ---------------------------------------------
 
+-- 过滤音频文件
+function IsValidAudioFile(path)
+  local ext = path:match("%.([^.]+)$")
+  if not ext then return false end
+  ext = ext:lower()
+  return (ext == "wav" or ext == "mp3" or ext == "flac" or ext == "ogg" or ext == "aiff" or ext == "ape" or ext == "wv")
+end
+
 function GetItemSectionStartPos(item)
   local take = reaper.GetActiveTake(item)
   if not take then return 0 end
@@ -525,7 +530,7 @@ local function GetRootSource(src)
 end
 
 -- Items 收集工程中当前使用的音频文件
-local function CollectAllUniqueSources_FromItems()
+local function CollectFromItems()
   local files, files_idx = {}, {}
   local item_cnt = reaper.CountMediaItems(0)
   for i = 0, item_cnt - 1 do
@@ -574,7 +579,7 @@ local function CollectAllUniqueSources_FromItems()
 end
 
 -- Media Items 收集所有工程对象
-function CollectMediaItemsDetail()
+function CollectMediaItems()
   local files_idx = {}
   local item_cnt = reaper.CountMediaItems(0)
   for i = 0, item_cnt - 1 do
@@ -649,7 +654,7 @@ function CollectMediaItemsDetail()
 end
 
 -- RPP 收集所有引用的音频文件
-function CollectAllUniqueSources_FromRPP()
+function CollectFromRPP()
   local files_idx = {}
   local path_set = {}
 
@@ -731,7 +736,7 @@ function CollectAllUniqueSources_FromRPP()
 end
 
 -- Project Directory 收集工程目录的音频文件
-function CollectAllUniqueSources_FromProjectDirectory()
+function CollectFromProjectDirectory()
   local files, files_idx = {}, {}
   -- 获取当前工程路径
   local proj_path = reaper.GetProjectPath()
@@ -743,9 +748,9 @@ function CollectAllUniqueSources_FromProjectDirectory()
     local file = reaper.EnumerateFiles(proj_path, i)
     if not file then break end
     local ext = file:match("^.+%.([^.]+)$")
-    if ext and valid_exts[ext:lower()] then
+    if ext and valid_exts[ext:lower()] and ext:lower() ~= "rpp" then
       local fullpath = proj_path .. "/" .. file
-      if not files[fullpath] then
+      if IsValidAudioFile(fullpath) and not files[fullpath] then
         local info = { path = fullpath, filename = file }
         -- 获取文件大小
         local f = io.open(fullpath, "rb")
@@ -789,10 +794,14 @@ function CollectAllUniqueSources_FromProjectDirectory()
   return files, files_idx
 end
 
-function CollectFiles_FromCustomFolder(paths)
+function CollectFromCustomFolder(paths)
   local files_idx = {}
   for _, path in ipairs(paths or {}) do
     if type(path) == "string" and path ~= "" then
+      if not IsValidAudioFile(path) then
+        goto continue
+      end
+
       local typ, size, bits, samplerate, channels, length = "", 0, "-", "-", "-", "-"
       local genre, description, comment, orig_date = "", "", "", ""
 
@@ -919,20 +928,20 @@ end
 function CollectFiles()
   local files, files_idx
   if collect_mode == COLLECT_MODE_ITEMS then
-    files, files_idx = CollectAllUniqueSources_FromItems()
+    files, files_idx = CollectFromItems()
     files_idx_cache = files_idx
   elseif collect_mode == COLLECT_MODE_DIR then
-    files, files_idx = CollectAllUniqueSources_FromProjectDirectory()
+    files, files_idx = CollectFromProjectDirectory()
     files_idx_cache = files_idx
   elseif collect_mode == COLLECT_MODE_TREE then
     local dir = tree_state.cur_path or "" -- 或默认某个盘符/目录
     files_idx_cache = GetAudioFilesFromDirCached(dir)
     selected_row = nil
   elseif collect_mode == COLLECT_MODE_RPP then
-    files_idx = CollectAllUniqueSources_FromRPP()
+    files_idx = CollectFromRPP()
     files_idx_cache = MergeUsagesByPath(files_idx)
   elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
-    files_idx = CollectMediaItemsDetail()
+    files_idx = CollectMediaItems()
     files_idx_cache = MergeUsagesBySection(files_idx)
   elseif collect_mode == COLLECT_MODE_SHORTCUT then
     local dir = tree_state.cur_path or ""
@@ -941,7 +950,7 @@ function CollectFiles()
   elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
     local folder = tree_state.cur_custom_folder or ""
     local paths = (folder ~= "" and custom_folders_content[folder]) or {}
-    files_idx_cache = CollectFiles_FromCustomFolder(paths)
+    files_idx_cache = CollectFromCustomFolder(paths)
     selected_row = nil
   else
     files_idx_cache = {} -- collect_mode全部清空
@@ -1208,6 +1217,10 @@ end
 
 -- 波形峰值采样
 function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
+  if not IsValidAudioFile(filepath) then
+    return
+  end
+
   reaper.PreventUIRefresh(1) -- 防止UI刷新
   local src = reaper.PCM_Source_CreateFromFile(filepath)
   if not src then return end
@@ -1290,7 +1303,7 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
   return peaks, pixel_cnt, src_len, channels
 end
 
-function GetPeaks_FromTake(take, step, pixel_cnt, start_time, end_time)
+function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
   reaper.PreventUIRefresh(1) -- 防止UI刷新
   local src = reaper.GetMediaItemTake_Source(take)
   local srate = reaper.GetMediaSourceSampleRate(src)
@@ -1430,11 +1443,11 @@ local function PlayFromStart(info)
   StopPreview()
   Wave.play_cursor = 0
   local source
-  if collect_mode == COLLECT_MODE_RPP and info and info.path then -- RPP模式下强制用源音频路径
+  if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidAudioFile(info.path) then -- RPP模式下强制用源音频路径
     source = reaper.PCM_Source_CreateFromFile(info.path)
   elseif info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
     source = reaper.GetMediaItemTake_Source(info.take)
-  elseif info and info.path then
+  elseif info and info.path and IsValidAudioFile(info.path) then
     source = reaper.PCM_Source_CreateFromFile(info.path)
   end
   if source then
@@ -1472,11 +1485,11 @@ local function PlayFromCursor(info)
   end
   StopPreview()
   local source
-  if collect_mode == COLLECT_MODE_RPP and info and info.path then -- RPP模式下强制用源音频路径
+  if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidAudioFile(info.path) then -- RPP模式下强制用源音频路径
     source = reaper.PCM_Source_CreateFromFile(info.path)
   elseif info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
     source = reaper.GetMediaItemTake_Source(info.take)
-  elseif info and info.path then
+  elseif info and info.path and IsValidAudioFile(info.path) then
     source = reaper.PCM_Source_CreateFromFile(info.path)
   end
   if source then
@@ -1592,7 +1605,7 @@ end
 function GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
   -- 优先用已有 item/take 的 accessor
   if info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
-    return GetPeaks_FromTake(info.take, wf_step, pixel_cnt, start_time, end_time)
+    return GetPeaksFromTake(info.take, wf_step, pixel_cnt, start_time, end_time)
   else
     -- 没有 take，用 PCM_Source_CreateFromFile 的方式
     return GetWavPeaks(info.path, wf_step, pixel_cnt, start_time, end_time)
@@ -1647,16 +1660,16 @@ splitter_drag = splitter_drag or false
 splitter_drag_offset = splitter_drag_offset or 0
 
 local collect_mode_labels = {
-  {label = "Audio Assets", value = COLLECT_MODE_ITEMS},
   {label = "Source Media", value = COLLECT_MODE_RPP},
-  {label = "Project Directory", value = COLLECT_MODE_DIR},
   {label = "Media Items", value = COLLECT_MODE_ALL_ITEMS},
+  {label = "Project Directory", value = COLLECT_MODE_DIR},
+  {label = "Audio Assets", value = COLLECT_MODE_ITEMS},
 }
 local selected_index = nil
 
 function GetAudioFilesFromDirCached(dir_path)
   if not audio_file_cache[dir_path] then
-    local _, files_idx = CollectAllUniqueSources_FromDirectory(dir_path)
+    local _, files_idx = CollectFromDirectory(dir_path)
     audio_file_cache[dir_path] = files_idx
   end
   return audio_file_cache[dir_path]
@@ -1667,7 +1680,7 @@ function RefreshAudioDirCache(dir_path)
 end
 
 -- 获取指定目录下所有有效音频文件
-function CollectAllUniqueSources_FromDirectory(dir_path)
+function CollectFromDirectory(dir_path)
   local files, files_idx = {}, {}
   local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true}
   if not dir_path or dir_path == "" then return files, files_idx end
@@ -1676,9 +1689,9 @@ function CollectAllUniqueSources_FromDirectory(dir_path)
     local file = reaper.EnumerateFiles(dir_path, i)
     if not file then break end
     local ext = file:match("^.+%.([^.]+)$")
-    if ext and valid_exts[ext:lower()] then
+    if ext and valid_exts[ext:lower()] and ext:lower() ~= "rpp" then
       local fullpath = dir_path .. sep .. file
-      if not files[fullpath] then
+      if IsValidAudioFile(fullpath) and not files[fullpath] then
         local info = { path = fullpath, filename = file }
         -- 获取文件大小
         local f = io.open(fullpath, "rb")
@@ -1757,7 +1770,7 @@ local function list_dir(path)
     if not file then break end
     local full = path .. ((path:sub(-1)==sep) and '' or sep) .. file
     local ext = file:match('%.([^.]+)$')
-    if ext then
+    if ext and audio_types[ext:upper()] then
       local src = reaper.PCM_Source_CreateFromFile(full)
       if src then
         local typ = reaper.GetMediaSourceType(src, '')
@@ -1831,7 +1844,7 @@ local function draw_shortcut_tree(sc, base_path)
   local show_name = shortcut_name
   local path = sc.path
   local open = tree_open[path]
-  local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0
+  local highlight = (collect_mode == COLLECT_MODE_SHORTCUT and tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0 -- 去掉 collect_mode == COLLECT_MODE_SHORTCUT 则保持高亮
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##shortcut_" .. path, highlight)
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
@@ -2093,7 +2106,7 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 文本颜色
       
       -- 渲染单选列表
-      local sel_mode = reaper.ImGui_TreeNode(ctx, "Audio Collection", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      local sel_mode = reaper.ImGui_TreeNode(ctx, "Resource Collection", reaper.ImGui_TreeNodeFlags_DefaultOpen())
       if sel_mode then
         for i, v in ipairs(collect_mode_labels) do
           local selected = (collect_mode == v.value)
@@ -2335,7 +2348,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         end
-        -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectAllUniqueSources_FromProjectDirectory()
+        -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectFromProjectDirectory()
         reaper.ImGui_TableHeadersRow(ctx)
 
         -- 排序，只对缓存排序一次
