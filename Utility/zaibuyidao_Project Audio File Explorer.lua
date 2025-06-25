@@ -1,9 +1,8 @@
 -- @description Project Audio Explorer
--- @version 1.5.2
+-- @version 1.5.3
 -- @author zaibuyidao
 -- @changelog
---   Fix: Completely exclude .rpp project files to prevent unintended generation of .rpp-PROX cache files.
---   Other detailed improvements and bug fixes.
+--   Fixed an issue where adjusting the pitch or rate knob would incorrectly update the waveform preview cursor to the mouse position.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -105,9 +104,11 @@ local last_audio_idx         = nil
 local auto_scroll_enabled    = false -- 自动滚屏
 local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
-local last_selected_info     = last_selected_info or nil -- 上次选中的音频信息
-local last_playing_info      = last_playing_info or nil  -- 上次播放的音频信息
 local files_idx_cache        = nil   -- 文件缓存
+
+last_selected_info           = last_selected_info or nil -- 上次选中的音频信息
+last_playing_info            = last_playing_info or nil  -- 上次播放的音频信息
+is_knob_dragging             = is_knob_dragging or false
 -- 表格排序常量
 local COL_FILENAME         = 2
 local COL_SIZE             = 3
@@ -3290,6 +3291,9 @@ function loop()
     -- local pitch_knob_min, pitch_knob_max = -6, 6 -- ±6 半音
     local pitch_knob_size = 20
     local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size, 0)
+    if reaper.ImGui_IsItemActive(ctx) then
+      is_knob_dragging = true
+    end
     if pitch_knob_changed then
       pitch = pitch_knob_value
       if playing_preview then RestartPreviewWithParams() end
@@ -3314,6 +3318,9 @@ function loop()
     reaper.ImGui_SameLine(ctx)
     local knob_size = 20
     local knob_changed, knob_value = ImGui_Knob(ctx, "##rate_knob", play_rate, rate_min, rate_max, knob_size, 1)
+    if reaper.ImGui_IsItemActive(ctx) then
+      is_knob_dragging = true
+    end
     if knob_changed then
       play_rate = knob_value
       if playing_preview then RestartPreviewWithParams() end
@@ -3937,7 +3944,7 @@ function loop()
         end
 
         -- 鼠标左键点击
-        if reaper.ImGui_IsMouseClicked(ctx, 0) then
+        if reaper.ImGui_IsMouseClicked(ctx, 0) and not is_knob_dragging then
           if has_selection() then
             if mouse_in_selection() then
               pending_clear_selection = false
@@ -3954,12 +3961,12 @@ function loop()
         end
 
         -- 框选/拖拽
-        if selecting and reaper.ImGui_IsMouseDown(ctx, 0) then
+        if selecting and reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
           select_end_time = mouse_time
         end
 
         -- 框选松开
-        if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) then
+        if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
           selecting = false
           if has_selection() then
             local select_min = math.min(select_start_time, select_end_time)
@@ -3978,7 +3985,7 @@ function loop()
         end
 
         -- 框选自动跳转到起始位置
-        if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) then
+        if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
           selecting = false
           -- 框选松开时自动跳光标
           if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
@@ -4019,7 +4026,7 @@ function loop()
         end
 
         -- 鼠标释放时，鼠标定位/清空选区
-        if not selecting and reaper.ImGui_IsMouseReleased(ctx, 0) and reaper.ImGui_IsItemHovered(ctx) then
+        if not selecting and reaper.ImGui_IsMouseReleased(ctx, 0) and reaper.ImGui_IsItemHovered(ctx) and not is_knob_dragging then
           if just_selected_range then
             just_selected_range = false  -- 跳过这次，防止和画选区的行为冲突
           else
@@ -4299,6 +4306,11 @@ function loop()
         get_drives()
         drives_loaded = true
       end)
+    end
+
+    -- 调整旋钮鼠标意外落到波形预览区时播放光标变成鼠标光标，防止状态卡住
+    if not reaper.ImGui_IsAnyItemActive(ctx) then
+      is_knob_dragging = false
     end
 
     reaper.ImGui_PopStyleVar(ctx, 6) -- ImGui_End 内 6 次圆角
