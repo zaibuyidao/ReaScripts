@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6648bf2002881c3e1db592f0ccd1de3743be2679">
+<index version="1" name="zaibuyidao Scripts" commit="19ce6a2eca96d154cda9732f1c0204bbd357aa09">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8664,6 +8664,10 @@ Change: Switching between any folders or modes now clears the file table selecti
         <changelog><![CDATA[Fix: Completely exclude .rpp project files to prevent unintended generation of .rpp-PROX cache files.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6648bf2002881c3e1db592f0ccd1de3743be2679/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.3" author="zaibuyidao" time="2025-06-25T03:00:44Z">
+        <changelog><![CDATA[Fixed an issue where adjusting the pitch or rate knob would incorrectly update the waveform preview cursor to the mouse position.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/19ce6a2eca96d154cda9732f1c0204bbd357aa09/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
