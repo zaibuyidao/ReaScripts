@@ -1,8 +1,8 @@
 -- @description Project Audio Explorer
--- @version 1.5.3
+-- @version 1.5.4
 -- @author zaibuyidao
 -- @changelog
---   Fixed an issue where adjusting the pitch or rate knob would incorrectly update the waveform preview cursor to the mouse position.
+--   Optimized play cursor jumping when adjusting playback rate.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -106,9 +106,10 @@ local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
 local files_idx_cache        = nil   -- 文件缓存
 
-last_selected_info           = last_selected_info or nil -- 上次选中的音频信息
-last_playing_info            = last_playing_info or nil  -- 上次播放的音频信息
-is_knob_dragging             = is_knob_dragging or false
+last_selected_info           = nil -- 上次选中的音频信息
+last_playing_info            = nil  -- 上次播放的音频信息
+is_knob_dragging             = false
+prev_preview_pos             = 0
 -- 表格排序常量
 local COL_FILENAME         = 2
 local COL_SIZE             = 3
@@ -1004,13 +1005,19 @@ local function PlayFile(source, path, do_loop)
   end
 end
 
-function RestartPreviewWithParams()
+function RestartPreviewWithParams(from_wave_pos)
   if not playing_source then return end
   local cur_pos = 0
-  if playing_preview and reaper.CF_Preview_GetValue then
-    local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-    if ok then cur_pos = pos end
+
+  if from_wave_pos then
+    cur_pos = from_wave_pos / play_rate -- 用新的速率换算
+  else
+    if playing_preview and reaper.CF_Preview_GetValue then
+      local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+      if ok then cur_pos = pos end
+    end
   end
+
   StopPlay()
   playing_preview = reaper.CF_CreatePreview(playing_source)
   if playing_preview then
@@ -3270,17 +3277,21 @@ function loop()
 
     if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
       local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-      if ok and preview_play_len and pos >= preview_play_len - 0.01 then
-        local cur_idx = -1
-        for i, info in ipairs(files_idx_cache or {}) do
-          if info.path == playing_path then cur_idx = i break end
+      local ok2, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+      if ok and ok2 then
+        if prev_preview_pos and prev_preview_pos < length and pos >= length then
+          local cur_idx = -1
+          for i, info in ipairs(files_idx_cache) do
+            if info.path == playing_path then cur_idx = i break end
+          end
+          if cur_idx > 0 and cur_idx < #files_idx_cache then
+            auto_play_next_pending = files_idx_cache[cur_idx + 1]
+          else
+            auto_play_next_pending = false
+            StopPreview()
+          end
         end
-        if cur_idx > 0 and cur_idx < #files_idx_cache then
-          auto_play_next_pending = files_idx_cache[cur_idx + 1]
-        else
-          auto_play_next_pending = false
-          StopPreview()
-        end
+       prev_preview_pos = pos
       end
     end
 
@@ -3322,8 +3333,30 @@ function loop()
       is_knob_dragging = true
     end
     if knob_changed then
-      play_rate = knob_value
-      if playing_preview then RestartPreviewWithParams() end
+      local r1 = play_rate  -- 当前速率
+      local r2 = knob_value -- 新速率
+      local wave_pos
+
+      -- 保存视觉时间，反推新的数据时间
+      if select_start_time and select_end_time then
+        local select_start_visual = select_start_time * r1
+        local select_end_visual = select_end_time * r1
+        select_start_time = select_start_visual / r2
+        select_end_time = select_end_visual / r2
+      end
+
+      if playing_preview and reaper.CF_Preview_GetValue then
+        local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+        if ok then
+          wave_pos = pos * r1 -- 播放时
+        end
+      else
+        wave_pos = Wave.play_cursor * r1 -- 停止时
+      end
+
+      play_rate = r2
+      Wave.play_cursor = wave_pos / play_rate -- 更新光标位置，确保视觉稳定
+      if playing_preview then RestartPreviewWithParams(wave_pos) end
     end
     -- 双向同步（输入框改了也会更新旋钮，下次刷新界面）
     if play_rate < rate_min then play_rate = rate_min end
@@ -3336,7 +3369,29 @@ function loop()
     rv4, play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
     reaper.ImGui_PopItemWidth(ctx)
     if rv4 then
-      if playing_preview then RestartPreviewWithParams() end
+      local r1 = play_rate    -- 当前速率
+      local r2 = new_play_rate -- 新速率
+      local wave_pos
+
+      if select_start_time and select_end_time then
+        local select_start_visual = select_start_time * r1
+        local select_end_visual = select_end_time * r1
+        select_start_time = select_start_visual / r2
+        select_end_time = select_end_visual / r2
+      end
+
+      if playing_preview and reaper.CF_Preview_GetValue then
+        local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+        if ok then
+          wave_pos = pos * r1 -- 播放时
+        end
+      else
+        wave_pos = Wave.play_cursor * r1 -- 停止时
+      end
+
+      play_rate = r2
+      Wave.play_cursor = wave_pos / play_rate -- 更新光标位置，确保视觉稳定
+      if playing_preview then RestartPreviewWithParams(wave_pos) end
     end
 
     -- 音量
@@ -3882,8 +3937,9 @@ function loop()
         local frac = rel_x / region_w
         frac = math.max(0, math.min(1, frac))
         -- 速率变化时调整光标位置
-        local visible_len = Wave.src_len / play_rate
-        local mouse_time = Wave.scroll + frac * (visible_len / Wave.zoom)
+        local visible_len = Wave.src_len / Wave.zoom
+        local mouse_time_visual = Wave.scroll + frac * visible_len
+        local mouse_time = mouse_time_visual / play_rate
 
         -- 鼠标滚轮缩放
         if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()) then
@@ -3952,6 +4008,8 @@ function loop()
               pending_clear_selection = true -- 只挂起，不做任何清空
             end
           else
+            local mouse_time_visual = Wave.scroll + frac * visible_len
+            local mouse_time = mouse_time_visual / play_rate
             selecting = true
             drag_start_x = mouse_x
             select_start_time = mouse_time
@@ -3962,6 +4020,8 @@ function loop()
 
         -- 框选/拖拽
         if selecting and reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
+          local mouse_time_visual = Wave.scroll + frac * visible_len
+          local mouse_time = mouse_time_visual / play_rate
           select_end_time = mouse_time
         end
 
@@ -4038,8 +4098,9 @@ function loop()
             local rel_x = mouse_x - min_x
             local frac = rel_x / region_w
             frac = math.max(0, math.min(1, frac))
-            local visible_len = Wave.src_len / play_rate
-            local mouse_time = Wave.scroll + frac * (visible_len / Wave.zoom)
+            local visible_len = Wave.src_len / Wave.zoom
+            local mouse_time_visual = Wave.scroll + frac * visible_len
+            local mouse_time = mouse_time_visual / play_rate
 
             if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
               local select_min = math.min(select_start_time, select_end_time)
@@ -4096,9 +4157,9 @@ function loop()
       -- 选区高亮 - 框选颜色
       if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
         -- 速率变化时调整选区位置
-        local visible_len = Wave.src_len / play_rate
-        local a = (select_start_time - Wave.scroll) / (visible_len / Wave.zoom) * region_w + min_x
-        local b = (select_end_time - Wave.scroll) / (visible_len / Wave.zoom) * region_w + min_x
+        local visible_len = Wave.src_len / Wave.zoom
+        local a = (select_start_time * play_rate - Wave.scroll) / visible_len * region_w + min_x
+        local b = (select_end_time * play_rate - Wave.scroll) / visible_len * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
         reaper.ImGui_DrawList_AddRectFilled(dl, a, min_y, b, max_y, 0x294A7A44 ) -- 0x192e4680 0x1844FF44
       end
@@ -4211,8 +4272,8 @@ function loop()
       local range_start, range_end
       if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
         label_fmt = "Selection: %s ~ %s | %s / %s"
-        range_start = math.min(select_start_time, select_end_time) * play_rate -- 速率变化时调整选区时间位置
-        range_end = math.max(select_start_time, select_end_time) * play_rate   -- 速率变化时调整选区时间位置
+        range_start = math.min(select_start_time, select_end_time)
+        range_end = math.max(select_start_time, select_end_time)
       else
         label_fmt = "View range: %s ~ %s | %s / %s"
         range_start = view_start
@@ -4223,7 +4284,7 @@ function loop()
         local label = string.format(label_fmt,
         reaper.format_timestr(range_start, ""),
         reaper.format_timestr(range_end, ""),
-        reaper.format_timestr(cursor_pos * play_rate, ""), -- 速率变化时调整光标时间位置
+        reaper.format_timestr(cursor_pos, ""), -- 速率变化时调整光标时间位置
         reaper.format_timestr(Wave.src_len, "")
       )
       local changed, new_scroll = reaper.ImGui_SliderDouble(ctx, "##scrollbar", Wave.scroll, 0, max_scroll, label)
