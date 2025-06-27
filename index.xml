@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="19ce6a2eca96d154cda9732f1c0204bbd357aa09">
+<index version="1" name="zaibuyidao Scripts" commit="2451364822280386c5b373e8bab7dd1c93981037">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8668,6 +8668,10 @@ Other detailed improvements and bug fixes.]]></changelog>
       <version name="1.5.3" author="zaibuyidao" time="2025-06-25T03:00:44Z">
         <changelog><![CDATA[Fixed an issue where adjusting the pitch or rate knob would incorrectly update the waveform preview cursor to the mouse position.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/19ce6a2eca96d154cda9732f1c0204bbd357aa09/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.4" author="zaibuyidao" time="2025-06-27T12:55:20Z">
+        <changelog><![CDATA[Optimized play cursor jumping when adjusting playback rate.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2451364822280386c5b373e8bab7dd1c93981037/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
