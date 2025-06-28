@@ -1,8 +1,10 @@
 -- @description Project Audio Explorer
--- @version 1.5.4
+-- @version 1.5.5
 -- @author zaibuyidao
 -- @changelog
---   Optimized play cursor jumping when adjusting playback rate.
+--   Introducing the Collections feature, which enables creation of custom folders with unlimited nesting levels.
+--   Added a "Group" feature, allowing users to create custom groups and drag audio files into them for more efficient organization and categorization of audio assets.
+--   Added a "Group" column, allowing users to easily manage and organize audio files in the table list into groups via right-click.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -954,8 +956,20 @@ function CollectFiles()
     local paths = (folder ~= "" and custom_folders_content[folder]) or {}
     files_idx_cache = CollectFromCustomFolder(paths)
     selected_row = nil
+  elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then -- 高级文件夹模式
+      local folder_id = tree_state.cur_advanced_folder or ""
+      local folder = advanced_folders[folder_id]
+      local paths = (folder and folder.files) or {}
+      files_idx_cache = CollectFromCustomFolder(paths)
+      selected_row = nil
   else
     files_idx_cache = {} -- collect_mode全部清空
+  end
+
+  if files_idx_cache then
+    for _, info in ipairs(files_idx_cache) do
+      info.group = GetCustomGroupsForPath(info.path)
+    end
   end
 
   previewed_files = {}
@@ -1671,7 +1685,7 @@ local collect_mode_labels = {
   {label = "Source Media", value = COLLECT_MODE_RPP},
   {label = "Media Items", value = COLLECT_MODE_ALL_ITEMS},
   {label = "Project Directory", value = COLLECT_MODE_DIR},
-  {label = "Audio Assets", value = COLLECT_MODE_ITEMS},
+  {label = "Item Assets", value = COLLECT_MODE_ITEMS},
 }
 local selected_index = nil
 
@@ -2025,8 +2039,238 @@ function clear_custom_folders_content_key()
   filew:close()
 end
 
+function GetCustomGroupsForPath(path)
+  local groups = {}
+  for folder, paths in pairs(custom_folders_content or {}) do
+    for _, p in ipairs(paths) do
+      if p == path then
+        table.insert(groups, folder)
+        break
+      end
+    end
+  end
+  return table.concat(groups, ", ")
+end
+
+function ShowGroupMenu(info)
+  -- 获取所有 group 名称
+  for _, group_name in ipairs(custom_folders or {}) do
+    local in_group = false
+    for _, path in ipairs(custom_folders_content[group_name] or {}) do
+      if path == info.path then
+        in_group = true
+        break
+      end
+    end
+    -- 显示菜单项，已属于则带勾
+    if reaper.ImGui_MenuItem(ctx, group_name, nil, in_group) then
+      if in_group then
+        -- 如果已属于，点击则移除
+        for i, p in ipairs(custom_folders_content[group_name]) do
+          if p == info.path then
+            table.remove(custom_folders_content[group_name], i)
+            break
+          end
+        end
+      else
+        -- 如果未属于，点击则加入
+        table.insert(custom_folders_content[group_name], info.path)
+      end
+      SaveCustomFolders()
+    end
+  end
+  -- 菜单底部提供新建分组功能
+  reaper.ImGui_Separator(ctx)
+  if reaper.ImGui_MenuItem(ctx, "Create Group...") then
+    local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
+    if ret and name and name ~= "" then
+      table.insert(custom_folders, name)
+      custom_folders_content[name] = {}
+      table.insert(custom_folders_content[name], info.path)
+      SaveCustomFolders()
+    end
+  end
+end
+
 -- 启动时加载自定义文件夹
 LoadCustomFolders()
+
+--------------------------------------------- 高级文件夹节点 ---------------------------------------------
+
+local EXT_KEY_ADVANCED_FOLDERS = "AdvancedFolders"
+local EXT_KEY_ADVANCED_ROOT = "AdvancedFoldersRoot"
+advanced_folders = advanced_folders or {}           -- [id] = {id=, name=, parent=, children={}, files={}}
+root_advanced_folders = root_advanced_folders or {} -- 存根节点id的数组
+
+function sanitize(str)
+  return (str or ""):gsub("[\r\n]", "")
+end
+
+function parse_line(line)
+  local parts = {}
+  for part in line:gmatch("([^|]*)") do
+    table.insert(parts, part)
+    if #parts >= 5 then break end
+  end
+  -- 不足 5 段的补 ""
+  for i = #parts+1, 5 do parts[i] = "" end
+  return parts[1], parts[2], parts[3], parts[4], parts[5]
+end
+
+function SaveAdvancedFolders()
+  local lines = {}
+  for id, node in pairs(advanced_folders) do
+    local cs = table.concat(node.children or {}, ",")
+    local fs = table.concat(node.files    or {}, ",")
+    local ps = node.parent or ""
+    local line = string.format("%s|%s|%s|%s|%s",
+      sanitize(id), sanitize(node.name), sanitize(ps),
+      sanitize(cs), sanitize(fs)
+    )
+    table.insert(lines, line)
+  end
+  local plain = table.concat(lines, "\n")
+  local enc = reaper.NF_Base64_Encode(plain, 0):gsub("[\r\n]", "")
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_ADVANCED_FOLDERS, enc, true)
+  local root_csv = table.concat(root_advanced_folders, ",")
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_ADVANCED_ROOT, root_csv, true)
+end
+
+function LoadAdvancedFolders()
+  advanced_folders, root_advanced_folders = {}, {}
+  -- 读 Root
+  local rootstr = reaper.GetExtState(EXT_SECTION, EXT_KEY_ADVANCED_ROOT)
+  if rootstr and rootstr~="" then
+    for id in rootstr:gmatch("[^,]+") do
+      table.insert(root_advanced_folders, id)
+    end
+  end
+  -- 读主数据
+  local enc = reaper.GetExtState(EXT_SECTION, EXT_KEY_ADVANCED_FOLDERS)
+  if not enc or enc=="" then return end
+  enc = enc:gsub("[\r\n]", "")
+  local ok, dec = reaper.NF_Base64_Decode(enc)
+  if not ok or not dec or dec=="" then return end
+  local idx = 0
+  for line in dec:gmatch("([^\n]+)") do
+    idx = idx + 1
+    local id, name, parent, cs, fs = parse_line(line)
+    if id and id ~= "" then
+      local node = {
+        id       = id,
+        name     = name,
+        parent   = (parent~="" and parent or nil),
+        children = {},
+        files    = {}
+      }
+      for cid in cs:gmatch("[^,]+") do table.insert(node.children, cid) end
+      for f   in fs:gmatch("[^,]+") do table.insert(node.files,    f)   end
+      advanced_folders[id] = node
+    else
+      -- 跳过空 id 行\n
+    end
+  end
+  -- 清理无效 root 的代码
+  for i = #root_advanced_folders, 1, -1 do
+    if not advanced_folders[root_advanced_folders[i]] then
+      table.remove(root_advanced_folders, i)
+    end
+  end
+  SaveAdvancedFolders()
+end
+
+function new_guid()
+  return (reaper.genGuid() or ""):gsub("[{}]", "")
+end
+
+function draw_advanced_folder_node(id, selected_id)
+  local node = advanced_folders[id]
+  if not node then return end
+  -- 仅在 COLLECT_MODE_ADVANCEDFOLDER 模式下高亮
+  local flags = reaper.ImGui_TreeNodeFlags_OpenOnArrow()
+  if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and selected_id == id then
+    flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
+  end
+  local node_open = reaper.ImGui_TreeNode(ctx, node.name .. "##" .. id, flags)
+  -- 选中
+  if reaper.ImGui_IsItemClicked(ctx, 0) then
+    tree_state.cur_advanced_folder = id
+    collect_mode = COLLECT_MODE_ADVANCEDFOLDER
+    files_idx_cache = nil
+    CollectFiles()
+  end
+  -- 右键菜单
+  if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+    reaper.ImGui_OpenPopup(ctx, "AdvancedFolderMenu_" .. id)
+  end
+  if reaper.ImGui_BeginPopup(ctx, "AdvancedFolderMenu_" .. id) then
+    if reaper.ImGui_MenuItem(ctx, "Rename") then
+      local ret, newname = reaper.GetUserInputs("Rename Collection", 1, "New Name:,extrawidth=200", node.name)
+      if ret and newname and newname ~= "" then
+        node.name = newname
+        SaveAdvancedFolders()
+      end
+    end
+    if reaper.ImGui_MenuItem(ctx, "Remove") then
+      if node.parent then
+        local parent_node = advanced_folders[node.parent]
+        for i,v in ipairs(parent_node.children) do if v==id then table.remove(parent_node.children, i) break end end
+      else
+        for i,v in ipairs(root_advanced_folders) do if v==id then table.remove(root_advanced_folders, i) break end end
+      end
+      -- 递归删除所有子节点
+      local function del_node(cid)
+        for _,ch in ipairs(advanced_folders[cid].children) do del_node(ch) end
+        advanced_folders[cid]=nil
+      end
+      del_node(id)
+      SaveAdvancedFolders()
+    end
+    if reaper.ImGui_MenuItem(ctx, "Add Subfolder") then
+      local ret, name = reaper.GetUserInputs("New Subfolder", 1, "Name:,extrawidth=200", "")
+      if ret and name and name ~= "" then
+        local new_id = new_guid()
+        advanced_folders[new_id] = { id = new_id, name = name, parent = id, children = {}, files = {} }
+        table.insert(node.children, new_id)
+        SaveAdvancedFolders()
+      end
+    end
+
+    reaper.ImGui_EndPopup(ctx)
+  end
+  -- 拖拽文件到高级文件夹中
+  if reaper.ImGui_BeginDragDropTarget(ctx) then
+    if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATH") then
+      local retval, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+      if retval and dtype == "AUDIO_PATH" and type(payload) == "string" and payload ~= "" then
+        local drag_path = payload
+        node.files = node.files or {}
+        local exists = false
+        for _, p in ipairs(node.files) do
+          if p == drag_path then exists = true break end
+        end
+        if not exists then
+          table.insert(node.files, drag_path)
+          SaveAdvancedFolders()
+          if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder == id then
+            CollectFiles()
+          end
+        end
+      end
+    end
+    reaper.ImGui_EndDragDropTarget(ctx)
+  end
+  -- 递归子节点
+  if node_open then
+    for _, cid in ipairs(node.children) do
+      draw_advanced_folder_node(cid, selected_id)
+    end
+    reaper.ImGui_TreePop(ctx)
+  end
+end
+
+-- 启动时加载高级自定义文件夹
+LoadAdvancedFolders()
 
 function loop()
   -- 首次使用时收集音频文件
@@ -2114,7 +2358,7 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 文本颜色
       
       -- 渲染单选列表
-      local sel_mode = reaper.ImGui_TreeNode(ctx, "Resource Collection", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      local sel_mode = reaper.ImGui_TreeNode(ctx, "Project Collection", reaper.ImGui_TreeNodeFlags_DefaultOpen())
       if sel_mode then
         for i, v in ipairs(collect_mode_labels) do
           local selected = (collect_mode == v.value)
@@ -2170,8 +2414,33 @@ function loop()
         reaper.ImGui_TreePop(ctx)
       end
 
-      -- 自定义文件夹节点
-      local custom_folder_open = reaper.ImGui_TreeNode(ctx, "Custom Folders", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      -- 高级文件夹节点 Collections
+      local flags = reaper.ImGui_TreeNodeFlags_DefaultOpen()
+      local advanced_folder_open = reaper.ImGui_TreeNode(ctx, "Collections", flags)
+      if advanced_folder_open then
+        for _, id in ipairs(root_advanced_folders) do
+          local node = advanced_folders[id]
+          if node then
+            draw_advanced_folder_node(id, tree_state.cur_advanced_folder)
+          else
+            -- 如果节点在 advanced_folders 中找不到，输出警告
+            -- reaper.ShowConsoleMsg("root_advanced_folders中的节点id="..id.."未在advanced_folders表找到\n")
+          end
+        end
+        if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder") then
+          local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
+          if ret and name and name ~= "" then
+            local new_id = new_guid()
+            advanced_folders[new_id] = { id = new_id, name = name, parent = nil, children = {}, files = {} } -- 写入 advanced_folders 表
+            table.insert(root_advanced_folders, new_id)
+            SaveAdvancedFolders()
+          end
+        end
+        reaper.ImGui_TreePop(ctx)
+      end
+
+      -- 自定义文件夹节点 Group
+      local custom_folder_open = reaper.ImGui_TreeNode(ctx, "Group##group", reaper.ImGui_TreeNodeFlags_DefaultOpen())
       if custom_folder_open then
         for i, folder in ipairs(custom_folders) do
           local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
@@ -2187,7 +2456,7 @@ function loop()
           end
           if reaper.ImGui_BeginPopup(ctx, "CustomFolderMenu_" .. folder) then
             if reaper.ImGui_MenuItem(ctx, "Rename") then
-              local ret, newname = reaper.GetUserInputs("Rename Folder", 1, "New Name:,extrawidth=200", folder)
+              local ret, newname = reaper.GetUserInputs("Rename Group", 1, "New Name:,extrawidth=200", folder)
               if ret and newname and newname ~= "" then
                 custom_folders[i] = newname
                 custom_folders_content[newname] = custom_folders_content[folder] or {}
@@ -2233,8 +2502,8 @@ function loop()
           end
         end
         -- 新建自定义文件夹按钮
-        if reaper.ImGui_Button(ctx, "Create Folder##add_custom_folder") then
-          local ret, name = reaper.GetUserInputs("Create Custom Folder", 1, "Folder Name:,extrawidth=200", "")
+        if reaper.ImGui_Button(ctx, "Create Group##add_custom_folder") then
+          local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
           if ret and name and name ~= "" then
             local exists = false
             for _, v in ipairs(custom_folders) do
@@ -2250,6 +2519,7 @@ function loop()
 
         reaper.ImGui_TreePop(ctx)
       end
+
       reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本颜色
       reaper.ImGui_EndChild(ctx)
     end
@@ -2302,7 +2572,7 @@ function loop()
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     0xFF0F0F0F)
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", right_w, child_h, 0) then
-      if reaper.ImGui_BeginTable(ctx, "filelist", 13,
+      if reaper.ImGui_BeginTable(ctx, "filelist", 14,
         -- reaper.ImGui_TableFlags_RowBg() -- 表格背景交替颜色
         reaper.ImGui_TableFlags_Borders() -- 表格分隔线
         | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
@@ -2326,6 +2596,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_RPP then -- RPP
           reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
@@ -2340,6 +2611,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         else
           reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
@@ -2354,6 +2626,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         end
         -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectFromProjectDirectory()
@@ -3069,8 +3342,29 @@ function loop()
             --   PlayFromStart(info)
             -- end
 
-            -- Path
+            -- Group
             reaper.ImGui_TableSetColumnIndex(ctx, 12)
+            local group_names = GetCustomGroupsForPath(info.path)
+            if group_names ~= "" then
+              reaper.ImGui_Text(ctx, group_names)
+            else
+              -- 用固定像素宽度撑大区域
+              reaper.ImGui_InvisibleButton(ctx, "GroupCell_", 100, reaper.ImGui_GetTextLineHeight(ctx))
+            end
+
+            -- 右键弹出group菜单
+            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+              reaper.ImGui_OpenPopup(ctx, "GroupMenu_" .. i)
+            end
+            if reaper.ImGui_BeginPopup(ctx, "GroupMenu_" .. i) then
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 菜单文字颜色
+              ShowGroupMenu(info)
+              reaper.ImGui_PopStyleColor(ctx, 1)
+              reaper.ImGui_EndPopup(ctx)
+            end
+
+            -- Path
+            reaper.ImGui_TableSetColumnIndex(ctx, 13)
             reaper.ImGui_Text(ctx, info.path)
             -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
             -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
@@ -3417,6 +3711,11 @@ function loop()
     -- 设置弹窗
     reaper.ImGui_SameLine(ctx, nil, 10)
     if reaper.ImGui_Button(ctx, "Settings##Popup") then
+      reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
+    end
+    -- 支持 Ctrl+P 快捷键打开设置
+    if (reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()))
+      and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_P()) then
       reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
     end
     if reaper.ImGui_BeginPopupModal(ctx, "Settings##Popup", nil) then
@@ -4272,11 +4571,11 @@ function loop()
       local range_start, range_end
       if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
         label_fmt = "Selection: %s ~ %s | %s / %s"
-        range_start = math.min(select_start_time, select_end_time)
-        range_end = math.max(select_start_time, select_end_time)
+        range_start = math.min(select_start_time, select_end_time) * play_rate -- 速率变化时调整选区时间位置
+        range_end = math.max(select_start_time, select_end_time) * play_rate -- 速率变化时调整选区时间位置
       else
         label_fmt = "View range: %s ~ %s | %s / %s"
-        range_start = view_start
+        range_start = view_start * play_rate -- 速率变化时调整选区时间位置
         range_end = view_end
       end
 
@@ -4379,6 +4678,13 @@ function loop()
   end
   reaper.ImGui_PopStyleVar(ctx, 3)
   reaper.ImGui_PopFont(ctx)
+
+  -- 检测 Ctrl+F4 快捷键
+  if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()) then
+    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
+      return -- 退出脚本
+    end
+  end
 
   if open then reaper.defer(loop) else StopPlay() end
 end
