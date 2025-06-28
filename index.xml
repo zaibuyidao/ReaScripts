@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2451364822280386c5b373e8bab7dd1c93981037">
+<index version="1" name="zaibuyidao Scripts" commit="03251bc760dbbc7090811e83561f26092a2eceb8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8672,6 +8672,12 @@ Other detailed improvements and bug fixes.]]></changelog>
       <version name="1.5.4" author="zaibuyidao" time="2025-06-27T12:55:20Z">
         <changelog><![CDATA[Optimized play cursor jumping when adjusting playback rate.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/2451364822280386c5b373e8bab7dd1c93981037/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.5" author="zaibuyidao" time="2025-06-28T17:42:12Z">
+        <changelog><![CDATA[Introducing the Collections feature, which enables creation of custom folders with unlimited nesting levels.
+Added a "Group" feature, allowing users to create custom groups and drag audio files into them for more efficient organization and categorization of audio assets.
+Added a "Group" column, allowing users to easily manage and organize audio files in the table list into groups via right-click.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/03251bc760dbbc7090811e83561f26092a2eceb8/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
