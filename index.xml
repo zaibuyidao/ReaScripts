@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="03251bc760dbbc7090811e83561f26092a2eceb8">
+<index version="1" name="zaibuyidao Scripts" commit="9615f2a23cebeec128dbb8154b9869edd7243fc7">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8678,6 +8678,13 @@ Other detailed improvements and bug fixes.]]></changelog>
 Added a "Group" feature, allowing users to create custom groups and drag audio files into them for more efficient organization and categorization of audio assets.
 Added a "Group" column, allowing users to easily manage and organize audio files in the table list into groups via right-click.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/03251bc760dbbc7090811e83561f26092a2eceb8/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.6" author="zaibuyidao" time="2025-06-29T10:28:29Z">
+        <changelog><![CDATA[Added a draggable splitter bar that lets users freely adjust the height of the waveform preview area by dragging.
+Added a context menu to the "Now playing" address bar, enabling users to open the containing folder and automatically highlight the audio file.
+Added a "Random Play" button, allowing random playback of any audio file from the current sound list.
+Optimized the mouse cursor in the waveform preview area: text input cursor appears when selecting, drag cursor when exporting a selection, and default cursor for clicks and other actions.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9615f2a23cebeec128dbb8154b9869edd7243fc7/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
