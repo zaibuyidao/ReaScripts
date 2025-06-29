@@ -1,10 +1,11 @@
 -- @description Project Audio Explorer
--- @version 1.5.5
+-- @version 1.5.6
 -- @author zaibuyidao
 -- @changelog
---   Introducing the Collections feature, which enables creation of custom folders with unlimited nesting levels.
---   Added a "Group" feature, allowing users to create custom groups and drag audio files into them for more efficient organization and categorization of audio assets.
---   Added a "Group" column, allowing users to easily manage and organize audio files in the table list into groups via right-click.
+--   Added a draggable splitter bar that lets users freely adjust the height of the waveform preview area by dragging.
+--   Added a context menu to the "Now playing" address bar, enabling users to open the containing folder and automatically highlight the audio file.
+--   Added a "Random Play" button, allowing random playback of any audio file from the current sound list.
+--   Optimized the mouse cursor in the waveform preview area: text input cursor appears when selecting, drag cursor when exporting a selection, and default cursor for clicks and other actions.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -244,7 +245,6 @@ local function SaveSettings()
   reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MAX, tostring(rate_max), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
-  reaper.SetExtState(EXT_SECTION, "ImgHOffset", tostring(img_h_offset), true)
 end
 
 -- 恢复设置
@@ -1539,10 +1539,10 @@ end
 
 -- 绘制时间线
 local function DrawTimeLine(ctx, wave, view_start, view_end)
-  local y_offset = 0      -- 距离波形底部4像素
+  local y_offset = -9     -- 距离波形底部-9像素
   local tick_long = 20    -- 主刻度高度
   local tick_middle = 10  -- 中间刻度高度
-  local tick_secmid = 7  -- 次中间刻度高度
+  local tick_secmid = 7   -- 次中间刻度高度
   local tick_short = 3    -- 次刻度高度
   local min_tick_px = 150 -- 两个主刻度最小像素距离
 
@@ -2342,7 +2342,8 @@ function loop()
     -- 自动缩放音频表格
     local line_h = reaper.ImGui_GetTextLineHeight(ctx)
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
-    local child_h = math.max(10, avail_y - line_h - 228 - img_h_offset) -- 减去播放控件+波形预览+进度条+地址栏的高度=228
+    -- 减去标题栏高度和底部间距。减去播放控件+波形预览+时间线9+进度条+地址栏的高度=228 +加分割条的厚度3=240
+    local child_h = math.max(10, avail_y - line_h - 240 - img_h_offset)
     if child_h < 10 then child_h = 10 end -- 最小高度保护(需要使用 if reaper.ImGui_BeginChild 才有效)
     
     local splitter_w = 3 -- 分割条宽度
@@ -3124,6 +3125,16 @@ function loop()
               if reaper.ImGui_Selectable(ctx, info.filename, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
                 selected_row = i
               end
+              -- 右键打开文件所在目录
+              if reaper.ImGui_BeginPopupContextItem(ctx, "RowContext_" .. i, 1) then
+                if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+                  local path = info.path
+                  if path and path ~= "" then
+                    reaper.CF_LocateInExplorer(path)
+                  end
+                end
+                reaper.ImGui_EndPopup(ctx)
+              end
             end
 
             if reaper.ImGui_IsItemHovered(ctx) then
@@ -3549,6 +3560,21 @@ function loop()
       end
     end
 
+    -- 随机播放按钮
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "Rand", 45) then
+      -- 随机选择表格中的一行
+      local count = #files_idx_cache
+      if count > 0 then
+        -- math.randomseed 可根据实际需要加上 os.time() 进行初始化
+        local rand_idx = math.random(1, count)
+        selected_row = rand_idx -- 高亮选中行
+        PlayFromCursor(files_idx_cache[rand_idx])
+        is_paused = false
+        paused_position = 0
+      end
+    end
+
     -- 循环开关
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_Text(ctx, "Loop:")
@@ -3799,18 +3825,6 @@ function loop()
         auto_scroll_enabled = new_scroll
       end
 
-      reaper.ImGui_Text(ctx, "Waveform height adjust:")
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      local changed, new_offset = reaper.ImGui_SliderInt(ctx, "##Waveform Height Adjust", img_h_offset, -70, 300, "%d px")
-      -- 检测右键单击滑块，复位为0
-      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-        img_h_offset = 0
-        changed = true
-      else
-        if changed then img_h_offset = new_offset end
-      end
-
       -- 背景不透明度
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Window background alpha:")
@@ -3946,7 +3960,6 @@ function loop()
         rate_min = 0.25,     -- 速率旋钮最低
         rate_max = 4.0,      -- 速率旋钮最高
         cache_dir = DEFAULT_CACHE_DIR,
-        img_h_offset = 0
       }
 
       reaper.ImGui_SameLine(ctx)
@@ -3967,13 +3980,11 @@ function loop()
         rate_max = DEFAULTS.rate_max
         cache_dir = DEFAULTS.cache_dir
         auto_scroll_enabled = DEFAULTS.auto_scroll_enabled
-        img_h_offset = DEFAULTS.img_h_offset
         -- 保存设置到ExtState
         reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
-        reaper.SetExtState(EXT_SECTION, "ImgHOffset", tostring(img_h_offset), true) -- 波形预览高度偏移
         MarkFontDirty()
         CollectFiles()
       end
@@ -4058,12 +4069,50 @@ function loop()
     -- Dummy 占位
     reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
 
-    img_h = base_img_h + img_h_offset -- 补偿高度
+    -- 横向分割条
+    reaper.ImGui_InvisibleButton(ctx, "##h_splitter", avail_x, splitter_w)
+    local active  = reaper.ImGui_IsItemActive(ctx)
+    local hovered = reaper.ImGui_IsItemHovered(ctx)
+    local mx, my = reaper.ImGui_GetMousePos(ctx)
+    local wx, wy = reaper.ImGui_GetWindowPos(ctx)
+
+    -- 鼠标按下时记录起始值
+    if reaper.ImGui_IsItemActivated(ctx) then
+      h_splitter_drag = true
+      h_splitter_start_mouse_y = my
+      h_splitter_start_offset  = img_h_offset
+    end
+
+    -- 拖动中，反向更新 img_h_offset
+    if h_splitter_drag and active then
+      local delta = my - h_splitter_start_mouse_y
+      local new_off = h_splitter_start_offset - delta
+      img_h_offset = math.max(-70, math.min(300, new_off))
+      reaper.SetExtState(EXT_SECTION, "ImgHOffset", tostring(img_h_offset), true)
+    end
+
+    -- 松开时结束拖拽
+    if not active then
+      h_splitter_drag = false
+    end
+
+    -- 绘制分割条
+    local dl = reaper.ImGui_GetWindowDrawList(ctx)
+    local x1,y1 = reaper.ImGui_GetItemRectMin(ctx)
+    local x2,y2 = reaper.ImGui_GetItemRectMax(ctx)
+    local col = hovered and 0x00AFFF88 or 0x77777744
+    reaper.ImGui_DrawList_AddRectFilled(dl, x1, y1, x2, y2, col)
+
+    -- 光标样式
+    if hovered or active then
+      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeNS())
+    end
 
     -- 波形预览
-    reaper.ImGui_Separator(ctx)
+    img_h = base_img_h + img_h_offset -- 补偿高度
+    -- reaper.ImGui_Separator(ctx)
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-    if reaper.ImGui_BeginChild(ctx, "waveform", avail_w, img_h + timeline_height) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度）
+    if reaper.ImGui_BeginChild(ctx, "waveform", avail_w, img_h + timeline_height+9) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+时间线间隔9）
       local pw_min_x, pw_min_y = reaper.ImGui_GetItemRectMin(ctx)
       local pw_max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local pw_region_w = math.max(64, math.floor(pw_max_x - pw_min_x))
@@ -4154,7 +4203,9 @@ function loop()
       end
 
       DrawWaveformInImGui(ctx, peaks, pw_region_w, img_h, src_len, channel_count)
-
+      if reaper.ImGui_IsItemHovered(ctx) then
+        reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
+      end
       -- 空格播放
       if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Space()) then
         if playing_preview then
@@ -4360,7 +4411,7 @@ function loop()
           end
         end
 
-        -- 框选松开后自动播放并跳转起始位置 未激活LOOP时
+        -- 框选松开后自动播放并跳转回到起始位置待命 未激活LOOP时
         if playing_preview and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 and not loop_enabled then
           local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
           if ok then
@@ -4505,8 +4556,22 @@ function loop()
         prev_play_cursor = nil
       end
 
+      local selection_exists = cur_info and has_selection and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01
+      -- 鼠标样式切换
+      if reaper.ImGui_IsItemHovered(ctx) and selection_exists then
+        if selecting and reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
+          -- 正在框选区域
+          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
+        -- elseif reaper.ImGui_IsMouseDown(ctx, 0) and not selecting then
+        --   reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+        else
+          -- 有选区且不在框选，允许拖拽到REAPER
+          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+        end
+      end
+
       -- 选区拖拽到REAPER
-      if cur_info and has_selection and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
+      if selection_exists then
         if reaper.ImGui_BeginDragDropSource(ctx) then
           reaper.ImGui_Text(ctx, "Drag selection to REAPER to insert")
           -- 判断区段还是源音频
@@ -4635,6 +4700,20 @@ function loop()
       if show_path then
         reaper.ImGui_SameLine(ctx, nil, 1)
         reaper.ImGui_Text(ctx, " Now playing: " .. show_path)
+        -- 右键点击时打开弹出菜单
+        if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+          reaper.ImGui_OpenPopup(ctx, "##now_playing")
+        end
+        if reaper.ImGui_BeginPopup(ctx, "##now_playing") then
+          if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+            if show_path and show_path ~= "" then
+              reaper.CF_LocateInExplorer(show_path)
+            end
+          end
+          reaper.ImGui_EndPopup(ctx)
+        end
+        reaper.ImGui_SameLine(ctx)
+        HelpMarker("Right-click the 'Now playing' text to open its containing folder and highlight the file.")
       end
     end
 
