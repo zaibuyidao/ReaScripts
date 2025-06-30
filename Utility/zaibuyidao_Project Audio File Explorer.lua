@@ -1,11 +1,9 @@
 -- @description Project Audio Explorer
--- @version 1.5.6
+-- @version 1.5.7
 -- @author zaibuyidao
 -- @changelog
---   Added a draggable splitter bar that lets users freely adjust the height of the waveform preview area by dragging.
---   Added a context menu to the "Now playing" address bar, enabling users to open the containing folder and automatically highlight the audio file.
---   Added a "Random Play" button, allowing random playback of any audio file from the current sound list.
---   Optimized the mouse cursor in the waveform preview area: text input cursor appears when selecting, drag cursor when exporting a selection, and default cursor for clicks and other actions.
+--   The peektree section now uses CollapsingHeader instead of TreeNode for a cleaner and more intuitive interface.
+--   Pressing ESC will now quickly exit the script if there is no selection in the waveform preview window.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -2359,10 +2357,14 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 文本颜色
       
       -- 渲染单选列表
-      local sel_mode = reaper.ImGui_TreeNode(ctx, "Project Collection", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      -- local sel_mode = reaper.ImGui_TreeNode(ctx, "Project Collection", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
+      local sel_mode = reaper.ImGui_CollapsingHeader(ctx, "Project Collection") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
       if sel_mode then
+        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         for i, v in ipairs(collect_mode_labels) do
           local selected = (collect_mode == v.value)
+          reaper.ImGui_AlignTextToFramePadding(ctx)
           if reaper.ImGui_Selectable(ctx, v.label, selected) then
             collect_mode = v.value
             selected_index = i
@@ -2371,13 +2373,16 @@ function loop()
             CollectFiles()
           end
         end
-        reaper.ImGui_TreePop(ctx)
+        reaper.ImGui_Unindent(ctx, 7)
+        --reaper.ImGui_TreePop(ctx)
       end
 
       -- Tree模式特殊处理（折叠节点）
       local flag = (collect_mode == COLLECT_MODE_TREE) and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-      local tree_expanded = reaper.ImGui_TreeNode(ctx, "This Computer", flag)
+      -- local tree_expanded = reaper.ImGui_TreeNode(ctx, "This Computer", flag)
+      local tree_expanded = reaper.ImGui_CollapsingHeader(ctx, "This Computer") -- , nil, flag)
       if tree_expanded then
+        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         if not drives_loaded then
           reaper.ImGui_Text(ctx, "Loading drives, please wait...")
           if not need_load_drives then
@@ -2388,12 +2393,15 @@ function loop()
             draw_tree(drv, drv)
           end
         end
-        reaper.ImGui_TreePop(ctx)
+        reaper.ImGui_Unindent(ctx, 7)
+        --reaper.ImGui_TreePop(ctx)
       end
 
       -- 文件夹快捷方式节点
-      local create_folder_open = reaper.ImGui_TreeNode(ctx, "Folder Shortcuts", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      -- local create_folder_open = reaper.ImGui_TreeNode(ctx, "Folder Shortcuts", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      local create_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
       if create_folder_open then
+        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         for i = 1, #folder_shortcuts do
           draw_shortcut_tree(folder_shortcuts[i])
         end
@@ -2411,14 +2419,16 @@ function loop()
             end
           end
         end
-
-        reaper.ImGui_TreePop(ctx)
+        reaper.ImGui_Unindent(ctx, 7)
+        --reaper.ImGui_TreePop(ctx)
       end
 
       -- 高级文件夹节点 Collections
       local flags = reaper.ImGui_TreeNodeFlags_DefaultOpen()
-      local advanced_folder_open = reaper.ImGui_TreeNode(ctx, "Collections", flags)
+      -- local advanced_folder_open = reaper.ImGui_TreeNode(ctx, "Collections", flags)
+      local advanced_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Collections") --, nil, flags)
       if advanced_folder_open then
+        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         for _, id in ipairs(root_advanced_folders) do
           local node = advanced_folders[id]
           if node then
@@ -2437,11 +2447,14 @@ function loop()
             SaveAdvancedFolders()
           end
         end
-        reaper.ImGui_TreePop(ctx)
+        reaper.ImGui_Unindent(ctx, 7)
+        --reaper.ImGui_TreePop(ctx)
       end
 
       -- 自定义文件夹节点 Group
-      local custom_folder_open = reaper.ImGui_TreeNode(ctx, "Group##group", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      -- local custom_folder_open = reaper.ImGui_TreeNode(ctx, "Group##group", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      local custom_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Group##group") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
       if custom_folder_open then
         for i, folder in ipairs(custom_folders) do
           local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
@@ -2517,11 +2530,10 @@ function loop()
             end
           end
         end
-
-        reaper.ImGui_TreePop(ctx)
+        reaper.ImGui_Unindent(ctx, 7)
+        --reaper.ImGui_TreePop(ctx)
       end
-
-      reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本颜色
+      reaper.ImGui_PopStyleColor(ctx, 2) -- 恢复文本和折叠标题按钮颜色
       reaper.ImGui_EndChild(ctx)
     end
 
@@ -3121,18 +3133,26 @@ function loop()
                 end
               end
             else
-              reaper.ImGui_TableSetColumnIndex(ctx, 1)
-              if reaper.ImGui_Selectable(ctx, info.filename, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+              local selectable_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
+              if reaper.ImGui_Selectable(ctx, selectable_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
                 selected_row = i
               end
-              -- 右键打开文件所在目录
-              if reaper.ImGui_BeginPopupContextItem(ctx, "RowContext_" .. i, 1) then
+
+              local popup_id = "row_context_" .. tostring(i)
+              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+                reaper.ImGui_OpenPopup(ctx, popup_id)
+              end
+
+              if reaper.ImGui_BeginPopup(ctx, popup_id) then
+                -- 右键打开文件所在目录
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 菜单文字颜色
                 if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
                   local path = info.path
                   if path and path ~= "" then
                     reaper.CF_LocateInExplorer(path)
                   end
                 end
+                reaper.ImGui_PopStyleColor(ctx, 1)
                 reaper.ImGui_EndPopup(ctx)
               end
             end
@@ -3163,6 +3183,7 @@ function loop()
 
             -- 拖动音频到REAPER或自定义文件夹
             if reaper.ImGui_BeginDragDropSource(ctx) then
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 菜单文字颜色
               reaper.ImGui_Text(ctx, "Drag to insert or collect")
               dragging_audio = {
                 path = info and info.path,
@@ -3176,6 +3197,7 @@ function loop()
                 -- reaper.ImGui_Text(ctx, "Drag to collect")
                 reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATH", path)
               end
+              reaper.ImGui_PopStyleColor(ctx, 1)
               reaper.ImGui_EndDragDropSource(ctx)
             end
 
@@ -4487,13 +4509,6 @@ function loop()
         end
       end
 
-      -- ESC按键，清除选区内容
-      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Escape()) then
-        select_start_time = nil
-        select_end_time = nil
-        pending_clear_selection = false
-      end
-
       -- 切换源时清除选区高亮和重置波形的缩放与滚动位置
       if selected_row ~= last_audio_idx then
         select_start_time = nil
@@ -4762,6 +4777,20 @@ function loop()
   if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()) then
     if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
       return -- 退出脚本
+    end
+  end
+
+  -- ESC按键，清除选区内容
+  if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Escape()) then
+    if select_start_time or select_end_time then
+      -- 有选区，清空
+      select_start_time = nil
+      select_end_time = nil
+      pending_clear_selection = false
+    else
+      -- 无选区，退出脚本
+      StopPreview()
+      return
     end
   end
 
