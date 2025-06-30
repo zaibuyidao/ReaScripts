@@ -1,9 +1,10 @@
 -- @description Project Audio Explorer
--- @version 1.5.7
+-- @version 1.5.8
 -- @author zaibuyidao
 -- @changelog
 --   The peektree section now uses CollapsingHeader instead of TreeNode for a cleaner and more intuitive interface.
 --   Pressing ESC will now quickly exit the script if there is no selection in the waveform preview window.
+--   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -2357,9 +2358,9 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 文本颜色
       
       -- 渲染单选列表
-      -- local sel_mode = reaper.ImGui_TreeNode(ctx, "Project Collection", reaper.ImGui_TreeNodeFlags_DefaultOpen())
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
       local sel_mode = reaper.ImGui_CollapsingHeader(ctx, "Project Collection") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      reaper.ImGui_PopStyleColor(ctx)
       if sel_mode then
         reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         for i, v in ipairs(collect_mode_labels) do
@@ -2374,13 +2375,13 @@ function loop()
           end
         end
         reaper.ImGui_Unindent(ctx, 7)
-        --reaper.ImGui_TreePop(ctx)
       end
 
       -- Tree模式特殊处理（折叠节点）
       local flag = (collect_mode == COLLECT_MODE_TREE) and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-      -- local tree_expanded = reaper.ImGui_TreeNode(ctx, "This Computer", flag)
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
       local tree_expanded = reaper.ImGui_CollapsingHeader(ctx, "This Computer") -- , nil, flag)
+      reaper.ImGui_PopStyleColor(ctx)
       if tree_expanded then
         reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         if not drives_loaded then
@@ -2394,12 +2395,12 @@ function loop()
           end
         end
         reaper.ImGui_Unindent(ctx, 7)
-        --reaper.ImGui_TreePop(ctx)
       end
 
       -- 文件夹快捷方式节点
-      -- local create_folder_open = reaper.ImGui_TreeNode(ctx, "Folder Shortcuts", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
       local create_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      reaper.ImGui_PopStyleColor(ctx)
       if create_folder_open then
         reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         for i = 1, #folder_shortcuts do
@@ -2420,13 +2421,13 @@ function loop()
           end
         end
         reaper.ImGui_Unindent(ctx, 7)
-        --reaper.ImGui_TreePop(ctx)
       end
 
       -- 高级文件夹节点 Collections
       local flags = reaper.ImGui_TreeNodeFlags_DefaultOpen()
-      -- local advanced_folder_open = reaper.ImGui_TreeNode(ctx, "Collections", flags)
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
       local advanced_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Collections") --, nil, flags)
+      reaper.ImGui_PopStyleColor(ctx)
       if advanced_folder_open then
         reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         for _, id in ipairs(root_advanced_folders) do
@@ -2448,12 +2449,12 @@ function loop()
           end
         end
         reaper.ImGui_Unindent(ctx, 7)
-        --reaper.ImGui_TreePop(ctx)
       end
 
       -- 自定义文件夹节点 Group
-      -- local custom_folder_open = reaper.ImGui_TreeNode(ctx, "Group##group", reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
       local custom_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Group##group") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+      reaper.ImGui_PopStyleColor(ctx)
       reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
       if custom_folder_open then
         for i, folder in ipairs(custom_folders) do
@@ -2531,9 +2532,8 @@ function loop()
           end
         end
         reaper.ImGui_Unindent(ctx, 7)
-        --reaper.ImGui_TreePop(ctx)
       end
-      reaper.ImGui_PopStyleColor(ctx, 2) -- 恢复文本和折叠标题按钮颜色
+      reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
       reaper.ImGui_EndChild(ctx)
     end
 
