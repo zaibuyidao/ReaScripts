@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9615f2a23cebeec128dbb8154b9869edd7243fc7">
+<index version="1" name="zaibuyidao Scripts" commit="b1a1c8df2109256da5a69bbbd410126cf1800337">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8685,6 +8685,11 @@ Added a context menu to the "Now playing" address bar, enabling users to open th
 Added a "Random Play" button, allowing random playback of any audio file from the current sound list.
 Optimized the mouse cursor in the waveform preview area: text input cursor appears when selecting, drag cursor when exporting a selection, and default cursor for clicks and other actions.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9615f2a23cebeec128dbb8154b9869edd7243fc7/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.7" author="zaibuyidao" time="2025-06-30T14:41:50Z">
+        <changelog><![CDATA[The peektree section now uses CollapsingHeader instead of TreeNode for a cleaner and more intuitive interface.
+Pressing ESC will now quickly exit the script if there is no selection in the waveform preview window.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b1a1c8df2109256da5a69bbbd410126cf1800337/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
