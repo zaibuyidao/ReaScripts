@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="00794dd384a745f41347d672a025d3d8ee5d7b05">
+<index version="1" name="zaibuyidao Scripts" commit="eebfc5a5f8b4c6670bd7fc15116c1e8860c80334">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8702,6 +8702,10 @@ Other detailed improvements and bug fixes.]]></changelog>
 Improved: Mode switching—clicking the main table now exits Recently Played mode.
 Fixed: Path separators now automatically match the current operating system for better cross-platform compatibility.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/00794dd384a745f41347d672a025d3d8ee5d7b05/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.10" author="zaibuyidao" time="2025-07-02T14:27:13Z">
+        <changelog><![CDATA[Added: Waveform preview is now available for each audio row in the table, allowing fast and intuitive browsing.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/eebfc5a5f8b4c6670bd7fc15116c1e8860c80334/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
