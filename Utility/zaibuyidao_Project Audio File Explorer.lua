@@ -1,10 +1,10 @@
 -- @description Project Audio Explorer
--- @version 1.5.8
+-- @version 1.5.9
 -- @author zaibuyidao
 -- @changelog
---   The peektree section now uses CollapsingHeader instead of TreeNode for a cleaner and more intuitive interface.
---   Pressing ESC will now quickly exit the script if there is no selection in the waveform preview window.
---   Other detailed improvements and bug fixes.
+--   Added: "Recently Played" list in the sidebar for quick access and playback of recently used audio files.
+--   Improved: Mode switching—clicking the main table now exits Recently Played mode.
+--   Fixed: Path separators now automatically match the current operating system for better cross-platform compatibility.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -107,6 +107,9 @@ local auto_scroll_enabled    = false -- 自动滚屏
 local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
 local files_idx_cache        = nil   -- 文件缓存
+local recent_audio_files     = {}    -- 最近播放列表
+local max_recent_files       = 20    -- 最多保留20条
+local selected_recent_row    = selected_recent_row or 0
 
 last_selected_info           = nil -- 上次选中的音频信息
 last_playing_info            = nil  -- 上次播放的音频信息
@@ -136,6 +139,7 @@ local EXT_KEY_RATE_MAX     = "RateMax"
 local EXT_KEY_VOLUME       = "Volume"
 local EXT_KEY_CACHE_DIR    = "CacheDir"
 local EXT_KEY_AUTOSCROLL   = "AutoScroll"
+local EXT_KEY_RECENT_PLAYED = "RecentPlayedFiles"
 -- 列表过滤
 local filename_filter      = nil
 -- 预览已读标记
@@ -143,7 +147,8 @@ local previewed_files = {}
 local function MarkPreviewed(path) previewed_files[path] = true end
 local function IsPreviewed(path) return previewed_files[path] == true end
 -- 波形缓存路径
-local DEFAULT_CACHE_DIR = script_path .. "waveform_cache/"
+local sep = package.config:sub(1,1)
+local DEFAULT_CACHE_DIR = script_path .. "waveform_cache" .. sep
 local cache_dir = reaper.GetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR)
 if not cache_dir or cache_dir == "" then
   cache_dir = DEFAULT_CACHE_DIR
@@ -244,6 +249,7 @@ local function SaveSettings()
   reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MAX, tostring(rate_max), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
+  reaper.SetExtState(EXT_SECTION, "MaxRecentFiles", tostring(max_recent_files), true)
 end
 
 -- 恢复设置
@@ -266,6 +272,9 @@ if last_bg_alpha then bg_alpha = last_bg_alpha end
 
 local last_img_h_offset = tonumber(reaper.GetExtState(EXT_SECTION, "ImgHOffset"))
 if last_img_h_offset then img_h_offset = last_img_h_offset end
+
+local last_max_recent = tonumber(reaper.GetExtState(EXT_SECTION, "MaxRecentFiles"))
+if last_max_recent then max_recent_files = math.max(1, math.min(100, last_max_recent)) end
 
 -- 文件夹快捷方式
 local EXT_KEY_SHORTCUTS = "FolderShortcuts"
@@ -298,6 +307,22 @@ function LoadFolderShortcuts()
 end
 
 folder_shortcuts = LoadFolderShortcuts()
+
+-- 规范分隔符，传 true 表示是文件夹
+function normalize_path(path, is_dir)
+  if reaper.GetOS():find("Win") then
+    path = path:gsub("/", "\\")
+    if is_dir and not path:match("\\$") then
+      path = path .. "\\"
+    end
+  else
+    if is_dir and not path:match("/$") then
+      path = path .. "/"
+    end
+  end
+  return path
+end
+
 
 --------------------------------------------- 颜色相关 ---------------------------------------------
 
@@ -334,7 +359,7 @@ local timeline_default_color = 0xCFCFCFFF -- 时间线默认颜色 0x3F3F48FF 0x
 
 --------------------------------------------- 波形缓存相关函数 ---------------------------------------------
 
-local function GetFileSize(filepath)
+function GetFileSize(filepath)
   local f = io.open(filepath, "rb")
   if not f then return 0 end
   f:seek("end")
@@ -343,7 +368,7 @@ local function GetFileSize(filepath)
   return sz or 0
 end
 
-local function SimpleHash(str)
+function SimpleHash(str)
   local hash = 0
   for i = 1, #str do
     hash = (hash * 31 + str:byte(i)) % 2^32
@@ -357,7 +382,7 @@ local function CacheFilename(filepath)
 end
 
 -- 保存缓存
-local function SaveWaveformCache(filepath, data)
+function SaveWaveformCache(filepath, data)
   local f = io.open(CacheFilename(filepath), "w+b")
   if not f then return end
   -- 第一行info，后面每行为每个像素的峰值
@@ -374,7 +399,7 @@ local function SaveWaveformCache(filepath, data)
 end
 
 -- 读取缓存
-local function LoadWaveformCache(filepath)
+function LoadWaveformCache(filepath)
   local f = io.open(CacheFilename(filepath), "rb")
   if not f then return nil end
   local line = f:read("*l")
@@ -396,7 +421,7 @@ local function LoadWaveformCache(filepath)
   return {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len}
 end
 
-local function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
+function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
   local cache_len = cache.src_len
   local cache_pixel_cnt = cache.pixel_cnt
   local chs = cache.channel_count
@@ -533,7 +558,7 @@ local function GetRootSource(src)
 end
 
 -- Items 收集工程中当前使用的音频文件
-local function CollectFromItems()
+function CollectFromItems()
   local files, files_idx = {}, {}
   local item_cnt = reaper.CountMediaItems(0)
   for i = 0, item_cnt - 1 do
@@ -869,7 +894,7 @@ function CollectFromCustomFolder(paths)
 end
 
 -- 按文件名排序
-local function SortFilesByFilenameAsc()
+function SortFilesByFilenameAsc()
   if files_idx_cache then
     table.sort(files_idx_cache, function(a, b)
       return (a.filename or "") < (b.filename or "")
@@ -929,6 +954,10 @@ function MergeUsagesBySection(files_idx)
 end
 
 function CollectFiles()
+  if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
+    current_recent_play_info = nil
+    selected_recent_row = 0 -- 清空最近播放选中项
+  end
   local files, files_idx
   if collect_mode == COLLECT_MODE_ITEMS then
     files, files_idx = CollectFromItems()
@@ -985,7 +1014,7 @@ function DestroySources(files_idx)
   end
 end
 
-local function StopPlay()
+function StopPlay()
   if playing_preview then
     reaper.CF_Preview_Stop(playing_preview)
     playing_preview = nil
@@ -997,7 +1026,7 @@ local function StopPlay()
 end
 
 -- 播放文件
-local function PlayFile(source, path, do_loop)
+function PlayFile(source, path, do_loop)
   StopPlay()
   if source then
     playing_preview = reaper.CF_CreatePreview(source)
@@ -1045,7 +1074,7 @@ function RestartPreviewWithParams(from_wave_pos)
   end
 end
 
-local function VAL2DB(x)
+function VAL2DB(x)
   if x < 0.0000000298023223876953125 then
     return -150
   else
@@ -1054,20 +1083,20 @@ local function VAL2DB(x)
 end
 
 -- dB转线性增益
-local function dB_to_gain(db)
+function dB_to_gain(db)
   return 10 ^ (db / 20)
 end
 
-local function RefreshFont()
+function RefreshFont()
   sans_serif = reaper.ImGui_CreateFont('sans-serif', font_size)
   reaper.ImGui_Attach(ctx, sans_serif)
 end
 
-local function MarkFontDirty()
+function MarkFontDirty()
   need_refresh_font = true
 end
 
-local function GetPhysicalPath(path_or_source)
+function GetPhysicalPath(path_or_source)
   if type(path_or_source) == "string" then
     return path_or_source
   elseif type(path_or_source) == "userdata" then
@@ -1455,7 +1484,7 @@ local function StopPreview()
 end
 
 -- 从头播放
-local function PlayFromStart(info)
+function PlayFromStart(info)
   last_play_cursor_before_play = 0
   -- 重置峰值
   for i = 1, peak_chans do
@@ -1488,6 +1517,10 @@ local function PlayFromStart(info)
       wf_play_start_cursor = 0
     end
     MarkPreviewed(info.path)
+    -- 添加最近播放
+    if info and info.path and collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
+      AddToRecentPlayed(info)
+    end
     -- 保存最后播放的信息
     last_playing_info = {}
     for k, v in pairs(info) do last_playing_info[k] = v end
@@ -1498,7 +1531,7 @@ local function PlayFromStart(info)
 end
 
 -- 从光标开始播放
-local function PlayFromCursor(info)
+function PlayFromCursor(info)
   last_play_cursor_before_play = Wave.play_cursor or 0
   -- 重置峰值
   for i = 1, peak_chans do
@@ -1537,7 +1570,7 @@ local function PlayFromCursor(info)
 end
 
 -- 绘制时间线
-local function DrawTimeLine(ctx, wave, view_start, view_end)
+function DrawTimeLine(ctx, wave, view_start, view_end)
   local y_offset = -9     -- 距离波形底部-9像素
   local tick_long = 20    -- 主刻度高度
   local tick_middle = 10  -- 中间刻度高度
@@ -1662,7 +1695,6 @@ end
 
 --------------------------------------------- 树状文件夹 ---------------------------------------------
 
-local sep = package.config:sub(1,1)
 local audio_types = { WAVE=true, MP3=true, FLAC=true, OGG=true, AIFF=true, APE=true }
 tree_state = tree_state or { cur_path = '', sel_audio = '' }
 local tree_open = {}
@@ -1899,7 +1931,7 @@ local function draw_shortcut_tree(sc, base_path)
     end
     if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
       if sc.path and sc.path ~= "" then
-        reaper.CF_ShellExecute(sc.path)
+        reaper.CF_ShellExecute(normalize_path(sc.path)) -- 规范分隔符
       end
     end
     if is_root_shortcut then
@@ -2271,6 +2303,134 @@ end
 -- 启动时加载高级自定义文件夹
 LoadAdvancedFolders()
 
+---------------------------------------------  最近播放节点 ---------------------------------------------
+
+function split(str, sep)
+  local result = {}
+  local pattern = string.format("([^%s]+)", sep)
+  local start = 1
+  local plain = true
+  local sep_start, sep_end = string.find(str, sep, start, plain)
+  while sep_start do
+    table.insert(result, string.sub(str, start, sep_start - 1))
+    start = sep_end + 1
+    sep_start, sep_end = string.find(str, sep, start, plain)
+  end
+  table.insert(result, string.sub(str, start))
+  return result
+end
+
+function LoadRecentPlayed()
+  recent_audio_files = {}
+  local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_RECENT_PLAYED)
+  if not str or str == "" then return end
+  local list = split(str, "|;|")
+  for _, item in ipairs(list) do
+    local path, filename = item:match("^(.-)%|%|(.*)$")
+    if path and path ~= "" then
+      local info = BuildFileInfoFromPath(path, filename)
+      table.insert(recent_audio_files, info)
+    end
+  end
+end
+
+function SaveRecentPlayed()
+  local t = {}
+  for _, info in ipairs(recent_audio_files) do
+    table.insert(t, (info.path or "") .. "||" .. (info.filename or ""))
+  end
+  local str = table.concat(t, "|;|") -- 用 |;| 分隔每一条
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_RECENT_PLAYED, str, true)
+end
+
+function BuildFileInfoFromPath(path, filename)
+  local info = {
+    path = path,
+    filename = filename or (path:match("[^/\\]+$") or path),
+    position = 0,
+    section_offset = 0,
+    section_length = 0
+  }
+
+  if not IsValidAudioFile(path) then return info end
+
+  local typ, size, bits, samplerate, channels, length = "", 0, "-", "-", "-", "-"
+  local genre, description, comment, orig_date = "", "", "", ""
+
+  -- 文件属性
+  if reaper.file_exists and reaper.file_exists(path) then
+    local src = reaper.PCM_Source_CreateFromFile(path)
+    if src then
+      typ = reaper.GetMediaSourceType(src, "")
+      bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
+      samplerate = reaper.GetMediaSourceSampleRate(src)
+      channels = reaper.GetMediaSourceNumChannels(src)
+      length = reaper.GetMediaSourceLength(src)
+      local _, _genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
+      local _, _comment = reaper.GetMediaFileMetadata(src, "XMP:dm/logComment")
+      local _, _description = reaper.GetMediaFileMetadata(src, "BWF:Description")
+      local _, _orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
+      genre = _genre or ""
+      comment = _comment or ""
+      description = _description or ""
+      orig_date = _orig_date or ""
+      reaper.PCM_Source_Destroy(src)
+    end
+  end
+
+  -- 音频格式校验
+  if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
+    return info
+  end
+
+  -- 文件大小
+  local f = io.open(path, "rb")
+  if f then
+    f:seek("end")
+    size = f:seek()
+    f:close()
+  end
+
+  info.type = typ
+  info.samplerate = samplerate
+  info.channels = channels
+  info.length = length
+  info.bits = bits
+  info.size = size
+  info.genre = genre
+  info.description = description
+  info.comment = comment
+  info.bwf_orig_date = orig_date
+  info.section_length = length
+
+  return info
+end
+
+function AddToRecentPlayed(file_info)
+  if not file_info or not file_info.path then return end
+  -- 规范分隔符
+  file_info.path = normalize_path(file_info.path)
+  if recent_audio_files[1] and recent_audio_files[1].path == file_info.path then
+    return
+  end
+  -- 移除已有的同路径项（避免重复）
+  for i = #recent_audio_files, 1, -1 do
+    if recent_audio_files[i].path == file_info.path then
+      table.remove(recent_audio_files, i)
+    end
+  end
+
+  table.insert(recent_audio_files, 1, file_info)
+  -- 裁剪超出最大数量
+  while #recent_audio_files > max_recent_files do
+    table.remove(recent_audio_files)
+  end
+  SaveRecentPlayed()
+end
+
+-- 读取最近播放
+LoadRecentPlayed()
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -2365,7 +2525,7 @@ function loop()
         reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         for i, v in ipairs(collect_mode_labels) do
           local selected = (collect_mode == v.value)
-          reaper.ImGui_AlignTextToFramePadding(ctx)
+          -- reaper.ImGui_AlignTextToFramePadding(ctx)
           if reaper.ImGui_Selectable(ctx, v.label, selected) then
             collect_mode = v.value
             selected_index = i
@@ -2455,8 +2615,8 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
       local custom_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Group##group") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
       reaper.ImGui_PopStyleColor(ctx)
-      reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
       if custom_folder_open then
+        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
         for i, folder in ipairs(custom_folders) do
           local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
           if reaper.ImGui_Selectable(ctx, folder, is_selected) then
@@ -2533,6 +2693,44 @@ function loop()
         end
         reaper.ImGui_Unindent(ctx, 7)
       end
+
+      -- 最近播放节点
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
+      local recent_played_open = reaper.ImGui_CollapsingHeader(ctx, "Recently Played##recent")
+      reaper.ImGui_PopStyleColor(ctx)
+      if recent_played_open then
+        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+        for i, info in ipairs(recent_audio_files) do
+          if i > max_recent_files then break end
+          local selected = (selected_recent_row == i)
+          if reaper.ImGui_Selectable(ctx, info.filename, selected) then
+            selected_recent_row = i
+            -- 进入最近播放前先保存当前模式
+            if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
+              last_collect_mode = collect_mode
+            end
+            collect_mode = COLLECT_MODE_RECENTLY_PLAYED -- 切换到最近播放模式
+            local full_info = BuildFileInfoFromPath(info.path, info.filename) -- 重新补全文件信息
+            PlayFromStart(full_info) -- 播放文件并加载波形
+            current_recent_play_info = full_info
+          end
+
+          -- 右键弹出菜单
+          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+            reaper.ImGui_OpenPopup(ctx, "recent_file_menu_" .. i)
+          end
+          if reaper.ImGui_BeginPopup(ctx, "recent_file_menu_" .. i) then
+            if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+              if info.path and info.path ~= "" then
+                reaper.CF_LocateInExplorer(normalize_path(info.path)) -- 规范分隔符
+              end
+            end
+            reaper.ImGui_EndPopup(ctx)
+          end
+        end
+        reaper.ImGui_Unindent(ctx, 7)
+      end
+
       reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
       reaper.ImGui_EndChild(ctx)
     end
@@ -2873,6 +3071,10 @@ function loop()
               local selectable_label = (info.filename or "-") .. "##ALLITEMS_" .. tostring(i)
               if reaper.ImGui_Selectable(ctx, selectable_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
                 selected_row = i
+                current_recent_play_info = nil -- 解除最近播放锁定
+                if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
+                  collect_mode = last_collect_mode or COLLECT_MODE_SHORTCUT
+                end
               end
               -- 右键菜单定位item/静音/重命名/插入到工程中
               local popup_id = "item_context_menu_" .. tostring(i)
@@ -3136,6 +3338,10 @@ function loop()
               local selectable_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
               if reaper.ImGui_Selectable(ctx, selectable_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
                 selected_row = i
+                current_recent_play_info = nil -- 解除最近播放锁定
+                if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
+                  collect_mode = last_collect_mode or COLLECT_MODE_SHORTCUT
+                end
               end
 
               local popup_id = "row_context_" .. tostring(i)
@@ -3149,7 +3355,7 @@ function loop()
                 if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
                   local path = info.path
                   if path and path ~= "" then
-                    reaper.CF_LocateInExplorer(path)
+                    reaper.CF_LocateInExplorer(normalize_path(path)) -- 规范分隔符
                   end
                 end
                 reaper.ImGui_PopStyleColor(ctx, 1)
@@ -3847,6 +4053,22 @@ function loop()
         auto_scroll_enabled = new_scroll
       end
 
+      -- 最近播放设置
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Max Recent Played Files:")
+      reaper.ImGui_SameLine(ctx)
+      reaper.ImGui_PushItemWidth(ctx, -65)
+      local changed_maxrecent, new_maxrecent = reaper.ImGui_InputInt(ctx, "##maxrecent_input", max_recent_files, 1, 5)
+      reaper.ImGui_PopItemWidth(ctx)
+      if changed_maxrecent then
+        max_recent_files = math.max(1, math.min(100, new_maxrecent or 10))
+        reaper.SetExtState(EXT_SECTION, "MaxRecentFiles", tostring(max_recent_files), true)
+        while #recent_audio_files > max_recent_files do
+          table.remove(recent_audio_files)
+        end
+        SaveRecentPlayed()
+      end
+
       -- 背景不透明度
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Window background alpha:")
@@ -3946,15 +4168,15 @@ function loop()
       local changed_cache_dir, new_cache_dir = reaper.ImGui_InputText(ctx, "##cache_dir", cache_dir, 512)
       reaper.ImGui_PopItemWidth(ctx)
       if changed_cache_dir then
-        cache_dir = new_cache_dir
+        cache_dir = normalize_path(new_cache_dir, true) -- 规范分隔符 文件夹路径传入true
         reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
       end
       reaper.ImGui_SameLine(ctx)
       if reaper.ImGui_Button(ctx, "Browse##SelectCacheDir") then
         local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", cache_dir)
         if rv == 1 and out and out ~= "" then
-          cache_dir = out
-          if not cache_dir:match("[/\\]$") then cache_dir = cache_dir .. "/" end
+          cache_dir = normalize_path(out, true) -- 规范分隔符 文件夹路径传入true
+          -- if not cache_dir:match("[/\\]$") then cache_dir = cache_dir .. "/" end
           reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
         end
       end
@@ -3982,6 +4204,7 @@ function loop()
         rate_min = 0.25,     -- 速率旋钮最低
         rate_max = 4.0,      -- 速率旋钮最高
         cache_dir = DEFAULT_CACHE_DIR,
+        max_recent_files = 20, -- 最近播放文件最大数量
       }
 
       reaper.ImGui_SameLine(ctx)
@@ -4002,6 +4225,7 @@ function loop()
         rate_max = DEFAULTS.rate_max
         cache_dir = DEFAULTS.cache_dir
         auto_scroll_enabled = DEFAULTS.auto_scroll_enabled
+        max_recent_files = DEFAULTS.max_recent_files
         -- 保存设置到ExtState
         reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
@@ -4144,7 +4368,15 @@ function loop()
       local window_end = Wave.scroll + view_len
 
       -- 获取峰值
-      local cur_info = files_idx_cache and files_idx_cache[selected_row]
+      -- local cur_info = files_idx_cache and files_idx_cache[selected_row] -- 因添加最近播放分支注释
+      local cur_info = nil
+      if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then -- 最近播放模式时使用播放列表项
+        cur_info = current_recent_play_info
+        selected_row = 0 -- 清空右侧表格选中项
+      elseif files_idx_cache and selected_row and files_idx_cache[selected_row] then
+        cur_info = files_idx_cache[selected_row] -- 其他模式用右侧表格选中项
+        selected_recent_row = 0 -- 清空最近播放选中项
+      end
       if not cur_info then
         cur_info = last_selected_info
       end
@@ -4722,7 +4954,7 @@ function loop()
         if reaper.ImGui_BeginPopup(ctx, "##now_playing") then
           if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
             if show_path and show_path ~= "" then
-              reaper.CF_LocateInExplorer(show_path)
+              reaper.CF_LocateInExplorer(normalize_path(show_path)) -- 规范分隔符
             end
           end
           reaper.ImGui_EndPopup(ctx)
