@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a2ad04e6a2f5602130275e0d3c44b8acfe6bb819">
+<index version="1" name="zaibuyidao Scripts" commit="00794dd384a745f41347d672a025d3d8ee5d7b05">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8696,6 +8696,12 @@ Pressing ESC will now quickly exit the script if there is no selection in the wa
 Pressing ESC will now quickly exit the script if there is no selection in the waveform preview window.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a2ad04e6a2f5602130275e0d3c44b8acfe6bb819/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.9" author="zaibuyidao" time="2025-07-02T08:47:44Z">
+        <changelog><![CDATA[Added: "Recently Played" list in the sidebar for quick access and playback of recently used audio files.
+Improved: Mode switching—clicking the main table now exits Recently Played mode.
+Fixed: Path separators now automatically match the current operating system for better cross-platform compatibility.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/00794dd384a745f41347d672a025d3d8ee5d7b05/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
