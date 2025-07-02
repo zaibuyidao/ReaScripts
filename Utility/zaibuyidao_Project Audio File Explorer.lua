@@ -1,10 +1,8 @@
 -- @description Project Audio Explorer
--- @version 1.5.9
+-- @version 1.5.10
 -- @author zaibuyidao
 -- @changelog
---   Added: "Recently Played" list in the sidebar for quick access and playback of recently used audio files.
---   Improved: Mode switching—clicking the main table now exits Recently Played mode.
---   Fixed: Path separators now automatically match the current operating system for better cross-platform compatibility.
+--   Added: Waveform preview is now available for each audio row in the table, allowing fast and intuitive browsing.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -115,6 +113,7 @@ last_selected_info           = nil -- 上次选中的音频信息
 last_playing_info            = nil  -- 上次播放的音频信息
 is_knob_dragging             = false
 prev_preview_pos             = 0
+waveform_task_queue          = waveform_task_queue or {} -- 表格列表波形预览
 -- 表格排序常量
 local COL_FILENAME         = 2
 local COL_SIZE             = 3
@@ -997,11 +996,16 @@ function CollectFiles()
   if files_idx_cache then
     for _, info in ipairs(files_idx_cache) do
       info.group = GetCustomGroupsForPath(info.path)
+      -- 清空表格列表的波形缓存
+      info._thumb_waveform = nil
+      info._last_thumb_w = nil
     end
   end
 
   previewed_files = {}
   SortFilesByFilenameAsc()
+  -- 切换模式后清空表格列表波形预览队列
+  waveform_task_queue = {}
 end
 
 -- 资源释放函数
@@ -2431,11 +2435,43 @@ end
 -- 读取最近播放
 LoadRecentPlayed()
 
+---------------------------------------------  表格列表波形预览节点 ---------------------------------------------
+
+-- 每帧限制最多处理多少个任务
+local MAX_WAVEFORM_PER_FRAME = 2
+
+function EnqueueWaveformTask(info, thumb_w)
+  for _, task in ipairs(waveform_task_queue) do
+    if task.info == info and task.width == thumb_w then
+      return
+    end
+  end
+  table.insert(waveform_task_queue, {info=info, width=thumb_w})
+end
+
+function ProcessWaveformTasks()
+  local n = 0
+  while n < MAX_WAVEFORM_PER_FRAME and #waveform_task_queue > 0 do
+    local task = table.remove(waveform_task_queue, 1)
+    -- 只在未缓存时采样
+    if not task.info._thumb_waveform then task.info._thumb_waveform = {} end
+    if not task.info._thumb_waveform[task.width] then
+      local peaks, pixel_cnt, src_len, channel_count = GetPeaksWithCache(task.info, wf_step, task.width) -- 统一采样步长 wf_step=400
+      if peaks and channel_count then
+        task.info._thumb_waveform[task.width] = {peaks=peaks, pixel_cnt=pixel_cnt, src_len=src_len, channel_count=channel_count}
+      end
+    end
+    n = n + 1
+  end
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
     CollectFiles()
   end
+  -- 表格列表波形预览，每帧先处理任务队列
+  ProcessWaveformTasks()
   if need_refresh_font then
     sans_serif = reaper.ImGui_CreateFont('sans-serif', font_size)
     reaper.ImGui_Attach(ctx, sans_serif)
@@ -2795,7 +2831,7 @@ function loop()
       ) then
         reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
         if collect_mode == COLLECT_MODE_ALL_ITEMS then -- Media Items
-          reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
+          reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
           reaper.ImGui_TableSetupColumn(ctx, "Take Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
           reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
@@ -2810,7 +2846,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_RPP then -- RPP
-          reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
+          reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
           reaper.ImGui_TableSetupColumn(ctx, "File Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
           reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
@@ -2825,7 +2861,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         else
-          reaper.ImGui_TableSetupColumn(ctx, "Mark",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 17)
+          reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
           reaper.ImGui_TableSetupColumn(ctx, "File Name",        reaper.ImGui_TableColumnFlags_WidthFixed(), 250, COL_FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
           reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
@@ -3052,17 +3088,44 @@ function loop()
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(), table_header_active)
             local row_hovered = false
 
-            -- mark
+            -- mark 原mark相关代码备留
+            -- reaper.ImGui_TableSetColumnIndex(ctx, 0)
+            -- if IsPreviewed(info.path) then
+            --   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+            --   local cx, cy = reaper.ImGui_GetCursorScreenPos(ctx)
+            --   local radius = 1.5
+            --   local color = 0xFFF0F0F0 -- 0x00FFFFFF -- 0x22ff22ff
+            --   reaper.ImGui_DrawList_AddCircleFilled(draw_list, cx + radius + 10, cy + radius + 5, radius, color)
+            --   reaper.ImGui_Dummy(ctx, radius*2+4, radius*2+4)
+            -- else
+            --   reaper.ImGui_Dummy(ctx, 10, 10)
+            -- end
+            
+            -- 表格列表波形预览缩略图自适应列宽
             reaper.ImGui_TableSetColumnIndex(ctx, 0)
-            if IsPreviewed(info.path) then
-              local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-              local cx, cy = reaper.ImGui_GetCursorScreenPos(ctx)
-              local radius = 1.5
-              local color = 0xFFF0F0F0 -- 0x00FFFFFF -- 0x22ff22ff
-              reaper.ImGui_DrawList_AddCircleFilled(draw_list, cx + radius + 10, cy + radius + 5, radius, color)
-              reaper.ImGui_Dummy(ctx, radius*2+4, radius*2+4)
+            local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))   -- 自适应宽度
+            local thumb_h = math.floor(reaper.ImGui_GetTextLineHeight(ctx) * 0.9) -- 自适应高度
+            -- 检查宽度变化，立刻清理缓存
+            local current_visible_infos = files_idx_cache or {}
+            if info._last_thumb_w ~= thumb_w then
+              info._thumb_waveform = {}
+              info._last_thumb_w = thumb_w
+              waveform_task_queue = {}
+              for _, v in ipairs(current_visible_infos) do
+                EnqueueWaveformTask(v, thumb_w)
+              end
+            end
+
+            info._thumb_waveform = info._thumb_waveform or {}
+            if info._thumb_waveform[thumb_w] then
+              local wf = info._thumb_waveform[thumb_w]
+              DrawWaveformInImGui(ctx, wf.peaks, thumb_w, thumb_h, wf.src_len, wf.channel_count)
             else
-              reaper.ImGui_Dummy(ctx, 10, 10)
+              EnqueueWaveformTask(info, thumb_w) -- 未加载则加入队列
+              -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx) -- 画灰色占位条
+              -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+              -- reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + thumb_w, y + thumb_h, 0x444444FF)
+              -- reaper.ImGui_Dummy(ctx, thumb_w, thumb_h)
             end
 
             -- File & Teak name
