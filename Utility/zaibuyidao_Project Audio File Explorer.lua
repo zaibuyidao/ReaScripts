@@ -1,8 +1,9 @@
 -- @description Project Audio Explorer
--- @version 1.5.10
+-- @version 1.5.11
 -- @author zaibuyidao
 -- @changelog
---   Added: Waveform preview is now available for each audio row in the table, allowing fast and intuitive browsing.
+--   After playback stops, the playback cursor will automatically return to the previous playback start position.
+--   Added content area font size and row height settings. You can now customize the font size and row height of the content area.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -62,7 +63,7 @@ end
 local SCRIPT_NAME = 'Project Audio Explorer - Browse, Search, and Preview Audio Files'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
-local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
+local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14) -- 全局默认字体大小
 local font_small = reaper.ImGui_CreateFont("", 12)
 local font_medium = reaper.ImGui_CreateFont("", 14)
 local font_large = reaper.ImGui_CreateFont("", 20)
@@ -70,15 +71,25 @@ reaper.ImGui_Attach(ctx, sans_serif)
 reaper.ImGui_Attach(ctx, font_small)
 reaper.ImGui_Attach(ctx, font_medium)
 reaper.ImGui_Attach(ctx, font_large)
+
+local need_refresh_font  = false
+local font_size          = 16 -- 内容字体大小
+local FONT_SIZE_MIN      = 12 -- 内容字体最小
+local FONT_SIZE_MAX      = 24 -- 内容字体最大
+local preview_font_sizes = { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 }
+local preview_fonts      = {}
+for _, sz in ipairs(preview_font_sizes) do
+  preview_fonts[sz] = reaper.ImGui_CreateFont("", sz)
+  reaper.ImGui_Attach(ctx, preview_fonts[sz])
+end
+local DEFAULT_ROW_HEIGHT = 16    -- 内容行高
+local row_height         = DEFAULT_ROW_HEIGHT
+
 reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 
 -- 状态变量
 local CACHE_PIXEL_WIDTH      = 2048
-local font_size              = 14    -- 默认字体大小
-local need_refresh_font      = false
-local FONT_SIZE_MIN          = 10
-local FONT_SIZE_MAX          = 20
 local selected_row           = -1
 local playing_preview        = nil
 local playing_path           = nil
@@ -213,6 +224,8 @@ if last_volume then volume = last_volume end
 local last_auto_scroll = reaper.GetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL)
 if last_auto_scroll == "0" then auto_scroll_enabled = false end
 if last_auto_scroll == "1" then auto_scroll_enabled = true end
+local last_row_height = tonumber(reaper.GetExtState(EXT_SECTION, "TableRowHeight"))
+if last_row_height then row_height = math.max(12, math.min(48, last_row_height)) end -- 内容行高限制范围
 
 -- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items, 4=This Computer, 5=Shortcuts）
 local collect_mode           = -1 -- -1 表示未设置
@@ -249,6 +262,7 @@ local function SaveSettings()
   reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
   reaper.SetExtState(EXT_SECTION, "MaxRecentFiles", tostring(max_recent_files), true)
+  reaper.SetExtState(EXT_SECTION, "TableRowHeight", tostring(row_height), true)
 end
 
 -- 恢复设置
@@ -322,7 +336,6 @@ function normalize_path(path, is_dir)
   return path
 end
 
-
 --------------------------------------------- 颜色相关 ---------------------------------------------
 
 -- 完全透明
@@ -375,7 +388,7 @@ function SimpleHash(str)
   return ("%08x"):format(hash)
 end
 
-local function CacheFilename(filepath)
+function CacheFilename(filepath)
   local size = tostring(GetFileSize(filepath))
   return cache_dir .. SimpleHash(filepath .. "@" .. size) .. ".wfc"
 end
@@ -1466,7 +1479,7 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
 end
 
 -- 停止播放预览
-local function StopPreview()
+function StopPreview()
   -- 重置峰值
   for i = 1, peak_chans do
     peak_hold[i] = 0
@@ -1787,7 +1800,7 @@ function CollectFromDirectory(dir_path)
   return files, files_idx
 end
 
-local function get_drives()
+function get_drives()
   if drive_cache and drives_loaded then return drive_cache end
   local drives = {}
   drive_name_map = {} -- 重置映射
@@ -1818,7 +1831,7 @@ local function get_drives()
 end
 
 -- 获取目录下所有子文件夹和支持类型的音频文件
-local function list_dir(path)
+function list_dir(path)
   local dirs, audios = {}, {}
   local ok = true
   local i = 0
@@ -1855,7 +1868,7 @@ local function list_dir(path)
 end
 
 -- 树状目录
-local function draw_tree(name, path)
+function draw_tree(name, path)
   local show_name = name
   if drive_name_map and drive_name_map[path] and drive_name_map[path] ~= "" then
     show_name = name .. " (" .. drive_name_map[path] .. ")"
@@ -1896,7 +1909,7 @@ local function draw_tree(name, path)
 end
 
 -- 绘制快捷方式
-local function draw_shortcut_tree(sc, base_path)
+function draw_shortcut_tree(sc, base_path)
   local shortcut_name = sc.name or sc.path
   local show_name = shortcut_name
   local path = sc.path
@@ -2472,8 +2485,8 @@ function loop()
   end
   -- 表格列表波形预览，每帧先处理任务队列
   ProcessWaveformTasks()
-  if need_refresh_font then
-    sans_serif = reaper.ImGui_CreateFont('sans-serif', font_size)
+  if need_refresh_font then -- 该段无效，适时移除
+    sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
     reaper.ImGui_Attach(ctx, sans_serif)
     need_refresh_font = false
   end
@@ -2551,6 +2564,27 @@ function loop()
 
     -- 左侧树状目录(此处需要使用 if 才有效，否则报错)
     if reaper.ImGui_BeginChild(ctx, "##left", left_w, child_h, 0, reaper.ImGui_WindowFlags_HorizontalScrollbar()) then
+      -- 内容字体自由缩放
+      local wheel = reaper.ImGui_GetMouseWheel(ctx)
+      local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+      if preview_fonts[font_size] then
+        reaper.ImGui_PushFont(ctx, preview_fonts[font_size])
+      end
+      if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
+        -- 找到当前字号在列表中的索引
+        local cur_idx = 1
+        for i, v in ipairs(preview_font_sizes) do
+          if v == font_size then
+            cur_idx = i
+            break
+          end
+        end
+        cur_idx = cur_idx + wheel
+        cur_idx = math.max(1, math.min(#preview_font_sizes, cur_idx))
+        font_size = preview_font_sizes[cur_idx]
+        wheel = 0
+      end
+
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 文本颜色
       
       -- 渲染单选列表
@@ -2768,6 +2802,7 @@ function loop()
       end
 
       reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
+      reaper.ImGui_PopFont(ctx)          -- 内容字体自由缩放
       reaper.ImGui_EndChild(ctx)
     end
 
@@ -2878,6 +2913,27 @@ function loop()
         end
         -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectFromProjectDirectory()
         reaper.ImGui_TableHeadersRow(ctx)
+
+        -- 内容字体自由缩放
+        local wheel = reaper.ImGui_GetMouseWheel(ctx)
+        local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+        if preview_fonts[font_size] then
+          reaper.ImGui_PushFont(ctx, preview_fonts[font_size])
+        end
+        if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
+          -- 找到当前字号在列表中的索引
+          local cur_idx = 1
+          for i, v in ipairs(preview_font_sizes) do
+            if v == font_size then
+              cur_idx = i
+              break
+            end
+          end
+          cur_idx = cur_idx + wheel
+          cur_idx = math.max(1, math.min(#preview_font_sizes, cur_idx))
+          font_size = preview_font_sizes[cur_idx]
+          wheel = 0
+        end
 
         -- 排序，只对缓存排序一次
         local need_sort, has_specs = reaper.ImGui_TableNeedSort(ctx)
@@ -3076,7 +3132,7 @@ function loop()
           end
 
           if match then
-            reaper.ImGui_TableNextRow(ctx)
+            reaper.ImGui_TableNextRow(ctx, reaper.ImGui_TableRowFlags_None(), row_height) -- 内容高度可以在设置中改变
             -- 表格标题文字颜色 -- 文字颜色
             if IsPreviewed(info.path) then
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), previewed_text)
@@ -3104,7 +3160,8 @@ function loop()
             -- 表格列表波形预览缩略图自适应列宽
             reaper.ImGui_TableSetColumnIndex(ctx, 0)
             local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))   -- 自适应宽度
-            local thumb_h = math.floor(reaper.ImGui_GetTextLineHeight(ctx) * 0.9) -- 自适应高度
+            -- local thumb_h = math.floor(reaper.ImGui_GetTextLineHeight(ctx) * 0.9) -- 旧版自适应高度
+            local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2-px 用于上下 padding
             -- 检查宽度变化，立刻清理缓存
             local current_visible_infos = files_idx_cache or {}
             if info._last_thumb_w ~= thumb_w then
@@ -3705,6 +3762,7 @@ function loop()
           end
         end
 
+        reaper.ImGui_PopFont(ctx) -- 内容字体自由缩放
         reaper.ImGui_EndTable(ctx)
       end
       -- 上下按键滚动保存选中项
@@ -4036,8 +4094,8 @@ function loop()
       reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
     end
     if reaper.ImGui_BeginPopupModal(ctx, "Settings##Popup", nil) then
-      -- 字体大小
-      reaper.ImGui_Text(ctx, "Font size:")
+      -- 内容字体大小
+      reaper.ImGui_Text(ctx, "Content Font Size:")
       reaper.ImGui_SameLine(ctx)
       reaper.ImGui_PushItemWidth(ctx, -65)
       local changed_font, new_font_size = reaper.ImGui_SliderInt(ctx, "##font_size_slider", font_size, FONT_SIZE_MIN, FONT_SIZE_MAX, "%d px")
@@ -4047,8 +4105,19 @@ function loop()
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
         MarkFontDirty()
       end
+      -- reaper.ImGui_SameLine(ctx)
+      -- HelpMarker("Adjust the content font size for the interface. Range: 12-24 px.")
+
+      -- 内容表格行高
+      reaper.ImGui_Text(ctx, "Content Row Height:")
       reaper.ImGui_SameLine(ctx)
-      HelpMarker("Adjust the font size for the interface. Range: 10-20 px.")
+      reaper.ImGui_PushItemWidth(ctx, -65)
+      local changed_row_height, new_row_height = reaper.ImGui_SliderInt(ctx, "##row_height_slider", row_height, 12, 48, "%d px")
+      reaper.ImGui_PopItemWidth(ctx)
+      if changed_row_height then
+        row_height = new_row_height
+        reaper.SetExtState(EXT_SECTION, "TableRowHeight", tostring(row_height), true)
+      end
 
       -- 收集切换
       -- reaper.ImGui_Text(ctx, "Audio File Source:")
@@ -4260,7 +4329,7 @@ function loop()
         auto_scroll_enabled = false,
         bg_alpha = 1.0,
         peak_chans = 6,
-        font_size = 14,
+        font_size = 16,
         max_db = 12,         -- 音量最大值
         pitch_knob_min = -6, -- 音高旋钮最低
         pitch_knob_max = 6,  -- 音高旋钮最高
@@ -4268,6 +4337,7 @@ function loop()
         rate_max = 4.0,      -- 速率旋钮最高
         cache_dir = DEFAULT_CACHE_DIR,
         max_recent_files = 20, -- 最近播放文件最大数量
+        row_height = DEFAULT_ROW_HEIGHT, -- 内容表格行高
       }
 
       reaper.ImGui_SameLine(ctx)
@@ -4289,6 +4359,7 @@ function loop()
         cache_dir = DEFAULTS.cache_dir
         auto_scroll_enabled = DEFAULTS.auto_scroll_enabled
         max_recent_files = DEFAULTS.max_recent_files
+        row_height = DEFAULTS.row_height
         -- 保存设置到ExtState
         reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
@@ -5045,6 +5116,11 @@ function loop()
       local ok_len, length   = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
       if ok_pos and ok_len and (length - position) < 0.01 then -- 距离结尾小于0.03秒
         StopPlay()
+        -- 光标复位
+        if last_play_cursor_before_play then
+          Wave.play_cursor = last_play_cursor_before_play
+          wf_play_start_cursor = last_play_cursor_before_play
+        end
       end
     end
 
