@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="35f44b9912c39bf09ea2219f546705ef4b2ea191">
+<index version="1" name="zaibuyidao Scripts" commit="8afb7e3b860fe7e243ca59e2813914dcd7e23796">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8719,6 +8719,12 @@ Fixed: Path separators now automatically match the current operating system for 
         <changelog><![CDATA[After playback stops, the playback cursor will automatically return to the previous playback start position.
 Added content area font size and row height settings. You can now customize the font size and row height of the content area.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/35f44b9912c39bf09ea2219f546705ef4b2ea191/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.12" author="zaibuyidao" time="2025-07-07T01:57:53Z">
+        <changelog><![CDATA[After playback stops, the playback cursor will automatically return to the previous playback start position.
+Added content area font size and row height settings. You can now customize the font size and row height of the content area.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8afb7e3b860fe7e243ca59e2813914dcd7e23796/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
