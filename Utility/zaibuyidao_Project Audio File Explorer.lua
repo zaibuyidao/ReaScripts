@@ -1,9 +1,10 @@
 -- @description Project Audio Explorer
--- @version 1.5.11
+-- @version 1.5.12
 -- @author zaibuyidao
 -- @changelog
 --   After playback stops, the playback cursor will automatically return to the previous playback start position.
 --   Added content area font size and row height settings. You can now customize the font size and row height of the content area.
+--   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -3188,8 +3189,9 @@ function loop()
             -- File & Teak name
             reaper.ImGui_TableSetColumnIndex(ctx, 1)
             if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
-              local selectable_label = (info.filename or "-") .. "##ALLITEMS_" .. tostring(i)
-              if reaper.ImGui_Selectable(ctx, selectable_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+              local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
+              local row_width = reaper.ImGui_GetContentRegionAvail(ctx) -- 获取当前列可用宽度
+              if reaper.ImGui_Selectable(ctx, row_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
                 selected_row = i
                 current_recent_play_info = nil -- 解除最近播放锁定
                 if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
@@ -3455,8 +3457,9 @@ function loop()
                 end
               end
             else
-              local selectable_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
-              if reaper.ImGui_Selectable(ctx, selectable_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+              local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
+              local row_width = reaper.ImGui_GetContentRegionAvail(ctx)
+              if reaper.ImGui_Selectable(ctx, row_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
                 selected_row = i
                 current_recent_play_info = nil -- 解除最近播放锁定
                 if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
