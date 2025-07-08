@@ -1,10 +1,8 @@
 -- @description Project Audio Explorer
--- @version 1.5.12
+-- @version 1.5.13
 -- @author zaibuyidao
 -- @changelog
---   After playback stops, the playback cursor will automatically return to the previous playback start position.
---   Added content area font size and row height settings. You can now customize the font size and row height of the content area.
---   Other detailed improvements and bug fixes.
+--   Added album cover display feature that shows cover art for audio files on the left side of the file list.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -2479,6 +2477,33 @@ function ProcessWaveformTasks()
   end
 end
 
+--------------------------------------------- 专辑封面 ---------------------------------------------
+
+local last_cover_path, last_cover_img
+local last_img_w, last_img_h
+local last_window_visible = true
+
+function GetCoverImagePath(audio_path)
+  local dir = audio_path:match("^(.*[\\/])")
+  local base = audio_path:match("([^\\/]+)%.[^%.]+$") -- 不带扩展名
+  local candidates = {
+    dir .. "cover.jpg",
+    dir .. "cover.png",
+    dir .. "folder.jpg",
+    dir .. "folder.png",
+    dir .. base .. ".jpg",
+    dir .. base .. ".png",
+  }
+  for _, img_path in ipairs(candidates) do
+    local f = io.open(img_path, "rb")
+    if f then
+      f:close()
+      return img_path
+    end
+  end
+  return nil
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -2499,6 +2524,16 @@ function loop()
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowTitleAlign(), 0.5, 0.5)
 
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
+
+  -- 脚本折叠时清理旧专辑封面，避免折叠展开时报错。
+  if not visible and last_window_visible then
+    if last_cover_img and reaper.ImGui_DestroyImage then
+      reaper.ImGui_DestroyImage(last_cover_img)
+    end
+    last_cover_img, last_cover_path = nil, nil
+  end
+  last_window_visible = visible
+
   if visible then
     -- 圆角处理: 弹出菜单、子区域、滚动条、滑块
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_PopupRounding(),     4.0) -- 弹窗
@@ -4491,11 +4526,70 @@ function loop()
       reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeNS())
     end
 
-    -- 波形预览
+    -- 专辑封面与波形预览 Child 高度补偿
     img_h = base_img_h + img_h_offset -- 补偿高度
     -- reaper.ImGui_Separator(ctx)
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-    if reaper.ImGui_BeginChild(ctx, "waveform", avail_w, img_h + timeline_height+9) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+时间线间隔9）
+    local left_w = 120 -- 左侧为专辑封面宽度
+    local right_w = math.floor(avail_w - left_w) -- 右侧为波形预览宽度
+
+    -- 专辑图片
+    if reaper.ImGui_BeginChild(ctx, "cover_art", left_w, img_h + timeline_height + 9) then
+      local img_info = files_idx_cache and files_idx_cache[selected_row]
+      if not img_info then img_info = last_selected_info end
+      local cover_path = img_info and GetCoverImagePath(img_info.path)
+
+      local img_w = 120
+      local img_h = 120
+      local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
+
+      if cover_path then
+        local pad = (avail_w - img_w) / 2
+        if pad > 0 then
+          reaper.ImGui_Dummy(ctx, pad-5, 0)
+          reaper.ImGui_SameLine(ctx)
+        end
+
+        if last_cover_path ~= cover_path or last_img_w ~= img_w then
+          last_cover_img = reaper.ImGui_CreateImage(cover_path)
+          last_cover_path = cover_path
+          last_img_w = img_w
+        end
+
+        local img = last_cover_img
+        if img then
+          -- 垂直居中
+          local ypad = (avail_h - img_h) / 2
+          if ypad > 0 then
+            reaper.ImGui_Dummy(ctx, 0, ypad-15)
+          end
+          reaper.ImGui_Image(ctx, img, img_w, img_h)
+        end
+      else
+        -- 没有图片时，水平+垂直都居中
+        local text = "No cover image"
+        local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
+        local tip_pad_x = (avail_w - text_w) / 2
+        local tip_pad_y = (avail_h - text_h) / 2
+        if tip_pad_y > 0 then
+          reaper.ImGui_Dummy(ctx, 0, tip_pad_y-10)
+        end
+        if tip_pad_x > 0 then
+          reaper.ImGui_Dummy(ctx, tip_pad_x, 0)
+          reaper.ImGui_SameLine(ctx)
+        end
+        reaper.ImGui_Text(ctx, text)
+        last_cover_img = nil
+        last_cover_path = nil
+        last_img_w = nil
+      end
+
+      reaper.ImGui_EndChild(ctx)
+    end
+    reaper.ImGui_SameLine(ctx, nil, 6)
+
+    -- 波形预览
+    if reaper.ImGui_BeginChild(ctx, "waveform", right_w-6, img_h + timeline_height+9) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+时间线间隔9）
       local pw_min_x, pw_min_y = reaper.ImGui_GetItemRectMin(ctx)
       local pw_max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local pw_region_w = math.max(64, math.floor(pw_max_x - pw_min_x))
