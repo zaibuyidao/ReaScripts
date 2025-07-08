@@ -1,8 +1,9 @@
 -- @description Project Audio Explorer
--- @version 1.5.13
+-- @version 1.5.14
 -- @author zaibuyidao
 -- @changelog
 --   Added album cover display feature that shows cover art for audio files on the left side of the file list.
+--   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -2504,6 +2505,16 @@ function GetCoverImagePath(audio_path)
   return nil
 end
 
+-- 判断 info 是否存在有效专辑封面
+function HasCoverImage(img_info)
+  if not img_info then return false end
+  local cover_path = img_info and GetCoverImagePath(img_info.path)
+  if cover_path and reaper.file_exists and reaper.file_exists(cover_path) then
+    return true
+  end
+  return false
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -4530,15 +4541,22 @@ function loop()
     img_h = base_img_h + img_h_offset -- 补偿高度
     -- reaper.ImGui_Separator(ctx)
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-    local left_w = 120 -- 左侧为专辑封面宽度
-    local right_w = math.floor(avail_w - left_w) -- 右侧为波形预览宽度
+    local img_info
+    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then
+      img_info = current_recent_play_info
+    elseif files_idx_cache and selected_row and files_idx_cache[selected_row] then
+      img_info = files_idx_cache[selected_row]
+    else
+      img_info = last_selected_info
+    end
+    local has_cover = HasCoverImage(img_info)
+    local left_img_w = has_cover and 120 or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
+    local gap = has_cover and 6 or 0
+    local right_img_w = avail_w - left_img_w - gap
 
     -- 专辑图片
-    if reaper.ImGui_BeginChild(ctx, "cover_art", left_w, img_h + timeline_height + 9) then
-      local img_info = files_idx_cache and files_idx_cache[selected_row]
-      if not img_info then img_info = last_selected_info end
+    if reaper.ImGui_BeginChild(ctx, "cover_art", left_img_w, img_h + timeline_height + 9) then
       local cover_path = img_info and GetCoverImagePath(img_info.path)
-
       local img_w = 120
       local img_h = 120
       local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
@@ -4566,19 +4584,19 @@ function loop()
           reaper.ImGui_Image(ctx, img, img_w, img_h)
         end
       else
-        -- 没有图片时，水平+垂直都居中
-        local text = "No cover image"
-        local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
-        local tip_pad_x = (avail_w - text_w) / 2
-        local tip_pad_y = (avail_h - text_h) / 2
-        if tip_pad_y > 0 then
-          reaper.ImGui_Dummy(ctx, 0, tip_pad_y-10)
-        end
-        if tip_pad_x > 0 then
-          reaper.ImGui_Dummy(ctx, tip_pad_x, 0)
-          reaper.ImGui_SameLine(ctx)
-        end
-        reaper.ImGui_Text(ctx, text)
+        -- 没有图片时，水平/垂直居中
+        -- local text = "No cover image"
+        -- local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
+        -- local tip_pad_x = (avail_w - text_w) / 2
+        -- local tip_pad_y = (avail_h - text_h) / 2
+        -- if tip_pad_y > 0 then
+        --   reaper.ImGui_Dummy(ctx, 0, tip_pad_y-10)
+        -- end
+        -- if tip_pad_x > 0 then
+        --   reaper.ImGui_Dummy(ctx, tip_pad_x, 0)
+        --   reaper.ImGui_SameLine(ctx)
+        -- end
+        -- reaper.ImGui_Text(ctx, text)
         last_cover_img = nil
         last_cover_path = nil
         last_img_w = nil
@@ -4586,10 +4604,15 @@ function loop()
 
       reaper.ImGui_EndChild(ctx)
     end
-    reaper.ImGui_SameLine(ctx, nil, 6)
+    reaper.ImGui_SameLine(ctx, nil, gap)
 
+    -- 无专辑封面时右侧内容的偏移补偿
+    if not has_cover then
+      reaper.ImGui_Dummy(ctx, -11, 0)
+      reaper.ImGui_SameLine(ctx)
+    end
     -- 波形预览
-    if reaper.ImGui_BeginChild(ctx, "waveform", right_w-6, img_h + timeline_height+9) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+时间线间隔9）
+    if reaper.ImGui_BeginChild(ctx, "waveform", right_img_w, img_h + timeline_height + 9) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+时间线间隔9）
       local pw_min_x, pw_min_y = reaper.ImGui_GetItemRectMin(ctx)
       local pw_max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local pw_region_w = math.max(64, math.floor(pw_max_x - pw_min_x))
