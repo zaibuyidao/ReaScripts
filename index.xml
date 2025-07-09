@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e001ee35f8fde11dc1c72e2e3f90557ab238c638">
+<index version="1" name="zaibuyidao Scripts" commit="dbb42867e829ab461cb71e3237c4faf522d23c13">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8744,6 +8744,11 @@ Other detailed improvements and bug fixes.]]></changelog>
         <changelog><![CDATA[Added album cover display feature that shows cover art for audio files on the left side of the file list.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/e001ee35f8fde11dc1c72e2e3f90557ab238c638/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.17" author="zaibuyidao" time="2025-07-09T14:39:08Z">
+        <changelog><![CDATA[Added album cover display feature that shows cover art for audio files on the left side of the file list.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/dbb42867e829ab461cb71e3237c4faf522d23c13/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
