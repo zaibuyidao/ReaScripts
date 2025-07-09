@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.14
+-- @version 1.5.15
 -- @author zaibuyidao
 -- @changelog
 --   Added album cover display feature that shows cover art for audio files on the left side of the file list.
@@ -73,7 +73,7 @@ reaper.ImGui_Attach(ctx, font_medium)
 reaper.ImGui_Attach(ctx, font_large)
 
 local need_refresh_font  = false
-local font_size          = 16 -- 内容字体大小
+local font_size          = 14 -- 内容字体大小
 local FONT_SIZE_MIN      = 12 -- 内容字体最小
 local FONT_SIZE_MAX      = 24 -- 内容字体最大
 local preview_font_sizes = { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 }
@@ -82,7 +82,7 @@ for _, sz in ipairs(preview_font_sizes) do
   preview_fonts[sz] = reaper.ImGui_CreateFont("", sz)
   reaper.ImGui_Attach(ctx, preview_fonts[sz])
 end
-local DEFAULT_ROW_HEIGHT = 16    -- 内容行高
+local DEFAULT_ROW_HEIGHT = 24    -- 内容行高
 local row_height         = DEFAULT_ROW_HEIGHT
 
 reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
@@ -288,38 +288,6 @@ if last_img_h_offset then img_h_offset = last_img_h_offset end
 
 local last_max_recent = tonumber(reaper.GetExtState(EXT_SECTION, "MaxRecentFiles"))
 if last_max_recent then max_recent_files = math.max(1, math.min(100, last_max_recent)) end
-
--- 文件夹快捷方式
-local EXT_KEY_SHORTCUTS = "FolderShortcuts"
-
-function SaveFolderShortcuts()
-  local t = {}
-  for _, sc in ipairs(folder_shortcuts) do
-    local name = (sc.name or ""):gsub(";", "%%3B"):gsub("%|%|", "%%7C%%7C")
-    local path = (sc.path or ""):gsub(";", "%%3B"):gsub("%|%|", "%%7C%%7C")
-    table.insert(t, name .. ";;" .. path)
-  end
-  local str = table.concat(t, "||")
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_SHORTCUTS, str, true)
-end
-
-function LoadFolderShortcuts()
-  local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_SHORTCUTS)
-  local shortcuts = {}
-  if str and str ~= "" then
-    for pair in str:gmatch("[^|][^|]*;;[^|]+") do
-      local name, path = pair:match("^(.-);;(.*)$")
-      if name and path then
-        name = name:gsub("%%3B", ";"):gsub("%%7C%%7C", "||")
-        path = path:gsub("%%3B", ";"):gsub("%%7C%%7C", "||")
-        table.insert(shortcuts, { name = name, path = path })
-      end
-    end
-  end
-  return shortcuts
-end
-
-folder_shortcuts = LoadFolderShortcuts()
 
 -- 规范分隔符，传 true 表示是文件夹
 function normalize_path(path, is_dir)
@@ -1719,11 +1687,8 @@ local dir_cache = {} -- path -> {dirs=..., audios=..., ok=...}
 local drive_cache = nil
 local drives_loaded = false
 local audio_file_cache = {}
-local last_dir = ""
 local drive_name_map = {} -- 盘符到卷标的映射
 local need_load_drives = false
-local is_loading_drives = false
-folder_shortcuts = folder_shortcuts or {} -- 选择文件夹快捷方式
 
 left_ratio = tonumber(reaper.GetExtState(EXT_SECTION, "left_ratio")) or 0.15 -- 启动时读取上次保存的
 splitter_drag = splitter_drag or false
@@ -1907,6 +1872,40 @@ function draw_tree(name, path)
     tree_open[path] = false
   end
 end
+
+--------------------------------------------- 文件夹快捷键方式节点 ---------------------------------------------
+
+local EXT_KEY_SHORTCUTS = "FolderShortcuts"
+folder_shortcuts = folder_shortcuts or {} -- 选择文件夹快捷方式
+
+function SaveFolderShortcuts()
+  local t = {}
+  for _, sc in ipairs(folder_shortcuts) do
+    local name = (sc.name or ""):gsub(";", "%%3B"):gsub("%|%|", "%%7C%%7C")
+    local path = normalize_path(sc.path or "", true):gsub(";", "%%3B"):gsub("%|%|", "%%7C%%7C")
+    table.insert(t, name .. ";;" .. path)
+  end
+  local str = table.concat(t, "||")
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_SHORTCUTS, str, true)
+end
+
+function LoadFolderShortcuts()
+  local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_SHORTCUTS)
+  local shortcuts = {}
+  if str and str ~= "" then
+    for pair in str:gmatch("[^|][^|]*;;[^|]+") do
+      local name, path = pair:match("^(.-);;(.*)$")
+      if name and path then
+        name = name:gsub("%%3B", ";"):gsub("%%7C%%7C", "||")
+        path = normalize_path(path:gsub("%%3B", ";"):gsub("%%7C%%7C", "||"), true)
+        table.insert(shortcuts, { name = name, path = path })
+      end
+    end
+  end
+  return shortcuts
+end
+
+folder_shortcuts = LoadFolderShortcuts()
 
 -- 绘制快捷方式
 function draw_shortcut_tree(sc, base_path)
@@ -4378,7 +4377,7 @@ function loop()
         auto_scroll_enabled = false,
         bg_alpha = 1.0,
         peak_chans = 6,
-        font_size = 16,
+        font_size = 14,
         max_db = 12,         -- 音量最大值
         pitch_knob_min = -6, -- 音高旋钮最低
         pitch_knob_max = 6,  -- 音高旋钮最高
