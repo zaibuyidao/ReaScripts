@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.16
+-- @version 1.5.17
 -- @author zaibuyidao
 -- @changelog
 --   Added album cover display feature that shows cover art for audio files on the left side of the file list.
@@ -3227,11 +3227,11 @@ function loop()
                 local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
                 -- DrawWaveformInImGui(ctx, wf.peaks, thumb_w, thumb_h, wf.src_len, wf.channel_count) -- 绘制波形支持多轨
                 DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, wf.src_len, 1) -- 绘制波形仅单轨
-                -- 绘制播放光标
-                if playing_path == info.path and Wave.play_cursor then
+                -- 绘制播放光标，排除最近播放影响
+                if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave.play_cursor then
                   local play_px = (Wave.play_cursor / wf.src_len) * thumb_w
                   local dl = reaper.ImGui_GetWindowDrawList(ctx)
-                  reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, 0x808080FF, 1)
+                  reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, 0x808080FF, 1.5)
                 end
                 -- 鼠标检测 - 点击切换播放光标
                 local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
@@ -3239,6 +3239,12 @@ function loop()
                   if reaper.ImGui_IsMouseClicked(ctx, 0) then
                     local rel_x = mouse_x - x
                     local new_pos = (rel_x / thumb_w) * wf.src_len
+
+                    current_recent_play_info = nil -- 解除最近播放锁定
+                    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
+                      collect_mode = last_collect_mode or COLLECT_MODE_SHORTCUT
+                    end
+
                     if playing_path == info.path then
                       RestartPreviewWithParams(new_pos)
                     else
