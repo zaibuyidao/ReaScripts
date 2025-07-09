@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.15
+-- @version 1.5.16
 -- @author zaibuyidao
 -- @changelog
 --   Added album cover display feature that shows cover art for audio files on the left side of the file list.
@@ -3219,10 +3219,36 @@ function loop()
               end
             end
 
+            -- 表格列表波形预览支持鼠标点击切换播放光标
             info._thumb_waveform = info._thumb_waveform or {}
             if info._thumb_waveform[thumb_w] then
               local wf = info._thumb_waveform[thumb_w]
-              DrawWaveformInImGui(ctx, wf.peaks, thumb_w, thumb_h, wf.src_len, wf.channel_count)
+              if wf.peaks and wf.peaks[1] then
+                local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+                -- DrawWaveformInImGui(ctx, wf.peaks, thumb_w, thumb_h, wf.src_len, wf.channel_count) -- 绘制波形支持多轨
+                DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, wf.src_len, 1) -- 绘制波形仅单轨
+                -- 绘制播放光标
+                if playing_path == info.path and Wave.play_cursor then
+                  local play_px = (Wave.play_cursor / wf.src_len) * thumb_w
+                  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+                  reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, 0x808080FF, 1)
+                end
+                -- 鼠标检测 - 点击切换播放光标
+                local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
+                if mouse_x >= x and mouse_x <= x + thumb_w and mouse_y >= y and mouse_y <= y + thumb_h then
+                  if reaper.ImGui_IsMouseClicked(ctx, 0) then
+                    local rel_x = mouse_x - x
+                    local new_pos = (rel_x / thumb_w) * wf.src_len
+                    if playing_path == info.path then
+                      RestartPreviewWithParams(new_pos)
+                    else
+                      selected_row = i
+                      PlayFromStart(info)
+                      RestartPreviewWithParams(new_pos)
+                    end
+                  end
+                end
+              end
             else
               EnqueueWaveformTask(info, thumb_w) -- 未加载则加入队列
               -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx) -- 画灰色占位条
