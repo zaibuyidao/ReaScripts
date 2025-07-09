@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.17
+-- @version 1.5.18
 -- @author zaibuyidao
 -- @changelog
 --   Added album cover display feature that shows cover art for audio files on the left side of the file list.
@@ -3236,7 +3236,7 @@ function loop()
                 -- 鼠标检测 - 点击切换播放光标
                 local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
                 if mouse_x >= x and mouse_x <= x + thumb_w and mouse_y >= y and mouse_y <= y + thumb_h then
-                  if reaper.ImGui_IsMouseClicked(ctx, 0) then
+                  if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
                     local rel_x = mouse_x - x
                     local new_pos = (rel_x / thumb_w) * wf.src_len
 
