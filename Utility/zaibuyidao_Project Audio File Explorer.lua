@@ -1,8 +1,9 @@
 -- @description Project Audio Explorer
--- @version 1.5.18
+-- @version 1.5.19
 -- @author zaibuyidao
 -- @changelog
---   Added album cover display feature that shows cover art for audio files on the left side of the file list.
+--   Added segmented path browsing: you can now click any folder segment in the path to quickly browse audio files in that folder.
+--   Fixed the issue where duplicate entries could appear in the Recently Played list.
 --   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
@@ -291,14 +292,22 @@ if last_max_recent then max_recent_files = math.max(1, math.min(100, last_max_re
 
 -- 规范分隔符，传 true 表示是文件夹
 function normalize_path(path, is_dir)
+  if not path then return "" end
   if reaper.GetOS():find("Win") then
     path = path:gsub("/", "\\")
-    if is_dir and not path:match("\\$") then
-      path = path .. "\\"
+    -- 合并所有连续的反斜杠为一个
+    path = path:gsub("\\+", "\\")
+    -- 处理盘符后多余斜杠，如 E:\\\ 变为 E:\
+    path = path:gsub("^(%a:)[\\]+", "%1\\")
+    -- 文件夹结尾补斜杠，且只补一个
+    if is_dir then
+      path = path:gsub("\\+$", "") .. "\\"
     end
   else
-    if is_dir and not path:match("/$") then
-      path = path .. "/"
+    -- 合并所有连续的斜杠为一个
+    path = path:gsub("/+", "/")
+    if is_dir then
+      path = path:gsub("/+$", "") .. "/"
     end
   end
   return path
@@ -308,7 +317,6 @@ end
 
 -- 完全透明
 local transparent = 0x00000000 -- R=00 G=00 B=00 A=00
-local yellow      = 0xFFFF00FF -- 纯黄，RGBA 全不透明
 -- 基本色 (100% 不透明)
 local white       = 0xFFFFFFFF -- 白色
 local black       = 0x000000FF -- 黑色
@@ -2360,6 +2368,7 @@ function SaveRecentPlayed()
 end
 
 function BuildFileInfoFromPath(path, filename)
+  path = normalize_path(path) -- 强制路径标准化
   local info = {
     path = path,
     filename = filename or (path:match("[^/\\]+$") or path),
@@ -2422,6 +2431,19 @@ function BuildFileInfoFromPath(path, filename)
   return info
 end
 
+function RemoveDuplicateRecentFiles()
+  local path_set = {}
+  local new_list = {}
+  for _, info in ipairs(recent_audio_files) do
+    local path = normalize_path(info.path)
+    if not path_set[path] then
+      path_set[path] = true
+      table.insert(new_list, info)
+    end
+  end
+  recent_audio_files = new_list
+end
+
 function AddToRecentPlayed(file_info)
   if not file_info or not file_info.path then return end
   -- 规范分隔符
@@ -2431,16 +2453,19 @@ function AddToRecentPlayed(file_info)
   end
   -- 移除已有的同路径项（避免重复）
   for i = #recent_audio_files, 1, -1 do
-    if recent_audio_files[i].path == file_info.path then
+    if normalize_path(recent_audio_files[i].path) == file_info.path then
       table.remove(recent_audio_files, i)
     end
   end
-
-  table.insert(recent_audio_files, 1, file_info)
+  -- table.insert(recent_audio_files, 1, file_info) -- 插入新的副本而不是file_info本身
+  local info_copy = {}
+  for k, v in pairs(file_info) do info_copy[k] = v end
+  table.insert(recent_audio_files, 1, info_copy)
   -- 裁剪超出最大数量
   while #recent_audio_files > max_recent_files do
     table.remove(recent_audio_files)
   end
+  -- RemoveDuplicateRecentFiles() -- 强制去重
   SaveRecentPlayed()
 end
 
@@ -2512,6 +2537,40 @@ function HasCoverImage(img_info)
     return true
   end
   return false
+end
+
+--------------------------------------------- 地址栏音频文件地址点击文件夹目录段节点 ---------------------------------------------
+
+function RefreshFolderFiles(dir)
+  if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
+    collect_mode = COLLECT_MODE_TREE -- 如果不是最近播放则使用树形目录
+    current_recent_play_info = nil
+    selected_recent_row = 0 -- 清空最近播放选中项
+  end
+
+  files_idx_cache = GetAudioFilesFromDirCached(dir)
+  selected_row = nil
+
+  if files_idx_cache then
+    for _, info in ipairs(files_idx_cache) do
+      info.group = GetCustomGroupsForPath(info.path)
+      -- 清空表格列表的波形缓存
+      info._thumb_waveform = nil
+      info._last_thumb_w = nil
+    end
+  end
+
+  previewed_files = {}
+  SortFilesByFilenameAsc()
+  -- 切换模式后清空表格列表波形预览队列
+  waveform_task_queue = {}
+
+  -- 图片资源释放
+  -- if last_cover_img and reaper.ImGui_DestroyImage then
+  --   reaper.ImGui_DestroyImage(last_cover_img)
+  -- end
+  -- last_cover_img, last_cover_path = nil, nil
+  -- last_img_w = nil
 end
 
 function loop()
@@ -5225,28 +5284,121 @@ function loop()
     end
 
     -- 状态栏行
-    local info = files_idx_cache and selected_row and files_idx_cache[selected_row]
-    reaper.ImGui_Text(ctx, ("%d audio files found."):format(#files_idx_cache))
-    if playing_preview then
-      local show_path = info and info.path or (last_playing_info and last_playing_info.path)
-      if show_path then
-        reaper.ImGui_SameLine(ctx, nil, 1)
-        reaper.ImGui_Text(ctx, " Now playing: " .. show_path)
-        -- 右键点击时打开弹出菜单
-        if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-          reaper.ImGui_OpenPopup(ctx, "##now_playing")
+    local file_info
+    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then -- 最近播放模式时使用播放列表项
+      file_info = current_recent_play_info
+    elseif files_idx_cache and selected_row and files_idx_cache[selected_row] then
+      file_info = files_idx_cache[selected_row] -- 其他模式用右侧表格选中项
+      selected_recent_row = 0 -- 清空最近播放选中项
+    else
+      file_info = last_playing_info
+    end
+
+    reaper.ImGui_Text(ctx, ("%7d audio files found."):format(#files_idx_cache)) -- 数字部分始终占用7位
+    reaper.ImGui_SameLine(ctx)
+
+    -- 路径始终跟随 file_info
+    local show_path = file_info and file_info.path or ""
+    show_path = normalize_path(show_path)
+    if show_path ~= "" then
+      reaper.ImGui_Text(ctx, "Now browsing:")
+      reaper.ImGui_SameLine(ctx)
+      local sep = package.config:sub(1,1)
+      local path_parts = {}
+      local cur = 1
+      local is_win = (sep == "\\")
+      local prefix = ""
+
+      -- 处理Windows盘符
+      if is_win then
+        local drive = show_path:match("^%a:\\")
+        if drive then
+          table.insert(path_parts, drive)
+          cur = #drive + 1
         end
-        if reaper.ImGui_BeginPopup(ctx, "##now_playing") then
-          if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
-            if show_path and show_path ~= "" then
-              reaper.CF_LocateInExplorer(normalize_path(show_path)) -- 规范分隔符
-            end
-          end
-          reaper.ImGui_EndPopup(ctx)
-        end
-        reaper.ImGui_SameLine(ctx)
-        HelpMarker("Right-click the 'Now playing' text to open its containing folder and highlight the file.")
       end
+
+      -- 其它部分分割
+      local remain = show_path:sub(cur)
+      for part in string.gmatch(remain, "([^"..sep.."]+)") do
+        table.insert(path_parts, part)
+      end
+
+      -- 预计算每个目录段的起止坐标
+      local pos_x_list = {}
+      local pos_w_list = {}
+      local cursor_x, cursor_y = reaper.ImGui_GetCursorScreenPos(ctx)
+      local tmp_x = cursor_x
+      local font_size = reaper.ImGui_GetFontSize(ctx)
+
+      for i = 1, #path_parts - 1 do
+        local text = path_parts[i] .. sep
+        local text_w, _ = reaper.ImGui_CalcTextSize(ctx, text)
+        pos_x_list[i] = tmp_x
+        pos_w_list[i] = text_w
+        tmp_x = tmp_x + text_w
+      end
+      -- 文件名段也要跟上，但不用高亮/可点
+      local filename = path_parts[#path_parts]
+      local text_w, _ = reaper.ImGui_CalcTextSize(ctx, filename)
+      pos_x_list[#path_parts] = tmp_x
+      pos_w_list[#path_parts] = text_w
+      -- 计算鼠标悬停在哪一段
+      local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
+      local hover_idx = nil
+      for i = 1, #path_parts - 1 do
+        if mouse_x >= pos_x_list[i] and mouse_x <= pos_x_list[i]+pos_w_list[i] and
+          mouse_y >= cursor_y and mouse_y <= cursor_y+font_size then
+          hover_idx = i
+          break
+        end
+      end
+      -- 渲染所有段
+      local full_path = is_win and path_parts[1] or ""
+      local open_folder_popup = false
+
+      for i = 1, #path_parts do
+        if i > 1 then
+          full_path = full_path .. sep .. path_parts[i]
+          reaper.ImGui_SameLine(ctx, nil, 0)
+        end
+
+        local is_file = (i == #path_parts)
+        local text = is_file and path_parts[i] or (path_parts[i] .. sep)
+        local col = (not is_file and hover_idx and i <= hover_idx) and table_header_active or normal_text -- 鼠标经过时纯白，其他保持默认文字颜色
+        reaper.ImGui_TextColored(ctx, col, text)
+
+        -- 点击目录段
+        if not is_file and hover_idx and i == hover_idx and reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
+          tree_state.cur_path = full_path -- 当前文件夹
+          RefreshFolderFiles(full_path) -- 刷新文件
+        end
+
+        -- 右键目录段弹出菜单
+        if not is_file and reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+          open_folder_popup = true
+        end
+      end
+
+      -- 右键弹出菜单
+      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+        open_folder_popup = true
+      end
+
+      if open_folder_popup then
+        reaper.ImGui_OpenPopup(ctx, "##now_browsing")
+      end
+
+      if reaper.ImGui_BeginPopup(ctx, "##now_browsing") then
+        if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+          if show_path and show_path ~= "" then
+            reaper.CF_LocateInExplorer(normalize_path(show_path))
+          end
+        end
+        reaper.ImGui_EndPopup(ctx)
+      end
+      reaper.ImGui_SameLine(ctx)
+      HelpMarker("Hovering over a folder segment highlights it. Click to navigate into that folder.\nRight-click the path to show and highlight the file in Explorer/Finder.")
     end
 
     -- 显示波形缩放百分比
