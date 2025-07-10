@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d0197f90c69795518c782c5d4d16714f7c52c1ef">
+<index version="1" name="zaibuyidao Scripts" commit="53e999d646e6c9295d91463e73303d281eb52d0f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8754,6 +8754,12 @@ Other detailed improvements and bug fixes.]]></changelog>
         <changelog><![CDATA[Added album cover display feature that shows cover art for audio files on the left side of the file list.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d0197f90c69795518c782c5d4d16714f7c52c1ef/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.19" author="zaibuyidao" time="2025-07-10T14:53:58Z">
+        <changelog><![CDATA[Added segmented path browsing: you can now click any folder segment in the path to quickly browse audio files in that folder.
+Fixed the issue where duplicate entries could appear in the Recently Played list.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/53e999d646e6c9295d91463e73303d281eb52d0f/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
