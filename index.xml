@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="87b8c5babaa17015d983d565a797b5dc9aa87161">
+<index version="1" name="zaibuyidao Scripts" commit="4e7cc1b5c0aa4e7269b989afd35c02aab6192e28">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8781,6 +8781,13 @@ Fixed path separator normalization issues to ensure stable and consistent path h
 Fixed an issue where pressing the spacebar while typing in a text box would stop playback.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/87b8c5babaa17015d983d565a797b5dc9aa87161/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.23" author="zaibuyidao" time="2025-07-12T19:31:18Z">
+        <changelog><![CDATA[Added a "Refresh Covers For All In List" button, allowing users to manually fetch cover images from metadata when needed. If image metadata is not used, the script will still display album cover images from the local folder if available.
+Fixed path separator normalization issues to ensure stable and consistent path handling across platforms.
+Fixed an issue where pressing the spacebar while typing in a text box would stop playback.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4e7cc1b5c0aa4e7269b989afd35c02aab6192e28/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
