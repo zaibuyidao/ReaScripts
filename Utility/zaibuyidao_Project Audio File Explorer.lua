@@ -1,9 +1,10 @@
 -- @description Project Audio Explorer
--- @version 1.5.19
+-- @version 1.5.20
 -- @author zaibuyidao
 -- @changelog
---   Added segmented path browsing: you can now click any folder segment in the path to quickly browse audio files in that folder.
---   Fixed the issue where duplicate entries could appear in the Recently Played list.
+--   Added a "Refresh Covers For All In List" button, allowing users to manually fetch cover images from metadata when needed. If image metadata is not used, the script will still display album cover images from the local folder if available.
+--   Fixed path separator normalization issues to ensure stable and consistent path handling across platforms.
+--   Fixed an issue where pressing the spacebar while typing in a text box would stop playback.
 --   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
@@ -157,6 +158,28 @@ local filename_filter      = nil
 local previewed_files = {}
 local function MarkPreviewed(path) previewed_files[path] = true end
 local function IsPreviewed(path) return previewed_files[path] == true end
+-- 规范分隔符，传 true 表示是文件夹
+function normalize_path(path, is_dir)
+  if not path then return "" end
+  if reaper.GetOS():find("Win") then
+    path = path:gsub("/", "\\")
+    -- 合并所有连续的反斜杠为一个
+    path = path:gsub("\\+", "\\")
+    -- 处理盘符后多余斜杠，如 E:\\\ 变为 E:\
+    path = path:gsub("^(%a:)[\\]+", "%1\\")
+    -- 文件夹结尾补斜杠，且只补一个
+    if is_dir then
+      path = path:gsub("\\+$", "") .. "\\"
+    end
+  else
+    -- 合并所有连续的斜杠为一个
+    path = path:gsub("/+", "/")
+    if is_dir then
+      path = path:gsub("/+$", "") .. "/"
+    end
+  end
+  return path
+end
 -- 波形缓存路径
 local sep = package.config:sub(1,1)
 local DEFAULT_CACHE_DIR = script_path .. "waveform_cache" .. sep
@@ -164,6 +187,8 @@ local cache_dir = reaper.GetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR)
 if not cache_dir or cache_dir == "" then
   cache_dir = DEFAULT_CACHE_DIR
 end
+cache_dir = normalize_path(cache_dir, true)
+
 local function EnsureCacheDir()
   local sep = package.config:sub(1,1)
   if not reaper.EnumerateFiles(cache_dir, 0) then
@@ -290,29 +315,6 @@ if last_img_h_offset then img_h_offset = last_img_h_offset end
 local last_max_recent = tonumber(reaper.GetExtState(EXT_SECTION, "MaxRecentFiles"))
 if last_max_recent then max_recent_files = math.max(1, math.min(100, last_max_recent)) end
 
--- 规范分隔符，传 true 表示是文件夹
-function normalize_path(path, is_dir)
-  if not path then return "" end
-  if reaper.GetOS():find("Win") then
-    path = path:gsub("/", "\\")
-    -- 合并所有连续的反斜杠为一个
-    path = path:gsub("\\+", "\\")
-    -- 处理盘符后多余斜杠，如 E:\\\ 变为 E:\
-    path = path:gsub("^(%a:)[\\]+", "%1\\")
-    -- 文件夹结尾补斜杠，且只补一个
-    if is_dir then
-      path = path:gsub("\\+$", "") .. "\\"
-    end
-  else
-    -- 合并所有连续的斜杠为一个
-    path = path:gsub("/+", "/")
-    if is_dir then
-      path = path:gsub("/+$", "") .. "/"
-    end
-  end
-  return path
-end
-
 --------------------------------------------- 颜色相关 ---------------------------------------------
 
 -- 完全透明
@@ -348,6 +350,7 @@ local timeline_default_color = 0xCFCFCFFF -- 时间线默认颜色 0x3F3F48FF 0x
 --------------------------------------------- 波形缓存相关函数 ---------------------------------------------
 
 function GetFileSize(filepath)
+  filepath = normalize_path(filepath, false)
   local f = io.open(filepath, "rb")
   if not f then return 0 end
   f:seek("end")
@@ -365,12 +368,14 @@ function SimpleHash(str)
 end
 
 function CacheFilename(filepath)
+  filepath = normalize_path(filepath, false)
   local size = tostring(GetFileSize(filepath))
   return cache_dir .. SimpleHash(filepath .. "@" .. size) .. ".wfc"
 end
 
 -- 保存缓存
 function SaveWaveformCache(filepath, data)
+  filepath = normalize_path(filepath, false)
   local f = io.open(CacheFilename(filepath), "w+b")
   if not f then return end
   -- 第一行info，后面每行为每个像素的峰值
@@ -388,6 +393,7 @@ end
 
 -- 读取缓存
 function LoadWaveformCache(filepath)
+  filepath = normalize_path(filepath, false)
   local f = io.open(CacheFilename(filepath), "rb")
   if not f then return nil end
   local line = f:read("*l")
@@ -438,12 +444,13 @@ end
 -- 获取波形数据
 function GetPeaksWithCache(info, wf_step, pixel_cnt, start_time, end_time)
   if not info or not info.path or info.path == "" then return end
-  local cache = LoadWaveformCache(info.path)
+  local path = normalize_path(info.path, false)
+  local cache = LoadWaveformCache(path)
   if not cache then
     -- 第一次采样，直接全量采样最大宽度
     local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, CACHE_PIXEL_WIDTH, start_time, end_time)
     if peaks and src_len and channel_count then
-      SaveWaveformCache(info.path, {peaks=peaks, pixel_cnt=CACHE_PIXEL_WIDTH, channel_count=channel_count, src_len=src_len})
+      SaveWaveformCache(path, {peaks=peaks, pixel_cnt=CACHE_PIXEL_WIDTH, channel_count=channel_count, src_len=src_len})
       cache = {peaks=peaks, pixel_cnt=CACHE_PIXEL_WIDTH, channel_count=channel_count, src_len=src_len}
     end
   end
@@ -555,6 +562,7 @@ function CollectFromItems()
     if take then
       local source = reaper.GetMediaItemTake_Source(take)
       local path = reaper.GetMediaSourceFileName(source, "")
+      path = normalize_path(path, false)
       local typ = reaper.GetMediaSourceType(source, "")
       if path and path ~= "" and not files[path] and (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
         -- 获取文件大小并格式化
@@ -608,6 +616,7 @@ function CollectMediaItems()
       local take_offset = GetItemSectionStartPos(item) or 0
       local take_length = reaper.GetMediaSourceLength(src) or 0
       path = reaper.GetMediaSourceFileName(src, "")
+      path = normalize_path(path, false)
       -- 通过源文件路径获取type，保证类型准确
       if path and path ~= "" then
         local real_src = reaper.PCM_Source_CreateFromFile(path)
@@ -685,6 +694,7 @@ function CollectFromRPP()
     if ret and chunk then
       for path in chunk:gmatch('FILE%s+"(.-)"') do
         if path and path ~= "" then
+          path = normalize_path(path, false)
           path_set[path] = true
         end
       end
@@ -699,6 +709,7 @@ function CollectFromRPP()
       local src = reaper.GetMediaItemTake_Source(take)
       local root_src = GetRootSource(src) -- 统一获取音频源
       local path = reaper.GetMediaSourceFileName(root_src, "")
+      path = normalize_path(path, false)
       if path and path_set[path] then
         local typ, bits, samplerate, channels, length, size = "", "-", "-", "-", "-", 0
         local description, comment = "", ""
@@ -756,6 +767,7 @@ function CollectFromProjectDirectory()
   local files, files_idx = {}, {}
   -- 获取当前工程路径
   local proj_path = reaper.GetProjectPath()
+  proj_path = normalize_path(proj_path, true)
   if not proj_path or proj_path == "" then return files, files_idx end
   -- 支持的扩展名
   local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true}
@@ -766,6 +778,7 @@ function CollectFromProjectDirectory()
     local ext = file:match("^.+%.([^.]+)$")
     if ext and valid_exts[ext:lower()] and ext:lower() ~= "rpp" then
       local fullpath = proj_path .. "/" .. file
+      fullpath = normalize_path(fullpath, false)
       if IsValidAudioFile(fullpath) and not files[fullpath] then
         local info = { path = fullpath, filename = file }
         -- 获取文件大小
@@ -814,6 +827,7 @@ function CollectFromCustomFolder(paths)
   local files_idx = {}
   for _, path in ipairs(paths or {}) do
     if type(path) == "string" and path ~= "" then
+      path = normalize_path(path, false)
       if not IsValidAudioFile(path) then
         goto continue
       end
@@ -894,7 +908,7 @@ function MergeUsagesByPath(files_idx)
   local merged = {}
   local map = {}
   for _, info in ipairs(files_idx) do
-    local key = info.path or ""
+    local key = normalize_path(info.path or "", false)
     if not map[key] then
       -- 拷贝一份新的结构
       local newinfo = {}
@@ -916,6 +930,7 @@ function MergeUsagesBySection(files_idx)
     -- 先得到原始path，再判断区段
     local root_src = GetRootSource(info.source)
     local path = reaper.GetMediaSourceFileName(root_src, "")
+    path = normalize_path(path, false)
     local start_offset, length = 0, 0
     if reaper.GetMediaSourceType(info.source, "") == "SECTION" then
       start_offset, length = GetSectionInfo(info.item, info.source)
@@ -1018,28 +1033,6 @@ function StopPlay()
   paused_position = 0
 end
 
--- 播放文件
-function PlayFile(source, path, do_loop)
-  StopPlay()
-  if source then
-    playing_preview = reaper.CF_CreatePreview(source)
-    if playing_preview then
-      if reaper.CF_Preview_SetValue then
-        reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", do_loop and 1 or 0)
-        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)      -- 设置音量
-        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate) -- 设置播放速率
-        reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
-        reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-      end
-      reaper.CF_Preview_Play(playing_preview)
-      playing_path = path
-      playing_source = source
-      preview_play_len = reaper.GetMediaSourceLength(source) or 0
-      MarkPreviewed(path)
-    end
-  end
-end
-
 function RestartPreviewWithParams(from_wave_pos)
   if not playing_source then return end
   local cur_pos = 0
@@ -1091,15 +1084,17 @@ end
 
 function GetPhysicalPath(path_or_source)
   if type(path_or_source) == "string" then
-    return path_or_source
+    return normalize_path(path_or_source, false)
   elseif type(path_or_source) == "userdata" then
-    return reaper.GetMediaSourceFileName(path_or_source, "")
+    local path = reaper.GetMediaSourceFileName(path_or_source, "")
+    return normalize_path(path, false)
   else
     return nil
   end
 end
 
 function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end)
+  path = normalize_path(path, false)
   -- 保存Arrange视图状态 - 避免滚屏
   reaper.PreventUIRefresh(1) -- 防止UI刷新
   reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
@@ -1260,6 +1255,7 @@ end
 
 -- 波形峰值采样
 function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
+  filepath = normalize_path(filepath, false)
   if not IsValidAudioFile(filepath) then
     return
   end
@@ -1711,6 +1707,7 @@ local collect_mode_labels = {
 local selected_index = nil
 
 function GetAudioFilesFromDirCached(dir_path)
+  dir_path = normalize_path(dir_path, true)
   if not audio_file_cache[dir_path] then
     local _, files_idx = CollectFromDirectory(dir_path)
     audio_file_cache[dir_path] = files_idx
@@ -1718,12 +1715,9 @@ function GetAudioFilesFromDirCached(dir_path)
   return audio_file_cache[dir_path]
 end
 
-function RefreshAudioDirCache(dir_path)
-  audio_file_cache[dir_path] = nil
-end
-
 -- 获取指定目录下所有有效音频文件
 function CollectFromDirectory(dir_path)
+  dir_path = normalize_path(dir_path, true)
   local files, files_idx = {}, {}
   local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true}
   if not dir_path or dir_path == "" then return files, files_idx end
@@ -1734,6 +1728,7 @@ function CollectFromDirectory(dir_path)
     local ext = file:match("^.+%.([^.]+)$")
     if ext and valid_exts[ext:lower()] and ext:lower() ~= "rpp" then
       local fullpath = dir_path .. sep .. file
+      fullpath = normalize_path(fullpath, false)
       if IsValidAudioFile(fullpath) and not files[fullpath] then
         local info = { path = fullpath, filename = file }
         -- 获取文件大小
@@ -1805,6 +1800,7 @@ end
 
 -- 获取目录下所有子文件夹和支持类型的音频文件
 function list_dir(path)
+  path = normalize_path(path, true)
   local dirs, audios = {}, {}
   local ok = true
   local i = 0
@@ -1812,6 +1808,7 @@ function list_dir(path)
     local file = reaper.EnumerateFiles(path, i)
     if not file then break end
     local full = path .. ((path:sub(-1)==sep) and '' or sep) .. file
+    full = normalize_path(full, false)
     local ext = file:match('%.([^.]+)$')
     if ext and audio_types[ext:upper()] then
       local src = reaper.PCM_Source_CreateFromFile(full)
@@ -1842,6 +1839,7 @@ end
 
 -- 树状目录
 function draw_tree(name, path)
+  path = normalize_path(path, true)
   local show_name = name
   if drive_name_map and drive_name_map[path] and drive_name_map[path] ~= "" then
     show_name = name .. " (" .. drive_name_map[path] .. ")"
@@ -1872,7 +1870,8 @@ function draw_tree(name, path)
     end
     local cache = dir_cache[path] or {dirs={}, audios={}, ok=true}
     for _, sub in ipairs(cache.dirs) do
-      draw_tree(sub, path .. sep .. sub)
+      local sub_path = normalize_path(path .. sep .. sub, true)
+      draw_tree(sub, sub_path)
     end
     reaper.ImGui_TreePop(ctx)
     tree_open[path] = true
@@ -1919,7 +1918,7 @@ folder_shortcuts = LoadFolderShortcuts()
 function draw_shortcut_tree(sc, base_path)
   local shortcut_name = sc.name or sc.path
   local show_name = shortcut_name
-  local path = sc.path
+  local path = normalize_path(sc.path, true)
   local open = tree_open[path]
   local highlight = (collect_mode == COLLECT_MODE_SHORTCUT and tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0 -- 去掉 collect_mode == COLLECT_MODE_SHORTCUT 则保持高亮
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##shortcut_" .. path, highlight)
@@ -1939,7 +1938,7 @@ function draw_shortcut_tree(sc, base_path)
     -- 只在顶级快捷方式节点支持重命名
     local is_root_shortcut = false
     for _, v in ipairs(folder_shortcuts) do
-      if v.path == sc.path then
+      if normalize_path(v.path, true) == path then
         is_root_shortcut = true
         break
       end
@@ -1954,8 +1953,8 @@ function draw_shortcut_tree(sc, base_path)
       end
     end
     if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
-      if sc.path and sc.path ~= "" then
-        reaper.CF_ShellExecute(normalize_path(sc.path)) -- 规范分隔符
+      if path and path ~= "" then
+        reaper.CF_ShellExecute(normalize_path(path)) -- 规范分隔符
       end
     end
     if is_root_shortcut then
@@ -1974,7 +1973,8 @@ function draw_shortcut_tree(sc, base_path)
     end
     local cache = dir_cache[path] or {dirs={}, audios={}, ok=true}
     for _, sub in ipairs(cache.dirs) do
-      draw_shortcut_tree({name=sub, path=path .. sep .. sub}, path)
+      local sub_path = normalize_path(path .. sep .. sub, true)
+      draw_shortcut_tree({name=sub, path=sub_path}, path)
     end
     reaper.ImGui_TreePop(ctx)
     tree_open[path] = true
@@ -1984,7 +1984,7 @@ function draw_shortcut_tree(sc, base_path)
 
   if remove_this then
     for idx, v in ipairs(folder_shortcuts) do
-      if v.path == sc.path then
+      if normalize_path(v.path, true) == path then
         table.remove(folder_shortcuts, idx)
         SaveFolderShortcuts()
         break
@@ -2006,9 +2006,10 @@ function SaveCustomFolders()
     local exist = {}
     local paths = {}
     for _, v in ipairs(custom_folders_content[folder] or {}) do
-      if type(v) == "string" and v ~= "" and not exist[v] then
-        table.insert(paths, v)
-        exist[v] = true
+      local norm_path = normalize_path(norm_path, false)
+      if type(norm_path) == "string" and norm_path ~= "" and not exist[norm_path] then
+        table.insert(paths, norm_path)
+        exist[norm_path] = true
       end
     end
     if #paths > 0 then
@@ -2055,6 +2056,7 @@ function LoadCustomFolders()
         local exist = {}
         local paths = {}
         for path in items:gmatch("[^;]+") do
+          path = normalize_path(path, false)
           if path ~= "" and not exist[path] then
             table.insert(paths, path)
             exist[path] = true
@@ -2095,10 +2097,11 @@ function clear_custom_folders_content_key()
 end
 
 function GetCustomGroupsForPath(path)
+  path = normalize_path(path, false)
   local groups = {}
   for folder, paths in pairs(custom_folders_content or {}) do
     for _, p in ipairs(paths) do
-      if p == path then
+      if normalize_path(p, false) == path then
         table.insert(groups, folder)
         break
       end
@@ -2112,7 +2115,7 @@ function ShowGroupMenu(info)
   for _, group_name in ipairs(custom_folders or {}) do
     local in_group = false
     for _, path in ipairs(custom_folders_content[group_name] or {}) do
-      if path == info.path then
+      if normalize_path(path, false) == normalize_path(info.path, false) then
         in_group = true
         break
       end
@@ -2122,14 +2125,14 @@ function ShowGroupMenu(info)
       if in_group then
         -- 如果已属于，点击则移除
         for i, p in ipairs(custom_folders_content[group_name]) do
-          if p == info.path then
+          if normalize_path(p, false) == normalize_path(info.path, false) then
             table.remove(custom_folders_content[group_name], i)
             break
           end
         end
       else
         -- 如果未属于，点击则加入
-        table.insert(custom_folders_content[group_name], info.path)
+        table.insert(custom_folders_content[group_name], normalize_path(info.path, false))
       end
       SaveCustomFolders()
     end
@@ -2141,7 +2144,7 @@ function ShowGroupMenu(info)
     if ret and name and name ~= "" then
       table.insert(custom_folders, name)
       custom_folders_content[name] = {}
-      table.insert(custom_folders_content[name], info.path)
+      table.insert(custom_folders_content[name], normalize_path(info.path, false))
       SaveCustomFolders()
     end
   end
@@ -2172,11 +2175,19 @@ function parse_line(line)
   return parts[1], parts[2], parts[3], parts[4], parts[5]
 end
 
+local function norm_files(files)
+  local t = {}
+  for _, path in ipairs(files or {}) do
+    table.insert(t, normalize_path(path, false))
+  end
+  return t
+end
+
 function SaveAdvancedFolders()
   local lines = {}
   for id, node in pairs(advanced_folders) do
     local cs = table.concat(node.children or {}, ",")
-    local fs = table.concat(node.files    or {}, ",")
+    local fs = table.concat(norm_files(node.files), ",")
     local ps = node.parent or ""
     local line = string.format("%s|%s|%s|%s|%s",
       sanitize(id), sanitize(node.name), sanitize(ps),
@@ -2219,7 +2230,7 @@ function LoadAdvancedFolders()
         files    = {}
       }
       for cid in cs:gmatch("[^,]+") do table.insert(node.children, cid) end
-      for f   in fs:gmatch("[^,]+") do table.insert(node.files,    f)   end
+      for f   in fs:gmatch("[^,]+") do table.insert(node.files,    normalize_path(f, false))   end
       advanced_folders[id] = node
     else
       -- 跳过空 id 行\n
@@ -2298,7 +2309,7 @@ function draw_advanced_folder_node(id, selected_id)
     if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATH") then
       local retval, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
       if retval and dtype == "AUDIO_PATH" and type(payload) == "string" and payload ~= "" then
-        local drag_path = payload
+        local drag_path = normalize_path(payload, false)
         node.files = node.files or {}
         local exists = false
         for _, p in ipairs(node.files) do
@@ -2507,8 +2518,156 @@ end
 local last_cover_path, last_cover_img
 local last_img_w, last_img_h
 local last_window_visible = true
+local cover_cache_created = false
+local persisted_cover_cache = reaper.GetExtState(EXT_SECTION, "CoverCacheCreated")
+if persisted_cover_cache == "1" then cover_cache_created = true end
+
+function file_exists(path)
+  local f = io.open(path, "rb")
+  if f then f:close(); return true end
+  return false
+end
+
+function get_ffmpeg_path()
+  local script_path = debug.getinfo(1,'S').source:match([[^@?(.*[\/])[^\/]-$]])
+  script_path = normalize_path(script_path, true)
+  local sep = package.config:sub(1,1)
+  local exe = (sep == "/" and "ffmpeg" or "ffmpeg.exe")
+  return script_path .. "lib" .. sep .. exe
+end
+
+function get_cover_cache_path(audio_path)
+  audio_path = normalize_path(audio_path, false)
+  local script_path = debug.getinfo(1,'S').source:match([[^@?(.*[\/])[^\/]-$]])
+  local sep = package.config:sub(1,1)
+  local cache_dir = script_path .. "cover_cache" .. sep
+  if not cover_cache_created then
+    os.execute((sep == "/" and "mkdir -p " or "mkdir ") .. '"' .. cache_dir .. '"')
+    cover_cache_created = true
+    reaper.SetExtState(EXT_SECTION, "CoverCacheCreated", "1", true)
+  end
+  local filename = SimpleHash(audio_path) .. ".jpg"
+  return cache_dir .. filename
+end
+
+function is_supported_audio(path)
+  local ext = path:match("^.+%.([^.]+)$")
+  if not ext then return false end
+  ext = ext:upper()
+  return (ext == "WAV" or ext == "WAVE" or ext == "MP3" or ext == "FLAC" or ext == "OGG" or ext == "AIFF" or ext == "APE" or ext == "WV")
+end
+
+function refresh_all_covers_in_list()
+  local ffmpeg_path = get_ffmpeg_path()
+  if not file_exists(ffmpeg_path) then
+    reaper.ShowMessageBox("ffmpeg not found.", "Error", 0)
+    return
+  end
+  -- 优先项目内 ffmpeg，否则尝试用系统 ffmpeg
+  -- if not file_exists(ffmpeg_path) then
+  --   ffmpeg_path = "ffmpeg"
+  -- end
+  if not files_idx_cache or #files_idx_cache == 0 then
+    reaper.ShowMessageBox("No audio files in list.", "Info", 0)
+    return
+  end
+
+  local sep = package.config:sub(1,1)
+  local script_dir = normalize_path(debug.getinfo(1,'S').source:match([[^@?(.*[\/])[^\/]-$]]), true)
+  local cache_dir = normalize_path(script_dir .. "cover_cache", true)
+  reaper.RecursiveCreateDirectory(cache_dir, 1)
+
+  if reaper.GetOS():find("Win") then
+    -- Windows 批处理
+    local bat_path = cache_dir .. "refresh_all.bat"
+    local bat = io.open(bat_path, "w")
+    bat:write("@echo off\n")
+    bat:write("setlocal enabledelayedexpansion\n")
+    bat:write("set /A success=0\n")
+    bat:write("set /A failed=0\n")
+    bat:write("set /A skipped=0\n\n")
+
+    for _, info in ipairs(files_idx_cache) do
+      local path  = normalize_path(info.path, false)
+      local cover = get_cover_cache_path(path)
+      if file_exists(cover) then
+        bat:write(string.format('echo Skipped (exists): "%s"\n', path))
+        bat:write("set /A skipped+=1\n\n")
+      else
+        -- bat:write(string.format('echo Processing: "%s"\n', path))
+        bat:write(string.format(
+          '"%s" -y -i "%s" -an -map 0:v:0? -vf scale=120:120 -pix_fmt yuvj420p -frames:v 1 -update 1 "%s" >nul 2>&1\n',
+          ffmpeg_path, path, cover
+        ))
+        bat:write(string.format(
+          'if %%ERRORLEVEL%% NEQ 0 (echo Failed: "%s"& set /A failed+=1) else (echo Success: "%s"& set /A success+=1)\n\n',
+          path, path
+        ))
+      end
+    end
+
+    bat:write("echo.\n")
+    bat:write("echo ========================\n")
+    bat:write("echo Summary:\n")
+    bat:write("echo   Success : %success%\n")
+    bat:write("echo   Failed  : %failed%\n")
+    bat:write("echo   Skipped : %skipped%\n")
+    bat:write("echo ========================\n")
+    bat:write("pause\n")
+    bat:write("del \"%~f0\"\n") -- 删除.bat 文件自身
+    bat:close()
+
+    os.execute('start "" cmd /C "' .. bat_path .. '"')
+  else
+    -- macOS / Linux shell
+    local sh_path = cache_dir .. "refresh_all.sh"
+    local sh = io.open(sh_path, "w")
+    sh:write("#!/bin/bash\n")
+    sh:write("success=0\nfailed=0\nskipped=0\n\n")
+    for _, info in ipairs(files_idx_cache) do
+      local path = normalize_path(info.path, false)
+      local cover = get_cover_cache_path(path)
+      if file_exists(cover) then
+        sh:write("echo \"Skipped (exists): " .. path .. "\"\n")
+        sh:write("skipped=$((skipped+1))\n\n")
+      else
+        sh:write("if \"" .. ffmpeg_path .. "\" -y -i \"" .. path .. "\" -an -map 0:v:0? -vf scale=120:120 -pix_fmt yuvj420p -frames:v 1 -update 1 \"" .. cover .. "\"; then\n")
+        sh:write("  echo \"Success: " .. path .. "\"\n")
+        sh:write("  success=$((success+1))\n")
+        sh:write("else\n")
+        sh:write("  echo \"Failed: " .. path .. "\"\n")
+        sh:write("  failed=$((failed+1))\n")
+        sh:write("fi\n\n")
+      end
+    end
+    sh:write("echo ========================\n")
+    sh:write("echo Summary:\n")
+    sh:write("echo   Success : $success\n")
+    sh:write("echo   Failed  : $failed\n")
+    sh:write("echo   Skipped : $skipped\n")
+    sh:write("echo ========================\n")
+    sh:write("read -p \"Press enter to exit.\"\n")
+    sh:close()
+    os.execute("chmod +x \"" .. sh_path .. "\"")
+    
+    -- macOS用Terminal，Linux用bash
+    local uname = io.popen("uname"):read("*l") or ""
+    if uname == "Darwin" then
+      os.execute("osascript -e 'tell application \"Terminal\" to do script \"bash " .. sh_path .. "\"'")
+    else
+      os.execute("bash \"" .. sh_path .. "\" &")
+    end
+  end
+end
 
 function GetCoverImagePath(audio_path)
+  audio_path = normalize_path(audio_path, false)
+  local cover_path = get_cover_cache_path(audio_path)
+  if file_exists(cover_path) then
+    return cover_path
+  end
+
+  -- 兼容查找
   local dir = audio_path:match("^(.*[\\/])")
   local base = audio_path:match("([^\\/]+)%.[^%.]+$") -- 不带扩展名
   local candidates = {
@@ -2614,13 +2773,13 @@ function loop()
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), ix, iy * 2.0)
 
     -- 过滤器控件居中
-    reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
-    local region_w = reaper.ImGui_GetContentRegionAvail(ctx)
-    local label_w = reaper.ImGui_CalcTextSize(ctx, "Filter:")
-    local filter_w = 800 -- 输入框宽度
-    local button_w = reaper.ImGui_CalcTextSize(ctx, "Clear") + 24 -- 24为按钮额外padding
-    local total_w = label_w + filter_w + button_w  + 16 -- 16为间隔
-    reaper.ImGui_SetCursorPosX(ctx, (region_w - total_w) / 2)
+    -- reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
+    -- local region_w = reaper.ImGui_GetContentRegionAvail(ctx)
+    -- local label_w = reaper.ImGui_CalcTextSize(ctx, "Filter:")
+    -- local filter_w = 800 -- 输入框宽度
+    -- local button_w = reaper.ImGui_CalcTextSize(ctx, "Clear") + 24 -- 24为按钮额外padding
+    -- local total_w = label_w + filter_w + button_w  + 16 -- 16为间隔
+    -- reaper.ImGui_SetCursorPosX(ctx, (region_w - total_w) / 2)
 
     -- 过滤器
     reaper.ImGui_Text(ctx, "Filter:")
@@ -2629,7 +2788,7 @@ function loop()
       filename_filter = reaper.ImGui_CreateTextFilter()
       reaper.ImGui_Attach(ctx, filename_filter)
     end
-    reaper.ImGui_SetNextItemWidth(ctx, filter_w)
+    reaper.ImGui_SetNextItemWidth(ctx, -500)
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
     -- 清空过滤器内容
     reaper.ImGui_SameLine(ctx)
@@ -2650,7 +2809,38 @@ function loop()
     if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F5()) then
       CollectFiles()
     end
-    reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
+
+    -- 刷新列表专辑封面按钮
+    reaper.ImGui_SameLine(ctx)
+    if ImGui.Button(ctx, 'Refresh Covers For All In List') then
+      refresh_all_covers_in_list()
+    end
+    -- 提示
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_BeginTooltip(ctx)
+      reaper.ImGui_Text(ctx, "Requires third-party tool:")
+      reaper.ImGui_Text(ctx, "   - Windows: ffmpeg.exe")
+      reaper.ImGui_Text(ctx, "   - macOS/Linux: ffmpeg")
+      reaper.ImGui_Text(ctx, "Place executable in directory:")
+      reaper.ImGui_Text(ctx, "  " .. script_path .. "lib")
+      reaper.ImGui_Text(ctx, "A 'cover_cache' folder will be created next to the script.")
+      reaper.ImGui_EndTooltip(ctx)
+    end
+    -- 右键弹出菜单
+    if reaper.ImGui_BeginPopupContextItem(ctx, nil) then
+      if reaper.ImGui_MenuItem(ctx, 'Download ffmpeg (Static Builds)') then
+        reaper.CF_ShellExecute('https://ffmpeg.org/download.html')
+      end
+      if reaper.ImGui_MenuItem(ctx, 'Open lib folder') then
+        reaper.CF_ShellExecute(script_path .. 'lib')
+      end
+      if reaper.ImGui_MenuItem(ctx, 'Open cover_cache folder') then
+        reaper.CF_ShellExecute(script_path .. 'cover_cache')
+      end
+      reaper.ImGui_EndPopup(ctx)
+    end
+
+    reaper.ImGui_Dummy(ctx, 1, 3) -- 控件下方 + 1px 间距
 
     -- 自动缩放音频表格
     local line_h = reaper.ImGui_GetTextLineHeight(ctx)
@@ -2745,6 +2935,7 @@ function loop()
         if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut") then
           local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
           if rv == 1 and folder and folder ~= "" then
+            folder = normalize_path(folder, true)
             local exists = false
             for _, v in ipairs(folder_shortcuts) do
               if v.path == folder then exists = true break end
@@ -2833,7 +3024,7 @@ function loop()
             if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATH") then
               local retval, dtype, payload, is_preview, is_delivery = reaper.ImGui_GetDragDropPayload(ctx)
               if retval and dtype == "AUDIO_PATH" and type(payload) == "string" and payload ~= "" then
-                local drag_path = payload
+                local drag_path = normalize_path(payload, false)
                 custom_folders_content[folder] = custom_folders_content[folder] or {}
                 local exists = false
                 for _, p in ipairs(custom_folders_content[folder]) do
@@ -2885,7 +3076,7 @@ function loop()
               last_collect_mode = collect_mode
             end
             collect_mode = COLLECT_MODE_RECENTLY_PLAYED -- 切换到最近播放模式
-            local full_info = BuildFileInfoFromPath(info.path, info.filename) -- 重新补全文件信息
+            local full_info = BuildFileInfoFromPath(normalize_path(info.path, false), info.filename) -- 重新补全文件信息
             PlayFromStart(full_info) -- 播放文件并加载波形
             current_recent_play_info = full_info
           end
@@ -3395,6 +3586,7 @@ function loop()
                         new_filename = new_filename .. ext
                       end
                       local new_path = dir .. "/" .. new_filename
+                      new_path = normalize_path(new_path, false)
 
                       -- 拷贝物理文件
                       local srcfile = io.open(old_path, "rb")
@@ -3441,7 +3633,8 @@ function loop()
                     reaper.PreventUIRefresh(1) -- 防止UI刷新
                     reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
                     if info.path and info.path ~= "" then
-                      reaper.InsertMedia(info.path, 0)
+                      local insert_path = normalize_path(info.path, false)
+                      reaper.InsertMedia(insert_path, 0)
                       reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
                     end
                     reaper.PreventUIRefresh(-1)
@@ -3510,7 +3703,7 @@ function loop()
                 -- F2: 更改item名称
                 if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F2()) then
                   if collect_mode == COLLECT_MODE_RPP then
-                    local old_path = info.path
+                    local old_path = normalize_path(info.path, false)
                     local dir = old_path:match("^(.*)[/\\][^/\\]+$")
                     local old_filename = old_path:match("[^/\\]+$")
                     local ext = old_filename:match("%.[^%.]+$") or "" -- 提取原始后缀
@@ -3522,6 +3715,7 @@ function loop()
                         new_filename = new_filename .. ext
                       end
                       local new_path = dir .. "/" .. new_filename
+                      new_path = ormalize_path(new_path, false)
 
                       -- 拷贝物理文件
                       local srcfile = io.open(old_path, "rb")
@@ -3633,7 +3827,7 @@ function loop()
                   reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
                   local old_cursor = reaper.GetCursorPosition()
                   reaper.PreventUIRefresh(1) -- 防止UI刷新
-                  reaper.InsertMedia(info.path, 0)
+                  reaper.InsertMedia(normalize_path(info.path, false), 0)
                   reaper.SetEditCurPos(old_cursor, true, false) -- 恢复光标到插入前
                   reaper.PreventUIRefresh(-1)
                   reaper.UpdateArrange()
@@ -3659,6 +3853,7 @@ function loop()
               -- 自定义文件夹，用 AUDIO_PATH 作为类型
               local path = info and info.path
               if path and path ~= "" then
+                path = normalize_path(path, false)
                 -- reaper.ImGui_Text(ctx, "Drag to collect")
                 reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATH", path)
               end
@@ -3675,7 +3870,7 @@ function loop()
                 reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
                 local old_cursor = reaper.GetCursorPosition()
                 reaper.PreventUIRefresh(1) -- 防止UI刷新
-                reaper.InsertMedia(info.path, 0)
+                reaper.InsertMedia(normalize_path(info.path, false), 0)
                 reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
                 reaper.PreventUIRefresh(-1)
                 reaper.UpdateArrange()
@@ -3842,7 +4037,7 @@ function loop()
 
             -- Group
             reaper.ImGui_TableSetColumnIndex(ctx, 12)
-            local group_names = GetCustomGroupsForPath(info.path)
+            local group_names = GetCustomGroupsForPath(normalize_path(info.path, false))
             if group_names ~= "" then
               reaper.ImGui_Text(ctx, group_names)
             else
@@ -3863,7 +4058,7 @@ function loop()
 
             -- Path
             reaper.ImGui_TableSetColumnIndex(ctx, 13)
-            reaper.ImGui_Text(ctx, info.path)
+            reaper.ImGui_Text(ctx, normalize_path(info.path or "", false))
             -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
             -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
             --   PlayFromStart(info)
@@ -3886,8 +4081,10 @@ function loop()
           -- 自动播放切换表格中的音频文件
           if auto_play_next_pending and type(auto_play_next_pending) == "table" then
             local next_idx = -1
+            local target_path = normalize_path(auto_play_next_pending.path, false) -- 规范化目标路径
             for i, info in ipairs(files_idx_cache or {}) do
-              if info.path == auto_play_next_pending.path then
+              local info_path = normalize_path(info.path, false)
+              if info_path == target_path then
                 next_idx = i
                 break
               end
@@ -3922,9 +4119,10 @@ function loop()
               if tr then reaper.SetOnlyTrackSelected(tr) end
               reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
               -- 判断是全长源音频还是item区段
+              local path = normalize_path(dragging_audio.path, false)
               if dragging_audio.start_time and dragging_audio.end_time and math.abs(dragging_audio.end_time - dragging_audio.start_time) > 0.01 then
                 InsertSelectedAudioSection(
-                  dragging_audio.path,
+                  path,
                   dragging_audio.start_time,
                   dragging_audio.end_time,
                   dragging_audio.section_offset or 0,
@@ -3932,7 +4130,7 @@ function loop()
                 )
               else
                 -- 只插入全长源音频
-                reaper.InsertMedia(dragging_audio.path, 0)
+                reaper.InsertMedia(path, 0)
               end
               reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
@@ -4089,8 +4287,10 @@ function loop()
       if ok and ok2 then
         if prev_preview_pos and prev_preview_pos < length and pos >= length then
           local cur_idx = -1
+          playing_path = normalize_path(playing_path, false)
           for i, info in ipairs(files_idx_cache) do
-            if info.path == playing_path then cur_idx = i break end
+            local info_path = normalize_path(info.path, false)
+            if info_path == playing_path then cur_idx = i break end
           end
           if cur_idx > 0 and cur_idx < #files_idx_cache then
             auto_play_next_pending = files_idx_cache[cur_idx + 1]
@@ -4552,7 +4752,8 @@ function loop()
         do_insert = true
       end
       if do_insert and cur_info and cur_info.path then
-        InsertSelectedAudioSection(cur_info.path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true)
+        local path = normalize_path(cur_info.path, false)
+        InsertSelectedAudioSection(path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true)
       end
       if reaper.ImGui_IsItemHovered(ctx) then
           reaper.ImGui_BeginTooltip(ctx)
@@ -4746,6 +4947,7 @@ function loop()
         else
           root_path = cur_info.path
         end
+        root_path = normalize_path(root_path or "", false)
         local cur_key = (root_path or cur_info.path) .. "|" .. tostring(section_offset) .. "|" .. tostring(section_length)
         if (not peaks)
           or (last_wave_info ~= cur_key)
@@ -4806,14 +5008,16 @@ function loop()
       end
       -- 空格播放
       if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Space()) then
-        if playing_preview then
-          StopPreview()
-          -- 强制播放光标复位
-          if last_play_cursor_before_play then
-            Wave.play_cursor = last_play_cursor_before_play
+        if not reaper.ImGui_IsAnyItemActive(ctx) then -- 避免输入框等被激活后空格冲突
+          if playing_preview then
+            StopPreview()
+            -- 强制播放光标复位
+            if last_play_cursor_before_play then
+              Wave.play_cursor = last_play_cursor_before_play
+            end
+          else
+            PlayFromCursor(cur_info)
           end
-        else
-          PlayFromCursor(cur_info)
         end
       end
 
@@ -5199,6 +5403,7 @@ function loop()
               local tr = reaper.BR_GetMouseCursorContext_Track()
               if tr then reaper.SetOnlyTrackSelected(tr) end
               path = GetPhysicalPath(cur_info and cur_info.path)
+              path = normalize_path(path or "", false)
               InsertSelectedAudioSection(path, dragging_selection.start_time, dragging_selection.end_time, dragging_selection.section_offset, false)
               reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
             end
@@ -5299,7 +5504,7 @@ function loop()
 
     -- 路径始终跟随 file_info
     local show_path = file_info and file_info.path or ""
-    show_path = normalize_path(show_path)
+    show_path = normalize_path(show_path, false)
     if show_path ~= "" then
       reaper.ImGui_Text(ctx, "Now browsing:")
       reaper.ImGui_SameLine(ctx)
@@ -5370,8 +5575,9 @@ function loop()
 
         -- 点击目录段
         if not is_file and hover_idx and i == hover_idx and reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
-          tree_state.cur_path = full_path -- 当前文件夹
-          RefreshFolderFiles(full_path) -- 刷新文件
+          local path = normalize_path(full_path, true)
+          tree_state.cur_path = path -- 当前文件夹
+          RefreshFolderFiles(path) -- 刷新文件
         end
 
         -- 右键目录段弹出菜单
