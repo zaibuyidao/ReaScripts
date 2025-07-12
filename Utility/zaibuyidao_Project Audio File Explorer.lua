@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.21
+-- @version 1.5.22
 -- @author zaibuyidao
 -- @changelog
 --   Added a "Refresh Covers For All In List" button, allowing users to manually fetch cover images from metadata when needed. If image metadata is not used, the script will still display album cover images from the local folder if available.
@@ -2252,7 +2252,7 @@ function draw_advanced_folder_node(id, selected_id)
   local node = advanced_folders[id]
   if not node then return end
   -- 仅在 COLLECT_MODE_ADVANCEDFOLDER 模式下高亮
-  local flags = reaper.ImGui_TreeNodeFlags_OpenOnArrow()
+  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() -- reaper.ImGui_TreeNodeFlags_OpenOnArrow() -- 使用OpenOnArrow()将只能点击箭头有效。
   if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and selected_id == id then
     flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
   end
