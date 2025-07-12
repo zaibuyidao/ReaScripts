@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.20
+-- @version 1.5.21
 -- @author zaibuyidao
 -- @changelog
 --   Added a "Refresh Covers For All In List" button, allowing users to manually fetch cover images from metadata when needed. If image metadata is not used, the script will still display album cover images from the local folder if available.
@@ -1995,7 +1995,6 @@ end
 
 --------------------------------------------- 自定义文件夹节点 ---------------------------------------------
 
-local EXT_KEY_CUSTOM_FOLDERS = "CustomFolders"
 local EXT_KEY_CUSTOM_CONTENT = "CustomFoldersContent"
 custom_folders = custom_folders or {} -- { "monster", "bgm", ... }
 custom_folders_content = custom_folders_content or {} -- { ["monster"] = { path1, path2 }, ... }
@@ -2006,7 +2005,7 @@ function SaveCustomFolders()
     local exist = {}
     local paths = {}
     for _, v in ipairs(custom_folders_content[folder] or {}) do
-      local norm_path = normalize_path(norm_path, false)
+      local norm_path = normalize_path(v, false)
       if type(norm_path) == "string" and norm_path ~= "" and not exist[norm_path] then
         table.insert(paths, norm_path)
         exist[norm_path] = true
