@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.23
+-- @version 1.5.24
 -- @author zaibuyidao
 -- @changelog
 --   Added a "Refresh Covers For All In List" button, allowing users to manually fetch cover images from metadata when needed. If image metadata is not used, the script will still display album cover images from the local folder if available.
@@ -1846,7 +1846,7 @@ function draw_tree(name, path)
   end
 
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
-  local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected()
+  local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##" .. path, flags | highlight)
   -- 只要点击树节点，不管当前什么模式，都切换到tree模式
   if reaper.ImGui_IsItemClicked(ctx, 0) then
@@ -1919,7 +1919,7 @@ function draw_shortcut_tree(sc, base_path)
   local show_name = shortcut_name
   local path = normalize_path(sc.path, true)
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
-  local highlight = (collect_mode == COLLECT_MODE_SHORTCUT and tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() -- 去掉 collect_mode == COLLECT_MODE_SHORTCUT 则保持高亮
+  local highlight = (collect_mode == COLLECT_MODE_SHORTCUT and tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0 -- 去掉 collect_mode == COLLECT_MODE_SHORTCUT 则保持高亮
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##shortcut_" .. path, flags | highlight)
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
