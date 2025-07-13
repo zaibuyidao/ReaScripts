@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.24
+-- @version 1.5.25
 -- @author zaibuyidao
 -- @changelog
 --   Added a "Refresh Covers For All In List" button, allowing users to manually fetch cover images from metadata when needed. If image metadata is not used, the script will still display album cover images from the local folder if available.
@@ -652,7 +652,11 @@ function CollectMediaItems()
     local track = reaper.GetMediaItem_Track(item)
     local _, track_name = reaper.GetTrackName(track)
     local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-    local _, take_name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
+    local take_name = ""
+    if take then
+      local ok, name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
+      take_name = ok and name or ""
+    end
     table.insert(files_idx, {
       item = item,
       take = take,
@@ -736,7 +740,11 @@ function CollectFromRPP()
         local track = reaper.GetMediaItem_Track(item)
         local _, track_name = reaper.GetTrackName(track)
         local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-        local _, take_name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
+        local take_name = ""
+        if take then
+          local ok, name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
+          take_name = ok and name or ""
+        end
         table.insert(files_idx, {
           item = item,
           take = take,
