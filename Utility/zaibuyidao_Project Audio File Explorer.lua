@@ -1,10 +1,8 @@
 -- @description Project Audio Explorer
--- @version 1.5.26
+-- @version 1.5.27
 -- @author zaibuyidao
 -- @changelog
---   Added a "Refresh Covers For All In List" button, allowing users to manually fetch cover images from metadata when needed. If image metadata is not used, the script will still display album cover images from the local folder if available.
---   Fixed path separator normalization issues to ensure stable and consistent path handling across platforms.
---   Fixed an issue where pressing the spacebar while typing in a text box would stop playback.
+--   Fixed error caused by empty item in project.
 --   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
@@ -352,7 +350,7 @@ local timeline_default_color = 0xCFCFCFFF -- 时间线默认颜色 0x3F3F48FF 0x
 function GetFileSize(filepath)
   filepath = normalize_path(filepath, false)
   local f = io.open(filepath, "rb")
-  if not f then return 0 end
+  if not f then return end
   f:seek("end")
   local sz = f:seek()
   f:close()
@@ -487,14 +485,15 @@ end
 
 function GetItemSectionStartPos(item)
   local take = reaper.GetActiveTake(item)
-  if not take then return 0 end
+  if not take then return end
   local src = reaper.GetMediaItemTake_Source(take)
+  if not reaper.ValidatePtr(src, "MediaSource*") then return end
   local src_type = reaper.GetMediaSourceType(src, "")
-  if src_type ~= "SECTION" then return 0 end
+  if src_type ~= "SECTION" then return end
 
   local track = reaper.GetMediaItem_Track(item)
   local rv, chunk = reaper.GetTrackStateChunk(track, "", false)
-  if not rv then return 0 end
+  if not rv then return end
 
   local item_count = reaper.CountTrackMediaItems(track)
   local item_idx = -1
@@ -505,7 +504,7 @@ function GetItemSectionStartPos(item)
     end
   end
 
-  if item_idx == -1 then return 0 end
+  if item_idx == -1 then return end
   local cur = 0
   for block in chunk:gmatch("<ITEM.-\n>") do
     cur = cur + 1
@@ -526,12 +525,6 @@ function GetItemSectionStartPos(item)
   return 0
 end
 
-function GetTakeSectionStartPos(take)
-  if not take then return 0 end
-  local item = reaper.GetMediaItemTake_Item(take)
-  return GetItemSectionStartPos(item)
-end
-
 function GetSectionInfo(item, src)
   local start_offset, length = 0, 0
   if reaper.GetMediaSourceType(src, "") == "SECTION" then
@@ -544,9 +537,13 @@ function GetSectionInfo(item, src)
 end
 
 local function GetRootSource(src)
+  -- 过滤空对象／非 MediaSource*
+  if not src or not reaper.ValidatePtr(src, "MediaSource*") then
+    return nil
+  end
   while reaper.GetMediaSourceType(src, "") == "SECTION" do
     local parent = reaper.GetMediaSourceParent(src)
-    if not parent then break end
+    if not parent or not reaper.ValidatePtr(parent, "MediaSource*") then break end
     src = parent
   end
   return src
@@ -561,6 +558,8 @@ function CollectFromItems()
     local take = reaper.GetActiveTake(item)
     if take then
       local source = reaper.GetMediaItemTake_Source(take)
+      -- 过滤空对象／非 MediaSource*
+      if not reaper.ValidatePtr(source, "MediaSource*") then goto continue end
       local path = reaper.GetMediaSourceFileName(source, "")
       path = normalize_path(path, false)
       local typ = reaper.GetMediaSourceType(source, "")
@@ -598,6 +597,7 @@ function CollectFromItems()
         files_idx[#files_idx+1] = files[path]
       end
     end
+    ::continue::
   end
   return files, files_idx
 end
@@ -613,6 +613,8 @@ function CollectMediaItems()
     local description, comment = "", ""
     if take then
       src = reaper.GetMediaItemTake_Source(take)
+      -- 过滤空对象／非 MediaSource*
+      if not reaper.ValidatePtr(src, "MediaSource*") then goto continue end
       local take_offset = GetItemSectionStartPos(item) or 0
       local take_length = reaper.GetMediaSourceLength(src) or 0
       path = reaper.GetMediaSourceFileName(src, "")
@@ -712,7 +714,10 @@ function CollectFromRPP()
     if take then
       local src = reaper.GetMediaItemTake_Source(take)
       local root_src = GetRootSource(src) -- 统一获取音频源
-      local path = reaper.GetMediaSourceFileName(root_src, "")
+      local path = ""
+      if reaper.ValidatePtr(root_src, "MediaSource*") then
+        path = reaper.GetMediaSourceFileName(root_src, "")
+      end
       path = normalize_path(path, false)
       if path and path_set[path] then
         local typ, bits, samplerate, channels, length, size = "", "-", "-", "-", "-", 0
@@ -937,6 +942,10 @@ function MergeUsagesBySection(files_idx)
   for _, info in ipairs(files_idx) do
     -- 先得到原始path，再判断区段
     local root_src = GetRootSource(info.source)
+    -- 过滤空对象／非 MediaSource*
+    if not root_src or not reaper.ValidatePtr(root_src, "MediaSource*") then
+      goto continue
+    end
     local path = reaper.GetMediaSourceFileName(root_src, "")
     path = normalize_path(path, false)
     local start_offset, length = 0, 0
@@ -960,6 +969,7 @@ function MergeUsagesBySection(files_idx)
     else
       table.insert(map[key].usages, info)
     end
+    ::continue::
   end
   return merged
 end
@@ -1093,7 +1103,7 @@ end
 function GetPhysicalPath(path_or_source)
   if type(path_or_source) == "string" then
     return normalize_path(path_or_source, false)
-  elseif type(path_or_source) == "userdata" then
+  elseif reaper.ValidatePtr(path_or_source, "MediaSource*") then
     local path = reaper.GetMediaSourceFileName(path_or_source, "")
     return normalize_path(path, false)
   else
@@ -4941,21 +4951,14 @@ function loop()
         local section_length = cur_info.section_length or 0
 
         -- 用完整源音频路径
-        local root_src = cur_info.source
-        if root_src and type(root_src) == "userdata" then
-          if reaper.GetMediaSourceType(root_src, "") == "SECTION" then
-            if GetRootSource then
-              root_src = GetRootSource(cur_info.source)
-            end
-          end
-        end
+        local root_src = GetRootSource(cur_info.source)
         local root_path
-        if root_src and type(root_src) == "userdata" then
+        if reaper.ValidatePtr(root_src, "MediaSource*") then
           root_path = reaper.GetMediaSourceFileName(root_src, "")
         else
-          root_path = cur_info.path
+          root_path = cur_info.path or ""
         end
-        root_path = normalize_path(root_path or "", false)
+        root_path = normalize_path(root_path, false)
         local cur_key = (root_path or cur_info.path) .. "|" .. tostring(section_offset) .. "|" .. tostring(section_length)
         if (not peaks)
           or (last_wave_info ~= cur_key)
@@ -5382,19 +5385,15 @@ function loop()
           local start_time = math.min(select_start_time, select_end_time) * play_rate
           local end_time = math.max(select_start_time, select_end_time) * play_rate
           -- 如果是SECTION，直接用区段路径和相对区段起点时间
-          if cur_info.source and type(cur_info.source) == "userdata" then
-            if reaper.GetMediaSourceType(cur_info.source, "") == "SECTION" then
-              drag_path = cur_info.source
-              start_time = start_time
-              end_time = end_time
-            end
+          if reaper.ValidatePtr(cur_info.source, "MediaSource*") and reaper.GetMediaSourceType(cur_info.source, "") == "SECTION" then
+            drag_path = cur_info.source
           end
 
           dragging_selection = {
             path = drag_path,
             start_time = start_time,
             end_time = end_time,
-            section_offset = cur_info.section_offset or 0
+            section_offset = cur_info.section_offset or 0,
           }
           reaper.ImGui_EndDragDropSource(ctx)
         end
