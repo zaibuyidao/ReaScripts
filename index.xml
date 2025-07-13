@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b0f1410f2949430093def4188324d9634d7d2c6f">
+<index version="1" name="zaibuyidao Scripts" commit="a53b492c2715c067cb4840cd7519aaf9a6715b9a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8809,6 +8809,11 @@ Fixed path separator normalization issues to ensure stable and consistent path h
 Fixed an issue where pressing the spacebar while typing in a text box would stop playback.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b0f1410f2949430093def4188324d9634d7d2c6f/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.27" author="zaibuyidao" time="2025-07-13T17:12:53Z">
+        <changelog><![CDATA[Fixed error caused by empty item in project.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a53b492c2715c067cb4840cd7519aaf9a6715b9a/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
