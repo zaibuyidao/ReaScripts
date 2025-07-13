@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.25
+-- @version 1.5.26
 -- @author zaibuyidao
 -- @changelog
 --   Added a "Refresh Covers For All In List" button, allowing users to manually fetch cover images from metadata when needed. If image metadata is not used, the script will still display album cover images from the local folder if available.
@@ -1298,7 +1298,8 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
 
   local peaks = {}
   for ch = 1, channels do peaks[ch] = {} end
-  local buf = reaper.new_array(samples_per_pixel * channels)
+  local buf_size = math.max(1, math.floor(samples_per_pixel * channels))
+  local buf = reaper.new_array(buf_size)
 
   -- 动态计算实际步长
   local function calcAdaptiveStep(read_samples)
@@ -1365,7 +1366,8 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
   local samples_per_pixel = math.max(1, math.floor(total_samples / pixel_cnt))
   local peaks = {}
   for ch = 1, channel_count do peaks[ch] = {} end
-  local buf = reaper.new_array(samples_per_pixel * channel_count)
+  local buf_size = math.max(1, math.floor(samples_per_pixel * channel_count))
+  local buf = reaper.new_array(buf_size)
 
   -- 临时插入 item/take 访问 full source
   local track_idx = reaper.CountTracks(0)
