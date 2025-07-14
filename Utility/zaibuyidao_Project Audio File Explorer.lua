@@ -1,9 +1,8 @@
 -- @description Project Audio Explorer
--- @version 1.5.27
+-- @version 1.5.28
 -- @author zaibuyidao
 -- @changelog
---   Fixed error caused by empty item in project.
---   Other detailed improvements and bug fixes.
+--   Added UCS list search feature code (search functionality is not yet enabled).
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -64,13 +63,13 @@ local SCRIPT_NAME = 'Project Audio Explorer - Browse, Search, and Preview Audio 
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14) -- 全局默认字体大小
-local font_small = reaper.ImGui_CreateFont("", 12)
-local font_medium = reaper.ImGui_CreateFont("", 14)
-local font_large = reaper.ImGui_CreateFont("", 20)
+-- local font_small = reaper.ImGui_CreateFont("", 12)
+-- local font_medium = reaper.ImGui_CreateFont("", 14)
+-- local font_large = reaper.ImGui_CreateFont("", 20)
 reaper.ImGui_Attach(ctx, sans_serif)
-reaper.ImGui_Attach(ctx, font_small)
-reaper.ImGui_Attach(ctx, font_medium)
-reaper.ImGui_Attach(ctx, font_large)
+-- reaper.ImGui_Attach(ctx, font_small)
+-- reaper.ImGui_Attach(ctx, font_medium)
+-- reaper.ImGui_Attach(ctx, font_large)
 
 local need_refresh_font  = false
 local font_size          = 14 -- 内容字体大小
@@ -154,8 +153,8 @@ local EXT_KEY_RECENT_PLAYED = "RecentPlayedFiles"
 local filename_filter      = nil
 -- 预览已读标记
 local previewed_files = {}
-local function MarkPreviewed(path) previewed_files[path] = true end
-local function IsPreviewed(path) return previewed_files[path] == true end
+function MarkPreviewed(path) previewed_files[path] = true end
+function IsPreviewed(path) return previewed_files[path] == true end
 -- 规范分隔符，传 true 表示是文件夹
 function normalize_path(path, is_dir)
   if not path then return "" end
@@ -187,7 +186,7 @@ if not cache_dir or cache_dir == "" then
 end
 cache_dir = normalize_path(cache_dir, true)
 
-local function EnsureCacheDir()
+function EnsureCacheDir()
   local sep = package.config:sub(1,1)
   if not reaper.EnumerateFiles(cache_dir, 0) then
     os.execute((sep == "/" and "mkdir -p " or "mkdir ") .. '"' .. cache_dir .. '"')
@@ -270,7 +269,7 @@ local doubleclick_action  = DOUBLECLICK_NONE -- 默认 Do Do nothing
 local bg_alpha            = 1.0              -- 默认背景不透明
 
 -- 保存设置
-local function SaveSettings()
+function SaveSettings()
   -- reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
   reaper.SetExtState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
   reaper.SetExtState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
@@ -536,7 +535,7 @@ function GetSectionInfo(item, src)
   return start_offset, length
 end
 
-local function GetRootSource(src)
+function GetRootSource(src)
   -- 过滤空对象／非 MediaSource*
   if not src or not reaper.ValidatePtr(src, "MediaSource*") then
     return nil
@@ -1691,10 +1690,10 @@ end
 
 -- 鼠标框选相关变量
 local pending_clear_selection = pending_clear_selection or false
-local function has_selection()
+function has_selection()
   return select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01
 end
-local function mouse_in_selection()
+function mouse_in_selection()
   if not mouse_time then return false end
   if not select_start_time or not select_end_time then return false end
   local sel_min = math.min(select_start_time, select_end_time)
@@ -2193,7 +2192,7 @@ function parse_line(line)
   return parts[1], parts[2], parts[3], parts[4], parts[5]
 end
 
-local function norm_files(files)
+function norm_files(files)
   local t = {}
   for _, path in ipairs(files or {}) do
     table.insert(t, normalize_path(path, false))
@@ -2750,6 +2749,65 @@ function RefreshFolderFiles(dir)
   -- last_img_w = nil
 end
 
+--------------------------------------------- UCS节点 ---------------------------------------------
+
+-- 语言设置
+local lang = "en"
+-- 列映射
+local COL_MAP = {
+  en = {1, 2},
+  zh = {6, 7},
+  tw = {9, 10},
+}
+local map = COL_MAP[lang] or COL_MAP.en
+-- 读取 CSV 文件
+local ucs_path = normalize_path(script_path .. "lib/ucs.csv", false)
+local f = io.open(ucs_path, "r")
+if not f then
+  reaper.ShowMessageBox("File not found:\n" .. ucs_path, "Error", 0)
+  return
+end
+
+-- 把所有行读到表里
+local lines = {}
+for line in f:lines() do table.insert(lines, line) end
+f:close()
+
+-- 从第2行开始解析。构建分类+子分类+CatID
+local categories = {}
+for i = 2, #lines do
+  local row = lines[i]
+  local fields = {}
+  for cell in row:gmatch("([^,]+)") do
+    table.insert(fields, cell)
+  end
+  local cat = fields[ map[1] ]
+  local sub = fields[ map[2] ]
+  local id  = fields[3]
+  if cat and cat ~= "" and sub and sub ~= "" then
+    categories[cat] = categories[cat] or {}
+    table.insert(categories[cat], { name = sub, id = id })
+  end
+end
+
+-- 按英文字母排序主分类和子分类
+local cat_names = {}
+for cat in pairs(categories) do
+  table.insert(cat_names, cat)
+end
+table.sort(cat_names, function(a,b) return a:lower() < b:lower() end)
+
+for _, cat in ipairs(cat_names) do
+  table.sort(categories[cat], function(a,b)
+    return a.name:lower() < b.name:lower()
+  end)
+end
+
+local running = true
+local cat_open_state = {} -- 用户操作状态
+local last_filter_text = ""
+local usc_filter
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -2877,246 +2935,355 @@ function loop()
 
     -- 左侧树状目录(此处需要使用 if 才有效，否则报错)
     if reaper.ImGui_BeginChild(ctx, "##left", left_w, child_h, 0, reaper.ImGui_WindowFlags_HorizontalScrollbar()) then
-      -- 内容字体自由缩放
-      local wheel = reaper.ImGui_GetMouseWheel(ctx)
-      local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
-      if preview_fonts[font_size] then
-        reaper.ImGui_PushFont(ctx, preview_fonts[font_size])
-      end
-      if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
-        -- 找到当前字号在列表中的索引
-        local cur_idx = 1
-        for i, v in ipairs(preview_font_sizes) do
-          if v == font_size then
-            cur_idx = i
-            break
+      if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar', reaper.ImGui_TabBarFlags_None()) then
+        -- PeekTree列表
+        if reaper.ImGui_BeginTabItem(ctx, 'PeekTree') then
+          -- 内容字体自由缩放
+          local wheel = reaper.ImGui_GetMouseWheel(ctx)
+          local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+          if preview_fonts[font_size] then
+            reaper.ImGui_PushFont(ctx, preview_fonts[font_size])
           end
-        end
-        cur_idx = cur_idx + wheel
-        cur_idx = math.max(1, math.min(#preview_font_sizes, cur_idx))
-        font_size = preview_font_sizes[cur_idx]
-        wheel = 0
-      end
-
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 文本颜色
-      
-      -- 渲染单选列表
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
-      local sel_mode = reaper.ImGui_CollapsingHeader(ctx, "Project Collection") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
-      reaper.ImGui_PopStyleColor(ctx)
-      if sel_mode then
-        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-        for i, v in ipairs(collect_mode_labels) do
-          local selected = (collect_mode == v.value)
-          -- reaper.ImGui_AlignTextToFramePadding(ctx)
-          if reaper.ImGui_Selectable(ctx, v.label, selected) then
-            collect_mode = v.value
-            selected_index = i
-            tree_open = {} -- 切到非tree时收起tree
-            files_idx_cache = nil
-            CollectFiles()
-          end
-        end
-        reaper.ImGui_Unindent(ctx, 7)
-      end
-
-      -- Tree模式特殊处理（折叠节点）
-      local flag = (collect_mode == COLLECT_MODE_TREE) and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
-      local tree_expanded = reaper.ImGui_CollapsingHeader(ctx, "This Computer") -- , nil, flag)
-      reaper.ImGui_PopStyleColor(ctx)
-      if tree_expanded then
-        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-        if not drives_loaded then
-          reaper.ImGui_Text(ctx, "Loading drives, please wait...")
-          if not need_load_drives then
-            need_load_drives = true
-          end
-        else
-          for _, drv in ipairs(drive_cache or {}) do
-            draw_tree(drv, drv)
-          end
-        end
-        reaper.ImGui_Unindent(ctx, 7)
-      end
-
-      -- 文件夹快捷方式节点
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
-      local create_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
-      reaper.ImGui_PopStyleColor(ctx)
-      if create_folder_open then
-        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-        for i = 1, #folder_shortcuts do
-          draw_shortcut_tree(folder_shortcuts[i])
-        end
-        -- 添加新快捷方式按钮
-        if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut") then
-          local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
-          if rv == 1 and folder and folder ~= "" then
-            folder = normalize_path(folder, true)
-            local exists = false
-            for _, v in ipairs(folder_shortcuts) do
-              if v.path == folder then exists = true break end
-            end
-            if not exists then
-              table.insert(folder_shortcuts, { name = folder:match("[^/\\]+$"), path = folder })
-              SaveFolderShortcuts()
-            end
-          end
-        end
-        reaper.ImGui_Unindent(ctx, 7)
-      end
-
-      -- 高级文件夹节点 Collections
-      local flags = reaper.ImGui_TreeNodeFlags_DefaultOpen()
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
-      local advanced_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Collections") --, nil, flags)
-      reaper.ImGui_PopStyleColor(ctx)
-      if advanced_folder_open then
-        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-        for _, id in ipairs(root_advanced_folders) do
-          local node = advanced_folders[id]
-          if node then
-            draw_advanced_folder_node(id, tree_state.cur_advanced_folder)
-          else
-            -- 如果节点在 advanced_folders 中找不到，输出警告
-            -- reaper.ShowConsoleMsg("root_advanced_folders中的节点id="..id.."未在advanced_folders表找到\n")
-          end
-        end
-        if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder") then
-          local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
-          if ret and name and name ~= "" then
-            local new_id = new_guid()
-            advanced_folders[new_id] = { id = new_id, name = name, parent = nil, children = {}, files = {} } -- 写入 advanced_folders 表
-            table.insert(root_advanced_folders, new_id)
-            SaveAdvancedFolders()
-          end
-        end
-        reaper.ImGui_Unindent(ctx, 7)
-      end
-
-      -- 自定义文件夹节点 Group
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
-      local custom_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Group##group") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
-      reaper.ImGui_PopStyleColor(ctx)
-      if custom_folder_open then
-        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-        for i, folder in ipairs(custom_folders) do
-          local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
-          if reaper.ImGui_Selectable(ctx, folder, is_selected) then
-            collect_mode = COLLECT_MODE_CUSTOMFOLDER
-            tree_state.cur_custom_folder = folder
-            files_idx_cache = nil
-            CollectFiles()
-          end
-          -- 右键菜单
-          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-            reaper.ImGui_OpenPopup(ctx, "CustomFolderMenu_" .. folder)
-          end
-          if reaper.ImGui_BeginPopup(ctx, "CustomFolderMenu_" .. folder) then
-            if reaper.ImGui_MenuItem(ctx, "Rename") then
-              local ret, newname = reaper.GetUserInputs("Rename Group", 1, "New Name:,extrawidth=200", folder)
-              if ret and newname and newname ~= "" then
-                custom_folders[i] = newname
-                custom_folders_content[newname] = custom_folders_content[folder] or {}
-                custom_folders_content[folder] = nil
-                if tree_state.cur_custom_folder == folder then
-                  tree_state.cur_custom_folder = newname
-                end
-                SaveCustomFolders()
+          if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
+            -- 找到当前字号在列表中的索引
+            local cur_idx = 1
+            for i, v in ipairs(preview_font_sizes) do
+              if v == font_size then
+                cur_idx = i
+                break
               end
             end
-            if reaper.ImGui_MenuItem(ctx, "Remove") then
-              table.remove(custom_folders, i)
-              custom_folders_content[folder] = nil
-              if tree_state.cur_custom_folder == folder then
-                tree_state.cur_custom_folder = ""
-                files_idx_cache = {}
-              end
-              SaveCustomFolders()
-            end
-            reaper.ImGui_EndPopup(ctx)
+            cur_idx = cur_idx + wheel
+            cur_idx = math.max(1, math.min(#preview_font_sizes, cur_idx))
+            font_size = preview_font_sizes[cur_idx]
+            wheel = 0
           end
-          -- 拖拽目标
-          if reaper.ImGui_BeginDragDropTarget(ctx) then
-            if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATH") then
-              local retval, dtype, payload, is_preview, is_delivery = reaper.ImGui_GetDragDropPayload(ctx)
-              if retval and dtype == "AUDIO_PATH" and type(payload) == "string" and payload ~= "" then
-                local drag_path = normalize_path(payload, false)
-                custom_folders_content[folder] = custom_folders_content[folder] or {}
+
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), normal_text) -- 文本颜色
+          
+          -- 渲染单选列表
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
+          local sel_mode = reaper.ImGui_CollapsingHeader(ctx, "Project Collection") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+          reaper.ImGui_PopStyleColor(ctx)
+          if sel_mode then
+            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            for i, v in ipairs(collect_mode_labels) do
+              local selected = (collect_mode == v.value)
+              -- reaper.ImGui_AlignTextToFramePadding(ctx)
+              if reaper.ImGui_Selectable(ctx, v.label, selected) then
+                collect_mode = v.value
+                selected_index = i
+                tree_open = {} -- 切到非tree时收起tree
+                files_idx_cache = nil
+                CollectFiles()
+              end
+            end
+            reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          -- Tree模式特殊处理（折叠节点）
+          local flag = (collect_mode == COLLECT_MODE_TREE) and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
+          local tree_expanded = reaper.ImGui_CollapsingHeader(ctx, "This Computer") -- , nil, flag)
+          reaper.ImGui_PopStyleColor(ctx)
+          if tree_expanded then
+            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            if not drives_loaded then
+              reaper.ImGui_Text(ctx, "Loading drives, please wait...")
+              if not need_load_drives then
+                need_load_drives = true
+              end
+            else
+              for _, drv in ipairs(drive_cache or {}) do
+                draw_tree(drv, drv)
+              end
+            end
+            reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          -- 文件夹快捷方式节点
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
+          local create_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+          reaper.ImGui_PopStyleColor(ctx)
+          if create_folder_open then
+            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            for i = 1, #folder_shortcuts do
+              draw_shortcut_tree(folder_shortcuts[i])
+            end
+            -- 添加新快捷方式按钮
+            if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut") then
+              local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
+              if rv == 1 and folder and folder ~= "" then
+                folder = normalize_path(folder, true)
                 local exists = false
-                for _, p in ipairs(custom_folders_content[folder]) do
-                  if p == drag_path then exists = true break end
+                for _, v in ipairs(folder_shortcuts) do
+                  if v.path == folder then exists = true break end
                 end
                 if not exists then
-                  table.insert(custom_folders_content[folder], drag_path)
+                  table.insert(folder_shortcuts, { name = folder:match("[^/\\]+$"), path = folder })
+                  SaveFolderShortcuts()
+                end
+              end
+            end
+            reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          -- 高级文件夹节点 Collections
+          local flags = reaper.ImGui_TreeNodeFlags_DefaultOpen()
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
+          local advanced_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Collections") --, nil, flags)
+          reaper.ImGui_PopStyleColor(ctx)
+          if advanced_folder_open then
+            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            for _, id in ipairs(root_advanced_folders) do
+              local node = advanced_folders[id]
+              if node then
+                draw_advanced_folder_node(id, tree_state.cur_advanced_folder)
+              else
+                -- 如果节点在 advanced_folders 中找不到，输出警告
+                -- reaper.ShowConsoleMsg("root_advanced_folders中的节点id="..id.."未在advanced_folders表找到\n")
+              end
+            end
+            if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder") then
+              local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
+              if ret and name and name ~= "" then
+                local new_id = new_guid()
+                advanced_folders[new_id] = { id = new_id, name = name, parent = nil, children = {}, files = {} } -- 写入 advanced_folders 表
+                table.insert(root_advanced_folders, new_id)
+                SaveAdvancedFolders()
+              end
+            end
+            reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          -- 自定义文件夹节点 Group
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
+          local custom_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Group##group") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+          reaper.ImGui_PopStyleColor(ctx)
+          if custom_folder_open then
+            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            for i, folder in ipairs(custom_folders) do
+              local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
+              if reaper.ImGui_Selectable(ctx, folder, is_selected) then
+                collect_mode = COLLECT_MODE_CUSTOMFOLDER
+                tree_state.cur_custom_folder = folder
+                files_idx_cache = nil
+                CollectFiles()
+              end
+              -- 右键菜单
+              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+                reaper.ImGui_OpenPopup(ctx, "CustomFolderMenu_" .. folder)
+              end
+              if reaper.ImGui_BeginPopup(ctx, "CustomFolderMenu_" .. folder) then
+                if reaper.ImGui_MenuItem(ctx, "Rename") then
+                  local ret, newname = reaper.GetUserInputs("Rename Group", 1, "New Name:,extrawidth=200", folder)
+                  if ret and newname and newname ~= "" then
+                    custom_folders[i] = newname
+                    custom_folders_content[newname] = custom_folders_content[folder] or {}
+                    custom_folders_content[folder] = nil
+                    if tree_state.cur_custom_folder == folder then
+                      tree_state.cur_custom_folder = newname
+                    end
+                    SaveCustomFolders()
+                  end
+                end
+                if reaper.ImGui_MenuItem(ctx, "Remove") then
+                  table.remove(custom_folders, i)
+                  custom_folders_content[folder] = nil
+                  if tree_state.cur_custom_folder == folder then
+                    tree_state.cur_custom_folder = ""
+                    files_idx_cache = {}
+                  end
                   SaveCustomFolders()
-                  if collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder then
-                    CollectFiles()
+                end
+                reaper.ImGui_EndPopup(ctx)
+              end
+              -- 拖拽目标
+              if reaper.ImGui_BeginDragDropTarget(ctx) then
+                if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATH") then
+                  local retval, dtype, payload, is_preview, is_delivery = reaper.ImGui_GetDragDropPayload(ctx)
+                  if retval and dtype == "AUDIO_PATH" and type(payload) == "string" and payload ~= "" then
+                    local drag_path = normalize_path(payload, false)
+                    custom_folders_content[folder] = custom_folders_content[folder] or {}
+                    local exists = false
+                    for _, p in ipairs(custom_folders_content[folder]) do
+                      if p == drag_path then exists = true break end
+                    end
+                    if not exists then
+                      table.insert(custom_folders_content[folder], drag_path)
+                      SaveCustomFolders()
+                      if collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder then
+                        CollectFiles()
+                      end
+                    end
+                  end
+                end
+                reaper.ImGui_EndDragDropTarget(ctx)
+              end
+            end
+            -- 新建自定义文件夹按钮
+            if reaper.ImGui_Button(ctx, "Create Group##add_custom_folder") then
+              local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
+              if ret and name and name ~= "" then
+                local exists = false
+                for _, v in ipairs(custom_folders) do
+                  if v == name then exists = true break end
+                end
+                if not exists then
+                  table.insert(custom_folders, name)
+                  custom_folders_content[name] = {}
+                  SaveCustomFolders()
+                end
+              end
+            end
+            reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          -- 最近播放节点
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
+          local recent_played_open = reaper.ImGui_CollapsingHeader(ctx, "Recently Played##recent")
+          reaper.ImGui_PopStyleColor(ctx)
+          if recent_played_open then
+            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            for i, info in ipairs(recent_audio_files) do
+              if i > max_recent_files then break end
+              local selected = (selected_recent_row == i)
+              if reaper.ImGui_Selectable(ctx, info.filename, selected) then
+                selected_recent_row = i
+                -- 进入最近播放前先保存当前模式
+                if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
+                  last_collect_mode = collect_mode
+                end
+                collect_mode = COLLECT_MODE_RECENTLY_PLAYED -- 切换到最近播放模式
+                local full_info = BuildFileInfoFromPath(normalize_path(info.path, false), info.filename) -- 重新补全文件信息
+                PlayFromStart(full_info) -- 播放文件并加载波形
+                current_recent_play_info = full_info
+              end
+
+              -- 右键弹出菜单
+              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+                reaper.ImGui_OpenPopup(ctx, "recent_file_menu_" .. i)
+              end
+              if reaper.ImGui_BeginPopup(ctx, "recent_file_menu_" .. i) then
+                if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+                  if info.path and info.path ~= "" then
+                    reaper.CF_LocateInExplorer(normalize_path(info.path)) -- 规范分隔符
+                  end
+                end
+                reaper.ImGui_EndPopup(ctx)
+              end
+            end
+            reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
+          reaper.ImGui_PopFont(ctx)          -- 内容字体自由缩放
+          reaper.ImGui_EndTabItem(ctx)
+        end
+        -- UCS列表
+        if reaper.ImGui_BeginTabItem(ctx, 'UCS') then
+          reaper.ImGui_Text(ctx, "Filter:")
+          reaper.ImGui_SameLine(ctx)
+          if not usc_filter then
+            usc_filter = reaper.ImGui_CreateTextFilter()
+            reaper.ImGui_Attach(ctx, usc_filter)
+          end
+          reaper.ImGui_SetNextItemWidth(ctx, -65)
+          reaper.ImGui_TextFilter_Draw(usc_filter, ctx, "##FilterUCS")
+          reaper.ImGui_SameLine(ctx)
+          if reaper.ImGui_Button(ctx, "Clear") then
+            reaper.ImGui_TextFilter_Set(usc_filter, "")
+          end
+          reaper.ImGui_Separator(ctx)
+
+          local filter_text = ""
+          if usc_filter then
+            filter_text = reaper.ImGui_TextFilter_Get(usc_filter)
+          end
+          -- 过滤时，自动展开子分类匹配但主分类不匹配的主分类
+          if filter_text ~= last_filter_text then
+            last_filter_text = filter_text
+            -- 清空所有折叠
+            if filter_text == "" then
+              cat_open_state = {}
+            else
+              -- 只重设需要自动展开的分类
+              for _, cat in ipairs(cat_names) do
+                local subs = categories[cat]
+                local filtered = {}
+                local cat_matched = false
+                if filter_text ~= "" then
+                  cat_matched = reaper.ImGui_TextFilter_PassFilter(usc_filter, cat)
+                  if cat_matched then
+                    filtered = subs
+                  else
+                    for _, entry in ipairs(subs) do
+                      if reaper.ImGui_TextFilter_PassFilter(usc_filter, entry.name) then
+                        table.insert(filtered, entry)
+                      end
+                    end
+                  end
+                else
+                  filtered = subs
+                end
+                -- 只自动展开主分类不匹配但有子分类匹配的分类
+                if not cat_matched and #filtered > 0 then
+                  cat_open_state[cat] = true
+                elseif filter_text ~= "" and cat_matched then
+                  cat_open_state[cat] = false
+                end
+              end
+            end
+          end
+
+          for _, cat in ipairs(cat_names) do
+            local subs = categories[cat]
+            local filtered = {}
+            local cat_matched = false
+            if filter_text ~= "" then
+              cat_matched = reaper.ImGui_TextFilter_PassFilter(usc_filter, cat)
+              if cat_matched then
+                filtered = subs
+              else
+                for _, entry in ipairs(subs) do
+                  if reaper.ImGui_TextFilter_PassFilter(usc_filter, entry.name) then
+                    table.insert(filtered, entry)
                   end
                 end
               end
+            else
+              filtered = subs
             end
-            reaper.ImGui_EndDragDropTarget(ctx)
-          end
-        end
-        -- 新建自定义文件夹按钮
-        if reaper.ImGui_Button(ctx, "Create Group##add_custom_folder") then
-          local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
-          if ret and name and name ~= "" then
-            local exists = false
-            for _, v in ipairs(custom_folders) do
-              if v == name then exists = true break end
-            end
-            if not exists then
-              table.insert(custom_folders, name)
-              custom_folders_content[name] = {}
-              SaveCustomFolders()
-            end
-          end
-        end
-        reaper.ImGui_Unindent(ctx, 7)
-      end
 
-      -- 最近播放节点
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), transparent)
-      local recent_played_open = reaper.ImGui_CollapsingHeader(ctx, "Recently Played##recent")
-      reaper.ImGui_PopStyleColor(ctx)
-      if recent_played_open then
-        reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-        for i, info in ipairs(recent_audio_files) do
-          if i > max_recent_files then break end
-          local selected = (selected_recent_row == i)
-          if reaper.ImGui_Selectable(ctx, info.filename, selected) then
-            selected_recent_row = i
-            -- 进入最近播放前先保存当前模式
-            if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
-              last_collect_mode = collect_mode
-            end
-            collect_mode = COLLECT_MODE_RECENTLY_PLAYED -- 切换到最近播放模式
-            local full_info = BuildFileInfoFromPath(normalize_path(info.path, false), info.filename) -- 重新补全文件信息
-            PlayFromStart(full_info) -- 播放文件并加载波形
-            current_recent_play_info = full_info
-          end
-
-          -- 右键弹出菜单
-          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-            reaper.ImGui_OpenPopup(ctx, "recent_file_menu_" .. i)
-          end
-          if reaper.ImGui_BeginPopup(ctx, "recent_file_menu_" .. i) then
-            if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
-              if info.path and info.path ~= "" then
-                reaper.CF_LocateInExplorer(normalize_path(info.path)) -- 规范分隔符
+            if #filtered > 0 then
+              reaper.ImGui_PushID(ctx, cat)
+              local is_open = cat_open_state[cat]
+              is_open = is_open and true or false
+              local arrow_label = is_open and "-" or "+"
+              if reaper.ImGui_Button(ctx, arrow_label, 20, 20) then
+                cat_open_state[cat] = not is_open
               end
-            end
-            reaper.ImGui_EndPopup(ctx)
-          end
-        end
-        reaper.ImGui_Unindent(ctx, 7)
-      end
+              reaper.ImGui_SameLine(ctx)
+              if reaper.ImGui_Selectable(ctx, cat, false, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+                -- reaper.ShowConsoleMsg("Clicked category: " .. cat .. "\n") -- 发送关键词
+              end
 
-      reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
-      reaper.ImGui_PopFont(ctx)          -- 内容字体自由缩放
+              if is_open then
+                for _, entry in ipairs(filtered) do
+                  reaper.ImGui_Indent(ctx, 28)
+                  if reaper.ImGui_Selectable(ctx, entry.name) then
+                    -- reaper.ShowConsoleMsg(("Selected: %s -> %s (ID: %s)\n"):format(cat, entry.name, entry.id)) -- 发送关键词
+                  end
+                  reaper.ImGui_Unindent(ctx, 28)
+                end
+              end
+              reaper.ImGui_PopID(ctx)
+            end
+          end
+          reaper.ImGui_EndTabItem(ctx)
+        end
+        reaper.ImGui_EndTabBar(ctx)
+      end
       reaper.ImGui_EndChild(ctx)
     end
 
