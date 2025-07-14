@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a53b492c2715c067cb4840cd7519aaf9a6715b9a">
+<index version="1" name="zaibuyidao Scripts" commit="d0d4318fd545fe662abb1f58f5d197265dca07cd">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8814,6 +8814,10 @@ Other detailed improvements and bug fixes.]]></changelog>
         <changelog><![CDATA[Fixed error caused by empty item in project.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a53b492c2715c067cb4840cd7519aaf9a6715b9a/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.28" author="zaibuyidao" time="2025-07-14T15:56:19Z">
+        <changelog><![CDATA[Added UCS list search feature code (search functionality is not yet enabled).]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d0d4318fd545fe662abb1f58f5d197265dca07cd/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
