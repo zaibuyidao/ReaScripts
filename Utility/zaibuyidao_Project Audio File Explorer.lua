@@ -1,9 +1,10 @@
 -- @description Project Audio Explorer
--- @version 1.5.29
+-- @version 1.5.30
 -- @author zaibuyidao
 -- @changelog
 --   Added UCS list search feature code (search functionality is not yet enabled).
 --   Temporarily disabled UCS CSV file reading.
+--   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -1904,6 +1905,11 @@ end
 local EXT_KEY_SHORTCUTS = "FolderShortcuts"
 folder_shortcuts = folder_shortcuts or {} -- 选择文件夹快捷方式
 
+-- 提取最后一级文件夹名称
+function GetFolderName(path)
+  return path:match("([^\\/]+)[\\/]?$")
+end
+
 function SaveFolderShortcuts()
   local t = {}
   for _, sc in ipairs(folder_shortcuts) do
@@ -1918,16 +1924,35 @@ end
 function LoadFolderShortcuts()
   local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_SHORTCUTS)
   local shortcuts = {}
-  if str and str ~= "" then
-    for pair in str:gmatch("[^|][^|]*;;[^|]+") do
-      local name, path = pair:match("^(.-);;(.*)$")
-      if name and path then
-        name = name:gsub("%%3B", ";"):gsub("%%7C%%7C", "||")
-        path = normalize_path(path:gsub("%%3B", ";"):gsub("%%7C%%7C", "||"), true)
-        table.insert(shortcuts, { name = name, path = path })
+  if not str or str == "" then
+    return shortcuts
+  end
+  -- 没有 "||"时，当作单条处理；否则拆分多条
+  local parts = {}
+  if not str:find("||", 1, true) then
+    parts = { str }
+  else
+    local last = 1
+    repeat
+      local s, e = str:find("||", last, true)
+      if s then
+        table.insert(parts, str:sub(last, s-1))
+        last = e + 1
+      else
+        table.insert(parts, str:sub(last))
       end
+    until not s
+  end
+  -- 逐条解析 name;;path
+  for _, pair in ipairs(parts) do
+    local name_enc, path_enc = pair:match("^(.-);;(.*)$")
+    if name_enc and path_enc then
+      local name = name_enc:gsub("%%3B", ";"):gsub("%%7C%%7C", "||")
+      local path = normalize_path(path_enc:gsub("%%3B", ";"):gsub("%%7C%%7C", "||"),true)
+      table.insert(shortcuts, { name = name, path = path })
     end
   end
+
   return shortcuts
 end
 
@@ -1935,8 +1960,8 @@ folder_shortcuts = LoadFolderShortcuts()
 
 -- 绘制快捷方式
 function draw_shortcut_tree(sc, base_path)
-  local shortcut_name = sc.name or sc.path
-  local show_name = shortcut_name
+  if type(sc)~="table" or not sc.path then return end
+  local show_name = (sc.name and sc.name ~= "") and sc.name or GetFolderName(sc.path)
   local path = normalize_path(sc.path, true)
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
   local highlight = (collect_mode == COLLECT_MODE_SHORTCUT and tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0 -- 去掉 collect_mode == COLLECT_MODE_SHORTCUT 则保持高亮
@@ -1964,7 +1989,7 @@ function draw_shortcut_tree(sc, base_path)
     end
     if is_root_shortcut then
       if reaper.ImGui_MenuItem(ctx, "Rename") then
-        local ret, newname = reaper.GetUserInputs("Rename Shortcut", 1, "New Name:,extrawidth=200", sc.name)
+        local ret, newname = reaper.GetUserInputs("Rename Shortcut", 1, "New Name:,extrawidth=200", (sc.name and sc.name~="") and sc.name or GetFolderName(sc.path))
         if ret and newname and newname ~= "" then
           sc.name = newname
           SaveFolderShortcuts()
@@ -2002,13 +2027,14 @@ function draw_shortcut_tree(sc, base_path)
   end
 
   if remove_this then
-    for idx, v in ipairs(folder_shortcuts) do
-      if normalize_path(v.path, true) == path then
-        table.remove(folder_shortcuts, idx)
-        SaveFolderShortcuts()
-        break
+    -- 反向遍历，避免索引错位
+    for i = #folder_shortcuts, 1, -1 do
+      if normalize_path(folder_shortcuts[i].path, true) == path then
+        table.remove(folder_shortcuts, i)
       end
     end
+    SaveFolderShortcuts()
+    remove_this = false
   end
 end
 
