@@ -1,8 +1,9 @@
 -- @description Project Audio Explorer
--- @version 1.5.28
+-- @version 1.5.29
 -- @author zaibuyidao
 -- @changelog
 --   Added UCS list search feature code (search functionality is not yet enabled).
+--   Temporarily disabled UCS CSV file reading.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -2760,18 +2761,24 @@ local COL_MAP = {
   tw = {9, 10},
 }
 local map = COL_MAP[lang] or COL_MAP.en
--- 读取 CSV 文件
-local ucs_path = normalize_path(script_path .. "lib/ucs.csv", false)
-local f = io.open(ucs_path, "r")
-if not f then
-  reaper.ShowMessageBox("File not found:\n" .. ucs_path, "Error", 0)
-  return
-end
+-- -- 读取 CSV 文件
+-- local ucs_path = normalize_path(script_path .. "lib/ucs.csv", false)
+-- local f = io.open(ucs_path, "r")
+-- if not f then
+--   reaper.ShowMessageBox("File not found:\n" .. ucs_path, "Error", 0)
+--   return
+-- end
 
 -- 把所有行读到表里
-local lines = {}
-for line in f:lines() do table.insert(lines, line) end
-f:close()
+-- local lines = {}
+-- for line in f:lines() do table.insert(lines, line) end
+-- f:close()
+
+local lines = { -- 临时测试
+  "Category,SubCategory,ID",
+  "Animals,Bark,1001",
+  "Human,Speech,1002"
+}
 
 -- 从第2行开始解析。构建分类+子分类+CatID
 local categories = {}
@@ -2888,7 +2895,7 @@ function loop()
 
     -- 刷新列表专辑封面按钮
     reaper.ImGui_SameLine(ctx)
-    if ImGui.Button(ctx, 'Refresh Covers For All In List') then
+    if ImGui.Button(ctx, 'Refresh Covers') then
       refresh_all_covers_in_list()
     end
     -- 提示
