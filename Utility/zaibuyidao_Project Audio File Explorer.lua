@@ -1,9 +1,9 @@
 -- @description Project Audio Explorer
--- @version 1.5.30
+-- @version 1.5.31
 -- @author zaibuyidao
 -- @changelog
---   Added UCS list search feature code (search functionality is not yet enabled).
---   Temporarily disabled UCS CSV file reading.
+--   Added image metadata support. Audio files with embedded cover art can now be displayed automatically without any third-party tools.
+--   Added the option "Close audio device when stopped or inactive" in settings.
 --   Other detailed improvements and bug fixes.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
@@ -73,12 +73,12 @@ reaper.ImGui_Attach(ctx, sans_serif)
 -- reaper.ImGui_Attach(ctx, font_medium)
 -- reaper.ImGui_Attach(ctx, font_large)
 
-local need_refresh_font  = false
-local font_size          = 14 -- 内容字体大小
-local FONT_SIZE_MIN      = 12 -- 内容字体最小
-local FONT_SIZE_MAX      = 24 -- 内容字体最大
-local preview_font_sizes = { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 }
-local preview_fonts      = {}
+need_refresh_font  = false
+font_size          = 14 -- 内容字体大小
+FONT_SIZE_MIN      = 12 -- 内容字体最小
+FONT_SIZE_MAX      = 24 -- 内容字体最大
+preview_font_sizes = { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 }
+preview_fonts      = {}
 for _, sz in ipairs(preview_font_sizes) do
   preview_fonts[sz] = reaper.ImGui_CreateFont("", sz)
   reaper.ImGui_Attach(ctx, preview_fonts[sz])
@@ -2559,187 +2559,266 @@ end
 
 --------------------------------------------- 专辑封面 ---------------------------------------------
 
-local last_cover_path, last_cover_img
-local last_img_w, last_img_h
 local last_window_visible = true
-local cover_cache_created = false
-local persisted_cover_cache = reaper.GetExtState(EXT_SECTION, "CoverCacheCreated")
-if persisted_cover_cache == "1" then cover_cache_created = true end
+local cover_cache = {}
+local cover_path_cache = {}
+local last_cover_img = nil
+local last_cover_path = nil
+local last_img_w = nil
+local img_cache_dir = script_path .. "cover_cache" .. sep
+img_cache_dir = normalize_path(img_cache_dir, true)
+if reaper.file_exists(img_cache_dir) == false then
+  reaper.RecursiveCreateDirectory(img_cache_dir, 0)
+end
 
-function file_exists(path)
+-- ID3v2 同步安全整数 & 大端整数解析
+function syncsafe_to_int(bs)
+  local b1,b2,b3,b4 = bs:byte(1,4)
+  return b1 * 2^21 + b2 * 2^14 + b3 * 2^7 + b4
+end
+function be_to_int(bs)
+  local b1,b2,b3,b4 = bs:byte(1,4)
+  return b1 * 2^24 + b2 * 2^16 + b3 * 2^8 + b4
+end
+
+-- 解析 ID3v2 APIC 帧（封面）
+local function parse_id3_apic(tag_data, ver)
+  local pos = 1
+  while pos + 10 <= #tag_data do
+    local id      = tag_data:sub(pos, pos + 3)
+    local size_bs = tag_data:sub(pos + 4, pos + 7)
+    local sz      = (ver==4) and syncsafe_to_int(size_bs) or be_to_int(size_bs)
+    if id == "APIC" then
+      local frame = tag_data:sub(pos + 10, pos + 10 + sz - 1)
+      local encoding      = frame:sub(1, 1) -- 文本编码
+      local rest1         = frame:sub(2) -- 跳过encoding
+      local mime_end      = rest1:find("\0", 1, true)
+      local mime          = rest1:sub(1, mime_end - 1)
+      local after_mime    = rest1:sub(mime_end + 1)
+      local pictype       = after_mime:sub(1, 1) -- pictureType
+      local desc_and_data = after_mime:sub(2)
+      local desc_end      = desc_and_data:find("\0", 1, true)
+      local description   = desc_and_data:sub(1, desc_end - 1)
+      local imgData       = desc_and_data:sub(desc_end + 1) -- 图像二进制
+      return mime, imgData
+    end
+    pos = pos + 10 + sz
+  end
+end
+
+-- MP3 / WAV（内嵌 ID3v2）提取，WAV 如果在结尾有 ID3 chunk，也能被识别
+function ExtractID3Cover(file_path)
+  if not file_path or type(file_path) ~= "string" or file_path == "" then 
+    return 
+  end
+  local path = normalize_path(file_path, false)
   local f = io.open(path, "rb")
-  if f then f:close(); return true end
-  return false
-end
-
-function get_ffmpeg_path()
-  local script_path = debug.getinfo(1,'S').source:match([[^@?(.*[\/])[^\/]-$]])
-  script_path = normalize_path(script_path, true)
-  local sep = package.config:sub(1,1)
-  local exe = (sep == "/" and "ffmpeg" or "ffmpeg.exe")
-  return script_path .. "lib" .. sep .. exe
-end
-
-function get_cover_cache_path(audio_path)
-  audio_path = normalize_path(audio_path, false)
-  local script_path = debug.getinfo(1,'S').source:match([[^@?(.*[\/])[^\/]-$]])
-  local sep = package.config:sub(1,1)
-  local cache_dir = script_path .. "cover_cache" .. sep
-  if not cover_cache_created then
-    os.execute((sep == "/" and "mkdir -p " or "mkdir ") .. '"' .. cache_dir .. '"')
-    cover_cache_created = true
-    reaper.SetExtState(EXT_SECTION, "CoverCacheCreated", "1", true)
-  end
-  local filename = SimpleHash(audio_path) .. ".jpg"
-  return cache_dir .. filename
-end
-
-function is_supported_audio(path)
-  local ext = path:match("^.+%.([^.]+)$")
-  if not ext then return false end
-  ext = ext:upper()
-  return (ext == "WAV" or ext == "WAVE" or ext == "MP3" or ext == "FLAC" or ext == "OGG" or ext == "AIFF" or ext == "APE" or ext == "WV")
-end
-
-function refresh_all_covers_in_list()
-  local ffmpeg_path = get_ffmpeg_path()
-  if not file_exists(ffmpeg_path) then
-    reaper.ShowMessageBox("ffmpeg not found.", "Error", 0)
-    return
-  end
-  -- 优先项目内 ffmpeg，否则尝试用系统 ffmpeg
-  -- if not file_exists(ffmpeg_path) then
-  --   ffmpeg_path = "ffmpeg"
-  -- end
-  if not files_idx_cache or #files_idx_cache == 0 then
-    reaper.ShowMessageBox("No audio files in list.", "Info", 0)
-    return
+  if not f then 
+    return 
   end
 
-  local sep = package.config:sub(1,1)
-  local script_dir = normalize_path(debug.getinfo(1,'S').source:match([[^@?(.*[\/])[^\/]-$]]), true)
-  local cache_dir = normalize_path(script_dir .. "cover_cache", true)
-  reaper.RecursiveCreateDirectory(cache_dir, 1)
+  local header = f:read(10)
+  local ver, tag_size, tag_data
 
-  if reaper.GetOS():find("Win") then
-    -- Windows 批处理
-    local bat_path = cache_dir .. "refresh_all.bat"
-    local bat = io.open(bat_path, "w")
-    bat:write("@echo off\n")
-    bat:write("setlocal enabledelayedexpansion\n")
-    bat:write("set /A success=0\n")
-    bat:write("set /A failed=0\n")
-    bat:write("set /A skipped=0\n\n")
-
-    for _, info in ipairs(files_idx_cache) do
-      local path  = normalize_path(info.path, false)
-      local cover = get_cover_cache_path(path)
-      if file_exists(cover) then
-        bat:write(string.format('echo Skipped (exists): "%s"\n', path))
-        bat:write("set /A skipped+=1\n\n")
-      else
-        -- bat:write(string.format('echo Processing: "%s"\n', path))
-        bat:write(string.format(
-          '"%s" -y -i "%s" -an -map 0:v:0? -vf scale=120:120 -pix_fmt yuvj420p -frames:v 1 -update 1 "%s" >nul 2>&1\n',
-          ffmpeg_path, path, cover
-        ))
-        bat:write(string.format(
-          'if %%ERRORLEVEL%% NEQ 0 (echo Failed: "%s"& set /A failed+=1) else (echo Success: "%s"& set /A success+=1)\n\n',
-          path, path
-        ))
-      end
-    end
-
-    bat:write("echo.\n")
-    bat:write("echo ========================\n")
-    bat:write("echo Summary:\n")
-    bat:write("echo   Success : %success%\n")
-    bat:write("echo   Failed  : %failed%\n")
-    bat:write("echo   Skipped : %skipped%\n")
-    bat:write("echo ========================\n")
-    bat:write("pause\n")
-    bat:write("del \"%~f0\"\n") -- 删除.bat 文件自身
-    bat:close()
-
-    os.execute('start "" cmd /C "' .. bat_path .. '"')
+  if header and header:sub(1,3) == "ID3" then
+    -- MP3 文件开头
+    ver      = header:byte(4)
+    tag_size = syncsafe_to_int(header:sub(7, 10))
+    tag_data = f:read(tag_size)
   else
-    -- macOS / Linux shell
-    local sh_path = cache_dir .. "refresh_all.sh"
-    local sh = io.open(sh_path, "w")
-    sh:write("#!/bin/bash\n")
-    sh:write("success=0\nfailed=0\nskipped=0\n\n")
-    for _, info in ipairs(files_idx_cache) do
-      local path = normalize_path(info.path, false)
-      local cover = get_cover_cache_path(path)
-      if file_exists(cover) then
-        sh:write("echo \"Skipped (exists): " .. path .. "\"\n")
-        sh:write("skipped=$((skipped+1))\n\n")
-      else
-        sh:write("if \"" .. ffmpeg_path .. "\" -y -i \"" .. path .. "\" -an -map 0:v:0? -vf scale=120:120 -pix_fmt yuvj420p -frames:v 1 -update 1 \"" .. cover .. "\"; then\n")
-        sh:write("  echo \"Success: " .. path .. "\"\n")
-        sh:write("  success=$((success+1))\n")
-        sh:write("else\n")
-        sh:write("  echo \"Failed: " .. path .. "\"\n")
-        sh:write("  failed=$((failed+1))\n")
-        sh:write("fi\n\n")
-      end
-    end
-    sh:write("echo ========================\n")
-    sh:write("echo Summary:\n")
-    sh:write("echo   Success : $success\n")
-    sh:write("echo   Failed  : $failed\n")
-    sh:write("echo   Skipped : $skipped\n")
-    sh:write("echo ========================\n")
-    sh:write("read -p \"Press enter to exit.\"\n")
-    sh:close()
-    os.execute("chmod +x \"" .. sh_path .. "\"")
-    
-    -- macOS用Terminal，Linux用bash
-    local uname = io.popen("uname"):read("*l") or ""
-    if uname == "Darwin" then
-      os.execute("osascript -e 'tell application \"Terminal\" to do script \"bash " .. sh_path .. "\"'")
-    else
-      os.execute("bash \"" .. sh_path .. "\" &")
-    end
+    -- 可能是 WAV 文件末尾的 ID3 chunk
+    local content = header .. f:read("*all")
+    local pos = content:find("ID3", 1, true)
+    if not pos then f:close() return end
+    local hdr2 = content:sub(pos, pos + 9)
+    if hdr2:sub(1, 3) ~= "ID3" then f:close() return end
+    ver      = hdr2:byte(4)
+    tag_size = syncsafe_to_int(hdr2:sub(7, 10))
+    tag_data = content:sub(pos + 10, pos + 10 + tag_size - 1)
   end
+
+  f:close()
+  return parse_id3_apic(tag_data, ver)
 end
 
+-- FLAC 原生 METADATA_BLOCK_PICTURE 提取
+function ExtractFlacCover(file_path)
+  if not file_path or type(file_path) ~= "string" or file_path == "" then
+    return
+  end
+  local path = normalize_path(file_path, false)
+  local f = io.open(path, "rb")
+  if not f then
+    return
+  end
+  if f:read(4) ~= "fLaC" then f:close() return end
+
+  while true do
+    local hdr = f:read(4)
+    if not hdr then break end
+    local b1         = hdr:byte(1)
+    local is_last    = b1 >= 128
+    local block_type = b1 % 128
+    local size       = hdr:byte(2) * 2^16 + hdr:byte(3) * 2^8 + hdr:byte(4)
+    local data       = f:read(size) or ""
+
+    if block_type == 6 then -- Picture block
+      local pos = 1
+      pos = pos + 4 -- 跳过 picture type
+      local mime_len = be_to_int(data:sub(pos, pos + 3))
+      pos = pos + 4
+      local mime = data:sub(pos, pos+mime_len - 1)
+      pos = pos + mime_len
+      local desc_len = be_to_int(data:sub(pos, pos + 3))
+      pos = pos + 4 + desc_len
+      pos = pos + 16 -- 跳过 width/height/depth/colors（各 4 字节）
+      local pic_len = be_to_int(data:sub(pos, pos + 3))
+      pos = pos + 4
+      local imgData = data:sub(pos, pos+pic_len - 1)
+      f:close()
+      return mime, imgData
+    end
+
+    if is_last then break end
+  end
+
+  f:close()
+end
+
+-- 提取并缓存封面二进制
+function GetCoverImageData(raw_path)
+  local audio_path = normalize_path(raw_path, false)
+  -- 已缓存则直接返回，避免重复 I/O
+  if cover_cache[audio_path] then
+    return cover_cache[audio_path].mime, cover_cache[audio_path].data
+  end
+  -- 尝试 MP3/WAV ID3
+  local mime, data = ExtractID3Cover(audio_path)
+  if data then
+    cover_cache[audio_path] = { mime = mime, data = data }
+    return mime, data
+  end
+  -- 尝试 FLAC Picture
+  mime, data = ExtractFlacCover(audio_path)
+  if data then
+    cover_cache[audio_path] = { mime = mime, data = data }
+    return mime, data
+  end
+  -- 回退到同目录图片文件
+  local dir = audio_path:match("^(.*[\\/])") or ""
+  local base = audio_path:match("([^\\/]+)%.%w+$") or ""
+  for _, name in ipairs({
+    "cover.jpg", "cover.png",
+    "folder.jpg", "folder.png",
+    base .. ".jpg", base .. ".png",
+  }) do
+    local p = dir .. name
+    local f = io.open(p, "rb")
+    if f then
+      local img = f:read("*all")
+      f:close()
+      local m = name:find("%.png$") and "image/png" or "image/jpeg"
+      cover_cache[audio_path] = { mime = m, data = img }
+      return m, img
+    end
+  end
+  -- 全部查找完成，还没找到封面
+  cover_cache[audio_path] = { mime = nil, data = nil }
+
+  return nil, nil
+end
+
+-- 提取封面并写到 cache_dir，返回完整文件路径
+function SaveCoverToTemp(file_path)
+  file_path = normalize_path(file_path, false)
+  -- 提取二进制
+  local mime, data = ExtractID3Cover(file_path)
+  if not data then mime, data = ExtractFlacCover(file_path) end
+  if not data then return nil end
+  local header = data:sub(1, 2)
+  -- 生成唯一文件路径
+  local hash = SimpleHash(file_path)
+  local ext  = mime:find("png") and ".png" or ".jpg"
+  local out  = img_cache_dir .. hash .. ext
+  -- 文件不存在就写入
+  local f2 = io.open(out, "rb")
+  if not f2 then
+    -- 写文件
+    local f = io.open(out, "wb")
+    if not f then
+      return nil
+    end
+    f:write(data)
+    f:close()
+  else
+    f2:close()
+  end
+  -- 缓存data
+  cover_cache[file_path] = { mime = mime, data = data }
+
+  return out
+end
+
+-- 先调用 SaveCoverToTemp 获取内嵌封面临时文件路径，如果没有，再退回到同目录查找图片文件
 function GetCoverImagePath(audio_path)
   audio_path = normalize_path(audio_path, false)
-  local cover_path = get_cover_cache_path(audio_path)
-  if file_exists(cover_path) then
-    return cover_path
+  -- 已缓存则直接返回
+  if cover_path_cache[audio_path] ~= nil then
+    return cover_path_cache[audio_path] or nil
   end
-
-  -- 兼容查找
-  local dir = audio_path:match("^(.*[\\/])")
-  local base = audio_path:match("([^\\/]+)%.[^%.]+$") -- 不带扩展名
-  local candidates = {
-    dir .. "cover.jpg",
-    dir .. "cover.png",
-    dir .. "folder.jpg",
-    dir .. "folder.png",
-    dir .. base .. ".jpg",
-    dir .. base .. ".png",
-  }
-  for _, img_path in ipairs(candidates) do
-    local f = io.open(img_path, "rb")
+  -- 内嵌封面
+  local tmp = SaveCoverToTemp(audio_path)
+  if tmp then
+    cover_path_cache[audio_path] = tmp
+    return tmp
+  end
+  -- 同目录图片文件
+  local dir  = audio_path:match("^(.*[\\/])") or ""
+  local base = audio_path:match("([^\\/]+)%.")  or ""
+  for _, name in ipairs({ "cover.jpg", "cover.png", "folder.jpg", "folder.png", base..".jpg", base..".png" }) do
+    local p = dir .. name
+    local f = io.open(p, "rb")
     if f then
       f:close()
-      return img_path
+      cover_path_cache[audio_path] = p
+      return p
     end
   end
+  -- 缓存查不到的情况，避免反复查找
+  cover_path_cache[audio_path] = false
   return nil
 end
 
 -- 判断 info 是否存在有效专辑封面
 function HasCoverImage(img_info)
   if not img_info then return false end
-  local cover_path = img_info and GetCoverImagePath(img_info.path)
-  if cover_path and reaper.file_exists and reaper.file_exists(cover_path) then
-    return true
+  local mime, data = GetCoverImageData(img_info.path)
+  return data ~= nil
+end
+
+function ReleaseAllCoverImages()
+  if cover_cache then
+    for k, img in pairs(cover_cache) do
+      if img and reaper.ImGui_DestroyImage then
+        reaper.ImGui_DestroyImage(img)
+      end
+      cover_cache[k] = nil
+    end
   end
-  return false
+end
+
+function DeleteCoverCacheFiles()
+  local path = img_cache_dir
+  local i = 0
+  while true do
+    local fname = reaper.EnumerateFiles(path, i)
+    if not fname then break end
+    local fpath = path .. fname
+    os.remove(fpath)
+    i = i + 1
+  end
+  
+  -- os.remove(path) -- 删除空目录
 end
 
 --------------------------------------------- 地址栏音频文件地址点击文件夹目录段节点 ---------------------------------------------
@@ -2919,11 +2998,6 @@ function loop()
       CollectFiles()
     end
 
-    -- 刷新列表专辑封面按钮
-    reaper.ImGui_SameLine(ctx)
-    if ImGui.Button(ctx, 'Refresh Covers') then
-      refresh_all_covers_in_list()
-    end
     -- 提示
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
@@ -4676,6 +4750,16 @@ function loop()
         reaper.SetExtState(EXT_SECTION, "TableRowHeight", tostring(row_height), true)
       end
 
+      -- 停止或应用程序不活跃时关闭音频设备
+      reaper.ImGui_Separator(ctx)
+      local aci = reaper.SNM_GetIntConfigVar("audiocloseinactive", 1)
+      local close_inactive = (aci == 1)
+      local changed_inactive
+      changed_inactive, close_inactive = reaper.ImGui_Checkbox(ctx, "Stop audio device when inactive", close_inactive)
+      if changed_inactive then
+        reaper.SNM_SetIntConfigVar("audiocloseinactive", close_inactive and 1 or 0)
+      end
+
       -- 收集切换
       -- reaper.ImGui_Text(ctx, "Audio File Source:")
       -- local changed_collect_mode = false
@@ -5058,57 +5142,45 @@ function loop()
     else
       img_info = last_selected_info
     end
-    local has_cover = HasCoverImage(img_info)
+    local has_cover = img_info and HasCoverImage(img_info)
     local left_img_w = has_cover and 120 or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
     local gap = has_cover and 6 or 0
     local right_img_w = avail_w - left_img_w - gap
 
-    -- 专辑图片
+    -- 专辑图片显示
     if reaper.ImGui_BeginChild(ctx, "cover_art", left_img_w, img_h + timeline_height + 9) then
-      local cover_path = img_info and GetCoverImagePath(img_info.path)
-      local img_w = 120
-      local img_h = 120
-      local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
-
+      local audio_path = img_info and img_info.path
+      -- 计算封面临时文件路径（优先内嵌元数据，再同目录查找）
+      local cover_path = audio_path and GetCoverImagePath(audio_path)
       if cover_path then
-        local pad = (avail_w - img_w) / 2
-        if pad > 0 then
-          reaper.ImGui_Dummy(ctx, pad-5, 0)
+        -- 水平/垂直居中
+        local img_w, img_h = 120, 120
+        local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
+        local pad_x = (avail_w - img_w) * 0.5
+        if pad_x > 0 then
+          reaper.ImGui_Dummy(ctx, pad_x, 0)
           reaper.ImGui_SameLine(ctx)
         end
+        local pad_y = (avail_h - img_h) * 0.5
+        if pad_y > 0 then
+          reaper.ImGui_Dummy(ctx, 0, pad_y-15)
+        end
 
+        -- 缓存并创建纹理
         if last_cover_path ~= cover_path or last_img_w ~= img_w then
-          last_cover_img = reaper.ImGui_CreateImage(cover_path)
+          last_cover_img  = reaper.ImGui_CreateImage(cover_path)
           last_cover_path = cover_path
           last_img_w = img_w
         end
 
-        local img = last_cover_img
-        if img then
-          -- 垂直居中
-          local ypad = (avail_h - img_h) / 2
-          if ypad > 0 then
-            reaper.ImGui_Dummy(ctx, 0, ypad-15)
-          end
-          reaper.ImGui_Image(ctx, img, img_w, img_h)
+        if last_cover_img then
+          reaper.ImGui_Image(ctx, last_cover_img, img_w, img_h)
         end
       else
-        -- 没有图片时，水平/垂直居中
-        -- local text = "No cover image"
-        -- local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
-        -- local tip_pad_x = (avail_w - text_w) / 2
-        -- local tip_pad_y = (avail_h - text_h) / 2
-        -- if tip_pad_y > 0 then
-        --   reaper.ImGui_Dummy(ctx, 0, tip_pad_y-10)
-        -- end
-        -- if tip_pad_x > 0 then
-        --   reaper.ImGui_Dummy(ctx, tip_pad_x, 0)
-        --   reaper.ImGui_SameLine(ctx)
-        -- end
-        -- reaper.ImGui_Text(ctx, text)
-        last_cover_img = nil
+        -- 无封面时重置
+        last_cover_img  = nil
         last_cover_path = nil
-        last_img_w = nil
+        last_img_w      = nil
       end
 
       reaper.ImGui_EndChild(ctx)
@@ -5877,11 +5949,19 @@ function loop()
     else
       -- 无选区，退出脚本
       StopPreview()
+      ReleaseAllCoverImages() -- 释放封面纹理
+      DeleteCoverCacheFiles() -- 删除缓存图片
       return
     end
   end
 
-  if open then reaper.defer(loop) else StopPlay() end
+  if open then
+    reaper.defer(loop)
+  else
+    StopPlay()
+    ReleaseAllCoverImages() -- 释放封面纹理
+    DeleteCoverCacheFiles() -- 删除缓存图片
+  end
 end
 
 reaper.defer(loop)
