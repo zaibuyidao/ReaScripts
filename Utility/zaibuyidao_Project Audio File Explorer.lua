@@ -1,5 +1,5 @@
 -- @description Project Audio Explorer
--- @version 1.5.31
+-- @version 1.5.32
 -- @author zaibuyidao
 -- @changelog
 --   Added image metadata support. Audio files with embedded cover art can now be displayed automatically without any third-party tools.
@@ -2997,32 +2997,7 @@ function loop()
     if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F5()) then
       CollectFiles()
     end
-
-    -- 提示
-    if reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, "Requires third-party tool:")
-      reaper.ImGui_Text(ctx, "   - Windows: ffmpeg.exe")
-      reaper.ImGui_Text(ctx, "   - macOS/Linux: ffmpeg")
-      reaper.ImGui_Text(ctx, "Place executable in directory:")
-      reaper.ImGui_Text(ctx, "  " .. script_path .. "lib")
-      reaper.ImGui_Text(ctx, "A 'cover_cache' folder will be created next to the script.")
-      reaper.ImGui_EndTooltip(ctx)
-    end
-    -- 右键弹出菜单
-    if reaper.ImGui_BeginPopupContextItem(ctx, nil) then
-      if reaper.ImGui_MenuItem(ctx, 'Download ffmpeg (Static Builds)') then
-        reaper.CF_ShellExecute('https://ffmpeg.org/download.html')
-      end
-      if reaper.ImGui_MenuItem(ctx, 'Open lib folder') then
-        reaper.CF_ShellExecute(script_path .. 'lib')
-      end
-      if reaper.ImGui_MenuItem(ctx, 'Open cover_cache folder') then
-        reaper.CF_ShellExecute(script_path .. 'cover_cache')
-      end
-      reaper.ImGui_EndPopup(ctx)
-    end
-
+    
     reaper.ImGui_Dummy(ctx, 1, 3) -- 控件下方 + 1px 间距
 
     -- 自动缩放音频表格
