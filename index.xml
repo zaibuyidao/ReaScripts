@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a57b648e788791bc9bb21d58a9b29e96ec015248">
+<index version="1" name="zaibuyidao Scripts" commit="d32e99a87d708d061c36c2207cced9bc0a58560e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8835,6 +8835,12 @@ Other detailed improvements and bug fixes.]]></changelog>
 Added the option "Close audio device when stopped or inactive" in settings.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a57b648e788791bc9bb21d58a9b29e96ec015248/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.32" author="zaibuyidao" time="2025-07-16T16:34:21Z">
+        <changelog><![CDATA[Added image metadata support. Audio files with embedded cover art can now be displayed automatically without any third-party tools.
+Added the option "Close audio device when stopped or inactive" in settings.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d32e99a87d708d061c36c2207cced9bc0a58560e/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
