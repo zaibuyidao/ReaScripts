@@ -1,10 +1,8 @@
 -- @description Project Audio Explorer
--- @version 1.5.32
+-- @version 1.5.33
 -- @author zaibuyidao
 -- @changelog
---   Added image metadata support. Audio files with embedded cover art can now be displayed automatically without any third-party tools.
---   Added the option "Close audio device when stopped or inactive" in settings.
---   Other detailed improvements and bug fixes.
+--   Skip Silence feature added. playback preview now automatically jumps to the first audible moment, bypassing leading silence.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -120,6 +118,9 @@ local files_idx_cache        = nil   -- 文件缓存
 local recent_audio_files     = {}    -- 最近播放列表
 local max_recent_files       = 20    -- 最多保留20条
 local selected_recent_row    = selected_recent_row or 0
+local skip_silence_enabled   = true  -- 跳过静音
+local skip_silence_db        = -60   -- 静音阈值，超过此值即认为有声
+local skip_silence_threshold = 10^(skip_silence_db / 20) -- 换算成振幅阈值 amp = 10^(dB/20)
 
 last_selected_info           = nil -- 上次选中的音频信息
 last_playing_info            = nil  -- 上次播放的音频信息
@@ -1486,6 +1487,8 @@ function StopPreview()
   end
   wf_play_start_time = nil
   wf_play_start_cursor = nil
+  is_paused = false
+  paused_position = 0
 
   -- 强制复位
   -- if last_play_cursor_before_play then
@@ -1501,7 +1504,13 @@ function PlayFromStart(info)
     peak_hold[i] = 0
   end
   StopPreview()
-  Wave.play_cursor = 0
+  -- Wave.play_cursor = 0
+  -- 跳过静音
+  local start_pos = 0
+  if skip_silence_enabled then
+    start_pos = FindFirstNonSilentTime(info)
+  end
+
   local source
   if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidAudioFile(info.path) then -- RPP模式下强制用源音频路径
     source = reaper.PCM_Source_CreateFromFile(info.path)
@@ -1520,11 +1529,11 @@ function PlayFromStart(info)
         reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-        reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", 0)
+        reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
       end
       reaper.CF_Preview_Play(playing_preview)
       wf_play_start_time = os.clock()
-      wf_play_start_cursor = 0
+      wf_play_start_cursor = start_pos
     end
     MarkPreviewed(info.path)
     -- 添加最近播放
@@ -2919,6 +2928,46 @@ local running = true
 local cat_open_state = {} -- 用户操作状态
 local last_filter_text = ""
 local usc_filter
+
+--------------------------------------------- 跳过静音节点 ---------------------------------------------
+
+skip_silence_enabled = (tonumber(reaper.GetExtState(EXT_SECTION, "SkipSilence")) or 1) == 1
+
+--- 从缓存中寻找首个有声位置 ms
+function FindFirstNonSilentTime(info)
+  local path = normalize_path(info.path, false)
+  local cache = LoadWaveformCache(path)
+  if not cache then return end
+
+  -- for i = 1, math.min(10, cache.pixel_cnt) do
+  --   local p = cache.peaks[1][i] or {0,0}
+  --   reaper.ShowConsoleMsg(string.format("px=%d → min=%.6f max=%.6f\n", i, p[1], p[2]))
+  -- end
+  -- local pixel_cnt, src_len = cache.pixel_cnt, cache.src_len
+  -- -- 只检查第1通道
+  -- for px = 1, pixel_cnt do
+  --   local p = cache.peaks[1][px] or {0,0}
+  --   if math.abs(p[1]) > skip_silence_threshold or math.abs(p[2]) > skip_silence_threshold then
+  --     -- 映射到实际时间
+  --     return (px-1)/(pixel_cnt-1) * src_len
+  --   end
+  -- end
+
+  local pixel_cnt     = cache.pixel_cnt
+  local src_len       = cache.src_len
+  local channel_count = cache.channel_count
+  for px = 1, pixel_cnt do
+    for ch = 1, channel_count do
+      local peak = cache.peaks[ch][px] or {0,0}
+      if math.abs(peak[1]) > skip_silence_threshold or math.abs(peak[2]) > skip_silence_threshold then
+        -- 映射到实际时间
+        return (px-1)/(pixel_cnt-1) * src_len
+      end
+    end
+  end
+
+  return
+end
 
 function loop()
   -- 首次使用时收集音频文件
@@ -5066,6 +5115,27 @@ function loop()
     -- Dummy 占位
     reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
 
+    -- 跳过静音的勾选项
+    reaper.ImGui_SameLine(ctx, nil, 0)
+    local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
+    local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "Skip Silence") -- 文字尺寸
+    local cb_w = txt_w + txt_h + 16 -- 文字宽度+勾选框大小+间距
+
+    -- 如果可用宽度足够，把光标推到右侧
+    if avail > cb_w then
+      reaper.ImGui_Dummy(ctx, avail - cb_w, 0)
+      reaper.ImGui_SameLine(ctx, nil, 0)
+    end
+
+    local silence_changed
+    silence_changed, skip_silence_enabled = reaper.ImGui_Checkbox(ctx, "Skip Silence", skip_silence_enabled)
+    if silence_changed then
+      reaper.SetExtState(EXT_SECTION, "SkipSilence", skip_silence_enabled and "1" or "0", true)
+    end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_SetTooltip(ctx, "Automatically skip initial silence when playing")
+    end
+
     -- 横向分割条
     reaper.ImGui_InvisibleButton(ctx, "##h_splitter", avail_x, splitter_w)
     local active  = reaper.ImGui_IsItemActive(ctx)
@@ -5269,10 +5339,16 @@ function loop()
         if not reaper.ImGui_IsAnyItemActive(ctx) then -- 避免输入框等被激活后空格冲突
           if playing_preview then
             StopPreview()
-            -- 强制播放光标复位
+            -- 强制播放光标复位旧版本，不包括光标复位
             if last_play_cursor_before_play then
               Wave.play_cursor = last_play_cursor_before_play
             end
+            -- 跳过静音，强制播放光标复位
+            -- if skip_silence_enabled and last_playing_info then
+            --   last_play_cursor_before_play = FindFirstNonSilentTime(last_playing_info)
+            -- end
+            -- Wave.play_cursor = last_play_cursor_before_play
+            -- wf_play_start_cursor = last_play_cursor_before_play
           else
             PlayFromCursor(cur_info)
           end
@@ -5878,12 +5954,18 @@ function loop()
       local ok_pos, position = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
       local ok_len, length   = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
       if ok_pos and ok_len and (length - position) < 0.01 then -- 距离结尾小于0.03秒
-        StopPlay()
-        -- 光标复位
+        StopPreview()
+        -- 光标复位旧版本，不包括跳过静音
         if last_play_cursor_before_play then
           Wave.play_cursor = last_play_cursor_before_play
           wf_play_start_cursor = last_play_cursor_before_play
         end
+        -- 跳过静音，光标复位
+        -- if skip_silence_enabled and last_playing_info then
+        --   last_play_cursor_before_play = FindFirstNonSilentTime(last_playing_info)
+        -- end
+        -- Wave.play_cursor = last_play_cursor_before_play
+        -- wf_play_start_cursor = last_play_cursor_before_play
       end
     end
 
@@ -5933,7 +6015,7 @@ function loop()
   if open then
     reaper.defer(loop)
   else
-    StopPlay()
+    StopPreview()
     ReleaseAllCoverImages() -- 释放封面纹理
     DeleteCoverCacheFiles() -- 删除缓存图片
   end
