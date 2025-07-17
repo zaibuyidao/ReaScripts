@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d32e99a87d708d061c36c2207cced9bc0a58560e">
+<index version="1" name="zaibuyidao Scripts" commit="00e8660808eec49dfff9c18b0a22d51385e57d1b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8841,6 +8841,10 @@ Other detailed improvements and bug fixes.]]></changelog>
 Added the option "Close audio device when stopped or inactive" in settings.
 Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/d32e99a87d708d061c36c2207cced9bc0a58560e/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
+      </version>
+      <version name="1.5.33" author="zaibuyidao" time="2025-07-17T15:10:06Z">
+        <changelog><![CDATA[Skip Silence feature added. playback preview now automatically jumps to the first audible moment, bypassing leading silence.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/00e8660808eec49dfff9c18b0a22d51385e57d1b/Utility/zaibuyidao_Project%20Audio%20File%20Explorer.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Set Default Reabank.lua" type="script" desc="Set Default Reabank">
