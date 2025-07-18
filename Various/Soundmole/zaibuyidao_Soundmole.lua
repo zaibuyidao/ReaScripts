@@ -1851,7 +1851,7 @@ end
 
 --------------------------------------------- 文件夹快捷键方式节点 ---------------------------------------------
 
-local EXT_KEY_SHORTCUTS = "FolderShortcuts"
+local EXT_KEY_SHORTCUTS = "folder_shortcuts"
 folder_shortcuts = folder_shortcuts or {} -- 选择文件夹快捷方式
 
 -- 提取最后一级文件夹名称
@@ -1989,7 +1989,7 @@ end
 
 --------------------------------------------- 自定义文件夹节点 ---------------------------------------------
 
-local EXT_KEY_CUSTOM_CONTENT = "GroupContent"
+local EXT_KEY_CUSTOM_CONTENT = "group_content"
 custom_folders = custom_folders or {} -- { "monster", "bgm", ... }
 custom_folders_content = custom_folders_content or {} -- { ["monster"] = { path1, path2 }, ... }
 
@@ -2006,7 +2006,11 @@ function SaveCustomFolders()
       end
     end
     if #paths > 0 then
+      -- 有内容时 GroupName|path1;path2
       table.insert(segments, folder .. "|" .. table.concat(paths, ";"))
+    else
+      -- 空组只写 GroupName
+      table.insert(segments, folder)
     end
   end
   local plain = table.concat(segments, "||")
@@ -2043,7 +2047,8 @@ function LoadCustomFolders()
   if decoded ~= "" then
     local segments = split_by_delimiter(decoded, "||")
     for _, segment in ipairs(segments) do
-      local folder, items = segment:match("^([^|]+)|(.+)$")
+      -- local folder, items = segment:match("^([^|]+)|(.+)$") -- 启用后，不加入空组。
+      local folder, items = segment:match("^([^|]+)%|?(.*)$") -- 确保空组可加载
       if folder then
         table.insert(folders, folder)
         local exist = {}
@@ -2148,8 +2153,8 @@ LoadCustomFolders()
 
 --------------------------------------------- 高级文件夹节点 ---------------------------------------------
 
-local EXT_KEY_ADVANCED_FOLDERS = "CollectionsContent"
-local EXT_KEY_ADVANCED_ROOT = "CollectionsRoot"
+local EXT_KEY_ADVANCED_FOLDERS = "collections_content"
+local EXT_KEY_ADVANCED_ROOT = "collections_root"
 advanced_folders = advanced_folders or {}
 root_advanced_folders = root_advanced_folders or {} -- 存根节点id的数组
 
