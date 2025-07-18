@@ -1,0 +1,19 @@
+-- @description Soundmole
+-- @author zaibuyidao
+-- @version 1.0
+-- @changelog
+--   New Script
+-- @reference
+--   https://forum.cockos.com/showthread.php?t=300916
+-- @links
+--   https://www.soundengine.cn/u/zaibuyidao
+--   https://github.com/zaibuyidao/ReaScripts
+-- @metapackage
+-- @provides
+--   [main=main] Soundmole/zaibuyidao_Soundmole.lua
+--   [nomain] Soundmole/lib/*.lua
+--   Soundmole/data/*.csv
+-- @donation http://www.paypal.me/zaibuyidao
+-- @about Requires JS_ReaScriptAPI & SWS Extension
+
+-- Licensed under the GNU GPL v3
