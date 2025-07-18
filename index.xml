@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6d3fe43ce956626c69b8aa301bd65f852e51ddb5">
+<index version="1" name="zaibuyidao Scripts" commit="ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14123,6 +14123,13 @@ Add "scroll to top" feature to UCS list]]></changelog>
         <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/6d3fe43ce956626c69b8aa301bd65f852e51ddb5/Various/Soundmole/lib/core.lua</source>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/6d3fe43ce956626c69b8aa301bd65f852e51ddb5/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/6d3fe43ce956626c69b8aa301bd65f852e51ddb5/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-07-18T17:53:56Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
