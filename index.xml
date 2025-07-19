@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb">
+<index version="1" name="zaibuyidao Scripts" commit="e56fdba2170c988a31f4e2a91464051a7d908c9c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14130,6 +14130,13 @@ Add "scroll to top" feature to UCS list]]></changelog>
         <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb/Various/Soundmole/lib/core.lua</source>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/ae26ebcf5c71a0b250b47b33a196d1e02e9a5ccb/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.2" author="zaibuyidao" time="2025-07-19T17:29:21Z">
+        <changelog><![CDATA[Added a dropdown menu for selectable search fields.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/e56fdba2170c988a31f4e2a91464051a7d908c9c/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/e56fdba2170c988a31f4e2a91464051a7d908c9c/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/e56fdba2170c988a31f4e2a91464051a7d908c9c/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/e56fdba2170c988a31f4e2a91464051a7d908c9c/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
