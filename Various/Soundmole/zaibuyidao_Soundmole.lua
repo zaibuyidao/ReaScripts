@@ -287,6 +287,42 @@ local colors = {
   timeline_def_color   = 0xCFCFCFFF, -- 时间线默认颜色
 }
 
+--------------------------------------------- 搜索字段列表 ---------------------------------------------
+
+local search_fields = {
+  { label = "Filename",         key = "filename",      enabled = true  }, -- 文件名
+  { label = "Description",      key = "description",   enabled = true  }, -- 描述
+  { label = "Type",             key = "type",          enabled = false }, -- 类型
+  { label = "Origination Date", key = "bwf_orig_date", enabled = false }, -- 原始日期
+  { label = "Samplerate",       key = "samplerate",    enabled = false }, -- 采样率
+  { label = "Channels",         key = "channels",      enabled = false }, -- 声道数
+  { label = "Bits",             key = "bits",          enabled = false }, -- 位深度
+  { label = "Length",           key = "length",        enabled = false }, -- 时长
+  { label = "Genre",            key = "genre",         enabled = false }, -- 流派
+  { label = "Comment",          key = "comment",       enabled = false }, -- 注释
+  { label = "Path",             key = "path",          enabled = false }, -- 路径
+}
+
+local EXT_KEY_SEARCH_FIELDS = "enabled_fields"
+local stored = reaper.GetExtState(EXT_SECTION, EXT_KEY_SEARCH_FIELDS)
+if stored and stored ~= "" then
+  local set = {}
+  for key in stored:gmatch('([^,]+)') do
+    set[key] = true
+  end
+  for _, field in ipairs(search_fields) do
+    field.enabled = set[field.key] or false
+  end
+end
+
+function SaveSearchFields()
+  local list = {}
+  for _, f in ipairs(search_fields) do
+    if f.enabled then table.insert(list, f.key) end
+  end
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_SEARCH_FIELDS, table.concat(list, ","), true)
+end
+
 --------------------------------------------- 波形缓存相关函数 ---------------------------------------------
 
 function GetFileSize(filepath)
@@ -2952,14 +2988,37 @@ function loop()
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
     local region_w = reaper.ImGui_GetContentRegionAvail(ctx)
-    local label_w = reaper.ImGui_CalcTextSize(ctx, "Filter:")
     local filter_w = 800 -- 输入框宽度
-    local button_w = reaper.ImGui_CalcTextSize(ctx, "Clear") + 24 -- 24为按钮额外padding
-    local total_w = label_w + filter_w + button_w  + 16 -- 16为间隔
+    local button_w1 = reaper.ImGui_CalcTextSize(ctx, "Clear") + 12 -- 12为按钮额外padding
+    local button_w2 = reaper.ImGui_CalcTextSize(ctx, "Rescan") + 12 -- 12为按钮额外padding
+    local total_w = filter_w + button_w1 + button_w2 + 150 -- 150 为搜索字段下拉菜单宽度
     reaper.ImGui_SetCursorPosX(ctx, (region_w - total_w) / 2)
 
-    -- 过滤器
-    reaper.ImGui_Text(ctx, "Filter:")
+    -- 搜索字段下拉菜单
+    reaper.ImGui_SetNextItemWidth(ctx, 150)
+    local selected_labels = {}
+    for _, field in ipairs(search_fields) do
+      if field.enabled then
+        table.insert(selected_labels, field.label)
+      end
+    end
+    -- 下拉菜单列表若无选中则显示默认，否则用+号连接
+    local combo_label = (#selected_labels > 0) and table.concat(selected_labels, "+") or "Select Fields"
+    if reaper.ImGui_BeginCombo(ctx, "##search_fields", combo_label, reaper.ImGui_WindowFlags_NoScrollbar()) then -- reaper.ImGui_ComboFlags_NoArrowButton()
+      for i, field in ipairs(search_fields) do
+        local changed, enabled = reaper.ImGui_Checkbox(ctx, field.label, field.enabled)
+        if changed then
+          field.enabled = enabled
+          SaveSearchFields()
+        end
+      end
+      reaper.ImGui_EndCombo(ctx)
+    end
+    -- 悬停提示已勾选列表
+    if #selected_labels > 0 and reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_SetTooltip(ctx, table.concat(selected_labels, "+"))
+    end
+
     reaper.ImGui_SameLine(ctx)
     if not filename_filter then
       filename_filter = reaper.ImGui_CreateTextFilter()
@@ -3674,7 +3733,15 @@ function loop()
             keywords[#keywords+1] = word:lower()
           end
           -- 合并所有要检索的内容，全部转小写
-          local target = ((info.filename or "") .. " " .. (info.description or "")):lower()
+          -- local target = ((info.filename or "") .. " " .. (info.description or "")):lower()
+          local target = ""
+          for _, field in ipairs(search_fields) do
+            if field.enabled then
+              target = target .. " " .. (info[field.key] or "")
+            end
+          end
+          target = target:lower()
+
           local match = true
           for _, kw in ipairs(keywords) do
             if not target:find(kw, 1, true) then

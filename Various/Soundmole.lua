@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.1
+-- @version 1.0.2
 -- @changelog
---   New Script
+--   Added a dropdown menu for selectable search fields.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
