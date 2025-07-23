@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e56fdba2170c988a31f4e2a91464051a7d908c9c">
+<index version="1" name="zaibuyidao Scripts" commit="339ec4bca38b97735204a9c1049f686df6f1d0b6">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14137,6 +14137,15 @@ Add "scroll to top" feature to UCS list]]></changelog>
         <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/e56fdba2170c988a31f4e2a91464051a7d908c9c/Various/Soundmole/lib/core.lua</source>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/e56fdba2170c988a31f4e2a91464051a7d908c9c/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/e56fdba2170c988a31f4e2a91464051a7d908c9c/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.3" author="zaibuyidao" time="2025-07-23T08:43:35Z">
+        <changelog><![CDATA[Added auto-save for mode selection, restoring the previous mode on next startup.
+Added a dropdown menu for selectable search fields.
+Included a new ucs.csv file for UCS support (functionality not yet active; work in progress).]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/339ec4bca38b97735204a9c1049f686df6f1d0b6/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/339ec4bca38b97735204a9c1049f686df6f1d0b6/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/339ec4bca38b97735204a9c1049f686df6f1d0b6/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/339ec4bca38b97735204a9c1049f686df6f1d0b6/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
