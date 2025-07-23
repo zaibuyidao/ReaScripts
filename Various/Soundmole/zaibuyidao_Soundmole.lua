@@ -118,9 +118,13 @@ local last_selected_info     = nil   -- 上次选中的音频信息
 local last_playing_info      = nil   -- 上次播放的音频信息
 local is_knob_dragging       = false
 local prev_preview_pos       = 0
-local waveform_task_queue    = {} -- 表格列表波形预览
+local waveform_task_queue    = {}    -- 表格列表波形预览
 local filename_filter        = nil   -- 列表音效搜索过滤
 local last_collect_mode
+local adv_folder_nodes_inited = false -- 是否已初始化高级文件夹节点的展开
+local expanded_ids            = {}    -- 已展开的高级文件夹ID列表
+local shortcut_nodes_inited   = false -- 是否已初始化快捷方式节点的展开
+local expanded_paths          = {}    -- 已展开的文件夹路径表
 -- 表格排序常量
 local COL_FILENAME    = 2
 local COL_SIZE        = 3
@@ -226,6 +230,7 @@ local COLLECT_MODE_ALL_ITEMS    = 3
 local COLLECT_MODE_TREE         = 4
 local COLLECT_MODE_SHORTCUT     = 5
 local COLLECT_MODE_CUSTOMFOLDER = 6 -- 自定义文件夹模式
+local COLLECT_MODE_RECENTLY_PLAYED = 9 -- 最近播放模式
 
 -- 设置相关
 local auto_play_selected  = true
@@ -1950,6 +1955,13 @@ function draw_shortcut_tree(sc, base_path)
   local path = normalize_path(sc.path, true)
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
   local highlight = (collect_mode == COLLECT_MODE_SHORTCUT and tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0 -- 去掉 collect_mode == COLLECT_MODE_SHORTCUT 则保持高亮
+
+  -- 路径折叠展开状态，确保二级以上路径下次打开时可以展开
+  local cmpath = path:gsub("[/\\]+$", "")
+  if expanded_paths[cmpath] then
+    flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
+  end
+
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##shortcut_" .. path, flags | highlight)
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
@@ -2288,9 +2300,14 @@ function draw_advanced_folder_node(id, selected_id)
   if not node then return end
   -- 仅在 COLLECT_MODE_ADVANCEDFOLDER 模式下高亮
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() -- reaper.ImGui_TreeNodeFlags_OpenOnArrow() -- 使用OpenOnArrow()将只能点击箭头有效。
-  if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and selected_id == id then
+  if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and selected_id == id then -- 去掉 collect_mode == COLLECT_MODE_ADVANCEDFOLDER 则保持高亮
     flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
   end
+  -- 路径折叠展开状态，确保二级以上路径下次打开时可以展开。如果节点在 expanded_ids 中，首次渲染时默认展开它
+  if expanded_ids[id] then
+    flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
+  end
+
   local node_open = reaper.ImGui_TreeNode(ctx, node.name .. "##" .. id, flags)
   -- 选中
   if reaper.ImGui_IsItemClicked(ctx, 0) then
@@ -2945,6 +2962,112 @@ function FindFirstNonSilentTime(info)
   return
 end
 
+--------------------------------------------- 退出时保存各个模式列表状态 ---------------------------------------------
+
+function LoadExitSettings()
+  collect_mode = tonumber(reaper.GetExtState(EXT_SECTION, "collect_mode") or "")
+
+  -- 恢复 工程文件资源 四个模式
+  if collect_mode == COLLECT_MODE_ITEMS or collect_mode == COLLECT_MODE_RPP or collect_mode == COLLECT_MODE_DIR or collect_mode == COLLECT_MODE_ALL_ITEMS then
+    local ext = reaper.GetExtState(EXT_SECTION, "project_header_open")
+    if ext == "true" then
+      project_open = true
+    elseif ext == "false" then
+      project_open = false
+    else
+      project_open = false
+    end
+  end
+
+  -- 恢复 Shortcuts 模式
+  if collect_mode == COLLECT_MODE_SHORTCUT then -- collect_mode == COLLECT_MODE_TREE or
+    local ext = reaper.GetExtState(EXT_SECTION, "shortcut_header_open")
+    if ext == "true" then
+      shortcut_open = true
+    elseif ext == "false" then
+      shortcut_open = false
+    else
+      shortcut_open = false
+    end
+
+    tree_state.cur_path = reaper.GetExtState(EXT_SECTION, "cur_tree_path") or ""
+  end
+
+  -- 恢复 Group 模式
+  if collect_mode == COLLECT_MODE_CUSTOMFOLDER then
+    local ext = reaper.GetExtState(EXT_SECTION, "group_header_open")
+    if ext == "true" then
+      group_open = true
+    elseif ext == "false" then
+      group_open = false
+    else
+      group_open = false
+    end
+
+    tree_state.cur_custom_folder = reaper.GetExtState(EXT_SECTION, "cur_custom_folder") or ""
+  end
+
+  -- 恢复 Collections 模式
+  if collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
+    -- 折叠状态
+    local ext = reaper.GetExtState(EXT_SECTION, "collections_header_open")
+    if ext == "true" then
+      collection_open = true
+    elseif ext == "false" then
+      collection_open = false
+    else
+      collection_open = false -- 默认关
+    end
+
+    -- 选中状态
+    local last = reaper.GetExtState(EXT_SECTION, "last_collections")
+    if last and last ~= "" and advanced_folders[last] then
+      tree_state.cur_advanced_folder = last
+    end
+  end
+
+  -- 恢复 最近播放 模式
+  if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+    local ext = reaper.GetExtState(EXT_SECTION, "recent_header_open")
+    if ext == "true" then
+      recent_open = true
+    elseif ext == "false" then
+      recent_open = false
+    else
+      recent_open = false
+    end
+
+    selected_recent_row = tonumber(reaper.GetExtState(EXT_SECTION, "cur_recent_row") or "") or 0
+  end
+end
+
+-- 保存当前模式列表折叠状态
+function SaveExitSettings()
+  reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
+
+  if collect_mode == COLLECT_MODE_ITEMS or collect_mode == COLLECT_MODE_RPP or collect_mode == COLLECT_MODE_DIR or collect_mode == COLLECT_MODE_ALL_ITEMS then
+    reaper.SetExtState(EXT_SECTION, "project_header_open", tostring(project_open), true)
+
+  elseif collect_mode == COLLECT_MODE_SHORTCUT then -- collect_mode == COLLECT_MODE_TREE or
+    reaper.SetExtState(EXT_SECTION, "shortcut_header_open", tostring(shortcut_open), true)
+    reaper.SetExtState(EXT_SECTION, "cur_tree_path", tree_state.cur_path or "", true)
+
+  elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
+    reaper.SetExtState(EXT_SECTION, "group_header_open", tostring(group_open), true)
+    reaper.SetExtState(EXT_SECTION, "cur_custom_folder", tree_state.cur_custom_folder or "", true)
+
+  elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
+    reaper.SetExtState(EXT_SECTION, "collections_header_open", tostring(collection_open), true)
+    reaper.SetExtState(EXT_SECTION, "last_collections", tree_state.cur_advanced_folder or "", true)
+
+  elseif collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+    reaper.SetExtState(EXT_SECTION, "recent_header_open", tostring(recent_open), true)
+    reaper.SetExtState(EXT_SECTION, "cur_recent_row", tostring(selected_recent_row or 0), true)
+  end
+end
+
+LoadExitSettings()
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -3093,9 +3216,13 @@ function loop()
           
           -- 渲染单选列表
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-          local sel_mode = reaper.ImGui_CollapsingHeader(ctx, "Project Collection") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+
+          local hdr_flags = project_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local is_project_open = reaper.ImGui_CollapsingHeader(ctx, "Project Collection", nil, hdr_flags)
+          project_open = is_project_open
+
           reaper.ImGui_PopStyleColor(ctx)
-          if sel_mode then
+          if is_project_open then
             reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
             for i, v in ipairs(collect_mode_labels) do
               local selected = (collect_mode == v.value)
@@ -3132,10 +3259,28 @@ function loop()
           end
 
           -- 文件夹快捷方式节点
+          if not shortcut_nodes_inited then
+            expanded_paths = {}
+            -- 递归将选中路径及其父目录都加入 expanded_paths
+            if tree_state.cur_path and tree_state.cur_path ~= "" then
+              local p = tree_state.cur_path:gsub("[/\\]+$", "")
+              while p and p ~= "" do
+                expanded_paths[p] = true
+                local parent = p:match("^(.*)[/\\][^/\\]+$") -- 只去掉最后一级
+                p = parent
+              end
+            end
+            shortcut_nodes_inited = true
+          end
+
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-          local create_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+
+          local hdr_flags = shortcut_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local is_shortcut_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts", nil, hdr_flags)
+          shortcut_open = is_shortcut_open
+
           reaper.ImGui_PopStyleColor(ctx)
-          if create_folder_open then
+          if is_shortcut_open then
             reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
             for i = 1, #folder_shortcuts do
               draw_shortcut_tree(folder_shortcuts[i])
@@ -3159,11 +3304,25 @@ function loop()
           end
 
           -- 高级文件夹节点 Collections
-          local flags = reaper.ImGui_TreeNodeFlags_DefaultOpen()
+          if not adv_folder_nodes_inited then
+            expanded_ids = {}
+            local p = tree_state.cur_advanced_folder
+            while p and advanced_folders[p] and advanced_folders[p].parent do
+              local par = advanced_folders[p].parent
+              expanded_ids[par] = true
+              p = par
+            end
+            adv_folder_nodes_inited = true
+          end
+
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-          local advanced_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Collections") --, nil, flags)
+
+          local hdr_flags = collection_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local is_collection_open = reaper.ImGui_CollapsingHeader(ctx, "Collections", nil, hdr_flags)
+          collection_open = is_collection_open
+
           reaper.ImGui_PopStyleColor(ctx)
-          if advanced_folder_open then
+          if is_collection_open then
             reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
             for _, id in ipairs(root_advanced_folders) do
               local node = advanced_folders[id]
@@ -3188,9 +3347,13 @@ function loop()
 
           -- 自定义文件夹节点 Group
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-          local custom_folder_open = reaper.ImGui_CollapsingHeader(ctx, "Group##group") -- , nil, reaper.ImGui_TreeNodeFlags_DefaultOpen())
+
+          local hdr_flags = group_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local is_group_open = reaper.ImGui_CollapsingHeader(ctx, "Group##group", nil, hdr_flags)
+          group_open = is_group_open
+
           reaper.ImGui_PopStyleColor(ctx)
-          if custom_folder_open then
+          if is_group_open then
             reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
             for i, folder in ipairs(custom_folders) do
               local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
@@ -3271,9 +3434,13 @@ function loop()
 
           -- 最近播放节点
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-          local recent_played_open = reaper.ImGui_CollapsingHeader(ctx, "Recently Played##recent")
+
+          local hdr_flags = recent_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local is_recent_open = reaper.ImGui_CollapsingHeader(ctx, "Recently Played##recent", nil, hdr_flags)
+          recent_open = is_recent_open
+
           reaper.ImGui_PopStyleColor(ctx)
-          if recent_played_open then
+          if is_recent_open then
             reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
             for i, info in ipairs(recent_audio_files) do
               if i > max_recent_files then break end
@@ -3815,7 +3982,7 @@ function loop()
 
                     current_recent_play_info = nil -- 解除最近播放锁定
                     if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
-                      collect_mode = last_collect_mode or COLLECT_MODE_SHORTCUT
+                      collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
                     end
 
                     if playing_path == info.path then
@@ -3845,7 +4012,7 @@ function loop()
                 selected_row = i
                 current_recent_play_info = nil -- 解除最近播放锁定
                 if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
-                  collect_mode = last_collect_mode or COLLECT_MODE_SHORTCUT
+                  collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
                 end
               end
               -- 右键菜单定位item/静音/重命名/插入到工程中
@@ -4116,7 +4283,7 @@ function loop()
                 selected_row = i
                 current_recent_play_info = nil -- 解除最近播放锁定
                 if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
-                  collect_mode = last_collect_mode or COLLECT_MODE_SHORTCUT
+                  collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
                 end
               end
 
@@ -6025,7 +6192,9 @@ function loop()
     StopPreview()
     ReleaseAllCoverImages() -- 释放封面纹理
     DeleteCoverCacheFiles() -- 删除缓存图片
+    SaveExitSettings()      -- 退出时保存最后使用的模式状态
   end
 end
-
+-- 退出时保存模式列表状态
+reaper.atexit(SaveExitSettings)
 reaper.defer(loop)
