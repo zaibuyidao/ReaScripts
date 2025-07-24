@@ -60,11 +60,11 @@ local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14) -- 全局默认字体大小
 -- local font_small = reaper.ImGui_CreateFont("", 12)
 -- local font_medium = reaper.ImGui_CreateFont("", 14)
--- local font_large = reaper.ImGui_CreateFont("", 20)
+local font_large = reaper.ImGui_CreateFont("", 20)
 reaper.ImGui_Attach(ctx, sans_serif)
 -- reaper.ImGui_Attach(ctx, font_small)
 -- reaper.ImGui_Attach(ctx, font_medium)
--- reaper.ImGui_Attach(ctx, font_large)
+reaper.ImGui_Attach(ctx, font_large)
 
 need_refresh_font  = false
 font_size          = 14 -- 内容字体大小
@@ -2391,20 +2391,20 @@ LoadAdvancedFolders()
 
 ---------------------------------------------  最近播放节点 ---------------------------------------------
 
-function split(str, sep)
-  local result = {}
-  local pattern = string.format("([^%s]+)", sep)
-  local start = 1
-  local plain = true
-  local sep_start, sep_end = string.find(str, sep, start, plain)
-  while sep_start do
-    table.insert(result, string.sub(str, start, sep_start - 1))
-    start = sep_end + 1
-    sep_start, sep_end = string.find(str, sep, start, plain)
-  end
-  table.insert(result, string.sub(str, start))
-  return result
-end
+-- function split(str, sep)
+--   local result = {}
+--   local pattern = string.format("([^%s]+)", sep)
+--   local start = 1
+--   local plain = true
+--   local sep_start, sep_end = string.find(str, sep, start, plain)
+--   while sep_start do
+--     table.insert(result, string.sub(str, start, sep_start - 1))
+--     start = sep_end + 1
+--     sep_start, sep_end = string.find(str, sep, start, plain)
+--   end
+--   table.insert(result, string.sub(str, start))
+--   return result
+-- end
 
 function LoadRecentPlayed()
   recent_audio_files = {}
@@ -3068,6 +3068,17 @@ end
 
 LoadExitSettings()
 
+--------------------------------------------- 保存搜索功能 ---------------------------------------------
+
+local active_saved_search = nil
+show_add_popup = false
+new_search_name = ""
+remove_search_idx = nil
+rename_name = rename_name or ""
+rename_idx = rename_idx or nil
+show_rename_popup = show_rename_popup or false
+saved_search_list = LoadSavedSearch(EXT_SECTION, saved_search_list)
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -3110,12 +3121,18 @@ function loop()
 
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
-    local region_w = reaper.ImGui_GetContentRegionAvail(ctx)
-    local filter_w = 800 -- 输入框宽度
-    local button_w1 = reaper.ImGui_CalcTextSize(ctx, "Clear") + 12 -- 12为按钮额外padding
-    local button_w2 = reaper.ImGui_CalcTextSize(ctx, "Rescan") + 12 -- 12为按钮额外padding
-    local total_w = filter_w + button_w1 + button_w2 + 150 -- 150 为搜索字段下拉菜单宽度
-    reaper.ImGui_SetCursorPosX(ctx, (region_w - total_w) / 2)
+    local filter_w = 300 -- 输入框宽度
+    -- local region_w = reaper.ImGui_GetContentRegionAvail(ctx)
+    -- local button_w1 = reaper.ImGui_CalcTextSize(ctx, "Clear") + 12 -- 12为按钮额外padding
+    -- local button_w2 = reaper.ImGui_CalcTextSize(ctx, "Rescan") + 12 -- 12为按钮额外padding
+    -- local total_w = filter_w + button_w1 + button_w2 + 150 -- 150 为搜索字段下拉菜单宽度
+    -- reaper.ImGui_SetCursorPosX(ctx, (region_w - total_w) / 2)
+
+    -- 标题栏
+    reaper.ImGui_PushFont(ctx, font_large)
+    reaper.ImGui_Text(ctx, '  Soundmole')
+    reaper.ImGui_PopFont(ctx)
+    reaper.ImGui_SameLine(ctx, nil, 40)
 
     -- 搜索字段下拉菜单
     reaper.ImGui_SetNextItemWidth(ctx, 150)
@@ -3153,6 +3170,12 @@ function loop()
     reaper.ImGui_SameLine(ctx)
     if reaper.ImGui_Button(ctx, "Clear") then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
+    end
+    -- 恢复（撤销所有过滤/搜索）
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "Restore All") then
+      reaper.ImGui_TextFilter_Set(filename_filter, "")
+      active_saved_search = nil
     end
     -- 刷新按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -3579,6 +3602,186 @@ function loop()
           end
           reaper.ImGui_EndTabItem(ctx)
         end
+
+        -- TAB 标签页 Saved Search
+        if reaper.ImGui_BeginTabItem(ctx, 'Saved Search') then
+          prev_filter_text = prev_filter_text or ""
+          local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+          if filter_text ~= "" and prev_filter_text ~= filter_text then
+            active_saved_search = nil
+          end
+          prev_filter_text = filter_text
+
+          -- 添加搜索词按钮
+          if reaper.ImGui_Button(ctx, "Save Current Search") then
+            new_search_name = filter_text
+            show_add_popup = true
+          end
+
+          -- 添加搜索词弹窗
+          if show_add_popup then
+            reaper.ImGui_OpenPopup(ctx, "Add Search")
+            show_add_popup = false
+          end
+          local add_visible = reaper.ImGui_BeginPopupModal(ctx, "Add Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+          if add_visible then
+            reaper.ImGui_Text(ctx, "Name:")
+            reaper.ImGui_SameLine(ctx)
+            local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
+            if input_changed then new_search_name = input_val end
+            reaper.ImGui_Separator(ctx)
+            reaper.ImGui_Text(ctx, "Keyword: " .. (filter_text or ""))
+            reaper.ImGui_Separator(ctx)
+            if reaper.ImGui_Button(ctx, "OK") or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+              if (new_search_name or "") ~= "" and (filter_text or "") ~= "" then
+                -- 避免重名
+                local exists = false
+                for _, s in ipairs(saved_search_list) do
+                  if s.name == new_search_name then exists = true break end
+                end
+                if not exists then
+                  table.insert(saved_search_list, {name = new_search_name, keyword = filter_text})
+                  SaveSavedSearch(EXT_SECTION, saved_search_list)
+                end
+              end
+              reaper.ImGui_CloseCurrentPopup(ctx)
+              new_search_name = ""
+            end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_Button(ctx, "Cancel") then
+              reaper.ImGui_CloseCurrentPopup(ctx)
+              new_search_name = ""
+            end
+            reaper.ImGui_EndPopup(ctx)
+          end
+          reaper.ImGui_Separator(ctx)
+
+          for idx, s in ipairs(saved_search_list) do
+            reaper.ImGui_PushID(ctx, "saved_search_" .. idx)
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),        0x00000000)
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), 0x00000000)
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  0x00000000)
+
+            -- local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, s.name)
+            -- local padding = 0
+            -- if reaper.ImGui_Selectable(ctx, s.name, false, 0, text_w + padding - 2, 0) then -- 只占文本宽度的 Selectable 备用
+
+            local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+            local cursor_pos = { reaper.ImGui_GetCursorScreenPos(ctx) }
+            if reaper.ImGui_Selectable(ctx, s.name, false, 0, text_w - 56, 0) then
+              active_saved_search = idx
+              -- 不写入过滤框
+              -- if filename_filter then
+              --   reaper.ImGui_TextFilter_Set(filename_filter, s.keyword)
+              -- end
+            end
+
+            if reaper.ImGui_IsItemHovered(ctx) then
+              reaper.ImGui_SetCursorScreenPos(ctx, table.unpack(cursor_pos))
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.table_header_active)
+              reaper.ImGui_Text(ctx, s.name)
+              reaper.ImGui_PopStyleColor(ctx)
+            end
+            -- 恢复关键词文字样式颜色
+            reaper.ImGui_PopStyleColor(ctx, 3)
+
+            -- 名称区域右键菜单
+            if reaper.ImGui_BeginPopupContextItem(ctx, "##context_saved_search_name", 1) then
+              if reaper.ImGui_MenuItem(ctx, "Rename") then
+                show_rename_popup = true
+                rename_idx = idx
+                rename_name = s.name
+              end
+              if reaper.ImGui_MenuItem(ctx, "Remove") then
+                remove_search_idx = idx
+              end
+              reaper.ImGui_EndPopup(ctx)
+            end
+            -- 上下移动按钮靠右对齐
+            reaper.ImGui_SameLine(ctx)
+            local btn_w = 20
+            local total_btn_w = btn_w * 2 + 8 -- 两个按钮+间距
+            local avail = reaper.ImGui_GetContentRegionAvail(ctx)
+            if avail > total_btn_w then
+              reaper.ImGui_Dummy(ctx, avail - total_btn_w - 8, 0)
+              reaper.ImGui_SameLine(ctx)
+            end
+            -- 上移
+            if idx > 1 then
+              if reaper.ImGui_Button(ctx, "^", btn_w, 20) then
+                local temp = saved_search_list[idx - 1]
+                saved_search_list[idx - 1] = saved_search_list[idx]
+                saved_search_list[idx] = temp
+                SaveSavedSearch(EXT_SECTION, saved_search_list)
+              end
+            else
+              reaper.ImGui_Dummy(ctx, btn_w, 20)
+            end
+            reaper.ImGui_SameLine(ctx, nil, 4)
+            -- 下移
+            if idx < #saved_search_list then
+              if reaper.ImGui_Button(ctx, "v", btn_w, 20) then
+                local temp = saved_search_list[idx + 1]
+                saved_search_list[idx + 1] = saved_search_list[idx]
+                saved_search_list[idx] = temp
+                SaveSavedSearch(EXT_SECTION, saved_search_list)
+              end
+            else
+              reaper.ImGui_Dummy(ctx, btn_w, 20)
+            end
+
+            reaper.ImGui_PopID(ctx)
+          end
+
+          -- 用户输入重命名的弹窗
+          if show_rename_popup and rename_idx then
+            reaper.ImGui_OpenPopup(ctx, "Rename Search")
+            show_rename_popup = false
+          end
+
+          local rename_visible = reaper.ImGui_BeginPopupModal(ctx, "Rename Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+          if rename_visible and rename_idx then
+            reaper.ImGui_Text(ctx, "Rename to: ")
+            reaper.ImGui_SameLine(ctx)
+            local input_changed, input_val = reaper.ImGui_InputText(ctx, "##rename_input", rename_name or "", 256)
+            if input_changed then rename_name = input_val end
+            reaper.ImGui_Separator(ctx)
+            if reaper.ImGui_Button(ctx, "OK") or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+              if (rename_name or "") ~= "" then
+                -- 检查重名
+                local exists = false
+                for i, s in ipairs(saved_search_list) do
+                  if s.name == rename_name and i ~= rename_idx then
+                    exists = true
+                    break
+                  end
+                end
+                if not exists then
+                  saved_search_list[rename_idx].name = rename_name
+                  SaveSavedSearch(EXT_SECTION, saved_search_list)
+                end
+              end
+              reaper.ImGui_CloseCurrentPopup(ctx)
+              rename_idx = nil
+              rename_name = ""
+            end
+            reaper.ImGui_SameLine(ctx)
+            if reaper.ImGui_Button(ctx, "Cancel") then
+              reaper.ImGui_CloseCurrentPopup(ctx)
+              rename_idx = nil
+              rename_name = ""
+            end
+            reaper.ImGui_EndPopup(ctx)
+          end
+          
+          if remove_search_idx then
+            table.remove(saved_search_list, remove_search_idx)
+            SaveSavedSearch(EXT_SECTION, saved_search_list)
+            remove_search_idx = nil
+          end
+          reaper.ImGui_EndTabItem(ctx)
+        end
+
         reaper.ImGui_EndTabBar(ctx)
       end
       reaper.ImGui_EndChild(ctx)
@@ -3893,12 +4096,26 @@ function loop()
         end
 
         for i, info in ipairs(files_idx_cache) do
+          -- 过滤关键词旧版本备份
+          -- local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+          -- -- 拆分为多个关键词
+          -- local keywords = {}
+          -- for word in filter_text:gmatch("%S+") do
+          --   keywords[#keywords+1] = word:lower()
+          -- end
+
+          -- 过滤关键词新版 - 与保存搜索关键词深度绑定
           local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+          local search_keyword = filter_text
+          if search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
+            search_keyword = saved_search_list[active_saved_search].keyword or ""
+          end
           -- 拆分为多个关键词
           local keywords = {}
-          for word in filter_text:gmatch("%S+") do
+          for word in search_keyword:gmatch("%S+") do
             keywords[#keywords+1] = word:lower()
           end
+
           -- 合并所有要检索的内容，全部转小写
           -- local target = ((info.filename or "") .. " " .. (info.description or "")):lower()
           local target = ""

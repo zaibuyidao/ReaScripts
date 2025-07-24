@@ -1,10 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.3
+-- @version 1.0.4
 -- @changelog
---   Added auto-save for mode selection, restoring the previous mode on next startup.
---   Added a dropdown menu for selectable search fields.
---   Included a new ucs.csv file for UCS support (functionality not yet active; work in progress).
+--   Added saved search feature. You can now save your search box content for quick access next time.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
