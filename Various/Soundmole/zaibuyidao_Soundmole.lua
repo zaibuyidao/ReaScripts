@@ -2391,21 +2391,6 @@ LoadAdvancedFolders()
 
 ---------------------------------------------  最近播放节点 ---------------------------------------------
 
--- function split(str, sep)
---   local result = {}
---   local pattern = string.format("([^%s]+)", sep)
---   local start = 1
---   local plain = true
---   local sep_start, sep_end = string.find(str, sep, start, plain)
---   while sep_start do
---     table.insert(result, string.sub(str, start, sep_start - 1))
---     start = sep_end + 1
---     sep_start, sep_end = string.find(str, sep, start, plain)
---   end
---   table.insert(result, string.sub(str, start))
---   return result
--- end
-
 function LoadRecentPlayed()
   recent_audio_files = {}
   local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_RECENT_PLAYED)
@@ -3079,6 +3064,55 @@ rename_idx = rename_idx or nil
 show_rename_popup = show_rename_popup or false
 saved_search_list = LoadSavedSearch(EXT_SECTION, saved_search_list)
 
+--------------------------------------------- 最近搜索节点 ---------------------------------------------
+
+local EXT_KEY_RECENT_SEARCHED = "recently_searched"
+local recent_search_keywords = {}
+local max_recent_searches = 20 -- 最多记录20条
+local search_input_timer = 0
+local last_search_input = ""
+local save_search_keyword = nil -- 保存最近搜索
+
+function LoadRecentSearched()
+  recent_search_keywords = {}
+  local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_RECENT_SEARCHED)
+  if not str or str == "" then return end
+  local list = split(str, "|;|")
+  for _, keyword in ipairs(list) do
+    if keyword and keyword ~= "" then
+      table.insert(recent_search_keywords, keyword)
+    end
+  end
+end
+
+function SaveRecentSearched()
+  local t = {}
+  for _, keyword in ipairs(recent_search_keywords) do
+    table.insert(t, keyword)
+  end
+  local str = table.concat(t, "|;|")
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_RECENT_SEARCHED, str, true)
+end
+
+function AddToRecentSearched(keyword)
+  keyword = keyword or ""
+  keyword = keyword:gsub("^%s+", ""):gsub("%s+$", "")
+  if keyword == "" then return end
+  -- 已存在则移到最前
+  for i = #recent_search_keywords, 1, -1 do
+    if recent_search_keywords[i] == keyword then
+      table.remove(recent_search_keywords, i)
+    end
+  end
+  table.insert(recent_search_keywords, 1, keyword)
+  while #recent_search_keywords > max_recent_searches do
+    table.remove(recent_search_keywords)
+  end
+  SaveRecentSearched()
+end
+
+LoadRecentSearched()
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -3132,7 +3166,7 @@ function loop()
     reaper.ImGui_PushFont(ctx, font_large)
     reaper.ImGui_Text(ctx, '  Soundmole')
     reaper.ImGui_PopFont(ctx)
-    reaper.ImGui_SameLine(ctx, nil, 40)
+    reaper.ImGui_SameLine(ctx, nil, 20)
 
     -- 搜索字段下拉菜单
     reaper.ImGui_SetNextItemWidth(ctx, 150)
@@ -3166,30 +3200,50 @@ function loop()
     end
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
+
     -- 清空过滤器内容
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "Clear") then
+    if reaper.ImGui_Button(ctx, "Clear", 80) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
     end
-    -- 恢复（撤销所有过滤/搜索）
-    reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "Restore All") then
-      reaper.ImGui_TextFilter_Set(filename_filter, "")
-      active_saved_search = nil
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_BeginTooltip(ctx)
+      reaper.ImGui_Text(ctx, 'F4: Clear the search box.')
+      reaper.ImGui_EndTooltip(ctx)
     end
+    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
+      reaper.ImGui_TextFilter_Set(filename_filter, "")
+    end
+
     -- 刷新按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Rescan") then
+    if reaper.ImGui_Button(ctx, "Rescan", 80) then
       CollectFiles()
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, "F5 will rescan and refresh the audio file list.")
+      reaper.ImGui_Text(ctx, "F5: Rescan and refresh the audio file list.")
       reaper.ImGui_EndTooltip(ctx)
     end
     -- F5
     if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F5()) then
       CollectFiles()
+    end
+
+    -- 恢复（撤销所有过滤/搜索）
+    reaper.ImGui_SameLine(ctx)
+    if reaper.ImGui_Button(ctx, "Restore All", 80) then
+      reaper.ImGui_TextFilter_Set(filename_filter, "")
+      active_saved_search = nil
+    end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_BeginTooltip(ctx)
+      reaper.ImGui_Text(ctx, 'F6: Restore all (undo all filters/search).')
+      reaper.ImGui_EndTooltip(ctx)
+    end
+    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F6()) then
+      reaper.ImGui_TextFilter_Set(filename_filter, "")
+      active_saved_search = nil
     end
     
     reaper.ImGui_Dummy(ctx, 1, 3) -- 控件下方 + 1px 间距
@@ -3452,6 +3506,83 @@ function loop()
                 end
               end
             end
+            reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          -- 最近搜索节点
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+
+          local hdr_flags_search = recent_search_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local is_search_open = reaper.ImGui_CollapsingHeader(ctx, "Recently Searched##recent_search", nil, hdr_flags_search)
+          recent_search_open = is_search_open
+
+          reaper.ImGui_PopStyleColor(ctx)
+          if is_search_open then
+            reaper.ImGui_Indent(ctx, 7)
+            for i, keyword in ipairs(recent_search_keywords) do
+              local selected = false
+              if reaper.ImGui_Selectable(ctx, keyword, selected) then
+                -- 点击发送到搜索框
+                reaper.ImGui_TextFilter_Set(filename_filter, keyword)
+              end
+              -- 右键菜单
+              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+                reaper.ImGui_OpenPopup(ctx, "recent_search_menu_" .. i)
+              end
+              if reaper.ImGui_BeginPopup(ctx, "recent_search_menu_" .. i) then
+                if reaper.ImGui_MenuItem(ctx, "Save as Saved Search") then
+                  show_add_popup = true
+                  new_search_name = keyword
+                  save_search_keyword = keyword
+                  reaper.ImGui_CloseCurrentPopup(ctx)
+                end
+                if reaper.ImGui_MenuItem(ctx, "Delete this record") then
+                  table.remove(recent_search_keywords, i)
+                  SaveRecentSearched()
+                  reaper.ImGui_CloseCurrentPopup(ctx)
+                end
+                reaper.ImGui_EndPopup(ctx)
+              end
+            end
+            -- 保存搜索关键词弹窗
+            if show_add_popup then
+              reaper.ImGui_OpenPopup(ctx, "Add Search")
+              show_add_popup = false
+            end
+            local add_visible = reaper.ImGui_BeginPopupModal(ctx, "Add Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+            if add_visible then
+              reaper.ImGui_Text(ctx, "Name:")
+              reaper.ImGui_SameLine(ctx)
+              local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
+              if input_changed then new_search_name = input_val end
+              reaper.ImGui_Separator(ctx)
+              reaper.ImGui_Text(ctx, "Keyword: " .. (save_search_keyword or ""))
+              reaper.ImGui_Separator(ctx)
+              if reaper.ImGui_Button(ctx, "OK") or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+                if (new_search_name or "") ~= "" and (save_search_keyword or "") ~= "" then
+                  -- 避免重名
+                  local exists = false
+                  for _, s in ipairs(saved_search_list) do
+                    if s.name == new_search_name then exists = true break end
+                  end
+                  if not exists then
+                    table.insert(saved_search_list, {name = new_search_name, keyword = save_search_keyword})
+                    SaveSavedSearch(EXT_SECTION, saved_search_list)
+                  end
+                end
+                reaper.ImGui_CloseCurrentPopup(ctx)
+                new_search_name = ""
+                save_search_keyword = ""
+              end
+              reaper.ImGui_SameLine(ctx)
+              if reaper.ImGui_Button(ctx, "Cancel") then
+                reaper.ImGui_CloseCurrentPopup(ctx)
+                new_search_name = ""
+                save_search_keyword = ""
+              end
+              reaper.ImGui_EndPopup(ctx)
+            end
+
             reaper.ImGui_Unindent(ctx, 7)
           end
 
@@ -4106,6 +4237,18 @@ function loop()
 
           -- 过滤关键词新版 - 与保存搜索关键词深度绑定
           local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+
+          -- 自动保存最近搜索关键词
+          if filter_text ~= last_search_input then
+            last_search_input = filter_text
+            search_input_timer = reaper.time_precise()
+          end
+          -- 输入停顿超过 2 秒，且内容不为空，才保存
+          if filter_text ~= "" and reaper.time_precise() - search_input_timer > 2 then
+            AddToRecentSearched(filter_text)
+            search_input_timer = math.huge -- 避免重复写入
+          end
+
           local search_keyword = filter_text
           if search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
             search_keyword = saved_search_list[active_saved_search].keyword or ""

@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.4
+-- @version 1.0.5
 -- @changelog
---   Added saved search feature. You can now save your search box content for quick access next time.
+--   Added "Saved Search" feature. You can now save your search box content for quick access next time.
+--   Added "Recently Searched" feature. The script now automatically records historical search keywords.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
