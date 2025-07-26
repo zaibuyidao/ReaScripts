@@ -126,17 +126,19 @@ local expanded_ids            = {}    -- 已展开的高级文件夹ID列表
 local shortcut_nodes_inited   = false -- 是否已初始化快捷方式节点的展开
 local expanded_paths          = {}    -- 已展开的文件夹路径表
 -- 表格排序常量
-local COL_FILENAME    = 2
-local COL_SIZE        = 3
-local COL_TYPE        = 4
-local COL_DATE        = 5
-local COL_GENRE       = 6
-local COL_COMMENT     = 7
-local COL_DESCRIPTION = 8
-local COL_LENGTH      = 9
-local COL_CHANNELS    = 10
-local COL_SAMPLERATE  = 11
-local COL_BITS        = 12
+local TableColumns = {
+  FILENAME    = 2,
+  SIZE        = 3,
+  TYPE        = 4,
+  DATE        = 5,
+  GENRE       = 6,
+  COMMENT     = 7,
+  DESCRIPTION = 8,
+  LENGTH      = 9,
+  CHANNELS    = 10,
+  SAMPLERATE  = 11,
+  BITS        = 12,
+}
 -- ExtState
 local EXT_SECTION              = "Soundmole"
 local EXT_KEY_PEAKS            = "peak_chans"
@@ -290,6 +292,7 @@ local colors = {
   normal_text          = 0xFFF0F0F0, -- 标准文本颜色
   previewed_text       = 0x888888FF, -- 已预览过的暗一些
   timeline_def_color   = 0xCFCFCFFF, -- 时间线默认颜色
+  thesaurus_text       = 0xBCC694FF, -- 同义词文本颜色
 }
 
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
@@ -3066,7 +3069,6 @@ saved_search_list = LoadSavedSearch(EXT_SECTION, saved_search_list)
 
 --------------------------------------------- 最近搜索节点 ---------------------------------------------
 
-local EXT_KEY_RECENT_SEARCHED = "recently_searched"
 local recent_search_keywords = {}
 local max_recent_searches = 20 -- 最多记录20条
 local search_input_timer = 0
@@ -3075,7 +3077,7 @@ local save_search_keyword = nil -- 保存最近搜索
 
 function LoadRecentSearched()
   recent_search_keywords = {}
-  local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_RECENT_SEARCHED)
+  local str = reaper.GetExtState(EXT_SECTION, "recently_searched")
   if not str or str == "" then return end
   local list = split(str, "|;|")
   for _, keyword in ipairs(list) do
@@ -3091,7 +3093,7 @@ function SaveRecentSearched()
     table.insert(t, keyword)
   end
   local str = table.concat(t, "|;|")
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_RECENT_SEARCHED, str, true)
+  reaper.SetExtState(EXT_SECTION, "recently_searched", str, true)
 end
 
 function AddToRecentSearched(keyword)
@@ -3112,6 +3114,31 @@ function AddToRecentSearched(keyword)
 end
 
 LoadRecentSearched()
+
+--------------------------------------------- 同义词搜索 ---------------------------------------------
+
+use_synonyms = use_synonyms or false
+local thesaurus_csv_path = normalize_path(script_path .. "data/thesaurus.csv", false)
+local thesaurus_map = {}
+
+local thesaurus_f = io.open(thesaurus_csv_path, "r")
+if thesaurus_f then
+  thesaurus_f:read() -- 跳过首行
+  for line in thesaurus_f:lines() do
+    local key, thesaurus = line:match('^([^,]+),"(.-)"')
+    if key and thesaurus then
+      local synonyms = {}
+      for word in thesaurus:gmatch("([^,]+)") do
+        synonyms[#synonyms+1] = word:lower()
+      end
+      -- 将每个同义词都映射到完整的同义词数组
+      for _, word in ipairs(synonyms) do
+        thesaurus_map[word] = synonyms
+      end
+    end
+  end
+  thesaurus_f:close()
+end
 
 function loop()
   -- 首次使用时收集音频文件
@@ -3155,7 +3182,7 @@ function loop()
 
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
-    local filter_w = 300 -- 输入框宽度
+    local filter_w = 430 -- 输入框宽度
     -- local region_w = reaper.ImGui_GetContentRegionAvail(ctx)
     -- local button_w1 = reaper.ImGui_CalcTextSize(ctx, "Clear") + 12 -- 12为按钮额外padding
     -- local button_w2 = reaper.ImGui_CalcTextSize(ctx, "Rescan") + 12 -- 12为按钮额外padding
@@ -3164,9 +3191,9 @@ function loop()
 
     -- 标题栏
     reaper.ImGui_PushFont(ctx, font_large)
-    reaper.ImGui_Text(ctx, '  Soundmole')
+    reaper.ImGui_Text(ctx, ' Soundmole')
     reaper.ImGui_PopFont(ctx)
-    reaper.ImGui_SameLine(ctx, nil, 20)
+    reaper.ImGui_SameLine(ctx, nil, 10)
 
     -- 搜索字段下拉菜单
     reaper.ImGui_SetNextItemWidth(ctx, 150)
@@ -3193,7 +3220,7 @@ function loop()
       reaper.ImGui_SetTooltip(ctx, table.concat(selected_labels, "+"))
     end
 
-    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_SameLine(ctx, nil, 10)
     if not filename_filter then
       filename_filter = reaper.ImGui_CreateTextFilter()
       reaper.ImGui_Attach(ctx, filename_filter)
@@ -3201,19 +3228,60 @@ function loop()
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
 
-    -- 清空过滤器内容
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_Text(ctx, 'Synonyms:')
     reaper.ImGui_SameLine(ctx)
+    local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "##Synonyms", use_synonyms)
+    if changed_synonyms then
+      use_synonyms = new_use_synonyms
+    end
+
+    -- 同义词显示输入框
+    reaper.ImGui_BeginDisabled(ctx, not use_synonyms) -- 输入框置灰
+    local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+    local synonym_display_parts = {}
+    local shown_synonym_groups = {} -- 同义词去重
+
+    if filter_text ~= "" then
+      for keyword in filter_text:gmatch("%S+") do
+        local synonyms = thesaurus_map[keyword:lower()]
+        if synonyms then
+          local sorted = {table.unpack(synonyms)} -- 将同义词排序后拼接为唯一标识
+          -- table.sort(sorted) -- 对同义词排序
+          local key = table.concat(sorted, ",")
+          if not shown_synonym_groups[key] then
+            shown_synonym_groups[key] = true
+            local display = table.concat(sorted, "||")
+            table.insert(synonym_display_parts, "(" .. display .. ")")
+          end
+        else
+          table.insert(synonym_display_parts, "(" .. keyword .. ")")
+        end
+      end
+    end
+
+    local synonym_display_text = #synonym_display_parts > 0 and table.concat(synonym_display_parts, " ") or ""
+
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SetNextItemWidth(ctx, filter_w)
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.thesaurus_text)
+    reaper.ImGui_InputText(ctx, "##SynonymDisplay", synonym_display_text, reaper.ImGui_InputTextFlags_ReadOnly())
+    reaper.ImGui_PopStyleColor(ctx)
+    reaper.ImGui_EndDisabled(ctx)
+
+    -- 清空过滤器内容
+    reaper.ImGui_SameLine(ctx, nil, 10)
     if reaper.ImGui_Button(ctx, "Clear", 80) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, 'F4: Clear the search box.')
+      reaper.ImGui_Text(ctx, 'Clear the search box.')
       reaper.ImGui_EndTooltip(ctx)
     end
-    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
-      reaper.ImGui_TextFilter_Set(filename_filter, "")
-    end
+    -- if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
+    --   reaper.ImGui_TextFilter_Set(filename_filter, "")
+    -- end
 
     -- 刷新按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -3231,21 +3299,46 @@ function loop()
     end
 
     -- 恢复（撤销所有过滤/搜索）
-    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_SameLine(ctx, nil, 10)
     if reaper.ImGui_Button(ctx, "Restore All", 80) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
       active_saved_search = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, 'F6: Restore all (undo all filters/search).')
+      reaper.ImGui_Text(ctx, 'Restore all (undo all filters/search).')
       reaper.ImGui_EndTooltip(ctx)
     end
-    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F6()) then
-      reaper.ImGui_TextFilter_Set(filename_filter, "")
-      active_saved_search = nil
+    -- if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F6()) then
+    --   reaper.ImGui_TextFilter_Set(filename_filter, "")
+    --   active_saved_search = nil
+    -- end
+
+    -- 当前播放文件的路径
+    local file_info
+    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then -- 最近播放模式时使用播放列表项
+      file_info = current_recent_play_info
+    elseif files_idx_cache and selected_row and files_idx_cache[selected_row] then
+      file_info = files_idx_cache[selected_row] -- 其他模式用右侧表格选中项
+      selected_recent_row = 0 -- 清空最近播放选中项
+    else
+      file_info = last_playing_info
     end
-    
+
+    local show_cur_path = file_info and file_info.path or ""
+    show_cur_path = normalize_path(show_cur_path, false)
+    local same_folder = show_cur_path:match("^(.*)[/\\][^/\\]-$")
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    if reaper.ImGui_Button(ctx, "Same Folder", 80) then
+      tree_state.cur_path = normalize_path(same_folder, true)
+      RefreshFolderFiles(same_folder)
+    end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_BeginTooltip(ctx)
+      reaper.ImGui_Text(ctx, "Click to jump to this folder and list its audio files.")
+      reaper.ImGui_EndTooltip(ctx)
+    end
+
     reaper.ImGui_Dummy(ctx, 1, 3) -- 控件下方 + 1px 间距
 
     -- 自动缩放音频表格
@@ -3979,47 +4072,47 @@ function loop()
         reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
         if collect_mode == COLLECT_MODE_ALL_ITEMS then -- Media Items
           reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
-          reaper.ImGui_TableSetupColumn(ctx, "Take Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_FILENAME)
-          reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
-          reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
-          reaper.ImGui_TableSetupColumn(ctx, "Track",       reaper.ImGui_TableColumnFlags_WidthFixed(), 100, COL_DATE)
-          reaper.ImGui_TableSetupColumn(ctx, "Position",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, COL_GENRE)
-          reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_COMMENT)
-          reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_DESCRIPTION)
-          reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, COL_LENGTH)
-          reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
-          reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
-          reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "Take Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
+          reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
+          reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
+          reaper.ImGui_TableSetupColumn(ctx, "Track",       reaper.ImGui_TableColumnFlags_WidthFixed(), 100, TableColumns.DATE)
+          reaper.ImGui_TableSetupColumn(ctx, "Position",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.GENRE)
+          reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.COMMENT)
+          reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.DESCRIPTION)
+          reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, TableColumns.LENGTH)
+          reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
+          reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
+          reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_RPP then -- RPP
           reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
-          reaper.ImGui_TableSetupColumn(ctx, "File Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_FILENAME)
-          reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
-          reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
-          reaper.ImGui_TableSetupColumn(ctx, "Track",       reaper.ImGui_TableColumnFlags_WidthFixed(), 100, COL_DATE)
-          reaper.ImGui_TableSetupColumn(ctx, "Position",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, COL_GENRE)
-          reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_COMMENT)
-          reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_DESCRIPTION)
-          reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, COL_LENGTH)
-          reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
-          reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
-          reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "File Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
+          reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
+          reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
+          reaper.ImGui_TableSetupColumn(ctx, "Track",       reaper.ImGui_TableColumnFlags_WidthFixed(), 100, TableColumns.DATE)
+          reaper.ImGui_TableSetupColumn(ctx, "Position",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.GENRE)
+          reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.COMMENT)
+          reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.DESCRIPTION)
+          reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, TableColumns.LENGTH)
+          reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
+          reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
+          reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         else
           reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
-          reaper.ImGui_TableSetupColumn(ctx, "File Name",        reaper.ImGui_TableColumnFlags_WidthFixed(), 250, COL_FILENAME)
-          reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_SIZE)
-          reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_TYPE)
-          reaper.ImGui_TableSetupColumn(ctx, "Date",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_DATE)
-          reaper.ImGui_TableSetupColumn(ctx, "Genre",       reaper.ImGui_TableColumnFlags_WidthFixed(), 55, COL_GENRE)
-          reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_COMMENT)
-          reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, COL_DESCRIPTION)
-          reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, COL_LENGTH)
-          reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_CHANNELS)
-          reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_SAMPLERATE)
-          reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, COL_BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "File Name",        reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
+          reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
+          reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
+          reaper.ImGui_TableSetupColumn(ctx, "Date",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.DATE)
+          reaper.ImGui_TableSetupColumn(ctx, "Genre",       reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.GENRE)
+          reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.COMMENT)
+          reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.DESCRIPTION)
+          reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, TableColumns.LENGTH)
+          reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
+          reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
+          reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         end
@@ -4065,7 +4158,7 @@ function loop()
     
           table.sort(files_idx_cache, function(a, b)
             for _, spec in ipairs(sort_specs) do
-              if spec.user_id == COL_FILENAME then
+              if spec.user_id == TableColumns.FILENAME then
                 if a.filename ~= b.filename then -- File 列排序
                   if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                     return a.filename > b.filename
@@ -4073,7 +4166,7 @@ function loop()
                     return a.filename < b.filename
                   end
                 end
-              elseif spec.user_id == COL_SIZE then -- Size 列排序
+              elseif spec.user_id == TableColumns.SIZE then -- Size 列排序
                 local asize = tonumber(a.size) or 0
                 local bsize = tonumber(b.size) or 0
                 if asize ~= bsize then
@@ -4083,7 +4176,7 @@ function loop()
                     return asize < bsize
                   end
                 end
-              elseif spec.user_id == COL_TYPE then -- Type 列排序
+              elseif spec.user_id == TableColumns.TYPE then -- Type 列排序
                 if a.type ~= b.type then
                   if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                     return a.type > b.type
@@ -4091,7 +4184,7 @@ function loop()
                     return a.type < b.type
                   end
                 end
-              elseif spec.user_id == COL_DATE then -- Date 列排序
+              elseif spec.user_id == TableColumns.DATE then -- Date 列排序
                 if (a.bwf_orig_date or "") ~= (b.bwf_orig_date or "") then
                   if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                     return (a.bwf_orig_date or "") > (b.bwf_orig_date or "")
@@ -4099,7 +4192,7 @@ function loop()
                     return (a.bwf_orig_date or "") < (b.bwf_orig_date or "")
                   end
                 end
-              elseif spec.user_id == COL_GENRE then -- Genre & Position 列排序
+              elseif spec.user_id == TableColumns.GENRE then -- Genre & Position 列排序
                 if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
                   local apos = tonumber(a.position) or 0
                   local bpos = tonumber(b.position) or 0
@@ -4119,7 +4212,7 @@ function loop()
                     end
                   end
                 end
-              elseif spec.user_id == COL_COMMENT then -- Comment 列排序
+              elseif spec.user_id == TableColumns.COMMENT then -- Comment 列排序
                 if (a.comment or "") ~= (b.comment or "") then
                   if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                     return (a.comment or "") > (b.comment or "")
@@ -4127,7 +4220,7 @@ function loop()
                     return (a.comment or "") < (b.comment or "")
                   end
                 end
-              elseif spec.user_id == COL_DESCRIPTION then -- Description 列排序
+              elseif spec.user_id == TableColumns.DESCRIPTION then -- Description 列排序
                 if (a.description or "") ~= (b.description or "") then
                   if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                     return (a.description or "") > (b.description or "")
@@ -4135,7 +4228,7 @@ function loop()
                     return (a.description or "") < (b.description or "")
                   end
                 end
-              elseif spec.user_id == COL_LENGTH then -- Length 列排序
+              elseif spec.user_id == TableColumns.LENGTH then -- Length 列排序
                 local alen = tonumber(a.length) or 0
                 local blen = tonumber(b.length) or 0
                 if alen ~= blen then
@@ -4145,7 +4238,7 @@ function loop()
                     return alen < blen
                   end
                 end
-              elseif spec.user_id == COL_CHANNELS then -- Channels 列排序
+              elseif spec.user_id == TableColumns.CHANNELS then -- Channels 列排序
                 local achan = tonumber(a.channels) or 0
                 local bchan = tonumber(b.channels) or 0
                 if achan ~= bchan then
@@ -4155,7 +4248,7 @@ function loop()
                     return achan < bchan
                   end
                 end
-              elseif spec.user_id == COL_SAMPLERATE then -- Samplerate 列排序
+              elseif spec.user_id == TableColumns.SAMPLERATE then -- Samplerate 列排序
                 local asr = tonumber(a.samplerate) or 0
                 local bsr = tonumber(b.samplerate) or 0
                 if asr ~= bsr then
@@ -4165,7 +4258,7 @@ function loop()
                     return asr < bsr
                   end
                 end
-              elseif spec.user_id == COL_BITS then -- Bits 列排序
+              elseif spec.user_id == TableColumns.BITS then -- Bits 列排序
                 local abits = tonumber(a.bits) or 0
                 local bbits = tonumber(b.bits) or 0
                 if abits ~= bbits then
@@ -4253,10 +4346,42 @@ function loop()
           if search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
             search_keyword = saved_search_list[active_saved_search].keyword or ""
           end
-          -- 拆分为多个关键词
-          local keywords = {}
-          for word in search_keyword:gmatch("%S+") do
-            keywords[#keywords+1] = word:lower()
+
+          -- 解析用户输入的关键词
+          local input_keywords = {}
+          for keyword in search_keyword:gmatch("%S+") do
+            table.insert(input_keywords, keyword:lower())
+          end
+
+          -- 启用同义词时，将关键词分为两类。有同义词的关键词 和 无同义词的额外关键词
+          local synonym_keywords = {}
+          local extra_keywords = {}
+          local seen_groups = {} -- 去重同义词组
+
+          if use_synonyms then
+            for _, kw in ipairs(input_keywords) do
+              local synonyms = thesaurus_map[kw]
+              if synonyms then
+                local group_key = table.concat((function()
+                  local temp = {table.unpack(synonyms)}
+                  table.sort(temp)
+                  return temp
+                end)(), ",")
+                if not seen_groups[group_key] then
+                  seen_groups[group_key] = true
+                  for _, synonym in ipairs(synonyms) do
+                    synonym_keywords[synonym] = true
+                  end
+                end
+              else
+                extra_keywords[#extra_keywords + 1] = kw
+              end
+            end
+          else
+            -- 未启用同义词时，所有关键词都是额外关键词
+            for _, kw in ipairs(input_keywords) do
+              extra_keywords[#extra_keywords + 1] = kw
+            end
           end
 
           -- 合并所有要检索的内容，全部转小写
@@ -4269,11 +4394,35 @@ function loop()
           end
           target = target:lower()
 
-          local match = true
-          for _, kw in ipairs(keywords) do
-            if not target:find(kw, 1, true) then
-              match = false
-              break
+          local match = false
+
+          -- 同义词启用时特殊的复合搜索逻辑
+          if use_synonyms and next(synonym_keywords) then
+            -- 同义词之间为 OR 逻辑，每个同义词与额外关键词为 AND 逻辑
+            for synonym in pairs(synonym_keywords) do
+              local synonym_match = target:find(synonym, 1, true) ~= nil
+              if synonym_match then
+                local extra_match = true
+                for _, extra_kw in ipairs(extra_keywords) do
+                  if not target:find(extra_kw, 1, true) then
+                    extra_match = false
+                    break
+                  end
+                end
+                if extra_match then
+                  match = true -- 找到有效组合 (synonym AND 所有额外词)，即可跳出
+                  break
+                end
+              end
+            end
+          else
+            -- 未启用同义词时或无同义词时，全部关键词用 AND 逻辑
+            match = true
+            for _, kw in ipairs(extra_keywords) do
+              if not target:find(kw, 1, true) then
+                match = false
+                break
+              end
             end
           end
 
@@ -5274,7 +5423,7 @@ function loop()
 
     -- 设置弹窗
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Settings##Popup") then
+    if reaper.ImGui_Button(ctx, "Settings##Popup", 80) then
       reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
     end
     -- 支持 Ctrl+P 快捷键打开设置

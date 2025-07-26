@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.5
+-- @version 1.0.6
 -- @changelog
---   Added "Saved Search" feature. You can now save your search box content for quick access next time.
---   Added "Recently Searched" feature. The script now automatically records historical search keywords.
+--   Added "Synonyms" feature: If the search keyword has synonyms, you can enable the "Synonyms" option to trigger synonym-based searching, automatically matching all results for related words.
+--   Added "Same Folder" feature: Quickly jump to the folder containing the currently playing file and browse all audio files in that directory.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
