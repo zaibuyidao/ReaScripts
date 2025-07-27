@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.7
+-- @version 1.0.8
 -- @changelog
 --   Optimized the arrangement and spacing of interface sections.
+--   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

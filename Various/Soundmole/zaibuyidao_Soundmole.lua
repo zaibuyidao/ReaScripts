@@ -3190,11 +3190,10 @@ function loop()
     reaper.ImGui_PushFont(ctx, fonts.title)
     reaper.ImGui_Text(ctx, ' Soundmole')
     reaper.ImGui_PopFont(ctx)
-    reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_EndGroup(ctx)
 
     -- 搜索字段下拉菜单
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, 15)
     reaper.ImGui_BeginGroup(ctx)
 
     reaper.ImGui_SetNextItemWidth(ctx, 150)
@@ -5909,14 +5908,13 @@ function loop()
         if last_cover_img then
           reaper.ImGui_Image(ctx, last_cover_img, img_w, img_h)
         end
-      else
-        -- 无封面时重置
-        last_cover_img  = nil
-        last_cover_path = nil
-        last_img_w      = nil
       end
-
       reaper.ImGui_EndChild(ctx)
+    else
+      -- 无封面时重置
+      last_cover_img  = nil
+      last_cover_path = nil
+      last_img_w      = nil
     end
     reaper.ImGui_SameLine(ctx, nil, gap)
 
@@ -6680,6 +6678,10 @@ function loop()
   -- 检测 Ctrl+F4 快捷键
   if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()) then
     if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
+      StopPreview()
+      ReleaseAllCoverImages() -- 释放封面纹理
+      DeleteCoverCacheFiles() -- 删除缓存图片
+      SaveExitSettings()      -- 保存状态
       return -- 退出脚本
     end
   end
@@ -6696,6 +6698,7 @@ function loop()
       StopPreview()
       ReleaseAllCoverImages() -- 释放封面纹理
       DeleteCoverCacheFiles() -- 删除缓存图片
+      SaveExitSettings()      -- 保存状态
       return
     end
   end
