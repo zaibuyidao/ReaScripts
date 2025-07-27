@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fc171a62d2c4e0bb57538d1762e5bc2d2cf1f650">
+<index version="1" name="zaibuyidao Scripts" commit="96c958174afbb61ac3638b9e35faaf6d22f9369a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14178,6 +14178,15 @@ Added "Same Folder" feature: Quickly jump to the folder containing the currently
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/fc171a62d2c4e0bb57538d1762e5bc2d2cf1f650/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/fc171a62d2c4e0bb57538d1762e5bc2d2cf1f650/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/fc171a62d2c4e0bb57538d1762e5bc2d2cf1f650/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.8" author="zaibuyidao" time="2025-07-27T08:56:26Z">
+        <changelog><![CDATA[Optimized the arrangement and spacing of interface sections.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/96c958174afbb61ac3638b9e35faaf6d22f9369a/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/96c958174afbb61ac3638b9e35faaf6d22f9369a/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/96c958174afbb61ac3638b9e35faaf6d22f9369a/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/96c958174afbb61ac3638b9e35faaf6d22f9369a/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/96c958174afbb61ac3638b9e35faaf6d22f9369a/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
