@@ -57,14 +57,18 @@ end
 local SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
-local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14) -- 全局默认字体大小
--- local font_small = reaper.ImGui_CreateFont("", 12)
--- local font_medium = reaper.ImGui_CreateFont("", 14)
-local font_large = reaper.ImGui_CreateFont("", 20)
-reaper.ImGui_Attach(ctx, sans_serif)
--- reaper.ImGui_Attach(ctx, font_small)
--- reaper.ImGui_Attach(ctx, font_medium)
-reaper.ImGui_Attach(ctx, font_large)
+local fonts = {
+  sans_serif = reaper.ImGui_CreateFont('sans-serif', 14), -- 全局默认字体大小
+  small = reaper.ImGui_CreateFont('', 12),
+  medium = reaper.ImGui_CreateFont('', 14),
+  large = reaper.ImGui_CreateFont('', 20),
+  title = reaper.ImGui_CreateFont('', 25),
+}
+reaper.ImGui_Attach(ctx, fonts.sans_serif)
+reaper.ImGui_Attach(ctx, fonts.small)
+reaper.ImGui_Attach(ctx, fonts.medium)
+reaper.ImGui_Attach(ctx, fonts.large)
+reaper.ImGui_Attach(ctx, fonts.title)
 
 need_refresh_font  = false
 font_size          = 14 -- 内容字体大小
@@ -1075,11 +1079,6 @@ end
 -- dB转线性增益
 function dB_to_gain(db)
   return 10 ^ (db / 20)
-end
-
-function RefreshFont()
-  sans_serif = reaper.ImGui_CreateFont('sans-serif', font_size)
-  reaper.ImGui_Attach(ctx, sans_serif)
 end
 
 function MarkFontDirty()
@@ -3148,11 +3147,11 @@ function loop()
   -- 表格列表波形预览，每帧先处理任务队列
   ProcessWaveformTasks()
   if need_refresh_font then -- 该段无效，适时移除
-    sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
-    reaper.ImGui_Attach(ctx, sans_serif)
+    fonts.sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
+    reaper.ImGui_Attach(ctx, fonts.sans_serif)
     need_refresh_font = false
   end
-  reaper.ImGui_PushFont(ctx, sans_serif)
+  reaper.ImGui_PushFont(ctx, fonts.sans_serif)
   reaper.ImGui_SetNextWindowBgAlpha(ctx, bg_alpha) -- 背景不透明度
 
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), 6.0)
@@ -3183,19 +3182,21 @@ function loop()
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
     local filter_w = 430 -- 输入框宽度
-    -- local region_w = reaper.ImGui_GetContentRegionAvail(ctx)
-    -- local button_w1 = reaper.ImGui_CalcTextSize(ctx, "Clear") + 12 -- 12为按钮额外padding
-    -- local button_w2 = reaper.ImGui_CalcTextSize(ctx, "Rescan") + 12 -- 12为按钮额外padding
-    -- local total_w = filter_w + button_w1 + button_w2 + 150 -- 150 为搜索字段下拉菜单宽度
-    -- reaper.ImGui_SetCursorPosX(ctx, (region_w - total_w) / 2)
 
     -- 标题栏
-    reaper.ImGui_PushFont(ctx, font_large)
+    reaper.ImGui_BeginGroup(ctx)
+    -- 计算按钮高度，让文字垂直居中
+    reaper.ImGui_Dummy(ctx, 0, 0)
+    reaper.ImGui_PushFont(ctx, fonts.title)
     reaper.ImGui_Text(ctx, ' Soundmole')
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_EndGroup(ctx)
 
     -- 搜索字段下拉菜单
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_BeginGroup(ctx)
+
     reaper.ImGui_SetNextItemWidth(ctx, 150)
     local selected_labels = {}
     for _, field in ipairs(search_fields) do
@@ -3228,9 +3229,10 @@ function loop()
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
 
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_Text(ctx, '') -- 换行占位符
+    reaper.ImGui_SameLine(ctx, nil, 60)
     reaper.ImGui_Text(ctx, 'Synonyms:')
-    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_SameLine(ctx, nil, 10)
     local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "##Synonyms", use_synonyms)
     if changed_synonyms then
       use_synonyms = new_use_synonyms
@@ -3268,10 +3270,13 @@ function loop()
     reaper.ImGui_InputText(ctx, "##SynonymDisplay", synonym_display_text, reaper.ImGui_InputTextFlags_ReadOnly())
     reaper.ImGui_PopStyleColor(ctx)
     reaper.ImGui_EndDisabled(ctx)
+    reaper.ImGui_EndGroup(ctx)
 
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_BeginGroup(ctx)
     -- 清空过滤器内容
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Clear", 80) then
+    if reaper.ImGui_Button(ctx, "Clear", 80, 48) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -3285,7 +3290,7 @@ function loop()
 
     -- 刷新按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Rescan", 80) then
+    if reaper.ImGui_Button(ctx, "Rescan", 80, 48) then
       CollectFiles()
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -3300,7 +3305,7 @@ function loop()
 
     -- 恢复（撤销所有过滤/搜索）
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Restore All", 80) then
+    if reaper.ImGui_Button(ctx, "Restore All", 80, 48) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
       active_saved_search = nil
     end
@@ -3329,7 +3334,7 @@ function loop()
     show_cur_path = normalize_path(show_cur_path, false)
     local same_folder = show_cur_path:match("^(.*)[/\\][^/\\]-$")
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Same Folder", 80) then
+    if reaper.ImGui_Button(ctx, "Same Folder", 80, 48) then
       tree_state.cur_path = normalize_path(same_folder, true)
       RefreshFolderFiles(same_folder)
     end
@@ -3338,8 +3343,8 @@ function loop()
       reaper.ImGui_Text(ctx, "Click to jump to this folder and list its audio files.")
       reaper.ImGui_EndTooltip(ctx)
     end
-
-    reaper.ImGui_Dummy(ctx, 1, 3) -- 控件下方 + 1px 间距
+    reaper.ImGui_EndGroup(ctx)
+    reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
 
     -- 自动缩放音频表格
     local line_h = reaper.ImGui_GetTextLineHeight(ctx)

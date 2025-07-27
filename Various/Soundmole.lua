@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.6
+-- @version 1.0.7
 -- @changelog
---   Added "Synonyms" feature: If the search keyword has synonyms, you can enable the "Synonyms" option to trigger synonym-based searching, automatically matching all results for related words.
---   Added "Same Folder" feature: Quickly jump to the folder containing the currently playing file and browse all audio files in that directory.
+--   Optimized the arrangement and spacing of interface sections.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
