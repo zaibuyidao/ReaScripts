@@ -5908,6 +5908,11 @@ function loop()
         if last_cover_img then
           reaper.ImGui_Image(ctx, last_cover_img, img_w, img_h)
         end
+      else
+        -- 无封面时重置
+        last_cover_img  = nil
+        last_cover_path = nil
+        last_img_w      = nil
       end
       reaper.ImGui_EndChild(ctx)
     else
