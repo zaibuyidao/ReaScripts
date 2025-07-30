@@ -138,10 +138,13 @@ local TableColumns = {
   GENRE       = 6,
   COMMENT     = 7,
   DESCRIPTION = 8,
-  LENGTH      = 9,
-  CHANNELS    = 10,
-  SAMPLERATE  = 11,
-  BITS        = 12,
+  CATEGORY    = 9,
+  SUBCATEGORY = 10,
+  CATID       = 11,
+  LENGTH      = 12,
+  CHANNELS    = 13,
+  SAMPLERATE  = 14,
+  BITS        = 15,
 }
 -- ExtState
 local EXT_SECTION              = "Soundmole"
@@ -313,6 +316,9 @@ local search_fields = {
   { label = "Genre",            key = "genre",         enabled = false }, -- 流派
   { label = "Comment",          key = "comment",       enabled = false }, -- 注释
   { label = "Path",             key = "path",          enabled = false }, -- 路径
+  { label = "Category",         key = "ucs_category",    enabled = false }, -- UCS主分类
+  { label = "Subcategory",      key = "ucs_subcategory", enabled = false }, -- UCS子分类
+  { label = "CatID",            key = "ucs_catid",       enabled = false }, -- CatID
 }
 
 local EXT_KEY_SEARCH_FIELDS = "enabled_fields"
@@ -582,7 +588,10 @@ function CollectFromItems()
           description = description or "",
           bwf_orig_date = orig_date or "",
           size = size,
-          source = source
+          source = source,
+          ucs_category    = get_ucstag(source, "category"),
+          ucs_catid       = get_ucstag(source, "catId"),
+          ucs_subcategory = get_ucstag(source, "subCategory")
         }
         files_idx[#files_idx+1] = files[path]
       end
@@ -668,6 +677,9 @@ function CollectMediaItems()
       position = pos,
       section_offset = take_offset,
       section_length = take_length,
+      ucs_category    = get_ucstag(src, "category"),
+      ucs_catid       = get_ucstag(src, "catId"),
+      ucs_subcategory = get_ucstag(src, "subCategory"),
     })
     ::continue::
   end
@@ -757,6 +769,9 @@ function CollectFromRPP()
           track = track,
           track_name = track_name,
           position = pos,
+          ucs_category    = get_ucstag(source, "category"),
+          ucs_catid       = get_ucstag(source, "catId"),
+          ucs_subcategory = get_ucstag(source, "subCategory"),
         })
       end
     end
@@ -815,6 +830,9 @@ function CollectFromProjectDirectory()
           info.comment = comment or ""
           info.description = description or ""
           info.bwf_orig_date = orig_date or ""
+          info.ucs_category    = get_ucstag(src, "category")
+          info.ucs_catid       = get_ucstag(src, "catId")
+          info.ucs_subcategory = get_ucstag(src, "subCategory")
         end
         files[fullpath] = info
         files_idx[#files_idx+1] = info
@@ -891,6 +909,9 @@ function CollectFromCustomFolder(paths)
         position = 0,
         section_offset = 0,
         section_length = length,
+        ucs_category    = get_ucstag(src, "category"),
+        ucs_catid       = get_ucstag(src, "catId"),
+        ucs_subcategory = get_ucstag(src, "subCategory"),
       })
     end
     ::continue::
@@ -1770,6 +1791,9 @@ function CollectFromDirectory(dir_path)
           info.comment = comment or ""
           info.description = description or ""
           info.bwf_orig_date = orig_date or ""
+          info.ucs_category    = get_ucstag(src, "category")
+          info.ucs_catid       = get_ucstag(src, "catId")
+          info.ucs_subcategory = get_ucstag(src, "subCategory")
         end
         files[fullpath] = info
         files_idx[#files_idx+1] = info
@@ -2448,6 +2472,9 @@ function BuildFileInfoFromPath(path, filename)
       comment = _comment or ""
       description = _description or ""
       orig_date = _orig_date or ""
+      local ucs_category    = get_ucstag(src, "category")
+      local ucs_catid       = get_ucstag(src, "catId")
+      local ucs_subcategory = get_ucstag(src, "subCategory")
       reaper.PCM_Source_Destroy(src)
     end
   end
@@ -2476,6 +2503,9 @@ function BuildFileInfoFromPath(path, filename)
   info.comment = comment
   info.bwf_orig_date = orig_date
   info.section_length = length
+  info.ucs_category    = ucs_category
+  info.ucs_catid       = ucs_catid
+  info.ucs_subcategory = ucs_subcategory
 
   return info
 end
@@ -2874,7 +2904,7 @@ f:close()
 --   "Human, Speech, 1002"
 -- }
 
--- 从第2行开始解析。构建分类+子分类+CatID
+-- 从第2行开始解析。构建主分类+子分类+CatID
 local categories = {}
 for i = 2, #lines do
   local row = lines[i]
@@ -3307,6 +3337,9 @@ function loop()
     if reaper.ImGui_Button(ctx, "Restore All", 80, 48) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
       active_saved_search = nil
+      -- 清除临时搜索字段
+      temp_search_field = nil
+      temp_search_keyword = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
@@ -3812,15 +3845,23 @@ function loop()
                 cat_open_state[cat] = not is_open
               end
               reaper.ImGui_SameLine(ctx)
+              -- 发送UCS主分类关键词，隐式搜索
               if reaper.ImGui_Selectable(ctx, cat, false, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
-                -- reaper.ShowConsoleMsg("Clicked category: " .. cat .. "\n") -- 发送关键词
+                -- reaper.ImGui_TextFilter_Set(filename_filter, cat) -- 关闭发送关键词，隐式搜索
+                temp_search_field = "ucs_category" -- 指定本次只搜索主分类字段
+                temp_search_keyword = cat:lower()  -- 指定本次分类关键词（小写用于比较）
+                active_saved_search = nil
               end
 
               if is_open then
                 for _, entry in ipairs(filtered) do
                   reaper.ImGui_Indent(ctx, 28)
+                  -- 发送UCS子分类关键词，隐式搜索
                   if reaper.ImGui_Selectable(ctx, entry.name) then
-                    -- reaper.ShowConsoleMsg(("Selected: %s -> %s (ID: %s)\n"):format(cat, entry.name, entry.id)) -- 发送关键词
+                    -- reaper.ImGui_TextFilter_Set(filename_filter, entry.name) -- 关闭发送关键词，隐式搜索
+                    temp_search_field = "ucs_subcategory"    -- 指定本次只搜索子分类字段
+                    temp_search_keyword = entry.name:lower() -- 指定本次分类关键词（小写用于比较）
+                    active_saved_search = nil
                   end
                   reaper.ImGui_Unindent(ctx, 28)
                 end
@@ -4063,7 +4104,7 @@ function loop()
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     0xFF0F0F0F)
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", right_w, child_h, 0) then
-      if reaper.ImGui_BeginTable(ctx, "filelist", 14,
+      if reaper.ImGui_BeginTable(ctx, "filelist", 17,
         -- reaper.ImGui_TableFlags_RowBg() -- 表格背景交替颜色
         reaper.ImGui_TableFlags_Borders() -- 表格分隔线
         | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
@@ -4083,6 +4124,9 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Position",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.GENRE)
           reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.COMMENT)
           reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.DESCRIPTION)
+          reaper.ImGui_TableSetupColumn(ctx, "Category",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATEGORY)
+          reaper.ImGui_TableSetupColumn(ctx, "Subcategory", reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.SUBCATEGORY)
+          reaper.ImGui_TableSetupColumn(ctx, "CatID",       reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATID)
           reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, TableColumns.LENGTH)
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
@@ -4098,6 +4142,9 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Position",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.GENRE)
           reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.COMMENT)
           reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.DESCRIPTION)
+          reaper.ImGui_TableSetupColumn(ctx, "Category",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATEGORY)
+          reaper.ImGui_TableSetupColumn(ctx, "Subcategory", reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.SUBCATEGORY)
+          reaper.ImGui_TableSetupColumn(ctx, "CatID",       reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATID)
           reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, TableColumns.LENGTH)
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
@@ -4113,6 +4160,9 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Genre",       reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.GENRE)
           reaper.ImGui_TableSetupColumn(ctx, "Comment",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.COMMENT)
           reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.DESCRIPTION)
+          reaper.ImGui_TableSetupColumn(ctx, "Category",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATEGORY)
+          reaper.ImGui_TableSetupColumn(ctx, "Subcategory", reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.SUBCATEGORY)
+          reaper.ImGui_TableSetupColumn(ctx, "CatID",       reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATID)
           reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, TableColumns.LENGTH)
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
@@ -4346,8 +4396,13 @@ function loop()
             search_input_timer = math.huge -- 避免重复写入
           end
 
+          -- 临时用UCS主分类/子分类 以及 Saved Search 的关键词参与搜索，替代空输入。关键词不发送到搜索框
           local search_keyword = filter_text
-          if search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
+
+          -- 隐式搜索相关代码。优先使用UCS主分类/子分类关键词，否则使用保存搜索关键词
+          if temp_search_keyword then
+            search_keyword = temp_search_keyword
+          elseif search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
             search_keyword = saved_search_list[active_saved_search].keyword or ""
           end
 
@@ -4389,14 +4444,19 @@ function loop()
           end
 
           -- 合并所有要检索的内容，全部转小写
-          -- local target = ((info.filename or "") .. " " .. (info.description or "")):lower()
           local target = ""
-          for _, field in ipairs(search_fields) do
-            if field.enabled then
-              target = target .. " " .. (info[field.key] or "")
+          if temp_search_field then
+            -- 临时指定UCS主分类/子分类字段隐式搜索
+            target = (info[temp_search_field] or ""):lower()
+          else
+            -- 多字段关键词搜索
+            for _, field in ipairs(search_fields) do
+              if field.enabled then
+                target = target .. " " .. (info[field.key] or "")
+              end
             end
+            target = target:lower()
           end
-          target = target:lower()
 
           local match = false
 
@@ -5004,8 +5064,20 @@ function loop()
             --   PlayFromStart(info)
             -- end
 
-            -- Length
+            -- Category (UCS)
             reaper.ImGui_TableSetColumnIndex(ctx, 8)
+            reaper.ImGui_Text(ctx, info.ucs_category or "-")
+
+            -- Subcategory (UCS)
+            reaper.ImGui_TableSetColumnIndex(ctx, 9)
+            reaper.ImGui_Text(ctx, info.ucs_subcategory or "-")
+
+            -- CatID (UCS)
+            reaper.ImGui_TableSetColumnIndex(ctx, 10)
+            reaper.ImGui_Text(ctx, info.ucs_catid or "-")
+
+            -- Length
+            reaper.ImGui_TableSetColumnIndex(ctx, 11)
             local len_str = (info.length and info.length > 0) and reaper.format_timestr(info.length, "") or "-"
             reaper.ImGui_Text(ctx, len_str)
             
@@ -5015,7 +5087,7 @@ function loop()
             -- end
 
             -- Channels
-            reaper.ImGui_TableSetColumnIndex(ctx, 9)
+            reaper.ImGui_TableSetColumnIndex(ctx, 12)
             reaper.ImGui_Text(ctx, info.channels)
             -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
             -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
@@ -5023,7 +5095,7 @@ function loop()
             -- end
 
             -- Samplerate
-            reaper.ImGui_TableSetColumnIndex(ctx, 10)
+            reaper.ImGui_TableSetColumnIndex(ctx, 13)
             reaper.ImGui_Text(ctx, info.samplerate or "-") -- reaper.ImGui_Text(ctx, info.samplerate and (info.samplerate .. " Hz") or "-")
             -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
             -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
@@ -5031,7 +5103,7 @@ function loop()
             -- end
 
             -- Bits
-            reaper.ImGui_TableSetColumnIndex(ctx, 11)
+            reaper.ImGui_TableSetColumnIndex(ctx, 14)
             reaper.ImGui_Text(ctx, info.bits or "-")
             -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
             -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
@@ -5039,7 +5111,7 @@ function loop()
             -- end
 
             -- Group
-            reaper.ImGui_TableSetColumnIndex(ctx, 12)
+            reaper.ImGui_TableSetColumnIndex(ctx, 15)
             local group_names = GetCustomGroupsForPath(normalize_path(info.path, false))
             if group_names ~= "" then
               reaper.ImGui_Text(ctx, group_names)
@@ -5060,7 +5132,7 @@ function loop()
             end
 
             -- Path
-            reaper.ImGui_TableSetColumnIndex(ctx, 13)
+            reaper.ImGui_TableSetColumnIndex(ctx, 16)
             reaper.ImGui_Text(ctx, normalize_path(info.path or "", false))
             -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
             -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then

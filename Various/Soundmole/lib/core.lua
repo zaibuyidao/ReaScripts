@@ -41,3 +41,9 @@ function SaveSavedSearch(EXT_SECTION, saved_search_list)
   local str = table.concat(t, "|;|")
   reaper.SetExtState(EXT_SECTION, "saved_search_list", str, true)
 end
+
+-- UCS 标签
+function get_ucstag(source, tag)
+  local _, val = reaper.GetMediaFileMetadata(source, "ASWG:" .. tag)
+  return val or ""
+end

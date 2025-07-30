@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.9
+-- @version 1.0.10
 -- @changelog
---   Optimized the arrangement and spacing of interface sections.
---   Other detailed improvements and bug fixes.
+--   Added UCS columns to display Category, Subcategory, and CatID fields.
+--   Added UCS tab keyword search. Clicking a category or subcategory now instantly performs an implicit search for that field, with no manual input required.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
