@@ -164,7 +164,7 @@ function WriteToMediaDB(info, dbfile)
   local f = io.open(dbfile, "a+b")
   if not f then return end
   -- FILE行
-  f:write(('FILE "%s" %d\n'):format(info.path, info.size))
+  f:write(('FILE "%s" %d %s\n'):format(info.path, info.size, info.type))
   -- DATA基本属性行
   f:write(('DATA z:%d y:%s l:%s n:%s s:%s i:%s\n'):format(
     info.size or 0, info.bwf_orig_date or "", info.length or "", info.channels or "", info.samplerate or "", info.bits or ""
@@ -217,7 +217,7 @@ function ParseMediaDBFile(dbpath)
     if line:find("^FILE") then
       if entry.path then table.insert(entries, entry) end
       entry = {}
-      entry.path, entry.size = line:match('^FILE%s+"(.-)"%s+(%d+)')
+      entry.path, entry.size, entry.type = line:match('^FILE%s+"(.-)"%s+(%d+)%s+(%S+)$')
       entry.size = tonumber(entry.size) or 0
       if entry.path then
         entry.filename = entry.path:match("([^/\\]+)$") or entry.path
