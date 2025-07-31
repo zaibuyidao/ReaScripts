@@ -364,7 +364,11 @@ end
 function CacheFilename(filepath)
   filepath = normalize_path(filepath, false)
   local size = tostring(GetFileSize(filepath))
-  return cache_dir .. SimpleHash(filepath .. "@" .. size) .. ".wfc"
+  local hash = SimpleHash(filepath .. "@" .. size)
+  local subdir = hash:sub(1, 2) -- 取前两位，16进制00~ff
+  local dir = cache_dir .. subdir .. sep
+  EnsureCacheDir(dir) -- 确保子文件夹存在
+  return dir .. hash .. ".wfc"
 end
 
 -- 保存缓存
