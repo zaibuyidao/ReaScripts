@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.12
+-- @version 1.0.13
 -- @changelog
---   Optimized peak cache directory structure with hexadecimal subfolder distribution.
+--   Added Media Database feature. You can now create databases for quick access to your audio assets.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

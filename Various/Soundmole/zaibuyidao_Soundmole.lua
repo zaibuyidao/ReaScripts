@@ -129,7 +129,8 @@ local adv_folder_nodes_inited = false -- 是否已初始化高级文件夹节点
 local expanded_ids            = {}    -- 已展开的高级文件夹ID列表
 local shortcut_nodes_inited   = false -- 是否已初始化快捷方式节点的展开
 local expanded_paths          = {}    -- 已展开的文件夹路径表
--- 表格排序常量
+
+-- 表格排序常量，编号对应表格列
 local TableColumns = {
   FILENAME    = 2,
   SIZE        = 3,
@@ -174,6 +175,14 @@ if not cache_dir or cache_dir == "" then
 end
 cache_dir = normalize_path(cache_dir, true)
 EnsureCacheDir(cache_dir)
+-- SoundmoleDB 路径
+local DEFAULT_MEDIADB_DIR = script_path .. "SoundmoleDB" .. sep
+local mediadb_dir = reaper.GetExtState(EXT_SECTION, "soundmoledb_dir")
+if not mediadb_dir or mediadb_dir == "" then
+  mediadb_dir = DEFAULT_MEDIADB_DIR
+end
+mediadb_dir = normalize_path(mediadb_dir, true)
+EnsureCacheDir(mediadb_dir)
 
 -- 波形预览状态变量
 local wf_step = 400                    -- 波形预览步长
@@ -231,15 +240,16 @@ local last_row_height = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_TABLE_R
 if last_row_height then row_height = math.max(12, math.min(48, last_row_height)) end -- 内容行高限制范围
 
 -- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items, 4=This Computer, 5=Shortcuts）
-local collect_mode              = -1 -- -1 表示未设置
-local COLLECT_MODE_ITEMS        = 0
-local COLLECT_MODE_RPP          = 1
-local COLLECT_MODE_DIR          = 2
-local COLLECT_MODE_ALL_ITEMS    = 3
-local COLLECT_MODE_TREE         = 4
-local COLLECT_MODE_SHORTCUT     = 5
-local COLLECT_MODE_CUSTOMFOLDER = 6 -- 自定义文件夹模式
-local COLLECT_MODE_RECENTLY_PLAYED = 9 -- 最近播放模式
+collect_mode                 = -1 -- -1 表示未设置
+COLLECT_MODE_ITEMS           = 0
+COLLECT_MODE_RPP             = 1
+COLLECT_MODE_DIR             = 2
+COLLECT_MODE_ALL_ITEMS       = 3
+COLLECT_MODE_TREE            = 4
+COLLECT_MODE_SHORTCUT        = 5
+COLLECT_MODE_CUSTOMFOLDER    = 6 -- 自定义文件夹模式
+COLLECT_MODE_RECENTLY_PLAYED = 9 -- 最近播放模式
+COLLECT_MODE_MEDIADB         = 999  -- 数据库模式
 
 -- 设置相关
 local auto_play_selected  = true
@@ -356,9 +366,9 @@ end
 function SimpleHash(str)
   local hash = 0
   for i = 1, #str do
-    hash = (hash * 31 + str:byte(i)) % 2^32
+    hash = (hash * 31 + str:byte(i)) % 2^53
   end
-  return ("%08x"):format(hash)
+  return ("%013x"):format(hash)
 end
 
 function CacheFilename(filepath)
@@ -474,14 +484,6 @@ function GetPeaksWithCache(info, wf_step, pixel_cnt, start_time, end_time)
 end
 
 --------------------------------------------- 收集工程音频相关函数 ---------------------------------------------
-
--- 过滤音频文件
-function IsValidAudioFile(path)
-  local ext = path:match("%.([^.]+)$")
-  if not ext then return false end
-  ext = ext:lower()
-  return (ext == "wav" or ext == "mp3" or ext == "flac" or ext == "ogg" or ext == "aiff" or ext == "ape" or ext == "wv")
-end
 
 function GetItemSectionStartPos(item)
   local take = reaper.GetActiveTake(item)
@@ -1021,11 +1023,19 @@ function CollectFiles()
     files_idx_cache = CollectFromCustomFolder(paths)
     selected_row = nil
   elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then -- 高级文件夹模式
-      local folder_id = tree_state.cur_advanced_folder or ""
-      local folder = advanced_folders[folder_id]
-      local paths = (folder and folder.files) or {}
-      files_idx_cache = CollectFromCustomFolder(paths)
-      selected_row = nil
+    local folder_id = tree_state.cur_advanced_folder or ""
+    local folder = advanced_folders[folder_id]
+    local paths = (folder and folder.files) or {}
+    files_idx_cache = CollectFromCustomFolder(paths)
+    selected_row = nil
+  elseif collect_mode == COLLECT_MODE_MEDIADB then
+    local db_dir = normalize_path(script_path .. "SoundmoleDB", true) -- true 表示文件夹
+    local dbfile = tree_state.cur_mediadb or ""
+    files_idx_cache = {}
+    if dbfile ~= "" then
+      files_idx_cache = ParseMediaDBFile(db_dir .. sep .. dbfile)
+    end
+    selected_row = nil
   else
     files_idx_cache = {} -- collect_mode全部清空
   end
@@ -3028,6 +3038,17 @@ function LoadExitSettings()
     tree_state.cur_custom_folder = reaper.GetExtState(EXT_SECTION, "cur_custom_folder") or ""
   end
 
+  -- 恢复数据库模式
+  if collect_mode == COLLECT_MODE_MEDIADB then
+    local ext = reaper.GetExtState(EXT_SECTION, "soundmoledb_header_open")
+    if ext == "true" then
+      mediadb_open = true
+    else
+      mediadb_open = false
+    end
+    tree_state.cur_mediadb = reaper.GetExtState(EXT_SECTION, "cur_soundmoledb") or ""
+  end
+
   -- 恢复 Collections 模式
   if collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
     -- 折叠状态
@@ -3076,6 +3097,10 @@ function SaveExitSettings()
   elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
     reaper.SetExtState(EXT_SECTION, "group_header_open", tostring(group_open), true)
     reaper.SetExtState(EXT_SECTION, "cur_custom_folder", tree_state.cur_custom_folder or "", true)
+
+  elseif collect_mode == COLLECT_MODE_MEDIADB then
+    reaper.SetExtState(EXT_SECTION, "soundmoledb_header_open", tostring(mediadb_open), true)
+    reaper.SetExtState(EXT_SECTION, "cur_soundmoledb", tree_state.cur_mediadb or "", true)
 
   elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
     reaper.SetExtState(EXT_SECTION, "collections_header_open", tostring(collection_open), true)
@@ -3173,6 +3198,10 @@ if thesaurus_f then
   thesaurus_f:close()
 end
 
+--------------------------------------------- 数据库 ---------------------------------------------
+
+mediadb_alias = LoadMediaDBAlias(EXT_SECTION) -- 加载数据库别名
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -3264,7 +3293,7 @@ function loop()
 
     reaper.ImGui_Text(ctx, '') -- 换行占位符
     reaper.ImGui_SameLine(ctx, nil, 60)
-    reaper.ImGui_Text(ctx, 'Synonyms:')
+    reaper.ImGui_Text(ctx, 'Thesaurus:')
     reaper.ImGui_SameLine(ctx, nil, 10)
     local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "##Synonyms", use_synonyms)
     if changed_synonyms then
@@ -3379,6 +3408,28 @@ function loop()
       reaper.ImGui_Text(ctx, "Click to jump to this folder and list its audio files.")
       reaper.ImGui_EndTooltip(ctx)
     end
+
+    -- 创建数据库按钮
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    if reaper.ImGui_Button(ctx, "Database##scan_folder_top", 80, 48) then -- Select Folder and Scan Audio
+      local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
+      if rv == 1 and folder and folder ~= "" then
+        folder = normalize_path(folder, true)
+        local filelist = ScanAllAudioFiles(folder)
+        local db_dir = script_path .. "SoundmoleDB"
+        EnsureCacheDir(db_dir)
+        -- 获取下一个可用编号
+        local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
+        local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+        -- 采集元数据并写入具体数据库文件
+        for _, path in ipairs(filelist) do
+          local info = CollectFileInfo(path)
+          WriteToMediaDB(info, dbfile)
+        end
+        reaper.ShowMessageBox(("Found %d audio files.\nMetadata written to SoundmoleDB."):format(#filelist), "Scan Completed", 0)
+      end
+    end
+
     reaper.ImGui_EndGroup(ctx)
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
 
@@ -3497,7 +3548,7 @@ function loop()
               draw_shortcut_tree(folder_shortcuts[i])
             end
             -- 添加新快捷方式按钮
-            if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut") then
+            if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut", 140, 40) then
               local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
               if rv == 1 and folder and folder ~= "" then
                 folder = normalize_path(folder, true)
@@ -3544,7 +3595,7 @@ function loop()
                 -- reaper.ShowConsoleMsg("root_advanced_folders中的节点id="..id.."未在advanced_folders表找到\n")
               end
             end
-            if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder") then
+            if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder", 140, 40) then
               local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
               if ret and name and name ~= "" then
                 local new_id = new_guid()
@@ -3626,7 +3677,7 @@ function loop()
               end
             end
             -- 新建自定义文件夹按钮
-            if reaper.ImGui_Button(ctx, "Create Group##add_custom_folder") then
+            if reaper.ImGui_Button(ctx, "Create Group##add_custom_folder", 140, 40) then
               local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
               if ret and name and name ~= "" then
                 local exists = false
@@ -3638,6 +3689,92 @@ function loop()
                   custom_folders_content[name] = {}
                   SaveCustomFolders()
                 end
+              end
+            end
+            reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          -- 数据库节点
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+
+          local hdr_flags = mediadb_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local is_mediadb_open = reaper.ImGui_CollapsingHeader(ctx, "Database##dbfilelist", nil, hdr_flags)
+          mediadb_open = is_mediadb_open
+
+          reaper.ImGui_PopStyleColor(ctx)
+          if is_mediadb_open then
+            reaper.ImGui_Indent(ctx, 7)
+            local mediadb_files = {}
+            local db_dir = script_path .. "SoundmoleDB"
+            local i = 0
+            while true do
+              local dbfile = reaper.EnumerateFiles(db_dir, i)
+              if not dbfile then break end
+              if dbfile:match("%.MoleFileList$") then
+                table.insert(mediadb_files, dbfile)
+              end
+              i = i + 1
+            end
+
+            for _, dbfile in ipairs(mediadb_files) do
+              local alias = mediadb_alias[dbfile] or dbfile -- 优先显示别名
+              local is_selected = (collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile)
+              if reaper.ImGui_Selectable(ctx, alias, is_selected) then
+                collect_mode = COLLECT_MODE_MEDIADB
+                tree_state.cur_mediadb = dbfile
+                files_idx_cache = nil
+                CollectFiles()
+              end
+              -- 右键菜单
+              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+                reaper.ImGui_OpenPopup(ctx, "SoundmoleDBMenu_" .. dbfile)
+              end
+              if reaper.ImGui_BeginPopup(ctx, "SoundmoleDBMenu_" .. dbfile) then
+                if reaper.ImGui_MenuItem(ctx, "Rename") then
+                  local ret, newname = reaper.GetUserInputs("Rename DB", 1, "New Name:,extrawidth=180", mediadb_alias[dbfile] or dbfile)
+                  if ret and newname and newname ~= "" and newname ~= dbfile then
+                    mediadb_alias[dbfile] = newname
+                    SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+                  end
+                end
+                if reaper.ImGui_MenuItem(ctx, "Remove") then
+                  local res = reaper.ShowMessageBox(
+                    ("Are you sure you want to delete the database file:\n%s ?\n\nThis action cannot be undone."):format(dbfile),
+                    "Confirm Delete",
+                    4 -- 4 = Yes/No
+                  )
+                  if res == 6 then -- 6 = Yes
+                    -- 删除数据库文件本身
+                    local db_path = normalize_path(db_dir, true) .. dbfile
+                    os.remove(db_path)
+                    mediadb_alias[dbfile] = nil
+                    SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+                    if tree_state.cur_mediadb == dbfile then
+                      tree_state.cur_mediadb = ""
+                      files_idx_cache = {}
+                    end
+                  end
+                end
+                reaper.ImGui_EndPopup(ctx)
+              end
+            end
+            -- 数据库按钮
+            if reaper.ImGui_Button(ctx, "Create Database##scan_folder", 140, 40) then -- Select Folder and Scan Audio
+              local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
+              if rv == 1 and folder and folder ~= "" then
+                folder = normalize_path(folder, true)
+                local filelist = ScanAllAudioFiles(folder)
+                local db_dir = script_path .. "SoundmoleDB"
+                EnsureCacheDir(db_dir)
+                -- 获取下一个可用编号
+                local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
+                local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+                -- 采集元数据并写入具体数据库文件
+                for _, path in ipairs(filelist) do
+                  local info = CollectFileInfo(path)
+                  WriteToMediaDB(info, dbfile)
+                end
+                reaper.ShowMessageBox(("Found %d audio files.\nMetadata written to MediaDB."):format(#filelist), "Scan Completed", 0)
               end
             end
             reaper.ImGui_Unindent(ctx, 7)

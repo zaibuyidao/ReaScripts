@@ -2,6 +2,16 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
+local sep = package.config:sub(1, 1)
+
+-- 过滤音频文件
+function IsValidAudioFile(path)
+  local ext = path:match("%.([^.]+)$")
+  if not ext then return false end
+  ext = ext:lower()
+  return (ext == "wav" or ext == "mp3" or ext == "flac" or ext == "ogg" or ext == "aiff" or ext == "ape" or ext == "wv")
+end
+
 function split(str, sep)
   local result = {}
   local plain = true
@@ -15,6 +25,8 @@ function split(str, sep)
   table.insert(result, string.sub(str, start))
   return result
 end
+
+--------------------------------------------- 保存搜索关键词 ---------------------------------------------
 
 function LoadSavedSearch(EXT_SECTION, saved_search_list)
   saved_search_list = saved_search_list or {}
@@ -48,4 +60,194 @@ function get_ucstag(source, tag)
   local _, val = reaper.GetMediaFileMetadata(source, "ASWG:" .. tag)
   if not val or val == "" then return end
   return val
+end
+
+--------------------------------------------- 数据库 ---------------------------------------------
+
+mediadb_alias = mediadb_alias or {}
+
+function SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+  mediadb_alias = mediadb_alias or {}
+  local t = {}
+  for filename, alias in pairs(mediadb_alias) do
+    filename = (filename or ""):gsub("|;|", ""):gsub("||", "")
+    alias = (alias or ""):gsub("|;|", ""):gsub("||", "")
+    table.insert(t, filename .. "||" .. alias)
+  end
+  local str = table.concat(t, "|;|") or ""
+  reaper.SetExtState(EXT_SECTION, "moledb_alias", str, true)
+end
+
+function LoadMediaDBAlias(EXT_SECTION)
+  local alias_map = {}
+  local str = reaper.GetExtState(EXT_SECTION, "moledb_alias")
+  if not str or str == "" then return alias_map end
+  for _, item in ipairs(split(str, "|;|")) do
+    local filename, alias = item:match("^(.-)%|%|(.*)$")
+    if filename and filename ~= "" then
+      alias_map[filename] = alias
+    end
+  end
+  return alias_map
+end
+
+-- 递归扫描目录下所有音频文件
+function ScanAllAudioFiles(root_dir)
+  local files = {}
+  local function scan(dir)
+    local i = 0
+    while true do
+      local file = reaper.EnumerateFiles(dir, i)
+      if not file then break end
+      local fullpath = dir .. sep .. file
+      if IsValidAudioFile(fullpath) then
+        table.insert(files, normalize_path(fullpath, false))
+      end
+      i = i + 1
+    end
+    local j = 0
+    while true do
+      local subdir = reaper.EnumerateSubdirectories(dir, j)
+      if not subdir then break end
+      scan(dir .. sep .. subdir)
+      j = j + 1
+    end
+  end
+  scan(normalize_path(root_dir, false))
+  return files
+end
+
+-- 采集全部元数据
+function CollectFileInfo(path)
+  local info = { path = path }
+  local f = io.open(path, "rb")
+  if f then
+    f:seek("end")
+    info.size = f:seek()
+    f:close()
+  else
+    info.size = 0
+  end
+  local src = reaper.PCM_Source_CreateFromFile(path)
+  if src then
+    info.type = reaper.GetMediaSourceType(src, "")
+    info.length = reaper.GetMediaSourceLength(src) or ""
+    info.samplerate = reaper.GetMediaSourceSampleRate(src) or ""
+    info.channels = reaper.GetMediaSourceNumChannels(src) or ""
+    info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
+    local _, genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
+    local _, comment = reaper.GetMediaFileMetadata(src, "XMP:dm/logComment")
+    local _, description = reaper.GetMediaFileMetadata(src, "BWF:Description")
+    local _, orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
+    info.genre = genre or ""
+    info.comment = comment or ""
+    info.description = description or ""
+    info.bwf_orig_date = orig_date or ""
+    info.ucs_category    = get_ucstag and get_ucstag(src, "category") or ""
+    info.ucs_catid       = get_ucstag and get_ucstag(src, "catId") or ""
+    info.ucs_subcategory = get_ucstag and get_ucstag(src, "subCategory") or ""
+    reaper.PCM_Source_Destroy(src)
+  end
+  info.filename = path:match("[^/\\]+$") or path
+  return info
+end
+
+local function quote_if_space(str)
+  if str:find("%s") then
+    return '"' .. str .. '"'
+  else
+    return str
+  end
+end
+
+function WriteToMediaDB(info, dbfile)
+  local f = io.open(dbfile, "a+b")
+  if not f then return end
+  -- FILE行
+  f:write(('FILE "%s" %d\n'):format(info.path, info.size))
+  -- DATA基本属性行
+  f:write(('DATA z:%d y:%s l:%s n:%s s:%s i:%s\n'):format(
+    info.size or 0, info.bwf_orig_date or "", info.length or "", info.channels or "", info.samplerate or "", info.bits or ""
+  ))
+  -- DATA类别行
+  local ucs = {}
+  if info.genre ~= "" then table.insert(ucs, 'g:' .. quote_if_space(info.genre)) end
+  if info.ucs_category ~= "" then table.insert(ucs, 't:' .. quote_if_space(info.ucs_category)) end
+  if info.ucs_subcategory ~= "" then table.insert(ucs, 'u:' .. quote_if_space(info.ucs_subcategory)) end
+  if info.ucs_catid ~= "" then table.insert(ucs, 'a:' .. quote_if_space(info.ucs_catid)) end
+  if #ucs > 0 then f:write('DATA ' .. table.concat(ucs, " ") .. '\n') end
+  -- DATA描述行
+  if info.comment ~= "" or info.description ~= "" then
+    f:write(('DATA c:"%s" d:"%s"\n'):format(info.comment or "", info.description or ""))
+  end
+  f:close()
+end
+
+-- 获取下一个可用编号
+function GetNextMediaDBIndex(db_dir)
+  local max_index = -1
+  for i = 0, 255 do
+    local prefix = ("%02x"):format(i)
+    local dbfile = string.format("%s/%s.MoleFileList", db_dir, prefix)
+    local f = io.open(dbfile, "rb")
+    if f then
+      max_index = i
+      f:close()
+    end
+  end
+  return ("%02x"):format(max_index + 1)
+end
+
+function BuildMediaDB(root_dir, db_dir)
+  local filelist = ScanAllAudioFiles(root_dir)
+  local db_index = GetNextMediaDBIndex(db_dir) -- 例如"00"
+  local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+  for _, path in ipairs(filelist) do
+    local info = CollectFileInfo(path)
+    WriteToMediaDB(info, dbfile)
+  end
+end
+
+function ParseMediaDBFile(dbpath)
+  local entries = {}
+  local f = io.open(dbpath, "rb")
+  if not f then return entries end
+  local entry = {}
+  for line in f:lines() do
+    if line:find("^FILE") then
+      if entry.path then table.insert(entries, entry) end
+      entry = {}
+      entry.path, entry.size = line:match('^FILE%s+"(.-)"%s+(%d+)')
+      entry.size = tonumber(entry.size) or 0
+      if entry.path then
+        entry.filename = entry.path:match("([^/\\]+)$") or entry.path
+      else
+        entry.filename = ""
+      end
+    elseif line:find("^DATA") then
+      -- 分类行
+      if line:find("g:") or line:find("t:") or line:find("u:") or line:find("a:") then
+        entry.genre = line:match('g:([^%s]+)') or ""
+        entry.ucs_category = line:match('t:([^%s]+)') or ""
+        entry.ucs_subcategory = line:match('u:([^%s]+)') or ""
+        entry.ucs_catid = line:match('a:([^%s]+)') or ""
+      -- 描述行
+      elseif line:find('c:') or line:find('d:') then
+        entry.comment = line:match('c:"(.-)"') or ""
+        entry.description = line:match('d:"(.-)"') or ""
+      else
+        -- 属性行
+        entry.bwf_orig_date = line:match('y:([%d%-]+)') or ""
+        entry.length = tonumber(line:match('l:([%d%.]+)')) or 0
+        entry.channels = tonumber(line:match('n:(%d+)')) or 0
+        entry.samplerate = tonumber(line:match('s:(%d+)')) or 0
+        entry.bits = tonumber(line:match('i:(%d+)')) or 0
+      end
+      entry.data = entry.data or {}
+      table.insert(entry.data, line)
+    end
+  end
+  if entry.path then table.insert(entries, entry) end
+  f:close()
+  return entries
 end
