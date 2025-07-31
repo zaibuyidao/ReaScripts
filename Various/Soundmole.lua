@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.11
+-- @version 1.0.12
 -- @changelog
 --   Optimized peak cache directory structure with hexadecimal subfolder distribution.
+--   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

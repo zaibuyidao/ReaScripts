@@ -44,6 +44,8 @@ end
 
 -- UCS 标签
 function get_ucstag(source, tag)
+  if not source then return end
   local _, val = reaper.GetMediaFileMetadata(source, "ASWG:" .. tag)
-  return val or ""
+  if not val or val == "" then return end
+  return val
 end
