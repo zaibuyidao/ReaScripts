@@ -3200,6 +3200,7 @@ end
 
 --------------------------------------------- 数据库 ---------------------------------------------
 
+db_build_task = nil
 mediadb_alias = LoadMediaDBAlias(EXT_SECTION) -- 加载数据库别名
 
 function loop()
@@ -3421,19 +3422,13 @@ function loop()
         -- 获取下一个可用编号
         local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
         local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
-        -- 采集元数据并写入具体数据库文件
-        for _, path in ipairs(filelist) do
-          local info = CollectFileInfo(path)
-          WriteToMediaDB(info, dbfile)
-          -- 生成波形缓存
-          local pixel_cnt = 2048 -- 生成波形宽度(像素)
-          local start_time, end_time = 0, tonumber(info.length) or 0
-          local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
-          if peaks and src_len and channel_count then
-            SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
-          end
-        end
-        reaper.ShowMessageBox(("Found %d audio files.\nMetadata written to SoundmoleDB."):format(#filelist), "Scan Completed", 0)
+        db_build_task = {
+          filelist = filelist,
+          dbfile = dbfile,
+          idx = 1,
+          total = #filelist,
+          finished = false,
+        }
       end
     end
 
@@ -3776,19 +3771,13 @@ function loop()
                 -- 获取下一个可用编号
                 local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
                 local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
-                -- 采集元数据并写入具体数据库文件
-                for _, path in ipairs(filelist) do
-                  local info = CollectFileInfo(path)
-                  WriteToMediaDB(info, dbfile)
-                  -- 生成波形缓存
-                  local pixel_cnt = 2048 -- 生成波形宽度(像素)
-                  local start_time, end_time = 0, tonumber(info.length) or 0
-                  local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
-                  if peaks and src_len and channel_count then
-                    SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
-                  end
-                end
-                reaper.ShowMessageBox(("Found %d audio files.\nMetadata written to MediaDB."):format(#filelist), "Scan Completed", 0)
+                db_build_task = {
+                  filelist = filelist,
+                  dbfile = dbfile,
+                  idx = 1,
+                  total = #filelist,
+                  finished = false,
+                }
               end
             end
             reaper.ImGui_Unindent(ctx, 7)
@@ -4528,16 +4517,35 @@ function loop()
           _G.scroll_target = 0.5 -- 0.0=顶部
         end
 
-        for i, info in ipairs(files_idx_cache) do
-          -- 过滤关键词旧版本备份
-          -- local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
-          -- -- 拆分为多个关键词
-          -- local keywords = {}
-          -- for word in filter_text:gmatch("%S+") do
-          --   keywords[#keywords+1] = word:lower()
-          -- end
+        -- 手动裁剪只遍历可视行，避免遍历整个完整列表而造成卡顿
+        local scroll_y = reaper.ImGui_GetScrollY(ctx)
+        local row_h    = row_height
+        local hdr_h    = reaper.ImGui_GetTextLineHeight(ctx) -- 表头行高
+        local total    = #files_idx_cache
+        local first    = math.max(0, math.floor(scroll_y / row_h))
+        local vis      = math.ceil((child_h - hdr_h) / row_h)
+        local last     = math.min(total - 1, first + vis)
+        -- 顶部隐藏行占位
+        if first > 0 then
+          reaper.ImGui_TableNextRow(ctx, 0, first * row_h)
+          reaper.ImGui_TableNextColumn(ctx)
+          reaper.ImGui_Dummy(ctx, -1, first * row_h)
+        end
 
-          -- 过滤关键词新版 - 与保存搜索关键词深度绑定
+        -- 清空表格峰值波形队列，只给可视行入队
+        waveform_task_queue = {}
+        for idx = first, last do
+          local info = files_idx_cache[idx + 1]
+          local tw = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+          info._thumb_waveform = info._thumb_waveform or {}
+          if not info._thumb_waveform[tw] then
+            EnqueueWaveformTask(info, tw)
+          end
+        end
+
+        for i = first, last do
+          local info = files_idx_cache[i + 1]
+          -- 过滤关键词 - 与保存搜索关键词深度绑定
           local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
 
           -- 自动保存最近搜索关键词
@@ -5327,6 +5335,15 @@ function loop()
             auto_play_next_pending = nil
           end
         end
+
+        -- 底部隐藏行占位
+        local tail = total - last - 1
+        if tail > 0 then
+          reaper.ImGui_TableNextRow(ctx, 0, tail * row_h)
+          reaper.ImGui_TableNextColumn(ctx)
+          reaper.ImGui_Dummy(ctx, -1, tail * row_h)
+        end
+        -- ProcessWaveformTasks() -- 如果表格列表波形加载异常，尝试启用并注释掉另一个。
 
         reaper.ImGui_PopFont(ctx) -- 内容字体自由缩放
         reaper.ImGui_EndTable(ctx)
@@ -6899,6 +6916,62 @@ function loop()
     -- 调整旋钮鼠标意外落到波形预览区时播放光标变成鼠标光标，防止状态卡住
     if not reaper.ImGui_IsAnyItemActive(ctx) then
       is_knob_dragging = false
+    end
+
+    -- 显示数据库构建进度
+    if db_build_task and not db_build_task.finished then
+      reaper.ImGui_OpenPopup(ctx, "Database Build Progress")
+    end
+    if reaper.ImGui_BeginPopupModal(ctx, "Database Build Progress", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+      local idx = db_build_task.idx
+      local total = db_build_task.total
+      local percent = (idx - 1) / math.max(1, total)
+
+      if db_build_task.aborted then
+        -- 被中断时弹窗内容
+        reaper.ImGui_Text(ctx, "Database build aborted!")
+        reaper.ImGui_Text(ctx, string.format("Processed: %d / %d", idx - 1, total))
+        if reaper.ImGui_Button(ctx, "OK") then
+          db_build_task = nil
+          reaper.ImGui_CloseCurrentPopup(ctx)
+        end
+
+      elseif db_build_task.finished then
+        -- 正常完成时弹窗内容
+        reaper.ImGui_Text(ctx, "Database build complete!")
+        reaper.ImGui_Text(ctx, string.format("Total files: %d", total))
+        reaper.ImGui_Text(ctx, string.format("Processed: %d", idx - 1))
+        if reaper.ImGui_Button(ctx, "OK") then
+          db_build_task = nil
+          reaper.ImGui_CloseCurrentPopup(ctx)
+        end
+
+      else
+        -- 构建中弹窗内容
+        reaper.ImGui_Text(ctx, "Generating waveform cache and collecting metadata...")
+        reaper.ImGui_ProgressBar(ctx, percent, -1, 20, string.format("%d / %d", idx-1, total))
+        if reaper.ImGui_Button(ctx, "Abort") then
+          db_build_task.aborted = true
+        end
+
+        if idx <= total then
+          local path = db_build_task.filelist[idx]
+          local info = CollectFileInfo(path)
+          WriteToMediaDB(info, db_build_task.dbfile)
+          local pixel_cnt = 2048
+          --local wf_step = 512
+          local start_time, end_time = 0, tonumber(info.length) or 0
+          local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
+          if peaks and src_len and channel_count then
+            SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
+          end
+          db_build_task.idx = db_build_task.idx + 1
+        else
+          db_build_task.finished = true
+        end
+      end
+
+      reaper.ImGui_EndPopup(ctx)
     end
 
     reaper.ImGui_PopStyleVar(ctx, 6) -- ImGui_End 内 6 次圆角

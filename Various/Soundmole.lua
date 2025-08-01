@@ -1,8 +1,11 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.16
+-- @version 1.0.17
 -- @changelog
---   Added Media Database feature. You can now create databases for quick access to your audio assets.
+--   Added database build progress popup, showing creation progress and supporting interruption.
+--   Fixed lag when scrolling and playing back large audio lists.
+--   Render only visible rows to dramatically improve table responsiveness.
+--   On-demand waveform loading prioritizes rendering in view.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
