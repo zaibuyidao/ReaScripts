@@ -4522,20 +4522,20 @@ function loop()
         local row_h    = row_height
         local hdr_h    = reaper.ImGui_GetTextLineHeight(ctx) -- 表头行高
         local total    = #files_idx_cache
-        local first    = math.max(0, math.floor(scroll_y / row_h))
+        local first    = math.max(0, math.floor(scroll_y / row_h) + 1)
         local vis      = math.ceil((child_h - hdr_h) / row_h)
-        local last     = math.min(total - 1, first + vis)
+        local last     = math.min(total - 1, first + vis - 1)
         -- 顶部隐藏行占位
         if first > 0 then
-          reaper.ImGui_TableNextRow(ctx, 0, first * row_h)
+          reaper.ImGui_TableNextRow(ctx, 0, (first - 1) * row_h)
           reaper.ImGui_TableNextColumn(ctx)
-          reaper.ImGui_Dummy(ctx, -1, first * row_h)
+          reaper.ImGui_Dummy(ctx, -1, (first - 1) * row_h)
         end
 
         -- 清空表格峰值波形队列，只给可视行入队
         waveform_task_queue = {}
         for idx = first, last do
-          local info = files_idx_cache[idx + 1]
+          local info = files_idx_cache[idx]
           local tw = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
           info._thumb_waveform = info._thumb_waveform or {}
           if not info._thumb_waveform[tw] then
@@ -4544,7 +4544,7 @@ function loop()
         end
 
         for i = first, last do
-          local info = files_idx_cache[i + 1]
+          local info = files_idx_cache[i]
           -- 过滤关键词 - 与保存搜索关键词深度绑定
           local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
 

@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.17
+-- @version 1.0.18
 -- @changelog
 --   Added database build progress popup, showing creation progress and supporting interruption.
 --   Fixed lag when scrolling and playing back large audio lists.
