@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.15
+-- @version 1.0.16
 -- @changelog
 --   Added Media Database feature. You can now create databases for quick access to your audio assets.
 --   Other detailed improvements and bug fixes.

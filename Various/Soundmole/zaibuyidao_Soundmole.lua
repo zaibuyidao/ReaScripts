@@ -3425,6 +3425,13 @@ function loop()
         for _, path in ipairs(filelist) do
           local info = CollectFileInfo(path)
           WriteToMediaDB(info, dbfile)
+          -- 生成波形缓存
+          local pixel_cnt = 2048 -- 生成波形宽度(像素)
+          local start_time, end_time = 0, tonumber(info.length) or 0
+          local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
+          if peaks and src_len and channel_count then
+            SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
+          end
         end
         reaper.ShowMessageBox(("Found %d audio files.\nMetadata written to SoundmoleDB."):format(#filelist), "Scan Completed", 0)
       end
@@ -3773,6 +3780,13 @@ function loop()
                 for _, path in ipairs(filelist) do
                   local info = CollectFileInfo(path)
                   WriteToMediaDB(info, dbfile)
+                  -- 生成波形缓存
+                  local pixel_cnt = 2048 -- 生成波形宽度(像素)
+                  local start_time, end_time = 0, tonumber(info.length) or 0
+                  local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
+                  if peaks and src_len and channel_count then
+                    SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
+                  end
                 end
                 reaper.ShowMessageBox(("Found %d audio files.\nMetadata written to MediaDB."):format(#filelist), "Scan Completed", 0)
               end
