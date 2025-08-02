@@ -3548,12 +3548,14 @@ function loop()
         -- 获取下一个可用编号
         local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
         local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+        local alias_name = folder:match("([^/\\]+)[/\\]?$") or "Unnamed"
         db_build_task = {
           filelist = filelist,
           dbfile = dbfile,
           idx = 1,
           total = #filelist,
           finished = false,
+          alias = alias_name,
         }
       end
     end
@@ -3897,12 +3899,14 @@ function loop()
                 -- 获取下一个可用编号
                 local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
                 local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+                local alias_name = folder:match("([^/\\]+)[/\\]?$") or "Unnamed"
                 db_build_task = {
                   filelist = filelist,
                   dbfile = dbfile,
                   idx = 1,
                   total = #filelist,
                   finished = false,
+                  alias = alias_name,
                 }
               end
             end
@@ -6982,6 +6986,10 @@ function loop()
         reaper.ImGui_Text(ctx, string.format("Total files: %d", total))
         reaper.ImGui_Text(ctx, string.format("Processed: %d", idx - 1))
         if reaper.ImGui_Button(ctx, "OK") then
+          local filename = db_build_task.dbfile:match("[^/\\]+$")
+          mediadb_alias[filename] = db_build_task.alias or "Unnamed"
+          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+          
           db_build_task = nil
           reaper.ImGui_CloseCurrentPopup(ctx)
         end

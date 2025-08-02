@@ -1,9 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.20
+-- @version 1.0.21
 -- @changelog
 --   Added support for shortcut Q to add samples to the selected track's RS5K plugin.
 --   Added support for loading samples into RS5K plugin via right-click menu.
+--   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
