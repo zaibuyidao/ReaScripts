@@ -251,3 +251,40 @@ function ParseMediaDBFile(dbpath)
   f:close()
   return entries
 end
+
+--------------------------------------------- RS5K ---------------------------------------------
+
+function GetOrCreateRS5k(track)
+  if not track then return nil end
+  local cnt = reaper.TrackFX_GetCount(track)
+  for i = 0, cnt-1 do
+    local _, name = reaper.TrackFX_GetFXName(track, i, "")
+    if name:find("RS5K") then
+      return i
+    end
+  end
+  return reaper.TrackFX_AddByName(track, "ReaSamplOmatic5000 (Cockos)", false, 1)
+end
+
+-- 往选中轨道的 RS5k 依次添加样本
+function LoadAudioToRS5k(track, path)
+  if not track or not path or path == "" then return end
+  local fx = GetOrCreateRS5k(track)
+  if not fx or fx < 0 then return end
+  -- 找第一个空槽，最多16槽
+  local slot = 0
+  while slot < 16 do
+    local param = ("FILE%d"):format(slot)
+    local val = reaper.TrackFX_GetNamedConfigParm(track, fx, param)
+    if not val or val == "" then break end
+    slot = slot + 1
+  end
+
+  if slot >= 16 then
+    reaper.ShowMessageBox("RS5k sample slots full", "Warning", 0)
+  else
+    local param = ("FILE%d"):format(slot)
+    reaper.TrackFX_SetNamedConfigParm(track, fx, param, path)
+    reaper.TrackFX_SetOpen(track, fx, true)
+  end
+end

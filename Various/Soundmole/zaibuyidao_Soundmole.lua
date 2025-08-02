@@ -5049,6 +5049,12 @@ function loop()
               reaper.ImGui_OpenPopup(ctx, popup_id)
             end
 
+            -- 快捷键将样本插入到RS5K
+            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Q()) then
+              local tr = reaper.GetSelectedTrack(0, 0)
+              LoadAudioToRS5k(tr, info.path)
+            end
+
             if reaper.ImGui_BeginPopup(ctx, popup_id) then
               -- 右键打开文件所在目录
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
@@ -5059,6 +5065,15 @@ function loop()
                 end
               end
               reaper.ImGui_PopStyleColor(ctx, 1)
+              
+              -- 右键加载到RS5k
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
+                if reaper.ImGui_MenuItem(ctx, "Load to RS5k (Q)") then
+                  local tr = reaper.GetSelectedTrack(0, 0)
+                  LoadAudioToRS5k(tr, info.path)
+                end
+              reaper.ImGui_PopStyleColor(ctx, 1)
+
               reaper.ImGui_EndPopup(ctx)
             end
           end

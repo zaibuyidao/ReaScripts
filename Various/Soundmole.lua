@@ -1,11 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.19
+-- @version 1.0.20
 -- @changelog
---   Corrected waveform rendering discrepancies so that displayed waveforms now accurately reflect the underlying audio data.
---   Fixed an index mismatch in the filtering and sorting logic to ensure click, playback, and random-play actions always target the intended visible item.
---   A visual progress bar has been added during the database creation process to display indexing and import progress in real time.
---   Other detailed improvements and bug fixes.
+--   Added support for shortcut Q to add samples to the selected track's RS5K plugin.
+--   Added support for loading samples into RS5K plugin via right-click menu.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
