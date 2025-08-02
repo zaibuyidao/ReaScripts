@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="20c9568e25ad9a9fdfb798a312091cd336e26814">
+<index version="1" name="zaibuyidao Scripts" commit="4041843baed82c62942e2edb886cef2b9abe81ae">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14290,6 +14290,17 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/20c9568e25ad9a9fdfb798a312091cd336e26814/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/20c9568e25ad9a9fdfb798a312091cd336e26814/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/20c9568e25ad9a9fdfb798a312091cd336e26814/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.19" author="zaibuyidao" time="2025-08-02T13:47:42Z">
+        <changelog><![CDATA[Corrected waveform rendering discrepancies so that displayed waveforms now accurately reflect the underlying audio data.
+Fixed an index mismatch in the filtering and sorting logic to ensure click, playback, and random-play actions always target the intended visible item.
+A visual progress bar has been added during the database creation process to display indexing and import progress in real time.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/4041843baed82c62942e2edb886cef2b9abe81ae/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/4041843baed82c62942e2edb886cef2b9abe81ae/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/4041843baed82c62942e2edb886cef2b9abe81ae/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/4041843baed82c62942e2edb886cef2b9abe81ae/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/4041843baed82c62942e2edb886cef2b9abe81ae/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
