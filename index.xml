@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9253b5cc0ed8275d95cbde5fd26f09d3c87a6497">
+<index version="1" name="zaibuyidao Scripts" commit="fcbf5f7e62058d3c47d31ba10dcf08e28c1762be">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14320,6 +14320,16 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/9253b5cc0ed8275d95cbde5fd26f09d3c87a6497/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/9253b5cc0ed8275d95cbde5fd26f09d3c87a6497/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/9253b5cc0ed8275d95cbde5fd26f09d3c87a6497/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.22" author="zaibuyidao" time="2025-08-02T17:42:42Z">
+        <changelog><![CDATA[Added support for shortcut Q to add samples to the selected track's RS5K plugin.
+Added support for loading samples into RS5K plugin via right-click menu.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/fcbf5f7e62058d3c47d31ba10dcf08e28c1762be/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/fcbf5f7e62058d3c47d31ba10dcf08e28c1762be/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/fcbf5f7e62058d3c47d31ba10dcf08e28c1762be/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/fcbf5f7e62058d3c47d31ba10dcf08e28c1762be/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/fcbf5f7e62058d3c47d31ba10dcf08e28c1762be/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
