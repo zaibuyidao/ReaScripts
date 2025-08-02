@@ -1,11 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.18
+-- @version 1.0.19
 -- @changelog
---   Added database build progress popup, showing creation progress and supporting interruption.
---   Fixed lag when scrolling and playing back large audio lists.
---   Render only visible rows to dramatically improve table responsiveness.
---   On-demand waveform loading prioritizes rendering in view.
+--   Corrected waveform rendering discrepancies so that displayed waveforms now accurately reflect the underlying audio data.
+--   Fixed an index mismatch in the filtering and sorting logic to ensure click, playback, and random-play actions always target the intended visible item.
+--   A visual progress bar has been added during the database creation process to display indexing and import progress in real time.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
