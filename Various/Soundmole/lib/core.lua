@@ -227,10 +227,14 @@ function ParseMediaDBFile(dbpath)
     elseif line:find("^DATA") then
       -- 分类行
       if line:find("g:") or line:find("t:") or line:find("u:") or line:find("a:") then
-        entry.genre = line:match('g:([^%s]+)') or ""
-        entry.ucs_category = line:match('t:([^%s]+)') or ""
-        entry.ucs_subcategory = line:match('u:([^%s]+)') or ""
-        entry.ucs_catid = line:match('a:([^%s]+)') or ""
+        local gq = line:match('g:"(.-)"')
+        entry.genre = gq or line:match('g:([^%s]+)') or ""
+        local tq = line:match('t:"(.-)"')
+        entry.ucs_category = tq or line:match('t:([^%s]+)') or ""
+        local uq = line:match('u:"(.-)"')
+        entry.ucs_subcategory = uq or line:match('u:([^%s]+)') or ""
+        local aq = line:match('a:"(.-)"')
+        entry.ucs_catid = aq or line:match('a:([^%s]+)') or ""
       -- 描述行
       elseif line:find('c:') or line:find('d:') then
         entry.comment = line:match('c:"(.-)"') or ""
