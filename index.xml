@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fcbf5f7e62058d3c47d31ba10dcf08e28c1762be">
+<index version="1" name="zaibuyidao Scripts" commit="9aec24662b5d81f72f3a492519a241b9ba43bc1a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14330,6 +14330,19 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/fcbf5f7e62058d3c47d31ba10dcf08e28c1762be/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/fcbf5f7e62058d3c47d31ba10dcf08e28c1762be/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/fcbf5f7e62058d3c47d31ba10dcf08e28c1762be/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.23" author="zaibuyidao" time="2025-08-03T09:16:08Z">
+        <changelog><![CDATA[Hold Shift and click to select a continuous range in the file list and drag it into Group, Collections, or Database.
+In the Database Mode, use the context menu to remove all selected audio files in one operation.
+In the Collections Mode, use the context menu to remove all selected audio files at once.
+In the Group Mode, bulk add or remove tags for all selected items.
+On database refresh, only new entries are loaded, avoiding a full re-read of the .MoleFileList.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/9aec24662b5d81f72f3a492519a241b9ba43bc1a/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/9aec24662b5d81f72f3a492519a241b9ba43bc1a/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/9aec24662b5d81f72f3a492519a241b9ba43bc1a/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/9aec24662b5d81f72f3a492519a241b9ba43bc1a/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/9aec24662b5d81f72f3a492519a241b9ba43bc1a/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
