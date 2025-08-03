@@ -160,9 +160,15 @@ local function quote_if_space(str)
   end
 end
 
-function WriteToMediaDB(info, dbfile)
+function WriteToMediaDB(info, dbfile, root_path)
   local f = io.open(dbfile, "a+b")
   if not f then return end
+  -- PATH，写入ROOT路径
+  local pos = f:seek("end")
+  if pos == 0 and root_path then
+    f:write(('PATH "%s"\n'):format(root_path))
+  end
+
   -- FILE行
   f:write(('FILE "%s" %d %s\n'):format(info.path, info.size, info.type))
   -- DATA基本属性行
@@ -254,6 +260,24 @@ function ParseMediaDBFile(dbpath)
   if entry.path then table.insert(entries, entry) end
   f:close()
   return entries
+end
+
+function RemoveFromMediaDB(path, dbfile)
+  local tmp = {}
+  local keep = true
+  for line in io.lines(dbfile) do
+    -- 当遇到 FILE 行且路径匹配时，切换到跳过状态
+    if line:match('^FILE%s+"(.-)"') == path then
+      keep = false
+    elseif line:find("^FILE") then
+      keep = true
+    end
+    if keep then table.insert(tmp, line) end
+  end
+  -- 写回文件
+  local f = io.open(dbfile, "wb")
+  for _, l in ipairs(tmp) do f:write(l, "\n") end
+  f:close()
 end
 
 --------------------------------------------- RS5K ---------------------------------------------

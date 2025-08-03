@@ -129,6 +129,8 @@ local adv_folder_nodes_inited = false -- 是否已初始化高级文件夹节点
 local expanded_ids            = {}    -- 已展开的高级文件夹ID列表
 local shortcut_nodes_inited   = false -- 是否已初始化快捷方式节点的展开
 local expanded_paths          = {}    -- 已展开的文件夹路径表
+local file_select_start       = nil   -- 音频文件列多选起点
+local file_select_end         = nil   -- 音频文件列多选结束
 
 -- 表格排序常量，编号对应表格列
 local TableColumns = {
@@ -995,6 +997,11 @@ function MergeUsagesBySection(files_idx)
 end
 
 function CollectFiles()
+-- 切模式时清空文件列表多选/主选中
+  file_select_start = nil
+  file_select_end   = nil
+  selected_row      = nil
+
   if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
     current_recent_play_info = nil
     selected_recent_row = 0 -- 清空最近播放选中项
@@ -2080,9 +2087,10 @@ end
 
 --------------------------------------------- 自定义文件夹节点 ---------------------------------------------
 
-local EXT_KEY_CUSTOM_CONTENT = "group_content"
-custom_folders = custom_folders or {} -- { "monster", "bgm", ... }
-custom_folders_content = custom_folders_content or {} -- { ["monster"] = { path1, path2 }, ... }
+EXT_KEY_CUSTOM_CONTENT = "group_content"
+custom_folders = custom_folders or {}
+custom_folders_content = custom_folders_content or {}
+group_select_start = nil
 
 function SaveCustomFolders()
   local segments = {}
@@ -2199,42 +2207,111 @@ function GetCustomGroupsForPath(path)
   return table.concat(groups, ", ")
 end
 
-function ShowGroupMenu(info)
-  -- 获取所有 group 名称
-  for _, group_name in ipairs(custom_folders or {}) do
-    local in_group = false
-    for _, path in ipairs(custom_folders_content[group_name] or {}) do
-      if normalize_path(path, false) == normalize_path(info.path, false) then
-        in_group = true
-        break
+function ShowGroupMenu(infos)
+  -- 对每个已有分组，统计在选中列表中有多少条已属于此组
+  for _, group_name in ipairs(custom_folders) do
+    local count_in = 0
+    for _, info in ipairs(infos) do
+      for _, p in ipairs(custom_folders_content[group_name] or {}) do
+        if normalize_path(p,false)==normalize_path(info.path, false) then
+          count_in = count_in + 1
+          break
+        end
       end
     end
-    -- 显示菜单项，已属于则带勾
-    if reaper.ImGui_MenuItem(ctx, group_name, nil, in_group) then
-      if in_group then
-        -- 如果已属于，点击则移除
-        for i, p in ipairs(custom_folders_content[group_name]) do
-          if normalize_path(p, false) == normalize_path(info.path, false) then
-            table.remove(custom_folders_content[group_name], i)
-            break
+
+    -- 判断全选、部分、未选
+    local all_in  = (count_in == #infos)
+    local some_in = (count_in > 0 and count_in < #infos)
+    local checked = all_in
+
+    -- 部分选中时加后缀提示
+    local label = group_name
+    if some_in then label = label .. " (partial)" end
+
+    if reaper.ImGui_MenuItem(ctx, label, nil, checked) then
+      if all_in then
+        -- 全部移除
+        for _, info in ipairs(infos) do
+          local path = normalize_path(info.path,false)
+          for idx,p in ipairs(custom_folders_content[group_name]) do
+            if p == path then
+              table.remove(custom_folders_content[group_name], idx)
+              break
+            end
           end
         end
       else
-        -- 如果未属于，点击则加入
-        table.insert(custom_folders_content[group_name], normalize_path(info.path, false))
+        -- 未全选时添加所有未在组内的
+        for _, info in ipairs(infos) do
+          local path = normalize_path(info.path, false)
+          local exists = false
+          for _, p in ipairs(custom_folders_content[group_name]) do
+            if p == path then exists = true break end
+          end
+          if not exists then
+            table.insert(custom_folders_content[group_name], path)
+          end
+        end
       end
       SaveCustomFolders()
     end
   end
-  -- 菜单底部提供新建分组功能
+
   reaper.ImGui_Separator(ctx)
+
+  -- 创建新组
   if reaper.ImGui_MenuItem(ctx, "Create Group...") then
     local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
     if ret and name and name ~= "" then
+      -- 新增分组并一次性插入所有选中路径
       table.insert(custom_folders, name)
       custom_folders_content[name] = {}
-      table.insert(custom_folders_content[name], normalize_path(info.path, false))
+      for _, info in ipairs(infos) do
+        table.insert(custom_folders_content[name], normalize_path(info.path, false))
+      end
       SaveCustomFolders()
+    end
+  end
+end
+
+function handle_group_click(idx, folder)
+  local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
+  if shift then
+    if not group_select_start then group_select_start = idx end
+    local a, b = math.min(group_select_start, idx), math.max(group_select_start, idx)
+    -- 强制刷新列表并显示第一个被选中的组
+    tree_state.cur_custom_folder = custom_folders[a]
+    collect_mode = COLLECT_MODE_CUSTOMFOLDER
+    files_idx_cache = nil
+    CollectFiles()
+  else
+    group_select_start = idx
+    tree_state.cur_custom_folder = folder
+    collect_mode = COLLECT_MODE_CUSTOMFOLDER
+    files_idx_cache = nil
+    CollectFiles()
+  end
+end
+
+-- 文件件列表多选/选中状态，Shift+点击多选 & 单击选中
+function handle_file_click(idx)
+  local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
+  if shift then
+    if not file_select_start then file_select_start = idx end
+    file_select_end = idx
+  else
+    file_select_start = idx
+    file_select_end = idx
+    selected_row = idx -- 单选时重置主选中
+    current_recent_play_info = nil
+    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+      collect_mode = last_collect_mode
+    end
+    -- 解除最近播放锁定 & 切回之前模式
+    current_recent_play_info = nil
+    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+      collect_mode = last_collect_mode
     end
   end
 end
@@ -2352,12 +2429,17 @@ function draw_advanced_folder_node(id, selected_id)
   end
 
   local node_open = reaper.ImGui_TreeNode(ctx, node.name .. "##" .. id, flags)
-  -- 选中
+  -- 切换当前高级文件夹目录选中状态
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_advanced_folder = id
     collect_mode = COLLECT_MODE_ADVANCEDFOLDER
     files_idx_cache = nil
     CollectFiles()
+
+    -- 清空多选状态
+    file_select_start = nil
+    file_select_end   = nil
+    selected_row      = -1
   end
   -- 右键菜单
   if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -2398,28 +2480,39 @@ function draw_advanced_folder_node(id, selected_id)
 
     reaper.ImGui_EndPopup(ctx)
   end
-  -- 拖拽文件到高级文件夹中
+
+  -- 拖动文件到高级文件夹中
   if reaper.ImGui_BeginDragDropTarget(ctx) then
-    if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATH") then
-      local retval, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
-      if retval and dtype == "AUDIO_PATH" and type(payload) == "string" and payload ~= "" then
-        local drag_path = normalize_path(payload, false)
+    if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
+      local ok, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+      if ok and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
         node.files = node.files or {}
-        local exists = false
-        for _, p in ipairs(node.files) do
-          if p == drag_path then exists = true break end
+        local changed = false
+        -- 按分隔符拆分每条路径
+        for raw in payload:gmatch("([^|;|]+)") do
+          local drag_path = normalize_path(raw, false)
+          local exists = false
+          for _, p in ipairs(node.files) do
+            if p == drag_path then exists = true break end
+          end
+          if not exists then
+            table.insert(node.files, drag_path)
+            changed = true
+          end
         end
-        if not exists then
-          table.insert(node.files, drag_path)
+        if changed then
           SaveAdvancedFolders()
           if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder == id then
+            files_idx_cache = nil
             CollectFiles()
           end
         end
       end
     end
+
     reaper.ImGui_EndDragDropTarget(ctx)
   end
+
   -- 递归子节点
   if node_open then
     for _, cid in ipairs(node.children) do
@@ -3556,6 +3649,7 @@ function loop()
           total = #filelist,
           finished = false,
           alias = alias_name,
+          root_path  = folder,
         }
       end
     end
@@ -3750,10 +3844,11 @@ function loop()
             for i, folder in ipairs(custom_folders) do
               local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
               if reaper.ImGui_Selectable(ctx, folder, is_selected) then
-                collect_mode = COLLECT_MODE_CUSTOMFOLDER
-                tree_state.cur_custom_folder = folder
-                files_idx_cache = nil
-                CollectFiles()
+                -- 切换自定义文件夹目录选中状态，清空文件列表多选/主选中
+                file_select_start = nil
+                file_select_end   = nil
+                selected_row      = -1
+                handle_group_click(i, folder)
               end
               -- 右键菜单
               if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -3783,23 +3878,34 @@ function loop()
                 end
                 reaper.ImGui_EndPopup(ctx)
               end
-              -- 拖拽目标
+
+              -- 拖动目标文件到分组
               if reaper.ImGui_BeginDragDropTarget(ctx) then
-                if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATH") then
-                  local retval, dtype, payload, is_preview, is_delivery = reaper.ImGui_GetDragDropPayload(ctx)
-                  if retval and dtype == "AUDIO_PATH" and type(payload) == "string" and payload ~= "" then
-                    local drag_path = normalize_path(payload, false)
+                -- 接收批量路径
+                if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
+                  local retval, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+                  if retval and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
+                    -- 确保表存在
                     custom_folders_content[folder] = custom_folders_content[folder] or {}
-                    local exists = false
-                    for _, p in ipairs(custom_folders_content[folder]) do
-                      if p == drag_path then exists = true break end
-                    end
-                    if not exists then
-                      table.insert(custom_folders_content[folder], drag_path)
-                      SaveCustomFolders()
-                      if collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder then
-                        CollectFiles()
+                    -- 按分隔符拆分每条路径
+                    for path in payload:gmatch("([^|;|]+)") do
+                      local drag_path = normalize_path(path, false)
+                      -- 去重检查
+                      local exists = false
+                      for _, p in ipairs(custom_folders_content[folder]) do
+                        if p == drag_path then
+                          exists = true
+                          break
+                        end
                       end
+                      if not exists then
+                        table.insert(custom_folders_content[folder], drag_path)
+                      end
+                    end
+                    -- 存储并刷新
+                    SaveCustomFolders()
+                    if collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder then
+                      CollectFiles()
                     end
                   end
                 end
@@ -3852,9 +3958,15 @@ function loop()
               if reaper.ImGui_Selectable(ctx, alias, is_selected) then
                 collect_mode = COLLECT_MODE_MEDIADB
                 tree_state.cur_mediadb = dbfile
+                -- 清除选中状态
+                file_select_start = nil
+                file_select_end   = nil
+                selected_row      = -1
+
                 files_idx_cache = nil
                 CollectFiles()
               end
+              
               -- 右键菜单
               if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
                 reaper.ImGui_OpenPopup(ctx, "SoundmoleDBMenu_" .. dbfile)
@@ -3885,7 +3997,105 @@ function loop()
                     end
                   end
                 end
+
+                -- 更新数据库
+                if reaper.ImGui_MenuItem(ctx, "Incremental Database Update") then
+                  -- 读取PATH行拿到根目录
+                  local dbpath = normalize_path(db_dir, true) .. dbfile
+                  local root
+                  for line in io.lines(dbpath) do
+                    root = line:match('^PATH%s+"(.-)"')
+                    if root then break end
+                  end
+                  if not root or root == "" then
+                    reaper.ShowMessageBox("No PATH in DB file", "Error", 0)
+                  else
+                    -- 扫描该目录下所有音频
+                    local newfiles = ScanAllAudioFiles(root)
+                    local existing = {}
+                    for _, info in ipairs(files_idx_cache) do
+                      existing[ normalize_path(info.path, false) ] = true
+                    end
+                    -- 只写入增量，并更新内存缓存
+                    local added = 0
+                    for _, fpath in ipairs(newfiles) do
+                      local key = normalize_path(fpath, false)
+                      if not existing[key] then
+                        local info = CollectFileInfo(key)
+                        WriteToMediaDB(info, dbpath)
+                        table.insert(files_idx_cache, info)
+                        added = added + 1
+                      end
+                    end
+                    -- 刷新缓存并重载列表
+                    files_idx_cache = nil
+                    CollectFiles()
+
+                    -- 清空多选状态
+                    file_select_start = nil
+                    file_select_end   = nil
+                    selected_row      = -1
+                    reaper.ShowMessageBox(string.format("%d new files added", added), "Update Complete", 0)
+                  end
+                end
+
+                -- 全量重建数据库
+                if reaper.ImGui_MenuItem(ctx, "Rebuild Database") then
+                  -- 读取 PATH 行，拿到根目录
+                  local dbpath, root_dir
+                  dbpath = normalize_path(db_dir, true) .. dbfile
+                  for line in io.lines(dbpath) do
+                    root_dir = line:match('^PATH%s+"(.-)"')
+                    if root_dir then break end
+                  end
+                  if not root_dir or root_dir == "" then
+                    reaper.ShowMessageBox("No PATH found in DB file", "Error", 0)
+                  else
+                    -- 清空旧库并写入PATH
+                    local f = io.open(dbpath, "wb")
+                    f:write(('PATH "%s"\n'):format(root_dir))
+                    f:close()
+                    -- 扫描该目录下所有音频，写入新库
+                    local all = ScanAllAudioFiles(root_dir)
+                    for _, p in ipairs(all) do
+                      local info = CollectFileInfo(p)
+                      WriteToMediaDB(info, dbpath, root_dir)
+                    end
+                    -- 刷新缓存并重载列表
+                    files_idx_cache = nil
+                    CollectFiles()
+
+                    -- 清空多选状态
+                    file_select_start = nil
+                    file_select_end   = nil
+                    selected_row      = -1
+                    reaper.ShowMessageBox("Database rebuild complete", "Info", 0)
+                  end
+                end
+
                 reaper.ImGui_EndPopup(ctx)
+              end
+
+              -- 拖动列表的音频文件到数据库中
+              if reaper.ImGui_BeginDragDropTarget(ctx) then
+                if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
+                  local ok, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+                  if ok and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
+                    -- 目标数据库文件绝对路径 .MoleFileList
+                    local dbpath = normalize_path(db_dir, true) .. dbfile
+                    local root_dir = tree_state.cur_scan_folder or ""
+                    for path in payload:gmatch("([^|;|]+)") do
+                      local p = normalize_path(path, false)
+                      local info = CollectFileInfo(p)
+                      WriteToMediaDB(info, dbpath)
+                    end
+                    -- 刷新文件列表
+                    if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile then
+                      CollectFiles()
+                    end
+                  end
+                end
+                reaper.ImGui_EndDragDropTarget(ctx)
               end
             end
             -- 数据库按钮
@@ -3907,9 +4117,11 @@ function loop()
                   total = #filelist,
                   finished = false,
                   alias = alias_name,
+                  root_path  = folder,
                 }
               end
             end
+
             reaper.ImGui_Unindent(ctx, 7)
           end
 
@@ -4769,13 +4981,16 @@ function loop()
           if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
             local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
             local row_width = reaper.ImGui_GetContentRegionAvail(ctx) -- 获取当前列可用宽度
-            if reaper.ImGui_Selectable(ctx, row_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
-              selected_row = i
-              current_recent_play_info = nil -- 解除最近播放锁定
-              if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
-                collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
-              end
+            local is_sel = false
+            if file_select_start and file_select_end then
+              local a = math.min(file_select_start, file_select_end)
+              local b = math.max(file_select_start, file_select_end)
+              is_sel = (i >= a and i <= b)
             end
+            if reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
+              handle_file_click(i)
+            end
+
             -- 右键菜单定位item/静音/重命名/插入到工程中
             local popup_id = "item_context_menu_" .. tostring(i)
             if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -5040,12 +5255,14 @@ function loop()
           else
             local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
             local row_width = reaper.ImGui_GetContentRegionAvail(ctx)
-            if reaper.ImGui_Selectable(ctx, row_label, selected_row == i, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
-              selected_row = i
-              current_recent_play_info = nil -- 解除最近播放锁定
-              if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
-                collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
-              end
+            local is_sel = false
+            if file_select_start and file_select_end then
+              local a = math.min(file_select_start, file_select_end)
+              local b = math.max(file_select_start, file_select_end)
+              is_sel = (i >= a and i <= b)
+            end
+            if reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
+              handle_file_click(i)
             end
 
             local popup_id = "row_context_" .. tostring(i)
@@ -5060,24 +5277,101 @@ function loop()
             end
 
             if reaper.ImGui_BeginPopup(ctx, popup_id) then
-              -- 右键打开文件所在目录
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
+
+              -- 右键打开文件所在目录
               if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
                 local path = info.path
                 if path and path ~= "" then
                   reaper.CF_LocateInExplorer(normalize_path(path)) -- 规范分隔符
                 end
               end
-              reaper.ImGui_PopStyleColor(ctx, 1)
-              
-              -- 右键加载到RS5k
-              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
-                if reaper.ImGui_MenuItem(ctx, "Load to RS5k (Q)") then
-                  local tr = reaper.GetSelectedTrack(0, 0)
-                  LoadAudioToRS5k(tr, info.path)
-                end
-              reaper.ImGui_PopStyleColor(ctx, 1)
 
+              -- 右键加载到RS5k
+              if reaper.ImGui_MenuItem(ctx, "Load to RS5k (Q)") then
+                local tr = reaper.GetSelectedTrack(0, 0)
+                LoadAudioToRS5k(tr, info.path)
+              end
+
+              -- 批量高级文件夹音频文件移除
+              if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder then
+                reaper.ImGui_Separator(ctx)
+                if reaper.ImGui_MenuItem(ctx, "Remove from Collections") then
+                  local node = advanced_folders[tree_state.cur_advanced_folder]
+                  if node and node.files then
+                    -- 收集所有需要移除的路径
+                    local remove_paths = {}
+                    if file_select_start and file_select_end and file_select_start ~= file_select_end then
+                      local a = math.min(file_select_start, file_select_end)
+                      local b = math.max(file_select_start, file_select_end)
+                      for j = a, b do
+                        local sel_info = _G.current_display_list[j]
+                        if sel_info and sel_info.path then
+                          remove_paths[normalize_path(sel_info.path, false)] = true
+                        end
+                      end
+                    else
+                      -- 单选只移除当前info
+                      remove_paths[normalize_path(info.path, false)] = true
+                    end
+
+                    -- 倒序遍历批量移除
+                    for k = #node.files, 1, -1 do
+                      if remove_paths[normalize_path(node.files[k], false)] then
+                        table.remove(node.files, k)
+                      end
+                    end
+                    SaveAdvancedFolders()
+                    files_idx_cache = nil
+                    CollectFiles()
+                    -- 清空多选状态
+                    file_select_start = nil
+                    file_select_end   = nil
+                    selected_row      = -1
+                  end
+                end
+              end
+
+              -- 批量数据库列表文件移除
+              if collect_mode == COLLECT_MODE_MEDIADB then
+                reaper.ImGui_Separator(ctx)
+                if reaper.ImGui_MenuItem(ctx, "Remove from Database") then
+                  -- 用当前选中数据库文件
+                  local db_dir = script_path .. "SoundmoleDB"
+                  local dbfile = tree_state.cur_mediadb
+                  local dbpath = db_dir .. sep .. dbfile
+                  -- 收集要移除的路径
+                  local remove_paths = {}
+                  if file_select_start and file_select_end and file_select_start ~= file_select_end then
+                    local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
+                    for j = a, b do
+                      local sel = _G.current_display_list[j]
+                      if sel and sel.path then
+                        remove_paths[normalize_path(sel.path, false)] = true
+                      end
+                    end
+                  else
+                    remove_paths[normalize_path(info.path, false)] = true
+                  end
+                  -- 移除选中项
+                  for path in pairs(remove_paths) do
+                    RemoveFromMediaDB(path, dbpath)
+                    for i = #files_idx_cache, 1, -1 do
+                      if normalize_path(files_idx_cache[i].path, false) == path then
+                        table.remove(files_idx_cache, i)
+                        break
+                      end
+                    end
+                  end
+
+                  files_idx_cache = nil
+                  CollectFiles()
+                  -- 清空多选状态
+                  file_select_start, file_select_end, selected_row = nil, nil, -1
+                end
+              end
+
+              reaper.ImGui_PopStyleColor(ctx, 1)
               reaper.ImGui_EndPopup(ctx)
             end
           end
@@ -5116,13 +5410,15 @@ function loop()
               end_time = info and info.section_length or 0,
               section_offset = info and info.section_offset or 0
             }
-            -- 自定义文件夹，用 AUDIO_PATH 作为类型
-            local path = info and info.path
-            if path and path ~= "" then
-              path = normalize_path(path, false)
-              -- reaper.ImGui_Text(ctx, "Drag to collect")
-              reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATH", path)
+            -- reaper.ImGui_Text(ctx, "Drag to collect multiple")
+            -- 收集范围内所有路径
+            local paths = {}
+            local a = math.min(file_select_start or i, file_select_end or i)
+            local b = math.max(file_select_start or i, file_select_end or i)
+            for j = a, b do
+              table.insert(paths, normalize_path(_G.current_display_list[j].path, false))
             end
+            reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATHS", table.concat(paths, "|;|"))
             reaper.ImGui_PopStyleColor(ctx, 1)
             reaper.ImGui_EndDragDropSource(ctx)
           end
@@ -5329,7 +5625,19 @@ function loop()
           end
           if reaper.ImGui_BeginPopup(ctx, "GroupMenu_" .. i) then
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
-            ShowGroupMenu(info)
+          -- 收集当前高亮范围内的所有 info
+            local infos = {}
+            if file_select_start and file_select_end then
+              local a = math.min(file_select_start, file_select_end)
+              local b = math.max(file_select_start, file_select_end)
+              for j = a, b do
+                table.insert(infos, filtered_list[j])
+              end
+            else
+              -- 无多选时，单条传入
+              table.insert(infos, filtered_list[i])
+            end
+            ShowGroupMenu(infos)
             reaper.ImGui_PopStyleColor(ctx, 1)
             reaper.ImGui_EndPopup(ctx)
           end
@@ -7005,7 +7313,7 @@ function loop()
         if idx <= total then
           local path = db_build_task.filelist[idx]
           local info = CollectFileInfo(path)
-          WriteToMediaDB(info, db_build_task.dbfile)
+          WriteToMediaDB(info, db_build_task.dbfile, db_build_task.root_path)
           local pixel_cnt = 2048
           --local wf_step = 512
           local start_time, end_time = 0, tonumber(info.length) or 0
