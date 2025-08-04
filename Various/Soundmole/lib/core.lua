@@ -160,15 +160,29 @@ local function quote_if_space(str)
   end
 end
 
+function AddPathToDBFile(dbfile, new_path)
+  local lines = {}
+  for line in io.lines(dbfile) do table.insert(lines, line) end
+  local already_exist = false
+  for _, l in ipairs(lines) do
+    if l:match('^PATH%s+"(.-)"') == new_path then
+      already_exist = true
+      break
+    end
+  end
+  if not already_exist then
+    -- 最顶部插入
+    table.insert(lines, 1, ('PATH "%s"'):format(new_path))
+    -- 写回
+    local f = io.open(dbfile, "wb")
+    for _, l in ipairs(lines) do f:write(l, "\n") end
+    f:close()
+  end
+end
+
 function WriteToMediaDB(info, dbfile, root_path)
   local f = io.open(dbfile, "a+b")
   if not f then return end
-  -- PATH，写入ROOT路径
-  local pos = f:seek("end")
-  if pos == 0 and root_path then
-    f:write(('PATH "%s"\n'):format(root_path))
-  end
-
   -- FILE行
   f:write(('FILE "%s" %d %s\n'):format(info.path, info.size, info.type))
   -- DATA基本属性行
@@ -278,6 +292,16 @@ function RemoveFromMediaDB(path, dbfile)
   local f = io.open(dbfile, "wb")
   for _, l in ipairs(tmp) do f:write(l, "\n") end
   f:close()
+end
+
+-- 获取数据库路径列表
+function GetPathListFromDB(dbpath)
+  local paths = {}
+  for line in io.lines(dbpath) do
+    local path = line:match('^PATH%s+"(.-)"')
+    if path then table.insert(paths, path) end
+  end
+  return paths
 end
 
 --------------------------------------------- RS5K ---------------------------------------------

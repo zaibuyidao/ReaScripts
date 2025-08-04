@@ -1,12 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.23
+-- @version 1.0.24
 -- @changelog
---   Hold Shift and click to select a continuous range in the file list and drag it into Group, Collections, or Database.
---   In the Database Mode, use the context menu to remove all selected audio files in one operation.
---   In the Collections Mode, use the context menu to remove all selected audio files at once.
---   In the Group Mode, bulk add or remove tags for all selected items.
---   On database refresh, only new entries are loaded, avoiding a full re-read of the .MoleFileList.
+--   Optimized database creation logic to support adding multiple folder paths to a single database.
+--   Unified progress bar display for database building and batch path import operations.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

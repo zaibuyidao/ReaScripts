@@ -3298,6 +3298,9 @@ end
 
 db_build_task = nil
 mediadb_alias = LoadMediaDBAlias(EXT_SECTION) -- 加载数据库别名
+tree_state.remove_path_dbfile = tree_state.remove_path_dbfile or nil
+tree_state.remove_path_to_remove = tree_state.remove_path_to_remove or nil
+tree_state.remove_path_confirm = tree_state.remove_path_confirm or false
 
 --------------------------------------------- 表格列表 ---------------------------------------------
 
@@ -3640,15 +3643,16 @@ function loop()
         EnsureCacheDir(db_dir)
         -- 获取下一个可用编号
         local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
-        local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
-        local alias_name = folder:match("([^/\\]+)[/\\]?$") or "Unnamed"
+        local dbfile = string.format("%s.MoleFileList", db_index) -- 只有文件名
+        local dbpath = normalize_path(db_dir, true) .. dbfile     -- 全路径
+        local f = io.open(dbpath, "wb") if f then f:close() end
+        AddPathToDBFile(dbpath, folder)
         db_build_task = {
           filelist = filelist,
-          dbfile = dbfile,
+          dbfile = dbpath,
           idx = 1,
           total = #filelist,
           finished = false,
-          alias = alias_name,
           root_path  = folder,
         }
       end
@@ -3972,16 +3976,21 @@ function loop()
                 reaper.ImGui_OpenPopup(ctx, "SoundmoleDBMenu_" .. dbfile)
               end
               if reaper.ImGui_BeginPopup(ctx, "SoundmoleDBMenu_" .. dbfile) then
-                if reaper.ImGui_MenuItem(ctx, "Rename") then
+
+                -- 重命名数据库
+                if reaper.ImGui_MenuItem(ctx, "Rename Database") then
                   local ret, newname = reaper.GetUserInputs("Rename DB", 1, "New Name:,extrawidth=180", mediadb_alias[dbfile] or dbfile)
                   if ret and newname and newname ~= "" and newname ~= dbfile then
                     mediadb_alias[dbfile] = newname
                     SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
                   end
                 end
-                if reaper.ImGui_MenuItem(ctx, "Remove") then
+                -- 删除数据库
+                if reaper.ImGui_MenuItem(ctx, "Delete Database") then
+                  local filename = dbfile:match("[^/\\]+$")
+                  local alias = mediadb_alias[filename] or filename
                   local res = reaper.ShowMessageBox(
-                    ("Are you sure you want to delete the database file:\n%s ?\n\nThis action cannot be undone."):format(dbfile),
+                    ("Are you sure you want to delete the database:\n%s (%s)\n\nThis action cannot be undone."):format(alias, dbfile),
                     "Confirm Delete",
                     4 -- 4 = Yes/No
                   )
@@ -3997,9 +4006,30 @@ function loop()
                     end
                   end
                 end
+                reaper.ImGui_Separator(ctx)
+                -- 添加路径到数据库
+                if reaper.ImGui_MenuItem(ctx, "Add Path to Database...") then
+                  tree_state.add_path_dbfile = dbfile -- 记录当前要添加路径的数据库
+                  tree_state.add_path_popup = true -- 标记弹窗
+                end
+                -- 从数据库移除路径
+                if reaper.ImGui_BeginMenu(ctx, "Remove Path from Database") then
+                  local db_dir = script_path .. "SoundmoleDB"
+                  local dbpath = normalize_path(db_dir, true) .. dbfile
+                  local path_list = GetPathListFromDB(dbpath)
+                  for _, p in ipairs(path_list) do
+                    if reaper.ImGui_MenuItem(ctx, p) then
+                      -- 记录要删除的信息
+                      tree_state.remove_path_dbfile = dbfile
+                      tree_state.remove_path_to_remove = p
+                      tree_state.remove_path_confirm = true
+                    end
+                  end
+                  reaper.ImGui_EndMenu(ctx)
+                end
 
-                -- 更新数据库
-                if reaper.ImGui_MenuItem(ctx, "Incremental Database Update") then
+                -- 增量更新数据库
+                if reaper.ImGui_MenuItem(ctx, "Scan Database for New Files") then -- Incremental Database Update
                   -- 读取PATH行拿到根目录
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   local root
@@ -4010,32 +4040,37 @@ function loop()
                   if not root or root == "" then
                     reaper.ShowMessageBox("No PATH in DB file", "Error", 0)
                   else
-                    -- 扫描该目录下所有音频
+                    -- 扫描所有音频，筛选出未入库的新文件
                     local newfiles = ScanAllAudioFiles(root)
                     local existing = {}
-                    for _, info in ipairs(files_idx_cache) do
-                      existing[ normalize_path(info.path, false) ] = true
+                    for _, info in ipairs(files_idx_cache or {}) do
+                      existing[normalize_path(info.path, false)] = true
                     end
-                    -- 只写入增量，并更新内存缓存
-                    local added = 0
+                    -- 仅保留新增的文件
+                    local to_add = {}
                     for _, fpath in ipairs(newfiles) do
                       local key = normalize_path(fpath, false)
                       if not existing[key] then
-                        local info = CollectFileInfo(key)
-                        WriteToMediaDB(info, dbpath)
-                        table.insert(files_idx_cache, info)
-                        added = added + 1
+                        table.insert(to_add, fpath)
                       end
                     end
-                    -- 刷新缓存并重载列表
-                    files_idx_cache = nil
-                    CollectFiles()
-
-                    -- 清空多选状态
-                    file_select_start = nil
-                    file_select_end   = nil
-                    selected_row      = -1
-                    reaper.ShowMessageBox(string.format("%d new files added", added), "Update Complete", 0)
+                    -- 如果没有新文件直接提示
+                    if #to_add == 0 then
+                      reaper.ShowMessageBox("No new files to add.", "Update Complete", 0)
+                    else
+                      -- 异步任务，由主循环进度条处理
+                      local filename = dbfile:match("[^/\\]+$")
+                      db_build_task = {
+                        filelist = to_add,
+                        dbfile = dbpath,
+                        idx = 1,
+                        total = #to_add,
+                        finished = false,
+                        alias = mediadb_alias[filename] or filename, -- mediadb_alias[dbfile] or "Unnamed",
+                        root_path = root,
+                        is_incremental = true
+                      }
+                    end
                   end
                 end
 
@@ -4055,21 +4090,19 @@ function loop()
                     local f = io.open(dbpath, "wb")
                     f:write(('PATH "%s"\n'):format(root_dir))
                     f:close()
-                    -- 扫描该目录下所有音频，写入新库
+                    -- 异步任务，由主循环进度条处理
+                    local filename = dbfile:match("[^/\\]+$")
                     local all = ScanAllAudioFiles(root_dir)
-                    for _, p in ipairs(all) do
-                      local info = CollectFileInfo(p)
-                      WriteToMediaDB(info, dbpath, root_dir)
-                    end
-                    -- 刷新缓存并重载列表
-                    files_idx_cache = nil
-                    CollectFiles()
-
-                    -- 清空多选状态
-                    file_select_start = nil
-                    file_select_end   = nil
-                    selected_row      = -1
-                    reaper.ShowMessageBox("Database rebuild complete", "Info", 0)
+                    db_build_task = {
+                      filelist = all,
+                      dbfile = dbpath,
+                      idx = 1,
+                      total = #all,
+                      finished = false,
+                      alias = mediadb_alias[filename] or filename, -- mediadb_alias[dbfile] or "Unnamed",
+                      root_path = root_dir,
+                      is_rebuild = true -- 标记为重建
+                    }
                   end
                 end
 
@@ -4098,28 +4131,14 @@ function loop()
                 reaper.ImGui_EndDragDropTarget(ctx)
               end
             end
+
             -- 数据库按钮
-            if reaper.ImGui_Button(ctx, "Create Database##scan_folder", 140, 40) then -- Select Folder and Scan Audio
-              local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
-              if rv == 1 and folder and folder ~= "" then
-                folder = normalize_path(folder, true)
-                local filelist = ScanAllAudioFiles(folder)
-                local db_dir = script_path .. "SoundmoleDB"
-                EnsureCacheDir(db_dir)
-                -- 获取下一个可用编号
-                local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
-                local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
-                local alias_name = folder:match("([^/\\]+)[/\\]?$") or "Unnamed"
-                db_build_task = {
-                  filelist = filelist,
-                  dbfile = dbfile,
-                  idx = 1,
-                  total = #filelist,
-                  finished = false,
-                  alias = alias_name,
-                  root_path  = folder,
-                }
-              end
+            if reaper.ImGui_Button(ctx, "Create Database", 140, 40) then
+              local db_dir = script_path .. "SoundmoleDB"
+              EnsureCacheDir(db_dir)
+              local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
+              local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+              local f = io.open(dbfile, "wb") f:close()
             end
 
             reaper.ImGui_Unindent(ctx, 7)
@@ -7270,6 +7289,89 @@ function loop()
       is_knob_dragging = false
     end
 
+    -- 添加路径到数据库
+    if tree_state.add_path_popup then
+      tree_state.add_path_popup = false
+      local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
+      if rv == 1 and folder and folder ~= "" then
+        folder = normalize_path(folder, true)
+        local filelist = ScanAllAudioFiles(folder)
+        local db_dir = script_path .. "SoundmoleDB"
+        EnsureCacheDir(db_dir)
+        local dbfile = tree_state.add_path_dbfile
+        local dbpath = normalize_path(db_dir, true) .. dbfile
+        -- local alias_name = folder:match("([^/\\]+)[/\\]?$") or "Unnamed"
+        -- 先写PATH行
+        AddPathToDBFile(dbpath, folder)
+        db_build_task = {
+          filelist = filelist,
+          dbfile = dbpath,
+          idx = 1,
+          total = #filelist,
+          finished = false,
+          -- alias = alias_name, 不重命名数据库命名
+          root_path = folder,
+        }
+      end
+      tree_state.add_path_dbfile = nil
+    end
+
+    -- 移除数据库的文件夹路径
+    if tree_state.remove_path_confirm then
+      local popup_open = true
+      reaper.ImGui_OpenPopup(ctx, "Remove Folder Path Confirm")
+      if reaper.ImGui_BeginPopupModal(ctx, "Remove Folder Path Confirm", popup_open, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+        reaper.ImGui_Text(ctx, "Are you sure you want to remove this folder path and all its audio files from the database?")
+        reaper.ImGui_Separator(ctx)
+        reaper.ImGui_Text(ctx, tree_state.remove_path_to_remove)
+        if reaper.ImGui_Button(ctx, "OK") then
+          local db_dir = script_path .. "SoundmoleDB"
+          local dbpath = normalize_path(db_dir, true) .. tree_state.remove_path_dbfile
+          local lines = {}
+          local skip_data = false
+          local remove_prefix = normalize_path(tree_state.remove_path_to_remove, true)
+          for line in io.lines(dbpath) do
+            -- 跳过对应的PATH行
+            if line:match('^PATH%s+"(.-)"') == tree_state.remove_path_to_remove then
+            -- 判断是否是需要移除路径下的FILE行
+            elseif line:match('^FILE%s+"(.-)"') then
+              local filepath = line:match('^FILE%s+"(.-)"')
+              filepath = normalize_path(filepath, false)
+              if filepath:sub(1, #remove_prefix) == remove_prefix then
+                skip_data = true -- 该文件及其所有DATA都要跳过
+              else
+                skip_data = false
+                table.insert(lines, line)
+              end
+            elseif skip_data and line:find("^DATA") then
+            else
+              skip_data = false
+              table.insert(lines, line)
+            end
+          end
+          -- 写回
+          local f = io.open(dbpath, "wb")
+          for _, l in ipairs(lines) do f:write(l, "\n") end
+          f:close()
+          files_idx_cache = nil
+          CollectFiles()
+
+          tree_state.remove_path_confirm = false
+          tree_state.remove_path_dbfile = nil
+          tree_state.remove_path_to_remove = nil
+          reaper.ImGui_CloseCurrentPopup(ctx)
+        end
+        reaper.ImGui_SameLine(ctx)
+        if reaper.ImGui_Button(ctx, "Cancel") then
+          tree_state.remove_path_confirm = false
+          tree_state.remove_path_dbfile = nil
+          tree_state.remove_path_to_remove = nil
+          reaper.ImGui_CloseCurrentPopup(ctx)
+        end
+        reaper.ImGui_EndPopup(ctx)
+      end
+    end
+
     -- 显示数据库构建进度
     if db_build_task and not db_build_task.finished then
       reaper.ImGui_OpenPopup(ctx, "Database Build Progress")
@@ -7284,6 +7386,15 @@ function loop()
         reaper.ImGui_Text(ctx, "Database build aborted!")
         reaper.ImGui_Text(ctx, string.format("Processed: %d / %d", idx - 1, total))
         if reaper.ImGui_Button(ctx, "OK") then
+          local filename = db_build_task.dbfile:match("[^/\\]+$")
+          local alias = db_build_task.alias
+          if not alias or alias == "" then
+            -- 自动用文件夹名
+            alias = db_build_task.root_path and db_build_task.root_path:match("([^/\\]+)[/\\]?$") or filename
+          end
+          mediadb_alias[filename] = alias
+          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+
           db_build_task = nil
           reaper.ImGui_CloseCurrentPopup(ctx)
         end
@@ -7294,8 +7405,16 @@ function loop()
         reaper.ImGui_Text(ctx, string.format("Total files: %d", total))
         reaper.ImGui_Text(ctx, string.format("Processed: %d", idx - 1))
         if reaper.ImGui_Button(ctx, "OK") then
+          -- 刷新相关信息
+          if db_build_task.is_rebuild then
+            files_idx_cache = nil
+            CollectFiles()
+            file_select_start = nil
+            file_select_end   = nil
+            selected_row      = -1
+          end
           local filename = db_build_task.dbfile:match("[^/\\]+$")
-          mediadb_alias[filename] = db_build_task.alias or "Unnamed"
+          mediadb_alias[filename] = db_build_task.alias -- or "Unnamed"
           SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
           
           db_build_task = nil
@@ -7304,7 +7423,7 @@ function loop()
 
       else
         -- 构建中弹窗内容
-        reaper.ImGui_Text(ctx, "Generating waveform cache and collecting metadata...")
+        reaper.ImGui_Text(ctx, "Collecting audio metadata and updating database...") -- "Generating waveform cache and collecting metadata..."
         reaper.ImGui_ProgressBar(ctx, percent, -1, 20, string.format("%d / %d", idx-1, total))
         if reaper.ImGui_Button(ctx, "Abort") then
           db_build_task.aborted = true
@@ -7313,17 +7432,21 @@ function loop()
         if idx <= total then
           local path = db_build_task.filelist[idx]
           local info = CollectFileInfo(path)
-          WriteToMediaDB(info, db_build_task.dbfile, db_build_task.root_path)
-          local pixel_cnt = 2048
-          --local wf_step = 512
-          local start_time, end_time = 0, tonumber(info.length) or 0
-          local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
-          if peaks and src_len and channel_count then
-            SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
-          end
+          WriteToMediaDB(info, db_build_task.dbfile)
+          -- 关闭构建波形缓存
+          -- local pixel_cnt = 2048
+          -- --local wf_step = 512
+          -- local start_time, end_time = 0, tonumber(info.length) or 0
+          -- local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
+          -- if peaks and src_len and channel_count then
+          --   SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
+          -- end
           db_build_task.idx = db_build_task.idx + 1
         else
           db_build_task.finished = true
+          -- 刷新
+          files_idx_cache = nil
+          CollectFiles()
         end
       end
 
