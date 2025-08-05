@@ -94,7 +94,9 @@ end
 -- 递归扫描目录下所有音频文件
 function ScanAllAudioFiles(root_dir)
   local files = {}
+  local sep = package.config:sub(1,1)
   local function scan(dir)
+    -- 文件
     local i = 0
     while true do
       local file = reaper.EnumerateFiles(dir, i)
@@ -105,16 +107,17 @@ function ScanAllAudioFiles(root_dir)
       end
       i = i + 1
     end
+    -- 子目录
     local j = 0
     while true do
-      local subdir = reaper.EnumerateSubdirectories(dir, j)
-      if not subdir then break end
-      scan(dir .. sep .. subdir)
+      local sub = reaper.EnumerateSubdirectories(dir, j)
+      if not sub then break end
+      scan(dir .. sep .. sub)
       j = j + 1
     end
   end
   scan(normalize_path(root_dir, false))
-  return files
+  return files, #files
 end
 
 -- 采集全部元数据

@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.24
+-- @version 1.0.25
 -- @changelog
---   Optimized database creation logic to support adding multiple folder paths to a single database.
---   Unified progress bar display for database building and batch path import operations.
+--   Fix table lag issue by implementing manual clipping of visible rows and deferred loading, significantly improving scrolling performance on large lists.
+--   Optimize recursive scanning process to reduce total scan time.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
