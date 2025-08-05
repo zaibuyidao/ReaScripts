@@ -7384,7 +7384,7 @@ function loop()
             -- 自动用文件夹名
             alias = db_build_task.root_path and db_build_task.root_path:match("([^/\\]+)[/\\]?$") or filename
           end
-          mediadb_alias[filename] = alias
+          mediadb_alias[filename] = filename -- alias -- 中断时不使用别名
           SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
 
           db_build_task = nil
@@ -7406,7 +7406,7 @@ function loop()
             selected_row      = -1
           end
           local filename = db_build_task.dbfile:match("[^/\\]+$")
-          mediadb_alias[filename] = filename -- db_build_task.alias or "Unnamed"
+          mediadb_alias[filename] = filename -- db_build_task.alias or "Unnamed" -- 完成时不使用别名
           SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
           
           db_build_task = nil

@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.25
+-- @version 1.0.26
 -- @changelog
 --   Fix table lag issue by implementing manual clipping of visible rows and deferred loading, significantly improving scrolling performance on large lists.
 --   Optimize recursive scanning process to reduce total scan time.
