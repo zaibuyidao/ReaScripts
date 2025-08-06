@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e2656ecb72496c34929ee1c4d95379afdbb2e2c3">
+<index version="1" name="zaibuyidao Scripts" commit="f08d8dbdf3188e568902d54330a7fa1e6f3126a7">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14373,6 +14373,17 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/e2656ecb72496c34929ee1c4d95379afdbb2e2c3/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/e2656ecb72496c34929ee1c4d95379afdbb2e2c3/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/e2656ecb72496c34929ee1c4d95379afdbb2e2c3/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.27" author="zaibuyidao" time="2025-08-06T08:14:48Z">
+        <changelog><![CDATA[Fix table cache confusion when switching between different modes and databases.
+Fix table lag issue by implementing manual clipping of visible rows and deferred loading, significantly improving scrolling performance on large lists.
+Optimize recursive scanning process to reduce total scan time.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/f08d8dbdf3188e568902d54330a7fa1e6f3126a7/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/f08d8dbdf3188e568902d54330a7fa1e6f3126a7/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/f08d8dbdf3188e568902d54330a7fa1e6f3126a7/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/f08d8dbdf3188e568902d54330a7fa1e6f3126a7/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/f08d8dbdf3188e568902d54330a7fa1e6f3126a7/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
