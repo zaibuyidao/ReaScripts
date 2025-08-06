@@ -1,10 +1,12 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.27
+-- @version 1.0.28
 -- @changelog
---   Fix table cache confusion when switching between different modes and databases.
---   Fix table lag issue by implementing manual clipping of visible rows and deferred loading, significantly improving scrolling performance on large lists.
---   Optimize recursive scanning process to reduce total scan time.
+--   Waveform loading is deferred during scrolling or column resizing and only batches visible rows after 2 seconds of idle time.
+--   The file list automatically switches to the newly created database mode and refreshes upon database creation.
+--   All static filter and sort caches are cleared when switching databases to ensure filters and sorting are reapplied.
+--   Column-width changes only clear the affected row's waveform cache and reset its loading flag; the clipper idle logic centrally handles loading.
+--   start_pos is always set via FindFirstNonSilentTime(info) or 0 to prevent passing nil to CF_Preview_SetValue.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

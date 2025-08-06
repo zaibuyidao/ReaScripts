@@ -1536,7 +1536,7 @@ function PlayFromStart(info)
   -- 跳过静音
   local start_pos = 0
   if skip_silence_enabled then
-    start_pos = FindFirstNonSilentTime(info)
+    start_pos = FindFirstNonSilentTime(info) or 0 -- 某些情况下需要为0，避免报错。有些文件没有波形。
   end
 
   local source
@@ -4715,6 +4715,16 @@ function loop()
         -- 获取当前激活数据库的唯一key
         local current_db_key = GetCurrentListKey() -- tostring(tree_state.cur_mediadb)
 
+        -- 检测数据库切换，清空静态缓存（解决数据库创建时列表为空问题）
+        static.last_db_key = static.last_db_key or ""
+        if current_db_key ~= static.last_db_key then
+          -- 新数据库，清空所有缓存
+          static.filtered_list_map    = {}
+          static.last_filter_text_map = {}
+          static.last_sort_specs_map  = {}
+          static.last_db_key          = current_db_key
+        end
+
         -- 获取排序状态
         local need_sort, has_specs = reaper.ImGui_TableNeedSort(ctx)
         local sort_specs = {}
@@ -4937,19 +4947,32 @@ function loop()
         local load_limit = 2 -- 每次最多加入2个加载任务
         local loaded_count = 0
 
+        -- 限制加载波形，指定列表无滚动时多少秒之后才开始加载。用于解决脚本卡顿问题。
+        local now_time = reaper.time_precise()
+        static.last_scroll_time = static.last_scroll_time or now_time
+        static.last_scroll_y    = static.last_scroll_y    or reaper.ImGui_GetScrollY(ctx)
+        local cur_scroll_y, wheel = reaper.ImGui_GetScrollY(ctx), reaper.ImGui_GetMouseWheel(ctx)
+        if cur_scroll_y ~= static.last_scroll_y or wheel ~= 0 then
+          static.last_scroll_y    = cur_scroll_y
+          static.last_scroll_time = now_time
+        end
+        local idle_time = now_time - static.last_scroll_time -- 停止滚动多久
+
         reaper.ImGui_ListClipper_Begin(clipper, #filtered_list)
         while reaper.ImGui_ListClipper_Step(clipper) do
           local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
-          -- clipper+限流+防止重复加入
-          for idx = display_start + 1, display_end do
-            if loaded_count >= load_limit then break end -- 限制本帧最大加载数
+          if idle_time >= 2 then
+            -- clipper+限流+防止重复加入
+            for idx = display_start + 1, display_end do
+              if loaded_count >= load_limit then break end -- 限制本帧最大加载数
 
-            local info = filtered_list[idx]
-            info._thumb_waveform = info._thumb_waveform or {}
-            if not info._thumb_waveform[tw] and not info._loading_waveform then
-              info._loading_waveform = true -- 设置加载标记，防止重复加入
-              EnqueueWaveformTask(info, tw)
-              loaded_count = loaded_count + 1
+              local info = filtered_list[idx]
+              info._thumb_waveform = info._thumb_waveform or {}
+              if not info._thumb_waveform[tw] and not info._loading_waveform then
+                info._loading_waveform = true -- 设置加载标记，防止重复加入
+                EnqueueWaveformTask(info, tw)
+                loaded_count = loaded_count + 1
+              end
             end
           end
 
@@ -4985,15 +5008,12 @@ function loop()
             local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))   -- 自适应宽度
             -- local thumb_h = math.floor(reaper.ImGui_GetTextLineHeight(ctx) * 0.9) -- 旧版自适应高度
             local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2-px 用于上下 padding
-            -- 检查宽度变化，立刻清理缓存
-            local current_visible_infos = filtered_list or {}
+
+            -- 检查宽度变化，只清空缓存并重置加载标记
             if info._last_thumb_w ~= thumb_w then
-              info._thumb_waveform = {}
-              info._last_thumb_w = thumb_w
-              if not info._loading_waveform then -- 只处理当前 info
-                info._loading_waveform = true
-                EnqueueWaveformTask(info, thumb_w)
-              end
+              info._thumb_waveform    = {}        -- 清掉旧波形缓存
+              info._last_thumb_w      = thumb_w  
+              info._loading_waveform  = false     -- 重置标记，让 Clip­per 在空闲>=2s 后再次入队
             end
 
             -- 表格列表波形预览支持鼠标点击切换播放光标
@@ -5033,7 +5053,10 @@ function loop()
                 end
               end
             else
-              EnqueueWaveformTask(info, thumb_w) -- 未加载则加入队列
+              if idle_time >= 2 then
+                info._loading_waveform = true
+                EnqueueWaveformTask(info, thumb_w) -- 未加载则加入队列
+              end
               -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx) -- 画灰色占位条
               -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
               -- reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + thumb_w, y + thumb_h, 0x444444FF)
@@ -7448,13 +7471,18 @@ function loop()
         reaper.ImGui_Text(ctx, string.format("Processed: %d", idx - 1))
         if reaper.ImGui_Button(ctx, "OK") then
           -- 刷新相关信息
-          if db_build_task.is_rebuild then
+          -- if db_build_task.is_rebuild then
+            -- 清除过滤/排序缓存，确保 BuildFilteredList 再次执行。否则创建数据库后的列表为空
+            static.filtered_list_map    = {}
+            static.last_filter_text_map = {}
+            static.last_sort_specs_map  = {}
+
             files_idx_cache = nil
             CollectFiles()
             file_select_start = nil
             file_select_end   = nil
             selected_row      = -1
-          end
+          -- end
           local filename = db_build_task.dbfile:match("[^/\\]+$")
           mediadb_alias[filename] = filename -- db_build_task.alias or "Unnamed" -- 完成时不使用别名
           SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
