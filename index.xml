@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f08d8dbdf3188e568902d54330a7fa1e6f3126a7">
+<index version="1" name="zaibuyidao Scripts" commit="3074e57f19c149f4b959647f6ef48bca09258837">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14384,6 +14384,19 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/f08d8dbdf3188e568902d54330a7fa1e6f3126a7/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/f08d8dbdf3188e568902d54330a7fa1e6f3126a7/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/f08d8dbdf3188e568902d54330a7fa1e6f3126a7/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.28" author="zaibuyidao" time="2025-08-06T18:34:05Z">
+        <changelog><![CDATA[Waveform loading is deferred during scrolling or column resizing and only batches visible rows after 2 seconds of idle time.
+The file list automatically switches to the newly created database mode and refreshes upon database creation.
+All static filter and sort caches are cleared when switching databases to ensure filters and sorting are reapplied.
+Column-width changes only clear the affected row's waveform cache and reset its loading flag; the clipper idle logic centrally handles loading.
+start_pos is always set via FindFirstNonSilentTime(info) or 0 to prevent passing nil to CF_Preview_SetValue.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/3074e57f19c149f4b959647f6ef48bca09258837/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/3074e57f19c149f4b959647f6ef48bca09258837/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/3074e57f19c149f4b959647f6ef48bca09258837/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/3074e57f19c149f4b959647f6ef48bca09258837/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/3074e57f19c149f4b959647f6ef48bca09258837/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
