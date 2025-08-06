@@ -3305,6 +3305,39 @@ clipper = clipper or reaper.ImGui_CreateListClipper(ctx)
 
 --------------------------------------------- 表格列表 ---------------------------------------------
 
+-- 只在过滤/排序状态变化时重建 filtered_list，普通渲染时只用缓存，用于解决滚动卡死问题
+local static = _G._soundmole_static or {}
+_G._soundmole_static = static
+static.filtered_list_map = static.filtered_list_map or {}  -- 用于存放所有列表缓存
+static.last_filter_text_map = static.last_filter_text_map or {}
+static.last_sort_specs_map  = static.last_sort_specs_map or {}
+
+-- 模式+选中项唯一key，用来切换音频列表
+function GetCurrentListKey()
+  -- 不同模式下用不同字段拼接唯一key
+  if collect_mode == COLLECT_MODE_MEDIADB then
+    return "MEDIADB:" .. tostring(tree_state.cur_mediadb or "default")
+  elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
+    return "ADVANCEDFOLDER:" .. tostring(tree_state.cur_advanced_folder or "default")
+  elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
+    return "CUSTOMFOLDER:" .. tostring(tree_state.cur_custom_folder or "default")
+  elseif collect_mode == COLLECT_MODE_TREE or collect_mode == COLLECT_MODE_SHORTCUT then
+    return "DIR:" .. tostring(tree_state.cur_path or "default")
+  elseif collect_mode == COLLECT_MODE_ITEMS then
+    return "ITEMS"
+  elseif collect_mode == COLLECT_MODE_DIR then
+    return "DIR"
+  elseif collect_mode == COLLECT_MODE_RPP then
+    return "RPP"
+  elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
+    return "ALL_ITEMS"
+  elseif collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+    return "RECENTLY_PLAYED"
+  else
+    return "UNKNOWN"
+  end
+end
+
 -- 根据文本框, 同义词, UCS, Saved Search 等规则，从原始 files_idx_cache 中构建过滤后列表。
 local function BuildFilteredList(list)
   local filtered = {}
@@ -4678,144 +4711,161 @@ function loop()
         end
         -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectFromProjectDirectory()
         reaper.ImGui_TableHeadersRow(ctx)
+        
+        -- 获取当前激活数据库的唯一key
+        local current_db_key = GetCurrentListKey() -- tostring(tree_state.cur_mediadb)
 
-        -- 音频文件列表 & 全局音频文件列表
-        local filtered_list = BuildFilteredList(files_idx_cache)
-        _G.current_display_list = filtered_list
-
-        -- 排序，只对缓存排序一次
+        -- 获取排序状态
         local need_sort, has_specs = reaper.ImGui_TableNeedSort(ctx)
-        if need_sort and has_specs and filtered_list then
-          local sort_specs = {}
-          local id = 0
-          while true do
-            local rv, col_index, col_user_id, sort_dir = reaper.ImGui_TableGetColumnSortSpecs(ctx, id)
-            if not rv then break end
-            sort_specs[#sort_specs + 1] = {
-              col_index = col_index,
-              user_id = col_user_id,
-              sort_dir = sort_dir
-            }
-            id = id + 1
-          end
-    
-          table.sort(filtered_list, function(a, b)
-            for _, spec in ipairs(sort_specs) do
-              if spec.user_id == TableColumns.FILENAME then
-                if a.filename ~= b.filename then -- File 列排序
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return a.filename > b.filename
-                  else
-                    return a.filename < b.filename
-                  end
-                end
-              elseif spec.user_id == TableColumns.SIZE then -- Size 列排序
-                local asize = tonumber(a.size) or 0
-                local bsize = tonumber(b.size) or 0
-                if asize ~= bsize then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return asize > bsize
-                  else
-                    return asize < bsize
-                  end
-                end
-              elseif spec.user_id == TableColumns.TYPE then -- Type 列排序
-                if a.type ~= b.type then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return a.type > b.type
-                  else
-                    return a.type < b.type
-                  end
-                end
-              elseif spec.user_id == TableColumns.DATE then -- Date 列排序
-                if (a.bwf_orig_date or "") ~= (b.bwf_orig_date or "") then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return (a.bwf_orig_date or "") > (b.bwf_orig_date or "")
-                  else
-                    return (a.bwf_orig_date or "") < (b.bwf_orig_date or "")
-                  end
-                end
-              elseif spec.user_id == TableColumns.GENRE then -- Genre & Position 列排序
-                if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
-                  local apos = tonumber(a.position) or 0
-                  local bpos = tonumber(b.position) or 0
-                  if apos ~= bpos then
+        local sort_specs = {}
+        local id = 0
+        while true do
+          local rv, col_index, col_user_id, sort_dir = reaper.ImGui_TableGetColumnSortSpecs(ctx, id)
+          if not rv then break end
+          sort_specs[#sort_specs + 1] = {
+            col_index = col_index,
+            user_id = col_user_id,
+            sort_dir = sort_dir
+          }
+          id = id + 1
+        end
+
+        -- 判断是否有过滤/排序变化
+        local sort_specs_str = tostring(sort_specs[1] and sort_specs[1].user_id or "") .. (sort_specs[1] and sort_specs[1].sort_dir or "")
+        local last_filter_text = static.last_filter_text_map[current_db_key] or ""
+        local last_sort_specs  = static.last_sort_specs_map[current_db_key] or ""
+        local filtered_list    = static.filtered_list_map[current_db_key]
+
+        -- 判断过滤/排序是否变更
+        local filter_changed = (filter_text ~= last_filter_text)
+        local sort_changed = (sort_specs_str ~= last_sort_specs)
+
+        if filter_changed or sort_changed or not filtered_list then
+          filtered_list = BuildFilteredList(files_idx_cache)
+          if #sort_specs > 0 and filtered_list then
+            table.sort(filtered_list, function(a, b)
+              for _, spec in ipairs(sort_specs) do
+                if spec.user_id == TableColumns.FILENAME then
+                  if a.filename ~= b.filename then -- File 列排序
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                      return apos > bpos
+                      return a.filename > b.filename
                     else
-                      return apos < bpos
+                      return a.filename < b.filename
                     end
                   end
-                else
-                  if (a.genre or "") ~= (b.genre or "") then
+                elseif spec.user_id == TableColumns.SIZE then -- Size 列排序
+                  local asize = tonumber(a.size) or 0
+                  local bsize = tonumber(b.size) or 0
+                  if asize ~= bsize then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                      return (a.genre or "") > (b.genre or "")
+                      return asize > bsize
                     else
-                      return (a.genre or "") < (b.genre or "")
+                      return asize < bsize
                     end
                   end
-                end
-              elseif spec.user_id == TableColumns.COMMENT then -- Comment 列排序
-                if (a.comment or "") ~= (b.comment or "") then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return (a.comment or "") > (b.comment or "")
-                  else
-                    return (a.comment or "") < (b.comment or "")
+                elseif spec.user_id == TableColumns.TYPE then -- Type 列排序
+                  if a.type ~= b.type then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return a.type > b.type
+                    else
+                      return a.type < b.type
+                    end
                   end
-                end
-              elseif spec.user_id == TableColumns.DESCRIPTION then -- Description 列排序
-                if (a.description or "") ~= (b.description or "") then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return (a.description or "") > (b.description or "")
-                  else
-                    return (a.description or "") < (b.description or "")
+                elseif spec.user_id == TableColumns.DATE then -- Date 列排序
+                  if (a.bwf_orig_date or "") ~= (b.bwf_orig_date or "") then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return (a.bwf_orig_date or "") > (b.bwf_orig_date or "")
+                    else
+                      return (a.bwf_orig_date or "") < (b.bwf_orig_date or "")
+                    end
                   end
-                end
-              elseif spec.user_id == TableColumns.LENGTH then -- Length 列排序
-                local alen = tonumber(a.length) or 0
-                local blen = tonumber(b.length) or 0
-                if alen ~= blen then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return alen > blen
+                elseif spec.user_id == TableColumns.GENRE then -- Genre & Position 列排序
+                  if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
+                    local apos = tonumber(a.position) or 0
+                    local bpos = tonumber(b.position) or 0
+                    if apos ~= bpos then
+                      if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                        return apos > bpos
+                      else
+                        return apos < bpos
+                      end
+                    end
                   else
-                    return alen < blen
+                    if (a.genre or "") ~= (b.genre or "") then
+                      if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                        return (a.genre or "") > (b.genre or "")
+                      else
+                        return (a.genre or "") < (b.genre or "")
+                      end
+                    end
                   end
-                end
-              elseif spec.user_id == TableColumns.CHANNELS then -- Channels 列排序
-                local achan = tonumber(a.channels) or 0
-                local bchan = tonumber(b.channels) or 0
-                if achan ~= bchan then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return achan > bchan
-                  else
-                    return achan < bchan
+                elseif spec.user_id == TableColumns.COMMENT then -- Comment 列排序
+                  if (a.comment or "") ~= (b.comment or "") then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return (a.comment or "") > (b.comment or "")
+                    else
+                      return (a.comment or "") < (b.comment or "")
+                    end
                   end
-                end
-              elseif spec.user_id == TableColumns.SAMPLERATE then -- Samplerate 列排序
-                local asr = tonumber(a.samplerate) or 0
-                local bsr = tonumber(b.samplerate) or 0
-                if asr ~= bsr then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return asr > bsr
-                  else
-                    return asr < bsr
+                elseif spec.user_id == TableColumns.DESCRIPTION then -- Description 列排序
+                  if (a.description or "") ~= (b.description or "") then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return (a.description or "") > (b.description or "")
+                    else
+                      return (a.description or "") < (b.description or "")
+                    end
                   end
-                end
-              elseif spec.user_id == TableColumns.BITS then -- Bits 列排序
-                local abits = tonumber(a.bits) or 0
-                local bbits = tonumber(b.bits) or 0
-                if abits ~= bbits then
-                  if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                    return abits > bbits
-                  else
-                    return abits < bbits
+                elseif spec.user_id == TableColumns.LENGTH then -- Length 列排序
+                  local alen = tonumber(a.length) or 0
+                  local blen = tonumber(b.length) or 0
+                  if alen ~= blen then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return alen > blen
+                    else
+                      return alen < blen
+                    end
+                  end
+                elseif spec.user_id == TableColumns.CHANNELS then -- Channels 列排序
+                  local achan = tonumber(a.channels) or 0
+                  local bchan = tonumber(b.channels) or 0
+                  if achan ~= bchan then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return achan > bchan
+                    else
+                      return achan < bchan
+                    end
+                  end
+                elseif spec.user_id == TableColumns.SAMPLERATE then -- Samplerate 列排序
+                  local asr = tonumber(a.samplerate) or 0
+                  local bsr = tonumber(b.samplerate) or 0
+                  if asr ~= bsr then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return asr > bsr
+                    else
+                      return asr < bsr
+                    end
+                  end
+                elseif spec.user_id == TableColumns.BITS then -- Bits 列排序
+                  local abits = tonumber(a.bits) or 0
+                  local bbits = tonumber(b.bits) or 0
+                  if abits ~= bbits then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return abits > bbits
+                    else
+                      return abits < bbits
+                    end
                   end
                 end
               end
-            end
-            return false
-          end)
+              return false
+            end)
+          end
+          static.filtered_list_map[current_db_key] = filtered_list
+          static.last_filter_text_map[current_db_key] = filter_text
+          static.last_sort_specs_map[current_db_key]  = sort_specs_str
         end
+
+        _G.current_display_list = filtered_list
 
         -- 内容字体自由缩放
         local wheel = reaper.ImGui_GetMouseWheel(ctx)
