@@ -1,12 +1,11 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.28
+-- @version 1.0.29
 -- @changelog
---   Waveform loading is deferred during scrolling or column resizing and only batches visible rows after 2 seconds of idle time.
---   The file list automatically switches to the newly created database mode and refreshes upon database creation.
---   All static filter and sort caches are cleared when switching databases to ensure filters and sorting are reapplied.
---   Column-width changes only clear the affected row's waveform cache and reset its loading flag; the clipper idle logic centrally handles loading.
---   start_pos is always set via FindFirstNonSilentTime(info) or 0 to prevent passing nil to CF_Preview_SetValue.
+--   Updated ImGui API calls for ReaImGui v0.10 to ensure full compatibility.
+--   Fixed the issue where Chinese volume labels did not display correctly in the My Computer drive list.
+--   Wrapped all widgets in loops with PushID()/PopID() to resolve conflicting ID warnings.
+--   Corrected ListClipper method calls to prevent nil value errors.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

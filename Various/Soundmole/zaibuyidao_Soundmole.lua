@@ -51,18 +51,20 @@ end
 local ImGui
 if reaper.ImGui_GetBuiltinPath then
   package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-  ImGui = require 'imgui' '0.9'
+  ImGui = require 'imgui' '0.10'
 end
 
 local SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
+local set_font = 'Calibri' -- options: sans-serif, Calibri, Microsoft YaHei, SimSun, STSong, STFangsong, ...
 local fonts = {
-  sans_serif = reaper.ImGui_CreateFont('sans-serif', 14), -- 全局默认字体大小
-  small = reaper.ImGui_CreateFont('', 12),
-  medium = reaper.ImGui_CreateFont('', 14),
-  large = reaper.ImGui_CreateFont('', 20),
-  title = reaper.ImGui_CreateFont('', 25),
+  sans_serif = reaper.ImGui_CreateFont(set_font, 14), -- 全局默认字体大小
+  small = reaper.ImGui_CreateFont(set_font, 12),
+  medium = reaper.ImGui_CreateFont(set_font, 14),
+  large = reaper.ImGui_CreateFont(set_font, 20),
+  title = reaper.ImGui_CreateFont(set_font, 25),
+  simsun = reaper.ImGui_CreateFont(set_font, 25),
 }
 reaper.ImGui_Attach(ctx, fonts.sans_serif)
 reaper.ImGui_Attach(ctx, fonts.small)
@@ -77,7 +79,7 @@ FONT_SIZE_MAX      = 24 -- 内容字体最大
 preview_font_sizes = { 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 }
 preview_fonts      = {}
 for _, sz in ipairs(preview_font_sizes) do
-  preview_fonts[sz] = reaper.ImGui_CreateFont("", sz)
+  preview_fonts[sz] = reaper.ImGui_CreateFont(set_font, sz)
   reaper.ImGui_Attach(ctx, preview_fonts[sz])
 end
 local DEFAULT_ROW_HEIGHT = 24 -- 内容行高
@@ -88,6 +90,7 @@ local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 -- 状态变量
 CACHE_PIXEL_WIDTH            = 2048
 selected_row                 = selected_row or -1
+ui_bottom_offset             = 240
 local playing_preview        = nil
 local playing_path           = nil
 local playing_source         = nil
@@ -1215,87 +1218,57 @@ end
 ImGui_Knob_drag_y = ImGui_Knob_drag_y or {}
 
 function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
+  -- 交互热区
   local radius = size * 0.5
-  local center_x, center_y = reaper.ImGui_GetCursorScreenPos(ctx)
-  center_x = center_x + radius
-  center_y = center_y + radius
+  local cx, cy = reaper.ImGui_GetCursorScreenPos(ctx)
+  cx, cy = cx + radius, cy + radius
 
-  local ANGLE_MIN = -3 * math.pi / 4
-  local ANGLE_MAX =  3 * math.pi / 4
-  local t = (value - v_min) / (v_max - v_min)
-  local angle = ANGLE_MIN + (ANGLE_MAX - ANGLE_MIN) * t - math.pi/2
-  -- 交互
-  reaper.ImGui_SetCursorScreenPos(ctx, center_x - radius, center_y - radius)
-  reaper.ImGui_InvisibleButton(ctx, label .. "_knob", size, size)
-  local active = reaper.ImGui_IsItemActive(ctx)
-  local hovered = reaper.ImGui_IsItemHovered(ctx)
-  -- 颜色
-  local col_idle = 0x1D2F49FF -- 未经过
-  local col_hovered = 0x23456DFF -- 悬停
-  local col_active = 0x316AADFF -- 拖动
-  local col_fill
-  if active then
-    col_fill = col_active
-  elseif hovered then
-    col_fill = col_hovered
-  else
-    col_fill = col_idle
-  end
-  -- 绘制
-  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-  reaper.ImGui_DrawList_AddCircleFilled(draw_list, center_x, center_y, radius, col_fill)
-  local hand_x = center_x + math.cos(angle) * (radius * 0.87)
-  local hand_y = center_y + math.sin(angle) * (radius * 0.87)
-  reaper.ImGui_DrawList_AddLine(draw_list, center_x, center_y, hand_x, hand_y, 0x3D85E0FF, 2)
-  reaper.ImGui_DrawList_AddCircle(draw_list, center_x, center_y, radius, 0x23456DFF, 32, 1)
-
-  local show_label = label and (label ~= "") and (not label:match("^##"))
-  if show_label then
-    reaper.ImGui_SameLine(ctx) -- 在旋钮右侧显示
-    reaper.ImGui_Text(ctx, label:gsub("##.*", "")) -- 只显示"##"前的内容
-  end
-  -- 交互
-  reaper.ImGui_SetCursorScreenPos(ctx, center_x - radius, center_y - radius)
-  reaper.ImGui_InvisibleButton(ctx, label .. "_knob", size, size)
+  reaper.ImGui_SetCursorScreenPos(ctx, cx - radius, cy - radius)
+  reaper.ImGui_InvisibleButton(ctx, label, size, size)
   local active = reaper.ImGui_IsItemActive(ctx)
   local hovered = reaper.ImGui_IsItemHovered(ctx)
   local changed = false
-  local step
-  if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()) then
-    step = (v_max - v_min) / 2000 -- 按住Ctrl超精细
-  elseif reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift()) then
-    step = (v_max - v_min) / 1000 -- 按住Shift精细
-  else
-    step = (v_max - v_min) / 100 -- 默认灵敏度，拖动100像素
+
+  -- 计算旋钮角度
+  local ANG_MIN, ANG_MAX = -3 * math.pi/4, 3 * math.pi / 4
+  local t = (value - v_min) / (v_max - v_min)
+  local angle = ANG_MIN + (ANG_MAX - ANG_MIN) * t - math.pi / 2
+
+  -- 绘制
+  local col = active and 0x316AADFF or (hovered and 0x23456DFF or 0x1D2F49FF) -- 未经过时 0x1D2F49FF, 悬停 0x23456DFF, 拖动 0x316AADFF
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+  reaper.ImGui_DrawList_AddCircleFilled(dl, cx, cy, radius, col)
+  local hx, hy = cx + math.cos(angle) * radius * 0.87, cy + math.sin(angle) * radius * 0.87
+  reaper.ImGui_DrawList_AddLine(dl, cx, cy, hx, hy, 0x3D85E0FF, 2)
+  reaper.ImGui_DrawList_AddCircle(dl, cx, cy, radius, 0x23456DFF, 32, 1)
+
+  -- 文本
+  if label:find("##")~=1 then
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_Text(ctx, label:gsub("##.*",""))
   end
 
-  -- 上下拖动改变参数
+  -- 拖拽更新
   if reaper.ImGui_IsItemActivated(ctx) then
-    ImGui_Knob_drag_y[label] = { y = select(2, reaper.ImGui_GetMousePos(ctx)), start_value = value }
+    ImGui_Knob_drag_y[label] = { y0 = select(2,reaper.ImGui_GetMousePos(ctx)), v0 = value }
   elseif active and ImGui_Knob_drag_y[label] then
     local cur_y = select(2, reaper.ImGui_GetMousePos(ctx))
-    local delta = ImGui_Knob_drag_y[label].y - cur_y -- 上移为正，下移为负
-    local new_value = ImGui_Knob_drag_y[label].start_value + delta * step
-    new_value = math.max(v_min, math.min(v_max, new_value))
-    if math.abs(new_value - value) > 1e-6 then
-      value = new_value
-      changed = true
-    end
+    local delta = ImGui_Knob_drag_y[label].y0 - cur_y
+    local step = (v_max - v_min) / ( reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) and 2000 or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) and 1000 or 100 )
+    local nv = ImGui_Knob_drag_y[label].v0 + delta*step
+    value = math.max(v_min, math.min(v_max, nv))
+    if math.abs(value - ImGui_Knob_drag_y[label].v0) > 1e-6 then changed = true end
   elseif not active then
     ImGui_Knob_drag_y[label] = nil
   end
 
-  -- 右键单击恢复默认
-  if hovered and reaper.ImGui_IsMouseClicked(ctx, 1) then
+  -- 右键或双击复位
+  if hovered and (reaper.ImGui_IsMouseClicked(ctx, 1) or reaper.ImGui_IsMouseDoubleClicked(ctx, 0)) then
     value = default_value or v_min
     changed = true
+    ImGui_Knob_drag_y[label] = nil
   end
-  -- 左键双击恢复默认
-  if hovered and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-    value = default_value or v_min
-    changed = true
-    ImGui_Knob_drag_y[label] = nil -- 重置drag偏移
-  end
+
   return changed, value
 end
 
@@ -1829,30 +1802,36 @@ function CollectFromDirectory(dir_path)
   return files, files_idx
 end
 
+-- 获取本机所有盘符及其卷标
 function get_drives()
   if drive_cache and drives_loaded then return drive_cache end
   local drives = {}
   drive_name_map = {} -- 重置映射
+
   if reaper.GetOS():find('Win') then
-    local handle = io.popen('wmic logicaldisk get name,volumename')
+    -- PowerShell: 强制 UTF-8 输出 '盘符|卷标' 列表
+    local ps = '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; ' ..
+               'Get-WmiObject Win32_LogicalDisk | ' ..
+               'Where-Object { $_.DriveType -eq 3 } | ' ..
+               'ForEach-Object{ $_.DeviceID + \'|\' + $_.VolumeName }'
+    local cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "' .. ps .. '"'
+    local handle = io.popen(cmd)
     if handle then
       for line in handle:lines() do
-        local name, volumename = line:match('^%s*([A-Z]:)%s*(.-)%s*$')
-        if name then
-          local drv = name .. '\\'
-          table.insert(drives, drv)
-          if volumename and volumename ~= "" then
-            drive_name_map[drv] = volumename
-          else
-            drive_name_map[drv] = "" -- 无卷标也要填表
-          end
+        local drv, vol = line:match('^([A-Z]:)%|(.*)$')
+        if drv then
+          local path = drv .. '\\'
+          table.insert(drives, path)
+          drive_name_map[path] = vol or ''
         end
       end
       handle:close()
     end
   else
     table.insert(drives, '/')
+    drive_name_map['/'] = ''
   end
+
   table.sort(drives)
   drive_cache = drives
   drives_loaded = true
@@ -1903,7 +1882,7 @@ function draw_tree(name, path)
   path = normalize_path(path, true)
   local show_name = name
   if drive_name_map and drive_name_map[path] and drive_name_map[path] ~= "" then
-    show_name = name .. " (" .. drive_name_map[path] .. ")"
+    show_name = name .. " [" .. drive_name_map[path] .. "]"
   end
 
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
@@ -3301,7 +3280,7 @@ mediadb_alias = LoadMediaDBAlias(EXT_SECTION) -- 加载数据库别名
 tree_state.remove_path_dbfile = tree_state.remove_path_dbfile or nil
 tree_state.remove_path_to_remove = tree_state.remove_path_to_remove or nil
 tree_state.remove_path_confirm = tree_state.remove_path_confirm or false
-clipper = clipper or reaper.ImGui_CreateListClipper(ctx)
+-- clipper = clipper or reaper.ImGui_CreateListClipper(ctx)
 
 --------------------------------------------- 表格列表 ---------------------------------------------
 
@@ -3466,12 +3445,12 @@ function loop()
   end
   -- 表格列表波形预览，每帧先处理任务队列
   ProcessWaveformTasks()
-  if need_refresh_font then -- 该段无效，适时移除
-    fonts.sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
+  if need_refresh_font then -- mark相关代码
+    fonts.sans_serif = reaper.ImGui_CreateFont(set_font, 14)
     reaper.ImGui_Attach(ctx, fonts.sans_serif)
     need_refresh_font = false
   end
-  reaper.ImGui_PushFont(ctx, fonts.sans_serif)
+  reaper.ImGui_PushFont(ctx, fonts.sans_serif, 14)
   reaper.ImGui_SetNextWindowBgAlpha(ctx, bg_alpha) -- 背景不透明度
 
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), 6.0)
@@ -3507,7 +3486,7 @@ function loop()
     reaper.ImGui_BeginGroup(ctx)
     -- 计算按钮高度，让文字垂直居中
     reaper.ImGui_Dummy(ctx, 0, 0)
-    reaper.ImGui_PushFont(ctx, fonts.title)
+    reaper.ImGui_PushFont(ctx, fonts.title, 25)
     reaper.ImGui_Text(ctx, ' Soundmole')
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
@@ -3549,7 +3528,7 @@ function loop()
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
 
     reaper.ImGui_Text(ctx, '') -- 换行占位符
-    reaper.ImGui_SameLine(ctx, nil, 58)
+    reaper.ImGui_SameLine(ctx, nil, 60)
     reaper.ImGui_Text(ctx, 'Thesaurus:')
     reaper.ImGui_SameLine(ctx, nil, 10)
     local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "##Synonyms", use_synonyms)
@@ -3595,7 +3574,7 @@ function loop()
     reaper.ImGui_BeginGroup(ctx)
     -- 清空过滤器内容
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Clear", 80, 48) then
+    if reaper.ImGui_Button(ctx, "Clear", 80, 46) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -3609,7 +3588,7 @@ function loop()
 
     -- 刷新按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Rescan", 80, 48) then
+    if reaper.ImGui_Button(ctx, "Rescan", 80, 46) then
       CollectFiles()
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -3624,7 +3603,7 @@ function loop()
 
     -- 恢复（撤销所有过滤/搜索）
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Restore All", 80, 48) then
+    if reaper.ImGui_Button(ctx, "Restore All", 80, 46) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
       active_saved_search = nil
       -- 清除临时搜索字段
@@ -3656,7 +3635,7 @@ function loop()
     show_cur_path = normalize_path(show_cur_path, false)
     local same_folder = show_cur_path:match("^(.*)[/\\][^/\\]-$")
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Same Folder", 80, 48) then
+    if reaper.ImGui_Button(ctx, "Same Folder", 80, 46) then
       tree_state.cur_path = normalize_path(same_folder, true)
       RefreshFolderFiles(same_folder)
     end
@@ -3668,7 +3647,7 @@ function loop()
 
     -- 创建数据库按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Database##scan_folder_top", 80, 48) then -- Select Folder and Scan Audio
+    if reaper.ImGui_Button(ctx, "Database##scan_folder_top", 80, 46) then -- Select Folder and Scan Audio
       local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
       if rv == 1 and folder and folder ~= "" then
         folder = normalize_path(folder, true)
@@ -3699,7 +3678,7 @@ function loop()
     local line_h = reaper.ImGui_GetTextLineHeight(ctx)
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
     -- 减去标题栏高度和底部间距。减去播放控件+波形预览+时间线9+进度条+地址栏的高度=228 +加分割条的厚度3=240
-    local child_h = math.max(10, avail_y - line_h - 240 - img_h_offset)
+    local child_h = math.max(10, avail_y - line_h - ui_bottom_offset - img_h_offset)
     if child_h < 10 then child_h = 10 end -- 最小高度保护(需要使用 if reaper.ImGui_BeginChild 才有效)
     
     local splitter_w = 3 -- 分割条宽度
@@ -3719,7 +3698,7 @@ function loop()
           local wheel = reaper.ImGui_GetMouseWheel(ctx)
           local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
           if preview_fonts[font_size] then
-            reaper.ImGui_PushFont(ctx, preview_fonts[font_size])
+            reaper.ImGui_PushFont(ctx, preview_fonts[font_size], 14)
           end
           if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
             -- 找到当前字号在列表中的索引
@@ -4881,7 +4860,7 @@ function loop()
         local wheel = reaper.ImGui_GetMouseWheel(ctx)
         local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
         if preview_fonts[font_size] then
-          reaper.ImGui_PushFont(ctx, preview_fonts[font_size])
+          reaper.ImGui_PushFont(ctx, preview_fonts[font_size], 14)
         end
         if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
           -- 找到当前字号在列表中的索引
@@ -4958,6 +4937,12 @@ function loop()
         end
         local idle_time = now_time - static.last_scroll_time -- 停止滚动多久
 
+        -- 避免列表不可见时 ImGui_ListClipper_Begin 报错修复
+        if not static.clipper then
+          static.clipper = reaper.ImGui_CreateListClipper(ctx)
+        end
+        local clipper = static.clipper
+
         reaper.ImGui_ListClipper_Begin(clipper, #filtered_list)
         while reaper.ImGui_ListClipper_Step(clipper) do
           local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
@@ -5023,7 +5008,10 @@ function loop()
               if wf.peaks and wf.peaks[1] then
                 local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
                 -- DrawWaveformInImGui(ctx, wf.peaks, thumb_w, thumb_h, wf.src_len, wf.channel_count) -- 绘制波形支持多轨
+                -- 给每行压入独立的ID，确保在同一个窗口内所有可见项的ID唯一。
+                reaper.ImGui_PushID(ctx, i)
                 DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, wf.src_len, 1) -- 绘制波形仅单轨
+                reaper.ImGui_PopID(ctx)
                 -- 绘制播放光标，排除最近播放影响
                 if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave.play_cursor then
                   local play_px = (Wave.play_cursor / wf.src_len) * thumb_w
@@ -5821,6 +5809,8 @@ function loop()
       end
 
       reaper.ImGui_EndChild(ctx)
+    else
+      static.clipper = nil
     end
     reaper.ImGui_PopStyleColor(ctx, 3) -- 恢复颜色
     reaper.ImGui_Separator(ctx)
@@ -5991,7 +5981,9 @@ function loop()
     reaper.ImGui_SameLine(ctx)
     -- local pitch_knob_min, pitch_knob_max = -6, 6 -- ±6 半音
     local pitch_knob_size = 20
+    reaper.ImGui_PushID(ctx, i)
     local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size, 0)
+    reaper.ImGui_PopID(ctx)
     if reaper.ImGui_IsItemActive(ctx) then
       is_knob_dragging = true
     end
@@ -6018,7 +6010,9 @@ function loop()
     reaper.ImGui_Text(ctx, "Rate:")
     reaper.ImGui_SameLine(ctx)
     local knob_size = 20
+    reaper.ImGui_PushID(ctx, i)
     local knob_changed, knob_value = ImGui_Knob(ctx, "##rate_knob", play_rate, rate_min, rate_max, knob_size, 1)
+    reaper.ImGui_PopID(ctx)
     if reaper.ImGui_IsItemActive(ctx) then
       is_knob_dragging = true
     end
