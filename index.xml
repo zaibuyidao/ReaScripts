@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3074e57f19c149f4b959647f6ef48bca09258837">
+<index version="1" name="zaibuyidao Scripts" commit="144cd88ac5ddb3dec6057f8925832c334bd516f5">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14397,6 +14397,18 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/3074e57f19c149f4b959647f6ef48bca09258837/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/3074e57f19c149f4b959647f6ef48bca09258837/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/3074e57f19c149f4b959647f6ef48bca09258837/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.29" author="zaibuyidao" time="2025-08-07T17:44:05Z">
+        <changelog><![CDATA[Updated ImGui API calls for ReaImGui v0.10 to ensure full compatibility.
+Fixed the issue where Chinese volume labels did not display correctly in the My Computer drive list.
+Wrapped all widgets in loops with PushID()/PopID() to resolve conflicting ID warnings.
+Corrected ListClipper method calls to prevent nil value errors.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/144cd88ac5ddb3dec6057f8925832c334bd516f5/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/144cd88ac5ddb3dec6057f8925832c334bd516f5/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/144cd88ac5ddb3dec6057f8925832c334bd516f5/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/144cd88ac5ddb3dec6057f8925832c334bd516f5/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/144cd88ac5ddb3dec6057f8925832c334bd516f5/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
