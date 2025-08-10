@@ -385,13 +385,15 @@ end
 
 function CacheFilename(filepath)
   filepath = normalize_path(filepath, false)
-  local size = tostring(GetFileSize(filepath))
+  -- 文件大小安全获取
+  local fsize = GetFileSize(filepath)
+  if not fsize then fsize = 0 end -- 文件不存在或无法访问时，避免崩溃
+  local size = tostring(fsize)
   local hash = SimpleHash(filepath .. "@" .. size)
   local subdir = hash:sub(1, 2) -- 取前两位，16进制00~ff
   local dir = cache_dir .. subdir .. sep
   EnsureCacheDir(dir) -- 确保子文件夹存在
   return dir .. hash .. ".wfc"
-  -- return cache_dir .. SimpleHash(filepath .. "@" .. size) .. ".wfc"
 end
 
 -- 保存缓存

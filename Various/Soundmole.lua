@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.30
+-- @version 1.0.31
 -- @changelog
 --   Added column drag Reorder columns by dragging left or right in the file list.
 --   Fixed clipper error No invalid pointer crash when the window is collapsed.
