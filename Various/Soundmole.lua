@@ -1,11 +1,13 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.29
+-- @version 1.0.30
 -- @changelog
---   Updated ImGui API calls for ReaImGui v0.10 to ensure full compatibility.
---   Fixed the issue where Chinese volume labels did not display correctly in the My Computer drive list.
---   Wrapped all widgets in loops with PushID()/PopID() to resolve conflicting ID warnings.
---   Corrected ListClipper method calls to prevent nil value errors.
+--   Added column drag Reorder columns by dragging left or right in the file list.
+--   Fixed clipper error No invalid pointer crash when the window is collapsed.
+--   Fix autosave behavior Save immediately in Enter mode save after two seconds idle in live mode.
+--   Live search adds 0.5s debounce Filtering triggers after 0.5s idle reducing per-keystroke refresh lag.
+--   RS5K optimization reuse the first RS5K on the selected track and set the loaded sample as the active slot.
+--   Batch creation create a new track per selected sample and load an RS5K instance for each.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

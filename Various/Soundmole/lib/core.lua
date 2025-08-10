@@ -309,37 +309,58 @@ end
 
 --------------------------------------------- RS5K ---------------------------------------------
 
-function GetOrCreateRS5k(track)
-  if not track then return nil end
-  local cnt = reaper.TrackFX_GetCount(track)
-  for i = 0, cnt-1 do
+function LoadAudioToRS5k(track, path)
+  if not path or path == "" then return end
+  reaper.PreventUIRefresh(1)
+
+  local insert_idx = reaper.CountTracks(0)
+  if track and reaper.ValidatePtr(track, "MediaTrack*") then
+    local tn = tonumber(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) or 0
+    if tn > 0 then insert_idx = math.floor(tn) end
+  end
+
+  reaper.InsertTrackAtIndex(insert_idx, true)
+  local new_tr = reaper.GetTrack(0, insert_idx)
+  if not new_tr then
+    reaper.PreventUIRefresh(-1)
+    return
+  end
+  -- 轨道命名为文件名
+  local basename = (path:match("([^/\\]+)$") or "Sample"):gsub("%.%w+$", "")
+  reaper.GetSetMediaTrackInfo_String(new_tr, "P_NAME", basename, true)
+
+  -- 添加RS5K
+  local fx = reaper.TrackFX_AddByName(new_tr, "ReaSamplomatic5000 (Cockos)", false, 1)
+  if fx < 0 then
+    fx = reaper.TrackFX_AddByName(new_tr, "VSTi: ReaSamplomatic5000 (Cockos)", false, 1)
+  end
+  -- 载入样本到RS5K第0槽
+  reaper.TrackFX_SetNamedConfigParm(new_tr, fx, "FILE0", path)
+  -- reaper.TrackFX_SetOpen(new_tr, fx, true)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
+end
+
+function FindRS5KOnTrack(track)
+  local fx_count = reaper.TrackFX_GetCount(track)
+  for i = 0, fx_count - 1 do
     local _, name = reaper.TrackFX_GetFXName(track, i, "")
-    if name:find("RS5K") then
+    if name:find("RS5K", 1, true) then
       return i
     end
   end
-  return reaper.TrackFX_AddByName(track, "ReaSamplOmatic5000 (Cockos)", false, 1)
+  return -1
 end
 
--- 往选中轨道的 RS5k 依次添加样本
-function LoadAudioToRS5k(track, path)
+-- 将当前样本加入已有RS5K，并设为活跃槽
+function LoadOnlySelectedToRS5k(track, path)
   if not track or not path or path == "" then return end
-  local fx = GetOrCreateRS5k(track)
-  if not fx or fx < 0 then return end
-  -- 找第一个空槽，最多16槽
-  local slot = 0
-  while slot < 16 do
-    local param = ("FILE%d"):format(slot)
-    local val = reaper.TrackFX_GetNamedConfigParm(track, fx, param)
-    if not val or val == "" then break end
-    slot = slot + 1
-  end
-
-  if slot >= 16 then
-    reaper.ShowMessageBox("RS5k sample slots full", "Warning", 0)
-  else
-    local param = ("FILE%d"):format(slot)
-    reaper.TrackFX_SetNamedConfigParm(track, fx, param, path)
-    reaper.TrackFX_SetOpen(track, fx, true)
-  end
+  reaper.PreventUIRefresh(1)
+  local fx = FindRS5KOnTrack(track)
+  if fx == -1 then reaper.PreventUIRefresh(-1) return end
+  -- 载入样本到RS5K第0槽
+  reaper.TrackFX_SetNamedConfigParm(track, fx, "FILE0", path)
+  reaper.TrackFX_SetOpen(track, fx, true)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
 end

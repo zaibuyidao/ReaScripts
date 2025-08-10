@@ -116,7 +116,8 @@ local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
 local files_idx_cache        = nil   -- 文件缓存
 local recent_audio_files     = {}    -- 最近播放列表
-local max_recent_files       = 20    -- 最多保留20条
+local max_recent_files       = 20    -- 最近播放最多保留20条
+local max_recent_search      = 20    -- 最近搜索最多保留20条
 local selected_recent_row    = 0
 local skip_silence_enabled   = false -- 跳过静音
 local skip_silence_db        = -60   -- 静音阈值，超过此值即认为有声
@@ -280,7 +281,8 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MAX, tostring(rate_max), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
-  reaper.SetExtState(EXT_SECTION, "max_recent_files", tostring(max_recent_files), true)
+  reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
+  reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_ROW_HEIGHT, tostring(row_height), true)
 end
 
@@ -302,8 +304,11 @@ if last_bg_alpha then bg_alpha = last_bg_alpha end
 local last_img_h_offset = tonumber(reaper.GetExtState(EXT_SECTION, "img_h_offset"))
 if last_img_h_offset then img_h_offset = last_img_h_offset end
 
-local last_max_recent = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_files"))
-if last_max_recent then max_recent_files = math.max(1, math.min(100, last_max_recent)) end
+local last_max_recent_play = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_play"))
+if last_max_recent_play then max_recent_files = math.max(1, math.min(100, last_max_recent_play)) end
+
+local last_max_recent_search = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_search"))
+if last_max_recent_search then max_recent_search = math.max(1, math.min(100, last_max_recent_search)) end
 
 --------------------------------------------- 颜色表 ---------------------------------------------
 
@@ -3203,7 +3208,6 @@ saved_search_list = LoadSavedSearch(EXT_SECTION, saved_search_list)
 --------------------------------------------- 最近搜索节点 ---------------------------------------------
 
 local recent_search_keywords = {}
-local max_recent_searches = 20 -- 最多记录20条
 local search_input_timer = 0
 local last_search_input = ""
 local save_search_keyword = nil -- 保存最近搜索
@@ -3240,7 +3244,7 @@ function AddToRecentSearched(keyword)
     end
   end
   table.insert(recent_search_keywords, 1, keyword)
-  while #recent_search_keywords > max_recent_searches do
+  while #recent_search_keywords > max_recent_search do
     table.remove(recent_search_keywords)
   end
   SaveRecentSearched()
@@ -3281,8 +3285,16 @@ tree_state.remove_path_dbfile = tree_state.remove_path_dbfile or nil
 tree_state.remove_path_to_remove = tree_state.remove_path_to_remove or nil
 tree_state.remove_path_confirm = tree_state.remove_path_confirm or false
 -- clipper = clipper or reaper.ImGui_CreateListClipper(ctx)
+build_waveform_cache = (reaper.GetExtState(EXT_SECTION, "build_waveform_cache") == "1")
 
---------------------------------------------- 表格列表 ---------------------------------------------
+--------------------------------------------- 右侧表格列表优化 ---------------------------------------------
+
+-- Enter模式搜索过滤
+local search_enter_ext = reaper.GetExtState(EXT_SECTION, "search_enter_mode")
+if search_enter_ext == "" then
+  search_enter_mode = false else search_enter_mode = (search_enter_ext == "1")
+end
+_G.commit_filter_text = _G.commit_filter_text or ""
 
 -- 只在过滤/排序状态变化时重建 filtered_list，普通渲染时只用缓存，用于解决滚动卡死问题
 local static = _G._soundmole_static or {}
@@ -3317,31 +3329,28 @@ function GetCurrentListKey()
   end
 end
 
--- 根据文本框, 同义词, UCS, Saved Search 等规则，从原始 files_idx_cache 中构建过滤后列表。
+-- 根据文本框, 同义词, UCS, Saved Search 等规则，从原始files_idx_cache中构建过滤后列表。
 local function BuildFilteredList(list)
   local filtered = {}
+
   for _, info in ipairs(list) do
     -- 过滤关键词 - 与保存搜索关键词深度绑定
-    local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+    local filter_text = _G.commit_filter_text or ""
 
     -- 自动保存最近搜索关键词
     if filter_text ~= last_search_input then
       last_search_input = filter_text
       search_input_timer = reaper.time_precise()
     end
-    -- 输入停顿超过 2 秒，且内容不为空，才保存
-    if filter_text ~= "" and reaper.time_precise() - search_input_timer > 2 then
-      AddToRecentSearched(filter_text)
-      search_input_timer = math.huge -- 避免重复写入
-    end
 
-    -- 临时关键词 & UCS 分类 & Saved Search参与搜索，替代空输入。关键词不发送到搜索框
+    -- 临时关键词 & UCS 分类 (& Saved Search暂不参与) 参与搜索，替代空输入。关键词不发送到搜索框
     local search_keyword = filter_text
     -- 隐式搜索相关代码。优先使用UCS主分类/子分类关键词，否则使用保存搜索关键词
     if temp_search_keyword then
       search_keyword = temp_search_keyword
-    elseif search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
-      search_keyword = saved_search_list[active_saved_search].keyword or ""
+    -- 保存搜索关键词（如果启用隐式发送保存搜索关键词则应整段注释2,共两处）
+    -- elseif search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
+    --   search_keyword = saved_search_list[active_saved_search].keyword or ""
     end
 
     -- 拆分用户输入为小写关键词数组
@@ -3351,7 +3360,7 @@ local function BuildFilteredList(list)
     end
 
     -- 启用同义词时，将关键词分为两类。有同义词的关键词 和 无同义词的额外关键词
-    -- 同义词逻辑：synonym_keywords 为 OR，extra_keywords 为 AND
+    -- 同义词逻辑: synonym_keywords 为 OR，extra_keywords 为 AND
     local synonym_keywords = {}
     local extra_keywords = {}
     local seen_groups = {} -- 去重同义词组
@@ -3438,6 +3447,778 @@ local function BuildFilteredList(list)
   return filtered
 end
 
+-- 右键菜单支持RS5K
+function RowContextFallbackFromCell(ctx, i, info, allow_open_popup, popup_id, is_item_mode)
+  if not reaper.ImGui_IsItemHovered(ctx) then return end
+
+  if allow_open_popup and reaper.ImGui_IsMouseClicked(ctx, 1) then
+    reaper.ImGui_OpenPopup(ctx, popup_id)
+  end
+  -- Q: 只在filename模式生效，避免和item模式的Q冲突
+  if (not is_item_mode) and info.path and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Q()) then
+    local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
+    if tr then LoadAudioToRS5k(tr, info.path) end
+  end
+  -- Shift+Q: 只在filename模式生效，避免和item模式的Shift+Q冲突
+  if (not is_item_mode) and info.path and reaper.ImGui_GetKeyMods(ctx) == reaper.ImGui_Mod_Shift() and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Q()) then
+    local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
+    if tr then LoadOnlySelectedToRS5k(tr, info.path) end
+  end
+end
+
+-- 键盘快捷键
+function HandleRowKeybinds(ctx, i, info, collect_mode)
+  if selected_row ~= i then return end
+  -- 只在窗口聚焦时响应
+  if not reaper.ImGui_IsWindowFocused(ctx, reaper.ImGui_FocusedFlags_RootAndChildWindows()) then return end
+  -- Q: 定位并选中usage/item
+  if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Q()) then
+    local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
+    if info.usages and #info.usages > 0 then
+      -- 当前索引
+      info.__usage_sel_index = (info.__usage_sel_index or 1) + (shift and -1 or 1)
+      local n = #info.usages
+      if info.__usage_sel_index < 1 then info.__usage_sel_index = n end
+      if info.__usage_sel_index > n then info.__usage_sel_index = 1 end
+
+      local target = info.usages[info.__usage_sel_index]
+      reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+      if target and target.item then
+        reaper.SetMediaItemSelected(target.item, true)
+        reaper.UpdateArrange()
+        local pos = reaper.GetMediaItemInfo_Value(target.item, "D_POSITION")
+        reaper.SetEditCurPos(pos or 0, true, false)
+      end
+    else
+      -- 只有一个item的情况
+      reaper.Main_OnCommand(40289, 0)
+      if info.item then
+        reaper.SetMediaItemSelected(info.item, true)
+        reaper.UpdateArrange()
+        local pos = reaper.GetMediaItemInfo_Value(info.item, "D_POSITION")
+        reaper.SetEditCurPos(pos or 0, true, false)
+      end
+    end
+  end
+
+  -- F2: 重命名
+  if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F2()) then
+    if collect_mode == COLLECT_MODE_RPP then
+      local old_path = normalize_path(info.path or "", false)
+      local dir = old_path:match("^(.*)[/\\][^/\\]+$") or ""
+      local old_filename = old_path:match("[^/\\]+$") or ""
+      local ext = old_filename:match("%.[^%.]+$") or "" -- 提取原始后缀
+
+      local ok, new_filename = reaper.GetUserInputs("Rename File", 1, "New Name:,extrawidth=200", old_filename)
+      if ok and new_filename and new_filename ~= "" and new_filename ~= old_filename then
+      -- 如果新文件名没有后缀，自动补全原后缀
+        if not new_filename:lower():match("%.[a-z0-9]+$") and ext ~= "" then
+          new_filename = new_filename .. ext
+        end
+        local new_path = dir .. "/" .. new_filename
+        new_path = normalize_path(new_path, false)
+
+        -- 拷贝物理文件
+        local srcfile = (old_path ~= "" and io.open(old_path, "rb")) or nil
+        local dstfile = (new_path ~= "" and io.open(new_path, "wb")) or nil
+        if srcfile and dstfile then
+          dstfile:write(srcfile:read("*a"))
+          srcfile:close()
+          dstfile:close()
+          -- 替换所有usages的source
+          for _, usage in ipairs(info.usages or {}) do
+            if usage.take then
+              reaper.BR_SetTakeSourceFromFile(usage.take, new_path, true)
+            end
+          end
+          CollectFiles()
+          reaper.ShowMessageBox("File copied and relinked!", "OK", 0)
+        else
+          reaper.ShowMessageBox("Copy failed!", "Error", 0)
+        end
+      end
+    elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
+      local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename or "")
+      if ok and new_name and new_name ~= "" then
+        -- 遍历所有usages
+        if info.usages and #info.usages > 0 then
+          for _, usage in ipairs(info.usages) do
+            if usage.take then
+              reaper.GetSetMediaItemTakeInfo_String(usage.take, "P_NAME", new_name, true)
+            end
+          end
+        elseif info.take then
+          reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
+        end
+        CollectFiles()
+      end
+    end
+  end
+
+  -- M: 静音 item 或整组 usages
+  if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_M()) then
+    if info.usages and #info.usages > 0 and info.usages[1].item then
+      -- 按第一个item的当前状态决定全组mute还是unmute
+      local first_mute = reaper.GetMediaItemInfo_Value(info.usages[1].item, "B_MUTE")
+      local new_mute = (first_mute == 1) and 0 or 1
+      for _, u in ipairs(info.usages) do
+        if u.item then
+          reaper.SetMediaItemInfo_Value(u.item, "B_MUTE", new_mute)
+        end
+      end
+      reaper.UpdateArrange()
+    elseif info.item then
+      -- 单个
+      local mute = reaper.GetMediaItemInfo_Value(info.item, "B_MUTE")
+      reaper.SetMediaItemInfo_Value(info.item, "B_MUTE", mute == 1 and 0 or 1)
+      reaper.UpdateArrange()
+    end
+  end
+
+  -- Ctrl+D: 删除
+  local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+  if ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_D()) then
+    if info.usages and #info.usages > 0 then
+      for _, u in ipairs(info.usages) do
+        if u.track and u.item then
+          reaper.DeleteTrackMediaItem(u.track, u.item)
+        end
+      end
+    elseif info.track and info.item then
+      -- 单个
+      reaper.DeleteTrackMediaItem(info.track, info.item)
+    end
+    CollectFiles()
+    reaper.UpdateArrange()
+  end
+end
+
+-- 统一的行右键菜单
+function DrawRowPopup(ctx, i, info, collect_mode)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
+
+  local is_item_mode = (collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP)
+
+  if is_item_mode then
+    -- Media Items / RPP，item 菜单
+    local is_muted = false
+    if info.usages and #info.usages > 0 and info.usages[1].item then
+      is_muted = (reaper.GetMediaItemInfo_Value(info.usages[1].item, "B_MUTE") == 1)
+    elseif info.item then
+      is_muted = (reaper.GetMediaItemInfo_Value(info.item, "B_MUTE") == 1)
+    end
+
+    if reaper.ImGui_MenuItem(ctx, "Mute", nil, is_muted) then
+      local new_mute = is_muted and 0 or 1
+      if info.usages and #info.usages > 0 then
+        for _, usage in ipairs(info.usages) do
+          if usage.item then
+            reaper.SetMediaItemInfo_Value(usage.item, "B_MUTE", new_mute)
+          end
+        end
+      elseif info.item then
+        reaper.SetMediaItemInfo_Value(info.item, "B_MUTE", new_mute)
+      end
+      reaper.UpdateArrange()
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+
+    if reaper.ImGui_BeginMenu(ctx, "Usage") then
+      for _, usage in ipairs(info.usages or {}) do
+        local label = string.format('Track %d "%s" %s',
+          reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
+          usage.track_name or "-",
+          reaper.format_timestr(usage.position or 0, "")
+        )
+        if reaper.ImGui_MenuItem(ctx, label) then
+          reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+          if usage.item then
+            reaper.SetMediaItemSelected(usage.item, true)
+          end
+          reaper.UpdateArrange()
+          reaper.SetEditCurPos(usage.position or 0, true, false)
+          reaper.ImGui_CloseCurrentPopup(ctx)
+        end
+      end
+      reaper.ImGui_EndMenu(ctx)
+    end
+
+    if collect_mode == COLLECT_MODE_RPP then
+      if reaper.ImGui_MenuItem(ctx, "Rename file...") then
+        local old_path = info.path
+        local dir = old_path and old_path:match("^(.*)[/\\][^/\\]+$")
+        local old_filename = old_path and old_path:match("[^/\\]+$")
+        local ext = old_filename and (old_filename:match("%.[^%.]+$") or "") or "" -- 提取原始后缀
+
+        local ok, new_filename = reaper.GetUserInputs("Rename File", 1, "New Name:,extrawidth=200", old_filename or "")
+        if ok and new_filename and new_filename ~= "" and new_filename ~= old_filename then
+          -- 如果新文件名没有后缀，自动补全原后缀
+          if not new_filename:lower():match("%.[a-z0-9]+$") and ext ~= "" then
+            new_filename = new_filename .. ext
+          end
+          local new_path = dir .. "/" .. new_filename
+          new_path = normalize_path(new_path, false)
+
+          -- 拷贝物理文件
+          local srcfile = old_path and io.open(old_path, "rb")
+          local dstfile = new_path and io.open(new_path, "wb")
+          if srcfile and dstfile then
+            dstfile:write(srcfile:read("*a"))
+            srcfile:close()
+            dstfile:close()
+            -- 替换所有usages的source
+            for _, usage in ipairs(info.usages or {}) do
+              if usage.take then
+                reaper.BR_SetTakeSourceFromFile(usage.take, new_path, true)
+              end
+            end
+            CollectFiles()
+            reaper.ShowMessageBox("File copied and relinked!", "OK", 0)
+          else
+            reaper.ShowMessageBox("Copy failed!", "Error", 0)
+          end
+        end
+        reaper.ImGui_CloseCurrentPopup(ctx)
+      end
+    else
+      if reaper.ImGui_MenuItem(ctx, "Rename active take") then
+        local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename or "")
+        if ok and new_name and new_name ~= "" then
+          if info.usages and #info.usages > 0 then
+            for _, usage in ipairs(info.usages) do
+              if usage.take then
+                reaper.GetSetMediaItemTakeInfo_String(usage.take, "P_NAME", new_name, true)
+              end
+            end
+          elseif info.take then
+            reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
+          end
+          CollectFiles()
+        end
+        reaper.ImGui_CloseCurrentPopup(ctx)
+      end
+    end
+
+    if reaper.ImGui_MenuItem(ctx, "Insert into project") then
+      WithAutoCrossfadeDisabled(function()
+        reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+        local old_cursor = reaper.GetCursorPosition()
+        reaper.PreventUIRefresh(1)
+        reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+        if info.path and info.path ~= "" then
+          local insert_path = normalize_path(info.path, false)
+          reaper.InsertMedia(insert_path, 0)
+          reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+        end
+        reaper.PreventUIRefresh(-1)
+        reaper.UpdateArrange()
+        reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+        reaper.ImGui_CloseCurrentPopup(ctx)
+      end)
+    end
+
+    if reaper.ImGui_MenuItem(ctx, "Remove from project") then
+      if info.usages and #info.usages > 0 then
+        for _, usage in ipairs(info.usages) do
+          if usage.track and usage.item then
+            reaper.DeleteTrackMediaItem(usage.track, usage.item)
+          end
+        end
+      elseif info.track and info.item then
+        -- 单个
+        reaper.DeleteTrackMediaItem(info.track, info.item)
+      end
+      CollectFiles() -- 删除后刷新列表
+      reaper.UpdateArrange()
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+
+  else
+    -- 右键打开文件所在目录
+    if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+      local path = info.path
+      if path and path ~= "" then
+        reaper.CF_LocateInExplorer(normalize_path(path, false)) -- 规范分隔符
+      end
+    end
+
+    -- 右键加载到RS5k，单选处理备用
+    -- if reaper.ImGui_MenuItem(ctx, "Load Sample to New RS5K Track (Q)") then
+    --   local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
+    --   LoadAudioToRS5k(tr, info.path)
+    -- end
+
+    -- 右键批量加载到RS5k
+    if reaper.ImGui_MenuItem(ctx, "Load Sample(s) to New RS5K Track (Q)") then
+      if file_select_start and file_select_end and file_select_start ~= file_select_end then
+        -- 批量: 按多选范围加载
+        local a = math.min(file_select_start, file_select_end)
+        local b = math.max(file_select_start, file_select_end)
+        for j = a, b do
+          local sel_info = _G.current_display_list[j]
+          if sel_info and sel_info.path then
+            -- 新建轨道
+            LoadAudioToRS5k(nil, sel_info.path)
+          end
+        end
+      else
+        -- 单选: 只加载当前info
+        local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
+        LoadAudioToRS5k(tr, info.path)
+      end
+    end
+
+    if reaper.ImGui_MenuItem(ctx, "Set as Active RS5K Sample (Shift+Q)") then
+      local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
+      LoadOnlySelectedToRS5k(tr, info.path)
+    end
+  end
+
+  -- 批量高级文件夹音频文件移除
+  if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder then
+    reaper.ImGui_Separator(ctx)
+    if reaper.ImGui_MenuItem(ctx, "Remove from Collections") then
+      local node = advanced_folders[tree_state.cur_advanced_folder]
+      if node and node.files then
+        -- 收集所有需要移除的路径
+        local remove_paths = {}
+        if file_select_start and file_select_end and file_select_start ~= file_select_end then
+          local a = math.min(file_select_start, file_select_end)
+          local b = math.max(file_select_start, file_select_end)
+          for j = a, b do
+            local sel_info = _G.current_display_list[j]
+            if sel_info and sel_info.path then
+              remove_paths[normalize_path(sel_info.path, false)] = true
+            end
+          end
+        else
+          -- 单选只移除当前info
+          remove_paths[normalize_path(info.path, false)] = true
+        end
+
+        -- 倒序遍历批量移除
+        for k = #node.files, 1, -1 do
+          if remove_paths[normalize_path(node.files[k], false)] then
+            table.remove(node.files, k)
+          end
+        end
+        SaveAdvancedFolders()
+        files_idx_cache = nil
+        CollectFiles()
+        -- 清空多选状态
+        file_select_start, file_select_end, selected_row = nil, nil, -1
+      end
+    end
+  end
+
+  -- 批量数据库列表文件移除
+  if collect_mode == COLLECT_MODE_MEDIADB then
+    reaper.ImGui_Separator(ctx)
+    if reaper.ImGui_MenuItem(ctx, "Remove from Database") then
+      -- 用当前选中数据库文件
+      local db_dir = script_path .. "SoundmoleDB"
+      local dbfile = tree_state.cur_mediadb
+      local dbpath = db_dir .. sep .. dbfile
+      -- 收集要移除的路径
+      local remove_paths = {}
+      if file_select_start and file_select_end and file_select_start ~= file_select_end then
+        local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
+        for j = a, b do
+          local sel = _G.current_display_list[j]
+          if sel and sel.path then
+            remove_paths[normalize_path(sel.path, false)] = true
+          end
+        end
+      else
+        remove_paths[normalize_path(info.path, false)] = true
+      end
+      -- 移除选中项
+      for path in pairs(remove_paths) do
+        RemoveFromMediaDB(path, dbpath)
+        for k = #files_idx_cache, 1, -1 do
+          if normalize_path(files_idx_cache[k].path, false) == path then
+            table.remove(files_idx_cache, k)
+            break
+          end
+        end
+      end
+
+      -- 强制重建列表，失效当前数据库的过滤缓存
+      local current_db_key = GetCurrentListKey()
+      static.filtered_list_map[current_db_key]    = nil
+      static.last_filter_text_map[current_db_key] = nil
+      static.last_sort_specs_map[current_db_key]  = nil
+
+      files_idx_cache = nil
+      CollectFiles()
+      -- 清空多选状态
+      file_select_start, file_select_end, selected_row = nil, nil, -1
+    end
+  end
+
+  reaper.ImGui_PopStyleColor(ctx, 1)
+end
+
+function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
+  -- 表格标题文字颜色 -- 文字颜色
+  if IsPreviewed(info.path) then
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.previewed_text)
+  else
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
+  end
+  -- 表格标题悬停及激活时颜色 -- 表格颜色 悬停颜色 激活颜色
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), colors.table_header_hovered)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(), colors.table_header_active)
+
+  -- mark 原mark相关代码备留
+  -- reaper.ImGui_TableSetColumnIndex(ctx, 0)
+  -- if IsPreviewed(info.path) then
+  --   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+  --   local cx, cy = reaper.ImGui_GetCursorScreenPos(ctx)
+  --   local radius = 1.5
+  --   local color = 0xFFF0F0F0 -- 0x00FFFFFF -- 0x22ff22ff
+  --   reaper.ImGui_DrawList_AddCircleFilled(draw_list, cx + radius + 10, cy + radius + 5, radius, color)
+  --   reaper.ImGui_Dummy(ctx, radius*2+4, radius*2+4)
+  -- else
+  --   reaper.ImGui_Dummy(ctx, 10, 10)
+  -- end
+
+  local col_count = reaper.ImGui_TableGetColumnCount(ctx)
+  for c = 0, col_count - 1 do
+    reaper.ImGui_TableSetColumnIndex(ctx, c)
+    local col_name = reaper.ImGui_TableGetColumnName(ctx, c) or ""
+
+    -- 名称别名，避免模式差异
+    local is_name_col   = (col_name == "Take Name" or col_name == "File Name")
+    local is_date_track = (col_name == "Date" or col_name == "Track")
+    local is_genre_pos  = (col_name == "Genre" or col_name == "Position")
+
+    -- Waveform
+    if col_name == "Waveform" then
+      local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx)) -- 自适应宽度
+      local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2-px 用于上下 padding
+
+      -- 检查宽度变化，只清空缓存并重置加载标记
+      if info._last_thumb_w ~= thumb_w then
+        info._thumb_waveform   = {}      -- 清掉旧波形缓存
+        info._last_thumb_w     = thumb_w
+        info._loading_waveform = false   -- 重置标记，让 Clip­per 在空闲>=2s 后再次入队
+      end
+
+      -- 表格列表波形预览支持鼠标点击切换播放光标
+      info._thumb_waveform = info._thumb_waveform or {}
+      local wf = info._thumb_waveform[thumb_w]
+
+      if wf and wf.peaks and wf.peaks[1] then
+        local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+        -- 给每行压入独立的ID，确保在同一个窗口内所有可见项的ID唯一。
+        reaper.ImGui_PushID(ctx, i)
+        DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, wf.src_len, 1)
+        -- DrawWaveformInImGui(ctx, wf.peaks, thumb_w, thumb_h, wf.src_len, wf.channel_count) -- 绘制波形支持多轨
+        reaper.ImGui_PopID(ctx)
+
+        -- 绘制播放光标，排除最近播放影响
+        if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave.play_cursor then
+          local play_px = (Wave.play_cursor / wf.src_len) * thumb_w
+          local dl = reaper.ImGui_GetWindowDrawList(ctx)
+          reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, 0x808080FF, 1.5)
+        end
+
+        -- 鼠标检测 - 点击跳播，切换播放光标
+        local mx, my = reaper.ImGui_GetMousePos(ctx)
+        if mx >= x and mx <= x + thumb_w and my >= y and my <= y + thumb_h then
+          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
+            local rel_x  = mx - x
+            local new_pos = (rel_x / thumb_w) * wf.src_len
+            current_recent_play_info = nil -- 解除最近播放锁定
+            if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+              collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
+            end
+            if playing_path == info.path then
+              RestartPreviewWithParams(new_pos)
+            else
+              selected_row = i
+              PlayFromStart(info)
+              RestartPreviewWithParams(new_pos)
+            end
+          end
+        end
+      else
+         -- 未加载则加入队列，停顿2秒
+        if idle_time >= 2 and not info._loading_waveform then
+          info._loading_waveform = true
+          EnqueueWaveformTask(info, thumb_w)
+        end
+        -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx) -- 画灰色占位条
+        -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+        -- reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + thumb_w, y + thumb_h, 0x444444FF)
+        -- reaper.ImGui_Dummy(ctx, thumb_w, thumb_h)
+      end
+
+    -- File & Teak name
+    elseif is_name_col then
+      local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
+      local is_sel = false
+      if file_select_start and file_select_end then
+        local a = math.min(file_select_start, file_select_end)
+        local b = math.max(file_select_start, file_select_end)
+        is_sel = (i >= a and i <= b)
+      end
+      if selected_row == i then is_sel = true end
+      if reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
+        handle_file_click(i)
+        selected_row = i
+      end
+
+      -- 双击播放
+      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
+        if doubleclick_action == DOUBLECLICK_INSERT then
+          WithAutoCrossfadeDisabled(function()
+            reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+            local old_cursor = reaper.GetCursorPosition()
+            reaper.PreventUIRefresh(1) -- 防止UI刷新
+            reaper.InsertMedia(normalize_path(info.path, false), 0)
+            reaper.SetEditCurPos(old_cursor, true, false) -- 恢复光标到插入前
+            reaper.PreventUIRefresh(-1)
+            reaper.UpdateArrange()
+            reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+          end)
+        elseif doubleclick_action == DOUBLECLICK_PREVIEW then
+          PlayFromStart(info)
+        elseif doubleclick_action == DOUBLECLICK_NONE then
+          -- Do nothing
+        end
+      end
+
+      -- 拖动音频到REAPER或自定义文件夹
+      if reaper.ImGui_BeginDragDropSource(ctx) then
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
+        reaper.ImGui_Text(ctx, "Drag to insert or collect")
+        dragging_audio = {
+          path = info and info.path,
+          start_time = 0,
+          end_time = info and info.section_length or 0,
+          section_offset = info and info.section_offset or 0
+        }
+        -- 收集范围内所有路径
+        local paths = {}
+        local a = math.min(file_select_start or i, file_select_end or i)
+        local b = math.max(file_select_start or i, file_select_end or i)
+        for j = a, b do table.insert(paths, normalize_path(_G.current_display_list[j].path, false)) end
+        reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATHS", table.concat(paths, "|;|"))
+        reaper.ImGui_PopStyleColor(ctx, 1)
+        reaper.ImGui_EndDragDropSource(ctx)
+      end
+
+      -- Ctrl+左键 或 Ctrl+S 插入文件到工程
+      local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+      local is_ctrl_click = reaper.ImGui_IsItemClicked(ctx, 0) and ctrl
+      local is_ctrl_S = ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S())
+      if (is_ctrl_click or (selected_row == i and is_ctrl_S)) then
+        WithAutoCrossfadeDisabled(function()
+          reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
+          local old_cursor = reaper.GetCursorPosition()
+          reaper.PreventUIRefresh(1) -- 防止UI刷新
+          reaper.InsertMedia(normalize_path(info.path, false), 0)
+          reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+          reaper.PreventUIRefresh(-1)
+          reaper.UpdateArrange()
+          reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+        end)
+      end
+
+      local popup_id = "row_popup_" .. tostring(i)
+      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+        reaper.ImGui_OpenPopup(ctx, popup_id)
+      end
+      if reaper.ImGui_BeginPopup(ctx, popup_id) then
+        DrawRowPopup(ctx, i, info, collect_mode) -- 根据 collect_mode 自动分流菜单
+        reaper.ImGui_EndPopup(ctx)
+      end
+
+      -- 键盘快捷键
+      HandleRowKeybinds(ctx, i, info, collect_mode)
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Size
+    elseif col_name == "Size" then
+      local size_str
+      if info.size >= 1024*1024 then
+        size_str = string.format("%.2f MB", info.size / 1024 / 1024)
+      elseif info.size >= 1024 then
+        size_str = string.format("%.2f KB", info.size / 1024)
+      else
+        size_str = string.format("%d B", info.size)
+      end
+      reaper.ImGui_Text(ctx, size_str)
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Type
+    elseif col_name == "Type" then
+      reaper.ImGui_Text(ctx, info.type)
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Date & Track name
+    elseif is_date_track then
+      if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
+        if info.usages and #info.usages > 1 then
+          reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
+        else
+          reaper.ImGui_Text(ctx, info.track_name or "-")
+        end
+        -- 右键 usage 跳转
+        local popup_id2 = "item_context_menu__" .. tostring(i)
+        if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+          reaper.ImGui_OpenPopup(ctx, popup_id2)
+        end
+        if reaper.ImGui_BeginPopup(ctx, popup_id2) then
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
+          for _, usage in ipairs(info.usages or {}) do
+            local label = string.format('Track %d "%s" %s',
+              reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
+              usage.track_name or "-",
+              reaper.format_timestr(usage.position or 0, "")
+            )
+            if reaper.ImGui_MenuItem(ctx, label) then
+              reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+              reaper.SetMediaItemSelected(usage.item, true)
+              reaper.UpdateArrange()
+              reaper.SetEditCurPos(usage.position, true, false)
+              reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+          end
+          reaper.ImGui_PopStyleColor(ctx, 1)
+          reaper.ImGui_EndPopup(ctx)
+        end
+      else
+        reaper.ImGui_Text(ctx, info.bwf_orig_date or "-")
+      end
+
+      RowContextFallbackFromCell(ctx, i, info, false, popup_id, is_item_mode)  -- 只给 Q，不打开主菜单
+
+    -- Genre & Position
+    elseif is_genre_pos then
+      if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
+        if info.usages and #info.usages > 1 then
+          reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
+        else
+          local pos_str = reaper.format_timestr(info.position or 0, "") or "-"
+          reaper.ImGui_Text(ctx, pos_str)
+        end
+        local popup_id3 = "item_context_menu___" .. tostring(i)
+        if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+          reaper.ImGui_OpenPopup(ctx, popup_id3)
+        end
+        if reaper.ImGui_BeginPopup(ctx, popup_id3) then
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
+          for _, usage in ipairs(info.usages or {}) do
+            local label = string.format('Track %d "%s" %s',
+              reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
+              usage.track_name or "-",
+              reaper.format_timestr(usage.position or 0, "")
+            )
+            if reaper.ImGui_MenuItem(ctx, label) then
+              reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
+              reaper.SetMediaItemSelected(usage.item, true)
+              reaper.UpdateArrange()
+              reaper.SetEditCurPos(usage.position, true, false)
+              reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+          end
+          reaper.ImGui_PopStyleColor(ctx, 1)
+          reaper.ImGui_EndPopup(ctx)
+        end
+      else
+        reaper.ImGui_Text(ctx, info.genre or "-")
+      end
+      RowContextFallbackFromCell(ctx, i, info, false, popup_id, is_item_mode) -- 只给 Q，不打开主菜单
+
+    -- Comment
+    elseif col_name == "Comment" then
+      reaper.ImGui_Text(ctx, info.comment or "-")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Description
+    elseif col_name == "Description" then
+      reaper.ImGui_Text(ctx, info.description or "-")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Category/SubCategory/CatID (UCS)
+    elseif col_name == "Category" then
+      reaper.ImGui_Text(ctx, info.ucs_category or "")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+    elseif col_name == "SubCategory" then
+      reaper.ImGui_Text(ctx, info.ucs_subcategory or "")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+    elseif col_name == "CatID" then
+      reaper.ImGui_Text(ctx, info.ucs_catid or "")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Length
+    elseif col_name == "Length" then
+      local len_str = (info.length and info.length > 0) and reaper.format_timestr(info.length, "") or "-"
+      reaper.ImGui_Text(ctx, len_str)
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Channels
+    elseif col_name == "Channels" then
+      reaper.ImGui_Text(ctx, info.channels)
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Samplerate
+    elseif col_name == "Samplerate" then
+      reaper.ImGui_Text(ctx, info.samplerate or "-")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Bits
+    elseif col_name == "Bits" then
+      reaper.ImGui_Text(ctx, info.bits or "-")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Group
+    elseif col_name == "Group" then
+      local group_names = GetCustomGroupsForPath(normalize_path(info.path, false))
+      if group_names ~= "" then
+        reaper.ImGui_Text(ctx, group_names)
+      else
+        -- 用固定像素宽度撑大区域
+        reaper.ImGui_InvisibleButton(ctx, "GroupCell_", 100, reaper.ImGui_GetTextLineHeight(ctx))
+      end
+
+      -- 右键弹出group菜单
+      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+        reaper.ImGui_OpenPopup(ctx, "GroupMenu_" .. i)
+      end
+      if reaper.ImGui_BeginPopup(ctx, "GroupMenu_" .. i) then
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
+        -- 收集当前高亮范围内的所有 info
+        local list = _G.current_display_list or {}
+        local infos = {}
+        if file_select_start and file_select_end then
+          local a = math.min(file_select_start, file_select_end)
+          local b = math.max(file_select_start, file_select_end)
+          for j = a, b do
+            table.insert(infos, list[j])
+          end
+        else
+          -- 无多选时，单条传入
+          table.insert(infos, list[i])
+        end
+        ShowGroupMenu(infos)
+        reaper.ImGui_PopStyleColor(ctx, 1)
+        reaper.ImGui_EndPopup(ctx)
+      end
+
+    -- Path
+    elseif col_name == "Path" then
+      reaper.ImGui_Text(ctx, normalize_path(info.path or "", false))
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+    end
+  end
+
+  reaper.ImGui_PopStyleColor(ctx, 3)
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -3465,6 +4246,7 @@ function loop()
       reaper.ImGui_DestroyImage(last_cover_img)
     end
     last_cover_img, last_cover_path = nil, nil
+    static.clipper = nil -- 防止ImGui_ListClipper报错
   end
   last_window_visible = visible
 
@@ -3527,6 +4309,47 @@ function loop()
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
 
+    _G.just_committed_filter = false
+    -- 按enter搜索
+    if search_enter_mode then
+      if (reaper.ImGui_IsItemActive(ctx) or reaper.ImGui_IsItemFocused(ctx)) and
+        (reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or
+          reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter())) then
+        local txt = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+        _G.commit_filter_text = txt
+        _G.just_committed_filter = true
+
+        -- Enter模式: 立刻保存到最近搜索
+        if txt ~= "" then
+          if txt ~= last_search_input then
+            AddToRecentSearched(txt)
+            last_search_input = txt
+          end
+          search_input_timer = math.huge -- 防重复保存
+        end
+      end
+    else
+      -- 实时模式: 0.5秒防抖(实时搜索模式停顿0.5秒再执行)+停顿2秒自动保存
+      local live = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+      local now = reaper.time_precise()
+      _G._live_prev, _G._live_t = _G._live_prev or "", _G._live_t or now
+      if live ~= _G._live_prev then
+        _G._live_prev = live
+        _G._live_t = now
+      end
+      if now - _G._live_t >= 0.5 then _G.commit_filter_text = live end
+
+      local cur = _G.commit_filter_text
+      if cur ~= last_search_input then
+        last_search_input = cur
+        search_input_timer = now
+      end
+      if cur ~= "" and now - (search_input_timer or 0) > 2 then
+        AddToRecentSearched(cur)
+        search_input_timer = math.huge
+      end
+    end
+
     reaper.ImGui_Text(ctx, '') -- 换行占位符
     reaper.ImGui_SameLine(ctx, nil, 60)
     reaper.ImGui_Text(ctx, 'Thesaurus:')
@@ -3534,6 +4357,9 @@ function loop()
     local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "##Synonyms", use_synonyms)
     if changed_synonyms then
       use_synonyms = new_use_synonyms
+      -- 同义词勾选时强制重建，否则不工作
+      static.filtered_list_map    = {}
+      static.last_filter_text_map = {}
     end
 
     -- 同义词显示输入框
@@ -3576,6 +4402,16 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     if reaper.ImGui_Button(ctx, "Clear", 80, 46) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
+
+      _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
+      -- 清除临时搜索字段，UCS隐式搜索临时关键词
+      active_saved_search = nil
+      temp_search_field   = nil
+      temp_search_keyword = nil
+
+      static.filtered_list_map    = {}
+      static.last_filter_text_map = {}
+      selected_row = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
@@ -3605,10 +4441,16 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     if reaper.ImGui_Button(ctx, "Restore All", 80, 46) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
+
+      _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
+      -- 清除临时搜索字段，UCS隐式搜索临时关键词
       active_saved_search = nil
-      -- 清除临时搜索字段
-      temp_search_field = nil
+      temp_search_field   = nil
       temp_search_keyword = nil
+
+      static.filtered_list_map    = {}
+      static.last_filter_text_map = {}
+      selected_row = nil  
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
@@ -4172,6 +5014,12 @@ function loop()
               if reaper.ImGui_Selectable(ctx, keyword, selected) then
                 -- 点击发送到搜索框
                 reaper.ImGui_TextFilter_Set(filename_filter, keyword)
+                -- 点击关键词时，同时回填到过滤框并更新_G.commit_filter_text
+                local kw = keyword or ""
+                _G.commit_filter_text    = kw
+                _G.just_committed_filter = true -- 如果外部有提交后写入最近搜索的一次性逻辑可用
+                last_search_input        = kw
+                search_input_timer       = reaper.time_precise()
               end
               -- 右键菜单
               if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -4197,16 +5045,24 @@ function loop()
               reaper.ImGui_OpenPopup(ctx, "Add Search")
               show_add_popup = false
             end
+
             local add_visible = reaper.ImGui_BeginPopupModal(ctx, "Add Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
             if add_visible then
               reaper.ImGui_Text(ctx, "Name:")
               reaper.ImGui_SameLine(ctx)
               local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
               if input_changed then new_search_name = input_val end
-              reaper.ImGui_Separator(ctx)
               reaper.ImGui_Text(ctx, "Keyword: " .. (save_search_keyword or ""))
               reaper.ImGui_Separator(ctx)
-              if reaper.ImGui_Button(ctx, "OK") or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+
+              local win_w = reaper.ImGui_GetWindowWidth(ctx)
+              local btn_w = 64
+              local spacing = 8 -- 两个按钮间距
+              -- 光标移到右侧对齐
+              local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
+              reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
+
+              if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
                 if (new_search_name or "") ~= "" and (save_search_keyword or "") ~= "" then
                   -- 避免重名
                   local exists = false
@@ -4223,7 +5079,7 @@ function loop()
                 save_search_keyword = ""
               end
               reaper.ImGui_SameLine(ctx)
-              if reaper.ImGui_Button(ctx, "Cancel") then
+              if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
                 reaper.ImGui_CloseCurrentPopup(ctx)
                 new_search_name = ""
                 save_search_keyword = ""
@@ -4292,6 +5148,7 @@ function loop()
           reaper.ImGui_SameLine(ctx)
           if reaper.ImGui_Button(ctx, "Clear") then
             reaper.ImGui_TextFilter_Set(usc_filter, "")
+            temp_search_keyword, temp_search_field = nil, nil -- 清除UCS隐式搜索
           end
           reaper.ImGui_Separator(ctx)
 
@@ -4365,7 +5222,6 @@ function loop()
               reaper.ImGui_SameLine(ctx)
               -- 发送UCS主分类关键词，隐式搜索
               if reaper.ImGui_Selectable(ctx, cat, false, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
-                -- reaper.ImGui_TextFilter_Set(filename_filter, cat) -- 关闭发送关键词，隐式搜索
                 temp_search_field = "ucs_category" -- 指定本次只搜索主分类字段
                 temp_search_keyword = cat:lower()  -- 指定本次分类关键词（小写用于比较）
                 active_saved_search = nil
@@ -4376,7 +5232,6 @@ function loop()
                   reaper.ImGui_Indent(ctx, 28)
                   -- 发送UCS子分类关键词，隐式搜索
                   if reaper.ImGui_Selectable(ctx, entry.name) then
-                    -- reaper.ImGui_TextFilter_Set(filename_filter, entry.name) -- 关闭发送关键词，隐式搜索
                     temp_search_field = "ucs_subcategory"    -- 指定本次只搜索子分类字段
                     temp_search_keyword = entry.name:lower() -- 指定本次分类关键词（小写用于比较）
                     active_saved_search = nil
@@ -4394,8 +5249,9 @@ function loop()
         if reaper.ImGui_BeginTabItem(ctx, 'Saved Search') then
           prev_filter_text = prev_filter_text or ""
           local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
-          if filter_text ~= "" and prev_filter_text ~= filter_text then
+          if prev_filter_text ~= filter_text then
             active_saved_search = nil
+            temp_search_keyword, temp_search_field = nil, nil -- 清除 UCS 隐式搜索
           end
           prev_filter_text = filter_text
 
@@ -4416,10 +5272,17 @@ function loop()
             reaper.ImGui_SameLine(ctx)
             local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
             if input_changed then new_search_name = input_val end
-            reaper.ImGui_Separator(ctx)
             reaper.ImGui_Text(ctx, "Keyword: " .. (filter_text or ""))
             reaper.ImGui_Separator(ctx)
-            if reaper.ImGui_Button(ctx, "OK") or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+
+            local win_w = reaper.ImGui_GetWindowWidth(ctx)
+            local btn_w = 64
+            local spacing = 8 -- 两个按钮间距
+            -- 光标移到右侧对齐
+            local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
+            reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
+
+            if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
               if (new_search_name or "") ~= "" and (filter_text or "") ~= "" then
                 -- 避免重名
                 local exists = false
@@ -4435,7 +5298,7 @@ function loop()
               new_search_name = ""
             end
             reaper.ImGui_SameLine(ctx)
-            if reaper.ImGui_Button(ctx, "Cancel") then
+            if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
               reaper.ImGui_CloseCurrentPopup(ctx)
               new_search_name = ""
             end
@@ -4449,26 +5312,42 @@ function loop()
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), 0x00000000)
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  0x00000000)
 
-            -- local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, s.name)
-            -- local padding = 0
-            -- if reaper.ImGui_Selectable(ctx, s.name, false, 0, text_w + padding - 2, 0) then -- 只占文本宽度的 Selectable 备用
-
             local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-            local cursor_pos = { reaper.ImGui_GetCursorScreenPos(ctx) }
-            if reaper.ImGui_Selectable(ctx, s.name, false, 0, text_w - 56, 0) then
-              active_saved_search = idx
-              -- 不写入过滤框
-              -- if filename_filter then
-              --   reaper.ImGui_TextFilter_Set(filename_filter, s.keyword)
-              -- end
+            local pos_x, pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
+
+            -- 组合显示文本: Name (keyword)
+            local label = (s.name or "")
+            if (s.keyword or "") ~= "" then
+              label = string.format("%s (%s)", s.name or "", s.keyword or "")
             end
 
-            if reaper.ImGui_IsItemHovered(ctx) then
-              reaper.ImGui_SetCursorScreenPos(ctx, table.unpack(cursor_pos))
+            -- 用不可见标签创建可点击/可悬浮的区域
+            local clicked = reaper.ImGui_Selectable(ctx, "##saved_sel_" .. idx, false, 0, text_w - 56, 0)
+            local hovered = reaper.ImGui_IsItemHovered(ctx)
+
+            -- 按悬浮状态切换文字颜色，手动在同一位置绘制一次文本
+            reaper.ImGui_SetCursorScreenPos(ctx, pos_x, pos_y)
+            if hovered then
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.table_header_active)
-              reaper.ImGui_Text(ctx, s.name)
+              reaper.ImGui_Text(ctx, label)
               reaper.ImGui_PopStyleColor(ctx)
+            else
+              reaper.ImGui_Text(ctx, label)
             end
+
+            -- 将保存搜索关键词发送过滤框（隐式搜索，如果启用隐式发送保存搜索关键词则应整段注释1,共两处）
+            if clicked then
+              active_saved_search = idx
+              local kw = s.keyword or ""
+              if filename_filter then
+                reaper.ImGui_TextFilter_Set(filename_filter, kw) -- 回填到输入框
+              end
+              _G.commit_filter_text    = kw                      -- 列表过滤使用
+              _G.just_committed_filter = true                    -- 如外部有一次性提交逻辑可用
+              last_search_input        = kw                      -- 同步输入状态
+              search_input_timer       = reaper.time_precise()   -- 重置计时，避免重复写入
+            end
+
             -- 恢复关键词文字样式颜色
             reaper.ImGui_PopStyleColor(ctx, 3)
 
@@ -4495,7 +5374,7 @@ function loop()
             end
             -- 上移
             if idx > 1 then
-              if reaper.ImGui_Button(ctx, "^", btn_w, 20) then
+              if reaper.ImGui_ArrowButton(ctx, "##up", reaper.ImGui_Dir_Up()) then
                 local temp = saved_search_list[idx - 1]
                 saved_search_list[idx - 1] = saved_search_list[idx]
                 saved_search_list[idx] = temp
@@ -4507,7 +5386,7 @@ function loop()
             reaper.ImGui_SameLine(ctx, nil, 4)
             -- 下移
             if idx < #saved_search_list then
-              if reaper.ImGui_Button(ctx, "v", btn_w, 20) then
+              if reaper.ImGui_ArrowButton(ctx, "##down", reaper.ImGui_Dir_Down()) then
                 local temp = saved_search_list[idx + 1]
                 saved_search_list[idx + 1] = saved_search_list[idx]
                 saved_search_list[idx] = temp
@@ -4631,10 +5510,11 @@ function loop()
         | reaper.ImGui_TableFlags_ScrollX()
         | reaper.ImGui_TableFlags_Sortable()
         | reaper.ImGui_TableFlags_Hideable()
+        | reaper.ImGui_TableFlags_Reorderable() -- 拖拽列
       ) then
         reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
         if collect_mode == COLLECT_MODE_ALL_ITEMS then -- Media Items
-          reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort() | reaper.ImGui_TableColumnFlags_NoReorder(), 100) -- 锁定列不允许拖动
           reaper.ImGui_TableSetupColumn(ctx, "Take Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -4721,12 +5601,17 @@ function loop()
 
         -- 判断是否有过滤/排序变化
         local sort_specs_str = tostring(sort_specs[1] and sort_specs[1].user_id or "") .. (sort_specs[1] and sort_specs[1].sort_dir or "")
+
+        local eff_text = _G.commit_filter_text or ""
+        local ucs_sig  = tostring(temp_search_field or "") .. "|" .. tostring(temp_search_keyword or "")
+        local eff      = eff_text .. "||" .. ucs_sig
+
         local last_filter_text = static.last_filter_text_map[current_db_key] or ""
         local last_sort_specs  = static.last_sort_specs_map[current_db_key] or ""
         local filtered_list    = static.filtered_list_map[current_db_key]
 
         -- 判断过滤/排序是否变更
-        local filter_changed = (filter_text ~= last_filter_text)
+        local filter_changed   = (eff ~= last_filter_text)
         local sort_changed = (sort_specs_str ~= last_sort_specs)
 
         if filter_changed or sort_changed or not filtered_list then
@@ -4850,7 +5735,7 @@ function loop()
             end)
           end
           static.filtered_list_map[current_db_key] = filtered_list
-          static.last_filter_text_map[current_db_key] = filter_text
+          static.last_filter_text_map[current_db_key] = eff
           static.last_sort_specs_map[current_db_key]  = sort_specs_str
         end
 
@@ -4922,22 +5807,40 @@ function loop()
           _G.scroll_target = 0.5 -- 0.0=顶部
         end
 
+        local wave_col = -1
+        local col_count = reaper.ImGui_TableGetColumnCount(ctx)
+        for c = 0, col_count - 1 do
+          if (reaper.ImGui_TableGetColumnName(ctx, c) or "") == "Waveform" then
+            wave_col = c
+            break
+          end
+        end
+
+        local wave_w
+        if wave_col >= 0 then
+          reaper.ImGui_TableSetColumnIndex(ctx, wave_col)
+          wave_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+        else
+          wave_w = 120 -- 没有 Waveform 列时的兜底宽度
+        end
+
         local tw = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-        local load_limit = 2 -- 每次最多加入2个加载任务
+        local load_limit   = 2 -- 每帧最多2个波形加载任务，波形加载限制2个
         local loaded_count = 0
 
         -- 限制加载波形，指定列表无滚动时多少秒之后才开始加载。用于解决脚本卡顿问题。
         local now_time = reaper.time_precise()
         static.last_scroll_time = static.last_scroll_time or now_time
-        static.last_scroll_y    = static.last_scroll_y    or reaper.ImGui_GetScrollY(ctx)
-        local cur_scroll_y, wheel = reaper.ImGui_GetScrollY(ctx), reaper.ImGui_GetMouseWheel(ctx)
+        static.last_scroll_y    = static.last_scroll_y or reaper.ImGui_GetScrollY(ctx)
+        local cur_scroll_y      = reaper.ImGui_GetScrollY(ctx)
+        local wheel             = reaper.ImGui_GetMouseWheel(ctx)
         if cur_scroll_y ~= static.last_scroll_y or wheel ~= 0 then
           static.last_scroll_y    = cur_scroll_y
           static.last_scroll_time = now_time
         end
         local idle_time = now_time - static.last_scroll_time -- 停止滚动多久
 
-        -- 避免列表不可见时 ImGui_ListClipper_Begin 报错修复
+        -- 确保 clipper 存在，避免列表不可见时 ImGui_ListClipper_Begin 报错修复
         if not static.clipper then
           static.clipper = reaper.ImGui_CreateListClipper(ctx)
         end
@@ -4946,795 +5849,26 @@ function loop()
         reaper.ImGui_ListClipper_Begin(clipper, #filtered_list)
         while reaper.ImGui_ListClipper_Step(clipper) do
           local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
-          if idle_time >= 2 then
+          if idle_time >= 2 then -- 停顿2秒
             -- clipper+限流+防止重复加入
             for idx = display_start + 1, display_end do
-              if loaded_count >= load_limit then break end -- 限制本帧最大加载数
+              if loaded_count >= load_limit then break end -- 波形加载，限制本帧最大加载数2个
 
-              local info = filtered_list[idx]
-              info._thumb_waveform = info._thumb_waveform or {}
-              if not info._thumb_waveform[tw] and not info._loading_waveform then
-                info._loading_waveform = true -- 设置加载标记，防止重复加入
-                EnqueueWaveformTask(info, tw)
+              local inf = filtered_list[idx]
+              inf._thumb_waveform = inf._thumb_waveform or {}
+              if not inf._thumb_waveform[tw] and not inf._loading_waveform then
+                inf._loading_waveform = true -- 设置加载标记，防止重复加入
+                EnqueueWaveformTask(inf, tw)
                 loaded_count = loaded_count + 1
               end
             end
           end
 
+          -- 每行渲染，按当前列名
           for i = display_start + 1, display_end do
             local info = filtered_list[i]
-            reaper.ImGui_TableNextRow(ctx, reaper.ImGui_TableRowFlags_None(), row_height) -- 内容高度可以在设置中改变
-            -- 表格标题文字颜色 -- 文字颜色
-            if IsPreviewed(info.path) then
-              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.previewed_text)
-            else
-              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
-            end
-            -- 表格标题悬停及激活时颜色 -- 表格颜色 悬停颜色 激活颜色
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), colors.table_header_hovered)
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(), colors.table_header_active)
-            local row_hovered = false
-
-            -- mark 原mark相关代码备留
-            -- reaper.ImGui_TableSetColumnIndex(ctx, 0)
-            -- if IsPreviewed(info.path) then
-            --   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-            --   local cx, cy = reaper.ImGui_GetCursorScreenPos(ctx)
-            --   local radius = 1.5
-            --   local color = 0xFFF0F0F0 -- 0x00FFFFFF -- 0x22ff22ff
-            --   reaper.ImGui_DrawList_AddCircleFilled(draw_list, cx + radius + 10, cy + radius + 5, radius, color)
-            --   reaper.ImGui_Dummy(ctx, radius*2+4, radius*2+4)
-            -- else
-            --   reaper.ImGui_Dummy(ctx, 10, 10)
-            -- end
-
-            -- 表格列表波形预览缩略图自适应列宽
-            reaper.ImGui_TableSetColumnIndex(ctx, 0)
-            local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))   -- 自适应宽度
-            -- local thumb_h = math.floor(reaper.ImGui_GetTextLineHeight(ctx) * 0.9) -- 旧版自适应高度
-            local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2-px 用于上下 padding
-
-            -- 检查宽度变化，只清空缓存并重置加载标记
-            if info._last_thumb_w ~= thumb_w then
-              info._thumb_waveform    = {}        -- 清掉旧波形缓存
-              info._last_thumb_w      = thumb_w  
-              info._loading_waveform  = false     -- 重置标记，让 Clip­per 在空闲>=2s 后再次入队
-            end
-
-            -- 表格列表波形预览支持鼠标点击切换播放光标
-            info._thumb_waveform = info._thumb_waveform or {}
-            if info._thumb_waveform[thumb_w] then
-              local wf = info._thumb_waveform[thumb_w]
-              if wf.peaks and wf.peaks[1] then
-                local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-                -- DrawWaveformInImGui(ctx, wf.peaks, thumb_w, thumb_h, wf.src_len, wf.channel_count) -- 绘制波形支持多轨
-                -- 给每行压入独立的ID，确保在同一个窗口内所有可见项的ID唯一。
-                reaper.ImGui_PushID(ctx, i)
-                DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, wf.src_len, 1) -- 绘制波形仅单轨
-                reaper.ImGui_PopID(ctx)
-                -- 绘制播放光标，排除最近播放影响
-                if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave.play_cursor then
-                  local play_px = (Wave.play_cursor / wf.src_len) * thumb_w
-                  local dl = reaper.ImGui_GetWindowDrawList(ctx)
-                  reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, 0x808080FF, 1.5)
-                end
-                -- 鼠标检测 - 点击切换播放光标
-                local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
-                if mouse_x >= x and mouse_x <= x + thumb_w and mouse_y >= y and mouse_y <= y + thumb_h then
-                  if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
-                    local rel_x = mouse_x - x
-                    local new_pos = (rel_x / thumb_w) * wf.src_len
-
-                    current_recent_play_info = nil -- 解除最近播放锁定
-                    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then -- 如果点击右侧表格列表项则切换回之前的模式
-                      collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
-                    end
-
-                    if playing_path == info.path then
-                      RestartPreviewWithParams(new_pos)
-                    else
-                      selected_row = i
-                      PlayFromStart(info)
-                      RestartPreviewWithParams(new_pos)
-                    end
-                  end
-                end
-              end
-            else
-              if idle_time >= 2 then
-                info._loading_waveform = true
-                EnqueueWaveformTask(info, thumb_w) -- 未加载则加入队列
-              end
-              -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx) -- 画灰色占位条
-              -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-              -- reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + thumb_w, y + thumb_h, 0x444444FF)
-              -- reaper.ImGui_Dummy(ctx, thumb_w, thumb_h)
-            end
-
-            -- File & Teak name
-            reaper.ImGui_TableSetColumnIndex(ctx, 1)
-            if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
-              local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
-              local row_width = reaper.ImGui_GetContentRegionAvail(ctx) -- 获取当前列可用宽度
-              local is_sel = false
-              if file_select_start and file_select_end then
-                local a = math.min(file_select_start, file_select_end)
-                local b = math.max(file_select_start, file_select_end)
-                is_sel = (i >= a and i <= b)
-              end
-              if selected_row == i then is_sel = true end
-              if reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
-                handle_file_click(i)
-                selected_row = i
-              end
-
-              -- 右键菜单定位item/静音/重命名/插入到工程中
-              local popup_id = "item_context_menu_" .. tostring(i)
-              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-                reaper.ImGui_OpenPopup(ctx, popup_id)
-              end
-
-              if reaper.ImGui_BeginPopup(ctx, popup_id) then
-                local is_muted = false
-                if info.usages and #info.usages > 0 then
-                  is_muted = (reaper.GetMediaItemInfo_Value(info.usages[1].item, "B_MUTE") == 1)
-                else
-                  is_muted = (reaper.GetMediaItemInfo_Value(info.item, "B_MUTE") == 1)
-                end
-
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
-                if reaper.ImGui_MenuItem(ctx, "Mute", nil, is_muted) then
-                  local new_mute = is_muted and 0 or 1
-                  if info.usages and #info.usages > 0 then
-                    for _, usage in ipairs(info.usages) do
-                      reaper.SetMediaItemInfo_Value(usage.item, "B_MUTE", new_mute)
-                    end
-                    reaper.UpdateArrange()
-                  else
-                    reaper.SetMediaItemInfo_Value(info.item, "B_MUTE", new_mute)
-                    reaper.UpdateArrange()
-                  end
-                  reaper.ImGui_CloseCurrentPopup(ctx)
-                end
-
-                if reaper.ImGui_BeginMenu(ctx, "Usage") then
-                  for _, usage in ipairs(info.usages or {}) do
-                    local label = string.format('Track %d "%s" %s',
-                      reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
-                      usage.track_name or "-",
-                      reaper.format_timestr(usage.position or 0, "")
-                    )
-                    if reaper.ImGui_MenuItem(ctx, label) then
-                      reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-                      reaper.SetMediaItemSelected(usage.item, true)
-                      reaper.UpdateArrange()
-                      reaper.SetEditCurPos(usage.position, true, false)
-                      reaper.ImGui_CloseCurrentPopup(ctx)
-                    end
-                  end
-                  reaper.ImGui_EndMenu(ctx)
-                end
-
-                if collect_mode == COLLECT_MODE_RPP then
-                  if reaper.ImGui_MenuItem(ctx, "Rename file...") then
-                    local old_path = info.path
-                    local dir = old_path:match("^(.*)[/\\][^/\\]+$")
-                    local old_filename = old_path:match("[^/\\]+$")
-                    local ext = old_filename:match("%.[^%.]+$") or "" -- 提取原始后缀
-
-                    local ok, new_filename = reaper.GetUserInputs("Rename File", 1, "New Name:,extrawidth=200", old_filename)
-                    if ok and new_filename and new_filename ~= "" and new_filename ~= old_filename then
-                      -- 如果新文件名没有后缀，自动补全原后缀
-                      if not new_filename:lower():match("%.[a-z0-9]+$") and ext ~= "" then
-                        new_filename = new_filename .. ext
-                      end
-                      local new_path = dir .. "/" .. new_filename
-                      new_path = normalize_path(new_path, false)
-
-                      -- 拷贝物理文件
-                      local srcfile = io.open(old_path, "rb")
-                      local dstfile = io.open(new_path, "wb")
-                      if srcfile and dstfile then
-                        dstfile:write(srcfile:read("*a"))
-                        srcfile:close()
-                        dstfile:close()
-                        -- 替换所有usages的source
-                        for _, usage in ipairs(info.usages or {}) do
-                          reaper.BR_SetTakeSourceFromFile(usage.take, new_path, true)
-                        end
-                        -- 刷新
-                        CollectFiles()
-                        reaper.ShowMessageBox("File copied and relinked!", "OK", 0)
-                      else
-                        reaper.ShowMessageBox("Copy failed!", "Error", 0)
-                      end
-                    end
-                    reaper.ImGui_CloseCurrentPopup(ctx)
-                  end
-                else
-                  if reaper.ImGui_MenuItem(ctx, "Rename active take") then
-                    local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename)
-                    if ok and new_name and new_name ~= "" then
-                      -- 遍历所有usages
-                      if info.usages and #info.usages > 0 then
-                        for _, usage in ipairs(info.usages) do
-                          reaper.GetSetMediaItemTakeInfo_String(usage.take, "P_NAME", new_name, true)
-                        end
-                      else
-                        reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
-                      end
-                      CollectFiles()
-                    end
-                    reaper.ImGui_CloseCurrentPopup(ctx)
-                  end
-                end
-
-                if reaper.ImGui_MenuItem(ctx, "Insert into project") then
-                  WithAutoCrossfadeDisabled(function()
-                    reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
-                    local old_cursor = reaper.GetCursorPosition()
-                    reaper.PreventUIRefresh(1) -- 防止UI刷新
-                    reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-                    if info.path and info.path ~= "" then
-                      local insert_path = normalize_path(info.path, false)
-                      reaper.InsertMedia(insert_path, 0)
-                      reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
-                    end
-                    reaper.PreventUIRefresh(-1)
-                    reaper.UpdateArrange()
-                    reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
-                    reaper.ImGui_CloseCurrentPopup(ctx)
-                  end)
-                end
-
-                if reaper.ImGui_MenuItem(ctx, "Remove from project") then
-                  if info.usages and #info.usages > 0 then
-                    for _, usage in ipairs(info.usages) do
-                      if usage.track and usage.item then
-                        reaper.DeleteTrackMediaItem(usage.track, usage.item)
-                      end
-                    end
-                  elseif info.track and info.item then
-                    -- 单个
-                    reaper.DeleteTrackMediaItem(info.track, info.item)
-                  end
-                  CollectFiles() -- 删除后刷新列表
-                  reaper.UpdateArrange()
-                  reaper.ImGui_CloseCurrentPopup(ctx)
-                end
-                reaper.ImGui_PopStyleColor(ctx, 1)
-                reaper.ImGui_EndPopup(ctx)
-              end
-
-              -- 键盘快捷键
-              if selected_row == i then
-                -- Q: 定位item并选中
-                if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Q()) then
-                  local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
-                  if info.usages and #info.usages > 0 then
-                    -- 当前索引
-                    info.__usage_sel_index = info.__usage_sel_index or 1
-                    if shift then
-                      -- 反向循环
-                      info.__usage_sel_index = info.__usage_sel_index - 1
-                      if info.__usage_sel_index < 1 then
-                        info.__usage_sel_index = #info.usages
-                      end
-                    else
-                      -- 正向循环
-                      info.__usage_sel_index = info.__usage_sel_index + 1
-                      if info.__usage_sel_index > #info.usages then
-                        info.__usage_sel_index = 1
-                      end
-                    end
-                    local target = info.usages[info.__usage_sel_index]
-                    reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-                    reaper.SetMediaItemSelected(target.item, true)
-                    reaper.UpdateArrange()
-                    local pos = reaper.GetMediaItemInfo_Value(target.item, "D_POSITION")
-                    reaper.SetEditCurPos(pos, true, false)
-                  else
-                    -- 只有一个item的情况
-                    reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-                    reaper.SetMediaItemSelected(info.item, true)
-                    reaper.UpdateArrange()
-                    local pos = reaper.GetMediaItemInfo_Value(info.item, "D_POSITION")
-                    reaper.SetEditCurPos(pos, true, false)
-                  end
-                end
-
-                -- F2: 更改item名称
-                if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F2()) then
-                  if collect_mode == COLLECT_MODE_RPP then
-                    local old_path = normalize_path(info.path, false)
-                    local dir = old_path:match("^(.*)[/\\][^/\\]+$")
-                    local old_filename = old_path:match("[^/\\]+$")
-                    local ext = old_filename:match("%.[^%.]+$") or "" -- 提取原始后缀
-
-                    local ok, new_filename = reaper.GetUserInputs("Rename File", 1, "New Name:,extrawidth=200", old_filename)
-                    if ok and new_filename and new_filename ~= "" and new_filename ~= old_filename then
-                      -- 如果新文件名没有后缀，自动补全原后缀
-                      if not new_filename:lower():match("%.[a-z0-9]+$") and ext ~= "" then
-                        new_filename = new_filename .. ext
-                      end
-                      local new_path = dir .. "/" .. new_filename
-                      new_path = ormalize_path(new_path, false)
-
-                      -- 拷贝物理文件
-                      local srcfile = io.open(old_path, "rb")
-                      local dstfile = io.open(new_path, "wb")
-                      if srcfile and dstfile then
-                        dstfile:write(srcfile:read("*a"))
-                        srcfile:close()
-                        dstfile:close()
-                        -- 替换所有usages的source
-                        for _, usage in ipairs(info.usages or {}) do
-                          reaper.BR_SetTakeSourceFromFile(usage.take, new_path, true)
-                        end
-                        -- 刷新
-                        CollectFiles()
-                        reaper.ShowMessageBox("File copied and relinked!", "OK", 0)
-                      else
-                        reaper.ShowMessageBox("Copy failed!", "Error", 0)
-                      end
-                    end
-                  elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
-                    local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename)
-                    if ok and new_name and new_name ~= "" then
-                      -- 遍历所有usages
-                      if info.usages and #info.usages > 0 then
-                        for _, usage in ipairs(info.usages) do
-                          reaper.GetSetMediaItemTakeInfo_String(usage.take, "P_NAME", new_name, true)
-                        end
-                      else
-                        reaper.GetSetMediaItemTakeInfo_String(info.take, "P_NAME", new_name, true)
-                      end
-                      CollectFiles()
-                    end
-                  end
-                end
-
-                -- M: mute item
-                if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_M()) then
-                  if info.usages and #info.usages > 0 then
-                    -- 按第一个item的当前状态决定全组mute还是unmute
-                    local first_mute = reaper.GetMediaItemInfo_Value(info.usages[1].item, "B_MUTE")
-                    local new_mute = (first_mute == 1) and 0 or 1
-                    for _, usage in ipairs(info.usages) do
-                      reaper.SetMediaItemInfo_Value(usage.item, "B_MUTE", new_mute)
-                    end
-                    reaper.UpdateArrange()
-                  else
-                    -- 单个
-                    local mute = reaper.GetMediaItemInfo_Value(info.item, "B_MUTE")
-                    reaper.SetMediaItemInfo_Value(info.item, "B_MUTE", mute == 1 and 0 or 1)
-                    reaper.UpdateArrange()
-                  end
-                end
-
-                -- Ctrl+D: 删除item
-                if (reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()))
-                  and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_D()) then
-                  if info.usages and #info.usages > 0 then
-                    for _, usage in ipairs(info.usages) do
-                      if usage.track and usage.item then
-                        reaper.DeleteTrackMediaItem(usage.track, usage.item)
-                      end
-                    end
-                  elseif info.track and info.item then
-                    -- 单个
-                    reaper.DeleteTrackMediaItem(info.track, info.item)
-                  end
-                  CollectFiles() -- 删除后刷新列表
-                  reaper.UpdateArrange()
-                end
-              end
-            else
-              local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
-              local row_width = reaper.ImGui_GetContentRegionAvail(ctx)
-              local is_sel = false
-              if file_select_start and file_select_end then
-                local a = math.min(file_select_start, file_select_end)
-                local b = math.max(file_select_start, file_select_end)
-                is_sel = (i >= a and i <= b)
-              end
-              if selected_row == i then is_sel = true end
-              if reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
-                handle_file_click(i)
-                selected_row = i
-              end
-
-              local popup_id = "row_context_" .. tostring(i)
-              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-                reaper.ImGui_OpenPopup(ctx, popup_id)
-              end
-
-              -- 快捷键将样本插入到RS5K
-              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Q()) then
-                local tr = reaper.GetSelectedTrack(0, 0)
-                LoadAudioToRS5k(tr, info.path)
-              end
-
-              if reaper.ImGui_BeginPopup(ctx, popup_id) then
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
-
-                -- 右键打开文件所在目录
-                if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
-                  local path = info.path
-                  if path and path ~= "" then
-                    reaper.CF_LocateInExplorer(normalize_path(path)) -- 规范分隔符
-                  end
-                end
-
-                -- 右键加载到RS5k
-                if reaper.ImGui_MenuItem(ctx, "Load to RS5k (Q)") then
-                  local tr = reaper.GetSelectedTrack(0, 0)
-                  LoadAudioToRS5k(tr, info.path)
-                end
-
-                -- 批量高级文件夹音频文件移除
-                if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder then
-                  reaper.ImGui_Separator(ctx)
-                  if reaper.ImGui_MenuItem(ctx, "Remove from Collections") then
-                    local node = advanced_folders[tree_state.cur_advanced_folder]
-                    if node and node.files then
-                      -- 收集所有需要移除的路径
-                      local remove_paths = {}
-                      if file_select_start and file_select_end and file_select_start ~= file_select_end then
-                        local a = math.min(file_select_start, file_select_end)
-                        local b = math.max(file_select_start, file_select_end)
-                        for j = a, b do
-                          local sel_info = _G.current_display_list[j]
-                          if sel_info and sel_info.path then
-                            remove_paths[normalize_path(sel_info.path, false)] = true
-                          end
-                        end
-                      else
-                        -- 单选只移除当前info
-                        remove_paths[normalize_path(info.path, false)] = true
-                      end
-
-                      -- 倒序遍历批量移除
-                      for k = #node.files, 1, -1 do
-                        if remove_paths[normalize_path(node.files[k], false)] then
-                          table.remove(node.files, k)
-                        end
-                      end
-                      SaveAdvancedFolders()
-                      files_idx_cache = nil
-                      CollectFiles()
-                      -- 清空多选状态
-                      file_select_start = nil
-                      file_select_end   = nil
-                      selected_row      = -1
-                    end
-                  end
-                end
-
-                -- 批量数据库列表文件移除
-                if collect_mode == COLLECT_MODE_MEDIADB then
-                  reaper.ImGui_Separator(ctx)
-                  if reaper.ImGui_MenuItem(ctx, "Remove from Database") then
-                    -- 用当前选中数据库文件
-                    local db_dir = script_path .. "SoundmoleDB"
-                    local dbfile = tree_state.cur_mediadb
-                    local dbpath = db_dir .. sep .. dbfile
-                    -- 收集要移除的路径
-                    local remove_paths = {}
-                    if file_select_start and file_select_end and file_select_start ~= file_select_end then
-                      local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
-                      for j = a, b do
-                        local sel = _G.current_display_list[j]
-                        if sel and sel.path then
-                          remove_paths[normalize_path(sel.path, false)] = true
-                        end
-                      end
-                    else
-                      remove_paths[normalize_path(info.path, false)] = true
-                    end
-                    -- 移除选中项
-                    for path in pairs(remove_paths) do
-                      RemoveFromMediaDB(path, dbpath)
-                      for i = #files_idx_cache, 1, -1 do
-                        if normalize_path(files_idx_cache[i].path, false) == path then
-                          table.remove(files_idx_cache, i)
-                          break
-                        end
-                      end
-                    end
-
-                    files_idx_cache = nil
-                    CollectFiles()
-                    -- 清空多选状态
-                    file_select_start, file_select_end, selected_row = nil, nil, -1
-                  end
-                end
-
-                reaper.ImGui_PopStyleColor(ctx, 1)
-                reaper.ImGui_EndPopup(ctx)
-              end
-            end
-
-            if reaper.ImGui_IsItemHovered(ctx) then
-              row_hovered = true
-            end
-
-            -- 双击播放
-            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-              if doubleclick_action == DOUBLECLICK_INSERT then
-                WithAutoCrossfadeDisabled(function()
-                  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
-                  local old_cursor = reaper.GetCursorPosition()
-                  reaper.PreventUIRefresh(1) -- 防止UI刷新
-                  reaper.InsertMedia(normalize_path(info.path, false), 0)
-                  reaper.SetEditCurPos(old_cursor, true, false) -- 恢复光标到插入前
-                  reaper.PreventUIRefresh(-1)
-                  reaper.UpdateArrange()
-                  reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
-                end)
-              elseif doubleclick_action == DOUBLECLICK_PREVIEW then
-                PlayFromStart(info)
-              elseif doubleclick_action == DOUBLECLICK_NONE then
-                -- Do nothing
-              end
-            end
-
-            -- 拖动音频到REAPER或自定义文件夹
-            if reaper.ImGui_BeginDragDropSource(ctx) then
-              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
-              reaper.ImGui_Text(ctx, "Drag to insert or collect")
-              dragging_audio = {
-                path = info and info.path,
-                start_time = 0,
-                end_time = info and info.section_length or 0,
-                section_offset = info and info.section_offset or 0
-              }
-              -- reaper.ImGui_Text(ctx, "Drag to collect multiple")
-              -- 收集范围内所有路径
-              local paths = {}
-              local a = math.min(file_select_start or i, file_select_end or i)
-              local b = math.max(file_select_start or i, file_select_end or i)
-              for j = a, b do
-                table.insert(paths, normalize_path(_G.current_display_list[j].path, false))
-              end
-              reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATHS", table.concat(paths, "|;|"))
-              reaper.ImGui_PopStyleColor(ctx, 1)
-              reaper.ImGui_EndDragDropSource(ctx)
-            end
-
-            -- Ctrl+左键 或 Ctrl+S 插入文件到工程
-            local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
-            local is_ctrl_click = reaper.ImGui_IsItemClicked(ctx, 0) and ctrl
-            local is_ctrl_I = ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S())
-            if (is_ctrl_click or (selected_row == i and is_ctrl_I)) then
-              WithAutoCrossfadeDisabled(function()
-                reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
-                local old_cursor = reaper.GetCursorPosition()
-                reaper.PreventUIRefresh(1) -- 防止UI刷新
-                reaper.InsertMedia(normalize_path(info.path, false), 0)
-                reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
-                reaper.PreventUIRefresh(-1)
-                reaper.UpdateArrange()
-                reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
-              end)
-            end
-
-            -- Size
-            reaper.ImGui_TableSetColumnIndex(ctx, 2)
-            local size_str
-            if info.size >= 1024*1024 then
-              size_str = string.format("%.2f MB", info.size / 1024 / 1024)
-            elseif info.size >= 1024 then
-              size_str = string.format("%.2f KB", info.size / 1024)
-            else
-              size_str = string.format("%d B", info.size)
-            end
-            reaper.ImGui_Text(ctx, size_str)
-            if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-              PlayFromStart(info)
-            end
-
-            -- Type
-            reaper.ImGui_TableSetColumnIndex(ctx, 3)
-            reaper.ImGui_Text(ctx, info.type)
-            if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-              PlayFromStart(info)
-            end
-
-            -- Date & Track name
-            if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
-              reaper.ImGui_TableSetColumnIndex(ctx, 4)
-              if info.usages and #info.usages > 1 then
-                reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
-              -- elseif info.usages and #info.usages == 1 then
-              --   reaper.ImGui_Text(ctx, info.usages[1].track_name or "-")
-              else
-                reaper.ImGui_Text(ctx, info.track_name or "-")
-              end
-              local popup_id2 = "item_context_menu__" .. tostring(i)
-              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-                reaper.ImGui_OpenPopup(ctx, popup_id2)
-              end
-              if reaper.ImGui_BeginPopup(ctx, popup_id2) then
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
-                for _, usage in ipairs(info.usages or {}) do
-                  local label = string.format('Track %d "%s" %s',
-                    reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
-                    usage.track_name or "-",
-                    reaper.format_timestr(usage.position or 0, "")
-                  )
-                  if reaper.ImGui_MenuItem(ctx, label) then
-                    reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-                    reaper.SetMediaItemSelected(usage.item, true)
-                    reaper.UpdateArrange()
-                    reaper.SetEditCurPos(usage.position, true, false)
-                    reaper.ImGui_CloseCurrentPopup(ctx)
-                  end
-                end
-                reaper.ImGui_PopStyleColor(ctx, 1)
-                reaper.ImGui_EndPopup(ctx)
-              end
-            else
-              reaper.ImGui_TableSetColumnIndex(ctx, 4)
-              reaper.ImGui_Text(ctx, info.bwf_orig_date or "-")
-              if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-                PlayFromStart(info)
-              end
-            end
-
-            -- Genre & Position
-            if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
-              reaper.ImGui_TableSetColumnIndex(ctx, 5)
-              if info.usages and #info.usages > 1 then
-                reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
-              else
-                local pos_str = reaper.format_timestr(info.position or 0, "") or "-"
-                reaper.ImGui_Text(ctx, pos_str)
-              end
-              local popup_id3 = "item_context_menu___" .. tostring(i)
-              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-                reaper.ImGui_OpenPopup(ctx, popup_id3)
-              end
-              if reaper.ImGui_BeginPopup(ctx, popup_id3) then
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
-                for _, usage in ipairs(info.usages or {}) do
-                  local label = string.format('Track %d "%s" %s',
-                    reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
-                    usage.track_name or "-",
-                    reaper.format_timestr(usage.position or 0, "")
-                  )
-                  if reaper.ImGui_MenuItem(ctx, label) then
-                    reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-                    reaper.SetMediaItemSelected(usage.item, true)
-                    reaper.UpdateArrange()
-                    reaper.SetEditCurPos(usage.position, true, false)
-                    reaper.ImGui_CloseCurrentPopup(ctx)
-                  end
-                end
-                reaper.ImGui_PopStyleColor(ctx, 1)
-                reaper.ImGui_EndPopup(ctx)
-              end
-            else
-              reaper.ImGui_TableSetColumnIndex(ctx, 5)
-              reaper.ImGui_Text(ctx, info.genre or "-")
-              if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-                PlayFromStart(info)
-              end
-            end
-
-            -- Comment
-            reaper.ImGui_TableSetColumnIndex(ctx, 6)
-            reaper.ImGui_Text(ctx, info.comment or "-")
-            -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            --   PlayFromStart(info)
-            -- end
-
-            -- Description
-            reaper.ImGui_TableSetColumnIndex(ctx, 7)
-            reaper.ImGui_Text(ctx, info.description or "-")
-            -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            --   PlayFromStart(info)
-            -- end
-
-            -- Category (UCS)
-            reaper.ImGui_TableSetColumnIndex(ctx, 8)
-            reaper.ImGui_Text(ctx, info.ucs_category or "")
-
-            -- Subcategory (UCS)
-            reaper.ImGui_TableSetColumnIndex(ctx, 9)
-            reaper.ImGui_Text(ctx, info.ucs_subcategory or "")
-
-            -- CatID (UCS)
-            reaper.ImGui_TableSetColumnIndex(ctx, 10)
-            reaper.ImGui_Text(ctx, info.ucs_catid or "")
-
-            -- Length
-            reaper.ImGui_TableSetColumnIndex(ctx, 11)
-            local len_str = (info.length and info.length > 0) and reaper.format_timestr(info.length, "") or "-"
-            reaper.ImGui_Text(ctx, len_str)
-            
-            -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            --   PlayFromStart(info)
-            -- end
-
-            -- Channels
-            reaper.ImGui_TableSetColumnIndex(ctx, 12)
-            reaper.ImGui_Text(ctx, info.channels)
-            -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            --   PlayFromStart(info)
-            -- end
-
-            -- Samplerate
-            reaper.ImGui_TableSetColumnIndex(ctx, 13)
-            reaper.ImGui_Text(ctx, info.samplerate or "-") -- reaper.ImGui_Text(ctx, info.samplerate and (info.samplerate .. " Hz") or "-")
-            -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            --   PlayFromStart(info)
-            -- end
-
-            -- Bits
-            reaper.ImGui_TableSetColumnIndex(ctx, 14)
-            reaper.ImGui_Text(ctx, info.bits or "-")
-            -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            --   PlayFromStart(info)
-            -- end
-
-            -- Group
-            reaper.ImGui_TableSetColumnIndex(ctx, 15)
-            local group_names = GetCustomGroupsForPath(normalize_path(info.path, false))
-            if group_names ~= "" then
-              reaper.ImGui_Text(ctx, group_names)
-            else
-              -- 用固定像素宽度撑大区域
-              reaper.ImGui_InvisibleButton(ctx, "GroupCell_", 100, reaper.ImGui_GetTextLineHeight(ctx))
-            end
-
-            -- 右键弹出group菜单
-            if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-              reaper.ImGui_OpenPopup(ctx, "GroupMenu_" .. i)
-            end
-            if reaper.ImGui_BeginPopup(ctx, "GroupMenu_" .. i) then
-              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
-            -- 收集当前高亮范围内的所有 info
-              local infos = {}
-              if file_select_start and file_select_end then
-                local a = math.min(file_select_start, file_select_end)
-                local b = math.max(file_select_start, file_select_end)
-                for j = a, b do
-                  table.insert(infos, filtered_list[j])
-                end
-              else
-                -- 无多选时，单条传入
-                table.insert(infos, filtered_list[i])
-              end
-              ShowGroupMenu(infos)
-              reaper.ImGui_PopStyleColor(ctx, 1)
-              reaper.ImGui_EndPopup(ctx)
-            end
-
-            -- Path
-            reaper.ImGui_TableSetColumnIndex(ctx, 16)
-            reaper.ImGui_Text(ctx, normalize_path(info.path or "", false))
-            -- if reaper.ImGui_IsItemHovered(ctx) then row_hovered = true end
-            -- if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-            --   PlayFromStart(info)
-            -- end
-
-            reaper.ImGui_PopStyleColor(ctx, 3) -- 恢复默认颜色, Popx3
-    
-            -- 在所有列渲染之后，再设置背景色 -- 此处设置无效
-            -- if row_hovered or selected_row == i then
-            --   reaper.ImGui_TableSetBgColor(ctx, reaper.ImGui_TableBgTarget_RowBg1(), 0x2d83ec66)
-            -- end
+            reaper.ImGui_TableNextRow(ctx, reaper.ImGui_TableRowFlags_None(), row_height)
+            RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
 
             -- 上下按键自动滚动到可见行并且高亮
             if selected_row == i and _G.scroll_target then
@@ -5746,23 +5880,21 @@ function loop()
             if auto_play_next_pending and type(auto_play_next_pending) == "table" then
               local next_idx = -1
               local target_path = normalize_path(auto_play_next_pending.path, false) -- 规范化目标路径
-              for i, info in ipairs(filtered_list or {}) do
-                local info_path = normalize_path(info.path, false)
-                if info_path == target_path then
-                  next_idx = i
+              for ii, inf2 in ipairs(filtered_list or {}) do
+                if normalize_path(inf2.path, false) == target_path then
+                  next_idx = ii
                   break
                 end
               end
               if next_idx > 0 then
                 selected_row = next_idx
-                _G.scroll_target = 0.5  -- 下一帧表格自动滚动到中间
+                _G.scroll_target = 0.5 -- 下一帧表格自动滚动到中间
               end
               PlayFromStart(auto_play_next_pending)
               auto_play_next_pending = nil
             end
           end
         end
-
         reaper.ImGui_ListClipper_End(clipper)
         reaper.ImGui_PopFont(ctx) -- 内容字体自由缩放
         reaper.ImGui_EndTable(ctx)
@@ -6144,37 +6276,6 @@ function loop()
         reaper.SNM_SetIntConfigVar("audiocloseinactive", close_inactive and 1 or 0)
       end
 
-      -- 收集切换
-      -- reaper.ImGui_Text(ctx, "Audio File Source:")
-      -- local changed_collect_mode = false
-      -- if reaper.ImGui_RadioButton(ctx, "None", collect_mode == -1) then
-      --   if collect_mode ~= -1 then changed_collect_mode = true end
-      --   collect_mode = -1 -- None/未选中选项
-      -- end
-      -- if reaper.ImGui_RadioButton(ctx, "Audio Assets", collect_mode == COLLECT_MODE_ITEMS) then
-      --   if collect_mode ~= COLLECT_MODE_ITEMS then changed_collect_mode = true end
-      --   collect_mode = COLLECT_MODE_ITEMS
-      -- end
-      -- if reaper.ImGui_RadioButton(ctx, "Source Media", collect_mode == COLLECT_MODE_RPP) then
-      --   if collect_mode ~= COLLECT_MODE_RPP then changed_collect_mode = true end
-      --   collect_mode = COLLECT_MODE_RPP
-      -- end
-      -- if reaper.ImGui_RadioButton(ctx, "Project Directory", collect_mode == COLLECT_MODE_DIR) then
-      --   if collect_mode ~= COLLECT_MODE_DIR then changed_collect_mode = true end
-      --   collect_mode = COLLECT_MODE_DIR
-      -- end
-      -- if reaper.ImGui_RadioButton(ctx, "Media Items", collect_mode == COLLECT_MODE_ALL_ITEMS) then
-      --   if collect_mode ~= COLLECT_MODE_ALL_ITEMS then changed_collect_mode = true end
-      --   collect_mode = COLLECT_MODE_ALL_ITEMS
-      -- end
-      -- if reaper.ImGui_RadioButton(ctx, "This Computer", collect_mode == COLLECT_MODE_TREE) then
-      --   if collect_mode ~= COLLECT_MODE_TREE then changed_collect_mode = true end
-      --   collect_mode = COLLECT_MODE_TREE
-      -- end
-      -- if changed_collect_mode and collect_mode >= 0 then
-      --   CollectFiles()
-      -- end
-
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Double-Click Action:")
       if reaper.ImGui_RadioButton(ctx, "Insert media file to arrange", doubleclick_action == DOUBLECLICK_INSERT) then
@@ -6190,6 +6291,27 @@ function loop()
       reaper.ImGui_Separator(ctx)
       local changed
       changed, auto_play_selected = reaper.ImGui_Checkbox(ctx, "Auto-play selected media", auto_play_selected)
+
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Datebase Settings:")
+      local chg_wf, v_wf = reaper.ImGui_Checkbox(ctx, "Build waveform cache during DB creation##wf_cache", build_waveform_cache)
+      if chg_wf then
+        build_waveform_cache = v_wf
+        reaper.SetExtState(EXT_SECTION, "build_waveform_cache", v_wf and "1" or "0", true)
+      end
+      if reaper.ImGui_IsItemHovered(ctx) then
+        reaper.ImGui_SetTooltip(ctx,
+          "When enabled, the database builder precomputes and saves waveform cache for each file.\nPros: faster preview later.\nCons: longer build time and extra disk usage."
+        )
+      end
+
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Search Settings:")
+      local sea_enter_changed, search_enter_v = reaper.ImGui_Checkbox(ctx, "Update search only when enter key pressed##enter_mode", search_enter_mode) -- Press Enter to search
+      if sea_enter_changed then
+        search_enter_mode = search_enter_v
+        reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_v and "1" or "0", true)
+      end
 
       -- 更改速率是否保持音高
       reaper.ImGui_Separator(ctx)
@@ -6210,19 +6332,31 @@ function loop()
         auto_scroll_enabled = new_scroll
       end
 
-      -- 最近播放设置
+      -- 最近搜索设置
       reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Max Recent Played Files:")
+      reaper.ImGui_Text(ctx, "Max Recent Searched:")
       reaper.ImGui_SameLine(ctx)
       reaper.ImGui_PushItemWidth(ctx, -65)
-      local changed_maxrecent, new_maxrecent = reaper.ImGui_InputInt(ctx, "##maxrecent_input", max_recent_files, 1, 5)
+      local chg_rs, v_rs = reaper.ImGui_InputInt(ctx, "##max_recent_search_input", max_recent_search, 1, 5)
       reaper.ImGui_PopItemWidth(ctx)
-      if changed_maxrecent then
-        max_recent_files = math.max(1, math.min(100, new_maxrecent or 10))
-        reaper.SetExtState(EXT_SECTION, "max_recent_files", tostring(max_recent_files), true)
-        while #recent_audio_files > max_recent_files do
-          table.remove(recent_audio_files)
-        end
+      if chg_rs then
+        max_recent_search = math.max(1, math.min(100, v_rs or 20))
+        reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
+        while #recent_search_keywords > max_recent_search do table.remove(recent_search_keywords) end -- saved_search_list
+        SaveRecentSearched()
+      end
+
+      -- 最近播放设置
+      -- reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "Max Recent Played:")
+      reaper.ImGui_SameLine(ctx)
+      reaper.ImGui_PushItemWidth(ctx, -65)
+      local chg_rp, v_rp = reaper.ImGui_InputInt(ctx, "##max_recent_play_input", max_recent_files, 1, 5)
+      reaper.ImGui_PopItemWidth(ctx)
+      if chg_rp then
+        max_recent_files = math.max(1, math.min(100, v_rp or 20))
+        reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
+        while #recent_audio_files > max_recent_files do table.remove(recent_audio_files) end
         SaveRecentPlayed()
       end
 
@@ -6338,9 +6472,15 @@ function loop()
         end
       end
 
-      -- 关闭按钮
       reaper.ImGui_Separator(ctx)
-      if reaper.ImGui_Button(ctx, "Save and Close##Rate_close") then
+      -- 按钮右对齐
+      local win_set_w = reaper.ImGui_GetWindowWidth(ctx)
+      local btn_set_w = 96
+      local spacing_set = 110
+      local padding_set_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
+      reaper.ImGui_SetCursorPosX(ctx, win_set_w - (btn_set_w * 2 + spacing_set + padding_set_x * 2))
+
+      if reaper.ImGui_Button(ctx, "Apply##Settings_save", btn_set_w, 20) then
         SaveSettings()
         reaper.ImGui_CloseCurrentPopup(ctx)
       end
@@ -6352,6 +6492,8 @@ function loop()
         auto_play_selected = true,
         preserve_pitch = true,
         auto_scroll_enabled = false,
+        build_waveform_cache = false,
+        search_enter_mode = false,
         bg_alpha = 1.0,
         peak_chans = 6,
         font_size = 14,
@@ -6362,11 +6504,19 @@ function loop()
         rate_max = 4.0,      -- 速率旋钮最高
         cache_dir = DEFAULT_CACHE_DIR,
         max_recent_files = 20, -- 最近播放文件最大数量
+        max_recent_search = 20, -- 最近搜索最大数量
         row_height = DEFAULT_ROW_HEIGHT, -- 内容表格行高
       }
 
+      -- Cancel 按钮
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Reset##Settings_reset") then
+      if reaper.ImGui_Button(ctx, "Cancel##Settings_cancel", btn_set_w, 20) then
+        reaper.ImGui_CloseCurrentPopup(ctx)
+      end
+      
+      reaper.ImGui_SameLine(ctx)
+
+      if reaper.ImGui_Button(ctx, "Reset##Settings_reset", btn_set_w, 20) then
         -- 恢复各项设置为默认值
         collect_mode = DEFAULTS.collect_mode
         doubleclick_action = DEFAULTS.doubleclick_action
@@ -6384,12 +6534,17 @@ function loop()
         cache_dir = DEFAULTS.cache_dir
         auto_scroll_enabled = DEFAULTS.auto_scroll_enabled
         max_recent_files = DEFAULTS.max_recent_files
+        max_recent_search = DEFAULTS.max_recent_search
         row_height = DEFAULTS.row_height
+        build_waveform_cache = DEFAULTS.build_waveform_cache
+        search_enter_mode = DEFAULTS.search_enter_mode
         -- 保存设置到ExtState
         reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
+        reaper.SetExtState(EXT_SECTION, "search_enter_mode", tostring(search_enter_mode), true)
+        reaper.SetExtState(EXT_SECTION, "build_waveform_cache", tostring(search_enter_mode), true)
         MarkFontDirty()
         CollectFiles()
       end
@@ -6410,16 +6565,6 @@ function loop()
     if rv5 then
       peak_chans = math.max(2, math.min(128, new_peaks or 2))
     end
-    -- reaper.ImGui_SameLine(ctx)
-    -- HelpMarker("Open settings to adjust playback and audio file collection options.\n\n" .. 
-    -- "Audio file source modes:\n" ..
-    -- "1. From Items (Default):\n" ..
-    -- "   Only lists audio files actually used by items in the current project.\n" ..
-    -- "2. From RPP (All in project state):\n" ..
-    -- "   Lists all audio files referenced anywhere in the project file, including those not currently placed on tracks.\n" ..
-    -- "3. From Project Directory:\n" ..
-    -- "   Scans and lists all audio files in the project directory, whether or not they are used or referenced in the project.\n\n" ..
-    -- "You can change file source and enable pitch preservation.")
 
     -- 插入选区音频到REAPER
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -7150,7 +7295,7 @@ function loop()
       if Wave.scroll < 0 then Wave.scroll = 0 end
       if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
 
-      -- + 按钮
+      -- +按钮
       reaper.ImGui_SameLine(ctx)
       if reaper.ImGui_Button(ctx, "+", 20) then  -- Zoom In
         local prev_zoom = Wave.zoom
@@ -7166,7 +7311,7 @@ function loop()
         end
       end
 
-      -- - 按钮
+      -- -按钮
       reaper.ImGui_SameLine(ctx)
       if reaper.ImGui_Button(ctx, "-", 20) then -- Zoom Out
         local prev_zoom = Wave.zoom
@@ -7497,14 +7642,16 @@ function loop()
           local path = db_build_task.filelist[idx]
           local info = CollectFileInfo(path)
           WriteToMediaDB(info, db_build_task.dbfile)
-          -- 关闭构建波形缓存
-          -- local pixel_cnt = 2048
-          -- --local wf_step = 512
-          -- local start_time, end_time = 0, tonumber(info.length) or 0
-          -- local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
-          -- if peaks and src_len and channel_count then
-          --   SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
-          -- end
+          -- 使用build_waveform_cache开启或关闭构建波形缓存
+          if build_waveform_cache then
+            local pixel_cnt = 2048
+            --local wf_step = 512 -- 直接读取全局值
+            local start_time, end_time = 0, tonumber(info.length) or 0
+            local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
+            if peaks and src_len and channel_count then
+              SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
+            end
+          end
           db_build_task.idx = db_build_task.idx + 1
         else
           db_build_task.finished = true
