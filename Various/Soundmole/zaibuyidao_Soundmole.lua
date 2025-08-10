@@ -3301,6 +3301,8 @@ _G.commit_filter_text = _G.commit_filter_text or ""
 -- 只在过滤/排序状态变化时重建 filtered_list，普通渲染时只用缓存，用于解决滚动卡死问题
 local static = _G._soundmole_static or {}
 _G._soundmole_static = static
+static.wf_delay_cached = static.wf_delay_cached or 0.5 -- 表格列表波形已缓存延迟0.5秒
+static.wf_delay_miss   = static.wf_delay_miss   or 2.0 -- 表格列表波形未缓存延迟2秒
 static.filtered_list_map = static.filtered_list_map or {}  -- 用于存放所有列表缓存
 static.last_filter_text_map = static.last_filter_text_map or {}
 static.last_sort_specs_map  = static.last_sort_specs_map or {}
@@ -3861,6 +3863,93 @@ function DrawRowPopup(ctx, i, info, collect_mode)
   reaper.ImGui_PopStyleColor(ctx, 1)
 end
 
+-- 用双延迟渲染波形
+-- 已缓存波形 - 停止滚动满 wf_delay_cached 0.5秒 后，按本帧上限 fast_wf_load_limit 2从磁盘缓存批量直读并显示。
+-- 未缓存波形 - 停止滚动满 wf_delay_miss 2秒 后，进入创建队列，沿用已有的 load_limit/loaded_count 限流。
+function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
+  local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx)) -- 自适应宽度
+  local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2px padding
+
+  -- 检查宽度变化，清空内存缓存并复位标记
+  if info._last_thumb_w ~= thumb_w then
+    info._thumb_waveform   = {}      -- 清掉旧波形缓存
+    info._last_thumb_w     = thumb_w
+    info._loading_waveform = false   -- 重置标记，让 Clip­per 在空闲2秒后再次入队
+  end
+
+  -- 表格列表波形预览支持鼠标点击切换播放光标
+  info._thumb_waveform = info._thumb_waveform or {}
+  local wf = info._thumb_waveform[thumb_w]
+
+  -- 已缓存时，尝试磁盘缓存直读+重映射
+  if not wf and idle_time >= (static.wf_delay_cached or 0.5) and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2) then
+    -- 只读磁盘缓存
+    local cache = LoadWaveformCache(info.path)
+    if cache and cache.peaks and cache.pixel_cnt and cache.channel_count and cache.src_len then
+      -- 按当前列宽重采样
+      local peaks_new, pixel_cnt_new, _, chs = RemapWaveformToWindow(cache, thumb_w, 0, cache.src_len)
+      if peaks_new and pixel_cnt_new and chs then
+        info._thumb_waveform[thumb_w] = {
+          peaks = peaks_new,
+          pixel_cnt = pixel_cnt_new,
+          src_len = cache.src_len,
+          channel_count = chs
+        }
+        wf = info._thumb_waveform[thumb_w]
+        info._loading_waveform = false
+        static.fast_wf_load_count = (static.fast_wf_load_count or 0) + 1
+      end
+    end
+  end
+
+  if wf and wf.peaks and wf.peaks[1] then
+    -- 绘制波形
+    local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+    reaper.ImGui_PushID(ctx, i)
+    DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, wf.src_len, 1)
+    reaper.ImGui_PopID(ctx)
+
+    -- 绘制播放光标，排除最近播放影响
+    if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave and Wave.play_cursor then
+      local play_px = (Wave.play_cursor / wf.src_len) * thumb_w
+      local dl = reaper.ImGui_GetWindowDrawList(ctx)
+      reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, 0x808080FF, 1.5)
+    end
+
+    -- 鼠标检测 - 点击跳播，切换播放光标
+    local mx, my = reaper.ImGui_GetMousePos(ctx)
+    if mx >= x and mx <= x + thumb_w and my >= y and my <= y + thumb_h then
+      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
+        local rel_x   = mx - x
+        local new_pos = (rel_x / thumb_w) * wf.src_len
+        current_recent_play_info = nil -- 解除最近播放锁定
+        if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+          collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
+        end
+        if playing_path == info.path then
+          RestartPreviewWithParams(new_pos)
+        else
+          selected_row = i
+          PlayFromStart(info)
+          RestartPreviewWithParams(new_pos)
+        end
+      end
+    end
+  else
+    -- 未缓存时兜底入队
+    if idle_time >= (static.wf_delay_miss or 2) and not info._loading_waveform then
+      info._loading_waveform = true
+      EnqueueWaveformTask(info, thumb_w)
+    end
+
+    -- 画灰色占位条
+    -- local dl = reaper.ImGui_GetWindowDrawList(ctx)
+    -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+    -- reaper.ImGui_DrawList_AddRectFilled(dl, x, y, x + thumb_w, y + thumb_h, 0x444444FF)
+    -- reaper.ImGui_Dummy(ctx, thumb_w, thumb_h)
+  end
+end
+
 function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
   -- 表格标题文字颜色 -- 文字颜色
   if IsPreviewed(info.path) then
@@ -3897,66 +3986,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
 
     -- Waveform
     if col_name == "Waveform" then
-      local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx)) -- 自适应宽度
-      local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2-px 用于上下 padding
-
-      -- 检查宽度变化，只清空缓存并重置加载标记
-      if info._last_thumb_w ~= thumb_w then
-        info._thumb_waveform   = {}      -- 清掉旧波形缓存
-        info._last_thumb_w     = thumb_w
-        info._loading_waveform = false   -- 重置标记，让 Clip­per 在空闲>=2s 后再次入队
-      end
-
-      -- 表格列表波形预览支持鼠标点击切换播放光标
-      info._thumb_waveform = info._thumb_waveform or {}
-      local wf = info._thumb_waveform[thumb_w]
-
-      if wf and wf.peaks and wf.peaks[1] then
-        local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-        -- 给每行压入独立的ID，确保在同一个窗口内所有可见项的ID唯一。
-        reaper.ImGui_PushID(ctx, i)
-        DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, wf.src_len, 1)
-        -- DrawWaveformInImGui(ctx, wf.peaks, thumb_w, thumb_h, wf.src_len, wf.channel_count) -- 绘制波形支持多轨
-        reaper.ImGui_PopID(ctx)
-
-        -- 绘制播放光标，排除最近播放影响
-        if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave.play_cursor then
-          local play_px = (Wave.play_cursor / wf.src_len) * thumb_w
-          local dl = reaper.ImGui_GetWindowDrawList(ctx)
-          reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, 0x808080FF, 1.5)
-        end
-
-        -- 鼠标检测 - 点击跳播，切换播放光标
-        local mx, my = reaper.ImGui_GetMousePos(ctx)
-        if mx >= x and mx <= x + thumb_w and my >= y and my <= y + thumb_h then
-          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
-            local rel_x  = mx - x
-            local new_pos = (rel_x / thumb_w) * wf.src_len
-            current_recent_play_info = nil -- 解除最近播放锁定
-            if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
-              collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
-            end
-            if playing_path == info.path then
-              RestartPreviewWithParams(new_pos)
-            else
-              selected_row = i
-              PlayFromStart(info)
-              RestartPreviewWithParams(new_pos)
-            end
-          end
-        end
-      else
-         -- 未加载则加入队列，停顿2秒
-        if idle_time >= 2 and not info._loading_waveform then
-          info._loading_waveform = true
-          EnqueueWaveformTask(info, thumb_w)
-        end
-        -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx) -- 画灰色占位条
-        -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-        -- reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + thumb_w, y + thumb_h, 0x444444FF)
-        -- reaper.ImGui_Dummy(ctx, thumb_w, thumb_h)
-      end
-
+      RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     -- File & Teak name
     elseif is_name_col then
       local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
@@ -5829,6 +5859,9 @@ function loop()
         local tw = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
         local load_limit   = 2 -- 每帧最多2个波形加载任务，波形加载限制2个
         local loaded_count = 0
+        -- 限制本帧已缓存直读次数，避免IO抖动
+        static.fast_wf_load_count = 0
+        static.fast_wf_load_limit = static.fast_wf_load_limit or 2
 
         -- 限制加载波形，指定列表无滚动时多少秒之后才开始加载。用于解决脚本卡顿问题。
         local now_time = reaper.time_precise()
@@ -5851,7 +5884,7 @@ function loop()
         reaper.ImGui_ListClipper_Begin(clipper, #filtered_list)
         while reaper.ImGui_ListClipper_Step(clipper) do
           local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
-          if idle_time >= 2 then -- 停顿2秒
+          if idle_time >= (static.wf_delay_miss or 2) then -- 未缓存，停顿2秒再入队
             -- clipper+限流+防止重复加入
             for idx = display_start + 1, display_end do
               if loaded_count >= load_limit then break end -- 波形加载，限制本帧最大加载数2个

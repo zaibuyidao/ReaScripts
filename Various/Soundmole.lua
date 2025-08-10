@@ -1,13 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.31
+-- @version 1.0.32
 -- @changelog
---   Added column drag Reorder columns by dragging left or right in the file list.
---   Fixed clipper error No invalid pointer crash when the window is collapsed.
---   Fix autosave behavior Save immediately in Enter mode save after two seconds idle in live mode.
---   Live search adds 0.5s debounce Filtering triggers after 0.5s idle reducing per-keystroke refresh lag.
---   RS5K optimization reuse the first RS5K on the selected track and set the loaded sample as the active slot.
---   Batch creation create a new track per selected sample and load an RS5K instance for each.
+--   Optimized waveform cache loading with a dual-delay strategy for cached and uncached waveforms.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
