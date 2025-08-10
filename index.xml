@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ace725460900ca2873f90f20b184f33d29f423a6">
+<index version="1" name="zaibuyidao Scripts" commit="f4b6375b6d69b2b49e7ce7ef237bf8a611ec20c1">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14423,6 +14423,20 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/ace725460900ca2873f90f20b184f33d29f423a6/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/ace725460900ca2873f90f20b184f33d29f423a6/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/ace725460900ca2873f90f20b184f33d29f423a6/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.31" author="zaibuyidao" time="2025-08-10T12:36:08Z">
+        <changelog><![CDATA[Added column drag Reorder columns by dragging left or right in the file list.
+Fixed clipper error No invalid pointer crash when the window is collapsed.
+Fix autosave behavior Save immediately in Enter mode save after two seconds idle in live mode.
+Live search adds 0.5s debounce Filtering triggers after 0.5s idle reducing per-keystroke refresh lag.
+RS5K optimization reuse the first RS5K on the selected track and set the loaded sample as the active slot.
+Batch creation create a new track per selected sample and load an RS5K instance for each.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/f4b6375b6d69b2b49e7ce7ef237bf8a611ec20c1/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/f4b6375b6d69b2b49e7ce7ef237bf8a611ec20c1/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/f4b6375b6d69b2b49e7ce7ef237bf8a611ec20c1/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/f4b6375b6d69b2b49e7ce7ef237bf8a611ec20c1/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/f4b6375b6d69b2b49e7ce7ef237bf8a611ec20c1/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
