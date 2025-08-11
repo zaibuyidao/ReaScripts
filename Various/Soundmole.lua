@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.33
+-- @version 1.0.34
 -- @changelog
 --   Optimize UCS category and subcategory search logic.
 --   Other detailed improvements and bug fixes.

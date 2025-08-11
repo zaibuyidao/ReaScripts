@@ -7651,17 +7651,24 @@ function loop()
     end
 
     -- 状态栏行
+    local display_list = _G.current_display_list or {}
+    -- 选中行越界保护
+    local sr = selected_row
+    if sr and (sr < 1 or sr > #display_list) then
+      sr = nil
+    end
+
     local file_info
     if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then -- 最近播放模式时使用播放列表项
       file_info = current_recent_play_info
-    elseif _G.current_display_list and selected_row and _G.current_display_list[selected_row] then
-      file_info = _G.current_display_list[selected_row] -- 其他模式用右侧表格选中项
+    elseif sr and display_list[sr] then
+      file_info = display_list[sr] -- 其他模式用右侧表格选中项
       selected_recent_row = 0 -- 清空最近播放选中项
     else
       file_info = last_playing_info
     end
 
-    reaper.ImGui_Text(ctx, ("%7d audio files found."):format(#_G.current_display_list)) -- 数字部分始终占用7位
+    reaper.ImGui_Text(ctx, string.format("%7d audio files found.", #display_list)) -- 数字固定 7 位
     reaper.ImGui_SameLine(ctx)
 
     -- 路径始终跟随 file_info
