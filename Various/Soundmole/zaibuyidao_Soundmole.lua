@@ -2702,7 +2702,7 @@ function be_to_int(bs)
 end
 
 -- 解析 ID3v2 APIC 帧（封面）
-local function parse_id3_apic(tag_data, ver)
+function parse_id3_apic(tag_data, ver)
   local pos = 1
   while pos + 10 <= #tag_data do
     local id      = tag_data:sub(pos, pos + 3)
@@ -2973,67 +2973,183 @@ end
 
 --------------------------------------------- UCS节点 ---------------------------------------------
 
--- 语言设置
-local lang = "en"
--- 列映射
-local COL_MAP = {
-  en = {1, 2},
-  zh = {6, 7},
-  tw = {9, 10},
+-- 强制英文搜索，当点击UCS主分类/子分类时，提交英文关键词
+UCS_FORCE_EN = UCS_FORCE_EN == nil and true or UCS_FORCE_EN
+CURRENT_LANG = CURRENT_LANG or (reaper.GetExtState(EXT_SECTION, "ucs_lang") ~= "" and reaper.GetExtState(EXT_SECTION, "ucs_lang") or "en")
+local UCS_LANG_OPTS = {
+  { key = "en", label = "English" },
+  { key = "zh", label = "简体中文" },
+  { key = "tw", label = "正體中文" },
 }
-local map = COL_MAP[lang] or COL_MAP.en
-local ucs_path = normalize_path(script_path .. "data/ucs.csv", false)
-local f = io.open(ucs_path, "r")
-if not f then
-  reaper.ShowMessageBox("File not found:\n" .. ucs_path, "Error", 0)
-  return
-end
 
--- 把所有行读到表里
-local lines = {}
-for line in f:lines() do table.insert(lines, line) end
-f:close()
+-- 展开状态
+cat_open_state       = cat_open_state       or {}
+ucs_open_en          = ucs_open_en          or {}
+ucs_last_filter_text = ucs_last_filter_text or ""
+usc_filter           = usc_filter           or nil
 
--- local lines = { -- 临时测试
---   "Category,SubCategory,ID",
---   "Animals, Bark, 1001",
---   "Human, Speech, 1002"
--- }
+local categories, cat_names, ucs_maps
 
--- 从第2行开始解析。构建主分类+子分类+CatID
-local categories = {}
-for i = 2, #lines do
-  local row = lines[i]
-  local fields = {}
-  for cell in row:gmatch("([^,]+)") do
-    table.insert(fields, cell)
+function parse_csv_line(line)
+  line = (line or ""):gsub("\r$", "")
+  local fields, buf, in_quotes = {}, {}, false
+  local i, n = 1, #line
+  while i <= n do
+    local ch = line:sub(i, i)
+    if ch == '"' then
+      if in_quotes and line:sub(i+1, i+1) == '"' then
+        table.insert(buf, '"'); i = i + 1
+      else
+        in_quotes = not in_quotes
+      end
+    elseif ch == ',' and not in_quotes then
+      local field = table.concat(buf)
+      field = field:gsub('^%s*"(.*)"%s*$', '%1')
+      field = field:match('^%s*(.-)%s*$') or field
+      table.insert(fields, field)
+      buf = {}
+    else
+      table.insert(buf, ch)
+    end
+    i = i + 1
   end
-  local cat = fields[ map[1] ]
-  local sub = fields[ map[2] ]
-  local id  = fields[3]
-  if cat and cat ~= "" and sub and sub ~= "" then
-    categories[cat] = categories[cat] or {}
-    table.insert(categories[cat], { name = sub, id = id })
+  local last = table.concat(buf)
+  last = last:gsub('^%s*"(.*)"%s*$', '%1')
+  last = last:match('^%s*(.-)%s*$') or last
+  table.insert(fields, last)
+  return fields
+end
+
+function LoadUCS_NoSort_WithENMap(lang)
+  local COL_MAP = { en = {1, 2}, zh = {6, 7}, tw = {9, 10} } -- 表格列映射
+  local map = COL_MAP[lang] or COL_MAP.en
+
+  local ucs_path = normalize_path(script_path .. "data/ucs.csv", false)
+  local f = io.open(ucs_path, "r")
+  if not f then
+    reaper.ShowMessageBox("File not found:\n" .. tostring(ucs_path), "Error", 0)
+    return {}, {}, { cat_to_en = {}, sub_to_en = {} }
+  end
+
+  local lines = {}
+  for line in f:lines() do lines[#lines+1] = line end
+  f:close()
+  if lines[1] then lines[1] = lines[1]:gsub("^\239\187\191", "") end -- strip BOM
+
+  -- 列固定 EN(1,2), CatID(3)
+  local EN_CAT_COL, EN_SUB_COL, CATID_COL = 1, 2, 3
+
+  local categories = {}
+  local cat_names  = {}
+  local seen_cat   = {}
+  local seen_sub   = {}
+
+  local ucs_maps = {
+    cat_to_en = {}, -- 显示语言主类-英文主分类
+    sub_to_en = {}  -- 显示语言子类-英文子分类（按主类分组）
+  }
+
+  for i = 2, #lines do
+    local fields = parse_csv_line(lines[i])
+
+    local cat_disp = (fields[ map[1] ] or ""):match("^%s*(.-)%s*$")
+    local sub_disp = (fields[ map[2] ] or ""):match("^%s*(.-)%s*$")
+    local id       = fields[ CATID_COL ] or ""
+
+    local cat_en   = (fields[ EN_CAT_COL ] or ""):match("^%s*(.-)%s*$")
+    local sub_en   = (fields[ EN_SUB_COL ] or ""):match("^%s*(.-)%s*$")
+
+    if cat_disp ~= "" and sub_disp ~= "" and cat_en ~= "" and sub_en ~= "" then
+      if not seen_cat[cat_disp] then
+        seen_cat[cat_disp] = true
+        categories[cat_disp] = {}
+        seen_sub[cat_disp] = {}
+        cat_names[#cat_names+1] = cat_disp
+
+        ucs_maps.cat_to_en[cat_disp] = cat_en
+        ucs_maps.sub_to_en[cat_disp] = {}
+      end
+      if not seen_sub[cat_disp][sub_disp] then
+        seen_sub[cat_disp][sub_disp] = true
+        categories[cat_disp][#categories[cat_disp]+1] = { name = sub_disp, id = id }
+        ucs_maps.sub_to_en[cat_disp][sub_disp] = sub_en
+      end
+    end
+  end
+
+  return categories, cat_names, ucs_maps
+end
+
+-- 将当前折叠展开状态显示语言key映射到英文key
+function SnapshotOpenStateToEN()
+  if not (cat_open_state and ucs_maps and ucs_maps.cat_to_en) then return end
+  for cat_disp, is_open in pairs(cat_open_state) do
+    local en = ucs_maps.cat_to_en[cat_disp] or cat_disp
+    if is_open then ucs_open_en[en] = true else ucs_open_en[en] = nil end
   end
 end
 
--- 按英文字母排序主分类和子分类
-local cat_names = {}
-for cat in pairs(categories) do
-  table.insert(cat_names, cat)
+-- 从英文key的展开状态恢复到显示语言
+function RestoreOpenStateFromEN()
+  cat_open_state = {}
+  if not (ucs_maps and ucs_maps.cat_to_en and cat_names) then return end
+  for _, cat_disp in ipairs(cat_names) do
+    local en = ucs_maps.cat_to_en[cat_disp] or cat_disp
+    if ucs_open_en[en] then
+      cat_open_state[cat_disp] = true
+    end
+  end
 end
-table.sort(cat_names, function(a, b) return a:lower() < b:lower() end)
 
-for _, cat in ipairs(cat_names) do
-  table.sort(categories[cat], function(a, b)
-    return a.name:lower() < b.name:lower()
-  end)
+-- 切换/重载UCS数据+清理与搜索相关的临时状态
+function ReloadUCSData(new_lang)
+  SnapshotOpenStateToEN()
+
+  CURRENT_LANG = new_lang
+  reaper.SetExtState(EXT_SECTION, "ucs_lang", CURRENT_LANG, true)
+  categories, cat_names, ucs_maps = LoadUCS_NoSort_WithENMap(CURRENT_LANG)
+  RestoreOpenStateFromEN()
+
+  if usc_filter then
+    reaper.ImGui_TextFilter_Set(usc_filter, "")
+  end
+
+  ucs_last_filter_text = ""
+  temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil
+  temp_search_field, temp_search_keyword = nil, nil
+  active_saved_search = nil
+  selected_row = nil
+
+  local static = _G._soundmole_static or {}
+  _G._soundmole_static = static
+  static.filtered_list_map, static.last_filter_text_map = {}, {}
 end
 
-local running = true
-local cat_open_state = {} -- 用户操作状态
-local last_filter_text = ""
-local usc_filter
+-- 语言下拉菜单
+function DrawUcsLanguageSelector(ctx)
+  local cur_label = "English"
+  for _, opt in ipairs(UCS_LANG_OPTS) do
+    if opt.key == CURRENT_LANG then cur_label = opt.label break end
+  end
+
+  reaper.ImGui_Text(ctx, "Language:")
+  reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_SetNextItemWidth(ctx, -65)
+  if reaper.ImGui_BeginCombo(ctx, "##ucs_lang_combo", cur_label) then
+    for _, opt in ipairs(UCS_LANG_OPTS) do
+      local selected = (opt.key == CURRENT_LANG)
+      if reaper.ImGui_Selectable(ctx, opt.label .. "##" .. opt.key, selected) then
+        if opt.key ~= CURRENT_LANG then
+          ReloadUCSData(opt.key)
+        end
+      end
+      if selected then reaper.ImGui_SetItemDefaultFocus(ctx) end
+    end
+    reaper.ImGui_EndCombo(ctx)
+  end
+end
+
+ReloadUCSData(CURRENT_LANG or "en")
 
 --------------------------------------------- 跳过静音节点 ---------------------------------------------
 
@@ -3333,106 +3449,234 @@ function GetCurrentListKey()
   end
 end
 
--- 根据文本框, 同义词, UCS, Saved Search 等规则，从原始files_idx_cache中构建过滤后列表。
-local function BuildFilteredList(list)
+-- -- 根据文本框, 同义词, UCS, Saved Search 等规则，从原始files_idx_cache中构建过滤后列表。
+-- function BuildFilteredList(list)
+--   local filtered = {}
+
+--   -- UCS主分类-子分类组合过滤的临时键词
+--   local pair_cat = (type(temp_ucs_cat_keyword) == "string" and temp_ucs_cat_keyword ~= "" ) and temp_ucs_cat_keyword or nil
+--   local pair_sub = (type(temp_ucs_sub_keyword) == "string" and temp_ucs_sub_keyword ~= "" ) and temp_ucs_sub_keyword or nil
+
+--   for _, info in ipairs(list) do
+--     -- 过滤关键词 - 与保存搜索关键词深度绑定
+--     local filter_text = _G.commit_filter_text or ""
+
+--     -- 自动保存最近搜索关键词
+--     if filter_text ~= last_search_input then
+--       last_search_input = filter_text
+--       search_input_timer = reaper.time_precise()
+--     end
+
+--     -- 临时关键词 & UCS 分类 (& Saved Search暂不参与) 参与搜索，替代空输入。关键词不发送到搜索框
+--     local search_keyword = filter_text
+--     -- 隐式搜索相关代码。优先使用UCS主分类/子分类关键词，否则使用保存搜索关键词
+--     if temp_search_keyword then
+--       search_keyword = temp_search_keyword
+--     -- 保存搜索关键词（如果启用隐式发送保存搜索关键词则应整段注释2,共两处）
+--     -- elseif search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
+--     --   search_keyword = saved_search_list[active_saved_search].keyword or ""
+--     end
+
+--     -- 拆分用户输入为小写关键词数组
+--     local input_keywords = {}
+--     for keyword in tostring(search_keyword):gmatch("%S+") do
+--       table.insert(input_keywords, keyword:lower())
+--     end
+
+--     -- 启用同义词时，将关键词分为两类。有同义词的关键词 和 无同义词的额外关键词
+--     -- 同义词逻辑: synonym_keywords 为 OR，extra_keywords 为 AND
+--     local synonym_keywords = {}
+--     local extra_keywords = {}
+--     local seen_groups = {} -- 去重同义词组
+
+--     if use_synonyms then
+--       for _, kw in ipairs(input_keywords) do
+--         local synonyms = thesaurus_map[kw]
+--         if synonyms then
+--           local temp = {table.unpack(synonyms)}
+--           table.sort(temp)
+--           local group_key = table.concat(temp, ",")
+--           if not seen_groups[group_key] then
+--             seen_groups[group_key] = true
+--             for _, synonym in ipairs(synonyms) do
+--               synonym_keywords[synonym] = true
+--             end
+--           end
+--         else
+--           extra_keywords[#extra_keywords + 1] = kw
+--         end
+--       end
+--     else
+--       -- 未启用同义词时，所有关键词都是额外关键词
+--       for _, kw in ipairs(input_keywords) do
+--         extra_keywords[#extra_keywords + 1] = kw
+--       end
+--     end
+
+--     -- 合并所有要检索的内容，全部转小写
+--     local target = ""
+--     if temp_search_field then
+--       -- 临时指定UCS主分类/子分类字段隐式搜索
+--       target = (tostring(info[temp_search_field] or "")):lower()
+--     else
+--       -- 多字段关键词搜索
+--       for _, field in ipairs(search_fields) do
+--         if field.enabled then
+--           target = target .. " " .. (tostring(info[field.key] or ""))
+--         end
+--       end
+--       target = target:lower()
+--     end
+
+--     -- 基础文本匹配
+--     local match = false
+--     if use_synonyms and next(synonym_keywords) then
+--       -- 同义词之间为 OR 逻辑，每个同义词与额外关键词为 AND 逻辑
+--       for synonym in pairs(synonym_keywords) do
+--         local synonym_match = target:find(synonym, 1, true) ~= nil
+--         if synonym_match then
+--           local extra_match = true
+--           for _, extra_kw in ipairs(extra_keywords) do
+--             if not target:find(extra_kw, 1, true) then
+--               extra_match = false
+--               break
+--             end
+--           end
+--           if extra_match then
+--             match = true -- 找到有效组合 (synonym AND 所有额外词)，即可跳出
+--             break
+--           end
+--         end
+--       end
+--     else
+--       -- 未启用同义词时或无同义词时，全部关键词用 AND 逻辑
+--       match = true
+--       for _, kw in ipairs(extra_keywords) do
+--         if not target:find(kw, 1, true) then
+--           match = false
+--           break
+--         end
+--       end
+--     end
+
+--     -- UCS主分类+子分类组合过滤
+--     local pair_ok = true
+--     if pair_cat and pair_sub then
+--       local cat_l = tostring(info.ucs_category or ""):lower()
+--       local sub_l = tostring(info.ucs_subcategory or ""):lower()
+--       pair_ok = (cat_l == pair_cat) and (sub_l == pair_sub)
+--     elseif pair_cat and not pair_sub then
+--       local cat_l = tostring(info.ucs_category or ""):lower()
+--       pair_ok = (cat_l == pair_cat)
+--     end
+
+--     -- 收集符合的info
+--     if match and pair_ok then
+--       table.insert(filtered, info)
+--     end
+--   end
+
+--   return filtered
+-- end
+
+-- 根据文本框、同义词、UCS、Saved Search 等规则，从原始 files_idx_cache 中构建过滤后列表
+function BuildFilteredList(list)
   local filtered = {}
 
-  for _, info in ipairs(list) do
-    -- 过滤关键词 - 与保存搜索关键词深度绑定
-    local filter_text = _G.commit_filter_text or ""
+  -- 读取一次输入框文本 & 记录输入时间，避免在循环中重复
+  local filter_text = _G.commit_filter_text or ""
+  if filter_text ~= last_search_input then
+    last_search_input = filter_text
+    search_input_timer = reaper.time_precise()
+  end
 
-    -- 自动保存最近搜索关键词
-    if filter_text ~= last_search_input then
-      last_search_input = filter_text
-      search_input_timer = reaper.time_precise()
-    end
+  -- 计算本次有效搜索串（优先级：临时关键词 > 手动输入）
+  local search_keyword = filter_text
+  if temp_search_keyword then
+    search_keyword = temp_search_keyword
+  -- 保存搜索关键词（如果启用隐式发送保存搜索关键词则应整段注释2,共两处）
+  -- elseif search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
+  --   search_keyword = saved_search_list[active_saved_search].keyword or ""
+  end
 
-    -- 临时关键词 & UCS 分类 (& Saved Search暂不参与) 参与搜索，替代空输入。关键词不发送到搜索框
-    local search_keyword = filter_text
-    -- 隐式搜索相关代码。优先使用UCS主分类/子分类关键词，否则使用保存搜索关键词
-    if temp_search_keyword then
-      search_keyword = temp_search_keyword
-    -- 保存搜索关键词（如果启用隐式发送保存搜索关键词则应整段注释2,共两处）
-    -- elseif search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
-    --   search_keyword = saved_search_list[active_saved_search].keyword or ""
-    end
+  -- 拆分输入关键词为小写
+  local input_keywords = {}
+  for kw in tostring(search_keyword):gmatch("%S+") do
+    input_keywords[#input_keywords + 1] = kw:lower()
+  end
 
-    -- 拆分用户输入为小写关键词数组
-    local input_keywords = {}
-    for keyword in search_keyword:gmatch("%S+") do
-      table.insert(input_keywords, keyword:lower())
-    end
-
-    -- 启用同义词时，将关键词分为两类。有同义词的关键词 和 无同义词的额外关键词
-    -- 同义词逻辑: synonym_keywords 为 OR，extra_keywords 为 AND
-    local synonym_keywords = {}
-    local extra_keywords = {}
-    local seen_groups = {} -- 去重同义词组
-
-    if use_synonyms then
-      for _, kw in ipairs(input_keywords) do
-        local synonyms = thesaurus_map[kw]
-        if synonyms then
-          local group_key = table.concat((function()
-            local temp = {table.unpack(synonyms)}
-            table.sort(temp)
-            return temp
-          end)(), ",")
-          if not seen_groups[group_key] then
-            seen_groups[group_key] = true
-            for _, synonym in ipairs(synonyms) do
-              synonym_keywords[synonym] = true
-            end
+  -- 启用同义词时，将关键词分为两类。有同义词的关键词 和 无同义词的额外关键词
+  -- 同义词逻辑: synonym_keywords 用 OR，extra_keywords 用 AND
+  local synonym_keywords = {}
+  local extra_keywords   = {}
+  local seen_groups      = {} -- 去重同义词组
+  local unpack_ = table.unpack or unpack
+  if use_synonyms then
+    for _, kw in ipairs(input_keywords) do
+      local synonyms = thesaurus_map and thesaurus_map[kw] or nil
+      if synonyms and #synonyms > 0 then
+        -- 复制+小写+排序，生成稳定组key
+        local temp = {unpack_(synonyms)}
+        for i = 1, #temp do temp[i] = tostring(temp[i]):lower() end
+        table.sort(temp)
+        local group_key = table.concat(temp, ",")
+        if not seen_groups[group_key] then
+          seen_groups[group_key] = true
+          for i = 1, #temp do
+            synonym_keywords[temp[i]] = true
           end
-        else
-          extra_keywords[#extra_keywords + 1] = kw
         end
-      end
-    else
-      -- 未启用同义词时，所有关键词都是额外关键词
-      for _, kw in ipairs(input_keywords) do
+      else
         extra_keywords[#extra_keywords + 1] = kw
       end
     end
+  else
+    -- 未启用同义词时，所有关键词都是额外关键词
+    for _, kw in ipairs(input_keywords) do
+      extra_keywords[#extra_keywords + 1] = kw
+    end
+  end
 
-    -- 合并所有要检索的内容，全部转小写
-    local target = ""
+  -- UCS主分类-子分类组合过滤的临时键词
+  local pair_cat = (type(temp_ucs_cat_keyword) == "string" and temp_ucs_cat_keyword ~= "") and temp_ucs_cat_keyword:lower() or nil
+  local pair_sub = (type(temp_ucs_sub_keyword) == "string" and temp_ucs_sub_keyword ~= "") and temp_ucs_sub_keyword:lower() or nil
+
+  for _, info in ipairs(list) do
+    -- 组装目标文本（多字段），最后一次性lower
+    local tb = {}
     if temp_search_field then
-      -- 临时指定UCS主分类/子分类字段隐式搜索
-      target = (info[temp_search_field] or ""):lower()
+      tb[1] = tostring(info[temp_search_field] or "")
     else
-      -- 多字段关键词搜索
+      local n = 0
       for _, field in ipairs(search_fields) do
         if field.enabled then
-          target = target .. " " .. (info[field.key] or "")
+          n = n + 1
+          tb[n] = tostring(info[field.key] or "")
         end
       end
-      target = target:lower()
+      if n == 0 then tb[1] = "" end
     end
+    local target = table.concat(tb, " "):lower()
 
-    -- 最终匹配判断
+    -- 文本匹配（synonym OR + extra AND；否则全 AND）
     local match = false
-    -- 同义词启用时特殊的复合搜索逻辑
     if use_synonyms and next(synonym_keywords) then
-      -- 同义词之间为 OR 逻辑，每个同义词与额外关键词为 AND 逻辑
       for synonym in pairs(synonym_keywords) do
-        local synonym_match = target:find(synonym, 1, true) ~= nil
-        if synonym_match then
-          local extra_match = true
+        if target:find(synonym, 1, true) then
+          local extra_ok = true
           for _, extra_kw in ipairs(extra_keywords) do
             if not target:find(extra_kw, 1, true) then
-              extra_match = false
+              extra_ok = false
               break
             end
           end
-          if extra_match then
-            match = true -- 找到有效组合 (synonym AND 所有额外词)，即可跳出
+          if extra_ok then
+            match = true
             break
           end
         end
       end
     else
-      -- 未启用同义词时或无同义词时，全部关键词用 AND 逻辑
       match = true
       for _, kw in ipairs(extra_keywords) do
         if not target:find(kw, 1, true) then
@@ -3442,9 +3686,19 @@ local function BuildFilteredList(list)
       end
     end
 
-    -- 收集符合的info
-    if match then
-      table.insert(filtered, info)
+    -- UCS 主/子类等值过滤
+    local pair_ok = true
+    if pair_cat and pair_sub then
+      local cat_l = tostring(info.ucs_category or ""):lower()
+      local sub_l = tostring(info.ucs_subcategory or ""):lower()
+      pair_ok = (cat_l == pair_cat) and (sub_l == pair_sub)
+    elseif pair_cat then
+      local cat_l = tostring(info.ucs_category or ""):lower()
+      pair_ok = (cat_l == pair_cat)
+    end
+
+    if match and pair_ok then
+      filtered[#filtered + 1] = info
     end
   end
 
@@ -4438,8 +4692,8 @@ function loop()
       _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
       -- 清除临时搜索字段，UCS隐式搜索临时关键词
       active_saved_search = nil
-      temp_search_field   = nil
-      temp_search_keyword = nil
+      temp_search_field, temp_search_keyword = nil
+      temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil
 
       static.filtered_list_map    = {}
       static.last_filter_text_map = {}
@@ -4477,8 +4731,8 @@ function loop()
       _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
       -- 清除临时搜索字段，UCS隐式搜索临时关键词
       active_saved_search = nil
-      temp_search_field   = nil
-      temp_search_keyword = nil
+      temp_search_field, temp_search_keyword = nil
+      temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil
 
       static.filtered_list_map    = {}
       static.last_filter_text_map = {}
@@ -5178,7 +5432,7 @@ function loop()
           reaper.ImGui_SetNextItemWidth(ctx, -65)
           reaper.ImGui_TextFilter_Draw(usc_filter, ctx, "##FilterUCS")
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, "Clear") then
+          if reaper.ImGui_Button(ctx, "Clear", 40) then
             reaper.ImGui_TextFilter_Set(usc_filter, "")
             temp_search_keyword, temp_search_field = nil, nil -- 清除UCS隐式搜索
           end
@@ -5189,8 +5443,8 @@ function loop()
             filter_text = reaper.ImGui_TextFilter_Get(usc_filter)
           end
           -- 过滤时，自动展开子分类匹配但主分类不匹配的主分类
-          if filter_text ~= last_filter_text then
-            last_filter_text = filter_text
+          if filter_text ~= ucs_last_filter_text then
+            ucs_last_filter_text = filter_text
             -- 清空所有折叠
             if filter_text == "" then
               cat_open_state = {}
@@ -5245,30 +5499,58 @@ function loop()
 
             if #filtered > 0 then
               reaper.ImGui_PushID(ctx, cat)
-              local is_open = cat_open_state[cat]
-              is_open = is_open and true or false
+              local is_open = cat_open_state[cat] and true or false
               local arrow_label = is_open and "-" or "+"
-              if reaper.ImGui_Button(ctx, arrow_label, 20, 20) then
+              if reaper.ImGui_Button(ctx, arrow_label .. "##toggle", 20, 20) then
                 cat_open_state[cat] = not is_open
+                local en = (ucs_maps and ucs_maps.cat_to_en and ucs_maps.cat_to_en[cat]) or cat
+                ucs_open_en = ucs_open_en or {}
+                if cat_open_state[cat] then ucs_open_en[en] = true else ucs_open_en[en] = nil end
               end
               reaper.ImGui_SameLine(ctx)
-              -- 发送UCS主分类关键词，隐式搜索
-              if reaper.ImGui_Selectable(ctx, cat, false, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
-                temp_search_field = "ucs_category" -- 指定本次只搜索主分类字段
-                temp_search_keyword = cat:lower()  -- 指定本次分类关键词（小写用于比较）
+              -- 点击主分类提交隐式搜索
+              if reaper.ImGui_Selectable(ctx, cat .. "##cat", false, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+                local send_cat = cat
+                if UCS_FORCE_EN and ucs_maps and ucs_maps.cat_to_en[cat] then
+                  send_cat = ucs_maps.cat_to_en[cat] -- force EN
+                end
+                temp_ucs_cat_keyword = tostring(send_cat):lower()
+                temp_ucs_sub_keyword = nil
+                temp_search_field, temp_search_keyword = nil, nil
                 active_saved_search = nil
+
+                local static = _G._soundmole_static or {}
+                _G._soundmole_static = static
+                static.filtered_list_map    = {}
+                static.last_filter_text_map = {}
               end
 
+              -- 点击子分类发送主+子分类关键词隐式搜索
               if is_open then
                 for _, entry in ipairs(filtered) do
+                  reaper.ImGui_PushID(ctx, entry.name)
                   reaper.ImGui_Indent(ctx, 28)
-                  -- 发送UCS子分类关键词，隐式搜索
-                  if reaper.ImGui_Selectable(ctx, entry.name) then
-                    temp_search_field = "ucs_subcategory"    -- 指定本次只搜索子分类字段
-                    temp_search_keyword = entry.name:lower() -- 指定本次分类关键词（小写用于比较）
+                  if reaper.ImGui_Selectable(ctx, entry.name .. "##sub") then
+                    local send_cat = cat
+                    local send_sub = entry.name
+                    if UCS_FORCE_EN and ucs_maps then
+                      send_cat = (ucs_maps.cat_to_en[cat] or send_cat)
+                      local sub_map = ucs_maps.sub_to_en[cat] or {}
+                      send_sub = (sub_map[entry.name] or send_sub)
+                    end
+
+                    temp_ucs_cat_keyword = tostring(send_cat):lower()
+                    temp_ucs_sub_keyword = tostring(send_sub):lower()
+                    temp_search_field, temp_search_keyword = nil, nil
                     active_saved_search = nil
+
+                    local static = _G._soundmole_static or {}
+                    _G._soundmole_static = static
+                    static.filtered_list_map    = {}
+                    static.last_filter_text_map = {}
                   end
                   reaper.ImGui_Unindent(ctx, 28)
+                  reaper.ImGui_PopID(ctx)
                 end
               end
               reaper.ImGui_PopID(ctx)
@@ -5372,12 +5654,13 @@ function loop()
               active_saved_search = idx
               local kw = s.keyword or ""
               if filename_filter then
-                reaper.ImGui_TextFilter_Set(filename_filter, kw) -- 回填到输入框
-              end
-              _G.commit_filter_text    = kw                      -- 列表过滤使用
-              _G.just_committed_filter = true                    -- 如外部有一次性提交逻辑可用
-              last_search_input        = kw                      -- 同步输入状态
-              search_input_timer       = reaper.time_precise()   -- 重置计时，避免重复写入
+                reaper.ImGui_TextFilter_Set(filename_filter, kw)    -- 回填到输入框
+              end   
+              _G.commit_filter_text    = kw                         -- 列表过滤使用
+              _G.just_committed_filter = true                       -- 如外部有一次性提交逻辑可用
+              last_search_input        = kw                         -- 同步输入状态
+              search_input_timer       = reaper.time_precise()      -- 重置计时，避免重复写入
+              temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil -- 清除主-子组合过滤残留
             end
 
             -- 恢复关键词文字样式颜色
@@ -6347,6 +6630,10 @@ function loop()
         search_enter_mode = search_enter_v
         reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_v and "1" or "0", true)
       end
+
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Text(ctx, "UCS Settings:")
+      DrawUcsLanguageSelector(ctx)
 
       -- 更改速率是否保持音高
       reaper.ImGui_Separator(ctx)

@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.32
+-- @version 1.0.33
 -- @changelog
---   Optimized waveform cache loading with a dual-delay strategy for cached and uncached waveforms.
+--   Optimize UCS category and subcategory search logic.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
