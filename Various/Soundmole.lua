@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.35
+-- @version 1.0.36
 -- @changelog
 --   Support dragging audio files directly from REAPER's Media Explorer or the system file manager to Collections nodes.
 --   Other detailed improvements and bug fixes.

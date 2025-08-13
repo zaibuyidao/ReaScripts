@@ -4719,13 +4719,13 @@ function loop()
 
       _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
       -- 清除临时搜索字段，UCS隐式搜索临时关键词
-      active_saved_search = nil
-      temp_search_field, temp_search_keyword = nil
-      temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil
+      -- active_saved_search = nil
+      -- temp_search_field, temp_search_keyword = nil
+      -- temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil
 
-      static.filtered_list_map    = {}
-      static.last_filter_text_map = {}
-      selected_row = nil
+      -- static.filtered_list_map    = {}
+      -- static.last_filter_text_map = {}
+      -- selected_row = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
