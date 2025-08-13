@@ -2467,32 +2467,56 @@ function draw_advanced_folder_node(id, selected_id)
     reaper.ImGui_EndPopup(ctx)
   end
 
-  -- 拖动文件到高级文件夹中
+  -- 拖动文件到高级文件夹中，媒体资源管理器文件+内部 AUDIO_PATHS (左侧选中项)
   if reaper.ImGui_BeginDragDropTarget(ctx) then
+    node.files = node.files or {}
+    local changed = false
+
+    local function add_path(p)
+      if not p or p == "" then return end
+      local np = normalize_path(p, false)
+      for _, old in ipairs(node.files) do
+        if old == np then return end
+      end
+      table.insert(node.files, np)
+      changed = true
+    end
+
+    -- 接收媒体资源管理器文件型负载
+    local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 1024)
+    if ok_files and count and count > 0 then
+      for i = 0, count - 1 do
+        local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
+        if ok1 and filepath and filepath ~= "" then
+          add_path(filepath)
+        end
+      end
+    end
+
+    -- 接收脚本内部自定义负载
     if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
-      local ok, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
-      if ok and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
-        node.files = node.files or {}
-        local changed = false
-        -- 按分隔符拆分每条路径
+      local ok2, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+      if ok2 and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
         for raw in payload:gmatch("([^|;|]+)") do
-          local drag_path = normalize_path(raw, false)
-          local exists = false
-          for _, p in ipairs(node.files) do
-            if p == drag_path then exists = true break end
-          end
-          if not exists then
-            table.insert(node.files, drag_path)
-            changed = true
-          end
+          add_path(raw)
         end
-        if changed then
-          SaveAdvancedFolders()
-          if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder == id then
-            files_idx_cache = nil
-            CollectFiles()
-          end
-        end
+      end
+    end
+
+    if changed then
+      SaveAdvancedFolders()
+      if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder == id then
+        files_idx_cache = nil
+        CollectFiles()
+
+        -- 清空多选状态
+        file_select_start = nil
+        file_select_end   = nil
+        selected_row      = -1
+
+        local static = _G._soundmole_static or {}
+        _G._soundmole_static = static
+        static.filtered_list_map, static.last_filter_text_map = {}, {}
       end
     end
 
@@ -4065,6 +4089,10 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         CollectFiles()
         -- 清空多选状态
         file_select_start, file_select_end, selected_row = nil, nil, -1
+
+        -- local static = _G._soundmole_static or {}
+        -- _G._soundmole_static = static
+        static.filtered_list_map, static.last_filter_text_map = {}, {}
       end
     end
   end
@@ -6258,6 +6286,65 @@ function loop()
         end
       end
 
+      -- 拖动文件到高级文件夹中，媒体资源管理器文件+内部 AUDIO_PATHS (右侧列表)
+      if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder then
+        local cur_id = tree_state.cur_advanced_folder
+        local node = advanced_folders[cur_id]
+
+        if node and reaper.ImGui_BeginDragDropTarget(ctx) then
+          node.files = node.files or {}
+          local changed = false
+
+          local function add_path(p)
+            if not p or p == "" then return end
+            local np = normalize_path(p, false)
+            for _, old in ipairs(node.files) do
+              if old == np then return end
+            end
+            table.insert(node.files, np)
+            changed = true
+          end
+
+          -- 接收媒体资源管理器文件型负载
+          local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 1024)
+          if ok_files and count and count > 0 then
+            for i = 0, count - 1 do
+              local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
+              if ok1 and filepath and filepath ~= "" then
+                add_path(filepath)
+              end
+            end
+          end
+
+          -- 接收脚本内部自定义负载
+          if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
+            local ok2, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+            if ok2 and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
+              for raw in payload:gmatch("([^|;|]+)") do
+                add_path(raw)
+              end
+            end
+          end
+
+          if changed then
+            SaveAdvancedFolders()
+            files_idx_cache = nil
+            CollectFiles()
+
+            -- 清空多选状态
+            file_select_start = nil
+            file_select_end   = nil
+            selected_row      = -1
+
+            local static = _G._soundmole_static or {}
+            _G._soundmole_static = static
+            static.filtered_list_map, static.last_filter_text_map = {}, {}
+          end
+
+          reaper.ImGui_EndDragDropTarget(ctx)
+        end
+      end
+
       reaper.ImGui_EndChild(ctx)
     else
       static.clipper = nil
@@ -6802,7 +6889,7 @@ function loop()
       local padding_set_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
       reaper.ImGui_SetCursorPosX(ctx, win_set_w - (btn_set_w * 2 + spacing_set + padding_set_x * 2))
 
-      if reaper.ImGui_Button(ctx, "Apply##Settings_save", btn_set_w, 20) then
+      if reaper.ImGui_Button(ctx, "Apply##Settings_save", btn_set_w, 36) then
         SaveSettings()
         reaper.ImGui_CloseCurrentPopup(ctx)
       end
@@ -6832,13 +6919,13 @@ function loop()
 
       -- Cancel 按钮
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Cancel##Settings_cancel", btn_set_w, 20) then
+      if reaper.ImGui_Button(ctx, "Cancel##Settings_cancel", btn_set_w, 36) then
         reaper.ImGui_CloseCurrentPopup(ctx)
       end
       
       reaper.ImGui_SameLine(ctx)
 
-      if reaper.ImGui_Button(ctx, "Reset##Settings_reset", btn_set_w, 20) then
+      if reaper.ImGui_Button(ctx, "Reset##Settings_reset", btn_set_w, 36) then
         -- 恢复各项设置为默认值
         collect_mode = DEFAULTS.collect_mode
         doubleclick_action = DEFAULTS.doubleclick_action
