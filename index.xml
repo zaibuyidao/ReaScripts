@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="d50d4847a16d7526ffd8d42eb3e383d002bd9901">
+<index version="1" name="zaibuyidao Scripts" commit="d9fe83c118da909c2ac4bcf605fd12f078390e8a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14482,6 +14482,16 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/d50d4847a16d7526ffd8d42eb3e383d002bd9901/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/d50d4847a16d7526ffd8d42eb3e383d002bd9901/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/d50d4847a16d7526ffd8d42eb3e383d002bd9901/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.37" author="zaibuyidao" time="2025-08-17T09:35:51Z">
+        <changelog><![CDATA[Added Key and BPM metadata columns.
+Added support for REAPER Shortcuts and Databases, which are now mirrored inside Soundmole.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/d9fe83c118da909c2ac4bcf605fd12f078390e8a/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/d9fe83c118da909c2ac4bcf605fd12f078390e8a/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/d9fe83c118da909c2ac4bcf605fd12f078390e8a/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/d9fe83c118da909c2ac4bcf605fd12f078390e8a/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/d9fe83c118da909c2ac4bcf605fd12f078390e8a/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
