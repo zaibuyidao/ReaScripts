@@ -152,6 +152,8 @@ local TableColumns = {
   CHANNELS    = 13,
   SAMPLERATE  = 14,
   BITS        = 15,
+  KEY         = 16,
+  BPM         = 17,
 }
 -- ExtState
 local EXT_SECTION              = "Soundmole"
@@ -256,6 +258,8 @@ COLLECT_MODE_SHORTCUT        = 5
 COLLECT_MODE_CUSTOMFOLDER    = 6 -- 自定义文件夹模式
 COLLECT_MODE_RECENTLY_PLAYED = 9 -- 最近播放模式
 COLLECT_MODE_MEDIADB         = 999  -- 数据库模式
+COLLECT_MODE_REAPERDB        = 1007 -- REAPER数据库
+COLLECT_MODE_SHORTCUT_MIRROR = 1009
 
 -- 设置相关
 local auto_play_selected  = true
@@ -332,6 +336,8 @@ local search_fields = {
   { label = "Samplerate",       key = "samplerate",    enabled = false }, -- 采样率
   { label = "Channels",         key = "channels",      enabled = false }, -- 声道数
   { label = "Bits",             key = "bits",          enabled = false }, -- 位深度
+  { label = "Key",              key = "key",           enabled = false }, -- 调号
+  { label = "BPM",              key = "bpm",           enabled = false }, -- 速度
   { label = "Length",           key = "length",        enabled = false }, -- 时长
   { label = "Genre",            key = "genre",         enabled = false }, -- 流派
   { label = "Comment",          key = "comment",       enabled = false }, -- 注释
@@ -566,10 +572,30 @@ function GetRootSource(src)
   return src
 end
 
--- Items 收集工程中当前使用的音频文件
+function get_meta_first(src, ids)
+  for _, id in ipairs(ids) do
+    local ok, val = reaper.GetMediaFileMetadata(src, id)
+    if ok and val and val ~= "" then return val end
+  end
+  return nil
+end
+
+-- 标准化调式
+function normalize_key(s)
+  if not s or s == "" then return "" end
+  s = s:gsub("^%s+", ""):gsub("%s+$", "")
+  s = s:gsub("%s+", ""):gsub("♯", "#"):gsub("♭", "b")
+  s = s:gsub("[Mm][Ii]?[Nn]?[Oo]?[Rr]$", "m")
+  local root, accidental, minor = s:match("^([A-Ga-g])([#b]?)(m?)$")
+  if root then return string.upper(root) .. accidental .. minor end
+  return string.upper(s)
+end
+
+-- Items Assets 收集工程中当前使用的音频文件
 function CollectFromItems()
   local files, files_idx = {}, {}
   local item_cnt = reaper.CountMediaItems(0)
+
   for i = 0, item_cnt - 1 do
     local item = reaper.GetMediaItem(0, i)
     local take = reaper.GetActiveTake(item)
@@ -583,7 +609,6 @@ function CollectFromItems()
       if path and path ~= "" and not files[path] and (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
         -- 获取文件大小并格式化
         local size = 0
-        local size_str = "0 B"
         local f = io.open(path, "rb")
         if f then
           f:seek("end")
@@ -591,11 +616,27 @@ function CollectFromItems()
           f:close()
         end
 
-        local bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(source) or "-"
-        local _, genre = reaper.GetMediaFileMetadata(source, "XMP:dm/genre")
-        local _, comment = reaper.GetMediaFileMetadata(source, "MP:dm/logComment")
-        local _, description = reaper.GetMediaFileMetadata(source, "BWF:Description")
-        local _, orig_date   = reaper.GetMediaFileMetadata(source, "BWF:OriginationDate")
+        local bits        = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(source) or ""
+        local genre       = get_meta_first(source, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
+        local comment     = get_meta_first(source, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
+        local description = get_meta_first(source, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
+        local orig_date   = get_meta_first(source, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
+
+        local bpm_str = get_meta_first(source, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
+        local bpm = bpm_str and tonumber(bpm_str) or nil
+        if not bpm then
+          local fn = path:match("[^/\\]+$") or path
+          local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
+          bpm = m and tonumber(m) or nil
+        end
+
+        local key_str = get_meta_first(source, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
+        if not key_str or key_str == "" then
+          local fn = path:match("([^/\\]+)$") or path
+          key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
+        end
+        local key = normalize_key(key_str)
+
         files[path] = {
           path = path,
           filename = path:match("([^/\\]+)$") or path,
@@ -612,7 +653,9 @@ function CollectFromItems()
           source = source,
           ucs_category    = get_ucstag(source, "category"),
           ucs_catid       = get_ucstag(source, "catId"),
-          ucs_subcategory = get_ucstag(source, "subCategory")
+          ucs_subcategory = get_ucstag(source, "subCategory"),
+          bpm = bpm or "",
+          key = key or "",
         }
         files_idx[#files_idx+1] = files[path]
       end
@@ -626,17 +669,22 @@ end
 function CollectMediaItems()
   local files_idx = {}
   local item_cnt = reaper.CountMediaItems(0)
+
   for i = 0, item_cnt - 1 do
     local item = reaper.GetMediaItem(0, i)
     local take = reaper.GetActiveTake(item)
-    local src, path, typ, size, bits, samplerate, channels, length = nil, "", "", 0, "-", "-", "-", "-"
-    local description, comment = "", ""
+
+    local take_offset, take_length, samplerate, channels, length = 0, 0, 0, 0, 0
+    local src, path, typ = nil, "", ""
+    local size, bits = 0, ""
+    local genre, description, comment, bwf_orig_date, ucs_category, ucs_catid, ucs_subcategory, bpm, key = "", "", "", "", "", "", "", "", ""
+
     if take then
       src = reaper.GetMediaItemTake_Source(take)
       -- 过滤空对象／非 MediaSource*
       if not reaper.ValidatePtr(src, "MediaSource*") then goto continue end
-      local take_offset = GetItemSectionStartPos(item) or 0
-      local take_length = reaper.GetMediaSourceLength(src) or 0
+      take_offset = GetItemSectionStartPos(item) or 0
+      take_length = reaper.GetMediaSourceLength(src) or 0
       path = reaper.GetMediaSourceFileName(src, "")
       path = normalize_path(path, false)
       -- 通过源文件路径获取type，保证类型准确
@@ -655,7 +703,7 @@ function CollectMediaItems()
         goto continue
       end
       -- typ = reaper.GetMediaSourceType(src, "") -- 通过take获取type，无法保证类型准确。会混入SECTION 等非音频类型
-      bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
+      bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
       samplerate = reaper.GetMediaSourceSampleRate(src)
       channels = reaper.GetMediaSourceNumChannels(src)
       length = reaper.GetMediaSourceLength(src)
@@ -666,11 +714,27 @@ function CollectMediaItems()
         size = f:seek()
         f:close()
       end
-      local _, desc = reaper.GetMediaFileMetadata(src, "BWF:Description")
-      local _, comm = reaper.GetMediaFileMetadata(src, "MP:dm/logComment")  -- 兼容BWF/MP3
-      description = desc or ""
-      comment = comm or ""
+      genre         = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
+      comment       = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
+      description   = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
+      bwf_orig_date = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
     end
+
+    local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
+    bpm = bpm_str and tonumber(bpm_str) or nil
+    if not bpm then
+      local fn = path:match("[^/\\]+$") or path
+      local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
+      bpm = m and tonumber(m) or nil
+    end
+
+    local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
+    if not key_str or key_str == "" then
+      local fn = path:match("([^/\\]+)$") or path
+      key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
+    end
+    key = normalize_key(key_str)
+
     local track = reaper.GetMediaItem_Track(item)
     local _, track_name = reaper.GetTrackName(track)
     local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
@@ -691,8 +755,10 @@ function CollectMediaItems()
       length = length,
       bits = bits,
       size = size,
+      genre = genre,
       description = description,
       comment = comment,
+      bwf_orig_date = bwf_orig_date,
       track = track,
       track_name = track_name,
       position = pos,
@@ -701,13 +767,15 @@ function CollectMediaItems()
       ucs_category    = get_ucstag(src, "category"),
       ucs_catid       = get_ucstag(src, "catId"),
       ucs_subcategory = get_ucstag(src, "subCategory"),
+      bpm = bpm or "",
+      key = key or "",
     })
     ::continue::
   end
   return files_idx
 end
 
--- RPP 收集所有引用的音频文件
+-- Source Media - RPP 收集所有引用的音频文件
 function CollectFromRPP()
   local files_idx = {}
   local path_set = {}
@@ -734,6 +802,10 @@ function CollectFromRPP()
   for i = 0, item_cnt - 1 do
     local item = reaper.GetMediaItem(0, i)
     local take = reaper.GetActiveTake(item)
+
+    local typ, bits, samplerate, channels, length, size = "", "", "", "", "", 0
+    local genre, description, comment, bwf_orig_date = "", "", "", ""
+    local real_src
     if take then
       local src = reaper.GetMediaItemTake_Source(take)
       local root_src = GetRootSource(src) -- 统一获取音频源
@@ -743,28 +815,43 @@ function CollectFromRPP()
       end
       path = normalize_path(path, false)
       if path and path_set[path] then
-        local typ, bits, samplerate, channels, length, size = "", "-", "-", "-", "-", 0
-        local description, comment = "", ""
         -- 获取元数据
-        local real_src = reaper.PCM_Source_CreateFromFile(path)
+        real_src = reaper.PCM_Source_CreateFromFile(path)
         if real_src then
           typ = reaper.GetMediaSourceType(real_src, "")
           samplerate = reaper.GetMediaSourceSampleRate(real_src)
           channels = reaper.GetMediaSourceNumChannels(real_src)
           length = reaper.GetMediaSourceLength(real_src)
-          bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(real_src) or "-"
+          bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(real_src) or ""
           local f = io.open(path, "rb")
           if f then
             f:seek("end")
             size = f:seek()
             f:close()
           end
-          local _, desc = reaper.GetMediaFileMetadata(real_src, "BWF:Description")
-          local _, comm = reaper.GetMediaFileMetadata(real_src, "MP:dm/logComment")
-          description = desc or ""
-          comment = comm or ""
+          genre         = get_meta_first(real_src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
+          comment       = get_meta_first(real_src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
+          description   = get_meta_first(real_src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
+          bwf_orig_date = get_meta_first(real_src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
+
+          local bpm_str = get_meta_first(real_src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
+          bpm = bpm_str and tonumber(bpm_str) or nil
+          if not bpm then
+            local fn = path:match("[^/\\]+$") or path
+            local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
+            bpm = m and tonumber(m) or nil
+          end
+
+          local key_str = get_meta_first(real_src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
+          if not key_str or key_str == "" then
+            local fn = path:match("([^/\\]+)$") or path
+            key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
+          end
+          key = normalize_key(key_str)
+
           reaper.PCM_Source_Destroy(real_src)
         end
+
         local track = reaper.GetMediaItem_Track(item)
         local _, track_name = reaper.GetTrackName(track)
         local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
@@ -785,14 +872,18 @@ function CollectFromRPP()
           length = length,
           bits = bits,
           size = size,
+          genre = genre,
           description = description,
           comment = comment,
+          bwf_orig_date = bwf_orig_date,
           track = track,
           track_name = track_name,
           position = pos,
           ucs_category    = get_ucstag(source, "category"),
           ucs_catid       = get_ucstag(source, "catId"),
           ucs_subcategory = get_ucstag(source, "subCategory"),
+          bpm = bpm or "",
+          key = key or "",
         })
       end
     end
@@ -810,6 +901,7 @@ function CollectFromProjectDirectory()
   if not proj_path or proj_path == "" then return files, files_idx end
   -- 支持的扩展名
   local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true}
+
   local i = 0
   while true do
     local file = reaper.EnumerateFiles(proj_path, i)
@@ -831,22 +923,20 @@ function CollectFromProjectDirectory()
         end
 
         local src = reaper.PCM_Source_CreateFromFile(fullpath)
-
         -- 测试元数据内容，可获取元数据信息用于对应列读取
         -- local retval, metadata_list = reaper.GetMediaFileMetadata(src, "")
         -- reaper.ShowConsoleMsg(metadata_list)
-
         if src then
           info.source = src
           info.type = reaper.GetMediaSourceType(src, "")
           info.length = reaper.GetMediaSourceLength(src)
           info.samplerate = reaper.GetMediaSourceSampleRate(src)
           info.channels = reaper.GetMediaSourceNumChannels(src)
-          info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
-          local _, genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
-          local _, comment = reaper.GetMediaFileMetadata(src, "XMP:dm/logComment")
-          local _, description = reaper.GetMediaFileMetadata(src, "BWF:Description")
-          local _, orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
+          info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
+          local genre       = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
+          local comment     = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
+          local description = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
+          local orig_date   = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
           info.genre = genre or ""
           info.comment = comment or ""
           info.description = description or ""
@@ -854,6 +944,22 @@ function CollectFromProjectDirectory()
           info.ucs_category    = get_ucstag(src, "category")
           info.ucs_catid       = get_ucstag(src, "catId")
           info.ucs_subcategory = get_ucstag(src, "subCategory")
+
+          local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
+          local bpm = bpm_str and tonumber(bpm_str) or nil
+          if not bpm then
+            local fn = file
+            local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
+            bpm = m and tonumber(m) or nil
+          end
+          info.bpm = bpm or ""
+
+          local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
+          if not key_str or key_str == "" then
+            local fn = file
+            key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
+          end
+          info.key = normalize_key(key_str)
         end
         files[fullpath] = info
         files_idx[#files_idx+1] = info
@@ -867,6 +973,7 @@ end
 
 function CollectFromCustomFolder(paths)
   local files_idx = {}
+
   for _, path in ipairs(paths or {}) do
     if type(path) == "string" and path ~= "" then
       path = normalize_path(path, false)
@@ -874,7 +981,7 @@ function CollectFromCustomFolder(paths)
         goto continue
       end
 
-      local typ, size, bits, samplerate, channels, length = "", 0, "-", "-", "-", "-"
+      local typ, size, bits, samplerate, channels, length = "", 0, "", "", "", ""
       local genre, description, comment, orig_date = "", "", "", ""
 
       -- 通过PCM_Source采集属性
@@ -882,19 +989,35 @@ function CollectFromCustomFolder(paths)
         local src = reaper.PCM_Source_CreateFromFile(path)
         if src then
           typ = reaper.GetMediaSourceType(src, "")
-          bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
+          bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
           samplerate = reaper.GetMediaSourceSampleRate(src)
           channels = reaper.GetMediaSourceNumChannels(src)
           length = reaper.GetMediaSourceLength(src)
           -- 直接赋值到外部变量
-          local _, _genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
-          local _, _comment = reaper.GetMediaFileMetadata(src, "XMP:dm/logComment")
-          local _, _description = reaper.GetMediaFileMetadata(src, "BWF:Description")
-          local _, _orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
+          local _genre       = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
+          local _comment     = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
+          local _description = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
+          local _orig_date   = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
           genre = _genre or ""
           comment = _comment or ""
           description = _description or ""
           orig_date = _orig_date or ""
+
+          local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
+          local bpm = bpm_str and tonumber(bpm_str) or nil
+          if not bpm then
+            local fn = path:match("[^/\\]+$") or path
+            local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
+            bpm = m and tonumber(m) or nil
+          end
+
+          local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
+          if not key_str or key_str == "" then
+            local fn = path:match("([^/\\]+)$") or path
+            key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
+          end
+          key = normalize_key(key_str)
+
           reaper.PCM_Source_Destroy(src)
         end
       end
@@ -933,6 +1056,8 @@ function CollectFromCustomFolder(paths)
         ucs_category    = get_ucstag(src, "category"),
         ucs_catid       = get_ucstag(src, "catId"),
         ucs_subcategory = get_ucstag(src, "subCategory"),
+        key = key,
+        bpm = bpm,
       })
     end
     ::continue::
@@ -1055,6 +1180,19 @@ function CollectFiles()
     if dbfile ~= "" then
       files_idx_cache = ParseMediaDBFile(db_dir .. sep .. dbfile)
     end
+    selected_row = nil
+  elseif collect_mode == COLLECT_MODE_REAPERDB then
+    local db_dir = reaper.GetResourcePath() .. sep .. "MediaDB"
+    local dbfile = tree_state.cur_reaper_db or ""
+    files_idx_cache = {}
+    if dbfile ~= "" then
+      local fullpath = db_dir .. sep .. dbfile
+      files_idx_cache = ParseMediaDBFile(fullpath)
+    end
+    selected_row = nil
+  elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
+    local dir = tree_state.cur_path or ""
+    files_idx_cache = GetAudioFilesFromDirCached(dir)
     selected_row = nil
   else
     files_idx_cache = {} -- collect_mode全部清空
@@ -1786,11 +1924,11 @@ function CollectFromDirectory(dir_path)
           info.length = reaper.GetMediaSourceLength(src)
           info.samplerate = reaper.GetMediaSourceSampleRate(src)
           info.channels = reaper.GetMediaSourceNumChannels(src)
-          info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
-          local _, genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
-          local _, comment = reaper.GetMediaFileMetadata(src, "XMP:dm/logComment")
-          local _, description = reaper.GetMediaFileMetadata(src, "BWF:Description")
-          local _, orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
+          info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
+          local genre       = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
+          local comment     = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
+          local description = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
+          local orig_date   = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
           info.genre = genre or ""
           info.comment = comment or ""
           info.description = description or ""
@@ -1798,6 +1936,22 @@ function CollectFromDirectory(dir_path)
           info.ucs_category    = get_ucstag(src, "category")
           info.ucs_catid       = get_ucstag(src, "catId")
           info.ucs_subcategory = get_ucstag(src, "subCategory")
+
+          local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
+          local bpm = bpm_str and tonumber(bpm_str) or nil
+          if not bpm then
+            local fn = file
+            local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
+            bpm = m and tonumber(m) or nil
+          end
+          info.bpm = bpm or ""
+
+          local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
+          if not key_str or key_str == "" then
+            local fn = file
+            key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
+          end
+          info.key = normalize_key(key_str)
         end
         files[fullpath] = info
         files_idx[#files_idx+1] = info
@@ -2572,29 +2726,47 @@ function BuildFileInfoFromPath(path, filename)
 
   if not IsValidAudioFile(path) then return info end
 
-  local typ, size, bits, samplerate, channels, length = "", 0, "-", "-", "-", "-"
+  local typ, size, bits, samplerate, channels, length = "", 0, "", "", "", ""
   local genre, description, comment, orig_date = "", "", "", ""
-
+  local key, bpm = "", ""
+  local ucs_category, ucs_catid, ucs_subcategory = "", "", ""
+  
   -- 文件属性
   if reaper.file_exists and reaper.file_exists(path) then
     local src = reaper.PCM_Source_CreateFromFile(path)
     if src then
       typ = reaper.GetMediaSourceType(src, "")
-      bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or "-"
+      bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
       samplerate = reaper.GetMediaSourceSampleRate(src)
       channels = reaper.GetMediaSourceNumChannels(src)
       length = reaper.GetMediaSourceLength(src)
-      local _, _genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
-      local _, _comment = reaper.GetMediaFileMetadata(src, "XMP:dm/logComment")
-      local _, _description = reaper.GetMediaFileMetadata(src, "BWF:Description")
-      local _, _orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
-      genre = _genre or ""
-      comment = _comment or ""
-      description = _description or ""
-      orig_date = _orig_date or ""
-      local ucs_category    = get_ucstag(src, "category")
-      local ucs_catid       = get_ucstag(src, "catId")
-      local ucs_subcategory = get_ucstag(src, "subCategory")
+
+      local genre       = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
+      local comment     = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
+      local description = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
+      local orig_date   = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
+
+      if get_ucstag then
+        ucs_category    = get_ucstag(src, "category")
+        ucs_catid       = get_ucstag(src, "catId")
+        ucs_subcategory = get_ucstag(src, "subCategory")
+      end
+
+      local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
+      bpm = bpm_str and tonumber(bpm_str) or nil
+      if not bpm then
+        local fn = info.filename
+        local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
+        bpm = m and tonumber(m) or nil
+      end
+      bpm = bpm or ""
+
+      local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
+      if not key_str or key_str == "" then
+        local fn = info.filename
+        key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
+      end
+      key = normalize_key(key_str)
       reaper.PCM_Source_Destroy(src)
     end
   end
@@ -2626,6 +2798,8 @@ function BuildFileInfoFromPath(path, filename)
   info.ucs_category    = ucs_category
   info.ucs_catid       = ucs_catid
   info.ucs_subcategory = ucs_subcategory
+  info.key = key
+  info.bpm = bpm
 
   return info
 end
@@ -3271,6 +3445,28 @@ function LoadExitSettings()
     tree_state.cur_mediadb = reaper.GetExtState(EXT_SECTION, "cur_soundmoledb") or ""
   end
 
+  -- 恢复REAPER自带数据库模式
+  if collect_mode == COLLECT_MODE_REAPERDB then
+    local ext = reaper.GetExtState(EXT_SECTION, "reaperdb_header_open")
+    if ext == "true" then
+      reaper_db_open = true
+    else
+      reaper_db_open = false
+    end
+    tree_state.cur_reaper_db = reaper.GetExtState(EXT_SECTION, "cur_reaperdb") or ""
+  end
+
+  -- 恢复REAPER自带快捷方式模式
+  if collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
+    local ext = reaper.GetExtState(EXT_SECTION, "shortcut_mirror_header_open")
+    if ext == "true" then
+      shortcut_mirror_open = true
+    else
+      shortcut_mirror_open = false
+    end
+    tree_state.cur_path = reaper.GetExtState(EXT_SECTION, "cur_sc_mirror") or ""
+  end
+
   -- 恢复 Collections 模式
   if collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
     -- 折叠状态
@@ -3323,6 +3519,14 @@ function SaveExitSettings()
   elseif collect_mode == COLLECT_MODE_MEDIADB then
     reaper.SetExtState(EXT_SECTION, "soundmoledb_header_open", tostring(mediadb_open), true)
     reaper.SetExtState(EXT_SECTION, "cur_soundmoledb", tree_state.cur_mediadb or "", true)
+
+  elseif collect_mode == COLLECT_MODE_REAPERDB then
+    reaper.SetExtState(EXT_SECTION, "reaperdb_header_open", tostring(reaper_db_open), true)
+    reaper.SetExtState(EXT_SECTION, "cur_reaperdb", tree_state.cur_reaper_db or "", true)
+
+  elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
+    reaper.SetExtState(EXT_SECTION, "shortcut_mirror_header_open", tostring(shortcut_mirror_open), true)
+    reaper.SetExtState(EXT_SECTION, "cur_sc_mirror", tree_state.cur_path or "", true)
 
   elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
     reaper.SetExtState(EXT_SECTION, "collections_header_open", tostring(collection_open), true)
@@ -3452,6 +3656,8 @@ function GetCurrentListKey()
   -- 不同模式下用不同字段拼接唯一key
   if collect_mode == COLLECT_MODE_MEDIADB then
     return "MEDIADB:" .. tostring(tree_state.cur_mediadb or "default")
+  elseif collect_mode == COLLECT_MODE_REAPERDB then -- 官方 .ReaperFileList
+    return "REAPERDB:" .. tostring(tree_state.cur_reaper_db or "default")
   elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
     return "ADVANCEDFOLDER:" .. tostring(tree_state.cur_advanced_folder or "default")
   elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
@@ -3909,7 +4115,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       for _, usage in ipairs(info.usages or {}) do
         local label = string.format('Track %d "%s" %s',
           reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
-          usage.track_name or "-",
+          usage.track_name or "",
           reaper.format_timestr(usage.position or 0, "")
         )
         if reaper.ImGui_MenuItem(ctx, label) then
@@ -4258,9 +4464,9 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
 
   local col_count = reaper.ImGui_TableGetColumnCount(ctx)
   for c = 0, col_count - 1 do
+    local is_item_mode = (collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP)
     reaper.ImGui_TableSetColumnIndex(ctx, c)
     local col_name = reaper.ImGui_TableGetColumnName(ctx, c) or ""
-
     -- 名称别名，避免模式差异
     local is_name_col   = (col_name == "Take Name" or col_name == "File Name")
     local is_date_track = (col_name == "Date" or col_name == "Track")
@@ -4271,7 +4477,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     -- File & Teak name
     elseif is_name_col then
-      local row_label = (info.filename or "-") .. "##RowContext__" .. tostring(i)
+      local row_label = (info.filename or "") .. "##RowContext__" .. tostring(i)
       local is_sel = false
       if file_select_start and file_select_end then
         local a = math.min(file_select_start, file_select_end)
@@ -4369,7 +4575,11 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
 
     -- Type
     elseif col_name == "Type" then
-      reaper.ImGui_Text(ctx, info.type)
+      -- reaper.ImGui_Text(ctx, info.type)
+      local fn  = info.filename or ""
+      local ext = fn:match("%.([^.]+)$")
+      ext = ext and ext:lower() or "-"
+      reaper.ImGui_Text(ctx, ext)
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
     -- Date & Track name
@@ -4378,7 +4588,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
         if info.usages and #info.usages > 1 then
           reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
         else
-          reaper.ImGui_Text(ctx, info.track_name or "-")
+          reaper.ImGui_Text(ctx, info.track_name or "")
         end
         -- 右键 usage 跳转
         local popup_id2 = "item_context_menu__" .. tostring(i)
@@ -4390,7 +4600,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           for _, usage in ipairs(info.usages or {}) do
             local label = string.format('Track %d "%s" %s',
               reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
-              usage.track_name or "-",
+              usage.track_name or "",
               reaper.format_timestr(usage.position or 0, "")
             )
             if reaper.ImGui_MenuItem(ctx, label) then
@@ -4405,7 +4615,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           reaper.ImGui_EndPopup(ctx)
         end
       else
-        reaper.ImGui_Text(ctx, info.bwf_orig_date or "-")
+        reaper.ImGui_Text(ctx, info.bwf_orig_date or "")
       end
 
       RowContextFallbackFromCell(ctx, i, info, false, popup_id, is_item_mode)  -- 只给 Q，不打开主菜单
@@ -4416,7 +4626,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
         if info.usages and #info.usages > 1 then
           reaper.ImGui_Text(ctx, ("%d instances"):format(#info.usages))
         else
-          local pos_str = reaper.format_timestr(info.position or 0, "") or "-"
+          local pos_str = reaper.format_timestr(info.position or 0, "") or ""
           reaper.ImGui_Text(ctx, pos_str)
         end
         local popup_id3 = "item_context_menu___" .. tostring(i)
@@ -4428,7 +4638,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           for _, usage in ipairs(info.usages or {}) do
             local label = string.format('Track %d "%s" %s',
               reaper.GetMediaTrackInfo_Value(usage.track, "IP_TRACKNUMBER") or 0,
-              usage.track_name or "-",
+              usage.track_name or "",
               reaper.format_timestr(usage.position or 0, "")
             )
             if reaper.ImGui_MenuItem(ctx, label) then
@@ -4443,18 +4653,18 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           reaper.ImGui_EndPopup(ctx)
         end
       else
-        reaper.ImGui_Text(ctx, info.genre or "-")
+        reaper.ImGui_Text(ctx, info.genre or "")
       end
       RowContextFallbackFromCell(ctx, i, info, false, popup_id, is_item_mode) -- 只给 Q，不打开主菜单
 
     -- Comment
     elseif col_name == "Comment" then
-      reaper.ImGui_Text(ctx, info.comment or "-")
+      reaper.ImGui_Text(ctx, info.comment or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
     -- Description
     elseif col_name == "Description" then
-      reaper.ImGui_Text(ctx, info.description or "-")
+      reaper.ImGui_Text(ctx, info.description or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
     -- Category/SubCategory/CatID (UCS)
@@ -4470,7 +4680,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
 
     -- Length
     elseif col_name == "Length" then
-      local len_str = (info.length and info.length > 0) and reaper.format_timestr(info.length, "") or "-"
+      local len_str = (info.length and info.length > 0) and reaper.format_timestr(info.length, "") or ""
       reaper.ImGui_Text(ctx, len_str)
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
@@ -4481,12 +4691,34 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
 
     -- Samplerate
     elseif col_name == "Samplerate" then
-      reaper.ImGui_Text(ctx, info.samplerate or "-")
+      reaper.ImGui_Text(ctx, info.samplerate or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
     -- Bits
     elseif col_name == "Bits" then
-      reaper.ImGui_Text(ctx, info.bits or "-")
+      reaper.ImGui_Text(ctx, info.bits or "")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Key
+    elseif col_name == "Key" then
+      local key = (info.key and info.key ~= "" and info.key) or ""
+      reaper.ImGui_Text(ctx, key)
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- BPM
+    elseif col_name == "BPM" then
+      local bpm = info.bpm
+      local bpm_str = ""
+      if bpm ~= nil and bpm ~= "" then
+        if type(bpm) == "number" then
+          -- 显示为整数，如果是小数则保留一位
+          bpm_str = (bpm % 1 == 0) and string.format("%d", bpm) or string.format("%.1f", bpm)
+        else
+          bpm_str = tostring(bpm)
+        end
+        if bpm_str == "" or bpm_str == "0" then bpm_str = "" end
+      end
+      reaper.ImGui_Text(ctx, bpm_str)
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
     -- Group
@@ -4531,6 +4763,147 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
   end
 
   reaper.ImGui_PopStyleColor(ctx, 3)
+end
+
+--------------------------------------------- 镜像REAPER自带数据库和快捷键方式 ---------------------------------------------
+
+-- 读取reaper.ini的[reaper_explorer]段，建立文件名 / 别名映射
+function build_reaper_db_alias_map()
+  local map = {}
+  local ini = reaper.GetResourcePath() .. sep .. "reaper.ini"
+  local f = io.open(ini, "rb"); if not f then return map end
+  local content = f:read("*a") or ""; f:close()
+
+  local chunk = content:match("%[reaper_explorer%](.-)\n%[") or content:match("%[reaper_explorer%](.+)") or ""
+  local idx = 0
+  while true do
+    local target = chunk:match("Shortcut"..idx.."=(.-)[\r\n]")
+    if not target then break end
+    local title  = chunk:match("ShortcutT"..idx.."=(.-)[\r\n]")
+    -- 数据库，target不含路径时为MediaDB的.ReaperFileList
+    local has_path = target:match("[/\\]")
+    if not has_path and target:match("%.ReaperFileList$") then
+      map[target] = title or target -- 如果没有标题，回退文件名
+    end
+    idx = idx + 1
+  end
+  return map
+end
+
+-- 枚举%ResourcePath%/MediaDB/xx.ReaperFileList
+function list_reaper_databases()
+  local out = {}
+  local db_dir = reaper.GetResourcePath() .. sep .. "MediaDB"
+  local alias_map = build_reaper_db_alias_map()
+  local i = 0
+  while true do
+    local fn = reaper.EnumerateFiles(db_dir, i)
+    if not fn then break end
+    if fn:match("%.ReaperFileList$") then
+      local alias = alias_map[fn] or fn
+      out[#out+1] = { alias = alias, filename = fn }
+    end
+    i = i + 1
+  end
+  table.sort(out, function(a,b) return (a.alias or a.filename) < (b.alias or b.filename) end)
+  return out
+end
+
+-- 获取路径的文件夹名称，无论(/, \)
+function path_basename(p)
+  if not p or p == "" then return "" end
+  local s = tostring(p):gsub("[/\\]+$", "")
+  if s:match("^%a:$") then return s end
+  return s:match("([^/\\]+)$") or s
+end
+
+function list_reaper_shortcut_folders()
+  local out = {}
+  local sep = package.config:sub(1,1)
+  local ini = reaper.GetResourcePath() .. sep .. "reaper.ini"
+  local f = io.open(ini, "rb"); if not f then return out end
+  local content = f:read("*a") or ""; f:close()
+
+  local chunk = content:match("%[reaper_explorer%](.-)\n%[") or content:match("%[reaper_explorer%](.+)") or ""
+  local idx = 0
+  while true do
+    local target = chunk:match("Shortcut"..idx.."=(.-)[\r\n]")
+    if not target then break end
+    local title  = chunk:match("ShortcutT"..idx.."=(.-)[\r\n]")
+    -- 镜像文件夹型快捷方式
+    if target:match("[/\\]") then
+      local path = normalize_path(target, true)
+      local name = title or (path_basename(path) or path)
+      out[#out+1] = { name = name, path = path }
+    end
+    idx = idx + 1
+  end
+
+  table.sort(out, function(a,b) return (a.name or a.path) < (b.name or b.path) end)
+  return out
+end
+
+function draw_shortcut_tree_mirror(sc, base_path)
+  if type(sc) ~= "table" or not sc.path then return end
+
+  local path = normalize_path(sc.path, true)
+  local show_name = (sc.name and sc.name ~= "") and sc.name or (path:gsub("[/\\]+$", "")):match("([^/\\]+)$") or path
+
+  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
+  local cmpath = path:gsub("[/\\]+$", "")
+  if expanded_paths and expanded_paths[cmpath] then
+    flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
+  end
+
+  local is_selected = (collect_mode == COLLECT_MODE_SHORTCUT_MIRROR) and ((tree_state.cur_path or "") == path)
+  if is_selected then
+    flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
+  end
+
+  local label = show_name .. "##shortcut_mirror_" .. path
+
+  local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
+  if reaper.ImGui_IsItemClicked(ctx, 0) then
+    tree_state.cur_path = path
+    if collect_mode ~= COLLECT_MODE_SHORTCUT_MIRROR then
+      collect_mode = COLLECT_MODE_SHORTCUT_MIRROR
+    end
+    file_select_start, file_select_end, selected_row = nil, nil, nil
+    files_idx_cache = nil
+    CollectFiles()
+
+    local static = _G._soundmole_static or {}
+    _G._soundmole_static = static
+    static.filtered_list_map, static.last_filter_text_map = {}, {}
+  end
+
+  if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+    reaper.ImGui_OpenPopup(ctx, "ShortcutMirrorMenu_" .. path)
+  end
+  if reaper.ImGui_BeginPopup(ctx, "ShortcutMirrorMenu_" .. path) then
+    if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+      if path and path ~= "" then
+        reaper.CF_ShellExecute(normalize_path(path))
+      end
+    end
+    reaper.ImGui_EndPopup(ctx)
+  end
+
+  if node_open then
+    if not dir_cache[path] then
+      local dirs, audios, ok = list_dir(path)
+      dir_cache[path] = { dirs = dirs, audios = audios, ok = ok }
+    end
+    local cache = dir_cache[path] or { dirs = {}, audios = {}, ok = true }
+    for _, sub in ipairs(cache.dirs) do
+      local sub_path = normalize_path(path .. sep .. sub, true)
+      draw_shortcut_tree_mirror({ name = sub, path = sub_path }, path)
+    end
+    reaper.ImGui_TreePop(ctx)
+    if tree_open then tree_open[path] = true end
+  else
+    if tree_open then tree_open[path] = false end
+  end
 end
 
 function loop()
@@ -5313,6 +5686,71 @@ function loop()
             reaper.ImGui_Unindent(ctx, 7)
           end
 
+          -- REAPER Database
+          local reaper_db_list = list_reaper_databases()
+          if #reaper_db_list == 0 then
+            -- 什么都不做
+          else
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+            local hdr_flags_readb = reaper_db_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+            local is_readb_open = reaper.ImGui_CollapsingHeader(ctx, "Database (Mirror)##reaperdb", nil, hdr_flags_readb)
+            reaper_db_open = is_readb_open
+            reaper.ImGui_PopStyleColor(ctx)
+
+            if is_readb_open then
+              reaper.ImGui_Indent(ctx, 7)
+              for _, it in ipairs(reaper_db_list) do
+                local alias = it.alias
+                local fn    = it.filename
+                local is_sel = (collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db == fn)
+
+                if reaper.ImGui_Selectable(ctx, alias, is_sel) then
+                  collect_mode = COLLECT_MODE_REAPERDB
+                  tree_state.cur_reaper_db = fn
+
+                  file_select_start, file_select_end, selected_row = nil, nil, -1
+                  files_idx_cache = nil
+                  CollectFiles()
+                end
+              end
+
+              reaper.ImGui_Unindent(ctx, 7)
+            end
+          end
+
+          -- 镜像官方快捷键方式
+          local sc_folders = list_reaper_shortcut_folders()
+          if #sc_folders == 0 then
+            -- 什么都不做
+          else
+            if not shortcut_mirror_nodes_inited then
+              expanded_paths = expanded_paths or {}
+              if tree_state.cur_path and tree_state.cur_path ~= "" then
+                local p = tree_state.cur_path:gsub("[/\\]+$", "")
+                while p and p ~= "" do
+                  expanded_paths[p] = true
+                  local parent = p:match("^(.*)[/\\][^/\\]+$")
+                  p = parent
+                end
+              end
+              shortcut_mirror_nodes_inited = true
+            end
+
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+            local hdr_flags_sc_mirror = shortcut_mirror_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+            local is_sc_mirror_open = reaper.ImGui_CollapsingHeader(ctx, "Shortcuts (Mirror)##shortcut_mirror", nil, hdr_flags_sc_mirror)
+            shortcut_mirror_open = is_sc_mirror_open
+            reaper.ImGui_PopStyleColor(ctx)
+            
+            if is_sc_mirror_open then
+              reaper.ImGui_Indent(ctx, 7)
+              for i = 1, #sc_folders do
+                draw_shortcut_tree_mirror(sc_folders[i])
+              end
+              reaper.ImGui_Unindent(ctx, 7)
+            end
+          end
+
           -- 最近搜索节点
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
 
@@ -5844,7 +6282,7 @@ function loop()
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     0xFF0F0F0F)
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", right_w, child_h, 0) then
-      if reaper.ImGui_BeginTable(ctx, "filelist", 17,
+      if reaper.ImGui_BeginTable(ctx, "filelist", 19,
         -- reaper.ImGui_TableFlags_RowBg() -- 表格背景交替颜色
         reaper.ImGui_TableFlags_Borders() -- 表格分隔线
         | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
@@ -5872,6 +6310,8 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "Key",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
+          reaper.ImGui_TableSetupColumn(ctx, "BPM",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_RPP then -- RPP
@@ -5890,6 +6330,8 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "Key",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
+          reaper.ImGui_TableSetupColumn(ctx, "BPM",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         else
@@ -5908,6 +6350,8 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "Key",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
+          reaper.ImGui_TableSetupColumn(ctx, "BPM",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         end

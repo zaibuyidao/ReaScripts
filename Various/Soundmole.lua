@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.36
+-- @version 1.0.37
 -- @changelog
---   Support dragging audio files directly from REAPER's Media Explorer or the system file manager to Collections nodes.
+--   Added Key and BPM metadata columns.
+--   Added support for REAPER Shortcuts and Databases, which are now mirrored inside Soundmole.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

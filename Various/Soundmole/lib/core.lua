@@ -120,42 +120,88 @@ function ScanAllAudioFiles(root_dir)
   return files, #files
 end
 
--- 采集全部元数据
+-- 收集单个音频文件元数据
 function CollectFileInfo(path)
   local info = { path = path }
-  local f = io.open(path, "rb")
-  if f then
-    f:seek("end")
-    info.size = f:seek()
-    f:close()
-  else
-    info.size = 0
+  do
+    local f = io.open(path, "rb")
+    if f then
+      f:seek("end")
+      info.size = f:seek()
+      f:close()
+    else
+      info.size = 0
+    end
   end
+
   local src = reaper.PCM_Source_CreateFromFile(path)
   if src then
-    info.type = reaper.GetMediaSourceType(src, "")
-    info.length = reaper.GetMediaSourceLength(src) or ""
+    info.type       = reaper.GetMediaSourceType(src, "")
+    info.length     = reaper.GetMediaSourceLength(src) or ""
     info.samplerate = reaper.GetMediaSourceSampleRate(src) or ""
-    info.channels = reaper.GetMediaSourceNumChannels(src) or ""
-    info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
-    local _, genre = reaper.GetMediaFileMetadata(src, "XMP:dm/genre")
-    local _, comment = reaper.GetMediaFileMetadata(src, "XMP:dm/logComment")
-    local _, description = reaper.GetMediaFileMetadata(src, "BWF:Description")
-    local _, orig_date  = reaper.GetMediaFileMetadata(src, "BWF:OriginationDate")
-    info.genre = genre or ""
-    info.comment = comment or ""
-    info.description = description or ""
+    info.channels   = reaper.GetMediaSourceNumChannels(src) or ""
+    info.bits       = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
+
+    local function get_meta_first(ids)
+      for _, id in ipairs(ids) do
+        local ok, val = reaper.GetMediaFileMetadata(src, id)
+        if ok and val and val ~= "" then return val end
+      end
+      return nil
+    end
+
+    local genre       = get_meta_first({ "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
+    local comment     = get_meta_first({ "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
+    local description = get_meta_first({ "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
+    local orig_date   = get_meta_first({ "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
+
+    info.genre         = genre or ""
+    info.comment       = comment or ""
+    info.description   = description or ""
     info.bwf_orig_date = orig_date or ""
-    info.ucs_category    = get_ucstag and get_ucstag(src, "category") or ""
-    info.ucs_catid       = get_ucstag and get_ucstag(src, "catId") or ""
+
+    info.ucs_category    = get_ucstag and get_ucstag(src, "category")    or ""
+    info.ucs_catid       = get_ucstag and get_ucstag(src, "catId")       or ""
     info.ucs_subcategory = get_ucstag and get_ucstag(src, "subCategory") or ""
+
+    local bpm_str = get_meta_first({ "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
+    local bpm = bpm_str and tonumber(bpm_str) or nil
+    if not bpm then
+      local fn = path:match("[^/\\]+$") or path
+      local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
+      bpm = m and tonumber(m) or nil
+    end
+    info.bpm = bpm or ""
+
+    local key_str = get_meta_first({ "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
+
+    local function normalize_key(s)
+      if not s or s == "" then return "" end
+      s = s:gsub("%s+", ""):gsub("♯", "#"):gsub("♭", "b")
+      s = s:gsub("[Mm][Ii][Nn][Oo]?[Rr]?$", "m")
+      local root, accidental, minor = s:match("^([A-Ga-g])([#b]?)(m?)$")
+      if root then
+        return string.upper(root) .. accidental .. minor
+      end
+      return string.upper(s)
+    end
+
+    if key_str and key_str ~= "" then
+      info.key = normalize_key(key_str)
+    else
+      local fn = path:match("[^/\\]+$") or path
+      local k = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
+      info.key = k and normalize_key(k) or ""
+    end
+
     reaper.PCM_Source_Destroy(src)
   end
+
   info.filename = path:match("[^/\\]+$") or path
   return info
 end
 
-local function quote_if_space(str)
+function quote_if_space(str)
   if str:find("%s") then
     return '"' .. str .. '"'
   else
@@ -183,26 +229,55 @@ function AddPathToDBFile(dbfile, new_path)
   end
 end
 
+-- t:[Metadata]Title       or [ASWG tags]songTitle      or [Cues]001 0:00.000
+-- a:[Metadata]Artist      or [ID3 tags]TPE1            or [IXML tags]USER:ARTIST
+-- b:[Metadata]Album       or [ASWG tags]library        or [ID3 tags]TOWN         or [ID3 tags]TPE2
+-- y:[Metadata]Date        or [BWF tags]OriginationDate
+-- g:[Metadata]Genre       or [XMP tags]dm/genre        or [ID3 tags]TCON
+-- c:[Metadata]Comment     or [ID3 tags]COMM
+
+-- d:[Metadata]Description or [BWF tags]Description     or [XMP tags]dc/description
+-- U:Custom Tags
+-- s:Sample rate
+-- n:Channel
+-- r:Offset
+-- l:Length
+-- i:Bits
+-- m:Track #
+-- j:[ID3 tags]APIC: mime:image/jpeg offset:86662062 length:93146
+
+-- k:[Metadata]Key         or [ID3 tags]TKEY or [XMP tags]dm/key
+-- p:[Metadata]MPM         or [ID3 tags]TBPM or [XMP tags]dm/tempo
+-- Category:[ASWG tags]category       or [IXML tags]USER:CATEGORY
+-- CatID:[ASWG tags]catId             or [IXML tags]USER:CATID
+-- SubCategory:[ASWG tags]subCategory or [IXML tags]USER:SUBCATEGORY
+
 function WriteToMediaDB(info, dbfile, root_path)
   local f = io.open(dbfile, "a+b")
   if not f then return end
   -- FILE行
-  f:write(('FILE "%s" %d %s\n'):format(info.path, info.size, info.type))
+  f:write(('FILE "%s" %d 0 0 0\n'):format(info.path, info.size))
   -- DATA基本属性行
-  f:write(('DATA z:%d y:%s l:%s n:%s s:%s i:%s\n'):format(
-    info.size or 0, info.bwf_orig_date or "", info.length or "", info.channels or "", info.samplerate or "", info.bits or ""
+  -- f:write(('DATA %s l:%s n:%s s:%s i:%s\n'):format(quote_if_space('y:' .. (info.bwf_orig_date or "")), info.length or "", info.channels or "", info.samplerate or "", info.bits or ""))
+  f:write(('DATA %sl:%s n:%s s:%s i:%s\n'):format(
+    (info.bwf_orig_date and info.bwf_orig_date ~= "") and (quote_if_space('y:' .. (info.bwf_orig_date))..' ') or '',
+    info.length or "", info.channels or "", info.samplerate or "", info.bits or ""
   ))
+
   -- DATA类别行
   local ucs = {}
-  if info.genre ~= "" then table.insert(ucs, 'g:' .. quote_if_space(info.genre)) end
-  if info.ucs_category ~= "" then table.insert(ucs, 't:' .. quote_if_space(info.ucs_category)) end
-  if info.ucs_subcategory ~= "" then table.insert(ucs, 'u:' .. quote_if_space(info.ucs_subcategory)) end
-  if info.ucs_catid ~= "" then table.insert(ucs, 'a:' .. quote_if_space(info.ucs_catid)) end
+  if info.genre and info.genre ~= "" then table.insert(ucs, quote_if_space('g:' .. info.genre)) end
+  if info.key and info.key ~= "" then table.insert(ucs, quote_if_space('k:' .. info.key)) end
+  if info.bpm and tostring(info.bpm) ~= "" then table.insert(ucs, quote_if_space('p:' .. tostring(info.bpm))) end
+  if info.ucs_category ~= "" then table.insert(ucs, quote_if_space('category:' .. info.ucs_category)) end
+  if info.ucs_subcategory ~= "" then table.insert(ucs, quote_if_space('subcategory:' .. info.ucs_subcategory)) end
+  if info.ucs_catid ~= "" then table.insert(ucs, quote_if_space('catid:' .. info.ucs_catid)) end
   if #ucs > 0 then f:write('DATA ' .. table.concat(ucs, " ") .. '\n') end
   -- DATA描述行
-  if info.comment ~= "" or info.description ~= "" then
-    f:write(('DATA c:"%s" d:"%s"\n'):format(info.comment or "", info.description or ""))
-  end
+  local desc = {}
+  if info.comment and info.comment ~= "" then table.insert(desc, quote_if_space('c:' .. info.comment)) end
+  if info.description and info.description ~= "" then table.insert(desc, quote_if_space('d:' .. info.description)) end
+  if #desc > 0 then f:write('DATA ' .. table.concat(desc, ' ') .. '\n') end
   f:close()
 end
 
@@ -235,45 +310,102 @@ function ParseMediaDBFile(dbpath)
   local entries = {}
   local f = io.open(dbpath, "rb")
   if not f then return entries end
+
+  local function parse_len_to_seconds(s) -- 支持 1:23:45.678 / 0:38.112 / 12.34
+    if not s or s == "" then return nil end
+    local h, m, sec = s:match("^(%d+):(%d+):([%d%.]+)$")
+    if h then return tonumber(h)*3600 + tonumber(m)*60 + tonumber(sec) end
+    local mm, ss = s:match("^(%d+):([%d%.]+)$")
+    if mm then return tonumber(mm)*60 + tonumber(ss) end
+    local n = s:match("^([%d%.]+)$")
+    if n then return tonumber(n) end
+    return nil
+  end
+
   local entry = {}
-  for line in f:lines() do
+  for raw in f:lines() do
+    local line = (raw or ""):gsub("\r","")
+    if line:sub(1,3) == "\239\187\191" then line = line:sub(4) end
     if line:find("^FILE") then
       if entry.path then table.insert(entries, entry) end
       entry = {}
-      entry.path, entry.size, entry.type = line:match('^FILE%s+"(.-)"%s+(%d+)%s+(%S+)$')
+      -- REAPER格式 FILE "path" size 0 mtime 0，当前仅取 path + size，其他数值忽略
+      entry.path, entry.size = line:match('^FILE%s+"(.-)"%s+(%d+)%s+%d+%s+%d+%s+%d+$')
+      if not entry.path then
+        -- 兼容旧格式 FILE "path" size type
+        entry.path, entry.size, entry.type = line:match('^FILE%s+"(.-)"%s+(%d+)%s+(%S+)$')
+      end
       entry.size = tonumber(entry.size) or 0
       if entry.path then
         entry.filename = entry.path:match("([^/\\]+)$") or entry.path
       else
         entry.filename = ""
       end
+
     elseif line:find("^DATA") then
-      -- 分类行
-      if line:find("g:") or line:find("t:") or line:find("u:") or line:find("a:") then
-        local gq = line:match('g:"(.-)"')
-        entry.genre = gq or line:match('g:([^%s]+)') or ""
-        local tq = line:match('t:"(.-)"')
-        entry.ucs_category = tq or line:match('t:([^%s]+)') or ""
-        local uq = line:match('u:"(.-)"')
-        entry.ucs_subcategory = uq or line:match('u:([^%s]+)') or ""
-        local aq = line:match('a:"(.-)"')
-        entry.ucs_catid = aq or line:match('a:([^%s]+)') or ""
-      -- 描述行
-      elseif line:find('c:') or line:find('d:') then
-        entry.comment = line:match('c:"(.-)"') or ""
-        entry.description = line:match('d:"(.-)"') or ""
-      else
-        -- 属性行
-        entry.bwf_orig_date = line:match('y:([%d%-]+)') or ""
-        entry.length = tonumber(line:match('l:([%d%.]+)')) or 0
-        entry.channels = tonumber(line:match('n:(%d+)')) or 0
-        entry.samplerate = tonumber(line:match('s:(%d+)')) or 0
-        entry.bits = tonumber(line:match('i:(%d+)')) or 0
+      -- g / k / p
+      do
+        local v = line:match('"[Gg]:([^"]-)"') or line:match('[Gg]:"([^"]-)"') or line:match('[Gg]:([^%s"]+)')
+        if v and v ~= "" then entry.genre = v end
       end
+      do
+        local v = line:match('"[Kk]:([^"]-)"') or line:match('[Kk]:"([^"]-)"') or line:match('[Kk]:([^%s"]+)')
+        if v and v ~= "" then entry.key = v end
+      end
+      do
+        local v = line:match('"[Pp]:([%d%.]+)"') or line:match('[Pp]:"([%d%.]+)"') or line:match('[Pp]:([%d%.]+)')
+        if v and v ~= "" then entry.bpm = tonumber(v) or entry.bpm or 0 end
+      end
+      -- UCS
+      do
+        local v = line:match('"category:([^"]-)"') or line:match('category:"([^"]-)"') or line:match('category:([^%s"]+)')
+        if v and v ~= "" then entry.ucs_category = v end
+      end
+      do
+        local v = line:match('"subcategory:([^"]-)"') or line:match('subcategory:"([^"]-)"') or line:match('subcategory:([^%s"]+)')
+        if v and v ~= "" then entry.ucs_subcategory = v end
+      end
+      do
+        local v = line:match('"catid:([^"]-)"') or line:match('catid:"([^"]-)"') or line:match('catid:([^%s"]+)')
+        if v and v ~= "" then entry.ucs_catid = v end
+      end
+      -- c / d
+      do
+        local v = line:match('"[Cc]:([^"]-)"') or line:match('[Cc]:"([^"]-)"') or line:match('[Cc]:([^%s"]+)')
+        if v and v ~= "" then entry.comment = v end
+      end
+      do
+        local v = line:match('"[Dd]:([^"]-)"') or line:match('[Dd]:"([^"]-)"') or line:match('[Dd]:([^%s"]+)')
+        if v and v ~= "" then entry.description = v end
+      end
+      -- y / l / n / s / i
+      do
+        local v = line:match('"[Yy]:([^"]-)"') or line:match('[Yy]:"([^"]-)"') or line:match('[Yy]:([%d%-]+)')
+        if v and v ~= "" then entry.bwf_orig_date = v end
+      end
+      do
+        local raw = line:match('"[Ll]:([^"]-)"') or line:match('[Ll]:"([^"]-)"') or line:match('[Ll]:([%d:%.]+)')
+        local secs = parse_len_to_seconds(raw)
+        if secs then entry.length = secs end
+      end
+      do
+        local v = line:match('"[Nn]:([^"]-)"') or line:match('[Nn]:"([^"]-)"') or line:match('[Nn]:(%d+)')
+        if v and v ~= "" then entry.channels = tonumber(v) or entry.channels or 0 end
+      end
+      do
+        local v = line:match('"[Ss]:([^"]-)"') or line:match('[Ss]:"([^"]-)"') or line:match('[Ss]:(%d+)')
+        if v and v ~= "" then entry.samplerate = tonumber(v) or entry.samplerate or 0 end
+      end
+      do
+        local v = line:match('"[Ii]:([^"]-)"') or line:match('[Ii]:"([^"]-)"') or line:match('[Ii]:(%d+)')
+        if v and v ~= "" then entry.bits = tonumber(v) or entry.bits or 0 end
+      end
+
       entry.data = entry.data or {}
       table.insert(entry.data, line)
     end
   end
+
   if entry.path then table.insert(entries, entry) end
   f:close()
   return entries
