@@ -306,21 +306,21 @@ function BuildMediaDB(root_dir, db_dir)
   end
 end
 
+function parse_len_to_seconds(s) -- 支持 1:23:45.678 / 0:38.112 / 12.34
+  if not s or s == "" then return nil end
+  local h, m, sec = s:match("^(%d+):(%d+):([%d%.]+)$")
+  if h then return tonumber(h)*3600 + tonumber(m)*60 + tonumber(sec) end
+  local mm, ss = s:match("^(%d+):([%d%.]+)$")
+  if mm then return tonumber(mm)*60 + tonumber(ss) end
+  local n = s:match("^([%d%.]+)$")
+  if n then return tonumber(n) end
+  return nil
+end
+
 function ParseMediaDBFile(dbpath)
   local entries = {}
   local f = io.open(dbpath, "rb")
   if not f then return entries end
-
-  local function parse_len_to_seconds(s) -- 支持 1:23:45.678 / 0:38.112 / 12.34
-    if not s or s == "" then return nil end
-    local h, m, sec = s:match("^(%d+):(%d+):([%d%.]+)$")
-    if h then return tonumber(h)*3600 + tonumber(m)*60 + tonumber(sec) end
-    local mm, ss = s:match("^(%d+):([%d%.]+)$")
-    if mm then return tonumber(mm)*60 + tonumber(ss) end
-    local n = s:match("^([%d%.]+)$")
-    if n then return tonumber(n) end
-    return nil
-  end
 
   local entry = {}
   for raw in f:lines() do
@@ -495,4 +495,129 @@ function LoadOnlySelectedToRS5k(track, path)
   reaper.TrackFX_SetOpen(track, fx, true)
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
+end
+
+--------------------------------------------- 数据库模式加载优化 ---------------------------------------------
+
+-- 解析DATA到entry
+function _apply_data_line(entry, line)
+  -- g / k / p
+  do
+    local v = line:match('"[Gg]:([^"]-)"') or line:match('[Gg]:"([^"]-)"') or line:match('[Gg]:([^%s"]+)')
+  if v and v ~= "" then entry.genre = v end
+    if v and v ~= "" then entry.genre = v end
+  end
+  do
+    local v = line:match('"[Kk]:([^"]-)"') or line:match('[Kk]:"([^"]-)"') or line:match('[Kk]:([^%s"]+)')
+    if v and v ~= "" then entry.key = v end
+  end
+  do
+    local v = line:match('"[Pp]:([%d%.]+)"') or line:match('[Pp]:"([%d%.]+)"') or line:match('[Pp]:([%d%.]+)')
+    if v and v ~= "" then entry.bpm = tonumber(v) or entry.bpm or 0 end
+  end
+  -- UCS
+  do
+    local v = line:match('"category:([^"]-)"') or line:match('category:"([^"]-)"') or line:match('category:([^%s"]+)')
+    if v and v ~= "" then entry.ucs_category = v end
+  end
+  do
+    local v = line:match('"subcategory:([^"]-)"') or line:match('subcategory:"([^"]-)"') or line:match('subcategory:([^%s"]+)')
+    if v and v ~= "" then entry.ucs_subcategory = v end
+  end
+  do
+    local v = line:match('"catid:([^"]-)"') or line:match('catid:"([^"]-)"') or line:match('catid:([^%s"]+)')
+    if v and v ~= "" then entry.ucs_catid = v end
+  end
+  -- c / d
+  do
+    local v = line:match('"[Cc]:([^"]-)"') or line:match('[Cc]:"([^"]-)"') or line:match('[Cc]:([^%s"]+)')
+    if v and v ~= "" then entry.comment = v end
+  end
+  do
+    local v = line:match('"[Dd]:([^"]-)"') or line:match('[Dd]:"([^"]-)"') or line:match('[Dd]:([^%s"]+)')
+    if v and v ~= "" then entry.description = v end
+  end
+  -- y / l / n / s / i
+  do
+    local v = line:match('"[Yy]:([^"]-)"') or line:match('[Yy]:"([^"]-)"') or line:match('[Yy]:([%d%-]+)')
+    if v and v ~= "" then entry.bwf_orig_date = v end
+  end
+  do
+    local raw = line:match('"[Ll]:([^"]-)"') or line:match('[Ll]:"([^"]-)"') or line:match('[Ll]:([%d:%.]+)')
+    local secs = parse_len_to_seconds(raw)
+    if secs then entry.length = secs end
+  end
+  do
+    local v = line:match('"[Nn]:([^"]-)"') or line:match('[Nn]:"([^"]-)"') or line:match('[Nn]:(%d+)')
+    if v and v ~= "" then entry.channels = tonumber(v) or entry.channels or 0 end
+  end
+  do
+    local v = line:match('"[Ss]:([^"]-)"') or line:match('[Ss]:"([^"]-)"') or line:match('[Ss]:(%d+)')
+    if v and v ~= "" then entry.samplerate = tonumber(v) or entry.samplerate or 0 end
+  end
+  do
+    local v = line:match('"[Ii]:([^"]-)"') or line:match('[Ii]:"([^"]-)"') or line:match('[Ii]:(%d+)')
+    if v and v ~= "" then entry.bits = tonumber(v) or entry.bits or 0 end
+  end
+end
+
+-- 流式读取
+function MediaDBStreamStart(dbpath)
+  local f = io.open(dbpath, "rb")
+  if not f then return nil end
+  return { f = f, eof = false, entry = nil, dbpath = dbpath }
+end
+
+-- 流式读取MediaDB，每次返回最多max_count条记录
+function MediaDBStreamRead(stream, max_count)
+  local out = {}
+  local s = stream
+  if not s or not s.f then return out end
+  local f = s.f
+  local added = 0
+  local entry = s.entry or {}
+
+  while added < (max_count or 1000) do
+    local raw = f:read("*l")
+    if not raw then
+      if entry.path then table.insert(out, entry) end
+      s.entry = nil
+      s.eof = true
+      break
+    end
+    local line = (raw or ""):gsub("\r","")
+    -- 去除BOM头
+    if #line >= 3 and line:sub(1,3) == "\239\187\191" then line = line:sub(4) end
+
+    if line:find("^FILE") then
+      -- 先把前一条记录推入
+      if entry.path then
+        table.insert(out, entry)
+        added = added + 1
+        if added >= (max_count or 1000) then
+          local new_path, new_size = line:match('^FILE%s+"(.-)"%s+(%d+)')
+          entry = { path = new_path, size = tonumber(new_size) or 0, filename = new_path and (new_path:match("([^/\\]+)$") or new_path) or "" }
+          s.entry = entry
+          break
+        end
+      end
+      entry = {}
+      entry.path, entry.size = line:match('^FILE%s+"(.-)"%s+(%d+)%s+%d+%s+%d+%s+%d+$')
+      if not entry.path then
+        entry.path, entry.size = line:match('^FILE%s+"(.-)"%s+(%d+)%s*')
+      end
+      entry.size = tonumber(entry.size) or 0
+      entry.filename = entry.path and (entry.path:match("([^/\\]+)$") or entry.path) or ""
+    elseif line:find("^DATA") then
+      -- 解析DATA行到当前entry
+      _apply_data_line(entry, line)
+    end
+  end
+
+  s.entry = entry
+  return out
+end
+
+function MediaDBStreamClose(stream)
+  if stream and stream.f then stream.f:close() end
 end

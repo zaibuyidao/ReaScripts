@@ -1173,23 +1173,30 @@ function CollectFiles()
     local paths = (folder and folder.files) or {}
     files_idx_cache = CollectFromCustomFolder(paths)
     selected_row = nil
+
+  -- 数据库加载，旧版备份
+  -- elseif collect_mode == COLLECT_MODE_MEDIADB then
+  --   local db_dir = normalize_path(script_path .. "SoundmoleDB", true) -- true 表示文件夹
+  --   local dbfile = tree_state.cur_mediadb or ""
+  --   files_idx_cache = {}
+  --   if dbfile ~= "" then
+  --     files_idx_cache = ParseMediaDBFile(db_dir .. sep .. dbfile)
+  --   end
+  --   selected_row = nil
+  -- elseif collect_mode == COLLECT_MODE_REAPERDB then
+  --   local db_dir = reaper.GetResourcePath() .. sep .. "MediaDB"
+  --   local dbfile = tree_state.cur_reaper_db or ""
+  --   files_idx_cache = {}
+  --   if dbfile ~= "" then
+  --     local fullpath = db_dir .. sep .. dbfile
+  --     files_idx_cache = ParseMediaDBFile(fullpath)
+  --   end
+  --   selected_row = nil
+
   elseif collect_mode == COLLECT_MODE_MEDIADB then
-    local db_dir = normalize_path(script_path .. "SoundmoleDB", true) -- true 表示文件夹
-    local dbfile = tree_state.cur_mediadb or ""
-    files_idx_cache = {}
-    if dbfile ~= "" then
-      files_idx_cache = ParseMediaDBFile(db_dir .. sep .. dbfile)
-    end
-    selected_row = nil
+    StartDBFirstPage(normalize_path(script_path .. "SoundmoleDB", true), tree_state.cur_mediadb, 2000)
   elseif collect_mode == COLLECT_MODE_REAPERDB then
-    local db_dir = reaper.GetResourcePath() .. sep .. "MediaDB"
-    local dbfile = tree_state.cur_reaper_db or ""
-    files_idx_cache = {}
-    if dbfile ~= "" then
-      local fullpath = db_dir .. sep .. dbfile
-      files_idx_cache = ParseMediaDBFile(fullpath)
-    end
-    selected_row = nil
+    StartDBFirstPage(normalize_path(reaper.GetResourcePath() .. sep .. "MediaDB", true), tree_state.cur_reaper_db, 2000)
   elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
     local dir = tree_state.cur_path or ""
     files_idx_cache = GetAudioFilesFromDirCached(dir)
@@ -1208,7 +1215,10 @@ function CollectFiles()
   end
 
   previewed_files = {}
-  SortFilesByFilenameAsc()
+  if not (_G._mediadb_stream and not _G._mediadb_stream.eof) then
+    SortFilesByFilenameAsc()
+  end
+  
   -- 切换模式后清空表格列表波形预览队列
   waveform_task_queue = {}
 end
@@ -1640,6 +1650,7 @@ function StopPreview()
   -- if last_play_cursor_before_play then
   --   Wave.play_cursor = last_play_cursor_before_play
   -- end
+  SM_PreviewStop()
 end
 
 -- 从头播放
@@ -1667,6 +1678,7 @@ function PlayFromStart(info)
   end
   if source then
     playing_preview = reaper.CF_CreatePreview(source)
+    SM_PreviewBegin(playing_source)
     playing_source = source
     if playing_preview then
       if reaper.CF_Preview_SetValue then
@@ -1713,6 +1725,7 @@ function PlayFromCursor(info)
   end
   if source then
     playing_preview = reaper.CF_CreatePreview(source)
+    SM_PreviewBegin(playing_source)
     playing_source = source
     if playing_preview then
       if reaper.CF_Preview_SetValue then
@@ -4906,6 +4919,108 @@ function draw_shortcut_tree_mirror(sc, base_path)
   end
 end
 
+--------------------------------------------- 数据库模式加载优化 ---------------------------------------------
+
+function SM_PreviewBegin()
+  _G._previewing_active = true
+  _G._preview_block_until = nil
+
+  local len -- 只有>0才使用
+  if playing_source and reaper.GetMediaSourceLength then
+    local ok, l = pcall(reaper.GetMediaSourceLength, playing_source)
+    if ok and l and l > 0 then len = l end
+  end
+
+  if len then
+    _G._preview_expected_end = reaper.time_precise() + len
+  else
+    _G._preview_expected_end = nil -- 未知长度不自动结束，等待 StopPreview() 结束
+  end
+end
+
+function SM_PreviewStop()
+  _G._previewing_active = false
+  _G._preview_expected_end = nil
+  _G._preview_block_until = reaper.time_precise() + 0.5 -- 预览结束后2秒再恢复加载列表，此处改为0.5秒
+end
+
+function SM_PreviewTick()
+  -- 若到达预计结束时间，自动进入静默期
+  if _G._previewing_active and _G._preview_expected_end then
+    if reaper.time_precise() >= _G._preview_expected_end then
+      SM_PreviewStop()
+    end
+  end
+end
+
+function ShouldPauseStreamingForPreview()
+  local now = reaper.time_precise()
+  local transport_active = (reaper.GetPlayState() ~= 0)
+  if _G._previewing_active then return true end
+  if transport_active then return true end
+  if _G._preview_block_until and now < _G._preview_block_until then return true end
+  return false
+end
+
+function AppendMediaDBWhenIdle(budget_sec, batch)
+  local s = _G._mediadb_stream
+  if not s or s.eof then return end
+
+  -- 预览结束后2秒静默期，暂停本帧加载
+  if ShouldPauseStreamingForPreview() then return end
+
+  local t0 = reaper.time_precise()
+  local budget = budget_sec or 0.008
+  local step   = batch or 1000
+
+  repeat
+    local chunk = MediaDBStreamRead(s, step)
+    if #chunk == 0 then break end
+    _G._stream_seen = _G._stream_seen or {}
+    for _, e in ipairs(chunk) do
+      if e.path and not _G._stream_seen[e.path] then
+        _G._stream_seen[e.path] = true
+        e.group = GetCustomGroupsForPath(e.path)
+        e._thumb_waveform = nil
+        e._last_thumb_w   = nil
+        files_idx_cache[#files_idx_cache+1] = e
+      end
+    end
+  until (reaper.time_precise() - t0) > budget
+
+  -- 流结束后再做一次排序
+  if s.eof then
+    SortFilesByFilenameAsc()
+  end
+end
+
+function StartDBFirstPage(db_dir, dbfile, first_n)
+  files_idx_cache = {}
+  selected_row = nil
+
+  -- 关闭旧流
+  if _G._mediadb_stream then
+    MediaDBStreamClose(_G._mediadb_stream)
+    _G._mediadb_stream = nil
+  end
+
+  if not dbfile or dbfile == "" then return false end
+  local fullpath = db_dir .. sep .. dbfile
+
+  _G._mediadb_stream = MediaDBStreamStart(fullpath)
+  if not _G._mediadb_stream then return false end
+
+  _G._stream_seen = {} -- 全局按路径去重
+  local first = MediaDBStreamRead(_G._mediadb_stream, first_n or 2000)
+  for _, e in ipairs(first) do
+    e.group = GetCustomGroupsForPath(e.path) -- 如果使用懒计算可移除
+    e._thumb_waveform = nil
+    e._last_thumb_w   = nil
+    files_idx_cache[#files_idx_cache+1] = e
+  end
+  return true
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -6688,6 +6803,10 @@ function loop()
         reaper.ImGui_ListClipper_End(clipper)
         reaper.ImGui_PopFont(ctx) -- 内容字体自由缩放
         reaper.ImGui_EndTable(ctx)
+
+        -- 流式后台加载。在每帧的空闲时间里分批把数据库条目灌入列表，避免一次性解析卡UI
+        AppendMediaDBWhenIdle(0.010, 1000) -- 本帧最多用10ms，每批最多1000条
+        SM_PreviewTick()
       end
       -- 上下按键滚动保存选中项
       _G.prev_selected_row = selected_row
@@ -8199,7 +8318,41 @@ function loop()
       file_info = last_playing_info
     end
 
-    reaper.ImGui_Text(ctx, string.format("%7d audio files found.", #display_list)) -- 数字固定 7 位
+    do
+      local is_db = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+      local streaming = is_db and (_G._mediadb_stream ~= nil) and (not _G._mediadb_stream.eof)
+      local loaded_total = (type(files_idx_cache) == "table") and #files_idx_cache or 0
+      local shown_count  = (type(_G.current_display_list) == "table") and #_G.current_display_list or 0
+
+      if streaming then
+        -- 流式进行中，显示已加载数量
+        reaper.ImGui_Text(ctx, string.format("%d loaded ...", loaded_total)) -- fixed width 7
+      else
+        if is_db then
+          -- 是否存在任意过滤
+          local has_filter = false
+          do
+            local t = _G.commit_filter_text
+            if type(t) == "string" and t ~= "" then has_filter = true end
+            if _G.temp_search_keyword then has_filter = true end
+            if _G.active_saved_search then has_filter = true end
+            if _G.temp_ucs_cat_keyword or _G.temp_ucs_sub_keyword then has_filter = true end
+          end
+
+          if has_filter then
+            -- 已完成+有过滤，只显示过滤后的数量和总数
+            reaper.ImGui_Text(ctx, string.format("%d shown / %d total.", shown_count, loaded_total))
+          else
+            -- 已完成+无过滤，显示总数
+            reaper.ImGui_Text(ctx, string.format("%d shown / %d total.", loaded_total, loaded_total))
+          end
+        else
+          -- 非MediaDB模式按原逻辑
+          reaper.ImGui_Text(ctx, string.format("%d audio files found.", shown_count))
+        end
+      end
+    end
+    
     reaper.ImGui_SameLine(ctx)
 
     -- 路径始终跟随 file_info

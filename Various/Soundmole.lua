@@ -1,10 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.37
+-- @version 1.0.38
 -- @changelog
---   Added Key and BPM metadata columns.
---   Added support for REAPER Shortcuts and Databases, which are now mirrored inside Soundmole.
---   Other detailed improvements and bug fixes.
+--   Optimized database loading (streamed in chunks with preview-aware pausing) to prevent UI stutter and speed up switching.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
