@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.39
+-- @version 1.0.40
 -- @changelog
---   Optimized database loading for faster first paint and smoother scrolling and search.
+--   Added dashed connectors between folder parent and child to clarify hierarchy, linking each child to its direct parent only, applied to Collections, This Computer, Shortcuts, and Shortcut Mirror.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

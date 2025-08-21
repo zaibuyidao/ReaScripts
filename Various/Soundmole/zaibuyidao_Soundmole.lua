@@ -1871,6 +1871,83 @@ function mouse_in_selection()
   return mouse_time >= sel_min and mouse_time <= sel_max
 end
 
+--------------------------------------------- 文件夹虚线 ---------------------------------------------
+
+-- 虚线样式
+local GUIDE_DASHED    = true
+local GUIDE_THICKNESS = 1 -- 更细
+local GUIDE_DASH_LEN  = 1 -- 更短
+local GUIDE_GAP_LEN   = 1 -- 更紧凑
+local GUIDE_LABEL_PAD = 0 -- 子级左侧留白
+
+local _guide = { base_x=nil, indent=nil, stack={} }
+function ResetCollectionGuide()
+  _guide.base_x = nil
+  _guide.indent = nil
+  _guide.stack  = {}
+end
+
+-- 捕获当前节点行矩形
+function CaptureNodeRectAndInit(ctx, depth)
+  local minx, miny = reaper.ImGui_GetItemRectMin(ctx)
+  local maxx, maxy = reaper.ImGui_GetItemRectMax(ctx)
+  if not _guide.base_x then _guide.base_x = minx end
+  if depth == 1 and (not _guide.indent or _guide.indent <= 0) then
+    _guide.indent = math.max(8, minx - _guide.base_x)
+  end
+  return minx, miny, maxx, maxy
+end
+
+-- 父级竖干
+function TrunkX(parent_depth)
+  local indent = _guide.indent or 14
+  return (_guide.base_x or 0) + (parent_depth + 1) * indent - indent * 0.5
+end
+
+-- 画虚线
+function DrawLine(dl, x1, y1, x2, y2, col, th, dashed)
+  if not dashed then
+    reaper.ImGui_DrawList_AddLine(dl, x1, y1, x2, y2, col, th); return
+  end
+  local hx = math.abs(x2 - x1) >= math.abs(y2 - y1)
+  if hx then
+    local total = x2 - x1; local dir = total >= 0 and 1 or -1
+    local len = math.abs(total); local s = 0
+    while s < len do
+      local e = math.min(s + GUIDE_DASH_LEN, len)
+      reaper.ImGui_DrawList_AddLine(dl, x1 + dir*s, y1, x1 + dir*e, y1, col, th)
+      s = e + GUIDE_GAP_LEN
+    end
+  else
+    local total = y2 - y1; local dir = total >= 0 and 1 or -1
+    local len = math.abs(total); local s = 0
+    while s < len do
+      local e = math.min(s + GUIDE_DASH_LEN, len)
+      reaper.ImGui_DrawList_AddLine(dl, x1, y1 + dir*s, x1, y1 + dir*e, col, th)
+      s = e + GUIDE_GAP_LEN
+    end
+  end
+end
+
+function DrawChildTeeFromParent(ctx, child_minx, child_cy)
+  local top = _guide.stack[#_guide.stack]
+  if not top then return end -- 根节点无父
+  local px = TrunkX(top.depth)
+  local dl  = reaper.ImGui_GetWindowDrawList(ctx)
+  DrawLine(dl, px, child_cy, child_minx - GUIDE_LABEL_PAD, child_cy, colors.previewed_text, GUIDE_THICKNESS, GUIDE_DASHED)
+  top.ymin = top.ymin and math.min(top.ymin, child_cy) or child_cy
+  top.ymax = top.ymax and math.max(top.ymax, child_cy) or child_cy
+end
+
+function DrawParentTrunk(ctx, parent_depth, parent_cy, ymin, ymax)
+  if not ymin or not ymax then return end
+  local px  = TrunkX(parent_depth)
+  local y1  = math.min(parent_cy, ymin)
+  local y2  = math.max(parent_cy, ymax)
+  local dl  = reaper.ImGui_GetWindowDrawList(ctx)
+  DrawLine(dl, px, y1, px, y2, colors.previewed_text, GUIDE_THICKNESS, GUIDE_DASHED)
+end
+
 --------------------------------------------- 树状文件夹 ---------------------------------------------
 
 local audio_types = { WAVE=true, MP3=true, FLAC=true, OGG=true, AIFF=true, APE=true }
@@ -2052,8 +2129,9 @@ function list_dir(path)
 end
 
 -- 树状目录
-function draw_tree(name, path)
+function draw_tree(name, path, depth)
   path = normalize_path(path, true)
+  depth = depth or 0
   local show_name = name
   if drive_name_map and drive_name_map[path] and drive_name_map[path] ~= "" then
     show_name = name .. " [" .. drive_name_map[path] .. "]"
@@ -2062,6 +2140,12 @@ function draw_tree(name, path)
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
   local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##" .. path, flags | highlight)
+  -- 捕获本行矩形与中心y
+  local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
+  local cy = (miny + maxy) * 0.5
+  if #_guide.stack > 0 then
+    DrawChildTeeFromParent(ctx, minx, cy)
+  end
   -- 只要点击树节点，不管当前什么模式，都切换到tree模式
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     if collect_mode ~= COLLECT_MODE_TREE then
@@ -2082,10 +2166,26 @@ function draw_tree(name, path)
       dir_cache[path] = {dirs=dirs, audios=audios, ok=ok}
     end
     local cache = dir_cache[path] or {dirs={}, audios={}, ok=true}
+
+    -- 支持绘制虚线
+    local pushed = false
+    if #cache.dirs > 0 then
+      table.insert(_guide.stack, { depth = depth, parent_cy = cy, ymin = nil, ymax = nil })
+      pushed = true
+    end
+
     for _, sub in ipairs(cache.dirs) do
       local sub_path = normalize_path(path .. sep .. sub, true)
-      draw_tree(sub, sub_path)
+      draw_tree(sub, sub_path, depth + 1)
     end
+
+    if pushed then
+      local top = table.remove(_guide.stack)
+      if top then
+        DrawParentTrunk(ctx, top.depth, top.parent_cy, top.ymin, top.ymax)
+      end
+    end
+
     reaper.ImGui_TreePop(ctx)
     tree_open[path] = true
   else
@@ -2152,10 +2252,11 @@ end
 folder_shortcuts = LoadFolderShortcuts()
 
 -- 绘制快捷方式
-function draw_shortcut_tree(sc, base_path)
+function draw_shortcut_tree(sc, base_path, depth)
   if type(sc)~="table" or not sc.path then return end
   local show_name = (sc.name and sc.name ~= "") and sc.name or GetFolderName(sc.path)
   local path = normalize_path(sc.path, true)
+  depth = depth or 0
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
   local highlight = (collect_mode == COLLECT_MODE_SHORTCUT and tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0 -- 去掉 collect_mode == COLLECT_MODE_SHORTCUT 则保持高亮
 
@@ -2166,6 +2267,12 @@ function draw_shortcut_tree(sc, base_path)
   end
 
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##shortcut_" .. path, flags | highlight)
+  -- 捕获本行矩形与中心y
+  local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
+  local cy = (miny + maxy) * 0.5
+  if #_guide.stack > 0 then
+    DrawChildTeeFromParent(ctx, minx, cy)
+  end
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
     collect_mode = COLLECT_MODE_SHORTCUT
@@ -2216,10 +2323,26 @@ function draw_shortcut_tree(sc, base_path)
       dir_cache[path] = {dirs=dirs, audios=audios, ok=ok}
     end
     local cache = dir_cache[path] or {dirs={}, audios={}, ok=true}
+
+    -- 支持绘制虚线
+    local pushed = false
+    if #cache.dirs > 0 then
+      table.insert(_guide.stack, { depth = depth, parent_cy = cy, ymin = nil, ymax = nil })
+      pushed = true
+    end
+
     for _, sub in ipairs(cache.dirs) do
       local sub_path = normalize_path(path .. sep .. sub, true)
-      draw_shortcut_tree({name=sub, path=sub_path}, path)
+      draw_shortcut_tree({ name = sub, path = sub_path }, path, depth + 1)
     end
+
+    if pushed then
+      local top = table.remove(_guide.stack)
+      if top then
+        DrawParentTrunk(ctx, top.depth, top.parent_cy, top.ymin, top.ymax)
+      end
+    end
+
     reaper.ImGui_TreePop(ctx)
     tree_open[path] = true
   else
@@ -2568,9 +2691,10 @@ function new_guid()
   return (reaper.genGuid() or ""):gsub("[{}]", "")
 end
 
-function draw_advanced_folder_node(id, selected_id)
+function draw_advanced_folder_node(id, selected_id, depth)
   local node = advanced_folders[id]
   if not node then return end
+  depth = depth or 0
   -- 仅在 COLLECT_MODE_ADVANCEDFOLDER 模式下高亮
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() -- reaper.ImGui_TreeNodeFlags_OpenOnArrow() -- 使用OpenOnArrow()将只能点击箭头有效。
   if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and selected_id == id then -- 去掉 collect_mode == COLLECT_MODE_ADVANCEDFOLDER 则保持高亮
@@ -2582,6 +2706,13 @@ function draw_advanced_folder_node(id, selected_id)
   end
 
   local node_open = reaper.ImGui_TreeNode(ctx, node.name .. "##" .. id, flags)
+  -- 捕获本行矩形与中心y
+  local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
+  local cy = (miny + maxy) * 0.5
+  if #_guide.stack > 0 then
+    DrawChildTeeFromParent(ctx, minx, cy)
+  end
+
   -- 切换当前高级文件夹目录选中状态
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_advanced_folder = id
@@ -2690,11 +2821,30 @@ function draw_advanced_folder_node(id, selected_id)
     reaper.ImGui_EndDragDropTarget(ctx)
   end
 
-  -- 递归子节点
+  -- 递归子节点，画虚线
   if node_open then
-    for _, cid in ipairs(node.children) do
-      draw_advanced_folder_node(cid, selected_id)
+    local has_children = (node.children and #node.children > 0)
+
+    -- 支持绘制虚线
+    local pushed = false
+    if has_children then
+      table.insert(_guide.stack, { depth = depth, parent_cy = cy, ymin = nil, ymax = nil })
+      pushed = true
     end
+
+    if has_children then
+      for _, cid in ipairs(node.children) do
+        draw_advanced_folder_node(cid, selected_id, depth + 1)
+      end
+    end
+
+    if pushed then
+      local top = table.remove(_guide.stack)
+      if top then
+        DrawParentTrunk(ctx, top.depth, top.parent_cy, top.ymin, top.ymax)
+      end
+    end
+
     reaper.ImGui_TreePop(ctx)
   end
 end
@@ -4861,11 +5011,12 @@ function list_reaper_shortcut_folders()
   return out
 end
 
-function draw_shortcut_tree_mirror(sc, base_path)
+function draw_shortcut_tree_mirror(sc, base_path, depth)
   if type(sc) ~= "table" or not sc.path then return end
 
   local path = normalize_path(sc.path, true)
   local show_name = (sc.name and sc.name ~= "") and sc.name or (path:gsub("[/\\]+$", "")):match("([^/\\]+)$") or path
+  depth = depth or 0
 
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
   local cmpath = path:gsub("[/\\]+$", "")
@@ -4881,6 +5032,12 @@ function draw_shortcut_tree_mirror(sc, base_path)
   local label = show_name .. "##shortcut_mirror_" .. path
 
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
+  -- 捕获本行矩形与中心y
+  local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
+  local cy = (miny + maxy) * 0.5
+  if #_guide.stack > 0 then
+    DrawChildTeeFromParent(ctx, minx, cy)
+  end
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
     if collect_mode ~= COLLECT_MODE_SHORTCUT_MIRROR then
@@ -4913,10 +5070,26 @@ function draw_shortcut_tree_mirror(sc, base_path)
       dir_cache[path] = { dirs = dirs, audios = audios, ok = ok }
     end
     local cache = dir_cache[path] or { dirs = {}, audios = {}, ok = true }
+
+    -- 支持绘制虚线
+    local pushed = false
+    if #cache.dirs > 0 then
+      table.insert(_guide.stack, { depth = depth, parent_cy = cy, ymin = nil, ymax = nil })
+      pushed = true
+    end
+
     for _, sub in ipairs(cache.dirs) do
       local sub_path = normalize_path(path .. sep .. sub, true)
-      draw_shortcut_tree_mirror({ name = sub, path = sub_path }, path)
+      draw_shortcut_tree_mirror({ name = sub, path = sub_path }, path, depth + 1)
     end
+
+    if pushed then
+      local top = table.remove(_guide.stack)
+      if top then
+        DrawParentTrunk(ctx, top.depth, top.parent_cy, top.ymin, top.ymax)
+      end
+    end
+
     reaper.ImGui_TreePop(ctx)
     if tree_open then tree_open[path] = true end
   else
@@ -5460,8 +5633,9 @@ function loop()
                 need_load_drives = true
               end
             else
+              ResetCollectionGuide() -- 重置导线度量
               for _, drv in ipairs(drive_cache or {}) do
-                draw_tree(drv, drv)
+                draw_tree(drv, drv, 0)
               end
             end
             reaper.ImGui_Unindent(ctx, 7)
@@ -5491,9 +5665,11 @@ function loop()
           reaper.ImGui_PopStyleColor(ctx)
           if is_shortcut_open then
             reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-            for i = 1, #folder_shortcuts do
-              draw_shortcut_tree(folder_shortcuts[i])
+            ResetCollectionGuide() -- 重置导线度量
+            for _, sc in ipairs(folder_shortcuts or {}) do
+              draw_shortcut_tree(sc, nil, 0)
             end
+
             -- 添加新快捷方式按钮
             if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut", 140, 40) then
               local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
@@ -5533,15 +5709,14 @@ function loop()
           reaper.ImGui_PopStyleColor(ctx)
           if is_collection_open then
             reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-            for _, id in ipairs(root_advanced_folders) do
+            ResetCollectionGuide() -- 重置导线度量
+            for i, id in ipairs(root_advanced_folders) do
               local node = advanced_folders[id]
               if node then
-                draw_advanced_folder_node(id, tree_state.cur_advanced_folder)
-              else
-                -- 如果节点在 advanced_folders 中找不到，输出警告
-                -- reaper.ShowConsoleMsg("root_advanced_folders中的节点id="..id.."未在advanced_folders表找到\n")
+                draw_advanced_folder_node(id, tree_state.cur_advanced_folder, 0)
               end
             end
+
             if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder", 140, 40) then
               local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
               if ret and name and name ~= "" then
@@ -5921,8 +6096,9 @@ function loop()
             
             if is_sc_mirror_open then
               reaper.ImGui_Indent(ctx, 7)
-              for i = 1, #sc_folders do
-                draw_shortcut_tree_mirror(sc_folders[i])
+              ResetCollectionGuide() -- 重置导线度量
+              for _, sc in ipairs(folder_shortcuts or {}) do
+                draw_shortcut_tree_mirror(sc, nil, 0)
               end
               reaper.ImGui_Unindent(ctx, 7)
             end
