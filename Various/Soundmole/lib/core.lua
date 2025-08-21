@@ -561,11 +561,11 @@ function _apply_data_line(entry, line)
   end
 end
 
--- 流式读取
-function MediaDBStreamStart(dbpath)
+-- 开启流式读取
+function MediaDBStreamStart(dbpath, opts)
   local f = io.open(dbpath, "rb")
   if not f then return nil end
-  return { f = f, eof = false, entry = nil, dbpath = dbpath }
+  return { f = f, eof = false, entry = nil, dbpath = dbpath, opts = opts or { lazy_data = true } }
 end
 
 -- 流式读取MediaDB，每次返回最多max_count条记录
@@ -576,6 +576,7 @@ function MediaDBStreamRead(stream, max_count)
   local f = s.f
   local added = 0
   local entry = s.entry or {}
+  local lazy = not (s.opts and s.opts.lazy_data == false) -- 默认懒解析
 
   while added < (max_count or 1000) do
     local raw = f:read("*l")
@@ -585,12 +586,12 @@ function MediaDBStreamRead(stream, max_count)
       s.eof = true
       break
     end
+
     local line = (raw or ""):gsub("\r","")
-    -- 去除BOM头
-    if #line >= 3 and line:sub(1,3) == "\239\187\191" then line = line:sub(4) end
+    if #line >= 3 and line:sub(1,3) == "\239\187\191" then line = line:sub(4) end -- strip BOM
 
     if line:find("^FILE") then
-      -- 先把前一条记录推入
+      -- 推入上一条
       if entry.path then
         table.insert(out, entry)
         added = added + 1
@@ -601,6 +602,7 @@ function MediaDBStreamRead(stream, max_count)
           break
         end
       end
+
       entry = {}
       entry.path, entry.size = line:match('^FILE%s+"(.-)"%s+(%d+)%s+%d+%s+%d+%s+%d+$')
       if not entry.path then
@@ -609,8 +611,12 @@ function MediaDBStreamRead(stream, max_count)
       entry.size = tonumber(entry.size) or 0
       entry.filename = entry.path and (entry.path:match("([^/\\]+)$") or entry.path) or ""
     elseif line:find("^DATA") then
-      -- 解析DATA行到当前entry
-      _apply_data_line(entry, line)
+      if lazy then
+        entry._data_lines = entry._data_lines or {}
+        entry._data_lines[#entry._data_lines+1] = line
+      else
+        _apply_data_line(entry, line)
+      end
     end
   end
 
@@ -620,4 +626,15 @@ end
 
 function MediaDBStreamClose(stream)
   if stream and stream.f then stream.f:close() end
+end
+
+-- 可见时一次性解析 DATA 行
+function EnsureEntryParsed(entry)
+  if not entry or entry._parsed then return end
+  local lines = entry._data_lines
+  if lines then
+    for i = 1, #lines do _apply_data_line(entry, lines[i]) end
+    entry._data_lines = nil
+  end
+  entry._parsed = true
 end

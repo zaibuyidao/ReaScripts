@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.38
+-- @version 1.0.39
 -- @changelog
---   Optimized database loading (streamed in chunks with preview-aware pausing) to prevent UI stutter and speed up switching.
+--   Optimized database loading for faster first paint and smoother scrolling and search.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

@@ -4452,6 +4452,11 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
 end
 
 function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
+  EnsureEntryParsed(info) -- 右侧文件列表首次可见时解析 DATA 元数据
+  if not info.group then  -- 分组延迟到可见时再计算
+    info.group = GetCustomGroupsForPath(info.path)
+  end
+
   -- 表格标题文字颜色 -- 文字颜色
   if IsPreviewed(info.path) then
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.previewed_text)
@@ -4962,35 +4967,91 @@ function ShouldPauseStreamingForPreview()
   return false
 end
 
+function ShouldPauseStreamingForTyping()
+  local now = reaper.time_precise()
+  -- 正在输入时让位
+  if _G._typing_active then return true end
+  -- 停止输入后的短暂尾巴期内继续让位
+  if _G._typing_block_until and now < _G._typing_block_until then return true end
+  return false
+end
+
+-- 暂时去掉钩子，将不使用2秒暂停加载
+-- function ShouldPauseStreamingForPreview() return false end
+-- function ShouldPauseStreamingForTyping() return false end
+
+-- 按帧限时分批加载数据库条目（自适应批量）
 function AppendMediaDBWhenIdle(budget_sec, batch)
   local s = _G._mediadb_stream
   if not s or s.eof then return end
 
-  -- 预览结束后2秒静默期，暂停本帧加载
-  if ShouldPauseStreamingForPreview() then return end
+  -- 打字/预览让位。存在对应函数且判定为需要让位时，本帧不加载
+  if type(ShouldPauseStreamingForPreview) == "function" and ShouldPauseStreamingForPreview() then return end
+  if type(ShouldPauseStreamingForTyping)  == "function" and ShouldPauseStreamingForTyping()  then return end
 
+  _G._append_adapt = _G._append_adapt or {
+    step   = 600,   -- 当前批量
+    min    = 200,   -- 批量下限
+    max    = 3000,  -- 批量上限
+    target = 0.006, -- 目标帧预算，默认每帧约 6ms
+    ema    = nil,   -- 最近帧耗时的指数滑动平均
+  }
+  local A = _G._append_adapt
+
+  -- 本帧时间预算与初始批量（若传入则使用传入值，否则用自适应当前值）
+  local budget = tonumber(budget_sec) or A.target
+  local step   = tonumber(batch) or A.step
+
+  -- 计时起点
   local t0 = reaper.time_precise()
-  local budget = budget_sec or 0.008
-  local step   = batch or 1000
+  local added_total = 0
 
-  repeat
-    local chunk = MediaDBStreamRead(s, step)
-    if #chunk == 0 then break end
-    _G._stream_seen = _G._stream_seen or {}
-    for _, e in ipairs(chunk) do
-      if e.path and not _G._stream_seen[e.path] then
-        _G._stream_seen[e.path] = true
-        e.group = GetCustomGroupsForPath(e.path)
-        e._thumb_waveform = nil
-        e._last_thumb_w   = nil
-        files_idx_cache[#files_idx_cache+1] = e
+  -- 去重表。避免同一路径重复加入
+  _G._stream_seen = _G._stream_seen or {}
+
+  -- 在预算用尽前分批读取并追加
+  while (reaper.time_precise() - t0) < budget do
+    local chunk = MediaDBStreamRead(s, step) -- 从流中读取最多step条FILE记录（DATA 懒处理）
+    local n = #chunk
+    if n == 0 then break end
+
+    -- 仅做追加索引。不解析 DATA，不做分组
+    for i = 1, n do
+      local e = chunk[i]
+      local p = e and e.path
+      if p and not _G._stream_seen[p] then
+        _G._stream_seen[p] = true
+        files_idx_cache[#files_idx_cache + 1] = e
+        added_total = added_total + 1
       end
     end
-  until (reaper.time_precise() - t0) > budget
 
-  -- 流结束后再做一次排序
+    if n < step then
+      -- 继续在下次读取时检测 EOF
+    end
+  end
+
+  -- 计算本帧实际耗时，并更新EMA（用于平滑自适应）
+  local elapsed = reaper.time_precise() - t0
+  local alpha = 0.3 -- EMA 平滑系数，数值越大越灵敏
+  A.ema = A.ema and (A.ema + alpha * (elapsed - A.ema)) or elapsed
+
+  -- 自适应批量调节
+  -- 若实际耗时 > 预算（含 5% 容差）则收缩批量
+  -- 若实际耗时 < 预算（留 20% 空头）则放大批量
+  -- 始终限制在 min..max 范围内
+  if A.ema > budget * 1.05 then
+    step = math.max(A.min, math.floor(step * 0.75))
+  elseif A.ema < budget * 0.80 then
+    step = math.min(A.max, math.floor(step * 1.25))
+  end
+  A.step = step
+
+  -- 文件流读尽后仅做一次排序（避免频繁排序造成卡顿）
   if s.eof then
-    SortFilesByFilenameAsc()
+    if type(SortFilesByFilenameAsc) == "function" then
+      SortFilesByFilenameAsc()
+    end
   end
 end
 
@@ -5007,17 +5068,18 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   if not dbfile or dbfile == "" then return false end
   local fullpath = db_dir .. sep .. dbfile
 
-  _G._mediadb_stream = MediaDBStreamStart(fullpath)
+  -- 懒解析流。DATA 行先不解析，仅缓存原文
+  _G._mediadb_stream = MediaDBStreamStart(fullpath, { lazy_data = true })
   if not _G._mediadb_stream then return false end
 
-  _G._stream_seen = {} -- 全局按路径去重
+  _G._stream_seen = {}
+
+  -- 首批2000条
   local first = MediaDBStreamRead(_G._mediadb_stream, first_n or 2000)
   for _, e in ipairs(first) do
-    e.group = GetCustomGroupsForPath(e.path) -- 如果使用懒计算可移除
-    e._thumb_waveform = nil
-    e._last_thumb_w   = nil
     files_idx_cache[#files_idx_cache+1] = e
   end
+
   return true
 end
 
@@ -6805,7 +6867,7 @@ function loop()
         reaper.ImGui_EndTable(ctx)
 
         -- 流式后台加载。在每帧的空闲时间里分批把数据库条目灌入列表，避免一次性解析卡UI
-        AppendMediaDBWhenIdle(0.010, 1000) -- 本帧最多用10ms，每批最多1000条
+        AppendMediaDBWhenIdle(0.010, 2000) -- 本帧最多用10ms，每批最多2000条，或者也可以不带参数全程自动
         SM_PreviewTick()
       end
       -- 上下按键滚动保存选中项
