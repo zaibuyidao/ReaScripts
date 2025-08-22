@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.40
+-- @version 1.0.41
 -- @changelog
 --   Added dashed connectors between folder parent and child to clarify hierarchy, linking each child to its direct parent only, applied to Collections, This Computer, Shortcuts, and Shortcut Mirror.
+--   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

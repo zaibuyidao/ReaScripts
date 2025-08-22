@@ -6097,7 +6097,7 @@ function loop()
             if is_sc_mirror_open then
               reaper.ImGui_Indent(ctx, 7)
               ResetCollectionGuide() -- 重置导线度量
-              for _, sc in ipairs(folder_shortcuts or {}) do
+              for _, sc in ipairs(sc_folders or {}) do
                 draw_shortcut_tree_mirror(sc, nil, 0)
               end
               reaper.ImGui_Unindent(ctx, 7)
