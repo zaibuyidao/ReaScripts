@@ -9,7 +9,7 @@ function IsValidAudioFile(path)
   local ext = path:match("%.([^.]+)$")
   if not ext then return false end
   ext = ext:lower()
-  return (ext == "wav" or ext == "mp3" or ext == "flac" or ext == "ogg" or ext == "aiff" or ext == "ape" or ext == "wv")
+  return (ext == "wav" or ext == "mp3" or ext == "flac" or ext == "ogg" or ext == "aiff" or ext == "ape" or ext == "wv" or ext == "m4a" or ext == "aac" or ext == "mp4")
 end
 
 function split(str, sep)

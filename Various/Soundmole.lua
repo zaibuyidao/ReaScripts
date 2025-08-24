@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.41
+-- @version 1.0.42
 -- @changelog
---   Added dashed connectors between folder parent and child to clarify hierarchy, linking each child to its direct parent only, applied to Collections, This Computer, Shortcuts, and Shortcut Mirror.
+--   Added Freesound mode, allowing direct search of online resources within Soundmole. If you want to download the original files (instead of preview MP3/OGG), you need to complete OAuth 2.0 authorization.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

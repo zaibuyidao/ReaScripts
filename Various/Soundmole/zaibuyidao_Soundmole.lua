@@ -255,11 +255,12 @@ COLLECT_MODE_DIR             = 2
 COLLECT_MODE_ALL_ITEMS       = 3
 COLLECT_MODE_TREE            = 4
 COLLECT_MODE_SHORTCUT        = 5
-COLLECT_MODE_CUSTOMFOLDER    = 6 -- 自定义文件夹模式
-COLLECT_MODE_RECENTLY_PLAYED = 9 -- 最近播放模式
-COLLECT_MODE_MEDIADB         = 999  -- 数据库模式
-COLLECT_MODE_REAPERDB        = 1007 -- REAPER数据库
-COLLECT_MODE_SHORTCUT_MIRROR = 1009
+COLLECT_MODE_CUSTOMFOLDER    = 6  -- 自定义文件夹模式
+COLLECT_MODE_RECENTLY_PLAYED = 9  -- 最近播放模式
+COLLECT_MODE_MEDIADB         = 10 -- 数据库模式
+COLLECT_MODE_REAPERDB        = 11 -- REAPER数据库
+COLLECT_MODE_SHORTCUT_MIRROR = 12
+COLLECT_MODE_FREESOUND       = 13
 
 -- 设置相关
 local auto_play_selected  = true
@@ -606,7 +607,7 @@ function CollectFromItems()
       local path = reaper.GetMediaSourceFileName(source, "")
       path = normalize_path(path, false)
       local typ = reaper.GetMediaSourceType(source, "")
-      if path and path ~= "" and not files[path] and (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
+      if path and path ~= "" and not files[path] and (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV" or typ == "M4A" or typ == "AAC" or typ == "MP4") then
         -- 获取文件大小并格式化
         local size = 0
         local f = io.open(path, "rb")
@@ -699,7 +700,7 @@ function CollectMediaItems()
       else
         typ = ""
       end
-      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
+      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV" or typ == "M4A" or typ == "AAC" or typ == "MP4") then
         goto continue
       end
       -- typ = reaper.GetMediaSourceType(src, "") -- 通过take获取type，无法保证类型准确。会混入SECTION 等非音频类型
@@ -900,7 +901,7 @@ function CollectFromProjectDirectory()
   proj_path = normalize_path(proj_path, true)
   if not proj_path or proj_path == "" then return files, files_idx end
   -- 支持的扩展名
-  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true}
+  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true, m4a=true, aac=true, mp4=true}
 
   local i = 0
   while true do
@@ -1023,7 +1024,7 @@ function CollectFromCustomFolder(paths)
       end
 
       -- 音频格式
-      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
+      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV" or typ == "M4A" or typ == "AAC" or typ == "MP4") then
         goto continue
       end
 
@@ -1201,6 +1202,12 @@ function CollectFiles()
     local dir = tree_state.cur_path or ""
     files_idx_cache = GetAudioFilesFromDirCached(dir)
     selected_row = nil
+  elseif collect_mode == COLLECT_MODE_FREESOUND then
+    if FS and type(FS_show_search_or_cache)=="function" then
+      FS_show_search_or_cache()
+    else
+      files_idx_cache = {}
+    end
   else
     files_idx_cache = {} -- collect_mode全部清空
   end
@@ -1950,7 +1957,7 @@ end
 
 --------------------------------------------- 树状文件夹 ---------------------------------------------
 
-local audio_types = { WAVE=true, MP3=true, FLAC=true, OGG=true, AIFF=true, APE=true }
+local audio_types = { WAVE=true, MP3=true, FLAC=true, OGG=true, AIFF=true, APE=true, M4A=true, AAC=true, MP4=true }
 tree_state = tree_state or { cur_path = '', sel_audio = '' }
 local tree_open = {}
 local dir_cache = {} -- path -> {dirs=..., audios=..., ok=...}
@@ -1985,7 +1992,7 @@ end
 function CollectFromDirectory(dir_path)
   dir_path = normalize_path(dir_path, true)
   local files, files_idx = {}, {}
-  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true}
+  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true, m4a=true, aac=true, mp4=true}
   if not dir_path or dir_path == "" then return files, files_idx end
   local i = 0
   while true do
@@ -2058,25 +2065,49 @@ function get_drives()
   if drive_cache and drives_loaded then return drive_cache end
   local drives = {}
   drive_name_map = {} -- 重置映射
-
   if reaper.GetOS():find('Win') then
-    -- PowerShell: 强制 UTF-8 输出 '盘符|卷标' 列表
-    local ps = '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; ' ..
-               'Get-WmiObject Win32_LogicalDisk | ' ..
-               'Where-Object { $_.DriveType -eq 3 } | ' ..
-               'ForEach-Object{ $_.DeviceID + \'|\' + $_.VolumeName }'
-    local cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "' .. ps .. '"'
-    local handle = io.popen(cmd)
-    if handle then
-      for line in handle:lines() do
-        local drv, vol = line:match('^([A-Z]:)%|(.*)$')
-        if drv then
-          local path = drv .. '\\'
-          table.insert(drives, path)
-          drive_name_map[path] = vol or ''
+    -- PowerShell 脚本：UTF-8 输出 "盘符|卷标"
+    local ps_core = '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; ' ..
+                    'Get-WmiObject Win32_LogicalDisk | ' ..
+                    'Where-Object { $_.DriveType -eq 3 } | ' ..
+                    'ForEach-Object{ $_.DeviceID + \'|\' + $_.VolumeName }'
+    if reaper.ExecProcess then
+      -- 用 ExecProcess 静默执行，并把结果写到临时文件再读回，避免CMD弹窗
+      local tmp = (reaper.GetResourcePath() .. sep .. ("drives_%d_%d.txt"):format(os.time(), math.random(1,1e6)))
+      local ps = ps_core .. (" | Set-Content -LiteralPath '%s' -Encoding UTF8"):format(tmp:gsub("'", "''"))
+      local cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "'..ps..'"'
+      local code = tonumber(reaper.ExecProcess(cmd, 15000)) or -1
+
+      if code == 0 then
+        local f = io.open(tmp, "rb")
+        if f then
+          for line in f:lines() do
+            local drv, vol = line:match('^([A-Z]:)%|(.*)$')
+            if drv then
+              local path = drv .. '\\'
+              table.insert(drives, path)
+              drive_name_map[path] = vol or ''
+            end
+          end
+          f:close()
         end
       end
-      handle:close()
+      os.remove(tmp)
+    else
+      -- 回退使用popen
+      local cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "'..ps_core..'"'
+      local handle = io.popen(cmd)
+      if handle then
+        for line in handle:lines() do
+          local drv, vol = line:match('^([A-Z]:)%|(.*)$')
+          if drv then
+            local path = drv .. '\\'
+            table.insert(drives, path)
+            drive_name_map[path] = vol or ''
+          end
+        end
+        handle:close()
+      end
     end
   else
     table.insert(drives, '/')
@@ -2935,7 +2966,7 @@ function BuildFileInfoFromPath(path, filename)
   end
 
   -- 音频格式校验
-  if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV") then
+  if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV" or typ == "M4A" or typ == "AAC" or typ == "MP4") then
     return info
   end
 
@@ -5194,6 +5225,7 @@ function AppendMediaDBWhenIdle(budget_sec, batch)
       local p = e and e.path
       if p and not _G._stream_seen[p] then
         _G._stream_seen[p] = true
+        FS_MaybeSwapEntryPathToLocal(e) -- Freesound 补丁，如果本地缓存已存在，先把条目切换为本地路径，再加入缓存。
         files_idx_cache[#files_idx_cache + 1] = e
         added_total = added_total + 1
       end
@@ -5250,10 +5282,1338 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   -- 首批2000条
   local first = MediaDBStreamRead(_G._mediadb_stream, first_n or 2000)
   for _, e in ipairs(first) do
+    FS_MaybeSwapEntryPathToLocal(e) -- Freesound 补丁，首屏条目立刻切换为本地路径（如果已下载）
     files_idx_cache[#files_idx_cache+1] = e
   end
 
   return true
+end
+
+--------------------------------------------- Freesound 模式 ---------------------------------------------
+
+function __z(items) return table.concat(items, "\0") .. "\0" end
+
+function FS_LoadSearchDB(basename)
+  collect_mode = COLLECT_MODE_FREESOUND
+
+  local db_dir = FS_DB_DIR()
+  file_select_start, file_select_end, selected_row = nil, nil, nil
+  previewed_files = {}
+  waveform_task_queue = {}
+  files_idx_cache = nil
+
+  StartDBFirstPage(db_dir, basename, FS.FIRST_PAGE_COUNT or 2000)
+
+  if _G._mediadb_stream and not _G._mediadb_stream.eof then
+    local oldPrev, oldType = ShouldPauseStreamingForPreview, ShouldPauseStreamingForTyping
+    _G.ShouldPauseStreamingForPreview = function() return false end
+    _G.ShouldPauseStreamingForTyping  = function() return false end
+
+    local t0 = reaper.time_precise()
+    while _G._mediadb_stream and not _G._mediadb_stream.eof do
+      AppendMediaDBWhenIdle(0.03, 1000)
+      if files_idx_cache and #files_idx_cache > 0 then break end
+      if reaper.time_precise() - t0 > 0.6 then break end
+    end
+
+    _G.ShouldPauseStreamingForPreview = oldPrev
+    _G.ShouldPauseStreamingForTyping  = oldType
+  end
+
+  -- 初始化去重。新库起始时清零计数，并做一次首屏去重
+  _G.__fs_seen_keys, _G.__fs_scanned_len = {}, 0
+  FS_DedupIncremental()
+end
+
+function FS_bool_from_es(key, default)
+  local v = reaper.GetExtState(EXT_SECTION, key)
+  if v == "1" or v == "true" or v == "TRUE" then return true end
+  if v == "0" or v == "false" or v == "FALSE" then return false end
+  return default
+end
+
+-- 如果本地缓存已存在，立即把条目path切换为本地路径。以用于右侧列表即时显示
+function FS_MaybeSwapEntryPathToLocal(e)
+  if not e or collect_mode ~= COLLECT_MODE_FREESOUND then return end
+  -- 需要拿到 comment 中的 sug@xxx 用于还原缓存文件名。懒解析一次 DATA 行
+  if not e.comment then
+    if type(EnsureEntryParsed) == "function" then EnsureEntryParsed(e) end
+  end
+  local cmt = tostring(e.comment or "")
+  local enc = cmt:match("sug@([^%s]+)")
+  if not enc or enc == "" then return end
+
+  -- 复用 Freesound 的缓存命名逻辑，得到期望缓存路径
+  local dst = FS_local_cache_path_for({ suggest_name = FS_urldecode(enc), comment = cmt })
+  if dst and reaper.file_exists(dst) then
+    e.path = dst
+    e.filename = dst:match("([^/\\]+)$") or dst
+  end
+end
+
+function FS_join(a,b)
+  local sep = package.config:sub(1,1)
+  return (a:sub(-1)=="/" or a:sub(-1)=="\\") and (a..b) or (a..sep..b)
+end
+
+function FS_ensure_dir(p)
+  if not p or p=="" then return end
+  if reaper.RecursiveCreateDirectory then
+    reaper.RecursiveCreateDirectory(p, 0)
+  else
+    if package.config:sub(1,1) == "\\" then
+      os.execute(('mkdir "%s" >NUL 2>NUL'):format(p))
+    else
+      os.execute(('mkdir -p "%s" >/dev/null 2>&1'):format(p))
+    end
+  end
+end
+
+function FS_urlencode(s)
+  s = tostring(s or "")
+  return (s:gsub("\n"," "):gsub("\r"," "):gsub("([^%w%-_%.~ ])", function(c) return string.format("%%%02X", string.byte(c)) end):gsub(" ", "%%20"))
+end
+
+function FS_urldecode(s)
+  s = tostring(s or "")
+  return (s:gsub("%%(%x%x)", function(h) return string.char(tonumber(h,16) or 0) end))
+end
+
+-- 从 comment 解析 src@URL
+function FS_extract_src_from_comment(cmt)
+  local s = tostring(cmt or "")
+  local u = s:match("src@([^%s]+)")
+  if u and u ~= "" then return u end
+  return nil
+end
+
+-- JSON 解码
+local FS_json = {}
+do
+  local pos,str
+  local function skip() while true do local c=str:sub(pos,pos); if c=="" then return else if c==" " or c=="\t" or c=="\n" or c=="\r" then pos=pos+1 else return end end end end
+  local function parse_string()
+    local i=pos+1; local out={}
+    while i<=#str do
+      local c=str:sub(i,i)
+      if c=='"' then local s=table.concat(out); pos=i+1; return s
+      elseif c=='\\' then
+        local n=str:sub(i+1,i+1)
+        if n=='"' or n=='\\' or n=='/' then out[#out+1]=n; i=i+2
+        elseif n=='b' then out[#out+1]="\b"; i=i+2
+        elseif n=='f' then out[#out+1]="\f"; i=i+2
+        elseif n=='n' then out[#out+1]="\n"; i=i+2
+        elseif n=='r' then out[#out+1]="\r"; i=i+2
+        elseif n=='t' then out[#out+1]="\t"; i=i+2
+        elseif n=='u' then local hex=str:sub(i+2,i+5); local cp=tonumber(hex,16) or 32; out[#out+1]=utf8.char(cp); i=i+6
+        else i=i+2 end
+      else out[#out+1]=c; i=i+1 end
+    end
+    return ""
+  end
+  local function parse_value()
+    skip(); local c=str:sub(pos,pos)
+    if c=="{" then
+      pos=pos+1; local obj={}; skip()
+      if str:sub(pos,pos)=="}" then pos=pos+1 return obj end
+      while true do
+        skip(); if str:sub(pos,pos)~='"' then return nil end
+        local k=parse_string(); skip(); if str:sub(pos,pos)~=":" then return nil end; pos=pos+1
+        local v=parse_value(); obj[k]=v; skip(); local ch=str:sub(pos,pos)
+        if ch=="}" then pos=pos+1 break end
+        if ch~="," then return nil end
+        pos=pos+1
+      end
+      return obj
+    elseif c=="[" then
+      pos=pos+1; local arr={}; skip()
+      if str:sub(pos,pos)=="]" then pos=pos+1 return arr end
+      local i=1
+      while true do
+        local v=parse_value(); arr[i]=v; i=i+1; skip(); local ch=str:sub(pos,pos)
+        if ch=="]" then pos=pos+1 break end
+        if ch~="," then return nil end
+        pos=pos+1
+      end
+      return arr
+    elseif c=='"' then
+      return parse_string()
+    elseif c=="-" or c:match("%d") then
+      local s0,e0=str:find("^%-?%d+%.?%d*[eE]?[%+%-]?%d*", pos); local n=tonumber(str:sub(s0,e0)); pos=e0+1; return n
+    elseif str:sub(pos,pos+3)=="null" then pos=pos+4 return nil
+    elseif str:sub(pos,pos+3)=="true" then pos=pos+4 return true
+    elseif str:sub(pos,pos+4)=="false" then pos=pos+5 return false
+    end
+    return nil
+  end
+  function FS_json.decode(s) str=tostring(s or ""); pos=1; return parse_value() end
+end
+
+function FS_http_get(url)
+  url = tostring(url or "")
+
+  local need_bearer = (FS and (FS.TOKEN or "") == "" and (FS.OAUTH_BEARER or "") ~= "")
+  local hdr = need_bearer and (' -H "Authorization: Bearer ' .. (FS.OAUTH_BEARER:gsub('"','\\"')) .. '"') or ""
+
+  -- 优先走 ExecProcess，避免CMD弹窗
+  if reaper.ExecProcess then
+    local tmp = FS_join(FS_DB_DIR(), (".fs_http_%d.tmp"):format(math.floor(reaper.time_precise()*1e6)))
+    local cmd = ('curl -L -s%s "%s" -o "%s"'):format(hdr, url:gsub('"','\\"'), tmp:gsub('"','\\"'))
+    local code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
+
+    local body = ""
+    local f = io.open(tmp, "rb")
+    if f then body = f:read("*a") or ""; f:close() end
+    os.remove(tmp)
+    return (code == 0) and body or ""
+  end
+
+  -- 回退 popen
+  local p = io.popen('curl -L -s' .. hdr .. ' "' .. url .. '"', "r")
+  local body = p and p:read("*a") or ""
+  if p then p:close() end
+  return body
+end
+
+-- 配置与状态
+FS = FS or {
+  ENABLED           = false, -- 勾选激活
+  TOKEN             = reaper.GetExtState(EXT_SECTION, "fs_oauth_client_secret") or "",
+  DB_DIR            = nil, -- 脚本目录下 FreesoundDB/
+  CACHE_DB_FILE     = "FreesoundDB.MoleFileList",
+  SEARCH_DB_FILE    = "FreesoundSearch.MoleFileList",
+  SAVE_PER_QUERY_DB = false, -- 如果为true，为每个关键词保存独立 DB
+  API_PAGE_SIZE     = 150,   -- Freesound 上限 150
+  FIRST_PAGE_COUNT  = 5000,  -- 首屏加载数
+  last_query        = "",
+  USE_ORIGINAL      = FS_bool_from_es("fs_use_original", false),        -- 勾选后使用原始文件
+  OAUTH_BEARER      = reaper.GetExtState(EXT_SECTION,"fs_oauth") or "", -- OAuth2 Access Token
+  DOWNLOAD_METHOD   = "curl",                                           -- nil=自动选择 "curl"=强制用curl "ps_iwr"=PowerShell Invoke-WebRequest "ps_bits"=PowerShell BITS
+  ui = {
+    query       = "",
+    sort_idx    = 1,   -- 1 Relevance / 2 Rating / 3 Duration / 4 Downloads / 5 Created_new / 6 Created_old
+    arrange_idx = 1,   -- 1 Timbre / 2 Tonality
+    num_results = 200, -- 1..450
+    max_minutes = 7.5  -- 0.5..30
+  }
+}
+
+FS.DEBUG = FS.DEBUG == nil and true or FS.DEBUG
+function FS_dbg(...)
+  if not FS.DEBUG then return end
+  local t = {}; for i=1,select('#', ...) do t[#t+1] = tostring(select(i, ...)) end
+  reaper.ShowConsoleMsg(table.concat(t, "") .. "\n")
+end
+
+function FS_get_query()
+  local q = tostring(FS and FS.ui and FS.ui.query or "")
+  if q ~= "" then return q end
+  local qx = reaper.GetExtState(EXT_SECTION, "fs_query") or ""
+  return qx
+end
+
+function FS_set_query(q)
+  q = tostring(q or "")
+  if FS and FS.ui then FS.ui.query = q end
+  reaper.SetExtState(EXT_SECTION, "fs_query", q, false)
+end
+
+function FS_DB_DIR()
+  if FS.DB_DIR then return FS.DB_DIR end
+  FS.DB_DIR = FS_join(script_path, "FreesoundDB")
+  FS_ensure_dir(FS.DB_DIR)
+  return FS.DB_DIR
+end
+
+function FS_path_DB_cache()
+  return FS_join(FS_DB_DIR(), FS.CACHE_DB_FILE)
+end
+
+function FS_sanitize_filename(s)
+  s = tostring(s or ""):gsub("[^%w%._%-]+", "_")
+  if s == "" then s = "EMPTY" end
+  return s:sub(1,64)
+end
+
+function FS_path_DB_search(for_query)
+  if FS.SAVE_PER_QUERY_DB and for_query and for_query~="" then
+    return FS_join(FS_DB_DIR(), FS_sanitize_filename(for_query) .. ".MoleFileList")
+  end
+  return FS_join(FS_DB_DIR(), FS.SEARCH_DB_FILE)
+end
+
+-- API 请求
+function FS_sort_code(idx)
+  if idx == 1 then return "score"
+  elseif idx == 2 then return "rating_desc"
+  elseif idx == 3 then return "duration_desc"
+  elseif idx == 4 then return "downloads_desc"
+  elseif idx == 5 then return "created_desc"
+  elseif idx == 6 then return "created_asc"
+  else return "score" end
+end
+
+function FS_build_url(q, page, page_size, sort, max_seconds)
+  local base = "https://freesound.org/apiv2/search/text/"
+  local fields = table.concat({
+    "id","name","original_filename","tags",
+    "description","license","type","previews",
+    "filesize","bitdepth","samplerate","channels","duration",
+    "category","category_code","created","url",
+    "ac_analysis","avg_rating","num_downloads","score",
+    "pack","pack_tokenized"
+  }, ",")
+
+  local filter = ""
+  if max_seconds and max_seconds > 0 then
+    filter = "&filter=" .. FS_urlencode(("duration:[* TO %d]"):format(math.floor(max_seconds)))
+  end
+
+  local auth_q = (FS and FS.TOKEN and FS.TOKEN ~= "") and ("&token=" .. FS_urlencode(FS.TOKEN)) or ""
+
+  local url = ("%s?query=%s&page=%d&page_size=%d&sort=%s&group_by_pack=0&fields=%s%s%s")
+    :format(base, FS_urlencode(q or ""), page or 1, page_size or 150, sort or "score",
+    fields, filter, auth_q)
+  return url
+end
+
+-- 去重与键构建工具
+function FS_is_cache_db_path(p)
+  local a = tostring(p or ""):gsub("\\","/"):lower()
+  local b = tostring(FS_path_DB_cache() or ""):gsub("\\","/"):lower()
+  return a == b
+end
+function FS_len_to_ms(sec)
+  local s = tonumber(sec) or 0
+  if s < 0 then s = 0 end
+  return math.floor(s * 1000 + 0.5)
+end
+-- 文件名(不含路径，大小写不敏感) + 长度(毫秒) + size(字节)
+function FS_cache_dedup_key(filename, length_sec, size_bytes)
+  local name = tostring(filename or ""):lower()
+  local ms   = FS_len_to_ms(length_sec)
+  local sz   = tonumber(size_bytes) or 0
+  return table.concat({name, ms, sz}, "|")
+end
+function FS_build_cache_keyset(dbpath)
+  local seen = {}
+  local s = MediaDBStreamStart(dbpath, { lazy_data = true })  -- 懒解析DATA【核心流式接口】
+  if not s then return seen end
+  while not s.eof do
+    local batch = MediaDBStreamRead(s, 1500)
+    for _, e in ipairs(batch) do
+      -- 需要解析 DATA 才能拿到 length 等字段【EnsureEntryParsed】
+      EnsureEntryParsed(e)
+      local fn = e.filename or (e.path and e.path:match("([^/\\]+)$")) or e.path or ""
+      seen[FS_cache_dedup_key(fn, e.length or 0, e.size or 0)] = true
+    end
+  end
+  MediaDBStreamClose(s)
+  return seen
+end
+
+function FS_s(s) s = tostring(s or ""):gsub("\r"," "):gsub("\n"," "):gsub('"',"'") return s end
+
+-- =============== 写入DB（含 FreesoundDB 去重与缓存名防冲突） ===============
+function FS_write_batch_to_db(results, dbpath)
+  local wrote  = 0
+  local cur_q  = tostring(FS._cur_query or "")
+
+  -- 仅写入 FreesoundDB.MoleFileList 时启用去重
+  local is_cache_db = FS_is_cache_db_path(dbpath)
+  local existed = is_cache_db and FS_build_cache_keyset(dbpath) or nil
+  local added_in_this_run = {} -- 避免本批次自身重复
+
+  -- 提取扩展名/去扩展/猜测扩展
+  local function ext_from_name(name) name=tostring(name or ""); return name:match("%.[%w]+$") end
+  local function guess_ext_from_url(url) local u=tostring(url or ""):lower(); local e=u:match("%.([%w]+)$"); return e and ("."..e) or nil end
+  local function strip_ext(name) return tostring(name or ""):gsub("%.[%w]+$","") end
+  local function sanitize_filename(s)
+    s = tostring(s or ""):gsub('[\\/:*?"<>|]', "_"):gsub("^%s+",""):gsub("%s+$","")
+    if s == "" then s = "untitled" end
+    return s:sub(1,128)
+  end
+
+  -- 生成建议缓存文件名，带唯一后缀。优先fid，否则用长度毫秒 + size
+  local function make_unique_suggest(base_noext, ext, fid, length_sec, size_bytes)
+    local suffix
+    if fid and tostring(fid) ~= "" then
+      suffix = "fs" .. tostring(fid)
+    else
+      suffix = string.format("L%d_S%d", FS_len_to_ms(length_sec), tonumber(size_bytes) or 0)
+    end
+    return sanitize_filename(string.format("%s__%s%s", base_noext, suffix, ext))
+  end
+
+  for _, s in ipairs(results or {}) do
+    -- 预览源
+    local pv_mp3, pv_ogg = "", ""
+    if s and s.previews then
+      pv_mp3 = s.previews["preview-hq-mp3"] or s.previews["preview-lq-mp3"] or ""
+      pv_ogg = s.previews["preview-hq-ogg"] or s.previews["preview-lq-ogg"] or ""
+    end
+
+    -- 是否使用原始文件，需 OAuth 2.0
+    local want_original = (FS.USE_ORIGINAL and (FS.OAUTH_BEARER or "") ~= "" and s and s.id ~= nil)
+
+    -- 实际下载/预览的 URL，写到 comment 的 src@
+    local src_url, src_kind
+    if want_original then
+      src_url  = ("https://freesound.org/apiv2/sounds/%d/download/"):format(tonumber(s.id))
+      src_kind = "original"
+    else
+      src_url  = (pv_mp3 ~= "" and pv_mp3) or (pv_ogg ~= "" and pv_ogg) or (s and s.url or "")
+      src_kind = "preview"
+    end
+
+    -- 计算展示名（path 字段仅用于列表展示/检索）
+    local base_name   = (s and s.original_filename and s.original_filename ~= "" and s.original_filename)
+                        or (s and s.name and s.name ~= "" and s.name)
+                        or ("freesound_"..tostring(s and s.id or ""))
+    local base_noext  = strip_ext(base_name)
+    local ext_from_ty = (s and s.type and tostring(s.type) ~= "" and ("."..tostring(s.type):gsub("^%.",""))) or nil
+
+    local ext
+    if want_original then
+      ext = ext_from_ty
+        or ext_from_name(s and s.original_filename)
+        or ext_from_name(s and s.name)
+        or guess_ext_from_url(src_url)
+        or ".wav"
+    else
+      if pv_mp3 ~= "" then
+        ext = ".mp3"
+      elseif pv_ogg ~= "" then
+        ext = ".ogg"
+      else
+        ext = guess_ext_from_url(src_url) or ".mp3"
+      end
+    end
+
+    local display = sanitize_filename(base_noext .. ext)
+
+    -- 分类/标签/描述
+    local category, subcat = "", ""
+    if s and type(s.category)=="table" then
+      category = tostring(s.category[1] or "")
+      subcat = tostring(s.category[2] or "")
+    elseif s and type(s.category)=="string" then
+      category = s.category
+    end
+
+    local tags = ""
+    if s and type(s.tags)=="table" then
+      local t = {}; local n = math.min(#s.tags, 10)
+      for i = 1,n do t[#t+1] = tostring(s.tags[i] or "") end
+      tags = table.concat(t, ",")
+    end
+
+    local desc_prefix = {}
+    if s and tonumber(s.avg_rating)    then desc_prefix[#desc_prefix+1] = ("⭐%02.1f"):format(tonumber(s.avg_rating)) end
+    if s and tonumber(s.num_downloads) then desc_prefix[#desc_prefix+1] = (function(n) local t=tostring(n); return "⬇"..t..string.rep(" ", math.max(0, 5-#t)) end)(tonumber(s.num_downloads)) end
+
+    local head = {}
+    -- if cur_q ~= "" then head[#head+1] = ("[q:%s]"):format(FS_s(cur_q)) end
+    -- if s and s.name and s.name~="" then head[#head+1] = ("[%s]"):format(FS_s(s.name)) end
+    -- if s and s.original_filename and s.original_filename~="" then head[#head+1] = ("(%s)"):format(FS_s(s.original_filename)) end
+    if tags ~= "" then head[#head+1] = ("#%s"):format(FS_s(tags)) end
+    local desc, tail = "", FS_s(s and s.description or "")
+    if tail ~= "" then desc = desc .. " " .. tail end
+
+    -- comment：src@ / src_kind@ / sug@ / fid@
+    local fid = s and s.id or nil
+    local comment = table.concat(desc_prefix, " ")
+    if src_url ~= "" then
+      comment = (comment ~= "" and (comment.."  ") or "") .. ("src@%s"):format(FS_s(src_url))
+      comment = comment .. ("  src_kind@%s"):format(src_kind)
+      -- 改为包含唯一后缀的建议缓存名，避免同名不同文件共用缓存
+      local sug = make_unique_suggest(base_noext, ext, fid, s and s.duration or 0, s and s.filesize or 0)
+      comment = comment .. ("  sug@%s"):format(FS_urlencode(sug))
+    end
+    if fid then
+      comment = (comment ~= "" and (comment.."  ") or "") .. ("fid@%s"):format(tostring(fid))
+    end
+    -- if cur_q ~= "" then
+    --   comment = (comment ~= "" and (comment.."  ") or "") .. ("[q:%s]"):format(FS_s(cur_q))
+    -- end
+
+    -- UCS / 音乐属性
+    local aa = (s and s.ac_analysis) or {}
+    local key_name = aa and (aa.ac_tonality or "") or ""
+    local bpm_val  = aa and tonumber(aa.ac_tempo) or nil
+    local genre = (s and s.pack ~= nil) and table.concat(head, " ") or ""
+
+    local info = {
+      path        = display,
+      size        = tonumber(s and s.filesize) or 0,
+      length      = tonumber(s and s.duration) or 0,
+      channels    = tonumber(s and s.channels) or 0,
+      samplerate  = tonumber(s and s.samplerate) or 0,
+      bits        = tonumber(s and s.bitdepth) or 0,
+      description = desc,
+      comment     = comment,
+      ucs_category    = FS_s(category),
+      ucs_subcategory = FS_s(subcat),
+      ucs_catid       = FS_s(s and s.category_code or ""),
+      bwf_orig_date   = FS_s(s and s.created or ""),
+      key             = (key_name ~= "" and key_name or nil),
+      bpm             = bpm_val,
+      genre           = FS_s(genre),
+    }
+
+    -- 去重，文件名 + 长度(毫秒) + size
+    if is_cache_db then
+      local key = FS_cache_dedup_key(display, info.length or 0, info.size or 0)
+      if existed[key] or added_in_this_run[key] then
+        -- 已存在，跳过写入
+        goto continue
+      else
+        added_in_this_run[key] = true
+      end
+    end
+
+    WriteToMediaDB(info, dbpath)
+    wrote = wrote + 1
+    ::continue::
+  end
+
+  return wrote
+end
+
+-- 统一的内存层去重键
+function FS_mem_dedup_key(e)
+  if not e then return nil end
+  -- 确保拿到 length/size/filename（懒解析 DATA）
+  if type(EnsureEntryParsed) == "function" then EnsureEntryParsed(e) end
+
+  local fn = e.filename or (e.path and e.path:match("([^/\\]+)$")) or ""
+  if fn == "" then return nil end
+
+  local ms = math.floor((tonumber(e.length) or 0) * 1000 + 0.5)
+  local sz = tonumber(e.size or 0) or 0
+  return (fn:lower() .. "|" .. tostring(ms) .. "|" .. tostring(sz))
+end
+
+-- 对 files_idx_cache 做显示层的增量去重（文件名+长度ms+size）
+function FS_DedupIncremental()
+  if collect_mode ~= COLLECT_MODE_FREESOUND then return end
+  if not files_idx_cache then return end
+
+  _G.__fs_seen_keys   = _G.__fs_seen_keys   or {}
+  _G.__fs_scanned_len = _G.__fs_scanned_len or 0
+
+  local start_i = _G.__fs_scanned_len + 1
+  local N = #files_idx_cache
+  if start_i > N then return end
+
+  local sel_obj = (selected_row and files_idx_cache[selected_row]) or nil
+
+  -- 标记重复
+  for i = start_i, N do
+    local e = files_idx_cache[i]
+    local k = FS_mem_dedup_key(e)
+    if k then
+      if _G.__fs_seen_keys[k] then
+        files_idx_cache[i] = false -- 标记删除
+      else
+        _G.__fs_seen_keys[k] = true
+      end
+    end
+  end
+
+  -- 压缩 false
+  local out = {}
+  for i = 1, #files_idx_cache do
+    local e = files_idx_cache[i]
+    if e then out[#out+1] = e end
+  end
+  files_idx_cache = out
+
+  -- 恢复选中行
+  if sel_obj then
+    local found
+    for i = 1, #files_idx_cache do
+      if files_idx_cache[i] == sel_obj then found = i; break end
+    end
+    selected_row = found
+  end
+
+  _G.__fs_scanned_len = #files_idx_cache
+end
+
+-- Arrange by 的客户端排序
+function FS_arrange_sort(results, arrange_idx)
+  if arrange_idx == 1 then
+    -- Timbre: 以 brightness -> warmth -> hardness -> roughness 进行稳定排序
+    table.sort(results, function(a,b)
+      local aa, bb = a.ac_analysis or {}, b.ac_analysis or {}
+      local k1 = tonumber(aa.ac_brightness or -1) or -1
+      local k2 = tonumber(bb.ac_brightness or -1) or -1
+      if k1 ~= k2 then return k1 > k2 end
+      local w1 = tonumber(aa.ac_warmth or -1) or -1
+      local w2 = tonumber(bb.ac_warmth or -1) or -1
+      if w1 ~= w2 then return w1 > w2 end
+      local h1 = tonumber(aa.ac_hardness or -1) or -1
+      local h2 = tonumber(bb.ac_hardness or -1) or -1
+      if h1 ~= h2 then return h1 > h2 end
+      local r1 = tonumber(aa.ac_roughness or -1) or -1
+      local r2 = tonumber(bb.ac_roughness or -1) or -1
+      if r1 ~= r2 then return r1 > r2 end
+      return (a.id or 0) < (b.id or 0)
+    end)
+  elseif arrange_idx == 2 then
+    -- Tonality: ac_tonality 字符串分组 + 次级按排行/下载数做细排
+    table.sort(results, function(a,b)
+      local aa, bb = a.ac_analysis or {}, b.ac_analysis or {}
+      local t1 = tostring(aa.ac_tonality or "~")
+      local t2 = tostring(bb.ac_tonality or "~")
+      if t1 ~= t2 then return t1 < t2 end
+      local r1 = tonumber(a.avg_rating or -1) or -1
+      local r2 = tonumber(b.avg_rating or -1) or -1
+      if r1 ~= r2 then return r1 > r2 end
+      local d1 = tonumber(a.num_downloads or -1) or -1
+      local d2 = tonumber(b.num_downloads or -1) or -1
+      if d1 ~= d2 then return d1 > d2 end
+      return (a.id or 0) < (b.id or 0)
+    end)
+  end
+end
+
+-- 搜索与加载
+function FS_rebuild_cache_if_empty()
+  local cache_db = FS_path_DB_cache()
+  local f = io.open(cache_db, "rb")
+  if f then f:close(); return end
+  local f2 = io.open(cache_db, "wb") if f2 then f2:close() end
+end
+
+function FS_search_basename(for_query)
+  if FS.SAVE_PER_QUERY_DB and for_query and for_query ~= "" then
+    return (tostring(for_query):gsub("[^%w%._%-]+","_"):sub(1,64)) .. ".MoleFileList"
+  end
+  return FS.SEARCH_DB_FILE
+end
+
+-- 全局 Arrange 跨页汇总后一次性按 Timbre/Tonality 排序，再写库
+function FS_fetch_and_build_db(q, sort_idx, max_minutes, total_needed)
+  q = tostring(q or "")
+  local basename  = FS_search_basename(q)
+  local search_db = FS_join(FS_DB_DIR(), basename)
+  local cache_db  = FS_join(FS_DB_DIR(), FS.CACHE_DB_FILE)
+
+  local f = io.open(search_db, "wb"); if f then f:close() end
+  local f2 = io.open(cache_db,  "ab"); if f2 then f2:close() end
+
+  local PAGE_MAX     = math.min(FS.API_PAGE_SIZE or 150, 150) -- 固定每页 150 API上限
+  local want_total   = math.max(1, tonumber(total_needed) or 200)
+  local sort         = FS_sort_code(sort_idx or 1)
+  local max_seconds  = math.floor((tonumber(max_minutes) or 7.5) + 0.5)
+
+  local seen, last_err = {}, nil
+  local pool_all = {}
+  local page = 1
+  FS._cur_query = q
+
+  while #pool_all < want_total do
+    local url = FS_build_url(q, page, PAGE_MAX, sort, max_seconds)
+    local body = FS_http_get(url)
+    if not body or body == "" then last_err = "Empty HTTP body."; break end
+
+    local obj = FS_json.decode(body)
+    if not (obj and obj.results and type(obj.results)=="table") then
+      last_err = tostring(body):gsub("[\r\n]+"," "):sub(1,180)
+      break
+    end
+
+    for _, s in ipairs(obj.results) do
+      if s and s.id and not seen[s.id] then
+        seen[s.id] = true
+        pool_all[#pool_all+1] = s
+      end
+    end
+
+    if not obj.next or obj.next == "" or #obj.results < PAGE_MAX then break end
+    page = page + 1
+  end
+
+  FS_arrange_sort(pool_all, FS.ui.arrange_idx or 1)
+
+  local take = math.min(want_total, #pool_all)
+  local batch = {}
+  for i = 1, take do batch[i] = pool_all[i] end
+
+  local wrote_total = FS_write_batch_to_db(batch, search_db)
+  FS_write_batch_to_db(batch, cache_db)
+
+  FS._cur_query = nil
+  return basename, wrote_total, last_err
+end
+
+function FS_show_search_or_cache(force_basename)
+  local db_dir = FS_DB_DIR()
+  local basename = force_basename
+  if not basename or basename == "" then
+    local q = FS_get_query()
+    if q ~= "" then
+      basename = FS_search_basename(q)
+    else
+      basename = FS.CACHE_DB_FILE
+    end
+  end
+
+  local full = FS_join(db_dir, basename)
+  local f = io.open(full, "rb")
+  local sz = 0
+  if f then sz = f:seek("end") or 0; f:close() end
+  if not f or sz == 0 then
+    basename = FS.CACHE_DB_FILE
+  end
+
+  StartDBFirstPage(db_dir, basename, FS.FIRST_PAGE_COUNT or 2000)
+end
+
+-- 下载与播放 Hook
+function FS_is_http(p) p = tostring(p or ""):lower(); return p:match("^https?://")~=nil end
+function FS_norm_http(p)
+  p = tostring(p or "")
+  if p:match("^https?[:\\/]") then
+    p = p:gsub("\\","/"):gsub("^https:/([^/])","https://%1"):gsub("^http:/([^/])","http://%1")
+  end
+  return p
+end
+
+function FS_cache_dir()
+  local d = FS_join(script_path, "freesound_cache")
+  FS_ensure_dir(d)
+  return d
+end
+
+function FS_basename_from_url(url)
+  url = tostring(url or "")
+  local base = url:gsub("[?#].*$",""):match("([^/]+)$") or ("fs_preview_"..tostring(math.random(1,1e9)))
+  if not base:match("%.[%w]+$") then
+    local ext = (url:match("%.ogg") and ".ogg") or ".mp3"
+    base = base .. ext
+  end
+  return base:gsub("[^%w%._%-]+","_"):sub(1,80)
+end
+
+function FS_sanitize_cache_name(s)
+  s = tostring(s or ""):gsub('[\\/:*?"<>|]', "_")
+  s = s:gsub("^%s+",""):gsub("%s+$","")
+  if s == "" then s = "cachefile" end
+  return s:sub(1,128)
+end
+
+function FS_local_cache_path_for(info)
+  local cache_dir = FS_cache_dir()
+
+  local suggest = info and info.suggest_name
+  if (not suggest or suggest == "") then
+    local cmt = tostring(info and info.comment or "")
+    local enc = cmt:match("sug@([^%s]+)")
+    if enc and enc ~= "" then
+      suggest = FS_urldecode(enc)
+    end
+  end
+
+  if suggest and suggest ~= "" then
+    return FS_join(cache_dir, FS_sanitize_cache_name(suggest))
+  end
+
+  local url = FS_norm_http(info and (info.src or info.path) or "")
+  local base = url:gsub("[?#].*$",""):match("([^/]+)$") or ("fs_"..tostring(math.random(1,1e9)))
+  if not base:match("%.[%w]+$") then base = base .. ".dat" end
+  return FS_join(cache_dir, base:gsub("[^%w%._%-]+","_"):sub(1,80))
+end
+
+-- 占位波形
+function FS_EnsureEmptyWaveform(info, thumb_w)
+  if not info or not thumb_w or thumb_w <= 0 then return end
+  info._thumb_waveform = info._thumb_waveform or {}
+  if info._thumb_waveform[thumb_w] then return end
+
+  local chs = math.max(1, tonumber(info.channels or 1) or 1) -- 强制 1 声道以省CPU
+  local peaks = {}
+  for ch = 1, chs do
+    peaks[ch] = {}
+    for i = 1, thumb_w do
+      peaks[ch][i] = {0, 0}  -- 零值峰，画出一条居中的细线
+    end
+  end
+  local src_len = tonumber(info.length or 0) or 0
+  info._thumb_waveform[thumb_w] = {
+    peaks       = peaks,
+    pixel_cnt   = thumb_w,
+    src_len     = src_len,
+    channel_count = chs
+  }
+end
+
+function FS_run(cmd)
+  local p = io.popen(cmd .. " 2>&1", "r")
+  if not p then return "", -1 end
+  local out = p:read("*a") or ""
+  local ok, _, code = p:close()
+  local ec = (type(code)=="number" and code) or (ok and 0 or -1)
+  return out, ec
+end
+
+function FS_has_curl()
+  local p = io.popen((package.config:sub(1,1)=="\\" and "where curl 2>nul" or "which curl 2>/dev/null"), "r")
+  local out = p and p:read("*a") or ""; if p then p:close() end
+  return out ~= nil and out ~= ""
+end
+
+function FS_download_to(url, dst, auth_header)
+  FS_ensure_dir(dst:match("^(.*)[/\\]") or FS_cache_dir())
+  url = FS_norm_http(url)
+
+  local is_win = (package.config:sub(1,1) == "\\")
+  local method = FS.DOWNLOAD_METHOD
+  if not method or method=="" then
+    if is_win then
+      method = (FS_has_curl() and "curl") or "ps_iwr"
+    else
+      method = "curl"
+    end
+  end
+
+  local auth_val = nil
+  if auth_header and auth_header:match("^%s*Authorization:%s*") then
+    auth_val = auth_header:gsub("^%s*Authorization:%s*", "")
+  end
+
+  local function try_curl()
+    local header = ""
+    if auth_header and auth_header ~= "" then
+      header = string.format(' -H "%s"', auth_header:gsub('"','\\"'))
+    end
+    local ua = ' -A "Soundmole/1.0"'
+    local cmd = string.format(
+      'curl --fail -L --retry 3 --retry-delay 1 --connect-timeout 10 --max-time 120 --no-progress-meter -C -%s%s "%s" -o "%s"',
+      ua, header, url, dst
+    )
+
+    local code
+    if reaper.ExecProcess then
+      code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
+    else
+      local _, c = FS_run(cmd)
+      code = c
+    end
+    return code == 0, code, "curl"
+  end
+
+  local function try_ps_iwr()
+    local headers_ps
+    if auth_val and auth_val ~= "" then
+      headers_ps = ([[ -Headers @{ Authorization = '%s'; "User-Agent" = 'Soundmole/1.0' } ]]):format(auth_val:gsub("'","''"))
+    else
+      headers_ps = [[ -Headers @{ "User-Agent" = 'Soundmole/1.0' } ]]
+    end
+    local ps = ([[ $ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; try { $r=Invoke-WebRequest -UseBasicParsing -TimeoutSec 120 -Uri '%s' -OutFile '%s' %s -PassThru; if (Test-Path -LiteralPath '%s') { exit 0 } else { exit 3 } } catch { $code=1; if ($_.Exception.Response){ try { $code=[int]$_.Exception.Response.StatusCode.value__ } catch {} }; exit $code } ]])
+              :format(url:gsub("'","''"), dst:gsub("'","''"), headers_ps, dst:gsub("'","''"))
+    local cmd = string.format('powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "%s"', ps)
+    local _, c = FS_run(cmd)
+    return c == 0, c, "ps_iwr"
+  end
+
+  local ok, code, used = false, -1, method
+  if method == "curl" then
+    ok, code, used = try_curl()
+  elseif method == "ps_iwr" and is_win then
+    ok, code, used = try_ps_iwr()
+  elseif method == "ps_bits" and is_win then
+    ok, code, used = try_ps_iwr()
+  else
+    ok, code, used = try_curl()
+  end
+
+  local f = ok and io.open(dst, "rb") or nil
+  if f then
+    local sz = f:seek("end") or 0; f:close()
+    if sz > 0 then return true end
+    --FS_dbg(string.format("[FS] download size=0 for %s", tostring(dst)))
+  else
+    --FS_dbg("[FS] download failed or no file created: ", tostring(dst))
+  end
+  return false
+end
+
+function FS_ensure_local_before_play(info)
+  if not info then return end
+  if collect_mode ~= COLLECT_MODE_FREESOUND then return end
+
+  local p = tostring(info.path or "")
+  local src, src_kind = nil, "preview"
+  local cmt = tostring(info.comment or "")
+
+  if FS_is_http(p) then
+    src = FS_norm_http(p)
+  else
+    src = cmt:match("src@([^%s]+)")
+    if src then src = FS_norm_http(src) end
+    local k = cmt:match("src_kind@([%w_]+)")
+    if k and k ~= "" then src_kind = k end
+  end
+  if not (src and FS_is_http(src)) then return end
+
+  -- 解析建议文件名，来自 comment 的 sug@
+  local suggest
+  do
+    local enc = cmt:match("sug@([^%s]+)")
+    if enc and enc ~= "" then suggest = FS_urldecode(enc) end
+  end
+
+  local dst = FS_local_cache_path_for({ src = src, suggest_name = suggest, comment = cmt })
+
+  local auth_header = nil
+  if src_kind == "original" and (FS.OAUTH_BEARER or "") ~= "" then
+    auth_header = "Authorization: Bearer " .. FS.OAUTH_BEARER
+  end
+
+  local ok = reaper.file_exists(dst) or FS_download_to(src, dst, auth_header)
+
+  -- 原始下载失败，尝试刷新后重试一次
+  if (not ok) and src_kind == "original" and (reaper.GetExtState(EXT_SECTION, "fs_oauth_refresh") or "") ~= "" then
+    if FS_OAuth_Refresh(true) then -- 静默刷新，避免弹窗
+      auth_header = "Authorization: Bearer " .. (FS.OAUTH_BEARER or "")
+      ok = FS_download_to(src, dst, auth_header)
+    end
+  end
+
+  if not ok then return end
+
+  -- 下载成功把该行的路径直接替换为本地路径，列表即时显示
+  info.path = dst
+  info._thumb_waveform = nil
+  info._loading_waveform = false
+
+  local w = (info._last_thumb_w and tonumber(info._last_thumb_w)) or 400
+  if type(EnqueueWaveformTask) == "function" then
+    waveform_task_queue = waveform_task_queue or {}
+    EnqueueWaveformTask(info, w)
+  end
+end
+
+function FS_InitHooks()
+  if _G.__FS_HOOKS_INSTALLED then return end
+  _G.__FS_HOOKS_INSTALLED = true
+
+  -- 播放钩子
+  if type(PlayFromStart)=="function" then
+    local __orig = PlayFromStart
+    PlayFromStart = function(info) FS_ensure_local_before_play(info); return __orig(info) end
+  end
+  if type(PlayFromCursor)=="function" then
+    local __orig = PlayFromCursor
+    PlayFromCursor = function(info) FS_ensure_local_before_play(info); return __orig(info) end
+  end
+
+  -- 插入钩子
+  if type(InsertSelectedToProject)=="function" then
+    local __orig = InsertSelectedToProject
+    InsertSelectedToProject = function(...)
+      if selected_row and files_idx_cache and files_idx_cache[selected_row] then
+        FS_ensure_local_before_play(files_idx_cache[selected_row])
+      end
+      return __orig(...)
+    end
+  end
+
+  -- 流式加载时做增量去重
+  if type(AppendMediaDBWhenIdle)=="function" and not _G.__FS_WRAP_APPEND then
+    _G.__FS_WRAP_APPEND = true
+    local __orig_append = AppendMediaDBWhenIdle
+    AppendMediaDBWhenIdle = function(budget_sec, batch)
+      local ret = __orig_append(budget_sec, batch)
+      if collect_mode == COLLECT_MODE_FREESOUND then
+        FS_DedupIncremental()
+      end
+      return ret
+    end
+  end
+
+  -- 波形单元渲染本地未落地时，先放空波形占位
+  if type(RenderWaveformCell)=="function" and not _G.__FS_WRAP_RENDER_CELL then
+    _G.__FS_WRAP_RENDER_CELL = true
+    local __orig_render = RenderWaveformCell
+    RenderWaveformCell = function(ctx, i, info, row_height, cmode, idle_time)
+      if cmode == COLLECT_MODE_FREESOUND and info and info.path then
+        -- 本地文件不存在给占位波形，避免首次加载 FLAC/OGG 不显示
+        local p = normalize_path(info.path, false)
+        if not reaper.file_exists(p) then
+          local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+          FS_EnsureEmptyWaveform(info, thumb_w)
+        end
+      end
+      return __orig_render(ctx, i, info, row_height, cmode, idle_time)
+    end
+  end
+
+  -- 确保有本地缓存库文件
+  FS_rebuild_cache_if_empty()
+end
+
+-- OAuth2 支持
+local FS_K = {
+  cid   = "fs_oauth_client_id",
+  csec  = "fs_oauth_client_secret",
+  redir = "fs_oauth_redirect_uri",
+  acc   = "fs_oauth",
+  ref   = "fs_oauth_refresh"
+}
+function FS_set_es(k, v)
+  reaper.SetExtState(EXT_SECTION, k, tostring(v or ""), true)
+end
+function FS_get_es(k)
+  return reaper.GetExtState(EXT_SECTION, k) or ""
+end
+
+-- 打开授权页
+function FS_OAuth_OpenAuthorize()
+  local client_id = FS_get_es(FS_K.cid)
+  local redirect  = FS_get_es(FS_K.redir)
+  if client_id == "" then
+    reaper.MB("Please enter your Client ID first.", "Freesound OAuth 2.0", 0)
+    --  reaper.MB("请先填写 Client ID。", "Freesound OAuth 2.0", 0)
+    return
+  end
+  local state = tostring(math.random(1, 1e9))
+  local url = ("https://freesound.org/apiv2/oauth2/authorize/?client_id=%s&response_type=code&state=%s%s")
+    :format(FS_urlencode(client_id), FS_urlencode(state),
+    (redirect ~= "" and ("&redirect_uri="..FS_urlencode(redirect)) or ""))
+  if reaper.CF_ShellExecute then reaper.CF_ShellExecute(url)
+  elseif package.config:sub(1,1) == "\\" then os.execute('start "" "'..url..'"')
+  else os.execute('open "'..url..'"') end
+end
+
+function FS_http_post_form(url, kvpairs)
+  url = tostring(url or "")
+
+  -- 组装 x-www-form-urlencoded 数据
+  local parts = {}
+  for k, v in pairs(kvpairs or {}) do
+    parts[#parts+1] = ("%s=%s"):format(FS_urlencode(k), FS_urlencode(tostring(v or "")))
+  end
+  local data = table.concat(parts, "&")
+
+  -- 优先 ExecProcess 避免CMD弹窗
+  if reaper.ExecProcess then
+    local tmp = FS_join(FS_DB_DIR(), (".fs_http_%d.tmp"):format(math.floor(reaper.time_precise()*1e6)))
+    local cmd = ('curl -s -L -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "%s" "%s" -o "%s"')
+      :format(data:gsub('"','\\"'), url:gsub('"','\\"'), tmp:gsub('"','\\"'))
+    local code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
+
+    local body = ""
+    local f = io.open(tmp, "rb")
+    if f then body = f:read("*a") or ""; f:close() end
+    os.remove(tmp)
+    return (code == 0) and body or ""
+  end
+
+  -- 回退到 popen
+  local cmd = ('curl -s -L -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "%s" "%s"')
+    :format(data, url)
+  local p = io.popen(cmd, "r")
+  local body = p and p:read("*a") or ""
+  if p then p:close() end
+  return body
+end
+
+-- 用授权码换取 Access/Refresh Token
+function FS_OAuth_ExchangeCode(auth_code)
+  auth_code = tostring(auth_code or "")
+  local client_id     = FS_get_es(FS_K.cid)
+  local client_secret = FS_get_es(FS_K.csec)
+  -- local redirect_uri  = FS_get_es(FS_K.redir)
+
+  if client_id=="" or client_secret=="" then
+    -- reaper.MB("请先填写 Client ID / Client Secret。", "Freesound OAuth 2.0", 0)
+    reaper.MB("Please enter both Client ID and Client Secret first.", "Freesound OAuth 2.0", 0)
+    return false
+  end
+  if auth_code=="" then
+    -- reaper.MB("请粘贴授权回调地址中的 code 参数。", "Freesound OAuth 2.0", 0)
+    reaper.MB("Please paste the 'code' parameter from the authorization callback URL.", "Freesound OAuth 2.0", 0)
+    return false
+  end
+
+  local token_url = "https://freesound.org/apiv2/oauth2/access_token/"
+  local form = {
+    grant_type    = "authorization_code",
+    client_id     = client_id,
+    client_secret = client_secret,
+    code          = auth_code,
+  }
+  -- 只有填写了 redirect_uri 才附带
+  -- if (redirect_uri or "") ~= "" then
+  --   form.redirect_uri = redirect_uri
+  -- end
+
+  local body = FS_http_post_form(token_url, form)
+  local obj  = FS_json.decode(body or "")
+
+  if not (obj and obj.access_token) then
+    local reason = (obj and (obj.error_description or obj.error)) or tostring(body):sub(1,400)
+    -- reaper.MB("换取令牌失败：\n"..reason, "Freesound OAuth2", 0)
+    reaper.MB(("Token exchange failed:\n%s"):format(tostring(reason or "")), "Freesound OAuth2", 0)
+    return false
+  end
+
+  -- 保存 token
+  FS_set_es(FS_K.acc, obj.access_token or "")
+  FS_set_es(FS_K.ref, obj.refresh_token or "")
+
+  FS.OAUTH_BEARER = obj.access_token or ""
+  FS.ui = FS.ui or {}
+  FS.ui.oauth_code = ""
+  FS.ui._oauth_just_saved = true
+
+  -- reaper.MB("OAuth 2.0 Access Token 已保存。", "Freesound OAuth 2.0", 0)
+  reaper.MB("OAuth 2.0 access token saved.", "Freesound OAuth 2.0", 0)
+  return true
+end
+
+-- 刷新 Access Token
+function FS_OAuth_Refresh(silent)
+  local client_id     = FS_get_es(FS_K.cid)
+  local client_secret = FS_get_es(FS_K.csec)
+  local refresh_token = FS_get_es(FS_K.ref)
+  if client_id=="" or client_secret=="" or refresh_token=="" then
+    -- if not silent then reaper.MB("请先保存 Client ID/Secret，并确保已有 Refresh Token。", "Freesound OAuth2", 0) end
+    if not silent then reaper.MB("Please save Client ID/Secret and ensure a Refresh Token is available.", "Freesound OAuth2", 0) end
+    return false
+  end
+  local token_url = "https://freesound.org/apiv2/oauth2/access_token/"
+  local body = FS_http_post_form(token_url, {
+    grant_type    = "refresh_token",
+    client_id     = client_id,
+    client_secret = client_secret,
+    refresh_token = refresh_token
+  })
+  local obj = FS_json.decode(body or "")
+  if not (obj and obj.access_token) then
+    -- if not silent then reaper.MB("刷新失败：\n"..tostring(body):sub(1,400), "Freesound OAuth2", 0) end
+    if not silent then reaper.MB(("Refresh failed:\n%s"):format(tostring(body):sub(1,400)), "Freesound OAuth2", 0) end
+    return false
+  end
+  FS_set_es(FS_K.acc, obj.access_token or "")
+  if obj.refresh_token and obj.refresh_token ~= "" then
+    FS_set_es(FS_K.ref, obj.refresh_token) -- 如果返回了新的 refresh_token，则一并保存
+  end
+  FS.OAUTH_BEARER = obj.access_token or ""
+  -- if not silent then reaper.MB("Access Token 已刷新。", "Freesound OAuth2", 0) end
+  if not silent then reaper.MB("Access token refreshed.", "Freesound OAuth2", 0) end
+  return true
+end
+
+-- Freesound 标签页 UI
+function FS_DrawSidebar(ctx)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), 0x00000000)
+  reaper.ImGui_PopStyleColor(ctx)
+  reaper.ImGui_Indent(ctx, 8)
+
+  -- 激活 Freesound 模式
+  do
+    local is_fs_mode = (collect_mode == COLLECT_MODE_FREESOUND)
+    local changed_enabled, want_enable = reaper.ImGui_Checkbox(ctx, "Activate Freesound mode", is_fs_mode)
+
+    if changed_enabled then
+      if want_enable then
+        -- 记住上一个模式以便回退
+        FS._last_collect_mode = collect_mode
+        collect_mode = COLLECT_MODE_FREESOUND
+        -- 进入 FS 模式后的初始化
+        FS_show_search_or_cache()
+        file_select_start, file_select_end, selected_row = nil, nil, nil
+        files_idx_cache = nil
+        CollectFiles()
+        local static = _G._soundmole_static or {}
+        _G._soundmole_static = static
+        static.filtered_list_map, static.last_filter_text_map = {}, {}
+      else
+        -- 取消勾选则从 Freesound 退回之前的模式（如果记录）
+        if FS._last_collect_mode and FS._last_collect_mode ~= COLLECT_MODE_FREESOUND then
+          collect_mode = FS._last_collect_mode
+        end
+      end
+    end
+
+    -- 只有当前模式为 Freesound 时才保持勾选，否则自动取消勾选
+    FS.ENABLED = (collect_mode == COLLECT_MODE_FREESOUND)
+    reaper.ImGui_BeginDisabled(ctx, not FS.ENABLED)
+  end
+
+  reaper.ImGui_SeparatorText(ctx, "Search Sounds")
+
+  -- 搜索框
+  reaper.ImGui_Text(ctx, "Search")
+  reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_SetNextItemWidth(ctx, 274)
+
+  local _, q_val = reaper.ImGui_InputText(ctx, "##fs_query", FS_get_query())
+  if q_val ~= nil then FS_set_query(q_val) end
+
+  -- Arrange by
+  reaper.ImGui_Text(ctx, "Arrange by")
+  reaper.ImGui_SameLine(ctx)
+  local arr = { "Timbre", "Tonality" }
+  reaper.ImGui_SetNextItemWidth(ctx, 250)
+  local arr_changed, arr_idx0 = reaper.ImGui_Combo(ctx, "##fs_arrange", (FS.ui.arrange_idx or 1)-1, __z(arr))
+  if arr_changed then FS.ui.arrange_idx = (arr_idx0 or 0) + 1 end
+
+  -- Sort by
+  reaper.ImGui_Text(ctx, "Sort by")
+  reaper.ImGui_SameLine(ctx)
+  local sorts = {
+    "Relevance","Rating","Duration","Downloads",
+    "Creation Date (newest first)","Creation Date (oldest first)"
+  }
+  reaper.ImGui_SetNextItemWidth(ctx, 273)
+  local s_changed, s_idx0 = reaper.ImGui_Combo(ctx, "##fs_sort", (FS.ui.sort_idx or 1)-1, __z(sorts))
+  if s_changed then FS.ui.sort_idx = (s_idx0 or 0) + 1 end
+
+  -- Number of results
+  reaper.ImGui_Text(ctx, "Number of results")
+  reaper.ImGui_SetNextItemWidth(ctx, 320)
+  local nr_changed, nr = reaper.ImGui_SliderInt(ctx, "##fs_num", FS.ui.num_results or 200, 1, 450)
+  if nr_changed then FS.ui.num_results = nr end
+
+  -- Maximum duration
+  reaper.ImGui_Text(ctx, "Maximum duration")
+  reaper.ImGui_SetNextItemWidth(ctx, 320)
+  local md_changed, md = reaper.ImGui_SliderDouble(ctx, "##fs_maxdur", FS.ui.max_minutes or 7.5, 0.5, 30.0, "%.1f")
+  if md_changed then FS.ui.max_minutes = md end
+
+  -- 清空回到本地增量库
+  if reaper.ImGui_Button(ctx, "Clear search (show local cache)", 200, 32) then
+    FS_set_query("") -- 清空缓存
+    collect_mode = COLLECT_MODE_FREESOUND
+    FS_LoadSearchDB(FS.CACHE_DB_FILE)
+
+    -- 刷新
+    file_select_start, file_select_end, selected_row = nil, nil, nil
+    files_idx_cache = nil
+    CollectFiles()
+
+    local static = _G._soundmole_static or {}
+    _G._soundmole_static = static
+    static.filtered_list_map, static.last_filter_text_map = {}, {}
+  end
+
+  reaper.ImGui_SameLine(ctx)
+
+  if reaper.ImGui_Button(ctx, "Search", 112, 32) then
+    local q = FS_get_query():match("^%s*(.-)%s*$")
+
+    if q == "" then
+      collect_mode = COLLECT_MODE_FREESOUND
+      FS_LoadSearchDB(FS.CACHE_DB_FILE)
+    else
+      collect_mode = COLLECT_MODE_FREESOUND
+      FS.last_query = q
+      FS_set_query(q)  -- 回写，保证输入框不丢词
+
+      local basename, wrote_total, err_excerpt = FS_fetch_and_build_db(
+        q, FS.ui.sort_idx, FS.ui.max_minutes, FS.ui.num_results
+      )
+
+      FS_LoadSearchDB(basename)
+
+      file_select_start, file_select_end, selected_row = nil, nil, nil
+      files_idx_cache = nil
+      CollectFiles()
+
+      local static = _G._soundmole_static or {}
+      _G._soundmole_static = static
+      static.filtered_list_map, static.last_filter_text_map = {}, {}
+
+      if (wrote_total or 0) == 0 and (err_excerpt or "") ~= "" then
+        -- reaper.ShowMessageBox("Freesound：未获得结果或 API 响应异常。\n"..tostring(err_excerpt), "Soundmole", 0)
+        reaper.ShowMessageBox("Freesound: No results or an unexpected API response.\n" .. tostring(err_excerpt), "Soundmole", 0)
+      end
+    end
+  end
+  
+  -- OAuth 2.0 设置
+  -- if reaper.ImGui_CollapsingHeader(ctx, "Original download (OAuth2 settings)") then
+  reaper.ImGui_SeparatorText(ctx, "Original download (OAuth 2.0 settings)")
+  local changed_uo, val_uo = reaper.ImGui_Checkbox(ctx, "Use original files (OAuth 2.0)", FS.USE_ORIGINAL)
+  if changed_uo then
+    FS.USE_ORIGINAL = val_uo
+    reaper.SetExtState(EXT_SECTION, "fs_use_original", (val_uo and "1" or "0"), true)
+  end
+  reaper.ImGui_SameLine(ctx)
+  HelpMarker("Download/preview the original audio via OAuth 2.0 (requires a valid access token). Uses the original file instead of the MP3/OGG preview. \n")
+
+  local cid   = FS_get_es("fs_oauth_client_id")
+  local csec  = FS_get_es("fs_oauth_client_secret")
+  local redir = FS_get_es("fs_oauth_redirect_uri")
+  local acc   = FS_get_es("fs_oauth")
+  local ref   = FS_get_es("fs_oauth_refresh")
+
+  -- 显示明文
+  FS.ui = FS.ui or {}
+  local show_secret = FS.ui._show_secrets == true
+  local pwd_flags = show_secret and 0 or reaper.ImGui_InputTextFlags_Password()
+
+  reaper.ImGui_Text(ctx, "Client ID")
+  reaper.ImGui_SetNextItemWidth(ctx, 320)
+  local _, v1 = reaper.ImGui_InputText(ctx, "##cid", cid, pwd_flags)
+  if v1 ~= nil then FS_set_es("fs_oauth_client_id", v1) end
+
+  reaper.ImGui_Text(ctx, "Client Secret")
+  reaper.ImGui_SetNextItemWidth(ctx, 320)
+  local _, v2 = reaper.ImGui_InputText(ctx, "##csec", csec, pwd_flags)
+  if v2 ~= nil then FS_set_es("fs_oauth_client_secret", v2) end
+
+  -- 切换明/暗文
+  local changed_show, sv = reaper.ImGui_Checkbox(ctx, "Show values", show_secret)
+  if changed_show then FS.ui._show_secrets = sv end
+
+  if reaper.ImGui_Button(ctx, "Open authorization page", 200, 32) then FS_OAuth_OpenAuthorize() end
+  reaper.ImGui_Text(ctx, "Paste authorization code:")
+
+  FS.ui = FS.ui or {}
+  reaper.ImGui_SetNextItemWidth(ctx, 320)
+  local _, code_in = reaper.ImGui_InputText(ctx, "##auth_code", FS.ui.oauth_code or "")
+  if code_in ~= nil then FS.ui.oauth_code = code_in end
+
+  if reaper.ImGui_Button(ctx, "Exchange authorization code", 200, 32) and (FS.ui.oauth_code or "") ~= "" then
+    FS_OAuth_ExchangeCode(FS.ui.oauth_code or "")
+  end
+
+  local skip_this_frame = false
+  if FS.ui and FS.ui._oauth_just_saved then
+    skip_this_frame = true
+    FS.ui._oauth_just_saved = nil
+  end
+
+  local acc_now = FS_get_es(FS_K.acc)
+  reaper.ImGui_Text(ctx, "Access token (Bearer)")
+  reaper.ImGui_SetNextItemWidth(ctx, 320)
+  local acc_changed, acc_val = reaper.ImGui_InputText(ctx, "##acc", acc_now)
+  if acc_changed and not skip_this_frame then
+    FS_set_es(FS_K.acc, acc_val)
+    FS.OAUTH_BEARER = acc_val
+  end
+
+  local ref_now = FS_get_es(FS_K.ref)
+  reaper.ImGui_Text(ctx, "Refresh token")
+  reaper.ImGui_SetNextItemWidth(ctx, 320)
+  local ref_changed, ref_val = reaper.ImGui_InputText(ctx, "##ref", ref_now)
+  if ref_changed and not skip_this_frame then
+    FS_set_es(FS_K.ref, ref_val)
+  end
+
+  if reaper.ImGui_Button(ctx, "Refresh access token", 200, 32) then FS_OAuth_Refresh(false) end
+  reaper.ImGui_SameLine(ctx)
+  HelpMarker("Refresh the OAuth 2.0 access token when original-file downloads start failing (e.g., 401/403) or when the token is about to expire. Some providers rotate the refresh token on refresh. If a new one is returned, it will be saved automatically.\n")
+
+  reaper.ImGui_EndDisabled(ctx)
+  reaper.ImGui_Unindent(ctx, 8)
 end
 
 function loop()
@@ -6578,6 +7938,14 @@ function loop()
             table.remove(saved_search_list, remove_search_idx)
             SaveSavedSearch(EXT_SECTION, saved_search_list)
             remove_search_idx = nil
+          end
+          reaper.ImGui_EndTabItem(ctx)
+        end
+
+        -- TAB 标签页 Freesound 节点
+        if reaper.ImGui_BeginTabItem(ctx, 'Freesound') then
+          if FS and type(FS_DrawSidebar)=="function" then
+            FS_DrawSidebar(ctx)
           end
           reaper.ImGui_EndTabItem(ctx)
         end
@@ -8947,6 +10315,11 @@ function loop()
       SaveExitSettings()      -- 保存状态
       return
     end
+  end
+
+  -- FreeSurround 初始化钩子
+  if FS and type(FS_InitHooks)=="function" then
+    FS_InitHooks()
   end
 
   if open then
