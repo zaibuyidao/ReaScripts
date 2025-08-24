@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7629fabfccfa7921e2233e1f671cd01c10756694">
+<index version="1" name="zaibuyidao Scripts" commit="1715d8f6f51200184cdb24b30b6c68d540ab104f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14525,6 +14525,15 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/7629fabfccfa7921e2233e1f671cd01c10756694/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/7629fabfccfa7921e2233e1f671cd01c10756694/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/7629fabfccfa7921e2233e1f671cd01c10756694/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.42" author="zaibuyidao" time="2025-08-24T14:28:05Z">
+        <changelog><![CDATA[Added Freesound mode, allowing direct search of online resources within Soundmole. If you want to download the original files (instead of preview MP3/OGG), you need to complete OAuth 2.0 authorization.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/1715d8f6f51200184cdb24b30b6c68d540ab104f/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/1715d8f6f51200184cdb24b30b6c68d540ab104f/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/1715d8f6f51200184cdb24b30b6c68d540ab104f/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/1715d8f6f51200184cdb24b30b6c68d540ab104f/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/1715d8f6f51200184cdb24b30b6c68d540ab104f/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
