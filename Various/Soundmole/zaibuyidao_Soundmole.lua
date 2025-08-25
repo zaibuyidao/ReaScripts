@@ -5478,7 +5478,7 @@ end
 -- 配置与状态
 FS = FS or {
   ENABLED           = false, -- 勾选激活
-  TOKEN             = reaper.GetExtState(EXT_SECTION, "fs_oauth_client_secret") or "",
+  TOKEN             = reaper.GetExtState(EXT_SECTION, "fs_api_token") or "", -- reaper.GetExtState(EXT_SECTION, "fs_oauth_client_secret") or "",
   DB_DIR            = nil, -- 脚本目录下 FreesoundDB/
   CACHE_DB_FILE     = "FreesoundDB.MoleFileList",
   SEARCH_DB_FILE    = "FreesoundSearch.MoleFileList",
@@ -6409,6 +6409,23 @@ function FS_OAuth_Refresh(silent)
   return true
 end
 
+function FS_DrawApiTokenField(ctx)
+  reaper.ImGui_Text(ctx, "API key (token)")
+  reaper.ImGui_SetNextItemWidth(ctx, 320)
+  FS.ui = FS.ui or {}
+  local show_secret = FS.ui._show_secrets == true
+  local flags = show_secret and 0 or reaper.ImGui_InputTextFlags_Password()
+  local cur = reaper.GetExtState(EXT_SECTION, "fs_api_token") or ""
+  local changed, v = reaper.ImGui_InputText(ctx, "##fs_api_token", cur, flags)
+  if changed and v ~= nil then
+    reaper.SetExtState(EXT_SECTION, "fs_api_token", v, true)
+    FS.TOKEN = v or ""
+  end
+  reaper.ImGui_SameLine(ctx)
+  -- HelpMarker("Freesound API v2 key，用于调用 /search/text/ 等只读接口。未启用 OAuth 也必须提供此值才能拿到预览URL。")
+  HelpMarker("Paste your Freesound API key (token). Used for /search/text etc. If OAuth is disabled, this is still required to fetch preview URLs.")
+end
+
 -- Freesound 标签页 UI
 function FS_DrawSidebar(ctx)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), 0x00000000)
@@ -6486,6 +6503,9 @@ function FS_DrawSidebar(ctx)
   reaper.ImGui_SetNextItemWidth(ctx, 320)
   local md_changed, md = reaper.ImGui_SliderDouble(ctx, "##fs_maxdur", FS.ui.max_minutes or 7.5, 0.5, 30.0, "%.1f")
   if md_changed then FS.ui.max_minutes = md end
+
+  -- API Token 输入框
+  FS_DrawApiTokenField(ctx)
 
   -- 清空回到本地增量库
   if reaper.ImGui_Button(ctx, "Clear search (show local cache)", 200, 32) then
