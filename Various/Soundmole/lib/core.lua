@@ -54,12 +54,69 @@ function SaveSavedSearch(EXT_SECTION, saved_search_list)
   reaper.SetExtState(EXT_SECTION, "saved_search_list", str, true)
 end
 
--- UCS 标签
+-- 是否为有效的 PCM_source*
+local function is_pcm_source(s)
+  return s and reaper.ValidatePtr(s, "PCM_source*")
+end
+
+-- 旧版本备用，但不够严谨
+-- function GetRootSource(src)
+--   -- 过滤空对象／非 MediaSource*
+--   if not src or not reaper.ValidatePtr(src, "MediaSource*") then
+--     return nil
+--   end
+--   while reaper.GetMediaSourceType(src, "") == "SECTION" do
+--     local parent = reaper.GetMediaSourceParent(src)
+--     if not parent or not reaper.ValidatePtr(parent, "MediaSource*") then break end
+--     src = parent
+--   end
+--   return src
+-- end
+
+function GetRootSource(src)
+  if not is_pcm_source(src) then return nil end
+
+  local s = src
+  local guard = 0
+  while true do
+    local t = reaper.GetMediaSourceType(s, "") or ""
+
+    -- 非音频源不支持 PCM 元数据
+    if t == "MIDI" or t == "VIDEO" then
+      return nil
+    end
+
+    local p = reaper.GetMediaSourceParent(s)
+    if not is_pcm_source(p) then
+      break -- 没有父节点，s 已是根
+    end
+
+    if t == "SECTION" or true then
+      s = p
+    end
+
+    guard = guard + 1
+    if guard > 16 then break end
+  end
+  return s
+end
+
+function GetMediaFileMetadataSafe(src, id)
+  local root = GetRootSource(src) or src
+  if not reaper.ValidatePtr(root, "PCM_source*") then
+    return false, nil
+  end
+  return reaper.GetMediaFileMetadata(root, id)
+end
+
+-- UCS 标签读取
 function get_ucstag(source, tag)
-  if not source then return end
-  local _, val = reaper.GetMediaFileMetadata(source, "ASWG:" .. tag)
-  if not val or val == "" then return end
-  return val
+  if not source or not tag or tag == "" then return nil end
+  local ok, val = GetMediaFileMetadataSafe(source, "ASWG:" .. tostring(tag))
+  if ok and val and val ~= "" then
+    return val
+  end
+  return nil
 end
 
 --------------------------------------------- 数据库 ---------------------------------------------

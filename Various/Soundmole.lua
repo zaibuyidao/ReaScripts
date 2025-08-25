@@ -1,9 +1,13 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.43
+-- @version 1.0.44
 -- @changelog
---   Added Freesound mode, allowing direct search of online resources within Soundmole. If you want to download the original files (instead of preview MP3/OGG), you need to complete OAuth 2.0 authorization.
---   Added "API key (token)" field in the Freesound sidebar to call /search/text and fetch MP3/OGG preview URLs without OAuth.
+--   Fixed Media Items error PCM_source now uses safe metadata read.
+--   Fixed get_ucstag wrong call now uses local safe function.
+--   Fixed ImGui Missing EndChild warning now always pairs calls.
+--   Fixed database deletion not taking effect now closes stream before deletion and refreshes state.
+--   Hardened waveform cache save now prevents nil in format.
+--   Compatibility non audio sources are now skipped for metadata reads.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

@@ -390,6 +390,47 @@ function SimpleHash(str)
   -- return ("%013x"):format(hash)
 end
 
+-- 把生成阶段的字段统一到 pixel_cnt / channel_count / src_len，并校验 peaks
+function _normalize_waveform_data(data)
+  if type(data) ~= "table" then return nil, "data not table" end
+
+  local peaks = data.peaks
+  if type(peaks) ~= "table" or #peaks == 0 then
+    return nil, "peaks empty"
+  end
+
+  -- 声道数优先取 data.channel_count，否则用 #peaks
+  local channels = tonumber(data.channel_count) or #peaks
+  if channels <= 0 then return nil, "channel_count invalid" end
+  if channels > #peaks then channels = #peaks end
+
+  -- 像素数优先取 data.pixel_cnt / data.pixel_count，否则以第一个声道长度为准
+  local px_cnt = tonumber(data.pixel_cnt) or tonumber(data.pixel_count)
+  if not px_cnt then
+    local ch1 = peaks[1]
+    if type(ch1) == "table" then px_cnt = #ch1 end
+  end
+  if not px_cnt or px_cnt <= 0 then
+    return nil, "pixel_cnt invalid"
+  end
+
+  local src_len = tonumber(data.src_len) or tonumber(data.length) or 0
+
+  for ch = 1, channels do
+    local row = peaks[ch]
+    if type(row) ~= "table" then return nil, "peaks row invalid" end
+    if #row < px_cnt then px_cnt = #row end
+  end
+  if px_cnt <= 0 then return nil, "pixel_cnt <= 0" end
+
+  return {
+    peaks         = peaks,
+    channel_count = channels,
+    pixel_cnt     = px_cnt,
+    src_len       = src_len
+  }
+end
+
 function CacheFilename(filepath)
   filepath = normalize_path(filepath, false)
   -- 文件大小安全获取
@@ -403,21 +444,31 @@ function CacheFilename(filepath)
   return dir .. hash .. ".wfc"
 end
 
--- 保存缓存
+-- 保存缓存。如果行是 MIDI/无效文件，直接不入队
 function SaveWaveformCache(filepath, data)
   filepath = normalize_path(filepath, false)
+
+  -- 统一/校验数据，避免 format 喂入 nil
+  local norm, why = _normalize_waveform_data(data)
+  if not norm then return end
+
   local f = io.open(CacheFilename(filepath), "w+b")
   if not f then return end
-  -- 第一行info，后面每行为每个像素的峰值
-  f:write(string.format("%d,%d,%f\n", data.pixel_cnt, data.channel_count, data.src_len))
-  for px = 1, data.pixel_cnt do
-    for ch = 1, data.channel_count do
-      local minv, maxv = data.peaks[ch][px][1], data.peaks[ch][px][2]
-      f:write(string.format("%f,%f", minv, maxv))
-      if ch < data.channel_count then f:write(",") end
+
+  f:write(string.format("%d,%d,%f\n", norm.pixel_cnt, norm.channel_count, norm.src_len))
+
+  for px = 1, norm.pixel_cnt do
+    local cols = {}
+    for ch = 1, norm.channel_count do
+      local p = norm.peaks[ch][px]
+      local minv = tonumber(p and p[1]) or 0.0
+      local maxv = tonumber(p and p[2]) or 0.0
+      cols[#cols+1] = string.format("%f,%f", minv, maxv)
     end
+    f:write(table.concat(cols, ","))
     f:write("\n")
   end
+
   f:close()
 end
 
@@ -560,23 +611,12 @@ function GetSectionInfo(item, src)
   return start_offset, length
 end
 
-function GetRootSource(src)
-  -- 过滤空对象／非 MediaSource*
-  if not src or not reaper.ValidatePtr(src, "MediaSource*") then
-    return nil
-  end
-  while reaper.GetMediaSourceType(src, "") == "SECTION" do
-    local parent = reaper.GetMediaSourceParent(src)
-    if not parent or not reaper.ValidatePtr(parent, "MediaSource*") then break end
-    src = parent
-  end
-  return src
-end
-
 function get_meta_first(src, ids)
   for _, id in ipairs(ids) do
-    local ok, val = reaper.GetMediaFileMetadata(src, id)
-    if ok and val and val ~= "" then return val end
+    local ok, val = GetMediaFileMetadataSafe(src, id)
+    if ok and val and val ~= "" then
+      return val
+    end
   end
   return nil
 end
@@ -7261,25 +7301,52 @@ function loop()
                 end
                 -- 删除数据库
                 if reaper.ImGui_MenuItem(ctx, "Delete Database") then
-                  local filename = dbfile:match("[^/\\]+$")
-                  local alias = mediadb_alias[filename] or filename
-                  local res = reaper.ShowMessageBox(
-                    ("Are you sure you want to delete the database:\n%s (%s)\n\nThis action cannot be undone."):format(alias, dbfile),
-                    "Confirm Delete",
-                    4 -- 4 = Yes/No
-                  )
-                  if res == 6 then -- 6 = Yes
-                    -- 删除数据库文件本身
-                    local db_path = normalize_path(db_dir, true) .. dbfile
-                    os.remove(db_path)
-                    mediadb_alias[dbfile] = nil
-                    SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
-                    if tree_state.cur_mediadb == dbfile then
-                      tree_state.cur_mediadb = ""
-                      files_idx_cache = {}
+                  -- 保护操作，如果正在重建这个 DB，先禁止删除
+                  if db_build_task and not db_build_task.finished and db_build_task.dbfile == dbfile then
+                    reaper.ShowMessageBox("This database is currently rebuilding.\nPlease stop the task before deleting.", "Cannot Delete", 0)
+                  else
+                    local filename = dbfile:match("[^/\\]+$")
+                    local alias = mediadb_alias[filename] or filename
+                    local res = reaper.ShowMessageBox(
+                      ("Are you sure you want to delete the database?\nAlias: %s\nFile: %s\n\nThis action cannot be undone."):format(alias, dbfile),
+                      "Confirm Delete",
+                      4 -- Yes/No
+                    )
+                    if res == 6 then -- 6 = Yes
+                      -- 释放文件占用，Windows 必须先关流
+                      if _G._mediadb_stream then
+                        MediaDBStreamClose(_G._mediadb_stream)
+                        _G._mediadb_stream = nil
+                      end
+
+                      -- 真实文件路径
+                      local db_dir  = script_path .. "SoundmoleDB"
+                      local db_path = normalize_path(db_dir, true) .. dbfile
+
+                      -- 执行删除并检查结果
+                      local ok, err = os.remove(db_path)
+                      if not ok then
+                        reaper.ShowMessageBox(
+                          "Failed to delete:\n" .. tostring(db_path) .. "\n\n" .. tostring(err or ""),
+                          "Error",
+                          0
+                        )
+                      else
+                        -- 清理别名
+                        mediadb_alias[filename] = nil
+                        SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+
+                        -- 清理当前选择与缓存并刷新
+                        if tree_state.cur_mediadb == dbfile then
+                          tree_state.cur_mediadb = ""
+                          selected_row = nil
+                          files_idx_cache = {}
+                        end
+                      end
                     end
                   end
                 end
+
                 reaper.ImGui_Separator(ctx)
                 -- 添加路径到数据库
                 if reaper.ImGui_MenuItem(ctx, "Add Path to Database...") then
@@ -7972,8 +8039,8 @@ function loop()
 
         reaper.ImGui_EndTabBar(ctx)
       end
-      reaper.ImGui_EndChild(ctx)
     end
+    reaper.ImGui_EndChild(ctx)
 
     -- 表格中间分割条
     reaper.ImGui_SameLine(ctx, nil, 0)
@@ -8533,11 +8600,10 @@ function loop()
           reaper.ImGui_EndDragDropTarget(ctx)
         end
       end
-
-      reaper.ImGui_EndChild(ctx)
     else
       static.clipper = nil
     end
+    reaper.ImGui_EndChild(ctx)
     reaper.ImGui_PopStyleColor(ctx, 3) -- 恢复颜色
     reaper.ImGui_Separator(ctx)
 
@@ -9331,13 +9397,13 @@ function loop()
         last_cover_path = nil
         last_img_w      = nil
       end
-      reaper.ImGui_EndChild(ctx)
     else
       -- 无封面时重置
       last_cover_img  = nil
       last_cover_path = nil
       last_img_w      = nil
     end
+    reaper.ImGui_EndChild(ctx)
     reaper.ImGui_SameLine(ctx, nil, gap)
 
     -- 无专辑封面时右侧内容的偏移补偿
