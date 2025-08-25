@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b06f4bc145f3af490fe02be2a757f0209864ad6a">
+<index version="1" name="zaibuyidao Scripts" commit="7009d15c48b95e145b8e6ea894aaa5ff35946fe2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14544,6 +14544,20 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/b06f4bc145f3af490fe02be2a757f0209864ad6a/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/b06f4bc145f3af490fe02be2a757f0209864ad6a/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/b06f4bc145f3af490fe02be2a757f0209864ad6a/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.44" author="zaibuyidao" time="2025-08-25T16:19:41Z">
+        <changelog><![CDATA[Fixed Media Items error PCM_source now uses safe metadata read.
+Fixed get_ucstag wrong call now uses local safe function.
+Fixed ImGui Missing EndChild warning now always pairs calls.
+Fixed database deletion not taking effect now closes stream before deletion and refreshes state.
+Hardened waveform cache save now prevents nil in format.
+Compatibility non audio sources are now skipped for metadata reads.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/7009d15c48b95e145b8e6ea894aaa5ff35946fe2/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/7009d15c48b95e145b8e6ea894aaa5ff35946fe2/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/7009d15c48b95e145b8e6ea894aaa5ff35946fe2/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/7009d15c48b95e145b8e6ea894aaa5ff35946fe2/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/7009d15c48b95e145b8e6ea894aaa5ff35946fe2/Various/Soundmole/data/ucs.csv</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
