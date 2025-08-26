@@ -390,7 +390,7 @@ function SimpleHash(str)
   -- return ("%013x"):format(hash)
 end
 
--- 把生成阶段的字段统一到 pixel_cnt / channel_count / src_len，并校验 peaks
+-- 波形缓存规范化
 function _normalize_waveform_data(data)
   if type(data) ~= "table" then return nil, "data not table" end
 
@@ -399,22 +399,19 @@ function _normalize_waveform_data(data)
     return nil, "peaks empty"
   end
 
-  -- 声道数优先取 data.channel_count，否则用 #peaks
   local channels = tonumber(data.channel_count) or #peaks
-  if channels <= 0 then return nil, "channel_count invalid" end
+  if not channels or channels <= 0 then return nil, "channel_count invalid" end
   if channels > #peaks then channels = #peaks end
 
-  -- 像素数优先取 data.pixel_cnt / data.pixel_count，否则以第一个声道长度为准
   local px_cnt = tonumber(data.pixel_cnt) or tonumber(data.pixel_count)
   if not px_cnt then
     local ch1 = peaks[1]
     if type(ch1) == "table" then px_cnt = #ch1 end
   end
-  if not px_cnt or px_cnt <= 0 then
-    return nil, "pixel_cnt invalid"
-  end
+  if not px_cnt or px_cnt <= 0 then return nil, "pixel_cnt invalid" end
 
   local src_len = tonumber(data.src_len) or tonumber(data.length) or 0
+  if src_len <= 0 then return nil, "src_len invalid" end
 
   for ch = 1, channels do
     local row = peaks[ch]
@@ -448,15 +445,16 @@ end
 function SaveWaveformCache(filepath, data)
   filepath = normalize_path(filepath, false)
 
-  -- 统一/校验数据，避免 format 喂入 nil
-  local norm, why = _normalize_waveform_data(data)
+  local norm = _normalize_waveform_data(data)
   if not norm then return end
+  if not (norm.pixel_cnt and norm.channel_count and norm.src_len) then return end
+  if norm.pixel_cnt <= 0 or norm.channel_count <= 0 or norm.src_len <= 0 then return end
 
   local f = io.open(CacheFilename(filepath), "w+b")
   if not f then return end
 
+  -- 像素数,声道数,源时长
   f:write(string.format("%d,%d,%f\n", norm.pixel_cnt, norm.channel_count, norm.src_len))
-
   for px = 1, norm.pixel_cnt do
     local cols = {}
     for ch = 1, norm.channel_count do
@@ -3160,36 +3158,45 @@ end
 
 -- MP3 / WAV（内嵌 ID3v2）提取，WAV 如果在结尾有 ID3 chunk，也能被识别
 function ExtractID3Cover(file_path)
-  if not file_path or type(file_path) ~= "string" or file_path == "" then 
-    return 
-  end
+  if not file_path or type(file_path) ~= "string" or file_path == "" then return end
   local path = normalize_path(file_path, false)
-  local f = io.open(path, "rb")
-  if not f then 
-    return 
-  end
 
-  local header = f:read(10)
+  local f = io.open(path, "rb")
+  if not f then return end
+
+  local header = f:read(10) or ""
   local ver, tag_size, tag_data
 
-  if header and header:sub(1,3) == "ID3" then
+  if #header >= 10 and header:sub(1, 3) == "ID3" then
     -- MP3 文件开头
     ver      = header:byte(4)
     tag_size = syncsafe_to_int(header:sub(7, 10))
-    tag_data = f:read(tag_size)
+    if tag_size and tag_size > 0 then
+      tag_data = f:read(tag_size) or ""
+    end
   else
     -- 可能是 WAV 文件末尾的 ID3 chunk
-    local content = header .. f:read("*all")
+    local content = header .. (f:read("*all") or "")
     local pos = content:find("ID3", 1, true)
     if not pos then f:close() return end
+    if (pos + 9) > #content then f:close() return end
+
     local hdr2 = content:sub(pos, pos + 9)
     if hdr2:sub(1, 3) ~= "ID3" then f:close() return end
+
     ver      = hdr2:byte(4)
     tag_size = syncsafe_to_int(hdr2:sub(7, 10))
-    tag_data = content:sub(pos + 10, pos + 10 + tag_size - 1)
+    if not tag_size or tag_size <= 0 then f:close() return end
+
+    local data_start = pos + 10
+    local data_end   = data_start + tag_size - 1
+    if data_end > #content then f:close() return end
+
+    tag_data = content:sub(data_start, data_end)
   end
 
   f:close()
+  if not tag_data or #tag_data == 0 then return end
   return parse_id3_apic(tag_data, ver)
 end
 
@@ -8039,8 +8046,8 @@ function loop()
 
         reaper.ImGui_EndTabBar(ctx)
       end
+      reaper.ImGui_EndChild(ctx)
     end
-    reaper.ImGui_EndChild(ctx)
 
     -- 表格中间分割条
     reaper.ImGui_SameLine(ctx, nil, 0)
@@ -8600,10 +8607,11 @@ function loop()
           reaper.ImGui_EndDragDropTarget(ctx)
         end
       end
+
+      reaper.ImGui_EndChild(ctx)
     else
       static.clipper = nil
     end
-    reaper.ImGui_EndChild(ctx)
     reaper.ImGui_PopStyleColor(ctx, 3) -- 恢复颜色
     reaper.ImGui_Separator(ctx)
 
@@ -9397,13 +9405,13 @@ function loop()
         last_cover_path = nil
         last_img_w      = nil
       end
+      reaper.ImGui_EndChild(ctx)
     else
       -- 无封面时重置
       last_cover_img  = nil
       last_cover_path = nil
       last_img_w      = nil
     end
-    reaper.ImGui_EndChild(ctx)
     reaper.ImGui_SameLine(ctx, nil, gap)
 
     -- 无专辑封面时右侧内容的偏移补偿
@@ -9467,6 +9475,7 @@ function loop()
             cache = {peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw}
           end
 
+          local ok_for_remap = false
           if collect_mode == COLLECT_MODE_ALL_ITEMS and section_length > 0 then
             -- 区段音频
             local zoom = Wave.zoom or 1
@@ -9480,26 +9489,34 @@ function loop()
             window_start = section_offset + scroll
             window_end = window_start + visible_len
             Wave.src_len = section_len -- 始终用区段长度
+            ok_for_remap = true
           else
             -- 全音频
-            local audio_len = cache.src_len
-            local zoom = Wave.zoom or 1
-            local visible_len = math.max(audio_len / zoom, 0.01)
-            if visible_len > audio_len then visible_len = audio_len end
+            local audio_len = tonumber(cache and cache.src_len) or 0
+            if audio_len > 0 then
+              local zoom = Wave.zoom or 1
+              local visible_len = math.max(audio_len / zoom, 0.01)
+              if visible_len > audio_len then visible_len = audio_len end
 
-            local max_scroll = math.max(0, audio_len - visible_len)
-            local scroll = math.max(0, math.min(Wave.scroll or 0, max_scroll))
+              local max_scroll = math.max(0, audio_len - visible_len)
+              local scroll = math.max(0, math.min(Wave.scroll or 0, max_scroll))
 
-            window_start = scroll
-            window_end = window_start + visible_len
-            Wave.src_len = audio_len -- 始终用源音频长度
+              window_start = scroll
+              window_end = window_start + visible_len
+              Wave.src_len = audio_len -- 始终用源音频长度
+              ok_for_remap = true
+            else
+              peaks, pixel_cnt, channel_count = nil, nil, nil
+            end
           end
 
-          peaks, pixel_cnt, _, channel_count = RemapWaveformToWindow(cache, pw_region_w, window_start, window_end)
-          last_wave_info = cur_key
-          last_pixel_cnt = pw_region_w
-          last_view_len = view_len
-          last_scroll = Wave.scroll
+          if ok_for_remap then
+            peaks, pixel_cnt, _, channel_count = RemapWaveformToWindow(cache, pw_region_w, window_start, window_end)
+            last_wave_info = cur_key
+            last_pixel_cnt = pw_region_w
+            last_view_len = view_len
+            last_scroll = Wave.scroll
+          end
         end
         -- end
       end

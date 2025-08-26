@@ -1,13 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.44
+-- @version 1.0.45
 -- @changelog
---   Fixed Media Items error PCM_source now uses safe metadata read.
---   Fixed get_ucstag wrong call now uses local safe function.
---   Fixed ImGui Missing EndChild warning now always pairs calls.
---   Fixed database deletion not taking effect now closes stream before deletion and refreshes state.
---   Hardened waveform cache save now prevents nil in format.
---   Compatibility non audio sources are now skipped for metadata reads.
+--   Fixed crash when switching REAPER Database due to nil audio_len.
 --   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
