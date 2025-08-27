@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.47
+-- @version 1.0.48
 -- @changelog
 --   Font size control fixed. The slider and Ctrl plus mouse wheel now take effect immediately based on your preset table.
 --   Settings button improved.
@@ -14,7 +14,7 @@
 --   [main=main] Soundmole/zaibuyidao_Soundmole.lua
 --   [nomain] Soundmole/lib/*.lua
 --   Soundmole/data/*.csv
---   Soundmole/data/*.otf
+--   Soundmole/data/icons.otf
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
