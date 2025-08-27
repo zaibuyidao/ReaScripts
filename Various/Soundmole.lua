@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.46
+-- @version 1.0.47
 -- @changelog
 --   Font size control fixed. The slider and Ctrl plus mouse wheel now take effect immediately based on your preset table.
 --   Settings button improved.
