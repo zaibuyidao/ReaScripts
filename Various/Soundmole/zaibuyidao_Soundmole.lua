@@ -71,6 +71,10 @@ reaper.ImGui_Attach(ctx, fonts.small)
 reaper.ImGui_Attach(ctx, fonts.medium)
 reaper.ImGui_Attach(ctx, fonts.large)
 reaper.ImGui_Attach(ctx, fonts.title)
+-- 字体图标
+local icon_font_path = normalize_path(script_path .. "data/icons.otf", false)
+fonts.icon = reaper.ImGui_CreateFontFromFile(icon_font_path, 0)
+reaper.ImGui_Attach(ctx, fonts.icon)
 
 need_refresh_font  = false
 font_size          = 14 -- 内容字体大小
@@ -82,10 +86,29 @@ for _, sz in ipairs(preview_font_sizes) do
   preview_fonts[sz] = reaper.ImGui_CreateFont(set_font, sz)
   reaper.ImGui_Attach(ctx, preview_fonts[sz])
 end
+function SnapFontSize(px)
+  local best = preview_font_sizes[1]
+  local bestd = math.huge
+  for _, s in ipairs(preview_font_sizes) do
+    local d = math.abs(s - px)
+    if d < bestd then best, bestd = s, d end
+  end
+  return best
+end
+function FindFontIndex(px)
+  for i, s in ipairs(preview_font_sizes) do
+    if s == px then return i end
+  end
+  local snap = SnapFontSize(px)
+  for i, s in ipairs(preview_font_sizes) do
+    if s == snap then return i end
+  end
+  return 1
+end
 local DEFAULT_ROW_HEIGHT = 24 -- 内容行高
 local row_height         = DEFAULT_ROW_HEIGHT
 reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
-local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
+-- local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 
 -- 状态变量
 CACHE_PIXEL_WIDTH            = 2048
@@ -6732,7 +6755,7 @@ function loop()
     reaper.ImGui_BeginGroup(ctx)
     -- 计算按钮高度，让文字垂直居中
     reaper.ImGui_Dummy(ctx, 0, 0)
-    reaper.ImGui_PushFont(ctx, fonts.title, 25)
+    reaper.ImGui_PushFont(ctx, fonts.title, 26)
     reaper.ImGui_Text(ctx, ' Soundmole')
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
@@ -6978,6 +7001,30 @@ function loop()
     end
 
     reaper.ImGui_EndGroup(ctx)
+
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_BeginGroup(ctx)
+     -- 设置弹窗
+    reaper.ImGui_SameLine(ctx, nil, 0)
+    local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
+    local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "    ") -- 文字尺寸
+    local cb_w = txt_w + txt_h + 16 -- 文字宽度+勾选框大小+间距
+
+    -- 如果可用宽度足够，把光标推到右侧
+    if avail > cb_w then
+      reaper.ImGui_Dummy(ctx, avail - cb_w, 0)
+      reaper.ImGui_SameLine(ctx, nil, 0)
+    end
+
+   reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+    local gear_label = '\u{0047}'
+    if reaper.ImGui_Button(ctx, gear_label, 28, 24) then -- 使用偶数避免模糊
+      reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
+    end
+    reaper.ImGui_PopFont(ctx)
+    reaper.ImGui_EndGroup(ctx)
+
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
 
     -- 自动缩放音频表格
@@ -7003,22 +7050,16 @@ function loop()
           -- 内容字体自由缩放
           local wheel = reaper.ImGui_GetMouseWheel(ctx)
           local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+          font_size = SnapFontSize(font_size)
           if preview_fonts[font_size] then
-            reaper.ImGui_PushFont(ctx, preview_fonts[font_size], 14)
+            reaper.ImGui_PushFont(ctx, fonts.sans_serif, font_size)
           end
           if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
-            -- 找到当前字号在列表中的索引
-            local cur_idx = 1
-            for i, v in ipairs(preview_font_sizes) do
-              if v == font_size then
-                cur_idx = i
-                break
-              end
-            end
-            cur_idx = cur_idx + wheel
-            cur_idx = math.max(1, math.min(#preview_font_sizes, cur_idx))
-            font_size = preview_font_sizes[cur_idx]
-            wheel = 0
+            local idx = FindFontIndex(font_size)
+            idx = idx + (wheel > 0 and 1 or -1)
+            idx = math.max(1, math.min(#preview_font_sizes, idx))
+            font_size = preview_font_sizes[idx]
+            reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
           end
 
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 文本颜色
@@ -8346,22 +8387,16 @@ function loop()
         -- 内容字体自由缩放
         local wheel = reaper.ImGui_GetMouseWheel(ctx)
         local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+        font_size = SnapFontSize(font_size)
         if preview_fonts[font_size] then
-          reaper.ImGui_PushFont(ctx, preview_fonts[font_size], 14)
+          reaper.ImGui_PushFont(ctx, fonts.sans_serif, font_size)
         end
         if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
-          -- 找到当前字号在列表中的索引
-          local cur_idx = 1
-          for i, v in ipairs(preview_font_sizes) do
-            if v == font_size then
-              cur_idx = i
-              break
-            end
-          end
-          cur_idx = cur_idx + wheel
-          cur_idx = math.max(1, math.min(#preview_font_sizes, cur_idx))
-          font_size = preview_font_sizes[cur_idx]
-          wheel = 0
+          local idx = FindFontIndex(font_size)
+          idx = idx + (wheel > 0 and 1 or -1)
+          idx = math.max(1, math.min(#preview_font_sizes, idx))
+          font_size = preview_font_sizes[idx]
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
         end
 
         -- 上下方向键选中文件
@@ -8899,10 +8934,11 @@ function loop()
     end
 
     -- 设置弹窗
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Settings##Popup", 80) then
-      reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
-    end
+    -- reaper.ImGui_SameLine(ctx, nil, 10)
+    -- if reaper.ImGui_Button(ctx, "Settings##Popup", 80) then
+    --   reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
+    -- end
+
     -- 支持 Ctrl+P 快捷键打开设置
     if (reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()))
       and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_P()) then
@@ -8916,7 +8952,7 @@ function loop()
       local changed_font, new_font_size = reaper.ImGui_SliderInt(ctx, "##font_size_slider", font_size, FONT_SIZE_MIN, FONT_SIZE_MAX, "%d px")
       reaper.ImGui_PopItemWidth(ctx)
       if changed_font then
-        font_size = new_font_size
+        font_size = SnapFontSize(new_font_size)
         reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
         MarkFontDirty()
       end
@@ -9152,7 +9188,7 @@ function loop()
       local padding_set_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
       reaper.ImGui_SetCursorPosX(ctx, win_set_w - (btn_set_w * 2 + spacing_set + padding_set_x * 2))
 
-      if reaper.ImGui_Button(ctx, "Apply##Settings_save", btn_set_w, 36) then
+      if reaper.ImGui_Button(ctx, "Save##Settings_save", btn_set_w, 32) then
         SaveSettings()
         reaper.ImGui_CloseCurrentPopup(ctx)
       end
@@ -9182,13 +9218,13 @@ function loop()
 
       -- Cancel 按钮
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Cancel##Settings_cancel", btn_set_w, 36) then
+      if reaper.ImGui_Button(ctx, "Cancel##Settings_cancel", btn_set_w, 32) then
         reaper.ImGui_CloseCurrentPopup(ctx)
       end
       
       reaper.ImGui_SameLine(ctx)
 
-      if reaper.ImGui_Button(ctx, "Reset##Settings_reset", btn_set_w, 36) then
+      if reaper.ImGui_Button(ctx, "Reset##Settings_reset", btn_set_w, 32) then
         -- 恢复各项设置为默认值
         collect_mode = DEFAULTS.collect_mode
         doubleclick_action = DEFAULTS.doubleclick_action

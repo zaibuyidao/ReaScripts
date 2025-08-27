@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.45
+-- @version 1.0.46
 -- @changelog
---   Fixed crash when switching REAPER Database due to nil audio_len.
---   Other detailed improvements and bug fixes.
+--   Font size control fixed. The slider and Ctrl plus mouse wheel now take effect immediately based on your preset table.
+--   Settings button improved.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
@@ -14,6 +14,7 @@
 --   [main=main] Soundmole/zaibuyidao_Soundmole.lua
 --   [nomain] Soundmole/lib/*.lua
 --   Soundmole/data/*.csv
+--   Soundmole/data/*.otf
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
