@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="12ca6a4efdbe88d7a2c0fc28f0a56fc9703cb7d0">
+<index version="1" name="zaibuyidao Scripts" commit="cc1057b52c4acc9e651e446ebcec762187885118">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14567,6 +14567,26 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/12ca6a4efdbe88d7a2c0fc28f0a56fc9703cb7d0/Various/Soundmole/lib/utils.lua</source>
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/12ca6a4efdbe88d7a2c0fc28f0a56fc9703cb7d0/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/12ca6a4efdbe88d7a2c0fc28f0a56fc9703cb7d0/Various/Soundmole/data/ucs.csv</source>
+      </version>
+      <version name="1.0.47" author="zaibuyidao" time="2025-08-27T14:39:19Z">
+        <changelog><![CDATA[Font size control fixed. The slider and Ctrl plus mouse wheel now take effect immediately based on your preset table.
+Settings button improved.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/76ba7150805a5513f4d6c4c928d28a9e0265d37a/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/76ba7150805a5513f4d6c4c928d28a9e0265d37a/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/76ba7150805a5513f4d6c4c928d28a9e0265d37a/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/76ba7150805a5513f4d6c4c928d28a9e0265d37a/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/76ba7150805a5513f4d6c4c928d28a9e0265d37a/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/76ba7150805a5513f4d6c4c928d28a9e0265d37a/Various/Soundmole/data/icons.otf</source>
+      </version>
+      <version name="1.0.48" author="zaibuyidao" time="2025-08-27T14:41:21Z">
+        <changelog><![CDATA[Font size control fixed. The slider and Ctrl plus mouse wheel now take effect immediately based on your preset table.
+Settings button improved.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/cc1057b52c4acc9e651e446ebcec762187885118/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/cc1057b52c4acc9e651e446ebcec762187885118/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/cc1057b52c4acc9e651e446ebcec762187885118/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/cc1057b52c4acc9e651e446ebcec762187885118/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/cc1057b52c4acc9e651e446ebcec762187885118/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/cc1057b52c4acc9e651e446ebcec762187885118/Various/Soundmole/data/icons.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
