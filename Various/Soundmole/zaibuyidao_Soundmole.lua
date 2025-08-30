@@ -348,6 +348,10 @@ local colors = {
   previewed_text       = 0x888888FF, -- 已预览过的暗一些
   timeline_def_color   = 0xCFCFCFFF, -- 时间线默认颜色
   thesaurus_text       = 0xBCC694FF, -- 同义词文本颜色
+  text                 = 0xFFF0F0F0, -- 文字颜色
+  accent               = 0xFFCC66FF, -- 强调色
+  accent_active        = 0xFFDD88FF, -- 强调色激活4
+  gary                 = 0x909090FF, -- 灰色
 }
 
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
@@ -1334,6 +1338,7 @@ function RestartPreviewWithParams(from_wave_pos)
     reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
     reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
     reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", cur_pos)
+    ApplyPreviewOutputTrack(playing_preview)
     reaper.CF_Preview_Play(playing_preview)
     is_paused = false
   end
@@ -1757,6 +1762,7 @@ function PlayFromStart(info)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
       end
+      ApplyPreviewOutputTrack(playing_preview)
       reaper.CF_Preview_Play(playing_preview)
       wf_play_start_time = os.clock()
       wf_play_start_cursor = start_pos
@@ -1804,6 +1810,7 @@ function PlayFromCursor(info)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
       end
+      ApplyPreviewOutputTrack(playing_preview)
       reaper.CF_Preview_Play(playing_preview)
       wf_play_start_time = os.clock()
       wf_play_start_cursor = Wave.play_cursor or 0
@@ -2124,52 +2131,104 @@ end
 -- 获取本机所有盘符及其卷标
 function get_drives()
   if drive_cache and drives_loaded then return drive_cache end
-  local drives = {}
-  drive_name_map = {} -- 重置映射
-  if reaper.GetOS():find('Win') then
-    -- PowerShell 脚本：UTF-8 输出 "盘符|卷标"
-    local ps_core = '[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; ' ..
-                    'Get-WmiObject Win32_LogicalDisk | ' ..
-                    'Where-Object { $_.DriveType -eq 3 } | ' ..
-                    'ForEach-Object{ $_.DeviceID + \'|\' + $_.VolumeName }'
-    if reaper.ExecProcess then
-      -- 用 ExecProcess 静默执行，并把结果写到临时文件再读回，避免CMD弹窗
-      local tmp = (reaper.GetResourcePath() .. sep .. ("drives_%d_%d.txt"):format(os.time(), math.random(1,1e6)))
-      local ps = ps_core .. (" | Set-Content -LiteralPath '%s' -Encoding UTF8"):format(tmp:gsub("'", "''"))
-      local cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "'..ps..'"'
-      local code = tonumber(reaper.ExecProcess(cmd, 15000)) or -1
 
-      if code == 0 then
-        local f = io.open(tmp, "rb")
-        if f then
-          for line in f:lines() do
-            local drv, vol = line:match('^([A-Z]:)%|(.*)$')
-            if drv then
-              local path = drv .. '\\'
-              table.insert(drives, path)
-              drive_name_map[path] = vol or ''
-            end
+  local drives = {}
+  drive_name_map = {}
+
+  if reaper.GetOS():find('Win') then
+    local sep = package.config:sub(1,1)
+    local base = reaper.GetResourcePath() .. sep
+    local tmp_out = base .. ("drives_%d_%d.txt"):format(os.time(), math.random(1,1e6))
+    local tmp_ps1 = base .. ("drives_%d_%d.ps1"):format(os.time(), math.random(1,1e6))
+
+    do
+      local ps = ([[
+[Console]::OutputEncoding=[System.Text.Encoding]::UTF8
+$h=@{}
+
+try {
+  [System.IO.DriveInfo]::GetDrives() | ForEach-Object {
+    $id=$_.Name.Substring(0,2).ToUpper()
+    $label=""
+    try { if ($_.IsReady) { $label=$_.VolumeLabel } } catch {}
+    $h[$id]=$label
+  }
+} catch {}
+
+try {
+  Get-WmiObject Win32_LogicalDisk | ForEach-Object {
+    $id=$_.DeviceID.ToUpper()
+    if (-not $h.ContainsKey($id)) { $h[$id]=$_.VolumeName }
+  }
+} catch {}
+
+try {
+  Get-PSDrive -PSProvider FileSystem | ForEach-Object {
+    $id=($_.Name + ":").ToUpper()
+    if (-not $h.ContainsKey($id)) { $h[$id]="" }
+  }
+} catch {}
+
+$h.Keys | Sort-Object | ForEach-Object {
+  "{0}|{1}" -f $_, $h[$_]
+} | Out-File -FilePath "]] .. tmp_out:gsub("\\","/") .. [[" -Encoding utf8
+]])
+      local f = io.open(tmp_ps1, "wb")
+      if f then f:write(ps); f:close() end
+    end
+
+    -- 隐藏执行，避免CMD弹窗
+    local cmd = ('powershell -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "%s"'):format(tmp_ps1)
+    if reaper.ExecProcess then
+      reaper.ExecProcess(cmd, 15000)
+    else
+      os.execute(cmd)
+    end
+
+    -- 读取结果，去除首行 UTF-8 BOM
+    local f = io.open(tmp_out, "rb")
+    if f then
+      local first = true
+      for line in f:lines() do
+        if first then
+          first = false
+          if line:sub(1,3) == string.char(0xEF,0xBB,0xBF) then
+            line = line:sub(4)
           end
-          f:close()
+        end
+        local drv, vol = line:match('^([A-Z]:)%|(.*)$')
+        if drv then
+          local path = drv .. '\\'
+          table.insert(drives, path)
+          drive_name_map[path] = vol or ''
         end
       end
-      os.remove(tmp)
-    else
-      -- 回退使用popen
-      local cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "'..ps_core..'"'
-      local handle = io.popen(cmd)
-      if handle then
-        for line in handle:lines() do
-          local drv, vol = line:match('^([A-Z]:)%|(.*)$')
-          if drv then
-            local path = drv .. '\\'
-            table.insert(drives, path)
-            drive_name_map[path] = vol or ''
-          end
+      f:close()
+    end
+    os.remove(tmp_out)
+    os.remove(tmp_ps1)
+
+    -- 兜底
+    if #drives == 0 then
+      local tmp2 = base .. ("drives_%d_%d.txt"):format(os.time(), math.random(1,1e6))
+      local cmd2 = ('cmd /d /s /c fsutil fsinfo drives > "%s"'):format(tmp2)
+      if reaper.ExecProcess then
+        reaper.ExecProcess(cmd2, 8000)
+      else
+        os.execute(cmd2)
+      end
+      local f2 = io.open(tmp2, "rb")
+      if f2 then
+        local data = f2:read("*a")
+        f2:close()
+        os.remove(tmp2)
+        for letter in data:gmatch('([A-Z]:\\)') do
+          table.insert(drives, letter)
+          drive_name_map[letter] = drive_name_map[letter] or ''
         end
-        handle:close()
       end
     end
+
   else
     table.insert(drives, '/')
     drive_name_map['/'] = ''
@@ -5684,7 +5743,7 @@ end
 
 function FS_s(s) s = tostring(s or ""):gsub("\r"," "):gsub("\n"," "):gsub('"',"'") return s end
 
--- =============== 写入DB（含 FreesoundDB 去重与缓存名防冲突） ===============
+-- 写入DB
 function FS_write_batch_to_db(results, dbpath)
   local wrote  = 0
   local cur_q  = tostring(FS._cur_query or "")
@@ -6706,6 +6765,97 @@ function FS_DrawSidebar(ctx)
   reaper.ImGui_Unindent(ctx, 8)
 end
 
+--------------------------------------------- 预览输出路由到轨道 ---------------------------------------------
+
+local preview_route_enable = reaper.GetExtState(EXT_SECTION, "preview_route_enable") == "1"
+local preview_route_name   = reaper.GetExtState(EXT_SECTION, "preview_route_name")
+if not preview_route_name or preview_route_name == "" then preview_route_name = "Soundmole Preview" end
+local preview_route_mode   = reaper.GetExtState(EXT_SECTION, "preview_route_mode")
+if preview_route_mode ~= "auto" and preview_route_mode ~= "named" and preview_route_mode ~= "selected" then
+  preview_route_mode = "auto"
+end
+
+-- 找到最上方的同名轨道
+function FindTopmostTrackByName(name)
+  if not name or name == "" then return nil end
+  local cnt = reaper.CountTracks(0)
+  for i = 0, cnt - 1 do
+    local tr = reaper.GetTrack(0, i)
+    local _, tr_name = reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", "", false)
+    if tr_name == name then return tr end
+  end
+  return nil
+end
+
+-- 找到第一条选中的轨道
+local function FindFirstSelectedTrack()
+  local cnt = reaper.CountTracks(0)
+  for i = 0, cnt - 1 do
+    local tr = reaper.GetTrack(0, i)
+    if reaper.IsTrackSelected(tr) then return tr end
+  end
+  return nil
+end
+
+-- 应用输出轨道到当前预览对象
+function ApplyPreviewOutputTrack(preview)
+  if not preview or not preview_route_enable then return end
+  if not reaper.CF_Preview_SetOutputTrack then return end
+
+  local target = nil
+  if preview_route_mode == "selected" then
+    target = FindFirstSelectedTrack()
+  elseif preview_route_mode == "named" then
+    target = FindTopmostTrackByName(preview_route_name)
+  else
+    target = FindFirstSelectedTrack() or FindTopmostTrackByName(preview_route_name)
+  end
+
+  if target then
+    local proj = reaper.EnumProjects(-1, "")
+    reaper.CF_Preview_SetOutputTrack(preview, proj, target)
+  end
+end
+
+--- 设置面板UI
+function RenderPreviewRouteSettingsUI(ctx)
+  reaper.ImGui_SeparatorText(ctx, "Preview Routing")
+  -- 预览路由开关
+  local changed_enable, new_enable = reaper.ImGui_Checkbox(ctx, "Enable preview routing", preview_route_enable)
+  if changed_enable then
+    preview_route_enable = new_enable
+    reaper.SetExtState(EXT_SECTION, "preview_route_enable", new_enable and "1" or "0", true)
+  end
+
+  -- 路由模式
+  reaper.ImGui_Text(ctx, "Routing mode:")
+  local modes = { "Auto: first selected, else named", "Named track only", "First selected track only" }
+  local map   = { "auto", "named", "selected" }
+  local cur_i = (preview_route_mode == "named") and 2 or (preview_route_mode == "selected") and 3 or 1
+
+  for i = 1, 3 do
+    if i > 1 then reaper.ImGui_SameLine(ctx) end
+    local changed = reaper.ImGui_RadioButton(ctx, modes[i], cur_i == i)
+    if changed then
+      cur_i = i
+      preview_route_mode = map[i]
+      reaper.SetExtState(EXT_SECTION, "preview_route_mode", preview_route_mode, true)
+    end
+  end
+
+  reaper.ImGui_Text(ctx, "Named track")
+  reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_SetNextItemWidth(ctx, -65)
+  local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
+  if changed_name and new_name ~= nil then
+    preview_route_name = new_name
+    reaper.SetExtState(EXT_SECTION, "preview_route_name", preview_route_name or "", true)
+  end
+  reaper.ImGui_SameLine(ctx)
+  HelpMarker("If multiple tracks share the same name, the topmost one is used.")
+  -- reaper.ImGui_TextColored(ctx, colors.gary, "If multiple tracks share the same name, the topmost one is used.")
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -7016,10 +7166,70 @@ function loop()
       reaper.ImGui_SameLine(ctx, nil, 0)
     end
 
-   reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    -- 旧版
+    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+    -- reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+    -- local gear_label = '\u{0047}'
+    -- if reaper.ImGui_Button(ctx, gear_label, 28, 24) then -- 使用偶数避免模糊
+    --   reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
+    -- end
+    -- reaper.ImGui_PopFont(ctx)
+    -- reaper.ImGui_PopStyleColor(ctx)
+    -- reaper.ImGui_EndGroup(ctx)
+
+    -- 文字版
+    -- reaper.ImGui_PushFont(ctx, fonts.icon, 18) -- 注意：PushFont 不接受“字号参数”，字号在 CreateFont 时就定了
+    -- local gear_label = '\u{0047}'
+    -- reaper.ImGui_Text(ctx, gear_label)
+    -- local hovered = reaper.ImGui_IsItemHovered(ctx)
+    -- if hovered then
+    --   reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+    -- end
+    -- if reaper.ImGui_IsItemClicked(ctx, 0) then
+    --   reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
+    -- end
+    -- reaper.ImGui_PopFont(ctx)
+    -- reaper.ImGui_EndGroup(ctx)
+
+    -- 按钮版
+    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 0, 0)
+    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),          colors.transparent)
+    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(),   colors.transparent)
+    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),    colors.transparent)
+
+    -- reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+    -- local gear_label = '\u{0047}'
+    -- if reaper.ImGui_Button(ctx, gear_label) then
+    --   reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
+    -- end
+    -- reaper.ImGui_PopFont(ctx)
+    -- reaper.ImGui_PopStyleColor(ctx, 3)
+    -- reaper.ImGui_PopStyleVar(ctx, 1)
+    -- reaper.ImGui_EndGroup(ctx)
+
     reaper.ImGui_PushFont(ctx, fonts.icon, 18)
     local gear_label = '\u{0047}'
-    if reaper.ImGui_Button(ctx, gear_label, 28, 24) then -- 使用偶数避免模糊
+    local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+    local tw, th = reaper.ImGui_CalcTextSize(ctx, gear_label)
+
+    local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+    local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+    local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+    local col_normal  = (colors and colors.text) or 0xFFFFFFFF
+    local col_hovered = (colors and colors.accent) or 0xFFCC66FF
+    local col_active  = (colors and colors.accent_active) or col_hovered
+    local col = hovered and (active and col_active or col_hovered) or col_normal
+
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+    reaper.ImGui_Text(ctx, gear_label)
+    reaper.ImGui_PopStyleColor(ctx)
+
+    if hovered then
+      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+    end
+    if clicked then
       reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
     end
     reaper.ImGui_PopFont(ctx)
@@ -8665,6 +8875,7 @@ function loop()
             reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
             reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
           end
+          ApplyPreviewOutputTrack(playing_preview)
           reaper.CF_Preview_Play(playing_preview)
           is_paused = false
           paused_position = 0
@@ -8728,6 +8939,7 @@ function loop()
             reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
             reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", paused_position)
           end
+          ApplyPreviewOutputTrack(playing_preview)
           reaper.CF_Preview_Play(playing_preview)
           wf_play_start_time = os.clock()
           wf_play_start_cursor = paused_position
@@ -8995,6 +9207,9 @@ function loop()
       reaper.ImGui_Separator(ctx)
       local changed
       changed, auto_play_selected = reaper.ImGui_Checkbox(ctx, "Auto-play selected media", auto_play_selected)
+
+      -- 预览输出路由到轨道
+      RenderPreviewRouteSettingsUI(ctx)
 
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Datebase Settings:")

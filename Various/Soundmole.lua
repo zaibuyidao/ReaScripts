@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.48
+-- @version 1.0.49
 -- @changelog
---   Font size control fixed. The slider and Ctrl plus mouse wheel now take effect immediately based on your preset table.
---   Settings button improved.
+--   Added preview routing to a track, supporting auto or named track.
+--   Fixed incomplete Windows drive enumeration, adding support for local, removable, and mapped network drives, including Chinese volume labels.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
