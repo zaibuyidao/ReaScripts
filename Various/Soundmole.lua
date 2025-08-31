@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.49
+-- @version 1.0.50
 -- @changelog
---   Added preview routing to a track, supporting auto or named track.
---   Fixed incomplete Windows drive enumeration, adding support for local, removable, and mapped network drives, including Chinese volume labels.
+--   Adjustments to parts of the UI.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

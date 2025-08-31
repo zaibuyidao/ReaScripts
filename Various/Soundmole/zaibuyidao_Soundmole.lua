@@ -348,10 +348,11 @@ local colors = {
   previewed_text       = 0x888888FF, -- 已预览过的暗一些
   timeline_def_color   = 0xCFCFCFFF, -- 时间线默认颜色
   thesaurus_text       = 0xBCC694FF, -- 同义词文本颜色
-  text                 = 0xFFF0F0F0, -- 文字颜色
+  text                 = 0x909090FF, -- 文字颜色
   accent               = 0xFFCC66FF, -- 强调色
-  accent_active        = 0xFFDD88FF, -- 强调色激活4
+  accent_active        = 0xFFDD88FF, -- 强调色激活
   gary                 = 0x909090FF, -- 灰色
+  light_gary           = 0xC0C0C020, -- 浅灰
 }
 
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
@@ -6856,6 +6857,296 @@ function RenderPreviewRouteSettingsUI(ctx)
   -- reaper.ImGui_TextColored(ctx, colors.gary, "If multiple tracks share the same name, the topmost one is used.")
 end
 
+--------------------------------------------- 播放控制按钮 ---------------------------------------------
+
+function UI_PlayIconTrigger_Play(ctx)
+  reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+  local play_label = '\u{0033}'
+  local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, play_label)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = (colors and colors.text) or 0xFFFFFFFF
+  local col_hovered = (colors and colors.accent) or 0xFFCC66FF
+  local col_active  = (colors and colors.accent_active) or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+  reaper.ImGui_Text(ctx, play_label)
+  reaper.ImGui_PopStyleColor(ctx)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    if is_paused and playing_source then
+      -- 以Wave.play_cursor为准恢复播放
+      playing_preview = reaper.CF_CreatePreview(playing_source)
+      if playing_preview then
+        if reaper.CF_Preview_SetValue then
+          reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
+          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+          reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+          reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
+          reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+          reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
+        end
+        ApplyPreviewOutputTrack(playing_preview)
+        reaper.CF_Preview_Play(playing_preview)
+        is_paused = false
+        paused_position = 0
+        wf_play_start_time = os.clock()
+        wf_play_start_cursor = Wave.play_cursor or 0
+      end
+
+    elseif selected_row > 0 and _G.current_display_list[selected_row] then
+      -- 非暂停时，从头开始或当前位置
+      -- if Wave and Wave.play_cursor and Wave.play_cursor > 0 then
+      --   PlayFromCursor(_G.current_display_list[selected_row])
+      -- else
+      --   PlayFromStart(_G.current_display_list[selected_row])
+      -- end
+      PlayFromCursor(_G.current_display_list[selected_row])
+      is_paused = false
+      paused_position = 0
+    end
+  end
+end
+
+function UI_PlayIconTrigger_Pause(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  local highlight_resume = (is_paused and playing_source) and true or false
+  reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+  local pause_label = '\u{0034}'
+
+  local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, pause_label)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_resume  = 0x2ee72eff
+  local col_normal  = highlight_resume and col_resume or ((colors and colors.text) or 0xFFFFFFFF)
+  local col_hovered = highlight_resume and col_resume or ((colors and colors.accent) or 0xFFCC66FF)
+  local col_active  = highlight_resume and col_resume or (colors and colors.accent_active) or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+  reaper.ImGui_Text(ctx, pause_label)
+  reaper.ImGui_PopStyleColor(ctx)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    if playing_preview and not is_paused then
+      -- 当前在播放，暂停
+      local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+      if ok then
+        paused_position = pos
+        wf_play_start_cursor = paused_position
+        Wave.play_cursor = paused_position
+      end
+      reaper.CF_Preview_Stop(playing_preview)
+      is_paused = true
+      playing_preview = nil
+    elseif is_paused and playing_source then
+      -- 处于暂停，恢复
+      playing_preview = reaper.CF_CreatePreview(playing_source)
+      if playing_preview then
+        if reaper.CF_Preview_SetValue then
+          reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
+          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+          reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+          reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
+          reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+          reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", paused_position)
+        end
+        ApplyPreviewOutputTrack(playing_preview)
+        reaper.CF_Preview_Play(playing_preview)
+        wf_play_start_time = os.clock()
+        wf_play_start_cursor = paused_position
+        is_paused = false
+      end
+    end
+  end
+end
+
+function UI_PlayIconTrigger_Stop(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+  local play_label = '\u{0035}'
+  local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, play_label)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = (colors and colors.text) or 0xFFFFFFFF
+  local col_hovered = (colors and colors.accent) or 0xFFCC66FF
+  local col_active  = (colors and colors.accent_active) or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+  reaper.ImGui_Text(ctx, play_label)
+  reaper.ImGui_PopStyleColor(ctx)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    StopPreview()
+    is_paused = false
+    paused_position = 0
+
+    -- 强制播放光标复位
+    if last_play_cursor_before_play then
+      Wave.play_cursor = last_play_cursor_before_play
+    end
+  end
+end
+
+function UI_PlayIconTrigger_Prev(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+  local play_label = '\u{0030}'
+  local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, play_label)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = (colors and colors.text) or 0xFFFFFFFF
+  local col_hovered = (colors and colors.accent) or 0xFFCC66FF
+  local col_active  = (colors and colors.accent_active) or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+  reaper.ImGui_Text(ctx, play_label)
+  reaper.ImGui_PopStyleColor(ctx)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    local list = filtered_list or _G.current_display_list or {}
+    local count = #list
+    if count == 0 then return end
+
+    local cur = (selected_row and selected_row >= 1 and selected_row <= count) and selected_row or (count + 1)
+    local prev_idx = (cur > 1) and (cur - 1) or count
+    local info = list[prev_idx]
+    if not info then return end
+
+    auto_play_next_pending    = info
+    _G.auto_play_next_pending = info
+
+    selected_row = prev_idx
+    _G.scroll_target = 0.5
+    is_paused = false
+    paused_position = 0
+  end
+end
+
+function UI_PlayIconTrigger_Next(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+  local play_label = '\u{0038}'
+  local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, play_label)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = (colors and colors.text) or 0xFFFFFFFF
+  local col_hovered = (colors and colors.accent) or 0xFFCC66FF
+  local col_active  = (colors and colors.accent_active) or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+  reaper.ImGui_Text(ctx, play_label)
+  reaper.ImGui_PopStyleColor(ctx)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    local list = filtered_list or _G.current_display_list or {}
+    local count = #list
+    if count == 0 then return end
+
+    local cur = (selected_row and selected_row >= 1 and selected_row <= count) and selected_row or 0
+    local next_idx = (cur < count) and (cur + 1) or 1
+    local info = list[next_idx]
+    if not info then return end
+
+    auto_play_next_pending    = info
+    _G.auto_play_next_pending = info
+
+    selected_row = next_idx
+    _G.scroll_target = 0.5
+    is_paused = false
+    paused_position = 0
+  end
+end
+
+function UI_PlayIconTrigger_Rand(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+  local play_label = '\u{004F}'
+  local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, play_label)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = (colors and colors.text) or 0xFFFFFFFF
+  local col_hovered = (colors and colors.accent) or 0xFFCC66FF
+  local col_active  = (colors and colors.accent_active) or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+  reaper.ImGui_Text(ctx, play_label)
+  reaper.ImGui_PopStyleColor(ctx)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    local list = _G.current_display_list or {}
+    local count = #list
+    if count > 0 then
+      local rand_idx = math.random(1, count)
+      selected_row = rand_idx -- 高亮选中行
+      PlayFromCursor(list[rand_idx])
+      is_paused = false
+      paused_position = 0
+      -- 滚动到可见中间
+      _G.scroll_target = 0.5 -- 0.0=顶部 -- 不在clipper循环内，无效
+    end
+  end
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -7125,8 +7416,71 @@ function loop()
     end
 
     -- 创建数据库按钮
+    -- reaper.ImGui_SameLine(ctx, nil, 10)
+    -- if reaper.ImGui_Button(ctx, "Database##scan_folder_top", 80, 46) then -- Select Folder and Scan Audio
+    --   local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
+    --   if rv == 1 and folder and folder ~= "" then
+    --     folder = normalize_path(folder, true)
+    --     local filelist = ScanAllAudioFiles(folder)
+    --     local db_dir = script_path .. "SoundmoleDB"
+    --     EnsureCacheDir(db_dir)
+    --     -- 获取下一个可用编号
+    --     local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
+    --     local dbfile = string.format("%s.MoleFileList", db_index) -- 只有文件名
+    --     local dbpath = normalize_path(db_dir, true) .. dbfile     -- 全路径
+    --     local f = io.open(dbpath, "wb") if f then f:close() end
+    --     AddPathToDBFile(dbpath, folder)
+    --     db_build_task = {
+    --       filelist = filelist,
+    --       dbfile = dbpath,
+    --       idx = 1,
+    --       total = #filelist,
+    --       finished = false,
+    --       root_path  = folder,
+    --     }
+    --   end
+    -- end
+
+    reaper.ImGui_EndGroup(ctx)
+
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Database##scan_folder_top", 80, 46) then -- Select Folder and Scan Audio
+    reaper.ImGui_BeginGroup(ctx)
+
+    -- 创建数据库图标
+    reaper.ImGui_SameLine(ctx, nil, 0)
+    local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
+    local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "0000") -- 文字尺寸
+    local cb_w = txt_w + txt_h + 16 -- 文字宽度+勾选框大小+间距
+
+    -- 如果可用宽度足够，把光标推到右侧
+    if avail > cb_w then
+      reaper.ImGui_Dummy(ctx, avail - cb_w, 0)
+      reaper.ImGui_SameLine(ctx, nil, 0)
+    end
+
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+    local gear_label = '\u{0059}'
+    local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+    local tw, th = reaper.ImGui_CalcTextSize(ctx, gear_label)
+
+    local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+    local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+    local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+    local col_normal  = (colors and colors.text) or 0xFFFFFFFF
+    local col_hovered = (colors and colors.accent) or 0xFFCC66FF
+    local col_active  = (colors and colors.accent_active) or col_hovered
+    local col = hovered and (active and col_active or col_hovered) or col_normal
+
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+    reaper.ImGui_Text(ctx, gear_label)
+    reaper.ImGui_PopStyleColor(ctx)
+
+    if hovered then
+      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+    end
+    if clicked then
       local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
       if rv == 1 and folder and folder ~= "" then
         folder = normalize_path(folder, true)
@@ -7149,15 +7503,18 @@ function loop()
         }
       end
     end
+    reaper.ImGui_PopFont(ctx)
+    -- 鼠标停靠提示
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_BeginTooltip(ctx)
+      reaper.ImGui_Text(ctx, 'Creating a database. Please browse and select a folder containing audio files.')
+      reaper.ImGui_EndTooltip(ctx)
+    end
 
-    reaper.ImGui_EndGroup(ctx)
-
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    reaper.ImGui_BeginGroup(ctx)
-     -- 设置弹窗
+    -- 设置弹窗图标
     reaper.ImGui_SameLine(ctx, nil, 0)
     local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
-    local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "    ") -- 文字尺寸
+    local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "0000") -- 文字尺寸
     local cb_w = txt_w + txt_h + 16 -- 文字宽度+勾选框大小+间距
 
     -- 如果可用宽度足够，把光标推到右侧
@@ -7167,47 +7524,6 @@ function loop()
     end
 
     reaper.ImGui_SameLine(ctx, nil, 10)
-    -- 旧版
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-    -- reaper.ImGui_PushFont(ctx, fonts.icon, 18)
-    -- local gear_label = '\u{0047}'
-    -- if reaper.ImGui_Button(ctx, gear_label, 28, 24) then -- 使用偶数避免模糊
-    --   reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
-    -- end
-    -- reaper.ImGui_PopFont(ctx)
-    -- reaper.ImGui_PopStyleColor(ctx)
-    -- reaper.ImGui_EndGroup(ctx)
-
-    -- 文字版
-    -- reaper.ImGui_PushFont(ctx, fonts.icon, 18) -- 注意：PushFont 不接受“字号参数”，字号在 CreateFont 时就定了
-    -- local gear_label = '\u{0047}'
-    -- reaper.ImGui_Text(ctx, gear_label)
-    -- local hovered = reaper.ImGui_IsItemHovered(ctx)
-    -- if hovered then
-    --   reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-    -- end
-    -- if reaper.ImGui_IsItemClicked(ctx, 0) then
-    --   reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
-    -- end
-    -- reaper.ImGui_PopFont(ctx)
-    -- reaper.ImGui_EndGroup(ctx)
-
-    -- 按钮版
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 0, 0)
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),          colors.transparent)
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(),   colors.transparent)
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),    colors.transparent)
-
-    -- reaper.ImGui_PushFont(ctx, fonts.icon, 18)
-    -- local gear_label = '\u{0047}'
-    -- if reaper.ImGui_Button(ctx, gear_label) then
-    --   reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
-    -- end
-    -- reaper.ImGui_PopFont(ctx)
-    -- reaper.ImGui_PopStyleColor(ctx, 3)
-    -- reaper.ImGui_PopStyleVar(ctx, 1)
-    -- reaper.ImGui_EndGroup(ctx)
-
     reaper.ImGui_PushFont(ctx, fonts.icon, 18)
     local gear_label = '\u{0047}'
     local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
@@ -7364,6 +7680,40 @@ function loop()
               end
             end
             reaper.ImGui_Unindent(ctx, 7)
+          end
+
+          -- 镜像官方快捷键方式
+          local sc_folders = list_reaper_shortcut_folders()
+          if #sc_folders == 0 then
+            -- 什么都不做
+          else
+            if not shortcut_mirror_nodes_inited then
+              expanded_paths = expanded_paths or {}
+              if tree_state.cur_path and tree_state.cur_path ~= "" then
+                local p = tree_state.cur_path:gsub("[/\\]+$", "")
+                while p and p ~= "" do
+                  expanded_paths[p] = true
+                  local parent = p:match("^(.*)[/\\][^/\\]+$")
+                  p = parent
+                end
+              end
+              shortcut_mirror_nodes_inited = true
+            end
+
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+            local hdr_flags_sc_mirror = shortcut_mirror_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+            local is_sc_mirror_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts (Mirror)##shortcut_mirror", nil, hdr_flags_sc_mirror)
+            shortcut_mirror_open = is_sc_mirror_open
+            reaper.ImGui_PopStyleColor(ctx)
+            
+            if is_sc_mirror_open then
+              reaper.ImGui_Indent(ctx, 7)
+              ResetCollectionGuide() -- 重置导线度量
+              for _, sc in ipairs(sc_folders or {}) do
+                draw_shortcut_tree_mirror(sc, nil, 0)
+              end
+              reaper.ImGui_Unindent(ctx, 7)
+            end
           end
 
           -- 高级文件夹节点 Collections
@@ -7771,40 +8121,6 @@ function loop()
                 end
               end
 
-              reaper.ImGui_Unindent(ctx, 7)
-            end
-          end
-
-          -- 镜像官方快捷键方式
-          local sc_folders = list_reaper_shortcut_folders()
-          if #sc_folders == 0 then
-            -- 什么都不做
-          else
-            if not shortcut_mirror_nodes_inited then
-              expanded_paths = expanded_paths or {}
-              if tree_state.cur_path and tree_state.cur_path ~= "" then
-                local p = tree_state.cur_path:gsub("[/\\]+$", "")
-                while p and p ~= "" do
-                  expanded_paths[p] = true
-                  local parent = p:match("^(.*)[/\\][^/\\]+$")
-                  p = parent
-                end
-              end
-              shortcut_mirror_nodes_inited = true
-            end
-
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-            local hdr_flags_sc_mirror = shortcut_mirror_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-            local is_sc_mirror_open = reaper.ImGui_CollapsingHeader(ctx, "Shortcuts (Mirror)##shortcut_mirror", nil, hdr_flags_sc_mirror)
-            shortcut_mirror_open = is_sc_mirror_open
-            reaper.ImGui_PopStyleColor(ctx)
-            
-            if is_sc_mirror_open then
-              reaper.ImGui_Indent(ctx, 7)
-              ResetCollectionGuide() -- 重置导线度量
-              for _, sc in ipairs(sc_folders or {}) do
-                draw_shortcut_tree_mirror(sc, nil, 0)
-              end
               reaper.ImGui_Unindent(ctx, 7)
             end
           end
@@ -8343,7 +8659,7 @@ function loop()
 
     -- 设置表格线条颜色 - 表格颜色
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderStrong(), 0x07192EFF) -- 边框线，深灰0xFF404040 透明0x00000000
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderLight(),  0x07192EFF) -- 列表线/分割线，深灰0xFF404040 透明0x00000000
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderLight(),  0x18539830) -- 列表线/分割线，深灰0xFF404040 透明0x00000000
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBg(),        0xFF0F0F0F) -- 表格行背景色 0xFF0F0F0F
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     0xFF0F0F0F)
     -- 右侧表格列表, 支持表格排序和冻结首行
@@ -8862,122 +9178,23 @@ function loop()
 
     -- 播放控制按钮
     -- Play 按钮
-    if reaper.ImGui_Button(ctx, "Play", 45) then
-      if is_paused and playing_source then
-        -- 以Wave.play_cursor为准恢复播放
-        playing_preview = reaper.CF_CreatePreview(playing_source)
-        if playing_preview then
-          if reaper.CF_Preview_SetValue then
-            reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-            reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-            reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
-            reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
-            reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-            reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
-          end
-          ApplyPreviewOutputTrack(playing_preview)
-          reaper.CF_Preview_Play(playing_preview)
-          is_paused = false
-          paused_position = 0
-          wf_play_start_time = os.clock()
-          wf_play_start_cursor = Wave.play_cursor or 0
-        end
-      elseif selected_row > 0 and _G.current_display_list[selected_row] then
-        -- 非暂停时，从头开始或当前位置
-        -- if Wave and Wave.play_cursor and Wave.play_cursor > 0 then
-        --   PlayFromCursor(_G.current_display_list[selected_row])
-        -- else
-        --   PlayFromStart(_G.current_display_list[selected_row])
-        -- end
-        PlayFromCursor(_G.current_display_list[selected_row])
-        is_paused = false
-        paused_position = 0
-      end
-    end
-
+    UI_PlayIconTrigger_Play(ctx)
+    
     -- Pause 按钮
-    reaper.ImGui_SameLine(ctx)
-    -- 播放暂停按钮始终显示，自动切换文字
-    local label = "Pause"
-    local highlight_resume = false
-    if is_paused and playing_source then
-      label = "Pause" -- Resume
-      highlight_resume = true
-    end
+    UI_PlayIconTrigger_Pause(ctx)
 
-    reaper.ImGui_SameLine(ctx)
-    -- 仅在 Resume 时高亮
-    if highlight_resume then
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x2ee72eff)
-    end
-    local clicked = reaper.ImGui_Button(ctx, label, 45)
-    if highlight_resume then
-      reaper.ImGui_PopStyleColor(ctx)
-    end
-
-    if clicked then
-      if playing_preview and not is_paused then
-        -- 当前在播放，暂停
-        local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-        if ok then
-          paused_position = pos
-          wf_play_start_cursor = paused_position
-          Wave.play_cursor = paused_position
-        end
-        reaper.CF_Preview_Stop(playing_preview)
-        is_paused = true
-        playing_preview = nil
-      elseif is_paused and playing_source then
-        -- 处于暂停，恢复
-        playing_preview = reaper.CF_CreatePreview(playing_source)
-        if playing_preview then
-          if reaper.CF_Preview_SetValue then
-            reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-            reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-            reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
-            reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
-            reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-            reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", paused_position)
-          end
-          ApplyPreviewOutputTrack(playing_preview)
-          reaper.CF_Preview_Play(playing_preview)
-          wf_play_start_time = os.clock()
-          wf_play_start_cursor = paused_position
-          is_paused = false
-        end
-      end
-    end
+    -- 播放上一个
+    UI_PlayIconTrigger_Prev(ctx)
 
     -- Stop 按钮
-    reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "Stop", 45) then
-      StopPreview()
-      is_paused = false
-      paused_position = 0
+    UI_PlayIconTrigger_Stop(ctx)
 
-      -- 强制播放光标复位
-      if last_play_cursor_before_play then
-        Wave.play_cursor = last_play_cursor_before_play
-      end
-    end
+    -- 播放下一个
+    UI_PlayIconTrigger_Next(ctx)
 
     -- 随机播放按钮
-    reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "Rand", 45) then
-      -- 随机选择表格中的一行
-      local list = _G.current_display_list or {}
-      local count = #list
-      if count > 0 then
-        -- math.randomseed 可根据实际需要加上 os.time() 进行初始化
-        local rand_idx = math.random(1, count)
-        selected_row = rand_idx -- 高亮选中行
-        PlayFromCursor(list[rand_idx])
-        is_paused = false
-        paused_position = 0
-        -- 滚动到可见中间
-        _G.scroll_target = 0.5 -- 0.0=顶部 -- 不在clipper循环内，无效
-      end
-    end
+    UI_PlayIconTrigger_Rand(ctx)
+
 
     -- 循环开关
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -10219,7 +10436,23 @@ function loop()
         reaper.format_timestr(cursor_pos, ""), -- 速率变化时调整光标时间位置
         reaper.format_timestr(Wave.src_len, "")
       )
+
+      -- 控件颜色
+      local col_frame_bg      = (colors and colors.scroll_bg)          or 0x1D2F4950 -- 背景
+      local col_frame_bg_hov  = (colors and colors.scroll_bg_hover)    or 0x23456D50 -- Hover
+      local col_frame_bg_act  = (colors and colors.scroll_bg_active)   or 0x316AAD50 -- Active
+      local col_grab          = (colors and colors.scroll_grab)        or 0xFFB0B0B0 -- 拖块
+      local col_grab_active   = (colors and colors.scroll_grab_active) or 0xFFFFFFFF -- 拖块按下
+
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),         col_frame_bg)
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgHovered(),  col_frame_bg_hov)
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgActive(),   col_frame_bg_act)
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrab(),      col_grab)
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrabActive(),col_grab_active)
+
       local changed, new_scroll = reaper.ImGui_SliderDouble(ctx, "##scrollbar", Wave.scroll, 0, max_scroll, label)
+      -- 恢复样式
+      reaper.ImGui_PopStyleColor(ctx, 5)
 
       if changed then
         Wave.scroll = new_scroll
