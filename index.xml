@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c7fe73f5c70fa200e46e6781c39bb23f3a161ca7">
+<index version="1" name="zaibuyidao Scripts" commit="960fa5577991ee78fccc43c8fdca082180afda21">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14597,6 +14597,15 @@ Fixed incomplete Windows drive enumeration, adding support for local, removable,
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/c7fe73f5c70fa200e46e6781c39bb23f3a161ca7/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/c7fe73f5c70fa200e46e6781c39bb23f3a161ca7/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/c7fe73f5c70fa200e46e6781c39bb23f3a161ca7/Various/Soundmole/data/icons.otf</source>
+      </version>
+      <version name="1.0.50" author="zaibuyidao" time="2025-08-31T12:12:00Z">
+        <changelog><![CDATA[Adjustments to parts of the UI.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/960fa5577991ee78fccc43c8fdca082180afda21/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/960fa5577991ee78fccc43c8fdca082180afda21/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/960fa5577991ee78fccc43c8fdca082180afda21/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/960fa5577991ee78fccc43c8fdca082180afda21/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/960fa5577991ee78fccc43c8fdca082180afda21/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/960fa5577991ee78fccc43c8fdca082180afda21/Various/Soundmole/data/icons.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
