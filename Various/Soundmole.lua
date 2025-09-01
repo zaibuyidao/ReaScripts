@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.50
+-- @version 1.0.51
 -- @changelog
---   Adjustments to parts of the UI.
+--   Fixed random play and ensured that in long lists the selected row scrolls into view and centers automatically.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

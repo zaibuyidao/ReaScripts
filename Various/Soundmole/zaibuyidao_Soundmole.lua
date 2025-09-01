@@ -7133,19 +7133,35 @@ function UI_PlayIconTrigger_Rand(ctx)
   reaper.ImGui_PopFont(ctx)
 
   if clicked then
-    local list = _G.current_display_list or {}
+    local list = filtered_list or _G.current_display_list or {}
     local count = #list
-    if count > 0 then
-      local rand_idx = math.random(1, count)
-      selected_row = rand_idx -- 高亮选中行
-      PlayFromCursor(list[rand_idx])
-      is_paused = false
-      paused_position = 0
-      -- 滚动到可见中间
-      _G.scroll_target = 0.5 -- 0.0=顶部 -- 不在clipper循环内，无效
+    if count == 0 then
+      return
     end
+
+    local rand_idx = math.random(1, count)
+    selected_row = rand_idx
+
+    local info = list[rand_idx]
+    if info then
+      PlayFromCursor(info)
+      is_paused, paused_position = false, 0
+    end
+
+    _G.scroll_request_index = rand_idx -- 目标索引
+    _G.scroll_request_align = 0.5      -- 居中
   end
 end
+
+-- 列表文件居中备用函数，将任意行 idx 请求滚动到可视区并对齐
+function SM_RequestCenterRow(idx, align)
+  _G.scroll_request_index = idx
+  _G.scroll_request_align = align or 0.5 -- 0 顶部, 0.5 居中, 1 底部
+end
+
+-- 跳到搜索命中的第一个结果并居中
+-- selected_row = hit_index
+-- SM_RequestCenterRow(hit_index, 0.5)
 
 function loop()
   -- 首次使用时收集音频文件
@@ -9013,6 +9029,33 @@ function loop()
         local clipper = static.clipper
 
         reaper.ImGui_ListClipper_Begin(clipper, #filtered_list)
+
+        -- 新增随机播放预滚动，强制把目标行拉入可视区并居中
+        do
+          if _G.scroll_request_index and #filtered_list > 0 then
+            local total = #filtered_list
+            local idx   = math.max(1, math.min(total, _G.scroll_request_index))
+            local align = _G.scroll_request_align or 0.5
+
+            local max_y = reaper.ImGui_GetScrollMaxY(ctx)   -- 当前窗口的最大可滚动距离
+            local win_h = reaper.ImGui_GetWindowHeight(ctx) -- 可视高度
+            local total_h = max_y + win_h                   -- 估算内容总高度
+
+            local center_ratio = (idx - 0.5) / total
+            local target_top = center_ratio * total_h - align * win_h
+            target_top = math.max(0, math.min(target_top, max_y))
+
+            local y0 = reaper.ImGui_GetScrollY(ctx)
+            reaper.ImGui_SetScrollY(ctx, target_top)
+            local y1 = reaper.ImGui_GetScrollY(ctx)
+
+            _G.scroll_request_index_exact = idx
+            _G.scroll_request_align_exact = align
+            _G.scroll_request_index = nil
+            _G.scroll_request_align = nil
+          end
+        end
+
         while reaper.ImGui_ListClipper_Step(clipper) do
           local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
           if idle_time >= (static.wf_delay_miss or 2) then -- 未缓存，停顿2秒再入队
@@ -9034,6 +9077,15 @@ function loop()
           for i = display_start + 1, display_end do
             local info = filtered_list[i]
             reaper.ImGui_TableNextRow(ctx, reaper.ImGui_TableRowFlags_None(), row_height)
+
+            -- 新增随机播放精确置中，当目标行提交到可视区时做最终对齐
+            if _G.scroll_request_index_exact and i == _G.scroll_request_index_exact then
+              local y0 = reaper.ImGui_GetScrollY(ctx)
+              reaper.ImGui_SetScrollHereY(ctx, _G.scroll_request_align_exact or 0.5)
+              local y1 = reaper.ImGui_GetScrollY(ctx)
+              _G.scroll_request_index_exact, _G.scroll_request_align_exact = nil, nil
+            end
+
             RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
 
             -- 上下按键自动滚动到可见行并且高亮
