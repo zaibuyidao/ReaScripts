@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b0626f8a7e956dbdacaf23e40e27e3623ec58ba9">
+<index version="1" name="zaibuyidao Scripts" commit="2ac11df146bd254eb2f9b96349e1240e6e3c1dc1">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14623,6 +14623,16 @@ Fixed incomplete Windows drive enumeration, adding support for local, removable,
         <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/081236ccabbc87a287829148cf0f2fe066a75513/Various/Soundmole/data/thesaurus.csv</source>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/081236ccabbc87a287829148cf0f2fe066a75513/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/081236ccabbc87a287829148cf0f2fe066a75513/Various/Soundmole/data/icons.otf</source>
+      </version>
+      <version name="1.0.52" author="zaibuyidao" time="2025-09-14T06:19:28Z">
+        <changelog><![CDATA[Fixed the occasional error when clicking Play and added safety checks to improve playback stability.
+Added parent and child tabs in the Settings page.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/2ac11df146bd254eb2f9b96349e1240e6e3c1dc1/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/2ac11df146bd254eb2f9b96349e1240e6e3c1dc1/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/2ac11df146bd254eb2f9b96349e1240e6e3c1dc1/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/2ac11df146bd254eb2f9b96349e1240e6e3c1dc1/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/2ac11df146bd254eb2f9b96349e1240e6e3c1dc1/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/2ac11df146bd254eb2f9b96349e1240e6e3c1dc1/Various/Soundmole/data/icons.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
