@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.52
+-- @version 1.0.53
 -- @changelog
---   Fixed the occasional error when clicking Play and added safety checks to improve playback stability.
---   Added parent and child tabs in the Settings page.
+--   Optimized playback controls, improved loop control, and added a preview routing dropdown.
+--   Added Same Folder mode.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
