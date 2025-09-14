@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.53
+-- @version 1.0.54
 -- @changelog
 --   Optimized playback controls, improved loop control, and added a preview routing dropdown.
 --   Added Same Folder mode.
@@ -15,6 +15,7 @@
 --   [nomain] Soundmole/lib/*.lua
 --   Soundmole/data/*.csv
 --   Soundmole/data/icons.otf
+--   Soundmole/data/odrf_upr_regular.otf
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
