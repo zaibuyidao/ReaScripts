@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.51
+-- @version 1.0.52
 -- @changelog
---   Fixed random play and ensured that in long lists the selected row scrolls into view and centers automatically.
+--   Fixed the occasional error when clicking Play and added safety checks to improve playback stability.
+--   Added parent and child tabs in the Settings page.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

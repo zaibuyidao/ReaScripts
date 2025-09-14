@@ -285,13 +285,16 @@ COLLECT_MODE_REAPERDB        = 11 -- REAPER数据库
 COLLECT_MODE_SHORTCUT_MIRROR = 12
 COLLECT_MODE_FREESOUND       = 13
 
--- 设置相关
-local auto_play_selected  = true
-local DOUBLECLICK_INSERT  = 0
-local DOUBLECLICK_PREVIEW = 1
-local DOUBLECLICK_NONE    = 2
-local doubleclick_action  = DOUBLECLICK_NONE
-local bg_alpha            = 1.0 -- 默认背景不透明
+--------------------------------------------- 设置弹窗相关 ---------------------------------------------
+
+local settings_window_open      = false
+local settings_window_prev_open = false
+local auto_play_selected        = true
+local DOUBLECLICK_INSERT        = 0
+local DOUBLECLICK_PREVIEW       = 1
+local DOUBLECLICK_NONE          = 2
+local doubleclick_action        = DOUBLECLICK_NONE
+local bg_alpha                  = 1.0 -- 默认背景不透明
 
 -- 保存设置
 function SaveSettings()
@@ -6820,7 +6823,7 @@ end
 
 --- 设置面板UI
 function RenderPreviewRouteSettingsUI(ctx)
-  reaper.ImGui_SeparatorText(ctx, "Preview Routing")
+  -- reaper.ImGui_SeparatorText(ctx, "Preview Routing")
   -- 预览路由开关
   local changed_enable, new_enable = reaper.ImGui_Checkbox(ctx, "Enable preview routing", preview_route_enable)
   if changed_enable then
@@ -6904,7 +6907,7 @@ function UI_PlayIconTrigger_Play(ctx)
         wf_play_start_cursor = Wave.play_cursor or 0
       end
 
-    elseif selected_row > 0 and _G.current_display_list[selected_row] then
+    elseif type(selected_row) == "number" and selected_row > 0 and type(_G.current_display_list) == "table" and _G.current_display_list[selected_row] then
       -- 非暂停时，从头开始或当前位置
       -- if Wave and Wave.play_cursor and Wave.play_cursor > 0 then
       --   PlayFromCursor(_G.current_display_list[selected_row])
@@ -7562,7 +7565,8 @@ function loop()
       reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
     end
     if clicked then
-      reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
+      settings_window_open = true
+      reaper.SetExtState(EXT_SECTION, "popup_settings_open", tostring(settings_window_open), true)
     end
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
@@ -9414,270 +9418,124 @@ function loop()
       reaper.SetExtState(EXT_SECTION, EXT_KEY_VOLUME, tostring(volume), true)
     end
 
-    -- 设置弹窗
-    -- reaper.ImGui_SameLine(ctx, nil, 10)
-    -- if reaper.ImGui_Button(ctx, "Settings##Popup", 80) then
-    --   reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
-    -- end
+    --------------------------------------------- 设置弹窗 ---------------------------------------------
 
-    -- 支持 Ctrl+P 快捷键打开设置
-    if (reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()))
-      and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_P()) then
-      reaper.ImGui_OpenPopup(ctx, "Settings##Popup")
-    end
-    if reaper.ImGui_BeginPopupModal(ctx, "Settings##Popup", nil) then
-      -- 内容字体大小
-      reaper.ImGui_Text(ctx, "Content Font Size:")
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      local changed_font, new_font_size = reaper.ImGui_SliderInt(ctx, "##font_size_slider", font_size, FONT_SIZE_MIN, FONT_SIZE_MAX, "%d px")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_font then
-        font_size = SnapFontSize(new_font_size)
-        reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
-        MarkFontDirty()
-      end
-      -- reaper.ImGui_SameLine(ctx)
-      -- HelpMarker("Adjust the content font size for the interface. Range: 12-24 px.")
+    do
+      settings_active_page = settings_active_page or "Appearance"
 
-      -- 内容表格行高
-      reaper.ImGui_Text(ctx, "Content Row Height:")
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      local changed_row_height, new_row_height = reaper.ImGui_SliderInt(ctx, "##row_height_slider", row_height, 12, 48, "%d px")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_row_height then
-        row_height = new_row_height
-        reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_ROW_HEIGHT, tostring(row_height), true)
-      end
+      -- 说明条配色
+      local PAGE_HEADER_BG   = 0x5B5B5E50
+      local PAGE_HEADER_TEXT = colors.normal_text
 
-      -- 停止或应用程序不活跃时关闭音频设备
-      reaper.ImGui_Separator(ctx)
-      local aci = reaper.SNM_GetIntConfigVar("audiocloseinactive", 1)
-      local close_inactive = (aci == 1)
-      local changed_inactive
-      changed_inactive, close_inactive = reaper.ImGui_Checkbox(ctx, "Stop audio device when inactive", close_inactive)
-      if changed_inactive then
-        reaper.SNM_SetIntConfigVar("audiocloseinactive", close_inactive and 1 or 0)
-      end
+      local PAGE_ALIASES = {
+        -- 兼容旧中文键
+        ["界面"] = "Appearance",
+        ["窗口"] = "Appearance",
+        ["峰值表"] = "Appearance",
+        ["外观"] = "Appearance",
 
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Double-Click Action:")
-      if reaper.ImGui_RadioButton(ctx, "Insert media file to arrange", doubleclick_action == DOUBLECLICK_INSERT) then
-        doubleclick_action = DOUBLECLICK_INSERT
-      end
-      if reaper.ImGui_RadioButton(ctx, "Preview media", doubleclick_action == DOUBLECLICK_PREVIEW) then
-        doubleclick_action = DOUBLECLICK_PREVIEW
-      end
-      if reaper.ImGui_RadioButton(ctx, "Do nothing", doubleclick_action == DOUBLECLICK_NONE) then
-        doubleclick_action = DOUBLECLICK_NONE
+        ["双击与预览"] = "Playback & Preview",
+        ["播放"] = "Playback & Preview",
+        ["播放控制"] = "Playback & Preview",
+        ["波形预览"] = "Playback & Preview",
+        ["播放与预览"] = "Playback & Preview",
+
+        ["数据库"] = "Database & Cache",
+        ["缓存目录"] = "Database & Cache",
+        ["数据库与缓存"] = "Database & Cache",
+
+        ["搜索"] = "Search & History",
+        ["最近"] = "Search & History",
+        ["搜索与历史"] = "Search & History",
+
+        ["路由"] = "Routing",
+        ["UCS"] = "UCS",
+
+        ["重置默认值"] = "Reset Defaults",
+        ["恢复默认"]   = "Reset Defaults",
+
+        -- 子级到父级
+        ["UI"]                              = "Appearance",
+        ["Window"]                          = "Appearance",
+        ["Peak Meter"]                      = "Appearance",
+        ["Double-Click & Preview"]          = "Playback & Preview",
+        ["Playback"]                        = "Playback & Preview",
+        ["Playback Control"]                = "Playback & Preview",
+        ["Waveform Preview"]                = "Playback & Preview",
+        ["Database"]                        = "Database & Cache",
+        ["Cache Directory"]                 = "Database & Cache",
+        ["Search"]                          = "Search & History",
+        ["Recent"]                          = "Search & History",
+        ["Preview Output Track & Channels"] = "Routing",
+        ["UCS Language Selection"]          = "UCS",
+        ["Restore Defaults"]                = "Reset Defaults",
+      }
+      if PAGE_ALIASES[settings_active_page] then
+        settings_active_page = PAGE_ALIASES[settings_active_page]
       end
 
-      reaper.ImGui_Separator(ctx)
-      local changed
-      changed, auto_play_selected = reaper.ImGui_Checkbox(ctx, "Auto-play selected media", auto_play_selected)
+      -- 分页说明条
+      local function DrawPageHeader(desc_text, bg_col, text_col)
+        local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+        local win_x, win_y = reaper.ImGui_GetWindowPos(ctx)
+        local win_w, _     = reaper.ImGui_GetWindowSize(ctx)
+        local pad_x, pad_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
+        local x0 = win_x + (pad_x or 0)
+        local x1 = win_x + (win_w or 0) - (pad_x or 0)
+        local _, cur_y = reaper.ImGui_GetCursorScreenPos(ctx)
 
-      -- 预览输出路由到轨道
-      RenderPreviewRouteSettingsUI(ctx)
+        local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, desc_text)
+        local pad_inner_y = 6
+        local header_h = (text_h or 16) + pad_inner_y * 2
 
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Datebase Settings:")
-      local chg_wf, v_wf = reaper.ImGui_Checkbox(ctx, "Build waveform cache during DB creation##wf_cache", build_waveform_cache)
-      if chg_wf then
-        build_waveform_cache = v_wf
-        reaper.SetExtState(EXT_SECTION, "build_waveform_cache", v_wf and "1" or "0", true)
-      end
-      if reaper.ImGui_IsItemHovered(ctx) then
-        reaper.ImGui_SetTooltip(ctx,
-          "When enabled, the database builder precomputes and saves waveform cache for each file.\nPros: faster preview later.\nCons: longer build time and extra disk usage."
-        )
-      end
+        reaper.ImGui_DrawList_AddRectFilled(draw_list, x0, cur_y, x1, cur_y + header_h, bg_col or PAGE_HEADER_BG, 4)
 
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Search Settings:")
-      local sea_enter_changed, search_enter_v = reaper.ImGui_Checkbox(ctx, "Update search only when enter key pressed##enter_mode", search_enter_mode) -- Press Enter to search
-      if sea_enter_changed then
-        search_enter_mode = search_enter_v
-        reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_v and "1" or "0", true)
+        local content_w = (x1 - x0)
+        local text_x = x0 + math.max(0, (content_w - (text_w or 0)) * 0.5)
+        local text_y = cur_y + math.max(0, (header_h - (text_h or 0)) * 0.5)
+        reaper.ImGui_DrawList_AddText(draw_list, text_x, text_y, text_col or PAGE_HEADER_TEXT, desc_text)
+        reaper.ImGui_Dummy(ctx, 1, header_h)
       end
 
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "UCS Settings:")
-      DrawUcsLanguageSelector(ctx)
-
-      -- 更改速率是否保持音高
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Playback Settings:")
-      local changed_pp
-      changed_pp, preserve_pitch = reaper.ImGui_Checkbox(ctx, "Preserve pitch when changing rate", preserve_pitch)
-      if changed_pp and playing_preview and reaper.CF_Preview_SetValue then
-        reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+      -- 子区块标题
+      local function DrawSubTitle(title)
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
+        reaper.ImGui_SeparatorText(ctx, title)
+        reaper.ImGui_PopStyleColor(ctx)
+        -- reaper.ImGui_Dummy(ctx, 1, 10)
       end
 
-      -- 波形预览设置
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Waveform Preview Settings:")
-
-      -- 波形预览自动滚屏
-      local changed_scroll, new_scroll = reaper.ImGui_Checkbox(ctx, "Auto scroll waveform during playback", auto_scroll_enabled)
-      if changed_scroll then
-        auto_scroll_enabled = new_scroll
-      end
-
-      -- 最近搜索设置
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Max Recent Searched:")
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      local chg_rs, v_rs = reaper.ImGui_InputInt(ctx, "##max_recent_search_input", max_recent_search, 1, 5)
-      reaper.ImGui_PopItemWidth(ctx)
-      if chg_rs then
-        max_recent_search = math.max(1, math.min(100, v_rs or 20))
-        reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
-        while #recent_search_keywords > max_recent_search do table.remove(recent_search_keywords) end -- saved_search_list
-        SaveRecentSearched()
-      end
-
-      -- 最近播放设置
-      -- reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Max Recent Played:")
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      local chg_rp, v_rp = reaper.ImGui_InputInt(ctx, "##max_recent_play_input", max_recent_files, 1, 5)
-      reaper.ImGui_PopItemWidth(ctx)
-      if chg_rp then
-        max_recent_files = math.max(1, math.min(100, v_rp or 20))
-        reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
-        while #recent_audio_files > max_recent_files do table.remove(recent_audio_files) end
-        SaveRecentPlayed()
-      end
-
-      -- 背景不透明度
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Window background alpha:")
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      local changed, new_bg_alpha = reaper.ImGui_InputDouble(ctx, "##bg_alpha", bg_alpha, 0.05, 0.1, "%.2f")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed then
-        -- 范围在 0 ~ 1
-        bg_alpha = math.max(0, math.min(1, new_bg_alpha or 1))
-      end
-
-      -- Peaks
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Peaks meter channels:")
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      local changed_peaks, new_peaks = reaper.ImGui_InputDouble(ctx, "##peaks_input", peak_chans, 1, 10, "%.0f")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_peaks then
-        peak_chans = math.floor((new_peaks or 2) + 0.5)
-        if peak_chans < 2 then peak_chans = 2 end
-        if peak_chans > 128 then peak_chans = 128 end
-        reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
-      end
-      reaper.ImGui_SameLine(ctx)
-      HelpMarker("Number of peak meter channels to show. Range: 2~128.")
-
-      -- 播放控件设置
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Playback Control Settings:")
-
-      -- 最大音量dB
-      reaper.ImGui_Text(ctx, "Max Volume (dB):")
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      reaper.ImGui_SameLine(ctx)
-      local changed_maxdb, new_max_db = reaper.ImGui_InputDouble(ctx, "##Max Volume (dB)", max_db, 1, 5, "%.2f")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_maxdb then
-        -- 可根据需要限制范围
-        if new_max_db < 0 then new_max_db = 0 end
-        if new_max_db > 24 then new_max_db = 24 end
-        max_db = new_max_db
-      end
-      reaper.ImGui_SameLine(ctx)
-      HelpMarker("Set the maximum output volume, in dB. Default: 12.")
-
-      -- 音高旋钮最小值
-      reaper.ImGui_Text(ctx, "Pitch Knob Min:")
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      reaper.ImGui_SameLine(ctx)
-      local changed_pmin, new_pmin = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Min", pitch_knob_min, 1, 2, "%.2f")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_pmin then
-        -- 限制最大不超过最大值
-        if new_pmin > pitch_knob_max then new_pmin = pitch_knob_max end
-        pitch_knob_min = new_pmin
-      end
-
-      -- 音高旋钮最大值
-      reaper.ImGui_Text(ctx, "Pitch Knob Max:")
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      reaper.ImGui_SameLine(ctx)
-      local changed_pmax, new_pmax = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Max", pitch_knob_max, 1, 2, "%.2f")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_pmax then
-        if new_pmax < pitch_knob_min then new_pmax = pitch_knob_min end
-        pitch_knob_max = new_pmax
-      end
-
-      -- 速率旋钮最小值
-      reaper.ImGui_Text(ctx, "Rate Min:")
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      reaper.ImGui_SameLine(ctx)
-      local changed_rmin, new_rmin = reaper.ImGui_InputDouble(ctx, "##Rate Min", rate_min, 0.01, 0.1, "%.2f")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_rmin then
-        if new_rmin < 0.01 then new_rmin = 0.01 end
-        if new_rmin > rate_max then new_rmin = rate_max end
-        rate_min = new_rmin
-      end
-
-      -- 速率旋钮最大值
-      reaper.ImGui_Text(ctx, "Rate Max:")
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      reaper.ImGui_SameLine(ctx)
-      local changed_rmax, new_rmax = reaper.ImGui_InputDouble(ctx, "##Rate Max", rate_max, 0.01, 0.1, "%.2f")
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_rmax then
-        if new_rmax < rate_min then new_rmax = rate_min end
-        rate_max = new_rmax
-      end
-
-      reaper.ImGui_Separator(ctx)
-      reaper.ImGui_Text(ctx, "Waveform Cache Folder:")
-      reaper.ImGui_PushItemWidth(ctx, -65)
-      local changed_cache_dir, new_cache_dir = reaper.ImGui_InputText(ctx, "##cache_dir", cache_dir, 512)
-      reaper.ImGui_PopItemWidth(ctx)
-      if changed_cache_dir then
-        cache_dir = normalize_path(new_cache_dir, true) -- 规范分隔符 文件夹路径传入true
-        reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
-      end
-      reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Browse##SelectCacheDir") then
-        local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", cache_dir)
-        if rv == 1 and out and out ~= "" then
-          cache_dir = normalize_path(out, true) -- 规范分隔符 文件夹路径传入true
-          -- if not cache_dir:match("[/\\]$") then cache_dir = cache_dir .. "/" end
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
+      ----------------------------------------------------------------
+      -- 顶部文字按钮
+      ----------------------------------------------------------------
+      local function DrawUnderlineIfHoveredOrActive(color)
+        if reaper.ImGui_IsItemHovered(ctx) or reaper.ImGui_IsItemActive(ctx) then
+          local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+          local minx, miny = reaper.ImGui_GetItemRectMin(ctx)
+          local maxx, maxy = reaper.ImGui_GetItemRectMax(ctx)
+          reaper.ImGui_DrawList_AddLine(draw_list, minx, maxy - 1, maxx, maxy - 1, color or colors.normal_text, 1.0)
         end
       end
 
-      reaper.ImGui_Separator(ctx)
-      -- 按钮右对齐
-      local win_set_w = reaper.ImGui_GetWindowWidth(ctx)
-      local btn_set_w = 96
-      local spacing_set = 110
-      local padding_set_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
-      reaper.ImGui_SetCursorPosX(ctx, win_set_w - (btn_set_w * 2 + spacing_set + padding_set_x * 2))
-
-      if reaper.ImGui_Button(ctx, "Save##Settings_save", btn_set_w, 32) then
-        SaveSettings()
-        reaper.ImGui_CloseCurrentPopup(ctx)
+      local function NavTextButton(label, id)
+        local active = (settings_active_page == id)
+        reaper.ImGui_PushID(ctx, "nav_" .. id)
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), active and colors.normal_text or 0xFFB0B0B0)
+        reaper.ImGui_Text(ctx, label)
+        DrawUnderlineIfHoveredOrActive(colors.text)
+        if reaper.ImGui_IsItemHovered(ctx) then
+          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+        end
+        if reaper.ImGui_IsItemClicked(ctx) then
+          settings_active_page = id
+        end
+        reaper.ImGui_PopStyleColor(ctx)
+        reaper.ImGui_PopID(ctx)
       end
 
-      -- 默认值定义
+      ----------------------------------------------------------------
+      -- 重置默认值
+      ----------------------------------------------------------------
       local DEFAULTS = {
         collect_mode = -1,
         doubleclick_action = DOUBLECLICK_NONE,
@@ -9689,62 +9547,425 @@ function loop()
         bg_alpha = 1.0,
         peak_chans = 6,
         font_size = 14,
-        max_db = 12,         -- 音量最大值
-        pitch_knob_min = -6, -- 音高旋钮最低
-        pitch_knob_max = 6,  -- 音高旋钮最高
-        rate_min = 0.25,     -- 速率旋钮最低
-        rate_max = 4.0,      -- 速率旋钮最高
+        max_db = 12,
+        pitch_knob_min = -6,
+        pitch_knob_max = 6,
+        rate_min = 0.25,
+        rate_max = 4.0,
         cache_dir = DEFAULT_CACHE_DIR,
-        max_recent_files = 20, -- 最近播放文件最大数量
-        max_recent_search = 20, -- 最近搜索最大数量
-        row_height = DEFAULT_ROW_HEIGHT, -- 内容表格行高
+        max_recent_files = 20,
+        max_recent_search = 20,
+        row_height = DEFAULT_ROW_HEIGHT,
       }
 
-      -- Cancel 按钮
-      reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Cancel##Settings_cancel", btn_set_w, 32) then
-        reaper.ImGui_CloseCurrentPopup(ctx)
-      end
-      
-      reaper.ImGui_SameLine(ctx)
+      ----------------------------------------------------------------
+      -- 各子区块内容
+      ----------------------------------------------------------------
+      local function Section_UI()
+        reaper.ImGui_Text(ctx, "Content Font Size:")
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        local changed_font, new_font_size = reaper.ImGui_SliderInt(ctx, "##font_size_slider", font_size, FONT_SIZE_MIN, FONT_SIZE_MAX, "%d px")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_font then
+          font_size = SnapFontSize(new_font_size)
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
+          MarkFontDirty()
+        end
 
-      if reaper.ImGui_Button(ctx, "Reset##Settings_reset", btn_set_w, 32) then
-        -- 恢复各项设置为默认值
-        collect_mode = DEFAULTS.collect_mode
-        doubleclick_action = DEFAULTS.doubleclick_action
-        auto_play_selected = DEFAULTS.auto_play_selected
-        preserve_pitch = DEFAULTS.preserve_pitch
-        bg_alpha = DEFAULTS.bg_alpha
-        peak_chans = DEFAULTS.peak_chans
-        font_size = DEFAULTS.font_size -- 字体大小
-        -- 恢复播放控件设置
-        max_db = DEFAULTS.max_db
-        pitch_knob_min = DEFAULTS.pitch_knob_min
-        pitch_knob_max = DEFAULTS.pitch_knob_max
-        rate_min = DEFAULTS.rate_min
-        rate_max = DEFAULTS.rate_max
-        cache_dir = DEFAULTS.cache_dir
-        auto_scroll_enabled = DEFAULTS.auto_scroll_enabled
-        max_recent_files = DEFAULTS.max_recent_files
-        max_recent_search = DEFAULTS.max_recent_search
-        row_height = DEFAULTS.row_height
-        build_waveform_cache = DEFAULTS.build_waveform_cache
-        search_enter_mode = DEFAULTS.search_enter_mode
-        -- 保存设置到ExtState
-        reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
-        reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
-        reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
-        reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
-        reaper.SetExtState(EXT_SECTION, "search_enter_mode", tostring(search_enter_mode), true)
-        reaper.SetExtState(EXT_SECTION, "build_waveform_cache", tostring(search_enter_mode), true)
-        MarkFontDirty()
-        CollectFiles()
-      end
-      if reaper.ImGui_IsItemHovered(ctx) then
-        reaper.ImGui_SetTooltip(ctx, "Reset all settings to default values")
+        reaper.ImGui_Text(ctx, "Content Row Height:")
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        local changed_row_height, new_row_height = reaper.ImGui_SliderInt(ctx, "##row_height_slider", row_height, 12, 48, "%d px")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_row_height then
+          row_height = new_row_height
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_ROW_HEIGHT, tostring(row_height), true)
+        end
       end
 
-      reaper.ImGui_EndPopup(ctx)
+      local function Section_Window()
+        reaper.ImGui_Text(ctx, "Window background alpha:")
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        local changed_bg, new_bg_alpha = reaper.ImGui_InputDouble(ctx, "##bg_alpha", bg_alpha, 0.05, 0.1, "%.2f")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_bg then
+          bg_alpha = math.max(0, math.min(1, new_bg_alpha or 1))
+          reaper.SetExtState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
+        end
+      end
+
+      local function Section_Peaks()
+        reaper.ImGui_Text(ctx, "Peaks meter channels:")
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        local changed_peaks, new_peaks = reaper.ImGui_InputDouble(ctx, "##peaks_input", peak_chans, 1, 10, "%.0f")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_peaks then
+          peak_chans = math.floor((new_peaks or 2) + 0.5)
+          if peak_chans < 2 then peak_chans = 2 end
+          if peak_chans > 128 then peak_chans = 128 end
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
+        end
+        reaper.ImGui_SameLine(ctx)
+        if HelpMarker then HelpMarker("Number of peak meter channels to show. Range: 2~128.") end
+      end
+
+      local function Section_System_StopAudioDevice()
+        local aci = reaper.SNM_GetIntConfigVar("audiocloseinactive", 1)
+        local close_inactive = (aci == 1)
+        local changed_inactive
+        changed_inactive, close_inactive = reaper.ImGui_Checkbox(ctx, "Stop audio device when inactive", close_inactive)
+        if changed_inactive then
+          reaper.SNM_SetIntConfigVar("audiocloseinactive", close_inactive and 1 or 0)
+        end
+      end
+
+      local function Section_DblClick_Preview()
+        reaper.ImGui_Text(ctx, "Double-Click Action:")
+        if reaper.ImGui_RadioButton(ctx, "Insert media file to arrange", doubleclick_action == DOUBLECLICK_INSERT) then
+          doubleclick_action = DOUBLECLICK_INSERT
+        end
+        if reaper.ImGui_RadioButton(ctx, "Preview media", doubleclick_action == DOUBLECLICK_PREVIEW) then
+          doubleclick_action = DOUBLECLICK_PREVIEW
+        end
+        if reaper.ImGui_RadioButton(ctx, "Do nothing", doubleclick_action == DOUBLECLICK_NONE) then
+          doubleclick_action = DOUBLECLICK_NONE
+        end
+
+        reaper.ImGui_Separator(ctx)
+        local chg_auto
+        chg_auto, auto_play_selected = reaper.ImGui_Checkbox(ctx, "Auto-play selected media", auto_play_selected)
+      end
+
+      local function Section_Playback()
+        reaper.ImGui_Text(ctx, "Playback Settings:")
+        local changed_pp
+        changed_pp, preserve_pitch = reaper.ImGui_Checkbox(ctx, "Preserve pitch when changing rate", preserve_pitch)
+        if changed_pp and playing_preview and reaper.CF_Preview_SetValue then
+          reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+        end
+      end
+
+      local function Section_PlaybackCtrl()
+        reaper.ImGui_Text(ctx, "Playback Control Settings:")
+
+        reaper.ImGui_Text(ctx, "Max Volume (dB):")
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx)
+        local changed_maxdb, new_max_db = reaper.ImGui_InputDouble(ctx, "##Max Volume (dB)", max_db, 1, 5, "%.2f")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_maxdb then
+          if new_max_db < 0 then new_max_db = 0 end
+          if new_max_db > 24 then new_max_db = 24 end
+          max_db = new_max_db
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_MAX_DB, tostring(max_db), true)
+        end
+        reaper.ImGui_SameLine(ctx)
+        if HelpMarker then HelpMarker("Set the maximum output volume, in dB. Default: 12.") end
+
+        reaper.ImGui_Text(ctx, "Pitch Knob Min:")
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx)
+        local changed_pmin, new_pmin = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Min", pitch_knob_min, 1, 2, "%.2f")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_pmin then
+          if new_pmin > pitch_knob_max then new_pmin = pitch_knob_max end
+          pitch_knob_min = new_pmin
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_PITCH_MIN, tostring(pitch_knob_min), true)
+        end
+
+        reaper.ImGui_Text(ctx, "Pitch Knob Max:")
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx)
+        local changed_pmax, new_pmax = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Max", pitch_knob_max, 1, 2, "%.2f")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_pmax then
+          if new_pmax < pitch_knob_min then new_pmax = pitch_knob_min end
+          pitch_knob_max = new_pmax
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_PITCH_MAX, tostring(pitch_knob_max), true)
+        end
+
+        reaper.ImGui_Text(ctx, "Rate Min:")
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx)
+        local changed_rmin, new_rmin = reaper.ImGui_InputDouble(ctx, "##Rate Min", rate_min, 0.01, 0.1, "%.2f")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_rmin then
+          if new_rmin < 0.01 then new_rmin = 0.01 end
+          if new_rmin > rate_max then new_rmin = rate_max end
+          rate_min = new_rmin
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MIN, tostring(rate_min), true)
+        end
+
+        reaper.ImGui_Text(ctx, "Rate Max:")
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx)
+        local changed_rmax, new_rmax = reaper.ImGui_InputDouble(ctx, "##Rate Max", rate_max, 0.01, 0.1, "%.2f")
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_rmax then
+          if new_rmax < rate_min then new_rmax = rate_min end
+          rate_max = new_rmax
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MAX, tostring(rate_max), true)
+        end
+      end
+
+      local function Section_WaveformPreview()
+        reaper.ImGui_Text(ctx, "Waveform Preview Settings:")
+        local changed_scroll, new_scroll = reaper.ImGui_Checkbox(ctx, "Auto scroll waveform during playback", auto_scroll_enabled)
+        if changed_scroll then
+          auto_scroll_enabled = new_scroll
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
+        end
+      end
+
+      local function Section_Database()
+        reaper.ImGui_Text(ctx, "Datebase Settings:")
+        local chg_wf, v_wf = reaper.ImGui_Checkbox(ctx, "Build waveform cache during DB creation##wf_cache", build_waveform_cache)
+        if chg_wf then
+          build_waveform_cache = v_wf
+          reaper.SetExtState(EXT_SECTION, "build_waveform_cache", v_wf and "1" or "0", true)
+        end
+        if reaper.ImGui_IsItemHovered(ctx) then
+          reaper.ImGui_SetTooltip(ctx,
+            "When enabled, the database builder precomputes and saves waveform cache for each file.\nPros: faster preview later.\nCons: longer build time and extra disk usage."
+          )
+        end
+      end
+
+      local function Section_CacheDir()
+        reaper.ImGui_Text(ctx, "Waveform Cache Folder:")
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        local changed_cache_dir, new_cache_dir = reaper.ImGui_InputText(ctx, "##cache_dir", cache_dir, 512)
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_cache_dir then
+          cache_dir = normalize_path(new_cache_dir, true)
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
+        end
+        reaper.ImGui_SameLine(ctx)
+        if reaper.ImGui_Button(ctx, "Browse##SelectCacheDir") then
+          local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", cache_dir)
+          if rv == 1 and out and out ~= "" then
+            cache_dir = normalize_path(out, true)
+            reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
+          end
+        end
+      end
+
+      local function Section_Search()
+        reaper.ImGui_Text(ctx, "Search Settings:")
+        local sea_enter_changed, search_enter_v = reaper.ImGui_Checkbox(ctx, "Update search only when enter key pressed##enter_mode", search_enter_mode)
+        if sea_enter_changed then
+          search_enter_mode = search_enter_v
+          reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_v and "1" or "0", true)
+        end
+      end
+
+      local function Section_Recent()
+        reaper.ImGui_Text(ctx, "Max Recent Searched:")
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        local chg_rs, v_rs = reaper.ImGui_InputInt(ctx, "##max_recent_search_input", max_recent_search, 1, 5)
+        reaper.ImGui_PopItemWidth(ctx)
+        if chg_rs then
+          max_recent_search = math.max(1, math.min(100, v_rs or 20))
+          reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
+          while #recent_search_keywords > max_recent_search do table.remove(recent_search_keywords) end
+          SaveRecentSearched()
+        end
+
+        reaper.ImGui_Text(ctx, "Max Recent Played:")
+        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_PushItemWidth(ctx, -65)
+        local chg_rp, v_rp = reaper.ImGui_InputInt(ctx, "##max_recent_play_input", max_recent_files, 1, 5)
+        reaper.ImGui_PopItemWidth(ctx)
+        if chg_rp then
+          max_recent_files = math.max(1, math.min(100, v_rp or 20))
+          reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
+          while #recent_audio_files > max_recent_files do table.remove(recent_audio_files) end
+          SaveRecentPlayed()
+        end
+      end
+
+      local function Section_Route()
+        RenderPreviewRouteSettingsUI(ctx)
+      end
+
+      local function Section_UCS()
+        reaper.ImGui_Text(ctx, "UCS Settings:")
+        DrawUcsLanguageSelector(ctx)
+      end
+
+      local function Section_ResetToDefaults()
+        reaper.ImGui_Text(ctx, "This action will restore all settings to their default values.")
+        -- reaper.ImGui_Separator(ctx)
+        if reaper.ImGui_Button(ctx, "Reset To Defaults##Settings_reset", 120, 32) then
+          -- 恢复各项设置为默认值
+          collect_mode         = DEFAULTS.collect_mode
+          doubleclick_action   = DEFAULTS.doubleclick_action
+          auto_play_selected   = DEFAULTS.auto_play_selected
+          preserve_pitch       = DEFAULTS.preserve_pitch
+          bg_alpha             = DEFAULTS.bg_alpha
+          peak_chans           = DEFAULTS.peak_chans
+          font_size            = DEFAULTS.font_size
+          max_db               = DEFAULTS.max_db
+          pitch_knob_min       = DEFAULTS.pitch_knob_min
+          pitch_knob_max       = DEFAULTS.pitch_knob_max
+          rate_min             = DEFAULTS.rate_min
+          rate_max             = DEFAULTS.rate_max
+          cache_dir            = DEFAULTS.cache_dir
+          auto_scroll_enabled  = DEFAULTS.auto_scroll_enabled
+          max_recent_files     = DEFAULTS.max_recent_files
+          max_recent_search    = DEFAULTS.max_recent_search
+          row_height           = DEFAULTS.row_height
+          build_waveform_cache = DEFAULTS.build_waveform_cache
+          search_enter_mode    = DEFAULTS.search_enter_mode
+
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
+          reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
+          reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
+
+          MarkFontDirty()
+          CollectFiles()
+        end
+        if reaper.ImGui_IsItemHovered(ctx) then
+          reaper.ImGui_SetTooltip(ctx, "Reset all settings to default values")
+        end
+      end
+
+      ----------------------------------------------------------------
+      -- 顶层分页
+      ----------------------------------------------------------------
+      local pages = {
+        -- 外观
+        { id = "Appearance", fn = function()
+            DrawPageHeader("Adjust UI appearance and display details", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            DrawSubTitle("UI") Section_UI()
+            DrawSubTitle("Window")
+            Section_Window()
+            DrawSubTitle("Peak Meter")
+            Section_Peaks()
+          end
+        },
+
+        -- 系统
+        { id = "System", fn = function()
+            DrawPageHeader("Adjust system preferences", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            DrawSubTitle("Stop audio device settings"); Section_System_StopAudioDevice()
+          end
+        },
+
+        -- 双击与预览
+        { id = "Playback & Preview", fn = function()
+            DrawPageHeader("Configure preview and playback behavior", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            DrawSubTitle("Double-Click & Preview")
+            Section_DblClick_Preview()
+            DrawSubTitle("Playback")
+            Section_Playback()
+            DrawSubTitle("Playback Control")
+            Section_PlaybackCtrl()
+            DrawSubTitle("Waveform Preview")
+            Section_WaveformPreview()
+          end
+        },
+
+        -- 数据库与缓存
+        { id = "Database & Cache", fn = function()
+            DrawPageHeader("Manage database and cache", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            DrawSubTitle("Database")
+            Section_Database()
+            DrawSubTitle("Cache Directory")
+            Section_CacheDir()
+          end
+        },
+
+        -- 搜索与历史
+        { id = "Search & History", fn = function()
+            DrawPageHeader("Configure search and history", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            DrawSubTitle("Search")
+            Section_Search()
+            DrawSubTitle("Recent")
+            Section_Recent()
+          end
+        },
+
+        -- 预览路由
+        { id = "Routing", fn = function()
+            DrawPageHeader("Configure preview output tracks and channels", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            DrawSubTitle("Preview Output Track & Channels")
+            Section_Route()
+          end
+        },
+
+        -- UCS
+        { id = "UCS", fn = function()
+            DrawPageHeader("Configure UCS language and tags", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            DrawSubTitle("UCS Language Selection")
+            Section_UCS()
+          end
+        },
+
+        -- 重置默认值
+        { id = "Reset Defaults", fn = function()
+            DrawPageHeader("Restore defaults", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            DrawSubTitle("Restore Defaults")
+            Section_ResetToDefaults()
+          end
+        },
+      }
+
+      -- Ctrl+P 打开设置弹窗
+      if (reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())) and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_P()) then
+        settings_window_open = true
+        reaper.SetExtState(EXT_SECTION, "popup_settings_open", "true", true)
+      end
+
+      function DrawSettingsWindow()
+        if not settings_window_open then return end
+
+        reaper.ImGui_SetNextWindowSize(ctx, 600, 400, reaper.ImGui_Cond_FirstUseEver())
+        local visible, open = reaper.ImGui_Begin(ctx, "Settings", true, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+        if visible then
+          -- 顶部导航
+          local ix, iy = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
+          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), 10, iy)
+          for i, p in ipairs(pages) do
+            NavTextButton(p.id, p.id)
+            reaper.ImGui_SameLine(ctx)
+          end
+          reaper.ImGui_NewLine(ctx)
+          reaper.ImGui_PopStyleVar(ctx)
+
+          -- 当前页内容
+          for _, p in ipairs(pages) do
+            if p.id == settings_active_page then
+              p.fn()
+              break
+            end
+          end
+
+          -- 底部留白
+          reaper.ImGui_Dummy(ctx, 800, 14)
+        end
+        reaper.ImGui_End(ctx)
+
+        -- 只在本帧从开到关的瞬间保存一次
+        if settings_window_prev_open and not open then
+          SaveSettings()
+        end
+        settings_window_prev_open = open
+
+        if settings_window_open ~= open then
+          settings_window_open = open
+          reaper.SetExtState(EXT_SECTION, "popup_settings_open", tostring(open), true)
+        end
+      end
+
+      DrawSettingsWindow()
     end
 
     -- 电平表通道选项
