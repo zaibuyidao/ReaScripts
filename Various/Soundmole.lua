@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.54
+-- @version 1.0.55
 -- @changelog
---   Optimized playback controls, improved loop control, and added a preview routing dropdown.
---   Added Same Folder mode.
+--   Preview routing adds a Hardware output option with channel selection and Mono toggle.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

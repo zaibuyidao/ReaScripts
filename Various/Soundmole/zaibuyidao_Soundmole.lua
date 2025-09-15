@@ -6800,6 +6800,8 @@ local preview_route_mode   = reaper.GetExtState(EXT_SECTION, "preview_route_mode
 if preview_route_mode ~= "auto" and preview_route_mode ~= "named" and preview_route_mode ~= "selected" then
   preview_route_mode = "auto"
 end
+local preview_out_to_track = reaper.GetExtState(EXT_SECTION, "preview_out_to_track") ~= "0" -- 默认经轨道，1=经轨道 0=硬件输出
+local preview_output_chan  = tonumber(reaper.GetExtState(EXT_SECTION, "preview_output_chan")) or 0 -- 默认1/2 (I_OUTCHAN: 低10位=物理输出起始通道，1024位(1<<10)为Mono标志)
 
 -- 找到最上方的同名轨道
 function FindTopmostTrackByName(name)
@@ -6813,8 +6815,7 @@ function FindTopmostTrackByName(name)
   return nil
 end
 
--- 找到第一条选中的轨道
-local function FindFirstSelectedTrack()
+function FindFirstSelectedTrack()
   local cnt = reaper.CountTracks(0)
   for i = 0, cnt - 1 do
     local tr = reaper.GetTrack(0, i)
@@ -6823,23 +6824,38 @@ local function FindFirstSelectedTrack()
   return nil
 end
 
--- 应用输出轨道到当前预览对象
+-- 显示标签, 通道/Mono
+function FormatChanLabel(chan)
+  local n = chan & 1023
+  if (chan & 1024) == 0 then
+    return string.format("Channel %d/%d", n + 1, n + 2)
+  else
+    return string.format("Channel %d", n + 1)
+  end
+end
+
 function ApplyPreviewOutputTrack(preview)
   if not preview or not preview_route_enable then return end
-  if not reaper.CF_Preview_SetOutputTrack then return end
 
-  local target = nil
-  if preview_route_mode == "selected" then
-    target = FindFirstSelectedTrack()
-  elseif preview_route_mode == "named" then
-    target = FindTopmostTrackByName(preview_route_name)
+  if preview_out_to_track then
+    if not reaper.CF_Preview_SetOutputTrack then return end
+    local target = nil
+    if preview_route_mode == "selected" then
+      target = FindFirstSelectedTrack()
+    elseif preview_route_mode == "named" then
+      target = FindTopmostTrackByName(preview_route_name)
+    else
+      target = FindFirstSelectedTrack() or FindTopmostTrackByName(preview_route_name)
+    end
+    if target then
+      local proj = reaper.EnumProjects(-1, "")
+      reaper.CF_Preview_SetOutputTrack(preview, proj, target)
+    end
   else
-    target = FindFirstSelectedTrack() or FindTopmostTrackByName(preview_route_name)
-  end
-
-  if target then
-    local proj = reaper.EnumProjects(-1, "")
-    reaper.CF_Preview_SetOutputTrack(preview, proj, target)
+    -- 硬件输出
+    if reaper.CF_Preview_SetValue then
+      reaper.CF_Preview_SetValue(preview, "I_OUTCHAN", preview_output_chan)
+    end
   end
 end
 
@@ -6853,7 +6869,56 @@ function RenderPreviewRouteSettingsUI(ctx)
     reaper.SetExtState(EXT_SECTION, "preview_route_enable", new_enable and "1" or "0", true)
   end
 
-  -- 路由模式
+  -- 输出目标，硬件 / 经轨道
+  reaper.ImGui_Text(ctx, "Output target:")
+  local changed_hw = reaper.ImGui_RadioButton(ctx, "Hardware output", not preview_out_to_track)
+  if changed_hw then
+    preview_out_to_track = false
+    reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "0", true)
+  end
+  reaper.ImGui_SameLine(ctx)
+  local changed_tr = reaper.ImGui_RadioButton(ctx, "Through track", preview_out_to_track)
+  if changed_tr then
+    preview_out_to_track = true
+    reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "1", true)
+  end
+
+  -- 硬件输出设置
+  reaper.ImGui_BeginDisabled(ctx, preview_out_to_track)
+  reaper.ImGui_Text(ctx, "Hardware channels:")
+  reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_SetNextItemWidth(ctx, 130)
+  if reaper.ImGui_BeginCombo(ctx, "##preview_hw_chan", FormatChanLabel(preview_output_chan)) then
+    -- Mono 开关，切换 bit 10
+    local is_mono = (preview_output_chan & 1024) ~= 0
+    local mono_changed, mono_val = reaper.ImGui_Checkbox(ctx, "Mono", is_mono)
+    if mono_changed then
+      if mono_val then
+        preview_output_chan = (preview_output_chan | 1024)
+      else
+        preview_output_chan = (preview_output_chan & ~1024)
+      end
+      reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(preview_output_chan), true)
+    end
+
+    reaper.ImGui_Separator(ctx)
+    local chan_base   = preview_output_chan & 1023
+    local mono_flag   = (preview_output_chan & 1024)
+    local skip        = (mono_flag == 0) and 2 or 1
+    local num_out     = reaper.GetNumAudioOutputs() or 2
+    for i = 0, num_out - 1, skip do
+      local sel = (chan_base == i)
+      if reaper.ImGui_Selectable(ctx, FormatChanLabel(i | mono_flag), sel) then
+        preview_output_chan = (i | mono_flag)
+        reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(preview_output_chan), true)
+      end
+    end
+    reaper.ImGui_EndCombo(ctx)
+  end
+  reaper.ImGui_EndDisabled(ctx)
+
+  -- 经轨道
+  reaper.ImGui_BeginDisabled(ctx, not preview_out_to_track)
   reaper.ImGui_Text(ctx, "Routing mode:")
   local modes = { "Auto: first selected, else named", "Named track only", "First selected track only" }
   local map   = { "auto", "named", "selected" }
@@ -6879,7 +6944,7 @@ function RenderPreviewRouteSettingsUI(ctx)
   end
   reaper.ImGui_SameLine(ctx)
   HelpMarker("If multiple tracks share the same name, the topmost one is used.")
-  -- reaper.ImGui_TextColored(ctx, colors.gary, "If multiple tracks share the same name, the topmost one is used.")
+  reaper.ImGui_EndDisabled(ctx)
 end
 
 --------------------------------------------- 播放控制按钮 ---------------------------------------------
@@ -7275,6 +7340,13 @@ function DrawPreviewRouteMenu(ctx)
   end
 
   if reaper.ImGui_BeginPopup(ctx, "##preview_route_menu") then
+    if preview_out_to_track == nil then
+      preview_out_to_track = reaper.GetExtState(EXT_SECTION, "preview_out_to_track") ~= "0" -- 默认走轨道
+    end
+    if preview_output_chan == nil then
+      preview_output_chan = tonumber(reaper.GetExtState(EXT_SECTION, "preview_output_chan")) or 0 -- 低10位起始通道，1024位为Mono
+    end
+
     -- 激活勾选
     local changed_enable, new_enable = reaper.ImGui_Checkbox(ctx, "Enable preview routing", preview_route_enable)
     if changed_enable then
@@ -7283,8 +7355,55 @@ function DrawPreviewRouteMenu(ctx)
     end
 
     reaper.ImGui_Separator(ctx)
+    reaper.ImGui_Text(ctx, "Output target:")
+    local changed_hw = reaper.ImGui_RadioButton(ctx, "Hardware output", not preview_out_to_track)
+    if changed_hw then
+      preview_out_to_track = false
+      reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "0", true)
+    end
+    reaper.ImGui_SameLine(ctx)
+    local changed_tr = reaper.ImGui_RadioButton(ctx, "Through track", preview_out_to_track)
+    if changed_tr then
+      preview_out_to_track = true
+      reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "1", true)
+    end
+
+    -- 硬件输出
+    reaper.ImGui_BeginDisabled(ctx, preview_out_to_track)
+    reaper.ImGui_Text(ctx, "Hardware channels:")
+    reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_SetNextItemWidth(ctx, 130)
+    if reaper.ImGui_BeginCombo(ctx, "##preview_hw_chan", FormatChanLabel(preview_output_chan)) then
+      local is_mono = (preview_output_chan & 1024) ~= 0
+      local mono_changed, mono_val = reaper.ImGui_Checkbox(ctx, "Mono", is_mono)
+      if mono_changed then
+        if mono_val then
+          preview_output_chan = preview_output_chan | 1024
+        else
+          preview_output_chan = preview_output_chan & 1023
+        end
+        reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(preview_output_chan), true)
+      end
+
+      reaper.ImGui_Separator(ctx)
+      local mono_flag = preview_output_chan & 1024
+      local skip      = (mono_flag == 0) and 2 or 1
+      local num_out   = reaper.GetNumAudioOutputs() or 2
+      local cur_base  = preview_output_chan & 1023
+
+      for i = 0, num_out - 1, skip do
+        local sel = (cur_base == i)
+        if reaper.ImGui_Selectable(ctx, FormatChanLabel(i | mono_flag), sel) then
+          preview_output_chan = (i | mono_flag)
+          reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(preview_output_chan), true)
+        end
+      end
+      reaper.ImGui_EndCombo(ctx)
+    end
+    reaper.ImGui_EndDisabled(ctx)
 
     -- 路由模式
+    reaper.ImGui_BeginDisabled(ctx, not preview_out_to_track)
     reaper.ImGui_Text(ctx, "Routing mode:")
     local modes = { "Auto: first selected, else named", "Named track only", "First selected track only" }
     local map   = { "auto", "named", "selected" }
@@ -7303,13 +7422,14 @@ function DrawPreviewRouteMenu(ctx)
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Named track:")
       reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_SetNextItemWidth(ctx, 150) -- 下拉里给个固定宽度更直观
+      reaper.ImGui_SetNextItemWidth(ctx, 150)
       local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
       if changed_name and new_name ~= nil then
         preview_route_name = new_name
         reaper.SetExtState(EXT_SECTION, "preview_route_name", preview_route_name or "", true)
       end
     end
+    reaper.ImGui_EndDisabled(ctx)
 
     reaper.ImGui_EndPopup(ctx)
   end
