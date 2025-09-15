@@ -299,7 +299,9 @@ local DOUBLECLICK_INSERT        = 0
 local DOUBLECLICK_PREVIEW       = 1
 local DOUBLECLICK_NONE          = 2
 local doubleclick_action        = DOUBLECLICK_NONE
-local bg_alpha                  = 1.0 -- 默认背景不透明
+local bg_alpha                  = 1.0   -- 默认背景不透明
+local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
+local mirror_database           = false -- 默认关闭 Database (Mirror)
 
 -- 保存设置
 function SaveSettings()
@@ -320,31 +322,71 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
   reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_ROW_HEIGHT, tostring(row_height), true)
+  reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
 end
 
 -- 恢复设置
-local last_doubleclick_action = tonumber(reaper.GetExtState(EXT_SECTION, "doubleclick_action"))
-if last_doubleclick_action then doubleclick_action = last_doubleclick_action end
+do
+  local v = tonumber(reaper.GetExtState(EXT_SECTION, "doubleclick_action"))
+  if v then doubleclick_action = v end
+end
 
-local last_auto_play = reaper.GetExtState(EXT_SECTION, "auto_play_selected")
-if last_auto_play == "1" then auto_play_selected = true
-elseif last_auto_play == "0" then auto_play_selected = false end
+do
+  local v = reaper.GetExtState(EXT_SECTION, "auto_play_selected")
+  if v == "1" then
+    auto_play_selected = true
+  elseif v == "0" then
+    auto_play_selected = false
+  end
+end
 
-local last_preserve_pitch = reaper.GetExtState(EXT_SECTION, "preserve_pitch")
-if last_preserve_pitch == "1" then preserve_pitch = true
-elseif last_preserve_pitch == "0" then preserve_pitch = false end
+do
+  local v = reaper.GetExtState(EXT_SECTION, "preserve_pitch")
+  if v == "1" then
+    preserve_pitch = true
+  elseif v == "0" then
+    preserve_pitch = false
+  end
+end
 
-local last_bg_alpha = tonumber(reaper.GetExtState(EXT_SECTION, "bg_alpha"))
-if last_bg_alpha then bg_alpha = last_bg_alpha end
+do
+  local v = tonumber(reaper.GetExtState(EXT_SECTION, "bg_alpha"))
+  if v then bg_alpha = v end
+end
 
-local last_img_h_offset = tonumber(reaper.GetExtState(EXT_SECTION, "img_h_offset"))
-if last_img_h_offset then img_h_offset = last_img_h_offset end
+do
+  local v = tonumber(reaper.GetExtState(EXT_SECTION, "img_h_offset"))
+  if v then img_h_offset = v end
+end
 
-local last_max_recent_play = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_play"))
-if last_max_recent_play then max_recent_files = math.max(1, math.min(100, last_max_recent_play)) end
+do
+  local v = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_play"))
+  if v then max_recent_files = math.max(1, math.min(100, v)) end
+end
 
-local last_max_recent_search = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_search"))
-if last_max_recent_search then max_recent_search = math.max(1, math.min(100, last_max_recent_search)) end
+do
+  local v = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_search"))
+  if v then max_recent_search = math.max(1, math.min(100, v)) end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "mirror_folder_shortcuts")
+  if v == "1" then
+    mirror_folder_shortcuts = true
+  elseif v == "0" then
+    mirror_folder_shortcuts = false
+  end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "mirror_database")
+  if v == "1" then
+    mirror_database = true
+  elseif v == "0" then
+    mirror_database = false
+  end
+end
 
 --------------------------------------------- 颜色表 ---------------------------------------------
 
@@ -3503,6 +3545,24 @@ function RefreshFolderFiles(dir)
   -- end
   -- last_cover_img, last_cover_path = nil, nil
   -- last_img_w = nil
+end
+
+--------------------------------------------- 快速预览文件夹节点 ---------------------------------------------
+
+preview_folder_input = preview_folder_input or ""
+reopen_preview_popup = reopen_preview_popup or false
+preview_popup_pos_x  = preview_popup_pos_x -- 记住上次弹窗位置
+preview_popup_pos_y  = preview_popup_pos_y
+
+-- 快速预览文件夹
+function BrowseForFolder(init_dir)
+  if reaper.JS_Dialog_BrowseForFolder then
+    local ok, path = reaper.JS_Dialog_BrowseForFolder("Select a folder", init_dir or "")
+    if ok and path and path ~= "" then
+      return path
+    end
+  end
+  return nil
 end
 
 --------------------------------------------- UCS节点 ---------------------------------------------
@@ -7677,7 +7737,7 @@ function loop()
 
       static.filtered_list_map    = {}
       static.last_filter_text_map = {}
-      selected_row = nil  
+      selected_row = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
@@ -7716,6 +7776,81 @@ function loop()
       reaper.ImGui_BeginTooltip(ctx)
       reaper.ImGui_Text(ctx, "Click to jump to this folder and list its audio files.")
       reaper.ImGui_EndTooltip(ctx)
+    end
+
+    -- 快速预览文件夹
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    if reaper.ImGui_Button(ctx, "Pick Folder", 90, 56) then
+      local init = preview_folder_input
+      if not init or init == "" then
+        if same_folder and same_folder ~= "" then
+          init = same_folder
+        elseif tree_state and tree_state.cur_path and tree_state.cur_path ~= "" then
+          init = tree_state.cur_path
+        else
+          init = reaper.GetResourcePath() -- 默认给个 REAPER 资源目录
+        end
+      end
+      preview_folder_input = normalize_path(init, true)
+      reaper.ImGui_OpenPopup(ctx, "##preview_folder_popup")
+    end
+
+    if reopen_preview_popup then
+      if preview_popup_pos_x and preview_popup_pos_y then
+        reaper.ImGui_SetNextWindowPos(ctx, preview_popup_pos_x, preview_popup_pos_y, reaper.ImGui_Cond_Appearing(), 0, 0)
+      end
+      reaper.ImGui_OpenPopup(ctx, "##preview_folder_popup")
+      reopen_preview_popup = false
+    end
+
+    if reaper.ImGui_BeginPopup(ctx, "##preview_folder_popup") then
+      if reaper.ImGui_IsWindowAppearing(ctx) then
+        preview_popup_pos_x, preview_popup_pos_y = reaper.ImGui_GetWindowPos(ctx)
+      end
+      reaper.ImGui_Text(ctx, "Type or pick a folder to preview:")
+      reaper.ImGui_PushItemWidth(ctx, 480)
+
+      local changed, new_str = reaper.ImGui_InputText(ctx, "##preview_folder_input", preview_folder_input or "")
+      if changed then
+        preview_folder_input = new_str
+      end
+      reaper.ImGui_PopItemWidth(ctx)
+
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      if reaper.ImGui_Button(ctx, "Select...", 80, 26) then
+        local picked = BrowseForFolder(preview_folder_input)
+        if picked and picked ~= "" then
+          preview_folder_input = normalize_path(picked, true)
+        end
+        reopen_preview_popup = true
+      end
+
+      reaper.ImGui_Separator(ctx)
+      if reaper.ImGui_Button(ctx, "OK", 80, 26) then
+        local path = (preview_folder_input or ""):gsub("%s+$", "")
+        if path ~= "" then
+          collect_mode        = COLLECT_MODE_SAMEFOLDER
+          tree_state.cur_path = normalize_path(path, true)
+          RefreshFolderFiles(tree_state.cur_path)
+          reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
+          reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+
+          file_select_start, file_select_end, selected_row = nil, nil, nil
+          files_idx_cache = nil
+          CollectFiles()
+
+          local static = _G._soundmole_static or {}
+          _G._soundmole_static = static
+          static.filtered_list_map, static.last_filter_text_map = {}, {}
+          reaper.ImGui_CloseCurrentPopup(ctx)
+        end
+      end
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      if reaper.ImGui_Button(ctx, "Cancel", 80, 26) then
+        reaper.ImGui_CloseCurrentPopup(ctx)
+      end
+
+      reaper.ImGui_EndPopup(ctx)
     end
 
     -- 创建数据库按钮
@@ -7987,36 +8122,38 @@ function loop()
           end
 
           -- 镜像官方快捷键方式
-          local sc_folders = list_reaper_shortcut_folders()
-          if #sc_folders == 0 then
-            -- 什么都不做
-          else
-            if not shortcut_mirror_nodes_inited then
-              expanded_paths = expanded_paths or {}
-              if tree_state.cur_path and tree_state.cur_path ~= "" then
-                local p = tree_state.cur_path:gsub("[/\\]+$", "")
-                while p and p ~= "" do
-                  expanded_paths[p] = true
-                  local parent = p:match("^(.*)[/\\][^/\\]+$")
-                  p = parent
+          if mirror_folder_shortcuts then
+            local sc_folders = list_reaper_shortcut_folders()
+            if #sc_folders == 0 then
+              -- 什么都不做
+            else
+              if not shortcut_mirror_nodes_inited then
+                expanded_paths = expanded_paths or {}
+                if tree_state.cur_path and tree_state.cur_path ~= "" then
+                  local p = tree_state.cur_path:gsub("[/\\]+$", "")
+                  while p and p ~= "" do
+                    expanded_paths[p] = true
+                    local parent = p:match("^(.*)[/\\][^/\\]+$")
+                    p = parent
+                  end
                 end
+                shortcut_mirror_nodes_inited = true
               end
-              shortcut_mirror_nodes_inited = true
-            end
 
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-            local hdr_flags_sc_mirror = shortcut_mirror_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-            local is_sc_mirror_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts (Mirror)##shortcut_mirror", nil, hdr_flags_sc_mirror)
-            shortcut_mirror_open = is_sc_mirror_open
-            reaper.ImGui_PopStyleColor(ctx)
-            
-            if is_sc_mirror_open then
-              reaper.ImGui_Indent(ctx, 7)
-              ResetCollectionGuide() -- 重置导线度量
-              for _, sc in ipairs(sc_folders or {}) do
-                draw_shortcut_tree_mirror(sc, nil, 0)
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+              local hdr_flags_sc_mirror = shortcut_mirror_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+              local is_sc_mirror_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts (Mirror)##shortcut_mirror", nil, hdr_flags_sc_mirror)
+              shortcut_mirror_open = is_sc_mirror_open
+              reaper.ImGui_PopStyleColor(ctx)
+              
+              if is_sc_mirror_open then
+                reaper.ImGui_Indent(ctx, 7)
+                ResetCollectionGuide() -- 重置导线度量
+                for _, sc in ipairs(sc_folders or {}) do
+                  draw_shortcut_tree_mirror(sc, nil, 0)
+                end
+                reaper.ImGui_Unindent(ctx, 7)
               end
-              reaper.ImGui_Unindent(ctx, 7)
             end
           end
 
@@ -8398,34 +8535,36 @@ function loop()
           end
 
           -- REAPER Database
-          local reaper_db_list = list_reaper_databases()
-          if #reaper_db_list == 0 then
-            -- 什么都不做
-          else
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
-            local hdr_flags_readb = reaper_db_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-            local is_readb_open = reaper.ImGui_CollapsingHeader(ctx, "Database (Mirror)##reaperdb", nil, hdr_flags_readb)
-            reaper_db_open = is_readb_open
-            reaper.ImGui_PopStyleColor(ctx)
+          if mirror_database then
+            local reaper_db_list = list_reaper_databases()
+            if #reaper_db_list == 0 then
+              -- 什么都不做
+            else
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+              local hdr_flags_readb = reaper_db_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+              local is_readb_open = reaper.ImGui_CollapsingHeader(ctx, "Database (Mirror)##reaperdb", nil, hdr_flags_readb)
+              reaper_db_open = is_readb_open
+              reaper.ImGui_PopStyleColor(ctx)
 
-            if is_readb_open then
-              reaper.ImGui_Indent(ctx, 7)
-              for _, it in ipairs(reaper_db_list) do
-                local alias = it.alias
-                local fn    = it.filename
-                local is_sel = (collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db == fn)
+              if is_readb_open then
+                reaper.ImGui_Indent(ctx, 7)
+                for _, it in ipairs(reaper_db_list) do
+                  local alias = it.alias
+                  local fn    = it.filename
+                  local is_sel = (collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db == fn)
 
-                if reaper.ImGui_Selectable(ctx, alias, is_sel) then
-                  collect_mode = COLLECT_MODE_REAPERDB
-                  tree_state.cur_reaper_db = fn
+                  if reaper.ImGui_Selectable(ctx, alias, is_sel) then
+                    collect_mode = COLLECT_MODE_REAPERDB
+                    tree_state.cur_reaper_db = fn
 
-                  file_select_start, file_select_end, selected_row = nil, nil, -1
-                  files_idx_cache = nil
-                  CollectFiles()
+                    file_select_start, file_select_end, selected_row = nil, nil, -1
+                    files_idx_cache = nil
+                    CollectFiles()
+                  end
                 end
-              end
 
-              reaper.ImGui_Unindent(ctx, 7)
+                reaper.ImGui_Unindent(ctx, 7)
+              end
             end
           end
 
@@ -9900,6 +10039,47 @@ function loop()
         if HelpMarker then HelpMarker("Number of peak meter channels to show. Range: 2~128.") end
       end
 
+      local function Section_MirrorToggles()
+        -- reaper.ImGui_Text(ctx, "Mirror")
+        -- reaper.ImGui_Spacing(ctx)
+
+        -- Folder Shortcuts (Mirror)
+        local chg_fs
+        chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, "Enable Folder Shortcuts (Mirror)", mirror_folder_shortcuts)
+        if chg_fs then
+          reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
+        end
+        if reaper.ImGui_IsItemHovered(ctx) then
+          reaper.ImGui_SetTooltip(ctx,
+            "Mirror the Media Explorer's \"Folder Shortcuts\" here.\n" ..
+            "Read-only: toggling this does NOT add/remove shortcuts in REAPER.\n" ..
+            "Turn off to hide this section and skip enumerating shortcuts for faster UI."
+          )
+        end
+        -- reaper.ImGui_TextColored(ctx, colors.gary, 
+        --   "Mirror Media Explorer's \"Folder Shortcuts\" here. Read-only display. \n" ..
+        --   "Disable to hide this section and skip shortcut enumeration for faster UI."
+        -- )
+
+        -- Database (Mirror)
+        local chg_db
+        chg_db, mirror_database = reaper.ImGui_Checkbox(ctx, "Enable Database (Mirror)", mirror_database)
+        if chg_db then
+          reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
+        end
+        if reaper.ImGui_IsItemHovered(ctx) then
+          reaper.ImGui_SetTooltip(ctx,
+            "Mirror the Media Explorer \"Database\" list and entries.\n" ..
+            "Read-only: create/scan/refresh databases in Media Explorer itself.\n" ..
+            "Turn off to hide this section and skip querying databases on startup."
+          )
+        end
+        -- reaper.ImGui_TextColored(ctx, colors.gary, 
+        --   "Mirror the Media Explorer \"Database\" list and entries. Read-only display. \n" ..
+        --   "Create or rescan databases in Media Explorer. Disable to hide this section and skip queries on startup."
+        -- )
+      end
+
       local function Section_System_StopAudioDevice()
         local aci = reaper.SNM_GetIntConfigVar("audiocloseinactive", 1)
         local close_inactive = (aci == 1)
@@ -9908,6 +10088,7 @@ function loop()
         if changed_inactive then
           reaper.SNM_SetIntConfigVar("audiocloseinactive", close_inactive and 1 or 0)
         end
+        reaper.ImGui_TextColored(ctx, colors.gary, "Release the audio device when this window is inactive. Read-only behavior toggle.")
       end
 
       local function Section_DblClick_Preview()
@@ -10116,6 +10297,8 @@ function loop()
           reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
           reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
           reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
+          reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
+          reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
 
           MarkFontDirty()
           CollectFiles()
@@ -10137,6 +10320,8 @@ function loop()
             Section_Window()
             DrawSubTitle("Peak Meter")
             Section_Peaks()
+            DrawSubTitle("Media Explorer Mirrors") -- Folder Shortcuts & Database
+            Section_MirrorToggles()
           end
         },
 
