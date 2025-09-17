@@ -162,6 +162,7 @@ local shortcut_nodes_inited   = false -- 是否已初始化快捷方式节点的
 local expanded_paths          = {}    -- 已展开的文件夹路径表
 local file_select_start       = nil   -- 音频文件列多选起点
 local file_select_end         = nil   -- 音频文件列多选结束
+local keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
 
 -- 表格排序常量，编号对应表格列
 local TableColumns = {
@@ -324,6 +325,7 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_ROW_HEIGHT, tostring(row_height), true)
   reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
 end
 
 -- 恢复设置
@@ -334,20 +336,14 @@ end
 
 do
   local v = reaper.GetExtState(EXT_SECTION, "auto_play_selected")
-  if v == "1" then
-    auto_play_selected = true
-  elseif v == "0" then
-    auto_play_selected = false
-  end
+  if v == "1" then auto_play_selected = true
+  elseif v == "0" then auto_play_selected = false end
 end
 
 do
   local v = reaper.GetExtState(EXT_SECTION, "preserve_pitch")
-  if v == "1" then
-    preserve_pitch = true
-  elseif v == "0" then
-    preserve_pitch = false
-  end
+  if v == "1" then preserve_pitch = true
+  elseif v == "0" then preserve_pitch = false end
 end
 
 do
@@ -372,20 +368,20 @@ end
 
 do
   local v = reaper.GetExtState(EXT_SECTION, "mirror_folder_shortcuts")
-  if v == "1" then
-    mirror_folder_shortcuts = true
-  elseif v == "0" then
-    mirror_folder_shortcuts = false
-  end
+  if v == "1" then mirror_folder_shortcuts = true
+  elseif v == "0" then mirror_folder_shortcuts = false end
 end
 
 do
   local v = reaper.GetExtState(EXT_SECTION, "mirror_database")
-  if v == "1" then
-    mirror_database = true
-  elseif v == "0" then
-    mirror_database = false
-  end
+  if v == "1" then mirror_database = true
+  elseif v == "0" then mirror_database = false end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "insert_keep_rate_pitch")
+  if v == "1" then keep_preview_rate_pitch_on_insert = true
+  elseif v == "0" then keep_preview_rate_pitch_on_insert = false end
 end
 
 --------------------------------------------- 颜色表 ---------------------------------------------
@@ -1427,6 +1423,41 @@ function GetPhysicalPath(path_or_source)
   end
 end
 
+function InsertMediaWithKeepParams(path)
+  path = normalize_path(path, false)
+  local before = {}
+  for i = 0, reaper.CountMediaItems(0) - 1 do
+    before[reaper.GetMediaItem(0, i)] = true
+  end
+
+  reaper.InsertMedia(path, 0)
+
+  local new_item = nil
+  for i = 0, reaper.CountMediaItems(0) - 1 do
+    local item = reaper.GetMediaItem(0, i)
+    if not before[item] then new_item = item break end
+  end
+  if not new_item then return end
+
+  local take = reaper.GetActiveTake(new_item)
+  if take and keep_preview_rate_pitch_on_insert then
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", tonumber(play_rate) or 1.0)
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PITCH",    tonumber(pitch) or 0.0)
+    reaper.SetMediaItemTakeInfo_Value(take, "B_PPITCH",   preserve_pitch and 1 or 0)
+
+    local src = reaper.GetMediaItemTake_Source(take)
+    if src then
+      local src_len = select(1, reaper.GetMediaSourceLength(src)) or 0
+      if src_len > 0 then
+        reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", src_len / play_rate)
+      end
+    end
+    reaper.UpdateItemInProject(new_item)
+  end
+
+  return new_item
+end
+
 function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end)
   path = normalize_path(path, false)
   -- 保存Arrange视图状态 - 避免滚屏
@@ -1472,7 +1503,20 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
   if section_offset then src_offset = src_offset + section_offset end
 
   reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
-  reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
+  -- reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
+
+  -- 按需应用预听速率与音高
+  if keep_preview_rate_pitch_on_insert then
+    reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len / play_rate)
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", play_rate or 1.0)
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PITCH",    pitch     or 0.0)
+    reaper.SetMediaItemTakeInfo_Value(take, "B_PPITCH",   preserve_pitch and 1 or 0)
+    reaper.UpdateItemInProject(new_item)
+  else
+    -- 长度等于源选区时长
+    reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
+  end
+
   local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
   -- 是否移动光标到结尾
   if move_cursor_to_end then
@@ -4604,7 +4648,11 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
         if info.path and info.path ~= "" then
           local insert_path = normalize_path(info.path, false)
-          reaper.InsertMedia(insert_path, 0)
+          if keep_preview_rate_pitch_on_insert then
+            InsertMediaWithKeepParams(insert_path)
+          else
+            reaper.InsertMedia(insert_path, 0)
+          end
           reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
         end
         reaper.PreventUIRefresh(-1)
@@ -4911,7 +4959,11 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
             local old_cursor = reaper.GetCursorPosition()
             reaper.PreventUIRefresh(1) -- 防止UI刷新
-            reaper.InsertMedia(normalize_path(info.path, false), 0)
+            if keep_preview_rate_pitch_on_insert then
+              InsertMediaWithKeepParams(normalize_path(info.path, false))
+            else
+              reaper.InsertMedia(normalize_path(info.path, false), 0)
+            end
             reaper.SetEditCurPos(old_cursor, true, false) -- 恢复光标到插入前
             reaper.PreventUIRefresh(-1)
             reaper.UpdateArrange()
@@ -4953,7 +5005,11 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
           local old_cursor = reaper.GetCursorPosition()
           reaper.PreventUIRefresh(1) -- 防止UI刷新
-          reaper.InsertMedia(normalize_path(info.path, false), 0)
+          if keep_preview_rate_pitch_on_insert then
+            InsertMediaWithKeepParams(normalize_path(info.path, false))
+          else
+            reaper.InsertMedia(normalize_path(info.path, false), 0)
+          end
           reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
           reaper.PreventUIRefresh(-1)
           reaper.UpdateArrange()
@@ -9677,7 +9733,11 @@ function loop()
                 )
               else
                 -- 只插入全长源音频
-                reaper.InsertMedia(path, 0)
+                if keep_preview_rate_pitch_on_insert then
+                  InsertMediaWithKeepParams(path)
+                else
+                  reaper.InsertMedia(path, 0)
+                end
               end
               reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
@@ -10289,6 +10349,15 @@ function loop()
         end
       end
 
+      local function Section_InsertOptions()
+        reaper.ImGui_Text(ctx, "Insert and drag:")
+        local chg_keep, v_keep = reaper.ImGui_Checkbox(ctx, "Keep preview rate & pitch when inserting to arrange", keep_preview_rate_pitch_on_insert)
+        if chg_keep then
+          keep_preview_rate_pitch_on_insert = v_keep
+          reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", v_keep and "1" or "0", true)
+        end
+      end
+
       local function Section_Database()
         reaper.ImGui_Text(ctx, "Datebase Settings:")
         local chg_wf, v_wf = reaper.ImGui_Checkbox(ctx, "Build waveform cache during DB creation##wf_cache", build_waveform_cache)
@@ -10437,6 +10506,8 @@ function loop()
             DrawPageHeader("Configure preview and playback behavior", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
             DrawSubTitle("Double-Click & Preview")
             Section_DblClick_Preview()
+            DrawSubTitle("Insert Options")
+            Section_InsertOptions()
             DrawSubTitle("Playback")
             Section_Playback()
             DrawSubTitle("Playback Control")

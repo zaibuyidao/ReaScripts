@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.57
+-- @version 1.0.58
 -- @changelog
---   Fixed empty filter results, checked columns are eagerly populated on load to ensure matches.
+--   New option Keep preview rate and pitch when inserting to arrange:
+--   Location "Settings - Playback & Preview - Insert Options"
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
