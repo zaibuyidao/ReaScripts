@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="3b4988c10f6aa517b36542d3fb379e44993166ce">
+<index version="1" name="zaibuyidao Scripts" commit="839b0fab795ce884e2d06c053432bacb471d316d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14685,6 +14685,17 @@ Added mirror toggles for REAPER Media Explorer in "Settings - Appearance". You c
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/3b4988c10f6aa517b36542d3fb379e44993166ce/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/3b4988c10f6aa517b36542d3fb379e44993166ce/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/3b4988c10f6aa517b36542d3fb379e44993166ce/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.58" author="zaibuyidao" time="2025-09-17T16:46:53Z">
+        <changelog><![CDATA[New option Keep preview rate and pitch when inserting to arrange:
+Location "Settings - Playback & Preview - Insert Options"]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/839b0fab795ce884e2d06c053432bacb471d316d/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/839b0fab795ce884e2d06c053432bacb471d316d/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/839b0fab795ce884e2d06c053432bacb471d316d/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/839b0fab795ce884e2d06c053432bacb471d316d/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/839b0fab795ce884e2d06c053432bacb471d316d/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/839b0fab795ce884e2d06c053432bacb471d316d/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/839b0fab795ce884e2d06c053432bacb471d316d/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
