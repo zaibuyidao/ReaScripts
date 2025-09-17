@@ -5488,8 +5488,34 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   if not dbfile or dbfile == "" then return false end
   local fullpath = db_dir .. sep .. dbfile
 
-  -- 懒解析流。DATA 行先不解析，仅缓存原文
-  _G._mediadb_stream = MediaDBStreamStart(fullpath, { lazy_data = true })
+  -- 把搜索面板里已勾选的列映射为 DATA 行中的键，作为优先解析集合
+  local function build_eager_tags()
+    local m = {}
+    -- File Name/Path/Size/Type 不在 DATA 内，不用设置
+    if type(search_fields) == "table" then
+      for _, f in ipairs(search_fields) do
+        if f.enabled then
+          if f.key == "description"    then m.d = true end      -- d:
+          if f.key == "comment"        then m.c = true end      -- c:
+          if f.key == "genre"          then m.g = true end      -- g:
+          if f.key == "key"            then m.k = true end      -- k:
+          if f.key == "bpm"            then m.p = true end      -- p:
+          if f.key == "ucs_category"   then m.category = true end     -- category:
+          if f.key == "ucs_subcategory"then m.subcategory = true end  -- subcategory:
+          if f.key == "ucs_catid"      then m.catid = true end        -- catid:
+          if f.key == "bwf_orig_date"  then m.y = true end      -- y:
+          if f.key == "length"         then m.l = true end      -- l:
+          if f.key == "channels"       then m.n = true end      -- n:
+          if f.key == "samplerate"     then m.s = true end      -- s:
+          if f.key == "bits"           then m.i = true end      -- i:
+        end
+      end
+    end
+    return m
+  end
+
+  -- 懒解析流。DATA 行先不解析，仅缓存原文 + 按勾选列优先解析
+  _G._mediadb_stream = MediaDBStreamStart(fullpath, {lazy_data  = true, eager_tags = build_eager_tags()})
   if not _G._mediadb_stream then return false end
 
   _G._stream_seen = {}
@@ -9232,14 +9258,15 @@ function loop()
             table.sort(filtered_list, function(a, b)
               for _, spec in ipairs(sort_specs) do
                 if spec.user_id == TableColumns.FILENAME then
-                  if a.filename ~= b.filename then -- File 列排序
+                  if a.filename ~= b.filename then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                       return a.filename > b.filename
                     else
                       return a.filename < b.filename
                     end
                   end
-                elseif spec.user_id == TableColumns.SIZE then -- Size 列排序
+
+                elseif spec.user_id == TableColumns.SIZE then
                   local asize = tonumber(a.size) or 0
                   local bsize = tonumber(b.size) or 0
                   if asize ~= bsize then
@@ -9249,7 +9276,8 @@ function loop()
                       return asize < bsize
                     end
                   end
-                elseif spec.user_id == TableColumns.TYPE then -- Type 列排序
+
+                elseif spec.user_id == TableColumns.TYPE then
                   if a.type ~= b.type then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                       return a.type > b.type
@@ -9257,16 +9285,20 @@ function loop()
                       return a.type < b.type
                     end
                   end
-                elseif spec.user_id == TableColumns.DATE then -- Date 列排序
-                  if (a.bwf_orig_date or "") ~= (b.bwf_orig_date or "") then
+
+                elseif spec.user_id == TableColumns.DATE then -- BWF Origination Date
+                  local ad = a.bwf_orig_date or ""
+                  local bd = b.bwf_orig_date or ""
+                  if ad ~= bd then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                      return (a.bwf_orig_date or "") > (b.bwf_orig_date or "")
+                      return ad > bd
                     else
-                      return (a.bwf_orig_date or "") < (b.bwf_orig_date or "")
+                      return ad < bd
                     end
                   end
-                elseif spec.user_id == TableColumns.GENRE then -- Genre & Position 列排序
-                  if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then -- Media items or RPP
+
+                elseif spec.user_id == TableColumns.GENRE then -- Genre (Items/RPP 模式下按 position)
+                  if collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP then
                     local apos = tonumber(a.position) or 0
                     local bpos = tonumber(b.position) or 0
                     if apos ~= bpos then
@@ -9277,31 +9309,40 @@ function loop()
                       end
                     end
                   else
-                    if (a.genre or "") ~= (b.genre or "") then
+                    local ag = a.genre or ""
+                    local bg = b.genre or ""
+                    if ag ~= bg then
                       if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                        return (a.genre or "") > (b.genre or "")
+                        return ag > bg
                       else
-                        return (a.genre or "") < (b.genre or "")
+                        return ag < bg
                       end
                     end
                   end
-                elseif spec.user_id == TableColumns.COMMENT then -- Comment 列排序
-                  if (a.comment or "") ~= (b.comment or "") then
+
+                elseif spec.user_id == TableColumns.COMMENT then
+                  local ac = a.comment or ""
+                  local bc = b.comment or ""
+                  if ac ~= bc then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                      return (a.comment or "") > (b.comment or "")
+                      return ac > bc
                     else
-                      return (a.comment or "") < (b.comment or "")
+                      return ac < bc
                     end
                   end
-                elseif spec.user_id == TableColumns.DESCRIPTION then -- Description 列排序
-                  if (a.description or "") ~= (b.description or "") then
+
+                elseif spec.user_id == TableColumns.DESCRIPTION then
+                  local adesc = a.description or ""
+                  local bdesc = b.description or ""
+                  if adesc ~= bdesc then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                      return (a.description or "") > (b.description or "")
+                      return adesc > bdesc
                     else
-                      return (a.description or "") < (b.description or "")
+                      return adesc < bdesc
                     end
                   end
-                elseif spec.user_id == TableColumns.LENGTH then -- Length 列排序
+
+                elseif spec.user_id == TableColumns.LENGTH then
                   local alen = tonumber(a.length) or 0
                   local blen = tonumber(b.length) or 0
                   if alen ~= blen then
@@ -9311,17 +9352,19 @@ function loop()
                       return alen < blen
                     end
                   end
-                elseif spec.user_id == TableColumns.CHANNELS then -- Channels 列排序
-                  local achan = tonumber(a.channels) or 0
-                  local bchan = tonumber(b.channels) or 0
-                  if achan ~= bchan then
+
+                elseif spec.user_id == TableColumns.CHANNELS then
+                  local ach = tonumber(a.channels) or 0
+                  local bch = tonumber(b.channels) or 0
+                  if ach ~= bch then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
-                      return achan > bchan
+                      return ach > bch
                     else
-                      return achan < bchan
+                      return ach < bch
                     end
                   end
-                elseif spec.user_id == TableColumns.SAMPLERATE then -- Samplerate 列排序
+
+                elseif spec.user_id == TableColumns.SAMPLERATE then
                   local asr = tonumber(a.samplerate) or 0
                   local bsr = tonumber(b.samplerate) or 0
                   if asr ~= bsr then
@@ -9331,7 +9374,8 @@ function loop()
                       return asr < bsr
                     end
                   end
-                elseif spec.user_id == TableColumns.BITS then -- Bits 列排序
+
+                elseif spec.user_id == TableColumns.BITS then
                   local abits = tonumber(a.bits) or 0
                   local bbits = tonumber(b.bits) or 0
                   if abits ~= bbits then
@@ -9341,6 +9385,62 @@ function loop()
                       return abits < bbits
                     end
                   end
+
+                elseif spec.user_id == TableColumns.KEY then
+                  local ak = a.key or ""
+                  local bk = b.key or ""
+                  if ak ~= bk then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return ak > bk
+                    else
+                      return ak < bk
+                    end
+                  end
+
+                elseif spec.user_id == TableColumns.BPM then
+                  local abpm = tonumber(a.bpm) or 0
+                  local bbpm = tonumber(b.bpm) or 0
+                  if abpm ~= bbpm then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return abpm > bbpm
+                    else
+                      return abpm < bbpm
+                    end
+                  end
+
+                elseif spec.user_id == TableColumns.CATEGORY then
+                  local acat = a.ucs_category or a.category or ""
+                  local bcat = b.ucs_category or b.category or ""
+                  if acat ~= bcat then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return acat > bcat
+                    else
+                      return acat < bcat
+                    end
+                  end
+
+                elseif spec.user_id == TableColumns.SUBCATEGORY then
+                  local asub = a.ucs_subcategory or a.subcategory or ""
+                  local bsub = b.ucs_subcategory or b.subcategory or ""
+                  if asub ~= bsub then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return asub > bsub
+                    else
+                      return asub < bsub
+                    end
+                  end
+
+                elseif spec.user_id == TableColumns.CATID then
+                  local acid = a.ucs_catid or a.catid or a.cat_id or ""
+                  local bcid = b.ucs_catid or b.catid or b.cat_id or ""
+                  if acid ~= bcid then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return acid > bcid
+                    else
+                      return acid < bcid
+                    end
+                  end
+
                 end
               end
               return false

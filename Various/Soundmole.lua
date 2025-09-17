@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.56
+-- @version 1.0.57
 -- @changelog
---   Added Quick Preview Folder. Enter a path or browse the disk to quickly open a specified folder and load its audio file list.
---   Added mirror toggles for REAPER Media Explorer in "Settings - Appearance". You can enable or disable Folder Shortcuts and Database independently.
+--   Fixed empty filter results, checked columns are eagerly populated on load to ensure matches.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

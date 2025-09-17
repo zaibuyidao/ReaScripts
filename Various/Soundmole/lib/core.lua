@@ -115,9 +115,26 @@ end
 -- UCS 标签读取
 function get_ucstag(source, tag)
   if not source or not tag or tag == "" then return nil end
+
+  -- 先检查ASWG
   local ok, val = GetMediaFileMetadataSafe(source, "ASWG:" .. tostring(tag))
   if ok and val and val ~= "" then
     return val
+  end
+  -- 再检查iXML
+  local map = {
+    category     = { "IXML:USER:CATEGORY" },
+    catId        = { "IXML:USER:CATID" },
+    subCategory  = { "IXML:USER:SUBCATEGORY" },
+    categoryfull = { "IXML:USER:CATEGORYFULL" },
+  }
+
+  local ids = map[tostring(tag)] or {}
+  for _, id in ipairs(ids) do
+    ok, val = GetMediaFileMetadataSafe(source, id)
+    if ok and val and val ~= "" then
+      return val
+    end
   end
   return nil
 end
@@ -637,6 +654,7 @@ function MediaDBStreamRead(stream, max_count)
   local added = 0
   local entry = s.entry or {}
   local lazy = not (s.opts and s.opts.lazy_data == false) -- 默认懒解析
+  local eager = (s.opts and s.opts.eager_tags) or nil     -- 需要优先解析的DATA键集合
 
   while added < (max_count or 1000) do
     local raw = f:read("*l")
@@ -670,11 +688,70 @@ function MediaDBStreamRead(stream, max_count)
       end
       entry.size = tonumber(entry.size) or 0
       entry.filename = entry.path and (entry.path:match("([^/\\]+)$") or entry.path) or ""
+
     elseif line:find("^DATA") then
       if lazy then
+        -- 只解析用户勾选的键，其余走懒加载。后续可 EnsureEntryParsed 全量解析
+        if eager then
+          if eager.g then
+            local v = line:match('"[Gg]:([^"]-)"') or line:match('[Gg]:"([^"]-)"') or line:match('[Gg]:([^%s"]+)')
+            if v and v ~= "" then entry.genre = v end
+          end
+          if eager.k then
+            local v = line:match('"[Kk]:([^"]-)"') or line:match('[Kk]:"([^"]-)"') or line:match('[Kk]:([^%s"]+)')
+            if v and v ~= "" then entry.key = v end
+          end
+          if eager.p then
+            local v = line:match('"[Pp]:([%d%.]+)"') or line:match('[Pp]:"([%d%.]+)"') or line:match('[Pp]:([%d%.]+)')
+            if v and v ~= "" then entry.bpm = tonumber(v) or entry.bpm or 0 end
+          end
+          if eager.category then
+            local v = line:match('"category:([^"]-)"') or line:match('category:"([^"]-)"') or line:match('category:([^%s"]+)')
+            if v and v ~= "" then entry.ucs_category = v end
+          end
+          if eager.subcategory then
+            local v = line:match('"subcategory:([^"]-)"') or line:match('subcategory:"([^"]-)"') or line:match('subcategory:([^%s"]+)')
+            if v and v ~= "" then entry.ucs_subcategory = v end
+          end
+          if eager.catid then
+            local v = line:match('"catid:([^"]-)"') or line:match('catid:"([^"]-)"') or line:match('catid:([^%s"]+)')
+            if v and v ~= "" then entry.ucs_catid = v end
+          end
+          if eager.c then
+            local v = line:match('"[Cc]:([^"]-)"') or line:match('[Cc]:"([^"]-)"') or line:match('[Cc]:([^%s"]+)')
+            if v and v ~= "" then entry.comment = v end
+          end
+          if eager.d then
+            local v = line:match('"[Dd]:([^"]-)"') or line:match('[Dd]:"([^"]-)"') or line:match('[Dd]:([^%s"]+)')
+            if v and v ~= "" then entry.description = v end
+          end
+          if eager.y then
+            local v = line:match('"[Yy]:([^"]-)"') or line:match('[Yy]:"([^"]-)"') or line:match('[Yy]:([%d%-]+)')
+            if v and v ~= "" then entry.bwf_orig_date = v end
+          end
+          if eager.l then
+            local raw_len = line:match('"[Ll]:([^"]-)"') or line:match('[Ll]:"([^"]-)"') or line:match('[Ll]:([%d:%.]+)')
+            local secs = parse_len_to_seconds(raw_len)
+            if secs then entry.length = secs end
+          end
+          if eager.n then
+            local v = line:match('"[Nn]:([^"]-)"') or line:match('[Nn]:"([^"]-)"') or line:match('[Nn]:(%d+)')
+            if v and v ~= "" then entry.channels = tonumber(v) or entry.channels or 0 end
+          end
+          if eager.s then
+            local v = line:match('"[Ss]:([^"]-)"') or line:match('[Ss]:"([^"]-)"') or line:match('[Ss]:(%d+)')
+            if v and v ~= "" then entry.samplerate = tonumber(v) or entry.samplerate or 0 end
+          end
+          if eager.i then
+            local v = line:match('"[Ii]:([^"]-)"') or line:match('[Ii]:"([^"]-)"') or line:match('[Ii]:(%d+)')
+            if v and v ~= "" then entry.bits = tonumber(v) or entry.bits or 0 end
+          end
+        end
+        -- 保存原始 DATA 行，供后续 EnsureEntryParsed 做完整解析
         entry._data_lines = entry._data_lines or {}
-        entry._data_lines[#entry._data_lines+1] = line
+        entry._data_lines[#entry._data_lines + 1] = line
       else
+        -- 非懒解析，直接全量解析
         _apply_data_line(entry, line)
       end
     end
