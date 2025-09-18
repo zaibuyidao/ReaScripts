@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.59
+-- @version 1.0.60
 -- @changelog
---   Fixed an ImGui_End Missing PopStyleVar error that occurred after collapsing the Settings page.
+--   Added a Play History button to show the Recently Played list while preserving its order.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

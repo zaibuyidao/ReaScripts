@@ -290,6 +290,7 @@ COLLECT_MODE_REAPERDB        = 11 -- REAPER数据库
 COLLECT_MODE_SHORTCUT_MIRROR = 12
 COLLECT_MODE_FREESOUND       = 13
 COLLECT_MODE_SAMEFOLDER      = 14
+COLLECT_MODE_PLAY_HISTORY    = 15 -- 播放历史表格模式
 
 --------------------------------------------- 设置弹窗相关 ---------------------------------------------
 
@@ -303,6 +304,7 @@ local doubleclick_action        = DOUBLECLICK_NONE
 local bg_alpha                  = 1.0   -- 默认背景不透明
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
 local mirror_database           = false -- 默认关闭 Database (Mirror)
+local show_peektree_recent      = true  -- 默认开启 播放历史
 
 -- 保存设置
 function SaveSettings()
@@ -326,6 +328,7 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
 end
 
 -- 恢复设置
@@ -382,6 +385,13 @@ do
   local v = reaper.GetExtState(EXT_SECTION, "insert_keep_rate_pitch")
   if v == "1" then keep_preview_rate_pitch_on_insert = true
   elseif v == "0" then keep_preview_rate_pitch_on_insert = false end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "show_peektree_recent")
+  if v == "1" or v == "" then show_peektree_recent = true
+  elseif v == "0" then show_peektree_recent = false
+  else show_peektree_recent = true end
 end
 
 --------------------------------------------- 颜色表 ---------------------------------------------
@@ -1254,32 +1264,40 @@ function CollectFiles()
     current_recent_play_info = nil
     selected_recent_row = 0 -- 清空最近播放选中项
   end
+
   local files, files_idx
   if collect_mode == COLLECT_MODE_ITEMS then
     files, files_idx = CollectFromItems()
     files_idx_cache = files_idx
+
   elseif collect_mode == COLLECT_MODE_DIR then
     files, files_idx = CollectFromProjectDirectory()
     files_idx_cache = files_idx
+
   elseif collect_mode == COLLECT_MODE_TREE then
     local dir = tree_state.cur_path or "" -- 或默认某个盘符/目录
     files_idx_cache = GetAudioFilesFromDirCached(dir)
     selected_row = nil
+
   elseif collect_mode == COLLECT_MODE_RPP then
     files_idx = CollectFromRPP()
     files_idx_cache = MergeUsagesByPath(files_idx)
+
   elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
     files_idx = CollectMediaItems()
     files_idx_cache = MergeUsagesBySection(files_idx)
+
   elseif collect_mode == COLLECT_MODE_SHORTCUT then
     local dir = tree_state.cur_path or ""
     files_idx_cache = GetAudioFilesFromDirCached(dir)
     selected_row = nil
+
   elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
     local folder = tree_state.cur_custom_folder or ""
     local paths = (folder ~= "" and custom_folders_content[folder]) or {}
     files_idx_cache = CollectFromCustomFolder(paths)
     selected_row = nil
+
   elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then -- 高级文件夹模式
     local folder_id = tree_state.cur_advanced_folder or ""
     local folder = advanced_folders[folder_id]
@@ -1308,22 +1326,37 @@ function CollectFiles()
 
   elseif collect_mode == COLLECT_MODE_MEDIADB then
     StartDBFirstPage(normalize_path(script_path .. "SoundmoleDB", true), tree_state.cur_mediadb, 2000)
+
   elseif collect_mode == COLLECT_MODE_REAPERDB then
     StartDBFirstPage(normalize_path(reaper.GetResourcePath() .. sep .. "MediaDB", true), tree_state.cur_reaper_db, 2000)
+
   elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
     local dir = tree_state.cur_path or ""
     files_idx_cache = GetAudioFilesFromDirCached(dir)
     selected_row = nil
+
   elseif collect_mode == COLLECT_MODE_FREESOUND then
     if FS and type(FS_show_search_or_cache)=="function" then
       FS_show_search_or_cache()
     else
       files_idx_cache = {}
     end
+
   elseif collect_mode == COLLECT_MODE_SAMEFOLDER then
     local dir = tree_state.cur_path or ""
     files_idx_cache = GetAudioFilesFromDirCached(dir)
     selected_row = nil
+
+  elseif collect_mode == COLLECT_MODE_PLAY_HISTORY then
+    LoadRecentPlayed()
+    files_idx_cache = {}
+    for i = 1, #recent_audio_files do
+      local info = recent_audio_files[i]
+      info._recent_idx = i
+      files_idx_cache[#files_idx_cache + 1] = info
+    end
+    selected_row = nil
+
   else
     files_idx_cache = {} -- collect_mode全部清空
   end
@@ -1338,7 +1371,8 @@ function CollectFiles()
   end
 
   previewed_files = {}
-  if not (_G._mediadb_stream and not _G._mediadb_stream.eof) then
+  -- 按文件名排序。其中播放历史按钮模式不执行按文件名排序，保持最近播放顺序
+  if not (_G._mediadb_stream and not _G._mediadb_stream.eof) and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
     SortFilesByFilenameAsc()
   end
   
@@ -3948,6 +3982,18 @@ function LoadExitSettings()
       RefreshFolderFiles(tree_state.cur_path)
     end
   end
+
+  if collect_mode == COLLECT_MODE_PLAY_HISTORY then
+    local ext = reaper.GetExtState(EXT_SECTION, "play_history_header_open")
+    if ext == "true" then
+      play_history_open = true
+    elseif ext == "false" then
+      play_history_open = false
+    else
+      play_history_open = false
+    end
+    selected_play_history_row = tonumber(reaper.GetExtState(EXT_SECTION, "cur_play_history_row") or "") or 0
+  end
 end
 
 -- 保存当前模式列表折叠状态
@@ -3987,6 +4033,10 @@ function SaveExitSettings()
 
   elseif collect_mode == COLLECT_MODE_SAMEFOLDER then
     reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+
+  elseif collect_mode == COLLECT_MODE_PLAY_HISTORY then
+    reaper.SetExtState(EXT_SECTION, "play_history_header_open", tostring(play_history_open), true)
+    reaper.SetExtState(EXT_SECTION, "cur_play_history_row", tostring(selected_play_history_row or 0), true)
 
   end
 end
@@ -5032,13 +5082,14 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
 
     -- Size
     elseif col_name == "Size" then
+      local size = tonumber(info.size or 0)
       local size_str
-      if info.size >= 1024*1024 then
-        size_str = string.format("%.2f MB", info.size / 1024 / 1024)
-      elseif info.size >= 1024 then
-        size_str = string.format("%.2f KB", info.size / 1024)
+      if size >= 1024 * 1024 then
+        size_str = string.format("%.2f MB", size / 1024 / 1024)
+      elseif size >= 1024 then
+        size_str = string.format("%.2f KB", size / 1024)
       else
-        size_str = string.format("%d B", info.size)
+        size_str = string.format("%d B", size)
       end
       reaper.ImGui_Text(ctx, size_str)
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
@@ -7877,6 +7928,27 @@ function loop()
       reaper.ImGui_OpenPopup(ctx, "##preview_folder_popup")
     end
 
+    -- Play History 最近播放按钮
+    if not show_peektree_recent then
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      if reaper.ImGui_Button(ctx, "Play History", 90, 56) then
+        LoadRecentPlayed()
+        collect_mode= COLLECT_MODE_PLAY_HISTORY
+
+        -- 清空跨模式残留
+        file_select_start, file_select_end, selected_row = nil, nil, nil
+        files_idx_cache = nil
+        CollectFiles()
+
+        local static = _G._soundmole_static or {}
+        _G._soundmole_static = static
+        static.filtered_list_map, static.last_filter_text_map = {}, {}
+      end
+      if reaper.ImGui_IsItemHovered(ctx) then
+        reaper.ImGui_SetTooltip(ctx, "Show Recently Played list in the table")
+      end
+    end
+
     if reopen_preview_popup then
       if preview_popup_pos_x and preview_popup_pos_y then
         reaper.ImGui_SetNextWindowPos(ctx, preview_popup_pos_x, preview_popup_pos_y, reaper.ImGui_Cond_Appearing(), 0, 0)
@@ -8742,44 +8814,46 @@ function loop()
           end
 
           -- 最近播放节点
-          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+          if show_peektree_recent then
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
 
-          local hdr_flags = recent_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-          local is_recent_open = reaper.ImGui_CollapsingHeader(ctx, "Recently Played##recent", nil, hdr_flags)
-          recent_open = is_recent_open
+            local hdr_flags = recent_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+            local is_recent_open = reaper.ImGui_CollapsingHeader(ctx, "Recently Played##recent", nil, hdr_flags)
+            recent_open = is_recent_open
 
-          reaper.ImGui_PopStyleColor(ctx)
-          if is_recent_open then
-            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-            for i, info in ipairs(recent_audio_files) do
-              if i > max_recent_files then break end
-              local selected = (selected_recent_row == i)
-              if reaper.ImGui_Selectable(ctx, info.filename, selected) then
-                selected_recent_row = i
-                -- 进入最近播放前先保存当前模式
-                if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
-                  last_collect_mode = collect_mode
-                end
-                collect_mode = COLLECT_MODE_RECENTLY_PLAYED -- 切换到最近播放模式
-                local full_info = BuildFileInfoFromPath(normalize_path(info.path, false), info.filename) -- 重新补全文件信息
-                PlayFromStart(full_info) -- 播放文件并加载波形
-                current_recent_play_info = full_info
-              end
-
-              -- 右键弹出菜单
-              if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-                reaper.ImGui_OpenPopup(ctx, "recent_file_menu_" .. i)
-              end
-              if reaper.ImGui_BeginPopup(ctx, "recent_file_menu_" .. i) then
-                if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
-                  if info.path and info.path ~= "" then
-                    reaper.CF_LocateInExplorer(normalize_path(info.path)) -- 规范分隔符
+            reaper.ImGui_PopStyleColor(ctx)
+            if is_recent_open then
+              reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+              for i, info in ipairs(recent_audio_files) do
+                if i > max_recent_files then break end
+                local selected = (selected_recent_row == i)
+                if reaper.ImGui_Selectable(ctx, info.filename, selected) then
+                  selected_recent_row = i
+                  -- 进入最近播放前先保存当前模式
+                  if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
+                    last_collect_mode = collect_mode
                   end
+                  collect_mode = COLLECT_MODE_RECENTLY_PLAYED -- 切换到最近播放模式
+                  local full_info = BuildFileInfoFromPath(normalize_path(info.path, false), info.filename) -- 重新补全文件信息
+                  PlayFromStart(full_info) -- 播放文件并加载波形
+                  current_recent_play_info = full_info
                 end
-                reaper.ImGui_EndPopup(ctx)
+
+                -- 右键弹出菜单
+                if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+                  reaper.ImGui_OpenPopup(ctx, "recent_file_menu_" .. i)
+                end
+                if reaper.ImGui_BeginPopup(ctx, "recent_file_menu_" .. i) then
+                  if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+                    if info.path and info.path ~= "" then
+                      reaper.CF_LocateInExplorer(normalize_path(info.path)) -- 规范分隔符
+                    end
+                  end
+                  reaper.ImGui_EndPopup(ctx)
+                end
               end
+              reaper.ImGui_Unindent(ctx, 7)
             end
-            reaper.ImGui_Unindent(ctx, 7)
           end
 
           reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
@@ -9310,7 +9384,7 @@ function loop()
 
         if filter_changed or sort_changed or not filtered_list then
           filtered_list = BuildFilteredList(files_idx_cache)
-          if #sort_specs > 0 and filtered_list then
+          if #sort_specs > 0 and filtered_list and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
             table.sort(filtered_list, function(a, b)
               for _, spec in ipairs(sort_specs) do
                 if spec.user_id == TableColumns.FILENAME then
@@ -10205,7 +10279,7 @@ function loop()
 
         -- Folder Shortcuts (Mirror)
         local chg_fs
-        chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, "Enable Folder Shortcuts (Mirror)", mirror_folder_shortcuts)
+        chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, "Mirror REAPER Folder Shortcuts", mirror_folder_shortcuts)
         if chg_fs then
           reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
         end
@@ -10223,7 +10297,7 @@ function loop()
 
         -- Database (Mirror)
         local chg_db
-        chg_db, mirror_database = reaper.ImGui_Checkbox(ctx, "Enable Database (Mirror)", mirror_database)
+        chg_db, mirror_database = reaper.ImGui_Checkbox(ctx, "Mirror Media Explorer Databases", mirror_database)
         if chg_db then
           reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
         end
@@ -10238,6 +10312,22 @@ function loop()
         --   "Mirror the Media Explorer \"Database\" list and entries. Read-only display. \n" ..
         --   "Create or rescan databases in Media Explorer. Disable to hide this section and skip queries on startup."
         -- )
+      end
+
+      local function Section_PeekTreeRecentToggle()
+        if show_peektree_recent == nil then
+          local ext = reaper.GetExtState(EXT_SECTION, "show_peektree_recent")
+          show_peektree_recent = (ext == nil or ext == "" or ext == "1")
+        end
+
+        local changed, v = reaper.ImGui_Checkbox(ctx, 'Show "Recently Played" in PeekTree (hides the "Play History" button)', show_peektree_recent)
+        if changed then
+          show_peektree_recent = v
+          reaper.SetExtState(EXT_SECTION, "show_peektree_recent", v and "1" or "0", true)
+        end
+        -- if reaper.ImGui_IsItemHovered(ctx) then
+        --   reaper.ImGui_SetTooltip(ctx, 'When enabled, the "Play History" button is hidden. Disable this to show the button.')
+        -- end
       end
 
       local function Section_System_StopAudioDevice()
@@ -10468,6 +10558,7 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
           reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
           reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
+          reaper.SetExtState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
 
           MarkFontDirty()
           CollectFiles()
@@ -10489,8 +10580,9 @@ function loop()
             Section_Window()
             DrawSubTitle("Peak Meter")
             Section_Peaks()
-            DrawSubTitle("Media Explorer Mirrors") -- Folder Shortcuts & Database
-            Section_MirrorToggles()
+            DrawSubTitle("PeekTree")
+            Section_MirrorToggles() -- Media Explorer Mirrors - Folder Shortcuts & Database
+            Section_PeekTreeRecentToggle() -- Recently Played
           end
         },
 
