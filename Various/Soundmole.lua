@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.58
+-- @version 1.0.59
 -- @changelog
---   New option Keep preview rate and pitch when inserting to arrange:
---   Location "Settings - Playback & Preview - Insert Options"
+--   Fixed an ImGui_End Missing PopStyleVar error that occurred after collapsing the Settings page.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

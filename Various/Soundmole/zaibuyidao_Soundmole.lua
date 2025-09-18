@@ -10594,8 +10594,8 @@ function loop()
 
           -- 底部留白
           reaper.ImGui_Dummy(ctx, 800, 14)
+          reaper.ImGui_End(ctx)
         end
-        reaper.ImGui_End(ctx)
 
         -- 只在本帧从开到关的瞬间保存一次
         if settings_window_prev_open and not open then
