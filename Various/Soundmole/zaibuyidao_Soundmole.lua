@@ -117,7 +117,7 @@ reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
 -- 状态变量
 CACHE_PIXEL_WIDTH            = 2048
 selected_row                 = selected_row or -1
-ui_bottom_offset             = 280   -- 底部预览区高度
+ui_bottom_offset             = 265   -- 底部预览区高度
 local playing_preview        = nil
 local playing_path           = nil
 local playing_source         = nil
@@ -222,8 +222,8 @@ EnsureCacheDir(mediadb_dir)
 
 -- 波形预览状态变量
 local wf_step = 400                    -- 波形预览步长
-local img_w, img_h = 1200, 120         -- 波形图像宽度和高度
-local base_img_h = 120                 -- 波形基础高度
+local img_w, img_h = 1200, 130         -- 波形图像宽度和高度
+local base_img_h = 130                 -- 波形基础高度
 local img_h_offset = 0                 -- 偏移高度，用于实时调整
 local timeline_height = 20             -- 时间线高度
 local wf_play_start_time = nil         -- 播放开始时间（os.clock）
@@ -403,6 +403,7 @@ local colors = {
   normal_text          = 0xFFF0F0F0, -- 标准文本颜色
   previewed_text       = 0x888888FF, -- 已预览过的暗一些
   timeline_def_color   = 0xCFCFCFFF, -- 时间线默认颜色
+  timeline_bg_color    = 0x18181AFF, -- 时间线背景颜色
   thesaurus_text       = 0xBCC694FF, -- 同义词文本颜色
   text                 = 0x909090FF, -- 文字颜色
   accent               = 0xFFCC66FF, -- 强调色
@@ -1957,11 +1958,11 @@ end
 
 -- 绘制时间线
 function DrawTimeLine(ctx, wave, view_start, view_end)
-  local y_offset = -9     -- 距离波形底部-9像素
-  local tick_long = 20    -- 主刻度高度
+  local y_offset    = 0   -- 距离波形底部-9像素
+  local tick_long   = 22  -- 主刻度高度
   local tick_middle = 10  -- 中间刻度高度
   local tick_secmid = 7   -- 次中间刻度高度
-  local tick_short = 3    -- 次刻度高度
+  local tick_short  = 3   -- 次刻度高度
   local min_tick_px = 150 -- 两个主刻度最小像素距离
 
   -- 绘制时间线基础线
@@ -1970,6 +1971,11 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
   local x0, y0 = min_x, max_y - y_offset
   local x1 = max_x
   local drawlist = reaper.ImGui_GetWindowDrawList(ctx)
+
+  -- 时间线背景
+  local timeline_h = tick_long + 1 -- 背景高度为主刻度高度+余量
+  local bg_col = (colors.timeline_bg_color or 0x18181AFF)
+  reaper.ImGui_DrawList_AddRectFilled(drawlist, x0, y0, x1, y0 + timeline_h, bg_col)
 
   -- 设置基础线颜色
   reaper.ImGui_DrawList_AddLine(drawlist, x0, y0, x1, y0, 0x3F3F48FF, 1.0)
@@ -2002,13 +2008,13 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
     -- 主刻度线
     reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_long, colors.timeline_def_color, 1.0)
     -- 时间标签
+    reaper.ImGui_PushFont(ctx, fonts.sans_serif, 13)
     local text = reaper.format_timestr(t or 0, "")
     -- 计算文字高度
-    local text = reaper.format_timestr(t or 0, "")
     local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
-    local text_y = y0 + tick_long - text_h + 0  -- 最后一个值是上下位置细调
+    local text_y = y0 + tick_long - text_h + 2 -- 最后一个值用于上下偏移文字位置细调的
     reaper.ImGui_DrawList_AddText(drawlist, x + 4, text_y, colors.timeline_def_color, text)
-    -- reaper.ImGui_DrawList_AddText(drawlist, x + 2, y0 + tick_long + 1, 0xE6ECFFFF, reaper.format_timestr(t or 0, ""))
+    reaper.ImGui_PopFont(ctx)
   end
 
   -- 绘制次刻度
@@ -7681,7 +7687,7 @@ function loop()
 
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
-    local filter_w = 430 -- 输入框宽度
+    local filter_w = 400 -- 输入框宽度
 
     -- 标题栏
     reaper.ImGui_BeginGroup(ctx)
@@ -7721,7 +7727,21 @@ function loop()
       reaper.ImGui_SetTooltip(ctx, table.concat(selected_labels, "+"))
     end
 
+    reaper.ImGui_Text(ctx, '') -- 换行占位符
+    reaper.ImGui_SameLine(ctx, nil, 0)
+    reaper.ImGui_Text(ctx, 'Thesaurus:')
+    reaper.ImGui_SameLine(ctx, nil, 60)
+    local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "##Synonyms", use_synonyms)
+    if changed_synonyms then
+      use_synonyms = new_use_synonyms
+      -- 同义词勾选时强制重建，否则不工作
+      static.filtered_list_map    = {}
+      static.last_filter_text_map = {}
+    end
+    reaper.ImGui_EndGroup(ctx)
+
     reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_BeginGroup(ctx)
     if not filename_filter then
       filename_filter = reaper.ImGui_CreateTextFilter()
       reaper.ImGui_Attach(ctx, filename_filter)
@@ -7770,18 +7790,6 @@ function loop()
       end
     end
 
-    reaper.ImGui_Text(ctx, '') -- 换行占位符
-    reaper.ImGui_SameLine(ctx, nil, 0)
-    reaper.ImGui_Text(ctx, 'Thesaurus:')
-    reaper.ImGui_SameLine(ctx, nil, 61)
-    local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "##Synonyms", use_synonyms)
-    if changed_synonyms then
-      use_synonyms = new_use_synonyms
-      -- 同义词勾选时强制重建，否则不工作
-      static.filtered_list_map    = {}
-      static.last_filter_text_map = {}
-    end
-
     -- 同义词显示输入框
     reaper.ImGui_BeginDisabled(ctx, not use_synonyms) -- 输入框置灰
     local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
@@ -7808,7 +7816,6 @@ function loop()
 
     local synonym_display_text = #synonym_display_parts > 0 and table.concat(synonym_display_parts, " ") or ""
 
-    reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.thesaurus_text)
     reaper.ImGui_InputText(ctx, "##SynonymDisplay", synonym_display_text, reaper.ImGui_InputTextFlags_ReadOnly())
@@ -10795,7 +10802,7 @@ function loop()
       local tl_w, th = reaper.ImGui_CalcTextSize(ctx, tlabel.."000") -- 占位
       local dl_w, _  = reaper.ImGui_CalcTextSize(ctx, dlabel)
 
-      reaper.ImGui_PushFont(ctx, fonts.odrf, 18)  -- 数值字体（仅用于测宽与绘制数值）
+      reaper.ImGui_PushFont(ctx, fonts.odrf, 16)  -- 数值字体（仅用于测宽与绘制数值）
       local tv_w, _  = reaper.ImGui_CalcTextSize(ctx, time_val_str)
       local dv_w, _  = reaper.ImGui_CalcTextSize(ctx, duration_val_str)
       reaper.ImGui_PopFont(ctx)
@@ -10812,14 +10819,14 @@ function loop()
 
       reaper.ImGui_Text(ctx, tlabel)
       reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushFont(ctx, fonts.odrf, 18)
+      reaper.ImGui_PushFont(ctx, fonts.odrf, 16)
       reaper.ImGui_Text(ctx, time_val_str)
       reaper.ImGui_PopFont(ctx)
 
       reaper.ImGui_SameLine(ctx)
       reaper.ImGui_Text(ctx, dlabel)
       reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushFont(ctx, fonts.odrf, 18)
+      reaper.ImGui_PushFont(ctx, fonts.odrf, 16)
       reaper.ImGui_Text(ctx, duration_val_str)
       reaper.ImGui_PopFont(ctx)
     end
@@ -10985,7 +10992,7 @@ function loop()
     if h_splitter_drag and active then
       local delta = my - h_splitter_start_mouse_y
       local new_off = h_splitter_start_offset - delta
-      img_h_offset = math.max(-70, math.min(300, new_off))
+      img_h_offset = math.max(0, math.min(300, new_off)) -- 专辑封面高度限制
       reaper.SetExtState(EXT_SECTION, "img_h_offset", tostring(img_h_offset), true)
     end
 
@@ -11019,18 +11026,18 @@ function loop()
       img_info = last_selected_info
     end
     local has_cover = img_info and HasCoverImage(img_info)
-    local left_img_w = has_cover and 120 or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
+    local left_img_w = has_cover and 130 or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
     local gap = has_cover and 6 or 0
     local right_img_w = avail_w - left_img_w - gap
 
     -- 专辑图片显示
-    if reaper.ImGui_BeginChild(ctx, "cover_art", left_img_w, img_h + timeline_height + 9) then
+    if reaper.ImGui_BeginChild(ctx, "cover_art", left_img_w, img_h) then
       local audio_path = img_info and img_info.path
       -- 计算封面临时文件路径（优先内嵌元数据，再同目录查找）
       local cover_path = audio_path and GetCoverImagePath(audio_path)
       if cover_path then
         -- 水平/垂直居中
-        local img_w, img_h = 120, 120
+        local img_w, img_h = 130, 130
         local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
         local pad_x = (avail_w - img_w) * 0.5
         if pad_x > 0 then
@@ -11073,7 +11080,7 @@ function loop()
       reaper.ImGui_SameLine(ctx)
     end
     -- 波形预览
-    if reaper.ImGui_BeginChild(ctx, "waveform", right_img_w, img_h + timeline_height + 9) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+时间线间隔9）
+    if reaper.ImGui_BeginChild(ctx, "waveform", right_img_w, img_h) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+时间线间隔9）
       local pw_min_x, pw_min_y = reaper.ImGui_GetItemRectMin(ctx)
       local pw_max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local pw_region_w = math.max(64, math.floor(pw_max_x - pw_min_x))
@@ -11174,7 +11181,16 @@ function loop()
         -- end
       end
 
-      DrawWaveformInImGui(ctx, peaks, pw_region_w, img_h, src_len, channel_count)
+      -- 绘制时间线
+      local view_start = Wave.scroll
+      local view_end = math.min(Wave.scroll + Wave.src_len / Wave.zoom, Wave.src_len)
+      if Wave.src_len and Wave.src_len > 0 then
+        DrawTimeLine(ctx, Wave, view_start, view_end)
+      end
+      -- reaper.ImGui_Dummy(ctx, 0, timeline_height) -- 占位时间线高度，本应是配套绘制时间线的，但ImGui_Dummy在这里无效
+
+      reaper.ImGui_NewLine(ctx) -- 改用换行，因为ImGui_Dummy在这里无效
+      DrawWaveformInImGui(ctx, peaks, pw_region_w, img_h - 30, src_len, channel_count) -- -30用于补偿波形预览上方的时间线区域和间隔，否则应为0
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
       end
@@ -11586,15 +11602,6 @@ function loop()
           reaper.PreventUIRefresh(-1)
         end
       end
-
-      -- 绘制时间线
-      local view_start = Wave.scroll
-      local view_end = math.min(Wave.scroll + Wave.src_len / Wave.zoom, Wave.src_len)
-      if Wave.src_len and Wave.src_len > 0 then
-        DrawTimeLine(ctx, Wave, view_start, view_end)
-      end
-      -- reaper.ImGui_Dummy(ctx, 0, timeline_height) -- 此处由于在Child内可以不用加，加了也无效
-
       reaper.ImGui_EndChild(ctx)
 
       -- 放大缩小按钮和水平滚动条
@@ -11726,7 +11733,25 @@ function loop()
           end
         else
           -- 非MediaDB模式按原逻辑
-          reaper.ImGui_Text(ctx, string.format("%d audio files found.", shown_count))
+          reaper.ImGui_Text(ctx, (function()
+            local function _len(v)
+              if type(v) == "table" then
+                return #v
+              elseif type(v) == "number" then
+                return v
+              end
+            end
+            local function _first_len(...)
+              for i = 1,select('#',...) do
+                local n = _len(select(i,...))
+                if n and n >= 0 then return n end
+              end
+            end
+            local total = _first_len(files_idx_cache, all_files, file_list, files_all, files) or (shown_count or 0)
+            local shown = _first_len(filtered_list, visible_rows, visible_list, display_list, view_list, table_list, rows_list, files_idx_cache_view, files_view, current_rows, current_list, render_list, current_display) or total
+
+            return string.format("%d shown / %d total.", shown, total)
+          end)())
         end
       end
     end

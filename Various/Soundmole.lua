@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.60
+-- @version 1.0.61
 -- @changelog
---   Added a Play History button to show the Recently Played list while preserving its order.
+--   Optimized status bar counts so shown reflects filtered results while total stays unchanged.
+--   Adjusted UI layout and spacing with consistent control alignment and labels.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
