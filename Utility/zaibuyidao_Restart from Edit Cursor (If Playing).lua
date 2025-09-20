@@ -1,5 +1,5 @@
--- @description Restart Transport If Playing
--- @version 1.0
+-- @description Restart from Edit Cursor (If Playing)
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
