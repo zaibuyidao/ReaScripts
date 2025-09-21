@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.61
+-- @version 1.0.62
 -- @changelog
---   Optimized status bar counts so shown reflects filtered results while total stays unchanged.
---   Adjusted UI layout and spacing with consistent control alignment and labels.
+--   Added database path filtering feature, allowing filtering of audio files by path prefix.
+--   Optimized parts of the UI.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

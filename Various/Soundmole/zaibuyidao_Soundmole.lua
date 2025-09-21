@@ -410,6 +410,9 @@ local colors = {
   accent_active        = 0xFFDD88FF, -- 强调色激活
   gary                 = 0x909090FF, -- 灰色
   light_gary           = 0xC0C0C020, -- 浅灰
+  red                  = 0xFF0000FF, -- 红色
+  yellow               = 0xFFFF00FF, -- 黄色
+  mole                 = 0xF4A460FF, -- 鼹鼠橙
 }
 
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
@@ -4156,7 +4159,7 @@ local static = _G._soundmole_static or {}
 _G._soundmole_static = static
 static.wf_delay_cached = static.wf_delay_cached or 0.5 -- 表格列表波形已缓存延迟0.5秒
 static.wf_delay_miss   = static.wf_delay_miss   or 2.0 -- 表格列表波形未缓存延迟2秒
-static.filtered_list_map = static.filtered_list_map or {}  -- 用于存放所有列表缓存
+static.filtered_list_map = static.filtered_list_map or {} -- 用于存放所有列表缓存
 static.last_filter_text_map = static.last_filter_text_map or {}
 static.last_sort_specs_map  = static.last_sort_specs_map or {}
 
@@ -4442,6 +4445,38 @@ function BuildFilteredList(list)
   end
 
   return filtered
+end
+
+-- 数据库路径过滤 BuildFilteredList 包装器，数据库模式优先做路径前缀裁剪
+if _G._BuildFilteredList_Original == nil and type(BuildFilteredList) == "function" then
+  _G._BuildFilteredList_Original = BuildFilteredList
+
+  function BuildFilteredList(list)
+    local L = list or {}
+    -- 仅数据库模式启用
+    local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+    local prefix = _G._db_path_prefix_filter
+
+    if in_db_mode and type(prefix) == "string" and prefix ~= "" then
+      local pref = normalize_path(prefix, false)
+      local os_is_win = (reaper.GetOS() or ""):find("Win")
+      local pref_l = os_is_win and pref:lower() or pref
+      -- 裁剪路径前缀
+      local prefiltered = {}
+      for i = 1, #L do
+        local info = L[i]
+        local p = normalize_path(info.path or "", false)
+        local pp = os_is_win and p:lower() or p
+        if pp:sub(1, #pref_l) == pref_l then
+          prefiltered[#prefiltered + 1] = info
+        end
+      end
+      -- 把裁剪后的列表交回原始 BuildFilteredList，保留原所有搜索/同义词/UCS 逻辑
+      return _G._BuildFilteredList_Original(prefiltered)
+    end
+    -- 非数据库模式或未设置路径前缀时，直接走原逻辑
+    return _G._BuildFilteredList_Original(L)
+  end
 end
 
 -- 右键菜单支持RS5K
@@ -7644,6 +7679,264 @@ end
 -- selected_row = hit_index
 -- SM_RequestCenterRow(hit_index, 0.5)
 
+--------------------------------------------- 数据库模式的路径过滤 ---------------------------------------------
+
+function DBFB_IsDir(path)
+  if not path or path == "" then return end
+  local ok = reaper.EnumerateFiles(path, 0) or reaper.EnumerateSubdirectories(path, 0)
+  return ok ~= nil
+end
+
+-- 解析 DB 文件里的 PATH 行
+function DBFB_ParsePathsFromDBFile(dbfile)
+  local roots, seen = {}, {}
+  local f = io.open(dbfile, "rb")
+  if not f then return roots end
+  for raw in f:lines() do
+    local line = (raw or ""):gsub("^\239\187\191", ""):gsub("\r", "")
+    local quoted = line:match('^%s*[Pp][Aa][Tt][Hh]%s+(%b"")') or line:match("^%s*[Pp][Aa][Tt][Hh]%s+(%b'')")
+    if quoted then
+      local p = quoted:sub(2, -2)
+      p = normalize_path(p, true)
+      local key = (reaper.GetOS():find("Win") and p:lower() or p)
+      if not seen[key] then
+        roots[#roots+1] = p
+        seen[key] = true
+      end
+    end
+  end
+  f:close()
+  return roots
+end
+
+-- 解析 DB 目录
+function DBFB_ParsePathsFromDBDir(dbdir)
+  local roots, seen = {}, {}
+  local i = 0
+  while true do
+    local name = reaper.EnumerateFiles(dbdir, i)
+    if not name then break end
+    local lower = name:lower()
+    if lower:find("%.molefilelist$") or lower:find("%.reaperfilelist$") then
+      local file = normalize_path(dbdir, true):gsub(sep.."$", "") .. sep .. name
+      for _, p in ipairs(DBFB_ParsePathsFromDBFile(file)) do
+        if not seen[p:lower()] then
+          roots[#roots+1] = p
+          seen[p:lower()] = true
+        end
+      end
+    end
+    i = i + 1
+  end
+  return roots
+end
+
+function DBFB_PickDBContainer(cur_db)
+  if not cur_db then return nil end
+  local candidates = {cur_db.dbfile, cur_db.path, cur_db.fullpath} -- 在用字段
+  for _, v in ipairs(candidates) do
+    if type(v) == "string" and v ~= "" then
+      return v
+    end
+  end
+  if type(cur_db) == "string" and cur_db ~= "" then
+    return cur_db
+  end
+  return nil
+end
+
+function DBFB_GetCurrentDBRoots()
+  local roots = {}
+  local cur_db = nil
+  local base_dir = nil
+
+  if collect_mode == COLLECT_MODE_MEDIADB then
+    cur_db  = (tree_state and tree_state.cur_mediadb) or nil
+    base_dir = (mediadb_dir and mediadb_dir ~= "" and normalize_path(mediadb_dir, true)) or normalize_path(script_path .. "SoundmoleDB", true)
+  elseif collect_mode == COLLECT_MODE_REAPERDB then
+    cur_db  = (tree_state and tree_state.cur_reaper_db) or nil
+    base_dir = normalize_path(reaper.GetResourcePath() .. sep .. "MediaDB", true)
+  else
+    return roots -- 非数据库模式不工作
+  end
+
+  local container = DBFB_PickDBContainer(cur_db)
+  if not container or container == "" then return roots end
+
+  local has_sep = container:find("[/\\]")
+  local is_abs_win = container:match("^[A-Za-z]:[\\/]")
+  local is_abs_posix = container:sub(1,1) == "/"
+  local full = container
+
+  if not (is_abs_win or is_abs_posix) then
+    if base_dir and base_dir ~= "" then
+      full = normalize_path(base_dir, true) .. container
+    end
+  end
+
+  -- 按类型解析
+  if full and full ~= "" and reaper.file_exists(full) then
+    roots = DBFB_ParsePathsFromDBFile(full)
+  elseif DBFB_IsDir(full) then
+    roots = DBFB_ParsePathsFromDBDir(full)
+  else
+    if base_dir and DBFB_IsDir(base_dir) then
+      roots = DBFB_ParsePathsFromDBDir(base_dir)
+    end
+  end
+  return roots
+end
+
+function DBFB_ApplyPathFilter(dir)
+  local prefix = normalize_path(dir, true)
+  if prefix == "" then return end
+  _G._db_path_prefix_filter = prefix
+
+  local list_src  = files_idx_cache or {}
+  local os_is_win = (reaper.GetOS() or ""):find("Win")
+  local pref_l    = os_is_win and prefix:lower() or prefix
+  local matched   = 0
+  for _, info in ipairs(list_src) do
+    local p  = normalize_path(info.path or "", false)
+    local pp = os_is_win and p:lower() or p
+    if pp:sub(1, #pref_l) == pref_l then matched = matched + 1 end
+  end
+
+  -- 清空当前数据库的过滤缓存，迫使表格在下一帧重建
+  local static = _G._soundmole_static or {}
+  static.filtered_list_map    = static.filtered_list_map or {} -- 用于存放所有列表缓存
+  static.last_filter_text_map = static.last_filter_text_map or {}
+  static.last_sort_specs_map  = static.last_sort_specs_map or {}
+
+  local current_db_key = GetCurrentListKey()
+  static.filtered_list_map[current_db_key] = nil
+  static.last_filter_text_map[current_db_key] = nil
+  static.last_sort_specs_map[current_db_key] = nil
+
+  file_select_start, file_select_end, selected_row = nil, nil, nil
+
+  reaper.ImGui_CloseCurrentPopup(ctx)
+end
+
+function DBFB_HasSubdir(dir)
+  return reaper.EnumerateSubdirectories(dir, 0) ~= nil
+end
+
+-- 绘制目录菜单
+function DBFB_DrawDirMenuRecursive(dir, display_name)
+  if not DBFB_HasSubdir(dir) then
+    if reaper.ImGui_MenuItem(ctx, display_name) then
+      DBFB_ApplyPathFilter(dir)
+      reaper.ImGui_CloseCurrentPopup(ctx)
+      return true
+    end
+    return false
+  end
+
+  reaper.ImGui_PushID(ctx, dir)
+  local opened = reaper.ImGui_BeginMenu(ctx, display_name)
+
+  local activated = (reaper.ImGui_IsItemActivated and reaper.ImGui_IsItemActivated(ctx)) or false
+  local clicked   = reaper.ImGui_IsItemClicked(ctx, 0)
+  local hovered   = reaper.ImGui_IsItemHovered(ctx)
+
+  if activated or (hovered and clicked) then
+    DBFB_ApplyPathFilter(dir)
+    reaper.ImGui_CloseCurrentPopup(ctx)
+    if opened then reaper.ImGui_EndMenu(ctx) end
+    reaper.ImGui_PopID(ctx)
+    return true
+  end
+
+  -- 悬停展开浏览子目录
+  if opened then
+    local idx = 0
+    while true do
+      local name = reaper.EnumerateSubdirectories(dir, idx)
+      if not name then break end
+      local sub = normalize_path(dir .. sep .. name, true)
+      if DBFB_DrawDirMenuRecursive(sub, name) then
+        reaper.ImGui_EndMenu(ctx)
+        reaper.ImGui_PopID(ctx)
+        return true
+      end
+      idx = idx + 1
+    end
+    reaper.ImGui_EndMenu(ctx)
+  end
+
+  reaper.ImGui_PopID(ctx)
+  return false
+end
+
+local roots = DBFB_GetCurrentDBRoots()
+
+function DBFB_DrawPopupContent()
+  local roots = DBFB_GetCurrentDBRoots()
+  if #roots == 0 then
+    reaper.ImGui_TextDisabled(ctx, "No root path found for the current database.")
+    return
+  end
+
+  for _, root in ipairs(roots) do
+    if DBFB_DrawDirMenuRecursive(root, root) then
+      return
+    end
+  end
+end
+
+function DBFB_DrawDatabaseFolderButton(ctx)
+  local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+  reaper.ImGui_SameLine(ctx, nil, 8)
+
+  if not in_db_mode then
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.gary)
+    local cursor_pos_x, cursor_pos_y = reaper.ImGui_GetCursorPos(ctx)
+    reaper.ImGui_SetCursorPosY(ctx, cursor_pos_y + 13)
+    reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+    local play_label = '\u{0066}'
+    reaper.ImGui_Text(ctx, play_label)
+    reaper.ImGui_PopFont(ctx)
+    reaper.ImGui_PopStyleColor(ctx)
+  else
+    -- 图标字体垂直偏移, 居中, 向下偏移
+    local cursor_pos_x, cursor_pos_y = reaper.ImGui_GetCursorPos(ctx)
+    reaper.ImGui_SetCursorPosY(ctx, cursor_pos_y + 13)
+
+    reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+    local play_label = '\u{0066}'
+    local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
+    local tw, th = reaper.ImGui_CalcTextSize(ctx, play_label)
+
+    local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
+    local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+    local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+    local col_normal  = colors.normal_text   or 0xFFFFFFFF
+    local col_hovered = colors.accentor      or 0xFFCC66FF
+    local col_active  = colors.accent_active or 0xFFCC66FF
+    local col = hovered and (active and col_active or col_hovered) or col_normal
+
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+    reaper.ImGui_Text(ctx, play_label)
+    reaper.ImGui_PopStyleColor(ctx)
+
+    if hovered and in_db_mode then
+      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+    end
+    reaper.ImGui_PopFont(ctx)
+
+    if reaper.ImGui_IsItemClicked(ctx) and in_db_mode then
+      reaper.ImGui_OpenPopup(ctx, "DB Folders")
+    end
+
+    if reaper.ImGui_BeginPopup(ctx, "DB Folders") then
+      DBFB_DrawPopupContent()
+      reaper.ImGui_EndPopup(ctx)
+    end
+  end
+end
+
 function loop()
   -- 首次使用时收集音频文件
   if not files_idx_cache then
@@ -7661,7 +7954,11 @@ function loop()
 
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), 6.0)
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(),  4.0)
-  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowTitleAlign(), 0.5, 0.5)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowTitleAlign(), 0, 0) -- 0.5, 0.5 为居中
+  -- 标题栏背景颜色
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBg(),          0x0A0A0AFF) -- 常规
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(),    0x181818FF) -- 聚焦
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgCollapsed(), 0x0F0F0F90) -- 折叠
 
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
 
@@ -7691,13 +7988,16 @@ function loop()
 
     -- 标题栏
     reaper.ImGui_BeginGroup(ctx)
-    -- reaper.ImGui_PushFont(ctx, fonts.title, 26)
-    reaper.ImGui_PushFont(ctx, fonts.odrf, 24)
+    reaper.ImGui_PushFont(ctx, fonts.odrf, 22)
     reaper.ImGui_SameLine(ctx, nil, 10)
-    -- reaper.ImGui_Text(ctx, 'Soundmole')
-    DrawTextVOffset(ctx, 'Soundmole', nil, 15) -- 文字居中，偏移设置
+    DrawTextVOffset(ctx, 'Sound', nil, 15) -- 文字居中，偏移设置
+    reaper.ImGui_SameLine(ctx, nil, 0)
+    DrawTextVOffset(ctx, 'mole', colors.mole, 15)
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
+
+    -- 数据库路径过滤按钮
+    DBFB_DrawDatabaseFolderButton(ctx)
 
     -- 搜索字段下拉菜单
     reaper.ImGui_SameLine(ctx, nil, 15)
@@ -7870,6 +8170,7 @@ function loop()
       reaper.ImGui_TextFilter_Set(filename_filter, "")
 
       _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
+      _G._db_path_prefix_filter = "" -- 清除数据库模式的路径过滤
       -- 清除临时搜索字段，UCS隐式搜索临时关键词
       active_saved_search = nil
       temp_search_field, temp_search_keyword = nil
@@ -8251,21 +8552,53 @@ function loop()
           end
 
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+          -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
+          if _G._shortcuts_force_open_state ~= nil then
+            reaper.ImGui_SetNextItemOpen(ctx, _G._shortcuts_force_open_state, reaper.ImGui_Cond_Always())
+            _G._shortcuts_force_open_state = nil
+          end
 
           local hdr_flags = shortcut_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local prev_shortcut_open = shortcut_open == true -- 记录上一帧状态
           local is_shortcut_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts", nil, hdr_flags)
           shortcut_open = is_shortcut_open
 
-          reaper.ImGui_PopStyleColor(ctx)
-          if is_shortcut_open then
-            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-            ResetCollectionGuide() -- 重置导线度量
-            for _, sc in ipairs(folder_shortcuts or {}) do
-              draw_shortcut_tree(sc, nil, 0)
-            end
+          do
+            local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+            local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+            local row_h = max_y - min_y
+            -- 让+号紧贴标题文本末尾
+            local header_label = "000Folder Shortcuts" -- 000为折叠箭头占位
+            local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
+            local PAD_LEFT = 2
+            local plus_h = math.max(12, row_h - 6)
+            local plus_w = plus_h
+            local plus_x = min_x + PAD_LEFT + label_w
+            local plus_y = min_y + (row_h - plus_h) * 0.5
 
-            -- 添加新快捷方式按钮
-            if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut", 140, 40) then
+            local hovering_plus = reaper.ImGui_IsMouseHoveringRect(ctx, plus_x, plus_y, plus_x + plus_w, plus_y + plus_h, true)
+            local clicked_plus  = hovering_plus and reaper.ImGui_IsMouseReleased(ctx, 0)
+
+            local dl  = reaper.ImGui_GetForegroundDrawList(ctx)
+            local col = hovering_plus and colors.accent_active or colors.previewed_text
+            local cx  = plus_x + plus_w * 0.5
+            local cy  = plus_y + plus_h * 0.5
+            local arm = math.floor(plus_h * 0.35)
+            local thick = 3.5
+            reaper.ImGui_DrawList_AddLine(dl, cx - arm, cy, cx + arm, cy, col, thick) -- 横
+            reaper.ImGui_DrawList_AddLine(dl, cx, cy - arm, cx, cy + arm, col, thick) -- 竖
+
+            -- if hovering_plus then
+            --   reaper.ImGui_BeginTooltip(ctx)
+            --   reaper.ImGui_Text(ctx, "Create Shortcut")
+            --   reaper.ImGui_EndTooltip(ctx)
+            -- end
+
+            if clicked_plus then
+              is_shortcut_open = prev_shortcut_open
+              shortcut_open = prev_shortcut_open
+              _G._shortcuts_force_open_state = prev_shortcut_open
+
               local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
               if rv == 1 and folder and folder ~= "" then
                 folder = normalize_path(folder, true)
@@ -8279,6 +8612,31 @@ function loop()
                 end
               end
             end
+          end
+
+          reaper.ImGui_PopStyleColor(ctx)
+          if is_shortcut_open then
+            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            ResetCollectionGuide() -- 重置导线度量
+            for _, sc in ipairs(folder_shortcuts or {}) do
+              draw_shortcut_tree(sc, nil, 0)
+            end
+
+            -- 添加新快捷方式按钮
+            -- if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut", 140, 40) then
+            --   local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
+            --   if rv == 1 and folder and folder ~= "" then
+            --     folder = normalize_path(folder, true)
+            --     local exists = false
+            --     for _, v in ipairs(folder_shortcuts) do
+            --       if v.path == folder then exists = true break end
+            --     end
+            --     if not exists then
+            --       table.insert(folder_shortcuts, { name = folder:match("[^/\\]+$"), path = folder })
+            --       SaveFolderShortcuts()
+            --     end
+            --   end
+            -- end
             reaper.ImGui_Unindent(ctx, 7)
           end
 
@@ -8331,10 +8689,62 @@ function loop()
           end
 
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+          -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
+          if _G._collections_force_open_state ~= nil then
+            reaper.ImGui_SetNextItemOpen(ctx, _G._collections_force_open_state, reaper.ImGui_Cond_Always())
+            _G._collections_force_open_state = nil
+          end
 
           local hdr_flags = collection_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local prev_collection_open = collection_open == true -- 记录上一帧状态
           local is_collection_open = reaper.ImGui_CollapsingHeader(ctx, "Collections", nil, hdr_flags)
           collection_open = is_collection_open
+
+          do
+            local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+            local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+            local row_h = max_y - min_y
+            -- 让+号紧贴标题文本末尾
+            local header_label = "000Collections" -- 000为折叠箭头占位
+            local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
+            local PAD_LEFT = 2
+            local plus_h = math.max(12, row_h - 6)
+            local plus_w = plus_h
+            local plus_x = min_x + PAD_LEFT + label_w
+            local plus_y = min_y + (row_h - plus_h) * 0.5
+
+            local hovering_plus = reaper.ImGui_IsMouseHoveringRect(ctx, plus_x, plus_y, plus_x + plus_w, plus_y + plus_h, true)
+            local clicked_plus  = hovering_plus and reaper.ImGui_IsMouseReleased(ctx, 0)
+
+            local dl  = reaper.ImGui_GetForegroundDrawList(ctx)
+            local col = hovering_plus and colors.accent_active or colors.previewed_text
+            local cx  = plus_x + plus_w * 0.5
+            local cy  = plus_y + plus_h * 0.5
+            local arm = math.floor(plus_h * 0.35)
+            local thick = 3.5
+            reaper.ImGui_DrawList_AddLine(dl, cx - arm, cy, cx + arm, cy, col, thick) -- 横
+            reaper.ImGui_DrawList_AddLine(dl, cx, cy - arm, cx, cy + arm, col, thick) -- 竖
+
+            -- if hovering_plus then
+            --   reaper.ImGui_BeginTooltip(ctx)
+            --   reaper.ImGui_Text(ctx, "Create Collection")
+            --   reaper.ImGui_EndTooltip(ctx)
+            -- end
+
+            if clicked_plus then
+              is_collection_open = prev_collection_open
+              collection_open = prev_collection_open
+              _G._collections_force_open_state = prev_collection_open
+
+              local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
+              if ret and name and name ~= "" then
+                local new_id = new_guid()
+                advanced_folders[new_id] = { id = new_id, name = name, parent = nil, children = {}, files = {} } -- 写入 advanced_folders 表
+                table.insert(root_advanced_folders, new_id)
+                SaveAdvancedFolders()
+              end
+            end
+          end
 
           reaper.ImGui_PopStyleColor(ctx)
           if is_collection_open then
@@ -8347,24 +8757,82 @@ function loop()
               end
             end
 
-            if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder", 140, 40) then
-              local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
-              if ret and name and name ~= "" then
-                local new_id = new_guid()
-                advanced_folders[new_id] = { id = new_id, name = name, parent = nil, children = {}, files = {} } -- 写入 advanced_folders 表
-                table.insert(root_advanced_folders, new_id)
-                SaveAdvancedFolders()
-              end
-            end
+            -- 按钮注释，改为标题旁边的+号
+            -- if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder", 140, 40) then
+            --   local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
+            --   if ret and name and name ~= "" then
+            --     local new_id = new_guid()
+            --     advanced_folders[new_id] = { id = new_id, name = name, parent = nil, children = {}, files = {} } -- 写入 advanced_folders 表
+            --     table.insert(root_advanced_folders, new_id)
+            --     SaveAdvancedFolders()
+            --   end
+            -- end
             reaper.ImGui_Unindent(ctx, 7)
           end
 
           -- 自定义文件夹节点 Group
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+          -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
+          if _G._group_force_open_state ~= nil then
+            reaper.ImGui_SetNextItemOpen(ctx, _G._group_force_open_state, reaper.ImGui_Cond_Always())
+            _G._group_force_open_state = nil
+          end
 
           local hdr_flags = group_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local prev_group_open = group_open == true -- 记录上一帧状态
           local is_group_open = reaper.ImGui_CollapsingHeader(ctx, "Group##group", nil, hdr_flags)
           group_open = is_group_open
+
+          do
+            local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+            local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+            local row_h = max_y - min_y
+            -- 让+号紧贴标题文本末尾
+            local header_label = "000Group" -- 000为折叠箭头占位
+            local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
+            local PAD_LEFT = 2
+            local plus_h = math.max(12, row_h - 6)
+            local plus_w = plus_h
+            local plus_x = min_x + PAD_LEFT + label_w
+            local plus_y = min_y + (row_h - plus_h) * 0.5
+
+            local hovering_plus = reaper.ImGui_IsMouseHoveringRect(ctx, plus_x, plus_y, plus_x + plus_w, plus_y + plus_h, true)
+            local clicked_plus  = hovering_plus and reaper.ImGui_IsMouseReleased(ctx, 0)
+
+            local dl  = reaper.ImGui_GetForegroundDrawList(ctx)
+            local col = hovering_plus and colors.accent_active or colors.previewed_text
+            local cx  = plus_x + plus_w * 0.5
+            local cy  = plus_y + plus_h * 0.5
+            local arm = math.floor(plus_h * 0.35)
+            local thick = 3.5
+            reaper.ImGui_DrawList_AddLine(dl, cx - arm, cy, cx + arm, cy, col, thick) -- 横
+            reaper.ImGui_DrawList_AddLine(dl, cx, cy - arm, cx, cy + arm, col, thick) -- 竖
+
+            -- if hovering_plus then
+            --   reaper.ImGui_BeginTooltip(ctx)
+            --   reaper.ImGui_Text(ctx, "Create Group")
+            --   reaper.ImGui_EndTooltip(ctx)
+            -- end
+
+            if clicked_plus then
+              is_group_open = prev_group_open
+              group_open = prev_group_open
+              _G._group_force_open_state = prev_group_open
+
+              local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
+              if ret and name and name ~= "" then
+                local exists = false
+                for _, v in ipairs(custom_folders) do
+                  if v == name then exists = true break end
+                end
+                if not exists then
+                  table.insert(custom_folders, name)
+                  custom_folders_content[name] = {}
+                  SaveCustomFolders()
+                end
+              end
+            end
+          end
 
           reaper.ImGui_PopStyleColor(ctx)
           if is_group_open then
@@ -8441,29 +8909,79 @@ function loop()
               end
             end
             -- 新建自定义文件夹按钮
-            if reaper.ImGui_Button(ctx, "Create Group##add_custom_folder", 140, 40) then
-              local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
-              if ret and name and name ~= "" then
-                local exists = false
-                for _, v in ipairs(custom_folders) do
-                  if v == name then exists = true break end
-                end
-                if not exists then
-                  table.insert(custom_folders, name)
-                  custom_folders_content[name] = {}
-                  SaveCustomFolders()
-                end
-              end
-            end
+            -- if reaper.ImGui_Button(ctx, "Create Group##add_custom_folder", 140, 40) then
+            --   local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
+            --   if ret and name and name ~= "" then
+            --     local exists = false
+            --     for _, v in ipairs(custom_folders) do
+            --       if v == name then exists = true break end
+            --     end
+            --     if not exists then
+            --       table.insert(custom_folders, name)
+            --       custom_folders_content[name] = {}
+            --       SaveCustomFolders()
+            --     end
+            --   end
+            -- end
             reaper.ImGui_Unindent(ctx, 7)
           end
 
           -- 数据库节点
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.transparent)
+          -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
+          if _G._mediadb_force_open_state ~= nil then
+            reaper.ImGui_SetNextItemOpen(ctx, _G._mediadb_force_open_state, reaper.ImGui_Cond_Always())
+            _G._mediadb_force_open_state = nil
+          end
 
           local hdr_flags = mediadb_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local prev_mediadb_open = mediadb_open == true -- 记录上一帧状态
           local is_mediadb_open = reaper.ImGui_CollapsingHeader(ctx, "Database##dbfilelist", nil, hdr_flags)
           mediadb_open = is_mediadb_open
+
+          do
+            local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+            local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+            local row_h = max_y - min_y
+            -- 让+号紧贴标题文本末尾
+            local header_label = "000Database" -- 000为折叠箭头占位
+            local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
+            local PAD_LEFT = 2
+            local plus_h = math.max(12, row_h - 6)
+            local plus_w = plus_h
+            local plus_x = min_x + PAD_LEFT + label_w
+            local plus_y = min_y + (row_h - plus_h) * 0.5
+
+            local hovering_plus = reaper.ImGui_IsMouseHoveringRect(ctx, plus_x, plus_y, plus_x + plus_w, plus_y + plus_h, true)
+            local clicked_plus  = hovering_plus and reaper.ImGui_IsMouseReleased(ctx, 0)
+
+            local dl  = reaper.ImGui_GetForegroundDrawList(ctx)
+            local col = hovering_plus and colors.accent_active or colors.previewed_text
+            local cx  = plus_x + plus_w * 0.5
+            local cy  = plus_y + plus_h * 0.5
+            local arm = math.floor(plus_h * 0.35)
+            local thick = 3.5
+            reaper.ImGui_DrawList_AddLine(dl, cx - arm, cy, cx + arm, cy, col, thick) -- 横
+            reaper.ImGui_DrawList_AddLine(dl, cx, cy - arm, cx, cy + arm, col, thick) -- 竖
+
+            -- if hovering_plus then
+            --   reaper.ImGui_BeginTooltip(ctx)
+            --   reaper.ImGui_Text(ctx, "Create Database")
+            --   reaper.ImGui_EndTooltip(ctx)
+            -- end
+
+            if clicked_plus then
+              is_mediadb_open = prev_mediadb_open
+              mediadb_open = prev_mediadb_open
+              _G._mediadb_force_open_state = prev_mediadb_open
+
+              local db_dir = script_path .. "SoundmoleDB"
+              EnsureCacheDir(db_dir)
+              local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
+              local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+              local f = io.open(dbfile, "wb") f:close()
+            end
+          end
 
           reaper.ImGui_PopStyleColor(ctx)
           if is_mediadb_open then
@@ -8486,11 +9004,19 @@ function loop()
               if reaper.ImGui_Selectable(ctx, alias, is_selected) then
                 collect_mode = COLLECT_MODE_MEDIADB
                 tree_state.cur_mediadb = dbfile
+                _G._db_path_prefix_filter = "" -- 切换数据库时清空路径前缀过滤
+
                 -- 清除选中状态
                 file_select_start = nil
                 file_select_end   = nil
                 selected_row      = -1
 
+                local static = _G._soundmole_static or {}
+                _G._soundmole_static = static
+                static.filtered_list_map    = {}
+                static.last_filter_text_map = {}
+
+                -- 触发重建
                 files_idx_cache = nil
                 CollectFiles()
               end
@@ -8684,13 +9210,13 @@ function loop()
             end
 
             -- 数据库按钮
-            if reaper.ImGui_Button(ctx, "Create Database", 140, 40) then
-              local db_dir = script_path .. "SoundmoleDB"
-              EnsureCacheDir(db_dir)
-              local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
-              local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
-              local f = io.open(dbfile, "wb") f:close()
-            end
+            -- if reaper.ImGui_Button(ctx, "Create Database", 140, 40) then
+            --   local db_dir = script_path .. "SoundmoleDB"
+            --   EnsureCacheDir(db_dir)
+            --   local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
+            --   local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+            --   local f = io.open(dbfile, "wb") f:close()
+            -- end
 
             reaper.ImGui_Unindent(ctx, 7)
           end
@@ -9018,6 +9544,7 @@ function loop()
           -- 添加搜索词按钮
           if reaper.ImGui_Button(ctx, "Save Current Search") then
             new_search_name = filter_text
+            new_keyword     = filter_text
             show_add_popup = true
           end
 
@@ -9028,39 +9555,60 @@ function loop()
           end
           local add_visible = reaper.ImGui_BeginPopupModal(ctx, "Add Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
           if add_visible then
-            reaper.ImGui_Text(ctx, "Name:")
-            reaper.ImGui_SameLine(ctx)
+            local name_w, _    = reaper.ImGui_CalcTextSize(ctx, "Alias:")
+            local keyword_w, _ = reaper.ImGui_CalcTextSize(ctx, "Keyword:")
+            local label_w      = math.max(name_w, keyword_w) + 8 -- 8px 作为标签与输入框的间距
+
+            reaper.ImGui_BeginGroup(ctx)
+            local row2_x = reaper.ImGui_GetCursorPosX(ctx)
+            reaper.ImGui_AlignTextToFramePadding(ctx)
+            reaper.ImGui_Text(ctx, "Keyword:")
+            reaper.ImGui_SameLine(ctx, nil, 6)
+            reaper.ImGui_SetCursorPosX(ctx, row2_x + label_w)
+            local kw_changed, kw_val = reaper.ImGui_InputText(ctx, "##new_keyword", new_keyword or "", 256)
+            if kw_changed then new_keyword = kw_val end
+            reaper.ImGui_EndGroup(ctx)
+
+            reaper.ImGui_BeginGroup(ctx)
+            local row_x = reaper.ImGui_GetCursorPosX(ctx)
+            reaper.ImGui_AlignTextToFramePadding(ctx)
+            reaper.ImGui_Text(ctx, "Alias:")
+            reaper.ImGui_SameLine(ctx, nil, 6)
+            reaper.ImGui_SetCursorPosX(ctx, row_x + label_w)
             local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
             if input_changed then new_search_name = input_val end
-            reaper.ImGui_Text(ctx, "Keyword: " .. (filter_text or ""))
+            reaper.ImGui_EndGroup(ctx)
+
             reaper.ImGui_Separator(ctx)
 
             local win_w = reaper.ImGui_GetWindowWidth(ctx)
             local btn_w = 64
-            local spacing = 8 -- 两个按钮间距
+            local spacing = 0 -- 两个按钮间距
             -- 光标移到右侧对齐
             local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
             reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
 
+            local function trim(s) return (tostring(s or ""):gsub("^%s+", ""):gsub("%s+$", "")) end -- 去首尾空白
             if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
-              if (new_search_name or "") ~= "" and (filter_text or "") ~= "" then
+              if trim(new_search_name) ~= "" and trim(new_keyword) ~= "" then
                 -- 避免重名
                 local exists = false
                 for _, s in ipairs(saved_search_list) do
                   if s.name == new_search_name then exists = true break end
                 end
                 if not exists then
-                  table.insert(saved_search_list, {name = new_search_name, keyword = filter_text})
+                  table.insert(saved_search_list, {name = new_search_name, keyword = new_keyword})
                   SaveSavedSearch(EXT_SECTION, saved_search_list)
                 end
               end
               reaper.ImGui_CloseCurrentPopup(ctx)
-              new_search_name = ""
+              new_search_name, new_keyword = "", ""
             end
+
             reaper.ImGui_SameLine(ctx)
             if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
               reaper.ImGui_CloseCurrentPopup(ctx)
-              new_search_name = ""
+              new_search_name, new_keyword = "", ""
             end
             reaper.ImGui_EndPopup(ctx)
           end
@@ -9078,7 +9626,7 @@ function loop()
             -- 组合显示文本: Name (keyword)
             local label = (s.name or "")
             if (s.keyword or "") ~= "" then
-              label = string.format("%s (%s)", s.name or "", s.keyword or "")
+              label = string.format("%s (%s)", s.keyword or "", s.name or "")
             end
 
             -- 用不可见标签创建可点击/可悬浮的区域
@@ -9133,28 +9681,75 @@ function loop()
               reaper.ImGui_Dummy(ctx, avail - total_btn_w - 8, 0)
               reaper.ImGui_SameLine(ctx)
             end
+
             -- 上移
             if idx > 1 then
-              if reaper.ImGui_ArrowButton(ctx, "##up", reaper.ImGui_Dir_Up()) then
+              reaper.ImGui_BeginGroup(ctx)
+              local start_x, start_y = reaper.ImGui_GetCursorPos(ctx)
+              reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+              local glyph_up = '\u{0015}' -- 上箭头
+              local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_up)
+
+              local centered_x = start_x + math.max(0, (btn_w - tw) * 0.5)
+              reaper.ImGui_SetCursorPosX(ctx, centered_x)
+              reaper.ImGui_AlignTextToFramePadding(ctx)
+
+              local text_pos_x, text_pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
+              local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
+              local hovered = (mouse_x >= text_pos_x and mouse_x <= text_pos_x + tw and mouse_y >= text_pos_y and mouse_y <= text_pos_y + th)
+
+              reaper.ImGui_TextColored(ctx, hovered and colors.accent_active or colors.previewed_text, glyph_up)
+              local clicked_up = reaper.ImGui_IsItemClicked(ctx)
+              reaper.ImGui_PopFont(ctx)
+
+              reaper.ImGui_SetCursorPos(ctx, start_x, start_y)
+              reaper.ImGui_Dummy(ctx, btn_w, 10)
+              reaper.ImGui_EndGroup(ctx)
+
+              if clicked_up then
                 local temp = saved_search_list[idx - 1]
                 saved_search_list[idx - 1] = saved_search_list[idx]
                 saved_search_list[idx] = temp
                 SaveSavedSearch(EXT_SECTION, saved_search_list)
               end
             else
-              reaper.ImGui_Dummy(ctx, btn_w, 20)
+              reaper.ImGui_Dummy(ctx, btn_w, 10)
             end
-            reaper.ImGui_SameLine(ctx, nil, 4)
+
+            reaper.ImGui_SameLine(ctx, nil, 0)
+
             -- 下移
             if idx < #saved_search_list then
-              if reaper.ImGui_ArrowButton(ctx, "##down", reaper.ImGui_Dir_Down()) then
+              reaper.ImGui_BeginGroup(ctx)
+              local start_x, start_y = reaper.ImGui_GetCursorPos(ctx)
+              reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+              local glyph_down = '\u{0012}' -- 下箭头
+              local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_down)
+
+              local centered_x = start_x + math.max(0, (btn_w - tw) * 0.5)
+              reaper.ImGui_SetCursorPosX(ctx, centered_x)
+              reaper.ImGui_AlignTextToFramePadding(ctx)
+
+              local text_pos_x, text_pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
+              local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
+              local hovered = (mouse_x >= text_pos_x and mouse_x <= text_pos_x + tw and mouse_y >= text_pos_y and mouse_y <= text_pos_y + th)
+
+              reaper.ImGui_TextColored(ctx, hovered and colors.accent_active or colors.previewed_text, glyph_down)
+              local clicked_down = reaper.ImGui_IsItemClicked(ctx)
+              reaper.ImGui_PopFont(ctx)
+
+              reaper.ImGui_SetCursorPos(ctx, start_x, start_y)
+              reaper.ImGui_Dummy(ctx, btn_w, 10)
+              reaper.ImGui_EndGroup(ctx)
+
+              if clicked_down then
                 local temp = saved_search_list[idx + 1]
                 saved_search_list[idx + 1] = saved_search_list[idx]
                 saved_search_list[idx] = temp
                 SaveSavedSearch(EXT_SECTION, saved_search_list)
               end
             else
-              reaper.ImGui_Dummy(ctx, btn_w, 20)
+              reaper.ImGui_Dummy(ctx, btn_w, 10)
             end
 
             reaper.ImGui_PopID(ctx)
@@ -10286,7 +10881,7 @@ function loop()
 
         -- Folder Shortcuts (Mirror)
         local chg_fs
-        chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, "Mirror REAPER Folder Shortcuts", mirror_folder_shortcuts)
+        chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, "Mirror Media Explorer Shortcuts", mirror_folder_shortcuts)
         if chg_fs then
           reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
         end
@@ -11179,6 +11774,17 @@ function loop()
           end
         end
         -- end
+      else
+        -- 空态提示
+        local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
+        local msg = "No audio selected. Select a folder or click a file to preview."
+        local tw, th = reaper.ImGui_CalcTextSize(ctx, msg)
+        local cur_x, cur_y = reaper.ImGui_GetCursorPos(ctx)
+        reaper.ImGui_SetCursorPos(ctx, cur_x + (avail_w - tw) * 0.5, cur_y + (avail_h - th) * 0.5)
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.gary)
+        reaper.ImGui_Text(ctx, msg)
+        reaper.ImGui_PopStyleColor(ctx)
+        reaper.ImGui_SetCursorPos(ctx, cur_x, cur_y)
       end
 
       -- 绘制时间线
@@ -11715,6 +12321,15 @@ function loop()
       else
         if is_db then
           -- 是否存在任意过滤
+          -- local has_filter = false
+          -- do
+          --   local t = _G.commit_filter_text
+          --   if type(t) == "string" and t ~= "" then has_filter = true end
+          --   if _G.temp_search_keyword then has_filter = true end
+          --   if _G.active_saved_search then has_filter = true end
+          --   if _G.temp_ucs_cat_keyword or _G.temp_ucs_sub_keyword then has_filter = true end
+          -- end
+
           local has_filter = false
           do
             local t = _G.commit_filter_text
@@ -11722,6 +12337,14 @@ function loop()
             if _G.temp_search_keyword then has_filter = true end
             if _G.active_saved_search then has_filter = true end
             if _G.temp_ucs_cat_keyword or _G.temp_ucs_sub_keyword then has_filter = true end
+
+            -- 新增：DB 文件夹过滤（_db_path_prefix_filter）
+            if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) then
+              local p = _G._db_path_prefix_filter
+              if type(p) == "string" and p ~= "" then
+                has_filter = true
+              end
+            end
           end
 
           if has_filter then
@@ -11979,6 +12602,7 @@ function loop()
     reaper.ImGui_End(ctx)
   end
   reaper.ImGui_PopStyleVar(ctx, 3)
+  reaper.ImGui_PopStyleColor(ctx, 3) -- 脚本标题栏背景颜色，常规，聚焦，折叠时颜色
   reaper.ImGui_PopFont(ctx)
 
   -- 检测 Ctrl+F4 快捷键
