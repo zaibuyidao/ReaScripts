@@ -4471,7 +4471,7 @@ if _G._BuildFilteredList_Original == nil and type(BuildFilteredList) == "functio
           prefiltered[#prefiltered + 1] = info
         end
       end
-      -- 把裁剪后的列表交回原始 BuildFilteredList，保留原所有搜索/同义词/UCS 逻辑
+      -- 把裁剪后的列表交回原始 BuildFilteredList，保留原所有搜索/同义词/UCS逻辑
       return _G._BuildFilteredList_Original(prefiltered)
     end
     -- 非数据库模式或未设置路径前缀时，直接走原逻辑
@@ -7679,154 +7679,107 @@ end
 -- selected_row = hit_index
 -- SM_RequestCenterRow(hit_index, 0.5)
 
---------------------------------------------- 数据库模式的路径过滤 ---------------------------------------------
+--------------------------------------------- 数据库路径过滤节点 ---------------------------------------------
 
-function DBFB_IsDir(path)
-  if not path or path == "" then return end
-  local ok = reaper.EnumerateFiles(path, 0) or reaper.EnumerateSubdirectories(path, 0)
-  return ok ~= nil
+local DBPF_State = {
+  roots_cache  = {},
+  subdir_cache = {},
+  db_abs_file  = "",
+}
+
+-- 失效全部缓存，切库/改PATH后调用
+function DBPF_InvalidateAllCaches()
+  DBPF_State.roots_cache  = {}
+  DBPF_State.subdir_cache = {}
+  DBPF_State.db_abs_file  = ""
 end
 
--- 解析 DB 文件里的 PATH 行
-function DBFB_ParsePathsFromDBFile(dbfile)
-  local roots, seen = {}, {}
-  local f = io.open(dbfile, "rb")
-  if not f then return roots end
-  for raw in f:lines() do
-    local line = (raw or ""):gsub("^\239\187\191", ""):gsub("\r", "")
-    local quoted = line:match('^%s*[Pp][Aa][Tt][Hh]%s+(%b"")') or line:match("^%s*[Pp][Aa][Tt][Hh]%s+(%b'')")
-    if quoted then
-      local p = quoted:sub(2, -2)
-      p = normalize_path(p, true)
-      local key = (reaper.GetOS():find("Win") and p:lower() or p)
-      if not seen[key] then
-        roots[#roots+1] = p
-        seen[key] = true
-      end
-    end
+-- 获取当前DB文件的绝对路径
+function DBPF_GetCurrentDBAbsPath()
+  if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
+    local db_dir = normalize_path(script_path .. "SoundmoleDB", true)
+    return db_dir .. tree_state.cur_mediadb
+  elseif collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db and tree_state.cur_reaper_db ~= "" then
+    local sep  = package.config:sub(1, 1)
+    local base = reaper.GetResourcePath() .. sep .. "MediaDB" .. sep
+    return normalize_path(base, true) .. tree_state.cur_reaper_db
   end
-  f:close()
-  return roots
+  return ""
 end
 
--- 解析 DB 目录
-function DBFB_ParsePathsFromDBDir(dbdir)
+-- 从DB文件读取PATH
+function DBPF_ReadRootsFromDB()
+  local abs = DBPF_GetCurrentDBAbsPath()
+  if abs == "" or (DBPF_State.db_abs_file == abs and #DBPF_State.roots_cache > 0) then
+    return DBPF_State.roots_cache
+  end
+
+  DBPF_State.db_abs_file = abs
+  DBPF_State.roots_cache = {}
   local roots, seen = {}, {}
-  local i = 0
-  while true do
-    local name = reaper.EnumerateFiles(dbdir, i)
-    if not name then break end
-    local lower = name:lower()
-    if lower:find("%.molefilelist$") or lower:find("%.reaperfilelist$") then
-      local file = normalize_path(dbdir, true):gsub(sep.."$", "") .. sep .. name
-      for _, p in ipairs(DBFB_ParsePathsFromDBFile(file)) do
-        if not seen[p:lower()] then
-          roots[#roots+1] = p
-          seen[p:lower()] = true
+
+  if abs ~= "" and reaper.file_exists(abs) then
+    for line in io.lines(abs) do
+      if line:sub(1, 3) == "\239\187\191" then line = line:sub(4) end -- 去BOM
+      local p = line:match('^%s*[Pp][Aa][Tt][Hh]%s+"(.-)"%s*$') or line:match('^%s*[Pp][Aa][Tt][Hh]%s+(.+)%s*$')
+      if p and p ~= "" then
+        local np = normalize_path(p, true)
+        if np ~= "" and not seen[np] then
+          seen[np] = true
+          roots[#roots+1] = np
         end
       end
     end
+  end
+
+  DBPF_State.roots_cache = roots
+  return roots
+end
+
+function DBPF_ListSubdirs(dir)
+  dir = normalize_path(dir, true)
+  local cached = DBPF_State.subdir_cache[dir]
+  if cached then return cached end
+
+  local out, i = {}, 0
+  while true do
+    local sub = reaper.EnumerateSubdirectories(dir, i)
+    if not sub then break end
+    out[#out+1] = normalize_path(dir .. sub, true)
     i = i + 1
   end
-  return roots
+  table.sort(out, function(a,b) return a:lower() < b:lower() end)
+  DBPF_State.subdir_cache[dir] = out
+  return out
 end
 
-function DBFB_PickDBContainer(cur_db)
-  if not cur_db then return nil end
-  local candidates = {cur_db.dbfile, cur_db.path, cur_db.fullpath} -- 在用字段
-  for _, v in ipairs(candidates) do
-    if type(v) == "string" and v ~= "" then
-      return v
-    end
-  end
-  if type(cur_db) == "string" and cur_db ~= "" then
-    return cur_db
-  end
-  return nil
+function DBPF_HasSubdir(dir)
+  local l = DBPF_ListSubdirs(dir)
+  return l and #l > 0
 end
 
-function DBFB_GetCurrentDBRoots()
-  local roots = {}
-  local cur_db = nil
-  local base_dir = nil
-
-  if collect_mode == COLLECT_MODE_MEDIADB then
-    cur_db  = (tree_state and tree_state.cur_mediadb) or nil
-    base_dir = (mediadb_dir and mediadb_dir ~= "" and normalize_path(mediadb_dir, true)) or normalize_path(script_path .. "SoundmoleDB", true)
-  elseif collect_mode == COLLECT_MODE_REAPERDB then
-    cur_db  = (tree_state and tree_state.cur_reaper_db) or nil
-    base_dir = normalize_path(reaper.GetResourcePath() .. sep .. "MediaDB", true)
-  else
-    return roots -- 非数据库模式不工作
-  end
-
-  local container = DBFB_PickDBContainer(cur_db)
-  if not container or container == "" then return roots end
-
-  local has_sep = container:find("[/\\]")
-  local is_abs_win = container:match("^[A-Za-z]:[\\/]")
-  local is_abs_posix = container:sub(1,1) == "/"
-  local full = container
-
-  if not (is_abs_win or is_abs_posix) then
-    if base_dir and base_dir ~= "" then
-      full = normalize_path(base_dir, true) .. container
-    end
-  end
-
-  -- 按类型解析
-  if full and full ~= "" and reaper.file_exists(full) then
-    roots = DBFB_ParsePathsFromDBFile(full)
-  elseif DBFB_IsDir(full) then
-    roots = DBFB_ParsePathsFromDBDir(full)
-  else
-    if base_dir and DBFB_IsDir(base_dir) then
-      roots = DBFB_ParsePathsFromDBDir(base_dir)
-    end
-  end
-  return roots
-end
-
-function DBFB_ApplyPathFilter(dir)
+-- 点击目录设置路径前缀
+function DBPF_ApplyPathFilter(dir)
   local prefix = normalize_path(dir, true)
   if prefix == "" then return end
   _G._db_path_prefix_filter = prefix
 
-  local list_src  = files_idx_cache or {}
-  local os_is_win = (reaper.GetOS() or ""):find("Win")
-  local pref_l    = os_is_win and prefix:lower() or prefix
-  local matched   = 0
-  for _, info in ipairs(list_src) do
-    local p  = normalize_path(info.path or "", false)
-    local pp = os_is_win and p:lower() or p
-    if pp:sub(1, #pref_l) == pref_l then matched = matched + 1 end
-  end
-
-  -- 清空当前数据库的过滤缓存，迫使表格在下一帧重建
+  -- 清空过滤缓存，强制下一帧按新前缀重建
   local static = _G._soundmole_static or {}
-  static.filtered_list_map    = static.filtered_list_map or {} -- 用于存放所有列表缓存
-  static.last_filter_text_map = static.last_filter_text_map or {}
-  static.last_sort_specs_map  = static.last_sort_specs_map or {}
+  _G._soundmole_static = static
+  static.filtered_list_map    = {}
+  static.last_filter_text_map = {}
+  static.last_sort_specs_map  = {}
 
-  local current_db_key = GetCurrentListKey()
-  static.filtered_list_map[current_db_key] = nil
-  static.last_filter_text_map[current_db_key] = nil
-  static.last_sort_specs_map[current_db_key] = nil
-
-  file_select_start, file_select_end, selected_row = nil, nil, nil
-
-  reaper.ImGui_CloseCurrentPopup(ctx)
+  file_select_start, file_select_end, selected_row = nil, nil, -1
 end
 
-function DBFB_HasSubdir(dir)
-  return reaper.EnumerateSubdirectories(dir, 0) ~= nil
-end
+function DBPF_DrawDirMenuRecursive(dir, display_name)
+  local has_child = DBPF_HasSubdir(dir)
 
--- 绘制目录菜单
-function DBFB_DrawDirMenuRecursive(dir, display_name)
-  if not DBFB_HasSubdir(dir) then
+  if not has_child then
     if reaper.ImGui_MenuItem(ctx, display_name) then
-      DBFB_ApplyPathFilter(dir)
+      DBPF_ApplyPathFilter(dir)
       reaper.ImGui_CloseCurrentPopup(ctx)
       return true
     end
@@ -7836,31 +7789,33 @@ function DBFB_DrawDirMenuRecursive(dir, display_name)
   reaper.ImGui_PushID(ctx, dir)
   local opened = reaper.ImGui_BeginMenu(ctx, display_name)
 
-  local activated = (reaper.ImGui_IsItemActivated and reaper.ImGui_IsItemActivated(ctx)) or false
-  local clicked   = reaper.ImGui_IsItemClicked(ctx, 0)
-  local hovered   = reaper.ImGui_IsItemHovered(ctx)
-
-  if activated or (hovered and clicked) then
-    DBFB_ApplyPathFilter(dir)
+  if reaper.ImGui_IsItemClicked(ctx, 0) then
+    DBPF_ApplyPathFilter(dir)
     reaper.ImGui_CloseCurrentPopup(ctx)
     if opened then reaper.ImGui_EndMenu(ctx) end
     reaper.ImGui_PopID(ctx)
     return true
   end
 
-  -- 悬停展开浏览子目录
   if opened then
-    local idx = 0
-    while true do
-      local name = reaper.EnumerateSubdirectories(dir, idx)
-      if not name then break end
-      local sub = normalize_path(dir .. sep .. name, true)
-      if DBFB_DrawDirMenuRecursive(sub, name) then
+    if reaper.ImGui_MenuItem(ctx, "Filter here##filter_here") then
+      DBPF_ApplyPathFilter(dir)
+      reaper.ImGui_CloseCurrentPopup(ctx)
+      reaper.ImGui_EndMenu(ctx)
+      reaper.ImGui_PopID(ctx)
+      return true
+    end
+
+    reaper.ImGui_Separator(ctx)
+
+    local subs = DBPF_ListSubdirs(dir) -- 首次打开时缓存
+    for _, child in ipairs(subs) do
+      local name = child:match("([^/\\]+)[/\\]$") or child
+      if DBPF_DrawDirMenuRecursive(child, name) then
         reaper.ImGui_EndMenu(ctx)
         reaper.ImGui_PopID(ctx)
         return true
       end
-      idx = idx + 1
     end
     reaper.ImGui_EndMenu(ctx)
   end
@@ -7869,72 +7824,126 @@ function DBFB_DrawDirMenuRecursive(dir, display_name)
   return false
 end
 
-local roots = DBFB_GetCurrentDBRoots()
+-- 逐层展开子目录
+function DBPF_DrawDBFoldersPopupBody()
+  local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+  if not in_db_mode then
+    reaper.ImGui_TextDisabled(ctx, "Not in Database mode.")
+    return
+  end
 
-function DBFB_DrawPopupContent()
-  local roots = DBFB_GetCurrentDBRoots()
+  local roots = DBPF_ReadRootsFromDB()
   if #roots == 0 then
-    reaper.ImGui_TextDisabled(ctx, "No root path found for the current database.")
+    reaper.ImGui_TextDisabled(ctx, "No PATH found in current database.")
+    if reaper.ImGui_MenuItem(ctx, "Refresh") then
+      DBPF_InvalidateAllCaches()
+    end
     return
   end
 
   for _, root in ipairs(roots) do
-    if DBFB_DrawDirMenuRecursive(root, root) then
+    local disp = root:match("([^/\\]+)[/\\]$") or root
+    if DBPF_DrawDirMenuRecursive(root, disp) then
       return
     end
   end
 end
 
-function DBFB_DrawDatabaseFolderButton(ctx)
-  local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
-  reaper.ImGui_SameLine(ctx, nil, 8)
+-- 从当前DB文件读取所有PATH
+function DBPF_GetCurrentDBRoots()
+  local roots = {}
+  local seen  = {}
+  local dbabs = DBPF_GetCurrentDBAbsPath()
+  if not dbabs or dbabs == "" then return roots end
+  if not reaper.file_exists(dbabs) then
+    reaper.ShowConsoleMsg(("Database file not found: %s\n"):format(tostring(dbabs)))
+    return roots
+  end
 
-  if not in_db_mode then
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.gary)
-    local cursor_pos_x, cursor_pos_y = reaper.ImGui_GetCursorPos(ctx)
-    reaper.ImGui_SetCursorPosY(ctx, cursor_pos_y + 13)
-    reaper.ImGui_PushFont(ctx, fonts.icon, 20)
-    local play_label = '\u{0066}'
-    reaper.ImGui_Text(ctx, play_label)
-    reaper.ImGui_PopFont(ctx)
-    reaper.ImGui_PopStyleColor(ctx)
-  else
-    -- 图标字体垂直偏移, 居中, 向下偏移
-    local cursor_pos_x, cursor_pos_y = reaper.ImGui_GetCursorPos(ctx)
-    reaper.ImGui_SetCursorPosY(ctx, cursor_pos_y + 13)
-
-    reaper.ImGui_PushFont(ctx, fonts.icon, 20)
-    local play_label = '\u{0066}'
-    local px, py = reaper.ImGui_GetCursorScreenPos(ctx)
-    local tw, th = reaper.ImGui_CalcTextSize(ctx, play_label)
-
-    local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, px, py, px + tw, py + th, true)
-    local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
-    local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
-
-    local col_normal  = colors.normal_text   or 0xFFFFFFFF
-    local col_hovered = colors.accentor      or 0xFFCC66FF
-    local col_active  = colors.accent_active or 0xFFCC66FF
-    local col = hovered and (active and col_active or col_hovered) or col_normal
-
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
-    reaper.ImGui_Text(ctx, play_label)
-    reaper.ImGui_PopStyleColor(ctx)
-
-    if hovered and in_db_mode then
-      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-    end
-    reaper.ImGui_PopFont(ctx)
-
-    if reaper.ImGui_IsItemClicked(ctx) and in_db_mode then
-      reaper.ImGui_OpenPopup(ctx, "DB Folders")
+  for line in io.lines(dbabs) do
+    if line:sub(1,3) == "\239\187\191" then line = line:sub(4) end -- 去BOM
+    local p = line:match('^%s*[Pp][Aa][Tt][Hh]%s+"(.-)"%s*$')
+    if not p then
+      p = line:match('^%s*[Pp][Aa][Tt][Hh]%s+(.+)%s*$')
     end
 
-    if reaper.ImGui_BeginPopup(ctx, "DB Folders") then
-      DBFB_DrawPopupContent()
-      reaper.ImGui_EndPopup(ctx)
+    if p and p ~= "" then
+      local np = normalize_path(p, true)
+      if np ~= "" and not seen[np] then
+        seen[np] = true
+        roots[#roots+1] = np
+      end
     end
   end
+
+  return roots
+end
+
+function DBPF_DrawDBFoldersPopup()
+  if not reaper.ImGui_BeginPopup(ctx, "DB Folders") then return end
+
+  local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+  if not in_db_mode then
+    reaper.ImGui_TextDisabled(ctx, "Not in Database mode.")
+    reaper.ImGui_EndPopup(ctx)
+    return
+  end
+
+  local roots = DBPF_GetCurrentDBRoots()
+  if #roots == 0 then
+    reaper.ImGui_TextDisabled(ctx, "No PATH found in current database.")
+    reaper.ImGui_EndPopup(ctx)
+    return
+  end
+
+  for _, root in ipairs(roots) do
+    local disp = root:match("([^/\\]+)[/\\]$") or root
+    if DBPF_DrawDirMenuRecursive(root, disp) then
+      reaper.ImGui_EndPopup(ctx)
+      return
+    end
+  end
+
+  reaper.ImGui_EndPopup(ctx)
+end
+
+-- 数据库路径过滤按钮
+function DBPF_DrawDatabaseFolderButton(ctx)
+  local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+  reaper.ImGui_SameLine(ctx, nil, 8)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), in_db_mode and colors.normal_text or colors.gary)
+
+  local _, y = reaper.ImGui_GetCursorPos(ctx)
+  reaper.ImGui_SetCursorPosY(ctx, y + 13)
+
+  reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+  local text_label = '\u{0066}'
+  reaper.ImGui_Text(ctx, text_label)
+  reaper.ImGui_PopFont(ctx)
+
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  local clicked = reaper.ImGui_IsItemClicked(ctx, 0)
+
+  if hovered then
+    reaper.ImGui_BeginTooltip(ctx)
+    if in_db_mode then
+      reaper.ImGui_Text(ctx, "Browse DB Folders")
+    else
+      reaper.ImGui_TextDisabled(ctx, "Not in Database mode")
+    end
+    reaper.ImGui_EndTooltip(ctx)
+  end
+
+  if clicked and in_db_mode then
+    reaper.ImGui_OpenPopup(ctx, "DB Folders")
+  end
+
+  if reaper.ImGui_BeginPopup(ctx, "DB Folders") then
+    DBPF_DrawDBFoldersPopupBody()
+    reaper.ImGui_EndPopup(ctx)
+  end
+
+  reaper.ImGui_PopStyleColor(ctx)
 end
 
 function loop()
@@ -7997,7 +8006,7 @@ function loop()
     reaper.ImGui_EndGroup(ctx)
 
     -- 数据库路径过滤按钮
-    DBFB_DrawDatabaseFolderButton(ctx)
+    DBPF_DrawDatabaseFolderButton(ctx)
 
     -- 搜索字段下拉菜单
     reaper.ImGui_SameLine(ctx, nil, 15)
@@ -8169,8 +8178,10 @@ function loop()
     if reaper.ImGui_Button(ctx, "Restore All", 90, 56) then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
 
-      _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
+      _G.commit_filter_text = ""     -- 立即清空生效查询（Enter模式）
       _G._db_path_prefix_filter = "" -- 清除数据库模式的路径过滤
+      DBPF_InvalidateAllCaches()     -- 让数据库路径根缓存失效
+
       -- 清除临时搜索字段，UCS隐式搜索临时关键词
       active_saved_search = nil
       temp_search_field, temp_search_keyword = nil
@@ -8401,6 +8412,7 @@ function loop()
           finished = false,
           root_path  = folder,
         }
+        DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
       end
     end
     reaper.ImGui_PopFont(ctx)
@@ -9019,6 +9031,7 @@ function loop()
                 -- 触发重建
                 files_idx_cache = nil
                 CollectFiles()
+                DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
               end
               
               -- 右键菜单
@@ -9102,6 +9115,7 @@ function loop()
                       tree_state.remove_path_confirm = true
                     end
                   end
+                  DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
                   reaper.ImGui_EndMenu(ctx)
                 end
 
@@ -12338,7 +12352,7 @@ function loop()
             if _G.active_saved_search then has_filter = true end
             if _G.temp_ucs_cat_keyword or _G.temp_ucs_sub_keyword then has_filter = true end
 
-            -- 新增：DB 文件夹过滤（_db_path_prefix_filter）
+            -- 数据库路径过滤
             if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) then
               local p = _G._db_path_prefix_filter
               if type(p) == "string" and p ~= "" then

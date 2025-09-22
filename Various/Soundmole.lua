@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.62
+-- @version 1.0.63
 -- @changelog
---   Added database path filtering feature, allowing filtering of audio files by path prefix.
---   Optimized parts of the UI.
+--   Fixed path filtering not triggering on folder clicks in large databases by adding a "Filter here" menu action for reliable filtering at all levels.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
