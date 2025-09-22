@@ -2088,7 +2088,7 @@ function mouse_in_selection()
   return mouse_time >= sel_min and mouse_time <= sel_max
 end
 
---------------------------------------------- 文件夹虚线 ---------------------------------------------
+--------------------------------------------- 文件夹虚线（暂不使用） ---------------------------------------------
 
 -- 虚线样式
 local GUIDE_DASHED    = true
@@ -2124,7 +2124,8 @@ end
 -- 画虚线
 function DrawLine(dl, x1, y1, x2, y2, col, th, dashed)
   if not dashed then
-    reaper.ImGui_DrawList_AddLine(dl, x1, y1, x2, y2, col, th); return
+    reaper.ImGui_DrawList_AddLine(dl, x1, y1, x2, y2, col, th)
+    return
   end
   local hx = math.abs(x2 - x1) >= math.abs(y2 - y1)
   if hx then
@@ -2170,7 +2171,7 @@ end
 local audio_types = { WAVE=true, MP3=true, FLAC=true, OGG=true, AIFF=true, APE=true, M4A=true, AAC=true, MP4=true }
 tree_state = tree_state or { cur_path = '', sel_audio = '' }
 local tree_open = {}
-local dir_cache = {} -- path -> {dirs=..., audios=..., ok=...}
+local dir_cache = {}
 local drive_cache = nil
 local drives_loaded = false
 local audio_file_cache = {}
@@ -2430,15 +2431,15 @@ function draw_tree(name, path, depth)
     show_name = name .. " [" .. drive_name_map[path] .. "]"
   end
 
-  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
+  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
   local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##" .. path, flags | highlight)
   -- 捕获本行矩形与中心y
-  local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
-  local cy = (miny + maxy) * 0.5
-  if #_guide.stack > 0 then
-    DrawChildTeeFromParent(ctx, minx, cy)
-  end
+  -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
+  -- local cy = (miny + maxy) * 0.5
+  -- if #_guide.stack > 0 then
+  --   DrawChildTeeFromParent(ctx, minx, cy)
+  -- end
   -- 只要点击树节点，不管当前什么模式，都切换到tree模式
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     if collect_mode ~= COLLECT_MODE_TREE then
@@ -2550,7 +2551,7 @@ function draw_shortcut_tree(sc, base_path, depth)
   local show_name = (sc.name and sc.name ~= "") and sc.name or GetFolderName(sc.path)
   local path = normalize_path(sc.path, true)
   depth = depth or 0
-  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
+  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
   local highlight = (collect_mode == COLLECT_MODE_SHORTCUT and tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0 -- 去掉 collect_mode == COLLECT_MODE_SHORTCUT 则保持高亮
 
   -- 路径折叠展开状态，确保二级以上路径下次打开时可以展开
@@ -2561,11 +2562,11 @@ function draw_shortcut_tree(sc, base_path, depth)
 
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##shortcut_" .. path, flags | highlight)
   -- 捕获本行矩形与中心y
-  local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
-  local cy = (miny + maxy) * 0.5
-  if #_guide.stack > 0 then
-    DrawChildTeeFromParent(ctx, minx, cy)
-  end
+  -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
+  -- local cy = (miny + maxy) * 0.5
+  -- if #_guide.stack > 0 then
+  --   DrawChildTeeFromParent(ctx, minx, cy)
+  -- end
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
     collect_mode = COLLECT_MODE_SHORTCUT
@@ -2989,7 +2990,7 @@ function draw_advanced_folder_node(id, selected_id, depth)
   if not node then return end
   depth = depth or 0
   -- 仅在 COLLECT_MODE_ADVANCEDFOLDER 模式下高亮
-  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() -- reaper.ImGui_TreeNodeFlags_OpenOnArrow() -- 使用OpenOnArrow()将只能点击箭头有效。
+  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes() -- reaper.ImGui_TreeNodeFlags_OpenOnArrow() -- 使用OpenOnArrow()将只能点击箭头有效。
   if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and selected_id == id then -- 去掉 collect_mode == COLLECT_MODE_ADVANCEDFOLDER 则保持高亮
     flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
   end
@@ -3000,11 +3001,11 @@ function draw_advanced_folder_node(id, selected_id, depth)
 
   local node_open = reaper.ImGui_TreeNode(ctx, node.name .. "##" .. id, flags)
   -- 捕获本行矩形与中心y
-  local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
-  local cy = (miny + maxy) * 0.5
-  if #_guide.stack > 0 then
-    DrawChildTeeFromParent(ctx, minx, cy)
-  end
+  -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
+  -- local cy = (miny + maxy) * 0.5
+  -- if #_guide.stack > 0 then
+  --   DrawChildTeeFromParent(ctx, minx, cy)
+  -- end
 
   -- 切换当前高级文件夹目录选中状态
   if reaper.ImGui_IsItemClicked(ctx, 0) then
@@ -5412,7 +5413,7 @@ function draw_shortcut_tree_mirror(sc, base_path, depth)
   local show_name = (sc.name and sc.name ~= "") and sc.name or (path:gsub("[/\\]+$", "")):match("([^/\\]+)$") or path
   depth = depth or 0
 
-  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth()
+  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
   local cmpath = path:gsub("[/\\]+$", "")
   if expanded_paths and expanded_paths[cmpath] then
     flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
@@ -5427,11 +5428,11 @@ function draw_shortcut_tree_mirror(sc, base_path, depth)
 
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
   -- 捕获本行矩形与中心y
-  local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
-  local cy = (miny + maxy) * 0.5
-  if #_guide.stack > 0 then
-    DrawChildTeeFromParent(ctx, minx, cy)
-  end
+  -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
+  -- local cy = (miny + maxy) * 0.5
+  -- if #_guide.stack > 0 then
+  --   DrawChildTeeFromParent(ctx, minx, cy)
+  -- end
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
     if collect_mode ~= COLLECT_MODE_SHORTCUT_MIRROR then
