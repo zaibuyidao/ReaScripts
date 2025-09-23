@@ -413,6 +413,9 @@ local colors = {
   red                  = 0xFF0000FF, -- 红色
   yellow               = 0xFFFF00FF, -- 黄色
   mole                 = 0xF4A460FF, -- 鼹鼠橙
+  big_button_normal    = 0x181818FF, -- 常态 #2B2B2B
+  big_button_hovered   = 0x3A3A3AFF, -- 悬停 #3A3A3A
+  big_button_active    = 0x2B2B2BFF, -- 按下 #1F1F1F
 }
 
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
@@ -7911,7 +7914,6 @@ end
 -- 数据库路径过滤按钮
 function DBPF_DrawDatabaseFolderButton(ctx)
   local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
-  reaper.ImGui_SameLine(ctx, nil, 8)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), in_db_mode and colors.normal_text or colors.gary)
 
   local _, y = reaper.ImGui_GetCursorPos(ctx)
@@ -8007,10 +8009,11 @@ function loop()
     reaper.ImGui_EndGroup(ctx)
 
     -- 数据库路径过滤按钮
+    reaper.ImGui_SameLine(ctx, nil, 10)
     DBPF_DrawDatabaseFolderButton(ctx)
 
     -- 搜索字段下拉菜单
-    reaper.ImGui_SameLine(ctx, nil, 15)
+    reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_BeginGroup(ctx)
 
     reaper.ImGui_SetNextItemWidth(ctx, 150)
@@ -8023,6 +8026,7 @@ function loop()
     -- 下拉菜单列表若无选中则显示默认，否则用+号连接
     local combo_label = (#selected_labels > 0) and table.concat(selected_labels, "+") or "Select Fields"
     if reaper.ImGui_BeginCombo(ctx, "##search_fields", combo_label, reaper.ImGui_WindowFlags_NoScrollbar()) then -- reaper.ImGui_ComboFlags_NoArrowButton()
+      reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
       for i, field in ipairs(search_fields) do
         local changed, enabled = reaper.ImGui_Checkbox(ctx, field.label, field.enabled)
         if changed then
@@ -8030,6 +8034,7 @@ function loop()
           SaveSearchFields()
         end
       end
+      reaper.ImGui_PopStyleVar(ctx)
       reaper.ImGui_EndCombo(ctx)
     end
     -- 悬停提示已勾选列表
@@ -8039,9 +8044,11 @@ function loop()
 
     reaper.ImGui_Text(ctx, '') -- 换行占位符
     reaper.ImGui_SameLine(ctx, nil, 0)
-    reaper.ImGui_Text(ctx, 'Thesaurus:')
-    reaper.ImGui_SameLine(ctx, nil, 60)
-    local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "##Synonyms", use_synonyms)
+    -- reaper.ImGui_Text(ctx, 'Thesaurus:')
+    -- reaper.ImGui_SameLine(ctx, nil, 60)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
+    local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, "Thesaurus:##Synonyms", use_synonyms)
+    reaper.ImGui_PopStyleVar(ctx)
     if changed_synonyms then
       use_synonyms = new_use_synonyms
       -- 同义词勾选时强制重建，否则不工作
@@ -8057,8 +8064,9 @@ function loop()
       reaper.ImGui_Attach(ctx, filename_filter)
     end
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
-
+    reaper.ImGui_PopStyleVar(ctx)
     _G.just_committed_filter = false
     -- 按enter搜索
     if search_enter_mode then
@@ -8128,7 +8136,9 @@ function loop()
 
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.thesaurus_text)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     reaper.ImGui_InputText(ctx, "##SynonymDisplay", synonym_display_text, reaper.ImGui_InputTextFlags_ReadOnly())
+    reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopStyleColor(ctx)
     reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_EndGroup(ctx)
@@ -8136,8 +8146,13 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_BeginGroup(ctx)
     -- 清空过滤器内容
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Clear", 90, 56) then
+    local clicked_clear = reaper.ImGui_Button(ctx, "Clear", 90, 50)
+    reaper.ImGui_PopStyleColor(ctx, 3)
+    if clicked_clear then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
 
       _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
@@ -8160,8 +8175,13 @@ function loop()
     -- end
 
     -- 刷新按钮
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Rescan", 90, 56) then
+    local clicked_rescan = reaper.ImGui_Button(ctx, "Rescan", 90, 50)
+    reaper.ImGui_PopStyleColor(ctx, 3)
+    if clicked_rescan then
       CollectFiles()
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -8175,8 +8195,13 @@ function loop()
     end
 
     -- 恢复（撤销所有过滤/搜索）
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Restore All", 90, 56) then
+    local clicked_res_all = reaper.ImGui_Button(ctx, "Restore All", 90, 50)
+    reaper.ImGui_PopStyleColor(ctx, 3)
+    if clicked_res_all then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
 
       _G.commit_filter_text = ""     -- 立即清空生效查询（Enter模式）
@@ -8216,8 +8241,13 @@ function loop()
     local show_cur_path = file_info and file_info.path or ""
     show_cur_path = normalize_path(show_cur_path, false)
     local same_folder = show_cur_path:match("^(.*)[/\\][^/\\]-$")
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Same Folder", 90, 56) then
+    local clicked_sanme_folder = reaper.ImGui_Button(ctx, "Same Folder", 90, 50)
+    reaper.ImGui_PopStyleColor(ctx, 3)
+    if clicked_sanme_folder then
       collect_mode = COLLECT_MODE_SAMEFOLDER
       tree_state.cur_path = normalize_path(same_folder, true)
       RefreshFolderFiles(same_folder)
@@ -8232,8 +8262,13 @@ function loop()
     end
 
     -- 快速预览文件夹
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    if reaper.ImGui_Button(ctx, "Pick Folder", 90, 56) then
+    local clicked_pick_folder = reaper.ImGui_Button(ctx, "Pick Folder", 90, 50)
+    reaper.ImGui_PopStyleColor(ctx, 3)
+    if clicked_pick_folder then
       local init = preview_folder_input
       if not init or init == "" then
         if same_folder and same_folder ~= "" then
@@ -8250,8 +8285,13 @@ function loop()
 
     -- Play History 最近播放按钮
     if not show_peektree_recent then
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
       reaper.ImGui_SameLine(ctx, nil, 10)
-      if reaper.ImGui_Button(ctx, "Play History", 90, 56) then
+      local clicked_play_his = reaper.ImGui_Button(ctx, "Play History", 90, 50)
+      reaper.ImGui_PopStyleColor(ctx, 3)
+      if clicked_play_his then
         LoadRecentPlayed()
         collect_mode= COLLECT_MODE_PLAY_HISTORY
 
@@ -8583,7 +8623,7 @@ function loop()
             -- 让+号紧贴标题文本末尾
             local header_label = "000Folder Shortcuts" -- 000为折叠箭头占位
             local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
-            local PAD_LEFT = 2
+            local PAD_LEFT = 6
             local plus_h = math.max(12, row_h - 6)
             local plus_w = plus_h
             local plus_x = min_x + PAD_LEFT + label_w
@@ -8597,7 +8637,7 @@ function loop()
             local cx  = plus_x + plus_w * 0.5
             local cy  = plus_y + plus_h * 0.5
             local arm = math.floor(plus_h * 0.35)
-            local thick = 3.5
+            local thick = 2
             reaper.ImGui_DrawList_AddLine(dl, cx - arm, cy, cx + arm, cy, col, thick) -- 横
             reaper.ImGui_DrawList_AddLine(dl, cx, cy - arm, cx, cy + arm, col, thick) -- 竖
 
@@ -8720,7 +8760,7 @@ function loop()
             -- 让+号紧贴标题文本末尾
             local header_label = "000Collections" -- 000为折叠箭头占位
             local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
-            local PAD_LEFT = 2
+            local PAD_LEFT = 6
             local plus_h = math.max(12, row_h - 6)
             local plus_w = plus_h
             local plus_x = min_x + PAD_LEFT + label_w
@@ -8734,7 +8774,7 @@ function loop()
             local cx  = plus_x + plus_w * 0.5
             local cy  = plus_y + plus_h * 0.5
             local arm = math.floor(plus_h * 0.35)
-            local thick = 3.5
+            local thick = 2
             reaper.ImGui_DrawList_AddLine(dl, cx - arm, cy, cx + arm, cy, col, thick) -- 横
             reaper.ImGui_DrawList_AddLine(dl, cx, cy - arm, cx, cy + arm, col, thick) -- 竖
 
@@ -8803,7 +8843,7 @@ function loop()
             -- 让+号紧贴标题文本末尾
             local header_label = "000Group" -- 000为折叠箭头占位
             local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
-            local PAD_LEFT = 2
+            local PAD_LEFT = 6
             local plus_h = math.max(12, row_h - 6)
             local plus_w = plus_h
             local plus_x = min_x + PAD_LEFT + label_w
@@ -8817,7 +8857,7 @@ function loop()
             local cx  = plus_x + plus_w * 0.5
             local cy  = plus_y + plus_h * 0.5
             local arm = math.floor(plus_h * 0.35)
-            local thick = 3.5
+            local thick = 2
             reaper.ImGui_DrawList_AddLine(dl, cx - arm, cy, cx + arm, cy, col, thick) -- 横
             reaper.ImGui_DrawList_AddLine(dl, cx, cy - arm, cx, cy + arm, col, thick) -- 竖
 
@@ -8959,7 +8999,7 @@ function loop()
             -- 让+号紧贴标题文本末尾
             local header_label = "000Database" -- 000为折叠箭头占位
             local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
-            local PAD_LEFT = 2
+            local PAD_LEFT = 6
             local plus_h = math.max(12, row_h - 6)
             local plus_w = plus_h
             local plus_x = min_x + PAD_LEFT + label_w
@@ -8973,7 +9013,7 @@ function loop()
             local cx  = plus_x + plus_w * 0.5
             local cy  = plus_y + plus_h * 0.5
             local arm = math.floor(plus_h * 0.35)
-            local thick = 3.5
+            local thick = 2
             reaper.ImGui_DrawList_AddLine(dl, cx - arm, cy, cx + arm, cy, col, thick) -- 横
             reaper.ImGui_DrawList_AddLine(dl, cx, cy - arm, cx, cy + arm, col, thick) -- 竖
 
@@ -10543,42 +10583,12 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     DrawPreviewRouteMenu(ctx)
 
-    -- 自动播放切换按钮
-    reaper.ImGui_SameLine(ctx, nil, 20)
-    reaper.ImGui_Text(ctx, "Auto Play Next:")
-    reaper.ImGui_SameLine(ctx)
-    local rv6
-    rv6, auto_play_next = reaper.ImGui_Checkbox(ctx, "##AutoPlayNext", auto_play_next)
-
-    if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
-      local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-      local ok2, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
-      if ok and ok2 then
-        if prev_preview_pos and prev_preview_pos < length and pos >= length then
-          local cur_idx = -1
-          playing_path = normalize_path(playing_path, false)
-          local list = _G.current_display_list or {}
-          for i, info in ipairs(list) do
-            local info_path = normalize_path(info.path, false)
-            if info_path == playing_path then cur_idx = i break end
-          end
-          if cur_idx > 0 and cur_idx < #list then
-            auto_play_next_pending = list[cur_idx + 1]
-          else
-            auto_play_next_pending = false
-            StopPreview()
-          end
-        end
-       prev_preview_pos = pos
-      end
-    end
-
     -- 音高旋钮
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, 20)
     reaper.ImGui_Text(ctx, "Pitch:")
     reaper.ImGui_SameLine(ctx)
     -- local pitch_knob_min, pitch_knob_max = -6, 6 -- ±6 半音
-    local pitch_knob_size = 22
+    local pitch_knob_size = 20
     reaper.ImGui_PushID(ctx, i)
     local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size, 0)
     reaper.ImGui_PopID(ctx)
@@ -10596,8 +10606,10 @@ function loop()
     -- 音高输入框
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 50)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local rv3
     rv3, pitch = reaper.ImGui_InputDouble(ctx, "##Pitch", pitch) -- (ctx, "Pitch", pitch, 1, 12, "%.3f")
+    reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopItemWidth(ctx)
     if rv3 then
       if playing_preview then RestartPreviewWithParams() end
@@ -10607,7 +10619,7 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_Text(ctx, "Rate:")
     reaper.ImGui_SameLine(ctx)
-    local knob_size = 22
+    local knob_size = 20
     reaper.ImGui_PushID(ctx, i)
     local knob_changed, knob_value = ImGui_Knob(ctx, "##rate_knob", play_rate, rate_min, rate_max, knob_size, 1)
     reaper.ImGui_PopID(ctx)
@@ -10647,8 +10659,10 @@ function loop()
     -- 播放速率输入框
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 50)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local rv4
     rv4, play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
+    reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopItemWidth(ctx)
     if rv4 then
       local r1 = play_rate    -- 当前速率
@@ -10682,8 +10696,10 @@ function loop()
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 200)
     local rv2 -- 0.0000000316 -150, 0.00001 -100
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local max_gain = dB_to_gain(max_db)
     rv2, volume = reaper.ImGui_SliderDouble(ctx, "##volume", volume, 0.0000000316, max_gain, string.format("%.2f dB", VAL2DB(volume)), reaper.ImGui_SliderFlags_Logarithmic())
+    reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopItemWidth(ctx)
     if rv2 then
       if playing_preview then RestartPreviewWithParams() end
@@ -11327,7 +11343,9 @@ function loop()
     reaper.ImGui_Text(ctx, "Peaks:")
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_SetNextItemWidth(ctx, 100)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local rv5, new_peaks = reaper.ImGui_InputInt(ctx, '##Peaks', peak_chans, 1, 1)
+    reaper.ImGui_PopStyleVar(ctx)
     if rv5 then
       peak_chans = math.max(2, math.min(128, new_peaks or 2))
     end
@@ -11455,14 +11473,48 @@ function loop()
 
     -- 跳过静音
     local silence_changed
-    reaper.ImGui_Text(ctx, "Skip Silence:")
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    silence_changed, skip_silence_enabled = reaper.ImGui_Checkbox(ctx, "##Skip Silence", skip_silence_enabled)
+    --reaper.ImGui_Text(ctx, "Skip Silence:")
+    --reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
+    silence_changed, skip_silence_enabled = reaper.ImGui_Checkbox(ctx, "Skip Silence##Skip Silence", skip_silence_enabled)
+    reaper.ImGui_PopStyleVar(ctx)
     if silence_changed then
       reaper.SetExtState(EXT_SECTION, "skip_silence", skip_silence_enabled and "1" or "0", true)
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_SetTooltip(ctx, "Automatically skip initial silence when playing")
+    end
+
+    -- 自动播放切换按钮
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    -- reaper.ImGui_Text(ctx, "Auto Play Next:")
+    -- reaper.ImGui_SameLine(ctx)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
+    local rv6
+    rv6, auto_play_next = reaper.ImGui_Checkbox(ctx, "Auto Play Next##AutoPlayNext", auto_play_next)
+    reaper.ImGui_PopStyleVar(ctx)
+
+    if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
+      local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+      local ok2, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+      if ok and ok2 then
+        if prev_preview_pos and prev_preview_pos < length and pos >= length then
+          local cur_idx = -1
+          playing_path = normalize_path(playing_path, false)
+          local list = _G.current_display_list or {}
+          for i, info in ipairs(list) do
+            local info_path = normalize_path(info.path, false)
+            if info_path == playing_path then cur_idx = i break end
+          end
+          if cur_idx > 0 and cur_idx < #list then
+            auto_play_next_pending = list[cur_idx + 1]
+          else
+            auto_play_next_pending = false
+            StopPreview()
+          end
+        end
+       prev_preview_pos = pos
+      end
     end
 
     -- 文件路径，始终跟随 file_info
@@ -12263,7 +12315,9 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrab(),      col_grab)
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrabActive(),col_grab_active)
 
+      reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
       local changed, new_scroll = reaper.ImGui_SliderDouble(ctx, "##scrollbar", Wave.scroll, 0, max_scroll, label)
+      reaper.ImGui_PopStyleVar(ctx)
       -- 恢复样式
       reaper.ImGui_PopStyleColor(ctx, 5)
 
@@ -12274,6 +12328,7 @@ function loop()
       if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
 
       -- +按钮
+      reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
       reaper.ImGui_SameLine(ctx)
       if reaper.ImGui_Button(ctx, "+", 20) then  -- Zoom In
         local prev_zoom = Wave.zoom
@@ -12304,6 +12359,7 @@ function loop()
           if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
         end
       end
+      reaper.ImGui_PopStyleVar(ctx)
     end
 
     -- 状态栏行

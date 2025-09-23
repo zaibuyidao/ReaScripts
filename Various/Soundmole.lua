@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.64
+-- @version 1.0.65
 -- @changelog
---   Optimized tree line rendering LinesToNodes.
---   Fixed path filtering not triggering on folder clicks in large databases by adding a "Filter here" menu action for reliable filtering at all levels.
+--   Adjusted UI layout and spacing with consistent control alignment and labels.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
