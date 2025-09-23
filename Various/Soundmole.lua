@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.65
+-- @version 1.0.66
 -- @changelog
---   Adjusted UI layout and spacing with consistent control alignment and labels.
+--   Added Freesound license info after downloads, aligned using fixed-width padding.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

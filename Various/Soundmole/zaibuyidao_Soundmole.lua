@@ -6007,6 +6007,42 @@ end
 
 function FS_s(s) s = tostring(s or ""):gsub("\r"," "):gsub("\n"," "):gsub('"',"'") return s end
 
+-- 将 Freesound 返回的 license URL 转为常见简写
+function FS_format_license(lic)
+  if not lic or lic == "" then return "" end
+  local map = {
+    -- CC0 1.0 公共领域贡献
+    ["creativecommons.org/publicdomain/zero/1.0"]  = "CC0-1.0",
+    -- PDM 1.0 公共领域标记
+    ["creativecommons.org/publicdomain/mark/1.0"]  = "PDM-1.0",
+    -- CC Sampling+ 取样+
+    ["creativecommons.org/licenses/sampling+/1.0"] = "CC-Sampling+-1.0",
+    -- CC BY 署名。需注明作者，可改作与再发布，允许商业使用
+    ["creativecommons.org/licenses/by/3.0"]        = "CC-BY-3.0",
+    ["creativecommons.org/licenses/by/4.0"]        = "CC-BY-4.0",
+    -- CC BY-SA 署名 相同方式共享
+    ["creativecommons.org/licenses/by-sa/3.0"]     = "CC-BY-SA-3.0",
+    ["creativecommons.org/licenses/by-sa/4.0"]     = "CC-BY-SA-4.0",
+    -- CC BY-NC 署名 非商业性使用
+    ["creativecommons.org/licenses/by-nc/3.0"]     = "CC-BY-NC-3.0",
+    ["creativecommons.org/licenses/by-nc/4.0"]     = "CC-BY-NC-4.0",
+    -- CC BY-NC-SA 署名 非商业性使用 相同方式共享
+    ["creativecommons.org/licenses/by-nc-sa/3.0"] = "CC-BY-NC-SA-3.0",
+    ["creativecommons.org/licenses/by-nc-sa/4.0"]  = "CC-BY-NC-SA-4.0",
+    -- CC BY-ND 署名 禁止演绎
+    ["creativecommons.org/licenses/by-nd/3.0"]     = "CC-BY-ND-3.0",
+    ["creativecommons.org/licenses/by-nd/4.0"]     = "CC-BY-ND-4.0",
+    -- CC BY-NC-ND 署名 非商业性使用 禁止演绎
+    ["creativecommons.org/licenses/by-nc-nd/3.0"] = "CC-BY-NC-ND-3.0",
+    ["creativecommons.org/licenses/by-nc-nd/4.0"]  = "CC-BY-NC-ND-4.0",
+  }
+  local key = lic:gsub("^https?://", ""):gsub("^www%.", ""):gsub("/+$", "")
+  for k, v in pairs(map) do
+    if key:find(k, 1, true) then return v end
+  end
+  return lic
+end
+
 -- 写入DB
 function FS_write_batch_to_db(results, dbpath)
   local wrote  = 0
@@ -6046,7 +6082,7 @@ function FS_write_batch_to_db(results, dbpath)
       pv_ogg = s.previews["preview-hq-ogg"] or s.previews["preview-lq-ogg"] or ""
     end
 
-    -- 是否使用原始文件，需 OAuth 2.0
+    -- 是否使用原始文件，需 OAuth2
     local want_original = (FS.USE_ORIGINAL and (FS.OAUTH_BEARER or "") ~= "" and s and s.id ~= nil)
 
     -- 实际下载/预览的 URL，写到 comment 的 src@
@@ -6060,9 +6096,7 @@ function FS_write_batch_to_db(results, dbpath)
     end
 
     -- 计算展示名（path 字段仅用于列表展示/检索）
-    local base_name   = (s and s.original_filename and s.original_filename ~= "" and s.original_filename)
-                        or (s and s.name and s.name ~= "" and s.name)
-                        or ("freesound_"..tostring(s and s.id or ""))
+    local base_name   = (s and s.original_filename and s.original_filename ~= "" and s.original_filename) or (s and s.name and s.name ~= "" and s.name) or ("freesound_"..tostring(s and s.id or ""))
     local base_noext  = strip_ext(base_name)
     local ext_from_ty = (s and s.type and tostring(s.type) ~= "" and ("."..tostring(s.type):gsub("^%.",""))) or nil
 
@@ -6102,8 +6136,20 @@ function FS_write_batch_to_db(results, dbpath)
     end
 
     local desc_prefix = {}
-    if s and tonumber(s.avg_rating)    then desc_prefix[#desc_prefix+1] = ("⭐%02.1f"):format(tonumber(s.avg_rating)) end
-    if s and tonumber(s.num_downloads) then desc_prefix[#desc_prefix+1] = (function(n) local t=tostring(n); return "⬇"..t..string.rep(" ", math.max(0, 5-#t)) end)(tonumber(s.num_downloads)) end
+    if s and tonumber(s.avg_rating) then
+      desc_prefix[#desc_prefix + 1] = ("⭐%02.1f"):format(tonumber(s.avg_rating))
+    end
+    if s and tonumber(s.num_downloads) then
+      desc_prefix[#desc_prefix + 1] = (function(n)
+        local t = tostring(n)
+        return "⬇" .. t .. string.rep(" ", math.max(0, 5 - #t))
+      end)
+      (tonumber(s.num_downloads))
+    end
+    if s and s.license and s.license ~= "" then
+      local t = tostring(FS_format_license(s.license))
+      desc_prefix[#desc_prefix + 1] = ("license:%s%s"):format(t, string.rep(" ", math.max(0, 12 - #t)))
+    end
 
     local head = {}
     -- if cur_q ~= "" then head[#head+1] = ("[q:%s]"):format(FS_s(cur_q)) end
@@ -6115,9 +6161,9 @@ function FS_write_batch_to_db(results, dbpath)
 
     -- comment：src@ / src_kind@ / sug@ / fid@
     local fid = s and s.id or nil
-    local comment = table.concat(desc_prefix, " ")
+    local comment = table.concat(desc_prefix, " ")
     if src_url ~= "" then
-      comment = (comment ~= "" and (comment.."  ") or "") .. ("src@%s"):format(FS_s(src_url))
+      comment = (comment ~= "" and (comment.." ") or "") .. ("src@%s"):format(FS_s(src_url))
       comment = comment .. ("  src_kind@%s"):format(src_kind)
       -- 改为包含唯一后缀的建议缓存名，避免同名不同文件共用缓存
       local sug = make_unique_suggest(base_noext, ext, fid, s and s.duration or 0, s and s.filesize or 0)
@@ -6669,8 +6715,8 @@ function FS_OAuth_OpenAuthorize()
   local client_id = FS_get_es(FS_K.cid)
   local redirect  = FS_get_es(FS_K.redir)
   if client_id == "" then
-    reaper.MB("Please enter your Client ID first.", "Freesound OAuth 2.0", 0)
-    --  reaper.MB("请先填写 Client ID。", "Freesound OAuth 2.0", 0)
+    reaper.MB("Please enter your Client ID first.", "Freesound OAuth2", 0)
+    --  reaper.MB("请先填写 Client ID。", "Freesound OAuth2", 0)
     return
   end
   local state = tostring(math.random(1, 1e9))
@@ -6723,13 +6769,13 @@ function FS_OAuth_ExchangeCode(auth_code)
   -- local redirect_uri  = FS_get_es(FS_K.redir)
 
   if client_id=="" or client_secret=="" then
-    -- reaper.MB("请先填写 Client ID / Client Secret。", "Freesound OAuth 2.0", 0)
-    reaper.MB("Please enter both Client ID and Client Secret first.", "Freesound OAuth 2.0", 0)
+    -- reaper.MB("请先填写 Client ID / Client Secret。", "Freesound OAuth2", 0)
+    reaper.MB("Please enter both Client ID and Client Secret first.", "Freesound OAuth2", 0)
     return false
   end
   if auth_code=="" then
-    -- reaper.MB("请粘贴授权回调地址中的 code 参数。", "Freesound OAuth 2.0", 0)
-    reaper.MB("Please paste the 'code' parameter from the authorization callback URL.", "Freesound OAuth 2.0", 0)
+    -- reaper.MB("请粘贴授权回调地址中的 code 参数。", "Freesound OAuth2", 0)
+    reaper.MB("Please paste the 'code' parameter from the authorization callback URL.", "Freesound OAuth2", 0)
     return false
   end
 
@@ -6764,8 +6810,8 @@ function FS_OAuth_ExchangeCode(auth_code)
   FS.ui.oauth_code = ""
   FS.ui._oauth_just_saved = true
 
-  -- reaper.MB("OAuth 2.0 Access Token 已保存。", "Freesound OAuth 2.0", 0)
-  reaper.MB("OAuth 2.0 access token saved.", "Freesound OAuth 2.0", 0)
+  -- reaper.MB("OAuth2 Access Token 已保存。", "Freesound OAuth2", 0)
+  reaper.MB("OAuth2 access token saved.", "Freesound OAuth2", 0)
   return true
 end
 
@@ -6950,16 +6996,16 @@ function FS_DrawSidebar(ctx)
     end
   end
   
-  -- OAuth 2.0 设置
+  -- OAuth2 设置
   -- if reaper.ImGui_CollapsingHeader(ctx, "Original download (OAuth2 settings)") then
-  reaper.ImGui_SeparatorText(ctx, "Original download (OAuth 2.0 settings)")
-  local changed_uo, val_uo = reaper.ImGui_Checkbox(ctx, "Use original files (OAuth 2.0)", FS.USE_ORIGINAL)
+  reaper.ImGui_SeparatorText(ctx, "Original Download (OAuth2 Settings)")
+  local changed_uo, val_uo = reaper.ImGui_Checkbox(ctx, "Use Original Files (OAuth2)", FS.USE_ORIGINAL)
   if changed_uo then
     FS.USE_ORIGINAL = val_uo
     reaper.SetExtState(EXT_SECTION, "fs_use_original", (val_uo and "1" or "0"), true)
   end
   reaper.ImGui_SameLine(ctx)
-  HelpMarker("Download/preview the original audio via OAuth 2.0 (requires a valid access token). Uses the original file instead of the MP3/OGG preview. \n")
+  HelpMarker("Download/preview the original audio via OAuth2 (requires a valid access token). Uses the original file instead of the MP3/OGG preview. \n")
 
   local cid   = FS_get_es("fs_oauth_client_id")
   local csec  = FS_get_es("fs_oauth_client_secret")
@@ -7023,7 +7069,7 @@ function FS_DrawSidebar(ctx)
 
   if reaper.ImGui_Button(ctx, "Refresh access token", 200, 32) then FS_OAuth_Refresh(false) end
   reaper.ImGui_SameLine(ctx)
-  HelpMarker("Refresh the OAuth 2.0 access token when original-file downloads start failing (e.g., 401/403) or when the token is about to expire. Some providers rotate the refresh token on refresh. If a new one is returned, it will be saved automatically.\n")
+  HelpMarker("Refresh the OAuth2 access token when original-file downloads start failing (e.g., 401/403) or when the token is about to expire. Some providers rotate the refresh token on refresh. If a new one is returned, it will be saved automatically.\n")
 
   reaper.ImGui_EndDisabled(ctx)
   reaper.ImGui_Unindent(ctx, 8)
