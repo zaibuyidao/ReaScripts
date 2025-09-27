@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7e406211020ad9bf6d331c8ef04ec5ea829869ea">
+<index version="1" name="zaibuyidao Scripts" commit="d75c509ca007ce385e57a5047d6cd81e27eaf607">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14784,6 +14784,16 @@ Fixed path filtering not triggering on folder clicks in large databases by addin
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/7e406211020ad9bf6d331c8ef04ec5ea829869ea/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/7e406211020ad9bf6d331c8ef04ec5ea829869ea/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/7e406211020ad9bf6d331c8ef04ec5ea829869ea/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.66" author="zaibuyidao" time="2025-09-23T15:52:43Z">
+        <changelog><![CDATA[Added Freesound license info after downloads, aligned using fixed-width padding.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/d75c509ca007ce385e57a5047d6cd81e27eaf607/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/d75c509ca007ce385e57a5047d6cd81e27eaf607/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/d75c509ca007ce385e57a5047d6cd81e27eaf607/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/d75c509ca007ce385e57a5047d6cd81e27eaf607/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/d75c509ca007ce385e57a5047d6cd81e27eaf607/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/d75c509ca007ce385e57a5047d6cd81e27eaf607/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/d75c509ca007ce385e57a5047d6cd81e27eaf607/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
