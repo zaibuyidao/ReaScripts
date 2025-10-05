@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="2fcad9356742df913ae015b6b75a3350382becc2">
+<index version="1" name="zaibuyidao Scripts" commit="3d5b8a5c30a387afa7b1920b12a0ad7302e6babd">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14820,6 +14820,16 @@ Experimental: Retrieve audio file metadata via C++ extension (currently tested o
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.69" author="zaibuyidao" time="2025-10-05T20:47:35Z">
+        <changelog><![CDATA[Added Mono, Stereo, 4.0 (Quad), 5.0 (Surround), and 5.1 (Surround + LFE) routing options with automatic output channel switching during preview.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/3d5b8a5c30a387afa7b1920b12a0ad7302e6babd/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/3d5b8a5c30a387afa7b1920b12a0ad7302e6babd/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/3d5b8a5c30a387afa7b1920b12a0ad7302e6babd/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/3d5b8a5c30a387afa7b1920b12a0ad7302e6babd/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/3d5b8a5c30a387afa7b1920b12a0ad7302e6babd/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/3d5b8a5c30a387afa7b1920b12a0ad7302e6babd/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/3d5b8a5c30a387afa7b1920b12a0ad7302e6babd/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
