@@ -170,6 +170,53 @@ end
 
 -- 递归扫描目录下所有音频文件
 function ScanAllAudioFiles(root_dir)
+  -- 扩展可用
+  local have_sm = reaper.APIExists("SM_ListDirBegin") and reaper.APIExists("SM_ListDirNextJSON") and reaper.APIExists("SM_ListDirEnd")
+  if have_sm and root_dir and root_dir ~= "" then
+    local files = {}
+    local count = 0
+    local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
+
+    local function json_unescape_min(s)
+      if not s then return s end
+      s = s:gsub("\\\\","\\"):gsub('\\"','"'):gsub("\\n","\n"):gsub("\\r","\r"):gsub("\\t","\t")
+      return s
+    end
+
+    local root = normalize_path(root_dir, false)
+    local h = reaper.SM_ListDirBegin(root, 1, exts_csv)
+    if not h then
+      return {}, 0
+    end
+
+    local BATCH = 20000
+
+    while true do
+      local nd = reaper.SM_ListDirNextJSON(h, BATCH)
+      if not nd or nd == "" then
+        break
+      end
+      if nd ~= "\n" then
+        for line in nd:gmatch("[^\r\n]+") do
+          local p = line:match([["path"%s*:%s*"([^"]+)]])
+          if p then
+            p = json_unescape_min(p)
+            p = normalize_path(p, false)
+            if IsValidAudioFile(p) then
+              files[#files+1] = p
+              count = count + 1
+            end
+          end
+        end
+      end
+      reaper.defer(function() end)
+    end
+
+    reaper.SM_ListDirEnd(h)
+    return files, count
+  end
+
+  -- 回退到旧逻辑
   local files = {}
   local sep = package.config:sub(1,1)
   local function scan(dir)
@@ -200,6 +247,49 @@ end
 -- 收集单个音频文件元数据
 function CollectFileInfo(path)
   local info = { path = path }
+
+  if HAVE_SM_EXT and path and path ~= "" then
+    local h = reaper.SM_ProbeMediaBegin(path, 0, "", 6) -- 单文件exts_csv忽略
+    if h then
+      while true do
+        local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 1, 8) -- 单文件取 1 条
+        if not chunk or chunk == "" then break end
+        if chunk ~= "\n" then
+          local line = chunk:match("[^\r\n]+")
+          if line and line ~= "" then
+            local m = sm_parse_ndjson_line(line)
+            local fullpath = normalize_path((m and m.path ~= "" and m.path) or path, false)
+
+            info.path            = fullpath
+            info.filename        = info.filename or (fullpath:match("[^/\\]+$") or fullpath)
+            info.size            = tonumber(m.size) or info.size or 0
+            info.type            = m.type or ""
+            info.length          = tonumber(m.len) or 0
+            info.section_length  = info.length
+            info.samplerate      = to_int(m.sr)
+            info.channels        = to_int(m.ch)
+            info.bits            = m.bits or ""
+            info.genre           = m.genre or ""
+            info.comment         = m.comment or ""
+            info.description     = m.description or ""
+            info.bwf_orig_date   = format_ts(m.mtime)
+            info.mtime           = tonumber(m.mtime) or 0
+            info.ucs_category    = m.ucs_category or ""
+            info.ucs_subcategory = m.ucs_subcategory or ""
+            info.ucs_catid       = m.ucs_catid or ""
+            info.key             = m.key or ""
+            info.bpm             = m.bpm or ""
+
+            reaper.SM_ProbeMediaEnd(h)
+            return info
+          end
+        end
+      end
+      reaper.SM_ProbeMediaEnd(h)
+    end
+  end
+
+  -- 回退到旧逻辑
   do
     local f = io.open(path, "rb")
     if f then
@@ -333,7 +423,7 @@ function WriteToMediaDB(info, dbfile, root_path)
   local f = io.open(dbfile, "a+b")
   if not f then return end
   -- FILE行
-  f:write(('FILE "%s" %d 0 0 0\n'):format(info.path, info.size))
+  f:write(('FILE "%s" %d 0 %d 0\n'):format(info.path, tonumber(info.size), tonumber(info.mtime) or 0))
   -- DATA基本属性行
   -- f:write(('DATA %s l:%s n:%s s:%s i:%s\n'):format(quote_if_space('y:' .. (info.bwf_orig_date or "")), info.length or "", info.channels or "", info.samplerate or "", info.bits or ""))
   f:write(('DATA %sl:%s n:%s s:%s i:%s\n'):format(
@@ -343,12 +433,12 @@ function WriteToMediaDB(info, dbfile, root_path)
 
   -- DATA类别行
   local ucs = {}
-  if info.genre and info.genre ~= "" then table.insert(ucs, quote_if_space('g:' .. info.genre)) end
-  if info.key and info.key ~= "" then table.insert(ucs, quote_if_space('k:' .. info.key)) end
-  if info.bpm and tostring(info.bpm) ~= "" then table.insert(ucs, quote_if_space('p:' .. tostring(info.bpm))) end
-  if info.ucs_category ~= "" then table.insert(ucs, quote_if_space('category:' .. info.ucs_category)) end
-  if info.ucs_subcategory ~= "" then table.insert(ucs, quote_if_space('subcategory:' .. info.ucs_subcategory)) end
-  if info.ucs_catid ~= "" then table.insert(ucs, quote_if_space('catid:' .. info.ucs_catid)) end
+  if info.genre           and info.genre           ~= "" then table.insert(ucs, quote_if_space('g:' .. info.genre))         end
+  if info.key             and info.key             ~= "" then table.insert(ucs, quote_if_space('k:' .. info.key))           end
+  if info.bpm             and tostring(info.bpm)   ~= "" then table.insert(ucs, quote_if_space('p:' .. tostring(info.bpm))) end
+  if info.ucs_category    and info.ucs_category    ~= "" then table.insert(ucs, quote_if_space('category:'    .. info.ucs_category))    end
+  if info.ucs_subcategory and info.ucs_subcategory ~= "" then table.insert(ucs, quote_if_space('subcategory:' .. info.ucs_subcategory)) end
+  if info.ucs_catid       and info.ucs_catid       ~= "" then table.insert(ucs, quote_if_space('catid:'       .. info.ucs_catid))       end
   if #ucs > 0 then f:write('DATA ' .. table.concat(ucs, " ") .. '\n') end
   -- DATA描述行
   local desc = {}

@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.67
+-- @version 1.0.68
 -- @changelog
 --   Improved UI color scheme for a more consistent and cohesive appearance.
 --   Enhanced Freesound settings page with a new "Clear all OAuth credentials" option.
