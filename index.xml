@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c5666d36a9e5e3a8d149f6c0ed69fe5c90af566d">
+<index version="1" name="zaibuyidao Scripts" commit="2fcad9356742df913ae015b6b75a3350382becc2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14807,6 +14807,19 @@ Experimental: Retrieve audio file metadata via C++ extension (currently tested o
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/c5666d36a9e5e3a8d149f6c0ed69fe5c90af566d/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/c5666d36a9e5e3a8d149f6c0ed69fe5c90af566d/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/c5666d36a9e5e3a8d149f6c0ed69fe5c90af566d/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.68" author="zaibuyidao" time="2025-10-05T12:34:54Z">
+        <changelog><![CDATA[Improved UI color scheme for a more consistent and cohesive appearance.
+Enhanced Freesound settings page with a new "Clear all OAuth credentials" option.
+Experimental: Accelerated waveform preview performance using C++ extension.
+Experimental: Retrieve audio file metadata via C++ extension (currently tested on Windows x64 only).]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/2fcad9356742df913ae015b6b75a3350382becc2/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
