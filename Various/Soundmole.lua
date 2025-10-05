@@ -1,11 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.68
+-- @version 1.0.69
 -- @changelog
---   Improved UI color scheme for a more consistent and cohesive appearance.
---   Enhanced Freesound settings page with a new "Clear all OAuth credentials" option.
---   Experimental: Accelerated waveform preview performance using C++ extension.
---   Experimental: Retrieve audio file metadata via C++ extension (currently tested on Windows x64 only).
+--   Added Mono, Stereo, 4.0 (Quad), 5.0 (Surround), and 5.1 (Surround + LFE) routing options with automatic output channel switching during preview.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

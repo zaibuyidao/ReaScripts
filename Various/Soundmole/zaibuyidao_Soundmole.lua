@@ -445,11 +445,12 @@ local colors = {
   knob_indicator          = 0xC0C0C0FF, -- 旋钮指针线
   slider_grab             = 0xFFB0B0B0, -- 推子滑块常态
   slider_grab_active      = 0xFFFFFFFF, -- 推子滑块按下
-  tab                     = 0x2E2E2EFF, -- 标签背景 #2E2E2E
-  tab_dimmed              = 0x2E2E2EFF, -- 常态标签 #2E2E2E
-  tab_hovered             = 0x3A3A3AFF, -- 悬停标签 #3A3A3A
-  tab_selected            = 0x4A4A4AFF, -- 选中标签 #4A4A4A
-  tab_dimmed_selected     = 0x363636FF, -- 失焦选中 #363636
+  tab                     = 0x2E2E2EFF, -- 页签-标签背景 #2E2E2E
+  tab_dimmed              = 0x2E2E2EFF, -- 页签-常态标签 #2E2E2E
+  tab_hovered             = 0x3A3A3AFF, -- 页签-悬停标签 #3A3A3A
+  tab_selected            = 0x4A4A4AFF, -- 页签-选中标签 #4A4A4A
+  tab_dimmed_selected     = 0x363636FF, -- 页签-失焦选中 #363636
+  tab_selected_overline   = 0x909090FF, -- 页签-水平上划线
   status_active           = 0xFFFFFFFF, -- 临时切换状态激活，如暂停/loop激活
   scrollbar_bg            = 0x181818FF, -- 滚动条-背景
   icon_normal             = 0xC0C0C060, -- 图标字体-常态亮灰 #909090
@@ -1816,6 +1817,13 @@ function RestartPreviewWithParams(from_wave_pos)
     end
   end
 
+  -- 从PCM源快速构造最小info
+  local function SrcInfoFromPCM(src)
+    if not src or not reaper.ValidatePtr(src, "PCM_source*") then return nil end
+    local ch = tonumber(reaper.GetMediaSourceNumChannels(src)) or 2
+    return { channels = ch }
+  end
+
   StopPlay()
   playing_preview = reaper.CF_CreatePreview(playing_source)
   if playing_preview then
@@ -1825,7 +1833,8 @@ function RestartPreviewWithParams(from_wave_pos)
     reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
     reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
     reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", cur_pos)
-    ApplyPreviewOutputTrack(playing_preview)
+    local resume_info = last_play_info or SrcInfoFromPCM(playing_source)
+    ApplyPreviewOutputTrack(playing_preview, resume_info)
     reaper.CF_Preview_Play(playing_preview)
     is_paused = false
   end
@@ -2398,7 +2407,7 @@ function PlayFromStart(info)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
       end
-      ApplyPreviewOutputTrack(playing_preview)
+      ApplyPreviewOutputTrack(playing_preview, info)
       reaper.CF_Preview_Play(playing_preview)
       wf_play_start_time = os.clock()
       wf_play_start_cursor = start_pos
@@ -2446,7 +2455,7 @@ function PlayFromCursor(info)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
       end
-      ApplyPreviewOutputTrack(playing_preview)
+      ApplyPreviewOutputTrack(playing_preview, info)
       reaper.CF_Preview_Play(playing_preview)
       wf_play_start_time = os.clock()
       wf_play_start_cursor = Wave.play_cursor or 0
@@ -7716,17 +7725,68 @@ function FindFirstSelectedTrack()
   return nil
 end
 
--- 显示标签, 通道/Mono
-function FormatChanLabel(chan)
-  local n = chan & 1023
-  if (chan & 1024) == 0 then
-    return string.format("Channel %d/%d", n + 1, n + 2)
-  else
-    return string.format("Channel %d", n + 1)
+function is_contiguous_span(map, span_len)
+  if type(map) ~= "table" or #map ~= span_len then return false end
+  local minv = math.huge
+  local set = {}
+  for i = 1, #map do
+    local v = tonumber(map[i])
+    if not v then return false end
+    set[v] = true
+    if v < minv then minv = v end
+  end
+  if minv == math.huge then return false end
+  for k = 0, span_len - 1 do
+    if not set[minv + k] then return false end
+  end
+  return true, minv
+end
+
+function EnsurePreviewBusTrack()
+  local BUS_NAME = "__SM_PREVIEW_BUS__"
+  local track_cnt = reaper.CountTracks(0)
+  for i = 0, track_cnt - 1 do
+    local tr = reaper.GetTrack(0, i)
+    local _, name = reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", "", false)
+    if name == BUS_NAME then return tr end
+  end
+  reaper.InsertTrackAtIndex(track_cnt, true)
+  local tr = reaper.GetTrack(0, track_cnt)
+  reaper.GetSetMediaTrackInfo_String(tr, "P_NAME", BUS_NAME, true)
+  reaper.SetMediaTrackInfo_Value(tr, "B_SHOWINMIXER", 0)
+  reaper.SetMediaTrackInfo_Value(tr, "B_SHOWINTCP", 0)
+  reaper.SetMediaTrackInfo_Value(tr, "B_MAINSEND", 0)
+  reaper.SetMediaTrackInfo_Value(tr, "D_VOL", 1.0)
+  return tr
+end
+
+function ConfigureHWBusRouting(bus_tr, src_channels, map, num_out)
+  if not bus_tr then return end
+  src_channels = math.max(1, tonumber(src_channels or 2))
+  num_out = math.max(2, tonumber(num_out or (reaper.GetNumAudioOutputs() or 2)))
+
+  local need_tr_ch = math.max(2, src_channels + (src_channels % 2))
+  reaper.SetMediaTrackInfo_Value(bus_tr, "I_NCHAN", need_tr_ch)
+
+  local HW = 1
+  for i = reaper.GetTrackNumSends(bus_tr, HW) - 1, 0, -1 do
+    reaper.RemoveTrackSend(bus_tr, HW, i)
+  end
+
+  local max_pairs = num_out
+  local nroute = math.min(#map, src_channels)
+  for i = 1, nroute do
+    local dst = math.max(1, math.min(map[i], max_pairs))
+    local send_idx = reaper.CreateTrackSend(bus_tr, nil)
+    reaper.SetTrackSendInfo_Value(bus_tr, HW, send_idx, "B_MUTE", 0)
+    reaper.SetTrackSendInfo_Value(bus_tr, HW, send_idx, "D_VOL", 1.0)
+    reaper.SetTrackSendInfo_Value(bus_tr, HW, send_idx, "D_PAN", 0.0)
+    reaper.SetTrackSendInfo_Value(bus_tr, HW, send_idx, "I_SRCCHAN", (i - 1) | 1024)
+    reaper.SetTrackSendInfo_Value(bus_tr, HW, send_idx, "I_DSTCHAN", (dst - 1) | 1024)
   end
 end
 
-function ApplyPreviewOutputTrack(preview)
+function ApplyPreviewOutputTrack(preview, info)
   if not preview or not preview_route_enable then return end
 
   if preview_out_to_track then
@@ -7743,31 +7803,404 @@ function ApplyPreviewOutputTrack(preview)
       local proj = reaper.EnumProjects(-1, "")
       reaper.CF_Preview_SetOutputTrack(preview, proj, target)
     end
-  else
-    -- 硬件输出
+    return
+  end
+
+  local num_out = reaper.GetNumAudioOutputs() or 2
+  if num_out < 1 then num_out = 2 end
+
+  local ch = tonumber(info and (info.channels or info.channel)) or 2
+  local mode, outchan_word, map = get_best_hw_mode_and_map(info)
+  map = map or {}
+
+  local contiguous, minv = is_contiguous_span(map, ch)
+
+  if contiguous then
+    if reaper.CF_Preview_SetOutputTrack then
+      local proj = reaper.EnumProjects(-1, "")
+      reaper.CF_Preview_SetOutputTrack(preview, proj, nil)
+    end
     if reaper.CF_Preview_SetValue then
-      reaper.CF_Preview_SetValue(preview, "I_OUTCHAN", preview_output_chan)
+      local mono_bit = ((mode == "mono") and 1024 or 0)
+      local word = ((minv - 1) | mono_bit)
+      reaper.CF_Preview_SetValue(preview, "I_OUTCHAN", word)
+    end
+  else
+    local bus = EnsurePreviewBusTrack()
+    ConfigureHWBusRouting(bus, ch, map, num_out)
+    if reaper.CF_Preview_SetOutputTrack and bus then
+      local proj = reaper.EnumProjects(-1, "")
+      reaper.CF_Preview_SetOutputTrack(preview, proj, bus)
     end
   end
 end
 
---- 设置面板UI
+local PRESET_KEYS = {
+  mono   = "preview_hw_map_mono",
+  stereo = "preview_hw_map_stereo",
+  ch4    = "preview_hw_map_ch4",
+  ch5    = "preview_hw_map_ch5",
+  s51    = "preview_hw_map_51",
+}
+
+local ACTIVE_KEYS = {
+  mono   = "preview_hw_active_mono",
+  stereo = "preview_hw_active_stereo",
+  ch4    = "preview_hw_active_ch4",
+  ch5    = "preview_hw_active_ch5",
+  s51    = "preview_hw_active_51",
+}
+
+local MODE_NEEDS    = { mono = 1, stereo = 2, ch4 = 4, ch5 = 5, s51 = 6 }
+local MODE_LABEL    = { mono = "1.0 (Mono)", stereo = "2.0 (Stereo)", ch4 = "4.0 (Quad)", ch5 = "5.0 (Surround)", s51 = "5.1 (Surround + LFE)" }
+local SUMMARY_ORDER = { "stereo", "ch4", "ch5", "s51", "mono" }
+local RENDER_ORDER  = { "mono", "stereo", "ch4", "ch5", "s51" }
+
+function split_csv_int(s)
+  local t = {}
+  if type(s) ~= "string" or s == "" then return t end
+  for tok in s:gmatch("[^,]+") do
+    local n = tonumber(tok)
+    if n then t[#t+1] = n end
+  end
+  return t
+end
+
+function join_csv_int(t)
+  if type(t) ~= "table" then return "" end
+  local buf = {}
+  for i = 1, #t do buf[i] = tostring(math.max(1, math.floor(t[i] or 1))) end
+  return table.concat(buf, ",")
+end
+
+function uniq_sorted_within_range(t, maxn)
+  local seen, out = {}, {}
+  for i = 1, #t do
+    local v = t[i]
+    if type(v) == "number" then
+      v = math.floor(v)
+      if v >= 1 and v <= maxn and not seen[v] then
+        seen[v] = true
+        out[#out+1] = v
+      end
+    end
+  end
+  table.sort(out)
+  return out
+end
+
+function load_active(mode, default_on)
+  local key = ACTIVE_KEYS[mode]
+  if not key then return default_on and true or false end
+  local s = reaper.GetExtState(EXT_SECTION, key)
+  if s == nil or s == "" then return default_on and true or false end
+  return s == "1"
+end
+
+function save_active(mode, on)
+  local key = ACTIVE_KEYS[mode]
+  if not key then return end
+  reaper.SetExtState(EXT_SECTION, key, on and "1" or "0", true)
+end
+
+function load_map(mode)
+  local key = PRESET_KEYS[mode]
+  if not key then return {} end
+  return split_csv_int(reaper.GetExtState(EXT_SECTION, key))
+end
+
+function save_map(mode, t)
+  local key = PRESET_KEYS[mode]
+  if not key then return end
+  reaper.SetExtState(EXT_SECTION, key, join_csv_int(t or {}), true)
+end
+
+function ensure_map(mode, num_out)
+  _G.preview_hw_maps = _G.preview_hw_maps or {}
+  local need = MODE_NEEDS[mode] or 0
+  local m = _G.preview_hw_maps[mode]
+  local key = PRESET_KEYS[mode]
+  local active_default = (mode == "stereo") -- 仅立体声默认激活
+
+  if not m then
+    local s = (key and reaper.GetExtState(EXT_SECTION, key)) or ""
+    if s ~= "" then
+      m = split_csv_int(s)
+    else
+      if active_default then
+        m = {}
+        for i = 1, need do
+          m[i] = math.min(i, math.max(1, num_out or (reaper.GetNumAudioOutputs() or 2)))
+        end
+      else
+        m = {}
+      end
+    end
+  end
+
+  m = uniq_sorted_within_range(m, math.max(1, num_out or (reaper.GetNumAudioOutputs() or 2)))
+  _G.preview_hw_maps[mode] = m
+  return m
+end
+
+function update_map(mode, new_tbl, num_out)
+  local t = uniq_sorted_within_range(new_tbl or {}, math.max(1, num_out or (reaper.GetNumAudioOutputs() or 2)))
+  local need = MODE_NEEDS[mode] or 0
+  while #t > need do table.remove(t) end
+  _G.preview_hw_maps = _G.preview_hw_maps or {}
+  _G.preview_hw_maps[mode] = t
+  save_map(mode, t)
+  -- 兼容旧模式
+  save_active(mode, #t > 0)
+  if mode == "mono" or mode == "stereo" then
+    local mono_flag = (mode == "mono") and 1024 or 0
+    local base0 = math.max(0, ((t[1] or 1) - 1))
+    _G.preview_output_chan = (base0 | mono_flag)
+    reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(_G.preview_output_chan), true)
+  end
+end
+
+-- 模式选择
+function build_summary(num_out)
+  local parts = {}
+  for _, mode in ipairs(SUMMARY_ORDER) do
+    local m = ensure_map(mode, num_out)
+    if #m > 0 then
+      parts[#parts+1] = string.format("%s (%s)", MODE_LABEL[mode], join_csv_int(m))
+    end
+  end
+  return (#parts > 0) and table.concat(parts, " // ") or "No active preset"
+end
+
+function pick_mode_by_channels(ch)
+  if not ch or ch < 1 then return nil end
+  for _, mode in ipairs(RENDER_ORDER) do
+    if MODE_NEEDS[mode] == ch and #ensure_map(mode) > 0 then
+      return mode
+    end
+  end
+  return nil
+end
+
+function calc_outchan_word(mode, num_out)
+  local map = ensure_map(mode, num_out)
+  local base = map[1] or 1
+  local mono_flag = (mode == "mono") and 1024 or 0
+  return ((math.max(1, base) - 1) | mono_flag), map
+end
+
+function get_best_hw_mode_and_map(info)
+  local num_out = reaper.GetNumAudioOutputs() or 2
+  if num_out < 1 then num_out = 2 end
+
+  local ch = nil
+  if info then ch = tonumber(info.channels or info.channel) end
+  local mode = pick_mode_by_channels(ch)
+  if not mode then
+    mode = "stereo"
+    if #ensure_map("stereo", num_out) == 0 then
+      update_map("stereo", {1, math.min(2, num_out)}, num_out)
+    end
+  end
+
+  local outchan_word, map = calc_outchan_word(mode, num_out)
+  return mode, outchan_word, map, num_out
+end
+
+function render_channel_picker(ctx, mode, num_out, id_prefix)
+  reaper.ImGui_PushID(ctx, id_prefix or ("pick_" .. mode))
+
+  local need = MODE_NEEDS[mode] or 0
+  local cur_sorted = ensure_map(mode, num_out)
+  local cur = { table.unpack(cur_sorted) }
+
+  local picked = {}
+  for i = 1, #cur do picked[cur[i]] = true end
+
+  reaper.ImGui_Text(ctx, string.format("Select up to %d channel(s):", need))
+
+  local per_row = 16
+  for ch = 1, num_out do
+    if ch > 1 and ((ch - 1) % per_row) ~= 0 then
+      reaper.ImGui_SameLine(ctx, nil, 4)
+    end
+
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 0)
+    local label = string.format("%d##%s_ch_%d", ch, mode, ch)
+    local changed, val = reaper.ImGui_Checkbox(ctx, label, picked[ch] or false)
+    reaper.ImGui_PopStyleVar(ctx, 1)
+    if changed then
+      if val then
+        if not picked[ch] then
+          if #cur < need then
+            cur[#cur+1] = ch
+            picked[ch] = true
+          else
+            if #cur > 0 then
+              local replaced = cur[#cur]
+              picked[replaced] = nil
+              cur[#cur] = ch
+              picked[ch] = true
+            end
+          end
+        end
+      else
+        for i = #cur, 1, -1 do
+          if cur[i] == ch then table.remove(cur, i) break end
+        end
+        picked[ch] = nil
+      end
+    end
+  end
+
+  if reaper.ImGui_Button(ctx, "Clear##"..mode) then
+    cur = {}
+    picked = {}
+  end
+  reaper.ImGui_SameLine(ctx)
+  if reaper.ImGui_Button(ctx, "Fill 1..N##"..mode) then
+    cur = {}
+    picked = {}
+    for i = 1, need do
+      local v = math.min(i, num_out)
+      cur[i] = v
+      picked[v] = true
+    end
+  end
+
+  table.sort(cur)
+  update_map(mode, cur, num_out)
+
+  reaper.ImGui_PopID(ctx)
+end
+
+function RenderHWAngledTable(ctx)
+  local num_out = tonumber(reaper.GetNumAudioOutputs() or 2)
+  if not num_out or num_out < 1 then num_out = 2 end
+
+  local column_headers = {}
+  for i = 1, num_out do column_headers[i] = ("ch%d"):format(i) end
+
+  local row_modes = {
+    { key = "mono",  label = MODE_LABEL.mono    or "Mono" },
+    { key = "stereo",label = MODE_LABEL.stereo  or "Stereo" },
+    { key = "ch4",   label = MODE_LABEL.ch4     or "4.0 (Quad)" },
+    { key = "ch5",   label = MODE_LABEL.ch5     or "5.0 (Surround)" },
+    { key = "s51",   label = MODE_LABEL.s51     or "5.1 (Surround + LFE)" },
+  }
+
+  local TABLE_FLAGS =
+    reaper.ImGui_TableFlags_SizingFixedFit() |
+    reaper.ImGui_TableFlags_BordersOuter()   |
+    reaper.ImGui_TableFlags_BordersInnerH()  |
+    reaper.ImGui_TableFlags_Resizable()      |
+    reaper.ImGui_TableFlags_SizingFixedFit()      |
+    reaper.ImGui_TableFlags_HighlightHoveredColumn()
+ 
+  local ANGLED_COLUMN_FLAGS =
+    reaper.ImGui_TableColumnFlags_AngledHeader() |
+    reaper.ImGui_TableColumnFlags_WidthFixed()
+
+  local ANGLE_RAD = math.rad(50)
+  local TEXT_ALIGN = {1.0, 0}
+
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_TableAngledHeadersAngle(), ANGLE_RAD)
+
+  local columns_count = 1 + #column_headers
+  if reaper.ImGui_BeginTable(ctx, "sm_hw_table_angled", columns_count, TABLE_FLAGS, 0, reaper.ImGui_GetTextLineHeight(ctx)) then
+    -- Mode 列 + 斜角列
+    reaper.ImGui_TableSetupColumn(ctx, "Mode", reaper.ImGui_TableColumnFlags_NoHeaderWidth() | reaper.ImGui_TableColumnFlags_WidthFixed())
+    for i = 1, #column_headers do
+      reaper.ImGui_TableSetupColumn(ctx, column_headers[i], ANGLED_COLUMN_FLAGS)
+    end
+
+    do
+      local cp_x, cp_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_CellPadding())
+      reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_CellPadding(), cp_x, cp_y * 2) -- 斜角表头行高度 *2
+      reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_TableAngledHeadersTextAlign(), table.unpack(TEXT_ALIGN))
+      reaper.ImGui_TableAngledHeadersRow(ctx)
+      reaper.ImGui_PopStyleVar(ctx, 2)
+    end
+
+    reaper.ImGui_TableHeadersRow(ctx)
+
+    for r, row in ipairs(row_modes) do
+      local mode  = row.key
+      local label = row.label
+      local need  = MODE_NEEDS[mode] or 0
+
+      reaper.ImGui_TableNextRow(ctx)
+      if reaper.ImGui_TableSetColumnIndex(ctx, 0) then
+        reaper.ImGui_AlignTextToFramePadding(ctx)
+        reaper.ImGui_Text(ctx, label)
+        -- 右侧增加已选映射概览
+        -- local cur = ensure_map(mode, num_out)
+        -- if #cur > 0 then
+        --   local s = (" (%s)"):format(join_csv_int(cur))
+        --   reaper.ImGui_SameLine(ctx)
+        --   reaper.ImGui_TextColored(ctx, colors.normal_text, s)
+        -- end
+      end
+
+      local cur = { table.unpack(ensure_map(mode, num_out)) }
+      local picked = {}
+      for i = 1, #cur do picked[cur[i]] = true end
+      -- 每个通道单元格：勾选即加入，取消即移除，超上限则替换最后一个
+      for c = 1, #column_headers do
+        if reaper.ImGui_TableSetColumnIndex(ctx, c) then
+          reaper.ImGui_PushID(ctx, (r - 1) * 1000 + c)
+          local changed, v = reaper.ImGui_Checkbox(ctx, "", picked[c] or false)
+          if changed then
+            if v then
+              if not picked[c] then
+                if #cur < need then
+                  cur[#cur+1] = c
+                  picked[c] = true
+                else
+                  if #cur > 0 then
+                    local replaced = cur[#cur]
+                    picked[replaced] = nil
+                    cur[#cur] = c
+                    picked[c] = true
+                  end
+                end
+              end
+            else
+              -- 取消
+              for i = #cur, 1, -1 do
+                if cur[i] == c then table.remove(cur, i) break end
+              end
+              picked[c] = nil
+            end
+          end
+          reaper.ImGui_PopID(ctx)
+        end
+      end
+
+      table.sort(cur)
+      update_map(mode, cur, num_out)
+    end
+    reaper.ImGui_EndTable(ctx)
+  end
+
+  reaper.ImGui_PopStyleVar(ctx) -- TableAngledHeadersAngle
+end
+
+-- 预览路由设置
 function RenderPreviewRouteSettingsUI(ctx)
-  -- reaper.ImGui_SeparatorText(ctx, "Preview Routing")
-  -- 预览路由开关
   local changed_enable, new_enable = reaper.ImGui_Checkbox(ctx, "Enable preview routing", preview_route_enable)
   if changed_enable then
     preview_route_enable = new_enable
     reaper.SetExtState(EXT_SECTION, "preview_route_enable", new_enable and "1" or "0", true)
   end
-
-  -- 输出目标，硬件 / 经轨道
   reaper.ImGui_Text(ctx, "Output target:")
   local changed_hw = reaper.ImGui_RadioButton(ctx, "Hardware output", not preview_out_to_track)
   if changed_hw then
     preview_out_to_track = false
     reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "0", true)
   end
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  HelpMarker("The number of available hardware output channels is determined by 'REAPER Preferences > Audio > Device > Output range'. To expose more outputs, set first to the first available channel and last to the last available channel.")
   reaper.ImGui_SameLine(ctx)
   local changed_tr = reaper.ImGui_RadioButton(ctx, "Through track", preview_out_to_track)
   if changed_tr then
@@ -7775,50 +8208,25 @@ function RenderPreviewRouteSettingsUI(ctx)
     reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "1", true)
   end
 
-  -- 硬件输出设置
-  reaper.ImGui_BeginDisabled(ctx, preview_out_to_track)
-  reaper.ImGui_Text(ctx, "Hardware channels:")
-  reaper.ImGui_SameLine(ctx)
-  reaper.ImGui_SetNextItemWidth(ctx, 130)
-  if reaper.ImGui_BeginCombo(ctx, "##preview_hw_chan", FormatChanLabel(preview_output_chan)) then
-    -- Mono 开关，切换 bit 10
-    local is_mono = (preview_output_chan & 1024) ~= 0
-    local mono_changed, mono_val = reaper.ImGui_Checkbox(ctx, "Mono", is_mono)
-    if mono_changed then
-      if mono_val then
-        preview_output_chan = (preview_output_chan | 1024)
-      else
-        preview_output_chan = (preview_output_chan & ~1024)
-      end
-      reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(preview_output_chan), true)
-    end
+  local num_out = reaper.GetNumAudioOutputs() or 2
+  if num_out < 1 then num_out = 2 end
 
-    reaper.ImGui_Separator(ctx)
-    local chan_base   = preview_output_chan & 1023
-    local mono_flag   = (preview_output_chan & 1024)
-    local skip        = (mono_flag == 0) and 2 or 1
-    local num_out     = reaper.GetNumAudioOutputs() or 2
-    for i = 0, num_out - 1, skip do
-      local sel = (chan_base == i)
-      if reaper.ImGui_Selectable(ctx, FormatChanLabel(i | mono_flag), sel) then
-        preview_output_chan = (i | mono_flag)
-        reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(preview_output_chan), true)
-      end
-    end
-    reaper.ImGui_EndCombo(ctx)
-  end
+  reaper.ImGui_SeparatorText(ctx, "Hardware channels")
+  -- reaper.ImGui_TextWrapped(ctx, build_summary(num_out))
+  reaper.ImGui_BeginDisabled(ctx, preview_out_to_track)
+  RenderHWAngledTable(ctx)
   reaper.ImGui_EndDisabled(ctx)
 
-  -- 经轨道
+  -- 经轨道路由
+  reaper.ImGui_SeparatorText(ctx, "Through track routing")
   reaper.ImGui_BeginDisabled(ctx, not preview_out_to_track)
   reaper.ImGui_Text(ctx, "Routing mode:")
   local modes = { "Auto: first selected, else named", "Named track only", "First selected track only" }
   local map   = { "auto", "named", "selected" }
   local cur_i = (preview_route_mode == "named") and 2 or (preview_route_mode == "selected") and 3 or 1
-
   for i = 1, 3 do
     if i > 1 then reaper.ImGui_SameLine(ctx) end
-    local changed = reaper.ImGui_RadioButton(ctx, modes[i], cur_i == i)
+    local changed = reaper.ImGui_RadioButton(ctx, modes[i] .. "##trmode" .. i, cur_i == i)
     if changed then
       cur_i = i
       preview_route_mode = map[i]
@@ -7828,13 +8236,13 @@ function RenderPreviewRouteSettingsUI(ctx)
 
   reaper.ImGui_Text(ctx, "Named track:")
   reaper.ImGui_SameLine(ctx)
-  reaper.ImGui_SetNextItemWidth(ctx, -65)
+  reaper.ImGui_SetNextItemWidth(ctx, 250)
   local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
   if changed_name and new_name ~= nil then
     preview_route_name = new_name
     reaper.SetExtState(EXT_SECTION, "preview_route_name", preview_route_name or "", true)
   end
-  reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
   HelpMarker("If multiple tracks share the same name, the topmost one is used.")
   reaper.ImGui_EndDisabled(ctx)
 end
@@ -7890,6 +8298,13 @@ function UI_PlayIconTrigger_Play(ctx)
   end
   reaper.ImGui_PopFont(ctx)
 
+  -- 从PCM源快速构造最小info
+  local function SrcInfoFromPCM(src)
+    if not src or not reaper.ValidatePtr(src, "PCM_source*") then return nil end
+    local ch = tonumber(reaper.GetMediaSourceNumChannels(src)) or 2
+    return { channels = ch }
+  end
+
   if clicked then
     if is_paused and playing_source then
       -- 以Wave.play_cursor为准恢复播放
@@ -7903,7 +8318,8 @@ function UI_PlayIconTrigger_Play(ctx)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
           reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
         end
-        ApplyPreviewOutputTrack(playing_preview)
+        local resume_info = SrcInfoFromPCM(playing_source)
+        ApplyPreviewOutputTrack(playing_preview, resume_info)
         reaper.CF_Preview_Play(playing_preview)
         is_paused = false
         paused_position = 0
@@ -7949,6 +8365,13 @@ function UI_PlayIconTrigger_Pause(ctx)
   end
   reaper.ImGui_PopFont(ctx)
 
+  -- 从PCM源快速构造最小info
+  local function SrcInfoFromPCM(src)
+    if not src or not reaper.ValidatePtr(src, "PCM_source*") then return nil end
+    local ch = tonumber(reaper.GetMediaSourceNumChannels(src)) or 2
+    return { channels = ch }
+  end
+
   if clicked then
     if playing_preview and not is_paused then
       -- 当前在播放，暂停
@@ -7973,7 +8396,8 @@ function UI_PlayIconTrigger_Pause(ctx)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
           reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", paused_position)
         end
-        ApplyPreviewOutputTrack(playing_preview)
+        local resume_info = SrcInfoFromPCM(playing_source)
+        ApplyPreviewOutputTrack(playing_preview, resume_info)
         reaper.CF_Preview_Play(playing_preview)
         wf_play_start_time = os.clock()
         wf_play_start_cursor = paused_position
@@ -8245,40 +8669,14 @@ function DrawPreviewRouteMenu(ctx)
     end
 
     -- 硬件输出
+    reaper.ImGui_SeparatorText(ctx, "Hardware channels")
+    -- reaper.ImGui_TextWrapped(ctx, build_summary(num_out))
     reaper.ImGui_BeginDisabled(ctx, preview_out_to_track)
-    reaper.ImGui_Text(ctx, "Hardware channels:")
-    reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_SetNextItemWidth(ctx, 130)
-    if reaper.ImGui_BeginCombo(ctx, "##preview_hw_chan", FormatChanLabel(preview_output_chan)) then
-      local is_mono = (preview_output_chan & 1024) ~= 0
-      local mono_changed, mono_val = reaper.ImGui_Checkbox(ctx, "Mono", is_mono)
-      if mono_changed then
-        if mono_val then
-          preview_output_chan = preview_output_chan | 1024
-        else
-          preview_output_chan = preview_output_chan & 1023
-        end
-        reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(preview_output_chan), true)
-      end
-
-      reaper.ImGui_Separator(ctx)
-      local mono_flag = preview_output_chan & 1024
-      local skip      = (mono_flag == 0) and 2 or 1
-      local num_out   = reaper.GetNumAudioOutputs() or 2
-      local cur_base  = preview_output_chan & 1023
-
-      for i = 0, num_out - 1, skip do
-        local sel = (cur_base == i)
-        if reaper.ImGui_Selectable(ctx, FormatChanLabel(i | mono_flag), sel) then
-          preview_output_chan = (i | mono_flag)
-          reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(preview_output_chan), true)
-        end
-      end
-      reaper.ImGui_EndCombo(ctx)
-    end
+    RenderHWAngledTable(ctx)
     reaper.ImGui_EndDisabled(ctx)
 
     -- 路由模式
+    reaper.ImGui_SeparatorText(ctx, "Through track routing")
     reaper.ImGui_BeginDisabled(ctx, not preview_out_to_track)
     reaper.ImGui_Text(ctx, "Routing mode:")
     local modes = { "Auto: first selected, else named", "Named track only", "First selected track only" }
@@ -8298,7 +8696,7 @@ function DrawPreviewRouteMenu(ctx)
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, "Named track:")
       reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_SetNextItemWidth(ctx, 150)
+      reaper.ImGui_SetNextItemWidth(ctx, 250)
       local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
       if changed_name and new_name ~= nil then
         preview_route_name = new_name
@@ -9183,7 +9581,8 @@ function loop()
 
     -- 左侧树状目录(此处需要使用 if 才有效，否则报错)
     if reaper.ImGui_BeginChild(ctx, "##left", left_w, child_h, 0, reaper.ImGui_WindowFlags_HorizontalScrollbar()) then
-      if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar', reaper.ImGui_TabBarFlags_None()) then
+      if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar', reaper.ImGui_TabBarFlags_None() | reaper.ImGui_TabBarFlags_DrawSelectedOverline()) then
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelectedOverline(), colors.tab_selected_overline)
         -- PeekTree列表
         if reaper.ImGui_BeginTabItem(ctx, 'PeekTree') then
           -- 内容字体自由缩放
@@ -10758,6 +11157,7 @@ function loop()
           reaper.ImGui_EndTabItem(ctx)
         end
 
+        reaper.ImGui_PopStyleColor(ctx)
         reaper.ImGui_EndTabBar(ctx)
       end
       reaper.ImGui_EndChild(ctx)

@@ -30,6 +30,22 @@ function normalize_path(path, is_dir)
   return path
 end
 
+-- 相对路径解析为绝对路径
+function resolve_rpp_path(p)
+  if not p or p == "" then return "" end
+  -- 绝对路径 / UNC 直接归一化
+  if p:match('^%a:[/\\]') or p:match('^\\\\') then
+    return normalize_path(p, false)
+  end
+  -- 相对路径，拼接工程目录
+  local _, projfn = reaper.EnumProjects(-1, "")
+  local base = (projfn and projfn:match("^(.*)[/\\]")) or (reaper.GetProjectPath("") or "")
+  if base == "" then
+    return normalize_path(p, false) -- 工程未保存时兜底
+  end
+  return normalize_path(base .. sep .. p, false)
+end
+
 function EnsureCacheDir(dir)
   if not reaper.file_exists(dir) then
     reaper.RecursiveCreateDirectory(dir, 0)
@@ -53,7 +69,7 @@ function to_int(x)
   return math.tointeger(n) or math.floor(n + 0.5)
 end
 
--- 按扩展名判断是否为音频
+-- 按扩展名判断是否为音频. 与IsValidAudioFile(path)重复
 function has_allowed_ext(p)
   if not p or p == "" then return false end
   local ext = p:match("%.([^.]+)$")
@@ -64,6 +80,14 @@ function has_allowed_ext(p)
     or ext == "ape" or ext == "wv"  or ext == "m4a"  or ext == "aac"
     or ext == "mp4"
   )
+end
+
+-- 把 valid_exts 表转成 "wav,flac,..." CSV
+function exts_table_to_csv(t)
+  local tmp = {}
+  for k, v in pairs(t) do if v then tmp[#tmp+1] = k end end
+  table.sort(tmp)
+  return table.concat(tmp, ",")
 end
 
 -- 解析元数据

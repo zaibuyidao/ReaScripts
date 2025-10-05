@@ -7,7 +7,7 @@ script_path = script_path:gsub("[/\\]lib$","") -- 确保不在lib目录下
 local sep = package.config:sub(1, 1)
 script_path = script_path .. sep
 
--- 过滤音频文件
+-- 过滤音频文件，与has_allowed_ext(p)重复
 function IsValidAudioFile(path)
   local ext = path:match("%.([^.]+)$")
   if not ext then return false end
