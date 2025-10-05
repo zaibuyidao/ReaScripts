@@ -1,8 +1,11 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.66
+-- @version 1.0.67
 -- @changelog
---   Added Freesound license info after downloads, aligned using fixed-width padding.
+--   Improved UI color scheme for a more consistent and cohesive appearance.
+--   Enhanced Freesound settings page with a new "Clear all OAuth credentials" option.
+--   Experimental: Accelerated waveform preview performance using C++ extension.
+--   Experimental: Retrieve audio file metadata via C++ extension (currently tested on Windows x64 only).
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

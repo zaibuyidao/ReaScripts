@@ -30,14 +30,67 @@ function normalize_path(path, is_dir)
   return path
 end
 
--- function EnsureCacheDir(cache_dir)
---   local sep = package.config:sub(1, 1)
---   if not reaper.EnumerateFiles(cache_dir, 0) then
---     os.execute((sep == "/" and "mkdir -p " or "mkdir ") .. '"' .. cache_dir .. '"')
---   end
--- end
 function EnsureCacheDir(dir)
   if not reaper.file_exists(dir) then
     reaper.RecursiveCreateDirectory(dir, 0)
   end
+end
+
+--------------------------------------------- C++扩展支持 ---------------------------------------------
+
+-- 将秒级时间戳转为 "YYYY/M/D HH:MM:SS"
+function format_ts(ts)
+  ts = tonumber(ts)
+  if not ts or ts <= 0 then return "" end
+  local t = os.date("*t", ts)
+  return string.format("%d/%d/%d %02d:%02d:%02d", t.year, t.month, t.day, t.hour, t.min, t.sec)
+end
+
+-- 把数值安全转为整数。优先 tointeger，其次四舍五入
+function to_int(x)
+  local n = tonumber(x)
+  if not n then return 0 end
+  return math.tointeger(n) or math.floor(n + 0.5)
+end
+
+-- 按扩展名判断是否为音频
+function has_allowed_ext(p)
+  if not p or p == "" then return false end
+  local ext = p:match("%.([^.]+)$")
+  if not ext then return false end
+  ext = ext:lower()
+  return (ext == "wav" or ext == "w64" or ext == "aif" or ext == "aiff"
+    or ext == "mp3" or ext == "ogg" or ext == "opus" or ext == "flac"
+    or ext == "ape" or ext == "wv"  or ext == "m4a"  or ext == "aac"
+    or ext == "mp4"
+  )
+end
+
+-- 解析元数据
+function sm_parse_ndjson_line(line)
+  local function get_str(k)
+    return (line:match('"'..k..'":"(.-)"')) or "" -- 纯字符串字段
+  end
+  local function get_num(k)
+    local v = line:match('"'..k..'":([%-%d%.]+)')
+    return v and tonumber(v) or 0
+  end
+  return {
+    path           = get_str("path"),
+    size           = get_num("size"),
+    mtime          = get_num("mtime"),
+    sr             = get_num("sr"),
+    ch             = get_num("ch"),
+    len            = get_num("len"),
+    bits           = get_str("bits"), -- 在C++中由SWS扩展回传
+    type           = get_str("type"),
+    genre          = get_str("genre"),
+    comment        = get_str("comment"),
+    description    = get_str("description"),
+    key            = get_str("key"),
+    bpm            = get_str("bpm"),
+    ucs_category   = get_str("ucs_category"),
+    ucs_subcategory= get_str("ucs_subcategory"),
+    ucs_catid      = get_str("ucs_catid"),
+  }
 end
