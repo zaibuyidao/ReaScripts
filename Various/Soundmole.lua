@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.70
+-- @version 1.0.71
 -- @changelog
---   Added Mono, Stereo, 4.0 (Quad), 5.0 (Surround), and 5.1 (Surround + LFE) routing options with automatic output channel switching during preview.
---   Other detailed improvements and bug fixes.
+--   Fixed the waveform preview showing a flat line on macOS.
+--   Fixed Freesound items not downloading on macOS.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

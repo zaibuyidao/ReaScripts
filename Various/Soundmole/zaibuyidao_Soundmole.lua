@@ -2116,12 +2116,13 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
   local src_len = reaper.GetMediaSourceLength(src)
 
   -- 支持整段还是窗口
-  start_time = start_time or 0
-  end_time = end_time or src_len
+  start_time = tonumber(start_time) or 0
+  end_time = tonumber(end_time) or 0
+  if end_time <= 0 or end_time > src_len then end_time = src_len end
   start_time = math.max(0, start_time)
-  end_time = math.min(src_len, end_time)
+  end_time = math.max(start_time, math.min(src_len, end_time))
+  
   local win_len = end_time - start_time
-
   local total_samples = math.floor(win_len * srate)
   local samples_per_pixel = math.max(1, math.floor(total_samples / pixel_cnt))
 
@@ -2133,6 +2134,7 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
   reaper.SetMediaItemLength(item, src_len, false)
   local take = reaper.AddTakeToMediaItem(item)
   reaper.SetMediaItemTake_Source(take, src)
+  reaper.UpdateItemInProject(item)
   local accessor = reaper.CreateTakeAudioAccessor(take)
 
   local peaks = {}
@@ -2245,8 +2247,12 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
   local channel_count = math.min(reaper.GetMediaSourceNumChannels(src), 6)
   local src_len = reaper.GetMediaSourceLength(src)
   -- 强制读取媒体源完整长度，而不是take修剪区段
-  start_time = start_time or 0
-  end_time = math.min(end_time or src_len, src_len)
+  start_time = tonumber(start_time) or 0
+  end_time = tonumber(end_time) or 0
+  if end_time <= 0 or end_time > src_len then end_time = src_len end
+  start_time = math.max(0, start_time)
+  end_time = math.max(start_time, math.min(src_len, end_time))
+
   local win_len = end_time - start_time
   local total_samples = math.floor(win_len * srate)
   local samples_per_pixel = math.max(1, math.floor(total_samples / pixel_cnt))
@@ -2263,6 +2269,7 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
   reaper.SetMediaItemLength(item, src_len, false)
   local tmp_take = reaper.AddTakeToMediaItem(item)
   reaper.SetMediaItemTake_Source(tmp_take, src)
+  reaper.UpdateItemInProject(item)
   local accessor = reaper.CreateTakeAudioAccessor(tmp_take)
 
   -- 动态计算实际步长
@@ -6446,8 +6453,10 @@ function FS_http_get(url)
   local need_bearer = (FS and (FS.TOKEN or "") == "" and (FS.OAUTH_BEARER or "") ~= "")
   local hdr = need_bearer and (' -H "Authorization: Bearer ' .. (FS.OAUTH_BEARER:gsub('"','\\"')) .. '"') or ""
 
-  -- 优先走 ExecProcess，避免CMD弹窗
-  if reaper.ExecProcess then
+  local osname = reaper.GetOS()
+  local is_win = osname and osname:find("Win") ~= nil
+  -- Windows 优先走 ExecProcess，避免CMD弹窗
+  if is_win and reaper.ExecProcess then
     local tmp = FS_join(FS_DB_DIR(), (".fs_http_%d.tmp"):format(math.floor(reaper.time_precise()*1e6)))
     local cmd = ('curl -L -s%s "%s" -o "%s"'):format(hdr, url:gsub('"','\\"'), tmp:gsub('"','\\"'))
     local code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
@@ -6456,11 +6465,15 @@ function FS_http_get(url)
     local f = io.open(tmp, "rb")
     if f then body = f:read("*a") or ""; f:close() end
     os.remove(tmp)
-    return (code == 0) and body or ""
+
+    if code == 0 and body ~= "" then
+      return body
+    end
   end
 
-  -- 回退 popen
-  local p = io.popen('curl -L -s' .. hdr .. ' "' .. url .. '"', "r")
+  -- macOS/Linux 用 /usr/bin/curl; Windows 作为回退用 curl
+  local curl_bin = is_win and "curl" or "/usr/bin/curl"
+  local p = io.popen(('%s -L -s%s "%s"'):format(curl_bin, hdr, url:gsub('"','\\"')), "r")
   local body = p and p:read("*a") or ""
   if p then p:close() end
   return body
@@ -6488,13 +6501,6 @@ FS = FS or {
     max_minutes = 7.5  -- 0.5..30
   }
 }
-
-FS.DEBUG = FS.DEBUG == nil and true or FS.DEBUG
-function FS_dbg(...)
-  if not FS.DEBUG then return end
-  local t = {}; for i=1,select('#', ...) do t[#t+1] = tostring(select(i, ...)) end
-  reaper.ShowConsoleMsg(table.concat(t, "") .. "\n")
-end
 
 function FS_get_query()
   local q = tostring(FS and FS.ui and FS.ui.query or "")
@@ -7122,18 +7128,26 @@ function FS_download_to(url, dst, auth_header)
   end
 
   local function try_curl()
+    -- macOS/Linux 用 /usr/bin/curl; Windows 作为回退用 curl
+    local curl_bin = is_win and "curl" or "/usr/bin/curl"
+    if not is_win then
+      local fchk = io.open(curl_bin, "rb")
+      if not fchk then curl_bin = "curl" else fchk:close() end
+    end
+
     local header = ""
     if auth_header and auth_header ~= "" then
       header = string.format(' -H "%s"', auth_header:gsub('"','\\"'))
     end
     local ua = ' -A "Soundmole/1.0"'
     local cmd = string.format(
-      'curl --fail -L --retry 3 --retry-delay 1 --connect-timeout 10 --max-time 120 --no-progress-meter -C -%s%s "%s" -o "%s"',
-      ua, header, url, dst
+      '%s --fail -L --retry 3 --retry-delay 1 --connect-timeout 10 --max-time 120 --no-progress-meter -C -%s%s "%s" -o "%s"',
+      curl_bin, ua, header, url, dst
     )
 
+    -- Windows 走 ExecProcess, macOS/Linux 走 popen
     local code
-    if reaper.ExecProcess then
+    if is_win and reaper.ExecProcess then
       code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
     else
       local _, c = FS_run(cmd)
@@ -7171,9 +7185,6 @@ function FS_download_to(url, dst, auth_header)
   if f then
     local sz = f:seek("end") or 0; f:close()
     if sz > 0 then return true end
-    --FS_dbg(string.format("[FS] download size=0 for %s", tostring(dst)))
-  else
-    --FS_dbg("[FS] download failed or no file created: ", tostring(dst))
   end
   return false
 end
