@@ -9214,13 +9214,15 @@ function loop()
 
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_BeginGroup(ctx)
+    local _, item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()) -- 取垂直行距
+    local two_rows_h = reaper.ImGui_GetFrameHeight(ctx) * 2 + item_spacing_y -- 两行高
     -- 清空过滤器内容
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameBorderSize(), 3) -- 按钮边框
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_clear = reaper.ImGui_Button(ctx, "Clear", 90, 56)
+    local clicked_clear = reaper.ImGui_Button(ctx, "Clear", 90, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_clear then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
@@ -9249,7 +9251,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_rescan = reaper.ImGui_Button(ctx, "Rescan", 90, 56)
+    local clicked_rescan = reaper.ImGui_Button(ctx, "Rescan", 90, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_rescan then
       CollectFiles()
@@ -9269,7 +9271,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_res_all = reaper.ImGui_Button(ctx, "Restore All", 90, 56)
+    local clicked_res_all = reaper.ImGui_Button(ctx, "Restore All", 90, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_res_all then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
@@ -9315,7 +9317,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_sanme_folder = reaper.ImGui_Button(ctx, "Same Folder", 90, 56)
+    local clicked_sanme_folder = reaper.ImGui_Button(ctx, "Same Folder", 90, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_sanme_folder then
       collect_mode = COLLECT_MODE_SAMEFOLDER
@@ -9336,7 +9338,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_pick_folder = reaper.ImGui_Button(ctx, "Pick Folder", 90, 56)
+    local clicked_pick_folder = reaper.ImGui_Button(ctx, "Pick Folder", 90, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_pick_folder then
       local init = preview_folder_input
@@ -9359,7 +9361,7 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
       reaper.ImGui_SameLine(ctx, nil, 10)
-      local clicked_play_his = reaper.ImGui_Button(ctx, "Play History", 90, 56)
+      local clicked_play_his = reaper.ImGui_Button(ctx, "Play History", 90, two_rows_h)
       reaper.ImGui_PopStyleColor(ctx, 3)
       if clicked_play_his then
         LoadRecentPlayed()

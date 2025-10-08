@@ -1,9 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.71
+-- @version 1.0.72
 -- @changelog
 --   Fixed the waveform preview showing a flat line on macOS.
 --   Fixed Freesound items not downloading on macOS.
+--   Other detailed improvements and bug fixes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
