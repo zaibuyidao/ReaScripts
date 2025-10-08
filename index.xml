@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="691c7738e08c61095ca8bdb547641923488002a7">
+<index version="1" name="zaibuyidao Scripts" commit="a10815473ae8450c25b0eafb859455561515aa74">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14852,6 +14852,18 @@ Fixed Freesound items not downloading on macOS.]]></changelog>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/691c7738e08c61095ca8bdb547641923488002a7/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/691c7738e08c61095ca8bdb547641923488002a7/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/691c7738e08c61095ca8bdb547641923488002a7/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.72" author="zaibuyidao" time="2025-10-08T13:37:16Z">
+        <changelog><![CDATA[Fixed the waveform preview showing a flat line on macOS.
+Fixed Freesound items not downloading on macOS.
+Other detailed improvements and bug fixes.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/a10815473ae8450c25b0eafb859455561515aa74/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/a10815473ae8450c25b0eafb859455561515aa74/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/a10815473ae8450c25b0eafb859455561515aa74/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/a10815473ae8450c25b0eafb859455561515aa74/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/a10815473ae8450c25b0eafb859455561515aa74/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/a10815473ae8450c25b0eafb859455561515aa74/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/a10815473ae8450c25b0eafb859455561515aa74/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
