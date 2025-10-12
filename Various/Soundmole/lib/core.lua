@@ -7,8 +7,10 @@ script_path = script_path:gsub("[/\\]lib$","") -- 确保不在lib目录下
 local sep = package.config:sub(1, 1)
 script_path = script_path .. sep
 
-local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
-
+local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaEnd')
+  and (reaper.APIExists('SM_ProbeMediaNextJSONEx') or reaper.APIExists('SM_ProbeMediaNextJSON'))
+  and reaper.APIExists('SM_GetPeaksCSV')
+  
 -- 过滤音频文件，与has_allowed_ext(p)重复
 function IsValidAudioFile(path)
   local ext = path:match("%.([^.]+)$")

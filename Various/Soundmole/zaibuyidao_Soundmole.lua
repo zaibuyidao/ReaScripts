@@ -54,7 +54,9 @@ if reaper.ImGui_GetBuiltinPath then
   ImGui = require 'imgui' '0.10'
 end
 
-local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
+local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaEnd')
+  and (reaper.APIExists('SM_ProbeMediaNextJSONEx') or reaper.APIExists('SM_ProbeMediaNextJSON'))
+  and reaper.APIExists('SM_GetPeaksCSV')
 
 local SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
@@ -2077,20 +2079,22 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
 
     local csv = reaper.SM_GetPeaksCSV(filepath, pixel_cnt, start_time, end_time, max_channels, step or 0)
     if not csv or csv == "" then return nil end
-
     local head_end = csv:find("\n", 1, true) or #csv
     local head = csv:sub(1, head_end - 1)
-    local p_cnt_s, ch_s, win_len_s = head:match("([^,]+),([^,]+),([^,]+)")
-    local p_cnt = tonumber(p_cnt_s) or pixel_cnt
-    local channels = math.min(tonumber(ch_s) or max_channels, max_channels)
+    local p1, p2, p3, p4, p5 = head:match("^%s*([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)")
+    local p_cnt = tonumber(p1) or pixel_cnt
+    local channels = math.min(tonumber(p2) or max_channels, max_channels)
+    local ready_rows = tonumber(p4) or p_cnt
+    local done = tonumber(p5) or 0
 
+    local limit_rows = math.min(p_cnt, ready_rows)
     local peaks = {}
     for ch = 1, channels do peaks[ch] = {} end
 
     local row = 1
     for line in csv:sub(head_end + 1):gmatch("([^\n]+)") do
-      local nums = {}
-      local col = 1
+      if row > limit_rows then break end
+      local nums, col = {}, 1
       for num in line:gmatch("([^,]+)") do
         nums[col] = tonumber(num) or 0
         col = col + 1
@@ -2100,7 +2104,6 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
         peaks[ch][row] = { nums[b] or 0, nums[b + 1] or 0 }
       end
       row = row + 1
-      if row > p_cnt then break end
     end
 
     return peaks, p_cnt, src_len, channels
@@ -2212,16 +2215,19 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
     if csv and csv ~= "" then
       local head_end = csv:find("\n", 1, true) or #csv
       local head = csv:sub(1, head_end - 1)
-      local p_cnt_s, ch_s = head:match("([^,]+),([^,]+),")
-      local p_cnt = tonumber(p_cnt_s) or pixel_cnt
-      local ch_hdr = tonumber(ch_s) or channel_count
-      local channels = math.min(ch_hdr, max_channels)
+      local p1, p2, p3, p4, p5 = head:match("^%s*([^,]+),([^,]+),([^,]+),([^,]+),([^,]+)")
+      local p_cnt = tonumber(p1) or pixel_cnt
+      local channels = math.min(tonumber(p2) or channel_count, max_channels)
+      local ready_rows = tonumber(p4) or p_cnt
+      local done = tonumber(p5) or 0
 
+      local limit_rows = math.min(p_cnt, ready_rows)
       local peaks = {}
       for ch = 1, channels do peaks[ch] = {} end
 
       local row = 1
       for line in csv:sub(head_end + 1):gmatch("([^\n]+)") do
+        if row > limit_rows then break end
         local i, nums = 1, {}
         for num in line:gmatch("([^,]+)") do
           nums[i] = tonumber(num) or 0
@@ -2232,7 +2238,6 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
           peaks[ch][row] = { nums[b] or 0, nums[b + 1] or 0 }
         end
         row = row + 1
-        if row > p_cnt then break end
       end
 
       return peaks, p_cnt, src_len, channels
@@ -4767,7 +4772,7 @@ _G.commit_filter_text = _G.commit_filter_text or ""
 local static = _G._soundmole_static or {}
 _G._soundmole_static = static
 static.wf_delay_cached = static.wf_delay_cached or 0.5 -- 表格列表波形已缓存延迟0.5秒
-static.wf_delay_miss   = static.wf_delay_miss   or 2.0 -- 表格列表波形未缓存延迟2秒
+static.wf_delay_miss   = static.wf_delay_miss   or 0.75 -- 表格列表波形未缓存延迟2秒
 static.filtered_list_map = static.filtered_list_map or {} -- 用于存放所有列表缓存
 static.last_filter_text_map = static.last_filter_text_map or {}
 static.last_sort_specs_map  = static.last_sort_specs_map or {}
