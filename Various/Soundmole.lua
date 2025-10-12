@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.73
+-- @version 1.0.74
 -- @changelog
 --   Other detailed improvements and bug fixes.
 -- @reference
