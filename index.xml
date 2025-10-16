@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6b14f2d74ab954d45d16f36003cb418f0209be1b">
+<index version="1" name="zaibuyidao Scripts" commit="6841d587945c3f2881e690600898804988ddad0e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -1509,6 +1509,10 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7aab26fcce01b5330b1180e182c087f7c1a1009b/Items%20Editing/zaibuyidao_Trim%20Item%20Edges%20Settings.lua</source>
       </version>
+      <version name="1.0.10" author="zaibuyidao" time="2025-10-16T14:55:40Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6841d587945c3f2881e690600898804988ddad0e/Items%20Editing/zaibuyidao_Trim%20Item%20Edges%20Settings.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Item Edges.lua" type="script" desc="Trim Item Edges">
       <metadata>
@@ -1562,6 +1566,10 @@
       <version name="1.0.9" author="zaibuyidao" time="2024-09-24T04:03:09Z">
         <changelog><![CDATA[# Updated item start position and length after edge trimming to ensure accurate processing.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/cd643c97b2c6357f65fae792a27157801d8fb541/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
+      </version>
+      <version name="1.0.10" author="zaibuyidao" time="2025-10-16T14:55:40Z">
+        <changelog><![CDATA[Fix: Resolved bad argument #1 to 'new_array' (invalid size) by using chunked reads with a capped buffer size to avoid large allocations in reaper.new_array]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6841d587945c3f2881e690600898804988ddad0e/Items%20Editing/zaibuyidao_Trim%20Item%20Edges.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items Settings.lua" type="script" desc="Trim Split Items Settings">
@@ -1632,6 +1640,10 @@
       <version name="2.0.2" author="zaibuyidao" time="2024-09-17T13:23:30Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/288d27c23c78ffad683b4c4e058fecccc288fc2f/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
+      </version>
+      <version name="2.0.6" author="zaibuyidao" time="2025-10-16T14:55:40Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6841d587945c3f2881e690600898804988ddad0e/Items%20Editing/zaibuyidao_Trim%20Split%20Items%20Settings.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Split Items.lua" type="script" desc="Trim Split Items">
@@ -1722,6 +1734,10 @@
       <version name="2.0.5" author="zaibuyidao" time="2024-09-22T07:24:47Z">
         <changelog><![CDATA[# Optimize sampling point calculation and improve floating-point processing accuracy.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/3ddc730f1f929d2cc2298aa54bf080b5c15f8656/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
+      </version>
+      <version name="2.0.6" author="zaibuyidao" time="2025-10-16T14:55:40Z">
+        <changelog><![CDATA[Fix: Resolved bad argument #1 to 'new_array' (invalid size) by using chunked reads with a capped buffer size to avoid large allocations in reaper.new_array]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6841d587945c3f2881e690600898804988ddad0e/Items%20Editing/zaibuyidao_Trim%20Split%20Items.lua</source>
       </version>
     </reapack>
   </category>
