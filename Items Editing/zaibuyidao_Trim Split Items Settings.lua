@@ -1,5 +1,5 @@
 -- @description Trim Split Items Settings
--- @version 2.0.2
+-- @version 2.0.6
 -- @author zaibuyidao
 -- @changelog
 --   New Script

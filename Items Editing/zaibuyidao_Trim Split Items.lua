@@ -1,8 +1,8 @@
 -- @description Trim Split Items
--- @version 2.0.5
+-- @version 2.0.6
 -- @author zaibuyidao
 -- @changelog
---   # Optimize sampling point calculation and improve floating-point processing accuracy.
+--   Fix: Resolved bad argument #1 to 'new_array' (invalid size) by using chunked reads with a capped buffer size to avoid large allocations in reaper.new_array
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -166,70 +166,119 @@ function get_sample_pos_value(take, skip_sample, item)
     return false, false, false
   end
 
-  -- 获取item的起始位置和长度
   local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
   local item_length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-
   local playrate_ori = reaper.GetMediaItemTakeInfo_Value(take, "D_PLAYRATE")
-  local item_len_ori = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  local item_len_ori = item_length
   reaper.SetMediaItemInfo_Value(item, "D_LENGTH", item_len_ori * playrate_ori)
   reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", 1)
 
   local accessor = reaper.CreateTakeAudioAccessor(take)
-  local source = reaper.GetMediaItemTake_Source(take)
-  local samplerate = reaper.GetMediaSourceSampleRate(source)
-
-  if skip_sample <= 0 or not tonumber(skip_sample) then
-    skip_sample = 0
-  elseif skip_sample > 0 then
-    skip_sample = samplerate / (samplerate / skip_sample) -- 跳过几个样本
+  if not accessor then
+    reaper.SetMediaItemInfo_Value(item, "D_LENGTH", item_len_ori)
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", playrate_ori)
+    return false, false, false
   end
 
-  skip_sample = math.floor(0.5 + skip_sample)
+  local source = reaper.GetMediaItemTake_Source(take)
+  local samplerate = reaper.GetMediaSourceSampleRate(source) or 44100
+  if samplerate <= 0 then samplerate = 44100 end
+  local channels = reaper.GetMediaSourceNumChannels(source) or 1
+  if channels < 1 then channels = 1 end
 
-  local channels = reaper.GetMediaSourceNumChannels(source)
-  local item_len_idx = math.ceil(item_length)
+  if type(skip_sample) ~= "number" or skip_sample < 0 then
+    skip_sample = 0
+  else
+    skip_sample = math.floor(skip_sample + 0.5)
+  end
 
-  local sample_min = {}
-  local sample_max = {}
-  local time_sample = {}
-  local breakX
+  local chunk_samples = samplerate
+  local max_total = 262144
+  if chunk_samples * channels > max_total then
+    chunk_samples = math.max(4096 // math.max(1, channels), math.floor(max_total / channels))
+  end
 
-  for i1 = 1, item_len_idx do
-    local buffer = reaper.new_array(samplerate * channels) -- 1秒
-    local accessor_samples = reaper.GetAudioAccessorSamples(accessor, samplerate , channels, i1-1, samplerate, buffer)
-    local continue_count = (i1-1) * samplerate
+  local total_seconds = math.ceil(item_len_ori)
+  local sample_min, sample_max, time_sample = {}, {}, {}
 
-    for i2 = 1, samplerate * channels, channels * (skip_sample + 1) do
-      local sample_point_num = (i2-1) / channels + continue_count
+  local started = false
+  local last_nz_index = 0
+  local break_all = false
 
-      -- 所有通道的最小/最大采样
-      local sample_min_chan = 9^99
-      local sample_max_chan = 0
-      for i3 = 1, channels do
-        local sample_buf = math.abs(buffer[i2 + (i3-1)])
-        sample_min_chan = math.min(sample_buf, sample_min_chan)
-        sample_max_chan = math.max(sample_buf, sample_max_chan)
+  for sec = 0, total_seconds - 1 do
+    local block_time = sec
+    local to_read = math.min(chunk_samples, samplerate)
+    local buffer = reaper.new_array(to_read * channels)
+    local ok = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, block_time, to_read, buffer)
+    if not ok then
+      buffer.clear()
+      break_all = true
+      break
+    end
+
+    local step_stride = channels * (skip_sample + 1)
+    local block_base_sample_index = sec * samplerate
+
+    for i = 1, (to_read * channels), step_stride do
+      local sample_point_num = ( (i - 1) // channels ) + block_base_sample_index
+      local min_v = 9^99
+      local max_v = 0
+      for c = 0, channels - 1 do
+        local v = math.abs(buffer[i + c] or 0)
+        if v < min_v then min_v = v end
+        if v > max_v then max_v = v end
       end
 
-      sample_min[#sample_min+1] = sample_min_chan
-      sample_max[#sample_max+1] = sample_max_chan
+      -- 跳过开头连续 0 值
+      if not started then
+        if max_v == 0 then
+        else
+          started = true
+        end
+      end
 
-      time_sample[#time_sample + 1] = sample_point_num / samplerate / playrate_ori + item_start
-      if time_sample[#time_sample] > item_len_ori + item_start then breakX = 1 break end
+      if started then
+        sample_min[#sample_min + 1] = min_v
+        sample_max[#sample_max + 1] = max_v
+        time_sample[#time_sample + 1] = (sample_point_num / samplerate) / playrate_ori + item_start
+        if max_v ~= 0 then
+          last_nz_index = #sample_max
+        end
+        if time_sample[#time_sample] > item_start + item_len_ori then
+          break_all = true
+          break
+        end
+      end
     end
+
     buffer.clear()
-    if breakX == 1 then break end
+    if break_all then break end
   end
 
   reaper.DestroyAudioAccessor(accessor)
 
-  -- 恢复播放速率
-  reaper.SetMediaItemInfo_Value(item, "D_LENGTH", item_length / playrate_ori)
+  -- 恢复播放速率与长度
+  reaper.SetMediaItemInfo_Value(item, "D_LENGTH", item_len_ori)
   reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", playrate_ori)
 
-  time_sample[1] = item_start
-  time_sample[#time_sample] = item_start + item_len_ori
+  if started and last_nz_index > 0 and last_nz_index < #sample_max then
+    for i = last_nz_index + 1, #sample_min do sample_min[i] = nil end
+    for i = last_nz_index + 1, #sample_max do sample_max[i] = nil end
+    for i = last_nz_index + 1, #time_sample do time_sample[i] = nil end
+  end
+
+  if not started then
+    return {}, {}, {}
+  end
+
+  if #time_sample > 0 then
+    -- 起点对齐
+    if time_sample[1] < item_start then time_sample[1] = item_start end
+    -- 末尾对齐
+    if time_sample[#time_sample] > item_start + item_len_ori then
+      time_sample[#time_sample] = item_start + item_len_ori
+    end
+  end
 
   return sample_min, sample_max, time_sample
 end
@@ -562,73 +611,66 @@ function expand_ranges(item, keep_ranges, left_pad, right_pad, fade_in, fade_out
 end
 
 function max_peak_pos(item, skip, right, left)
-  -- 获取当前Item的Take
   local take = reaper.GetActiveTake(item)
-  if not take then 
-    return nil 
-  end
-  
-  -- 获取音频源和Item的起始位置
-  local source = reaper.GetMediaItemTake_Source(take)
+  if not take or reaper.TakeIsMIDI(take) then return end
+
   local item_start = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
 
-  -- 计算跳过的采样数
-  if skip <= 0 then
-    skip = 0
-  elseif skip > 0 then
-    skip = reaper.GetMediaSourceSampleRate(source) / skip -- 每秒处理几个样本
-  end
+  if type(left) ~= "number" then left = 0 end
+  if type(right) ~= "number" then right = item_len end
+  if left > right then left, right = right, left end
+  left  = math.max(0, left)
+  right = math.min(item_len, right)
 
-  -- 获取采样值
   local sample_min, sample_max, time_sample = get_sample_pos_value(take, skip, item)
-  if not time_sample then 
-    return nil 
+  if not time_sample or #time_sample == 0 then return end
+
+  local lbound = item_start + left
+  local rbound = item_start + right
+
+  local function lower_bound(arr, x)
+    local lo, hi = 1, #arr + 1
+    while lo < hi do
+      local mid = (lo + hi) // 2
+      if arr[mid] < x then lo = mid + 1 else hi = mid end
+    end
+    return lo
   end
 
-  -- 定义检查范围的左边界和右边界（相对于Item的起始时间）
-  local right_bound = item_start + right
-  local left_bound = item_start + left
-  local max_value
-  local max_pos
+  local function upper_bound(arr, x)
+    local lo, hi = 1, #arr + 1
+    while lo < hi do
+      local mid = (lo + hi) // 2
+      if arr[mid] <= x then lo = mid + 1 else hi = mid end
+    end
+    return lo
+  end
 
-  -- 用于记录唯一的sample_max值
-  local unique_max = {}
+  local li = lower_bound(time_sample, lbound)
+  local ri = upper_bound(time_sample, rbound) - 1
+  if li > ri or li < 1 or ri < 1 then return end
 
-  -- 遍历所有采样点
-  for i = 1, #time_sample do
-    if time_sample[i] >= left_bound then
-      if time_sample[i] > right_bound then
-        break -- 超出右边界，停止检查
-      end
-      -- 更新最高峰值和位置
-      if max_value == nil or sample_max[i] > max_value then
-        max_pos = time_sample[i]
-        max_value = sample_max[i]
-      end
-      -- 记录当前采样点的最大值
-      unique_max[sample_max[i]] = true
+  local max_val = -1
+  local max_pos_abs = nil
+  local first_val = sample_max[li] or 0
+  local all_equal = true
+
+  for i = li, ri do
+    local v = sample_max[i] or 0
+    if v ~= first_val then all_equal = false end
+    if v > max_val then
+      max_val = v
+      max_pos_abs = time_sample[i]
     end
   end
 
-  -- 计算唯一的sample_max值的数量
-  local unique_count = 0
-  for _ in pairs(unique_max) do
-    unique_count = unique_count + 1
-  end
-
-  if unique_count == 1 then
-    -- 如果所有sample_max值都相同（无声），则将max_pos设置为指定的最大范围值
-    max_pos = right
+  if not max_pos_abs then return end
+  if all_equal then
+    return right
   else
-    -- 如果存在不同的sample_max值，则按照原有逻辑返回最高峰值的位置
-    if max_pos == nil then
-      max_pos = 0
-    else
-      max_pos = max_pos - item_start
-    end
+    return max_pos_abs - item_start
   end
-
-  return max_pos
 end
 
 function default_if_invalid(input, default, convert)

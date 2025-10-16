@@ -1,5 +1,5 @@
 -- @description Trim Item Edges Settings
--- @version 1.0
+-- @version 1.0.10
 -- @author zaibuyidao
 -- @changelog
 --   New Script

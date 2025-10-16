@@ -1,8 +1,8 @@
 -- @description Trim Item Edges
--- @version 1.0.9
+-- @version 1.0.10
 -- @author zaibuyidao
 -- @changelog
---   # Updated item start position and length after edge trimming to ensure accurate processing.
+--   Fix: Resolved bad argument #1 to 'new_array' (invalid size) by using chunked reads with a capped buffer size to avoid large allocations in reaper.new_array
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -234,77 +234,318 @@ function expand_ranges(item, keep_ranges, left_pad, right_pad, fade_in, fade_out
   return keep_ranges
 end
 
+-- 未计算跳过起始/末尾连续 0 值版本
+-- function get_sample_val_and_pos(take, step, threshold, hysteresis)
+--   if not take then return end
+--   local item = reaper.GetMediaItemTake_Item(take)
+--   if not item then return end
+--   local src = reaper.GetMediaItemTake_Source(take)
+--   if not src then return end
+--   local acc = reaper.CreateTakeAudioAccessor(take)
+--   if not acc then return end
+
+--   local aa_start = reaper.GetAudioAccessorStartTime(acc)
+--   local aa_end = reaper.GetAudioAccessorEndTime(acc)
+--   local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH") or (aa_end - aa_start)
+
+--   local sr = reaper.GetMediaSourceSampleRate(src)
+--   if sr <= 0 then sr = 44100 end
+--   local ch = reaper.GetMediaSourceNumChannels(src)
+--   if ch < 1 then ch = 1 end
+
+--   local chunk_samples = math.floor(0.1 * sr + 0.5)
+--   chunk_samples = math.max(4096, math.min(chunk_samples, 262144))
+
+--   local samp_step
+--   if type(step) == "number" then
+--     if step == 0 then
+--       samp_step = 1
+--     elseif step >= 1 then
+--       samp_step = math.floor(step)
+--     else
+--       samp_step = 1
+--     end
+--   else
+--     samp_step = 1
+--   end
+
+--   local left_min  = topower(threshold)
+--   local right_min = topower(threshold + hysteresis)
+
+--   -- 头尾窗口基准长度
+--   local HEAD_SEC = 30 -- 秒
+--   local TAIL_SEC = 30 -- 秒
+--   local head_end = math.min(aa_end, aa_start + HEAD_SEC)
+--   local tail_st  = math.max(aa_start, aa_end - TAIL_SEC)
+
+--   local lv, rv, l_idx_samp, r_idx_samp
+--   -- 正向扫描
+--   do
+--     local t0 = aa_start
+--     while t0 < head_end do
+--       local need = math.min(chunk_samples, math.max(0, math.floor((head_end - t0) * sr + 0.5)))
+--       if need <= 0 then break end
+--       local buf = reaper.new_array(need * ch)
+--       local ok  = reaper.GetAudioAccessorSamples(acc, sr, ch, t0, need, buf)
+--       if not ok then
+--         reaper.DestroyAudioAccessor(acc)
+--         return
+--       end
+
+--       for i = 0, need - 1, samp_step do
+--         local base = i * ch
+--         for j = 0, ch - 1 do
+--           local v = math.abs(buf[base + j + 1])
+--           if v > left_min then
+--             lv = v
+--             l_idx_samp = math.floor((t0 - aa_start) * sr + 0.5) + i
+--             break
+--           end
+--         end
+--         if lv then break end
+--       end
+
+--       if lv then break end
+--       t0 = t0 + need / sr
+--     end
+--   end
+--   -- 逆向扫描
+--   do
+--     local tail_len_smp = math.floor((aa_end - tail_st) * sr + 0.5)
+--     local remain = tail_len_smp
+--     while remain > 0 do
+--       local need = math.min(chunk_samples, remain)
+--       local block_start_samp = remain - need
+--       local t0 = tail_st + (block_start_samp / sr)
+
+--       local buf = reaper.new_array(need * ch)
+--       local ok  = reaper.GetAudioAccessorSamples(acc, sr, ch, t0, need, buf)
+--       if not ok then
+--         reaper.DestroyAudioAccessor(acc)
+--         return 
+--       end
+
+--       local i = need - 1
+--       while i >= 0 do
+--         local base = i * ch
+--         for j = 0, ch - 1 do
+--           local v = math.abs(buf[base + j + 1])
+--           if v > right_min then
+--             rv = v
+--             r_idx_samp = math.floor((t0 - aa_start) * sr + 0.5) + i
+--             break
+--           end
+--         end
+--         if rv then break end
+--         i = i - samp_step
+--         if i < 0 and rv == nil then break end
+--       end
+
+--       if rv then break end
+--       remain = block_start_samp
+--     end
+--   end
+
+--   reaper.DestroyAudioAccessor(acc)
+
+--   if lv and rv then
+--     local l_sec = math.min((l_idx_samp or 0) / sr, item_len)
+--     local r_sec = math.min((r_idx_samp or 0) / sr, item_len)
+--     return true, todb(lv), l_sec, todb(rv), r_sec
+--   end
+--   return nil
+-- end
+
+-- 正向扫描先跳过起始连续 0 值，从第一个非零样本处起算 30 秒窗口；
+-- 逆向扫描先跳过末尾连续 0 值，从最后一个非零样本处往回 30 秒作为窗口。
 function get_sample_val_and_pos(take, step, threshold, hysteresis)
-  local ret = false
-  if take == nil then return end
-
+  if not take then return end
   local item = reaper.GetMediaItemTake_Item(take)
-  if item == nil then return end
+  if not item then return end
 
-  local source = reaper.GetMediaItemTake_Source(take)
-  if source == nil then return end
+  local src = reaper.GetMediaItemTake_Source(take)
+  if not src then return end
 
-  local accessor = reaper.CreateTakeAudioAccessor(take)
-  if accessor == nil then return end
+  local acc = reaper.CreateTakeAudioAccessor(take)
+  if not acc then return end
 
-  local aa_start = reaper.GetAudioAccessorStartTime(accessor)
-  local aa_end = reaper.GetAudioAccessorEndTime(accessor)
+  local aa_start = reaper.GetAudioAccessorStartTime(acc)
+  local aa_end = reaper.GetAudioAccessorEndTime(acc)
+  local item_len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH") or (aa_end - aa_start)
 
-  -- 获取采样率和通道数
-  local samplerate = reaper.GetMediaSourceSampleRate(source)
-  if not samplerate or samplerate == 0 then
-    samplerate = 44100  -- 默认采样率
+  local sr = reaper.GetMediaSourceSampleRate(src) or 44100
+  if sr <= 0 then sr = 44100 end
+  local ch = reaper.GetMediaSourceNumChannels(src) or 1
+  if ch < 1 then ch = 1 end
+
+  local chunk_samples = math.floor(0.1 * sr + 0.5)
+  chunk_samples = math.max(4096, math.min(chunk_samples, 262144))
+
+  local samp_step
+  if type(step) == "number" then
+    if step == 0 then samp_step = 1
+    elseif step >= 1 then samp_step = math.floor(step)
+    else samp_step = 1 end
+  else
+    samp_step = 1
   end
-  local channels = reaper.GetMediaSourceNumChannels(source)
 
   local left_min = topower(threshold)
   local right_min = topower(threshold + hysteresis)
 
-  local lv, rv
-  local l, r
+  -- 头尾窗口基准长度
+  local HEAD_SEC = 30 -- 秒
+  local TAIL_SEC = 30 -- 秒
 
-  local samples_per_channel = math.ceil((aa_end - aa_start) * samplerate)
-  local buffer = reaper.new_array(samples_per_channel * channels)
-
-  -- 读取所有样本
-  local aa_ret = reaper.GetAudioAccessorSamples(accessor, samplerate, channels, aa_start, samples_per_channel, buffer)
-  if aa_ret <= 0 then
-    reaper.DestroyAudioAccessor(accessor)
-    return nil
-  end
-
-  -- 查找左边界
-  for i = 0, samples_per_channel - 1 do
-    for j = 0, channels - 1 do
-      local idx = i * channels + j + 1
-      local v = math.abs(buffer[idx])
-      if v > left_min then
-        lv = v
-        l = i
-        goto found_l
+  -- 找正向起点，跳过开头连续 0 值，定位第一个非零样本的时间
+  local head_start = aa_start
+  do
+    local t0 = aa_start
+    while t0 < aa_end do
+      local need = math.min(chunk_samples, math.max(0, math.floor((aa_end - t0) * sr + 0.5)))
+      if need <= 0 then break end
+      local buf = reaper.new_array(need * ch)
+      local ok = reaper.GetAudioAccessorSamples(acc, sr, ch, t0, need, buf)
+      if not ok then
+        reaper.DestroyAudioAccessor(acc)
+        return
       end
+
+      local found = false
+      for i = 0, need - 1, samp_step do
+        local base = i * ch
+        local nz = false
+        for j = 0, ch - 1 do
+          if math.abs(buf[base + j + 1]) > 0 then
+            nz = true
+            break
+          end
+        end
+        if nz then
+          head_start = t0 + i / sr
+          found = true
+          break
+        end
+      end
+      if found then break end
+      t0 = t0 + need / sr
     end
   end
-  ::found_l::
+  local head_end = math.min(aa_end, head_start + HEAD_SEC)
 
-  -- 查找右边界
-  for i = samples_per_channel - 1, 0, -1 do
-    for j = 0, channels - 1 do
-      local idx = i * channels + j + 1
-      local v = math.abs(buffer[idx])
-      if v > right_min then
-        rv = v
-        r = i
-        goto found_r
+  -- 找逆向起点，跳过末尾连续 0 值，定位最后一个非零样本的时间
+  local tail_end = aa_end
+  do
+    local total_smp = math.floor((aa_end - aa_start) * sr + 0.5)
+    local remain = total_smp
+    while remain > 0 do
+      local need = math.min(chunk_samples, remain)
+      local block_start_samp = remain - need
+      local t0 = aa_start + block_start_samp / sr
+
+      local buf = reaper.new_array(need * ch)
+      local ok = reaper.GetAudioAccessorSamples(acc, sr, ch, t0, need, buf)
+      if not ok then reaper.DestroyAudioAccessor(acc)
+        return
       end
+
+      local found = false
+      local i = need - 1
+      while i >= 0 do
+        local base = i * ch
+        local nz = false
+        for j = 0, ch - 1 do
+          if math.abs(buf[base + j + 1]) > 0 then
+            nz = true
+            break
+          end
+        end
+        if nz then
+          tail_end = t0 + i / sr
+          found = true
+          break
+        end
+        i = i - samp_step
+      end
+      if found then break end
+      remain = block_start_samp
     end
   end
-  ::found_r::
 
-  reaper.DestroyAudioAccessor(accessor)
+  local tail_st = math.max(aa_start, tail_end - TAIL_SEC)
+  local lv, rv, l_idx_samp, r_idx_samp
+  -- 正向扫描
+  do
+    local t0 = head_start
+    while t0 < head_end do
+      local need = math.min(chunk_samples, math.max(0, math.floor((head_end - t0) * sr + 0.5)))
+      if need <= 0 then break end
+      local buf = reaper.new_array(need * ch)
+      local ok = reaper.GetAudioAccessorSamples(acc, sr, ch, t0, need, buf)
+      if not ok then
+        reaper.DestroyAudioAccessor(acc)
+        return
+      end
+
+      for i = 0, need - 1, samp_step do
+        local base = i * ch
+        for j = 0, ch - 1 do
+          local v = math.abs(buf[base + j + 1])
+          if v > left_min then
+            lv = v
+            l_idx_samp = math.floor((t0 - aa_start) * sr + 0.5) + i
+            break
+          end
+        end
+        if lv then break end
+      end
+
+      if lv then break end
+      t0 = t0 + need / sr
+    end
+  end
+  -- 逆向扫描
+  do
+    local tail_len_smp = math.floor((tail_end - tail_st) * sr + 0.5)
+    local remain = tail_len_smp
+    while remain > 0 do
+      local need = math.min(chunk_samples, remain)
+      local block_start_samp = remain - need
+      local t0 = tail_st + block_start_samp / sr
+
+      local buf = reaper.new_array(need * ch)
+      local ok = reaper.GetAudioAccessorSamples(acc, sr, ch, t0, need, buf)
+      if not ok then
+        reaper.DestroyAudioAccessor(acc)
+        return
+      end
+
+      local i = need - 1
+      while i >= 0 do
+        local base = i * ch
+        for j = 0, ch - 1 do
+          local v = math.abs(buf[base + j + 1])
+          if v > right_min then
+            rv = v
+            r_idx_samp = math.floor((t0 - aa_start) * sr + 0.5) + i
+            break
+          end
+        end
+        if rv then break end
+        i = i - samp_step
+      end
+
+      if rv then break end
+      remain = block_start_samp
+    end
+  end
+
+  reaper.DestroyAudioAccessor(acc)
 
   if lv and rv then
-    return true, todb(lv), l / samplerate, todb(rv), r / samplerate
+    local l_sec = math.min((l_idx_samp or 0) / sr, item_len)
+    local r_sec = math.min((r_idx_samp or 0) / sr, item_len)
+    return true, todb(lv), l_sec, todb(rv), r_sec
   end
   return nil
 end
