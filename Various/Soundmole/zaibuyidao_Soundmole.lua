@@ -55,7 +55,7 @@ if reaper.ImGui_GetBuiltinPath then
 end
 
 local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
-
+local HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists('SM_GetWaveformCachePath') and reaper.APIExists('SM_BuildWaveformCache')
 local SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
@@ -576,7 +576,6 @@ function CacheFilename(filepath)
   local hash = SimpleHash(filepath .. "@" .. size)
   local subdir = hash:sub(1, 2) -- 取前两位，16进制00~ff
   local dir = cache_dir .. subdir .. sep
-  EnsureCacheDir(dir) -- 确保子文件夹存在
   return dir .. hash .. ".wfc"
 end
 
@@ -588,6 +587,10 @@ function SaveWaveformCache(filepath, data)
   if not norm then return end
   if not (norm.pixel_cnt and norm.channel_count and norm.src_len) then return end
   if norm.pixel_cnt <= 0 or norm.channel_count <= 0 or norm.src_len <= 0 then return end
+
+  local fpath = CacheFilename(filepath)
+  local dir = fpath:match("^(.*[\\/])") or cache_dir
+  EnsureCacheDir(dir) -- 只在真正写入时创建子目录
 
   local f = io.open(CacheFilename(filepath), "w+b")
   if not f then return end
@@ -683,7 +686,7 @@ function GetPeaksWithCache(info, wf_step, pixel_cnt, start_time, end_time)
     local frac = src_px - i
     for ch = 1, cache.channel_count do
       local v1 = cache.peaks[ch][i] or {0, 0}
-      local v2 = cache.peaks[ch][i+1] or v1  -- 越界时用v1
+      local v2 = cache.peaks[ch][i+1] or v1 -- 越界时用v1
       -- 线性插值
       local minv = v1[1] + (v2[1] - v1[1]) * frac
       local maxv = v1[2] + (v2[2] - v1[2]) * frac
@@ -691,6 +694,128 @@ function GetPeaksWithCache(info, wf_step, pixel_cnt, start_time, end_time)
     end
   end
   return peaks_new, pixel_cnt, cache.src_len, cache.channel_count
+end
+
+--------------------------------------------- 波形缓存扩展相关 ---------------------------------------------
+
+if HAVE_SM_WFC then reaper.SM_SetCacheBaseDir(DEFAULT_CACHE_DIR) end -- 设置波形缓存路径
+
+function SM_ReadSMWF(path)
+  local f = io.open(path, "rb")
+  if not f then return end
+  local hdr = f:read(64)
+  if not hdr or #hdr < 64 then f:close() return end
+  -- 头 64 字节: magic(4) + version(I4) + pixel_cnt(I4) + channels(I4) + win_len(double) + reserved(40)
+  local magic, ver, px, ch, win_len, _ = string.unpack("<c4I4I4I4dc40", hdr)
+  if magic ~= "SMWF" or ver ~= 1 or px <= 0 or ch <= 0 then f:close() return end
+
+  local per_row = ch * 2
+  local need_bytes = px * per_row * 4
+  local blob = f:read(need_bytes); f:close()
+  if not blob or #blob < need_bytes then return end
+
+  local peaks = {}
+  for c = 1, ch do peaks[c] = {} end
+
+  local pos = 1
+  for row = 1, px do
+    for c = 1, ch do
+      local vmin; vmin, pos = string.unpack("<f", blob, pos)
+      local vmax; vmax, pos = string.unpack("<f", blob, pos)
+      peaks[c][row] = {vmin, vmax}
+    end
+  end
+  return peaks, px, win_len, ch
+end
+
+function SM_LoadWaveformCache(path, pixel_cnt, start_time, end_time, max_channels)
+  if not path or path == "" then return nil, "invalid path" end
+  if not (reaper and reaper.SM_GetWaveformCachePath and reaper.SM_BuildWaveformCache) then
+    return nil, "SM extension not available"
+  end
+
+  local px = math.max(1, math.floor(tonumber(pixel_cnt or 512)))
+  local st = math.max(0.0, tonumber(start_time or 0.0))
+  local et = tonumber(end_time or 0.0) or 0.0
+  if et <= st then et = 0.0 end -- 0/<=start 表示整段
+  local maxch = math.max(1, math.min(64, math.floor(tonumber(max_channels or 6))))
+
+  local smwf = reaper.SM_GetWaveformCachePath(path, px, st, et, maxch)
+  if smwf == "" then
+    smwf = reaper.SM_BuildWaveformCache(path, px, st, et, maxch, 1) -- 同步构建 1=直接复用 0=强制重建
+    if smwf == "" then return nil, "SM_BuildWaveformCache failed" end
+  end
+  -- 读取
+  local peaks, px_real, win_len, ch_real = SM_ReadSMWF(smwf)
+  if not peaks then return nil, "SM_ReadSMWF failed" end
+  -- 兜底重建，避免尾列对齐误差
+  if px_real ~= px then
+    smwf = reaper.SM_BuildWaveformCache(path, px, st, et, maxch, 1) -- 1=直接复用 0=强制重建
+    if smwf == "" then return nil, "SM_BuildWaveformCache(rebuild) failed" end
+    peaks, px_real, win_len, ch_real = SM_ReadSMWF(smwf)
+    if not peaks then return nil, "SM_ReadSMWF after rebuild failed" end
+  end
+
+  return {
+    peaks         = peaks,
+    pixel_cnt     = px_real,
+    channel_count = ch_real,
+    src_len       = win_len,
+    s_per_px      = (px_real > 0) and (win_len / px_real) or 0.0,
+    smwf_path     = smwf
+  }
+end
+
+-- 构建波形缓存
+function SM_EnsureWaveformCache(path, pixel_cnt, start_time, end_time, max_channels)
+  if not path or path == "" then return nil, "invalid path" end
+  pixel_cnt    = math.max(1, math.floor(pixel_cnt or 0))
+  start_time   = tonumber(start_time) or 0
+  end_time     = tonumber(end_time) or 0
+  max_channels = math.max(1, math.min(64, tonumber(max_channels) or 2))
+
+  local smwf = reaper.SM_GetWaveformCachePath(path, pixel_cnt, start_time, end_time, max_channels)
+  if smwf ~= "" then
+    return smwf
+  end
+  -- 未命中则同步构建
+  local built = reaper.SM_BuildWaveformCache(path, pixel_cnt, start_time, end_time, max_channels, 1) -- 1=直接复用 0=强制重建
+  if built == "" then
+    return nil, "SM_BuildWaveformCache failed"
+  end
+  return built
+end
+
+-- wf_step 已失效，仅保留形参但不使用
+function SM_GetPeaksWithCache(info, wf_step, pixel_cnt, start_time, end_time)
+  if not info or not info.path or info.path == "" then return end
+  local path = normalize_path(info.path, false)
+  -- 通道上限 6
+  local maxch = (info.max_channels or info.channel_count or 6)
+  if maxch < 1 then maxch = 1 elseif maxch > 64 then maxch = 64 end
+
+  pixel_cnt  = math.max(1, math.min(200000, pixel_cnt or 1200))
+  start_time = math.max(0.0, start_time or 0.0)
+  end_time   = (end_time and end_time > 0.0) and end_time or 0.0
+
+  local smwf = reaper.SM_GetWaveformCachePath(path, pixel_cnt, start_time, end_time, maxch)
+  if smwf == "" then
+    smwf = reaper.SM_BuildWaveformCache(path, pixel_cnt, start_time, end_time, maxch, 1) -- 1=直接复用 0=强制重建
+  end
+  if smwf == "" then return end
+
+  local peaks, px, win_len, ch = SM_ReadSMWF(smwf)
+  if not peaks then return end
+
+  local nonzero = 0
+  for r=1,px do
+    for c=1,ch do
+      local p = peaks[c][r]
+      if p and ((p[1] or 0) ~= 0 or (p[2] or 0) ~= 0) then nonzero = nonzero + 1 break end
+    end
+  end
+
+  return peaks, px, win_len, ch
 end
 
 --------------------------------------------- 收集工程音频相关函数 ---------------------------------------------
@@ -3913,7 +4038,7 @@ LoadRecentPlayed()
 ---------------------------------------------  表格列表波形预览节点 ---------------------------------------------
 
 -- 每帧限制最多处理多少个任务
-local MAX_WAVEFORM_PER_FRAME = 2
+local MAX_WAVEFORM_PER_FRAME = 1
 
 function EnqueueWaveformTask(info, thumb_w)
   for _, task in ipairs(waveform_task_queue) do
@@ -3931,7 +4056,11 @@ function ProcessWaveformTasks()
     -- 只在未缓存时采样
     if not task.info._thumb_waveform then task.info._thumb_waveform = {} end
     if not task.info._thumb_waveform[task.width] then
-      local peaks, pixel_cnt, src_len, channel_count = GetPeaksWithCache(task.info, wf_step, task.width) -- 统一采样步长 wf_step=400
+      if HAVE_SM_WFC then
+        local peaks, pixel_cnt, src_len, channel_count = SM_GetPeaksWithCache(task.info, wf_step, task.width)
+      else
+        local peaks, pixel_cnt, src_len, channel_count = GetPeaksWithCache(task.info, wf_step, task.width) -- 统一采样步长 wf_step=400
+      end
       if peaks and channel_count then
         task.info._thumb_waveform[task.width] = {peaks=peaks, pixel_cnt=pixel_cnt, src_len=src_len, channel_count=channel_count}
       end
@@ -4448,7 +4577,12 @@ skip_silence_enabled = (tonumber(reaper.GetExtState(EXT_SECTION, "skip_silence")
 --- 从缓存中寻找首个有声位置 ms
 function FindFirstNonSilentTime(info)
   local path = normalize_path(info.path, false)
-  local cache = LoadWaveformCache(path)
+  local cache
+  if HAVE_SM_WFC then
+    cache = SM_LoadWaveformCache(path)
+  else
+    cache = LoadWaveformCache(path)
+  end
   if not cache then return end
 
   -- for i = 1, math.min(10, cache.pixel_cnt) do
@@ -4767,7 +4901,7 @@ _G.commit_filter_text = _G.commit_filter_text or ""
 local static = _G._soundmole_static or {}
 _G._soundmole_static = static
 static.wf_delay_cached = static.wf_delay_cached or 0.5 -- 表格列表波形已缓存延迟0.5秒
-static.wf_delay_miss   = static.wf_delay_miss   or 2.0 -- 表格列表波形未缓存延迟2秒
+static.wf_delay_miss   = static.wf_delay_miss   or 1.0 -- 表格列表波形未缓存延迟2秒
 static.filtered_list_map = static.filtered_list_map or {} -- 用于存放所有列表缓存
 static.last_filter_text_map = static.last_filter_text_map or {}
 static.last_sort_specs_map  = static.last_sort_specs_map or {}
@@ -5515,26 +5649,41 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
   local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx)) -- 自适应宽度
   local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2px padding
 
-  -- 检查宽度变化，清空内存缓存并复位标记
+  -- 检查宽度变化
   if info._last_thumb_w ~= thumb_w then
-    info._thumb_waveform   = {}      -- 清掉旧波形缓存
-    info._last_thumb_w     = thumb_w
-    info._loading_waveform = false   -- 重置标记，让 Clip­per 在空闲2秒后再次入队
+    if info._thumb_waveform and info._last_thumb_w then
+      info._thumb_waveform[info._last_thumb_w] = nil
+    end
+    info._last_thumb_w = thumb_w
+    info._loading_waveform = false -- 重置标记，让 Clip­per 在空闲2秒后再次入队
   end
 
   -- 表格列表波形预览支持鼠标点击切换播放光标
   info._thumb_waveform = info._thumb_waveform or {}
   local wf = info._thumb_waveform[thumb_w]
 
+  local expected_key = tostring(info.path or "") .. "|" .. tostring(thumb_w)
+  if wf and wf._key ~= expected_key then
+    -- 发现异步/串写，丢弃并回到未命中状态
+    info._thumb_waveform[thumb_w] = nil
+    wf = nil
+  end
+
   -- 已缓存时，尝试磁盘缓存直读+重映射
   if not wf and idle_time >= (static.wf_delay_cached or 0.5) and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2) then
     -- 只读磁盘缓存
-    local cache = LoadWaveformCache(info.path)
+    local cache
+    if HAVE_SM_WFC then
+      cache = SM_LoadWaveformCache(info.path) -- API扩展版本
+    else
+      cache = LoadWaveformCache(info.path)
+    end
     if cache and cache.peaks and cache.pixel_cnt and cache.channel_count and cache.src_len then
       -- 按当前列宽重采样
       local peaks_new, pixel_cnt_new, _, chs = RemapWaveformToWindow(cache, thumb_w, 0, cache.src_len)
       if peaks_new and pixel_cnt_new and chs then
         info._thumb_waveform[thumb_w] = {
+          _key = expected_key, -- 写入防串台 key
           peaks = peaks_new,
           pixel_cnt = pixel_cnt_new,
           src_len = cache.src_len,
@@ -5548,41 +5697,54 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
   end
 
   if wf and wf.peaks and wf.peaks[1] then
+    -- 用 path 作 ID 作用域，避免 i 在 Clip­per/排序下复用引起冲突
+    reaper.ImGui_PushID(ctx, info.path or i)
+    -- 可见窗口总时长，避免 src_len 为 nil
+    local src_len = tonumber(wf.src_len)
+                  or tonumber(info and info.length)
+                  or ((wf.s_per_px and wf.pixel_cnt) and (wf.s_per_px * wf.pixel_cnt))
+                  or 0
     -- 绘制波形
     local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
     reaper.ImGui_PushID(ctx, i)
-    DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, wf.src_len, 1)
+    DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, src_len, 1)
     reaper.ImGui_PopID(ctx)
 
     -- 绘制播放光标，排除最近播放影响
-    if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave and Wave.play_cursor then
-      local play_px = (Wave.play_cursor / wf.src_len) * thumb_w
-      local dl = reaper.ImGui_GetWindowDrawList(ctx)
-      reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, colors.table_play_cursor, 1.5)
+    if src_len > 0 and collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave and Wave.play_cursor then
+      local play_px = (Wave.play_cursor / src_len) * thumb_w
+      if play_px == play_px then -- 过滤 NaN
+        if play_px < 0 then play_px = 0 elseif play_px > thumb_w then play_px = thumb_w end
+        local dl = reaper.ImGui_GetWindowDrawList(ctx)
+        reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, colors.table_play_cursor, 1.5)
+      end
     end
 
     -- 鼠标检测 - 点击跳播，切换播放光标
-    local mx, my = reaper.ImGui_GetMousePos(ctx)
-    if mx >= x and mx <= x + thumb_w and my >= y and my <= y + thumb_h then
-      if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
-        local rel_x   = mx - x
-        local new_pos = (rel_x / thumb_w) * wf.src_len
-        current_recent_play_info = nil -- 解除最近播放锁定
-        if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
-          collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
-        end
-        if playing_path == info.path then
-          RestartPreviewWithParams(new_pos)
-        else
-          selected_row = i
-          PlayFromStart(info)
-          RestartPreviewWithParams(new_pos)
+    if src_len > 0 then
+      local mx, my = reaper.ImGui_GetMousePos(ctx)
+      if mx >= x and mx <= x + thumb_w and my >= y and my <= y + thumb_h then
+        if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
+          local rel_x = mx - x
+          local new_pos = (rel_x / thumb_w) * src_len
+          current_recent_play_info = nil -- 解除最近播放锁定
+          if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+            collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
+          end
+          if playing_path == info.path then
+            RestartPreviewWithParams(new_pos)
+          else
+            selected_row = i
+            PlayFromStart(info)
+            RestartPreviewWithParams(new_pos)
+          end
         end
       end
     end
+    reaper.ImGui_PopID(ctx)
   else
     -- 未缓存时兜底入队
-    if idle_time >= (static.wf_delay_miss or 2) and not info._loading_waveform then
+    if idle_time >= (static.wf_delay_miss or 1) and not info._loading_waveform then
       info._loading_waveform = true
       EnqueueWaveformTask(info, thumb_w)
     end
@@ -11628,7 +11790,7 @@ function loop()
         end
 
         local tw = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-        local load_limit   = 2 -- 每帧最多2个波形加载任务，波形加载限制2个
+        local load_limit   = 1 -- 每帧最多2个波形加载任务，波形加载限制2个
         local loaded_count = 0
         -- 限制本帧已缓存直读次数，避免IO抖动
         static.fast_wf_load_count = 0
@@ -11682,7 +11844,7 @@ function loop()
 
         while reaper.ImGui_ListClipper_Step(clipper) do
           local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
-          if idle_time >= (static.wf_delay_miss or 2) then -- 未缓存，停顿2秒再入队
+          if idle_time >= (static.wf_delay_miss or 1) then -- 未缓存，停顿2秒再入队
             -- clipper+限流+防止重复加入
             for idx = display_start + 1, display_end do
               if loaded_count >= load_limit then break end -- 波形加载，限制本帧最大加载数2个
@@ -13099,14 +13261,19 @@ function loop()
           or (last_view_len ~= view_len)
           or (last_scroll ~= Wave.scroll)
         then
-          local cache = LoadWaveformCache(root_path)
-          if not cache then
-            local peaks_raw, pixel_cnt_raw, src_len_raw, channel_count_raw = GetPeaksForInfo(
-              { path = root_path }, wf_step, CACHE_PIXEL_WIDTH, 0, nil)
-            SaveWaveformCache(root_path, {
-              peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw
-            })
-            cache = {peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw}
+          local cache
+          if HAVE_SM_WFC then
+            cache = SM_LoadWaveformCache(root_path)
+          else
+            cache = LoadWaveformCache(root_path)
+            if not cache then
+              local peaks_raw, pixel_cnt_raw, src_len_raw, channel_count_raw = GetPeaksForInfo(
+                { path = root_path }, wf_step, CACHE_PIXEL_WIDTH, 0, nil)
+              SaveWaveformCache(root_path, {
+                peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw
+              })
+              cache = {peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw}
+            end
           end
 
           local ok_for_remap = false
@@ -13955,12 +14122,27 @@ function loop()
           WriteToMediaDB(info, db_build_task.dbfile)
           -- 使用build_waveform_cache开启或关闭构建波形缓存
           if build_waveform_cache then
-            local pixel_cnt = 2048
-            --local wf_step = 512 -- 直接读取全局值
-            local start_time, end_time = 0, tonumber(info.length) or 0
-            local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
-            if peaks and src_len and channel_count then
-              SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
+            if HAVE_SM_WFC then
+              local path = normalize_path(root_path or info.path, false)
+              local pixel_cnt    = 2048
+              local start_time   = 0
+              local end_time     = 0 -- 0/<=start 表示整段
+              local max_channels = math.max(1, math.min(64, (info.max_channels or info.channel_count or 6)))
+
+              local smwf, err = SM_EnsureWaveformCache(path, pixel_cnt, start_time, end_time, max_channels)
+              if not smwf then
+                print("[WFCache][ERR] ensure failed: " .. tostring(err))
+              else
+                -- 留个路径给后续使用
+                info._smwf_path = smwf
+              end
+            else
+              local pixel_cnt = 2048
+              local start_time, end_time = 0, tonumber(info.length) or 0
+              local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
+              if peaks and src_len and channel_count then
+                SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
+              end
             end
           end
           db_build_task.idx = db_build_task.idx + 1
