@@ -443,6 +443,14 @@ local colors = {
   knob_active             = 0x4A4A4AFF, -- 旋钮按下
   knob_outline            = 0x00000000, -- 旋钮外圈描边线
   knob_indicator          = 0xC0C0C0FF, -- 旋钮指针线
+  volume_line_normal      = 0x444444FF, -- 水平音量推子-颜色
+  volume_line_hovered     = 0xA0A0A0FF, -- 水平音量推子-悬停颜色
+  volume_line_tick        = 0xFFF0F0F0, -- 水平音量推子-刻度颜色
+  volume_fader            = 0xFFB0B0B0, -- 水平音量推子-常态颜色
+  volume_fader_active     = 0xFFFFFFFF, -- 水平音量推子-按下颜色
+  volume_fader_outline    = 0xFFB0B0B0, -- 水平音量推子-外圈描边线
+  volume_bg               = 0x24242420, -- 水平音量推子-背景
+  volume_bg_border        = 0xFFFFFF10, -- 水平音量推子-背景边框线
   slider_grab             = 0xFFB0B0B0, -- 推子滑块常态
   slider_grab_active      = 0xFFFFFFFF, -- 推子滑块按下
   tab                     = 0x2E2E2EFF, -- 页签-标签背景 #2E2E2E
@@ -2175,6 +2183,142 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   end
 
   return changed, value
+end
+
+-- 水平音量推子控件，抛物线型映射
+ImGui_Volume_drag_x = ImGui_Volume_drag_x or {}
+
+function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_thick, knob_radius, default_db)
+  min_db = tonumber(min_db) -- dB最小
+  max_db = tonumber(max_db) -- dB最大
+  if max_db <= min_db then max_db = min_db + 0.001 end
+  width = tonumber(width) or 150           -- 线长
+  line_thick = tonumber(line_thick) or 4   -- 线粗
+  knob_radius = tonumber(knob_radius) or 8 -- 圆点半径
+  default_db = (default_db == nil) and 0 or default_db -- 右键/双击音量复位
+
+  local changed = false
+  local cur_db  = VAL2DB(gain_value or 1)
+  if cur_db < min_db then cur_db = min_db end
+  if cur_db > max_db then cur_db = max_db end
+
+  local hit_h  = math.max(knob_radius * 2 + 10, line_thick + 12)
+  local x0, y0 = reaper.ImGui_GetCursorScreenPos(ctx)
+  local x1     = x0 + width
+  local y_line = y0 + hit_h * 0.5
+
+  reaper.ImGui_InvisibleButton(ctx, label, width, hit_h)
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  local active  = reaper.ImGui_IsItemActive(ctx)
+
+  local col_line     = (colors and colors.volume_line_normal)   or 0xA0A0A0FF -- 音量线默认那颜色
+  local col_line_hov = (colors and colors.volume_line_hovered)  or 0xC0C0C0FF -- 音量线悬浮颜色
+  local col_tick     = (colors and colors.volume_line_tick)     or 0x66FFFF90 -- 0 dB 刻度细线颜色
+  local col_knob     = (colors and colors.volume_fader)         or 0xFFB0B0B0 -- 圆点默认颜色
+  local col_knob_act = (colors and colors.volume_fader_active)  or 0xFFFFFFFF -- 圆点激活颜色
+  local col_outline  = (colors and colors.volume_fader_outline) or 0x222222FF -- 圆点描边颜色
+  local col_bg       = (colors and colors.volume_bg)            or 0x00000022
+  local col_bg_bd    = (colors and colors.volume_bg_border)     or 0xFFFFFF10
+  local bg_pad       = 6 -- 左右外扩
+  local bg_vpad      = 2 -- 上下内缩
+
+  -- 映射抛物线，中段鼓起
+  local range_db = (max_db - min_db)
+  local k = 4 -- 弯曲度 >1 越大越鼓
+
+  local function db_to_x(db)
+    local u = (db - min_db) / range_db
+    if u < 0 then u = 0 elseif u > 1 then u = 1 end
+    local t = u ^ k
+    return x0 + t * width
+  end
+
+  local function x_to_db(mx)
+    local t = (mx - x0) / width
+    if t < 0 then t = 0 elseif t > 1 then t = 1 end
+    local u = t ^ (1.0 / k)
+    return min_db + u * range_db
+  end
+  -- 绘制线与圆点
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+
+  -- 圆角背景底层绘制
+  do
+    local bx0 = x0 - bg_pad
+    local bx1 = x1 + bg_pad
+    local by0 = y0 + math.min(bg_vpad, hit_h * 0.5 - 1)
+    local by1 = y0 + hit_h - math.min(bg_vpad, hit_h * 0.5 - 1)
+    local bg_h = by1 - by0               -- 实际背景高度
+    local round = math.floor(bg_h * 0.5) -- 按背景高度算圆角
+    reaper.ImGui_DrawList_AddRectFilled(dl, bx0, by0, bx1, by1, col_bg, round)
+    reaper.ImGui_DrawList_AddRect(dl,       bx0, by0, bx1, by1, col_bg_bd, round, 0, 1.0)
+  end
+
+  -- 中线
+  reaper.ImGui_DrawList_AddLine(dl, x0, y_line, x1, y_line, hovered and col_line_hov or col_line, line_thick)
+
+  -- 0 dB 刻度细线
+  if 0 >= min_db and 0 <= max_db then
+    local zero_x = db_to_x(0)
+    local tick_h = math.max(10, line_thick + 6) -- 刻度长度
+    local tick_th = 1 -- 刻度线粗
+    reaper.ImGui_DrawList_AddLine(dl, zero_x, y_line - tick_h * 0.5, zero_x, y_line + tick_h * 0.5, col_tick, tick_th)
+  end
+
+  -- 圆点
+  local knob_x = db_to_x(cur_db)
+  reaper.ImGui_DrawList_AddCircleFilled(dl, knob_x, y_line, knob_radius, active and col_knob_act or col_knob)
+  reaper.ImGui_DrawList_AddCircle(dl, knob_x, y_line, knob_radius, col_outline, 32, 1)
+  -- 滚轮微调
+  if hovered then
+    local wheel = reaper.ImGui_GetMouseWheel(ctx)
+    if wheel ~= 0 then
+      local step = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) and 0.1 or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) and 1 or 0.5
+      cur_db = math.min(max_db, math.max(min_db, cur_db + wheel * step))
+      gain_value = dB_to_gain(cur_db)
+      changed = true
+    end
+  end
+  -- 点击/拖动
+  if reaper.ImGui_IsItemActivated(ctx) then
+    ImGui_Volume_drag_x[label] = true
+  end
+  if (active or (hovered and reaper.ImGui_IsMouseDown(ctx, 0))) and ImGui_Volume_drag_x[label] then
+    local mx = select(1, reaper.ImGui_GetMousePos(ctx))
+    cur_db = x_to_db(mx)
+    gain_value = dB_to_gain(cur_db)
+    changed = true
+  end
+  if not reaper.ImGui_IsMouseDown(ctx, 0) then
+    ImGui_Volume_drag_x[label] = nil
+  end
+  -- 右键或双击复位到 default_db
+  if hovered and (reaper.ImGui_IsMouseClicked(ctx, 1) or reaper.ImGui_IsMouseDoubleClicked(ctx, 0)) then
+    cur_db = default_db
+    gain_value = dB_to_gain(cur_db)
+    changed = true
+    ImGui_Volume_drag_x[label] = nil
+  end
+  -- 键盘微调
+  if active then
+    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_LeftArrow(), false) then
+      cur_db = math.max(min_db, cur_db - 0.5)
+      gain_value = dB_to_gain(cur_db)
+      changed = true
+    elseif reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_RightArrow(), false) then
+      cur_db = math.min(max_db, cur_db + 0.5)
+      gain_value = dB_to_gain(cur_db)
+      changed = true
+    end
+  end
+  -- 悬浮提示
+  -- if hovered then
+  --   reaper.ImGui_BeginTooltip(ctx)
+  --   reaper.ImGui_Text(ctx, string.format("Volume: %.2f dB", cur_db))
+  --   reaper.ImGui_EndTooltip(ctx)
+  -- end
+
+  return changed, gain_value
 end
 
 --------------------------------------------- 波形预览相关函数 ---------------------------------------------
@@ -12164,24 +12308,22 @@ function loop()
       if playing_preview then RestartPreviewWithParams(wave_pos) end
     end
 
-    -- 音量
+    -- 水平音量推子
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_Text(ctx, "Volume:")
-    reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_PushItemWidth(ctx, 200)
-    local rv2 -- 0.0000000316 -150, 0.00001 -100
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
-    local max_gain = dB_to_gain(max_db)
-    rv2, volume = reaper.ImGui_SliderDouble(ctx, "##volume", volume, 0.0000000316, max_gain, string.format("%.2f dB", VAL2DB(volume)), reaper.ImGui_SliderFlags_Logarithmic())
-    -- reaper.ImGui_PopStyleVar(ctx)
-    reaper.ImGui_PopItemWidth(ctx)
-    if rv2 then
-      if playing_preview then RestartPreviewWithParams() end
-      reaper.SetExtState(EXT_SECTION, EXT_KEY_VOLUME, tostring(volume), true)
+    reaper.ImGui_SameLine(ctx, nil, 15)
+    local rv2
+    rv2, volume = ImGui_VolumeLine(ctx, "##volume_line", volume, min_db, max_db, 150, 3, 8, 0, 50)
+    local db_now = math.max(min_db, math.min(max_db, VAL2DB(volume or 1)))
+    reaper.ImGui_SameLine(ctx, nil, 15)
+    reaper.ImGui_PushItemWidth(ctx, 50)
+    local rv7, db_edit = reaper.ImGui_InputDouble(ctx, "dB##VolDB", db_now, 0, 0, "%.1f") -- dB 输入框
+    if rv7 then
+      db_edit = math.max(min_db, math.min(max_db, db_edit))
+      volume  = dB_to_gain(db_edit)
+      rv2     = true
     end
-    -- 右键归零
-    if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
-      volume = 1 -- 0dB
+    if rv2 then
       if playing_preview then RestartPreviewWithParams() end
       reaper.SetExtState(EXT_SECTION, EXT_KEY_VOLUME, tostring(volume), true)
     end

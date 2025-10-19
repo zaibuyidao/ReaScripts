@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.75
+-- @version 1.0.76
 -- @changelog
---   Optimized Soundmole extension support, improving waveform loading speed (compatible with reaper_soundmole-x64.dll v0.0.3).
+--   Added a horizontal volume fader with double-click reset.
+--   Compatible with reaper_soundmole-x64.dll v0.0.3.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
