@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="c4dab47cf91fbd927780b76b581d05a8fe0cd15d">
+<index version="1" name="zaibuyidao Scripts" commit="d5f48bfb2a59aa6395058accaad52ba444a47f3d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -14921,6 +14921,17 @@ Compatible with reaper_soundmole-x64.dll v0.0.3.1]]></changelog>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/c4dab47cf91fbd927780b76b581d05a8fe0cd15d/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/c4dab47cf91fbd927780b76b581d05a8fe0cd15d/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/c4dab47cf91fbd927780b76b581d05a8fe0cd15d/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.77" author="zaibuyidao" time="2025-10-19T10:23:34Z">
+        <changelog><![CDATA[Fixed macOS form POST and OAuth token exchange issue by using a temp file and skipping unintended Bearer header to prevent invalid_grant.
+Compatible with reaper_soundmole-x64.dll v0.0.3.1]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/d5f48bfb2a59aa6395058accaad52ba444a47f3d/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/d5f48bfb2a59aa6395058accaad52ba444a47f3d/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/d5f48bfb2a59aa6395058accaad52ba444a47f3d/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/d5f48bfb2a59aa6395058accaad52ba444a47f3d/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/d5f48bfb2a59aa6395058accaad52ba444a47f3d/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/d5f48bfb2a59aa6395058accaad52ba444a47f3d/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/d5f48bfb2a59aa6395058accaad52ba444a47f3d/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
