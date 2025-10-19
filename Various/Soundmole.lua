@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.76
+-- @version 1.0.77
 -- @changelog
---   Added a horizontal volume fader with double-click reset.
+--   Fixed macOS form POST and OAuth token exchange issue by using a temp file and skipping unintended Bearer header to prevent invalid_grant.
 --   Compatible with reaper_soundmole-x64.dll v0.0.3.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

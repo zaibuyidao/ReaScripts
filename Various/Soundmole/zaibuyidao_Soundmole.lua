@@ -7653,26 +7653,46 @@ function FS_http_post_form(url, kvpairs)
   end
   local data = table.concat(parts, "&")
 
-  -- 优先 ExecProcess 避免CMD弹窗
-  if reaper.ExecProcess then
-    local tmp = FS_join(FS_DB_DIR(), (".fs_http_%d.tmp"):format(math.floor(reaper.time_precise()*1e6)))
-    local cmd = ('curl -s -L -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "%s" "%s" -o "%s"')
-      :format(data:gsub('"','\\"'), url:gsub('"','\\"'), tmp:gsub('"','\\"'))
-    local code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
+  -- OAuth 令牌交换如果有 grant_type，不加 Bearer
+  local is_oauth_token_exchange = (kvpairs and kvpairs.grant_type ~= nil)
+  local need_bearer = (not is_oauth_token_exchange) and (FS and (FS.TOKEN or "") == "" and (FS.OAUTH_BEARER or "") ~= "")
+  local hdr = need_bearer and (' -H "Authorization: Bearer ' .. (FS.OAUTH_BEARER:gsub('"','\\"')) .. '"') or ""
 
+  local osname = reaper.GetOS()
+  local is_win = osname and osname:find("Win") ~= nil
+
+  -- 将数据写入临时文件，避免 macOS 下 & 等被 shell 解释
+  local stamp = math.floor(reaper.time_precise() * 1e6)
+  local tmp_dat = FS_join(FS_DB_DIR(), (".fs_http_%d.dat"):format(stamp))
+  do
+    local f = io.open(tmp_dat, "wb")
+    if not f then return "" end
+    f:write(data or "")
+    f:close()
+  end
+
+  -- Windows 优先走 ExecProcess，避免CMD弹窗
+  if is_win and reaper.ExecProcess then
+    local tmp_out = FS_join(FS_DB_DIR(), (".fs_http_%d.out"):format(stamp))
+    local cmd = ('curl -L -s%s -X POST -H "Content-Type: application/x-www-form-urlencoded" ' .. '--data-binary "@%s" "%s" -o "%s"'):format(hdr, tmp_dat:gsub('"','\\"'), url:gsub('"','\\"'), tmp_out:gsub('"','\\"'))
+    local code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
     local body = ""
-    local f = io.open(tmp, "rb")
-    if f then body = f:read("*a") or ""; f:close() end
-    os.remove(tmp)
+    local f = io.open(tmp_out, "rb")
+    if f then
+      body = f:read("*a") or ""
+      f:close()
+    end
+    os.remove(tmp_out)
+    os.remove(tmp_dat)
     return (code == 0) and body or ""
   end
 
-  -- 回退到 popen
-  local cmd = ('curl -s -L -X POST -H "Content-Type: application/x-www-form-urlencoded" --data "%s" "%s"')
-    :format(data, url)
-  local p = io.popen(cmd, "r")
+  -- macOS/Linux 用 /usr/bin/curl; Windows 作为回退用 curl
+  local curl_bin = is_win and "curl" or "/usr/bin/curl"
+  local p = io.popen(('%s -L -s%s -X POST -H "Content-Type: application/x-www-form-urlencoded" --data-binary "@%s" "%s"'):format(curl_bin, hdr, tmp_dat:gsub('"','\\"'), url:gsub('"','\\"')), "r")
   local body = p and p:read("*a") or ""
   if p then p:close() end
+  os.remove(tmp_dat)
   return body
 end
 
