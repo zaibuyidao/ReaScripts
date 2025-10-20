@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.77
+-- @version 1.0.78
 -- @changelog
---   Fixed macOS form POST and OAuth token exchange issue by using a temp file and skipping unintended Bearer header to prevent invalid_grant.
+--   Other detailed improvements and bug fixes.
 --   Compatible with reaper_soundmole-x64.dll v0.0.3.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

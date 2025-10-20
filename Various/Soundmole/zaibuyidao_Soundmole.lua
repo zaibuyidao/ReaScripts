@@ -3327,7 +3327,8 @@ folder_shortcuts = folder_shortcuts or {} -- 选择文件夹快捷方式
 
 -- 提取最后一级文件夹名称
 function GetFolderName(path)
-  return path:match("([^\\/]+)[\\/]?$")
+  local name = path and path:match("([^\\/]+)[\\/]?$")
+  return name or "/"
 end
 
 function SaveFolderShortcuts()
