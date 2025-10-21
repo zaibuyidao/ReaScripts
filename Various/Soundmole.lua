@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.78
+-- @version 1.0.79
 -- @changelog
 --   Other detailed improvements and bug fixes.
---   Compatible with reaper_soundmole-x64.dll v0.0.3.1
+--   Compatible with reaper_soundmole-x64.dll v0.0.4
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
