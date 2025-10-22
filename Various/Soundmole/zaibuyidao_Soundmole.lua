@@ -472,6 +472,12 @@ local colors = {
   table_play_cursor       = 0xD0D0D0FF, -- 0x808080FF, 播放光标-表格列内
   preview_play_cursor     = 0xD0D0D0FF, -- 0x808080FF, 播放光标-波形预览区域
   dnd_preview             = 0x5AC85A88, -- 0x5AC85A55, -- 拖动目标时接收区高亮颜色
+  fs_button_normal        = 0x274160FF, -- Freesound - 按钮常态颜色
+  fs_button_hovered       = 0x3B7ECEFF, -- Freesound - 按钮悬停颜色
+  fs_button_active        = 0x4296FAFF, -- Freesound - 按钮按下颜色
+  fs_search_button_normal = 0xFFF2994A, -- Freesound - 搜索按钮常态颜色
+  fs_search_button_hovered= 0xFFFFA858, -- Freesound - 搜索按钮悬停颜色
+  fs_search_button_active = 0xFFF2998B, -- Freesound - 搜索按钮按下颜色
 }
 
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
@@ -7977,6 +7983,9 @@ function FS_DrawSidebar(ctx)
   local w2 = math.max(0, avail_w - gap - w1 - 9)
 
   -- 清空回到本地增量库
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.fs_button_normal  or 0x274160FF) -- 常态
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.fs_button_hovered or 0x3B7ECEFF) -- 悬停
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.fs_button_active  or 0x4296FAFF) -- 按下
   if reaper.ImGui_Button(ctx, "Clear (show local cache)", w1, 40) then
     FS_set_query("") -- 清空缓存
     collect_mode = COLLECT_MODE_FREESOUND
@@ -7991,9 +8000,12 @@ function FS_DrawSidebar(ctx)
     _G._soundmole_static = static
     static.filtered_list_map, static.last_filter_text_map = {}, {}
   end
+  reaper.ImGui_PopStyleColor(ctx, 3)
 
   reaper.ImGui_SameLine(ctx)
-
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.fs_search_button_normal  or 0xFFF2994A) -- 常态
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.fs_search_button_hovered or 0xFFFFA858) -- 悬停
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.fs_search_button_active  or 0xFFF2998B) -- 按下
   if reaper.ImGui_Button(ctx, "Search", w2, 40) then
     local q = FS_get_query():match("^%s*(.-)%s*$")
 
@@ -8025,6 +8037,7 @@ function FS_DrawSidebar(ctx)
       end
     end
   end
+  reaper.ImGui_PopStyleColor(ctx, 3)
 
   -- OAuth2 设置
   reaper.ImGui_SeparatorText(ctx, "Original File Access (OAuth2 Settings)")
@@ -8061,6 +8074,9 @@ function FS_DrawSidebar(ctx)
   local changed_show, sv = reaper.ImGui_Checkbox(ctx, "Show values", show_secret)
   if changed_show then FS.ui._show_secrets = sv end
 
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.fs_button_normal  or 0x274160FF) -- 常态
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.fs_button_hovered or 0x3B7ECEFF) -- 悬停
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.fs_button_active  or 0x4296FAFF) -- 按下
   if reaper.ImGui_Button(ctx, "Open authorization page", -10, 40) then FS_OAuth_OpenAuthorize() end
   reaper.ImGui_Text(ctx, "Paste authorization code:")
 
@@ -8109,7 +8125,7 @@ function FS_DrawSidebar(ctx)
     FS.ui.oauth_code = ""
     FS.ui._oauth_just_saved = true
   end
-
+  reaper.ImGui_PopStyleColor(ctx, 3)
   HelpMarker("Refresh the OAuth2 access token when original-file downloads start failing (e.g., 401/403) or when the token is about to expire. Some providers rotate the refresh token on refresh. If a new one is returned, it will be saved automatically.\n")
 
   reaper.ImGui_EndDisabled(ctx)
@@ -9936,6 +9952,7 @@ function loop()
           total = #filelist,
           finished = false,
           root_path  = folder,
+          existing_map = DB_ReadExistingFileSet(dbpath)
         }
         DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
       end
@@ -10888,10 +10905,15 @@ function loop()
                   else
                     -- 扫描所有音频，筛选出未入库的新文件
                     local newfiles = ScanAllAudioFiles(root)
-                    local existing = {}
-                    for _, info in ipairs(files_idx_cache or {}) do
-                      existing[normalize_path(info.path, false)] = true
-                    end
+
+                    -- 旧逻辑以内存 files_idx_cache 做已存在集合
+                    -- local existing = {}
+                    -- for _, info in ipairs(files_idx_cache or {}) do
+                    --   existing[normalize_path(info.path, false)] = true
+                    -- end
+
+                    -- 以数据库内容做已存在集合
+                    local existing = DB_ReadExistingFileSet(dbpath)
                     -- 仅保留新增的文件
                     local to_add = {}
                     for _, fpath in ipairs(newfiles) do
@@ -10914,7 +10936,8 @@ function loop()
                         finished = false,
                         alias = mediadb_alias[filename] or filename, -- mediadb_alias[dbfile] or "Unnamed",
                         root_path = root,
-                        is_incremental = true
+                        is_incremental = true,
+                        existing_map = DB_ReadExistingFileSet(dbpath) -- 读入已存在的FILE
                       }
                     end
                   end
@@ -10922,32 +10945,37 @@ function loop()
 
                 -- 全量重建数据库
                 if reaper.ImGui_MenuItem(ctx, "Rebuild Database") then
-                  -- 读取 PATH 行，拿到根目录
-                  local dbpath, root_dir
-                  dbpath = normalize_path(db_dir, true) .. dbfile
-                  for line in io.lines(dbpath) do
-                    root_dir = line:match('^PATH%s+"(.-)"')
-                    if root_dir then break end
-                  end
-                  if not root_dir or root_dir == "" then
+                  local dbpath = normalize_path(db_dir, true) .. dbfile
+                  -- 读取所有 PATH 行
+                  local path_list = GetPathListFromDB(dbpath)
+                  if not path_list or #path_list == 0 then
                     reaper.ShowMessageBox("No PATH found in DB file", "Error", 0)
                   else
-                    -- 清空旧库并写入PATH
+                    -- 清空旧库并写入所有 PATH 头部
                     local f = io.open(dbpath, "wb")
-                    f:write(('PATH "%s"\n'):format(root_dir))
+                    for _, p in ipairs(path_list) do f:write(('PATH "%s"\n'):format(p)) end
                     f:close()
+                    -- 合并扫描所有路径得到的文件列表
+                    local all = {}
+                    for _, root_dir in ipairs(path_list) do
+                      local lst = ScanAllAudioFiles(root_dir)
+                      for i = 1, #lst do
+                        all[#all + 1] = lst[i]
+                      end
+                    end
                     -- 异步任务，由主循环进度条处理
                     local filename = dbfile:match("[^/\\]+$")
-                    local all = ScanAllAudioFiles(root_dir)
                     db_build_task = {
-                      filelist = all,
-                      dbfile = dbpath,
-                      idx = 1,
-                      total = #all,
-                      finished = false,
-                      alias = mediadb_alias[filename] or filename, -- mediadb_alias[dbfile] or "Unnamed",
-                      root_path = root_dir,
-                      is_rebuild = true -- 标记为重建
+                      filelist    = all,
+                      dbfile      = dbpath,
+                      idx         = 1,
+                      total       = #all,
+                      finished    = false,
+                      alias       = mediadb_alias[filename] or filename, -- mediadb_alias[dbfile] or "Unnamed",
+                      root_path   = path_list[1], -- 兼容旧逻辑用到 root_path 的情况
+                      root_paths  = path_list,
+                      is_rebuild  = true,
+                      existing_map = {}
                     }
                   end
                 end
@@ -10963,11 +10991,16 @@ function loop()
                   if ok and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
                     -- 目标数据库文件绝对路径 .MoleFileList
                     local dbpath = normalize_path(db_dir, true) .. dbfile
+                    local existing_map = DB_ReadExistingFileSet(dbpath)
                     local root_dir = tree_state.cur_scan_folder or ""
                     for path in payload:gmatch("([^|;|]+)") do
                       local p = normalize_path(path, false)
-                      local info = CollectFileInfo(p)
-                      WriteToMediaDB(info, dbpath)
+                      -- DB 中不存在才写入
+                      if not existing_map[p] then
+                        local info = CollectFileInfo(p)
+                        WriteToMediaDB(info, dbpath)
+                        existing_map[p] = true -- 写入后立刻标记，避免批量内重复
+                      end
                     end
                     -- 刷新文件列表
                     if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile then
@@ -13265,10 +13298,14 @@ function loop()
 
       -- 处理Windows盘符
       if is_win then
-        local drive = show_path:match("^%a:\\")
+        local drive = show_path:match("^%a:")
         if drive then
           table.insert(path_parts, drive)
-          cur = #drive + 1
+          if show_path:sub(#drive + 1, #drive + 1) == sep then
+            cur = #drive + 2
+          else
+            cur = #drive + 1
+          end
         end
       end
 
@@ -14242,6 +14279,7 @@ function loop()
           finished = false,
           -- alias = alias_name, 不重命名数据库命名
           root_path = folder,
+          existing_map = DB_ReadExistingFileSet(dbpath)
         }
       end
       tree_state.add_path_dbfile = nil
@@ -14367,8 +14405,13 @@ function loop()
 
         if idx <= total then
           local path = db_build_task.filelist[idx]
-          local info = CollectFileInfo(path)
-          WriteToMediaDB(info, db_build_task.dbfile)
+          local key  = normalize_path(path, false)
+
+          if not db_build_task.existing_map[key] then
+            local info = CollectFileInfo(path)
+            WriteToMediaDB(info, db_build_task.dbfile)
+            db_build_task.existing_map[key] = true
+          end
           -- 使用build_waveform_cache开启或关闭构建波形缓存
           if build_waveform_cache then
             if HAVE_SM_WFC then

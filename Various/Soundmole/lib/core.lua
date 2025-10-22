@@ -608,6 +608,21 @@ function GetPathListFromDB(dbpath)
   return paths
 end
 
+-- 读取现有 FILE 集合
+function DB_ReadExistingFileSet(dbpath)
+  local set = {}
+  local f = io.open(dbpath, "rb")
+  if not f then return set end
+  for line in f:lines() do
+    local p = line:match('^FILE%s+"(.-)"')
+    if p and p ~= "" then
+      set[normalize_path(p, false)] = true
+    end
+  end
+  f:close()
+  return set
+end
+
 --------------------------------------------- RS5K ---------------------------------------------
 
 function LoadAudioToRS5k(track, path)
