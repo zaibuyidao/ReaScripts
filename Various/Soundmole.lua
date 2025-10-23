@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.82
+-- @version 1.0.83
 -- @changelog
---   Fixed an issue where folder file changes did not refresh via "Rescan" or F5, additions edits and deletions now update immediately.
+--   Improved auto play-next stability.
 --   Compatible with reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

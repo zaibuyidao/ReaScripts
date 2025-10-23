@@ -13317,26 +13317,34 @@ function loop()
     rv6, auto_play_next = reaper.ImGui_Checkbox(ctx, "Auto Play Next##AutoPlayNext", auto_play_next)
     -- reaper.ImGui_PopStyleVar(ctx)
 
-    if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
-      local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-      local ok2, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
-      if ok and ok2 then
-        if prev_preview_pos and prev_preview_pos < length and pos >= length then
-          local cur_idx = -1
-          playing_path = normalize_path(playing_path, false)
-          local list = _G.current_display_list or {}
-          for i, info in ipairs(list) do
-            local info_path = normalize_path(info.path, false)
-            if info_path == playing_path then cur_idx = i break end
+    do
+      -- 时间容差
+      local END_EPS = 0.02
+
+      if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
+        local ok_pos, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+        local ok_len, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+        if ok_pos and ok_len then
+          if prev_preview_pos and prev_preview_pos < (length - END_EPS) and pos >= (length - END_EPS) then
+            local cur_idx = -1
+            playing_path = normalize_path(playing_path, false)
+            local list = _G.current_display_list or {}
+            for i, info in ipairs(list) do
+              local info_path = normalize_path(info.path, false)
+              if info_path == playing_path then cur_idx = i break end
+            end
+
+            if cur_idx > 0 and cur_idx < #list then
+              auto_play_next_pending = list[cur_idx + 1]
+              -- StopPreview()
+            else
+              auto_play_next_pending = false
+              StopPreview()
+            end
           end
-          if cur_idx > 0 and cur_idx < #list then
-            auto_play_next_pending = list[cur_idx + 1]
-          else
-            auto_play_next_pending = false
-            StopPreview()
-          end
+          -- 记录当前帧位置
+          prev_preview_pos = pos
         end
-       prev_preview_pos = pos
       end
     end
 
