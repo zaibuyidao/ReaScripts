@@ -4250,7 +4250,7 @@ function ProcessWaveformTasks()
             if type(smwf_or_state) == "string" then
               local peaks, px, win_len, ch = SM_ReadSMWF(smwf_or_state)
               if peaks and ch then
-                info._thumb_waveform[width] = { peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch }
+                info._thumb_waveform[width] = { _key = expected_key, peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch }
               end
               info._wf_state[width] = nil
             elseif type(smwf_or_state) == "table" then
@@ -4262,7 +4262,7 @@ function ProcessWaveformTasks()
           else
             local peaks, px, win_len, ch = SM_GetPeaksWithCache(info, nil, width)
             if peaks then
-              info._thumb_waveform[width] = { peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch }
+              info._thumb_waveform[width] = { _key = expected_key, peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch }
             else
               local _, reason, st = SM_GetPeaksWithCache(info, nil, width)
               if reason == "pending" and st then
@@ -4278,7 +4278,7 @@ function ProcessWaveformTasks()
             local peaks, pixel_cnt, src_len, channel_count = GetPeaksWithCache(info, wf_step, width) -- 统一采样步长 wf_step=400
             if peaks and channel_count then
               info._thumb_waveform[width] = {
-                peaks = peaks, pixel_cnt = pixel_cnt, src_len = src_len, channel_count = channel_count
+                _key = expected_key, peaks = peaks, pixel_cnt = pixel_cnt, src_len = src_len, channel_count = channel_count
               }
             end
           end
@@ -5899,6 +5899,15 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     wf = nil
   end
 
+  -- Freesound 本地未落地时，先确保有0值占位波形
+  if (not wf) and collect_mode == COLLECT_MODE_FREESOUND then
+    local p = normalize_path(info.path or "", false)
+    if not reaper.file_exists(p) then
+      FS_EnsureEmptyWaveform(info, thumb_w)
+      wf = info._thumb_waveform[thumb_w]
+    end
+  end
+
   -- 已缓存时，尝试磁盘缓存直读+重映射
   if not wf and idle_time >= (static.wf_delay_cached or 0.5) and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2) then
     -- 只读磁盘缓存
@@ -7485,6 +7494,7 @@ function FS_EnsureEmptyWaveform(info, thumb_w)
   end
   local src_len = tonumber(info.length or 0) or 0
   info._thumb_waveform[thumb_w] = {
+    _key        = expected_key, -- 与 RenderWaveformCell 的防串写一致
     peaks       = peaks,
     pixel_cnt   = thumb_w,
     src_len     = src_len,

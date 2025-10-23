@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.80
+-- @version 1.0.81
 -- @changelog
---   Other detailed improvements and bug fixes.
+--   Fix placeholder waveform not showing before download in Freesound mode.
 --   Compatible with reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
