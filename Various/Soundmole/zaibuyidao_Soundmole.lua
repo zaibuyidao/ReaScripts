@@ -3011,6 +3011,63 @@ local collect_mode_labels = {
 }
 local selected_index = nil
 
+-- 文件夹强制刷新，清空缓存 + 使右侧列表缓存失效
+function ForceRescan()
+  local cur_path = tree_state.cur_path or ""
+  -- 清空目录/文件缓存
+  dir_cache        = {}
+  audio_file_cache = {}
+  tree_open        = {}
+  files_idx_cache  = nil
+  -- 清空盘符缓存
+  -- drives_loaded    = false
+  -- drive_cache      = nil
+  -- need_load_drives = true
+
+  -- 读取文件夹列表的模式
+  if collect_mode ~= COLLECT_MODE_TREE and collect_mode ~= COLLECT_MODE_SHORTCUT and collect_mode ~= COLLECT_MODE_SAMEFOLDER then
+    collect_mode = COLLECT_MODE_TREE
+  end
+  -- 重建当前路径索引
+  if cur_path ~= "" then files_idx_cache = GetAudioFilesFromDirCached(cur_path) end
+  -- 失效右侧过滤/排序后缓存，确保下一帧重新构建
+  do
+    local static = _G._soundmole_static or {}
+    _G._soundmole_static = static
+    static.filtered_list_map    = static.filtered_list_map    or {}
+    static.last_filter_text_map = static.last_filter_text_map or {}
+    static.last_sort_specs_map  = static.last_sort_specs_map  or {}
+
+    local current_key
+    if type(GetCurrentListKey) == "function" then
+      current_key = GetCurrentListKey()
+    else
+      -- 目录类模式统一用 DIR 路径，其余用模式名
+      if collect_mode == COLLECT_MODE_TREE or collect_mode == COLLECT_MODE_SHORTCUT or collect_mode == COLLECT_MODE_SAMEFOLDER then
+        current_key = "DIR:" .. tostring(cur_path or "default")
+      else
+        current_key = tostring(collect_mode)
+      end
+    end
+
+    static.filtered_list_map[current_key]    = nil
+    static.last_filter_text_map[current_key] = nil
+    static.last_sort_specs_map[current_key]  = nil
+
+    _G.__fs_seen_keys   = nil
+    _G.__fs_scanned_len = 0
+  end
+
+  -- 重置列表 UI 状态
+  selected_row = nil
+  if list_offset ~= nil then list_offset = 0 end
+  _G.scroll_request_index_exact, _G.scroll_request_align_exact = nil, nil
+  _G.prev_selected_row = -1
+
+  -- 原刷新流程
+  CollectFiles()
+end
+
 function GetAudioFilesFromDirCached(dir_path)
   dir_path = normalize_path(dir_path, true)
   if not audio_file_cache[dir_path] then
@@ -9693,7 +9750,7 @@ function loop()
     local clicked_rescan = reaper.ImGui_Button(ctx, "Rescan", 90, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_rescan then
-      CollectFiles()
+      ForceRescan()
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_BeginTooltip(ctx)
@@ -9702,7 +9759,7 @@ function loop()
     end
     -- F5
     if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F5()) then
-      CollectFiles()
+      ForceRescan()
     end
 
     -- 恢复（撤销所有过滤/搜索）
