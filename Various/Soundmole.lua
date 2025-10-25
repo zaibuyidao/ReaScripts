@@ -1,10 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.85
+-- @version 1.0.86
 -- @changelog
---   Added UCS and folder-path filter tags for faster targeting.
---   Improved UCS list interactions with clearer hover feedback.
---   Refined folder-path icon in database mode and added icon mode switching.
+--   Added toggle to show or hide the left table.
+--   Improved splitter experience.
 --   Compatible with reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

@@ -462,7 +462,7 @@ local colors = {
   status_active           = 0xFFFFFFFF, -- 临时切换状态激活，如暂停/loop激活
   scrollbar_bg            = 0x181818FF, -- 滚动条-背景
   icon_normal             = 0xC0C0C060, -- 图标字体-常态亮灰 #909090
-  icon_hovered            = 0xF4A460FF, -- 图标字体-悬停更亮 #FFCC66
+  icon_hovered            = 0xFFFFFFFF, -- 图标字体-悬停更亮 #F4A460
   icon_active             = 0xFFFFFFFF, -- 图标字体-按下激活 #FFFFFF
   wave_center             = 0x6F7C63FF, -- 0x808004FF, -- 波形-中心线
   wave_line               = 0x99AA84FF, -- 0xCCCC06FF, -- 波形-主线
@@ -2561,15 +2561,18 @@ function DrawDBPathFilterTag(ctx)
   local path = _G._db_path_prefix_filter
   if type(path) ~= "string" or path == "" then return end
   -- 只显示最后 40 个字符
-  local function ellipsis_left(s, keep)
-    if not s then return "" end
-    keep = keep or 40
-    local len = #s
-    if len <= keep then return s end
-    return "..." .. s:sub(len - keep + 1)
+  local function u8_ellipsis_left(s, keep_chars)
+    if type(s) ~= "string" then return "" end
+    keep_chars = keep_chars
+    local len = utf8.len(s)
+    if not len then return s end
+    if len <= keep_chars then return s end
+    local start_cp = len - keep_chars + 1
+    local byte_start = utf8.offset(s, start_cp)
+    return "..." .. s:sub(byte_start)
   end
 
-  local display_path = ellipsis_left(path, 40)
+  local display_path = u8_ellipsis_left(path, 40)
   local clicked_main, clicked_close = ImGui_Tag(ctx, "##dbpf", "Pathname: " .. display_path, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5})
 
   if clicked_close then
@@ -3249,10 +3252,6 @@ local drives_loaded = false
 local audio_file_cache = {}
 local drive_name_map = {} -- 盘符到卷标的映射
 local need_load_drives = false
-
-left_ratio = tonumber(reaper.GetExtState(EXT_SECTION, "left_ratio")) or 0.15 -- 启动时读取上次保存的
-splitter_drag = splitter_drag or false
-splitter_drag_offset = splitter_drag_offset or 0
 
 local collect_mode_labels = {
   {label = "Source Media", value = COLLECT_MODE_RPP},
@@ -9788,7 +9787,7 @@ function DBPF_DrawDatabaseFolderButton(ctx)
   local tw, th = reaper.ImGui_CalcTextSize(ctx, text_label)
   local tx = x + (reserve_w - (tw or 0)) * 0.5
   local ty = y + (reserve_h - (th or 0)) * 0.5
-  local col = in_db_mode and colors.gray or colors.gray
+  local col = in_db_mode and colors.gray or colors.icon_normal
   reaper.ImGui_DrawList_AddText(dl, tx, ty, col, text_label)
   reaper.ImGui_PopFont(ctx)
 
@@ -9815,6 +9814,51 @@ function DBPF_DrawDatabaseFolderButton(ctx)
   end
 
   reaper.ImGui_PopStyleColor(ctx)
+end
+
+--------------------------------------------- 分割条相关代码 ---------------------------------------------
+
+local LEFT_TABLE_VISIBLE = (reaper.GetExtState(EXT_SECTION, "left_table_visible") ~= "false")
+
+local splitter_w = 3 -- 分割条宽度
+left_ratio = tonumber(reaper.GetExtState(EXT_SECTION, "left_ratio")) or 0.15 -- 启动时读取上次保存的
+splitter_drag = false
+splitter_drag_offset = 0
+
+-- 左侧表格显示/隐藏切换按钮
+function SM_DrawLeftTableToggle(ctx)
+  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  local glyph = '\u{004B}'
+  local dy = 0
+  local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = colors.icon_normal or 0xFFFFFFFF
+  local col_hovered = colors.icon_hovered or 0xFFCC66FF
+  local col_active  = colors.icon_active or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  DrawTextVOffset(ctx, glyph, col, 4)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+
+  if clicked then
+    LEFT_TABLE_VISIBLE = not LEFT_TABLE_VISIBLE
+    reaper.SetExtState(EXT_SECTION, "left_table_visible", LEFT_TABLE_VISIBLE and "true" or "false", true)
+  end
+
+  reaper.ImGui_PopFont(ctx)
+
+  if hovered then
+    reaper.ImGui_BeginTooltip(ctx)
+    reaper.ImGui_Text(ctx, LEFT_TABLE_VISIBLE and 'Click to hide the left table.' or 'Click to show the left table.')
+    reaper.ImGui_EndTooltip(ctx)
+  end
 end
 
 function loop()
@@ -10397,6 +10441,9 @@ function loop()
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
 
+    SM_DrawLeftTableToggle(ctx) -- 左侧表格开关按钮
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    
     -- 是否显示 UCS 隐式搜索标签
     function SM_HasUCSTag()
       local ucs_cat = _G.temp_ucs_cat_keyword
@@ -10435,12 +10482,21 @@ function loop()
     local child_h = math.max(10, avail_y - line_h - ui_bottom_offset - img_h_offset)
     if child_h < 10 then child_h = 10 end -- 最小高度保护(需要使用 if reaper.ImGui_BeginChild 才有效)
     
-    local splitter_w = 3 -- 分割条宽度
-    local min_left = math.floor(avail_x * 0.005) -- 最小左侧宽度占比
-    local max_left = math.floor(avail_x * 0.5) -- 最大左侧宽度占比
+    -- 旧版逻辑，比例宽度计算方法（弃用）
+    -- local min_left = math.floor(avail_x * 0.005) -- 最小左侧宽度占比
+    -- local max_left = math.floor(avail_x * 0.5) -- 最大左侧宽度占比
+    -- -- 用 left_ratio 实时计算宽度
+    -- local left_w = math.floor(avail_x * left_ratio)
+    -- local right_w = avail_x - left_w - splitter_w
 
-    -- 用 left_ratio 实时计算宽度
-    local left_w = math.floor(avail_x * left_ratio)
+    if LEFT_TABLE_VISIBLE then -- 开关切换隐藏左侧表格
+
+    local min_left_px = math.floor(avail_x * 0.005) -- 左侧最小像素宽
+    local max_left_px = math.floor(avail_x * 0.5) -- 左侧最大像素宽
+
+    local left_px = tonumber(reaper.GetExtState(EXT_SECTION, "left_px")) or 700
+    left_px = math.max(min_left_px, math.min(left_px, math.max(min_left_px, math.min(max_left_px, avail_x - splitter_w - 10))))
+    local left_w  = left_px
     local right_w = avail_x - left_w - splitter_w
 
     -- 左侧树状目录(此处需要使用 if 才有效，否则报错)
@@ -12071,12 +12127,23 @@ function loop()
       splitter_drag_offset = mx - wx - left_w
     end
 
+    -- 旧版拖动逻辑，基于比例计算新左宽（弃用）
+    -- if splitter_drag and splitter_active then
+    --   -- 拖动时，基于初始点击的偏移修正
+    --   local new_left = mx - wx - splitter_drag_offset
+    --   new_left = math.max(min_left, math.min(max_left, new_left))
+    --   left_ratio = new_left / avail_x
+    --   reaper.SetExtState(EXT_SECTION, "left_ratio", tostring(left_ratio), true) -- 保存分割条位置
+    -- end
+
+    -- 拖动
     if splitter_drag and splitter_active then
-      -- 拖动时，基于初始点击的偏移修正
-      local new_left = mx - wx - splitter_drag_offset
-      new_left = math.max(min_left, math.min(max_left, new_left))
-      left_ratio = new_left / avail_x
-      reaper.SetExtState(EXT_SECTION, "left_ratio", tostring(left_ratio), true) -- 保存分割条位置
+      local new_left_px = mx - wx - (splitter_drag_offset or 0)
+      new_left_px = math.max(min_left_px, math.min(max_left_px, new_left_px))
+      left_px = new_left_px
+      reaper.SetExtState(EXT_SECTION, "left_px", tostring(left_px), true) -- 持久化像素宽
+      left_w  = left_px
+      right_w = math.max(0, avail_x - left_w - splitter_w)
     end
 
     if not splitter_active then
@@ -12096,6 +12163,10 @@ function loop()
     end
 
     reaper.ImGui_SameLine(ctx)
+
+    else -- 加入左侧表格隐藏开关，隐藏时右侧表格区域
+      right_w = 0
+    end
 
     -- 设置表格线条颜色 - 表格颜色
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),            colors.table_header)        -- 表格选中项颜色
