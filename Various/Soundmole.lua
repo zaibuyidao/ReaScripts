@@ -1,8 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.84
+-- @version 1.0.85
 -- @changelog
---   Optimized playback controls.
+--   Added UCS and folder-path filter tags for faster targeting.
+--   Improved UCS list interactions with clearer hover feedback.
+--   Refined folder-path icon in database mode and added icon mode switching.
 --   Compatible with reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

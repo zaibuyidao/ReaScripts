@@ -120,3 +120,11 @@ function sm_parse_ndjson_line(line)
     ucs_catid      = get_str("ucs_catid"),
   }
 end
+
+-- 缩短行高的换行
+function TightNewLine(ctx, scale)
+  scale = scale or 0.7
+  local lh = reaper.ImGui_GetTextLineHeightWithSpacing(ctx)
+  -- 用 Dummy 精确推进垂直光标，避免默认的 NewLine 高度
+  reaper.ImGui_Dummy(ctx, 0, lh * scale)
+end

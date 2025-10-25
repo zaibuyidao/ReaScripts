@@ -476,8 +476,8 @@ local colors = {
   fs_button_hovered       = 0x3B7ECEFF, -- Freesound - 按钮悬停颜色
   fs_button_active        = 0x4296FAFF, -- Freesound - 按钮按下颜色
   fs_search_button_normal = 0xFFF2994A, -- Freesound - 搜索按钮常态颜色
-  fs_search_button_hovered= 0xFFFFA858, -- Freesound - 搜索按钮悬停颜色
-  fs_search_button_active = 0xFFF2998B, -- Freesound - 搜索按钮按下颜色
+  fs_search_button_hovered= 0xFFFFA870, -- Freesound - 搜索按钮悬停颜色
+  fs_search_button_active = 0xFFF2999B, -- Freesound - 搜索按钮按下颜色
 }
 
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
@@ -2433,6 +2433,158 @@ function SmoothSetPreviewRate(target_rate, ramp_ms)
     reaper.defer(step)
   end
   reaper.defer(step)
+end
+
+--------------------------------------------- 标签控件 ---------------------------------------------
+
+-- 文本标签控件
+function ImGui_Tag(ctx, id, text, opts)
+  opts = opts or {}
+  text = tostring(text or "")
+
+  local pad_x = opts.pad_x or 8
+  local pad_y = opts.pad_y or 4
+  local rounding = opts.rounding or 15
+
+  -- 左右分离的内边距与文本&X的额外间距
+  local pad_l  = (opts.pad_l ~= nil) and opts.pad_l or pad_x
+  local pad_r  = (opts.pad_r ~= nil) and opts.pad_r or pad_x
+  local text_to_x_gap = math.max(0, opts.text_to_x_gap or 5) -- 越小越紧
+  -- 文本尺寸
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, text)
+  local close_d = opts.close_d or math.max(th, 14)
+  local h = pad_y * 2 + math.max(th, close_d)
+  -- 颜色
+  local bg_normal  = opts.bg               or (colors and colors.tab)                or 0x2E2E2EFF
+  local bg_hovered = opts.bg_hovered       or (colors and colors.tab_hovered)        or 0x3A3A3AFF
+  local bg_active  = opts.bg_active        or (colors and colors.tab_selected)       or 0x4A4A4AFF
+  local border_col = opts.border           or (colors and colors.table_border_light) or 0x2D2D2E77
+  local text_col   = opts.text_col         or (colors and colors.normal_text)        or 0xFFF0F0F0
+  
+  local x_col      = opts.x_col            or (colors and colors.icon_normal) 
+  local x_col_hov  = opts.x_col_hovered    or (colors and colors.icon_active)
+  local x_col_act  = opts.x_col_active     or (colors and colors.icon_hovered)
+
+  local c_bg       = opts.close_bg         or (colors and colors.dark_gray)
+  local c_bg_hov   = opts.close_bg_hovered or (colors and colors.dark_gray)
+  local c_bg_act   = opts.close_bg_active  or (colors and colors.dark_gray)
+  local c_border   = opts.close_border     or (colors and colors.dark_gray)
+
+  -- 主区与关闭区不重叠
+  local main_w = pad_l + tw + pad_r
+  local close_w = close_d
+  local total_w = main_w + (text_to_x_gap + 5) + close_w
+  -- 坐标
+  local x0, y0 = reaper.ImGui_GetCursorScreenPos(ctx)
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+
+  reaper.ImGui_InvisibleButton(ctx, id .. "##main", main_w, h)
+  local hovered_main = reaper.ImGui_IsItemHovered(ctx)
+  local active_main = reaper.ImGui_IsItemActive(ctx)
+  local clicked_main = reaper.ImGui_IsItemClicked(ctx, 0)
+
+  local bg = active_main and bg_active or (hovered_main and bg_hovered or bg_normal)
+  reaper.ImGui_DrawList_AddRectFilled(dl, x0, y0, x0 + total_w, y0 + h, bg, rounding)
+  reaper.ImGui_DrawList_AddRect(dl, x0, y0, x0 + total_w, y0 + h, border_col, rounding, 0, 1)
+  -- 文本
+  local tx = x0 + pad_l
+  local ty = y0 + (h - th) * 0.5
+  reaper.ImGui_DrawList_AddText(dl, tx, ty, text_col, text)
+  -- 关闭按钮
+  local close_x = x0 + main_w + text_to_x_gap
+  local close_y = y0 + (h - close_d) * 0.5
+  local prev_x, prev_y = reaper.ImGui_GetCursorScreenPos(ctx)
+  reaper.ImGui_SetCursorScreenPos(ctx, close_x, close_y)
+  reaper.ImGui_InvisibleButton(ctx, id .. "##close", close_w, close_d)
+  local hovered_close = reaper.ImGui_IsItemHovered(ctx)
+  local active_close = reaper.ImGui_IsItemActive(ctx)
+  local clicked_close = reaper.ImGui_IsItemClicked(ctx, 0)
+  reaper.ImGui_SetCursorScreenPos(ctx, prev_x, prev_y)
+  -- 关闭图形
+  local cr = close_d * 0.45
+  local cx = close_x + cr
+  local cy = y0 + h * 0.5
+  local cbg = active_close and c_bg_act or (hovered_close and c_bg_hov or c_bg)
+  reaper.ImGui_DrawList_AddCircleFilled(dl, cx, cy, cr, cbg, 32)
+  reaper.ImGui_DrawList_AddCircle(dl, cx, cy, cr, c_border, 32, 1)
+  local half = cr * 0.6
+  local thick = math.max(1.25, cr * 0.22)
+  local colx = active_close and x_col_act or (hovered_close and x_col_hov or x_col)
+  reaper.ImGui_DrawList_AddLine(dl, cx - half, cy - half, cx + half, cy + half, colx, thick)
+  reaper.ImGui_DrawList_AddLine(dl, cx - half, cy + half, cx + half, cy - half, colx, thick)
+  reaper.ImGui_SetCursorScreenPos(ctx, x0 + total_w, y0)
+
+  return clicked_main, clicked_close, hovered_main, hovered_close, total_w, h
+end
+
+function DrawImplicitSearchTag(ctx)
+  local ucs_cat = _G.temp_ucs_cat_keyword
+  local ucs_sub = _G.temp_ucs_sub_keyword
+  local implicit_kw
+
+  if type(ucs_cat) == "string" and ucs_cat ~= "" then
+    if type(ucs_sub) == "string" and ucs_sub ~= "" then
+      implicit_kw = (ucs_cat .. " + " .. ucs_sub)
+    else
+      implicit_kw = ucs_cat
+    end
+  elseif type(_G.temp_search_keyword) == "string" and _G.temp_search_keyword ~= "" then
+    implicit_kw = _G.temp_search_keyword
+  end
+  -- 无关键词则不绘制
+  if not implicit_kw or implicit_kw == "" then return end
+
+  -- pad_y 为减小垂直内边距， close_d 为关闭按钮直径
+  local clicked_main, clicked_close = ImGui_Tag(ctx, "##ucs", "UCS Tag: " .. (implicit_kw:upper()), { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5 })
+
+  if clicked_close then
+    -- 清除UCS隐式搜索关键词
+    active_saved_search = nil
+    temp_search_field, temp_search_keyword = nil
+    temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil
+
+    -- if _G.usc_filter then reaper.ImGui_TextFilter_Set(_G.usc_filter, "") end -- 清空过滤器
+
+    local static = _G._soundmole_static or {}
+    _G._soundmole_static = static
+    static.filtered_list_map = {}
+    static.last_filter_text_map = {}
+
+    return clicked_main, true
+  end
+
+  return clicked_main, false
+end
+
+-- 绘制数据库过滤文件夹标签
+function DrawDBPathFilterTag(ctx)
+  local path = _G._db_path_prefix_filter
+  if type(path) ~= "string" or path == "" then return end
+  -- 只显示最后 40 个字符
+  local function ellipsis_left(s, keep)
+    if not s then return "" end
+    keep = keep or 40
+    local len = #s
+    if len <= keep then return s end
+    return "..." .. s:sub(len - keep + 1)
+  end
+
+  local display_path = ellipsis_left(path, 40)
+  local clicked_main, clicked_close = ImGui_Tag(ctx, "##dbpf", "Pathname: " .. display_path, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5})
+
+  if clicked_close then
+    -- 清空数据库路径过滤
+    _G._db_path_prefix_filter = nil
+
+    local static = _G._soundmole_static or {}
+    _G._soundmole_static = static
+    static.filtered_list_map = {}
+    static.last_filter_text_map = {}
+
+    return clicked_main, true
+  end
+
+  return clicked_main, false
 end
 
 --------------------------------------------- 波形预览相关函数 ---------------------------------------------
@@ -4945,6 +5097,59 @@ function DrawUcsLanguageSelector(ctx)
 end
 
 ReloadUCSData(CURRENT_LANG or "en")
+
+-- 图标按钮
+function IconButton(ctx, id, glyph, w, h)
+  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+  -- 用不可见按钮占位并负责交互区域
+  reaper.ImGui_InvisibleButton(ctx, id, w, h)
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  local clicked = reaper.ImGui_IsItemClicked(ctx, 0)
+
+  -- 绘制图标
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+  reaper.ImGui_DrawList_PushClipRect(dl, x, y, x + w, y + h, true)
+
+  local col = (hovered and colors.icon_active) or colors.icon_normal
+  local icon_px = math.floor(h * 0.90)
+  if fonts and fonts.icon then reaper.ImGui_PushFont(ctx, fonts.icon, icon_px) end
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph)
+  local tx = x + (w - tw) * 0.5
+  local ty = y + (h - th) * 0.5
+  reaper.ImGui_DrawList_AddText(dl, tx, ty, col, glyph)
+  if fonts and fonts.icon then reaper.ImGui_PopFont(ctx) end
+
+  reaper.ImGui_DrawList_PopClipRect(dl)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  return clicked, hovered
+end
+
+-- 悬浮变色
+function HoverSelectable(ctx, label, id, width, flags)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),        0x00000000)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), 0x00000000)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  0x00000000)
+
+  local pos_x, pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
+  local clicked = reaper.ImGui_Selectable(ctx, id, false, flags or 0, math.max(0, width or 0), 0)
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+
+  reaper.ImGui_SetCursorScreenPos(ctx, pos_x, pos_y)
+  if hovered then
+    -- reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.table_header_active)
+    reaper.ImGui_Text(ctx, label or "")
+    reaper.ImGui_PopStyleColor(ctx)
+  else
+    reaper.ImGui_Text(ctx, label or "")
+  end
+
+  reaper.ImGui_PopStyleColor(ctx, 3)
+  return clicked, hovered
+end
 
 --------------------------------------------- 跳过静音节点 ---------------------------------------------
 
@@ -9561,9 +9766,30 @@ function DBPF_DrawDatabaseFolderButton(ctx)
   local _, y = reaper.ImGui_GetCursorPos(ctx)
   reaper.ImGui_SetCursorPosY(ctx, y + 13)
 
+  -- 旧版
+  -- reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+  -- local text_label = in_db_mode and '\u{0051}' or '\u{0067}'
+  -- reaper.ImGui_Text(ctx, text_label)
+  -- reaper.ImGui_PopFont(ctx)
+
+  -- 固定字体宽度占位 + 居中绘制，确保两种字形宽度一致
   reaper.ImGui_PushFont(ctx, fonts.icon, 20)
-  local text_label = '\u{0066}'
-  reaper.ImGui_Text(ctx, text_label)
+  local text_label = in_db_mode and '\u{0051}' or '\u{0050}'
+  -- 计算两种字形在该字号下的最大宽度
+  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0051}'))
+  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0050}'))
+  local reserve_w = math.max(w1 or 0, w2 or 0)
+  local reserve_h = 20 -- 与 PushFont 的像素大小一致
+
+  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+  reaper.ImGui_InvisibleButton(ctx, "##db_icon", reserve_w, reserve_h)
+  -- 居中绘制当前字形
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, text_label)
+  local tx = x + (reserve_w - (tw or 0)) * 0.5
+  local ty = y + (reserve_h - (th or 0)) * 0.5
+  local col = in_db_mode and colors.gray or colors.gray
+  reaper.ImGui_DrawList_AddText(dl, tx, ty, col, text_label)
   reaper.ImGui_PopFont(ctx)
 
   local hovered = reaper.ImGui_IsItemHovered(ctx)
@@ -10170,6 +10396,35 @@ function loop()
     end
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
+
+    -- 是否显示 UCS 隐式搜索标签
+    function SM_HasUCSTag()
+      local ucs_cat = _G.temp_ucs_cat_keyword
+      local ucs_sub = _G.temp_ucs_sub_keyword
+      if type(ucs_cat) == "string" and ucs_cat ~= "" then return true end
+      if type(_G.temp_search_keyword) == "string" and _G.temp_search_keyword ~= "" then return true end
+      return false
+    end
+    -- 是否显示数据库路径过滤标签
+    function SM_HasDBTag()
+      local p = _G._db_path_prefix_filter
+      return type(p) == "string" and p ~= ""
+    end
+
+    local has_ucs = SM_HasUCSTag()
+    local has_db  = SM_HasDBTag()
+    -- 记录当前行的基线（相对坐标）
+    local base_x, base_y = reaper.ImGui_GetCursorPos(ctx)
+    if has_ucs then DrawImplicitSearchTag(ctx) end
+    if has_ucs and has_db then
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      -- 把第二个标签的 Y 拉回到第一枚标签的基线，否则会偏下
+      local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
+      reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
+    end
+    if has_db then DrawDBPathFilterTag(ctx) end
+
+    TightNewLine(ctx, 0.5) -- 正常行高的 50%
 
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
 
@@ -11365,18 +11620,22 @@ function loop()
         end
         -- UCS列表
         if reaper.ImGui_BeginTabItem(ctx, 'UCS') then
-          reaper.ImGui_Text(ctx, "Filter:")
-          reaper.ImGui_SameLine(ctx)
           if not usc_filter then
             usc_filter = reaper.ImGui_CreateTextFilter()
             reaper.ImGui_Attach(ctx, usc_filter)
           end
-          reaper.ImGui_SetNextItemWidth(ctx, -65)
+          reaper.ImGui_SetNextItemWidth(ctx, -100)
           reaper.ImGui_TextFilter_Draw(usc_filter, ctx, "##FilterUCS")
           reaper.ImGui_SameLine(ctx)
           if reaper.ImGui_Button(ctx, "Clear", 40) then
             reaper.ImGui_TextFilter_Set(usc_filter, "")
             temp_search_keyword, temp_search_field = nil, nil -- 清除UCS隐式搜索
+          end
+          -- 全部折叠
+          reaper.ImGui_SameLine(ctx)
+          if reaper.ImGui_Button(ctx, "Flod", 40) then
+            cat_open_state = {}
+            if ucs_open_en ~= nil then ucs_open_en = {} end
           end
           reaper.ImGui_Separator(ctx)
 
@@ -11442,16 +11701,22 @@ function loop()
             if #filtered > 0 then
               reaper.ImGui_PushID(ctx, cat)
               local is_open = cat_open_state[cat] and true or false
-              local arrow_label = is_open and "-" or "+"
-              if reaper.ImGui_Button(ctx, arrow_label .. "##toggle", 20, 20) then
+              local GLYPH_PLUS  = '\u{0066}'
+              local GLYPH_MINUS = '\u{0065}'
+              local clicked, hovered = IconButton(ctx, "##toggle_" .. tostring(cat), (is_open and GLYPH_MINUS or GLYPH_PLUS), 20, 20)
+              if clicked then
                 cat_open_state[cat] = not is_open
                 local en = (ucs_maps and ucs_maps.cat_to_en and ucs_maps.cat_to_en[cat]) or cat
                 ucs_open_en = ucs_open_en or {}
                 if cat_open_state[cat] then ucs_open_en[en] = true else ucs_open_en[en] = nil end
               end
               reaper.ImGui_SameLine(ctx)
-              -- 点击主分类提交隐式搜索
-              if reaper.ImGui_Selectable(ctx, cat .. "##cat", false, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+
+              -- 点击主分类提交隐式搜索，主分类统一悬浮样式
+              local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+              -- local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat), "##cat", text_w, reaper.ImGui_SelectableFlags_SpanAllColumns()))
+              local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat), "##cat", text_w, 0))
+              if clicked_cat then
                 local send_cat = cat
                 if UCS_FORCE_EN and ucs_maps and ucs_maps.cat_to_en[cat] then
                   send_cat = ucs_maps.cat_to_en[cat] -- force EN
@@ -11470,9 +11735,12 @@ function loop()
               -- 点击子分类发送主+子分类关键词隐式搜索
               if is_open then
                 for _, entry in ipairs(filtered) do
+                  -- 子分类统一悬浮样式
                   reaper.ImGui_PushID(ctx, entry.name)
                   reaper.ImGui_Indent(ctx, 28)
-                  if reaper.ImGui_Selectable(ctx, entry.name .. "##sub") then
+                  local w_sub = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+                  local clicked_sub = select(1, HoverSelectable(ctx, tostring(entry.name), "##sub", w_sub, 0))
+                  if clicked_sub then
                     local send_cat = cat
                     local send_sub = entry.name
                     if UCS_FORCE_EN and ucs_maps then
