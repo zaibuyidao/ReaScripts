@@ -1931,15 +1931,7 @@ function CollectFiles()
   waveform_task_queue = {}
 end
 
--- 资源释放函数
-function DestroySources(files_idx)
-  for _, info in ipairs(files_idx) do
-    if info.source then
-      reaper.PCM_Source_Destroy(info.source)
-      info.source = nil
-    end
-  end
-end
+--------------------------------------------- 播放控件相关 ---------------------------------------------
 
 function StopPlay()
   if playing_preview then
@@ -2334,6 +2326,113 @@ function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_th
   -- end
 
   return changed, gain_value
+end
+
+-- 平滑设置预听音量
+local __vol_ramp_id = 0
+
+function SmoothSetPreviewVolume(target_lin, ramp_ms)
+  if not playing_preview or not reaper.CF_Preview_SetValue then return end
+  target_lin = math.max(0, tonumber(target_lin) or 1.0)
+  ramp_ms = math.max(10, tonumber(ramp_ms))
+
+  local ok, cur = reaper.CF_Preview_GetValue(playing_preview, "D_VOLUME")
+  local start_lin = (ok and tonumber(cur)) or 1.0
+  if math.abs(target_lin - start_lin) < 1e-4 then
+    reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", target_lin)
+    return
+  end
+
+  __vol_ramp_id = __vol_ramp_id + 1
+  local myid = __vol_ramp_id
+  local t0 = reaper.time_precise()
+  local dur = ramp_ms / 1000
+
+  local db0 = VAL2DB(start_lin)
+  local db1 = VAL2DB(target_lin)
+
+  local function step()
+    if myid ~= __vol_ramp_id then return end
+    local a = (reaper.time_precise() - t0) / dur
+    if a >= 1 then
+      reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", target_lin)
+      return
+    end
+    local db = db0 + (db1 - db0) * a
+    local lin = dB_to_gain(db)
+    reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", lin)
+    reaper.defer(step)
+  end
+
+  reaper.defer(step)
+end
+
+-- 平滑设置预听音高
+local __pitch_ramp_id = 0
+
+function SmoothSetPreviewPitch(target_semitones, ramp_ms)
+  if not playing_preview or not reaper.CF_Preview_SetValue then return end
+  ramp_ms = math.max(10, tonumber(ramp_ms))
+  target_semitones = tonumber(target_semitones) or 0
+
+  local ok, cur = reaper.CF_Preview_GetValue(playing_preview, "D_PITCH")
+  local start_semitones = (ok and tonumber(cur)) or 0
+  if math.abs(target_semitones - start_semitones) < 1e-4 then
+    reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", target_semitones)
+    return
+  end
+
+  __pitch_ramp_id = __pitch_ramp_id + 1
+  local myid = __pitch_ramp_id
+  local t0 = reaper.time_precise()
+  local dur = ramp_ms / 1000
+
+  local function step()
+    if myid ~= __pitch_ramp_id then return end
+    local a = (reaper.time_precise() - t0) / dur
+    if a >= 1 then
+      reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", target_semitones)
+      return
+    end
+    local semis = start_semitones + (target_semitones - start_semitones) * a
+    reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", semis)
+    reaper.defer(step)
+  end
+  reaper.defer(step)
+end
+
+-- 平滑设置预听速率（不在使用中。因为无效，仍有阶梯咔嚓声）
+local __rate_ramp_id = 0
+
+function SmoothSetPreviewRate(target_rate, ramp_ms)
+  if not playing_preview or not reaper.CF_Preview_SetValue then return end
+  ramp_ms = math.max(10, tonumber(ramp_ms))
+  target_rate = tonumber(target_rate) or 1.0
+
+  local ok, cur = reaper.CF_Preview_GetValue(playing_preview, "D_PLAYRATE")
+  local start_rate = (ok and tonumber(cur)) or 1.0
+  if math.abs(target_rate - start_rate) < 1e-6 then
+    reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", target_rate)
+    return
+  end
+
+  __rate_ramp_id = __rate_ramp_id + 1
+  local myid = __rate_ramp_id
+  local t0 = reaper.time_precise()
+  local dur = ramp_ms / 1000
+
+  local function step()
+    if myid ~= __rate_ramp_id then return end
+    local a = (reaper.time_precise() - t0) / dur
+    if a >= 1 then
+      reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", target_rate)
+      return
+    end
+    local r = start_rate + (target_rate - start_rate) * a
+    reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", r)
+    reaper.defer(step)
+  end
+  reaper.defer(step)
 end
 
 --------------------------------------------- 波形预览相关函数 ---------------------------------------------
@@ -6008,7 +6107,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
 
     -- 绘制播放光标，排除最近播放影响
     if src_len > 0 and collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave and Wave.play_cursor then
-      local play_px = (Wave.play_cursor / src_len) * thumb_w
+      local play_px = ((Wave.play_cursor * play_rate) / src_len) * thumb_w
       if play_px == play_px then -- 过滤 NaN
         if play_px < 0 then play_px = 0 elseif play_px > thumb_w then play_px = thumb_w end
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
@@ -12422,7 +12521,7 @@ function loop()
     end
     if pitch_knob_changed then
       pitch = pitch_knob_value
-      if playing_preview then RestartPreviewWithParams() end
+      if playing_preview then SmoothSetPreviewPitch(pitch, 80) end
     end
     -- 防止手动输入越界
     if pitch < pitch_knob_min then pitch = pitch_knob_min end
@@ -12437,7 +12536,7 @@ function loop()
     -- reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopItemWidth(ctx)
     if rv3 then
-      if playing_preview then RestartPreviewWithParams() end
+      if playing_preview then SmoothSetPreviewPitch(pitch, 80) end
     end
 
     -- 播放速率旋钮
@@ -12486,7 +12585,7 @@ function loop()
     reaper.ImGui_PushItemWidth(ctx, 50)
     -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local rv4
-    rv4, play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
+    rv4, new_play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
     -- reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopItemWidth(ctx)
     if rv4 then
@@ -12531,7 +12630,7 @@ function loop()
       rv2     = true
     end
     if rv2 then
-      if playing_preview then RestartPreviewWithParams() end
+      if playing_preview then SmoothSetPreviewVolume(volume, 60) end
       reaper.SetExtState(EXT_SECTION, EXT_KEY_VOLUME, tostring(volume), true)
     end
 
