@@ -2590,6 +2590,140 @@ function DrawDBPathFilterTag(ctx)
   return clicked_main, false
 end
 
+-- 绘制过滤搜索标签
+function DrawFilterSearchTag(ctx)
+  _G.locked_filter_terms = _G.locked_filter_terms or {}
+  local locked = _G.locked_filter_terms
+  local lock_on = _G.filter_lock_enabled
+
+  local function reset_cache()
+    local static = _G._soundmole_static or {}
+    _G._soundmole_static = static
+    static.filtered_list_map    = {}
+    static.last_filter_text_map = {}
+  end
+  -- 记录基线，保证对齐
+  local _, base_y = reaper.ImGui_GetCursorPos(ctx)
+  -- 若当前为锁定，把刚提交的输入并入locked
+  if lock_on then
+    local ft = _G.commit_filter_text
+    if type(ft) == "string" then
+      ft = ft:match("^%s*(.-)%s*$") or ""
+      if ft ~= "" then
+        local seen = {}
+        for _, t in ipairs(locked) do seen[t:lower()] = true end
+        for word in ft:gmatch("%S+") do
+          local w = word:lower()
+          if not seen[w] then
+            locked[#locked + 1] = w
+            seen[w] = true
+          end
+        end
+        _G.commit_filter_text = nil
+        reset_cache()
+      end
+    end
+  end
+
+  local any_clicked, any_closed = false, false
+  for i = 1, #locked do
+    if i > 1 then
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
+      reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
+    end
+    local tag_text = locked[i]
+    local clicked_main, clicked_close = ImGui_Tag(ctx, "##locked_" .. i, "Search: " .. tag_text, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5 })
+    any_clicked = any_clicked or clicked_main
+    if clicked_close then
+      table.remove(locked, i)
+      reset_cache()
+      any_closed = true
+      -- 位置回退以便继续对齐
+      local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
+      reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
+    end
+  end
+
+  local ft = _G.commit_filter_text
+  if type(ft) == "string" then
+    ft = ft:match("^%s*(.-)%s*$") or ""
+    if ft ~= "" then
+      if #locked > 0 then
+        reaper.ImGui_SameLine(ctx, nil, 10)
+        local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
+        reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
+      end
+      local clicked_main, clicked_close = ImGui_Tag(ctx, "##filter_text", "Search: " .. ft, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5 })
+      any_clicked = any_clicked or clicked_main
+      if clicked_close then
+        _G.commit_filter_text = nil
+        if _G.global_filter then reaper.ImGui_TextFilter_Set(_G.global_filter, "") end
+        if _G.filename_filter then reaper.ImGui_TextFilter_Set(_G.filename_filter, "") end
+        if _G.table_filter   then reaper.ImGui_TextFilter_Set(_G.table_filter,   "") end
+        if _G.keyword_filter then reaper.ImGui_TextFilter_Set(_G.keyword_filter, "") end
+        reset_cache()
+        any_closed = true
+      end
+    end
+  end
+
+  return any_clicked, any_closed
+end
+
+-- 过滤锁定开关
+function DrawFilterLockToggle(ctx)
+  _G.filter_lock_enabled = not not _G.filter_lock_enabled
+  _G.locked_filter_terms = _G.locked_filter_terms or {}
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
+  -- 与图标尺寸对齐的下移
+  local _, cy = reaper.ImGui_GetCursorPos(ctx)
+  reaper.ImGui_SetCursorPosY(ctx, cy + 13)
+
+  reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+  local lock_on = _G.filter_lock_enabled
+  local text_label = (lock_on and '\u{005C}') or '\u{005D}' -- 关=005C; 开=005D
+  -- 固定宽高占位
+  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{005D}'))
+  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{005C}'))
+  local reserve_w = math.max(w1 or 0, w2 or 0)
+  local reserve_h = 20
+
+  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+  reaper.ImGui_InvisibleButton(ctx, "##filter_lock_toggle", reserve_w, reserve_h)
+
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, text_label)
+  local tx = x + (reserve_w - (tw or 0)) * 0.5
+  local ty = y + (reserve_h - (th or 0)) * 0.5
+  local col = lock_on and colors.gray or colors.icon_normal
+  reaper.ImGui_DrawList_AddText(dl, tx, ty, col, text_label)
+  reaper.ImGui_PopFont(ctx)
+
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  local clicked = reaper.ImGui_IsItemClicked(ctx, 0)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+    reaper.ImGui_BeginTooltip(ctx)
+    -- 中文描述 - 在当前结果内继续搜索：开启；当前结果内继续搜索：关闭
+    reaper.ImGui_Text(ctx, lock_on and "Search within current results: On" or "Search within current results: Off")
+    reaper.ImGui_EndTooltip(ctx)
+  end
+
+  if clicked then
+    _G.filter_lock_enabled = not lock_on
+    -- 刷新缓存
+    local static = _G._soundmole_static or {}
+    _G._soundmole_static = static
+    static.filtered_list_map    = {}
+    static.last_filter_text_map = {}
+  end
+
+  reaper.ImGui_PopStyleColor(ctx)
+end
+
 --------------------------------------------- 波形预览相关函数 ---------------------------------------------
 
 -- 波形峰值采样
@@ -3599,6 +3733,62 @@ function list_dir(path)
   return dirs, audios, ok
 end
 
+-- 此电脑右键菜单
+function AddThisComputerContextMenu(path)
+  if not path or path == "" then return end
+  if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+    reaper.ImGui_OpenPopup(ctx, "TCMenu_" .. path)
+  end
+
+  if reaper.ImGui_BeginPopup(ctx, "TCMenu_" .. path) then
+    if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+      reaper.CF_ShellExecute(normalize_path(path)) -- 规范分隔符
+    end
+    -- 将路径添加为新数据库
+    if reaper.ImGui_MenuItem(ctx, "Build Database from This Folder") then
+      local folder   = normalize_path(path, true)
+      local filelist = ScanAllAudioFiles(folder)
+
+      local db_dir = script_path .. "SoundmoleDB"
+      EnsureCacheDir(db_dir)
+      -- 获取下一个可用编号并生成数据库文件
+      local db_index = GetNextMediaDBIndex(db_dir)                -- 00~FF
+      local dbfile   = string.format("%s.MoleFileList", db_index) -- 文件名
+      local dbpath   = normalize_path(db_dir, true) .. dbfile     -- 全路径
+      -- 创建空文件并写入根路径
+      local f = io.open(dbpath, "wb")
+      if f then f:close() end
+      AddPathToDBFile(dbpath, folder) -- 必要时改流式建库边扫描、边写入，StartScanAndBuildDB_Stream(root_dir)
+
+      -- 构建任务
+      db_build_task = {
+        filelist     = filelist,
+        dbfile       = dbpath, -- 全路径
+        idx          = 1,
+        total        = #filelist,
+        finished     = false,
+        root_path    = folder,
+        existing_map = DB_ReadExistingFileSet(dbpath)
+      }
+
+      -- 用该文件夹名作为数据库别名
+      local alias = (folder or ""):gsub("[/\\]+$","")
+      alias = alias:match("([^/\\]+)$") or alias
+      alias = alias:gsub("^%s+",""):gsub("%s+$","")
+      if alias ~= "" then
+        mediadb_alias = mediadb_alias or {}
+        mediadb_alias[dbfile] = alias
+        SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+      end
+
+      -- 让数据库缓存失效
+      DBPF_InvalidateAllCaches()
+    end
+
+    reaper.ImGui_EndPopup(ctx)
+  end
+end
+
 -- 树状目录
 function draw_tree(name, path, depth)
   path = normalize_path(path, true)
@@ -3611,6 +3801,10 @@ function draw_tree(name, path, depth)
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
   local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0
   local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##" .. path, flags | highlight)
+
+  -- 此电脑右键菜单
+  AddThisComputerContextMenu(path)
+
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
   -- local cy = (miny + maxy) * 0.5
@@ -3780,6 +3974,50 @@ function draw_shortcut_tree(sc, base_path, depth)
         reaper.CF_ShellExecute(normalize_path(path)) -- 规范分隔符
       end
     end
+
+    -- 将路径添加为新数据库
+    if reaper.ImGui_MenuItem(ctx, "Build Database from This Folder") then
+      if path and path ~= "" then
+        local folder = normalize_path(path, true)
+        local filelist = ScanAllAudioFiles(folder)
+
+        local db_dir = script_path .. "SoundmoleDB"
+        EnsureCacheDir(db_dir)
+        -- 获取下一个可用编号并生成数据库文件
+        local db_index = GetNextMediaDBIndex(db_dir)                -- 00~FF
+        local dbfile   = string.format("%s.MoleFileList", db_index) -- 只有文件名
+        local dbpath   = normalize_path(db_dir, true) .. dbfile     -- 全路径
+        -- 创建空文件并写入根路径
+        local f = io.open(dbpath, "wb")
+        if f then f:close() end
+        AddPathToDBFile(dbpath, folder) -- 必要时改流式建库边扫描、边写入，StartScanAndBuildDB_Stream(root_dir)
+
+        -- 构建任务
+        db_build_task = {
+          filelist     = filelist,
+          dbfile       = dbpath, -- 全路径
+          idx          = 1,
+          total        = #filelist,
+          finished     = false,
+          root_path    = folder,
+          existing_map = DB_ReadExistingFileSet(dbpath)
+        }
+
+        -- 用该文件夹名作为数据库别名
+        local alias = (folder or ""):gsub("[/\\]+$","")
+        alias = alias:match("([^/\\]+)$") or alias
+        alias = alias:gsub("^%s+",""):gsub("%s+$","")
+        if alias ~= "" then
+          mediadb_alias = mediadb_alias or {}
+          mediadb_alias[dbfile] = alias
+          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+        end
+
+        -- 让数据库缓存失效
+        DBPF_InvalidateAllCaches()
+      end
+    end
+
     if is_root_shortcut then
       if reaper.ImGui_MenuItem(ctx, "Remove") then
         remove_this = true
@@ -5678,6 +5916,19 @@ function BuildFilteredList(list)
   local input_keywords = {}
   for kw in tostring(search_keyword):gmatch("%S+") do
     input_keywords[#input_keywords + 1] = kw:lower()
+  end
+
+  -- 锁定搜索关键词开关
+  if _G.locked_filter_terms and #_G.locked_filter_terms > 0 then
+    local seen = {}
+    for _, kw in ipairs(input_keywords) do seen[kw] = true end
+    for _, kw in ipairs(_G.locked_filter_terms) do
+      local w = tostring(kw):lower()
+      if w ~= "" and not seen[w] then
+        input_keywords[#input_keywords + 1] = w
+        seen[w] = true
+      end
+    end
   end
 
   -- 启用同义词时，将关键词分为两类。有同义词的关键词 和 无同义词的额外关键词
@@ -9935,13 +10186,15 @@ function loop()
     -- 标题栏
     reaper.ImGui_BeginGroup(ctx)
     reaper.ImGui_PushFont(ctx, fonts.odrf, 22)
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, 0)
     DrawTextVOffset(ctx, 'Sound', nil, 15) -- 文字居中，偏移设置
     reaper.ImGui_SameLine(ctx, nil, 0)
     DrawTextVOffset(ctx, 'mole', colors.mole, 15)
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
 
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    DrawFilterLockToggle(ctx)
     -- 数据库路径过滤按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
     DBPF_DrawDatabaseFolderButton(ctx)
@@ -10364,11 +10617,110 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
     reaper.ImGui_Text(ctx, glyph)
     reaper.ImGui_PopStyleColor(ctx)
+    reaper.ImGui_PopFont(ctx)
 
     if hovered then
       reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
     end
+
     if clicked then
+      reaper.ImGui_OpenPopup(ctx, "Database Actions")
+    end
+
+    local open_create_modal = false
+    local run_choose_folder = false
+    local run_delete_db     = false
+
+    if reaper.ImGui_BeginPopup(ctx, "Database Actions") then
+      if reaper.ImGui_MenuItem(ctx, "Create a New Database") then
+        local db_dir = script_path .. "SoundmoleDB"
+        EnsureCacheDir(db_dir)
+        local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
+        local dbfile_name = string.format("%s.MoleFileList", db_index)
+        local dbfile_path = string.format("%s/%s", db_dir, dbfile_name)
+
+        _G.__sm_dbfile_path = dbfile_path
+        _G.__sm_dbfile_name = dbfile_name
+        _G.__sm_db_alias    = dbfile_name
+        _G.__sm_db_msg      = nil
+
+        open_create_modal = true
+      end
+      if reaper.ImGui_MenuItem(ctx, "Build Database from Folder") then
+        run_choose_folder = true
+      end
+
+      reaper.ImGui_Separator(ctx)
+      -- 删除数据库
+      if reaper.ImGui_MenuItem(ctx, "Delete Database") then
+        run_delete_db = true
+      end
+
+      reaper.ImGui_EndPopup(ctx)
+    end
+    -- 触发创建数据库弹窗
+    if open_create_modal then
+      reaper.ImGui_OpenPopup(ctx, "Create a New Database")
+    end
+
+    -- 创建数据库弹窗分支
+    do
+      if _G.__sm_db_show then _G.__sm_db_show = false end
+      local cand_visible = reaper.ImGui_BeginPopupModal(ctx, "Create a New Database", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+      if cand_visible then
+        reaper.ImGui_TextWrapped(ctx, "What would you like the database name to be?")
+        reaper.ImGui_SetNextItemWidth(ctx, 300)
+        local changed, v = reaper.ImGui_InputText(ctx, "##db_alias", _G.__sm_db_alias or "")
+        if changed then _G.__sm_db_alias = v end
+
+        if _G.__sm_db_msg then reaper.ImGui_Text(ctx, _G.__sm_db_msg) end
+        reaper.ImGui_Separator(ctx)
+        -- 按钮右对齐
+        local win_w = reaper.ImGui_GetWindowWidth(ctx)
+        local btn_w = 64
+        local spacing = 8
+        local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
+        reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
+
+        if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+          local path  = tostring(_G.__sm_dbfile_path or "")
+          local fname = tostring(_G.__sm_dbfile_name or "")
+          local alias = tostring(_G.__sm_db_alias or ""):gsub("^%s+",""):gsub("%s+$","")
+
+          if path == "" or fname == "" then
+            _G.__sm_db_msg = "Internal error: empty path."
+          else
+            if reaper.file_exists(path) then
+              _G.__sm_db_msg = "File already exists."
+            else
+              local f = io.open(path, "wb")
+              if f then
+                f:close()
+                if alias ~= "" then
+                  mediadb_alias = mediadb_alias or {}
+                  mediadb_alias[path] = alias
+                  mediadb_alias[fname] = alias
+                  SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+                end
+                _G.__sm_db_msg = nil
+                reaper.ImGui_CloseCurrentPopup(ctx)
+              else
+                _G.__sm_db_msg = "Failed to create file."
+              end
+            end
+          end
+        end
+
+        reaper.ImGui_SameLine(ctx)
+        if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
+          reaper.ImGui_CloseCurrentPopup(ctx)
+        end
+        reaper.ImGui_EndPopup(ctx)
+      end
+    end
+
+    -- 选择路径的分支
+    if run_choose_folder then
       local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
       if rv == 1 and folder and folder ~= "" then
         folder = normalize_path(folder, true)
@@ -10378,8 +10730,10 @@ function loop()
         -- 获取下一个可用编号
         local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
         local dbfile = string.format("%s.MoleFileList", db_index) -- 只有文件名
+
         local dbpath = normalize_path(db_dir, true) .. dbfile     -- 全路径
-        local f = io.open(dbpath, "wb") if f then f:close() end
+        local f = io.open(dbpath, "wb")
+        if f then f:close() end
         AddPathToDBFile(dbpath, folder) -- 必要时改流式建库边扫描、边写入，StartScanAndBuildDB_Stream(root_dir)
         db_build_task = {
           filelist = filelist,
@@ -10390,16 +10744,82 @@ function loop()
           root_path  = folder,
           existing_map = DB_ReadExistingFileSet(dbpath)
         }
+
+        -- 更改数据库名称
+        local alias = (folder or ""):gsub("[/\\]+$","")
+        alias = alias:match("([^/\\]+)$") or alias
+        alias = alias:gsub("^%s+",""):gsub("%s+$","")
+        if alias ~= "" then
+          mediadb_alias = mediadb_alias or {}
+          mediadb_alias[dbfile] = alias
+          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+        end
+
         DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
       end
     end
-    reaper.ImGui_PopFont(ctx)
-    -- 鼠标停靠提示
-    if reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, 'Creating a database. Please browse and select a folder containing audio files.')
-      reaper.ImGui_EndTooltip(ctx)
+
+    -- 删除数据库分支
+    if run_delete_db then
+      local target_dbfile = (tree_state and tree_state.cur_mediadb ~= "" and tree_state.cur_mediadb) or nil
+      if not target_dbfile then
+        reaper.ShowMessageBox("No database selected.", "Delete Database", 0)
+      else
+        -- 保护操作，如果正在重建这个 DB，先禁止删除
+        local db_dir   = script_path .. "SoundmoleDB"
+        local db_path  = normalize_path(db_dir, true) .. target_dbfile -- 构造全路径
+        if db_build_task and not db_build_task.finished and db_build_task.dbfile == db_path then
+          reaper.ShowMessageBox("This database is currently rebuilding.\nPlease stop the task before deleting.", "Cannot Delete", 0)
+        else
+          local filename = target_dbfile:match("[^/\\]+$")
+          local alias = (mediadb_alias and mediadb_alias[filename]) or filename
+          local res = reaper.ShowMessageBox(
+            ("Are you sure you want to delete the database?\nAlias: %s\nFile: %s\n\nThis action cannot be undone."):format(tostring(alias), tostring(target_dbfile)),
+            "Confirm Delete",
+            4 -- Yes/No
+          )
+          if res == 6 then -- 6 = Yes
+            -- 释放文件占用，Windows 必须先关流
+            if _G._mediadb_stream then
+              MediaDBStreamClose(_G._mediadb_stream)
+              _G._mediadb_stream = nil
+            end
+
+            -- 执行删除并检查结果
+            local ok, err = os.remove(db_path)
+            if not ok then
+              reaper.ShowMessageBox(
+                "Failed to delete:\n" .. tostring(db_path) .. "\n\n" .. tostring(err or ""),
+                "Error",
+                0
+              )
+            else
+              -- 清理别名
+              if mediadb_alias then
+                mediadb_alias[filename] = nil
+                SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+              end
+
+              -- 清理当前选择与缓存
+              if tree_state and tree_state.cur_mediadb == target_dbfile then
+                tree_state.cur_mediadb = ""
+              end
+              selected_row    = nil
+              files_idx_cache = {}
+
+              DBPF_InvalidateAllCaches()
+            end
+          end
+        end
+      end
     end
+
+    -- 鼠标停靠提示
+    -- if reaper.ImGui_IsItemHovered(ctx) then
+    --   reaper.ImGui_BeginTooltip(ctx)
+    --   reaper.ImGui_Text(ctx, 'Creating a database. Please browse and select a folder containing audio files.')
+    --   reaper.ImGui_EndTooltip(ctx)
+    -- end
 
     -- 设置弹窗图标
     reaper.ImGui_SameLine(ctx, nil, 0)
@@ -10444,6 +10864,8 @@ function loop()
     SM_DrawLeftTableToggle(ctx) -- 左侧表格开关按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
     
+    DrawFilterSearchTag(ctx) -- 绘制过滤标签
+
     -- 是否显示 UCS 隐式搜索标签
     function SM_HasUCSTag()
       local ucs_cat = _G.temp_ucs_cat_keyword
@@ -10462,6 +10884,13 @@ function loop()
     local has_db  = SM_HasDBTag()
     -- 记录当前行的基线（相对坐标）
     local base_x, base_y = reaper.ImGui_GetCursorPos(ctx)
+
+    if has_ucs or has_db then
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
+      reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
+    end
+
     if has_ucs then DrawImplicitSearchTag(ctx) end
     if has_ucs and has_db then
       reaper.ImGui_SameLine(ctx, nil, 10)
@@ -10471,9 +10900,9 @@ function loop()
     end
     if has_db then DrawDBPathFilterTag(ctx) end
 
-    TightNewLine(ctx, 0.5) -- 正常行高的 50%
+    TightNewLine(ctx, 0.7) -- 正常行高的70%
 
-    reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
+    -- reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
 
     -- 自动缩放音频表格
     local line_h = reaper.ImGui_GetTextLineHeight(ctx)
@@ -11239,8 +11668,78 @@ function loop()
               local db_dir = script_path .. "SoundmoleDB"
               EnsureCacheDir(db_dir)
               local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
-              local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
-              local f = io.open(dbfile, "wb") f:close()
+              -- 仅简单创建空数据库文件（弃用）
+              -- local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+              -- local f = io.open(dbfile, "wb") f:close()
+
+              local dbfile_name = string.format("%s.MoleFileList", db_index)
+              local dbfile_path = string.format("%s/%s", db_dir, dbfile_name)
+
+              -- 弹窗状态初始化
+              _G.__sm_dbfile_path = dbfile_path -- 固定底层文件路径
+              _G.__sm_dbfile_name = dbfile_name -- 固定底层文件名
+              _G.__sm_db_alias    = dbfile_name -- 别名默认等于底层名
+              _G.__sm_db_msg      = nil
+              _G.__sm_db_show     = true
+
+              reaper.ImGui_OpenPopup(ctx, "Create a new Database")
+            end
+
+            -- 创建数据库，弹窗绘制
+            if _G.__sm_db_show then _G.__sm_db_show = false end
+
+            local cand_visible = reaper.ImGui_BeginPopupModal(ctx, "Create a new Database", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+            if cand_visible then
+              reaper.ImGui_TextWrapped(ctx, "What would you like the database name to be?")
+              reaper.ImGui_SetNextItemWidth(ctx, 300)
+              local changed, v = reaper.ImGui_InputText(ctx, "##db_alias", _G.__sm_db_alias or "")
+              if changed then _G.__sm_db_alias = v end
+
+              if _G.__sm_db_msg then reaper.ImGui_Text(ctx, _G.__sm_db_msg) end
+              reaper.ImGui_Separator(ctx)
+              
+              -- 按钮右对齐
+              local win_w = reaper.ImGui_GetWindowWidth(ctx)
+              local btn_w = 64
+              local spacing = 8
+              -- 光标移到右侧对齐
+              local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
+              reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
+
+              if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+                local path  = tostring(_G.__sm_dbfile_path or "")
+                local fname = tostring(_G.__sm_dbfile_name or "")
+                local alias = tostring(_G.__sm_db_alias or ""):gsub("^%s+",""):gsub("%s+$","")
+
+                if path == "" or fname == "" then
+                  _G.__sm_db_msg = "Internal error: empty path."
+                else
+                  if reaper.file_exists(path) then
+                    _G.__sm_db_msg = "File already exists."
+                  else
+                    local f = io.open(path, "wb")
+                    if f then
+                      f:close()
+                      if alias ~= "" then
+                        mediadb_alias = mediadb_alias or {}
+                        mediadb_alias[path] = alias
+                        mediadb_alias[fname] = alias
+                        SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+                      end
+                      _G.__sm_db_msg = nil
+                      reaper.ImGui_CloseCurrentPopup(ctx)
+                    else
+                      _G.__sm_db_msg = "Failed to create file."
+                    end
+                  end
+                end
+              end
+
+              reaper.ImGui_SameLine(ctx)
+              if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
+                reaper.ImGui_CloseCurrentPopup(ctx)
+              end
+              reaper.ImGui_EndPopup(ctx)
             end
           end
 
@@ -11460,7 +11959,7 @@ function loop()
                 reaper.ImGui_EndPopup(ctx)
               end
 
-              -- 拖动列表的音频文件到数据库中
+              -- 拖动列表的音频文件到数据库中（左侧折叠标题区域）
               if reaper.ImGui_BeginDragDropTarget(ctx) then
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview)
                 if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
@@ -11485,6 +11984,68 @@ function loop()
                     end
                   end
                 end
+
+                -- 从系统文件管理器拖入
+                do
+                  local pending_set, pending = {}, {}
+                  local function push_path(p_abs)
+                    if not p_abs or p_abs == "" then return end
+                    local np = normalize_path(p_abs, false)
+                    if not pending_set[np] then
+                      pending_set[np] = true
+                      table.insert(pending, np)
+                    end
+                  end
+
+                  local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 2048)
+                  if ok_files and count and count > 0 then
+                    for i = 0, count - 1 do
+                      local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
+                      if ok1 and filepath and filepath ~= "" then
+                        local p = normalize_path(filepath, false)
+                        local looks_dir = (p:match("[/\\]$") ~= nil) or (p:match("^.+%.[^/\\%.]+$") == nil)
+                        if looks_dir then
+                          for _, f in ipairs(ScanAllAudioFiles(normalize_path(p, true))) do
+                            push_path(f)
+                          end
+                        else
+                          push_path(p)
+                        end
+                      end
+                    end
+                  end
+
+                  if #pending > 0 then
+                    local dbpath = normalize_path(db_dir, true) .. dbfile
+                    local existing_map = DB_ReadExistingFileSet(dbpath)
+                    local root_dir = tree_state and tree_state.cur_scan_folder or ""
+
+                    for _, p in ipairs(pending) do
+                      if not existing_map[p] then
+                        local info = CollectFileInfo(p)
+                        if info then
+                          WriteToMediaDB(info, dbpath)
+                          existing_map[p] = true
+                        end
+                      end
+                    end
+
+                    -- 刷新文件列表
+                    if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb == dbfile then
+                      files_idx_cache = nil
+                      CollectFiles()
+
+                      file_select_start = nil
+                      file_select_end   = nil
+                      selected_row      = -1
+
+                      local static = _G._soundmole_static or {}
+                      _G._soundmole_static = static
+                      static.filtered_list_map, static.last_filter_text_map = {}, {}
+                    end
+                  end
+                end
+
                 reaper.ImGui_PopStyleColor(ctx)
                 reaper.ImGui_EndDragDropTarget(ctx)
               end
@@ -12795,6 +13356,104 @@ function loop()
             local static = _G._soundmole_static or {}
             _G._soundmole_static = static
             static.filtered_list_map, static.last_filter_text_map = {}, {}
+          end
+
+          reaper.ImGui_PopStyleColor(ctx)
+          reaper.ImGui_EndDragDropTarget(ctx)
+        end
+      end
+
+      -- 拖动文件到数据库中，媒体资源管理器文件+内部 AUDIO_PATHS (右侧列表)
+      if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
+        local dbfile = tree_state.cur_mediadb
+        local db_dir = script_path .. "SoundmoleDB"
+
+        if reaper.ImGui_BeginDragDropTarget(ctx) then
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview)
+          if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
+            local ok, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+            if ok and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
+              -- 目标数据库文件绝对路径 .MoleFileList
+              local dbpath = normalize_path(db_dir, true) .. dbfile
+              local existing_map = DB_ReadExistingFileSet(dbpath)
+              local root_dir = (tree_state and tree_state.cur_scan_folder) or ""
+              for path in payload:gmatch("([^|;|]+)") do
+                local p = normalize_path(path, false)
+                -- DB 中不存在才写入
+                if not existing_map[p] then
+                  local info = CollectFileInfo(p)
+                  if info then
+                    WriteToMediaDB(info, dbpath)
+                    existing_map[p] = true -- 写入后立刻标记，避免批量内重复
+                  end
+                end
+              end
+              -- 刷新文件列表
+              if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile then
+                CollectFiles()
+              end
+            end
+          end
+
+          -- 从系统文件管理器拖入
+          do
+            local pending_set, pending = {}, {}
+            local function push_path(p_abs)
+              if not p_abs or p_abs == "" then return end
+              local np = normalize_path(p_abs, false)
+              if not pending_set[np] then
+                pending_set[np] = true
+                table.insert(pending, np)
+              end
+            end
+
+            local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 2048)
+            if ok_files and count and count > 0 then
+              for i = 0, count - 1 do
+                local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
+                if ok1 and filepath and filepath ~= "" then
+                  local p = normalize_path(filepath, false)
+                  local looks_dir = (p:match("[/\\]$") ~= nil) or (p:match("^.+%.[^/\\%.]+$") == nil)
+                  if looks_dir then
+                    for _, f in ipairs(ScanAllAudioFiles(normalize_path(p, true))) do
+                      push_path(f)
+                    end
+                  else
+                    push_path(p)
+                  end
+                end
+              end
+            end
+
+            if #pending > 0 then
+              local dbpath = normalize_path(db_dir, true) .. dbfile
+              local existing_map = DB_ReadExistingFileSet(dbpath)
+              local root_dir = (tree_state and tree_state.cur_scan_folder) or ""
+
+              for _, p in ipairs(pending) do
+                if not existing_map[p] then
+                  local info = CollectFileInfo(p)
+                  if info then
+                    WriteToMediaDB(info, dbpath)
+                    existing_map[p] = true
+                  end
+                end
+              end
+
+              -- 刷新文件列表
+              if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb == dbfile then
+                files_idx_cache = nil
+                CollectFiles()
+
+                file_select_start = nil
+                file_select_end   = nil
+                selected_row      = -1
+
+                local static = _G._soundmole_static or {}
+                _G._soundmole_static = static
+                static.filtered_list_map, static.last_filter_text_map = {}, {}
+              end
+            end
           end
 
           reaper.ImGui_PopStyleColor(ctx)
@@ -14900,9 +15559,10 @@ function loop()
             file_select_end   = nil
             selected_row      = -1
           -- end
-          local filename = db_build_task.dbfile:match("[^/\\]+$")
-          mediadb_alias[filename] = filename -- db_build_task.alias or "Unnamed" -- 完成时不使用别名
-          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+          -- 完成后是否更改数据库名称（暂时关闭）
+          -- local filename = db_build_task.dbfile:match("[^/\\]+$")
+          -- mediadb_alias[filename] = filename -- db_build_task.alias or "Unnamed" -- 完成时不使用别名
+          -- SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
           
           db_build_task = nil
           reaper.ImGui_CloseCurrentPopup(ctx)
