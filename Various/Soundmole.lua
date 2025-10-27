@@ -1,11 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.87
+-- @version 1.0.88
 -- @changelog
---   Improved database creation flow, create an empty database or build from a folder.
---   Enhanced tag filtering, add keyword based tag search.
---   Added Lock button, continue searching within current results.
---   Added drag and drop to database, support audio from local file explorer and REAPER Media Explorer.
+--   Fixed rare stops and playhead hangs with Auto Play Next on very short samples.
 --   Compatible with reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

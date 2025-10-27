@@ -3042,6 +3042,7 @@ function StopPreview()
   wf_play_start_cursor = nil
   is_paused = false
   paused_position = 0
+  prev_preview_pos = 0 -- 复位上一帧位置
 
   -- 强制复位
   -- if last_play_cursor_before_play then
