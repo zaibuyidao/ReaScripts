@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.88
+-- @version 1.0.89
 -- @changelog
---   Fixed rare stops and playhead hangs with Auto Play Next on very short samples.
+--   Fixed an issue where silence scanning could run even when the skip silence toggle was off.
 --   Compatible with reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

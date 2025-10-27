@@ -3069,12 +3069,10 @@ function PlayFromStart(info)
       if type(state_or_path) == "table" and state_or_path.status == "pending" then
         state_or_path = SM_EnsureWaveformCache_Pump(state_or_path, WF_PUMP_ITERS, WF_PUMP_MS)
       end
-      -- 同步回退
+      -- 同步回退（弃用）
       -- reaper.SM_BuildWaveformCache(normalize_path(info.path, false), px_for_skip, st, et, maxch, 1)
     end
 
-    start_pos = FindFirstNonSilentTime(info) or 0 -- 某些情况下需要为0，避免报错。有些文件没有波形。
-  else
     start_pos = FindFirstNonSilentTime(info) or 0 -- 某些情况下需要为0，避免报错。有些文件没有波形。
   end
 
