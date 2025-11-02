@@ -127,6 +127,7 @@ local loop_enabled           = false -- 是否自动循环
 local preview_play_len       = 0     -- 当前预览音频长度
 local peak_chans             = 6     -- 默认显示6路电平
 local play_rate              = 1     -- 默认速率1.0
+local effective_rate_knob    = 1.0   -- 缓存旋钮显示的有效速率
 local pitch                  = 0     -- 音高调节
 local preserve_pitch         = true  -- 变速时是否保持音高
 local is_paused              = false -- 是否处于暂停状态
@@ -448,7 +449,7 @@ local colors = {
   volume_line_tick        = 0xFFF0F0F0, -- 水平音量推子-刻度颜色
   volume_fader            = 0xFFB0B0B0, -- 水平音量推子-常态颜色
   volume_fader_active     = 0xFFFFFFFF, -- 水平音量推子-按下颜色
-  volume_fader_outline    = 0xFFB0B0B0, -- 水平音量推子-外圈描边线
+  volume_fader_outline    = 0xFFFFFFFF, -- 水平音量推子-外圈描边线
   volume_bg               = 0x24242420, -- 水平音量推子-背景
   volume_bg_border        = 0xFFFFFF10, -- 水平音量推子-背景边框线
   slider_grab             = 0xFFB0B0B0, -- 推子滑块常态
@@ -1949,7 +1950,7 @@ function RestartPreviewWithParams(from_wave_pos)
   local cur_pos = 0
 
   if from_wave_pos then
-    cur_pos = from_wave_pos / play_rate -- 用新的速率换算
+    cur_pos = from_wave_pos / effective_rate_knob -- 用新的速率换算
   else
     if playing_preview and reaper.CF_Preview_GetValue then
       local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
@@ -1969,7 +1970,7 @@ function RestartPreviewWithParams(from_wave_pos)
   if playing_preview then
     reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
     reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-    reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+    reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
     reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
     reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
     reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", cur_pos)
@@ -2026,7 +2027,7 @@ function InsertMediaWithKeepParams(path)
 
   local take = reaper.GetActiveTake(new_item)
   if take and keep_preview_rate_pitch_on_insert then
-    reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", tonumber(play_rate) or 1.0)
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", tonumber(effective_rate_knob) or 1.0)
     reaper.SetMediaItemTakeInfo_Value(take, "D_PITCH",    tonumber(pitch) or 0.0)
     reaper.SetMediaItemTakeInfo_Value(take, "B_PPITCH",   preserve_pitch and 1 or 0)
 
@@ -2034,7 +2035,7 @@ function InsertMediaWithKeepParams(path)
     if src then
       local src_len = select(1, reaper.GetMediaSourceLength(src)) or 0
       if src_len > 0 then
-        reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", src_len / play_rate)
+        reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", src_len / effective_rate_knob)
       end
     end
     reaper.UpdateItemInProject(new_item)
@@ -2092,10 +2093,10 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
 
   -- 按需应用预听速率与音高
   if keep_preview_rate_pitch_on_insert then
-    reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len / play_rate)
-    reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", play_rate or 1.0)
-    reaper.SetMediaItemTakeInfo_Value(take, "D_PITCH",    pitch     or 0.0)
-    reaper.SetMediaItemTakeInfo_Value(take, "B_PPITCH",   preserve_pitch and 1 or 0)
+    reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len / effective_rate_knob)
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", effective_rate_knob or 1.0)
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PITCH", pitch or 0.0)
+    reaper.SetMediaItemTakeInfo_Value(take, "B_PPITCH", preserve_pitch and 1 or 0)
     reaper.UpdateItemInProject(new_item)
   else
     -- 长度等于源选区时长
@@ -2128,6 +2129,7 @@ end
 
 -- 旋钮控件，在函数最前面加静态表存储drag偏移
 ImGui_Knob_drag_y = ImGui_Knob_drag_y or {}
+ImGui_Knob_RClickToMenu = ImGui_Knob_RClickToMenu or {}
 
 function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   -- 交互热区
@@ -2182,8 +2184,8 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
     ImGui_Knob_drag_y[label] = nil
   end
 
-  -- 右键或双击复位
-  if hovered and (reaper.ImGui_IsMouseClicked(ctx, 1) or reaper.ImGui_IsMouseDoubleClicked(ctx, 0)) then
+  -- 双击复位
+  if hovered and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
     value = default_value or v_min
     changed = true
     ImGui_Knob_drag_y[label] = nil
@@ -2300,7 +2302,7 @@ function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_th
     ImGui_Volume_drag_x[label] = nil
   end
   -- 右键或双击复位到 default_db
-  if hovered and (reaper.ImGui_IsMouseClicked(ctx, 1) or reaper.ImGui_IsMouseDoubleClicked(ctx, 0)) then
+  if hovered and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
     cur_db = default_db
     gain_value = dB_to_gain(cur_db)
     changed = true
@@ -3025,6 +3027,100 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
   end
 end
 
+--------------------------------------------- 同步速度与联动 ---------------------------------------------
+
+tempo_sync_enabled = false -- 同步速度
+link_with_reaper   = false -- 联动走带
+link_prev_playing  = false
+wait_nextbar_play  = false -- true=等待, false=立刻
+wait_nextbar_cur   = { active=false, target_t=0, deadline=0, info=nil }
+
+function GetTempoBase(src_or_path)
+  local base = 1.0
+  local src, need_destroy = nil, false
+
+  if src_or_path and type(src_or_path) == "string" then
+    src = reaper.PCM_Source_CreateFromFile(src_or_path)
+    need_destroy = (src ~= nil)
+  elseif src_or_path then
+    src = src_or_path
+  end
+  src = src or playing_source
+
+  if src and reaper.GetTempoMatchPlayRate then
+    local ok, rate = reaper.GetTempoMatchPlayRate(src, 1, 0, 1)
+    if ok and type(rate) == "number" and rate > 0 then
+      base = rate
+    end
+  end
+
+  if need_destroy and src then reaper.PCM_Source_Destroy(src) end
+  return base
+end
+
+function DistanceToNextBarFromCursor()
+  local t = reaper.GetCursorPosition()
+  local qn = reaper.TimeMap_timeToQN(t)
+  local num, denom = reaper.TimeMap_GetTimeSigAtTime(0, t)
+  num = num or 4
+  denom = denom or 4
+  local qn_per_bar = 4 * num / denom
+  local cur_bar_idx = math.floor(qn / qn_per_bar) -- 当前所处小节索引
+  local next_bar_qn = (cur_bar_idx + 1) * qn_per_bar -- 下个小节的 QN 位置
+  local next_bar_time = reaper.TimeMap_QNToTime(next_bar_qn) - 0.05 -- 提前0.05秒触发，避免误差
+  local dist = math.max(0, next_bar_time - t)
+  return dist, next_bar_time, qn_per_bar
+end
+
+function WaitNextBarCursorTick()
+  if not wait_nextbar_cur.active then return end
+  local st = reaper.GetPlayState()
+  local is_playing = (((st or 0) & 1) == 1)
+  local now    = is_playing and reaper.GetPlayPosition() or reaper.time_precise()
+  local target = is_playing and wait_nextbar_cur.target_t or wait_nextbar_cur.deadline
+
+  if now + 0.0005 >= target then
+    local info = wait_nextbar_cur.info
+    wait_nextbar_cur.active = false
+    wait_nextbar_cur.info   = nil
+    PlayFromCursor(info)
+    return
+  end
+  reaper.defer(WaitNextBarCursorTick)
+end
+
+-- 等待到下一个小节再播放
+function PlayCursorAtNextBar(info, wait_next)
+  if wait_next == nil then wait_next = true end -- 兼容旧调用
+
+  if not wait_next then
+    -- 立刻播放
+    wait_nextbar_cur.active = false
+    wait_nextbar_cur.info   = nil
+    PlayFromCursor(info)
+    local _, next_bar_time = DistanceToNextBarFromCursor()
+    return 0.0, next_bar_time
+  end
+  -- 等待
+  local dist, next_bar_time = DistanceToNextBarFromCursor()
+  wait_nextbar_cur.active   = false
+  wait_nextbar_cur.info     = info
+  wait_nextbar_cur.target_t = next_bar_time
+  wait_nextbar_cur.deadline = reaper.time_precise() + dist
+  wait_nextbar_cur.active   = true
+
+  if dist < 1e-4 then
+    wait_nextbar_cur.active = false
+    PlayFromCursor(info)
+    return 0.0, next_bar_time
+  end
+
+  WaitNextBarCursorTick()
+  return dist, next_bar_time
+end
+
+--------------------------------------------- 播放控制 ---------------------------------------------
+
 -- 停止播放预览
 function StopPreview()
   -- 重置峰值
@@ -3049,6 +3145,8 @@ function StopPreview()
   --   Wave.play_cursor = last_play_cursor_before_play
   -- end
   SM_PreviewStop()
+  -- 下一个小节播放
+  if wait_nextbar_cur then wait_nextbar_cur.active = false end
 end
 
 -- 从头播放
@@ -3095,14 +3193,14 @@ function PlayFromStart(info)
     source = reaper.PCM_Source_CreateFromFile(info.path)
   end
   if source then
+    playing_source = source
     playing_preview = reaper.CF_CreatePreview(source)
     SM_PreviewBegin(playing_source)
-    playing_source = source
     if playing_preview then
       if reaper.CF_Preview_SetValue then
         reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob) -- 同步速度与联动
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
@@ -3143,17 +3241,29 @@ function PlayFromCursor(info)
     source = reaper.PCM_Source_CreateFromFile(info.path)
   end
   if source then
+    playing_source = source
     playing_preview = reaper.CF_CreatePreview(source)
     SM_PreviewBegin(playing_source)
-    playing_source = source
     if playing_preview then
       if reaper.CF_Preview_SetValue then
         reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob) -- 同步速度与联动
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-        reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
+        -- 决定光标起播位置
+        local base_pos = (link_with_reaper and 0) or Wave.play_cursor or 0 --  or (tempo_sync_enabled and Wave.play_cursor / effective_rate_knob)
+        local start_pos = base_pos
+        if skip_silence_enabled then
+          local eps = 1e-6
+          if base_pos <= eps then
+            -- 仅在从头起播的场景下应用跳过静音
+            local non_sil = FindFirstNonSilentTime(info)
+            if non_sil and non_sil > 0 then start_pos = non_sil end
+          end
+        end
+        reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
+        Wave.play_cursor = start_pos
       end
       ApplyPreviewOutputTrack(playing_preview, info)
       reaper.CF_Preview_Play(playing_preview)
@@ -6561,7 +6671,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
 
     -- 绘制播放光标，排除最近播放影响
     if src_len > 0 and collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave and Wave.play_cursor then
-      local play_px = ((Wave.play_cursor * play_rate) / src_len) * thumb_w
+      local play_px = ((Wave.play_cursor * effective_rate_knob) / src_len) * thumb_w
       if play_px == play_px then -- 过滤 NaN
         if play_px < 0 then play_px = 0 elseif play_px > thumb_w then play_px = thumb_w end
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
@@ -6575,7 +6685,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
       if mx >= x and mx <= x + thumb_w and my >= y and my <= y + thumb_h then
         if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
           local rel_x = mx - x
-          local new_pos = (rel_x / thumb_w) * src_len
+          local new_pos = ((rel_x / thumb_w) / effective_rate_knob) * src_len
           current_recent_play_info = nil -- 解除最近播放锁定
           if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
             collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
@@ -7474,7 +7584,7 @@ function FS_http_get(url)
   local osname = reaper.GetOS()
   local is_win = osname and osname:find("Win") ~= nil
   -- Windows 优先走 ExecProcess，避免CMD弹窗
-  if is_win and reaper.ExecProcess then
+  if is_win then
     local tmp = FS_join(FS_DB_DIR(), (".fs_http_%d.tmp"):format(math.floor(reaper.time_precise()*1e6)))
     local cmd = ('curl -L -s%s "%s" -o "%s"'):format(hdr, url:gsub('"','\\"'), tmp:gsub('"','\\"'))
     local code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
@@ -8166,7 +8276,7 @@ function FS_download_to(url, dst, auth_header)
 
     -- Windows 走 ExecProcess, macOS/Linux 走 popen
     local code
-    if is_win and reaper.ExecProcess then
+    if is_win then
       code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
     else
       local _, c = FS_run(cmd)
@@ -8385,7 +8495,7 @@ function FS_http_post_form(url, kvpairs)
   end
 
   -- Windows 优先走 ExecProcess，避免CMD弹窗
-  if is_win and reaper.ExecProcess then
+  if is_win then
     local tmp_out = FS_join(FS_DB_DIR(), (".fs_http_%d.out"):format(stamp))
     local cmd = ('curl -L -s%s -X POST -H "Content-Type: application/x-www-form-urlencoded" ' .. '--data-binary "@%s" "%s" -o "%s"'):format(hdr, tmp_dat:gsub('"','\\"'), url:gsub('"','\\"'), tmp_out:gsub('"','\\"'))
     local code = tonumber(reaper.ExecProcess(cmd, 120000)) or -1
@@ -13524,6 +13634,38 @@ function loop()
     if pitch < pitch_knob_min then pitch = pitch_knob_min end
     if pitch > pitch_knob_max then pitch = pitch_knob_max end
 
+    if reaper.ImGui_BeginPopupContextItem(ctx) then
+      if reaper.ImGui_MenuItem(ctx, "Preserve pitch when changing rate", nil, preserve_pitch) then
+        preserve_pitch = not preserve_pitch
+        reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
+      end
+      if reaper.ImGui_MenuItem(ctx, "Keep preview rate & pitch when inserting to arrange", nil, keep_preview_rate_pitch_on_insert) then
+        keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
+        reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+      end
+      reaper.ImGui_Separator(ctx)
+      if reaper.ImGui_MenuItem(ctx, "Tempo Sync", nil, tempo_sync_enabled, true) then
+        tempo_sync_enabled = not tempo_sync_enabled
+        -- 新增同步速率立刻应用
+        if tempo_sync_enabled then
+          play_rate = 1.0
+          sync_rate_reset_done = true
+        else
+          sync_rate_reset_done = false
+        end
+        -- 正在播放则立刻按新速率重启预览
+        if playing_preview then RestartPreviewWithParams() end
+      end
+      if reaper.ImGui_MenuItem(ctx, "Link Transport", nil, link_with_reaper, true) then
+        link_with_reaper = not link_with_reaper
+      end
+      if reaper.ImGui_MenuItem(ctx, "Start at Next Bar (Link Transport required, Spacebar to trigger)", nil, wait_nextbar_play, link_with_reaper) then
+        wait_nextbar_play = not wait_nextbar_play
+      end
+
+      reaper.ImGui_EndPopup(ctx)
+    end
+
     -- 音高输入框
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 50)
@@ -13537,19 +13679,106 @@ function loop()
     end
 
     -- 播放速率旋钮
+    function _safe_base()
+      local b = GetTempoBase(file_info and file_info.path or nil) or 1.0
+      if b <= 0 then b = 1.0 end
+      return b
+    end
+
+    -- 记住上一帧是否开启同步和上一帧的有效速率
+    if _prev_tempo_sync == nil then _prev_tempo_sync = tempo_sync_enabled end
+    if _prev_eff_rate == nil then
+      local b0 = _safe_base()
+      _prev_eff_rate = (tempo_sync_enabled and (play_rate * b0)) or play_rate
+    end
+
+    -- 补偿抵消 Tempo Sync 状态翻转，保持光标屏幕位置不变
+    do
+      if _prev_tempo_sync ~= tempo_sync_enabled then
+        local base_now = _safe_base()
+
+        local old_eff = _prev_eff_rate
+        local pr_new = play_rate
+        if tempo_sync_enabled and not sync_rate_reset_done then
+          pr_new = 1.0
+          sync_rate_reset_done = true
+        elseif (not tempo_sync_enabled) and sync_rate_reset_done then
+          sync_rate_reset_done = false
+        end
+
+        local new_eff = (tempo_sync_enabled and (pr_new * base_now)) or pr_new
+
+        local wave_pos
+        if select_start_time and select_end_time then
+          local s_vis = select_start_time * old_eff
+          local e_vis = select_end_time * old_eff
+          select_start_time = s_vis / new_eff
+          select_end_time   = e_vis / new_eff
+        end
+
+        if playing_preview and reaper.CF_Preview_GetValue then
+          local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+          if ok then wave_pos = pos * old_eff end
+        else
+          wave_pos = Wave.play_cursor * old_eff
+        end
+
+        play_rate = pr_new
+        Wave.play_cursor = wave_pos / new_eff
+        effective_rate_knob = new_eff
+        if playing_preview then RestartPreviewWithParams(wave_pos) end
+
+        _prev_tempo_sync = tempo_sync_enabled
+        _prev_eff_rate   = new_eff
+      end
+    end
+
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_Text(ctx, "Rate:")
     reaper.ImGui_SameLine(ctx)
     local knob_size = 24
     reaper.ImGui_PushID(ctx, i)
+
+    local base = _safe_base()
+    if tempo_sync_enabled and not sync_rate_reset_done then
+      play_rate = 1.0
+      sync_rate_reset_done = true
+    elseif not tempo_sync_enabled and sync_rate_reset_done then
+      sync_rate_reset_done = false
+    end
+
+    local disp_rate = tempo_sync_enabled and (play_rate * base) or play_rate
+    effective_rate_knob = disp_rate
+
+    local ui_locked = tempo_sync_enabled -- 开启同步则锁控件
+    if ui_locked then reaper.ImGui_BeginDisabled(ctx, true) end
     local knob_changed, knob_value = ImGui_Knob(ctx, "##rate_knob", play_rate, rate_min, rate_max, knob_size, 1)
+    if ui_locked then reaper.ImGui_EndDisabled(ctx) end
     reaper.ImGui_PopID(ctx)
+
+    -- 置灰时为旋钮铺一层不可见按钮，用于右键弹出菜单
+    local _ctx_btn_id = "##rate_knob_ctx"
+    do
+      local _curx, _cury = reaper.ImGui_GetCursorScreenPos(ctx)
+      local _minx, _miny = reaper.ImGui_GetItemRectMin(ctx)
+      local _maxx, _maxy = reaper.ImGui_GetItemRectMax(ctx)
+      if ui_locked then
+        reaper.ImGui_SetCursorScreenPos(ctx, _minx, _miny)
+        reaper.ImGui_InvisibleButton(ctx, _ctx_btn_id, _maxx - _minx, _maxy - _miny)
+        reaper.ImGui_SetCursorScreenPos(ctx, _curx, _cury)
+      end
+    end
+
+    -- 拖拽状态标记
     if reaper.ImGui_IsItemActive(ctx) then
       is_knob_dragging = true
     end
-    if knob_changed then
-      local r1 = play_rate  -- 当前速率
-      local r2 = knob_value -- 新速率
+
+    -- 旋钮改变时，使用相同思路做抵消，确保光标不跳
+    if knob_changed and not ui_locked then
+      local base_now = _safe_base()
+      local r1 = (tempo_sync_enabled and (play_rate * base_now)) or play_rate -- 当前速率
+      local r2 = (tempo_sync_enabled and (knob_value * base_now)) or knob_value -- 新速率
       local wave_pos
 
       -- 保存视觉时间，反推新的数据时间
@@ -13562,32 +13791,68 @@ function loop()
 
       if playing_preview and reaper.CF_Preview_GetValue then
         local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-        if ok then
-          wave_pos = pos * r1 -- 播放时
-        end
+        if ok then wave_pos = pos * r1 end -- 播放时
       else
         wave_pos = Wave.play_cursor * r1 -- 停止时
       end
 
-      play_rate = r2
-      Wave.play_cursor = wave_pos / play_rate -- 更新光标位置，确保视觉稳定
+      play_rate = knob_value
+      Wave.play_cursor = wave_pos / r2 -- 更新光标位置，确保视觉稳定
+      effective_rate_knob = r2
+      _prev_eff_rate = r2
       if playing_preview then RestartPreviewWithParams(wave_pos) end
     end
-    -- 双向同步（输入框改了也会更新旋钮，下次刷新界面）
+
+    -- 双向同步（输入框改了也会更新旋钮）
     if play_rate < rate_min then play_rate = rate_min end
     if play_rate > rate_max then play_rate = rate_max end
+
+    local _popup_opened = ui_locked and reaper.ImGui_BeginPopupContextItem(ctx, "##rate_knob_ctx") or reaper.ImGui_BeginPopupContextItem(ctx)
+    if _popup_opened then
+      if reaper.ImGui_MenuItem(ctx, "Preserve pitch when changing rate", nil, preserve_pitch) then
+        preserve_pitch = not preserve_pitch
+        reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
+      end
+      if reaper.ImGui_MenuItem(ctx, "Keep preview rate & pitch when inserting to arrange", nil, keep_preview_rate_pitch_on_insert) then
+        keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
+        reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+      end
+      reaper.ImGui_Separator(ctx)
+      if reaper.ImGui_MenuItem(ctx, "Tempo Sync", nil, tempo_sync_enabled, true) then
+        tempo_sync_enabled = not tempo_sync_enabled
+        -- 新增同步速率立刻应用
+        if tempo_sync_enabled then
+          play_rate = 1.0
+          sync_rate_reset_done = true
+        else
+          sync_rate_reset_done = false
+        end
+        -- 正在播放则立刻按新速率重启预览
+        if playing_preview then RestartPreviewWithParams() end
+      end
+      if reaper.ImGui_MenuItem(ctx, "Link Transport", nil, link_with_reaper, true) then
+        link_with_reaper = not link_with_reaper
+      end
+      if reaper.ImGui_MenuItem(ctx, "Start at Next Bar (Link Transport required, Spacebar to trigger)", nil, wait_nextbar_play, link_with_reaper) then
+        wait_nextbar_play = not wait_nextbar_play
+      end
+
+      reaper.ImGui_EndPopup(ctx)
+    end
 
     -- 播放速率输入框
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushItemWidth(ctx, 50)
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
-    local rv4
-    rv4, new_play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", play_rate) -- (ctx, "Rate##RatePlayrate", play_rate, 0.05, 0.1, "%.3f")
-    -- reaper.ImGui_PopStyleVar(ctx)
+    local rv4, new_play_rate
+    if ui_locked then reaper.ImGui_BeginDisabled(ctx, true) end
+    rv4, new_play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", disp_rate)
+    if ui_locked then reaper.ImGui_EndDisabled(ctx) end
     reaper.ImGui_PopItemWidth(ctx)
-    if rv4 then
-      local r1 = play_rate    -- 当前速率
-      local r2 = new_play_rate -- 新速率
+
+    if rv4 and not ui_locked then
+      local base_now = _safe_base()
+      local r1 = (tempo_sync_enabled and (play_rate * base_now)) or play_rate
+      local r2 = (tempo_sync_enabled and (new_play_rate * base_now)) or new_play_rate
       local wave_pos
 
       if select_start_time and select_end_time then
@@ -13599,15 +13864,15 @@ function loop()
 
       if playing_preview and reaper.CF_Preview_GetValue then
         local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-        if ok then
-          wave_pos = pos * r1 -- 播放时
-        end
+        if ok then wave_pos = pos * r1 end -- 播放时
       else
         wave_pos = Wave.play_cursor * r1 -- 停止时
       end
 
-      play_rate = r2
-      Wave.play_cursor = wave_pos / play_rate -- 更新光标位置，确保视觉稳定
+      play_rate = new_play_rate
+      Wave.play_cursor = wave_pos / r2
+      effective_rate_knob = r2
+      _prev_eff_rate = r2
       if playing_preview then RestartPreviewWithParams(wave_pos) end
     end
 
@@ -14016,19 +14281,25 @@ function loop()
 
       local function Section_CacheDir()
         reaper.ImGui_Text(ctx, "Waveform Cache Folder:")
-        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_PushItemWidth(ctx, -140)
         local changed_cache_dir, new_cache_dir = reaper.ImGui_InputText(ctx, "##cache_dir", cache_dir, 512)
         reaper.ImGui_PopItemWidth(ctx)
         if changed_cache_dir then
           cache_dir = normalize_path(new_cache_dir, true)
           reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
         end
-        reaper.ImGui_SameLine(ctx)
-        if reaper.ImGui_Button(ctx, "Browse##SelectCacheDir") then
+        reaper.ImGui_SameLine(ctx, nil, 8)
+        if reaper.ImGui_Button(ctx, "Browse##SelectCacheDir", 60) then
           local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", cache_dir)
           if rv == 1 and out and out ~= "" then
             cache_dir = normalize_path(out, true)
             reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
+          end
+        end
+        reaper.ImGui_SameLine(ctx, nil, 8)
+        if reaper.ImGui_Button(ctx, "Open##OpenCacheDir", 60) then
+          if cache_dir and cache_dir ~= "" then
+            reaper.CF_LocateInExplorer(normalize_path(cache_dir, true))
           end
         end
       end
@@ -14415,7 +14686,7 @@ function loop()
 
     do
       -- 时间容差
-      local END_EPS = 0.02
+      local END_EPS = 0.05
 
       if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
         local ok_pos, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
@@ -14443,6 +14714,20 @@ function loop()
         end
       end
     end
+
+    -- 同步速度复选框
+    -- reaper.ImGui_SameLine(ctx, nil, 10)
+    -- local _rv_sync, _sync = reaper.ImGui_Checkbox(ctx, "Tempo Sync##sm_sync", tempo_sync_enabled)
+    -- if _rv_sync then
+    --   tempo_sync_enabled = _sync
+    --   if playing_preview then
+    --     if RestartPreviewWithParams then RestartPreviewWithParams() end
+    --   end
+    -- end
+    -- 联动复选框
+    -- reaper.ImGui_SameLine(ctx, nil, 10)
+    -- local _rv_link, _link = reaper.ImGui_Checkbox(ctx, "Link Transport##sm_link", link_with_reaper)
+    -- if _rv_link then link_with_reaper = _link end
 
     -- 文件路径，始终跟随 file_info
     local show_path = file_info and file_info.path or ""
@@ -14808,6 +15093,7 @@ function loop()
         if not reaper.ImGui_IsAnyItemActive(ctx) then -- 避免输入框等被激活后空格冲突
           if playing_preview then
             StopPreview()
+            if link_with_reaper then reaper.Main_OnCommand(1016, 0) end -- 同步停止REAPER
             -- 强制播放光标复位旧版本，不包括光标复位
             if last_play_cursor_before_play then
               Wave.play_cursor = last_play_cursor_before_play
@@ -14819,7 +15105,17 @@ function loop()
             -- Wave.play_cursor = last_play_cursor_before_play
             -- wf_play_start_cursor = last_play_cursor_before_play
           else
-            PlayFromCursor(cur_info)
+            if link_with_reaper then
+              local playstate = reaper.GetPlayState()
+              if ((playstate & 1) == 1) then
+                reaper.Main_OnCommand(1016, 0)
+              else
+                reaper.Main_OnCommand(1007, 0)
+              end
+              -- PlayCursorAtNextBar(cur_info) -- 等待到下一个小节再预览
+            else
+              PlayFromCursor(cur_info)
+            end
           end
         end
       end
@@ -14980,11 +15276,12 @@ function loop()
           select_end_time = mouse_time
         end
 
-        -- 框选松开
+        -- 框选松开，移动光标（未播放时）
         if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
           selecting = false
           if has_selection() then
             local select_min = math.min(select_start_time, select_end_time)
+            select_min = (tempo_sync_enabled and select_min / effective_rate_knob) or select_min
             just_selected_range = true
             Wave.play_cursor = select_min
             wf_play_start_cursor = select_min
@@ -15005,6 +15302,7 @@ function loop()
           -- 框选松开时自动跳光标
           if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
             local select_min = math.min(select_start_time, select_end_time)
+            -- select_min = (tempo_sync_enabled and select_min / effective_rate_knob) or select_min
             Wave.play_cursor = select_min
             wf_play_start_cursor = select_min
             if playing_preview then
@@ -15022,6 +15320,10 @@ function loop()
           if ok then
             local select_max = math.max(select_start_time, select_end_time)
             local select_min = math.min(select_start_time, select_end_time)
+            -- 框选选区的左右范围值
+            select_max = (tempo_sync_enabled and (select_max / effective_rate_knob)) or select_max
+            select_min = (tempo_sync_enabled and (select_min / effective_rate_knob)) or select_min
+
             if prev_play_cursor and prev_play_cursor >= select_min and prev_play_cursor <= select_max then
               if pos >= select_max then
                 StopPreview(cur_info)
@@ -15055,11 +15357,15 @@ function loop()
             frac = math.max(0, math.min(1, frac))
             local visible_len = Wave.src_len / Wave.zoom
             local mouse_time_visual = Wave.scroll + frac * visible_len
-            local mouse_time = mouse_time_visual / play_rate
+            local mouse_time = mouse_time_visual / effective_rate_knob -- 鼠标点击时定位光标
 
             if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
               local select_min = math.min(select_start_time, select_end_time)
               local select_max = math.max(select_start_time, select_end_time)
+
+              select_max = (tempo_sync_enabled and (select_max / effective_rate_knob)) or select_max
+              select_min = (tempo_sync_enabled and (select_min / effective_rate_knob)) or select_min
+
               if mouse_time >= select_min and mouse_time <= select_max then
                 -- 选区内 - 定位
                 Wave.play_cursor = mouse_time
@@ -15127,7 +15433,7 @@ function loop()
       -- 绘制播放光标
       if Wave.play_cursor and Wave.src_len and Wave.zoom and Wave.zoom ~= 0 then
         -- 速率变化时调整光标位置
-        local adjusted_play_cursor = Wave.play_cursor * play_rate
+        local adjusted_play_cursor = Wave.play_cursor * effective_rate_knob -- 播放光标推进位置
         local px = (adjusted_play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
         reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, colors.preview_play_cursor, 1) -- 0xFF2222FF
@@ -15637,6 +15943,31 @@ function loop()
       DeleteCoverCacheFiles() -- 删除缓存图片
       SaveExitSettings()      -- 保存状态
       return -- 退出脚本
+    end
+  end
+
+  -- 同步速度与联动
+  do
+    if link_with_reaper then
+      local st = reaper.GetPlayState() -- 1=播放, 2=暂停
+      local is_play = (((st or 0) & 1) == 1)
+
+      if is_play and not link_prev_playing then
+        local info = file_info or last_playing_info
+        if info and info.path and not playing_preview then
+          if wait_nextbar_play then
+            PlayCursorAtNextBar(info, true)
+          else
+            PlayCursorAtNextBar(info, false)
+          end
+        end
+      elseif (not is_play) and link_prev_playing then
+        if playing_preview and StopPreview then StopPreview() end
+        if wait_nextbar_cur then wait_nextbar_cur.active = false end
+      end
+      link_prev_playing = is_play
+    else
+      link_prev_playing = false
     end
   end
 

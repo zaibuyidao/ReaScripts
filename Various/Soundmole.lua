@@ -1,9 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.89
+-- @version 1.0.90
 -- @changelog
---   Fixed an issue where silence scanning could run even when the skip silence toggle was off.
---   Compatible with reaper_soundmole-x64.dll v0.0.4.1
+--   Added Tempo Sync to match the playback rate to the project tempo.
+--   Added Link Transport with Start at Next Bar when enabled.
+--   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
