@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="121f71e595bdb514c1cb15060713504191832130">
+<index version="1" name="zaibuyidao Scripts" commit="79b0d77bdfdaebedb6cc08fa2dff1f741907e5bc">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -6620,6 +6620,24 @@ Added mode selection:
       <version name="1.3.4" author="zaibuyidao" time="2024-01-21T09:10:22Z">
         <changelog><![CDATA[+ Add Multi-Language Support]]></changelog>
         <source main="main midi_editor midi_inlineeditor">https://github.com/zaibuyidao/ReaScripts/raw/111fad8b1f584f3bb0299d6ab0638994322ff9bf/MIDI%20Editor/zaibuyidao_Transpose.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Trim MIDI Item Edges.lua" type="script" desc="Trim MIDI Item Edges">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires JS_ReaScriptAPI & SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/u/zaibuyidao</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2025-11-02T14:04:19Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/79b0d77bdfdaebedb6cc08fa2dff1f741907e5bc/MIDI%20Editor/zaibuyidao_Trim%20MIDI%20Item%20Edges.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Trim Note Left Edge (Fast).lua" type="script" desc="Trim Note Left Edge (Fast)">
