@@ -1,10 +1,10 @@
 #NAME:Chinese Traditional (繁體中文)
-;Version: 7.49.1
+;Version: 7.52
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49375/Chinese%20%28Traditional%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.49, SWS: 2.14.0.7
+;  Brand new REAPER: 7.52, SWS: 2.14.0.7
 
 [common]
 DCEF2B4D03DE723C=名稱
@@ -2304,7 +2304,6 @@ E88E3942C922993A=k'name
 A380354012A2D803=通過名稱跳轉到片段標記
 
 [DLG_145] ; IDD_COLORTHEMEDEV
-81F584F9FDAE6C4F=在查找器中顯示
 26A41802E656AB2D=主題開發/調整
 76CA49A564380AB8=主題顏色/字體設定:
 72E77C5A7CC1D2B0=加載主題...
@@ -2312,6 +2311,7 @@ C63F867B1B382AE3=儲存主題...
 A439058D27884637=圖片資源路徑:
 80682754268B716C=在資源管理器中顯示
 3AAC7E082D07235C=重新加載圖片
+81F584F9FDAE6C4F=在查找器中顯示
 
 [DLG_146] ; IDD_FX_UNKN
 165C255907F1A60A=無法加載以下效果插件:
@@ -3654,7 +3654,9 @@ A7BA0064C3A88716=輸出設備:
 973B67107DB3B77C=默認預設渲染路徑 (若未指定，則使用當前工程目錄，前提是存在該目錄):
 E19AF0FCD67934A5=當工程未儲存且沒有配置錄音路徑時的默認預設錄音路徑:
 55FF305FB05C16EA=將所有峰值緩存 (.reapeaks) 存儲在另一個路徑:
-6934246FDA04EE9E=以下路徑使用備用峰值緩存路徑 (多個路徑由分號分隔):
+CCDEE8625F8393F7=以下路徑使用備用峰值緩存路徑:
+8EDDEE351E7EF4E9=編輯列表...
+B8A8BC344CEEADF4=不要從以下路徑複製/移動媒體:
 
 [DLG_475] ; IDD_MEDIAITEMPROPS
 8A7A99B055B2BC0E=淡入:
@@ -6900,16 +6902,16 @@ DFEF278FAC892693=對象編輯: 按儲存的微調對話框設定 7 向左微調 
 DFEF348FAC893CAA=對象編輯: 按儲存的微調對話框設定 8 向左微調 ⇌ Item edit: Nudge left by saved nudge dialog settings 8
 7B29B42478E44E26=對象編輯: 將滑鼠下方的對象移動到編輯游標的位置 ⇌ Item edit: Move position of item under mouse to edit cursor
 7C5665CED16B35C0=對象編輯: 將滑鼠下方對象的左邊緣修剪到編輯游標 ⇌ Item edit: Trim left edge of item under mouse to edit cursor
-345EF096C306C94B=對象編輯: 將滑鼠下方對象的左邊緣移動到編輯游標 ⇌ Item edit: Move left edge of item under mouse to edit cursor
+AB671D42FD20D809=對象編輯: 將滑鼠下方對象的左邊緣移動到編輯游標 (保持對象右邊緣不變) ⇌ Item edit: Move left edge of item under mouse to edit cursor (preserving item right edge)
 7E2A0BFEACB110C7=對象編輯: 將滑鼠下方對象的右邊緣修剪到編輯游標 ⇌ Item edit: Trim right edge of item under mouse to edit cursor
-F4065BA0753ECEF6=對象編輯: 將滑鼠下方對象的右邊緣移動到編輯游標 ⇌ Item edit: Move right edge of item under mouse to edit cursor
+7597DB81BE1B90BB=對象編輯: 將滑鼠下方對象的右邊緣移動到編輯游標 (保持對象長度不變) ⇌ Item edit: Move right edge of item under mouse to edit cursor (preserving item length)
 97774266884310BD=對象編輯: 將滑鼠下方對象的內容移動到編輯游標 ⇌ Item edit: Move contents of item under mouse to edit cursor
 4D12E260B0E09A3A=對象編輯: 將滑鼠下方對象的克隆移動到編輯游標 ⇌ Item edit: Move duplicate of item under mouse to edit cursor
 BA67DC02378871E5=對象編輯: 將對象位置移動到編輯游標 ⇌ Item edit: Move position of item to edit cursor
 E1F55EEE9C62B46F=對象編輯: 將對象的左邊緣修剪到編輯游標 ⇌ Item edit: Trim left edge of item to edit cursor
-5B29ABBD2B4EB438=對象編輯: 將對象的左邊緣移動到編輯游標 ⇌ Item edit: Move left edge of item to edit cursor
+EB6439C9B1D20F40=對象編輯: 將對象的左邊緣移動到編輯游標 (保持對象右邊緣不變) ⇌ Item edit: Move left edge of item to edit cursor (preserving item right edge)
 9C5B4D6BEC2DF304=對象編輯: 將對象的右邊緣修剪到編輯游標 ⇌ Item edit: Trim right edge of item to edit cursor
-8FF1755C264ECDF5=對象編輯: 將對象的右邊緣移動到編輯游標 ⇌ Item edit: Move right edge of item to edit cursor
+F1E003DFEA502F7A=對象編輯: 將對象的右邊緣移動到編輯游標 (保持對象長度不變) ⇌ Item edit: Move right edge of item to edit cursor (preserving item length)
 8BA1C5410EDD134A=對象編輯: 將對象的內容移動到編輯游標 ⇌ Item edit: Move contents of item to edit cursor
 EC4404E2595D22F9=對象編輯: 將對象的克隆移動到編輯游標 ⇌ Item edit: Move duplicate of item to edit cursor
 E93F2BB2C8128CF6=對象編輯: 向左移動對象, 保持內容的時間不變 ⇌ Item edit: Move items left, preserving timing of contents
@@ -13309,6 +13311,10 @@ BF4E7CF25C00238B= [有點脈衝感]
 D4A529A0DD35A4AD=加載自動化對象
 096516B609B04A04=儲存自動化對象
 
+[portable]
+9AD7B58BCF084FA3=您正在運行便攜安裝的 REAPER。\r\n\r\n是否掃描系統 VST/CLAP/LV2 路徑？\r\n\r\n如果選擇否，以後可能需要手動添加這些路徑。
+FB86E1671F243FB8=便攜安裝
+
 [prefs]
 D2DE5E701E5C239D=將按鍵映射儲存為:
 2564D884E323133A=選擇要打開的按鍵映射:
@@ -13339,7 +13345,8 @@ BDAA654D1485A54B=同時顯示檔案名和完整路徑
 24BEF8358EFADF20=加載工程時添加到最近列表
 698B10369F7014B2=使用 '儲存工程的副本' 時添加到最近列表
 2F416F6C91972BAF=使用 '儲存工程的新版本' 時從最近列表中刪除舊工程
-3C50D04ABFECEE2A=清除最近工程列表
+4BB201A87FABD680=從最近列表中移除丟失的工程
+7C37DB2245F9E12D=清除最近列表
 6A4004041F988DAF=清除最近工程列表？
 B967FB615627BFEF=選擇工程:
 BA17125F561726C9=當不錄音時
@@ -14257,6 +14264,7 @@ DC2462818769728A=如果工程尚未儲存且在檔案/工程設定中未設定�
 96F6407D44067B64=REAPER 峰值緩存檔案 (.reapeaks) 的備用路徑。即使在此處未啟用，也可以使用備用路徑，參見 '偏好設定/媒體'。
 02DF1D8AB8130F68=始終將其峰值緩存檔案放在備用路徑而不是與媒體一起的路徑列表。對於樣本庫等非常有用。
 50A0CCCDC8CC3250=當沒有加載工程並且您希望加載或儲存工程檔案時，設定默認預設目錄。
+FE9E322410443D3C=不會從這些路徑複製或移動媒體的路徑列表(匯入時若已配置, 或另存為並複製時)。適用於樣本庫等。
 
 [prefs_playback_help]
 3CCEB93DC24D10C2=使播放在工程結束時停止或循環。
@@ -14673,7 +14681,6 @@ FB7CC4A30F878FE2=工程中有 %d 個檔案在 %d 個位置處於離線狀態，�
 4E8D6287A1724A20=自動儲存到工程檔案時出錯:\r\n\r\n%.250s\r\n\r\n在 '偏好設定/工程' 中配置的自動儲存路徑可能無效。
 C52F200316AE8FED=自動儲存到工程檔案時出錯:\r\n\r\n%.250s\r\n\r\n路徑是否存在？
 18A46BAC3D405203=建立工程檔案時出錯:\r\n\r\n%.250s\r\n\r\n路徑是否存在？
-46AE0C6B2EBA8FE0=寫入工程檔案時出錯。磁碟滿了嗎？
 87E4711028D1A7F0=寫入工程檔案時出錯:\r\n\r\n%.250s\r\n\r\n磁碟是否已滿？
 7978763C70E0E2FA=儲存撤銷歷史時出錯。磁碟滿了嗎？
 E8D1FE31118A288D=不能覆蓋檔案:
@@ -16383,7 +16390,7 @@ FA98D3571B9E88A5=2. 淡入/淡出
 3F451A815B294912=4. 標準化
 5311D773796693AE=5. 單聲道調整
 7BFB422B2074C1CD=6. 磚牆限制
-D9E935A9DFE55B31=自動遞增後綴需包含至少一個非數字字符，並在其後至少跟隨一個數字字符。
+D8813A9A9386C02B=自動遞增後綴必須包含至少一個非數字字符，後接至少一個數字字符。
 248A14563F32E013=默認預設後綴: \"%s\"
 5EDC668654E009C6=自動遞增錯誤
 F15BBEAE9FE15E1D=無法打開音訊設備
@@ -17096,6 +17103,7 @@ D3E9DFB04B0A4EBC=所有其他通道
 E4DE2C7D9E7BCC06=正在匯入檔案...
 8C00464CAF319497=正在關閉工程...
 DF704AFC9B0F8861=轉換器 FX
+CCE0F0218F7E6DE2=工程: 正在加載檔案:
 7E1CF55F634C15CB=工程: 正在加載 %s: %.50s
 91DE3E15F8EBE496=工程: 已加載 %s: %.50s
 C951102801B4AE30=工程: 離線 %s: %.50s
@@ -17104,6 +17112,7 @@ C3ED77175FF7A80D=正在初始化主視窗...
 EB2BBACE116ABF50=正在初始化 ReWire 客戶端模式
 D9167318AC0D469C=正在檢查 ReWire 客戶端模式...
 69B380B30FA53BFC=正在掃描 VST 插件...
+F12ADE56210FD8AD=偵測到新的便攜安裝。
 88DA76CD09DEB8F9=正在掃描 LV2 插件...
 F22E97F36AB17B23=正在掃描 CLAP 插件...
 6EE741A56EC25D89=正在掃描 DX 插件...
@@ -17121,7 +17130,6 @@ E6A87EA06A513679=正在加載 SoundTouch...
 40CAAF582132F5FF=正在加載 élastique 2 專業...
 CD0C8A087BDCAD95=正在加載 élastique 專業...
 DA57C65EF182238A=正在加載 élastique 3 專業...
-CCE0F0218F7E6DE2=工程: 正在加載檔案:
 C4F4B0B3B434649F=正在加載插件:
 B0D42459D3B68499=主控 FX
 2B35EDB88B113816=正在加載工程...
@@ -18335,7 +18343,7 @@ EDF02F8482409CC9=將循環點設定到對象
 493857C8B63BC179=將 MIDI 對象設定為忽略工程速度
 8AF952B6CA6C789B=設定對象跟隨時間還是節拍
 FB859C9E2BE98C60=軌道: 切換播放偏移旁通
-7807733D53BE55BA=更改工程時基
+1B7F9D7BE4FC8114=時基更改時更新 MIDI 和包絡
 90DB134BAB72BD8A=設定軌道對象跟隨時間還是節拍
 875A18C2D666BE39=從活躍片段檔案名設定對象名稱
 3037B0085150A1B8=複製時間選區的內容
@@ -18686,7 +18694,6 @@ CC4A99D4D24FE494=克隆對象
 C8AB0312AE1913D3=更改軌道聲像法則
 272C78B705A5D85A=更改軌道聲像模式
 3460BF2A88B34FD3=已錄製的媒體
-2AA05F76ED2A49F7=從工程設定更改 MIDI 對象時基
 2EE17BFDCC2D37EC=更新拉伸標記以保持媒體對象時序
 FFACA2768FF3EC8B=更改工程設定
 BC3E46C8C4F6A25D=替換媒體
@@ -19623,6 +19630,8 @@ C150968636F14911=接收: %d %s
 
 [xfade]
 D3CB687A12F92D6B=相位對齊:
+1B058CDE189ACC46=加載快照 %d
+F1D366BE39030147=儲存快照 %d
 0A985472ECA941F6=默認預設交疊淡變
 6C8449A3508FC672=(未命名)
 E50CD8C50F981DCD=命名交疊淡變預設
@@ -19641,7 +19650,13 @@ D7D1E9586987DB29=僅在範圍內
 94084B4309839602=僅上層車道
 E4C93448946D6700=僅下層車道
 7C9263CE9B28B574=交疊淡變到媒體對象邊緣
+C3FE98B91673BEBA=將淡入同步到淡出
+203881B045A248DA=將淡出同步到淡入
 428EE4949D6F20B9=通過調整以最大化相位對齊:
+F2C0C22B0DC39038=左側對象位置
+5B639544B5A96D9D=左側對象內容
+38EA4EDC38708039=右側對象位置
+2C83A7492DDB0D24=右側對象內容
 
 [xfade_access]
 5A894669BDB24C58=聯動淡入淡出編輯
@@ -19763,18 +19778,6 @@ E32AEC08656CB22B=編輯: 微調右側對象音量 -1 dB ⇌ Edit: Nudge right-ha
 9ADC3E4A927383A0=編輯: 微調左側對象音量 -0.1 dB ⇌ Edit: Nudge left-hand item volume -0.1 dB
 B10540588324BC53=編輯: 微調右側對象音量 +0.1 dB ⇌ Edit: Nudge right-hand item volume +0.1 dB
 9BE9B62BB7370949=編輯: 微調右側對象音量 -0.1 dB ⇌ Edit: Nudge right-hand item volume -0.1 dB
-
-[xfadedit]
-C3FE98B91673BEBA=同步淡入到淡出
-203881B045A248DA=同步淡出到淡入
-F2C0C22B0DC39038=左側對象位置
-5B639544B5A96D9D=左側對象內容
-38EA4EDC38708039=右側對象位置
-2C83A7492DDB0D24=右側對象內容
-
-[xfadeedit]
-1B058CDE189ACC46=加載快照 %d
-F1D366BE39030147=儲存快照 %d
 
 [actionlist_synonyms]
 ;0000000000000001=open,display,view,show,hide

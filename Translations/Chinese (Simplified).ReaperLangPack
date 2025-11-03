@@ -1,10 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 7.49.1
+;Version: 7.52
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49376/Chinese%20%28Simplified%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.49, SWS: 2.14.0.7
+;  Brand new REAPER: 7.52, SWS: 2.14.0.7
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -2304,7 +2304,6 @@ E88E3942C922993A=k'name
 A380354012A2D803=通过名称跳转到片段标记
 
 [DLG_145] ; IDD_COLORTHEMEDEV
-81F584F9FDAE6C4F=在查找器中显示
 26A41802E656AB2D=主题开发/调整
 76CA49A564380AB8=主题颜色/字体设置:
 72E77C5A7CC1D2B0=加载主题...
@@ -2312,6 +2311,7 @@ C63F867B1B382AE3=保存主题...
 A439058D27884637=图片资源路径:
 80682754268B716C=在资源管理器中显示
 3AAC7E082D07235C=重新加载图片
+81F584F9FDAE6C4F=在查找器中显示
 
 [DLG_146] ; IDD_FX_UNKN
 165C255907F1A60A=无法加载以下效果插件:
@@ -3654,7 +3654,9 @@ A7BA0064C3A88716=输出设备:
 973B67107DB3B77C=默认渲染路径 (若未指定，则使用当前工程目录，前提是存在该目录):
 E19AF0FCD67934A5=当工程未保存且没有配置录音路径时的默认录音路径:
 55FF305FB05C16EA=将所有峰值缓存 (.reapeaks) 存储在另一个路径:
-6934246FDA04EE9E=以下路径使用备用峰值缓存路径 (多个路径由分号分隔):
+CCDEE8625F8393F7=以下路径使用备用峰值缓存路径:
+8EDDEE351E7EF4E9=编辑列表...
+B8A8BC344CEEADF4=不要从以下路径复制或移动媒体:
 
 [DLG_475] ; IDD_MEDIAITEMPROPS
 8A7A99B055B2BC0E=淡入:
@@ -6900,16 +6902,16 @@ DFEF278FAC892693=对象编辑: 按保存的微调对话框设置 7 向左微调 
 DFEF348FAC893CAA=对象编辑: 按保存的微调对话框设置 8 向左微调 ⇌ Item edit: Nudge left by saved nudge dialog settings 8
 7B29B42478E44E26=对象编辑: 将鼠标下方的对象移动到编辑光标的位置 ⇌ Item edit: Move position of item under mouse to edit cursor
 7C5665CED16B35C0=对象编辑: 将鼠标下方对象的左边缘修剪到编辑光标 ⇌ Item edit: Trim left edge of item under mouse to edit cursor
-345EF096C306C94B=对象编辑: 将鼠标下方对象的左边缘移动到编辑光标 ⇌ Item edit: Move left edge of item under mouse to edit cursor
+AB671D42FD20D809=对象编辑: 将鼠标下方对象的左边缘移动到编辑光标 (保持对象右边缘不变) ⇌ Item edit: Move left edge of item under mouse to edit cursor (preserving item right edge)
 7E2A0BFEACB110C7=对象编辑: 将鼠标下方对象的右边缘修剪到编辑光标 ⇌ Item edit: Trim right edge of item under mouse to edit cursor
-F4065BA0753ECEF6=对象编辑: 将鼠标下方对象的右边缘移动到编辑光标 ⇌ Item edit: Move right edge of item under mouse to edit cursor
+7597DB81BE1B90BB=对象编辑: 将鼠标下方对象的右边缘移动到编辑光标 (保持对象长度不变) ⇌ Item edit: Move right edge of item under mouse to edit cursor (preserving item length)
 97774266884310BD=对象编辑: 将鼠标下方对象的内容移动到编辑光标 ⇌ Item edit: Move contents of item under mouse to edit cursor
 4D12E260B0E09A3A=对象编辑: 将鼠标下方对象的克隆移动到编辑光标 ⇌ Item edit: Move duplicate of item under mouse to edit cursor
 BA67DC02378871E5=对象编辑: 将对象位置移动到编辑光标 ⇌ Item edit: Move position of item to edit cursor
 E1F55EEE9C62B46F=对象编辑: 将对象的左边缘修剪到编辑光标 ⇌ Item edit: Trim left edge of item to edit cursor
-5B29ABBD2B4EB438=对象编辑: 将对象的左边缘移动到编辑光标 ⇌ Item edit: Move left edge of item to edit cursor
+EB6439C9B1D20F40=对象编辑: 将对象的左边缘移动到编辑光标 (保持对象右边缘不变) ⇌ Item edit: Move left edge of item to edit cursor (preserving item right edge)
 9C5B4D6BEC2DF304=对象编辑: 将对象的右边缘修剪到编辑光标 ⇌ Item edit: Trim right edge of item to edit cursor
-8FF1755C264ECDF5=对象编辑: 将对象的右边缘移动到编辑光标 ⇌ Item edit: Move right edge of item to edit cursor
+F1E003DFEA502F7A=对象编辑: 将对象的右边缘移动到编辑光标 (保持对象长度不变) ⇌ Item edit: Move right edge of item to edit cursor (preserving item length)
 8BA1C5410EDD134A=对象编辑: 将对象的内容移动到编辑光标 ⇌ Item edit: Move contents of item to edit cursor
 EC4404E2595D22F9=对象编辑: 将对象的克隆移动到编辑光标 ⇌ Item edit: Move duplicate of item to edit cursor
 E93F2BB2C8128CF6=对象编辑: 向左移动对象, 保持内容的时间不变 ⇌ Item edit: Move items left, preserving timing of contents
@@ -13309,6 +13311,10 @@ BF4E7CF25C00238B= [有点脉冲感]
 D4A529A0DD35A4AD=加载自动化对象
 096516B609B04A04=保存自动化对象
 
+[portable]
+9AD7B58BCF084FA3=您正在运行便携安装的 REAPER。\r\n\r\n是否扫描系统 VST/CLAP/LV2 路径？\r\n\r\n如果选择否，以后可能需要手动添加这些路径。
+FB86E1671F243FB8=便携安装
+
 [prefs]
 D2DE5E701E5C239D=将按键映射保存为:
 2564D884E323133A=选择要打开的按键映射:
@@ -13339,7 +13345,8 @@ BDAA654D1485A54B=同时显示文件名和完整路径
 24BEF8358EFADF20=加载工程时添加到最近列表
 698B10369F7014B2=使用 '保存工程的副本' 时添加到最近列表
 2F416F6C91972BAF=使用 '保存工程的新版本' 时从最近列表中删除旧工程
-3C50D04ABFECEE2A=清除最近工程列表
+4BB201A87FABD680=从最近列表中移除丢失的工程
+7C37DB2245F9E12D=清除最近列表
 6A4004041F988DAF=清除最近工程列表？
 B967FB615627BFEF=选择工程:
 BA17125F561726C9=当不录音时
@@ -14257,6 +14264,7 @@ DC2462818769728A=如果工程尚未保存且在文件/工程设置中未设置�
 96F6407D44067B64=REAPER 峰值缓存文件 (.reapeaks) 的备用路径。即使在此处未启用，也可以使用备用路径，参见 '首选项/媒体'。
 02DF1D8AB8130F68=始终将其峰值缓存文件放在备用路径而不是与媒体一起的路径列表。对于样本库等非常有用。
 50A0CCCDC8CC3250=当没有加载工程并且您希望加载或保存工程文件时，设置默认目录。
+FE9E322410443D3C=不会从这些路径复制或移动媒体的路径列表(导入时若已配置, 或另存为并复制时)。适用于样本库等。
 
 [prefs_playback_help]
 3CCEB93DC24D10C2=使播放在工程结束时停止或循环。
@@ -14673,7 +14681,6 @@ FB7CC4A30F878FE2=工程中有 %d 个文件在 %d 个位置处于离线状态，�
 4E8D6287A1724A20=自动保存到工程文件时出错:\r\n\r\n%.250s\r\n\r\n在 '首选项/工程' 中配置的自动保存路径可能无效。
 C52F200316AE8FED=自动保存到工程文件时出错:\r\n\r\n%.250s\r\n\r\n路径是否存在？
 18A46BAC3D405203=创建工程文件时出错:\r\n\r\n%.250s\r\n\r\n路径是否存在？
-46AE0C6B2EBA8FE0=写入工程文件时出错。磁盘满了吗？
 87E4711028D1A7F0=写入工程文件时出错:\r\n\r\n%.250s\r\n\r\n磁盘是否已满？
 7978763C70E0E2FA=保存撤销历史时出错。磁盘满了吗？
 E8D1FE31118A288D=不能覆盖文件:
@@ -16383,7 +16390,7 @@ FA98D3571B9E88A5=2. 淡入/淡出
 3F451A815B294912=4. 标准化
 5311D773796693AE=5. 单声道调整
 7BFB422B2074C1CD=6. 砖墙限制
-D9E935A9DFE55B31=自动递增后缀需包含至少一个非数字字符，并在其后至少跟随一个数字字符。
+D8813A9A9386C02B=自动递增后缀必须包含至少一个非数字字符，后接至少一个数字字符。
 248A14563F32E013=默认后缀: \"%s\"
 5EDC668654E009C6=自动递增错误
 F15BBEAE9FE15E1D=无法打开音频设备
@@ -17096,6 +17103,7 @@ D3E9DFB04B0A4EBC=所有其他通道
 E4DE2C7D9E7BCC06=正在导入文件...
 8C00464CAF319497=正在关闭工程...
 DF704AFC9B0F8861=转换器 FX
+CCE0F0218F7E6DE2=工程: 正在加载文件:
 7E1CF55F634C15CB=工程: 正在加载 %s: %.50s
 91DE3E15F8EBE496=工程: 已加载 %s: %.50s
 C951102801B4AE30=工程: 离线 %s: %.50s
@@ -17104,6 +17112,7 @@ C3ED77175FF7A80D=正在初始化主窗口...
 EB2BBACE116ABF50=正在初始化 ReWire 客户端模式
 D9167318AC0D469C=正在检查 ReWire 客户端模式...
 69B380B30FA53BFC=正在扫描 VST 插件...
+F12ADE56210FD8AD=检测到新的便携安装。
 88DA76CD09DEB8F9=正在扫描 LV2 插件...
 F22E97F36AB17B23=正在扫描 CLAP 插件...
 6EE741A56EC25D89=正在扫描 DX 插件...
@@ -17121,7 +17130,6 @@ E6A87EA06A513679=正在加载 SoundTouch...
 40CAAF582132F5FF=正在加载 élastique 2 专业...
 CD0C8A087BDCAD95=正在加载 élastique 专业...
 DA57C65EF182238A=正在加载 élastique 3 专业...
-CCE0F0218F7E6DE2=工程: 正在加载文件:
 C4F4B0B3B434649F=正在加载插件:
 B0D42459D3B68499=主控 FX
 2B35EDB88B113816=正在加载工程...
@@ -18335,7 +18343,7 @@ EDF02F8482409CC9=将循环点设置到对象
 493857C8B63BC179=将 MIDI 对象设置为忽略工程速度
 8AF952B6CA6C789B=设置对象跟随时间还是节拍
 FB859C9E2BE98C60=轨道: 切换播放偏移旁通
-7807733D53BE55BA=更改工程时基
+1B7F9D7BE4FC8114=时基更改时更新 MIDI 和包络
 90DB134BAB72BD8A=设置轨道对象跟随时间还是节拍
 875A18C2D666BE39=从活跃片段文件名设置对象名称
 3037B0085150A1B8=复制时间选区的内容
@@ -18686,7 +18694,6 @@ CC4A99D4D24FE494=克隆对象
 C8AB0312AE1913D3=更改轨道声像法则
 272C78B705A5D85A=更改轨道声像模式
 3460BF2A88B34FD3=已录制的媒体
-2AA05F76ED2A49F7=从工程设置更改 MIDI 对象时基
 2EE17BFDCC2D37EC=更新拉伸标记以保持媒体对象时序
 FFACA2768FF3EC8B=更改工程设置
 BC3E46C8C4F6A25D=替换媒体
@@ -19623,6 +19630,8 @@ C150968636F14911=接收: %d %s
 
 [xfade]
 D3CB687A12F92D6B=相位对齐:
+1B058CDE189ACC46=加载快照 %d
+F1D366BE39030147=保存快照 %d
 0A985472ECA941F6=默认交叉淡化
 6C8449A3508FC672=(未命名)
 E50CD8C50F981DCD=命名交叉淡化预设
@@ -19641,7 +19650,13 @@ D7D1E9586987DB29=仅在范围内
 94084B4309839602=仅上层车道
 E4C93448946D6700=仅下层车道
 7C9263CE9B28B574=交叉淡化到媒体对象边缘
+C3FE98B91673BEBA=将淡入同步到淡出
+203881B045A248DA=将淡出同步到淡入
 428EE4949D6F20B9=通过调整以最大化相位对齐:
+F2C0C22B0DC39038=左侧对象位置
+5B639544B5A96D9D=左侧对象内容
+38EA4EDC38708039=右侧对象位置
+2C83A7492DDB0D24=右侧对象内容
 
 [xfade_access]
 5A894669BDB24C58=联动淡入淡出编辑
@@ -19763,18 +19778,6 @@ E32AEC08656CB22B=编辑: 微调右侧对象音量 -1 dB ⇌ Edit: Nudge right-ha
 9ADC3E4A927383A0=编辑: 微调左侧对象音量 -0.1 dB ⇌ Edit: Nudge left-hand item volume -0.1 dB
 B10540588324BC53=编辑: 微调右侧对象音量 +0.1 dB ⇌ Edit: Nudge right-hand item volume +0.1 dB
 9BE9B62BB7370949=编辑: 微调右侧对象音量 -0.1 dB ⇌ Edit: Nudge right-hand item volume -0.1 dB
-
-[xfadedit]
-C3FE98B91673BEBA=同步淡入到淡出
-203881B045A248DA=同步淡出到淡入
-F2C0C22B0DC39038=左侧对象位置
-5B639544B5A96D9D=左侧对象内容
-38EA4EDC38708039=右侧对象位置
-2C83A7492DDB0D24=右侧对象内容
-
-[xfadeedit]
-1B058CDE189ACC46=加载快照 %d
-F1D366BE39030147=保存快照 %d
 
 [actionlist_synonyms]
 ;0000000000000001=open,display,view,show,hide
