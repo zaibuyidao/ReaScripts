@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.90
+-- @version 1.0.91
 -- @changelog
---   Added Tempo Sync to match the playback rate to the project tempo.
---   Added Link Transport with Start at Next Bar when enabled.
+--   Other detailed improvements and bug fixes
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

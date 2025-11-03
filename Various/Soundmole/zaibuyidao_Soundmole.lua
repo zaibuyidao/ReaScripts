@@ -12795,6 +12795,7 @@ function loop()
       -- 鼠标按下时，记录当前偏移
       splitter_drag = true
       splitter_drag_offset = mx - wx - left_w
+      is_knob_dragging = true
     end
 
     -- 旧版拖动逻辑，基于比例计算新左宽（弃用）
@@ -14864,6 +14865,7 @@ function loop()
       h_splitter_drag = true
       h_splitter_start_mouse_y = my
       h_splitter_start_offset  = img_h_offset
+      is_knob_dragging = true
     end
 
     -- 拖动中，反向更新 img_h_offset
