@@ -14687,31 +14687,49 @@ function loop()
 
     do
       -- 时间容差
-      local END_EPS = 0.05
+      local END_EPS = 0.10
 
       if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
-        local ok_pos, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-        local ok_len, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
-        if ok_pos and ok_len then
-          if prev_preview_pos and prev_preview_pos < (length - END_EPS) and pos >= (length - END_EPS) then
-            local cur_idx = -1
-            playing_path = normalize_path(playing_path, false)
-            local list = _G.current_display_list or {}
-            for i, info in ipairs(list) do
-              local info_path = normalize_path(info.path, false)
-              if info_path == playing_path then cur_idx = i break end
-            end
+        local rate = play_rate or 1
+        local cursor_pos = ((Wave and Wave.play_cursor) or 0) * rate
+        local src_len = (Wave and Wave.src_len) or 0
 
-            if cur_idx > 0 and cur_idx < #list then
-              auto_play_next_pending = list[cur_idx + 1]
-              -- StopPreview()
-            else
-              auto_play_next_pending = false
-              StopPreview()
-            end
+        local has_sel = (select_start_time and select_end_time) and (math.abs(select_end_time - select_start_time) > 0.01)
+        local duration = has_sel and (math.abs(select_end_time - select_start_time) * rate) or src_len
+        local should_trigger = false
+
+        if duration and duration > 0 then
+          if cursor_pos >= (duration - END_EPS) then
+            should_trigger = true
           end
-          -- 记录当前帧位置
-          prev_preview_pos = pos
+        else
+          local ok_pos, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+          local ok_len, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+          if ok_pos and ok_len then
+            if (prev_preview_pos and prev_preview_pos < (length - END_EPS) and pos >= (length - END_EPS)) or ((length - pos) <= END_EPS) then
+              should_trigger = true
+            end
+            prev_preview_pos = pos
+          elseif ok_len and prev_preview_pos and prev_preview_pos >= (length - END_EPS) then
+            should_trigger = true
+          end
+        end
+
+        if should_trigger then
+          local list = _G.current_display_list or {}
+          local cur_idx = -1
+          playing_path = normalize_path(playing_path, false)
+          for i, info in ipairs(list) do
+            local info_path = normalize_path(info.path, false)
+            if info_path == playing_path then cur_idx = i break end
+          end
+
+          if cur_idx > 0 and cur_idx < #list then
+            auto_play_next_pending = list[cur_idx + 1]
+          else
+            auto_play_next_pending = false
+            StopPreview()
+          end
         end
       end
     end

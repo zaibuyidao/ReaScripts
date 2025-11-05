@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.91
+-- @version 1.0.92
 -- @changelog
---   Other detailed improvements and bug fixes
+--   Improve Auto Play Next stability and compatibility on Windows and Linux.
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
