@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.92
+-- @version 1.0.93
 -- @changelog
---   Improve Auto Play Next stability and compatibility on Windows and Linux.
+--   Open the folder picker pre-navigated to the path entered in the input field.
+--   Added Freesound Cache Folder in Settings to configure the Freesound cache directory.
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

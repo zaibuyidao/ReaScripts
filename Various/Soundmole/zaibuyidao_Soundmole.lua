@@ -197,6 +197,7 @@ local EXT_KEY_RATE_MIN         = "rate_min"
 local EXT_KEY_RATE_MAX         = "rate_max"
 local EXT_KEY_VOLUME           = "volume"
 local EXT_KEY_CACHE_DIR        = "cache_dir"
+local EXT_KEY_FS_CACHE_DIR     = "fs_cache_dir"
 local EXT_KEY_AUTOSCROLL       = "auto_scroll"
 local EXT_KEY_RECENT_PLAYED    = "recent_played_files"
 local EXT_KEY_TABLE_ROW_HEIGHT = "table_row_height"
@@ -205,7 +206,7 @@ local previewed_files = {} -- 预览已读标记
 function MarkPreviewed(path) previewed_files[path] = true end
 function IsPreviewed(path) return previewed_files[path] == true end
 
--- 波形缓存路径
+-- Soundmole 波形缓存路径
 local sep = package.config:sub(1, 1)
 local DEFAULT_CACHE_DIR = script_path .. "waveform_cache" .. sep
 local cache_dir = reaper.GetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR)
@@ -214,6 +215,16 @@ if not cache_dir or cache_dir == "" then
 end
 cache_dir = normalize_path(cache_dir, true)
 EnsureCacheDir(cache_dir)
+
+-- Freesound 波形缓存路径
+local DEFAULT_FS_CACHE_DIR = script_path .. "freesound_cache" .. sep
+local fs_cache_dir = reaper.GetExtState(EXT_SECTION, EXT_KEY_FS_CACHE_DIR)
+if not fs_cache_dir or fs_cache_dir == "" then
+  fs_cache_dir = DEFAULT_FS_CACHE_DIR
+end
+fs_cache_dir = normalize_path(fs_cache_dir, true)
+EnsureCacheDir(fs_cache_dir)
+
 -- SoundmoleDB 路径
 local DEFAULT_MEDIADB_DIR = script_path .. "SoundmoleDB" .. sep
 local mediadb_dir = reaper.GetExtState(EXT_SECTION, "soundmoledb_dir")
@@ -324,6 +335,7 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MIN, tostring(rate_min), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MAX, tostring(rate_max), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
+  reaper.SetExtState(EXT_SECTION, EXT_KEY_FS_CACHE_DIR, tostring(fs_cache_dir), true)
   reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
   reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
   reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
@@ -10631,9 +10643,10 @@ function loop()
 
       reaper.ImGui_SameLine(ctx, nil, 10)
       if reaper.ImGui_Button(ctx, "Select...", 80, 26) then
-        local picked = BrowseForFolder(preview_folder_input)
-        if picked and picked ~= "" then
-          preview_folder_input = normalize_path(picked, true)
+        local start_dir = normalize_path(preview_folder_input or tree_state.cur_path or "", true)
+        local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", start_dir)
+        if rv == 1 and out and out ~= "" then
+          preview_folder_input = normalize_path(out, true)
         end
         reopen_preview_popup = true
       end
@@ -14300,7 +14313,32 @@ function loop()
         reaper.ImGui_SameLine(ctx, nil, 8)
         if reaper.ImGui_Button(ctx, "Open##OpenCacheDir", 60) then
           if cache_dir and cache_dir ~= "" then
-            reaper.CF_LocateInExplorer(normalize_path(cache_dir, true))
+            -- reaper.CF_LocateInExplorer(normalize_path(cache_dir, true)) -- 选中文件夹
+            reaper.CF_ShellExecute(normalize_path(cache_dir, true)) -- 进入文件夹
+          end
+        end
+
+        reaper.ImGui_Text(ctx, "Freesound Cache Folder:")
+        reaper.ImGui_PushItemWidth(ctx, -140)
+        local changed_fs_cache_dir, new_fs_cache_dir = reaper.ImGui_InputText(ctx, "##fs_cache_dir", fs_cache_dir, 512)
+        reaper.ImGui_PopItemWidth(ctx)
+        if changed_fs_cache_dir then
+          fs_cache_dir = normalize_path(new_fs_cache_dir, true)
+          reaper.SetExtState(EXT_SECTION, EXT_KEY_FS_CACHE_DIR, fs_cache_dir, true)
+        end
+        reaper.ImGui_SameLine(ctx, nil, 8)
+        if reaper.ImGui_Button(ctx, "Browse##SelectFsCacheDir", 60) then
+          local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", fs_cache_dir)
+          if rv == 1 and out and out ~= "" then
+            fs_cache_dir = normalize_path(out, true)
+            reaper.SetExtState(EXT_SECTION, EXT_KEY_FS_CACHE_DIR, fs_cache_dir, true)
+          end
+        end
+        reaper.ImGui_SameLine(ctx, nil, 8)
+        if reaper.ImGui_Button(ctx, "Open##OpenFsCacheDir", 60) then
+          if fs_cache_dir and fs_cache_dir ~= "" then
+            -- reaper.CF_LocateInExplorer(normalize_path(fs_cache_dir, true)) -- 选中文件夹
+            reaper.CF_ShellExecute(normalize_path(fs_cache_dir, true)) -- 进入文件夹
           end
         end
       end
