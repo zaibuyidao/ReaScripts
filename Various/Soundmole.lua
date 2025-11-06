@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.93
+-- @version 1.0.94
 -- @changelog
---   Open the folder picker pre-navigated to the path entered in the input field.
---   Added Freesound Cache Folder in Settings to configure the Freesound cache directory.
+--   Added Tempo Sync and Link Transport support when playing an audio file with a single click.
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

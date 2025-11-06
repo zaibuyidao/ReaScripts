@@ -3066,6 +3066,33 @@ function GetTempoBase(src_or_path)
     end
   end
 
+  -- 如果预测失败，使用元数据 BPM 兜底
+  if base == 1.0 then
+    local maybe_bpm
+    if not maybe_bpm and file_info and tonumber(file_info.bpm) and tonumber(file_info.bpm) > 0 then
+      maybe_bpm = tonumber(file_info.bpm)
+    end
+    if not maybe_bpm and src then
+      local function get_bpm_from_meta(s, id)
+        local ok, v = reaper.GetMediaFileMetadata(s, id)
+        local n = tonumber(v)
+        if ok and n and n > 0 then return n end
+      end
+      maybe_bpm = get_bpm_from_meta(src, "XMP:dm/tempo") or get_bpm_from_meta(src, "ID3:TBPM") or get_bpm_from_meta(src, "VORBIS:BPM") or get_bpm_from_meta(src, "RIFF:ACID:tempo")
+    end
+    if maybe_bpm and maybe_bpm > 0 then
+      local proj_bpm = reaper.Master_GetTempo()
+      if (not proj_bpm or proj_bpm <= 0) and reaper.GetProjectTimeSignature2 then
+        local _, _, _, tempo = reaper.GetProjectTimeSignature2(0)
+        proj_bpm = tempo
+      end
+      proj_bpm = tonumber(proj_bpm) or 120.0
+      if proj_bpm > 0 then
+        base = proj_bpm / maybe_bpm
+      end
+    end
+  end
+
   if need_destroy and src then reaper.PCM_Source_Destroy(src) end
   return base
 end
@@ -3128,6 +3155,61 @@ function PlayCursorAtNextBar(info, wait_next)
   end
 
   WaitNextBarCursorTick()
+  return dist, next_bar_time
+end
+
+-- 等到下一个小节再从头播放
+function PlayStartAtNextBar(info, wait_next)
+  if wait_next == nil then wait_next = true end -- 兼容旧调用
+  if wait_nextbar_cur then wait_nextbar_cur.active = false end
+  -- 立刻把当前文件切到本次要播的对象
+  file_info = info
+  -- 基于当前 info 计算并写入有效速率
+  local function ApplyEffectiveRateForInfo(cur)
+    local base = 1.0
+    if tempo_sync_enabled then
+      local b = GetTempoBase((cur and cur.path) or nil) or 1.0
+      if b > 0 then base = b end
+      effective_rate_knob = (play_rate or 1.0) * base
+    else
+      effective_rate_knob = (play_rate or 1.0)
+    end
+  end
+
+  if not wait_next then
+    ApplyEffectiveRateForInfo(info)
+    PlayFromStart(info)
+    local _, next_bar_time = DistanceToNextBarFromCursor()
+    return 0, next_bar_time
+  end
+
+  local dist, next_bar_time = DistanceToNextBarFromCursor()
+  if dist < 1e-4 then
+    ApplyEffectiveRateForInfo(info)
+    PlayFromStart(info)
+    return 0, next_bar_time
+  end
+
+  _G.wait_nextbar_start = _G.wait_nextbar_start or { active=false }
+  _G.wait_nextbar_start.info = info
+  _G.wait_nextbar_start.deadline = reaper.time_precise() + dist
+  _G.wait_nextbar_start.active = true
+
+  local function tick()
+    local st = _G.wait_nextbar_start
+    if not st or not st.active then return end
+    if reaper.time_precise() + 1e-6 >= (st.deadline or 0) then
+      st.active = false
+      if st.info then
+        ApplyEffectiveRateForInfo(st.info) -- 起播前刷新一次速率
+        PlayFromStart(st.info)
+      end
+      return
+    end
+    reaper.defer(tick)
+  end
+  reaper.defer(tick)
+
   return dist, next_bar_time
 end
 
@@ -15226,9 +15308,20 @@ function loop()
         if last_selected_row ~= selected_row then
           local cur_info = _G.current_display_list[selected_row]
           if cur_info then
-            PlayFromStart(cur_info)
+            if link_with_reaper then
+              reaper.Main_OnCommand(1007, 0)
+              if playing_preview then StopPreview() end
+              if wait_nextbar_play then
+                PlayStartAtNextBar(cur_info, true) -- 下一个小节从头播
+              else
+                PlayStartAtNextBar(cur_info, false) -- 立即从头播
+              end
+            else
+              PlayFromStart(cur_info)
+            end
+
             last_selected_info = {}
-            for k,v in pairs(cur_info) do last_selected_info[k]=v end
+            for k, v in pairs(cur_info) do last_selected_info[k] = v end
           end
           last_selected_row = selected_row
         end
@@ -16011,21 +16104,23 @@ function loop()
       local is_play = (((st or 0) & 1) == 1)
 
       if is_play and not link_prev_playing then
-        local info = file_info or last_playing_info
+        local info = (_G.current_display_list and selected_row and _G.current_display_list[selected_row]) or last_selected_info or last_playing_info or file_info
         if info and info.path and not playing_preview then
           if wait_nextbar_play then
-            PlayCursorAtNextBar(info, true)
+            PlayStartAtNextBar(info, true)
           else
-            PlayCursorAtNextBar(info, false)
+            PlayStartAtNextBar(info, false)
           end
         end
-      elseif (not is_play) and link_prev_playing then
-        if playing_preview and StopPreview then StopPreview() end
+      elseif not is_play and link_prev_playing then
+        if playing_preview then StopPreview() end
         if wait_nextbar_cur then wait_nextbar_cur.active = false end
+        if _G.wait_nextbar_start then _G.wait_nextbar_start.active = false end
       end
       link_prev_playing = is_play
     else
       link_prev_playing = false
+      if _G.wait_nextbar_start then _G.wait_nextbar_start.active = false end
     end
   end
 
