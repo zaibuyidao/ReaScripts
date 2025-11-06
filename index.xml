@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ff54b5acdb22682eaf6cb67b48d6dd52a425bb84">
+<index version="1" name="zaibuyidao Scripts" commit="ad4a4fba857e79d5c717b73e2f46c401d1b94a90">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -15158,6 +15158,17 @@ Support reaper_soundmole-x64.dll v0.0.4.1]]></changelog>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/ff54b5acdb22682eaf6cb67b48d6dd52a425bb84/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/ff54b5acdb22682eaf6cb67b48d6dd52a425bb84/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/ff54b5acdb22682eaf6cb67b48d6dd52a425bb84/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.94" author="zaibuyidao" time="2025-11-06T15:35:53Z">
+        <changelog><![CDATA[Added Tempo Sync and Link Transport support when playing an audio file with a single click.
+Support reaper_soundmole-x64.dll v0.0.4.1]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/ad4a4fba857e79d5c717b73e2f46c401d1b94a90/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/ad4a4fba857e79d5c717b73e2f46c401d1b94a90/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/ad4a4fba857e79d5c717b73e2f46c401d1b94a90/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/ad4a4fba857e79d5c717b73e2f46c401d1b94a90/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/ad4a4fba857e79d5c717b73e2f46c401d1b94a90/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/ad4a4fba857e79d5c717b73e2f46c401d1b94a90/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/ad4a4fba857e79d5c717b73e2f46c401d1b94a90/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
