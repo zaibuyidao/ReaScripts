@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.95
+-- @version 1.0.96
 -- @changelog
---   Added Optimized tempo matching logic, significantly improving the accuracy and stability of playrate calculation and alignment.
+--   Fixed a potential crash caused by info being nil during database building.
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

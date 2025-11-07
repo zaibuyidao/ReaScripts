@@ -16043,8 +16043,9 @@ function loop()
           local path = db_build_task.filelist[idx]
           local key  = normalize_path(path, false)
 
+          local info = CollectFileInfo(path)
           if not db_build_task.existing_map[key] then
-            local info = CollectFileInfo(path)
+            -- local info = CollectFileInfo(path)
             WriteToMediaDB(info, db_build_task.dbfile)
             db_build_task.existing_map[key] = true
           end
