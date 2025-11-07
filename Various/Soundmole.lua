@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.94
+-- @version 1.0.95
 -- @changelog
---   Added Tempo Sync and Link Transport support when playing an audio file with a single click.
+--   Added Optimized tempo matching logic, significantly improving the accuracy and stability of playrate calculation and alignment.
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

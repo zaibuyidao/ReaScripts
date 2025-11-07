@@ -3047,48 +3047,55 @@ link_prev_playing  = false
 wait_nextbar_play  = false -- true=等待, false=立刻
 wait_nextbar_cur   = { active=false, target_t=0, deadline=0, info=nil }
 
-function GetTempoBase(src_or_path)
-  local base = 1.0
-  local src, need_destroy = nil, false
+function GetBPMAtPos(timepos)
+  local pos = tonumber(timepos) or reaper.GetCursorPosition()
+  local bpm
+  bpm = reaper.TimeMap_GetDividedBpmAtTime(pos)
+  if not bpm or bpm == 0 then
+    local pt_idx = reaper.FindTempoTimeSigMarker(0, pos)
+    if pt_idx and pt_idx >= 0 then
+      local _, _, _, _, marker_bpm = reaper.GetTempoTimeSigMarker(0, pt_idx)
+      bpm = marker_bpm
+    end
+  end
+  -- 全局速度
+  bpm = tonumber(bpm) or reaper.Master_GetTempo() or 120
+  if bpm <= 0 then bpm = 120 end
+  return bpm
+end
 
+function GetTempoBase(src_or_path, timepos)
+  local base = 1.0
+  local at_time = tonumber(timepos) or reaper.GetCursorPosition()
+
+  local src, need_destroy = nil, false
   if src_or_path and type(src_or_path) == "string" then
     src = reaper.PCM_Source_CreateFromFile(src_or_path)
     need_destroy = (src ~= nil)
   elseif src_or_path then
     src = src_or_path
   end
-  src = src or playing_source
-
-  if src and reaper.GetTempoMatchPlayRate then
-    local ok, rate = reaper.GetTempoMatchPlayRate(src, 1, 0, 1)
-    if ok and type(rate) == "number" and rate > 0 then
-      base = rate
-    end
+  -- 当前光标位置的BPM
+  local proj_bpm = GetBPMAtPos(at_time)
+  local maybe_bpm
+  if not maybe_bpm and file_info and tonumber(file_info.bpm) and tonumber(file_info.bpm) > 0 then
+    maybe_bpm = tonumber(file_info.bpm)
   end
-
-  -- 如果预测失败，使用元数据 BPM 兜底
-  if base == 1.0 then
-    local maybe_bpm
-    if not maybe_bpm and file_info and tonumber(file_info.bpm) and tonumber(file_info.bpm) > 0 then
-      maybe_bpm = tonumber(file_info.bpm)
+  if not maybe_bpm and src then
+    local function get_bpm_from_meta(s, id)
+      local ok, v = reaper.GetMediaFileMetadata(s, id)
+      local n = tonumber(v)
+      if ok and n and n > 0 then return n end
     end
-    if not maybe_bpm and src then
-      local function get_bpm_from_meta(s, id)
-        local ok, v = reaper.GetMediaFileMetadata(s, id)
-        local n = tonumber(v)
-        if ok and n and n > 0 then return n end
-      end
-      maybe_bpm = get_bpm_from_meta(src, "XMP:dm/tempo") or get_bpm_from_meta(src, "ID3:TBPM") or get_bpm_from_meta(src, "VORBIS:BPM") or get_bpm_from_meta(src, "RIFF:ACID:tempo")
-    end
-    if maybe_bpm and maybe_bpm > 0 then
-      local proj_bpm = reaper.Master_GetTempo()
-      if (not proj_bpm or proj_bpm <= 0) and reaper.GetProjectTimeSignature2 then
-        local _, _, _, tempo = reaper.GetProjectTimeSignature2(0)
-        proj_bpm = tempo
-      end
-      proj_bpm = tonumber(proj_bpm) or 120.0
-      if proj_bpm > 0 then
-        base = proj_bpm / maybe_bpm
+    maybe_bpm = get_bpm_from_meta(src, "XMP:dm/tempo") or get_bpm_from_meta(src, "ID3:TBPM") or get_bpm_from_meta(src, "VORBIS:BPM") or get_bpm_from_meta(src, "RIFF:ACID:tempo")
+  end
+  if maybe_bpm and maybe_bpm > 0 then
+    base = proj_bpm / maybe_bpm
+  else
+    if src then
+      local ok, rate = reaper.GetTempoMatchPlayRate(src, 1, 0, 1)
+      if ok and type(rate) == "number" and rate > 0 then
+        base = rate
       end
     end
   end
