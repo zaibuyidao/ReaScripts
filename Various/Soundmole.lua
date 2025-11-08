@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.97
+-- @version 1.0.98
 -- @changelog
---   Added a color palette for more intuitive color management with quick import and export.
+--   Optimized the global color palette with unified naming and improved readability.
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

@@ -427,30 +427,30 @@ local colors = {
   herder_hovered          = 0x2D2D2EFF, -- 鼠标悬停时表头颜色
   herder_active           = 0x3A3A3AFF, -- 鼠标点击时表头颜色
   normal_text             = 0xFFF0F0F0, -- 标准文本颜色
+  link_text               = 0x3A3A3AFF, -- 链接文本颜色
   previewed_text          = 0x888888FF, -- 已预览过的暗一些
   timeline_text           = 0x909090FF, -- 时间线 - 文本
   timeline_def_color      = 0x353536FF, -- 0xCFCFCFFF, 时间线 - 默认颜色
   timeline_bg_color       = 0x15192050, -- 0x18181AFF, 时间线 - 背景颜色
   thesaurus_text          = 0xBCC694FF, -- 同义词文本颜色
-  text                    = 0x909090FF, -- 文字颜色
-  accent                  = 0xFFCC66FF, -- 强调色
-  accent_active           = 0xFFDD88FF, -- 强调色激活
-  gray                    = 0x909090FF, -- 灰色 #909090
-  light_gray              = 0xC0C0C020, -- 浅灰 #C0C0C0
-  dark_gray               = 0x222222FF, -- 深灰 #222222
-  red                     = 0xFF0000FF, -- 红色
-  yellow                  = 0xFFFF00FF, -- 黄色
+  gray                    = 0x909090FF, -- 灰色
+  tag_normal              = 0x2E2E2EFF, -- 标签-常规
+  tag_hovered             = 0x3A3A3AFF, -- 标签-悬停
+  tag_selected            = 0x4A4A4AFF, -- 标签-选中
+  tag_close_bg            = 0x222222FF, -- 标签关闭按钮
+  tag_border              = 0x2D2D2E77, -- 标签描边线
   mole                    = 0xF4A460FF, -- 鼹鼠橙
-  button_normal           = 0x2E2E2EFF, -- 按钮常态 #2E2E2E
-  button_hovered          = 0x444444FF, -- 按钮悬停 #444444
-  button_active           = 0x383838FF, -- 按钮按下 #383838
+  button_normal           = 0x2E2E2EFF, -- 按钮常态
+  button_hovered          = 0x444444FF, -- 按钮悬停
+  button_active           = 0x383838FF, -- 按钮按下
   big_button_normal       = 0x181818FF, -- 大按钮常态
   big_button_hovered      = 0x3A3A3AFF, -- 大按钮悬停
   big_button_active       = 0x1F1F1FFF, -- 大按钮按下
-  frame_bg                = 0x313131FF, -- 输入框背景 #242424
-  frame_bg_hovered        = 0x3A3A3AFF, -- 输入框悬停 #3A3A3AFF
-  frame_bg_active         = 0x424242FF, -- 输入框按下 #424242FF
-  popup_bg                = 0x222222FF, -- 弹出菜单背景 #141414
+  big_button_border       = 0xC0C0C020, -- 浅灰
+  frame_bg                = 0x313131FF, -- 输入框背景
+  frame_bg_hovered        = 0x3A3A3AFF, -- 输入框悬停
+  frame_bg_active         = 0x424242FF, -- 输入框按下
+  popup_bg                = 0x222222FF, -- 弹出菜单背景
   check_mark              = 0xE0E0E0FF, -- 复选框对勾颜色
   knob_normal             = 0x2E2E2EFF, -- 旋钮常态
   knob_hovered            = 0x3A3A3AFF, -- 旋钮悬停
@@ -465,19 +465,21 @@ local colors = {
   volume_fader_outline    = 0xFFFFFFFF, -- 水平音量推子-外圈描边线
   volume_bg               = 0x24242420, -- 水平音量推子-背景
   volume_bg_border        = 0xFFFFFF10, -- 水平音量推子-背景边框线
+  scrollbar_bg            = 0x181818FF, -- 滚动条-背景
   slider_grab             = 0xFFB0B0B0, -- 推子滑块常态
   slider_grab_active      = 0xFFFFFFFF, -- 推子滑块按下
-  tab                     = 0x2E2E2EFF, -- 页签-标签背景 #2E2E2E
-  tab_dimmed              = 0x2E2E2EFF, -- 页签-常态标签 #2E2E2E
-  tab_hovered             = 0x3A3A3AFF, -- 页签-悬停标签 #3A3A3A
-  tab_selected            = 0x4A4A4AFF, -- 页签-选中标签 #4A4A4A
-  tab_dimmed_selected     = 0x363636FF, -- 页签-失焦选中 #363636
+  tab                     = 0x2E2E2EFF, -- 页签-标签背景
+  tab_dimmed              = 0x2E2E2EFF, -- 页签-常态标签
+  tab_hovered             = 0x3A3A3AFF, -- 页签-悬停标签
+  tab_selected            = 0x4A4A4AFF, -- 页签-选中标签
+  tab_dimmed_selected     = 0x363636FF, -- 页签-失焦选中
   tab_selected_overline   = 0x909090FF, -- 页签-水平上划线
+  icon_normal             = 0xC0C0C060, -- 图标字体-常态亮灰
+  icon_hovered            = 0xFFFFFFFF, -- 图标字体-悬停更亮
+  icon_active             = 0xFFFFFFFF, -- 图标字体-按下激活
   status_active           = 0xFFFFFFFF, -- 临时切换状态激活，如暂停/loop激活
-  scrollbar_bg            = 0x181818FF, -- 滚动条-背景
-  icon_normal             = 0xC0C0C060, -- 图标字体-常态亮灰 #909090
-  icon_hovered            = 0xFFFFFFFF, -- 图标字体-悬停更亮 #F4A460
-  icon_active             = 0xFFFFFFFF, -- 图标字体-按下激活 #FFFFFF
+  icon_on                 = 0xB9B9B9FF, -- 图标开
+  icon_off                = 0x676767FF, -- 图标关
   wave_center             = 0x6F7C63FF, -- 0x808004FF, -- 波形-中心线
   wave_line               = 0x99AA84FF, -- 0xCCCC06FF, -- 波形-主线
   wave_line_selected      = 0x66FFFF20, -- 0x294A7A44, -- 波形-选中/预览时更亮
@@ -2638,20 +2640,20 @@ function ImGui_Tag(ctx, id, text, opts)
   local close_d = opts.close_d or math.max(th, 14)
   local h = pad_y * 2 + math.max(th, close_d)
   -- 颜色
-  local bg_normal  = opts.bg               or (colors and colors.tab)                or 0x2E2E2EFF
-  local bg_hovered = opts.bg_hovered       or (colors and colors.tab_hovered)        or 0x3A3A3AFF
-  local bg_active  = opts.bg_active        or (colors and colors.tab_selected)       or 0x4A4A4AFF
-  local border_col = opts.border           or (colors and colors.table_border_light) or 0x2D2D2E77
-  local text_col   = opts.text_col         or (colors and colors.normal_text)        or 0xFFF0F0F0
+  local bg_normal  = colors.tag_normal
+  local bg_hovered = colors.tag_hovered
+  local bg_active  = colors.tag_selected
+  local border_col = colors.tag_border
+  local text_col   = colors.normal_text
   
-  local x_col      = opts.x_col            or (colors and colors.icon_normal) 
-  local x_col_hov  = opts.x_col_hovered    or (colors and colors.icon_active)
-  local x_col_act  = opts.x_col_active     or (colors and colors.icon_hovered)
+  local x_col      = colors.icon_normal
+  local x_col_hov  = colors.icon_active
+  local x_col_act  = colors.icon_hovered
 
-  local c_bg       = opts.close_bg         or (colors and colors.dark_gray)
-  local c_bg_hov   = opts.close_bg_hovered or (colors and colors.dark_gray)
-  local c_bg_act   = opts.close_bg_active  or (colors and colors.dark_gray)
-  local c_border   = opts.close_border     or (colors and colors.dark_gray)
+  local c_bg       = colors.tag_close_bg
+  local c_bg_hov   = colors.tag_close_bg
+  local c_bg_act   = colors.tag_close_bg
+  local c_border   = colors.tag_close_bg
 
   -- 主区与关闭区不重叠
   local main_w = pad_l + tw + pad_r
@@ -2880,7 +2882,7 @@ function DrawFilterLockToggle(ctx)
   local tw, th = reaper.ImGui_CalcTextSize(ctx, text_label)
   local tx = x + (reserve_w - (tw or 0)) * 0.5
   local ty = y + (reserve_h - (th or 0)) * 0.5
-  local col = lock_on and colors.gray or colors.icon_normal
+  local col = lock_on and colors.icon_on or colors.icon_off
   reaper.ImGui_DrawList_AddText(dl, tx, ty, col, text_label)
   reaper.ImGui_PopFont(ctx)
 
@@ -5756,7 +5758,7 @@ function HoverSelectable(ctx, label, id, width, flags)
   reaper.ImGui_SetCursorScreenPos(ctx, pos_x, pos_y)
   if hovered then
     -- reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.table_header_active)
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.link_text)
     reaper.ImGui_Text(ctx, label or "")
     reaper.ImGui_PopStyleColor(ctx)
   else
@@ -10390,7 +10392,7 @@ end
 -- 数据库路径过滤按钮
 function DBPF_DrawDatabaseFolderButton(ctx)
   local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
-  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), in_db_mode and colors.normal_text or colors.gray)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- in_db_mode and colors.icon_on or colors.normal_text
 
   local _, y = reaper.ImGui_GetCursorPos(ctx)
   reaper.ImGui_SetCursorPosY(ctx, y + 13)
@@ -10417,7 +10419,7 @@ function DBPF_DrawDatabaseFolderButton(ctx)
   local tw, th = reaper.ImGui_CalcTextSize(ctx, text_label)
   local tx = x + (reserve_w - (tw or 0)) * 0.5
   local ty = y + (reserve_h - (th or 0)) * 0.5
-  local col = in_db_mode and colors.gray or colors.icon_normal
+  local col = in_db_mode and colors.icon_on or colors.icon_off
   reaper.ImGui_DrawList_AddText(dl, tx, ty, col, text_label)
   reaper.ImGui_PopFont(ctx)
 
@@ -10535,7 +10537,7 @@ function loop()
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ChildRounding(),     0.0) -- 子窗口
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(),    4.0) -- 主窗口
 
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Border(),            colors.light_gray)       -- 边框颜色
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Border(),            colors.big_button_border)-- 边框颜色
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),            colors.button_normal)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),      colors.button_active)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(),     colors.button_hovered)
@@ -12934,7 +12936,7 @@ function loop()
               local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
               local hovered = (mouse_x >= text_pos_x and mouse_x <= text_pos_x + tw and mouse_y >= text_pos_y and mouse_y <= text_pos_y + th)
 
-              reaper.ImGui_TextColored(ctx, hovered and colors.accent_active or colors.previewed_text, glyph_up)
+              reaper.ImGui_TextColored(ctx, hovered and colors.icon_hovered or colors.icon_normal, glyph_up)
               local clicked_up = reaper.ImGui_IsItemClicked(ctx)
               reaper.ImGui_PopFont(ctx)
 
@@ -12970,7 +12972,7 @@ function loop()
               local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
               local hovered = (mouse_x >= text_pos_x and mouse_x <= text_pos_x + tw and mouse_y >= text_pos_y and mouse_y <= text_pos_y + th)
 
-              reaper.ImGui_TextColored(ctx, hovered and colors.accent_active or colors.previewed_text, glyph_down)
+              reaper.ImGui_TextColored(ctx, hovered and colors.icon_hovered or colors.icon_normal, glyph_down)
               local clicked_down = reaper.ImGui_IsItemClicked(ctx)
               reaper.ImGui_PopFont(ctx)
 
@@ -14322,30 +14324,31 @@ function loop()
       -- 颜色分组，具体显示内容
       local COLOR_GROUPS = {
         ["背景 Background"] = { "window_bg" },
-        ["文本 Text"] = { "normal_text","previewed_text","thesaurus_text","text" },
+        ["文本 Text"] = { "normal_text","previewed_text","thesaurus_text","link_text" },
         ["标题栏 Header"] = { "header","herder_hovered","herder_active" },
         ["表格 Table"] = {
-          "table_header_bg","table_header","table_header_hovered","table_header_active",
+          "table_header_bg","table_header_hovered","table_header_active","table_header",
           "table_border_strong","table_border_light","table_separator","table_separator_hovered",
           "table_separator_active","table_play_cursor"
         },
         ["页签 Tabs"] = {
-          "tab","tab_dimmed","tab_hovered","tab_selected","tab_dimmed_selected","tab_selected_overline"
+          "tab","tab_hovered","tab_selected","tab_dimmed","tab_dimmed_selected","tab_selected_overline"
         },
         ["波形 Waveform"] = { "wave_line","wave_center","wave_line_selected","preview_play_cursor" },
-        ["时间线 Timeline"] = { "timeline_text","timeline_bg_color" },"timeline_def_color",
-        ["输入与弹窗 Inputs"] = { "frame_bg","frame_bg_hovered","frame_bg_active","check_mark","popup_bg","scrollbar_bg" },
-        ["按钮 Buttons"] = { "button_normal","button_hovered","button_active","big_button_normal","big_button_hovered","big_button_active" },
-        ["旋钮 Knobs"] = { "knob_normal","knob_hovered","knob_active","knob_outline","knob_indicator" },
-        ["图标 Icons"] = { "icon_normal","icon_hovered","icon_active" },
+        ["时间线 Timeline"] = { "timeline_text","timeline_bg_color","timeline_def_color" },
         ["音量滑块 Volume Fader"] = {
           "volume_line_normal","volume_line_hovered","volume_line_tick",
           "volume_fader","volume_fader_active","volume_fader_outline",
-          "volume_bg","volume_bg_border","slider_grab","slider_grab_active"
+          "volume_bg","volume_bg_border"
         },
-        ["分割线 Separators"] = { "separator_line","separator_line_active" },
-        ["状态 State"] = { "status_active" },
-        -- ["基础与强调 Base/Accent"] = { "transparent","accent","accent_active","gray","light_gray","dark_gray","red","yellow","mole" },
+        ["按钮 Buttons"] = { "button_normal","button_hovered","button_active","big_button_normal","big_button_hovered","big_button_active","big_button_border" },
+        ["旋钮 Knobs"] = { "knob_normal","knob_hovered","knob_active","knob_outline","knob_indicator" },
+        ["图标 Icons"] = { "icon_normal","icon_hovered","icon_active","status_active","icon_on","icon_off" },
+        ["输入与弹窗 Inputs"] = { "frame_bg","frame_bg_hovered","frame_bg_active","check_mark","popup_bg" },
+
+        ["分割线 Separators"] = { "separator_line","separator_line_active","slider_grab","slider_grab_active","scrollbar_bg" },
+        ["基础 Base"] = { "transparent","gray","mole" },
+        ["标签 Tag"] = { "tag_normal","tag_hovered","tag_selected","tag_border","tag_close_bg" },
         ["Freesound"] = {
           "fs_button_normal","fs_button_hovered","fs_button_active",
           "fs_search_button_normal","fs_search_button_hovered","fs_search_button_active"
@@ -14363,12 +14366,12 @@ function loop()
         "时间线 Timeline",
         "输入与弹窗 Inputs",
         "按钮 Buttons",
+        "音量滑块 Volume Fader",
         "旋钮 Knobs",
         "图标 Icons",
-        "音量滑块 Volume Fader",
+        "标签 Tag",
         "分割线 Separators",
-        "状态 State",
-        -- "基础与强调 Base/Accent",
+        "基础 Base",
         "Freesound",
       }
 
@@ -14378,23 +14381,23 @@ function loop()
         window_bg                = "Window BG",                -- 界面背景色
 
         -- 表格 Table
-        table_header_bg          = "Table Header BG",          -- "表头背景 Header BG",
-        table_header             = "Table Header Normal",      -- "表头文本 Table Header",
+        table_header_bg          = "Table Header Normal",      -- "表头背景 Header BG",
         table_header_hovered     = "Table Header Hovered",     -- "表头悬停 Header Hover",
         table_header_active      = "Table Header Active",      -- "表头按下 Header Active",
+        table_header             = "Table Header Selected",    -- "表头选中 Table Header Selected",
         table_border_strong      = "Table Border Strong",      -- "表格边框 粗 Border Strong",
         table_border_light       = "Table Border Light",       -- "表格边框 细 Border Light",
-        table_separator          = "Table Separator Normal",   -- "表格分隔线 Separator",
+        table_separator          = "Table Separator Normal*",  -- "表格分隔线 Separator",
         table_separator_hovered  = "Table Separator Hovered",  -- "分隔线 悬停 Separator Hover",
         table_separator_active   = "Table Separator Active",   -- "分隔线 按下 Separator Active",
         table_play_cursor        = "Table Playhead Line",      -- "表格播放指示线 Table Playhead",
 
         -- 页签 Tabs
         tab                      = "Tab Normal",               -- "页签 Tab",
-        tab_dimmed               = "Tab Dimmed",               -- "页签 弱化 Tab Dimmed",
         tab_hovered              = "Tab Hovered",              -- "页签 悬停 Tab Hover",
         tab_selected             = "Tab Selected",             -- "页签 选中 Tab Selected",
-        tab_dimmed_selected      = "Tab Dimmed Selected",      -- "页签 选中 弱化 Dimmed Selected",
+        tab_dimmed               = "Tab Dimmed*",              -- "页签 弱化 Tab Dimmed",
+        tab_dimmed_selected      = "Tab Dimmed Selected*",     -- "页签 选中 弱化 Dimmed Selected",
         tab_selected_overline    = "Tab Selected Overline",    -- "页签 顶部高亮 Selected Overline",
 
         -- 标题栏 Header
@@ -14406,12 +14409,12 @@ function loop()
         normal_text              = "Normal Text",              -- "普通文本 Normal Text",
         previewed_text           = "Previewed Text",           -- "预览文本 Previewed Text",
         thesaurus_text           = "Thesaurus Text",           -- "同义词文本 Thesaurus Text",
-        text                     = "Body Text",                -- "正文文本 Body Text",
+        link_text                = "Link Text",                -- "超链接文本 Link Text",
 
         -- 时间线 Timeline
-        timeline_def_color       = "Timeline Default",         -- "时间线 默认色 Timeline Default",
         timeline_bg_color        = "Timeline BG",              -- "时间线 背景 Timeline BG",
         timeline_text            = "Timeline Text",            -- "时间线 文本 Timeline Text",
+        timeline_def_color       = "Timeline Tick",            -- "时间线 标尺 Timeline Default",
 
         -- 按钮 Buttons
         button_normal            = "Button Normal",            -- "按钮 常态 Button",
@@ -14420,6 +14423,7 @@ function loop()
         big_button_normal        = "Big Button Normal",        -- "大按钮 常态 Big Button",
         big_button_hovered       = "Big Button Hovered",       -- "大按钮 悬停 Big Button Hover",
         big_button_active        = "Big Button Active",        -- "大按钮 按下 Big Button Active",
+        big_button_border        = "Big Button Border",        -- "大按钮 按下 Big Button Border",
 
         -- 输入与弹窗 Inputs
         frame_bg                 = "Frame BG Normal",          -- "输入框 背景 Frame BG",
@@ -14427,13 +14431,12 @@ function loop()
         frame_bg_active          = "Frame BG Active",          -- "输入框 激活 Frame BG Active",
         check_mark               = "Check Mark",               -- "复选 对勾 Check Mark",
         popup_bg                 = "Popup BG",                 -- "弹窗 背景 Popup BG",
-        scrollbar_bg             = "Scrollbar BG",             -- "滚动条 背景 Scrollbar BG",
 
         -- 旋钮 Knobs
         knob_normal              = "Knob Normal",              -- "旋钮 常态 Knob",
         knob_hovered             = "Knob Hovered",             -- "旋钮 悬停 Knob Hover",
         knob_active              = "Knob Active",              -- "旋钮 按下 Knob Active",
-        knob_outline             = "Knob Outline",             -- "旋钮 轮廓 Knob Outline",
+        knob_outline             = "Knob Border",              -- "旋钮 轮廓 Knob Border",
         knob_indicator           = "Knob Indicator",           -- "旋钮 指示器 Knob Indicator",
 
         -- 音量滑块 Volume Fader
@@ -14442,40 +14445,40 @@ function loop()
         volume_line_tick         = "Volume Line Tick",         -- "音量线 刻度 Volume Tick",
         volume_fader             = "Volume Fader Normal",      -- "音量推子 Fader",
         volume_fader_active      = "Volume Fader Active",      -- "音量推子 按下 Fader Active",
-        volume_fader_outline     = "Volume Fader Outline",     -- "音量推子 轮廓 Fader Outline",
-        volume_bg                = "Volume BG Normal",         -- "音量 背景 Volume BG",
+        volume_fader_outline     = "Volume Fader Border",      -- "音量推子 轮廓 Fader Border",
+        volume_bg                = "Volume BG",                -- "音量 背景 Volume BG",
         volume_bg_border         = "Volume BG Border",         -- "音量 背景边框 Volume BG Border",
-        slider_grab              = "Slider Grab Normal",       -- "滑块 抓手 Slider Grab",
-        slider_grab_active       = "Slider Grab Active",       -- "滑块 抓手 按下 Slider Grab Active",
 
         -- 图标 Icons
-        icon_normal              = "Icon Normal",              -- "图标 常态 Icon",
-        icon_hovered             = "Icon Hovered",             -- "图标 悬停 Icon Hover",
-        icon_active              = "Icon Active",              -- "图标 按下 Icon Active",
+        icon_normal              = "Icon Normal",              -- "图标 常态",
+        icon_hovered             = "Icon Hovered",             -- "图标 悬停",
+        icon_active              = "Icon Active",              -- "图标 按下",
+        status_active            = "Icon Status Active",       -- "状态 激活",
+        icon_on                  = "Icon On",                  -- "图标 开",
+        icon_off                 = "Icon Off",                 -- "图标 关",
 
         -- 波形 Waveform
-        wave_line                = "Waveform Normal",          -- "波形 线条 Wave Line",
-        wave_center              = "Waveform Center",          -- "波形 中线 Wave Center",
-        wave_line_selected       = "Waveform Selected",        -- "波形 线条 选中 Wave Selected",
-        preview_play_cursor      = "Waveform Playhead Line",   -- "预览播放指示线 Preview Playhead",
+        wave_line                = "Waveform Normal",          -- "波形 常态",
+        wave_center              = "Waveform Center",          -- "波形 中线",
+        wave_line_selected       = "Waveform Selected",        -- "波形 选中",
+        preview_play_cursor      = "Waveform Playhead Line",   -- "预览播放指示线",
 
         -- 分割线 Separators
         separator_line           = "Separator Normal",         -- "分割线 Separator",
         separator_line_active    = "Separator Active",         -- "分割线 按下 Separator Active",
-
-        -- 状态 State
-        status_active            = "Status Active",            -- "状态 已激活 Status Active",
+        slider_grab              = "Slider Grab Normal",       -- "滑块 抓手 Slider Grab",
+        slider_grab_active       = "Slider Grab Active",       -- "滑块 抓手 按下 Slider Grab Active",
+        scrollbar_bg             = "Scrollbar BG",             -- "滚动条 背景 Scrollbar BG",
 
         -- 基础与强调 Base/Accent
-        transparent              = "Transparent",              --"透明 Transparent",
-        accent                   = "Accent",                   --"强调色 Accent",
-        accent_active            = "Accent Active",            --"强调色 按下 Accent Active",
-        gray                     = "Gray",                     --"灰 Gray",
-        light_gray               = "Light Gray",               --"浅灰 Light Gray",
-        dark_gray                = "Dark Gray",                --"深灰 Dark Gray",
-        red                      = "Red",                      --"红 Red",
-        yellow                   = "Yellow",                   --"黄 Yellow",
-        mole                     = "Mole",                     --"主品牌色 Mole",
+        transparent              = "Transparent",              -- "透明 Transparent",
+        mole                     = "Mole",                     -- "Mole",
+        gray                     = "Gray",                     -- "灰 Gray",
+        tag_normal               = "Tag Normal",
+        tag_hovered              = "Tag Hovered",
+        tag_selected             = "Tag Selected",
+        tag_border               = "Tag Border",               -- "标签描边线",
+        tag_close_bg             = "Tag Close BG",             -- "标签关闭背景",
 
         -- Freesound
         fs_button_normal         = "FS Button Normal",         -- "FS 按钮 常态",
@@ -14552,7 +14555,7 @@ function loop()
         end
 
         -- 按三列平均切片
-        local per_col = math.floor(#group_names / 3)
+        local per_col = math.floor(#group_names / 3) -- math.ceil(#group_names / 3)
         local col1, col2, col3 = {}, {}, {}
         for i = 1, #group_names do
           if i <= per_col then
@@ -15442,7 +15445,7 @@ function loop()
 
         local is_file = (i == #path_parts)
         local text = is_file and path_parts[i] or (path_parts[i] .. sep)
-        local col = (not is_file and hover_idx and i <= hover_idx) and colors.table_header_active or colors.normal_text -- 鼠标经过时纯白，其他保持默认文字颜色
+        local col = (not is_file and hover_idx and i <= hover_idx) and colors.link_text or colors.normal_text -- 鼠标经过时纯白，其他保持默认文字颜色
         reaper.ImGui_TextColored(ctx, col, text)
 
         -- 点击目录段
