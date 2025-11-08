@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.98
+-- @version 1.0.99
 -- @changelog
---   Optimized the global color palette with unified naming and improved readability.
+--   Other detailed improvements and bug fixes
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

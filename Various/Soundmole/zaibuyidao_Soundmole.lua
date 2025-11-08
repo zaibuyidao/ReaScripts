@@ -16573,12 +16573,12 @@ function loop()
       reaper.ImGui_EndPopup(ctx)
     end
 
-    reaper.ImGui_PopStyleColor(ctx, 21) -- 全局背景色
+    reaper.ImGui_PopStyleColor(ctx, 20) -- 全局背景色
     reaper.ImGui_PopStyleVar(ctx, 6) -- ImGui_End 内 6 次圆角
     reaper.ImGui_End(ctx)
   end
   reaper.ImGui_PopStyleVar(ctx, 3)
-  reaper.ImGui_PopStyleColor(ctx, 3) -- 脚本标题栏背景颜色，常规，聚焦，折叠时颜色
+  reaper.ImGui_PopStyleColor(ctx, 4) -- 脚本标题栏背景颜色，常规，聚焦，折叠时颜色
   reaper.ImGui_PopFont(ctx)
 
   -- 检测 Ctrl+F4 快捷键
