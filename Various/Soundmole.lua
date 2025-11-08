@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.96
+-- @version 1.0.97
 -- @changelog
---   Fixed a potential crash caused by info being nil during database building.
+--   Added a color palette for more intuitive color management with quick import and export.
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

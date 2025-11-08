@@ -120,9 +120,9 @@ reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
 WFC_PX_DEFAULT               = 2048  -- 默认缓存像素（与C++对齐）
 selected_row                 = selected_row or -1
 ui_bottom_offset             = 265   -- 底部预览区高度
-local playing_preview        = nil
-local playing_path           = nil
-local playing_source         = nil
+playing_preview              = nil
+playing_path                 = nil
+playing_source               = nil
 local loop_enabled           = false -- 是否自动循环
 local preview_play_len       = 0     -- 当前预览音频长度
 local peak_chans             = 6     -- 默认显示6路电平
@@ -412,6 +412,7 @@ end
 --------------------------------------------- 颜色表 ---------------------------------------------
 
 local colors = {
+  window_bg               = 0x141414FF, -- 脚本主窗口背景
   transparent             = 0x00000000, -- 完全透明
   table_header            = 0x2D2D2E50, -- 表格-列表选中行颜色
   table_header_bg         = 0x2D2D2E80, -- 表格-列表置顶行颜色
@@ -492,6 +493,174 @@ local colors = {
   fs_search_button_hovered= 0xFFFFA870, -- Freesound - 搜索按钮悬停颜色
   fs_search_button_active = 0xFFF2999B, -- Freesound - 搜索按钮按下颜色
 }
+
+-- 复制默认颜色表
+function copy_shallow(t)
+  local r = {}
+  for k, v in pairs(t) do r[k] = v end
+  return r
+end
+local DEFAULT_COLORS = copy_shallow(colors)
+
+-- 加载已保存颜色
+function LoadColorsFromExtState()
+  for k in pairs(DEFAULT_COLORS) do
+    local saved = reaper.GetExtState(EXT_SECTION, "jb_color" .. k)
+    if saved and saved ~= "" then
+      local n = tonumber(saved)
+      if n then colors[k] = n end
+    end
+  end
+end
+
+-- 保存单个颜色
+function SaveOneColorToExtState(key)
+  local v = colors[key]
+  if v ~= nil then
+    reaper.SetExtState(EXT_SECTION, "jb_color" .. key, tostring(v), true)
+  end
+end
+
+-- 保存全部颜色
+function SaveAllColorsToExtState()
+  for k in pairs(DEFAULT_COLORS) do SaveOneColorToExtState(k) end
+end
+
+-- 恢复默认并保存
+function RestoreAllColorsToDefault()
+  for k, v in pairs(DEFAULT_COLORS) do colors[k] = v end
+  SaveAllColorsToExtState()
+end
+
+-- 排序后的颜色键名
+function sorted_color_keys()
+  local t = {}
+  for k in pairs(DEFAULT_COLORS) do t[#t+1] = k end
+  table.sort(t, function(a,b) return a:lower() < b:lower() end)
+  return t
+end
+
+-- 解析颜色字符串
+function _parse_color_value(s)
+  if s == nil then return nil end
+  s = tostring(s):match("^%s*(.-)%s*$")
+  if s == "" then return nil end
+  -- 纯十进制
+  if s:match("^%d+$") then
+    local n = tonumber(s)
+    if n then return n & 0xFFFFFFFF end
+  end
+  -- 统一成纯HEX再转
+  local hex = s
+  hex = hex:gsub("^0[xX]", ""):gsub("^#", "")
+  if hex:match("^[%da-fA-F]+$") then
+    if #hex == 6 then hex = hex .. "FF" end
+    if #hex == 8 then
+      local n = tonumber("0x" .. hex)
+      if n then return n & 0xFFFFFFFF end
+    end
+  end
+  return nil
+end
+
+-- 导出
+function ExportColorsToFile(path)
+  local f, err = io.open(path, "w")
+  if not f then return false, ("Unable to write file: " .. tostring(err or "")) end -- 无法写入文件
+  f:write("# Soundmole Color Config v1\n")
+  for _, k in ipairs(sorted_color_keys()) do
+    local v = tonumber(colors[k]) or 0
+    f:write(string.format("%s=0x%08X\n", k, v & 0xFFFFFFFF))
+  end
+  f:close()
+  return true
+end
+
+-- 导入
+function ImportColorsFromFile(path)
+  local f, err = io.open(path, "r")
+  if not f then return false, 0, 0, ("Unable to read file: " .. tostring(err or "")) end -- 无法读取文件
+  local changed, total = 0, 0
+  for line in f:lines() do
+    local s = line:match("^%s*(.-)%s*$")
+    if s ~= "" and not s:match("^#") and not s:match("^;") then
+      local key, val = s:match("^([%w_]+)%s*=%s*(.+)$")
+      if key and val and colors[key] ~= nil then
+        total = total + 1
+        local n = _parse_color_value(val)
+        if n then
+          if colors[key] ~= n then changed = changed + 1 end
+          colors[key] = n
+          reaper.SetExtState(EXT_SECTION, "jb_color" .. key, tostring(n), true)
+        end
+      end
+    end
+  end
+  f:close()
+  return true, changed, total
+end
+
+-- 颜色菜单
+function DrawColorsMenuIcon(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+  local glyph = '\u{004A}'
+  local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = colors.icon_normal or 0xFFFFFFFF
+  local col_hovered = colors.icon_hovered or 0xFFCC66FF
+  local col_active  = colors.icon_active or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  DrawTextVOffset(ctx, glyph, col, 4)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    reaper.ImGui_OpenPopup(ctx, "##colors_menu")
+  end
+
+  if reaper.ImGui_BeginPopup(ctx, "##colors_menu") then
+    -- Restore
+    if reaper.ImGui_MenuItem(ctx, "Restore All to Defaults") then
+      RestoreAllColorsToDefault()
+    end
+
+    reaper.ImGui_Separator(ctx)
+
+    -- Import
+    if reaper.ImGui_MenuItem(ctx, "Import...") then
+      local dir = reaper.GetResourcePath()
+      local rv, path = reaper.JS_Dialog_BrowseForOpenFiles("Import Color Config", dir, "", "", false)
+      if rv == 1 and path and path ~= "" then
+        local ok, changed, total, err = ImportColorsFromFile(path)
+        _colors_last_import_msg = ok and (string.format("Imported %d of %d items", changed or 0, total or 0)) or (err or "Import failed")
+      end
+    end
+
+    -- Export
+    if reaper.ImGui_MenuItem(ctx, "Export...") then
+      local dir = reaper.GetResourcePath()
+      local rv, path = reaper.JS_Dialog_BrowseForSaveFile("Export Color Config", dir, "SoundmoleColors.smcol", "")
+      if rv == 1 and path and path ~= "" then
+        if not path:lower():match("%.smcol$") then path = path .. ".smcol" end
+        local ok, err = ExportColorsToFile(path)
+        _colors_last_export_msg = ok and ("Exported: " .. path) or (err or "Export failed")
+      end
+    end
+
+    reaper.ImGui_EndPopup(ctx)
+  end
+end
+
+LoadColorsFromExtState()
 
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
 
@@ -10344,6 +10513,7 @@ function loop()
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBg(),          0x0A0A0AFF) -- 常规
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(),    0x181818FF) -- 聚焦
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgCollapsed(), 0x0F0F0F90) -- 折叠
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(),         colors.window_bg) -- 主窗口背景
 
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
 
@@ -14050,6 +14220,10 @@ function loop()
         ["Preview Output Track & Channels"] = "Routing",
         ["UCS Language Selection"]          = "UCS",
         ["Restore Defaults"]                = "Reset Defaults",
+
+        ["颜色"]     = "Colors",
+        ["颜色设置"] = "Colors",
+        ["配色"]     = "Colors",
       }
       if PAGE_ALIASES[settings_active_page] then
         settings_active_page = PAGE_ALIASES[settings_active_page]
@@ -14142,7 +14316,309 @@ function loop()
       ----------------------------------------------------------------
       -- 各子区块内容
       ----------------------------------------------------------------
-      local function Section_UI()
+      -- 颜色设置
+      local _colors_last_import_msg, _colors_last_export_msg = nil, nil
+
+      -- 颜色分组，具体显示内容
+      local COLOR_GROUPS = {
+        ["背景 Background"] = { "window_bg" },
+        ["文本 Text"] = { "normal_text","previewed_text","thesaurus_text","text" },
+        ["标题栏 Header"] = { "header","herder_hovered","herder_active" },
+        ["表格 Table"] = {
+          "table_header_bg","table_header","table_header_hovered","table_header_active",
+          "table_border_strong","table_border_light","table_separator","table_separator_hovered",
+          "table_separator_active","table_play_cursor"
+        },
+        ["页签 Tabs"] = {
+          "tab","tab_dimmed","tab_hovered","tab_selected","tab_dimmed_selected","tab_selected_overline"
+        },
+        ["波形 Waveform"] = { "wave_line","wave_center","wave_line_selected","preview_play_cursor" },
+        ["时间线 Timeline"] = { "timeline_text","timeline_bg_color" },"timeline_def_color",
+        ["输入与弹窗 Inputs"] = { "frame_bg","frame_bg_hovered","frame_bg_active","check_mark","popup_bg","scrollbar_bg" },
+        ["按钮 Buttons"] = { "button_normal","button_hovered","button_active","big_button_normal","big_button_hovered","big_button_active" },
+        ["旋钮 Knobs"] = { "knob_normal","knob_hovered","knob_active","knob_outline","knob_indicator" },
+        ["图标 Icons"] = { "icon_normal","icon_hovered","icon_active" },
+        ["音量滑块 Volume Fader"] = {
+          "volume_line_normal","volume_line_hovered","volume_line_tick",
+          "volume_fader","volume_fader_active","volume_fader_outline",
+          "volume_bg","volume_bg_border","slider_grab","slider_grab_active"
+        },
+        ["分割线 Separators"] = { "separator_line","separator_line_active" },
+        ["状态 State"] = { "status_active" },
+        -- ["基础与强调 Base/Accent"] = { "transparent","accent","accent_active","gray","light_gray","dark_gray","red","yellow","mole" },
+        ["Freesound"] = {
+          "fs_button_normal","fs_button_hovered","fs_button_active",
+          "fs_search_button_normal","fs_search_button_hovered","fs_search_button_active"
+        },
+      }
+
+      -- 颜色组顺序，上下调整区域
+      local COLOR_GROUP_ORDER = {
+        "背景 Background",
+        "文本 Text",
+        "标题栏 Header",
+        "表格 Table",
+        "页签 Tabs",
+        "波形 Waveform",
+        "时间线 Timeline",
+        "输入与弹窗 Inputs",
+        "按钮 Buttons",
+        "旋钮 Knobs",
+        "图标 Icons",
+        "音量滑块 Volume Fader",
+        "分割线 Separators",
+        "状态 State",
+        -- "基础与强调 Base/Accent",
+        "Freesound",
+      }
+
+      -- 颜色文本编辑区
+      local COLOR_LABELS = {
+        -- 背景 Background
+        window_bg                = "Window BG",                -- 界面背景色
+
+        -- 表格 Table
+        table_header_bg          = "Table Header BG",          -- "表头背景 Header BG",
+        table_header             = "Table Header Normal",      -- "表头文本 Table Header",
+        table_header_hovered     = "Table Header Hovered",     -- "表头悬停 Header Hover",
+        table_header_active      = "Table Header Active",      -- "表头按下 Header Active",
+        table_border_strong      = "Table Border Strong",      -- "表格边框 粗 Border Strong",
+        table_border_light       = "Table Border Light",       -- "表格边框 细 Border Light",
+        table_separator          = "Table Separator Normal",   -- "表格分隔线 Separator",
+        table_separator_hovered  = "Table Separator Hovered",  -- "分隔线 悬停 Separator Hover",
+        table_separator_active   = "Table Separator Active",   -- "分隔线 按下 Separator Active",
+        table_play_cursor        = "Table Playhead Line",      -- "表格播放指示线 Table Playhead",
+
+        -- 页签 Tabs
+        tab                      = "Tab Normal",               -- "页签 Tab",
+        tab_dimmed               = "Tab Dimmed",               -- "页签 弱化 Tab Dimmed",
+        tab_hovered              = "Tab Hovered",              -- "页签 悬停 Tab Hover",
+        tab_selected             = "Tab Selected",             -- "页签 选中 Tab Selected",
+        tab_dimmed_selected      = "Tab Dimmed Selected",      -- "页签 选中 弱化 Dimmed Selected",
+        tab_selected_overline    = "Tab Selected Overline",    -- "页签 顶部高亮 Selected Overline",
+
+        -- 标题栏 Header
+        header                   = "PeekTree Header Normal",   -- "标题栏 Header",
+        herder_hovered           = "PeekTree Header Hovered",  -- "标题栏 悬停 Header Hover",
+        herder_active            = "PeekTree Header Active",   -- "标题栏 按下 Header Active",
+
+        -- 文本 Text
+        normal_text              = "Normal Text",              -- "普通文本 Normal Text",
+        previewed_text           = "Previewed Text",           -- "预览文本 Previewed Text",
+        thesaurus_text           = "Thesaurus Text",           -- "同义词文本 Thesaurus Text",
+        text                     = "Body Text",                -- "正文文本 Body Text",
+
+        -- 时间线 Timeline
+        timeline_def_color       = "Timeline Default",         -- "时间线 默认色 Timeline Default",
+        timeline_bg_color        = "Timeline BG",              -- "时间线 背景 Timeline BG",
+        timeline_text            = "Timeline Text",            -- "时间线 文本 Timeline Text",
+
+        -- 按钮 Buttons
+        button_normal            = "Button Normal",            -- "按钮 常态 Button",
+        button_hovered           = "Button Hovered",           -- "按钮 悬停 Button Hover",
+        button_active            = "Button Active",            -- "按钮 按下 Button Active",
+        big_button_normal        = "Big Button Normal",        -- "大按钮 常态 Big Button",
+        big_button_hovered       = "Big Button Hovered",       -- "大按钮 悬停 Big Button Hover",
+        big_button_active        = "Big Button Active",        -- "大按钮 按下 Big Button Active",
+
+        -- 输入与弹窗 Inputs
+        frame_bg                 = "Frame BG Normal",          -- "输入框 背景 Frame BG",
+        frame_bg_hovered         = "Frame BG Hovered",         -- "输入框 悬停 Frame BG Hover",
+        frame_bg_active          = "Frame BG Active",          -- "输入框 激活 Frame BG Active",
+        check_mark               = "Check Mark",               -- "复选 对勾 Check Mark",
+        popup_bg                 = "Popup BG",                 -- "弹窗 背景 Popup BG",
+        scrollbar_bg             = "Scrollbar BG",             -- "滚动条 背景 Scrollbar BG",
+
+        -- 旋钮 Knobs
+        knob_normal              = "Knob Normal",              -- "旋钮 常态 Knob",
+        knob_hovered             = "Knob Hovered",             -- "旋钮 悬停 Knob Hover",
+        knob_active              = "Knob Active",              -- "旋钮 按下 Knob Active",
+        knob_outline             = "Knob Outline",             -- "旋钮 轮廓 Knob Outline",
+        knob_indicator           = "Knob Indicator",           -- "旋钮 指示器 Knob Indicator",
+
+        -- 音量滑块 Volume Fader
+        volume_line_normal       = "Volume Line Normal",       -- "音量线 常态 Volume Line",
+        volume_line_hovered      = "Volume Line Hovered",      -- "音量线 悬停 Volume Line Hover",
+        volume_line_tick         = "Volume Line Tick",         -- "音量线 刻度 Volume Tick",
+        volume_fader             = "Volume Fader Normal",      -- "音量推子 Fader",
+        volume_fader_active      = "Volume Fader Active",      -- "音量推子 按下 Fader Active",
+        volume_fader_outline     = "Volume Fader Outline",     -- "音量推子 轮廓 Fader Outline",
+        volume_bg                = "Volume BG Normal",         -- "音量 背景 Volume BG",
+        volume_bg_border         = "Volume BG Border",         -- "音量 背景边框 Volume BG Border",
+        slider_grab              = "Slider Grab Normal",       -- "滑块 抓手 Slider Grab",
+        slider_grab_active       = "Slider Grab Active",       -- "滑块 抓手 按下 Slider Grab Active",
+
+        -- 图标 Icons
+        icon_normal              = "Icon Normal",              -- "图标 常态 Icon",
+        icon_hovered             = "Icon Hovered",             -- "图标 悬停 Icon Hover",
+        icon_active              = "Icon Active",              -- "图标 按下 Icon Active",
+
+        -- 波形 Waveform
+        wave_line                = "Waveform Normal",          -- "波形 线条 Wave Line",
+        wave_center              = "Waveform Center",          -- "波形 中线 Wave Center",
+        wave_line_selected       = "Waveform Selected",        -- "波形 线条 选中 Wave Selected",
+        preview_play_cursor      = "Waveform Playhead Line",   -- "预览播放指示线 Preview Playhead",
+
+        -- 分割线 Separators
+        separator_line           = "Separator Normal",         -- "分割线 Separator",
+        separator_line_active    = "Separator Active",         -- "分割线 按下 Separator Active",
+
+        -- 状态 State
+        status_active            = "Status Active",            -- "状态 已激活 Status Active",
+
+        -- 基础与强调 Base/Accent
+        transparent              = "Transparent",              --"透明 Transparent",
+        accent                   = "Accent",                   --"强调色 Accent",
+        accent_active            = "Accent Active",            --"强调色 按下 Accent Active",
+        gray                     = "Gray",                     --"灰 Gray",
+        light_gray               = "Light Gray",               --"浅灰 Light Gray",
+        dark_gray                = "Dark Gray",                --"深灰 Dark Gray",
+        red                      = "Red",                      --"红 Red",
+        yellow                   = "Yellow",                   --"黄 Yellow",
+        mole                     = "Mole",                     --"主品牌色 Mole",
+
+        -- Freesound
+        fs_button_normal         = "FS Button Normal",         -- "FS 按钮 常态",
+        fs_button_hovered        = "FS Button Hovered",        -- "FS 按钮 悬停",
+        fs_button_active         = "FS Button Active",         -- "FS 按钮 按下",
+        fs_search_button_normal  = "FS Search Button Normal",  -- "FS 搜索按钮 常态",
+        fs_search_button_hovered = "FS Search Button Hovered", -- "FS 搜索按钮 悬停",
+        fs_search_button_active  = "FS Search Button Active",  -- "FS 搜索按钮 按下",
+      }
+
+      -- 左名称 + 右侧小色块 + 点击弹出调色板
+      function DrawColorRow_Picker(key, label)
+        if colors[key] == nil then return end
+        reaper.ImGui_TableNextRow(ctx)
+
+        local display = (COLOR_LABELS and COLOR_LABELS[key]) or label or key
+
+        -- 左列名称，非右对齐
+        -- reaper.ImGui_TableSetColumnIndex(ctx, 0)
+        -- reaper.ImGui_Text(ctx, display)
+
+        -- 左列名称右对齐
+        reaper.ImGui_TableSetColumnIndex(ctx, 0)
+        do
+          local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx)) -- 当前单元可用宽
+          local text_w  = select(1, reaper.ImGui_CalcTextSize(ctx, display)) -- 文本宽
+          local cur_x   = reaper.ImGui_GetCursorPosX(ctx)
+          reaper.ImGui_SetCursorPosX(ctx, cur_x + math.max(0, avail_w - text_w))
+          reaper.ImGui_Text(ctx, display)
+        end
+
+        -- 右列显示色块，点击弹出调色板
+        reaper.ImGui_TableSetColumnIndex(ctx, 1)
+        reaper.ImGui_PushID(ctx, "color_" .. key)
+
+        local btn_flags = reaper.ImGui_ColorEditFlags_NoTooltip() | reaper.ImGui_ColorEditFlags_NoDragDrop()
+        if reaper.ImGui_ColorButton(ctx, "##btn", colors[key], btn_flags, 55, 18) then
+          reaper.ImGui_OpenPopup(ctx, "popup_" .. key)
+        end
+
+        -- 点击色块后弹出的调色板
+        if reaper.ImGui_BeginPopup(ctx, "popup_" .. key) then
+          reaper.ImGui_Text(ctx, display)
+
+          local flags = reaper.ImGui_ColorEditFlags_DisplayHex()
+                      | reaper.ImGui_ColorEditFlags_AlphaBar()
+                      | reaper.ImGui_ColorEditFlags_PickerHueWheel()
+                      | reaper.ImGui_ColorEditFlags_NoSidePreview()
+
+          local changed, new_col = reaper.ImGui_ColorPicker4(ctx, "##picker", colors[key], flags)
+          if changed then
+            colors[key] = new_col
+            SaveOneColorToExtState(key)
+          end
+          reaper.ImGui_EndPopup(ctx)
+        end
+
+        reaper.ImGui_PopID(ctx)
+      end
+
+      function Section_Colors()
+        -- 颜色分组名列表，按 COLOR_GROUP_ORDER 显示顺序，未列出的补到末尾
+        local group_names, seen = {}, {}
+        if COLOR_GROUP_ORDER then
+          for _, name in ipairs(COLOR_GROUP_ORDER) do
+            if COLOR_GROUPS[name] then
+              group_names[#group_names+1] = name
+              seen[name] = true
+            end
+          end
+        end
+        for name in pairs(COLOR_GROUPS) do
+          if not seen[name] then group_names[#group_names+1] = name end
+        end
+
+        -- 按三列平均切片
+        local per_col = math.floor(#group_names / 3)
+        local col1, col2, col3 = {}, {}, {}
+        for i = 1, #group_names do
+          if i <= per_col then
+            col1[#col1+1] = group_names[i]
+          elseif i <= per_col * 2 then
+            col2[#col2+1] = group_names[i]
+          else
+            col3[#col3+1] = group_names[i]
+          end
+        end
+
+        reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), 0, 0)
+        local group_gap_h = reaper.ImGui_GetTextLineHeight(ctx)
+
+        -- 外层三列并排
+        local outer_flags = reaper.ImGui_TableFlags_SizingStretchSame()
+                          -- | reaper.ImGui_TableFlags_BordersInnerV()
+        if reaper.ImGui_BeginTable(ctx, "tbl_colors_three_cols", 3, outer_flags, -1, 0) then
+          reaper.ImGui_TableNextRow(ctx)
+
+          local function render_column(list, col_id)
+            reaper.ImGui_TableSetColumnIndex(ctx, col_id)
+            local first = true
+            for _, group in ipairs(list) do
+              if not first then
+                reaper.ImGui_Dummy(ctx, 0, group_gap_h) -- 颜色分组之间空一行
+              end
+              first = false
+
+              -- reaper.ImGui_Text(ctx, group) -- 分组标题
+
+              local tbl_flags = reaper.ImGui_TableFlags_SizingFixedFit()
+                              -- | reaper.ImGui_TableFlags_RowBg()
+              if reaper.ImGui_BeginTable(ctx, "tbl_group_col"..col_id.."_"..group, 2, tbl_flags, -1, 0) then
+                reaper.ImGui_TableSetupColumn(ctx, "Name",  reaper.ImGui_TableColumnFlags_WidthFixed(), 160)
+                reaper.ImGui_TableSetupColumn(ctx, "Color", reaper.ImGui_TableColumnFlags_WidthFixed(), 70)
+                for _, key in ipairs(COLOR_GROUPS[group]) do
+                  DrawColorRow_Picker(key, key)
+                end
+                reaper.ImGui_EndTable(ctx)
+              end
+            end
+          end
+
+          render_column(col1, 0)
+          render_column(col2, 1)
+          render_column(col3, 2)
+
+          reaper.ImGui_EndTable(ctx)
+        end
+
+        reaper.ImGui_PopStyleVar(ctx)
+
+        reaper.ImGui_NewLine(ctx)
+        DrawColorsMenuIcon(ctx)
+        if _colors_last_import_msg then
+          reaper.ImGui_SameLine(ctx, nil, 10)
+          reaper.ImGui_TextColored(ctx, colors.gray, _colors_last_import_msg)
+        end
+        if _colors_last_export_msg then
+          reaper.ImGui_SameLine(ctx, nil, 10)
+          reaper.ImGui_TextColored(ctx, colors.gray, _colors_last_export_msg)
+        end
+      end
+
+      function Section_UI()
         reaper.ImGui_Text(ctx, "Content Font Size:")
         reaper.ImGui_SameLine(ctx)
         reaper.ImGui_PushItemWidth(ctx, -65)
@@ -14596,6 +15072,14 @@ function loop()
           end
         },
 
+        -- Colors
+        { id = "Colors", fn = function()
+            DrawPageHeader("Customize color palette", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
+            -- DrawSubTitle("Customize color palette")
+            Section_Colors()
+          end
+        },
+
         -- 重置默认值
         { id = "Reset Defaults", fn = function()
             DrawPageHeader("Restore defaults", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
@@ -14636,7 +15120,7 @@ function loop()
           end
 
           -- 底部留白
-          reaper.ImGui_Dummy(ctx, 800, 14)
+          reaper.ImGui_Dummy(ctx, 850, 20)
           reaper.ImGui_End(ctx)
         end
 
@@ -16086,7 +16570,7 @@ function loop()
       reaper.ImGui_EndPopup(ctx)
     end
 
-    reaper.ImGui_PopStyleColor(ctx, 20) -- 全局背景色
+    reaper.ImGui_PopStyleColor(ctx, 21) -- 全局背景色
     reaper.ImGui_PopStyleVar(ctx, 6) -- ImGui_End 内 6 次圆角
     reaper.ImGui_End(ctx)
   end
