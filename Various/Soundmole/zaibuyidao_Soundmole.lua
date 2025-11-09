@@ -15347,10 +15347,7 @@ function loop()
       if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
         local rate = play_rate or 1
         local cursor_pos = ((Wave and Wave.play_cursor) or 0) * rate
-        local src_len = (Wave and Wave.src_len) or 0
-
-        local has_sel = (select_start_time and select_end_time) and (math.abs(select_end_time - select_start_time) > 0.01)
-        local duration = has_sel and (math.abs(select_end_time - select_start_time) * rate) or src_len
+        local duration = (Wave and Wave.src_len) or 0
         local should_trigger = false
 
         if duration and duration > 0 then
