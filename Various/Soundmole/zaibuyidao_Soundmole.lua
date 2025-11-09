@@ -119,7 +119,7 @@ reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
 -- 状态变量
 WFC_PX_DEFAULT               = 2048  -- 默认缓存像素（与C++对齐）
 selected_row                 = selected_row or -1
-ui_bottom_offset             = 265   -- 底部预览区高度
+ui_bottom_offset             = 251   -- 底部预览区高度
 playing_preview              = nil
 playing_path                 = nil
 playing_source               = nil
@@ -2627,6 +2627,135 @@ function SmoothSetPreviewRate(target_rate, ramp_ms)
     reaper.defer(step)
   end
   reaper.defer(step)
+end
+
+--------------------------------------------- 水平滚动条控件 ---------------------------------------------
+
+WaveMiniSB_State = WaveMiniSB_State or {}
+
+function _clamp(v, a, b) if v < a then return a elseif v > b then return b else return v end end
+
+function UI_WaveMiniScrollbar(ctx, id, total_len, view_len, scroll, height, wheel_ratio, tooltip_text)
+  total_len   = tonumber(total_len)   or 0
+  view_len    = tonumber(view_len)    or 0
+  scroll      = tonumber(scroll)      or 0
+  height      = tonumber(height)      or 12
+  wheel_ratio = tonumber(wheel_ratio) or 0.15
+
+  local changed = false
+  local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx)) or 0
+  local icon_w, icon_h = height, height
+  local gap = 3
+  local bar_w = math.max(24, avail_w - icon_w * 2 - gap * 2)
+  -- 左箭头
+  local glyphL = utf8.char(0x0008) -- 左箭头
+  local left_clicked = false
+  do
+    left_clicked = select(1, IconButton(ctx, id .. ":L", glyphL, icon_w, icon_h))
+    reaper.ImGui_SameLine(ctx, nil, gap)
+  end
+  -- 滚动条本体
+  local bar_id = id .. ":bar"
+  local x0, y0 = reaper.ImGui_GetCursorScreenPos(ctx)
+  reaper.ImGui_InvisibleButton(ctx, bar_id, bar_w, icon_h)
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  local active  = reaper.ImGui_IsItemActive(ctx)
+
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+  local col_bg       = colors.scrollbar_bg
+  local col_border   = colors.scrollbar_border or colors.scrollbar_bg -- 描边线暂未提供，共用背景颜色
+  local col_grab     = colors.scrollbar_grab_normal
+  local col_grab_hov = colors.scrollbar_grab_hovered
+  local col_grab_act = colors.scrollbar_grab_active
+  local round = math.floor(icon_h * 0.5)
+
+  reaper.ImGui_DrawList_AddRectFilled(dl, x0, y0, x0 + bar_w, y0 + icon_h, col_bg, round)
+  reaper.ImGui_DrawList_AddRect(dl, x0, y0, x0 + bar_w, y0 + icon_h, col_border, round, 0, 1)
+
+  local max_scroll = math.max(0, total_len - view_len)
+  local ratio = (total_len > 0 and view_len > 0) and _clamp(view_len / total_len, 0, 1) or 1
+  local disabled = (ratio >= 0.9999) or (max_scroll <= 0)
+  local min_thumb_px = math.min(24, bar_w)
+  local thumb_w = math.max(min_thumb_px, math.floor(bar_w * ratio + 0.5))
+  if disabled then thumb_w = bar_w end
+  local bar_span = math.max(1, bar_w - thumb_w)
+  local t = (not disabled and max_scroll > 0) and _clamp(scroll / max_scroll, 0, 1) or 0
+  local thumb_x0 = x0 + math.floor(bar_span * t + 0.5)
+  local thumb_y0 = y0
+  local thumb_x1 = thumb_x0 + thumb_w
+  local thumb_y1 = y0 + icon_h
+
+  local mx, my = reaper.ImGui_GetMousePos(ctx)
+  local thumb_hovered = hovered and (mx >= thumb_x0 and mx <= thumb_x1 and my >= thumb_y0 and my <= thumb_y1)
+
+  local thumb_col = active and col_grab_act or (thumb_hovered and col_grab_hov or col_grab)
+  reaper.ImGui_DrawList_AddRectFilled(dl, thumb_x0, thumb_y0, thumb_x1, thumb_y1, thumb_col, round)
+  reaper.ImGui_DrawList_AddRect(dl, thumb_x0, thumb_y0, thumb_x1, thumb_y1, col_border, round, 0, 1)
+  -- 悬浮提示
+  if hovered and tooltip_text and tooltip_text ~= "" then
+    reaper.ImGui_BeginTooltip(ctx)
+    reaper.ImGui_Text(ctx, tooltip_text)
+    reaper.ImGui_EndTooltip(ctx)
+  end
+  -- 拖拽与点击
+  if not disabled then
+    local mx = select(1, reaper.ImGui_GetMousePos(ctx))
+    if reaper.ImGui_IsItemActivated(ctx) then
+      local inside = (mx >= thumb_x0 and mx <= thumb_x1)
+      WaveMiniSB_State[bar_id] = { dragging = true, grab_dx = inside and (mx - thumb_x0) or math.floor(thumb_w * 0.5) }
+    end
+    if active and WaveMiniSB_State[bar_id] and WaveMiniSB_State[bar_id].dragging then
+      local grab_dx = WaveMiniSB_State[bar_id].grab_dx or math.floor(thumb_w * 0.5)
+      local new_thumb_x0 = _clamp(mx - grab_dx, x0, x0 + bar_span)
+      local new_t = (bar_span > 0) and ((new_thumb_x0 - x0) / bar_span) or 0
+      local new_scroll = new_t * max_scroll
+      if math.abs(new_scroll - scroll) > 1e-9 then
+        scroll = new_scroll
+        changed = true
+      end
+    end
+    if not reaper.ImGui_IsMouseDown(ctx, 0) then
+      WaveMiniSB_State[bar_id] = nil
+    end
+    -- 背景点击居中滑块
+    if hovered and not active and reaper.ImGui_IsMouseClicked(ctx, 0) then
+      local click_x = select(1, reaper.ImGui_GetMousePos(ctx))
+      local new_thumb_x0 = _clamp(click_x - thumb_w * 0.5, x0, x0 + bar_span)
+      local new_t = (bar_span > 0) and ((new_thumb_x0 - x0) / bar_span) or 0
+      local new_scroll = new_t * max_scroll
+      if math.abs(new_scroll - scroll) > 1e-9 then
+        scroll = new_scroll
+        changed = true
+      end
+    end
+    -- 滚轮微调
+    if hovered then
+      local wheel = reaper.ImGui_GetMouseWheel(ctx)
+      if wheel ~= 0 then
+        local step_ratio = wheel_ratio
+        if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) then step_ratio = wheel_ratio * 0.3 end
+        if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) then step_ratio = wheel_ratio * 2.0 end
+        local delta = view_len * step_ratio * (-wheel)
+        scroll = _clamp(scroll + delta, 0, max_scroll)
+        changed = true
+      end
+    end
+  end
+  -- 右箭头
+  reaper.ImGui_SameLine(ctx, nil, gap)
+  local glyphR = utf8.char(0x0009) -- 右箭头
+  local right_clicked = select(1, IconButton(ctx, id .. ":R", glyphR, icon_w, icon_h))
+  -- 箭头点击步进
+  if left_clicked or right_clicked then
+    local step_ratio = 0.10
+    if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) then step_ratio = 0.05 end
+    if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) then step_ratio = 0.50 end
+    local delta = view_len * step_ratio * (right_clicked and 1 or -1)
+    scroll = _clamp(scroll + delta, 0, math.max(0, total_len - view_len))
+    changed = true
+  end
+
+  return changed, scroll
 end
 
 --------------------------------------------- 标签控件 ---------------------------------------------
@@ -16202,83 +16331,38 @@ function loop()
       end
       reaper.ImGui_EndChild(ctx)
 
-      -- 放大缩小按钮和水平滚动条
-      local view_len = Wave.src_len / Wave.zoom
-      local max_scroll = math.max(0, Wave.src_len - view_len)
-      local cursor_pos = Wave.play_cursor or 0
-      local label_fmt
+      -- 水平滚动条控件
+      do
+        local view_len = (Wave.src_len or 0) / math.max(Wave.zoom or 1, 1)
+        local max_scroll = math.max(0, (Wave.src_len or 0) - view_len)
+        local cursor_pos = Wave.play_cursor or 0
 
-      local range_start, range_end
-      if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
-        label_fmt = "Selection: %s ~ %s" -- "Selection: %s ~ %s | %s / %s"
-        range_start = math.min(select_start_time, select_end_time) * play_rate -- 速率变化时调整选区时间位置
-        range_end = math.max(select_start_time, select_end_time) * play_rate -- 速率变化时调整选区时间位置
-      else
-        label_fmt = "View range: %s ~ %s" -- "View range: %s ~ %s | %s / %s"
-        range_start = view_start * play_rate -- 速率变化时调整选区时间位置
-        range_end = view_end
-      end
-
-      reaper.ImGui_SetNextItemWidth(ctx, -65)
-      local label = string.format(label_fmt,
-        reaper.format_timestr(range_start, ""),
-        reaper.format_timestr(range_end, ""),
-        reaper.format_timestr(cursor_pos, ""), -- 速率变化时调整光标时间位置
-        reaper.format_timestr(Wave.src_len, "")
-      )
-
-      -- 滑块控件颜色
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBg(),          colors.scrollbar_bg)
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgHovered(),   colors.frame_bg_hovered)
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgActive(),    colors.frame_bg_active)
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrab(),       colors.slider_grab)
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrabActive(), colors.slider_grab_active)
-      -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.gray or 0x999999FF)
-      -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
-      local changed, new_scroll = reaper.ImGui_SliderDouble(ctx, "##scrollbar", Wave.scroll, 0, max_scroll, label)
-      -- reaper.ImGui_PopStyleVar(ctx)
-      -- 恢复样式
-      reaper.ImGui_PopStyleColor(ctx, 5)
-
-      if changed then
-        Wave.scroll = new_scroll
-      end
-      if Wave.scroll < 0 then Wave.scroll = 0 end
-      if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
-
-      -- -按钮
-      reaper.ImGui_SameLine(ctx, nil, 4)
-      if reaper.ImGui_Button(ctx, "-", 24) then -- Zoom Out
-        local prev_zoom = Wave.zoom
-        Wave.zoom = math.max(Wave.zoom / 1.25, 1)
-        if Wave.zoom ~= prev_zoom then
-          local old_view_len = Wave.src_len / prev_zoom
-          local center = Wave.scroll + old_view_len / 2
-          local new_view_len = Wave.src_len / Wave.zoom
-          Wave.scroll = center - new_view_len / 2
-          if Wave.scroll < 0 then Wave.scroll = 0 end
-          local max_scroll = math.max(0, Wave.src_len - new_view_len)
-          if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
+        local label_fmt
+        local range_start, range_end
+        if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
+          label_fmt = "Selection: %s ~ %s"
+          range_start = math.min(select_start_time, select_end_time) * (play_rate or 1)
+          range_end = math.max(select_start_time, select_end_time) * (play_rate or 1)
+        else
+          label_fmt = "View range: %s ~ %s"
+          range_start = (view_start or 0) * (play_rate or 1)
+          range_end = (view_end or view_start or 0)
         end
+
+        local tooltip = string.format(label_fmt, reaper.format_timestr(range_start or 0, ""), reaper.format_timestr(range_end or 0, ""))
+        -- 左箭头 + 滚动条 + 右箭头
+        local changed, new_scroll = UI_WaveMiniScrollbar(
+          ctx, "##wf_scrollbar",
+          Wave.src_len or 0,
+          view_len,
+          Wave.scroll or 0,
+          11,   -- 高度
+          0.15, -- 滚轮灵敏度
+          nil   -- 悬浮提示
+        )
+
+        if changed then Wave.scroll = math.max(0, math.min(new_scroll, max_scroll)) end
       end
-      
-      -- +按钮
-      -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
-      reaper.ImGui_SameLine(ctx, nil, 4)
-      if reaper.ImGui_Button(ctx, "+", 24) then  -- Zoom In
-        local prev_zoom = Wave.zoom
-        Wave.zoom = math.min(Wave.zoom * 1.25, 16)
-        if Wave.zoom ~= prev_zoom then
-          local old_view_len = Wave.src_len / prev_zoom
-          local center = Wave.scroll + old_view_len / 2
-          local new_view_len = Wave.src_len / Wave.zoom
-          Wave.scroll = center - new_view_len / 2
-          if Wave.scroll < 0 then Wave.scroll = 0 end
-          local max_scroll = math.max(0, Wave.src_len - new_view_len)
-          if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
-        end
-      end
-      -- reaper.ImGui_PopStyleVar(ctx)
     end
 
     -- 状态栏行
