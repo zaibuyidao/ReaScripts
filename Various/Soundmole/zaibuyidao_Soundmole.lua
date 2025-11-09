@@ -413,6 +413,9 @@ end
 
 local colors = {
   window_bg               = 0x141414FF, -- 脚本主窗口背景
+  title_bg                = 0x141414FF, -- 脚本标题栏-背景
+  title_bg_active         = 0x181818FF, -- 脚本标题栏-选中
+  title_bg_collapse       = 0x0F0F0F90, -- 脚本标题栏-折叠
   transparent             = 0x00000000, -- 完全透明
   table_header            = 0x2D2D2E50, -- 表格-列表选中行颜色
   table_header_bg         = 0x2D2D2E80, -- 表格-列表置顶行颜色
@@ -465,7 +468,10 @@ local colors = {
   volume_fader_outline    = 0xFFFFFFFF, -- 水平音量推子-外圈描边线
   volume_bg               = 0x24242420, -- 水平音量推子-背景
   volume_bg_border        = 0xFFFFFF10, -- 水平音量推子-背景边框线
-  scrollbar_bg            = 0x181818FF, -- 滚动条-背景
+  scrollbar_bg            = 0x181818FF, -- 缩放波形的滚动条-背景
+  scrollbar_grab_normal   = 0x313131FF, -- 滚动条-常态
+  scrollbar_grab_hovered  = 0x3A3A3AFF, -- 滚动条-悬停
+  scrollbar_grab_active   = 0x424242FF, -- 滚动条-按下
   slider_grab             = 0xFFB0B0B0, -- 推子滑块常态
   slider_grab_active      = 0xFFFFFFFF, -- 推子滑块按下
   tab                     = 0x2E2E2EFF, -- 页签-标签背景
@@ -483,6 +489,8 @@ local colors = {
   wave_center             = 0x6F7C63FF, -- 0x808004FF, -- 波形-中心线
   wave_line               = 0x99AA84FF, -- 0xCCCC06FF, -- 波形-主线
   wave_line_selected      = 0x66FFFF20, -- 0x294A7A44, -- 波形-选中/预览时更亮
+  peak_meter_bg           = 0x222222FF, -- 电平表-背景
+  peak_meter_normal       = 0x33DD33FF, -- 电平表-填充
   separator_line          = 0x77777744, -- 分割线-常态颜色
   separator_line_active   = 0xC0C0C0FF, -- 0x00AFFF88, 分割线-抓住时颜色
   table_play_cursor       = 0xD0D0D0FF, -- 0x808080FF, 播放光标-表格列内
@@ -494,6 +502,7 @@ local colors = {
   fs_search_button_normal = 0xFFF2994A, -- Freesound - 搜索按钮常态颜色
   fs_search_button_hovered= 0xFFFFA870, -- Freesound - 搜索按钮悬停颜色
   fs_search_button_active = 0xFFF2999B, -- Freesound - 搜索按钮按下颜色
+  settings_header_bg      = 0x5B5B5E50, -- 设置-分页背景
 }
 
 -- 复制默认颜色表
@@ -3567,11 +3576,10 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
 
   -- 时间线背景
   local timeline_h = tick_long + 1 -- 背景高度为主刻度高度+余量
-  local bg_col = (colors.timeline_bg_color or 0x18181AFF)
-  reaper.ImGui_DrawList_AddRectFilled(drawlist, x0, y0, x1, y0 + timeline_h, bg_col)
+  reaper.ImGui_DrawList_AddRectFilled(drawlist, x0, y0, x1, y0 + timeline_h, colors.timeline_bg_color)
 
   -- 设置基础线颜色
-  reaper.ImGui_DrawList_AddLine(drawlist, x0, y0, x1, y0, 0x3F3F48FF, 1.0)
+  reaper.ImGui_DrawList_AddLine(drawlist, x0, y0, x1, y0, colors.timeline_def_color, 1.0)
 
   -- 智能自适应主刻度数
   local avail_w = max_x - min_x
@@ -9532,21 +9540,29 @@ function RenderHWAngledTable(ctx)
   }
 
   local TABLE_FLAGS =
-    reaper.ImGui_TableFlags_SizingFixedFit() |
-    reaper.ImGui_TableFlags_BordersOuter()   |
-    reaper.ImGui_TableFlags_BordersInnerH()  |
-    reaper.ImGui_TableFlags_Resizable()      |
-    reaper.ImGui_TableFlags_SizingFixedFit()      |
-    reaper.ImGui_TableFlags_HighlightHoveredColumn()
+        reaper.ImGui_TableFlags_SizingFixedFit()
+     |  reaper.ImGui_TableFlags_BordersOuter()
+     |  reaper.ImGui_TableFlags_BordersInnerH()
+     -- |  reaper.ImGui_TableFlags_Resizable()
+     |  reaper.ImGui_TableFlags_SizingFixedFit()
+     |  reaper.ImGui_TableFlags_HighlightHoveredColumn()
  
   local ANGLED_COLUMN_FLAGS =
-    reaper.ImGui_TableColumnFlags_AngledHeader() |
-    reaper.ImGui_TableColumnFlags_WidthFixed()
+        reaper.ImGui_TableColumnFlags_AngledHeader()
+     |  reaper.ImGui_TableColumnFlags_WidthFixed()
 
   local ANGLE_RAD = math.rad(50)
   local TEXT_ALIGN = {1.0, 0}
 
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_TableAngledHeadersAngle(), ANGLE_RAD)
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),            colors.table_header)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableHeaderBg(),     colors.table_header_bg)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderStrong(), colors.table_border_strong)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableBorderLight(),  colors.table_border_light)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Separator(),         colors.table_separator)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SeparatorHovered(),  colors.table_separator_hovered)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SeparatorActive(),   colors.table_separator_active)
 
   local columns_count = 1 + #column_headers
   if reaper.ImGui_BeginTable(ctx, "sm_hw_table_angled", columns_count, TABLE_FLAGS, 0, reaper.ImGui_GetTextLineHeight(ctx)) then
@@ -9624,7 +9640,7 @@ function RenderHWAngledTable(ctx)
     end
     reaper.ImGui_EndTable(ctx)
   end
-
+  reaper.ImGui_PopStyleColor(ctx, 7)
   reaper.ImGui_PopStyleVar(ctx) -- TableAngledHeadersAngle
 end
 
@@ -10512,12 +10528,19 @@ function loop()
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(),  4.0)
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowTitleAlign(), 0, 0) -- 0.5, 0.5 为居中
   -- 标题栏背景颜色
-  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBg(),          0x0A0A0AFF) -- 常规
-  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(),    0x181818FF) -- 聚焦
-  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgCollapsed(), 0x0F0F0F90) -- 折叠
-  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(),         colors.window_bg) -- 主窗口背景
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBg(),          colors.title_bg)          -- 常规
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(),    colors.title_bg_active)   -- 聚焦
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgCollapsed(), colors.title_bg_collapse) -- 折叠
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(),         colors.window_bg)         -- 主窗口背景
 
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ScrollbarBg(),          colors.scrollbar_bg)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ScrollbarGrab(),        colors.scrollbar_grab_normal)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ScrollbarGrabHovered(), colors.scrollbar_grab_hovered)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ScrollbarGrabActive(),  colors.scrollbar_grab_active)
+
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
+  reaper.ImGui_PopStyleColor(ctx, 1)
 
   -- 脚本折叠时清理旧专辑封面，避免折叠展开时报错。
   if not visible and last_window_visible then
@@ -14177,7 +14200,7 @@ function loop()
       settings_active_page = settings_active_page or "Appearance"
 
       -- 说明条配色
-      local PAGE_HEADER_BG   = 0x5B5B5E50
+      local PAGE_HEADER_BG   = colors.settings_header_bg
       local PAGE_HEADER_TEXT = colors.normal_text
 
       local PAGE_ALIASES = {
@@ -14277,7 +14300,7 @@ function loop()
       local function NavTextButton(label, id)
         local active = (settings_active_page == id)
         reaper.ImGui_PushID(ctx, "nav_" .. id)
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), active and colors.normal_text or 0xFFB0B0B0)
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), active and colors.normal_text or colors.previewed_text)
         reaper.ImGui_Text(ctx, label)
         DrawUnderlineIfHoveredOrActive(colors.normal_text)
         if reaper.ImGui_IsItemHovered(ctx) then
@@ -14323,7 +14346,7 @@ function loop()
 
       -- 颜色分组，具体显示内容
       local COLOR_GROUPS = {
-        ["背景 Background"] = { "window_bg" },
+        ["背景 Background"] = { "window_bg","title_bg","title_bg_active","title_bg_collapse" },
         ["文本 Text"] = { "normal_text","previewed_text","thesaurus_text","link_text" },
         ["标题栏 Header"] = { "header","herder_hovered","herder_active" },
         ["表格 Table"] = {
@@ -14336,6 +14359,7 @@ function loop()
         },
         ["波形 Waveform"] = { "wave_line","wave_center","wave_line_selected","preview_play_cursor" },
         ["时间线 Timeline"] = { "timeline_text","timeline_bg_color","timeline_def_color" },
+        ["电平表 Meter"] = { "peak_meter_bg","peak_meter_normal" },
         ["音量滑块 Volume Fader"] = {
           "volume_line_normal","volume_line_hovered","volume_line_tick",
           "volume_fader","volume_fader_active","volume_fader_outline",
@@ -14345,9 +14369,9 @@ function loop()
         ["旋钮 Knobs"] = { "knob_normal","knob_hovered","knob_active","knob_outline","knob_indicator" },
         ["图标 Icons"] = { "icon_normal","icon_hovered","icon_active","status_active","icon_on","icon_off" },
         ["输入与弹窗 Inputs"] = { "frame_bg","frame_bg_hovered","frame_bg_active","check_mark","popup_bg" },
-
-        ["分割线 Separators"] = { "separator_line","separator_line_active","slider_grab","slider_grab_active","scrollbar_bg" },
-        ["基础 Base"] = { "transparent","gray","mole" },
+        ["分割线 Separators"] = { "separator_line","separator_line_active","slider_grab","slider_grab_active" },
+        ["滚动条 Scrollbar"] = { "scrollbar_bg","scrollbar_grab_normal","scrollbar_grab_hovered","scrollbar_grab_active" },
+        ["基础 Base"] = { "transparent","gray","mole","settings_header_bg" },
         ["标签 Tag"] = { "tag_normal","tag_hovered","tag_selected","tag_border","tag_close_bg" },
         ["Freesound"] = {
           "fs_button_normal","fs_button_hovered","fs_button_active",
@@ -14364,6 +14388,7 @@ function loop()
         "页签 Tabs",
         "波形 Waveform",
         "时间线 Timeline",
+        "电平表 Meter",
         "输入与弹窗 Inputs",
         "按钮 Buttons",
         "音量滑块 Volume Fader",
@@ -14371,6 +14396,7 @@ function loop()
         "图标 Icons",
         "标签 Tag",
         "分割线 Separators",
+        "滚动条 Scrollbar",
         "基础 Base",
         "Freesound",
       }
@@ -14379,6 +14405,9 @@ function loop()
       local COLOR_LABELS = {
         -- 背景 Background
         window_bg                = "Window BG",                -- 界面背景色
+        title_bg                 = "Title BG",                 -- 标题栏背景
+        title_bg_active          = "Title BG Active",          -- 标题栏选中
+        title_bg_collapse        = "Title BG Collapse",        -- 标题栏折叠
 
         -- 表格 Table
         table_header_bg          = "Table Header Normal",      -- "表头背景 Header BG",
@@ -14415,6 +14444,10 @@ function loop()
         timeline_bg_color        = "Timeline BG",              -- "时间线 背景 Timeline BG",
         timeline_text            = "Timeline Text",            -- "时间线 文本 Timeline Text",
         timeline_def_color       = "Timeline Tick",            -- "时间线 标尺 Timeline Default",
+
+        -- 电平表 Meter
+        peak_meter_bg            = "Meter BG",                 -- "电平表 背景"
+        peak_meter_normal        = "Meter Normal",             -- "电平表 常规"
 
         -- 按钮 Buttons
         button_normal            = "Button Normal",            -- "按钮 常态 Button",
@@ -14457,6 +14490,13 @@ function loop()
         icon_on                  = "Icon On",                  -- "图标 开",
         icon_off                 = "Icon Off",                 -- "图标 关",
 
+        -- 标签 Tag
+        tag_normal               = "Tag Normal",
+        tag_hovered              = "Tag Hovered",
+        tag_selected             = "Tag Selected",
+        tag_border               = "Tag Border",               -- "标签描边线",
+        tag_close_bg             = "Tag Close BG",             -- "标签关闭背景",
+
         -- 波形 Waveform
         wave_line                = "Waveform Normal",          -- "波形 常态",
         wave_center              = "Waveform Center",          -- "波形 中线",
@@ -14468,17 +14508,18 @@ function loop()
         separator_line_active    = "Separator Active",         -- "分割线 按下 Separator Active",
         slider_grab              = "Slider Grab Normal",       -- "滑块 抓手 Slider Grab",
         slider_grab_active       = "Slider Grab Active",       -- "滑块 抓手 按下 Slider Grab Active",
+
+        -- 滚动条 Scrollbar
         scrollbar_bg             = "Scrollbar BG",             -- "滚动条 背景 Scrollbar BG",
+        scrollbar_grab_normal    = "Scrollbar Grab Normal",    -- 滚动条-常态
+        scrollbar_grab_hovered   = "Scrollbar Grab Hovered",   -- 滚动条-悬停
+        scrollbar_grab_active    = "Scrollbar Grab Active",    -- 滚动条-按下
 
         -- 基础与强调 Base/Accent
         transparent              = "Transparent",              -- "透明 Transparent",
         mole                     = "Mole",                     -- "Mole",
         gray                     = "Gray",                     -- "灰 Gray",
-        tag_normal               = "Tag Normal",
-        tag_hovered              = "Tag Hovered",
-        tag_selected             = "Tag Selected",
-        tag_border               = "Tag Border",               -- "标签描边线",
-        tag_close_bg             = "Tag Close BG",             -- "标签关闭背景",
+        settings_header_bg       = "Settings Header BG",       -- "设置页面背景"
 
         -- Freesound
         fs_button_normal         = "FS Button Normal",         -- "FS 按钮 常态",
@@ -15202,10 +15243,10 @@ function loop()
       local bar_y1 = y
       local bar_y2 = y + bar_height
       -- 先画底
-      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, bar_y1, bar_x2, bar_y2, 0x222222ff)
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, bar_y1, bar_x2, bar_y2, colors.peak_meter_bg)
       -- 再画峰值
       local peak_y = bar_y2 - peak * bar_height
-      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, peak_y, bar_x2, bar_y2, 0x33dd33ff) -- 0x33dd33ff
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, peak_y, bar_x2, bar_y2, colors.peak_meter_normal)
     end
     -- Dummy 占位
     reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
@@ -16578,7 +16619,7 @@ function loop()
     reaper.ImGui_End(ctx)
   end
   reaper.ImGui_PopStyleVar(ctx, 3)
-  reaper.ImGui_PopStyleColor(ctx, 4) -- 脚本标题栏背景颜色，常规，聚焦，折叠时颜色
+  reaper.ImGui_PopStyleColor(ctx, 8) -- 脚本标题栏背景颜色，常规，聚焦，折叠时颜色
   reaper.ImGui_PopFont(ctx)
 
   -- 检测 Ctrl+F4 快捷键
