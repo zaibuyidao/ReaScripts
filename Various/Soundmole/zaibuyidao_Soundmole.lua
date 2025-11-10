@@ -10065,7 +10065,9 @@ function UI_PlayIconTrigger_Prev(ctx)
 
     file_select_start, file_select_end = nil, nil
     selected_row = prev_idx
-    _G.scroll_target = 0.5
+    _G.scroll_request_index = prev_idx
+    _G.scroll_request_align = 0.5
+    -- _G.scroll_target = 0.5
     is_paused = false
     paused_position = 0
   end
@@ -10108,7 +10110,9 @@ function UI_PlayIconTrigger_Next(ctx)
 
     file_select_start, file_select_end = nil, nil
     selected_row = next_idx
-    _G.scroll_target = 0.5
+    _G.scroll_request_index = next_idx
+    _G.scroll_request_align = 0.5
+    -- _G.scroll_target = 0.5
     is_paused = false
     paused_position = 0
   end
@@ -13782,7 +13786,10 @@ function loop()
               if next_idx > 0 then
                 file_select_start, file_select_end = nil, nil -- 清空多选范围，避免旧条目继续高亮
                 selected_row = next_idx
-                _G.scroll_target = 0.5 -- 下一帧表格自动滚动到中间
+                -- 强制滚入视区并居中
+                _G.scroll_request_index = next_idx
+                _G.scroll_request_align = 0.5
+                -- _G.scroll_target = 0.5 -- 下一帧表格自动滚动到中间
               end
               PlayFromStart(auto_play_next_pending)
               auto_play_next_pending = nil
