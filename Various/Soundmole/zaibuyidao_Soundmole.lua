@@ -3918,22 +3918,13 @@ local selected_index = nil
 -- 文件夹强制刷新，清空缓存 + 使右侧列表缓存失效
 function ForceRescan()
   local cur_path = tree_state.cur_path or ""
+  local prev_mode = collect_mode
   -- 清空目录/文件缓存
   dir_cache        = {}
   audio_file_cache = {}
   tree_open        = {}
   files_idx_cache  = nil
-  -- 清空盘符缓存
-  -- drives_loaded    = false
-  -- drive_cache      = nil
-  -- need_load_drives = true
 
-  -- 读取文件夹列表的模式
-  if collect_mode ~= COLLECT_MODE_TREE and collect_mode ~= COLLECT_MODE_SHORTCUT and collect_mode ~= COLLECT_MODE_SAMEFOLDER then
-    collect_mode = COLLECT_MODE_TREE
-  end
-  -- 重建当前路径索引
-  if cur_path ~= "" then files_idx_cache = GetAudioFilesFromDirCached(cur_path) end
   -- 失效右侧过滤/排序后缓存，确保下一帧重新构建
   do
     local static = _G._soundmole_static or {}
@@ -3947,10 +3938,10 @@ function ForceRescan()
       current_key = GetCurrentListKey()
     else
       -- 目录类模式统一用 DIR 路径，其余用模式名
-      if collect_mode == COLLECT_MODE_TREE or collect_mode == COLLECT_MODE_SHORTCUT or collect_mode == COLLECT_MODE_SAMEFOLDER then
+      if prev_mode == COLLECT_MODE_TREE or prev_mode == COLLECT_MODE_SHORTCUT or prev_mode == COLLECT_MODE_SAMEFOLDER then
         current_key = "DIR:" .. tostring(cur_path or "default")
       else
-        current_key = tostring(collect_mode)
+        current_key = tostring(prev_mode)
       end
     end
 
@@ -3962,13 +3953,21 @@ function ForceRescan()
     _G.__fs_scanned_len = 0
   end
 
+  if prev_mode == COLLECT_MODE_TREE or prev_mode == COLLECT_MODE_SHORTCUT or prev_mode == COLLECT_MODE_SAMEFOLDER then
+    if cur_path ~= "" then
+      files_idx_cache = GetAudioFilesFromDirCached(cur_path)
+    end
+  else
+    -- 让数据库缓存失效
+    DBPF_InvalidateAllCaches()
+  end
+
   -- 重置列表 UI 状态
   selected_row = nil
   if list_offset ~= nil then list_offset = 0 end
   _G.scroll_request_index_exact, _G.scroll_request_align_exact = nil, nil
   _G.prev_selected_row = -1
 
-  -- 原刷新流程
   CollectFiles()
 end
 

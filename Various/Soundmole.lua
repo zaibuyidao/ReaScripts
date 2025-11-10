@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.107
+-- @version 1.0.108
 -- @changelog
---   Other detailed improvements and bug fixes
+--   Fixed an issue where clicking Rescan jumped to the wrong view
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
