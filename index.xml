@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="10e38b4226e3a8f52b6562850ca6a80cd74ab9b2">
+<index version="1" name="zaibuyidao Scripts" commit="4a703ca9710b0abb281d6238f3ad4cc6d15d2fdf">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -15268,6 +15268,17 @@ Support reaper_soundmole-x64.dll v0.0.4.1]]></changelog>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/10e38b4226e3a8f52b6562850ca6a80cd74ab9b2/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/10e38b4226e3a8f52b6562850ca6a80cd74ab9b2/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/10e38b4226e3a8f52b6562850ca6a80cd74ab9b2/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.104" author="zaibuyidao" time="2025-11-10T13:49:56Z">
+        <changelog><![CDATA[Fixed the issue where Auto Play Next skipped a track and now clears previous multi-selection on auto-jump so only the new track stays selected
+Support reaper_soundmole-x64.dll v0.0.4.1]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/4a703ca9710b0abb281d6238f3ad4cc6d15d2fdf/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/4a703ca9710b0abb281d6238f3ad4cc6d15d2fdf/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/4a703ca9710b0abb281d6238f3ad4cc6d15d2fdf/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/4a703ca9710b0abb281d6238f3ad4cc6d15d2fdf/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/4a703ca9710b0abb281d6238f3ad4cc6d15d2fdf/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/4a703ca9710b0abb281d6238f3ad4cc6d15d2fdf/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/4a703ca9710b0abb281d6238f3ad4cc6d15d2fdf/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
