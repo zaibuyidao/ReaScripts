@@ -469,7 +469,7 @@ local colors = {
   volume_bg               = 0x24242420, -- 水平音量推子-背景
   volume_bg_border        = 0xFFFFFF10, -- 水平音量推子-背景边框线
   scrollbar_bg            = 0x181818FF, -- 缩放波形的滚动条-背景
-  scrollbar_grab_normal   = 0x313131FF, -- 滚动条-常态
+  scrollbar_grab_normal   = 0x322929FF, -- 滚动条-常态
   scrollbar_grab_hovered  = 0x3A3A3AFF, -- 滚动条-悬停
   scrollbar_grab_active   = 0x424242FF, -- 滚动条-按下
   slider_grab             = 0xFFB0B0B0, -- 推子滑块常态
@@ -7094,7 +7094,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
       if mx >= x and mx <= x + thumb_w and my >= y and my <= y + thumb_h then
         if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
           local rel_x = mx - x
-          local new_pos = ((rel_x / thumb_w) / effective_rate_knob) * src_len
+          local new_pos = (rel_x / thumb_w) * src_len
           current_recent_play_info = nil -- 解除最近播放锁定
           if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
             collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
@@ -14703,6 +14703,14 @@ function loop()
             colors[key] = new_col
             SaveOneColorToExtState(key)
           end
+
+          -- 按 Enter ，保存当前值并关闭弹窗
+          if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+            colors[key] = new_col
+            SaveOneColorToExtState(key)
+            reaper.ImGui_CloseCurrentPopup(ctx)
+          end
+
           reaper.ImGui_EndPopup(ctx)
         end
 
@@ -15473,6 +15481,15 @@ function loop()
       -- 时间容差
       local END_EPS = 0.10
 
+      -- 切到新预览时重置上次位置，避免跨文件误触发
+      last_preview_handle = last_preview_handle
+      last_preview_path = last_preview_path
+      if playing_preview ~= last_preview_handle or playing_path ~= last_preview_path then
+        prev_preview_pos = nil
+        last_preview_handle = playing_preview
+        last_preview_path = playing_path
+      end
+
       if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
         local rate = play_rate or 1
         local cursor_pos = ((Wave and Wave.play_cursor) or 0) * rate
@@ -15486,13 +15503,17 @@ function loop()
         else
           local ok_pos, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
           local ok_len, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+
           if ok_pos and ok_len then
-            if (prev_preview_pos and prev_preview_pos < (length - END_EPS) and pos >= (length - END_EPS)) or ((length - pos) <= END_EPS) then
+            if (prev_preview_pos and prev_preview_pos < (length - END_EPS) and pos >= (length - END_EPS)) or (pos > 0 and (length - pos) <= END_EPS) then
               should_trigger = true
             end
             prev_preview_pos = pos
           elseif ok_len and prev_preview_pos and prev_preview_pos >= (length - END_EPS) then
-            should_trigger = true
+            -- 仅当仍是同一预览句柄时才允许兜底触发
+            if playing_preview == last_preview_handle then
+              should_trigger = true
+            end
           end
         end
 
@@ -15511,6 +15532,8 @@ function loop()
             auto_play_next_pending = false
             StopPreview()
           end
+          -- 触发后清零，避免尾部抖动再次触发
+          prev_preview_pos = nil
         end
       end
     end
