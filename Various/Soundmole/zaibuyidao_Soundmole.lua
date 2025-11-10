@@ -15495,11 +15495,10 @@ function loop()
       local END_EPS = 0.10
 
       -- 切到新预览时重置上次位置，避免跨文件误触发
-      last_preview_handle = last_preview_handle
-      last_preview_path = last_preview_path
-      if playing_preview ~= last_preview_handle or playing_path ~= last_preview_path then
+      local prev_handle = last_preview_handle
+      local prev_path = last_preview_path
+      if playing_path ~= prev_path then
         prev_preview_pos = nil
-        last_preview_handle = playing_preview
         last_preview_path = playing_path
         if Wave then Wave.play_cursor = 0 end -- 避免沿用上一首的光标末尾导致连跳
       end
@@ -15510,7 +15509,7 @@ function loop()
         local duration = (Wave and Wave.src_len) or 0
         local should_trigger = false
 
-        if duration and duration > 0 then --  and prev_preview_pos ~= nil
+        if duration and duration > 0 then
           if cursor_pos >= (duration - END_EPS) then
             should_trigger = true
           end
@@ -15525,7 +15524,7 @@ function loop()
             prev_preview_pos = pos
           elseif ok_len and prev_preview_pos and prev_preview_pos >= (length - END_EPS) then
             -- 仅当仍是同一预览句柄时才允许兜底触发
-            if playing_preview == last_preview_handle then
+            if playing_preview == prev_handle then
               should_trigger = true
             end
           end
@@ -15550,6 +15549,8 @@ function loop()
           prev_preview_pos = nil
         end
       end
+      -- 更新句柄记录，用于后续比较
+      last_preview_handle = playing_preview
     end
 
     -- 同步速度复选框

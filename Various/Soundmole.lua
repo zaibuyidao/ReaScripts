@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.106
+-- @version 1.0.107
 -- @changelog
---   Improved the knob control for a steadier pointer and smoother interaction
+--   Other detailed improvements and bug fixes
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
