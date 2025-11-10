@@ -13787,6 +13787,7 @@ function loop()
               if next_idx > 0 then
                 file_select_start, file_select_end = nil, nil -- 清空多选范围，避免旧条目继续高亮
                 selected_row = next_idx
+                last_selected_row = next_idx -- 同步last_selected_row，避免auto_play_selected在下一帧再次起播
                 -- 强制滚入视区并居中
                 _G.scroll_request_index = next_idx
                 _G.scroll_request_align = 0.5

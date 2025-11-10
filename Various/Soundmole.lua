@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.108
+-- @version 1.0.109
 -- @changelog
---   Fixed an issue where clicking Rescan jumped to the wrong view
+--   Fixed a double trigger playback issue when Skip Silence and Auto Play Next are both enabled
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
