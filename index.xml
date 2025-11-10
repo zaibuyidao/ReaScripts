@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="572f461c31e2f28003fda440e95e0a69f26a9d10">
+<index version="1" name="zaibuyidao Scripts" commit="dae63340d4db211bf513ed2be2a575de54c30e9d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -15290,6 +15290,17 @@ Support reaper_soundmole-x64.dll v0.0.4.1]]></changelog>
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/572f461c31e2f28003fda440e95e0a69f26a9d10/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/572f461c31e2f28003fda440e95e0a69f26a9d10/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/572f461c31e2f28003fda440e95e0a69f26a9d10/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.106" author="zaibuyidao" time="2025-11-10T15:28:32Z">
+        <changelog><![CDATA[Improved the knob control for a steadier pointer and smoother interaction
+Support reaper_soundmole-x64.dll v0.0.4.1]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/dae63340d4db211bf513ed2be2a575de54c30e9d/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/dae63340d4db211bf513ed2be2a575de54c30e9d/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/dae63340d4db211bf513ed2be2a575de54c30e9d/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/dae63340d4db211bf513ed2be2a575de54c30e9d/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/dae63340d4db211bf513ed2be2a575de54c30e9d/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/dae63340d4db211bf513ed2be2a575de54c30e9d/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/dae63340d4db211bf513ed2be2a575de54c30e9d/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
