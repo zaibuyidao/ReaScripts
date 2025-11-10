@@ -2319,15 +2319,11 @@ function HelpMarker(desc)
   end
 end
 
--- 旋钮控件，在函数最前面加静态表存储drag偏移
-ImGui_Knob_drag_y = ImGui_Knob_drag_y or {}
-ImGui_Knob_RClickToMenu = ImGui_Knob_RClickToMenu or {}
-
+-- 旋钮控件
 function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
-  -- 交互热区
   local radius = size * 0.5
-  local cx, cy = reaper.ImGui_GetCursorScreenPos(ctx)
-  cx, cy = cx + radius, cy + radius
+  local x0, y0 = reaper.ImGui_GetCursorScreenPos(ctx)
+  local cx, cy = x0 + radius, y0 + radius
 
   reaper.ImGui_SetCursorScreenPos(ctx, cx - radius, cy - radius)
   reaper.ImGui_InvisibleButton(ctx, label, size, size)
@@ -2335,53 +2331,59 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   local hovered = reaper.ImGui_IsItemHovered(ctx)
   local changed = false
 
-  -- 计算旋钮角度
-  local ANG_MIN, ANG_MAX = -3 * math.pi/4, 3 * math.pi / 4
-  local t = (value - v_min) / (v_max - v_min)
-  local angle = ANG_MIN + (ANG_MAX - ANG_MIN) * t - math.pi / 2
-
-  -- 绘制
-  local col
   if active then
-    col = colors.knob_active
-  elseif hovered then
-    col = colors.knob_hovered
-  else
-    col = colors.knob_normal
+    local mdx, mdy = reaper.ImGui_GetMouseDelta(ctx)
+    if mdx ~= 0.0 or mdy ~= 0.0 then
+      local dom = (math.abs(mdy) >= math.abs(mdx)) and (-mdy) or mdx
+      -- 步进: 细=Shift 中=Ctrl，粗=默认
+      local denom = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) and 2000 or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) and 1000 or 200
+      local step = (v_max - v_min) / denom
+      local nv = value + dom * step
+      if nv < v_min then nv = v_min end
+      if nv > v_max then nv = v_max end
+      if math.abs(nv - value) > 1e-9 then
+        value = nv
+        changed = true
+      end
+    end
   end
 
+  local ANG_MIN = math.pi * 0.75
+  local ANG_MAX = math.pi * 2.25
+  local t = 0.0
+  if v_max > v_min then
+    t = (value - v_min) / (v_max - v_min)
+    if t < 0 then t = 0 elseif t > 1 then t = 1 end
+  end
+  local angle = ANG_MIN + (ANG_MAX - ANG_MIN) * t
+  local ca, sa = math.cos(angle), math.sin(angle)
+
+  local col = active and colors.knob_active or hovered and colors.knob_hovered or colors.knob_normal
   local dl = reaper.ImGui_GetWindowDrawList(ctx)
-  reaper.ImGui_DrawList_AddCircleFilled(dl, cx, cy, radius, col)
-  local hx, hy = cx + math.cos(angle) * radius * 0.87, cy + math.sin(angle) * radius * 0.87
-  reaper.ImGui_DrawList_AddLine(dl, cx, cy, hx, hy, colors.knob_indicator, 2)
-  reaper.ImGui_DrawList_AddCircle(dl, cx, cy, radius, colors.knob_outline, 32, 1)
-
+  -- 外圆填充
+  reaper.ImGui_DrawList_AddCircleFilled(dl, cx, cy, radius, col, 32)
+  -- 指针
+  local inner = radius * 0.15 -- 指针起点内缩
+  local tip   = radius - 2    -- 指针终点
+  reaper.ImGui_DrawList_AddLine(dl, cx + ca * inner, cy + sa * inner, cx + ca * tip, cy + sa * tip, colors.knob_indicator, 2)
+  -- 外描边
+  reaper.ImGui_DrawList_AddCircle(dl, cx, cy, radius, colors.knob_outline, 32, 1.0)
   -- 文本
-  if label:find("##")~=1 then
+  if label:find("##") ~= 1 then
     reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_Text(ctx, label:gsub("##.*",""))
+    reaper.ImGui_Text(ctx, (label:gsub("##.*","")))
   end
-
-  -- 拖拽更新
-  if reaper.ImGui_IsItemActivated(ctx) then
-    ImGui_Knob_drag_y[label] = { y0 = select(2,reaper.ImGui_GetMousePos(ctx)), v0 = value }
-  elseif active and ImGui_Knob_drag_y[label] then
-    local cur_y = select(2, reaper.ImGui_GetMousePos(ctx))
-    local delta = ImGui_Knob_drag_y[label].y0 - cur_y
-    local step = (v_max - v_min) / ( reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) and 2000 or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) and 1000 or 100 )
-    local nv = ImGui_Knob_drag_y[label].v0 + delta*step
-    value = math.max(v_min, math.min(v_max, nv))
-    if math.abs(value - ImGui_Knob_drag_y[label].v0) > 1e-6 then changed = true end
-  elseif not active then
-    ImGui_Knob_drag_y[label] = nil
-  end
-
   -- 双击复位
   if hovered and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
-    value = default_value or v_min
+    value = (default_value ~= nil) and default_value or v_min
     changed = true
-    ImGui_Knob_drag_y[label] = nil
   end
+  -- Tooltip
+  -- if hovered or active then
+  --   reaper.ImGui_BeginTooltip(ctx)
+  --   reaper.ImGui_Text(ctx, string.format("%.3f", value))
+  --   reaper.ImGui_EndTooltip(ctx)
+  -- end
 
   return changed, value
 end
