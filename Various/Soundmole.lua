@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.103
+-- @version 1.0.104
 -- @changelog
---   Other detailed improvements and bug fixes
+--   Fixed the issue where Auto Play Next skipped a track and now clears previous multi-selection on auto-jump so only the new track stays selected
 --   Support reaper_soundmole-x64.dll v0.0.4.1
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

@@ -10063,6 +10063,7 @@ function UI_PlayIconTrigger_Prev(ctx)
     auto_play_next_pending    = info
     _G.auto_play_next_pending = info
 
+    file_select_start, file_select_end = nil, nil
     selected_row = prev_idx
     _G.scroll_target = 0.5
     is_paused = false
@@ -10105,6 +10106,7 @@ function UI_PlayIconTrigger_Next(ctx)
     auto_play_next_pending    = info
     _G.auto_play_next_pending = info
 
+    file_select_start, file_select_end = nil, nil
     selected_row = next_idx
     _G.scroll_target = 0.5
     is_paused = false
@@ -10150,6 +10152,7 @@ function UI_PlayIconTrigger_Rand(ctx)
       is_paused, paused_position = false, 0
     end
 
+    file_select_start, file_select_end = nil, nil
     _G.scroll_request_index = rand_idx -- 目标索引
     _G.scroll_request_align = 0.5      -- 居中
   end
@@ -13777,6 +13780,7 @@ function loop()
                 end
               end
               if next_idx > 0 then
+                file_select_start, file_select_end = nil, nil -- 清空多选范围，避免旧条目继续高亮
                 selected_row = next_idx
                 _G.scroll_target = 0.5 -- 下一帧表格自动滚动到中间
               end
@@ -15488,6 +15492,7 @@ function loop()
         prev_preview_pos = nil
         last_preview_handle = playing_preview
         last_preview_path = playing_path
+        if Wave then Wave.play_cursor = 0 end -- 避免沿用上一首的光标末尾导致连跳
       end
 
       if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
@@ -15496,7 +15501,7 @@ function loop()
         local duration = (Wave and Wave.src_len) or 0
         local should_trigger = false
 
-        if duration and duration > 0 then
+        if duration and duration > 0 then --  and prev_preview_pos ~= nil
           if cursor_pos >= (duration - END_EPS) then
             should_trigger = true
           end
