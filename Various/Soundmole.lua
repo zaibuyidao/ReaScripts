@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.109
+-- @version 1.0.110
 -- @changelog
---   Fixed a double trigger playback issue when Skip Silence and Auto Play Next are both enabled
---   Support reaper_soundmole-x64.dll v0.0.4.1
+--   Enhanced the Freesound mode list with license filtering
+--   Support reaper_soundmole-x64.dll v0.0.5
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

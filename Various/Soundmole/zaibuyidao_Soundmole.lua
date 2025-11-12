@@ -7133,6 +7133,28 @@ function DrawCellTextOneLine(ctx, s)
   reaper.ImGui_Text(ctx, s)
 end
 
+-- 从comment字符串中提取license
+function SM_ExtractLicenseFromComment(comment)
+  local s = tostring(comment or "")
+  if s == "" then return "" end
+
+  local _, e = s:lower():find("license%s*[:：%-]*%s*")
+  if not e then return "" end
+
+  local rest = s:sub(e + 1)
+  local cut = #rest + 1
+  local stops = { " ", "  ", "\t", "src@", "fid@", "sug@", "src_kind@", "\r\n", "\n", "\r" }
+  for i = 1, #stops do
+    local p = rest:find(stops[i], 1, true)
+    if p and p < cut then cut = p end
+  end
+
+  local body = rest:sub(1, cut - 1)
+  body = body:gsub("[ %z%s]+$", ""):gsub("^%s+", ""):gsub("%s+$", "")
+  if body == "" then return "" end
+  return body -- return "license:" .. body
+end
+
 function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
   EnsureEntryParsed(info) -- 右侧文件列表首次可见时解析 DATA 元数据
   if not info.group then  -- 分组延迟到可见时再计算
@@ -7371,6 +7393,16 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       DrawCellTextOneLine(ctx, info.comment) -- reaper.ImGui_Text(ctx, info.comment or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
+    -- Freesound模式的License
+    elseif col_name == "License" then
+      local only = SM_ExtractLicenseFromComment(info.comment)
+      DrawCellTextOneLine(ctx, only)
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+    -- Freesound模式的Tags
+    elseif col_name == "Tags" then
+        reaper.ImGui_Text(ctx, info.genre or "")
+        RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
     -- Description
     elseif col_name == "Description" then
       DrawCellTextOneLine(ctx, info.description) -- reaper.ImGui_Text(ctx, info.description or "")
@@ -7383,7 +7415,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
     elseif col_name == "SubCategory" then
       reaper.ImGui_Text(ctx, info.ucs_subcategory or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
-    elseif col_name == "CatID" then
+    elseif col_name == "CatID" or col_name == "Category ID" then
       reaper.ImGui_Text(ctx, info.ucs_catid or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
@@ -8033,10 +8065,10 @@ FS = FS or {
   DOWNLOAD_METHOD   = "curl",                                           -- nil=自动选择 "curl"=强制用curl "ps_iwr"=PowerShell Invoke-WebRequest "ps_bits"=PowerShell BITS
   ui = {
     query       = "",
-    sort_idx    = 1,   -- 1 Relevance / 2 Rating / 3 Duration / 4 Downloads / 5 Created_new / 6 Created_old
-    arrange_idx = 1,   -- 1 Timbre / 2 Tonality
-    num_results = 200, -- 1..450
-    max_minutes = 7.5  -- 0.5..30
+    sort_idx    = 1,  -- 1 Relevance / 2 Rating / 3 Duration / 4 Downloads / 5 Created_new / 6 Created_old
+    arrange_idx = 1,  -- 1 Timbre / 2 Tonality
+    num_results = 60, -- 1..450
+    max_minutes = 5.5 -- 0.5..30
   }
 }
 
@@ -8297,7 +8329,7 @@ function FS_write_batch_to_db(results, dbpath)
     -- if cur_q ~= "" then head[#head+1] = ("[q:%s]"):format(FS_s(cur_q)) end
     -- if s and s.name and s.name~="" then head[#head+1] = ("[%s]"):format(FS_s(s.name)) end
     -- if s and s.original_filename and s.original_filename~="" then head[#head+1] = ("(%s)"):format(FS_s(s.original_filename)) end
-    if tags ~= "" then head[#head+1] = ("#%s"):format(FS_s(tags)) end
+    if tags ~= "" then head[#head+1] = ("%s"):format(FS_s(tags)) end -- 带#号: head[#head+1] = ("#%s"):format(FS_s(tags))
     local desc, tail = "", FS_s(s and s.description or "")
     if tail ~= "" then desc = desc .. " " .. tail end
 
@@ -13299,7 +13331,7 @@ function loop()
       ) then
         reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
         if collect_mode == COLLECT_MODE_ALL_ITEMS then -- Media Items
-          reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort() | reaper.ImGui_TableColumnFlags_NoReorder(), 100) -- 锁定列不允许拖动
+          reaper.ImGui_TableSetupColumn(ctx, "Waveform",    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort() | reaper.ImGui_TableColumnFlags_NoReorder(), 100) -- 锁定列不允许拖动
           reaper.ImGui_TableSetupColumn(ctx, "Take Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -13319,7 +13351,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_RPP then -- RPP
-          reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          reaper.ImGui_TableSetupColumn(ctx, "Waveform",    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
           reaper.ImGui_TableSetupColumn(ctx, "File Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -13338,9 +13370,29 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "BPM",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
+        elseif collect_mode == COLLECT_MODE_FREESOUND then -- Freesound
+          reaper.ImGui_TableSetupColumn(ctx, "Waveform",    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          reaper.ImGui_TableSetupColumn(ctx, "File Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
+          reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
+          reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
+          reaper.ImGui_TableSetupColumn(ctx, "Date",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.DATE)
+          reaper.ImGui_TableSetupColumn(ctx, "Tags",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.GENRE)
+          reaper.ImGui_TableSetupColumn(ctx, "License",     reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.COMMENT)
+          reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.DESCRIPTION)
+          reaper.ImGui_TableSetupColumn(ctx, "Category",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATEGORY)
+          reaper.ImGui_TableSetupColumn(ctx, "SubCategory", reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.SUBCATEGORY)
+          reaper.ImGui_TableSetupColumn(ctx, "Category ID", reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATID)
+          reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, TableColumns.LENGTH)
+          reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
+          reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
+          reaper.ImGui_TableSetupColumn(ctx, "Bits",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
+          reaper.ImGui_TableSetupColumn(ctx, "Key",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
+          reaper.ImGui_TableSetupColumn(ctx, "BPM",         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
+          reaper.ImGui_TableSetupColumn(ctx, "Group",       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
+          reaper.ImGui_TableSetupColumn(ctx, "Path",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         else
-          reaper.ImGui_TableSetupColumn(ctx, "Waveform",        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
-          reaper.ImGui_TableSetupColumn(ctx, "File Name",        reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
+          reaper.ImGui_TableSetupColumn(ctx, "Waveform",    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          reaper.ImGui_TableSetupColumn(ctx, "File Name",   reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, "Size",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, "Type",        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
           reaper.ImGui_TableSetupColumn(ctx, "Date",        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.DATE)
