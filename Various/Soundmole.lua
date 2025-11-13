@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.110
+-- @version 1.0.111
 -- @changelog
---   Enhanced the Freesound mode list with license filtering
+--   Optimized the spacing display logic between the timeline, waveform preview, and horizontal scrollbar, and automatically hides the scrollbar when not zoomed in
 --   Support reaper_soundmole-x64.dll v0.0.5
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

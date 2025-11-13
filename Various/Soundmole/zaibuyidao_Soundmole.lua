@@ -119,7 +119,7 @@ reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
 -- 状态变量
 WFC_PX_DEFAULT               = 2048  -- 默认缓存像素（与C++对齐）
 selected_row                 = selected_row or -1
-ui_bottom_offset             = 251   -- 底部预览区高度
+ui_bottom_offset             = 231   -- 底部预览区高度
 playing_preview              = nil
 playing_path                 = nil
 playing_source               = nil
@@ -2644,6 +2644,13 @@ function UI_WaveMiniScrollbar(ctx, id, total_len, view_len, scroll, height, whee
   height      = tonumber(height)      or 12
   wheel_ratio = tonumber(wheel_ratio) or 0.15
 
+  -- 当视图长度覆盖全部内容时不显示滚动条
+  local max_scroll0 = math.max(0, total_len - view_len)
+  local ratio0 = (total_len > 0 and view_len > 0) and _clamp(view_len / total_len, 0, 1) or 1
+  if (ratio0 >= 0.9999) or (max_scroll0 <= 0) then
+    return false, _clamp(scroll, 0, max_scroll0)
+  end
+
   local changed = false
   local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx)) or 0
   local icon_w, icon_h = height, height
@@ -3692,7 +3699,7 @@ end
 -- 绘制时间线
 function DrawTimeLine(ctx, wave, view_start, view_end)
   local y_offset    = 0   -- 距离波形底部-9像素
-  local tick_long   = 22  -- 主刻度高度
+  local tick_long   = 18  -- 主刻度高度
   local tick_middle = 10  -- 中间刻度高度
   local tick_secmid = 7   -- 次中间刻度高度
   local tick_short  = 3   -- 次刻度高度
@@ -3707,10 +3714,11 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
 
   -- 时间线背景
   local timeline_h = tick_long + 1 -- 背景高度为主刻度高度+余量
+  local base_y = y0 + timeline_h   -- 把标尺基线放到底部
   reaper.ImGui_DrawList_AddRectFilled(drawlist, x0, y0, x1, y0 + timeline_h, colors.timeline_bg_color)
 
   -- 设置基础线颜色
-  reaper.ImGui_DrawList_AddLine(drawlist, x0, y0, x1, y0, colors.timeline_def_color, 1.0)
+  reaper.ImGui_DrawList_AddLine(drawlist, x0, base_y, x1, base_y, colors.timeline_def_color, 1.0)
 
   -- 智能自适应主刻度数
   local avail_w = max_x - min_x
@@ -3738,19 +3746,18 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
     local frac = (t - view_start) / view_len
     local x = min_x + frac * (max_x - min_x)
     -- 主刻度线
-    reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_long, colors.timeline_def_color, 1.0)
+    reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_long, colors.timeline_def_color, 1.0)
     -- 时间标签
-    reaper.ImGui_PushFont(ctx, fonts.sans_serif, 13)
+    reaper.ImGui_PushFont(ctx, fonts.sans_serif, 12)
     local text = reaper.format_timestr(t or 0, "")
-    -- 计算文字高度
     local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
-    local text_y = y0 + tick_long - text_h + 2 -- 最后一个值用于上下偏移文字位置细调的
-    reaper.ImGui_DrawList_AddText(drawlist, x + 4, text_y, colors.timeline_text, text)
+    local text_y = base_y - tick_long - 3 -- 时间数值在刻度上方
+    reaper.ImGui_DrawList_AddText(drawlist, x + 4, text_y, colors.timeline_text, text) -- 文本左右偏移量
     reaper.ImGui_PopFont(ctx)
   end
 
   -- 绘制次刻度
-  local sub_divs = 20 -- 主刻度之间分20份
+  local sub_divs = 10 -- 主刻度之间分20份
   local sub_tick_step = tick_step / sub_divs
 
   if sub_tick_step >= 0.00001 then
@@ -3766,13 +3773,13 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
         local x = min_x + frac * (max_x - min_x)
         -- 主->中->次中->短->中->次中->主...
         if sub_index == 10 then -- 中间刻度线
-          reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_middle, colors.timeline_def_color, 1.0)
+          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_middle, colors.timeline_def_color, 1.0)
         elseif sub_index == 5 or sub_index == 15 then
           -- 次中间刻度线
-          reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_secmid, colors.timeline_def_color, 1.0)
+          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_secmid, colors.timeline_def_color, 1.0)
         else
           -- 次刻度
-          reaper.ImGui_DrawList_AddLine(drawlist, x, y0, x, y0 + tick_short, colors.timeline_def_color, 1.0)
+          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_short, colors.timeline_def_color, 1.0)
         end
       end
     end
@@ -7415,7 +7422,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
     elseif col_name == "SubCategory" then
       reaper.ImGui_Text(ctx, info.ucs_subcategory or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
-    elseif col_name == "CatID" or col_name == "Category ID" then
+    elseif col_name == "CatID" then
       reaper.ImGui_Text(ctx, info.ucs_catid or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
@@ -13381,7 +13388,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, "Description", reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.DESCRIPTION)
           reaper.ImGui_TableSetupColumn(ctx, "Category",    reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATEGORY)
           reaper.ImGui_TableSetupColumn(ctx, "SubCategory", reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.SUBCATEGORY)
-          reaper.ImGui_TableSetupColumn(ctx, "Category ID", reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATID)
+          reaper.ImGui_TableSetupColumn(ctx, "CatID",       reaper.ImGui_TableColumnFlags_WidthFixed(), 80, TableColumns.CATID)
           reaper.ImGui_TableSetupColumn(ctx, "Length",      reaper.ImGui_TableColumnFlags_WidthFixed(), 60, TableColumns.LENGTH)
           reaper.ImGui_TableSetupColumn(ctx, "Channels",    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, "Samplerate",  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
@@ -15972,9 +15979,7 @@ function loop()
       if Wave.src_len and Wave.src_len > 0 then
         DrawTimeLine(ctx, Wave, view_start, view_end)
       end
-      -- reaper.ImGui_Dummy(ctx, 0, timeline_height) -- 占位时间线高度，本应是配套绘制时间线的，但ImGui_Dummy在这里无效
-
-      reaper.ImGui_NewLine(ctx) -- 改用换行，因为ImGui_Dummy在这里无效
+      reaper.ImGui_Dummy(ctx, 0, 11) -- 占位时间线高度
       DrawWaveformInImGui(ctx, peaks, pw_region_w, img_h - 30, src_len, channel_count) -- -30用于补偿波形预览上方的时间线区域和间隔，否则应为0
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
@@ -16419,9 +16424,16 @@ function loop()
           reaper.PreventUIRefresh(-1)
         end
       end
-      reaper.ImGui_EndChild(ctx)
 
       -- 水平滚动条控件
+
+      -- 抵消Child底部WindowPadding带来的空隙，把光标往上拉一点
+      do
+        local cur_x, cur_y = reaper.ImGui_GetCursorPos(ctx)
+        local pad_x, pad_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
+        reaper.ImGui_SetCursorPos(ctx, cur_x, cur_y - pad_y)
+      end
+
       do
         local view_len = (Wave.src_len or 0) / math.max(Wave.zoom or 1, 1)
         local max_scroll = math.max(0, (Wave.src_len or 0) - view_len)
@@ -16453,6 +16465,7 @@ function loop()
 
         if changed then Wave.scroll = math.max(0, math.min(new_scroll, max_scroll)) end
       end
+      reaper.ImGui_EndChild(ctx)
     end
 
     -- 状态栏行
