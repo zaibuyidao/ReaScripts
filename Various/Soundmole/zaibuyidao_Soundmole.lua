@@ -694,6 +694,36 @@ local search_fields = {
   { label = "CatID",            key = "ucs_catid",       enabled = false }, -- CatID
 }
 
+-- 根据模式切换 Comment/License 搜索项显示文字
+function UpdateCommentSearchFieldLabel()
+  if type(search_fields) ~= "table" then return end
+  for _, f in ipairs(search_fields) do
+    if f.key == "comment" then
+      if collect_mode == COLLECT_MODE_FREESOUND then
+        f.label = "License"
+      else
+        f.label = "Comment"
+      end
+      break
+    end
+  end
+end
+
+-- 根据模式切换 Genre/Tags 搜索项显示文字
+function UpdateGenreSearchFieldLabel()
+  if type(search_fields) ~= "table" then return end
+  for _, f in ipairs(search_fields) do
+    if f.key == "genre" then
+      if collect_mode == COLLECT_MODE_FREESOUND then
+        f.label = "Tags"
+      else
+        f.label = "Genre"
+      end
+      break
+    end
+  end
+end
+
 local EXT_KEY_SEARCH_FIELDS = "enabled_fields"
 local stored = reaper.GetExtState(EXT_SECTION, EXT_KEY_SEARCH_FIELDS)
 if stored and stored ~= "" then
@@ -6503,7 +6533,16 @@ function BuildFilteredList(list)
       for _, field in ipairs(search_fields) do
         if field.enabled then
           n = n + 1
-          tb[n] = tostring(info[field.key] or "")
+
+          -- 在 FREESOUND 模式下，对comment字段只使用提取后的License文本进行搜索
+          local v = info[field.key]
+          if field.key == "comment" and collect_mode == COLLECT_MODE_FREESOUND then
+            v = SM_ExtractLicenseFromComment(info.comment)
+          end
+
+          tb[n] = tostring(v or "")
+
+          -- tb[n] = tostring(info[field.key] or "")
         end
       end
       if n == 0 then tb[1] = "" end
@@ -10785,6 +10824,10 @@ function loop()
     reaper.ImGui_BeginGroup(ctx)
 
     reaper.ImGui_SetNextItemWidth(ctx, 150)
+    -- 根据当前模式切换 Comment/License 文本
+    UpdateCommentSearchFieldLabel()
+    -- 根据当前模式切换 Genre/Tags 文本
+    UpdateGenreSearchFieldLabel()
     local selected_labels = {}
     for _, field in ipairs(search_fields) do
       if field.enabled then
@@ -13535,6 +13578,13 @@ function loop()
                 elseif spec.user_id == TableColumns.COMMENT then
                   local ac = a.comment or ""
                   local bc = b.comment or ""
+
+                  -- 在 FREESOUND 模式下，按提取出的 License 文本排序
+                  if collect_mode == COLLECT_MODE_FREESOUND then
+                    ac = SM_ExtractLicenseFromComment(ac)
+                    bc = SM_ExtractLicenseFromComment(bc)
+                  end
+
                   if ac ~= bc then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                       return ac > bc
