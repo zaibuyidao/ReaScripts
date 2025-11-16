@@ -144,6 +144,7 @@ local last_audio_idx         = nil
 local auto_scroll_enabled    = false -- 自动滚屏
 local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
+local waveform_hint_enabled  = true  -- 波形预览鼠标提示开关
 local files_idx_cache        = nil   -- 文件缓存
 local recent_audio_files     = {}    -- 最近播放列表
 local max_recent_files       = 20    -- 最近播放最多保留20条
@@ -186,22 +187,8 @@ local TableColumns = {
   KEY         = 16,
   BPM         = 17,
 }
--- ExtState
-local EXT_SECTION              = "Soundmole"
-local EXT_KEY_PEAKS            = "peak_chans"
-local EXT_KEY_FONT_SIZE        = "font_size"
-local EXT_KEY_MAX_DB           = "max_db"
-local EXT_KEY_PITCH_MIN        = "pitch_knob_min"
-local EXT_KEY_PITCH_MAX        = "pitch_knob_max"
-local EXT_KEY_RATE_MIN         = "rate_min"
-local EXT_KEY_RATE_MAX         = "rate_max"
-local EXT_KEY_VOLUME           = "volume"
-local EXT_KEY_CACHE_DIR        = "cache_dir"
-local EXT_KEY_FS_CACHE_DIR     = "fs_cache_dir"
-local EXT_KEY_AUTOSCROLL       = "auto_scroll"
-local EXT_KEY_RECENT_PLAYED    = "recent_played_files"
-local EXT_KEY_TABLE_ROW_HEIGHT = "table_row_height"
 
+local EXT_SECTION = "Soundmole"
 local previewed_files = {} -- 预览已读标记
 function MarkPreviewed(path) previewed_files[path] = true end
 function IsPreviewed(path) return previewed_files[path] == true end
@@ -209,7 +196,7 @@ function IsPreviewed(path) return previewed_files[path] == true end
 -- Soundmole 波形缓存路径
 local sep = package.config:sub(1, 1)
 local DEFAULT_CACHE_DIR = script_path .. "waveform_cache" .. sep
-local cache_dir = reaper.GetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR)
+local cache_dir = reaper.GetExtState(EXT_SECTION, "cache_dir")
 if not cache_dir or cache_dir == "" then
   cache_dir = DEFAULT_CACHE_DIR
 end
@@ -218,7 +205,7 @@ EnsureCacheDir(cache_dir)
 
 -- Freesound 波形缓存路径
 local DEFAULT_FS_CACHE_DIR = script_path .. "freesound_cache" .. sep
-local fs_cache_dir = reaper.GetExtState(EXT_SECTION, EXT_KEY_FS_CACHE_DIR)
+local fs_cache_dir = reaper.GetExtState(EXT_SECTION, "fs_cache_dir")
 if not fs_cache_dir or fs_cache_dir == "" then
   fs_cache_dir = DEFAULT_FS_CACHE_DIR
 end
@@ -267,26 +254,29 @@ local Wave = {
 }
 
 -- 读取ExtState
-local last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_PEAKS))
+local last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, "peak_chans"))
 if last_peak_chans then peak_chans = math.min(math.max(last_peak_chans, 6), 128) end
-local last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE))
+local last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, "font_size"))
 if last_font_size then font_size = math.min(math.max(last_font_size, FONT_SIZE_MIN), FONT_SIZE_MAX) end
-local last_max_db = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_MAX_DB))
+local last_max_db = tonumber(reaper.GetExtState(EXT_SECTION, "max_db"))
 if last_max_db then max_db = last_max_db end
-local last_pitch_knob_min = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_PITCH_MIN))
+local last_pitch_knob_min = tonumber(reaper.GetExtState(EXT_SECTION, "pitch_knob_min"))
 if last_pitch_knob_min then pitch_knob_min = last_pitch_knob_min end
-local last_pitch_knob_max = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_PITCH_MAX))
+local last_pitch_knob_max = tonumber(reaper.GetExtState(EXT_SECTION, "pitch_knob_max"))
 if last_pitch_knob_max then pitch_knob_max = last_pitch_knob_max end
-local last_rate_min = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_RATE_MIN))
+local last_rate_min = tonumber(reaper.GetExtState(EXT_SECTION, "rate_min"))
 if last_rate_min then rate_min = last_rate_min end
-local last_rate_max = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_RATE_MAX))
+local last_rate_max = tonumber(reaper.GetExtState(EXT_SECTION, "rate_max"))
 if last_rate_max then rate_max = last_rate_max end
-local last_volume = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_VOLUME))
+local last_volume = tonumber(reaper.GetExtState(EXT_SECTION, "volume"))
 if last_volume then volume = last_volume end
-local last_auto_scroll = reaper.GetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL)
+local last_auto_scroll = reaper.GetExtState(EXT_SECTION, "auto_scroll")
 if last_auto_scroll == "0" then auto_scroll_enabled = false end
 if last_auto_scroll == "1" then auto_scroll_enabled = true end
-local last_row_height = tonumber(reaper.GetExtState(EXT_SECTION, EXT_KEY_TABLE_ROW_HEIGHT))
+local last_hover_hint = reaper.GetExtState(EXT_SECTION, "waveform_hover_hint")
+if last_hover_hint == "0" then waveform_hint_enabled = false end
+if last_hover_hint == "1" then waveform_hint_enabled = true end
+local last_row_height = tonumber(reaper.GetExtState(EXT_SECTION, "table_row_height"))
 if last_row_height then row_height = math.max(12, math.min(48, last_row_height)) end -- 内容行高限制范围
 
 -- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items, 4=This Computer, 5=Shortcuts）
@@ -327,19 +317,20 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
   reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
   reaper.SetExtState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_MAX_DB, tostring(max_db), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_PITCH_MIN, tostring(pitch_knob_min), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_PITCH_MAX, tostring(pitch_knob_max), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MIN, tostring(rate_min), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MAX, tostring(rate_max), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_FS_CACHE_DIR, tostring(fs_cache_dir), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
+  reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
+  reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
+  reaper.SetExtState(EXT_SECTION, "max_db", tostring(max_db), true)
+  reaper.SetExtState(EXT_SECTION, "pitch_knob_min", tostring(pitch_knob_min), true)
+  reaper.SetExtState(EXT_SECTION, "pitch_knob_max", tostring(pitch_knob_max), true)
+  reaper.SetExtState(EXT_SECTION, "rate_min", tostring(rate_min), true)
+  reaper.SetExtState(EXT_SECTION, "rate_max", tostring(rate_max), true)
+  reaper.SetExtState(EXT_SECTION, "cache_dir", tostring(cache_dir), true)
+  reaper.SetExtState(EXT_SECTION, "fs_cache_dir", tostring(fs_cache_dir), true)
+  reaper.SetExtState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
+  reaper.SetExtState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
   reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
   reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_ROW_HEIGHT, tostring(row_height), true)
+  reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
   reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
@@ -503,6 +494,9 @@ local colors = {
   fs_search_button_hovered= 0xFFFFA870, -- Freesound - 搜索按钮悬停颜色
   fs_search_button_active = 0xFFF2999B, -- Freesound - 搜索按钮按下颜色
   settings_header_bg      = 0x5B5B5E50, -- 设置-分页背景
+  preview_pint_bg         = 0x58766CFF, -- 预览鼠标光标提示-背景
+  preview_pint_play_cursor= 0x58766CFF, -- 预览鼠标光标提示-光标
+  preview_pint_text       = 0xFFF0F0F0, -- 预览鼠标光标提示-文本
 }
 
 -- 复制默认颜色表
@@ -5124,7 +5118,7 @@ LoadAdvancedFolders()
 
 function LoadRecentPlayed()
   recent_audio_files = {}
-  local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_RECENT_PLAYED)
+  local str = reaper.GetExtState(EXT_SECTION, "recent_played_files")
   if not str or str == "" then return end
   local list = split(str, "|;|")
   for _, item in ipairs(list) do
@@ -5142,7 +5136,7 @@ function SaveRecentPlayed()
     table.insert(t, (info.path or "") .. "||" .. (info.filename or ""))
   end
   local str = table.concat(t, "|;|") -- 用 |;| 分隔每一条
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_RECENT_PLAYED, str, true)
+  reaper.SetExtState(EXT_SECTION, "recent_played_files", str, true)
 end
 
 function BuildFileInfoFromPath(path, filename)
@@ -11571,7 +11565,7 @@ function loop()
             idx = idx + (wheel > 0 and 1 or -1)
             idx = math.max(1, math.min(#preview_font_sizes, idx))
             font_size = preview_font_sizes[idx]
-            reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
+            reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
           end
 
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 文本颜色
@@ -13727,7 +13721,7 @@ function loop()
           idx = idx + (wheel > 0 and 1 or -1)
           idx = math.max(1, math.min(#preview_font_sizes, idx))
           font_size = preview_font_sizes[idx]
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
+          reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
         end
 
         -- 上下方向键选中文件
@@ -14442,7 +14436,7 @@ function loop()
     end
     if rv2 then
       if playing_preview then SmoothSetPreviewVolume(volume, 60) end
-      reaper.SetExtState(EXT_SECTION, EXT_KEY_VOLUME, tostring(volume), true)
+      reaper.SetExtState(EXT_SECTION, "volume", tostring(volume), true)
     end
 
     --------------------------------------------- 设置弹窗 ---------------------------------------------
@@ -14608,7 +14602,7 @@ function loop()
         ["页签 Tabs"] = {
           "tab","tab_hovered","tab_selected","tab_dimmed","tab_dimmed_selected","tab_selected_overline"
         },
-        ["波形 Waveform"] = { "wave_line","wave_center","wave_line_selected","preview_play_cursor" },
+        ["波形 Waveform"] = { "wave_line","wave_center","wave_line_selected","preview_play_cursor","preview_pint_bg","preview_pint_play_cursor","preview_pint_text" },
         ["时间线 Timeline"] = { "timeline_text","timeline_bg_color","timeline_def_color" },
         ["电平表 Meter"] = { "peak_meter_bg","peak_meter_normal" },
         ["音量滑块 Volume Fader"] = {
@@ -14753,6 +14747,9 @@ function loop()
         wave_center              = "Waveform Center",          -- "波形 中线",
         wave_line_selected       = "Waveform Selected",        -- "波形 选中",
         preview_play_cursor      = "Waveform Playhead Line",   -- "预览播放指示线",
+        preview_pint_bg          = "Waveform Pint BG",         -- "预览鼠标光标提示-背景",
+        preview_pint_play_cursor = "Waveform Pint Cursor",     -- "预览鼠标光标提示-光标",
+        preview_pint_text        = "Waveform Pint Text",       -- "预览鼠标光标提示-文本",
 
         -- 分割线 Separators
         separator_line           = "Separator Normal",         -- "分割线 Separator",
@@ -14929,7 +14926,7 @@ function loop()
         reaper.ImGui_PopItemWidth(ctx)
         if changed_font then
           font_size = SnapFontSize(new_font_size)
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
+          reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
           MarkFontDirty()
         end
 
@@ -14940,7 +14937,7 @@ function loop()
         reaper.ImGui_PopItemWidth(ctx)
         if changed_row_height then
           row_height = new_row_height
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_TABLE_ROW_HEIGHT, tostring(row_height), true)
+          reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
         end
       end
 
@@ -14966,7 +14963,7 @@ function loop()
           peak_chans = math.floor((new_peaks or 2) + 0.5)
           if peak_chans < 2 then peak_chans = 2 end
           if peak_chans > 128 then peak_chans = 128 end
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
+          reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
         end
         reaper.ImGui_SameLine(ctx)
         if HelpMarker then HelpMarker("Number of peak meter channels to show. Range: 2~128.") end
@@ -15078,7 +15075,7 @@ function loop()
           if new_max_db < 0 then new_max_db = 0 end
           if new_max_db > 24 then new_max_db = 24 end
           max_db = new_max_db
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_MAX_DB, tostring(max_db), true)
+          reaper.SetExtState(EXT_SECTION, "max_db", tostring(max_db), true)
         end
         reaper.ImGui_SameLine(ctx)
         if HelpMarker then HelpMarker("Set the maximum output volume, in dB. Default: 12.") end
@@ -15091,7 +15088,7 @@ function loop()
         if changed_pmin then
           if new_pmin > pitch_knob_max then new_pmin = pitch_knob_max end
           pitch_knob_min = new_pmin
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_PITCH_MIN, tostring(pitch_knob_min), true)
+          reaper.SetExtState(EXT_SECTION, "pitch_knob_min", tostring(pitch_knob_min), true)
         end
 
         reaper.ImGui_Text(ctx, "Pitch Knob Max:")
@@ -15102,7 +15099,7 @@ function loop()
         if changed_pmax then
           if new_pmax < pitch_knob_min then new_pmax = pitch_knob_min end
           pitch_knob_max = new_pmax
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_PITCH_MAX, tostring(pitch_knob_max), true)
+          reaper.SetExtState(EXT_SECTION, "pitch_knob_max", tostring(pitch_knob_max), true)
         end
 
         reaper.ImGui_Text(ctx, "Rate Min:")
@@ -15114,7 +15111,7 @@ function loop()
           if new_rmin < 0.01 then new_rmin = 0.01 end
           if new_rmin > rate_max then new_rmin = rate_max end
           rate_min = new_rmin
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MIN, tostring(rate_min), true)
+          reaper.SetExtState(EXT_SECTION, "rate_min", tostring(rate_min), true)
         end
 
         reaper.ImGui_Text(ctx, "Rate Max:")
@@ -15125,7 +15122,7 @@ function loop()
         if changed_rmax then
           if new_rmax < rate_min then new_rmax = rate_min end
           rate_max = new_rmax
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_RATE_MAX, tostring(rate_max), true)
+          reaper.SetExtState(EXT_SECTION, "rate_max", tostring(rate_max), true)
         end
       end
 
@@ -15134,7 +15131,13 @@ function loop()
         local changed_scroll, new_scroll = reaper.ImGui_Checkbox(ctx, "Auto scroll waveform during playback", auto_scroll_enabled)
         if changed_scroll then
           auto_scroll_enabled = new_scroll
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
+          reaper.SetExtState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
+        end
+        -- 是否显示鼠标悬停提示线与时间
+        local changed_hover, new_hover = reaper.ImGui_Checkbox(ctx, "Show mouse hover cursor & time on waveform preview", waveform_hint_enabled)
+        if changed_hover then
+          waveform_hint_enabled = new_hover
+          reaper.SetExtState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
         end
       end
 
@@ -15168,14 +15171,14 @@ function loop()
         reaper.ImGui_PopItemWidth(ctx)
         if changed_cache_dir then
           cache_dir = normalize_path(new_cache_dir, true)
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
+          reaper.SetExtState(EXT_SECTION, "cache_dir", cache_dir, true)
         end
         reaper.ImGui_SameLine(ctx, nil, 8)
         if reaper.ImGui_Button(ctx, "Browse##SelectCacheDir", 60) then
           local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", cache_dir)
           if rv == 1 and out and out ~= "" then
             cache_dir = normalize_path(out, true)
-            reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, cache_dir, true)
+            reaper.SetExtState(EXT_SECTION, "cache_dir", cache_dir, true)
           end
         end
         reaper.ImGui_SameLine(ctx, nil, 8)
@@ -15192,14 +15195,14 @@ function loop()
         reaper.ImGui_PopItemWidth(ctx)
         if changed_fs_cache_dir then
           fs_cache_dir = normalize_path(new_fs_cache_dir, true)
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_FS_CACHE_DIR, fs_cache_dir, true)
+          reaper.SetExtState(EXT_SECTION, "fs_cache_dir", fs_cache_dir, true)
         end
         reaper.ImGui_SameLine(ctx, nil, 8)
         if reaper.ImGui_Button(ctx, "Browse##SelectFsCacheDir", 60) then
           local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", fs_cache_dir)
           if rv == 1 and out and out ~= "" then
             fs_cache_dir = normalize_path(out, true)
-            reaper.SetExtState(EXT_SECTION, EXT_KEY_FS_CACHE_DIR, fs_cache_dir, true)
+            reaper.SetExtState(EXT_SECTION, "fs_cache_dir", fs_cache_dir, true)
           end
         end
         reaper.ImGui_SameLine(ctx, nil, 8)
@@ -15280,10 +15283,10 @@ function loop()
           build_waveform_cache = DEFAULTS.build_waveform_cache
           search_enter_mode    = DEFAULTS.search_enter_mode
 
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_PEAKS, tostring(peak_chans), true)
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_FONT_SIZE, tostring(font_size), true)
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_CACHE_DIR, tostring(cache_dir), true)
-          reaper.SetExtState(EXT_SECTION, EXT_KEY_AUTOSCROLL, tostring(auto_scroll_enabled and 1 or 0), true)
+          reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
+          reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
+          reaper.SetExtState(EXT_SECTION, "cache_dir", tostring(cache_dir), true)
+          reaper.SetExtState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
           reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
           reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
           reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
@@ -16394,6 +16397,73 @@ function loop()
         local px = (adjusted_play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
         reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, colors.preview_play_cursor, 1) -- 0xFF2222FF
+      end
+
+      -- 鼠标悬停提示线与时间显示
+      if waveform_hint_enabled and reaper.ImGui_IsItemHovered(ctx) and Wave.src_len and Wave.src_len > 0 and Wave.zoom and Wave.zoom ~= 0 then
+        local rel_x = mouse_x - min_x
+        local frac = 0
+        if region_w and region_w > 0 then
+          frac = rel_x / region_w
+        end
+        if frac < 0 then frac = 0 end
+        if frac > 1 then frac = 1 end
+
+        local visible_len = Wave.src_len / Wave.zoom
+        local mouse_time_visual = Wave.scroll + frac * visible_len
+
+        -- 使用 effective_rate_knob 还原到音频实际时间
+        local rate_for_display = (effective_rate_knob and effective_rate_knob ~= 0) and effective_rate_knob or 1.0
+        local mouse_time = mouse_time_visual / rate_for_display
+
+        -- 限制在音频范围内
+        if mouse_time < 0 then mouse_time = 0 end
+        if Wave.src_len and mouse_time > Wave.src_len then mouse_time = Wave.src_len end
+
+        -- 垂直提示线（跟随鼠标）
+        local hover_px = min_x + frac * region_w
+        local dl = reaper.ImGui_GetWindowDrawList(ctx)
+        reaper.ImGui_DrawList_AddLine(dl, hover_px, min_y, hover_px, max_y, colors.preview_pint_play_cursor, 1)
+
+        -- 顶部左侧时间文本+背景
+        local time_str = reaper.format_timestr(mouse_time or 0, "")
+
+        reaper.ImGui_PushFont(ctx, nil, 12)
+        local tw, th = reaper.ImGui_CalcTextSize(ctx, time_str)
+        local pad_x, pad_y = 4, 2
+
+        -- 自定义垂直偏移: 负值往上，正值往下
+        local offset_y = 24
+
+        -- 放在竖线顶部的左侧，稍微上移避免压住波形
+        local text_x = hover_px - tw - pad_x * 2 - 2
+        if text_x < min_x + 2 then
+          text_x = min_x + 2
+        end
+        local text_y = min_y - th - pad_y * 2 + offset_y
+
+        local bg_x0 = text_x
+        local bg_y0 = text_y
+        local bg_x1 = text_x + tw + pad_x * 2
+        local bg_y1 = text_y + th + pad_y * 2
+
+        local bg_col = colors.preview_pint_bg or 0x000000CC
+        local text_col = colors.preview_pint_text or 0xFFFFFFFF
+
+        reaper.ImGui_DrawList_AddRectFilled(dl, bg_x0, bg_y0, bg_x1, bg_y1, bg_col)
+        reaper.ImGui_DrawList_AddText(dl, text_x + pad_x, text_y + pad_y, text_col, time_str)
+        -- 恢复原来的字体设置
+        reaper.ImGui_PopFont(ctx)
+      end
+
+      -- 波形预览自动滚屏
+      if playing_preview and auto_scroll_enabled then
+        -- 当前视野长度（秒）
+        local view_len = Wave.src_len / Wave.zoom
+        -- 如果光标超出可见区域，自动滚动窗口
+        if Wave.play_cursor < Wave.scroll or Wave.play_cursor > (Wave.scroll + view_len) then
+          Wave.scroll = math.max(0, math.min(Wave.src_len - view_len, Wave.play_cursor - view_len / 2))
+        end
       end
 
       -- 波形预览自动滚屏

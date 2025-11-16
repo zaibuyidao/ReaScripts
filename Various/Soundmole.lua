@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.112
+-- @version 1.0.113
 -- @changelog
---   Fixed the License column filtering in Freesound mode to keep search behavior consistent with the displayed results
+--   Added mouse cursor hint in waveform preview
 --   Support reaper_soundmole-x64.dll v0.0.5
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
