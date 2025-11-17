@@ -13094,22 +13094,78 @@ function loop()
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), 0x00000000)
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  0x00000000)
 
-            local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-            local pos_x, pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
-
             -- 组合显示文本: Name (keyword)
             local label = (s.name or "")
             if (s.keyword or "") ~= "" then
               label = string.format("%s (%s)", s.keyword or "", s.name or "")
             end
 
-            -- 用不可见标签创建可点击/可悬浮的区域
-            local clicked = reaper.ImGui_Selectable(ctx, "##saved_sel_" .. idx, false, 0, text_w - 56, 0)
-            local hovered = reaper.ImGui_IsItemHovered(ctx)
+            local handle_w = 20
+            local handle_h = reaper.ImGui_GetTextLineHeight(ctx)
+
+            reaper.ImGui_InvisibleButton(ctx, "##drag_handle", handle_w, handle_h)
+            local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
+            local handle_active  = reaper.ImGui_IsItemActive(ctx)
+
+            -- 拖动源 - 从图标区域开始拖动
+            if reaper.ImGui_BeginDragDropSource(ctx) then
+              reaper.ImGui_SetDragDropPayload(ctx, "SAVED_SEARCH_REORDER", tostring(idx))
+              reaper.ImGui_Text(ctx, label)
+              reaper.ImGui_EndDragDropSource(ctx)
+            end
+
+            -- 拖动目标 - 拖动到图标区域上，与该行对调
+            if reaper.ImGui_BeginDragDropTarget(ctx) then
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview or 0x00000000)
+              local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SAVED_SEARCH_REORDER")
+              if ok and payload then
+                local from_idx = tonumber(payload)
+                if from_idx and from_idx ~= idx and saved_search_list[from_idx] then
+                  local tmp = saved_search_list[from_idx]
+                  saved_search_list[from_idx] = saved_search_list[idx]
+                  saved_search_list[idx] = tmp
+                  SaveSavedSearch(EXT_SECTION, saved_search_list)
+                  active_saved_search = idx
+                end
+              end
+              reaper.ImGui_PopStyleColor(ctx)
+              reaper.ImGui_EndDragDropTarget(ctx)
+            end
+
+            local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+            local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
+            local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
+
+            reaper.ImGui_PushFont(ctx, fonts.icon, 17)
+            local glyph_drag = '\u{006D}'
+            local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+            local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+            local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+            local col = colors.icon_normal or 0xFFFFFFFF
+            if handle_active then
+              col = colors.icon_active or colors.icon_hovered or col
+            elseif handle_hovered then
+              col = colors.icon_hovered or col
+            end
+            reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+            reaper.ImGui_PopFont(ctx)
+
+            if handle_hovered or handle_active then
+              reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+            end
+
+            reaper.ImGui_SameLine(ctx)
+
+            local text_pos_x, text_pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
+            local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+
+            local clicked = reaper.ImGui_Selectable(ctx, "##saved_sel_" .. idx, false, 0, text_w, 0)
+            local hovered_row = reaper.ImGui_IsItemHovered(ctx)
 
             -- 按悬浮状态切换文字颜色，手动在同一位置绘制一次文本
-            reaper.ImGui_SetCursorScreenPos(ctx, pos_x, pos_y)
-            if hovered then
+            reaper.ImGui_SetCursorScreenPos(ctx, text_pos_x, text_pos_y)
+            if hovered_row then
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.table_header_active)
               reaper.ImGui_Text(ctx, label)
               reaper.ImGui_PopStyleColor(ctx)
@@ -13123,7 +13179,7 @@ function loop()
               local kw = s.keyword or ""
               if filename_filter then
                 reaper.ImGui_TextFilter_Set(filename_filter, kw)    -- 回填到输入框
-              end   
+              end
               _G.commit_filter_text    = kw                         -- 列表过滤使用
               _G.just_committed_filter = true                       -- 如外部有一次性提交逻辑可用
               last_search_input        = kw                         -- 同步输入状态
@@ -13145,85 +13201,6 @@ function loop()
                 remove_search_idx = idx
               end
               reaper.ImGui_EndPopup(ctx)
-            end
-            -- 上下移动按钮靠右对齐
-            reaper.ImGui_SameLine(ctx)
-            local btn_w = 24
-            local total_btn_w = btn_w * 2 + 8 -- 两个按钮+间距
-            local avail = reaper.ImGui_GetContentRegionAvail(ctx)
-            if avail > total_btn_w then
-              reaper.ImGui_Dummy(ctx, avail - total_btn_w - 8, 0)
-              reaper.ImGui_SameLine(ctx)
-            end
-
-            -- 上移
-            if idx > 1 then
-              reaper.ImGui_BeginGroup(ctx)
-              local start_x, start_y = reaper.ImGui_GetCursorPos(ctx)
-              reaper.ImGui_PushFont(ctx, fonts.icon, 17)
-              local glyph_up = '\u{0006}' -- 上箭头 15
-              local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_up)
-
-              local centered_x = start_x + math.max(0, (btn_w - tw) * 0.5)
-              reaper.ImGui_SetCursorPosX(ctx, centered_x)
-              reaper.ImGui_AlignTextToFramePadding(ctx)
-
-              local text_pos_x, text_pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
-              local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
-              local hovered = (mouse_x >= text_pos_x and mouse_x <= text_pos_x + tw and mouse_y >= text_pos_y and mouse_y <= text_pos_y + th)
-
-              reaper.ImGui_TextColored(ctx, hovered and colors.icon_hovered or colors.icon_normal, glyph_up)
-              local clicked_up = reaper.ImGui_IsItemClicked(ctx)
-              reaper.ImGui_PopFont(ctx)
-
-              reaper.ImGui_SetCursorPos(ctx, start_x, start_y)
-              reaper.ImGui_Dummy(ctx, btn_w, 10)
-              reaper.ImGui_EndGroup(ctx)
-
-              if clicked_up then
-                local temp = saved_search_list[idx - 1]
-                saved_search_list[idx - 1] = saved_search_list[idx]
-                saved_search_list[idx] = temp
-                SaveSavedSearch(EXT_SECTION, saved_search_list)
-              end
-            else
-              reaper.ImGui_Dummy(ctx, btn_w, 10)
-            end
-
-            reaper.ImGui_SameLine(ctx, nil, 0)
-
-            -- 下移
-            if idx < #saved_search_list then
-              reaper.ImGui_BeginGroup(ctx)
-              local start_x, start_y = reaper.ImGui_GetCursorPos(ctx)
-              reaper.ImGui_PushFont(ctx, fonts.icon, 17)
-              local glyph_down = '\u{0007}' -- 下箭头 12
-              local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_down)
-
-              local centered_x = start_x + math.max(0, (btn_w - tw) * 0.5)
-              reaper.ImGui_SetCursorPosX(ctx, centered_x)
-              reaper.ImGui_AlignTextToFramePadding(ctx)
-
-              local text_pos_x, text_pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
-              local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
-              local hovered = (mouse_x >= text_pos_x and mouse_x <= text_pos_x + tw and mouse_y >= text_pos_y and mouse_y <= text_pos_y + th)
-
-              reaper.ImGui_TextColored(ctx, hovered and colors.icon_hovered or colors.icon_normal, glyph_down)
-              local clicked_down = reaper.ImGui_IsItemClicked(ctx)
-              reaper.ImGui_PopFont(ctx)
-
-              reaper.ImGui_SetCursorPos(ctx, start_x, start_y)
-              reaper.ImGui_Dummy(ctx, btn_w, 10)
-              reaper.ImGui_EndGroup(ctx)
-
-              if clicked_down then
-                local temp = saved_search_list[idx + 1]
-                saved_search_list[idx + 1] = saved_search_list[idx]
-                saved_search_list[idx] = temp
-                SaveSavedSearch(EXT_SECTION, saved_search_list)
-              end
-            else
-              reaper.ImGui_Dummy(ctx, btn_w, 10)
             end
 
             reaper.ImGui_PopID(ctx)

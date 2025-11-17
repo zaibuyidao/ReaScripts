@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.113
+-- @version 1.0.114
 -- @changelog
---   Added mouse cursor hint in waveform preview
+--   Added drag-and-drop sorting via the left text icon in the Saved Search list
 --   Support reaper_soundmole-x64.dll v0.0.5
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
