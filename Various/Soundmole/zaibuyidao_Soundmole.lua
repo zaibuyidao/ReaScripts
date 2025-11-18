@@ -6183,6 +6183,8 @@ rename_name = rename_name or ""
 rename_idx = rename_idx or nil
 show_rename_popup = show_rename_popup or false
 saved_search_list = LoadSavedSearch(EXT_SECTION, saved_search_list)
+saved_search_drag_index = saved_search_drag_index or nil -- 当前被拖动的行索引
+saved_search_last_target_index = saved_search_last_target_index or nil -- 上一次交换过的目标行索引
 
 --------------------------------------------- 最近搜索节点 ---------------------------------------------
 
@@ -13007,6 +13009,12 @@ function loop()
 
         -- TAB 标签页 Saved Search
         if reaper.ImGui_BeginTabItem(ctx, 'Saved Searches') then
+          -- 鼠标左键松开时，结束拖动，清空拖动状态
+          if not reaper.ImGui_IsMouseDown(ctx, 0) then
+            saved_search_drag_index = nil
+            saved_search_last_target_index = nil
+          end
+
           prev_filter_text = prev_filter_text or ""
           local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
           if prev_filter_text ~= filter_text then
@@ -13108,8 +13116,13 @@ function loop()
             saved_filter_text = reaper.ImGui_TextFilter_Get(saved_search_filter) or ""
           end
 
-          for idx, s in ipairs(saved_search_list) do
+          -- 鼠标抬起时重置拖动状态
+          if not reaper.ImGui_IsMouseDown(ctx, 0) then
+            saved_search_dragging = false
+            saved_search_drag_from = nil
+          end
 
+          for idx, s in ipairs(saved_search_list) do
             local show_row = true
             if saved_filter_text ~= "" and saved_search_filter then
               show_row = reaper.ImGui_TextFilter_PassFilter(saved_search_filter, s.keyword or "") or reaper.ImGui_TextFilter_PassFilter(saved_search_filter, s.name or "")
@@ -13123,14 +13136,8 @@ function loop()
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), 0x00000000)
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  0x00000000)
 
-            -- 组合显示文本: Name (keyword)
-            -- local label = (s.name or "")
-            -- if (s.keyword or "") ~= "" then
-            --   label = string.format("%s (%s)", s.keyword or "", s.name or "")
-            -- end
-
             -- 组合显示文本: keyword (alias)
-            local name    = tostring(s.name or "")
+            local name = tostring(s.name or "")
             local keyword = tostring(s.keyword or "")
             local label
             if keyword ~= "" then
@@ -13150,29 +13157,57 @@ function loop()
 
             reaper.ImGui_InvisibleButton(ctx, "##drag_handle", handle_w, handle_h)
             local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
-            local handle_active  = reaper.ImGui_IsItemActive(ctx)
+            local handle_active = reaper.ImGui_IsItemActive(ctx)
 
             -- 拖动源 - 从图标区域开始拖动
             if reaper.ImGui_BeginDragDropSource(ctx) then
-              reaper.ImGui_SetDragDropPayload(ctx, "SAVED_SEARCH_REORDER", tostring(idx))
-              reaper.ImGui_Text(ctx, label)
+              -- 首次开始拖动时记录当前拖动行
+              if not saved_search_drag_index then
+                saved_search_drag_index = idx
+                saved_search_last_target_index = idx
+              end
+
+              -- 根据当前正在拖动的索引，重新计算被拖动项的文本
+              local drag_entry = saved_search_list[saved_search_drag_index] or s
+              local drag_name = tostring(drag_entry.name or "")
+              local drag_keyword = tostring(drag_entry.keyword or "")
+              local drag_label
+              if drag_keyword ~= "" then
+                if drag_name ~= "" and drag_name ~= drag_keyword then
+                  drag_label = string.format("%s (%s)", drag_keyword, drag_name)
+                else
+                  drag_label = drag_keyword
+                end
+              else
+                drag_label = drag_name
+              end
+
+              reaper.ImGui_SetDragDropPayload(ctx, "SAVED_SEARCH_REORDER", tostring(saved_search_drag_index))
+              -- 提示文字始终显示真正被拖动的那一条
+              reaper.ImGui_Text(ctx, drag_label)
               reaper.ImGui_EndDragDropSource(ctx)
             end
 
-            -- 拖动目标 - 拖动到图标区域上，与该行对调
+            -- 拖动目标 - 拖动经过图标时，立刻与该行交换一次
             if reaper.ImGui_BeginDragDropTarget(ctx) then
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview or 0x00000000)
-              local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SAVED_SEARCH_REORDER")
-              if ok and payload then
-                local from_idx = tonumber(payload)
-                if from_idx and from_idx ~= idx and saved_search_list[from_idx] then
+              local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SAVED_SEARCH_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
+
+              if ok and saved_search_drag_index and idx ~= saved_search_drag_index and idx ~= saved_search_last_target_index then
+                local from_idx = saved_search_drag_index
+                if saved_search_list[from_idx] then
                   local tmp = saved_search_list[from_idx]
                   saved_search_list[from_idx] = saved_search_list[idx]
                   saved_search_list[idx] = tmp
+
                   SaveSavedSearch(EXT_SECTION, saved_search_list)
                   active_saved_search = idx
+                  -- 更新拖动状态，拖动项的新位置和最近交换目标
+                  saved_search_drag_index = idx
+                  saved_search_last_target_index = idx
                 end
               end
+
               reaper.ImGui_PopStyleColor(ctx)
               reaper.ImGui_EndDragDropTarget(ctx)
             end
