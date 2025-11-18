@@ -4627,6 +4627,9 @@ EXT_KEY_CUSTOM_CONTENT = "group_content"
 custom_folders = custom_folders or {}
 custom_folders_content = custom_folders_content or {}
 group_select_start = nil
+-- 分组列表拖动状态
+group_drag_index = group_drag_index or nil -- 当前被拖动的行索引
+group_last_target_index = group_last_target_index or nil -- 上一次交换的目标行索引
 
 function SaveCustomFolders()
   local segments = {}
@@ -6267,6 +6270,21 @@ tree_state.remove_path_to_remove = tree_state.remove_path_to_remove or nil
 tree_state.remove_path_confirm = tree_state.remove_path_confirm or false
 -- clipper = clipper or reaper.ImGui_CreateListClipper(ctx)
 build_waveform_cache = (reaper.GetExtState(EXT_SECTION, "build_waveform_cache") == "1")
+-- 数据库列表拖动状态
+mediadb_drag_index = mediadb_drag_index or nil -- 当前被拖动的行索引
+mediadb_last_target_index = mediadb_last_target_index or nil -- 上一次交换的目标行索引
+-- 读取数据库排序
+if mediadb_order == nil then
+  mediadb_order = {}
+  local s = reaper.GetExtState(EXT_SECTION, "mediadb_order")
+  if s and s ~= "" then
+    for name in s:gmatch("([^|;|]+)") do
+      if name ~= "" then
+        table.insert(mediadb_order, name)
+      end
+    end
+  end
+end
 
 --------------------------------------------- 右侧表格列表优化 ---------------------------------------------
 
@@ -12089,7 +12107,89 @@ function loop()
           reaper.ImGui_PopStyleColor(ctx)
           if is_group_open then
             reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+
+            -- 鼠标抬起时重置分组拖动状态
+            if not reaper.ImGui_IsMouseDown(ctx, 0) then
+              group_drag_index = nil
+              group_last_target_index = nil
+            end
+
             for i, folder in ipairs(custom_folders) do
+              local handle_w = 20
+              local handle_h = reaper.ImGui_GetTextLineHeight(ctx)
+              reaper.ImGui_InvisibleButton(ctx, "##group_drag_" .. tostring(folder), handle_w, handle_h)
+              local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
+              local handle_active  = reaper.ImGui_IsItemActive(ctx)
+              -- 拖动源
+              if reaper.ImGui_BeginDragDropSource(ctx) then
+                if not group_drag_index then
+                  group_drag_index = i
+                  group_last_target_index = i
+                end
+
+                local drag_idx    = group_drag_index or i
+                local drag_folder = custom_folders[drag_idx] or folder
+
+                reaper.ImGui_SetDragDropPayload(ctx, "SM_GROUP_REORDER", tostring(drag_idx))
+                reaper.ImGui_Text(ctx, drag_folder)
+                reaper.ImGui_EndDragDropSource(ctx)
+              end
+              -- 拖动目标
+              if reaper.ImGui_BeginDragDropTarget(ctx) then
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview or 0x00000000)
+                local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_GROUP_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
+
+                if ok and group_drag_index and i ~= group_drag_index and i ~= group_last_target_index then
+                  local from_idx = group_drag_index
+                  if custom_folders[from_idx] and custom_folders[i] then
+                    local tmp = custom_folders[from_idx]
+                    custom_folders[from_idx] = custom_folders[i]
+                    custom_folders[i] = tmp
+
+                    group_drag_index = i
+                    group_last_target_index = i
+
+                    -- 保存分组顺序
+                    SaveCustomFolders()
+                  end
+                end
+
+                reaper.ImGui_PopStyleColor(ctx)
+                reaper.ImGui_EndDragDropTarget(ctx)
+              end
+
+              -- 绘制拖动图标
+              do
+                local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+                local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
+                local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
+
+                if fonts and fonts.icon then
+                  reaper.ImGui_PushFont(ctx, fonts.icon, 17)
+                end
+                local glyph_drag = '\u{0041}'
+                local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                local col = colors.icon_normal or 0xFFFFFFFF
+                if handle_active then
+                  col = colors.icon_active or colors.icon_hovered or col
+                elseif handle_hovered then
+                  col = colors.icon_hovered or col
+                end
+                reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+                if fonts and fonts.icon then
+                  reaper.ImGui_PopFont(ctx)
+                end
+
+                if handle_hovered or handle_active then
+                  reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+                end
+              end
+
+              reaper.ImGui_SameLine(ctx)
+
               local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
               if reaper.ImGui_Selectable(ctx, folder, is_selected) then
                 -- 切换自定义文件夹目录选中状态，清空文件列表多选/主选中
@@ -12367,6 +12467,13 @@ function loop()
           reaper.ImGui_PopStyleColor(ctx)
           if is_mediadb_open then
             reaper.ImGui_Indent(ctx, 7)
+
+            -- 鼠标抬起时重置数据库拖动状态
+            if not reaper.ImGui_IsMouseDown(ctx, 0) then
+              mediadb_drag_index = nil
+              mediadb_last_target_index = nil
+            end
+
             local mediadb_files = {}
             local db_dir = script_path .. "SoundmoleDB"
             local i = 0
@@ -12379,7 +12486,122 @@ function loop()
               i = i + 1
             end
 
-            for _, dbfile in ipairs(mediadb_files) do
+            mediadb_order = mediadb_order or {}
+            do
+              local exist = {}
+              for _, name in ipairs(mediadb_files) do
+                exist[name] = true
+              end
+              -- 清理顺序表中已经不存在的项
+              for i = #mediadb_order, 1, -1 do
+                if not exist[mediadb_order[i]] then
+                  table.remove(mediadb_order, i)
+                end
+              end
+              -- 新数据库追加到顺序表末尾
+              for _, name in ipairs(mediadb_files) do
+                local found = false
+                for _, n2 in ipairs(mediadb_order) do
+                  if n2 == name then
+                    found = true
+                    break
+                  end
+                end
+                if not found then
+                  table.insert(mediadb_order, name)
+                end
+              end
+              -- 用顺序表重建当前显示列表
+              local ordered = {}
+              for _, name in ipairs(mediadb_order) do
+                if exist[name] then
+                  ordered[#ordered + 1] = name
+                end
+              end
+              mediadb_files = ordered
+            end
+
+            for idx, dbfile in ipairs(mediadb_files) do
+              local handle_w = 20
+              local handle_h = reaper.ImGui_GetTextLineHeight(ctx)
+              reaper.ImGui_InvisibleButton(ctx, "##db_drag_" .. tostring(dbfile), handle_w, handle_h)
+              local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
+              local handle_active  = reaper.ImGui_IsItemActive(ctx)
+              -- 拖动源
+              if reaper.ImGui_BeginDragDropSource(ctx) then
+                if not mediadb_drag_index then
+                  mediadb_drag_index = idx
+                  mediadb_last_target_index = idx
+                end
+
+                local drag_idx    = mediadb_drag_index or idx
+                local drag_dbfile = mediadb_files[drag_idx] or dbfile
+                local drag_alias  = mediadb_alias[drag_dbfile] or drag_dbfile
+
+                reaper.ImGui_SetDragDropPayload(ctx, "SM_DB_REORDER", tostring(drag_idx))
+                reaper.ImGui_Text(ctx, drag_alias)
+                reaper.ImGui_EndDragDropSource(ctx)
+              end
+              -- 拖动目标
+              if reaper.ImGui_BeginDragDropTarget(ctx) then
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview or 0x00000000)
+                local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_DB_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
+
+                if ok and mediadb_drag_index and idx ~= mediadb_drag_index and idx ~= mediadb_last_target_index then
+                  local from_idx = mediadb_drag_index
+                  if mediadb_order[from_idx] and mediadb_order[idx] then
+                    local tmp = mediadb_order[from_idx]
+                    mediadb_order[from_idx] = mediadb_order[idx]
+                    mediadb_order[idx] = tmp
+
+                    mediadb_drag_index = idx
+                    mediadb_last_target_index = idx
+
+                    local parts = {}
+                    for _, name in ipairs(mediadb_order) do
+                      if name and name ~= "" then
+                        parts[#parts + 1] = name
+                      end
+                    end
+                    reaper.SetExtState(EXT_SECTION, "mediadb_order", table.concat(parts, "|;|"), true)
+                  end
+                end
+
+                reaper.ImGui_PopStyleColor(ctx)
+                reaper.ImGui_EndDragDropTarget(ctx)
+              end
+
+              do
+                local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+                local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
+                local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
+
+                if fonts and fonts.icon then
+                  reaper.ImGui_PushFont(ctx, fonts.icon, 17)
+                end
+                local glyph_drag = '\u{0041}'
+                local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                local col = colors.icon_normal or 0xFFFFFFFF
+                if handle_active then
+                  col = colors.icon_active or colors.icon_hovered or col
+                elseif handle_hovered then
+                  col = colors.icon_hovered or col
+                end
+                reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+                if fonts and fonts.icon then
+                  reaper.ImGui_PopFont(ctx)
+                end
+
+                if handle_hovered or handle_active then
+                  reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+                end
+              end
+
+              reaper.ImGui_SameLine(ctx)
+
               local alias = mediadb_alias[dbfile] or dbfile -- 优先显示别名
               local is_selected = (collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile)
               if reaper.ImGui_Selectable(ctx, alias, is_selected) then

@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.116
+-- @version 1.0.117
 -- @changelog
---   Improved Saved Search drag-and-drop reordering
+--   Other detailed improvements and bug fixes
 --   Support reaper_soundmole-x64.dll v0.0.5
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
