@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.114
+-- @version 1.0.115
 -- @changelog
---   Added drag-and-drop sorting via the left text icon in the Saved Search list
+--   Improves saved search management with new filter and clear options and a more consistent button layout
 --   Support reaper_soundmole-x64.dll v0.0.5
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
