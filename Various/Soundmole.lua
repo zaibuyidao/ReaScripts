@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.117
+-- @version 1.0.118
 -- @changelog
 --   Other detailed improvements and bug fixes
 --   Support reaper_soundmole-x64.dll v0.0.5

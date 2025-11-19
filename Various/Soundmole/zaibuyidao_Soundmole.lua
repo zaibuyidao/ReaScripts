@@ -6187,7 +6187,7 @@ rename_idx = rename_idx or nil
 show_rename_popup = show_rename_popup or false
 saved_search_list = LoadSavedSearch(EXT_SECTION, saved_search_list)
 saved_search_drag_index = saved_search_drag_index or nil -- 当前被拖动的行索引
-saved_search_last_target_index = saved_search_last_target_index or nil -- 上一次交换过的目标行索引
+saved_search_last_target_index = saved_search_last_target_index or nil -- 上一次交换的目标行索引
 
 --------------------------------------------- 最近搜索节点 ---------------------------------------------
 
@@ -7644,7 +7644,7 @@ function list_reaper_shortcut_folders()
   return out
 end
 
-function draw_shortcut_tree_mirror(sc, base_path, depth)
+function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
   if type(sc) ~= "table" or not sc.path then return end
 
   local path = normalize_path(sc.path, true)
@@ -7662,7 +7662,7 @@ function draw_shortcut_tree_mirror(sc, base_path, depth)
     flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
   end
 
-  local label = show_name .. "##shortcut_mirror_" .. path
+  local label = show_name .. "##shortcut_mirror_" .. tostring(root_idx) .. path
 
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
   -- 捕获本行矩形与中心y
@@ -7711,9 +7711,9 @@ function draw_shortcut_tree_mirror(sc, base_path, depth)
       pushed = true
     end
 
-    for _, sub in ipairs(cache.dirs) do
+    for idx, sub in ipairs(cache.dirs) do
       local sub_path = normalize_path(path .. sep .. sub, true)
-      draw_shortcut_tree_mirror({ name = sub, path = sub_path }, path, depth + 1)
+      draw_shortcut_tree_mirror({ name = sub, path = sub_path }, path, depth + 1, idx)
     end
 
     if pushed then
@@ -11820,12 +11820,12 @@ function loop()
               local is_sc_mirror_open = reaper.ImGui_CollapsingHeader(ctx, "Folder Shortcuts (Mirror)##shortcut_mirror", nil, hdr_flags_sc_mirror)
               shortcut_mirror_open = is_sc_mirror_open
               reaper.ImGui_PopStyleColor(ctx)
-              
+
               if is_sc_mirror_open then
                 reaper.ImGui_Indent(ctx, 7)
                 ResetCollectionGuide() -- 重置导线度量
-                for _, sc in ipairs(sc_folders or {}) do
-                  draw_shortcut_tree_mirror(sc, nil, 0)
+                for idx, sc in ipairs(sc_folders or {}) do
+                  draw_shortcut_tree_mirror(sc, nil, 0, idx)
                 end
                 reaper.ImGui_Unindent(ctx, 7)
               end
@@ -12106,7 +12106,7 @@ function loop()
 
           reaper.ImGui_PopStyleColor(ctx)
           if is_group_open then
-            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            -- reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
 
             -- 鼠标抬起时重置分组拖动状态
             if not reaper.ImGui_IsMouseDown(ctx, 0) then
@@ -12277,7 +12277,7 @@ function loop()
             --     end
             --   end
             -- end
-            reaper.ImGui_Unindent(ctx, 7)
+            -- reaper.ImGui_Unindent(ctx, 7)
           end
 
           -- 数据库节点
@@ -12466,7 +12466,7 @@ function loop()
 
           reaper.ImGui_PopStyleColor(ctx)
           if is_mediadb_open then
-            reaper.ImGui_Indent(ctx, 7)
+            -- reaper.ImGui_Indent(ctx, 7)
 
             -- 鼠标抬起时重置数据库拖动状态
             if not reaper.ImGui_IsMouseDown(ctx, 0) then
@@ -12903,7 +12903,7 @@ function loop()
             --   local f = io.open(dbfile, "wb") f:close()
             -- end
 
-            reaper.ImGui_Unindent(ctx, 7)
+            -- reaper.ImGui_Unindent(ctx, 7)
           end
 
           -- REAPER Database
@@ -12925,7 +12925,7 @@ function loop()
                   local fn    = it.filename
                   local is_sel = (collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db == fn)
 
-                  if reaper.ImGui_Selectable(ctx, alias, is_sel) then
+                  if reaper.ImGui_Selectable(ctx, alias .. "##reaperdb_" .. fn, is_sel) then
                     collect_mode = COLLECT_MODE_REAPERDB
                     tree_state.cur_reaper_db = fn
 
@@ -13230,13 +13230,7 @@ function loop()
         end
 
         -- TAB 标签页 Saved Search
-        if reaper.ImGui_BeginTabItem(ctx, 'Saved Searches') then
-          -- 鼠标左键松开时，结束拖动，清空拖动状态
-          if not reaper.ImGui_IsMouseDown(ctx, 0) then
-            saved_search_drag_index = nil
-            saved_search_last_target_index = nil
-          end
-
+        if reaper.ImGui_BeginTabItem(ctx, 'Saved Search') then
           prev_filter_text = prev_filter_text or ""
           local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
           if prev_filter_text ~= filter_text then
@@ -13332,16 +13326,16 @@ function loop()
           end
           reaper.ImGui_Separator(ctx)
 
+          -- 鼠标抬起时重置保存搜索拖动状态
+          if not reaper.ImGui_IsMouseDown(ctx, 0) then
+            saved_search_drag_index = nil
+            saved_search_last_target_index = nil
+          end
+
           -- Saved Search 列表过滤
           local saved_filter_text = ""
           if saved_search_filter then
             saved_filter_text = reaper.ImGui_TextFilter_Get(saved_search_filter) or ""
-          end
-
-          -- 鼠标抬起时重置拖动状态
-          if not reaper.ImGui_IsMouseDown(ctx, 0) then
-            saved_search_dragging = false
-            saved_search_drag_from = nil
           end
 
           for idx, s in ipairs(saved_search_list) do
@@ -13376,57 +13370,39 @@ function loop()
 
             local handle_w = 20
             local handle_h = reaper.ImGui_GetTextLineHeight(ctx)
-
-            reaper.ImGui_InvisibleButton(ctx, "##drag_handle", handle_w, handle_h)
+            reaper.ImGui_InvisibleButton(ctx, "##saved_drag_" .. tostring(idx), handle_w, handle_h)
             local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
             local handle_active = reaper.ImGui_IsItemActive(ctx)
-
-            -- 拖动源 - 从图标区域开始拖动
+            -- 拖动源
             if reaper.ImGui_BeginDragDropSource(ctx) then
-              -- 首次开始拖动时记录当前拖动行
               if not saved_search_drag_index then
                 saved_search_drag_index = idx
                 saved_search_last_target_index = idx
               end
 
-              -- 根据当前正在拖动的索引，重新计算被拖动项的文本
-              local drag_entry = saved_search_list[saved_search_drag_index] or s
-              local drag_name = tostring(drag_entry.name or "")
-              local drag_keyword = tostring(drag_entry.keyword or "")
-              local drag_label
-              if drag_keyword ~= "" then
-                if drag_name ~= "" and drag_name ~= drag_keyword then
-                  drag_label = string.format("%s (%s)", drag_keyword, drag_name)
-                else
-                  drag_label = drag_keyword
-                end
-              else
-                drag_label = drag_name
-              end
+              local drag_idx = saved_search_drag_index or idx
+              local drag_item = saved_search_list[drag_idx] or s
 
-              reaper.ImGui_SetDragDropPayload(ctx, "SAVED_SEARCH_REORDER", tostring(saved_search_drag_index))
-              -- 提示文字始终显示真正被拖动的那一条
-              reaper.ImGui_Text(ctx, drag_label)
+              reaper.ImGui_SetDragDropPayload(ctx, "SM_SAVED_REORDER", tostring(drag_idx))
+              reaper.ImGui_Text(ctx, drag_item and (drag_item.name or "") or "")
               reaper.ImGui_EndDragDropSource(ctx)
             end
-
-            -- 拖动目标 - 拖动经过图标时，立刻与该行交换一次
+            -- 拖动目标
             if reaper.ImGui_BeginDragDropTarget(ctx) then
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview or 0x00000000)
-              local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SAVED_SEARCH_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
+              local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_SAVED_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
 
               if ok and saved_search_drag_index and idx ~= saved_search_drag_index and idx ~= saved_search_last_target_index then
                 local from_idx = saved_search_drag_index
-                if saved_search_list[from_idx] then
+                if saved_search_list[from_idx] and saved_search_list[idx] then
                   local tmp = saved_search_list[from_idx]
                   saved_search_list[from_idx] = saved_search_list[idx]
                   saved_search_list[idx] = tmp
 
-                  SaveSavedSearch(EXT_SECTION, saved_search_list)
-                  active_saved_search = idx
-                  -- 更新拖动状态，拖动项的新位置和最近交换目标
                   saved_search_drag_index = idx
                   saved_search_last_target_index = idx
+
+                  SaveSavedSearch(EXT_SECTION, saved_search_list)
                 end
               end
 
@@ -13434,27 +13410,34 @@ function loop()
               reaper.ImGui_EndDragDropTarget(ctx)
             end
 
-            local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-            local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
-            local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
+            -- 绘制拖动图标
+            do
+              local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+              local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
+              local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
-            reaper.ImGui_PushFont(ctx, fonts.icon, 17)
-            local glyph_drag = '\u{006D}'
-            local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
-            local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
-            local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+              if fonts and fonts.icon then
+                reaper.ImGui_PushFont(ctx, fonts.icon, 17)
+              end
+              local glyph_drag = '\u{0041}'
+              local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+              local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+              local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
 
-            local col = colors.icon_normal or 0xFFFFFFFF
-            if handle_active then
-              col = colors.icon_active or colors.icon_hovered or col
-            elseif handle_hovered then
-              col = colors.icon_hovered or col
-            end
-            reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
-            reaper.ImGui_PopFont(ctx)
+              local col = colors.icon_normal or 0xFFFFFFFF
+              if handle_active then
+                col = colors.icon_active or colors.icon_hovered or col
+              elseif handle_hovered then
+                col = colors.icon_hovered or col
+              end
+              reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+              if fonts and fonts.icon then
+                reaper.ImGui_PopFont(ctx)
+              end
 
-            if handle_hovered or handle_active then
-              reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+              if handle_hovered or handle_active then
+                reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+              end
             end
 
             reaper.ImGui_SameLine(ctx)
