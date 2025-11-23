@@ -25,7 +25,7 @@ else
 end
 
 function CheckShortcutSetting()
-    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Tracks Properties/zaibuyidao_Toggle Solo for Specific Track Setting.lua'
+    local shortcutSetting = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Various/Advanced Solo/zaibuyidao_Toggle Solo for Specific Track (Settings).lua'
 
     if reaper.file_exists(shortcutSetting) then
         dofile(shortcutSetting)
@@ -60,11 +60,11 @@ end
 
 function noUndoPoint() end
 reaper.PreventUIRefresh(1)
-local num = reaper.GetExtState("TOGGLE_SOLO_FOR_SPECIFIC_TRACK_SETTING", "Number")
+local num = reaper.GetExtState("TOGGLE_SOLO_FOR_SPECIFIC_TRACK_SETTINGS", "Number")
 if num == "" then
     CheckShortcutSetting()
     reaper.defer(function() end)
-    num = reaper.GetExtState("TOGGLE_SOLO_FOR_SPECIFIC_TRACK_SETTING", "Number")
+    num = reaper.GetExtState("TOGGLE_SOLO_FOR_SPECIFIC_TRACK_SETTINGS", "Number")
 end
 num = tonumber(num) - 1
 
