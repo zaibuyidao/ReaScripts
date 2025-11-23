@@ -1,8 +1,8 @@
 -- @description Advanced Solo Bundle
 -- @author zaibuyidao
--- @version 1.0.3
+-- @version 1.0.4
 -- @changelog
---   # Fixed the "attempt to index a nil value" issue.
+--   # Other detailed improvements and bug fixes.
 -- @links
 --   Forum Thread https://forum.cockos.com/showthread.php?t=290856
 --   GitHub repository https://github.com/zaibuyidao/ReaScripts
