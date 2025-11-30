@@ -6217,6 +6217,8 @@ local recent_search_keywords = {}
 local search_input_timer = 0
 local last_search_input = ""
 local save_search_keyword = nil -- 保存最近搜索
+-- 当前搜索历史指针，用于上一条/下一条搜索
+local search_history_index = nil
 
 function LoadRecentSearched()
   recent_search_keywords = {}
@@ -6250,10 +6252,30 @@ function AddToRecentSearched(keyword)
     end
   end
   table.insert(recent_search_keywords, 1, keyword)
+
+  search_history_index = 1 -- 搜索历史，新搜索默认指向最新一条
+
   while #recent_search_keywords > max_recent_search do
     table.remove(recent_search_keywords)
   end
   SaveRecentSearched()
+end
+
+-- 根据搜索历史索引应用搜索，用于上一条 / 下一条按钮（暂未启用）
+function ApplySearchFromHistory(idx)
+  if not filename_filter then return end
+  local keyword = recent_search_keywords[idx]
+  if not keyword then return end
+
+  search_history_index = idx
+
+  -- 回填搜索框并立刻生效
+  reaper.ImGui_TextFilter_Set(filename_filter, keyword)
+  local kw = keyword or ""
+  _G.commit_filter_text    = kw
+  _G.just_committed_filter = true
+  last_search_input        = kw
+  search_input_timer       = reaper.time_precise()
 end
 
 LoadRecentSearched()
@@ -10849,6 +10871,103 @@ function loop()
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
 
+    -- 搜索历史: 上一条/下一条
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    do
+      local history_count = #recent_search_keywords
+      local cur_idx = search_history_index or 0
+      local can_prev = (history_count > 1) and (cur_idx < history_count)
+      local can_next = (history_count > 1) and (cur_idx > 1)
+      local dy = 13
+      -- 上一条
+      do
+        reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+        local glyph = '\u{0160}'
+        local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+        local hovered = can_prev and reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true) or false
+        local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+        local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+        local col
+        if not can_prev then
+          col = colors.icon_off
+        else
+          local col_normal  = colors.icon_on      or colors.icon_normal
+          local col_hovered = colors.icon_hovered or col_normal
+          local col_active  = colors.icon_active  or col_hovered
+          col = hovered and (active and col_active or col_hovered) or col_normal
+        end
+
+        DrawTextVOffset(ctx, glyph, col, dy)
+        reaper.ImGui_PopFont(ctx)
+
+        if hovered and can_prev then
+          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+        end
+
+        if clicked and can_prev then
+          local idx = (search_history_index or 0) + 1
+          if idx <= history_count then
+            ApplySearchFromHistory(idx)
+          end
+        end
+
+        if hovered then
+          reaper.ImGui_BeginTooltip(ctx)
+          if can_prev then
+            reaper.ImGui_Text(ctx, "Previous Search")
+          else
+            reaper.ImGui_TextDisabled(ctx, "No previous search")
+          end
+          reaper.ImGui_EndTooltip(ctx)
+        end
+      end
+      -- 下一条
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      do
+        reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+        local glyph = '\u{0161}'
+        local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+        local hovered = can_next and reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true) or false
+        local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+        local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+        local col
+        if not can_next then
+          col = colors.icon_off
+        else
+          local col_normal  = colors.icon_on       or colors.icon_normal
+          local col_hovered = colors.icon_hovered  or col_normal
+          local col_active  = colors.icon_active   or col_hovered
+          col = hovered and (active and col_active or col_hovered) or col_normal
+        end
+
+        DrawTextVOffset(ctx, glyph, col, dy)
+        reaper.ImGui_PopFont(ctx)
+
+        if hovered and can_next then
+          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+        end
+
+        if clicked and can_next then
+          local idx = (search_history_index or 0) - 1
+          if idx >= 1 then
+            ApplySearchFromHistory(idx)
+          end
+        end
+
+        if hovered then
+          reaper.ImGui_BeginTooltip(ctx)
+          if can_next then
+            reaper.ImGui_Text(ctx, "Next Search")
+          else
+            reaper.ImGui_TextDisabled(ctx, "No next search")
+          end
+          reaper.ImGui_EndTooltip(ctx)
+        end
+      end
+    end
+
     reaper.ImGui_SameLine(ctx, nil, 10)
     DrawFilterLockToggle(ctx)
     -- 数据库路径过滤按钮
@@ -11057,6 +11176,9 @@ function loop()
       _G.commit_filter_text = ""     -- 立即清空生效查询（Enter模式）
       _G._db_path_prefix_filter = "" -- 清除数据库模式的路径过滤
       DBPF_InvalidateAllCaches()     -- 让数据库路径根缓存失效
+
+      -- 重置搜索历史指针，让上一条从最新的开始
+      search_history_index = 0
 
       -- 清除临时搜索字段，UCS隐式搜索临时关键词
       active_saved_search = nil
@@ -13161,6 +13283,7 @@ function loop()
             for i, keyword in ipairs(recent_search_keywords) do
               local selected = false
               if reaper.ImGui_Selectable(ctx, keyword, selected) then
+                search_history_index = i -- 搜索历史，上一条/下一条用
                 -- 点击发送到搜索框
                 reaper.ImGui_TextFilter_Set(filename_filter, keyword)
                 -- 点击关键词时，同时回填到过滤框并更新_G.commit_filter_text
@@ -13170,6 +13293,9 @@ function loop()
                 last_search_input        = kw
                 search_input_timer       = reaper.time_precise()
               end
+              -- if reaper.ImGui_Selectable(ctx, keyword, selected) then
+              --   ApplySearchFromHistory(i)
+              -- end
               -- 右键菜单
               if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
                 reaper.ImGui_OpenPopup(ctx, "recent_search_menu_" .. i)

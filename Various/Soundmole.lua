@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.119
+-- @version 1.0.120
 -- @changelog
---   Added support for dragging to reorder items.
+--   Added previous and next navigation for search history.
 --   Support reaper_soundmole-x64.dll v0.0.5
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
