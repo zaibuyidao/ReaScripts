@@ -74,7 +74,7 @@ reaper.ImGui_Attach(ctx, fonts.medium)
 reaper.ImGui_Attach(ctx, fonts.large)
 reaper.ImGui_Attach(ctx, fonts.title)
 -- 图标字体
-local icon_font_path = normalize_path(script_path .. "data/icons.otf", false)
+local icon_font_path = normalize_path(script_path .. "data/icons-regular.otf", false)
 fonts.icon = reaper.ImGui_CreateFontFromFile(icon_font_path, 0)
 reaper.ImGui_Attach(ctx, fonts.icon)
 -- 数字字体
@@ -609,7 +609,7 @@ end
 function DrawColorsMenuIcon(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   reaper.ImGui_PushFont(ctx, fonts.icon, 18)
-  local glyph = '\u{004A}'
+  local glyph = '\u{010F}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -3039,10 +3039,10 @@ function DrawFilterLockToggle(ctx)
 
   reaper.ImGui_PushFont(ctx, fonts.icon, 20)
   local lock_on = _G.filter_lock_enabled
-  local text_label = (lock_on and '\u{005C}') or '\u{005D}' -- 关=005C; 开=005D
+  local text_label = (lock_on and '\u{0163}') or '\u{0162}' -- 关=0163; 开=0162
   -- 固定宽高占位
-  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{005D}'))
-  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{005C}'))
+  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0163}'))
+  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0162}'))
   local reserve_w = math.max(w1 or 0, w2 or 0)
   local reserve_h = 20
 
@@ -4412,6 +4412,9 @@ end
 
 local EXT_KEY_SHORTCUTS = "folder_shortcuts"
 folder_shortcuts = folder_shortcuts or {} -- 选择文件夹快捷方式
+-- Shortcuts 列表拖动状态
+shortcut_drag_index = shortcut_drag_index or nil        -- 当前被拖动的快捷方式索引
+shortcut_last_target_index = shortcut_last_target_index or nil -- 上一次交换的目标索引
 
 -- 提取最后一级文件夹名称
 function GetFolderName(path)
@@ -4591,9 +4594,18 @@ function draw_shortcut_tree(sc, base_path, depth)
       pushed = true
     end
 
+    -- 顶层快捷方式的子树整体右移一个拖动手柄宽度
+    if depth == 0 then
+      reaper.ImGui_Indent(ctx, COLLECTION_HANDLE_W or 20)
+    end
+
     for _, sub in ipairs(cache.dirs) do
       local sub_path = normalize_path(path .. sep .. sub, true)
       draw_shortcut_tree({ name = sub, path = sub_path }, path, depth + 1)
+    end
+
+    if depth == 0 then
+      reaper.ImGui_Unindent(ctx, COLLECTION_HANDLE_W or 20)
     end
 
     if pushed then
@@ -4864,6 +4876,9 @@ local EXT_KEY_ADVANCED_FOLDERS = "collections_content"
 local EXT_KEY_ADVANCED_ROOT = "collections_root"
 advanced_folders = advanced_folders or {}
 root_advanced_folders = root_advanced_folders or {} -- 存根节点id的数组
+-- Collections 列表拖动状态
+collection_drag_index = collection_drag_index or nil -- 当前被拖动的根结点索引
+collection_last_target_index = collection_last_target_index or nil -- 上一次交换的目标索引
 
 function sanitize(str)
   return (str or ""):gsub("[\r\n]", "")
@@ -5098,8 +5113,15 @@ function draw_advanced_folder_node(id, selected_id, depth)
     end
 
     if has_children then
+      -- 使用ImGui_Indent让子节点整体右移，depth == 0说明是最顶层的父级目录展开的那一层
+      if depth == 0 then
+        reaper.ImGui_Indent(ctx, COLLECTION_HANDLE_W or 20)
+      end
       for _, cid in ipairs(node.children) do
         draw_advanced_folder_node(cid, selected_id, depth + 1)
+      end
+      if depth == 0 then
+        reaper.ImGui_Unindent(ctx, COLLECTION_HANDLE_W or 20)
       end
     end
 
@@ -9959,7 +9981,7 @@ end
 
 function UI_PlayIconTrigger_Play(ctx)
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0033}'
+  local glyph = '\u{0103}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -10025,7 +10047,7 @@ function UI_PlayIconTrigger_Pause(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   local highlight_resume = (is_paused and playing_source) and true or false
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0034}'
+  local glyph = '\u{0104}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -10090,7 +10112,7 @@ end
 function UI_PlayIconTrigger_Stop(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0035}'
+  local glyph = '\u{0105}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -10124,7 +10146,7 @@ end
 function UI_PlayIconTrigger_Prev(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0030}'
+  local glyph = '\u{0100}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -10169,7 +10191,7 @@ end
 function UI_PlayIconTrigger_Next(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0038}'
+  local glyph = '\u{0108}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -10214,7 +10236,7 @@ end
 function UI_PlayIconTrigger_Rand(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{004F}'
+  local glyph = '\u{0147}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -10261,7 +10283,7 @@ function UI_PlayIconTrigger_Loop(ctx)
   local highlight_loop = loop_enabled and true or false
 
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{003C}'
+  local glyph = '\u{010D}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -10298,7 +10320,7 @@ end
 function DrawPreviewRouteMenu(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0048}'
+  local glyph = '\u{0112}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -10650,10 +10672,10 @@ function DBPF_DrawDatabaseFolderButton(ctx)
 
   -- 固定字体宽度占位 + 居中绘制，确保两种字形宽度一致
   reaper.ImGui_PushFont(ctx, fonts.icon, 20)
-  local text_label = in_db_mode and '\u{0051}' or '\u{0050}'
+  local text_label = in_db_mode and '\u{0165}' or '\u{0164}'
   -- 计算两种字形在该字号下的最大宽度
-  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0051}'))
-  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0050}'))
+  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0165}'))
+  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0164}'))
   local reserve_w = math.max(w1 or 0, w2 or 0)
   local reserve_h = 20 -- 与 PushFont 的像素大小一致
 
@@ -10705,7 +10727,7 @@ splitter_drag_offset = 0
 -- 左侧表格显示/隐藏切换按钮
 function SM_DrawLeftTableToggle(ctx)
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-  local glyph = '\u{004B}'
+  local glyph = '\u{0110}'
   local dy = 0
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -11241,7 +11263,7 @@ function loop()
 
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-    local glyph = '\u{0059}'
+    local glyph = '\u{0169}'
     local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
     local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -11474,7 +11496,7 @@ function loop()
 
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-    local glyph = '\u{0047}'
+    local glyph = '\u{0114}'
     local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
     local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -11627,7 +11649,7 @@ function loop()
                 need_load_drives = true
               end
             else
-              ResetCollectionGuide() -- 重置导线度量
+              -- ResetCollectionGuide() -- 重置导线度量
               for _, drv in ipairs(drive_cache or {}) do
                 draw_tree(drv, drv, 0)
               end
@@ -11678,7 +11700,7 @@ function loop()
             -- local hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
             -- local clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
             -- local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-            -- local glyph = '\u{0069}'
+            -- local glyph = '\u{0150}'
             -- local dl = reaper.ImGui_GetForegroundDrawList(ctx)
 
             -- local icon_size = math.floor(icon_h * 0.90)
@@ -11730,7 +11752,7 @@ function loop()
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
 
               local col   = (hovering_icon and colors.icon_active) or colors.icon_normal
-              local glyph = '\u{0069}'
+              local glyph = '\u{0150}'
               local icon_size = math.floor(icon_h * 0.90)
 
               if fonts and fonts.icon then reaper.ImGui_PushFont(ctx, fonts.icon, icon_size) end
@@ -11771,10 +11793,108 @@ function loop()
           end
 
           reaper.ImGui_PopStyleColor(ctx)
+          -- 顶层 Shortcut 拖动手柄宽度
+          local COLLECTION_HANDLE_W = 20
           if is_shortcut_open then
-            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-            ResetCollectionGuide() -- 重置导线度量
-            for _, sc in ipairs(folder_shortcuts or {}) do
+            -- reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+
+            -- 鼠标抬起时重置 Shortcuts 拖动状态
+            if not reaper.ImGui_IsMouseDown(ctx, 0) then
+              shortcut_drag_index = nil
+              shortcut_last_target_index = nil
+            end
+
+            -- ResetCollectionGuide() -- 重置导线度量
+            for i, sc in ipairs(folder_shortcuts or {}) do
+              local handle_w = COLLECTION_HANDLE_W
+              local handle_h = reaper.ImGui_GetTextLineHeight(ctx)
+              reaper.ImGui_InvisibleButton(ctx, "##shortcut_drag_" .. tostring(i), handle_w, handle_h)
+              local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
+              local handle_active  = reaper.ImGui_IsItemActive(ctx)
+              local is_drag_source = (shortcut_drag_index ~= nil and i == shortcut_drag_index and reaper.ImGui_IsMouseDown(ctx, 0))
+
+              -- 拖动源
+              if reaper.ImGui_BeginDragDropSource(ctx) then
+                if not shortcut_drag_index then
+                  shortcut_drag_index = i
+                  shortcut_last_target_index = i
+                end
+
+                local drag_idx = shortcut_drag_index or i
+                local drag_sc  = folder_shortcuts[drag_idx] or sc
+                local drag_name
+
+                if drag_sc then
+                  if drag_sc.name and drag_sc.name ~= "" then
+                    drag_name = drag_sc.name
+                  else
+                    drag_name = GetFolderName(drag_sc.path)
+                  end
+                else
+                  drag_name = tostring(drag_idx)
+                end
+
+                reaper.ImGui_SetDragDropPayload(ctx, "SM_SHORTCUT_REORDER", tostring(drag_idx))
+                reaper.ImGui_Text(ctx, drag_name or "")
+                reaper.ImGui_EndDragDropSource(ctx)
+              end
+
+              -- 拖动目标
+              if reaper.ImGui_BeginDragDropTarget(ctx) then
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), 0x00000000) -- colors.dnd_preview
+                local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_SHORTCUT_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
+
+                if ok and shortcut_drag_index and i ~= shortcut_drag_index and i ~= shortcut_last_target_index then
+                  local from_idx = shortcut_drag_index
+                  if folder_shortcuts[from_idx] and folder_shortcuts[i] then
+                    local tmp = folder_shortcuts[from_idx]
+                    folder_shortcuts[from_idx] = folder_shortcuts[i]
+                    folder_shortcuts[i] = tmp
+
+                    shortcut_drag_index = i
+                    shortcut_last_target_index = i
+
+                    -- 保存快捷方式顺序
+                    SaveFolderShortcuts()
+                  end
+                end
+
+                reaper.ImGui_PopStyleColor(ctx)
+                reaper.ImGui_EndDragDropTarget(ctx)
+              end
+
+              -- 绘制拖动图标
+              do
+                local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+                local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
+                local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
+
+                if fonts and fonts.icon then
+                  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                end
+                local glyph_drag = '\u{00F0}'
+                local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                local col = colors.icon_normal or 0xFFFFFFFF
+                if is_drag_source then
+                  col = colors.icon_active or colors.icon_hovered or col
+                elseif handle_hovered then
+                  col = colors.icon_hovered or col
+                end
+                reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+                if fonts and fonts.icon then
+                  reaper.ImGui_PopFont(ctx)
+                end
+
+                if is_drag_source or handle_hovered then
+                  reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+                end
+              end
+
+              reaper.ImGui_SameLine(ctx, nil, 0)
+
               draw_shortcut_tree(sc, nil, 0)
             end
 
@@ -11793,7 +11913,7 @@ function loop()
             --     end
             --   end
             -- end
-            reaper.ImGui_Unindent(ctx, 7)
+            -- reaper.ImGui_Unindent(ctx, 7)
           end
 
           -- 镜像官方快捷键方式
@@ -11823,7 +11943,7 @@ function loop()
 
               if is_sc_mirror_open then
                 reaper.ImGui_Indent(ctx, 7)
-                ResetCollectionGuide() -- 重置导线度量
+                -- ResetCollectionGuide() -- 重置导线度量
                 for idx, sc in ipairs(sc_folders or {}) do
                   draw_shortcut_tree_mirror(sc, nil, 0, idx)
                 end
@@ -11872,7 +11992,7 @@ function loop()
             -- local hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
             -- local clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
             -- local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-            -- local glyph = '\u{0069}'
+            -- local glyph = '\u{0150}'
             -- local dl = reaper.ImGui_GetForegroundDrawList(ctx)
 
             -- local icon_size = math.floor(icon_h * 0.90)
@@ -11924,7 +12044,7 @@ function loop()
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
 
               local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-              local glyph = '\u{0069}'
+              local glyph = '\u{0150}'
               local icon_size = math.floor(icon_h * 0.90)
 
               if fonts and fonts.icon then reaper.ImGui_PushFont(ctx, fonts.icon, icon_size) end
@@ -11960,12 +12080,100 @@ function loop()
           end
 
           reaper.ImGui_PopStyleColor(ctx)
+          -- 顶层 Collection 拖动手柄宽度
+          local COLLECTION_HANDLE_W = 20
           if is_collection_open then
-            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-            ResetCollectionGuide() -- 重置导线度量
+            -- reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+
+            -- 鼠标抬起时重置 Collections 拖动状态
+            if not reaper.ImGui_IsMouseDown(ctx, 0) then
+              collection_drag_index = nil
+              collection_last_target_index = nil
+            end
+
+            -- ResetCollectionGuide() -- 重置导线度量
             for i, id in ipairs(root_advanced_folders) do
               local node = advanced_folders[id]
               if node then
+                local handle_w = COLLECTION_HANDLE_W
+                local handle_h = reaper.ImGui_GetTextLineHeight(ctx)
+                reaper.ImGui_InvisibleButton(ctx, "##collection_drag_" .. tostring(id), handle_w, handle_h)
+                local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
+                local handle_active  = reaper.ImGui_IsItemActive(ctx)
+
+                -- 拖动源
+                if reaper.ImGui_BeginDragDropSource(ctx) then
+                  if not collection_drag_index then
+                    collection_drag_index = i
+                    collection_last_target_index = i
+                  end
+
+                  local drag_idx  = collection_drag_index or i
+                  local drag_id   = root_advanced_folders[drag_idx] or id
+                  local drag_node = advanced_folders[drag_id]
+                  local drag_name = (drag_node and drag_node.name) or tostring(drag_id)
+
+                  reaper.ImGui_SetDragDropPayload(ctx, "SM_COLLECTION_REORDER", tostring(drag_idx))
+                  reaper.ImGui_Text(ctx, drag_name)
+                  reaper.ImGui_EndDragDropSource(ctx)
+                end
+
+                -- 拖动目标
+                if reaper.ImGui_BeginDragDropTarget(ctx) then
+                  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), 0x00000000) -- colors.dnd_preview
+                  local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_COLLECTION_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
+
+                  if ok and collection_drag_index and i ~= collection_drag_index and i ~= collection_last_target_index then
+                    local from_idx = collection_drag_index
+                    if root_advanced_folders[from_idx] and root_advanced_folders[i] then
+                      local tmp = root_advanced_folders[from_idx]
+                      root_advanced_folders[from_idx] = root_advanced_folders[i]
+                      root_advanced_folders[i] = tmp
+
+                      collection_drag_index = i
+                      collection_last_target_index = i
+
+                      -- 保存根 Collection 顺序
+                      SaveAdvancedFolders()
+                    end
+                  end
+
+                  reaper.ImGui_PopStyleColor(ctx)
+                  reaper.ImGui_EndDragDropTarget(ctx)
+                end
+
+                -- 绘制拖动图标
+                do
+                  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+                  local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
+                  local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
+
+                  if fonts and fonts.icon then
+                    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                  end
+                  local glyph_drag = '\u{00F0}'
+                  local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                  local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                  local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                  local col = colors.icon_normal or 0xFFFFFFFF
+                  if handle_active then
+                    col = colors.icon_active or colors.icon_hovered or col
+                  elseif handle_hovered then
+                    col = colors.icon_hovered or col
+                  end
+                  reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+                  if fonts and fonts.icon then
+                    reaper.ImGui_PopFont(ctx)
+                  end
+
+                  if handle_hovered or handle_active then
+                    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
+                  end
+                end
+
+                reaper.ImGui_SameLine(ctx, nil, 0)
+
                 draw_advanced_folder_node(id, tree_state.cur_advanced_folder, 0)
               end
             end
@@ -11980,7 +12188,7 @@ function loop()
             --     SaveAdvancedFolders()
             --   end
             -- end
-            reaper.ImGui_Unindent(ctx, 7)
+            -- reaper.ImGui_Unindent(ctx, 7)
           end
 
           -- 自定义文件夹节点 Group
@@ -12012,7 +12220,7 @@ function loop()
             -- local hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
             -- local clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
             -- local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-            -- local glyph = '\u{0069}'
+            -- local glyph = '\u{0150}'
             -- local dl = reaper.ImGui_GetForegroundDrawList(ctx)
 
             -- local icon_size = math.floor(icon_h * 0.90)
@@ -12064,7 +12272,7 @@ function loop()
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
 
               local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-              local glyph = '\u{0069}'
+              local glyph = '\u{0150}'
               local icon_size = math.floor(icon_h * 0.90)
 
               if fonts and fonts.icon then reaper.ImGui_PushFont(ctx, fonts.icon, icon_size) end
@@ -12136,7 +12344,7 @@ function loop()
               end
               -- 拖动目标
               if reaper.ImGui_BeginDragDropTarget(ctx) then
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview or 0x00000000)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), 0x00000000) -- colors.dnd_preview
                 local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_GROUP_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
 
                 if ok and group_drag_index and i ~= group_drag_index and i ~= group_last_target_index then
@@ -12165,9 +12373,9 @@ function loop()
                 local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
                 if fonts and fonts.icon then
-                  reaper.ImGui_PushFont(ctx, fonts.icon, 17)
+                  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
                 end
-                local glyph_drag = '\u{0041}'
+                local glyph_drag = '\u{00C3}'
                 local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
                 local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
                 local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
@@ -12361,7 +12569,7 @@ function loop()
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
 
               local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-              local glyph = '\u{0069}'
+              local glyph = '\u{0150}'
               local icon_size = math.floor(icon_h * 0.90)
 
               if fonts and fonts.icon then reaper.ImGui_PushFont(ctx, fonts.icon, icon_size) end
@@ -12544,7 +12752,7 @@ function loop()
               end
               -- 拖动目标
               if reaper.ImGui_BeginDragDropTarget(ctx) then
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview or 0x00000000)
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), 0x00000000) -- colors.dnd_preview
                 local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_DB_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
 
                 if ok and mediadb_drag_index and idx ~= mediadb_drag_index and idx ~= mediadb_last_target_index then
@@ -12577,9 +12785,9 @@ function loop()
                 local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
                 if fonts and fonts.icon then
-                  reaper.ImGui_PushFont(ctx, fonts.icon, 17)
+                  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
                 end
-                local glyph_drag = '\u{0041}'
+                local glyph_drag = '\u{0168}'
                 local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
                 local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
                 local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
@@ -13161,8 +13369,8 @@ function loop()
             if #filtered > 0 then
               reaper.ImGui_PushID(ctx, cat)
               local is_open = cat_open_state[cat] and true or false
-              local GLYPH_PLUS  = '\u{0066}'
-              local GLYPH_MINUS = '\u{0065}'
+              local GLYPH_PLUS  = '\u{0166}'
+              local GLYPH_MINUS = '\u{0167}'
               local clicked, hovered = IconButton(ctx, "##toggle_" .. tostring(cat), (is_open and GLYPH_MINUS or GLYPH_PLUS), 20, 20)
               if clicked then
                 cat_open_state[cat] = not is_open
@@ -13373,6 +13581,7 @@ function loop()
             reaper.ImGui_InvisibleButton(ctx, "##saved_drag_" .. tostring(idx), handle_w, handle_h)
             local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
             local handle_active = reaper.ImGui_IsItemActive(ctx)
+            local is_drag_source = (saved_search_drag_index ~= nil and idx == saved_search_drag_index and reaper.ImGui_IsMouseDown(ctx, 0))
             -- 拖动源
             if reaper.ImGui_BeginDragDropSource(ctx) then
               if not saved_search_drag_index then
@@ -13389,7 +13598,7 @@ function loop()
             end
             -- 拖动目标
             if reaper.ImGui_BeginDragDropTarget(ctx) then
-              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview or 0x00000000)
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), 0x00000000) -- colors.dnd_preview
               local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_SAVED_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
 
               if ok and saved_search_drag_index and idx ~= saved_search_drag_index and idx ~= saved_search_last_target_index then
@@ -13417,15 +13626,15 @@ function loop()
               local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
               if fonts and fonts.icon then
-                reaper.ImGui_PushFont(ctx, fonts.icon, 17)
+                reaper.ImGui_PushFont(ctx, fonts.icon, 16)
               end
-              local glyph_drag = '\u{0041}'
+              local glyph_drag = '\u{00C3}'
               local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
               local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
               local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
 
               local col = colors.icon_normal or 0xFFFFFFFF
-              if handle_active then
+              if is_drag_source then
                 col = colors.icon_active or colors.icon_hovered or col
               elseif handle_hovered then
                 col = colors.icon_hovered or col
@@ -13435,7 +13644,7 @@ function loop()
                 reaper.ImGui_PopFont(ctx)
               end
 
-              if handle_hovered or handle_active then
+              if is_drag_source or handle_hovered then
                 reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
               end
             end

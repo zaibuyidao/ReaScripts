@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.118
+-- @version 1.0.119
 -- @changelog
---   Other detailed improvements and bug fixes
+--   Added support for dragging to reorder items.
 --   Support reaper_soundmole-x64.dll v0.0.5
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -15,6 +15,7 @@
 --   [nomain] Soundmole/lib/*.lua
 --   Soundmole/data/*.csv
 --   Soundmole/data/icons.otf
+--   Soundmole/data/icons-regular.otf
 --   Soundmole/data/odrf_upr_regular.otf
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
