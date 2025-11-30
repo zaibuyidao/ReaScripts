@@ -1,0 +1,19 @@
+-- @description Blocks DS
+-- @author zaibuyidao
+-- @version 1.0
+-- @changelog
+--   New Script
+-- @reference
+--   https://forum.cockos.com/showthread.php?t=100100
+-- @links
+--   https://www.soundengine.cn/u/zaibuyidao
+--   https://github.com/zaibuyidao/ReaScripts
+-- @metapackage
+-- @provides
+--   [main=main] Blocks DS/zaibuyidao_Blocks DS.lua
+--   [nomain] Blocks DS/lib/*.lua
+-- @donation http://www.paypal.me/zaibuyidao
+-- @about
+--   A classic falling block puzzle game for REAPER.
+--   Style: DS / Classic mechanics.
+--   Requires JS_ReaScriptAPI & SWS Extension
