@@ -67,6 +67,8 @@ local NEXT_BOX_SIZE = 60
 local BOX_GAP = 5
 local WIN_LINES = 150 -- 实际上现在是无限玩，但保留这个作为目标参考
 local MAX_LEVEL = 20  -- 最高等级
+local LOCK_DELAY = 0.5 -- 锁定延迟时间(秒)
+local lock_start_time = nil -- 记录触底开始的时间
 
 -- 速度表(秒/格)
 local SPEED_TABLE = {
@@ -220,6 +222,7 @@ function new_piece()
 
   cur_x, cur_y = 5, 1
   can_hold = true
+  lock_start_time = nil -- 新方块产生时，清除锁定计时
 
   if check_collision(cur_x, cur_y, current_piece.shape) then
     state = "GAMEOVER"
@@ -241,6 +244,7 @@ function attempt_hold()
     current_piece = create_piece_from_id(temp_id)
     cur_x, cur_y = 5, 1
     can_hold = false
+    lock_start_time = nil -- Hold交换后，清除锁定计时
   end
 end
 
@@ -270,21 +274,21 @@ function check_lines()
   local lines_cleared = 0
   local y = ROWS
   while y >= 1 do
-      local full = true
-      for x = 1, COLS do
-        if grid[y][x] == 0 then
-          full = false
-          break
-        end
+    local full = true
+    for x = 1, COLS do
+      if grid[y][x] == 0 then
+        full = false
+        break
       end
-      if full then
-        lines_cleared = lines_cleared + 1
-        for ky = y, 2, -1 do grid[ky] = grid[ky-1] end
-        grid[1] = {}
-        for kx = 1, COLS do grid[1][kx] = 0 end
-      else
-        y = y - 1
-      end
+    end
+    if full then
+      lines_cleared = lines_cleared + 1
+      for ky = y, 2, -1 do grid[ky] = grid[ky-1] end
+      grid[1] = {}
+      for kx = 1, COLS do grid[1][kx] = 0 end
+    else
+      y = y - 1
+    end
   end
   if lines_cleared > 0 then
     score_lines = score_lines + lines_cleared
@@ -301,27 +305,56 @@ function check_lines()
 end
 
 function rotate_piece(dir)
-  if current_piece.id == 4 then return end
+  if current_piece.id == 4 then return false end
   local new_shape = {}
   for i, p in ipairs(current_piece.shape) do
-      local nx, ny
-      if dir == "right" then nx, ny = -p.y, p.x else nx, ny = p.y, -p.x end
-      new_shape[i] = {x = nx, y = ny}
+    local nx, ny
+    if dir == "right" then nx, ny = -p.y, p.x else nx, ny = p.y, -p.x end
+    new_shape[i] = {x = nx, y = ny}
   end
+
+  local rotated = false
+  -- 原地
   if not check_collision(cur_x, cur_y, new_shape) then
     current_piece.shape = new_shape
+    rotated = true
+  -- 墙踢 Left
   elseif not check_collision(cur_x - 1, cur_y, new_shape) then
     cur_x = cur_x - 1
     current_piece.shape = new_shape
-  elseif
-  not check_collision(cur_x + 1, cur_y, new_shape) then
+    rotated = true
+  -- 墙踢 Right
+  elseif not check_collision(cur_x + 1, cur_y, new_shape) then
     cur_x = cur_x + 1
     current_piece.shape = new_shape
+    rotated = true
+  -- I条专用墙踢 Left-2
+  elseif current_piece.id == 1 and not check_collision(cur_x - 2, cur_y, new_shape) then
+    cur_x = cur_x - 2
+    current_piece.shape = new_shape
+    rotated = true
+  -- I条专用墙踢 Right-2
+  elseif current_piece.id == 1 and not check_collision(cur_x + 2, cur_y, new_shape) then
+    cur_x = cur_x + 2
+    current_piece.shape = new_shape
+    rotated = true
+  -- 地板踢: 如果卡在地里，尝试向上提1格
+  elseif not check_collision(cur_x, cur_y - 1, new_shape) then
+    cur_y = cur_y - 1
+    current_piece.shape = new_shape
+    rotated = true
+  -- 强力地板踢: I条竖转横可能需要提2格
+  elseif not check_collision(cur_x, cur_y - 2, new_shape) then
+    cur_y = cur_y - 2
+    current_piece.shape = new_shape
+    rotated = true
   end
+
+  return rotated
 end
 
 function game_update()
-  -- 暂停功能逻辑
+  -- 暂停处理
   if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Space()) then
     if state == "PLAYING" then
       state = "PAUSED"
@@ -330,23 +363,31 @@ function game_update()
       last_tick = reaper.time_precise() -- 恢复时重置计时，防止瞬间下落
     end
   end
-
-  -- 如果是暂停状态，直接返回，不执行任何更新
-  if state == "PAUSED" or state == "MENU" then return end
   if state ~= "PLAYING" then return end
 
   local now = reaper.time_precise()
-  local forced_drop = false
+  local action_performed = false -- 标记本帧是否有移动/旋转操作
 
+  -- 左右移动
   if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_A()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_LeftArrow()) then
-    if not check_collision(cur_x - 1, cur_y, current_piece.shape) then cur_x = cur_x - 1 end
+    if not check_collision(cur_x - 1, cur_y, current_piece.shape) then
+      cur_x = cur_x - 1
+      action_performed = true
+    end
   end
   if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_D()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_RightArrow()) then
-    if not check_collision(cur_x + 1, cur_y, current_piece.shape) then cur_x = cur_x + 1 end
+    if not check_collision(cur_x + 1, cur_y, current_piece.shape) then
+      cur_x = cur_x + 1
+      action_performed = true
+    end
   end
+  local current_drop_interval = tick_speed
+  -- 软下落
   if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_S()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_DownArrow()) then
-    if now - last_tick > 0.05 then forced_drop = true end
+    current_drop_interval = 0.05 
   end
+
+  -- 硬下落
   if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_W()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_UpArrow()) then
     while not check_collision(cur_x, cur_y + 1, current_piece.shape) do cur_y = cur_y + 1 end
     lock_piece()
@@ -354,21 +395,53 @@ function game_update()
     return 
   end
 
-  if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_J()) then rotate_piece("left") end
-  if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_K()) then rotate_piece("right") end
+  -- 旋转
+  if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_J()) then
+    if rotate_piece("left") then action_performed = true end
+  end
+  if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_K()) then
+    if rotate_piece("right") then action_performed = true end
+  end
 
+  -- Hold
   if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Q()) then 
     attempt_hold()
     last_tick = now 
   end
 
-  if forced_drop or (now - last_tick > tick_speed) then
-    if not check_collision(cur_x, cur_y + 1, current_piece.shape) then
+  -- 检查是否即将发生触底碰撞
+  local is_grounded = check_collision(cur_x, cur_y + 1, current_piece.shape)
+
+  -- 处理重力下落
+  if now - last_tick > current_drop_interval then
+    if not is_grounded then
       cur_y = cur_y + 1
+      last_tick = now
+      lock_start_time = nil -- 只要发生了下落，就重置锁定计时
+      is_grounded = false   -- 更新状态
     else
-      lock_piece()
+      -- 即使时间到了，但因为触底无法下落，只更新时间戳，不移动，不强制锁定
+      last_tick = now
     end
-    last_tick = now
+  end
+  -- 处理锁定计时 (Infinity Rule)
+  if is_grounded then
+    -- 如果是刚触底，开始计时
+    if not lock_start_time then
+      lock_start_time = now
+    end
+    -- 只要移动或旋转就重置计时器
+    if action_performed then
+      lock_start_time = now
+    end
+    -- 只有超时才锁定
+    if now - lock_start_time > LOCK_DELAY then
+      lock_piece()
+      lock_start_time = nil
+    end
+  else
+    -- 悬空状态下清除计时
+    lock_start_time = nil
   end
 end
 
@@ -379,12 +452,13 @@ function loop()
   reaper.ImGui_SetNextWindowSize(ctx, total_w, total_h, reaper.ImGui_Cond_FirstUseEver())
 
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), 6.0)
-  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(),  4.0)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(), 4.0)
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowTitleAlign(), 0.5, 0.5) -- 0.5, 0.5 为居中
 
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(), 0x181818FF)
-
+  reaper.ImGui_PushFont(ctx, my_font, 14)
   local visible, open = reaper.ImGui_Begin(ctx, 'Blocks DS', true)
+  reaper.ImGui_PopFont(ctx)
   if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Escape()) then
     open = false
   end
@@ -417,9 +491,10 @@ function loop()
       local temp_piece = create_piece_from_id(hold_piece_id)
       draw_preview_piece(draw_list, temp_piece.shape, COLORS[hold_piece_id], hold_box_x, hold_box_y, NEXT_BOX_SIZE, PREVIEW_BLOCK_SIZE)
     end
-    reaper.ImGui_EndGroup(ctx)
 
-    reaper.ImGui_Dummy(ctx, 0, 240)
+    reaper.ImGui_EndGroup(ctx)
+    reaper.ImGui_Dummy(ctx, 0, 260)
+
     reaper.ImGui_BeginGroup(ctx)
     -- reaper.ImGui_Text(ctx, "TETRIS")
     reaper.ImGui_TextColored(ctx, 0xFFFF00FF, "TOP: " .. tostring(high_score))
@@ -514,9 +589,10 @@ function loop()
 
     reaper.ImGui_Dummy(ctx, 0, 5)
     reaper.ImGui_PushFont(ctx, my_font, 16)
-    local btn_text = (state == "MENU") and "START" or "RESTART"
-    local start_by_key = (state == "MENU") and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter())
-    if reaper.ImGui_Button(ctx, btn_text, 100, 40) or start_by_key then
+    -- local btn_text = (state == "MENU") and "START" or "RESTART"
+    -- reaper.ImGui_Button(ctx, btn_text, 100, 40)
+    local start_by_key = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter())
+    if start_by_key then
       init_game()
       score_lines = 0
       state = "PLAYING"
