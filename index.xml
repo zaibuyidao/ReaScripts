@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f6c856113ed32c5444ee626f8bb2ebc2a3500cd7">
+<index version="1" name="zaibuyidao Scripts" commit="76df47e0919c9bfce523c4ee763323b81f7b2a56">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -300,6 +300,11 @@
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main" file="Blocks DS/zaibuyidao_Blocks DS.lua">https://github.com/zaibuyidao/ReaScripts/raw/f6c856113ed32c5444ee626f8bb2ebc2a3500cd7/Games/Blocks%20DS/zaibuyidao_Blocks%20DS.lua</source>
         <source file="Blocks DS/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/f6c856113ed32c5444ee626f8bb2ebc2a3500cd7/Games/Blocks%20DS/lib/utils.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2025-12-01T14:44:50Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main" file="Blocks DS/zaibuyidao_Blocks DS.lua">https://github.com/zaibuyidao/ReaScripts/raw/76df47e0919c9bfce523c4ee763323b81f7b2a56/Games/Blocks%20DS/zaibuyidao_Blocks%20DS.lua</source>
+        <source file="Blocks DS/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/76df47e0919c9bfce523c4ee763323b81f7b2a56/Games/Blocks%20DS/lib/utils.lua</source>
       </version>
     </reapack>
   </category>
