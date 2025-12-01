@@ -281,15 +281,20 @@ function check_lines()
         break
       end
     end
+
     if full then
       lines_cleared = lines_cleared + 1
-      for ky = y, 2, -1 do grid[ky] = grid[ky-1] end
-      grid[1] = {}
-      for kx = 1, COLS do grid[1][kx] = 0 end
+      table.remove(grid, y)
+      local new_row = {}
+      for x = 1, COLS do
+        new_row[x] = 0
+      end
+      table.insert(grid, 1, new_row)
     else
       y = y - 1
     end
   end
+  
   if lines_cleared > 0 then
     score_lines = score_lines + lines_cleared
     -- 检查并更新最高分
@@ -297,10 +302,9 @@ function check_lines()
       high_score = score_lines
       reaper.SetExtState("TetrisUltimate", "HighScore", tostring(high_score), true)
     end
-    update_level_speed() -- [新增] 消除行后更新等级和速度
-
     -- 可以保留胜利条件，或者让其无限进行直到GameOver
     -- if score_lines >= WIN_LINES then state = "WIN" end
+    update_level_speed()
   end
 end
 
