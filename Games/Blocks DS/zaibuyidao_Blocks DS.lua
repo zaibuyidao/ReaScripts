@@ -58,7 +58,9 @@ local my_font = reaper.ImGui_CreateFont('sans-serif', 24)
 reaper.ImGui_Attach(ctx, my_font)
 
 -- 配置参数
-local COLS, ROWS = 10, 20
+local COLS, ROWS = 10, 23 -- 总行数设置为23 (3行缓冲区 + 20行可视区)
+local VISIBLE_ROWS = 20
+local HIDDEN_ROWS = ROWS - VISIBLE_ROWS -- 3行隐藏
 local BLOCK_SIZE = 20
 local PREVIEW_BLOCK_SIZE = 15
 local UI_LEFT_WIDTH = 70
@@ -118,7 +120,7 @@ local tick_speed = 0.8  -- 当前下落速度
 local state = "MENU"    -- 初始状态
 local last_tick = reaper.time_precise()
 local current_piece = nil
-local cur_x, cur_y = 5, 1
+local cur_x, cur_y = 5, 2
 local show_ghost = true -- Ghost Piece 开关
 local clear_effects = {} -- 消除特效列表
 local pending_clear_lines = {} -- 等待消除的行号列表
@@ -227,10 +229,18 @@ function new_piece()
   current_piece = table.remove(next_queue, 1)
   table.insert(next_queue, get_random_piece_data())
 
-  cur_x, cur_y = 5, 1
+  -- 动态设置生成位置
+  cur_x = 5
+  if current_piece.id <= 3 then
+    cur_y = 3
+  else
+    cur_y = 2
+  end
+
   can_hold = true
   lock_start_time = nil -- 新方块产生时，清除锁定计时
 
+  -- 碰撞检测
   if check_collision(cur_x, cur_y, current_piece.shape) then
     state = "GAMEOVER"
   end
@@ -249,7 +259,14 @@ function attempt_hold()
     local temp_id = hold_piece_id
     hold_piece_id = current_id
     current_piece = create_piece_from_id(temp_id)
-    cur_x, cur_y = 5, 1
+
+    cur_x = 5
+    if current_piece.id == 1 then
+      cur_y = 3
+    else
+      cur_y = 2
+    end
+
     can_hold = false
     lock_start_time = nil -- Hold交换后，清除锁定计时
   end
@@ -505,7 +522,7 @@ end
 
 function loop()
   local total_w = UI_LEFT_WIDTH + (COLS * BLOCK_SIZE) + UI_RIGHT_WIDTH + 30
-  local total_h = (ROWS * BLOCK_SIZE) + 40
+  local total_h = (VISIBLE_ROWS * BLOCK_SIZE) + 40
 
   reaper.ImGui_SetNextWindowSize(ctx, total_w, total_h, reaper.ImGui_Cond_FirstUseEver())
 
@@ -526,7 +543,7 @@ function loop()
     local cursor_x, cursor_y = reaper.ImGui_GetCursorScreenPos(ctx)
 
     local board_w = COLS * BLOCK_SIZE
-    local board_h = ROWS * BLOCK_SIZE
+    local board_h = VISIBLE_ROWS * BLOCK_SIZE
 
     local left_ui_x = cursor_x
     local board_x = cursor_x + UI_LEFT_WIDTH + 10
@@ -564,14 +581,18 @@ function loop()
     -- 绘制中间游戏区
     reaper.ImGui_DrawList_AddRectFilled(draw_list, board_x, cursor_y, board_x + board_w, cursor_y + board_h, 0x000000FF)
     reaper.ImGui_DrawList_AddRect(draw_list, board_x, cursor_y, board_x + board_w, cursor_y + board_h, COLORS['border'], 0.0, 0, 2.0)
-
+    -- 设置裁切区域, 位于前3行缓冲区的方块会被ClipRect裁掉不显示
+    reaper.ImGui_DrawList_PushClipRect(draw_list, board_x, cursor_y, board_x + board_w, cursor_y + board_h, true)
     -- 绘制网格
     for y = 1, ROWS do
+      local draw_y = y - HIDDEN_ROWS -- 坐标变换: 逻辑第4行，视觉第1行
       -- 检查当前行是否正在消除中
       local is_clearing_row = false
       if state == "CLEARING" then
         for _, cy in ipairs(pending_clear_lines) do
-          if y == cy then is_clearing_row = true; break end
+          if y == cy then
+            is_clearing_row = true
+            break end
         end
       end
 
@@ -580,7 +601,7 @@ function loop()
         for x = 1, COLS do
           if grid[y][x] ~= 0 then
             local px = board_x + (x-1) * BLOCK_SIZE
-            local py = cursor_y + (y-1) * BLOCK_SIZE
+            local py = cursor_y + (draw_y-1) * BLOCK_SIZE
             reaper.ImGui_DrawList_AddRectFilled(draw_list, px + 1, py + 1, px + BLOCK_SIZE - 1, py + BLOCK_SIZE - 1, COLORS[grid[y][x]])
           end
         end
@@ -602,7 +623,8 @@ function loop()
         local col = (0xFFFFFF << 8) | alpha
         -- 计算特效的位置
         local px = board_x
-        local py = cursor_y + (effect.y - 1) * BLOCK_SIZE
+        local draw_y = effect.y - HIDDEN_ROWS
+        local py = cursor_y + (draw_y - 1) * BLOCK_SIZE
         -- 绘制覆盖整行的闪光矩形
         reaper.ImGui_DrawList_AddRectFilled(draw_list, px, py, px + board_w, py + BLOCK_SIZE, col)
       end
@@ -621,8 +643,9 @@ function loop()
         local x = cur_x + p.x
         local y = ghost_y + p.y
         if y >= 1 and y <= ROWS then
+          local draw_y = y - HIDDEN_ROWS
           local px = board_x + (x-1) * BLOCK_SIZE
-          local py = cursor_y + (y-1) * BLOCK_SIZE
+          local py = cursor_y + (draw_y-1) * BLOCK_SIZE
           -- 绘制半透明填充
           reaper.ImGui_DrawList_AddRectFilled(draw_list, px + 1, py + 1, px + BLOCK_SIZE - 1, py + BLOCK_SIZE - 1, COLORS['ghost'])
           -- 绘制白色虚线边框效果
@@ -631,18 +654,21 @@ function loop()
       end
     end
 
+    -- 绘制当前方块
     if (state == "PLAYING" or state == "PAUSED") and current_piece then
       for _, p in ipairs(current_piece.shape) do
         local x = cur_x + p.x
         local y = cur_y + p.y
         if y >= 1 and y <= ROWS then
+          local draw_y = y - HIDDEN_ROWS
           local px = board_x + (x-1) * BLOCK_SIZE
-          local py = cursor_y + (y-1) * BLOCK_SIZE
+          local py = cursor_y + (draw_y-1) * BLOCK_SIZE
           reaper.ImGui_DrawList_AddRectFilled(draw_list, px + 1, py + 1, px + BLOCK_SIZE - 1, py + BLOCK_SIZE - 1, COLORS[current_piece.id])
         end
       end
     end
 
+    reaper.ImGui_DrawList_PopClipRect(draw_list)
     -- 绘制右侧 UI 面板
     reaper.ImGui_SetCursorScreenPos(ctx, right_ui_x, cursor_y)
     reaper.ImGui_BeginGroup(ctx)
