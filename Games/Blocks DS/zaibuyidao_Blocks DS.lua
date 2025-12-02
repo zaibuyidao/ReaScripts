@@ -69,6 +69,7 @@ local WIN_LINES = 150 -- 实际上现在是无限玩，但保留这个作为目�
 local MAX_LEVEL = 20  -- 最高等级
 local LOCK_DELAY = 0.5 -- 锁定延迟时间(秒)
 local lock_start_time = nil -- 记录触底开始的时间
+local CLEAR_ANIMATION_DURATION = 0.4 -- 消除动画持续时间(秒)
 
 -- 速度表(秒/格)
 local SPEED_TABLE = {
@@ -119,6 +120,9 @@ local last_tick = reaper.time_precise()
 local current_piece = nil
 local cur_x, cur_y = 5, 1
 local show_ghost = true -- Ghost Piece 开关
+local clear_effects = {} -- 消除特效列表
+local pending_clear_lines = {} -- 等待消除的行号列表
+local clear_start_time = nil   -- 消除动画开始时间
 
 function get_random_piece_data()
   local type_id = math.random(1, 7)
@@ -204,6 +208,9 @@ function init_game()
   can_hold = true
   score_lines = 0
   current_piece = nil -- 初始化时清空当前方块
+  clear_effects = {}
+  pending_clear_lines = {}
+  clear_start_time = nil
 
   -- 读取存储的最高分
   local saved_score = reaper.GetExtState("TetrisUltimate", "HighScore")
@@ -266,14 +273,18 @@ function lock_piece()
       grid[y][x] = current_piece.id
     end
   end
-  check_lines()
-  if state == "PLAYING" then new_piece() end
+  -- 先检查是否有行需要消除
+  local lines_found = check_lines()
+  if not lines_found and state == "PLAYING" then 
+    new_piece() 
+  end
 end
 
+-- 检测并开始消除动画
 function check_lines()
-  local lines_cleared = 0
-  local y = ROWS
-  while y >= 1 do
+  local lines_to_clear = {}
+  -- 标记所有满行
+  for y = 1, ROWS do
     local full = true
     for x = 1, COLS do
       if grid[y][x] == 0 then
@@ -281,31 +292,65 @@ function check_lines()
         break
       end
     end
-
     if full then
-      lines_cleared = lines_cleared + 1
-      table.remove(grid, y)
-      local new_row = {}
-      for x = 1, COLS do
-        new_row[x] = 0
-      end
-      table.insert(grid, 1, new_row)
-    else
-      y = y - 1
+      table.insert(lines_to_clear, y)
     end
   end
-  
-  if lines_cleared > 0 then
-    score_lines = score_lines + lines_cleared
-    -- 检查并更新最高分
+
+  if #lines_to_clear > 0 then
+    state = "CLEARING"
+    pending_clear_lines = lines_to_clear
+    clear_start_time = reaper.time_precise()
+
+    for _, line_y in ipairs(lines_to_clear) do
+      table.insert(clear_effects, {
+        y = line_y, -- 记录视觉上的行号
+        start_time = clear_start_time,
+        duration = CLEAR_ANIMATION_DURATION -- 特效持续时间
+      })
+    end
+    return true
+  end
+  return false
+end
+
+-- 动画结束后执行实际的数据更新
+function resolve_lines()
+  if #pending_clear_lines > 0 then
+    -- 更新分数
+    score_lines = score_lines + #pending_clear_lines
     if score_lines > high_score then
       high_score = score_lines
       reaper.SetExtState("TetrisUltimate", "HighScore", tostring(high_score), true)
     end
-    -- 可以保留胜利条件，或者让其无限进行直到GameOver
-    -- if score_lines >= WIN_LINES then state = "WIN" end
     update_level_speed()
+
+    -- 重构网格 (消除行并下落)
+    local new_grid = {}
+    -- 在顶部填充对应数量的空行
+    for i = 1, #pending_clear_lines do
+      local row = {}
+      for x = 1, COLS do row[x] = 0 end
+      table.insert(new_grid, row)
+    end
+    -- 复制所有未消除的行
+    for y = 1, ROWS do
+      local is_cleared = false
+      for _, cleared_y in ipairs(pending_clear_lines) do
+        if y == cleared_y then is_cleared = true; break end
+      end
+
+      if not is_cleared then
+        table.insert(new_grid, grid[y])
+      end
+    end
+
+    grid = new_grid
+    pending_clear_lines = {}
   end
+
+  state = "PLAYING"
+  new_piece()
 end
 
 function rotate_piece(dir)
@@ -367,6 +412,15 @@ function game_update()
       last_tick = reaper.time_precise() -- 恢复时重置计时，防止瞬间下落
     end
   end
+
+  if state == "CLEARING" then
+    local now = reaper.time_precise()
+    if now - clear_start_time >= CLEAR_ANIMATION_DURATION then
+      resolve_lines()
+    end
+    return 
+  end
+
   if state ~= "PLAYING" then return end
 
   local now = reaper.time_precise()
@@ -511,13 +565,46 @@ function loop()
     reaper.ImGui_DrawList_AddRectFilled(draw_list, board_x, cursor_y, board_x + board_w, cursor_y + board_h, 0x000000FF)
     reaper.ImGui_DrawList_AddRect(draw_list, board_x, cursor_y, board_x + board_w, cursor_y + board_h, COLORS['border'], 0.0, 0, 2.0)
 
+    -- 绘制网格
     for y = 1, ROWS do
-      for x = 1, COLS do
-        if grid[y][x] ~= 0 then
-          local px = board_x + (x-1) * BLOCK_SIZE
-          local py = cursor_y + (y-1) * BLOCK_SIZE
-          reaper.ImGui_DrawList_AddRectFilled(draw_list, px + 1, py + 1, px + BLOCK_SIZE - 1, py + BLOCK_SIZE - 1, COLORS[grid[y][x]])
+      -- 检查当前行是否正在消除中
+      local is_clearing_row = false
+      if state == "CLEARING" then
+        for _, cy in ipairs(pending_clear_lines) do
+          if y == cy then is_clearing_row = true; break end
         end
+      end
+
+      -- 只有非消除行才绘制方块
+      if not is_clearing_row then
+        for x = 1, COLS do
+          if grid[y][x] ~= 0 then
+            local px = board_x + (x-1) * BLOCK_SIZE
+            local py = cursor_y + (y-1) * BLOCK_SIZE
+            reaper.ImGui_DrawList_AddRectFilled(draw_list, px + 1, py + 1, px + BLOCK_SIZE - 1, py + BLOCK_SIZE - 1, COLORS[grid[y][x]])
+          end
+        end
+      end
+    end
+
+    -- 渲染消除特效
+    local now = reaper.time_precise()
+    for i = #clear_effects, 1, -1 do
+      local effect = clear_effects[i]
+      local age = now - effect.start_time
+
+      if age >= effect.duration then
+        table.remove(clear_effects, i)
+      else
+        -- 计算透明度，从 255 渐变到 0
+        local progress = age / effect.duration
+        local alpha = math.floor((1.0 - progress) * 200) -- 最大透明度200
+        local col = (0xFFFFFF << 8) | alpha
+        -- 计算特效的位置
+        local px = board_x
+        local py = cursor_y + (effect.y - 1) * BLOCK_SIZE
+        -- 绘制覆盖整行的闪光矩形
+        reaper.ImGui_DrawList_AddRectFilled(draw_list, px, py, px + board_w, py + BLOCK_SIZE, col)
       end
     end
 
