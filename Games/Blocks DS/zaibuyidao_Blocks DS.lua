@@ -725,7 +725,11 @@ function loop()
 
     reaper.ImGui_EndGroup(ctx)
 
-    if state == "GAMEOVER" or state == "WIN" or state == "PAUSED" then
+    if state == "GAMEOVER" or state == "WIN" or state == "PAUSED" or state == "MENU" then
+      -- 绘制半透明黑色背景遮罩
+      local overlay_col = 0x000000D0 
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, board_x, cursor_y, board_x + board_w, cursor_y + board_h, overlay_col)
+
       reaper.ImGui_PushFont(ctx, my_font, 24)
       local txt = "GAME OVER"
       local col = 0xFF0000FF
@@ -741,8 +745,15 @@ function loop()
         col = 0xFFFFFFFF
       end
 
-      local w, h = reaper.ImGui_CalcTextSize(ctx, txt)
-      reaper.ImGui_SetCursorScreenPos(ctx, board_x + (board_w - w)/2, cursor_y + board_h/2 - h)
+      -- 计算文字居中位置
+      local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, txt)
+      local text_x = board_x + (board_w - text_w) / 2
+      local text_y = cursor_y + board_h / 2 - text_h
+      -- 绘制文字阴影，进一步增强对比度
+      reaper.ImGui_SetCursorScreenPos(ctx, text_x + 2, text_y + 2)
+      reaper.ImGui_TextColored(ctx, 0x000000FF, txt)
+      -- 绘制前景高亮文字
+      reaper.ImGui_SetCursorScreenPos(ctx, text_x, text_y)
       reaper.ImGui_TextColored(ctx, col, txt)
       reaper.ImGui_PopFont(ctx)
     end
