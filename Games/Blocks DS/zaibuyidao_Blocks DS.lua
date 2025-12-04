@@ -72,6 +72,13 @@ local MAX_LEVEL = 20  -- 最高等级
 local LOCK_DELAY = 0.5 -- 锁定延迟时间(秒)
 local lock_start_time = nil -- 记录触底开始的时间
 local CLEAR_ANIMATION_DURATION = 0.4 -- 消除动画持续时间(秒)
+local BOTTOM_CLEAR_ANIMATION_DURATION = 0.6
+
+-- 道具配置
+local ITEM_TRIGGER_LINES = 4 -- 累积消除多少行触发特殊方块
+local ITEM_STAR_DURATION = 5 -- 星星道具持续时间
+local ITEM_TYPE = { NONE = 0, STAR = 1, CLEAR = 2 }
+local ITEM_ICONS = { [0] = "", [1] = "✮", [2] = "⇢" }
 
 -- 速度表(秒/格)
 local SPEED_TABLE = {
@@ -94,7 +101,9 @@ local COLORS = {
   ['border'] = 0xFFFFFF88,
   ['hold_bg'] = 0x333333FF, 
   ['next_bg'] = 0x333333FF,
-  ['ghost'] = 0xFFFFFF33
+  ['ghost'] = 0xFFFFFF33,
+  ['special_txt'] = 0x000000FF, -- 特殊符号颜色 (黑色)
+  ['item_clear_anim'] = 0xFFFF00AA
 }
 
 -- 方块形状
@@ -126,7 +135,23 @@ local clear_effects = {} -- 消除特效列表
 local pending_clear_lines = {} -- 等待消除的行号列表
 local clear_start_time = nil   -- 消除动画开始时间
 
+-- 道具变量
+local enable_item_mode = false
+local lines_counter_for_item = 0
+local special_block_on_field = false
+local held_item = ITEM_TYPE.NONE
+local is_star_mode = false
+local star_mode_end_time = 0
+local bottom_clear_active = false
+local bottom_clear_start_time = 0
+
 function get_random_piece_data()
+  if is_star_mode then
+    local shape_data = {}
+    for i, p in ipairs(SHAPES[1]) do shape_data[i] = {x=p[1], y=p[2]} end
+    return { id = 1, shape = shape_data }
+  end
+
   local type_id = math.random(1, 7)
   local shape_data = {}
   for i, p in ipairs(SHAPES[type_id]) do
@@ -154,8 +179,28 @@ function help_marker(desc)
   end
 end
 
+-- 绘制单个格子
+function draw_block_rect(draw_list, x, y, size, col, is_special)
+  reaper.ImGui_DrawList_AddRectFilled(draw_list, x + 1, y + 1, x + size - 1, y + size - 1, col)
+  
+  if is_special then
+    local font_size = size * 0.8
+    reaper.ImGui_PushFont(ctx, my_font, font_size)
+
+    local txt = "◈"
+    local tw, th = reaper.ImGui_CalcTextSize(ctx, txt)
+    local txt_x = x + (size - tw) / 2
+    local txt_y = y + (size - th) / 2
+
+    reaper.ImGui_DrawList_AddText(draw_list, txt_x, txt_y, COLORS['special_txt'], txt)
+    reaper.ImGui_PopFont(ctx)
+  end
+end
+
 -- 预览方块绘制 (自动居中)
-function draw_preview_piece(draw_list, shape, color, box_x, box_y, box_size, blk_size)
+function draw_preview_piece(draw_list, piece, box_x, box_y, box_size, blk_size)
+  local shape = piece.shape
+  local color = COLORS[piece.id]
   local min_x, max_x, min_y, max_y = 100, -100, 100, -100
   for _, p in ipairs(shape) do
     if p.x and p.y then
@@ -174,11 +219,11 @@ function draw_preview_piece(draw_list, shape, color, box_x, box_y, box_size, blk
   local offset_x = box_x + (box_size - piece_pixel_w) / 2
   local offset_y = box_y + (box_size - piece_pixel_h) / 2
 
-  for _, p in ipairs(shape) do
+  for i, p in ipairs(shape) do
     local draw_x = offset_x + (p.x - min_x) * blk_size
     local draw_y = offset_y + (p.y - min_y) * blk_size
 
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, draw_x, draw_y, draw_x + blk_size - 1, draw_y + blk_size - 1, color)
+    draw_block_rect(draw_list, draw_x, draw_y, blk_size, color, false)
     reaper.ImGui_DrawList_AddRect(draw_list, draw_x, draw_y, draw_x + blk_size - 1, draw_y + blk_size - 1, 0xFFFFFF44)
   end
 end
@@ -194,17 +239,19 @@ end
 
 function init_game()
   grid = {}
+  grid_special = {}
   for y = 1, ROWS do
     grid[y] = {}
+    grid_special[y] = {}
     for x = 1, COLS do
       grid[y][x] = 0
+      grid_special[y][x] = false
     end
   end
 
   next_queue = {}
-  for i = 1, 6 do
-    table.insert(next_queue, get_random_piece_data())
-  end
+  is_star_mode = false
+  for i = 1, 6 do table.insert(next_queue, get_random_piece_data()) end
 
   hold_piece_id = nil
   can_hold = true
@@ -213,6 +260,12 @@ function init_game()
   clear_effects = {}
   pending_clear_lines = {}
   clear_start_time = nil
+  
+  lines_counter_for_item = 0
+  special_block_on_field = false
+  held_item = ITEM_TYPE.NONE
+  star_mode_end_time = 0
+  bottom_clear_active = false
 
   -- 读取存储的最高分
   local saved_score = reaper.GetExtState("TetrisUltimate", "HighScore")
@@ -222,6 +275,36 @@ function init_game()
     high_score = 0
   end
   update_level_speed() -- 初始化速度
+end
+
+-- 尝试在现有的格子中随机生成一个特殊方块
+function spawn_special_block()
+  -- 先清除场上所有旧的特殊标记，保证刷新位置
+  for y = 1, ROWS do
+    for x = 1, COLS do
+      if grid_special[y][x] then
+        grid_special[y][x] = false
+      end
+    end
+  end
+  -- 寻找所有可用的实体方块
+  local candidates = {}
+  for y = 1, ROWS do
+    for x = 1, COLS do
+      -- 必须是实体格子
+      if grid[y][x] ~= 0 then
+        table.insert(candidates, {x=x, y=y})
+      end
+    end
+  end
+  -- 随机选择一个标记为特殊
+  if #candidates > 0 then
+    local c = candidates[math.random(#candidates)]
+    grid_special[c.y][c.x] = true
+    special_block_on_field = true
+    return true
+  end
+  return false
 end
 
 function new_piece()
@@ -297,9 +380,25 @@ function lock_piece()
   end
 end
 
+function lock_piece()
+  for i, p in ipairs(current_piece.shape) do
+    local x = cur_x + p.x
+    local y = cur_y + p.y
+    if y >= 1 and y <= ROWS and x >= 1 and x <= COLS then
+      grid[y][x] = current_piece.id
+    end
+  end
+  -- 先检查是否有行需要消除
+  local lines_found = check_lines()
+  if not lines_found then
+    if state == "PLAYING" then new_piece() end
+  end
+end
+
 -- 检测并开始消除动画
 function check_lines()
   local lines_to_clear = {}
+  local special_cleared = false
   -- 标记所有满行
   for y = 1, ROWS do
     local full = true
@@ -311,6 +410,11 @@ function check_lines()
     end
     if full then
       table.insert(lines_to_clear, y)
+      for x = 1, COLS do
+        if grid_special[y][x] then
+          special_cleared = true
+        end
+      end
     end
   end
 
@@ -318,6 +422,14 @@ function check_lines()
     state = "CLEARING"
     pending_clear_lines = lines_to_clear
     clear_start_time = reaper.time_precise()
+
+    -- 触发道具获取逻辑
+    if enable_item_mode and special_cleared then
+      local r = math.random()
+      if r < 0.5 then held_item = ITEM_TYPE.STAR else held_item = ITEM_TYPE.CLEAR end
+      special_block_on_field = false
+      lines_counter_for_item = 0 
+    end
 
     for _, line_y in ipairs(lines_to_clear) do
       table.insert(clear_effects, {
@@ -334,6 +446,10 @@ end
 -- 动画结束后执行实际的数据更新
 function resolve_lines()
   if #pending_clear_lines > 0 then
+    -- 如果没得到道具，且不在特殊模式下，增加计数
+    if enable_item_mode and held_item == ITEM_TYPE.NONE and not is_star_mode then
+      lines_counter_for_item = lines_counter_for_item + #pending_clear_lines
+    end
     -- 更新分数
     score_lines = score_lines + #pending_clear_lines
     if score_lines > high_score then
@@ -344,30 +460,112 @@ function resolve_lines()
 
     -- 重构网格 (消除行并下落)
     local new_grid = {}
+    local new_grid_special = {}
     -- 在顶部填充对应数量的空行
     for i = 1, #pending_clear_lines do
       local row = {}
-      for x = 1, COLS do row[x] = 0 end
+      local row_spec = {}
+      for x = 1, COLS do
+        row[x] = 0
+        row_spec[x] = false
+      end
       table.insert(new_grid, row)
+      table.insert(new_grid_special, row_spec)
     end
     -- 复制所有未消除的行
     for y = 1, ROWS do
       local is_cleared = false
       for _, cleared_y in ipairs(pending_clear_lines) do
-        if y == cleared_y then is_cleared = true; break end
+        if y == cleared_y then
+          is_cleared = true
+          break
+        end
       end
 
       if not is_cleared then
         table.insert(new_grid, grid[y])
+        table.insert(new_grid_special, grid_special[y])
       end
     end
 
     grid = new_grid
+    grid_special = new_grid_special
     pending_clear_lines = {}
+    
+    -- 消行并重排后，如果满足条件消除>=10行，立刻刷新特殊格位置
+    if enable_item_mode and lines_counter_for_item >= ITEM_TRIGGER_LINES and held_item == ITEM_TYPE.NONE and not is_star_mode then
+      spawn_special_block() 
+    end
   end
 
   state = "PLAYING"
   new_piece()
+end
+
+function trigger_bottom_clear()
+  local has_blocks = false
+  for y = ROWS, ROWS - 1, -1 do
+    for x = 1, COLS do
+      if grid[y][x] ~= 0 then
+        has_blocks = true
+        break
+      end
+    end
+  end
+
+  if not has_blocks then
+    held_item = ITEM_TYPE.NONE
+    lines_counter_for_item = 0
+    return
+  end
+
+  state = "CLEARING_BOTTOM"
+  bottom_clear_active = true
+  bottom_clear_start_time = reaper.time_precise()
+  held_item = ITEM_TYPE.NONE
+  lines_counter_for_item = 0
+end
+
+function resolve_bottom_clear()
+  local remove_count = 2
+  
+  local new_rows = {}
+  local new_rows_spec = {}
+  for i = 1, remove_count do
+    local r = {}
+    local rs = {}
+    for x = 1, COLS do
+      r[x] = 0
+      rs[x] = false
+    end
+    table.insert(new_rows, r)
+    table.insert(new_rows_spec, rs)
+  end
+
+  local final_grid = {}
+  local final_grid_spec = {}
+  
+  for i=1, remove_count do
+    table.insert(final_grid, new_rows[i])
+    table.insert(final_grid_spec, new_rows_spec[i])
+  end
+  
+  for y=1, ROWS - remove_count do
+    table.insert(final_grid, grid[y])
+    table.insert(final_grid_spec, grid_special[y])
+  end
+
+  for y = ROWS - remove_count + 1, ROWS do
+    for x=1, COLS do
+        if grid_special[y][x] then special_block_on_field = false end
+    end
+  end
+
+  grid = final_grid
+  grid_special = final_grid_spec
+  
+  bottom_clear_active = false
+  state = "PLAYING"
 end
 
 function rotate_piece(dir)
@@ -420,6 +618,7 @@ function rotate_piece(dir)
 end
 
 function game_update()
+  local now = reaper.time_precise()
   -- 暂停处理
   if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Space()) then
     if state == "PLAYING" then
@@ -431,16 +630,57 @@ function game_update()
   end
 
   if state == "CLEARING" then
-    local now = reaper.time_precise()
     if now - clear_start_time >= CLEAR_ANIMATION_DURATION then
       resolve_lines()
     end
     return 
   end
 
+  if state == "CLEARING_BOTTOM" then
+    if now - bottom_clear_start_time >= BOTTOM_CLEAR_ANIMATION_DURATION then
+      resolve_bottom_clear()
+    end
+    return
+  end
+
   if state ~= "PLAYING" then return end
 
-  local now = reaper.time_precise()
+
+  -- 检查星星模式是否过期
+  if is_star_mode and now >= star_mode_end_time then
+    is_star_mode = false
+    -- 立刻刷新队列为随机
+    for i = 1, #next_queue do
+      next_queue[i] = get_random_piece_data()
+    end
+  end
+
+  -- 使用道具(E键)
+  if enable_item_mode and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_E()) then
+    if held_item == ITEM_TYPE.STAR then
+      is_star_mode = true
+      star_mode_end_time = now + ITEM_STAR_DURATION
+      held_item = ITEM_TYPE.NONE
+      lines_counter_for_item = 0
+      
+      local new_i = create_piece_from_id(1) -- I piece
+      if check_collision(cur_x, cur_y, new_i.shape) then
+        if not check_collision(cur_x, cur_y-1, new_i.shape) then cur_y = cur_y - 1
+        elseif not check_collision(cur_x-1, cur_y, new_i.shape) then cur_x = cur_x - 1
+        elseif not check_collision(cur_x+1, cur_y, new_i.shape) then cur_x = cur_x + 1
+        else cur_x, cur_y = 5, 3 end
+      end
+      current_piece = new_i
+
+      for i = 1, #next_queue do
+        next_queue[i] = create_piece_from_id(1)
+      end
+    elseif held_item == ITEM_TYPE.CLEAR then
+      trigger_bottom_clear()
+      return
+    end
+  end
+
   local action_performed = false -- 标记本帧是否有移动/旋转操作
 
   -- 左右移动
@@ -553,7 +793,7 @@ function loop()
     reaper.ImGui_SetCursorScreenPos(ctx, left_ui_x, cursor_y)
     reaper.ImGui_BeginGroup(ctx)
     reaper.ImGui_PushFont(ctx, my_font, 16)
-    reaper.ImGui_Text(ctx, "HOLD:")
+    reaper.ImGui_Text(ctx, "HOLD")
 
     local hold_box_x = left_ui_x + 0
     local hold_box_y = cursor_y + 30
@@ -564,11 +804,32 @@ function loop()
 
     if hold_piece_id then
       local temp_piece = create_piece_from_id(hold_piece_id)
-      draw_preview_piece(draw_list, temp_piece.shape, COLORS[hold_piece_id], hold_box_x, hold_box_y, NEXT_BOX_SIZE, PREVIEW_BLOCK_SIZE)
+      draw_preview_piece(draw_list, temp_piece, hold_box_x, hold_box_y, NEXT_BOX_SIZE, PREVIEW_BLOCK_SIZE)
+    end
+
+    -- ITEM UI
+    if enable_item_mode then
+      reaper.ImGui_Dummy(ctx, 0, NEXT_BOX_SIZE + 10)
+      reaper.ImGui_Text(ctx, "ITEM")
+      local item_box_y = hold_box_y + NEXT_BOX_SIZE + 35
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, hold_box_x, item_box_y, hold_box_x + NEXT_BOX_SIZE, item_box_y + NEXT_BOX_SIZE, COLORS['hold_bg'])
+      reaper.ImGui_DrawList_AddRect(draw_list, hold_box_x, item_box_y, hold_box_x + NEXT_BOX_SIZE, item_box_y + NEXT_BOX_SIZE, 0xFFFFFFFF)
+
+      if held_item ~= ITEM_TYPE.NONE then
+        local icon = ITEM_ICONS[held_item]
+        reaper.ImGui_PushFont(ctx, my_font, 32)
+        local tw, th = reaper.ImGui_CalcTextSize(ctx, icon)
+        local center_x = hold_box_x + (NEXT_BOX_SIZE - tw)/2
+        local center_y = item_box_y + (NEXT_BOX_SIZE - th)/2 - 3
+        reaper.ImGui_SetCursorScreenPos(ctx, center_x, center_y)
+        reaper.ImGui_Text(ctx, icon)
+        reaper.ImGui_PopFont(ctx)
+      end
     end
 
     reaper.ImGui_EndGroup(ctx)
-    reaper.ImGui_Dummy(ctx, 0, 260)
+    reaper.ImGui_SetCursorScreenPos(ctx, left_ui_x, cursor_y + 300)
+    -- reaper.ImGui_Dummy(ctx, 0, 260)
 
     reaper.ImGui_BeginGroup(ctx)
     -- reaper.ImGui_Text(ctx, "TETRIS")
@@ -602,7 +863,8 @@ function loop()
           if grid[y][x] ~= 0 then
             local px = board_x + (x-1) * BLOCK_SIZE
             local py = cursor_y + (draw_y-1) * BLOCK_SIZE
-            reaper.ImGui_DrawList_AddRectFilled(draw_list, px + 1, py + 1, px + BLOCK_SIZE - 1, py + BLOCK_SIZE - 1, COLORS[grid[y][x]])
+            local is_special = grid_special[y][x]
+            draw_block_rect(draw_list, px, py, BLOCK_SIZE, COLORS[grid[y][x]], is_special)
           end
         end
       end
@@ -630,6 +892,17 @@ function loop()
       end
     end
 
+    if state == "CLEARING_BOTTOM" then
+      local anim_time = now - bottom_clear_start_time
+      local progress = anim_time / BOTTOM_CLEAR_ANIMATION_DURATION
+      if progress > 1 then progress = 1 end
+      
+      local visual_bottom_y_start = (ROWS - HIDDEN_ROWS - 2) * BLOCK_SIZE + cursor_y
+      local visual_height = 2 * BLOCK_SIZE
+      local anim_width = board_w * progress
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, board_x, visual_bottom_y_start, board_x + anim_width, visual_bottom_y_start + visual_height, COLORS['item_clear_anim'])
+    end
+
     -- 绘制 Ghost Piece
     if state == "PLAYING" and current_piece and show_ghost then
       local ghost_y = cur_y
@@ -639,7 +912,7 @@ function loop()
       end
 
       -- 绘制幽灵方块
-      for _, p in ipairs(current_piece.shape) do
+      for i, p in ipairs(current_piece.shape) do
         local x = cur_x + p.x
         local y = ghost_y + p.y
         if y >= 1 and y <= ROWS then
@@ -656,14 +929,15 @@ function loop()
 
     -- 绘制当前方块
     if (state == "PLAYING" or state == "PAUSED") and current_piece then
-      for _, p in ipairs(current_piece.shape) do
+      for i, p in ipairs(current_piece.shape) do
         local x = cur_x + p.x
         local y = cur_y + p.y
         if y >= 1 and y <= ROWS then
           local draw_y = y - HIDDEN_ROWS
           local px = board_x + (x-1) * BLOCK_SIZE
           local py = cursor_y + (draw_y-1) * BLOCK_SIZE
-          reaper.ImGui_DrawList_AddRectFilled(draw_list, px + 1, py + 1, px + BLOCK_SIZE - 1, py + BLOCK_SIZE - 1, COLORS[current_piece.id])
+          local is_special = (current_piece.special_idx == i)
+          draw_block_rect(draw_list, px, py, BLOCK_SIZE, COLORS[current_piece.id], is_special)
         end
       end
     end
@@ -674,7 +948,7 @@ function loop()
     reaper.ImGui_BeginGroup(ctx)
     reaper.ImGui_PushFont(ctx, my_font, 16)
 
-    reaper.ImGui_Text(ctx, "NEXT:")
+    reaper.ImGui_Text(ctx, "NEXT")
     local preview_base_x, preview_base_y = reaper.ImGui_GetCursorScreenPos(ctx)
 
     local total_step = NEXT_BOX_SIZE + BOX_GAP 
@@ -696,7 +970,7 @@ function loop()
       reaper.ImGui_DrawList_AddRectFilled(draw_list, box_x, box_y, box_x + NEXT_BOX_SIZE, box_y + NEXT_BOX_SIZE, COLORS['next_bg'])
       reaper.ImGui_DrawList_AddRect(draw_list, box_x, box_y, box_x + NEXT_BOX_SIZE, box_y + NEXT_BOX_SIZE, 0xFFFFFF66)
 
-      draw_preview_piece(draw_list, piece.shape, COLORS[piece.id], box_x, box_y, NEXT_BOX_SIZE, PREVIEW_BLOCK_SIZE)
+      draw_preview_piece(draw_list, piece, box_x, box_y, NEXT_BOX_SIZE, PREVIEW_BLOCK_SIZE)
     end
 
     local total_height = 4 * total_step
@@ -711,16 +985,16 @@ function loop()
     local start_by_key = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter())
     if start_by_key then
       init_game()
-      score_lines = 0
       state = "PLAYING"
       new_piece()
     end
 
     local rv
     rv, show_ghost = reaper.ImGui_Checkbox(ctx, "Ghost Piece", show_ghost)
+    rv, enable_item_mode = reaper.ImGui_Checkbox(ctx, "Item Mode", enable_item_mode)
 
     reaper.ImGui_SameLine(ctx)
-    help_marker("A/D: Move\nW: Drop\nS: Fast\nJ/K: Rotate\nSpace: Pause\nQ: HOLD\nEnter: Start\nESC: Exit")
+    help_marker("A/D: Move\nW: Drop\nS: Fast\nJ/K: Rotate\nSpace: Pause\nQ: HOLD\nE: Use Item\nEnter: Start\nESC: Exit")
     reaper.ImGui_PopFont(ctx)
 
     reaper.ImGui_EndGroup(ctx)
