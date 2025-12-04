@@ -494,7 +494,7 @@ function resolve_lines()
     
     -- 消行并重排后，如果满足条件消除>=10行，立刻刷新特殊格位置
     if enable_item_mode and lines_counter_for_item >= ITEM_TRIGGER_LINES and held_item == ITEM_TYPE.NONE and not is_star_mode then
-      spawn_special_block() 
+      if spawn_special_block() then lines_counter_for_item = 0 end
     end
   end
 
