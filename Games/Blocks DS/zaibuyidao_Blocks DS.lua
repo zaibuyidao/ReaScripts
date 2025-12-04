@@ -366,21 +366,6 @@ function check_collision(cx, cy, shape)
 end
 
 function lock_piece()
-  for _, p in ipairs(current_piece.shape) do
-    local x = cur_x + p.x
-    local y = cur_y + p.y
-    if y >= 1 and y <= ROWS and x >= 1 and x <= COLS then
-      grid[y][x] = current_piece.id
-    end
-  end
-  -- 先检查是否有行需要消除
-  local lines_found = check_lines()
-  if not lines_found and state == "PLAYING" then 
-    new_piece() 
-  end
-end
-
-function lock_piece()
   for i, p in ipairs(current_piece.shape) do
     local x = cur_x + p.x
     local y = cur_y + p.y
