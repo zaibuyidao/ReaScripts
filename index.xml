@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="30d674d3bc6e92edcffa4c4b34a12a1120a0e03e">
+<index version="1" name="zaibuyidao Scripts" commit="2e763263390db07490cc2388100f633f3794ff74">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -15559,6 +15559,22 @@ Support reaper_soundmole-x64.dll v0.0.5]]></changelog>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/5c1c8b80c08255d70b908e147667d9e1013c9d3e/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/5c1c8b80c08255d70b908e147667d9e1013c9d3e/Various/Soundmole/data/icons-regular.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/5c1c8b80c08255d70b908e147667d9e1013c9d3e/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.121" author="zaibuyidao" time="2025-12-06T15:53:44Z">
+        <changelog><![CDATA[Fixed a bug where filenames containing special characters (e.g., ##) caused the file list text to disappear and waveforms to fail rendering.
+Disabled ImGui default keyboard navigation to resolve arrow key shortcut conflicts.
+Optimized PeekTree list interaction with new visual indicators during dragging.
+Optimized playback control with a new "Jump to Start" feature (restarts playback if playing, resets cursor if stopped).
+Optimized file browsing by automatically hiding system folders and the Recycle Bin.
+Support reaper_soundmole-x64.dll v0.0.6]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/2e763263390db07490cc2388100f633f3794ff74/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/2e763263390db07490cc2388100f633f3794ff74/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/2e763263390db07490cc2388100f633f3794ff74/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/2e763263390db07490cc2388100f633f3794ff74/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/2e763263390db07490cc2388100f633f3794ff74/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/2e763263390db07490cc2388100f633f3794ff74/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/2e763263390db07490cc2388100f633f3794ff74/Various/Soundmole/data/icons-regular.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/2e763263390db07490cc2388100f633f3794ff74/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
