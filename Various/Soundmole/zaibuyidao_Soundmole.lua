@@ -59,6 +59,12 @@ local HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists(
 local SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
+
+-- 关闭键盘导航
+local config_flags = reaper.ImGui_GetConfigVar(ctx, reaper.ImGui_ConfigVar_Flags())
+config_flags = config_flags & (~reaper.ImGui_ConfigFlags_NavEnableKeyboard())
+reaper.ImGui_SetConfigVar(ctx, reaper.ImGui_ConfigVar_Flags(), config_flags)
+
 local set_font = 'sans-serif' -- options: Arial, sans-serif, Calibri, Segoe UI, Microsoft YaHei, SimSun, STSong, STFangsong, ...
 local fonts = {
   sans_serif = reaper.ImGui_CreateFont(set_font, 14), -- 全局默认字体大小
@@ -144,7 +150,7 @@ local last_audio_idx         = nil
 local auto_scroll_enabled    = false -- 自动滚屏
 local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
-local waveform_hint_enabled  = true  -- 波形预览鼠标提示开关
+local waveform_hint_enabled  = false -- 波形预览鼠标提示开关
 local files_idx_cache        = nil   -- 文件缓存
 local recent_audio_files     = {}    -- 最近播放列表
 local max_recent_files       = 20    -- 最近播放最多保留20条
@@ -308,7 +314,7 @@ local doubleclick_action        = DOUBLECLICK_NONE
 local bg_alpha                  = 1.0   -- 默认背景不透明
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
 local mirror_database           = false -- 默认关闭 Database (Mirror)
-local show_peektree_recent      = true  -- 默认开启 播放历史
+local show_peektree_recent      = false -- 默认开启 播放历史
 
 -- 保存设置
 function SaveSettings()
@@ -395,9 +401,8 @@ end
 
 do
   local v = reaper.GetExtState(EXT_SECTION, "show_peektree_recent")
-  if v == "1" or v == "" then show_peektree_recent = true
-  elseif v == "0" then show_peektree_recent = false
-  else show_peektree_recent = true end
+  if v == "1" then show_peektree_recent = true
+  else show_peektree_recent = false end
 end
 
 --------------------------------------------- 颜色表 ---------------------------------------------
@@ -4244,25 +4249,43 @@ $h.Keys | Sort-Object | ForEach-Object {
   return drives
 end
 
+-- 系统文件夹名称忽略列表
+local ignored_sys_folders = {
+  ["$RECYCLE.BIN"]              = true,
+  ["$Recycle.Bin"]              = true,
+  ["System Volume Information"] = true,
+  ["RECYCLER"]                  = true,
+  ["Config.Msi"]                = true,
+  ["Recovery"]                  = true,
+  [".Trash"]                    = true,
+  [".Trashes"]                  = true,
+  [".fseventsd"]                = true,
+  [".Spotlight-V100"]           = true,
+}
+
 -- 获取目录下所有子文件夹和支持类型的音频文件
 function list_dir(path)
   path = normalize_path(path, true)
   local dirs, audios = {}, {}
   local ok = true
+
   local i = 0
   while true do
     local file = reaper.EnumerateFiles(path, i)
     if not file then break end
-    local full = path .. ((path:sub(-1)==sep) and '' or sep) .. file
-    full = normalize_path(full, false)
-    local ext = file:match('%.([^.]+)$')
-    if ext and audio_types[ext:upper()] then
-      local src = reaper.PCM_Source_CreateFromFile(full)
-      if src then
-        local typ = reaper.GetMediaSourceType(src, '')
-        reaper.PCM_Source_Destroy(src)
-        if typ and audio_types[typ:upper()] then
-          table.insert(audios, file)
+
+    if not file:match("^%.") and not file:match("^%$") then
+      local full = path .. ((path:sub(-1)==sep) and '' or sep) .. file
+      full = normalize_path(full, false)
+      local ext = file:match('%.([^.]+)$')
+      if ext and audio_types[ext:upper()] then
+        local src = reaper.PCM_Source_CreateFromFile(full)
+        if src then
+          local typ = reaper.GetMediaSourceType(src, '')
+          reaper.PCM_Source_Destroy(src)
+          if typ and audio_types[typ:upper()] then
+            table.insert(audios, file)
+          end
         end
       end
     end
@@ -4274,7 +4297,11 @@ function list_dir(path)
   while true do
     local subdir = reaper.EnumerateSubdirectories(path, j)
     if not subdir then break end
-    table.insert(dirs, subdir)
+
+    if not ignored_sys_folders[subdir] and not subdir:match("^%.") and not subdir:match("^%$") then
+      table.insert(dirs, subdir)
+    end
+
     j = j + 1
   end
 
@@ -4294,6 +4321,27 @@ function AddThisComputerContextMenu(path)
     if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
       reaper.CF_ShellExecute(normalize_path(path)) -- 规范分隔符
     end
+
+    -- 添加到文件夹快捷方式
+    if reaper.ImGui_MenuItem(ctx, "Add to Folder Shortcuts") then
+      local folder = normalize_path(path, true)
+      local exists = false
+      -- 检查是否已存在
+      for _, v in ipairs(folder_shortcuts) do
+        if normalize_path(v.path, true) == folder then
+          exists = true
+          break
+        end
+      end
+      -- 不存在则添加
+      if not exists then
+        -- 提取文件夹名称作为快捷方式名称
+        local name = folder:match("([^/\\]+)[/\\]?$") or folder
+        table.insert(folder_shortcuts, { name = name, path = folder })
+        SaveFolderShortcuts()
+      end
+    end
+
     -- 将路径添加为新数据库
     if reaper.ImGui_MenuItem(ctx, "Build Database from This Folder") then
       local folder   = normalize_path(path, true)
@@ -6035,6 +6083,19 @@ function LoadExitSettings()
     end
   end
 
+  -- 恢复 This Computer (Tree) 模式
+  if collect_mode == COLLECT_MODE_TREE then
+    local ext = reaper.GetExtState(EXT_SECTION, "this_computer_open")
+    if ext == "true" then
+      this_computer_open = true
+    elseif ext == "false" then
+      this_computer_open = false
+    else
+      this_computer_open = false -- 默认折叠
+    end
+    tree_state.cur_path = reaper.GetExtState(EXT_SECTION, "cur_tree_path") or ""
+  end
+
   -- 恢复 Shortcuts 模式
   if collect_mode == COLLECT_MODE_SHORTCUT then -- collect_mode == COLLECT_MODE_TREE or
     local ext = reaper.GetExtState(EXT_SECTION, "shortcut_header_open")
@@ -6157,6 +6218,10 @@ function SaveExitSettings()
 
   if collect_mode == COLLECT_MODE_ITEMS or collect_mode == COLLECT_MODE_RPP or collect_mode == COLLECT_MODE_DIR or collect_mode == COLLECT_MODE_ALL_ITEMS then
     reaper.SetExtState(EXT_SECTION, "project_header_open", tostring(project_open), true)
+
+  elseif collect_mode == COLLECT_MODE_TREE then
+    reaper.SetExtState(EXT_SECTION, "this_computer_open", tostring(this_computer_open), true)
+    reaper.SetExtState(EXT_SECTION, "cur_tree_path", tree_state.cur_path or "", true)
 
   elseif collect_mode == COLLECT_MODE_SHORTCUT then -- collect_mode == COLLECT_MODE_TREE or
     reaper.SetExtState(EXT_SECTION, "shortcut_header_open", tostring(shortcut_open), true)
@@ -7233,6 +7298,8 @@ end
 -- 单行文本绘制，移除换行并压缩空白，防止表格行被撑高
 function DrawCellTextOneLine(ctx, s)
   s = tostring(s or "")
+  -- 插入零宽空格破坏 ImGui 的 ID 解析规则，使 ## 可见
+  s = s:gsub("#", "#\u{200B}")
   s = s:gsub("\r\n", " "):gsub("[\r\n]", " "):gsub("%s+", " ")
   reaper.ImGui_Text(ctx, s)
 end
@@ -7303,7 +7370,8 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     -- File & Teak name
     elseif is_name_col then
-      local row_label = (info.filename or "") .. "##RowContext__" .. tostring(i)
+      local display_name = (info.filename or ""):gsub("#", "#\u{200B}")
+      local row_label = display_name .. "##RowContext__" .. tostring(i)
       local is_sel = false
       if file_select_start and file_select_end then
         local a = math.min(file_select_start, file_select_end)
@@ -10131,6 +10199,48 @@ function UI_PlayIconTrigger_Pause(ctx)
   end
 end
 
+function UI_PlayIconTrigger_JumpToStart(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  local glyph = '\u{0102}'
+  local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = colors.icon_normal or 0xFFFFFFFF
+  local col_hovered = colors.icon_hovered or 0xFFCC66FF
+  local col_active  = colors.icon_active or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  DrawTextVOffset(ctx, glyph, col, 4)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    if Wave then Wave.play_cursor = 0 end
+    -- 判断当前状态
+    if playing_preview and not is_paused then
+      -- 正在播放时更新播放位置到 0，继续播放
+      if reaper.CF_Preview_SetValue then
+        reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", 0)
+      end
+      -- 如果有记录起始时间，也需要更新，以保证进度条同步
+      wf_play_start_cursor = 0
+      wf_play_start_time = os.clock() 
+    else
+      -- 停止或暂停状态则仅重置状态，不触发播放
+      StopPreview()
+      is_paused = false
+      paused_position = 0
+    end
+  end
+end
+
 function UI_PlayIconTrigger_Stop(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   reaper.ImGui_PushFont(ctx, fonts.icon, 16)
@@ -11743,7 +11853,7 @@ function loop()
 
           reaper.ImGui_PopStyleColor(ctx)
           if is_project_open then
-            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+            reaper.ImGui_Indent(ctx, 25) -- 手动缩进16像素
             for i, v in ipairs(collect_mode_labels) do
               local selected = (collect_mode == v.value)
               -- reaper.ImGui_AlignTextToFramePadding(ctx)
@@ -11755,16 +11865,89 @@ function loop()
                 CollectFiles()
               end
             end
-            reaper.ImGui_Unindent(ctx, 7)
+            reaper.ImGui_Unindent(ctx, 25)
           end
 
           -- Tree模式特殊处理（折叠节点）
-          local flag = (collect_mode == COLLECT_MODE_TREE) and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          -- 初始化持久化状态变量，防止点击图标时状态丢失
+          -- if this_computer_open == nil then 
+          --   this_computer_open = (collect_mode == COLLECT_MODE_TREE) 
+          -- end
+          -- 如果上一帧点了图标，本帧强制恢复折叠状态
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
-          local tree_expanded = reaper.ImGui_CollapsingHeader(ctx, "This Computer") -- , nil, flag)
+          if _G._this_computer_force_open_state ~= nil then
+            reaper.ImGui_SetNextItemOpen(ctx, _G._this_computer_force_open_state, reaper.ImGui_Cond_Always())
+            _G._this_computer_force_open_state = nil
+          end
+
+          local hdr_flags = this_computer_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+          local prev_this_computer_open = this_computer_open == true -- 记录上一帧状态
+          local is_this_computer_open = reaper.ImGui_CollapsingHeader(ctx, "This Computer", nil, hdr_flags)
+          this_computer_open = is_this_computer_open -- 更新当前状态
           reaper.ImGui_PopStyleColor(ctx)
-          if tree_expanded then
-            reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+
+          do
+            local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+            local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+            local row_h = max_y - min_y
+            -- 让图标紧贴标题文本末尾
+            local header_label = "0000This Computer" -- 0000为折叠箭头占位
+            local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
+            local PAD_LEFT = 6
+            local icon_h = math.max(12, row_h - 6)
+            local icon_w = icon_h
+            local icon_x = min_x + PAD_LEFT + label_w
+            local icon_y = min_y + (row_h - icon_h) * 0.5
+
+            local win_x, win_y = reaper.ImGui_GetWindowPos(ctx)
+            local win_w, win_h = reaper.ImGui_GetWindowSize(ctx)
+            local clip_x0, clip_y0 = win_x, win_y
+            local clip_x1, clip_y1 = win_x + win_w, win_y + win_h
+
+            local fully_inside = (icon_x >= clip_x0) and (icon_y >= clip_y0) and ((icon_x + icon_w) <= clip_x1) and ((icon_y + icon_h) <= clip_y1)
+            local hovering_icon, clicked_icon = false, false
+            if fully_inside then
+              hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
+              clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
+
+              local dl = reaper.ImGui_GetWindowDrawList(ctx)
+              reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
+
+              local col   = (hovering_icon and colors.icon_active) or colors.icon_normal
+              local glyph = '\u{010A}' -- 刷新图标
+              local icon_size = math.floor(icon_h * 0.80)
+
+              if fonts and fonts.icon then reaper.ImGui_PushFont(ctx, fonts.icon, icon_size) end
+              local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph)
+              local tx = icon_x + (icon_w - tw) * 0.5
+              local ty = icon_y + (icon_h - th) * 0.5
+              reaper.ImGui_DrawList_AddText(dl, tx, ty, col, glyph)
+              if fonts and fonts.icon then reaper.ImGui_PopFont(ctx) end
+
+              reaper.ImGui_DrawList_PopClipRect(dl)
+
+              if hovering_icon then
+                reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+                reaper.ImGui_BeginTooltip(ctx)
+                reaper.ImGui_Text(ctx, "Refresh Drives")
+                reaper.ImGui_EndTooltip(ctx)
+              end
+            end
+
+            if clicked_icon then
+              is_this_computer_open = prev_this_computer_open
+              this_computer_open = prev_this_computer_open
+              _G._this_computer_force_open_state = prev_this_computer_open
+
+              -- 清空缓存并标记需要重新加载
+              drive_cache = nil
+              drives_loaded = false
+              need_load_drives = true
+            end
+          end
+
+          if is_this_computer_open then
+            reaper.ImGui_Indent(ctx, 20) -- 手动缩进16像素
             if not drives_loaded then
               reaper.ImGui_Text(ctx, "Loading drives, please wait...")
               if not need_load_drives then
@@ -11776,7 +11959,7 @@ function loop()
                 draw_tree(drv, drv, 0)
               end
             end
-            reaper.ImGui_Unindent(ctx, 7)
+            reaper.ImGui_Unindent(ctx, 20)
           end
 
           -- 文件夹快捷方式节点
@@ -11807,46 +11990,6 @@ function loop()
           shortcut_open = is_shortcut_open
 
           do
-            -- local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
-            -- local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
-            -- local row_h = max_y - min_y
-            -- -- 让图标紧贴标题文本末尾
-            -- local header_label = "0000Folder Shortcuts" -- 000为折叠箭头占位
-            -- local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
-            -- local PAD_LEFT = 6
-            -- local icon_h = math.max(12, row_h - 6)
-            -- local icon_w = icon_h
-            -- local icon_x = min_x + PAD_LEFT + label_w
-            -- local icon_y = min_y + (row_h - icon_h) * 0.5
-
-            -- local hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-            -- local clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
-            -- local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-            -- local glyph = '\u{0150}'
-            -- local dl = reaper.ImGui_GetForegroundDrawList(ctx)
-
-            -- local icon_size = math.floor(icon_h * 0.90)
-            -- if fonts and fonts.icon then
-            --   reaper.ImGui_PushFont(ctx, fonts.icon, icon_size)
-            -- end
-            -- local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph)
-            -- local tx = icon_x + (icon_w - tw) * 0.5
-            -- local ty = icon_y + (icon_h - th) * 0.5
-            -- reaper.ImGui_DrawList_AddText(dl, tx, ty, col, glyph)
-            -- if fonts and fonts.icon then
-            --   reaper.ImGui_PopFont(ctx)
-            -- end
-
-            -- if hovering_icon then
-            --   reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-            -- end
-
-            -- if hovering_icon then
-            --   reaper.ImGui_BeginTooltip(ctx)
-            --   reaper.ImGui_Text(ctx, "Create Shortcut")
-            --   reaper.ImGui_EndTooltip(ctx)
-            -- end
-
             local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
             local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
             local row_h = max_y - min_y
@@ -11991,23 +12134,36 @@ function loop()
                 local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
                 local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
-                if fonts and fonts.icon then
-                  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-                end
-                local glyph_drag = '\u{00F0}'
-                local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
-                local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
-                local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+                local win_x, _ = reaper.ImGui_GetWindowPos(ctx)
+                local win_w, _ = reaper.ImGui_GetWindowSize(ctx)
+                local win_right_edge = win_x + win_w
+                -- 只要鼠标在图标左侧到窗口右侧之间，且在当前行高度内，即视为悬停
+                local row_hovered = reaper.ImGui_IsMouseHoveringRect(ctx, rect_min_x, rect_min_y, win_right_edge, rect_min_y + rect_h, true)
 
-                local col = colors.icon_normal or 0xFFFFFFFF
-                if is_drag_source then
-                  col = colors.icon_active or colors.icon_hovered or col
-                elseif handle_hovered then
-                  col = colors.icon_hovered or col
-                end
-                reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
-                if fonts and fonts.icon then
-                  reaper.ImGui_PopFont(ctx)
+                if is_drag_source or handle_hovered or row_hovered then
+                  if fonts and fonts.icon then
+                    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                  end
+                  local glyph_drag = '\u{00F9}'
+                  local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                  local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                  local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                  local col = colors.icon_normal or 0xFFFFFFFF
+                  if is_drag_source then
+                    col = colors.icon_active or colors.icon_hovered or col
+                  elseif handle_hovered then
+                    col = colors.icon_hovered or col
+                  else
+                    -- 仅经过列表（非手柄）时，使用常态颜色（或者你可以根据喜好改成 hovered 颜色）
+                    col = colors.icon_normal or col
+                  end
+
+                  reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+
+                  if fonts and fonts.icon then
+                    reaper.ImGui_PopFont(ctx)
+                  end
                 end
 
                 if is_drag_source or handle_hovered then
@@ -12064,12 +12220,12 @@ function loop()
               reaper.ImGui_PopStyleColor(ctx)
 
               if is_sc_mirror_open then
-                reaper.ImGui_Indent(ctx, 7)
+                reaper.ImGui_Indent(ctx, 20)
                 -- ResetCollectionGuide() -- 重置导线度量
                 for idx, sc in ipairs(sc_folders or {}) do
                   draw_shortcut_tree_mirror(sc, nil, 0, idx)
                 end
-                reaper.ImGui_Unindent(ctx, 7)
+                reaper.ImGui_Unindent(ctx, 20)
               end
             end
           end
@@ -12099,46 +12255,6 @@ function loop()
           collection_open = is_collection_open
 
           do
-            -- local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
-            -- local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
-            -- local row_h = max_y - min_y
-            -- -- 让图标紧贴标题文本末尾
-            -- local header_label = "0000Collections" -- 000为折叠箭头占位
-            -- local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
-            -- local PAD_LEFT = 6
-            -- local icon_h = math.max(12, row_h - 6)
-            -- local icon_w = icon_h
-            -- local icon_x = min_x + PAD_LEFT + label_w
-            -- local icon_y = min_y + (row_h - icon_h) * 0.5
-
-            -- local hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-            -- local clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
-            -- local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-            -- local glyph = '\u{0150}'
-            -- local dl = reaper.ImGui_GetForegroundDrawList(ctx)
-
-            -- local icon_size = math.floor(icon_h * 0.90)
-            -- if fonts and fonts.icon then
-            --   reaper.ImGui_PushFont(ctx, fonts.icon, icon_size)
-            -- end
-            -- local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph)
-            -- local tx = icon_x + (icon_w - tw) * 0.5
-            -- local ty = icon_y + (icon_h - th) * 0.5
-            -- reaper.ImGui_DrawList_AddText(dl, tx, ty, col, glyph)
-            -- if fonts and fonts.icon then
-            --   reaper.ImGui_PopFont(ctx)
-            -- end
-
-            -- if hovering_icon then
-            --   reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-            -- end
-
-            -- if hovering_icon then
-            --   reaper.ImGui_BeginTooltip(ctx)
-            --   reaper.ImGui_Text(ctx, "Create Collection")
-            --   reaper.ImGui_EndTooltip(ctx)
-            -- end
-
             local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
             local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
             local row_h = max_y - min_y
@@ -12270,23 +12386,31 @@ function loop()
                   local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
                   local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
-                  if fonts and fonts.icon then
-                    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-                  end
-                  local glyph_drag = '\u{00F0}'
-                  local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
-                  local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
-                  local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+                  local win_x, _ = reaper.ImGui_GetWindowPos(ctx)
+                  local win_w, _ = reaper.ImGui_GetWindowSize(ctx)
+                  local win_right_edge = win_x + win_w
+                  -- 只要鼠标在图标左侧到窗口右侧之间，且在当前行高度内，即视为悬停
+                  local row_hovered = reaper.ImGui_IsMouseHoveringRect(ctx, rect_min_x, rect_min_y, win_right_edge, rect_min_y + rect_h, true)
 
-                  local col = colors.icon_normal or 0xFFFFFFFF
-                  if handle_active then
-                    col = colors.icon_active or colors.icon_hovered or col
-                  elseif handle_hovered then
-                    col = colors.icon_hovered or col
-                  end
-                  reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
-                  if fonts and fonts.icon then
-                    reaper.ImGui_PopFont(ctx)
+                  if handle_active or handle_hovered or row_hovered then
+                    if fonts and fonts.icon then
+                      reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                    end
+                    local glyph_drag = '\u{0153}'
+                    local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                    local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                    local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                    local col = colors.icon_normal or 0xFFFFFFFF
+                    if handle_active then
+                      col = colors.icon_active or colors.icon_hovered or col
+                    elseif handle_hovered then
+                      col = colors.icon_hovered or col
+                    end
+                    reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+                    if fonts and fonts.icon then
+                      reaper.ImGui_PopFont(ctx)
+                    end
                   end
 
                   if handle_hovered or handle_active then
@@ -12327,46 +12451,6 @@ function loop()
           group_open = is_group_open
 
           do
-            -- local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
-            -- local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
-            -- local row_h = max_y - min_y
-            -- -- 让图标紧贴标题文本末尾
-            -- local header_label = "0000Group" -- 000为折叠箭头占位
-            -- local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
-            -- local PAD_LEFT = 6
-            -- local icon_h = math.max(12, row_h - 6)
-            -- local icon_w = icon_h
-            -- local icon_x = min_x + PAD_LEFT + label_w
-            -- local icon_y = min_y + (row_h - icon_h) * 0.5
-
-            -- local hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-            -- local clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
-            -- local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-            -- local glyph = '\u{0150}'
-            -- local dl = reaper.ImGui_GetForegroundDrawList(ctx)
-
-            -- local icon_size = math.floor(icon_h * 0.90)
-            -- if fonts and fonts.icon then
-            --   reaper.ImGui_PushFont(ctx, fonts.icon, icon_size)
-            -- end
-            -- local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph)
-            -- local tx = icon_x + (icon_w - tw) * 0.5
-            -- local ty = icon_y + (icon_h - th) * 0.5
-            -- reaper.ImGui_DrawList_AddText(dl, tx, ty, col, glyph)
-            -- if fonts and fonts.icon then
-            --   reaper.ImGui_PopFont(ctx)
-            -- end
-
-            -- if hovering_icon then
-            --   reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-            -- end
-
-            -- if hovering_icon then
-            --   reaper.ImGui_BeginTooltip(ctx)
-            --   reaper.ImGui_Text(ctx, "Create Group")
-            --   reaper.ImGui_EndTooltip(ctx)
-            -- end
-
             local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
             local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
             local row_h = max_y - min_y
@@ -12494,23 +12578,31 @@ function loop()
                 local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
                 local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
-                if fonts and fonts.icon then
-                  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-                end
-                local glyph_drag = '\u{00C3}'
-                local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
-                local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
-                local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+                local win_x, _ = reaper.ImGui_GetWindowPos(ctx)
+                local win_w, _ = reaper.ImGui_GetWindowSize(ctx)
+                local win_right_edge = win_x + win_w
+                -- 只要鼠标在图标左侧到窗口右侧之间，且在当前行高度内，即视为悬停
+                local row_hovered = reaper.ImGui_IsMouseHoveringRect(ctx, rect_min_x, rect_min_y, win_right_edge, rect_min_y + rect_h, true)
 
-                local col = colors.icon_normal or 0xFFFFFFFF
-                if handle_active then
-                  col = colors.icon_active or colors.icon_hovered or col
-                elseif handle_hovered then
-                  col = colors.icon_hovered or col
-                end
-                reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
-                if fonts and fonts.icon then
-                  reaper.ImGui_PopFont(ctx)
+                if handle_active or handle_hovered or row_hovered then
+                  if fonts and fonts.icon then
+                    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                  end
+                  local glyph_drag = '\u{00C3}'
+                  local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                  local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                  local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                  local col = colors.icon_normal or 0xFFFFFFFF
+                  if handle_active then
+                    col = colors.icon_active or colors.icon_hovered or col
+                  elseif handle_hovered then
+                    col = colors.icon_hovered or col
+                  end
+                  reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+                  if fonts and fonts.icon then
+                    reaper.ImGui_PopFont(ctx)
+                  end
                 end
 
                 if handle_hovered or handle_active then
@@ -12624,46 +12716,6 @@ function loop()
           mediadb_open = is_mediadb_open
 
           do
-            -- local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
-            -- local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
-            -- local row_h = max_y - min_y
-            -- -- 让图标紧贴标题文本末尾
-            -- local header_label = "0000Database" -- 000为折叠箭头占位
-            -- local label_w, _ = reaper.ImGui_CalcTextSize(ctx, header_label)
-            -- local PAD_LEFT = 6
-            -- local icon_h = math.max(12, row_h - 6)
-            -- local icon_w = icon_h
-            -- local icon_x = min_x + PAD_LEFT + label_w
-            -- local icon_y = min_y + (row_h - icon_h) * 0.5
-
-            -- local hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-            -- local clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
-            -- local col = (hovering_icon and colors.icon_active) or colors.icon_normal
-            -- local glyph = '\u{0069}'
-            -- local dl = reaper.ImGui_GetForegroundDrawList(ctx)
-
-            -- local icon_size = math.floor(icon_h * 0.90)
-            -- if fonts and fonts.icon then
-            --   reaper.ImGui_PushFont(ctx, fonts.icon, icon_size)
-            -- end
-            -- local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph)
-            -- local tx = icon_x + (icon_w - tw) * 0.5
-            -- local ty = icon_y + (icon_h - th) * 0.5
-            -- reaper.ImGui_DrawList_AddText(dl, tx, ty, col, glyph)
-            -- if fonts and fonts.icon then
-            --   reaper.ImGui_PopFont(ctx)
-            -- end
-
-            -- if hovering_icon then
-            --   reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-            -- end
-
-            -- if hovering_icon then
-            --   reaper.ImGui_BeginTooltip(ctx)
-            --   reaper.ImGui_Text(ctx, "Create Database")
-            --   reaper.ImGui_EndTooltip(ctx)
-            -- end
-
             local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
             local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
             local row_h = max_y - min_y
@@ -12906,23 +12958,31 @@ function loop()
                 local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
                 local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
-                if fonts and fonts.icon then
-                  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-                end
-                local glyph_drag = '\u{0168}'
-                local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
-                local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
-                local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+                local win_x, _ = reaper.ImGui_GetWindowPos(ctx)
+                local win_w, _ = reaper.ImGui_GetWindowSize(ctx)
+                local win_right_edge = win_x + win_w
+                -- 只要鼠标在图标左侧到窗口右侧之间，且在当前行高度内，即视为悬停
+                local row_hovered = reaper.ImGui_IsMouseHoveringRect(ctx, rect_min_x, rect_min_y, win_right_edge, rect_min_y + rect_h, true)
 
-                local col = colors.icon_normal or 0xFFFFFFFF
-                if handle_active then
-                  col = colors.icon_active or colors.icon_hovered or col
-                elseif handle_hovered then
-                  col = colors.icon_hovered or col
-                end
-                reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
-                if fonts and fonts.icon then
-                  reaper.ImGui_PopFont(ctx)
+                if handle_active or handle_hovered or row_hovered then
+                  if fonts and fonts.icon then
+                    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                  end
+                  local glyph_drag = '\u{0168}'
+                  local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                  local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                  local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                  local col = colors.icon_normal or 0xFFFFFFFF
+                  if handle_active then
+                    col = colors.icon_active or colors.icon_hovered or col
+                  elseif handle_hovered then
+                    col = colors.icon_hovered or col
+                  end
+                  reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+                  if fonts and fonts.icon then
+                    reaper.ImGui_PopFont(ctx)
+                  end
                 end
 
                 if handle_hovered or handle_active then
@@ -12954,7 +13014,7 @@ function loop()
                 CollectFiles()
                 DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
               end
-              
+
               -- 右键菜单
               if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
                 reaper.ImGui_OpenPopup(ctx, "SoundmoleDBMenu_" .. dbfile)
@@ -13249,7 +13309,7 @@ function loop()
               reaper.ImGui_PopStyleColor(ctx)
 
               if is_readb_open then
-                reaper.ImGui_Indent(ctx, 7)
+                reaper.ImGui_Indent(ctx, 25)
                 for _, it in ipairs(reaper_db_list) do
                   local alias = it.alias
                   local fn    = it.filename
@@ -13265,7 +13325,7 @@ function loop()
                   end
                 end
 
-                reaper.ImGui_Unindent(ctx, 7)
+                reaper.ImGui_Unindent(ctx, 25)
               end
             end
           end
@@ -13279,7 +13339,7 @@ function loop()
 
           reaper.ImGui_PopStyleColor(ctx)
           if is_search_open then
-            reaper.ImGui_Indent(ctx, 7)
+            reaper.ImGui_Indent(ctx, 25)
             for i, keyword in ipairs(recent_search_keywords) do
               local selected = false
               if reaper.ImGui_Selectable(ctx, keyword, selected) then
@@ -13362,7 +13422,7 @@ function loop()
               reaper.ImGui_EndPopup(ctx)
             end
 
-            reaper.ImGui_Unindent(ctx, 7)
+            reaper.ImGui_Unindent(ctx, 25)
           end
 
           -- 最近播放节点
@@ -13375,7 +13435,7 @@ function loop()
 
             reaper.ImGui_PopStyleColor(ctx)
             if is_recent_open then
-              reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
+              reaper.ImGui_Indent(ctx, 25) -- 手动缩进16像素
               for i, info in ipairs(recent_audio_files) do
                 if i > max_recent_files then break end
                 local selected = (selected_recent_row == i)
@@ -13404,7 +13464,7 @@ function loop()
                   reaper.ImGui_EndPopup(ctx)
                 end
               end
-              reaper.ImGui_Unindent(ctx, 7)
+              reaper.ImGui_Unindent(ctx, 25)
             end
           end
 
@@ -13751,23 +13811,31 @@ function loop()
               local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
               local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
 
-              if fonts and fonts.icon then
-                reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-              end
-              local glyph_drag = '\u{00C3}'
-              local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
-              local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
-              local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+              local win_x, _ = reaper.ImGui_GetWindowPos(ctx)
+              local win_w, _ = reaper.ImGui_GetWindowSize(ctx)
+              local win_right_edge = win_x + win_w
+              -- 只要鼠标在图标左侧到窗口右侧之间，且在当前行高度内，即视为悬停
+              local row_hovered = reaper.ImGui_IsMouseHoveringRect(ctx, rect_min_x, rect_min_y, win_right_edge, rect_min_y + rect_h, true)
 
-              local col = colors.icon_normal or 0xFFFFFFFF
-              if is_drag_source then
-                col = colors.icon_active or colors.icon_hovered or col
-              elseif handle_hovered then
-                col = colors.icon_hovered or col
-              end
-              reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
-              if fonts and fonts.icon then
-                reaper.ImGui_PopFont(ctx)
+              if is_drag_source or handle_hovered or row_hovered then
+                if fonts and fonts.icon then
+                  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                end
+                local glyph_drag = '\u{00C3}'
+                local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
+                local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
+                local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
+
+                local col = colors.icon_normal or 0xFFFFFFFF
+                if is_drag_source then
+                  col = colors.icon_active or colors.icon_hovered or col
+                elseif handle_hovered then
+                  col = colors.icon_hovered or col
+                end
+                reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
+                if fonts and fonts.icon then
+                  reaper.ImGui_PopFont(ctx)
+                end
               end
 
               if is_drag_source or handle_hovered then
@@ -14731,6 +14799,9 @@ function loop()
     
     -- Pause 按钮
     UI_PlayIconTrigger_Pause(ctx)
+
+    -- 跳到开头
+    UI_PlayIconTrigger_JumpToStart(ctx)
 
     -- 播放上一个
     UI_PlayIconTrigger_Prev(ctx)
