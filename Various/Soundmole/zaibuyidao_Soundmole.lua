@@ -172,8 +172,13 @@ local shortcut_nodes_inited   = false -- 是否已初始化快捷方式节点的
 local expanded_paths          = {}    -- 已展开的文件夹路径表
 local file_select_start       = nil   -- 音频文件列多选起点
 local file_select_end         = nil   -- 音频文件列多选结束
+local show_vertical_zoom      = false -- 显示波形纵向缩放提示状态变量
+local show_vertical_zoom_timer = 0
+local show_font_size_popup    = false -- 字体大小显示状态变量
+local show_font_size_timer    = 0
+local show_row_height_popup   = false -- 行高显示状态变量
+local show_row_height_timer   = 0
 local keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
-
 -- 表格排序常量，编号对应表格列
 local TableColumns = {
   FILENAME    = 2,
@@ -248,8 +253,7 @@ local peak_hold = {} -- 存放各通道的峰值保持
 local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
 local VERTICAL_ZOOM_MIN = 0.3
 local VERTICAL_ZOOM_MAX = 4.0
-local show_vertical_zoom = false
-local show_vertical_zoom_timer = 0
+
 -- 定义Wave类
 local Wave = {
   play_cursor = 0,
@@ -3354,7 +3358,10 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
   return peaks, pixel_cnt, src_len, channel_count
 end
 
-function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
+function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, vertical_scale)
+  -- 如果没有传入缩放比例，默认使用 1.0
+  local v_scale = vertical_scale or 1.0
+
   reaper.ImGui_InvisibleButton(ctx, "##wave", img_w, img_h)
   local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
   local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
@@ -3376,8 +3383,8 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count)
         local p = (peaks[ch] and peaks[ch][idx]) or {0, 0}
         local minv = p[1] or 0
         local maxv = p[2] or 0
-        local y1 = y_mid - minv * ch_h / 2 * waveform_vertical_zoom
-        local y2 = y_mid - maxv * ch_h / 2 * waveform_vertical_zoom
+        local y1 = y_mid - minv * ch_h / 2 * v_scale
+        local y2 = y_mid - maxv * ch_h / 2 * v_scale
 
         -- 波形覆盖在中线上
         reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, colors.wave_line, 1.0) -- 波形颜色-主线
@@ -7245,7 +7252,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     -- 绘制波形
     local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
     reaper.ImGui_PushID(ctx, i)
-    DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, src_len, 1)
+    DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, src_len, 1, 1.0)
     reaper.ImGui_PopID(ctx)
 
     -- 绘制播放光标，排除最近播放影响
@@ -11840,6 +11847,9 @@ function loop()
             idx = math.max(1, math.min(#preview_font_sizes, idx))
             font_size = preview_font_sizes[idx]
             reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
+            -- 激活字体提示
+            show_font_size_popup = true
+            show_font_size_timer = reaper.time_precise()
           end
 
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 文本颜色
@@ -14382,19 +14392,35 @@ function loop()
 
         _G.current_display_list = filtered_list
 
-        -- 内容字体自由缩放
+        -- 字体大小自由缩放
         local wheel = reaper.ImGui_GetMouseWheel(ctx)
         local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+        local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Shift())
         font_size = SnapFontSize(font_size)
         if preview_fonts[font_size] then
           reaper.ImGui_PushFont(ctx, fonts.sans_serif, font_size)
         end
-        if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
+        if wheel ~= 0 and ctrl and (not shift) and reaper.ImGui_IsWindowHovered(ctx) then
           local idx = FindFontIndex(font_size)
           idx = idx + (wheel > 0 and 1 or -1)
           idx = math.max(1, math.min(#preview_font_sizes, idx))
           font_size = preview_font_sizes[idx]
           reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
+          -- 激活字体提示
+          show_font_size_popup = true
+          show_font_size_timer = reaper.time_precise()
+        end
+        -- 表格行高调整
+        if wheel ~= 0 and ctrl and shift and reaper.ImGui_IsWindowHovered(ctx) then
+          row_height = row_height + (wheel > 0 and 1 or -1)
+          -- 限制范围 (12 ~ 48)
+          if row_height < 12 then row_height = 12 end
+          if row_height > 48 then row_height = 48 end
+          reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
+
+          -- 激活提示
+          show_row_height_popup = true
+          show_row_height_timer = reaper.time_precise()
         end
 
         -- 上下方向键选中文件
@@ -16709,7 +16735,7 @@ function loop()
         DrawTimeLine(ctx, Wave, view_start, view_end)
       end
       reaper.ImGui_Dummy(ctx, 0, 11) -- 占位时间线高度
-      DrawWaveformInImGui(ctx, peaks, pw_region_w, img_h - 30, src_len, channel_count) -- -30用于补偿波形预览上方的时间线区域和间隔，否则应为0
+      DrawWaveformInImGui(ctx, peaks, pw_region_w, img_h - 30, src_len, channel_count, waveform_vertical_zoom) -- -30用于补偿波形预览上方的时间线区域和间隔，否则应为0
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
       end
@@ -17364,6 +17390,26 @@ function loop()
       reaper.ImGui_Text(ctx, text)
     elseif show_vertical_zoom and (reaper.time_precise() - show_vertical_zoom_timer >= 1.2) then
       show_vertical_zoom = false
+
+    -- 显示字体大小提示
+    elseif show_font_size_popup and (reaper.time_precise() - show_font_size_timer < 1.1) then
+      local window_width = reaper.ImGui_GetWindowWidth(ctx)
+      local text = string.format("Font Size: %d px", font_size) -- 显示字体大小
+      local text_width = reaper.ImGui_CalcTextSize(ctx, text)
+      reaper.ImGui_SetCursorPosX(ctx, window_width - text_width - 16) -- 右对齐
+      reaper.ImGui_Text(ctx, text)
+    elseif show_font_size_popup and (reaper.time_precise() - show_font_size_timer >= 1.2) then
+      show_font_size_popup = false
+
+    -- 显示行高提示
+    elseif show_row_height_popup and (reaper.time_precise() - show_row_height_timer < 1.1) then
+      local window_width = reaper.ImGui_GetWindowWidth(ctx)
+      local text = string.format("Row Height: %d px", row_height) -- 显示行高
+      local text_width = reaper.ImGui_CalcTextSize(ctx, text)
+      reaper.ImGui_SetCursorPosX(ctx, window_width - text_width - 16) -- 右对齐
+      reaper.ImGui_Text(ctx, text)
+    elseif show_row_height_popup and (reaper.time_precise() - show_row_height_timer >= 1.2) then
+      show_row_height_popup = false
     end
 
     -- 自动停止非Loop播放，只要没勾选Loop且快播完就自动Stop

@@ -1,12 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.121
+-- @version 1.0.122
 -- @changelog
---   Fixed a bug where filenames containing special characters (e.g., ##) caused the file list text to disappear and waveforms to fail rendering.
---   Disabled ImGui default keyboard navigation to resolve arrow key shortcut conflicts.
---   Optimized PeekTree list interaction with new visual indicators during dragging.
---   Optimized playback control with a new "Jump to Start" feature (restarts playback if playing, resets cursor if stopped).
---   Optimized file browsing by automatically hiding system folders and the Recycle Bin.
+--   Added visual tooltips when adjusting Font Size (Ctrl+Wheel) and Row Height (Ctrl+Shift+Wheel).
+--   Zooming the preview waveform no longer incorrectly scales the waveforms in the file list.
 --   Support reaper_soundmole-x64.dll v0.0.6
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
