@@ -6448,213 +6448,166 @@ function GetCurrentListKey()
   end
 end
 
--- -- 根据文本框, 同义词, UCS, Saved Search 等规则，从原始files_idx_cache中构建过滤后列表。
--- function BuildFilteredList(list)
---   local filtered = {}
-
---   -- UCS主分类-子分类组合过滤的临时键词
---   local pair_cat = (type(temp_ucs_cat_keyword) == "string" and temp_ucs_cat_keyword ~= "" ) and temp_ucs_cat_keyword or nil
---   local pair_sub = (type(temp_ucs_sub_keyword) == "string" and temp_ucs_sub_keyword ~= "" ) and temp_ucs_sub_keyword or nil
-
---   for _, info in ipairs(list) do
---     -- 过滤关键词 - 与保存搜索关键词深度绑定
---     local filter_text = _G.commit_filter_text or ""
-
---     -- 自动保存最近搜索关键词
---     if filter_text ~= last_search_input then
---       last_search_input = filter_text
---       search_input_timer = reaper.time_precise()
---     end
-
---     -- 临时关键词 & UCS 分类 (& Saved Search暂不参与) 参与搜索，替代空输入。关键词不发送到搜索框
---     local search_keyword = filter_text
---     -- 隐式搜索相关代码。优先使用UCS主分类/子分类关键词，否则使用保存搜索关键词
---     if temp_search_keyword then
---       search_keyword = temp_search_keyword
---     -- 保存搜索关键词（如果启用隐式发送保存搜索关键词则应整段注释2,共两处）
---     -- elseif search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
---     --   search_keyword = saved_search_list[active_saved_search].keyword or ""
---     end
-
---     -- 拆分用户输入为小写关键词数组
---     local input_keywords = {}
---     for keyword in tostring(search_keyword):gmatch("%S+") do
---       table.insert(input_keywords, keyword:lower())
---     end
-
---     -- 启用同义词时，将关键词分为两类。有同义词的关键词 和 无同义词的额外关键词
---     -- 同义词逻辑: synonym_keywords 为 OR，extra_keywords 为 AND
---     local synonym_keywords = {}
---     local extra_keywords = {}
---     local seen_groups = {} -- 去重同义词组
-
---     if use_synonyms then
---       for _, kw in ipairs(input_keywords) do
---         local synonyms = thesaurus_map[kw]
---         if synonyms then
---           local temp = {table.unpack(synonyms)}
---           table.sort(temp)
---           local group_key = table.concat(temp, ",")
---           if not seen_groups[group_key] then
---             seen_groups[group_key] = true
---             for _, synonym in ipairs(synonyms) do
---               synonym_keywords[synonym] = true
---             end
---           end
---         else
---           extra_keywords[#extra_keywords + 1] = kw
---         end
---       end
---     else
---       -- 未启用同义词时，所有关键词都是额外关键词
---       for _, kw in ipairs(input_keywords) do
---         extra_keywords[#extra_keywords + 1] = kw
---       end
---     end
-
---     -- 合并所有要检索的内容，全部转小写
---     local target = ""
---     if temp_search_field then
---       -- 临时指定UCS主分类/子分类字段隐式搜索
---       target = (tostring(info[temp_search_field] or "")):lower()
---     else
---       -- 多字段关键词搜索
---       for _, field in ipairs(search_fields) do
---         if field.enabled then
---           target = target .. " " .. (tostring(info[field.key] or ""))
---         end
---       end
---       target = target:lower()
---     end
-
---     -- 基础文本匹配
---     local match = false
---     if use_synonyms and next(synonym_keywords) then
---       -- 同义词之间为 OR 逻辑，每个同义词与额外关键词为 AND 逻辑
---       for synonym in pairs(synonym_keywords) do
---         local synonym_match = target:find(synonym, 1, true) ~= nil
---         if synonym_match then
---           local extra_match = true
---           for _, extra_kw in ipairs(extra_keywords) do
---             if not target:find(extra_kw, 1, true) then
---               extra_match = false
---               break
---             end
---           end
---           if extra_match then
---             match = true -- 找到有效组合 (synonym AND 所有额外词)，即可跳出
---             break
---           end
---         end
---       end
---     else
---       -- 未启用同义词时或无同义词时，全部关键词用 AND 逻辑
---       match = true
---       for _, kw in ipairs(extra_keywords) do
---         if not target:find(kw, 1, true) then
---           match = false
---           break
---         end
---       end
---     end
-
---     -- UCS主分类+子分类组合过滤
---     local pair_ok = true
---     if pair_cat and pair_sub then
---       local cat_l = tostring(info.ucs_category or ""):lower()
---       local sub_l = tostring(info.ucs_subcategory or ""):lower()
---       pair_ok = (cat_l == pair_cat) and (sub_l == pair_sub)
---     elseif pair_cat and not pair_sub then
---       local cat_l = tostring(info.ucs_category or ""):lower()
---       pair_ok = (cat_l == pair_cat)
---     end
-
---     -- 收集符合的info
---     if match and pair_ok then
---       table.insert(filtered, info)
---     end
---   end
-
---   return filtered
--- end
-
 -- 根据文本框、同义词、UCS、Saved Search 等规则，从原始 files_idx_cache 中构建过滤后列表
+-- 支持 AND / OR / NOT 逻辑 (大小写不敏感)
+-- 支持 ^ 开头, $ 结尾
+-- 支持 "" 全字匹配，且支持延伸功能：" box" (词首), "box " (词尾)
 function BuildFilteredList(list)
   local filtered = {}
 
-  -- 读取一次输入框文本 & 记录输入时间，避免在循环中重复
+  -- 输入防抖与自动保存逻辑
   local filter_text = _G.commit_filter_text or ""
   if filter_text ~= last_search_input then
     last_search_input = filter_text
     search_input_timer = reaper.time_precise()
   end
 
-  -- 计算本次有效搜索串（优先级：临时关键词 > 手动输入）
+  -- 获取基础搜索关键词
   local search_keyword = filter_text
   if temp_search_keyword then
     search_keyword = temp_search_keyword
-  -- 保存搜索关键词（如果启用隐式发送保存搜索关键词则应整段注释2,共两处）
-  -- elseif search_keyword == "" and active_saved_search and saved_search_list[active_saved_search] then
-  --   search_keyword = saved_search_list[active_saved_search].keyword or ""
   end
+  search_keyword = tostring(search_keyword):gsub("^%s+", ""):gsub("%s+$", "")
 
-  -- 拆分输入关键词为小写
-  local input_keywords = {}
-  for kw in tostring(search_keyword):gmatch("%S+") do
-    input_keywords[#input_keywords + 1] = kw:lower()
-  end
+  -- 准备 Token 列表 (合并输入框内容 和 锁定搜索词)
+  local raw_tokens = {}
+  
+  -- 优先提取双引号内容，再提取普通词
+  local p = 1
+  local len = #search_keyword
+  while p <= len do
+    local s, e = search_keyword:find("%S", p)
+    if not s then break end
+    p = s
 
-  -- 锁定搜索关键词开关
-  if _G.locked_filter_terms and #_G.locked_filter_terms > 0 then
-    local seen = {}
-    for _, kw in ipairs(input_keywords) do seen[kw] = true end
-    for _, kw in ipairs(_G.locked_filter_terms) do
-      local w = tostring(kw):lower()
-      if w ~= "" and not seen[w] then
-        input_keywords[#input_keywords + 1] = w
-        seen[w] = true
+    if search_keyword:sub(p, p) == '"' then
+      local next_q = search_keyword:find('"', p + 1)
+      if next_q then
+        table.insert(raw_tokens, search_keyword:sub(p, next_q))
+        p = next_q + 1
+      else
+        table.insert(raw_tokens, search_keyword:sub(p))
+        break
+      end
+    else
+      local next_space = search_keyword:find("%s", p)
+      if next_space then
+        table.insert(raw_tokens, search_keyword:sub(p, next_space - 1))
+        p = next_space + 1
+      else
+        table.insert(raw_tokens, search_keyword:sub(p))
+        break
       end
     end
   end
 
-  -- 启用同义词时，将关键词分为两类。有同义词的关键词 和 无同义词的额外关键词
-  -- 同义词逻辑: synonym_keywords 用 OR，extra_keywords 用 AND
-  local synonym_keywords = {}
-  local extra_keywords   = {}
-  local seen_groups      = {} -- 去重同义词组
-  local unpack_ = table.unpack or unpack
-  if use_synonyms then
-    for _, kw in ipairs(input_keywords) do
-      local synonyms = thesaurus_map and thesaurus_map[kw] or nil
-      if synonyms and #synonyms > 0 then
-        -- 复制+小写+排序，生成稳定组key
-        local temp = {unpack_(synonyms)}
-        for i = 1, #temp do temp[i] = tostring(temp[i]):lower() end
-        table.sort(temp)
-        local group_key = table.concat(temp, ",")
-        if not seen_groups[group_key] then
-          seen_groups[group_key] = true
-          for i = 1, #temp do
-            synonym_keywords[temp[i]] = true
+  -- 如果有锁定搜索词，强制追加到 Token 列表中
+  if _G.locked_filter_terms and #_G.locked_filter_terms > 0 then
+    for _, locked_w in ipairs(_G.locked_filter_terms) do
+      table.insert(raw_tokens, locked_w)
+    end
+  end
+
+  -- 解析布尔搜索表达式 (构建 boolean_groups)
+  local boolean_groups = {}
+  local current_group = {}
+  local pending_not = false
+
+  if #raw_tokens > 0 then
+    for _, token in ipairs(raw_tokens) do
+      local upper = token:upper()
+      local is_quoted = (token:sub(1, 1) == '"')
+
+      if not is_quoted and upper == "OR" then
+        if #current_group > 0 then
+          table.insert(boolean_groups, current_group)
+          current_group = {}
+        end
+        pending_not = false
+
+      elseif not is_quoted and upper == "AND" then
+        pending_not = false
+
+      elseif not is_quoted and upper == "NOT" then
+        pending_not = true
+
+      else
+        -- 这是一个搜索词
+        local clean_w = token
+        local anchor_start = false
+        local anchor_end = false
+        local exact_phrase = false 
+        local quote_mode = "whole" -- 引号模式: "whole"(全字), "start"(词首), "end"(词尾)
+
+        -- 处理双引号
+        if clean_w:sub(1, 1) == '"' and clean_w:sub(-1) == '"' and #clean_w >= 2 then
+          exact_phrase = true
+          local inner = clean_w:sub(2, -2) -- 暂不去除空格，先分析空格逻辑
+
+          -- 分析引号内的空格逻辑
+          local has_leading  = inner:match("^%s") -- 是否有前导空格 " box"
+          local has_trailing = inner:match("%s$") -- 是否有尾随空格 "box "
+
+          -- 确定匹配模式
+          if has_leading and not has_trailing then
+            quote_mode = "start" -- " box" -> 词首匹配 (如 boxing)
+          elseif not has_leading and has_trailing then
+            quote_mode = "end"   -- "box " -> 词尾匹配 (如 toolbox)
+          else
+            quote_mode = "whole" -- "box"  -> 全字匹配
+          end
+
+          -- 移除空白得到核心词，转小写
+          clean_w = inner:gsub("^%s+", ""):gsub("%s+$", ""):lower()
+        else
+          -- 处理 ^ 和 $ 锚点 (仅在非引号模式下生效)
+          if clean_w:sub(1, 1) == "^" and #clean_w > 1 then
+            anchor_start = true
+            clean_w = clean_w:sub(2)
+          end
+          if clean_w:sub(-1) == "$" and #clean_w > 1 then
+            anchor_end = true
+            clean_w = clean_w:sub(1, -2)
+          end
+          clean_w = clean_w:lower()
+        end
+
+        local term_data = {
+          words = { clean_w },
+          exclude = pending_not,
+          match_start = anchor_start,
+          match_end = anchor_end,
+          match_exact = exact_phrase,
+          q_mode = quote_mode -- 传递引号模式
+        }
+
+        -- 同义词注入 (仅普通模式下注入，精确匹配不注入同义词)
+        if (not exact_phrase) and use_synonyms and thesaurus_map then
+          local syns = thesaurus_map[clean_w]
+          if syns then
+            for _, s in ipairs(syns) do
+              table.insert(term_data.words, s:lower())
+            end
           end
         end
-      else
-        extra_keywords[#extra_keywords + 1] = kw
+
+        table.insert(current_group, term_data)
+        pending_not = false
       end
     end
-  else
-    -- 未启用同义词时，所有关键词都是额外关键词
-    for _, kw in ipairs(input_keywords) do
-      extra_keywords[#extra_keywords + 1] = kw
+    -- 插入最后一个组
+    if #current_group > 0 then
+      table.insert(boolean_groups, current_group)
     end
   end
 
-  -- UCS主分类-子分类组合过滤的临时键词
+  -- UCS主分类-子分类组合过滤
   local pair_cat = (type(temp_ucs_cat_keyword) == "string" and temp_ucs_cat_keyword ~= "") and temp_ucs_cat_keyword:lower() or nil
   local pair_sub = (type(temp_ucs_sub_keyword) == "string" and temp_ucs_sub_keyword ~= "") and temp_ucs_sub_keyword:lower() or nil
 
+  -- 遍历文件列表进行匹配
   for _, info in ipairs(list) do
-    -- 组装目标文本（多字段），最后一次性lower
+    -- 组装目标文本
     local tb = {}
     if temp_search_field then
       tb[1] = tostring(info[temp_search_field] or "")
@@ -6663,51 +6616,102 @@ function BuildFilteredList(list)
       for _, field in ipairs(search_fields) do
         if field.enabled then
           n = n + 1
-
-          -- 在 FREESOUND 模式下，对comment字段只使用提取后的License文本进行搜索
           local v = info[field.key]
           if field.key == "comment" and collect_mode == COLLECT_MODE_FREESOUND then
             v = SM_ExtractLicenseFromComment(info.comment)
           end
-
           tb[n] = tostring(v or "")
-
-          -- tb[n] = tostring(info[field.key] or "")
         end
       end
       if n == 0 then tb[1] = "" end
     end
-    local target = table.concat(tb, " "):lower()
+    local target = table.concat(tb, " "):gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""):lower()
 
-    -- 文本匹配（synonym OR + extra AND；否则全 AND）
-    local match = false
-    if use_synonyms and next(synonym_keywords) then
-      for synonym in pairs(synonym_keywords) do
-        if target:find(synonym, 1, true) then
-          local extra_ok = true
-          for _, extra_kw in ipairs(extra_keywords) do
-            if not target:find(extra_kw, 1, true) then
-              extra_ok = false
+    -- 布尔文本匹配
+    local text_match = false
+
+    if #boolean_groups == 0 then
+      text_match = true
+    else
+      -- OR 逻辑
+      for _, group in ipairs(boolean_groups) do
+        local group_match = true
+
+        -- AND 逻辑
+        for _, term in ipairs(group) do
+          local term_found = false
+
+          for _, w in ipairs(term.words) do
+            local w_len = #w
+            local is_match = false
+
+            if term.match_exact then
+              -- 双引号逻辑: 根据 q_mode 区分 Start/End/Whole
+              if w:match("^%w+$") then
+                -- 纯单词，使用边界锚点
+                if term.q_mode == "start" then
+                  -- " box" -> 词首匹配 (%f[%a]box) -> 匹配 "boxing", 不匹配 "toolbox"
+                  if target:find("%f[%a]" .. w) then is_match = true end
+                elseif term.q_mode == "end" then
+                  -- "box " -> 词尾匹配 (box%f[%A]) -> 匹配 "toolbox", 不匹配 "boxing"
+                  if target:find(w .. "%f[%A]") then is_match = true end
+                else
+                  -- "box"  -> 全字匹配 (%f[%a]box%f[%A])
+                  if target:find("%f[%a]" .. w .. "%f[%A]") then is_match = true end
+                end
+              else
+                 -- 非纯字母词（如 "file.wav"），退化为包含匹配
+                if target:find(w, 1, true) then is_match = true end
+              end
+
+            elseif term.match_start and term.match_end then
+              if target == w then is_match = true end
+
+            elseif term.match_start then
+              if target:sub(1, w_len) == w then is_match = true end
+
+            elseif term.match_end then
+              if target:sub(-w_len) == w then
+                is_match = true
+              else
+                local stem = target:match("(.+)%.%w+$")
+                if stem and stem:sub(-w_len) == w then
+                  is_match = true
+                end
+              end
+
+            else
+              -- 普通包含匹配
+              if target:find(w, 1, true) then is_match = true end
+            end
+
+            if is_match then
+              term_found = true
               break
             end
           end
-          if extra_ok then
-            match = true
-            break
+
+          if term.exclude then
+            if term_found then
+              group_match = false
+              break
+            end
+          else
+            if not term_found then
+              group_match = false
+              break
+            end
           end
         end
-      end
-    else
-      match = true
-      for _, kw in ipairs(extra_keywords) do
-        if not target:find(kw, 1, true) then
-          match = false
+
+        if group_match then
+          text_match = true
           break
         end
       end
     end
 
-    -- UCS 主/子类等值过滤
+    -- UCS 过滤与最终判定
     local pair_ok = true
     if pair_cat and pair_sub then
       local cat_l = tostring(info.ucs_category or ""):lower()
@@ -6718,7 +6722,7 @@ function BuildFilteredList(list)
       pair_ok = (cat_l == pair_cat)
     end
 
-    if match and pair_ok then
+    if text_match and pair_ok then
       filtered[#filtered + 1] = info
     end
   end
@@ -11199,18 +11203,36 @@ function loop()
 
     if filter_text ~= "" then
       for keyword in filter_text:gmatch("%S+") do
-        local synonyms = thesaurus_map[keyword:lower()]
-        if synonyms then
-          local sorted = {table.unpack(synonyms)} -- 将同义词排序后拼接为唯一标识
-          -- table.sort(sorted) -- 对同义词排序
-          local key = table.concat(sorted, ",")
-          if not shown_synonym_groups[key] then
-            shown_synonym_groups[key] = true
-            local display = table.concat(sorted, "||")
-            table.insert(synonym_display_parts, "(" .. display .. ")")
+        -- 过滤逻辑控制词与语法符号，不让它们显示在同义词框中
+        local is_syntax_token = false
+        local k_up = keyword:upper()
+
+        -- 过滤逻辑运算符 (AND, OR, NOT)
+        if k_up == "AND" or k_up == "OR" or k_up == "NOT" then
+          is_syntax_token = true
+        end
+
+        -- 过滤语法锚点与引号 (^, $, "")
+        -- 如果词首是 ^ 或 ", 或者词尾是 $ 或 "，则视为语法词
+        if not is_syntax_token then
+          if keyword:find('^"') or keyword:find('"$') or keyword:find('^%^') or keyword:find('%$$') then
+            is_syntax_token = true
           end
-        else
-          table.insert(synonym_display_parts, "(" .. keyword .. ")")
+        end
+        if not is_syntax_token then
+          local synonyms = thesaurus_map[keyword:lower()]
+          if synonyms then
+            local sorted = {table.unpack(synonyms)} -- 将同义词排序后拼接为唯一标识
+            -- table.sort(sorted) -- 对同义词排序
+            local key = table.concat(sorted, ",")
+            if not shown_synonym_groups[key] then
+              shown_synonym_groups[key] = true
+              local display = table.concat(sorted, "||")
+              table.insert(synonym_display_parts, "(" .. display .. ")")
+            end
+          else
+            table.insert(synonym_display_parts, "(" .. keyword .. ")")
+          end
         end
       end
     end
@@ -16772,15 +16794,17 @@ function loop()
       end
 
       -- 右方向键播放
-      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_RightArrow()) then
-        PlayFromCursor(cur_info)
-      end
+      if not reaper.ImGui_IsAnyItemActive(ctx) then
+        if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_RightArrow()) then
+          PlayFromCursor(cur_info)
+        end
 
-      -- 左方向键停止
-      if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_LeftArrow()) then
-        StopPreview()
-        if last_play_cursor_before_play then
-          Wave.play_cursor = last_play_cursor_before_play
+        -- 左方向键停止
+        if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_LeftArrow()) then
+          StopPreview()
+          if last_play_cursor_before_play then
+            Wave.play_cursor = last_play_cursor_before_play
+          end
         end
       end
 

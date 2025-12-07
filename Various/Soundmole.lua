@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.122
+-- @version 1.0.123
 -- @changelog
---   Added visual tooltips when adjusting Font Size (Ctrl+Wheel) and Row Height (Ctrl+Shift+Wheel).
---   Zooming the preview waveform no longer incorrectly scales the waveforms in the file list.
+--   Optimized search logic to support Boolean operators, anchors, and quoted exact matching, while hiding syntax control words in the thesaurus display.
 --   Support reaper_soundmole-x64.dll v0.0.6
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
