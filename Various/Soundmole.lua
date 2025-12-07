@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.123
+-- @version 1.0.124
 -- @changelog
---   Optimized search logic to support Boolean operators, anchors, and quoted exact matching, while hiding syntax control words in the thesaurus display.
+--   Added waveform color mode options (Monochrome, Dynamic Alpha, Spectral Gradient).
 --   Support reaper_soundmole-x64.dll v0.0.6
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

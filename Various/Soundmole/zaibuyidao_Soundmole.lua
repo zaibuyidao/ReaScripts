@@ -179,6 +179,9 @@ local show_font_size_timer    = 0
 local show_row_height_popup   = false -- 行高显示状态变量
 local show_row_height_timer   = 0
 local keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
+WAVE_COLOR_MONO               = 0     -- 波形-默认单色
+WAVE_COLOR_ALPHA              = 1     -- 波形-动态透明度
+WAVE_COLOR_GRADIENT           = 2     -- 波形-颜色渐变
 -- 表格排序常量，编号对应表格列
 local TableColumns = {
   FILENAME    = 2,
@@ -264,6 +267,7 @@ local Wave = {
 }
 
 -- 读取ExtState
+local waveform_color_mode = tonumber(reaper.GetExtState(EXT_SECTION, "waveform_color_mode")) or WAVE_COLOR_MONO
 local last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, "peak_chans"))
 if last_peak_chans then peak_chans = math.min(math.max(last_peak_chans, 6), 128) end
 local last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, "font_size"))
@@ -3358,6 +3362,7 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
   return peaks, pixel_cnt, src_len, channel_count
 end
 
+-- 绘制波形
 function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, vertical_scale)
   -- 如果没有传入缩放比例，默认使用 1.0
   local v_scale = vertical_scale or 1.0
@@ -3374,20 +3379,58 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
       local ch_y = min_y + (ch - 1) * h / channel_count
       local ch_h = h / channel_count
       local y_mid = ch_y + ch_h / 2
-      -- 先画一条横线，作为静音参考线
-      reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, colors.wave_center, 1.0) -- 波形颜色-中心线
-      -- 再画波形竖线
+
+      -- 画中心参考线
+      reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, colors.wave_center, 1.0) 
+
       for i = 1, w do
         local frac = (i - 1) / (w - 1)
         local idx = math.floor(frac * #peaks[ch]) + 1
         local p = (peaks[ch] and peaks[ch][idx]) or {0, 0}
         local minv = p[1] or 0
         local maxv = p[2] or 0
+
+        -- 计算线条高度
         local y1 = y_mid - minv * ch_h / 2 * v_scale
         local y2 = y_mid - maxv * ch_h / 2 * v_scale
 
-        -- 波形覆盖在中线上
-        reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, colors.wave_line, 1.0) -- 波形颜色-主线
+        -- 确定线条颜色
+        local col = colors.wave_line -- 默认 (模式 0)
+
+        -- 如果不是默认模式，进行动态计算
+        if waveform_color_mode ~= WAVE_COLOR_MONO then
+           -- 获取当前采样点的振幅 (0.0 ~ 1.0)
+           local amp = math.max(math.abs(minv), math.abs(maxv)) * v_scale
+           -- 限制在 0~1 之间
+           if amp > 1.0 then amp = 1.0 end
+
+           if waveform_color_mode == WAVE_COLOR_ALPHA then
+             -- 方案 A: 动态透明度 (振幅越小越透明，最小 0.2，最大 1.0)
+             local alpha_ratio = 0.25 + (amp * 0.75) 
+             if alpha_ratio > 1.0 then alpha_ratio = 1.0 end
+             local alpha_byte = math.floor(alpha_ratio * 255)
+             -- 保留原颜色的 RGB，替换 Alpha 通道
+             col = (colors.wave_line & 0xFFFFFF00) | alpha_byte
+
+           elseif waveform_color_mode == WAVE_COLOR_GRADIENT then
+             -- 方案 B: 颜色渐变 (HSV 转换)
+             -- Hue: 0.6(蓝) -> 0.3(绿) -> 0.0(红/黄)
+             local hue = 0.6 - (amp * 0.6)
+             if hue < 0 then hue = 0 end
+
+             -- Saturation: 声音越大越饱和
+             local sat = 0.7 + (amp * 0.3)
+
+             -- Value: 始终保持较亮
+             local val = 1.0
+
+             local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, sat, val)
+             col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 1.0)
+           end
+        end
+
+        -- 绘制线条
+        reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, col, 1.0) 
       end
     end
   end
@@ -15852,17 +15895,50 @@ function loop()
 
       local function Section_WaveformPreview()
         reaper.ImGui_Text(ctx, "Waveform Preview Settings:")
+
+        -- 自动滚动开关
         local changed_scroll, new_scroll = reaper.ImGui_Checkbox(ctx, "Auto scroll waveform during playback", auto_scroll_enabled)
         if changed_scroll then
           auto_scroll_enabled = new_scroll
           reaper.SetExtState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
         end
+
         -- 是否显示鼠标悬停提示线与时间
         local changed_hover, new_hover = reaper.ImGui_Checkbox(ctx, "Show mouse hover cursor & time on waveform preview", waveform_hint_enabled)
         if changed_hover then
           waveform_hint_enabled = new_hover
           reaper.SetExtState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
         end
+
+        -- 波形着色模式选择
+        reaper.ImGui_Separator(ctx)
+        reaper.ImGui_Text(ctx, "Waveform Color Mode:")
+
+        -- 选项1: 默认单色
+        if reaper.ImGui_RadioButton(ctx, "Default (Monochrome)", waveform_color_mode == WAVE_COLOR_MONO) then
+          waveform_color_mode = WAVE_COLOR_MONO
+          reaper.SetExtState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
+        end
+        reaper.ImGui_SameLine(ctx)
+
+        -- 选项2: 动态透明度
+        if reaper.ImGui_RadioButton(ctx, "Dynamic Alpha", waveform_color_mode == WAVE_COLOR_ALPHA) then
+          waveform_color_mode = WAVE_COLOR_ALPHA
+          reaper.SetExtState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
+        end
+        -- if reaper.ImGui_IsItemHovered(ctx) then
+        --   reaper.ImGui_SetTooltip(ctx, "Louder parts are opaque, quieter parts are transparent.")
+        -- end
+        reaper.ImGui_SameLine(ctx)
+
+        -- 选项3: 颜色渐变
+        if reaper.ImGui_RadioButton(ctx, "Spectral Gradient", waveform_color_mode == WAVE_COLOR_GRADIENT) then
+          waveform_color_mode = WAVE_COLOR_GRADIENT
+          reaper.SetExtState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
+        end
+        -- if reaper.ImGui_IsItemHovered(ctx) then
+        --   reaper.ImGui_SetTooltip(ctx, "Quiet = Cool Colors (Blue), Loud = Warm Colors (Red/Yellow).")
+        -- end
       end
 
       local function Section_InsertOptions()
