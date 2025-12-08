@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.124
+-- @version 1.0.125
 -- @changelog
 --   Added waveform color mode options (Monochrome, Dynamic Alpha, Spectral Gradient).
 --   Support reaper_soundmole-x64.dll v0.0.6

@@ -3405,7 +3405,7 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
            if amp > 1.0 then amp = 1.0 end
 
            if waveform_color_mode == WAVE_COLOR_ALPHA then
-             -- 方案 A: 动态透明度 (振幅越小越透明，最小 0.2，最大 1.0)
+             -- A: 动态透明度 (振幅越小越透明，最小 0.2，最大 1.0)
              local alpha_ratio = 0.25 + (amp * 0.75) 
              if alpha_ratio > 1.0 then alpha_ratio = 1.0 end
              local alpha_byte = math.floor(alpha_ratio * 255)
@@ -3413,7 +3413,7 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
              col = (colors.wave_line & 0xFFFFFF00) | alpha_byte
 
            elseif waveform_color_mode == WAVE_COLOR_GRADIENT then
-             -- 方案 B: 颜色渐变 (HSV 转换)
+             -- B: 颜色渐变 (HSV 转换)
              -- Hue: 0.6(蓝) -> 0.3(绿) -> 0.0(红/黄)
              local hue = 0.6 - (amp * 0.6)
              if hue < 0 then hue = 0 end
@@ -3421,8 +3421,8 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
              -- Saturation: 声音越大越饱和
              local sat = 0.7 + (amp * 0.3)
 
-             -- Value: 始终保持较亮
-             local val = 1.0
+             -- local val = 0.85 -- 始终保持较亮
+             local val = 0.6 + (amp * 0.3) -- 亮度随音量动态变化
 
              local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, sat, val)
              col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 1.0)
