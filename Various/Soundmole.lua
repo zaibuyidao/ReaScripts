@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.125
+-- @version 1.0.126
 -- @changelog
---   Added waveform color mode options (Monochrome, Dynamic Alpha, Spectral Gradient).
---   Support reaper_soundmole-x64.dll v0.0.6
+--   Added C++ based asynchronous database loading.
+--   Support reaper_soundmole-x64.dll v0.0.7
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

@@ -54,6 +54,7 @@ if reaper.ImGui_GetBuiltinPath then
   ImGui = require 'imgui' '0.10'
 end
 
+local HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw') and reaper.APIExists('SM_DB_Load') and reaper.APIExists('SM_DB_Release') and reaper.APIExists('SM_DB_GetCount')
 local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
 local HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists('SM_GetWaveformCachePath') and reaper.APIExists('SM_BuildWaveformCache') and reaper.APIExists('SM_WFC_Begin') and reaper.APIExists('SM_WFC_Pump') and reaper.APIExists('SM_WFC_GetPathIfReady')
 local SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
@@ -8028,11 +8029,25 @@ function AppendMediaDBWhenIdle(budget_sec, batch)
   end
 end
 
-function StartDBFirstPage(db_dir, dbfile, first_n)
-  files_idx_cache = {}
-  selected_row = nil
+-- 加载器状态容器
+local db_loader = {
+  active = false,     -- 是否正在加载
+  ctx = nil,          -- C++ 指针
+  temp_list = {},     -- 临时存放数据的表
+  total_estimate = 0, -- 预估总数(用于进度条)
+  loaded_count = 0    -- 已加载数量
+}
 
-  -- 关闭旧流
+function StartDBFirstPage(db_dir, dbfile, first_n)
+  -- 清理旧状态
+  if db_loader.active and db_loader.ctx then
+    reaper.SM_DB_Release(db_loader.ctx)
+    db_loader.active = false
+    -- 如果从中途打断 C++ 加载，务必恢复 GC
+    collectgarbage("restart")
+  end
+
+  -- 清理旧流
   if _G._mediadb_stream then
     MediaDBStreamClose(_G._mediadb_stream)
     _G._mediadb_stream = nil
@@ -8041,6 +8056,30 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   if not dbfile or dbfile == "" then return false end
   local fullpath = db_dir .. sep .. dbfile
 
+  -- 分支 A: 极速模式
+  if reaper.APIExists('SM_DB_GetNextBatchRaw') then
+    local ctx = reaper.SM_DB_Load(fullpath)
+
+    if ctx then
+      -- 初始化异步任务
+      db_loader.ctx = ctx
+      db_loader.temp_list = {}
+      db_loader.loaded_count = 0
+      db_loader.total_estimate = reaper.SM_DB_GetCount(ctx)
+      db_loader.active = true
+
+      -- 清空 UI
+      files_idx_cache = {} 
+      selected_row = nil
+
+      -- 暂停 GC 加速处理
+      collectgarbage("stop")
+
+      return true -- 成功启动异步任务，直接返回
+    end
+  end
+
+  -- 分支 B: 传统 Lua 流模式
   -- 把搜索面板里已勾选的列映射为 DATA 行中的键，作为优先解析集合
   local function build_eager_tags()
     local m = {}
@@ -8068,19 +8107,107 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   end
 
   -- 懒解析流。DATA 行先不解析，仅缓存原文 + 按勾选列优先解析
-  _G._mediadb_stream = MediaDBStreamStart(fullpath, {lazy_data  = true, eager_tags = build_eager_tags()})
+  _G._mediadb_stream = MediaDBStreamStart(fullpath, {lazy_data = true, eager_tags = build_eager_tags()})
   if not _G._mediadb_stream then return false end
 
   _G._stream_seen = {}
+  files_idx_cache = {}
+  selected_row = nil
 
-  -- 首批2000条
+  -- 读取首屏 首批2000条
   local first = MediaDBStreamRead(_G._mediadb_stream, first_n or 2000)
   for _, e in ipairs(first) do
-    FS_MaybeSwapEntryPathToLocal(e) -- Freesound 补丁，首屏条目立刻切换为本地路径（如果已下载）
+    if collect_mode == COLLECT_MODE_FREESOUND then FS_MaybeSwapEntryPathToLocal(e) end -- Freesound 补丁，首屏条目立刻切换为本地路径（如果已下载）
     files_idx_cache[#files_idx_cache+1] = e
   end
 
+  if collect_mode == COLLECT_MODE_FREESOUND then
+    _G.__fs_seen_keys, _G.__fs_scanned_len = {}, 0
+    FS_DedupIncremental()
+  end
+
   return true
+end
+
+-- 异步加载器
+function RunDatabaseLoaderTick()
+  if not db_loader.active then return end
+
+  local BUDGET     = 0.015 -- 时间预算 (毫秒) 限制每一帧(Loop)脚本最多占用 CPU 的时间。
+  local BATCH_SIZE = 3000  -- 批量大小 (条目数) 每次调用 SM_DB_GetNextBatchRaw 时，一次性搬运多少条数据
+  local t0 = reaper.time_precise()
+
+  while true do
+    local chunk = reaper.SM_DB_GetNextBatchRaw(db_loader.ctx, BATCH_SIZE)
+
+    if not chunk or chunk == "" then
+      reaper.SM_DB_Release(db_loader.ctx)
+      db_loader.ctx = nil
+      db_loader.active = false
+      files_idx_cache = db_loader.temp_list
+      db_loader.temp_list = nil
+
+      if collect_mode == COLLECT_MODE_FREESOUND then
+        for _, e in ipairs(files_idx_cache) do FS_MaybeSwapEntryPathToLocal(e) end
+        _G.__fs_seen_keys, _G.__fs_scanned_len = {}, 0
+        FS_DedupIncremental()
+      end
+      if SortFilesByFilenameAsc then SortFilesByFilenameAsc() end
+      collectgarbage("restart")
+      collectgarbage("collect")
+      local static = _G._soundmole_static or {}
+      static.filtered_list_map = {} 
+      static.last_filter_text_map = {}
+      return
+    end
+
+    for line in chunk:gmatch("[^\n]+") do
+      local item = {}
+      local last_pos = 1
+      local fields = {} 
+      -- 16 个字段
+      for i=1,16 do
+        local p = line:find('|', last_pos, true)
+        if p then
+          fields[i] = line:sub(last_pos, p-1)
+          last_pos = p + 1
+        else
+          fields[i] = line:sub(last_pos)
+          break
+        end
+      end
+
+      item.path = fields[1]
+      if item.path and item.path ~= "" then
+        item.filename = item.path:match("[^/\\]+$") or item.path
+        item.size = tonumber(fields[2]) or 0
+        item.mtime = tonumber(fields[3]) or 0
+
+        if fields[4]~="" then item.samplerate = tonumber(fields[4]) end
+        if fields[5]~="" then item.channels = tonumber(fields[5]) end
+        if fields[6]~="" then item.length = tonumber(fields[6]) end
+        if fields[7]~="" then item.bits = tonumber(fields[7]) end
+        if fields[8]~="" then item.bpm = tonumber(fields[8]) end
+
+        if fields[9]~="" then item.type = fields[9] end
+        if fields[10]~="" then item.description = fields[10] end
+        if fields[11]~="" then item.comment = fields[11] end
+        if fields[12]~="" then item.genre = fields[12] end
+        if fields[13]~="" then item.bwf_orig_date = fields[13] end
+
+        if fields[14]~="" then item.ucs_category = fields[14] end
+        if fields[15]~="" then item.ucs_subcategory = fields[15] end
+        if fields[16]~="" then item.ucs_catid = fields[16] end
+
+        table.insert(db_loader.temp_list, item)
+        db_loader.loaded_count = db_loader.loaded_count + 1
+      end
+    end
+
+    if (reaper.time_precise() - t0) > BUDGET then
+      return
+    end
+  end
 end
 
 --------------------------------------------- Freesound 模式 ---------------------------------------------
@@ -10947,6 +11074,7 @@ function SM_DrawLeftTableToggle(ctx)
 end
 
 function loop()
+  RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！
   -- 首次使用时收集音频文件
   if not files_idx_cache then
     CollectFiles()
@@ -11020,6 +11148,27 @@ function loop()
 
     local ix, iy = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), ix, iy * 2.0)
+
+    -- 在界面最上层显示加载进度条 (当 db_loader 激活时)
+    if db_loader.active then
+      -- 计算百分比
+      local pct = 0
+      if db_loader.total_estimate > 0 then
+        pct = db_loader.loaded_count / db_loader.total_estimate
+      end
+
+      -- 在窗口中央显示进度条
+      local win_w, win_h = reaper.ImGui_GetWindowSize(ctx)
+      reaper.ImGui_SetNextWindowPos(ctx, win_w * 0.5, win_h * 0.5, reaper.ImGui_Cond_Always(), 0.5, 0.5)
+      reaper.ImGui_SetNextWindowSize(ctx, 300, 100)
+
+      if reaper.ImGui_Begin(ctx, "DBLoader", false, reaper.ImGui_WindowFlags_NoTitleBar() | reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_NoMove()) then
+        reaper.ImGui_Text(ctx, "Loading Database... Please wait.")
+        reaper.ImGui_Text(ctx, string.format("%d / %d records", db_loader.loaded_count, db_loader.total_estimate))
+        reaper.ImGui_ProgressBar(ctx, pct, -1, 0, string.format("%.0f%%", pct * 100))
+        reaper.ImGui_End(ctx)
+      end
+    end
 
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
