@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.126
+-- @version 1.0.127
 -- @changelog
---   Added C++ based asynchronous database loading.
---   Support reaper_soundmole-x64.dll v0.0.7
+--   Significantly optimized database loading speed and stability via deep C++ extension integration.
+--   Support reaper_soundmole-x64.dll v0.0.8
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

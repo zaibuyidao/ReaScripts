@@ -6649,6 +6649,12 @@ function BuildFilteredList(list)
   local pair_cat = (type(temp_ucs_cat_keyword) == "string" and temp_ucs_cat_keyword ~= "") and temp_ucs_cat_keyword:lower() or nil
   local pair_sub = (type(temp_ucs_sub_keyword) == "string" and temp_ucs_sub_keyword ~= "") and temp_ucs_sub_keyword:lower() or nil
 
+  -- 性能优化：无搜索条件时，直接透传原列表 (零拷贝)
+  -- 避免 N 次无效循环和重建表，消除加载完成后的最后一道卡顿
+  if (#boolean_groups == 0) and (not pair_cat) and (not pair_sub) then
+    return list
+  end
+
   -- 遍历文件列表进行匹配
   for _, info in ipairs(list) do
     -- 组装目标文本
@@ -8133,8 +8139,8 @@ end
 function RunDatabaseLoaderTick()
   if not db_loader.active then return end
 
-  local BUDGET     = 0.015 -- 时间预算 (毫秒) 限制每一帧(Loop)脚本最多占用 CPU 的时间。
-  local BATCH_SIZE = 3000  -- 批量大小 (条目数) 每次调用 SM_DB_GetNextBatchRaw 时，一次性搬运多少条数据
+  local BUDGET     = 0.010 -- 时间预算 (毫秒) 限制每一帧(Loop)脚本最多占用 CPU 的时间。
+  local BATCH_SIZE = 7000 -- 批量大小 (条目数) 每次调用 SM_DB_GetNextBatchRaw 时，一次性搬运多少条数据
   local t0 = reaper.time_precise()
 
   while true do
@@ -8152,7 +8158,7 @@ function RunDatabaseLoaderTick()
         _G.__fs_seen_keys, _G.__fs_scanned_len = {}, 0
         FS_DedupIncremental()
       end
-      if SortFilesByFilenameAsc then SortFilesByFilenameAsc() end
+      -- if SortFilesByFilenameAsc then SortFilesByFilenameAsc() end -- 排序注释，交给扩展功能处理
       collectgarbage("restart")
       collectgarbage("collect")
       local static = _G._soundmole_static or {}
@@ -11159,10 +11165,10 @@ function loop()
 
       -- 在窗口中央显示进度条
       local win_w, win_h = reaper.ImGui_GetWindowSize(ctx)
-      reaper.ImGui_SetNextWindowPos(ctx, win_w * 0.5, win_h * 0.5, reaper.ImGui_Cond_Always(), 0.5, 0.5)
+      reaper.ImGui_SetNextWindowPos(ctx, win_w * 0.5, win_h * 0.5, reaper.ImGui_Cond_Appearing(), 0.5, 0.5) -- reaper.ImGui_Cond_Always(), 0.5, 0.5)
       reaper.ImGui_SetNextWindowSize(ctx, 300, 100)
 
-      if reaper.ImGui_Begin(ctx, "DBLoader", false, reaper.ImGui_WindowFlags_NoTitleBar() | reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_NoMove()) then
+      if reaper.ImGui_Begin(ctx, "DBLoader", false, reaper.ImGui_WindowFlags_NoTitleBar() | reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_TopMost()) then -- | reaper.ImGui_WindowFlags_NoMove()
         reaper.ImGui_Text(ctx, "Loading Database... Please wait.")
         reaper.ImGui_Text(ctx, string.format("%d / %d records", db_loader.loaded_count, db_loader.total_estimate))
         reaper.ImGui_ProgressBar(ctx, pct, -1, 0, string.format("%.0f%%", pct * 100))
@@ -13219,24 +13225,26 @@ function loop()
               local alias = mediadb_alias[dbfile] or dbfile -- 优先显示别名
               local is_selected = (collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile)
               if reaper.ImGui_Selectable(ctx, alias, is_selected) then
-                collect_mode = COLLECT_MODE_MEDIADB
-                tree_state.cur_mediadb = dbfile
-                _G._db_path_prefix_filter = "" -- 切换数据库时清空路径前缀过滤
+                if collect_mode ~= COLLECT_MODE_MEDIADB or tree_state.cur_mediadb ~= dbfile then
+                  collect_mode = COLLECT_MODE_MEDIADB
+                  tree_state.cur_mediadb = dbfile
+                  _G._db_path_prefix_filter = "" -- 切换数据库时清空路径前缀过滤
 
-                -- 清除选中状态
-                file_select_start = nil
-                file_select_end   = nil
-                selected_row      = -1
+                  -- 清除选中状态
+                  file_select_start = nil
+                  file_select_end   = nil
+                  selected_row      = -1
 
-                local static = _G._soundmole_static or {}
-                _G._soundmole_static = static
-                static.filtered_list_map    = {}
-                static.last_filter_text_map = {}
+                  local static = _G._soundmole_static or {}
+                  _G._soundmole_static = static
+                  static.filtered_list_map    = {}
+                  static.last_filter_text_map = {}
 
-                -- 触发重建
-                files_idx_cache = nil
-                CollectFiles()
-                DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
+                  -- 触发重建
+                  files_idx_cache = nil
+                  CollectFiles()
+                  DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
+                end
               end
 
               -- 右键菜单
@@ -13425,6 +13433,7 @@ function loop()
                     -- 目标数据库文件绝对路径 .MoleFileList
                     local dbpath = normalize_path(db_dir, true) .. dbfile
                     local existing_map = DB_ReadExistingFileSet(dbpath)
+                    local any_added = false
                     local root_dir = tree_state.cur_scan_folder or ""
                     for path in payload:gmatch("([^|;|]+)") do
                       local p = normalize_path(path, false)
@@ -13433,10 +13442,11 @@ function loop()
                         local info = CollectFileInfo(p)
                         WriteToMediaDB(info, dbpath)
                         existing_map[p] = true -- 写入后立刻标记，避免批量内重复
+                        any_added = true
                       end
                     end
                     -- 刷新文件列表
-                    if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile then
+                    if any_added and collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile then
                       CollectFiles()
                     end
                   end
@@ -13475,6 +13485,7 @@ function loop()
                   if #pending > 0 then
                     local dbpath = normalize_path(db_dir, true) .. dbfile
                     local existing_map = DB_ReadExistingFileSet(dbpath)
+                    local any_added = false
                     local root_dir = tree_state and tree_state.cur_scan_folder or ""
 
                     for _, p in ipairs(pending) do
@@ -13483,12 +13494,13 @@ function loop()
                         if info then
                           WriteToMediaDB(info, dbpath)
                           existing_map[p] = true
+                          any_added = true -- 标记为脏
                         end
                       end
                     end
 
                     -- 刷新文件列表
-                    if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb == dbfile then
+                    if any_added and collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb == dbfile then
                       files_idx_cache = nil
                       CollectFiles()
 
@@ -13540,12 +13552,14 @@ function loop()
                   local is_sel = (collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db == fn)
 
                   if reaper.ImGui_Selectable(ctx, alias .. "##reaperdb_" .. fn, is_sel) then
-                    collect_mode = COLLECT_MODE_REAPERDB
-                    tree_state.cur_reaper_db = fn
+                    if collect_mode ~= COLLECT_MODE_REAPERDB or tree_state.cur_reaper_db ~= fn then
+                      collect_mode = COLLECT_MODE_REAPERDB
+                      tree_state.cur_reaper_db = fn
 
-                    file_select_start, file_select_end, selected_row = nil, nil, -1
-                    files_idx_cache = nil
-                    CollectFiles()
+                      file_select_start, file_select_end, selected_row = nil, nil, -1
+                      files_idx_cache = nil
+                      CollectFiles()
+                    end
                   end
                 end
 
