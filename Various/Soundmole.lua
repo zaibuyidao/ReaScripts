@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.127
+-- @version 1.0.128
 -- @changelog
---   Significantly optimized database loading speed and stability via deep C++ extension integration.
---   Support reaper_soundmole-x64.dll v0.0.8
+--   Added support for accelerated table sorting via the Soundmole extension, significantly boosting list response speed.
+--   Support reaper_soundmole-x64.dll v0.0.9
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

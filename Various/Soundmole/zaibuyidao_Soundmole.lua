@@ -8072,6 +8072,7 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
       db_loader.temp_list = {}
       db_loader.loaded_count = 0
       db_loader.total_estimate = reaper.SM_DB_GetCount(ctx)
+      db_loader.op_type = "LOAD"
       db_loader.active = true
 
       -- 清空 UI
@@ -8139,8 +8140,15 @@ end
 function RunDatabaseLoaderTick()
   if not db_loader.active then return end
 
-  local BUDGET     = 0.010 -- 时间预算 (毫秒) 限制每一帧(Loop)脚本最多占用 CPU 的时间。
-  local BATCH_SIZE = 7000 -- 批量大小 (条目数) 每次调用 SM_DB_GetNextBatchRaw 时，一次性搬运多少条数据
+  if not db_loader.temp_list then
+    db_loader.active = false
+    return 
+  end
+
+  local is_sorting_mode = (db_loader.op_type == "SORT")
+
+  local BUDGET     = is_sorting_mode and 0.050 or 0.010 -- 时间预算 (毫秒) 限制每一帧(Loop)脚本最多占用 CPU 的时间。
+  local BATCH_SIZE = is_sorting_mode and 20000 or 7000  -- 批量大小 (条目数) 每次调用 SM_DB_GetNextBatchRaw 时，一次性搬运多少条数据
   local t0 = reaper.time_precise()
 
   while true do
@@ -8150,8 +8158,10 @@ function RunDatabaseLoaderTick()
       reaper.SM_DB_Release(db_loader.ctx)
       db_loader.ctx = nil
       db_loader.active = false
+
       files_idx_cache = db_loader.temp_list
       db_loader.temp_list = nil
+      db_loader.op_type = nil -- 任务完成，清除操作类型标记
 
       if collect_mode == COLLECT_MODE_FREESOUND then
         for _, e in ipairs(files_idx_cache) do FS_MaybeSwapEntryPathToLocal(e) end
@@ -11165,14 +11175,29 @@ function loop()
 
       -- 在窗口中央显示进度条
       local win_w, win_h = reaper.ImGui_GetWindowSize(ctx)
-      reaper.ImGui_SetNextWindowPos(ctx, win_w * 0.5, win_h * 0.5, reaper.ImGui_Cond_Appearing(), 0.5, 0.5) -- reaper.ImGui_Cond_Always(), 0.5, 0.5)
-      reaper.ImGui_SetNextWindowSize(ctx, 300, 100)
 
-      if reaper.ImGui_Begin(ctx, "DBLoader", false, reaper.ImGui_WindowFlags_NoTitleBar() | reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_TopMost()) then -- | reaper.ImGui_WindowFlags_NoMove()
-        reaper.ImGui_Text(ctx, "Loading Database... Please wait.")
-        reaper.ImGui_Text(ctx, string.format("%d / %d records", db_loader.loaded_count, db_loader.total_estimate))
-        reaper.ImGui_ProgressBar(ctx, pct, -1, 0, string.format("%.0f%%", pct * 100))
-        reaper.ImGui_End(ctx)
+      if db_loader.op_type == "SORT" then
+        -- 场景 A: 纯排序
+        reaper.ImGui_SetNextWindowPos(ctx, win_w * 0.5, win_h * 0.5, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
+        reaper.ImGui_SetNextWindowSize(ctx, 200, 70)
+        local flags = reaper.ImGui_WindowFlags_NoTitleBar() | reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_NoScrollbar() | reaper.ImGui_WindowFlags_TopMost()
+
+        if reaper.ImGui_Begin(ctx, "SortProgress", false, flags) then
+          reaper.ImGui_Text(ctx, "Sorting data...")
+          reaper.ImGui_ProgressBar(ctx, pct, -1, 0, string.format("%.0f%%", pct * 100))
+          reaper.ImGui_End(ctx)
+        end
+      else
+        -- 场景 B: 硬盘加载
+        reaper.ImGui_SetNextWindowPos(ctx, win_w * 0.5, win_h * 0.5, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
+        reaper.ImGui_SetNextWindowSize(ctx, 300, 100)
+
+        if reaper.ImGui_Begin(ctx, "DBLoader", false, reaper.ImGui_WindowFlags_NoTitleBar() | reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_TopMost()) then
+          reaper.ImGui_Text(ctx, "Loading Database... Please wait.")
+          reaper.ImGui_Text(ctx, string.format("%d / %d records", db_loader.loaded_count, db_loader.total_estimate))
+          reaper.ImGui_ProgressBar(ctx, pct, -1, 0, string.format("%.0f%%", pct * 100))
+          reaper.ImGui_End(ctx)
+        end
       end
     end
 
@@ -14412,8 +14437,63 @@ function loop()
         local filter_changed   = (eff ~= last_filter_text)
         local sort_changed = (sort_specs_str ~= last_sort_specs)
 
-        if filter_changed or sort_changed or not filtered_list then
+        -- 检查是否需要排序
+        if sort_changed and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and reaper.APIExists("SM_DB_Sort") then
+           if not db_loader.ctx then
+              local sep = package.config:sub(1, 1)
+              local db_fullpath = nil
+              if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
+                db_fullpath = normalize_path(script_path .. "SoundmoleDB" .. sep .. tree_state.cur_mediadb, false)
+              elseif collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db and tree_state.cur_reaper_db ~= "" then
+                db_fullpath = normalize_path(reaper.GetResourcePath() .. sep .. "MediaDB" .. sep .. tree_state.cur_reaper_db, false)
+              end
+              if db_fullpath then db_loader.ctx = reaper.SM_DB_Load(db_fullpath) end
+           end
+
+           -- 执行排序
+           if db_loader.ctx and #sort_specs > 0 then
+              local spec = sort_specs[1]
+              local col_name = "filename"
+              if spec.user_id == TableColumns.SIZE then col_name = "size"
+              elseif spec.user_id == TableColumns.DATE then col_name = "mtime"
+              elseif spec.user_id == TableColumns.LENGTH then col_name = "len"
+              elseif spec.user_id == TableColumns.BPM then col_name = "bpm"
+              elseif spec.user_id == TableColumns.SAMPLERATE then col_name = "sr"
+              elseif spec.user_id == TableColumns.CHANNELS then col_name = "ch"
+              elseif spec.user_id == TableColumns.BITS then col_name = "bits"
+              elseif spec.user_id == TableColumns.TYPE then col_name = "type"
+              elseif spec.user_id == TableColumns.GENRE then col_name = "genre"
+              elseif spec.user_id == TableColumns.DESCRIPTION then col_name = "desc"
+              elseif spec.user_id == TableColumns.COMMENT then col_name = "comment"
+              elseif spec.user_id == TableColumns.CATEGORY then col_name = "cat"
+              elseif spec.user_id == TableColumns.SUBCATEGORY then col_name = "subcat"
+              elseif spec.user_id == TableColumns.CATID then col_name = "catid"
+              elseif spec.user_id == TableColumns.KEY then col_name = "key"
+              end
+
+              -- 扩展排序
+              local is_asc = (spec.sort_dir == reaper.ImGui_SortDirection_Ascending()) and 1 or 0
+              reaper.SM_DB_Sort(db_loader.ctx, col_name, is_asc)
+
+              -- 重置加载器状态
+              files_idx_cache = {} -- 清空显示缓存
+              db_loader.temp_list = {} -- 强制初始化为空表，只在触发排序时执行一次
+              db_loader.loaded_count = 0 
+              db_loader.total_estimate = reaper.SM_DB_GetCount(db_loader.ctx)
+              if db_loader.op_type ~= "LOAD" then db_loader.op_type = "SORT" end -- 只有当当前空闲或非 LOAD 时，才标记为 "SORT"
+              db_loader.active = true -- 激活加载器，后续由 RunDatabaseLoaderTick 接管
+              -- 标记状态已更新，防止下一帧重复进入
+              static.last_sort_specs_map[current_db_key] = sort_specs_str
+              -- 立即清空过滤列表并退出当前逻辑，等待数据加载完成
+              filtered_list = {}
+              static.filtered_list_map[current_db_key] = filtered_list
+              goto continue_frame -- 跳过后面的 Lua 排序逻辑
+           end
+        end
+
+        if not db_loader.active and (filter_changed or sort_changed or not filtered_list) then
           filtered_list = BuildFilteredList(files_idx_cache)
+          -- 回退到旧排序
           if #sort_specs > 0 and filtered_list and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
             table.sort(filtered_list, function(a, b)
               for _, spec in ipairs(sort_specs) do
@@ -14617,6 +14697,8 @@ function loop()
           static.last_filter_text_map[current_db_key] = eff
           static.last_sort_specs_map[current_db_key]  = sort_specs_str
         end
+
+        ::continue_frame::
 
         _G.current_display_list = filtered_list
 
