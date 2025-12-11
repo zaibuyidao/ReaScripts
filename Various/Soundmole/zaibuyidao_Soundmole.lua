@@ -6250,6 +6250,10 @@ function LoadExitSettings()
     end
   end
 
+-- 恢复目标数据库设置
+  tree_state.target_mediadb = reaper.GetExtState(EXT_SECTION, "target_mediadb")
+  if tree_state.target_mediadb == "" then tree_state.target_mediadb = nil end
+
   if collect_mode == COLLECT_MODE_PLAY_HISTORY then
     local ext = reaper.GetExtState(EXT_SECTION, "play_history_header_open")
     if ext == "true" then
@@ -6310,6 +6314,8 @@ function SaveExitSettings()
     reaper.SetExtState(EXT_SECTION, "cur_play_history_row", tostring(selected_play_history_row or 0), true)
 
   end
+  -- 保存目标数据库设置
+  reaper.SetExtState(EXT_SECTION, "target_mediadb", tree_state.target_mediadb or "", true)
 end
 
 LoadExitSettings()
@@ -7140,6 +7146,56 @@ function DrawRowPopup(ctx, i, info, collect_mode)
     if reaper.ImGui_MenuItem(ctx, "Set as Active RS5K Sample (Shift+Q)") then
       local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
       LoadOnlySelectedToRS5k(tr, info.path)
+    end
+  end
+
+  -- 添加到目标数据库
+  if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
+    local db_dir = script_path .. "SoundmoleDB"
+    local target_db_path = normalize_path(db_dir, true) .. tree_state.target_mediadb
+    local alias = (mediadb_alias and mediadb_alias[tree_state.target_mediadb]) or tree_state.target_mediadb
+
+    reaper.ImGui_Separator(ctx)
+    if reaper.ImGui_MenuItem(ctx, "Add to Target DB: " .. alias) then
+      if not reaper.file_exists(target_db_path) then
+        reaper.ShowMessageBox("Target database file not found:\n" .. target_db_path, "Error", 0)
+        -- 自动清除无效的目标
+        -- tree_state.target_mediadb = nil
+        -- reaper.SetExtState(EXT_SECTION, "target_mediadb", "", true)
+      else
+        -- 收集要添加的路径
+        local paths_to_add = {}
+        if file_select_start and file_select_end and file_select_start ~= file_select_end then
+          local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
+          for j = a, b do
+            local sel = _G.current_display_list[j]
+            if sel and sel.path then table.insert(paths_to_add, sel.path) end
+          end
+        else
+          if info.path then table.insert(paths_to_add, info.path) end
+        end
+
+        -- 执行写入
+        local existing_map = DB_ReadExistingFileSet(target_db_path)
+        local added_count = 0
+        for _, p in ipairs(paths_to_add) do
+          local norm_p = normalize_path(p, false)
+          if not existing_map[norm_p] then
+            local file_info = CollectFileInfo(p) -- 重新收集信息以确保数据完整
+            if file_info then
+              WriteToMediaDB(file_info, target_db_path)
+              existing_map[norm_p] = true
+              added_count = added_count + 1
+            end
+          end
+        end
+
+        -- 如果当前正处于该目标数据库视图，刷新列表
+        if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == tree_state.target_mediadb then
+          files_idx_cache = nil
+          CollectFiles()
+        end
+      end
     end
   end
 
@@ -13278,6 +13334,21 @@ function loop()
               end
               if reaper.ImGui_BeginPopup(ctx, "SoundmoleDBMenu_" .. dbfile) then
 
+                -- 设置/清除目标数据库
+                if reaper.ImGui_BeginMenu(ctx, "Target Database") then
+                  local is_target = (tree_state.target_mediadb == dbfile)
+                  if reaper.ImGui_MenuItem(ctx, "Set as Target Database", nil, is_target) then
+                    tree_state.target_mediadb = dbfile
+                    reaper.SetExtState(EXT_SECTION, "target_mediadb", dbfile, true)
+                  end
+                  if reaper.ImGui_MenuItem(ctx, "Clear Target Database") then
+                    tree_state.target_mediadb = nil
+                    reaper.SetExtState(EXT_SECTION, "target_mediadb", "", true)
+                  end
+                  reaper.ImGui_EndMenu(ctx)
+                end
+                reaper.ImGui_Separator(ctx)
+
                 -- 重命名数据库
                 if reaper.ImGui_MenuItem(ctx, "Rename Database") then
                   local ret, newname = reaper.GetUserInputs("Rename DB", 1, "New Name:,extrawidth=180", mediadb_alias[dbfile] or dbfile)
@@ -16646,6 +16717,97 @@ function loop()
     local rv6
     rv6, auto_play_next = reaper.ImGui_Checkbox(ctx, "Auto Play Next##AutoPlayNext", auto_play_next)
     -- reaper.ImGui_PopStyleVar(ctx)
+
+    -- if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
+    --   reaper.ImGui_SameLine(ctx, nil, 15)
+    --   local alias = (mediadb_alias and mediadb_alias[tree_state.target_mediadb]) or tree_state.target_mediadb
+    --   reaper.ImGui_TextColored(ctx, colors.mole, "Target: " .. alias)
+    --   if reaper.ImGui_IsItemHovered(ctx) then
+    --     reaper.ImGui_SetTooltip(ctx, "Right-click a file in the list to add it to this database.")
+    --   end
+    -- end
+
+    -- 目标数据库下拉菜单
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_AlignTextToFramePadding(ctx)
+    reaper.ImGui_TextColored(ctx, colors.mole, "Target DB:") -- 标签颜色使用 Mole 色
+    reaper.ImGui_SameLine(ctx)
+
+    reaper.ImGui_SetNextItemWidth(ctx, 150) -- 设置下拉框宽度，可按需调整
+
+    -- 计算当前显示的名称
+    local current_target_alias = "None"
+    if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
+      current_target_alias = (mediadb_alias and mediadb_alias[tree_state.target_mediadb]) or tree_state.target_mediadb
+    end
+
+    if reaper.ImGui_BeginCombo(ctx, "##target_db_combo", current_target_alias, reaper.ImGui_ComboFlags_HeightLarge()) then
+      -- 选项无，取消目标
+      if reaper.ImGui_Selectable(ctx, "None", (tree_state.target_mediadb == nil or tree_state.target_mediadb == "")) then
+        tree_state.target_mediadb = nil
+        reaper.SetExtState(EXT_SECTION, "target_mediadb", "", true) -- 清除保存的状态
+      end
+
+      -- 动态获取并排序数据库列表(只在展开时运行)
+      local db_list_temp = {}
+      local db_dir = script_path .. "SoundmoleDB"
+      local i = 0
+      while true do
+        local dbfile = reaper.EnumerateFiles(db_dir, i)
+        if not dbfile then break end
+        if dbfile:match("%.MoleFileList$") then
+          table.insert(db_list_temp, dbfile)
+        end
+        i = i + 1
+      end
+
+      -- 使用 mediadb_order 进行排序，保持与左侧列表顺序一致
+      local ordered_dbs = {}
+      if mediadb_order then
+        local exist_map = {}
+        for _, f in ipairs(db_list_temp) do exist_map[f] = true end
+        -- 加入已排序的
+        for _, name in ipairs(mediadb_order) do
+          if exist_map[name] then
+            table.insert(ordered_dbs, name)
+            exist_map[name] = nil -- 标记已处理
+          end
+        end
+        -- 加入未排序的新文件
+        for _, f in ipairs(db_list_temp) do
+          if exist_map[f] then table.insert(ordered_dbs, f) end
+        end
+      else
+        ordered_dbs = db_list_temp -- 无排序配置则直接使用
+        table.sort(ordered_dbs)
+      end
+
+      -- 渲染数据库列表选项
+      for _, dbfile in ipairs(ordered_dbs) do
+        local alias = (mediadb_alias and mediadb_alias[dbfile]) or dbfile
+        local is_selected = (tree_state.target_mediadb == dbfile)
+
+        if reaper.ImGui_Selectable(ctx, alias, is_selected) then
+          tree_state.target_mediadb = dbfile
+          reaper.SetExtState(EXT_SECTION, "target_mediadb", dbfile, true) -- 保存选中状态
+        end
+        -- 鼠标悬停显示真实文件名提示
+        if reaper.ImGui_IsItemHovered(ctx) then
+          reaper.ImGui_SetTooltip(ctx, "File: " .. dbfile)
+        end
+        -- 保持选中项在视野内
+        if is_selected then
+          reaper.ImGui_SetItemDefaultFocus(ctx)
+        end
+      end
+
+      reaper.ImGui_EndCombo(ctx)
+    end
+
+    -- 下拉框本身的悬停提示
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_SetTooltip(ctx, "Select a database as the target for 'Add to Database' actions.\nRight-click files in the list to add them to this target.")
+    end
 
     do
       -- 时间容差

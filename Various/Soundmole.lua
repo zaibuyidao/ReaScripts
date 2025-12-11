@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.128
+-- @version 1.0.129
 -- @changelog
---   Added support for accelerated table sorting via the Soundmole extension, significantly boosting list response speed.
+--   Added 'Target Database' setting (via right-click menu or panel dropdown) and 'Add to Target DB' feature.
 --   Support reaper_soundmole-x64.dll v0.0.9
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
