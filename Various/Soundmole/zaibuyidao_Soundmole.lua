@@ -293,6 +293,10 @@ if last_hover_hint == "0" then waveform_hint_enabled = false end
 if last_hover_hint == "1" then waveform_hint_enabled = true end
 local last_row_height = tonumber(reaper.GetExtState(EXT_SECTION, "table_row_height"))
 if last_row_height then row_height = math.max(12, math.min(48, last_row_height)) end -- 内容行高限制范围
+local last_hue_shift = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_hue_shift")) -- 读取色相偏移设置
+spectral_hue_shift = last_hue_shift or 0.0
+local last_grad_sat = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_grad_sat")) -- 读取饱和度设置
+spectral_grad_sat = last_grad_sat or 1.0
 
 -- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items, 4=This Computer, 5=Shortcuts）
 collect_mode                 = -1 -- -1 表示未设置
@@ -310,6 +314,173 @@ COLLECT_MODE_SHORTCUT_MIRROR = 12
 COLLECT_MODE_FREESOUND       = 13
 COLLECT_MODE_SAMEFOLDER      = 14
 COLLECT_MODE_PLAY_HISTORY    = 15 -- 播放历史表格模式
+
+-- 定义虚拟列表代理元表 (界面卡顿, 丢失 Bits 和 BPM)
+-- local VirtualListMeta = {
+--   __index = function(t, k)
+--     if type(k) == "number" then
+--       if not t._handle then return nil end
+--       local raw = reaper.SM_DB_GetRowRaw(t._handle, k - 1)
+--       if not raw or raw == "" then return nil end
+
+--       local item = {}
+--       local last_pos = 1
+--       local fields = {} 
+--       for i = 1, 16 do
+--         local p = raw:find('|', last_pos, true)
+--         if p then
+--           fields[i] = raw:sub(last_pos, p-1)
+--           last_pos = p + 1
+--         else
+--           fields[i] = raw:sub(last_pos)
+--           break
+--         end
+--       end
+
+--       item.path = fields[1]
+--       if item.path and item.path ~= "" then
+--         item.filename = item.path:match("[^/\\]+$") or item.path
+--         item.size = tonumber(fields[2]) or 0
+--         item.mtime = tonumber(fields[3]) or 0
+--         if fields[9]  ~= "" then item.type = fields[9] end
+--         if fields[10] ~= "" then item.description = fields[10] end
+--         if fields[11] ~= "" then item.comment = fields[11] end
+--         if fields[12] ~= "" then item.genre = fields[12] end
+--         if fields[4]  ~= "" then item.samplerate = tonumber(fields[4]) end
+--         if fields[5]  ~= "" then item.channels = tonumber(fields[5]) end
+--         if fields[6]  ~= "" then item.length = tonumber(fields[6]) end
+--         if fields[13] ~= "" then item.bwf_orig_date = fields[13] end
+--         item.ucs_category = fields[14]
+--         item.ucs_subcategory = fields[15]
+--         if fields[16]~="" then item.ucs_catid = fields[16] end
+--         rawset(t, k, item)
+--         return item
+--       end
+--       return nil
+--     end
+--     return nil
+--   end,
+--   __len = function(t) return t._count end
+-- }
+
+-- 定义虚拟列表代理元表 (GC 优化版)
+local VirtualListMeta = {
+  __index = function(t, k)
+    -- 只处理数字索引
+    if type(k) ~= "number" then return nil end
+
+    -- 获取 C++ 数据
+    if not t._handle then return nil end
+    local raw = reaper.SM_DB_GetRowRaw(t._handle, k - 1)
+    if not raw or raw == "" then return nil end
+
+    local item = {}
+    local last_pos = 1
+    local p, val_str
+
+    -- 1. Path
+    p = raw:find('|', last_pos, true)
+    if not p then return nil end -- 数据损坏保护
+    item.path = raw:sub(last_pos, p-1)
+    last_pos = p + 1
+
+    -- 2. Size
+    p = raw:find('|', last_pos, true)
+    item.size = tonumber(raw:sub(last_pos, p-1)) or 0
+    last_pos = p + 1
+
+    -- 3. MTime
+    p = raw:find('|', last_pos, true)
+    item.mtime = tonumber(raw:sub(last_pos, p-1)) or 0
+    last_pos = p + 1
+
+    -- 4. SampleRate
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.samplerate = tonumber(val_str) end
+    last_pos = p + 1
+
+    -- 5. Channels
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.channels = tonumber(val_str) end
+    last_pos = p + 1
+
+    -- 6. Length
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.length = tonumber(val_str) end
+    last_pos = p + 1
+
+    -- 7. Bits
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.bits = tonumber(val_str) end
+    last_pos = p + 1
+
+    -- 8. BPM
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.bpm = tonumber(val_str) end
+    last_pos = p + 1
+
+    -- 9. Type
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.type = val_str end
+    last_pos = p + 1
+
+    -- 10. Description
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.description = val_str end
+    last_pos = p + 1
+
+    -- 11. Comment
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.comment = val_str end
+    last_pos = p + 1
+
+    -- 12. Genre
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.genre = val_str end
+    last_pos = p + 1
+
+    -- 13. BWF Date
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.bwf_orig_date = val_str end
+    last_pos = p + 1
+
+    -- 14. UCS Category
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.ucs_category = val_str end
+    last_pos = p + 1
+
+    -- 15. UCS SubCategory
+    p = raw:find('|', last_pos, true)
+    val_str = raw:sub(last_pos, p-1)
+    if #val_str > 0 then item.ucs_subcategory = val_str end
+    last_pos = p + 1
+
+    -- 16. UCS CatID
+    val_str = raw:sub(last_pos)
+    if #val_str > 0 then item.ucs_catid = val_str end
+
+    -- 17. Filename
+    if item.path then
+      item.filename = item.path:match("[^/\\]+$") or item.path
+    end
+
+    rawset(t, k, item)
+    return item
+  end,
+
+  __len = function(t) return t._count end
+}
 
 --------------------------------------------- 设置弹窗相关 ---------------------------------------------
 
@@ -2143,7 +2314,8 @@ function CollectFiles()
     files_idx_cache = {} -- collect_mode全部清空
   end
 
-  if files_idx_cache then
+  -- 如果是 C++ 代理模式(有_handle)，跳过此耗时的全量循环
+  if files_idx_cache and not files_idx_cache._handle then
     for _, info in ipairs(files_idx_cache) do
       info.group = GetCustomGroupsForPath(info.path)
       -- 清空表格列表的波形缓存
@@ -2154,10 +2326,12 @@ function CollectFiles()
 
   previewed_files = {}
   -- 按文件名排序。其中播放历史按钮模式不执行按文件名排序，保持最近播放顺序
-  if not (_G._mediadb_stream and not _G._mediadb_stream.eof) and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
+  -- 如果是 C++ 代理模式，数据在加载时已由 C++ 排好序，无需 Lua 再次排序
+  local is_proxy = files_idx_cache and files_idx_cache._handle
+  if not is_proxy and not (_G._mediadb_stream and not _G._mediadb_stream.eof) and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
     SortFilesByFilenameAsc()
   end
-  
+
   -- 切换模式后清空表格列表波形预览队列
   waveform_task_queue = {}
 end
@@ -3400,34 +3574,53 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
 
         -- 如果不是默认模式，进行动态计算
         if waveform_color_mode ~= WAVE_COLOR_MONO then
-           -- 获取当前采样点的振幅 (0.0 ~ 1.0)
-           local amp = math.max(math.abs(minv), math.abs(maxv)) * v_scale
-           -- 限制在 0~1 之间
-           if amp > 1.0 then amp = 1.0 end
+          -- 获取当前采样点的振幅 (0.0 ~ 1.0)
+          local amp = math.max(math.abs(minv), math.abs(maxv)) * v_scale
+          -- 限制在 0~1 之间
+          if amp > 1.0 then amp = 1.0 end
 
-           if waveform_color_mode == WAVE_COLOR_ALPHA then
-             -- A: 动态透明度 (振幅越小越透明，最小 0.2，最大 1.0)
-             local alpha_ratio = 0.25 + (amp * 0.75) 
-             if alpha_ratio > 1.0 then alpha_ratio = 1.0 end
-             local alpha_byte = math.floor(alpha_ratio * 255)
-             -- 保留原颜色的 RGB，替换 Alpha 通道
-             col = (colors.wave_line & 0xFFFFFF00) | alpha_byte
+          if waveform_color_mode == WAVE_COLOR_ALPHA then
+            -- A: 动态透明度 (振幅越小越透明，最小 0.2，最大 1.0)
+            local alpha_ratio = 0.25 + (amp * 0.75) 
+            if alpha_ratio > 1.0 then alpha_ratio = 1.0 end
+            local alpha_byte = math.floor(alpha_ratio * 255)
+            -- 保留原颜色的 RGB，替换 Alpha 通道
+            col = (colors.wave_line & 0xFFFFFF00) | alpha_byte
 
-           elseif waveform_color_mode == WAVE_COLOR_GRADIENT then
-             -- B: 颜色渐变 (HSV 转换)
-             -- Hue: 0.6(蓝) -> 0.3(绿) -> 0.0(红/黄)
-             local hue = 0.6 - (amp * 0.6)
-             if hue < 0 then hue = 0 end
+          --  elseif waveform_color_mode == WAVE_COLOR_GRADIENT then
+          --    -- B: 颜色渐变 (HSV 转换)
+          --    -- Hue: 0.6(蓝) -> 0.3(绿) -> 0.0(红/黄)
+          --    local hue = 0.6 - (amp * 0.6)
+          --    if hue < 0 then hue = 0 end
 
-             -- Saturation: 声音越大越饱和
-             local sat = 0.7 + (amp * 0.3)
+          --    -- Saturation: 声音越大越饱和
+          --    local sat = 0.7 + (amp * 0.3)
 
-             -- local val = 0.85 -- 始终保持较亮
-             local val = 0.6 + (amp * 0.3) -- 亮度随音量动态变化
+          --    -- local val = 0.85 -- 始终保持较亮
+          --    local val = 0.6 + (amp * 0.3) -- 亮度随音量动态变化
 
-             local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, sat, val)
-             col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 1.0)
-           end
+          --    local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, sat, val)
+          --    col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 1.0)
+          --  end
+          elseif waveform_color_mode == WAVE_COLOR_GRADIENT then
+            -- B: 颜色渐变 (HSV 转换)
+            -- Hue: 0.6(蓝) -> 0.3(绿) -> 0.0(红/黄)
+            local base_hue = 0.6 - (amp * 0.6)
+            if base_hue < 0 then base_hue = 0 end
+
+            -- 应用色相偏移
+            local hue = (base_hue + (spectral_hue_shift or 0)) % 1.0
+            -- Saturation: 声音越大越饱和 (0.7 ~ 1.0)
+            -- 乘以全局饱和度系数，降低此值可使颜色变柔和(Pastel)
+            local sat_mult = spectral_grad_sat or 1.0
+            local sat = (0.7 + (amp * 0.3)) * sat_mult
+
+            -- local val = 0.85 -- 始终保持较亮
+            local val = 0.6 + (amp * 0.3) -- 亮度随音量动态变化
+
+            local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, sat, val)
+            col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 1.0)
+          end
         end
 
         -- 绘制线条
@@ -6503,25 +6696,83 @@ end
 -- 支持 ^ 开头, $ 结尾
 -- 支持 "" 全字匹配，且支持延伸功能：" box" (词首), "box " (词尾)
 function BuildFilteredList(list)
-  local filtered = {}
-
-  -- 输入防抖与自动保存逻辑
+  local safe_cache = list or files_idx_cache or {}
+  -- 准备关键词
   local filter_text = _G.commit_filter_text or ""
   if filter_text ~= last_search_input then
     last_search_input = filter_text
     search_input_timer = reaper.time_precise()
   end
 
-  -- 获取基础搜索关键词
   local search_keyword = filter_text
-  if temp_search_keyword then
-    search_keyword = temp_search_keyword
-  end
-  search_keyword = tostring(search_keyword):gsub("^%s+", ""):gsub("%s+$", "")
+  if temp_search_keyword then search_keyword = temp_search_keyword end
 
-  -- 准备 Token 列表 (合并输入框内容 和 锁定搜索词)
+  local final_query = search_keyword or ""
+  if _G.filter_lock_enabled and _G.locked_filter_terms and #_G.locked_filter_terms > 0 then
+    for _, lw in ipairs(_G.locked_filter_terms) do
+      final_query = final_query .. " " .. lw
+    end
+  end
+  final_query = final_query:gsub("^%s+", ""):gsub("%s+$", "")
+
+  local db_path_filter = _G._db_path_prefix_filter 
+  local has_path = (db_path_filter and db_path_filter ~= "")
+  local has_ucs_cat = (temp_ucs_cat_keyword and temp_ucs_cat_keyword ~= "")
+  local has_ucs_sub = (temp_ucs_sub_keyword and temp_ucs_sub_keyword ~= "")
+  local has_ucs = has_ucs_cat or has_ucs_sub
+
+  -- 当查询、路径过滤、UCS 过滤全部为空时，直接返回原始列表缓存
+  if final_query == "" and not has_path and not has_ucs then
+    return safe_cache
+  end
+
+  local use_cpp = false
+  local db_handle = nil
+
+  if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) then
+    if _G.db_loader and _G.db_loader.ctx then
+      if HAVE_SM_SEARCH then
+        use_cpp = true
+        db_handle = _G.db_loader.ctx
+      end
+    end
+  end
+
+  if use_cpp then
+    local fields_t = {}
+    if temp_search_field then
+      table.insert(fields_t, temp_search_field)
+    else
+      for _, f in ipairs(search_fields) do
+        if f.enabled then table.insert(fields_t, f.key) end
+      end
+    end
+    local fields_csv = table.concat(fields_t, ",")
+
+    -- 将 UCS 分类和子分类参数传递给 C++
+    local ucs_cat_arg = temp_ucs_cat_keyword or ""
+    local ucs_sub_arg = temp_ucs_sub_keyword or ""
+    local res_handle = reaper.SM_DB_Filter(db_handle, final_query, fields_csv, db_path_filter or "", ucs_cat_arg, ucs_sub_arg)
+
+    if res_handle then
+      local count = reaper.SM_DB_GetCount(res_handle)
+      local proxy = { _handle = res_handle, _count = count }
+      if _G._last_search_handle then reaper.SM_DB_Release(_G._last_search_handle) end
+      _G._last_search_handle = res_handle
+
+      setmetatable(proxy, VirtualListMeta)
+      return proxy
+    else
+      return safe_cache
+    end
+  end
+
+  -- 回退到旧版逻辑
+  -- print("Reached Legacy Fallback.\n")
+
+  local filtered = {}
   local raw_tokens = {}
-  
+
   -- 优先提取双引号内容，再提取普通词
   local p = 1
   local len = #search_keyword
@@ -6662,7 +6913,10 @@ function BuildFilteredList(list)
   end
 
   -- 遍历文件列表进行匹配
-  for _, info in ipairs(list) do
+  -- for _, info in ipairs(list) do -- 必须使用数字循环，因为 list 可能是 C++ 代理对象
+  for i = 1, #list do
+    local info = list[i]
+    if not info then break end -- 防御性检查
     -- 组装目标文本
     local tb = {}
     if temp_search_field then
@@ -6962,6 +7216,63 @@ function HandleRowKeybinds(ctx, i, info, collect_mode)
     CollectFiles()
     reaper.UpdateArrange()
   end
+
+  do
+    -- Ctrl+B: 添加到目标数据库
+    local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+    if ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_B()) then
+      -- 检查是否设置了目标数据库
+      if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
+        local db_dir = script_path .. "SoundmoleDB"
+        local target_db_path = normalize_path(db_dir, true) .. tree_state.target_mediadb
+
+        if not reaper.file_exists(target_db_path) then
+          reaper.ShowMessageBox("Target database file not found:\n" .. target_db_path, "Error", 0)
+        else
+          -- 收集选中路径 (支持多选)
+          local paths_to_add = {}
+          if file_select_start and file_select_end and file_select_start ~= file_select_end then
+            local list = _G.current_display_list or {}
+            local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
+            for j = a, b do
+              local sel = list[j]
+              if sel and sel.path then table.insert(paths_to_add, sel.path) end
+            end
+          else
+            -- 单选
+            if info.path then table.insert(paths_to_add, info.path) end
+          end
+
+          -- 执行写入
+          local existing_map = DB_ReadExistingFileSet(target_db_path)
+          local added_count = 0
+          for _, p in ipairs(paths_to_add) do
+            local norm_p = normalize_path(p, false)
+            if not existing_map[norm_p] then
+              -- 重新收集完整信息确保元数据齐全
+              local file_info_to_add = CollectFileInfo(p) 
+              if file_info_to_add then
+                WriteToMediaDB(file_info_to_add, target_db_path)
+                existing_map[norm_p] = true
+                added_count = added_count + 1
+              end
+            end
+          end
+
+          -- 如果当前正在查看该目标库，则刷新显示
+          if added_count > 0 then
+            if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == tree_state.target_mediadb then
+              files_idx_cache = nil
+              CollectFiles()
+            end
+          end
+        end
+      else
+        reaper.ShowMessageBox("No Target Database set.\nPlease right-click a database in the left panel and select 'Set as Target Database'.", "Tip", 0)
+      end
+    end
+  end
+
 end
 
 -- 统一的行右键菜单
@@ -7124,7 +7435,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
     -- end
 
     -- 右键批量加载到RS5k
-    if reaper.ImGui_MenuItem(ctx, "Load Sample(s) to New RS5K Track (Q)") then
+    if reaper.ImGui_MenuItem(ctx, "Load Sample(s) to New RS5K Track", "Q") then
       if file_select_start and file_select_end and file_select_start ~= file_select_end then
         -- 批量: 按多选范围加载
         local a = math.min(file_select_start, file_select_end)
@@ -7143,7 +7454,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       end
     end
 
-    if reaper.ImGui_MenuItem(ctx, "Set as Active RS5K Sample (Shift+Q)") then
+    if reaper.ImGui_MenuItem(ctx, "Set as Active RS5K Sample", "Shift+Q") then
       local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
       LoadOnlySelectedToRS5k(tr, info.path)
     end
@@ -7156,7 +7467,13 @@ function DrawRowPopup(ctx, i, info, collect_mode)
     local alias = (mediadb_alias and mediadb_alias[tree_state.target_mediadb]) or tree_state.target_mediadb
 
     reaper.ImGui_Separator(ctx)
-    if reaper.ImGui_MenuItem(ctx, "Add to Target DB: " .. alias) then
+    local is_ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+    local is_d = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_B())
+    local trigger_shortcut = is_ctrl and is_d
+
+    if reaper.ImGui_MenuItem(ctx, "Add to Target DB: " .. alias, "Ctrl+B") or trigger_shortcut then
+      -- 如果是通过快捷键触发，立即关闭菜单
+      if trigger_shortcut then reaper.ImGui_CloseCurrentPopup(ctx) end
       if not reaper.file_exists(target_db_path) then
         reaper.ShowMessageBox("Target database file not found:\n" .. target_db_path, "Error", 0)
         -- 自动清除无效的目标
@@ -8092,7 +8409,7 @@ function AppendMediaDBWhenIdle(budget_sec, batch)
 end
 
 -- 加载器状态容器
-local db_loader = {
+_G.db_loader = {
   active = false,     -- 是否正在加载
   ctx = nil,          -- C++ 指针
   temp_list = {},     -- 临时存放数据的表
@@ -8101,12 +8418,15 @@ local db_loader = {
 }
 
 function StartDBFirstPage(db_dir, dbfile, first_n)
+  db_loader = _G.db_loader
+  local sep = package.config:sub(1, 1)
+
   -- 清理旧状态
-  if db_loader.active and db_loader.ctx then
-    reaper.SM_DB_Release(db_loader.ctx)
-    db_loader.active = false
-    -- 如果从中途打断 C++ 加载，务必恢复 GC
-    collectgarbage("restart")
+  if _G.db_loader and _G.db_loader.ctx then
+    reaper.SM_DB_Release(_G.db_loader.ctx)
+    _G.db_loader.ctx = nil
+    _G.db_loader.active = false
+    collectgarbage("restart") -- 恢复 GC
   end
 
   -- 清理旧流
@@ -8118,25 +8438,35 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   if not dbfile or dbfile == "" then return false end
   local fullpath = db_dir .. sep .. dbfile
 
-  -- 分支 A: 极速模式
-  if reaper.APIExists('SM_DB_GetNextBatchRaw') then
+  -- 分支 A: 极速模式, C++ 极速加载分支
+  if HAVE_SM_DB then
+    -- C++ Load 已经在内部完成了读取和按文件名排序，耗时极短
     local ctx = reaper.SM_DB_Load(fullpath)
-
     if ctx then
-      -- 初始化异步任务
-      db_loader.ctx = ctx
-      db_loader.temp_list = {}
-      db_loader.loaded_count = 0
-      db_loader.total_estimate = reaper.SM_DB_GetCount(ctx)
-      db_loader.op_type = "LOAD"
-      db_loader.active = true
+      -- 初始化加载器容器，但不激活 active，只为了保存 ctx 给搜索/排序用
+      _G.db_loader = _G.db_loader or {}
+      _G.db_loader.ctx = ctx
+      _G.db_loader.active = false -- 关闭慢速加载循环，不显示进度条
+      _G.db_loader.op_type = nil
+      _G.db_loader.temp_list = nil
 
-      -- 清空 UI
-      files_idx_cache = {} 
+      -- 直接构建代理，跳过搬运
+      local count = reaper.SM_DB_GetCount(ctx)
+      local proxy = { _handle = ctx, _count = count }
+      setmetatable(proxy, VirtualListMeta)
+
+      -- 赋值给全局缓存，立即生效
+      files_idx_cache = proxy
       selected_row = nil
 
-      -- 暂停 GC 加速处理
-      collectgarbage("stop")
+      -- 清空过滤缓存，确保 UI 刷新
+      local static = _G._soundmole_static or {}
+      static.filtered_list_map = {} 
+      static.last_filter_text_map = {}
+      -- static.last_sort_specs_map = {} -- 强制清空排序状态缓存，当前不需要
+
+      -- 强制内存回收
+      collectgarbage("collect")
 
       return true -- 成功启动异步任务，直接返回
     end
@@ -8177,8 +8507,8 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   files_idx_cache = {}
   selected_row = nil
 
-  -- 读取首屏 首批2000条
-  local first = MediaDBStreamRead(_G._mediadb_stream, first_n or 2000)
+  -- 读取首屏 首批5000条
+  local first = MediaDBStreamRead(_G._mediadb_stream, first_n or 5000)
   for _, e in ipairs(first) do
     if collect_mode == COLLECT_MODE_FREESOUND then FS_MaybeSwapEntryPathToLocal(e) end -- Freesound 补丁，首屏条目立刻切换为本地路径（如果已下载）
     files_idx_cache[#files_idx_cache+1] = e
@@ -8211,8 +8541,10 @@ function RunDatabaseLoaderTick()
     local chunk = reaper.SM_DB_GetNextBatchRaw(db_loader.ctx, BATCH_SIZE)
 
     if not chunk or chunk == "" then
-      reaper.SM_DB_Release(db_loader.ctx)
-      db_loader.ctx = nil
+      -- 加载完成后，不再释放 ctx，不置空。因为数据库、排序、搜索等需要在内存中执行
+      -- reaper.SM_DB_Release(db_loader.ctx)
+      -- db_loader.ctx = nil
+
       db_loader.active = false
 
       files_idx_cache = db_loader.temp_list
@@ -11146,7 +11478,7 @@ function SM_DrawLeftTableToggle(ctx)
 end
 
 function loop()
-  RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！
+  -- RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！(新版 C++ 代理模式下，数据瞬间就绪，无需运行后台分片加载器)
   -- 首次使用时收集音频文件
   if not files_idx_cache then
     CollectFiles()
@@ -14510,56 +14842,66 @@ function loop()
 
         -- 检查是否需要排序
         if sort_changed and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and reaper.APIExists("SM_DB_Sort") then
-           if not db_loader.ctx then
-              local sep = package.config:sub(1, 1)
-              local db_fullpath = nil
-              if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
-                db_fullpath = normalize_path(script_path .. "SoundmoleDB" .. sep .. tree_state.cur_mediadb, false)
-              elseif collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db and tree_state.cur_reaper_db ~= "" then
-                db_fullpath = normalize_path(reaper.GetResourcePath() .. sep .. "MediaDB" .. sep .. tree_state.cur_reaper_db, false)
+          -- 确定排序句柄
+          local target_ctx = nil
+          local is_search_view = false
+          if _G._last_search_handle and type(filtered_list) == "table" and filtered_list._handle == _G._last_search_handle then
+            target_ctx = _G._last_search_handle
+            is_search_view = true
+          else
+            target_ctx = db_loader.ctx
+          end
+
+          -- 执行排序
+          if target_ctx and #sort_specs > 0 then
+            local spec = sort_specs[1]
+            local col_name = "filename"
+            -- 映射列 ID 到数据库列名，C++ 接口要求
+            if spec.user_id == TableColumns.SIZE then col_name = "size"
+            elseif spec.user_id == TableColumns.DATE then col_name = "date" -- elseif spec.user_id == TableColumns.DATE then col_name = "mtime" 日期与最后修改时间临时修改
+            elseif spec.user_id == TableColumns.LENGTH then col_name = "len"
+            elseif spec.user_id == TableColumns.BPM then col_name = "bpm"
+            elseif spec.user_id == TableColumns.SAMPLERATE then col_name = "sr"
+            elseif spec.user_id == TableColumns.CHANNELS then col_name = "ch"
+            elseif spec.user_id == TableColumns.BITS then col_name = "bits"
+            elseif spec.user_id == TableColumns.TYPE then col_name = "type"
+            elseif spec.user_id == TableColumns.GENRE then col_name = "genre"
+            elseif spec.user_id == TableColumns.DESCRIPTION then col_name = "desc"
+            elseif spec.user_id == TableColumns.COMMENT then col_name = "comment"
+            elseif spec.user_id == TableColumns.CATEGORY then col_name = "cat"
+            elseif spec.user_id == TableColumns.SUBCATEGORY then col_name = "subcat"
+            elseif spec.user_id == TableColumns.CATID then col_name = "catid"
+            elseif spec.user_id == TableColumns.KEY then col_name = "key"
+            end
+
+            local is_asc = (spec.sort_dir == reaper.ImGui_SortDirection_Ascending()) and 1 or 0
+            reaper.SM_DB_Sort(target_ctx, col_name, is_asc)
+
+            -- 接管列表
+            if not is_search_view then
+              local count = reaper.SM_DB_GetCount(target_ctx)
+              local proxy = { _handle = target_ctx, _count = count }
+              setmetatable(proxy, VirtualListMeta)
+              
+              files_idx_cache = proxy
+              filtered_list = proxy
+              static.filtered_list_map[current_db_key] = proxy
+              
+              db_loader.active = false 
+              db_loader.temp_list = nil
+            else
+              if getmetatable(filtered_list) == nil then
+                setmetatable(filtered_list, VirtualListMeta)
               end
-              if db_fullpath then db_loader.ctx = reaper.SM_DB_Load(db_fullpath) end
-           end
+            end
 
-           -- 执行排序
-           if db_loader.ctx and #sort_specs > 0 then
-              local spec = sort_specs[1]
-              local col_name = "filename"
-              if spec.user_id == TableColumns.SIZE then col_name = "size"
-              elseif spec.user_id == TableColumns.DATE then col_name = "mtime"
-              elseif spec.user_id == TableColumns.LENGTH then col_name = "len"
-              elseif spec.user_id == TableColumns.BPM then col_name = "bpm"
-              elseif spec.user_id == TableColumns.SAMPLERATE then col_name = "sr"
-              elseif spec.user_id == TableColumns.CHANNELS then col_name = "ch"
-              elseif spec.user_id == TableColumns.BITS then col_name = "bits"
-              elseif spec.user_id == TableColumns.TYPE then col_name = "type"
-              elseif spec.user_id == TableColumns.GENRE then col_name = "genre"
-              elseif spec.user_id == TableColumns.DESCRIPTION then col_name = "desc"
-              elseif spec.user_id == TableColumns.COMMENT then col_name = "comment"
-              elseif spec.user_id == TableColumns.CATEGORY then col_name = "cat"
-              elseif spec.user_id == TableColumns.SUBCATEGORY then col_name = "subcat"
-              elseif spec.user_id == TableColumns.CATID then col_name = "catid"
-              elseif spec.user_id == TableColumns.KEY then col_name = "key"
-              end
+            -- 同步更新排序和过滤状态，防止下一帧触发慢速构建
+            static.last_sort_specs_map[current_db_key] = sort_specs_str
+            static.last_filter_text_map[current_db_key] = eff or _G.commit_filter_text or "" -- 同步更新 eff
 
-              -- 扩展排序
-              local is_asc = (spec.sort_dir == reaper.ImGui_SortDirection_Ascending()) and 1 or 0
-              reaper.SM_DB_Sort(db_loader.ctx, col_name, is_asc)
-
-              -- 重置加载器状态
-              files_idx_cache = {} -- 清空显示缓存
-              db_loader.temp_list = {} -- 强制初始化为空表，只在触发排序时执行一次
-              db_loader.loaded_count = 0 
-              db_loader.total_estimate = reaper.SM_DB_GetCount(db_loader.ctx)
-              if db_loader.op_type ~= "LOAD" then db_loader.op_type = "SORT" end -- 只有当当前空闲或非 LOAD 时，才标记为 "SORT"
-              db_loader.active = true -- 激活加载器，后续由 RunDatabaseLoaderTick 接管
-              -- 标记状态已更新，防止下一帧重复进入
-              static.last_sort_specs_map[current_db_key] = sort_specs_str
-              -- 立即清空过滤列表并退出当前逻辑，等待数据加载完成
-              filtered_list = {}
-              static.filtered_list_map[current_db_key] = filtered_list
-              goto continue_frame -- 跳过后面的 Lua 排序逻辑
-           end
+            static.clipper = nil 
+            goto continue_frame
+          end
         end
 
         if not db_loader.active and (filter_changed or sort_changed or not filtered_list) then
@@ -14891,7 +15233,19 @@ function loop()
         end
         local clipper = static.clipper
 
-        reaper.ImGui_ListClipper_Begin(clipper, #filtered_list)
+        -- reaper.ImGui_ListClipper_Begin(clipper, #filtered_list) -- 旧版，全部加载
+
+        -- 瞬间加载的核心显示
+        local display_count = 0
+        if filtered_list and filtered_list._count then 
+          display_count = filtered_list._count 
+        elseif filtered_list then
+          display_count = #filtered_list 
+        end
+
+        -- 确保 clipper 初始化
+        if not static.clipper then static.clipper = reaper.ImGui_CreateListClipper(ctx) end
+        reaper.ImGui_ListClipper_Begin(static.clipper, display_count)
 
         -- 新增随机播放预滚动，强制把目标行拉入可视区并居中
         do
@@ -15664,6 +16018,8 @@ function loop()
         max_recent_files = 20,
         max_recent_search = 20,
         row_height = DEFAULT_ROW_HEIGHT,
+        spectral_hue_shift = 0.0,
+        spectral_grad_sat = 1.0, -- 默认全饱和
       }
 
       ----------------------------------------------------------------
@@ -16252,9 +16608,35 @@ function loop()
           waveform_color_mode = WAVE_COLOR_GRADIENT
           reaper.SetExtState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
         end
-        -- if reaper.ImGui_IsItemHovered(ctx) then
-        --   reaper.ImGui_SetTooltip(ctx, "Quiet = Cool Colors (Blue), Loud = Warm Colors (Red/Yellow).")
-        -- end
+
+        -- 仅在渐变模式下显示色相偏移滑块
+        if waveform_color_mode == WAVE_COLOR_GRADIENT then
+          reaper.ImGui_Indent(ctx, 20)
+          -- 色相偏移 (Hue Shift)
+          reaper.ImGui_Text(ctx, "Gradient Hue Shift:")
+          reaper.ImGui_SameLine(ctx)
+          reaper.ImGui_SetNextItemWidth(ctx, 150)
+          local changed_h, v_h = reaper.ImGui_SliderDouble(ctx, "##hue_shift", spectral_hue_shift, 0.0, 1.0, "%.2f")
+          if changed_h then
+            spectral_hue_shift = v_h
+            reaper.SetExtState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
+          end
+          reaper.ImGui_SameLine(ctx, nil, 10)
+          -- 饱和度 (Saturation)
+          reaper.ImGui_Text(ctx, "Gradient Saturation:")
+          reaper.ImGui_SameLine(ctx)
+          reaper.ImGui_SetNextItemWidth(ctx, 150)
+          -- 范围 0.0 ~ 1.0，越低颜色越灰/柔和
+          local changed_s, v_s = reaper.ImGui_SliderDouble(ctx, "##grad_sat", spectral_grad_sat, 0.0, 1.0, "%.2f")
+          if changed_s then
+            spectral_grad_sat = v_s
+            reaper.SetExtState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
+          end
+          if reaper.ImGui_IsItemHovered(ctx) then
+            reaper.ImGui_SetTooltip(ctx, "Lower this value to make colors softer (pastel). Default is 1.0.")
+          end
+          reaper.ImGui_Unindent(ctx, 20)
+        end
       end
 
       local function Section_InsertOptions()
@@ -18224,6 +18606,24 @@ function loop()
     SaveExitSettings()      -- 退出时保存最后使用的模式状态
   end
 end
+-- 退出清理函数
+function OnScriptExit()
+  -- 释放 C++ 扩展内存 (防止内存泄漏)
+  if _G.db_loader and _G.db_loader.ctx then
+    if reaper.APIExists("SM_DB_Release") then 
+      reaper.SM_DB_Release(_G.db_loader.ctx) 
+    end
+    _G.db_loader.ctx = nil
+  end
+  
+  if _G._last_search_handle then
+    if reaper.APIExists("SM_DB_Release") then 
+      reaper.SM_DB_Release(_G._last_search_handle) 
+    end
+    _G._last_search_handle = nil
+  end
+end
 -- 退出时保存模式列表状态
 reaper.atexit(SaveExitSettings)
+reaper.atexit(OnScriptExit)
 reaper.defer(loop)

@@ -1,9 +1,11 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.129
+-- @version 1.0.130
 -- @changelog
---   Added 'Target Database' setting (via right-click menu or panel dropdown) and 'Add to Target DB' feature.
---   Support reaper_soundmole-x64.dll v0.0.9
+--   Introduced Spectral Gradient waveform coloring with adjustable hue shift.
+--   Added Ctrl+B shortcut to directly add selected audio files to the Target Database.
+--   Deeply optimized the C++ extension for faster database searching, sorting, and loading.
+--   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
