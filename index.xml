@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="279aeaebf3dad46621e3246f99bb190b8b5bca21">
+<index version="1" name="zaibuyidao Scripts" commit="bc07d595203a37892ba8e803068ac38470938b2f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -15686,6 +15686,20 @@ Support reaper_soundmole-x64.dll v0.0.10]]></changelog>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/279aeaebf3dad46621e3246f99bb190b8b5bca21/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/279aeaebf3dad46621e3246f99bb190b8b5bca21/Various/Soundmole/data/icons-regular.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/279aeaebf3dad46621e3246f99bb190b8b5bca21/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.131" author="zaibuyidao" time="2025-12-14T18:12:10Z">
+        <changelog><![CDATA[Introduced Spectral Gradient waveform coloring with adjustable hue shift.
+Added Ctrl+B shortcut to directly add selected audio files to the Target Database.
+Deeply optimized the C++ extension for faster database searching, sorting, and loading.
+Support reaper_soundmole-x64.dll v0.0.10]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/bc07d595203a37892ba8e803068ac38470938b2f/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/bc07d595203a37892ba8e803068ac38470938b2f/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/bc07d595203a37892ba8e803068ac38470938b2f/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/bc07d595203a37892ba8e803068ac38470938b2f/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/bc07d595203a37892ba8e803068ac38470938b2f/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/bc07d595203a37892ba8e803068ac38470938b2f/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/bc07d595203a37892ba8e803068ac38470938b2f/Various/Soundmole/data/icons-regular.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/bc07d595203a37892ba8e803068ac38470938b2f/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
