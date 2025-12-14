@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.130
+-- @version 1.0.131
 -- @changelog
 --   Introduced Spectral Gradient waveform coloring with adjustable hue shift.
 --   Added Ctrl+B shortcut to directly add selected audio files to the Target Database.

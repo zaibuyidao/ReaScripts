@@ -54,6 +54,7 @@ if reaper.ImGui_GetBuiltinPath then
   ImGui = require 'imgui' '0.10'
 end
 
+local HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_GetRowRaw')
 local HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw') and reaper.APIExists('SM_DB_Load') and reaper.APIExists('SM_DB_Release') and reaper.APIExists('SM_DB_GetCount')
 local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
 local HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists('SM_GetWaveformCachePath') and reaper.APIExists('SM_BuildWaveformCache') and reaper.APIExists('SM_WFC_Begin') and reaper.APIExists('SM_WFC_Pump') and reaper.APIExists('SM_WFC_GetPathIfReady')
