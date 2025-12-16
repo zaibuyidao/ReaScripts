@@ -1,10 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.131
+-- @version 1.0.132
 -- @changelog
---   Introduced Spectral Gradient waveform coloring with adjustable hue shift.
---   Added Ctrl+B shortcut to directly add selected audio files to the Target Database.
---   Deeply optimized the C++ extension for faster database searching, sorting, and loading.
+--   Other detailed improvements and bug fixes
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

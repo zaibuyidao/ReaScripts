@@ -7762,6 +7762,8 @@ function SM_ExtractLicenseFromComment(comment)
 end
 
 function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
+  if not info then return end -- 防御性检查
+
   EnsureEntryParsed(info) -- 右侧文件列表首次可见时解析 DATA 元数据
   if not info.group then  -- 分组延迟到可见时再计算
     info.group = GetCustomGroupsForPath(info.path)
