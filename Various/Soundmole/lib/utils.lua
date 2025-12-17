@@ -128,3 +128,98 @@ function TightNewLine(ctx, scale)
   -- 用 Dummy 精确推进垂直光标，避免默认的 NewLine 高度
   reaper.ImGui_Dummy(ctx, 0, lh * scale)
 end
+
+----------------------------------------------------------------
+-- 查询 action 绑定的快捷键
+----------------------------------------------------------------
+
+function SM_NormalizeActionCommandID(cmd)
+  if cmd == nil then return nil end
+  if type(cmd) == "number" then
+    return tostring(math.floor(cmd))
+  end
+  cmd = tostring(cmd)
+  if cmd:match("^%d+$") then return cmd end
+  if cmd:sub(1, 1) == "_" then return cmd end
+
+  local looked = reaper.NamedCommandLookup(cmd)
+  if looked and looked ~= 0 then
+    return tostring(looked)
+  end
+  return cmd
+end
+
+-- 读取 reaper-kb.ini
+function SM_ReadReaperKBIniText()
+  local kb = reaper.GetResourcePath() .. sep .. "reaper-kb.ini"
+  local f = io.open(kb, "rb")
+  if not f then return nil, kb end
+  local s = f:read("*a") or ""
+  f:close()
+  return s, kb
+end
+
+-- 查询操作绑定的快捷键
+function SM_GetActionShortcuts(cmd, section_filter)
+  local cmd_norm = SM_NormalizeActionCommandID(cmd)
+  if not cmd_norm or cmd_norm == "" then return {} end
+
+  local text, kbpath = SM_ReadReaperKBIniText()
+  if not text or text == "" then return {} end
+
+  local out = {}
+  for line in text:gmatch("[^\r\n]+") do
+    if line:sub(1, 4) == "KEY " then
+      local mod, key, act, sec = line:match("^KEY%s+([%-%d]+)%s+([%-%d]+)%s+([^%s]+)%s+([%-%d]+)")
+      if mod and key and act and sec then
+        local secn = tonumber(sec) or 0
+        if secn ~= 102 and secn ~= 103 then
+          if act == cmd_norm then
+            if section_filter == nil or (tonumber(section_filter) == secn) then
+              out[#out + 1] = {
+                modifier = tonumber(mod) or 0,
+                key      = tonumber(key) or 0,
+                cmd      = act,
+                section  = secn,
+                kbpath   = kbpath,
+              }
+            end
+          end
+        end
+      end
+    end
+  end
+  return out
+end
+
+function SM_KeyValueToVK(keyvalue)
+  local k = tonumber(keyvalue)
+  if not k then return nil end
+  return k
+end
+
+function SM_VKToName(vk)
+  vk = tonumber(vk)
+  if not vk then return "" end
+
+  -- A-Z
+  if vk >= 65 and vk <= 90 then
+    return string.char(vk)
+  end
+  -- 0-9
+  if vk >= 48 and vk <= 57 then
+    return string.char(vk)
+  end
+  -- F1-F24
+  if vk >= 112 and vk <= 135 then
+    return "F" .. tostring(vk - 111)
+  end
+
+  local map = {
+    [8]="Backspace",[9]="Tab",[13]="Enter",[27]="Esc",[32]="Space",
+    [33]="PageUp",[34]="PageDown",[35]="End",[36]="Home",
+    [37]="Left",[38]="Up",[39]="Right",[40]="Down",
+    [45]="Insert",[46]="Delete",
+  }
+  return map[vk] or tostring(vk)
+end

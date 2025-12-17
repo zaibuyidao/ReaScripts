@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.132
+-- @version 1.0.133
 -- @changelog
---   Other detailed improvements and bug fixes
+--   Added 'Add Selected Files to Target Database' script, enabling shortcut binding to quickly add selected files to the target database.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -12,6 +12,7 @@
 -- @metapackage
 -- @provides
 --   [main=main] Soundmole/zaibuyidao_Soundmole.lua
+--   [main=main] Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua
 --   [nomain] Soundmole/lib/*.lua
 --   Soundmole/data/*.csv
 --   Soundmole/data/icons.otf

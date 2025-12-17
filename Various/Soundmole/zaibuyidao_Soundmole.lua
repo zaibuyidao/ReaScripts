@@ -6646,6 +6646,98 @@ if mediadb_order == nil then
   end
 end
 
+-- 添加选中文件到目标数据库
+function SM_Action_AddSelectionToTargetDB()
+  -- 检查目标数据库是否有效
+  if not (tree_state.target_mediadb and tree_state.target_mediadb ~= "") then
+    reaper.ShowMessageBox("No Target Database set.\nPlease set a Target Database first.", "Tip", 0)
+    return
+  end
+
+  local db_dir = script_path .. "SoundmoleDB"
+  local target_db_path = normalize_path(db_dir, true) .. tree_state.target_mediadb
+
+  if not reaper.file_exists(target_db_path) then
+    reaper.ShowMessageBox("Target database file not found:\n" .. target_db_path, "Error", 0)
+    return
+  end
+
+  -- 收集选中路径
+  local paths_to_add = {}
+  local list = _G.current_display_list or {}
+
+  -- 多选
+  if file_select_start and file_select_end and file_select_start ~= file_select_end then
+    local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
+    for j = a, b do
+      local sel = list[j]
+      if sel and sel.path then table.insert(paths_to_add, sel.path) end
+    end
+  -- 单选
+  elseif selected_row and list[selected_row] then
+    local sel = list[selected_row]
+    if sel and sel.path then table.insert(paths_to_add, sel.path) end
+  end
+
+  if #paths_to_add == 0 then return end -- 无选中内容
+
+  -- 执行写入
+  local existing_map = DB_ReadExistingFileSet(target_db_path)
+  local added_count = 0
+  
+  for _, p in ipairs(paths_to_add) do
+    local norm_p = normalize_path(p, false)
+    if not existing_map[norm_p] then
+      local file_info_to_add = CollectFileInfo(p)
+      if file_info_to_add then
+        WriteToMediaDB(file_info_to_add, target_db_path)
+        existing_map[norm_p] = true
+        added_count = added_count + 1
+      end
+    end
+  end
+
+  -- 刷新显示
+  if added_count > 0 then
+    if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == tree_state.target_mediadb then
+      files_idx_cache = nil
+      CollectFiles()
+    end
+  end
+end
+
+----------------------------------------------------------------
+-- 查询 action 绑定的快捷键
+----------------------------------------------------------------
+
+TARGET_ACTION_CMD = "_RS20af4fb17f06c6fe528a48b9e27fee68b6fb18ee" -- zaibuyidao_Soundmole - Add Selected Files to Target Database.lua
+virtual_key_code = 0 -- 目标按键 (F9 = 120)
+g_last_time = 0
+
+binds = SM_GetActionShortcuts("_RS20af4fb17f06c6fe528a48b9e27fee68b6fb18ee", 0) -- 0=Main section
+for i, b in ipairs(binds) do
+  local vk = SM_KeyValueToVK(b.key)
+  -- reaper.ShowConsoleMsg(string.format("bind #%d: mod=%d keyvalue=%d (VK=%d, %s) section=%d\n", i, b.modifier, b.key, vk, SM_VKToName(vk), b.section))
+  virtual_key_code = vk
+end
+
+function MonitorShortcut(virtual_key_code)
+  local state = reaper.JS_VKeys_GetState(reaper.time_precise() - 0.03)
+  -- 检测按键
+  if state:byte(virtual_key_code) ~= 0 then
+    local now = reaper.time_precise()
+    if (now - g_last_time) > 0.5 then -- 防抖 0.5秒
+      local cmd_id = reaper.NamedCommandLookup(TARGET_ACTION_CMD) -- 查找 ID
+      if cmd_id == 0 then
+        -- reaper.ShowMessageBox("Cannot find action: " .. TARGET_ACTION_CMD, "Error", 0)
+      else
+        reaper.Main_OnCommand(cmd_id, 0)
+      end
+      g_last_time = now
+    end
+  end
+end
+
 --------------------------------------------- 右侧表格列表优化 ---------------------------------------------
 
 -- Enter模式搜索过滤
@@ -7222,6 +7314,7 @@ function HandleRowKeybinds(ctx, i, info, collect_mode)
     -- Ctrl+B: 添加到目标数据库
     local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
     if ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_B()) then
+      -- SM_Action_AddSelectionToTargetDB()
       -- 检查是否设置了目标数据库
       if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
         local db_dir = script_path .. "SoundmoleDB"
@@ -11482,6 +11575,16 @@ end
 
 function loop()
   -- RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！(新版 C++ 代理模式下，数据瞬间就绪，无需运行后台分片加载器)
+
+  MonitorShortcut(virtual_key_code)
+
+  -- 接收信号
+  local ext_signal = reaper.GetExtState("Soundmole", "CMD_AddSelectedToTarget")
+  if ext_signal == "1" then
+    reaper.SetExtState("Soundmole", "CMD_AddSelectedToTarget", "0", false)
+    SM_Action_AddSelectionToTargetDB()
+  end
+
   -- 首次使用时收集音频文件
   if not files_idx_cache then
     CollectFiles()
