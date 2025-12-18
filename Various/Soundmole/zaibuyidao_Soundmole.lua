@@ -6650,7 +6650,7 @@ end
 function SM_Action_AddSelectionToTargetDB()
   -- 检查目标数据库是否有效
   if not (tree_state.target_mediadb and tree_state.target_mediadb ~= "") then
-    reaper.ShowMessageBox("No Target Database set.\nPlease set a Target Database first.", "Tip", 0)
+    -- reaper.ShowConsoleMsg("Soundmole: No Target Database set. Please right-click a DB file to set as target.\n")
     return
   end
 
@@ -6722,6 +6722,8 @@ for i, b in ipairs(binds) do
 end
 
 function MonitorShortcut(virtual_key_code)
+  if not virtual_key_code or virtual_key_code == 0 then return end
+
   local state = reaper.JS_VKeys_GetState(reaper.time_precise() - 0.03)
   -- 检测按键
   if state:byte(virtual_key_code) ~= 0 then
