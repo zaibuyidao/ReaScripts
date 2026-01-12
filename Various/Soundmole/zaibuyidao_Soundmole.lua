@@ -6185,8 +6185,8 @@ function DrawUcsLanguageSelector(ctx)
   end
 
   reaper.ImGui_Text(ctx, "Language:")
-  reaper.ImGui_SameLine(ctx)
-  reaper.ImGui_SetNextItemWidth(ctx, -65)
+  reaper.ImGui_SameLine(ctx, 150)
+  reaper.ImGui_SetNextItemWidth(ctx, 150)
   if reaper.ImGui_BeginCombo(ctx, "##ucs_lang_combo", cur_label) then
     for _, opt in ipairs(UCS_LANG_OPTS) do
       local selected = (opt.key == CURRENT_LANG)
@@ -10710,7 +10710,7 @@ function RenderPreviewRouteSettingsUI(ctx)
   end
 
   reaper.ImGui_Text(ctx, "Named track:")
-  reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_SameLine(ctx, 150)
   reaper.ImGui_SetNextItemWidth(ctx, 250)
   local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
   if changed_name and new_name ~= nil then
@@ -16467,8 +16467,8 @@ function loop()
 
       function Section_UI()
         reaper.ImGui_Text(ctx, "Content Font Size:")
-        reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx, 200)
+        reaper.ImGui_PushItemWidth(ctx, 500)
         local changed_font, new_font_size = reaper.ImGui_SliderInt(ctx, "##font_size_slider", font_size, FONT_SIZE_MIN, FONT_SIZE_MAX, "%d px")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_font then
@@ -16478,8 +16478,8 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, "Content Row Height:")
-        reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx, 200)
+        reaper.ImGui_PushItemWidth(ctx, 500)
         local changed_row_height, new_row_height = reaper.ImGui_SliderInt(ctx, "##row_height_slider", row_height, 12, 48, "%d px")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_row_height then
@@ -16490,8 +16490,8 @@ function loop()
 
       local function Section_Window()
         reaper.ImGui_Text(ctx, "Window background alpha:")
-        reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx, 200)
+        reaper.ImGui_PushItemWidth(ctx, 200)
         local changed_bg, new_bg_alpha = reaper.ImGui_InputDouble(ctx, "##bg_alpha", bg_alpha, 0.05, 0.1, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_bg then
@@ -16502,8 +16502,8 @@ function loop()
 
       local function Section_Peaks()
         reaper.ImGui_Text(ctx, "Peaks meter channels:")
-        reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx, 200)
+        reaper.ImGui_PushItemWidth(ctx, 200)
         local changed_peaks, new_peaks = reaper.ImGui_InputDouble(ctx, "##peaks_input", peak_chans, 1, 10, "%.0f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_peaks then
@@ -16614,8 +16614,10 @@ function loop()
         reaper.ImGui_Text(ctx, "Playback Control Settings:")
 
         reaper.ImGui_Text(ctx, "Max Volume (dB):")
-        reaper.ImGui_PushItemWidth(ctx, -65)
         reaper.ImGui_SameLine(ctx)
+        if HelpMarker then HelpMarker("Set the maximum output volume, in dB. Default: 12.") end
+        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, 150)
         local changed_maxdb, new_max_db = reaper.ImGui_InputDouble(ctx, "##Max Volume (dB)", max_db, 1, 5, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_maxdb then
@@ -16624,12 +16626,11 @@ function loop()
           max_db = new_max_db
           reaper.SetExtState(EXT_SECTION, "max_db", tostring(max_db), true)
         end
-        reaper.ImGui_SameLine(ctx)
-        if HelpMarker then HelpMarker("Set the maximum output volume, in dB. Default: 12.") end
 
-        reaper.ImGui_Text(ctx, "Pitch Knob Min:")
-        reaper.ImGui_PushItemWidth(ctx, -65)
         reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_Text(ctx, "Pitch Knob Min:")
+        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, 500)
         local changed_pmin, new_pmin = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Min", pitch_knob_min, 1, 2, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_pmin then
@@ -16639,8 +16640,8 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, "Pitch Knob Max:")
-        reaper.ImGui_PushItemWidth(ctx, -65)
-        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, 150)
         local changed_pmax, new_pmax = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Max", pitch_knob_max, 1, 2, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_pmax then
@@ -16650,8 +16651,8 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, "Rate Min:")
-        reaper.ImGui_PushItemWidth(ctx, -65)
-        reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, 150)
         local changed_rmin, new_rmin = reaper.ImGui_InputDouble(ctx, "##Rate Min", rate_min, 0.01, 0.1, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_rmin then
@@ -16661,9 +16662,10 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "rate_min", tostring(rate_min), true)
         end
 
-        reaper.ImGui_Text(ctx, "Rate Max:")
-        reaper.ImGui_PushItemWidth(ctx, -65)
         reaper.ImGui_SameLine(ctx)
+        reaper.ImGui_Text(ctx, "Rate Max:")
+        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, 500)
         local changed_rmax, new_rmax = reaper.ImGui_InputDouble(ctx, "##Rate Max", rate_max, 0.01, 0.1, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_rmax then
@@ -16722,8 +16724,8 @@ function loop()
           reaper.ImGui_Indent(ctx, 20)
           -- 色相偏移 (Hue Shift)
           reaper.ImGui_Text(ctx, "Gradient Hue Shift:")
-          reaper.ImGui_SameLine(ctx)
-          reaper.ImGui_SetNextItemWidth(ctx, 150)
+          reaper.ImGui_SameLine(ctx, 150)
+          reaper.ImGui_SetNextItemWidth(ctx, 200)
           local changed_h, v_h = reaper.ImGui_SliderDouble(ctx, "##hue_shift", spectral_hue_shift, 0.0, 1.0, "%.2f")
           if changed_h then
             spectral_hue_shift = v_h
@@ -16732,8 +16734,8 @@ function loop()
           reaper.ImGui_SameLine(ctx, nil, 10)
           -- 饱和度 (Saturation)
           reaper.ImGui_Text(ctx, "Gradient Saturation:")
-          reaper.ImGui_SameLine(ctx)
-          reaper.ImGui_SetNextItemWidth(ctx, 150)
+          reaper.ImGui_SameLine(ctx, 500)
+          reaper.ImGui_SetNextItemWidth(ctx, 200)
           -- 范围 0.0 ~ 1.0，越低颜色越灰/柔和
           local changed_s, v_s = reaper.ImGui_SliderDouble(ctx, "##grad_sat", spectral_grad_sat, 0.0, 1.0, "%.2f")
           if changed_s then
@@ -16772,7 +16774,7 @@ function loop()
 
       local function Section_CacheDir()
         reaper.ImGui_Text(ctx, "Waveform Cache Folder:")
-        reaper.ImGui_PushItemWidth(ctx, -140)
+        reaper.ImGui_PushItemWidth(ctx, 600)
         local changed_cache_dir, new_cache_dir = reaper.ImGui_InputText(ctx, "##cache_dir", cache_dir, 512)
         reaper.ImGui_PopItemWidth(ctx)
         if changed_cache_dir then
@@ -16796,7 +16798,7 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, "Freesound Cache Folder:")
-        reaper.ImGui_PushItemWidth(ctx, -140)
+        reaper.ImGui_PushItemWidth(ctx, 600)
         local changed_fs_cache_dir, new_fs_cache_dir = reaper.ImGui_InputText(ctx, "##fs_cache_dir", fs_cache_dir, 512)
         reaper.ImGui_PopItemWidth(ctx)
         if changed_fs_cache_dir then
@@ -16831,8 +16833,8 @@ function loop()
 
       local function Section_Recent()
         reaper.ImGui_Text(ctx, "Max Recent Searched:")
-        reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx, 150)
+        reaper.ImGui_PushItemWidth(ctx, 200)
         local chg_rs, v_rs = reaper.ImGui_InputInt(ctx, "##max_recent_search_input", max_recent_search, 1, 5)
         reaper.ImGui_PopItemWidth(ctx)
         if chg_rs then
@@ -16843,8 +16845,8 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, "Max Recent Played:")
-        reaper.ImGui_SameLine(ctx)
-        reaper.ImGui_PushItemWidth(ctx, -65)
+        reaper.ImGui_SameLine(ctx, 150)
+        reaper.ImGui_PushItemWidth(ctx, 200)
         local chg_rp, v_rp = reaper.ImGui_InputInt(ctx, "##max_recent_play_input", max_recent_files, 1, 5)
         reaper.ImGui_PopItemWidth(ctx)
         if chg_rp then

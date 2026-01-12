@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.134
+-- @version 1.0.135
 -- @changelog
---   Added 'Add Selected Files to Target Database' script, enabling shortcut binding to quickly add selected files to the target database.
+--   UI: Optimized settings interface alignment
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
