@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9b4bfe9313cc677d31d7fa8537c68b114f5731f8">
+<index version="1" name="zaibuyidao Scripts" commit="ab9dd489d281bdce23b880061cb3097c0d43d164">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -15751,6 +15751,19 @@ Support reaper_soundmole-x64.dll v0.0.10]]></changelog>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/9b4bfe9313cc677d31d7fa8537c68b114f5731f8/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/9b4bfe9313cc677d31d7fa8537c68b114f5731f8/Various/Soundmole/data/icons-regular.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/9b4bfe9313cc677d31d7fa8537c68b114f5731f8/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.136" author="zaibuyidao" time="2026-01-12T06:46:53Z">
+        <changelog><![CDATA[Added an "All" option to the Search Fields dropdown to toggle all filters at once.
+Support reaper_soundmole-x64.dll v0.0.10]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/zaibuyidao_Soundmole%20-%20Add%20Selected%20Files%20to%20Target%20Database.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/data/icons-regular.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/ab9dd489d281bdce23b880061cb3097c0d43d164/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
