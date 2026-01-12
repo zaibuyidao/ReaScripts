@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.135
+-- @version 1.0.136
 -- @changelog
---   UI: Optimized settings interface alignment
+--   Added an "All" option to the Search Fields dropdown to toggle all filters at once.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

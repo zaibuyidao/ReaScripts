@@ -11818,21 +11818,43 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_BeginGroup(ctx)
 
+    local selected_labels = {}
+    local all_checked = true -- 初始为全选
+    for _, field in ipairs(search_fields) do
+      if field.enabled then
+        table.insert(selected_labels, field.label)
+      else
+        all_checked = false
+      end
+    end
+
+    -- 全选显示All；部分选择显示组合文本；都没选显示Select Fields
+    local combo_label = "Select Fields"
+    if all_checked and #search_fields > 0 then
+      combo_label = "All"
+    elseif #selected_labels > 0 then
+      combo_label = table.concat(selected_labels, "+")
+    end
+
     reaper.ImGui_SetNextItemWidth(ctx, 150)
     -- 根据当前模式切换 Comment/License 文本
     UpdateCommentSearchFieldLabel()
     -- 根据当前模式切换 Genre/Tags 文本
     UpdateGenreSearchFieldLabel()
-    local selected_labels = {}
-    for _, field in ipairs(search_fields) do
-      if field.enabled then
-        table.insert(selected_labels, field.label)
-      end
-    end
-    -- 下拉菜单列表若无选中则显示默认，否则用+号连接
-    local combo_label = (#selected_labels > 0) and table.concat(selected_labels, "+") or "Select Fields"
+
+    -- 绘制下拉菜单
     if reaper.ImGui_BeginCombo(ctx, "##search_fields", combo_label, reaper.ImGui_WindowFlags_NoScrollbar()) then -- reaper.ImGui_ComboFlags_NoArrowButton()
-      --reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
+      -- 绘制 All 选项
+      local changed_all, new_all_state = reaper.ImGui_Checkbox(ctx, "All", all_checked)
+      if changed_all then
+        for _, field in ipairs(search_fields) do
+          field.enabled = new_all_state
+        end
+        SaveSearchFields()
+      end
+
+      reaper.ImGui_Separator(ctx) -- 分割线
+
       for i, field in ipairs(search_fields) do
         local changed, enabled = reaper.ImGui_Checkbox(ctx, field.label, field.enabled)
         if changed then
@@ -11840,11 +11862,12 @@ function loop()
           SaveSearchFields()
         end
       end
-      --reaper.ImGui_PopStyleVar(ctx)
+
       reaper.ImGui_EndCombo(ctx)
     end
+
     -- 悬停提示已勾选列表
-    if #selected_labels > 0 and reaper.ImGui_IsItemHovered(ctx) then
+    if not all_checked and #selected_labels > 0 and reaper.ImGui_IsItemHovered(ctx) then
       reaper.ImGui_SetTooltip(ctx, table.concat(selected_labels, "+"))
     end
 
@@ -16627,10 +16650,9 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "max_db", tostring(max_db), true)
         end
 
-        reaper.ImGui_SameLine(ctx)
         reaper.ImGui_Text(ctx, "Pitch Knob Min:")
         reaper.ImGui_PushItemWidth(ctx, 200)
-        reaper.ImGui_SameLine(ctx, 500)
+        reaper.ImGui_SameLine(ctx, 150)
         local changed_pmin, new_pmin = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Min", pitch_knob_min, 1, 2, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_pmin then
@@ -16639,9 +16661,10 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "pitch_knob_min", tostring(pitch_knob_min), true)
         end
 
+        reaper.ImGui_SameLine(ctx)
         reaper.ImGui_Text(ctx, "Pitch Knob Max:")
         reaper.ImGui_PushItemWidth(ctx, 200)
-        reaper.ImGui_SameLine(ctx, 150)
+        reaper.ImGui_SameLine(ctx, 500)
         local changed_pmax, new_pmax = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Max", pitch_knob_max, 1, 2, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_pmax then
