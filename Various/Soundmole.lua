@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.136
+-- @version 1.0.137
 -- @changelog
---   Added an "All" option to the Search Fields dropdown to toggle all filters at once.
+--   Fixed DB folder filtering issues.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

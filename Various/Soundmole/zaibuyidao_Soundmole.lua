@@ -6792,17 +6792,18 @@ end
 -- 支持 "" 全字匹配，且支持延伸功能：" box" (词首), "box " (词尾)
 function BuildFilteredList(list)
   local safe_cache = list or files_idx_cache or {}
-  -- 准备关键词
+  local db_path_filter = _G._db_path_prefix_filter
+
+  -- 准备搜索关键词
   local filter_text = _G.commit_filter_text or ""
   if filter_text ~= last_search_input then
     last_search_input = filter_text
     search_input_timer = reaper.time_precise()
   end
-
-  local search_keyword = filter_text
-  if temp_search_keyword then search_keyword = temp_search_keyword end
-
+  local search_keyword = (temp_search_keyword or filter_text) or ""
   local final_query = search_keyword or ""
+
+  -- 处理锁定关键词
   if _G.filter_lock_enabled and _G.locked_filter_terms and #_G.locked_filter_terms > 0 then
     for _, lw in ipairs(_G.locked_filter_terms) do
       final_query = final_query .. " " .. lw
@@ -6810,55 +6811,76 @@ function BuildFilteredList(list)
   end
   final_query = final_query:gsub("^%s+", ""):gsub("%s+$", "")
 
-  local db_path_filter = _G._db_path_prefix_filter 
-  local has_path = (db_path_filter and db_path_filter ~= "")
-  local has_ucs_cat = (temp_ucs_cat_keyword and temp_ucs_cat_keyword ~= "")
-  local has_ucs_sub = (temp_ucs_sub_keyword and temp_ucs_sub_keyword ~= "")
-  local has_ucs = has_ucs_cat or has_ucs_sub
+  -- 准备UCS参数
+  local ucs_cat_arg = temp_ucs_cat_keyword or ""
+  local ucs_sub_arg = temp_ucs_sub_keyword or ""
+  local has_ucs = (ucs_cat_arg ~= "") or (ucs_sub_arg ~= "")
+  local has_path = (db_path_filter ~= "")
+  local is_empty_request = (final_query == "" and not has_path and not has_ucs)
 
-  -- 当查询、路径过滤、UCS 过滤全部为空时，直接返回原始列表缓存
-  if final_query == "" and not has_path and not has_ucs then
-    return safe_cache
-  end
+  -- 当查询、路径过滤、UCS 过滤全部为空时，直接返回原始列表缓存 -- 此处lua处理超慢
+  -- if final_query == "" and not has_path and not has_ucs then
+  --   return safe_cache
+  -- end
 
   local use_cpp = false
   local db_handle = nil
-
   if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) then
-    if _G.db_loader and _G.db_loader.ctx then
-      if HAVE_SM_SEARCH then
-        use_cpp = true
-        db_handle = _G.db_loader.ctx
-      end
+    if _G.db_loader and _G.db_loader.ctx and HAVE_SM_SEARCH then
+      use_cpp = true
+      db_handle = _G.db_loader.ctx
     end
   end
 
+  -- 无扩展时回退
+  if (not use_cpp) and is_empty_request then 
+    return safe_cache
+  end
+
   if use_cpp then
-    local fields_t = {}
-    if temp_search_field then
-      table.insert(fields_t, temp_search_field)
-    else
-      for _, f in ipairs(search_fields) do
-        if f.enabled then table.insert(fields_t, f.key) end
+    if _G.SM_Cache_Ctx ~= db_handle or not _G.SM_Cache_Full_Handle then
+      if _G.SM_Cache_Full_Handle then 
+        if _G.SM_Cache_Full_Handle ~= _G._last_search_handle then
+          reaper.SM_DB_Release(_G.SM_Cache_Full_Handle)
+        end
+      end
+      local new_full_cache = reaper.SM_DB_Filter(db_handle, "", "", "", "", "")
+      if new_full_cache then
+        _G.SM_Cache_Full_Handle = new_full_cache
+        _G.SM_Cache_Ctx = db_handle
       end
     end
-    local fields_csv = table.concat(fields_t, ",")
 
-    -- 将 UCS 分类和子分类参数传递给 C++
-    local ucs_cat_arg = temp_ucs_cat_keyword or ""
-    local ucs_sub_arg = temp_ucs_sub_keyword or ""
-    local res_handle = reaper.SM_DB_Filter(db_handle, final_query, fields_csv, db_path_filter or "", ucs_cat_arg, ucs_sub_arg)
+    local res_handle = nil
+    if is_empty_request then
+      res_handle = _G.SM_Cache_Full_Handle
+    else
+      -- 常规搜索
+      local fields_t = {}
+      if temp_search_field then
+        table.insert(fields_t, temp_search_field)
+      else
+        for _, f in ipairs(search_fields) do
+          if f.enabled then table.insert(fields_t, f.key) end
+        end
+      end
+
+      res_handle = reaper.SM_DB_Filter(db_handle, final_query, table.concat(fields_t, ","), db_path_filter, ucs_cat_arg, ucs_sub_arg)
+    end
 
     if res_handle then
       local count = reaper.SM_DB_GetCount(res_handle)
-      local proxy = { _handle = res_handle, _count = count }
-      if _G._last_search_handle then reaper.SM_DB_Release(_G._last_search_handle) end
+      if _G._last_search_handle then
+        if _G._last_search_handle ~= _G.SM_Cache_Full_Handle then
+          reaper.SM_DB_Release(_G._last_search_handle)
+        end
+      end
+
       _G._last_search_handle = res_handle
 
+      local proxy = { _handle = res_handle, _count = count }
       setmetatable(proxy, VirtualListMeta)
       return proxy
-    else
-      return safe_cache
     end
   end
 
@@ -7133,38 +7155,6 @@ function BuildFilteredList(list)
   end
 
   return filtered
-end
-
--- 数据库路径过滤 BuildFilteredList 包装器，数据库模式优先做路径前缀裁剪
-if _G._BuildFilteredList_Original == nil and type(BuildFilteredList) == "function" then
-  _G._BuildFilteredList_Original = BuildFilteredList
-
-  function BuildFilteredList(list)
-    local L = list or {}
-    -- 仅数据库模式启用
-    local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
-    local prefix = _G._db_path_prefix_filter
-
-    if in_db_mode and type(prefix) == "string" and prefix ~= "" then
-      local pref = normalize_path(prefix, false)
-      local os_is_win = (reaper.GetOS() or ""):find("Win")
-      local pref_l = os_is_win and pref:lower() or pref
-      -- 裁剪路径前缀
-      local prefiltered = {}
-      for i = 1, #L do
-        local info = L[i]
-        local p = normalize_path(info.path or "", false)
-        local pp = os_is_win and p:lower() or p
-        if pp:sub(1, #pref_l) == pref_l then
-          prefiltered[#prefiltered + 1] = info
-        end
-      end
-      -- 把裁剪后的列表交回原始 BuildFilteredList，保留原所有搜索/同义词/UCS逻辑
-      return _G._BuildFilteredList_Original(prefiltered)
-    end
-    -- 非数据库模式或未设置路径前缀时，直接走原逻辑
-    return _G._BuildFilteredList_Original(L)
-  end
 end
 
 -- 右键菜单支持RS5K
@@ -11327,13 +11317,14 @@ function DBPF_ApplyPathFilter(dir)
   local prefix = normalize_path(dir, true)
   if prefix == "" then return end
   _G._db_path_prefix_filter = prefix
+  _G.SM_ForceFilterRefresh = true
 
   -- 清空过滤缓存，强制下一帧按新前缀重建
   local static = _G._soundmole_static or {}
   _G._soundmole_static = static
   static.filtered_list_map    = {}
   static.last_filter_text_map = {}
-  static.last_sort_specs_map  = {}
+  -- static.last_sort_specs_map  = {} -- 不重置排序
 
   file_select_start, file_select_end, selected_row = nil, nil, -1
 end
@@ -14961,16 +14952,19 @@ function loop()
 
         local eff_text = _G.commit_filter_text or ""
         local ucs_sig  = tostring(temp_search_field or "") .. "|" .. tostring(temp_search_keyword or "")
-        local eff      = eff_text .. "||" .. ucs_sig
+        local path_sig = tostring(_G._db_path_prefix_filter or "")
+        local eff      = eff_text .. "||" .. ucs_sig .. "||" .. path_sig
 
         local last_filter_text = static.last_filter_text_map[current_db_key] or ""
         local last_sort_specs  = static.last_sort_specs_map[current_db_key] or ""
         local filtered_list    = static.filtered_list_map[current_db_key]
 
-        -- 判断过滤/排序是否变更
-        local filter_changed   = (eff ~= last_filter_text)
-        local sort_changed = (sort_specs_str ~= last_sort_specs)
+        -- 检测变更
+        local force_refresh = (_G.SM_ForceFilterRefresh == true)
+        local filter_changed = (eff ~= last_filter_text) or force_refresh
+        if force_refresh then _G.SM_ForceFilterRefresh = false end
 
+        local sort_changed = (sort_specs_str ~= last_sort_specs)
         -- 检查是否需要排序
         if sort_changed and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and reaper.APIExists("SM_DB_Sort") then
           -- 确定排序句柄
