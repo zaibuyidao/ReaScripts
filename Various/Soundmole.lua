@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.137
+-- @version 1.0.138
 -- @changelog
---   Fixed DB folder filtering issues.
+--   Optimized C++ mode performance: filtering and resetting views is now blazing fast.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

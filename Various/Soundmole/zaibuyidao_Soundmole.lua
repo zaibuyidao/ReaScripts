@@ -6818,10 +6818,10 @@ function BuildFilteredList(list)
   local has_path = (db_path_filter ~= "")
   local is_empty_request = (final_query == "" and not has_path and not has_ucs)
 
-  -- 当查询、路径过滤、UCS 过滤全部为空时，直接返回原始列表缓存 -- 此处lua处理超慢
-  -- if final_query == "" and not has_path and not has_ucs then
-  --   return safe_cache
-  -- end
+  -- 当查询、路径过滤、UCS 过滤全部为空时，直接返回原始列表缓存
+  if final_query == "" and not has_path and not has_ucs then
+    return safe_cache
+  end
 
   local use_cpp = false
   local db_handle = nil
@@ -15032,7 +15032,7 @@ function loop()
         if not db_loader.active and (filter_changed or sort_changed or not filtered_list) then
           filtered_list = BuildFilteredList(files_idx_cache)
           -- 回退到旧排序
-          if #sort_specs > 0 and filtered_list and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
+          if #sort_specs > 0 and filtered_list and (not filtered_list._handle) and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
             table.sort(filtered_list, function(a, b)
               for _, spec in ipairs(sort_specs) do
                 if spec.user_id == TableColumns.FILENAME then
