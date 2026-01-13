@@ -208,6 +208,8 @@ local EXT_SECTION = "Soundmole"
 local previewed_files = {} -- 预览已读标记
 function MarkPreviewed(path) previewed_files[path] = true end
 function IsPreviewed(path) return previewed_files[path] == true end
+-- 全局句柄，用于浏览大型文件夹后台加载元数据
+_G.async_probe_handle = nil
 
 -- Soundmole 波形缓存路径
 local sep = package.config:sub(1, 1)
@@ -2208,8 +2210,20 @@ function MergeUsagesBySection(files_idx)
   return merged
 end
 
+-- 停止扫描大型文件夹
+function StopAsyncScan()
+  if _G.async_probe_handle then
+    if reaper.APIExists("SM_ProbeMediaEnd") then
+      reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
+    end
+    _G.async_probe_handle = nil
+  end
+end
+
 function CollectFiles()
--- 切模式时清空文件列表多选/主选中
+  -- 切换模式时，强制停止之前大型文件夹的后台扫描
+  StopAsyncScan()
+  -- 切模式时清空文件列表多选/主选中
   file_select_start = nil
   file_select_end   = nil
   selected_row      = nil
@@ -4266,6 +4280,67 @@ function CollectFromDirectory(dir_path)
   dir_path = normalize_path(dir_path, true)
   local files, files_idx = {}, {}
 
+  -- 将当前正在构建的文件表，注册为后台更新的目标
+  _G.current_files_map = files
+  if reaper.APIExists("SM_ListDirBegin") and dir_path and dir_path ~= "" then
+    local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
+    local h = reaper.SM_ListDirBegin(dir_path, 0, exts_csv)
+    if h then
+      while true do
+        local chunk = reaper.SM_ListDirNextJSON(h, 2000)
+        if not chunk or chunk == "" then break end
+        if chunk ~= "\n" then
+          for line in chunk:gmatch("[^\r\n]+") do
+            if line ~= "" then
+              local m = sm_parse_ndjson_line(line)
+              if m.path ~= "" then
+                local fullpath = normalize_path(m.path, false)
+                if not files[fullpath] then
+                  local info = {
+                    path            = fullpath,
+                    filename        = (fullpath:match("[^/\\]+$") or fullpath),
+                    size            = tonumber(m.size) or 0,
+                    mtime           = tonumber(m.mtime) or 0,
+                    bwf_orig_date   = format_ts(m.mtime),
+
+                    -- 初始占位，等待后台填充
+                    type            = "...", 
+                    length          = 0,
+                    samplerate      = 0,
+                    channels        = 0,
+                    bits            = "",
+                    genre           = "",
+                    comment         = "",
+                    description     = "",
+                    ucs_category    = "",
+                    ucs_subcategory = "",
+                    ucs_catid       = "",
+                    key             = "",
+                    bpm             = "",
+                  }
+                  files[fullpath] = info
+                  files_idx[#files_idx+1] = info
+                end
+              end
+            end
+          end
+        end
+      end
+      reaper.SM_ListDirEnd(h)
+      -- 启动后台探测器
+      if _G.async_probe_handle then 
+        reaper.SM_ProbeMediaEnd(_G.async_probe_handle) 
+        _G.async_probe_handle = nil
+      end
+      if reaper.APIExists("SM_ProbeMediaBegin") then
+        -- Flag 0 = 标准模式
+        _G.async_probe_handle = reaper.SM_ProbeMediaBegin(dir_path, 0, exts_csv, 0)
+      end
+
+      return files, files_idx
+    end
+  end
+
   if HAVE_SM_EXT and dir_path and dir_path ~= "" then
     local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
     local h = reaper.SM_ProbeMediaBegin(dir_path, 0, exts_csv, 6)
@@ -4380,6 +4455,60 @@ function CollectFromDirectory(dir_path)
   end
 
   return files, files_idx
+end
+
+function ProcessAsyncMetadata()
+  if not _G.async_probe_handle then return end
+
+  -- 如果不在文件夹模式下，立即停止扫描
+  if not _G.current_files_map then
+    if reaper.APIExists("SM_ProbeMediaEnd") then
+      reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
+    end
+    _G.async_probe_handle = nil
+    return
+  end
+
+  -- 批量读取，每次处理 256 个文件，保持 UI 流畅
+  local chunk = reaper.SM_ProbeMediaNextJSONEx(_G.async_probe_handle, 256, 8)
+
+  if not chunk or chunk == "" then
+    reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
+    _G.async_probe_handle = nil
+    return
+  end
+
+  if chunk ~= "\n" then
+    -- 更新当前正在浏览的文件夹表
+    local target_map = _G.current_files_map
+
+    for line in chunk:gmatch("[^\r\n]+") do
+      if line ~= "" then
+        local m = sm_parse_ndjson_line(line)
+        if m.path ~= "" then
+          local fullpath = normalize_path(m.path, false)
+          local info = target_map[fullpath]
+
+          if info then
+            -- 填充元数据
+            info.type            = m.type or ""
+            info.length          = tonumber(m.len) or 0
+            info.samplerate      = to_int(m.sr)
+            info.channels        = to_int(m.ch)
+            info.bits            = m.bits or ""
+            info.comment         = m.comment or ""
+            info.description     = m.description or ""
+            info.genre           = m.genre or ""
+            info.ucs_category    = m.ucs_category or ""
+            info.ucs_subcategory = m.ucs_subcategory or ""
+            info.ucs_catid       = m.ucs_catid or ""
+            info.key             = m.key or ""
+            info.bpm             = m.bpm or ""
+          end
+        end
+      end
+    end
+  end
 end
 
 -- 获取本机所有盘符及其卷标
@@ -11568,8 +11697,8 @@ end
 
 function loop()
   -- RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！(新版 C++ 代理模式下，数据瞬间就绪，无需运行后台分片加载器)
-
-  MonitorShortcut(virtual_key_code)
+  ProcessAsyncMetadata() -- 处理后台元数据加载，浏览物理文件夹时触发
+  MonitorShortcut(virtual_key_code) -- 监控快捷键，使用操作列表脚本控制主脚本添加条目到目标数据库
 
   -- 接收信号
   local ext_signal = reaper.GetExtState("Soundmole", "CMD_AddSelectedToTarget")
@@ -18735,6 +18864,13 @@ function loop()
 end
 -- 退出清理函数
 function OnScriptExit()
+  -- 清理文件夹模式的后台扫描器 或使用 StopAsyncScan()
+  if _G.async_probe_handle then
+    if reaper.APIExists("SM_ProbeMediaEnd") then
+      reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
+    end
+    _G.async_probe_handle = nil
+  end
   -- 释放 C++ 扩展内存 (防止内存泄漏)
   if _G.db_loader and _G.db_loader.ctx then
     if reaper.APIExists("SM_DB_Release") then 

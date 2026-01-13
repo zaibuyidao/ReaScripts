@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.138
+-- @version 1.0.139
 -- @changelog
---   Optimized C++ mode performance: filtering and resetting views is now blazing fast.
+--   Implemented asynchronous loading for local file browsing. Large directories now open instantly, effectively resolving UI freezing issues.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
