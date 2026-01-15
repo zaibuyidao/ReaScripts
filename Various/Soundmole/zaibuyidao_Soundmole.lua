@@ -522,8 +522,11 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
   reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
 end
 
 -- 恢复设置
@@ -577,15 +580,33 @@ do
 end
 
 do
+  local v = reaper.GetExtState(EXT_SECTION, "show_peektree_recent")
+  if v == "1" then show_peektree_recent = true
+  else show_peektree_recent = false end
+end
+
+do
   local v = reaper.GetExtState(EXT_SECTION, "insert_keep_rate_pitch")
   if v == "1" then keep_preview_rate_pitch_on_insert = true
   elseif v == "0" then keep_preview_rate_pitch_on_insert = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "show_peektree_recent")
-  if v == "1" then show_peektree_recent = true
-  else show_peektree_recent = false end
+  local v = reaper.GetExtState(EXT_SECTION, "tempo_sync")
+  if v == "1" then tempo_sync_enabled = true
+  elseif v == "0" then tempo_sync_enabled = false end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "link_transport")
+  if v == "1" then link_with_reaper = true
+  elseif v == "0" then link_with_reaper = false end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "wait_nextbar")
+  if v == "1" then wait_nextbar_play = true
+  elseif v == "0" then wait_nextbar_play = false end
 end
 
 --------------------------------------------- 颜色表 ---------------------------------------------
@@ -3647,10 +3668,10 @@ end
 
 --------------------------------------------- 同步速度与联动 ---------------------------------------------
 
-tempo_sync_enabled = false -- 同步速度
-link_with_reaper   = false -- 联动走带
+tempo_sync_enabled = tempo_sync_enabled or false -- 同步速度
+link_with_reaper   = link_with_reaper or false   -- 联动走带
 link_prev_playing  = false
-wait_nextbar_play  = false -- true=等待, false=立刻
+wait_nextbar_play  = wait_nextbar_play or false  -- true=等待, false=立刻
 wait_nextbar_cur   = { active=false, target_t=0, deadline=0, info=nil }
 
 function GetBPMAtPos(timepos)
@@ -5555,6 +5576,42 @@ function draw_advanced_folder_node(id, selected_id, depth)
     end
 
     reaper.ImGui_TreePop(ctx)
+  end
+end
+
+-- 递归生成 Collections 菜单 (支持多选批量添加)
+function ShowAddToCollectionMenu(node_ids, file_paths)
+  for _, id in ipairs(node_ids) do
+    local node = advanced_folders[id]
+    if node then
+      local has_children = node.children and #node.children > 0
+
+      if has_children then
+        if reaper.ImGui_BeginMenu(ctx, node.name .. "##col_menu_" .. id) then
+          if reaper.ImGui_MenuItem(ctx, "Add to this folder") then
+            -- 循环添加所有选中的文件
+            for _, p in ipairs(file_paths) do
+              table.insert(node.files, p)
+            end
+            SaveAdvancedFolders()
+          end
+
+          reaper.ImGui_Separator(ctx)
+          -- 递归传递：把文件列表继续传给子级
+          ShowAddToCollectionMenu(node.children, file_paths)
+          reaper.ImGui_EndMenu(ctx)
+        end
+      else
+        -- 没有子级，直接点击添加
+        if reaper.ImGui_MenuItem(ctx, node.name .. "##col_item_" .. id) then
+          -- 循环添加所有选中的文件
+          for _, p in ipairs(file_paths) do
+            table.insert(node.files, p)
+          end
+          SaveAdvancedFolders()
+        end
+      end
+    end
   end
 end
 
@@ -7675,13 +7732,41 @@ function DrawRowPopup(ctx, i, info, collect_mode)
     end
   end
 
+  reaper.ImGui_Separator(ctx)
+  -- 添加到 Collections
+  if reaper.ImGui_BeginMenu(ctx, "Add to Collections") then
+    if #root_advanced_folders == 0 then
+      reaper.ImGui_TextDisabled(ctx, "(No Collections created)")
+    else
+      local paths_to_add = {}
+
+      if file_select_start and file_select_end and file_select_start ~= file_select_end then
+        local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
+        for j = a, b do
+          local sel = _G.current_display_list[j]
+          if sel and sel.path then 
+            table.insert(paths_to_add, sel.path) 
+          end
+        end
+      else
+        -- 单选时只添加当前右键这一行的文件
+        if info.path then 
+          table.insert(paths_to_add, info.path) 
+        end
+      end
+
+      ShowAddToCollectionMenu(root_advanced_folders, paths_to_add)
+    end
+    reaper.ImGui_EndMenu(ctx)
+  end
+
   -- 添加到目标数据库
   if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
     local db_dir = script_path .. "SoundmoleDB"
     local target_db_path = normalize_path(db_dir, true) .. tree_state.target_mediadb
     local alias = (mediadb_alias and mediadb_alias[tree_state.target_mediadb]) or tree_state.target_mediadb
 
-    reaper.ImGui_Separator(ctx)
+    -- reaper.ImGui_Separator(ctx)
     local is_ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
     local is_d = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_B())
     local trigger_shortcut = is_ctrl and is_d
@@ -15880,6 +15965,7 @@ function loop()
       reaper.ImGui_Separator(ctx)
       if reaper.ImGui_MenuItem(ctx, "Tempo Sync", nil, tempo_sync_enabled, true) then
         tempo_sync_enabled = not tempo_sync_enabled
+        reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
         -- 新增同步速率立刻应用
         if tempo_sync_enabled then
           play_rate = 1.0
@@ -15892,9 +15978,11 @@ function loop()
       end
       if reaper.ImGui_MenuItem(ctx, "Link Transport", nil, link_with_reaper, true) then
         link_with_reaper = not link_with_reaper
+        reaper.SetExtState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
       end
       if reaper.ImGui_MenuItem(ctx, "Start at Next Bar (Link Transport required, Spacebar to trigger)", nil, wait_nextbar_play, link_with_reaper) then
         wait_nextbar_play = not wait_nextbar_play
+        reaper.SetExtState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
       end
 
       reaper.ImGui_EndPopup(ctx)
@@ -16054,6 +16142,7 @@ function loop()
       reaper.ImGui_Separator(ctx)
       if reaper.ImGui_MenuItem(ctx, "Tempo Sync", nil, tempo_sync_enabled, true) then
         tempo_sync_enabled = not tempo_sync_enabled
+        reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
         -- 新增同步速率立刻应用
         if tempo_sync_enabled then
           play_rate = 1.0
@@ -16066,9 +16155,11 @@ function loop()
       end
       if reaper.ImGui_MenuItem(ctx, "Link Transport", nil, link_with_reaper, true) then
         link_with_reaper = not link_with_reaper
+        reaper.SetExtState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
       end
       if reaper.ImGui_MenuItem(ctx, "Start at Next Bar (Link Transport required, Spacebar to trigger)", nil, wait_nextbar_play, link_with_reaper) then
         wait_nextbar_play = not wait_nextbar_play
+        reaper.SetExtState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
       end
 
       reaper.ImGui_EndPopup(ctx)

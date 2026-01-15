@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.139
+-- @version 1.0.140
 -- @changelog
---   Implemented asynchronous loading for local file browsing. Large directories now open instantly, effectively resolving UI freezing issues.
+--   Added persistent storage for "Tempo Sync", "Link Transport", and "Start at Next Bar" settings.
+--   Added a new "Add to Collections" option to the file list right-click menu for faster workflow.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
