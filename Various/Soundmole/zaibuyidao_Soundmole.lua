@@ -637,6 +637,7 @@ local colors = {
   timeline_bg_color       = 0x15192050, -- 0x18181AFF, 时间线 - 背景颜色
   thesaurus_text          = 0xBCC694FF, -- 同义词文本颜色
   gray                    = 0x909090FF, -- 灰色
+  cyan                    = 0x00FFFFFF, -- 青色
   tag_normal              = 0x2E2E2EFF, -- 标签-常规
   tag_hovered             = 0x3A3A3AFF, -- 标签-悬停
   tag_selected            = 0x4A4A4AFF, -- 标签-选中
@@ -12821,6 +12822,8 @@ function loop()
             show_font_size_timer = reaper.time_precise()
           end
 
+          if reaper.ImGui_BeginChild(ctx, "PeakTreeRegion") then
+
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 文本颜色
           
           -- 渲染单选列表
@@ -14472,6 +14475,10 @@ function loop()
 
           reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
           reaper.ImGui_PopFont(ctx)          -- 内容字体自由缩放
+
+          reaper.ImGui_EndChild(ctx) -- PeakTreeRegion
+          end
+
           reaper.ImGui_EndTabItem(ctx)
         end
         -- UCS列表
@@ -14495,468 +14502,518 @@ function loop()
           end
           reaper.ImGui_Separator(ctx)
 
-          local filter_text = ""
-          if usc_filter then
-            filter_text = reaper.ImGui_TextFilter_Get(usc_filter)
-          end
-          -- 过滤时，自动展开子分类匹配但主分类不匹配的主分类
-          if filter_text ~= ucs_last_filter_text then
-            ucs_last_filter_text = filter_text
-            -- 清空所有折叠
-            if filter_text == "" then
-              cat_open_state = {}
-            else
-              -- 只重设需要自动展开的分类
-              for _, cat in ipairs(cat_names) do
-                local subs = categories[cat]
-                local filtered = {}
-                local cat_matched = false
-                if filter_text ~= "" then
-                  cat_matched = reaper.ImGui_TextFilter_PassFilter(usc_filter, cat)
-                  if cat_matched then
-                    filtered = subs
-                  else
-                    for _, entry in ipairs(subs) do
-                      if reaper.ImGui_TextFilter_PassFilter(usc_filter, entry.name) then
-                        table.insert(filtered, entry)
+          if reaper.ImGui_BeginChild(ctx, "UCSListRegion") then
+
+            local filter_text = ""
+            if usc_filter then
+              filter_text = reaper.ImGui_TextFilter_Get(usc_filter)
+            end
+            -- 过滤时，自动展开子分类匹配但主分类不匹配的主分类
+            if filter_text ~= ucs_last_filter_text then
+              ucs_last_filter_text = filter_text
+              -- 清空所有折叠
+              if filter_text == "" then
+                cat_open_state = {}
+              else
+                -- 只重设需要自动展开的分类
+                for _, cat in ipairs(cat_names) do
+                  local subs = categories[cat]
+                  local filtered = {}
+                  local cat_matched = false
+                  if filter_text ~= "" then
+                    cat_matched = reaper.ImGui_TextFilter_PassFilter(usc_filter, cat)
+                    if cat_matched then
+                      filtered = subs
+                    else
+                      for _, entry in ipairs(subs) do
+                        if reaper.ImGui_TextFilter_PassFilter(usc_filter, entry.name) then
+                          table.insert(filtered, entry)
+                        end
                       end
                     end
+                  else
+                    filtered = subs
                   end
-                else
+                  -- 只自动展开主分类不匹配但有子分类匹配的分类
+                  if not cat_matched and #filtered > 0 then
+                    cat_open_state[cat] = true
+                  elseif filter_text ~= "" and cat_matched then
+                    cat_open_state[cat] = false
+                  end
+                end
+              end
+            end
+
+            for _, cat in ipairs(cat_names) do
+              local subs = categories[cat]
+              local filtered = {}
+              local cat_matched = false
+              if filter_text ~= "" then
+                cat_matched = reaper.ImGui_TextFilter_PassFilter(usc_filter, cat)
+                if cat_matched then
                   filtered = subs
-                end
-                -- 只自动展开主分类不匹配但有子分类匹配的分类
-                if not cat_matched and #filtered > 0 then
-                  cat_open_state[cat] = true
-                elseif filter_text ~= "" and cat_matched then
-                  cat_open_state[cat] = false
-                end
-              end
-            end
-          end
-
-          for _, cat in ipairs(cat_names) do
-            local subs = categories[cat]
-            local filtered = {}
-            local cat_matched = false
-            if filter_text ~= "" then
-              cat_matched = reaper.ImGui_TextFilter_PassFilter(usc_filter, cat)
-              if cat_matched then
-                filtered = subs
-              else
-                for _, entry in ipairs(subs) do
-                  if reaper.ImGui_TextFilter_PassFilter(usc_filter, entry.name) then
-                    table.insert(filtered, entry)
-                  end
-                end
-              end
-            else
-              filtered = subs
-            end
-
-            if #filtered > 0 then
-              reaper.ImGui_PushID(ctx, cat)
-              local is_open = cat_open_state[cat] and true or false
-              local GLYPH_PLUS  = '\u{0166}'
-              local GLYPH_MINUS = '\u{0167}'
-              local clicked, hovered = IconButton(ctx, "##toggle_" .. tostring(cat), (is_open and GLYPH_MINUS or GLYPH_PLUS), 20, 20)
-              if clicked then
-                cat_open_state[cat] = not is_open
-                local en = (ucs_maps and ucs_maps.cat_to_en and ucs_maps.cat_to_en[cat]) or cat
-                ucs_open_en = ucs_open_en or {}
-                if cat_open_state[cat] then ucs_open_en[en] = true else ucs_open_en[en] = nil end
-              end
-              reaper.ImGui_SameLine(ctx)
-
-              -- 点击主分类提交隐式搜索，主分类统一悬浮样式
-              local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-              -- local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat), "##cat", text_w, reaper.ImGui_SelectableFlags_SpanAllColumns()))
-              local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat), "##cat", text_w, 0))
-              if clicked_cat then
-                local send_cat = cat
-                if UCS_FORCE_EN and ucs_maps and ucs_maps.cat_to_en[cat] then
-                  send_cat = ucs_maps.cat_to_en[cat] -- force EN
-                end
-                temp_ucs_cat_keyword = tostring(send_cat):lower()
-                temp_ucs_sub_keyword = nil
-                temp_search_field, temp_search_keyword = nil, nil
-                active_saved_search = nil
-
-                local static = _G._soundmole_static or {}
-                _G._soundmole_static = static
-                static.filtered_list_map    = {}
-                static.last_filter_text_map = {}
-              end
-
-              -- 点击子分类发送主+子分类关键词隐式搜索
-              if is_open then
-                for _, entry in ipairs(filtered) do
-                  -- 子分类统一悬浮样式
-                  reaper.ImGui_PushID(ctx, entry.name)
-                  reaper.ImGui_Indent(ctx, 28)
-                  local w_sub = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-                  local clicked_sub = select(1, HoverSelectable(ctx, tostring(entry.name), "##sub", w_sub, 0))
-                  if clicked_sub then
-                    local send_cat = cat
-                    local send_sub = entry.name
-                    if UCS_FORCE_EN and ucs_maps then
-                      send_cat = (ucs_maps.cat_to_en[cat] or send_cat)
-                      local sub_map = ucs_maps.sub_to_en[cat] or {}
-                      send_sub = (sub_map[entry.name] or send_sub)
+                else
+                  for _, entry in ipairs(subs) do
+                    if reaper.ImGui_TextFilter_PassFilter(usc_filter, entry.name) then
+                      table.insert(filtered, entry)
                     end
-
-                    temp_ucs_cat_keyword = tostring(send_cat):lower()
-                    temp_ucs_sub_keyword = tostring(send_sub):lower()
-                    temp_search_field, temp_search_keyword = nil, nil
-                    active_saved_search = nil
-
-                    local static = _G._soundmole_static or {}
-                    _G._soundmole_static = static
-                    static.filtered_list_map    = {}
-                    static.last_filter_text_map = {}
                   end
-                  reaper.ImGui_Unindent(ctx, 28)
-                  reaper.ImGui_PopID(ctx)
                 end
+              else
+                filtered = subs
               end
-              reaper.ImGui_PopID(ctx)
+
+              if #filtered > 0 then
+                reaper.ImGui_PushID(ctx, cat)
+                local is_open = cat_open_state[cat] and true or false
+                local GLYPH_PLUS  = '\u{0166}'
+                local GLYPH_MINUS = '\u{0167}'
+                local clicked, hovered = IconButton(ctx, "##toggle_" .. tostring(cat), (is_open and GLYPH_MINUS or GLYPH_PLUS), 20, 20)
+                if clicked then
+                  cat_open_state[cat] = not is_open
+                  local en = (ucs_maps and ucs_maps.cat_to_en and ucs_maps.cat_to_en[cat]) or cat
+                  ucs_open_en = ucs_open_en or {}
+                  if cat_open_state[cat] then ucs_open_en[en] = true else ucs_open_en[en] = nil end
+                end
+                reaper.ImGui_SameLine(ctx)
+
+                -- 点击主分类提交隐式搜索，主分类统一悬浮样式
+                local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+                -- local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat), "##cat", text_w, reaper.ImGui_SelectableFlags_SpanAllColumns()))
+                local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat), "##cat", text_w, 0))
+                if clicked_cat then
+                  local send_cat = cat
+                  if UCS_FORCE_EN and ucs_maps and ucs_maps.cat_to_en[cat] then
+                    send_cat = ucs_maps.cat_to_en[cat] -- force EN
+                  end
+                  temp_ucs_cat_keyword = tostring(send_cat):lower()
+                  temp_ucs_sub_keyword = nil
+                  temp_search_field, temp_search_keyword = nil, nil
+                  active_saved_search = nil
+
+                  local static = _G._soundmole_static or {}
+                  _G._soundmole_static = static
+                  static.filtered_list_map    = {}
+                  static.last_filter_text_map = {}
+                end
+
+                -- 点击子分类发送主+子分类关键词隐式搜索
+                if is_open then
+                  for _, entry in ipairs(filtered) do
+                    -- 子分类统一悬浮样式
+                    reaper.ImGui_PushID(ctx, entry.name)
+                    reaper.ImGui_Indent(ctx, 28)
+                    local w_sub = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+                    local clicked_sub = select(1, HoverSelectable(ctx, tostring(entry.name), "##sub", w_sub, 0))
+                    if clicked_sub then
+                      local send_cat = cat
+                      local send_sub = entry.name
+                      if UCS_FORCE_EN and ucs_maps then
+                        send_cat = (ucs_maps.cat_to_en[cat] or send_cat)
+                        local sub_map = ucs_maps.sub_to_en[cat] or {}
+                        send_sub = (sub_map[entry.name] or send_sub)
+                      end
+
+                      temp_ucs_cat_keyword = tostring(send_cat):lower()
+                      temp_ucs_sub_keyword = tostring(send_sub):lower()
+                      temp_search_field, temp_search_keyword = nil, nil
+                      active_saved_search = nil
+
+                      local static = _G._soundmole_static or {}
+                      _G._soundmole_static = static
+                      static.filtered_list_map    = {}
+                      static.last_filter_text_map = {}
+                    end
+                    reaper.ImGui_Unindent(ctx, 28)
+                    reaper.ImGui_PopID(ctx)
+                  end
+                end
+                reaper.ImGui_PopID(ctx)
+              end
             end
+            reaper.ImGui_EndChild(ctx)
           end
+
           reaper.ImGui_EndTabItem(ctx)
         end
 
         -- TAB 标签页 Saved Search
         if reaper.ImGui_BeginTabItem(ctx, 'Saved Search') then
-          prev_filter_text = prev_filter_text or ""
-          local filter_text = reaper.ImGui_TextFilter_Get(filename_filter) or ""
-          if prev_filter_text ~= filter_text then
-            active_saved_search = nil
-            temp_search_keyword, temp_search_field = nil, nil -- 清除 UCS 隐式搜索
-          end
-          prev_filter_text = filter_text
+          local DND_PAYLOAD = "SM_SAVED_SEARCH_NODE"
+          -- 将区域判定改为上下各 25% 用于排序，中间 50% 用于归档
+          local FOLDER_SORT_ZONE_RATIO = 0.25
 
-          -- 初始化 Saved Search 过滤器
-          if not saved_search_filter then
+          local function TableToString(tbl)
+            if type(tbl) ~= "table" then
+              return (type(tbl) == "string") and string.format("%q", tbl) or tostring(tbl)
+            end
+            local result, is_array = "{", (#tbl > 0)
+            if is_array then
+              for i, v in ipairs(tbl) do
+                result = result .. (i > 1 and "," or "") .. TableToString(v)
+              end
+            else
+              local first = true
+              for k, v in pairs(tbl) do
+                result = result .. (first and "" or ",") .. "[" .. string.format("%q", k) .. "]=" .. TableToString(v)
+                first = false
+              end
+            end
+            return result .. "}"
+          end
+
+          local function SaveTreeData()
+            local data = { roots = root_saved_searches, nodes = saved_search_nodes }
+            reaper.SetExtState("Soundmole", "SavedSearchesTree", TableToString(data), true)
+          end
+
+          if not saved_search_nodes then saved_search_nodes = {} end
+          if not root_saved_searches then root_saved_searches = {} end
+
+          -- 加载数据
+          if not _G.saved_searches_loaded then
+            local str = reaper.GetExtState("Soundmole", "SavedSearchesTree")
+            if str and str ~= "" then
+              local func = load("return " .. str)
+              if func then
+                local data = func()
+                if data then
+                  root_saved_searches = data.roots or {}
+                  saved_search_nodes = data.nodes or {}
+                end
+              end
+            end
+            _G.saved_searches_loaded = true
+          end
+
+          local function IsDescendant(source_id, target_id)
+            if source_id == target_id then return true end
+            local node = saved_search_nodes[source_id]
+            if not node or not node.children then return false end
+            for _, child_id in ipairs(node.children) do
+              if IsDescendant(child_id, target_id) then return true end
+            end
+            return false
+          end
+
+          local function FindParentList(search_id, current_list)
+            current_list = current_list or root_saved_searches
+            for i, id in ipairs(current_list) do
+              if id == search_id then return current_list, i end
+              local node = saved_search_nodes[id]
+              if node and node.children then
+                local list, idx = FindParentList(search_id, node.children)
+                if list then return list, idx end
+              end
+            end
+            return nil, nil
+          end
+
+          local function ReorderNode(drag_id, target_id, insert_mode)
+            if drag_id == target_id or IsDescendant(drag_id, target_id) then return end
+            local src_list, src_idx = FindParentList(drag_id)
+            local dest_list, dest_idx = FindParentList(target_id)
+            if not src_list or not dest_list then return end
+
+            local actual_dest_idx = dest_idx + insert_mode -- 0: before, 1: after
+            if src_list == dest_list and src_idx < actual_dest_idx then
+              actual_dest_idx = actual_dest_idx - 1
+            end
+
+            table.remove(src_list, src_idx)
+            table.insert(dest_list, actual_dest_idx, drag_id)
+            SaveTreeData()
+          end
+
+          local function MoveNodeIntoFolder(drag_id, target_folder_id)
+            if drag_id == target_folder_id or IsDescendant(drag_id, target_folder_id) then return end
+            local src_list, src_idx = FindParentList(drag_id)
+            if not src_list then return end
+
+            local folder = saved_search_nodes[target_folder_id]
+            if folder then
+              if folder.children then
+                for _, child in ipairs(folder.children) do
+                  if child == drag_id then return end
+                end
+              else
+                folder.children = {}
+              end
+              table.remove(src_list, src_idx)
+              table.insert(folder.children, drag_id)
+              folder.open = true
+              SaveTreeData()
+            end
+          end
+
+          local function NodePassesFilter(id, filter_string)
+            if not filter_string or filter_string == "" then return true, false end
+            local node = saved_search_nodes[id]
+            if not node then return false, false end
+
+            local f_lower = filter_string:lower()
+            local self_match = (node.name and node.name:lower():find(f_lower, 1, true)) or 
+                               (node.term and node.term:lower():find(f_lower, 1, true))
+
+            local child_match = false
+            if node.children then
+              for _, child_id in ipairs(node.children) do
+                local cm = NodePassesFilter(child_id, filter_string)
+                if cm then child_match = true end
+              end
+            end
+            return (self_match or child_match), child_match
+          end
+
+          local function DrawDragVisuals(is_folder)
+            local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+            local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+            local _, mouse_y = reaper.ImGui_GetMousePos(ctx)
+            local rel_y = mouse_y - min_y
+            local h = max_y - min_y
+            local dl = reaper.ImGui_GetForegroundDrawList(ctx)
+
+            if is_folder then
+              if rel_y < (h * FOLDER_SORT_ZONE_RATIO) then
+                -- 上部：插入上方
+                reaper.ImGui_DrawList_AddLine(dl, min_x, min_y, max_x, min_y, colors.cyan, 2)
+              elseif rel_y > (h * (1 - FOLDER_SORT_ZONE_RATIO)) then
+                -- 下部：插入下方
+                reaper.ImGui_DrawList_AddLine(dl, min_x, max_y, max_x, max_y, colors.cyan, 2)
+              else
+                -- 中部：放入内部
+                reaper.ImGui_DrawList_AddRect(dl, min_x, min_y, max_x, max_y, colors.dnd_preview, 0, 0, 2)
+              end
+            else
+              -- 普通关键词只有上下二分
+              local y_line = (rel_y < (h * 0.5)) and min_y or max_y
+              reaper.ImGui_DrawList_AddLine(dl, min_x, y_line, max_x, y_line, colors.cyan, 2)
+            end
+          end
+
+          local function HandleDragDropTarget(target_id, is_folder)
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), 0)
+            if reaper.ImGui_BeginDragDropTarget(ctx) then
+              local ret_payload, payload_type = reaper.ImGui_GetDragDropPayload(ctx)
+              if ret_payload and payload_type == DND_PAYLOAD then
+                DrawDragVisuals(is_folder)
+              end
+
+              local ret, payload = reaper.ImGui_AcceptDragDropPayload(ctx, DND_PAYLOAD)
+              if ret and payload then
+                local _, min_y = reaper.ImGui_GetItemRectMin(ctx)
+                local _, max_y = reaper.ImGui_GetItemRectMax(ctx)
+                local _, mouse_y = reaper.ImGui_GetMousePos(ctx)
+                local rel_y = mouse_y - min_y
+                local h = max_y - min_y
+
+                if is_folder then
+                  if rel_y < (h * FOLDER_SORT_ZONE_RATIO) then
+                    ReorderNode(payload, target_id, 0) -- 上
+                  elseif rel_y > (h * (1 - FOLDER_SORT_ZONE_RATIO)) then
+                    ReorderNode(payload, target_id, 1) -- 下
+                  else
+                    MoveNodeIntoFolder(payload, target_id) -- 中
+                  end
+                else
+                  ReorderNode(payload, target_id, (rel_y < (h * 0.5)) and 0 or 1)
+                end
+              end
+              reaper.ImGui_EndDragDropTarget(ctx)
+            end
+            reaper.ImGui_PopStyleColor(ctx)
+          end
+
+          local function HandleDragDropSource(id, name, is_folder)
+            if reaper.ImGui_BeginDragDropSource(ctx) then
+              reaper.ImGui_SetDragDropPayload(ctx, DND_PAYLOAD, id)
+              reaper.ImGui_Text(ctx, (is_folder and "Move Group: " or "Move Item: ") .. name)
+              reaper.ImGui_TextDisabled(ctx, "(Drop on Center to nest, Edge to sort)")
+              reaper.ImGui_EndDragDropSource(ctx)
+            end
+          end
+
+          local function DrawSavedSearchTree(list, depth, filter_str)
+            if (depth or 0) > 50 then reaper.ImGui_TextDisabled(ctx, "Max Depth") return end
+            local is_filtering = (filter_str and filter_str ~= "")
+
+            for _, id in ipairs(list) do
+              local node = saved_search_nodes[id]
+              local is_visible, force_open = true, false
+              if is_filtering then
+                is_visible, force_open = NodePassesFilter(id, filter_str)
+              end
+
+              if node and is_visible then
+                reaper.ImGui_PushID(ctx, "node_" .. id)
+
+                if node.type == "folder" then
+                  local flags = reaper.ImGui_TreeNodeFlags_SpanAllColumns()
+                  reaper.ImGui_SetNextItemOpen(ctx, force_open or node.open, reaper.ImGui_Cond_Always())
+
+                  local is_node_open = reaper.ImGui_TreeNode(ctx, node.name, flags)
+
+                  if not is_filtering then
+                    HandleDragDropSource(id, node.name, true)
+                    HandleDragDropTarget(id, true)
+                  end
+
+                  if reaper.ImGui_IsItemToggledOpen(ctx) and not is_filtering then
+                    node.open = not node.open
+                    SaveTreeData()
+                  end
+
+                  if reaper.ImGui_BeginPopupContextItem(ctx) then
+                    if reaper.ImGui_MenuItem(ctx, "Rename Group") then
+                      local ret, new_name = reaper.GetUserInputs("Rename", 1, "New Name:,extrawidth=200", node.name)
+                      if ret then node.name = new_name; SaveTreeData() end
+                    end
+                    if reaper.ImGui_MenuItem(ctx, "Create Sub-Group") then
+                      local new_id = new_guid()
+                      saved_search_nodes[new_id] = { id=new_id, type="folder", name="New Group", children={}, open=true }
+                      table.insert(node.children, new_id)
+                      node.open = true
+                      SaveTreeData()
+                    end
+                    reaper.ImGui_Separator(ctx)
+                    if reaper.ImGui_MenuItem(ctx, "Delete Group") then
+                      local p_list, p_idx = FindParentList(id)
+                      if p_list then
+                        table.remove(p_list, p_idx)
+                        saved_search_nodes[id] = nil
+                        SaveTreeData()
+                      end
+                    end
+                    reaper.ImGui_EndPopup(ctx)
+                  end
+
+                  if is_node_open then
+                    DrawSavedSearchTree(node.children, (depth or 0) + 1, filter_str)
+                    reaper.ImGui_TreePop(ctx)
+                  end
+                else -- Item Node
+                  local is_selected = (active_saved_search == id)
+                  if reaper.ImGui_Selectable(ctx, node.name, is_selected, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+                    active_saved_search = id
+                    if filename_filter then reaper.ImGui_TextFilter_Set(filename_filter, node.term) end
+                    _G.commit_filter_text = node.term
+                    _G.just_committed_filter = true
+                    search_input_timer = reaper.time_precise()
+                  end
+
+                  if not is_filtering then
+                    HandleDragDropSource(id, node.name, false)
+                    HandleDragDropTarget(id, false)
+                  end
+
+                  if reaper.ImGui_BeginPopupContextItem(ctx) then
+                    if reaper.ImGui_MenuItem(ctx, "Rename") then
+                      local ret, new_name = reaper.GetUserInputs("Rename", 1, "Name:,extrawidth=200", node.name)
+                      if ret then node.name = new_name; SaveTreeData() end
+                    end
+                    if reaper.ImGui_MenuItem(ctx, "Update with Current Filter") then
+                      node.term = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+                      SaveTreeData()
+                    end
+                    reaper.ImGui_Separator(ctx)
+                    if reaper.ImGui_MenuItem(ctx, "Delete") then
+                      local p_list, p_idx = FindParentList(id)
+                      if p_list then
+                        table.remove(p_list, p_idx)
+                        saved_search_nodes[id] = nil
+                        SaveTreeData()
+                      end
+                    end
+                    reaper.ImGui_EndPopup(ctx)
+                  end
+                end
+                reaper.ImGui_PopID(ctx)
+              end
+            end
+          end
+
+          -- 主界面布局
+          if not saved_search_filter or not reaper.ImGui_ValidatePtr(saved_search_filter, 'ImGui_TextFilter*') then
             saved_search_filter = reaper.ImGui_CreateTextFilter()
-            reaper.ImGui_Attach(ctx, saved_search_filter)
           end
 
-          reaper.ImGui_SetNextItemWidth(ctx, -100) -- 预留右侧按钮空间
+          reaper.ImGui_SetNextItemWidth(ctx, -170)
           reaper.ImGui_TextFilter_Draw(saved_search_filter, ctx, "##SavedSearchFilter")
+          local filter_val = reaper.ImGui_TextFilter_Get(saved_search_filter) or ""
+
           reaper.ImGui_SameLine(ctx)
           if reaper.ImGui_Button(ctx, "Clear", 40) then
             reaper.ImGui_TextFilter_Set(saved_search_filter, "")
+            filter_val = ""
           end
+
           reaper.ImGui_SameLine(ctx)
+          if reaper.ImGui_Button(ctx, "+Group", 60) then
+            local new_id = new_guid()
+            saved_search_nodes[new_id] = { id=new_id, type="folder", name="New Group", children={}, open=true }
+            table.insert(root_saved_searches, new_id)
+            SaveTreeData()
+          end
 
-          -- 添加搜索词按钮
+          reaper.ImGui_SameLine(ctx)
           if reaper.ImGui_Button(ctx, "Save", 40) then
-            new_search_name = filter_text
-            new_keyword     = filter_text
-            show_add_popup = true
-          end
-
-          -- 添加搜索词弹窗
-          if show_add_popup then
-            reaper.ImGui_OpenPopup(ctx, "Add Search")
-            show_add_popup = false
-          end
-          local add_visible = reaper.ImGui_BeginPopupModal(ctx, "Add Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
-          if add_visible then
-            local name_w, _    = reaper.ImGui_CalcTextSize(ctx, "Alias:")
-            local keyword_w, _ = reaper.ImGui_CalcTextSize(ctx, "Keyword:")
-            local label_w      = math.max(name_w, keyword_w) + 8 -- 8px 作为标签与输入框的间距
-
-            reaper.ImGui_BeginGroup(ctx)
-            local row2_x = reaper.ImGui_GetCursorPosX(ctx)
-            reaper.ImGui_AlignTextToFramePadding(ctx)
-            reaper.ImGui_Text(ctx, "Keyword:")
-            reaper.ImGui_SameLine(ctx, nil, 6)
-            reaper.ImGui_SetCursorPosX(ctx, row2_x + label_w)
-            local kw_changed, kw_val = reaper.ImGui_InputText(ctx, "##new_keyword", new_keyword or "", 256)
-            if kw_changed then new_keyword = kw_val end
-            reaper.ImGui_EndGroup(ctx)
-
-            reaper.ImGui_BeginGroup(ctx)
-            local row_x = reaper.ImGui_GetCursorPosX(ctx)
-            reaper.ImGui_AlignTextToFramePadding(ctx)
-            reaper.ImGui_Text(ctx, "Alias:")
-            reaper.ImGui_SameLine(ctx, nil, 6)
-            reaper.ImGui_SetCursorPosX(ctx, row_x + label_w)
-            local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
-            if input_changed then new_search_name = input_val end
-            reaper.ImGui_EndGroup(ctx)
-
-            reaper.ImGui_Separator(ctx)
-
-            local win_w = reaper.ImGui_GetWindowWidth(ctx)
-            local btn_w = 64
-            local spacing = 0 -- 两个按钮间距
-            -- 光标移到右侧对齐
-            local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
-            reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
-
-            local function trim(s) return (tostring(s or ""):gsub("^%s+", ""):gsub("%s+$", "")) end -- 去首尾空白
-            if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
-              if trim(new_search_name) ~= "" and trim(new_keyword) ~= "" then
-                -- 避免重名
-                local exists = false
-                for _, s in ipairs(saved_search_list) do
-                  if s.name == new_search_name then exists = true break end
-                end
-                if not exists then
-                  table.insert(saved_search_list, {name = new_search_name, keyword = new_keyword})
-                  SaveSavedSearch(EXT_SECTION, saved_search_list)
-                end
-              end
-              reaper.ImGui_CloseCurrentPopup(ctx)
-              new_search_name, new_keyword = "", ""
+            local main_filter = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+            if main_filter ~= "" then
+              local new_id = new_guid()
+              saved_search_nodes[new_id] = { id=new_id, type="item", name=main_filter, term=main_filter }
+              table.insert(root_saved_searches, new_id)
+              SaveTreeData()
+            else
+              reaper.ShowMessageBox("Main search filter is empty.", "Info", 0)
             end
-
-            reaper.ImGui_SameLine(ctx)
-            if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
-              reaper.ImGui_CloseCurrentPopup(ctx)
-              new_search_name, new_keyword = "", ""
-            end
-            reaper.ImGui_EndPopup(ctx)
           end
+
           reaper.ImGui_Separator(ctx)
 
-          -- 鼠标抬起时重置保存搜索拖动状态
-          if not reaper.ImGui_IsMouseDown(ctx, 0) then
-            saved_search_drag_index = nil
-            saved_search_last_target_index = nil
-          end
-
-          -- Saved Search 列表过滤
-          local saved_filter_text = ""
-          if saved_search_filter then
-            saved_filter_text = reaper.ImGui_TextFilter_Get(saved_search_filter) or ""
-          end
-
-          for idx, s in ipairs(saved_search_list) do
-            local show_row = true
-            if saved_filter_text ~= "" and saved_search_filter then
-              show_row = reaper.ImGui_TextFilter_PassFilter(saved_search_filter, s.keyword or "") or reaper.ImGui_TextFilter_PassFilter(saved_search_filter, s.name or "")
-            end
-            if not show_row then
-              goto continue_saved_search_list
-            end
-
-            reaper.ImGui_PushID(ctx, "saved_search_" .. idx)
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),        0x00000000)
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), 0x00000000)
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  0x00000000)
-
-            -- 组合显示文本: keyword (alias)
-            local name = tostring(s.name or "")
-            local keyword = tostring(s.keyword or "")
-            local label
-            if keyword ~= "" then
-              if name ~= "" and name ~= keyword then
-                label = string.format("%s (%s)", keyword, name)
-              else
-                -- 别名为空或与关键词相同，只显示关键词
-                label = keyword
-              end
+          if reaper.ImGui_BeginChild(ctx, "SavedSearchesTreeRegion") then
+            if #root_saved_searches == 0 then
+              reaper.ImGui_TextDisabled(ctx, "No saved searches.")
             else
-              -- 没有关键词时，退回显示别名
-              label = name
-            end
+              DrawSavedSearchTree(root_saved_searches, 0, filter_val)
 
-            local handle_w = 20
-            local handle_h = reaper.ImGui_GetTextLineHeight(ctx)
-            reaper.ImGui_InvisibleButton(ctx, "##saved_drag_" .. tostring(idx), handle_w, handle_h)
-            local handle_hovered = reaper.ImGui_IsItemHovered(ctx)
-            local handle_active = reaper.ImGui_IsItemActive(ctx)
-            local is_drag_source = (saved_search_drag_index ~= nil and idx == saved_search_drag_index and reaper.ImGui_IsMouseDown(ctx, 0))
-            -- 拖动源
-            if reaper.ImGui_BeginDragDropSource(ctx) then
-              if not saved_search_drag_index then
-                saved_search_drag_index = idx
-                saved_search_last_target_index = idx
-              end
+              if filter_val == "" then
+                local content_h = select(2, reaper.ImGui_GetContentRegionAvail(ctx))
+                reaper.ImGui_Dummy(ctx, 0, math.max(content_h, 50))
 
-              local drag_idx = saved_search_drag_index or idx
-              local drag_item = saved_search_list[drag_idx] or s
-
-              reaper.ImGui_SetDragDropPayload(ctx, "SM_SAVED_REORDER", tostring(drag_idx))
-              reaper.ImGui_Text(ctx, drag_item and (drag_item.name or "") or "")
-              reaper.ImGui_EndDragDropSource(ctx)
-            end
-            -- 拖动目标
-            if reaper.ImGui_BeginDragDropTarget(ctx) then
-              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), 0x00000000) -- colors.dnd_preview
-              local ok, payload = reaper.ImGui_AcceptDragDropPayload(ctx, "SM_SAVED_REORDER", nil, reaper.ImGui_DragDropFlags_AcceptBeforeDelivery())
-
-              if ok and saved_search_drag_index and idx ~= saved_search_drag_index and idx ~= saved_search_last_target_index then
-                local from_idx = saved_search_drag_index
-                if saved_search_list[from_idx] and saved_search_list[idx] then
-                  local tmp = saved_search_list[from_idx]
-                  saved_search_list[from_idx] = saved_search_list[idx]
-                  saved_search_list[idx] = tmp
-
-                  saved_search_drag_index = idx
-                  saved_search_last_target_index = idx
-
-                  SaveSavedSearch(EXT_SECTION, saved_search_list)
-                end
-              end
-
-              reaper.ImGui_PopStyleColor(ctx)
-              reaper.ImGui_EndDragDropTarget(ctx)
-            end
-
-            -- 绘制拖动图标
-            do
-              local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-              local rect_min_x, rect_min_y = reaper.ImGui_GetItemRectMin(ctx)
-              local rect_w, rect_h = reaper.ImGui_GetItemRectSize(ctx)
-
-              local win_x, _ = reaper.ImGui_GetWindowPos(ctx)
-              local win_w, _ = reaper.ImGui_GetWindowSize(ctx)
-              local win_right_edge = win_x + win_w
-              -- 只要鼠标在图标左侧到窗口右侧之间，且在当前行高度内，即视为悬停
-              local row_hovered = reaper.ImGui_IsMouseHoveringRect(ctx, rect_min_x, rect_min_y, win_right_edge, rect_min_y + rect_h, true)
-
-              if is_drag_source or handle_hovered or row_hovered then
-                if fonts and fonts.icon then
-                  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
-                end
-                local glyph_drag = '\u{00C3}'
-                local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
-                local center_x = rect_min_x + math.max(0, (rect_w - tw) * 0.5)
-                local center_y = rect_min_y + math.max(0, (rect_h - th) * 0.5)
-
-                local col = colors.icon_normal or 0xFFFFFFFF
-                if is_drag_source then
-                  col = colors.icon_active or colors.icon_hovered or col
-                elseif handle_hovered then
-                  col = colors.icon_hovered or col
-                end
-                reaper.ImGui_DrawList_AddText(draw_list, center_x, center_y, col, glyph_drag)
-                if fonts and fonts.icon then
-                  reaper.ImGui_PopFont(ctx)
-                end
-              end
-
-              if is_drag_source or handle_hovered then
-                reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
-              end
-            end
-
-            reaper.ImGui_SameLine(ctx)
-
-            local text_pos_x, text_pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
-            local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-
-            local clicked = reaper.ImGui_Selectable(ctx, "##saved_sel_" .. idx, false, 0, text_w, 0)
-            local hovered_row = reaper.ImGui_IsItemHovered(ctx)
-
-            -- 按悬浮状态切换文字颜色，手动在同一位置绘制一次文本
-            reaper.ImGui_SetCursorScreenPos(ctx, text_pos_x, text_pos_y)
-            if hovered_row then
-              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.table_header_active)
-              reaper.ImGui_Text(ctx, label)
-              reaper.ImGui_PopStyleColor(ctx)
-            else
-              reaper.ImGui_Text(ctx, label)
-            end
-
-            -- 将保存搜索关键词发送过滤框（隐式搜索，如果启用隐式发送保存搜索关键词则应整段注释1,共两处）
-            if clicked then
-              active_saved_search = idx
-              local kw = s.keyword or ""
-              if filename_filter then
-                reaper.ImGui_TextFilter_Set(filename_filter, kw)    -- 回填到输入框
-              end
-              _G.commit_filter_text    = kw                         -- 列表过滤使用
-              _G.just_committed_filter = true                       -- 如外部有一次性提交逻辑可用
-              last_search_input        = kw                         -- 同步输入状态
-              search_input_timer       = reaper.time_precise()      -- 重置计时，避免重复写入
-              temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil -- 清除主-子组合过滤残留
-            end
-
-            -- 恢复关键词文字样式颜色
-            reaper.ImGui_PopStyleColor(ctx, 3)
-
-            -- 名称区域右键菜单
-            if reaper.ImGui_BeginPopupContextItem(ctx, "##context_saved_search_name", 1) then
-              if reaper.ImGui_MenuItem(ctx, "Rename") then
-                show_rename_popup = true
-                rename_idx = idx
-                rename_name = s.name
-              end
-              if reaper.ImGui_MenuItem(ctx, "Remove") then
-                remove_search_idx = idx
-              end
-              reaper.ImGui_EndPopup(ctx)
-            end
-
-            reaper.ImGui_PopID(ctx)
-            ::continue_saved_search_list::
-          end
-
-          -- 用户输入重命名的弹窗
-          if show_rename_popup and rename_idx then
-            reaper.ImGui_OpenPopup(ctx, "Rename Alias")
-            show_rename_popup = false
-          end
-
-          local rename_visible = reaper.ImGui_BeginPopupModal(ctx, "Rename Alias", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
-          if rename_visible and rename_idx then
-            reaper.ImGui_Text(ctx, "Rename to: ")
-            reaper.ImGui_SameLine(ctx)
-            local input_changed, input_val = reaper.ImGui_InputText(ctx, "##rename_input", rename_name or "", 256)
-            if input_changed then rename_name = input_val end
-            reaper.ImGui_Separator(ctx)
-            local win_w = reaper.ImGui_GetWindowWidth(ctx)
-            local btn_w = 64
-            local spacing = 0 -- 两个按钮间距
-            -- 光标移到右侧对齐
-            local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
-            reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
-
-            if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
-              if (rename_name or "") ~= "" then
-                -- 检查重名
-                local exists = false
-                for i, s in ipairs(saved_search_list) do
-                  if s.name == rename_name and i ~= rename_idx then
-                    exists = true
-                    break
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), 0)
+                if reaper.ImGui_BeginDragDropTarget(ctx) then
+                  local ret_payload, payload_type = reaper.ImGui_GetDragDropPayload(ctx)
+                  if ret_payload and payload_type == DND_PAYLOAD then
+                    local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+                    local max_x, _ = reaper.ImGui_GetItemRectMax(ctx)
+                    reaper.ImGui_DrawList_AddLine(reaper.ImGui_GetForegroundDrawList(ctx), min_x, min_y, max_x, min_y, colors.cyan, 2)
                   end
+
+                  local ret, payload = reaper.ImGui_AcceptDragDropPayload(ctx, DND_PAYLOAD)
+                  if ret and payload then
+                    local src_list, src_idx = FindParentList(payload)
+                    if src_list then table.remove(src_list, src_idx) end
+                    table.insert(root_saved_searches, payload)
+                    SaveTreeData()
+                  end
+                  reaper.ImGui_EndDragDropTarget(ctx)
                 end
-                if not exists then
-                  saved_search_list[rename_idx].name = rename_name
-                  SaveSavedSearch(EXT_SECTION, saved_search_list)
-                end
+                reaper.ImGui_PopStyleColor(ctx)
               end
-              reaper.ImGui_CloseCurrentPopup(ctx)
-              rename_idx = nil
-              rename_name = ""
             end
-            reaper.ImGui_SameLine(ctx)
-            if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
-              reaper.ImGui_CloseCurrentPopup(ctx)
-              rename_idx = nil
-              rename_name = ""
-            end
-            reaper.ImGui_EndPopup(ctx)
+            reaper.ImGui_EndChild(ctx)
           end
-          
-          if remove_search_idx then
-            table.remove(saved_search_list, remove_search_idx)
-            SaveSavedSearch(EXT_SECTION, saved_search_list)
-            remove_search_idx = nil
-          end
+
           reaper.ImGui_EndTabItem(ctx)
         end
 
         -- TAB 标签页 Freesound 节点
         if reaper.ImGui_BeginTabItem(ctx, 'Freesound') then
           if FS and type(FS_DrawSidebar)=="function" then
-            FS_DrawSidebar(ctx)
+            if reaper.ImGui_BeginChild(ctx, "SavedSearchesTreeRegion") then
+              FS_DrawSidebar(ctx)
+              reaper.ImGui_EndChild(ctx)
+            end
           end
           reaper.ImGui_EndTabItem(ctx)
         end
@@ -16400,7 +16457,7 @@ function loop()
         ["输入与弹窗 Inputs"] = { "frame_bg","frame_bg_hovered","frame_bg_active","check_mark","popup_bg" },
         ["分割线 Separators"] = { "separator_line","separator_line_active","slider_grab","slider_grab_active" },
         ["滚动条 Scrollbar"] = { "scrollbar_bg","scrollbar_grab_normal","scrollbar_grab_hovered","scrollbar_grab_active" },
-        ["基础 Base"] = { "transparent","gray","mole","settings_header_bg" },
+        ["基础 Base"] = { "transparent","gray","cyan","mole","settings_header_bg" },
         ["标签 Tag"] = { "tag_normal","tag_hovered","tag_selected","tag_border","tag_close_bg" },
         ["Freesound"] = {
           "fs_button_normal","fs_button_hovered","fs_button_active",
@@ -16551,6 +16608,7 @@ function loop()
         transparent              = "Transparent",              -- "透明 Transparent",
         mole                     = "Mole",                     -- "Mole",
         gray                     = "Gray",                     -- "灰 Gray",
+        cyan                     = "Cyan",                     -- "青 Cyan",
         settings_header_bg       = "Settings Header BG",       -- "设置页面背景"
 
         -- Freesound
