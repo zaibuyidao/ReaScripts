@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.141
+-- @version 1.0.142
 -- @changelog
 --   Improved Saved Search functionality with new drag-and-drop interactions, supporting free sorting, folder nesting, and real-time visual feedback.
 --   Added persistent storage for "Tempo Sync", "Link Transport", and "Start at Next Bar" settings.

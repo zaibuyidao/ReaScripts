@@ -12804,6 +12804,7 @@ function loop()
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelectedOverline(), colors.tab_selected_overline)
         -- PeekTree列表
         if reaper.ImGui_BeginTabItem(ctx, 'PeekTree') then
+          if reaper.ImGui_BeginChild(ctx, "PeakTreeRegion") then -- PeakTreeRegion 开始
           -- 内容字体自由缩放
           local wheel = reaper.ImGui_GetMouseWheel(ctx)
           local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
@@ -12821,8 +12822,6 @@ function loop()
             show_font_size_popup = true
             show_font_size_timer = reaper.time_precise()
           end
-
-          if reaper.ImGui_BeginChild(ctx, "PeakTreeRegion") then
 
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 文本颜色
           
@@ -14476,7 +14475,7 @@ function loop()
           reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
           reaper.ImGui_PopFont(ctx)          -- 内容字体自由缩放
 
-          reaper.ImGui_EndChild(ctx) -- PeakTreeRegion
+          reaper.ImGui_EndChild(ctx) -- PeakTreeRegion 结束
           end
 
           reaper.ImGui_EndTabItem(ctx)
