@@ -19012,6 +19012,7 @@ function loop()
 end
 -- 退出清理函数
 function OnScriptExit()
+  if SaveExitSettings then pcall(SaveExitSettings) end
   -- 清理文件夹模式的后台扫描器 或使用 StopAsyncScan()
   if _G.async_probe_handle then
     if reaper.APIExists("SM_ProbeMediaEnd") then
@@ -19026,15 +19027,28 @@ function OnScriptExit()
     end
     _G.db_loader.ctx = nil
   end
-  
+  -- 上一次搜索结果句柄
   if _G._last_search_handle then
     if reaper.APIExists("SM_DB_Release") then 
       reaper.SM_DB_Release(_G._last_search_handle) 
     end
     _G._last_search_handle = nil
   end
+  -- 全量缓存句柄
+  if _G.SM_Cache_Full_Handle then
+    if reaper.APIExists("SM_DB_Release") then 
+      reaper.SM_DB_Release(_G.SM_Cache_Full_Handle)
+    end
+  end
+  -- 如果脚本在读取 CSV/DB 数据库的过程中被关闭，确保文件句柄被关闭
+  if _G._mediadb_stream then 
+    MediaDBStreamClose(_G._mediadb_stream)
+    _G._mediadb_stream = nil
+  end
+
+  StopPreview()
+  ReleaseAllCoverImages() -- 释放封面纹理
+  DeleteCoverCacheFiles() -- 删除缓存图片
 end
--- 退出时保存模式列表状态
-reaper.atexit(SaveExitSettings)
 reaper.atexit(OnScriptExit)
 reaper.defer(loop)
