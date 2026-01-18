@@ -1,10 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.142
+-- @version 1.0.143
 -- @changelog
---   Improved Saved Search functionality with new drag-and-drop interactions, supporting free sorting, folder nesting, and real-time visual feedback.
---   Added persistent storage for "Tempo Sync", "Link Transport", and "Start at Next Bar" settings.
---   Added a new "Add to Collections" option to the file list right-click menu for faster workflow.
+--   Optimized memory release mechanism and streamlined background scanning tasks.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
