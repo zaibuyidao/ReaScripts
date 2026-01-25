@@ -18638,23 +18638,89 @@ function loop()
 
         -- 拖拽释放检测
         if dragging_selection then
-          reaper.PreventUIRefresh(1)
-          local window, _, _ = reaper.BR_GetMouseCursorContext()
+          local window, segment, details = reaper.BR_GetMouseCursorContext()
+          local mouse_pos_time = reaper.BR_GetMouseCursorContext_Position()
+
+          if mouse_pos_time > -1 then
+            local mouse_x_os, mouse_y_os = reaper.GetMousePosition() -- 获取鼠标在屏幕上的绝对位置
+            local zoom_lvl = reaper.GetHZoomLevel() -- 获取水平缩放比例
+            -- 计算吸附偏移
+            local snap_time = reaper.SnapToGrid(0, mouse_pos_time)
+            local time_diff = snap_time - mouse_pos_time
+            local pixel_offset = time_diff * zoom_lvl -- 计算线应该偏离鼠标多少像素
+            local target_x_native = mouse_x_os + pixel_offset
+            -- 线的上下边界，填满编排视图
+            local top_y, bottom_y = 0, 1000
+            if reaper.JS_Window_FindChildByID then
+              local main_hwnd = reaper.GetMainHwnd()
+              local arrange_hwnd = reaper.JS_Window_FindChildByID(main_hwnd, 1000)
+              if arrange_hwnd then
+                local _, _, top, _, bottom = reaper.JS_Window_GetRect(arrange_hwnd)
+                top_y, bottom_y = top, bottom
+              else
+                top_y = 0
+                bottom_y = select(2, reaper.GetMousePosition()) + 2000
+              end
+            end
+
+            -- 将原生坐标转为 ImGui 坐标
+            local final_x, final_top = reaper.ImGui_PointConvertNative(ctx, target_x_native, top_y, true)
+            local _, final_bottom = reaper.ImGui_PointConvertNative(ctx, target_x_native, bottom_y, true)
+            local final_height = final_bottom - final_top
+            -- 绘制一个1像素宽的窗口
+            reaper.ImGui_SetNextWindowPos(ctx, final_x, final_top)
+            reaper.ImGui_SetNextWindowSize(ctx, 1, final_height) -- 强制宽度 1
+
+            reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowMinSize(), 1, 1)
+            reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
+            reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowBorderSize(), 0)
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(), colors.dnd_preview)
+            local flags = reaper.ImGui_WindowFlags_NoDecoration() | reaper.ImGui_WindowFlags_NoInputs() | reaper.ImGui_WindowFlags_NoFocusOnAppearing() | reaper.ImGui_WindowFlags_NoNav()
+
+            if reaper.ImGui_Begin(ctx, "##guide_line_selection_1px", false, flags) then
+              reaper.ImGui_End(ctx)
+            end
+
+            reaper.ImGui_PopStyleColor(ctx)
+            reaper.ImGui_PopStyleVar(ctx, 3)
+
+            -- 鼠标图标
+            if reaper.JS_Mouse_LoadCursor then
+              local cursor_path = script_path .. "lib/cursor_311.cur"
+              local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
+              if cursor then reaper.JS_Mouse_SetCursor(cursor) end
+            end
+          end
+
+          -- 拖拽释放检测
           if not reaper.ImGui_IsMouseDown(ctx, 0) then
             if window == "arrange" then
+              reaper.PreventUIRefresh(1)
+              reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
               local old_cursor = reaper.GetCursorPosition()
               local insert_time = reaper.BR_GetMouseCursorContext_Position()
+              if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
+              insert_time = reaper.SnapToGrid(0, insert_time)
               reaper.SetEditCurPos(insert_time, false, false)
+
               local tr = reaper.BR_GetMouseCursorContext_Track()
               if tr then reaper.SetOnlyTrackSelected(tr) end
+              -- reaper.Main_OnCommand(40289, 0) -- Unselect all items
+
               path = GetPhysicalPath(cur_info and cur_info.path)
               path = normalize_path(path or "", false)
               InsertSelectedAudioSection(path, dragging_selection.start_time, dragging_selection.end_time, dragging_selection.section_offset, false)
               reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
+              reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+              reaper.UpdateArrange()
+              reaper.PreventUIRefresh(-1)
             end
             dragging_selection = nil -- 不管插入与否都要清除
+            -- 恢复鼠标图标
+            if reaper.JS_Mouse_LoadCursor then 
+              reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) 
+            end
           end
-          reaper.PreventUIRefresh(-1)
         end
       end
 

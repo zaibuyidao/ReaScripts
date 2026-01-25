@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.145
+-- @version 1.0.146
 -- @changelog
---   Added a "Tempo Sync" checkbox to the interface.
---   Added an option to toggle tooltips in Settings.
+--   Added snap guide lines and custom cursor support for dragging selections to improve visual feedback.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
