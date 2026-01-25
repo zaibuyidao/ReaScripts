@@ -284,34 +284,34 @@ local Wave = {
 }
 
 -- 读取ExtState
-local waveform_color_mode = tonumber(reaper.GetExtState(EXT_SECTION, "waveform_color_mode")) or WAVE_COLOR_MONO
-local last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, "peak_chans"))
+waveform_color_mode = tonumber(reaper.GetExtState(EXT_SECTION, "waveform_color_mode")) or WAVE_COLOR_MONO
+last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, "peak_chans"))
 if last_peak_chans then peak_chans = math.min(math.max(last_peak_chans, 6), 128) end
-local last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, "font_size"))
+last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, "font_size"))
 if last_font_size then font_size = math.min(math.max(last_font_size, FONT_SIZE_MIN), FONT_SIZE_MAX) end
-local last_max_db = tonumber(reaper.GetExtState(EXT_SECTION, "max_db"))
+last_max_db = tonumber(reaper.GetExtState(EXT_SECTION, "max_db"))
 if last_max_db then max_db = last_max_db end
-local last_pitch_knob_min = tonumber(reaper.GetExtState(EXT_SECTION, "pitch_knob_min"))
+last_pitch_knob_min = tonumber(reaper.GetExtState(EXT_SECTION, "pitch_knob_min"))
 if last_pitch_knob_min then pitch_knob_min = last_pitch_knob_min end
-local last_pitch_knob_max = tonumber(reaper.GetExtState(EXT_SECTION, "pitch_knob_max"))
+last_pitch_knob_max = tonumber(reaper.GetExtState(EXT_SECTION, "pitch_knob_max"))
 if last_pitch_knob_max then pitch_knob_max = last_pitch_knob_max end
-local last_rate_min = tonumber(reaper.GetExtState(EXT_SECTION, "rate_min"))
+last_rate_min = tonumber(reaper.GetExtState(EXT_SECTION, "rate_min"))
 if last_rate_min then rate_min = last_rate_min end
-local last_rate_max = tonumber(reaper.GetExtState(EXT_SECTION, "rate_max"))
+last_rate_max = tonumber(reaper.GetExtState(EXT_SECTION, "rate_max"))
 if last_rate_max then rate_max = last_rate_max end
-local last_volume = tonumber(reaper.GetExtState(EXT_SECTION, "volume"))
+last_volume = tonumber(reaper.GetExtState(EXT_SECTION, "volume"))
 if last_volume then volume = last_volume end
-local last_auto_scroll = reaper.GetExtState(EXT_SECTION, "auto_scroll")
+last_auto_scroll = reaper.GetExtState(EXT_SECTION, "auto_scroll")
 if last_auto_scroll == "0" then auto_scroll_enabled = false end
 if last_auto_scroll == "1" then auto_scroll_enabled = true end
-local last_hover_hint = reaper.GetExtState(EXT_SECTION, "waveform_hover_hint")
+last_hover_hint = reaper.GetExtState(EXT_SECTION, "waveform_hover_hint")
 if last_hover_hint == "0" then waveform_hint_enabled = false end
 if last_hover_hint == "1" then waveform_hint_enabled = true end
-local last_row_height = tonumber(reaper.GetExtState(EXT_SECTION, "table_row_height"))
+last_row_height = tonumber(reaper.GetExtState(EXT_SECTION, "table_row_height"))
 if last_row_height then row_height = math.max(12, math.min(48, last_row_height)) end -- 内容行高限制范围
-local last_hue_shift = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_hue_shift")) -- 读取色相偏移设置
+last_hue_shift = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_hue_shift")) -- 读取色相偏移设置
 spectral_hue_shift = last_hue_shift or 0.0
-local last_grad_sat = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_grad_sat")) -- 读取饱和度设置
+last_grad_sat = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_grad_sat")) -- 读取饱和度设置
 spectral_grad_sat = last_grad_sat or 1.0
 
 -- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items, 4=This Computer, 5=Shortcuts）
@@ -512,6 +512,16 @@ local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror
 local mirror_database           = false -- 默认关闭 Database (Mirror)
 local show_peektree_recent      = false -- 默认开启 播放历史
 
+-- Tips提示显示
+function DrawTooltip(text)
+  -- 如果全局开关关闭，直接返回，不显示
+  if not show_tooltips then return end
+  -- 只有当鼠标悬停时才显示
+  if reaper.ImGui_IsItemHovered(ctx) then
+    reaper.ImGui_SetTooltip(ctx, text)
+  end
+end
+
 -- 保存设置
 function SaveSettings()
   -- reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
@@ -540,6 +550,7 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true)
 end
 
 -- 恢复设置
@@ -620,6 +631,12 @@ do
   local v = reaper.GetExtState(EXT_SECTION, "wait_nextbar")
   if v == "1" then wait_nextbar_play = true
   elseif v == "0" then wait_nextbar_play = false end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "show_tooltips")
+  if v == "1" then show_tooltips = true
+  elseif v == "0" then show_tooltips = false end
 end
 
 --------------------------------------------- 颜色表 ---------------------------------------------
@@ -12087,7 +12104,7 @@ function loop()
 
     -- 悬停提示已勾选列表
     if not all_checked and #selected_labels > 0 and reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_SetTooltip(ctx, table.concat(selected_labels, "+"))
+      DrawTooltip(table.concat(selected_labels, "+"))
     end
 
     reaper.ImGui_Text(ctx, '') -- 换行占位符
@@ -12235,9 +12252,7 @@ function loop()
       -- selected_row = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, 'Clear the search box.')
-      reaper.ImGui_EndTooltip(ctx)
+      DrawTooltip('Clear the search box.')
     end
     -- if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
     --   reaper.ImGui_TextFilter_Set(filename_filter, "")
@@ -12254,9 +12269,7 @@ function loop()
       ForceRescan()
     end
     if reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, "F5: Rescan and refresh the audio file list.")
-      reaper.ImGui_EndTooltip(ctx)
+      DrawTooltip('Rescan and refresh the audio file list (F5).')
     end
     -- F5
     if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F5()) then
@@ -12290,9 +12303,7 @@ function loop()
       selected_row = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, 'Restore all (undo all filters/search).')
-      reaper.ImGui_EndTooltip(ctx)
+      DrawTooltip('Restore all (undo all filters/search).')
     end
     -- if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F6()) then
     --   reaper.ImGui_TextFilter_Set(filename_filter, "")
@@ -12328,9 +12339,7 @@ function loop()
     end
 
     if reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_BeginTooltip(ctx)
-      reaper.ImGui_Text(ctx, "Click to jump to this folder and list its audio files.")
-      reaper.ImGui_EndTooltip(ctx)
+      DrawTooltip("Click to jump to this folder and list its audio files.")
     end
 
     -- 快速预览文件夹
@@ -12377,7 +12386,7 @@ function loop()
         static.filtered_list_map, static.last_filter_text_map = {}, {}
       end
       if reaper.ImGui_IsItemHovered(ctx) then
-        reaper.ImGui_SetTooltip(ctx, "Show Recently Played list in the table")
+        DrawTooltip("Show Recently Played list in the table")
       end
     end
 
@@ -16494,6 +16503,7 @@ function loop()
         row_height = DEFAULT_ROW_HEIGHT,
         spectral_hue_shift = 0.0,
         spectral_grad_sat = 1.0, -- 默认全饱和
+        show_tooltips = false, -- 默认提示开关
       }
 
       ----------------------------------------------------------------
@@ -16894,7 +16904,7 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
         end
         if reaper.ImGui_IsItemHovered(ctx) then
-          reaper.ImGui_SetTooltip(ctx,
+          DrawTooltip(
             "Mirror the Media Explorer's \"Folder Shortcuts\" here.\n" ..
             "Read-only: toggling this does NOT add/remove shortcuts in REAPER.\n" ..
             "Turn off to hide this section and skip enumerating shortcuts for faster UI."
@@ -16912,7 +16922,7 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
         end
         if reaper.ImGui_IsItemHovered(ctx) then
-          reaper.ImGui_SetTooltip(ctx,
+          DrawTooltip(
             "Mirror the Media Explorer \"Database\" list and entries.\n" ..
             "Read-only: create/scan/refresh databases in Media Explorer itself.\n" ..
             "Turn off to hide this section and skip querying databases on startup."
@@ -16949,6 +16959,21 @@ function loop()
           reaper.SNM_SetIntConfigVar("audiocloseinactive", close_inactive and 1 or 0)
         end
         reaper.ImGui_TextColored(ctx, colors.gray, "Release the audio device when this window is inactive. Read-only behavior toggle.")
+      end
+
+      function Section_System_Tooltips()
+        -- 复选框
+        local changed, new_val = reaper.ImGui_Checkbox(ctx, "Enable Tooltips", show_tooltips) -- 启用鼠标悬停提示
+
+        if changed then
+          show_tooltips = new_val
+          reaper.SetExtState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true) -- 立即保存设置到本地
+        end
+        -- 提示
+        if reaper.ImGui_IsItemHovered(ctx) then
+          -- 设置项不能改DrawTooltip
+          reaper.ImGui_SetTooltip(ctx, "Toggle visibility of help popups when hovering over items.") -- 开启/关闭鼠标悬停在控件上时的帮助说明。
+        end
       end
 
       local function Section_DblClick_Preview()
@@ -17110,7 +17135,7 @@ function loop()
             reaper.SetExtState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
           end
           if reaper.ImGui_IsItemHovered(ctx) then
-            reaper.ImGui_SetTooltip(ctx, "Lower this value to make colors softer (pastel). Default is 1.0.")
+            DrawTooltip("Lower this value to make colors softer (pastel). Default is 1.0.")
           end
           reaper.ImGui_Unindent(ctx, 20)
         end
@@ -17133,7 +17158,7 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "build_waveform_cache", v_wf and "1" or "0", true)
         end
         if reaper.ImGui_IsItemHovered(ctx) then
-          reaper.ImGui_SetTooltip(ctx,
+          DrawTooltip(
             "When enabled, the database builder precomputes and saves waveform cache for each file.\nPros: faster preview later.\nCons: longer build time and extra disk usage."
           )
         end
@@ -17272,7 +17297,7 @@ function loop()
           CollectFiles()
         end
         if reaper.ImGui_IsItemHovered(ctx) then
-          reaper.ImGui_SetTooltip(ctx, "Reset all settings to default values")
+          DrawTooltip("Reset all settings to default values")
         end
       end
 
@@ -17297,7 +17322,12 @@ function loop()
         -- 系统
         { id = "System", fn = function()
             DrawPageHeader("Adjust system preferences", PAGE_HEADER_BG, PAGE_HEADER_TEXT)
-            DrawSubTitle("Stop audio device settings"); Section_System_StopAudioDevice()
+            DrawSubTitle("Stop audio device settings")
+            Section_System_StopAudioDevice()
+            -- 提示信息
+            reaper.ImGui_Separator(ctx)
+            DrawSubTitle("User Interface Settings")
+            Section_System_Tooltips()
           end
         },
 
@@ -17455,9 +17485,7 @@ function loop()
         InsertSelectedAudioSection(path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true)
       end
       if reaper.ImGui_IsItemHovered(ctx) then
-          reaper.ImGui_BeginTooltip(ctx)
-          reaper.ImGui_Text(ctx, "Shift+S to insert the selected audio section into the project.")
-          reaper.ImGui_EndTooltip(ctx)
+          DrawTooltip("Shift+S to insert the selected audio section into the project.")
       end
     end
 
@@ -17565,7 +17593,7 @@ function loop()
       reaper.SetExtState(EXT_SECTION, "skip_silence", skip_silence_enabled and "1" or "0", true)
     end
     if reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_SetTooltip(ctx, "Automatically skip initial silence when playing")
+      DrawTooltip("Automatically skip initial silence when playing")
     end
 
     -- 自动播放切换按钮
@@ -17585,6 +17613,23 @@ function loop()
     --     reaper.ImGui_SetTooltip(ctx, "Right-click a file in the list to add it to this database.")
     --   end
     -- end
+
+    -- Tempo Sync 速度同步复选框
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    local sync_changed, new_sync = reaper.ImGui_Checkbox(ctx, "Tempo Sync", tempo_sync_enabled)
+    if sync_changed then
+      tempo_sync_enabled = new_sync
+      reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
+      -- 立即刷新当前播放的速率
+      if playing_preview and file_info then
+        local base = GetTempoBase(file_info.path)
+        effective_rate_knob = (play_rate or 1.0) * (tempo_sync_enabled and base or 1.0)
+        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
+      end
+    end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      DrawTooltip("Auto-stretch sample to match project BPM") -- 自动拉伸采样以匹配项目速度
+    end
 
     -- 目标数据库下拉菜单
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -17652,7 +17697,7 @@ function loop()
         end
         -- 鼠标悬停显示真实文件名提示
         if reaper.ImGui_IsItemHovered(ctx) then
-          reaper.ImGui_SetTooltip(ctx, "File: " .. dbfile)
+          DrawTooltip("File: " .. dbfile)
         end
         -- 保持选中项在视野内
         if is_selected then
@@ -17665,7 +17710,7 @@ function loop()
 
     -- 下拉框本身的悬停提示
     if reaper.ImGui_IsItemHovered(ctx) then
-      reaper.ImGui_SetTooltip(ctx, "Select a database as the target for 'Add to Database' actions.\nRight-click files in the list to add them to this target.")
+      DrawTooltip("Select a database as the target for 'Add to Database' actions.\nRight-click files in the list to add them to this target.")
     end
 
     do

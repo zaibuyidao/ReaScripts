@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.144
+-- @version 1.0.145
 -- @changelog
---   Added visual alignment guides and cursor indicators when dragging files.
---   Added drag snapping support, adhering to grid settings when enabled.
+--   Added a "Tempo Sync" checkbox to the interface.
+--   Added an option to toggle tooltips in Settings.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
