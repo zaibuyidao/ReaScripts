@@ -48,6 +48,19 @@ if not reaper.ImGui_GetBuiltinPath then
   return
 end
 
+if not reaper.APIExists("JS_Window_Find") then
+  local jsmsg = "Please right-click and install 'js_ReaScriptAPI: API functions for ReaScripts'.\nThen restart REAPER and run the script again, thank you!\n"
+  local jstitle = "You must install JS_ReaScriptAPI"
+  reaper.MB(jsmsg, jstitle, 0)
+  local ok, err = reaper.ReaPack_AddSetRepository("ReaTeam Extensions", "https://github.com/ReaTeam/Extensions/raw/master/index.xml", true, 1)
+  if ok then
+    reaper.ReaPack_BrowsePackages("js_ReaScriptAPI")
+  else
+    reaper.MB(err, "Error", 0)
+  end
+  return reaper.defer(function() end)
+end
+
 local ImGui
 if reaper.ImGui_GetBuiltinPath then
   package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
@@ -15743,7 +15756,63 @@ function loop()
 
       -- 拖动音频到REAPER
       if dragging_audio then
-        local window, _, _ = reaper.BR_GetMouseCursorContext()
+        local window, segment, details = reaper.BR_GetMouseCursorContext()
+        local mouse_pos_time = reaper.BR_GetMouseCursorContext_Position()
+        -- 绘制参考线
+        if mouse_pos_time > -1 then
+          local mouse_x_os, mouse_y_os = reaper.GetMousePosition() -- 获取鼠标在屏幕上的绝对位置
+          local zoom_lvl = reaper.GetHZoomLevel() -- 获取水平缩放比例
+          -- 计算吸附偏移
+          local snap_time = reaper.SnapToGrid(0, mouse_pos_time)
+          local time_diff = snap_time - mouse_pos_time
+          local pixel_offset = time_diff * zoom_lvl -- 计算线应该偏离鼠标多少像素
+          local target_x_native = mouse_x_os + pixel_offset
+          -- 线的上下边界，填满编排视图
+          local top_y, bottom_y = 0, 1000
+          if reaper.JS_Window_FindChildByID then
+            local main_hwnd = reaper.GetMainHwnd()
+            local arrange_hwnd = reaper.JS_Window_FindChildByID(main_hwnd, 1000)
+            if arrange_hwnd then
+              local _, _, top, _, bottom = reaper.JS_Window_GetRect(arrange_hwnd)
+              top_y, bottom_y = top, bottom
+            else
+              -- 如果没有找到编排窗口，就用屏幕高度
+              top_y = 0
+              bottom_y = select(2, reaper.GetMousePosition()) + 2000
+            end
+          end
+          -- 将原生坐标转为 ImGui 坐标
+          local final_x, final_top = reaper.ImGui_PointConvertNative(ctx, target_x_native, top_y, true)
+          local _, final_bottom = reaper.ImGui_PointConvertNative(ctx, target_x_native, bottom_y, true)
+          local final_height = final_bottom - final_top
+          -- 绘制一个1像素宽的窗口
+          reaper.ImGui_SetNextWindowPos(ctx, final_x, final_top)
+          reaper.ImGui_SetNextWindowSize(ctx, 1, final_height) -- 强制宽度 1
+          -- 打破 ImGui 默认窗口最小宽度限制
+          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowMinSize(), 1, 1)
+          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
+          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowBorderSize(), 0)
+          -- 设置颜色
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(), colors.dnd_preview)
+          local flags = reaper.ImGui_WindowFlags_NoDecoration() | reaper.ImGui_WindowFlags_NoInputs() | reaper.ImGui_WindowFlags_NoFocusOnAppearing() | reaper.ImGui_WindowFlags_NoNav()
+
+          -- 创建这个微型窗口作为参考线
+          if reaper.ImGui_Begin(ctx, "##guide_line_1px", false, flags) then
+            reaper.ImGui_End(ctx)
+          end
+
+          reaper.ImGui_PopStyleColor(ctx)
+          reaper.ImGui_PopStyleVar(ctx, 3)
+
+          -- 鼠标图标
+          if reaper.JS_Mouse_LoadCursor then
+            local cursor_path = script_path .. "lib/cursor_311.cur"
+            local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
+            -- local cursor = reaper.JS_Mouse_LoadCursor(525)
+            if cursor then reaper.JS_Mouse_SetCursor(cursor) end
+          end
+        end
+
         if not reaper.ImGui_IsMouseDown(ctx, 0) then -- 鼠标释放
           if window == "arrange" then -- 只允许在arrange窗口松开时插入
             WithAutoCrossfadeDisabled(function()
@@ -15751,6 +15820,8 @@ function loop()
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
               local old_cursor = reaper.GetCursorPosition()
               local insert_time = reaper.BR_GetMouseCursorContext_Position()
+              if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
+              insert_time = reaper.SnapToGrid(0, insert_time)
               reaper.SetEditCurPos(insert_time, false, false)
               local tr = reaper.BR_GetMouseCursorContext_Track()
               if tr then reaper.SetOnlyTrackSelected(tr) end
@@ -15777,9 +15848,11 @@ function loop()
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
               reaper.PreventUIRefresh(-1)
               reaper.UpdateArrange()
+              if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
             end)
           end
           dragging_audio = nil -- 鼠标释放时重置
+          if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
         end
       end
 

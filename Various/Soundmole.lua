@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.143
+-- @version 1.0.144
 -- @changelog
---   Optimized memory release mechanism and streamlined background scanning tasks.
+--   Added visual alignment guides and cursor indicators when dragging files.
+--   Added drag snapping support, adhering to grid settings when enabled.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -14,6 +15,7 @@
 --   [main=main] Soundmole/zaibuyidao_Soundmole.lua
 --   [main=main] Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua
 --   [nomain] Soundmole/lib/*.lua
+--   [nomain] Soundmole/lib/*.cur
 --   Soundmole/data/*.csv
 --   Soundmole/data/icons.otf
 --   Soundmole/data/icons-regular.otf
