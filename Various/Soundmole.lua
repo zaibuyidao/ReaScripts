@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.148
+-- @version 1.0.149
 -- @changelog
 --   Added a high-performance C++ database engine for stable and efficient large-scale indexing.
 --   Support reaper_soundmole-x64.dll v0.0.11
