@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.146
+-- @version 1.0.147
 -- @changelog
---   Added snap guide lines and custom cursor support for dragging selections to improve visual feedback.
+--   Added a high-performance C++ database engine for stable and efficient large-scale indexing.
 --   Support reaper_soundmole-x64.dll v0.0.10
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

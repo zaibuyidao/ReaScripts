@@ -67,6 +67,7 @@ if reaper.ImGui_GetBuiltinPath then
   ImGui = require 'imgui' '0.10'
 end
 
+local HAVE_SM_BUILDER = reaper.APIExists('SM_Builder_Start') and reaper.APIExists('SM_Builder_RunSlice') and reaper.APIExists('SM_Builder_GetInfo') and reaper.APIExists('SM_Builder_GetStatusString') and reaper.APIExists('SM_Builder_Stop')
 local HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_GetRowRaw')
 local HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw') and reaper.APIExists('SM_DB_Load') and reaper.APIExists('SM_DB_Release') and reaper.APIExists('SM_DB_GetCount')
 local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
@@ -4770,43 +4771,32 @@ function AddThisComputerContextMenu(path)
 
     -- 将路径添加为新数据库
     if reaper.ImGui_MenuItem(ctx, "Build Database from This Folder") then
-      local folder   = normalize_path(path, true)
-      local filelist = ScanAllAudioFiles(folder)
-
+      local folder = normalize_path(path, true)
       local db_dir = script_path .. "SoundmoleDB"
       EnsureCacheDir(db_dir)
       -- 获取下一个可用编号并生成数据库文件
       local db_index = GetNextMediaDBIndex(db_dir)                -- 00~FF
       local dbfile   = string.format("%s.MoleFileList", db_index) -- 文件名
       local dbpath   = normalize_path(db_dir, true) .. dbfile     -- 全路径
-      -- 创建空文件并写入根路径
-      local f = io.open(dbpath, "wb")
-      if f then f:close() end
-      AddPathToDBFile(dbpath, folder) -- 必要时改流式建库边扫描、边写入，StartScanAndBuildDB_Stream(root_dir)
 
-      -- 构建任务
-      db_build_task = {
-        filelist     = filelist,
-        dbfile       = dbpath, -- 全路径
-        idx          = 1,
-        total        = #filelist,
-        finished     = false,
-        root_path    = folder,
-        existing_map = DB_ReadExistingFileSet(dbpath)
-      }
+      -- 启动构建任务
+      local success = SM_StartDatabaseBuild(folder, dbpath)
 
-      -- 用该文件夹名作为数据库别名
-      local alias = (folder or ""):gsub("[/\\]+$","")
-      alias = alias:match("([^/\\]+)$") or alias
-      alias = alias:gsub("^%s+",""):gsub("%s+$","")
-      if alias ~= "" then
-        mediadb_alias = mediadb_alias or {}
-        mediadb_alias[dbfile] = alias
-        SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+      if success then
+        -- 用该文件夹名作为数据库别名
+        local alias = (folder or ""):gsub("[/\\]+$","")
+        alias = alias:match("([^/\\]+)$") or alias
+        alias = alias:gsub("^%s+",""):gsub("%s+$","")
+
+        if alias ~= "" then
+          mediadb_alias = mediadb_alias or {}
+          mediadb_alias[dbfile] = alias
+          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+        end
+
+        -- 让数据库缓存失效
+        DBPF_InvalidateAllCaches()
       end
-
-      -- 让数据库缓存失效
-      DBPF_InvalidateAllCaches()
     end
 
     reaper.ImGui_EndPopup(ctx)
@@ -5006,42 +4996,31 @@ function draw_shortcut_tree(sc, base_path, depth)
     if reaper.ImGui_MenuItem(ctx, "Build Database from This Folder") then
       if path and path ~= "" then
         local folder = normalize_path(path, true)
-        local filelist = ScanAllAudioFiles(folder)
-
         local db_dir = script_path .. "SoundmoleDB"
         EnsureCacheDir(db_dir)
         -- 获取下一个可用编号并生成数据库文件
         local db_index = GetNextMediaDBIndex(db_dir)                -- 00~FF
-        local dbfile   = string.format("%s.MoleFileList", db_index) -- 只有文件名
+        local dbfile   = string.format("%s.MoleFileList", db_index) -- 文件名
         local dbpath   = normalize_path(db_dir, true) .. dbfile     -- 全路径
-        -- 创建空文件并写入根路径
-        local f = io.open(dbpath, "wb")
-        if f then f:close() end
-        AddPathToDBFile(dbpath, folder) -- 必要时改流式建库边扫描、边写入，StartScanAndBuildDB_Stream(root_dir)
 
-        -- 构建任务
-        db_build_task = {
-          filelist     = filelist,
-          dbfile       = dbpath, -- 全路径
-          idx          = 1,
-          total        = #filelist,
-          finished     = false,
-          root_path    = folder,
-          existing_map = DB_ReadExistingFileSet(dbpath)
-        }
+        -- 启动构建任务
+        local success = SM_StartDatabaseBuild(folder, dbpath)
 
-        -- 用该文件夹名作为数据库别名
-        local alias = (folder or ""):gsub("[/\\]+$","")
-        alias = alias:match("([^/\\]+)$") or alias
-        alias = alias:gsub("^%s+",""):gsub("%s+$","")
-        if alias ~= "" then
-          mediadb_alias = mediadb_alias or {}
-          mediadb_alias[dbfile] = alias
-          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+        if success then
+          -- 用该文件夹名作为数据库别名
+          local alias = (folder or ""):gsub("[/\\]+$","")
+          alias = alias:match("([^/\\]+)$") or alias
+          alias = alias:gsub("^%s+",""):gsub("%s+$","")
+
+          if alias ~= "" then
+            mediadb_alias = mediadb_alias or {}
+            mediadb_alias[dbfile] = alias
+            SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+          end
+
+          -- 让数据库缓存失效
+          DBPF_InvalidateAllCaches()
         end
-
-        -- 让数据库缓存失效
-        DBPF_InvalidateAllCaches()
       end
     end
 
@@ -11811,8 +11790,190 @@ function SM_DrawLeftTableToggle(ctx)
   end
 end
 
+--------------------------------------------- C++ 从文件夹构建数据库 ---------------------------------------------
+
+local builder_state = {
+  active = false,
+  should_open = false, -- 用于通知 loop 打开弹窗
+  db_path = "",
+  root_path = "",
+  start_time = 0
+}
+
+function SM_StartDatabaseBuild(root_path, db_file_path)
+  root_path = normalize_path(root_path, true)
+  db_file_path = normalize_path(db_file_path, false)
+
+  -- 优先尝试 C++ 扩展
+  if HAVE_SM_BUILDER then
+    -- 启动 C++ 构建线程
+    local result = reaper.SM_Builder_Start(root_path, db_file_path)
+
+    if result == 1 then
+      builder_state = builder_state or {} -- 防止未初始化
+      builder_state.active = true
+      builder_state.should_open = true -- 通知GUI下一帧打开弹窗
+      builder_state.db_path = db_file_path
+      builder_state.root_path = root_path
+      builder_state.start_time = reaper.time_precise()
+      return true
+    else
+      reaper.MB("C++ Builder Start Failed.\nCheck read/write permissions.", "Soundmole Error", 0)
+      return false
+    end
+  end
+
+  -- 回退到 Lua 旧逻辑
+  local filelist = ScanAllAudioFiles(root_path)
+  if not filelist or #filelist == 0 then
+    reaper.MB("No audio files found in this folder.", "Soundmole", 0)
+    return false
+  end
+  -- 创建空文件并写入根路径
+  local f = io.open(db_file_path, "wb")
+  if f then f:close() else return false end
+  AddPathToDBFile(db_file_path, root_path) -- 必要时改流式建库边扫描、边写入，StartScanAndBuildDB_Stream(root_dir)
+
+  -- 构建任务
+  db_build_task = {
+    filelist     = filelist,
+    dbfile       = db_file_path, -- 全路径
+    idx          = 1,
+    total        = #filelist,
+    finished     = false,
+    root_path    = root_path,
+    existing_map = DB_ReadExistingFileSet(db_file_path)
+  }
+
+  return true
+end
+
+function SM_ProcessBuilderLoop()
+  if builder_state.active then
+    local status = reaper.SM_Builder_RunSlice(20) -- 20ms 时间片
+    local count = reaper.SM_Builder_GetInfo() -- 获取数量
+    local cur_file = reaper.SM_Builder_GetStatusString(0) -- 获取文件名
+
+    -- 更新状态到 builder_state，以便弹窗使用
+    builder_state.current_count = count
+
+    -- 扫描完成
+    if status == 0 then
+      builder_state.active = false -- 停止 C++ 引擎
+      builder_state.final_count = count -- 保存最终数量
+      builder_state.total_time = reaper.time_precise() - (builder_state.start_time or reaper.time_precise()) -- 计算总耗时
+      reaper.ImGui_OpenPopup(ctx, "Build Complete") -- 触发完成弹窗
+
+    -- 扫描失败
+    elseif status == -1 then
+      builder_state.active = false -- 停止 C++ 引擎
+      builder_state.err_msg = reaper.SM_Builder_GetStatusString(1)
+      reaper.ImGui_OpenPopup(ctx, "Build Failed") -- 触发失败弹窗
+    end
+
+    -- 正在扫描，显示浮动进度条
+    if status == 1 then
+      local win_flags = reaper.ImGui_WindowFlags_TopMost()
+                      | reaper.ImGui_WindowFlags_NoDocking()
+                      | reaper.ImGui_WindowFlags_NoCollapse()
+                      | reaper.ImGui_WindowFlags_AlwaysAutoResize()
+
+      local center_x, center_y = reaper.ImGui_Viewport_GetCenter(reaper.ImGui_GetMainViewport(ctx))
+      reaper.ImGui_SetNextWindowPos(ctx, center_x, center_y, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
+      reaper.ImGui_SetNextWindowSize(ctx, 400, 180, reaper.ImGui_Cond_Always())
+
+      local visible, open = reaper.ImGui_Begin(ctx, "Database Builder Progress", true, win_flags)
+      if visible then
+        local elapsed = reaper.time_precise() - (builder_state.start_time or 0)
+        -- 文字宽度
+        local title_w, _ = reaper.ImGui_CalcTextSize(ctx, "Creating Database")
+        local win_w = reaper.ImGui_GetWindowWidth(ctx)
+        reaper.ImGui_SetCursorPosX(ctx, (win_w - title_w) * 0.5)
+        reaper.ImGui_Text(ctx, "Creating Database")
+        reaper.ImGui_Separator(ctx)
+
+        reaper.ImGui_Text(ctx, string.format("Files: %d", count))
+        reaper.ImGui_Text(ctx, string.format("Time : %.1f s", elapsed))
+        reaper.ImGui_Spacing(ctx)
+
+        local show_name = (cur_file and cur_file ~= "") and cur_file or "Processing..."
+        local text_w, _ = reaper.ImGui_CalcTextSize(ctx, show_name)
+        local win_w = reaper.ImGui_GetWindowWidth(ctx)
+        reaper.ImGui_SetCursorPosX(ctx, (win_w - text_w) * 0.5)
+        -- reaper.ImGui_TextDisabled(ctx, show_name) -- 不换行
+        reaper.ImGui_Text(ctx, show_name) -- 不换行
+
+        -- 进度条动画
+        -- local progress = (count % 1000) / 1000
+        -- reaper.ImGui_ProgressBar(ctx, progress, -1, 0, "")
+
+        -- 居中
+        reaper.ImGui_Spacing(ctx)
+        local btn_width = 80
+        local window_width = reaper.ImGui_GetWindowWidth(ctx)
+        local center_pos_x = (window_width - btn_width) / 2
+
+        reaper.ImGui_SetCursorPosX(ctx, center_pos_x)
+        if reaper.ImGui_Button(ctx, "Cancel", 80, 30) then
+          open = false
+        end
+        reaper.ImGui_End(ctx)
+      end
+
+      if not open then
+        reaper.SM_Builder_Stop()
+        builder_state.active = false
+      end
+    end
+  end
+
+  -- 结果弹窗
+  local modal_flags = reaper.ImGui_WindowFlags_AlwaysAutoResize() | reaper.ImGui_WindowFlags_TopMost()
+
+  -- 完成弹窗
+  reaper.ImGui_SetNextWindowSize(ctx, 300, 150, reaper.ImGui_Cond_Always())
+  if reaper.ImGui_BeginPopupModal(ctx, "Build Complete", nil, modal_flags) then
+    reaper.ImGui_Text(ctx, "Database build finished successfully!")
+    reaper.ImGui_Separator(ctx)
+    reaper.ImGui_Text(ctx, string.format("Total Files Processed: %d", builder_state.final_count or 0))
+    reaper.ImGui_Text(ctx, string.format("Total Time Spent: %.2f s", builder_state.total_time or 0))
+    reaper.ImGui_Spacing(ctx)
+    -- 计算居中位置
+    local btn_width = 80
+    local window_width = reaper.ImGui_GetWindowWidth(ctx)
+    local center_pos_x = (window_width - btn_width) / 2
+    reaper.ImGui_SetCursorPosX(ctx, center_pos_x)
+    if reaper.ImGui_Button(ctx, "OK", 80, 30) then
+      if DBPF_InvalidateAllCaches then DBPF_InvalidateAllCaches() end
+      if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb then
+        local current_db_name = builder_state.db_path:match("[^/\\]+$")
+        if tree_state.cur_mediadb == current_db_name and ForceRescan then ForceRescan() end
+      end
+
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+    reaper.ImGui_EndPopup(ctx)
+  end
+
+  -- 失败弹窗
+  if reaper.ImGui_BeginPopupModal(ctx, "Build Failed", nil, modal_flags) then
+    reaper.ImGui_TextColored(ctx, colors.gray, "Critical Error Occurred")
+    reaper.ImGui_Separator(ctx)
+    reaper.ImGui_PushTextWrapPos(ctx, 400)
+    reaper.ImGui_Text(ctx, builder_state.err_msg or "Unknown Error")
+    reaper.ImGui_PopTextWrapPos(ctx)
+
+    reaper.ImGui_Spacing(ctx)
+    if reaper.ImGui_Button(ctx, "Close", 80, 30) then
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+    reaper.ImGui_EndPopup(ctx)
+  end
+end
+
 function loop()
   -- RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！(新版 C++ 代理模式下，数据瞬间就绪，无需运行后台分片加载器)
+  -- SM_ProcessBuilderLoop() -- 处理数据库构建器
   ProcessAsyncMetadata() -- 处理后台元数据加载，浏览物理文件夹时触发
   MonitorShortcut(virtual_key_code) -- 监控快捷键，使用操作列表脚本控制主脚本添加条目到目标数据库
 
@@ -11854,6 +12015,8 @@ function loop()
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
   reaper.ImGui_PopStyleColor(ctx, 1)
+
+  SM_ProcessBuilderLoop() -- 处理数据库构建器
 
   -- 脚本折叠时清理旧专辑封面，避免折叠展开时报错。
   if not visible and last_window_visible then
@@ -19196,6 +19359,10 @@ function loop()
 end
 -- 退出清理函数
 function OnScriptExit()
+  -- 停止数据库构建器 (优先清理)
+  if reaper.APIExists("SM_Builder_Stop") then
+    reaper.SM_Builder_Stop()
+  end
   if SaveExitSettings then pcall(SaveExitSettings) end
   -- 清理文件夹模式的后台扫描器 或使用 StopAsyncScan()
   if _G.async_probe_handle then
