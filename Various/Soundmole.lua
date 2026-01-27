@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.150
+-- @version 1.0.151
 -- @changelog
---   Fixed script crashes caused by null waveform rendering parameters during sorting or list switching.
+--   Optimized database creation workflow.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

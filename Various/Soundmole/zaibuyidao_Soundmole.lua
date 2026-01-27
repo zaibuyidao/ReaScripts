@@ -643,7 +643,7 @@ end
 --------------------------------------------- 颜色表 ---------------------------------------------
 
 local colors = {
-  window_bg               = 0x141414FF, -- 脚本主窗口背景
+  window_bg               = 0x000000FF, -- 脚本主窗口背景
   title_bg                = 0x141414FF, -- 脚本标题栏-背景
   title_bg_active         = 0x181818FF, -- 脚本标题栏-选中
   title_bg_collapse       = 0x0F0F0F90, -- 脚本标题栏-折叠
@@ -707,10 +707,10 @@ local colors = {
   slider_grab             = 0xFFB0B0B0, -- 推子滑块常态
   slider_grab_active      = 0xFFFFFFFF, -- 推子滑块按下
   tab                     = 0x2E2E2EFF, -- 页签-标签背景
-  tab_dimmed              = 0x2E2E2EFF, -- 页签-常态标签
+  -- tab_dimmed              = 0x2E2E2EFF, -- 页签-常态标签
   tab_hovered             = 0x3A3A3AFF, -- 页签-悬停标签
   tab_selected            = 0x4A4A4AFF, -- 页签-选中标签
-  tab_dimmed_selected     = 0x363636FF, -- 页签-失焦选中
+  -- tab_dimmed_selected     = 0x363636FF, -- 页签-失焦选中
   tab_selected_overline   = 0x909090FF, -- 页签-水平上划线
   icon_normal             = 0xC0C0C060, -- 图标字体-常态亮灰
   icon_hovered            = 0xFFFFFFFF, -- 图标字体-悬停更亮
@@ -11830,7 +11830,7 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
     if result == 1 then
       builder_state = builder_state or {} -- 防止未初始化
       builder_state.active = true
-      builder_state.should_open = true -- 通知GUI下一帧打开弹窗
+      builder_state.should_open = true -- 通知 GUI 打开进度弹窗
       builder_state.db_path = db_file_path
       builder_state.root_path = root_path
       builder_state.start_time = reaper.time_precise()
@@ -12070,10 +12070,10 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrab(),        colors.slider_grab)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrabActive(),  colors.slider_grab_active)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Tab(),               colors.tab)
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabDimmed(),         colors.tab_dimmed)
+    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabDimmed(),         colors.tab_dimmed)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabHovered(),        colors.tab_hovered)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelected(),       colors.tab_selected)
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabDimmedSelected(), colors.tab_dimmed_selected)
+    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabDimmedSelected(), colors.tab_dimmed_selected)
 
     local ix, iy = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), ix, iy * 2.0)
@@ -12739,6 +12739,13 @@ function loop()
     -- 创建数据库弹窗分支
     do
       if _G.__sm_db_show then _G.__sm_db_show = false end
+      -- 设置弹窗居中显示
+      local vp = reaper.ImGui_GetMainViewport(ctx)
+      local cx, cy = reaper.ImGui_Viewport_GetCenter(vp)
+      reaper.ImGui_SetNextWindowPos(ctx, cx, cy, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
+      -- 设定宽度为 340，高度 0 自适应
+      reaper.ImGui_SetNextWindowSize(ctx, 300, 0, reaper.ImGui_Cond_Appearing())
+
       local cand_visible = reaper.ImGui_BeginPopupModal(ctx, "Create a New Database", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
       if cand_visible then
         reaper.ImGui_TextWrapped(ctx, "What would you like the database name to be?")
@@ -12797,38 +12804,31 @@ function loop()
       local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
       if rv == 1 and folder and folder ~= "" then
         folder = normalize_path(folder, true)
-        local filelist = ScanAllAudioFiles(folder)
         local db_dir = script_path .. "SoundmoleDB"
         EnsureCacheDir(db_dir)
-        -- 获取下一个可用编号
-        local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
-        local dbfile = string.format("%s.MoleFileList", db_index) -- 只有文件名
-
+        -- 获取下一个可用编号并生成数据库文件
+        local db_index = GetNextMediaDBIndex(db_dir)              -- 00~FF
+        local dbfile = string.format("%s.MoleFileList", db_index) -- 文件名
         local dbpath = normalize_path(db_dir, true) .. dbfile     -- 全路径
-        local f = io.open(dbpath, "wb")
-        if f then f:close() end
-        AddPathToDBFile(dbpath, folder) -- 必要时改流式建库边扫描、边写入，StartScanAndBuildDB_Stream(root_dir)
-        db_build_task = {
-          filelist = filelist,
-          dbfile = dbpath,
-          idx = 1,
-          total = #filelist,
-          finished = false,
-          root_path  = folder,
-          existing_map = DB_ReadExistingFileSet(dbpath)
-        }
 
-        -- 更改数据库名称
-        local alias = (folder or ""):gsub("[/\\]+$","")
-        alias = alias:match("([^/\\]+)$") or alias
-        alias = alias:gsub("^%s+",""):gsub("%s+$","")
-        if alias ~= "" then
-          mediadb_alias = mediadb_alias or {}
-          mediadb_alias[dbfile] = alias
-          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+        -- 启动构建任务
+        local success = SM_StartDatabaseBuild(folder, dbpath)
+
+        if success then
+          -- 用该文件夹名作为数据库别名
+          local alias = (folder or ""):gsub("[/\\]+$","")
+          alias = alias:match("([^/\\]+)$") or alias
+          alias = alias:gsub("^%s+",""):gsub("%s+$","")
+
+          if alias ~= "" then
+            mediadb_alias = mediadb_alias or {}
+            mediadb_alias[dbfile] = alias
+            SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+          end
+
+          -- 让数据库缓存失效
+          DBPF_InvalidateAllCaches()
         end
-
-        DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
       end
     end
 
@@ -13003,8 +13003,8 @@ function loop()
 
     -- 左侧树状目录(此处需要使用 if 才有效，否则报错)
     if reaper.ImGui_BeginChild(ctx, "##left", left_w, child_h, 0, reaper.ImGui_WindowFlags_HorizontalScrollbar()) then
-      if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar', reaper.ImGui_TabBarFlags_None() | reaper.ImGui_TabBarFlags_DrawSelectedOverline()) then
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelectedOverline(), colors.tab_selected_overline)
+      if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar', reaper.ImGui_TabBarFlags_None()) then -- | reaper.ImGui_TabBarFlags_DrawSelectedOverline()
+        --reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelectedOverline(), colors.tab_selected_overline) -- tab 选中态上划线颜色
         -- PeekTree列表
         if reaper.ImGui_BeginTabItem(ctx, 'PeekTree') then
           if reaper.ImGui_BeginChild(ctx, "PeakTreeRegion") then -- PeakTreeRegion 开始
@@ -15220,7 +15220,7 @@ function loop()
           reaper.ImGui_EndTabItem(ctx)
         end
 
-        reaper.ImGui_PopStyleColor(ctx)
+        --reaper.ImGui_PopStyleColor(ctx)
         reaper.ImGui_EndTabBar(ctx)
       end
       reaper.ImGui_EndChild(ctx)
@@ -15297,15 +15297,15 @@ function loop()
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", right_w, child_h, 0) then
       if reaper.ImGui_BeginTable(ctx, "filelist", 19,
-        -- reaper.ImGui_TableFlags_RowBg() -- 表格背景交替颜色
-        reaper.ImGui_TableFlags_Borders() -- 表格分隔线
-        | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
-        | reaper.ImGui_TableFlags_Resizable()
-        | reaper.ImGui_TableFlags_ScrollY()
-        | reaper.ImGui_TableFlags_ScrollX()
-        | reaper.ImGui_TableFlags_Sortable()
-        | reaper.ImGui_TableFlags_Hideable()
-        | reaper.ImGui_TableFlags_Reorderable() -- 拖拽列
+        reaper.ImGui_TableFlags_Borders()      -- 表格分隔线
+      | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
+      | reaper.ImGui_TableFlags_Resizable()
+      | reaper.ImGui_TableFlags_ScrollY()
+      | reaper.ImGui_TableFlags_ScrollX()
+      | reaper.ImGui_TableFlags_Sortable()
+      | reaper.ImGui_TableFlags_Hideable()
+      | reaper.ImGui_TableFlags_Reorderable() -- 拖拽列
+      -- | reaper.ImGui_TableFlags_RowBg()       -- 表格背景交替颜色
       ) then
         reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
         if collect_mode == COLLECT_MODE_ALL_ITEMS then -- Media Items
@@ -16704,7 +16704,7 @@ function loop()
           "table_separator_active","table_play_cursor"
         },
         ["页签 Tabs"] = {
-          "tab","tab_hovered","tab_selected","tab_dimmed","tab_dimmed_selected","tab_selected_overline"
+          "tab","tab_hovered","tab_selected" -- ,"tab_dimmed","tab_dimmed_selected" ,"tab_selected_overline"
         },
         ["波形 Waveform"] = { "wave_line","wave_center","wave_line_selected","preview_play_cursor","preview_pint_bg","preview_pint_play_cursor","preview_pint_text" },
         ["时间线 Timeline"] = { "timeline_text","timeline_bg_color","timeline_def_color" },
@@ -16774,9 +16774,9 @@ function loop()
         tab                      = "Tab Normal",               -- "页签 Tab",
         tab_hovered              = "Tab Hovered",              -- "页签 悬停 Tab Hover",
         tab_selected             = "Tab Selected",             -- "页签 选中 Tab Selected",
-        tab_dimmed               = "Tab Dimmed*",              -- "页签 弱化 Tab Dimmed",
-        tab_dimmed_selected      = "Tab Dimmed Selected*",     -- "页签 选中 弱化 Dimmed Selected",
-        tab_selected_overline    = "Tab Selected Overline",    -- "页签 顶部高亮 Selected Overline",
+        -- tab_dimmed               = "Tab Dimmed*",              -- "页签 弱化 Tab Dimmed",
+        -- tab_dimmed_selected      = "Tab Dimmed Selected*",     -- "页签 选中 弱化 Dimmed Selected",
+        -- tab_selected_overline    = "Tab Selected Overline",    -- "页签 顶部高亮 Selected Overline",
 
         -- 标题栏 Header
         header                   = "PeekTree Header Normal",   -- "标题栏 Header",
@@ -19298,7 +19298,7 @@ function loop()
       reaper.ImGui_EndPopup(ctx)
     end
 
-    reaper.ImGui_PopStyleColor(ctx, 20) -- 全局背景色
+    reaper.ImGui_PopStyleColor(ctx, 18) -- 全局背景色
     reaper.ImGui_PopStyleVar(ctx, 6) -- ImGui_End 内 6 次圆角
     reaper.ImGui_End(ctx)
   end
