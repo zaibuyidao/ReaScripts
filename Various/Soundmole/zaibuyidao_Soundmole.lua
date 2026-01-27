@@ -1109,12 +1109,22 @@ function LoadWaveformCache(filepath)
 end
 
 function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
-  local cache_len = cache.src_len
-  local cache_pixel_cnt = cache.pixel_cnt
-  local chs = cache.channel_count
+  if not cache or not pixel_cnt or type(pixel_cnt) ~= "number" then
+    return {}, 0, 0, 0
+  end
+
+  local cache_len = cache.src_len or 1 -- 防止除以0
+  local cache_pixel_cnt = cache.pixel_cnt or 0
+  local chs = cache.channel_count or 0
   local peaks_new = {}
-  for ch = 1, chs do peaks_new[ch] = {} end
-  local window_len = end_time - start_time
+
+  -- 如果是 0 则不执行循环
+  for ch = 1, (chs or 0) do
+    peaks_new[ch] = {}
+  end
+
+  local window_len = (end_time or 0) - (start_time or 0)
+
   -- 对每个显示像素，找到在缓存中的位置做插值
   for px = 1, pixel_cnt do
     -- 当前像素在窗口中的时间
@@ -1123,14 +1133,22 @@ function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
     local src_px = t / cache_len * (cache_pixel_cnt-1) + 1
     local i = math.floor(src_px)
     local frac = src_px - i
+
     for ch = 1, chs do
-      local v1 = cache.peaks[ch][i] or {0,0}
-      local v2 = cache.peaks[ch][i+1] or v1
-      local minv = v1[1] + (v2[1] - v1[1]) * frac
-      local maxv = v1[2] + (v2[2] - v1[2]) * frac
-      peaks_new[ch][px] = {minv, maxv}
+      -- 检查 peaks[ch] 是否存在，防止 cache 结构损坏报错
+      if cache.peaks and cache.peaks[ch] then
+        local v1 = cache.peaks[ch][i] or {0,0}
+        local v2 = cache.peaks[ch][i+1] or v1
+        local minv = v1[1] + (v2[1] - v1[1]) * frac
+        local maxv = v1[2] + (v2[2] - v1[2]) * frac
+        peaks_new[ch][px] = {minv, maxv}
+      else
+        -- 如果某通道数据缺失，填充静音
+        peaks_new[ch][px] = {0, 0}
+      end
     end
   end
+
   return peaks_new, pixel_cnt, window_len, chs
 end
 
