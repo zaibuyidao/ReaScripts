@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.153
+-- @version 1.0.154
 -- @changelog
 --   Added language pack support.
 --   Support reaper_soundmole-x64.dll v0.0.11

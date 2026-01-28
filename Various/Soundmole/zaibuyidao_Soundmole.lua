@@ -17141,18 +17141,15 @@ function loop()
       end
 
       function Section_System_Language()
-        DrawSubTitle("Language Settings")
         -- 定义支持的语言列表
         local languages = {
           { name = "English",  code = "en-US" },
           { name = "简体中文", code = "zh-CN" }
         }
 
-        -- 获取当前正在使用的语言代码
         local current_code = reaper.GetExtState(EXT_SECTION, "language")
         if current_code == "" then current_code = "en-US" end
 
-        -- 获取下拉框当前应该显示的名字
         local preview_name = "English"
         for _, lang in ipairs(languages) do
           if lang.code == current_code then
@@ -17161,18 +17158,17 @@ function loop()
           end
         end
 
-        -- 绘制下拉菜单 "###Language_Selector" 确保 ID 固定，避免切换语言时 UI 闪烁
+        -- 绘制下拉菜单 "###Language_Selector" 确保 ID 固定
         reaper.ImGui_SetNextItemWidth(ctx, 150)
         if reaper.ImGui_BeginCombo(ctx, T("Language") .. "###Language_Selector", preview_name) then
           for _, lang in ipairs(languages) do
             local is_selected = (current_code == lang.code)
             if reaper.ImGui_Selectable(ctx, lang.name, is_selected) then
               reaper.SetExtState(EXT_SECTION, "language", lang.code, true)
-              -- 立即重新加载语言包
+              -- 重新加载语言包
               L.load(lang.code)
             end
 
-            -- 保持高亮位置
             if is_selected then
               reaper.ImGui_SetItemDefaultFocus(ctx)
             end
