@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.151
+-- @version 1.0.152
 -- @changelog
---   Optimized database creation workflow.
+--   Added language pack support.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -14,7 +14,8 @@
 --   [main=main] Soundmole/zaibuyidao_Soundmole.lua
 --   [main=main] Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua
 --   [nomain] Soundmole/lib/*.lua
---   [nomain] Soundmole/lib/*.cur
+--   Soundmole/lib/*.cur
+--   Soundmole/lang/*.txt
 --   Soundmole/data/*.csv
 --   Soundmole/data/icons.otf
 --   Soundmole/data/icons-regular.otf

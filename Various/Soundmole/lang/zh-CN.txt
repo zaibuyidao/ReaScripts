@@ -1,0 +1,93 @@
+# Soundmole 中文语言包
+
+# 界面按钮
+Settings=设置
+Filter=过滤
+Clear=清空
+Rescan=重新扫描
+Restore All=恢复全部
+Play History=播放历史
+Same Folder=同级文件夹
+Pick Folder=选择文件夹
+
+# 搜索导航
+Thesaurus:=同义词库:
+Previous Search=上一个搜索项
+No previous search=没有更早的搜索记录
+Next Search=下一个搜索项
+No next search=没有更晚的搜索记录
+Search within current results: On=在当前结果中搜索: 开启
+Search within current results: Off=在当前结果中搜索: 关闭
+Click to hide the left table=点击隐藏左侧栏
+Click to show the left table=点击显示左侧栏
+
+# 页签与侧边栏
+PeekTree=媒体库
+UCS=UCS分类
+Saved Search=保存搜索
+Freesound=Freesound
+Project Collection=工程资产
+Source Media=源媒体
+Media Items=媒体对象
+Project Directory=工程目录
+Item Assets=对象资产
+This Computer=此电脑
+Folder Shortcuts=快捷方式
+Folder Shortcuts (Mirror)=快捷方式(镜像)
+Collections=收藏夹
+Group=分组
+Database=数据库
+Database (Mirror)=数据库(镜像)
+Recently Searched=最近搜索
+Recently Played=最近播放
+
+# 走带控制
+Skip Silence=跳过静音
+Auto Play Next=自动播放下一条
+Tempo Sync=速度同步
+Target DB:=目标数据库
+
+# 表格文件列
+Waveform=波形
+File Name=文件名
+Size=大小
+Type=格式
+Date=日期
+Genre=流派
+Comment=注释
+Description=描述
+Category=分类
+SubCategory=子分类
+CatID=分类ID
+Length=长度
+Channels=声道
+Samplerate=采样率
+Bits=位深
+Key=调性
+BPM=BPM
+Group=分组
+Path=路径
+Take Name=片段名
+Track=轨道
+Position=位置
+Tags=标签
+License=授权
+
+# 数据库
+Browse DB Folders=浏览数据库文件夹
+Not in Database mode=当前非数据库模式
+DB Folders=数据库文件夹
+No PATH found in current database.=当前数据库中无路径记录。
+
+# 状态栏
+Files found: %d=找到文件: %d 个
+
+# 波形相关
+No audio selected. Select a folder or click a file to preview.=未选中音频。请选择文件夹或点击文件进行预览。
+
+# 设置页面
+Language=语言
+Language Settings=语言设置
+Adjust system preferences=调整系统首选项
+Stop audio device settings=音频设备停止设置
+User Interface Settings=用户界面设置
