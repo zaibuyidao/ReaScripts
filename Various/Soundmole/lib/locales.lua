@@ -1,4 +1,4 @@
--- lib/locales.lua
+-- NoIndex: true
 local Locales = {}
 local db = {}
 local CONTEXT_SEP = "#"
