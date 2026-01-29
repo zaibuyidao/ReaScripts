@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.156
+-- @version 1.0.157
 -- @changelog
---   Added Chinese translation, project progress at 15%.
+--   Added Chinese translation, project progress at 25%.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

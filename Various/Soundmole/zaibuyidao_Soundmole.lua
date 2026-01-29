@@ -4770,12 +4770,12 @@ function AddThisComputerContextMenu(path)
   end
 
   if reaper.ImGui_BeginPopup(ctx, "TCMenu_" .. path) then
-    if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+    if reaper.ImGui_MenuItem(ctx, T("Show in Explorer/Finder")) then
       reaper.CF_ShellExecute(normalize_path(path)) -- 规范分隔符
     end
 
     -- 添加到文件夹快捷方式
-    if reaper.ImGui_MenuItem(ctx, "Add to Folder Shortcuts") then
+    if reaper.ImGui_MenuItem(ctx, T("Add to Folder Shortcuts")) then
       local folder = normalize_path(path, true)
       local exists = false
       -- 检查是否已存在
@@ -4795,7 +4795,7 @@ function AddThisComputerContextMenu(path)
     end
 
     -- 将路径添加为新数据库
-    if reaper.ImGui_MenuItem(ctx, "Build Database from This Folder") then
+    if reaper.ImGui_MenuItem(ctx, T("Build Database from This Folder")) then
       local folder = normalize_path(path, true)
       local db_dir = script_path .. "SoundmoleDB"
       EnsureCacheDir(db_dir)
@@ -5003,22 +5003,22 @@ function draw_shortcut_tree(sc, base_path, depth)
       end
     end
     if is_root_shortcut then
-      if reaper.ImGui_MenuItem(ctx, "Rename") then
-        local ret, newname = reaper.GetUserInputs("Rename Shortcut", 1, "New Name:,extrawidth=200", (sc.name and sc.name~="") and sc.name or GetFolderName(sc.path))
+      if reaper.ImGui_MenuItem(ctx, T("Rename")) then
+        local ret, newname = reaper.GetUserInputs(T("Rename Shortcut"), 1, T("New Name:") .. ",extrawidth=200", (sc.name and sc.name~="") and sc.name or GetFolderName(sc.path))
         if ret and newname and newname ~= "" then
           sc.name = newname
           SaveFolderShortcuts()
         end
       end
     end
-    if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+    if reaper.ImGui_MenuItem(ctx, T("Show in Explorer/Finder")) then
       if path and path ~= "" then
         reaper.CF_ShellExecute(normalize_path(path)) -- 规范分隔符
       end
     end
 
     -- 将路径添加为新数据库
-    if reaper.ImGui_MenuItem(ctx, "Build Database from This Folder") then
+    if reaper.ImGui_MenuItem(ctx, T("Build Database from This Folder")) then
       if path and path ~= "" then
         local folder = normalize_path(path, true)
         local db_dir = script_path .. "SoundmoleDB"
@@ -5050,7 +5050,7 @@ function draw_shortcut_tree(sc, base_path, depth)
     end
 
     if is_root_shortcut then
-      if reaper.ImGui_MenuItem(ctx, "Remove") then
+      if reaper.ImGui_MenuItem(ctx, T("Remove")) then
         remove_this = true
       end
     end
@@ -5290,8 +5290,8 @@ function ShowGroupMenu(infos)
   reaper.ImGui_Separator(ctx)
 
   -- 创建新组
-  if reaper.ImGui_MenuItem(ctx, "Create Group...") then
-    local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
+  if reaper.ImGui_MenuItem(ctx, T("Create Group...")) then
+    local ret, name = reaper.GetUserInputs(T("Create Group"), 1, T("Name:") .. ",extrawidth=200", "")
     if ret and name and name ~= "" then
       -- 新增分组并一次性插入所有选中路径
       table.insert(custom_folders, name)
@@ -5486,14 +5486,14 @@ function draw_advanced_folder_node(id, selected_id, depth)
     reaper.ImGui_OpenPopup(ctx, "AdvancedFolderMenu_" .. id)
   end
   if reaper.ImGui_BeginPopup(ctx, "AdvancedFolderMenu_" .. id) then
-    if reaper.ImGui_MenuItem(ctx, "Rename") then
-      local ret, newname = reaper.GetUserInputs("Rename Collection", 1, "New Name:,extrawidth=200", node.name)
+    if reaper.ImGui_MenuItem(ctx, T("Rename")) then
+      local ret, newname = reaper.GetUserInputs(T("Rename Collection"), 1, T("New Name:") .. ",extrawidth=200", node.name)
       if ret and newname and newname ~= "" then
         node.name = newname
         SaveAdvancedFolders()
       end
     end
-    if reaper.ImGui_MenuItem(ctx, "Remove") then
+    if reaper.ImGui_MenuItem(ctx, T("Remove")) then
       if node.parent then
         local parent_node = advanced_folders[node.parent]
         for i,v in ipairs(parent_node.children) do if v==id then table.remove(parent_node.children, i) break end end
@@ -5508,8 +5508,8 @@ function draw_advanced_folder_node(id, selected_id, depth)
       del_node(id)
       SaveAdvancedFolders()
     end
-    if reaper.ImGui_MenuItem(ctx, "Add Subfolder") then
-      local ret, name = reaper.GetUserInputs("New Subfolder", 1, "Name:,extrawidth=200", "")
+    if reaper.ImGui_MenuItem(ctx, T("Add Subfolder")) then
+      local ret, name = reaper.GetUserInputs(T("New Subfolder"), 1, T("Name:") .. ",extrawidth=200", "")
       if ret and name and name ~= "" then
         local new_id = new_guid()
         advanced_folders[new_id] = { id = new_id, name = name, parent = id, children = {}, files = {} }
@@ -7440,7 +7440,7 @@ function HandleRowKeybinds(ctx, i, info, collect_mode)
       local old_filename = old_path:match("[^/\\]+$") or ""
       local ext = old_filename:match("%.[^%.]+$") or "" -- 提取原始后缀
 
-      local ok, new_filename = reaper.GetUserInputs("Rename File", 1, "New Name:,extrawidth=200", old_filename)
+      local ok, new_filename = reaper.GetUserInputs(T("Rename File"), 1, T("New Name:") .. ",extrawidth=200", old_filename)
       if ok and new_filename and new_filename ~= "" and new_filename ~= old_filename then
       -- 如果新文件名没有后缀，自动补全原后缀
         if not new_filename:lower():match("%.[a-z0-9]+$") and ext ~= "" then
@@ -7469,7 +7469,7 @@ function HandleRowKeybinds(ctx, i, info, collect_mode)
         end
       end
     elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
-      local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename or "")
+      local ok, new_name = reaper.GetUserInputs(T("Rename Active Take"), 1, T("New Name:") .. ",extrawidth=200", info.filename or "")
       if ok and new_name and new_name ~= "" then
         -- 遍历所有usages
         if info.usages and #info.usages > 0 then
@@ -7633,13 +7633,13 @@ function DrawRowPopup(ctx, i, info, collect_mode)
     end
 
     if collect_mode == COLLECT_MODE_RPP then
-      if reaper.ImGui_MenuItem(ctx, "Rename file...") then
+      if reaper.ImGui_MenuItem(ctx, T("Rename file...")) then
         local old_path = info.path
         local dir = old_path and old_path:match("^(.*)[/\\][^/\\]+$")
         local old_filename = old_path and old_path:match("[^/\\]+$")
         local ext = old_filename and (old_filename:match("%.[^%.]+$") or "") or "" -- 提取原始后缀
 
-        local ok, new_filename = reaper.GetUserInputs("Rename File", 1, "New Name:,extrawidth=200", old_filename or "")
+        local ok, new_filename = reaper.GetUserInputs(T("Rename File"), 1, T("New Name:") .. ",extrawidth=200", old_filename or "")
         if ok and new_filename and new_filename ~= "" and new_filename ~= old_filename then
           -- 如果新文件名没有后缀，自动补全原后缀
           if not new_filename:lower():match("%.[a-z0-9]+$") and ext ~= "" then
@@ -7670,8 +7670,8 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         reaper.ImGui_CloseCurrentPopup(ctx)
       end
     else
-      if reaper.ImGui_MenuItem(ctx, "Rename active take") then
-        local ok, new_name = reaper.GetUserInputs("Rename Active Take", 1, "New Name:,extrawidth=200", info.filename or "")
+      if reaper.ImGui_MenuItem(ctx, T("Rename active take")) then
+        local ok, new_name = reaper.GetUserInputs(T("Rename Active Take"), 1, T("New Name:") .. ",extrawidth=200", info.filename or "")
         if ok and new_name and new_name ~= "" then
           if info.usages and #info.usages > 0 then
             for _, usage in ipairs(info.usages) do
@@ -7710,7 +7710,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       end)
     end
 
-    if reaper.ImGui_MenuItem(ctx, "Remove from project") then
+    if reaper.ImGui_MenuItem(ctx, T("Remove from project")) then
       if info.usages and #info.usages > 0 then
         for _, usage in ipairs(info.usages) do
           if usage.track and usage.item then
@@ -7728,7 +7728,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
 
   else
     -- 右键打开文件所在目录
-    if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+    if reaper.ImGui_MenuItem(ctx, T("Show in Explorer/Finder")) then
       local path = info.path
       if path and path ~= "" then
         reaper.CF_LocateInExplorer(normalize_path(path, false)) -- 规范分隔符
@@ -7854,7 +7854,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
   -- 批量高级文件夹音频文件移除
   if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder then
     reaper.ImGui_Separator(ctx)
-    if reaper.ImGui_MenuItem(ctx, "Remove from Collections") then
+    if reaper.ImGui_MenuItem(ctx, T("Remove from Collections")) then
       local node = advanced_folders[tree_state.cur_advanced_folder]
       if node and node.files then
         -- 收集所有需要移除的路径
@@ -7895,7 +7895,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
   -- 批量数据库列表文件移除
   if collect_mode == COLLECT_MODE_MEDIADB then
     reaper.ImGui_Separator(ctx)
-    if reaper.ImGui_MenuItem(ctx, "Remove from Database") then
+    if reaper.ImGui_MenuItem(ctx, T("Remove from Database")) then
       -- 用当前选中数据库文件
       local db_dir = script_path .. "SoundmoleDB"
       local dbfile = tree_state.cur_mediadb
@@ -8572,7 +8572,7 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
     reaper.ImGui_OpenPopup(ctx, "ShortcutMirrorMenu_" .. path)
   end
   if reaper.ImGui_BeginPopup(ctx, "ShortcutMirrorMenu_" .. path) then
-    if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+    if reaper.ImGui_MenuItem(ctx, T("Show in Explorer/Finder")) then
       if path and path ~= "" then
         reaper.CF_ShellExecute(normalize_path(path))
       end
@@ -10252,7 +10252,7 @@ function FS_DrawSidebar(ctx)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.fs_button_normal  or 0x274160FF) -- 常态
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.fs_button_hovered or 0x3B7ECEFF) -- 悬停
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.fs_button_active  or 0x4296FAFF) -- 按下
-  if reaper.ImGui_Button(ctx, "Clear (show local cache)", w1, 40) then
+  if reaper.ImGui_Button(ctx, T("Clear (show local cache)"), w1, 40) then
     FS_set_query("") -- 清空缓存
     collect_mode = COLLECT_MODE_FREESOUND
     FS_LoadSearchDB(FS.CACHE_DB_FILE)
@@ -10362,7 +10362,7 @@ function FS_DrawSidebar(ctx)
   end
 
   local acc_now = FS_get_es(FS_K.acc)
-  reaper.ImGui_Text(ctx, "Access token (Bearer)")
+  reaper.ImGui_Text(ctx, T("Access token (Bearer)"))
   reaper.ImGui_SetNextItemWidth(ctx, -10)
   local acc_changed, acc_val = reaper.ImGui_InputText(ctx, "##acc", acc_now)
   if acc_changed and not skip_this_frame then
@@ -10371,17 +10371,17 @@ function FS_DrawSidebar(ctx)
   end
 
   local ref_now = FS_get_es(FS_K.ref)
-  reaper.ImGui_Text(ctx, "Refresh token")
+  reaper.ImGui_Text(ctx, T("Refresh token"))
   reaper.ImGui_SetNextItemWidth(ctx, -10)
   local ref_changed, ref_val = reaper.ImGui_InputText(ctx, "##ref", ref_now)
   if ref_changed and not skip_this_frame then
     FS_set_es(FS_K.ref, ref_val)
   end
 
-  if reaper.ImGui_Button(ctx, "Refresh access token", -10, 40) then FS_OAuth_Refresh(false) end
+  if reaper.ImGui_Button(ctx, T("Refresh access token"), -10, 40) then FS_OAuth_Refresh(false) end
   -- reaper.ImGui_SameLine(ctx)
-  reaper.ImGui_SeparatorText(ctx, "Clear OAuth2 Credentials")
-  if reaper.ImGui_Button(ctx, "Clear all OAuth credentials", -10, 40) then
+  reaper.ImGui_SeparatorText(ctx, T("Clear OAuth2 Credentials"))
+  if reaper.ImGui_Button(ctx, T("Clear all OAuth credentials"), -10, 40) then
     FS_set_es("fs_oauth_client_id", "")
     FS_set_es("fs_oauth_client_secret", "")
     FS_set_es(FS_K.acc, "")
@@ -10759,7 +10759,7 @@ function render_channel_picker(ctx, mode, num_out, id_prefix)
     end
   end
 
-  if reaper.ImGui_Button(ctx, "Clear##"..mode) then
+  if reaper.ImGui_Button(ctx, T("Clear") .. "##"..mode) then
     cur = {}
     picked = {}
   end
@@ -12706,15 +12706,15 @@ function loop()
     end
 
     if clicked then
-      reaper.ImGui_OpenPopup(ctx, "Database Actions")
+      reaper.ImGui_OpenPopup(ctx, T("Database Actions"))
     end
 
     local open_create_modal = false
     local run_choose_folder = false
     local run_delete_db     = false
 
-    if reaper.ImGui_BeginPopup(ctx, "Database Actions") then
-      if reaper.ImGui_MenuItem(ctx, "Create a New Database") then
+    if reaper.ImGui_BeginPopup(ctx, T("Database Actions")) then
+      if reaper.ImGui_MenuItem(ctx, T("Create a New Database")) then
         local db_dir = script_path .. "SoundmoleDB"
         EnsureCacheDir(db_dir)
         local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
@@ -12728,13 +12728,13 @@ function loop()
 
         open_create_modal = true
       end
-      if reaper.ImGui_MenuItem(ctx, "Build Database from Folder") then
+      if reaper.ImGui_MenuItem(ctx, T("Build Database from Folder")) then
         run_choose_folder = true
       end
 
       reaper.ImGui_Separator(ctx)
       -- 删除数据库
-      if reaper.ImGui_MenuItem(ctx, "Delete Database") then
+      if reaper.ImGui_MenuItem(ctx, T("Delete Database")) then
         run_delete_db = true
       end
 
@@ -12742,7 +12742,7 @@ function loop()
     end
     -- 触发创建数据库弹窗
     if open_create_modal then
-      reaper.ImGui_OpenPopup(ctx, "Create a New Database")
+      reaper.ImGui_OpenPopup(ctx, T("Create a New Database"))
     end
 
     -- 创建数据库弹窗分支
@@ -12755,9 +12755,9 @@ function loop()
       -- 设定宽度为 340，高度 0 自适应
       reaper.ImGui_SetNextWindowSize(ctx, 300, 0, reaper.ImGui_Cond_Appearing())
 
-      local cand_visible = reaper.ImGui_BeginPopupModal(ctx, "Create a New Database", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+      local cand_visible = reaper.ImGui_BeginPopupModal(ctx, T("Create a New Database"), nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
       if cand_visible then
-        reaper.ImGui_TextWrapped(ctx, "What would you like the database name to be?")
+        reaper.ImGui_TextWrapped(ctx, T("What would you like the database name to be?"))
         reaper.ImGui_SetNextItemWidth(ctx, 300)
         local changed, v = reaper.ImGui_InputText(ctx, "##db_alias", _G.__sm_db_alias or "")
         if changed then _G.__sm_db_alias = v end
@@ -12845,7 +12845,7 @@ function loop()
     if run_delete_db then
       local target_dbfile = (tree_state and tree_state.cur_mediadb ~= "" and tree_state.cur_mediadb) or nil
       if not target_dbfile then
-        reaper.ShowMessageBox("No database selected.", "Delete Database", 0)
+        reaper.ShowMessageBox("No database selected.", T("Delete Database"), 0)
       else
         -- 保护操作，如果正在重建这个 DB，先禁止删除
         local db_dir   = script_path .. "SoundmoleDB"
@@ -13122,7 +13122,7 @@ function loop()
               if hovering_icon then
                 reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
                 reaper.ImGui_BeginTooltip(ctx)
-                reaper.ImGui_Text(ctx, "Refresh Drives")
+                reaper.ImGui_Text(ctx, T("Refresh Drives"))
                 reaper.ImGui_EndTooltip(ctx)
               end
             end
@@ -13142,7 +13142,7 @@ function loop()
           if is_this_computer_open then
             reaper.ImGui_Indent(ctx, 20) -- 手动缩进16像素
             if not drives_loaded then
-              reaper.ImGui_Text(ctx, "Loading drives, please wait...")
+              reaper.ImGui_Text(ctx, T("Loading drives, please wait..."))
               if not need_load_drives then
                 need_load_drives = true
               end
@@ -13225,7 +13225,7 @@ function loop()
               if hovering_icon then
                 reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
                 reaper.ImGui_BeginTooltip(ctx)
-                reaper.ImGui_Text(ctx, "Create Shortcut")
+                reaper.ImGui_Text(ctx, T("Create Shortcut"))
                 reaper.ImGui_EndTooltip(ctx)
               end
             end
@@ -13235,7 +13235,7 @@ function loop()
               shortcut_open = prev_shortcut_open
               _G._shortcuts_force_open_state = prev_shortcut_open
 
-              local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
+              local rv, folder = reaper.JS_Dialog_BrowseForFolder(T("Choose folder to add shortcut:"), "")
               if rv == 1 and folder and folder ~= "" then
                 folder = normalize_path(folder, true)
                 local exists = false
@@ -13490,7 +13490,7 @@ function loop()
               if hovering_icon then
                 reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
                 reaper.ImGui_BeginTooltip(ctx)
-                reaper.ImGui_Text(ctx, "Create Collection")
+                reaper.ImGui_Text(ctx, T("Create Collection"))
                 reaper.ImGui_EndTooltip(ctx)
               end
             end
@@ -13500,7 +13500,7 @@ function loop()
               collection_open = prev_collection_open
               _G._collections_force_open_state = prev_collection_open
 
-              local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
+              local ret, name = reaper.GetUserInputs(T("Create Collection"), 1, T("Name:") .. ",extrawidth=200", "")
               if ret and name and name ~= "" then
                 local new_id = new_guid()
                 advanced_folders[new_id] = { id = new_id, name = name, parent = nil, children = {}, files = {} } -- 写入 advanced_folders 表
@@ -13686,7 +13686,7 @@ function loop()
               if hovering_icon then
                 reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
                 reaper.ImGui_BeginTooltip(ctx)
-                reaper.ImGui_Text(ctx, "Create Group")
+                reaper.ImGui_Text(ctx, T("Create Group"))
                 reaper.ImGui_EndTooltip(ctx)
               end
             end
@@ -13696,7 +13696,7 @@ function loop()
               group_open = prev_group_open
               _G._group_force_open_state = prev_group_open
 
-              local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
+              local ret, name = reaper.GetUserInputs(T("Create Group"), 1, T("Name:") .. ",extrawidth=200", "")
               if ret and name and name ~= "" then
                 local exists = false
                 for _, v in ipairs(custom_folders) do
@@ -13818,8 +13818,8 @@ function loop()
                 reaper.ImGui_OpenPopup(ctx, "CustomFolderMenu_" .. folder)
               end
               if reaper.ImGui_BeginPopup(ctx, "CustomFolderMenu_" .. folder) then
-                if reaper.ImGui_MenuItem(ctx, "Rename") then
-                  local ret, newname = reaper.GetUserInputs("Rename Group", 1, "New Name:,extrawidth=200", folder)
+                if reaper.ImGui_MenuItem(ctx, T("Rename")) then
+                  local ret, newname = reaper.GetUserInputs(T("Rename Group"), 1, T("New Name:") .. ",extrawidth=200", folder)
                   if ret and newname and newname ~= "" then
                     custom_folders[i] = newname
                     custom_folders_content[newname] = custom_folders_content[folder] or {}
@@ -13830,7 +13830,7 @@ function loop()
                     SaveCustomFolders()
                   end
                 end
-                if reaper.ImGui_MenuItem(ctx, "Remove") then
+                if reaper.ImGui_MenuItem(ctx, T("Remove")) then
                   table.remove(custom_folders, i)
                   custom_folders_content[folder] = nil
                   if tree_state.cur_custom_folder == folder then
@@ -13951,7 +13951,7 @@ function loop()
               if hovering_icon then
                 reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
                 reaper.ImGui_BeginTooltip(ctx)
-                reaper.ImGui_Text(ctx, "Create Database")
+                reaper.ImGui_Text(ctx, T("Create Database"))
                 reaper.ImGui_EndTooltip(ctx)
               end
             end
@@ -13978,15 +13978,15 @@ function loop()
               _G.__sm_db_msg      = nil
               _G.__sm_db_show     = true
 
-              reaper.ImGui_OpenPopup(ctx, "Create a new Database")
+              reaper.ImGui_OpenPopup(ctx, T("Create a New Database"))
             end
 
             -- 创建数据库，弹窗绘制
             if _G.__sm_db_show then _G.__sm_db_show = false end
 
-            local cand_visible = reaper.ImGui_BeginPopupModal(ctx, "Create a new Database", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+            local cand_visible = reaper.ImGui_BeginPopupModal(ctx, T("Create a New Database"), nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
             if cand_visible then
-              reaper.ImGui_TextWrapped(ctx, "What would you like the database name to be?")
+              reaper.ImGui_TextWrapped(ctx, T("What would you like the database name to be?"))
               reaper.ImGui_SetNextItemWidth(ctx, 300)
               local changed, v = reaper.ImGui_InputText(ctx, "##db_alias", _G.__sm_db_alias or "")
               if changed then _G.__sm_db_alias = v end
@@ -14217,13 +14217,13 @@ function loop()
               if reaper.ImGui_BeginPopup(ctx, "SoundmoleDBMenu_" .. dbfile) then
 
                 -- 设置/清除目标数据库
-                if reaper.ImGui_BeginMenu(ctx, "Target Database") then
+                if reaper.ImGui_BeginMenu(ctx, T("Target Database")) then
                   local is_target = (tree_state.target_mediadb == dbfile)
-                  if reaper.ImGui_MenuItem(ctx, "Set as Target Database", nil, is_target) then
+                  if reaper.ImGui_MenuItem(ctx, T("Set as Target Database"), nil, is_target) then
                     tree_state.target_mediadb = dbfile
                     reaper.SetExtState(EXT_SECTION, "target_mediadb", dbfile, true)
                   end
-                  if reaper.ImGui_MenuItem(ctx, "Clear Target Database") then
+                  if reaper.ImGui_MenuItem(ctx, T("Clear Target Database")) then
                     tree_state.target_mediadb = nil
                     reaper.SetExtState(EXT_SECTION, "target_mediadb", "", true)
                   end
@@ -14232,15 +14232,15 @@ function loop()
                 reaper.ImGui_Separator(ctx)
 
                 -- 重命名数据库
-                if reaper.ImGui_MenuItem(ctx, "Rename Database") then
-                  local ret, newname = reaper.GetUserInputs("Rename DB", 1, "New Name:,extrawidth=180", mediadb_alias[dbfile] or dbfile)
+                if reaper.ImGui_MenuItem(ctx, T("Rename Database")) then
+                  local ret, newname = reaper.GetUserInputs(T("Rename Database"), 1, T("New Name:") .. ",extrawidth=180", mediadb_alias[dbfile] or dbfile)
                   if ret and newname and newname ~= "" and newname ~= dbfile then
                     mediadb_alias[dbfile] = newname
                     SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
                   end
                 end
                 -- 删除数据库
-                if reaper.ImGui_MenuItem(ctx, "Delete Database") then
+                if reaper.ImGui_MenuItem(ctx, T("Delete Database")) then
                   -- 保护操作，如果正在重建这个 DB，先禁止删除
                   if db_build_task and not db_build_task.finished and db_build_task.dbfile == dbfile then
                     reaper.ShowMessageBox("This database is currently rebuilding.\nPlease stop the task before deleting.", "Cannot Delete", 0)
@@ -14294,7 +14294,7 @@ function loop()
                   tree_state.add_path_popup = true -- 标记弹窗
                 end
                 -- 从数据库移除路径
-                if reaper.ImGui_BeginMenu(ctx, "Remove Path from Database") then
+                if reaper.ImGui_BeginMenu(ctx, T("Remove Path from Database")) then
                   local db_dir = script_path .. "SoundmoleDB"
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   local path_list = GetPathListFromDB(dbpath)
@@ -14577,13 +14577,13 @@ function loop()
                 reaper.ImGui_OpenPopup(ctx, "recent_search_menu_" .. i)
               end
               if reaper.ImGui_BeginPopup(ctx, "recent_search_menu_" .. i) then
-                if reaper.ImGui_MenuItem(ctx, "Save as Saved Search") then
+                if reaper.ImGui_MenuItem(ctx, T("Save as Saved Search")) then
                   show_add_popup = true
                   new_search_name = keyword
                   save_search_keyword = keyword
                   reaper.ImGui_CloseCurrentPopup(ctx)
                 end
-                if reaper.ImGui_MenuItem(ctx, "Delete this record") then
+                if reaper.ImGui_MenuItem(ctx, T("Delete this record")) then
                   table.remove(recent_search_keywords, i)
                   SaveRecentSearched()
                   reaper.ImGui_CloseCurrentPopup(ctx)
@@ -14599,7 +14599,7 @@ function loop()
 
             local add_visible = reaper.ImGui_BeginPopupModal(ctx, "Add Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
             if add_visible then
-              reaper.ImGui_Text(ctx, "Name:")
+              reaper.ImGui_Text(ctx, T("Name:"))
               reaper.ImGui_SameLine(ctx)
               local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
               if input_changed then new_search_name = input_val end
@@ -14672,7 +14672,7 @@ function loop()
                   reaper.ImGui_OpenPopup(ctx, "recent_file_menu_" .. i)
                 end
                 if reaper.ImGui_BeginPopup(ctx, "recent_file_menu_" .. i) then
-                  if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+                  if reaper.ImGui_MenuItem(ctx, T("Show in Explorer/Finder")) then
                     if info.path and info.path ~= "" then
                       reaper.CF_LocateInExplorer(normalize_path(info.path)) -- 规范分隔符
                     end
@@ -14701,7 +14701,7 @@ function loop()
           reaper.ImGui_SetNextItemWidth(ctx, -100)
           reaper.ImGui_TextFilter_Draw(usc_filter, ctx, "##FilterUCS")
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, "Clear", 40) then
+          if reaper.ImGui_Button(ctx, T("Clear"), 40) then
             reaper.ImGui_TextFilter_Set(usc_filter, "")
             temp_search_keyword, temp_search_field = nil, nil -- 清除UCS隐式搜索
           end
@@ -15075,11 +15075,11 @@ function loop()
                   end
 
                   if reaper.ImGui_BeginPopupContextItem(ctx) then
-                    if reaper.ImGui_MenuItem(ctx, "Rename Group") then
-                      local ret, new_name = reaper.GetUserInputs("Rename", 1, "New Name:,extrawidth=200", node.name)
+                    if reaper.ImGui_MenuItem(ctx, T("Rename Group")) then
+                      local ret, new_name = reaper.GetUserInputs(T("Rename"), 1, T("New Name:") .. ",extrawidth=200", node.name)
                       if ret then node.name = new_name; SaveTreeData() end
                     end
-                    if reaper.ImGui_MenuItem(ctx, "Create Sub-Group") then
+                    if reaper.ImGui_MenuItem(ctx, T("Create Sub-Group")) then
                       local new_id = new_guid()
                       saved_search_nodes[new_id] = { id=new_id, type="folder", name="New Group", children={}, open=true }
                       table.insert(node.children, new_id)
@@ -15087,7 +15087,7 @@ function loop()
                       SaveTreeData()
                     end
                     reaper.ImGui_Separator(ctx)
-                    if reaper.ImGui_MenuItem(ctx, "Delete Group") then
+                    if reaper.ImGui_MenuItem(ctx, T("Delete Group")) then
                       local p_list, p_idx = FindParentList(id)
                       if p_list then
                         table.remove(p_list, p_idx)
@@ -15118,16 +15118,16 @@ function loop()
                   end
 
                   if reaper.ImGui_BeginPopupContextItem(ctx) then
-                    if reaper.ImGui_MenuItem(ctx, "Rename") then
-                      local ret, new_name = reaper.GetUserInputs("Rename", 1, "Name:,extrawidth=200", node.name)
+                    if reaper.ImGui_MenuItem(ctx, T("Rename")) then
+                      local ret, new_name = reaper.GetUserInputs(T("Rename"), 1, T("New Name:") .. ",extrawidth=200", node.name)
                       if ret then node.name = new_name; SaveTreeData() end
                     end
-                    if reaper.ImGui_MenuItem(ctx, "Update with Current Filter") then
+                    if reaper.ImGui_MenuItem(ctx, T("Update with Current Filter")) then
                       node.term = reaper.ImGui_TextFilter_Get(filename_filter) or ""
                       SaveTreeData()
                     end
                     reaper.ImGui_Separator(ctx)
-                    if reaper.ImGui_MenuItem(ctx, "Delete") then
+                    if reaper.ImGui_MenuItem(ctx, T("Delete")) then
                       local p_list, p_idx = FindParentList(id)
                       if p_list then
                         table.remove(p_list, p_idx)
@@ -15153,13 +15153,13 @@ function loop()
           local filter_val = reaper.ImGui_TextFilter_Get(saved_search_filter) or ""
 
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, "Clear", 40) then
+          if reaper.ImGui_Button(ctx, T("Clear"), 40) then
             reaper.ImGui_TextFilter_Set(saved_search_filter, "")
             filter_val = ""
           end
 
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, "+Group", 60) then
+          if reaper.ImGui_Button(ctx, T("+Group"), 60) then
             local new_id = new_guid()
             saved_search_nodes[new_id] = { id=new_id, type="folder", name="New Group", children={}, open=true }
             table.insert(root_saved_searches, new_id)
@@ -15167,7 +15167,7 @@ function loop()
           end
 
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, "Save", 40) then
+          if reaper.ImGui_Button(ctx, T("Save"), 40) then
             local main_filter = reaper.ImGui_TextFilter_Get(filename_filter) or ""
             if main_filter ~= "" then
               local new_id = new_guid()
@@ -15183,7 +15183,7 @@ function loop()
 
           if reaper.ImGui_BeginChild(ctx, "SavedSearchesTreeRegion") then
             if #root_saved_searches == 0 then
-              reaper.ImGui_TextDisabled(ctx, "No saved searches.")
+              reaper.ImGui_TextDisabled(ctx, T("No saved searches."))
             else
               DrawSavedSearchTree(root_saved_searches, 0, filter_val)
 
@@ -17089,7 +17089,7 @@ function loop()
 
         -- Folder Shortcuts (Mirror)
         local chg_fs
-        chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, "Mirror Media Explorer Shortcuts", mirror_folder_shortcuts)
+        chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, T("Mirror Media Explorer Shortcuts"), mirror_folder_shortcuts)
         if chg_fs then
           reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
         end
@@ -17107,7 +17107,7 @@ function loop()
 
         -- Database (Mirror)
         local chg_db
-        chg_db, mirror_database = reaper.ImGui_Checkbox(ctx, "Mirror Media Explorer Databases", mirror_database)
+        chg_db, mirror_database = reaper.ImGui_Checkbox(ctx, T("Mirror Media Explorer Databases"), mirror_database)
         if chg_db then
           reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
         end
@@ -17130,7 +17130,7 @@ function loop()
           show_peektree_recent = (ext == nil or ext == "" or ext == "1")
         end
 
-        local changed, v = reaper.ImGui_Checkbox(ctx, 'Show "Recently Played" in PeekTree (hides the "Play History" button)', show_peektree_recent)
+        local changed, v = reaper.ImGui_Checkbox(ctx, T('Show "Recently Played" in PeekTree (hides the "Play History" button)'), show_peektree_recent)
         if changed then
           show_peektree_recent = v
           reaper.SetExtState(EXT_SECTION, "show_peektree_recent", v and "1" or "0", true)
@@ -18134,7 +18134,7 @@ function loop()
       end
 
       if reaper.ImGui_BeginPopup(ctx, "##now_browsing") then
-        if reaper.ImGui_MenuItem(ctx, "Show in Explorer/Finder") then
+        if reaper.ImGui_MenuItem(ctx, T("Show in Explorer/Finder")) then
           if show_path and show_path ~= "" then
             reaper.CF_LocateInExplorer(normalize_path(show_path))
           end
@@ -19057,10 +19057,10 @@ function loop()
 
           if has_filter then
             -- 已完成+有过滤，只显示过滤后的数量和总数
-            reaper.ImGui_Text(ctx, string.format("%d shown / %d total.", shown_count, loaded_total))
+            reaper.ImGui_Text(ctx, string.format(T("%d shown / %d total"), shown_count, loaded_total))
           else
             -- 已完成+无过滤，显示总数
-            reaper.ImGui_Text(ctx, string.format("%d shown / %d total.", loaded_total, loaded_total))
+            reaper.ImGui_Text(ctx, string.format(T("%d shown / %d total"), loaded_total, loaded_total))
           end
         else
           -- 非MediaDB模式按原逻辑
@@ -19081,7 +19081,7 @@ function loop()
             local total = _first_len(files_idx_cache, all_files, file_list, files_all, files) or (shown_count or 0)
             local shown = _first_len(filtered_list, visible_rows, visible_list, display_list, view_list, table_list, rows_list, files_idx_cache_view, files_view, current_rows, current_list, render_list, current_display) or total
 
-            return string.format("%d shown / %d total.", shown, total)
+            return string.format(T("%d shown / %d total"), shown, total)
           end)())
         end
       end
@@ -19186,9 +19186,9 @@ function loop()
     -- 移除数据库的文件夹路径
     if tree_state.remove_path_confirm then
       local popup_open = true
-      reaper.ImGui_OpenPopup(ctx, "Remove Folder Path Confirm")
-      if reaper.ImGui_BeginPopupModal(ctx, "Remove Folder Path Confirm", popup_open, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
-        reaper.ImGui_Text(ctx, "Are you sure you want to remove this folder path and all its audio files from the database?")
+      reaper.ImGui_OpenPopup(ctx, T("Remove Folder Path Confirm"))
+      if reaper.ImGui_BeginPopupModal(ctx, T("Remove Folder Path Confirm"), popup_open, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+        reaper.ImGui_Text(ctx, T("Are you sure you want to remove this folder path and all its audio files from the database?"))
         reaper.ImGui_Separator(ctx)
         reaper.ImGui_Text(ctx, tree_state.remove_path_to_remove)
         if reaper.ImGui_Button(ctx, "OK") then

@@ -1,3 +1,4 @@
+# @noindex
 # Soundmole 中文语言包
 
 # 界面按钮
@@ -21,9 +22,71 @@ Search within current results: Off=在当前结果中搜索: 关闭
 Click to hide the left table=点击隐藏左侧栏
 Click to show the left table=点击显示左侧栏
 
+# PeekTree
+Show in Explorer/Finder=在文件资源管理器/访达中显示
+Add to Folder Shortcuts=添加到文件夹快捷方式
+Build Database from This Folder=从此文件夹构建数据库
+Build Database from Folder=从文件夹构建数据库
+Rename=重命名
+Remove=移除
+Rename File=重命名文件
+Rename file...=重命名文件...
+Rename Shortcut=重命名快捷方式
+Rename Collection=重命名收藏
+Rename Active Take=重命名活跃片段
+Rename Group=重命名分组
+Create Sub-Group=创建子分组
+Update with Current Filter=按当前过滤器更新
+Delete=删除
+Delete Database=删除数据库
+Delete this record=删除此条记录
+Save as Saved Search=另存为保存搜索
+Delete Group=删除分组
+Remove=移除
+Remove from project=从工程中移除
+Remove from Collections=从收藏夹中移除
+Remove from Database=从数据库中移除
+Remove Path from Database=从数据库中移除路径
+Remove Folder Path Confirm=确认移除文件夹路径
+Are you sure you want to remove this folder path and all its audio files from the database?=确定要从数据库中移除此文件夹路径及其所有音频文件吗？
+Add Subfolder=添加子文件夹
+New Subfolder=新建子文件夹
+Name:=名称:
+New Name:=新名称:
+Refresh Drives=刷新驱动器
+Create Shortcut=创建快捷方式
+Choose folder to add shortcut:=选择文件夹以创建快捷方式:
+Create Collection=创建收藏
+Create Group...=创建分组...
+Create Group=创建分组
+Database Actions=数据库操作
+Create a New Database=创建新数据库
+What would you like the database name to be?=想为数据库起什么名字?
+Create Database=创建数据库
+Target Database=目标数据库
+Set as Target Database=设置为目标数据库
+Clear Target Database=清除目标数据库
+Rename Database=重命名数据库
+Mirror Media Explorer Shortcuts=镜像媒体资源管理器快捷方式
+Mirror Media Explorer Databases=镜像媒体资源管理器数据库
+Show "Recently Played" in PeekTree (hides the "Play History" button)=在媒体库中显示 "最近播放" (隐藏 "播放历史" 按钮)
+Loading drives, please wait...=正在加载驱动器，请稍候...
++Group=+分组
+Save=保存
+No saved searches.=无保存搜索
+
+# 自由音效
+Access token (Bearer)=访问令牌 (Bearer)
+Refresh token=刷新令牌
+Refresh access token=刷新访问令牌
+Clear (show local cache)=清空 (切至本地缓存)
+Clear OAuth2 Credentials=清除 OAuth2 凭据
+Clear all OAuth credentials=清除所有 OAuth 凭据
+
+
 # 页签与侧边栏
 PeekTree=媒体库
-UCS=UCS分类
+UCS=UCS
 Saved Search=保存搜索
 Freesound=自由音效
 Project Collection=工程资产
@@ -76,6 +139,7 @@ Track=轨道
 Position=位置
 Tags=标签
 License=授权
+%d shown / %d total=已显示 %d 条 / 共 %d 条
 
 # 数据库
 Browse DB Folders=浏览数据库文件夹
