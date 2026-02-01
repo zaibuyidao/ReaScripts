@@ -4,6 +4,13 @@ package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_pa
 require ('lib.core')
 require ('lib.utils')
 local L = require('lib.locales')
+local trans_status, trans_result = pcall(require, "lib.translation")
+local Translator = nil
+if trans_status then
+  Translator = trans_result
+else
+  Translator = nil -- 禁用翻译功能
+end
 
 local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
@@ -12318,27 +12325,61 @@ function loop()
       filename_filter = reaper.ImGui_CreateTextFilter()
       reaper.ImGui_Attach(ctx, filename_filter)
     end
-    reaper.ImGui_SetNextItemWidth(ctx, filter_w)
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
-    reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
-    -- reaper.ImGui_PopStyleVar(ctx)
-    _G.just_committed_filter = false
-    -- 按enter搜索
-    if search_enter_mode then
-      if (reaper.ImGui_IsItemActive(ctx) or reaper.ImGui_IsItemFocused(ctx)) and
-        (reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or
-          reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter())) then
-        local txt = reaper.ImGui_TextFilter_Get(filename_filter) or ""
-        _G.commit_filter_text = txt
-        _G.just_committed_filter = true
 
-        -- Enter模式: 立刻保存到最近搜索
-        if txt ~= "" then
-          if txt ~= last_search_input then
-            AddToRecentSearched(txt)
-            last_search_input = txt
+    reaper.ImGui_SetNextItemWidth(ctx, filter_w)
+    reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
+    _G.just_committed_filter = false
+
+    -- 翻译时的视觉提示
+    if Translator and Translator.is_requesting then
+      local box_min_x, box_min_y = reaper.ImGui_GetItemRectMin(ctx)
+      local box_max_x, box_max_y = reaper.ImGui_GetItemRectMax(ctx)
+      local status_text = "Translating..."
+      local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, status_text)
+      -- 计算输入框内部右侧位置
+      local draw_x = box_max_x - txt_w - 10
+      local draw_y = box_min_y + (box_max_y - box_min_y - txt_h) / 2
+
+      local text_col = colors.mole or 0xFF0000FF
+      local draw_list = reaper.ImGui_GetForegroundDrawList(ctx)
+      reaper.ImGui_DrawList_AddText(draw_list, draw_x, draw_y, text_col, status_text)
+    end
+
+    if _G.trans_append_mode == nil then _G.trans_append_mode = false end
+    if _G.trans_src_txt == nil then _G.trans_src_txt = "" end
+
+    if search_enter_mode then
+      -- Enter模式逻辑
+      if (reaper.ImGui_IsItemActive(ctx) or reaper.ImGui_IsItemFocused(ctx))
+      and (reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter())
+      or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter())) then
+        -- 判断是否按住了Ctrl
+        if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl()) then
+          -- 翻译模式
+          local current_txt = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+          if current_txt ~= "" and Translator and Translator.pending_text == nil then
+            -- 检测 Shift 状态以决定模式
+            if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Shift()) then
+              _G.trans_append_mode = true  -- 标记保留原文
+            else
+              _G.trans_append_mode = false -- 标记直接替换
+            end
+            _G.trans_src_txt = current_txt -- 记住原文
+            Translator.SendRequest(current_txt)
           end
-          search_input_timer = math.huge -- 防重复保存
+        else
+          local txt = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+          _G.commit_filter_text = txt
+          _G.just_committed_filter = true
+
+          -- Enter模式: 立刻保存到最近搜索
+          if txt ~= "" then
+            if txt ~= last_search_input then
+              AddToRecentSearched(txt)
+              last_search_input = txt
+            end
+            search_input_timer = math.huge -- 防重复保存
+          end
         end
       end
     else
@@ -12361,6 +12402,46 @@ function loop()
         AddToRecentSearched(cur)
         search_input_timer = math.huge
       end
+
+      -- 实时模式下支持 Ctrl+Enter 翻译
+      -- if (reaper.ImGui_IsItemActive(ctx) or reaper.ImGui_IsItemFocused(ctx))
+      -- and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+      -- and (reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter())
+      -- or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter())) then
+      --   local current_txt = reaper.ImGui_TextFilter_Get(filename_filter) or ""
+      --   if current_txt ~= "" and Translator and Translator.pending_text == nil then
+      --     if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Shift()) then
+      --        _G.trans_append_mode = true
+      --     else
+      --       _G.trans_append_mode = false
+      --     end
+                
+      --     _G.trans_src_txt = current_txt
+      --     Translator.SendRequest(current_txt)
+      --   end
+      -- end
+    end
+
+    -- 检查翻译结果
+    if Translator then
+      Translator.Poll(function(eng_result)
+        if eng_result and eng_result ~= "" then
+          local final_text = eng_result
+          -- 根据模式决定结果文本
+          if _G.trans_append_mode and _G.trans_src_txt and _G.trans_src_txt ~= "" then
+            -- 拼接原文 + 空格 + 译文
+            final_text = _G.trans_src_txt .. " " .. eng_result
+          end
+          -- 填入最终结果
+          filename_filter = reaper.ImGui_CreateTextFilter(final_text)
+          _G.commit_filter_text = final_text
+          _G.just_committed_filter = true
+
+          reaper.ImGui_SetWindowFocus(ctx)
+          _G._live_prev = final_text
+          _G._live_t = 0
+        end
+      end)
     end
 
     -- 同义词显示输入框

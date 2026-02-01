@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.157
+-- @version 1.0.158
 -- @changelog
---   Added Chinese translation, project progress at 25%.
+--   Added an intelligent keyword translator to automatically convert non-English keywords into English, improving search precision for non-native speakers.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -14,6 +14,7 @@
 --   [main=main] Soundmole/zaibuyidao_Soundmole.lua
 --   [main=main] Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua
 --   [nomain] Soundmole/lib/*.lua
+--   [nomain] Soundmole/lib/*.py
 --   [nomain] Soundmole/lib/*.cur
 --   Soundmole/lang/*.txt
 --   Soundmole/data/*.csv
