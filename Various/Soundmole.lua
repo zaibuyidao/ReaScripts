@@ -1,8 +1,14 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.158
+-- @version 1.0.159
 -- @changelog
---   Added an intelligent keyword translator to automatically convert non-English keywords into English, improving search precision for non-native speakers.
+--   Added ability to jump to the same folder or filter in Database mode by clicking the album art.
+--   Added ability to remember the selected sidebar tab state upon exit.
+--   Fixed an issue where recent searches could not be saved to Saved Searches.
+--   Fixed "Reset to Defaults" not restoring all settings.
+--   Fixed image loading issues and stability, added support for WAV embedded ID3 artwork.
+--   Fixed an issue where peak meter channel settings were not saving correctly.
+--   Enabled the "Search on Enter" option by default.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

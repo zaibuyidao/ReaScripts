@@ -267,6 +267,10 @@ end
 mediadb_dir = normalize_path(mediadb_dir, true)
 EnsureCacheDir(mediadb_dir)
 
+-- 读取上次选中的标签页名称
+local startup_tab_name = reaper.GetExtState(EXT_SECTION, "sidebar_active_tab")
+local current_sidebar_tab = "PeekTree" -- 默认为 PeekTree，用于记录当前状态
+
 -- 波形预览状态变量
 local wf_step = 400                    -- 波形预览步长
 local img_w, img_h = 1200, 130         -- 波形图像宽度和高度
@@ -301,7 +305,7 @@ local Wave = {
 -- 读取ExtState
 waveform_color_mode = tonumber(reaper.GetExtState(EXT_SECTION, "waveform_color_mode")) or WAVE_COLOR_MONO
 last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, "peak_chans"))
-if last_peak_chans then peak_chans = math.min(math.max(last_peak_chans, 6), 128) end
+if last_peak_chans then peak_chans = math.min(math.max(last_peak_chans, 2), 128) end
 last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, "font_size"))
 if last_font_size then font_size = math.min(math.max(last_font_size, FONT_SIZE_MIN), FONT_SIZE_MAX) end
 last_max_db = tonumber(reaper.GetExtState(EXT_SECTION, "max_db"))
@@ -328,6 +332,7 @@ last_hue_shift = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_hue_shift"))
 spectral_hue_shift = last_hue_shift or 0.0
 last_grad_sat = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_grad_sat")) -- 读取饱和度设置
 spectral_grad_sat = last_grad_sat or 1.0
+pitch_semitone_step = reaper.GetExtState(EXT_SECTION, "pitch_semitone_step") == "1" -- 读取半音步进设置
 
 -- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items, 4=This Computer, 5=Shortcuts）
 collect_mode                 = -1 -- -1 表示未设置
@@ -539,6 +544,7 @@ end
 
 -- 保存设置
 function SaveSettings()
+  -- 基础设置
   -- reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
   reaper.SetExtState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
   reaper.SetExtState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
@@ -547,10 +553,14 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
   reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
   reaper.SetExtState(EXT_SECTION, "max_db", tostring(max_db), true)
+  
+  -- 播放控制范围
   reaper.SetExtState(EXT_SECTION, "pitch_knob_min", tostring(pitch_knob_min), true)
   reaper.SetExtState(EXT_SECTION, "pitch_knob_max", tostring(pitch_knob_max), true)
   reaper.SetExtState(EXT_SECTION, "rate_min", tostring(rate_min), true)
   reaper.SetExtState(EXT_SECTION, "rate_max", tostring(rate_max), true)
+  
+  -- 缓存与列表
   reaper.SetExtState(EXT_SECTION, "cache_dir", tostring(cache_dir), true)
   reaper.SetExtState(EXT_SECTION, "fs_cache_dir", tostring(fs_cache_dir), true)
   reaper.SetExtState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
@@ -558,14 +568,26 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
   reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
   reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
+  reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
+  
+  -- [新增补缺] 视觉设置
+  reaper.SetExtState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
+  reaper.SetExtState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
+  reaper.SetExtState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true)
+
+  -- 镜像与侧边栏
   reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
+
+  -- 播放行为与同步
   reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
 end
 
 -- 恢复设置
@@ -652,6 +674,19 @@ do
   local v = reaper.GetExtState(EXT_SECTION, "show_tooltips")
   if v == "1" then show_tooltips = true
   elseif v == "0" then show_tooltips = false end
+end
+
+do
+  local v = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_grad_sat"))
+  if v then spectral_grad_sat = v else spectral_grad_sat = 1.0 end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "pitch_semitone_step")
+  if v == "1" then pitch_semitone_step = true
+  elseif v == "0" then pitch_semitone_step = false 
+  else pitch_semitone_step = false -- 默认为关
+  end
 end
 
 --------------------------------------------- 颜色表 ---------------------------------------------
@@ -5935,13 +5970,100 @@ end
 local last_window_visible = true
 local cover_cache = {}
 local cover_path_cache = {}
+local bad_cover_cache = {}
 local last_cover_img = nil
 local last_cover_path = nil
-local last_img_w = nil
+
 local img_cache_dir = script_path .. "cover_cache" .. sep
 img_cache_dir = normalize_path(img_cache_dir, true)
 if reaper.file_exists(img_cache_dir) == false then
   reaper.RecursiveCreateDirectory(img_cache_dir, 0)
+end
+
+-- 读取文件头
+function IsValidImageFile(path)
+  if not path then return false end
+
+  -- 以二进制只读模式打开
+  local f = io.open(path, "rb") 
+  if not f then return false end
+  -- 读取前 8 个字节
+  local header = f:read(8) 
+  f:close()
+
+  if not header or #header < 2 then return false end
+
+  -- 检查 PNG (89 50 4E 47 ...)
+  if header:sub(1, 8) == "\137PNG\r\n\26\n" then 
+    return true 
+  end
+
+  -- 检查 JPG (FF D8 ...)
+  if header:sub(1, 2) == "\255\216" then 
+    return true 
+  end
+
+  -- 检查 GIF (GIF87a 或 GIF89a) GIF，文件头前3个字节是 "GIF" (ASCII: 47 49 46)
+  if header:sub(1, 3) == "GIF" then
+    return true
+  end
+
+  -- 检查 BMP，BMP 文件头前2个字节是 "BM" (ASCII: 66 77)
+  if header:sub(1, 2) == "BM" then
+    return true
+  end
+
+  return false
+end
+
+-- 读取 Little Endian 32位整数
+function read_le32(f)
+  local b = f:read(4)
+  if not b then return 0 end
+  local b1, b2, b3, b4 = b:byte(1, 4)
+  return b1 + (b2 * 256) + (b3 * 65536) + (b4 * 16777216)
+end
+
+-- WAV RIFF 解析器
+function GetWavChunkID3(path)
+  local f = io.open(path, "rb")
+  if not f then return nil end
+
+  -- 检查 RIFF 头
+  if f:read(4) ~= "RIFF" then f:close() return nil end
+  f:read(4) -- 跳过文件总大小
+  if f:read(4) ~= "WAVE" then f:close() return nil end
+
+  local file_size = f:seek("end")
+  f:seek("set", 12) -- 回到 WAVE 标志之后
+
+  while f:seek() < file_size do
+    -- 读取 Chunk ID
+    local chunk_id = f:read(4)
+    if not chunk_id or #chunk_id < 4 then break end
+
+    -- 读取 Chunk Size
+    local chunk_size = read_le32(f)
+    if not chunk_size then break end
+
+    -- 判断是否为 ID3 块，兼容 Boom Library 的小写id3
+    if chunk_id == "id3 " or chunk_id == "ID3 " then
+      local data = f:read(chunk_size)
+      f:close()
+      return data
+    else
+      -- 如果是音频 data 或其他无关块直接跳过
+      f:seek("cur", chunk_size)
+    end
+
+    -- 如果 Chunk Size 是奇数，末尾有一个填充字节
+    if chunk_size % 2 ~= 0 then
+      f:seek("cur", 1)
+    end
+  end
+
+  f:close()
+  return nil
 end
 
 -- ID3v2 同步安全整数 & 大端整数解析
@@ -5956,71 +6078,97 @@ end
 
 -- 解析 ID3v2 APIC 帧（封面）
 function parse_id3_apic(tag_data, ver)
+  if not tag_data then return end
   local pos = 1
-  while pos + 10 <= #tag_data do
+  local len = #tag_data
+
+  while pos + 10 <= len do
     local id      = tag_data:sub(pos, pos + 3)
+    -- 遇到填充字节(Padding)直接结束
+    if id == "\0\0\0\0" then break end
     local size_bs = tag_data:sub(pos + 4, pos + 7)
+    if #size_bs < 4 then break end
     local sz      = (ver==4) and syncsafe_to_int(size_bs) or be_to_int(size_bs)
+    if pos + 10 + sz > len + 1 then break end -- 安全检查
+
     if id == "APIC" then
       local frame = tag_data:sub(pos + 10, pos + 10 + sz - 1)
-      local encoding      = frame:sub(1, 1) -- 文本编码
-      local rest1         = frame:sub(2) -- 跳过encoding
-      local mime_end      = rest1:find("\0", 1, true)
-      local mime          = rest1:sub(1, mime_end - 1)
-      local after_mime    = rest1:sub(mime_end + 1)
-      local pictype       = after_mime:sub(1, 1) -- pictureType
-      local desc_and_data = after_mime:sub(2)
-      local desc_end      = desc_and_data:find("\0", 1, true)
-      local description   = desc_and_data:sub(1, desc_end - 1)
-      local imgData       = desc_and_data:sub(desc_end + 1) -- 图像二进制
-      return mime, imgData
+      local encoding = frame:sub(1, 1) -- 文本编码字节
+      local rest1    = frame:sub(2)
+      local mime_end = rest1:find("\0", 1, true)
+
+      if mime_end then
+        local mime = rest1:sub(1, mime_end - 1)
+        local after_mime = rest1:sub(mime_end + 1)
+        local search_area = after_mime:sub(2)
+        -- 寻找 JPG (FF D8)
+        local jpg_pos = search_area:find("\255\216", 1, true)
+        -- 寻找 PNG (89 50 4E 47)
+        local png_pos = search_area:find("\137PNG", 1, true)
+        local img_start = nil
+        if jpg_pos and png_pos then
+          img_start = math.min(jpg_pos, png_pos)
+        else
+          img_start = jpg_pos or png_pos
+        end
+
+        if img_start then
+          local imgData = search_area:sub(img_start)
+          if imgData:sub(1, 4) == "\137PNG" then mime = "image/png" end
+          if imgData:sub(1, 2) == "\255\216" then mime = "image/jpeg" end
+          return mime, imgData
+        end
+      end
     end
+
     pos = pos + 10 + sz
   end
+  return nil, nil
 end
 
--- MP3 / WAV（内嵌 ID3v2）提取，WAV 如果在结尾有 ID3 chunk，也能被识别
+-- MP3 / WAV（内嵌 ID3v2）提取
 function ExtractID3Cover(file_path)
   if not file_path or type(file_path) ~= "string" or file_path == "" then return end
   local path = normalize_path(file_path, false)
 
+  -- 尝试读取文件头，判断是 MP3 还是 WAV
   local f = io.open(path, "rb")
   if not f then return end
-
   local header = f:read(10) or ""
-  local ver, tag_size, tag_data
+  f:close()
 
+  local tag_full_data = nil
+
+  -- MP3
   if #header >= 10 and header:sub(1, 3) == "ID3" then
-    -- MP3 文件开头
-    ver      = header:byte(4)
-    tag_size = syncsafe_to_int(header:sub(7, 10))
-    if tag_size and tag_size > 0 then
-      tag_data = f:read(tag_size) or ""
+    local f_mp3 = io.open(path, "rb")
+    if f_mp3 then
+      local h = f_mp3:read(10)
+      local size = syncsafe_to_int(h:sub(7, 10))
+      if size > 0 then
+        -- 读取整个 ID3 标签头 + 内容
+        f_mp3:seek("set", 0)
+        tag_full_data = f_mp3:read(10 + size)
+      end
+      f_mp3:close()
     end
-  else
-    -- 可能是 WAV 文件末尾的 ID3 chunk
-    local content = header .. (f:read("*all") or "")
-    local pos = content:find("ID3", 1, true)
-    if not pos then f:close() return end
-    if (pos + 9) > #content then f:close() return end
 
-    local hdr2 = content:sub(pos, pos + 9)
-    if hdr2:sub(1, 3) ~= "ID3" then f:close() return end
-
-    ver      = hdr2:byte(4)
-    tag_size = syncsafe_to_int(hdr2:sub(7, 10))
-    if not tag_size or tag_size <= 0 then f:close() return end
-
-    local data_start = pos + 10
-    local data_end   = data_start + tag_size - 1
-    if data_end > #content then f:close() return end
-
-    tag_data = content:sub(data_start, data_end)
+  -- WAV
+  elseif header:sub(1, 4) == "RIFF" then
+    -- 调用上面新写的解析器
+    tag_full_data = GetWavChunkID3(path)
   end
 
-  f:close()
-  if not tag_data or #tag_data == 0 then return end
-  return parse_id3_apic(tag_data, ver)
+  -- 统一解析逻辑
+  if tag_full_data and #tag_full_data >= 10 and tag_full_data:sub(1, 3) == "ID3" then
+    local ver      = tag_full_data:byte(4)
+    local tag_size = syncsafe_to_int(tag_full_data:sub(7, 10))
+    local tag_body = tag_full_data:sub(11, 11 + tag_size - 1)
+    
+    return parse_id3_apic(tag_body, ver)
+  end
+
+  return nil
 end
 
 -- FLAC 原生 METADATA_BLOCK_PICTURE 提取
@@ -6170,6 +6318,7 @@ end
 -- 判断 info 是否存在有效专辑封面
 function HasCoverImage(img_info)
   if not img_info then return false end
+  if img_info.path and bad_cover_cache[img_info.path] then return false end
   local mime, data = GetCoverImageData(img_info.path)
   return data ~= nil
 end
@@ -6230,7 +6379,6 @@ function RefreshFolderFiles(dir)
   --   reaper.ImGui_DestroyImage(last_cover_img)
   -- end
   -- last_cover_img, last_cover_path = nil, nil
-  -- last_img_w = nil
 end
 
 --------------------------------------------- 快速预览文件夹节点 ---------------------------------------------
@@ -6738,22 +6886,49 @@ function SaveExitSettings()
   end
   -- 保存目标数据库设置
   reaper.SetExtState(EXT_SECTION, "target_mediadb", tree_state.target_mediadb or "", true)
+
+  -- 保存当前侧边栏选中的标签页
+  if current_sidebar_tab then
+    reaper.SetExtState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
+  end
 end
 
 LoadExitSettings()
 
 --------------------------------------------- 保存搜索功能 ---------------------------------------------
 
-local active_saved_search = nil
-show_add_popup = false
-new_search_name = ""
-remove_search_idx = nil
-rename_name = rename_name or ""
-rename_idx = rename_idx or nil
-show_rename_popup = show_rename_popup or false
-saved_search_list = LoadSavedSearch(EXT_SECTION, saved_search_list)
-saved_search_drag_index = saved_search_drag_index or nil -- 当前被拖动的行索引
-saved_search_last_target_index = saved_search_last_target_index or nil -- 上一次交换的目标行索引
+saved_search_nodes = {}          -- 存储节点详情
+root_saved_searches = {}         -- 存储根目录的 ID 排序列表
+_G.saved_searches_loaded = false -- 标记是否已从 ExtState 加载过数据
+
+local active_saved_search = nil  -- 当前选中的搜索项 ID
+show_add_popup = false           -- 控制添加搜索弹窗显示
+new_search_name = ""             -- 新建时的名称缓存
+save_search_keyword = ""         -- 新建时的关键词缓存
+
+function TableToString(tbl)
+  if type(tbl) ~= "table" then
+    return (type(tbl) == "string") and string.format("%q", tbl) or tostring(tbl)
+  end
+  local result, is_array = "{", (#tbl > 0)
+  if is_array then
+    for i, v in ipairs(tbl) do
+      result = result .. (i > 1 and "," or "") .. TableToString(v)
+    end
+  else
+    local first = true
+    for k, v in pairs(tbl) do
+      result = result .. (first and "" or ",") .. "[" .. string.format("%q", k) .. "]=" .. TableToString(v)
+      first = false
+    end
+  end
+  return result .. "}"
+end
+
+function SaveTreeData()
+  local data = { roots = root_saved_searches, nodes = saved_search_nodes }
+  reaper.SetExtState(EXT_SECTION, "SavedSearchesTree", TableToString(data), true)
+end
 
 --------------------------------------------- 最近搜索节点 ---------------------------------------------
 
@@ -6973,7 +7148,7 @@ end
 -- Enter模式搜索过滤
 local search_enter_ext = reaper.GetExtState(EXT_SECTION, "search_enter_mode")
 if search_enter_ext == "" then
-  search_enter_mode = false else search_enter_mode = (search_enter_ext == "1")
+  search_enter_mode = true else search_enter_mode = (search_enter_ext == "1")
 end
 _G.commit_filter_text = _G.commit_filter_text or ""
 
@@ -12012,9 +12187,9 @@ function loop()
   MonitorShortcut(virtual_key_code) -- 监控快捷键，使用操作列表脚本控制主脚本添加条目到目标数据库
 
   -- 接收信号
-  local ext_signal = reaper.GetExtState("Soundmole", "CMD_AddSelectedToTarget")
+  local ext_signal = reaper.GetExtState(EXT_SECTION, "CMD_AddSelectedToTarget")
   if ext_signal == "1" then
-    reaper.SetExtState("Soundmole", "CMD_AddSelectedToTarget", "0", false)
+    reaper.SetExtState(EXT_SECTION, "CMD_AddSelectedToTarget", "0", false)
     SM_Action_AddSelectionToTargetDB()
   end
 
@@ -13096,7 +13271,11 @@ function loop()
       if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar', reaper.ImGui_TabBarFlags_None()) then -- | reaper.ImGui_TabBarFlags_DrawSelectedOverline()
         --reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelectedOverline(), colors.tab_selected_overline) -- tab 选中态上划线颜色
         -- PeekTree列表
-        if reaper.ImGui_BeginTabItem(ctx, T('PeekTree')) then
+        local flag_pt = (startup_tab_name == "PeekTree") and reaper.ImGui_TabItemFlags_SetSelected() or 0
+        if reaper.ImGui_BeginTabItem(ctx, T('PeekTree'), nil, flag_pt) then
+          current_sidebar_tab = "PeekTree" -- 记录当前状态
+          if startup_tab_name == "PeekTree" then startup_tab_name = nil end -- 清除强制标记
+
           if reaper.ImGui_BeginChild(ctx, "PeakTreeRegion") then -- PeakTreeRegion 开始
           -- 内容字体自由缩放
           local wheel = reaper.ImGui_GetMouseWheel(ctx)
@@ -14696,20 +14875,42 @@ function loop()
 
               if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
                 if (new_search_name or "") ~= "" and (save_search_keyword or "") ~= "" then
-                  -- 避免重名
-                  local exists = false
-                  for _, s in ipairs(saved_search_list) do
-                    if s.name == new_search_name then exists = true break end
+                  if not _G.saved_searches_loaded then
+                    local str = reaper.GetExtState(EXT_SECTION, "SavedSearchesTree")
+                    if str and str ~= "" then
+                      local func = load("return " .. str)
+                      if func then
+                        local data = func()
+                        if data then
+                          root_saved_searches = data.roots or {}
+                          saved_search_nodes = data.nodes or {}
+                        end
+                      end
+                    end
+                    _G.saved_searches_loaded = true
                   end
-                  if not exists then
-                    table.insert(saved_search_list, {name = new_search_name, keyword = save_search_keyword})
-                    SaveSavedSearch(EXT_SECTION, saved_search_list)
-                  end
+
+                  -- 初始化表
+                  if not saved_search_nodes then saved_search_nodes = {} end
+                  if not root_saved_searches then root_saved_searches = {} end
+                  -- 插入数据
+                  local new_id = new_guid()
+                  -- 创建节点
+                  saved_search_nodes[new_id] = {
+                    id = new_id,
+                    type = "item",
+                    name = new_search_name,
+                    term = save_search_keyword
+                  }
+                  -- 插入到根目录末尾
+                  table.insert(root_saved_searches, new_id)
+                  SaveTreeData()
                 end
                 reaper.ImGui_CloseCurrentPopup(ctx)
                 new_search_name = ""
                 save_search_keyword = ""
               end
+
               reaper.ImGui_SameLine(ctx)
               if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
                 reaper.ImGui_CloseCurrentPopup(ctx)
@@ -14774,7 +14975,11 @@ function loop()
           reaper.ImGui_EndTabItem(ctx)
         end
         -- UCS列表
-        if reaper.ImGui_BeginTabItem(ctx, T("UCS")) then
+        local flag_ucs = (startup_tab_name == "UCS") and reaper.ImGui_TabItemFlags_SetSelected() or 0
+        if reaper.ImGui_BeginTabItem(ctx, T("UCS"), nil, flag_ucs) then
+          current_sidebar_tab = "UCS"
+          if startup_tab_name == "UCS" then startup_tab_name = nil end
+
           if not usc_filter then
             usc_filter = reaper.ImGui_CreateTextFilter()
             reaper.ImGui_Attach(ctx, usc_filter)
@@ -14930,41 +15135,21 @@ function loop()
         end
 
         -- TAB 标签页 Saved Search
-        if reaper.ImGui_BeginTabItem(ctx, T("Saved Search") .. "###Saved_Search") then
+        local flag_ss = (startup_tab_name == "SavedSearch") and reaper.ImGui_TabItemFlags_SetSelected() or 0
+        if reaper.ImGui_BeginTabItem(ctx, T("Saved Search") .. "###Saved_Search", nil, flag_ss) then
+          current_sidebar_tab = "SavedSearch"
+          if startup_tab_name == "SavedSearch" then startup_tab_name = nil end
+
           local DND_PAYLOAD = "SM_SAVED_SEARCH_NODE"
           -- 将区域判定改为上下各 25% 用于排序，中间 50% 用于归档
           local FOLDER_SORT_ZONE_RATIO = 0.25
-
-          local function TableToString(tbl)
-            if type(tbl) ~= "table" then
-              return (type(tbl) == "string") and string.format("%q", tbl) or tostring(tbl)
-            end
-            local result, is_array = "{", (#tbl > 0)
-            if is_array then
-              for i, v in ipairs(tbl) do
-                result = result .. (i > 1 and "," or "") .. TableToString(v)
-              end
-            else
-              local first = true
-              for k, v in pairs(tbl) do
-                result = result .. (first and "" or ",") .. "[" .. string.format("%q", k) .. "]=" .. TableToString(v)
-                first = false
-              end
-            end
-            return result .. "}"
-          end
-
-          local function SaveTreeData()
-            local data = { roots = root_saved_searches, nodes = saved_search_nodes }
-            reaper.SetExtState("Soundmole", "SavedSearchesTree", TableToString(data), true)
-          end
 
           if not saved_search_nodes then saved_search_nodes = {} end
           if not root_saved_searches then root_saved_searches = {} end
 
           -- 加载数据
           if not _G.saved_searches_loaded then
-            local str = reaper.GetExtState("Soundmole", "SavedSearchesTree")
+            local str = reaper.GetExtState(EXT_SECTION, "SavedSearchesTree")
             if str and str ~= "" then
               local func = load("return " .. str)
               if func then
@@ -15158,7 +15343,10 @@ function loop()
                   if reaper.ImGui_BeginPopupContextItem(ctx) then
                     if reaper.ImGui_MenuItem(ctx, T("Rename Group")) then
                       local ret, new_name = reaper.GetUserInputs(T("Rename"), 1, T("New Name:") .. ",extrawidth=200", node.name)
-                      if ret then node.name = new_name; SaveTreeData() end
+                      if ret then
+                        node.name = new_name
+                        SaveTreeData()
+                      end
                     end
                     if reaper.ImGui_MenuItem(ctx, T("Create Sub-Group")) then
                       local new_id = new_guid()
@@ -15201,7 +15389,10 @@ function loop()
                   if reaper.ImGui_BeginPopupContextItem(ctx) then
                     if reaper.ImGui_MenuItem(ctx, T("Rename")) then
                       local ret, new_name = reaper.GetUserInputs(T("Rename"), 1, T("New Name:") .. ",extrawidth=200", node.name)
-                      if ret then node.name = new_name; SaveTreeData() end
+                      if ret then
+                        node.name = new_name
+                        SaveTreeData()
+                      end
                     end
                     if reaper.ImGui_MenuItem(ctx, T("Update with Current Filter")) then
                       node.term = reaper.ImGui_TextFilter_Get(filename_filter) or ""
@@ -15300,7 +15491,11 @@ function loop()
         end
 
         -- TAB 标签页 Freesound 节点
-        if reaper.ImGui_BeginTabItem(ctx, T("Freesound")) then
+        local flag_fs = (startup_tab_name == "Freesound") and reaper.ImGui_TabItemFlags_SetSelected() or 0
+        if reaper.ImGui_BeginTabItem(ctx, T("Freesound"), nil, flag_fs) then
+          current_sidebar_tab = "Freesound"
+          if startup_tab_name == "Freesound" then startup_tab_name = nil end
+
           if FS and type(FS_DrawSidebar)=="function" then
             if reaper.ImGui_BeginChild(ctx, "SavedSearchesTreeRegion") then
               FS_DrawSidebar(ctx)
@@ -16351,12 +16546,19 @@ function loop()
     reaper.ImGui_PushID(ctx, i)
     local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size, 0)
     reaper.ImGui_PopID(ctx)
+
     if reaper.ImGui_IsItemActive(ctx) then
       is_knob_dragging = true
     end
     if pitch_knob_changed then
       pitch = pitch_knob_value
-      if playing_preview then SmoothSetPreviewPitch(pitch, 80) end
+      local effective_pitch = pitch
+      if pitch_semitone_step then effective_pitch = math.floor(pitch + 0.5) end -- 半音步进
+      if playing_preview then SmoothSetPreviewPitch(effective_pitch, 80) end
+    end
+
+    if pitch_semitone_step and not reaper.ImGui_IsItemActive(ctx) then
+      pitch = math.floor(pitch + 0.5)
     end
     -- 防止手动输入越界
     if pitch < pitch_knob_min then pitch = pitch_knob_min end
@@ -16371,6 +16573,14 @@ function loop()
         keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
         reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
       end
+
+      if reaper.ImGui_MenuItem(ctx, "Semitone Steps", nil, pitch_semitone_step) then
+        pitch_semitone_step = not pitch_semitone_step
+        reaper.SetExtState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
+        -- 激活时立即将当前音高吸附到整数
+        if pitch_semitone_step then pitch = math.floor(pitch + 0.5) end
+      end
+
       reaper.ImGui_Separator(ctx)
       if reaper.ImGui_MenuItem(ctx, "Tempo Sync", nil, tempo_sync_enabled, true) then
         tempo_sync_enabled = not tempo_sync_enabled
@@ -16402,7 +16612,8 @@ function loop()
     reaper.ImGui_PushItemWidth(ctx, 50)
     -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local rv3
-    rv3, pitch = reaper.ImGui_InputDouble(ctx, "##Pitch", pitch) -- (ctx, "Pitch", pitch, 1, 12, "%.3f")
+    local fmt = pitch_semitone_step and "%.0f" or "%.3f"
+    rv3, pitch = reaper.ImGui_InputDouble(ctx, "##Pitch", pitch, 0, 0, fmt) -- (ctx, "Pitch", pitch, 1, 12, "%.3f")
     -- reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopItemWidth(ctx)
     if rv3 then
@@ -16547,6 +16758,12 @@ function loop()
       if reaper.ImGui_MenuItem(ctx, "Keep preview rate & pitch when inserting to arrange", nil, keep_preview_rate_pitch_on_insert) then
         keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
         reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+      end
+      if reaper.ImGui_MenuItem(ctx, "Semitone Steps", nil, pitch_semitone_step) then
+        pitch_semitone_step = not pitch_semitone_step
+        reaper.SetExtState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
+        -- 激活时立即将当前音高吸附到整数
+        if pitch_semitone_step then pitch = math.floor(pitch + 0.5) end
       end
       reaper.ImGui_Separator(ctx)
       if reaper.ImGui_MenuItem(ctx, "Tempo Sync", nil, tempo_sync_enabled, true) then
@@ -16748,34 +16965,6 @@ function loop()
         reaper.ImGui_PopStyleColor(ctx)
         reaper.ImGui_PopID(ctx)
       end
-
-      ----------------------------------------------------------------
-      -- 重置默认值
-      ----------------------------------------------------------------
-      local DEFAULTS = {
-        collect_mode = -1,
-        doubleclick_action = DOUBLECLICK_NONE,
-        auto_play_selected = true,
-        preserve_pitch = true,
-        auto_scroll_enabled = false,
-        build_waveform_cache = false,
-        search_enter_mode = false,
-        bg_alpha = 1.0,
-        peak_chans = 6,
-        font_size = 14,
-        max_db = 12,
-        pitch_knob_min = -6,
-        pitch_knob_max = 6,
-        rate_min = 0.25,
-        rate_max = 4.0,
-        cache_dir = DEFAULT_CACHE_DIR,
-        max_recent_files = 20,
-        max_recent_search = 20,
-        row_height = DEFAULT_ROW_HEIGHT,
-        spectral_hue_shift = 0.0,
-        spectral_grad_sat = 1.0, -- 默认全饱和
-        show_tooltips = false, -- 默认提示开关
-      }
 
       ----------------------------------------------------------------
       -- 各子区块内容
@@ -17353,6 +17542,14 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "pitch_knob_max", tostring(pitch_knob_max), true)
         end
 
+        -- 半音步进勾选项
+        reaper.ImGui_SameLine(ctx, nil, 20)
+        local changed_step, new_step = reaper.ImGui_Checkbox(ctx, "Semitone Steps", pitch_semitone_step)
+        if changed_step then
+          pitch_semitone_step = new_step
+          reaper.SetExtState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
+        end
+
         reaper.ImGui_Text(ctx, "Rate Min:")
         reaper.ImGui_PushItemWidth(ctx, 200)
         reaper.ImGui_SameLine(ctx, 150)
@@ -17573,37 +17770,52 @@ function loop()
         reaper.ImGui_Text(ctx, "This action will restore all settings to their default values.")
         -- reaper.ImGui_Separator(ctx)
         if reaper.ImGui_Button(ctx, "Reset To Defaults##Settings_reset", 120, 32) then
-          -- 恢复各项设置为默认值
-          collect_mode         = DEFAULTS.collect_mode
-          doubleclick_action   = DEFAULTS.doubleclick_action
-          auto_play_selected   = DEFAULTS.auto_play_selected
-          preserve_pitch       = DEFAULTS.preserve_pitch
-          bg_alpha             = DEFAULTS.bg_alpha
-          peak_chans           = DEFAULTS.peak_chans
-          font_size            = DEFAULTS.font_size
-          max_db               = DEFAULTS.max_db
-          pitch_knob_min       = DEFAULTS.pitch_knob_min
-          pitch_knob_max       = DEFAULTS.pitch_knob_max
-          rate_min             = DEFAULTS.rate_min
-          rate_max             = DEFAULTS.rate_max
-          cache_dir            = DEFAULTS.cache_dir
-          auto_scroll_enabled  = DEFAULTS.auto_scroll_enabled
-          max_recent_files     = DEFAULTS.max_recent_files
-          max_recent_search    = DEFAULTS.max_recent_search
-          row_height           = DEFAULTS.row_height
-          build_waveform_cache = DEFAULTS.build_waveform_cache
-          search_enter_mode    = DEFAULTS.search_enter_mode
+          -- 重置默认值
+          collect_mode         = -1
+          doubleclick_action   = DOUBLECLICK_NONE
+          row_height           = DEFAULT_ROW_HEIGHT
+          auto_play_selected   = true
+          preserve_pitch       = true
+          bg_alpha             = 1.0
+          peak_chans           = 6
+          font_size            = 14
+          max_db               = 12
+          auto_scroll_enabled  = false
+          search_enter_mode    = true
+          build_waveform_cache = false
 
-          reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
-          reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
-          reaper.SetExtState(EXT_SECTION, "cache_dir", tostring(cache_dir), true)
-          reaper.SetExtState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
-          reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
-          reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
-          reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
-          reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
-          reaper.SetExtState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
+          -- 播放控制范围
+          pitch_knob_min       = -6
+          pitch_knob_max       = 6
+          rate_min             = 0.25
+          rate_max             = 4
 
+          -- 缓存
+          cache_dir            = DEFAULT_CACHE_DIR
+          fs_cache_dir         = DEFAULT_FS_CACHE_DIR
+          max_recent_files     = 20
+          max_recent_search    = 20
+
+          -- 视觉
+          spectral_hue_shift    = 0
+          spectral_grad_sat     = 1
+          show_tooltips         = false -- 默认提示开关
+          waveform_hint_enabled = false -- 波形预览鼠标提示开关
+
+          -- 镜像与侧边栏
+          mirror_folder_shortcuts = false
+          mirror_database         = false
+          show_peektree_recent    = false -- 播放历史
+          current_sidebar_tab     = "PeekTree"
+
+          -- 播放行为与同步
+          pitch_semitone_step     = false           -- 重置半音步进为关闭
+          tempo_sync_enabled      = false           -- 重置速度同步为关闭
+          link_with_reaper        = false           -- 重置与 REAPER 主速率链接为关闭
+          wait_nextbar_play       = false           -- 重置等待小节末尾播放为关闭
+          keep_preview_rate_pitch_on_insert = false -- 重置插入时保持预览速率和音高为关闭
+
+          SaveSettings() -- 保存设置
           MarkFontDirty()
           CollectFiles()
         end
@@ -17774,6 +17986,7 @@ function loop()
     -- reaper.ImGui_PopStyleVar(ctx)
     if rv5 then
       peak_chans = math.max(2, math.min(128, new_peaks or 2))
+      reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
     end
 
     -- 插入选区音频到REAPER
@@ -18286,8 +18499,11 @@ function loop()
     -- 专辑图片显示
     if reaper.ImGui_BeginChild(ctx, "cover_art", left_img_w, img_h) then
       local audio_path = img_info and img_info.path
-      -- 计算封面临时文件路径（优先内嵌元数据，再同目录查找）
-      local cover_path = audio_path and GetCoverImagePath(audio_path)
+      local cover_path = nil
+      if audio_path and not bad_cover_cache[audio_path] then
+        -- 计算封面临时文件路径
+        cover_path = GetCoverImagePath(audio_path)
+      end
       if cover_path then
         -- 水平/垂直居中
         local img_w, img_h = 130, 130
@@ -18303,27 +18519,74 @@ function loop()
         end
 
         -- 缓存并创建纹理
-        if last_cover_path ~= cover_path or last_img_w ~= img_w then
-          last_cover_img  = reaper.ImGui_CreateImage(cover_path)
+        if last_cover_path ~= cover_path then
+          -- 销毁旧图
+          if last_cover_img and reaper.ImGui_DestroyImage then
+            reaper.ImGui_DestroyImage(last_cover_img)
+          end
+          last_cover_img = nil
+          -- 检查文件头，只有通过了二进制检查的文件才允许调用 CreateImage
+          if IsValidImageFile(cover_path) then
+            local ok, retval = pcall(reaper.ImGui_CreateImage, cover_path)
+            if ok and retval then
+              last_cover_img = retval
+            else
+              -- 通过了头检查但依然加载失败，可能是数据截断
+              if audio_path then bad_cover_cache[audio_path] = true end
+            end
+          else
+            -- 文件头验证失败直接拉黑避免崩溃
+            if audio_path then bad_cover_cache[audio_path] = true end
+          end
+
           last_cover_path = cover_path
-          last_img_w = img_w
         end
 
+        -- 绘制图片切换文件夹路径
         if last_cover_img then
+          -- 绘制图片
           reaper.ImGui_Image(ctx, last_cover_img, img_w, img_h)
+
+          -- 检测鼠标悬停
+          if reaper.ImGui_IsItemHovered(ctx) then
+            reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+            local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+            local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+            local border_col = colors.gray or 0xFFFFFF66
+            -- 在图片上方画一个矩形框
+            local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+            reaper.ImGui_DrawList_AddRect(draw_list, min_x, min_y, max_x, max_y, border_col, 0, 0, 3)
+          end
+
+          -- 检测点击事件
+          if reaper.ImGui_IsItemClicked(ctx) and audio_path then
+            local parent_dir = normalize_path(audio_path, false):match("^(.*)[/\\]")
+
+            if parent_dir then
+              local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+              if in_db_mode then
+                DBPF_ApplyPathFilter(parent_dir)
+              else
+                collect_mode = COLLECT_MODE_SAMEFOLDER -- 切换 SameFolder 模式
+                tree_state.cur_path = normalize_path(parent_dir, true)
+                RefreshFolderFiles(parent_dir)
+
+                reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
+                reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+              end
+            end
+          end
         end
       else
         -- 无封面时重置
         last_cover_img  = nil
         last_cover_path = nil
-        last_img_w      = nil
       end
       reaper.ImGui_EndChild(ctx)
     else
       -- 无封面时重置
       last_cover_img  = nil
       last_cover_path = nil
-      last_img_w      = nil
     end
     reaper.ImGui_SameLine(ctx, nil, gap)
 
