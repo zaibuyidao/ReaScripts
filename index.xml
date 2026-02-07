@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="f447f5dccefb99e938bcb3621172995d3ba9e904">
+<index version="1" name="zaibuyidao Scripts" commit="b74b00ac88839c78c9e2793df7653b18f4458b34">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -16155,6 +16155,37 @@ Support reaper_soundmole-x64.dll v0.0.11]]></changelog>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/f447f5dccefb99e938bcb3621172995d3ba9e904/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/f447f5dccefb99e938bcb3621172995d3ba9e904/Various/Soundmole/data/icons-regular.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/f447f5dccefb99e938bcb3621172995d3ba9e904/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.159" author="zaibuyidao" time="2026-02-07T12:46:39Z">
+        <changelog><![CDATA[Added ability to jump to the same folder or filter in Database mode by clicking the album art.
+Added ability to remember the selected sidebar tab state upon exit.
+Fixed an issue where recent searches could not be saved to Saved Searches.
+Fixed "Reset to Defaults" not restoring all settings.
+Fixed image loading issues and stability, added support for WAV embedded ID3 artwork.
+Fixed an issue where peak meter channel settings were not saving correctly.
+Enabled the "Search on Enter" option by default.
+Support reaper_soundmole-x64.dll v0.0.11]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/zaibuyidao_Soundmole%20-%20Add%20Selected%20Files%20to%20Target%20Database.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/locales.lua">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/locales.lua</source>
+        <source file="Soundmole/lib/translation.lua">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/translation.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/lib/translator.py">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/translator.py</source>
+        <source file="Soundmole/lib/cursor_253.cur">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/cursor_253.cur</source>
+        <source file="Soundmole/lib/cursor_258.cur">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/cursor_258.cur</source>
+        <source file="Soundmole/lib/cursor_263.cur">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/cursor_263.cur</source>
+        <source file="Soundmole/lib/cursor_270.cur">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/cursor_270.cur</source>
+        <source file="Soundmole/lib/cursor_271.cur">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/cursor_271.cur</source>
+        <source file="Soundmole/lib/cursor_279.cur">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/cursor_279.cur</source>
+        <source file="Soundmole/lib/cursor_311.cur">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lib/cursor_311.cur</source>
+        <source file="Soundmole/lang/en-US.txt">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lang/en-US.txt</source>
+        <source file="Soundmole/lang/zh-CN.txt">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/lang/zh-CN.txt</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/data/icons-regular.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/b74b00ac88839c78c9e2793df7653b18f4458b34/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
