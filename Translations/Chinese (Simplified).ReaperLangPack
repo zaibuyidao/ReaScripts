@@ -1,10 +1,10 @@
 #NAME:Chinese Simplified (简体中文)
-;Version: 7.60
+;Version: 7.61
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49376/Chinese%20%28Simplified%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.60, SWS: 2.14.0.7
+;  Brand new REAPER: 7.61, SWS: 2.14.0.7
 
 [common]
 DCEF2B4D03DE723C=名称
@@ -13813,6 +13813,8 @@ ED1532758085E357=鼠标下方的轨道
 35F00B6FDBA01CF8=编辑光标或播放光标 (默认)
 C94DCA651A8805D8=视图中心
 AC7DA40A71A28A0C=鼠标光标
+2F6D68C9936C8363=编辑光标或播放光标, 保持位置
+21CE27E6F4E52966=编辑光标, 保持位置
 385CF76CE687AD9C=锁定的对象中断波纹编辑
 36D2B335DF906511=锁定的对象中断单轨波纹编辑
 080E32BDDCA4B887=锁定的对象不受波纹编辑影响

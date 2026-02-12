@@ -1,10 +1,10 @@
 #NAME:Chinese Traditional (繁體中文)
-;Version: 7.60
+;Version: 7.61
 ;Author: zaibuyidao
 ;Link: https://www.soundengine.cn/t/topic/43
 ;Link: https://stash.reaper.fm/v/49375/Chinese%20%28Traditional%29.ReaperLangPack
 ;changelog:
-;  Brand new REAPER: 7.60, SWS: 2.14.0.7
+;  Brand new REAPER: 7.61, SWS: 2.14.0.7
 
 [common]
 DCEF2B4D03DE723C=名稱
@@ -13813,6 +13813,8 @@ ED1532758085E357=滑鼠下方的軌道
 35F00B6FDBA01CF8=編輯游標或播放游標 (默認預設)
 C94DCA651A8805D8=檢視中心
 AC7DA40A71A28A0C=滑鼠游標
+2F6D68C9936C8363=編輯游標或播放游標, 保持位置
+21CE27E6F4E52966=編輯游標, 保持位置
 385CF76CE687AD9C=鎖定的對象中斷波紋編輯
 36D2B335DF906511=鎖定的對象中斷單軌波紋編輯
 080E32BDDCA4B887=鎖定的對象不受波紋編輯影響
