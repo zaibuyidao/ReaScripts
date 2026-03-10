@@ -1,11 +1,13 @@
 -- @description Toggle VSTi Floating for Selected Tracks
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
+-- @provides
+--  [main=main,midi_editor] .
 -- @donate http://www.paypal.me/zaibuyidao
 -- @about Requires JS_ReaScriptAPI & SWS Extension
 
