@@ -2548,6 +2548,163 @@ function GetPhysicalPath(path_or_source)
   end
 end
 
+--------------------------------------------- 从波形预览中拖动音频选区至REAPER时的区段插入行为 ---------------------------------------------
+
+function GetDragPreviewTimelineLength(start_time, end_time)
+  local item_len = math.abs((tonumber(end_time) or 0) - (tonumber(start_time) or 0))
+  if item_len <= 0 then return 0 end
+
+  if keep_preview_rate_pitch_on_insert then
+    local rate = tonumber(effective_rate_knob) or 1.0
+    if math.abs(rate) > 1e-9 then
+      item_len = item_len / rate
+    end
+  end
+
+  return item_len
+end
+
+function GetArrangeViewNativeRect()
+  if not reaper.JS_Window_FindChildByID then return end
+  local main_hwnd = reaper.GetMainHwnd()
+  local arrange_hwnd = reaper.JS_Window_FindChildByID(main_hwnd, 1000)
+  if not arrange_hwnd then return end
+
+  local ok, left, top, right, bottom = reaper.JS_Window_GetRect(arrange_hwnd)
+  if not ok then return end
+  if not left or not top or not right or not bottom then return end
+  if right <= left or bottom <= top then return end
+  return left, top, right, bottom
+end
+
+function TimeToArrangeNativeX(t)
+  local left, top, right, bottom = GetArrangeViewNativeRect()
+  if not left then return end
+
+  local view_start, view_end = reaper.GetSet_ArrangeView2(0, false, left, right, 0, 0)
+  if not view_start or not view_end or view_end <= view_start then return end
+
+  local frac = (t - view_start) / (view_end - view_start)
+  local native_x = left + frac * (right - left)
+  return math.floor(native_x + 0.5), top, bottom, left, right
+end
+
+function DrawArrangeGuideLine(ctx, native_x, top_y, bottom_y, id)
+  if not native_x or not top_y or not bottom_y then return end
+
+  local final_x, final_top = reaper.ImGui_PointConvertNative(ctx, native_x, top_y, true)
+  local _, final_bottom = reaper.ImGui_PointConvertNative(ctx, native_x, bottom_y, true)
+  local final_height = math.max(1, final_bottom - final_top)
+
+  reaper.ImGui_SetNextWindowPos(ctx, final_x, final_top)
+  reaper.ImGui_SetNextWindowSize(ctx, 1, final_height)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowMinSize(), 1, 1)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowBorderSize(), 0)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(), colors.dnd_preview)
+
+  local flags = reaper.ImGui_WindowFlags_NoDecoration() | reaper.ImGui_WindowFlags_NoInputs() | reaper.ImGui_WindowFlags_NoFocusOnAppearing() | reaper.ImGui_WindowFlags_NoNav()
+  if reaper.ImGui_Begin(ctx, id, false, flags) then
+    reaper.ImGui_End(ctx)
+  end
+
+  reaper.ImGui_PopStyleColor(ctx)
+  reaper.ImGui_PopStyleVar(ctx, 3)
+end
+
+function GetArrangeTrackNativeRect(track)
+  local left, arrange_top, right, arrange_bottom = GetArrangeViewNativeRect()
+  if not left then return end
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+
+  local track_top = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPSCREENY"))
+  if not track_top then
+    local rel_y = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPY"))
+    if rel_y then track_top = arrange_top + rel_y end
+  end
+
+  local track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_WNDH"))
+  if not track_h or track_h <= 0 then
+    track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPH")) or 0
+  end
+
+  if not track_top or track_h <= 0 then return end
+
+  local track_bottom = track_top + track_h
+  if track_bottom <= arrange_top or track_top >= arrange_bottom then return end
+
+  if track_top < arrange_top then track_top = arrange_top end
+  if track_bottom > arrange_bottom then track_bottom = arrange_bottom end
+  if track_bottom <= track_top then return end
+
+  return left, track_top, right, track_bottom
+end
+
+function DrawArrangeGuideBlock(ctx, native_left, native_right, top_y, bottom_y, id, col)
+  if not native_left or not native_right or not top_y or not bottom_y then return end
+  if native_right < native_left then native_left, native_right = native_right, native_left end
+
+  local final_left, final_top = reaper.ImGui_PointConvertNative(ctx, native_left, top_y, true)
+  local final_right, final_bottom = reaper.ImGui_PointConvertNative(ctx, native_right, bottom_y, true)
+  local final_width = math.max(1, final_right - final_left)
+  local final_height = math.max(1, final_bottom - final_top)
+
+  reaper.ImGui_SetNextWindowPos(ctx, final_left, final_top)
+  reaper.ImGui_SetNextWindowSize(ctx, final_width, final_height)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowMinSize(), 1, 1)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowBorderSize(), 0)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(), col)
+
+  local flags = reaper.ImGui_WindowFlags_NoDecoration() | reaper.ImGui_WindowFlags_NoInputs() | reaper.ImGui_WindowFlags_NoFocusOnAppearing() | reaper.ImGui_WindowFlags_NoNav()
+  if reaper.ImGui_Begin(ctx, id, false, flags) then
+    reaper.ImGui_End(ctx)
+  end
+
+  reaper.ImGui_PopStyleColor(ctx)
+  reaper.ImGui_PopStyleVar(ctx, 3)
+end
+
+function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track)
+  insert_time = tonumber(insert_time)
+  item_len = tonumber(item_len) or 0
+  if not insert_time then return false end
+
+  local start_x, top_y, bottom_y, left, right = TimeToArrangeNativeX(insert_time)
+  if not start_x then return false end
+
+  local drew = false
+
+  if item_len > 0 then
+    local end_x = TimeToArrangeNativeX(insert_time + item_len)
+    local block_left, block_top, block_right, block_bottom = GetArrangeTrackNativeRect(track)
+    if end_x and block_top then
+      local rect_left = math.max(left, math.min(start_x, end_x))
+      local rect_right = math.min(right, math.max(start_x, end_x))
+      if rect_right > rect_left then
+        local block_col = ((colors.gray or 0x909090FF) & 0xFFFFFF00) | 0x44
+        DrawArrangeGuideBlock(ctx, rect_left, rect_right, block_top, block_bottom, "##" .. id_prefix .. "_block", block_col)
+        drew = true
+      end
+    end
+  end
+
+  if start_x >= left and start_x <= right then
+    DrawArrangeGuideLine(ctx, start_x, top_y, bottom_y, "##" .. id_prefix .. "_start")
+    drew = true
+  end
+
+  if item_len > 0 then
+    local end_x = TimeToArrangeNativeX(insert_time + item_len)
+    if end_x and end_x >= left and end_x <= right and math.abs(end_x - start_x) >= 1 then
+      DrawArrangeGuideLine(ctx, end_x, top_y, bottom_y, "##" .. id_prefix .. "_end")
+      drew = true
+    end
+  end
+
+  return drew
+end
+
 function InsertMediaWithKeepParams(path)
   path = normalize_path(path, false)
   local before = {}
@@ -2600,7 +2757,39 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
   local before = {}
   for i = 0, reaper.CountMediaItems(0) - 1 do before[reaper.GetMediaItem(0, i)] = true end
   reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-  reaper.InsertMedia(path, 0)
+
+  -- 区段插入优先走 REAPER 原生 InsertMediaSection，尽量保持与媒体资源管理器一致的 SECTION 逻辑。
+  local sel_len = math.abs((tonumber(sel_end) or 0) - (tonumber(sel_start) or 0))
+  local src_offset = math.min(tonumber(sel_start) or 0, tonumber(sel_end) or 0)
+  if section_offset then src_offset = src_offset + section_offset end
+
+  local used_native_section = false
+  if path ~= "" and sel_len > 0 and reaper.APIExists("InsertMediaSection") then
+    local full_src = reaper.PCM_Source_CreateFromFile(path)
+    if full_src then
+      local full_len = reaper.GetMediaSourceLength(full_src)
+      full_len = tonumber(full_len) or 0
+      reaper.PCM_Source_Destroy(full_src)
+
+      if full_len > 0 then
+        local start_pos = math.max(0, math.min(src_offset, full_len))
+        local end_pos = math.max(start_pos, math.min(src_offset + sel_len, full_len))
+        local start_pct = start_pos / full_len
+        local end_pct = end_pos / full_len
+        local needs_section = (start_pos > 1e-9) or ((full_len - end_pos) > 1e-9)
+
+        if needs_section and end_pct > start_pct then
+          reaper.InsertMediaSection(path, 0, start_pct, end_pct, 0.0)
+          used_native_section = true
+        end
+      end
+    end
+  end
+
+  if not used_native_section then
+    reaper.InsertMedia(path, 0)
+  end
+
   local new_item = nil
   for i = 0, reaper.CountMediaItems(0) - 1 do
     local item = reaper.GetMediaItem(0, i)
@@ -2622,13 +2811,9 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
     return
   end
 
-  -- 偏移和长度
-  local sel_len = math.abs(sel_end - sel_start)
-  local src_offset = math.min(sel_start, sel_end)
-  if section_offset then src_offset = src_offset + section_offset end
-
-  reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
-  -- reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
+  if not used_native_section then
+    reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
+  end
 
   -- 按需应用预听速率与音高
   if keep_preview_rate_pitch_on_insert then
@@ -2642,10 +2827,12 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
     reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
   end
 
+  reaper.UpdateItemInProject(new_item)
   local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
+  local item_len = reaper.GetMediaItemInfo_Value(new_item, "D_LENGTH")
   -- 是否移动光标到结尾
   if move_cursor_to_end then
-    reaper.SetEditCurPos(pos + sel_len, false, false)
+    reaper.SetEditCurPos(pos + item_len, false, false)
   end
 
   -- 恢复交叉淡化
@@ -16235,49 +16422,10 @@ function loop()
         local mouse_pos_time = reaper.BR_GetMouseCursorContext_Position()
         -- 绘制参考线
         if mouse_pos_time > -1 then
-          local mouse_x_os, mouse_y_os = reaper.GetMousePosition() -- 获取鼠标在屏幕上的绝对位置
-          local zoom_lvl = reaper.GetHZoomLevel() -- 获取水平缩放比例
-          -- 计算吸附偏移
-          local snap_time = reaper.SnapToGrid(0, mouse_pos_time)
-          local time_diff = snap_time - mouse_pos_time
-          local pixel_offset = time_diff * zoom_lvl -- 计算线应该偏离鼠标多少像素
-          local target_x_native = mouse_x_os + pixel_offset
-          -- 线的上下边界，填满编排视图
-          local top_y, bottom_y = 0, 1000
-          if reaper.JS_Window_FindChildByID then
-            local main_hwnd = reaper.GetMainHwnd()
-            local arrange_hwnd = reaper.JS_Window_FindChildByID(main_hwnd, 1000)
-            if arrange_hwnd then
-              local _, _, top, _, bottom = reaper.JS_Window_GetRect(arrange_hwnd)
-              top_y, bottom_y = top, bottom
-            else
-              -- 如果没有找到编排窗口，就用屏幕高度
-              top_y = 0
-              bottom_y = select(2, reaper.GetMousePosition()) + 2000
-            end
-          end
-          -- 将原生坐标转为 ImGui 坐标
-          local final_x, final_top = reaper.ImGui_PointConvertNative(ctx, target_x_native, top_y, true)
-          local _, final_bottom = reaper.ImGui_PointConvertNative(ctx, target_x_native, bottom_y, true)
-          local final_height = final_bottom - final_top
-          -- 绘制一个1像素宽的窗口
-          reaper.ImGui_SetNextWindowPos(ctx, final_x, final_top)
-          reaper.ImGui_SetNextWindowSize(ctx, 1, final_height) -- 强制宽度 1
-          -- 打破 ImGui 默认窗口最小宽度限制
-          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowMinSize(), 1, 1)
-          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
-          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowBorderSize(), 0)
-          -- 设置颜色
-          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(), colors.dnd_preview)
-          local flags = reaper.ImGui_WindowFlags_NoDecoration() | reaper.ImGui_WindowFlags_NoInputs() | reaper.ImGui_WindowFlags_NoFocusOnAppearing() | reaper.ImGui_WindowFlags_NoNav()
-
-          -- 创建这个微型窗口作为参考线
-          if reaper.ImGui_Begin(ctx, "##guide_line_1px", false, flags) then
-            reaper.ImGui_End(ctx)
-          end
-
-          reaper.ImGui_PopStyleColor(ctx)
-          reaper.ImGui_PopStyleVar(ctx, 3)
+          local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
+          local item_len = GetDragPreviewTimelineLength(dragging_audio.start_time, dragging_audio.end_time)
+          local hover_track = reaper.BR_GetMouseCursorContext_Track()
+          DrawArrangeInsertGuides(ctx, "guide_line_drag_audio", insert_time, item_len, hover_track)
 
           -- 鼠标图标
           if reaper.JS_Mouse_LoadCursor then
@@ -19218,47 +19366,10 @@ function loop()
           local mouse_pos_time = reaper.BR_GetMouseCursorContext_Position()
 
           if mouse_pos_time > -1 then
-            local mouse_x_os, mouse_y_os = reaper.GetMousePosition() -- 获取鼠标在屏幕上的绝对位置
-            local zoom_lvl = reaper.GetHZoomLevel() -- 获取水平缩放比例
-            -- 计算吸附偏移
-            local snap_time = reaper.SnapToGrid(0, mouse_pos_time)
-            local time_diff = snap_time - mouse_pos_time
-            local pixel_offset = time_diff * zoom_lvl -- 计算线应该偏离鼠标多少像素
-            local target_x_native = mouse_x_os + pixel_offset
-            -- 线的上下边界，填满编排视图
-            local top_y, bottom_y = 0, 1000
-            if reaper.JS_Window_FindChildByID then
-              local main_hwnd = reaper.GetMainHwnd()
-              local arrange_hwnd = reaper.JS_Window_FindChildByID(main_hwnd, 1000)
-              if arrange_hwnd then
-                local _, _, top, _, bottom = reaper.JS_Window_GetRect(arrange_hwnd)
-                top_y, bottom_y = top, bottom
-              else
-                top_y = 0
-                bottom_y = select(2, reaper.GetMousePosition()) + 2000
-              end
-            end
-
-            -- 将原生坐标转为 ImGui 坐标
-            local final_x, final_top = reaper.ImGui_PointConvertNative(ctx, target_x_native, top_y, true)
-            local _, final_bottom = reaper.ImGui_PointConvertNative(ctx, target_x_native, bottom_y, true)
-            local final_height = final_bottom - final_top
-            -- 绘制一个1像素宽的窗口
-            reaper.ImGui_SetNextWindowPos(ctx, final_x, final_top)
-            reaper.ImGui_SetNextWindowSize(ctx, 1, final_height) -- 强制宽度 1
-
-            reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowMinSize(), 1, 1)
-            reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
-            reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowBorderSize(), 0)
-            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(), colors.dnd_preview)
-            local flags = reaper.ImGui_WindowFlags_NoDecoration() | reaper.ImGui_WindowFlags_NoInputs() | reaper.ImGui_WindowFlags_NoFocusOnAppearing() | reaper.ImGui_WindowFlags_NoNav()
-
-            if reaper.ImGui_Begin(ctx, "##guide_line_selection_1px", false, flags) then
-              reaper.ImGui_End(ctx)
-            end
-
-            reaper.ImGui_PopStyleColor(ctx)
-            reaper.ImGui_PopStyleVar(ctx, 3)
+            local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
+            local item_len = GetDragPreviewTimelineLength(dragging_selection.start_time, dragging_selection.end_time)
+            local hover_track = reaper.BR_GetMouseCursorContext_Track()
+            DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track)
 
             -- 鼠标图标
             if reaper.JS_Mouse_LoadCursor then

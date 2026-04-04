@@ -1,14 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.159
+-- @version 1.0.160
 -- @changelog
---   Added ability to jump to the same folder or filter in Database mode by clicking the album art.
---   Added ability to remember the selected sidebar tab state upon exit.
---   Fixed an issue where recent searches could not be saved to Saved Searches.
---   Fixed "Reset to Defaults" not restoring all settings.
---   Fixed image loading issues and stability, added support for WAV embedded ID3 artwork.
---   Fixed an issue where peak meter channel settings were not saving correctly.
---   Enabled the "Search on Enter" option by default.
+--   Added dynamic section start and end guide lines and reference blocks that follow track changes
+--   Fixed an issue where inserting sections by dragging waveform selections into REAPER behaved incorrectly
+--   Fixed an offset issue of section guide lines when dragging into REAPER under high DPI scaling
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
