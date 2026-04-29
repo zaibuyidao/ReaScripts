@@ -88,6 +88,10 @@ local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local config_flags = reaper.ImGui_GetConfigVar(ctx, reaper.ImGui_ConfigVar_Flags())
 config_flags = config_flags & (~reaper.ImGui_ConfigFlags_NavEnableKeyboard())
 reaper.ImGui_SetConfigVar(ctx, reaper.ImGui_ConfigVar_Flags(), config_flags)
+if reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly then
+  -- 修复窗口拖动行为（仅限标题栏）
+  reaper.ImGui_SetConfigVar(ctx, reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly(), 1)
+end
 
 local set_font = 'sans-serif' -- options: Arial, sans-serif, Calibri, Segoe UI, Microsoft YaHei, SimSun, STSong, STFangsong, ...
 local fonts = {
