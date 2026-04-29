@@ -2665,19 +2665,185 @@ function DrawArrangeGuideBlock(ctx, native_left, native_right, top_y, bottom_y, 
   reaper.ImGui_PopStyleVar(ctx, 3)
 end
 
-function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track)
+function DecodeTrackLaneFromInfo(info)
+  info = math.floor(tonumber(info) or 0)
+  return math.floor(info / 256) % 256
+end
+
+function GetTrackFixedLaneLayoutInfo(track)
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+  local freemode = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE")) or 0
+  if freemode ~= 2 then return end
+
+  local lane_count = math.floor(tonumber(reaper.GetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES")) or 0)
+  if lane_count <= 0 then return end
+
+  local left, track_top, right, track_bottom = GetArrangeTrackNativeRect(track)
+  if not left then return end
+  if track_bottom <= track_top then return end
+
+  return left, track_top, right, track_bottom, lane_count
+end
+
+function ProbeExistingFixedLaneRects(track)
+  local left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
+  if not left or not reaper.GetTrackFromPoint then return end
+
+  local probe_x = math.floor((left + right) * 0.5)
+  local rects = {}
+  for lane = 0, lane_count - 1 do
+    local lane_top, lane_bottom = nil, nil
+    for y = math.floor(track_top), math.max(math.floor(track_top), math.floor(track_bottom) - 1) do
+      local hit_track, info = reaper.GetTrackFromPoint(probe_x, y)
+      if hit_track == track and DecodeTrackLaneFromInfo(info) == lane then
+        if not lane_top then lane_top = y end
+        lane_bottom = y + 1
+      elseif lane_top then
+        break
+      end
+    end
+    if lane_top and lane_bottom and lane_bottom > lane_top then
+      rects[lane] = { left, lane_top, right, lane_bottom }
+    end
+  end
+
+  return rects, left, track_top, right, track_bottom, lane_count
+end
+
+function BuildFixedLaneRects(track)
+  local raw_rects, left, track_top, right, track_bottom, lane_count = ProbeExistingFixedLaneRects(track)
+  if not left then return end
+
+  local total_h = track_bottom - track_top
+  if total_h <= 0 then return end
+
+  local function median(nums)
+    if not nums or #nums == 0 then return nil end
+    local t = {}
+    for i = 1, #nums do t[i] = nums[i] end
+    table.sort(t)
+    local n = #t
+    if n % 2 == 1 then return t[(n + 1) // 2] end
+    return (t[n // 2] + t[n // 2 + 1]) * 0.5
+  end
+
+  if raw_rects then
+    local rects = {}
+    for lane = 0, lane_count - 1 do
+      local rect = raw_rects[lane]
+      if rect then
+        rects[lane] = { rect[1], rect[2], rect[3], rect[4] }
+      end
+    end
+
+    local prev_heights = {}
+    for lane = 0, lane_count - 2 do
+      local rect = rects[lane]
+      if rect and rect[4] > rect[2] then
+        table.insert(prev_heights, rect[4] - rect[2])
+      end
+    end
+
+    local ref_lane_h = median(prev_heights)
+    local last_rect = rects[lane_count - 1]
+    if ref_lane_h and last_rect and ref_lane_h > 0 then
+      local gutter_top = math.floor(last_rect[2] + ref_lane_h + 0.5)
+      if gutter_top > track_bottom then gutter_top = track_bottom end
+      if gutter_top > last_rect[2] and gutter_top < track_bottom then
+        last_rect[4] = gutter_top
+        rects[lane_count] = { left, gutter_top, right, track_bottom }
+        return rects, left, track_top, right, track_bottom, lane_count
+      end
+    end
+  end
+
+  local samples = {}
+  for lane = 0, lane_count - 2 do
+    local rect = raw_rects and raw_rects[lane]
+    if rect then
+      local h = rect[4] - rect[2]
+      if h > 0 then table.insert(samples, h) end
+    end
+  end
+  if #samples == 0 then
+    for lane = 0, lane_count - 1 do
+      local rect = raw_rects and raw_rects[lane]
+      if rect then
+        local h = rect[4] - rect[2]
+        if h > 0 then table.insert(samples, h) end
+      end
+    end
+  end
+  if #samples == 0 then return end
+
+  local sum = 0
+  for _, h in ipairs(samples) do sum = sum + h end
+  local lane_h = math.max(1, math.floor((sum / #samples) + 0.5))
+  local gutter_top = math.floor(track_top + lane_h * lane_count + 0.5)
+  if gutter_top > track_bottom then gutter_top = track_bottom end
+
+  local rects = {}
+  for lane = 0, lane_count - 1 do
+    local top = math.floor(track_top + lane * lane_h + 0.5)
+    local bottom = (lane == lane_count - 1)
+      and gutter_top
+      or math.floor(track_top + (lane + 1) * lane_h + 0.5)
+    if bottom <= top then bottom = top + 1 end
+    if bottom > track_bottom then bottom = track_bottom end
+    rects[lane] = { left, top, right, bottom }
+  end
+
+  if gutter_top < track_bottom then
+    rects[lane_count] = { left, gutter_top, right, track_bottom }
+  end
+
+  return rects, left, track_top, right, track_bottom, lane_count
+end
+
+function GetArrangeTrackNewLaneNativeRect(track)
+  local rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(track)
+  if not left then return end
+
+  local rect = rects and rects[lane_count]
+  if rect then return rect[1], rect[2], rect[3], rect[4] end
+end
+
+function GetArrangeTrackLaneNativeRect(track, lane)
+  local left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
+  if not left then
+    local full_left, full_top, full_right, full_bottom = GetArrangeTrackNativeRect(track)
+    if lane == nil then return full_left, full_top, full_right, full_bottom end
+    return
+  end
+  if lane == nil then return left, track_top, right, track_bottom end
+
+  lane = math.floor(tonumber(lane) or -1)
+  if lane < 0 then return end
+  if lane == lane_count then
+    return GetArrangeTrackNewLaneNativeRect(track)
+  end
+  if lane > lane_count then return end
+
+  local rects = BuildFixedLaneRects(track)
+  local rect = rects and rects[lane]
+  if rect then
+    return rect[1], rect[2], rect[3], rect[4]
+  end
+end
+
+function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track, target_lane)
   insert_time = tonumber(insert_time)
   item_len = tonumber(item_len) or 0
   if not insert_time then return false end
 
-  local start_x, top_y, bottom_y, left, right = TimeToArrangeNativeX(insert_time)
+  local start_x, arrange_top, arrange_bottom, left, right = TimeToArrangeNativeX(insert_time)
   if not start_x then return false end
 
+  local block_left, block_top, block_right, block_bottom = GetArrangeTrackLaneNativeRect(track, target_lane)
   local drew = false
 
   if item_len > 0 then
     local end_x = TimeToArrangeNativeX(insert_time + item_len)
-    local block_left, block_top, block_right, block_bottom = GetArrangeTrackNativeRect(track)
     if end_x and block_top then
       local rect_left = math.max(left, math.min(start_x, end_x))
       local rect_right = math.min(right, math.max(start_x, end_x))
@@ -2690,14 +2856,14 @@ function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track)
   end
 
   if start_x >= left and start_x <= right then
-    DrawArrangeGuideLine(ctx, start_x, top_y, bottom_y, "##" .. id_prefix .. "_start")
+    DrawArrangeGuideLine(ctx, start_x, arrange_top, arrange_bottom, "##" .. id_prefix .. "_start")
     drew = true
   end
 
   if item_len > 0 then
     local end_x = TimeToArrangeNativeX(insert_time + item_len)
     if end_x and end_x >= left and end_x <= right and math.abs(end_x - start_x) >= 1 then
-      DrawArrangeGuideLine(ctx, end_x, top_y, bottom_y, "##" .. id_prefix .. "_end")
+      DrawArrangeGuideLine(ctx, end_x, arrange_top, arrange_bottom, "##" .. id_prefix .. "_end")
       drew = true
     end
   end
@@ -2705,7 +2871,65 @@ function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track)
   return drew
 end
 
-function InsertMediaWithKeepParams(path)
+function GetArrangeTargetTrackLaneAtMouse()
+  if not reaper.GetTrackFromPoint or not reaper.GetMousePosition then return end
+
+  local mouse_x, mouse_y = reaper.GetMousePosition()
+  if not mouse_x or not mouse_y then return end
+
+  local track, info = reaper.GetTrackFromPoint(mouse_x, mouse_y)
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+
+  local lane = nil
+  local is_valid_target = true
+  local freemode = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE")) or 0
+  if freemode == 2 then
+    local rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(track)
+    if left and mouse_y >= track_top and mouse_y < track_bottom then
+      for idx = 0, lane_count do
+        local rect = rects and rects[idx]
+        if rect and mouse_y >= rect[2] and mouse_y < rect[4] then
+          lane = idx
+          break
+        end
+      end
+    end
+
+    is_valid_target = lane ~= nil
+  end
+
+  return track, lane, is_valid_target
+end
+
+function ApplyInsertedItemToTargetLane(item, target_lane)
+  if target_lane == nil then return end
+  if not item or not reaper.ValidatePtr(item, "MediaItem*") then return end
+
+  local track = reaper.GetMediaItem_Track(item)
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+
+  local freemode = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE")) or 0
+  if freemode ~= 2 then return end
+
+  local lane_count = math.floor(tonumber(reaper.GetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES")) or 0)
+  if lane_count <= 0 then return end
+
+  target_lane = math.floor(tonumber(target_lane) or 0)
+  if target_lane < 0 then target_lane = 0 end
+  if target_lane >= lane_count then
+    reaper.SetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES", target_lane + 1)
+    if reaper.UpdateTimeline then reaper.UpdateTimeline() end
+    if reaper.TrackList_AdjustWindows then reaper.TrackList_AdjustWindows(false) end
+    reaper.UpdateArrange()
+    lane_count = math.floor(tonumber(reaper.GetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES")) or lane_count)
+  end
+  if target_lane >= lane_count then target_lane = lane_count - 1 end
+
+  reaper.SetMediaItemInfo_Value(item, "I_FIXEDLANE", target_lane)
+  reaper.UpdateItemInProject(item)
+end
+
+function InsertMediaWithKeepParams(path, target_lane)
   path = normalize_path(path, false)
   local before = {}
   for i = 0, reaper.CountMediaItems(0) - 1 do
@@ -2720,6 +2944,8 @@ function InsertMediaWithKeepParams(path)
     if not before[item] then new_item = item break end
   end
   if not new_item then return end
+
+  ApplyInsertedItemToTargetLane(new_item, target_lane)
 
   local take = reaper.GetActiveTake(new_item)
   if take and keep_preview_rate_pitch_on_insert then
@@ -2740,7 +2966,7 @@ function InsertMediaWithKeepParams(path)
   return new_item
 end
 
-function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end)
+function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end, target_lane)
   path = normalize_path(path, false)
   -- 保存Arrange视图状态 - 避免滚屏
   reaper.PreventUIRefresh(1) -- 防止UI刷新
@@ -2810,6 +3036,8 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
     reaper.PreventUIRefresh(-1)
     return
   end
+
+  ApplyInsertedItemToTargetLane(new_item, target_lane)
 
   if not used_native_section then
     reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", src_offset)
@@ -8552,10 +8780,15 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       if reaper.ImGui_BeginDragDropSource(ctx) then
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
         reaper.ImGui_Text(ctx, "Drag to insert or collect")
+        local drag_preview_end_time = tonumber(info and info.section_length) or 0
+        if drag_preview_end_time <= 0 then
+          drag_preview_end_time = tonumber(info and info.length) or 0
+        end
         dragging_audio = {
           path = info and info.path,
           start_time = 0,
           end_time = info and info.section_length or 0,
+          preview_end_time = drag_preview_end_time,
           section_offset = info and info.section_offset or 0
         }
         -- 收集范围内所有路径
@@ -16420,12 +16653,13 @@ function loop()
       if dragging_audio then
         local window, segment, details = reaper.BR_GetMouseCursorContext()
         local mouse_pos_time = reaper.BR_GetMouseCursorContext_Position()
+        local hover_track, hover_lane, hover_valid = GetArrangeTargetTrackLaneAtMouse()
         -- 绘制参考线
-        if mouse_pos_time > -1 then
+        if mouse_pos_time > -1 and (hover_valid ~= false) then
           local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
-          local item_len = GetDragPreviewTimelineLength(dragging_audio.start_time, dragging_audio.end_time)
-          local hover_track = reaper.BR_GetMouseCursorContext_Track()
-          DrawArrangeInsertGuides(ctx, "guide_line_drag_audio", insert_time, item_len, hover_track)
+          local item_len = GetDragPreviewTimelineLength(dragging_audio.start_time, dragging_audio.preview_end_time or dragging_audio.end_time)
+          hover_track = hover_track or reaper.BR_GetMouseCursorContext_Track()
+          DrawArrangeInsertGuides(ctx, "guide_line_drag_audio", insert_time, item_len, hover_track, hover_lane)
 
           -- 鼠标图标
           if reaper.JS_Mouse_LoadCursor then
@@ -16437,7 +16671,7 @@ function loop()
         end
 
         if not reaper.ImGui_IsMouseDown(ctx, 0) then -- 鼠标释放
-          if window == "arrange" then -- 只允许在arrange窗口松开时插入
+          if window == "arrange" and (hover_valid ~= false) then -- 只允许在arrange窗口松开时插入
             WithAutoCrossfadeDisabled(function()
               reaper.PreventUIRefresh(1) -- 防止UI刷新
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
@@ -16446,7 +16680,8 @@ function loop()
               if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
               insert_time = reaper.SnapToGrid(0, insert_time)
               reaper.SetEditCurPos(insert_time, false, false)
-              local tr = reaper.BR_GetMouseCursorContext_Track()
+              local tr, target_lane = hover_track, hover_lane
+              if not tr then tr = reaper.BR_GetMouseCursorContext_Track() end
               if tr then reaper.SetOnlyTrackSelected(tr) end
               reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
               -- 判断是全长源音频还是item区段
@@ -16457,15 +16692,12 @@ function loop()
                   dragging_audio.start_time,
                   dragging_audio.end_time,
                   dragging_audio.section_offset or 0,
-                  false
+                  false,
+                  target_lane
                 )
               else
                 -- 只插入全长源音频
-                if keep_preview_rate_pitch_on_insert then
-                  InsertMediaWithKeepParams(path)
-                else
-                  reaper.InsertMedia(path, 0)
-                end
+                InsertMediaWithKeepParams(path, target_lane)
               end
               reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
@@ -19364,12 +19596,13 @@ function loop()
         if dragging_selection then
           local window, segment, details = reaper.BR_GetMouseCursorContext()
           local mouse_pos_time = reaper.BR_GetMouseCursorContext_Position()
+          local hover_track, hover_lane, hover_valid = GetArrangeTargetTrackLaneAtMouse()
 
-          if mouse_pos_time > -1 then
+          if mouse_pos_time > -1 and (hover_valid ~= false) then
             local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
             local item_len = GetDragPreviewTimelineLength(dragging_selection.start_time, dragging_selection.end_time)
-            local hover_track = reaper.BR_GetMouseCursorContext_Track()
-            DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track)
+            hover_track = hover_track or reaper.BR_GetMouseCursorContext_Track()
+            DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track, hover_lane)
 
             -- 鼠标图标
             if reaper.JS_Mouse_LoadCursor then
@@ -19381,7 +19614,7 @@ function loop()
 
           -- 拖拽释放检测
           if not reaper.ImGui_IsMouseDown(ctx, 0) then
-            if window == "arrange" then
+            if window == "arrange" and (hover_valid ~= false) then
               reaper.PreventUIRefresh(1)
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
               local old_cursor = reaper.GetCursorPosition()
@@ -19390,13 +19623,14 @@ function loop()
               insert_time = reaper.SnapToGrid(0, insert_time)
               reaper.SetEditCurPos(insert_time, false, false)
 
-              local tr = reaper.BR_GetMouseCursorContext_Track()
+              local tr, target_lane = hover_track, hover_lane
+              if not tr then tr = reaper.BR_GetMouseCursorContext_Track() end
               if tr then reaper.SetOnlyTrackSelected(tr) end
               -- reaper.Main_OnCommand(40289, 0) -- Unselect all items
 
               path = GetPhysicalPath(cur_info and cur_info.path)
               path = normalize_path(path or "", false)
-              InsertSelectedAudioSection(path, dragging_selection.start_time, dragging_selection.end_time, dragging_selection.section_offset, false)
+              InsertSelectedAudioSection(path, dragging_selection.start_time, dragging_selection.end_time, dragging_selection.section_offset, false, target_lane)
               reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
               reaper.UpdateArrange()

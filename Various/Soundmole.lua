@@ -1,10 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.160
+-- @version 1.0.161
 -- @changelog
---   Added dynamic section start and end guide lines and reference blocks that follow track changes
---   Fixed an issue where inserting sections by dragging waveform selections into REAPER behaved incorrectly
---   Fixed an offset issue of section guide lines when dragging into REAPER under high DPI scaling
+--   Added support for inserting files into item lanes with visual feedback
+--   Optimized visual feedback when dragging audio files from the file list
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
