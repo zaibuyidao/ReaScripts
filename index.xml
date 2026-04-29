@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ba3813ee519493a37afa5a2d15872fddbcc35e6d">
+<index version="1" name="zaibuyidao Scripts" commit="af2cd414952079b159ae537e89479e1c225259ad">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9268,6 +9268,10 @@ Other detailed improvements and bug fixes.]]></changelog>
       <version name="1.0.3" author="zaibuyidao" time="2026-04-29T14:57:17Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/ba3813ee519493a37afa5a2d15872fddbcc35e6d/Utility/zaibuyidao_Translate%20Keywords%20and%20Send%20to%20Media%20Explorer%20Search.lua</source>
+      </version>
+      <version name="1.0.4" author="zaibuyidao" time="2026-04-29T15:04:13Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/af2cd414952079b159ae537e89479e1c225259ad/Utility/zaibuyidao_Translate%20Keywords%20and%20Send%20to%20Media%20Explorer%20Search.lua</source>
       </version>
     </reapack>
   </category>
