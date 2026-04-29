@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="26c0be3442e1b7885fd915026fc5bf8b9e80a620">
+<index version="1" name="zaibuyidao Scripts" commit="9b7a42d06b481512bd8cbfe7140dab90a38bd74b">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9234,6 +9234,28 @@ Other detailed improvements and bug fixes.]]></changelog>
       <version name="1.0" author="zaibuyidao" time="2024-09-24T03:06:07Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9e239ec49bfbdc22a1f05084ab198906510a311a/Utility/zaibuyidao_Track%20Follows%20Item-Razor%20Selection.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Translate and Search Keywords in Media Explorer.lua" type="script" desc="Translate and Search Keywords in Media Explorer">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab ReaImGui\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab js_ReaScriptAPI\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab Python\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab Python package: openai\sa180\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2026-04-29T08:26:03Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9b7a42d06b481512bd8cbfe7140dab90a38bd74b/Utility/zaibuyidao_Translate%20and%20Search%20Keywords%20in%20Media%20Explorer.lua</source>
       </version>
     </reapack>
   </category>
