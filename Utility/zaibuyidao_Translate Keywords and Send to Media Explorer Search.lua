@@ -1,5 +1,5 @@
 -- @description Translate Keywords and Send to Media Explorer Search
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -84,6 +84,7 @@ reaper.ImGui_Attach(ctx, font)
 
 local FRAME_ROUNDING = 6.0
 local WINDOW_ROUNDING = 8.0
+local TITLE_BG_COLOR = 0x121212FF
 
 local info = debug.getinfo(1, "S")
 local script_path = info.source:match([[^@?(.*[\/])[^\/]-$]]) or ""
@@ -857,6 +858,7 @@ end
 function draw_ui()
   reaper.ImGui_SetNextWindowSize(ctx, 530, 155, reaper.ImGui_Cond_FirstUseEver())
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), WINDOW_ROUNDING)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(), TITLE_BG_COLOR)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true, reaper.ImGui_WindowFlags_NoCollapse())
   reaper.ImGui_PopStyleVar(ctx)
 
@@ -996,6 +998,7 @@ function draw_ui()
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_End(ctx)
   end
+  reaper.ImGui_PopStyleColor(ctx)
 
   if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Escape()) then
     should_close = true
