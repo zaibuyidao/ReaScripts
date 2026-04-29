@@ -1,5 +1,5 @@
 -- @description Translate Keywords and Send to Media Explorer Search
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -525,7 +525,7 @@ build_python_worker = function()
     "API_KEY_B64 = " .. py_quote(base64_encode(get_api_key())),
     "BASE_URL = " .. py_quote(get_base_url()),
     "MODEL_NAME = " .. py_quote(get_model_name()),
-    "SYSTEM_PROMPT = " .. py_quote("You translate any user input into concise English for sound search, but the primary result should stay close to the literal core meaning of the original word or phrase. Return exactly two lines in this format:\nKEYWORDS: one primary english keyword or one short primary english phrase only\nSYNONYMS: synonym 1 | synonym 2 | synonym 3\nThe KEYWORDS line must contain only one primary result, not a list and not comma-separated alternatives. Do not append generic suffixes such as sound effect, sound effects, sound, audio, sfx, or fx unless they are part of the literal meaning. Both lines must contain English keywords only. Do not include Chinese, Japanese, Korean, Cyrillic, accented characters, emojis, or any non-English symbols. Use only English. Do not explain anything. Do not number items. Keep everything compact and search-friendly."),
+    "SYSTEM_PROMPT = " .. py_quote("You translate any user input into concise English for sound search, but the primary result should stay close to the literal core meaning of the original word or phrase. Return exactly two lines in this format:\nKEYWORDS: one primary english keyword or one short primary english phrase only\nSYNONYMS: synonym 1 | synonym 2 | synonym 3 | synonym 4 | synonym 5 | synonym 6 | synonym 7\nThe KEYWORDS line must contain only one primary result, not a list and not comma-separated alternatives. Do not append generic suffixes such as sound effect, sound effects, sound, audio, sfx, or fx unless they are part of the literal meaning. Both lines must contain English keywords only. Do not include Chinese, Japanese, Korean, Cyrillic, accented characters, emojis, or any non-English symbols. Use only English. Do not explain anything. Do not number items. Keep everything compact and search-friendly."),
     "",
     "def atomic_write(path, content):",
     "    tmp = path + '.tmp'",
