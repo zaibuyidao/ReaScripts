@@ -1,5 +1,5 @@
 -- @description Translate Keywords and Send to Media Explorer Search
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -82,6 +82,9 @@ end
 local font = reaper.ImGui_CreateFont("sans-serif", 14)
 reaper.ImGui_Attach(ctx, font)
 
+local FRAME_ROUNDING = 6.0
+local WINDOW_ROUNDING = 8.0
+
 local info = debug.getinfo(1, "S")
 local script_path = info.source:match([[^@?(.*[\/])[^\/]-$]]) or ""
 local is_windows = reaper.GetOS():find("Win") ~= nil
@@ -141,6 +144,7 @@ end
 local function sanitize_search_text(text)
   text = tostring(text or "")
   text = text:gsub("[%z\1-\31\127]", "")
+  text = text:gsub("\194[\128-\159]", "")
   return trim(text)
 end
 
@@ -766,9 +770,21 @@ local translated_synonyms = split_lines(reaper.GetExtState(EXT_SECTION, "last_sy
 local last_translation_source = ""
 local status_text = UI_TEXT.dependency_hint
 local should_close = false
+local pending_send_current_after_shortcut = false
+local input_clear_serial = 0
 
 local function store_input_text()
   reaper.SetExtState(EXT_SECTION, "last_input", input_text or "", true)
+end
+
+local function is_alt_down()
+  if reaper.ImGui_Key_LeftAlt and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftAlt()) then
+    return true
+  end
+  if reaper.ImGui_Key_RightAlt and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightAlt()) then
+    return true
+  end
+  return reaper.ImGui_Mod_Alt and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Alt())
 end
 
 local function store_translation_state()
@@ -807,6 +823,12 @@ local function send_current_input()
   end
 end
 
+local function shortcut_keys_released()
+  return not reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+    and not reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_Enter())
+    and not reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_KeypadEnter())
+end
+
 local function on_translate_success(result)
   local allow_synonyms = supports_synonyms_for_input(last_translation_source)
   translated_text, translated_synonyms = parse_translation_payload(result)
@@ -833,25 +855,35 @@ local function on_translate_error(err)
 end
 
 function draw_ui()
-  reaper.ImGui_SetNextWindowSize(ctx, 730, 225, reaper.ImGui_Cond_FirstUseEver())
+  reaper.ImGui_SetNextWindowSize(ctx, 530, 155, reaper.ImGui_Cond_FirstUseEver())
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), WINDOW_ROUNDING)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true, reaper.ImGui_WindowFlags_NoCollapse())
+  reaper.ImGui_PopStyleVar(ctx)
 
   if visible then
     reaper.ImGui_PushFont(ctx, font, 14)
-    reaper.ImGui_TextWrapped(ctx, UI_TEXT.input_help)
-    reaper.ImGui_Spacing(ctx)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(), FRAME_ROUNDING)
+    -- reaper.ImGui_TextWrapped(ctx, UI_TEXT.input_help)
+    -- reaper.ImGui_Spacing(ctx)
 
     local input_hint = Translator.is_requesting and UI_TEXT.translating or ""
     reaper.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
     local changed
-    changed, input_text = reaper.ImGui_InputText(ctx, "##keywords", input_text or "")
+    changed, input_text = reaper.ImGui_InputText(ctx, "##keywords" .. input_clear_serial, input_text or "")
     local input_is_active = reaper.ImGui_IsItemActive(ctx)
     local input_is_focused = reaper.ImGui_IsItemFocused(ctx)
+    local input_is_hovered = reaper.ImGui_IsItemHovered(ctx)
+    local input_is_clicked = reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Left())
     if changed then
       local clean_input = sanitize_search_text(input_text)
       if clean_input ~= input_text then
         input_text = clean_input
       end
+      store_input_text()
+    end
+    if input_is_hovered and input_is_clicked and is_alt_down() then
+      input_text = ""
+      input_clear_serial = input_clear_serial + 1
       store_input_text()
     end
 
@@ -869,22 +901,27 @@ function draw_ui()
     if (input_is_active or input_is_focused)
       and (reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter())) then
       if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl()) then
-        send_current_input()
+        pending_send_current_after_shortcut = true
       else
         begin_translation()
       end
     end
 
-    reaper.ImGui_Spacing(ctx)
+    if pending_send_current_after_shortcut and shortcut_keys_released() then
+      pending_send_current_after_shortcut = false
+      send_current_input()
+    end
+
+    -- reaper.ImGui_Spacing(ctx)
 
     -- if translated_text ~= "" then
     --   reaper.ImGui_TextWrapped(ctx, "Current English keywords: " .. translated_text)
     -- end
 
-    if #translated_synonyms > 0 then
+    --if #translated_synonyms > 0 then
       reaper.ImGui_Spacing(ctx)
-      reaper.ImGui_TextWrapped(ctx, UI_TEXT.synonyms)
-      local synonym_button_height = 28
+      -- reaper.ImGui_TextWrapped(ctx, UI_TEXT.synonyms)
+      local synonym_button_height = 24
       local synonym_row_width = reaper.ImGui_GetContentRegionAvail(ctx)
       local synonym_line_width = 0
       local synonym_item_spacing = ({ reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()) })[1] or 8
@@ -907,7 +944,7 @@ function draw_ui()
       for i = 1, #translated_synonyms do
         local synonym = translated_synonyms[i]
         place_synonym_button(synonym)
-        if reaper.ImGui_Button(ctx, synonym, 0, synonym_button_height) then
+        if reaper.ImGui_Button(ctx, synonym, 0) then
           local ok, err = apply_search_text(synonym)
           if ok then
             status_text = UI_TEXT.synonym_sent_prefix .. synonym
@@ -930,10 +967,10 @@ function draw_ui()
         end
       end
       reaper.ImGui_PopStyleColor(ctx, 3)
-    end
+    --end
 
     if status_text ~= "" then
-      reaper.ImGui_Spacing(ctx)
+      -- reaper.ImGui_Spacing(ctx)
       reaper.ImGui_TextWrapped(ctx, status_text)
     end
 
@@ -955,6 +992,7 @@ function draw_ui()
       should_close = true
     end
 
+    reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_End(ctx)
   end
