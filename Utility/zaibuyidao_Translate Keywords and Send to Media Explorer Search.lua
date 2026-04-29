@@ -1,4 +1,4 @@
--- @description Translate and Search Keywords in Media Explorer
+-- @description Translate Keywords and Send to Media Explorer Search
 -- @version 1.0
 -- @author zaibuyidao
 -- @changelog
@@ -39,8 +39,8 @@ else
   return
 end
 
-local SCRIPT_NAME = "Translate and Search Keywords in Media Explorer"
-local EXT_SECTION = "TRANSLATE_AND_SEARCH_KEYWORDS_IN_MEDIA_EXPLORER"
+local SCRIPT_NAME = "Translate Keywords and Send to Media Explorer Search"
+local EXT_SECTION = "TRANSLATE_KEYWORDS_AND_SEND_TO_MEDIA_EXPLORER_SEARCH"
 
 local DEFAULT_API_KEY_B64 = "YjY2YzczMzA2OWQ4NDAyNWIyZTdkZTJlNTg1ZTk1MjcuMTdmUEdRRzY2OTE5UldMVA=="
 local DEFAULT_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
