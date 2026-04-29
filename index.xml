@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9b7a42d06b481512bd8cbfe7140dab90a38bd74b">
+<index version="1" name="zaibuyidao Scripts" commit="94066140d7ab2b1cec83cc0dda02d002ea8bf903">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9236,7 +9236,7 @@ Other detailed improvements and bug fixes.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9e239ec49bfbdc22a1f05084ab198906510a311a/Utility/zaibuyidao_Track%20Follows%20Item-Razor%20Selection.lua</source>
       </version>
     </reapack>
-    <reapack name="zaibuyidao_Translate and Search Keywords in Media Explorer.lua" type="script" desc="Translate and Search Keywords in Media Explorer">
+    <reapack name="zaibuyidao_Translate Keywords and Send to Media Explorer Search.lua" type="script" desc="Translate Keywords and Send to Media Explorer Search">
       <metadata>
         <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
 {\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
@@ -9253,9 +9253,9 @@ Other detailed improvements and bug fixes.]]></changelog>
         <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
         <link rel="donation">http://www.paypal.me/zaibuyidao</link>
       </metadata>
-      <version name="1.0" author="zaibuyidao" time="2026-04-29T08:26:03Z">
+      <version name="1.0" author="zaibuyidao" time="2026-04-29T08:43:24Z">
         <changelog><![CDATA[New Script]]></changelog>
-        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9b7a42d06b481512bd8cbfe7140dab90a38bd74b/Utility/zaibuyidao_Translate%20and%20Search%20Keywords%20in%20Media%20Explorer.lua</source>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/94066140d7ab2b1cec83cc0dda02d002ea8bf903/Utility/zaibuyidao_Translate%20Keywords%20and%20Send%20to%20Media%20Explorer%20Search.lua</source>
       </version>
     </reapack>
   </category>
