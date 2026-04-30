@@ -1,10 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.162
+-- @version 1.0.163
 -- @changelog
---   Fixed window dragging behavior (title bar only)
---   Added support for inserting files into item lanes with visual feedback
---   Optimized visual feedback when dragging audio files from the file list
+--   Added Chinese translation, project progress at 85%.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
