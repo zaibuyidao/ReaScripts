@@ -1296,12 +1296,12 @@ function FS_KickDownloadQueue()
   local remaining = math.max(0, #q - pos + 1)
   if remaining > 0 then
     FS.ui = FS.ui or {}
-    FS.ui.download_status = ("Downloads queued: %d"):format(remaining)
+    FS.ui.download_status = (T("Downloads queued: %d")):format(remaining)
   elseif FS_download_job_count() == 0 then
     FS.download_queue = nil
     FS.download_queue_pos = nil
     FS.ui = FS.ui or {}
-    FS.ui.download_status = "Download complete"
+    FS.ui.download_status = T("Download complete")
   else
     FS.download_queue = nil
     FS.download_queue_pos = nil
@@ -1326,7 +1326,7 @@ function FS_QueueDownloadList(list)
   FS.download_queue = (#q > 0) and q or nil
   FS.download_queue_pos = (#q > 0) and 1 or nil
   FS.ui = FS.ui or {}
-  FS.ui.download_status = (#q > 0) and ("Downloads queued: %d"):format(#q) or "No downloads queued"
+  FS.ui.download_status = (#q > 0) and (T("Downloads queued: %d")):format(#q) or T("No downloads queued")
   FS_KickDownloadQueue()
 end
 
@@ -1349,7 +1349,7 @@ function FS_ProcessDownloadJobs()
       FS.download_jobs[key] = nil
       os.remove(job.done); os.remove(job.fail); os.remove(job.log); os.remove(job.script); if job.launcher then os.remove(job.launcher) end
       FS.ui = FS.ui or {}
-      FS.ui.download_status = "Download complete"
+      FS.ui.download_status = T("Download complete")
       FS_finish_download_job(job)
     elseif failed or timed_out then
       FS.download_jobs[key] = nil
@@ -1359,10 +1359,10 @@ function FS_ProcessDownloadJobs()
         job.info._fs_download_failed = true
       end
       FS.ui = FS.ui or {}
-      FS.ui.download_status = timed_out and "Download timed out" or "Download failed"
+      FS.ui.download_status = timed_out and T("Download timed out") or T("Download failed")
     elseif part_size > 0 then
       FS.ui = FS.ui or {}
-      FS.ui.download_status = ("Downloading... %.1f KB"):format(part_size / 1024)
+      FS.ui.download_status = (T("Downloading... %.1f KB")):format(part_size / 1024)
     end
   end
 
@@ -1765,7 +1765,7 @@ function FS_DrawSidebar(ctx)
   -- Arrange by
   reaper.ImGui_Text(ctx, T("Arrange by"))
   reaper.ImGui_SameLine(ctx)
-  local arr = { "Timbre", "Tonality" }
+  local arr = { T("Timbre"), T("Tonality") }
   reaper.ImGui_SetNextItemWidth(ctx, -10)
   local arr_changed, arr_idx0 = reaper.ImGui_Combo(ctx, "##fs_arrange", (FS.ui.arrange_idx or 1)-1, __z(arr))
   if arr_changed then FS.ui.arrange_idx = (arr_idx0 or 0) + 1 end
@@ -1774,8 +1774,8 @@ function FS_DrawSidebar(ctx)
   reaper.ImGui_Text(ctx, T("Sort by"))
   reaper.ImGui_SameLine(ctx)
   local sorts = {
-    "Relevance","Rating","Duration","Downloads",
-    "Creation Date (newest first)","Creation Date (oldest first)"
+    T("Relevance"), T("Rating"), T("Duration"), T("Downloads"),
+    T("Creation Date (newest first)"), T("Creation Date (oldest first)")
   }
   reaper.ImGui_SetNextItemWidth(ctx, -10)
   local s_changed, s_idx0 = reaper.ImGui_Combo(ctx, "##fs_sort", (FS.ui.sort_idx or 1)-1, __z(sorts))

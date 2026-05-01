@@ -112,8 +112,21 @@ Connect Freesound=连接 Freesound
 Repair Freesound authorization=修复 Freesound 授权
 Reset Freesound Authorization=重置 Freesound 授权
 Reset Freesound authorization=重置 Freesound 授权
+Download timed out=下载超时
 Download failed=下载失败
 Downloading...=下载中...
+Timbre=音色
+Tonality=调性
+Relevance=相关性
+Rating=评分
+Duration=时长
+Downloads=下载量
+Creation Date (newest first)=创建日期 (最新优先)
+Creation Date (oldest first)=创建日期 (最早优先)
+Downloads queued: %d=队列中: %d
+Download complete=下载完成
+No downloads queued=没有下载在队列中
+Downloading... %.1f KB=下载中... %.1f KB
 
 # 页签与侧边栏
 PeekTree=媒体库

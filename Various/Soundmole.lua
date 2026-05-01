@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.164
+-- @version 1.0.165
 -- @changelog
 --   Improve Freesound download and preview system, enhancing performance and stability.
---   Added Chinese translation, project progress at 90%.
+--   Added Chinese translation, project progress at 95%.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
