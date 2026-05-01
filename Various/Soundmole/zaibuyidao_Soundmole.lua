@@ -294,6 +294,7 @@ local peaks, pixel_cnt, src_len, channel_count
 local last_pixel_cnt, last_view_len, last_scroll
 local last_wave_info -- 记录上次渲染的info
 local peak_hold = {} -- 存放各通道的峰值保持
+local spectrum_mini = { levels = {}, last_t = 0 } -- mini 频谱视觉反馈
 local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
 local VERTICAL_ZOOM_MIN = 0.3
 local VERTICAL_ZOOM_MAX = 4.0
@@ -3405,6 +3406,83 @@ function SmoothSetPreviewRate(target_rate, ramp_ms)
   reaper.defer(step)
 end
 
+--------------------------------------------- mini 频谱视觉反馈 ---------------------------------------------
+
+function ResetMiniSpectrum()
+  for i = 1, #(spectrum_mini.levels or {}) do
+    spectrum_mini.levels[i] = 0
+  end
+  spectrum_mini.last_t = 0
+end
+
+function DrawMiniSpectrumAnalyzer(ctx, width, height)
+  width = math.max(24, width or 72)
+  height = math.max(8, height or reaper.ImGui_GetFrameHeight(ctx))
+
+  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+  local now = reaper.time_precise()
+  local dt = spectrum_mini.last_t > 0 and (now - spectrum_mini.last_t) or 0
+  if dt < 0 then dt = 0 end
+  if dt > 0.12 then dt = 0.12 end
+  spectrum_mini.last_t = now
+
+  local peak_sum, peak_max, peak_count = 0, 0, 0
+  if playing_preview and reaper.CF_Preview_GetPeak then
+    for i = 0, math.max(0, peak_chans - 1) do
+      local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
+      if valid then
+        value = math.max(0, math.min(1, value or 0))
+        peak_sum = peak_sum + value
+        if value > peak_max then peak_max = value end
+        peak_count = peak_count + 1
+      end
+    end
+  end
+
+  local active = playing_preview and peak_count > 0 and peak_max > 0.0005
+  local amp = active and math.min(1, (peak_max * 0.72) + ((peak_sum / peak_count) * 0.55)) or 0
+  local bars = math.max(8, math.min(18, math.floor(width / 4)))
+  local gap = 1
+  local bar_w = math.max(2, math.floor((width - (bars - 1) * gap) / bars))
+  local used_w = bars * bar_w + (bars - 1) * gap
+  local start_x = x + math.floor((width - used_w) * 0.5)
+  local bg_col = (colors and colors.peak_meter_bg) or 0x222222FF
+
+  reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + width, y + height, bg_col, 2)
+
+  for i = 1, bars do
+    local ratio = (i - 1) / math.max(1, bars - 1)
+    local curve = 1.02 - ratio * 0.48
+    local motion = 0.5 + 0.5 * math.sin(now * (6.0 + ratio * 5.5) + i * 1.77)
+    local ripple = 0.5 + 0.5 * math.sin(now * 3.1 + i * 0.63)
+    local target = active and math.min(1, amp * curve * (0.42 + motion * 0.48 + ripple * 0.18)) or 0
+    local cur = spectrum_mini.levels[i] or 0
+    if target > cur then
+      cur = cur + (target - cur) * 0.55
+    else
+      cur = math.max(0, cur - (dt * 3.5))
+    end
+    spectrum_mini.levels[i] = cur
+
+    local bar_h = math.max(1, cur * (height - 3))
+    local bx1 = start_x + (i - 1) * (bar_w + gap)
+    local bx2 = bx1 + bar_w
+    local by2 = y + height - 1
+    local by1 = by2 - bar_h
+    local hue = 0.46 - ratio * 0.34
+    if hue < 0 then hue = 0 end
+    local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, 0.78, 0.45 + cur * 0.5)
+    local col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, active and 1.0 or 0.45)
+    reaper.ImGui_DrawList_AddRectFilled(draw_list, bx1, by1, bx2, by2, col, 1)
+  end
+
+  reaper.ImGui_Dummy(ctx, width, height)
+  if reaper.ImGui_IsItemHovered(ctx) then
+    DrawTooltip("Mini spectrum visualizer")
+  end
+end
+
 --------------------------------------------- 水平滚动条控件 ---------------------------------------------
 
 WaveMiniSB_State = WaveMiniSB_State or {}
@@ -4381,6 +4459,7 @@ function StopPreview()
   for i = 1, peak_chans do
     peak_hold[i] = 0
   end
+  ResetMiniSpectrum()
   if playing_preview then
     reaper.CF_Preview_Stop(playing_preview)
     playing_preview = nil
@@ -16969,31 +17048,35 @@ function loop()
     end
 
     -- 竖直电平条 mini
+    -- reaper.ImGui_SameLine(ctx, nil, 10)
+    -- local bar_height = reaper.ImGui_GetFrameHeight(ctx) -- base_height -- 或 reaper.ImGui_GetFrameHeight(ctx)
+    -- local bar_width = 7
+    -- local spacing = 2
+    -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+    -- local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    -- for i = 0, peak_chans - 1 do
+    --   local peak = 0
+    --   if playing_preview and reaper.CF_Preview_GetPeak then
+    --     local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
+    --     if valid then peak = value end
+    --   end
+    --   -- 画竖直电平条（底灰、顶色高亮）
+    --   local bar_x1 = x + i * (bar_width + spacing)
+    --   local bar_x2 = bar_x1 + bar_width
+    --   local bar_y1 = y
+    --   local bar_y2 = y + bar_height
+    --   -- 先画底
+    --   reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, bar_y1, bar_x2, bar_y2, colors.peak_meter_bg)
+    --   -- 再画峰值
+    --   local peak_y = bar_y2 - peak * bar_height
+    --   reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, peak_y, bar_x2, bar_y2, colors.peak_meter_normal)
+    -- end
+    -- -- Dummy 占位
+    -- reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
+
+    -- 简易频谱反馈
     reaper.ImGui_SameLine(ctx, nil, 10)
-    local bar_height = reaper.ImGui_GetFrameHeight(ctx) -- base_height -- 或 reaper.ImGui_GetFrameHeight(ctx)
-    local bar_width = 7
-    local spacing = 2
-    local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-    local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-    for i = 0, peak_chans - 1 do
-      local peak = 0
-      if playing_preview and reaper.CF_Preview_GetPeak then
-        local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
-        if valid then peak = value end
-      end
-      -- 画竖直电平条（底灰、顶色高亮）
-      local bar_x1 = x + i * (bar_width + spacing)
-      local bar_x2 = bar_x1 + bar_width
-      local bar_y1 = y
-      local bar_y2 = y + bar_height
-      -- 先画底
-      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, bar_y1, bar_x2, bar_y2, colors.peak_meter_bg)
-      -- 再画峰值
-      local peak_y = bar_y2 - peak * bar_height
-      reaper.ImGui_DrawList_AddRectFilled(draw_list, bar_x1, peak_y, bar_x2, bar_y2, colors.peak_meter_normal)
-    end
-    -- Dummy 占位
-    reaper.ImGui_Dummy(ctx, peak_chans * (bar_width + spacing), bar_height)
+    DrawMiniSpectrumAnalyzer(ctx, 90, bar_height)
 
     -- 播放器控件
     reaper.ImGui_SameLine(ctx)
