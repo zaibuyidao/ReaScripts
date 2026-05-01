@@ -222,7 +222,7 @@ waveform_task_queue          = {}    -- 表格列表波形预览
 file_select_start            = nil   -- 音频文件列多选起点
 file_select_end              = nil   -- 音频文件列多选结束
 selected_row                 = selected_row or -1
-ui_bottom_offset             = 231   -- 底部预览区高度
+ui_bottom_offset             = 231   -- 底部总高度
 playing_preview              = nil
 playing_path                 = nil
 playing_source               = nil
@@ -342,9 +342,11 @@ local current_sidebar_tab = "PeekTree" -- 默认为 PeekTree，用于记录当�
 -- 波形预览状态变量
 local wf_step = 400                    -- 波形预览步长
 local img_w, img_h = 1200, 130         -- 波形图像宽度和高度
-local base_img_h = 130                 -- 波形基础高度
+local base_img_h = 130                 -- 波形基础高度，用于控制与底部控件的间隔，顶部时间线和预留的专辑图片空间
 local img_h_offset = 0                 -- 偏移高度，用于实时调整
-local timeline_height = 20             -- 时间线高度
+local timeline_height = 20             -- 时间线高度，此处与波形预览之间的间隔，补偿时间线占用的空间
+local waveform_scrollbar_height = 11   -- 横向缩放条高度
+local bottom_fixed_height = math.max(0, ui_bottom_offset - base_img_h) -- 播放控件、跳过静音、分隔条和状态栏等固定高度
 local wf_play_start_time = nil         -- 播放开始时间（os.clock）
 local wf_play_start_cursor = nil       -- 播放开始时光标位置
 local selecting = false                -- 是否正在拖拽选区
@@ -362,6 +364,14 @@ local last_manual_wave_zoom_time = 0 -- 手动缩放后短暂抑制自动滚屏�
 local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
 local VERTICAL_ZOOM_MIN = 0.3
 local VERTICAL_ZOOM_MAX = 4.0
+
+function GetWaveformPreviewHeight()
+  return UIScaleF(base_img_h + img_h_offset)
+end
+
+function GetBottomPreviewReserveHeight()
+  return UIScaleF(bottom_fixed_height) + GetWaveformPreviewHeight()
+end
 
 -- 定义Wave类
 local Wave = {
@@ -3576,8 +3586,8 @@ function UI_WaveMiniScrollbar(ctx, id, total_len, view_len, scroll, height, whee
   local changed = false
   local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx)) or 0
   local icon_w, icon_h = height, height
-  local gap = 3
-  local bar_w = math.max(24, avail_w - icon_w * 2 - gap * 2)
+  local gap = UIScaleF(3)
+  local bar_w = math.max(UIScaleF(24), avail_w - icon_w * 2 - gap * 2)
   -- 左箭头
   local glyphL = utf8.char(0x0008) -- 左箭头
   local left_clicked = false
@@ -3599,14 +3609,15 @@ function UI_WaveMiniScrollbar(ctx, id, total_len, view_len, scroll, height, whee
   local col_grab_hov = colors.scrollbar_grab_hovered
   local col_grab_act = colors.scrollbar_grab_active
   local round = math.floor(icon_h * 0.5)
+  local border_th = UIScaleF(1)
 
   reaper.ImGui_DrawList_AddRectFilled(dl, x0, y0, x0 + bar_w, y0 + icon_h, col_bg, round)
-  reaper.ImGui_DrawList_AddRect(dl, x0, y0, x0 + bar_w, y0 + icon_h, col_border, round, 0, 1)
+  reaper.ImGui_DrawList_AddRect(dl, x0, y0, x0 + bar_w, y0 + icon_h, col_border, round, 0, border_th)
 
   local max_scroll = math.max(0, total_len - view_len)
   local ratio = (total_len > 0 and view_len > 0) and _clamp(view_len / total_len, 0, 1) or 1
   local disabled = (ratio >= 0.9999) or (max_scroll <= 0)
-  local min_thumb_px = math.min(24, bar_w)
+  local min_thumb_px = math.min(UIScaleF(24), bar_w)
   local thumb_w = math.max(min_thumb_px, math.floor(bar_w * ratio + 0.5))
   if disabled then thumb_w = bar_w end
   local bar_span = math.max(1, bar_w - thumb_w)
@@ -3621,7 +3632,7 @@ function UI_WaveMiniScrollbar(ctx, id, total_len, view_len, scroll, height, whee
 
   local thumb_col = active and col_grab_act or (thumb_hovered and col_grab_hov or col_grab)
   reaper.ImGui_DrawList_AddRectFilled(dl, thumb_x0, thumb_y0, thumb_x1, thumb_y1, thumb_col, round)
-  reaper.ImGui_DrawList_AddRect(dl, thumb_x0, thumb_y0, thumb_x1, thumb_y1, col_border, round, 0, 1)
+  reaper.ImGui_DrawList_AddRect(dl, thumb_x0, thumb_y0, thumb_x1, thumb_y1, col_border, round, 0, border_th)
   -- 悬浮提示
   if hovered and tooltip_text and tooltip_text ~= "" then
     reaper.ImGui_BeginTooltip(ctx)
@@ -12464,10 +12475,11 @@ function loop()
     -- reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
 
     -- 自动缩放音频表格
-    local line_h = reaper.ImGui_GetTextLineHeight(ctx)
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
-    -- 减去标题栏高度和底部间距。减去播放控件+波形预览+时间线9+进度条+地址栏的高度=228 +加分割条的厚度3=240
-    local child_h = math.max(10, avail_y - line_h - UIScaleF(ui_bottom_offset) - img_h_offset)
+    local _, main_item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
+    local main_overflow_guard = math.max(1, UIScaleF(20))
+    -- 底部预留空间已包含控件, 分隔条, 波形预览, 滚动条和状态栏。
+    local child_h = math.max(10, avail_y - GetBottomPreviewReserveHeight() - main_item_spacing_y - main_overflow_guard)
     if child_h < 10 then child_h = 10 end -- 最小高度保护(需要使用 if reaper.ImGui_BeginChild 才有效)
 
     if LEFT_TABLE_VISIBLE then -- 开关切换隐藏左侧表格
@@ -15676,6 +15688,8 @@ function loop()
       static.clipper = nil
     end
     reaper.ImGui_PopStyleColor(ctx, 7) -- 恢复颜色
+
+    local bottom_layout_start_y = select(2, reaper.ImGui_GetCursorPos(ctx))
     reaper.ImGui_Separator(ctx)
 
     -- 播放控制按钮
@@ -17629,7 +17643,8 @@ function loop()
     end
 
     -- 横向分割条
-    reaper.ImGui_InvisibleButton(ctx, "##h_splitter", avail_x, splitter_w)
+    local h_splitter_h = UIScaleF(splitter_w)
+    reaper.ImGui_InvisibleButton(ctx, "##h_splitter", avail_x, h_splitter_h)
     local active  = reaper.ImGui_IsItemActive(ctx)
     local hovered = reaper.ImGui_IsItemHovered(ctx)
     local mx, my = reaper.ImGui_GetMousePos(ctx)
@@ -17669,7 +17684,7 @@ function loop()
     end
 
     -- 专辑封面与波形预览 Child 高度补偿
-    img_h = UIScale(base_img_h + img_h_offset) -- 补偿高度
+    img_h = GetWaveformPreviewHeight()
     -- reaper.ImGui_Separator(ctx)
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
     local img_info
@@ -17911,9 +17926,12 @@ function loop()
       if Wave.src_len and Wave.src_len > 0 then
         DrawTimeLine(ctx, Wave, view_start, view_end)
       end
-      local timeline_extra_h = math.max(0, UIScale(18) - 18)
-      reaper.ImGui_Dummy(ctx, 0, UIScale(11) + timeline_extra_h) -- 占位时间线高度
-      local waveform_h = math.max(UIScale(32), img_h - UIScale(30) - timeline_extra_h) -- -30用于补偿波形预览上方的时间线区域和间隔，否则应为0
+      local timeline_h = UIScaleF(timeline_height)
+      local scrollbar_h = UIScaleF(waveform_scrollbar_height)
+      local _, wave_child_avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
+      local _, item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
+      local waveform_h = math.max(1, wave_child_avail_h - timeline_h - scrollbar_h - item_spacing_y * 2)
+      reaper.ImGui_Dummy(ctx, 0, timeline_h) -- 占位时间线高度，与波形预览之间的间隔所在位置
       DrawWaveformInImGui(ctx, peaks, pw_region_w, waveform_h, src_len, channel_count, waveform_vertical_zoom)
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
@@ -18409,13 +18427,6 @@ function loop()
 
       -- 水平滚动条控件
 
-      -- 抵消Child底部WindowPadding带来的空隙，把光标往上拉一点
-      do
-        local cur_x, cur_y = reaper.ImGui_GetCursorPos(ctx)
-        local pad_x, pad_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
-        reaper.ImGui_SetCursorPos(ctx, cur_x, cur_y - pad_y)
-      end
-
       do
         local view_len = (Wave.src_len or 0) / math.max(Wave.zoom or 1, 1)
         local max_scroll = math.max(0, (Wave.src_len or 0) - view_len)
@@ -18440,7 +18451,7 @@ function loop()
           Wave.src_len or 0,
           view_len,
           Wave.scroll or 0,
-          UIScale(11), -- 高度
+          scrollbar_h, -- 高度
           0.15, -- 滚轮灵敏度
           nil   -- 悬浮提示
         )
@@ -18570,6 +18581,20 @@ function loop()
       reaper.ImGui_Text(ctx, text)
     elseif show_row_height_popup and (reaper.time_precise() - show_row_height_timer >= 1.2) then
       show_row_height_popup = false
+    end
+
+    do
+      local bottom_layout_end_y = select(2, reaper.ImGui_GetCursorPos(ctx))
+      if bottom_layout_start_y and img_h and img_h > 0 and ui_scale and ui_scale > 0 then
+        local measured_fixed = (bottom_layout_end_y - bottom_layout_start_y - img_h) / ui_scale
+        if measured_fixed == measured_fixed and measured_fixed > 0 then
+          measured_fixed = math.floor(measured_fixed * 2 + 0.5) / 2
+          measured_fixed = math.max(40, math.min(180, measured_fixed))
+          if math.abs(measured_fixed - bottom_fixed_height) > 0.25 then
+            bottom_fixed_height = measured_fixed
+          end
+        end
+      end
     end
 
     -- 自动停止非Loop播放，只要没勾选Loop且快播完就自动Stop

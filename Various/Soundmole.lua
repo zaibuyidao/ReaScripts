@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.168
+-- @version 1.0.169
 -- @changelog
 --   Added UI scaling support, allowing users to adjust the interface scale to their preference.
 --   Improve time scale zoom display in waveform preview.
