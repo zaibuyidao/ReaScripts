@@ -295,6 +295,7 @@ local last_pixel_cnt, last_view_len, last_scroll
 local last_wave_info -- 记录上次渲染的info
 local peak_hold = {} -- 存放各通道的峰值保持
 local spectrum_mini = { levels = {}, last_t = 0 } -- mini 频谱视觉反馈
+local last_manual_wave_zoom_time = 0 -- 手动缩放后短暂抑制自动滚屏覆盖鼠标锚点
 local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
 local VERTICAL_ZOOM_MIN = 0.3
 local VERTICAL_ZOOM_MAX = 4.0
@@ -4610,6 +4611,45 @@ function PlayFromCursor(info)
   end
 end
 
+--------------------------------------------- 时间标尺控件 ---------------------------------------------
+
+function ClampWaveView(wave)
+  if not wave then return end
+  local src_len = math.max(0, tonumber(wave.src_len) or 0)
+  local zoom = math.max(1, tonumber(wave.zoom) or 1)
+  local view_len = (src_len > 0) and (src_len / zoom) or 0
+  local max_scroll = math.max(0, src_len - view_len)
+  wave.zoom = zoom
+  wave.scroll = _clamp(tonumber(wave.scroll) or 0, 0, max_scroll)
+end
+
+function ZoomWaveAtFraction(wave, anchor_frac, zoom_factor, min_zoom, max_zoom)
+  if not wave then return false end
+  local src_len = math.max(0, tonumber(wave.src_len) or 0)
+  if src_len <= 0 then return false end
+
+  min_zoom = min_zoom or 1
+  max_zoom = max_zoom or 16
+  local old_zoom = _clamp(tonumber(wave.zoom) or 1, min_zoom, max_zoom)
+  local new_zoom = _clamp(old_zoom * (tonumber(zoom_factor) or 1), min_zoom, max_zoom)
+  if math.abs(new_zoom - old_zoom) < 1e-12 then
+    wave.zoom = old_zoom
+    ClampWaveView(wave)
+    return false
+  end
+
+  anchor_frac = _clamp(tonumber(anchor_frac) or 0.5, 0, 1)
+  local old_view_len = src_len / old_zoom
+  local anchor_time = (tonumber(wave.scroll) or 0) + anchor_frac * old_view_len
+  local new_view_len = src_len / new_zoom
+
+  wave.zoom = new_zoom
+  wave.scroll = anchor_time - anchor_frac * new_view_len
+  ClampWaveView(wave)
+  last_manual_wave_zoom_time = reaper.time_precise()
+  return true
+end
+
 -- 绘制时间线
 function DrawTimeLine(ctx, wave, view_start, view_end)
   local y_offset    = 0   -- 距离波形底部-9像素
@@ -4637,12 +4677,20 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
   -- 智能自适应主刻度数
   local avail_w = max_x - min_x
   local target_ticks_visible = math.max(1, math.floor(avail_w / min_tick_px + 0.5))
+  local show_end_label = wave and math.abs((tonumber(wave.zoom) or 1) - 1) < 1e-9 and math.abs(view_start or 0) < 1e-9
+  local end_text, end_text_w = nil, 0
+  if show_end_label then
+    end_text = reaper.format_timestr(tonumber(view_end) or 0, "")
+    reaper.ImGui_PushFont(ctx, fonts.sans_serif, 12)
+    end_text_w = select(1, reaper.ImGui_CalcTextSize(ctx, end_text))
+    reaper.ImGui_PopFont(ctx)
+  end
 
   -- 计算自适应的主刻度间隔
   local view_len = view_end - view_start
   if view_len <= 0 then view_len = 1 end -- 防止为0
-  local pixels_per_sec = wave.w / view_len
-  local tick_steps = {0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 30, 60, 120, 300}
+  local pixels_per_sec = avail_w / view_len
+  local tick_steps = {0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 30, 60, 120, 300}
   local tick_step = view_len / target_ticks_visible
   for _, v in ipairs(tick_steps) do
     if v * pixels_per_sec >= min_tick_px then
@@ -4666,7 +4714,11 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
     local text = reaper.format_timestr(t or 0, "")
     local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
     local text_y = base_y - tick_long - 3 -- 时间数值在刻度上方
-    reaper.ImGui_DrawList_AddText(drawlist, x + 4, text_y, colors.timeline_text, text) -- 文本左右偏移量
+    local text_x = x + 4
+    local overlaps_end_label = show_end_label and ((text_x + text_w + 6) > (max_x - end_text_w - 4))
+    if not overlaps_end_label then
+      reaper.ImGui_DrawList_AddText(drawlist, text_x, text_y, colors.timeline_text, text) -- 文本左右偏移量
+    end
     reaper.ImGui_PopFont(ctx)
   end
 
@@ -4697,6 +4749,17 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
         end
       end
     end
+  end
+
+  -- 完整视图下，最右侧始终显示音频结束时间
+  if show_end_label then
+    reaper.ImGui_PushFont(ctx, fonts.sans_serif, 12)
+    local text_w = end_text_w
+    local text_x = math.max(min_x, max_x - text_w - 4)
+    local text_y = base_y - tick_long - 3
+    reaper.ImGui_DrawList_AddLine(drawlist, max_x, base_y, max_x, base_y - tick_long, colors.timeline_def_color, 1.0)
+    reaper.ImGui_DrawList_AddText(drawlist, text_x, text_y, colors.timeline_text, end_text)
+    reaper.ImGui_PopFont(ctx)
   end
 end
 
@@ -14422,7 +14485,7 @@ function loop()
                     end
                     if reaper.ImGui_MenuItem(ctx, T("Create Sub-Group")) then
                       local new_id = new_guid()
-                      saved_search_nodes[new_id] = { id=new_id, type="folder", name="New Group", children={}, open=true }
+                      saved_search_nodes[new_id] = { id=new_id, type="folder", name=T("New Group"), children={}, open=true }
                       table.insert(node.children, new_id)
                       node.open = true
                       SaveTreeData()
@@ -14492,7 +14555,7 @@ function loop()
             saved_search_filter = reaper.ImGui_CreateTextFilter()
           end
 
-          reaper.ImGui_SetNextItemWidth(ctx, -170)
+          reaper.ImGui_SetNextItemWidth(ctx, -150)
           reaper.ImGui_TextFilter_Draw(saved_search_filter, ctx, "##SavedSearchFilter")
           local filter_val = reaper.ImGui_TextFilter_Get(saved_search_filter) or ""
 
@@ -14500,14 +14563,6 @@ function loop()
           if reaper.ImGui_Button(ctx, T("Clear"), 40) then
             reaper.ImGui_TextFilter_Set(saved_search_filter, "")
             filter_val = ""
-          end
-
-          reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, T("+Group"), 60) then
-            local new_id = new_guid()
-            saved_search_nodes[new_id] = { id=new_id, type="folder", name="New Group", children={}, open=true }
-            table.insert(root_saved_searches, new_id)
-            SaveTreeData()
           end
 
           reaper.ImGui_SameLine(ctx)
@@ -14521,6 +14576,14 @@ function loop()
             else
               reaper.ShowMessageBox("Main search filter is empty.", "Info", 0)
             end
+          end
+
+          reaper.ImGui_SameLine(ctx)
+          if reaper.ImGui_Button(ctx, T("+"), 40) then
+            local new_id = new_guid()
+            saved_search_nodes[new_id] = { id=new_id, type="folder", name=T("New Group"), children={}, open=true }
+            table.insert(root_saved_searches, new_id)
+            SaveTreeData()
           end
 
           reaper.ImGui_Separator(ctx)
@@ -17359,7 +17422,7 @@ function loop()
       reaper.ImGui_SameLine(ctx)
       local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
       local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, file_info.path) -- 文字尺寸
-      local cb_w = txt_w + txt_h + 16 -- 文字宽度+勾选框大小+间距
+      local cb_w = txt_w + txt_h - 10 -- + 16 -- 文字宽度+勾选框大小+间距
 
       -- 如果可用宽度足够，把光标推到右侧
       if avail > cb_w then
@@ -17367,7 +17430,6 @@ function loop()
         reaper.ImGui_SameLine(ctx, nil, 0)
       end
 
-      -- reaper.ImGui_Text(ctx, "Now browsing:")
       reaper.ImGui_SameLine(ctx)
       local sep = package.config:sub(1,1)
       local path_parts = {}
@@ -17471,8 +17533,8 @@ function loop()
         end
         reaper.ImGui_EndPopup(ctx)
       end
-      reaper.ImGui_SameLine(ctx)
-      HelpMarker("Hovering over a folder segment highlights it. Click to navigate into that folder.\nRight-click the path to show and highlight the file in Explorer/Finder.")
+      -- reaper.ImGui_SameLine(ctx)
+      -- HelpMarker("Hovering over a folder segment highlights it. Click to navigate into that folder.\nRight-click the path to show and highlight the file in Explorer/Finder.")
     end
 
     -- 横向分割条
@@ -17636,6 +17698,7 @@ function loop()
       local pw_min_x, pw_min_y = reaper.ImGui_GetItemRectMin(ctx)
       local pw_max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local pw_region_w = math.max(64, math.floor(pw_max_x - pw_min_x))
+      Wave.w = pw_region_w
 
       local view_len = Wave.src_len / Wave.zoom
       local window_start = Wave.scroll
@@ -17702,6 +17765,7 @@ function loop()
 
             local max_scroll = math.max(0, section_len - visible_len)
             local scroll = math.max(0, math.min(Wave.scroll or 0, max_scroll))
+            Wave.scroll = scroll
 
             window_start = section_offset + scroll
             window_end = window_start + visible_len
@@ -17717,6 +17781,7 @@ function loop()
 
               local max_scroll = math.max(0, audio_len - visible_len)
               local scroll = math.max(0, math.min(Wave.scroll or 0, max_scroll))
+              Wave.scroll = scroll
 
               window_start = scroll
               window_end = window_start + visible_len
@@ -17809,32 +17874,12 @@ function loop()
 
       -- 小键盘 + 号放大波形
       if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadAdd()) then
-        local prev_zoom = Wave.zoom
-        Wave.zoom = math.min(Wave.zoom * 1.25, 16)
-        if Wave.zoom ~= prev_zoom then
-          local old_view_len = Wave.src_len / prev_zoom
-          local center = Wave.scroll + old_view_len / 2
-          local new_view_len = Wave.src_len / Wave.zoom
-          Wave.scroll = center - new_view_len / 2
-          if Wave.scroll < 0 then Wave.scroll = 0 end
-          local max_scroll = math.max(0, Wave.src_len - new_view_len)
-          if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
-        end
+        if ZoomWaveAtFraction(Wave, 0.5, 1.25, 1, 16) then last_view_len = nil end
       end
 
       -- 小键盘 - 号缩小波形
       if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadSubtract()) then
-        local prev_zoom = Wave.zoom
-        Wave.zoom = math.max(Wave.zoom / 1.25, 1)
-        if Wave.zoom ~= prev_zoom then
-          local old_view_len = Wave.src_len / prev_zoom
-          local center = Wave.scroll + old_view_len / 2
-          local new_view_len = Wave.src_len / Wave.zoom
-          Wave.scroll = center - new_view_len / 2
-          if Wave.scroll < 0 then Wave.scroll = 0 end
-          local max_scroll = math.max(0, Wave.src_len - new_view_len)
-          if Wave.scroll > max_scroll then Wave.scroll = max_scroll end
-        end
+        if ZoomWaveAtFraction(Wave, 0.5, 1 / 1.25, 1, 16) then last_view_len = nil end
       end
 
       -- 单击自动播放，选中项变化时触发
@@ -17870,7 +17915,7 @@ function loop()
 
       if reaper.ImGui_IsItemHovered(ctx) then
         local rel_x = mouse_x - min_x
-        local frac = rel_x / region_w
+        local frac = (region_w > 0) and (rel_x / region_w) or 0.5
         frac = math.max(0, math.min(1, frac))
         -- 速率变化时调整光标位置
         local visible_len = Wave.src_len / Wave.zoom
@@ -17893,44 +17938,12 @@ function loop()
           -- 鼠标滚轮横向缩放
           local mouse_wheel = reaper.ImGui_GetMouseWheel(ctx)
           if mouse_wheel ~= 0 then
-            local min_zoom, max_zoom = 1, 16
-
-            if (mouse_wheel > 0 and Wave.zoom >= max_zoom) or (mouse_wheel < 0 and Wave.zoom <= min_zoom) then
-              -- 判断是否到缩放边界
-            else
-              local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
-              local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
-              local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
-              local region_w = max_x - min_x
-
-              -- 获取当前鼠标位置在波形上的时间
-              local rel_x = mouse_x - min_x
-              local frac = rel_x / region_w
-              frac = math.max(0, math.min(1, frac))
-              local mouse_time = Wave.scroll + frac * (Wave.src_len / Wave.zoom)
-
-              -- 向上滚动放大
-              if mouse_wheel > 0 then
-                Wave.zoom = math.min(Wave.zoom * 1.25, 16) -- 最大放大倍数16
-              -- 向下滚动缩小
-              else
-                Wave.zoom = math.max(Wave.zoom / 1.25, 1) -- 最小缩小倍数1
-              end
-
-              -- 缩放后，保持当前鼠标位置不变
-              local view_len = Wave.src_len / Wave.zoom
-              Wave.scroll = mouse_time - frac * view_len
-
-              -- 保证滚动不会超出音频范围
-              if Wave.scroll < 0 then Wave.scroll = 0 end
-              if Wave.scroll > Wave.src_len - view_len then Wave.scroll = Wave.src_len - view_len end
-
-              -- 最小缩放时，显示整条音频
-              if Wave.zoom == 1 then
-                Wave.scroll = 0
-              end
-
+            local zoom_factor = (mouse_wheel > 0) and 1.25 or (1 / 1.25)
+            if ZoomWaveAtFraction(Wave, frac, zoom_factor, 1, 16) then
               last_view_len = nil
+              visible_len = Wave.src_len / Wave.zoom
+              mouse_time_visual = Wave.scroll + frac * visible_len
+              mouse_time = mouse_time_visual / play_rate
             end
           end
         end
@@ -18182,7 +18195,7 @@ function loop()
       end
 
       -- 波形预览自动滚屏
-      if playing_preview and auto_scroll_enabled then
+      if playing_preview and auto_scroll_enabled and (reaper.time_precise() - (last_manual_wave_zoom_time or 0) > 0.25) then
         -- 当前视野长度（秒）
         local view_len = Wave.src_len / Wave.zoom
         -- 如果光标超出可见区域，自动滚动窗口
@@ -18192,7 +18205,7 @@ function loop()
       end
 
       -- 波形预览自动滚屏
-      if playing_preview and auto_scroll_enabled then
+      if playing_preview and auto_scroll_enabled and (reaper.time_precise() - (last_manual_wave_zoom_time or 0) > 0.25) then
         -- 当前视野长度（秒）
         local view_len = Wave.src_len / Wave.zoom
         -- 如果光标超出可见区域，自动滚动窗口

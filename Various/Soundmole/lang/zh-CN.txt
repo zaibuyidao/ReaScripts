@@ -80,10 +80,11 @@ Mirror Media Explorer Shortcuts=镜像媒体资源管理器快捷方式
 Mirror Media Explorer Databases=镜像媒体资源管理器数据库
 Show "Recently Played" in PeekTree (hides the "Play History" button)=在媒体库中显示 "最近播放" (隐藏 "播放历史" 按钮)
 Loading drives, please wait...=正在加载驱动器，请稍候...
-+Group=+分组
+New Group=新分组
 Save=保存
 No saved searches.=无保存搜索
 Fold=折叠
+Main search filter is empty.=主搜索筛选条件为空。
 
 # Freesound
 Activate Freesound mode=启用 Freesound 模式

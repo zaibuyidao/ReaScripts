@@ -1,7 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.166
+-- @version 1.0.167
 -- @changelog
+--   Improve time scale zoom display in waveform preview.
 --   Improve Freesound download and preview system, enhancing performance and stability.
 --   Added mini spectrum visualization.
 --   Added Chinese translation, project progress at 95%.
