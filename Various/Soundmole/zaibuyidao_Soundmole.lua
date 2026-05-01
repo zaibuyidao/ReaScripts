@@ -84,6 +84,67 @@ local HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists(
 local SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
+local EXT_SECTION = "Soundmole"
+
+local UI_SCALE_MIN = 0.75
+local UI_SCALE_MAX = 3.00
+local UI_SCALE_PRESETS = { 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00 }
+
+function ClampUIScale(v)
+  v = tonumber(v) or 1.0
+  if v < UI_SCALE_MIN then return UI_SCALE_MIN end
+  if v > UI_SCALE_MAX then return UI_SCALE_MAX end
+  return v
+end
+
+local ui_scale = ClampUIScale(tonumber(reaper.GetExtState(EXT_SECTION, "ui_scale")) or 1.0)
+
+function FormatUIScale(v)
+  return string.format("%d%%", math.floor(ClampUIScale(v) * 100 + 0.5))
+end
+
+function SetUIScale(v)
+  ui_scale = ClampUIScale(v)
+  reaper.SetExtState(EXT_SECTION, "ui_scale", string.format("%.2f", ui_scale), true)
+end
+
+function UIScale(v)
+  return math.floor((tonumber(v) or 0) * ui_scale + 0.5)
+end
+
+function UIScaleF(v)
+  return (tonumber(v) or 0) * ui_scale
+end
+
+function UIFontSize(v)
+  return math.max(1, UIScale(v))
+end
+
+function PushUIFont(ctx, font, size)
+  if size ~= nil then
+    return reaper.ImGui_PushFont(ctx, font, UIFontSize(size))
+  end
+  return reaper.ImGui_PushFont(ctx, font)
+end
+
+function ApplyWindowUIScale(ctx)
+  -- Font and icon sizes are scaled through PushUIFont().
+  return ui_scale
+end
+
+function DrawUIScaleCombo(ctx, id, width)
+  reaper.ImGui_SetNextItemWidth(ctx, width or UIScale(86))
+  if reaper.ImGui_BeginCombo(ctx, "##" .. id, FormatUIScale(ui_scale)) then
+    for _, preset in ipairs(UI_SCALE_PRESETS) do
+      local selected = math.abs(ui_scale - preset) < 0.005
+      if reaper.ImGui_Selectable(ctx, FormatUIScale(preset), selected) then
+        SetUIScale(preset)
+      end
+      if selected then reaper.ImGui_SetItemDefaultFocus(ctx) end
+    end
+    reaper.ImGui_EndCombo(ctx)
+  end
+end
 
 -- 关闭键盘导航
 local config_flags = reaper.ImGui_GetConfigVar(ctx, reaper.ImGui_ConfigVar_Flags())
@@ -148,8 +209,11 @@ function FindFontIndex(px)
 end
 local DEFAULT_ROW_HEIGHT = 24 -- 内容行高
 local row_height         = DEFAULT_ROW_HEIGHT
-reaper.ImGui_SetNextWindowSize(ctx, 1400, 857, reaper.ImGui_Cond_FirstUseEver())
--- local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
+reaper.ImGui_SetNextWindowSize(ctx, UIScale(1400), UIScale(857), reaper.ImGui_Cond_FirstUseEver())
+
+function GetScaledRowHeight()
+  return math.max(12, UIScaleF(row_height))
+end
 
 -- 状态变量
 WFC_PX_DEFAULT               = 2048  -- 默认缓存像素（与C++对齐）
@@ -231,7 +295,6 @@ local TableColumns = {
   BPM         = 17,
 }
 
-local EXT_SECTION = "Soundmole"
 -- 加载语言文件
 local saved_lang = reaper.GetExtState(EXT_SECTION, "language")
 if saved_lang == "" then saved_lang = "en-US" end
@@ -559,6 +622,7 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
   reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
   reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
+  reaper.SetExtState(EXT_SECTION, "ui_scale", string.format("%.2f", ui_scale), true)
   reaper.SetExtState(EXT_SECTION, "max_db", tostring(max_db), true)
   
   -- 播放控制范围
@@ -618,6 +682,11 @@ end
 do
   local v = tonumber(reaper.GetExtState(EXT_SECTION, "bg_alpha"))
   if v then bg_alpha = v end
+end
+
+do
+  local v = tonumber(reaper.GetExtState(EXT_SECTION, "ui_scale"))
+  if v then ui_scale = ClampUIScale(v) end
 end
 
 do
@@ -912,7 +981,7 @@ end
 -- 颜色菜单
 function DrawColorsMenuIcon(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 18)
+  PushUIFont(ctx, fonts.icon, 18)
   local glyph = '\u{010F}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -3140,10 +3209,10 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
   reaper.ImGui_DrawList_AddCircleFilled(dl, cx, cy, radius, col, 32)
   -- 指针
   local inner = radius * 0.15 -- 指针起点内缩
-  local tip   = radius - 2    -- 指针终点
-  reaper.ImGui_DrawList_AddLine(dl, cx + ca * inner, cy + sa * inner, cx + ca * tip, cy + sa * tip, colors.knob_indicator, 2)
+  local tip   = radius - UIScaleF(2) -- 指针终点
+  reaper.ImGui_DrawList_AddLine(dl, cx + ca * inner, cy + sa * inner, cx + ca * tip, cy + sa * tip, colors.knob_indicator, UIScaleF(2))
   -- 外描边
-  reaper.ImGui_DrawList_AddCircle(dl, cx, cy, radius, colors.knob_outline, 32, 1.0)
+  reaper.ImGui_DrawList_AddCircle(dl, cx, cy, radius, colors.knob_outline, 32, UIScaleF(1))
   -- 文本
   if label:find("##") ~= 1 then
     reaper.ImGui_SameLine(ctx)
@@ -3171,9 +3240,9 @@ function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_th
   min_db = tonumber(min_db) -- dB最小
   max_db = tonumber(max_db) -- dB最大
   if max_db <= min_db then max_db = min_db + 0.001 end
-  width = tonumber(width) or 150           -- 线长
-  line_thick = tonumber(line_thick) or 4   -- 线粗
-  knob_radius = tonumber(knob_radius) or 8 -- 圆点半径
+  width = UIScale(tonumber(width) or 150)           -- 线长
+  line_thick = UIScaleF(tonumber(line_thick) or 4)  -- 线粗
+  knob_radius = UIScale(tonumber(knob_radius) or 8) -- 圆点半径
   default_db = (default_db == nil) and 0 or default_db -- 右键/双击音量复位
 
   local changed = false
@@ -3181,7 +3250,7 @@ function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_th
   if cur_db < min_db then cur_db = min_db end
   if cur_db > max_db then cur_db = max_db end
 
-  local hit_h  = math.max(knob_radius * 2 + 10, line_thick + 12)
+  local hit_h  = math.max(knob_radius * 2 + UIScale(10), line_thick + UIScaleF(12))
   local x0, y0 = reaper.ImGui_GetCursorScreenPos(ctx)
   local x1     = x0 + width
   local y_line = y0 + hit_h * 0.5
@@ -3198,8 +3267,8 @@ function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_th
   local col_outline  = (colors and colors.volume_fader_outline) or 0x222222FF -- 圆点描边颜色
   local col_bg       = (colors and colors.volume_bg)            or 0x00000022
   local col_bg_bd    = (colors and colors.volume_bg_border)     or 0xFFFFFF10
-  local bg_pad       = 6 -- 左右外扩
-  local bg_vpad      = 2 -- 上下内缩
+  local bg_pad       = UIScaleF(6) -- 左右外扩
+  local bg_vpad      = UIScaleF(2) -- 上下内缩
 
   -- 映射抛物线，中段鼓起
   local range_db = (max_db - min_db)
@@ -3225,12 +3294,12 @@ function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_th
   do
     local bx0 = x0 - bg_pad
     local bx1 = x1 + bg_pad
-    local by0 = y0 + math.min(bg_vpad, hit_h * 0.5 - 1)
-    local by1 = y0 + hit_h - math.min(bg_vpad, hit_h * 0.5 - 1)
+    local by0 = y0 + math.min(bg_vpad, hit_h * 0.5 - UIScaleF(1))
+    local by1 = y0 + hit_h - math.min(bg_vpad, hit_h * 0.5 - UIScaleF(1))
     local bg_h = by1 - by0               -- 实际背景高度
     local round = math.floor(bg_h * 0.5) -- 按背景高度算圆角
     reaper.ImGui_DrawList_AddRectFilled(dl, bx0, by0, bx1, by1, col_bg, round)
-    reaper.ImGui_DrawList_AddRect(dl,       bx0, by0, bx1, by1, col_bg_bd, round, 0, 1.0)
+    reaper.ImGui_DrawList_AddRect(dl,       bx0, by0, bx1, by1, col_bg_bd, round, 0, UIScaleF(1))
   end
 
   -- 中线
@@ -3239,15 +3308,15 @@ function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_th
   -- 0 dB 刻度细线
   if 0 >= min_db and 0 <= max_db then
     local zero_x = db_to_x(0)
-    local tick_h = math.max(10, line_thick + 6) -- 刻度长度
-    local tick_th = 1 -- 刻度线粗
+    local tick_h = math.max(UIScale(10), line_thick + UIScaleF(6)) -- 刻度长度
+    local tick_th = UIScaleF(1) -- 刻度线粗
     reaper.ImGui_DrawList_AddLine(dl, zero_x, y_line - tick_h * 0.5, zero_x, y_line + tick_h * 0.5, col_tick, tick_th)
   end
 
   -- 圆点
   local knob_x = db_to_x(cur_db)
   reaper.ImGui_DrawList_AddCircleFilled(dl, knob_x, y_line, knob_radius, active and col_knob_act or col_knob)
-  reaper.ImGui_DrawList_AddCircle(dl, knob_x, y_line, knob_radius, col_outline, 32, 1)
+  reaper.ImGui_DrawList_AddCircle(dl, knob_x, y_line, knob_radius, col_outline, 32, UIScaleF(1))
   -- 滚轮微调
   if hovered then
     local wheel = reaper.ImGui_GetMouseWheel(ctx)
@@ -3864,9 +3933,9 @@ function DrawFilterLockToggle(ctx)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
   -- 与图标尺寸对齐的下移
   local _, cy = reaper.ImGui_GetCursorPos(ctx)
-  reaper.ImGui_SetCursorPosY(ctx, cy + 13)
+  reaper.ImGui_SetCursorPosY(ctx, cy + UIScaleF(15))
 
-  reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+  PushUIFont(ctx, fonts.icon, 20)
   local lock_on = _G.filter_lock_enabled
   local text_label = (lock_on and '\u{0163}') or '\u{0162}' -- 关=0163; 开=0162
   -- 固定宽高占位
@@ -4652,12 +4721,15 @@ end
 
 -- 绘制时间线
 function DrawTimeLine(ctx, wave, view_start, view_end)
-  local y_offset    = 0   -- 距离波形底部-9像素
-  local tick_long   = 18  -- 主刻度高度
-  local tick_middle = 10  -- 中间刻度高度
-  local tick_secmid = 7   -- 次中间刻度高度
-  local tick_short  = 3   -- 次刻度高度
-  local min_tick_px = 150 -- 两个主刻度最小像素距离
+  local y_offset    = 0            -- 距离波形底部-9像素
+  local tick_long   = UIScale(18)  -- 主刻度高度
+  local tick_middle = UIScale(10)  -- 中间刻度高度
+  local tick_secmid = UIScale(7)   -- 次中间刻度高度
+  local tick_short  = UIScale(3)   -- 次刻度高度
+  local min_tick_px = UIScale(150) -- 两个主刻度最小像素距离
+  local line_th     = UIScaleF(1)
+  local label_x_pad = UIScaleF(4)
+  local label_margin = UIScaleF(6)
 
   -- 绘制时间线基础线
   local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
@@ -4667,12 +4739,12 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
   local drawlist = reaper.ImGui_GetWindowDrawList(ctx)
 
   -- 时间线背景
-  local timeline_h = tick_long + 1 -- 背景高度为主刻度高度+余量
-  local base_y = y0 + timeline_h   -- 把标尺基线放到底部
+  local timeline_h = tick_long + UIScaleF(1) -- 背景高度为主刻度高度+余量
+  local base_y = y0 + timeline_h -- 把标尺基线放到底部
   reaper.ImGui_DrawList_AddRectFilled(drawlist, x0, y0, x1, y0 + timeline_h, colors.timeline_bg_color)
 
   -- 设置基础线颜色
-  reaper.ImGui_DrawList_AddLine(drawlist, x0, base_y, x1, base_y, colors.timeline_def_color, 1.0)
+  reaper.ImGui_DrawList_AddLine(drawlist, x0, base_y, x1, base_y, colors.timeline_def_color, line_th)
 
   -- 智能自适应主刻度数
   local avail_w = max_x - min_x
@@ -4681,7 +4753,7 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
   local end_text, end_text_w = nil, 0
   if show_end_label then
     end_text = reaper.format_timestr(tonumber(view_end) or 0, "")
-    reaper.ImGui_PushFont(ctx, fonts.sans_serif, 12)
+    PushUIFont(ctx, fonts.sans_serif, 12)
     end_text_w = select(1, reaper.ImGui_CalcTextSize(ctx, end_text))
     reaper.ImGui_PopFont(ctx)
   end
@@ -4708,14 +4780,14 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
     local frac = (t - view_start) / view_len
     local x = min_x + frac * (max_x - min_x)
     -- 主刻度线
-    reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_long, colors.timeline_def_color, 1.0)
+    reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_long, colors.timeline_def_color, line_th)
     -- 时间标签
-    reaper.ImGui_PushFont(ctx, fonts.sans_serif, 12)
+    PushUIFont(ctx, fonts.sans_serif, 12)
     local text = reaper.format_timestr(t or 0, "")
     local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
-    local text_y = base_y - tick_long - 3 -- 时间数值在刻度上方
-    local text_x = x + 4
-    local overlaps_end_label = show_end_label and ((text_x + text_w + 6) > (max_x - end_text_w - 4))
+    local text_y = base_y - tick_long - UIScaleF(3) -- 100% 保持原始位置，放大时按比例抬高
+    local text_x = x + label_x_pad
+    local overlaps_end_label = show_end_label and ((text_x + text_w + label_margin) > (max_x - end_text_w - label_x_pad))
     if not overlaps_end_label then
       reaper.ImGui_DrawList_AddText(drawlist, text_x, text_y, colors.timeline_text, text) -- 文本左右偏移量
     end
@@ -4739,13 +4811,13 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
         local x = min_x + frac * (max_x - min_x)
         -- 主->中->次中->短->中->次中->主...
         if sub_index == 10 then -- 中间刻度线
-          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_middle, colors.timeline_def_color, 1.0)
+          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_middle, colors.timeline_def_color, line_th)
         elseif sub_index == 5 or sub_index == 15 then
           -- 次中间刻度线
-          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_secmid, colors.timeline_def_color, 1.0)
+          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_secmid, colors.timeline_def_color, line_th)
         else
           -- 次刻度
-          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_short, colors.timeline_def_color, 1.0)
+          reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_short, colors.timeline_def_color, line_th)
         end
       end
     end
@@ -4753,11 +4825,11 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
 
   -- 完整视图下，最右侧始终显示音频结束时间
   if show_end_label then
-    reaper.ImGui_PushFont(ctx, fonts.sans_serif, 12)
+    PushUIFont(ctx, fonts.sans_serif, 12)
     local text_w = end_text_w
-    local text_x = math.max(min_x, max_x - text_w - 4)
-    local text_y = base_y - tick_long - 3
-    reaper.ImGui_DrawList_AddLine(drawlist, max_x, base_y, max_x, base_y - tick_long, colors.timeline_def_color, 1.0)
+    local text_x = math.max(min_x, max_x - text_w - label_x_pad)
+    local text_y = base_y - tick_long - UIScaleF(3)
+    reaper.ImGui_DrawList_AddLine(drawlist, max_x, base_y, max_x, base_y - tick_long, colors.timeline_def_color, line_th)
     reaper.ImGui_DrawList_AddText(drawlist, text_x, text_y, colors.timeline_text, end_text)
     reaper.ImGui_PopFont(ctx)
   end
@@ -7130,8 +7202,8 @@ function DrawUcsLanguageSelector(ctx)
   end
 
   reaper.ImGui_Text(ctx, T("Language:"))
-  reaper.ImGui_SameLine(ctx, 150)
-  reaper.ImGui_SetNextItemWidth(ctx, 150)
+  reaper.ImGui_SameLine(ctx, UIScale(150))
+  reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
   if reaper.ImGui_BeginCombo(ctx, "##ucs_lang_combo", cur_label) then
     for _, opt in ipairs(UCS_LANG_OPTS) do
       local selected = (opt.key == CURRENT_LANG)
@@ -10263,8 +10335,8 @@ function RenderPreviewRouteSettingsUI(ctx)
   end
 
   reaper.ImGui_Text(ctx, T("Named track:"))
-  reaper.ImGui_SameLine(ctx, 150)
-  reaper.ImGui_SetNextItemWidth(ctx, 250)
+  reaper.ImGui_SameLine(ctx, UIScale(150))
+  reaper.ImGui_SetNextItemWidth(ctx, UIScale(250))
   local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
   if changed_name and new_name ~= nil then
     preview_route_name = new_name
@@ -10306,7 +10378,7 @@ function CalcTextHitRect(ctx, text, dy)
 end
 
 function UI_PlayIconTrigger_Play(ctx)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0103}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10372,7 +10444,7 @@ end
 function UI_PlayIconTrigger_Pause(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   local highlight_resume = (is_paused and playing_source) and true or false
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0104}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10437,7 +10509,7 @@ end
 
 function UI_PlayIconTrigger_JumpToStart(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0102}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10479,7 +10551,7 @@ end
 
 function UI_PlayIconTrigger_Stop(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0105}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10513,7 +10585,7 @@ end
 
 function UI_PlayIconTrigger_Prev(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0100}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10558,7 +10630,7 @@ end
 
 function UI_PlayIconTrigger_Next(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0108}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10603,7 +10675,7 @@ end
 
 function UI_PlayIconTrigger_Rand(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0147}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10650,7 +10722,7 @@ function UI_PlayIconTrigger_Loop(ctx)
 
   local highlight_loop = loop_enabled and true or false
 
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{010D}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10687,7 +10759,7 @@ end
 -- 路由按钮与下拉菜单
 function DrawPreviewRouteMenu(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0112}'
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -10773,7 +10845,7 @@ function DrawPreviewRouteMenu(ctx)
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Text(ctx, T("Named track:"))
       reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_SetNextItemWidth(ctx, 250)
+      reaper.ImGui_SetNextItemWidth(ctx, UIScale(250))
       local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
       if changed_name and new_name ~= nil then
         preview_route_name = new_name
@@ -11031,16 +11103,10 @@ function DBPF_DrawDatabaseFolderButton(ctx)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- in_db_mode and colors.icon_on or colors.normal_text
 
   local _, y = reaper.ImGui_GetCursorPos(ctx)
-  reaper.ImGui_SetCursorPosY(ctx, y + 13)
-
-  -- 旧版
-  -- reaper.ImGui_PushFont(ctx, fonts.icon, 20)
-  -- local text_label = in_db_mode and '\u{0051}' or '\u{0067}'
-  -- reaper.ImGui_Text(ctx, text_label)
-  -- reaper.ImGui_PopFont(ctx)
+  reaper.ImGui_SetCursorPosY(ctx, y + UIScale(15))
 
   -- 固定字体宽度占位 + 居中绘制，确保两种字形宽度一致
-  reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+  PushUIFont(ctx, fonts.icon, 20)
   local text_label = in_db_mode and '\u{0165}' or '\u{0164}'
   -- 计算两种字形在该字号下的最大宽度
   local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0165}'))
@@ -11097,7 +11163,7 @@ splitter_drag_offset = 0
 
 -- 左侧表格显示/隐藏切换按钮
 function SM_DrawLeftTableToggle(ctx)
-  reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+  PushUIFont(ctx, fonts.icon, 16)
   local glyph = '\u{0110}'
   local dy = 0
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
@@ -11221,7 +11287,7 @@ function SM_ProcessBuilderLoop()
 
       local center_x, center_y = reaper.ImGui_Viewport_GetCenter(reaper.ImGui_GetMainViewport(ctx))
       reaper.ImGui_SetNextWindowPos(ctx, center_x, center_y, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
-      reaper.ImGui_SetNextWindowSize(ctx, 400, 180, reaper.ImGui_Cond_Always())
+      reaper.ImGui_SetNextWindowSize(ctx, UIScale(400), UIScale(180), reaper.ImGui_Cond_Always())
 
       local visible, open = reaper.ImGui_Begin(ctx, "Database Builder Progress", true, win_flags)
       if visible then
@@ -11272,7 +11338,7 @@ function SM_ProcessBuilderLoop()
   local modal_flags = reaper.ImGui_WindowFlags_AlwaysAutoResize() | reaper.ImGui_WindowFlags_TopMost()
 
   -- 完成弹窗
-  reaper.ImGui_SetNextWindowSize(ctx, 300, 150, reaper.ImGui_Cond_Always())
+    reaper.ImGui_SetNextWindowSize(ctx, UIScale(300), UIScale(150), reaper.ImGui_Cond_Always())
   if reaper.ImGui_BeginPopupModal(ctx, "Build Complete", nil, modal_flags) then
     reaper.ImGui_Text(ctx, "Database build finished successfully!")
     reaper.ImGui_Separator(ctx)
@@ -11339,11 +11405,11 @@ function loop()
     reaper.ImGui_Attach(ctx, fonts.sans_serif)
     need_refresh_font = false
   end
-  reaper.ImGui_PushFont(ctx, fonts.sans_serif, 14)
+  PushUIFont(ctx, fonts.sans_serif, 14)
   reaper.ImGui_SetNextWindowBgAlpha(ctx, bg_alpha) -- 背景不透明度
 
-  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), 6.0)
-  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(),  4.0)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), UIScaleF(8.0))
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(),  UIScaleF(4.0))
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowTitleAlign(), 0, 0) -- 0.5, 0.5 为居中
   -- 标题栏背景颜色
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBg(),          colors.title_bg)          -- 常规
@@ -11374,11 +11440,11 @@ function loop()
 
   if visible then
     -- 圆角处理: 弹出菜单、子区域、滚动条、滑块
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_PopupRounding(),     4.0) -- 弹窗
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ScrollbarRounding(), 4.0) -- 滚动条
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_GrabRounding(),      4.0) -- 滑块
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_PopupRounding(),     UIScaleF(4.0)) -- 弹窗
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ScrollbarRounding(), UIScaleF(4.0)) -- 滚动条
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_GrabRounding(),      UIScaleF(4.0)) -- 滑块
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ChildRounding(),     0.0) -- 子窗口
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(),    4.0) -- 主窗口
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(),    UIScaleF(4.0)) -- 主窗口
 
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Border(),            colors.big_button_border)-- 边框颜色
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),            colors.button_normal)
@@ -11418,7 +11484,7 @@ function loop()
       if db_loader.op_type == "SORT" then
         -- 场景 A: 纯排序
         reaper.ImGui_SetNextWindowPos(ctx, win_w * 0.5, win_h * 0.5, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
-        reaper.ImGui_SetNextWindowSize(ctx, 200, 70)
+        reaper.ImGui_SetNextWindowSize(ctx, UIScale(200), UIScale(70))
         local flags = reaper.ImGui_WindowFlags_NoTitleBar() | reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_NoScrollbar() | reaper.ImGui_WindowFlags_TopMost()
 
         if reaper.ImGui_Begin(ctx, "SortProgress", false, flags) then
@@ -11429,7 +11495,7 @@ function loop()
       else
         -- 场景 B: 硬盘加载
         reaper.ImGui_SetNextWindowPos(ctx, win_w * 0.5, win_h * 0.5, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
-        reaper.ImGui_SetNextWindowSize(ctx, 300, 100)
+        reaper.ImGui_SetNextWindowSize(ctx, UIScale(300), UIScale(100))
 
         if reaper.ImGui_Begin(ctx, "DBLoader", false, reaper.ImGui_WindowFlags_NoTitleBar() | reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_TopMost()) then
           reaper.ImGui_Text(ctx, "Loading Database... Please wait.")
@@ -11446,7 +11512,7 @@ function loop()
 
     -- 标题栏
     reaper.ImGui_BeginGroup(ctx)
-    reaper.ImGui_PushFont(ctx, fonts.odrf, 22)
+    PushUIFont(ctx, fonts.odrf, 22)
     reaper.ImGui_SameLine(ctx, nil, 0)
     DrawTextVOffset(ctx, 'Sound', nil, 15) -- 文字居中，偏移设置
     reaper.ImGui_SameLine(ctx, nil, 0)
@@ -11455,16 +11521,16 @@ function loop()
     reaper.ImGui_EndGroup(ctx)
 
     -- 搜索历史: 上一条/下一条
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     do
       local history_count = #recent_search_keywords
       local cur_idx = search_history_index or 0
       local can_prev = (history_count > 1) and (cur_idx < history_count)
       local can_next = (history_count > 1) and (cur_idx > 1)
-      local dy = 13
+      local dy = UIScaleF(13)
       -- 上一条
       do
-        reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+        PushUIFont(ctx, fonts.icon, 20)
         local glyph = '\u{0160}'
         local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
         local hovered = can_prev and reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true) or false
@@ -11506,9 +11572,9 @@ function loop()
         end
       end
       -- 下一条
-      reaper.ImGui_SameLine(ctx, nil, 10)
+      reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
       do
-        reaper.ImGui_PushFont(ctx, fonts.icon, 20)
+        PushUIFont(ctx, fonts.icon, 20)
         local glyph = '\u{0161}'
         local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
         local hovered = can_next and reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true) or false
@@ -11551,14 +11617,14 @@ function loop()
       end
     end
 
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     DrawFilterLockToggle(ctx)
     -- 数据库路径过滤按钮
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     DBPF_DrawDatabaseFolderButton(ctx)
 
     -- 搜索字段下拉菜单
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     reaper.ImGui_BeginGroup(ctx)
 
     local selected_labels = {}
@@ -11579,7 +11645,7 @@ function loop()
       combo_label = table.concat(selected_labels, "+")
     end
 
-    reaper.ImGui_SetNextItemWidth(ctx, 150)
+    reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
     -- 根据当前模式切换 Comment/License 文本
     UpdateCommentSearchFieldLabel()
     -- 根据当前模式切换 Genre/Tags 文本
@@ -11810,14 +11876,16 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_BeginGroup(ctx)
     local _, item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()) -- 取垂直行距
+    local top_button_w = UIScale(90)
+    local top_button_gap = UIScaleF(10)
     local two_rows_h = reaper.ImGui_GetFrameHeight(ctx) * 2 + item_spacing_y -- 两行高
     -- 清空过滤器内容
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameBorderSize(), 3) -- 按钮边框
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameBorderSize(), UIScaleF(3)) -- 按钮边框
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_clear = reaper.ImGui_Button(ctx, T("Clear"), 90, two_rows_h)
+    reaper.ImGui_SameLine(ctx, nil, top_button_gap)
+    local clicked_clear = reaper.ImGui_Button(ctx, T("Clear"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_clear then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
@@ -11843,8 +11911,8 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_rescan = reaper.ImGui_Button(ctx, T("Rescan"), 90, two_rows_h)
+    reaper.ImGui_SameLine(ctx, nil, top_button_gap)
+    local clicked_rescan = reaper.ImGui_Button(ctx, T("Rescan"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_rescan then
       ForceRescan()
@@ -11861,8 +11929,8 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_res_all = reaper.ImGui_Button(ctx, T("Restore All"), 90, two_rows_h)
+    reaper.ImGui_SameLine(ctx, nil, top_button_gap)
+    local clicked_res_all = reaper.ImGui_Button(ctx, T("Restore All"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_res_all then
       reaper.ImGui_TextFilter_Set(filename_filter, "")
@@ -11908,8 +11976,8 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_sanme_folder = reaper.ImGui_Button(ctx, T("Same Folder"), 90, two_rows_h)
+    reaper.ImGui_SameLine(ctx, nil, top_button_gap)
+    local clicked_sanme_folder = reaper.ImGui_Button(ctx, T("Same Folder"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_sanme_folder then
       collect_mode = COLLECT_MODE_SAMEFOLDER
@@ -11927,8 +11995,8 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    local clicked_pick_folder = reaper.ImGui_Button(ctx, T("Pick Folder"), 90, two_rows_h)
+    reaper.ImGui_SameLine(ctx, nil, top_button_gap)
+    local clicked_pick_folder = reaper.ImGui_Button(ctx, T("Pick Folder"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_pick_folder then
       local init = preview_folder_input
@@ -11950,8 +12018,8 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
-      reaper.ImGui_SameLine(ctx, nil, 10)
-      local clicked_play_his = reaper.ImGui_Button(ctx, T("Play History"), 90, two_rows_h)
+      reaper.ImGui_SameLine(ctx, nil, top_button_gap)
+      local clicked_play_his = reaper.ImGui_Button(ctx, T("Play History"), top_button_w, two_rows_h)
       reaper.ImGui_PopStyleColor(ctx, 3)
       if clicked_play_his then
         LoadRecentPlayed()
@@ -12064,8 +12132,8 @@ function loop()
     -- 创建数据库图标
     reaper.ImGui_SameLine(ctx, nil, 0)
     local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
-    local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "00") -- 文字尺寸
-    local cb_w = txt_w + txt_h + 16 -- 文字宽度+勾选框大小+间距
+    local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "000000") -- 文字尺寸
+    local cb_w = txt_w + txt_h + UIScaleF(16) -- 设置图标+缩放菜单
 
     -- 如果可用宽度足够，把光标推到右侧
     if avail > cb_w then
@@ -12074,7 +12142,7 @@ function loop()
     end
 
     reaper.ImGui_SameLine(ctx, nil, 10)
-    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+    PushUIFont(ctx, fonts.icon, 16)
     local glyph = '\u{0169}'
     local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -12144,7 +12212,7 @@ function loop()
       local cx, cy = reaper.ImGui_Viewport_GetCenter(vp)
       reaper.ImGui_SetNextWindowPos(ctx, cx, cy, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
       -- 设定宽度为 340，高度 0 自适应
-      reaper.ImGui_SetNextWindowSize(ctx, 300, 0, reaper.ImGui_Cond_Appearing())
+        reaper.ImGui_SetNextWindowSize(ctx, UIScale(300), 0, reaper.ImGui_Cond_Appearing())
 
       local cand_visible = reaper.ImGui_BeginPopupModal(ctx, T("Create a New Database"), nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
       if cand_visible then
@@ -12287,27 +12355,9 @@ function loop()
       end
     end
 
-    -- 鼠标停靠提示
-    -- if reaper.ImGui_IsItemHovered(ctx) then
-    --   reaper.ImGui_BeginTooltip(ctx)
-    --   reaper.ImGui_Text(ctx, 'Creating a database. Please browse and select a folder containing audio files.')
-    --   reaper.ImGui_EndTooltip(ctx)
-    -- end
-
     -- 设置弹窗图标
-    reaper.ImGui_SameLine(ctx, nil, 0)
-    local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
-    local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "0000") -- 文字尺寸
-    local cb_w = txt_w + txt_h + 16 -- 文字宽度+勾选框大小+间距
-
-    -- 如果可用宽度足够，把光标推到右侧
-    if avail > cb_w then
-      reaper.ImGui_Dummy(ctx, avail - cb_w, 0)
-      reaper.ImGui_SameLine(ctx, nil, 0)
-    end
-
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+    PushUIFont(ctx, fonts.icon, 16)
     local glyph = '\u{0114}'
     local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -12323,6 +12373,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
     reaper.ImGui_Text(ctx, glyph)
     reaper.ImGui_PopStyleColor(ctx)
+    reaper.ImGui_PopFont(ctx)
 
     if hovered then
       reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
@@ -12331,7 +12382,42 @@ function loop()
       settings_window_open = true
       reaper.SetExtState(EXT_SECTION, "popup_settings_open", tostring(settings_window_open), true)
     end
+    
+    -- 界面缩放图标
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+    PushUIFont(ctx, fonts.icon, 16)
+    local glyph = '\u{0130}'
+    local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+
+    local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
+    local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+    local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+    local col_normal  = colors.icon_normal or 0xFFFFFFFF
+    local col_hovered = colors.icon_hovered or 0xFFCC66FF
+    local col_active  = colors.icon_active or col_hovered
+    local col = hovered and (active and col_active or col_hovered) or col_normal
+
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+    reaper.ImGui_Text(ctx, glyph)
+    reaper.ImGui_PopStyleColor(ctx)
     reaper.ImGui_PopFont(ctx)
+
+    if hovered then
+      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+    end
+    if clicked then
+      reaper.ImGui_OpenPopup(ctx, "##top_ui_scale_menu")
+    end
+    if reaper.ImGui_BeginPopup(ctx, "##top_ui_scale_menu") then
+      for _, preset in ipairs(UI_SCALE_PRESETS) do
+        local selected = math.abs(ui_scale - preset) < 0.005
+        if reaper.ImGui_MenuItem(ctx, FormatUIScale(preset), nil, selected) then
+          SetUIScale(preset)
+        end
+      end
+      reaper.ImGui_EndPopup(ctx)
+    end
     reaper.ImGui_EndGroup(ctx)
 
     SM_DrawLeftTableToggle(ctx) -- 左侧表格开关按钮
@@ -12381,15 +12467,8 @@ function loop()
     local line_h = reaper.ImGui_GetTextLineHeight(ctx)
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
     -- 减去标题栏高度和底部间距。减去播放控件+波形预览+时间线9+进度条+地址栏的高度=228 +加分割条的厚度3=240
-    local child_h = math.max(10, avail_y - line_h - ui_bottom_offset - img_h_offset)
+    local child_h = math.max(10, avail_y - line_h - UIScaleF(ui_bottom_offset) - img_h_offset)
     if child_h < 10 then child_h = 10 end -- 最小高度保护(需要使用 if reaper.ImGui_BeginChild 才有效)
-    
-    -- 旧版逻辑，比例宽度计算方法（弃用）
-    -- local min_left = math.floor(avail_x * 0.005) -- 最小左侧宽度占比
-    -- local max_left = math.floor(avail_x * 0.5) -- 最大左侧宽度占比
-    -- -- 用 left_ratio 实时计算宽度
-    -- local left_w = math.floor(avail_x * left_ratio)
-    -- local right_w = avail_x - left_w - splitter_w
 
     if LEFT_TABLE_VISIBLE then -- 开关切换隐藏左侧表格
 
@@ -12417,7 +12496,7 @@ function loop()
           local ctrl  = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
           font_size = SnapFontSize(font_size)
           if preview_fonts[font_size] then
-            reaper.ImGui_PushFont(ctx, fonts.sans_serif, font_size)
+            PushUIFont(ctx, fonts.sans_serif, font_size)
           end
           if wheel ~= 0 and ctrl and reaper.ImGui_IsWindowHovered(ctx) then
             local idx = FindFontIndex(font_size)
@@ -12730,7 +12809,7 @@ function loop()
 
                 if is_drag_source or handle_hovered or row_hovered then
                   if fonts and fonts.icon then
-                    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                    PushUIFont(ctx, fonts.icon, 16)
                   end
                   local glyph_drag = '\u{00F9}'
                   local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
@@ -12982,7 +13061,7 @@ function loop()
 
                   if handle_active or handle_hovered or row_hovered then
                     if fonts and fonts.icon then
-                      reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                      PushUIFont(ctx, fonts.icon, 16)
                     end
                     local glyph_drag = '\u{0153}'
                     local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
@@ -13174,7 +13253,7 @@ function loop()
 
                 if handle_active or handle_hovered or row_hovered then
                   if fonts and fonts.icon then
-                    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                    PushUIFont(ctx, fonts.icon, 16)
                   end
                   local glyph_drag = '\u{00C3}'
                   local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
@@ -13378,6 +13457,12 @@ function loop()
 
             -- 创建数据库，弹窗绘制
             if _G.__sm_db_show then _G.__sm_db_show = false end
+            -- 设置弹窗居中显示
+            local vp = reaper.ImGui_GetMainViewport(ctx)
+            local cx, cy = reaper.ImGui_Viewport_GetCenter(vp)
+            reaper.ImGui_SetNextWindowPos(ctx, cx, cy, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
+            -- 设定宽度为 340，高度 0 自适应
+            reaper.ImGui_SetNextWindowSize(ctx, UIScale(300), 0, reaper.ImGui_Cond_Appearing())
 
             local cand_visible = reaper.ImGui_BeginPopupModal(ctx, T("Create a New Database"), nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
             if cand_visible then
@@ -13554,7 +13639,7 @@ function loop()
 
                 if handle_active or handle_hovered or row_hovered then
                   if fonts and fonts.icon then
-                    reaper.ImGui_PushFont(ctx, fonts.icon, 16)
+                    PushUIFont(ctx, fonts.icon, 16)
                   end
                   local glyph_drag = '\u{0168}'
                   local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph_drag)
@@ -14119,16 +14204,16 @@ function loop()
             usc_filter = reaper.ImGui_CreateTextFilter()
             reaper.ImGui_Attach(ctx, usc_filter)
           end
-          reaper.ImGui_SetNextItemWidth(ctx, -100)
+          reaper.ImGui_SetNextItemWidth(ctx, -UIScale(100))
           reaper.ImGui_TextFilter_Draw(usc_filter, ctx, "##FilterUCS")
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, T("Clear"), 40) then
+          if reaper.ImGui_Button(ctx, T("Clear"), UIScale(40)) then
             reaper.ImGui_TextFilter_Set(usc_filter, "")
             temp_search_keyword, temp_search_field = nil, nil -- 清除UCS隐式搜索
           end
           -- 全部折叠
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, T("Fold"), 40) then
+          if reaper.ImGui_Button(ctx, T("Fold"), UIScale(40)) then
             cat_open_state = {}
             if ucs_open_en ~= nil then ucs_open_en = {} end
           end
@@ -14200,7 +14285,7 @@ function loop()
                 local is_open = cat_open_state[cat] and true or false
                 local GLYPH_PLUS  = '\u{0166}'
                 local GLYPH_MINUS = '\u{0167}'
-                local clicked, hovered = IconButton(ctx, "##toggle_" .. tostring(cat), (is_open and GLYPH_MINUS or GLYPH_PLUS), 20, 20)
+                local clicked, hovered = IconButton(ctx, "##toggle_" .. tostring(cat), (is_open and GLYPH_MINUS or GLYPH_PLUS), UIScale(20), UIScale(20))
                 if clicked then
                   cat_open_state[cat] = not is_open
                   local en = (ucs_maps and ucs_maps.cat_to_en and ucs_maps.cat_to_en[cat]) or cat
@@ -14555,18 +14640,18 @@ function loop()
             saved_search_filter = reaper.ImGui_CreateTextFilter()
           end
 
-          reaper.ImGui_SetNextItemWidth(ctx, -150)
+          reaper.ImGui_SetNextItemWidth(ctx, -UIScale(150))
           reaper.ImGui_TextFilter_Draw(saved_search_filter, ctx, "##SavedSearchFilter")
           local filter_val = reaper.ImGui_TextFilter_Get(saved_search_filter) or ""
 
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, T("Clear"), 40) then
+          if reaper.ImGui_Button(ctx, T("Clear"), UIScale(40)) then
             reaper.ImGui_TextFilter_Set(saved_search_filter, "")
             filter_val = ""
           end
 
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, T("Save"), 40) then
+          if reaper.ImGui_Button(ctx, T("Save"), UIScale(40)) then
             local main_filter = reaper.ImGui_TextFilter_Get(filename_filter) or ""
             if main_filter ~= "" then
               local new_id = new_guid()
@@ -14579,7 +14664,7 @@ function loop()
           end
 
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, T("+"), 40) then
+          if reaper.ImGui_Button(ctx, T("+"), UIScale(40)) then
             local new_id = new_guid()
             saved_search_nodes[new_id] = { id=new_id, type="folder", name=T("New Group"), children={}, open=true }
             table.insert(root_saved_searches, new_id)
@@ -15139,7 +15224,7 @@ function loop()
         local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Shift())
         font_size = SnapFontSize(font_size)
         if preview_fonts[font_size] then
-          reaper.ImGui_PushFont(ctx, fonts.sans_serif, font_size)
+          PushUIFont(ctx, fonts.sans_serif, font_size)
         end
         if wheel ~= 0 and ctrl and (not shift) and reaper.ImGui_IsWindowHovered(ctx) then
           local idx = FindFontIndex(font_size)
@@ -15309,9 +15394,10 @@ function loop()
           end
 
           -- 每行渲染，按当前列名
+          local scaled_row_height = GetScaledRowHeight()
           for i = display_start + 1, display_end do
             local info = filtered_list[i]
-            reaper.ImGui_TableNextRow(ctx, reaper.ImGui_TableRowFlags_None(), row_height)
+            reaper.ImGui_TableNextRow(ctx, reaper.ImGui_TableRowFlags_None(), scaled_row_height)
 
             -- 新增随机播放精确置中，当目标行提交到可视区时做最终对齐
             if _G.scroll_request_index_exact and i == _G.scroll_request_index_exact then
@@ -15321,7 +15407,7 @@ function loop()
               _G.scroll_request_index_exact, _G.scroll_request_align_exact = nil, nil
             end
 
-            RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
+            RenderFileRowByColumns(ctx, i, info, scaled_row_height, collect_mode, idle_time)
 
             -- 上下按键自动滚动到可见行并且高亮
             if selected_row == i and _G.scroll_target then
@@ -15633,11 +15719,11 @@ function loop()
     DrawPreviewRouteMenu(ctx)
 
     -- 音高旋钮
-    reaper.ImGui_SameLine(ctx, nil, 20)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(20))
     reaper.ImGui_Text(ctx, T("Pitch:"))
     reaper.ImGui_SameLine(ctx)
     -- local pitch_knob_min, pitch_knob_max = -6, 6 -- ±6 半音
-    local pitch_knob_size = 24
+    local pitch_knob_size = UIScale(24)
     reaper.ImGui_PushID(ctx, i)
     local pitch_knob_changed, pitch_knob_value = ImGui_Knob(ctx, "##pitch_knob", pitch, pitch_knob_min, pitch_knob_max, pitch_knob_size, 0)
     reaper.ImGui_PopID(ctx)
@@ -15704,7 +15790,7 @@ function loop()
 
     -- 音高输入框
     reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_PushItemWidth(ctx, 50)
+    reaper.ImGui_PushItemWidth(ctx, UIScale(50))
     -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local rv3
     local fmt = pitch_semitone_step and "%.0f" or "%.3f"
@@ -15770,10 +15856,10 @@ function loop()
       end
     end
 
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     reaper.ImGui_Text(ctx, T("Rate:"))
     reaper.ImGui_SameLine(ctx)
-    local knob_size = 24
+    local knob_size = UIScale(24)
     reaper.ImGui_PushID(ctx, i)
 
     local base = _safe_base()
@@ -15888,7 +15974,7 @@ function loop()
 
     -- 播放速率输入框
     reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_PushItemWidth(ctx, 50)
+    reaper.ImGui_PushItemWidth(ctx, UIScale(50))
     local rv4, new_play_rate
     if ui_locked then reaper.ImGui_BeginDisabled(ctx, true) end
     rv4, new_play_rate = reaper.ImGui_InputDouble(ctx, "##RatePlayrate", disp_rate)
@@ -15923,14 +16009,14 @@ function loop()
     end
 
     -- 水平音量推子
-    reaper.ImGui_SameLine(ctx, nil, 10)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     reaper.ImGui_Text(ctx, T("Volume:"))
-    reaper.ImGui_SameLine(ctx, nil, 15)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(15))
     local rv2
     rv2, volume = ImGui_VolumeLine(ctx, "##volume_line", volume, min_db, max_db, 150, 3, 8, 0, 50)
     local db_now = math.max(min_db, math.min(max_db, VAL2DB(volume or 1)))
-    reaper.ImGui_SameLine(ctx, nil, 15)
-    reaper.ImGui_PushItemWidth(ctx, 50)
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(15))
+    reaper.ImGui_PushItemWidth(ctx, UIScale(50))
     local rv7, db_edit = reaper.ImGui_InputDouble(ctx, "dB##VolDB", db_now, 0, 0, "%.1f") -- dB 输入框
     if rv7 then
       db_edit = math.max(min_db, math.min(max_db, db_edit))
@@ -16283,7 +16369,7 @@ function loop()
         reaper.ImGui_PushID(ctx, "color_" .. key)
 
         local btn_flags = reaper.ImGui_ColorEditFlags_NoTooltip() | reaper.ImGui_ColorEditFlags_NoDragDrop()
-        if reaper.ImGui_ColorButton(ctx, "##btn", colors[key], btn_flags, 55, 18) then
+        if reaper.ImGui_ColorButton(ctx, "##btn", colors[key], btn_flags, UIScale(55), UIScale(18)) then
           reaper.ImGui_OpenPopup(ctx, "popup_" .. key)
         end
 
@@ -16366,8 +16452,8 @@ function loop()
               local tbl_flags = reaper.ImGui_TableFlags_SizingFixedFit()
                               -- | reaper.ImGui_TableFlags_RowBg()
               if reaper.ImGui_BeginTable(ctx, "tbl_group_col"..col_id.."_"..group, 2, tbl_flags, -1, 0) then
-                reaper.ImGui_TableSetupColumn(ctx, "Name",  reaper.ImGui_TableColumnFlags_WidthFixed(), 160)
-                reaper.ImGui_TableSetupColumn(ctx, "Color", reaper.ImGui_TableColumnFlags_WidthFixed(), 70)
+                reaper.ImGui_TableSetupColumn(ctx, "Name",  reaper.ImGui_TableColumnFlags_WidthFixed(), UIScale(160))
+                reaper.ImGui_TableSetupColumn(ctx, "Color", reaper.ImGui_TableColumnFlags_WidthFixed(), UIScale(70))
                 for _, key in ipairs(COLOR_GROUPS[group]) do
                   DrawColorRow_Picker(key, key)
                 end
@@ -16398,9 +16484,13 @@ function loop()
       end
 
       function Section_UI()
+        reaper.ImGui_Text(ctx, T("UI Scale:"))
+        reaper.ImGui_SameLine(ctx, UIScale(200))
+        DrawUIScaleCombo(ctx, "settings_ui_scale", UIScale(500))
+
         reaper.ImGui_Text(ctx, T("Content Font Size:"))
-        reaper.ImGui_SameLine(ctx, 200)
-        reaper.ImGui_PushItemWidth(ctx, 500)
+        reaper.ImGui_SameLine(ctx, UIScale(200))
+        reaper.ImGui_PushItemWidth(ctx, UIScale(500))
         local changed_font, new_font_size = reaper.ImGui_SliderInt(ctx, "##font_size_slider", font_size, FONT_SIZE_MIN, FONT_SIZE_MAX, "%d px")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_font then
@@ -16410,8 +16500,8 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, T("Content Row Height:"))
-        reaper.ImGui_SameLine(ctx, 200)
-        reaper.ImGui_PushItemWidth(ctx, 500)
+        reaper.ImGui_SameLine(ctx, UIScale(200))
+        reaper.ImGui_PushItemWidth(ctx, UIScale(500))
         local changed_row_height, new_row_height = reaper.ImGui_SliderInt(ctx, "##row_height_slider", row_height, 12, 48, "%d px")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_row_height then
@@ -16422,8 +16512,8 @@ function loop()
 
       local function Section_Window()
         reaper.ImGui_Text(ctx, T("Window background alpha:"))
-        reaper.ImGui_SameLine(ctx, 200)
-        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, UIScale(200))
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
         local changed_bg, new_bg_alpha = reaper.ImGui_InputDouble(ctx, "##bg_alpha", bg_alpha, 0.05, 0.1, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_bg then
@@ -16434,8 +16524,8 @@ function loop()
 
       local function Section_Peaks()
         reaper.ImGui_Text(ctx, T("Peaks meter channels:"))
-        reaper.ImGui_SameLine(ctx, 200)
-        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, UIScale(200))
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
         local changed_peaks, new_peaks = reaper.ImGui_InputDouble(ctx, "##peaks_input", peak_chans, 1, 10, "%.0f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_peaks then
@@ -16524,7 +16614,7 @@ function loop()
         end
 
         -- 绘制下拉菜单 "###Language_Selector" 确保 ID 固定
-        reaper.ImGui_SetNextItemWidth(ctx, 150)
+        reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
         if reaper.ImGui_BeginCombo(ctx, T("Language") .. "###Language_Selector", preview_name) then
           for _, lang in ipairs(languages) do
             local is_selected = (current_code == lang.code)
@@ -16603,8 +16693,8 @@ function loop()
         reaper.ImGui_Text(ctx, T("Max Volume (dB):"))
         reaper.ImGui_SameLine(ctx)
         if HelpMarker then HelpMarker(T("Set the maximum output volume, in dB. Default: 12.")) end
-        reaper.ImGui_PushItemWidth(ctx, 200)
-        reaper.ImGui_SameLine(ctx, 150)
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
+        reaper.ImGui_SameLine(ctx, UIScale(150))
         local changed_maxdb, new_max_db = reaper.ImGui_InputDouble(ctx, "##Max Volume (dB)", max_db, 1, 5, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_maxdb then
@@ -16615,8 +16705,8 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, T("Pitch Knob Min:"))
-        reaper.ImGui_PushItemWidth(ctx, 200)
-        reaper.ImGui_SameLine(ctx, 150)
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
+        reaper.ImGui_SameLine(ctx, UIScale(150))
         local changed_pmin, new_pmin = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Min", pitch_knob_min, 1, 2, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_pmin then
@@ -16627,8 +16717,8 @@ function loop()
 
         reaper.ImGui_SameLine(ctx)
         reaper.ImGui_Text(ctx, T("Pitch Knob Max:"))
-        reaper.ImGui_PushItemWidth(ctx, 200)
-        reaper.ImGui_SameLine(ctx, 500)
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
+        reaper.ImGui_SameLine(ctx, UIScale(500))
         local changed_pmax, new_pmax = reaper.ImGui_InputDouble(ctx, "##Pitch Knob Max", pitch_knob_max, 1, 2, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_pmax then
@@ -16638,7 +16728,7 @@ function loop()
         end
 
         -- 半音步进勾选项
-        reaper.ImGui_SameLine(ctx, nil, 20)
+        reaper.ImGui_SameLine(ctx, nil, UIScaleF(20))
         local changed_step, new_step = reaper.ImGui_Checkbox(ctx, T("Semitone Steps"), pitch_semitone_step)
         if changed_step then
           pitch_semitone_step = new_step
@@ -16646,8 +16736,8 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, T("Rate Min:"))
-        reaper.ImGui_PushItemWidth(ctx, 200)
-        reaper.ImGui_SameLine(ctx, 150)
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
+        reaper.ImGui_SameLine(ctx, UIScale(150))
         local changed_rmin, new_rmin = reaper.ImGui_InputDouble(ctx, "##Rate Min", rate_min, 0.01, 0.1, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_rmin then
@@ -16659,8 +16749,8 @@ function loop()
 
         reaper.ImGui_SameLine(ctx)
         reaper.ImGui_Text(ctx, T("Rate Max:"))
-        reaper.ImGui_PushItemWidth(ctx, 200)
-        reaper.ImGui_SameLine(ctx, 500)
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
+        reaper.ImGui_SameLine(ctx, UIScale(500))
         local changed_rmax, new_rmax = reaper.ImGui_InputDouble(ctx, "##Rate Max", rate_max, 0.01, 0.1, "%.2f")
         reaper.ImGui_PopItemWidth(ctx)
         if changed_rmax then
@@ -16719,18 +16809,18 @@ function loop()
           reaper.ImGui_Indent(ctx, 20)
           -- 色相偏移 (Hue Shift)
           reaper.ImGui_Text(ctx, T("Gradient Hue Shift:"))
-          reaper.ImGui_SameLine(ctx, 150)
-          reaper.ImGui_SetNextItemWidth(ctx, 200)
+          reaper.ImGui_SameLine(ctx, UIScale(150))
+        reaper.ImGui_SetNextItemWidth(ctx, UIScale(200))
           local changed_h, v_h = reaper.ImGui_SliderDouble(ctx, "##hue_shift", spectral_hue_shift, 0.0, 1.0, "%.2f")
           if changed_h then
             spectral_hue_shift = v_h
             reaper.SetExtState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
           end
-          reaper.ImGui_SameLine(ctx, nil, 10)
+          reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
           -- 饱和度 (Saturation)
           reaper.ImGui_Text(ctx, T("Gradient Saturation:"))
-          reaper.ImGui_SameLine(ctx, 500)
-          reaper.ImGui_SetNextItemWidth(ctx, 200)
+          reaper.ImGui_SameLine(ctx, UIScale(500))
+        reaper.ImGui_SetNextItemWidth(ctx, UIScale(200))
           -- 范围 0.0 ~ 1.0，越低颜色越灰/柔和
           local changed_s, v_s = reaper.ImGui_SliderDouble(ctx, "##grad_sat", spectral_grad_sat, 0.0, 1.0, "%.2f")
           if changed_s then
@@ -16769,7 +16859,7 @@ function loop()
 
       local function Section_CacheDir()
         reaper.ImGui_Text(ctx, T("Waveform Cache Folder:"))
-        reaper.ImGui_PushItemWidth(ctx, 600)
+        reaper.ImGui_PushItemWidth(ctx, UIScale(600))
         local changed_cache_dir, new_cache_dir = reaper.ImGui_InputText(ctx, "##cache_dir", cache_dir, 512)
         reaper.ImGui_PopItemWidth(ctx)
         if changed_cache_dir then
@@ -16793,7 +16883,7 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, T("Freesound Cache Folder:"))
-        reaper.ImGui_PushItemWidth(ctx, 600)
+        reaper.ImGui_PushItemWidth(ctx, UIScale(600))
         local changed_fs_cache_dir, new_fs_cache_dir = reaper.ImGui_InputText(ctx, "##fs_cache_dir", fs_cache_dir, 512)
         reaper.ImGui_PopItemWidth(ctx)
         if changed_fs_cache_dir then
@@ -16828,8 +16918,8 @@ function loop()
 
       local function Section_Recent()
         reaper.ImGui_Text(ctx, T("Max Recent Searched:"))
-        reaper.ImGui_SameLine(ctx, 150)
-        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, UIScale(150))
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
         local chg_rs, v_rs = reaper.ImGui_InputInt(ctx, "##max_recent_search_input", max_recent_search, 1, 5)
         reaper.ImGui_PopItemWidth(ctx)
         if chg_rs then
@@ -16840,8 +16930,8 @@ function loop()
         end
 
         reaper.ImGui_Text(ctx, T("Max Recent Played:"))
-        reaper.ImGui_SameLine(ctx, 150)
-        reaper.ImGui_PushItemWidth(ctx, 200)
+        reaper.ImGui_SameLine(ctx, UIScale(150))
+        reaper.ImGui_PushItemWidth(ctx, UIScale(200))
         local chg_rp, v_rp = reaper.ImGui_InputInt(ctx, "##max_recent_play_input", max_recent_files, 1, 5)
         reaper.ImGui_PopItemWidth(ctx)
         if chg_rp then
@@ -16864,7 +16954,7 @@ function loop()
       local function Section_ResetToDefaults()
         reaper.ImGui_Text(ctx, T("This action will restore all settings to their default values."))
         -- reaper.ImGui_Separator(ctx)
-        if reaper.ImGui_Button(ctx, T("Reset To Defaults").."##Settings_reset", 120, 32) then
+        if reaper.ImGui_Button(ctx, T("Reset To Defaults").."##Settings_reset", UIScale(120), UIScale(32)) then
           -- 重置默认值
           collect_mode         = -1
           doubleclick_action   = DOUBLECLICK_NONE
@@ -16874,6 +16964,7 @@ function loop()
           bg_alpha             = 1.0
           peak_chans           = 6
           font_size            = 14
+          ui_scale             = 1.0
           max_db               = 12
           auto_scroll_enabled  = false
           search_enter_mode    = true
@@ -17029,12 +17120,12 @@ function loop()
       function DrawSettingsWindow()
         if not settings_window_open then return end
 
-        reaper.ImGui_SetNextWindowSize(ctx, 600, 400, reaper.ImGui_Cond_FirstUseEver())
+        reaper.ImGui_SetNextWindowSize(ctx, UIScale(600), UIScale(400), reaper.ImGui_Cond_FirstUseEver())
         local visible, open = reaper.ImGui_Begin(ctx, T("Settings"), true, reaper.ImGui_WindowFlags_AlwaysAutoResize())
         if visible then
           -- 顶部导航
           local ix, iy = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
-          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), 10, iy)
+          reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), UIScaleF(10), iy)
           for i, p in ipairs(pages) do
             NavTextButton(p.id, p.id)
             reaper.ImGui_SameLine(ctx)
@@ -17051,7 +17142,7 @@ function loop()
           end
 
           -- 底部留白
-          reaper.ImGui_Dummy(ctx, 850, 20)
+          reaper.ImGui_Dummy(ctx, UIScale(850), UIScale(20))
           reaper.ImGui_End(ctx)
         end
 
@@ -17075,7 +17166,7 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_Text(ctx, T("Peaks:"))
     reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_SetNextItemWidth(ctx, 100)
+    reaper.ImGui_SetNextItemWidth(ctx, UIScale(100))
     -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local rv5, new_peaks = reaper.ImGui_InputInt(ctx, '##Peaks', peak_chans, 1, 1)
     -- reaper.ImGui_PopStyleVar(ctx)
@@ -17098,7 +17189,7 @@ function loop()
       if shift and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S()) then
         do_insert = true
       end
-      if reaper.ImGui_Button(ctx, "Insert Selection Into Project") then
+      if reaper.ImGui_Button(ctx, T("Insert Selection Into Project")) then
         do_insert = true
       end
       if do_insert and cur_info and cur_info.path then
@@ -17106,7 +17197,7 @@ function loop()
         InsertSelectedAudioSection(path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true)
       end
       if reaper.ImGui_IsItemHovered(ctx) then
-          DrawTooltip("Shift+S to insert the selected audio section into the project.")
+        DrawTooltip(T("Shift+S to insert the selected audio section into the project."))
       end
     end
 
@@ -17139,7 +17230,7 @@ function loop()
 
     -- 简易频谱反馈
     reaper.ImGui_SameLine(ctx, nil, 10)
-    DrawMiniSpectrumAnalyzer(ctx, 90, bar_height)
+    DrawMiniSpectrumAnalyzer(ctx, UIScale(90), bar_height)
 
     -- 播放器控件
     reaper.ImGui_SameLine(ctx)
@@ -17166,7 +17257,7 @@ function loop()
       local tl_w, th = reaper.ImGui_CalcTextSize(ctx, tlabel.."000") -- 占位
       local dl_w, _  = reaper.ImGui_CalcTextSize(ctx, dlabel)
 
-      reaper.ImGui_PushFont(ctx, fonts.odrf, 16)  -- 数值字体（仅用于测宽与绘制数值）
+      PushUIFont(ctx, fonts.odrf, 16)  -- 数值字体（仅用于测宽与绘制数值）
       local tv_w, _  = reaper.ImGui_CalcTextSize(ctx, time_val_str)
       local dv_w, _  = reaper.ImGui_CalcTextSize(ctx, duration_val_str)
       reaper.ImGui_PopFont(ctx)
@@ -17183,14 +17274,14 @@ function loop()
 
       reaper.ImGui_Text(ctx, tlabel)
       reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushFont(ctx, fonts.odrf, 16)
+      PushUIFont(ctx, fonts.odrf, 16)
       reaper.ImGui_Text(ctx, time_val_str)
       reaper.ImGui_PopFont(ctx)
 
       reaper.ImGui_SameLine(ctx)
       reaper.ImGui_Text(ctx, dlabel)
       reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushFont(ctx, fonts.odrf, 16)
+      PushUIFont(ctx, fonts.odrf, 16)
       reaper.ImGui_Text(ctx, duration_val_str)
       reaper.ImGui_PopFont(ctx)
     end
@@ -17262,7 +17353,7 @@ function loop()
     reaper.ImGui_TextColored(ctx, colors.mole, T("Target DB:")) -- 标签颜色使用 Mole 色
     reaper.ImGui_SameLine(ctx)
 
-    reaper.ImGui_SetNextItemWidth(ctx, 150) -- 设置下拉框宽度，可按需调整
+    reaper.ImGui_SetNextItemWidth(ctx, UIScale(150)) -- 设置下拉框宽度，可按需调整
 
     -- 计算当前显示的名称
     local current_target_alias = "None"
@@ -17554,7 +17645,7 @@ function loop()
 
     -- 拖动中，反向更新 img_h_offset
     if h_splitter_drag and active then
-      local delta = my - h_splitter_start_mouse_y
+      local delta = (my - h_splitter_start_mouse_y) / ui_scale
       local new_off = h_splitter_start_offset - delta
       img_h_offset = math.max(0, math.min(300, new_off)) -- 专辑封面高度限制
       reaper.SetExtState(EXT_SECTION, "img_h_offset", tostring(img_h_offset), true)
@@ -17578,7 +17669,7 @@ function loop()
     end
 
     -- 专辑封面与波形预览 Child 高度补偿
-    img_h = base_img_h + img_h_offset -- 补偿高度
+    img_h = UIScale(base_img_h + img_h_offset) -- 补偿高度
     -- reaper.ImGui_Separator(ctx)
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
     local img_info
@@ -17590,8 +17681,8 @@ function loop()
       img_info = last_selected_info
     end
     local has_cover = img_info and HasCoverImage(img_info)
-    local left_img_w = has_cover and 130 or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
-    local gap = has_cover and 6 or 0
+    local left_img_w = has_cover and UIScale(130) or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
+    local gap = has_cover and UIScaleF(6) or 0
     local right_img_w = avail_w - left_img_w - gap
 
     -- 专辑图片显示
@@ -17604,7 +17695,7 @@ function loop()
       end
       if cover_path then
         -- 水平/垂直居中
-        local img_w, img_h = 130, 130
+        local img_w, img_h = UIScale(130), UIScale(130)
         local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
         local pad_x = (avail_w - img_w) * 0.5
         if pad_x > 0 then
@@ -17613,7 +17704,7 @@ function loop()
         end
         local pad_y = (avail_h - img_h) * 0.5
         if pad_y > 0 then
-          reaper.ImGui_Dummy(ctx, 0, pad_y-15)
+          reaper.ImGui_Dummy(ctx, 0, pad_y - UIScale(15))
         end
 
         -- 缓存并创建纹理
@@ -17690,7 +17781,7 @@ function loop()
 
     -- 无专辑封面时右侧内容的偏移补偿
     if not has_cover then
-      reaper.ImGui_Dummy(ctx, -11, 0)
+      reaper.ImGui_Dummy(ctx, -UIScale(11), 0)
       reaper.ImGui_SameLine(ctx)
     end
     -- 波形预览
@@ -17820,8 +17911,10 @@ function loop()
       if Wave.src_len and Wave.src_len > 0 then
         DrawTimeLine(ctx, Wave, view_start, view_end)
       end
-      reaper.ImGui_Dummy(ctx, 0, 11) -- 占位时间线高度
-      DrawWaveformInImGui(ctx, peaks, pw_region_w, img_h - 30, src_len, channel_count, waveform_vertical_zoom) -- -30用于补偿波形预览上方的时间线区域和间隔，否则应为0
+      local timeline_extra_h = math.max(0, UIScale(18) - 18)
+      reaper.ImGui_Dummy(ctx, 0, UIScale(11) + timeline_extra_h) -- 占位时间线高度
+      local waveform_h = math.max(UIScale(32), img_h - UIScale(30) - timeline_extra_h) -- -30用于补偿波形预览上方的时间线区域和间隔，否则应为0
+      DrawWaveformInImGui(ctx, peaks, pw_region_w, waveform_h, src_len, channel_count, waveform_vertical_zoom)
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
       end
@@ -18134,7 +18227,7 @@ function loop()
         local adjusted_play_cursor = Wave.play_cursor * effective_rate_knob -- 播放光标推进位置
         local px = (adjusted_play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
-        reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, colors.preview_play_cursor, 1) -- 0xFF2222FF
+        reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, colors.preview_play_cursor, UIScaleF(1)) -- 0xFF2222FF
       end
 
       -- 鼠标悬停提示线与时间显示
@@ -18161,17 +18254,17 @@ function loop()
         -- 垂直提示线（跟随鼠标）
         local hover_px = min_x + frac * region_w
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
-        reaper.ImGui_DrawList_AddLine(dl, hover_px, min_y, hover_px, max_y, colors.preview_pint_play_cursor, 1)
+        reaper.ImGui_DrawList_AddLine(dl, hover_px, min_y, hover_px, max_y, colors.preview_pint_play_cursor, UIScaleF(1))
 
         -- 顶部左侧时间文本+背景
         local time_str = reaper.format_timestr(mouse_time or 0, "")
 
-        reaper.ImGui_PushFont(ctx, nil, 12)
+        PushUIFont(ctx, nil, 12)
         local tw, th = reaper.ImGui_CalcTextSize(ctx, time_str)
-        local pad_x, pad_y = 4, 2
+        local pad_x, pad_y = UIScaleF(4), UIScaleF(2)
 
         -- 自定义垂直偏移: 负值往上，正值往下
-        local offset_y = 24
+        local offset_y = UIScaleF(24)
 
         -- 放在竖线顶部的左侧，稍微上移避免压住波形
         local text_x = hover_px - tw - pad_x * 2 - 2
@@ -18347,7 +18440,7 @@ function loop()
           Wave.src_len or 0,
           view_len,
           Wave.scroll or 0,
-          11,   -- 高度
+          UIScale(11), -- 高度
           0.15, -- 滚轮灵敏度
           nil   -- 悬浮提示
         )

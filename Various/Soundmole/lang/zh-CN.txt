@@ -19,6 +19,7 @@ All=全部
 Select Fields=选择字段
 Translating...=翻译中...
 Error=错误
+UI Scale:=界面缩放:
 
 # 搜索导航
 Thesaurus:=同义词库:
@@ -325,4 +326,5 @@ Restore Defaults=恢复默认设置
 Reset To Defaults=重置为默认值
 This action will restore all settings to their default values.=此操作将把所有设置恢复为默认值。
 Reset all settings to default values=将所有设置恢复为默认值
-
+Insert Selection Into Project=将选区插入到工程
+Shift+S to insert the selected audio section into the project.=按 Shift+S 将选中的音频片段插入到工程中。

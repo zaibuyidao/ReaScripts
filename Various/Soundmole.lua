@@ -1,7 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.167
+-- @version 1.0.168
 -- @changelog
+--   Added UI scaling support, allowing users to adjust the interface scale to their preference.
 --   Improve time scale zoom display in waveform preview.
 --   Improve Freesound download and preview system, enhancing performance and stability.
 --   Added mini spectrum visualization.
