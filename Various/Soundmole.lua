@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.171
+-- @version 1.0.172
 -- @changelog
---   Optimized the database path adding workflow with support for prioritizing fast database builds via the Soundmole extension.
---   Optimized metadata retrieval with a unified processing workflow.
+--   Improve Freesound OAuth2 settings by switching to manual input due to instability in the built-in authorization.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

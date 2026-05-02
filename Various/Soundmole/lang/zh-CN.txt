@@ -105,7 +105,12 @@ After a Freesound search finishes, queue every result in the list for background
 Original File Access (OAuth2 Settings)=原始文件访问 (OAuth2 设置)
 Prefer Original Files over Previews=优先使用原始文件而非预览文件
 Download/preview the original audio via OAuth2 (requires a valid access token). Uses the original file instead of the MP3/OGG preview. =通过 OAuth2 下载或预览原始音频 (需有效访问令牌)。使用原始文件而非 MP3/OGG 预览。
+Client ID=Client ID
+Client Secret=Client Secret
+Open authorization code page=打开 authorization code 创建页面
+Authorization Code=Authorization Code
 Freesound authorization: ready=Freesound 授权: 就绪
+Freesound authorization: not connected=Freesound 授权: 未连接
 Freesound authorization: built-in=Freesound 授权: 内置
 Downloads running: %d, queued: %d=下载中: %d，队列中: %d
 Downloads running: %d=下载中: %d
@@ -129,6 +134,16 @@ Downloads queued: %d=队列中: %d
 Download complete=下载完成
 No downloads queued=没有下载在队列中
 Downloading... %.1f KB=下载中... %.1f KB
+Freesound: No results or an unexpected API response.=Freesound: 未找到结果或 API 返回异常。
+Please fill Freesound Client ID, Client Secret, and authorization code, then connect Freesound.=请填写 Freesound Client ID, Client Secret 和授权码，然后连接 Freesound。
+Access token refreshed.=访问令牌已刷新
+Refresh failed:\n%s=刷新失败:\n%s
+Freesound needs to connect once before it can refresh the access token.=Freesound 需要先完成一次连接，才能刷新访问令牌。
+OAuth2 access token saved.=OAuth2 访问令牌已保存。
+Token exchange failed:\n%s=令牌交换失败:\n%s
+Please enter Freesound Client ID and Client Secret.=请输入 Freesound Client ID 和 Client Secret。
+Please enter a Freesound authorization code.=请输入 Freesound 授权码。
+Please enter a Freesound Client ID first.=请先输入 Freesound Client ID。
 
 # 页签与侧边栏
 PeekTree=媒体库
