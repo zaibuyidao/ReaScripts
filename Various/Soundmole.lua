@@ -1,11 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.170
+-- @version 1.0.171
 -- @changelog
---   Fixed album cover centering inaccuracies at fractional UI scaling to prevent unnecessary scrollbars.
---   Fixed misaligned bottom UI hints, such as font size indicators, when scrolling the table list with the mouse wheel.
---   Unified the vertical alignment of the title text and search history icons to improve consistency when scaling the UI.
---   Added Chinese translation, project progress at 95%.
+--   Optimized the database path adding workflow with support for prioritizing fast database builds via the Soundmole extension.
+--   Optimized metadata retrieval with a unified processing workflow.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -25,6 +23,12 @@
 --   Soundmole/data/icons-regular.otf
 --   Soundmole/data/odrf_upr_regular.otf
 -- @donation http://www.paypal.me/zaibuyidao
--- @about Requires JS_ReaScriptAPI & SWS Extension
+-- @about
+--   Requires:
+--   1. ReaImGui
+--   2. JS_ReaScriptAPI
+--   3. SWS Extension
+--   4. Soundmole Extension (https://stash.reaper.fm/v/50782/reaper_soundmole-x64.dll)
+--   5. Python
 
 -- Licensed under the GNU GPL v3

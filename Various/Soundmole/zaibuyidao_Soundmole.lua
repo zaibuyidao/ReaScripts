@@ -1514,849 +1514,6 @@ function GetSectionInfo(item, src)
   return start_offset, length
 end
 
-function get_meta_first(src, ids)
-  for _, id in ipairs(ids) do
-    local ok, val = GetMediaFileMetadataSafe(src, id)
-    if ok and val and val ~= "" then
-      return val
-    end
-  end
-  return nil
-end
-
--- 标准化调式
-function normalize_key(s)
-  if not s or s == "" then return "" end
-  s = s:gsub("^%s+", ""):gsub("%s+$", "")
-  s = s:gsub("%s+", ""):gsub("♯", "#"):gsub("♭", "b")
-  s = s:gsub("[Mm][Ii]?[Nn]?[Oo]?[Rr]$", "m")
-  local root, accidental, minor = s:match("^([A-Ga-g])([#b]?)(m?)$")
-  if root then return string.upper(root) .. accidental .. minor end
-  return string.upper(s)
-end
-
--- Items Assets 收集工程中当前使用的音频文件
-function CollectFromItems()
-  local files, files_idx = {}, {}
-  local item_cnt = reaper.CountMediaItems(0)
-
-  if HAVE_SM_EXT then
-    local wanted, first_src = {}, {}
-    for i = 0, item_cnt - 1 do
-      local item = reaper.GetMediaItem(0, i)
-      local take = reaper.GetActiveTake(item)
-      if take then
-        local src = reaper.GetMediaItemTake_Source(take)
-        -- 过滤空对象／非 MediaSource*
-        if reaper.ValidatePtr(src, "MediaSource*") then
-          local p = normalize_path(reaper.GetMediaSourceFileName(src, ""), false)
-          local t = reaper.GetMediaSourceType(src, "")
-          if p ~= "" and has_allowed_ext(p) and not wanted[p] then
-            wanted[p]     = true
-            first_src[p]  = src -- 保存一个 source 以兼容后续逻辑需要
-          end
-        end
-      end
-    end
-
-    for path, _ in pairs(wanted) do
-      local h = reaper.SM_ProbeMediaBegin(path, 0, "", 6) -- 单文件exts_csv留空即可
-      if h then
-        local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 1, 8)
-        reaper.SM_ProbeMediaEnd(h)
-        if chunk and chunk ~= "" and chunk ~= "\n" then
-          local line = chunk:match("[^\r\n]+")
-          if line and line ~= "" then
-            local m = sm_parse_ndjson_line(line)
-            local info = {
-              path            = path,
-              filename        = path:match("[^/\\]+$") or path,
-              size            = tonumber(m.size) or 0,
-              type            = m.type,
-              length          = tonumber(m.len),
-              samplerate      = to_int(m.sr),
-              channels        = to_int(m.ch),
-              bits            = m.bits or "",
-              genre           = m.genre or "",
-              comment         = m.comment or "",
-              description     = m.description or "",
-              bwf_orig_date   = format_ts(m.mtime), -- 格式化时间戳
-              mtime           = tonumber(m.mtime) or 0, -- 数值时间戳，排序/比较用
-              ucs_category    = m.ucs_category or "",
-              ucs_subcategory = m.ucs_subcategory or "",
-              ucs_catid       = m.ucs_catid or "",
-              key             = m.key or "",
-              bpm             = tonumber(m.bpm) or 0,
-
-              source          = first_src[path], -- 兼容旧逻辑
-            }
-            files[path] = info
-            files_idx[#files_idx+1] = info
-          end
-        end
-      end
-    end
-
-    if #files_idx > 0 then
-      return files, files_idx
-    end
-  end
-
-  -- 返回旧逻辑
-  for i = 0, item_cnt - 1 do
-    local item = reaper.GetMediaItem(0, i)
-    local take = reaper.GetActiveTake(item)
-    if take then
-      local source = reaper.GetMediaItemTake_Source(take)
-      -- 过滤空对象／非 MediaSource*
-      if not reaper.ValidatePtr(source, "MediaSource*") then goto continue end
-      local path = reaper.GetMediaSourceFileName(source, "")
-      path = normalize_path(path, false)
-      local typ = reaper.GetMediaSourceType(source, "")
-      if path and path ~= "" and not files[path] and (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV" or typ == "M4A" or typ == "AAC" or typ == "MP4") then
-        -- 获取文件大小并格式化
-        local size = 0
-        local f = io.open(path, "rb")
-        if f then
-          f:seek("end")
-          size = f:seek()
-          f:close()
-        end
-
-        local bits        = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(source) or ""
-        local genre       = get_meta_first(source, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
-        local comment     = get_meta_first(source, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
-        local description = get_meta_first(source, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
-        local orig_date   = get_meta_first(source, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
-
-        local bpm_str = get_meta_first(source, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
-        local bpm = bpm_str and tonumber(bpm_str) or nil
-        if not bpm then
-          local fn = path:match("[^/\\]+$") or path
-          local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
-          bpm = m and tonumber(m) or nil
-        end
-
-        local key_str = get_meta_first(source, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
-        if not key_str or key_str == "" then
-          local fn = path:match("([^/\\]+)$") or path
-          key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
-        end
-        local key = normalize_key(key_str)
-
-        files[path] = {
-          path = path,
-          filename = path:match("([^/\\]+)$") or path,
-          type = typ,
-          samplerate = reaper.GetMediaSourceSampleRate(source),
-          channels = reaper.GetMediaSourceNumChannels(source),
-          length = reaper.GetMediaSourceLength(source),
-          bits   = bits,
-          genre = genre or "",
-          comment = comment or "",
-          description = description or "",
-          bwf_orig_date = orig_date or "",
-          size = size,
-          source = source,
-          ucs_category    = get_ucstag(source, "category"),
-          ucs_catid       = get_ucstag(source, "catId"),
-          ucs_subcategory = get_ucstag(source, "subCategory"),
-          bpm = bpm or "",
-          key = key or "",
-        }
-        files_idx[#files_idx+1] = files[path]
-      end
-    end
-    ::continue::
-  end
-  return files, files_idx
-end
-
--- Media Items 收集所有工程对象
-function CollectMediaItems()
-  local files_idx = {}
-  local item_cnt = reaper.CountMediaItems(0)
-
-  if HAVE_SM_EXT then -- 单文件模式: Begin > NextJSONEx > 逐行解析 > End
-    local wanted = {}
-    for i = 0, item_cnt - 1 do
-      local item = reaper.GetMediaItem(0, i)
-      local take = reaper.GetActiveTake(item)
-      if take then
-        local src = reaper.GetMediaItemTake_Source(take)
-        if reaper.ValidatePtr(src, "MediaSource*") then
-          local p = normalize_path(reaper.GetMediaSourceFileName(src, ""), false)
-          if p and p ~= "" then wanted[p] = true end
-        end
-      end
-    end
-
-    local meta_by_path = {}
-    for p, _ in pairs(wanted) do
-      local h = reaper.SM_ProbeMediaBegin(p, 0, "", 6) -- 单文件exts_csv留空
-      if h then
-        while true do
-          local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 1, 8) -- 单文件 1 条即可
-          if not chunk or chunk == "" then break end
-          if chunk ~= "\n" then
-            local line = chunk:match("[^\r\n]+")
-            if line and line ~= "" then
-              meta_by_path[p] = sm_parse_ndjson_line(line)
-            end
-          end
-        end
-        reaper.SM_ProbeMediaEnd(h)
-      end
-    end
-
-    for i = 0, item_cnt - 1 do
-      local item = reaper.GetMediaItem(0, i)
-      local take = reaper.GetActiveTake(item)
-      if take then
-        local src = reaper.GetMediaItemTake_Source(take)
-        -- 过滤空对象／非 MediaSource*
-        if reaper.ValidatePtr(src, "MediaSource*") then
-          local path = normalize_path(reaper.GetMediaSourceFileName(src, ""), false)
-          local m = path ~= "" and meta_by_path[path] or nil
-          if m and m.path ~= "" and has_allowed_ext(m.path) then
-            local track = reaper.GetMediaItem_Track(item)
-            local _, track_name = reaper.GetTrackName(track)
-            local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-            local take_name = ""
-            do
-              local ok, name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
-              take_name = ok and name or ""
-            end
-
-            local section_offset = GetItemSectionStartPos(item) or 0
-            local section_length = tonumber(m.len) or 0
-
-            table.insert(files_idx, {
-              item            = item,
-              take            = take,
-              track           = track,
-              track_name      = track_name,
-              position        = pos,
-              section_offset  = section_offset,
-              section_length  = section_length,
-              source          = src,
-
-              path            = path,
-              filename        = take_name ~= "" and take_name or (path:match("[^/\\]+$") or path),
-              type            = m.type or "",
-              samplerate      = to_int(m.sr),
-              channels        = to_int(m.ch),
-              length          = tonumber(m.len) or 0,
-              bits            = m.bits or "",
-              size            = tonumber(m.size) or 0,
-              genre           = m.genre or "",
-              description     = m.description or "",
-              comment         = m.comment or "",
-              bwf_orig_date   = format_ts(m.mtime),
-              mtime           = tonumber(m.mtime) or 0,
-              ucs_category    = m.ucs_category or "",
-              ucs_catid       = m.ucs_catid or "",
-              ucs_subcategory = m.ucs_subcategory or "",
-              key             = m.key or "",
-              bpm             = m.bpm or "",
-            })
-          end
-        end
-      end
-    end
-
-    if #files_idx > 0 then
-      return files_idx
-    end
-  end
-
-  -- 回退到旧逻辑
-  for i = 0, item_cnt - 1 do
-    local item = reaper.GetMediaItem(0, i)
-    local take = reaper.GetActiveTake(item)
-
-    local take_offset, take_length, samplerate, channels, length = 0, 0, 0, 0, 0
-    local src, path, typ = nil, "", ""
-    local size, bits = 0, ""
-    local genre, description, comment, bwf_orig_date, ucs_category, ucs_catid, ucs_subcategory, bpm, key = "", "", "", "", "", "", "", "", ""
-
-    if take then
-      src = reaper.GetMediaItemTake_Source(take)
-      -- 过滤空对象／非 MediaSource*
-      if not reaper.ValidatePtr(src, "MediaSource*") then goto continue end
-      take_offset = GetItemSectionStartPos(item) or 0
-      take_length = reaper.GetMediaSourceLength(src) or 0
-      path = reaper.GetMediaSourceFileName(src, "")
-      path = normalize_path(path, false)
-      -- 通过源文件路径获取type，保证类型准确
-      if path and path ~= "" then
-        local real_src = reaper.PCM_Source_CreateFromFile(path)
-        if real_src then
-          typ = reaper.GetMediaSourceType(real_src, "")
-          reaper.PCM_Source_Destroy(real_src)
-        else
-          typ = ""
-        end
-      else
-        typ = ""
-      end
-      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV" or typ == "M4A" or typ == "AAC" or typ == "MP4") then
-        goto continue
-      end
-      -- typ = reaper.GetMediaSourceType(src, "") -- 通过take获取type，无法保证类型准确。会混入SECTION 等非音频类型
-      bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
-      samplerate = reaper.GetMediaSourceSampleRate(src)
-      channels = reaper.GetMediaSourceNumChannels(src)
-      length = reaper.GetMediaSourceLength(src)
-      -- 文件大小
-      local f = io.open(path, "rb")
-      if f then
-        f:seek("end")
-        size = f:seek()
-        f:close()
-      end
-      genre         = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
-      comment       = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
-      description   = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
-      bwf_orig_date = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
-    end
-
-    local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
-    bpm = bpm_str and tonumber(bpm_str) or nil
-    if not bpm then
-      local fn = path:match("[^/\\]+$") or path
-      local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
-      bpm = m and tonumber(m) or nil
-    end
-
-    local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
-    if not key_str or key_str == "" then
-      local fn = path:match("([^/\\]+)$") or path
-      key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
-    end
-    key = normalize_key(key_str)
-
-    local track = reaper.GetMediaItem_Track(item)
-    local _, track_name = reaper.GetTrackName(track)
-    local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-    local take_name = ""
-    if take then
-      local ok, name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
-      take_name = ok and name or ""
-    end
-    table.insert(files_idx, {
-      item = item,
-      take = take,
-      source = src,
-      path = path,
-      filename = take_name ~= "" and take_name or (path:match("[^/\\]+$") or path),
-      type = typ,
-      samplerate = samplerate,
-      channels = channels,
-      length = length,
-      bits = bits,
-      size = size,
-      genre = genre,
-      description = description,
-      comment = comment,
-      bwf_orig_date = bwf_orig_date,
-      track = track,
-      track_name = track_name,
-      position = pos,
-      section_offset = take_offset,
-      section_length = take_length,
-      ucs_category    = get_ucstag(src, "category"),
-      ucs_catid       = get_ucstag(src, "catId"),
-      ucs_subcategory = get_ucstag(src, "subCategory"),
-      bpm = bpm or "",
-      key = key or "",
-    })
-    ::continue::
-  end
-  return files_idx
-end
-
--- Source Media - RPP 收集所有引用的音频文件
-function CollectFromRPP()
-  local files_idx = {}
-  local path_set = {}
-
-  -- 获取RPP所有引用路径
-  local tracks = {}
-  local track_count = reaper.CountTracks(0)
-  for i = 0, track_count-1 do
-    tracks[#tracks+1] = reaper.GetTrack(0, i)
-  end
-  for _, track in ipairs(tracks) do
-    local ret, chunk = reaper.GetTrackStateChunk(track, "", false)
-    if ret and chunk then
-      for path in chunk:gmatch('FILE%s+"(.-)"') do
-        if path and path ~= "" then
-          path = normalize_path(path, false)
-          path_set[path] = true
-        end
-      end
-    end
-  end
-
-  if HAVE_SM_EXT then
-    local meta_by_path = {}
-    for p, _ in pairs(path_set) do
-      local h = reaper.SM_ProbeMediaBegin(p, 0, "", 6) -- 单文件exts_csv置空
-      if h then
-        while true do
-          local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 1, 8) -- 单文件一条足够
-
-          if not chunk or chunk == "" then break end
-          if chunk ~= "\n" then
-            local line = chunk:match("[^\r\n]+")
-            if line and line ~= "" then
-              local m = sm_parse_ndjson_line(line)
-              local k = normalize_path((m and m.path ~= "" and m.path) or p, false)
-              meta_by_path[k] = m
-            end
-          end
-        end
-        reaper.SM_ProbeMediaEnd(h)
-      end
-    end
-
-    local item_cnt = reaper.CountMediaItems(0)
-    for i = 0, item_cnt - 1 do
-      local item = reaper.GetMediaItem(0, i)
-      local take = reaper.GetActiveTake(item)
-      if take then
-        local src = reaper.GetMediaItemTake_Source(take)
-        if reaper.ValidatePtr(src, "MediaSource*") then
-          local root_src = GetRootSource(src) -- 统一获取音频源
-          local path = ""
-          if reaper.ValidatePtr(root_src, "MediaSource*") then
-            path = normalize_path(reaper.GetMediaSourceFileName(root_src, ""), false)
-          end
-
-          if path ~= "" and path_set[path] then
-            local m = meta_by_path[path]
-            if m and m.path ~= "" and has_allowed_ext(m.path) then
-              local track = reaper.GetMediaItem_Track(item)
-              local _, track_name = reaper.GetTrackName(track)
-              local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-              local ok, tname = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
-              local take_name = ok and tname or ""
-              table.insert(files_idx, {
-                item            = item,
-                take            = take,
-                track           = track,
-                track_name      = track_name,
-                position        = pos,
-                source          = src,
-
-                path            = path,
-                filename        = take_name ~= "" and take_name or (path:match("[^/\\]+$") or path),
-                type            = m.type or "",
-                samplerate      = to_int(m.sr),
-                channels        = to_int(m.ch),
-                length          = tonumber(m.len) or 0,
-                bits            = m.bits or "",
-                size            = tonumber(m.size) or 0,
-                genre           = m.genre or "",
-                description     = m.description or "",
-                comment         = m.comment or "",
-                bwf_orig_date   = format_ts(m.mtime),
-                mtime           = tonumber(m.mtime) or 0, -- 排序用时间戳
-                ucs_category    = m.ucs_category or "",
-                ucs_catid       = m.ucs_catid or "",
-                ucs_subcategory = m.ucs_subcategory or "",
-                key             = m.key or "",
-                bpm             = m.bpm or "",
-              })
-            end
-          end
-        end
-      end
-    end
-
-    if #files_idx > 0 then
-      return files_idx
-    end
-  end
-
-  -- 回退到旧逻辑
-  local item_cnt = reaper.CountMediaItems(0)
-  for i = 0, item_cnt - 1 do
-    local item = reaper.GetMediaItem(0, i)
-    local take = reaper.GetActiveTake(item)
-
-    local typ, bits, samplerate, channels, length, size = "", "", "", "", "", 0
-    local genre, description, comment, bwf_orig_date = "", "", "", ""
-    local real_src
-    if take then
-      local src = reaper.GetMediaItemTake_Source(take)
-      local root_src = GetRootSource(src) -- 统一获取音频源
-      local path = ""
-      if reaper.ValidatePtr(root_src, "MediaSource*") then
-        path = reaper.GetMediaSourceFileName(root_src, "")
-      end
-      path = normalize_path(path, false)
-      if path and path_set[path] then
-        -- 获取元数据
-        real_src = reaper.PCM_Source_CreateFromFile(path)
-        if real_src then
-          typ = reaper.GetMediaSourceType(real_src, "")
-          samplerate = reaper.GetMediaSourceSampleRate(real_src)
-          channels = reaper.GetMediaSourceNumChannels(real_src)
-          length = reaper.GetMediaSourceLength(real_src)
-          bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(real_src) or ""
-          local f = io.open(path, "rb")
-          if f then
-            f:seek("end")
-            size = f:seek()
-            f:close()
-          end
-          genre         = get_meta_first(real_src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
-          comment       = get_meta_first(real_src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
-          description   = get_meta_first(real_src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
-          bwf_orig_date = get_meta_first(real_src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
-
-          local bpm_str = get_meta_first(real_src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
-          bpm = bpm_str and tonumber(bpm_str) or nil
-          if not bpm then
-            local fn = path:match("[^/\\]+$") or path
-            local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
-            bpm = m and tonumber(m) or nil
-          end
-
-          local key_str = get_meta_first(real_src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
-          if not key_str or key_str == "" then
-            local fn = path:match("([^/\\]+)$") or path
-            key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
-          end
-          key = normalize_key(key_str)
-
-          reaper.PCM_Source_Destroy(real_src)
-        end
-
-        local track = reaper.GetMediaItem_Track(item)
-        local _, track_name = reaper.GetTrackName(track)
-        local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
-        local take_name = ""
-        if take then
-          local ok, name = reaper.GetSetMediaItemTakeInfo_String(take, "P_NAME", "", false)
-          take_name = ok and name or ""
-        end
-        table.insert(files_idx, {
-          item = item,
-          take = take,
-          source = real_src,
-          path = path,
-          filename = path:match("[^/\\]+$") or path,
-          type = typ,
-          samplerate = samplerate,
-          channels = channels,
-          length = length,
-          bits = bits,
-          size = size,
-          genre = genre,
-          description = description,
-          comment = comment,
-          bwf_orig_date = bwf_orig_date,
-          track = track,
-          track_name = track_name,
-          position = pos,
-          ucs_category    = get_ucstag(real_src, "category"),
-          ucs_catid       = get_ucstag(real_src, "catId"),
-          ucs_subcategory = get_ucstag(real_src, "subCategory"),
-          bpm = bpm or "",
-          key = key or "",
-        })
-      end
-    end
-  end
-
-  return files_idx
-end
-
--- Project Directory 收集工程目录的音频文件
-function CollectFromProjectDirectory()
-  local files, files_idx = {}, {}
-  -- 获取当前工程路径
-  local proj_path = reaper.GetProjectPath()
-  proj_path = normalize_path(proj_path, true)
-  if not proj_path or proj_path == "" then return files, files_idx end
-
-  -- 目录模式 Begin > NextJSONEx > 逐行解析 > End
-  if HAVE_SM_EXT then
-    local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
-    local h = reaper.SM_ProbeMediaBegin(proj_path, 0, exts_csv, 6)
-    if h then
-      while true do
-        local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 256, 8) -- 批量取, 预算 8ms
-        if not chunk or chunk == "" then break end
-        if chunk ~= "\n" then
-          for line in chunk:gmatch("[^\r\n]+") do
-            if line ~= "" then
-              local m = sm_parse_ndjson_line(line)
-              if m.path ~= "" then
-                local fullpath = normalize_path(m.path, false)
-                if not files[fullpath] then
-                  local info = {
-                    path            = fullpath,
-                    filename        = (fullpath:match("[^/\\]+$") or fullpath),
-                    size            = tonumber(m.size) or 0,
-                    type            = m.type or "",
-                    length          = tonumber(m.len) or 0,
-                    samplerate      = to_int(m.sr),
-                    channels        = to_int(m.ch),
-                    bits            = m.bits or "",
-                    genre           = m.genre or "",
-                    comment         = m.comment or "",
-                    description     = m.description or "",
-                    bwf_orig_date   = format_ts(m.mtime),
-                    mtime           = tonumber(m.mtime) or 0, -- 数值时间戳（排序/筛选）
-                    ucs_category    = m.ucs_category or "",
-                    ucs_subcategory = m.ucs_subcategory or "",
-                    ucs_catid       = m.ucs_catid or "",
-                    key             = m.key or "",
-                    bpm             = m.bpm or "",
-                  }
-                  files[fullpath] = info
-                  files_idx[#files_idx + 1] = info
-                end
-              end
-            end
-          end
-        end
-      end
-      reaper.SM_ProbeMediaEnd(h)
-      return files, files_idx  -- 成功使用扩展时直接返回
-    end
-  end
-
-  -- 回退到旧逻辑
-  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true, m4a=true, aac=true, mp4=true}
-
-  local i = 0
-  while true do
-    local file = reaper.EnumerateFiles(proj_path, i)
-    if not file then break end
-    local ext = file:match("^.+%.([^.]+)$")
-    if ext and valid_exts[ext:lower()] and ext:lower() ~= "rpp" then
-      local fullpath = proj_path .. "/" .. file
-      fullpath = normalize_path(fullpath, false)
-      if IsValidAudioFile(fullpath) and not files[fullpath] then
-        local info = { path = fullpath, filename = file }
-        -- 获取文件大小
-        local f = io.open(fullpath, "rb")
-        if f then
-          f:seek("end")
-          info.size = f:seek()
-          f:close()
-        else
-          info.size = 0
-        end
-
-        local src = reaper.PCM_Source_CreateFromFile(fullpath)
-        -- 测试元数据内容，可获取元数据信息用于对应列读取
-        -- local retval, metadata_list = reaper.GetMediaFileMetadata(src, "")
-        -- reaper.ShowConsoleMsg(metadata_list)
-        if src then
-          info.source = src
-          info.type = reaper.GetMediaSourceType(src, "")
-          info.length = reaper.GetMediaSourceLength(src)
-          info.samplerate = reaper.GetMediaSourceSampleRate(src)
-          info.channels = reaper.GetMediaSourceNumChannels(src)
-          info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
-          local genre       = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
-          local comment     = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
-          local description = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
-          local orig_date   = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
-          info.genre = genre or ""
-          info.comment = comment or ""
-          info.description = description or ""
-          info.bwf_orig_date = orig_date or ""
-          info.ucs_category    = get_ucstag(src, "category")
-          info.ucs_catid       = get_ucstag(src, "catId")
-          info.ucs_subcategory = get_ucstag(src, "subCategory")
-
-          local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
-          local bpm = bpm_str and tonumber(bpm_str) or nil
-          if not bpm then
-            local fn = file
-            local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
-            bpm = m and tonumber(m) or nil
-          end
-          info.bpm = bpm or ""
-
-          local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
-          if not key_str or key_str == "" then
-            local fn = file
-            key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
-          end
-          info.key = normalize_key(key_str)
-        end
-        files[fullpath] = info
-        files_idx[#files_idx+1] = info
-      end
-    end
-    i = i + 1
-  end
-
-  return files, files_idx
-end
-
-function CollectFromCustomFolder(paths)
-  local files_idx = {}
-  -- 逐个单文件模式探针 Begin > NextJSONEx > 逐行解析 > End
-  if HAVE_SM_EXT and type(paths) == "table" and #paths > 0 then
-    local seen = {}
-    for _, raw in ipairs(paths) do
-      if type(raw) == "string" and raw ~= "" then
-        local inpath = normalize_path(raw, false)
-        if has_allowed_ext(inpath) then -- 单文件模式不吃 exts_csv，需在 Lua 侧按扩展名放行
-          local h = reaper.SM_ProbeMediaBegin(inpath, 0, "", 6) -- 单文 exts_csv忽略
-          if h then
-            while true do
-              local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 1, 8)
-              if not chunk or chunk == "" then break end
-              if chunk ~= "\n" then
-                for line in chunk:gmatch("[^\r\n]+") do
-                  if line ~= "" then
-                    local m = sm_parse_ndjson_line(line)
-                    local fullpath = normalize_path((m and m.path ~= "" and m.path) or inpath, false)
-                    if not seen[fullpath] then
-                      local info = {
-                        path            = fullpath,
-                        filename        = (fullpath:match("[^/\\]+$") or fullpath),
-                        size            = tonumber(m.size) or 0,
-                        type            = m and (m.type or "") or "",
-                        length          = tonumber(m and m.len) or 0,
-                        samplerate      = to_int(m and m.sr),
-                        channels        = to_int(m and m.ch),
-                        bits            = (m and m.bits) or "",
-                        genre           = (m and m.genre) or "",
-                        comment         = (m and m.comment) or "",
-                        description     = (m and m.description) or "",
-                        bwf_orig_date   = format_ts(m and m.mtime),
-                        mtime           = tonumber(m and m.mtime) or 0, -- 数值时间戳（排序/筛选）
-                        ucs_category    = (m and m.ucs_category) or "",
-                        ucs_subcategory = (m and m.ucs_subcategory) or "",
-                        ucs_catid       = (m and m.ucs_catid) or "",
-                        key             = (m and m.key) or "",
-                        bpm             = (m and m.bpm) or "",
-
-                        position        = 0,
-                        section_offset  = 0,
-                        section_length  = tonumber(m and m.len) or 0,
-                      }
-                      files_idx[#files_idx + 1] = info
-                      seen[fullpath] = true
-                    end
-                  end
-                end
-              end
-            end
-            reaper.SM_ProbeMediaEnd(h)
-          end
-        end
-      end
-    end
-
-    if #files_idx > 0 then
-      return files_idx
-    end
-  end
-
-  -- 回退到旧逻辑
-  for _, path in ipairs(paths or {}) do
-    if type(path) == "string" and path ~= "" then
-      path = normalize_path(path, false)
-      if not IsValidAudioFile(path) then
-        goto continue
-      end
-
-      local typ, size, bits, samplerate, channels, length = "", 0, "", "", "", ""
-      local genre, description, comment, orig_date = "", "", "", ""
-
-      -- 通过PCM_Source采集属性
-      if reaper.file_exists and reaper.file_exists(path) then
-        local src = reaper.PCM_Source_CreateFromFile(path)
-        if src then
-          typ = reaper.GetMediaSourceType(src, "")
-          bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
-          samplerate = reaper.GetMediaSourceSampleRate(src)
-          channels = reaper.GetMediaSourceNumChannels(src)
-          length = reaper.GetMediaSourceLength(src)
-          -- 直接赋值到外部变量
-          local _genre       = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
-          local _comment     = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
-          local _description = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
-          local _orig_date   = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
-          genre = _genre or ""
-          comment = _comment or ""
-          description = _description or ""
-          orig_date = _orig_date or ""
-
-          local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
-          local bpm = bpm_str and tonumber(bpm_str) or nil
-          if not bpm then
-            local fn = path:match("[^/\\]+$") or path
-            local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
-            bpm = m and tonumber(m) or nil
-          end
-
-          local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
-          if not key_str or key_str == "" then
-            local fn = path:match("([^/\\]+)$") or path
-            key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
-          end
-          key = normalize_key(key_str)
-
-          reaper.PCM_Source_Destroy(src)
-        end
-      end
-
-      -- 音频格式
-      if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV" or typ == "M4A" or typ == "AAC" or typ == "MP4") then
-        goto continue
-      end
-
-      -- 文件大小
-      local f = io.open(path, "rb")
-      if f then
-        f:seek("end")
-        size = f:seek()
-        f:close()
-      end
-
-      local filename = path:match("[^/\\]+$") or path
-
-      table.insert(files_idx, {
-        path = path,
-        filename = filename,
-        type = typ,
-        samplerate = samplerate,
-        channels = channels,
-        length = length,
-        bits = bits,
-        size = size,
-        genre = genre,
-        description = description,
-        comment = comment,
-        bwf_orig_date = orig_date,
-        position = 0,
-        section_offset = 0,
-        section_length = length,
-        ucs_category    = get_ucstag(src, "category"),
-        ucs_catid       = get_ucstag(src, "catId"),
-        ucs_subcategory = get_ucstag(src, "subCategory"),
-        key = key,
-        bpm = bpm,
-      })
-    end
-    ::continue::
-  end
-  return files_idx
-end
-
 -- 按文件名排序
 function SortFilesByFilenameAsc()
   if files_idx_cache then
@@ -5032,242 +4189,6 @@ function GetAudioFilesFromDirCached(dir_path)
   return audio_file_cache[dir_path]
 end
 
--- 获取指定目录下所有有效音频文件
-function CollectFromDirectory(dir_path)
-  dir_path = normalize_path(dir_path, true)
-  local files, files_idx = {}, {}
-
-  -- 将当前正在构建的文件表，注册为后台更新的目标
-  _G.current_files_map = files
-  if reaper.APIExists("SM_ListDirBegin") and dir_path and dir_path ~= "" then
-    local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
-    local h = reaper.SM_ListDirBegin(dir_path, 0, exts_csv)
-    if h then
-      while true do
-        local chunk = reaper.SM_ListDirNextJSON(h, 2000)
-        if not chunk or chunk == "" then break end
-        if chunk ~= "\n" then
-          for line in chunk:gmatch("[^\r\n]+") do
-            if line ~= "" then
-              local m = sm_parse_ndjson_line(line)
-              if m.path ~= "" then
-                local fullpath = normalize_path(m.path, false)
-                if not files[fullpath] then
-                  local info = {
-                    path            = fullpath,
-                    filename        = (fullpath:match("[^/\\]+$") or fullpath),
-                    size            = tonumber(m.size) or 0,
-                    mtime           = tonumber(m.mtime) or 0,
-                    bwf_orig_date   = format_ts(m.mtime),
-
-                    -- 初始占位，等待后台填充
-                    type            = "...", 
-                    length          = 0,
-                    samplerate      = 0,
-                    channels        = 0,
-                    bits            = "",
-                    genre           = "",
-                    comment         = "",
-                    description     = "",
-                    ucs_category    = "",
-                    ucs_subcategory = "",
-                    ucs_catid       = "",
-                    key             = "",
-                    bpm             = "",
-                  }
-                  files[fullpath] = info
-                  files_idx[#files_idx+1] = info
-                end
-              end
-            end
-          end
-        end
-      end
-      reaper.SM_ListDirEnd(h)
-      -- 启动后台探测器
-      if _G.async_probe_handle then 
-        reaper.SM_ProbeMediaEnd(_G.async_probe_handle) 
-        _G.async_probe_handle = nil
-      end
-      if reaper.APIExists("SM_ProbeMediaBegin") then
-        -- Flag 0 = 标准模式
-        _G.async_probe_handle = reaper.SM_ProbeMediaBegin(dir_path, 0, exts_csv, 0)
-      end
-
-      return files, files_idx
-    end
-  end
-
-  if HAVE_SM_EXT and dir_path and dir_path ~= "" then
-    local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
-    local h = reaper.SM_ProbeMediaBegin(dir_path, 0, exts_csv, 6)
-    if h then
-      while true do
-        local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 256, 8) -- 一次取一批，max_items=256 / 预算=8ms，按需调大
-        if not chunk or chunk == "" then break end
-        if chunk ~= "\n" then
-          for line in chunk:gmatch("[^\r\n]+") do
-            if line ~= "" then
-              local m = sm_parse_ndjson_line(line)
-              if m.path ~= "" then
-                local fullpath = normalize_path(m.path, false)
-                if not files[fullpath] then
-                  local info = {
-                    path            = fullpath,
-                    filename        = (fullpath:match("[^/\\]+$") or fullpath),
-                    size            = tonumber(m.size) or 0,
-                    type            = m.type or "",
-                    length          = tonumber(m.len) or 0,
-                    samplerate      = to_int(m.sr),
-                    channels        = to_int(m.ch),
-                    bits            = m.bits or "",
-                    genre           = m.genre or "",
-                    comment         = m.comment or "",
-                    description     = m.description or "",
-                    bwf_orig_date   = format_ts(m.mtime),     -- 或为 orig_date
-                    mtime           = tonumber(m.mtime) or 0, -- 数值型时间戳（排序/筛选/比较用）
-                    ucs_category    = m.ucs_category or "",
-                    ucs_subcategory = m.ucs_subcategory or "",
-                    ucs_catid       = m.ucs_catid or "",
-                    key             = m.key or "",
-                    bpm             = m.bpm or "",
-                  }
-                  files[fullpath] = info
-                  files_idx[#files_idx+1] = info
-                end
-              end
-            end
-          end
-        end
-      end
-      reaper.SM_ProbeMediaEnd(h)
-      return files, files_idx
-    end
-  end
-
-  -- 回退到旧逻辑
-  local valid_exts = {wav=true, mp3=true, flac=true, ogg=true, aiff=true, ape=true, wv=true, m4a=true, aac=true, mp4=true}
-  if not dir_path or dir_path == "" then return files, files_idx end
-  local i = 0
-  while true do
-    local file = reaper.EnumerateFiles(dir_path, i)
-    if not file then break end
-    local ext = file:match("^.+%.([^.]+)$")
-    if ext and valid_exts[ext:lower()] and ext:lower() ~= "rpp" then
-      local fullpath = dir_path .. sep .. file
-      fullpath = normalize_path(fullpath, false)
-      if IsValidAudioFile(fullpath) and not files[fullpath] then
-        local info = { path = fullpath, filename = file }
-        -- 获取文件大小
-        local f = io.open(fullpath, "rb")
-        if f then
-          f:seek("end")
-          info.size = f:seek()
-          f:close()
-        else
-          info.size = 0
-        end
-
-        local src = reaper.PCM_Source_CreateFromFile(fullpath)
-        if src then
-          info.source = src
-          info.type = reaper.GetMediaSourceType(src, "")
-          info.length = reaper.GetMediaSourceLength(src)
-          info.samplerate = reaper.GetMediaSourceSampleRate(src)
-          info.channels = reaper.GetMediaSourceNumChannels(src)
-          info.bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
-          local genre       = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
-          local comment     = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
-          local description = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
-          local orig_date   = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
-          info.genre = genre or ""
-          info.comment = comment or ""
-          info.description = description or ""
-          info.bwf_orig_date = orig_date or ""
-          info.ucs_category    = get_ucstag(src, "category")
-          info.ucs_catid       = get_ucstag(src, "catId")
-          info.ucs_subcategory = get_ucstag(src, "subCategory")
-
-          local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
-          local bpm = bpm_str and tonumber(bpm_str) or nil
-          if not bpm then
-            local fn = file
-            local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
-            bpm = m and tonumber(m) or nil
-          end
-          info.bpm = bpm or ""
-
-          local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
-          if not key_str or key_str == "" then
-            local fn = file
-            key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
-          end
-          info.key = normalize_key(key_str)
-        end
-        files[fullpath] = info
-        files_idx[#files_idx+1] = info
-      end
-    end
-    i = i + 1
-  end
-
-  return files, files_idx
-end
-
-function ProcessAsyncMetadata()
-  if not _G.async_probe_handle then return end
-
-  -- 如果不在文件夹模式下，立即停止扫描
-  if not _G.current_files_map then
-    if reaper.APIExists("SM_ProbeMediaEnd") then
-      reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
-    end
-    _G.async_probe_handle = nil
-    return
-  end
-
-  -- 批量读取，每次处理 256 个文件，保持 UI 流畅
-  local chunk = reaper.SM_ProbeMediaNextJSONEx(_G.async_probe_handle, 256, 8)
-
-  if not chunk or chunk == "" then
-    reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
-    _G.async_probe_handle = nil
-    return
-  end
-
-  if chunk ~= "\n" then
-    -- 更新当前正在浏览的文件夹表
-    local target_map = _G.current_files_map
-
-    for line in chunk:gmatch("[^\r\n]+") do
-      if line ~= "" then
-        local m = sm_parse_ndjson_line(line)
-        if m.path ~= "" then
-          local fullpath = normalize_path(m.path, false)
-          local info = target_map[fullpath]
-
-          if info then
-            -- 填充元数据
-            info.type            = m.type or ""
-            info.length          = tonumber(m.len) or 0
-            info.samplerate      = to_int(m.sr)
-            info.channels        = to_int(m.ch)
-            info.bits            = m.bits or ""
-            info.comment         = m.comment or ""
-            info.description     = m.description or ""
-            info.genre           = m.genre or ""
-            info.ucs_category    = m.ucs_category or ""
-            info.ucs_subcategory = m.ucs_subcategory or ""
-            info.ucs_catid       = m.ucs_catid or ""
-            info.key             = m.key or ""
-            info.bpm             = m.bpm or ""
-          end
-        end
-      end
-    end
-  end
-end
-
 -- 获取本机所有盘符及其卷标
 function get_drives()
   if drive_cache and drives_loaded then return drive_cache end
@@ -6355,138 +5276,6 @@ function SaveRecentPlayed()
   end
   local str = table.concat(t, "|;|") -- 用 |;| 分隔每一条
   reaper.SetExtState(EXT_SECTION, "recent_played_files", str, true)
-end
-
-function BuildFileInfoFromPath(path, filename)
-  path = normalize_path(path) -- 强制路径标准化
-  local info = {
-    path = path,
-    filename = filename or (path:match("[^/\\]+$") or path),
-    position = 0,
-    section_offset = 0,
-    section_length = 0
-  }
-
-  if not IsValidAudioFile(path) then return info end
-
-  if HAVE_SM_EXT and path and path ~= "" then
-    local h = reaper.SM_ProbeMediaBegin(path, 0, "", 6)
-    if h then
-      while true do
-        local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 1, 8) -- 单文件取 1 条即可
-        if not chunk or chunk == "" then break end
-        if chunk ~= "\n" then
-          local line = chunk:match("[^\r\n]+")
-          if line and line ~= "" then
-            local m = sm_parse_ndjson_line(line)
-            local fullpath = normalize_path((m and m.path ~= "" and m.path) or path, false)
-
-            info.path            = fullpath
-            info.filename        = filename or (fullpath:match("[^/\\]+$") or fullpath)
-            info.size            = tonumber(m.size) or 0
-            info.type            = m.type or ""
-            info.length          = tonumber(m.len) or 0
-            info.section_length  = info.length
-            info.samplerate      = to_int(m.sr)
-            info.channels        = to_int(m.ch)
-            info.bits            = m.bits or ""
-            info.genre           = m.genre or ""
-            info.comment         = m.comment or ""
-            info.description     = m.description or ""
-            info.bwf_orig_date   = format_ts(m.mtime)
-            info.mtime           = tonumber(m.mtime) or 0
-            info.ucs_category    = m.ucs_category or ""
-            info.ucs_subcategory = m.ucs_subcategory or ""
-            info.ucs_catid       = m.ucs_catid or ""
-            info.key             = m.key or ""
-            info.bpm             = m.bpm or ""
-
-            reaper.SM_ProbeMediaEnd(h)
-            return info
-          end
-        end
-      end
-      reaper.SM_ProbeMediaEnd(h)
-    end
-  end
-
-  -- 回退到旧逻辑
-  local typ, size, bits, samplerate, channels, length = "", 0, "", "", "", ""
-  local genre, description, comment, orig_date = "", "", "", ""
-  local key, bpm = "", ""
-  local ucs_category, ucs_catid, ucs_subcategory = "", "", ""
-  
-  -- 文件属性
-  if reaper.file_exists and reaper.file_exists(path) then
-    local src = reaper.PCM_Source_CreateFromFile(path)
-    if src then
-      typ = reaper.GetMediaSourceType(src, "")
-      bits = reaper.CF_GetMediaSourceBitDepth and reaper.CF_GetMediaSourceBitDepth(src) or ""
-      samplerate = reaper.GetMediaSourceSampleRate(src)
-      channels = reaper.GetMediaSourceNumChannels(src)
-      length = reaper.GetMediaSourceLength(src)
-
-      local genre       = get_meta_first(src, { "XMP:dm/genre", "ID3:TCON", "VORBIS:GENRE", "RIFF:IGNR" })
-      local comment     = get_meta_first(src, { "XMP:dm/logComment", "ID3:COMM", "VORBIS:COMMENT", "RIFF:ICMT" })
-      local description = get_meta_first(src, { "BWF:Description", "RIFF:IDESC", "RIFF:ICMT" })
-      local orig_date   = get_meta_first(src, { "BWF:OriginationDate", "XMP:xmp/CreateDate", "ID3:TDRC", "VORBIS:DATE", "RIFF:ICRD" })
-
-      if get_ucstag then
-        ucs_category    = get_ucstag(src, "category")
-        ucs_catid       = get_ucstag(src, "catId")
-        ucs_subcategory = get_ucstag(src, "subCategory")
-      end
-
-      local bpm_str = get_meta_first(src, { "XMP:dm/tempo", "ID3:TBPM", "VORBIS:BPM", "RIFF:ACID:tempo" })
-      bpm = bpm_str and tonumber(bpm_str) or nil
-      if not bpm then
-        local fn = info.filename
-        local m = fn:match("(%d+)%s*[bB][pP][mM]") or fn:match("[_-](%d+)[_-]?BPM")
-        bpm = m and tonumber(m) or nil
-      end
-      bpm = bpm or ""
-
-      local key_str = get_meta_first(src, { "XMP:dm/key", "ID3:TKEY", "RIFF:IKEY", "VORBIS:KEY", "RIFF:ACID:key" })
-      if not key_str or key_str == "" then
-        local fn = info.filename
-        key_str = fn:match("%f[%a]([A-Ga-g][#b♯♭]?%s*[Mm][Ii]?[Nn]?[Oo]?[Rr]?)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?m)%f[^%a]") or fn:match("%f[%a]([A-Ga-g][#b♯♭]?)%f[^%a]")
-      end
-      key = normalize_key(key_str)
-      reaper.PCM_Source_Destroy(src)
-    end
-  end
-
-  -- 音频格式校验
-  if not (typ == "WAVE" or typ == "MP3" or typ == "FLAC" or typ == "OGG" or typ == "AIFF" or typ == "APE" or typ == "WV" or typ == "M4A" or typ == "AAC" or typ == "MP4") then
-    return info
-  end
-
-  -- 文件大小
-  local f = io.open(path, "rb")
-  if f then
-    f:seek("end")
-    size = f:seek()
-    f:close()
-  end
-
-  info.type = typ
-  info.samplerate = samplerate
-  info.channels = channels
-  info.length = length
-  info.bits = bits
-  info.size = size
-  info.genre = genre
-  info.description = description
-  info.comment = comment
-  info.bwf_orig_date = orig_date
-  info.section_length = length
-  info.ucs_category    = ucs_category
-  info.ucs_catid       = ucs_catid
-  info.ucs_subcategory = ucs_subcategory
-  info.key = key
-  info.bpm = bpm
-
-  return info
 end
 
 function RemoveDuplicateRecentFiles()
@@ -11235,6 +10024,25 @@ local builder_state = {
   start_time = 0
 }
 
+function SM_DBHasFileRecords(db_file_path)
+  local f = io.open(db_file_path, "rb")
+  if not f then return false end
+
+  for line in f:lines() do
+    if line:match("^FILE%s+") then
+      f:close()
+      return true
+    end
+  end
+
+  f:close()
+  return false
+end
+
+function SM_CanBuilderReplaceDB(db_file_path)
+  return HAVE_SM_BUILDER and not SM_DBHasFileRecords(db_file_path)
+end
+
 function SM_StartDatabaseBuild(root_path, db_file_path)
   root_path = normalize_path(root_path, true)
   db_file_path = normalize_path(db_file_path, false)
@@ -11251,6 +10059,7 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
       builder_state.db_path = db_file_path
       builder_state.root_path = root_path
       builder_state.start_time = reaper.time_precise()
+      db_build_task = nil
       return true
     else
       reaper.MB("C++ Builder Start Failed.\nCheck read/write permissions.", "Soundmole Error", 0)
@@ -11344,12 +10153,12 @@ function SM_ProcessBuilderLoop()
 
         -- 居中
         reaper.ImGui_Spacing(ctx)
-        local btn_width = 80
+        local btn_width = UIScaleF(80)
         local window_width = reaper.ImGui_GetWindowWidth(ctx)
         local center_pos_x = (window_width - btn_width) / 2
 
         reaper.ImGui_SetCursorPosX(ctx, center_pos_x)
-        if reaper.ImGui_Button(ctx, "Cancel", 80, 30) then
+        if reaper.ImGui_Button(ctx, "Cancel", btn_width, UIScaleF(30)) then
           open = false
         end
         reaper.ImGui_End(ctx)
@@ -11374,11 +10183,11 @@ function SM_ProcessBuilderLoop()
     reaper.ImGui_Text(ctx, string.format("Total Time Spent: %.2f s", builder_state.total_time or 0))
     reaper.ImGui_Spacing(ctx)
     -- 计算居中位置
-    local btn_width = 80
+    local btn_width = UIScaleF(80)
     local window_width = reaper.ImGui_GetWindowWidth(ctx)
     local center_pos_x = (window_width - btn_width) / 2
     reaper.ImGui_SetCursorPosX(ctx, center_pos_x)
-    if reaper.ImGui_Button(ctx, "OK", 80, 30) then
+    if reaper.ImGui_Button(ctx, "OK", btn_width, UIScaleF(30)) then
       if DBPF_InvalidateAllCaches then DBPF_InvalidateAllCaches() end
       if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb then
         local current_db_name = builder_state.db_path:match("[^/\\]+$")
@@ -11399,7 +10208,7 @@ function SM_ProcessBuilderLoop()
     reaper.ImGui_PopTextWrapPos(ctx)
 
     reaper.ImGui_Spacing(ctx)
-    if reaper.ImGui_Button(ctx, "Close", 80, 30) then
+    if reaper.ImGui_Button(ctx, "Close", UIScaleF(80), UIScaleF(30)) then
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
     reaper.ImGui_EndPopup(ctx)
@@ -11536,7 +10345,7 @@ function loop()
 
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
-    local filter_w = 400 -- 输入框宽度
+    local filter_w = UIScaleF(400) -- 输入框宽度
     local topbar_h = GetTopbarAlignHeight(ctx)
 
     -- 标题栏
@@ -13812,6 +12621,11 @@ function loop()
                   end
                   if not root or root == "" then
                     reaper.ShowMessageBox("No PATH in DB file", "Error", 0)
+                  elseif SM_CanBuilderReplaceDB(dbpath) then
+                    local success = SM_StartDatabaseBuild(root, dbpath)
+                    if success then
+                      DBPF_InvalidateAllCaches()
+                    end
                   else
                     -- 扫描所有音频，筛选出未入库的新文件
                     local newfiles = ScanAllAudioFiles(root)
@@ -13860,6 +12674,11 @@ function loop()
                   local path_list = GetPathListFromDB(dbpath)
                   if not path_list or #path_list == 0 then
                     reaper.ShowMessageBox("No PATH found in DB file", "Error", 0)
+                  elseif #path_list == 1 and HAVE_SM_BUILDER then
+                    local success = SM_StartDatabaseBuild(path_list[1], dbpath)
+                    if success then
+                      DBPF_InvalidateAllCaches()
+                    end
                   else
                     -- 清空旧库并写入所有 PATH 头部
                     local f = io.open(dbpath, "wb")
@@ -18650,24 +17469,31 @@ function loop()
       local rv, folder = reaper.JS_Dialog_BrowseForFolder(T("Choose folder to scan audio files:"), "")
       if rv == 1 and folder and folder ~= "" then
         folder = normalize_path(folder, true)
-        local filelist = ScanAllAudioFiles(folder)
         local db_dir = script_path .. "SoundmoleDB"
         EnsureCacheDir(db_dir)
         local dbfile = tree_state.add_path_dbfile
         local dbpath = normalize_path(db_dir, true) .. dbfile
-        -- local alias_name = folder:match("([^/\\]+)[/\\]?$") or "Unnamed"
-        -- 先写PATH行
-        AddPathToDBFile(dbpath, folder)
-        db_build_task = {
-          filelist = filelist,
-          dbfile = dbpath,
-          idx = 1,
-          total = #filelist,
-          finished = false,
-          -- alias = alias_name, 不重命名数据库命名
-          root_path = folder,
-          existing_map = DB_ReadExistingFileSet(dbpath)
-        }
+        if SM_CanBuilderReplaceDB(dbpath) then
+          local success = SM_StartDatabaseBuild(folder, dbpath)
+          if success then
+            DBPF_InvalidateAllCaches()
+          end
+        else
+          local filelist = ScanAllAudioFiles(folder)
+          -- local alias_name = folder:match("([^/\\]+)[/\\]?$") or "Unnamed"
+          -- 先写PATH行
+          AddPathToDBFile(dbpath, folder)
+          db_build_task = {
+            filelist = filelist,
+            dbfile = dbpath,
+            idx = 1,
+            total = #filelist,
+            finished = false,
+            -- alias = alias_name, 不重命名数据库命名
+            root_path = folder,
+            existing_map = DB_ReadExistingFileSet(dbpath)
+          }
+        end
       end
       tree_state.add_path_dbfile = nil
     end
@@ -18732,7 +17558,7 @@ function loop()
     if db_build_task and not db_build_task.finished then
       reaper.ImGui_OpenPopup(ctx, "Database Build Progress")
     end
-    if reaper.ImGui_BeginPopupModal(ctx, "Database Build Progress", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+    if db_build_task and reaper.ImGui_BeginPopupModal(ctx, "Database Build Progress", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
       local idx = db_build_task.idx
       local total = db_build_task.total
       local percent = (idx - 1) / math.max(1, total)
