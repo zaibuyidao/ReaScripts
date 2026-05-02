@@ -86,9 +86,9 @@ local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local EXT_SECTION = "Soundmole"
 
-local UI_SCALE_MIN = 0.75
+local UI_SCALE_MIN = 0.50
 local UI_SCALE_MAX = 3.00
-local UI_SCALE_PRESETS = { 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00 }
+local UI_SCALE_PRESETS = { 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00 }
 
 function ClampUIScale(v)
   v = tonumber(v) or 1.0
@@ -3942,32 +3942,17 @@ function DrawFilterLockToggle(ctx)
   _G.locked_filter_terms = _G.locked_filter_terms or {}
 
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
-  -- 与图标尺寸对齐的下移
-  local _, cy = reaper.ImGui_GetCursorPos(ctx)
-  reaper.ImGui_SetCursorPosY(ctx, cy + UIScaleF(15))
 
   PushUIFont(ctx, fonts.icon, 20)
   local lock_on = _G.filter_lock_enabled
   local text_label = (lock_on and '\u{0163}') or '\u{0162}' -- 关=0163; 开=0162
-  -- 固定宽高占位
+  -- 固定宽高占位，并与顶部工具栏其它图标共用同一套居中规则
   local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0163}'))
   local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0162}'))
   local reserve_w = math.max(w1 or 0, w2 or 0)
-  local reserve_h = 20
-
-  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-  reaper.ImGui_InvisibleButton(ctx, "##filter_lock_toggle", reserve_w, reserve_h)
-
-  local dl = reaper.ImGui_GetWindowDrawList(ctx)
-  local tw, th = reaper.ImGui_CalcTextSize(ctx, text_label)
-  local tx = x + (reserve_w - (tw or 0)) * 0.5
-  local ty = y + (reserve_h - (th or 0)) * 0.5
   local col = lock_on and colors.icon_on or colors.icon_off
-  reaper.ImGui_DrawList_AddText(dl, tx, ty, col, text_label)
+  local hovered, clicked = DrawTextCenteredInBox(ctx, text_label, col, GetTopbarAlignHeight(ctx), "##filter_lock_toggle", reserve_w)
   reaper.ImGui_PopFont(ctx)
-
-  local hovered = reaper.ImGui_IsItemHovered(ctx)
-  local clicked = reaper.ImGui_IsItemClicked(ctx, 0)
 
   if hovered then
     reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
@@ -10358,7 +10343,7 @@ function RenderPreviewRouteSettingsUI(ctx)
   reaper.ImGui_EndDisabled(ctx)
 end
 
---------------------------------------------- 播放控制按钮 ---------------------------------------------
+--------------------------------------------- 文本/图标居中或垂直偏移 ---------------------------------------------
 
 -- 文本上下偏移或文本居中
 function DrawTextVOffset(ctx, text, col, dy)
@@ -10387,6 +10372,53 @@ function CalcTextHitRect(ctx, text, dy)
   local voffY   = (line_h - font_sz) * 0.5 + dy
   return x, y + voffY, x + tw, y + voffY + font_sz, tw, line_h
 end
+
+local TOPBAR_ALIGN_HEIGHT = 30
+local TOPBAR_ALIGN_Y_OFFSET = 6
+local TOPBAR_TITLE_Y_OFFSET = 12
+
+function GetTopbarAlignHeight(ctx)
+  return math.max(reaper.ImGui_GetFrameHeight(ctx), UIScaleF(TOPBAR_ALIGN_HEIGHT))
+end
+
+function DrawTextCenteredInBox(ctx, text, col, box_h, id, min_w)
+  box_h = box_h or GetTopbarAlignHeight(ctx)
+  local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
+  local box_w = math.max(min_w or 0, text_w or 0)
+  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+  reaper.ImGui_InvisibleButton(ctx, id or ("##center_text_" .. tostring(text)), box_w, box_h)
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  local active = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = reaper.ImGui_IsItemClicked(ctx, 0)
+  if type(col) == "function" then col = col(hovered, active) end
+
+  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+  local tx = x + math.max(0, (box_w - (text_w or 0)) * 0.5)
+  local ty = y + math.max(0, (box_h - (text_h or 0)) * 0.5) + UIScaleF(TOPBAR_ALIGN_Y_OFFSET)
+  reaper.ImGui_DrawList_AddText(
+    draw_list, tx, ty,
+    col or reaper.ImGui_GetColor(ctx, reaper.ImGui_Col_Text()), text
+  )
+  return hovered, clicked, box_w, box_h
+end
+
+function DrawTitleTextCenteredInBox(ctx, text, col, box_h, id)
+  box_h = box_h or GetTopbarAlignHeight(ctx)
+  local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
+  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+  reaper.ImGui_InvisibleButton(ctx, id or ("##title_text_" .. tostring(text)), text_w or 0, box_h)
+
+  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+  local title_offset = math.max(UIScaleF(TOPBAR_TITLE_Y_OFFSET), TOPBAR_TITLE_Y_OFFSET)
+  local ty = y + math.max(0, (box_h - (text_h or 0)) * 0.5) + title_offset
+  reaper.ImGui_DrawList_AddText(
+    draw_list, x, ty,
+    col or reaper.ImGui_GetColor(ctx, reaper.ImGui_Col_Text()), text
+  )
+  return reaper.ImGui_IsItemHovered(ctx), reaper.ImGui_IsItemClicked(ctx, 0), text_w or 0, box_h
+end
+
+--------------------------------------------- 播放控制按钮 ---------------------------------------------
 
 function UI_PlayIconTrigger_Play(ctx)
   PushUIFont(ctx, fonts.icon, 16)
@@ -11113,9 +11145,6 @@ function DBPF_DrawDatabaseFolderButton(ctx)
   local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- in_db_mode and colors.icon_on or colors.normal_text
 
-  local _, y = reaper.ImGui_GetCursorPos(ctx)
-  reaper.ImGui_SetCursorPosY(ctx, y + UIScale(15))
-
   -- 固定字体宽度占位 + 居中绘制，确保两种字形宽度一致
   PushUIFont(ctx, fonts.icon, 20)
   local text_label = in_db_mode and '\u{0165}' or '\u{0164}'
@@ -11123,21 +11152,9 @@ function DBPF_DrawDatabaseFolderButton(ctx)
   local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0165}'))
   local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0164}'))
   local reserve_w = math.max(w1 or 0, w2 or 0)
-  local reserve_h = 20 -- 与 PushFont 的像素大小一致
-
-  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-  reaper.ImGui_InvisibleButton(ctx, "##db_icon", reserve_w, reserve_h)
-  -- 居中绘制当前字形
-  local dl = reaper.ImGui_GetWindowDrawList(ctx)
-  local tw, th = reaper.ImGui_CalcTextSize(ctx, text_label)
-  local tx = x + (reserve_w - (tw or 0)) * 0.5
-  local ty = y + (reserve_h - (th or 0)) * 0.5
   local col = in_db_mode and colors.icon_on or colors.icon_off
-  reaper.ImGui_DrawList_AddText(dl, tx, ty, col, text_label)
+  local hovered, clicked = DrawTextCenteredInBox(ctx, text_label, col, GetTopbarAlignHeight(ctx), "##db_icon", reserve_w)
   reaper.ImGui_PopFont(ctx)
-
-  local hovered = reaper.ImGui_IsItemHovered(ctx)
-  local clicked = reaper.ImGui_IsItemClicked(ctx, 0)
 
   if hovered then
     reaper.ImGui_BeginTooltip(ctx)
@@ -11520,14 +11537,15 @@ function loop()
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
     local filter_w = 400 -- 输入框宽度
+    local topbar_h = GetTopbarAlignHeight(ctx)
 
     -- 标题栏
     reaper.ImGui_BeginGroup(ctx)
     PushUIFont(ctx, fonts.odrf, 22)
     reaper.ImGui_SameLine(ctx, nil, 0)
-    DrawTextVOffset(ctx, 'Sound', nil, 15) -- 文字居中，偏移设置
+    DrawTitleTextCenteredInBox(ctx, 'Sound', nil, topbar_h, "##title_sound")
     reaper.ImGui_SameLine(ctx, nil, 0)
-    DrawTextVOffset(ctx, 'mole', colors.mole, 15)
+    DrawTitleTextCenteredInBox(ctx, 'mole', colors.mole, topbar_h, "##title_mole")
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
 
@@ -11538,27 +11556,17 @@ function loop()
       local cur_idx = search_history_index or 0
       local can_prev = (history_count > 1) and (cur_idx < history_count)
       local can_next = (history_count > 1) and (cur_idx > 1)
-      local dy = UIScaleF(13)
       -- 上一条
       do
         PushUIFont(ctx, fonts.icon, 20)
         local glyph = '\u{0160}'
-        local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
-        local hovered = can_prev and reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true) or false
-        local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
-        local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
-
-        local col
-        if not can_prev then
-          col = colors.icon_off
-        else
+        local hovered, clicked = DrawTextCenteredInBox(ctx, glyph, function(is_hovered, is_active)
+          if not can_prev then return colors.icon_off end
           local col_normal  = colors.icon_on      or colors.icon_normal
           local col_hovered = colors.icon_hovered or col_normal
           local col_active  = colors.icon_active  or col_hovered
-          col = hovered and (active and col_active or col_hovered) or col_normal
-        end
-
-        DrawTextVOffset(ctx, glyph, col, dy)
+          return is_hovered and (is_active and col_active or col_hovered) or col_normal
+        end, topbar_h, "##search_history_prev")
         reaper.ImGui_PopFont(ctx)
 
         if hovered and can_prev then
@@ -11587,22 +11595,13 @@ function loop()
       do
         PushUIFont(ctx, fonts.icon, 20)
         local glyph = '\u{0161}'
-        local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
-        local hovered = can_next and reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true) or false
-        local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
-        local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
-
-        local col
-        if not can_next then
-          col = colors.icon_off
-        else
+        local hovered, clicked = DrawTextCenteredInBox(ctx, glyph, function(is_hovered, is_active)
+          if not can_next then return colors.icon_off end
           local col_normal  = colors.icon_on       or colors.icon_normal
           local col_hovered = colors.icon_hovered  or col_normal
           local col_active  = colors.icon_active   or col_hovered
-          col = hovered and (active and col_active or col_hovered) or col_normal
-        end
-
-        DrawTextVOffset(ctx, glyph, col, dy)
+          return is_hovered and (is_active and col_active or col_hovered) or col_normal
+        end, topbar_h, "##search_history_next")
         reaper.ImGui_PopFont(ctx)
 
         if hovered and can_next then
@@ -17709,18 +17708,36 @@ function loop()
         cover_path = GetCoverImagePath(audio_path)
       end
       if cover_path then
-        -- 水平/垂直居中
-        local img_w, img_h = UIScale(130), UIScale(130)
-        local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
-        local pad_x = (avail_w - img_w) * 0.5
-        if pad_x > 0 then
-          reaper.ImGui_Dummy(ctx, pad_x, 0)
-          reaper.ImGui_SameLine(ctx)
+        -- 水平/垂直居中，避免非整数 UI 缩放导致滚动条
+        local function PixelFloor(v)
+          return math.floor((tonumber(v) or 0) + 0.0001)
         end
-        local pad_y = (avail_h - img_h) * 0.5
-        if pad_y > 0 then
-          reaper.ImGui_Dummy(ctx, 0, pad_y - UIScale(15))
-        end
+
+        local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
+        local img_w = PixelFloor(UIScale(130))
+        local img_h = PixelFloor(UIScale(130))
+        img_w = math.max(1, math.min(img_w, PixelFloor(avail_w)))
+        img_h = math.max(1, math.min(img_h, PixelFloor(avail_h)))
+
+        -- 使用 SetCursorPos，不用 Dummy，避免 Dummy 增加内容滚动范围
+        local cur_x, cur_y = reaper.ImGui_GetCursorPos(ctx)
+        local pad_x = PixelFloor((avail_w - img_w) * 0.5)
+        local pad_y = PixelFloor((avail_h - img_h) * 0.5)
+
+        reaper.ImGui_SetCursorPos(ctx, cur_x + math.max(0, pad_x), cur_y + math.max(0, pad_y))
+
+        -- 旧版使用 Dummy 实现居中，缺点是 Dummy 会增加 Child 的内容高度，导致在某些 UI 缩放下出现不必要的滚动条
+        -- local img_w, img_h = UIScale(130), UIScale(130)
+        -- local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
+        -- local pad_x = (avail_w - img_w) * 0.5
+        -- if pad_x > 0 then
+        --   reaper.ImGui_Dummy(ctx, pad_x, 0)
+        --   reaper.ImGui_SameLine(ctx)
+        -- end
+        -- local pad_y = (avail_h - img_h) * 0.5
+        -- if pad_y > 0 then
+        --   reaper.ImGui_Dummy(ctx, 0, pad_y - UIScale(15))
+        -- end
 
         -- 缓存并创建纹理
         if last_cover_path ~= cover_path then
@@ -18548,39 +18565,35 @@ function loop()
         end
       end
     end
-    
-    reaper.ImGui_SameLine(ctx)
 
     -- 显示波形缩放百分比
     reaper.ImGui_SameLine(ctx)
-    if show_vertical_zoom and (reaper.time_precise() - show_vertical_zoom_timer < 1.1) then -- 1.1秒内显示
-      local window_width = reaper.ImGui_GetWindowWidth(ctx)
-      local text = string.format(T("Vertical Zoom:").." %.0f%%", waveform_vertical_zoom * 100)
-      local text_width = reaper.ImGui_CalcTextSize(ctx, text)
-      reaper.ImGui_SetCursorPosX(ctx, window_width - text_width - 16)
-      reaper.ImGui_Text(ctx, text)
-    elseif show_vertical_zoom and (reaper.time_precise() - show_vertical_zoom_timer >= 1.2) then
-      show_vertical_zoom = false
+    do
+      local now = reaper.time_precise()
+      local hint_text = nil
+      if show_vertical_zoom and (now - show_vertical_zoom_timer < 1.1) then
+        hint_text = string.format(T("Vertical Zoom:").." %.0f%%", waveform_vertical_zoom * 100)
+      elseif show_vertical_zoom and (now - show_vertical_zoom_timer >= 1.2) then
+        show_vertical_zoom = false
+      elseif show_font_size_popup and (now - show_font_size_timer < 1.1) then
+        hint_text = string.format(T("Font Size:").." %d px", font_size)
+      elseif show_font_size_popup and (now - show_font_size_timer >= 1.2) then
+        show_font_size_popup = false
+      elseif show_row_height_popup and (now - show_row_height_timer < 1.1) then
+        hint_text = string.format(T("Row Height:").." %d px", row_height)
+      elseif show_row_height_popup and (now - show_row_height_timer >= 1.2) then
+        show_row_height_popup = false
+      end
 
-    -- 显示字体大小提示
-    elseif show_font_size_popup and (reaper.time_precise() - show_font_size_timer < 1.1) then
-      local window_width = reaper.ImGui_GetWindowWidth(ctx)
-      local text = string.format(T("Font Size:").." %d px", font_size) -- 显示字体大小
-      local text_width = reaper.ImGui_CalcTextSize(ctx, text)
-      reaper.ImGui_SetCursorPosX(ctx, window_width - text_width - 16) -- 右对齐
-      reaper.ImGui_Text(ctx, text)
-    elseif show_font_size_popup and (reaper.time_precise() - show_font_size_timer >= 1.2) then
-      show_font_size_popup = false
-
-    -- 显示行高提示
-    elseif show_row_height_popup and (reaper.time_precise() - show_row_height_timer < 1.1) then
-      local window_width = reaper.ImGui_GetWindowWidth(ctx)
-      local text = string.format(T("Row Height:").." %d px", row_height) -- 显示行高
-      local text_width = reaper.ImGui_CalcTextSize(ctx, text)
-      reaper.ImGui_SetCursorPosX(ctx, window_width - text_width - 16) -- 右对齐
-      reaper.ImGui_Text(ctx, text)
-    elseif show_row_height_popup and (reaper.time_precise() - show_row_height_timer >= 1.2) then
-      show_row_height_popup = false
+      if hint_text and hint_text ~= "" then
+        local window_x = select(1, reaper.ImGui_GetWindowPos(ctx))
+        local window_w = reaper.ImGui_GetWindowWidth(ctx)
+        local text_w = reaper.ImGui_CalcTextSize(ctx, hint_text)
+        local _, cursor_y = reaper.ImGui_GetCursorScreenPos(ctx)
+        local x = window_x + window_w - text_w - 16
+        local dl = reaper.ImGui_GetWindowDrawList(ctx)
+        reaper.ImGui_DrawList_AddText(dl, x, cursor_y, reaper.ImGui_GetColor(ctx, reaper.ImGui_Col_Text()), hint_text)
+      end
     end
 
     do

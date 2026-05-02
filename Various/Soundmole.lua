@@ -1,11 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.169
+-- @version 1.0.170
 -- @changelog
---   Added UI scaling support, allowing users to adjust the interface scale to their preference.
---   Improve time scale zoom display in waveform preview.
---   Improve Freesound download and preview system, enhancing performance and stability.
---   Added mini spectrum visualization.
+--   Fixed album cover centering inaccuracies at fractional UI scaling to prevent unnecessary scrollbars.
+--   Fixed misaligned bottom UI hints, such as font size indicators, when scrolling the table list with the mouse wheel.
+--   Unified the vertical alignment of the title text and search history icons to improve consistency when scaling the UI.
 --   Added Chinese translation, project progress at 95%.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
