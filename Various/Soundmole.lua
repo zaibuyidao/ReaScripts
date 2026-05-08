@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.172
+-- @version 1.0.173
 -- @changelog
---   Improve Freesound OAuth2 settings by switching to manual input due to instability in the built-in authorization.
+--   Added macOS support for item lanes.
+--   Added horizontal guide lines and support for creating track guide lines and reference blocks.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

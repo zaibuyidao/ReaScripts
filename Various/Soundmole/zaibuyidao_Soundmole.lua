@@ -1814,24 +1814,370 @@ function GetDragPreviewTimelineLength(start_time, end_time)
   return item_len
 end
 
-function GetArrangeViewNativeRect()
-  if not reaper.JS_Window_FindChildByID then return end
-  local main_hwnd = reaper.GetMainHwnd()
-  local arrange_hwnd = reaper.JS_Window_FindChildByID(main_hwnd, 1000)
-  if not arrange_hwnd then return end
+function IsFiniteNumber(v)
+  v = tonumber(v)
+  return v and v == v and v ~= math.huge and v ~= -math.huge
+end
 
-  local ok, left, top, right, bottom = reaper.JS_Window_GetRect(arrange_hwnd)
-  if not ok then return end
-  if not left or not top or not right or not bottom then return end
-  if right <= left or bottom <= top then return end
-  return left, top, right, bottom
+SOUNDMOLE_IS_MACOS = SOUNDMOLE_IS_MACOS
+function IsMacOS()
+  if SOUNDMOLE_IS_MACOS ~= nil then return SOUNDMOLE_IS_MACOS end
+  local os_name = reaper.GetOS and reaper.GetOS() or ""
+  SOUNDMOLE_IS_MACOS = os_name:match("OSX") ~= nil or os_name:match("macOS") ~= nil or os_name:match("Darwin") ~= nil
+  return SOUNDMOLE_IS_MACOS
+end
+
+function NativePointToImGui(ctx, x, y)
+  if reaper.ImGui_PointConvertNative then
+    if IsMacOS() then
+      return reaper.ImGui_PointConvertNative(ctx, x, y)
+    end
+    return reaper.ImGui_PointConvertNative(ctx, x, y, true)
+  end
+  return x, y
+end
+
+function NativeYRangeMinMax(y1, y2)
+  if not IsFiniteNumber(y1) or not IsFiniteNumber(y2) then return end
+  if y2 < y1 then y1, y2 = y2, y1 end
+  return y1, y2
+end
+
+function NativeYInRange(y, y1, y2)
+  if not IsFiniteNumber(y) then return false end
+  local y_min, y_max = NativeYRangeMinMax(y1, y2)
+  return y_min ~= nil and y >= y_min and y < y_max
+end
+
+function NativeYInRect(y, rect)
+  if not rect then return false end
+  return NativeYInRange(y, rect[2], rect[4])
+end
+
+SOUNDMOLE_MAIN_WINDOW_RECT = SOUNDMOLE_MAIN_WINDOW_RECT or nil
+
+function UpdateSoundmoleMainWindowRect()
+  if not reaper.ImGui_GetWindowPos or not reaper.ImGui_GetWindowSize then return end
+  local x, y = reaper.ImGui_GetWindowPos(ctx)
+  local w, h = reaper.ImGui_GetWindowSize(ctx)
+  if IsFiniteNumber(x) and IsFiniteNumber(y) and IsFiniteNumber(w) and IsFiniteNumber(h) and w > 0 and h > 0 then
+    SOUNDMOLE_MAIN_WINDOW_RECT = { x, y, x + w, y + h }
+  end
+end
+
+function ImGuiRectOverlapsSoundmoleWindow(left, top, right, bottom)
+  local rect = SOUNDMOLE_MAIN_WINDOW_RECT
+  if not rect or not left or not top or not right or not bottom then return false end
+  return left < rect[3] and right > rect[1] and top < rect[4] and bottom > rect[2]
+end
+
+function NativePointOverSoundmoleWindow(native_x, native_y)
+  local rect = SOUNDMOLE_MAIN_WINDOW_RECT
+  if not rect then return false end
+  local x, y = NativePointToImGui(ctx, native_x, native_y)
+  if not x or not y then return false end
+  return x >= rect[1] and x < rect[3] and y >= rect[2] and y < rect[4]
+end
+
+MAC_ARRANGE_Y_OFFSET = MAC_ARRANGE_Y_OFFSET or nil
+MAC_ARRANGE_Y_OFFSET_TIME = MAC_ARRANGE_Y_OFFSET_TIME or 0
+MAC_HOVER_TRACK_RECT_CACHE_SECONDS = 0.08
+mac_hover_track_rect_cache = mac_hover_track_rect_cache or setmetatable({}, { __mode = "k" })
+
+function GetMainWindowNativeRect()
+  local main_hwnd = reaper.GetMainHwnd()
+  if reaper.JS_Window_GetRect and main_hwnd then
+    local ok, l, t, r, b = reaper.JS_Window_GetRect(main_hwnd)
+    if ok and IsFiniteNumber(l) and IsFiniteNumber(t) and IsFiniteNumber(r) and IsFiniteNumber(b) and r > l and b > t then
+      return l, t, r, b
+    end
+  end
+end
+
+function GetArrangeWindowNativeRectRaw()
+  local main_hwnd = reaper.GetMainHwnd()
+  if reaper.JS_Window_FindChildByID and reaper.JS_Window_GetRect and main_hwnd then
+    local arrange_hwnd = reaper.JS_Window_FindChildByID(main_hwnd, 1000)
+    if arrange_hwnd then
+      local ok, left, top, right, bottom = reaper.JS_Window_GetRect(arrange_hwnd)
+      if ok and IsFiniteNumber(left) and IsFiniteNumber(top) and IsFiniteNumber(right) and IsFiniteNumber(bottom) and right > left and bottom > top then
+        return left, top, right, bottom
+      end
+    end
+  end
+end
+
+function ProbeMacTrackNativeYRangeAtPoint(track, mouse_x, mouse_y)
+  if not IsMacOS() or not track or not reaper.GetTrackFromPoint then return end
+  if not IsFiniteNumber(mouse_x) or not IsFiniteNumber(mouse_y) then return end
+
+  local probe_x = math.floor(mouse_x + 0.5)
+  local start_y = math.floor(mouse_y + 0.5)
+  local hit_track = reaper.GetTrackFromPoint(probe_x, start_y)
+  if hit_track ~= track then return end
+
+  local track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_WNDH"))
+  if not track_h or track_h <= 0 then
+    track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPH")) or 0
+  end
+  local scan_pad = math.max(128, math.floor((tonumber(track_h) or 0) + 96))
+  local _, main_top, _, main_bottom = GetMainWindowNativeRect()
+  local min_y = math.floor(math.max(main_top or (start_y - scan_pad), start_y - scan_pad) + 0.5)
+  local max_y = math.floor(math.min(main_bottom or (start_y + scan_pad), start_y + scan_pad) + 0.5)
+
+  local track_top = start_y
+  while track_top > min_y do
+    if reaper.GetTrackFromPoint(probe_x, track_top - 1) ~= track then break end
+    track_top = track_top - 1
+  end
+
+  local track_bottom = start_y + 1
+  while track_bottom < max_y do
+    if reaper.GetTrackFromPoint(probe_x, track_bottom) ~= track then break end
+    track_bottom = track_bottom + 1
+  end
+
+  if track_bottom <= track_top then return end
+
+  local rel_y = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPY"))
+  if IsFiniteNumber(rel_y) then
+    MAC_ARRANGE_Y_OFFSET = track_top - rel_y
+    MAC_ARRANGE_Y_OFFSET_TIME = reaper.time_precise and reaper.time_precise() or 0
+  end
+
+  return track_top, track_bottom
+end
+
+function GetMacHoveredTrackNativeRect(track, mouse_x, mouse_y)
+  if not IsMacOS() or not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+  if not IsFiniteNumber(mouse_x) or not IsFiniteNumber(mouse_y) then return end
+
+  local now = reaper.time_precise and reaper.time_precise() or 0
+  local cached = mac_hover_track_rect_cache[track]
+  if cached and cached.time and (now - cached.time) <= MAC_HOVER_TRACK_RECT_CACHE_SECONDS
+      and NativeYInRange(mouse_y, cached.top, cached.bottom) then
+    return { cached.left, cached.top, cached.right, cached.bottom }
+  end
+
+  local track_top, track_bottom = ProbeMacTrackNativeYRangeAtPoint(track, mouse_x, mouse_y)
+  local y_min, y_max = NativeYRangeMinMax(track_top, track_bottom)
+  if not y_min or y_max <= y_min then return end
+
+  local left, _, right = GetArrangeViewNativeRect()
+  if (not left or not right) then
+    left, right = GetArrangeHorizontalNativeRange(mouse_x)
+  end
+  if not left or not right or right <= left then return end
+
+  mac_hover_track_rect_cache[track] = {
+    left = left,
+    top = y_min,
+    right = right,
+    bottom = y_max,
+    time = now
+  }
+  return { left, y_min, right, y_max }
+end
+
+function GetMacArrangeYOffset()
+  if not IsMacOS() then return end
+
+  local _, arrange_top = GetArrangeWindowNativeRectRaw()
+  if IsFiniteNumber(arrange_top) then return arrange_top end
+
+  if reaper.GetMousePosition and reaper.GetTrackFromPoint then
+    local mouse_x, mouse_y = reaper.GetMousePosition()
+    if IsFiniteNumber(mouse_x) and IsFiniteNumber(mouse_y) then
+      local tr = reaper.GetTrackFromPoint(math.floor(mouse_x + 0.5), math.floor(mouse_y + 0.5))
+      if tr and reaper.ValidatePtr(tr, "MediaTrack*") then
+        ProbeMacTrackNativeYRangeAtPoint(tr, mouse_x, mouse_y)
+      end
+    end
+  end
+
+  local now = reaper.time_precise and reaper.time_precise() or 0
+  if IsFiniteNumber(MAC_ARRANGE_Y_OFFSET) and (now - (MAC_ARRANGE_Y_OFFSET_TIME or 0)) <= 2.0 then
+    return MAC_ARRANGE_Y_OFFSET
+  end
+end
+
+function GetTrackNativeYRangeRaw(track)
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+
+  local track_top = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPSCREENY"))
+  local track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_WNDH"))
+  if not track_h or track_h <= 0 then
+    track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPH")) or 0
+  end
+
+  if IsFiniteNumber(track_top) and IsFiniteNumber(track_h) and track_h > 0 then
+    return track_top, track_top + track_h
+  end
+end
+
+function GetVisibleArrangeTrackVerticalNativeRange()
+  local top, bottom = nil, nil
+  for i = 0, reaper.CountTracks(0) - 1 do
+    local tr = reaper.GetTrack(0, i)
+    local tr_top, tr_bottom = GetTrackNativeYRangeRaw(tr)
+    if tr_top and tr_bottom and tr_bottom > tr_top then
+      top = top and math.min(top, tr_top) or tr_top
+      bottom = bottom and math.max(bottom, tr_bottom) or tr_bottom
+    end
+  end
+  return top, bottom
+end
+
+function GetMacArrangeVisualNativeYRange(raw_top, raw_bottom)
+  if not IsMacOS() then return raw_top, raw_bottom end
+
+  local visual_top_native, visual_top_y = nil, nil
+  local visual_bottom_native, visual_bottom_y = nil, nil
+
+  local function imgui_y(native_y)
+    if not IsFiniteNumber(native_y) then return end
+    local _, y = NativePointToImGui(ctx, 0, native_y)
+    return y
+  end
+
+  local raw_y1, raw_y2 = imgui_y(raw_top), imgui_y(raw_bottom)
+  local raw_visual_top, raw_visual_bottom = NativeYRangeMinMax(raw_y1, raw_y2)
+
+  local function consider_top(native_y)
+    local y = imgui_y(native_y)
+    if not IsFiniteNumber(y) then return end
+    if raw_visual_top and (y < raw_visual_top - 4 or y > raw_visual_bottom + 4) then return end
+    if not visual_top_y or y < visual_top_y then
+      visual_top_native, visual_top_y = native_y, y
+    end
+  end
+
+  local function consider_bottom(native_y)
+    local y = imgui_y(native_y)
+    if IsFiniteNumber(y) and (not visual_bottom_y or y > visual_bottom_y) then
+      visual_bottom_native, visual_bottom_y = native_y, y
+    end
+  end
+
+  for i = 0, reaper.CountTracks(0) - 1 do
+    local tr = reaper.GetTrack(0, i)
+    local tr_top, tr_bottom = GetTrackNativeYRangeRaw(tr)
+    if tr_top and tr_bottom then
+      consider_top(tr_top)
+      consider_top(tr_bottom)
+    end
+  end
+
+  if not visual_top_native then
+    consider_top(raw_top)
+    consider_top(raw_bottom)
+  end
+
+  consider_bottom(raw_top)
+  consider_bottom(raw_bottom)
+  local _, main_top, _, main_bottom = GetMainWindowNativeRect()
+  consider_bottom(main_top)
+  consider_bottom(main_bottom)
+
+  local y_min, y_max = NativeYRangeMinMax(visual_top_native, visual_bottom_native)
+  if y_min and y_max > y_min then return y_min, y_max end
+  return raw_top, raw_bottom
+end
+
+function GetFullArrangeViewTimes()
+  if not reaper.GetSet_ArrangeView2 then return end
+  local view_start, view_end = reaper.GetSet_ArrangeView2(0, false, 0, 0, 0, 0)
+  if IsFiniteNumber(view_start) and IsFiniteNumber(view_end) and view_end > view_start then
+    return view_start, view_end
+  end
+end
+
+function GetArrangeHorizontalNativeRange(reference_x)
+  if not reaper.GetSet_ArrangeView2 then return end
+
+  local view_start, view_end = GetFullArrangeViewTimes()
+  if not view_start then return end
+
+  local ref_x = tonumber(reference_x)
+  if not ref_x and reaper.GetMousePosition then
+    ref_x = select(1, reaper.GetMousePosition())
+  end
+  if not IsFiniteNumber(ref_x) then ref_x = 0 end
+
+  local probe_w = 256
+  local x1 = math.floor(ref_x + 0.5)
+  local x2 = x1 + probe_w
+  local t1, t2 = reaper.GetSet_ArrangeView2(0, false, x1, x2, 0, 0)
+
+  if not (IsFiniteNumber(t1) and IsFiniteNumber(t2) and math.abs(t2 - t1) > 1e-12) then
+    x2 = math.floor(ref_x + 0.5)
+    x1 = x2 - probe_w
+    t1, t2 = reaper.GetSet_ArrangeView2(0, false, x1, x2, 0, 0)
+  end
+  if not (IsFiniteNumber(t1) and IsFiniteNumber(t2) and math.abs(t2 - t1) > 1e-12) then
+    return
+  end
+
+  local px_per_sec = (x2 - x1) / (t2 - t1)
+  if not IsFiniteNumber(px_per_sec) or math.abs(px_per_sec) < 1e-12 then return end
+
+  local left = x1 + (view_start - t1) * px_per_sec
+  local right = x1 + (view_end - t1) * px_per_sec
+  if right < left then left, right = right, left end
+  if right <= left then return end
+
+  return math.floor(left + 0.5), math.floor(right + 0.5), view_start, view_end
+end
+
+function GetArrangeViewNativeRect()
+  local raw_left, raw_top, raw_right, raw_bottom = GetArrangeWindowNativeRectRaw()
+  if raw_left then
+    if IsMacOS() then
+      raw_top, raw_bottom = GetMacArrangeVisualNativeYRange(raw_top, raw_bottom)
+    end
+    return raw_left, raw_top, raw_right, raw_bottom
+  end
+
+  local _, main_top, _, main_bottom = GetMainWindowNativeRect()
+
+  local mouse_x, mouse_y = nil, nil
+  if reaper.GetMousePosition then
+    mouse_x, mouse_y = reaper.GetMousePosition()
+  end
+
+  local left, right = GetArrangeHorizontalNativeRange(mouse_x)
+  local top, bottom = GetVisibleArrangeTrackVerticalNativeRange()
+
+  if IsMacOS() then
+    if not top and IsFiniteNumber(main_top) then top = main_top end
+    if IsFiniteNumber(main_bottom) then bottom = main_bottom end
+  end
+
+  if not top and IsFiniteNumber(mouse_y) then
+    top, bottom = mouse_y - 200, mouse_y + 200
+  end
+  if top and bottom and main_top and main_bottom then
+    top = math.max(top, main_top)
+    if IsMacOS() then
+      bottom = math.max(bottom, main_bottom)
+    else
+      bottom = math.min(bottom, main_bottom)
+    end
+  end
+
+  if left and right and top and bottom and right > left and bottom > top then
+    return left, top, right, bottom
+  end
 end
 
 function TimeToArrangeNativeX(t)
   local left, top, right, bottom = GetArrangeViewNativeRect()
   if not left then return end
 
-  local view_start, view_end = reaper.GetSet_ArrangeView2(0, false, left, right, 0, 0)
+  local view_start, view_end = GetFullArrangeViewTimes()
+  if not view_start then
+    view_start, view_end = reaper.GetSet_ArrangeView2(0, false, left, right, 0, 0)
+  end
   if not view_start or not view_end or view_end <= view_start then return end
 
   local frac = (t - view_start) / (view_end - view_start)
@@ -1839,12 +2185,14 @@ function TimeToArrangeNativeX(t)
   return math.floor(native_x + 0.5), top, bottom, left, right
 end
 
-function DrawArrangeGuideLine(ctx, native_x, top_y, bottom_y, id)
-  if not native_x or not top_y or not bottom_y then return end
-
-  local final_x, final_top = reaper.ImGui_PointConvertNative(ctx, native_x, top_y, true)
-  local _, final_bottom = reaper.ImGui_PointConvertNative(ctx, native_x, bottom_y, true)
+function DrawArrangeGuideLineSegment(ctx, final_x, final_top, final_bottom, id)
+  if not final_x or not final_top or not final_bottom then return false end
+  if final_bottom < final_top then final_top, final_bottom = final_bottom, final_top end
+  final_x = math.floor(final_x + 0.5)
+  final_top = math.floor(final_top + 0.5)
+  final_bottom = math.floor(final_bottom + 0.5)
   local final_height = math.max(1, final_bottom - final_top)
+  if final_height <= 0 then return false end
 
   reaper.ImGui_SetNextWindowPos(ctx, final_x, final_top)
   reaper.ImGui_SetNextWindowSize(ctx, 1, final_height)
@@ -1860,44 +2208,241 @@ function DrawArrangeGuideLine(ctx, native_x, top_y, bottom_y, id)
 
   reaper.ImGui_PopStyleColor(ctx)
   reaper.ImGui_PopStyleVar(ctx, 3)
+  return true
+end
+
+function DrawArrangeGuideLine(ctx, native_x, top_y, bottom_y, id, avoid_soundmole_window)
+  if not native_x or not top_y or not bottom_y then return false end
+
+  local final_x, final_top = NativePointToImGui(ctx, native_x, top_y)
+  local _, final_bottom = NativePointToImGui(ctx, native_x, bottom_y)
+  if not final_x or not final_top or not final_bottom then return false end
+  if final_bottom < final_top then final_top, final_bottom = final_bottom, final_top end
+
+  local rect = SOUNDMOLE_MAIN_WINDOW_RECT
+  if avoid_soundmole_window and rect
+      and final_x < rect[3] and final_x + 1 > rect[1]
+      and final_top < rect[4] and final_bottom > rect[2] then
+    local drew = false
+    if final_top < rect[2] then
+      drew = DrawArrangeGuideLineSegment(ctx, final_x, final_top, math.min(final_bottom, rect[2]), id .. "_top") or drew
+    end
+    if final_bottom > rect[4] then
+      drew = DrawArrangeGuideLineSegment(ctx, final_x, math.max(final_top, rect[4]), final_bottom, id .. "_bottom") or drew
+    end
+    return drew
+  end
+
+  return DrawArrangeGuideLineSegment(ctx, final_x, final_top, final_bottom, id)
+end
+
+function DrawArrangeGuideHorizontalLineSegment(ctx, final_left, final_right, final_y, id)
+  if not final_left or not final_right or not final_y then return false end
+  if final_right < final_left then final_left, final_right = final_right, final_left end
+  final_left = math.floor(final_left + 0.5)
+  final_right = math.floor(final_right + 0.5)
+  final_y = math.floor(final_y + 0.5)
+  local final_width = math.max(1, final_right - final_left)
+  if final_width <= 0 then return false end
+
+  reaper.ImGui_SetNextWindowPos(ctx, final_left, final_y - 1)
+  reaper.ImGui_SetNextWindowSize(ctx, final_width, 3)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowMinSize(), 1, 1)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowBorderSize(), 0)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_WindowBg(), 0x00000000)
+
+  local flags = reaper.ImGui_WindowFlags_NoDecoration() | reaper.ImGui_WindowFlags_NoInputs() | reaper.ImGui_WindowFlags_NoFocusOnAppearing() | reaper.ImGui_WindowFlags_NoNav()
+  if reaper.ImGui_Begin(ctx, id, false, flags) then
+    local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    reaper.ImGui_DrawList_AddLine(draw_list, final_left, final_y, final_right, final_y, colors.dnd_preview, 1.0)
+    reaper.ImGui_End(ctx)
+  end
+
+  reaper.ImGui_PopStyleColor(ctx)
+  reaper.ImGui_PopStyleVar(ctx, 3)
+  return true
+end
+
+function DrawArrangeGuideHorizontalLine(ctx, native_left, native_right, native_y, id, avoid_soundmole_window)
+  if not native_left or not native_right or not native_y then return false end
+
+  local final_left, final_y = NativePointToImGui(ctx, native_left, native_y)
+  local final_right = select(1, NativePointToImGui(ctx, native_right, native_y))
+  if not final_left or not final_right or not final_y then return false end
+  if final_right < final_left then final_left, final_right = final_right, final_left end
+
+  local rect = SOUNDMOLE_MAIN_WINDOW_RECT
+  if avoid_soundmole_window and rect
+      and final_y < rect[4] and final_y + 1 > rect[2]
+      and final_left < rect[3] and final_right > rect[1] then
+    local drew = false
+    if final_left < rect[1] then
+      drew = DrawArrangeGuideHorizontalLineSegment(ctx, final_left, math.min(final_right, rect[1]), final_y, id .. "_left") or drew
+    end
+    if final_right > rect[3] then
+      drew = DrawArrangeGuideHorizontalLineSegment(ctx, math.max(final_left, rect[3]), final_right, final_y, id .. "_right") or drew
+    end
+    return drew
+  end
+
+  return DrawArrangeGuideHorizontalLineSegment(ctx, final_left, final_right, final_y, id)
 end
 
 function GetArrangeTrackNativeRect(track)
-  local left, arrange_top, right, arrange_bottom = GetArrangeViewNativeRect()
-  if not left then return end
   if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
 
-  local track_top = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPSCREENY"))
+  local left, arrange_top, right, arrange_bottom = GetArrangeViewNativeRect()
+  local track_top, track_bottom = GetTrackNativeYRangeRaw(track)
   if not track_top then
     local rel_y = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPY"))
-    if rel_y then track_top = arrange_top + rel_y end
+    local track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_WNDH"))
+    if not track_h or track_h <= 0 then
+      track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPH")) or 0
+    end
+    if rel_y and arrange_top and track_h > 0 then
+      track_top = arrange_top + rel_y
+      track_bottom = track_top + track_h
+    end
   end
 
-  local track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_WNDH"))
-  if not track_h or track_h <= 0 then
-    track_h = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_TCPH")) or 0
+  if (not left or not right) and reaper.GetMousePosition then
+    left, right = GetArrangeHorizontalNativeRange(select(1, reaper.GetMousePosition()))
   end
+  if not left or not right or right <= left then return end
 
-  if not track_top or track_h <= 0 then return end
+  if not track_top or not track_bottom or track_bottom <= track_top then return end
 
-  local track_bottom = track_top + track_h
-  if track_bottom <= arrange_top or track_top >= arrange_bottom then return end
-
-  if track_top < arrange_top then track_top = arrange_top end
-  if track_bottom > arrange_bottom then track_bottom = arrange_bottom end
+  if arrange_top and arrange_bottom then
+    if track_bottom <= arrange_top or track_top >= arrange_bottom then return end
+    if track_top < arrange_top then track_top = arrange_top end
+    if track_bottom > arrange_bottom then track_bottom = arrange_bottom end
+  end
   if track_bottom <= track_top then return end
 
   return left, track_top, right, track_bottom
 end
 
-function DrawArrangeGuideBlock(ctx, native_left, native_right, top_y, bottom_y, id, col)
+ARRANGE_NEW_TRACK_TARGET_LANE = ARRANGE_NEW_TRACK_TARGET_LANE or -2147483648
+
+function IsArrangeNewTrackTargetLane(target_lane)
+  return target_lane == ARRANGE_NEW_TRACK_TARGET_LANE
+end
+
+function GetLastVisibleArrangeTrackNativeInfo(arrange_top, arrange_bottom)
+  local last_top, last_bottom, last_height = nil, nil, nil
+  for i = 0, reaper.CountTracks(0) - 1 do
+    local tr = reaper.GetTrack(0, i)
+    local tr_top, tr_bottom = GetTrackNativeYRangeRaw(tr)
+    if tr_top and tr_bottom and tr_bottom > tr_top and tr_bottom > arrange_top and tr_top < arrange_bottom then
+      if not last_bottom or tr_bottom > last_bottom then
+        last_top = math.max(tr_top, arrange_top)
+        last_bottom = math.min(tr_bottom, arrange_bottom)
+        last_height = tr_bottom - tr_top
+      end
+    end
+  end
+  return last_top, last_bottom, last_height
+end
+
+function GetMacLastArrangeTrackNativeInfoAtPoint(mouse_x, mouse_y, arrange_top, arrange_bottom)
+  if not IsMacOS() or not reaper.GetTrackFromPoint then return end
+  if not IsFiniteNumber(mouse_x) or not IsFiniteNumber(mouse_y) or not IsFiniteNumber(arrange_top) or not IsFiniteNumber(arrange_bottom) then return end
+
+  local probe_x = math.floor(mouse_x + 0.5)
+  local y = math.floor(math.min(mouse_y, arrange_bottom - 1) + 0.5)
+  local min_y = math.floor(arrange_top + 0.5)
+
+  while y >= min_y do
+    local tr = reaper.GetTrackFromPoint(probe_x, y)
+    if tr and reaper.ValidatePtr(tr, "MediaTrack*") then
+      local tr_top, tr_bottom = ProbeMacTrackNativeYRangeAtPoint(tr, probe_x, y)
+      if not tr_top then tr_top, tr_bottom = GetTrackNativeYRangeRaw(tr) end
+      if tr_top and tr_bottom and tr_bottom > tr_top then
+        local clipped_top = math.max(tr_top, arrange_top)
+        local clipped_bottom = math.min(tr_bottom, arrange_bottom)
+        if clipped_bottom > clipped_top then
+          return clipped_top, clipped_bottom, tr_bottom - tr_top
+        end
+      end
+      return
+    end
+    y = y - 1
+  end
+end
+
+function GetArrangeNewTrackTargetNativeRectAtMouse(mouse_x, mouse_y)
+  if not IsFiniteNumber(mouse_x) or not IsFiniteNumber(mouse_y) then return end
+  if NativePointOverSoundmoleWindow(mouse_x, mouse_y) then return end
+  if IsMacOS() and reaper.GetTrackFromPoint then
+    local track_at_mouse = reaper.GetTrackFromPoint(math.floor(mouse_x + 0.5), math.floor(mouse_y + 0.5))
+    if track_at_mouse and reaper.ValidatePtr(track_at_mouse, "MediaTrack*") then return end
+  end
+
+  local left, arrange_top, right, arrange_bottom = GetArrangeViewNativeRect()
+  if (not left or not right) then
+    left, right = GetArrangeHorizontalNativeRange(mouse_x)
+  end
+  if not left or not right or not arrange_top or not arrange_bottom then return end
+  local arrange_min, arrange_max = NativeYRangeMinMax(arrange_top, arrange_bottom)
+  if right <= left or not arrange_min or arrange_max <= arrange_min then return end
+  if mouse_x < left or mouse_x > right or not NativeYInRange(mouse_y, arrange_top, arrange_bottom) then return end
+
+  local last_top, last_bottom, last_height = GetLastVisibleArrangeTrackNativeInfo(arrange_min, arrange_max)
+  if IsMacOS() then
+    local last_min, last_max = NativeYRangeMinMax(last_top, last_bottom)
+    local target_edge = last_min or arrange_max
+    if mouse_y >= target_edge then return end
+
+    local guide_h = math.floor(math.max(32, math.min(96, tonumber(last_height) or 64)) + 0.5)
+    local target_top = math.max(arrange_min, target_edge - guide_h)
+    local target_bottom = target_edge
+    if target_bottom <= target_top then return end
+    return { left, target_top, right, target_bottom }
+  end
+
+  local target_top = last_bottom or arrange_top
+  if mouse_y < target_top then return end
+  if target_top >= arrange_bottom then return end
+
+  local guide_h = math.floor(math.max(32, math.min(96, tonumber(last_height) or 64)) + 0.5)
+  local target_bottom = math.min(arrange_bottom, target_top + guide_h)
+  if target_bottom <= target_top then return end
+
+  return { left, target_top, right, target_bottom }
+end
+
+function CreateArrangeDropTrackAtEnd()
+  local idx = reaper.CountTracks(0)
+  reaper.InsertTrackAtIndex(idx, true)
+  local track = reaper.GetTrack(0, idx)
+  if track and reaper.ValidatePtr(track, "MediaTrack*") then
+    reaper.SetOnlyTrackSelected(track)
+    if reaper.TrackList_AdjustWindows then reaper.TrackList_AdjustWindows(false) end
+    reaper.UpdateArrange()
+    return track
+  end
+end
+
+function ResolveArrangeDropTrackTarget(hover_track, hover_lane)
+  if IsArrangeNewTrackTargetLane(hover_lane) then
+    return CreateArrangeDropTrackAtEnd(), nil
+  end
+  return hover_track, hover_lane
+end
+
+function DrawArrangeGuideBlock(ctx, native_left, native_right, top_y, bottom_y, id, col, avoid_soundmole_window)
   if not native_left or not native_right or not top_y or not bottom_y then return end
   if native_right < native_left then native_left, native_right = native_right, native_left end
 
-  local final_left, final_top = reaper.ImGui_PointConvertNative(ctx, native_left, top_y, true)
-  local final_right, final_bottom = reaper.ImGui_PointConvertNative(ctx, native_right, bottom_y, true)
+  local final_left, final_top = NativePointToImGui(ctx, native_left, top_y)
+  local final_right, final_bottom = NativePointToImGui(ctx, native_right, bottom_y)
+  if not final_left or not final_top or not final_right or not final_bottom then return end
+  if final_right < final_left then final_left, final_right = final_right, final_left end
+  if final_bottom < final_top then final_top, final_bottom = final_bottom, final_top end
   local final_width = math.max(1, final_right - final_left)
   local final_height = math.max(1, final_bottom - final_top)
+  if avoid_soundmole_window and ImGuiRectOverlapsSoundmoleWindow(final_left, final_top, final_right, final_bottom) then return end
 
   reaper.ImGui_SetNextWindowPos(ctx, final_left, final_top)
   reaper.ImGui_SetNextWindowSize(ctx, final_width, final_height)
@@ -1920,6 +2465,20 @@ function DecodeTrackLaneFromInfo(info)
   return math.floor(info / 256) % 256
 end
 
+function FixedLanePointMatchesTarget(track, probe_x, y, lane, lane_count)
+  if not track or not reaper.GetTrackFromPoint then return false end
+  lane = math.floor(tonumber(lane) or -1)
+  lane_count = math.floor(tonumber(lane_count) or 0)
+  if lane < 0 or lane_count <= 0 then return false end
+
+  local hit_track, info = reaper.GetTrackFromPoint(math.floor(probe_x + 0.5), math.floor(y + 0.5))
+  if hit_track ~= track then return false end
+
+  local hit_lane = DecodeTrackLaneFromInfo(info)
+  if lane >= lane_count then return hit_lane >= lane_count end
+  return hit_lane == lane
+end
+
 function GetTrackFixedLaneLayoutInfo(track)
   if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
   local freemode = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE")) or 0
@@ -1935,8 +2494,342 @@ function GetTrackFixedLaneLayoutInfo(track)
   return left, track_top, right, track_bottom, lane_count
 end
 
-function ProbeExistingFixedLaneRects(track)
+FIXED_LANE_RECTS_CACHE_SECONDS = 0.10
+FIXED_LANE_POINT_RECT_CACHE_SECONDS = 0.10
+fixed_lane_rect_cache = fixed_lane_rect_cache or setmetatable({}, { __mode = "k" })
+
+function GetFixedLaneCacheEntry(track, left, track_top, right, track_bottom, lane_count)
+  if not track then return end
+  local now = reaper.time_precise and reaper.time_precise() or 0
+  local c = fixed_lane_rect_cache[track]
+  local same_layout = c
+    and c.lane_count == lane_count
+    and math.abs((c.left or 0) - left) < 0.5
+    and math.abs((c.right or 0) - right) < 0.5
+    and math.abs((c.track_top or 0) - track_top) < 0.5
+    and math.abs((c.track_bottom or 0) - track_bottom) < 0.5
+
+  if not same_layout then
+    c = {
+      left = left,
+      right = right,
+      track_top = track_top,
+      track_bottom = track_bottom,
+      lane_count = lane_count,
+      rects = {},
+      rect_times = {},
+      now = now
+    }
+    fixed_lane_rect_cache[track] = c
+  else
+    c.now = now
+  end
+
+  return c, now
+end
+
+function GetCachedFullFixedLaneRects(track, left, track_top, right, track_bottom, lane_count)
+  local c, now = GetFixedLaneCacheEntry(track, left, track_top, right, track_bottom, lane_count)
+  if c and c.full and c.full_time and (now - c.full_time) <= FIXED_LANE_RECTS_CACHE_SECONDS then
+    return c.rects, left, track_top, right, track_bottom, lane_count
+  end
+end
+
+function StoreFullFixedLaneRects(track, rects, left, track_top, right, track_bottom, lane_count)
+  local c, now = GetFixedLaneCacheEntry(track, left, track_top, right, track_bottom, lane_count)
+  if not c then return end
+  c.rects = rects or {}
+  c.rect_times = {}
+  for lane, _ in pairs(c.rects) do
+    c.rect_times[lane] = now
+  end
+  c.full = true
+  c.full_time = now
+end
+
+function ProbeFixedTargetLaneRectAtPoint(track, lane, mouse_x, mouse_y, force_refresh)
   local left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
+  if not left or not reaper.GetTrackFromPoint then return end
+
+  lane = math.floor(tonumber(lane) or -1)
+  if lane < 0 or lane > lane_count then return end
+  if not mouse_x or not mouse_y or mouse_y < track_top or mouse_y >= track_bottom then return end
+
+  local c, now = GetFixedLaneCacheEntry(track, left, track_top, right, track_bottom, lane_count)
+  local cached = c and c.rects and c.rects[lane]
+  local cached_time = c and c.rect_times and c.rect_times[lane]
+  if not force_refresh
+      and cached and cached_time and (now - cached_time) <= FIXED_LANE_POINT_RECT_CACHE_SECONDS
+      and mouse_y >= cached[2] and mouse_y < cached[4] then
+    return cached, left, track_top, right, track_bottom, lane_count
+  end
+
+  local probe_x = math.floor(math.max(left, math.min(mouse_x, right - 1)) + 0.5)
+  local min_y = math.floor(track_top)
+  local max_y = math.max(min_y + 1, math.ceil(track_bottom))
+  if lane == lane_count - 1 then
+    local rects = BuildFixedLaneRects(track, true)
+    local new_lane_rect = rects and rects[lane_count]
+    if new_lane_rect and IsFiniteNumber(new_lane_rect[2]) then
+      local new_lane_top = math.floor(new_lane_rect[2] + 0.5)
+      if mouse_y >= new_lane_top then return end
+      if new_lane_top > min_y and new_lane_top < max_y then max_y = new_lane_top end
+    end
+  end
+
+  local start_y = math.floor(mouse_y)
+  if start_y < min_y then start_y = min_y end
+  if start_y >= max_y then start_y = max_y - 1 end
+
+  if not FixedLanePointMatchesTarget(track, probe_x, start_y, lane, lane_count) then
+    local alt_y = nil
+    if start_y > min_y and FixedLanePointMatchesTarget(track, probe_x, start_y - 1, lane, lane_count) then
+      alt_y = start_y - 1
+    elseif start_y + 1 < max_y and FixedLanePointMatchesTarget(track, probe_x, start_y + 1, lane, lane_count) then
+      alt_y = start_y + 1
+    end
+    if not alt_y then return end
+    start_y = alt_y
+  end
+
+  local lane_top = start_y
+  while lane_top > min_y do
+    local y = lane_top - 1
+    if not FixedLanePointMatchesTarget(track, probe_x, y, lane, lane_count) then break end
+    lane_top = y
+  end
+
+  local lane_bottom = start_y + 1
+  while lane_bottom < max_y do
+    if not FixedLanePointMatchesTarget(track, probe_x, lane_bottom, lane, lane_count) then break end
+    lane_bottom = lane_bottom + 1
+  end
+
+  if lane_bottom <= lane_top then return end
+  local rect_top = math.max(track_top, lane_top)
+  local rect_bottom = math.min(track_bottom, lane_bottom)
+  if rect_bottom <= rect_top then return end
+  local rect = { left, rect_top, right, rect_bottom }
+  if c then
+    c.rects[lane] = rect
+    c.rect_times[lane] = now
+    c.full = nil
+    c.full_time = nil
+  end
+
+  return rect, left, track_top, right, track_bottom, lane_count
+end
+
+function ProbeFixedLaneRectAtPoint(track, lane, mouse_x, mouse_y, force_refresh)
+  local left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
+  lane = math.floor(tonumber(lane) or -1)
+  if not left or lane < 0 or lane >= lane_count then return end
+  return ProbeFixedTargetLaneRectAtPoint(track, lane, mouse_x, mouse_y, force_refresh)
+end
+
+function ProbeFixedNewLaneRectAtPoint(track, mouse_x, mouse_y, force_refresh)
+  local left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
+  if not left or lane_count <= 0 then return end
+  return ProbeFixedTargetLaneRectAtPoint(track, lane_count, mouse_x, mouse_y, force_refresh)
+end
+
+function DecodeMacFixedLaneFromInfo(info, lane_count)
+  lane_count = math.floor(tonumber(lane_count) or 0)
+  if lane_count <= 0 then return nil end
+  if info == nil then return nil end
+  local direct_lane = DecodeTrackLaneFromInfo(info)
+  if direct_lane >= 0 and direct_lane < lane_count then
+    return lane_count - 1 - direct_lane
+  end
+  if direct_lane >= lane_count then return lane_count end
+  return nil
+end
+
+function MacActualFixedLaneFromVisualLane(lane, lane_count)
+  lane = math.floor(tonumber(lane) or -1)
+  lane_count = math.floor(tonumber(lane_count) or 0)
+  if lane_count <= 0 or lane < 0 then return nil end
+  if lane >= lane_count then return lane_count end
+  return lane_count - 1 - lane
+end
+
+function MacFixedLanePointMatchesTarget(track, probe_x, y, lane, lane_count)
+  if not IsMacOS() or not track or not reaper.GetTrackFromPoint then return false end
+  lane = math.floor(tonumber(lane) or -1)
+  lane_count = math.floor(tonumber(lane_count) or 0)
+  if lane < 0 or lane_count <= 0 then return false end
+
+  local hit_track, info = reaper.GetTrackFromPoint(math.floor(probe_x + 0.5), math.floor(y + 0.5))
+  if hit_track ~= track then return false end
+
+  local hit_lane = DecodeMacFixedLaneFromInfo(info, lane_count)
+  return hit_lane == lane
+end
+
+function ProbeMacFixedLaneRectAtPoint(track, lane, mouse_x, mouse_y, rects, left, track_top, right, track_bottom, lane_count)
+  if not IsMacOS() or not track or not reaper.GetTrackFromPoint then return end
+  if not IsFiniteNumber(mouse_x) or not IsFiniteNumber(mouse_y) then return end
+
+  lane = math.floor(tonumber(lane) or -1)
+  lane_count = math.floor(tonumber(lane_count) or 0)
+  if lane < 0 or lane >= lane_count then return end
+
+  if not left or not right or not track_top or not track_bottom or not lane_count or lane_count <= 0 then
+    rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(track, true)
+  end
+  if not left or not right or right <= left then return end
+
+  local y_min, y_max = NativeYRangeMinMax(track_top, track_bottom)
+  if not y_min or y_max <= y_min then return end
+  if mouse_y < y_min or mouse_y >= y_max then return end
+
+  local new_lane_rect = rects and rects[lane_count]
+  if new_lane_rect then
+    local new_min, new_max = NativeYRangeMinMax(new_lane_rect[2], new_lane_rect[4])
+    if new_min and new_max > new_min then
+      if mouse_y >= new_min and mouse_y < new_max then return end
+      if mouse_y < new_min and new_min > y_min and new_min < y_max then
+        y_max = new_min
+      elseif mouse_y >= new_max and new_max > y_min and new_max < y_max then
+        y_min = new_max
+      end
+    end
+  end
+
+  local probe_x = math.floor(math.max(left, math.min(mouse_x, right - 1)) + 0.5)
+  local min_y = math.floor(y_min + 0.5)
+  local max_y = math.max(min_y + 1, math.ceil(y_max - 0.5))
+  local start_y = math.floor(mouse_y + 0.5)
+  if start_y < min_y then start_y = min_y end
+  if start_y >= max_y then start_y = max_y - 1 end
+
+  if not MacFixedLanePointMatchesTarget(track, probe_x, start_y, lane, lane_count) then
+    local alt_y = nil
+    if start_y > min_y and MacFixedLanePointMatchesTarget(track, probe_x, start_y - 1, lane, lane_count) then
+      alt_y = start_y - 1
+    elseif start_y + 1 < max_y and MacFixedLanePointMatchesTarget(track, probe_x, start_y + 1, lane, lane_count) then
+      alt_y = start_y + 1
+    end
+    if not alt_y then return end
+    start_y = alt_y
+  end
+
+  local lane_top = start_y
+  while lane_top > min_y do
+    local y = lane_top - 1
+    if not MacFixedLanePointMatchesTarget(track, probe_x, y, lane, lane_count) then break end
+    lane_top = y
+  end
+
+  local lane_bottom = start_y + 1
+  while lane_bottom < max_y do
+    if not MacFixedLanePointMatchesTarget(track, probe_x, lane_bottom, lane, lane_count) then break end
+    lane_bottom = lane_bottom + 1
+  end
+
+  if lane_bottom <= lane_top then return end
+  local rect_top = math.max(y_min, lane_top)
+  local rect_bottom = math.min(y_max, lane_bottom)
+  if rect_bottom <= rect_top then return end
+
+  return { left, rect_top, right, rect_bottom }
+end
+
+function GetMacFixedLaneTargetAtMouse(track, info, mouse_x, mouse_y, mac_track_rect)
+  if not IsMacOS() or not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+
+  local rects, left, track_top, right, track_bottom, lane_count
+  if mac_track_rect then
+    rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(
+      track,
+      true,
+      mac_track_rect[1],
+      mac_track_rect[2],
+      mac_track_rect[3],
+      mac_track_rect[4]
+    )
+  else
+    rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(track, true)
+  end
+  if not left or not lane_count or lane_count <= 0 then return end
+
+  local new_lane_rect = rects and rects[lane_count]
+  if new_lane_rect and NativeYInRect(mouse_y, new_lane_rect) then
+    return lane_count, new_lane_rect, rects, left, track_top, right, track_bottom, lane_count
+  end
+
+  local lane = DecodeMacFixedLaneFromInfo(info, lane_count)
+  if lane and lane >= 0 and lane < lane_count then
+    local target_lane = MacActualFixedLaneFromVisualLane(lane, lane_count)
+    local probed_rect = ProbeMacFixedLaneRectAtPoint(track, lane, mouse_x, mouse_y, rects, left, track_top, right, track_bottom, lane_count)
+    if probed_rect then
+      return target_lane, probed_rect, rects, left, track_top, right, track_bottom, lane_count
+    end
+
+    local rect = rects and rects[lane]
+    if rect and NativeYInRect(mouse_y, rect) then
+      return target_lane, rect, rects, left, track_top, right, track_bottom, lane_count
+    end
+  elseif lane == lane_count and new_lane_rect then
+    return lane_count, new_lane_rect, rects, left, track_top, right, track_bottom, lane_count
+  end
+
+  local rect_lane, rect_lane_rect = GetFixedLaneTargetFromRectsAtMouse(rects, left, track_top, right, track_bottom, lane_count, mouse_y)
+  if rect_lane and rect_lane >= 0 and rect_lane < lane_count then
+    return MacActualFixedLaneFromVisualLane(rect_lane, lane_count), rect_lane_rect, rects, left, track_top, right, track_bottom, lane_count
+  end
+  return rect_lane, rect_lane_rect, rects, left, track_top, right, track_bottom, lane_count
+end
+
+function GetMacFixedNewLaneTargetByGeometryAtMouse(mouse_x, mouse_y)
+  if not IsMacOS() or not IsFiniteNumber(mouse_x) or not IsFiniteNumber(mouse_y) then return end
+  if not reaper.CountTracks or not reaper.GetTrack then return end
+
+  local point_track = nil
+  if reaper.GetTrackFromPoint then
+    point_track = reaper.GetTrackFromPoint(math.floor(mouse_x + 0.5), math.floor(mouse_y + 0.5))
+    if not (point_track and reaper.ValidatePtr(point_track, "MediaTrack*")) then point_track = nil end
+  end
+
+  for i = 0, reaper.CountTracks(0) - 1 do
+    local track = reaper.GetTrack(0, i)
+    if track and reaper.ValidatePtr(track, "MediaTrack*") then
+      local freemode = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE")) or 0
+      if freemode == 2 and (not point_track or point_track == track) then
+        local rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(track, true)
+        local new_lane_rect = rects and lane_count and rects[lane_count]
+        if new_lane_rect and left and right and mouse_x >= left and mouse_x <= right
+            and NativeYInRange(mouse_y, track_top, track_bottom)
+            and NativeYInRect(mouse_y, new_lane_rect) then
+          return track, lane_count, true, new_lane_rect
+        end
+      end
+    end
+  end
+end
+
+function GetApproxFixedLaneRect(track, lane)
+  local left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
+  if not left then return end
+  lane = math.floor(tonumber(lane) or -1)
+  if lane < 0 or lane >= lane_count then return end
+
+  local lane_h = (track_bottom - track_top) / lane_count
+  if lane_h <= 0 then return end
+
+  local top = math.floor(track_top + lane_h * lane + 0.5)
+  local bottom = (lane == lane_count - 1)
+    and track_bottom
+    or math.floor(track_top + lane_h * (lane + 1) + 0.5)
+  if bottom <= top then bottom = top + 1 end
+  if bottom > track_bottom then bottom = track_bottom end
+  return { left, top, right, bottom }
+end
+
+function ProbeExistingFixedLaneRects(track, left, track_top, right, track_bottom, lane_count)
+  if not left then
+    left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
+  end
   if not left or not reaper.GetTrackFromPoint then return end
 
   local probe_x = math.floor((left + right) * 0.5)
@@ -1960,93 +2853,214 @@ function ProbeExistingFixedLaneRects(track)
   return rects, left, track_top, right, track_bottom, lane_count
 end
 
-function BuildFixedLaneRects(track)
-  local raw_rects, left, track_top, right, track_bottom, lane_count = ProbeExistingFixedLaneRects(track)
+function FixedLaneMedian(nums)
+  if not nums or #nums == 0 then return nil end
+  local t = {}
+  for i = 1, #nums do t[i] = nums[i] end
+  table.sort(t)
+  local n = #t
+  if n % 2 == 1 then return t[(n + 1) // 2] end
+  return (t[n // 2] + t[n // 2 + 1]) * 0.5
+end
+
+function CopyFixedLaneRect(rect)
+  if not rect then return nil end
+  return { rect[1], rect[2], rect[3], rect[4] }
+end
+
+function CollectFixedLaneItemRects(track, left, track_top, right, track_bottom, lane_count)
+  if not track or not reaper.CountTrackMediaItems then return {}, {} end
+
+  local rects = {}
+  local heights = {}
+  for i = 0, reaper.CountTrackMediaItems(track) - 1 do
+    local item = reaper.GetTrackMediaItem(track, i)
+    if item and reaper.ValidatePtr(item, "MediaItem*") then
+      local lane = math.floor(tonumber(reaper.GetMediaItemInfo_Value(item, "I_FIXEDLANE")) or -1)
+      local item_y = tonumber(reaper.GetMediaItemInfo_Value(item, "I_LASTY"))
+      local item_h = tonumber(reaper.GetMediaItemInfo_Value(item, "I_LASTH"))
+      if lane >= 0 and lane < lane_count and IsFiniteNumber(item_y) and IsFiniteNumber(item_h) and item_h > 0 then
+        local top = math.floor(track_top + item_y + 0.5)
+        local bottom = math.floor(track_top + item_y + item_h + 0.5)
+        if top < track_top then top = track_top end
+        if bottom > track_bottom then bottom = track_bottom end
+        if bottom > top then
+          local old = rects[lane]
+          if old then
+            if top < old[2] then old[2] = top end
+            if bottom > old[4] then old[4] = bottom end
+          else
+            rects[lane] = { left, top, right, bottom }
+          end
+        end
+      end
+    end
+  end
+
+  for lane = 0, lane_count - 1 do
+    local rect = rects[lane]
+    if rect and rect[4] > rect[2] then
+      table.insert(heights, rect[4] - rect[2])
+    end
+  end
+  return rects, heights
+end
+
+function GetFixedLanePitchFromRects(rects, lane_count)
+  if not rects then return nil end
+  local pitches = {}
+  local prev_lane, prev_center = nil, nil
+  for lane = 0, lane_count - 1 do
+    local rect = rects[lane]
+    if rect and rect[4] > rect[2] then
+      local center = (rect[2] + rect[4]) * 0.5
+      if prev_lane and lane > prev_lane then
+        local pitch = (center - prev_center) / (lane - prev_lane)
+        if IsFiniteNumber(pitch) and pitch > 0 then table.insert(pitches, pitch) end
+      end
+      prev_lane, prev_center = lane, center
+    end
+  end
+  return FixedLaneMedian(pitches)
+end
+
+function EstimateFixedNewLaneHeight(total_h, lane_count, lane_h)
+  total_h = tonumber(total_h) or 0
+  lane_count = math.max(1, math.floor(tonumber(lane_count) or 1))
+  if total_h <= 1 then return 1 end
+
+  local by_lane = lane_h and lane_h > 0 and math.floor(lane_h * 0.12 + 0.5) or nil
+  local by_track = math.floor(total_h * 0.08 + 0.5)
+  local h = by_lane or by_track
+  if not h or h <= 0 then h = by_track end
+
+  local max_h = math.floor(math.min(total_h * 0.32, total_h / (lane_count + 1)) + 0.5)
+  if max_h < 1 then max_h = 1 end
+  local min_h = math.min(5, max_h)
+  h = math.max(min_h, math.min(18, h, max_h))
+  if h >= total_h then h = math.max(1, math.floor(total_h * 0.25 + 0.5)) end
+  return h
+end
+
+function ChooseFixedNewLaneTop(track_top, track_bottom, lane_count, lane_h, raw_rects, item_rects)
+  local candidates = {}
+  local function add_candidate(v)
+    if IsFiniteNumber(v) and v > track_top and v < track_bottom then
+      table.insert(candidates, v)
+    end
+  end
+
+  local prev_heights = {}
+  if raw_rects then
+    for lane = 0, lane_count - 2 do
+      local rect = raw_rects[lane]
+      if rect and rect[4] > rect[2] then table.insert(prev_heights, rect[4] - rect[2]) end
+    end
+  end
+  local ref_lane_h = FixedLaneMedian(prev_heights) or lane_h
+  local last_raw = raw_rects and raw_rects[lane_count - 1]
+  if ref_lane_h and last_raw then add_candidate(last_raw[2] + ref_lane_h) end
+
+  if item_rects then
+    local item_pitch = GetFixedLanePitchFromRects(item_rects, lane_count) or lane_h
+    for lane = 0, lane_count - 1 do
+      local rect = item_rects[lane]
+      if rect then
+        if lane == lane_count - 1 then add_candidate(rect[4]) end
+        if item_pitch then add_candidate(rect[2] + item_pitch * (lane_count - lane)) end
+      end
+    end
+  end
+
+  if #candidates > 0 then
+    table.sort(candidates)
+    return math.floor(candidates[#candidates] + 0.5)
+  end
+
+  local new_lane_h = EstimateFixedNewLaneHeight(track_bottom - track_top, lane_count, lane_h)
+  return math.floor(track_bottom - new_lane_h + 0.5)
+end
+
+function NormalizeFixedLaneRects(rects, left, track_top, right, track_bottom, lane_count, gutter_top)
+  gutter_top = tonumber(gutter_top)
+  if not IsFiniteNumber(gutter_top) or gutter_top <= track_top or gutter_top >= track_bottom then
+    return rects
+  end
+
+  local lane_area_h = gutter_top - track_top
+  if lane_area_h <= 0 then return rects end
+
+  rects = {}
+  if IsMacOS() then
+    local track_min, track_max = NativeYRangeMinMax(track_top, track_bottom)
+    if not track_min or track_max <= track_min then return rects end
+
+    local new_lane_h = math.abs(track_bottom - gutter_top)
+    new_lane_h = math.max(1, math.min(new_lane_h, track_max - track_min - 1))
+    local lane_area_min = track_min + new_lane_h
+    local lane_area_max = track_max
+    local mac_lane_area_h = lane_area_max - lane_area_min
+    if mac_lane_area_h <= 0 then return rects end
+
+    for lane = 0, lane_count - 1 do
+      local lane_high = (lane == 0) and lane_area_max or rects[lane - 1][2]
+      local lane_low = (lane == lane_count - 1)
+        and lane_area_min
+        or math.floor(lane_area_max - mac_lane_area_h * (lane + 1) / lane_count + 0.5)
+      if lane_high <= lane_low then lane_high = lane_low + 1 end
+      if lane_high > lane_area_max then lane_high = lane_area_max end
+      rects[lane] = { left, lane_low, right, lane_high }
+    end
+
+    rects[lane_count] = { left, track_min, right, lane_area_min }
+    return rects
+  end
+
+  for lane = 0, lane_count - 1 do
+    local top = (lane == 0) and track_top or rects[lane - 1][4]
+    local bottom = (lane == lane_count - 1)
+      and gutter_top
+      or math.floor(track_top + lane_area_h * (lane + 1) / lane_count + 0.5)
+    if bottom <= top then bottom = top + 1 end
+    if bottom > gutter_top then bottom = gutter_top end
+    rects[lane] = { left, top, right, bottom }
+  end
+
+  rects[lane_count] = { left, gutter_top, right, track_bottom }
+  return rects
+end
+
+function BuildFixedLaneRects(track, force_refresh, override_left, override_top, override_right, override_bottom)
+  local left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
   if not left then return end
+
+  if IsFiniteNumber(override_left) and IsFiniteNumber(override_top)
+      and IsFiniteNumber(override_right) and IsFiniteNumber(override_bottom)
+      and override_right > override_left then
+    local override_y_min, override_y_max = NativeYRangeMinMax(override_top, override_bottom)
+    if override_y_min and override_y_max > override_y_min then
+      left, track_top, right, track_bottom = override_left, override_y_min, override_right, override_y_max
+    end
+  end
+
+  if not force_refresh then
+    local cached_rects = GetCachedFullFixedLaneRects(track, left, track_top, right, track_bottom, lane_count)
+    if cached_rects then
+      return cached_rects, left, track_top, right, track_bottom, lane_count
+    end
+  end
 
   local total_h = track_bottom - track_top
   if total_h <= 0 then return end
 
-  local function median(nums)
-    if not nums or #nums == 0 then return nil end
-    local t = {}
-    for i = 1, #nums do t[i] = nums[i] end
-    table.sort(t)
-    local n = #t
-    if n % 2 == 1 then return t[(n + 1) // 2] end
-    return (t[n // 2] + t[n // 2 + 1]) * 0.5
-  end
-
-  if raw_rects then
-    local rects = {}
-    for lane = 0, lane_count - 1 do
-      local rect = raw_rects[lane]
-      if rect then
-        rects[lane] = { rect[1], rect[2], rect[3], rect[4] }
-      end
-    end
-
-    local prev_heights = {}
-    for lane = 0, lane_count - 2 do
-      local rect = rects[lane]
-      if rect and rect[4] > rect[2] then
-        table.insert(prev_heights, rect[4] - rect[2])
-      end
-    end
-
-    local ref_lane_h = median(prev_heights)
-    local last_rect = rects[lane_count - 1]
-    if ref_lane_h and last_rect and ref_lane_h > 0 then
-      local gutter_top = math.floor(last_rect[2] + ref_lane_h + 0.5)
-      if gutter_top > track_bottom then gutter_top = track_bottom end
-      if gutter_top > last_rect[2] and gutter_top < track_bottom then
-        last_rect[4] = gutter_top
-        rects[lane_count] = { left, gutter_top, right, track_bottom }
-        return rects, left, track_top, right, track_bottom, lane_count
-      end
-    end
-  end
-
-  local samples = {}
-  for lane = 0, lane_count - 2 do
-    local rect = raw_rects and raw_rects[lane]
-    if rect then
-      local h = rect[4] - rect[2]
-      if h > 0 then table.insert(samples, h) end
-    end
-  end
-  if #samples == 0 then
-    for lane = 0, lane_count - 1 do
-      local rect = raw_rects and raw_rects[lane]
-      if rect then
-        local h = rect[4] - rect[2]
-        if h > 0 then table.insert(samples, h) end
-      end
-    end
-  end
-  if #samples == 0 then return end
-
-  local sum = 0
-  for _, h in ipairs(samples) do sum = sum + h end
-  local lane_h = math.max(1, math.floor((sum / #samples) + 0.5))
-  local gutter_top = math.floor(track_top + lane_h * lane_count + 0.5)
+  local gutter_top = track_bottom - EstimateFixedNewLaneHeight(total_h, lane_count)
+  local min_gutter_top = track_top + lane_count
+  if gutter_top < min_gutter_top then gutter_top = min_gutter_top end
   if gutter_top > track_bottom then gutter_top = track_bottom end
 
-  local rects = {}
-  for lane = 0, lane_count - 1 do
-    local top = math.floor(track_top + lane * lane_h + 0.5)
-    local bottom = (lane == lane_count - 1)
-      and gutter_top
-      or math.floor(track_top + (lane + 1) * lane_h + 0.5)
-    if bottom <= top then bottom = top + 1 end
-    if bottom > track_bottom then bottom = track_bottom end
-    rects[lane] = { left, top, right, bottom }
-  end
+  local rects = NormalizeFixedLaneRects(nil, left, track_top, right, track_bottom, lane_count, gutter_top)
 
-  if gutter_top < track_bottom then
-    rects[lane_count] = { left, gutter_top, right, track_bottom }
-  end
-
+  StoreFullFixedLaneRects(track, rects, left, track_top, right, track_bottom, lane_count)
   return rects, left, track_top, right, track_bottom, lane_count
 end
 
@@ -2074,6 +3088,13 @@ function GetArrangeTrackLaneNativeRect(track, lane)
   end
   if lane > lane_count then return end
 
+  local c = GetFixedLaneCacheEntry(track, left, track_top, right, track_bottom, lane_count)
+  local cached_rect = c and c.rects and c.rects[lane]
+  local cached_time = c and c.rect_times and c.rect_times[lane]
+  if cached_rect and cached_time and (c.now - cached_time) <= FIXED_LANE_POINT_RECT_CACHE_SECONDS then
+    return cached_rect[1], cached_rect[2], cached_rect[3], cached_rect[4]
+  end
+
   local rects = BuildFixedLaneRects(track)
   local rect = rects and rects[lane]
   if rect then
@@ -2081,7 +3102,7 @@ function GetArrangeTrackLaneNativeRect(track, lane)
   end
 end
 
-function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track, target_lane)
+function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track, target_lane, target_rect)
   insert_time = tonumber(insert_time)
   item_len = tonumber(item_len) or 0
   if not insert_time then return false end
@@ -2089,8 +3110,20 @@ function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track, t
   local start_x, arrange_top, arrange_bottom, left, right = TimeToArrangeNativeX(insert_time)
   if not start_x then return false end
 
-  local block_left, block_top, block_right, block_bottom = GetArrangeTrackLaneNativeRect(track, target_lane)
+  local block_left, block_top, block_right, block_bottom
+  if target_rect then
+    block_left, block_top, block_right, block_bottom = target_rect[1], target_rect[2], target_rect[3], target_rect[4]
+  else
+    block_left, block_top, block_right, block_bottom = GetArrangeTrackLaneNativeRect(track, target_lane)
+  end
   local drew = false
+  local is_new_track_target = IsArrangeNewTrackTargetLane(target_lane)
+
+  if is_new_track_target and block_top then
+    local track_col = ((colors.gray or 0x909090FF) & 0xFFFFFF00) | 0x22
+    DrawArrangeGuideBlock(ctx, block_left, block_right, block_top, block_bottom, "##" .. id_prefix .. "_new_track", track_col, true)
+    drew = true
+  end
 
   if item_len > 0 then
     local end_x = TimeToArrangeNativeX(insert_time + item_len)
@@ -2099,21 +3132,29 @@ function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track, t
       local rect_right = math.min(right, math.max(start_x, end_x))
       if rect_right > rect_left then
         local block_col = ((colors.gray or 0x909090FF) & 0xFFFFFF00) | 0x44
-        DrawArrangeGuideBlock(ctx, rect_left, rect_right, block_top, block_bottom, "##" .. id_prefix .. "_block", block_col)
+        DrawArrangeGuideBlock(ctx, rect_left, rect_right, block_top, block_bottom, "##" .. id_prefix .. "_block", block_col, is_new_track_target)
         drew = true
       end
     end
   end
 
+  if block_top and block_bottom then
+    DrawArrangeGuideHorizontalLine(ctx, left, right, block_top, "##" .. id_prefix .. "_top", true)
+    if math.abs(block_bottom - block_top) >= 1 then
+      DrawArrangeGuideHorizontalLine(ctx, left, right, block_bottom, "##" .. id_prefix .. "_bottom", true)
+    end
+    drew = true
+  end
+
   if start_x >= left and start_x <= right then
-    DrawArrangeGuideLine(ctx, start_x, arrange_top, arrange_bottom, "##" .. id_prefix .. "_start")
+    DrawArrangeGuideLine(ctx, start_x, arrange_top, arrange_bottom, "##" .. id_prefix .. "_start", true)
     drew = true
   end
 
   if item_len > 0 then
     local end_x = TimeToArrangeNativeX(insert_time + item_len)
     if end_x and end_x >= left and end_x <= right and math.abs(end_x - start_x) >= 1 then
-      DrawArrangeGuideLine(ctx, end_x, arrange_top, arrange_bottom, "##" .. id_prefix .. "_end")
+      DrawArrangeGuideLine(ctx, end_x, arrange_top, arrange_bottom, "##" .. id_prefix .. "_end", true)
       drew = true
     end
   end
@@ -2121,34 +3162,184 @@ function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track, t
   return drew
 end
 
+function GetFixedNewLaneTargetAtMouse(track, mouse_y, force_refresh, allow_probe_hit)
+  local mouse_x = nil
+  if reaper.GetMousePosition then mouse_x = select(1, reaper.GetMousePosition()) end
+  if IsFiniteNumber(mouse_x) then
+    local probed_rect, probed_left, probed_top, probed_right, probed_bottom, probed_lane_count = ProbeFixedNewLaneRectAtPoint(track, mouse_x, mouse_y, force_refresh)
+    if probed_rect and NativeYInRect(mouse_y, probed_rect) then
+      local probed_rects = {}
+      probed_rects[probed_lane_count] = probed_rect
+      return probed_lane_count, probed_rect, probed_rects, probed_left, probed_top, probed_right, probed_bottom, probed_lane_count
+    end
+  end
+
+  local rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(track, force_refresh)
+  if not left or not lane_count then return end
+  if not NativeYInRange(mouse_y, track_top, track_bottom) then return end
+
+  local rect = rects and rects[lane_count]
+  if rect and NativeYInRect(mouse_y, rect) then
+    return lane_count, rect, rects, left, track_top, right, track_bottom, lane_count
+  end
+  if rect and allow_probe_hit and IsFixedNewLaneProbeZone(track, mouse_y) then
+    return lane_count, rect, rects, left, track_top, right, track_bottom, lane_count
+  end
+
+  return nil, nil, rects, left, track_top, right, track_bottom, lane_count
+end
+
+function IsFixedNewLaneProbeZone(track, mouse_y)
+  local track_top, track_bottom = GetTrackNativeYRangeRaw(track)
+  if not track_top then
+    local left, full_top, right, full_bottom = GetArrangeTrackNativeRect(track)
+    track_top, track_bottom = full_top, full_bottom
+  end
+  if not track_top then return false end
+
+  local y_min, y_max = NativeYRangeMinMax(track_top, track_bottom)
+  if not y_min then return false end
+
+  local total_h = y_max - y_min
+  if total_h <= 0 then return false end
+
+  local probe_h = math.min(total_h, math.max(24, math.min(48, math.floor(total_h * 0.2 + 0.5))))
+  if IsMacOS() then
+    return mouse_y >= y_min and mouse_y < y_min + probe_h
+  end
+  return mouse_y >= track_bottom - probe_h and mouse_y < track_bottom
+end
+
+function GetFixedLaneTargetFromRectsAtMouse(rects, left, track_top, right, track_bottom, lane_count, mouse_y)
+  if not left or not lane_count then return end
+  if not NativeYInRange(mouse_y, track_top, track_bottom) then return end
+
+  local new_lane_rect = rects and rects[lane_count]
+  if new_lane_rect and NativeYInRect(mouse_y, new_lane_rect) then
+    return lane_count, new_lane_rect
+  end
+
+  for idx = 0, lane_count - 1 do
+    local rect = rects and rects[idx]
+    if rect and NativeYInRect(mouse_y, rect) then
+      return idx, rect
+    end
+  end
+end
+
 function GetArrangeTargetTrackLaneAtMouse()
-  if not reaper.GetTrackFromPoint or not reaper.GetMousePosition then return end
+  if not reaper.GetMousePosition then return end
 
   local mouse_x, mouse_y = reaper.GetMousePosition()
   if not mouse_x or not mouse_y then return end
 
+  if IsMacOS() then
+    local mac_new_lane_track, mac_new_lane, mac_new_lane_valid, mac_new_lane_rect = GetMacFixedNewLaneTargetByGeometryAtMouse(mouse_x, mouse_y)
+    if mac_new_lane_track then
+      return mac_new_lane_track, mac_new_lane, mac_new_lane_valid, mac_new_lane_rect
+    end
+  end
+
+  local new_track_rect = GetArrangeNewTrackTargetNativeRectAtMouse(mouse_x, mouse_y)
+  if new_track_rect then
+    return nil, ARRANGE_NEW_TRACK_TARGET_LANE, true, new_track_rect
+  end
+
+  if not reaper.GetTrackFromPoint then return end
   local track, info = reaper.GetTrackFromPoint(mouse_x, mouse_y)
   if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
 
+  local mac_track_rect = GetMacHoveredTrackNativeRect(track, mouse_x, mouse_y)
   local lane = nil
+  local lane_rect = IsMacOS() and mac_track_rect or nil
   local is_valid_target = true
   local freemode = tonumber(reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE")) or 0
   if freemode == 2 then
-    local rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(track)
-    if left and mouse_y >= track_top and mouse_y < track_bottom then
-      for idx = 0, lane_count do
-        local rect = rects and rects[idx]
-        if rect and mouse_y >= rect[2] and mouse_y < rect[4] then
-          lane = idx
-          break
-        end
+    local lane_count_direct = math.floor(tonumber(reaper.GetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES")) or 0)
+    local direct_lane = DecodeTrackLaneFromInfo(info)
+    local rects, left, track_top, right, track_bottom, lane_count
+    if IsMacOS() then
+      lane, lane_rect, rects, left, track_top, right, track_bottom, lane_count = GetMacFixedLaneTargetAtMouse(track, info, mouse_x, mouse_y, mac_track_rect)
+    elseif mac_track_rect then
+      rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(
+        track,
+        true,
+        mac_track_rect[1],
+        mac_track_rect[2],
+        mac_track_rect[3],
+        mac_track_rect[4]
+      )
+    else
+      rects, left, track_top, right, track_bottom, lane_count = BuildFixedLaneRects(track, true)
+    end
+    if lane_count and lane_count > 0 then lane_count_direct = lane_count end
+
+    if (not IsMacOS()) and lane_count_direct > 0 then
+      local new_lane_rect = rects and rects[lane_count_direct]
+      local mouse_in_new_lane_rect = new_lane_rect and mouse_y >= new_lane_rect[2] and mouse_y < new_lane_rect[4]
+      if mouse_in_new_lane_rect then
+        lane = lane_count_direct
+        lane_rect = new_lane_rect
+      elseif direct_lane >= 0 and direct_lane < lane_count_direct then
+        lane_rect = ProbeFixedLaneRectAtPoint(track, direct_lane, mouse_x, mouse_y, true)
+        if lane_rect then lane = direct_lane end
+      elseif direct_lane >= lane_count_direct then
+        lane, lane_rect = GetFixedNewLaneTargetAtMouse(track, mouse_y, true, direct_lane >= lane_count_direct)
       end
+    end
+
+    if not IsMacOS() and not lane and lane_count_direct > 0 and direct_lane >= 0 and direct_lane < lane_count_direct then
+      lane = direct_lane
+      lane_rect = ProbeFixedLaneRectAtPoint(track, lane, mouse_x, mouse_y, true) or (rects and rects[lane]) or GetApproxFixedLaneRect(track, lane)
+    elseif not lane then
+      lane, lane_rect = GetFixedLaneTargetFromRectsAtMouse(rects, left, track_top, right, track_bottom, lane_count, mouse_y)
     end
 
     is_valid_target = lane ~= nil
   end
 
-  return track, lane, is_valid_target
+  return track, lane, is_valid_target, lane_rect
+end
+
+function GetArrangeTimelinePositionAtMouse()
+  local pos = -1
+  if reaper.BR_GetMouseCursorContext_Position then
+    pos = reaper.BR_GetMouseCursorContext_Position()
+  end
+  if IsFiniteNumber(pos) and pos > -1 then return pos end
+
+  if not reaper.GetMousePosition or not reaper.GetSet_ArrangeView2 then return -1 end
+  local mouse_x = select(1, reaper.GetMousePosition())
+  if not IsFiniteNumber(mouse_x) then return -1 end
+  local left, right = GetArrangeHorizontalNativeRange(mouse_x)
+  if left and right and (mouse_x < left or mouse_x > right) then return -1 end
+
+  local x = math.floor(mouse_x + 0.5)
+  local t = reaper.GetSet_ArrangeView2(0, false, x, x + 1, 0, 0)
+  if IsFiniteNumber(t) then return t end
+  return -1
+end
+
+function IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane)
+  if hover_valid == false then return false end
+  if IsArrangeNewTrackTargetLane(hover_lane) then
+    if not IsMacOS() and window ~= nil and window ~= "" and window ~= "arrange" and window ~= "unknown" then return false end
+    return IsFiniteNumber(mouse_pos_time) and mouse_pos_time > -1
+  end
+  if window == "arrange" then return true end
+  if reaper.GetMousePosition then
+    local mouse_x = select(1, reaper.GetMousePosition())
+    if IsFiniteNumber(mouse_x) then
+      local left, right = GetArrangeHorizontalNativeRange(mouse_x)
+      if left and right and (mouse_x < left or mouse_x > right) then return false end
+    end
+  end
+  if IsMacOS() and IsFiniteNumber(mouse_pos_time) and mouse_pos_time > -1 then
+    if hover_track and reaper.ValidatePtr(hover_track, "MediaTrack*") then return true end
+    local br_track = reaper.BR_GetMouseCursorContext_Track and reaper.BR_GetMouseCursorContext_Track()
+    if br_track and reaper.ValidatePtr(br_track, "MediaTrack*") then return true end
+  end
+  return hover_track and reaper.ValidatePtr(hover_track, "MediaTrack*") and IsFiniteNumber(mouse_pos_time) and mouse_pos_time > -1
 end
 
 function ApplyInsertedItemToTargetLane(item, target_lane)
@@ -2168,6 +3359,7 @@ function ApplyInsertedItemToTargetLane(item, target_lane)
   if target_lane < 0 then target_lane = 0 end
   if target_lane >= lane_count then
     reaper.SetMediaTrackInfo_Value(track, "I_NUMFIXEDLANES", target_lane + 1)
+    if fixed_lane_rect_cache then fixed_lane_rect_cache[track] = nil end
     if reaper.UpdateTimeline then reaper.UpdateTimeline() end
     if reaper.TrackList_AdjustWindows then reaper.TrackList_AdjustWindows(false) end
     reaper.UpdateArrange()
@@ -2176,7 +3368,9 @@ function ApplyInsertedItemToTargetLane(item, target_lane)
   if target_lane >= lane_count then target_lane = lane_count - 1 end
 
   reaper.SetMediaItemInfo_Value(item, "I_FIXEDLANE", target_lane)
+  if reaper.UpdateItemLanes then reaper.UpdateItemLanes(0) end
   reaper.UpdateItemInProject(item)
+  if fixed_lane_rect_cache then fixed_lane_rect_cache[track] = nil end
 end
 
 function InsertMediaWithKeepParams(path, target_lane)
@@ -10262,6 +11456,7 @@ function loop()
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
   reaper.ImGui_PopStyleColor(ctx, 1)
+  if visible then UpdateSoundmoleMainWindowRect() end
 
   SM_ProcessBuilderLoop() -- 处理数据库构建器
 
@@ -14283,14 +15478,14 @@ function loop()
       -- 拖动音频到REAPER
       if dragging_audio then
         local window, segment, details = reaper.BR_GetMouseCursorContext()
-        local mouse_pos_time = reaper.BR_GetMouseCursorContext_Position()
-        local hover_track, hover_lane, hover_valid = GetArrangeTargetTrackLaneAtMouse()
+        local mouse_pos_time = GetArrangeTimelinePositionAtMouse()
+        local hover_track, hover_lane, hover_valid, hover_rect = GetArrangeTargetTrackLaneAtMouse()
         -- 绘制参考线
-        if mouse_pos_time > -1 and (hover_valid ~= false) then
+        if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
           local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
           local item_len = GetDragPreviewTimelineLength(dragging_audio.start_time, dragging_audio.preview_end_time or dragging_audio.end_time)
           hover_track = hover_track or reaper.BR_GetMouseCursorContext_Track()
-          DrawArrangeInsertGuides(ctx, "guide_line_drag_audio", insert_time, item_len, hover_track, hover_lane)
+          DrawArrangeInsertGuides(ctx, "guide_line_drag_audio", insert_time, item_len, hover_track, hover_lane, hover_rect)
 
           -- 鼠标图标
           if reaper.JS_Mouse_LoadCursor then
@@ -14302,17 +15497,22 @@ function loop()
         end
 
         if not reaper.ImGui_IsMouseDown(ctx, 0) then -- 鼠标释放
-          if window == "arrange" and (hover_valid ~= false) then -- 只允许在arrange窗口松开时插入
+          if IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then -- 只允许在arrange窗口松开时插入
             WithAutoCrossfadeDisabled(function()
               reaper.PreventUIRefresh(1) -- 防止UI刷新
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
               local old_cursor = reaper.GetCursorPosition()
-              local insert_time = reaper.BR_GetMouseCursorContext_Position()
+              local insert_time = GetArrangeTimelinePositionAtMouse()
               if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
               insert_time = reaper.SnapToGrid(0, insert_time)
               reaper.SetEditCurPos(insert_time, false, false)
-              local tr, target_lane = hover_track, hover_lane
-              if not tr then tr = reaper.BR_GetMouseCursorContext_Track() end
+              local tr, target_lane = ResolveArrangeDropTrackTarget(hover_track, hover_lane)
+              if not tr and not IsArrangeNewTrackTargetLane(hover_lane) then tr = reaper.BR_GetMouseCursorContext_Track() end
+              if not tr and IsArrangeNewTrackTargetLane(hover_lane) then
+                reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+                reaper.PreventUIRefresh(-1)
+                return
+              end
               if tr then reaper.SetOnlyTrackSelected(tr) end
               reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
               -- 判断是全长源音频还是item区段
@@ -17211,14 +18411,14 @@ function loop()
         -- 拖拽释放检测
         if dragging_selection then
           local window, segment, details = reaper.BR_GetMouseCursorContext()
-          local mouse_pos_time = reaper.BR_GetMouseCursorContext_Position()
-          local hover_track, hover_lane, hover_valid = GetArrangeTargetTrackLaneAtMouse()
+          local mouse_pos_time = GetArrangeTimelinePositionAtMouse()
+          local hover_track, hover_lane, hover_valid, hover_rect = GetArrangeTargetTrackLaneAtMouse()
 
-          if mouse_pos_time > -1 and (hover_valid ~= false) then
+          if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
             local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
             local item_len = GetDragPreviewTimelineLength(dragging_selection.start_time, dragging_selection.end_time)
             hover_track = hover_track or reaper.BR_GetMouseCursorContext_Track()
-            DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track, hover_lane)
+            DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track, hover_lane, hover_rect)
 
             -- 鼠标图标
             if reaper.JS_Mouse_LoadCursor then
@@ -17230,17 +18430,22 @@ function loop()
 
           -- 拖拽释放检测
           if not reaper.ImGui_IsMouseDown(ctx, 0) then
-            if window == "arrange" and (hover_valid ~= false) then
+            if IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
               reaper.PreventUIRefresh(1)
               reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
               local old_cursor = reaper.GetCursorPosition()
-              local insert_time = reaper.BR_GetMouseCursorContext_Position()
+              local insert_time = GetArrangeTimelinePositionAtMouse()
               if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
               insert_time = reaper.SnapToGrid(0, insert_time)
               reaper.SetEditCurPos(insert_time, false, false)
 
-              local tr, target_lane = hover_track, hover_lane
-              if not tr then tr = reaper.BR_GetMouseCursorContext_Track() end
+              local tr, target_lane = ResolveArrangeDropTrackTarget(hover_track, hover_lane)
+              if not tr and not IsArrangeNewTrackTargetLane(hover_lane) then tr = reaper.BR_GetMouseCursorContext_Track() end
+              if not tr and IsArrangeNewTrackTargetLane(hover_lane) then
+                reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
+                reaper.PreventUIRefresh(-1)
+                return
+              end
               if tr then reaper.SetOnlyTrackSelected(tr) end
               -- reaper.Main_OnCommand(40289, 0) -- Unselect all items
 
