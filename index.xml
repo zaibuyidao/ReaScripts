@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="e76fbde4b81d702be7a134bac0301807307a3f56">
+<index version="1" name="zaibuyidao Scripts" commit="c5979fb83b330e891d64212addc4fb8695b03cfc">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8169,6 +8169,42 @@ Added automatic check for ReaImGui dependency. The script now guides users to in
       <version name="1.0" author="zaibuyidao" time="2022-06-30T12:39:50Z">
         <changelog><![CDATA[+ Initial release]]></changelog>
         <source main="midi_editor">https://github.com/zaibuyidao/ReaScripts/raw/a5f295eea93b2c74ad2960310dd11794b7acc338/Utility/zaibuyidao_Cakewalk%20Style%20Cursor%20Follow%20(MIDI%20Editor).lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Copy Paste Razor Edit Content.lua" type="script" desc="Copy/Paste Razor Edit Content">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Integrated copy/paste tool for razor edit content, markers, regions, and tempo/time signature markers. Requires ReaImGui and SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2026-05-08T07:11:30Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c5979fb83b330e891d64212addc4fb8695b03cfc/Utility/zaibuyidao_Copy%20Paste%20Razor%20Edit%20Content.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_Copy Paste Time Selection Content.lua" type="script" desc="Copy/Paste Time Selection Content">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Integrated copy/paste tool for media items, markers, regions, and tempo/time signature markers in the time selection. Requires ReaImGui and SWS Extension\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2026-05-08T07:11:30Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c5979fb83b330e891d64212addc4fb8695b03cfc/Utility/zaibuyidao_Copy%20Paste%20Time%20Selection%20Content.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Tempo Time Signature In Time Selection (Relative Position).lua" type="script" desc="Copy Tempo/Time Signature In Time Selection (Relative Position)">
