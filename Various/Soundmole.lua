@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.173
+-- @version 1.0.174
 -- @changelog
---   Added macOS support for item lanes.
---   Added horizontal guide lines and support for creating track guide lines and reference blocks.
+--   Optimized the code structure by removing invalid and redundant code.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

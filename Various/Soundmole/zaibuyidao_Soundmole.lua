@@ -127,11 +127,6 @@ function PushUIFont(ctx, font, size)
   return reaper.ImGui_PushFont(ctx, font)
 end
 
-function ApplyWindowUIScale(ctx)
-  -- Font and icon sizes are scaled through PushUIFont().
-  return ui_scale
-end
-
 function DrawUIScaleCombo(ctx, id, width)
   reaper.ImGui_SetNextItemWidth(ctx, width or UIScale(86))
   if reaper.ImGui_BeginCombo(ctx, "##" .. id, FormatUIScale(ui_scale)) then
@@ -430,54 +425,6 @@ COLLECT_MODE_SHORTCUT_MIRROR = 12
 COLLECT_MODE_FREESOUND       = 13
 COLLECT_MODE_SAMEFOLDER      = 14
 COLLECT_MODE_PLAY_HISTORY    = 15 -- 播放历史表格模式
-
--- 定义虚拟列表代理元表 (界面卡顿, 丢失 Bits 和 BPM)
--- local VirtualListMeta = {
---   __index = function(t, k)
---     if type(k) == "number" then
---       if not t._handle then return nil end
---       local raw = reaper.SM_DB_GetRowRaw(t._handle, k - 1)
---       if not raw or raw == "" then return nil end
-
---       local item = {}
---       local last_pos = 1
---       local fields = {} 
---       for i = 1, 16 do
---         local p = raw:find('|', last_pos, true)
---         if p then
---           fields[i] = raw:sub(last_pos, p-1)
---           last_pos = p + 1
---         else
---           fields[i] = raw:sub(last_pos)
---           break
---         end
---       end
-
---       item.path = fields[1]
---       if item.path and item.path ~= "" then
---         item.filename = item.path:match("[^/\\]+$") or item.path
---         item.size = tonumber(fields[2]) or 0
---         item.mtime = tonumber(fields[3]) or 0
---         if fields[9]  ~= "" then item.type = fields[9] end
---         if fields[10] ~= "" then item.description = fields[10] end
---         if fields[11] ~= "" then item.comment = fields[11] end
---         if fields[12] ~= "" then item.genre = fields[12] end
---         if fields[4]  ~= "" then item.samplerate = tonumber(fields[4]) end
---         if fields[5]  ~= "" then item.channels = tonumber(fields[5]) end
---         if fields[6]  ~= "" then item.length = tonumber(fields[6]) end
---         if fields[13] ~= "" then item.bwf_orig_date = fields[13] end
---         item.ucs_category = fields[14]
---         item.ucs_subcategory = fields[15]
---         if fields[16]~="" then item.ucs_catid = fields[16] end
---         rawset(t, k, item)
---         return item
---       end
---       return nil
---     end
---     return nil
---   end,
---   __len = function(t) return t._count end
--- }
 
 -- 定义虚拟列表代理元表 (GC 优化版)
 local VirtualListMeta = {
@@ -1979,28 +1926,6 @@ function GetMacHoveredTrackNativeRect(track, mouse_x, mouse_y)
   return { left, y_min, right, y_max }
 end
 
-function GetMacArrangeYOffset()
-  if not IsMacOS() then return end
-
-  local _, arrange_top = GetArrangeWindowNativeRectRaw()
-  if IsFiniteNumber(arrange_top) then return arrange_top end
-
-  if reaper.GetMousePosition and reaper.GetTrackFromPoint then
-    local mouse_x, mouse_y = reaper.GetMousePosition()
-    if IsFiniteNumber(mouse_x) and IsFiniteNumber(mouse_y) then
-      local tr = reaper.GetTrackFromPoint(math.floor(mouse_x + 0.5), math.floor(mouse_y + 0.5))
-      if tr and reaper.ValidatePtr(tr, "MediaTrack*") then
-        ProbeMacTrackNativeYRangeAtPoint(tr, mouse_x, mouse_y)
-      end
-    end
-  end
-
-  local now = reaper.time_precise and reaper.time_precise() or 0
-  if IsFiniteNumber(MAC_ARRANGE_Y_OFFSET) and (now - (MAC_ARRANGE_Y_OFFSET_TIME or 0)) <= 2.0 then
-    return MAC_ARRANGE_Y_OFFSET
-  end
-end
-
 function GetTrackNativeYRangeRaw(track)
   if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
 
@@ -2343,32 +2268,6 @@ function GetLastVisibleArrangeTrackNativeInfo(arrange_top, arrange_bottom)
     end
   end
   return last_top, last_bottom, last_height
-end
-
-function GetMacLastArrangeTrackNativeInfoAtPoint(mouse_x, mouse_y, arrange_top, arrange_bottom)
-  if not IsMacOS() or not reaper.GetTrackFromPoint then return end
-  if not IsFiniteNumber(mouse_x) or not IsFiniteNumber(mouse_y) or not IsFiniteNumber(arrange_top) or not IsFiniteNumber(arrange_bottom) then return end
-
-  local probe_x = math.floor(mouse_x + 0.5)
-  local y = math.floor(math.min(mouse_y, arrange_bottom - 1) + 0.5)
-  local min_y = math.floor(arrange_top + 0.5)
-
-  while y >= min_y do
-    local tr = reaper.GetTrackFromPoint(probe_x, y)
-    if tr and reaper.ValidatePtr(tr, "MediaTrack*") then
-      local tr_top, tr_bottom = ProbeMacTrackNativeYRangeAtPoint(tr, probe_x, y)
-      if not tr_top then tr_top, tr_bottom = GetTrackNativeYRangeRaw(tr) end
-      if tr_top and tr_bottom and tr_bottom > tr_top then
-        local clipped_top = math.max(tr_top, arrange_top)
-        local clipped_bottom = math.min(tr_bottom, arrange_bottom)
-        if clipped_bottom > clipped_top then
-          return clipped_top, clipped_bottom, tr_bottom - tr_top
-        end
-      end
-      return
-    end
-    y = y - 1
-  end
 end
 
 function GetArrangeNewTrackTargetNativeRectAtMouse(mouse_x, mouse_y)
@@ -2826,104 +2725,6 @@ function GetApproxFixedLaneRect(track, lane)
   return { left, top, right, bottom }
 end
 
-function ProbeExistingFixedLaneRects(track, left, track_top, right, track_bottom, lane_count)
-  if not left then
-    left, track_top, right, track_bottom, lane_count = GetTrackFixedLaneLayoutInfo(track)
-  end
-  if not left or not reaper.GetTrackFromPoint then return end
-
-  local probe_x = math.floor((left + right) * 0.5)
-  local rects = {}
-  for lane = 0, lane_count - 1 do
-    local lane_top, lane_bottom = nil, nil
-    for y = math.floor(track_top), math.max(math.floor(track_top), math.floor(track_bottom) - 1) do
-      local hit_track, info = reaper.GetTrackFromPoint(probe_x, y)
-      if hit_track == track and DecodeTrackLaneFromInfo(info) == lane then
-        if not lane_top then lane_top = y end
-        lane_bottom = y + 1
-      elseif lane_top then
-        break
-      end
-    end
-    if lane_top and lane_bottom and lane_bottom > lane_top then
-      rects[lane] = { left, lane_top, right, lane_bottom }
-    end
-  end
-
-  return rects, left, track_top, right, track_bottom, lane_count
-end
-
-function FixedLaneMedian(nums)
-  if not nums or #nums == 0 then return nil end
-  local t = {}
-  for i = 1, #nums do t[i] = nums[i] end
-  table.sort(t)
-  local n = #t
-  if n % 2 == 1 then return t[(n + 1) // 2] end
-  return (t[n // 2] + t[n // 2 + 1]) * 0.5
-end
-
-function CopyFixedLaneRect(rect)
-  if not rect then return nil end
-  return { rect[1], rect[2], rect[3], rect[4] }
-end
-
-function CollectFixedLaneItemRects(track, left, track_top, right, track_bottom, lane_count)
-  if not track or not reaper.CountTrackMediaItems then return {}, {} end
-
-  local rects = {}
-  local heights = {}
-  for i = 0, reaper.CountTrackMediaItems(track) - 1 do
-    local item = reaper.GetTrackMediaItem(track, i)
-    if item and reaper.ValidatePtr(item, "MediaItem*") then
-      local lane = math.floor(tonumber(reaper.GetMediaItemInfo_Value(item, "I_FIXEDLANE")) or -1)
-      local item_y = tonumber(reaper.GetMediaItemInfo_Value(item, "I_LASTY"))
-      local item_h = tonumber(reaper.GetMediaItemInfo_Value(item, "I_LASTH"))
-      if lane >= 0 and lane < lane_count and IsFiniteNumber(item_y) and IsFiniteNumber(item_h) and item_h > 0 then
-        local top = math.floor(track_top + item_y + 0.5)
-        local bottom = math.floor(track_top + item_y + item_h + 0.5)
-        if top < track_top then top = track_top end
-        if bottom > track_bottom then bottom = track_bottom end
-        if bottom > top then
-          local old = rects[lane]
-          if old then
-            if top < old[2] then old[2] = top end
-            if bottom > old[4] then old[4] = bottom end
-          else
-            rects[lane] = { left, top, right, bottom }
-          end
-        end
-      end
-    end
-  end
-
-  for lane = 0, lane_count - 1 do
-    local rect = rects[lane]
-    if rect and rect[4] > rect[2] then
-      table.insert(heights, rect[4] - rect[2])
-    end
-  end
-  return rects, heights
-end
-
-function GetFixedLanePitchFromRects(rects, lane_count)
-  if not rects then return nil end
-  local pitches = {}
-  local prev_lane, prev_center = nil, nil
-  for lane = 0, lane_count - 1 do
-    local rect = rects[lane]
-    if rect and rect[4] > rect[2] then
-      local center = (rect[2] + rect[4]) * 0.5
-      if prev_lane and lane > prev_lane then
-        local pitch = (center - prev_center) / (lane - prev_lane)
-        if IsFiniteNumber(pitch) and pitch > 0 then table.insert(pitches, pitch) end
-      end
-      prev_lane, prev_center = lane, center
-    end
-  end
-  return FixedLaneMedian(pitches)
-end
-
 function EstimateFixedNewLaneHeight(total_h, lane_count, lane_h)
   total_h = tonumber(total_h) or 0
   lane_count = math.max(1, math.floor(tonumber(lane_count) or 1))
@@ -2940,45 +2741,6 @@ function EstimateFixedNewLaneHeight(total_h, lane_count, lane_h)
   h = math.max(min_h, math.min(18, h, max_h))
   if h >= total_h then h = math.max(1, math.floor(total_h * 0.25 + 0.5)) end
   return h
-end
-
-function ChooseFixedNewLaneTop(track_top, track_bottom, lane_count, lane_h, raw_rects, item_rects)
-  local candidates = {}
-  local function add_candidate(v)
-    if IsFiniteNumber(v) and v > track_top and v < track_bottom then
-      table.insert(candidates, v)
-    end
-  end
-
-  local prev_heights = {}
-  if raw_rects then
-    for lane = 0, lane_count - 2 do
-      local rect = raw_rects[lane]
-      if rect and rect[4] > rect[2] then table.insert(prev_heights, rect[4] - rect[2]) end
-    end
-  end
-  local ref_lane_h = FixedLaneMedian(prev_heights) or lane_h
-  local last_raw = raw_rects and raw_rects[lane_count - 1]
-  if ref_lane_h and last_raw then add_candidate(last_raw[2] + ref_lane_h) end
-
-  if item_rects then
-    local item_pitch = GetFixedLanePitchFromRects(item_rects, lane_count) or lane_h
-    for lane = 0, lane_count - 1 do
-      local rect = item_rects[lane]
-      if rect then
-        if lane == lane_count - 1 then add_candidate(rect[4]) end
-        if item_pitch then add_candidate(rect[2] + item_pitch * (lane_count - lane)) end
-      end
-    end
-  end
-
-  if #candidates > 0 then
-    table.sort(candidates)
-    return math.floor(candidates[#candidates] + 0.5)
-  end
-
-  local new_lane_h = EstimateFixedNewLaneHeight(track_bottom - track_top, lane_count, lane_h)
-  return math.floor(track_bottom - new_lane_h + 0.5)
 end
 
 function NormalizeFixedLaneRects(rects, left, track_top, right, track_bottom, lane_count, gutter_top)
@@ -3798,40 +3560,6 @@ function SmoothSetPreviewPitch(target_semitones, ramp_ms)
     end
     local semis = start_semitones + (target_semitones - start_semitones) * a
     reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", semis)
-    reaper.defer(step)
-  end
-  reaper.defer(step)
-end
-
--- 平滑设置预听速率（不在使用中。因为无效，仍有阶梯咔嚓声）
-local __rate_ramp_id = 0
-
-function SmoothSetPreviewRate(target_rate, ramp_ms)
-  if not playing_preview or not reaper.CF_Preview_SetValue then return end
-  ramp_ms = math.max(10, tonumber(ramp_ms))
-  target_rate = tonumber(target_rate) or 1.0
-
-  local ok, cur = reaper.CF_Preview_GetValue(playing_preview, "D_PLAYRATE")
-  local start_rate = (ok and tonumber(cur)) or 1.0
-  if math.abs(target_rate - start_rate) < 1e-6 then
-    reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", target_rate)
-    return
-  end
-
-  __rate_ramp_id = __rate_ramp_id + 1
-  local myid = __rate_ramp_id
-  local t0 = reaper.time_precise()
-  local dur = ramp_ms / 1000
-
-  local function step()
-    if myid ~= __rate_ramp_id then return end
-    local a = (reaper.time_precise() - t0) / dur
-    if a >= 1 then
-      reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", target_rate)
-      return
-    end
-    local r = start_rate + (target_rate - start_rate) * a
-    reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", r)
     reaper.defer(step)
   end
   reaper.defer(step)
@@ -5988,32 +5716,6 @@ function LoadCustomFolders()
   end
   custom_folders = folders
   custom_folders_content = contents
-end
-
--- 清除自定义文件夹内容
-function clear_custom_folders_content_key()
-  local extstate_ini = reaper.get_ini_file():gsub("reaper%.ini$", "reaper-extstate.ini")
-  local file = io.open(extstate_ini, "r")
-  if not file then
-    reaper.MB("无法打开 reaper-extstate.ini 文件", "错误", 0)
-    return
-  end
-  local lines = {}
-  for line in file:lines() do
-    if not line:match("^CustomFoldersContent=") then
-      table.insert(lines, line)
-    end
-  end
-  file:close()
-  local filew = io.open(extstate_ini, "w+")
-  if not filew then
-    reaper.MB("无法写入 reaper-extstate.ini 文件", "错误", 0)
-    return
-  end
-  for _, l in ipairs(lines) do
-    filew:write(l, "\n")
-  end
-  filew:close()
 end
 
 function GetCustomGroupsForPath(path)
@@ -10076,73 +9778,6 @@ function get_best_hw_mode_and_map(info)
 
   local outchan_word, map = calc_outchan_word(mode, num_out)
   return mode, outchan_word, map, num_out
-end
-
-function render_channel_picker(ctx, mode, num_out, id_prefix)
-  reaper.ImGui_PushID(ctx, id_prefix or ("pick_" .. mode))
-
-  local need = MODE_NEEDS[mode] or 0
-  local cur_sorted = ensure_map(mode, num_out)
-  local cur = { table.unpack(cur_sorted) }
-
-  local picked = {}
-  for i = 1, #cur do picked[cur[i]] = true end
-
-  reaper.ImGui_Text(ctx, string.format("Select up to %d channel(s):", need))
-
-  local per_row = 16
-  for ch = 1, num_out do
-    if ch > 1 and ((ch - 1) % per_row) ~= 0 then
-      reaper.ImGui_SameLine(ctx, nil, 4)
-    end
-
-    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 0)
-    local label = string.format("%d##%s_ch_%d", ch, mode, ch)
-    local changed, val = reaper.ImGui_Checkbox(ctx, label, picked[ch] or false)
-    reaper.ImGui_PopStyleVar(ctx, 1)
-    if changed then
-      if val then
-        if not picked[ch] then
-          if #cur < need then
-            cur[#cur+1] = ch
-            picked[ch] = true
-          else
-            if #cur > 0 then
-              local replaced = cur[#cur]
-              picked[replaced] = nil
-              cur[#cur] = ch
-              picked[ch] = true
-            end
-          end
-        end
-      else
-        for i = #cur, 1, -1 do
-          if cur[i] == ch then table.remove(cur, i) break end
-        end
-        picked[ch] = nil
-      end
-    end
-  end
-
-  if reaper.ImGui_Button(ctx, T("Clear") .. "##"..mode) then
-    cur = {}
-    picked = {}
-  end
-  reaper.ImGui_SameLine(ctx)
-  if reaper.ImGui_Button(ctx, "Fill 1..N##"..mode) then
-    cur = {}
-    picked = {}
-    for i = 1, need do
-      local v = math.min(i, num_out)
-      cur[i] = v
-      picked[v] = true
-    end
-  end
-
-  table.sort(cur)
-  update_map(mode, cur, num_out)
-
-  reaper.ImGui_PopID(ctx)
 end
 
 function RenderHWAngledTable(ctx)
