@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.174
+-- @version 1.0.175
 -- @changelog
---   Optimized the code structure by removing invalid and redundant code.
+--   Optimized waveform selection dragging and audio drag-and-drop insertion performance, reducing lag in high-PDC projects.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

@@ -262,6 +262,7 @@ local shortcut_nodes_inited   = false -- 是否已初始化快捷方式节点的
 local expanded_paths          = {}    -- 已展开的文件夹路径表
 local show_vertical_zoom      = false -- 显示波形纵向缩放提示状态变量
 local show_vertical_zoom_timer = 0
+local pending_preview_seek    = nil   -- 框选释放后的预览跳转延后一帧，避免拖拽帧被高 PDC 工程卡住
 local show_font_size_popup    = false -- 字体大小显示状态变量
 local show_font_size_timer    = 0
 local show_row_height_popup   = false -- 行高显示状态变量
@@ -2989,10 +2990,11 @@ function GetFixedLaneTargetFromRectsAtMouse(rects, left, track_top, right, track
   end
 end
 
-function GetArrangeTargetTrackLaneAtMouse()
-  if not reaper.GetMousePosition then return end
-
-  local mouse_x, mouse_y = reaper.GetMousePosition()
+function GetArrangeTargetTrackLaneAtMouse(mouse_x, mouse_y)
+  if not (IsFiniteNumber(mouse_x) and IsFiniteNumber(mouse_y)) then
+    if not reaper.GetMousePosition then return end
+    mouse_x, mouse_y = reaper.GetMousePosition()
+  end
   if not mouse_x or not mouse_y then return end
 
   if IsMacOS() then
@@ -3063,7 +3065,31 @@ function GetArrangeTargetTrackLaneAtMouse()
   return track, lane, is_valid_target, lane_rect
 end
 
+function GetArrangeTimelinePositionFromNativeX(mouse_x, left, right, view_start, view_end)
+  if not IsFiniteNumber(mouse_x) then return -1 end
+
+  if not (IsFiniteNumber(left) and IsFiniteNumber(right) and right > left) then
+    left, _, right = GetArrangeViewNativeRect()
+  end
+  if not (IsFiniteNumber(left) and IsFiniteNumber(right) and right > left) then return -1 end
+  if mouse_x < left or mouse_x > right then return -1 end
+
+  if not (IsFiniteNumber(view_start) and IsFiniteNumber(view_end) and view_end > view_start) then
+    view_start, view_end = GetFullArrangeViewTimes()
+  end
+  if not (IsFiniteNumber(view_start) and IsFiniteNumber(view_end) and view_end > view_start) then return -1 end
+
+  local frac = (mouse_x - left) / (right - left)
+  return view_start + frac * (view_end - view_start)
+end
+
 function GetArrangeTimelinePositionAtMouse()
+  if reaper.GetMousePosition then
+    local mouse_x = select(1, reaper.GetMousePosition())
+    local fast_pos = GetArrangeTimelinePositionFromNativeX(mouse_x)
+    if IsFiniteNumber(fast_pos) and fast_pos > -1 then return fast_pos end
+  end
+
   local pos = -1
   if reaper.BR_GetMouseCursorContext_Position then
     pos = reaper.BR_GetMouseCursorContext_Position()
@@ -3104,6 +3130,29 @@ function IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, h
   return hover_track and reaper.ValidatePtr(hover_track, "MediaTrack*") and IsFiniteNumber(mouse_pos_time) and mouse_pos_time > -1
 end
 
+function GetArrangeDragHoverState()
+  if not reaper.GetMousePosition then return "", -1 end
+
+  local mouse_x, mouse_y = reaper.GetMousePosition()
+  if not (IsFiniteNumber(mouse_x) and IsFiniteNumber(mouse_y)) then return "", -1 end
+  if NativePointOverSoundmoleWindow(mouse_x, mouse_y) then return "", -1 end
+
+  local left, top, right, bottom = GetArrangeViewNativeRect()
+  if not (IsFiniteNumber(left) and IsFiniteNumber(top) and IsFiniteNumber(right) and IsFiniteNumber(bottom)) then
+    return "", -1
+  end
+  if right <= left or bottom <= top then return "", -1 end
+  if mouse_x < left or mouse_x > right or not NativeYInRange(mouse_y, top, bottom) then
+    return "", -1
+  end
+
+  local view_start, view_end = GetFullArrangeViewTimes()
+  local mouse_pos_time = GetArrangeTimelinePositionFromNativeX(mouse_x, left, right, view_start, view_end)
+  local hover_track, hover_lane, hover_valid, hover_rect = GetArrangeTargetTrackLaneAtMouse(mouse_x, mouse_y)
+
+  return "arrange", mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect
+end
+
 function ApplyInsertedItemToTargetLane(item, target_lane)
   if target_lane == nil then return end
   if not item or not reaper.ValidatePtr(item, "MediaItem*") then return end
@@ -3133,6 +3182,92 @@ function ApplyInsertedItemToTargetLane(item, target_lane)
   if reaper.UpdateItemLanes then reaper.UpdateItemLanes(0) end
   reaper.UpdateItemInProject(item)
   if fixed_lane_rect_cache then fixed_lane_rect_cache[track] = nil end
+end
+
+function UnselectAllMediaItemsFast()
+  if not reaper.CountSelectedMediaItems or not reaper.GetSelectedMediaItem then return end
+  local guard = 0
+  while reaper.CountSelectedMediaItems(0) > 0 and guard < 100000 do
+    local item = reaper.GetSelectedMediaItem(0, 0)
+    if not item then break end
+    reaper.SetMediaItemSelected(item, false)
+    guard = guard + 1
+  end
+end
+
+function InsertMediaItemAtTrackFast(track, path, insert_time, start_offset, source_len, target_lane, clear_selection)
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+  path = normalize_path(path or "", false)
+  if path == "" then return end
+
+  insert_time = tonumber(insert_time) or reaper.GetCursorPosition()
+  start_offset = math.max(0, tonumber(start_offset) or 0)
+  source_len = tonumber(source_len)
+
+  local source = reaper.PCM_Source_CreateFromFile(path)
+  if not source or not reaper.ValidatePtr(source, "PCM_source*") then return end
+
+  local full_len = tonumber((reaper.GetMediaSourceLength(source))) or 0
+  if full_len > 0 then
+    if start_offset > full_len then start_offset = full_len end
+    local max_len = math.max(0, full_len - start_offset)
+    if not source_len or source_len <= 0 or source_len > max_len then
+      source_len = max_len
+    end
+  elseif not source_len or source_len <= 0 then
+    if reaper.PCM_Source_Destroy then reaper.PCM_Source_Destroy(source) end
+    return
+  end
+  if not source_len or source_len <= 0 then
+    if reaper.PCM_Source_Destroy then reaper.PCM_Source_Destroy(source) end
+    return
+  end
+
+  if clear_selection then UnselectAllMediaItemsFast() end
+
+  local item = reaper.AddMediaItemToTrack(track)
+  if not item then
+    if reaper.PCM_Source_Destroy then reaper.PCM_Source_Destroy(source) end
+    return
+  end
+
+  local take = reaper.AddTakeToMediaItem(item)
+  if not take then
+    if reaper.DeleteTrackMediaItem then reaper.DeleteTrackMediaItem(track, item) end
+    if reaper.PCM_Source_Destroy then reaper.PCM_Source_Destroy(source) end
+    return
+  end
+
+  reaper.SetMediaItemInfo_Value(item, "D_POSITION", insert_time)
+  reaper.SetMediaItemTake_Source(take, source)
+  reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", start_offset)
+
+  local timeline_len = source_len
+  if keep_preview_rate_pitch_on_insert then
+    local rate = tonumber(effective_rate_knob) or 1.0
+    if math.abs(rate) < 1e-9 then rate = 1.0 end
+    timeline_len = source_len / rate
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", rate)
+    reaper.SetMediaItemTakeInfo_Value(take, "D_PITCH", tonumber(pitch) or 0.0)
+    reaper.SetMediaItemTakeInfo_Value(take, "B_PPITCH", preserve_pitch and 1 or 0)
+  end
+
+  reaper.SetMediaItemInfo_Value(item, "D_LENGTH", timeline_len)
+  ApplyInsertedItemToTargetLane(item, target_lane)
+  if reaper.SetMediaItemSelected then reaper.SetMediaItemSelected(item, true) end
+  reaper.UpdateItemInProject(item)
+  return item
+end
+
+function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, section_offset, target_lane, clear_selection)
+  local st = tonumber(start_time)
+  local et = tonumber(end_time)
+  if st and et and math.abs(et - st) > 0.01 then
+    local src_offset = math.min(st, et) + (tonumber(section_offset) or 0)
+    local src_len = math.abs(et - st)
+    return InsertMediaItemAtTrackFast(track, path, insert_time, src_offset, src_len, target_lane, clear_selection)
+  end
+  return InsertMediaItemAtTrackFast(track, path, insert_time, tonumber(section_offset) or 0, nil, target_lane, clear_selection)
 end
 
 function InsertMediaWithKeepParams(path, target_lane)
@@ -4752,6 +4887,38 @@ function PlayFromCursor(info)
     -- 保存最后播放的信息
     last_playing_info = {}
     for k, v in pairs(info) do last_playing_info[k] = v end
+  end
+end
+
+function QueuePreviewSeek(info, pos, restart_preview)
+  pos = tonumber(pos)
+  if not pos then return end
+  pending_preview_seek = {
+    info = info,
+    pos = pos,
+    restart = restart_preview == true,
+    due = (reaper.time_precise and reaper.time_precise() or 0) + 0.05
+  }
+end
+
+function ProcessPendingPreviewSeek()
+  local pending = pending_preview_seek
+  if not pending then return end
+  if selecting or dragging_selection or dragging_audio then return end
+  if reaper.ImGui_IsMouseDown and reaper.ImGui_IsMouseDown(ctx, 0) then return end
+
+  local now = reaper.time_precise and reaper.time_precise() or 0
+  if now < (pending.due or 0) then return end
+  pending_preview_seek = nil
+
+  Wave.play_cursor = pending.pos
+  wf_play_start_cursor = pending.pos
+  if not playing_preview then return end
+
+  if pending.restart then
+    PlayFromCursor(pending.info)
+  elseif reaper.CF_Preview_SetValue then
+    reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", pending.pos)
   end
 end
 
@@ -11066,6 +11233,7 @@ function loop()
   end
   -- 表格列表波形预览，每帧先处理任务队列
   ProcessWaveformTasks()
+  ProcessPendingPreviewSeek()
   if need_refresh_font then -- mark相关代码
     fonts.sans_serif = reaper.ImGui_CreateFont(set_font, 14)
     reaper.ImGui_Attach(ctx, fonts.sans_serif)
@@ -15112,14 +15280,11 @@ function loop()
 
       -- 拖动音频到REAPER
       if dragging_audio then
-        local window, segment, details = reaper.BR_GetMouseCursorContext()
-        local mouse_pos_time = GetArrangeTimelinePositionAtMouse()
-        local hover_track, hover_lane, hover_valid, hover_rect = GetArrangeTargetTrackLaneAtMouse()
+        local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
         -- 绘制参考线
         if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
           local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
           local item_len = GetDragPreviewTimelineLength(dragging_audio.start_time, dragging_audio.preview_end_time or dragging_audio.end_time)
-          hover_track = hover_track or reaper.BR_GetMouseCursorContext_Track()
           DrawArrangeInsertGuides(ctx, "guide_line_drag_audio", insert_time, item_len, hover_track, hover_lane, hover_rect)
 
           -- 鼠标图标
@@ -15133,44 +15298,25 @@ function loop()
 
         if not reaper.ImGui_IsMouseDown(ctx, 0) then -- 鼠标释放
           if IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then -- 只允许在arrange窗口松开时插入
-            WithAutoCrossfadeDisabled(function()
-              reaper.PreventUIRefresh(1) -- 防止UI刷新
-              reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
-              local old_cursor = reaper.GetCursorPosition()
-              local insert_time = GetArrangeTimelinePositionAtMouse()
-              if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
-              insert_time = reaper.SnapToGrid(0, insert_time)
-              reaper.SetEditCurPos(insert_time, false, false)
-              local tr, target_lane = ResolveArrangeDropTrackTarget(hover_track, hover_lane)
-              if not tr and not IsArrangeNewTrackTargetLane(hover_lane) then tr = reaper.BR_GetMouseCursorContext_Track() end
-              if not tr and IsArrangeNewTrackTargetLane(hover_lane) then
-                reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
-                reaper.PreventUIRefresh(-1)
-                return
-              end
-              if tr then reaper.SetOnlyTrackSelected(tr) end
-              reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
-              -- 判断是全长源音频还是item区段
+            local insert_time = mouse_pos_time
+            if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
+            insert_time = reaper.SnapToGrid(0, insert_time)
+
+            local tr, target_lane = ResolveArrangeDropTrackTarget(hover_track, hover_lane)
+            if tr then
+              reaper.SetOnlyTrackSelected(tr)
               local path = normalize_path(dragging_audio.path, false)
-              if dragging_audio.start_time and dragging_audio.end_time and math.abs(dragging_audio.end_time - dragging_audio.start_time) > 0.01 then
-                InsertSelectedAudioSection(
-                  path,
-                  dragging_audio.start_time,
-                  dragging_audio.end_time,
-                  dragging_audio.section_offset or 0,
-                  false,
-                  target_lane
-                )
-              else
-                -- 只插入全长源音频
-                InsertMediaWithKeepParams(path, target_lane)
-              end
-              reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
-              reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
-              reaper.PreventUIRefresh(-1)
-              reaper.UpdateArrange()
-              if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
-            end)
+              InsertDraggedMediaFast(
+                tr,
+                path,
+                insert_time,
+                dragging_audio.start_time,
+                dragging_audio.end_time,
+                dragging_audio.section_offset or 0,
+                target_lane,
+                true
+              )
+            end
           end
           dragging_audio = nil -- 鼠标释放时重置
           if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
@@ -17109,7 +17255,7 @@ function loop()
         if Wave then Wave.play_cursor = 0 end -- 避免沿用上一首的光标末尾导致连跳
       end
 
-      if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending then
+      if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending and not pending_preview_seek and not selecting and not dragging_selection and not dragging_audio then
         local rate = play_rate or 1
         local cursor_pos = ((Wave and Wave.play_cursor) or 0) * rate
         local duration = (Wave and Wave.src_len) or 0
@@ -17766,9 +17912,7 @@ function loop()
             Wave.play_cursor = select_min
             wf_play_start_cursor = select_min
             if playing_preview then
-              if reaper.CF_Preview_SetValue then -- 移动播放位置
-                reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", select_min)
-              end
+              QueuePreviewSeek(cur_info, select_min, false)
               -- if reaper.CF_Preview_SetValue then
               --   PlayFromCursor(cur_info)
               -- end
@@ -17788,14 +17932,14 @@ function loop()
             if playing_preview then
               -- 直接设置播放位置
               if reaper.CF_Preview_SetValue then
-                PlayFromCursor(cur_info) -- 从框选区域的起始位置开始播放
+                QueuePreviewSeek(cur_info, select_min, true) -- 从框选区域的起始位置开始播放
               end
             end
           end
         end
 
         -- 框选松开后自动播放并跳转回到起始位置待命 未激活LOOP时
-        if playing_preview and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 and not loop_enabled then
+        if playing_preview and not pending_preview_seek and not selecting and not dragging_selection and not dragging_audio and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 and not loop_enabled then
           local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
           if ok then
             local select_max = math.max(select_start_time, select_end_time)
@@ -17997,7 +18141,7 @@ function loop()
       end
 
       -- 选区循环播放支持
-      if playing_preview and reaper.CF_Preview_GetValue then
+      if playing_preview and reaper.CF_Preview_GetValue and not pending_preview_seek and not selecting and not dragging_selection and not dragging_audio then
         local ok, position = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
         if ok then
           Wave.play_cursor = position
@@ -18045,14 +18189,11 @@ function loop()
 
         -- 拖拽释放检测
         if dragging_selection then
-          local window, segment, details = reaper.BR_GetMouseCursorContext()
-          local mouse_pos_time = GetArrangeTimelinePositionAtMouse()
-          local hover_track, hover_lane, hover_valid, hover_rect = GetArrangeTargetTrackLaneAtMouse()
+          local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
 
           if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
             local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
             local item_len = GetDragPreviewTimelineLength(dragging_selection.start_time, dragging_selection.end_time)
-            hover_track = hover_track or reaper.BR_GetMouseCursorContext_Track()
             DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track, hover_lane, hover_rect)
 
             -- 鼠标图标
@@ -18066,31 +18207,26 @@ function loop()
           -- 拖拽释放检测
           if not reaper.ImGui_IsMouseDown(ctx, 0) then
             if IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
-              reaper.PreventUIRefresh(1)
-              reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
-              local old_cursor = reaper.GetCursorPosition()
-              local insert_time = GetArrangeTimelinePositionAtMouse()
+              local insert_time = mouse_pos_time
               if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
               insert_time = reaper.SnapToGrid(0, insert_time)
-              reaper.SetEditCurPos(insert_time, false, false)
 
               local tr, target_lane = ResolveArrangeDropTrackTarget(hover_track, hover_lane)
-              if not tr and not IsArrangeNewTrackTargetLane(hover_lane) then tr = reaper.BR_GetMouseCursorContext_Track() end
-              if not tr and IsArrangeNewTrackTargetLane(hover_lane) then
-                reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
-                reaper.PreventUIRefresh(-1)
-                return
+              if tr then
+                reaper.SetOnlyTrackSelected(tr)
+                local path = GetPhysicalPath(dragging_selection.path or (cur_info and cur_info.path))
+                path = normalize_path(path or "", false)
+                InsertDraggedMediaFast(
+                  tr,
+                  path,
+                  insert_time,
+                  dragging_selection.start_time,
+                  dragging_selection.end_time,
+                  dragging_selection.section_offset or 0,
+                  target_lane,
+                  false
+                )
               end
-              if tr then reaper.SetOnlyTrackSelected(tr) end
-              -- reaper.Main_OnCommand(40289, 0) -- Unselect all items
-
-              path = GetPhysicalPath(cur_info and cur_info.path)
-              path = normalize_path(path or "", false)
-              InsertSelectedAudioSection(path, dragging_selection.start_time, dragging_selection.end_time, dragging_selection.section_offset, false, target_lane)
-              reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
-              reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
-              reaper.UpdateArrange()
-              reaper.PreventUIRefresh(-1)
             end
             dragging_selection = nil -- 不管插入与否都要清除
             -- 恢复鼠标图标
@@ -18270,7 +18406,7 @@ function loop()
     end
 
     -- 自动停止非Loop播放，只要没勾选Loop且快播完就自动Stop
-    if playing_preview and not loop_enabled and not auto_play_next  then
+    if playing_preview and not loop_enabled and not auto_play_next and not pending_preview_seek and not selecting and not dragging_selection and not dragging_audio then
       local ok_pos, position = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
       local ok_len, length   = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
       if ok_pos and ok_len and (length - position) < 0.01 then -- 距离结尾小于0.03秒
