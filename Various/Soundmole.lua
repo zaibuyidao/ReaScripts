@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.175
+-- @version 1.0.176
 -- @changelog
---   Optimized waveform selection dragging and audio drag-and-drop insertion performance, reducing lag in high-PDC projects.
+--   Added draggable waveform selection boundaries for independent left/right adjustment.
+--   Improved waveform drag behavior to prevent accidental "drag selection to REAPER" triggers.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

@@ -349,6 +349,11 @@ local selecting = false                -- 是否正在拖拽选区
 local drag_start_x = nil               -- 拖拽起点像素
 local select_start_time = nil          -- 选区起点时间
 local select_end_time = nil            -- 选区终点时间
+selection_edge_drag = nil
+selection_drag_click_valid = false
+selection_edge_cursor_cache = selection_edge_cursor_cache or {}
+selection_edge_cursor_active = false
+SELECTION_EDGE_HIT_PX = SELECTION_EDGE_HIT_PX or 7
 local last_play_cursor_before_play = 0 -- 记录播放前光标
 local prev_play_cursor = nil
 local peaks, pixel_cnt, src_len, channel_count
@@ -5107,12 +5112,95 @@ local pending_clear_selection = pending_clear_selection or false
 function has_selection()
   return select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01
 end
-function mouse_in_selection()
-  if not mouse_time then return false end
+function mouse_in_selection(time)
+  local t = time or mouse_time
+  if not t then return false end
   if not select_start_time or not select_end_time then return false end
   local sel_min = math.min(select_start_time, select_end_time)
   local sel_max = math.max(select_start_time, select_end_time)
-  return mouse_time >= sel_min and mouse_time <= sel_max
+  return t >= sel_min and t <= sel_max
+end
+
+function WaveSelectionTimeFromX(mouse_x, min_x, region_w, wave, rate)
+  if not mouse_x or not min_x or not region_w or region_w <= 0 then return end
+  if not wave or not wave.src_len or not wave.zoom or wave.zoom == 0 then return end
+  local rel_x = mouse_x - min_x
+  local frac = rel_x / region_w
+  frac = math.max(0, math.min(1, frac))
+  local visible_len = wave.src_len / wave.zoom
+  local rate_for_time = (rate and math.abs(rate) > 1e-9) and rate or 1.0
+  local t = ((wave.scroll or 0) + frac * visible_len) / rate_for_time
+  return math.max(0, math.min(wave.src_len or t, t))
+end
+
+function WaveSelectionEdgePixels(min_x, region_w, wave, rate)
+  if not has_selection() or not min_x or not region_w or region_w <= 0 then return end
+  if not wave or not wave.src_len or not wave.zoom or wave.zoom == 0 then return end
+  local visible_len = wave.src_len / wave.zoom
+  if visible_len <= 0 then return end
+  local display_rate = (rate and math.abs(rate) > 1e-9) and rate or 1.0
+  local scroll = wave.scroll or 0
+  local start_px = ((select_start_time * display_rate - scroll) / visible_len) * region_w + min_x
+  local end_px = ((select_end_time * display_rate - scroll) / visible_len) * region_w + min_x
+  return start_px, end_px
+end
+
+function GetWaveSelectionEdgeHit(mouse_x, mouse_y, min_x, min_y, max_x, max_y, region_w, wave, rate)
+  if not has_selection() then return end
+  if not IsFiniteNumber(mouse_x) or not IsFiniteNumber(mouse_y) then return end
+  if mouse_y < min_y or mouse_y > max_y then return end
+  local start_px, end_px = WaveSelectionEdgePixels(min_x, region_w, wave, rate)
+  if not start_px or not end_px then return end
+
+  local left_px = math.min(start_px, end_px)
+  local right_px = math.max(start_px, end_px)
+  local hit_px = UIScaleF(SELECTION_EDGE_HIT_PX)
+  local near_left = math.abs(mouse_x - left_px) <= hit_px
+  local near_right = math.abs(mouse_x - right_px) <= hit_px
+  if not near_left and not near_right then return end
+
+  if near_left and near_right then
+    near_right = math.abs(mouse_x - right_px) < math.abs(mouse_x - left_px)
+    near_left = not near_right
+  end
+
+  if near_left then
+    return (start_px <= end_px) and "start" or "end", "left"
+  end
+  return (start_px > end_px) and "start" or "end", "right"
+end
+
+function GetDraggedSelectionEdgeSide(edge)
+  if not edge or not select_start_time or not select_end_time then return end
+  local moving = (edge == "start") and select_start_time or select_end_time
+  local fixed = (edge == "start") and select_end_time or select_start_time
+  return (moving <= fixed) and "left" or "right"
+end
+
+function SetWaveSelectionEdgeCursor(ctx, side)
+  if side ~= "left" and side ~= "right" then return end
+  if reaper.JS_Mouse_LoadCursorFromFile and reaper.JS_Mouse_SetCursor then
+    local filename = (side == "left") and "cursor_270.cur" or "cursor_271.cur"
+    local cursor = selection_edge_cursor_cache[filename]
+    if cursor == nil then
+      cursor = reaper.JS_Mouse_LoadCursorFromFile(script_path .. "lib/" .. filename)
+      selection_edge_cursor_cache[filename] = cursor or false
+    end
+    if cursor then
+      reaper.JS_Mouse_SetCursor(cursor)
+      selection_edge_cursor_active = true
+      return
+    end
+  end
+  reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeEW())
+end
+
+function ResetWaveSelectionEdgeCursor()
+  if not selection_edge_cursor_active then return end
+  selection_edge_cursor_active = false
+  if reaper.JS_Mouse_SetCursor and reaper.JS_Mouse_LoadCursor then
+    reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0))
+  end
 end
 
 --------------------------------------------- 文件夹虚线（暂不使用） ---------------------------------------------
@@ -17840,6 +17928,29 @@ function loop()
       local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
       local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local region_w = max_x - min_x
+      local skip_waveform_release = false
+      if not reaper.ImGui_IsMouseDown(ctx, 0) and not dragging_selection then
+        selection_drag_click_valid = false
+      end
+
+      if selection_edge_drag and not is_knob_dragging then
+        if reaper.ImGui_IsMouseDown(ctx, 0) then
+          local drag_time = WaveSelectionTimeFromX(mouse_x, min_x, region_w, Wave, play_rate)
+          if drag_time then
+            if selection_edge_drag.edge == "start" then
+              select_start_time = drag_time
+            else
+              select_end_time = drag_time
+            end
+            SetWaveSelectionEdgeCursor(ctx, GetDraggedSelectionEdgeSide(selection_edge_drag.edge))
+          end
+          pending_clear_selection = false
+        else
+          selection_edge_drag = nil
+          skip_waveform_release = true
+          ResetWaveSelectionEdgeCursor()
+        end
+      end
 
       if reaper.ImGui_IsItemHovered(ctx) then
         local rel_x = mouse_x - min_x
@@ -17879,9 +17990,18 @@ function loop()
         -- 鼠标左键点击
         if reaper.ImGui_IsMouseClicked(ctx, 0) and not is_knob_dragging then
           if has_selection() then
-            if mouse_in_selection() then
+            local edge, side = GetWaveSelectionEdgeHit(mouse_x, mouse_y, min_x, min_y, max_x, max_y, region_w, Wave, play_rate)
+            if edge then
+              selection_edge_drag = { edge = edge }
+              selection_drag_click_valid = false
+              selecting = false
+              pending_clear_selection = false
+              SetWaveSelectionEdgeCursor(ctx, side)
+            elseif mouse_in_selection(mouse_time) then
+              selection_drag_click_valid = true
               pending_clear_selection = false
             else
+              selection_drag_click_valid = false
               pending_clear_selection = true -- 只挂起，不做任何清空
             end
           else
@@ -17891,6 +18011,7 @@ function loop()
             drag_start_x = mouse_x
             select_start_time = mouse_time
             select_end_time = mouse_time
+            selection_drag_click_valid = false
             pending_clear_selection = false
           end
         end
@@ -17963,11 +18084,12 @@ function loop()
         if dragging_selection and reaper.ImGui_IsMouseReleased(ctx, 0) then -- 松开时仍在本窗口
           if reaper.ImGui_IsWindowHovered(ctx) then
             dragging_selection = nil
+            selection_drag_click_valid = false
           end
         end
 
         -- 鼠标释放时，鼠标定位/清空选区
-        if not selecting and reaper.ImGui_IsMouseReleased(ctx, 0) and reaper.ImGui_IsItemHovered(ctx) and not is_knob_dragging then
+        if not selecting and not skip_waveform_release and reaper.ImGui_IsMouseReleased(ctx, 0) and reaper.ImGui_IsItemHovered(ctx) and not is_knob_dragging then
           if just_selected_range then
             just_selected_range = false  -- 跳过这次，防止和画选区的行为冲突
           else
@@ -18002,6 +18124,9 @@ function loop()
                 -- 选区外 - 清空选区
                 select_start_time = nil
                 select_end_time = nil
+                selection_edge_drag = nil
+                selection_drag_click_valid = false
+                ResetWaveSelectionEdgeCursor()
                 Wave.play_cursor = mouse_time
                 wf_play_start_cursor = mouse_time
                 if playing_preview then
@@ -18026,6 +18151,9 @@ function loop()
       if selected_row ~= last_audio_idx then
         select_start_time = nil
         select_end_time = nil
+        selection_edge_drag = nil
+        selection_drag_click_valid = false
+        ResetWaveSelectionEdgeCursor()
         last_audio_idx = selected_row
           Wave.zoom = 1
           Wave.scroll = 0
@@ -18039,7 +18167,7 @@ function loop()
         local a = (select_start_time * play_rate - Wave.scroll) / visible_len * region_w + min_x
         local b = (select_end_time * play_rate - Wave.scroll) / visible_len * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
-        reaper.ImGui_DrawList_AddRectFilled(dl, a, min_y, b, max_y, colors.wave_line_selected) -- 0x192e4680 0x1844FF44
+        reaper.ImGui_DrawList_AddRectFilled(dl, math.min(a, b), min_y, math.max(a, b), max_y, colors.wave_line_selected) -- 0x192e4680 0x1844FF44
       end
 
       -- loop循环选区
@@ -18153,7 +18281,21 @@ function loop()
 
       local selection_exists = cur_info and has_selection and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01
       -- 鼠标样式切换
-      if reaper.ImGui_IsItemHovered(ctx) and selection_exists then
+      local edge_cursor_side = nil
+      if selection_edge_drag then
+        edge_cursor_side = GetDraggedSelectionEdgeSide(selection_edge_drag.edge)
+      elseif reaper.ImGui_IsItemHovered(ctx) and selection_exists and not selecting and not dragging_selection then
+        local _, side = GetWaveSelectionEdgeHit(mouse_x, mouse_y, min_x, min_y, max_x, max_y, region_w, Wave, play_rate)
+        edge_cursor_side = side
+      end
+
+      if edge_cursor_side then
+        SetWaveSelectionEdgeCursor(ctx, edge_cursor_side)
+      else
+        ResetWaveSelectionEdgeCursor()
+      end
+
+      if reaper.ImGui_IsItemHovered(ctx) and selection_exists and not edge_cursor_side then
         if selecting and reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
           -- 正在框选区域
           reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
@@ -18167,7 +18309,7 @@ function loop()
 
       -- 选区拖拽到REAPER
       if selection_exists then
-        if reaper.ImGui_BeginDragDropSource(ctx) then
+        if selection_drag_click_valid and not selection_edge_drag and reaper.ImGui_BeginDragDropSource(ctx) then
           reaper.ImGui_Text(ctx, "Drag selection to REAPER to insert")
           -- 判断区段还是源音频
           local drag_path = cur_info.path
@@ -18229,6 +18371,7 @@ function loop()
               end
             end
             dragging_selection = nil -- 不管插入与否都要清除
+            selection_drag_click_valid = false
             -- 恢复鼠标图标
             if reaper.JS_Mouse_LoadCursor then 
               reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) 
@@ -18692,6 +18835,9 @@ function loop()
       -- 有选区，清空
       select_start_time = nil
       select_end_time = nil
+      selection_edge_drag = nil
+      selection_drag_click_valid = false
+      ResetWaveSelectionEdgeCursor()
       pending_clear_selection = false
     else
       -- 无选区，退出脚本
@@ -18719,6 +18865,7 @@ function loop()
 end
 -- 退出清理函数
 function OnScriptExit()
+  ResetWaveSelectionEdgeCursor()
   -- 停止数据库构建器 (优先清理)
   if reaper.APIExists("SM_Builder_Stop") then
     reaper.SM_Builder_Stop()
