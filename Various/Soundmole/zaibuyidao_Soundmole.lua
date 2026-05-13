@@ -76,13 +76,13 @@ if reaper.ImGui_GetBuiltinPath then
   ImGui = require 'imgui' '0.10'
 end
 
-local HAVE_SM_BUILDER = reaper.APIExists('SM_Builder_Start') and reaper.APIExists('SM_Builder_RunSlice') and reaper.APIExists('SM_Builder_GetInfo') and reaper.APIExists('SM_Builder_GetStatusString') and reaper.APIExists('SM_Builder_Stop')
-local HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_GetRowRaw')
-local HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw') and reaper.APIExists('SM_DB_Load') and reaper.APIExists('SM_DB_Release') and reaper.APIExists('SM_DB_GetCount')
-local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
-local HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists('SM_GetWaveformCachePath') and reaper.APIExists('SM_BuildWaveformCache') and reaper.APIExists('SM_WFC_Begin') and reaper.APIExists('SM_WFC_Pump') and reaper.APIExists('SM_WFC_GetPathIfReady')
-local SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
-local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
+HAVE_SM_BUILDER = reaper.APIExists('SM_Builder_Start') and reaper.APIExists('SM_Builder_RunSlice') and reaper.APIExists('SM_Builder_GetInfo') and reaper.APIExists('SM_Builder_GetStatusString') and reaper.APIExists('SM_Builder_Stop')
+HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_GetRowRaw')
+HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw') and reaper.APIExists('SM_DB_Load') and reaper.APIExists('SM_DB_Release') and reaper.APIExists('SM_DB_GetCount')
+HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
+HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists('SM_GetWaveformCachePath') and reaper.APIExists('SM_BuildWaveformCache') and reaper.APIExists('SM_WFC_Begin') and reaper.APIExists('SM_WFC_Pump') and reaper.APIExists('SM_WFC_GetPathIfReady')
+SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
+FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
 local EXT_SECTION = "Soundmole"
 
@@ -745,9 +745,10 @@ local colors = {
   table_separator         = 0x5A5A5AFF, -- 表格-列分隔线(设置无效)
   table_separator_hovered = 0xA0A0A0FF, -- 表格-悬停
   table_separator_active  = 0xC0C0C0FF, -- 表格-拖动
-  header                  = 0x2D2D2E30, -- 表头颜色主要位于PeekTree标题栏
-  herder_hovered          = 0x2D2D2EFF, -- 鼠标悬停时表头颜色
-  herder_active           = 0x3A3A3AFF, -- 鼠标点击时表头颜色
+  header                  = 0x2D2D2E30, -- 标题栏-表头颜色主要位于PeekTree标题栏
+  header_hovered          = 0x2D2D2EFF, -- 标题栏-鼠标悬停时表头颜色
+  header_active           = 0x3A3A3AFF, -- 标题栏-鼠标点击时表头颜色
+  header_item_selected    = 0x222222FF, -- 标题栏-可选择项颜色
   normal_text             = 0xFFF0F0F0, -- 标准文本颜色
   link_text               = 0x3A3A3AFF, -- 链接文本颜色
   previewed_text          = 0x888888FF, -- 已预览过的暗一些
@@ -808,7 +809,7 @@ local colors = {
   icon_off                = 0x676767FF, -- 图标关
   wave_center             = 0x6F7C63FF, -- 0x808004FF, -- 波形-中心线
   wave_line               = 0x99AA84FF, -- 0xCCCC06FF, -- 波形-主线
-  wave_line_selected      = 0x66FFFF20, -- 0x294A7A44, -- 波形-选中/预览时更亮
+  wave_line_selected      = 0x66FFFF60, -- 0x294A7A44, -- 波形-选中/预览时更亮
   peak_meter_bg           = 0x222222FF, -- 电平表-背景
   peak_meter_normal       = 0x33DD33FF, -- 电平表-填充
   separator_line          = 0x77777744, -- 分割线-常态颜色
@@ -823,6 +824,7 @@ local colors = {
   fs_search_button_hovered= 0xFFFFA870, -- Freesound - 搜索按钮悬停颜色
   fs_search_button_active = 0xFFF2999B, -- Freesound - 搜索按钮按下颜色
   settings_header_bg      = 0x5B5B5E50, -- 设置-分页背景
+  drag_reference_block    = 0xB1B4B4FF, -- 拖动时的参考块背景颜色
   preview_pint_bg         = 0x58766CFF, -- 预览鼠标光标提示-背景
   preview_pint_play_cursor= 0x58766CFF, -- 预览鼠标光标提示-光标
   preview_pint_text       = 0xFFF0F0F0, -- 预览鼠标光标提示-文本
@@ -2899,7 +2901,7 @@ function DrawArrangeInsertGuides(ctx, id_prefix, insert_time, item_len, track, t
       local rect_left = math.max(left, math.min(start_x, end_x))
       local rect_right = math.min(right, math.max(start_x, end_x))
       if rect_right > rect_left then
-        local block_col = ((colors.gray or 0x909090FF) & 0xFFFFFF00) | 0x44
+        local block_col = colors.drag_reference_block or 0xB1B4B4FF
         DrawArrangeGuideBlock(ctx, rect_left, rect_right, block_top, block_bottom, "##" .. id_prefix .. "_block", block_col, is_new_track_target)
         drew = true
       end
@@ -3268,9 +3270,18 @@ function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, 
   local st = tonumber(start_time)
   local et = tonumber(end_time)
   if st and et and math.abs(et - st) > 0.01 then
-    local src_offset = math.min(st, et) + (tonumber(section_offset) or 0)
-    local src_len = math.abs(et - st)
-    return InsertMediaItemAtTrackFast(track, path, insert_time, src_offset, src_len, target_lane, clear_selection)
+    if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
+    path = normalize_path(path or "", false)
+    if path == "" then return end
+
+    local old_cursor = reaper.GetCursorPosition()
+    reaper.SetOnlyTrackSelected(track)
+    reaper.SetEditCurPos(tonumber(insert_time) or old_cursor, false, false)
+
+    local item = InsertSelectedAudioSection(path, st, et, tonumber(section_offset) or 0, false, target_lane)
+
+    reaper.SetEditCurPos(old_cursor, false, false)
+    return item
   end
   return InsertMediaItemAtTrackFast(track, path, insert_time, tonumber(section_offset) or 0, nil, target_lane, clear_selection)
 end
@@ -3727,11 +3738,23 @@ function DrawMiniSpectrumAnalyzer(ctx, width, height)
   spectrum_mini.last_t = now
 
   local peak_sum, peak_max, peak_count = 0, 0, 0
+  local visual_gain = 1
+  if playing_preview then
+    local preview_volume = tonumber(volume) or 1
+    if reaper.CF_Preview_GetValue then
+      local ok, cur_volume = reaper.CF_Preview_GetValue(playing_preview, "D_VOLUME")
+      if ok then preview_volume = tonumber(cur_volume) or preview_volume end
+    end
+    if preview_volume > 0.000001 then
+      visual_gain = 1 / preview_volume
+    end
+  end
+
   if playing_preview and reaper.CF_Preview_GetPeak then
     for i = 0, math.max(0, peak_chans - 1) do
       local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
       if valid then
-        value = math.max(0, math.min(1, value or 0))
+        value = math.max(0, math.min(1, (value or 0) * visual_gain))
         peak_sum = peak_sum + value
         if value > peak_max then peak_max = value end
         peak_count = peak_count + 1
@@ -5109,6 +5132,8 @@ end
 
 -- 鼠标框选相关变量
 local pending_clear_selection = pending_clear_selection or false
+local pending_new_selection_start_time = nil
+local pending_new_selection_start_x = nil
 function has_selection()
   return select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01
 end
@@ -8787,7 +8812,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
       if play_px == play_px then -- 过滤 NaN
         if play_px < 0 then play_px = 0 elseif play_px > thumb_w then play_px = thumb_w end
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
-        reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, colors.table_play_cursor, 1.5)
+        reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, colors.table_play_cursor, UIScaleF(2))
       end
     end
 
@@ -8958,7 +8983,13 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           preview_end_time = drag_preview_end_time,
           section_offset = info and info.section_offset or 0
         }
+        if reaper.JS_Mouse_LoadCursor then
+          local cursor_path = script_path .. "lib/cursor_258.cur"
+          local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
+          if cursor then reaper.JS_Mouse_SetCursor(cursor) end
+        end
         -- 收集范围内所有路径
+        local paths = {}
         local paths = {}
         local a = math.min(file_select_start or i, file_select_end or i)
         local b = math.max(file_select_start or i, file_select_end or i)
@@ -11055,9 +11086,8 @@ end
 
 --------------------------------------------- 分割条相关代码 ---------------------------------------------
 
-local LEFT_TABLE_VISIBLE = (reaper.GetExtState(EXT_SECTION, "left_table_visible") ~= "false")
-
-local splitter_w = 3 -- 分割条宽度
+LEFT_TABLE_VISIBLE = (reaper.GetExtState(EXT_SECTION, "left_table_visible") ~= "false")
+splitter_w = 3 -- 分割条宽度
 left_ratio = tonumber(reaper.GetExtState(EXT_SECTION, "left_ratio")) or 0.15 -- 启动时读取上次保存的
 splitter_drag = false
 splitter_drag_offset = 0
@@ -11378,8 +11408,8 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_FrameBgHovered(),    colors.frame_bg_hovered) -- 输入框悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_CheckMark(),         colors.check_mark)       -- 复选框对勾
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),            colors.header)           -- 表头背景
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(),     colors.herder_hovered)   -- 表头悬停
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),      colors.herder_active)    -- 表头激活
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(),     colors.header_hovered)   -- 表头悬停
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),      colors.header_active)    -- 表头激活
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_PopupBg(),           colors.popup_bg)         -- 弹出菜单背景
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),              colors.normal_text)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrab(),        colors.slider_grab)
@@ -12430,12 +12460,19 @@ function loop()
             for i, v in ipairs(collect_mode_labels) do
               local selected = (collect_mode == v.value)
               -- reaper.ImGui_AlignTextToFramePadding(ctx)
+              if selected then
+                -- PeakTree选中状态高亮
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+              end
               if reaper.ImGui_Selectable(ctx, v.label, selected) then
                 collect_mode = v.value
                 selected_index = i
                 tree_open = {} -- 切到非tree时收起tree
                 files_idx_cache = nil
                 CollectFiles()
+              end
+              if selected then
+                reaper.ImGui_PopStyleColor(ctx, 1)
               end
             end
             reaper.ImGui_Unindent(ctx, 25)
@@ -12521,6 +12558,8 @@ function loop()
 
           if is_this_computer_open then
             reaper.ImGui_Indent(ctx, 20) -- 手动缩进16像素
+            -- PeakTree选中状态高亮
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
             if not drives_loaded then
               reaper.ImGui_Text(ctx, T("Loading drives, please wait..."))
               if not need_load_drives then
@@ -12532,6 +12571,7 @@ function loop()
                 draw_tree(drv, drv, 0)
               end
             end
+            reaper.ImGui_PopStyleColor(ctx, 1)
             reaper.ImGui_Unindent(ctx, 20)
           end
 
@@ -12746,7 +12786,10 @@ function loop()
 
               reaper.ImGui_SameLine(ctx, nil, 0)
 
+              -- PeakTree选中状态高亮
+              reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
               draw_shortcut_tree(sc, nil, 0)
+              reaper.ImGui_PopStyleColor(ctx, 1)
             end
 
             -- 添加新快捷方式按钮
@@ -12993,7 +13036,10 @@ function loop()
 
                 reaper.ImGui_SameLine(ctx, nil, 0)
 
+                -- PeakTree选中状态高亮
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
                 draw_advanced_folder_node(id, tree_state.cur_advanced_folder, 0)
+                reaper.ImGui_PopStyleColor(ctx, 1)
               end
             end
 
@@ -13186,12 +13232,19 @@ function loop()
               reaper.ImGui_SameLine(ctx)
 
               local is_selected = (collect_mode == COLLECT_MODE_CUSTOMFOLDER and tree_state.cur_custom_folder == folder)
+              if is_selected then
+                -- PeakTree选中状态高亮
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+              end
               if reaper.ImGui_Selectable(ctx, folder, is_selected) then
                 -- 切换自定义文件夹目录选中状态，清空文件列表多选/主选中
                 file_select_start = nil
                 file_select_end   = nil
                 selected_row      = -1
                 handle_group_click(i, folder)
+              end
+              if is_selected then
+                reaper.ImGui_PopStyleColor(ctx, 1)
               end
               -- 右键菜单
               if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -13573,6 +13626,10 @@ function loop()
 
               local alias = mediadb_alias[dbfile] or dbfile -- 优先显示别名
               local is_selected = (collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile)
+              if is_selected then
+                -- PeakTree选中状态高亮
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+              end
               if reaper.ImGui_Selectable(ctx, alias, is_selected) then
                 if collect_mode ~= COLLECT_MODE_MEDIADB or tree_state.cur_mediadb ~= dbfile then
                   collect_mode = COLLECT_MODE_MEDIADB
@@ -13594,6 +13651,9 @@ function loop()
                   CollectFiles()
                   DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
                 end
+              end
+              if is_selected then
+                reaper.ImGui_PopStyleColor(ctx, 1)
               end
 
               -- 右键菜单
@@ -13919,6 +13979,8 @@ function loop()
               reaper.ImGui_PopStyleColor(ctx)
 
               if is_readb_open then
+                -- PeakTree选中状态高亮
+                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
                 reaper.ImGui_Indent(ctx, 25)
                 for _, it in ipairs(reaper_db_list) do
                   local alias = it.alias
@@ -13936,6 +13998,7 @@ function loop()
                     end
                   end
                 end
+                reaper.ImGui_PopStyleColor(ctx, 1)
 
                 reaper.ImGui_Unindent(ctx, 25)
               end
@@ -13952,6 +14015,8 @@ function loop()
           reaper.ImGui_PopStyleColor(ctx)
           if is_search_open then
             reaper.ImGui_Indent(ctx, 25)
+            -- PeakTree选中状态高亮
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
             for i, keyword in ipairs(recent_search_keywords) do
               local selected = false
               if reaper.ImGui_Selectable(ctx, keyword, selected) then
@@ -13987,6 +14052,7 @@ function loop()
                 reaper.ImGui_EndPopup(ctx)
               end
             end
+            reaper.ImGui_PopStyleColor(ctx, 1)
             -- 保存搜索关键词弹窗
             if show_add_popup then
               reaper.ImGui_OpenPopup(ctx, "Add Search")
@@ -14073,6 +14139,10 @@ function loop()
               for i, info in ipairs(recent_audio_files) do
                 if i > max_recent_files then break end
                 local selected = (selected_recent_row == i)
+                if selected then
+                  -- PeakTree选中状态高亮
+                  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+                end
                 if reaper.ImGui_Selectable(ctx, info.filename, selected) then
                   selected_recent_row = i
                   -- 进入最近播放前先保存当前模式
@@ -14083,6 +14153,9 @@ function loop()
                   local full_info = BuildFileInfoFromPath(normalize_path(info.path, false), info.filename) -- 重新补全文件信息
                   PlayFromStart(full_info) -- 播放文件并加载波形
                   current_recent_play_info = full_info
+                end
+                if selected then
+                  reaper.ImGui_PopStyleColor(ctx, 1)
                 end
 
                 -- 右键弹出菜单
@@ -15368,6 +15441,11 @@ function loop()
 
       -- 拖动音频到REAPER
       if dragging_audio then
+        if reaper.JS_Mouse_LoadCursor then
+          local cursor_path = script_path .. "lib/cursor_258.cur"
+          local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
+          if cursor then reaper.JS_Mouse_SetCursor(cursor) end
+        end
         local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
         -- 绘制参考线
         if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
@@ -15376,12 +15454,6 @@ function loop()
           DrawArrangeInsertGuides(ctx, "guide_line_drag_audio", insert_time, item_len, hover_track, hover_lane, hover_rect)
 
           -- 鼠标图标
-          if reaper.JS_Mouse_LoadCursor then
-            local cursor_path = script_path .. "lib/cursor_311.cur"
-            local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
-            -- local cursor = reaper.JS_Mouse_LoadCursor(525)
-            if cursor then reaper.JS_Mouse_SetCursor(cursor) end
-          end
         end
 
         if not reaper.ImGui_IsMouseDown(ctx, 0) then -- 鼠标释放
@@ -16058,7 +16130,7 @@ function loop()
       local COLOR_GROUPS = {
         ["背景 Background"] = { "window_bg","title_bg","title_bg_active","title_bg_collapse" },
         ["文本 Text"] = { "normal_text","previewed_text","thesaurus_text","link_text" },
-        ["标题栏 Header"] = { "header","herder_hovered","herder_active" },
+        ["标题栏 Header"] = { "header","header_hovered","header_active","header_item_selected" },
         ["表格 Table"] = {
           "table_header_bg","table_header_hovered","table_header_active","table_header",
           "table_border_strong","table_border_light","table_separator","table_separator_hovered",
@@ -16081,7 +16153,7 @@ function loop()
         ["输入与弹窗 Inputs"] = { "frame_bg","frame_bg_hovered","frame_bg_active","check_mark","popup_bg" },
         ["分割线 Separators"] = { "separator_line","separator_line_active","slider_grab","slider_grab_active" },
         ["滚动条 Scrollbar"] = { "scrollbar_bg","scrollbar_grab_normal","scrollbar_grab_hovered","scrollbar_grab_active" },
-        ["基础 Base"] = { "transparent","gray","cyan","mole","settings_header_bg" },
+        ["基础 Base"] = { "transparent","gray","cyan","mole","settings_header_bg","drag_reference_block" },
         ["标签 Tag"] = { "tag_normal","tag_hovered","tag_selected","tag_border","tag_close_bg" },
         ["Freesound"] = {
           "fs_button_normal","fs_button_hovered","fs_button_active",
@@ -16141,8 +16213,9 @@ function loop()
 
         -- 标题栏 Header
         header                   = "PeekTree Header Normal",   -- "标题栏 Header",
-        herder_hovered           = "PeekTree Header Hovered",  -- "标题栏 悬停 Header Hover",
-        herder_active            = "PeekTree Header Active",   -- "标题栏 按下 Header Active",
+        header_hovered           = "PeekTree Header Hovered",  -- "标题栏 悬停 Header Hover",
+        header_active            = "PeekTree Header Active",   -- "标题栏 按下 Header Active",
+        header_item_selected     = "PeekTree Header Item Selected", -- "标题栏 选中项 Header Item Selected",
 
         -- 文本 Text
         normal_text              = "Normal Text",              -- "普通文本 Normal Text",
@@ -16234,6 +16307,7 @@ function loop()
         gray                     = "Gray",                     -- "灰 Gray",
         cyan                     = "Cyan",                     -- "青 Cyan",
         settings_header_bg       = "Settings Header BG",       -- "设置页面背景"
+        drag_reference_block     = "Drag Reference Block",     -- "拖动参考块"
 
         -- Freesound
         fs_button_normal         = "FS Button Normal",         -- "FS 按钮 常态",
@@ -17076,32 +17150,6 @@ function loop()
       reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
     end
 
-    -- 插入选区音频到REAPER
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
-      local list = _G.current_display_list or {}
-      local cur_info = list[selected_row]
-      if not cur_info then
-        cur_info = last_selected_info
-      end
-      local do_insert = false
-      -- Shift+S
-      local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
-      if shift and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S()) then
-        do_insert = true
-      end
-      if reaper.ImGui_Button(ctx, T("Insert Selection Into Project")) then
-        do_insert = true
-      end
-      if do_insert and cur_info and cur_info.path then
-        local path = normalize_path(cur_info.path, false)
-        InsertSelectedAudioSection(path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true)
-      end
-      if reaper.ImGui_IsItemHovered(ctx) then
-        DrawTooltip(T("Shift+S to insert the selected audio section into the project."))
-      end
-    end
-
     -- 竖直电平条 mini
     -- reaper.ImGui_SameLine(ctx, nil, 10)
     -- local bar_height = reaper.ImGui_GetFrameHeight(ctx) -- base_height -- 或 reaper.ImGui_GetFrameHeight(ctx)
@@ -17931,6 +17979,9 @@ function loop()
       local skip_waveform_release = false
       if not reaper.ImGui_IsMouseDown(ctx, 0) and not dragging_selection then
         selection_drag_click_valid = false
+        pending_clear_selection = false
+        pending_new_selection_start_time = nil
+        pending_new_selection_start_x = nil
       end
 
       if selection_edge_drag and not is_knob_dragging then
@@ -17996,13 +18047,19 @@ function loop()
               selection_drag_click_valid = false
               selecting = false
               pending_clear_selection = false
+              pending_new_selection_start_time = nil
+              pending_new_selection_start_x = nil
               SetWaveSelectionEdgeCursor(ctx, side)
             elseif mouse_in_selection(mouse_time) then
               selection_drag_click_valid = true
               pending_clear_selection = false
+              pending_new_selection_start_time = nil
+              pending_new_selection_start_x = nil
             else
               selection_drag_click_valid = false
               pending_clear_selection = true -- 只挂起，不做任何清空
+              pending_new_selection_start_time = mouse_time
+              pending_new_selection_start_x = mouse_x
             end
           else
             local mouse_time_visual = Wave.scroll + frac * visible_len
@@ -18013,6 +18070,23 @@ function loop()
             select_end_time = mouse_time
             selection_drag_click_valid = false
             pending_clear_selection = false
+            pending_new_selection_start_time = nil
+            pending_new_selection_start_x = nil
+          end
+        end
+
+        if pending_clear_selection and reaper.ImGui_IsMouseDown(ctx, 0) and not selecting and not selection_edge_drag and not is_knob_dragging then
+          local start_x = pending_new_selection_start_x or mouse_x
+          if math.abs(mouse_x - start_x) > UIScaleF(3) then
+            selecting = true
+            drag_start_x = start_x
+            select_start_time = pending_new_selection_start_time or mouse_time
+            select_end_time = mouse_time
+            selection_drag_click_valid = false
+            pending_clear_selection = false
+            pending_new_selection_start_time = nil
+            pending_new_selection_start_x = nil
+            ResetWaveSelectionEdgeCursor()
           end
         end
 
@@ -18085,6 +18159,9 @@ function loop()
           if reaper.ImGui_IsWindowHovered(ctx) then
             dragging_selection = nil
             selection_drag_click_valid = false
+            if reaper.JS_Mouse_LoadCursor then
+              reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0))
+            end
           end
         end
 
@@ -18126,6 +18203,7 @@ function loop()
                 select_end_time = nil
                 selection_edge_drag = nil
                 selection_drag_click_valid = false
+                pending_clear_selection = false
                 ResetWaveSelectionEdgeCursor()
                 Wave.play_cursor = mouse_time
                 wf_play_start_cursor = mouse_time
@@ -18188,7 +18266,7 @@ function loop()
         local adjusted_play_cursor = Wave.play_cursor * effective_rate_knob -- 播放光标推进位置
         local px = (adjusted_play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
-        reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, colors.preview_play_cursor, UIScaleF(1)) -- 0xFF2222FF
+        reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, colors.preview_play_cursor, UIScaleF(2))
       end
 
       -- 鼠标悬停提示线与时间显示
@@ -18295,18 +18373,6 @@ function loop()
         ResetWaveSelectionEdgeCursor()
       end
 
-      if reaper.ImGui_IsItemHovered(ctx) and selection_exists and not edge_cursor_side then
-        if selecting and reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
-          -- 正在框选区域
-          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
-        -- elseif reaper.ImGui_IsMouseDown(ctx, 0) and not selecting then
-        --   reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
-        else
-          -- 有选区且不在框选，允许拖拽到REAPER
-          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeAll())
-        end
-      end
-
       -- 选区拖拽到REAPER
       if selection_exists then
         if selection_drag_click_valid and not selection_edge_drag and reaper.ImGui_BeginDragDropSource(ctx) then
@@ -18326,24 +18392,27 @@ function loop()
             end_time = end_time,
             section_offset = cur_info.section_offset or 0,
           }
+          if reaper.JS_Mouse_LoadCursor then
+            local cursor_path = script_path .. "lib/cursor_258.cur"
+            local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
+            if cursor then reaper.JS_Mouse_SetCursor(cursor) end
+          end
           reaper.ImGui_EndDragDropSource(ctx)
         end
 
         -- 拖拽释放检测
         if dragging_selection then
+          if reaper.JS_Mouse_LoadCursor then
+            local cursor_path = script_path .. "lib/cursor_258.cur"
+            local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
+            if cursor then reaper.JS_Mouse_SetCursor(cursor) end
+          end
           local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
 
           if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
             local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
             local item_len = GetDragPreviewTimelineLength(dragging_selection.start_time, dragging_selection.end_time)
             DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track, hover_lane, hover_rect)
-
-            -- 鼠标图标
-            if reaper.JS_Mouse_LoadCursor then
-              local cursor_path = script_path .. "lib/cursor_311.cur"
-              local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
-              if cursor then reaper.JS_Mouse_SetCursor(cursor) end
-            end
           end
 
           -- 拖拽释放检测
@@ -18500,6 +18569,32 @@ function loop()
 
             return string.format(T("%d shown / %d total"), shown, total)
           end)())
+        end
+
+        -- 插入选区音频到REAPER文本提示
+        reaper.ImGui_SameLine(ctx, nil,  UIScale(10))
+        if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
+          local list = _G.current_display_list or {}
+          local cur_info = list[selected_row]
+          if not cur_info then
+            cur_info = last_selected_info
+          end
+          local do_insert = false
+          -- Shift+S
+          local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
+          if shift and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S()) then
+            do_insert = true
+          end
+          PushUIFont(ctx, fonts.sans_serif, 13)
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.gray or 0x909090FF)
+          reaper.ImGui_Text(ctx, T("Shift+S to insert the selected audio section into the project."))
+          reaper.ImGui_PopStyleColor(ctx)
+          reaper.ImGui_PopFont(ctx)
+
+          if do_insert and cur_info and cur_info.path then
+            local path = normalize_path(cur_info.path, false)
+            InsertSelectedAudioSection(path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true)
+          end
         end
       end
     end
