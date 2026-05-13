@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5933c8ff16b11538c2714e18a92d68d6ccfdca12">
+<index version="1" name="zaibuyidao Scripts" commit="5ced4815a5f00d5d1657ac1cb291c73a1818d13e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7994,13 +7994,13 @@ Added mode selection:
 {\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab Run the script and choose a .reabank file.\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab Normal run: writes MIDIBANKPROGFN only to the current track.\par}
 {\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab Shift-run: also writes the selected path to the mididefbankprog default entry in reaper.ini.\sa180\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 CN \u20026 ?\u36873 ?\u20013 ?\u30340 ?\u36712 ?\u36947 ?\u25351 ?\u23450 ? ReaBank \u25991 ?\u20214 ?\u12290 ?\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 \u26412 ?\u33050 ?\u26412 ?\u25552 ?\u21462 ?\u33258 ? zaibuyidao_Articulation Map.lua / lib/core.lua\u12290 ?\par}
-{\pard \ql \f0 \sa180 \li0 \fi0 \u20351 ?\u29992 ?\u26041 ?\u27861 ?\u65306 ?\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab \u36873 ?\u20013 ?\u19968 ?\u20010 ?\u36712 ?\u36947 ?\u65292 ?\u25110 ?\u25171 ?\u24320 ? MIDI \u32534 ?\u36753 ?\u22120 ?\u65292 ?\u35753 ?\u33050 ?\u26412 ?\u33258 ?\u21160 ?\u33719 ?\u21462 ?\u24403 ?\u21069 ? MIDI take \u25152 ?\u22312 ?\u36712 ?\u36947 ?\u12290 ?\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab \u36816 ?\u34892 ?\u33050 ?\u26412 ?\u24182 ?\u36873 ?\u25321 ? .reabank \u25991 ?\u20214 ?\u12290 ?\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab \u26222 ?\u36890 ?\u36816 ?\u34892 ?\u65306 ?\u20165 ?\u23558 ? MIDIBANKPROGFN \u20889 ?\u20837 ?\u24403 ?\u21069 ?\u36712 ?\u36947 ?\u12290 ?\par}
-{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab \u25353 ?\u20303 ? Shift \u36816 ?\u34892 ?\u65306 ?\u21516 ?\u26102 ?\u23558 ?\u25152 ?\u36873 ?\u36335 ?\u24452 ?\u20889 ?\u20837 ? reaper.ini \u30340 ? mididefbankprog \u40664 ?\u35748 ?\u39033 ?\u12290 ?\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 CN \u20026?\u36873?\u20013?\u30340?\u36712?\u36947?\u25351?\u23450? ReaBank \u25991?\u20214?\u12290?\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u26412?\u33050?\u26412?\u25552?\u21462?\u33258? zaibuyidao_Articulation Map.lua / lib/core.lua\u12290?\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 \u20351?\u29992?\u26041?\u27861?\u65306?\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab \u36873?\u20013?\u19968?\u20010?\u36712?\u36947?\u65292?\u25110?\u25171?\u24320? MIDI \u32534?\u36753?\u22120?\u65292?\u35753?\u33050?\u26412?\u33258?\u21160?\u33719?\u21462?\u24403?\u21069? MIDI take \u25152?\u22312?\u36712?\u36947?\u12290?\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab \u36816?\u34892?\u33050?\u26412?\u24182?\u36873?\u25321? .reabank \u25991?\u20214?\u12290?\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab \u26222?\u36890?\u36816?\u34892?\u65306?\u20165?\u23558? MIDIBANKPROGFN \u20889?\u20837?\u24403?\u21069?\u36712?\u36947?\u12290?\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab \u25353?\u20303? Shift \u36816?\u34892?\u65306?\u21516?\u26102?\u23558?\u25152?\u36873?\u36335?\u24452?\u20889?\u20837? reaper.ini \u30340? mididefbankprog \u40664?\u35748?\u39033?\u12290?\sa180\par}
 }
 ]]></description>
         <link rel="website">https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80</link>
@@ -16803,6 +16803,33 @@ Support reaper_soundmole-x64.dll v0.0.11]]></changelog>
         <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/6c200ab8f2b943992ebb05231ea93bcb759e2025/Various/Soundmole/data/icons.otf</source>
         <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/6c200ab8f2b943992ebb05231ea93bcb759e2025/Various/Soundmole/data/icons-regular.otf</source>
         <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/6c200ab8f2b943992ebb05231ea93bcb759e2025/Various/Soundmole/data/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.176" author="zaibuyidao" time="2026-05-13T09:03:57Z">
+        <changelog><![CDATA[Added draggable waveform selection boundaries for independent left/right adjustment.
+Improved waveform drag behavior to prevent accidental "drag selection to REAPER" triggers.
+Support reaper_soundmole-x64.dll v0.0.11]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/zaibuyidao_Soundmole%20-%20Add%20Selected%20Files%20to%20Target%20Database.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/freesound.lua">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/freesound.lua</source>
+        <source file="Soundmole/lib/locales.lua">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/locales.lua</source>
+        <source file="Soundmole/lib/translation.lua">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/translation.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/lib/translator.py">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/translator.py</source>
+        <source file="Soundmole/lib/cursor_253.cur">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/cursor_253.cur</source>
+        <source file="Soundmole/lib/cursor_258.cur">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/cursor_258.cur</source>
+        <source file="Soundmole/lib/cursor_263.cur">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/cursor_263.cur</source>
+        <source file="Soundmole/lib/cursor_270.cur">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/cursor_270.cur</source>
+        <source file="Soundmole/lib/cursor_271.cur">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/cursor_271.cur</source>
+        <source file="Soundmole/lib/cursor_279.cur">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/cursor_279.cur</source>
+        <source file="Soundmole/lib/cursor_311.cur">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lib/cursor_311.cur</source>
+        <source file="Soundmole/lang/en-US.txt">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lang/en-US.txt</source>
+        <source file="Soundmole/lang/zh-CN.txt">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/lang/zh-CN.txt</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/data/icons.otf">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/data/icons.otf</source>
+        <source file="Soundmole/data/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/data/icons-regular.otf</source>
+        <source file="Soundmole/data/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/c6220ecea7036ddf0d67a6172b9002d36ba142a5/Various/Soundmole/data/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
