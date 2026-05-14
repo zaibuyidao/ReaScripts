@@ -1,14 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.177
+-- @version 1.0.178
 -- @changelog
---   Added left and right boundary extension support in the waveform preview window, allowing draggable selection edge adjustment.
---   Enhanced waveform preview play cursor visibility with a thicker cursor style.
---   Improved waveform preview selection visibility with deeper selection colors.
---   Improved mouse cursor feedback behavior during drag operations.
---   Optimized simple spectrum feedback rendering to maintain clear visual response even at very low playback volumes.
---   Optimized drag reference block background color rendering.
---   Improved PeekTree title selected-state color display.
+--   Fixed an issue where the filename was missing when dragging in a full audio track.
 --   Support reaper_soundmole-x64.dll v0.0.11
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

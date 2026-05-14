@@ -8979,7 +8979,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
         dragging_audio = {
           path = info and info.path,
           start_time = 0,
-          end_time = info and info.section_length or 0,
+          end_time = drag_preview_end_time,
           preview_end_time = drag_preview_end_time,
           section_offset = info and info.section_offset or 0
         }
