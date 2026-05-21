@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8b0781c555840fda56e8e6163a068811b60c8236">
+<index version="1" name="zaibuyidao Scripts" commit="9314642bcbe9f93166492dcec10cafcad8338b0d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8151,6 +8151,11 @@ Added Ctrl+MouseWheel support in the preview panel to adjust the preview font si
 Added a new options menu for easier access to settings.
 Added automatic check for ReaImGui dependency. The script now guides users to install or update ReaImGui if it is missing or outdated.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/0e60bfc4e91f06af8c9d1a8bbe01983db02cfb94/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
+      </version>
+      <version name="1.0.17" author="zaibuyidao" time="2026-05-21T12:09:42Z">
+        <changelog><![CDATA[Fixed Source Files mode wildcard expansion for $track, $tracknumber, and $folders.
+Fixed marker wildcard handling for $markerid and Marker Manager insert operations.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9314642bcbe9f93166492dcec10cafcad8338b0d/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
