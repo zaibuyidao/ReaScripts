@@ -1,9 +1,12 @@
 -- @description Batch Rename Plus
--- @version 1.0.17
+-- @version 1.0.18
 -- @author zaibuyidao
 -- @changelog
---   Fixed Source Files mode wildcard expansion for $track, $tracknumber, and $folders.
---   Fixed marker wildcard handling for $markerid and Marker Manager insert operations.
+--   Evaluated specifiers before wildcard value expansion so object names containing d=/a=/r=/e= text are preserved literally.
+--   Prevented empty rename patterns from blanking item/source names.
+--   Normalized wildcard expansion across modes, including case-insensitive wildcard token matching.
+--   Hardened wildcard/specifier replacement paths across all batch modes so replacement text is treated literally.
+--   Aligned Source Files preview with the actual on-disk rename behavior.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -340,6 +343,16 @@ local function replace_last(s, pat, repl)
   return s:gsub("^(.*)("..pat..")", function(a,b) return a..repl end)
 end
 
+local function replace_first(s, pat, repl)
+  local out = s:gsub(pat, function() return repl end, 1)
+  return out
+end
+
+local function replace_all(s, pat, repl)
+  local out = s:gsub(pat, function() return repl end)
+  return out
+end
+
 local function escape_pattern(str)
   -- 正则元字符转义 ^ $ ( ) % . [ ] + - |
   str = str:gsub("([%^%$%(%)%%%.%[%]%+%-%|])", "%%%1")
@@ -449,13 +462,40 @@ local function apply_case_transform(name, token)
   end
   -- 首字母大写，其它小写
   if token:match("^[%u]%l+$") then
-    return name:gsub("^%l", string.upper)
+    return name:lower():gsub("^%l", string.upper)
   end
   -- 原样输出
   return name
 end
 
 --表格预览
+local wildcard_patterns = {}
+local function get_wildcard_pattern(token)
+  if wildcard_patterns[token] then return wildcard_patterns[token] end
+  local parts = { "%$" }
+  for i = 1, #token do
+    local c = token:sub(i, i)
+    if c:match("%a") then
+      parts[#parts + 1] = "[" .. c:lower() .. c:upper() .. "]"
+    else
+      parts[#parts + 1] = "%" .. c
+    end
+  end
+  local pat = table.concat(parts)
+  wildcard_patterns[token] = pat
+  return pat
+end
+
+local function expand_wildcard(name, token, value, use_case_transform)
+  value = tostring(value or "")
+  return name:gsub(get_wildcard_pattern(token), function(tok)
+    if use_case_transform then
+      return apply_case_transform(value, tok:sub(2))
+    end
+    return value
+  end)
+end
+
 local function render_preview_table(ctx, id, realCount, row_builder)
   preview_mode = true
   local cnt = realCount
@@ -729,7 +769,7 @@ local function CollectSelectedSourcePaths()
     local item = reaper.GetSelectedMediaItem(0, i)
     local take = reaper.GetActiveTake(item)
     local path = GetTakeSourceFilePath(take)
-    if path then
+    if path and path ~= "" then
       selected_paths[path] = true -- 记录路径，便于查找
     end
   end
@@ -1101,26 +1141,19 @@ function build_items(build_pattern, origin_name, tname, track_num, folders, take
   i             = tonumber(i)   or 1
 
   -- 通用 token 替换
-  local name = build_pattern
-  name = name:gsub("%$tracknumber", tostring(track_num))
-  name = name:gsub("%$folders", folders)
-  name = name:gsub("(%$[Tt][Rr][Aa][Cc][Kk])", function(tok)
-    return apply_case_transform(tname, tok:sub(2))
-  end)
-  -- name = name:gsub("%$item", origin_name)
-  name = name:gsub("(%$[Ii][Tt][Ee][Mm])", function(tok)
-    return apply_case_transform(origin_name, tok:sub(2))
-  end)
-
+  local name = apply_modifiers(build_pattern, i)
   local guid = ""
   if take then
     local _, g = reaper.GetSetMediaItemTakeInfo_String(take, "GUID", "", false)
     guid = g or ""
   end
-  name = name:gsub("%$GUID", guid)
+  name = expand_wildcard(name, "tracknumber", track_num)
+  name = expand_wildcard(name, "folders", folders, true)
+  name = expand_wildcard(name, "track", tname, true)
+  name = expand_wildcard(name, "item", origin_name, true)
+  name = expand_wildcard(name, "GUID", guid)
 
   -- 继承循环/累加/随机等功能
-  name = apply_modifiers(name, i)
   return name
 end
 
@@ -1132,16 +1165,12 @@ local function build_tracks(pat, origin, guid, num, parent, i)
   i      = tonumber(i) or 1
 
   -- 通用 token 替换
-  local name = pat
-  name = name:gsub("%$tracknumber", tostring(num))
-  name = name:gsub("%$GUID", guid)
-  name = name:gsub("%$folders", parent or "")
-  -- name = name:gsub("%$track", origin)
-  name = name:gsub("(%$[Tt][Rr][Aa][Cc][Kk])", function(tok)
-    return apply_case_transform(origin, tok:sub(2))
-  end)
+  local name = apply_modifiers(pat, i)
+  name = expand_wildcard(name, "tracknumber", num)
+  name = expand_wildcard(name, "GUID", guid)
+  name = expand_wildcard(name, "folders", parent or "", true)
+  name = expand_wildcard(name, "track", origin, true)
 
-  name = apply_modifiers(name, i)
   return name
 end
 
@@ -1152,15 +1181,11 @@ function build_region_manager(pattern, origin_name, region_id, i)
   i           = tonumber(i) or 1
 
   -- 通用 token 替换
-  local name = pattern
-  name = name:gsub("%$regionidx", tostring(i))
-  name = name:gsub("%$regionid",  tostring(region_id))
-  -- name = name:gsub("%$region", origin_name)
-  name = name:gsub("(%$[Rr][Ee][Gg][Ii][Oo][Nn])", function(tok)
-    return apply_case_transform(origin_name, tok:sub(2))
-  end)
+  local name = apply_modifiers(pattern, i)
+  name = expand_wildcard(name, "regionidx", i)
+  name = expand_wildcard(name, "regionid", region_id)
+  name = expand_wildcard(name, "region", origin_name, true)
 
-  name = apply_modifiers(name, i)
   return name
 end
 
@@ -1171,15 +1196,11 @@ local function build_region_time(pattern, origin_name, region_id, i)
   i           = tonumber(i) or 1
 
   -- 通用 token 替换
-  local name = pattern
-  name = name:gsub("%$regionidx", tostring(i))
-  name = name:gsub("%$regionid",  tostring(region_id))
-  -- name = name:gsub("%$region", origin_name)
-  name = name:gsub("(%$[Rr][Ee][Gg][Ii][Oo][Nn])", function(tok)
-    return apply_case_transform(origin_name, tok:sub(2))
-  end)
+  local name = apply_modifiers(pattern, i)
+  name = expand_wildcard(name, "regionidx", i)
+  name = expand_wildcard(name, "regionid", region_id)
+  name = expand_wildcard(name, "region", origin_name, true)
 
-  name = apply_modifiers(name, i)
   return name
 end
 
@@ -1190,15 +1211,11 @@ local function build_region_for_items(pattern, origin_name, region_id, i)
   i           = tonumber(i) or 1
 
   -- 通用 token 替换
-  local name = pattern
-  name = name:gsub("%$regionidx", tostring(i))
-  name = name:gsub("%$regionid",  tostring(region_id))
-  -- name = name:gsub("%$region", origin_name)
-  name = name:gsub("(%$[Rr][Ee][Gg][Ii][Oo][Nn])", function(tok)
-    return apply_case_transform(origin_name, tok:sub(2))
-  end)
+  local name = apply_modifiers(pattern, i)
+  name = expand_wildcard(name, "regionidx", i)
+  name = expand_wildcard(name, "regionid", region_id)
+  name = expand_wildcard(name, "region", origin_name, true)
 
-  name = apply_modifiers(name, i)
   return name
 end
 
@@ -1209,15 +1226,11 @@ function build_marker_manager(pattern, origin_name, marker_id, i)
   i           = tonumber(i) or 1
 
   -- 通用 token 替换
-  local name = pattern
-  name = name:gsub("%$markeridx", tostring(i))
-  name = name:gsub("%$markerid",  tostring(marker_id))
-  -- name = name:gsub("%$marker", origin_name)
-  name = name:gsub("(%$[Mm][Aa][Rr][Kk][Ee][Rr])", function(tok)
-    return apply_case_transform(origin_name, tok:sub(2))
-  end)
+  local name = apply_modifiers(pattern, i)
+  name = expand_wildcard(name, "markeridx", i)
+  name = expand_wildcard(name, "markerid", marker_id)
+  name = expand_wildcard(name, "marker", origin_name, true)
 
-  name = apply_modifiers(name, i)
   return name
 end
 
@@ -1228,15 +1241,11 @@ local function build_marker_time(pattern, origin_name, marker_id, i)
   i           = tonumber(i) or 1
 
   -- 通用 token 替换
-  local name = pattern
-  name = name:gsub("%$markeridx", tostring(i))
-  name = name:gsub("%$markerid",  tostring(marker_id))
-  -- name = name:gsub("%$marker", origin_name)
-  name = name:gsub("(%$[Mm][Aa][Rr][Kk][Ee][Rr])", function(tok)
-    return apply_case_transform(origin_name, tok:sub(2))
-  end)
+  local name = apply_modifiers(pattern, i)
+  name = expand_wildcard(name, "markeridx", i)
+  name = expand_wildcard(name, "markerid", marker_id)
+  name = expand_wildcard(name, "marker", origin_name, true)
 
-  name = apply_modifiers(name, i)
   return name
 end
 
@@ -1249,18 +1258,12 @@ function build_sources(build_pattern, origin_name, tname, track_num, folders, i)
   i             = tonumber(i)   or 1
 
   -- 通用 token 替换
-  local name = build_pattern
-  name = name:gsub("%$tracknumber", tostring(track_num))
-  name = name:gsub("%$folders", folders)
-  name = name:gsub("(%$[Tt][Rr][Aa][Cc][Kk])", function(tok)
-    return apply_case_transform(tname, tok:sub(2))
-  end)
-  -- name = name:gsub("%$source", origin_name)
-  name = name:gsub("(%$[Ss][Oo][Uu][Rr][Cc][Ee])", function(tok)
-    return apply_case_transform(origin_name, tok:sub(2))
-  end)
+  local name = apply_modifiers(build_pattern, i)
+  name = expand_wildcard(name, "tracknumber", track_num)
+  name = expand_wildcard(name, "folders", folders, true)
+  name = expand_wildcard(name, "track", tname, true)
+  name = expand_wildcard(name, "source", origin_name, true)
 
-  name = apply_modifiers(name, i)
   return name
 end
 
@@ -1351,7 +1354,7 @@ local function apply_batch_items()
     local seq = (sort_index == 0 and data.seqIndex) or idx
 
     -- 5.1 Rename 用 build_items 展开
-    if enable_rename then
+    if enable_rename and rename_pattern ~= "" then
       new_name = build_items(
         rename_pattern,
         data.orig_name,
@@ -1381,13 +1384,13 @@ local function apply_batch_items()
       -- 根据 Occurrence 模式执行替换
       if occurrence_mode == 0 then
         -- First: 仅替换首个匹配
-        new_name = new_name:gsub(pat, repl, 1)
+        new_name = replace_first(new_name, pat, repl)
       elseif occurrence_mode == 1 then
         -- Last: 仅替换最后一个匹配
         new_name = replace_last(new_name, pat, repl)
       else
         -- All: 默认替换所有匹配
-        new_name = new_name:gsub(pat, repl)
+        new_name = replace_all(new_name, pat, repl)
       end
     end
 
@@ -1500,11 +1503,11 @@ local function apply_batch_tracks()
       end
       local repl = build_tracks(replace_text, origin, guid, track_num, parent, i + 1)
       if occurrence_mode == 0 then
-        new_name = new_name:gsub(pat, repl, 1)
+        new_name = replace_first(new_name, pat, repl)
       elseif occurrence_mode == 1 then
         new_name = replace_last(new_name, pat, repl)
       else
-        new_name = new_name:gsub(pat, repl)
+        new_name = replace_all(new_name, pat, repl)
       end
     end
     -- 3) Remove
@@ -1608,11 +1611,11 @@ function apply_batch_region_manager()
       end
       local repl = build_region_manager(replace_text or "", orig, region.index, idx)
       if occurrence_mode == 0 then
-        new_name = new_name:gsub(pat, repl, 1)
+        new_name = replace_first(new_name, pat, repl)
       elseif occurrence_mode == 1 then
         new_name = replace_last(new_name, pat, repl)
       else
-        new_name = new_name:gsub(pat, repl)
+        new_name = replace_all(new_name, pat, repl)
       end
     end
     -- 3) Remove
@@ -1715,11 +1718,11 @@ local function apply_batch_region_time()
       end
       local repl = build_region_time(replace_text or "", orig, region.index, idx)
       if occurrence_mode == 0 then
-        new_name = new_name:gsub(pat, repl, 1)
+        new_name = replace_first(new_name, pat, repl)
       elseif occurrence_mode == 1 then
         new_name = replace_last(new_name, pat, repl)
       else
-        new_name = new_name:gsub(pat, repl)
+        new_name = replace_all(new_name, pat, repl)
       end
     end
     -- 3) Remove
@@ -1813,11 +1816,11 @@ function apply_batch_regions_for_items()
       end
       local repl = build_region_for_items(replace_text or "", orig, region.index, idx)
       if occurrence_mode == 0 then
-        new_name = new_name:gsub(pat, repl, 1)
+        new_name = replace_first(new_name, pat, repl)
       elseif occurrence_mode == 1 then
         new_name = replace_last(new_name, pat, repl)
       else
-        new_name = new_name:gsub(pat, repl)
+        new_name = replace_all(new_name, pat, repl)
       end
     end
     -- 3) Remove
@@ -1923,11 +1926,11 @@ function apply_batch_marker_manager()
       end
       local repl = build_marker_manager(replace_text or "", orig, marker.index, idx)
       if occurrence_mode == 0 then
-        new_name = new_name:gsub(pat, repl, 1)
+        new_name = replace_first(new_name, pat, repl)
       elseif occurrence_mode == 1 then
         new_name = replace_last(new_name, pat, repl)
       else
-        new_name = new_name:gsub(pat, repl)
+        new_name = replace_all(new_name, pat, repl)
       end
     end
     -- 3) Remove
@@ -2028,11 +2031,11 @@ local function apply_batch_marker_time()
       end
       local repl = build_marker_time(replace_text or "", orig, marker.index, idx)
       if occurrence_mode == 0 then
-        new_name = new_name:gsub(pat, repl, 1)
+        new_name = replace_first(new_name, pat, repl)
       elseif occurrence_mode == 1 then
         new_name = replace_last(new_name, pat, repl)
       else
-        new_name = new_name:gsub(pat, repl)
+        new_name = replace_all(new_name, pat, repl)
       end
     end
 
@@ -2113,6 +2116,7 @@ local function get_sorted_sources_data()
     -- 源文件对象及路径
     local src  = reaper.GetMediaItemTake_Source(take)
     local path = reaper.GetMediaSourceFileName(src, "")
+    if not path or path == "" then goto continue end
 
     -- 轨道信息
     local track   = reaper.GetMediaItem_Track(item)
@@ -2203,6 +2207,13 @@ local function apply_batch_sources()
 
   -- 收集并排序所有源文件数据
   local items = get_sorted_sources_data()
+  if #items == 0 then
+    RestoreSelectedItems(init_sel_items)
+    reaper.Undo_EndBlock("Batch Rename Plus (no source files)", -1)
+    reaper.PreventUIRefresh(-1)
+    reaper.ShowMessageBox("Selected media items have no valid audio source files.", "Batch Rename Plus", 0)
+    return
+  end
 
   -- 构建唯一源列表（每条路径只保留一次）
   local seen_paths = {}
@@ -2243,11 +2254,11 @@ local function apply_batch_sources()
       end
       local repl = build_sources(replace_text, base, rec.tname, rec.track_num, rec.folders, seq)
       if occurrence_mode == 0 then
-        new_base = new_base:gsub(pat, repl, 1)
+        new_base = replace_first(new_base, pat, repl)
       elseif occurrence_mode == 1 then
         new_base = replace_last(new_base, pat, repl)
       else
-        new_base = new_base:gsub(pat, repl)
+        new_base = replace_all(new_base, pat, repl)
       end
     end
 
@@ -2315,13 +2326,26 @@ local function apply_batch_sources()
   -- 离线所有源、执行重命名并更新引用
   local origState = OfflineSources(items)
   local errors = {}
+  local function update_source_refs(oldPath, newPath, newName)
+    for _, d in ipairs(items) do
+      if d.path == oldPath then
+        reaper.BR_SetTakeSourceFromFile(d.take, newPath, false)
+        if write_take_name then
+          reaper.GetSetMediaItemTakeInfo_String(d.take, "P_NAME", newName, true)
+        end
+      end
+    end
+  end
+
   for _, rec in ipairs(uniqueRecs) do
     local oldPath = rec.path
     local newName = nameMap[oldPath]
     local dir     = oldPath:match("^(.*[\\/])") or ""
     local newPath = dir .. newName
 
-    if not FileExists(oldPath) then
+    if oldPath == newPath then
+      update_source_refs(oldPath, newPath, newName)
+    elseif not FileExists(oldPath) then
       table.insert(errors, "Does not exist: " .. oldPath)
     else
       local ok, err = os.rename(oldPath, newPath)
@@ -2426,7 +2450,7 @@ local function get_preview_data_and_builder()
       local new_name = orig
 
       -- 1) Rename
-      if enable_rename then
+      if enable_rename and rename_pattern ~= "" then
         new_name = build_items(rename_pattern, orig, rec.tname, rec.track_num, rec.folders, rec.take, seq)
       end
       -- 2) Replace
@@ -2437,11 +2461,11 @@ local function get_preview_data_and_builder()
         end
         local repl = build_items(replace_text or "", orig, rec.tname, rec.track_num, rec.folders, rec.take, seq)
         if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
+          new_name = replace_first(new_name, pat, repl)
         elseif occurrence_mode == 1 then
           new_name = replace_last(new_name, pat, repl)
         else
-          new_name = new_name:gsub(pat, repl)
+          new_name = replace_all(new_name, pat, repl)
         end
       end
       -- 3) Remove
@@ -2514,11 +2538,11 @@ local function get_preview_data_and_builder()
         end
         local repl = build_tracks(replace_text, orig, guid, num, parent, seq)
         if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
+          new_name = replace_first(new_name, pat, repl)
         elseif occurrence_mode == 1 then
           new_name = replace_last(new_name, pat, repl)
         else
-          new_name = new_name:gsub(pat, repl)
+          new_name = replace_all(new_name, pat, repl)
         end
       end
       -- 3) Remove
@@ -2590,11 +2614,11 @@ local function get_preview_data_and_builder()
         end
         local repl = build_region_manager(replace_text or "", orig, region.index, i)
         if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
+          new_name = replace_first(new_name, pat, repl)
         elseif occurrence_mode == 1 then
           new_name = replace_last(new_name, pat, repl)
         else
-          new_name = new_name:gsub(pat, repl)
+          new_name = replace_all(new_name, pat, repl)
         end
       end
 
@@ -2668,11 +2692,11 @@ local function get_preview_data_and_builder()
         end
         local repl = build_region_time(replace_text or "", orig, region.index, i)
         if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
+          new_name = replace_first(new_name, pat, repl)
         elseif occurrence_mode == 1 then
           new_name = replace_last(new_name, pat, repl)
         else
-          new_name = new_name:gsub(pat, repl)
+          new_name = replace_all(new_name, pat, repl)
         end
       end
       -- 3) Remove
@@ -2740,11 +2764,11 @@ local function get_preview_data_and_builder()
         end
         local repl = build_region_for_items(replace_text or "", orig, region.index, i)
         if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
+          new_name = replace_first(new_name, pat, repl)
         elseif occurrence_mode == 1 then
           new_name = replace_last(new_name, pat, repl)
         else
-          new_name = new_name:gsub(pat, repl)
+          new_name = replace_all(new_name, pat, repl)
         end
       end
   
@@ -2813,11 +2837,11 @@ local function get_preview_data_and_builder()
         end
         local repl = build_marker_manager(replace_text or "", orig, marker.index, i)
         if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
+          new_name = replace_first(new_name, pat, repl)
         elseif occurrence_mode == 1 then
           new_name = replace_last(new_name, pat, repl)
         else
-          new_name = new_name:gsub(pat, repl)
+          new_name = replace_all(new_name, pat, repl)
         end
       end
   
@@ -2890,11 +2914,11 @@ local function get_preview_data_and_builder()
         end
         local repl = build_marker_time(replace_text or "", orig, marker.index, i)
         if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
+          new_name = replace_first(new_name, pat, repl)
         elseif occurrence_mode == 1 then
           new_name = replace_last(new_name, pat, repl)
         else
-          new_name = new_name:gsub(pat, repl)
+          new_name = replace_all(new_name, pat, repl)
         end
       end
       -- 3) Remove
@@ -2952,7 +2976,7 @@ local function get_preview_data_and_builder()
       local new_name = base
 
       -- 1) Rename
-      if enable_rename then
+      if enable_rename and rename_pattern ~= "" then
         new_name = build_sources(rename_pattern, base, data.tname, data.track_num, data.folders, seq)
       end
       -- 2) Replace
@@ -2963,11 +2987,11 @@ local function get_preview_data_and_builder()
         end
         local repl = build_sources(replace_text or "", base, data.tname, data.track_num, data.folders, seq)
         if occurrence_mode == 0 then
-          new_name = new_name:gsub(pat, repl, 1)
+          new_name = replace_first(new_name, pat, repl)
         elseif occurrence_mode == 1 then
           new_name = replace_last(new_name, pat, repl)
         else
-          new_name = new_name:gsub(pat, repl)
+          new_name = replace_all(new_name, pat, repl)
         end
       end
       -- 3) Remove
@@ -3119,7 +3143,6 @@ local function preview_popup(ctx)
     reaper.ImGui_SetNextWindowSize(ctx, 600, 400, reaper.ImGui_Cond_FirstUseEver())
     local data, builder = get_preview_data_and_builder()
     local visible, open = reaper.ImGui_Begin(ctx, "Preview Panel", show_preview_window)
-    --reaper.ImGui_SameLine(ctx)
     reaper.ImGui_Text(ctx, string.format("Preview - %d Object(s)", #data))
     show_preview_window = open
     -- 保存当前状态到 ExtState，下次脚本启动时恢复
@@ -3133,14 +3156,14 @@ local function preview_popup(ctx)
       reaper.ImGui_TextFilter_Draw(preview_filter, ctx, "Filter")
 
       -- 字体大小输入框
-      reaper.ImGui_SameLine(ctx)
-      reaper.ImGui_PushItemWidth(ctx, -70)
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      reaper.ImGui_PushItemWidth(ctx, -85)
       local changed, new_sz = reaper.ImGui_InputInt(
         ctx,
         "Font size",
         preview_font_size,
-        2,   -- step
-        10   -- fast step (Ctrl+箭头)
+        2, -- step
+        10 -- fast step (Ctrl+箭头)
       )
       reaper.ImGui_SameLine(ctx)
       help_marker(
@@ -3507,6 +3530,17 @@ local function frame()
   reaper.ImGui_PushFont(ctx, font_large)
   reaper.ImGui_Text(ctx, 'Batch Rename Plus')
   reaper.ImGui_PopFont(ctx)
+
+  reaper.ImGui_SameLine(ctx, nil, 0)
+  local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
+  local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "Item vs Source".."Preview".."Options") -- 文字尺寸
+  local total_w = txt_w + txt_h + 8 -- 设置图标+缩放菜单
+
+  -- 如果可用宽度足够，把光标推到右侧
+  if avail > total_w then
+    reaper.ImGui_Dummy(ctx, avail - total_w, 0)
+    reaper.ImGui_SameLine(ctx, nil, 0)
+  end
 
   -- Item vs Source List 弹窗
   reaper.ImGui_SameLine(ctx)
