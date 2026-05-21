@@ -1,11 +1,9 @@
 -- @description Batch Rename Plus
--- @version 1.0.16
+-- @version 1.0.17
 -- @author zaibuyidao
 -- @changelog
---   Added a status bar to the preview panel to display error counts, duplicate-name warnings, and the current batch mode.
---   Added Ctrl+MouseWheel support in the preview panel to adjust the preview font size on the fly.
---   Added a new options menu for easier access to settings.
---   Added automatic check for ReaImGui dependency. The script now guides users to install or update ReaImGui if it is missing or outdated.
+--   Fixed Source Files mode wildcard expansion for $track, $tracknumber, and $folders.
+--   Fixed marker wildcard handling for $markerid and Marker Manager insert operations.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -1105,8 +1103,10 @@ function build_items(build_pattern, origin_name, tname, track_num, folders, take
   -- 通用 token 替换
   local name = build_pattern
   name = name:gsub("%$tracknumber", tostring(track_num))
-  name = name:gsub("%$track", tname)
   name = name:gsub("%$folders", folders)
+  name = name:gsub("(%$[Tt][Rr][Aa][Cc][Kk])", function(tok)
+    return apply_case_transform(tname, tok:sub(2))
+  end)
   -- name = name:gsub("%$item", origin_name)
   name = name:gsub("(%$[Ii][Tt][Ee][Mm])", function(tok)
     return apply_case_transform(origin_name, tok:sub(2))
@@ -1221,10 +1221,10 @@ function build_marker_manager(pattern, origin_name, marker_id, i)
   return name
 end
 
-local function build_marker_time(pattern, origin_name, region_id, i)
+local function build_marker_time(pattern, origin_name, marker_id, i)
   pattern     = pattern     or ""
   origin_name = origin_name or ""
-  region_id   = region_id   or 0
+  marker_id   = marker_id   or 0
   i           = tonumber(i) or 1
 
   -- 通用 token 替换
@@ -1240,14 +1240,21 @@ local function build_marker_time(pattern, origin_name, region_id, i)
   return name
 end
 
-function build_sources(build_pattern, origin_name, track_num, i)
+function build_sources(build_pattern, origin_name, tname, track_num, folders, i)
   build_pattern = build_pattern or ""
   origin_name   = origin_name   or ""
+  tname         = tname         or ""
   track_num     = track_num     or 0
+  folders       = folders       or ""
   i             = tonumber(i)   or 1
 
   -- 通用 token 替换
   local name = build_pattern
+  name = name:gsub("%$tracknumber", tostring(track_num))
+  name = name:gsub("%$folders", folders)
+  name = name:gsub("(%$[Tt][Rr][Aa][Cc][Kk])", function(tok)
+    return apply_case_transform(tname, tok:sub(2))
+  end)
   -- name = name:gsub("%$source", origin_name)
   name = name:gsub("(%$[Ss][Oo][Uu][Rr][Cc][Ee])", function(tok)
     return apply_case_transform(origin_name, tok:sub(2))
@@ -1950,7 +1957,7 @@ function apply_batch_marker_manager()
     end
     -- 4) Insert
     if enable_insert and insert_text ~="" then
-      local insert_str = build_marker_manager(insert_text, orig, region.index, idx)
+      local insert_str = build_marker_manager(insert_text, orig, marker.index, idx)
       local name_length = utf8.len(new_name)
       local safe_insert_pos = math.min(insert_position, 100)
       local insert_i
@@ -2109,7 +2116,10 @@ local function get_sorted_sources_data()
 
     -- 轨道信息
     local track   = reaper.GetMediaItem_Track(item)
+    local _, tname = reaper.GetTrackName(track, "")
     local tnum   = math.floor(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") or 0)
+    local parent = reaper.GetParentTrack(track)
+    local folders = parent and select(2, reaper.GetTrackName(parent, "")) or ""
 
     -- item 在时间线上的位置
     local pos    = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
@@ -2120,7 +2130,9 @@ local function get_sorted_sources_data()
       src       = src,
       path      = path,
       orig_name = path:match("[^\\/]+$") or "",
+      tname     = tname,
       track_num = tnum,
+      folders   = folders,
       position  = pos,
       seqIndex  = 0,   -- 占位，后面会填
     })
@@ -2214,14 +2226,13 @@ local function apply_batch_sources()
   for _, rec in ipairs(uniqueRecs) do
     -- 拆分文件名/扩展
     local filename = rec.path:match("[^\\/]+$") or ""
-    local base, ext = filename:match("(.+)(%.[^%.]+)$")
+    local base, ext = SplitNameExt(filename)
     local seq = rec.seqIndex
-    if not base then base, ext = filename, "" end
 
     -- Rename
     local new_base = base
     if enable_rename and rename_pattern ~= "" then
-      new_base = build_sources(rename_pattern, base, rec.track_num, seq)
+      new_base = build_sources(rename_pattern, base, rec.tname, rec.track_num, rec.folders, seq)
     end
 
     -- Replace
@@ -2230,7 +2241,7 @@ local function apply_batch_sources()
       if ignore_case then
         pat = make_case_insensitive_pattern(pat)
       end
-      local repl = build_sources(replace_text, base, rec.track_num, seq)
+      local repl = build_sources(replace_text, base, rec.tname, rec.track_num, rec.folders, seq)
       if occurrence_mode == 0 then
         new_base = new_base:gsub(pat, repl, 1)
       elseif occurrence_mode == 1 then
@@ -2270,7 +2281,7 @@ local function apply_batch_sources()
 
     -- Insert
     if enable_insert and insert_text ~= "" then
-      local insert_str = build_sources(insert_text, base, rec.track_num, seq)
+      local insert_str = build_sources(insert_text, base, rec.tname, rec.track_num, rec.folders, seq)
       local name_length = utf8.len(new_base) or #new_base
       local safe_insert_pos = math.min(insert_position, 100)
       if safe_insert_pos < 0 then safe_insert_pos = 0 end
@@ -2840,7 +2851,7 @@ local function get_preview_data_and_builder()
   
       -- 4) Insert
       if enable_insert and insert_text ~= "" then
-        local insert_str = build_marker_manager(insert_text, orig, region.index, i)
+        local insert_str = build_marker_manager(insert_text, orig, marker.index, i)
         local name_length = utf8.len(new_name)
         local safe_insert_pos = math.min(insert_position, 100)
         if safe_insert_pos < 0 then safe_insert_pos = 0 end
@@ -2936,12 +2947,13 @@ local function get_preview_data_and_builder()
     builder = function(i)
       local data     = data[i]
       local orig     = data.orig_name
+      local base, ext = SplitNameExt(orig)
       local seq      = data.seqIndex
-      local new_name = orig
+      local new_name = base
 
       -- 1) Rename
       if enable_rename then
-        new_name = build_sources(rename_pattern, orig, data.track_num, seq)
+        new_name = build_sources(rename_pattern, base, data.tname, data.track_num, data.folders, seq)
       end
       -- 2) Replace
       if enable_replace and find_text ~= "" then
@@ -2949,7 +2961,7 @@ local function get_preview_data_and_builder()
         if ignore_case then
           pat = make_case_insensitive_pattern(pat)
         end
-        local repl = build_sources(replace_text or "", orig, data.track_num, seq)
+        local repl = build_sources(replace_text or "", base, data.tname, data.track_num, data.folders, seq)
         if occurrence_mode == 0 then
           new_name = new_name:gsub(pat, repl, 1)
         elseif occurrence_mode == 1 then
@@ -2983,7 +2995,7 @@ local function get_preview_data_and_builder()
       end
       -- 4) Insert
       if enable_insert and insert_text ~= "" then
-        local insert_str = build_sources(insert_text, orig, data.track_num, seq)
+        local insert_str = build_sources(insert_text, base, data.tname, data.track_num, data.folders, seq)
         local name_length = utf8.len(new_name) or #new_name
         local safe_insert_pos = math.max(0, math.min(insert_position, 100))
         local insert_i
@@ -2998,7 +3010,7 @@ local function get_preview_data_and_builder()
         new_name = new_name:sub(1, b - 1) .. insert_str .. new_name:sub(b)
       end
 
-      return orig, new_name
+      return orig, new_name .. ext
     end
   else
     data = {}
@@ -3411,14 +3423,14 @@ local function draw_wildcards(ctx, button_label, popup_id, target)
     "Tracks",
     "Regions",
     "Markers",
-    "Sourse Files",
+    "Source Files",
   }
   local wildcards_by_mode = {
     [0] = { "$item", "$track", "$tracknumber", "$folders", "$GUID" },
     [1] = { "$track", "$tracknumber", "$folders", "$GUID" },
     [2] = { "$region", "$regionid", "$regionidx" },
     [3] = { "$marker", "$markerid", "$markeridx" },
-    [4] = { "$source" },
+    [4] = { "$source", "$track", "$tracknumber", "$folders" },
   }
 
   reaper.ImGui_SameLine(ctx)
@@ -3703,7 +3715,7 @@ local function frame()
   elseif process_mode == 6 then
     example_text = "Example: $marker_d=0001_a=E-A_r=4"
   elseif process_mode == 7 then
-    example_text = "Example: $source_d=0001_a=E-A_r=4"
+    example_text = "Example: $track_$source_d=0001_a=E-A_r=4"
   end
 
   -- 1) Rename
@@ -3733,6 +3745,8 @@ local function frame()
     "$item for item name, $track for track name, $tracknumber for track number, $folders for track folder, $GUID for unique identifier.\n\n" ..
     "Tracks wildcards: \n" ..
     "$track for track name, $tracknumber for track number, $folders for track folder, $GUID for unique identifier.\n\n" ..
+    "Source Files wildcards: \n" ..
+    "$source for source file name, $track for track name, $tracknumber for track number, $folders for track folder.\n\n" ..
     "General tags: d=n for number increment, d=start-end for number cycle, a=c for letter increment, a=start-end for letter cycle, r=n for random string.\n\n" ..
     "Modes: rename, replace, remove or insert. Enable cycle mode to loop numbers or letters. Sorting options: track, sequential or timeline."
   )
@@ -3856,7 +3870,7 @@ local function frame()
   -- reaper.ImGui_SeparatorText(ctx, 'Options')
   reaper.ImGui_Separator(ctx)
 
-  local changed7, newCycle = reaper.ImGui_Checkbox(ctx, "Range Cycle Mode", use_cycle_mode)
+  local changed7, newCycle = reaper.ImGui_Checkbox(ctx, "Range Cycle", use_cycle_mode)
   if changed7 then use_cycle_mode = newCycle end
   reaper.ImGui_SameLine(ctx)
   -- 帮助
