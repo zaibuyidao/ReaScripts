@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.178
+-- @version 1.0.179
 -- @changelog
---   Fixed an issue where the filename was missing when dragging in a full audio track.
---   Support reaper_soundmole-x64.dll v0.0.11
+--   Improved cache directory switching logic with real-time runtime sync for waveform and Freesound caches, while properly isolating old cache jobs and indexes.
+--   Support reaper_soundmole-x64.dll v0.0.13
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

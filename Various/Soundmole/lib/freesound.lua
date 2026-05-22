@@ -13,6 +13,17 @@ function M.configure(opts)
   if opts.script_path and opts.script_path ~= "" then script_path = opts.script_path end
   if opts.ext_section and opts.ext_section ~= "" then EXT_SECTION = opts.ext_section end
   if opts.colors then colors = opts.colors end
+  if opts.cache_dir and opts.cache_dir ~= "" then
+    FS = FS or {}
+    local new_cache_dir = (type(normalize_path) == "function") and normalize_path(opts.cache_dir, true) or opts.cache_dir
+    if FS.CACHE_DIR ~= new_cache_dir then
+      FS.CACHE_DIR = new_cache_dir
+      FS._cache_dir_ready = false
+      FS._cache_index_ready = false
+      FS._download_dir_ready = false
+      FS._download_dir = nil
+    end
+  end
   return M
 end
 
@@ -865,8 +876,13 @@ function FS_norm_http(p)
 end
 
 function FS_cache_dir()
-  local d = FS_join(script_path, "freesound_cache")
   FS = FS or {}
+  local d = FS.CACHE_DIR or _G.soundmole_fs_cache_dir or FS_join(script_path, "freesound_cache")
+  if type(normalize_path) == "function" then
+    d = normalize_path(d, true)
+  elseif not (d:sub(-1) == "/" or d:sub(-1) == "\\") then
+    d = d .. sep
+  end
   if FS._cache_dir ~= d or not FS._cache_dir_ready then
     FS_ensure_dir(d)
     FS._cache_dir = d

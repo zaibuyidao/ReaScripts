@@ -366,6 +366,71 @@ local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
 local VERTICAL_ZOOM_MIN = 0.3
 local VERTICAL_ZOOM_MAX = 4.0
 
+function ClearWaveformRuntimeCache()
+  waveform_task_queue = {}
+  peaks, pixel_cnt, src_len, channel_count = nil, nil, nil, nil
+  last_pixel_cnt, last_view_len, last_scroll = nil, nil, nil
+  last_wave_info = nil
+
+  if files_idx_cache and not files_idx_cache._handle then
+    for _, info in ipairs(files_idx_cache) do
+      if type(info) == "table" then
+        info._thumb_waveform = nil
+        info._last_thumb_w = nil
+        info._wf_state = nil
+        info._wf_enqueued = nil
+        info._loading_waveform = false
+        info._smwf_path = nil
+      end
+    end
+  end
+end
+
+function ApplyWaveformCacheDir(new_dir, persist, clear_runtime)
+  local old_dir = cache_dir
+  cache_dir = normalize_path((new_dir and new_dir ~= "") and new_dir or DEFAULT_CACHE_DIR, true)
+  EnsureCacheDir(cache_dir)
+  if HAVE_SM_WFC and reaper.SM_SetCacheBaseDir then
+    reaper.SM_SetCacheBaseDir(cache_dir)
+  end
+  if persist ~= false then
+    reaper.SetExtState(EXT_SECTION, "cache_dir", cache_dir, true)
+  end
+  if clear_runtime ~= false and old_dir ~= cache_dir then
+    ClearWaveformRuntimeCache()
+  end
+  return cache_dir
+end
+
+function ApplyFreesoundCacheDir(new_dir, persist, clear_runtime)
+  local old_dir = fs_cache_dir
+  fs_cache_dir = normalize_path((new_dir and new_dir ~= "") and new_dir or DEFAULT_FS_CACHE_DIR, true)
+  EnsureCacheDir(fs_cache_dir)
+  _G.soundmole_fs_cache_dir = fs_cache_dir
+
+  if Freesound and Freesound.configure then
+    Freesound.configure({ cache_dir = fs_cache_dir })
+  elseif FS then
+    FS.CACHE_DIR = fs_cache_dir
+    FS._cache_dir_ready = false
+    FS._cache_index_ready = false
+  end
+
+  if FS and old_dir ~= fs_cache_dir then
+    FS._cache_dir_ready = false
+    FS._cache_index_ready = false
+    FS._download_dir_ready = false
+    FS._download_dir = nil
+  end
+  if persist ~= false then
+    reaper.SetExtState(EXT_SECTION, "fs_cache_dir", fs_cache_dir, true)
+  end
+  if clear_runtime ~= false and old_dir ~= fs_cache_dir then
+    ClearWaveformRuntimeCache()
+  end
+  return fs_cache_dir
+end
+
 function GetWaveformPreviewHeight()
   return UIScaleF(base_img_h + img_h_offset)
 end
@@ -577,6 +642,9 @@ end
 
 -- 保存设置
 function SaveSettings()
+  ApplyWaveformCacheDir(cache_dir, false, false)
+  ApplyFreesoundCacheDir(fs_cache_dir, false, false)
+
   -- 基础设置
   -- reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
   reaper.SetExtState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
@@ -841,6 +909,7 @@ if Freesound and Freesound.configure then
   Freesound.configure({
     script_path = script_path,
     ext_section = EXT_SECTION,
+    cache_dir = fs_cache_dir,
     colors = colors,
   })
 end
@@ -1285,7 +1354,8 @@ end
 
 --------------------------------------------- 波形缓存扩展相关 ---------------------------------------------
 
-if HAVE_SM_WFC then reaper.SM_SetCacheBaseDir(DEFAULT_CACHE_DIR) end -- 设置波形缓存路径
+ApplyWaveformCacheDir(cache_dir, false, false) -- 设置波形缓存路径
+ApplyFreesoundCacheDir(fs_cache_dir, false, false)
 
  -- 每帧任务上限
 MAX_WAVEFORM_PER_FRAME =  8
@@ -16838,15 +16908,13 @@ function loop()
         local changed_cache_dir, new_cache_dir = reaper.ImGui_InputText(ctx, "##cache_dir", cache_dir, 512)
         reaper.ImGui_PopItemWidth(ctx)
         if changed_cache_dir then
-          cache_dir = normalize_path(new_cache_dir, true)
-          reaper.SetExtState(EXT_SECTION, "cache_dir", cache_dir, true)
+          ApplyWaveformCacheDir(new_cache_dir, true, true)
         end
         reaper.ImGui_SameLine(ctx, nil, 8)
         if reaper.ImGui_Button(ctx, T("Browse").."##SelectCacheDir", 60) then
           local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", cache_dir)
           if rv == 1 and out and out ~= "" then
-            cache_dir = normalize_path(out, true)
-            reaper.SetExtState(EXT_SECTION, "cache_dir", cache_dir, true)
+            ApplyWaveformCacheDir(out, true, true)
           end
         end
         reaper.ImGui_SameLine(ctx, nil, 8)
@@ -16862,15 +16930,13 @@ function loop()
         local changed_fs_cache_dir, new_fs_cache_dir = reaper.ImGui_InputText(ctx, "##fs_cache_dir", fs_cache_dir, 512)
         reaper.ImGui_PopItemWidth(ctx)
         if changed_fs_cache_dir then
-          fs_cache_dir = normalize_path(new_fs_cache_dir, true)
-          reaper.SetExtState(EXT_SECTION, "fs_cache_dir", fs_cache_dir, true)
+          ApplyFreesoundCacheDir(new_fs_cache_dir, true, true)
         end
         reaper.ImGui_SameLine(ctx, nil, 8)
         if reaper.ImGui_Button(ctx, T("Browse").."##SelectFsCacheDir", 60) then
           local rv, out = reaper.JS_Dialog_BrowseForFolder("Select a directory:", fs_cache_dir)
           if rv == 1 and out and out ~= "" then
-            fs_cache_dir = normalize_path(out, true)
-            reaper.SetExtState(EXT_SECTION, "fs_cache_dir", fs_cache_dir, true)
+            ApplyFreesoundCacheDir(out, true, true)
           end
         end
         reaper.ImGui_SameLine(ctx, nil, 8)
@@ -16976,6 +17042,8 @@ function loop()
           wait_nextbar_play       = false           -- 重置等待小节末尾播放为关闭
           keep_preview_rate_pitch_on_insert = false -- 重置插入时保持预览速率和音高为关闭
 
+          ApplyWaveformCacheDir(cache_dir, false, true)
+          ApplyFreesoundCacheDir(fs_cache_dir, false, true)
           SaveSettings() -- 保存设置
           MarkFontDirty()
           CollectFiles()
