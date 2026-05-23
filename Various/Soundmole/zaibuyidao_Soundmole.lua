@@ -1744,6 +1744,10 @@ function CollectFiles()
 
   -- 切换模式后清空表格列表波形预览队列
   waveform_task_queue = {}
+
+  if type(RequestActiveSearchRefresh) == "function" then
+    RequestActiveSearchRefresh()
+  end
 end
 
 --------------------------------------------- 播放控件相关 ---------------------------------------------
@@ -7046,6 +7050,10 @@ function RefreshFolderFiles(dir)
   -- 切换模式后清空表格列表波形预览队列
   waveform_task_queue = {}
 
+  if type(RequestActiveSearchRefresh) == "function" then
+    RequestActiveSearchRefresh()
+  end
+
   -- 图片资源释放
   -- if last_cover_img and reaper.ImGui_DestroyImage then
   --   reaper.ImGui_DestroyImage(last_cover_img)
@@ -7665,6 +7673,7 @@ function ApplySearchFromHistory(idx)
   local kw = keyword or ""
   _G.commit_filter_text    = kw
   _G.just_committed_filter = true
+  RequestSearchRefresh()
   last_search_input        = kw
   search_input_timer       = reaper.time_precise()
 end
@@ -7846,6 +7855,12 @@ function GetCurrentListKey()
     return "CUSTOMFOLDER:" .. tostring(tree_state.cur_custom_folder or "default")
   elseif collect_mode == COLLECT_MODE_TREE or collect_mode == COLLECT_MODE_SHORTCUT then
     return "DIR:" .. tostring(tree_state.cur_path or "default")
+  elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
+    return "SHORTCUT_MIRROR:" .. tostring(tree_state.cur_path or "default")
+  elseif collect_mode == COLLECT_MODE_SAMEFOLDER then
+    return "SAMEFOLDER:" .. tostring(tree_state.cur_path or "default")
+  elseif collect_mode == COLLECT_MODE_FREESOUND then
+    return "FREESOUND"
   elseif collect_mode == COLLECT_MODE_ITEMS then
     return "ITEMS"
   elseif collect_mode == COLLECT_MODE_DIR then
@@ -7856,8 +7871,36 @@ function GetCurrentListKey()
     return "ALL_ITEMS"
   elseif collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
     return "RECENTLY_PLAYED"
+  elseif collect_mode == COLLECT_MODE_PLAY_HISTORY then
+    return "PLAY_HISTORY"
   else
     return "UNKNOWN"
+  end
+end
+
+function RequestSearchRefresh()
+  _G.SM_ForceFilterRefresh = true
+
+  local s = _G._soundmole_static
+  if not s then return end
+
+  local key = type(GetCurrentListKey) == "function" and GetCurrentListKey() or nil
+  if key then
+    if s.filtered_list_map then s.filtered_list_map[key] = nil end
+    if s.last_filter_text_map then s.last_filter_text_map[key] = nil end
+  end
+end
+
+function RequestActiveSearchRefresh()
+  local ft = _G.commit_filter_text
+  local has_text = type(ft) == "string" and ft:match("%S") ~= nil
+  local has_temp = type(temp_search_keyword) == "string" and temp_search_keyword ~= ""
+  local has_ucs_cat = type(temp_ucs_cat_keyword) == "string" and temp_ucs_cat_keyword ~= ""
+  local has_ucs_sub = type(temp_ucs_sub_keyword) == "string" and temp_ucs_sub_keyword ~= ""
+  local has_locked = _G.filter_lock_enabled and type(_G.locked_filter_terms) == "table" and #_G.locked_filter_terms > 0
+
+  if has_text or has_temp or has_ucs_cat or has_ucs_sub or has_locked then
+    RequestSearchRefresh()
   end
 end
 
@@ -11752,6 +11795,7 @@ function loop()
           local txt = reaper.ImGui_TextFilter_Get(filename_filter) or ""
           _G.commit_filter_text = txt
           _G.just_committed_filter = true
+          RequestSearchRefresh()
 
           -- Enter模式: 立刻保存到最近搜索
           if txt ~= "" then
@@ -11817,6 +11861,7 @@ function loop()
           filename_filter = reaper.ImGui_CreateTextFilter(final_text)
           _G.commit_filter_text = final_text
           _G.just_committed_filter = true
+          RequestSearchRefresh()
 
           reaper.ImGui_SetWindowFocus(ctx)
           _G._live_prev = final_text
@@ -14097,6 +14142,7 @@ function loop()
                 local kw = keyword or ""
                 _G.commit_filter_text    = kw
                 _G.just_committed_filter = true -- 如果外部有提交后写入最近搜索的一次性逻辑可用
+                RequestSearchRefresh()
                 last_search_input        = kw
                 search_input_timer       = reaper.time_precise()
               end
@@ -14657,6 +14703,7 @@ function loop()
                     if filename_filter then reaper.ImGui_TextFilter_Set(filename_filter, node.term) end
                     _G.commit_filter_text = node.term
                     _G.just_committed_filter = true
+                    RequestSearchRefresh()
                     search_input_timer = reaper.time_precise()
                   end
 
@@ -14997,13 +15044,16 @@ function loop()
         local filtered_list    = static.filtered_list_map[current_db_key]
 
         -- 检测变更
-        local force_refresh = (_G.SM_ForceFilterRefresh == true)
+        local force_refresh = (_G.SM_ForceFilterRefresh == true) or (_G.just_committed_filter == true)
         local filter_changed = (eff ~= last_filter_text) or force_refresh
-        if force_refresh then _G.SM_ForceFilterRefresh = false end
+        if force_refresh then
+          _G.SM_ForceFilterRefresh = false
+          _G.just_committed_filter = false
+        end
 
         local sort_changed = (sort_specs_str ~= last_sort_specs)
         -- 检查是否需要排序
-        if sort_changed and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and reaper.APIExists("SM_DB_Sort") then
+        if sort_changed and not filter_changed and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and reaper.APIExists("SM_DB_Sort") then
           -- 确定排序句柄
           local target_ctx = nil
           local is_search_view = false
@@ -15270,7 +15320,11 @@ function loop()
           end
           static.filtered_list_map[current_db_key] = filtered_list
           static.last_filter_text_map[current_db_key] = eff
-          static.last_sort_specs_map[current_db_key]  = sort_specs_str
+          if filter_changed and filtered_list and filtered_list._handle and #sort_specs > 0 then
+            static.last_sort_specs_map[current_db_key] = ""
+          else
+            static.last_sort_specs_map[current_db_key] = sort_specs_str
+          end
         end
 
         ::continue_frame::

@@ -1,8 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.179
+-- @version 1.0.180
 -- @changelog
---   Improved cache directory switching logic with real-time runtime sync for waveform and Freesound caches, while properly isolating old cache jobs and indexes.
+--   Switching databases, modes, or folders now automatically reapplies active search tags and refreshes results.
+--   Pressing Enter repeatedly with the same keyword now forces the search filter to refresh again.
+--   Fixed an issue where sorting refreshed before search filtering, causing active search tags to not correctly filter results.
 --   Support reaper_soundmole-x64.dll v0.0.13
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
