@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="7e8b884c952c127190f5ea040bf8714e5323dea1">
+<index version="1" name="zaibuyidao Scripts" commit="6c2476cc2c5061d84278cb72ccc8bc50ba4321c4">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8164,6 +8164,23 @@ Normalized wildcard expansion across modes, including case-insensitive wildcard 
 Hardened wildcard/specifier replacement paths across all batch modes so replacement text is treated literally.
 Aligned Source Files preview with the actual on-disk rename behavior.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/30f076aa62d87970e82f9860d90ca9d140594b9c/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
+      </version>
+      <version name="1.0.19" author="zaibuyidao" time="2026-05-23T08:37:24Z">
+        <changelog><![CDATA[Added Regions (Selected Regions) mode with support for REAPER selected regions.
+Added Markers (Selected Markers) mode with support for REAPER selected markers.
+Added an Options toggle to show or hide the main preview table.
+Extended the Options table font-size setting to also affect Compare (Item vs Source List) table text.
+Added an Options toggle to show or hide all help markers.
+Added Ctrl+LeftClick cell copying support to the Preview popup table.
+Added a Ctrl+LeftClick cell-copying help marker to the Preview popup.
+Added Copy Sources and Refresh buttons to the Compare popup.
+Added a Message column to the Compare popup for per-row comparison feedback.
+Moved the Preview popup font-size control into Options and limited it to popup table content.
+Added a Match Src option for Source Rename mode (enabled by default). When disabled, sources can be renamed without changing item names.
+Improved the Batch Mode UI layout for cleaner mode selection and better visual grouping.
+Stabilized the Preview popup window title with a hidden ID to prevent window position jumping when object counts change.
+Fixed Ctrl+Enter apply handling so the no-changes warning no longer appears immediately after a successful rename.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c2476cc2c5061d84278cb72ccc8bc50ba4321c4/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
