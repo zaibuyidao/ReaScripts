@@ -1,5 +1,5 @@
 -- @description Copy/Paste Time Selection Content
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -654,14 +654,6 @@ local copy_options = {
   tempo = load_bool("copy_tempo", true)
 }
 
-local paste_options = {
-  all = load_bool("paste_all", true),
-  items = load_bool("paste_items", true),
-  markers = load_bool("paste_markers", true),
-  regions = load_bool("paste_regions", true),
-  tempo = load_bool("paste_tempo", true)
-}
-
 local function refresh_all(options)
   options.all = options.items and options.markers and options.regions and options.tempo
 end
@@ -675,7 +667,6 @@ local function set_all(options, value)
 end
 
 refresh_all(copy_options)
-refresh_all(paste_options)
 
 local function create_ui_font(size)
   if not reaper.ImGui_CreateFont then return nil end
@@ -710,7 +701,7 @@ if font_normal then reaper.ImGui_Attach(ctx, font_normal) end
 if font_button then reaper.ImGui_Attach(ctx, font_button) end
 if font_small then reaper.ImGui_Attach(ctx, font_small) end
 
-reaper.ImGui_SetNextWindowSize(ctx, 430, 360, reaper.ImGui_Cond_FirstUseEver())
+reaper.ImGui_SetNextWindowSize(ctx, 200, 380, reaper.ImGui_Cond_FirstUseEver())
 
 local function push_font(font, size)
   if font then reaper.ImGui_PushFont(ctx, font, size) end
@@ -762,23 +753,13 @@ local function save_settings()
   save_bool("copy_markers", copy_options.markers)
   save_bool("copy_regions", copy_options.regions)
   save_bool("copy_tempo", copy_options.tempo)
-  save_bool("paste_all", paste_options.all)
-  save_bool("paste_items", paste_options.items)
-  save_bool("paste_markers", paste_options.markers)
-  save_bool("paste_regions", paste_options.regions)
-  save_bool("paste_tempo", paste_options.tempo)
 end
 
-local function draw_section(label, button_label, button_colors, options, action)
-  push_font(font_small, font_small_size)
-  -- reaper.ImGui_Text(ctx, label)
-  pop_font(font_small)
+local function draw_action_button(button_label, button_colors, options, action)
   if colored_button(button_label, button_colors) then
     save_settings()
     action(options)
   end
-  reaper.ImGui_Spacing(ctx)
-  draw_options(label, options)
 end
 
 local function loop()
@@ -789,9 +770,11 @@ local function loop()
 
   local visible, open = reaper.ImGui_Begin(ctx, TITLE, true)
   if visible then
-    draw_section(T.copy, T.copy_button, { 0x2D8C7EFF, 0x36A997FF, 0x24766BFF }, copy_options, copy_time_selection)
+    draw_action_button(T.copy_button, { 0x2D8C7EFF, 0x36A997FF, 0x24766BFF }, copy_options, copy_time_selection)
+    -- reaper.ImGui_Spacing(ctx)
+    draw_action_button(T.paste_button, { 0xC9772BFF, 0xD98B42FF, 0xAA6322FF }, copy_options, paste_time_selection)
     reaper.ImGui_Separator(ctx)
-    draw_section(T.paste, T.paste_button, { 0xC9772BFF, 0xD98B42FF, 0xAA6322FF }, paste_options, paste_time_selection)
+    draw_options("shared", copy_options)
     reaper.ImGui_Separator(ctx)
     push_font(font_small, font_small_size)
     reaper.ImGui_TextWrapped(ctx, last_status)
