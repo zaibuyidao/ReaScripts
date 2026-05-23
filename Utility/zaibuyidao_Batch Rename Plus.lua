@@ -1,21 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.19
+-- @version 1.0.20
 -- @author zaibuyidao
 -- @changelog
---   Added Regions (Selected Regions) mode with support for REAPER selected regions.
---   Added Markers (Selected Markers) mode with support for REAPER selected markers.
---   Added an Options toggle to show or hide the main preview table.
---   Extended the Options table font-size setting to also affect Compare (Item vs Source List) table text.
---   Added an Options toggle to show or hide all help markers.
---   Added Ctrl+LeftClick cell copying support to the Preview popup table.
---   Added a Ctrl+LeftClick cell-copying help marker to the Preview popup.
---   Added Copy Sources and Refresh buttons to the Compare popup.
---   Added a Message column to the Compare popup for per-row comparison feedback.
---   Moved the Preview popup font-size control into Options and limited it to popup table content.
---   Added a Match Src option for Source Rename mode (enabled by default). When disabled, sources can be renamed without changing item names.
---   Improved the Batch Mode UI layout for cleaner mode selection and better visual grouping.
---   Stabilized the Preview popup window title with a hidden ID to prevent window position jumping when object counts change.
---   Fixed Ctrl+Enter apply handling so the no-changes warning no longer appears immediately after a successful rename.
+--   Added language switching support. Currently supports English, Simplified Chinese, and Traditional Chinese.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -72,8 +59,587 @@ if reaper.ImGui_GetBuiltinPath then
   ImGui = require 'imgui' '0.9'
 end
 
+local TEXT = {
+  zh_CN = {
+    title = "Batch Rename Plus",
+    window_title = "Batch Rename Plus - REAPER 可扩展批量重命名",
+    error = "错误",
+    ok = "确定",
+    cancel = "取消",
+    items = "媒体对象",
+    tracks = "轨道",
+    regions = "区域",
+    markers = "标记",
+    source_files = "源文件",
+    media = "媒体",
+    manager = "管理器",
+    time_selection = "时间选区",
+    selected_regions = "选中的区域",
+    selected_items = "选中的媒体对象",
+    selected_markers = "选中的标记",
+    batch_items = "媒体对象",
+    batch_tracks = "轨道",
+    batch_regions_manager = "区域 / 管理器",
+    batch_regions_time = "区域 / 时间选区",
+    batch_regions_selected = "区域 / 选中的区域",
+    batch_regions_items = "区域 / 选中的媒体对象",
+    batch_markers_manager = "标记 / 管理器",
+    batch_markers_selected = "标记 / 选中的标记",
+    batch_markers_time = "标记 / 时间选区",
+    batch_sources_items = "源文件 / 选中的媒体对象",
+    tip_items = "提示: 在编排视图中选择媒体对象。",
+    tip_tracks = "提示: 在轨道控制面板中选择轨道。",
+    tip_regions_manager = "提示: 打开区域/标记管理器并选择区域。",
+    tip_regions_time = "提示: 在编排视图中拖拽创建用于区域的时间选区。",
+    tip_regions_selected = "提示: 在编排标尺中选择区域。",
+    tip_regions_items = "提示: 在编排视图中选择媒体对象，以定位其所在区域。",
+    tip_markers_manager = "提示: 打开区域/标记管理器并选择标记。",
+    tip_markers_selected = "提示: 在编排标尺中选择标记。",
+    tip_markers_time = "提示: 在编排视图中拖拽创建用于标记的时间选区。",
+    tip_sources_items = "提示: 在编排视图中选择带有源文件的媒体对象。",
+    save_preset = "保存预设",
+    rename_preset = "重命名预设",
+    save_preset_title = "输入新预设名称: ",
+    rename_preset_title = "输入预设的新名称: ",
+    no_preset = "无预设",
+    reset_factory = "重置为出厂默认值",
+    save_preset_menu = "保存预设...",
+    delete_preset = "删除预设",
+    rename_preset_menu = "重命名预设...",
+    export_presets = "导出预设",
+    import_presets = "导入预设",
+    text_files_filter = "文本文件 (*.txt)\0*.txt\0所有文件\0*.*\0",
+    failed_open_write = "无法打开文件写入: \n%s",
+    failed_open_read = "无法打开文件读取: \n%s",
+    exported_presets = "已导出 %d 个预设到: \n%s",
+    imported_presets = "已从以下文件导入 %d 个预设: \n%s",
+    preview_objects = "预览 - %d 个对象",
+    compare_objects = "比较 - %d 个对象",
+    resize = "调整大小",
+    horizontal_scroll = "水平滚动",
+    vertical_scroll = "垂直滚动",
+    before = "之前",
+    after = "之后",
+    message = "消息",
+    index = "序号",
+    item_name = "媒体对象名称",
+    source_name = "源文件名称",
+    empty_name = "错误: 名称为空。",
+    empty_slot = "空槽位。",
+    random_preview = "随机(%s)",
+    counts_status = "%d 个错误，%d 个重复。",
+    mode = "模式",
+    copy_cell_help = "按住 Ctrl 并左键单击可复制单元格内容。\n",
+    filter = "筛选: ",
+    compare = "比较",
+    preview = "预览",
+    options = "选项",
+    interface = "界面",
+    language = "界面语言",
+    language_english = "English",
+    language_simplified_chinese = "简体中文",
+    language_traditional_chinese = "繁體中文",
+    preview_options = "预览",
+    support = "支持",
+    support_text_1 = "这个工具是免费且开源的，并且会一直如此。",
+    support_text_2 = "不过如果你愿意捐赠支持，我会非常感谢。",
+    visit_soundengine = "访问 soundengine.cn",
+    close = "关闭",
+    popup_table_font_size = "弹窗表格字号",
+    show_main_preview_table = "显示主预览表格",
+    show_help_markers = "显示帮助提示",
+    save_and_close = "保存并关闭",
+    reset = "重置",
+    no_items_selected_compare = "未选择媒体对象。\n请至少选择一个媒体对象。",
+    different_same = "相同: %s",
+    different = "不同",
+    copy_table = "复制表格",
+    copy_items = "复制对象",
+    copy_sources = "复制源文件",
+    refresh = "刷新",
+    apply_to = "应用到",
+    target = "目标",
+    choose_target_help = "选择 Batch Rename Plus 要重命名的对象。\n\n区域和标记会按选择方式分组: 管理器、时间选区、编排视图选择，或选中的媒体对象。",
+    settings = "设置",
+    example = "示例: ",
+    rename = "重命名",
+    replace = "替换",
+    remove = "删除",
+    insert = "插入",
+    wildcards = "通配符",
+    specifiers = "格式符",
+    pattern = "模式",
+    find_what = "查找内容",
+    replace_with = "替换为",
+    ignore_case = "忽略大小写",
+    occurrence = "出现位置",
+    first = "首次",
+    last = "末次",
+    all = "全部",
+    count = "数量",
+    at_position = "位置",
+    at_position_insert = "位置",
+    from = "从",
+    from_insert = "从",
+    beginning = "开头",
+    ending = "结尾",
+    to_insert = "插入内容",
+    behavior = "行为",
+    range_cycle = "范围循环",
+    match_src = "匹配源",
+    sort_by = "排序方式",
+    track = "轨道",
+    sequence = "顺序",
+    timeline = "时间线",
+    open_region_marker_manager = "打开区域/标记管理器",
+    clear = "清空",
+    rename_all = "全部重命名",
+    rename_all_display = "全部重命名",
+    wildcard_help = "媒体对象通配符: \n$item 表示媒体对象名称，$track 表示轨道名称，$tracknumber 表示轨道编号，$folders 表示轨道文件夹，$GUID 表示唯一标识符。\n\n轨道通配符: \n$track 表示轨道名称，$tracknumber 表示轨道编号，$folders 表示轨道文件夹，$GUID 表示唯一标识符。\n\n源文件通配符: \n$source 表示源文件名，$track 表示轨道名称，$tracknumber 表示轨道编号，$folders 表示轨道文件夹。\n\n通用标签: d=n 表示数字递增，d=start-end 表示数字循环，a=c 表示字母递增，a=start-end 表示字母循环，r=n 表示随机字符串。\n\n模式: 重命名、替换、删除或插入。启用循环模式后，数字或字母会循环。排序选项: 轨道、顺序或时间线。",
+    slider_help = "按住 Alt 拖动滑块可进行更细微的调整。\n\n如需超精细控制，请按住 Alt + Shift 拖动。\n\n要输入指定数值，请按住 Ctrl 并左键单击滑块后输入。",
+    range_cycle_help = "启用循环模式后，字母或数字会在指定范围内连续循环。\n\n例如，'a=A-C' 会按 A - B - C - A - ... 循环，'d=1-3' 会按 1 - 2 - 3 - 1 - ... 循环。\n你也可以指定反向范围，例如 'a=Z-X' 或 'd=9-7'，用于降序循环。",
+    match_src_help = "启用后，重命名源文件时也会把媒体对象/Take 名称更新为新的源文件名。\n\n关闭后，只重命名源文件，媒体对象/Take 名称保持不变。",
+    rename_all_help = "按 Ctrl+Enter 可立即执行“全部重命名”。",
+    no_media_items_selected = "未选择媒体对象。",
+    no_tracks_selected = "未选择轨道。",
+    no_options_selected = "未选择任何功能。请至少勾选一个功能。",
+    no_changes = "未应用任何更改。请调整设置。",
+    open_region_marker_manager_msg = "请先打开区域/标记管理器窗口。\n\n菜单路径: 视图 - 区域/标记管理器",
+    no_regions_manager = "区域/标记管理器中未选择区域。",
+    no_time_selection = "没有时间选区。",
+    no_regions_time = "时间选区内未找到区域。",
+    no_regions_arrange = "编排视图中未选择区域。",
+    no_regions_items = "未找到选中媒体对象所在的区域。",
+    no_markers_manager = "区域/标记管理器中未选择标记。",
+    no_markers_arrange = "编排视图中未选择标记。",
+    no_markers_time = "时间选区内未找到标记。",
+    selected_region_marker_requires_newer = "选中的区域/标记需要 REAPER 7.73 或更新版本。",
+    selected_items_no_audio = "选中的媒体对象没有音频源或均为 MIDI！",
+    no_valid_source_files = "选中的媒体对象没有有效的音频源文件。",
+    undo_batch = "Batch Rename Plus",
+    undo_no_changes = "Batch Rename Plus (无更改)",
+    undo_no_source_files = "Batch Rename Plus (无源文件)",
+    renaming_errors_header = "\n---- 重命名已完成，但发生以下错误: ----\n",
+    does_not_exist = "不存在: %s",
+    failed_rename = "失败: %s <--> %s (%s)",
+    unknown = "未知"
+  },
+  zh_TW = {
+    title = "Batch Rename Plus",
+    window_title = "Batch Rename Plus - REAPER 可擴充批次重新命名",
+    error = "錯誤",
+    ok = "確定",
+    cancel = "取消",
+    items = "媒體物件",
+    tracks = "軌道",
+    regions = "區域",
+    markers = "標記",
+    source_files = "來源檔案",
+    media = "媒體",
+    manager = "管理器",
+    time_selection = "時間選取",
+    selected_regions = "選取的區域",
+    selected_items = "選取的媒體物件",
+    selected_markers = "選取的標記",
+    batch_items = "媒體物件",
+    batch_tracks = "軌道",
+    batch_regions_manager = "區域 / 管理器",
+    batch_regions_time = "區域 / 時間選取",
+    batch_regions_selected = "區域 / 選取的區域",
+    batch_regions_items = "區域 / 選取的媒體物件",
+    batch_markers_manager = "標記 / 管理器",
+    batch_markers_selected = "標記 / 選取的標記",
+    batch_markers_time = "標記 / 時間選取",
+    batch_sources_items = "來源檔案 / 選取的媒體物件",
+    tip_items = "提示: 在編曲視圖中選取媒體物件。",
+    tip_tracks = "提示: 在軌道控制面板中選取軌道。",
+    tip_regions_manager = "提示: 開啟區域/標記管理器並選取區域。",
+    tip_regions_time = "提示: 在編曲視圖中拖曳建立用於區域的時間選取。",
+    tip_regions_selected = "提示: 在編曲標尺中選取區域。",
+    tip_regions_items = "提示: 在編曲視圖中選取媒體物件，以定位其所在區域。",
+    tip_markers_manager = "提示: 開啟區域/標記管理器並選取標記。",
+    tip_markers_selected = "提示: 在編曲標尺中選取標記。",
+    tip_markers_time = "提示: 在編曲視圖中拖曳建立用於標記的時間選取。",
+    tip_sources_items = "提示: 在編曲視圖中選取帶有來源檔案的媒體物件。",
+    save_preset = "儲存預設",
+    rename_preset = "重新命名預設",
+    save_preset_title = "輸入新預設名稱: ",
+    rename_preset_title = "輸入預設的新名稱: ",
+    no_preset = "無預設",
+    reset_factory = "重設為出廠預設",
+    save_preset_menu = "儲存預設...",
+    delete_preset = "刪除預設",
+    rename_preset_menu = "重新命名預設...",
+    export_presets = "匯出預設",
+    import_presets = "匯入預設",
+    text_files_filter = "文字檔案 (*.txt)\0*.txt\0所有檔案\0*.*\0",
+    failed_open_write = "無法開啟檔案寫入: \n%s",
+    failed_open_read = "無法開啟檔案讀取: \n%s",
+    exported_presets = "已匯出 %d 個預設到: \n%s",
+    imported_presets = "已從以下檔案匯入 %d 個預設: \n%s",
+    preview_objects = "預覽 - %d 個物件",
+    compare_objects = "比較 - %d 個物件",
+    resize = "調整大小",
+    horizontal_scroll = "水平捲動",
+    vertical_scroll = "垂直捲動",
+    before = "之前",
+    after = "之後",
+    message = "訊息",
+    index = "序號",
+    item_name = "媒體物件名稱",
+    source_name = "來源檔案名稱",
+    empty_name = "錯誤: 名稱為空。",
+    empty_slot = "空白欄位。",
+    random_preview = "隨機(%s)",
+    counts_status = "%d 個錯誤，%d 個重複。",
+    mode = "模式",
+    copy_cell_help = "按住 Ctrl 並左鍵點擊可複製儲存格內容。\n",
+    filter = "篩選: ",
+    compare = "比較",
+    preview = "預覽",
+    options = "選項",
+    interface = "介面",
+    language = "介面語言",
+    language_english = "English",
+    language_simplified_chinese = "简体中文",
+    language_traditional_chinese = "繁體中文",
+    preview_options = "預覽",
+    support = "支持",
+    support_text_1 = "這個工具是免費且開源的，並且會一直如此。",
+    support_text_2 = "不過如果你願意捐贈支持，我會非常感謝。",
+    visit_soundengine = "造訪 soundengine.cn",
+    close = "關閉",
+    popup_table_font_size = "彈窗表格字號",
+    show_main_preview_table = "顯示主預覽表格",
+    show_help_markers = "顯示說明提示",
+    save_and_close = "儲存並關閉",
+    reset = "重設",
+    no_items_selected_compare = "未選取媒體物件。\n請至少選取一個媒體物件。",
+    different_same = "相同: %s",
+    different = "不同",
+    copy_table = "複製表格",
+    copy_items = "複製物件",
+    copy_sources = "複製來源",
+    refresh = "重新整理",
+    apply_to = "套用到",
+    target = "目標",
+    choose_target_help = "選擇 Batch Rename Plus 要重新命名的物件。\n\n區域和標記會依選取方式分組: 管理器、時間選取、編曲視圖選取，或選取的媒體物件。",
+    settings = "設定",
+    example = "範例: ",
+    rename = "重新命名",
+    replace = "取代",
+    remove = "刪除",
+    insert = "插入",
+    wildcards = "萬用字元",
+    specifiers = "格式符",
+    pattern = "模式",
+    find_what = "尋找內容",
+    replace_with = "取代為",
+    ignore_case = "忽略大小寫",
+    occurrence = "出現位置",
+    first = "首次",
+    last = "末次",
+    all = "全部",
+    count = "數量",
+    at_position = "位置",
+    at_position_insert = "位置",
+    from = "從",
+    from_insert = "從",
+    beginning = "開頭",
+    ending = "結尾",
+    to_insert = "插入內容",
+    behavior = "行為",
+    range_cycle = "範圍循環",
+    match_src = "符合來源",
+    sort_by = "排序方式",
+    track = "軌道",
+    sequence = "順序",
+    timeline = "時間線",
+    open_region_marker_manager = "開啟區域/標記管理器",
+    clear = "清空",
+    rename_all = "全部重新命名",
+    rename_all_display = "全部重新命名",
+    wildcard_help = "媒體物件萬用字元: \n$item 表示媒體物件名稱，$track 表示軌道名稱，$tracknumber 表示軌道編號，$folders 表示軌道資料夾，$GUID 表示唯一識別碼。\n\n軌道萬用字元: \n$track 表示軌道名稱，$tracknumber 表示軌道編號，$folders 表示軌道資料夾，$GUID 表示唯一識別碼。\n\n來源檔案萬用字元: \n$source 表示來源檔名，$track 表示軌道名稱，$tracknumber 表示軌道編號，$folders 表示軌道資料夾。\n\n通用標籤: d=n 表示數字遞增，d=start-end 表示數字循環，a=c 表示字母遞增，a=start-end 表示字母循環，r=n 表示隨機字串。\n\n模式: 重新命名、取代、刪除或插入。啟用循環模式後，數字或字母會循環。排序選項: 軌道、順序或時間線。",
+    slider_help = "按住 Alt 拖曳滑桿可進行更細微的調整。\n\n如需超精細控制，請按住 Alt + Shift 拖曳。\n\n要輸入指定數值，請按住 Ctrl 並左鍵點擊滑桿後輸入。",
+    range_cycle_help = "啟用循環模式後，字母或數字會在指定範圍內連續循環。\n\n例如，'a=A-C' 會按 A - B - C - A - ... 循環，'d=1-3' 會按 1 - 2 - 3 - 1 - ... 循環。\n你也可以指定反向範圍，例如 'a=Z-X' 或 'd=9-7'，用於降序循環。",
+    match_src_help = "啟用後，重新命名來源檔案時也會把媒體物件/Take 名稱更新為新的來源檔名。\n\n關閉後，只重新命名來源檔案，媒體物件/Take 名稱保持不變。",
+    rename_all_help = "按 Ctrl+Enter 可立即執行「全部重新命名」。",
+    no_media_items_selected = "未選取媒體物件。",
+    no_tracks_selected = "未選取軌道。",
+    no_options_selected = "未選取任何功能。請至少勾選一個功能。",
+    no_changes = "未套用任何變更。請調整設定。",
+    open_region_marker_manager_msg = "請先開啟區域/標記管理器視窗。\n\n選單路徑: 檢視 - 區域/標記管理器",
+    no_regions_manager = "區域/標記管理器中未選取區域。",
+    no_time_selection = "沒有時間選取。",
+    no_regions_time = "時間選取內未找到區域。",
+    no_regions_arrange = "編曲視圖中未選取區域。",
+    no_regions_items = "未找到選取媒體物件所在的區域。",
+    no_markers_manager = "區域/標記管理器中未選取標記。",
+    no_markers_arrange = "編曲視圖中未選取標記。",
+    no_markers_time = "時間選取內未找到標記。",
+    selected_region_marker_requires_newer = "選取的區域/標記需要 REAPER 7.73 或更新版本。",
+    selected_items_no_audio = "選取的媒體物件沒有音訊來源或皆為 MIDI！",
+    no_valid_source_files = "選取的媒體物件沒有有效的音訊來源檔案。",
+    undo_batch = "Batch Rename Plus",
+    undo_no_changes = "Batch Rename Plus (無變更)",
+    undo_no_source_files = "Batch Rename Plus (無來源檔案)",
+    renaming_errors_header = "\n---- 重新命名已完成，但發生以下錯誤: ----\n",
+    does_not_exist = "不存在: %s",
+    failed_rename = "失敗: %s <--> %s (%s)",
+    unknown = "未知"
+  },
+  en = {
+    title = "Batch Rename Plus",
+    window_title = "Batch Rename Plus - Extensible Batch Renaming for REAPER",
+    error = "Error",
+    ok = "OK",
+    cancel = "Cancel",
+    items = "Items",
+    tracks = "Tracks",
+    regions = "Regions",
+    markers = "Markers",
+    source_files = "Source Files",
+    media = "Media",
+    manager = "Manager",
+    time_selection = "Time Selection",
+    selected_regions = "Selected Regions",
+    selected_items = "Selected Items",
+    selected_markers = "Selected Markers",
+    batch_items = "Items",
+    batch_tracks = "Tracks",
+    batch_regions_manager = "Regions / Manager",
+    batch_regions_time = "Regions / Time Selection",
+    batch_regions_selected = "Regions / Selected Regions",
+    batch_regions_items = "Regions / Selected Items",
+    batch_markers_manager = "Markers / Manager",
+    batch_markers_selected = "Markers / Selected Markers",
+    batch_markers_time = "Markers / Time Selection",
+    batch_sources_items = "Source Files / Selected Items",
+    tip_items = "Tip: In the Arrange view, select your items.",
+    tip_tracks = "Tip: In the Track Control Panel, select a track.",
+    tip_regions_manager = "Tip: Open the Region Manager and select a region.",
+    tip_regions_time = "Tip: In the Arrange view, drag to make a time selection for regions.",
+    tip_regions_selected = "Tip: In the arrange ruler, select regions.",
+    tip_regions_items = "Tip: Select items in the Arrange view to target their regions.",
+    tip_markers_manager = "Tip: Open the Marker Manager and select a marker.",
+    tip_markers_selected = "Tip: In the arrange ruler, select markers.",
+    tip_markers_time = "Tip: In the Arrange view, drag to make a time selection for markers.",
+    tip_sources_items = "Tip: In the Arrange view, select media items with source files.",
+    save_preset = "Save Preset",
+    rename_preset = "Rename Preset",
+    save_preset_title = "Enter a name for the new preset:",
+    rename_preset_title = "Enter a new name for the preset:",
+    no_preset = "No preset",
+    reset_factory = "Reset to factory default",
+    save_preset_menu = "Save Preset...",
+    delete_preset = "Delete Preset",
+    rename_preset_menu = "Rename Preset...",
+    export_presets = "Export Presets",
+    import_presets = "Import Presets",
+    text_files_filter = "Text Files (*.txt)\0*.txt\0All Files\0*.*\0",
+    failed_open_write = "Failed to open file for writing:\n%s",
+    failed_open_read = "Failed to open file for reading:\n%s",
+    exported_presets = "Exported %d presets to:\n%s",
+    imported_presets = "Imported %d presets from:\n%s",
+    preview_objects = "Preview - %d Object(s)",
+    compare_objects = "Compare - %d Object(s)",
+    resize = "Resize",
+    horizontal_scroll = "Horizontal Scroll",
+    vertical_scroll = "Vertical Scroll",
+    before = "Before",
+    after = "After",
+    message = "Message",
+    index = "Index",
+    item_name = "Item Name",
+    source_name = "Source Name",
+    empty_name = "Error: empty name.",
+    empty_slot = "Empty slot.",
+    random_preview = "random(%s)",
+    counts_status = "%d error(s) detected. %d duplicate(s) detected.",
+    mode = "Mode",
+    copy_cell_help = "Use Ctrl+LeftClick to copy cell content\n",
+    filter = "Filter:",
+    compare = "Compare",
+    preview = "Preview",
+    options = "Options",
+    interface = "Interface",
+    language = "Language",
+    language_english = "English",
+    language_simplified_chinese = "简体中文",
+    language_traditional_chinese = "繁體中文",
+    preview_options = "Preview",
+    support = "Support",
+    support_text_1 = "This tool is free and open source. And it will always be.",
+    support_text_2 = "However, I do appreciate your support via donation.",
+    visit_soundengine = "Visit soundengine.cn",
+    close = "Close",
+    popup_table_font_size = "Popup table font size",
+    show_main_preview_table = "Show main preview table",
+    show_help_markers = "Show help markers",
+    save_and_close = "Save and Close",
+    reset = "Reset",
+    no_items_selected_compare = "No items selected.\nPlease select at least one media item.",
+    different_same = "Same: %s",
+    different = "Different",
+    copy_table = "Copy Table",
+    copy_items = "Copy Items",
+    copy_sources = "Copy Sources",
+    refresh = "Refresh",
+    apply_to = "Apply To",
+    target = "Target",
+    choose_target_help = "Choose what Batch Rename Plus should rename.\n\nRegions and markers are grouped by how they are selected: Manager, Time Selection, arrange-view selection, or selected items.",
+    settings = "Settings",
+    example = "Example:",
+    rename = "Rename",
+    replace = "Replace",
+    remove = "Remove",
+    insert = "Insert",
+    wildcards = "Wildcards",
+    specifiers = "Specifiers",
+    pattern = "Pattern",
+    find_what = "Find what",
+    replace_with = "Replace with",
+    ignore_case = "Ignore case",
+    occurrence = "Occurrence",
+    first = "First",
+    last = "Last",
+    all = "All",
+    count = "Count",
+    at_position = "At position",
+    at_position_insert = "At position",
+    from = "From",
+    from_insert = "From",
+    beginning = "Beginning",
+    ending = "End",
+    to_insert = "To insert",
+    behavior = "Behavior",
+    range_cycle = "Range Cycle",
+    match_src = "Match Src",
+    sort_by = "Sort by",
+    track = "Track",
+    sequence = "Sequence",
+    timeline = "Timeline",
+    open_region_marker_manager = "Open Region/Marker Manager",
+    clear = "Clear",
+    rename_all = "Rename All",
+    rename_all_display = "Rename All",
+    wildcard_help = "Items wildcards: \n$item for item name, $track for track name, $tracknumber for track number, $folders for track folder, $GUID for unique identifier.\n\nTracks wildcards: \n$track for track name, $tracknumber for track number, $folders for track folder, $GUID for unique identifier.\n\nSource Files wildcards: \n$source for source file name, $track for track name, $tracknumber for track number, $folders for track folder.\n\nGeneral tags: d=n for number increment, d=start-end for number cycle, a=c for letter increment, a=start-end for letter cycle, r=n for random string.\n\nModes: rename, replace, remove or insert. Enable cycle mode to loop numbers or letters. Sorting options: track, sequential or timeline.",
+    slider_help = "Hold Alt and drag the slider to make finer adjustments.\n\nFor ultra-precise control, hold Alt + Shift while dragging.\n\nTo enter a specific value, Ctrl + Left-click the slider and type it in.",
+    range_cycle_help = "Enable Cycle Mode to continuously loop letters or numbers within a specified range.\n\nFor example, 'a=A-C' will cycle A - B - C - A - ..., and 'd=1-3' will cycle 1 - 2 - 3 - 1 - ...,\nYou can also specify a reverse range like 'a=Z-X' or 'd=9-7' to cycle in descending order.",
+    match_src_help = "When enabled, source-file renames also update item/take names to the new source filename.\n\nDisable it to keep item/take names unchanged while only renaming source files.",
+    rename_all_help = "Press Ctrl+Enter to instantly perform the “Rename All” action.",
+    no_media_items_selected = "No media items selected.",
+    no_tracks_selected = "No tracks selected.",
+    no_options_selected = "No options selected - please check at least one feature.",
+    no_changes = "No changes applied - please adjust settings.",
+    open_region_marker_manager_msg = "Please open the Region/Marker Manager window first.\n\nIn the menu bar, go to: View - Region/marker manager",
+    no_regions_manager = "No regions selected in Region Manager.",
+    no_time_selection = "No time selection.",
+    no_regions_time = "No regions found in time selection.",
+    no_regions_arrange = "No regions selected in arrange view.",
+    no_regions_items = "No regions found for selected items.",
+    no_markers_manager = "No markers selected in Marker Manager.",
+    no_markers_arrange = "No markers selected in arrange view.",
+    no_markers_time = "No markers found in time selection.",
+    selected_region_marker_requires_newer = "Selected regions/markers require REAPER 7.73 or newer.",
+    selected_items_no_audio = "Selected media items have no audio source or are all MIDI!",
+    no_valid_source_files = "Selected media items have no valid audio source files.",
+    undo_batch = "Batch Rename Plus",
+    undo_no_changes = "Batch Rename Plus (no changes)",
+    undo_no_source_files = "Batch Rename Plus (no source files)",
+    renaming_errors_header = "\n---- Renaming completed, the following errors occurred: ----\n",
+    does_not_exist = "Does not exist: %s",
+    failed_rename = "Failed: %s <--> %s (%s)",
+    unknown = "Unknown"
+  }
+}
+
+local LANGUAGE_EXT_SECTION = "BatchRenamePlus"
+local LANGUAGE_EXT_KEY = "Language"
+local LANGUAGE_DEFAULT = "en"
+local LANGUAGE_OPTIONS = {
+  { id = "en",    label_key = "language_english" },
+  { id = "zh_CN", label_key = "language_simplified_chinese" },
+  { id = "zh_TW", label_key = "language_traditional_chinese" },
+}
+local LANGUAGE_ALIASES = {
+  English = "en",
+  ["简体中文"] = "zh_CN",
+  ["繁體中文"] = "zh_TW",
+}
+
+local language = LANGUAGE_DEFAULT
+local T = TEXT[LANGUAGE_DEFAULT]
+local TITLE = T.title
+
+function fill_missing_translation_keys()
+  for lang_id, lang_table in pairs(TEXT) do
+    if lang_id ~= LANGUAGE_DEFAULT then
+      for key, value in pairs(TEXT[LANGUAGE_DEFAULT]) do
+        if lang_table[key] == nil then
+          lang_table[key] = value
+        end
+      end
+    end
+  end
+end
+
+fill_missing_translation_keys()
+
+function stable_label(label, stable_id)
+  return tostring(label or "") .. "###" .. tostring(stable_id)
+end
+
+function display_label(label)
+  return tostring(label or ""):gsub("###.*$", ""):gsub("##.*$", "")
+end
+
+function normalize_language(value)
+  value = tostring(value or "")
+  value = LANGUAGE_ALIASES[value] or value
+  if TEXT[value] then return value end
+  return LANGUAGE_DEFAULT
+end
+
+function set_language(value, persist)
+  language = normalize_language(value)
+  T = TEXT[language] or TEXT[LANGUAGE_DEFAULT]
+  TITLE = T.title
+  if persist then
+    reaper.SetExtState(LANGUAGE_EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
+  end
+end
+
+local stored_language = reaper.GetExtState(LANGUAGE_EXT_SECTION, LANGUAGE_EXT_KEY)
+set_language(stored_language, false)
+if stored_language ~= "" and stored_language ~= language then
+  reaper.SetExtState(LANGUAGE_EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
+end
+
+function tr(key, ...)
+  local text = T[key] or TEXT[LANGUAGE_DEFAULT][key] or tostring(key)
+  if select("#", ...) > 0 then
+    return string.format(text, ...)
+  end
+  return text
+end
+
+function ui_label(key, stable_id, ...)
+  return stable_label(display_label(tr(key, ...)), stable_id or key)
+end
+
+function get_language_label(value)
+  local normalized = normalize_language(value)
+  for _, opt in ipairs(LANGUAGE_OPTIONS) do
+    if opt.id == normalized then
+      return tr(opt.label_key)
+    end
+  end
+  return tr("language_english")
+end
+
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
-local ctx = reaper.ImGui_CreateContext('Batch Rename Plus')
+local ctx = reaper.ImGui_CreateContext(TITLE)
 local sans_serif = reaper.ImGui_CreateFont('sans-serif', 14)
 local font_large = reaper.ImGui_CreateFont("", 20)
 local font_medium = reaper.ImGui_CreateFont("", 14)
@@ -86,7 +652,7 @@ reaper.ImGui_Attach(ctx, font_medium)
 reaper.ImGui_Attach(ctx, font_botton)
 reaper.ImGui_Attach(ctx, font_small)
 
-local preview_font_size  = 14 -- 当前预览字体大小（像素）
+local preview_font_size  = 14 -- 当前预览字体大小 (像素)
 local preview_font_sizes = { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 }
 local preview_fonts      = {}
 for _, sz in ipairs(preview_font_sizes) do
@@ -97,7 +663,6 @@ end
 -- 设置菜单
 local show_main_preview  = true -- 是否显示主脚本的表格预览
 local show_help_markers  = true -- 是否显示help_marker
-local show_settings_popup = false
 
 reaper.ImGui_SetNextWindowSize(ctx, 365, 800, reaper.ImGui_Cond_FirstUseEver())
 
@@ -120,7 +685,7 @@ local use_cycle_mode         = true                  -- cycle mode checkbox
 local sort_index             = 0                     -- 0 = Track, 1 = Sequence, 2 = Timeline
 local preview_mode           = false                 -- 预览模式默认值
 local ignore_case            = false                 -- 是否忽略大小写
-local occurrence_mode        = 2                     -- Occurrence 模式：0=First,1=Last,2=All
+local occurrence_mode        = 2                     -- Occurrence 模式: 0=First,1=Last,2=All
 local write_take_name        = true                  -- true 将新文件名写入 Take 名称，false 保持原 Take 名称
 local PREVIEW_TABLE_ID       = "preview_table"       -- 主脚本里共用
 local PREVIEW_POPUP_TABLE_ID = "preview_popup_table" -- 弹窗里共用
@@ -131,33 +696,33 @@ local preview_filter
 local ctrl_enter_was_down   = false
 
 local batch_modes = {
-  { label = "Items",                         menu = "Items",            tip = "Tip: In the Arrange view, select your items." },
-  { label = "Tracks",                        menu = "Tracks",           tip = "Tip: In the Track Control Panel, select a track." },
-  { label = "Regions / Manager",             menu = "Manager",          tip = "Tip: Open the Region Manager and select a region." },
-  { label = "Regions / Time Selection",      menu = "Time Selection",   tip = "Tip: In the Arrange view, drag to make a time selection for regions." },
-  { label = "Regions / Selected Regions",    menu = "Selected Regions", tip = "Tip: In the arrange ruler, select regions." },
-  { label = "Regions / Selected Items",      menu = "Selected Items",   tip = "Tip: Select items in the Arrange view to target their regions." },
-  { label = "Markers / Manager",             menu = "Manager",          tip = "Tip: Open the Marker Manager and select a marker." },
-  { label = "Markers / Selected Markers",    menu = "Selected Markers", tip = "Tip: In the arrange ruler, select markers." },
-  { label = "Markers / Time Selection",      menu = "Time Selection",   tip = "Tip: In the Arrange view, drag to make a time selection for markers." },
-  { label = "Source Files / Selected Items", menu = "Selected Items",   tip = "Tip: In the Arrange view, select media items with source files." },
+  { label_key = "batch_items",            menu_key = "items",            tip_key = "tip_items" },
+  { label_key = "batch_tracks",           menu_key = "tracks",           tip_key = "tip_tracks" },
+  { label_key = "batch_regions_manager",  menu_key = "manager",          tip_key = "tip_regions_manager" },
+  { label_key = "batch_regions_time",     menu_key = "time_selection",   tip_key = "tip_regions_time" },
+  { label_key = "batch_regions_selected", menu_key = "selected_regions", tip_key = "tip_regions_selected" },
+  { label_key = "batch_regions_items",    menu_key = "selected_items",   tip_key = "tip_regions_items" },
+  { label_key = "batch_markers_manager",  menu_key = "manager",          tip_key = "tip_markers_manager" },
+  { label_key = "batch_markers_selected", menu_key = "selected_markers", tip_key = "tip_markers_selected" },
+  { label_key = "batch_markers_time",     menu_key = "time_selection",   tip_key = "tip_markers_time" },
+  { label_key = "batch_sources_items",    menu_key = "selected_items",   tip_key = "tip_sources_items" },
 }
 
 local batch_mode_groups = {
-  { label = "Media",        modes = { 0, 1 } },
-  { label = "Regions",      modes = { 2, 3, 4, 5 } },
-  { label = "Markers",      modes = { 6, 7, 8 } },
-  { label = "Source Files", modes = { 9 } },
+  { label_key = "media",        modes = { 0, 1 } },
+  { label_key = "regions",      modes = { 2, 3, 4, 5 } },
+  { label_key = "markers",      modes = { 6, 7, 8 } },
+  { label_key = "source_files", modes = { 9 } },
 }
 
 function get_batch_mode_label(mode)
   local rec = batch_modes[(mode or 0) + 1]
-  return rec and rec.label or ""
+  return rec and tr(rec.label_key) or ""
 end
 
 function get_batch_mode_tip(mode)
   local rec = batch_modes[(mode or 0) + 1]
-  return rec and rec.tip or ""
+  return rec and tr(rec.tip_key) or ""
 end
 
 --------------------------------------------------------------------------------
@@ -239,7 +804,7 @@ function EncodePreset()
   return table.concat(data, "\t")
 end
 
--- 应用某条预设（解码并赋值）
+-- 应用某条预设 (解码并赋值)
 function ApplyPreset(dataStr)
   local params = {}
   for v in dataStr:gmatch("([^\t]*)") do table.insert(params, v) end
@@ -263,9 +828,10 @@ end
 
 -- 通用 ImGui 文本输入对话框
 function ImGui_TextPrompt(ctx, prompt, buf_label, buf_size, callback)
+  local popup_id = stable_label(prompt.caption_key and tr(prompt.caption_key) or prompt.id, prompt.id)
   -- 如果 show 被置为 true 就打开弹窗一次
   if prompt.show then
-    reaper.ImGui_OpenPopup(ctx, prompt.id)
+    reaper.ImGui_OpenPopup(ctx, popup_id)
     prompt.show = false
   end
 
@@ -275,21 +841,21 @@ function ImGui_TextPrompt(ctx, prompt, buf_label, buf_size, callback)
   reaper.ImGui_SetNextWindowPos(ctx, cx, cy, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
 
   -- 真正绘制 Modal
-  if reaper.ImGui_BeginPopupModal(ctx, prompt.id, nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+  if reaper.ImGui_BeginPopupModal(ctx, popup_id, nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
     -- 标题文字
-    reaper.ImGui_Text(ctx, prompt.title)
+    reaper.ImGui_Text(ctx, prompt.title_key and tr(prompt.title_key) or prompt.title)
     -- 文本输入框
     local changed
     changed, prompt.buffer = reaper.ImGui_InputText(ctx, buf_label, prompt.buffer, buf_size)
     -- 确定按钮
-    if reaper.ImGui_Button(ctx, "OK") then -- ctx, "OK", 120, 0
+    if reaper.ImGui_Button(ctx, T.ok) then -- ctx, "OK", 120, 0
       callback(prompt.buffer)
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
 
     reaper.ImGui_SameLine(ctx)
     -- 取消按钮
-    if reaper.ImGui_Button(ctx, "Cancel") then -- ctx, "OK", 120, 0
+    if reaper.ImGui_Button(ctx, T.cancel) then -- ctx, "OK", 120, 0
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
 
@@ -299,15 +865,17 @@ end
 
 -- 用于保存预设和重命名预设的两个 prompt 对象
 local savePresetPrompt = {
-  id     = "Save Preset",
-  title  = "Enter a name for the new preset:",
+  id          = "save_preset_prompt",
+  caption_key = "save_preset",
+  title_key   = "save_preset_title",
   buffer = "",
   show   = false
 }
 
 local renamePresetPrompt = {
-  id      = "Rename Preset",
-  title   = "Enter a new name for the preset:",
+  id          = "rename_preset_prompt",
+  caption_key = "rename_preset",
+  title_key   = "rename_preset_title",
   buffer  = "",
   show    = false,
   oldName = "" -- 用来暂存旧名字
@@ -470,7 +1038,7 @@ function apply_modifiers(name, i)
   -- 4) 随机字符串 r=n
   if is_preview then
     name = name:gsub("r=(%d+)", function(n)
-      return "random("..n..")"
+      return tr("random_preview", n)
     end)
   else
     name = name:gsub("r=(%d+)", function(n)
@@ -550,7 +1118,7 @@ function render_preview_table(ctx, id, realCount, row_builder)
   local cnt = realCount
 
   reaper.ImGui_PushID(ctx, id)
-  reaper.ImGui_SeparatorText(ctx, string.format("Preview - %d Object(s)", cnt))
+  reaper.ImGui_SeparatorText(ctx, tr("preview_objects", cnt))
 
   -- 压缩复选框样式
   local fp_x, fp_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
@@ -560,11 +1128,11 @@ function render_preview_table(ctx, id, realCount, row_builder)
 
   local tblFlags1 = tables.horizontal.flags1 or 0
   local ok
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Resize", tblFlags1, reaper.ImGui_TableFlags_Resizable())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, T.resize, tblFlags1, reaper.ImGui_TableFlags_Resizable())
   reaper.ImGui_SameLine(ctx)
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Horizontal Scroll", tblFlags1, reaper.ImGui_TableFlags_ScrollX())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, T.horizontal_scroll, tblFlags1, reaper.ImGui_TableFlags_ScrollX())
   reaper.ImGui_SameLine(ctx)
-  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, "Vertical Scroll", tblFlags1, reaper.ImGui_TableFlags_ScrollY())
+  ok, tblFlags1 = reaper.ImGui_CheckboxFlags(ctx, T.vertical_scroll, tblFlags1, reaper.ImGui_TableFlags_ScrollY())
   tables.horizontal.flags1 = tblFlags1
 
   -- 恢复复选框样式
@@ -577,9 +1145,9 @@ function render_preview_table(ctx, id, realCount, row_builder)
   local name_counts = {}
   local tableFlags = tblFlags1 + reaper.ImGui_TableFlags_RowBg() -- reaper.ImGui_TableFlags_Borders()
   if reaper.ImGui_BeginTable(ctx, id .. "_table", 3, tableFlags, -1, 127) then
-    reaper.ImGui_TableSetupColumn(ctx, "Before", reaper.ImGui_TableColumnFlags_NoHide())
-    reaper.ImGui_TableSetupColumn(ctx, "After", reaper.ImGui_TableColumnFlags_NoHide())
-    reaper.ImGui_TableSetupColumn(ctx, "Message", 0)
+    reaper.ImGui_TableSetupColumn(ctx, T.before, reaper.ImGui_TableColumnFlags_NoHide())
+    reaper.ImGui_TableSetupColumn(ctx, T.after, reaper.ImGui_TableColumnFlags_NoHide())
+    reaper.ImGui_TableSetupColumn(ctx, T.message, 0)
     reaper.ImGui_TableHeadersRow(ctx)
 
     for i = 1, displayCount do
@@ -602,7 +1170,7 @@ function render_preview_table(ctx, id, realCount, row_builder)
         if #after == 0 then
           errorCount = errorCount + 1
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-          reaper.ImGui_Text(ctx, "Error: empty name.")
+          reaper.ImGui_Text(ctx, T.empty_name)
           reaper.ImGui_PopStyleColor(ctx)
         end
       else
@@ -613,7 +1181,7 @@ function render_preview_table(ctx, id, realCount, row_builder)
         reaper.ImGui_TableNextColumn(ctx)
         reaper.ImGui_Text(ctx, "--")
         reaper.ImGui_TableNextColumn(ctx)
-        reaper.ImGui_Text(ctx, "Empty slot.")
+        reaper.ImGui_Text(ctx, T.empty_slot)
         reaper.ImGui_PopStyleColor(ctx)
       end
     end
@@ -626,7 +1194,7 @@ function render_preview_table(ctx, id, realCount, row_builder)
 
     -- 显示错误和重复统计
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
-    reaper.ImGui_Text(ctx, string.format("%d error(s) detected. %d duplicate(s) detected.", errorCount, dupCount))
+    reaper.ImGui_Text(ctx, tr("counts_status", errorCount, dupCount))
     reaper.ImGui_PopStyleColor(ctx)
   end
   reaper.ImGui_PopID(ctx)
@@ -657,9 +1225,9 @@ function render_preview_table_popup(ctx, id, realCount, row_builder)
   local table_font = preview_fonts[preview_font_size] or preview_fonts[14] or preview_fonts[12]
   reaper.ImGui_PushFont(ctx, table_font)
   if reaper.ImGui_BeginTable(ctx, id .. "_table", 3, tableFlags, -1, 0) then
-    reaper.ImGui_TableSetupColumn(ctx, "Before", reaper.ImGui_TableColumnFlags_NoHide())
-    reaper.ImGui_TableSetupColumn(ctx, "After", reaper.ImGui_TableColumnFlags_NoHide())
-    reaper.ImGui_TableSetupColumn(ctx, "Message", 0)
+    reaper.ImGui_TableSetupColumn(ctx, T.before, reaper.ImGui_TableColumnFlags_NoHide())
+    reaper.ImGui_TableSetupColumn(ctx, T.after, reaper.ImGui_TableColumnFlags_NoHide())
+    reaper.ImGui_TableSetupColumn(ctx, T.message, 0)
     reaper.ImGui_TableHeadersRow(ctx)
 
     for i = 1, displayCount do
@@ -684,7 +1252,7 @@ function render_preview_table_popup(ctx, id, realCount, row_builder)
           end
           reaper.ImGui_TableNextColumn(ctx)
           if #after == 0 then
-            local message = "Error: empty name."
+            local message = T.empty_name
             errorCount = errorCount + 1
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
             reaper.ImGui_Text(ctx, message)
@@ -707,7 +1275,7 @@ function render_preview_table_popup(ctx, id, realCount, row_builder)
             reaper.CF_SetClipboard("--")
           end
           reaper.ImGui_TableNextColumn(ctx)
-          local message = "Empty slot."
+          local message = T.empty_slot
           reaper.ImGui_Text(ctx, message)
           if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl()) and reaper.ImGui_IsItemClicked(ctx, reaper.ImGui_MouseButton_Left()) then
             reaper.CF_SetClipboard(message)
@@ -734,15 +1302,15 @@ function render_preview_table_popup(ctx, id, realCount, row_builder)
   end
 
   local modeName = get_batch_mode_label(process_mode)
-  local status = string.format("%d error(s) detected. %d duplicate(s) detected.", errorCount, dupCount)
-  status = status .. " Mode: " .. modeName
+  local status = tr("counts_status", errorCount, dupCount)
+  status = status .. " " .. T.mode .. ": " .. modeName
 
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
   reaper.ImGui_Text(ctx, status)
   reaper.ImGui_PopStyleColor(ctx)
   reaper.ImGui_SameLine(ctx)
   help_marker(
-    "Use Ctrl+LeftClick to copy cell content\n"
+    T.copy_cell_help
   )
 
   preview_mode = false
@@ -877,7 +1445,7 @@ function CollectAudioSources()
     end
   end
   if #uniqueList == 0 then
-    reaper.ShowMessageBox("选中的媒体对象没有音频源或均为 MIDI!", "Error", 0)
+    reaper.ShowMessageBox(T.selected_items_no_audio, T.error, 0)
     return nil
   end
   return items, uniqueList
@@ -925,7 +1493,7 @@ function get_all_markers_mgr()
   local _, num_markers, num_regions = reaper.CountProjectMarkers(0)
   for i = 0, num_markers + num_regions - 1 do
     local retval, isrgn, pos, _, name, idx, color = reaper.EnumProjectMarkers3(0, i)
-    -- 只保留 Marker（isrgn == false）
+    -- 只保留 Marker (isrgn == false) 
     if retval and not isrgn then
       table.insert(res, {
         index = idx,
@@ -1115,7 +1683,7 @@ function selected_region_marker_api_error()
           reaper.GetRegionOrMarker and
           reaper.GetRegionOrMarkerInfo_Value and
           reaper.GetSetRegionOrMarkerInfo_String) then
-    return "Selected regions/markers require REAPER 7.73 or newer."
+    return T.selected_region_marker_requires_newer
   end
 end
 
@@ -1486,11 +2054,11 @@ function apply_batch_items()
   -- 1. 基本检查
   local item_count = reaper.CountSelectedMediaItems(0)
   if item_count == 0 then
-    reaper.ShowMessageBox("No media items selected.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_media_items_selected, TITLE, 0)
     return
   end
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -1611,11 +2179,11 @@ function apply_batch_items()
 
   -- 7. 结束 Undo
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -1625,11 +2193,11 @@ end
 function apply_batch_tracks()
   local cnt = reaper.CountSelectedTracks(0)
   if cnt == 0 then
-    reaper.ShowMessageBox("No tracks selected.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_tracks_selected, TITLE, 0)
     return
   end
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -1713,11 +2281,11 @@ function apply_batch_tracks()
   end
 
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -1727,21 +2295,16 @@ end
 function apply_batch_region_manager()
   local hWnd = GetRegionMarkerManager()
   if not hWnd then
-    reaper.ShowMessageBox(
-      "Please open the Region/Marker Manager window first.\n\n" ..
-      "In the menu bar, go to: View - Region/marker manager",
-      "Batch Rename Plus",
-      0
-    )
+    reaper.ShowMessageBox(T.open_region_marker_manager_msg, TITLE, 0)
     return
   end
   local regions = get_sel_regions_mgr()
   if #regions == 0 then
-    reaper.ShowMessageBox("No regions selected in Region Manager.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_regions_manager, TITLE, 0)
     return
   end
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -1821,11 +2384,11 @@ function apply_batch_region_manager()
   end
 
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -1836,19 +2399,19 @@ function apply_batch_region_time()
   -- 获取时间选区
   local sel_start, sel_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, false)
   if sel_start == sel_end then
-    reaper.ShowMessageBox("No time selection.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_time_selection, TITLE, 0)
     return
   end
 
   -- 获取选区内区域
   local regions = get_sel_regions()
   if #regions == 0 then
-    reaper.ShowMessageBox("No regions found in time selection.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_regions_time, TITLE, 0)
     return
   end
 
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -1928,11 +2491,11 @@ function apply_batch_region_time()
   end
 
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -1942,15 +2505,15 @@ end
 function apply_batch_selected_regions()
   local regions, err = get_selected_project_regions()
   if not regions then
-    reaper.ShowMessageBox(err, "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(err, TITLE, 0)
     return
   end
   if #regions == 0 then
-    reaper.ShowMessageBox("No regions selected in arrange view.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_regions_arrange, TITLE, 0)
     return
   end
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -1968,11 +2531,11 @@ function apply_batch_selected_regions()
   end
 
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -1982,11 +2545,11 @@ end
 function apply_batch_regions_for_items()
   local regions = get_sel_regions_for_items()
   if #regions == 0 then
-    reaper.ShowMessageBox("No regions found for selected items.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_regions_items, TITLE, 0)
     return
   end
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -2067,11 +2630,11 @@ function apply_batch_regions_for_items()
   end
 
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -2081,22 +2644,17 @@ end
 function apply_batch_marker_manager()
   local hWnd = GetRegionMarkerManager()
   if not hWnd then
-    reaper.ShowMessageBox(
-      "Please open the Region/Marker Manager window first.\n\n" ..
-      "In the menu bar, go to: View - Region/marker manager",
-      "Batch Rename Plus",
-      0
-    )
+    reaper.ShowMessageBox(T.open_region_marker_manager_msg, TITLE, 0)
     return
   end
 
   local markers = get_sel_markers_mgr()
   if #markers == 0 then
-    reaper.ShowMessageBox("No markers selected in Marker Manager.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_markers_manager, TITLE, 0)
     return
   end
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -2176,11 +2734,11 @@ function apply_batch_marker_manager()
   end
 
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -2190,15 +2748,15 @@ end
 function apply_batch_selected_markers()
   local markers, err = get_selected_project_markers()
   if not markers then
-    reaper.ShowMessageBox(err, "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(err, TITLE, 0)
     return
   end
   if #markers == 0 then
-    reaper.ShowMessageBox("No markers selected in arrange view.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_markers_arrange, TITLE, 0)
     return
   end
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -2216,11 +2774,11 @@ function apply_batch_selected_markers()
   end
 
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -2230,17 +2788,17 @@ end
 function apply_batch_marker_time()
   local sel_start, sel_end = reaper.GetSet_LoopTimeRange2(0, false, false, 0, 0, false)
   if sel_start == sel_end then
-    reaper.ShowMessageBox("No time selection.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_time_selection, TITLE, 0)
     return
   end
   local markers = get_sel_markers()
   if #markers == 0 then
-    reaper.ShowMessageBox("No markers found in time selection.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_markers_time, TITLE, 0)
     return
   end
 
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -2323,11 +2881,11 @@ function apply_batch_marker_time()
   end
 
   if changed_any then
-    reaper.Undo_EndBlock("Batch Rename Plus", -1)
+    reaper.Undo_EndBlock(T.undo_batch, -1)
     reaper.UpdateArrange()
   else
-    reaper.Undo_EndBlock("Batch Rename Plus (no changes)", -1)
-    reaper.ShowMessageBox("No changes applied - please adjust settings.", "Batch Rename Plus", 0)
+    reaper.Undo_EndBlock(T.undo_no_changes, -1)
+    reaper.ShowMessageBox(T.no_changes, TITLE, 0)
   end
 end
 
@@ -2421,11 +2979,11 @@ function apply_batch_sources()
   -- 基本检查
   local sel_cnt = CountSelectedItems(0)
   if sel_cnt == 0 then
-    reaper.ShowMessageBox("No media items selected.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_media_items_selected, TITLE, 0)
     return
   end
   if not (enable_rename or enable_replace or enable_remove or enable_insert) then
-    reaper.ShowMessageBox("No options selected - please check at least one feature.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_options_selected, TITLE, 0)
     return
   end
 
@@ -2442,13 +3000,13 @@ function apply_batch_sources()
   local items = get_sorted_sources_data()
   if #items == 0 then
     RestoreSelectedItems(init_sel_items)
-    reaper.Undo_EndBlock("Batch Rename Plus (no source files)", -1)
+    reaper.Undo_EndBlock(T.undo_no_source_files, -1)
     reaper.PreventUIRefresh(-1)
-    reaper.ShowMessageBox("Selected media items have no valid audio source files.", "Batch Rename Plus", 0)
+    reaper.ShowMessageBox(T.no_valid_source_files, TITLE, 0)
     return
   end
 
-  -- 构建唯一源列表（每条路径只保留一次）
+  -- 构建唯一源列表 (每条路径只保留一次) 
   local seen_paths = {}
   local uniqueRecs = {}
   for _, d in ipairs(items) do
@@ -2579,7 +3137,7 @@ function apply_batch_sources()
     if oldPath == newPath then
       update_source_refs(oldPath, newPath, newName)
     elseif not FileExists(oldPath) then
-      table.insert(errors, "Does not exist: " .. oldPath)
+      table.insert(errors, tr("does_not_exist", oldPath))
     else
       local ok, err = os.rename(oldPath, newPath)
       if not ok then
@@ -2599,7 +3157,7 @@ function apply_batch_sources()
           end
         end
       else
-        table.insert(errors, string.format("Failed: %s <--> %s (%s)", oldPath, newName, err or "Unknown"))
+        table.insert(errors, tr("failed_rename", oldPath, newName, err or T.unknown))
       end
     end
   end
@@ -2611,14 +3169,14 @@ function apply_batch_sources()
   end
   reaper.Main_OnCommand(40441, 0) -- Peaks: Rebuild peaks for selected items
   RestoreSelectedItems(init_sel_items)
-  reaper.Undo_EndBlock("Batch Rename Plus", -1)
+  reaper.Undo_EndBlock(T.undo_batch, -1)
   reaper.PreventUIRefresh(-1)
   reaper.UpdateArrange()
   reaper.MarkProjectDirty(0) -- 工程改动提示
 
   -- 打印错误日志
   if #errors > 0 then
-    reaper.ShowConsoleMsg("\n---- Renaming completed, the following errors occurred: ----\n")
+    reaper.ShowConsoleMsg(T.renaming_errors_header)
     for _, e in ipairs(errors) do
       reaper.ShowConsoleMsg(e .. "\n")
     end
@@ -3333,33 +3891,35 @@ function transparent_link(ctx, label, url)
 end
 
 function support_popup(ctx)
+  local popup_id = ui_label("support", "SupportPopup")
+
   -- reaper.ImGui_PushFont(ctx, font_small)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x00000000)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x00000000)
   
   local _, pad_y  = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
-  local _, text_h = reaper.ImGui_CalcTextSize(ctx, "Support")
+  local _, text_h = reaper.ImGui_CalcTextSize(ctx, T.support)
   local button_h  = text_h + pad_y * 3.5
 
-  if reaper.ImGui_Button(ctx, "Support", 0, button_h) then
-    reaper.ImGui_OpenPopup(ctx, "Support")
+  if reaper.ImGui_Button(ctx, ui_label("support", "SupportButton"), 0, button_h) then
+    reaper.ImGui_OpenPopup(ctx, popup_id)
   end
 
   -- reaper.ImGui_PopFont(ctx)
   reaper.ImGui_PopStyleColor(ctx, 3)
 
   -- 弹窗内容
-  if reaper.ImGui_BeginPopupModal(ctx, "Support", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
-    reaper.ImGui_Text(ctx, "This tool is free and open source. And it will always be.")
-    reaper.ImGui_Text(ctx, "However, I do appreciate your support via donation.")
+  if reaper.ImGui_BeginPopupModal(ctx, popup_id, nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+    reaper.ImGui_Text(ctx, T.support_text_1)
+    reaper.ImGui_Text(ctx, T.support_text_2)
     reaper.ImGui_Separator(ctx)
 
     -- “Visit” 透明按钮
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        0x00000000)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x00000000)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x00000000)
-    if reaper.ImGui_Button(ctx, "Visit soundengine.cn") then
+    if reaper.ImGui_Button(ctx, ui_label("visit_soundengine", "VisitSoundEngineButton")) then
       reaper.CF_ShellExecute("https://www.soundengine.cn")
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
@@ -3367,7 +3927,7 @@ function support_popup(ctx)
 
     reaper.ImGui_Separator(ctx)
     -- 关闭按钮
-    if reaper.ImGui_Button(ctx, "Close") then
+    if reaper.ImGui_Button(ctx, ui_label("close", "SupportCloseButton")) then
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
 
@@ -3383,11 +3943,11 @@ function preview_popup(ctx)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(),          yellow)
 
   local _, pad_y  = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
-  local _, text_h = reaper.ImGui_CalcTextSize(ctx, label)
+  local _, text_h = reaper.ImGui_CalcTextSize(ctx, T.preview)
   local button_h  = text_h + pad_y * 3.5
 
   reaper.ImGui_PushFont(ctx, font_small)
-  if reaper.ImGui_Button(ctx, "Preview##Menu", 0, button_h) then
+  if reaper.ImGui_Button(ctx, ui_label("preview", "PreviewMenuButton"), 0, button_h) then
     show_preview_window = true
   end
   reaper.ImGui_PopFont(ctx)
@@ -3398,7 +3958,7 @@ function preview_popup(ctx)
     -- 首次打开时设置尺寸
     reaper.ImGui_SetNextWindowSize(ctx, 600, 400, reaper.ImGui_Cond_FirstUseEver())
     local data, builder = get_preview_data_and_builder()
-    local title = string.format("Preview - %d Object(s)###Preview Panel", #data)
+    local title = tr("preview_objects", #data) .. "###Preview Panel"
     local visible, open = reaper.ImGui_Begin(ctx, title, show_preview_window)
     show_preview_window = open
     -- 保存当前状态到 ExtState，下次脚本启动时恢复
@@ -3410,7 +3970,7 @@ function preview_popup(ctx)
         preview_filter = reaper.ImGui_CreateTextFilter()
         reaper.ImGui_Attach(ctx, preview_filter)
       end
-      reaper.ImGui_Text(ctx, "Filter: ")
+      reaper.ImGui_Text(ctx, T.filter)
       reaper.ImGui_SameLine(ctx, nil, 10)
       reaper.ImGui_TextFilter_Draw(preview_filter, ctx, "##Filter")
 
@@ -3449,41 +4009,56 @@ function DrawSettings(ctx)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  0x00000000)
 
   local _, pad_y  = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
-  local _, text_h = reaper.ImGui_CalcTextSize(ctx, label)
+  local _, text_h = reaper.ImGui_CalcTextSize(ctx, T.options)
   local button_h  = text_h + pad_y * 3.5
 
   reaper.ImGui_PushFont(ctx, font_small)
-  if reaper.ImGui_Button(ctx, "Options", 0, button_h) then
-    show_settings_popup = true
-    reaper.ImGui_OpenPopup(ctx, "Options##SettingsPopup")
+  if reaper.ImGui_Button(ctx, ui_label("options", "SettingsButton"), 0, button_h) then
+    reaper.ImGui_OpenPopup(ctx, ui_label("options", "SettingsPopup"))
   end
   reaper.ImGui_PopFont(ctx)
   reaper.ImGui_PopStyleColor(ctx, 3)
 
-  if reaper.ImGui_BeginPopupModal(ctx, "Options##SettingsPopup", show_settings_popup, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+  if reaper.ImGui_BeginPopupModal(ctx, ui_label("options", "SettingsPopup"), nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+    reaper.ImGui_SeparatorText(ctx, tr("interface"))
+    -- reaper.ImGui_PushItemWidth(ctx, -95)
+    if reaper.ImGui_BeginCombo(ctx, ui_label("language", "language_select"), get_language_label(language)) then
+      for _, opt in ipairs(LANGUAGE_OPTIONS) do
+        local selected = language == opt.id
+        if reaper.ImGui_Selectable(ctx, stable_label(tr(opt.label_key), "language_" .. opt.id), selected) then
+          set_language(opt.id, true)
+        end
+        if selected then reaper.ImGui_SetItemDefaultFocus(ctx) end
+      end
+      reaper.ImGui_EndCombo(ctx)
+    end
+    -- reaper.ImGui_PopItemWidth(ctx)
+
+    reaper.ImGui_SeparatorText(ctx, tr("preview_options"))
     -- 弹窗表格字体大小
     -- reaper.ImGui_Text(ctx, "Popup Table Font Size")
-    local changed_font, new_font = reaper.ImGui_SliderInt(ctx, "Popup table font size##font_size", preview_font_size, 10, 24)
+    local changed_font, new_font = reaper.ImGui_SliderInt(ctx, ui_label("popup_table_font_size", "font_size"), preview_font_size, 10, 24)
     if changed_font then preview_font_size = new_font end
   
     -- 是否显示主脚本的表格预览
-    local changed_prev, new_prev = reaper.ImGui_Checkbox(ctx, "Show main preview table", show_main_preview)
+    local changed_prev, new_prev = reaper.ImGui_Checkbox(ctx, ui_label("show_main_preview_table"), show_main_preview)
     if changed_prev then show_main_preview = new_prev end
 
     -- 是否显示help_marker
-    local changed_help, new_help = reaper.ImGui_Checkbox(ctx, "Show help markers", show_help_markers)
+    local changed_help, new_help = reaper.ImGui_Checkbox(ctx, ui_label("show_help_markers"), show_help_markers)
     if changed_help then show_help_markers = new_help end
   
     reaper.ImGui_Separator(ctx)
-    if reaper.ImGui_Button(ctx, "Save and Close##settings_save") then
+    if reaper.ImGui_Button(ctx, ui_label("save_and_close", "settings_save")) then
       reaper.SetExtState("BatchRenamePlus", "PreviewFontSize",    tostring(preview_font_size),  true)
       reaper.SetExtState("BatchRenamePlus", "ShowMainPreview", tostring(show_main_preview), true)
       reaper.SetExtState("BatchRenamePlus", "ShowHelpMarkers", tostring(show_help_markers), true)
-      show_settings_popup = false
+      reaper.SetExtState(LANGUAGE_EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, "Reset##settings_reset") then
+    if reaper.ImGui_Button(ctx, ui_label("reset", "settings_reset")) then
+      set_language(LANGUAGE_DEFAULT, true)
       preview_font_size = 14
       show_main_preview = true
       show_help_markers = true
@@ -3577,17 +4152,17 @@ function item_vs_source()
 
   -- 取 FramePadding 的垂直值，用来计算按钮高度
   local _, pad_y  = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
-  local _, text_h = reaper.ImGui_CalcTextSize(ctx, label)
+  local _, text_h = reaper.ImGui_CalcTextSize(ctx, T.compare)
   local button_h  = text_h + pad_y * 3.5
 
   reaper.ImGui_PushFont(ctx, font_small)
-  if reaper.ImGui_Button(ctx, "Compare", 0, button_h) then
+  if reaper.ImGui_Button(ctx, T.compare, 0, button_h) then
     local cnt = reaper.CountSelectedMediaItems(0)
     if cnt > 0 then
       show_list_data   = gather_show_list_data()
       show_list_window = true
     else
-      reaper.ShowMessageBox("No items selected.\nPlease select at least one media item.", "Batch Rename Plus", 0)
+      reaper.ShowMessageBox(T.no_items_selected_compare, TITLE, 0)
     end
   end
   reaper.ImGui_PopFont(ctx)
@@ -3595,7 +4170,7 @@ function item_vs_source()
 
   if show_list_window then
     reaper.ImGui_SetNextWindowSize(ctx, 600, 300, reaper.ImGui_Cond_FirstUseEver())
-    local title = string.format("Compare - %d Object(s)###Compare", #show_list_data)
+    local title = tr("compare_objects", #show_list_data) .. "###Compare"
     local visible, open = reaper.ImGui_Begin(ctx, title, show_list_window)
     show_list_window = open
     if visible then
@@ -3647,9 +4222,9 @@ function item_vs_source()
 
         local shared = longest_common_text(take_name, file_name)
         if shared ~= "" then
-          return "Different; Same: " .. shared
+          return tr("different_same", shared)
         end
-        return "Different"
+        return T.different
       end
 
       -- 把可拖拽标志合入 table_flags
@@ -3662,15 +4237,11 @@ function item_vs_source()
       reaper.ImGui_PushFont(ctx, table_font)
       if reaper.ImGui_BeginTable(ctx, "show_list_table", 4, table_flags) then
         -- 第一列固定宽度
-        reaper.ImGui_TableSetupColumn(ctx, "Index",
-          reaper.ImGui_TableColumnFlags_WidthFixed(), 50)
+        reaper.ImGui_TableSetupColumn(ctx, T.index, reaper.ImGui_TableColumnFlags_WidthFixed(), 50)
         -- 后三列伸展但依然可调整
-        reaper.ImGui_TableSetupColumn(ctx, "Item Name",
-          reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
-        reaper.ImGui_TableSetupColumn(ctx, "Source Name",
-          reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
-        reaper.ImGui_TableSetupColumn(ctx, "Message",
-          reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
+        reaper.ImGui_TableSetupColumn(ctx, T.item_name, reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
+        reaper.ImGui_TableSetupColumn(ctx, T.source_name, reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
+        reaper.ImGui_TableSetupColumn(ctx, T.message, reaper.ImGui_TableColumnFlags_WidthStretch(), 0)
   
         reaper.ImGui_TableHeadersRow(ctx)
   
@@ -3724,7 +4295,7 @@ function item_vs_source()
       end
       reaper.ImGui_PopFont(ctx)
 
-      if reaper.ImGui_Button(ctx, "Copy Table") then
+      if reaper.ImGui_Button(ctx, T.copy_table) then
         local lines = {}
         for i, entry in ipairs(show_list_data) do
           -- 格式：[序号]   项目名称   源文件名称   比较信息
@@ -3735,7 +4306,7 @@ function item_vs_source()
       end
 
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Copy Items") then
+      if reaper.ImGui_Button(ctx, T.copy_items) then
         local lines = {}
         for _, entry in ipairs(show_list_data) do
           lines[#lines+1] = entry.take_name
@@ -3743,7 +4314,7 @@ function item_vs_source()
         reaper.CF_SetClipboard(table.concat(lines, "\n"))
       end
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Copy Sources") then
+      if reaper.ImGui_Button(ctx, T.copy_sources) then
         local lines = {}
         for _, entry in ipairs(show_list_data) do
           lines[#lines+1] = entry.file_name
@@ -3751,12 +4322,12 @@ function item_vs_source()
         reaper.CF_SetClipboard(table.concat(lines, "\n"))
       end
       reaper.ImGui_SameLine(ctx)
-      if reaper.ImGui_Button(ctx, "Refresh") then
+      if reaper.ImGui_Button(ctx, T.refresh) then
         show_list_data = gather_show_list_data()
       end
       reaper.ImGui_SameLine(ctx)
       help_marker(
-        "Use Ctrl+LeftClick to copy cell content\n"
+        T.copy_cell_help
       )
 
       reaper.ImGui_End(ctx)
@@ -3767,11 +4338,11 @@ end
 function draw_wildcards(ctx, button_label, popup_id, target)
   -- 占位符按钮
   local mode_labels = {
-    "Items",
-    "Tracks",
-    "Regions",
-    "Markers",
-    "Source Files",
+    T.items,
+    T.tracks,
+    T.regions,
+    T.markers,
+    T.source_files,
   }
   local wildcards_by_mode = {
     [0] = { "$item", "$track", "$tracknumber", "$folders", "$GUID" },
@@ -3852,17 +4423,17 @@ function draw_specifiers(ctx, button_label, popup_id, target)
 end
 
 function draw_batch_mode_selector(ctx)
-  reaper.ImGui_SeparatorText(ctx, "Apply To")
+  reaper.ImGui_SeparatorText(ctx, tr("apply_to"))
   -- reaper.ImGui_Text(ctx, "Target")
   -- reaper.ImGui_SameLine(ctx)
   reaper.ImGui_PushItemWidth(ctx, -95)
-  if reaper.ImGui_BeginCombo(ctx, "Target##batch_mode_combo", get_batch_mode_label(process_mode)) then
+  if reaper.ImGui_BeginCombo(ctx, ui_label("target", "batch_mode_combo"), get_batch_mode_label(process_mode)) then
     for group_i, group in ipairs(batch_mode_groups) do
-      reaper.ImGui_TextDisabled(ctx, group.label)
+      reaper.ImGui_TextDisabled(ctx, tr(group.label_key))
       for _, mode in ipairs(group.modes) do
         local mode_def = batch_modes[mode + 1]
         local selected = process_mode == mode
-        if mode_def and reaper.ImGui_Selectable(ctx, mode_def.menu .. "##batch_mode_" .. tostring(mode), selected) then
+        if mode_def and reaper.ImGui_Selectable(ctx, stable_label(tr(mode_def.menu_key), "batch_mode_" .. tostring(mode)), selected) then
           process_mode = mode
         end
         if selected then
@@ -3877,10 +4448,7 @@ function draw_batch_mode_selector(ctx)
   end
   reaper.ImGui_PopItemWidth(ctx)
   reaper.ImGui_SameLine(ctx)
-  help_marker(
-    "Choose what Batch Rename Plus should rename.\n\n" ..
-    "Regions and markers are grouped by how they are selected: Manager, Time Selection, arrange-view selection, or selected items."
-  )
+  help_marker(T.choose_target_help)
 
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), 0x808080FF)
   reaper.ImGui_Text(ctx, get_batch_mode_tip(process_mode))
@@ -3889,13 +4457,21 @@ end
 
 function frame()
   reaper.ImGui_PushFont(ctx, font_large)
-  reaper.ImGui_Text(ctx, 'Batch Rename Plus')
+  reaper.ImGui_Text(ctx, TITLE)
   reaper.ImGui_PopFont(ctx)
 
   reaper.ImGui_SameLine(ctx, nil, 0)
   local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
-  local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "Compare".."Preview".."Options") -- 文字尺寸
-  local total_w = txt_w + txt_h + 8 -- 设置图标+缩放菜单
+  local frame_pad_x = select(1, reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding()))
+  local item_spacing_x = select(1, reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()))
+
+  reaper.ImGui_PushFont(ctx, font_small)
+  local compare_w = select(1, reaper.ImGui_CalcTextSize(ctx, T.compare)) + frame_pad_x * 2
+  local preview_w = select(1, reaper.ImGui_CalcTextSize(ctx, T.preview)) + frame_pad_x * 2
+  local options_w = select(1, reaper.ImGui_CalcTextSize(ctx, T.options)) + frame_pad_x * 2
+  reaper.ImGui_PopFont(ctx)
+
+  local total_w = math.ceil(compare_w + preview_w + options_w + item_spacing_x * 2) + 8
 
   -- 如果可用宽度足够，把光标推到右侧
   if avail > total_w then
@@ -3931,10 +4507,10 @@ function frame()
   reaper.ImGui_PushItemWidth(ctx, -95)
   reaper.ImGui_Separator(ctx)
   -- 用户预设
-  local comboLabel = (selectedPreset == 1) and "No preset" or presetNames[selectedPreset]
+  local comboLabel = (selectedPreset == 1) and T.no_preset or presetNames[selectedPreset]
   if reaper.ImGui_BeginCombo(ctx, "##Presets", comboLabel) then
     -- 1. 清空当前设置
-    if reaper.ImGui_Selectable(ctx, "Reset to factory default", false) then
+    if reaper.ImGui_Selectable(ctx, T.reset_factory, false) then
       selectedPreset = 1
       ResetState()
     end
@@ -3945,7 +4521,7 @@ function frame()
     --   -- reaper.ImGui_Text(ctx, "No preset")
     -- end
 
-    -- 3. 列出所有用户预设（从 index=2 开始）
+    -- 3. 列出所有用户预设 (从 index=2 开始) 
     for i = 2, #presetNames do
       local name = presetNames[i]
       local isSel = (selectedPreset == i)
@@ -3977,13 +4553,13 @@ function frame()
     --   showSavePopup = true
     -- end
 
-    if reaper.ImGui_MenuItem(ctx, "Save Preset...", nil, false, true) then
+    if reaper.ImGui_MenuItem(ctx, T.save_preset_menu, nil, false, true) then
       savePresetPrompt.buffer = ""
       savePresetPrompt.show   = true
     end
 
     -- 2. 删除预设
-    if reaper.ImGui_MenuItem(ctx, "Delete Preset", nil, false, canModify) then
+    if reaper.ImGui_MenuItem(ctx, T.delete_preset, nil, false, canModify) then
       local nameToDel = presetNames[selectedPreset]
       table.remove(presetNames, selectedPreset)
       SavePresetList()
@@ -3993,7 +4569,7 @@ function frame()
     end
 
     -- 3. 重命名预设
-    if reaper.ImGui_MenuItem(ctx, "Rename Preset...", nil, false, canModify) then
+    if reaper.ImGui_MenuItem(ctx, T.rename_preset_menu, nil, false, canModify) then
       renamePresetPrompt.oldName = presetNames[selectedPreset]
       renamePresetPrompt.buffer  = renamePresetPrompt.oldName
       renamePresetPrompt.show    = true
@@ -4001,10 +4577,10 @@ function frame()
 
     -- 4. 导出所有用户预设
     reaper.ImGui_Separator(ctx)
-    if reaper.ImGui_MenuItem(ctx, "Export Presets") then
-      local filter = "Text Files (*.txt)\0*.txt\0All Files\0*.*\0"
+    if reaper.ImGui_MenuItem(ctx, T.export_presets) then
+      local filter = T.text_files_filter
       local retval, file = reaper.JS_Dialog_BrowseForSaveFile(
-        "Export Presets", -- 标题
+        T.export_presets, -- 标题
         "",               -- 初始路径
         filter,           -- 过滤器
         "txt"             -- 默认后缀，不含点
@@ -4015,7 +4591,7 @@ function frame()
         if not file:match("%.[^%.]+$") then file = file .. ".txt" end
         local f, err = io.open(file, "w")
         if not f then
-          reaper.MB("Failed to open file for writing:\n" .. err, "Error", 0)
+          reaper.MB(tr("failed_open_write", err), T.error, 0)
         else
           for i = 2, #presetNames do
             local name = presetNames[i]
@@ -4023,13 +4599,13 @@ function frame()
             f:write(name, "\t", data, "\n")
           end
           f:close()
-          reaper.MB("Exported "..(#presetNames-1).." presets to:\n"..file, "Export Presets", 0)
+          reaper.MB(tr("exported_presets", #presetNames - 1, file), T.export_presets, 0)
         end
       end
     end
     -- 5. 导入用户预设
-    if reaper.ImGui_MenuItem(ctx, "Import Presets") then
-      local r1, r2 = reaper.GetUserFileNameForRead("", "Import Presets", "*.txt")
+    if reaper.ImGui_MenuItem(ctx, T.import_presets) then
+      local r1, r2 = reaper.GetUserFileNameForRead("", T.import_presets, "*.txt")
       local file
       if type(r1)=="string" then
         file = r1
@@ -4042,7 +4618,7 @@ function frame()
       else
         local f, err = io.open(file, "r")
         if not f then
-          reaper.MB("Failed to open file for reading:\n" .. err, "Error", 0)
+          reaper.MB(tr("failed_open_read", err), T.error, 0)
         else
           local count = 0
           for line in f:lines() do
@@ -4057,7 +4633,7 @@ function frame()
           end
           f:close()
           SavePresetList()
-          reaper.MB("Imported "..count.." presets from:\n"..file, "Import Presets", 0)
+          reaper.MB(tr("imported_presets", count, file), T.import_presets, 0)
         end
       end
     end
@@ -4095,42 +4671,42 @@ function frame()
 
   draw_batch_mode_selector(ctx)
 
-  reaper.ImGui_SeparatorText(ctx, 'Settings')
+  reaper.ImGui_SeparatorText(ctx, T.settings)
   if process_mode == 0 then
-    example_text = "Example: $item_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $item_d=0001_a=E-A_r=4"
   elseif process_mode == 1 then
-    example_text = "Example: $track_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $track_d=0001_a=E-A_r=4"
   elseif process_mode == 2 then
-    example_text = "Example: $region_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $region_d=0001_a=E-A_r=4"
   elseif process_mode == 3 then
-    example_text = "Example: $region_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $region_d=0001_a=E-A_r=4"
   elseif process_mode == 4 then
-    example_text = "Example: $region_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $region_d=0001_a=E-A_r=4"
   elseif process_mode == 5 then
-    example_text = "Example: $region_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $region_d=0001_a=E-A_r=4"
   elseif process_mode == 6 then
-    example_text = "Example: $marker_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $marker_d=0001_a=E-A_r=4"
   elseif process_mode == 7 then
-    example_text = "Example: $marker_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $marker_d=0001_a=E-A_r=4"
   elseif process_mode == 8 then
-    example_text = "Example: $marker_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $marker_d=0001_a=E-A_r=4"
   elseif process_mode == 9 then
-    example_text = "Example: $track_$source_d=0001_a=E-A_r=4"
+    example_text = T.example .. " $track_$source_d=0001_a=E-A_r=4"
   end
 
   -- 1) Rename
-  local ch_n, new_n = reaper.ImGui_Checkbox(ctx, "Rename", enable_rename)
+  local ch_n, new_n = reaper.ImGui_Checkbox(ctx, T.rename, enable_rename)
   if ch_n then enable_rename = new_n end
 
   if enable_rename then
-    draw_wildcards(ctx, 'Wildcards##1', 'wildcards_popup##1', 'rename')
-    draw_specifiers(ctx, 'Specifiers##1', 'item_mode_specifiers##1', 'rename')
+    draw_wildcards(ctx, ui_label("wildcards", "wildcards_rename"), 'wildcards_popup##1', 'rename')
+    draw_specifiers(ctx, ui_label("specifiers", "specifiers_rename"), 'item_mode_specifiers##1', 'rename')
   end
 
   reaper.ImGui_BeginDisabled(ctx, not enable_rename)
   local ch_p, newPattern = reaper.ImGui_InputTextWithHint(
     ctx,
-    "Pattern",
+    T.pattern,
     example_text,
     rename_pattern
   )
@@ -4140,31 +4716,22 @@ function frame()
   -- 帮助
   reaper.ImGui_SameLine(ctx)
 
-  help_marker(
-    "Items wildcards: \n" ..
-    "$item for item name, $track for track name, $tracknumber for track number, $folders for track folder, $GUID for unique identifier.\n\n" ..
-    "Tracks wildcards: \n" ..
-    "$track for track name, $tracknumber for track number, $folders for track folder, $GUID for unique identifier.\n\n" ..
-    "Source Files wildcards: \n" ..
-    "$source for source file name, $track for track name, $tracknumber for track number, $folders for track folder.\n\n" ..
-    "General tags: d=n for number increment, d=start-end for number cycle, a=c for letter increment, a=start-end for letter cycle, r=n for random string.\n\n" ..
-    "Modes: rename, replace, remove or insert. Enable cycle mode to loop numbers or letters. Sorting options: track, sequential or timeline."
-  )
+  help_marker(T.wildcard_help)
   reaper.ImGui_Separator(ctx)
 
   -- 2) Replace
-  local ch_rp, new_rp = reaper.ImGui_Checkbox(ctx, "Replace", enable_replace)
+  local ch_rp, new_rp = reaper.ImGui_Checkbox(ctx, T.replace, enable_replace)
   if ch_rp then enable_replace = new_rp end
 
   if enable_replace then
-    draw_wildcards(ctx, 'Wildcards##2', 'wildcards_popup##2', 'replace')
-    draw_specifiers(ctx, 'Specifiers##2', 'item_mode_specifiers##2', 'replace')
+    draw_wildcards(ctx, ui_label("wildcards", "wildcards_replace"), 'wildcards_popup##2', 'replace')
+    draw_specifiers(ctx, ui_label("specifiers", "specifiers_replace"), 'item_mode_specifiers##2', 'replace')
   end
 
   reaper.ImGui_BeginDisabled(ctx, not enable_replace)
-  local ch_f, new_find = reaper.ImGui_InputText(ctx, "Find what##find", find_text or "")
+  local ch_f, new_find = reaper.ImGui_InputText(ctx, ui_label("find_what", "find"), find_text or "")
   if ch_f then find_text = new_find end
-  local ch_w, new_repl = reaper.ImGui_InputText(ctx, "Replace with##repl", replace_text or "")
+  local ch_w, new_repl = reaper.ImGui_InputText(ctx, ui_label("replace_with", "repl"), replace_text or "")
   if ch_w then replace_text = new_repl end
 
   -- 忽略大小写选项
@@ -4173,14 +4740,14 @@ function frame()
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), fp_x, math.floor(fp_y * 0.5))
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), is_x, math.floor(is_y * 0.5))
 
-  local ch_ic, new_ic = reaper.ImGui_Checkbox(ctx, "Ignore case##ic", ignore_case)
+  local ch_ic, new_ic = reaper.ImGui_Checkbox(ctx, ui_label("ignore_case", "ic"), ignore_case)
   if ch_ic then ignore_case = new_ic end
   reaper.ImGui_PopStyleVar(ctx, 2)
 
   reaper.ImGui_SameLine(ctx)
   -- Occurrence 列表: First, Last, All
-  if reaper.ImGui_BeginCombo(ctx, "Occurrence##occ", (occurrence_mode==0 and "First") or (occurrence_mode==1 and "Last") or "All") then
-    local occ_opts = {"First", "Last", "All"}
+  if reaper.ImGui_BeginCombo(ctx, ui_label("occurrence", "occ"), (occurrence_mode==0 and T.first) or (occurrence_mode==1 and T.last) or T.all) then
+    local occ_opts = {T.first, T.last, T.all}
     for i = 0, 2 do
       local sel = (i == occurrence_mode)
       if reaper.ImGui_Selectable(ctx, occ_opts[i+1], sel) then occurrence_mode = i end
@@ -4192,35 +4759,27 @@ function frame()
   reaper.ImGui_Separator(ctx)
 
   -- 3) Remove
-  local ch_rm, new_rm = reaper.ImGui_Checkbox(ctx, "Remove", enable_remove)
+  local ch_rm, new_rm = reaper.ImGui_Checkbox(ctx, T.remove, enable_remove)
   if ch_rm then enable_remove = new_rm end
   reaper.ImGui_BeginDisabled(ctx, not enable_remove)
   reaper.ImGui_PushItemWidth(ctx, -95)
-  local ch_cnt, newCnt = reaper.ImGui_DragInt(ctx, "Count##rmcnt", remove_count, 1, 0, 100, "%d")
+  local ch_cnt, newCnt = reaper.ImGui_DragInt(ctx, ui_label("count", "rmcnt"), remove_count, 1, 0, 100, "%d")
   if ch_cnt then remove_count = newCnt end
   reaper.ImGui_PopItemWidth(ctx)
   -- 帮助
   reaper.ImGui_SameLine(ctx)
-  help_marker(
-    "Hold Alt and drag the slider to make finer adjustments.\n\n" ..
-    "For ultra-precise control, hold Alt + Shift while dragging.\n\n" ..
-    "To enter a specific value, Ctrl + Left-click the slider and type it in."
-  )
+  help_marker(T.slider_help)
 
   reaper.ImGui_PushItemWidth(ctx, -95)
-  local ch_pos, newPos = reaper.ImGui_DragInt(ctx, "At position##rmpos", remove_position, 1, 0, 100, "%d")
+  local ch_pos, newPos = reaper.ImGui_DragInt(ctx, ui_label("at_position", "rmpos"), remove_position, 1, 0, 100, "%d")
   if ch_pos then remove_position = newPos end
   reaper.ImGui_PopItemWidth(ctx)
   -- 帮助
   reaper.ImGui_SameLine(ctx)
-  help_marker(
-    "Hold Alt and drag the slider to make finer adjustments.\n\n" ..
-    "For ultra-precise control, hold Alt + Shift while dragging.\n\n" ..
-    "To enter a specific value, Ctrl + Left-click the slider and type it in."
-  )
+  help_marker(T.slider_help)
 
-  if reaper.ImGui_BeginCombo(ctx, "From##rmside", (remove_side_index==0) and "Beginning" or "End") then
-    local opts = { "Beginning", "End" }
+  if reaper.ImGui_BeginCombo(ctx, ui_label("from", "rmside"), (remove_side_index==0) and T.beginning or T.ending) then
+    local opts = { T.beginning, T.ending }
     for i = 0, 1 do
       local sel = (i == remove_side_index)
       if reaper.ImGui_Selectable(ctx, opts[i+1], sel) then remove_side_index = i end
@@ -4232,34 +4791,30 @@ function frame()
   reaper.ImGui_Separator(ctx)
 
   -- 4) Insert
-  local ch_i, new_i = reaper.ImGui_Checkbox(ctx, "Insert", enable_insert)
+  local ch_i, new_i = reaper.ImGui_Checkbox(ctx, T.insert, enable_insert)
   if ch_i then enable_insert = new_i end
 
   if enable_insert then
-    draw_wildcards(ctx, 'Wildcards##3', 'wildcards_popup##3', 'insert')
-    draw_specifiers(ctx, 'Specifiers##3', 'item_mode_specifiers##3', 'insert')
+    draw_wildcards(ctx, ui_label("wildcards", "wildcards_insert"), 'wildcards_popup##3', 'insert')
+    draw_specifiers(ctx, ui_label("specifiers", "specifiers_insert"), 'item_mode_specifiers##3', 'insert')
   end
 
   reaper.ImGui_BeginDisabled(ctx, not enable_insert)
-  local ch_txt, newTxt = reaper.ImGui_InputText(ctx, "To insert##ins", insert_text or "")
+  local ch_txt, newTxt = reaper.ImGui_InputText(ctx, ui_label("to_insert", "ins"), insert_text or "")
   if ch_txt then insert_text = newTxt end
 
   reaper.ImGui_PushItemWidth(ctx, -95)
-  local ch_ip, new_ip = reaper.ImGui_DragInt(ctx, "At position##inspos", insert_position, 1, 0, 100, "%d")
+  local ch_ip, new_ip = reaper.ImGui_DragInt(ctx, ui_label("at_position_insert", "inspos"), insert_position, 1, 0, 100, "%d")
   if ch_ip then insert_position = new_ip end
   reaper.ImGui_PopItemWidth(ctx)
   -- 帮助
   reaper.ImGui_SameLine(ctx)
-  help_marker(
-    "Hold Alt and drag the slider to make finer adjustments.\n\n" ..
-    "For ultra-precise control, hold Alt + Shift while dragging.\n\n" ..
-    "To enter a specific value, Ctrl + Left-click the slider and type it in."
-  )
+  help_marker(T.slider_help)
 
-  if reaper.ImGui_BeginCombo(ctx, "From##insside", (insert_side_index==0) and "Beginning" or "End") then
+  if reaper.ImGui_BeginCombo(ctx, ui_label("from_insert", "insside"), (insert_side_index==0) and T.beginning or T.ending) then
     for i = 0, 1 do
       local sel = (i == insert_side_index)
-      local lbl = (i == 0) and "Beginning" or "End"
+      local lbl = (i == 0) and T.beginning or T.ending
       if reaper.ImGui_Selectable(ctx, lbl, sel) then insert_side_index = i end
       if sel then reaper.ImGui_SetItemDefaultFocus(ctx) end
     end
@@ -4267,32 +4822,25 @@ function frame()
   end
   reaper.ImGui_EndDisabled(ctx)
 
-  reaper.ImGui_SeparatorText(ctx, "Behavior")
+  reaper.ImGui_SeparatorText(ctx, T.behavior)
 
-  local changed7, newCycle = reaper.ImGui_Checkbox(ctx, "Range Cycle", use_cycle_mode)
+  local changed7, newCycle = reaper.ImGui_Checkbox(ctx, T.range_cycle, use_cycle_mode)
   if changed7 then use_cycle_mode = newCycle end
   reaper.ImGui_SameLine(ctx)
-  help_marker(
-    "Enable Cycle Mode to continuously loop letters or numbers within a specified range.\n\n" ..
-    "For example, 'a=A-C' will cycle A - B - C - A - ..., and 'd=1-3' will cycle 1 - 2 - 3 - 1 - ..., " ..
-    "You can also specify a reverse range like 'a=Z-X' or 'd=9-7' to cycle in descending order."
-  )
+  help_marker(T.range_cycle_help)
   if process_mode == 9 then
     reaper.ImGui_SameLine(ctx)
-    local changed_take_name, new_take_name = reaper.ImGui_Checkbox(ctx, "Match Src##write_take_name", write_take_name)
+    local changed_take_name, new_take_name = reaper.ImGui_Checkbox(ctx, ui_label("match_src", "write_take_name"), write_take_name)
     if changed_take_name then write_take_name = new_take_name end
     reaper.ImGui_SameLine(ctx)
-    help_marker(
-      "When enabled, source-file renames also update item/take names to the new source filename.\n\n" ..
-      "Disable it to keep item/take names unchanged while only renaming source files."
-    )
+    help_marker(T.match_src_help)
   end
 
   if process_mode == 0 or process_mode == 9 then
     reaper.ImGui_PushItemWidth(ctx, -95)
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_BeginCombo(ctx, "Sort by", (sort_index == 0 and "Track") or (sort_index == 1 and "Sequence") or "Timeline") then
-      local sort_options = { "Track", "Sequence", "Timeline" }
+    if reaper.ImGui_BeginCombo(ctx, T.sort_by, (sort_index == 0 and T.track) or (sort_index == 1 and T.sequence) or T.timeline) then
+      local sort_options = { T.track, T.sequence, T.timeline }
       for i = 0, #sort_options-1 do
         local is_selected = (i == sort_index)
         if reaper.ImGui_Selectable(ctx, sort_options[i+1], is_selected) then
@@ -4308,7 +4856,7 @@ function frame()
   if process_mode == 2 or process_mode == 6 then
     reaper.ImGui_SameLine(ctx)
     reaper.ImGui_PushFont(ctx, font_small)
-    open_region_marker_manager(ctx, "Open Region/Marker Manager")
+    open_region_marker_manager(ctx, T.open_region_marker_manager)
     reaper.ImGui_PopFont(ctx)
   end
 
@@ -4330,7 +4878,7 @@ function frame()
 
   -- reaper.ImGui_Separator(ctx)
   -- reaper.ImGui_Dummy(ctx, 0, 0)
-  -- 计算可用宽度并分成两半（减去 SameLine 之间的间距）
+  -- 计算可用宽度并分成两半 (减去 SameLine 之间的间距)
   local avail_x, _     = reaper.ImGui_GetContentRegionAvail(ctx)
   local item_spacing_x = select(1, reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()))
   local half_width     = (avail_x - item_spacing_x) * 0.5
@@ -4340,7 +4888,7 @@ function frame()
 
   -- 左侧按钮，占一半宽度
   reaper.ImGui_PushFont(ctx, font_medium)
-  if reaper.ImGui_Button(ctx, "Clear", half_width, button_h) then
+  if reaper.ImGui_Button(ctx, T.clear, half_width, button_h) then
     selectedPreset = 1
     ResetState()
   end
@@ -4348,13 +4896,13 @@ function frame()
   reaper.ImGui_SameLine(ctx)
   
   -- 右侧按钮，占一半宽度
-  if reaper.ImGui_Button(ctx, "Rename All##do_rename", half_width, button_h) then
+  if reaper.ImGui_Button(ctx, ui_label("rename_all", "do_rename"), half_width, button_h) then
     apply_batch_rename()
   end
   reaper.ImGui_PopFont(ctx)
   -- 帮助
   reaper.ImGui_SameLine(ctx)
-  help_marker("Press Ctrl+Enter to instantly perform the “Rename All” action.")
+  help_marker(T.rename_all_help)
 
   if tables.disable_indent then
     reaper.ImGui_PopStyleVar(ctx)
@@ -4372,7 +4920,7 @@ function loop()
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameRounding(),  4.0)
 
   -- 1) 开始窗口
-  local visible, open = reaper.ImGui_Begin(ctx, "Batch Rename Plus - Extensible Batch Renaming for REAPER", true)
+  local visible, open = reaper.ImGui_Begin(ctx, ui_label("window_title", "MainWindow"), true)
   if visible then
     -- 圆角处理: 弹出菜单、子区域、滚动条、滑块
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_PopupRounding(),     4.0)
