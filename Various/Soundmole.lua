@@ -1,10 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.180
+-- @version 1.0.181
 -- @changelog
---   Switching databases, modes, or folders now automatically reapplies active search tags and refreshes results.
---   Pressing Enter repeatedly with the same keyword now forces the search filter to refresh again.
---   Fixed an issue where sorting refreshed before search filtering, causing active search tags to not correctly filter results.
+--   Added a Toggle Main Window Collapse script for quickly collapsing or expanding the main window via a custom shortcut binding.
 --   Support reaper_soundmole-x64.dll v0.0.13
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -15,6 +13,7 @@
 -- @provides
 --   [main=main] Soundmole/zaibuyidao_Soundmole.lua
 --   [main=main] Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua
+--   [main=main] Soundmole/zaibuyidao_Soundmole - Toggle Main Window Collapse.lua
 --   [nomain] Soundmole/lib/*.lua
 --   [nomain] Soundmole/lib/*.py
 --   [nomain] Soundmole/lib/*.cur

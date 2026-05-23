@@ -7794,9 +7794,19 @@ end
 -- 查询 action 绑定的快捷键
 ----------------------------------------------------------------
 
+main_window_focused = false
+main_window_collapsed = false
+main_window_collapse_request = nil
+collapse_action_cmd = nil
+collapse_action_shortcuts = {}
+collapse_action_shortcuts_last_scan = 0
+collapse_action_shortcut_last_time = 0
+
 TARGET_ACTION_CMD = "_RS20af4fb17f06c6fe528a48b9e27fee68b6fb18ee" -- zaibuyidao_Soundmole - Add Selected Files to Target Database.lua
 virtual_key_code = 0 -- 目标按键 (F9 = 120)
 g_last_time = 0
+COLLAPSE_ACTION_SCRIPT_NAME = "zaibuyidao_Soundmole - Toggle Main Window Collapse.lua"
+CMD_TOGGLE_MAIN_COLLAPSE = "CMD_ToggleMainCollapse"
 
 binds = SM_GetActionShortcuts("_RS20af4fb17f06c6fe528a48b9e27fee68b6fb18ee", 0) -- 0=Main section
 for i, b in ipairs(binds) do
@@ -7822,6 +7832,99 @@ function MonitorShortcut(virtual_key_code)
       g_last_time = now
     end
   end
+end
+
+function RequestMainWindowCollapseToggle()
+  main_window_collapse_request = not main_window_collapsed
+end
+
+function SM_FindActionCommandByScriptName(script_name)
+  local text = SM_ReadReaperKBIniText and select(1, SM_ReadReaperKBIniText())
+  if not text or text == "" then return nil end
+
+  local target = tostring(script_name or ""):lower()
+  if target == "" then return nil end
+
+  for line in text:gmatch("[^\r\n]+") do
+    if line:sub(1, 4) == "SCR " then
+      local line_l = line:lower()
+      if line_l:find(target, 1, true) then
+        local cmd = line:match("^SCR%s+%S+%s+%S+%s+(_?RS[%w_]+)")
+        if cmd and cmd ~= "" then
+          if cmd:sub(1, 1) ~= "_" then cmd = "_" .. cmd end
+          return cmd
+        end
+      end
+    end
+  end
+end
+
+function RefreshCollapseActionShortcuts(force)
+  local now = reaper.time_precise()
+  if not force and (now - (collapse_action_shortcuts_last_scan or 0)) < 0.5 then return end
+  collapse_action_shortcuts_last_scan = now
+
+  local found_cmd = SM_FindActionCommandByScriptName(COLLAPSE_ACTION_SCRIPT_NAME)
+  if found_cmd and found_cmd ~= "" then
+    collapse_action_cmd = found_cmd
+  end
+  if collapse_action_cmd and collapse_action_cmd ~= "" then
+    collapse_action_shortcuts = SM_GetActionShortcuts(collapse_action_cmd, 0)
+  end
+end
+
+function SM_VKeyDownFromState(state, vk)
+  return state and vk and ((state:byte(vk) or 0) ~= 0)
+end
+
+function SM_ModifierDownFromState(state, vk_main, vk_left, vk_right)
+  return SM_VKeyDownFromState(state, vk_main)
+      or SM_VKeyDownFromState(state, vk_left)
+      or SM_VKeyDownFromState(state, vk_right)
+end
+
+function SM_ActionShortcutModsMatch(modifier, state)
+  modifier = tonumber(modifier) or 0
+  local need_shift = (modifier & 4) ~= 0
+  local need_ctrl  = (modifier & 8) ~= 0
+  local need_alt   = (modifier & 16) ~= 0
+
+  local shift_down = SM_ModifierDownFromState(state, 16, 160, 161)
+  local ctrl_down  = SM_ModifierDownFromState(state, 17, 162, 163)
+  local alt_down   = SM_ModifierDownFromState(state, 18, 164, 165)
+
+  return need_shift == shift_down and need_ctrl == ctrl_down and need_alt == alt_down
+end
+
+function SM_ActionShortcutPressed(binding, state)
+  if not binding then return false end
+  local vk = SM_KeyValueToVK(binding.key)
+  if not vk or vk == 0 then return false end
+  return SM_VKeyDownFromState(state, vk) and SM_ActionShortcutModsMatch(binding.modifier, state)
+end
+
+function MonitorCollapseActionShortcut()
+  RefreshCollapseActionShortcuts(false)
+  if not collapse_action_shortcuts or #collapse_action_shortcuts == 0 then return false end
+
+  local state = reaper.JS_VKeys_GetState(reaper.time_precise() - 0.03)
+  for _, binding in ipairs(collapse_action_shortcuts) do
+    if SM_ActionShortcutPressed(binding, state) then
+      local now = reaper.time_precise()
+      if (now - (collapse_action_shortcut_last_time or 0)) > 0.35 then
+        RequestMainWindowCollapseToggle()
+        collapse_action_shortcut_last_time = now
+        return true
+      end
+      return false
+    end
+  end
+  return false
+end
+
+function IsPlainF11Pressed()
+  if not reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F11()) then return false end
+  return (reaper.ImGui_GetKeyMods(ctx) or 0) == 0
 end
 
 --------------------------------------------- 右侧表格列表优化 ---------------------------------------------
@@ -11455,6 +11558,18 @@ function loop()
     SM_Action_AddSelectionToTargetDB()
   end
 
+  local collapse_signal_handled = false
+  local collapse_signal = reaper.GetExtState(EXT_SECTION, CMD_TOGGLE_MAIN_COLLAPSE)
+  if collapse_signal and collapse_signal ~= "" and collapse_signal ~= "0" then
+    reaper.SetExtState(EXT_SECTION, CMD_TOGGLE_MAIN_COLLAPSE, "0", false)
+    local now = reaper.time_precise()
+    if (now - (collapse_action_shortcut_last_time or 0)) > 0.20 then
+      RequestMainWindowCollapseToggle()
+    end
+    collapse_action_shortcut_last_time = now
+    collapse_signal_handled = true
+  end
+
   -- 首次使用时收集音频文件
   if not files_idx_cache then
     CollectFiles()
@@ -11471,6 +11586,20 @@ function loop()
     need_refresh_font = false
   end
   PushUIFont(ctx, fonts.sans_serif, 14)
+  local collapse_keyboard_handled = false
+  if main_window_focused and not collapse_signal_handled then
+    collapse_keyboard_handled = MonitorCollapseActionShortcut()
+  end
+  if not collapse_signal_handled and not collapse_keyboard_handled then
+    if IsPlainF11Pressed() then
+      RequestMainWindowCollapseToggle()
+      collapse_action_shortcut_last_time = reaper.time_precise()
+    end
+  end
+  if main_window_collapse_request ~= nil and reaper.ImGui_SetNextWindowCollapsed then
+    reaper.ImGui_SetNextWindowCollapsed(ctx, main_window_collapse_request, reaper.ImGui_Cond_Always())
+    main_window_collapse_request = nil
+  end
   reaper.ImGui_SetNextWindowBgAlpha(ctx, bg_alpha) -- 背景不透明度
 
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), UIScaleF(8.0))
@@ -11490,6 +11619,12 @@ function loop()
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
   reaper.ImGui_PopStyleColor(ctx, 1)
+  if reaper.ImGui_IsWindowCollapsed then
+    main_window_collapsed = reaper.ImGui_IsWindowCollapsed(ctx)
+  else
+    main_window_collapsed = not visible
+  end
+  main_window_focused = reaper.ImGui_IsWindowFocused(ctx, reaper.ImGui_FocusedFlags_RootAndChildWindows())
   if visible then UpdateSoundmoleMainWindowRect() end
 
   SM_ProcessBuilderLoop() -- 处理数据库构建器
