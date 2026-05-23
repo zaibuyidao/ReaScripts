@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6464e4e1d6cfed30ae62d764a0e866513c7821c8">
+<index version="1" name="zaibuyidao Scripts" commit="bd46bff1d17ee9f4ff54ed31c0ef1969c2e202c5">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8253,6 +8253,10 @@ Fixed Ctrl+Enter apply handling so the no-changes warning no longer appears imme
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c5979fb83b330e891d64212addc4fb8695b03cfc/Utility/zaibuyidao_Copy%20Paste%20Razor%20Edit%20Content.lua</source>
       </version>
+      <version name="1.0.1" author="zaibuyidao" time="2026-05-23T17:16:40Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/bd46bff1d17ee9f4ff54ed31c0ef1969c2e202c5/Utility/zaibuyidao_Copy%20Paste%20Razor%20Edit%20Content.lua</source>
+      </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Paste Time Selection Content.lua" type="script" desc="Copy/Paste Time Selection Content">
       <metadata>
@@ -8270,6 +8274,10 @@ Fixed Ctrl+Enter apply handling so the no-changes warning no longer appears imme
       <version name="1.0" author="zaibuyidao" time="2026-05-08T07:11:30Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c5979fb83b330e891d64212addc4fb8695b03cfc/Utility/zaibuyidao_Copy%20Paste%20Time%20Selection%20Content.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2026-05-23T17:16:40Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/bd46bff1d17ee9f4ff54ed31c0ef1969c2e202c5/Utility/zaibuyidao_Copy%20Paste%20Time%20Selection%20Content.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Copy Tempo Time Signature In Time Selection (Relative Position).lua" type="script" desc="Copy Tempo/Time Signature In Time Selection (Relative Position)">
