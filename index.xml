@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6c2476cc2c5061d84278cb72ccc8bc50ba4321c4">
+<index version="1" name="zaibuyidao Scripts" commit="9522d2a44dec1a57906a6e43cd4d2fe3d899d279">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8181,6 +8181,10 @@ Improved the Batch Mode UI layout for cleaner mode selection and better visual g
 Stabilized the Preview popup window title with a hidden ID to prevent window position jumping when object counts change.
 Fixed Ctrl+Enter apply handling so the no-changes warning no longer appears immediately after a successful rename.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c2476cc2c5061d84278cb72ccc8bc50ba4321c4/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
+      </version>
+      <version name="1.0.20" author="zaibuyidao" time="2026-05-23T12:15:55Z">
+        <changelog><![CDATA[Added language switching support. Currently supports English, Simplified Chinese, and Traditional Chinese.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9522d2a44dec1a57906a6e43cd4d2fe3d899d279/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
