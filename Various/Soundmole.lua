@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.181
+-- @version 1.0.182
 -- @changelog
---   Added a Toggle Main Window Collapse script for quickly collapsing or expanding the main window via a custom shortcut binding.
---   Support reaper_soundmole-x64.dll v0.0.13
+--   Added an "Album Art" column with cover extraction, deduplicated caching, cover_id linking, and click-to-filter for audio sharing the same cover.
+--   Support reaper_soundmole-x64.dll v0.0.14
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

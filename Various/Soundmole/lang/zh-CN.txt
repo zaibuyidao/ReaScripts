@@ -179,6 +179,7 @@ Start at Next Bar (Link Transport required, Spacebar to trigger)=从下一小节
 
 # 表格文件列
 Waveform=波形
+Album Art=专辑图片
 File Name=文件名
 Size=大小
 Type=格式

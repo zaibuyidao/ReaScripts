@@ -1476,6 +1476,357 @@ function quote_if_space(str)
   end
 end
 
+--------------------------------------------- Cover index ---------------------------------------------
+
+local SM_COVER_CACHE = {}
+local SM_COVER_INDEX_CACHE = nil
+
+local function sm_join_path(a, b)
+  if not a or a == "" then return b or "" end
+  local last = a:sub(-1)
+  if last == "/" or last == "\\" then return a .. (b or "") end
+  return a .. sep .. (b or "")
+end
+
+local function sm_read_all(path)
+  local f = io.open(path, "rb")
+  if not f then return nil end
+  local data = f:read("*all")
+  f:close()
+  return data
+end
+
+local function sm_write_all(path, data)
+  local f = io.open(path, "wb")
+  if not f then return false end
+  f:write(data or "")
+  f:close()
+  return true
+end
+
+function SM_CoverCacheDir()
+  local dir = normalize_path(script_path .. "cover_cache" .. sep, true)
+  if reaper and reaper.RecursiveCreateDirectory then
+    reaper.RecursiveCreateDirectory(dir, 0)
+  else
+    os.execute('mkdir "' .. dir .. '"')
+  end
+  return dir
+end
+
+function SM_CoverIndexPath()
+  local lib_dir = normalize_path(script_path .. "lib" .. sep, true)
+  if reaper and reaper.RecursiveCreateDirectory then
+    reaper.RecursiveCreateDirectory(lib_dir, 0)
+  end
+  return lib_dir .. "cover_index.json"
+end
+
+local function sm_json_escape(s)
+  s = tostring(s or "")
+  s = s:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\r", "\\r"):gsub("\n", "\\n"):gsub("\t", "\\t")
+  return s
+end
+
+local function sm_json_unescape(s)
+  s = tostring(s or "")
+  s = s:gsub("\\r", "\r"):gsub("\\n", "\n"):gsub("\\t", "\t"):gsub('\\"', '"'):gsub("\\\\", "\\")
+  return s
+end
+
+function SM_LoadCoverIndex()
+  if SM_COVER_INDEX_CACHE then return SM_COVER_INDEX_CACHE end
+  local index = {}
+  local text = sm_read_all(SM_CoverIndexPath())
+  if text and text ~= "" then
+    for k, v in text:gmatch('"(.-)"%s*:%s*"(.-)"') do
+      if k ~= "covers" then
+        index[sm_json_unescape(k)] = sm_json_unescape(v)
+      end
+    end
+  end
+  SM_COVER_INDEX_CACHE = index
+  return index
+end
+
+function SM_SaveCoverIndex(index)
+  index = index or SM_COVER_INDEX_CACHE or {}
+  local ids = {}
+  for id in pairs(index) do ids[#ids + 1] = id end
+  table.sort(ids)
+
+  local lines = { "{", '  "covers": {' }
+  for i, id in ipairs(ids) do
+    local suffix = (i < #ids) and "," or ""
+    lines[#lines + 1] = ('    "%s": "%s"%s'):format(sm_json_escape(id), sm_json_escape(index[id]), suffix)
+  end
+  lines[#lines + 1] = "  }"
+  lines[#lines + 1] = "}"
+  sm_write_all(SM_CoverIndexPath(), table.concat(lines, "\n") .. "\n")
+end
+
+function SM_GetCoverPathByID(cover_id)
+  if not cover_id or cover_id == "" then return nil end
+  local p = SM_LoadCoverIndex()[cover_id]
+  if p and p ~= "" and (not reaper or not reaper.file_exists or reaper.file_exists(p)) then
+    return p
+  end
+  return nil
+end
+
+local function sm_cover_hash(data)
+  if not data or data == "" then return nil end
+  local h1 = 2166136261
+  local h2 = 2166136261 ~ 0x9E3779B9
+  for i = 1, #data do
+    h1 = ((h1 ~ data:byte(i)) * 16777619) % 4294967296
+  end
+  for i = #data, 1, -1 do
+    h2 = ((h2 ~ data:byte(i)) * 16777619) % 4294967296
+  end
+  return ("%08x%08x%08x"):format(#data % 4294967296, h1, h2)
+end
+
+local function sm_image_ext(mime, data)
+  mime = tostring(mime or ""):lower()
+  if mime:find("png", 1, true) then return ".png" end
+  if mime:find("gif", 1, true) then return ".gif" end
+  if mime:find("bmp", 1, true) then return ".bmp" end
+  if mime:find("webp", 1, true) then return ".webp" end
+  if data and data:sub(1, 8) == "\137PNG\r\n\26\n" then return ".png" end
+  if data and data:sub(1, 3) == "GIF" then return ".gif" end
+  if data and data:sub(1, 2) == "BM" then return ".bmp" end
+  if data and data:sub(1, 4) == "RIFF" and data:sub(9, 12) == "WEBP" then return ".webp" end
+  return ".jpg"
+end
+
+if not read_le32 then
+  function read_le32(f)
+    local b = f:read(4)
+    if not b or #b < 4 then return 0 end
+    local b1, b2, b3, b4 = b:byte(1, 4)
+    return b1 + (b2 * 256) + (b3 * 65536) + (b4 * 16777216)
+  end
+end
+
+if not GetWavChunkID3 then
+  function GetWavChunkID3(path)
+    local f = io.open(path, "rb")
+    if not f then return nil end
+    if f:read(4) ~= "RIFF" then f:close() return nil end
+    f:read(4)
+    if f:read(4) ~= "WAVE" then f:close() return nil end
+    local file_size = f:seek("end")
+    f:seek("set", 12)
+    while f:seek() < file_size do
+      local chunk_id = f:read(4)
+      if not chunk_id or #chunk_id < 4 then break end
+      local chunk_size = read_le32(f)
+      if chunk_id == "id3 " or chunk_id == "ID3 " then
+        local data = f:read(chunk_size)
+        f:close()
+        return data
+      end
+      f:seek("cur", chunk_size + (chunk_size % 2))
+    end
+    f:close()
+    return nil
+  end
+end
+
+if not syncsafe_to_int then
+  function syncsafe_to_int(bs)
+    local b1, b2, b3, b4 = bs:byte(1, 4)
+    return b1 * 2^21 + b2 * 2^14 + b3 * 2^7 + b4
+  end
+end
+
+if not be_to_int then
+  function be_to_int(bs)
+    local b1, b2, b3, b4 = bs:byte(1, 4)
+    return b1 * 2^24 + b2 * 2^16 + b3 * 2^8 + b4
+  end
+end
+
+if not parse_id3_apic then
+  function parse_id3_apic(tag_data, ver)
+    if not tag_data then return nil, nil end
+    local pos, len = 1, #tag_data
+    while pos + 10 <= len do
+      local id = tag_data:sub(pos, pos + 3)
+      if id == "\0\0\0\0" then break end
+      local size_bs = tag_data:sub(pos + 4, pos + 7)
+      if #size_bs < 4 then break end
+      local sz = (ver == 4) and syncsafe_to_int(size_bs) or be_to_int(size_bs)
+      if sz <= 0 or pos + 10 + sz > len + 1 then break end
+      if id == "APIC" then
+        local frame = tag_data:sub(pos + 10, pos + 10 + sz - 1)
+        local rest1 = frame:sub(2)
+        local mime_end = rest1:find("\0", 1, true)
+        local mime = "image/jpeg"
+        local search_area = frame
+        if mime_end then
+          mime = rest1:sub(1, mime_end - 1)
+          search_area = rest1:sub(mime_end + 2)
+        end
+        local jpg_pos = search_area:find("\255\216", 1, true)
+        local png_pos = search_area:find("\137PNG", 1, true)
+        local gif_pos = search_area:find("GIF8", 1, true)
+        local img_start = jpg_pos or png_pos or gif_pos
+        for _, p in ipairs({ jpg_pos, png_pos, gif_pos }) do
+          if p and (not img_start or p < img_start) then img_start = p end
+        end
+        if img_start then
+          local img = search_area:sub(img_start)
+          if img:sub(1, 4) == "\137PNG" then mime = "image/png" end
+          if img:sub(1, 3) == "GIF" then mime = "image/gif" end
+          if img:sub(1, 2) == "\255\216" then mime = "image/jpeg" end
+          return mime, img
+        end
+      end
+      pos = pos + 10 + sz
+    end
+    return nil, nil
+  end
+end
+
+if not ExtractID3Cover then
+  function ExtractID3Cover(file_path)
+    if not file_path or file_path == "" then return nil, nil end
+    local path = normalize_path(file_path, false)
+    local f = io.open(path, "rb")
+    if not f then return nil, nil end
+    local header = f:read(10) or ""
+    f:close()
+
+    local tag_full_data
+    if #header >= 10 and header:sub(1, 3) == "ID3" then
+      local tag_size = syncsafe_to_int(header:sub(7, 10))
+      local f2 = io.open(path, "rb")
+      if f2 then
+        tag_full_data = f2:read(10 + tag_size)
+        f2:close()
+      end
+    elseif header:sub(1, 4) == "RIFF" then
+      tag_full_data = GetWavChunkID3(path)
+    end
+
+    if tag_full_data and #tag_full_data >= 10 and tag_full_data:sub(1, 3) == "ID3" then
+      local ver = tag_full_data:byte(4)
+      local tag_size = syncsafe_to_int(tag_full_data:sub(7, 10))
+      local tag_body = tag_full_data:sub(11, 11 + tag_size - 1)
+      return parse_id3_apic(tag_body, ver)
+    end
+    return nil, nil
+  end
+end
+
+if not ExtractFlacCover then
+  function ExtractFlacCover(file_path)
+    if not file_path or file_path == "" then return nil, nil end
+    local path = normalize_path(file_path, false)
+    local f = io.open(path, "rb")
+    if not f then return nil, nil end
+    if f:read(4) ~= "fLaC" then f:close() return nil, nil end
+
+    while true do
+      local hdr = f:read(4)
+      if not hdr or #hdr < 4 then break end
+      local b1 = hdr:byte(1)
+      local is_last = b1 >= 128
+      local block_type = b1 % 128
+      local size = hdr:byte(2) * 2^16 + hdr:byte(3) * 2^8 + hdr:byte(4)
+      local data = f:read(size) or ""
+      if block_type == 6 then
+        local pos = 5
+        local mime_len = be_to_int(data:sub(pos, pos + 3)); pos = pos + 4
+        local mime = data:sub(pos, pos + mime_len - 1); pos = pos + mime_len
+        local desc_len = be_to_int(data:sub(pos, pos + 3)); pos = pos + 4 + desc_len
+        pos = pos + 16
+        local pic_len = be_to_int(data:sub(pos, pos + 3)); pos = pos + 4
+        local img = data:sub(pos, pos + pic_len - 1)
+        f:close()
+        return mime, img
+      end
+      if is_last then break end
+    end
+
+    f:close()
+    return nil, nil
+  end
+end
+
+local function sm_read_external_cover(audio_path)
+  local dir = audio_path:match("^(.*[\\/])") or ""
+  local base = audio_path:match("([^\\/]+)%.%w+$") or ""
+  local names = {
+    "cover.jpg", "cover.jpeg", "cover.png", "cover.gif",
+    "cover.bmp", "cover.webp",
+    "folder.jpg", "folder.jpeg", "folder.png", "folder.gif",
+    "folder.bmp", "folder.webp",
+    base .. ".jpg", base .. ".jpeg", base .. ".png", base .. ".gif",
+    base .. ".bmp", base .. ".webp"
+  }
+  for _, name in ipairs(names) do
+    local p = dir .. name
+    local img = sm_read_all(p)
+    if img and img ~= "" then
+      local lower = name:lower()
+      local mime = lower:match("%.png$") and "image/png"
+        or (lower:match("%.gif$") and "image/gif")
+        or (lower:match("%.bmp$") and "image/bmp")
+        or (lower:match("%.webp$") and "image/webp")
+        or "image/jpeg"
+      return mime, img
+    end
+  end
+  return nil, nil
+end
+
+function SM_EnsureCoverForAudio(audio_path)
+  audio_path = normalize_path(audio_path or "", false)
+  if audio_path == "" then return nil, nil end
+  if SM_COVER_CACHE[audio_path] ~= nil then
+    local hit = SM_COVER_CACHE[audio_path]
+    if hit == false then return nil, nil end
+    return hit.cover_id, hit.path
+  end
+
+  local mime, data
+  if type(GetCoverImageData) == "function" then
+    mime, data = GetCoverImageData(audio_path)
+  else
+    mime, data = ExtractID3Cover(audio_path)
+    if not data then mime, data = ExtractFlacCover(audio_path) end
+    if not data then mime, data = sm_read_external_cover(audio_path) end
+  end
+
+  if not data or data == "" then
+    SM_COVER_CACHE[audio_path] = false
+    return nil, nil
+  end
+
+  local cover_id = sm_cover_hash(data)
+  if not cover_id then
+    SM_COVER_CACHE[audio_path] = false
+    return nil, nil
+  end
+
+  local out_path = SM_CoverCacheDir() .. cover_id .. sm_image_ext(mime, data)
+  if not reaper or not reaper.file_exists or not reaper.file_exists(out_path) then
+    sm_write_all(out_path, data)
+  end
+
+  local index = SM_LoadCoverIndex()
+  if index[cover_id] ~= out_path then
+    index[cover_id] = out_path
+    SM_SaveCoverIndex(index)
+  end
+
+  SM_COVER_CACHE[audio_path] = { cover_id = cover_id, path = out_path }
+  return cover_id, out_path
+end
+
 function AddPathToDBFile(dbfile, new_path)
   local lines = {}
   for line in io.lines(dbfile) do table.insert(lines, line) end
@@ -1522,6 +1873,10 @@ end
 function WriteToMediaDB(info, dbfile, root_path)
   local f = io.open(dbfile, "a+b")
   if not f then return end
+  if info and (not info.cover_id or info.cover_id == "") and info.path and type(SM_EnsureCoverForAudio) == "function" then
+    local cover_id = SM_EnsureCoverForAudio(info.path)
+    if cover_id and cover_id ~= "" then info.cover_id = cover_id end
+  end
   -- FILE行
   f:write(('FILE "%s" %d 0 %d 0\n'):format(info.path, tonumber(info.size), tonumber(info.mtime) or 0))
   -- DATA基本属性行
@@ -1544,6 +1899,7 @@ function WriteToMediaDB(info, dbfile, root_path)
   local desc = {}
   if info.comment and info.comment ~= "" then table.insert(desc, quote_if_space('c:' .. info.comment)) end
   if info.description and info.description ~= "" then table.insert(desc, quote_if_space('d:' .. info.description)) end
+  if info.cover_id and info.cover_id ~= "" then table.insert(desc, 'cover_id:' .. tostring(info.cover_id)) end
   if #desc > 0 then f:write('DATA ' .. table.concat(desc, ' ') .. '\n') end
   f:close()
 end
@@ -1666,6 +2022,10 @@ function ParseMediaDBFile(dbpath)
       do
         local v = line:match('"[Ii]:([^"]-)"') or line:match('[Ii]:"([^"]-)"') or line:match('[Ii]:(%d+)')
         if v and v ~= "" then entry.bits = tonumber(v) or entry.bits or 0 end
+      end
+      do
+        local v = line:match('"cover_id:([^"]-)"') or line:match('cover_id:"([^"]-)"') or line:match('cover_id:([^%s"]+)')
+        if v and v ~= "" then entry.cover_id = v end
       end
 
       entry.data = entry.data or {}
@@ -1841,6 +2201,10 @@ function _apply_data_line(entry, line)
     local v = line:match('"[Ii]:([^"]-)"') or line:match('[Ii]:"([^"]-)"') or line:match('[Ii]:(%d+)')
     if v and v ~= "" then entry.bits = tonumber(v) or entry.bits or 0 end
   end
+  do
+    local v = line:match('"cover_id:([^"]-)"') or line:match('cover_id:"([^"]-)"') or line:match('cover_id:([^%s"]+)')
+    if v and v ~= "" then entry.cover_id = v end
+  end
 end
 
 -- 开启流式读取
@@ -1895,6 +2259,10 @@ function MediaDBStreamRead(stream, max_count)
       entry.filename = entry.path and (entry.path:match("([^/\\]+)$") or entry.path) or ""
 
     elseif line:find("^DATA") then
+      do
+        local v = line:match('"cover_id:([^"]-)"') or line:match('cover_id:"([^"]-)"') or line:match('cover_id:([^%s"]+)')
+        if v and v ~= "" then entry.cover_id = v end
+      end
       if lazy then
         -- 只解析用户勾选的键，其余走懒加载。后续可 EnsureEntryParsed 全量解析
         if eager then

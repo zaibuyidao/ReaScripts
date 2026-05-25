@@ -601,10 +601,23 @@ local VirtualListMeta = {
     last_pos = p + 1
 
     -- 16. UCS CatID
-    val_str = raw:sub(last_pos)
+    p = raw:find('|', last_pos, true)
+    if p then
+      val_str = raw:sub(last_pos, p-1)
+      last_pos = p + 1
+    else
+      val_str = raw:sub(last_pos)
+      last_pos = nil
+    end
     if #val_str > 0 then item.ucs_catid = val_str end
 
-    -- 17. Filename
+    -- 17. Cover ID
+    if last_pos then
+      val_str = raw:sub(last_pos)
+      if #val_str > 0 then item.cover_id = val_str end
+    end
+
+    -- Filename
     if item.path then
       item.filename = item.path:match("[^/\\]+$") or item.path
     end
@@ -4171,6 +4184,24 @@ function DrawDBPathFilterTag(ctx)
   return clicked_main, false
 end
 
+function DrawCoverFilterTag(ctx)
+  local cover_id = _G._cover_id_filter
+  if type(cover_id) ~= "string" or cover_id == "" then return end
+  local label_id = (#cover_id > 12) and (cover_id:sub(1, 12) .. "...") or cover_id
+  local clicked_main, clicked_close = ImGui_Tag(ctx, "##cover_filter", "Cover: " .. label_id, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5})
+
+  if clicked_close then
+    _G._cover_id_filter = nil
+    local static = _G._soundmole_static or {}
+    _G._soundmole_static = static
+    static.filtered_list_map = {}
+    static.last_filter_text_map = {}
+    return clicked_main, true
+  end
+
+  return clicked_main, false
+end
+
 -- 绘制过滤搜索标签
 function DrawFilterSearchTag(ctx)
   _G.locked_filter_terms = _G.locked_filter_terms or {}
@@ -6646,6 +6677,7 @@ end
 local last_window_visible = true
 local cover_cache = {}
 local cover_path_cache = {}
+local cover_image_cache = {}
 local bad_cover_cache = {}
 local last_cover_img = nil
 local last_cover_path = nil
@@ -6663,8 +6695,8 @@ function IsValidImageFile(path)
   -- 以二进制只读模式打开
   local f = io.open(path, "rb") 
   if not f then return false end
-  -- 读取前 8 个字节
-  local header = f:read(8) 
+  -- 读取前 12 个字节，兼容 PNG/JPG/GIF/BMP/WEBP 头
+  local header = f:read(12) 
   f:close()
 
   if not header or #header < 2 then return false end
@@ -6686,6 +6718,11 @@ function IsValidImageFile(path)
 
   -- 检查 BMP，BMP 文件头前2个字节是 "BM" (ASCII: 66 77)
   if header:sub(1, 2) == "BM" then
+    return true
+  end
+
+  -- 检查 WEBP，文件头为 RIFF....WEBP
+  if header:sub(1, 4) == "RIFF" and header:sub(9, 12) == "WEBP" then
     return true
   end
 
@@ -6913,13 +6950,22 @@ function GetCoverImageData(raw_path)
   -- 回退到同目录图片文件
   local dir  = audio_path:match("^(.*[\\/])") or ""
   local base = audio_path:match("([^\\/]+)%.%w+$") or ""
-  for _, name in ipairs({ "cover.jpg", "cover.png", "folder.jpg", "folder.png", base .. ".jpg", base .. ".png" }) do
+  for _, name in ipairs({
+    "cover.jpg", "cover.jpeg", "cover.png", "cover.gif", "cover.bmp", "cover.webp",
+    "folder.jpg", "folder.jpeg", "folder.png", "folder.gif", "folder.bmp", "folder.webp",
+    base .. ".jpg", base .. ".jpeg", base .. ".png", base .. ".gif", base .. ".bmp", base .. ".webp"
+  }) do
     local p = dir .. name
     local f = io.open(p, "rb")
     if f then
       local img = f:read("*all")
       f:close()
-      local m = name:find("%.png$") and "image/png" or "image/jpeg"
+      local lower = name:lower()
+      local m = lower:match("%.png$") and "image/png"
+        or (lower:match("%.gif$") and "image/gif")
+        or (lower:match("%.bmp$") and "image/bmp")
+        or (lower:match("%.webp$") and "image/webp")
+        or "image/jpeg"
       cover_cache[audio_path] = { mime = m, data = img }
       return m, img
     end
@@ -6933,14 +6979,22 @@ end
 -- 提取封面并写到 cache_dir，返回完整文件路径
 function SaveCoverToTemp(file_path)
   file_path = normalize_path(file_path, false)
+  if type(SM_EnsureCoverForAudio) == "function" then
+    local _, cover_path = SM_EnsureCoverForAudio(file_path)
+    if cover_path then return cover_path end
+  end
   -- 提取二进制
   local mime, data = ExtractID3Cover(file_path)
   if not data then mime, data = ExtractFlacCover(file_path) end
   if not data then return nil end
-  local header = data:sub(1, 2)
   -- 生成唯一文件路径
-  local hash = SimpleHash(file_path)
-  local ext  = mime:find("png") and ".png" or ".jpg"
+  local hash = SimpleHash(data)
+  local mime_l = tostring(mime or ""):lower()
+  local ext = ".jpg"
+  if mime_l:find("png", 1, true) or data:sub(1, 8) == "\137PNG\r\n\26\n" then ext = ".png"
+  elseif mime_l:find("gif", 1, true) or data:sub(1, 3) == "GIF" then ext = ".gif"
+  elseif mime_l:find("bmp", 1, true) or data:sub(1, 2) == "BM" then ext = ".bmp"
+  elseif mime_l:find("webp", 1, true) or (data:sub(1, 4) == "RIFF" and data:sub(9, 12) == "WEBP") then ext = ".webp" end
   local out  = img_cache_dir .. hash .. ext
   -- 文件不存在就写入
   local f2 = io.open(out, "rb")
@@ -6964,6 +7018,13 @@ end
 -- 先调用 SaveCoverToTemp 获取内嵌封面临时文件路径，如果没有，再退回到同目录查找图片文件
 function GetCoverImagePath(audio_path)
   audio_path = normalize_path(audio_path, false)
+  if type(SM_EnsureCoverForAudio) == "function" then
+    local _, cover_path = SM_EnsureCoverForAudio(audio_path)
+    if cover_path then
+      cover_path_cache[audio_path] = cover_path
+      return cover_path
+    end
+  end
   -- 已缓存则直接返回
   if cover_path_cache[audio_path] ~= nil then
     return cover_path_cache[audio_path] or nil
@@ -6977,7 +7038,11 @@ function GetCoverImagePath(audio_path)
   -- 同目录图片文件
   local dir  = audio_path:match("^(.*[\\/])") or ""
   local base = audio_path:match("([^\\/]+)%.")  or ""
-  for _, name in ipairs({ "cover.jpg", "cover.png", "folder.jpg", "folder.png", base .. ".jpg", base .. ".png" }) do
+  for _, name in ipairs({
+    "cover.jpg", "cover.jpeg", "cover.png", "cover.gif", "cover.bmp", "cover.webp",
+    "folder.jpg", "folder.jpeg", "folder.png", "folder.gif", "folder.bmp", "folder.webp",
+    base .. ".jpg", base .. ".jpeg", base .. ".png", base .. ".gif", base .. ".bmp", base .. ".webp"
+  }) do
     local p = dir .. name
     local f = io.open(p, "rb")
     if f then
@@ -6995,19 +7060,26 @@ end
 function HasCoverImage(img_info)
   if not img_info then return false end
   if img_info.path and bad_cover_cache[img_info.path] then return false end
+  if img_info.cover_id and type(SM_GetCoverPathByID) == "function" then
+    return SM_GetCoverPathByID(img_info.cover_id) ~= nil
+  end
   local mime, data = GetCoverImageData(img_info.path)
   return data ~= nil
 end
 
 function ReleaseAllCoverImages()
-  if cover_cache then
-    for k, img in pairs(cover_cache) do
-      if img and reaper.ImGui_DestroyImage then
-        reaper.ImGui_DestroyImage(img)
-      end
-      cover_cache[k] = nil
+  if cover_image_cache and reaper.ImGui_DestroyImage then
+    for k, cached in pairs(cover_image_cache) do
+      local img = (type(cached) == "table") and cached.image or cached
+      if img then pcall(reaper.ImGui_DestroyImage, img) end
+      cover_image_cache[k] = nil
     end
   end
+  if cover_cache then
+    for k in pairs(cover_cache) do cover_cache[k] = nil end
+  end
+  cover_path_cache = {}
+  bad_cover_cache = {}
 end
 
 function DeleteCoverCacheFiles()
@@ -8001,10 +8073,48 @@ function RequestActiveSearchRefresh()
   local has_ucs_cat = type(temp_ucs_cat_keyword) == "string" and temp_ucs_cat_keyword ~= ""
   local has_ucs_sub = type(temp_ucs_sub_keyword) == "string" and temp_ucs_sub_keyword ~= ""
   local has_locked = _G.filter_lock_enabled and type(_G.locked_filter_terms) == "table" and #_G.locked_filter_terms > 0
+  local has_cover = type(_G._cover_id_filter) == "string" and _G._cover_id_filter ~= ""
 
-  if has_text or has_temp or has_ucs_cat or has_ucs_sub or has_locked then
+  if has_text or has_temp or has_ucs_cat or has_ucs_sub or has_locked or has_cover then
     RequestSearchRefresh()
   end
+end
+
+function EnsureCoverIDForFilter(info)
+  if not info then return "" end
+  if type(EnsureEntryParsed) == "function" then EnsureEntryParsed(info) end
+
+  local cover_id = tostring(info.cover_id or "")
+  if cover_id ~= "" then return cover_id end
+
+  -- Live-folder / project-item rows may not come from a freshly built DB.
+  -- For cover filtering, compute the same content-hash ID on demand so only
+  -- rows with the exact same image binary remain visible.
+  if info.path and info.path ~= "" and type(SM_EnsureCoverForAudio) == "function" then
+    local id = SM_EnsureCoverForAudio(info.path)
+    if id and id ~= "" then
+      info.cover_id = id
+      return tostring(id)
+    end
+  end
+
+  return ""
+end
+
+function FilterListByCoverID(list, cover_id)
+  cover_id = tostring(cover_id or "")
+  if cover_id == "" then return list end
+
+  local out = {}
+  local n = #((type(list) == "table" and list) or {})
+  for i = 1, n do
+    local info = list[i]
+    if info and EnsureCoverIDForFilter(info) == cover_id then
+      out[#out + 1] = info
+    end
+  end
+  out._cover_filter_id = cover_id
+  return out
 end
 
 -- 根据文本框、同义词、UCS、Saved Search 等规则，从原始 files_idx_cache 中构建过滤后列表
@@ -8013,7 +8123,8 @@ end
 -- 支持 "" 全字匹配，且支持延伸功能：" box" (词首), "box " (词尾)
 function BuildFilteredList(list)
   local safe_cache = list or files_idx_cache or {}
-  local db_path_filter = _G._db_path_prefix_filter
+  local db_path_filter = _G._db_path_prefix_filter or ""
+  local cover_filter = _G._cover_id_filter or ""
 
   -- 准备搜索关键词
   local filter_text = _G.commit_filter_text or ""
@@ -8037,10 +8148,11 @@ function BuildFilteredList(list)
   local ucs_sub_arg = temp_ucs_sub_keyword or ""
   local has_ucs = (ucs_cat_arg ~= "") or (ucs_sub_arg ~= "")
   local has_path = (db_path_filter ~= "")
-  local is_empty_request = (final_query == "" and not has_path and not has_ucs)
+  local has_cover = (cover_filter ~= "")
+  local is_empty_request = (final_query == "" and not has_path and not has_ucs and not has_cover)
 
   -- 当查询、路径过滤、UCS 过滤全部为空时，直接返回原始列表缓存
-  if final_query == "" and not has_path and not has_ucs then
+  if final_query == "" and not has_path and not has_ucs and not has_cover then
     return safe_cache
   end
 
@@ -8058,7 +8170,7 @@ function BuildFilteredList(list)
     return safe_cache
   end
 
-  if use_cpp then
+  if use_cpp and not has_cover then
     if _G.SM_Cache_Ctx ~= db_handle or not _G.SM_Cache_Full_Handle then
       if _G.SM_Cache_Full_Handle then 
         if _G.SM_Cache_Full_Handle ~= _G._last_search_handle then
@@ -8370,7 +8482,12 @@ function BuildFilteredList(list)
       pair_ok = (cat_l == pair_cat)
     end
 
-    if text_match and pair_ok then
+    local cover_ok = true
+    if has_cover then
+      cover_ok = (EnsureCoverIDForFilter(info) == cover_filter)
+    end
+
+    if text_match and pair_ok and cover_ok then
       filtered[#filtered + 1] = info
     end
   end
@@ -9069,6 +9186,96 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
   end
 end
 
+function ApplyCoverFilter(cover_id)
+  if not cover_id or cover_id == "" then return end
+  _G._cover_id_filter = cover_id
+  selected_row = -1
+  file_select_start, file_select_end = nil, nil
+  if type(RequestSearchRefresh) == "function" then
+    RequestSearchRefresh()
+  else
+    local s = _G._soundmole_static or {}
+    _G._soundmole_static = s
+    s.filtered_list_map = {}
+    s.last_filter_text_map = {}
+  end
+end
+
+function ResolveCoverPathForEntry(info)
+  if not info then return nil, nil end
+  local cover_id = info.cover_id
+  if cover_id and cover_id ~= "" and type(SM_GetCoverPathByID) == "function" then
+    local path = SM_GetCoverPathByID(cover_id)
+    if path then return path, cover_id end
+  end
+  if info.path and info.path ~= "" and type(SM_EnsureCoverForAudio) == "function" then
+    local id, path = SM_EnsureCoverForAudio(info.path)
+    if id and id ~= "" then info.cover_id = id end
+    if path then return path, id end
+  end
+  if info.path and info.path ~= "" then
+    local path = GetCoverImagePath(info.path)
+    if path then return path, cover_id end
+  end
+  return nil, cover_id
+end
+
+function GetCoverImageTexture(ctx, path)
+  if not path or path == "" then return nil end
+  if bad_cover_cache[path] then return nil end
+  local cached = cover_image_cache[path]
+  if type(cached) == "table" and cached.image then return cached.image end
+  if cached then
+    if reaper.ImGui_Attach then pcall(reaper.ImGui_Attach, ctx, cached) end
+    cover_image_cache[path] = { image = cached }
+    return cached
+  end
+  if not IsValidImageFile(path) then
+    bad_cover_cache[path] = true
+    return nil
+  end
+  local ok, img = pcall(reaper.ImGui_CreateImage, path)
+  if ok and img then
+    if reaper.ImGui_Attach then
+      local attach_ok = pcall(reaper.ImGui_Attach, ctx, img)
+      if not attach_ok then
+        if reaper.ImGui_DestroyImage then pcall(reaper.ImGui_DestroyImage, img) end
+        bad_cover_cache[path] = true
+        return nil
+      end
+    end
+    cover_image_cache[path] = { image = img }
+    return img
+  end
+  bad_cover_cache[path] = true
+  return nil
+end
+
+function RenderCoverCell(ctx, i, info, row_height)
+  local side = math.max(1, math.floor(row_height or GetScaledRowHeight()))
+  local cover_path, cover_id = ResolveCoverPathForEntry(info)
+  local img = cover_path and GetCoverImageTexture(ctx, cover_path) or nil
+
+  reaper.ImGui_PushID(ctx, "cover_" .. tostring(info and info.path or i))
+  if img then
+    reaper.ImGui_Image(ctx, img, side, side)
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+      if cover_id and cover_id ~= "" then
+        reaper.ImGui_BeginTooltip(ctx)
+        reaper.ImGui_Text(ctx, "cover_id:" .. tostring(cover_id))
+        reaper.ImGui_EndTooltip(ctx)
+      end
+    end
+    if reaper.ImGui_IsItemClicked(ctx, 0) and cover_id and cover_id ~= "" then
+      ApplyCoverFilter(cover_id)
+    end
+  else
+    reaper.ImGui_Dummy(ctx, side, side)
+  end
+  reaper.ImGui_PopID(ctx)
+end
+
 -- 单行文本绘制，移除换行并压缩空白，防止表格行被撑高
 function DrawCellTextOneLine(ctx, s)
   s = tostring(s or "")
@@ -9144,6 +9351,8 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
     -- Waveform
     if col_name == T("Waveform") then
       RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
+    elseif col_name == T("Album Art") or col_name == "专辑图片" then
+      RenderCoverCell(ctx, i, info, row_height)
     -- File & Teak name
     elseif is_name_col then
       local display_name = (info.filename or ""):gsub("#", "#\u{200B}")
@@ -9922,8 +10131,8 @@ function RunDatabaseLoaderTick()
       local item = {}
       local last_pos = 1
       local fields = {} 
-      -- 16 个字段
-      for i=1,16 do
+      -- 17 个字段
+      for i=1,17 do
         local p = line:find('|', last_pos, true)
         if p then
           fields[i] = line:sub(last_pos, p-1)
@@ -9955,6 +10164,7 @@ function RunDatabaseLoaderTick()
         if fields[14]~="" then item.ucs_category = fields[14] end
         if fields[15]~="" then item.ucs_subcategory = fields[15] end
         if fields[16]~="" then item.ucs_catid = fields[16] end
+        if fields[17]~="" then item.cover_id = fields[17] end
 
         table.insert(db_loader.temp_list, item)
         db_loader.loaded_count = db_loader.loaded_count + 1
@@ -12076,13 +12286,14 @@ function loop()
       reaper.ImGui_TextFilter_Set(filename_filter, "")
 
       _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
+      _G._cover_id_filter = nil
       -- 清除临时搜索字段，UCS隐式搜索临时关键词
       -- active_saved_search = nil
       -- temp_search_field, temp_search_keyword = nil
       -- temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil
 
-      -- static.filtered_list_map    = {}
-      -- static.last_filter_text_map = {}
+      static.filtered_list_map    = {}
+      static.last_filter_text_map = {}
       -- selected_row = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -12623,26 +12834,37 @@ function loop()
       local p = _G._db_path_prefix_filter
       return type(p) == "string" and p ~= ""
     end
+    function SM_HasCoverTag()
+      local c = _G._cover_id_filter
+      return type(c) == "string" and c ~= ""
+    end
 
     local has_ucs = SM_HasUCSTag()
     local has_db  = SM_HasDBTag()
+    local has_cover = SM_HasCoverTag()
     -- 记录当前行的基线（相对坐标）
     local base_x, base_y = reaper.ImGui_GetCursorPos(ctx)
 
-    if has_ucs or has_db then
+    if has_ucs or has_db or has_cover then
       reaper.ImGui_SameLine(ctx, nil, 10)
       local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
       reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
     end
 
     if has_ucs then DrawImplicitSearchTag(ctx) end
-    if has_ucs and has_db then
+    if has_ucs and (has_db or has_cover) then
       reaper.ImGui_SameLine(ctx, nil, 10)
       -- 把第二个标签的 Y 拉回到第一枚标签的基线，否则会偏下
       local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
       reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
     end
     if has_db then DrawDBPathFilterTag(ctx) end
+    if has_db and has_cover then
+      reaper.ImGui_SameLine(ctx, nil, 10)
+      local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
+      reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
+    end
+    if has_cover then DrawCoverFilterTag(ctx) end
 
     TightNewLine(ctx, 0.7) -- 正常行高的70%
 
@@ -15042,7 +15264,7 @@ function loop()
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     colors.red)                 -- 表格交替行背景 0xFF0F0F0F
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", right_w, child_h, 0) then
-      if reaper.ImGui_BeginTable(ctx, "filelist", 19,
+      if reaper.ImGui_BeginTable(ctx, "filelist", 20,
         reaper.ImGui_TableFlags_Borders()      -- 表格分隔线
       | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
       | reaper.ImGui_TableFlags_Resizable()
@@ -15054,8 +15276,10 @@ function loop()
       -- | reaper.ImGui_TableFlags_RowBg()       -- 表格背景交替颜色
       ) then
         reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
+        local cover_col_w = math.max(28, math.ceil(GetScaledRowHeight()))
         if collect_mode == COLLECT_MODE_ALL_ITEMS then -- Media Items
           reaper.ImGui_TableSetupColumn(ctx, T("Waveform"),    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort() | reaper.ImGui_TableColumnFlags_NoReorder(), 100) -- 锁定列不允许拖动
+          reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("Take Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, T("Type"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -15076,6 +15300,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_RPP then -- RPP
           reaper.ImGui_TableSetupColumn(ctx, T("Waveform"),    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, T("Type"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -15096,6 +15321,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_FREESOUND then -- Freesound
           reaper.ImGui_TableSetupColumn(ctx, T("Waveform"),    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, T("Type"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -15116,6 +15342,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         else
           reaper.ImGui_TableSetupColumn(ctx, T("Waveform"),    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, T("Type"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -15172,7 +15399,8 @@ function loop()
         local eff_text = _G.commit_filter_text or ""
         local ucs_sig  = tostring(temp_search_field or "") .. "|" .. tostring(temp_search_keyword or "")
         local path_sig = tostring(_G._db_path_prefix_filter or "")
-        local eff      = eff_text .. "||" .. ucs_sig .. "||" .. path_sig
+        local cover_sig = tostring(_G._cover_id_filter or "")
+        local eff      = eff_text .. "||" .. ucs_sig .. "||" .. path_sig .. "||" .. cover_sig
 
         local last_filter_text = static.last_filter_text_map[current_db_key] or ""
         local last_sort_specs  = static.last_sort_specs_map[current_db_key] or ""
@@ -15188,7 +15416,8 @@ function loop()
 
         local sort_changed = (sort_specs_str ~= last_sort_specs)
         -- 检查是否需要排序
-        if sort_changed and not filter_changed and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and reaper.APIExists("SM_DB_Sort") then
+        local cover_filter_active = (type(_G._cover_id_filter) == "string" and _G._cover_id_filter ~= "")
+        if sort_changed and not filter_changed and not cover_filter_active and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and reaper.APIExists("SM_DB_Sort") then
           -- 确定排序句柄
           local target_ctx = nil
           local is_search_view = false
@@ -15463,6 +15692,12 @@ function loop()
         end
 
         ::continue_frame::
+
+        if cover_sig ~= "" and filtered_list and filtered_list._cover_filter_id ~= cover_sig then
+          filtered_list = FilterListByCoverID(filtered_list, cover_sig)
+          static.filtered_list_map[current_db_key] = filtered_list
+          static.last_filter_text_map[current_db_key] = eff
+        end
 
         _G.current_display_list = filtered_list
 
@@ -17943,7 +18178,17 @@ function loop()
           if IsValidImageFile(cover_path) then
             local ok, retval = pcall(reaper.ImGui_CreateImage, cover_path)
             if ok and retval then
-              last_cover_img = retval
+              if reaper.ImGui_Attach then
+                local attach_ok = pcall(reaper.ImGui_Attach, ctx, retval)
+                if attach_ok then
+                  last_cover_img = retval
+                else
+                  if reaper.ImGui_DestroyImage then pcall(reaper.ImGui_DestroyImage, retval) end
+                  if audio_path then bad_cover_cache[audio_path] = true end
+                end
+              else
+                last_cover_img = retval
+              end
             else
               -- 通过了头检查但依然加载失败，可能是数据截断
               if audio_path then bad_cover_cache[audio_path] = true end
@@ -18788,6 +19033,7 @@ function loop()
             if _G.temp_search_keyword then has_filter = true end
             if _G.active_saved_search then has_filter = true end
             if _G.temp_ucs_cat_keyword or _G.temp_ucs_sub_keyword then has_filter = true end
+            if type(_G._cover_id_filter) == "string" and _G._cover_id_filter ~= "" then has_filter = true end
 
             -- 数据库路径过滤
             if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) then
