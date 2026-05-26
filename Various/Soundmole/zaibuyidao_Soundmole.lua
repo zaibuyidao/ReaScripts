@@ -7086,17 +7086,8 @@ function ReleaseAllCoverImages()
 end
 
 function DeleteCoverCacheFiles()
-  local path = img_cache_dir
-  local i = 0
-  while true do
-    local fname = reaper.EnumerateFiles(path, i)
-    if not fname then break end
-    local fpath = path .. fname
-    os.remove(fpath)
-    i = i + 1
-  end
-  
-  -- os.remove(path) -- 删除空目录
+  -- cover_cache is content-addressed and referenced by cover_index.json /
+  -- per-database coverids files, so keep the files across sessions.
 end
 
 --------------------------------------------- 地址栏音频文件地址点击文件夹目录段节点 ---------------------------------------------
@@ -9035,7 +9026,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       end
       -- 移除选中项
       for path in pairs(remove_paths) do
-        RemoveFromMediaDB(path, dbpath)
+        RemoveFromMediaDB(path, dbpath, true)
         for k = #files_idx_cache, 1, -1 do
           if normalize_path(files_idx_cache[k].path, false) == path then
             table.remove(files_idx_cache, k)
@@ -9043,6 +9034,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
           end
         end
       end
+      if SM_DBCoverIndexExists(dbpath) then SM_RebuildDBCoverIndexFromDB(dbpath) end
 
       -- 强制重建列表，失效当前数据库的过滤缓存
       local current_db_key = GetCurrentListKey()
@@ -9404,6 +9396,26 @@ function SM_GetAlbumPanelSourceList()
   return {}
 end
 
+function SM_GetCurrentDBCoverIndexPath()
+  if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
+    return normalize_path(script_path .. "SoundmoleDB", true) .. tree_state.cur_mediadb
+  end
+  if collect_mode == COLLECT_MODE_REAPERDB and tree_state and tree_state.cur_reaper_db and tree_state.cur_reaper_db ~= "" then
+    return normalize_path(reaper.GetResourcePath() .. sep .. "MediaDB", true) .. tree_state.cur_reaper_db
+  end
+  return nil
+end
+
+function SM_GetAlbumPanelDBCoverItems()
+  if type(SM_LoadDBCoverIndexItems) ~= "function" then return nil end
+  if collect_mode ~= COLLECT_MODE_MEDIADB and collect_mode ~= COLLECT_MODE_REAPERDB then return nil end
+  local dbpath = SM_GetCurrentDBCoverIndexPath() or _G.current_db_fullpath
+  if not dbpath or dbpath == "" then return nil end
+  local items = SM_LoadDBCoverIndexItems(dbpath)
+  if not items then return nil end
+  return dbpath, items
+end
+
 function SM_AlbumPanelListKey(list)
   local key = type(GetCurrentListKey) == "function" and GetCurrentListKey() or tostring(collect_mode or "")
   return tostring(list) .. "|" .. tostring(key)
@@ -9420,6 +9432,19 @@ function SM_ResetAlbumPanelCache(list, key)
 end
 
 function SM_UpdateAlbumPanelCache(list, max_scan)
+  local dbpath, db_items = SM_GetAlbumPanelDBCoverItems()
+  if db_items then
+    local key = "DBCOVER:" .. tostring(dbpath)
+    if album_panel_cache.key ~= key or album_panel_cache.items ~= db_items then
+      SM_ResetAlbumPanelCache(db_items, key)
+      album_panel_cache.items = db_items
+      album_panel_cache.last_count = #db_items
+      album_panel_cache.scan_index = #db_items + 1
+      album_panel_cache.done = true
+    end
+    return album_panel_cache
+  end
+
   list = (type(list) == "table") and list or {}
   local key = SM_AlbumPanelListKey(list)
   if album_panel_cache.key ~= key or album_panel_cache.list ~= list then
@@ -10368,6 +10393,7 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
 
   if not dbfile or dbfile == "" then return false end
   local fullpath = db_dir .. sep .. dbfile
+  _G.current_db_fullpath = fullpath
 
   -- 分支 A: 极速模式, C++ 极速加载分支
   if HAVE_SM_DB then
@@ -10383,7 +10409,7 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
 
       -- 直接构建代理，跳过搬运
       local count = reaper.SM_DB_GetCount(ctx)
-      local proxy = { _handle = ctx, _count = count }
+      local proxy = { _handle = ctx, _count = count, _db_path = fullpath }
       setmetatable(proxy, VirtualListMeta)
 
       -- 赋值给全局缓存，立即生效
@@ -12050,7 +12076,8 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
     total        = #filelist,
     finished     = false,
     root_path    = root_path,
-    existing_map = DB_ReadExistingFileSet(db_file_path)
+    existing_map = DB_ReadExistingFileSet(db_file_path),
+    cover_index  = {}
   }
 
   return true
@@ -12070,6 +12097,8 @@ function SM_ProcessBuilderLoop()
       builder_state.active = false -- 停止 C++ 引擎
       builder_state.final_count = count -- 保存最终数量
       builder_state.total_time = reaper.time_precise() - (builder_state.start_time or reaper.time_precise()) -- 计算总耗时
+      if type(SM_ClearDBCoverIndexCache) == "function" then SM_ClearDBCoverIndexCache(builder_state.db_path) end
+      if type(SM_ResetAlbumPanelCache) == "function" then SM_ResetAlbumPanelCache(nil, nil) end
       reaper.ImGui_OpenPopup(ctx, "Build Complete") -- 触发完成弹窗
 
     -- 扫描失败
@@ -14753,7 +14782,8 @@ function loop()
                         alias = mediadb_alias[filename] or filename, -- mediadb_alias[dbfile] or "Unnamed",
                         root_path = root,
                         is_incremental = true,
-                        existing_map = DB_ReadExistingFileSet(dbpath) -- 读入已存在的FILE
+                        existing_map = DB_ReadExistingFileSet(dbpath), -- 读入已存在的FILE
+                        cover_index = SM_PrepareDBCoverIndexForAppend(dbpath)
                       }
                     end
                   end
@@ -14796,7 +14826,8 @@ function loop()
                       root_path   = path_list[1], -- 兼容旧逻辑用到 root_path 的情况
                       root_paths  = path_list,
                       is_rebuild  = true,
-                      existing_map = {}
+                      existing_map = {},
+                      cover_index  = {}
                     }
                   end
                 end
@@ -19732,7 +19763,8 @@ function loop()
             finished = false,
             -- alias = alias_name, 不重命名数据库命名
             root_path = folder,
-            existing_map = DB_ReadExistingFileSet(dbpath)
+            existing_map = DB_ReadExistingFileSet(dbpath),
+            cover_index = SM_PrepareDBCoverIndexForAppend(dbpath)
           }
         end
       end
@@ -19776,6 +19808,7 @@ function loop()
           local f = io.open(dbpath, "wb")
           for _, l in ipairs(lines) do f:write(l, "\n") end
           f:close()
+          if SM_DBCoverIndexExists(dbpath) then SM_RebuildDBCoverIndexFromDB(dbpath) end
           files_idx_cache = nil
           CollectFiles()
 
@@ -19856,6 +19889,9 @@ function loop()
         reaper.ImGui_ProgressBar(ctx, percent, -1, 20, string.format("%d / %d", idx-1, total))
         if reaper.ImGui_Button(ctx, "Abort") then
           db_build_task.aborted = true
+          if db_build_task.dbfile and db_build_task.cover_index then
+            SM_SaveDBCoverIndex(db_build_task.dbfile, db_build_task.cover_index)
+          end
         end
 
         if idx <= total then
@@ -19865,7 +19901,7 @@ function loop()
           local info = CollectFileInfo(path)
           if not db_build_task.existing_map[key] then
             -- local info = CollectFileInfo(path)
-            WriteToMediaDB(info, db_build_task.dbfile)
+            WriteToMediaDB(info, db_build_task.dbfile, nil, db_build_task.cover_index)
             db_build_task.existing_map[key] = true
           end
           -- 使用build_waveform_cache开启或关闭构建波形缓存
@@ -19896,6 +19932,7 @@ function loop()
           db_build_task.idx = db_build_task.idx + 1
         else
           db_build_task.finished = true
+          SM_SaveDBCoverIndex(db_build_task.dbfile, db_build_task.cover_index or {})
           -- 刷新
           files_idx_cache = nil
           CollectFiles()

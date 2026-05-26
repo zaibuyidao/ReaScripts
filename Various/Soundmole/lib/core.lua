@@ -1676,6 +1676,177 @@ function SM_SaveCoverIndex(index)
   sm_write_all(SM_CoverIndexPath(), table.concat(lines, "\n") .. "\n")
 end
 
+local SM_DB_COVER_INDEX_CACHE = {}
+
+function SM_DBCoverIndexPath(dbpath)
+  dbpath = tostring(dbpath or "")
+  if dbpath == "" then return "" end
+  return dbpath .. ".coverids.json"
+end
+
+function SM_DBCoverIndexExists(dbpath)
+  local path = SM_DBCoverIndexPath(dbpath)
+  if path == "" then return false end
+  if reaper and reaper.file_exists then return reaper.file_exists(path) end
+  local f = io.open(path, "rb")
+  if f then f:close() return true end
+  return false
+end
+
+function SM_ClearDBCoverIndexCache(dbpath)
+  if dbpath and dbpath ~= "" then
+    SM_DB_COVER_INDEX_CACHE[normalize_path(tostring(dbpath), false)] = nil
+  else
+    SM_DB_COVER_INDEX_CACHE = {}
+  end
+end
+
+local function sm_load_cover_map_from_json(path)
+  local text = sm_read_all(path)
+  if not text or text == "" then return {} end
+
+  local map = {}
+  local body = sm_extract_json_object_body(text, "covers")
+  if body then
+    for k, v in pairs(sm_parse_json_string_map(body)) do
+      if sm_is_valid_cover_id(k) and v and v ~= "" then
+        map[k] = v
+      end
+    end
+  else
+    for k, v in text:gmatch('"(.-)"%s*:%s*"(.-)"') do
+      k = sm_json_unescape(k)
+      v = sm_json_unescape(v)
+      if sm_is_valid_cover_id(k) and v ~= "" then
+        map[k] = v
+      end
+    end
+  end
+  return map
+end
+
+function SM_LoadDBCoverIndexMap(dbpath)
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  if dbpath == "" then return nil end
+  local cached = SM_DB_COVER_INDEX_CACHE[dbpath]
+  if cached and cached.map then return cached.map end
+
+  local idx_path = SM_DBCoverIndexPath(dbpath)
+  local f = io.open(idx_path, "rb")
+  if not f then return nil end
+  f:close()
+
+  local map = sm_load_cover_map_from_json(idx_path)
+  SM_DB_COVER_INDEX_CACHE[dbpath] = { map = map }
+  return map
+end
+
+function SM_LoadDBCoverIndexItems(dbpath)
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  if dbpath == "" then return nil end
+  local cached = SM_DB_COVER_INDEX_CACHE[dbpath]
+  if cached and cached.items then return cached.items end
+
+  local map = SM_LoadDBCoverIndexMap(dbpath)
+  if not map then return nil end
+
+  local ids = {}
+  for id in pairs(map) do ids[#ids + 1] = id end
+  table.sort(ids)
+
+  local items = {}
+  for i = 1, #ids do
+    local id = ids[i]
+    local path = map[id]
+    if not path or path == "" or (reaper and reaper.file_exists and not reaper.file_exists(path)) then
+      path = (type(SM_GetCoverPathByID) == "function") and SM_GetCoverPathByID(id) or nil
+    end
+    if path and path ~= "" then
+      items[#items + 1] = { cover_id = id, path = path }
+    end
+  end
+
+  cached = SM_DB_COVER_INDEX_CACHE[dbpath] or { map = map }
+  cached.items = items
+  SM_DB_COVER_INDEX_CACHE[dbpath] = cached
+  return items
+end
+
+function SM_SaveDBCoverIndex(dbpath, map)
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  if dbpath == "" then return false end
+  map = map or {}
+
+  local clean = {}
+  local ids = {}
+  for id, path in pairs(map) do
+    if sm_is_valid_cover_id(id) and path and path ~= "" then
+      clean[id] = tostring(path)
+      ids[#ids + 1] = id
+    end
+  end
+  table.sort(ids)
+
+  local lines = { "{", '  "covers": {' }
+  for i, id in ipairs(ids) do
+    local suffix = (i < #ids) and "," or ""
+    lines[#lines + 1] = ('    "%s": "%s"%s'):format(sm_json_escape(id), sm_json_escape(clean[id]), suffix)
+  end
+  lines[#lines + 1] = "  }"
+  lines[#lines + 1] = "}"
+
+  local ok = sm_write_all(SM_DBCoverIndexPath(dbpath), table.concat(lines, "\n") .. "\n")
+  SM_DB_COVER_INDEX_CACHE[dbpath] = { map = clean }
+  return ok
+end
+
+function SM_AddDBCoverIndexEntry(dbpath, cover_id, cover_path, map)
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  cover_id = tostring(cover_id or "")
+  if dbpath == "" or not sm_is_valid_cover_id(cover_id) then return map end
+
+  cover_path = cover_path or ((type(SM_GetCoverPathByID) == "function") and SM_GetCoverPathByID(cover_id) or nil)
+  if not cover_path or cover_path == "" then return map end
+
+  if map then
+    map[cover_id] = cover_path
+    return map
+  end
+
+  if not SM_DBCoverIndexExists(dbpath) then return nil end
+  local idx = SM_LoadDBCoverIndexMap(dbpath) or {}
+  idx[cover_id] = cover_path
+  SM_SaveDBCoverIndex(dbpath, idx)
+  return idx
+end
+
+function SM_RebuildDBCoverIndexFromDB(dbpath)
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  if dbpath == "" then return nil end
+  local f = io.open(dbpath, "rb")
+  if not f then return nil end
+
+  local map = {}
+  for raw in f:lines() do
+    local line = (raw or ""):gsub("\r", "")
+    local id = line:match('"cover_id:([^"]-)"') or line:match('cover_id:"([^"]-)"') or line:match('cover_id:([^%s"]+)')
+    if sm_is_valid_cover_id(id or "") then
+      local path = (type(SM_GetCoverPathByID) == "function") and SM_GetCoverPathByID(id) or nil
+      if path and path ~= "" then map[id] = path end
+    end
+  end
+  f:close()
+
+  SM_SaveDBCoverIndex(dbpath, map)
+  return map
+end
+
+function SM_PrepareDBCoverIndexForAppend(dbpath)
+  local map = SM_LoadDBCoverIndexMap(dbpath)
+  if map then return map end
+  return SM_RebuildDBCoverIndexFromDB(dbpath) or {}
+end
+
 function SM_GetCoverPathByID(cover_id)
   if not cover_id or cover_id == "" then return nil end
   local p = SM_LoadCoverIndex()[cover_id]
@@ -1981,12 +2152,16 @@ end
 -- CatID:[ASWG tags]catId             or [IXML tags]USER:CATID
 -- SubCategory:[ASWG tags]subCategory or [IXML tags]USER:SUBCATEGORY
 
-function WriteToMediaDB(info, dbfile, root_path)
+function WriteToMediaDB(info, dbfile, root_path, db_cover_index)
   local f = io.open(dbfile, "a+b")
   if not f then return end
+  local cover_path = nil
   if info and (not info.cover_id or info.cover_id == "") and info.path and type(SM_EnsureCoverForAudio) == "function" then
-    local cover_id = SM_EnsureCoverForAudio(info.path)
+    local cover_id
+    cover_id, cover_path = SM_EnsureCoverForAudio(info.path)
     if cover_id and cover_id ~= "" then info.cover_id = cover_id end
+  elseif info and info.cover_id and info.cover_id ~= "" and type(SM_GetCoverPathByID) == "function" then
+    cover_path = SM_GetCoverPathByID(info.cover_id)
   end
   -- FILE行
   f:write(('FILE "%s" %d 0 %d 0\n'):format(info.path, tonumber(info.size), tonumber(info.mtime) or 0))
@@ -2013,6 +2188,9 @@ function WriteToMediaDB(info, dbfile, root_path)
   if info.cover_id and info.cover_id ~= "" then table.insert(desc, 'cover_id:' .. tostring(info.cover_id)) end
   if #desc > 0 then f:write('DATA ' .. table.concat(desc, ' ') .. '\n') end
   f:close()
+  if info.cover_id and info.cover_id ~= "" and type(SM_AddDBCoverIndexEntry) == "function" then
+    SM_AddDBCoverIndexEntry(dbfile, info.cover_id, cover_path, db_cover_index)
+  end
 end
 
 -- 获取下一个可用编号
@@ -2034,10 +2212,12 @@ function BuildMediaDB(root_dir, db_dir)
   local filelist = ScanAllAudioFiles(root_dir)
   local db_index = GetNextMediaDBIndex(db_dir) -- 例如"00"
   local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
+  local db_cover_index = {}
   for _, path in ipairs(filelist) do
     local info = CollectFileInfo(path)
-    WriteToMediaDB(info, dbfile)
+    WriteToMediaDB(info, dbfile, nil, db_cover_index)
   end
+  SM_SaveDBCoverIndex(dbfile, db_cover_index)
 end
 
 function parse_len_to_seconds(s) -- 支持 1:23:45.678 / 0:38.112 / 12.34
@@ -2149,7 +2329,7 @@ function ParseMediaDBFile(dbpath)
   return entries
 end
 
-function RemoveFromMediaDB(path, dbfile)
+function RemoveFromMediaDB(path, dbfile, skip_cover_rebuild)
   local tmp = {}
   local keep = true
   for line in io.lines(dbfile) do
@@ -2165,6 +2345,7 @@ function RemoveFromMediaDB(path, dbfile)
   local f = io.open(dbfile, "wb")
   for _, l in ipairs(tmp) do f:write(l, "\n") end
   f:close()
+  if not skip_cover_rebuild and SM_DBCoverIndexExists(dbfile) then SM_RebuildDBCoverIndexFromDB(dbfile) end
 end
 
 -- 获取数据库路径列表
