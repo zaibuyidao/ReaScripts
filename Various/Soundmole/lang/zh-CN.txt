@@ -31,6 +31,8 @@ Search within current results: On=在当前结果中搜索: 开启
 Search within current results: Off=在当前结果中搜索: 关闭
 Click to hide the left table=点击隐藏左侧栏
 Click to show the left table=点击显示左侧栏
+Click to hide the album panel=点击隐藏右侧板
+Click to show the album panel=点击显示右侧板
 
 # PeekTree
 Show in Explorer/Finder=在文件资源管理器/访达中显示
@@ -179,7 +181,7 @@ Start at Next Bar (Link Transport required, Spacebar to trigger)=从下一小节
 
 # 表格文件列
 Waveform=波形
-Album Art=专辑图片
+Album Art=专辑
 File Name=文件名
 Size=大小
 Type=格式

@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.182
+-- @version 1.0.183
 -- @changelog
---   Added an "Album Art" column with cover extraction, deduplicated caching, cover_id linking, and click-to-filter for audio sharing the same cover.
+--   Added album artwork and Metadata panel display.
+--   Improved album artwork and Metadata panel layout, and refined splitter spacing and drag stability.
 --   Support reaper_soundmole-x64.dll v0.0.14
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

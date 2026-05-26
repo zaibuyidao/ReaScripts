@@ -696,6 +696,9 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
+  reaper.SetExtState(EXT_SECTION, "album_panel_visible", ALBUM_PANEL_VISIBLE and "true" or "false", true)
+  reaper.SetExtState(EXT_SECTION, "album_panel_px", tostring(album_panel_px or 280), true)
+  reaper.SetExtState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab or "album", true)
 
   -- 播放行为与同步
   reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
@@ -9257,6 +9260,9 @@ function RenderCoverCell(ctx, i, info, row_height)
   local img = cover_path and GetCoverImageTexture(ctx, cover_path) or nil
 
   reaper.ImGui_PushID(ctx, "cover_" .. tostring(info and info.path or i))
+  local cur_x = reaper.ImGui_GetCursorPosX(ctx)
+  local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx)) or side
+  reaper.ImGui_SetCursorPosX(ctx, cur_x + math.max(0, (avail_w - side) * 0.5))
   if img then
     reaper.ImGui_Image(ctx, img, side, side)
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -9274,6 +9280,369 @@ function RenderCoverCell(ctx, i, info, row_height)
     reaper.ImGui_Dummy(ctx, side, side)
   end
   reaper.ImGui_PopID(ctx)
+end
+
+local album_panel_cache = {
+  key = nil,
+  list = nil,
+  scan_index = 1,
+  last_count = 0,
+  done = false,
+  items = {},
+  seen = {}
+}
+cover_image_dim_cache = {}
+
+function SM_ReadUIntBE(s, pos, len)
+  if not s or #s < pos + len - 1 then return nil end
+  local v = 0
+  for i = 0, len - 1 do
+    v = v * 256 + (s:byte(pos + i) or 0)
+  end
+  return v
+end
+
+function SM_ReadUIntLE(s, pos, len)
+  if not s or #s < pos + len - 1 then return nil end
+  local v, mul = 0, 1
+  for i = 0, len - 1 do
+    v = v + (s:byte(pos + i) or 0) * mul
+    mul = mul * 256
+  end
+  return v
+end
+
+function SM_GetImageFileDimensions(path)
+  if not path or path == "" then return nil, nil end
+  local cached = cover_image_dim_cache[path]
+  if cached ~= nil then
+    if cached == false then return nil, nil end
+    return cached.w, cached.h
+  end
+
+  local f = io.open(path, "rb")
+  if not f then
+    cover_image_dim_cache[path] = false
+    return nil, nil
+  end
+  local data = f:read(65536) or ""
+  f:close()
+
+  local w, h
+  if data:sub(1, 8) == "\137PNG\r\n\26\n" then
+    w = SM_ReadUIntBE(data, 17, 4)
+    h = SM_ReadUIntBE(data, 21, 4)
+  elseif data:sub(1, 3) == "GIF" then
+    w = SM_ReadUIntLE(data, 7, 2)
+    h = SM_ReadUIntLE(data, 9, 2)
+  elseif data:sub(1, 2) == "BM" then
+    w = SM_ReadUIntLE(data, 19, 4)
+    h = SM_ReadUIntLE(data, 23, 4)
+  elseif data:sub(1, 2) == "\255\216" then
+    local pos = 3
+    while pos + 8 <= #data do
+      while pos <= #data and data:byte(pos) ~= 0xFF do pos = pos + 1 end
+      while pos <= #data and data:byte(pos) == 0xFF do pos = pos + 1 end
+      local marker = data:byte(pos)
+      pos = pos + 1
+      if not marker or marker == 0xD9 or marker == 0xDA then break end
+      local seg_len = SM_ReadUIntBE(data, pos, 2)
+      if not seg_len or seg_len < 2 then break end
+      if (marker >= 0xC0 and marker <= 0xC3) or (marker >= 0xC5 and marker <= 0xC7)
+          or (marker >= 0xC9 and marker <= 0xCB) or (marker >= 0xCD and marker <= 0xCF) then
+        h = SM_ReadUIntBE(data, pos + 3, 2)
+        w = SM_ReadUIntBE(data, pos + 5, 2)
+        break
+      end
+      pos = pos + seg_len
+    end
+  elseif data:sub(1, 4) == "RIFF" and data:sub(9, 12) == "WEBP" then
+    local fmt = data:sub(13, 16)
+    if fmt == "VP8X" and #data >= 30 then
+      w = SM_ReadUIntLE(data, 25, 3)
+      h = SM_ReadUIntLE(data, 28, 3)
+      if w then w = w + 1 end
+      if h then h = h + 1 end
+    elseif fmt == "VP8 " and #data >= 30 then
+      w = SM_ReadUIntLE(data, 27, 2)
+      h = SM_ReadUIntLE(data, 29, 2)
+      if w then w = w & 0x3FFF end
+      if h then h = h & 0x3FFF end
+    elseif fmt == "VP8L" and #data >= 25 then
+      local b1, b2, b3, b4 = data:byte(22, 25)
+      if b1 and b2 and b3 and b4 then
+        w = 1 + (((b2 & 0x3F) << 8) | b1)
+        h = 1 + (((b4 & 0x0F) << 10) | (b3 << 2) | ((b2 & 0xC0) >> 6))
+      end
+    end
+  end
+
+  if w and h and w > 0 and h > 0 then
+    cover_image_dim_cache[path] = { w = w, h = h }
+    return w, h
+  end
+  cover_image_dim_cache[path] = false
+  return nil, nil
+end
+
+function SM_FitImageInBox(path, box_w, box_h)
+  local iw, ih = SM_GetImageFileDimensions(path)
+  if not iw or not ih or iw <= 0 or ih <= 0 then
+    return box_w, box_h
+  end
+  local scale = math.min(box_w / iw, box_h / ih)
+  return math.max(1, math.floor(iw * scale + 0.5)), math.max(1, math.floor(ih * scale + 0.5))
+end
+
+function SM_GetAlbumPanelSourceList()
+  if type(files_idx_cache) == "table" and #files_idx_cache > 0 then
+    return files_idx_cache
+  end
+  if type(_G.current_display_list) == "table" then
+    return _G.current_display_list
+  end
+  return {}
+end
+
+function SM_AlbumPanelListKey(list)
+  local key = type(GetCurrentListKey) == "function" and GetCurrentListKey() or tostring(collect_mode or "")
+  return tostring(list) .. "|" .. tostring(key)
+end
+
+function SM_ResetAlbumPanelCache(list, key)
+  album_panel_cache.key = key
+  album_panel_cache.list = list
+  album_panel_cache.scan_index = 1
+  album_panel_cache.last_count = 0
+  album_panel_cache.done = false
+  album_panel_cache.items = {}
+  album_panel_cache.seen = {}
+end
+
+function SM_UpdateAlbumPanelCache(list, max_scan)
+  list = (type(list) == "table") and list or {}
+  local key = SM_AlbumPanelListKey(list)
+  if album_panel_cache.key ~= key or album_panel_cache.list ~= list then
+    SM_ResetAlbumPanelCache(list, key)
+  end
+
+  local n = #list
+  if n < (album_panel_cache.last_count or 0) then
+    SM_ResetAlbumPanelCache(list, key)
+  elseif n > (album_panel_cache.last_count or 0) and album_panel_cache.done then
+    album_panel_cache.done = false
+  end
+  album_panel_cache.last_count = n
+
+  if not album_panel_cache.done then
+    local scanned = 0
+    local limit = tonumber(max_scan) or 64
+    while album_panel_cache.scan_index <= n and scanned < limit do
+      local info = list[album_panel_cache.scan_index]
+      if info then
+        if type(EnsureEntryParsed) == "function" then EnsureEntryParsed(info) end
+        local cover_path, cover_id = ResolveCoverPathForEntry(info)
+        if cover_path then
+          local cover_key = tostring((cover_id and cover_id ~= "" and cover_id) or normalize_path(cover_path, false))
+          if cover_key ~= "" and not album_panel_cache.seen[cover_key] then
+            album_panel_cache.seen[cover_key] = true
+            album_panel_cache.items[#album_panel_cache.items + 1] = {
+              cover_id = cover_id,
+              path = cover_path,
+              info = info
+            }
+          end
+        end
+      end
+      album_panel_cache.scan_index = album_panel_cache.scan_index + 1
+      scanned = scanned + 1
+    end
+    if album_panel_cache.scan_index > n then
+      album_panel_cache.done = true
+    end
+  end
+
+  return album_panel_cache
+end
+
+function SM_DrawAlbumTile(ctx, item, index, tile_px)
+  tile_px = math.max(1, tile_px or UIScale(125))
+  local flags = reaper.ImGui_WindowFlags_NoScrollbar()
+  if reaper.ImGui_WindowFlags_NoScrollWithMouse then
+    flags = flags | reaper.ImGui_WindowFlags_NoScrollWithMouse()
+  end
+  if reaper.ImGui_BeginChild(ctx, "##album_tile_" .. tostring(index), tile_px, tile_px, 0, flags) then
+    local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    local win_x, win_y = reaper.ImGui_GetWindowPos(ctx)
+    local win_w, win_h = reaper.ImGui_GetWindowSize(ctx)
+    local bg_col = colors.table_header_bg or 0x2D2D2E80
+    local border_col = colors.table_border_light or 0x2D2D2E77
+    reaper.ImGui_DrawList_AddRectFilled(draw_list, win_x, win_y, win_x + win_w, win_y + win_h, bg_col, 2)
+
+    local img = item and item.path and GetCoverImageTexture(ctx, item.path) or nil
+    if img then
+      local draw_w, draw_h = SM_FitImageInBox(item.path, tile_px, tile_px)
+      local cur_x, cur_y = reaper.ImGui_GetCursorPos(ctx)
+      reaper.ImGui_SetCursorPos(ctx, cur_x + math.max(0, (tile_px - draw_w) * 0.5), cur_y + math.max(0, (tile_px - draw_h) * 0.5))
+      reaper.ImGui_Image(ctx, img, draw_w, draw_h)
+    end
+
+    local hovered = reaper.ImGui_IsWindowHovered(ctx)
+    if hovered then
+      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+      reaper.ImGui_DrawList_AddRect(draw_list, win_x, win_y, win_x + win_w, win_y + win_h, colors.gray or 0x909090FF, 2, 0, 2)
+      if item and item.cover_id and item.cover_id ~= "" then
+        reaper.ImGui_BeginTooltip(ctx)
+        reaper.ImGui_Text(ctx, "cover_id:" .. tostring(item.cover_id))
+        reaper.ImGui_EndTooltip(ctx)
+      end
+    else
+      reaper.ImGui_DrawList_AddRect(draw_list, win_x, win_y, win_x + win_w, win_y + win_h, border_col, 2)
+    end
+    if hovered and reaper.ImGui_IsMouseClicked(ctx, 0) and item and item.cover_id and item.cover_id ~= "" then
+      ApplyCoverFilter(item.cover_id)
+    end
+    reaper.ImGui_EndChild(ctx)
+  end
+end
+
+function SM_DrawAlbumArtTab(ctx)
+  local cache = SM_UpdateAlbumPanelCache(SM_GetAlbumPanelSourceList(), 48)
+  local items = cache.items or {}
+  local tile_px = UIScale(125)
+  local gap = UIScaleF(8)
+  local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx))
+  local used_w = 0
+
+  for i, item in ipairs(items) do
+    local next_w = (used_w > 0) and (used_w + gap + tile_px) or tile_px
+    if used_w > 0 and next_w <= avail_w then
+      reaper.ImGui_SameLine(ctx, nil, gap)
+      used_w = next_w
+    else
+      used_w = tile_px
+    end
+    SM_DrawAlbumTile(ctx, item, i, tile_px)
+  end
+
+  if #items == 0 then
+    if cache.done then
+      reaper.ImGui_TextDisabled(ctx, T("No album art"))
+    else
+      reaper.ImGui_TextDisabled(ctx, T("Scanning album art..."))
+    end
+  elseif not cache.done then
+    reaper.ImGui_TextDisabled(ctx, T("Scanning album art..."))
+  end
+end
+
+function SM_GetSelectedMetadataInfo()
+  if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then
+    return current_recent_play_info
+  end
+  if _G.current_display_list and selected_row and selected_row > 0 and _G.current_display_list[selected_row] then
+    return _G.current_display_list[selected_row]
+  end
+  return last_selected_info or last_playing_info
+end
+
+function SM_FormatMetadataDuration(info)
+  local v = info and (info.duration or info.length or info.section_length)
+  local n = tonumber(v)
+  if n and n > 0 then
+    return reaper.format_timestr(n, "")
+  end
+  return tostring(v or "")
+end
+
+function SM_MetadataRow(ctx, label, value)
+  reaper.ImGui_TableNextRow(ctx)
+  reaper.ImGui_TableSetColumnIndex(ctx, 0)
+  reaper.ImGui_Text(ctx, label)
+  reaper.ImGui_TableSetColumnIndex(ctx, 1)
+  reaper.ImGui_TextWrapped(ctx, tostring(value or ""))
+end
+
+function SM_DrawMetadataTab(ctx)
+  local info = SM_GetSelectedMetadataInfo()
+  if info and type(EnsureEntryParsed) == "function" then EnsureEntryParsed(info) end
+  if not info then
+    reaper.ImGui_TextDisabled(ctx, T("No selection"))
+    return
+  end
+
+  local path = tostring(info.pathname or info.path or "")
+  local filename = tostring(info.filename or path:match("[^/\\]+$") or "")
+  local channels = tostring(info.channels or info.channel_count or "")
+  local duration = SM_FormatMetadataDuration(info)
+
+  local cover_path, cover_id = ResolveCoverPathForEntry(info)
+  local cover_img = cover_path and GetCoverImageTexture(ctx, cover_path) or nil
+  if cover_img then
+    local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx))
+    local max_side = math.max(1, math.min(avail_w, UIScale(125)))
+    local draw_w, draw_h = SM_FitImageInBox(cover_path, max_side, max_side)
+    reaper.ImGui_Image(ctx, cover_img, draw_w, draw_h)
+    if reaper.ImGui_IsItemHovered(ctx) then
+      reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+      if cover_id and cover_id ~= "" then
+        reaper.ImGui_BeginTooltip(ctx)
+        reaper.ImGui_Text(ctx, "cover_id:" .. tostring(cover_id))
+        reaper.ImGui_EndTooltip(ctx)
+      end
+    end
+    if reaper.ImGui_IsItemClicked(ctx, 0) and cover_id and cover_id ~= "" then
+      ApplyCoverFilter(cover_id)
+    end
+    reaper.ImGui_Dummy(ctx, 1, UIScaleF(6))
+  end
+
+  local flags = reaper.ImGui_TableFlags_BordersInnerH() | reaper.ImGui_TableFlags_SizingStretchProp()
+  if reaper.ImGui_BeginTable(ctx, "album_metadata_table", 2, flags) then
+    reaper.ImGui_TableSetupColumn(ctx, "Field", reaper.ImGui_TableColumnFlags_WidthFixed(), UIScale(78))
+    reaper.ImGui_TableSetupColumn(ctx, "Value", reaper.ImGui_TableColumnFlags_WidthStretch())
+    SM_MetadataRow(ctx, "filename", filename)
+    SM_MetadataRow(ctx, "channels", channels)
+    SM_MetadataRow(ctx, "duration", duration)
+    SM_MetadataRow(ctx, "pathname", path)
+    reaper.ImGui_EndTable(ctx)
+  end
+end
+
+function SM_DrawAlbumPanel(ctx, panel_w, panel_h)
+  if reaper.ImGui_BeginChild(ctx, "##album_panel", panel_w, panel_h, 0) then
+    if reaper.ImGui_BeginTabBar(ctx, "AlbumPanelTabs", reaper.ImGui_TabBarFlags_None()) then
+      local restore_tab = album_panel_tab_restore_pending
+      local album_flags = (restore_tab and album_panel_active_tab == "album") and reaper.ImGui_TabItemFlags_SetSelected() or 0
+      if reaper.ImGui_BeginTabItem(ctx, T("Album Art"), nil, album_flags) then
+        if album_panel_active_tab ~= "album" then
+          album_panel_active_tab = "album"
+          reaper.SetExtState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
+        end
+        if reaper.ImGui_BeginChild(ctx, "##album_art_scroll", 0, 0, 0) then
+          SM_DrawAlbumArtTab(ctx)
+          reaper.ImGui_EndChild(ctx)
+        end
+        reaper.ImGui_EndTabItem(ctx)
+      end
+
+      local metadata_flags = (restore_tab and album_panel_active_tab == "metadata") and reaper.ImGui_TabItemFlags_SetSelected() or 0
+      if reaper.ImGui_BeginTabItem(ctx, T("Metadata"), nil, metadata_flags) then
+        if album_panel_active_tab ~= "metadata" then
+          album_panel_active_tab = "metadata"
+          reaper.SetExtState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
+        end
+        if reaper.ImGui_BeginChild(ctx, "##metadata_scroll", 0, 0, 0) then
+          SM_DrawMetadataTab(ctx)
+          reaper.ImGui_EndChild(ctx)
+        end
+        reaper.ImGui_EndTabItem(ctx)
+      end
+      album_panel_tab_restore_pending = false
+      reaper.ImGui_EndTabBar(ctx)
+    end
+    reaper.ImGui_EndChild(ctx)
+  end
 end
 
 -- 单行文本绘制，移除换行并压缩空白，防止表格行被撑高
@@ -11513,10 +11882,18 @@ end
 --------------------------------------------- 分割条相关代码 ---------------------------------------------
 
 LEFT_TABLE_VISIBLE = (reaper.GetExtState(EXT_SECTION, "left_table_visible") ~= "false")
+ALBUM_PANEL_VISIBLE = (reaper.GetExtState(EXT_SECTION, "album_panel_visible") ~= "false")
 splitter_w = 3 -- 分割条宽度
 left_ratio = tonumber(reaper.GetExtState(EXT_SECTION, "left_ratio")) or 0.15 -- 启动时读取上次保存的
 splitter_drag = false
 splitter_drag_offset = 0
+album_panel_px = tonumber(reaper.GetExtState(EXT_SECTION, "album_panel_px")) or 280
+album_splitter_drag = false
+album_splitter_start_mouse_x = 0
+album_splitter_start_w = 0
+album_panel_active_tab = reaper.GetExtState(EXT_SECTION, "album_panel_active_tab")
+if album_panel_active_tab ~= "metadata" then album_panel_active_tab = "album" end
+album_panel_tab_restore_pending = true
 
 -- 左侧表格显示/隐藏切换按钮
 function SM_DrawLeftTableToggle(ctx)
@@ -11550,6 +11927,53 @@ function SM_DrawLeftTableToggle(ctx)
   if hovered then
     reaper.ImGui_BeginTooltip(ctx)
     reaper.ImGui_Text(ctx, LEFT_TABLE_VISIBLE and T("Click to hide the left table") or T("Click to show the left table"))
+    reaper.ImGui_EndTooltip(ctx)
+  end
+end
+
+-- 右侧专辑/metadata 面板显示/隐藏切换按钮
+function SM_DrawAlbumPanelToggle(ctx, align_right)
+  PushUIFont(ctx, fonts.icon, 16)
+  local glyph = '\u{0110}'
+  local dy = 0
+  if align_right then
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+    local glyph_w = select(1, reaper.ImGui_CalcTextSize(ctx, glyph)) or 0
+    local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx)) or 0
+    local pad_right = UIScaleF(2)
+    local push_w = avail_w - glyph_w - pad_right
+    if push_w > 0 then
+      reaper.ImGui_Dummy(ctx, push_w, 0)
+      reaper.ImGui_SameLine(ctx, nil, 0)
+    end
+  end
+  local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+  local col_normal  = colors.icon_normal or 0xFFFFFFFF
+  local col_hovered = colors.icon_hovered or 0xFFCC66FF
+  local col_active  = colors.icon_active or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+
+  DrawTextVOffset(ctx, glyph, col, 4)
+
+  if hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+  end
+
+  if clicked then
+    ALBUM_PANEL_VISIBLE = not ALBUM_PANEL_VISIBLE
+    reaper.SetExtState(EXT_SECTION, "album_panel_visible", ALBUM_PANEL_VISIBLE and "true" or "false", true)
+  end
+
+  reaper.ImGui_PopFont(ctx)
+
+  if hovered then
+    reaper.ImGui_BeginTooltip(ctx)
+    reaper.ImGui_Text(ctx, ALBUM_PANEL_VISIBLE and T("Click to hide the album panel") or T("Click to show the album panel"))
     reaper.ImGui_EndTooltip(ctx)
   end
 end
@@ -12818,7 +13242,6 @@ function loop()
 
     SM_DrawLeftTableToggle(ctx) -- 左侧表格开关按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
-    
     DrawFilterSearchTag(ctx) -- 绘制过滤标签
 
     -- 是否显示 UCS 隐式搜索标签
@@ -12865,8 +13288,7 @@ function loop()
       reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
     end
     if has_cover then DrawCoverFilterTag(ctx) end
-
-    TightNewLine(ctx, 0.7) -- 正常行高的70%
+    SM_DrawAlbumPanelToggle(ctx, true) -- 右侧专辑/metadata 面板开关按钮
 
     -- reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
 
@@ -12878,15 +13300,67 @@ function loop()
     local child_h = math.max(10, avail_y - GetBottomPreviewReserveHeight() - main_item_spacing_y - main_overflow_guard)
     if child_h < 10 then child_h = 10 end -- 最小高度保护(需要使用 if reaper.ImGui_BeginChild 才有效)
 
-    if LEFT_TABLE_VISIBLE then -- 开关切换隐藏左侧表格
-
+    local split_px = splitter_w
+    local middle_min_px = math.max(10, math.floor(avail_x * 0.30))
+    local album_min_px = UIScale(125) + UIScale(18)
+    local left_splitter_gap = LEFT_TABLE_VISIBLE and math.max(1, UIScaleF(4)) or 0
+    local left_splitter_line_w = LEFT_TABLE_VISIBLE and split_px or 0
+    local left_splitter_w = LEFT_TABLE_VISIBLE and (left_splitter_line_w + left_splitter_gap * 2) or 0
+    local album_splitter_gap = ALBUM_PANEL_VISIBLE and math.max(1, UIScaleF(4)) or 0
+    local album_splitter_line_w = ALBUM_PANEL_VISIBLE and split_px or 0
+    local album_splitter_w = ALBUM_PANEL_VISIBLE and (album_splitter_line_w + album_splitter_gap * 2) or 0
     local min_left_px = math.floor(avail_x * 0.005) -- 左侧最小像素宽
-    local max_left_px = math.floor(avail_x * 0.5) -- 左侧最大像素宽
-
+    local left_w, table_w, album_w = 0, avail_x, 0
     local left_px = tonumber(reaper.GetExtState(EXT_SECTION, "left_px")) or 700
-    left_px = math.max(min_left_px, math.min(left_px, math.max(min_left_px, math.min(max_left_px, avail_x - splitter_w - 10))))
-    local left_w  = left_px
-    local right_w = avail_x - left_w - splitter_w
+
+    if ALBUM_PANEL_VISIBLE then
+      local left_reserve_px = LEFT_TABLE_VISIBLE and (min_left_px + left_splitter_w) or 0
+      local max_album_px = avail_x - left_reserve_px - album_splitter_w - middle_min_px
+      max_album_px = math.max(0, max_album_px)
+      if max_album_px < album_min_px then
+        album_w = max_album_px
+      else
+        album_w = math.max(album_min_px, math.min(album_panel_px or 280, max_album_px))
+      end
+    end
+
+    if LEFT_TABLE_VISIBLE then
+      local max_left_px_initial = math.floor(avail_x * 0.5) -- 左侧最大像素宽
+      if ALBUM_PANEL_VISIBLE then
+        max_left_px_initial = math.min(max_left_px_initial, avail_x - left_splitter_w - album_splitter_w - album_w - middle_min_px)
+      else
+        max_left_px_initial = math.min(max_left_px_initial, avail_x - left_splitter_w - middle_min_px)
+      end
+      max_left_px_initial = math.max(min_left_px, max_left_px_initial)
+      left_px = math.max(min_left_px, math.min(left_px, max_left_px_initial))
+      left_w = left_px
+    end
+
+    table_w = avail_x - left_w - left_splitter_w - album_w - album_splitter_w
+    if table_w < middle_min_px and ALBUM_PANEL_VISIBLE then
+      album_w = math.max(0, album_w - (middle_min_px - table_w))
+      table_w = avail_x - left_w - left_splitter_w - album_w - album_splitter_w
+    end
+    table_w = math.max(10, table_w)
+
+    local max_left_px = math.floor(avail_x * 0.5)
+    if LEFT_TABLE_VISIBLE then
+      max_left_px = math.min(max_left_px, avail_x - left_splitter_w - album_splitter_w - album_w - middle_min_px)
+      max_left_px = math.max(min_left_px, max_left_px)
+    end
+
+    if LEFT_TABLE_VISIBLE and splitter_drag and reaper.ImGui_IsMouseDown(ctx, 0) then
+      local mx = select(1, reaper.ImGui_GetMousePos(ctx))
+      local wx = select(1, reaper.ImGui_GetWindowPos(ctx))
+      local new_left_px = mx - wx - (splitter_drag_offset or 0)
+      new_left_px = math.max(min_left_px, math.min(max_left_px, new_left_px))
+      left_px = new_left_px
+      left_w = left_px
+      table_w = math.max(10, avail_x - left_w - left_splitter_w - album_w - album_splitter_w)
+      reaper.SetExtState(EXT_SECTION, "left_px", tostring(left_px), true)
+    end
+
+    if LEFT_TABLE_VISIBLE then -- 开关切换隐藏左侧表格
 
     -- 左侧树状目录(此处需要使用 if 才有效，否则报错)
     if reaper.ImGui_BeginChild(ctx, "##left", left_w, child_h, 0, reaper.ImGui_WindowFlags_HorizontalScrollbar()) then
@@ -15195,12 +15669,13 @@ function loop()
     end
 
     -- 表格中间分割条
-    reaper.ImGui_SameLine(ctx, nil, 0)
-    reaper.ImGui_InvisibleButton(ctx, "##splitter", splitter_w, child_h)
+    reaper.ImGui_SameLine(ctx, nil, left_splitter_gap)
+    reaper.ImGui_InvisibleButton(ctx, "##splitter", left_splitter_line_w, child_h)
     local splitter_active = reaper.ImGui_IsItemActive(ctx)
     local splitter_hovered = reaper.ImGui_IsItemHovered(ctx)
     local mx = select(1, reaper.ImGui_GetMousePos(ctx))
     local wx = select(1, reaper.ImGui_GetWindowPos(ctx))
+    local splitter_just_started = false
 
     -- 防止分割条跳变
     if reaper.ImGui_IsItemActivated(ctx) then
@@ -15208,6 +15683,7 @@ function loop()
       splitter_drag = true
       splitter_drag_offset = mx - wx - left_w
       is_knob_dragging = true
+      splitter_just_started = true
     end
 
     -- 旧版拖动逻辑，基于比例计算新左宽（弃用）
@@ -15220,13 +15696,13 @@ function loop()
     -- end
 
     -- 拖动
-    if splitter_drag and splitter_active then
+    if splitter_drag and splitter_active and not splitter_just_started then
       local new_left_px = mx - wx - (splitter_drag_offset or 0)
       new_left_px = math.max(min_left_px, math.min(max_left_px, new_left_px))
       left_px = new_left_px
       reaper.SetExtState(EXT_SECTION, "left_px", tostring(left_px), true) -- 持久化像素宽
-      left_w  = left_px
-      right_w = math.max(0, avail_x - left_w - splitter_w)
+      left_w = left_px
+      table_w = math.max(10, avail_x - left_w - left_splitter_w - album_w - album_splitter_w)
     end
 
     if not splitter_active then
@@ -15245,10 +15721,9 @@ function loop()
       reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeEW())
     end
 
-    reaper.ImGui_SameLine(ctx)
-
-    else -- 加入左侧表格隐藏开关，隐藏时右侧表格区域
-      right_w = 0
+    end
+    if LEFT_TABLE_VISIBLE then
+      reaper.ImGui_SameLine(ctx, nil, left_splitter_gap)
     end
 
     -- 设置表格线条颜色 - 表格颜色
@@ -15263,7 +15738,7 @@ function loop()
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBg(),        colors.yellow)              -- 表格行背景色 0xFF0F0F0F
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     colors.red)                 -- 表格交替行背景 0xFF0F0F0F
     -- 右侧表格列表, 支持表格排序和冻结首行
-    if reaper.ImGui_BeginChild(ctx, "##file_table_child", right_w, child_h, 0) then
+    if reaper.ImGui_BeginChild(ctx, "##file_table_child", table_w, child_h, 0) then
       if reaper.ImGui_BeginTable(ctx, "filelist", 20,
         reaper.ImGui_TableFlags_Borders()      -- 表格分隔线
       | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
@@ -16139,6 +16614,51 @@ function loop()
       reaper.ImGui_EndChild(ctx)
     else
       static.clipper = nil
+    end
+
+    if ALBUM_PANEL_VISIBLE then
+      reaper.ImGui_SameLine(ctx, nil, album_splitter_gap)
+      reaper.ImGui_InvisibleButton(ctx, "##album_splitter", album_splitter_line_w, child_h)
+      local album_splitter_active = reaper.ImGui_IsItemActive(ctx)
+      local album_splitter_hovered = reaper.ImGui_IsItemHovered(ctx)
+      local mx = select(1, reaper.ImGui_GetMousePos(ctx))
+
+      if reaper.ImGui_IsItemActivated(ctx) then
+        album_splitter_drag = true
+        album_splitter_start_mouse_x = mx
+        album_splitter_start_w = album_w
+        is_knob_dragging = true
+      end
+
+      if album_splitter_drag and album_splitter_active then
+        local max_album_px = avail_x - left_w - left_splitter_w - album_splitter_w - middle_min_px
+        max_album_px = math.max(0, max_album_px)
+        local new_album_w = (album_splitter_start_w or album_w) - (mx - (album_splitter_start_mouse_x or mx))
+        if max_album_px >= album_min_px then
+          new_album_w = math.max(album_min_px, math.min(max_album_px, new_album_w))
+        else
+          new_album_w = math.max(0, math.min(max_album_px, new_album_w))
+        end
+        album_w = new_album_w
+        album_panel_px = album_w
+        reaper.SetExtState(EXT_SECTION, "album_panel_px", tostring(album_panel_px), true)
+      end
+
+      if not album_splitter_active then
+        album_splitter_drag = false
+      end
+
+      local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+      local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+      local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+      local color = album_splitter_hovered and colors.separator_line_active or colors.separator_line
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, min_x, min_y, max_x, max_y, color)
+      if album_splitter_hovered or album_splitter_active then
+        reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_ResizeEW())
+      end
+
+      reaper.ImGui_SameLine(ctx, nil, album_splitter_gap)
+      SM_DrawAlbumPanel(ctx, math.max(1, album_w), child_h)
     end
     reaper.ImGui_PopStyleColor(ctx, 7) -- 恢复颜色
 
@@ -17458,6 +17978,10 @@ function loop()
           mirror_database         = false
           show_peektree_recent    = false -- 播放历史
           current_sidebar_tab     = "PeekTree"
+          ALBUM_PANEL_VISIBLE     = true
+          album_panel_px          = 280
+          album_panel_active_tab  = "album"
+          album_panel_tab_restore_pending = true
 
           -- 播放行为与同步
           pitch_semitone_step     = false           -- 重置半音步进为关闭
