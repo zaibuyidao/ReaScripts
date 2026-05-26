@@ -1534,14 +1534,117 @@ local function sm_json_unescape(s)
   return s
 end
 
+local function sm_is_valid_cover_id(id)
+  return type(id) == "string" and #id == 24 and id:match("^[0-9A-Fa-f]+$") ~= nil
+end
+
+local function sm_json_string_end(text, quote_pos)
+  local i = quote_pos + 1
+  while i <= #text do
+    local ch = text:sub(i, i)
+    if ch == "\\" then
+      i = i + 2
+    elseif ch == '"' then
+      return i
+    else
+      i = i + 1
+    end
+  end
+  return nil
+end
+
+local function sm_extract_json_object_body(text, key)
+  if not text or text == "" or not key or key == "" then return nil end
+  local _, open_pos = text:find('"' .. key .. '"%s*:%s*{')
+  if not open_pos then return nil end
+
+  local depth = 1
+  local body_start = open_pos + 1
+  local i = body_start
+  while i <= #text do
+    local ch = text:sub(i, i)
+    if ch == '"' then
+      local close_pos = sm_json_string_end(text, i)
+      if not close_pos then return nil end
+      i = close_pos + 1
+    elseif ch == "{" then
+      depth = depth + 1
+      i = i + 1
+    elseif ch == "}" then
+      depth = depth - 1
+      if depth == 0 then
+        return text:sub(body_start, i - 1)
+      end
+      i = i + 1
+    else
+      i = i + 1
+    end
+  end
+  return nil
+end
+
+local function sm_skip_json_gap(text, pos)
+  while pos <= #text do
+    local ch = text:sub(pos, pos)
+    if ch == " " or ch == "\t" or ch == "\r" or ch == "\n" or ch == "," then
+      pos = pos + 1
+    else
+      break
+    end
+  end
+  return pos
+end
+
+local function sm_read_json_string(text, pos)
+  if text:sub(pos, pos) ~= '"' then return nil, pos + 1 end
+  local close_pos = sm_json_string_end(text, pos)
+  if not close_pos then return nil, #text + 1 end
+  return sm_json_unescape(text:sub(pos + 1, close_pos - 1)), close_pos + 1
+end
+
+local function sm_parse_json_string_map(body)
+  local map = {}
+  local pos = 1
+  while pos <= #body do
+    pos = sm_skip_json_gap(body, pos)
+    if pos > #body then break end
+
+    local key, next_pos = sm_read_json_string(body, pos)
+    if key then
+      pos = sm_skip_json_gap(body, next_pos)
+      if body:sub(pos, pos) == ":" then
+        local value
+        value, pos = sm_read_json_string(body, sm_skip_json_gap(body, pos + 1))
+        if value then map[key] = value end
+      else
+        pos = next_pos
+      end
+    else
+      pos = next_pos
+    end
+  end
+  return map
+end
+
 function SM_LoadCoverIndex()
   if SM_COVER_INDEX_CACHE then return SM_COVER_INDEX_CACHE end
   local index = {}
   local text = sm_read_all(SM_CoverIndexPath())
   if text and text ~= "" then
-    for k, v in text:gmatch('"(.-)"%s*:%s*"(.-)"') do
-      if k ~= "covers" then
-        index[sm_json_unescape(k)] = sm_json_unescape(v)
+    local body = sm_extract_json_object_body(text, "covers")
+    if body then
+      for k, v in pairs(sm_parse_json_string_map(body)) do
+        if sm_is_valid_cover_id(k) and v and v ~= "" then
+          index[k] = v
+        end
+      end
+    else
+      for k, v in text:gmatch('"(.-)"%s*:%s*"(.-)"') do
+        k = sm_json_unescape(k)
+        v = sm_json_unescape(v)
+        if sm_is_valid_cover_id(k) and v ~= "" then
+          index[k] = v
+        end
       end
     end
   end
@@ -1551,8 +1654,16 @@ end
 
 function SM_SaveCoverIndex(index)
   index = index or SM_COVER_INDEX_CACHE or {}
+  local clean = {}
   local ids = {}
-  for id in pairs(index) do ids[#ids + 1] = id end
+  for id, path in pairs(index) do
+    if sm_is_valid_cover_id(id) and path and path ~= "" then
+      clean[id] = tostring(path)
+      ids[#ids + 1] = id
+    end
+  end
+  index = clean
+  SM_COVER_INDEX_CACHE = index
   table.sort(ids)
 
   local lines = { "{", '  "covers": {' }
