@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.21
+-- @version 1.0.22
 -- @author zaibuyidao
 -- @changelog
---   Added Wwise-style regular expression support to Replace mode.
+--   Changed Replace mode to "Match case", defaulting to case-insensitive matching.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -171,7 +171,7 @@ local TEXT = {
     pattern = "模式",
     find_what = "查找内容",
     replace_with = "替换为",
-    ignore_case = "忽略大小写",
+    match_case = "匹配大小写",
     use_regular_expression = "使用正则表达式",
     regex_help = "勾选后，“查找内容”会按 Wwise/ECMAScript 风格的正则表达式匹配；“替换为”可以使用捕获组。\n\n常用写法:\n. 匹配任意单个字符\n\\d 匹配数字，\\D 匹配非数字\n\\w 匹配字母、数字或下划线，\\W 匹配其它字符\n\\s 匹配空格、Tab、换行等空白字符\n^ 匹配名称开头，$ 匹配名称结尾\n[ABC] 匹配 A、B 或 C；[A-Z] 匹配 A 到 Z\n[^0-9] 匹配不是数字的字符\n* 表示 0 次或更多，+ 表示 1 次或更多，? 表示 0 次或 1 次\n{3} 表示正好 3 次，{2,4} 表示 2 到 4 次\n( ) 创建捕获组；(?: ) 创建不编号的分组\n| 表示“或者”，例如 cat|dog\n\\b 匹配单词边界\n\n替换引用:\n$1、$2 使用第 1、第 2 个捕获组\n$& 使用整个匹配内容\n$` 使用匹配前面的内容\n$' 使用匹配后面的内容\n$+ 使用最后一个捕获组\n$$ 输入一个普通的 $ 符号\n\n入门示例:\n1. 去掉名称末尾编号\n查找内容: _\\d+$\n替换为: 留空\n示例: Amb_Rain_001 -> Amb_Rain\n\n2. 把空格和横线统一成下划线\n查找内容: [\\s-]+\n替换为: _\n示例: Footstep Wood-01 -> Footstep_Wood_01\n\n3. 交换两个用下划线分隔的部分\n查找内容: ^(.*)_(.*)$\n替换为: $2_$1\n示例: Door_Open -> Open_Door\n\n4. 只保留括号里的文字\n查找内容: ^.*\\((.*)\\).*$\n替换为: $1\n示例: Explosion (Large) -> Large\n\n小提示: 如果要匹配 .、(、)、[、]、+、*、?、$ 这些符号本身，请在前面加反斜杠，例如 \\. 表示真正的点号。",
     occurrence = "出现位置",
@@ -337,7 +337,7 @@ local TEXT = {
     pattern = "模式",
     find_what = "尋找內容",
     replace_with = "取代為",
-    ignore_case = "忽略大小寫",
+    match_case = "匹配大小寫",
     use_regular_expression = "使用正則表達式",
     regex_help = "勾選後，「尋找內容」會按 Wwise/ECMAScript 風格的正則表達式匹配；「取代為」可以使用捕獲組。\n\n常用寫法:\n. 匹配任意單個字元\n\\d 匹配數字，\\D 匹配非數字\n\\w 匹配字母、數字或底線，\\W 匹配其它字元\n\\s 匹配空格、Tab、換行等空白字元\n^ 匹配名稱開頭，$ 匹配名稱結尾\n[ABC] 匹配 A、B 或 C；[A-Z] 匹配 A 到 Z\n[^0-9] 匹配不是數字的字元\n* 表示 0 次或更多，+ 表示 1 次或更多，? 表示 0 次或 1 次\n{3} 表示正好 3 次，{2,4} 表示 2 到 4 次\n( ) 建立捕獲組；(?: ) 建立不編號的分組\n| 表示「或者」，例如 cat|dog\n\\b 匹配單字邊界\n\n取代引用:\n$1、$2 使用第 1、第 2 個捕獲組\n$& 使用整個匹配內容\n$` 使用匹配前面的內容\n$' 使用匹配後面的內容\n$+ 使用最後一個捕獲組\n$$ 輸入一個普通的 $ 符號\n\n入門範例:\n1. 去掉名稱結尾編號\n尋找內容: _\\d+$\n取代為: 留空\n範例: Amb_Rain_001 -> Amb_Rain\n\n2. 把空格和橫線統一成底線\n尋找內容: [\\s-]+\n取代為: _\n範例: Footstep Wood-01 -> Footstep_Wood_01\n\n3. 交換兩個用底線分隔的部分\n尋找內容: ^(.*)_(.*)$\n取代為: $2_$1\n範例: Door_Open -> Open_Door\n\n4. 只保留括號裡的文字\n尋找內容: ^.*\\((.*)\\).*$\n取代為: $1\n範例: Explosion (Large) -> Large\n\n小提示: 如果要匹配 .、(、)、[、]、+、*、?、$ 這些符號本身，請在前面加反斜線，例如 \\. 表示真正的點號。",
     occurrence = "出現位置",
@@ -503,7 +503,7 @@ local TEXT = {
     pattern = "Pattern",
     find_what = "Find what",
     replace_with = "Replace with",
-    ignore_case = "Ignore case",
+    match_case = "Match case",
     use_regular_expression = "Use Regular Expression",
     regex_help = "When enabled, “Find what” is matched as a Wwise/ECMAScript-style regular expression. “Replace with” can use capture groups.\n\nCommon patterns:\n. matches any single character\n\\d matches a digit, \\D matches a non-digit\n\\w matches a letter, digit, or underscore; \\W matches anything else\n\\s matches whitespace such as space, Tab, or newline\n^ matches the start of the name, $ matches the end\n[ABC] matches A, B, or C; [A-Z] matches A through Z\n[^0-9] matches any character that is not a digit\n* means 0 or more, + means 1 or more, ? means 0 or 1\n{3} means exactly 3 times, {2,4} means 2 to 4 times\n( ) creates a capture group; (?: ) creates an unnumbered group\n| means “or”, for example cat|dog\n\\b matches a word boundary\n\nReplacement references:\n$1, $2 use capture group 1 or 2\n$& uses the whole match\n$` uses the text before the match\n$' uses the text after the match\n$+ uses the last captured group\n$$ inserts a plain $ character\n\nBeginner examples:\n1. Remove a trailing number\nFind what: _\\d+$\nReplace with: leave empty\nExample: Amb_Rain_001 -> Amb_Rain\n\n2. Turn spaces and hyphens into underscores\nFind what: [\\s-]+\nReplace with: _\nExample: Footstep Wood-01 -> Footstep_Wood_01\n\n3. Swap two underscore-separated parts\nFind what: ^(.*)_(.*)$\nReplace with: $2_$1\nExample: Door_Open -> Open_Door\n\n4. Keep only text inside parentheses\nFind what: ^.*\\((.*)\\).*$\nReplace with: $1\nExample: Explosion (Large) -> Large\n\nTip: To match punctuation such as ., (, ), [, ], +, *, ?, or $ literally, put a backslash before it. For example, \\. matches a real dot.",
     occurrence = "Occurrence",
@@ -691,7 +691,7 @@ local insert_side_index      = 0                     -- 0 = beginning, 1 = end
 local use_cycle_mode         = true                  -- cycle mode checkbox
 local sort_index             = 0                     -- 0 = Track, 1 = Sequence, 2 = Timeline
 local preview_mode           = false                 -- 预览模式默认值
-local ignore_case            = false                 -- 是否忽略大小写
+local match_case             = false                 -- 匹配大小写
 local occurrence_mode        = 2                     -- Occurrence 模式: 0=First,1=Last,2=All
 local use_regular_expression = false                 -- Wwise/ECMAScript-style regex for Replace
 local write_take_name        = true                  -- true 将新文件名写入 Take 名称，false 保持原 Take 名称
@@ -747,15 +747,17 @@ function SaveUseRegularExpressionState()
   reaper.SetExtState(EXT_SECTION, USE_REGEX_EXT_KEY, tostring(use_regular_expression), true)
 end
 
-local stored_use_regex = reaper.GetExtState(EXT_SECTION, USE_REGEX_EXT_KEY)
-if stored_use_regex == "true" then
-  use_regular_expression = true
-elseif stored_use_regex == "false" then
-  use_regular_expression = false
+function LoadUseRegularExpressionState()
+  local stored_use_regex = reaper.GetExtState(EXT_SECTION, USE_REGEX_EXT_KEY)
+  if stored_use_regex == "true" then
+    use_regular_expression = true
+  elseif stored_use_regex == "false" then
+    use_regular_expression = false
+  end
 end
 
 -- 重置到初始状态
-function ResetState()
+function ResetState(save_regular_expression_state)
   rename_pattern    = ""
   find_text         = ""
   replace_text      = ""
@@ -771,10 +773,12 @@ function ResetState()
   enable_insert     = false
   use_cycle_mode    = true
   write_take_name   = true
-  ignore_case       = false
+  match_case        = false
   use_regular_expression = false
   occurrence_mode   = 2 -- All 模式
-  SaveUseRegularExpressionState()
+  if save_regular_expression_state ~= false then
+    SaveUseRegularExpressionState()
+  end
 end
 
 -- 判断表中是否包含某值
@@ -820,7 +824,7 @@ function EncodePreset()
     enable_replace and "1" or "0",
     enable_remove  and "1" or "0",
     enable_insert  and "1" or "0",
-    ignore_case    and "1" or "0",
+    match_case     and "1" or "0",
     tostring(occurrence_mode),
     write_take_name and "1" or "0",
     use_regular_expression and "1" or "0",
@@ -845,7 +849,7 @@ function ApplyPreset(dataStr)
   enable_replace    = params[11]=="1"
   enable_remove     = params[12]=="1"
   enable_insert     = params[13]=="1"
-  ignore_case       = params[14]=="1"
+  match_case       = params[14]=="1"
   occurrence_mode   = tonumber(params[15]) or 2
   write_take_name   = (params[16] == nil or params[16] == "") and true or (params[16] == "1")
   use_regular_expression = params[17]=="1"
@@ -909,7 +913,8 @@ local renamePresetPrompt = {
 
 -- 预设初始加载
 LoadPresetList()
-ResetState()
+ResetState(false)
+LoadUseRegularExpressionState()
 
 --------------------------------------------------------------------------------
 -- 颜色相关
@@ -945,10 +950,6 @@ if ext_popup == "true" then show_preview_window = true
 elseif ext_popup == "false" then show_preview_window = false end
 
 -- 预览表格
-local default_preview_open = false
-local ext = reaper.GetExtState("BatchRenamePlus", "PreviewOpen")
-local preview_open = default_preview_open
-if ext == "true" then preview_open = true elseif ext == "false" then preview_open = false end
 -- 预览表格的 flags1 初始值。如果全部不勾选，则使用flags1 = 0
 local tables = {
   disable_indent = false,
@@ -1532,7 +1533,7 @@ function wwise_regex_replace(s, pat, repl, occurrence)
   local compiled = regex_compile(pat)
   if not compiled then return s end
   local text = regex_make_text(s)
-  local ignore = ignore_case
+  local ignore = not match_case
 
   if occurrence == "last" then
     local search_pos = 1
@@ -2536,7 +2537,7 @@ function build_project_marker_result(origin_name, marker_id, seq, build_fn)
 
   if enable_replace and find_text ~= "" then
     local pat = escape_pattern(find_text)
-    if ignore_case then
+    if not match_case then
       pat = make_case_insensitive_pattern(pat)
     end
     local repl = build_fn(replace_text or "", origin_name, marker_id, seq)
@@ -2709,7 +2710,7 @@ function apply_batch_items()
     -- 5.2 Replace 也用 build_items 先展开 replace_text
     if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      if ignore_case then
+      if not match_case then
         pat = make_case_insensitive_pattern(pat)
       end
       local repl = build_items(
@@ -2838,7 +2839,7 @@ function apply_batch_tracks()
     -- 2) Replace
     if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      if ignore_case then
+      if not match_case then
         pat = make_case_insensitive_pattern(pat)
       end
       local repl = build_tracks(replace_text, origin, guid, track_num, parent, i + 1)
@@ -2941,7 +2942,7 @@ function apply_batch_region_manager()
     -- 2) Replace
     if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      if ignore_case then
+      if not match_case then
         pat = make_case_insensitive_pattern(pat)
       end
       local repl = build_region_manager(replace_text or "", orig, region.index, idx)
@@ -3048,7 +3049,7 @@ function apply_batch_region_time()
     -- 2) Replace
     if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      if ignore_case then
+      if not match_case then
         pat = make_case_insensitive_pattern(pat)
       end
       local repl = build_region_time(replace_text or "", orig, region.index, idx)
@@ -3186,7 +3187,7 @@ function apply_batch_regions_for_items()
     -- 2) Replace
     if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      if ignore_case then
+      if not match_case then
         pat = make_case_insensitive_pattern(pat)
       end
       local repl = build_region_for_items(replace_text or "", orig, region.index, idx)
@@ -3291,7 +3292,7 @@ function apply_batch_marker_manager()
     -- 2) Replace
     if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      if ignore_case then
+      if not match_case then
         pat = make_case_insensitive_pattern(pat)
       end
       local repl = build_marker_manager(replace_text or "", orig, marker.index, idx)
@@ -3436,7 +3437,7 @@ function apply_batch_marker_time()
     -- 2) Replace
     if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      if ignore_case then
+      if not match_case then
         pat = make_case_insensitive_pattern(pat)
       end
       local repl = build_marker_time(replace_text or "", orig, marker.index, idx)
@@ -3659,7 +3660,7 @@ function apply_batch_sources()
     -- Replace
     if enable_replace and find_text ~= "" then
       local pat = escape_pattern(find_text)
-      if ignore_case then
+      if not match_case then
         pat = make_case_insensitive_pattern(pat)
       end
       local repl = build_sources(replace_text, base, rec.tname, rec.track_num, rec.folders, seq)
@@ -3870,7 +3871,7 @@ function get_preview_data_and_builder()
       -- 2) Replace
       if enable_replace and find_text ~= "" then
         local pat = escape_pattern(find_text)
-        if ignore_case then
+        if not match_case then
           pat = make_case_insensitive_pattern(pat)
         end
         local repl = build_items(replace_text or "", orig, rec.tname, rec.track_num, rec.folders, rec.take, seq)
@@ -3947,7 +3948,7 @@ function get_preview_data_and_builder()
       -- 2) Replace
       if enable_replace and find_text ~= "" then
         local pat = escape_pattern(find_text)
-        if ignore_case then
+        if not match_case then
           pat = make_case_insensitive_pattern(pat)
         end
         local repl = build_tracks(replace_text, orig, guid, num, parent, seq)
@@ -4023,7 +4024,7 @@ function get_preview_data_and_builder()
       -- 2) Replace
       if enable_replace and find_text ~= "" then
         local pat = escape_pattern(find_text)
-        if ignore_case then
+        if not match_case then
           pat = make_case_insensitive_pattern(pat)
         end
         local repl = build_region_manager(replace_text or "", orig, region.index, i)
@@ -4101,7 +4102,7 @@ function get_preview_data_and_builder()
       -- 2) Replace
       if enable_replace and find_text ~= "" then
         local pat = escape_pattern(find_text)
-        if ignore_case then
+        if not match_case then
           pat = make_case_insensitive_pattern(pat)
         end
         local repl = build_region_time(replace_text or "", orig, region.index, i)
@@ -4183,7 +4184,7 @@ function get_preview_data_and_builder()
       -- 2) Replace
       if enable_replace and find_text ~= "" then
         local pat = escape_pattern(find_text)
-        if ignore_case then
+        if not match_case then
           pat = make_case_insensitive_pattern(pat)
         end
         local repl = build_region_for_items(replace_text or "", orig, region.index, i)
@@ -4256,7 +4257,7 @@ function get_preview_data_and_builder()
       -- 2) Replace
       if enable_replace and find_text ~= "" then
         local pat = escape_pattern(find_text)
-        if ignore_case then
+        if not match_case then
           pat = make_case_insensitive_pattern(pat)
         end
         local repl = build_marker_manager(replace_text or "", orig, marker.index, i)
@@ -4343,7 +4344,7 @@ function get_preview_data_and_builder()
       -- 2) Replace
       if enable_replace and find_text ~= "" then
         local pat = escape_pattern(find_text)
-        if ignore_case then
+        if not match_case then
           pat = make_case_insensitive_pattern(pat)
         end
         local repl = build_marker_time(replace_text or "", orig, marker.index, i)
@@ -4416,7 +4417,7 @@ function get_preview_data_and_builder()
       -- 2) Replace
       if enable_replace and find_text ~= "" then
         local pat = escape_pattern(find_text)
-        if ignore_case then
+        if not match_case then
           pat = make_case_insensitive_pattern(pat)
         end
         local repl = build_sources(replace_text or "", base, data.tname, data.track_num, data.folders, seq)
@@ -5353,14 +5354,14 @@ function frame()
   local ch_w, new_repl = reaper.ImGui_InputText(ctx, ui_label("replace_with", "repl"), replace_text or "")
   if ch_w then replace_text = new_repl end
 
-  -- 忽略大小写选项
+  -- 匹配大小写选项
   local fp_x, fp_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding())
   local is_x, is_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), fp_x, math.floor(fp_y * 0.5))
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), is_x, math.floor(is_y * 0.5))
 
-  local ch_ic, new_ic = reaper.ImGui_Checkbox(ctx, ui_label("ignore_case", "ic"), ignore_case)
-  if ch_ic then ignore_case = new_ic end
+  local ch_mc, new_mc = reaper.ImGui_Checkbox(ctx, ui_label("match_case", "mc"), match_case)
+  if ch_mc then match_case = new_mc end
   reaper.ImGui_PopStyleVar(ctx, 2)
 
   reaper.ImGui_SameLine(ctx)
