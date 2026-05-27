@@ -1,12 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.185
+-- @version 1.0.186
 -- @changelog
---   Added per-database cover indexes so the album art panel can load unique cover_id lists directly when switching databases, improving performance for large libraries.
---   Fixed invalid cover_id entries that could be generated in the cover index.
---   Added album artwork and Metadata panel display.
---   Improved album artwork and Metadata panel layout, and refined splitter spacing and drag stability.
---   Support reaper_soundmole-x64.dll v0.0.15
+--   Optimized Database mode album art loading and cover_id filtering performance for large libraries.
+--   Support reaper_soundmole-x64.dll v0.0.16
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

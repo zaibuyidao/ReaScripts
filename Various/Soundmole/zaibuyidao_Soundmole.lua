@@ -8111,6 +8111,99 @@ function FilterListByCoverID(list, cover_id)
   return out
 end
 
+function SM_GetEnabledSearchFieldsCSV()
+  local fields_t = {}
+  if temp_search_field then
+    fields_t[#fields_t + 1] = temp_search_field
+  else
+    for _, f in ipairs(search_fields) do
+      if f.enabled then fields_t[#fields_t + 1] = f.key end
+    end
+  end
+  return table.concat(fields_t, ",")
+end
+
+function SM_GetCoverIDFromRawDBRow(raw)
+  raw = tostring(raw or "")
+  if raw == "" then return "" end
+
+  local pos = 1
+  for _ = 1, 16 do
+    local p = raw:find("|", pos, true)
+    if not p then return "" end
+    pos = p + 1
+  end
+  return raw:sub(pos)
+end
+
+function SM_RawDBRowHasCoverIDField(raw)
+  raw = tostring(raw or "")
+  if raw == "" then return false end
+
+  local pos = 1
+  for _ = 1, 16 do
+    local p = raw:find("|", pos, true)
+    if not p then return false end
+    pos = p + 1
+  end
+  return true
+end
+
+function SM_ReleaseDBSearchHandle(handle)
+  if not handle then return end
+  if _G.db_loader and handle == _G.db_loader.ctx then return end
+  if handle == _G.SM_Cache_Full_Handle then return end
+  if reaper.APIExists("SM_DB_Release") then
+    reaper.SM_DB_Release(handle)
+  end
+end
+
+function SM_AdoptDBSearchHandle(handle)
+  if _G._last_search_handle and _G._last_search_handle ~= handle then
+    SM_ReleaseDBSearchHandle(_G._last_search_handle)
+  end
+  _G._last_search_handle = handle
+end
+
+function SM_MakeDBProxy(handle, cover_id)
+  if not handle then return nil end
+  local count = reaper.SM_DB_GetCount(handle) or 0
+  local proxy = { _handle = handle, _count = count }
+  if cover_id and cover_id ~= "" then proxy._cover_filter_id = cover_id end
+  setmetatable(proxy, VirtualListMeta)
+  return proxy
+end
+
+function SM_TryDBCoverFilterWithExtension(handle, cover_id)
+  cover_id = tostring(cover_id or "")
+  if not handle or cover_id == "" then return nil end
+  if not (HAVE_SM_SEARCH and reaper.SM_DB_Filter and reaper.SM_DB_GetCount and reaper.SM_DB_GetRowRaw) then return nil end
+
+  local source_raw = reaper.SM_DB_GetRowRaw(handle, 0)
+  local source_has_cover_field = SM_RawDBRowHasCoverIDField(source_raw)
+
+  local ok, res_handle = pcall(reaper.SM_DB_Filter, handle, cover_id, "cover_id", "", "", "")
+  if not ok or not res_handle then return nil end
+
+  local count = reaper.SM_DB_GetCount(res_handle) or 0
+  if count <= 0 then
+    if source_has_cover_field then
+      return res_handle
+    else
+      SM_ReleaseDBSearchHandle(res_handle)
+      return nil
+    end
+  end
+
+  local raw = reaper.SM_DB_GetRowRaw(res_handle, 0)
+  if SM_GetCoverIDFromRawDBRow(raw) ~= cover_id then
+    SM_ReleaseDBSearchHandle(res_handle)
+    return nil
+  end
+
+  return res_handle
+end
+
 -- 根据文本框、同义词、UCS、Saved Search 等规则，从原始 files_idx_cache 中构建过滤后列表
 -- 支持 AND / OR / NOT 逻辑 (大小写不敏感)
 -- 支持 ^ 开头, $ 结尾
@@ -8164,50 +8257,32 @@ function BuildFilteredList(list)
     return safe_cache
   end
 
-  if use_cpp and not has_cover then
-    if _G.SM_Cache_Ctx ~= db_handle or not _G.SM_Cache_Full_Handle then
-      if _G.SM_Cache_Full_Handle then 
-        if _G.SM_Cache_Full_Handle ~= _G._last_search_handle then
-          reaper.SM_DB_Release(_G.SM_Cache_Full_Handle)
-        end
-      end
-      local new_full_cache = reaper.SM_DB_Filter(db_handle, "", "", "", "", "")
-      if new_full_cache then
-        _G.SM_Cache_Full_Handle = new_full_cache
-        _G.SM_Cache_Ctx = db_handle
-      end
-    end
-
+  if use_cpp then
+    local base_handle = db_handle
+    local base_is_temp = false
     local res_handle = nil
-    if is_empty_request then
-      res_handle = _G.SM_Cache_Full_Handle
-    else
-      -- 常规搜索
-      local fields_t = {}
-      if temp_search_field then
-        table.insert(fields_t, temp_search_field)
-      else
-        for _, f in ipairs(search_fields) do
-          if f.enabled then table.insert(fields_t, f.key) end
-        end
-      end
+    local has_base_filter = (final_query ~= "") or has_path or has_ucs
 
-      res_handle = reaper.SM_DB_Filter(db_handle, final_query, table.concat(fields_t, ","), db_path_filter, ucs_cat_arg, ucs_sub_arg)
+    if has_base_filter then
+      res_handle = reaper.SM_DB_Filter(db_handle, final_query, SM_GetEnabledSearchFieldsCSV(), db_path_filter, ucs_cat_arg, ucs_sub_arg)
+      if res_handle then
+        base_handle = res_handle
+        base_is_temp = true
+      end
     end
 
-    if res_handle then
-      local count = reaper.SM_DB_GetCount(res_handle)
-      if _G._last_search_handle then
-        if _G._last_search_handle ~= _G.SM_Cache_Full_Handle then
-          reaper.SM_DB_Release(_G._last_search_handle)
-        end
+    if has_cover then
+      local cover_handle = SM_TryDBCoverFilterWithExtension(base_handle, cover_filter)
+      if cover_handle then
+        if base_is_temp then SM_ReleaseDBSearchHandle(base_handle) end
+        SM_AdoptDBSearchHandle(cover_handle)
+        return SM_MakeDBProxy(cover_handle, cover_filter)
       end
 
-      _G._last_search_handle = res_handle
-
-      local proxy = { _handle = res_handle, _count = count }
-      setmetatable(proxy, VirtualListMeta)
-      return proxy
+      if base_is_temp then SM_ReleaseDBSearchHandle(base_handle) end
+    elseif res_handle then
+      SM_AdoptDBSearchHandle(res_handle)
+      return SM_MakeDBProxy(res_handle)
     end
   end
 
@@ -8352,7 +8427,7 @@ function BuildFilteredList(list)
 
   -- 性能优化：无搜索条件时，直接透传原列表 (零拷贝)
   -- 避免 N 次无效循环和重建表，消除加载完成后的最后一道卡顿
-  if (#boolean_groups == 0) and (not pair_cat) and (not pair_sub) then
+  if (#boolean_groups == 0) and (not pair_cat) and (not pair_sub) and (not has_cover) then
     return list
   end
 
@@ -8486,6 +8561,7 @@ function BuildFilteredList(list)
     end
   end
 
+  if has_cover then filtered._cover_filter_id = cover_filter end
   return filtered
 end
 
