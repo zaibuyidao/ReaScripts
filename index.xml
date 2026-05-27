@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="18c43462c27d9bbd823d9ec6dae7288908fefe3f">
+<index version="1" name="zaibuyidao Scripts" commit="7e12c35ba80ce248b61d7dca7a809c827aa85399">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -8185,6 +8185,10 @@ Fixed Ctrl+Enter apply handling so the no-changes warning no longer appears imme
       <version name="1.0.20" author="zaibuyidao" time="2026-05-23T12:15:55Z">
         <changelog><![CDATA[Added language switching support. Currently supports English, Simplified Chinese, and Traditional Chinese.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/9522d2a44dec1a57906a6e43cd4d2fe3d899d279/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
+      </version>
+      <version name="1.0.21" author="zaibuyidao" time="2026-05-27T12:06:03Z">
+        <changelog><![CDATA[Added Wwise-style regular expression support to Replace mode.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7e12c35ba80ce248b61d7dca7a809c827aa85399/Utility/zaibuyidao_Batch%20Rename%20Plus.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Build MIDI Routing Channels to Selected Tracks.lua" type="script" desc="Build MIDI Routing Channels to Selected Tracks">
