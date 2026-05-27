@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.20
+-- @version 1.0.21
 -- @author zaibuyidao
 -- @changelog
---   Added language switching support. Currently supports English, Simplified Chinese, and Traditional Chinese.
+--   Added Wwise-style regular expression support to Replace mode.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -172,6 +172,8 @@ local TEXT = {
     find_what = "查找内容",
     replace_with = "替换为",
     ignore_case = "忽略大小写",
+    use_regular_expression = "使用正则表达式",
+    regex_help = "勾选后，“查找内容”会按 Wwise/ECMAScript 风格的正则表达式匹配；“替换为”可以使用捕获组。\n\n常用写法:\n. 匹配任意单个字符\n\\d 匹配数字，\\D 匹配非数字\n\\w 匹配字母、数字或下划线，\\W 匹配其它字符\n\\s 匹配空格、Tab、换行等空白字符\n^ 匹配名称开头，$ 匹配名称结尾\n[ABC] 匹配 A、B 或 C；[A-Z] 匹配 A 到 Z\n[^0-9] 匹配不是数字的字符\n* 表示 0 次或更多，+ 表示 1 次或更多，? 表示 0 次或 1 次\n{3} 表示正好 3 次，{2,4} 表示 2 到 4 次\n( ) 创建捕获组；(?: ) 创建不编号的分组\n| 表示“或者”，例如 cat|dog\n\\b 匹配单词边界\n\n替换引用:\n$1、$2 使用第 1、第 2 个捕获组\n$& 使用整个匹配内容\n$` 使用匹配前面的内容\n$' 使用匹配后面的内容\n$+ 使用最后一个捕获组\n$$ 输入一个普通的 $ 符号\n\n入门示例:\n1. 去掉名称末尾编号\n查找内容: _\\d+$\n替换为: 留空\n示例: Amb_Rain_001 -> Amb_Rain\n\n2. 把空格和横线统一成下划线\n查找内容: [\\s-]+\n替换为: _\n示例: Footstep Wood-01 -> Footstep_Wood_01\n\n3. 交换两个用下划线分隔的部分\n查找内容: ^(.*)_(.*)$\n替换为: $2_$1\n示例: Door_Open -> Open_Door\n\n4. 只保留括号里的文字\n查找内容: ^.*\\((.*)\\).*$\n替换为: $1\n示例: Explosion (Large) -> Large\n\n小提示: 如果要匹配 .、(、)、[、]、+、*、?、$ 这些符号本身，请在前面加反斜杠，例如 \\. 表示真正的点号。",
     occurrence = "出现位置",
     first = "首次",
     last = "末次",
@@ -336,6 +338,8 @@ local TEXT = {
     find_what = "尋找內容",
     replace_with = "取代為",
     ignore_case = "忽略大小寫",
+    use_regular_expression = "使用正則表達式",
+    regex_help = "勾選後，「尋找內容」會按 Wwise/ECMAScript 風格的正則表達式匹配；「取代為」可以使用捕獲組。\n\n常用寫法:\n. 匹配任意單個字元\n\\d 匹配數字，\\D 匹配非數字\n\\w 匹配字母、數字或底線，\\W 匹配其它字元\n\\s 匹配空格、Tab、換行等空白字元\n^ 匹配名稱開頭，$ 匹配名稱結尾\n[ABC] 匹配 A、B 或 C；[A-Z] 匹配 A 到 Z\n[^0-9] 匹配不是數字的字元\n* 表示 0 次或更多，+ 表示 1 次或更多，? 表示 0 次或 1 次\n{3} 表示正好 3 次，{2,4} 表示 2 到 4 次\n( ) 建立捕獲組；(?: ) 建立不編號的分組\n| 表示「或者」，例如 cat|dog\n\\b 匹配單字邊界\n\n取代引用:\n$1、$2 使用第 1、第 2 個捕獲組\n$& 使用整個匹配內容\n$` 使用匹配前面的內容\n$' 使用匹配後面的內容\n$+ 使用最後一個捕獲組\n$$ 輸入一個普通的 $ 符號\n\n入門範例:\n1. 去掉名稱結尾編號\n尋找內容: _\\d+$\n取代為: 留空\n範例: Amb_Rain_001 -> Amb_Rain\n\n2. 把空格和橫線統一成底線\n尋找內容: [\\s-]+\n取代為: _\n範例: Footstep Wood-01 -> Footstep_Wood_01\n\n3. 交換兩個用底線分隔的部分\n尋找內容: ^(.*)_(.*)$\n取代為: $2_$1\n範例: Door_Open -> Open_Door\n\n4. 只保留括號裡的文字\n尋找內容: ^.*\\((.*)\\).*$\n取代為: $1\n範例: Explosion (Large) -> Large\n\n小提示: 如果要匹配 .、(、)、[、]、+、*、?、$ 這些符號本身，請在前面加反斜線，例如 \\. 表示真正的點號。",
     occurrence = "出現位置",
     first = "首次",
     last = "末次",
@@ -500,6 +504,8 @@ local TEXT = {
     find_what = "Find what",
     replace_with = "Replace with",
     ignore_case = "Ignore case",
+    use_regular_expression = "Use Regular Expression",
+    regex_help = "When enabled, “Find what” is matched as a Wwise/ECMAScript-style regular expression. “Replace with” can use capture groups.\n\nCommon patterns:\n. matches any single character\n\\d matches a digit, \\D matches a non-digit\n\\w matches a letter, digit, or underscore; \\W matches anything else\n\\s matches whitespace such as space, Tab, or newline\n^ matches the start of the name, $ matches the end\n[ABC] matches A, B, or C; [A-Z] matches A through Z\n[^0-9] matches any character that is not a digit\n* means 0 or more, + means 1 or more, ? means 0 or 1\n{3} means exactly 3 times, {2,4} means 2 to 4 times\n( ) creates a capture group; (?: ) creates an unnumbered group\n| means “or”, for example cat|dog\n\\b matches a word boundary\n\nReplacement references:\n$1, $2 use capture group 1 or 2\n$& uses the whole match\n$` uses the text before the match\n$' uses the text after the match\n$+ uses the last captured group\n$$ inserts a plain $ character\n\nBeginner examples:\n1. Remove a trailing number\nFind what: _\\d+$\nReplace with: leave empty\nExample: Amb_Rain_001 -> Amb_Rain\n\n2. Turn spaces and hyphens into underscores\nFind what: [\\s-]+\nReplace with: _\nExample: Footstep Wood-01 -> Footstep_Wood_01\n\n3. Swap two underscore-separated parts\nFind what: ^(.*)_(.*)$\nReplace with: $2_$1\nExample: Door_Open -> Open_Door\n\n4. Keep only text inside parentheses\nFind what: ^.*\\((.*)\\).*$\nReplace with: $1\nExample: Explosion (Large) -> Large\n\nTip: To match punctuation such as ., (, ), [, ], +, *, ?, or $ literally, put a backslash before it. For example, \\. matches a real dot.",
     occurrence = "Occurrence",
     first = "First",
     last = "Last",
@@ -554,7 +560,8 @@ local TEXT = {
   }
 }
 
-local LANGUAGE_EXT_SECTION = "BatchRenamePlus"
+local EXT_SECTION = "BatchRenamePlus"
+
 local LANGUAGE_EXT_KEY = "Language"
 local LANGUAGE_DEFAULT = "en"
 local LANGUAGE_OPTIONS = {
@@ -606,14 +613,14 @@ function set_language(value, persist)
   T = TEXT[language] or TEXT[LANGUAGE_DEFAULT]
   TITLE = T.title
   if persist then
-    reaper.SetExtState(LANGUAGE_EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
+    reaper.SetExtState(EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
   end
 end
 
-local stored_language = reaper.GetExtState(LANGUAGE_EXT_SECTION, LANGUAGE_EXT_KEY)
+local stored_language = reaper.GetExtState(EXT_SECTION, LANGUAGE_EXT_KEY)
 set_language(stored_language, false)
 if stored_language ~= "" and stored_language ~= language then
-  reaper.SetExtState(LANGUAGE_EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
+  reaper.SetExtState(EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
 end
 
 function tr(key, ...)
@@ -686,6 +693,7 @@ local sort_index             = 0                     -- 0 = Track, 1 = Sequence,
 local preview_mode           = false                 -- 预览模式默认值
 local ignore_case            = false                 -- 是否忽略大小写
 local occurrence_mode        = 2                     -- Occurrence 模式: 0=First,1=Last,2=All
+local use_regular_expression = false                 -- Wwise/ECMAScript-style regex for Replace
 local write_take_name        = true                  -- true 将新文件名写入 Take 名称，false 保持原 Take 名称
 local PREVIEW_TABLE_ID       = "preview_table"       -- 主脚本里共用
 local PREVIEW_POPUP_TABLE_ID = "preview_popup_table" -- 弹窗里共用
@@ -733,6 +741,19 @@ local selectedPreset = 1 -- 默认为 Reset to factory default
 local newPresetName = ""
 local showSavePopup = false
 
+local USE_REGEX_EXT_KEY = "UseRegularExpression"
+
+function SaveUseRegularExpressionState()
+  reaper.SetExtState(EXT_SECTION, USE_REGEX_EXT_KEY, tostring(use_regular_expression), true)
+end
+
+local stored_use_regex = reaper.GetExtState(EXT_SECTION, USE_REGEX_EXT_KEY)
+if stored_use_regex == "true" then
+  use_regular_expression = true
+elseif stored_use_regex == "false" then
+  use_regular_expression = false
+end
+
 -- 重置到初始状态
 function ResetState()
   rename_pattern    = ""
@@ -751,7 +772,9 @@ function ResetState()
   use_cycle_mode    = true
   write_take_name   = true
   ignore_case       = false
+  use_regular_expression = false
   occurrence_mode   = 2 -- All 模式
+  SaveUseRegularExpressionState()
 end
 
 -- 判断表中是否包含某值
@@ -800,6 +823,7 @@ function EncodePreset()
     ignore_case    and "1" or "0",
     tostring(occurrence_mode),
     write_take_name and "1" or "0",
+    use_regular_expression and "1" or "0",
   }
   return table.concat(data, "\t")
 end
@@ -824,6 +848,8 @@ function ApplyPreset(dataStr)
   ignore_case       = params[14]=="1"
   occurrence_mode   = tonumber(params[15]) or 2
   write_take_name   = (params[16] == nil or params[16] == "") and true or (params[16] == "1")
+  use_regular_expression = params[17]=="1"
+  SaveUseRegularExpressionState()
 end
 
 -- 通用 ImGui 文本输入对话框
@@ -951,26 +977,619 @@ function help_marker(desc)
 end
 
 function make_case_insensitive_pattern(str)
+  if use_regular_expression then return str or "" end
   return str:gsub("(%a)", function(c)
     return "["..c:lower()..c:upper().."]"
   end)
 end
 
+-- Wwise 的 Batch Rename 使用 ECMAScript 风格正则。Lua 没有 regex，因此这里实现了一个简易匹配器。
+local WWISE_REGEX_CACHE = {}
+
+function regex_utf8_char_at(s, i)
+  local b = s:byte(i)
+  if not b then return nil, nil, i end
+
+  local len = 1
+  if b >= 0xF0 and b <= 0xF7 then
+    len = 4
+  elseif b >= 0xE0 and b <= 0xEF then
+    len = 3
+  elseif b >= 0xC0 and b <= 0xDF then
+    len = 2
+  end
+
+  if i + len - 1 > #s then len = 1 end
+  local ch = s:sub(i, i + len - 1)
+  local ok, cp = pcall(utf8.codepoint, ch)
+  if not ok or not cp then
+    ch = s:sub(i, i)
+    cp = b
+    len = 1
+  end
+  return ch, cp, i + len
+end
+
+function regex_make_text(s)
+  s = tostring(s or "")
+  local text = { source = s, chars = {}, cps = {}, byte_starts = {} }
+  local i = 1
+  while i <= #s do
+    local ch, cp, next_i = regex_utf8_char_at(s, i)
+    text.byte_starts[#text.chars + 1] = i
+    text.chars[#text.chars + 1] = ch
+    text.cps[#text.cps + 1] = cp
+    i = next_i
+  end
+  text.n = #text.chars
+  text.byte_starts[text.n + 1] = #s + 1
+  return text
+end
+
+function regex_slice(text, first_pos, end_pos)
+  first_pos = math.max(1, math.min(first_pos or 1, text.n + 1))
+  end_pos = math.max(1, math.min(end_pos or (text.n + 1), text.n + 1))
+  if end_pos <= first_pos then return "" end
+  return text.source:sub(text.byte_starts[first_pos], text.byte_starts[end_pos] - 1)
+end
+
+function regex_copy_captures(caps)
+  local out = {}
+  for k, v in pairs(caps or {}) do
+    out[k] = { start = v.start, finish = v.finish }
+  end
+  return out
+end
+
+function regex_state(pos, caps)
+  return { pos = pos, caps = regex_copy_captures(caps) }
+end
+
+function regex_ascii_lower(cp)
+  if cp and cp >= 65 and cp <= 90 then return cp + 32 end
+  return cp
+end
+
+function regex_cp_equal(a, b, ignore)
+  if a == b then return true end
+  return ignore and regex_ascii_lower(a) == regex_ascii_lower(b)
+end
+
+function regex_is_digit(cp)
+  return cp and cp >= 48 and cp <= 57
+end
+
+function regex_is_word(cp)
+  return cp and ((cp >= 48 and cp <= 57) or (cp >= 65 and cp <= 90) or (cp >= 97 and cp <= 122) or cp == 95)
+end
+
+function regex_is_space(cp)
+  return cp == 32 or cp == 9 or cp == 10 or cp == 11 or cp == 12 or cp == 13 or cp == 0xA0
+end
+
+function regex_compile(pattern)
+  pattern = tostring(pattern or "")
+  local cached = WWISE_REGEX_CACHE[pattern]
+  if cached then return cached.compiled, cached.err end
+
+  local p = { s = pattern, i = 1, len = #pattern, group_count = 0, err = nil }
+  local parse_expression, parse_sequence, parse_atom, parse_class
+
+  local function peek(offset)
+    offset = offset or 0
+    local pos = p.i + offset
+    if pos > p.len then return "" end
+    return p.s:sub(pos, pos)
+  end
+
+  local function consume(n)
+    n = n or 1
+    local out = p.s:sub(p.i, p.i + n - 1)
+    p.i = p.i + n
+    return out
+  end
+
+  local function read_digits()
+    local start_i = p.i
+    while peek():match("%d") do consume(1) end
+    return p.s:sub(start_i, p.i - 1)
+  end
+
+  local function read_char()
+    local ch, cp, next_i = regex_utf8_char_at(p.s, p.i)
+    p.i = next_i
+    return ch, cp
+  end
+
+  local function literal_node(cp)
+    return { type = "literal", cp = cp }
+  end
+
+  local function class_node(name)
+    return { type = "class", negated = false, parts = { { kind = "pred", name = name } } }
+  end
+
+  local function escaped_atom(in_class)
+    consume(1)
+    if p.i > p.len then return literal_node(92) end
+    local c = peek()
+
+    if c == "s" or c == "S" or c == "d" or c == "D" or c == "w" or c == "W" then
+      consume(1)
+      if in_class then return { kind = "pred", name = c } end
+      return class_node(c)
+    elseif c == "n" then
+      consume(1)
+      if in_class then return { kind = "char", cp = 10 } end
+      return literal_node(10)
+    elseif c == "r" then
+      consume(1)
+      if in_class then return { kind = "char", cp = 13 } end
+      return literal_node(13)
+    elseif c == "t" then
+      consume(1)
+      if in_class then return { kind = "char", cp = 9 } end
+      return literal_node(9)
+    elseif c == "b" and not in_class then
+      consume(1)
+      return { type = "boundary", negated = false }
+    elseif c == "B" and not in_class then
+      consume(1)
+      return { type = "boundary", negated = true }
+    elseif c == "b" and in_class then
+      consume(1)
+      return { kind = "char", cp = 8 }
+    elseif c == "x" then
+      local hex = p.s:sub(p.i + 1, p.i + 2)
+      if hex:match("^%x%x$") then
+        p.i = p.i + 3
+        local cp = tonumber(hex, 16)
+        if in_class then return { kind = "char", cp = cp } end
+        return literal_node(cp)
+      end
+      p.err = "Invalid hexadecimal escape"
+      return in_class and { kind = "char", cp = 120 } or literal_node(120)
+    end
+
+    local _, cp = read_char()
+    if in_class then return { kind = "char", cp = cp } end
+    return literal_node(cp)
+  end
+
+  parse_class = function()
+    consume(1)
+    local negated = false
+    if peek() == "^" then
+      negated = true
+      consume(1)
+    end
+
+    local parts = {}
+    local first = true
+    local closed = false
+    while p.i <= p.len do
+      if peek() == "]" and not first then
+        consume(1)
+        closed = true
+        break
+      end
+
+      local item
+      if peek() == "\\" then
+        item = escaped_atom(true)
+      else
+        local _, cp = read_char()
+        item = { kind = "char", cp = cp }
+      end
+
+      if item.kind == "char" and peek() == "-" and p.s:sub(p.i + 1, p.i + 1) ~= "]" and p.i < p.len then
+        consume(1)
+        local item2
+        if peek() == "\\" then
+          item2 = escaped_atom(true)
+        else
+          local _, cp2 = read_char()
+          item2 = { kind = "char", cp = cp2 }
+        end
+        if item2.kind == "char" then
+          parts[#parts + 1] = { kind = "range", from = item.cp, to = item2.cp }
+        else
+          parts[#parts + 1] = item
+          parts[#parts + 1] = { kind = "char", cp = 45 }
+          parts[#parts + 1] = item2
+        end
+      else
+        parts[#parts + 1] = item
+      end
+      first = false
+    end
+
+    if not closed then p.err = "Unclosed character class" end
+    return { type = "class", negated = negated, parts = parts }
+  end
+
+  local function apply_quantifier(atom)
+    local c = peek()
+    if c == "*" or c == "+" or c == "?" then
+      consume(1)
+      if c == "*" then return { type = "repeat", child = atom, min = 0, max = nil } end
+      if c == "+" then return { type = "repeat", child = atom, min = 1, max = nil } end
+      return { type = "repeat", child = atom, min = 0, max = 1 }
+    elseif c == "{" then
+      local save_i = p.i
+      consume(1)
+      local min_s = read_digits()
+      if min_s == "" then
+        p.i = save_i
+        return atom
+      end
+      local min_n = tonumber(min_s)
+      local max_n = min_n
+      if peek() == "," then
+        consume(1)
+        local max_s = read_digits()
+        max_n = (max_s == "") and nil or tonumber(max_s)
+      end
+      if peek() ~= "}" then
+        p.i = save_i
+        return atom
+      end
+      consume(1)
+      if max_n and max_n < min_n then
+        p.err = "Invalid quantifier range"
+      end
+      return { type = "repeat", child = atom, min = min_n, max = max_n }
+    end
+    return atom
+  end
+
+  parse_atom = function()
+    local c = peek()
+    if c == "" then return { type = "seq", nodes = {} } end
+    if c == "*" or c == "+" or c == "?" then
+      p.err = "Nothing to repeat"
+      consume(1)
+      return literal_node(c:byte())
+    elseif c == "^" then
+      consume(1)
+      return { type = "anchor_start" }
+    elseif c == "$" then
+      consume(1)
+      return { type = "anchor_end" }
+    elseif c == "." then
+      consume(1)
+      return { type = "any" }
+    elseif c == "[" then
+      return parse_class()
+    elseif c == "\\" then
+      return escaped_atom(false)
+    elseif c == "(" then
+      consume(1)
+      local capture_id = nil
+      if peek() == "?" then
+        if p.s:sub(p.i, p.i + 1) == "?:" then
+          consume(2)
+        else
+          p.err = "Unsupported group syntax"
+        end
+      else
+        p.group_count = p.group_count + 1
+        capture_id = p.group_count
+      end
+
+      local child = parse_expression()
+      if peek() == ")" then
+        consume(1)
+      else
+        p.err = "Unclosed group"
+      end
+      return { type = "group", child = child, capture_id = capture_id }
+    end
+
+    local _, cp = read_char()
+    return literal_node(cp)
+  end
+
+  parse_sequence = function()
+    local nodes = {}
+    while p.i <= p.len do
+      local c = peek()
+      if c == ")" or c == "|" then break end
+      local atom = parse_atom()
+      if p.err then break end
+      nodes[#nodes + 1] = apply_quantifier(atom)
+      if p.err then break end
+    end
+    return { type = "seq", nodes = nodes }
+  end
+
+  parse_expression = function()
+    local branches = { parse_sequence() }
+    while not p.err and peek() == "|" do
+      consume(1)
+      branches[#branches + 1] = parse_sequence()
+    end
+    if #branches == 1 then return branches[1] end
+    return { type = "alt", branches = branches }
+  end
+
+  local ast = parse_expression()
+  if not p.err and p.i <= p.len then
+    p.err = "Unexpected character"
+  end
+
+  if p.err then
+    WWISE_REGEX_CACHE[pattern] = { compiled = nil, err = p.err }
+    return nil, p.err
+  end
+
+  local compiled = { ast = ast, group_count = p.group_count }
+  WWISE_REGEX_CACHE[pattern] = { compiled = compiled, err = nil }
+  return compiled, nil
+end
+
+function regex_part_matches(part, cp, ignore)
+  if part.kind == "char" then
+    return regex_cp_equal(cp, part.cp, ignore)
+  elseif part.kind == "range" then
+    local test_cp = ignore and regex_ascii_lower(cp) or cp
+    local from_cp = ignore and regex_ascii_lower(part.from) or part.from
+    local to_cp = ignore and regex_ascii_lower(part.to) or part.to
+    if from_cp <= to_cp then
+      return test_cp >= from_cp and test_cp <= to_cp
+    end
+    return test_cp >= to_cp and test_cp <= from_cp
+  elseif part.kind == "pred" then
+    if part.name == "d" then return regex_is_digit(cp) end
+    if part.name == "D" then return not regex_is_digit(cp) end
+    if part.name == "w" then return regex_is_word(cp) end
+    if part.name == "W" then return not regex_is_word(cp) end
+    if part.name == "s" then return regex_is_space(cp) end
+    if part.name == "S" then return not regex_is_space(cp) end
+  end
+  return false
+end
+
+local function regex_class_matches(node, cp, ignore)
+  local matched = false
+  for _, part in ipairs(node.parts or {}) do
+    if regex_part_matches(part, cp, ignore) then
+      matched = true
+      break
+    end
+  end
+  return node.negated and not matched or matched
+end
+
+local regex_match_node
+
+function regex_match_sequence(nodes, text, pos, caps, ignore)
+  local states = { regex_state(pos, caps) }
+  for _, child in ipairs(nodes) do
+    local next_states = {}
+    for _, st in ipairs(states) do
+      local child_states = regex_match_node(child, text, st.pos, st.caps, ignore)
+      for _, child_st in ipairs(child_states) do
+        next_states[#next_states + 1] = child_st
+      end
+    end
+    states = next_states
+    if #states == 0 then break end
+  end
+  return states
+end
+
+regex_match_node = function(node, text, pos, caps, ignore)
+  if node.type == "seq" then
+    return regex_match_sequence(node.nodes, text, pos, caps, ignore)
+  elseif node.type == "literal" then
+    if pos <= text.n and regex_cp_equal(text.cps[pos], node.cp, ignore) then
+      return { regex_state(pos + 1, caps) }
+    end
+    return {}
+  elseif node.type == "any" then
+    if pos <= text.n and text.cps[pos] ~= 10 then
+      return { regex_state(pos + 1, caps) }
+    end
+    return {}
+  elseif node.type == "class" then
+    if pos <= text.n and regex_class_matches(node, text.cps[pos], ignore) then
+      return { regex_state(pos + 1, caps) }
+    end
+    return {}
+  elseif node.type == "anchor_start" then
+    if pos == 1 or (pos > 1 and text.cps[pos - 1] == 10) then
+      return { regex_state(pos, caps) }
+    end
+    return {}
+  elseif node.type == "anchor_end" then
+    if pos == text.n + 1 or text.cps[pos] == 10 or text.cps[pos] == 13 then
+      return { regex_state(pos, caps) }
+    end
+    return {}
+  elseif node.type == "boundary" then
+    local prev_word = (pos > 1) and regex_is_word(text.cps[pos - 1]) or false
+    local next_word = (pos <= text.n) and regex_is_word(text.cps[pos]) or false
+    local is_boundary = prev_word ~= next_word
+    if (node.negated and not is_boundary) or (not node.negated and is_boundary) then
+      return { regex_state(pos, caps) }
+    end
+    return {}
+  elseif node.type == "group" then
+    local out = {}
+    local child_states = regex_match_node(node.child, text, pos, regex_copy_captures(caps), ignore)
+    for _, st in ipairs(child_states) do
+      local new_caps = regex_copy_captures(st.caps)
+      if node.capture_id then
+        new_caps[node.capture_id] = { start = pos, finish = st.pos }
+      end
+      out[#out + 1] = { pos = st.pos, caps = new_caps }
+    end
+    return out
+  elseif node.type == "alt" then
+    local out = {}
+    for _, branch in ipairs(node.branches) do
+      local states = regex_match_node(branch, text, pos, regex_copy_captures(caps), ignore)
+      for _, st in ipairs(states) do out[#out + 1] = st end
+    end
+    return out
+  elseif node.type == "repeat" then
+    local out = {}
+    local function repeat_from(cur_pos, cur_caps, count)
+      if not node.max or count < node.max then
+        local states = regex_match_node(node.child, text, cur_pos, regex_copy_captures(cur_caps), ignore)
+        for _, st in ipairs(states) do
+          if st.pos ~= cur_pos then
+            repeat_from(st.pos, st.caps, count + 1)
+          elseif count + 1 >= node.min then
+            out[#out + 1] = regex_state(st.pos, st.caps)
+          end
+        end
+      end
+      if count >= node.min then
+        out[#out + 1] = regex_state(cur_pos, cur_caps)
+      end
+    end
+    repeat_from(pos, caps, 0)
+    return out
+  end
+  return {}
+end
+
+function regex_find(compiled, text, start_pos, ignore)
+  for start_i = start_pos, text.n + 1 do
+    local states = regex_match_node(compiled.ast, text, start_i, {}, ignore)
+    if #states > 0 then
+      return {
+        start = start_i,
+        finish = states[1].pos,
+        caps = states[1].caps,
+        group_count = compiled.group_count
+      }
+    end
+  end
+  return nil
+end
+
+function regex_expand_replacement(repl, text, match)
+  repl = tostring(repl or "")
+  local out = {}
+  local i = 1
+  while i <= #repl do
+    local c = repl:sub(i, i)
+    if c == "$" and i < #repl then
+      local n = repl:sub(i + 1, i + 1)
+      if n == "&" then
+        out[#out + 1] = regex_slice(text, match.start, match.finish)
+        i = i + 2
+      elseif n == "`" then
+        out[#out + 1] = regex_slice(text, 1, match.start)
+        i = i + 2
+      elseif n == "'" then
+        out[#out + 1] = regex_slice(text, match.finish, text.n + 1)
+        i = i + 2
+      elseif n == "+" then
+        local cap
+        for id = match.group_count, 1, -1 do
+          if match.caps[id] then
+            cap = match.caps[id]
+            break
+          end
+        end
+        out[#out + 1] = cap and regex_slice(text, cap.start, cap.finish) or ""
+        i = i + 2
+      elseif n == "$" then
+        out[#out + 1] = "$"
+        i = i + 2
+      elseif n:match("%d") then
+        local j = i + 1
+        while j <= #repl and repl:sub(j, j):match("%d") do j = j + 1 end
+        local id = tonumber(repl:sub(i + 1, j - 1))
+        local cap = id and match.caps[id]
+        out[#out + 1] = cap and regex_slice(text, cap.start, cap.finish) or ""
+        i = j
+      else
+        out[#out + 1] = "$"
+        i = i + 1
+      end
+    else
+      out[#out + 1] = c
+      i = i + 1
+    end
+  end
+  return table.concat(out)
+end
+
+function regex_next_search_pos(match, text)
+  if match.finish == match.start then
+    if match.finish <= text.n then return match.finish + 1 end
+    return text.n + 2
+  end
+  return match.finish
+end
+
+function wwise_regex_replace(s, pat, repl, occurrence)
+  local compiled = regex_compile(pat)
+  if not compiled then return s end
+  local text = regex_make_text(s)
+  local ignore = ignore_case
+
+  if occurrence == "last" then
+    local search_pos = 1
+    local last_match = nil
+    while search_pos <= text.n + 1 do
+      local match = regex_find(compiled, text, search_pos, ignore)
+      if not match then break end
+      last_match = match
+      search_pos = regex_next_search_pos(match, text)
+    end
+    if not last_match then return s end
+    return regex_slice(text, 1, last_match.start) ..
+      regex_expand_replacement(repl, text, last_match) ..
+      regex_slice(text, last_match.finish, text.n + 1)
+  end
+
+  local out = {}
+  local search_pos = 1
+  local emit_pos = 1
+  while search_pos <= text.n + 1 do
+    local match = regex_find(compiled, text, search_pos, ignore)
+    if not match then break end
+    out[#out + 1] = regex_slice(text, emit_pos, match.start)
+    out[#out + 1] = regex_expand_replacement(repl, text, match)
+    emit_pos = match.finish
+    search_pos = regex_next_search_pos(match, text)
+    if occurrence == "first" then break end
+  end
+  out[#out + 1] = regex_slice(text, emit_pos, text.n + 1)
+  return table.concat(out)
+end
+
 function replace_last(s, pat, repl)
+  if use_regular_expression then
+    return wwise_regex_replace(s, pat, repl, "last")
+  end
   return s:gsub("^(.*)("..pat..")", function(a,b) return a..repl end)
 end
 
 function replace_first(s, pat, repl)
+  if use_regular_expression then
+    return wwise_regex_replace(s, pat, repl, "first")
+  end
   local out = s:gsub(pat, function() return repl end, 1)
   return out
 end
 
 function replace_all(s, pat, repl)
+  if use_regular_expression then
+    return wwise_regex_replace(s, pat, repl, "all")
+  end
   local out = s:gsub(pat, function() return repl end)
   return out
 end
 
 function escape_pattern(str)
+  if use_regular_expression then return str or "" end
   -- 正则元字符转义 ^ $ ( ) % . [ ] + - |
   str = str:gsub("([%^%$%(%)%%%.%[%]%+%-%|])", "%%%1")
   str = str:gsub("%*", ".*")
@@ -4053,7 +4672,7 @@ function DrawSettings(ctx)
       reaper.SetExtState("BatchRenamePlus", "PreviewFontSize",    tostring(preview_font_size),  true)
       reaper.SetExtState("BatchRenamePlus", "ShowMainPreview", tostring(show_main_preview), true)
       reaper.SetExtState("BatchRenamePlus", "ShowHelpMarkers", tostring(show_help_markers), true)
-      reaper.SetExtState(LANGUAGE_EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
+      reaper.SetExtState(EXT_SECTION, LANGUAGE_EXT_KEY, language, true)
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
     reaper.ImGui_SameLine(ctx)
@@ -4755,6 +5374,14 @@ function frame()
     end
     reaper.ImGui_EndCombo(ctx)
   end
+
+  local ch_regex, new_regex = reaper.ImGui_Checkbox(ctx, ui_label("use_regular_expression", "regex"), use_regular_expression)
+  if ch_regex then
+    use_regular_expression = new_regex
+    SaveUseRegularExpressionState()
+  end
+  reaper.ImGui_SameLine(ctx)
+  help_marker(T.regex_help)
   reaper.ImGui_EndDisabled(ctx)
   reaper.ImGui_Separator(ctx)
 
