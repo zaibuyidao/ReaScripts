@@ -81,6 +81,7 @@ HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_Ge
 HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw') and reaper.APIExists('SM_DB_Load') and reaper.APIExists('SM_DB_Release') and reaper.APIExists('SM_DB_GetCount')
 HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
 HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists('SM_GetWaveformCachePath') and reaper.APIExists('SM_BuildWaveformCache') and reaper.APIExists('SM_WFC_Begin') and reaper.APIExists('SM_WFC_Pump') and reaper.APIExists('SM_WFC_GetPathIfReady')
+HAVE_SM_DROP_MEDIA_FILES = reaper.APIExists('SM_DropMediaFiles')
 SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
@@ -214,9 +215,6 @@ end
 WFC_PX_DEFAULT               = 2048  -- 默认缓存像素（与C++对齐）
 files_idx_cache              = nil   -- 文件缓存
 waveform_task_queue          = {}    -- 表格列表波形预览
-file_select_start            = nil   -- 音频文件列多选起点
-file_select_end              = nil   -- 音频文件列多选结束
-selected_row                 = selected_row or -1
 ui_bottom_offset             = 231   -- 底部总高度
 playing_preview              = nil
 playing_path                 = nil
@@ -1090,6 +1088,133 @@ end
 
 LoadColorsFromExtState()
 
+--------------------------------------------- 文件选择相关状态变量 ---------------------------------------------
+
+file_select_start            = nil   -- 音频文件列多选起点
+file_select_end              = nil   -- 音频文件列多选结束
+file_selected_rows           = file_selected_rows or {} -- Ctrl+click non-contiguous selection
+file_selection_anchor        = file_selection_anchor or nil
+selected_row                 = selected_row or -1
+
+function ClearFileSelection()
+  file_select_start = nil
+  file_select_end = nil
+  file_selected_rows = {}
+  file_selection_anchor = nil
+end
+
+function FileSelectionHasExplicitRows()
+  if file_select_start and file_select_end then return true end
+  if type(file_selected_rows) == "table" then
+    for _, selected in pairs(file_selected_rows) do
+      if selected then return true end
+    end
+  end
+  return false
+end
+
+function FirstRowInSelectionMap(rows)
+  local first = nil
+  for row, selected in pairs(rows or {}) do
+    row = tonumber(row)
+    if selected and row and (not first or row < first) then first = row end
+  end
+  return first
+end
+
+function CollectSelectedFileRows(list, fallback_idx)
+  list = list or _G.current_display_list or {}
+  local rows = {}
+
+  if file_select_start and file_select_end then
+    local a = math.min(file_select_start, file_select_end)
+    local b = math.max(file_select_start, file_select_end)
+    for j = a, b do
+      if list[j] then rows[j] = true end
+    end
+  end
+
+  if type(file_selected_rows) == "table" then
+    for row, selected in pairs(file_selected_rows) do
+      row = tonumber(row)
+      if selected and row and list[row] then rows[row] = true end
+    end
+  end
+
+  if next(rows) == nil then
+    local idx = tonumber(fallback_idx)
+    if not (idx and list[idx]) then idx = tonumber(selected_row) end
+    if idx and list[idx] then rows[idx] = true end
+  end
+
+  local ordered = {}
+  for row in pairs(rows) do table.insert(ordered, row) end
+  table.sort(ordered)
+  return ordered
+end
+
+function GetSelectedFileInfos(list, fallback_idx)
+  list = list or _G.current_display_list or {}
+  local infos = {}
+  for _, row in ipairs(CollectSelectedFileRows(list, fallback_idx)) do
+    if list[row] then table.insert(infos, list[row]) end
+  end
+  return infos
+end
+
+function GetSelectedFilePaths(list, fallback_idx)
+  local paths = {}
+  local seen = {}
+  for _, info in ipairs(GetSelectedFileInfos(list, fallback_idx)) do
+    local path = info and info.path
+    if path and path ~= "" then
+      local key = normalize_path(path, false)
+      if not seen[key] then
+        seen[key] = true
+        table.insert(paths, path)
+      end
+    end
+  end
+  return paths
+end
+
+function GetFileInfosForRowAction(list, row_index)
+  list = list or _G.current_display_list or {}
+  if IsFileRowSelected(row_index) then return GetSelectedFileInfos(list, row_index) end
+  return list[row_index] and { list[row_index] } or {}
+end
+
+function GetFilePathsForRowAction(list, row_index)
+  local paths = {}
+  local seen = {}
+  for _, info in ipairs(GetFileInfosForRowAction(list, row_index)) do
+    local path = info and info.path
+    if path and path ~= "" then
+      local key = normalize_path(path, false)
+      if not seen[key] then
+        seen[key] = true
+        table.insert(paths, path)
+      end
+    end
+  end
+  return paths
+end
+
+function IsFileRowSelected(idx)
+  idx = tonumber(idx)
+  if not idx then return false end
+
+  if file_select_start and file_select_end then
+    local a = math.min(file_select_start, file_select_end)
+    local b = math.max(file_select_start, file_select_end)
+    if idx >= a and idx <= b then return true end
+  end
+
+  if type(file_selected_rows) == "table" and file_selected_rows[idx] then return true end
+  if not FileSelectionHasExplicitRows() and selected_row == idx then return true end
+  return false
+end
+
 --------------------------------------------- 搜索字段列表 ---------------------------------------------
 
 local search_fields = {
@@ -1635,8 +1760,7 @@ function CollectFiles()
   -- 切换模式时，强制停止之前大型文件夹的后台扫描
   StopAsyncScan()
   -- 切模式时清空文件列表多选/主选中
-  file_select_start = nil
-  file_select_end   = nil
+  ClearFileSelection()
   selected_row      = nil
 
   if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then
@@ -3374,6 +3498,46 @@ function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, 
     return item
   end
   return InsertMediaItemAtTrackFast(track, path, insert_time, tonumber(section_offset) or 0, nil, target_lane, clear_selection)
+end
+
+function GetDragPathsForRow(row_index)
+  local list = _G.current_display_list or {}
+  local paths = {}
+  local rows = IsFileRowSelected(row_index) and CollectSelectedFileRows(list, row_index) or { row_index }
+
+  for _, j in ipairs(rows) do
+    local info = list[j]
+    local p = info and info.path
+    if p and p ~= "" then
+      table.insert(paths, normalize_path(p, false))
+    end
+  end
+
+  return paths
+end
+
+function EncodeDropMediaFileList(paths)
+  local out = {}
+  for _, p in ipairs(paths or {}) do
+    p = tostring(p or ""):gsub("[\r\n]", "")
+    if p ~= "" then table.insert(out, p) end
+  end
+  return table.concat(out, "\n")
+end
+
+function SM_TryNativeDropMediaFiles(paths)
+  if not (HAVE_SM_DROP_MEDIA_FILES and reaper.SM_DropMediaFiles) then return false, false end
+  if not paths or #paths < 1 then return false, false end
+
+  local payload = EncodeDropMediaFileList(paths)
+  if payload == "" then return false, false end
+
+  local ok, result = pcall(reaper.SM_DropMediaFiles, payload)
+  if not ok then return true, false end
+
+  result = tonumber(result) or 0
+  if result < 0 then return true, false end
+  return true, result > 0
 end
 
 function InsertMediaWithKeepParams(path, target_lane)
@@ -6207,25 +6371,48 @@ function handle_group_click(idx, folder)
   end
 end
 
--- 文件件列表多选/选中状态，Shift+点击多选 & 单击选中
+-- 文件件列表多选/选中状态，Shift+点击范围多选，Ctrl+点击离散多选，单击选中
 function handle_file_click(idx)
   local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
-  if shift then
-    if not file_select_start then file_select_start = idx end
+  local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+
+  if ctrl then
+    local list = _G.current_display_list or {}
+    local rows = {}
+    for _, row in ipairs(CollectSelectedFileRows(list, selected_row)) do
+      rows[row] = true
+    end
+
+    if rows[idx] then
+      rows[idx] = nil
+    else
+      rows[idx] = true
+    end
+
+    file_select_start = nil
+    file_select_end = nil
+    file_selected_rows = rows
+    file_selection_anchor = idx
+    selected_row = rows[idx] and idx or (FirstRowInSelectionMap(rows) or -1)
+  elseif shift then
+    if not file_selection_anchor then
+      file_selection_anchor = file_select_start or ((selected_row and selected_row > 0) and selected_row or idx)
+      if file_selection_anchor <= 0 then file_selection_anchor = idx end
+    end
+    file_select_start = file_selection_anchor
     file_select_end = idx
+    selected_row = idx
   else
+    file_selected_rows = {}
     file_select_start = idx
     file_select_end = idx
+    file_selection_anchor = idx
     selected_row = idx -- 单选时重置主选中
-    current_recent_play_info = nil
-    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
-      collect_mode = last_collect_mode
-    end
-    -- 解除最近播放锁定 & 切回之前模式
-    current_recent_play_info = nil
-    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
-      collect_mode = last_collect_mode
-    end
+  end
+
+  current_recent_play_info = nil
+  if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+    collect_mode = last_collect_mode
   end
 end
 
@@ -6361,9 +6548,8 @@ function draw_advanced_folder_node(id, selected_id, depth)
     CollectFiles()
 
     -- 清空多选状态
-    file_select_start = nil
-    file_select_end   = nil
-    selected_row      = -1
+    ClearFileSelection()
+    selected_row = -1
   end
   -- 右键菜单
   if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -6449,9 +6635,8 @@ function draw_advanced_folder_node(id, selected_id, depth)
         CollectFiles()
 
         -- 清空多选状态
-        file_select_start = nil
-        file_select_end   = nil
-        selected_row      = -1
+        ClearFileSelection()
+        selected_row = -1
 
         local static = _G._soundmole_static or {}
         _G._soundmole_static = static
@@ -7812,22 +7997,8 @@ function SM_Action_AddSelectionToTargetDB()
     return
   end
 
-  -- 收集选中路径
-  local paths_to_add = {}
   local list = _G.current_display_list or {}
-
-  -- 多选
-  if file_select_start and file_select_end and file_select_start ~= file_select_end then
-    local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
-    for j = a, b do
-      local sel = list[j]
-      if sel and sel.path then table.insert(paths_to_add, sel.path) end
-    end
-  -- 单选
-  elseif selected_row and list[selected_row] then
-    local sel = list[selected_row]
-    if sel and sel.path then table.insert(paths_to_add, sel.path) end
-  end
+  local paths_to_add = GetSelectedFilePaths(list, selected_row)
 
   if #paths_to_add == 0 then return end -- 无选中内容
 
@@ -8723,19 +8894,9 @@ function HandleRowKeybinds(ctx, i, info, collect_mode)
         if not reaper.file_exists(target_db_path) then
           reaper.ShowMessageBox("Target database file not found:\n" .. target_db_path, "Error", 0)
         else
-          -- 收集选中路径 (支持多选)
-          local paths_to_add = {}
-          if file_select_start and file_select_end and file_select_start ~= file_select_end then
-            local list = _G.current_display_list or {}
-            local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
-            for j = a, b do
-              local sel = list[j]
-              if sel and sel.path then table.insert(paths_to_add, sel.path) end
-            end
-          else
-            -- 单选
-            if info.path then table.insert(paths_to_add, info.path) end
-          end
+          -- 收集选中路径 (支持 Shift 范围与 Ctrl 离散多选)
+          local fallback_idx = (selected_row and selected_row > 0) and selected_row or i
+          local paths_to_add = GetSelectedFilePaths(_G.current_display_list or {}, fallback_idx)
 
           -- 执行写入
           local existing_map = DB_ReadExistingFileSet(target_db_path)
@@ -8930,16 +9091,10 @@ function DrawRowPopup(ctx, i, info, collect_mode)
 
     -- 右键批量加载到RS5k
     if reaper.ImGui_MenuItem(ctx, T("Load Sample(s) to New RS5K Track"), "Q") then
-      if file_select_start and file_select_end and file_select_start ~= file_select_end then
-        -- 批量: 按多选范围加载
-        local a = math.min(file_select_start, file_select_end)
-        local b = math.max(file_select_start, file_select_end)
-        for j = a, b do
-          local sel_info = _G.current_display_list[j]
-          if sel_info and sel_info.path then
-            -- 新建轨道
-            LoadAudioToRS5k(nil, sel_info.path)
-          end
+      local selected_infos = GetFileInfosForRowAction(_G.current_display_list or {}, i)
+      if #selected_infos > 1 then
+        for _, sel_info in ipairs(selected_infos) do
+          if sel_info and sel_info.path then LoadAudioToRS5k(nil, sel_info.path) end
         end
       else
         -- 单选: 只加载当前info
@@ -8960,22 +9115,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
     if #root_advanced_folders == 0 then
       reaper.ImGui_TextDisabled(ctx, T("(No Collections created)"))
     else
-      local paths_to_add = {}
-
-      if file_select_start and file_select_end and file_select_start ~= file_select_end then
-        local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
-        for j = a, b do
-          local sel = _G.current_display_list[j]
-          if sel and sel.path then 
-            table.insert(paths_to_add, sel.path) 
-          end
-        end
-      else
-        -- 单选时只添加当前右键这一行的文件
-        if info.path then 
-          table.insert(paths_to_add, info.path) 
-        end
-      end
+      local paths_to_add = GetFilePathsForRowAction(_G.current_display_list or {}, i)
 
       ShowAddToCollectionMenu(root_advanced_folders, paths_to_add)
     end
@@ -9003,16 +9143,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         -- reaper.SetExtState(EXT_SECTION, "target_mediadb", "", true)
       else
         -- 收集要添加的路径
-        local paths_to_add = {}
-        if file_select_start and file_select_end and file_select_start ~= file_select_end then
-          local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
-          for j = a, b do
-            local sel = _G.current_display_list[j]
-            if sel and sel.path then table.insert(paths_to_add, sel.path) end
-          end
-        else
-          if info.path then table.insert(paths_to_add, info.path) end
-        end
+        local paths_to_add = GetFilePathsForRowAction(_G.current_display_list or {}, i)
 
         -- 执行写入
         local existing_map = DB_ReadExistingFileSet(target_db_path)
@@ -9046,18 +9177,8 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       if node and node.files then
         -- 收集所有需要移除的路径
         local remove_paths = {}
-        if file_select_start and file_select_end and file_select_start ~= file_select_end then
-          local a = math.min(file_select_start, file_select_end)
-          local b = math.max(file_select_start, file_select_end)
-          for j = a, b do
-            local sel_info = _G.current_display_list[j]
-            if sel_info and sel_info.path then
-              remove_paths[normalize_path(sel_info.path, false)] = true
-            end
-          end
-        else
-          -- 单选只移除当前info
-          remove_paths[normalize_path(info.path, false)] = true
+        for _, path in ipairs(GetFilePathsForRowAction(_G.current_display_list or {}, i)) do
+          remove_paths[normalize_path(path, false)] = true
         end
 
         -- 倒序遍历批量移除
@@ -9070,7 +9191,8 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         files_idx_cache = nil
         CollectFiles()
         -- 清空多选状态
-        file_select_start, file_select_end, selected_row = nil, nil, -1
+        ClearFileSelection()
+        selected_row = -1
 
         -- local static = _G._soundmole_static or {}
         -- _G._soundmole_static = static
@@ -9089,16 +9211,8 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       local dbpath = db_dir .. sep .. dbfile
       -- 收集要移除的路径
       local remove_paths = {}
-      if file_select_start and file_select_end and file_select_start ~= file_select_end then
-        local a, b = math.min(file_select_start, file_select_end), math.max(file_select_start, file_select_end)
-        for j = a, b do
-          local sel = _G.current_display_list[j]
-          if sel and sel.path then
-            remove_paths[normalize_path(sel.path, false)] = true
-          end
-        end
-      else
-        remove_paths[normalize_path(info.path, false)] = true
+      for _, path in ipairs(GetFilePathsForRowAction(_G.current_display_list or {}, i)) do
+        remove_paths[normalize_path(path, false)] = true
       end
       -- 移除选中项
       for path in pairs(remove_paths) do
@@ -9121,7 +9235,8 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       files_idx_cache = nil
       CollectFiles()
       -- 清空多选状态
-      file_select_start, file_select_end, selected_row = nil, nil, -1
+      ClearFileSelection()
+      selected_row = -1
     end
   end
 
@@ -9261,7 +9376,7 @@ function ApplyCoverFilter(cover_id)
   if not cover_id or cover_id == "" then return end
   _G._cover_id_filter = cover_id
   selected_row = -1
-  file_select_start, file_select_end = nil, nil
+  ClearFileSelection()
   if type(RequestSearchRefresh) == "function" then
     RequestSearchRefresh()
   else
@@ -9827,16 +9942,9 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
     elseif is_name_col then
       local display_name = (info.filename or ""):gsub("#", "#\u{200B}")
       local row_label = display_name .. "##RowContext__" .. tostring(i)
-      local is_sel = false
-      if file_select_start and file_select_end then
-        local a = math.min(file_select_start, file_select_end)
-        local b = math.max(file_select_start, file_select_end)
-        is_sel = (i >= a and i <= b)
-      end
-      if selected_row == i then is_sel = true end
+      local is_sel = IsFileRowSelected(i)
       if reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
         handle_file_click(i)
-        selected_row = i
       end
 
       -- 双击播放
@@ -9867,38 +9975,37 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       if reaper.ImGui_BeginDragDropSource(ctx) then
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
         reaper.ImGui_Text(ctx, "Drag to insert or collect")
+        local paths = GetDragPathsForRow(i)
+        if #paths == 0 and info and info.path and info.path ~= "" then
+          table.insert(paths, normalize_path(info.path, false))
+        end
         local drag_preview_end_time = tonumber(info and info.section_length) or 0
         if drag_preview_end_time <= 0 then
           drag_preview_end_time = tonumber(info and info.length) or 0
         end
         dragging_audio = {
           path = info and info.path,
+          paths = paths,
           start_time = 0,
           end_time = drag_preview_end_time,
           preview_end_time = drag_preview_end_time,
-          section_offset = info and info.section_offset or 0
+          section_offset = info and info.section_offset or 0,
+          native_drop_pending = (HAVE_SM_DROP_MEDIA_FILES and #paths > 0)
         }
         if reaper.JS_Mouse_LoadCursor then
           local cursor_path = script_path .. "lib/cursor_258.cur"
           local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
           if cursor then reaper.JS_Mouse_SetCursor(cursor) end
         end
-        -- 收集范围内所有路径
-        local paths = {}
-        local paths = {}
-        local a = math.min(file_select_start or i, file_select_end or i)
-        local b = math.max(file_select_start or i, file_select_end or i)
-        for j = a, b do table.insert(paths, normalize_path(_G.current_display_list[j].path, false)) end
         reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATHS", table.concat(paths, "|;|"))
         reaper.ImGui_PopStyleColor(ctx, 1)
         reaper.ImGui_EndDragDropSource(ctx)
       end
 
-      -- Ctrl+左键 或 Ctrl+S 插入文件到工程
+      -- Ctrl+S 插入文件到工程
       local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
-      local is_ctrl_click = reaper.ImGui_IsItemClicked(ctx, 0) and ctrl
       local is_ctrl_S = ctrl and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_S())
-      if (is_ctrl_click or (selected_row == i and is_ctrl_S)) then
+      if selected_row == i and is_ctrl_S then
         WithAutoCrossfadeDisabled(function()
           reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
           local old_cursor = reaper.GetCursorPosition()
@@ -10118,17 +10225,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
         reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
         -- 收集当前高亮范围内的所有 info
         local list = _G.current_display_list or {}
-        local infos = {}
-        if file_select_start and file_select_end then
-          local a = math.min(file_select_start, file_select_end)
-          local b = math.max(file_select_start, file_select_end)
-          for j = a, b do
-            table.insert(infos, list[j])
-          end
-        else
-          -- 无多选时，单条传入
-          table.insert(infos, list[i])
-        end
+        local infos = GetFileInfosForRowAction(list, i)
         ShowGroupMenu(infos)
         reaper.ImGui_PopStyleColor(ctx, 1)
         reaper.ImGui_EndPopup(ctx)
@@ -10254,7 +10351,8 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
     if collect_mode ~= COLLECT_MODE_SHORTCUT_MIRROR then
       collect_mode = COLLECT_MODE_SHORTCUT_MIRROR
     end
-    file_select_start, file_select_end, selected_row = nil, nil, nil
+    ClearFileSelection()
+    selected_row = nil
     files_idx_cache = nil
     CollectFiles()
 
@@ -11462,7 +11560,7 @@ function UI_PlayIconTrigger_Prev(ctx)
     auto_play_next_pending    = info
     _G.auto_play_next_pending = info
 
-    file_select_start, file_select_end = nil, nil
+    ClearFileSelection()
     selected_row = prev_idx
     _G.scroll_request_index = prev_idx
     _G.scroll_request_align = 0.5
@@ -11507,7 +11605,7 @@ function UI_PlayIconTrigger_Next(ctx)
     auto_play_next_pending    = info
     _G.auto_play_next_pending = info
 
-    file_select_start, file_select_end = nil, nil
+    ClearFileSelection()
     selected_row = next_idx
     _G.scroll_request_index = next_idx
     _G.scroll_request_align = 0.5
@@ -11555,7 +11653,7 @@ function UI_PlayIconTrigger_Rand(ctx)
       is_paused, paused_position = false, 0
     end
 
-    file_select_start, file_select_end = nil, nil
+    ClearFileSelection()
     _G.scroll_request_index = rand_idx -- 目标索引
     _G.scroll_request_align = 0.5      -- 居中
   end
@@ -11805,7 +11903,8 @@ function DBPF_ApplyPathFilter(dir)
   static.last_filter_text_map = {}
   -- static.last_sort_specs_map  = {} -- 不重置排序
 
-  file_select_start, file_select_end, selected_row = nil, nil, -1
+  ClearFileSelection()
+  selected_row = -1
 end
 
 function DBPF_DrawDirMenuRecursive(dir, display_name)
@@ -12951,7 +13050,8 @@ function loop()
         collect_mode= COLLECT_MODE_PLAY_HISTORY
 
         -- 清空跨模式残留
-        file_select_start, file_select_end, selected_row = nil, nil, nil
+        ClearFileSelection()
+        selected_row = nil
         files_idx_cache = nil
         CollectFiles()
 
@@ -13005,7 +13105,8 @@ function loop()
           reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
           reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
 
-          file_select_start, file_select_end, selected_row = nil, nil, nil
+          ClearFileSelection()
+          selected_row = nil
           files_idx_cache = nil
           CollectFiles()
 
@@ -14289,9 +14390,8 @@ function loop()
               end
               if reaper.ImGui_Selectable(ctx, folder, is_selected) then
                 -- 切换自定义文件夹目录选中状态，清空文件列表多选/主选中
-                file_select_start = nil
-                file_select_end   = nil
-                selected_row      = -1
+                ClearFileSelection()
+                selected_row = -1
                 handle_group_click(i, folder)
               end
               if is_selected then
@@ -14688,9 +14788,8 @@ function loop()
                   _G._db_path_prefix_filter = "" -- 切换数据库时清空路径前缀过滤
 
                   -- 清除选中状态
-                  file_select_start = nil
-                  file_select_end   = nil
-                  selected_row      = -1
+                  ClearFileSelection()
+                  selected_row = -1
 
                   local static = _G._soundmole_static or {}
                   _G._soundmole_static = static
@@ -14908,6 +15007,23 @@ function loop()
                   end
                 end
 
+                -- 仅重建当前数据库的专辑封面索引 JSON，不重新扫描/重建数据库
+                if reaper.ImGui_MenuItem(ctx, "Rebuild Album Cover Index") then
+                  local dbpath = normalize_path(db_dir, true) .. dbfile
+                  if not reaper.file_exists(dbpath) then
+                    reaper.ShowMessageBox("Database file not found:\n" .. dbpath, "Error", 0)
+                  else
+                    local map = SM_RebuildDBCoverIndexFromDB(dbpath) or {}
+                    if type(SM_ClearDBCoverIndexCache) == "function" then SM_ClearDBCoverIndexCache(dbpath) end
+                    if type(SM_ResetAlbumPanelCache) == "function" then SM_ResetAlbumPanelCache(nil, nil) end
+
+                    local count = 0
+                    for _ in pairs(map) do count = count + 1 end
+                    local idx_path = (type(SM_DBCoverIndexPath) == "function") and SM_DBCoverIndexPath(dbpath) or (dbpath .. ".coverids.json")
+                    reaper.ShowMessageBox(("Album cover index rebuilt:\n%s\n\n%d covers found."):format(idx_path, count), "Soundmole", 0)
+                  end
+                end
+
                 reaper.ImGui_EndPopup(ctx)
               end
 
@@ -14991,9 +15107,8 @@ function loop()
                       files_idx_cache = nil
                       CollectFiles()
 
-                      file_select_start = nil
-                      file_select_end   = nil
-                      selected_row      = -1
+                      ClearFileSelection()
+                      selected_row = -1
 
                       local static = _G._soundmole_static or {}
                       _G._soundmole_static = static
@@ -15045,7 +15160,8 @@ function loop()
                       collect_mode = COLLECT_MODE_REAPERDB
                       tree_state.cur_reaper_db = fn
 
-                      file_select_start, file_select_end, selected_row = nil, nil, -1
+                      ClearFileSelection()
+                      selected_row = -1
                       files_idx_cache = nil
                       CollectFiles()
                     end
@@ -16491,7 +16607,7 @@ function loop()
                 end
               end
               if next_idx > 0 then
-                file_select_start, file_select_end = nil, nil -- 清空多选范围，避免旧条目继续高亮
+                ClearFileSelection() -- 清空多选范围，避免旧条目继续高亮
                 selected_row = next_idx
                 last_selected_row = next_idx -- 同步last_selected_row，避免auto_play_selected在下一帧再次起播
                 -- 强制滚入视区并居中
@@ -16523,8 +16639,24 @@ function loop()
           if cursor then reaper.JS_Mouse_SetCursor(cursor) end
         end
         local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
+        local over_arrange_drop_target = IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane)
+        local native_drop_consumed = false
+
+        if over_arrange_drop_target
+          and dragging_audio.native_drop_pending
+          and not dragging_audio.native_drop_attempted
+          and reaper.ImGui_IsMouseDown(ctx, 0)
+        then
+          dragging_audio.native_drop_attempted = true
+          native_drop_consumed = SM_TryNativeDropMediaFiles(dragging_audio.paths)
+          if native_drop_consumed then
+            dragging_audio = nil
+            if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
+          end
+        end
+
         -- 绘制参考线
-        if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
+        if dragging_audio and mouse_pos_time > -1 and over_arrange_drop_target then
           local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
           local item_len = GetDragPreviewTimelineLength(dragging_audio.start_time, dragging_audio.preview_end_time or dragging_audio.end_time)
           DrawArrangeInsertGuides(ctx, "guide_line_drag_audio", insert_time, item_len, hover_track, hover_lane, hover_rect)
@@ -16532,8 +16664,8 @@ function loop()
           -- 鼠标图标
         end
 
-        if not reaper.ImGui_IsMouseDown(ctx, 0) then -- 鼠标释放
-          if IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then -- 只允许在arrange窗口松开时插入
+        if dragging_audio and not reaper.ImGui_IsMouseDown(ctx, 0) then -- 鼠标释放
+          if over_arrange_drop_target then -- 只允许在arrange窗口松开时插入
             local insert_time = mouse_pos_time
             if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
             insert_time = reaper.SnapToGrid(0, insert_time)
@@ -16606,9 +16738,8 @@ function loop()
             CollectFiles()
 
             -- 清空多选状态
-            file_select_start = nil
-            file_select_end   = nil
-            selected_row      = -1
+            ClearFileSelection()
+            selected_row = -1
 
             local static = _G._soundmole_static or {}
             _G._soundmole_static = static
@@ -16702,9 +16833,8 @@ function loop()
                 files_idx_cache = nil
                 CollectFiles()
 
-                file_select_start = nil
-                file_select_end   = nil
-                selected_row      = -1
+                ClearFileSelection()
+                selected_row = -1
 
                 local static = _G._soundmole_static or {}
                 _G._soundmole_static = static
@@ -19946,9 +20076,8 @@ function loop()
 
             files_idx_cache = nil
             CollectFiles()
-            file_select_start = nil
-            file_select_end   = nil
-            selected_row      = -1
+            ClearFileSelection()
+            selected_row = -1
           -- end
           -- 完成后是否更改数据库名称（暂时关闭）
           -- local filename = db_build_task.dbfile:match("[^/\\]+$")

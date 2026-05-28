@@ -1,9 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.186
+-- @version 1.0.187
 -- @changelog
---   Optimized Database mode album art loading and cover_id filtering performance for large libraries.
---   Support reaper_soundmole-x64.dll v0.0.16
+--   Added support for dragging multiple selected audio files from the audio table list into REAPER.
+--   Audio table rows now support Ctrl+left-click to add or remove items from the selection without inserting audio.
+--   Support reaper_soundmole-x64.dll v0.0.17
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
