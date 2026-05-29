@@ -1,6 +1,6 @@
 -- @description Advanced Solo Bundle
 -- @author zaibuyidao
--- @version 1.0.4
+-- @version 1.0.5
 -- @changelog
 --   # Other detailed improvements and bug fixes.
 -- @links
