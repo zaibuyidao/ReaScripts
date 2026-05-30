@@ -1,8 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.189
+-- @version 1.0.190
 -- @changelog
---   Added support for REAPER native operations when dragging waveform preview selections into REAPER with the extension installed.
+--   Added a thesaurus edit button for quickly opening and editing the thesaurus.
+--   Improved the search history icon so a single icon now supports previous search, while Ctrl click switches to next search.
+--   Improved the thesaurus display behavior so it is now shown by clicking a button.
 --   Support reaper_soundmole-x64.dll v0.0.17
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

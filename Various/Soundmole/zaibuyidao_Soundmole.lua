@@ -12588,7 +12588,7 @@ function loop()
 
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
-    local filter_w = UIScaleF(400) -- 输入框宽度
+    local filter_w = UIScaleF(350) -- 输入框宽度
     local topbar_h = GetTopbarAlignHeight(ctx)
 
     -- 标题栏
@@ -12601,81 +12601,73 @@ function loop()
     reaper.ImGui_PopFont(ctx)
     reaper.ImGui_EndGroup(ctx)
 
-    -- 搜索历史: 上一条/下一条
+    -- 搜索历史: 上一条 / Ctrl+点击下一条
     reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     do
       local history_count = #recent_search_keywords
       local cur_idx = search_history_index or 0
       local can_prev = (history_count > 1) and (cur_idx < history_count)
       local can_next = (history_count > 1) and (cur_idx > 1)
-      -- 上一条
-      do
-        PushUIFont(ctx, fonts.icon, 20)
-        local glyph = '\u{0160}'
-        local hovered, clicked = DrawTextCenteredInBox(ctx, glyph, function(is_hovered, is_active)
-          if not can_prev then return colors.icon_off end
-          local col_normal  = colors.icon_on      or colors.icon_normal
-          local col_hovered = colors.icon_hovered or col_normal
-          local col_active  = colors.icon_active  or col_hovered
-          return is_hovered and (is_active and col_active or col_hovered) or col_normal
-        end, topbar_h, "##search_history_prev")
-        reaper.ImGui_PopFont(ctx)
+      local can_any  = can_prev or can_next
 
-        if hovered and can_prev then
-          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-        end
+      PushUIFont(ctx, fonts.icon, 20)
+      local glyph = '\u{0160}' -- 使用'上一条'图标
 
-        if clicked and can_prev then
-          local idx = (search_history_index or 0) + 1
-          if idx <= history_count then
-            ApplySearchFromHistory(idx)
+      local hovered, clicked = DrawTextCenteredInBox(ctx, glyph, function(is_hovered, is_active)
+        if not can_any then return colors.icon_off end
+        local col_normal  = colors.icon_on      or colors.icon_normal
+        local col_hovered = colors.icon_hovered or col_normal
+        local col_active  = colors.icon_active  or col_hovered
+        return is_hovered and (is_active and col_active or col_hovered) or col_normal
+      end, topbar_h, "##search_history_prev_next")
+      reaper.ImGui_PopFont(ctx)
+
+      if hovered and can_any then
+        reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+      end
+
+      if clicked and can_any then
+        local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+
+        if ctrl then
+          -- Ctrl+点击：下一条
+          if can_next then
+            local idx = (search_history_index or 0) - 1
+            if idx >= 1 then
+              ApplySearchFromHistory(idx)
+            end
           end
-        end
-
-        if hovered then
-          reaper.ImGui_BeginTooltip(ctx)
+        else
+          -- 默认点击：上一条
           if can_prev then
-            reaper.ImGui_Text(ctx, T("Previous Search"))
-          else
-            reaper.ImGui_TextDisabled(ctx, T("No previous search"))
+            local idx = (search_history_index or 0) + 1
+            if idx <= history_count then
+              ApplySearchFromHistory(idx)
+            end
           end
-          reaper.ImGui_EndTooltip(ctx)
         end
       end
-      -- 下一条
-      reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
-      do
-        PushUIFont(ctx, fonts.icon, 20)
-        local glyph = '\u{0161}'
-        local hovered, clicked = DrawTextCenteredInBox(ctx, glyph, function(is_hovered, is_active)
-          if not can_next then return colors.icon_off end
-          local col_normal  = colors.icon_on       or colors.icon_normal
-          local col_hovered = colors.icon_hovered  or col_normal
-          local col_active  = colors.icon_active   or col_hovered
-          return is_hovered and (is_active and col_active or col_hovered) or col_normal
-        end, topbar_h, "##search_history_next")
-        reaper.ImGui_PopFont(ctx)
 
-        if hovered and can_next then
-          reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-        end
+      if hovered then
+        reaper.ImGui_BeginTooltip(ctx)
 
-        if clicked and can_next then
-          local idx = (search_history_index or 0) - 1
-          if idx >= 1 then
-            ApplySearchFromHistory(idx)
-          end
-        end
+        local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
 
-        if hovered then
-          reaper.ImGui_BeginTooltip(ctx)
+        if ctrl then
           if can_next then
             reaper.ImGui_Text(ctx, T("Next Search"))
           else
             reaper.ImGui_TextDisabled(ctx, T("No next search"))
           end
-          reaper.ImGui_EndTooltip(ctx)
+        else
+          if can_prev then
+            reaper.ImGui_Text(ctx, T("Previous Search or Hold CTRL for Next Search"))
+          else
+            reaper.ImGui_TextDisabled(ctx, T("No previous search"))
+          end
         end
+
+        reaper.ImGui_EndTooltip(ctx)
       end
     end
 
@@ -12744,17 +12736,16 @@ function loop()
 
     reaper.ImGui_Text(ctx, '') -- 换行占位符
     reaper.ImGui_SameLine(ctx, nil, 0)
-    -- reaper.ImGui_Text(ctx, 'Thesaurus:')
-    -- reaper.ImGui_SameLine(ctx, nil, 60)
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
-    local changed_synonyms, new_use_synonyms = reaper.ImGui_Checkbox(ctx, T("Thesaurus:") .. "###Thesaurus", use_synonyms)
-    -- reaper.ImGui_PopStyleVar(ctx)
-    if changed_synonyms then
-      use_synonyms = new_use_synonyms
-      -- 同义词勾选时强制重建，否则不工作
-      static.filtered_list_map    = {}
-      static.last_filter_text_map = {}
-    end
+    -- 第二行
+    local group_w = UIScale(150)
+    local label = T("Thesaurus:")
+    local label_w = reaper.ImGui_CalcTextSize(ctx, label)
+
+    local group_start_x = reaper.ImGui_GetCursorPosX(ctx)
+    reaper.ImGui_SetCursorPosX(ctx, group_start_x + group_w - label_w)
+
+    reaper.ImGui_Text(ctx, label)
+
     reaper.ImGui_EndGroup(ctx)
 
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -12766,6 +12757,81 @@ function loop()
 
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
+
+    -- 绘制后立刻记录搜索框状态
+    filter_box_active  = reaper.ImGui_IsItemActive(ctx)
+    filter_box_focused = reaper.ImGui_IsItemFocused(ctx)
+
+    reaper.ImGui_SameLine(ctx, nil, 10)
+
+    do
+      local button_h = reaper.ImGui_GetFrameHeight(ctx)
+      local button_w = button_h
+
+      local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+
+      if reaper.ImGui_InvisibleButton(ctx, "T##use_synonyms", button_w, button_h) then
+        use_synonyms = not use_synonyms
+
+        -- 同义词勾选时强制重建，否则不工作
+        static.filtered_list_map    = {}
+        static.last_filter_text_map = {}
+      end
+
+      local hovered = reaper.ImGui_IsItemHovered(ctx)
+      local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+      local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+      if hovered then
+        reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+      end
+
+      local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+
+      local col = (use_synonyms or hovered) and colors.icon_on or colors.icon_off
+      local border_col = (use_synonyms or hovered) and colors.icon_on or colors.icon_off
+      local pad = UIScale(1)
+      local rounding = UIScale(4)
+      local thickness = UIScale(1)
+
+      reaper.ImGui_DrawList_AddRect(
+        draw_list,
+        x + pad, y + pad,
+        x + button_w - pad, y + button_h - pad,
+        border_col,
+        rounding,
+        0,
+        thickness
+      )
+
+      -- 像素 T 图标
+      local icon_size = button_h * 0.52
+      local icon_x = x + (button_w - icon_size) * 0.5
+      local icon_y = y + (button_h - icon_size) * 0.5
+
+      local unit = icon_size / 5
+
+      -- 横条：XXXXX
+      reaper.ImGui_DrawList_AddRectFilled(
+        draw_list,
+        icon_x,
+        icon_y,
+        icon_x + icon_size,
+        icon_y + unit,
+        col
+      )
+
+      -- 竖条：中间一格
+      reaper.ImGui_DrawList_AddRectFilled(
+        draw_list,
+        icon_x + unit * 2,
+        icon_y + unit,
+        icon_x + unit * 3,
+        icon_y + icon_size,
+        col
+      )
+    end
+
     _G.just_committed_filter = false
 
     -- 翻译时的视觉提示
@@ -12788,7 +12854,7 @@ function loop()
 
     if search_enter_mode then
       -- Enter模式逻辑
-      if (reaper.ImGui_IsItemActive(ctx) or reaper.ImGui_IsItemFocused(ctx))
+      if (filter_box_active or filter_box_focused)
       and (reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter())
       or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter())) then
         -- 判断是否按住了Ctrl
@@ -12830,8 +12896,10 @@ function loop()
         _G._live_prev = live
         _G._live_t = now
       end
-      if now - _G._live_t >= 0.5 then _G.commit_filter_text = live end
-
+      if now - _G._live_t >= 0.5 and _G.commit_filter_text ~= live then
+        _G.commit_filter_text = live
+        RequestSearchRefresh()
+      end
       local cur = _G.commit_filter_text
       if cur ~= last_search_input then
         last_search_input = cur
@@ -12933,6 +13001,98 @@ function loop()
     -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     reaper.ImGui_InputText(ctx, "##SynonymDisplay", synonym_display_text, reaper.ImGui_InputTextFlags_ReadOnly())
     -- reaper.ImGui_PopStyleVar(ctx)
+    reaper.ImGui_SameLine(ctx, nil, 10)
+
+    do
+      local button_h = reaper.ImGui_GetFrameHeight(ctx)
+      local button_w = button_h
+
+      local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+
+      if reaper.ImGui_InvisibleButton(ctx, "E##open_thesaurus", button_w, button_h) then
+        reaper.CF_ShellExecute(thesaurus_csv_path)
+      end
+
+      local hovered = reaper.ImGui_IsItemHovered(ctx)
+      local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+      local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+
+      if hovered then
+        reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+      end
+      if reaper.ImGui_IsItemHovered(ctx) then
+        reaper.ImGui_SetTooltip(ctx, T("Edit thesaurus"))
+      end
+
+      local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+
+      -- 状态颜色
+      local col = hovered and colors.icon_on or colors.icon_off
+      local border_col = hovered and colors.icon_on or colors.icon_off
+
+      -- 按钮外框细线
+      local pad = UIScale(1)
+      local rounding = UIScale(4)
+      local thickness = UIScale(1)
+
+      reaper.ImGui_DrawList_AddRect(
+        draw_list,
+        x + pad, y + pad,
+        x + button_w - pad, y + button_h - pad,
+        border_col,
+        rounding,
+        0,
+        thickness
+      )
+
+      -- 像素 E 图标
+      local icon_size = button_h * 0.52
+      local icon_x = x + (button_w - icon_size) * 0.5
+      local icon_y = y + (button_h - icon_size) * 0.5
+
+      local unit = icon_size / 5
+
+      -- 左竖条
+      reaper.ImGui_DrawList_AddRectFilled(
+        draw_list,
+        icon_x,
+        icon_y,
+        icon_x + unit,
+        icon_y + icon_size,
+        col
+      )
+
+      -- 上横条
+      reaper.ImGui_DrawList_AddRectFilled(
+        draw_list,
+        icon_x,
+        icon_y,
+        icon_x + icon_size,
+        icon_y + unit,
+        col
+      )
+
+      -- 中横条
+      reaper.ImGui_DrawList_AddRectFilled(
+        draw_list,
+        icon_x,
+        icon_y + unit * 2,
+        icon_x + icon_size * 0.85,
+        icon_y + unit * 3,
+        col
+      )
+
+      -- 下横条
+      reaper.ImGui_DrawList_AddRectFilled(
+        draw_list,
+        icon_x,
+        icon_y + unit * 4,
+        icon_x + icon_size,
+        icon_y + icon_size,
+        col
+      )
+    end
+
     reaper.ImGui_PopStyleColor(ctx)
     reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_EndGroup(ctx)
