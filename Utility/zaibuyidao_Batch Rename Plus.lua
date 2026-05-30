@@ -1,8 +1,8 @@
 -- @description Batch Rename Plus
--- @version 1.0.22
+-- @version 1.0.23
 -- @author zaibuyidao
 -- @changelog
---   Changed Replace mode to "Match case", defaulting to case-insensitive matching.
+--   Fixed the independent drawing logic of the Preview and Compare windows to prevent repeated white flashing when docking the window to the center area.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -4572,8 +4572,9 @@ function preview_popup(ctx)
   end
   reaper.ImGui_PopFont(ctx)
   reaper.ImGui_PopStyleColor(ctx, 4)
+end
 
-  -- 弹窗逻辑
+function draw_preview_window(ctx)
   if show_preview_window then
     -- 首次打开时设置尺寸
     reaper.ImGui_SetNextWindowSize(ctx, 600, 400, reaper.ImGui_Cond_FirstUseEver())
@@ -4597,7 +4598,6 @@ function preview_popup(ctx)
       -- 渲染预览表格
       -- local data, builder = get_preview_data_and_builder()
       render_preview_table_popup(ctx, PREVIEW_POPUP_TABLE_ID, #data, builder)
-
       reaper.ImGui_End(ctx)
     end
   end
@@ -4788,6 +4788,9 @@ function item_vs_source()
   reaper.ImGui_PopFont(ctx)
   reaper.ImGui_PopStyleColor(ctx, 3)
 
+end
+
+function draw_compare_window(ctx)
   if show_list_window then
     reaper.ImGui_SetNextWindowSize(ctx, 600, 300, reaper.ImGui_Cond_FirstUseEver())
     local title = tr("compare_objects", #show_list_data) .. "###Compare"
@@ -4949,8 +4952,7 @@ function item_vs_source()
       help_marker(
         T.copy_cell_help
       )
-
-      reaper.ImGui_End(ctx)
+    reaper.ImGui_End(ctx)
     end
   end
 end
@@ -5564,9 +5566,12 @@ function loop()
     end
     -- 4) 恢复行间距样式
     reaper.ImGui_PopStyleVar(ctx, 5) -- 4 次圆角 + 1 次行间距
-    -- 5) 结束窗口
     reaper.ImGui_End(ctx)
   end
+
+  -- 5) 独立窗口放在主窗口之后绘制，避免 DockBuilder 中心区域停靠时产生嵌套窗口闪烁
+  draw_compare_window(ctx)
+  draw_preview_window(ctx)
 
   -- 6) Pop 最早 Push 的 WindowRounding + FrameRounding
   reaper.ImGui_PopStyleVar(ctx, 2)
