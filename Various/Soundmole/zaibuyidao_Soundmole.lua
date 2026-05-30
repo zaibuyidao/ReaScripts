@@ -1089,7 +1089,7 @@ do
 end
 
 do
-  settings_active_page = settings_active_page or T("Appearance")
+  settings_active_page = settings_active_page or "Appearance"
 
   local PAGE_ALIASES = {
     -- 子级到父级
@@ -1648,6 +1648,9 @@ do
           reaper.SetExtState(EXT_SECTION, "language", lang.code, true)
           -- 重新加载语言包
           L.load(lang.code)
+          if PAGE_ALIASES and PAGE_ALIASES[settings_active_page] then
+            settings_active_page = PAGE_ALIASES[settings_active_page]
+          end
         end
 
         if is_selected then
@@ -2041,9 +2044,10 @@ do
   ----------------------------------------------------------------
   -- 顶层分页
   ----------------------------------------------------------------
-  local pages = {
+  function GetSettingsPages()
+    return {
     -- 外观
-    { id = T("Appearance"), fn = function()
+    { id = "Appearance", label = T("Appearance"), fn = function()
         DrawPageHeader(T("Adjust UI appearance and display details"), colors.settings_header_bg, colors.normal_text)
         DrawSubTitle(T("UI")) Section_UI()
         DrawSubTitle(T("Window"))
@@ -2057,7 +2061,7 @@ do
     },
 
     -- 系统
-    { id = T("System"), fn = function()
+    { id = "System", label = T("System"), fn = function()
         DrawPageHeader(T("Adjust system preferences"), colors.settings_header_bg, colors.normal_text)
         DrawSubTitle(T("Language Settings"))
         Section_System_Language()
@@ -2071,7 +2075,7 @@ do
     },
 
     -- 双击与预览
-    { id = T("Playback & Preview"), fn = function()
+    { id = "Playback & Preview", label = T("Playback & Preview"), fn = function()
         DrawPageHeader(T("Configure preview and playback behavior"), colors.settings_header_bg, colors.normal_text)
         DrawSubTitle(T("Double-Click & Preview"))
         Section_DblClick_Preview()
@@ -2087,7 +2091,7 @@ do
     },
 
     -- 数据库与缓存
-    { id = T("Database & Cache"), fn = function()
+    { id = "Database & Cache", label = T("Database & Cache"), fn = function()
         DrawPageHeader(T("Manage database and cache"), colors.settings_header_bg, colors.normal_text)
         DrawSubTitle(T("Database"))
         Section_Database()
@@ -2097,7 +2101,7 @@ do
     },
 
     -- 搜索与历史
-    { id = T("Search & History"), fn = function()
+    { id = "Search & History", label = T("Search & History"), fn = function()
         DrawPageHeader(T("Configure search and history"), colors.settings_header_bg, colors.normal_text)
         DrawSubTitle(T("Search"))
         Section_Search()
@@ -2107,7 +2111,7 @@ do
     },
 
     -- 预览路由
-    { id = T("Routing"), fn = function()
+    { id = "Routing", label = T("Routing"), fn = function()
         DrawPageHeader(T("Configure preview output tracks and channels"), colors.settings_header_bg, colors.normal_text)
         DrawSubTitle(T("Preview Output Track & Channels"))
         Section_Route()
@@ -2115,7 +2119,7 @@ do
     },
 
     -- UCS
-    { id = "UCS", fn = function()
+    { id = "UCS", label = "UCS", fn = function()
         DrawPageHeader(T("Configure UCS language and tags"), colors.settings_header_bg, colors.normal_text)
         DrawSubTitle(T("UCS Language Selection"))
         Section_UCS()
@@ -2123,7 +2127,7 @@ do
     },
 
     -- Colors
-    { id = T("Colors"), fn = function()
+    { id = "Colors", label = T("Colors"), fn = function()
         DrawPageHeader(T("Customize color palette"), colors.settings_header_bg, colors.normal_text)
         -- DrawSubTitle(T("Customize color palette"))
         Section_Colors()
@@ -2131,13 +2135,14 @@ do
     },
 
     -- 重置默认值
-    { id = T("Reset Defaults"), fn = function()
+    { id = "Reset Defaults", label = T("Reset Defaults"), fn = function()
         DrawPageHeader(T("Restore defaults"), colors.settings_header_bg, colors.normal_text)
         DrawSubTitle(T("Restore Defaults"))
         Section_ResetToDefaults()
       end
     },
   }
+  end
 
   -- Ctrl+P 打开设置弹窗
   function HandleSettingsWindowShortcut()
@@ -2150,19 +2155,20 @@ do
   function DrawSettingsWindow()
     if not settings_window_open then return end
 
-    settings_active_page = settings_active_page or T("Appearance")
+    settings_active_page = settings_active_page or "Appearance"
     if PAGE_ALIASES[settings_active_page] then
       settings_active_page = PAGE_ALIASES[settings_active_page]
     end
 
     reaper.ImGui_SetNextWindowSize(ctx, UIScale(600), UIScale(400), reaper.ImGui_Cond_FirstUseEver())
-    local visible, open = reaper.ImGui_Begin(ctx, T("Settings"), true, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+    local visible, open = reaper.ImGui_Begin(ctx, T("Settings") .. "###SettingsWindow", true, reaper.ImGui_WindowFlags_AlwaysAutoResize())
     if visible then
+      local pages = GetSettingsPages()
       -- 顶部导航
       local ix, iy = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
       reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), UIScaleF(10), iy)
       for i, p in ipairs(pages) do
-        NavTextButton(p.id, p.id)
+        NavTextButton(p.label or p.id, p.id)
         reaper.ImGui_SameLine(ctx)
       end
       reaper.ImGui_NewLine(ctx)

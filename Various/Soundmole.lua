@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.191
+-- @version 1.0.192
 -- @changelog
---   Fixed the Settings window drawing logic to prevent repeated white flashing when docking the main window to the center area.
+--   Fixed the top menu not refreshing instantly after language switching and prevented window jumping.
 --   Support reaper_soundmole-x64.dll v0.0.17
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
