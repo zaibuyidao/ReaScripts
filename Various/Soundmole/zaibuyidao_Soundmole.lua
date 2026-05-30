@@ -19692,7 +19692,7 @@ function loop()
 
           local dummy_wav_path = ""
           if HAVE_SM_DROP_MEDIA_FILES then
-            local dur = math.abs(end_time - start_time)
+            local dur = GetDragPreviewTimelineLength(start_time, end_time)
             if dur > 0 then
               dummy_wav_path = string.gsub(reaper.GetResourcePath(), "\\", "/") .. "/sm_drag_dummy_" .. tostring(math.random(10000, 99999)) .. ".wav"
               local f = io.open(dummy_wav_path, "wb")

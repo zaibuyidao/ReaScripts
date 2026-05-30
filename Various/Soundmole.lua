@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.188
+-- @version 1.0.189
 -- @changelog
 --   Added support for REAPER native operations when dragging waveform preview selections into REAPER with the extension installed.
 --   Support reaper_soundmole-x64.dll v0.0.17
