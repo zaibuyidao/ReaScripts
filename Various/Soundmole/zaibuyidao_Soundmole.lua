@@ -3525,7 +3525,7 @@ function EncodeDropMediaFileList(paths)
   return table.concat(out, "\n")
 end
 
-function SM_TryNativeDropMediaFiles(paths)
+function TryNativeDropMediaFiles(paths)
   if not (HAVE_SM_DROP_MEDIA_FILES and reaper.SM_DropMediaFiles) then return false, false end
   if not paths or #paths < 1 then return false, false end
 
@@ -12384,6 +12384,47 @@ function SM_ProcessBuilderLoop()
 end
 
 function loop()
+  if _G.pending_dummy_replacements and #_G.pending_dummy_replacements > 0 then
+    for i = #_G.pending_dummy_replacements, 1, -1 do
+      local req = _G.pending_dummy_replacements[i]
+      local replaced = false
+      local cnt = reaper.CountSelectedMediaItems(0)
+      for j = 0, cnt - 1 do
+        local item = reaper.GetSelectedMediaItem(0, j)
+        local take = reaper.GetActiveTake(item)
+        if take then
+          local src = reaper.GetMediaItemTake_Source(take)
+          local fn = reaper.GetMediaSourceFileName(src, "")
+          if fn then
+              local norm_fn = string.gsub(fn, "\\", "/")
+              local norm_dummy = string.gsub(req.dummy_path, "\\", "/")
+              if norm_fn == norm_dummy then
+                local real_src = reaper.PCM_Source_CreateFromFile(req.real_path)
+                reaper.SetMediaItemTake_Source(take, real_src)
+                reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", req.start_time)
+                
+                if req.apply_rate_pitch then
+                  local sel_len = math.abs((tonumber(req.end_time) or 0) - (tonumber(req.start_time) or 0))
+                  local rate = tonumber(req.rate) or 1.0
+                  if math.abs(rate) < 1e-9 then rate = 1.0 end
+                  reaper.SetMediaItemInfo_Value(item, "D_LENGTH", sel_len / rate)
+                  reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", rate)
+                  reaper.SetMediaItemTakeInfo_Value(take, "D_PITCH", tonumber(req.pitch) or 0.0)
+                  reaper.SetMediaItemTakeInfo_Value(take, "B_PPITCH", req.preserve_pitch and 1 or 0)
+                end
+                
+                reaper.UpdateItemInProject(item)
+                replaced = true
+              end
+          end
+        end
+      end
+      if replaced or (reaper.time_precise() - req.timestamp > 3.0) then
+        os.remove(req.dummy_path)
+        table.remove(_G.pending_dummy_replacements, i)
+      end
+    end
+  end
   -- RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！(新版 C++ 代理模式下，数据瞬间就绪，无需运行后台分片加载器)
   -- SM_ProcessBuilderLoop() -- 处理数据库构建器
   ProcessAsyncMetadata() -- 处理后台元数据加载，浏览物理文件夹时触发
@@ -16648,7 +16689,7 @@ function loop()
           and reaper.ImGui_IsMouseDown(ctx, 0)
         then
           dragging_audio.native_drop_attempted = true
-          native_drop_consumed = SM_TryNativeDropMediaFiles(dragging_audio.paths)
+          native_drop_consumed = TryNativeDropMediaFiles(dragging_audio.paths)
           if native_drop_consumed then
             dragging_audio = nil
             if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
@@ -19649,11 +19690,40 @@ function loop()
             drag_path = cur_info.source
           end
 
+          local dummy_wav_path = ""
+          if HAVE_SM_DROP_MEDIA_FILES then
+            local dur = math.abs(end_time - start_time)
+            if dur > 0 then
+              dummy_wav_path = string.gsub(reaper.GetResourcePath(), "\\", "/") .. "/sm_drag_dummy_" .. tostring(math.random(10000, 99999)) .. ".wav"
+              local f = io.open(dummy_wav_path, "wb")
+              if f then
+                local sr = 44100
+                local channels = 1
+                local bps = 16
+                local block_align = channels * (bps / 8)
+                local byte_rate = sr * block_align
+                local data_size = math.floor(dur * byte_rate)
+                local chunk_size = 36 + data_size
+                local function w32(v) f:write(string.char(v & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF, (v >> 24) & 0xFF)) end
+                local function w16(v) f:write(string.char(v & 0xFF, (v >> 8) & 0xFF)) end
+                f:write("RIFF") w32(chunk_size) f:write("WAVEfmt ") w32(16) w16(1) w16(channels)
+                w32(sr) w32(byte_rate) w16(block_align) w16(bps) f:write("data") w32(data_size)
+                f:seek("set", 43 + data_size)
+                f:write("\0")
+                f:close()
+              end
+            end
+          end
+
           dragging_selection = {
             path = drag_path,
+            paths = dummy_wav_path ~= "" and {dummy_wav_path} or {drag_path},
+            dummy_path = dummy_wav_path ~= "" and dummy_wav_path or nil,
             start_time = start_time,
             end_time = end_time,
             section_offset = cur_info.section_offset or 0,
+            native_drop_pending = HAVE_SM_DROP_MEDIA_FILES,
+            native_drop_attempted = false
           }
           if reaper.JS_Mouse_LoadCursor then
             local cursor_path = script_path .. "lib/cursor_258.cur"
@@ -19665,48 +19735,82 @@ function loop()
 
         -- 拖拽释放检测
         if dragging_selection then
-          if reaper.JS_Mouse_LoadCursor then
-            local cursor_path = script_path .. "lib/cursor_258.cur"
-            local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
-            if cursor then reaper.JS_Mouse_SetCursor(cursor) end
-          end
           local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
+          local over_arrange_drop_target = IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane)
+          local native_drop_consumed = false
 
-          if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
-            local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
-            local item_len = GetDragPreviewTimelineLength(dragging_selection.start_time, dragging_selection.end_time)
-            DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track, hover_lane, hover_rect)
+          if over_arrange_drop_target
+            and dragging_selection.native_drop_pending
+            and not dragging_selection.native_drop_attempted
+            and reaper.ImGui_IsMouseDown(ctx, 0)
+          then
+            dragging_selection.native_drop_attempted = true
+            native_drop_consumed = TryNativeDropMediaFiles(dragging_selection.paths)
+            if native_drop_consumed then
+              if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
+              
+              if dragging_selection.dummy_path then
+                  _G.pending_dummy_replacements = _G.pending_dummy_replacements or {}
+                  table.insert(_G.pending_dummy_replacements, {
+                      dummy_path = dragging_selection.dummy_path,
+                      real_path = dragging_selection.path,
+                      start_time = dragging_selection.start_time,
+                      end_time = dragging_selection.end_time,
+                      apply_rate_pitch = keep_preview_rate_pitch_on_insert,
+                      rate = effective_rate_knob,
+                      pitch = pitch,
+                      preserve_pitch = preserve_pitch,
+                      timestamp = reaper.time_precise()
+                  })
+              end
+              dragging_selection = nil
+            end
           end
 
-          -- 拖拽释放检测
-          if not reaper.ImGui_IsMouseDown(ctx, 0) then
-            if IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
-              local insert_time = mouse_pos_time
-              if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
-              insert_time = reaper.SnapToGrid(0, insert_time)
-
-              local tr, target_lane = ResolveArrangeDropTrackTarget(hover_track, hover_lane)
-              if tr then
-                reaper.SetOnlyTrackSelected(tr)
-                local path = GetPhysicalPath(dragging_selection.path or (cur_info and cur_info.path))
-                path = normalize_path(path or "", false)
-                InsertDraggedMediaFast(
-                  tr,
-                  path,
-                  insert_time,
-                  dragging_selection.start_time,
-                  dragging_selection.end_time,
-                  dragging_selection.section_offset or 0,
-                  target_lane,
-                  false
-                )
-              end
+          if dragging_selection then
+            if reaper.JS_Mouse_LoadCursor then
+              local cursor_path = script_path .. "lib/cursor_258.cur"
+              local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
+              if cursor then reaper.JS_Mouse_SetCursor(cursor) end
             end
-            dragging_selection = nil -- 不管插入与否都要清除
-            selection_drag_click_valid = false
-            -- 恢复鼠标图标
-            if reaper.JS_Mouse_LoadCursor then 
-              reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) 
+            local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
+
+            if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
+              local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
+              local item_len = GetDragPreviewTimelineLength(dragging_selection.start_time, dragging_selection.end_time)
+              DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track, hover_lane, hover_rect)
+            end
+
+            -- 拖拽释放检测
+            if not reaper.ImGui_IsMouseDown(ctx, 0) then
+              if IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
+                local insert_time = mouse_pos_time
+                if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
+                insert_time = reaper.SnapToGrid(0, insert_time)
+
+                local tr, target_lane = ResolveArrangeDropTrackTarget(hover_track, hover_lane)
+                if tr then
+                  reaper.SetOnlyTrackSelected(tr)
+                  local path = GetPhysicalPath(dragging_selection.path or (cur_info and cur_info.path))
+                  path = normalize_path(path or "", false)
+                  InsertDraggedMediaFast(
+                    tr,
+                    path,
+                    insert_time,
+                    dragging_selection.start_time,
+                    dragging_selection.end_time,
+                    dragging_selection.section_offset or 0,
+                    target_lane,
+                    false
+                  )
+                end
+              end
+              dragging_selection = nil -- 不管插入与否都要清除
+              selection_drag_click_valid = false
+              -- 恢复鼠标图标
+              if reaper.JS_Mouse_LoadCursor then 
+                reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) 
+              end
             end
           end
         end

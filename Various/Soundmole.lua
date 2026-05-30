@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.187
+-- @version 1.0.188
 -- @changelog
---   Added support for dragging multiple selected audio files from the audio table list into REAPER.
---   Audio table rows now support Ctrl+left-click to add or remove items from the selection without inserting audio.
+--   Added support for REAPER native operations when dragging waveform preview selections into REAPER with the extension installed.
 --   Support reaper_soundmole-x64.dll v0.0.17
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
