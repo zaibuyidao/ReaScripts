@@ -1,10 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.190
+-- @version 1.0.191
 -- @changelog
---   Added a thesaurus edit button for quickly opening and editing the thesaurus.
---   Improved the search history icon so a single icon now supports previous search, while Ctrl click switches to next search.
---   Improved the thesaurus display behavior so it is now shown by clicking a button.
+--   Fixed the Settings window drawing logic to prevent repeated white flashing when docking the main window to the center area.
 --   Support reaper_soundmole-x64.dll v0.0.17
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
