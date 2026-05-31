@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="fad9ba16f923075ec907e3dee740c7b1ea377727">
+<index version="1" name="zaibuyidao Scripts" commit="66f8c3fa794677ecad21b03d99760b194f71cbc2">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9279,6 +9279,28 @@ Other detailed improvements and bug fixes.]]></changelog>
       <version name="1.1.1" author="zaibuyidao" time="2023-03-08T13:40:21Z">
         <changelog><![CDATA[Initial release]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/a94fa93be2afd6e8a5ccd4425de389539a6af3c7/Utility/zaibuyidao_Set%20Project%20Grid.lua</source>
+      </version>
+    </reapack>
+    <reapack name="zaibuyidao_SFX Snapshot Library.lua" type="script" desc="SFX Snapshot Library">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires:\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab ReaImGui\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab js_ReaScriptAPI\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab SWS Extension\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab Soundmole Extension\sa180\par}
+}
+]]></description>
+        <link rel="website">https://www.soundengine.cn/u/zaibuyidao</link>
+        <link rel="website">https://github.com/zaibuyidao/ReaScripts</link>
+        <link rel="donation">http://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2026-05-31T10:42:45Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/66f8c3fa794677ecad21b03d99760b194f71cbc2/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Tap Tempo Checker (No Tempo Change).lua" type="script" desc="Tap Tempo Checker (No Tempo Change)">
