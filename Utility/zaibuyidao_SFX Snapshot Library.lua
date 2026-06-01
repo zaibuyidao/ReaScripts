@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -14,8 +14,7 @@
 --   3. SWS Extension
 --   4. Soundmole Extension
 
-local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
-local ZBYDFuncPath = RESOURCE_PATH .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
   dofile(ZBYDFuncPath)
   if not checkSWSExtension() or not checkJSAPIExtension() then return end
@@ -78,13 +77,772 @@ if reaper.ImGui_GetBuiltinPath then
   ImGui = require 'imgui' '0.10'
 end
 
+local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
+local SCRIPT_NAME = "SFX Snapshot Library"
+local SCRIPT_VERSION = "1.0.2"
+local EXT_SECTION = "SOUNDFX_SNAPSHOT_LIBRARY_PRO"
+
+local LANGUAGE_DEFAULT = "en"
+local LANGUAGE_OPTIONS = {
+  { id = "en",    label_key = "language_english" },
+  { id = "zh_CN", label_key = "language_simplified_chinese" },
+  { id = "zh_TW", label_key = "language_traditional_chinese" },
+}
+local LANGUAGE_ALIASES = {
+  English = "en",
+  ["简体中文"] = "zh_CN",
+  ["繁體中文"] = "zh_TW",
+}
+
+local TEXT = {
+  en = {
+    language_english = "English",
+    language_simplified_chinese = "简体中文",
+    language_traditional_chinese = "繁體中文",
+
+    title = "SFX Snapshot Library",
+    subtitle = "Professional modular SFX archive / restore system",
+    error = "Error",
+    ok = "OK",
+    cancel = "Cancel",
+    apply = "Apply",
+    save = "Save",
+    load = "Load",
+    play = "Play",
+    stop = "Stop",
+    options = "Options",
+    settings = "Settings",
+    browse = "Browse",
+    remove = "Remove",
+    open_folder = "Open Folder",
+    export_zip = "Export ZIP",
+    import_zip = "Import ZIP",
+    add_favorite = "Add Favorite",
+    remove_favorite = "Remove Favorite",
+    favorite = "Favorite",
+
+    category_all = "All",
+    category_uncategorized = "Uncategorized",
+    unnamed = "Unnamed",
+    snapshot = "snapshot",
+    default_snapshot_name_format = "SFX Snapshot %Y-%m-%d %H-%M-%S",
+    imported_snapshot = "Imported Snapshot",
+
+    capture_razor = "Razor Edit",
+    capture_time_selection = "Time Selection",
+    capture_time_selection_selected_items = "Time Selection (Selected Items)",
+    capture_unknown = "Unknown",
+
+    popup_save_snapshot = "Save Snapshot",
+    popup_load_snapshot = "Load Snapshot",
+    popup_settings = "Settings",
+
+    search_hint = "Search name / category / tags / description...",
+    category_label = "Category:",
+    favorites_only = "Favorites only",
+    no_snapshot_selected = "No snapshot selected.",
+    no_snapshots_found = "No snapshots found.",
+    no_existing_items = "No existing items.",
+    no_existing_categories = "No existing categories.",
+    no_existing_tags = "No existing tags.",
+
+    waveform_preview_unavailable = "Waveform preview unavailable.",
+    back_to_start = "Back to Start",
+    loop_on = "Loop On",
+    loop_off = "Loop Off",
+    tooltip_waveform_seek = "Click the waveform to set the cursor and play from that position.",
+    tooltip_preview_start = "Return preview cursor to the start.",
+    tooltip_preview_volume = "Preview volume: drag up/down to adjust, double-click to reset to 0 dB.",
+
+    meta_category = "Category: {value}",
+    meta_source = "Source: {value}",
+    meta_tags = "Tags: {value}",
+    meta_duration = "Duration: {value} s",
+    meta_tracks = "Tracks: {value}",
+    meta_items = "Items: {value}",
+    meta_media_archived = "Media archived: {value}",
+    meta_missing_media = "Missing media: {value}",
+    meta_created = "Created: {value}",
+    meta_preview_skip = "Preview skip: {value} s",
+    meta_preview_missing = "Preview: missing",
+    meta_preview_error = "Preview error: {value}",
+    meta_detail_summary = "Duration {duration}s    Tracks {tracks}    Items {items}    Media {media}",
+
+    smart_save_info = "Smart save: Razor Edit has priority. If no Razor Edit exists, the current time selection will be captured.",
+    field_name = "Name",
+    field_description = "Description",
+    category_dropdown = "Category ▼",
+    tags_dropdown = "Tags ▼",
+    tooltip_choose_categories = "Choose from existing categories",
+    tooltip_append_tags = "Append from existing tags",
+    same_name_overwrite = "Same-name snapshots will be updated and preview.mp3 will be overwritten.",
+    archive_always = "Markers, regions, tempo/time signatures, track names and FX are always archived.",
+    tip_reuse_names = "Tip: click Category or Tags to reuse existing names.",
+
+    load_snapshot_name = "Load: {name}",
+    load_to_new_tracks = "Load to new tracks",
+    check_empty_target = "Check empty target area before loading",
+    restore_markers = "Restore markers",
+    restore_regions = "Restore regions",
+    restore_tempo = "Restore tempo and time signatures",
+    restore_track_info = "Restore track names and FX",
+    tooltip_restore_track_info_load = "Track names and FX are applied only to tracks created during this load.",
+    tooltip_restore_track_info_settings = "Track names and FX are applied only to tracks created during load.",
+
+    interface = "Interface",
+    settings_language = "Language:",
+    settings_library_location = "Library Location",
+    settings_library_description = "Choose where snapshots, metadata and preview files are stored.",
+    select_library_directory = "Select library directory:",
+    use_reaper_resource_path = "Use REAPER Resource Path",
+    open_current_library = "Open Current Library",
+    settings_load_options = "Load Options",
+    settings_save_options = "Save Options",
+    settings_snapshot_options = "Snapshot Options",
+    settings_snapshot_sort = "List Sort:",
+    settings_display_options = "Display Options",
+    show_load_popup = "Show load confirmation popup",
+    auto_render_preview = "Auto render preview.mp3 when saving",
+    skip_preview_leading_empty = "Skip leading empty content when rendering preview",
+    show_capture_abbreviations = "Show [TS]/[RE] capture labels",
+    show_tips = "Show tips",
+    place_info_panel_bottom = "Place info panel at bottom",
+    sort_newest = "Newest first",
+    sort_oldest = "Oldest first",
+    sort_alphabetical = "Alphabetical",
+
+    dialog_export_zip_title = "Export SFX Snapshot ZIP",
+    dialog_export_folder_title = "Select export folder:",
+    dialog_import_zip_title = "Import SFX Snapshot ZIP",
+    dialog_zip_filter = "ZIP files (*.zip)\0*.zip\0All files (*.*)\0*.*\0",
+    undo_load_snapshot = "Load SFX Snapshot",
+
+    confirm_remove_snapshot = "Remove this snapshot and delete its local folder?\n\n{name}\n\nFolder:\n{folder}",
+
+    error_failed_open_source_media = "Failed to open source media: {path}",
+    error_failed_write_archived_media = "Failed to write archived media: {path}",
+    error_refuse_delete_outside = "Refusing to delete a folder outside the snapshots directory.",
+    error_failed_delete_snapshot_folder = "Failed to delete snapshot folder: {path}",
+    error_snapshot_folder_not_found = "Snapshot folder not found.",
+    error_zip_create_windows = "Failed to create ZIP with PowerShell .NET ZipFile. Please check whether the export folder is writable:\n\n{path}",
+    error_zip_create_unix = "Failed to create ZIP. On macOS it uses ditto; on Linux it requires zip.",
+    error_zip_not_found = "ZIP file not found.",
+    error_zip_extract_windows = "Failed to extract ZIP. Tried Windows tar.exe and PowerShell .NET ZipFile.",
+    error_zip_extract_unix = "Failed to extract ZIP. On macOS it uses ditto; on Linux it requires unzip.",
+    error_imported_data_missing = "Imported snapshot data is missing.",
+    error_reaper_enum_unavailable = "REAPER file enumeration API is unavailable.",
+    error_failed_copy_imported_snapshot_folder = "Failed to copy imported snapshot folder.",
+    error_no_capture_context = "No Razor Edit or time selection found. Please create a Razor Edit area or a time selection before saving.",
+    error_capture_empty = "{mode} contains no media items, markers, regions, or tempo/time signature markers.",
+    error_invalid_snapshot_data = "Invalid snapshot data.",
+    error_snapshot_has_no_tracks = "Snapshot has no tracks.",
+    error_target_area_not_empty = "Target area is not empty. Track {track} already contains items in this range.",
+    error_invalid_snapshot_folder = "Invalid snapshot folder.",
+    error_invalid_preview_range = "Invalid preview render range.",
+    error_preview_mp3_not_created = "preview.mp3 was not created. Please check REAPER render action 42230 or render settings.",
+    error_load_snapshot_detail = "Failed to load snapshot:\n\n{detail}",
+    error_snapshot_data_missing_detail = "Snapshot data file not found:\n\n{path}",
+    error_zip_missing_detail = "ZIP file not found:\n\n{path}",
+    error_zip_invalid_package_detail = "This ZIP does not look like a SFX Snapshot package.\n\nsnapshot.lua was not found.",
+    error_import_read_detail = "Failed to read imported snapshot:\n\n{detail}",
+    error_waveform_cache_file_not_found = "Waveform cache file not found.",
+    error_lua_no_string_unpack = "This REAPER Lua build does not support string.unpack.",
+    error_waveform_cache_open = "Failed to open waveform cache.",
+    error_waveform_cache_header = "Invalid waveform cache header.",
+    error_waveform_cache_magic = "Invalid waveform cache magic.",
+    error_waveform_cache_parse = "Failed to parse waveform cache header.",
+    error_waveform_cache_unsupported = "Unsupported waveform cache data.",
+    error_waveform_cache_incomplete = "Incomplete waveform cache data.",
+    error_internal_preview_requires_sws = "Internal preview playback requires the SWS extension.\n\nPlease install/update SWS, then restart REAPER.",
+    error_preview_file_not_found = "Preview file not found:\n\n{path}",
+    error_preview_source_failed = "Failed to create preview source:\n\n{path}",
+    error_preview_object_failed = "Failed to create internal preview object.",
+    error_preview_start_failed = "Failed to start internal preview playback.",
+    error_no_preview_for_snapshot = "No preview file found for this snapshot.\n\nYou can re-save the snapshot to auto-render preview.mp3, or manually place preview.mp3 here:\n\n{folder}",
+    error_folder_browser_requires_js = "Folder browser requires the js_ReaScriptAPI extension.",
+
+    status_ready = "Ready.",
+    status_capture_failed = "Capture failed.",
+    status_snapshot_write_failed = "Failed to write snapshot file.",
+    status_saved_preview_ok = "Saved {mode} snapshot and rendered preview: {name}{media_note}",
+    status_saved_preview_failed = "Saved {mode} snapshot, but preview render failed: {name}{media_note}",
+    status_media_archived_note = " | Media archived: {count}",
+    status_missing_media_note = " | Missing media: {count}",
+    status_no_snapshot_selected = "No snapshot selected.",
+    status_load_failed = "Load failed.",
+    status_loaded_snapshot = "Loaded snapshot: {name}",
+    status_export_data_missing = "Export failed: snapshot data missing.",
+    status_export_cancelled = "Export cancelled.",
+    status_export_failed = "Export failed.",
+    status_exported_zip = "Exported snapshot ZIP: {path}",
+    status_import_cancelled = "Import cancelled.",
+    status_import_zip_missing = "Import failed: ZIP file missing.",
+    status_import_failed = "Import failed.",
+    status_import_snapshot_missing = "Import failed: snapshot.lua not found in ZIP.",
+    status_import_invalid_data = "Import failed: invalid snapshot data.",
+    status_imported_snapshot = "Imported snapshot: {name}",
+    status_already_favorite = "Already in favorites.",
+    status_already_not_favorite = "Already removed from favorites.",
+    status_added_favorite = "Added to favorites.",
+    status_removed_favorite = "Removed from favorites.",
+    status_removed_deleted = "Removed snapshot and deleted local folder.",
+    status_removed_index_delete_failed = "Removed from library index, but failed to delete local folder.",
+    status_no_preview_waveform = "No preview file found for waveform display.",
+    status_waveform_extension_missing = "Waveform cache extension is not available.",
+    status_waveform_read_failed = "Failed to read waveform cache.",
+    status_waveform_building = "Building waveform cache...",
+    status_waveform_build_failed = "Failed to build waveform cache.",
+    status_looping_preview = "Looping preview: {name}",
+    status_preview_finished = "Preview finished.",
+    status_internal_preview_requires_sws = "Internal preview requires SWS extension.",
+    status_preview_file_missing = "Preview file missing.",
+    status_preview_source_failed = "Failed to create preview source.",
+    status_preview_object_failed = "Failed to create preview object.",
+    status_preview_start_failed = "Failed to start preview.",
+    status_playing_preview_from = "Playing preview from {seconds}s: {name}",
+    status_playing_preview = "Playing preview: {name}",
+    status_preview_cursor_start = "Preview cursor returned to start.",
+    status_preview_stopped = "Preview stopped.",
+    status_preview_loop_enabled = "Preview loop enabled.",
+    status_preview_loop_disabled = "Preview loop disabled.",
+    status_sort_changed = "Snapshot list sort changed: {label}",
+    status_settings_applied = "Settings applied.",
+  },
+
+  zh_CN = {
+    language_english = "English",
+    language_simplified_chinese = "简体中文",
+    language_traditional_chinese = "繁體中文",
+
+    title = "SFX Snapshot Library",
+    subtitle = "专业模块化音效快照归档 / 还原系统",
+    error = "错误",
+    ok = "确定",
+    cancel = "取消",
+    apply = "应用",
+    save = "保存",
+    load = "载入",
+    play = "播放",
+    stop = "停止",
+    options = "选项",
+    settings = "设置",
+    browse = "浏览",
+    remove = "移除",
+    open_folder = "打开文件夹",
+    export_zip = "导出 ZIP",
+    import_zip = "导入 ZIP",
+    add_favorite = "添加收藏",
+    remove_favorite = "取消收藏",
+    favorite = "收藏",
+
+    category_all = "全部",
+    category_uncategorized = "未分类",
+    unnamed = "未命名",
+    snapshot = "快照",
+    default_snapshot_name_format = "音效快照 %Y-%m-%d %H-%M-%S",
+    imported_snapshot = "导入的快照",
+
+    capture_razor = "Razor Edit",
+    capture_time_selection = "时间选区",
+    capture_time_selection_selected_items = "时间选区（选中对象）",
+    capture_unknown = "未知",
+
+    popup_save_snapshot = "保存快照",
+    popup_load_snapshot = "载入快照",
+    popup_settings = "设置",
+
+    search_hint = "搜索名称 / 分类 / 标签 / 描述...",
+    category_label = "分类:",
+    favorites_only = "仅显示收藏",
+    no_snapshot_selected = "未选择快照。",
+    no_snapshots_found = "未找到快照。",
+    no_existing_items = "没有现有项目。",
+    no_existing_categories = "没有现有分类。",
+    no_existing_tags = "没有现有标签。",
+
+    waveform_preview_unavailable = "波形预览不可用。",
+    back_to_start = "回到开头",
+    loop_on = "循环开",
+    loop_off = "循环关",
+    tooltip_waveform_seek = "点击波形可设置光标，并从该位置播放。",
+    tooltip_preview_start = "将预览光标返回到开头。",
+    tooltip_preview_volume = "预览音量: 上下拖动调整，双击重置为 0 dB。",
+
+    meta_category = "分类: {value}",
+    meta_source = "来源: {value}",
+    meta_tags = "标签: {value}",
+    meta_duration = "时长: {value} 秒",
+    meta_tracks = "轨道: {value}",
+    meta_items = "媒体对象: {value}",
+    meta_media_archived = "已归档媒体: {value}",
+    meta_missing_media = "缺失媒体: {value}",
+    meta_created = "创建时间: {value}",
+    meta_preview_skip = "预览跳过: {value} 秒",
+    meta_preview_missing = "预览: 缺失",
+    meta_preview_error = "预览错误: {value}",
+    meta_detail_summary = "时长 {duration}秒    轨道 {tracks}    对象 {items}    媒体 {media}",
+
+    smart_save_info = "智能保存: 剃刀编辑优先。如果没有剃刀编辑，则捕获当前时间选区。",
+    field_name = "名称",
+    field_description = "描述",
+    category_dropdown = "分类 ▼",
+    tags_dropdown = "标签 ▼",
+    tooltip_choose_categories = "从现有分类中选择",
+    tooltip_append_tags = "从现有标签中追加",
+    same_name_overwrite = "同名快照会被更新，preview.mp3 会被覆盖。",
+    archive_always = "标记、区域、速度/拍号、轨道名称和 FX 始终会被归档。",
+    tip_reuse_names = "提示: 点击分类或标签可复用现有名称。",
+
+    load_snapshot_name = "载入: {name}",
+    load_to_new_tracks = "载入到新轨道",
+    check_empty_target = "载入前检查目标区域是否为空",
+    restore_markers = "还原标记",
+    restore_regions = "还原区域",
+    restore_tempo = "还原速度和拍号",
+    restore_track_info = "还原轨道名称和 FX",
+    tooltip_restore_track_info_load = "轨道名称和 FX 只会应用到本次载入时创建的轨道。",
+    tooltip_restore_track_info_settings = "轨道名称和 FX 只会应用到载入时创建的轨道。",
+
+    interface = "界面",
+    settings_language = "语言:",
+    settings_library_location = "资源库位置",
+    settings_library_description = "选择快照、元数据和预览文件的存储位置。",
+    select_library_directory = "选择资源库文件夹:",
+    use_reaper_resource_path = "使用 REAPER 资源路径",
+    open_current_library = "打开当前资源库",
+    settings_load_options = "载入选项",
+    settings_save_options = "保存选项",
+    settings_snapshot_options = "快照选项",
+    settings_snapshot_sort = "列表排序:",
+    settings_display_options = "显示选项",
+    show_load_popup = "显示载入确认弹窗",
+    auto_render_preview = "保存时自动渲染 preview.mp3",
+    skip_preview_leading_empty = "渲染预览时跳过开头空白内容",
+    show_capture_abbreviations = "显示 [TS]/[RE] 捕获标签",
+    show_tips = "显示提示",
+    place_info_panel_bottom = "将信息面板放在底部",
+    sort_newest = "最新优先",
+    sort_oldest = "最旧优先",
+    sort_alphabetical = "按字母排序",
+
+    dialog_export_zip_title = "导出 SFX 快照 ZIP",
+    dialog_export_folder_title = "选择导出文件夹: ",
+    dialog_import_zip_title = "导入 SFX 快照 ZIP",
+    dialog_zip_filter = "ZIP 文件 (*.zip)\0*.zip\0所有文件 (*.*)\0*.*\0",
+    undo_load_snapshot = "载入 SFX 快照",
+
+    confirm_remove_snapshot = "要移除此快照并删除本地文件夹吗？\n\n{name}\n\n文件夹: \n{folder}",
+
+    error_failed_open_source_media = "无法打开源媒体: {path}",
+    error_failed_write_archived_media = "无法写入归档媒体: {path}",
+    error_refuse_delete_outside = "拒绝删除快照目录之外的文件夹。",
+    error_failed_delete_snapshot_folder = "无法删除快照文件夹: {path}",
+    error_snapshot_folder_not_found = "未找到快照文件夹。",
+    error_zip_create_windows = "无法通过 PowerShell .NET ZipFile 创建 ZIP。请检查导出文件夹是否可写: \n\n{path}",
+    error_zip_create_unix = "无法创建 ZIP。macOS 使用 ditto，Linux 需要 zip。",
+    error_zip_not_found = "未找到 ZIP 文件。",
+    error_zip_extract_windows = "无法解压 ZIP。已尝试 Windows tar.exe 和 PowerShell .NET ZipFile。",
+    error_zip_extract_unix = "无法解压 ZIP。macOS 使用 ditto，Linux 需要 unzip。",
+    error_imported_data_missing = "导入的快照数据缺失。",
+    error_reaper_enum_unavailable = "REAPER 文件枚举 API 不可用。",
+    error_failed_copy_imported_snapshot_folder = "无法复制导入的快照文件夹。",
+    error_no_capture_context = "未找到 Razor Edit 或时间选区。保存前请创建 Razor Edit 区域或时间选区。",
+    error_capture_empty = "{mode} 中没有媒体对象、标记、区域或速度/拍号标记。",
+    error_invalid_snapshot_data = "无效的快照数据。",
+    error_snapshot_has_no_tracks = "快照没有轨道。",
+    error_target_area_not_empty = "目标区域不是空的。轨道 {track} 在此范围内已有对象。",
+    error_invalid_snapshot_folder = "无效的快照文件夹。",
+    error_invalid_preview_range = "无效的预览渲染范围。",
+    error_preview_mp3_not_created = "未创建 preview.mp3。请检查 REAPER 渲染动作 42230 或渲染设置。",
+    error_load_snapshot_detail = "无法载入快照: \n\n{detail}",
+    error_snapshot_data_missing_detail = "未找到快照数据文件: \n\n{path}",
+    error_zip_missing_detail = "未找到 ZIP 文件: \n\n{path}",
+    error_zip_invalid_package_detail = "此 ZIP 看起来不是 SFX Snapshot 包。\n\n未找到 snapshot.lua。",
+    error_import_read_detail = "无法读取导入的快照: \n\n{detail}",
+    error_waveform_cache_file_not_found = "未找到波形缓存文件。",
+    error_lua_no_string_unpack = "此 REAPER Lua 版本不支持 string.unpack。",
+    error_waveform_cache_open = "无法打开波形缓存。",
+    error_waveform_cache_header = "无效的波形缓存头。",
+    error_waveform_cache_magic = "无效的波形缓存标识。",
+    error_waveform_cache_parse = "无法解析波形缓存头。",
+    error_waveform_cache_unsupported = "不支持的波形缓存数据。",
+    error_waveform_cache_incomplete = "波形缓存数据不完整。",
+    error_internal_preview_requires_sws = "内部预览播放需要 SWS 扩展。\n\n请安装/更新 SWS，然后重启 REAPER。",
+    error_preview_file_not_found = "未找到预览文件: \n\n{path}",
+    error_preview_source_failed = "无法创建预览源: \n\n{path}",
+    error_preview_object_failed = "无法创建内部预览对象。",
+    error_preview_start_failed = "无法启动内部预览播放。",
+    error_no_preview_for_snapshot = "此快照没有预览文件。\n\n可以重新保存快照以自动渲染 preview.mp3，或手动将 preview.mp3 放到这里: \n\n{folder}",
+    error_folder_browser_requires_js = "文件夹浏览器需要 js_ReaScriptAPI 扩展。",
+
+    status_ready = "就绪。",
+    status_capture_failed = "捕获失败。",
+    status_snapshot_write_failed = "无法写入快照文件。",
+    status_saved_preview_ok = "已保存 {mode} 快照并渲染预览: {name}{media_note}",
+    status_saved_preview_failed = "已保存 {mode} 快照，但预览渲染失败: {name}{media_note}",
+    status_media_archived_note = " | 已归档媒体: {count}",
+    status_missing_media_note = " | 缺失媒体: {count}",
+    status_no_snapshot_selected = "未选择快照。",
+    status_load_failed = "载入失败。",
+    status_loaded_snapshot = "已载入快照: {name}",
+    status_export_data_missing = "导出失败: 快照数据缺失。",
+    status_export_cancelled = "已取消导出。",
+    status_export_failed = "导出失败。",
+    status_exported_zip = "已导出快照 ZIP: {path}",
+    status_import_cancelled = "已取消导入。",
+    status_import_zip_missing = "导入失败: ZIP 文件缺失。",
+    status_import_failed = "导入失败。",
+    status_import_snapshot_missing = "导入失败: ZIP 中未找到 snapshot.lua。",
+    status_import_invalid_data = "导入失败: 快照数据无效。",
+    status_imported_snapshot = "已导入快照: {name}",
+    status_already_favorite = "已经在收藏中。",
+    status_already_not_favorite = "已经取消收藏。",
+    status_added_favorite = "已添加到收藏。",
+    status_removed_favorite = "已取消收藏。",
+    status_removed_deleted = "已移除快照并删除本地文件夹。",
+    status_removed_index_delete_failed = "已从资源库索引中移除，但删除本地文件夹失败。",
+    status_no_preview_waveform = "没有可用于波形显示的预览文件。",
+    status_waveform_extension_missing = "波形缓存扩展不可用。",
+    status_waveform_read_failed = "无法读取波形缓存。",
+    status_waveform_building = "正在构建波形缓存...",
+    status_waveform_build_failed = "波形缓存构建失败。",
+    status_looping_preview = "循环预览: {name}",
+    status_preview_finished = "预览结束。",
+    status_internal_preview_requires_sws = "内部预览需要 SWS 扩展。",
+    status_preview_file_missing = "预览文件缺失。",
+    status_preview_source_failed = "无法创建预览源。",
+    status_preview_object_failed = "无法创建预览对象。",
+    status_preview_start_failed = "无法开始预览。",
+    status_playing_preview_from = "从 {seconds} 秒播放预览: {name}",
+    status_playing_preview = "正在播放预览: {name}",
+    status_preview_cursor_start = "预览光标已返回开头。",
+    status_preview_stopped = "预览已停止。",
+    status_preview_loop_enabled = "已启用预览循环。",
+    status_preview_loop_disabled = "已关闭预览循环。",
+    status_sort_changed = "快照列表排序已更改: {label}",
+    status_settings_applied = "设置已应用。",
+  },
+
+  zh_TW = {
+    language_english = "English",
+    language_simplified_chinese = "简体中文",
+    language_traditional_chinese = "繁體中文",
+
+    title = "SFX Snapshot Library",
+    subtitle = "專業模組化音效快照封存 / 還原系統",
+    error = "錯誤",
+    ok = "確定",
+    cancel = "取消",
+    apply = "套用",
+    save = "儲存",
+    load = "載入",
+    play = "播放",
+    stop = "停止",
+    options = "選項",
+    settings = "設定",
+    browse = "瀏覽",
+    remove = "移除",
+    open_folder = "開啟資料夾",
+    export_zip = "匯出 ZIP",
+    import_zip = "匯入 ZIP",
+    add_favorite = "加入收藏",
+    remove_favorite = "取消收藏",
+    favorite = "收藏",
+
+    category_all = "全部",
+    category_uncategorized = "未分類",
+    unnamed = "未命名",
+    snapshot = "快照",
+    default_snapshot_name_format = "音效快照 %Y-%m-%d %H-%M-%S",
+    imported_snapshot = "匯入的快照",
+
+    capture_razor = "Razor Edit",
+    capture_time_selection = "時間選區",
+    capture_time_selection_selected_items = "時間選區（選取物件）",
+    capture_unknown = "未知",
+
+    popup_save_snapshot = "儲存快照",
+    popup_load_snapshot = "載入快照",
+    popup_settings = "設定",
+
+    search_hint = "搜尋名稱 / 分類 / 標籤 / 描述...",
+    category_label = "分類: ",
+    favorites_only = "僅顯示收藏",
+    no_snapshot_selected = "尚未選取快照。",
+    no_snapshots_found = "找不到快照。",
+    no_existing_items = "沒有現有項目。",
+    no_existing_categories = "沒有現有分類。",
+    no_existing_tags = "沒有現有標籤。",
+
+    waveform_preview_unavailable = "波形預覽不可用。",
+    back_to_start = "回到開頭",
+    loop_on = "循環開",
+    loop_off = "循環關",
+    tooltip_waveform_seek = "點擊波形可設定游標，並從該位置播放。",
+    tooltip_preview_start = "將預覽游標回到開頭。",
+    tooltip_preview_volume = "預覽音量: 上下拖曳調整，雙擊重設為 0 dB。",
+
+    meta_category = "分類: {value}",
+    meta_source = "來源: {value}",
+    meta_tags = "標籤: {value}",
+    meta_duration = "長度: {value} 秒",
+    meta_tracks = "軌道: {value}",
+    meta_items = "媒體物件: {value}",
+    meta_media_archived = "已封存媒體: {value}",
+    meta_missing_media = "缺少媒體: {value}",
+    meta_created = "建立時間: {value}",
+    meta_preview_skip = "預覽跳過: {value} 秒",
+    meta_preview_missing = "預覽: 缺少",
+    meta_preview_error = "預覽錯誤: {value}",
+    meta_detail_summary = "長度 {duration}秒    軌道 {tracks}    物件 {items}    媒體 {media}",
+
+    smart_save_info = "智慧儲存: 剃刀編輯優先。如果沒有剃刀編輯，則擷取目前時間選區。",
+    field_name = "名稱",
+    field_description = "描述",
+    category_dropdown = "分類 ▼",
+    tags_dropdown = "標籤 ▼",
+    tooltip_choose_categories = "從現有分類中選擇",
+    tooltip_append_tags = "從現有標籤中追加",
+    same_name_overwrite = "同名快照會被更新，preview.mp3 會被覆寫。",
+    archive_always = "標記、區域、速度/拍號、軌道名稱和 FX 一律會被封存。",
+    tip_reuse_names = "提示: 點擊分類或標籤可重用現有名稱。",
+
+    load_snapshot_name = "載入: {name}",
+    load_to_new_tracks = "載入到新軌道",
+    check_empty_target = "載入前檢查目標區域是否為空",
+    restore_markers = "還原標記",
+    restore_regions = "還原區域",
+    restore_tempo = "還原速度和拍號",
+    restore_track_info = "還原軌道名稱和 FX",
+    tooltip_restore_track_info_load = "軌道名稱和 FX 只會套用到本次載入時建立的軌道。",
+    tooltip_restore_track_info_settings = "軌道名稱和 FX 只會套用到載入時建立的軌道。",
+
+    interface = "介面",
+    settings_language = "語言:",
+    settings_library_location = "資源庫位置",
+    settings_library_description = "選擇快照、元資料和預覽檔案的儲存位置。",
+    select_library_directory = "選擇資源庫資料夾: ",
+    use_reaper_resource_path = "使用 REAPER 資源路徑",
+    open_current_library = "開啟目前資源庫",
+    settings_load_options = "載入選項",
+    settings_save_options = "儲存選項",
+    settings_snapshot_options = "快照選項",
+    settings_snapshot_sort = "列表排序: ",
+    settings_display_options = "顯示選項",
+    show_load_popup = "顯示載入確認視窗",
+    auto_render_preview = "儲存時自動算繪 preview.mp3",
+    skip_preview_leading_empty = "算繪預覽時跳過開頭空白內容",
+    show_capture_abbreviations = "顯示 [TS]/[RE] 擷取標籤",
+    show_tips = "顯示提示",
+    place_info_panel_bottom = "將資訊面板放在底部",
+    sort_newest = "最新優先",
+    sort_oldest = "最舊優先",
+    sort_alphabetical = "依字母排序",
+
+    dialog_export_zip_title = "匯出 SFX 快照 ZIP",
+    dialog_export_folder_title = "選擇匯出資料夾: ",
+    dialog_import_zip_title = "匯入 SFX 快照 ZIP",
+    dialog_zip_filter = "ZIP 檔案 (*.zip)\0*.zip\0所有檔案 (*.*)\0*.*\0",
+    undo_load_snapshot = "載入 SFX 快照",
+
+    confirm_remove_snapshot = "要移除此快照並刪除本機資料夾嗎？\n\n{name}\n\n資料夾: \n{folder}",
+
+    error_failed_open_source_media = "無法開啟來源媒體: {path}",
+    error_failed_write_archived_media = "無法寫入封存媒體: {path}",
+    error_refuse_delete_outside = "拒絕刪除快照目錄之外的資料夾。",
+    error_failed_delete_snapshot_folder = "無法刪除快照資料夾: {path}",
+    error_snapshot_folder_not_found = "找不到快照資料夾。",
+    error_zip_create_windows = "無法透過 PowerShell .NET ZipFile 建立 ZIP。請檢查匯出資料夾是否可寫入: \n\n{path}",
+    error_zip_create_unix = "無法建立 ZIP。macOS 使用 ditto，Linux 需要 zip。",
+    error_zip_not_found = "找不到 ZIP 檔案。",
+    error_zip_extract_windows = "無法解壓 ZIP。已嘗試 Windows tar.exe 和 PowerShell .NET ZipFile。",
+    error_zip_extract_unix = "無法解壓 ZIP。macOS 使用 ditto，Linux 需要 unzip。",
+    error_imported_data_missing = "匯入的快照資料缺失。",
+    error_reaper_enum_unavailable = "REAPER 檔案列舉 API 不可用。",
+    error_failed_copy_imported_snapshot_folder = "無法複製匯入的快照資料夾。",
+    error_no_capture_context = "找不到 Razor Edit 或時間選區。儲存前請建立 Razor Edit 區域或時間選區。",
+    error_capture_empty = "{mode} 中沒有媒體物件、標記、區域或速度/拍號標記。",
+    error_invalid_snapshot_data = "無效的快照資料。",
+    error_snapshot_has_no_tracks = "快照沒有軌道。",
+    error_target_area_not_empty = "目標區域不是空的。軌道 {track} 在此範圍內已有物件。",
+    error_invalid_snapshot_folder = "無效的快照資料夾。",
+    error_invalid_preview_range = "無效的預覽算繪範圍。",
+    error_preview_mp3_not_created = "未建立 preview.mp3。請檢查 REAPER 算繪動作 42230 或算繪設定。",
+    error_load_snapshot_detail = "無法載入快照: \n\n{detail}",
+    error_snapshot_data_missing_detail = "找不到快照資料檔案: \n\n{path}",
+    error_zip_missing_detail = "找不到 ZIP 檔案: \n\n{path}",
+    error_zip_invalid_package_detail = "此 ZIP 看起來不是 SFX Snapshot 套件。\n\n找不到 snapshot.lua。",
+    error_import_read_detail = "無法讀取匯入的快照: \n\n{detail}",
+    error_waveform_cache_file_not_found = "找不到波形快取檔案。",
+    error_lua_no_string_unpack = "此 REAPER Lua 版本不支援 string.unpack。",
+    error_waveform_cache_open = "無法開啟波形快取。",
+    error_waveform_cache_header = "無效的波形快取標頭。",
+    error_waveform_cache_magic = "無效的波形快取識別。",
+    error_waveform_cache_parse = "無法解析波形快取標頭。",
+    error_waveform_cache_unsupported = "不支援的波形快取資料。",
+    error_waveform_cache_incomplete = "波形快取資料不完整。",
+    error_internal_preview_requires_sws = "內部預覽播放需要 SWS 擴充。\n\n請安裝/更新 SWS，然後重新啟動 REAPER。",
+    error_preview_file_not_found = "找不到預覽檔案: \n\n{path}",
+    error_preview_source_failed = "無法建立預覽來源: \n\n{path}",
+    error_preview_object_failed = "無法建立內部預覽物件。",
+    error_preview_start_failed = "無法啟動內部預覽播放。",
+    error_no_preview_for_snapshot = "此快照沒有預覽檔案。\n\n可以重新儲存快照以自動算繪 preview.mp3，或手動將 preview.mp3 放到這裡: \n\n{folder}",
+    error_folder_browser_requires_js = "資料夾瀏覽器需要 js_ReaScriptAPI 擴充。",
+
+    status_ready = "就緒。",
+    status_capture_failed = "擷取失敗。",
+    status_snapshot_write_failed = "無法寫入快照檔案。",
+    status_saved_preview_ok = "已儲存 {mode} 快照並算繪預覽: {name}{media_note}",
+    status_saved_preview_failed = "已儲存 {mode} 快照，但預覽算繪失敗: {name}{media_note}",
+    status_media_archived_note = " | 已封存媒體: {count}",
+    status_missing_media_note = " | 缺少媒體: {count}",
+    status_no_snapshot_selected = "尚未選取快照。",
+    status_load_failed = "載入失敗。",
+    status_loaded_snapshot = "已載入快照: {name}",
+    status_export_data_missing = "匯出失敗: 快照資料缺失。",
+    status_export_cancelled = "已取消匯出。",
+    status_export_failed = "匯出失敗。",
+    status_exported_zip = "已匯出快照 ZIP: {path}",
+    status_import_cancelled = "已取消匯入。",
+    status_import_zip_missing = "匯入失敗: ZIP 檔案缺失。",
+    status_import_failed = "匯入失敗。",
+    status_import_snapshot_missing = "匯入失敗: ZIP 中找不到 snapshot.lua。",
+    status_import_invalid_data = "匯入失敗: 快照資料無效。",
+    status_imported_snapshot = "已匯入快照: {name}",
+    status_already_favorite = "已經在收藏中。",
+    status_already_not_favorite = "已經取消收藏。",
+    status_added_favorite = "已加入收藏。",
+    status_removed_favorite = "已取消收藏。",
+    status_removed_deleted = "已移除快照並刪除本機資料夾。",
+    status_removed_index_delete_failed = "已從資源庫索引中移除，但刪除本機資料夾失敗。",
+    status_no_preview_waveform = "沒有可用於波形顯示的預覽檔案。",
+    status_waveform_extension_missing = "波形快取擴充不可用。",
+    status_waveform_read_failed = "無法讀取波形快取。",
+    status_waveform_building = "正在建立波形快取...",
+    status_waveform_build_failed = "波形快取建立失敗。",
+    status_looping_preview = "循環預覽: {name}",
+    status_preview_finished = "預覽結束。",
+    status_internal_preview_requires_sws = "內部預覽需要 SWS 擴充。",
+    status_preview_file_missing = "預覽檔案缺失。",
+    status_preview_source_failed = "無法建立預覽來源。",
+    status_preview_object_failed = "無法建立預覽物件。",
+    status_preview_start_failed = "無法開始預覽。",
+    status_playing_preview_from = "從 {seconds} 秒播放預覽: {name}",
+    status_playing_preview = "正在播放預覽: {name}",
+    status_preview_cursor_start = "預覽游標已回到開頭。",
+    status_preview_stopped = "預覽已停止。",
+    status_preview_loop_enabled = "已啟用預覽循環。",
+    status_preview_loop_disabled = "已關閉預覽循環。",
+    status_sort_changed = "快照列表排序已變更: {label}",
+    status_settings_applied = "設定已套用。",
+  },
+}
+
+local language = LANGUAGE_DEFAULT
+local T = TEXT[LANGUAGE_DEFAULT]
+
+function NormalizeLanguageId(id)
+  id = tostring(id or "")
+  id = LANGUAGE_ALIASES[id] or id
+  if TEXT[id] then return id end
+  return LANGUAGE_DEFAULT
+end
+
+function SetLanguage(id)
+  language = NormalizeLanguageId(id)
+  T = TEXT[language] or TEXT[LANGUAGE_DEFAULT]
+end
+
+function LoadLanguageSetting()
+  local saved = ""
+  if reaper.GetExtState then
+    saved = reaper.GetExtState(EXT_SECTION, "language")
+  end
+  SetLanguage(saved)
+end
+
+function Tr(key, vars)
+  local text = (T and T[key]) or (TEXT[LANGUAGE_DEFAULT] and TEXT[LANGUAGE_DEFAULT][key]) or tostring(key)
+
+  if type(vars) == "table" then
+    text = text:gsub("{([%w_]+)}", function(name)
+      local value = vars[name]
+      if value == nil then return "{" .. name .. "}" end
+      return tostring(value)
+    end)
+  end
+
+  return text
+end
+
+function UiLabel(key, id, vars)
+  local label = Tr(key, vars)
+  if id and id ~= "" then
+    return label .. "##" .. tostring(id)
+  end
+  return label
+end
+
+function GetLanguageDisplayName(id)
+  local lang_id = NormalizeLanguageId(id)
+  for _, option in ipairs(LANGUAGE_OPTIONS) do
+    if option.id == lang_id then
+      return GetLanguageOptionLabel(option)
+    end
+  end
+  return lang_id
+end
+
+function GetLanguageOptionLabel(option)
+  option = option or LANGUAGE_OPTIONS[1]
+  local text = TEXT[option.id] or TEXT[LANGUAGE_DEFAULT]
+  return (text and text[option.label_key]) or option.id
+end
+
+function DisplayCategory(category)
+  local c = tostring(category or "")
+  if c == "" or c == "Uncategorized" then
+    return Tr("category_uncategorized")
+  end
+  return c
+end
+
+function DisplayCategoryFilter(category)
+  if tostring(category or "") == "All" then
+    return Tr("category_all")
+  end
+  return DisplayCategory(category)
+end
+
+function GetCaptureModeDisplay(mode, fallback_label)
+  mode = tostring(mode or "")
+  if mode == "razor" then
+    return Tr("capture_razor")
+  elseif mode == "time_selection_selected_items" then
+    return Tr("capture_time_selection_selected_items")
+  elseif mode == "time_selection" then
+    return Tr("capture_time_selection")
+  end
+
+  local fallback = tostring(fallback_label or "")
+  if fallback == "Razor Edit" then return Tr("capture_razor") end
+  if fallback == "Time Selection" then return Tr("capture_time_selection") end
+  if fallback == "Time Selection (Selected Items)" then return Tr("capture_time_selection_selected_items") end
+  if fallback ~= "" then return fallback end
+  return Tr("capture_unknown")
+end
+
+function GetSortLabel(key)
+  if key == "oldest" then return Tr("sort_oldest") end
+  if key == "alphabetical" then return Tr("sort_alphabetical") end
+  return Tr("sort_newest")
+end
+
+LoadLanguageSetting()
+
 ----------------------------------------
 -- Constants
 ----------------------------------------
-
-local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.1"
-local EXT_SECTION = "SOUNDFX_SNAPSHOT_LIBRARY_PRO"
 
 local DEFAULT_LIBRARY_DIR = RESOURCE_PATH .. "/SFX Snapshot Library"
 local SNAPSHOT_DIR_NAME = "snapshots"
@@ -200,8 +958,9 @@ local state = {
   bottom_split_ratio = 0.72,
   side_split_ratio = 0.64,
   sort_order = "newest",
+  language = language,
 
-  status = "Ready.",
+  status = Tr("status_ready"),
   error = "",
 
   show_save_popup = false,
@@ -214,7 +973,7 @@ local state = {
   load_popup_restore_track_info = false,
   load_popup_check_empty_space = true,
   save_name = "",
-  save_category = "Whoosh",
+  save_category = "",
   save_tags = "",
   save_description = "",
 
@@ -295,7 +1054,7 @@ function SanitizeFileName(name)
   name = name:gsub("[\\/:*?\"<>|]", "_")
   name = name:gsub("%s+", " ")
   if name == "" then
-    name = os.date("SFX Snapshot %Y-%m-%d %H-%M-%S")
+    name = os.date(Tr("default_snapshot_name_format"))
   end
   return name
 end
@@ -371,12 +1130,12 @@ end
 
 function CopyFileBinary(src_path, dst_path)
   local src = io.open(src_path, "rb")
-  if not src then return false, "Failed to open source media: " .. tostring(src_path) end
+  if not src then return false, Tr("error_failed_open_source_media", { path = tostring(src_path) }) end
 
   local dst = io.open(dst_path, "wb")
   if not dst then
     src:close()
-    return false, "Failed to write archived media: " .. tostring(dst_path)
+    return false, Tr("error_failed_write_archived_media", { path = tostring(dst_path) })
   end
 
   while true do
@@ -780,7 +1539,7 @@ function DeleteDirectoryRecursive(path)
   end
 
   if not IsSnapshotFolderSafeToDelete(path) then
-    return false, "Refusing to delete a folder outside the snapshots directory."
+    return false, Tr("error_refuse_delete_outside")
   end
 
   local command
@@ -793,7 +1552,7 @@ function DeleteDirectoryRecursive(path)
   RunShellCommand(command)
 
   if PathExists(path) then
-    return false, "Failed to delete snapshot folder: " .. path
+    return false, Tr("error_failed_delete_snapshot_folder", { path = path })
   end
 
   return true
@@ -940,15 +1699,15 @@ end
 function BrowseForExportZipPath(snapshot)
   if not snapshot then return nil end
 
-  local default_name = SanitizeFileName(snapshot.name or "SFX Snapshot") .. ".zip"
+  local default_name = SanitizeFileName(snapshot.name or Tr("title")) .. ".zip"
 
   if reaper.JS_Dialog_BrowseForSaveFile then
     local ok, rv, out = pcall(
       reaper.JS_Dialog_BrowseForSaveFile,
-      "Export SFX Snapshot ZIP",
+      Tr("dialog_export_zip_title"),
       state.library_dir,
       default_name,
-      "ZIP files (*.zip)\0*.zip\0All files (*.*)\0*.*\0"
+      Tr("dialog_zip_filter")
     )
 
     if ok and rv == 1 and out and out ~= "" then
@@ -959,7 +1718,7 @@ function BrowseForExportZipPath(snapshot)
   end
 
   if reaper.JS_Dialog_BrowseForFolder then
-    local rv, out = reaper.JS_Dialog_BrowseForFolder("Select export folder:", state.library_dir)
+    local rv, out = reaper.JS_Dialog_BrowseForFolder(Tr("dialog_export_folder_title"), state.library_dir)
     if rv == 1 and out and out ~= "" then
       return JoinPath(out, default_name)
     end
@@ -974,7 +1733,7 @@ function ZipFolder(source_folder, zip_path)
   zip_path = EnsureZipExtension(zip_path)
 
   if source_folder == "" or not FileExists(JoinPath(source_folder, "snapshot.lua")) then
-    return false, "Snapshot folder not found."
+    return false, Tr("error_snapshot_folder_not_found")
   end
 
   local zip_dir = GetFileDir(zip_path)
@@ -996,7 +1755,7 @@ function ZipFolder(source_folder, zip_path)
       return true, zip_path
     end
 
-    return false, "Failed to create ZIP with PowerShell .NET ZipFile. Please check whether the export folder is writable:\n\n" .. tostring(zip_dir ~= "" and zip_dir or zip_path)
+    return false, Tr("error_zip_create_windows", { path = tostring(zip_dir ~= "" and zip_dir or zip_path) })
   end
 
   local command
@@ -1010,7 +1769,7 @@ function ZipFolder(source_folder, zip_path)
 
   local ok = RunShellCommand(command)
   if not ok or not FileExists(zip_path) then
-    return false, "Failed to create ZIP. On macOS it uses ditto; on Linux it requires zip."
+    return false, Tr("error_zip_create_unix")
   end
 
   return true, zip_path
@@ -1021,7 +1780,7 @@ function UnzipFile(zip_path, dest_dir)
   dest_dir = NormalizePath(dest_dir)
 
   if zip_path == "" or not FileExists(zip_path) then
-    return false, "ZIP file not found."
+    return false, Tr("error_zip_not_found")
   end
 
   EnsureDir(dest_dir)
@@ -1050,7 +1809,7 @@ function UnzipFile(zip_path, dest_dir)
       return true
     end
 
-    return false, "Failed to extract ZIP. Tried Windows tar.exe and PowerShell .NET ZipFile."
+    return false, Tr("error_zip_extract_windows")
   end
 
   local command
@@ -1062,7 +1821,7 @@ function UnzipFile(zip_path, dest_dir)
 
   local ok = RunShellCommand(command)
   if not ok then
-    return false, "Failed to extract ZIP. On macOS it uses ditto; on Linux it requires unzip."
+    return false, Tr("error_zip_extract_unix")
   end
 
   return true
@@ -1121,7 +1880,7 @@ end
 
 function MakeUniqueSnapshotName(name)
   name = SanitizeFileName(name)
-  if name == "" then name = "Imported Snapshot" end
+  if name == "" then name = Tr("imported_snapshot") end
 
   if not SnapshotNameExists(name) then
     return name
@@ -1158,13 +1917,13 @@ function CopyDirectoryRecursive(source_folder, dest_folder)
   dest_folder = NormalizePath(dest_folder)
 
   if source_folder == "" or not FileExists(JoinPath(source_folder, "snapshot.lua")) then
-    return false, "Imported snapshot data is missing."
+    return false, Tr("error_imported_data_missing")
   end
 
   EnsureDir(dest_folder)
 
   if not reaper.EnumerateFiles or not reaper.EnumerateSubdirectories then
-    return false, "REAPER file enumeration API is unavailable."
+    return false, Tr("error_reaper_enum_unavailable")
   end
 
   local function copy_tree(src, dst)
@@ -1201,11 +1960,11 @@ function CopyDirectoryRecursive(source_folder, dest_folder)
 
   local ok, err = copy_tree(source_folder, dest_folder)
   if not ok then
-    return false, err or "Failed to copy imported snapshot folder."
+    return false, err or Tr("error_failed_copy_imported_snapshot_folder")
   end
 
   if not FileExists(JoinPath(dest_folder, "snapshot.lua")) then
-    return false, "Failed to copy imported snapshot folder."
+    return false, Tr("error_failed_copy_imported_snapshot_folder")
   end
 
   return true
@@ -1228,6 +1987,11 @@ end
 function LoadSettings()
   local lib = reaper.GetExtState(EXT_SECTION, "library_dir")
   if lib == "" then lib = DEFAULT_LIBRARY_DIR end
+
+  local saved_language = reaper.GetExtState(EXT_SECTION, "language")
+  SetLanguage(saved_language)
+  state.language = language
+  state.status = Tr("status_ready")
 
   state.library_dir = NormalizePath(lib)
   state.new_library_dir = state.library_dir
@@ -1261,6 +2025,7 @@ end
 
 function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "library_dir", state.library_dir, true)
+  reaper.SetExtState(EXT_SECTION, "language", NormalizeLanguageId(state.language or language), true)
   reaper.SetExtState(EXT_SECTION, "load_to_new_tracks", state.load_to_new_tracks and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "restore_markers", state.restore_markers and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "restore_regions", state.restore_regions and "1" or "0", true)
@@ -1830,7 +2595,7 @@ end
 function CaptureSnapshotData(meta)
   local ctx_data = GetSmartCaptureContext()
   if not ctx_data then
-    return nil, "No Razor Edit or time selection found. Please create a Razor Edit area or a time selection before saving."
+    return nil, Tr("error_no_capture_context")
   end
 
   local tracks = {}
@@ -1925,7 +2690,9 @@ function CaptureSnapshotData(meta)
   end
 
   if captured_item_count == 0 and #(data.markers or {}) == 0 and #(data.tempo or {}) == 0 then
-    return nil, ctx_data.mode_label .. " contains no media items, markers, regions, or tempo/time signature markers."
+    return nil, Tr("error_capture_empty", {
+      mode = GetCaptureModeDisplay(ctx_data.mode, ctx_data.mode_label)
+    })
   end
 
   return data
@@ -2138,7 +2905,7 @@ end
 
 function RestoreSnapshotData(data, snapshot_folder)
   if type(data) ~= "table" then
-    return false, "Invalid snapshot data."
+    return false, Tr("error_invalid_snapshot_data")
   end
 
   local target_pos = reaper.GetCursorPosition()
@@ -2147,7 +2914,7 @@ function RestoreSnapshotData(data, snapshot_folder)
   local track_count = tonumber(capture.track_count) or #(data.tracks or {})
 
   if track_count <= 0 then
-    return false, "Snapshot has no tracks."
+    return false, Tr("error_snapshot_has_no_tracks")
   end
 
   local start_track_index
@@ -2174,7 +2941,7 @@ function RestoreSnapshotData(data, snapshot_folder)
   if state.check_empty_space and duration > 0 then
     local blocked, track_number = TrackAreaHasItems(start_track_index, track_count, target_pos, target_pos + duration)
     if blocked then
-      return false, "Target area is not empty. Track " .. tostring(track_number) .. " already contains items in this range."
+      return false, Tr("error_target_area_not_empty", { track = tostring(track_number) })
     end
   end
 
@@ -2293,11 +3060,11 @@ end
 
 function RenderPreviewMp3(snapshot_folder, start_pos, end_pos)
   if not snapshot_folder or snapshot_folder == "" then
-    return false, "Invalid snapshot folder."
+    return false, Tr("error_invalid_snapshot_folder")
   end
 
   if not start_pos or not end_pos or end_pos <= start_pos then
-    return false, "Invalid preview render range."
+    return false, Tr("error_invalid_preview_range")
   end
 
   EnsureDir(snapshot_folder)
@@ -2346,7 +3113,7 @@ function RenderPreviewMp3(snapshot_folder, start_pos, end_pos)
   end
 
   if not FileExists(preview_path) then
-    return false, "preview.mp3 was not created. Please check REAPER render action 42230 or render settings."
+    return false, Tr("error_preview_mp3_not_created")
   end
 
   return true, preview_path
@@ -2405,7 +3172,7 @@ function SaveSnapshotFromPopup()
 
   local data, err = CaptureSnapshotData(meta)
   if not data then
-    state.status = err or "Capture failed."
+    state.status = err or Tr("status_capture_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
     return
   end
@@ -2463,7 +3230,7 @@ function SaveSnapshotFromPopup()
   local ok = SaveLuaTable(data_path, data)
 
   if not ok then
-    state.status = "Failed to write snapshot file."
+    state.status = Tr("status_snapshot_write_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
     return
   end
@@ -2481,24 +3248,25 @@ function SaveSnapshotFromPopup()
 
   local media_note = ""
   if meta.media_copied_count and meta.media_copied_count > 0 then
-    media_note = string.format(" | Media archived: %d", meta.media_copied_count)
+    media_note = Tr("status_media_archived_note", { count = meta.media_copied_count })
   end
 
   if meta.media_missing_count and meta.media_missing_count > 0 then
-    media_note = media_note .. string.format(" | Missing media: %d", meta.media_missing_count)
+    media_note = media_note .. Tr("status_missing_media_note", { count = meta.media_missing_count })
   end
 
+  local mode_label = GetCaptureModeDisplay(meta.capture_mode, meta.capture_mode_label)
   if meta.has_preview then
-    state.status = "Saved " .. tostring(meta.capture_mode_label or "snapshot") .. " snapshot and rendered preview: " .. name .. media_note
+    state.status = Tr("status_saved_preview_ok", { mode = mode_label, name = name, media_note = media_note })
   else
-    state.status = "Saved " .. tostring(meta.capture_mode_label or "snapshot") .. " snapshot, but preview render failed: " .. name .. media_note
+    state.status = Tr("status_saved_preview_failed", { mode = mode_label, name = name, media_note = media_note })
   end
 end
 
 function LoadSelectedSnapshot()
   local snapshot = state.snapshots[state.selected]
   if not snapshot then
-    state.status = "No snapshot selected."
+    state.status = Tr("status_no_snapshot_selected")
     return
   end
 
@@ -2506,8 +3274,8 @@ function LoadSelectedSnapshot()
   local data, err = LoadLuaTable(data_path)
 
   if not data then
-    state.status = "Failed to load snapshot."
-    reaper.MB("Failed to load snapshot:\n\n" .. tostring(err or data_path), SCRIPT_NAME, 0)
+    state.status = Tr("status_load_failed")
+    reaper.MB(Tr("error_load_snapshot_detail", { detail = tostring(err or data_path) }), SCRIPT_NAME, 0)
     return
   end
 
@@ -2521,15 +3289,15 @@ function LoadSelectedSnapshot()
     PumpPeakBuildQueue(0.25)
     reaper.UpdateArrange()
   end
-  reaper.Undo_EndBlock("Load SFX Snapshot", -1)
+  reaper.Undo_EndBlock(Tr("undo_load_snapshot"), -1)
 
   if not ok then
-    state.status = result_or_err or "Load failed."
+    state.status = result_or_err or Tr("status_load_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
     return
   end
 
-  state.status = "Loaded snapshot: " .. tostring(snapshot.name or "")
+  state.status = Tr("status_loaded_snapshot", { name = tostring(snapshot.name or "") })
 end
 
 function PrimeLoadConfirmPopup()
@@ -2554,7 +3322,7 @@ end
 function RequestLoadSelectedSnapshot()
   local snapshot = state.snapshots[state.selected]
   if not snapshot then
-    state.status = "No snapshot selected."
+    state.status = Tr("status_no_snapshot_selected")
     return
   end
 
@@ -2569,46 +3337,46 @@ end
 function ExportSelectedSnapshotZip()
   local snapshot = state.snapshots[state.selected]
   if not snapshot then
-    state.status = "No snapshot selected."
+    state.status = Tr("status_no_snapshot_selected")
     return
   end
 
   local snapshot_folder = GetSnapshotFolder(snapshot)
   if not FileExists(JoinPath(snapshot_folder, "snapshot.lua")) then
-    reaper.MB("Snapshot data file not found:\n\n" .. tostring(snapshot_folder), SCRIPT_NAME, 0)
-    state.status = "Export failed: snapshot data missing."
+    reaper.MB(Tr("error_snapshot_data_missing_detail", { path = tostring(snapshot_folder) }), SCRIPT_NAME, 0)
+    state.status = Tr("status_export_data_missing")
     return
   end
 
   local zip_path = BrowseForExportZipPath(snapshot)
   if not zip_path or zip_path == "" then
-    state.status = "Export cancelled."
+    state.status = Tr("status_export_cancelled")
     return
   end
 
   local ok, result = ZipFolder(snapshot_folder, zip_path)
   if not ok then
-    state.status = result or "Export failed."
+    state.status = result or Tr("status_export_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
     return
   end
 
-  state.status = "Exported snapshot ZIP: " .. tostring(result)
+  state.status = Tr("status_exported_zip", { path = tostring(result) })
   OpenFolder(GetFileDir(result))
 end
 
 function ImportSnapshotZip()
-  local ok_read, zip_path = reaper.GetUserFileNameForRead("", "Import SFX Snapshot ZIP", ".zip")
+  local ok_read, zip_path = reaper.GetUserFileNameForRead("", Tr("dialog_import_zip_title"), ".zip")
   if not ok_read or not zip_path or zip_path == "" then
-    state.status = "Import cancelled."
+    state.status = Tr("status_import_cancelled")
     return
   end
 
   zip_path = NormalizePath(zip_path)
 
   if not FileExists(zip_path) then
-    reaper.MB("ZIP file not found:\n\n" .. tostring(zip_path), SCRIPT_NAME, 0)
-    state.status = "Import failed: ZIP file missing."
+    reaper.MB(Tr("error_zip_missing_detail", { path = tostring(zip_path) }), SCRIPT_NAME, 0)
+    state.status = Tr("status_import_zip_missing")
     return
   end
 
@@ -2620,7 +3388,7 @@ function ImportSnapshotZip()
   local unzip_ok, unzip_err = UnzipFile(zip_path, temp_dir)
   if not unzip_ok then
     DeleteDirectoryRecursive(temp_dir)
-    state.status = unzip_err or "Import failed."
+    state.status = unzip_err or Tr("status_import_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
     return
   end
@@ -2628,8 +3396,8 @@ function ImportSnapshotZip()
   local source_folder = FindSnapshotDataFolder(temp_dir, 3)
   if not source_folder then
     DeleteDirectoryRecursive(temp_dir)
-    state.status = "Import failed: snapshot.lua not found in ZIP."
-    reaper.MB("This ZIP does not look like a SFX Snapshot package.\n\nsnapshot.lua was not found.", SCRIPT_NAME, 0)
+    state.status = Tr("status_import_snapshot_missing")
+    reaper.MB(Tr("error_zip_invalid_package_detail"), SCRIPT_NAME, 0)
     return
   end
 
@@ -2637,15 +3405,15 @@ function ImportSnapshotZip()
   local data, err = LoadLuaTable(data_path)
   if type(data) ~= "table" then
     DeleteDirectoryRecursive(temp_dir)
-    state.status = "Import failed: invalid snapshot data."
-    reaper.MB("Failed to read imported snapshot:\n\n" .. tostring(err or data_path), SCRIPT_NAME, 0)
+    state.status = Tr("status_import_invalid_data")
+    reaper.MB(Tr("error_import_read_detail", { detail = tostring(err or data_path) }), SCRIPT_NAME, 0)
     return
   end
 
   local meta = data.meta or {}
   if type(meta) ~= "table" then meta = {} end
 
-  meta.name = MakeUniqueSnapshotName(meta.name or GetPathBaseName(source_folder) or "Imported Snapshot")
+  meta.name = MakeUniqueSnapshotName(meta.name or GetPathBaseName(source_folder) or Tr("imported_snapshot"))
 
   local import_id = tostring(meta.id or "")
   if import_id == "" or SnapshotIdExists(import_id) then
@@ -2666,7 +3434,7 @@ function ImportSnapshotZip()
   local move_ok, move_err = MoveOrCopySnapshotFolder(source_folder, dest_folder)
   if not move_ok then
     DeleteDirectoryRecursive(temp_dir)
-    state.status = move_err or "Import failed."
+    state.status = move_err or Tr("status_import_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
     return
   end
@@ -2689,7 +3457,7 @@ function ImportSnapshotZip()
   end
 
   ResetWaveformCacheState()
-  state.status = "Imported snapshot: " .. tostring(meta.name or "")
+  state.status = Tr("status_imported_snapshot", { name = tostring(meta.name or "") })
 end
 
 function SetFavorite(snapshot, favorite)
@@ -2697,7 +3465,7 @@ function SetFavorite(snapshot, favorite)
 
   local target = favorite == true
   if snapshot.favorite == target then
-    state.status = target and "Already in favorites." or "Already removed from favorites."
+    state.status = target and Tr("status_already_favorite") or Tr("status_already_not_favorite")
     return
   end
 
@@ -2706,7 +3474,7 @@ function SetFavorite(snapshot, favorite)
   -- 排序收藏夹
   -- SortSnapshots()
   -- SaveIndex()
-  state.status = snapshot.favorite and "Added to favorites." or "Removed from favorites."
+  state.status = snapshot.favorite and Tr("status_added_favorite") or Tr("status_removed_favorite")
 end
 
 function ToggleFavorite(snapshot)
@@ -2720,9 +3488,10 @@ function RemoveSelectedSnapshotFromIndex()
 
   local folder = GetSnapshotFolder(snapshot)
   local ret = reaper.MB(
-    "Remove this snapshot and delete its local folder?\n\n" ..
-    tostring(snapshot.name or "") ..
-    "\n\nFolder:\n" .. tostring(folder),
+    Tr("confirm_remove_snapshot", {
+      name = tostring(snapshot.name or ""),
+      folder = tostring(folder),
+    }),
     SCRIPT_NAME,
     4
   )
@@ -2733,7 +3502,7 @@ function RemoveSelectedSnapshotFromIndex()
 
   local ok, err = DeleteDirectoryRecursive(folder)
   if not ok then
-    reaper.MB(tostring(err or "Failed to delete snapshot folder."), SCRIPT_NAME, 0)
+    reaper.MB(tostring(err or Tr("error_failed_delete_snapshot_folder", { path = folder })), SCRIPT_NAME, 0)
   end
 
   table.remove(state.snapshots, state.selected)
@@ -2743,9 +3512,9 @@ function RemoveSelectedSnapshotFromIndex()
   ResetWaveformCacheState()
 
   if ok then
-    state.status = "Removed snapshot and deleted local folder."
+    state.status = Tr("status_removed_deleted")
   else
-    state.status = "Removed from library index, but failed to delete local folder."
+    state.status = Tr("status_removed_index_delete_failed")
   end
 end
 
@@ -2794,27 +3563,27 @@ end
 
 function ReadWaveformCacheFile(path)
   if not path or path == "" or not FileExists(path) then
-    return nil, "Waveform cache file not found."
+    return nil, Tr("error_waveform_cache_file_not_found")
   end
 
   if not string.unpack then
-    return nil, "This REAPER Lua build does not support string.unpack."
+    return nil, Tr("error_lua_no_string_unpack")
   end
 
   local f = io.open(path, "rb")
   if not f then
-    return nil, "Failed to open waveform cache."
+    return nil, Tr("error_waveform_cache_open")
   end
 
   local header = f:read(64)
   if not header or #header < 64 then
     f:close()
-    return nil, "Invalid waveform cache header."
+    return nil, Tr("error_waveform_cache_header")
   end
 
   if header:sub(1, 4) ~= "SMWF" then
     f:close()
-    return nil, "Invalid waveform cache magic."
+    return nil, Tr("error_waveform_cache_magic")
   end
 
   local ok, version, pixel_cnt, channels, win_len = pcall(function()
@@ -2828,7 +3597,7 @@ function ReadWaveformCacheFile(path)
 
   if not ok then
     f:close()
-    return nil, "Failed to parse waveform cache header."
+    return nil, Tr("error_waveform_cache_parse")
   end
 
   pixel_cnt = tonumber(pixel_cnt) or 0
@@ -2837,7 +3606,7 @@ function ReadWaveformCacheFile(path)
 
   if version ~= 1 or pixel_cnt <= 0 or channels <= 0 or win_len <= 0 then
     f:close()
-    return nil, "Unsupported waveform cache data."
+    return nil, Tr("error_waveform_cache_unsupported")
   end
 
   local need = pixel_cnt * channels * 2 * 4
@@ -2845,7 +3614,7 @@ function ReadWaveformCacheFile(path)
   f:close()
 
   if not data or #data < need then
-    return nil, "Incomplete waveform cache data."
+    return nil, Tr("error_waveform_cache_incomplete")
   end
 
   local mins = {}
@@ -2924,12 +3693,12 @@ function StartOrPumpWaveformCache(snapshot)
   end
 
   if not FileExists(preview_path) then
-    state.waveform_cache_status = "No preview file found for waveform display."
+    state.waveform_cache_status = Tr("status_no_preview_waveform")
     return nil
   end
 
   if not HasWaveformCacheSupport() then
-    state.waveform_cache_status = "Waveform cache extension is not available."
+    state.waveform_cache_status = Tr("status_waveform_extension_missing")
     return nil
   end
 
@@ -2955,7 +3724,7 @@ function StartOrPumpWaveformCache(snapshot)
       return data
     end
 
-    state.waveform_cache_status = err or "Failed to read waveform cache."
+    state.waveform_cache_status = err or Tr("status_waveform_read_failed")
   end
 
   if state.waveform_cache_job_key ~= "" and reaper.SM_WFC_Pump and reaper.SM_WFC_GetPathIfReady then
@@ -2972,10 +3741,10 @@ function StartOrPumpWaveformCache(snapshot)
         return data
       end
 
-      state.waveform_cache_status = err or "Failed to read waveform cache."
+      state.waveform_cache_status = err or Tr("status_waveform_read_failed")
     else
       state.waveform_cache_building = true
-      state.waveform_cache_status = "Building waveform cache..."
+      state.waveform_cache_status = Tr("status_waveform_building")
     end
 
     return nil
@@ -2994,7 +3763,7 @@ function StartOrPumpWaveformCache(snapshot)
     if ok_begin and job_key and job_key ~= "" then
       state.waveform_cache_job_key = job_key
       state.waveform_cache_building = true
-      state.waveform_cache_status = "Building waveform cache..."
+      state.waveform_cache_status = Tr("status_waveform_building")
       return nil
     end
   end
@@ -3020,9 +3789,9 @@ function StartOrPumpWaveformCache(snapshot)
         return data
       end
 
-      state.waveform_cache_status = err or "Failed to read waveform cache."
+      state.waveform_cache_status = err or Tr("status_waveform_read_failed")
     else
-      state.waveform_cache_status = "Failed to build waveform cache."
+      state.waveform_cache_status = Tr("status_waveform_build_failed")
     end
   end
 
@@ -3233,9 +4002,9 @@ function UpdatePreviewState()
     StopInternalPreview(false)
     if loop_enabled and loop_path ~= "" and FileExists(loop_path) and PlayPreviewFile then
       PlayPreviewFile(loop_path, loop_name, 0)
-      state.status = "Looping preview: " .. tostring(loop_name or "")
+      state.status = Tr("status_looping_preview", { name = tostring(loop_name or "") })
     else
-      state.status = "Preview finished."
+      state.status = Tr("status_preview_finished")
     end
     return
   end
@@ -3244,9 +4013,9 @@ function UpdatePreviewState()
     StopInternalPreview(true)
     if loop_enabled and loop_path ~= "" and FileExists(loop_path) and PlayPreviewFile then
       PlayPreviewFile(loop_path, loop_name, 0)
-      state.status = "Looping preview: " .. tostring(loop_name or "")
+      state.status = Tr("status_looping_preview", { name = tostring(loop_name or "") })
     else
-      state.status = "Preview finished."
+      state.status = Tr("status_preview_finished")
     end
   end
 end
@@ -3254,18 +4023,17 @@ end
 function PlayPreviewFile(path, name, start_pos)
   if not HasInternalPreviewSupport() then
     reaper.MB(
-      "Internal preview playback requires the SWS extension.\\n\\n" ..
-      "Please install/update SWS, then restart REAPER.",
+      Tr("error_internal_preview_requires_sws"),
       SCRIPT_NAME,
       0
     )
-    state.status = "Internal preview requires SWS extension."
+    state.status = Tr("status_internal_preview_requires_sws")
     return false
   end
 
   if not path or path == "" or not FileExists(path) then
-    reaper.MB("Preview file not found:\\n\\n" .. tostring(path or ""), SCRIPT_NAME, 0)
-    state.status = "Preview file missing."
+    reaper.MB(Tr("error_preview_file_not_found", { path = tostring(path or "") }), SCRIPT_NAME, 0)
+    state.status = Tr("status_preview_file_missing")
     return false
   end
 
@@ -3273,8 +4041,8 @@ function PlayPreviewFile(path, name, start_pos)
 
   local source = reaper.PCM_Source_CreateFromFile(path)
   if not source then
-    reaper.MB("Failed to create preview source:\\n\\n" .. tostring(path), SCRIPT_NAME, 0)
-    state.status = "Failed to create preview source."
+    reaper.MB(Tr("error_preview_source_failed", { path = tostring(path) }), SCRIPT_NAME, 0)
+    state.status = Tr("status_preview_source_failed")
     return false
   end
 
@@ -3287,8 +4055,8 @@ function PlayPreviewFile(path, name, start_pos)
   local preview = reaper.CF_CreatePreview(source)
   if not preview then
     pcall(reaper.PCM_Source_Destroy, source)
-    reaper.MB("Failed to create internal preview object.", SCRIPT_NAME, 0)
-    state.status = "Failed to create preview object."
+    reaper.MB(Tr("error_preview_object_failed"), SCRIPT_NAME, 0)
+    state.status = Tr("status_preview_object_failed")
     return false
   end
 
@@ -3303,8 +4071,8 @@ function PlayPreviewFile(path, name, start_pos)
   if not played then
     pcall(reaper.CF_Preview_Stop, preview)
     pcall(reaper.PCM_Source_Destroy, source)
-    reaper.MB("Failed to start internal preview playback.", SCRIPT_NAME, 0)
-    state.status = "Failed to start preview."
+    reaper.MB(Tr("error_preview_start_failed"), SCRIPT_NAME, 0)
+    state.status = Tr("status_preview_start_failed")
     return false
   end
 
@@ -3328,9 +4096,12 @@ function PlayPreviewFile(path, name, start_pos)
   end
 
   if start_pos > 0 then
-    state.status = string.format("Playing preview from %.2fs: %s", start_pos, tostring(name or ""))
+    state.status = Tr("status_playing_preview_from", {
+      seconds = string.format("%.2f", start_pos),
+      name = tostring(name or ""),
+    })
   else
-    state.status = "Playing preview: " .. tostring(name or "")
+    state.status = Tr("status_playing_preview", { name = tostring(name or "") })
   end
 
   return true
@@ -3344,9 +4115,7 @@ function AuditionSelectedSnapshot(start_pos)
 
   if not FileExists(preview) then
     reaper.MB(
-      "No preview file found for this snapshot.\\n\\n" ..
-      "You can re-save the snapshot to auto-render preview.mp3, or manually place preview.mp3 here:\\n\\n" ..
-      GetSnapshotFolder(snapshot),
+      Tr("error_no_preview_for_snapshot", { folder = GetSnapshotFolder(snapshot) }),
       SCRIPT_NAME,
       0
     )
@@ -3362,7 +4131,7 @@ function SeekSelectedPreviewToRatio(ratio)
 
   local preview = GetSnapshotPreviewPath(snapshot)
   if not FileExists(preview) then
-    state.status = "Preview file missing."
+    state.status = Tr("status_preview_file_missing")
     return false
   end
 
@@ -3415,14 +4184,14 @@ function ResetSelectedPreviewToStart()
   if state.preview_is_playing and NormalizePath(state.preview_path) == NormalizePath(preview) then
     PlayPreviewFile(preview, tostring(snapshot.name or ""), 0)
   else
-    state.status = "Preview cursor returned to start."
+    state.status = Tr("status_preview_cursor_start")
   end
 end
 
 function TogglePreviewPlayback()
   if state.preview_is_playing then
     StopInternalPreview(true)
-    state.status = "Preview stopped."
+    state.status = Tr("status_preview_stopped")
   else
     local snapshot = state.snapshots[state.selected]
     if not snapshot then return end
@@ -3511,10 +4280,15 @@ end
 function DrawSelectablePopupList(popup_id, items, on_select, empty_text)
   if ImGui.BeginPopup(ctx, popup_id) then
     if #items == 0 then
-      ImGui.TextDisabled(ctx, empty_text or "No existing items.")
+      ImGui.TextDisabled(ctx, empty_text or Tr("no_existing_items"))
     else
-      for _, item in ipairs(items) do
-        if ImGui.Selectable(ctx, tostring(item), false) then
+      for i, item in ipairs(items) do
+        local label = tostring(item)
+        if popup_id == "CategoryPresetPopup" then
+          label = DisplayCategoryFilter(item)
+        end
+
+        if ImGui.Selectable(ctx, label .. "##selectable_popup_item_" .. tostring(i), false) then
           on_select(item)
         end
       end
@@ -3728,7 +4502,7 @@ function ImGuiPreviewVolumeKnob(ctx, id, min_db, ref_db, max_db, value_db, radiu
   end
 
   if hovered and state.show_tips then
-    ImGui.SetTooltip(ctx, "Preview volume: drag up/down to adjust, double-click to reset to 0 dB.")
+    ImGui.SetTooltip(ctx, Tr("tooltip_preview_volume"))
   end
 
   ImGui.EndGroup(ctx)
@@ -3812,7 +4586,7 @@ end
 function DrawHeader()
   local title_text = SCRIPT_NAME
   local version_text = "v" .. SCRIPT_VERSION
-  local subtitle_text = "Professional modular SFX archive / restore system"
+  local subtitle_text = Tr("subtitle")
   local title_x = ImGui.GetCursorPosX and ImGui.GetCursorPosX(ctx) or 0
   local title_y = ImGui.GetCursorPosY and ImGui.GetCursorPosY(ctx) or 0
   local title_w, title_h = 0, 24
@@ -3878,9 +4652,9 @@ function DrawTopBar()
   local avail_w = select(1, ImGui.GetContentRegionAvail(ctx))
   local spacing = 5
 
-  local save_w = select(1, CalcTextSizeSafe(" Save ", 52, 0))
-  local load_w = select(1, CalcTextSizeSafe(" Load ", 52, 0))
-  local options_w = select(1, CalcTextSizeSafe(" Options ", 76, 0))
+  local save_w = select(1, CalcTextSizeSafe(" " .. Tr("save") .. " ", 52, 0))
+  local load_w = select(1, CalcTextSizeSafe(" " .. Tr("load") .. " ", 52, 0))
+  local options_w = select(1, CalcTextSizeSafe(" " .. Tr("options") .. " ", 76, 0))
   local frame_height = GetFrameHeightSafe(22)
   local button_total_w = save_w + load_w + options_w + spacing * 3
 
@@ -3893,20 +4667,20 @@ function DrawTopBar()
   end
 
   local function draw_options_menu()
-    if ImGui.Button(ctx, "Options", options_w, frame_height) then
+    if ImGui.Button(ctx, Tr("options"), options_w, frame_height) then
       ImGui.OpenPopup(ctx, "TopBarOptions")
     end
 
     if ImGui.BeginPopup and ImGui.BeginPopup(ctx, "TopBarOptions") then
-      if ImGui.MenuItem(ctx, "Import ZIP") then
+      if ImGui.MenuItem(ctx, Tr("import_zip")) then
         ImportSnapshotZip()
       end
 
-      if ImGui.MenuItem(ctx, "Export ZIP") then
+      if ImGui.MenuItem(ctx, Tr("export_zip")) then
         ExportSelectedSnapshotZip()
       end
 
-      if ImGui.MenuItem(ctx, "Settings") then
+      if ImGui.MenuItem(ctx, Tr("settings")) then
         request_settings_popup()
       end
 
@@ -3916,23 +4690,23 @@ function DrawTopBar()
 
   if search_w >= 180 then
     ImGui.SetNextItemWidth(ctx, search_w)
-    local changed, v = ImGui.InputTextWithHint(ctx, "##search", "Search name / category / tags / description...", state.filter)
+    local changed, v = ImGui.InputTextWithHint(ctx, "##search", Tr("search_hint"), state.filter)
     if changed then state.filter = v end
 
     ImGui.SameLine(ctx, nil, spacing)
 
-    if ImGui.Button(ctx, "Save", save_w, frame_height) then -- "Smart Save"
-      state.save_name = os.date("SFX Snapshot %Y-%m-%d %H-%M-%S")
-      state.save_category = "Whoosh"
+    if ImGui.Button(ctx, Tr("save"), save_w, frame_height) then -- "Smart Save"
+      state.save_name = os.date(Tr("default_snapshot_name_format"))
+      state.save_category = ""
       state.save_tags = ""
       state.save_description = ""
       state.show_save_popup = true
-      ImGui.OpenPopup(ctx, "Save Snapshot")
+      ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
     end
 
     ImGui.SameLine(ctx, nil, spacing)
 
-    if ImGui.Button(ctx, "Load", load_w, frame_height) then -- "Load at Cursor"
+    if ImGui.Button(ctx, Tr("load"), load_w, frame_height) then -- "Load at Cursor"
       RequestLoadSelectedSnapshot()
     end
 
@@ -3941,21 +4715,21 @@ function DrawTopBar()
     draw_options_menu()
   else
     ImGui.SetNextItemWidth(ctx, -1)
-    local changed, v = ImGui.InputTextWithHint(ctx, "##search", "Search name / category / tags / description...", state.filter)
+    local changed, v = ImGui.InputTextWithHint(ctx, "##search", Tr("search_hint"), state.filter)
     if changed then state.filter = v end
 
-    if ImGui.Button(ctx, "Save", save_w, frame_height) then
-      state.save_name = os.date("SFX Snapshot %Y-%m-%d %H-%M-%S")
-      state.save_category = "Whoosh"
+    if ImGui.Button(ctx, Tr("save"), save_w, frame_height) then
+      state.save_name = os.date(Tr("default_snapshot_name_format"))
+      state.save_category = ""
       state.save_tags = ""
       state.save_description = ""
       state.show_save_popup = true
-      ImGui.OpenPopup(ctx, "Save Snapshot")
+      ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
     end
 
     ImGui.SameLine(ctx, nil, spacing)
 
-    if ImGui.Button(ctx, "Load", load_w, frame_height) then
+    if ImGui.Button(ctx, Tr("load"), load_w, frame_height) then
       RequestLoadSelectedSnapshot()
     end
 
@@ -3966,15 +4740,15 @@ function DrawTopBar()
 end
 
 function DrawFilters()
-  ImGui.Text(ctx, "Category:")
+  ImGui.Text(ctx, Tr("category_label"))
   ImGui.SameLine(ctx, nil, 5)
 
   local categories = GetCategories()
 
   ImGui.SetNextItemWidth(ctx, 120)
-  if ImGui.BeginCombo(ctx, "##category", state.category_filter) then
-    for _, c in ipairs(categories) do
-      if ImGui.Selectable(ctx, c, state.category_filter == c) then
+  if ImGui.BeginCombo(ctx, "##category", DisplayCategoryFilter(state.category_filter)) then
+    for i, c in ipairs(categories) do
+      if ImGui.Selectable(ctx, DisplayCategoryFilter(c) .. "##category_option_" .. tostring(i), state.category_filter == c) then
         state.category_filter = c
       end
     end
@@ -3983,7 +4757,7 @@ function DrawFilters()
 
   ImGui.SameLine(ctx)
 
-  local changed, fav = ImGui.Checkbox(ctx, "Favorites only", state.show_favorites_only)
+  local changed, fav = ImGui.Checkbox(ctx, Tr("favorites_only"), state.show_favorites_only)
   if changed then state.show_favorites_only = fav end
 end
 
@@ -3991,7 +4765,7 @@ function DrawWaveformCachePreviewBar()
   local snapshot = state.snapshots[state.selected]
 
   if not snapshot then
-    ImGui.TextDisabled(ctx, "No snapshot selected.")
+    ImGui.TextDisabled(ctx, Tr("no_snapshot_selected"))
     return
   end
 
@@ -4064,7 +4838,7 @@ function DrawWaveformCachePreviewBar()
       ImGui.DrawList_AddLine(draw_list, lx, y1, lx, y2, 0x78C7FFFF, 1.0)
     end
   else
-    local msg = state.waveform_cache_status ~= "" and state.waveform_cache_status or "Waveform preview unavailable."
+    local msg = state.waveform_cache_status ~= "" and state.waveform_cache_status or Tr("waveform_preview_unavailable")
     if draw_list and ImGui.DrawList_AddText then
       ImGui.DrawList_AddText(draw_list, x + 10, y + 20, 0x8A93A2FF, msg)
     else
@@ -4109,14 +4883,14 @@ function DrawWaveformCachePreviewBar()
   end
 
   if hovered and state.show_tips then
-    ImGui.SetTooltip(ctx, "Click the waveform to set the cursor and play from that position.")
+    ImGui.SetTooltip(ctx, Tr("tooltip_waveform_seek"))
   end
 
   local frame_height = GetFrameHeightSafe(22)
-  local rewind_text_w = select(1, CalcTextSizeSafe(" Back to Start ", 32, 0))
+  local rewind_text_w = select(1, CalcTextSizeSafe(" " .. Tr("back_to_start") .. " ", 32, 0))
   local rewind_w = math.max(frame_height, rewind_text_w)
-  local play_w = select(1, CalcTextSizeSafe(" Play ", 52, 0))
-  local loop_w = select(1, CalcTextSizeSafe(" Loop Off ", 76, 0))
+  local play_w = select(1, CalcTextSizeSafe(" " .. Tr("play") .. " ", 52, 0))
+  local loop_w = select(1, CalcTextSizeSafe(" " .. Tr("loop_off") .. " ", 76, 0))
   local spacing = 5
   local cursor_x = ImGui.GetCursorPosX and ImGui.GetCursorPosX(ctx) or 0
   local controls_w = rewind_w + spacing + play_w + spacing + loop_w
@@ -4126,20 +4900,20 @@ function DrawWaveformCachePreviewBar()
     ImGui.SetCursorPosX(ctx, controls_x)
   end
 
-  if ImGui.Button(ctx, "Back to Start##preview_start", rewind_w, frame_height) then
+  if ImGui.Button(ctx, UiLabel("back_to_start", "preview_start"), rewind_w, frame_height) then
     ResetSelectedPreviewToStart()
   end
   if state.show_tips and ImGui.IsItemHovered(ctx) then
-    ImGui.SetTooltip(ctx, "Return preview cursor to the start.")
+    ImGui.SetTooltip(ctx, Tr("tooltip_preview_start"))
   end
 
   ImGui.SameLine(ctx, nil, spacing)
 
-  local btn_label = is_selected_preview_playing and "Stop" or "Play"
-  if ImGui.Button(ctx, btn_label, play_w, frame_height) then
+  local btn_label = is_selected_preview_playing and Tr("stop") or Tr("play")
+  if ImGui.Button(ctx, btn_label .. "##preview_play_stop", play_w, frame_height) then
     if is_selected_preview_playing then
       StopInternalPreview(true)
-      state.status = "Preview stopped."
+      state.status = Tr("status_preview_stopped")
     else
       PlayPreviewFile(preview_path, tostring(snapshot.name or ""), locate_pos)
     end
@@ -4147,10 +4921,10 @@ function DrawWaveformCachePreviewBar()
 
   ImGui.SameLine(ctx, nil, spacing)
 
-  local loop_label = state.preview_loop and "Loop On" or "Loop Off"
-  if ImGui.Button(ctx, loop_label, loop_w, frame_height) then
+  local loop_label = state.preview_loop and Tr("loop_on") or Tr("loop_off")
+  if ImGui.Button(ctx, loop_label .. "##preview_loop", loop_w, frame_height) then
     state.preview_loop = not state.preview_loop
-    state.status = state.preview_loop and "Preview loop enabled." or "Preview loop disabled."
+    state.status = state.preview_loop and Tr("status_preview_loop_enabled") or Tr("status_preview_loop_disabled")
   end
 end
 
@@ -4182,7 +4956,7 @@ function DrawSnapshotList(width, height)
             source = " [RE]"
           end
         end
-        local name = fav .. tostring(s.name or "Unnamed") .. source
+        local name = fav .. tostring(s.name or Tr("unnamed")) .. source
         local label = name .. "##snapshot_" .. tostring(i)
 
         local selected = state.selected == i
@@ -4204,22 +4978,22 @@ function DrawSnapshotList(width, height)
         if ImGui.BeginPopupContextItem and ImGui.BeginPopupContextItem(ctx, "snapshot_context_" .. tostring(i)) then
           state.selected = i
 
-          if ImGui.MenuItem(ctx, s.favorite and "Remove Favorite" or "Add Favorite") then
+          if ImGui.MenuItem(ctx, s.favorite and Tr("remove_favorite") or Tr("add_favorite")) then
             ToggleFavorite(s)
             list_changed = true
           end
 
-          if ImGui.MenuItem(ctx, "Open Folder") then
+          if ImGui.MenuItem(ctx, Tr("open_folder")) then
             OpenFolder(GetSnapshotFolder(s))
           end
 
-          if ImGui.MenuItem(ctx, "Export ZIP") then
+          if ImGui.MenuItem(ctx, Tr("export_zip")) then
             ExportSelectedSnapshotZip()
           end
 
           ImGui.Separator(ctx)
 
-          if ImGui.MenuItem(ctx, "Remove") then
+          if ImGui.MenuItem(ctx, Tr("remove")) then
             RemoveSelectedSnapshotFromIndex()
             list_changed = true
           end
@@ -4235,26 +5009,26 @@ function DrawSnapshotList(width, height)
           ImGui.BeginTooltip(ctx)
           ImGui.Text(ctx, tostring(s.name or ""))
           ImGui.Separator(ctx)
-          ImGui.Text(ctx, "Category: " .. tostring(s.category or "Uncategorized"))
-          ImGui.Text(ctx, "Source: " .. tostring(s.capture_mode_label or s.capture_mode or ""))
-          ImGui.Text(ctx, "Tags: " .. JoinTags(s.tags))
-          ImGui.Text(ctx, string.format("Duration: %.3f s", tonumber(s.duration) or 0))
-          ImGui.Text(ctx, "Tracks: " .. tostring(s.track_count or 0))
-          ImGui.Text(ctx, "Items: " .. tostring(s.item_count or 0))
-          ImGui.Text(ctx, "Media archived: " .. tostring(s.media_copied_count or 0))
+          ImGui.Text(ctx, Tr("meta_category", { value = DisplayCategory(s.category) }))
+          ImGui.Text(ctx, Tr("meta_source", { value = GetCaptureModeDisplay(s.capture_mode, s.capture_mode_label) }))
+          ImGui.Text(ctx, Tr("meta_tags", { value = JoinTags(s.tags) }))
+          ImGui.Text(ctx, Tr("meta_duration", { value = string.format("%.3f", tonumber(s.duration) or 0) }))
+          ImGui.Text(ctx, Tr("meta_tracks", { value = tostring(s.track_count or 0) }))
+          ImGui.Text(ctx, Tr("meta_items", { value = tostring(s.item_count or 0) }))
+          ImGui.Text(ctx, Tr("meta_media_archived", { value = tostring(s.media_copied_count or 0) }))
           if tonumber(s.media_missing_count or 0) and tonumber(s.media_missing_count or 0) > 0 then
-            ImGui.Text(ctx, "Missing media: " .. tostring(s.media_missing_count or 0))
+            ImGui.Text(ctx, Tr("meta_missing_media", { value = tostring(s.media_missing_count or 0) }))
           end
-          ImGui.Text(ctx, "Created: " .. tostring(s.created_at or ""))
+          ImGui.Text(ctx, Tr("meta_created", { value = tostring(s.created_at or "") }))
 
           if s.has_preview then
             if tonumber(s.preview_start_offset or 0) and tonumber(s.preview_start_offset or 0) > 0 then
-              ImGui.Text(ctx, string.format("Preview skip: %.3f s", tonumber(s.preview_start_offset) or 0))
+              ImGui.Text(ctx, Tr("meta_preview_skip", { value = string.format("%.3f", tonumber(s.preview_start_offset) or 0) }))
             end
           else
-            ImGui.TextDisabled(ctx, "Preview: missing")
+            ImGui.TextDisabled(ctx, Tr("meta_preview_missing"))
             if s.preview_error and s.preview_error ~= "" then
-              ImGui.TextWrapped(ctx, "Preview error: " .. tostring(s.preview_error))
+              ImGui.TextWrapped(ctx, Tr("meta_preview_error", { value = tostring(s.preview_error) }))
             end
           end
 
@@ -4268,7 +5042,7 @@ function DrawSnapshotList(width, height)
     end
 
     if visible_count == 0 then
-      ImGui.TextDisabled(ctx, "No snapshots found.")
+      ImGui.TextDisabled(ctx, Tr("no_snapshots_found"))
     end
     ImGui.EndChild(ctx)
   end
@@ -4283,23 +5057,23 @@ function DrawInfoPanel(width, height)
     local s = state.snapshots[state.selected]
 
     if not s then
-      ImGui.TextDisabled(ctx, "No snapshot selected.")
+      ImGui.TextDisabled(ctx, Tr("no_snapshot_selected"))
     else
       local frame_height = GetFrameHeightSafe(22)
-      ImGui.Text(ctx, tostring(s.name or "Unnamed"))
+      ImGui.Text(ctx, tostring(s.name or Tr("unnamed")))
 
       ImGui.SameLine(ctx, nil, 5)
-      if ImGui.SmallButton(ctx, s.favorite and "★ Favorite " or " ☆ Favorite") then
+      if ImGui.SmallButton(ctx, (s.favorite and "★ " or "☆ ") .. Tr("favorite")) then
         ToggleFavorite(s)
       end
 
       ImGui.SameLine(ctx, nil, 5)
-      if ImGui.SmallButton(ctx, "Open Folder") then
+      if ImGui.SmallButton(ctx, Tr("open_folder")) then
         OpenFolder(GetSnapshotFolder(s))
       end
 
       ImGui.SameLine(ctx, nil, 5)
-      if ImGui.SmallButton(ctx, "Export ZIP") then
+      if ImGui.SmallButton(ctx, Tr("export_zip")) then
         ExportSelectedSnapshotZip()
       end
 
@@ -4308,21 +5082,20 @@ function DrawInfoPanel(width, height)
       --   RemoveSelectedSnapshotFromIndex()
       -- end
 
-      ImGui.TextDisabled(ctx, "Category: " .. tostring(s.category or "Uncategorized"))
-      ImGui.TextDisabled(ctx, "Source: " .. tostring(s.capture_mode_label or s.capture_mode or ""))
-      ImGui.TextDisabled(ctx, "Tags: " .. JoinTags(s.tags))
-      ImGui.TextDisabled(ctx, "Created: " .. tostring(s.created_at or ""))
-      ImGui.TextDisabled(ctx, string.format("Preview skip: %.3f s", tonumber(s.preview_start_offset) or 0))
-      ImGui.TextDisabled(ctx, string.format(
-        "Duration %.3fs    Tracks %d    Items %d    Media %d",
-        tonumber(s.duration) or 0,
-        tonumber(s.track_count) or 0,
-        tonumber(s.item_count) or 0,
-        tonumber(s.media_copied_count) or 0
-      ))
+      ImGui.TextDisabled(ctx, Tr("meta_category", { value = DisplayCategory(s.category) }))
+      ImGui.TextDisabled(ctx, Tr("meta_source", { value = GetCaptureModeDisplay(s.capture_mode, s.capture_mode_label) }))
+      ImGui.TextDisabled(ctx, Tr("meta_tags", { value = JoinTags(s.tags) }))
+      ImGui.TextDisabled(ctx, Tr("meta_created", { value = tostring(s.created_at or "") }))
+      ImGui.TextDisabled(ctx, Tr("meta_preview_skip", { value = string.format("%.3f", tonumber(s.preview_start_offset) or 0) }))
+      ImGui.TextDisabled(ctx, Tr("meta_detail_summary", {
+        duration = string.format("%.3f", tonumber(s.duration) or 0),
+        tracks = tostring(tonumber(s.track_count) or 0),
+        items = tostring(tonumber(s.item_count) or 0),
+        media = tostring(tonumber(s.media_copied_count) or 0),
+      }))
 
       if tonumber(s.media_missing_count or 0) and tonumber(s.media_missing_count or 0) > 0 then
-        ImGui.TextDisabled(ctx, "Missing media: " .. tostring(s.media_missing_count or 0))
+        ImGui.TextDisabled(ctx, Tr("meta_missing_media", { value = tostring(s.media_missing_count or 0) }))
       end
       if s.description and s.description ~= "" then
         ImGui.TextWrapped(ctx, s.description)
@@ -4338,12 +5111,12 @@ function DrawInfoPanel(width, height)
 end
 
 function DrawSavePopup()
-  if ImGui.BeginPopupModal(ctx, "Save Snapshot", nil, ImGui.WindowFlags_AlwaysAutoResize) then
-    ImGui.Text(ctx, "Smart save: Razor Edit has priority. If no Razor Edit exists, the current time selection will be captured.")
+  if ImGui.BeginPopupModal(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    ImGui.Text(ctx, Tr("smart_save_info"))
     ImGui.Separator(ctx)
 
     ImGui.SetNextItemWidth(ctx, 420)
-    local changed, v = ImGui.InputText(ctx, "Name", state.save_name)
+    local changed, v = ImGui.InputText(ctx, UiLabel("field_name", "save_name"), state.save_name)
     if changed then state.save_name = v end
 
     ImGui.SetNextItemWidth(ctx, 420)
@@ -4352,18 +5125,18 @@ function DrawSavePopup()
 
     ImGui.SameLine(ctx, nil, 3)
 
-    if ImGui.SmallButton(ctx, "Category ▼##category_presets") then
+    if ImGui.SmallButton(ctx, UiLabel("category_dropdown", "category_presets")) then
       ImGui.OpenPopup(ctx, "CategoryPresetPopup")
     end
     if state.show_tips and ImGui.IsItemHovered(ctx) then
-      ImGui.SetTooltip(ctx, "Choose from existing categories")
+      ImGui.SetTooltip(ctx, Tr("tooltip_choose_categories"))
     end
 
     DrawSelectablePopupList("CategoryPresetPopup", GetCategories(), function(item)
       if item ~= "All" then
-        state.save_category = item
+        state.save_category = item == "Uncategorized" and "" or item
       end
-    end, "No existing categories.")
+    end, Tr("no_existing_categories"))
 
     ImGui.SetNextItemWidth(ctx, 420)
     local changed3, v3 = ImGui.InputText(ctx, "##TagsInput", state.save_tags)
@@ -4371,37 +5144,37 @@ function DrawSavePopup()
 
     ImGui.SameLine(ctx, nil, 3)
 
-    if ImGui.SmallButton(ctx, "Tags ▼##tag_presets") then
+    if ImGui.SmallButton(ctx, UiLabel("tags_dropdown", "tag_presets")) then
       ImGui.OpenPopup(ctx, "TagPresetPopup")
     end
     if state.show_tips and ImGui.IsItemHovered(ctx) then
-      ImGui.SetTooltip(ctx, "Append from existing tags")
+      ImGui.SetTooltip(ctx, Tr("tooltip_append_tags"))
     end
 
     DrawSelectablePopupList("TagPresetPopup", GetAllTags(), function(item)
       state.save_tags = AppendTagText(state.save_tags, item)
-    end, "No existing tags.")
+    end, Tr("no_existing_tags"))
 
     ImGui.SetNextItemWidth(ctx, 420)
-    local changed4, v4 = ImGui.InputTextMultiline(ctx, "Description", state.save_description, 420, 90)
+    local changed4, v4 = ImGui.InputTextMultiline(ctx, UiLabel("field_description", "save_description"), state.save_description, 420, 90)
     if changed4 then state.save_description = v4 end
 
-    ImGui.TextDisabled(ctx, "Same-name snapshots will be updated and preview.mp3 will be overwritten.")
-    ImGui.TextDisabled(ctx, "Markers, regions, tempo/time signatures, track names and FX are always archived.")
+    ImGui.TextDisabled(ctx, Tr("same_name_overwrite"))
+    ImGui.TextDisabled(ctx, Tr("archive_always"))
     if state.show_tips then
-      ImGui.TextDisabled(ctx, "Tip: click Category or Tags to reuse existing names.")
+      ImGui.TextDisabled(ctx, Tr("tip_reuse_names"))
     end
 
     ImGui.Separator(ctx)
 
-    if ImGui.Button(ctx, "Save", 100, 30) then
+    if ImGui.Button(ctx, Tr("save"), 100, 30) then
       SaveSnapshotFromPopup()
       ImGui.CloseCurrentPopup(ctx)
     end
 
     ImGui.SameLine(ctx)
 
-    if ImGui.Button(ctx, "Cancel", 100, 30) then
+    if ImGui.Button(ctx, Tr("cancel"), 100, 30) then
       ImGui.CloseCurrentPopup(ctx)
     end
 
@@ -4410,39 +5183,39 @@ function DrawSavePopup()
 end
 
 function DrawLoadConfirmPopup()
-  if ImGui.BeginPopupModal(ctx, "Load Snapshot", nil, ImGui.WindowFlags_AlwaysAutoResize) then
+  if ImGui.BeginPopupModal(ctx, UiLabel("popup_load_snapshot", "LoadSnapshotPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
     local snapshot = state.snapshots[state.selected]
 
     if not snapshot then
-      ImGui.TextDisabled(ctx, "No snapshot selected.")
+      ImGui.TextDisabled(ctx, Tr("no_snapshot_selected"))
     else
-      ImGui.Text(ctx, "Load: " .. tostring(snapshot.name or "Unnamed"))
+      ImGui.Text(ctx, Tr("load_snapshot_name", { name = tostring(snapshot.name or Tr("unnamed")) }))
       ImGui.Separator(ctx)
 
-      local changed1, v1 = ImGui.Checkbox(ctx, "Load to new tracks", state.load_popup_load_to_new_tracks)
+      local changed1, v1 = ImGui.Checkbox(ctx, Tr("load_to_new_tracks"), state.load_popup_load_to_new_tracks)
       if changed1 then state.load_popup_load_to_new_tracks = v1 end
 
-      local changed2, v2 = ImGui.Checkbox(ctx, "Check empty target area before loading", state.load_popup_check_empty_space)
+      local changed2, v2 = ImGui.Checkbox(ctx, Tr("check_empty_target"), state.load_popup_check_empty_space)
       if changed2 then state.load_popup_check_empty_space = v2 end
 
-      local changed3, v3 = ImGui.Checkbox(ctx, "Restore markers", state.load_popup_restore_markers)
+      local changed3, v3 = ImGui.Checkbox(ctx, Tr("restore_markers"), state.load_popup_restore_markers)
       if changed3 then state.load_popup_restore_markers = v3 end
 
-      local changed4, v4 = ImGui.Checkbox(ctx, "Restore regions", state.load_popup_restore_regions)
+      local changed4, v4 = ImGui.Checkbox(ctx, Tr("restore_regions"), state.load_popup_restore_regions)
       if changed4 then state.load_popup_restore_regions = v4 end
 
-      local changed5, v5 = ImGui.Checkbox(ctx, "Restore tempo and time signatures", state.load_popup_restore_tempo)
+      local changed5, v5 = ImGui.Checkbox(ctx, Tr("restore_tempo"), state.load_popup_restore_tempo)
       if changed5 then state.load_popup_restore_tempo = v5 end
 
-      local changed6, v6 = ImGui.Checkbox(ctx, "Restore track names and FX", state.load_popup_restore_track_info)
+      local changed6, v6 = ImGui.Checkbox(ctx, Tr("restore_track_info"), state.load_popup_restore_track_info)
       if changed6 then state.load_popup_restore_track_info = v6 end
       if state.show_tips and ImGui.IsItemHovered(ctx) then
-        ImGui.SetTooltip(ctx, "Track names and FX are applied only to tracks created during this load.")
+        ImGui.SetTooltip(ctx, Tr("tooltip_restore_track_info_load"))
       end
 
       ImGui.Separator(ctx)
 
-      if ImGui.Button(ctx, "Load", 100, 30) then
+      if ImGui.Button(ctx, Tr("load"), 100, 30) then
         ApplyLoadPopupSettings()
         state.request_execute_load = true
         ImGui.CloseCurrentPopup(ctx)
@@ -4450,7 +5223,7 @@ function DrawLoadConfirmPopup()
 
       ImGui.SameLine(ctx)
 
-      if ImGui.Button(ctx, "Cancel", 100, 30) then
+      if ImGui.Button(ctx, Tr("cancel"), 100, 30) then
         ImGui.CloseCurrentPopup(ctx)
       end
     end
@@ -4460,139 +5233,155 @@ function DrawLoadConfirmPopup()
 end
 
 function DrawSettingsPopup()
-  if ImGui.BeginPopupModal(ctx, "Settings", nil, ImGui.WindowFlags_AlwaysAutoResize) then
-    ImGui.Text(ctx, "Library Location")
-    ImGui.TextDisabled(ctx, "Choose where snapshots, metadata and preview files are stored.")
-    ImGui.Separator(ctx)
+  if ImGui.BeginPopupModal(ctx, UiLabel("popup_settings", "SettingsPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    ImGui.SeparatorText(ctx, Tr("interface"))
+    ImGui.Text(ctx, Tr("settings_language"))
+    ImGui.SameLine(ctx, nil, 5)
+    ImGui.SetNextItemWidth(ctx, 200)
+    if ImGui.BeginCombo(ctx, "##language", GetLanguageDisplayName(state.language or language)) then
+      for _, option in ipairs(LANGUAGE_OPTIONS) do
+        local selected = NormalizeLanguageId(state.language or language) == option.id
+        if ImGui.Selectable(ctx, GetLanguageOptionLabel(option) .. "##language_" .. option.id, selected) then
+          state.language = option.id
+        end
+        if selected and ImGui.SetItemDefaultFocus then
+          ImGui.SetItemDefaultFocus(ctx)
+        end
+      end
+      ImGui.EndCombo(ctx)
+    end
 
-    ImGui.SetNextItemWidth(ctx, 450)
+    --ImGui.Separator(ctx)
+    ImGui.SeparatorText(ctx, Tr("settings_library_location"))
+    ImGui.TextDisabled(ctx, Tr("settings_library_description"))
+    --ImGui.Separator(ctx)
+
+    ImGui.SetNextItemWidth(ctx, 400)
     local changed, v = ImGui.InputText(ctx, "##library_dir", state.new_library_dir)
     if changed then state.new_library_dir = v end
 
-    ImGui.SameLine(ctx, nil, 10)
+    ImGui.SameLine(ctx, nil, 5)
     local frame_height = GetFrameHeightSafe(22)
 
-    if ImGui.Button(ctx, "Browse##SelectLibraryDir", nil, frame_height) then
+    if ImGui.Button(ctx, UiLabel("browse", "SelectLibraryDir"), nil, frame_height) then
       if reaper.JS_Dialog_BrowseForFolder then
         local start_dir = state.new_library_dir ~= "" and state.new_library_dir or state.library_dir
-        local rv, out = reaper.JS_Dialog_BrowseForFolder("Select library directory:", start_dir)
+        local rv, out = reaper.JS_Dialog_BrowseForFolder(Tr("select_library_directory"), start_dir)
         if rv == 1 and out and out ~= "" then
           state.new_library_dir = NormalizePath(out)
         end
       else
-        reaper.MB("Folder browser requires the js_ReaScriptAPI extension.", SCRIPT_NAME, 0)
+        reaper.MB(Tr("error_folder_browser_requires_js"), SCRIPT_NAME, 0)
       end
     end
 
-    if ImGui.SmallButton(ctx, "Use REAPER Resource Path") then
+    if ImGui.SmallButton(ctx, Tr("use_reaper_resource_path")) then
       state.new_library_dir = DEFAULT_LIBRARY_DIR
     end
     -- if ImGui.Button(ctx, "Use REAPER Resource Path", nil, frame_height) then
     --   state.new_library_dir = DEFAULT_LIBRARY_DIR
     -- end
     ImGui.SameLine(ctx, nil, 5)
-    if ImGui.SmallButton(ctx, "Open Current Library") then
+    if ImGui.SmallButton(ctx, Tr("open_current_library")) then
       OpenFolder(state.library_dir)
     end
     -- if ImGui.Button(ctx, "Open Current Library", nil, frame_height) then
     --   OpenFolder(state.library_dir)
     -- end
 
-    ImGui.Separator(ctx)
-    ImGui.Text(ctx, "Load Options")
+    --ImGui.Separator(ctx)
+    ImGui.SeparatorText(ctx, Tr("settings_load_options"))
 
-    local c1, v1 = ImGui.Checkbox(ctx, "Show load confirmation popup", state.show_load_popup)
+    local c1, v1 = ImGui.Checkbox(ctx, Tr("show_load_popup"), state.show_load_popup)
     if c1 then state.show_load_popup = v1 end
 
-    local c2, v2 = ImGui.Checkbox(ctx, "Load to new tracks", state.load_to_new_tracks)
+    local c2, v2 = ImGui.Checkbox(ctx, Tr("load_to_new_tracks"), state.load_to_new_tracks)
     if c2 then state.load_to_new_tracks = v2 end
 
-    local c3, v3 = ImGui.Checkbox(ctx, "Check empty target area before loading", state.check_empty_space)
+    local c3, v3 = ImGui.Checkbox(ctx, Tr("check_empty_target"), state.check_empty_space)
     if c3 then state.check_empty_space = v3 end
 
-    local c4, v4 = ImGui.Checkbox(ctx, "Restore markers", state.restore_markers)
+    local c4, v4 = ImGui.Checkbox(ctx, Tr("restore_markers"), state.restore_markers)
     if c4 then state.restore_markers = v4 end
 
-    local c5, v5 = ImGui.Checkbox(ctx, "Restore regions", state.restore_regions)
+    local c5, v5 = ImGui.Checkbox(ctx, Tr("restore_regions"), state.restore_regions)
     if c5 then state.restore_regions = v5 end
 
-    local c6, v6 = ImGui.Checkbox(ctx, "Restore tempo and time signatures", state.restore_tempo)
+    local c6, v6 = ImGui.Checkbox(ctx, Tr("restore_tempo"), state.restore_tempo)
     if c6 then state.restore_tempo = v6 end
 
-    local c7, v7 = ImGui.Checkbox(ctx, "Restore track names and FX", state.restore_track_info)
+    local c7, v7 = ImGui.Checkbox(ctx, Tr("restore_track_info"), state.restore_track_info)
     if c7 then state.restore_track_info = v7 end
     if state.show_tips and ImGui.IsItemHovered(ctx) then
-      ImGui.SetTooltip(ctx, "Track names and FX are applied only to tracks created during load.")
+      ImGui.SetTooltip(ctx, Tr("tooltip_restore_track_info_settings"))
     end
 
-    ImGui.Separator(ctx)
-    ImGui.Text(ctx, "Save Options")
+    --ImGui.Separator(ctx)
+    ImGui.SeparatorText(ctx, Tr("settings_save_options"))
 
-    local c8, v8 = ImGui.Checkbox(ctx, "Auto render preview.mp3 when saving", state.auto_render_preview)
+    local c8, v8 = ImGui.Checkbox(ctx, Tr("auto_render_preview"), state.auto_render_preview)
     if c8 then state.auto_render_preview = v8 end
 
-    local c9, v9 = ImGui.Checkbox(ctx, "Skip leading empty content when rendering preview", state.skip_preview_leading_empty)
+    local c9, v9 = ImGui.Checkbox(ctx, Tr("skip_preview_leading_empty"), state.skip_preview_leading_empty)
     if c9 then state.skip_preview_leading_empty = v9 end
 
-    ImGui.Separator(ctx)
-    ImGui.Text(ctx, "Snapshot List Sort:")
+    --ImGui.Separator(ctx)
+    ImGui.SeparatorText(ctx, Tr("settings_snapshot_options"))
+    ImGui.Text(ctx, Tr("settings_snapshot_sort"))
     ImGui.SameLine(ctx, nil, 5)
 
-    local sort_labels = {
-      newest = "Newest first",
-      oldest = "Oldest first",
-      alphabetical = "Alphabetical",
-    }
-
-    local current_sort_label = sort_labels[state.sort_order or "newest"] or sort_labels.newest
+    local current_sort_label = GetSortLabel(state.sort_order or "newest")
     ImGui.SetNextItemWidth(ctx, 200)
     if ImGui.BeginCombo(ctx, "##snapshot_sort_order", current_sort_label) then
       local sort_items = {
-        { key = "newest", label = "Newest first" },
-        { key = "oldest", label = "Oldest first" },
-        { key = "alphabetical", label = "Alphabetical" },
+        { key = "newest", label = GetSortLabel("newest") },
+        { key = "oldest", label = GetSortLabel("oldest") },
+        { key = "alphabetical", label = GetSortLabel("alphabetical") },
       }
 
       for _, item in ipairs(sort_items) do
-        if ImGui.Selectable(ctx, item.label, state.sort_order == item.key) then
+        if ImGui.Selectable(ctx, item.label .. "##sort_" .. item.key, state.sort_order == item.key) then
           state.sort_order = item.key
           SaveSettings()
           SortSnapshots()
-          state.status = "Snapshot list sort changed: " .. item.label
+          state.status = Tr("status_sort_changed", { label = item.label })
         end
       end
 
       ImGui.EndCombo(ctx)
     end
 
-    ImGui.Separator(ctx)
-    ImGui.Text(ctx, "Display Options")
+    --ImGui.Separator(ctx)
+    reaper.ImGui_SeparatorText(ctx, Tr("settings_display_options"))
 
-    local c10, v10 = ImGui.Checkbox(ctx, "Show [TS]/[RE] capture labels", state.show_capture_abbreviations)
+    local c10, v10 = ImGui.Checkbox(ctx, Tr("show_capture_abbreviations"), state.show_capture_abbreviations)
     if c10 then state.show_capture_abbreviations = v10 end
 
-    local c11, v11 = ImGui.Checkbox(ctx, "Show tips", state.show_tips)
+    local c11, v11 = ImGui.Checkbox(ctx, Tr("show_tips"), state.show_tips)
     if c11 then state.show_tips = v11 end
 
-    local c12, v12 = ImGui.Checkbox(ctx, "Place info panel at bottom", state.info_panel_at_bottom)
+    local c12, v12 = ImGui.Checkbox(ctx, Tr("place_info_panel_bottom"), state.info_panel_at_bottom)
     if c12 then state.info_panel_at_bottom = v12 end
 
     ImGui.Separator(ctx)
 
-    if ImGui.Button(ctx, "Apply", 100, 30) then
+    if ImGui.Button(ctx, Tr("apply"), 100, 30) then
+      state.language = NormalizeLanguageId(state.language or language)
+      SetLanguage(state.language)
       state.library_dir = NormalizePath(state.new_library_dir)
       EnsureDir(state.library_dir)
       EnsureDir(GetSnapshotsRoot())
       SaveSettings()
       LoadIndex()
       ResetWaveformCacheState()
-      state.status = "Settings applied."
+      state.status = Tr("status_settings_applied")
       ImGui.CloseCurrentPopup(ctx)
     end
 
     ImGui.SameLine(ctx, nil, 10)
 
-    if ImGui.Button(ctx, "Cancel", 100, 30) then
+    if ImGui.Button(ctx, Tr("cancel"), 100, 30) then
+      state.language = language
       state.new_library_dir = state.library_dir
       ImGui.CloseCurrentPopup(ctx)
     end
@@ -4859,7 +5648,7 @@ function MainLoop()
     DrawSavePopup()
     if state.request_open_load_confirm_popup then
       state.request_open_load_confirm_popup = false
-      ImGui.OpenPopup(ctx, "Load Snapshot")
+      ImGui.OpenPopup(ctx, UiLabel("popup_load_snapshot", "LoadSnapshotPopup"))
     end
     DrawLoadConfirmPopup()
     if state.request_execute_load then
@@ -4868,7 +5657,7 @@ function MainLoop()
     end
     if state.request_open_settings_popup then
       state.request_open_settings_popup = false
-      ImGui.OpenPopup(ctx, "Settings")
+      ImGui.OpenPopup(ctx, UiLabel("popup_settings", "SettingsPopup"))
     end
     DrawSettingsPopup()
     HandleExitShortcut()
