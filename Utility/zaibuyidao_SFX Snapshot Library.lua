@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.2
+-- @version 1.0.3
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -79,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.2"
+local SCRIPT_VERSION = "1.0.3"
 local EXT_SECTION = "SOUNDFX_SNAPSHOT_LIBRARY_PRO"
 
 local LANGUAGE_DEFAULT = "en"
@@ -342,7 +342,7 @@ local TEXT = {
     default_snapshot_name_format = "音效快照 %Y-%m-%d %H-%M-%S",
     imported_snapshot = "导入的快照",
 
-    capture_razor = "Razor Edit",
+    capture_razor = "剃刀编辑",
     capture_time_selection = "时间选区",
     capture_time_selection_selected_items = "时间选区（选中对象）",
     capture_unknown = "未知",
@@ -446,7 +446,7 @@ local TEXT = {
     error_imported_data_missing = "导入的快照数据缺失。",
     error_reaper_enum_unavailable = "REAPER 文件枚举 API 不可用。",
     error_failed_copy_imported_snapshot_folder = "无法复制导入的快照文件夹。",
-    error_no_capture_context = "未找到 Razor Edit 或时间选区。保存前请创建 Razor Edit 区域或时间选区。",
+    error_no_capture_context = "未找到剃刀编辑或时间选区。保存前请创建剃刀编辑区域或时间选区。",
     error_capture_empty = "{mode} 中没有媒体对象、标记、区域或速度/拍号标记。",
     error_invalid_snapshot_data = "无效的快照数据。",
     error_snapshot_has_no_tracks = "快照没有轨道。",
@@ -556,7 +556,7 @@ local TEXT = {
     default_snapshot_name_format = "音效快照 %Y-%m-%d %H-%M-%S",
     imported_snapshot = "匯入的快照",
 
-    capture_razor = "Razor Edit",
+    capture_razor = "剃刀編輯",
     capture_time_selection = "時間選區",
     capture_time_selection_selected_items = "時間選區（選取物件）",
     capture_unknown = "未知",
@@ -660,7 +660,7 @@ local TEXT = {
     error_imported_data_missing = "匯入的快照資料缺失。",
     error_reaper_enum_unavailable = "REAPER 檔案列舉 API 不可用。",
     error_failed_copy_imported_snapshot_folder = "無法複製匯入的快照資料夾。",
-    error_no_capture_context = "找不到 Razor Edit 或時間選區。儲存前請建立 Razor Edit 區域或時間選區。",
+    error_no_capture_context = "找不到剃刀編輯或時間選區。儲存前請建立剃刀編輯區域或時間選區。",
     error_capture_empty = "{mode} 中沒有媒體物件、標記、區域或速度/拍號標記。",
     error_invalid_snapshot_data = "無效的快照資料。",
     error_snapshot_has_no_tracks = "快照沒有軌道。",
@@ -929,6 +929,10 @@ if font_title then ImGui.Attach(ctx, font_title) end
 if font_normal then ImGui.Attach(ctx, font_normal) end
 if font_small then ImGui.Attach(ctx, font_small) end
 if font_tiny then ImGui.Attach(ctx, font_tiny) end
+
+local STATUS_BAR_FONT_SIZE = 12
+local STATUS_BAR_PADDING_Y = 4
+local STATUS_BAR_HEIGHT = STATUS_BAR_FONT_SIZE + STATUS_BAR_PADDING_Y * 2
 
 ----------------------------------------
 -- State
@@ -5103,10 +5107,27 @@ function DrawInfoPanel(width, height)
     end
 
     ImGui.Dummy(ctx, 0, 5) -- 5 像素间隔
-    ImGui.Separator(ctx)
-    ImGui.Dummy(ctx, 0, 5)
-    ImGui.TextDisabled(ctx, state.status or "")
     ImGui.EndChild(ctx)
+  end
+end
+
+function DrawBottomStatusBar(width, height)
+  width = width or 0
+  height = height or STATUS_BAR_HEIGHT
+
+  local pushed_padding = false
+  if ImGui.StyleVar_WindowPadding then
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_WindowPadding, 0, 0)
+    pushed_padding = true
+  end
+
+  ImGui.Dummy(ctx, 0, STATUS_BAR_PADDING_Y)
+  ImGui.PushFont(ctx, font_small, STATUS_BAR_FONT_SIZE)
+  ImGui.TextDisabled(ctx, state.status or "")
+  ImGui.PopFont(ctx)
+
+  if pushed_padding then
+    ImGui.PopStyleVar(ctx)
   end
 end
 
@@ -5564,7 +5585,9 @@ function DrawMainContentLayout()
   local min_info = 150
 
   local safe_w = math.max(1, avail_w - 1)
-  local safe_h = math.max(1, avail_h - 1)
+  local safe_h = math.max(1, avail_h - STATUS_BAR_HEIGHT - 1)
+  local layout_cursor_x = ImGui.GetCursorPosX and ImGui.GetCursorPosX(ctx) or nil
+  local layout_cursor_y = ImGui.GetCursorPosY and ImGui.GetCursorPosY(ctx) or nil
 
   ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing, 0, 0)
 
@@ -5597,7 +5620,7 @@ function DrawMainContentLayout()
 
     local list_w = math.floor(usable_w * state.side_split_ratio)
 
-    DrawSnapshotList(list_w, 0)
+    DrawSnapshotList(list_w, safe_h)
 
     -- 5px 像素间隔
     ImGui.SameLine(ctx, nil, gap_size)
@@ -5608,8 +5631,17 @@ function DrawMainContentLayout()
     -- 5px 像素间隔
     ImGui.SameLine(ctx, nil, gap_size)
 
-    DrawInfoPanel(0, 0)
+    DrawInfoPanel(0, safe_h)
   end
+
+  if layout_cursor_y and ImGui.SetCursorPosY then
+    ImGui.SetCursorPosY(ctx, layout_cursor_y + safe_h)
+  end
+  if layout_cursor_x and ImGui.SetCursorPosX then
+    ImGui.SetCursorPosX(ctx, layout_cursor_x)
+  end
+
+  DrawBottomStatusBar(0, STATUS_BAR_HEIGHT)
 
   ImGui.PopStyleVar(ctx)
 end
