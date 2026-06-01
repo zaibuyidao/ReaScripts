@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="66f8c3fa794677ecad21b03d99760b194f71cbc2">
+<index version="1" name="zaibuyidao Scripts" commit="4a11872790d8df203f84568b6550f6040abdd460">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9301,6 +9301,10 @@ Other detailed improvements and bug fixes.]]></changelog>
       <version name="1.0" author="zaibuyidao" time="2026-05-31T10:42:45Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/66f8c3fa794677ecad21b03d99760b194f71cbc2/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
+      </version>
+      <version name="1.0.1" author="zaibuyidao" time="2026-06-01T14:54:09Z">
+        <changelog><![CDATA[New Script]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/4a11872790d8df203f84568b6550f6040abdd460/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Tap Tempo Checker (No Tempo Change).lua" type="script" desc="Tap Tempo Checker (No Tempo Change)">
