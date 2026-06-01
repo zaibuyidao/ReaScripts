@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0
+-- @version 1.0.1
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -14,7 +14,8 @@
 --   3. SWS Extension
 --   4. Soundmole Extension
 
-local ZBYDFuncPath = reaper.GetResourcePath() .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
+local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
+local ZBYDFuncPath = RESOURCE_PATH .. '/Scripts/zaibuyidao Scripts/Utility/zaibuyidao_Functions.lua'
 if reaper.file_exists(ZBYDFuncPath) then
   dofile(ZBYDFuncPath)
   if not checkSWSExtension() or not checkJSAPIExtension() then return end
@@ -82,10 +83,10 @@ end
 ----------------------------------------
 
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0"
+local SCRIPT_VERSION = "1.0.1"
 local EXT_SECTION = "SOUNDFX_SNAPSHOT_LIBRARY_PRO"
 
-local DEFAULT_LIBRARY_DIR = reaper.GetResourcePath() .. "/SFX Snapshot Library"
+local DEFAULT_LIBRARY_DIR = RESOURCE_PATH .. "/SFX Snapshot Library"
 local SNAPSHOT_DIR_NAME = "snapshots"
 local INDEX_FILE_NAME = "index.lua"
 local PREVIEW_FILE_NAME = "preview.mp3"
@@ -137,6 +138,7 @@ local WINDOW_FLAGS_MAIN = WINDOW_FLAGS_NO_COLLAPSE + WINDOW_FLAGS_NO_TITLE_BAR
 
 local MOUSE_CURSOR_RESIZE_NS = ImGuiValue(ImGui.MouseCursor_ResizeNS, 3)
 local MOUSE_CURSOR_RESIZE_EW = ImGuiValue(ImGui.MouseCursor_ResizeEW, 4)
+local FOCUSED_FLAGS_ROOT_AND_CHILDREN = ImGuiValue(ImGui.FocusedFlags_RootAndChildWindows, 3)
 
 ----------------------------------------
 -- Fonts
@@ -185,10 +187,15 @@ local state = {
 
   load_to_new_tracks = false,
   restore_markers = true,
+  restore_regions = true,
   restore_tempo = true,
+  restore_track_info = false,
   check_empty_space = true,
+  show_load_popup = false,
   auto_render_preview = true,
   skip_preview_leading_empty = true,
+  show_capture_abbreviations = false,
+  show_tips = true,
   info_panel_at_bottom = true,
   bottom_split_ratio = 0.72,
   side_split_ratio = 0.64,
@@ -198,6 +205,14 @@ local state = {
   error = "",
 
   show_save_popup = false,
+  request_open_load_confirm_popup = false,
+  request_execute_load = false,
+  load_popup_load_to_new_tracks = false,
+  load_popup_restore_markers = true,
+  load_popup_restore_regions = true,
+  load_popup_restore_tempo = true,
+  load_popup_restore_track_info = false,
+  load_popup_check_empty_space = true,
   save_name = "",
   save_category = "Whoosh",
   save_tags = "",
@@ -214,6 +229,8 @@ local state = {
   preview_length = 0,
   preview_is_playing = false,
   preview_loop = false,
+  preview_locate_path = "",
+  preview_locate_position = 0,
   preview_volume_db = 0.0,
   preview_volume_db_text = "0.0",
   preview_volume_drag_start_y = nil,
@@ -225,8 +242,11 @@ local state = {
   waveform_cache_data = nil,
   waveform_cache_building = false,
   waveform_cache_status = "",
+  peak_build_queue = {},
 
   snapshot_list_focused = false,
+  main_window_focused = false,
+  request_open_settings_popup = false,
   space_key_consumed_frame = false,
   request_close = false,
 }
@@ -1214,10 +1234,15 @@ function LoadSettings()
 
   state.load_to_new_tracks = reaper.GetExtState(EXT_SECTION, "load_to_new_tracks") == "1"
   state.restore_markers = reaper.GetExtState(EXT_SECTION, "restore_markers") ~= "0"
+  state.restore_regions = reaper.GetExtState(EXT_SECTION, "restore_regions") ~= "0"
   state.restore_tempo = reaper.GetExtState(EXT_SECTION, "restore_tempo") ~= "0"
+  state.restore_track_info = reaper.GetExtState(EXT_SECTION, "restore_track_info") == "1"
   state.check_empty_space = reaper.GetExtState(EXT_SECTION, "check_empty_space") ~= "0"
+  state.show_load_popup = reaper.GetExtState(EXT_SECTION, "show_load_popup") == "1"
   state.auto_render_preview = reaper.GetExtState(EXT_SECTION, "auto_render_preview") ~= "0"
   state.skip_preview_leading_empty = reaper.GetExtState(EXT_SECTION, "skip_preview_leading_empty") ~= "0"
+  state.show_capture_abbreviations = reaper.GetExtState(EXT_SECTION, "show_capture_abbreviations") == "1"
+  state.show_tips = reaper.GetExtState(EXT_SECTION, "show_tips") ~= "0"
   state.info_panel_at_bottom = reaper.GetExtState(EXT_SECTION, "info_panel_at_bottom") ~= "0"
 
   local sort_order = reaper.GetExtState(EXT_SECTION, "sort_order")
@@ -1238,10 +1263,15 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "library_dir", state.library_dir, true)
   reaper.SetExtState(EXT_SECTION, "load_to_new_tracks", state.load_to_new_tracks and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "restore_markers", state.restore_markers and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "restore_regions", state.restore_regions and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "restore_tempo", state.restore_tempo and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "restore_track_info", state.restore_track_info and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "check_empty_space", state.check_empty_space and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "show_load_popup", state.show_load_popup and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "auto_render_preview", state.auto_render_preview and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "skip_preview_leading_empty", state.skip_preview_leading_empty and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "show_capture_abbreviations", state.show_capture_abbreviations and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "show_tips", state.show_tips and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "info_panel_at_bottom", state.info_panel_at_bottom and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "sort_order", tostring(state.sort_order or "newest"), true)
   reaper.SetExtState(EXT_SECTION, "bottom_split_ratio", tostring(state.bottom_split_ratio or 0.72), true)
@@ -1294,6 +1324,34 @@ function SortSnapshots()
 
   if state.selected > #state.snapshots then state.selected = #state.snapshots end
   if state.selected < 1 then state.selected = 1 end
+end
+
+function SelectSnapshotById(id)
+  id = tostring(id or "")
+  if id == "" then return false end
+
+  for i, snapshot in ipairs(state.snapshots or {}) do
+    if tostring(snapshot.id or "") == id then
+      state.selected = i
+      return true
+    end
+  end
+
+  return false
+end
+
+function EnsureSnapshotVisibleById(id)
+  if not SelectSnapshotById(id) then return false end
+
+  local snapshot = state.snapshots[state.selected]
+  if snapshot and not SnapshotMatchesFilter(snapshot) then
+    state.filter = ""
+    state.category_filter = "All"
+    state.show_favorites_only = false
+    SelectSnapshotById(id)
+  end
+
+  return true
 end
 
 function LoadIndex()
@@ -1425,6 +1483,73 @@ function TrackHasItemsInRange(track, start_pos, end_pos)
   return false
 end
 
+function GetTrackIndex(track)
+  if not track then return nil end
+
+  local n = reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")
+  if not n then return nil end
+
+  return math.max(0, math.floor(n - 1))
+end
+
+function GetItemStableKey(item)
+  if not item then return "" end
+
+  if reaper.BR_GetMediaItemGUID then
+    local ok, guid = pcall(reaper.BR_GetMediaItemGUID, item)
+    if ok and guid and guid ~= "" then return tostring(guid) end
+  end
+
+  if reaper.GetSetMediaItemInfo_String then
+    local ok, retval, guid = pcall(reaper.GetSetMediaItemInfo_String, item, "GUID", "", false)
+    if ok and retval and guid and guid ~= "" then return tostring(guid) end
+  end
+
+  return tostring(item)
+end
+
+function CollectSelectedItemsInRange(start_pos, end_pos)
+  local selected_item_set = {}
+  local track_map = {}
+  local track_ranges = {}
+  local selected_count = reaper.CountSelectedMediaItems(0)
+
+  for i = 0, selected_count - 1 do
+    local item = reaper.GetSelectedMediaItem(0, i)
+
+    if item and ItemOverlapsRangeByTime(item, start_pos, end_pos) then
+      local track = reaper.GetMediaItem_Track(item)
+      local track_index = GetTrackIndex(track)
+
+      if track and track_index then
+        selected_item_set[GetItemStableKey(item)] = true
+
+        if not track_map[track_index] then
+          local tr = {
+            track = track,
+            track_index = track_index,
+            ranges = {
+              {
+                start_pos = start_pos,
+                end_pos = end_pos,
+              }
+            },
+          }
+
+          track_map[track_index] = tr
+          track_ranges[#track_ranges + 1] = tr
+        end
+      end
+    end
+  end
+
+  table.sort(track_ranges, function(a, b)
+    return (tonumber(a.track_index) or 0) < (tonumber(b.track_index) or 0)
+  end)
+
+  return selected_item_set, track_ranges
+end
+
 function GetTimeSelectionContext()
   local start_pos, end_pos = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
@@ -1432,28 +1557,37 @@ function GetTimeSelectionContext()
     return nil
   end
 
+  local selected_item_set, selected_track_ranges = CollectSelectedItemsInRange(start_pos, end_pos)
+  local selected_items_only = #selected_track_ranges > 0
   local track_count = reaper.CountTracks(0)
-  local track_ranges = {}
+  local track_ranges = selected_items_only and selected_track_ranges or {}
   local min_track = math.huge
   local max_track = -1
 
-  for i = 0, track_count - 1 do
-    local track = reaper.GetTrack(0, i)
+  if selected_items_only then
+    for _, tr in ipairs(track_ranges) do
+      min_track = math.min(min_track, tr.track_index)
+      max_track = math.max(max_track, tr.track_index)
+    end
+  else
+    for i = 0, track_count - 1 do
+      local track = reaper.GetTrack(0, i)
 
-    if track and TrackHasItemsInRange(track, start_pos, end_pos) then
-      track_ranges[#track_ranges + 1] = {
-        track = track,
-        track_index = i,
-        ranges = {
-          {
-            start_pos = start_pos,
-            end_pos = end_pos,
-          }
-        },
-      }
+      if track and TrackHasItemsInRange(track, start_pos, end_pos) then
+        track_ranges[#track_ranges + 1] = {
+          track = track,
+          track_index = i,
+          ranges = {
+            {
+              start_pos = start_pos,
+              end_pos = end_pos,
+            }
+          },
+        }
 
-      min_track = math.min(min_track, i)
-      max_track = math.max(max_track, i)
+        min_track = math.min(min_track, i)
+        max_track = math.max(max_track, i)
+      end
     end
   end
 
@@ -1472,7 +1606,7 @@ function GetTimeSelectionContext()
 
   return {
     mode = "time_selection",
-    mode_label = "Time Selection",
+    mode_label = selected_items_only and "Time Selection (Selected Items)" or "Time Selection",
     track_ranges = track_ranges,
     all_ranges = {
       {
@@ -1485,7 +1619,10 @@ function GetTimeSelectionContext()
     duration = end_pos - start_pos,
     min_track = min_track,
     max_track = max_track,
-    track_count = math.max(1, max_track - min_track + 1),
+    track_count = math.max(1, #track_ranges),
+    compact_tracks = true,
+    selected_items_only = selected_items_only,
+    selected_item_set = selected_item_set,
   }
 end
 
@@ -1595,7 +1732,10 @@ end
 -- Marker / Region / Tempo
 ----------------------------------------
 
-function CollectMarkers(ctx_data)
+function CollectMarkers(ctx_data, include_markers, include_regions)
+  include_markers = include_markers ~= false
+  include_regions = include_regions ~= false
+
   local markers = {}
   local total = select(1, reaper.CountProjectMarkers(0)) or 0
 
@@ -1605,14 +1745,14 @@ function CollectMarkers(ctx_data)
     if ok then
       local include = false
 
-      if is_region then
+      if is_region and include_regions then
         for _, r in ipairs(ctx_data.all_ranges) do
           if pos >= r.start_pos and rgn_end <= r.end_pos then
             include = true
             break
           end
         end
-      else
+      elseif not is_region and include_markers then
         include = PositionInRanges(pos, ctx_data.all_ranges)
       end
 
@@ -1652,11 +1792,17 @@ function CollectTempo(ctx_data)
   return tempo
 end
 
-function RestoreMarkers(markers, target_pos)
+function RestoreMarkers(markers, target_pos, include_markers, include_regions)
+  if include_markers == nil then include_markers = true end
+  if include_regions == nil then include_regions = true end
+
   for _, m in ipairs(markers or {}) do
-    local pos = target_pos + (tonumber(m.pos) or 0)
-    local rgn_end = target_pos + (tonumber(m.rgn_end) or 0)
-    reaper.AddProjectMarker2(0, m.is_region == true, pos, rgn_end, m.name or "", -1, tonumber(m.color) or 0)
+    local is_region = m.is_region == true
+    if (is_region and include_regions) or ((not is_region) and include_markers) then
+      local pos = target_pos + (tonumber(m.pos) or 0)
+      local rgn_end = target_pos + (tonumber(m.rgn_end) or 0)
+      reaper.AddProjectMarker2(0, is_region, pos, rgn_end, m.name or "", -1, tonumber(m.color) or 0)
+    end
   end
 end
 
@@ -1688,15 +1834,24 @@ function CaptureSnapshotData(meta)
   end
 
   local tracks = {}
+  local save_markers = true
+  local save_regions = true
+  local save_tempo = true
+  local save_track_info = true
 
-  for _, tr in ipairs(ctx_data.track_ranges) do
+  for track_order, tr in ipairs(ctx_data.track_ranges) do
     local track = tr.track
-    local track_chunk = GetTrackChunk(track)
+    local track_chunk = ""
+
+    if save_track_info then
+      track_chunk = GetTrackChunk(track) or ""
+    end
 
     local track_data = {
       source_track_index = tr.track_index,
-      relative_track_index = tr.track_index - ctx_data.min_track,
-      track_chunk = StripItemsFromTrackChunk(track_chunk or ""),
+      relative_track_index = ctx_data.compact_tracks and (track_order - 1) or (tr.track_index - ctx_data.min_track),
+      track_chunk = save_track_info and StripItemsFromTrackChunk(track_chunk) or "",
+      track_info_saved = save_track_info,
       items = {},
       ranges = {},
     }
@@ -1711,8 +1866,13 @@ function CaptureSnapshotData(meta)
     local item_count = reaper.CountTrackMediaItems(track)
     for i = 0, item_count - 1 do
       local item = reaper.GetTrackMediaItem(track, i)
+      local include_item = item and ItemOverlapsRanges(item, tr.ranges)
 
-      if item and ItemOverlapsRanges(item, tr.ranges) then
+      if include_item and ctx_data.selected_items_only then
+        include_item = ctx_data.selected_item_set and ctx_data.selected_item_set[GetItemStableKey(item)] == true
+      end
+
+      if include_item then
         local chunk = GetItemChunk(item)
 
         if chunk then
@@ -1745,12 +1905,18 @@ function CaptureSnapshotData(meta)
       duration = ctx_data.duration,
       min_track = ctx_data.min_track,
       max_track = ctx_data.max_track,
-      track_count = ctx_data.track_count,
+      track_count = ctx_data.compact_tracks and math.max(1, #tracks) or ctx_data.track_count,
+      compact_tracks = ctx_data.compact_tracks == true,
+      selected_items_only = ctx_data.selected_items_only == true,
+      markers_saved = save_markers,
+      regions_saved = save_regions,
+      tempo_saved = save_tempo,
+      track_info_saved = save_track_info,
     },
 
     tracks = tracks,
-    markers = CollectMarkers(ctx_data),
-    tempo = CollectTempo(ctx_data),
+    markers = (save_markers or save_regions) and CollectMarkers(ctx_data, save_markers, save_regions) or {},
+    tempo = save_tempo and CollectTempo(ctx_data) or {},
   }
 
   local captured_item_count = 0
@@ -1786,6 +1952,94 @@ end
 function InsertTracksAt(index, count)
   for i = 1, count do
     reaper.InsertTrackAtIndex(index + i - 1, true)
+  end
+end
+
+function QueueSourcePeakBuild(source, item)
+  if not source or not reaper.PCM_Source_BuildPeaks then return end
+
+  state.peak_build_queue[#state.peak_build_queue + 1] = {
+    source = source,
+    item = item,
+    started = false,
+  }
+end
+
+function QueueItemPeakBuild(item)
+  if not item then return end
+
+  if reaper.UpdateItemInProject then
+    pcall(reaper.UpdateItemInProject, item)
+  end
+
+  if not reaper.PCM_Source_BuildPeaks or not reaper.GetMediaItemTake_Source then
+    return
+  end
+
+  local seen = {}
+  local take_count = reaper.CountTakes and reaper.CountTakes(item) or 0
+
+  if take_count > 0 and reaper.GetTake then
+    for i = 0, take_count - 1 do
+      local take = reaper.GetTake(item, i)
+      local source = take and reaper.GetMediaItemTake_Source(take)
+      local key = tostring(source)
+
+      if source and not seen[key] then
+        seen[key] = true
+        QueueSourcePeakBuild(source, item)
+      end
+    end
+  elseif reaper.GetActiveTake then
+    local take = reaper.GetActiveTake(item)
+    local source = take and reaper.GetMediaItemTake_Source(take)
+
+    if source then
+      QueueSourcePeakBuild(source, item)
+    end
+  end
+end
+
+function PumpPeakBuildQueue(max_seconds)
+  local queue = state.peak_build_queue
+  if not queue or #queue == 0 or not reaper.PCM_Source_BuildPeaks then return end
+
+  local start_time = reaper.time_precise and reaper.time_precise() or 0
+  local budget = tonumber(max_seconds) or 0.02
+  local i = 1
+
+  while i <= #queue do
+    local job = queue[i]
+    local mode = job.started and 1 or 0
+    local ok, remaining = pcall(reaper.PCM_Source_BuildPeaks, job.source, mode)
+
+    job.started = true
+
+    if not ok then
+      table.remove(queue, i)
+    else
+      remaining = tonumber(remaining) or 0
+
+      if remaining <= 0 then
+        pcall(reaper.PCM_Source_BuildPeaks, job.source, 2)
+
+        if job.item and reaper.UpdateItemInProject then
+          pcall(reaper.UpdateItemInProject, job.item)
+        end
+
+        table.remove(queue, i)
+      else
+        i = i + 1
+      end
+    end
+
+    if budget > 0 and reaper.time_precise and (reaper.time_precise() - start_time) >= budget then
+      break
+    end
+  end
+
+  if #queue == 0 then
+    reaper.UpdateArrange()
   end
 end
 
@@ -1931,7 +2185,7 @@ function RestoreSnapshotData(data, snapshot_folder)
 
     local track = reaper.GetTrack(0, target_track_index)
     if track then
-      if new_track_indices[target_track_index] and tr.track_chunk and tr.track_chunk ~= "" then
+      if state.restore_track_info and new_track_indices[target_track_index] and tr.track_chunk and tr.track_chunk ~= "" then
         SetTrackChunk(track, tr.track_chunk)
       end
 
@@ -1940,6 +2194,7 @@ function RestoreSnapshotData(data, snapshot_folder)
         local chunk = ResolveSnapshotMediaPathsInChunk(item_data.chunk or "", snapshot_folder)
         chunk = AdjustItemChunkPosition(chunk, capture.start_pos or 0, target_pos)
         SetItemChunk(item, chunk)
+        QueueItemPeakBuild(item)
       end
     end
   end
@@ -1948,12 +2203,13 @@ function RestoreSnapshotData(data, snapshot_folder)
     RestoreTempo(data.tempo, target_pos)
   end
 
-  if state.restore_markers then
-    RestoreMarkers(data.markers, target_pos)
+  if state.restore_markers or state.restore_regions then
+    RestoreMarkers(data.markers, target_pos, state.restore_markers, state.restore_regions)
   end
 
   RestoreCapturedRangeState(data, start_track_index, target_pos)
 
+  PumpPeakBuildQueue(0.25)
   reaper.UpdateArrange()
   return true
 end
@@ -2054,6 +2310,8 @@ function RenderPreviewMp3(snapshot_folder, start_pos, end_pos)
   local ok, err = pcall(function()
     -- Always overwrite the preview file for same-name snapshot updates.
     -- Also remove the old WAV preview so updated snapshots do not keep large legacy files.
+    RemovePreviewWaveformCache(preview_path, snapshot_folder)
+
     if FileExists(preview_path) then
       os.remove(preview_path)
     end
@@ -2154,6 +2412,10 @@ function SaveSnapshotFromPopup()
 
   meta.capture_mode = (data.capture and data.capture.mode) or "unknown"
   meta.capture_mode_label = (data.capture and data.capture.mode_label) or ""
+  meta.markers_saved = (data.capture and data.capture.markers_saved) == true
+  meta.regions_saved = (data.capture and data.capture.regions_saved) == true
+  meta.tempo_saved = (data.capture and data.capture.tempo_saved) == true
+  meta.track_info_saved = (data.capture and data.capture.track_info_saved) == true
 
   local folder = JoinPath(GetSnapshotsRoot(), folder_name)
   EnsureDir(folder)
@@ -2214,6 +2476,8 @@ function SaveSnapshotFromPopup()
 
   SaveIndex()
   LoadIndex()
+  EnsureSnapshotVisibleById(id)
+  ResetWaveformCacheState()
 
   local media_note = ""
   if meta.media_copied_count and meta.media_copied_count > 0 then
@@ -2253,6 +2517,10 @@ function LoadSelectedSnapshot()
   local ok, result_or_err = RestoreSnapshotData(data, GetSnapshotFolder(snapshot))
 
   reaper.PreventUIRefresh(-1)
+  if ok then
+    PumpPeakBuildQueue(0.25)
+    reaper.UpdateArrange()
+  end
   reaper.Undo_EndBlock("Load SFX Snapshot", -1)
 
   if not ok then
@@ -2262,6 +2530,40 @@ function LoadSelectedSnapshot()
   end
 
   state.status = "Loaded snapshot: " .. tostring(snapshot.name or "")
+end
+
+function PrimeLoadConfirmPopup()
+  state.load_popup_load_to_new_tracks = state.load_to_new_tracks == true
+  state.load_popup_restore_markers = state.restore_markers ~= false
+  state.load_popup_restore_regions = state.restore_regions ~= false
+  state.load_popup_restore_tempo = state.restore_tempo ~= false
+  state.load_popup_restore_track_info = state.restore_track_info == true
+  state.load_popup_check_empty_space = state.check_empty_space ~= false
+end
+
+function ApplyLoadPopupSettings()
+  state.load_to_new_tracks = state.load_popup_load_to_new_tracks == true
+  state.restore_markers = state.load_popup_restore_markers ~= false
+  state.restore_regions = state.load_popup_restore_regions ~= false
+  state.restore_tempo = state.load_popup_restore_tempo ~= false
+  state.restore_track_info = state.load_popup_restore_track_info == true
+  state.check_empty_space = state.load_popup_check_empty_space ~= false
+  SaveSettings()
+end
+
+function RequestLoadSelectedSnapshot()
+  local snapshot = state.snapshots[state.selected]
+  if not snapshot then
+    state.status = "No snapshot selected."
+    return
+  end
+
+  if state.show_load_popup then
+    PrimeLoadConfirmPopup()
+    state.request_open_load_confirm_popup = true
+  else
+    LoadSelectedSnapshot()
+  end
 end
 
 function ExportSelectedSnapshotZip()
@@ -2464,6 +2766,30 @@ function ResetWaveformCacheState()
   state.waveform_cache_data = nil
   state.waveform_cache_building = false
   state.waveform_cache_status = ""
+end
+
+function RemovePreviewWaveformCache(preview_path, snapshot_folder)
+  if not preview_path or preview_path == "" or not reaper.SM_SetCacheBaseDir or not reaper.SM_GetWaveformCachePath then
+    return
+  end
+
+  if snapshot_folder and snapshot_folder ~= "" then
+    EnsureDir(snapshot_folder)
+    pcall(reaper.SM_SetCacheBaseDir, snapshot_folder)
+  end
+
+  local ok_existing, existing_path = pcall(
+    reaper.SM_GetWaveformCachePath,
+    preview_path,
+    WAVEFORM_CACHE_PIXELS,
+    0.0,
+    0.0,
+    WAVEFORM_CACHE_MAX_CHANNELS
+  )
+
+  if ok_existing and existing_path and existing_path ~= "" and FileExists(existing_path) then
+    pcall(os.remove, existing_path)
+  end
 end
 
 function ReadWaveformCacheFile(path)
@@ -2830,6 +3156,25 @@ function ResetPreviewState()
   state.preview_is_playing = false
 end
 
+function SetPreviewLocatePosition(path, position)
+  state.preview_locate_path = NormalizePath(path or "")
+  state.preview_locate_position = math.max(0, tonumber(position) or 0)
+end
+
+function GetPreviewLocatePosition(path, length)
+  if NormalizePath(path or "") ~= NormalizePath(state.preview_locate_path or "") then
+    return 0
+  end
+
+  local pos = math.max(0, tonumber(state.preview_locate_position) or 0)
+  length = tonumber(length) or 0
+  if length > 0 then
+    pos = math.min(pos, math.max(0, length))
+  end
+
+  return pos
+end
+
 function StopInternalPreview(stop_preview)
   if state.preview_handle and stop_preview ~= false and reaper.CF_Preview_Stop then
     pcall(reaper.CF_Preview_Stop, state.preview_handle)
@@ -2991,7 +3336,7 @@ function PlayPreviewFile(path, name, start_pos)
   return true
 end
 
-function AuditionSelectedSnapshot()
+function AuditionSelectedSnapshot(start_pos)
   local snapshot = state.snapshots[state.selected]
   if not snapshot then return end
 
@@ -3008,7 +3353,7 @@ function AuditionSelectedSnapshot()
     return
   end
 
-  PlayPreviewFile(preview, tostring(snapshot.name or ""))
+  PlayPreviewFile(preview, tostring(snapshot.name or ""), tonumber(start_pos) or 0)
 end
 
 function SeekSelectedPreviewToRatio(ratio)
@@ -3037,7 +3382,41 @@ function SeekSelectedPreviewToRatio(ratio)
   end
 
   local target_pos = (len > 0) and (ratio * len) or 0
+  SetPreviewLocatePosition(preview, target_pos)
   return PlayPreviewFile(preview, tostring(snapshot.name or ""), target_pos)
+end
+
+function GetSelectedPreviewLocatePosition(snapshot, preview)
+  if not snapshot or not preview or preview == "" then return 0 end
+
+  local len = 0
+  if state.waveform_cache_data and state.waveform_cache_data.win_len and state.waveform_cache_data.win_len > 0 then
+    len = state.waveform_cache_data.win_len
+  elseif state.preview_path == preview and state.preview_length and state.preview_length > 0 then
+    len = state.preview_length
+  else
+    len = GetPreviewFileLength(preview)
+  end
+
+  if len <= 0 then
+    len = tonumber(snapshot.duration) or 0
+  end
+
+  return GetPreviewLocatePosition(preview, len)
+end
+
+function ResetSelectedPreviewToStart()
+  local snapshot = state.snapshots[state.selected]
+  if not snapshot then return end
+
+  local preview = GetSnapshotPreviewPath(snapshot)
+  SetPreviewLocatePosition(preview, 0)
+
+  if state.preview_is_playing and NormalizePath(state.preview_path) == NormalizePath(preview) then
+    PlayPreviewFile(preview, tostring(snapshot.name or ""), 0)
+  else
+    state.status = "Preview cursor returned to start."
+  end
 end
 
 function TogglePreviewPlayback()
@@ -3045,7 +3424,11 @@ function TogglePreviewPlayback()
     StopInternalPreview(true)
     state.status = "Preview stopped."
   else
-    AuditionSelectedSnapshot()
+    local snapshot = state.snapshots[state.selected]
+    if not snapshot then return end
+
+    local preview = GetSnapshotPreviewPath(snapshot)
+    AuditionSelectedSnapshot(GetSelectedPreviewLocatePosition(snapshot, preview))
   end
 end
 
@@ -3141,6 +3524,34 @@ function DrawSelectablePopupList(popup_id, items, on_select, empty_text)
   end
 end
 
+function CalcTextSizeSafe(text, fallback_w, fallback_h)
+  local w = tonumber(fallback_w) or 0
+  local h = tonumber(fallback_h) or 0
+
+  if reaper.ImGui_CalcTextSize then
+    local ok, calc_w, calc_h = pcall(reaper.ImGui_CalcTextSize, ctx, tostring(text or ""))
+    if ok then
+      w = tonumber(calc_w) or w
+      h = tonumber(calc_h) or h
+    end
+  end
+
+  return w, h
+end
+
+function GetFrameHeightSafe(fallback)
+  local h = tonumber(fallback) or 22
+
+  if reaper.ImGui_GetFrameHeight then
+    local ok, value = pcall(reaper.ImGui_GetFrameHeight, ctx)
+    if ok then
+      h = tonumber(value) or h
+    end
+  end
+
+  return h
+end
+
 function SnapshotMatchesFilter(s)
   if state.show_favorites_only and not s.favorite then
     return false
@@ -3207,9 +3618,9 @@ function GetPreviewVolumeKnobSize()
   local knob_size = 36
   local input_w = 40
   local db_label_w = 16
-  local frame_height = reaper.ImGui_GetFrameHeight(ctx) or 22
+  local frame_height = GetFrameHeightSafe(22)
   local total_w = math.max(knob_size, input_w + db_label_w + 4)
-  local total_h = knob_size + frame_height - 5 -- 音量旋钮与分割线的距离
+  local total_h = knob_size + frame_height - 7 -- 音量旋钮与分割线的距离
 
   return total_w, total_h, knob_size, input_w
 end
@@ -3316,7 +3727,7 @@ function ImGuiPreviewVolumeKnob(ctx, id, min_db, ref_db, max_db, value_db, radiu
     preview_volume_knob_ratio_at_click[id] = nil
   end
 
-  if hovered then
+  if hovered and state.show_tips then
     ImGui.SetTooltip(ctx, "Preview volume: drag up/down to adjust, double-click to reset to 0 dB.")
   end
 
@@ -3360,7 +3771,7 @@ function DrawPreviewVolumeKnob()
   end
 
   -- 音量旋钮和音量输入框的间距
-  local knob_input_gap = 0
+  local knob_input_gap = -2
 
   if ImGui.SetCursorPos then
     ImGui.SetCursorPos(ctx, start_x, start_y + knob_size + knob_input_gap)
@@ -3407,9 +3818,7 @@ function DrawHeader()
   local title_w, title_h = 0, 24
 
   if font_title then ImGui.PushFont(ctx, font_title, 21) end
-  if reaper.ImGui_CalcTextSize then
-    title_w, title_h = reaper.ImGui_CalcTextSize(ctx, title_text)
-  end
+  title_w, title_h = CalcTextSizeSafe(title_text, 0, 24)
   ImGui.Text(ctx, title_text)
   if font_title then ImGui.PopFont(ctx) end
 
@@ -3417,9 +3826,7 @@ function DrawHeader()
 
   if font_small then ImGui.PushFont(ctx, font_small, 12) end
   local version_w, version_h = 0, 12
-  if reaper.ImGui_CalcTextSize then
-    version_w, version_h = reaper.ImGui_CalcTextSize(ctx, version_text)
-  end
+  version_w, version_h = CalcTextSizeSafe(version_text, 0, 12)
 
   if ImGui.SetCursorPosY then
     ImGui.SetCursorPosY(ctx, title_y + math.max(0, (title_h - version_h) * 0.5))
@@ -3443,9 +3850,7 @@ function DrawHeader()
   DrawPreviewVolumeKnob()
 
   local subtitle_w, subtitle_h = 0, 12
-  if reaper.ImGui_CalcTextSize then
-    subtitle_w, subtitle_h = reaper.ImGui_CalcTextSize(ctx, subtitle_text)
-  end
+  subtitle_w, subtitle_h = CalcTextSizeSafe(subtitle_text, 0, 12)
 
   if ImGui.SetCursorPos then
     ImGui.SetCursorPos(ctx, title_x, title_y + title_h + 2)
@@ -3473,22 +3878,48 @@ function DrawTopBar()
   local avail_w = select(1, ImGui.GetContentRegionAvail(ctx))
   local spacing = 5
 
-  local save_w = reaper.ImGui_CalcTextSize(ctx, " Save ")
-  local load_w = reaper.ImGui_CalcTextSize(ctx, " Load ")
-  local import_w = reaper.ImGui_CalcTextSize(ctx, " Import ")
-  --local export_w = reaper.ImGui_CalcTextSize(ctx, "Export")
-  local settings_w = reaper.ImGui_CalcTextSize(ctx, " Settings ")
-  local frame_height = reaper.ImGui_GetFrameHeight(ctx)
-  local button_total_w = save_w + load_w + import_w + settings_w + spacing * 5
+  local save_w = select(1, CalcTextSizeSafe(" Save ", 52, 0))
+  local load_w = select(1, CalcTextSizeSafe(" Load ", 52, 0))
+  local options_w = select(1, CalcTextSizeSafe(" Options ", 76, 0))
+  local frame_height = GetFrameHeightSafe(22)
+  local button_total_w = save_w + load_w + options_w + spacing * 3
 
   local search_w = avail_w - button_total_w
+
+  local function request_settings_popup()
+    state.new_library_dir = state.library_dir
+    state.show_settings_popup = true
+    state.request_open_settings_popup = true
+  end
+
+  local function draw_options_menu()
+    if ImGui.Button(ctx, "Options", options_w, frame_height) then
+      ImGui.OpenPopup(ctx, "TopBarOptions")
+    end
+
+    if ImGui.BeginPopup and ImGui.BeginPopup(ctx, "TopBarOptions") then
+      if ImGui.MenuItem(ctx, "Import ZIP") then
+        ImportSnapshotZip()
+      end
+
+      if ImGui.MenuItem(ctx, "Export ZIP") then
+        ExportSelectedSnapshotZip()
+      end
+
+      if ImGui.MenuItem(ctx, "Settings") then
+        request_settings_popup()
+      end
+
+      ImGui.EndPopup(ctx)
+    end
+  end
 
   if search_w >= 180 then
     ImGui.SetNextItemWidth(ctx, search_w)
     local changed, v = ImGui.InputTextWithHint(ctx, "##search", "Search name / category / tags / description...", state.filter)
     if changed then state.filter = v end
 
-    ImGui.SameLine(ctx)
+    ImGui.SameLine(ctx, nil, spacing)
 
     if ImGui.Button(ctx, "Save", save_w, frame_height) then -- "Smart Save"
       state.save_name = os.date("SFX Snapshot %Y-%m-%d %H-%M-%S")
@@ -3502,28 +3933,12 @@ function DrawTopBar()
     ImGui.SameLine(ctx, nil, spacing)
 
     if ImGui.Button(ctx, "Load", load_w, frame_height) then -- "Load at Cursor"
-      LoadSelectedSnapshot()
+      RequestLoadSelectedSnapshot()
     end
 
     ImGui.SameLine(ctx, nil, spacing)
 
-    if ImGui.Button(ctx, "Import", import_w, frame_height) then
-      ImportSnapshotZip()
-    end
-
-    -- ImGui.SameLine(ctx, nil, spacing)
-
-    -- if ImGui.Button(ctx, "Export", export_w, frame_height) then
-    --   ExportSelectedSnapshotZip()
-    -- end
-
-    ImGui.SameLine(ctx, nil, spacing)
-
-    if ImGui.Button(ctx, "Settings", settings_w, frame_height) then
-      state.new_library_dir = state.library_dir
-      state.show_settings_popup = true
-      ImGui.OpenPopup(ctx, "Settings")
-    end
+    draw_options_menu()
   else
     ImGui.SetNextItemWidth(ctx, -1)
     local changed, v = ImGui.InputTextWithHint(ctx, "##search", "Search name / category / tags / description...", state.filter)
@@ -3538,39 +3953,26 @@ function DrawTopBar()
       ImGui.OpenPopup(ctx, "Save Snapshot")
     end
 
-    ImGui.SameLine(ctx)
+    ImGui.SameLine(ctx, nil, spacing)
 
     if ImGui.Button(ctx, "Load", load_w, frame_height) then
-      LoadSelectedSnapshot()
+      RequestLoadSelectedSnapshot()
     end
 
-    ImGui.SameLine(ctx)
+    ImGui.SameLine(ctx, nil, spacing)
 
-    if ImGui.Button(ctx, "Import", import_w, frame_height) then
-      ImportSnapshotZip()
-    end
-
-    ImGui.SameLine(ctx)
-
-    if ImGui.Button(ctx, "Export", export_w, frame_height) then
-      ExportSelectedSnapshotZip()
-    end
-
-    ImGui.SameLine(ctx)
-
-    if ImGui.Button(ctx, "Settings", settings_w, frame_height) then
-      state.new_library_dir = state.library_dir
-      state.show_settings_popup = true
-      ImGui.OpenPopup(ctx, "Settings")
-    end
+    draw_options_menu()
   end
 end
 
 function DrawFilters()
+  ImGui.Text(ctx, "Category:")
+  ImGui.SameLine(ctx, nil, 5)
+
   local categories = GetCategories()
 
   ImGui.SetNextItemWidth(ctx, 120)
-  if ImGui.BeginCombo(ctx, "Category##category", state.category_filter) then
+  if ImGui.BeginCombo(ctx, "##category", state.category_filter) then
     for _, c in ipairs(categories) do
       if ImGui.Selectable(ctx, c, state.category_filter == c) then
         state.category_filter = c
@@ -3581,16 +3983,8 @@ function DrawFilters()
 
   ImGui.SameLine(ctx)
 
-  local changed, fav = ImGui.Checkbox(ctx, "Favorites", state.show_favorites_only)
+  local changed, fav = ImGui.Checkbox(ctx, "Favorites only", state.show_favorites_only)
   if changed then state.show_favorites_only = fav end
-
-  ImGui.SameLine(ctx)
-
-  local changed2, v2 = ImGui.Checkbox(ctx, "New tracks", state.load_to_new_tracks)
-  if changed2 then
-    state.load_to_new_tracks = v2
-    SaveSettings()
-  end
 end
 
 function DrawWaveformCachePreviewBar()
@@ -3605,7 +3999,6 @@ function DrawWaveformCachePreviewBar()
   local waveform_data = StartOrPumpWaveformCache(snapshot)
   local is_selected_preview_playing = state.preview_is_playing and NormalizePath(state.preview_path) == NormalizePath(preview_path)
 
-  local pos = is_selected_preview_playing and (tonumber(state.preview_position) or 0) or 0
   local len = 0
   if waveform_data and waveform_data.win_len and waveform_data.win_len > 0 then
     len = waveform_data.win_len
@@ -3613,6 +4006,14 @@ function DrawWaveformCachePreviewBar()
     len = state.preview_length
   else
     len = tonumber(snapshot.duration) or 0
+  end
+
+  local locate_pos = GetPreviewLocatePosition(preview_path, len)
+  local pos = is_selected_preview_playing and (tonumber(state.preview_position) or 0) or locate_pos
+  if len > 0 then
+    pos = math.max(0, math.min(len, pos))
+  else
+    pos = math.max(0, pos)
   end
 
   local wave_w = select(1, ImGui.GetContentRegionAvail(ctx))
@@ -3676,8 +4077,18 @@ function DrawWaveformCachePreviewBar()
     ImGui.DrawList_AddLine(draw_list, x, center_y, x + wave_w, center_y, 0xFFFFFF22, 1.0)
   end
 
+  local locate_ratio = 0
+  if len > 0 then
+    locate_ratio = math.max(0, math.min(1, locate_pos / len))
+  end
+
+  if draw_list and ImGui.DrawList_AddLine then
+    local locate_x = x + locate_ratio * wave_w
+    ImGui.DrawList_AddLine(draw_list, locate_x, y, locate_x, y + wave_h, 0x78C7FF88, 1.0)
+  end
+
   local cursor_ratio = 0
-  if is_selected_preview_playing and len > 0 then
+  if len > 0 then
     cursor_ratio = math.max(0, math.min(1, pos / len))
   end
 
@@ -3697,21 +4108,32 @@ function DrawWaveformCachePreviewBar()
     SeekSelectedPreviewToRatio(ratio)
   end
 
-  if hovered then
-    ImGui.SetTooltip(ctx, "Click the waveform to play from that position.")
+  if hovered and state.show_tips then
+    ImGui.SetTooltip(ctx, "Click the waveform to set the cursor and play from that position.")
   end
 
-  local play_w = reaper.ImGui_CalcTextSize(ctx, " Play ")
-  local loop_w = reaper.ImGui_CalcTextSize(ctx, " Loop Off ")
-  local frame_height = reaper.ImGui_GetFrameHeight(ctx)
+  local frame_height = GetFrameHeightSafe(22)
+  local rewind_text_w = select(1, CalcTextSizeSafe(" Back to Start ", 32, 0))
+  local rewind_w = math.max(frame_height, rewind_text_w)
+  local play_w = select(1, CalcTextSizeSafe(" Play ", 52, 0))
+  local loop_w = select(1, CalcTextSizeSafe(" Loop Off ", 76, 0))
   local spacing = 5
   local cursor_x = ImGui.GetCursorPosX and ImGui.GetCursorPosX(ctx) or 0
-  local controls_w = play_w + spacing + loop_w
+  local controls_w = rewind_w + spacing + play_w + spacing + loop_w
   local controls_x = cursor_x + math.max(0, (wave_w - controls_w) * 0.5)
 
   if ImGui.SetCursorPosX then
     ImGui.SetCursorPosX(ctx, controls_x)
   end
+
+  if ImGui.Button(ctx, "Back to Start##preview_start", rewind_w, frame_height) then
+    ResetSelectedPreviewToStart()
+  end
+  if state.show_tips and ImGui.IsItemHovered(ctx) then
+    ImGui.SetTooltip(ctx, "Return preview cursor to the start.")
+  end
+
+  ImGui.SameLine(ctx, nil, spacing)
 
   local btn_label = is_selected_preview_playing and "Stop" or "Play"
   if ImGui.Button(ctx, btn_label, play_w, frame_height) then
@@ -3719,7 +4141,7 @@ function DrawWaveformCachePreviewBar()
       StopInternalPreview(true)
       state.status = "Preview stopped."
     else
-      PlayPreviewFile(preview_path, tostring(snapshot.name or ""), 0)
+      PlayPreviewFile(preview_path, tostring(snapshot.name or ""), locate_pos)
     end
   end
 
@@ -3752,7 +4174,14 @@ function DrawSnapshotList(width, height)
         visible_count = visible_count + 1
 
         local fav = s.favorite and "★ " or "☆ "
-        local source = s.capture_mode == "time_selection" and " [TS]" or ""
+        local source = ""
+        if state.show_capture_abbreviations then
+          if s.capture_mode == "time_selection" then
+            source = " [TS]"
+          elseif s.capture_mode == "razor" then
+            source = " [RE]"
+          end
+        end
         local name = fav .. tostring(s.name or "Unnamed") .. source
         local label = name .. "##snapshot_" .. tostring(i)
 
@@ -3802,7 +4231,7 @@ function DrawSnapshotList(width, height)
           break
         end
 
-        if ImGui.IsItemHovered(ctx) then
+        if state.show_tips and ImGui.IsItemHovered(ctx) then
           ImGui.BeginTooltip(ctx)
           ImGui.Text(ctx, tostring(s.name or ""))
           ImGui.Separator(ctx)
@@ -3819,7 +4248,6 @@ function DrawSnapshotList(width, height)
           ImGui.Text(ctx, "Created: " .. tostring(s.created_at or ""))
 
           if s.has_preview then
-            ImGui.Text(ctx, "Preview: " .. tostring(s.preview or PREVIEW_FILE_NAME))
             if tonumber(s.preview_start_offset or 0) and tonumber(s.preview_start_offset or 0) > 0 then
               ImGui.Text(ctx, string.format("Preview skip: %.3f s", tonumber(s.preview_start_offset) or 0))
             end
@@ -3857,7 +4285,7 @@ function DrawInfoPanel(width, height)
     if not s then
       ImGui.TextDisabled(ctx, "No snapshot selected.")
     else
-      local frame_height = reaper.ImGui_GetFrameHeight(ctx)
+      local frame_height = GetFrameHeightSafe(22)
       ImGui.Text(ctx, tostring(s.name or "Unnamed"))
 
       ImGui.SameLine(ctx, nil, 5)
@@ -3883,6 +4311,8 @@ function DrawInfoPanel(width, height)
       ImGui.TextDisabled(ctx, "Category: " .. tostring(s.category or "Uncategorized"))
       ImGui.TextDisabled(ctx, "Source: " .. tostring(s.capture_mode_label or s.capture_mode or ""))
       ImGui.TextDisabled(ctx, "Tags: " .. JoinTags(s.tags))
+      ImGui.TextDisabled(ctx, "Created: " .. tostring(s.created_at or ""))
+      ImGui.TextDisabled(ctx, string.format("Preview skip: %.3f s", tonumber(s.preview_start_offset) or 0))
       ImGui.TextDisabled(ctx, string.format(
         "Duration %.3fs    Tracks %d    Items %d    Media %d",
         tonumber(s.duration) or 0,
@@ -3925,7 +4355,7 @@ function DrawSavePopup()
     if ImGui.SmallButton(ctx, "Category ▼##category_presets") then
       ImGui.OpenPopup(ctx, "CategoryPresetPopup")
     end
-    if ImGui.IsItemHovered(ctx) then
+    if state.show_tips and ImGui.IsItemHovered(ctx) then
       ImGui.SetTooltip(ctx, "Choose from existing categories")
     end
 
@@ -3944,7 +4374,7 @@ function DrawSavePopup()
     if ImGui.SmallButton(ctx, "Tags ▼##tag_presets") then
       ImGui.OpenPopup(ctx, "TagPresetPopup")
     end
-    if ImGui.IsItemHovered(ctx) then
+    if state.show_tips and ImGui.IsItemHovered(ctx) then
       ImGui.SetTooltip(ctx, "Append from existing tags")
     end
 
@@ -3957,7 +4387,10 @@ function DrawSavePopup()
     if changed4 then state.save_description = v4 end
 
     ImGui.TextDisabled(ctx, "Same-name snapshots will be updated and preview.mp3 will be overwritten.")
-    ImGui.TextDisabled(ctx, "Tip: click Category or Tags to reuse existing names.")
+    ImGui.TextDisabled(ctx, "Markers, regions, tempo/time signatures, track names and FX are always archived.")
+    if state.show_tips then
+      ImGui.TextDisabled(ctx, "Tip: click Category or Tags to reuse existing names.")
+    end
 
     ImGui.Separator(ctx)
 
@@ -3976,6 +4409,56 @@ function DrawSavePopup()
   end
 end
 
+function DrawLoadConfirmPopup()
+  if ImGui.BeginPopupModal(ctx, "Load Snapshot", nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    local snapshot = state.snapshots[state.selected]
+
+    if not snapshot then
+      ImGui.TextDisabled(ctx, "No snapshot selected.")
+    else
+      ImGui.Text(ctx, "Load: " .. tostring(snapshot.name or "Unnamed"))
+      ImGui.Separator(ctx)
+
+      local changed1, v1 = ImGui.Checkbox(ctx, "Load to new tracks", state.load_popup_load_to_new_tracks)
+      if changed1 then state.load_popup_load_to_new_tracks = v1 end
+
+      local changed2, v2 = ImGui.Checkbox(ctx, "Check empty target area before loading", state.load_popup_check_empty_space)
+      if changed2 then state.load_popup_check_empty_space = v2 end
+
+      local changed3, v3 = ImGui.Checkbox(ctx, "Restore markers", state.load_popup_restore_markers)
+      if changed3 then state.load_popup_restore_markers = v3 end
+
+      local changed4, v4 = ImGui.Checkbox(ctx, "Restore regions", state.load_popup_restore_regions)
+      if changed4 then state.load_popup_restore_regions = v4 end
+
+      local changed5, v5 = ImGui.Checkbox(ctx, "Restore tempo and time signatures", state.load_popup_restore_tempo)
+      if changed5 then state.load_popup_restore_tempo = v5 end
+
+      local changed6, v6 = ImGui.Checkbox(ctx, "Restore track names and FX", state.load_popup_restore_track_info)
+      if changed6 then state.load_popup_restore_track_info = v6 end
+      if state.show_tips and ImGui.IsItemHovered(ctx) then
+        ImGui.SetTooltip(ctx, "Track names and FX are applied only to tracks created during this load.")
+      end
+
+      ImGui.Separator(ctx)
+
+      if ImGui.Button(ctx, "Load", 100, 30) then
+        ApplyLoadPopupSettings()
+        state.request_execute_load = true
+        ImGui.CloseCurrentPopup(ctx)
+      end
+
+      ImGui.SameLine(ctx)
+
+      if ImGui.Button(ctx, "Cancel", 100, 30) then
+        ImGui.CloseCurrentPopup(ctx)
+      end
+    end
+
+    ImGui.EndPopup(ctx)
+  end
+end
+
 function DrawSettingsPopup()
   if ImGui.BeginPopupModal(ctx, "Settings", nil, ImGui.WindowFlags_AlwaysAutoResize) then
     ImGui.Text(ctx, "Library Location")
@@ -3987,7 +4470,7 @@ function DrawSettingsPopup()
     if changed then state.new_library_dir = v end
 
     ImGui.SameLine(ctx, nil, 10)
-    local frame_height = reaper.ImGui_GetFrameHeight(ctx)
+    local frame_height = GetFrameHeightSafe(22)
 
     if ImGui.Button(ctx, "Browse##SelectLibraryDir", nil, frame_height) then
       if reaper.JS_Dialog_BrowseForFolder then
@@ -4016,27 +4499,44 @@ function DrawSettingsPopup()
     -- end
 
     ImGui.Separator(ctx)
+    ImGui.Text(ctx, "Load Options")
 
-    local c1, v1 = ImGui.Checkbox(ctx, "Restore markers and regions", state.restore_markers)
-    if c1 then state.restore_markers = v1 end
+    local c1, v1 = ImGui.Checkbox(ctx, "Show load confirmation popup", state.show_load_popup)
+    if c1 then state.show_load_popup = v1 end
 
-    local c2, v2 = ImGui.Checkbox(ctx, "Restore tempo and time signatures", state.restore_tempo)
-    if c2 then state.restore_tempo = v2 end
+    local c2, v2 = ImGui.Checkbox(ctx, "Load to new tracks", state.load_to_new_tracks)
+    if c2 then state.load_to_new_tracks = v2 end
 
     local c3, v3 = ImGui.Checkbox(ctx, "Check empty target area before loading", state.check_empty_space)
     if c3 then state.check_empty_space = v3 end
 
-    local c4, v4 = ImGui.Checkbox(ctx, "Auto render preview.mp3 when saving", state.auto_render_preview)
-    if c4 then state.auto_render_preview = v4 end
+    local c4, v4 = ImGui.Checkbox(ctx, "Restore markers", state.restore_markers)
+    if c4 then state.restore_markers = v4 end
 
-    local c5, v5 = ImGui.Checkbox(ctx, "Skip leading empty content when rendering preview", state.skip_preview_leading_empty)
-    if c5 then state.skip_preview_leading_empty = v5 end
+    local c5, v5 = ImGui.Checkbox(ctx, "Restore regions", state.restore_regions)
+    if c5 then state.restore_regions = v5 end
 
-    local c6, v6 = ImGui.Checkbox(ctx, "Place info panel at bottom", state.info_panel_at_bottom)
-    if c6 then state.info_panel_at_bottom = v6 end
+    local c6, v6 = ImGui.Checkbox(ctx, "Restore tempo and time signatures", state.restore_tempo)
+    if c6 then state.restore_tempo = v6 end
+
+    local c7, v7 = ImGui.Checkbox(ctx, "Restore track names and FX", state.restore_track_info)
+    if c7 then state.restore_track_info = v7 end
+    if state.show_tips and ImGui.IsItemHovered(ctx) then
+      ImGui.SetTooltip(ctx, "Track names and FX are applied only to tracks created during load.")
+    end
 
     ImGui.Separator(ctx)
-    ImGui.Text(ctx, "Snapshot List Sort")
+    ImGui.Text(ctx, "Save Options")
+
+    local c8, v8 = ImGui.Checkbox(ctx, "Auto render preview.mp3 when saving", state.auto_render_preview)
+    if c8 then state.auto_render_preview = v8 end
+
+    local c9, v9 = ImGui.Checkbox(ctx, "Skip leading empty content when rendering preview", state.skip_preview_leading_empty)
+    if c9 then state.skip_preview_leading_empty = v9 end
+
+    ImGui.Separator(ctx)
+    ImGui.Text(ctx, "Snapshot List Sort:")
+    ImGui.SameLine(ctx, nil, 5)
 
     local sort_labels = {
       newest = "Newest first",
@@ -4066,6 +4566,18 @@ function DrawSettingsPopup()
     end
 
     ImGui.Separator(ctx)
+    ImGui.Text(ctx, "Display Options")
+
+    local c10, v10 = ImGui.Checkbox(ctx, "Show [TS]/[RE] capture labels", state.show_capture_abbreviations)
+    if c10 then state.show_capture_abbreviations = v10 end
+
+    local c11, v11 = ImGui.Checkbox(ctx, "Show tips", state.show_tips)
+    if c11 then state.show_tips = v11 end
+
+    local c12, v12 = ImGui.Checkbox(ctx, "Place info panel at bottom", state.info_panel_at_bottom)
+    if c12 then state.info_panel_at_bottom = v12 end
+
+    ImGui.Separator(ctx)
 
     if ImGui.Button(ctx, "Apply", 100, 30) then
       state.library_dir = NormalizePath(state.new_library_dir)
@@ -4074,7 +4586,7 @@ function DrawSettingsPopup()
       SaveSettings()
       LoadIndex()
       ResetWaveformCacheState()
-      state.status = "Library path changed."
+      state.status = "Settings applied."
       ImGui.CloseCurrentPopup(ctx)
     end
 
@@ -4133,18 +4645,21 @@ function IsShiftDown()
 end
 
 function HandleSnapshotListShortcuts()
-  if not state.snapshot_list_focused then return end
+  if not state.main_window_focused and not state.snapshot_list_focused then return end
   if IsTextInputActive() then return end
   if not ImGui.IsKeyPressed then return end
 
   local snapshot = state.snapshots[state.selected]
   if not snapshot then return end
 
-  local shift_down = IsShiftDown()
-
   if ImGui.IsKeyPressed(ctx, KEY_SPACE) then
     TogglePreviewPlayback()
+    return
   end
+
+  if not state.snapshot_list_focused then return end
+
+  local shift_down = IsShiftDown()
 
   if ImGui.IsKeyPressed(ctx, KEY_DELETE) and shift_down then
     RemoveSelectedSnapshotFromIndex()
@@ -4316,12 +4831,22 @@ end
 
 function MainLoop()
   UpdatePreviewState()
+  PumpPeakBuildQueue(0.02)
   ImGui.SetNextWindowSize(ctx, 430, 670, ImGui.Cond_FirstUseEver)
 
   PushStyle()
 
+  state.main_window_focused = false
   local visible, open = ImGui.Begin(ctx, SCRIPT_NAME, true, WINDOW_FLAGS_MAIN)
   if visible then
+    if ImGui.IsWindowFocused then
+      local ok_focused, focused = pcall(ImGui.IsWindowFocused, ctx, FOCUSED_FLAGS_ROOT_AND_CHILDREN)
+      if not ok_focused then
+        ok_focused, focused = pcall(ImGui.IsWindowFocused, ctx)
+      end
+      state.main_window_focused = ok_focused and focused == true
+    end
+
     if font_normal then ImGui.PushFont(ctx, font_normal, 14) end
 
     DrawHeader()
@@ -4332,6 +4857,19 @@ function MainLoop()
     DrawMainContentLayout()
 
     DrawSavePopup()
+    if state.request_open_load_confirm_popup then
+      state.request_open_load_confirm_popup = false
+      ImGui.OpenPopup(ctx, "Load Snapshot")
+    end
+    DrawLoadConfirmPopup()
+    if state.request_execute_load then
+      state.request_execute_load = false
+      LoadSelectedSnapshot()
+    end
+    if state.request_open_settings_popup then
+      state.request_open_settings_popup = false
+      ImGui.OpenPopup(ctx, "Settings")
+    end
     DrawSettingsPopup()
     HandleExitShortcut()
     HandleSnapshotListShortcuts()
