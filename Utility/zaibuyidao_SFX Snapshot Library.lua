@@ -1,8 +1,8 @@
 -- @description SFX Snapshot Library
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   Fix renaming loaded snapshots by retargeting project media references.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -79,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.5"
+local SCRIPT_VERSION = "1.0.6"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -1708,6 +1708,172 @@ function ReleaseSnapshotFileLocks()
   if reaper.UpdateArrange then
     pcall(reaper.UpdateArrange)
   end
+end
+
+function NormalizePathForCompare(path)
+  local normalized = NormalizePath(path)
+  if reaper.GetOS():find("Win") then
+    normalized = Lower(normalized)
+  end
+  return normalized
+end
+
+function GetRelativePathUnderFolder(path, folder)
+  local normalized_path = NormalizePath(path)
+  local normalized_folder = NormalizePath(folder)
+
+  if normalized_path == "" or normalized_folder == "" then
+    return nil
+  end
+
+  local compare_path = NormalizePathForCompare(normalized_path)
+  local compare_folder = NormalizePathForCompare(normalized_folder)
+  local prefix = compare_folder .. "/"
+
+  if compare_path:sub(1, #prefix) ~= prefix then
+    return nil
+  end
+
+  return normalized_path:sub(#normalized_folder + 2)
+end
+
+function MakeOfflineSnapshotMediaPath(original_path, rename_id, index)
+  local ext = tostring(original_path or ""):match("(%.[^%.\\/]+)$") or ".offline"
+  local temp_dir = GetSystemTempDir()
+  local candidate
+
+  repeat
+    candidate = JoinPath(
+      temp_dir,
+      string.format("sfx_snapshot_rename_offline_%s_%03d%s", tostring(rename_id or MakeID()), index, ext)
+    )
+    index = index + 1
+  until not FileExists(candidate)
+
+  return candidate
+end
+
+function RewriteSnapshotMediaPathsInChunk(chunk, old_folder, replacement_for_path)
+  local changed = false
+
+  local rewritten = tostring(chunk or ""):gsub('(FILE%s+")([^"]+)(")', function(prefix, path, suffix)
+    local rel = GetRelativePathUnderFolder(path, old_folder)
+    if not rel then
+      return prefix .. path .. suffix
+    end
+
+    local replacement = replacement_for_path(path, rel)
+    if not replacement or replacement == "" then
+      return prefix .. path .. suffix
+    end
+
+    changed = true
+    return prefix .. replacement .. suffix
+  end)
+
+  return rewritten, changed
+end
+
+function CollectProjectSnapshotMediaReferences(old_folder, new_folder)
+  local refs = {
+    items = {},
+    media_count = 0,
+  }
+  local offline_paths = {}
+  local rename_id = MakeID()
+  local offline_index = 1
+
+  local function offline_path_for(path)
+    local key = NormalizePathForCompare(path)
+    if not offline_paths[key] then
+      offline_paths[key] = MakeOfflineSnapshotMediaPath(path, rename_id, offline_index)
+      offline_index = offline_index + 1
+      refs.media_count = refs.media_count + 1
+    end
+    return offline_paths[key]
+  end
+
+  local track_count = reaper.CountTracks(0)
+  for track_index = 0, track_count - 1 do
+    local track = reaper.GetTrack(0, track_index)
+    if track then
+      local item_count = reaper.CountTrackMediaItems(track)
+      for item_index = 0, item_count - 1 do
+        local item = reaper.GetTrackMediaItem(track, item_index)
+        local chunk = item and GetItemChunk(item)
+        if chunk and chunk ~= "" then
+          local offline_chunk, changed = RewriteSnapshotMediaPathsInChunk(chunk, old_folder, function(path)
+            return offline_path_for(path)
+          end)
+
+          if changed then
+            local new_chunk = RewriteSnapshotMediaPathsInChunk(chunk, old_folder, function(_, rel)
+              return JoinPath(new_folder, rel)
+            end)
+
+            refs.items[#refs.items + 1] = {
+              item = item,
+              original_chunk = chunk,
+              offline_chunk = offline_chunk,
+              new_chunk = new_chunk,
+            }
+          end
+        end
+      end
+    end
+  end
+
+  return refs
+end
+
+function IsMediaItemValid(item)
+  if not item then return false end
+  if reaper.ValidatePtr2 then
+    return reaper.ValidatePtr2(0, item, "MediaItem*")
+  end
+  return true
+end
+
+function ApplyProjectSnapshotMediaReferenceChunks(refs, chunk_key, refresh_peaks)
+  if type(refs) ~= "table" or type(refs.items) ~= "table" or #refs.items == 0 then
+    return true, 0, 0
+  end
+
+  local changed = 0
+  local failed = 0
+
+  for _, entry in ipairs(refs.items) do
+    local item = entry.item
+    local chunk = entry[chunk_key]
+
+    if item and chunk and IsMediaItemValid(item) then
+      local ok, result = pcall(SetItemChunk, item, chunk)
+      if ok and result ~= false then
+        changed = changed + 1
+
+        if refresh_peaks then
+          if reaper.UpdateItemInProject then
+            pcall(reaper.UpdateItemInProject, item)
+          end
+          if QueueItemPeakBuild then
+            QueueItemPeakBuild(item)
+          end
+        end
+      else
+        failed = failed + 1
+      end
+    end
+  end
+
+  if refresh_peaks and changed > 0 and PumpPeakBuildQueue then
+    PumpPeakBuildQueue(0.25)
+  end
+
+  if changed > 0 and reaper.UpdateArrange then
+    pcall(reaper.UpdateArrange)
+  end
+
+  return failed == 0, changed, failed
 end
 
 function RunWindowsPowerShellScript(script)
@@ -4268,10 +4434,28 @@ function RenameSnapshotById(snapshot_id, requested_name)
     return false
   end
 
+  local project_refs = nil
+  if NormalizePath(old_folder) ~= NormalizePath(new_folder) then
+    project_refs = CollectProjectSnapshotMediaReferences(old_folder, new_folder)
+    local refs_ok = ApplyProjectSnapshotMediaReferenceChunks(project_refs, "offline_chunk")
+    if not refs_ok then
+      ApplyProjectSnapshotMediaReferenceChunks(project_refs, "original_chunk")
+      local msg = Tr("error_failed_rename_snapshot_folder", {
+        source = old_folder,
+        dest = new_folder,
+      })
+      state.status = msg
+      reaper.MB(msg, SCRIPT_NAME, 0)
+      return false
+    end
+    ReleaseSnapshotFileLocks()
+  end
+
   local moved = false
   if NormalizePath(old_folder) ~= NormalizePath(new_folder) then
     local move_ok, move_err = MoveSnapshotFolderStrict(old_folder, new_folder)
     if not move_ok then
+      ApplyProjectSnapshotMediaReferenceChunks(project_refs, "original_chunk")
       local msg = tostring(move_err or Tr("error_failed_rename_snapshot_folder", {
         source = old_folder,
         dest = new_folder,
@@ -4299,6 +4483,7 @@ function RenameSnapshotById(snapshot_id, requested_name)
     if moved then
       MoveSnapshotFolderStrict(new_folder, old_folder)
     end
+    ApplyProjectSnapshotMediaReferenceChunks(project_refs, "original_chunk")
 
     snapshot.name = old_name
     snapshot.folder = old_folder_name
@@ -4315,6 +4500,7 @@ function RenameSnapshotById(snapshot_id, requested_name)
     if moved then
       MoveSnapshotFolderStrict(new_folder, old_folder)
     end
+    ApplyProjectSnapshotMediaReferenceChunks(project_refs, "original_chunk")
 
     snapshot.name = old_name
     snapshot.folder = old_folder_name
@@ -4327,6 +4513,7 @@ function RenameSnapshotById(snapshot_id, requested_name)
     return false
   end
 
+  ApplyProjectSnapshotMediaReferenceChunks(project_refs, "new_chunk", true)
   ReleaseSnapshotFileLocks()
   LoadIndex()
   EnsureSnapshotVisibleById(id)
