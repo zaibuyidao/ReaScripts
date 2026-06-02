@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.3
+-- @version 1.0.4
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -79,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.3"
+local SCRIPT_VERSION = "1.0.4"
 local EXT_SECTION = "SOUNDFX_SNAPSHOT_LIBRARY_PRO"
 
 local LANGUAGE_DEFAULT = "en"
@@ -186,8 +186,10 @@ local TEXT = {
     restore_regions = "Restore regions",
     restore_tempo = "Restore tempo and time signatures",
     restore_track_info = "Restore track names and FX",
+    restore_empty_tracks = "Restore empty tracks",
     tooltip_restore_track_info_load = "Track names and FX are applied only to tracks created during this load.",
     tooltip_restore_track_info_settings = "Track names and FX are applied only to tracks created during load.",
+    tooltip_restore_empty_tracks = "When disabled, captured tracks with no media items are skipped and remaining tracks are compacted.",
 
     interface = "Interface",
     settings_language = "Language:",
@@ -400,8 +402,10 @@ local TEXT = {
     restore_regions = "还原区域",
     restore_tempo = "还原速度和拍号",
     restore_track_info = "还原轨道名称和 FX",
+    restore_empty_tracks = "还原空轨道",
     tooltip_restore_track_info_load = "轨道名称和 FX 只会应用到本次载入时创建的轨道。",
     tooltip_restore_track_info_settings = "轨道名称和 FX 只会应用到载入时创建的轨道。",
+    tooltip_restore_empty_tracks = "关闭时，会跳过没有媒体对象的已捕获轨道，并压缩剩余轨道。",
 
     interface = "界面",
     settings_language = "语言:",
@@ -614,8 +618,10 @@ local TEXT = {
     restore_regions = "還原區域",
     restore_tempo = "還原速度和拍號",
     restore_track_info = "還原軌道名稱和 FX",
+    restore_empty_tracks = "還原空軌道",
     tooltip_restore_track_info_load = "軌道名稱和 FX 只會套用到本次載入時建立的軌道。",
     tooltip_restore_track_info_settings = "軌道名稱和 FX 只會套用到載入時建立的軌道。",
+    tooltip_restore_empty_tracks = "關閉時，會跳過沒有媒體物件的已擷取軌道，並壓縮剩餘軌道。",
 
     interface = "介面",
     settings_language = "語言:",
@@ -952,8 +958,9 @@ local state = {
   restore_regions = true,
   restore_tempo = true,
   restore_track_info = false,
+  restore_empty_tracks = false,
   check_empty_space = true,
-  show_load_popup = false,
+  show_load_popup = true,
   auto_render_preview = true,
   skip_preview_leading_empty = true,
   show_capture_abbreviations = false,
@@ -975,6 +982,7 @@ local state = {
   load_popup_restore_regions = true,
   load_popup_restore_tempo = true,
   load_popup_restore_track_info = false,
+  load_popup_restore_empty_tracks = false,
   load_popup_check_empty_space = true,
   save_name = "",
   save_category = "",
@@ -2005,8 +2013,9 @@ function LoadSettings()
   state.restore_regions = reaper.GetExtState(EXT_SECTION, "restore_regions") ~= "0"
   state.restore_tempo = reaper.GetExtState(EXT_SECTION, "restore_tempo") ~= "0"
   state.restore_track_info = reaper.GetExtState(EXT_SECTION, "restore_track_info") == "1"
+  state.restore_empty_tracks = reaper.GetExtState(EXT_SECTION, "restore_empty_tracks") == "1"
   state.check_empty_space = reaper.GetExtState(EXT_SECTION, "check_empty_space") ~= "0"
-  state.show_load_popup = reaper.GetExtState(EXT_SECTION, "show_load_popup") == "1"
+  state.show_load_popup = reaper.GetExtState(EXT_SECTION, "show_load_popup") ~= "0"
   state.auto_render_preview = reaper.GetExtState(EXT_SECTION, "auto_render_preview") ~= "0"
   state.skip_preview_leading_empty = reaper.GetExtState(EXT_SECTION, "skip_preview_leading_empty") ~= "0"
   state.show_capture_abbreviations = reaper.GetExtState(EXT_SECTION, "show_capture_abbreviations") == "1"
@@ -2035,6 +2044,7 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "restore_regions", state.restore_regions and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "restore_tempo", state.restore_tempo and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "restore_track_info", state.restore_track_info and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "restore_empty_tracks", state.restore_empty_tracks and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "check_empty_space", state.check_empty_space and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "show_load_popup", state.show_load_popup and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "auto_render_preview", state.auto_render_preview and "1" or "0", true)
@@ -2319,6 +2329,37 @@ function CollectSelectedItemsInRange(start_pos, end_pos)
   return selected_item_set, track_ranges
 end
 
+function MakeCaptureTrackRange(track, track_index, start_pos, end_pos)
+  return {
+    track = track,
+    track_index = track_index,
+    ranges = {
+      {
+        start_pos = start_pos,
+        end_pos = end_pos,
+      }
+    },
+  }
+end
+
+function BuildContiguousTimeSelectionTrackRanges(min_track, max_track, start_pos, end_pos)
+  local ranges = {}
+  local track_count = reaper.CountTracks(0)
+
+  if min_track == math.huge or max_track < min_track then
+    return ranges
+  end
+
+  for i = min_track, math.min(max_track, track_count - 1) do
+    local track = reaper.GetTrack(0, i)
+    if track then
+      ranges[#ranges + 1] = MakeCaptureTrackRange(track, i, start_pos, end_pos)
+    end
+  end
+
+  return ranges
+end
+
 function GetTimeSelectionContext()
   local start_pos, end_pos = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
 
@@ -2329,12 +2370,12 @@ function GetTimeSelectionContext()
   local selected_item_set, selected_track_ranges = CollectSelectedItemsInRange(start_pos, end_pos)
   local selected_items_only = #selected_track_ranges > 0
   local track_count = reaper.CountTracks(0)
-  local track_ranges = selected_items_only and selected_track_ranges or {}
+  local track_ranges = {}
   local min_track = math.huge
   local max_track = -1
 
   if selected_items_only then
-    for _, tr in ipairs(track_ranges) do
+    for _, tr in ipairs(selected_track_ranges) do
       min_track = math.min(min_track, tr.track_index)
       max_track = math.max(max_track, tr.track_index)
     end
@@ -2343,17 +2384,6 @@ function GetTimeSelectionContext()
       local track = reaper.GetTrack(0, i)
 
       if track and TrackHasItemsInRange(track, start_pos, end_pos) then
-        track_ranges[#track_ranges + 1] = {
-          track = track,
-          track_index = i,
-          ranges = {
-            {
-              start_pos = start_pos,
-              end_pos = end_pos,
-            }
-          },
-        }
-
         min_track = math.min(min_track, i)
         max_track = math.max(max_track, i)
       end
@@ -2361,17 +2391,31 @@ function GetTimeSelectionContext()
   end
 
   -- Allow marker / region / tempo-only snapshots.
-  -- If there are no media items in the time selection, use the selected track as a harmless anchor.
+  -- If there are no media items in the time selection, use selected tracks as harmless anchors.
   if min_track == math.huge then
-    local selected_track = reaper.GetSelectedTrack(0, 0)
-    if selected_track then
-      local n = reaper.GetMediaTrackInfo_Value(selected_track, "IP_TRACKNUMBER")
-      min_track = math.max(0, math.floor(n - 1))
+    local selected_track_count = reaper.CountSelectedTracks and reaper.CountSelectedTracks(0) or 0
+
+    if selected_track_count > 0 then
+      for i = 0, selected_track_count - 1 do
+        local selected_track = reaper.GetSelectedTrack(0, i)
+        local selected_index = GetTrackIndex(selected_track)
+        if selected_index then
+          min_track = math.min(min_track, selected_index)
+          max_track = math.max(max_track, selected_index)
+        end
+      end
     else
       min_track = 0
+      max_track = min_track
     end
-    max_track = min_track
+
+    if min_track == math.huge then
+      min_track = 0
+      max_track = min_track
+    end
   end
+
+  track_ranges = BuildContiguousTimeSelectionTrackRanges(min_track, max_track, start_pos, end_pos)
 
   return {
     mode = "time_selection",
@@ -2853,17 +2897,18 @@ function RestoreTimeSelectionRange(target_pos, duration)
   reaper.GetSet_LoopTimeRange(true, false, target_pos, target_pos + duration, false)
 end
 
-function RestoreRazorEditRange(data, start_track_index, target_pos)
+function RestoreRazorEditRange(data, start_track_index, target_pos, track_plan)
   if type(data) ~= "table" then return end
 
   local capture = data.capture or {}
-  local source_start = tonumber(capture.start_pos) or 0
-  local tracks = data.tracks or {}
+  local tracks = track_plan or {}
 
   ClearAllRazorEdits()
 
-  for _, tr in ipairs(tracks) do
-    local rel_index = tonumber(tr.relative_track_index) or 0
+  for _, entry in ipairs(tracks) do
+    local tr = entry.track_data or entry
+    local rel_index = tonumber(entry.target_relative_index)
+    if rel_index == nil then rel_index = tonumber(tr.relative_track_index) or 0 end
     local target_track_index = start_track_index + rel_index
     local track = reaper.GetTrack(0, target_track_index)
 
@@ -2893,7 +2938,7 @@ function RestoreRazorEditRange(data, start_track_index, target_pos)
   end
 end
 
-function RestoreCapturedRangeState(data, start_track_index, target_pos)
+function RestoreCapturedRangeState(data, start_track_index, target_pos, track_plan)
   local capture = data.capture or {}
   local mode = capture.mode or "unknown"
   local duration = tonumber(capture.duration) or 0
@@ -2903,8 +2948,86 @@ function RestoreCapturedRangeState(data, start_track_index, target_pos)
     RestoreTimeSelectionRange(target_pos, duration)
   elseif mode == "razor" then
     -- Keep the time selection unchanged for Razor snapshots and restore the Razor area itself.
-    RestoreRazorEditRange(data, start_track_index, target_pos)
+    RestoreRazorEditRange(data, start_track_index, target_pos, track_plan)
   end
+end
+
+function TrackDataHasCapturedItems(track_data)
+  return type(track_data) == "table" and type(track_data.items) == "table" and #track_data.items > 0
+end
+
+function GetTrackDataRelativeIndex(track_data)
+  local rel_index = tonumber(track_data and track_data.relative_track_index) or 0
+  return math.max(0, math.floor(rel_index))
+end
+
+function GetSortedSnapshotTracks(data)
+  local sorted = {}
+
+  for _, tr in ipairs((data and data.tracks) or {}) do
+    sorted[#sorted + 1] = tr
+  end
+
+  table.sort(sorted, function(a, b)
+    local ar = GetTrackDataRelativeIndex(a)
+    local br = GetTrackDataRelativeIndex(b)
+    if ar == br then
+      return (tonumber(a and a.source_track_index) or 0) < (tonumber(b and b.source_track_index) or 0)
+    end
+    return ar < br
+  end)
+
+  return sorted
+end
+
+function BuildRestoreTrackPlan(data)
+  local capture = data and data.capture or {}
+  local sorted_tracks = GetSortedSnapshotTracks(data)
+  local plan = {}
+
+  if state.restore_empty_tracks then
+    local track_count = math.max(0, math.floor(tonumber(capture.track_count) or 0))
+
+    for _, tr in ipairs(sorted_tracks) do
+      local rel_index = GetTrackDataRelativeIndex(tr)
+      plan[#plan + 1] = {
+        track_data = tr,
+        target_relative_index = rel_index,
+      }
+      track_count = math.max(track_count, rel_index + 1)
+    end
+
+    return plan, track_count
+  end
+
+  for _, tr in ipairs(sorted_tracks) do
+    if TrackDataHasCapturedItems(tr) then
+      plan[#plan + 1] = {
+        track_data = tr,
+        target_relative_index = #plan,
+      }
+    end
+  end
+
+  return plan, #plan
+end
+
+function SnapshotHasRestorableGlobalData(data)
+  if type(data) ~= "table" then return false end
+
+  if state.restore_tempo and type(data.tempo) == "table" and #data.tempo > 0 then
+    return true
+  end
+
+  if (state.restore_markers or state.restore_regions) and type(data.markers) == "table" then
+    for _, marker in ipairs(data.markers) do
+      if marker and ((marker.is_region and state.restore_regions) or ((not marker.is_region) and state.restore_markers)) then
+        return true
+      end
+    end
+  end
+
+  return false
 end
 
 function RestoreSnapshotData(data, snapshot_folder)
@@ -2915,9 +3038,9 @@ function RestoreSnapshotData(data, snapshot_folder)
   local target_pos = reaper.GetCursorPosition()
   local capture = data.capture or {}
   local duration = tonumber(capture.duration) or 0
-  local track_count = tonumber(capture.track_count) or #(data.tracks or {})
+  local track_plan, track_count = BuildRestoreTrackPlan(data)
 
-  if track_count <= 0 then
+  if track_count <= 0 and not SnapshotHasRestorableGlobalData(data) and (capture.mode or "unknown") ~= "time_selection" then
     return false, Tr("error_snapshot_has_no_tracks")
   end
 
@@ -2927,13 +3050,24 @@ function RestoreSnapshotData(data, snapshot_folder)
 
   if state.load_to_new_tracks then
     start_track_index = original_track_count
+  else
+    start_track_index = GetSelectedTrackIndexOrZero()
+  end
+
+  if state.check_empty_space and duration > 0 and track_count > 0 then
+    local blocked, track_number = TrackAreaHasItems(start_track_index, track_count, target_pos, target_pos + duration)
+    if blocked then
+      return false, Tr("error_target_area_not_empty", { track = tostring(track_number) })
+    end
+  end
+
+  if state.load_to_new_tracks then
     InsertTracksAt(start_track_index, track_count)
 
     for i = start_track_index, start_track_index + track_count - 1 do
       new_track_indices[i] = true
     end
   else
-    start_track_index = GetSelectedTrackIndexOrZero()
     EnsureTrackCount(start_track_index + track_count)
 
     local current_track_count = reaper.CountTracks(0)
@@ -2942,15 +3076,9 @@ function RestoreSnapshotData(data, snapshot_folder)
     end
   end
 
-  if state.check_empty_space and duration > 0 then
-    local blocked, track_number = TrackAreaHasItems(start_track_index, track_count, target_pos, target_pos + duration)
-    if blocked then
-      return false, Tr("error_target_area_not_empty", { track = tostring(track_number) })
-    end
-  end
-
-  for _, tr in ipairs(data.tracks or {}) do
-    local rel_index = tonumber(tr.relative_track_index) or 0
+  for _, entry in ipairs(track_plan) do
+    local tr = entry.track_data
+    local rel_index = tonumber(entry.target_relative_index) or 0
     local target_track_index = start_track_index + rel_index
     EnsureTrackCount(target_track_index + 1)
 
@@ -2978,7 +3106,7 @@ function RestoreSnapshotData(data, snapshot_folder)
     RestoreMarkers(data.markers, target_pos, state.restore_markers, state.restore_regions)
   end
 
-  RestoreCapturedRangeState(data, start_track_index, target_pos)
+  RestoreCapturedRangeState(data, start_track_index, target_pos, track_plan)
 
   PumpPeakBuildQueue(0.25)
   reaper.UpdateArrange()
@@ -3283,17 +3411,34 @@ function LoadSelectedSnapshot()
     return
   end
 
+  local function LoadErrorHandler(err)
+    if debug and debug.traceback then
+      return debug.traceback(err, 2)
+    end
+    return tostring(err)
+  end
+
   reaper.Undo_BeginBlock()
   reaper.PreventUIRefresh(1)
 
-  local ok, result_or_err = RestoreSnapshotData(data, GetSnapshotFolder(snapshot))
+  local call_ok, ok, result_or_err = xpcall(function()
+    local restore_ok, restore_err = RestoreSnapshotData(data, GetSnapshotFolder(snapshot))
+    if restore_ok then
+      PumpPeakBuildQueue(0.25)
+      reaper.UpdateArrange()
+    end
+    return restore_ok, restore_err
+  end, LoadErrorHandler)
 
   reaper.PreventUIRefresh(-1)
-  if ok then
-    PumpPeakBuildQueue(0.25)
-    reaper.UpdateArrange()
-  end
+  reaper.UpdateArrange()
   reaper.Undo_EndBlock(Tr("undo_load_snapshot"), -1)
+
+  if not call_ok then
+    state.status = Tr("status_load_failed")
+    reaper.MB(Tr("error_load_snapshot_detail", { detail = tostring(ok or "") }), SCRIPT_NAME, 0)
+    return
+  end
 
   if not ok then
     state.status = result_or_err or Tr("status_load_failed")
@@ -3310,6 +3455,7 @@ function PrimeLoadConfirmPopup()
   state.load_popup_restore_regions = state.restore_regions ~= false
   state.load_popup_restore_tempo = state.restore_tempo ~= false
   state.load_popup_restore_track_info = state.restore_track_info == true
+  state.load_popup_restore_empty_tracks = state.restore_empty_tracks == true
   state.load_popup_check_empty_space = state.check_empty_space ~= false
 end
 
@@ -3319,6 +3465,7 @@ function ApplyLoadPopupSettings()
   state.restore_regions = state.load_popup_restore_regions ~= false
   state.restore_tempo = state.load_popup_restore_tempo ~= false
   state.restore_track_info = state.load_popup_restore_track_info == true
+  state.restore_empty_tracks = state.load_popup_restore_empty_tracks == true
   state.check_empty_space = state.load_popup_check_empty_space ~= false
   SaveSettings()
 end
@@ -5234,6 +5381,12 @@ function DrawLoadConfirmPopup()
         ImGui.SetTooltip(ctx, Tr("tooltip_restore_track_info_load"))
       end
 
+      local changed7, v7 = ImGui.Checkbox(ctx, Tr("restore_empty_tracks"), state.load_popup_restore_empty_tracks)
+      if changed7 then state.load_popup_restore_empty_tracks = v7 end
+      if state.show_tips and ImGui.IsItemHovered(ctx) then
+        ImGui.SetTooltip(ctx, Tr("tooltip_restore_empty_tracks"))
+      end
+
       ImGui.Separator(ctx)
 
       if ImGui.Button(ctx, Tr("load"), 100, 30) then
@@ -5337,14 +5490,20 @@ function DrawSettingsPopup()
       ImGui.SetTooltip(ctx, Tr("tooltip_restore_track_info_settings"))
     end
 
+    local c8, v8 = ImGui.Checkbox(ctx, Tr("restore_empty_tracks"), state.restore_empty_tracks)
+    if c8 then state.restore_empty_tracks = v8 end
+    if state.show_tips and ImGui.IsItemHovered(ctx) then
+      ImGui.SetTooltip(ctx, Tr("tooltip_restore_empty_tracks"))
+    end
+
     --ImGui.Separator(ctx)
     ImGui.SeparatorText(ctx, Tr("settings_save_options"))
 
-    local c8, v8 = ImGui.Checkbox(ctx, Tr("auto_render_preview"), state.auto_render_preview)
-    if c8 then state.auto_render_preview = v8 end
+    local c9, v9 = ImGui.Checkbox(ctx, Tr("auto_render_preview"), state.auto_render_preview)
+    if c9 then state.auto_render_preview = v9 end
 
-    local c9, v9 = ImGui.Checkbox(ctx, Tr("skip_preview_leading_empty"), state.skip_preview_leading_empty)
-    if c9 then state.skip_preview_leading_empty = v9 end
+    local c10, v10 = ImGui.Checkbox(ctx, Tr("skip_preview_leading_empty"), state.skip_preview_leading_empty)
+    if c10 then state.skip_preview_leading_empty = v10 end
 
     --ImGui.Separator(ctx)
     ImGui.SeparatorText(ctx, Tr("settings_snapshot_options"))
@@ -5375,14 +5534,14 @@ function DrawSettingsPopup()
     --ImGui.Separator(ctx)
     reaper.ImGui_SeparatorText(ctx, Tr("settings_display_options"))
 
-    local c10, v10 = ImGui.Checkbox(ctx, Tr("show_capture_abbreviations"), state.show_capture_abbreviations)
-    if c10 then state.show_capture_abbreviations = v10 end
+    local c11, v11 = ImGui.Checkbox(ctx, Tr("show_capture_abbreviations"), state.show_capture_abbreviations)
+    if c11 then state.show_capture_abbreviations = v11 end
 
-    local c11, v11 = ImGui.Checkbox(ctx, Tr("show_tips"), state.show_tips)
-    if c11 then state.show_tips = v11 end
+    local c12, v12 = ImGui.Checkbox(ctx, Tr("show_tips"), state.show_tips)
+    if c12 then state.show_tips = v12 end
 
-    local c12, v12 = ImGui.Checkbox(ctx, Tr("place_info_panel_bottom"), state.info_panel_at_bottom)
-    if c12 then state.info_panel_at_bottom = v12 end
+    local c13, v13 = ImGui.Checkbox(ctx, Tr("place_info_panel_bottom"), state.info_panel_at_bottom)
+    if c13 then state.info_panel_at_bottom = v13 end
 
     ImGui.Separator(ctx)
 
