@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog
 --   New Script
@@ -79,8 +79,8 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.4"
-local EXT_SECTION = "SOUNDFX_SNAPSHOT_LIBRARY_PRO"
+local SCRIPT_VERSION = "1.0.5"
+local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
 local LANGUAGE_OPTIONS = {
@@ -114,6 +114,7 @@ local TEXT = {
     settings = "Settings",
     browse = "Browse",
     remove = "Remove",
+    rename = "Rename",
     open_folder = "Open Folder",
     export_zip = "Export ZIP",
     import_zip = "Import ZIP",
@@ -135,6 +136,7 @@ local TEXT = {
 
     popup_save_snapshot = "Save Snapshot",
     popup_load_snapshot = "Load Snapshot",
+    popup_rename_snapshot = "Rename Snapshot",
     popup_settings = "Settings",
 
     search_hint = "Search name / category / tags / description...",
@@ -170,12 +172,14 @@ local TEXT = {
 
     smart_save_info = "Smart save: Razor Edit has priority. If no Razor Edit exists, the current time selection will be captured.",
     field_name = "Name",
+    field_new_name = "New name",
     field_description = "Description",
     category_dropdown = "Category ▼",
     tags_dropdown = "Tags ▼",
     tooltip_choose_categories = "Choose from existing categories",
     tooltip_append_tags = "Append from existing tags",
-    same_name_overwrite = "Same-name snapshots will be updated and preview.mp3 will be overwritten.",
+    same_name_overwrite = "Same-name snapshots require confirmation before overwriting.",
+    confirm_overwrite_snapshot = "A snapshot named \"{name}\" already exists.\n\nOK will overwrite it. Cancel returns to the save window so you can rename it.",
     archive_always = "Markers, regions, tempo/time signatures, track names and FX are always archived.",
     tip_reuse_names = "Tip: click Category or Tags to reuse existing names.",
 
@@ -226,6 +230,10 @@ local TEXT = {
     error_refuse_delete_outside = "Refusing to delete a folder outside the snapshots directory.",
     error_failed_delete_snapshot_folder = "Failed to delete snapshot folder: {path}",
     error_snapshot_folder_not_found = "Snapshot folder not found.",
+    error_snapshot_name_exists = "A snapshot named \"{name}\" already exists.",
+    error_snapshot_folder_exists = "A snapshot folder named \"{folder}\" already exists.",
+    error_failed_rename_snapshot_folder = "Failed to rename snapshot folder:\n\n{source}\n\n->\n\n{dest}",
+    error_failed_update_snapshot_data = "Failed to update snapshot data file.",
     error_zip_create_windows = "Failed to create ZIP with PowerShell .NET ZipFile. Please check whether the export folder is writable:\n\n{path}",
     error_zip_create_unix = "Failed to create ZIP. On macOS it uses ditto; on Linux it requires zip.",
     error_zip_not_found = "ZIP file not found.",
@@ -265,6 +273,7 @@ local TEXT = {
 
     status_ready = "Ready.",
     status_capture_failed = "Capture failed.",
+    status_save_cancelled_same_name = "Save cancelled: same-name snapshot was not overwritten.",
     status_snapshot_write_failed = "Failed to write snapshot file.",
     status_saved_preview_ok = "Saved {mode} snapshot and rendered preview: {name}{media_note}",
     status_saved_preview_failed = "Saved {mode} snapshot, but preview render failed: {name}{media_note}",
@@ -288,7 +297,10 @@ local TEXT = {
     status_added_favorite = "Added to favorites.",
     status_removed_favorite = "Removed from favorites.",
     status_removed_deleted = "Removed snapshot and deleted local folder.",
-    status_removed_index_delete_failed = "Removed from library index, but failed to delete local folder.",
+    status_remove_delete_failed = "Delete failed. Snapshot was kept in the library.",
+    status_removed_index_delete_failed = "Delete failed. Snapshot was kept in the library.",
+    status_renamed_snapshot = "Renamed snapshot: {name}",
+    status_rename_cancelled = "Rename cancelled.",
     status_no_preview_waveform = "No preview file found for waveform display.",
     status_waveform_extension_missing = "Waveform cache extension is not available.",
     status_waveform_read_failed = "Failed to read waveform cache.",
@@ -330,6 +342,7 @@ local TEXT = {
     settings = "设置",
     browse = "浏览",
     remove = "移除",
+    rename = "重命名",
     open_folder = "打开文件夹",
     export_zip = "导出 ZIP",
     import_zip = "导入 ZIP",
@@ -351,6 +364,7 @@ local TEXT = {
 
     popup_save_snapshot = "保存快照",
     popup_load_snapshot = "载入快照",
+    popup_rename_snapshot = "重命名快照",
     popup_settings = "设置",
 
     search_hint = "搜索名称 / 分类 / 标签 / 描述...",
@@ -386,12 +400,14 @@ local TEXT = {
 
     smart_save_info = "智能保存: 剃刀编辑优先。如果没有剃刀编辑，则捕获当前时间选区。",
     field_name = "名称",
+    field_new_name = "新名称",
     field_description = "描述",
     category_dropdown = "分类 ▼",
     tags_dropdown = "标签 ▼",
     tooltip_choose_categories = "从现有分类中选择",
     tooltip_append_tags = "从现有标签中追加",
-    same_name_overwrite = "同名快照会被更新，preview.mp3 会被覆盖。",
+    same_name_overwrite = "同名快照需要确认后才会覆盖。",
+    confirm_overwrite_snapshot = "已存在同名快照: {name}\n\n点击[确定]将覆盖，点击[取消]返回保存窗口以便改名。",
     archive_always = "标记、区域、速度/拍号、轨道名称和 FX 始终会被归档。",
     tip_reuse_names = "提示: 点击分类或标签可复用现有名称。",
 
@@ -442,6 +458,10 @@ local TEXT = {
     error_refuse_delete_outside = "拒绝删除快照目录之外的文件夹。",
     error_failed_delete_snapshot_folder = "无法删除快照文件夹: {path}",
     error_snapshot_folder_not_found = "未找到快照文件夹。",
+    error_snapshot_name_exists = "已存在同名快照: {name}",
+    error_snapshot_folder_exists = "已存在同名快照文件夹: {folder}",
+    error_failed_rename_snapshot_folder = "无法重命名快照文件夹: \n\n{source}\n\n->\n\n{dest}",
+    error_failed_update_snapshot_data = "无法更新快照数据文件。",
     error_zip_create_windows = "无法通过 PowerShell .NET ZipFile 创建 ZIP。请检查导出文件夹是否可写: \n\n{path}",
     error_zip_create_unix = "无法创建 ZIP。macOS 使用 ditto，Linux 需要 zip。",
     error_zip_not_found = "未找到 ZIP 文件。",
@@ -481,6 +501,7 @@ local TEXT = {
 
     status_ready = "就绪。",
     status_capture_failed = "捕获失败。",
+    status_save_cancelled_same_name = "已取消保存: 未覆盖同名快照。",
     status_snapshot_write_failed = "无法写入快照文件。",
     status_saved_preview_ok = "已保存 {mode} 快照并渲染预览: {name}{media_note}",
     status_saved_preview_failed = "已保存 {mode} 快照，但预览渲染失败: {name}{media_note}",
@@ -504,7 +525,10 @@ local TEXT = {
     status_added_favorite = "已添加到收藏。",
     status_removed_favorite = "已取消收藏。",
     status_removed_deleted = "已移除快照并删除本地文件夹。",
-    status_removed_index_delete_failed = "已从资源库索引中移除，但删除本地文件夹失败。",
+    status_remove_delete_failed = "删除失败，快照已保留在资源库中。",
+    status_removed_index_delete_failed = "删除失败，快照已保留在资源库中。",
+    status_renamed_snapshot = "已重命名快照: {name}",
+    status_rename_cancelled = "已取消重命名。",
     status_no_preview_waveform = "没有可用于波形显示的预览文件。",
     status_waveform_extension_missing = "波形缓存扩展不可用。",
     status_waveform_read_failed = "无法读取波形缓存。",
@@ -546,6 +570,7 @@ local TEXT = {
     settings = "設定",
     browse = "瀏覽",
     remove = "移除",
+    rename = "重新命名",
     open_folder = "開啟資料夾",
     export_zip = "匯出 ZIP",
     import_zip = "匯入 ZIP",
@@ -567,6 +592,7 @@ local TEXT = {
 
     popup_save_snapshot = "儲存快照",
     popup_load_snapshot = "載入快照",
+    popup_rename_snapshot = "重新命名快照",
     popup_settings = "設定",
 
     search_hint = "搜尋名稱 / 分類 / 標籤 / 描述...",
@@ -602,12 +628,14 @@ local TEXT = {
 
     smart_save_info = "智慧儲存: 剃刀編輯優先。如果沒有剃刀編輯，則擷取目前時間選區。",
     field_name = "名稱",
+    field_new_name = "新名稱",
     field_description = "描述",
     category_dropdown = "分類 ▼",
     tags_dropdown = "標籤 ▼",
     tooltip_choose_categories = "從現有分類中選擇",
     tooltip_append_tags = "從現有標籤中追加",
-    same_name_overwrite = "同名快照會被更新，preview.mp3 會被覆寫。",
+    same_name_overwrite = "同名快照需要確認後才會覆寫。",
+    confirm_overwrite_snapshot = "已存在同名快照: {name}\n\n點擊[確定]將覆寫，點擊[取消]返回儲存視窗以便改名。",
     archive_always = "標記、區域、速度/拍號、軌道名稱和 FX 一律會被封存。",
     tip_reuse_names = "提示: 點擊分類或標籤可重用現有名稱。",
 
@@ -658,6 +686,10 @@ local TEXT = {
     error_refuse_delete_outside = "拒絕刪除快照目錄之外的資料夾。",
     error_failed_delete_snapshot_folder = "無法刪除快照資料夾: {path}",
     error_snapshot_folder_not_found = "找不到快照資料夾。",
+    error_snapshot_name_exists = "已存在同名快照: {name}",
+    error_snapshot_folder_exists = "已存在同名快照資料夾: {folder}",
+    error_failed_rename_snapshot_folder = "無法重新命名快照資料夾: \n\n{source}\n\n->\n\n{dest}",
+    error_failed_update_snapshot_data = "無法更新快照資料檔案。",
     error_zip_create_windows = "無法透過 PowerShell .NET ZipFile 建立 ZIP。請檢查匯出資料夾是否可寫入: \n\n{path}",
     error_zip_create_unix = "無法建立 ZIP。macOS 使用 ditto，Linux 需要 zip。",
     error_zip_not_found = "找不到 ZIP 檔案。",
@@ -697,6 +729,7 @@ local TEXT = {
 
     status_ready = "就緒。",
     status_capture_failed = "擷取失敗。",
+    status_save_cancelled_same_name = "已取消儲存: 未覆寫同名快照。",
     status_snapshot_write_failed = "無法寫入快照檔案。",
     status_saved_preview_ok = "已儲存 {mode} 快照並算繪預覽: {name}{media_note}",
     status_saved_preview_failed = "已儲存 {mode} 快照，但預覽算繪失敗: {name}{media_note}",
@@ -720,7 +753,10 @@ local TEXT = {
     status_added_favorite = "已加入收藏。",
     status_removed_favorite = "已取消收藏。",
     status_removed_deleted = "已移除快照並刪除本機資料夾。",
-    status_removed_index_delete_failed = "已從資源庫索引中移除，但刪除本機資料夾失敗。",
+    status_remove_delete_failed = "刪除失敗，快照已保留在資源庫中。",
+    status_removed_index_delete_failed = "刪除失敗，快照已保留在資源庫中。",
+    status_renamed_snapshot = "已重新命名快照: {name}",
+    status_rename_cancelled = "已取消重新命名。",
     status_no_preview_waveform = "沒有可用於波形顯示的預覽檔案。",
     status_waveform_extension_missing = "波形快取擴充不可用。",
     status_waveform_read_failed = "無法讀取波形快取。",
@@ -975,6 +1011,7 @@ local state = {
   error = "",
 
   show_save_popup = false,
+  request_open_rename_popup = false,
   request_open_load_confirm_popup = false,
   request_execute_load = false,
   load_popup_load_to_new_tracks = false,
@@ -988,6 +1025,10 @@ local state = {
   save_category = "",
   save_tags = "",
   save_description = "",
+  save_in_progress = false,
+  save_submitted = false,
+  rename_snapshot_id = "",
+  rename_name = "",
 
   show_settings_popup = false,
   new_library_dir = "",
@@ -1456,6 +1497,95 @@ function GetSnapshotPreviewPath(snapshot)
   return mp3_path
 end
 
+function SnapshotMetaMatches(snapshot, meta, folder_name)
+  if type(snapshot) ~= "table" or type(meta) ~= "table" then return false end
+
+  local snapshot_id = tostring(snapshot.id or "")
+  local meta_id = tostring(meta.id or "")
+  if snapshot_id ~= "" and meta_id ~= "" and snapshot_id == meta_id then
+    return true
+  end
+
+  local snapshot_name = tostring(snapshot.name or "")
+  local meta_name = tostring(meta.name or "")
+  if snapshot_name ~= "" and meta_name ~= "" and snapshot_name == meta_name then
+    return true
+  end
+
+  local snapshot_folder = tostring(snapshot.folder or "")
+  local meta_folder = tostring(meta.folder or "")
+  folder_name = tostring(folder_name or "")
+  if snapshot_folder ~= "" and meta_folder ~= "" and snapshot_folder == meta_folder then
+    return true
+  end
+
+  if snapshot_folder ~= "" and folder_name ~= "" and snapshot_folder == folder_name then
+    return true
+  end
+
+  return false
+end
+
+function SnapshotFolderMatches(snapshot, folder, folder_name)
+  local data = LoadLuaTable(JoinPath(folder, "snapshot.lua"))
+  if type(data) ~= "table" then return false end
+
+  return SnapshotMetaMatches(snapshot, data.meta or {}, folder_name)
+end
+
+function ResolveSnapshotFolder(snapshot)
+  if type(snapshot) ~= "table" then return "" end
+
+  local root = GetSnapshotsRoot()
+  local tried = {}
+  local candidates = {}
+
+  local function add_candidate(folder_name)
+    folder_name = tostring(folder_name or "")
+    if folder_name == "" then return end
+
+    local path = JoinPath(root, folder_name)
+    local key = NormalizePath(path)
+    if not tried[key] then
+      tried[key] = true
+      candidates[#candidates + 1] = { path = path, name = folder_name }
+    end
+  end
+
+  add_candidate(snapshot.folder)
+  add_candidate(snapshot.id)
+  add_candidate(SanitizeFileName(snapshot.name))
+
+  for _, candidate in ipairs(candidates) do
+    if FileExists(JoinPath(candidate.path, "snapshot.lua")) then
+      return candidate.path, candidate.name
+    end
+  end
+
+  if reaper.EnumerateSubdirectories then
+    local i = 0
+    while true do
+      local folder_name = reaper.EnumerateSubdirectories(root, i)
+      if not folder_name then break end
+
+      local folder = JoinPath(root, folder_name)
+      if SnapshotFolderMatches(snapshot, folder, folder_name) then
+        return folder, folder_name
+      end
+
+      i = i + 1
+    end
+  end
+
+  return "", ""
+end
+
+function GetSnapshotFolderForFileOperation(snapshot)
+  local folder = ResolveSnapshotFolder(snapshot)
+  if folder and folder ~= "" then return folder end
+  return GetSnapshotFolder(snapshot)
+end
+
 function OpenFolder(path)
   path = NormalizePath(path)
   if reaper.CF_ShellExecute then
@@ -1544,9 +1674,110 @@ function IsSnapshotFolderSafeToDelete(path)
   return folder:sub(1, #root + 1) == root .. "/"
 end
 
+function IsSnapshotPathInsideRoot(path)
+  local folder = NormalizePath(path)
+  local root = NormalizePath(GetSnapshotsRoot())
+
+  if folder == "" or root == "" or folder == root then
+    return false
+  end
+
+  if reaper.GetOS():find("Win") then
+    folder = Lower(folder)
+    root = Lower(root)
+  end
+
+  return folder:sub(1, #root + 1) == root .. "/"
+end
+
+function ReleaseSnapshotFileLocks()
+  if StopInternalPreview then
+    pcall(StopInternalPreview, true)
+  end
+
+  if CancelAllWaveformCacheJobs then
+    CancelAllWaveformCacheJobs()
+  elseif reaper.SM_WFC_Cancel then
+    pcall(reaper.SM_WFC_Cancel, "")
+  end
+
+  if ResetWaveformCacheState then
+    ResetWaveformCacheState(false)
+  end
+
+  if reaper.UpdateArrange then
+    pcall(reaper.UpdateArrange)
+  end
+end
+
+function RunWindowsPowerShellScript(script)
+  if not reaper.GetOS():find("Win") then return false, "" end
+
+  local command = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ' .. ShellQuote(script)
+  return RunShellCommand(command)
+end
+
+function WindowsDirectoryExists(path)
+  if not reaper.GetOS():find("Win") then return nil end
+
+  local ps = "$ErrorActionPreference = 'Stop'; " ..
+    "if (Test-Path -LiteralPath " .. PowerShellQuote(path) .. " -PathType Container) { Write-Output '1' } else { Write-Output '0' }"
+  local command = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ' .. ShellQuote(ps)
+
+  if reaper.ExecProcess and RunProcessHidden then
+    local ok, output = RunProcessHidden(command, 10000)
+    if ok then
+      output = tostring(output or "")
+      if output:match("1") then return true end
+      if output:match("0") then return false end
+    end
+  end
+
+  local ps_exit = "$ErrorActionPreference = 'Stop'; " ..
+    "if (Test-Path -LiteralPath " .. PowerShellQuote(path) .. " -PathType Container) { exit 0 } else { exit 1 }"
+  local ok = RunWindowsPowerShellScript(ps_exit)
+  return ok == true
+end
+
+function SnapshotDirectoryExists(path)
+  path = NormalizePath(path)
+  if path == "" then return false end
+
+  local win_exists = WindowsDirectoryExists(path)
+  if win_exists ~= nil then return win_exists end
+
+  return PathExists(path)
+end
+
+function WaitForSnapshotDirectoryDeleted(path, timeout_seconds)
+  if not SnapshotDirectoryExists(path) then return true end
+
+  if reaper.GetOS():find("Win") then
+    RemoveDirectoryWithPowerShell(path)
+  end
+
+  return not SnapshotDirectoryExists(path)
+end
+
+function RemoveDirectoryWithPowerShell(path)
+  local ps = "$ErrorActionPreference = 'Stop'; " ..
+    "if (Test-Path -LiteralPath " .. PowerShellQuote(path) .. ") { " ..
+    "Remove-Item -LiteralPath " .. PowerShellQuote(path) .. " -Recurse -Force }"
+
+  return RunWindowsPowerShellScript(ps)
+end
+
+function MoveDirectoryWithPowerShell(source_folder, dest_folder)
+  local ps = "$ErrorActionPreference = 'Stop'; " ..
+    "Move-Item -LiteralPath " .. PowerShellQuote(source_folder) ..
+    " -Destination " .. PowerShellQuote(dest_folder) .. " -Force"
+
+  return RunWindowsPowerShellScript(ps)
+end
+
 function DeleteDirectoryRecursive(path)
   path = NormalizePath(path)
-  if path == "" or not PathExists(path) then
+  if path == "" or not SnapshotDirectoryExists(path) then
     return true
   end
 
@@ -1554,16 +1785,21 @@ function DeleteDirectoryRecursive(path)
     return false, Tr("error_refuse_delete_outside")
   end
 
+  ReleaseSnapshotFileLocks()
+
   local command
   if reaper.GetOS():find("Win") then
-    command = 'rmdir /S /Q ' .. ShellQuote(path)
+    RemoveDirectoryWithPowerShell(path)
+    if SnapshotDirectoryExists(path) then
+      command = 'rmdir /S /Q ' .. ShellQuote(path)
+      RunShellCommand(command)
+    end
   else
     command = 'rm -rf -- ' .. ShellQuote(path)
+    RunShellCommand(command)
   end
 
-  RunShellCommand(command)
-
-  if PathExists(path) then
+  if not WaitForSnapshotDirectoryDeleted(path, 2.0) then
     return false, Tr("error_failed_delete_snapshot_folder", { path = path })
   end
 
@@ -1985,11 +2221,62 @@ function MoveOrCopySnapshotFolder(source_folder, dest_folder)
   source_folder = NormalizePath(source_folder)
   dest_folder = NormalizePath(dest_folder)
 
+  ReleaseSnapshotFileLocks()
+
   if os.rename(source_folder, dest_folder) then
     return true
   end
 
+  if reaper.GetOS():find("Win") then
+    MoveDirectoryWithPowerShell(source_folder, dest_folder)
+    if PathExists(dest_folder) then
+      return true
+    end
+  end
+
   return CopyDirectoryRecursive(source_folder, dest_folder)
+end
+
+function MoveSnapshotFolderStrict(source_folder, dest_folder)
+  source_folder = NormalizePath(source_folder)
+  dest_folder = NormalizePath(dest_folder)
+
+  if source_folder == "" or not PathExists(source_folder) then
+    return false, Tr("error_snapshot_folder_not_found")
+  end
+
+  if NormalizePath(source_folder) == NormalizePath(dest_folder) then
+    return true
+  end
+
+  if not IsSnapshotPathInsideRoot(source_folder) or not IsSnapshotPathInsideRoot(dest_folder) then
+    return false, Tr("error_refuse_delete_outside")
+  end
+
+  if PathExists(dest_folder) then
+    return false, Tr("error_snapshot_folder_exists", { folder = GetFileName(dest_folder) })
+  end
+
+  EnsureDir(GetFileDir(dest_folder))
+  ReleaseSnapshotFileLocks()
+
+  if os.rename(source_folder, dest_folder) then
+    if PathExists(dest_folder) and not PathExists(source_folder) then
+      return true
+    end
+  end
+
+  if reaper.GetOS():find("Win") then
+    MoveDirectoryWithPowerShell(source_folder, dest_folder)
+    if PathExists(dest_folder) and not PathExists(source_folder) then
+      return true
+    end
+  end
+
+  return false, Tr("error_failed_rename_snapshot_folder", {
+    source = source_folder,
+    dest = dest_folder,
+  })
 end
 
 ----------------------------------------
@@ -2695,6 +2982,7 @@ function CaptureSnapshotData(meta)
           track_data.items[#track_data.items + 1] = {
             position = pos - ctx_data.start_pos,
             length = len,
+            stable_key = GetItemStableKey(item),
             chunk = chunk,
           }
         end
@@ -3190,7 +3478,117 @@ function GetPreviewRenderStart(data)
   return preview_start
 end
 
-function RenderPreviewMp3(snapshot_folder, start_pos, end_pos)
+function MakePreviewItemFallbackKey(track_index, position, length)
+  return string.format(
+    "%d:%.12f:%.12f",
+    math.floor(tonumber(track_index) or -1),
+    tonumber(position) or 0,
+    tonumber(length) or 0
+  )
+end
+
+function BuildPreviewCapturedItemSet(data)
+  local captured = {}
+  if type(data) ~= "table" then return captured end
+
+  local capture_start = tonumber(data.capture and data.capture.start_pos) or 0
+
+  for _, tr in ipairs(data.tracks or {}) do
+    local source_track_index = tonumber(tr.source_track_index)
+
+    for _, item_data in ipairs(tr.items or {}) do
+      local stable_key = tostring(item_data.stable_key or "")
+      if stable_key ~= "" then
+        captured[stable_key] = true
+      end
+
+      local rel_pos = tonumber(item_data.position)
+      local len = tonumber(item_data.length)
+      if source_track_index and rel_pos and len then
+        captured[MakePreviewItemFallbackKey(source_track_index, capture_start + rel_pos, len)] = true
+      end
+    end
+  end
+
+  return captured
+end
+
+function IsPreviewCapturedItem(item, track_index, captured_item_set)
+  if not item or type(captured_item_set) ~= "table" then return false end
+
+  local stable_key = GetItemStableKey(item)
+  if stable_key ~= "" and captured_item_set[stable_key] then
+    return true
+  end
+
+  local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+  return captured_item_set[MakePreviewItemFallbackKey(track_index, pos, len)] == true
+end
+
+function CreatePreviewRenderMuteGuard(data, start_pos, end_pos)
+  if type(data) ~= "table" then return nil end
+
+  local guard = { items = {} }
+  local captured_item_set = BuildPreviewCapturedItemSet(data)
+  local track_count = reaper.CountTracks(0)
+
+  for track_index = 0, track_count - 1 do
+    local track = reaper.GetTrack(0, track_index)
+    if track then
+      local item_count = reaper.CountTrackMediaItems(track)
+
+      for item_index = 0, item_count - 1 do
+        local item = reaper.GetTrackMediaItem(track, item_index)
+
+        if item and ItemOverlapsRangeByTime(item, start_pos, end_pos) and not IsPreviewCapturedItem(item, track_index, captured_item_set) then
+          local ok_get, old_mute = pcall(reaper.GetMediaItemInfo_Value, item, "B_MUTE")
+          old_mute = ok_get and (tonumber(old_mute) or 0) or 0
+
+          if old_mute < 0.5 then
+            local ok_set = pcall(reaper.SetMediaItemInfo_Value, item, "B_MUTE", 1)
+            if ok_set then
+              guard.items[#guard.items + 1] = {
+                item = item,
+                mute = old_mute,
+              }
+            end
+          end
+        end
+      end
+    end
+  end
+
+  if #guard.items > 0 then
+    reaper.UpdateArrange()
+  end
+
+  return guard
+end
+
+function RestorePreviewRenderMuteGuard(guard)
+  if type(guard) ~= "table" or type(guard.items) ~= "table" then return end
+
+  for i = #guard.items, 1, -1 do
+    local entry = guard.items[i]
+    local item = entry and entry.item
+    local valid = item ~= nil
+
+    if valid and reaper.ValidatePtr2 then
+      valid = reaper.ValidatePtr2(0, item, "MediaItem*")
+    end
+
+    if valid then
+      pcall(reaper.SetMediaItemInfo_Value, item, "B_MUTE", tonumber(entry.mute) or 0)
+    end
+  end
+
+  if #guard.items > 0 then
+    reaper.UpdateArrange()
+  end
+end
+
+function RenderPreviewMp3(snapshot_folder, start_pos, end_pos, render_data)
   if not snapshot_folder or snapshot_folder == "" then
     return false, Tr("error_invalid_snapshot_folder")
   end
@@ -3205,6 +3603,7 @@ function RenderPreviewMp3(snapshot_folder, start_pos, end_pos)
 
   local old_settings = SaveRenderSettings()
   local old_time_sel_start, old_time_sel_end = reaper.GetSet_LoopTimeRange(false, false, 0, 0, false)
+  local mute_guard = nil
 
   local ok, err = pcall(function()
     -- Always overwrite the preview file for same-name snapshot updates.
@@ -3233,10 +3632,13 @@ function RenderPreviewMp3(snapshot_folder, start_pos, end_pos)
 
     SetRenderFormatMp3()
 
+    mute_guard = CreatePreviewRenderMuteGuard(render_data, start_pos, end_pos)
+
     -- File: Render project, using the most recent render settings, auto-close render dialog
     reaper.Main_OnCommand(42230, 0)
   end)
 
+  RestorePreviewRenderMuteGuard(mute_guard)
   reaper.GetSet_LoopTimeRange(true, false, old_time_sel_start, old_time_sel_end, false)
   RestoreRenderSettings(old_settings)
 
@@ -3255,37 +3657,113 @@ end
 -- Save / Load Snapshot
 ----------------------------------------
 
-function SaveSnapshotFromPopup()
+function FindSnapshotForSaveName(name, folder_name)
+  local name_match = nil
+  local name_index = nil
+  local folder_match = nil
+  local folder_index = nil
+
+  for i, s in ipairs(state.snapshots or {}) do
+    if not name_match and tostring(s.name or "") == name then
+      name_match = s
+      name_index = i
+    end
+
+    if not folder_match and folder_name ~= "" and tostring(s.folder or s.id or "") == folder_name then
+      folder_match = s
+      folder_index = i
+    end
+  end
+
+  if name_match then
+    return name_match, name_index
+  end
+
+  return folder_match, folder_index
+end
+
+function ConfirmOverwriteSnapshot(name)
+  local result = reaper.MB(
+    Tr("confirm_overwrite_snapshot", { name = tostring(name or "") }),
+    SCRIPT_NAME,
+    1
+  )
+
+  return result == 1
+end
+
+function PrepareSnapshotFolderForSave(existing_snapshot, folder_name)
+  local folder = JoinPath(GetSnapshotsRoot(), folder_name)
+
+  if existing_snapshot then
+    local old_folder_name = tostring(existing_snapshot.folder or existing_snapshot.id or "")
+    local old_folder = JoinPath(GetSnapshotsRoot(), old_folder_name)
+
+    if old_folder_name ~= "" and NormalizePath(old_folder) ~= NormalizePath(folder) and SnapshotDirectoryExists(old_folder) then
+      if SnapshotDirectoryExists(folder) then
+        return nil, Tr("error_snapshot_folder_exists", { folder = folder_name })
+      end
+
+      local move_ok, move_err = MoveSnapshotFolderStrict(old_folder, folder)
+      if not move_ok then
+        return nil, move_err
+      end
+    end
+  end
+
+  EnsureDir(folder)
+  return folder
+end
+
+function RemoveLegacySnapshotFolderAfterSave(existing_snapshot, folder_name)
+  if not existing_snapshot then return end
+
+  local old_folder_name = tostring(existing_snapshot.folder or existing_snapshot.id or "")
+  if old_folder_name == "" or old_folder_name == folder_name then return end
+
+  local old_folder = JoinPath(GetSnapshotsRoot(), old_folder_name)
+  local new_folder = JoinPath(GetSnapshotsRoot(), folder_name)
+
+  if NormalizePath(old_folder) ~= NormalizePath(new_folder) and SnapshotDirectoryExists(old_folder) then
+    DeleteDirectoryRecursive(old_folder)
+  end
+end
+
+function SaveSnapshotFromPopupImpl()
   local name = SanitizeFileName(state.save_name)
   local category = Trim(state.save_category)
   local tags = SplitTags(state.save_tags)
   local desc = tostring(state.save_description or "")
+  local folder_name = SanitizeFileName(name)
 
   local existing_snapshot = nil
   local existing_index = nil
 
-  -- Same-name save updates and overwrites the existing snapshot folder.
-  for i, s in ipairs(state.snapshots) do
-    if tostring(s.name or "") == name then
-      existing_snapshot = s
-      existing_index = i
-      break
+  existing_snapshot, existing_index = FindSnapshotForSaveName(name, folder_name)
+
+  local folder = JoinPath(GetSnapshotsRoot(), folder_name)
+  local folder_exists = SnapshotDirectoryExists(folder)
+
+  if existing_snapshot or folder_exists then
+    if not ConfirmOverwriteSnapshot(name) then
+      state.status = Tr("status_save_cancelled_same_name")
+      return false
     end
   end
 
   local id
-  local folder_name
   local created_at
   local favorite
 
   if existing_snapshot then
     id = existing_snapshot.id
-    folder_name = existing_snapshot.folder
     created_at = existing_snapshot.created_at or os.date("%Y-%m-%d %H:%M:%S")
     favorite = existing_snapshot.favorite == true
   else
     id = MakeID()
-    folder_name = SanitizeFileName(name) .. "_" .. id
+    while SnapshotIdExists(id) do
+      id = MakeID()
+    end
     created_at = os.date("%Y-%m-%d %H:%M:%S")
     favorite = false
   end
@@ -3306,7 +3784,7 @@ function SaveSnapshotFromPopup()
   if not data then
     state.status = err or Tr("status_capture_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
-    return
+    return false
   end
 
   meta.capture_mode = (data.capture and data.capture.mode) or "unknown"
@@ -3316,8 +3794,12 @@ function SaveSnapshotFromPopup()
   meta.tempo_saved = (data.capture and data.capture.tempo_saved) == true
   meta.track_info_saved = (data.capture and data.capture.track_info_saved) == true
 
-  local folder = JoinPath(GetSnapshotsRoot(), folder_name)
-  EnsureDir(folder)
+  folder, err = PrepareSnapshotFolderForSave(existing_snapshot, folder_name)
+  if not folder then
+    state.status = tostring(err or Tr("error_invalid_snapshot_folder"))
+    reaper.MB(state.status, SCRIPT_NAME, 0)
+    return false
+  end
 
   local media_archive = ArchiveSnapshotMedia(data, folder)
   meta.media_reference_count = media_archive.reference_count or 0
@@ -3326,7 +3808,7 @@ function SaveSnapshotFromPopup()
 
   if state.auto_render_preview then
     local preview_start_pos = GetPreviewRenderStart(data)
-    local preview_ok, preview_result = RenderPreviewMp3(folder, preview_start_pos, data.capture.end_pos)
+    local preview_ok, preview_result = RenderPreviewMp3(folder, preview_start_pos, data.capture.end_pos, data)
 
     meta.preview_start_offset = math.max(0, preview_start_pos - (data.capture.start_pos or preview_start_pos))
     meta.preview_render_start = preview_start_pos
@@ -3362,10 +3844,20 @@ function SaveSnapshotFromPopup()
   local ok = SaveLuaTable(data_path, data)
 
   if not ok then
+    if existing_snapshot then
+      local old_folder_name = tostring(existing_snapshot.folder or existing_snapshot.id or "")
+      if old_folder_name ~= "" and old_folder_name ~= folder_name then
+        local old_folder = JoinPath(GetSnapshotsRoot(), old_folder_name)
+        MoveSnapshotFolderStrict(folder, old_folder)
+      end
+    end
+
     state.status = Tr("status_snapshot_write_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
-    return
+    return false
   end
+
+  RemoveLegacySnapshotFolderAfterSave(existing_snapshot, folder_name)
 
   if existing_index then
     state.snapshots[existing_index] = meta
@@ -3393,6 +3885,30 @@ function SaveSnapshotFromPopup()
   else
     state.status = Tr("status_saved_preview_failed", { mode = mode_label, name = name, media_note = media_note })
   end
+
+  return true
+end
+
+function SaveSnapshotFromPopup()
+  if state.save_in_progress or state.save_submitted then
+    return false
+  end
+
+  state.save_in_progress = true
+  local ok, result = pcall(SaveSnapshotFromPopupImpl)
+  state.save_in_progress = false
+
+  if not ok then
+    state.status = tostring(result or Tr("status_capture_failed"))
+    reaper.MB(state.status, SCRIPT_NAME, 0)
+    return false
+  end
+
+  if result == true then
+    state.save_submitted = true
+  end
+
+  return result == true
 end
 
 function LoadSelectedSnapshot()
@@ -3572,7 +4088,10 @@ function ImportSnapshotZip()
   end
   meta.id = import_id
 
-  local base_folder = meta.folder or (SanitizeFileName(meta.name) .. "_" .. import_id)
+  local base_folder = tostring(meta.folder or "")
+  if base_folder == "" then
+    base_folder = SanitizeFileName(meta.name)
+  end
   meta.folder = MakeUniqueSnapshotFolderName(base_folder)
   meta.imported_at = os.date("%Y-%m-%d %H:%M:%S")
   meta.updated_at = os.date("%Y-%m-%d %H:%M:%S")
@@ -3633,11 +4152,202 @@ function ToggleFavorite(snapshot)
   SetFavorite(snapshot, not snapshot.favorite)
 end
 
+function FindSnapshotIndexById(id)
+  id = tostring(id or "")
+  if id == "" then return nil, nil end
+
+  for i, snapshot in ipairs(state.snapshots or {}) do
+    if tostring(snapshot.id or "") == id then
+      return i, snapshot
+    end
+  end
+
+  return nil, nil
+end
+
+function SnapshotNameExistsExcept(name, except_id)
+  name = tostring(name or "")
+  except_id = tostring(except_id or "")
+
+  for _, snapshot in ipairs(state.snapshots or {}) do
+    if tostring(snapshot.id or "") ~= except_id and tostring(snapshot.name or "") == name then
+      return true
+    end
+  end
+
+  return false
+end
+
+function SnapshotFolderNameExistsExcept(folder_name, except_id)
+  folder_name = tostring(folder_name or "")
+  except_id = tostring(except_id or "")
+
+  for _, snapshot in ipairs(state.snapshots or {}) do
+    if tostring(snapshot.id or "") ~= except_id and tostring(snapshot.folder or snapshot.id or "") == folder_name then
+      return true
+    end
+  end
+
+  return false
+end
+
+function PrimeRenameSnapshot(snapshot)
+  if not snapshot then
+    state.status = Tr("status_no_snapshot_selected")
+    return
+  end
+
+  state.rename_snapshot_id = tostring(snapshot.id or "")
+  state.rename_name = tostring(snapshot.name or "")
+  state.request_open_rename_popup = true
+end
+
+function RenameSnapshotById(snapshot_id, requested_name)
+  local index, snapshot = FindSnapshotIndexById(snapshot_id)
+  if not snapshot then
+    state.status = Tr("status_no_snapshot_selected")
+    return false
+  end
+
+  local new_name = SanitizeFileName(requested_name)
+  local new_folder_name = SanitizeFileName(new_name)
+  local old_name = tostring(snapshot.name or "")
+  local old_updated_at = snapshot.updated_at
+  local old_folder, resolved_old_folder_name = ResolveSnapshotFolder(snapshot)
+  local old_folder_name = tostring(resolved_old_folder_name or "")
+  if old_folder_name == "" then
+    old_folder_name = tostring(snapshot.folder or snapshot.id or "")
+  end
+
+  if old_folder == "" then
+    old_folder = GetSnapshotFolder(snapshot)
+  end
+
+  local new_folder = JoinPath(GetSnapshotsRoot(), new_folder_name)
+  local id = tostring(snapshot.id or "")
+
+  if new_name == old_name and old_folder_name == new_folder_name and tostring(snapshot.folder or "") == new_folder_name then
+    state.status = Tr("status_rename_cancelled")
+    return true
+  end
+
+  if SnapshotNameExistsExcept(new_name, id) then
+    local msg = Tr("error_snapshot_name_exists", { name = new_name })
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    return false
+  end
+
+  if SnapshotFolderNameExistsExcept(new_folder_name, id) then
+    local msg = Tr("error_snapshot_folder_exists", { folder = new_folder_name })
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    return false
+  end
+
+  if not FileExists(JoinPath(old_folder, "snapshot.lua")) then
+    local msg = Tr("error_snapshot_folder_not_found")
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    return false
+  end
+
+  if NormalizePath(old_folder) ~= NormalizePath(new_folder) and PathExists(new_folder) then
+    local msg = Tr("error_snapshot_folder_exists", { folder = new_folder_name })
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    return false
+  end
+
+  local data_path = JoinPath(old_folder, "snapshot.lua")
+  local data = LoadLuaTable(data_path)
+  if type(data) ~= "table" then
+    local msg = Tr("error_snapshot_data_missing_detail", { path = data_path })
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    return false
+  end
+
+  local moved = false
+  if NormalizePath(old_folder) ~= NormalizePath(new_folder) then
+    local move_ok, move_err = MoveSnapshotFolderStrict(old_folder, new_folder)
+    if not move_ok then
+      local msg = tostring(move_err or Tr("error_failed_rename_snapshot_folder", {
+        source = old_folder,
+        dest = new_folder,
+      }))
+      state.status = msg
+      reaper.MB(msg, SCRIPT_NAME, 0)
+      return false
+    end
+    moved = true
+    ReleaseSnapshotFileLocks()
+  end
+
+  snapshot.name = new_name
+  snapshot.folder = new_folder_name
+  snapshot.updated_at = os.date("%Y-%m-%d %H:%M:%S")
+
+  local meta = data.meta
+  if type(meta) ~= "table" then meta = {} end
+  for key, value in pairs(snapshot) do
+    meta[key] = value
+  end
+  data.meta = meta
+
+  if not SaveLuaTable(JoinPath(new_folder, "snapshot.lua"), data) then
+    if moved then
+      MoveSnapshotFolderStrict(new_folder, old_folder)
+    end
+
+    snapshot.name = old_name
+    snapshot.folder = old_folder_name
+    snapshot.updated_at = old_updated_at
+
+    local msg = Tr("error_failed_update_snapshot_data")
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    return false
+  end
+
+  state.snapshots[index] = snapshot
+  if not SaveIndex() then
+    if moved then
+      MoveSnapshotFolderStrict(new_folder, old_folder)
+    end
+
+    snapshot.name = old_name
+    snapshot.folder = old_folder_name
+    snapshot.updated_at = old_updated_at
+    state.snapshots[index] = snapshot
+
+    local msg = Tr("error_failed_update_snapshot_data")
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    return false
+  end
+
+  ReleaseSnapshotFileLocks()
+  LoadIndex()
+  EnsureSnapshotVisibleById(id)
+  ResetWaveformCacheState()
+
+  state.status = Tr("status_renamed_snapshot", { name = new_name })
+  return true
+end
+
 function RemoveSelectedSnapshotFromIndex()
   local snapshot = state.snapshots[state.selected]
-  if not snapshot then return end
+  if not snapshot then return false end
 
-  local folder = GetSnapshotFolder(snapshot)
+  local folder = GetSnapshotFolderForFileOperation(snapshot)
+  if folder == "" or not FileExists(JoinPath(folder, "snapshot.lua")) then
+    local msg = Tr("error_snapshot_folder_not_found")
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    return false
+  end
+
   local ret = reaper.MB(
     Tr("confirm_remove_snapshot", {
       name = tostring(snapshot.name or ""),
@@ -3647,26 +4357,39 @@ function RemoveSelectedSnapshotFromIndex()
     4
   )
 
-  if ret ~= 6 then return end
+  if ret ~= 6 then return false end
 
-  StopInternalPreview(true)
+  RemovePreviewWaveformCache(JoinPath(folder, PREVIEW_FILE_NAME), folder)
+  ReleaseSnapshotFileLocks()
 
   local ok, err = DeleteDirectoryRecursive(folder)
   if not ok then
-    reaper.MB(tostring(err or Tr("error_failed_delete_snapshot_folder", { path = folder })), SCRIPT_NAME, 0)
+    local msg = tostring(err or Tr("error_failed_delete_snapshot_folder", { path = folder }))
+    state.status = Tr("status_remove_delete_failed")
+    reaper.MB(state.status .. "\n\n" .. msg, SCRIPT_NAME, 0)
+    ResetWaveformCacheState()
+    return false
   end
 
   table.remove(state.snapshots, state.selected)
   if state.selected > #state.snapshots then state.selected = #state.snapshots end
   if state.selected < 1 then state.selected = 1 end
-  SaveIndex()
+
+  ReleaseSnapshotFileLocks()
+  if not SaveIndex() then
+    local msg = Tr("error_failed_update_snapshot_data")
+    state.status = msg
+    reaper.MB(msg, SCRIPT_NAME, 0)
+    ResetWaveformCacheState()
+    return false
+  end
+
+  LoadIndex()
   ResetWaveformCacheState()
 
-  if ok then
-    state.status = Tr("status_removed_deleted")
-  else
-    state.status = Tr("status_removed_index_delete_failed")
-  end
+  state.status = Tr("status_removed_deleted")
+  reaper.MB(state.status, SCRIPT_NAME, 0)
+  return true
 end
 
 ----------------------------------------
@@ -3679,7 +4402,30 @@ function HasWaveformCacheSupport()
     and (reaper.SM_WFC_Begin or reaper.SM_BuildWaveformCache)
 end
 
-function ResetWaveformCacheState()
+function CancelWaveformCacheJob(job_key)
+  job_key = tostring(job_key or "")
+  if job_key == "" or not reaper.SM_WFC_Cancel then return false end
+
+  local ok = pcall(reaper.SM_WFC_Cancel, job_key)
+  return ok == true
+end
+
+function CancelAllWaveformCacheJobs()
+  if not reaper.SM_WFC_Cancel then return false end
+
+  local ok = pcall(reaper.SM_WFC_Cancel, "")
+  return ok == true
+end
+
+function ResetWaveformCacheState(cancel_jobs)
+  if cancel_jobs ~= false then
+    if state.waveform_cache_job_key and state.waveform_cache_job_key ~= "" then
+      CancelWaveformCacheJob(state.waveform_cache_job_key)
+    else
+      CancelAllWaveformCacheJobs()
+    end
+  end
+
   state.waveform_cache_key = ""
   state.waveform_cache_path = ""
   state.waveform_cache_job_key = ""
@@ -3689,7 +4435,13 @@ function ResetWaveformCacheState()
 end
 
 function RemovePreviewWaveformCache(preview_path, snapshot_folder)
-  if not preview_path or preview_path == "" or not reaper.SM_SetCacheBaseDir or not reaper.SM_GetWaveformCachePath then
+  if not preview_path or preview_path == "" then
+    return
+  end
+
+  CancelAllWaveformCacheJobs()
+
+  if not reaper.SM_SetCacheBaseDir or not reaper.SM_GetWaveformCachePath then
     return
   end
 
@@ -3831,6 +4583,7 @@ function StartOrPumpWaveformCache(snapshot)
   local cache_key = GetSelectedSnapshotWaveformKey(snapshot, preview_path)
 
   if state.waveform_cache_key ~= cache_key then
+    CancelWaveformCacheJob(state.waveform_cache_job_key)
     state.waveform_cache_key = cache_key
     state.waveform_cache_path = ""
     state.waveform_cache_job_key = ""
@@ -3879,11 +4632,19 @@ function StartOrPumpWaveformCache(snapshot)
   end
 
   if state.waveform_cache_job_key ~= "" and reaper.SM_WFC_Pump and reaper.SM_WFC_GetPathIfReady then
-    pcall(reaper.SM_WFC_Pump, state.waveform_cache_job_key, 800, 1.5)
+    local job_key = state.waveform_cache_job_key
+    pcall(reaper.SM_WFC_Pump, job_key, 800, 1.5)
 
-    local ok_ready, ready_path = pcall(reaper.SM_WFC_GetPathIfReady, state.waveform_cache_job_key)
-    if ok_ready and ready_path and ready_path ~= "" and FileExists(ready_path) then
-      local data, err = ReadWaveformCacheFile(ready_path)
+    local ok_ready, ready_path = pcall(reaper.SM_WFC_GetPathIfReady, job_key)
+    if ok_ready and ready_path and ready_path ~= "" then
+      local data, err = nil, Tr("error_waveform_cache_file_not_found")
+      if FileExists(ready_path) then
+        data, err = ReadWaveformCacheFile(ready_path)
+      end
+
+      CancelWaveformCacheJob(job_key)
+      state.waveform_cache_job_key = ""
+
       if data then
         state.waveform_cache_path = ready_path
         state.waveform_cache_data = data
@@ -4851,6 +5612,8 @@ function DrawTopBar()
       state.save_category = ""
       state.save_tags = ""
       state.save_description = ""
+      state.save_in_progress = false
+      state.save_submitted = false
       state.show_save_popup = true
       ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
     end
@@ -4874,6 +5637,8 @@ function DrawTopBar()
       state.save_category = ""
       state.save_tags = ""
       state.save_description = ""
+      state.save_in_progress = false
+      state.save_submitted = false
       state.show_save_popup = true
       ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
     end
@@ -4912,11 +5677,39 @@ function DrawFilters()
   if changed then state.show_favorites_only = fav end
 end
 
+function DrawWaveformPlaceholderBar(message)
+  local wave_w = select(1, ImGui.GetContentRegionAvail(ctx))
+  wave_w = math.max(80, tonumber(wave_w) or 80)
+  local wave_h = 56
+  local x, y = ImGui.GetCursorScreenPos(ctx)
+
+  ImGui.InvisibleButton(ctx, "##selected_snapshot_waveform_placeholder", wave_w, wave_h)
+
+  local draw_list = ImGui.GetWindowDrawList(ctx)
+  if draw_list and ImGui.DrawList_AddRectFilled then
+    ImGui.DrawList_AddRectFilled(draw_list, x, y, x + wave_w, y + wave_h, 0x111318FF)
+  end
+
+  if draw_list and ImGui.DrawList_AddLine then
+    local center_y = y + wave_h * 0.5
+    ImGui.DrawList_AddLine(draw_list, x, center_y, x + wave_w, center_y, 0xFFFFFF22, 1.0)
+  end
+
+  message = tostring(message or "")
+  if message ~= "" then
+    if draw_list and ImGui.DrawList_AddText then
+      ImGui.DrawList_AddText(draw_list, x + 10, y + 20, 0x8A93A2FF, message)
+    else
+      ImGui.TextDisabled(ctx, message)
+    end
+  end
+end
+
 function DrawWaveformCachePreviewBar()
   local snapshot = state.snapshots[state.selected]
 
   if not snapshot then
-    ImGui.TextDisabled(ctx, Tr("no_snapshot_selected"))
+    DrawWaveformPlaceholderBar(Tr("no_snapshot_selected"))
     return
   end
 
@@ -5144,9 +5937,12 @@ function DrawSnapshotList(width, height)
 
           ImGui.Separator(ctx)
 
+          if ImGui.MenuItem(ctx, Tr("rename")) then
+            PrimeRenameSnapshot(s)
+          end
+
           if ImGui.MenuItem(ctx, Tr("remove")) then
-            RemoveSelectedSnapshotFromIndex()
-            list_changed = true
+            list_changed = RemoveSelectedSnapshotFromIndex() == true
           end
 
           ImGui.EndPopup(ctx)
@@ -5335,15 +6131,59 @@ function DrawSavePopup()
 
     ImGui.Separator(ctx)
 
-    if ImGui.Button(ctx, Tr("save"), 100, 30) then
-      SaveSnapshotFromPopup()
-      ImGui.CloseCurrentPopup(ctx)
+    if ImGui.Button(ctx, Tr("save"), 100, 30) and not state.save_in_progress and not state.save_submitted then
+      if SaveSnapshotFromPopup() then
+        state.show_save_popup = false
+        ImGui.CloseCurrentPopup(ctx)
+      end
     end
 
     ImGui.SameLine(ctx)
 
-    if ImGui.Button(ctx, Tr("cancel"), 100, 30) then
+    if ImGui.Button(ctx, Tr("cancel"), 100, 30) and not state.save_in_progress then
+      state.show_save_popup = false
+      state.save_submitted = false
       ImGui.CloseCurrentPopup(ctx)
+    end
+
+    ImGui.EndPopup(ctx)
+  end
+end
+
+function DrawRenamePopup()
+  if ImGui.BeginPopupModal(ctx, UiLabel("popup_rename_snapshot", "RenameSnapshotPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    local _, snapshot = FindSnapshotIndexById(state.rename_snapshot_id)
+
+    if not snapshot then
+      ImGui.TextDisabled(ctx, Tr("no_snapshot_selected"))
+      ImGui.Separator(ctx)
+
+      if ImGui.Button(ctx, Tr("cancel"), 100, 30) then
+        state.status = Tr("status_rename_cancelled")
+        ImGui.CloseCurrentPopup(ctx)
+      end
+    else
+      ImGui.Text(ctx, tostring(snapshot.name or Tr("unnamed")))
+      ImGui.Separator(ctx)
+
+      ImGui.SetNextItemWidth(ctx, 420)
+      local changed, value = ImGui.InputText(ctx, UiLabel("field_new_name", "rename_name"), state.rename_name or "")
+      if changed then state.rename_name = value end
+
+      ImGui.Separator(ctx)
+
+      if ImGui.Button(ctx, Tr("rename"), 100, 30) then
+        if RenameSnapshotById(state.rename_snapshot_id, state.rename_name) then
+          ImGui.CloseCurrentPopup(ctx)
+        end
+      end
+
+      ImGui.SameLine(ctx)
+
+      if ImGui.Button(ctx, Tr("cancel"), 100, 30) then
+        state.status = Tr("status_rename_cancelled")
+        ImGui.CloseCurrentPopup(ctx)
+      end
     end
 
     ImGui.EndPopup(ctx)
@@ -5837,6 +6677,11 @@ function MainLoop()
     DrawMainContentLayout()
 
     DrawSavePopup()
+    if state.request_open_rename_popup then
+      state.request_open_rename_popup = false
+      ImGui.OpenPopup(ctx, UiLabel("popup_rename_snapshot", "RenameSnapshotPopup"))
+    end
+    DrawRenamePopup()
     if state.request_open_load_confirm_popup then
       state.request_open_load_confirm_popup = false
       ImGui.OpenPopup(ctx, UiLabel("popup_load_snapshot", "LoadSnapshotPopup"))
@@ -5868,6 +6713,7 @@ function MainLoop()
     reaper.defer(MainLoop)
   else
     StopInternalPreview(true)
+    ResetWaveformCacheState()
   end
 end
 
