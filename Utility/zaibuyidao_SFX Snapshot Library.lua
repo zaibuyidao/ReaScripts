@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.7
+-- @version 1.0.8
 -- @author zaibuyidao
 -- @changelog
 --   Keep the snapshot index synchronized with local snapshot folders.
@@ -80,7 +80,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.7"
+local SCRIPT_VERSION = "1.0.8"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -895,6 +895,7 @@ local SNAPSHOT_DIR_NAME = "snapshots"
 local INDEX_FILE_NAME = "index.lua"
 local PREVIEW_FILE_NAME = "preview.mp3"
 local LEGACY_PREVIEW_FILE_NAME = "preview.wav"
+local WAVEFORM_CACHE_EXTENSION = ".smwf"
 
 local ctx = ImGui.CreateContext(SCRIPT_NAME)
 local CHILD_FLAGS_BORDER = ImGui.ChildFlags_Borders or 1
@@ -1509,6 +1510,17 @@ function GetSnapshotPreviewPath(snapshot)
   end
 
   return mp3_path
+end
+
+function GetPreviewWaveformCachePath(preview_path)
+  preview_path = tostring(preview_path or "")
+  if preview_path == "" then return "" end
+
+  local dir = GetFileDir(preview_path)
+  local name = GetFileName(preview_path)
+  local stem = name:match("^(.*)%.[^%.]*$") or name
+
+  return JoinPath(dir, stem .. WAVEFORM_CACHE_EXTENSION)
 end
 
 function SnapshotMetaMatches(snapshot, meta, folder_name)
@@ -5013,7 +5025,6 @@ end
 
 function HasWaveformCacheSupport()
   return reaper.SM_SetCacheBaseDir
-    and reaper.SM_GetWaveformCachePath
     and (reaper.SM_WFC_Begin or reaper.SM_BuildWaveformCache)
 end
 
@@ -5056,27 +5067,41 @@ function RemovePreviewWaveformCache(preview_path, snapshot_folder)
 
   CancelAllWaveformCacheJobs()
 
-  if not reaper.SM_SetCacheBaseDir or not reaper.SM_GetWaveformCachePath then
-    return
-  end
-
   if snapshot_folder and snapshot_folder ~= "" then
     EnsureDir(snapshot_folder)
-    pcall(reaper.SM_SetCacheBaseDir, snapshot_folder)
   end
 
-  local ok_existing, existing_path = pcall(
-    reaper.SM_GetWaveformCachePath,
-    preview_path,
-    WAVEFORM_CACHE_PIXELS,
-    0.0,
-    0.0,
-    WAVEFORM_CACHE_MAX_CHANNELS
-  )
+  local cache_path = GetPreviewWaveformCachePath(preview_path)
 
-  if ok_existing and existing_path and existing_path ~= "" and FileExists(existing_path) then
-    pcall(os.remove, existing_path)
+  if cache_path ~= "" and FileExists(cache_path) then
+    pcall(os.remove, cache_path)
   end
+end
+
+function FinalizePreviewWaveformCachePath(source_path, preview_path)
+  source_path = tostring(source_path or "")
+  local target_path = GetPreviewWaveformCachePath(preview_path)
+
+  if source_path == "" or target_path == "" then return source_path end
+  if NormalizePathForCompare(source_path) == NormalizePathForCompare(target_path) then
+    return target_path
+  end
+
+  if FileExists(target_path) then
+    pcall(os.remove, target_path)
+  end
+
+  if os.rename(source_path, target_path) then
+    return target_path
+  end
+
+  local copied = CopyFileBinary(source_path, target_path)
+  if copied then
+    pcall(os.remove, source_path)
+    return target_path
+  end
+
+  return ""
 end
 
 function ReadWaveformCacheFile(path)
@@ -5224,19 +5249,12 @@ function StartOrPumpWaveformCache(snapshot)
   EnsureDir(snapshot_folder)
   pcall(reaper.SM_SetCacheBaseDir, snapshot_folder)
 
-  local ok_existing, existing_path = pcall(
-    reaper.SM_GetWaveformCachePath,
-    preview_path,
-    WAVEFORM_CACHE_PIXELS,
-    0.0,
-    0.0,
-    WAVEFORM_CACHE_MAX_CHANNELS
-  )
+  local cache_path = GetPreviewWaveformCachePath(preview_path)
 
-  if ok_existing and existing_path and existing_path ~= "" and FileExists(existing_path) then
-    local data, err = ReadWaveformCacheFile(existing_path)
+  if cache_path ~= "" and FileExists(cache_path) then
+    local data, err = ReadWaveformCacheFile(cache_path)
     if data then
-      state.waveform_cache_path = existing_path
+      state.waveform_cache_path = cache_path
       state.waveform_cache_data = data
       state.waveform_cache_building = false
       state.waveform_cache_status = ""
@@ -5254,6 +5272,7 @@ function StartOrPumpWaveformCache(snapshot)
     if ok_ready and ready_path and ready_path ~= "" then
       local data, err = nil, Tr("error_waveform_cache_file_not_found")
       if FileExists(ready_path) then
+        ready_path = FinalizePreviewWaveformCachePath(ready_path, preview_path)
         data, err = ReadWaveformCacheFile(ready_path)
       end
 
@@ -5307,6 +5326,7 @@ function StartOrPumpWaveformCache(snapshot)
     )
 
     if ok_build and built_path and built_path ~= "" and FileExists(built_path) then
+      built_path = FinalizePreviewWaveformCachePath(built_path, preview_path)
       local data, err = ReadWaveformCacheFile(built_path)
       if data then
         state.waveform_cache_path = built_path
