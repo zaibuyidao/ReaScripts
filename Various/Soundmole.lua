@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.192
+-- @version 1.0.193
 -- @changelog
---   Fixed the top menu not refreshing instantly after language switching and prevented window jumping.
+--   Improved waveform cache task cleanup for better stability when switching views or exiting.
 --   Support reaper_soundmole-x64.dll v0.0.17
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

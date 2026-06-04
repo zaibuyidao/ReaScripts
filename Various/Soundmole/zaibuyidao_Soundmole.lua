@@ -81,6 +81,7 @@ HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_Ge
 HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw') and reaper.APIExists('SM_DB_Load') and reaper.APIExists('SM_DB_Release') and reaper.APIExists('SM_DB_GetCount')
 HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
 HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists('SM_GetWaveformCachePath') and reaper.APIExists('SM_BuildWaveformCache') and reaper.APIExists('SM_WFC_Begin') and reaper.APIExists('SM_WFC_Pump') and reaper.APIExists('SM_WFC_GetPathIfReady')
+HAVE_SM_WFC_CANCEL = reaper.APIExists('SM_WFC_Cancel')
 HAVE_SM_DROP_MEDIA_FILES = reaper.APIExists('SM_DropMediaFiles')
 SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
@@ -364,7 +365,48 @@ local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
 local VERTICAL_ZOOM_MIN = 0.3
 local VERTICAL_ZOOM_MAX = 4.0
 
+sm_wfc_pending_jobs = {}
+
+function CancelTrackedWaveformJob(key)
+  if not key or key == "" then return end
+  if HAVE_SM_WFC_CANCEL and reaper.SM_WFC_Cancel then
+    pcall(reaper.SM_WFC_Cancel, key)
+  end
+  sm_wfc_pending_jobs[key] = nil
+end
+
+function RegisterWaveformJob(key)
+  if key and key ~= "" then
+    sm_wfc_pending_jobs[key] = true
+  end
+end
+
+function CancelWaveformState(state)
+  if type(state) == "table" and state.status == "pending" then
+    CancelTrackedWaveformJob(state.key)
+  end
+end
+
+function CancelInfoWaveformJobs(info)
+  if type(info) ~= "table" then return end
+  if type(info._wf_state) == "table" then
+    for _, state in pairs(info._wf_state) do
+      CancelWaveformState(state)
+    end
+  else
+    CancelWaveformState(info._wf_state)
+  end
+  info._wf_state = nil
+end
+
+function CancelAllWaveformJobs()
+  for key in pairs(sm_wfc_pending_jobs) do
+    CancelTrackedWaveformJob(key)
+  end
+end
+
 function ClearWaveformRuntimeCache()
+  CancelAllWaveformJobs()
   waveform_task_queue = {}
   peaks, pixel_cnt, src_len, channel_count = nil, nil, nil, nil
   last_pixel_cnt, last_view_len, last_scroll = nil, nil, nil
@@ -375,7 +417,7 @@ function ClearWaveformRuntimeCache()
       if type(info) == "table" then
         info._thumb_waveform = nil
         info._last_thumb_w = nil
-        info._wf_state = nil
+        CancelInfoWaveformJobs(info)
         info._wf_enqueued = nil
         info._loading_waveform = false
         info._smwf_path = nil
@@ -2662,6 +2704,7 @@ function SM_EnsureWaveformCache(path, pixel_cnt, start_time, end_time, max_chann
 
   local key = reaper.SM_WFC_Begin(path, px, st, et, maxch)
   if key and key ~= "" then
+    RegisterWaveformJob(key)
     return {
       status    = "pending",
       key       = key,
@@ -2689,7 +2732,17 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
 
   reaper.SM_WFC_Pump(state.key, max_iters, max_ms)
   local smwf = reaper.SM_WFC_GetPathIfReady(state.key)
-  if smwf ~= "" then return smwf end
+  if smwf ~= "" then
+    CancelTrackedWaveformJob(state.key)
+    return smwf
+  end
+  if state.req_path and reaper.SM_GetWaveformCachePath then
+    local ready = reaper.SM_GetWaveformCachePath(state.req_path, state.req_px or WFC_PX_DEFAULT, state.req_st or 0, state.req_et or 0, state.req_maxch or 6)
+    if ready ~= "" then
+      CancelTrackedWaveformJob(state.key)
+      return ready
+    end
+  end
   return state
 end
 
@@ -2976,6 +3029,7 @@ function CollectFiles()
   end
 
   -- 切换模式后清空表格列表波形预览队列
+  CancelAllWaveformJobs()
   waveform_task_queue = {}
 
   if type(RequestActiveSearchRefresh) == "function" then
@@ -8392,6 +8446,7 @@ function RefreshFolderFiles(dir)
   previewed_files = {}
   SortFilesByFilenameAsc()
   -- 切换模式后清空表格列表波形预览队列
+  CancelAllWaveformJobs()
   waveform_task_queue = {}
 
   if type(RequestActiveSearchRefresh) == "function" then
@@ -20434,6 +20489,7 @@ function OnScriptExit()
     _G._mediadb_stream = nil
   end
 
+  CancelAllWaveformJobs()
   StopPreview()
   ReleaseAllCoverImages() -- 释放封面纹理
   DeleteCoverCacheFiles() -- 删除缓存图片
