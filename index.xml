@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="8afba50de7ff52da5199c423e8815dffa6a8d99a">
+<index version="1" name="zaibuyidao Scripts" commit="f18cb71fba3cb15dfdf06f46b529ed4604fd4b9d">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9345,6 +9345,10 @@ Make remove release loaded snapshot media and support list multi-selection.]]></
         <changelog><![CDATA[Keep the snapshot index synchronized with local snapshot folders.
 Make remove release loaded snapshot media and support list multi-selection.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/8afba50de7ff52da5199c423e8815dffa6a8d99a/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
+      </version>
+      <version name="1.0.11" author="zaibuyidao" time="2026-06-04T16:00:27Z">
+        <changelog><![CDATA[Support multi-selection ZIP export and multi-snapshot ZIP import.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/f18cb71fba3cb15dfdf06f46b529ed4604fd4b9d/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Tap Tempo Checker (No Tempo Change).lua" type="script" desc="Tap Tempo Checker (No Tempo Change)">
