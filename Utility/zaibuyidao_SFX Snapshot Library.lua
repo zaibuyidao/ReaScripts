@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.11
+-- @version 1.0.12
 -- @author zaibuyidao
 -- @changelog
 --   Support multi-selection ZIP export and multi-snapshot ZIP import.
@@ -79,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.11"
+local SCRIPT_VERSION = "1.0.12"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -910,7 +910,12 @@ local MOUSE_BUTTON_RIGHT = ImGui.MouseButton_Right or 1
 local KEY_SPACE = ImGui.Key_Space or 32
 local KEY_ESCAPE = ImGui.Key_Escape or 27
 local KEY_DELETE = ImGui.Key_Delete or 522
+local KEY_ENTER = ImGui.Key_Enter or (reaper.ImGui_Key_Enter and reaper.ImGui_Key_Enter())
+local KEY_KEYPAD_ENTER = ImGui.Key_KeypadEnter or (reaper.ImGui_Key_KeypadEnter and reaper.ImGui_Key_KeypadEnter())
 local KEY_F = ImGui.Key_F or 575
+local KEY_S = ImGui.Key_S or (reaper.ImGui_Key_S and reaper.ImGui_Key_S())
+local KEY_L = ImGui.Key_L or (reaper.ImGui_Key_L and reaper.ImGui_Key_L())
+local KEY_COMMA = ImGui.Key_Comma or (reaper.ImGui_Key_Comma and reaper.ImGui_Key_Comma())
 local KEY_LEFT_CTRL = ImGui.Key_LeftCtrl
 local KEY_RIGHT_CTRL = ImGui.Key_RightCtrl
 local KEY_LEFT_SHIFT = ImGui.Key_LeftShift or 656
@@ -944,7 +949,12 @@ MOUSE_BUTTON_RIGHT = ImGuiValue(ImGui.MouseButton_Right, MOUSE_BUTTON_RIGHT)
 KEY_SPACE = ImGuiValue(ImGui.Key_Space, KEY_SPACE)
 KEY_ESCAPE = ImGuiValue(ImGui.Key_Escape, KEY_ESCAPE)
 KEY_DELETE = ImGuiValue(ImGui.Key_Delete, KEY_DELETE)
+KEY_ENTER = ImGuiValue(ImGui.Key_Enter, KEY_ENTER)
+KEY_KEYPAD_ENTER = ImGuiValue(ImGui.Key_KeypadEnter, KEY_KEYPAD_ENTER)
 KEY_F = ImGuiValue(ImGui.Key_F, KEY_F)
+KEY_S = ImGuiValue(ImGui.Key_S, KEY_S)
+KEY_L = ImGuiValue(ImGui.Key_L, KEY_L)
+KEY_COMMA = ImGuiValue(ImGui.Key_Comma, KEY_COMMA)
 KEY_LEFT_CTRL = ImGuiValue(ImGui.Key_LeftCtrl, KEY_LEFT_CTRL)
 KEY_RIGHT_CTRL = ImGuiValue(ImGui.Key_RightCtrl, KEY_RIGHT_CTRL)
 KEY_LEFT_SHIFT = ImGuiValue(ImGui.Key_LeftShift, KEY_LEFT_SHIFT)
@@ -1033,6 +1043,7 @@ local state = {
   error = "",
 
   show_save_popup = false,
+  request_open_save_popup = false,
   request_open_rename_popup = false,
   request_open_load_confirm_popup = false,
   request_execute_load = false,
@@ -1081,6 +1092,7 @@ local state = {
   snapshot_list_focused = false,
   snapshot_disk_sync_at = 0,
   main_window_focused = false,
+  modal_popup_active = false,
   request_open_settings_popup = false,
   space_key_consumed_frame = false,
   request_close = false,
@@ -4430,6 +4442,22 @@ function ApplyLoadPopupSettings()
   SaveSettings()
 end
 
+function RequestSaveSnapshotPopup(open_now)
+  state.save_name = os.date(Tr("default_snapshot_name_format"))
+  state.save_category = ""
+  state.save_tags = ""
+  state.save_description = ""
+  state.save_in_progress = false
+  state.save_submitted = false
+  state.show_save_popup = true
+
+  if open_now and ImGui.OpenPopup then
+    ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
+  else
+    state.request_open_save_popup = true
+  end
+end
+
 function RequestLoadSelectedSnapshot()
   local snapshot = state.snapshots[state.selected]
   if not snapshot then
@@ -4442,6 +4470,17 @@ function RequestLoadSelectedSnapshot()
     state.request_open_load_confirm_popup = true
   else
     LoadSelectedSnapshot()
+  end
+end
+
+function RequestSettingsPopup(open_now)
+  state.new_library_dir = state.library_dir
+  state.show_settings_popup = true
+
+  if open_now and ImGui.OpenPopup then
+    ImGui.OpenPopup(ctx, UiLabel("popup_settings", "SettingsPopup"))
+  else
+    state.request_open_settings_popup = true
   end
 end
 
@@ -6317,9 +6356,7 @@ function DrawTopBar()
   local search_w = avail_w - button_total_w
 
   local function request_settings_popup()
-    state.new_library_dir = state.library_dir
-    state.show_settings_popup = true
-    state.request_open_settings_popup = true
+    RequestSettingsPopup(false)
   end
 
   local function draw_options_menu()
@@ -6352,14 +6389,7 @@ function DrawTopBar()
     ImGui.SameLine(ctx, nil, spacing)
 
     if ImGui.Button(ctx, Tr("save"), save_w, frame_height) then -- "Smart Save"
-      state.save_name = os.date(Tr("default_snapshot_name_format"))
-      state.save_category = ""
-      state.save_tags = ""
-      state.save_description = ""
-      state.save_in_progress = false
-      state.save_submitted = false
-      state.show_save_popup = true
-      ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
+      RequestSaveSnapshotPopup(true)
     end
 
     ImGui.SameLine(ctx, nil, spacing)
@@ -6377,14 +6407,7 @@ function DrawTopBar()
     if changed then state.filter = v end
 
     if ImGui.Button(ctx, Tr("save"), save_w, frame_height) then
-      state.save_name = os.date(Tr("default_snapshot_name_format"))
-      state.save_category = ""
-      state.save_tags = ""
-      state.save_description = ""
-      state.save_in_progress = false
-      state.save_submitted = false
-      state.show_save_popup = true
-      ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
+      RequestSaveSnapshotPopup(true)
     end
 
     ImGui.SameLine(ctx, nil, spacing)
@@ -6827,6 +6850,7 @@ end
 
 function DrawSavePopup()
   if ImGui.BeginPopupModal(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    state.modal_popup_active = true
     ImGui.Text(ctx, Tr("smart_save_info"))
     ImGui.Separator(ctx)
 
@@ -6880,7 +6904,8 @@ function DrawSavePopup()
 
     ImGui.Separator(ctx)
 
-    if ImGui.Button(ctx, Tr("save"), 100, 30) and not state.save_in_progress and not state.save_submitted then
+    local save_requested = ImGui.Button(ctx, Tr("save"), 100, 30) or IsConfirmKeyPressed()
+    if save_requested and not state.save_in_progress and not state.save_submitted then
       if SaveSnapshotFromPopup() then
         state.show_save_popup = false
         ImGui.CloseCurrentPopup(ctx)
@@ -6901,6 +6926,7 @@ end
 
 function DrawRenamePopup()
   if ImGui.BeginPopupModal(ctx, UiLabel("popup_rename_snapshot", "RenameSnapshotPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    state.modal_popup_active = true
     local _, snapshot = FindSnapshotIndexById(state.rename_snapshot_id)
 
     if not snapshot then
@@ -6921,7 +6947,8 @@ function DrawRenamePopup()
 
       ImGui.Separator(ctx)
 
-      if ImGui.Button(ctx, Tr("rename"), 100, 30) then
+      local rename_requested = ImGui.Button(ctx, Tr("rename"), 100, 30) or IsConfirmKeyPressed()
+      if rename_requested then
         if RenameSnapshotById(state.rename_snapshot_id, state.rename_name) then
           ImGui.CloseCurrentPopup(ctx)
         end
@@ -6941,6 +6968,7 @@ end
 
 function DrawLoadConfirmPopup()
   if ImGui.BeginPopupModal(ctx, UiLabel("popup_load_snapshot", "LoadSnapshotPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    state.modal_popup_active = true
     local snapshot = state.snapshots[state.selected]
 
     if not snapshot then
@@ -6978,7 +7006,8 @@ function DrawLoadConfirmPopup()
 
       ImGui.Separator(ctx)
 
-      if ImGui.Button(ctx, Tr("load"), 100, 30) then
+      local load_requested = ImGui.Button(ctx, Tr("load"), 100, 30) or IsConfirmKeyPressed()
+      if load_requested then
         ApplyLoadPopupSettings()
         state.request_execute_load = true
         ImGui.CloseCurrentPopup(ctx)
@@ -6997,6 +7026,7 @@ end
 
 function DrawSettingsPopup()
   if ImGui.BeginPopupModal(ctx, UiLabel("popup_settings", "SettingsPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    state.modal_popup_active = true
     ImGui.SeparatorText(ctx, Tr("interface"))
     ImGui.Text(ctx, Tr("settings_language"))
     ImGui.SameLine(ctx, nil, 5)
@@ -7171,8 +7201,19 @@ function IsTextInputActive()
   return false
 end
 
+function IsKeyPressedSafe(key)
+  if not ImGui.IsKeyPressed or key == nil then return false end
+
+  local ok, pressed = pcall(ImGui.IsKeyPressed, ctx, key)
+  return ok and pressed == true
+end
+
+function IsConfirmKeyPressed()
+  return IsKeyPressedSafe(KEY_ENTER) or IsKeyPressedSafe(KEY_KEYPAD_ENTER)
+end
+
 function HandleExitShortcut()
-  if ImGui.IsKeyPressed and ImGui.IsKeyPressed(ctx, KEY_ESCAPE) then
+  if IsKeyPressedSafe(KEY_ESCAPE) then
     state.request_close = true
   end
 end
@@ -7231,6 +7272,26 @@ function IsCtrlDown()
   return left_down or right_down
 end
 
+function HandleGlobalShortcuts()
+  if not state.main_window_focused and not state.snapshot_list_focused then return end
+  if state.modal_popup_active then return end
+  if not IsCtrlDown() then return end
+
+  if IsKeyPressedSafe(KEY_COMMA) then
+    RequestSettingsPopup(false)
+    return
+  end
+
+  if IsKeyPressedSafe(KEY_S) then
+    RequestSaveSnapshotPopup(false)
+    return
+  end
+
+  if IsKeyPressedSafe(KEY_L) then
+    RequestLoadSelectedSnapshot()
+  end
+end
+
 function HandleSnapshotListShortcuts()
   if not state.main_window_focused and not state.snapshot_list_focused then return end
   if IsTextInputActive() then return end
@@ -7239,8 +7300,13 @@ function HandleSnapshotListShortcuts()
   local snapshot = state.snapshots[state.selected]
   if not snapshot then return end
 
-  if ImGui.IsKeyPressed(ctx, KEY_SPACE) then
+  if IsKeyPressedSafe(KEY_SPACE) then
     TogglePreviewPlayback()
+    return
+  end
+
+  if IsKeyPressedSafe(KEY_F) then
+    ToggleFavorite(snapshot)
     return
   end
 
@@ -7248,13 +7314,9 @@ function HandleSnapshotListShortcuts()
 
   local shift_down = IsShiftDown()
 
-  if ImGui.IsKeyPressed(ctx, KEY_DELETE) and shift_down then
+  if IsKeyPressedSafe(KEY_DELETE) and shift_down then
     RemoveSelectedSnapshotFromIndex()
     return
-  end
-
-  if ImGui.IsKeyPressed(ctx, KEY_F) then
-    ToggleFavorite(snapshot)
   end
 end
 
@@ -7455,6 +7517,11 @@ function MainLoop()
     -- ImGui.Separator(ctx)
     DrawMainContentLayout()
 
+    state.modal_popup_active = false
+    if state.request_open_save_popup then
+      state.request_open_save_popup = false
+      ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
+    end
     DrawSavePopup()
     if state.request_open_rename_popup then
       state.request_open_rename_popup = false
@@ -7476,6 +7543,7 @@ function MainLoop()
     end
     DrawSettingsPopup()
     HandleExitShortcut()
+    HandleGlobalShortcuts()
     HandleSnapshotListShortcuts()
 
     if font_normal then ImGui.PopFont(ctx) end
