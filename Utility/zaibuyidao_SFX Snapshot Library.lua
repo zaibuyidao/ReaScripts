@@ -1,9 +1,8 @@
 -- @description SFX Snapshot Library
--- @version 1.0.10
+-- @version 1.0.11
 -- @author zaibuyidao
 -- @changelog
---   Keep the snapshot index synchronized with local snapshot folders.
---   Make remove release loaded snapshot media and support list multi-selection.
+--   Support multi-selection ZIP export and multi-snapshot ZIP import.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -80,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.10"
+local SCRIPT_VERSION = "1.0.11"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -287,12 +286,14 @@ local TEXT = {
     status_export_cancelled = "Export cancelled.",
     status_export_failed = "Export failed.",
     status_exported_zip = "Exported snapshot ZIP: {path}",
+    status_exported_zip_count = "Exported {count} snapshots to ZIP: {path}",
     status_import_cancelled = "Import cancelled.",
     status_import_zip_missing = "Import failed: ZIP file missing.",
     status_import_failed = "Import failed.",
     status_import_snapshot_missing = "Import failed: snapshot.lua not found in ZIP.",
     status_import_invalid_data = "Import failed: invalid snapshot data.",
     status_imported_snapshot = "Imported snapshot: {name}",
+    status_imported_snapshot_count = "Imported {count} snapshots.",
     status_already_favorite = "Already in favorites.",
     status_already_not_favorite = "Already removed from favorites.",
     status_added_favorite = "Added to favorites.",
@@ -516,12 +517,14 @@ local TEXT = {
     status_export_cancelled = "已取消导出。",
     status_export_failed = "导出失败。",
     status_exported_zip = "已导出快照 ZIP: {path}",
+    status_exported_zip_count = "已导出 {count} 个快照到 ZIP: {path}",
     status_import_cancelled = "已取消导入。",
     status_import_zip_missing = "导入失败: ZIP 文件缺失。",
     status_import_failed = "导入失败。",
     status_import_snapshot_missing = "导入失败: ZIP 中未找到 snapshot.lua。",
     status_import_invalid_data = "导入失败: 快照数据无效。",
     status_imported_snapshot = "已导入快照: {name}",
+    status_imported_snapshot_count = "已导入 {count} 个快照。",
     status_already_favorite = "已经在收藏中。",
     status_already_not_favorite = "已经取消收藏。",
     status_added_favorite = "已添加到收藏。",
@@ -745,12 +748,14 @@ local TEXT = {
     status_export_cancelled = "已取消匯出。",
     status_export_failed = "匯出失敗。",
     status_exported_zip = "已匯出快照 ZIP: {path}",
+    status_exported_zip_count = "已匯出 {count} 個快照到 ZIP: {path}",
     status_import_cancelled = "已取消匯入。",
     status_import_zip_missing = "匯入失敗: ZIP 檔案缺失。",
     status_import_failed = "匯入失敗。",
     status_import_snapshot_missing = "匯入失敗: ZIP 中找不到 snapshot.lua。",
     status_import_invalid_data = "匯入失敗: 快照資料無效。",
     status_imported_snapshot = "已匯入快照: {name}",
+    status_imported_snapshot_count = "已匯入 {count} 個快照。",
     status_already_favorite = "已經在收藏中。",
     status_already_not_favorite = "已經取消收藏。",
     status_added_favorite = "已加入收藏。",
@@ -2171,11 +2176,11 @@ function BrowseForExportZipPath(snapshot)
   return JoinPath(state.library_dir, default_name)
 end
 
-function ZipFolder(source_folder, zip_path)
+function ZipFolder(source_folder, zip_path, require_snapshot)
   source_folder = NormalizePath(source_folder)
   zip_path = EnsureZipExtension(zip_path)
 
-  if source_folder == "" or not FileExists(JoinPath(source_folder, "snapshot.lua")) then
+  if source_folder == "" or (require_snapshot ~= false and not FileExists(JoinPath(source_folder, "snapshot.lua"))) then
     return false, Tr("error_snapshot_folder_not_found")
   end
 
@@ -2294,6 +2299,36 @@ function FindSnapshotDataFolder(root, depth)
   end
 
   return nil
+end
+
+function FindSnapshotDataFolders(root, depth, out, seen)
+  root = NormalizePath(root)
+  depth = tonumber(depth) or 0
+  out = out or {}
+  seen = seen or {}
+
+  if root == "" or seen[root] then return out end
+  seen[root] = true
+
+  if FileExists(JoinPath(root, "snapshot.lua")) then
+    out[#out + 1] = root
+    return out
+  end
+
+  if depth <= 0 or not reaper.EnumerateSubdirectories then
+    return out
+  end
+
+  local i = 0
+  while true do
+    local sub = reaper.EnumerateSubdirectories(root, i)
+    if not sub then break end
+
+    FindSnapshotDataFolders(JoinPath(root, sub), depth - 1, out, seen)
+    i = i + 1
+  end
+
+  return out
 end
 
 function SnapshotIdExists(id)
@@ -4411,34 +4446,143 @@ function RequestLoadSelectedSnapshot()
 end
 
 function ExportSelectedSnapshotZip()
-  local snapshot = state.snapshots[state.selected]
-  if not snapshot then
+  local indices = GetSelectedSnapshotIndices()
+  if #indices == 0 then
     state.status = Tr("status_no_snapshot_selected")
     return
   end
 
-  local snapshot_folder = GetSnapshotFolderForFileOperation(snapshot)
-  if not FileExists(JoinPath(snapshot_folder, "snapshot.lua")) then
-    reaper.MB(Tr("error_snapshot_data_missing_detail", { path = tostring(snapshot_folder) }), SCRIPT_NAME, 0)
-    state.status = Tr("status_export_data_missing")
+  local entries = {}
+  for _, index in ipairs(indices) do
+    local snapshot = state.snapshots[index]
+    if snapshot then
+      local snapshot_folder = GetSnapshotFolderForFileOperation(snapshot)
+      if not FileExists(JoinPath(snapshot_folder, "snapshot.lua")) then
+        reaper.MB(Tr("error_snapshot_data_missing_detail", { path = tostring(snapshot_folder) }), SCRIPT_NAME, 0)
+        state.status = Tr("status_export_data_missing")
+        return
+      end
+
+      entries[#entries + 1] = {
+        snapshot = snapshot,
+        folder = snapshot_folder,
+      }
+    end
+  end
+
+  if #entries == 0 then
+    state.status = Tr("status_no_snapshot_selected")
     return
   end
 
-  local zip_path = BrowseForExportZipPath(snapshot)
+  local export_snapshot = entries[1].snapshot
+  if #entries > 1 then
+    export_snapshot = { name = string.format("%s %d Snapshots", Tr("title"), #entries) }
+  end
+
+  local zip_path = BrowseForExportZipPath(export_snapshot)
   if not zip_path or zip_path == "" then
     state.status = Tr("status_export_cancelled")
     return
   end
 
-  local ok, result = ZipFolder(snapshot_folder, zip_path)
+  local ok, result
+  if #entries == 1 then
+    ok, result = ZipFolder(entries[1].folder, zip_path)
+  else
+    local temp_dir = JoinPath(GetSnapshotsRoot(), "_export_temp_" .. MakeID())
+    EnsureDir(temp_dir)
+
+    local used_names = {}
+    local function make_unique_package_folder_name(base_name)
+      base_name = SanitizeFileName(base_name)
+      if base_name == "" then base_name = "Snapshot" end
+
+      local candidate = base_name
+      local index = 2
+      while used_names[Lower(candidate)] or PathExists(JoinPath(temp_dir, candidate)) do
+        candidate = string.format("%s_%02d", base_name, index)
+        index = index + 1
+      end
+
+      used_names[Lower(candidate)] = true
+      return candidate
+    end
+
+    for _, entry in ipairs(entries) do
+      local base_name = GetPathBaseName(entry.folder)
+      if base_name == "" then
+        base_name = entry.snapshot.folder or entry.snapshot.name or "Snapshot"
+      end
+
+      local dest_folder = JoinPath(temp_dir, make_unique_package_folder_name(base_name))
+      local copy_ok, copy_err = CopyDirectoryRecursive(entry.folder, dest_folder)
+      if not copy_ok then
+        DeleteDirectoryRecursive(temp_dir)
+        state.status = copy_err or Tr("status_export_failed")
+        reaper.MB(state.status, SCRIPT_NAME, 0)
+        return
+      end
+    end
+
+    ok, result = ZipFolder(temp_dir, zip_path, false)
+    DeleteDirectoryRecursive(temp_dir)
+  end
+
   if not ok then
     state.status = result or Tr("status_export_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
     return
   end
 
-  state.status = Tr("status_exported_zip", { path = tostring(result) })
+  if #entries == 1 then
+    state.status = Tr("status_exported_zip", { path = tostring(result) })
+  else
+    state.status = Tr("status_exported_zip_count", { count = tostring(#entries), path = tostring(result) })
+  end
   OpenFolder(GetFileDir(result))
+end
+
+function ImportSnapshotDataFolder(source_folder)
+  local data_path = JoinPath(source_folder, "snapshot.lua")
+  local data, err = LoadLuaTable(data_path)
+  if type(data) ~= "table" then
+    return false, Tr("status_import_invalid_data"), Tr("error_import_read_detail", { detail = tostring(err or data_path) })
+  end
+
+  local meta = data.meta or {}
+  if type(meta) ~= "table" then meta = {} end
+
+  meta.name = MakeUniqueSnapshotName(meta.name or GetPathBaseName(source_folder) or Tr("imported_snapshot"))
+
+  local import_id = tostring(meta.id or "")
+  if import_id == "" or SnapshotIdExists(import_id) then
+    import_id = MakeID()
+  end
+  meta.id = import_id
+
+  local base_folder = tostring(meta.folder or "")
+  if base_folder == "" then
+    base_folder = SanitizeFileName(meta.name)
+  end
+  meta.folder = MakeUniqueSnapshotFolderName(base_folder)
+  meta.imported_at = os.date("%Y-%m-%d %H:%M:%S")
+  meta.updated_at = os.date("%Y-%m-%d %H:%M:%S")
+  meta.has_preview = FileExists(JoinPath(source_folder, PREVIEW_FILE_NAME)) or FileExists(JoinPath(source_folder, LEGACY_PREVIEW_FILE_NAME))
+  meta.preview = FileExists(JoinPath(source_folder, PREVIEW_FILE_NAME)) and PREVIEW_FILE_NAME or (meta.has_preview and LEGACY_PREVIEW_FILE_NAME or "")
+
+  data.meta = meta
+
+  local dest_folder = JoinPath(GetSnapshotsRoot(), meta.folder)
+  local move_ok, move_err = MoveOrCopySnapshotFolder(source_folder, dest_folder)
+  if not move_ok then
+    return false, move_err or Tr("status_import_failed"), move_err or Tr("status_import_failed")
+  end
+
+  SaveLuaTable(JoinPath(dest_folder, "snapshot.lua"), data)
+  state.snapshots[#state.snapshots + 1] = meta
+
+  return true, meta
 end
 
 function ImportSnapshotZip()
@@ -4469,74 +4613,55 @@ function ImportSnapshotZip()
     return
   end
 
-  local source_folder = FindSnapshotDataFolder(temp_dir, 3)
-  if not source_folder then
+  local source_folders = FindSnapshotDataFolders(temp_dir, 5)
+  table.sort(source_folders)
+
+  if #source_folders == 0 then
     DeleteDirectoryRecursive(temp_dir)
     state.status = Tr("status_import_snapshot_missing")
     reaper.MB(Tr("error_zip_invalid_package_detail"), SCRIPT_NAME, 0)
     return
   end
 
-  local data_path = JoinPath(source_folder, "snapshot.lua")
-  local data, err = LoadLuaTable(data_path)
-  if type(data) ~= "table" then
-    DeleteDirectoryRecursive(temp_dir)
-    state.status = Tr("status_import_invalid_data")
-    reaper.MB(Tr("error_import_read_detail", { detail = tostring(err or data_path) }), SCRIPT_NAME, 0)
-    return
+  local imported = {}
+  for _, source_folder in ipairs(source_folders) do
+    local import_ok, meta_or_status, message = ImportSnapshotDataFolder(source_folder)
+    if not import_ok then
+      if #imported > 0 then SaveIndex() end
+      DeleteDirectoryRecursive(temp_dir)
+      state.status = meta_or_status or Tr("status_import_failed")
+      reaper.MB(message or state.status, SCRIPT_NAME, 0)
+      return
+    end
+
+    imported[#imported + 1] = meta_or_status
   end
 
-  local meta = data.meta or {}
-  if type(meta) ~= "table" then meta = {} end
-
-  meta.name = MakeUniqueSnapshotName(meta.name or GetPathBaseName(source_folder) or Tr("imported_snapshot"))
-
-  local import_id = tostring(meta.id or "")
-  if import_id == "" or SnapshotIdExists(import_id) then
-    import_id = MakeID()
-  end
-  meta.id = import_id
-
-  local base_folder = tostring(meta.folder or "")
-  if base_folder == "" then
-    base_folder = SanitizeFileName(meta.name)
-  end
-  meta.folder = MakeUniqueSnapshotFolderName(base_folder)
-  meta.imported_at = os.date("%Y-%m-%d %H:%M:%S")
-  meta.updated_at = os.date("%Y-%m-%d %H:%M:%S")
-  meta.has_preview = FileExists(JoinPath(source_folder, PREVIEW_FILE_NAME)) or FileExists(JoinPath(source_folder, LEGACY_PREVIEW_FILE_NAME))
-  meta.preview = FileExists(JoinPath(source_folder, PREVIEW_FILE_NAME)) and PREVIEW_FILE_NAME or (meta.has_preview and LEGACY_PREVIEW_FILE_NAME or "")
-
-  data.meta = meta
-
-  local dest_folder = JoinPath(GetSnapshotsRoot(), meta.folder)
-  local move_ok, move_err = MoveOrCopySnapshotFolder(source_folder, dest_folder)
-  if not move_ok then
-    DeleteDirectoryRecursive(temp_dir)
-    state.status = move_err or Tr("status_import_failed")
-    reaper.MB(state.status, SCRIPT_NAME, 0)
-    return
-  end
-
-  SaveLuaTable(JoinPath(dest_folder, "snapshot.lua"), data)
-
-  if NormalizePath(source_folder) ~= NormalizePath(temp_dir) then
-    DeleteDirectoryRecursive(temp_dir)
-  end
-
-  state.snapshots[#state.snapshots + 1] = meta
+  DeleteDirectoryRecursive(temp_dir)
   SaveIndex()
   LoadIndex()
 
+  local imported_ids = {}
+  for _, meta in ipairs(imported) do
+    imported_ids[tostring(meta.id or "")] = true
+  end
+
+  ClearSnapshotSelection()
+  local last_imported_name = ""
   for i, snapshot in ipairs(state.snapshots or {}) do
-    if tostring(snapshot.id or "") == import_id then
+    if imported_ids[tostring(snapshot.id or "")] then
       state.selected = i
-      break
+      state.selected_snapshot_ids[GetSnapshotSelectionKey(snapshot, i)] = true
+      last_imported_name = tostring(snapshot.name or "")
     end
   end
 
   ResetWaveformCacheState()
-  state.status = Tr("status_imported_snapshot", { name = tostring(meta.name or "") })
+  if #imported == 1 then
+    state.status = Tr("status_imported_snapshot", { name = last_imported_name })
+  else
+    state.status = Tr("status_imported_snapshot_count", { count = tostring(#imported) })
+  end
 end
 
 function SetFavorite(snapshot, favorite)
@@ -5956,13 +6081,9 @@ function DrawHeaderCloseButton()
   local cx = x0 + slot_w * 0.5
   local cy = y0 + 6.5
   local half = HEADER_CLOSE_X_SIZE * 0.5
-  local glow_col = hovered and 0x78C7FFAA or 0x78C7FF50
-  local accent_col = active and 0xFFFFFFFF or (hovered and 0xFF5F8BFF or 0xE8EDF5E0)
-  local slash_col = active and 0x78C7FFFF or (hovered and 0xFFFFFFFF or 0x78C7FFFF)
-
-  if hovered and ImGui.DrawList_AddCircleFilled then
-    ImGui.DrawList_AddCircleFilled(draw_list, cx, cy, 7.5, 0x78C7FF20)
-  end
+  local glow_col = active and 0x3F4A5666 or (hovered and 0x4656665E or 0x3A465255)
+  local accent_col = active and 0xAAB3C0D6 or (hovered and 0x8F9CABCC or 0x75808DB8)
+  local slash_col = active and 0x7E9AB0D8 or (hovered and 0x6F879BD0 or 0x53687DB8)
 
   ImGui.DrawList_AddLine(draw_list, cx - half, cy - half, cx + half, cy + half, glow_col, 3.4)
   ImGui.DrawList_AddLine(draw_list, cx - half, cy + half, cx + half, cy - half, glow_col, 3.4)
