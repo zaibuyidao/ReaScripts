@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.12
+-- @version 1.0.13
 -- @author zaibuyidao
 -- @changelog
 --   Support multi-selection ZIP export and multi-snapshot ZIP import.
@@ -79,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.12"
+local SCRIPT_VERSION = "1.0.13"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -172,7 +172,7 @@ local TEXT = {
 
     smart_save_info = "Smart save: Razor Edit has priority. If no Razor Edit exists, the current time selection will be captured.",
     field_name = "Name",
-    field_new_name = "New name",
+    field_new_name = "New name:",
     field_description = "Description",
     category_dropdown = "Category ▼",
     tags_dropdown = "Tags ▼",
@@ -403,7 +403,7 @@ local TEXT = {
 
     smart_save_info = "智能保存: 剃刀编辑优先。如果没有剃刀编辑，则捕获当前时间选区。",
     field_name = "名称",
-    field_new_name = "新名称",
+    field_new_name = "新名称:",
     field_description = "描述",
     category_dropdown = "分类 ▼",
     tags_dropdown = "标签 ▼",
@@ -634,7 +634,7 @@ local TEXT = {
 
     smart_save_info = "智慧儲存: 剃刀編輯優先。如果沒有剃刀編輯，則擷取目前時間選區。",
     field_name = "名稱",
-    field_new_name = "新名稱",
+    field_new_name = "新名稱:",
     field_description = "描述",
     category_dropdown = "分類 ▼",
     tags_dropdown = "標籤 ▼",
@@ -6854,11 +6854,11 @@ function DrawSavePopup()
     ImGui.Text(ctx, Tr("smart_save_info"))
     ImGui.Separator(ctx)
 
-    ImGui.SetNextItemWidth(ctx, 420)
+    ImGui.SetNextItemWidth(ctx, 400)
     local changed, v = ImGui.InputText(ctx, UiLabel("field_name", "save_name"), state.save_name)
     if changed then state.save_name = v end
 
-    ImGui.SetNextItemWidth(ctx, 420)
+    ImGui.SetNextItemWidth(ctx, 400)
     local changed2, v2 = ImGui.InputText(ctx, "##CategoryInput", state.save_category)
     if changed2 then state.save_category = v2 end
 
@@ -6877,7 +6877,7 @@ function DrawSavePopup()
       end
     end, Tr("no_existing_categories"))
 
-    ImGui.SetNextItemWidth(ctx, 420)
+    ImGui.SetNextItemWidth(ctx, 400)
     local changed3, v3 = ImGui.InputText(ctx, "##TagsInput", state.save_tags)
     if changed3 then state.save_tags = v3 end
 
@@ -6894,8 +6894,8 @@ function DrawSavePopup()
       state.save_tags = AppendTagText(state.save_tags, item)
     end, Tr("no_existing_tags"))
 
-    ImGui.SetNextItemWidth(ctx, 420)
-    local changed4, v4 = ImGui.InputTextMultiline(ctx, UiLabel("field_description", "save_description"), state.save_description, 420, 90)
+    ImGui.SetNextItemWidth(ctx, 400)
+    local changed4, v4 = ImGui.InputTextMultiline(ctx, UiLabel("field_description", "save_description"), state.save_description, 400, 90)
     if changed4 then state.save_description = v4 end
 
     if state.show_tips then
@@ -6941,8 +6941,10 @@ function DrawRenamePopup()
       ImGui.Text(ctx, tostring(snapshot.name or Tr("unnamed")))
       ImGui.Separator(ctx)
 
-      ImGui.SetNextItemWidth(ctx, 420)
-      local changed, value = ImGui.InputText(ctx, UiLabel("field_new_name", "rename_name"), state.rename_name or "")
+      ImGui.Text(ctx, Tr("field_new_name"))
+      ImGui.SameLine(ctx, nil, 5)
+      ImGui.SetNextItemWidth(ctx, 300)
+      local changed, value = ImGui.InputText(ctx, "##rename_name", state.rename_name or "")
       if changed then state.rename_name = value end
 
       ImGui.Separator(ctx)
