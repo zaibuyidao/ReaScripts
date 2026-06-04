@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.9
+-- @version 1.0.10
 -- @author zaibuyidao
 -- @changelog
 --   Keep the snapshot index synchronized with local snapshot folders.
@@ -80,7 +80,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.9"
+local SCRIPT_VERSION = "1.0.10"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -919,6 +919,9 @@ local PREVIEW_VOLUME_MIN_DB = -60.0
 local PREVIEW_VOLUME_MAX_DB = 12.0
 local PREVIEW_VOLUME_ZERO_RATIO = 0.5
 local PREVIEW_VOLUME_DRAG_SPEED = 0.006
+local HEADER_CLOSE_SLOT_W = 18
+local HEADER_CLOSE_HIT_H = 16
+local HEADER_CLOSE_X_SIZE = 7
 
 function ImGuiValue(value, fallback)
   if type(value) == "function" then
@@ -5935,6 +5938,38 @@ function DrawPreviewVolumeKnobArc(draw_list, cx, cy, radius, angle_start, angle_
   end
 end
 
+function DrawHeaderCloseButton()
+  local slot_w = HEADER_CLOSE_SLOT_W
+  local hit_h = HEADER_CLOSE_HIT_H
+  local draw_list = ImGui.GetWindowDrawList(ctx)
+  local x0, y0 = ImGui.GetCursorScreenPos(ctx)
+
+  if ImGui.InvisibleButton(ctx, "##header_close_button", slot_w, hit_h) then
+    state.request_close = true
+  end
+
+  local hovered = ImGui.IsItemHovered and ImGui.IsItemHovered(ctx)
+  local active = ImGui.IsItemActive and ImGui.IsItemActive(ctx)
+
+  if not (draw_list and ImGui.DrawList_AddLine) then return end
+
+  local cx = x0 + slot_w * 0.5
+  local cy = y0 + 6.5
+  local half = HEADER_CLOSE_X_SIZE * 0.5
+  local glow_col = hovered and 0x78C7FFAA or 0x78C7FF50
+  local accent_col = active and 0xFFFFFFFF or (hovered and 0xFF5F8BFF or 0xE8EDF5E0)
+  local slash_col = active and 0x78C7FFFF or (hovered and 0xFFFFFFFF or 0x78C7FFFF)
+
+  if hovered and ImGui.DrawList_AddCircleFilled then
+    ImGui.DrawList_AddCircleFilled(draw_list, cx, cy, 7.5, 0x78C7FF20)
+  end
+
+  ImGui.DrawList_AddLine(draw_list, cx - half, cy - half, cx + half, cy + half, glow_col, 3.4)
+  ImGui.DrawList_AddLine(draw_list, cx - half, cy + half, cx + half, cy - half, glow_col, 3.4)
+  ImGui.DrawList_AddLine(draw_list, cx - half, cy - half, cx + half, cy + half, accent_col, 1.45)
+  ImGui.DrawList_AddLine(draw_list, cx - half, cy + half, cx + half, cy - half, slash_col, 1.45)
+end
+
 function ImGuiPreviewVolumeKnob(ctx, id, min_db, ref_db, max_db, value_db, radius, x_margin, y_margin, gutter_width)
   local changed = false
   local new_value_db = ClampNumber(value_db, min_db, max_db)
@@ -6104,11 +6139,12 @@ function DrawHeader()
   if font_small then ImGui.PopFont(ctx) end
 
   local knob_w, knob_h = GetPreviewVolumeKnobSize()
+  local right_tools_w = knob_w + HEADER_CLOSE_SLOT_W
   ImGui.SameLine(ctx, nil, 0)
 
   local avail = select(1, ImGui.GetContentRegionAvail(ctx)) or 0
-  if avail > knob_w then
-    ImGui.Dummy(ctx, avail - knob_w, 0)
+  if avail > right_tools_w then
+    ImGui.Dummy(ctx, avail - right_tools_w, 0)
     ImGui.SameLine(ctx, nil, 0)
   end
 
@@ -6116,6 +6152,11 @@ function DrawHeader()
     ImGui.SetCursorPosY(ctx, title_y)
   end
   DrawPreviewVolumeKnob()
+
+  if ImGui.SetCursorPosY then
+    ImGui.SetCursorPosY(ctx, title_y + 1)
+  end
+  DrawHeaderCloseButton()
 
   local subtitle_w, subtitle_h = 0, 12
   subtitle_w, subtitle_h = CalcTextSizeSafe(subtitle_text, 0, 12)
