@@ -1,8 +1,8 @@
 -- @description SFX Snapshot Library
--- @version 1.0.13
+-- @version 1.0.14
 -- @author zaibuyidao
 -- @changelog
---   Support multi-selection ZIP export and multi-snapshot ZIP import.
+--   Add Alt+Enter and middle-click loading shortcuts, plus shortcut help.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -79,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.13"
+local SCRIPT_VERSION = "1.0.14"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -118,6 +118,7 @@ local TEXT = {
     open_folder = "Open Folder",
     export_zip = "Export ZIP",
     import_zip = "Import ZIP",
+    view_shortcuts = "Shortcuts",
     add_favorite = "Add Favorite",
     remove_favorite = "Remove Favorite",
     favorite = "Favorite",
@@ -219,6 +220,8 @@ local TEXT = {
     dialog_export_folder_title = "Select export folder:",
     dialog_import_zip_title = "Import SFX Snapshot ZIP",
     dialog_zip_filter = "ZIP files (*.zip)\0*.zip\0All files (*.*)\0*.*\0",
+    shortcut_help_title = "Keyboard Shortcuts",
+    shortcut_help_text = "Ctrl+S: Save snapshot\nCtrl+L: Load selected snapshot\nAlt+Enter: Load selected snapshot\nMiddle mouse button on a list item: Load that snapshot\nSpace: Play / stop selected snapshot preview\nF: Add / remove selected snapshot from favorites\nShift+Delete: Remove selected snapshot(s)\nCtrl+,: Open Settings\nEnter: Confirm current dialog\nEsc: Close script",
     undo_load_snapshot = "Load SFX Snapshot",
 
     confirm_remove_snapshot = "Remove this snapshot and delete its local folder?\n\n{name}\n\nFolder:\n{folder}",
@@ -349,6 +352,7 @@ local TEXT = {
     open_folder = "打开文件夹",
     export_zip = "导出 ZIP",
     import_zip = "导入 ZIP",
+    view_shortcuts = "快捷键",
     add_favorite = "添加收藏",
     remove_favorite = "取消收藏",
     favorite = "收藏",
@@ -450,6 +454,8 @@ local TEXT = {
     dialog_export_folder_title = "选择导出文件夹: ",
     dialog_import_zip_title = "导入 SFX 快照 ZIP",
     dialog_zip_filter = "ZIP 文件 (*.zip)\0*.zip\0所有文件 (*.*)\0*.*\0",
+    shortcut_help_title = "快捷键",
+    shortcut_help_text = "Ctrl+S：保存快照\nCtrl+L：载入当前选中的快照\nAlt+Enter：载入当前选中的快照\n鼠标中键点击列表条目：载入该快照\nSpace：播放 / 停止当前快照预览\nF：添加 / 取消收藏当前快照\nShift+Delete：移除选中的快照\nCtrl+,：打开设置\nEnter：确认当前弹窗\nEsc：关闭脚本",
     undo_load_snapshot = "载入 SFX 快照",
 
     confirm_remove_snapshot = "要移除此快照并删除本地文件夹吗？\n\n{name}\n\n文件夹: \n{folder}",
@@ -580,6 +586,7 @@ local TEXT = {
     open_folder = "開啟資料夾",
     export_zip = "匯出 ZIP",
     import_zip = "匯入 ZIP",
+    view_shortcuts = "快捷鍵",
     add_favorite = "加入收藏",
     remove_favorite = "取消收藏",
     favorite = "收藏",
@@ -681,6 +688,8 @@ local TEXT = {
     dialog_export_folder_title = "選擇匯出資料夾: ",
     dialog_import_zip_title = "匯入 SFX 快照 ZIP",
     dialog_zip_filter = "ZIP 檔案 (*.zip)\0*.zip\0所有檔案 (*.*)\0*.*\0",
+    shortcut_help_title = "快捷鍵",
+    shortcut_help_text = "Ctrl+S：儲存快照\nCtrl+L：載入目前選取的快照\nAlt+Enter：載入目前選取的快照\n滑鼠中鍵點擊清單項目：載入該快照\nSpace：播放 / 停止目前快照預覽\nF：加入 / 取消收藏目前快照\nShift+Delete：移除選取的快照\nCtrl+,：開啟設定\nEnter：確認目前彈窗\nEsc：關閉腳本",
     undo_load_snapshot = "載入 SFX 快照",
 
     confirm_remove_snapshot = "要移除此快照並刪除本機資料夾嗎？\n\n{name}\n\n資料夾: \n{folder}",
@@ -907,6 +916,7 @@ local CHILD_FLAGS_BORDER = ImGui.ChildFlags_Borders or 1
 local WINDOW_FLAGS_NONE = 0
 local MOUSE_BUTTON_LEFT = ImGui.MouseButton_Left or 0
 local MOUSE_BUTTON_RIGHT = ImGui.MouseButton_Right or 1
+local MOUSE_BUTTON_MIDDLE = ImGui.MouseButton_Middle or 2
 local KEY_SPACE = ImGui.Key_Space or 32
 local KEY_ESCAPE = ImGui.Key_Escape or 27
 local KEY_DELETE = ImGui.Key_Delete or 522
@@ -920,8 +930,11 @@ local KEY_LEFT_CTRL = ImGui.Key_LeftCtrl
 local KEY_RIGHT_CTRL = ImGui.Key_RightCtrl
 local KEY_LEFT_SHIFT = ImGui.Key_LeftShift or 656
 local KEY_RIGHT_SHIFT = ImGui.Key_RightShift or 660
+local KEY_LEFT_ALT = ImGui.Key_LeftAlt or (reaper.ImGui_Key_LeftAlt and reaper.ImGui_Key_LeftAlt())
+local KEY_RIGHT_ALT = ImGui.Key_RightAlt or (reaper.ImGui_Key_RightAlt and reaper.ImGui_Key_RightAlt())
 local MOD_CTRL = ImGui.Mod_Ctrl or 2
 local MOD_SHIFT = ImGui.Mod_Shift or 1
+local MOD_ALT = ImGui.Mod_Alt or 4
 local WAVEFORM_CACHE_PIXELS = 2048
 local WAVEFORM_CACHE_MAX_CHANNELS = 6
 local SNAPSHOT_DISK_SYNC_INTERVAL = 3.0
@@ -946,6 +959,7 @@ end
 
 MOUSE_BUTTON_LEFT = ImGuiValue(ImGui.MouseButton_Left, MOUSE_BUTTON_LEFT)
 MOUSE_BUTTON_RIGHT = ImGuiValue(ImGui.MouseButton_Right, MOUSE_BUTTON_RIGHT)
+MOUSE_BUTTON_MIDDLE = ImGuiValue(ImGui.MouseButton_Middle, MOUSE_BUTTON_MIDDLE)
 KEY_SPACE = ImGuiValue(ImGui.Key_Space, KEY_SPACE)
 KEY_ESCAPE = ImGuiValue(ImGui.Key_Escape, KEY_ESCAPE)
 KEY_DELETE = ImGuiValue(ImGui.Key_Delete, KEY_DELETE)
@@ -959,8 +973,11 @@ KEY_LEFT_CTRL = ImGuiValue(ImGui.Key_LeftCtrl, KEY_LEFT_CTRL)
 KEY_RIGHT_CTRL = ImGuiValue(ImGui.Key_RightCtrl, KEY_RIGHT_CTRL)
 KEY_LEFT_SHIFT = ImGuiValue(ImGui.Key_LeftShift, KEY_LEFT_SHIFT)
 KEY_RIGHT_SHIFT = ImGuiValue(ImGui.Key_RightShift, KEY_RIGHT_SHIFT)
+KEY_LEFT_ALT = ImGuiValue(ImGui.Key_LeftAlt, KEY_LEFT_ALT)
+KEY_RIGHT_ALT = ImGuiValue(ImGui.Key_RightAlt, KEY_RIGHT_ALT)
 MOD_CTRL = ImGuiValue(ImGui.Mod_Ctrl, MOD_CTRL)
 MOD_SHIFT = ImGuiValue(ImGui.Mod_Shift, MOD_SHIFT)
+MOD_ALT = ImGuiValue(ImGui.Mod_Alt, MOD_ALT)
 
 local WINDOW_FLAGS_NO_COLLAPSE = ImGuiValue(ImGui.WindowFlags_NoCollapse, 32)
 local WINDOW_FLAGS_NO_TITLE_BAR = ImGuiValue(ImGui.WindowFlags_NoTitleBar, 1)
@@ -4484,6 +4501,10 @@ function RequestSettingsPopup(open_now)
   end
 end
 
+function ShowShortcutHelp()
+  reaper.MB(Tr("shortcut_help_text"), Tr("shortcut_help_title"), 0)
+end
+
 function ExportSelectedSnapshotZip()
   local indices = GetSelectedSnapshotIndices()
   if #indices == 0 then
@@ -6373,6 +6394,10 @@ function DrawTopBar()
         ExportSelectedSnapshotZip()
       end
 
+      if ImGui.MenuItem(ctx, Tr("view_shortcuts")) then
+        ShowShortcutHelp()
+      end
+
       if ImGui.MenuItem(ctx, Tr("settings")) then
         request_settings_popup()
       end
@@ -6428,7 +6453,7 @@ function DrawFilters()
 
   local categories = GetCategories()
 
-  ImGui.SetNextItemWidth(ctx, 120)
+  ImGui.SetNextItemWidth(ctx, 150)
   if ImGui.BeginCombo(ctx, "##category", DisplayCategoryFilter(state.category_filter)) then
     for i, c in ipairs(categories) do
       if ImGui.Selectable(ctx, DisplayCategoryFilter(c) .. "##category_option_" .. tostring(i), state.category_filter == c) then
@@ -6680,6 +6705,16 @@ function DrawSnapshotList(width, height)
           AuditionSelectedSnapshot()
         end
 
+        if ImGui.IsItemClicked and ImGui.IsItemClicked(ctx, MOUSE_BUTTON_MIDDLE) then
+          if not IsSnapshotSelected(i) then
+            SelectOnlySnapshot(i)
+          else
+            state.selected = i
+          end
+          state.snapshot_list_focused = true
+          RequestLoadSelectedSnapshot()
+        end
+
         if ImGui.IsItemClicked and ImGui.IsItemClicked(ctx, MOUSE_BUTTON_RIGHT) then
           if not IsSnapshotSelected(i) then
             SelectOnlySnapshot(i)
@@ -6699,6 +6734,10 @@ function DrawSnapshotList(width, height)
           if ImGui.MenuItem(ctx, s.favorite and Tr("remove_favorite") or Tr("add_favorite")) then
             ToggleFavorite(s)
             list_changed = true
+          end
+
+          if ImGui.MenuItem(ctx, Tr("load")) then
+            RequestLoadSelectedSnapshot()
           end
 
           if ImGui.MenuItem(ctx, Tr("open_folder")) then
@@ -7274,22 +7313,57 @@ function IsCtrlDown()
   return left_down or right_down
 end
 
+function IsAltDown()
+  if ImGui.GetKeyMods then
+    local ok, mods = pcall(ImGui.GetKeyMods, ctx)
+    if ok and tonumber(mods) and tonumber(MOD_ALT) then
+      local alt = tonumber(MOD_ALT) or 0
+      if alt > 0 then
+        return math.floor((tonumber(mods) or 0) / alt) % 2 == 1
+      end
+    end
+  end
+
+  local left_down = false
+  local right_down = false
+
+  if ImGui.IsKeyDown then
+    if KEY_LEFT_ALT then
+      local ok_left, result_left = pcall(ImGui.IsKeyDown, ctx, KEY_LEFT_ALT)
+      if ok_left then left_down = result_left == true end
+    end
+
+    if KEY_RIGHT_ALT then
+      local ok_right, result_right = pcall(ImGui.IsKeyDown, ctx, KEY_RIGHT_ALT)
+      if ok_right then right_down = result_right == true end
+    end
+  end
+
+  return left_down or right_down
+end
+
 function HandleGlobalShortcuts()
   if not state.main_window_focused and not state.snapshot_list_focused then return end
   if state.modal_popup_active then return end
-  if not IsCtrlDown() then return end
 
-  if IsKeyPressedSafe(KEY_COMMA) then
-    RequestSettingsPopup(false)
-    return
+  if IsCtrlDown() then
+    if IsKeyPressedSafe(KEY_COMMA) then
+      RequestSettingsPopup(false)
+      return
+    end
+
+    if IsKeyPressedSafe(KEY_S) then
+      RequestSaveSnapshotPopup(false)
+      return
+    end
+
+    if IsKeyPressedSafe(KEY_L) then
+      RequestLoadSelectedSnapshot()
+      return
+    end
   end
 
-  if IsKeyPressedSafe(KEY_S) then
-    RequestSaveSnapshotPopup(false)
-    return
-  end
-
-  if IsKeyPressedSafe(KEY_L) then
+  if IsAltDown() and IsConfirmKeyPressed() then
     RequestLoadSelectedSnapshot()
   end
 end
