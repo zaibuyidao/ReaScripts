@@ -1,7 +1,8 @@
 -- @description SFX Snapshot Library
--- @version 1.0.15
+-- @version 1.0.16
 -- @author zaibuyidao
 -- @changelog
+--   Remove media files no longer referenced after updating a snapshot.
 --   Make preview rendering independent from the project's render settings.
 --   Stabilize list tooltips and add updating the selected snapshot from the current capture area.
 -- @links
@@ -80,7 +81,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.15"
+local SCRIPT_VERSION = "1.0.16"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -1374,6 +1375,79 @@ function ArchiveSnapshotMedia(data, snapshot_folder)
   }
 
   return data.media_archive
+end
+
+function RemoveUnreferencedSnapshotMedia(data, snapshot_folder)
+  local media_dir = JoinPath(snapshot_folder, "media")
+  if not SnapshotDirectoryExists(media_dir) or not reaper.EnumerateFiles or not reaper.EnumerateSubdirectories then
+    return
+  end
+
+  local referenced = {}
+  for _, tr in ipairs(data.tracks or {}) do
+    for _, item_data in ipairs(tr.items or {}) do
+      for _, path in ipairs(ExtractQuotedFilePathsFromChunk(item_data.chunk or "")) do
+        local relative_path = tostring(path):match("^" .. SNAPSHOT_MEDIA_TOKEN .. "[/\\](.+)$")
+        if relative_path and relative_path ~= "" then
+          referenced[NormalizePathForCompare(relative_path)] = true
+        end
+      end
+    end
+  end
+
+  if next(referenced) == nil then
+    DeleteDirectoryRecursive(media_dir)
+    return
+  end
+
+  local function has_reference_under(relative_dir)
+    local prefix = NormalizePathForCompare(relative_dir) .. "/"
+    for relative_path in pairs(referenced) do
+      if relative_path:sub(1, #prefix) == prefix then
+        return true
+      end
+    end
+    return false
+  end
+
+  local function cleanup_folder(folder, relative_dir)
+    local files = {}
+    local file_index = 0
+    while true do
+      local file_name = reaper.EnumerateFiles(folder, file_index)
+      if not file_name then break end
+      files[#files + 1] = file_name
+      file_index = file_index + 1
+    end
+
+    for _, file_name in ipairs(files) do
+      local relative_path = relative_dir == "" and file_name or JoinPath(relative_dir, file_name)
+      if not referenced[NormalizePathForCompare(relative_path)] then
+        pcall(os.remove, JoinPath(folder, file_name))
+      end
+    end
+
+    local subdirectories = {}
+    local directory_index = 0
+    while true do
+      local directory_name = reaper.EnumerateSubdirectories(folder, directory_index)
+      if not directory_name then break end
+      subdirectories[#subdirectories + 1] = directory_name
+      directory_index = directory_index + 1
+    end
+
+    for _, directory_name in ipairs(subdirectories) do
+      local relative_path = relative_dir == "" and directory_name or JoinPath(relative_dir, directory_name)
+      local subdirectory = JoinPath(folder, directory_name)
+      if has_reference_under(relative_path) then
+        cleanup_folder(subdirectory, relative_path)
+      else
+        DeleteDirectoryRecursive(subdirectory)
+      end
+    end
+  end
+
+  cleanup_folder(media_dir, "")
 end
 
 function ResolveSnapshotMediaPathsInChunk(chunk, snapshot_folder)
@@ -4408,6 +4482,10 @@ function SaveSnapshotFromPopupImpl(update_snapshot, skip_overwrite_confirm)
     state.status = Tr("status_snapshot_write_failed")
     reaper.MB(state.status, SCRIPT_NAME, 0)
     return false
+  end
+
+  if existing_snapshot then
+    RemoveUnreferencedSnapshotMedia(data, folder)
   end
 
   RemoveLegacySnapshotFolderAfterSave(existing_snapshot, folder_name)
