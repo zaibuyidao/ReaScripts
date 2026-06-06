@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b9bb4662e69bb136060d9b554b0c078e179c15cf">
+<index version="1" name="zaibuyidao Scripts" commit="db86106c0de27b59b696040280d59eb5e4acc20a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9361,6 +9361,11 @@ Make remove release loaded snapshot media and support list multi-selection.]]></
       <version name="1.0.14" author="zaibuyidao" time="2026-06-05T14:30:37Z">
         <changelog><![CDATA[Add Alt+Enter and middle-click loading shortcuts, plus shortcut help.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b9bb4662e69bb136060d9b554b0c078e179c15cf/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
+      </version>
+      <version name="1.0.15" author="zaibuyidao" time="2026-06-06T06:42:33Z">
+        <changelog><![CDATA[Make preview rendering independent from the project's render settings.
+Stabilize list tooltips and add updating the selected snapshot from the current capture area.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/db86106c0de27b59b696040280d59eb5e4acc20a/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Tap Tempo Checker (No Tempo Change).lua" type="script" desc="Tap Tempo Checker (No Tempo Change)">
