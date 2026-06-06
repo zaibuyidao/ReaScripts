@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.193
+-- @version 1.0.194
 -- @changelog
---   Improved waveform cache task cleanup for better stability when switching views or exiting.
---   Support reaper_soundmole-x64.dll v0.0.17
+--   Fixed a Section source dragging issue.
+--   Support reaper_soundmole-x64.dll v0.0.19
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

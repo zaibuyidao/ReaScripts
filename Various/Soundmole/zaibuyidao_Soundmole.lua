@@ -3130,6 +3130,495 @@ function GetDragPreviewTimelineLength(start_time, end_time)
   return item_len
 end
 
+function GetSelectionDragMediaDirectory()
+  local project, project_filename = reaper.EnumProjects(-1, "")
+  local media_dir = ""
+
+  if reaper.GetProjectPathEx then
+    local ok, path = pcall(reaper.GetProjectPathEx, project, "")
+    if ok and type(path) == "string" then media_dir = path end
+  end
+  if media_dir == "" and reaper.GetProjectPath then
+    local ok, path = pcall(reaper.GetProjectPath, "")
+    if ok and type(path) == "string" then media_dir = path end
+  end
+  if media_dir == "" then
+    media_dir = reaper.GetResourcePath() .. sep .. "Media"
+  end
+  if not project_filename or project_filename == "" then
+    local resource_path = normalize_path(reaper.GetResourcePath(), false)
+    local effective_path = normalize_path(media_dir, false)
+    if reaper.GetOS():find("Win") then
+      resource_path, effective_path = resource_path:lower(), effective_path:lower()
+    end
+    if effective_path == resource_path then
+      media_dir = reaper.GetResourcePath() .. sep .. "Media"
+    end
+  end
+
+  media_dir = normalize_path(media_dir, true)
+  EnsureCacheDir(media_dir)
+  return media_dir
+end
+
+function GetSelectionDragPreviewDirectory()
+  local base_dir = os.getenv("TEMP") or os.getenv("TMP") or os.getenv("TMPDIR") or ""
+  if base_dir == "" then
+    base_dir = reaper.GetResourcePath() .. sep .. "SoundmoleTemp"
+  end
+  return normalize_path(base_dir, true)
+end
+
+function WriteSelectionDragPreviewFile(path, duration)
+  duration = tonumber(duration) or 0
+  if duration <= 0 then return false end
+
+  local file = io.open(path, "wb")
+  if not file then return false end
+
+  local sample_rate = 8000
+  local channels = 1
+  local bits_per_sample = 8
+  local block_align = channels
+  local byte_rate = sample_rate * block_align
+  local data_size = math.max(1, math.floor(duration * byte_rate + 0.5))
+  local chunk_size = 36 + data_size
+  local function write_u32(value)
+    file:write(string.char(value & 0xFF, (value >> 8) & 0xFF, (value >> 16) & 0xFF, (value >> 24) & 0xFF))
+  end
+  local function write_u16(value)
+    file:write(string.char(value & 0xFF, (value >> 8) & 0xFF))
+  end
+
+  file:write("RIFF") write_u32(chunk_size) file:write("WAVEfmt ") write_u32(16)
+  write_u16(1) write_u16(channels) write_u32(sample_rate) write_u32(byte_rate)
+  write_u16(block_align) write_u16(bits_per_sample) file:write("data") write_u32(data_size)
+  file:seek("set", 43 + data_size)
+  file:write("\128")
+  file:close()
+  return true
+end
+
+function IsReadableSelectionDragPreview(path)
+  if not path or path == "" or not reaper.file_exists(path) then return false end
+  local source = reaper.PCM_Source_CreateFromFile(path)
+  if not source then return false end
+  local length = reaper.GetMediaSourceLength(source)
+  length = tonumber(length) or 0
+  reaper.PCM_Source_Destroy(source)
+  return length > 0
+end
+
+function CleanupSelectionDragPreview(req)
+  if not req then return end
+  if req.dropped_preview_copy_path and req.dropped_preview_copy_path ~= ""
+    and not SameSelectionDragPath(req.dropped_preview_copy_path, req.final_section_source_path)
+  then
+    os.remove(req.dropped_preview_copy_path .. ".reapeaks")
+    os.remove(req.dropped_preview_copy_path)
+  end
+  if req.preview_path and req.preview_path ~= "" then
+    os.remove(req.preview_path .. ".reapeaks")
+    os.remove(req.preview_path)
+  end
+  if req.preview_dir and req.preview_dir:match("[/\\]%.soundmole_drag_preview_") then
+    local directory = req.preview_dir:gsub("[/\\]+$", "")
+    local index = 0
+    while index < 100 do
+      local name = reaper.EnumerateFiles(directory, index)
+      if not name then break end
+      if not os.remove(normalize_path(directory .. sep .. name, false)) then index = index + 1 end
+    end
+    os.remove(directory)
+  end
+  req.preview_path = nil
+  req.preview_dir = nil
+  req.dropped_preview_copy_path = nil
+  req.final_section_source_path = nil
+end
+
+function CreateSelectionDragPreview(real_path, start_time, end_time)
+  real_path = normalize_path(real_path or "", false)
+  local filename = real_path:match("[^/\\]+$")
+  if not filename or filename == "" then return nil end
+
+  local duration = GetDragPreviewTimelineLength(start_time, end_time)
+  if duration <= 0 then return nil end
+
+  local unique = string.format("%d_%05d", math.floor(reaper.time_precise() * 1000000), math.random(0, 99999))
+  local preview_dir = normalize_path(GetSelectionDragPreviewDirectory() .. ".soundmole_drag_preview_" .. unique, true)
+  EnsureCacheDir(preview_dir)
+  local preview_path = normalize_path(preview_dir .. filename, false)
+
+  WriteSelectionDragPreviewFile(preview_path, duration)
+  if not IsReadableSelectionDragPreview(preview_path) then
+    os.remove(preview_path)
+    local stem = filename:match("^(.*)%.[^.]*$") or filename
+    preview_path = normalize_path(preview_dir .. stem .. ".wav", false)
+    WriteSelectionDragPreviewFile(preview_path, duration)
+  end
+
+  if not IsReadableSelectionDragPreview(preview_path) then
+    CleanupSelectionDragPreview({ preview_path = preview_path, preview_dir = preview_dir })
+    return nil
+  end
+  return preview_path, preview_dir
+end
+
+function SelectionDragPathKey(path)
+  path = normalize_path(path or "", false)
+  if reaper.GetOS():find("Win") then path = path:lower() end
+  return path
+end
+
+function IsPathInsideSelectionDragMediaDirectory(path, media_dir)
+  path = SelectionDragPathKey(path)
+  media_dir = SelectionDragPathKey(normalize_path(media_dir or "", true))
+  return path ~= "" and media_dir ~= "" and path:sub(1, #media_dir) == media_dir
+end
+
+function SelectionDragFilesMatch(path_a, path_b)
+  if SameSelectionDragPath and SameSelectionDragPath(path_a, path_b) then return true end
+
+  local size_a = GetFileSize(path_a)
+  local size_b = GetFileSize(path_b)
+  if size_a == nil or size_b == nil or size_a ~= size_b then return false end
+
+  local file_a = io.open(path_a, "rb")
+  local file_b = io.open(path_b, "rb")
+  if not file_a or not file_b then
+    if file_a then file_a:close() end
+    if file_b then file_b:close() end
+    return false
+  end
+
+  local matches = true
+  while true do
+    local chunk_a = file_a:read(1024 * 1024)
+    local chunk_b = file_b:read(1024 * 1024)
+    if chunk_a ~= chunk_b then matches = false break end
+    if not chunk_a then break end
+  end
+  file_a:close()
+  file_b:close()
+  return matches
+end
+
+function CopySelectionDragSourceFile(source_path, destination_path)
+  local source = io.open(source_path, "rb")
+  if not source then return false end
+
+  local unique = string.format("%d_%05d", math.floor(reaper.time_precise() * 1000000), math.random(0, 99999))
+  local temporary_path = destination_path .. ".soundmole_copying_" .. unique
+  local destination = io.open(temporary_path, "wb")
+  if not destination then
+    source:close()
+    return false
+  end
+
+  local copied = true
+  while true do
+    local chunk = source:read(1024 * 1024)
+    if not chunk then break end
+    if not destination:write(chunk) then copied = false break end
+  end
+  source:close()
+  destination:close()
+
+  if copied and os.rename(temporary_path, destination_path) then return true end
+  os.remove(temporary_path)
+  return reaper.file_exists(destination_path) and SelectionDragFilesMatch(source_path, destination_path)
+end
+
+selection_drag_import_cache = selection_drag_import_cache or {}
+function GetSelectionDragImportCacheKey(real_path, media_dir)
+  return SelectionDragPathKey(media_dir) .. "|" .. SelectionDragPathKey(real_path)
+end
+
+function GetSelectionDragPersistentStateKey(real_path, media_dir)
+  return "selection_drag_import_" .. SimpleHash(SelectionDragPathKey(media_dir) .. "|" .. SelectionDragPathKey(real_path))
+end
+
+function GetCachedSelectionDragSourceInMediaDirectory(real_path)
+  real_path = normalize_path(real_path or "", false)
+  if real_path == "" or not reaper.file_exists(real_path) then return nil end
+
+  local media_dir = GetSelectionDragMediaDirectory()
+  if IsPathInsideSelectionDragMediaDirectory(real_path, media_dir) then return real_path end
+
+  local cache_key = GetSelectionDragImportCacheKey(real_path, media_dir)
+  local cached_path = selection_drag_import_cache[cache_key]
+  local real_size = GetFileSize(real_path)
+  local cached_size = cached_path and GetFileSize(cached_path)
+  if cached_path and reaper.file_exists(cached_path)
+    and IsPathInsideSelectionDragMediaDirectory(cached_path, media_dir)
+    and real_size ~= nil and cached_size ~= nil and real_size == cached_size
+  then
+    return cached_path
+  end
+
+  if reaper.GetExtState then
+    local value = reaper.GetExtState(EXT_SECTION, GetSelectionDragPersistentStateKey(real_path, media_dir))
+    if value and value ~= "" then
+      local source_length, stored_paths = value:match("^(%d+):(.*)$")
+      source_length = tonumber(source_length)
+      local stored_source = source_length and stored_paths:sub(1, source_length) or ""
+      local stored_import = source_length and stored_paths:sub(source_length + 1) or ""
+      stored_import = normalize_path(stored_import or "", false)
+      local stored_size = GetFileSize(stored_import)
+      if SelectionDragPathKey(stored_source) == SelectionDragPathKey(real_path)
+        and reaper.file_exists(stored_import)
+        and IsPathInsideSelectionDragMediaDirectory(stored_import, media_dir)
+        and real_size ~= nil and stored_size ~= nil and real_size == stored_size
+      then
+        selection_drag_import_cache[cache_key] = stored_import
+        return stored_import
+      end
+    end
+  end
+end
+
+function CacheSelectionDragImportedSource(real_path, imported_path, media_dir)
+  real_path = normalize_path(real_path or "", false)
+  imported_path = normalize_path(imported_path or "", false)
+  media_dir = media_dir or GetSelectionDragMediaDirectory()
+  if real_path ~= "" and imported_path ~= "" then
+    selection_drag_import_cache[GetSelectionDragImportCacheKey(real_path, media_dir)] = imported_path
+    if reaper.SetExtState then
+      local value = tostring(#real_path) .. ":" .. real_path .. imported_path
+      reaper.SetExtState(EXT_SECTION, GetSelectionDragPersistentStateKey(real_path, media_dir), value, true)
+    end
+  end
+end
+
+function FindSelectionDragSourceInMediaDirectory(real_path)
+  real_path = normalize_path(real_path or "", false)
+  if real_path == "" or not reaper.file_exists(real_path) then return nil end
+
+  local cached_path = GetCachedSelectionDragSourceInMediaDirectory(real_path)
+  if cached_path then return cached_path end
+
+  local media_dir = GetSelectionDragMediaDirectory()
+  local filename = real_path:match("[^/\\]+$")
+  if not filename or filename == "" then return nil end
+  local stem, extension = filename:match("^(.*)(%.[^.]*)$")
+  if not stem then stem, extension = filename, "" end
+  if reaper.GetOS():find("Win") then stem, extension = stem:lower(), extension:lower() end
+
+  local index = 0
+  while true do
+    local candidate_name = reaper.EnumerateFiles(media_dir, index)
+    if not candidate_name then break end
+    local compare_name = reaper.GetOS():find("Win") and candidate_name:lower() or candidate_name
+    local candidate_stem = extension == "" and compare_name or compare_name:sub(1, math.max(0, #compare_name - #extension))
+    local candidate_extension = extension == "" and "" or compare_name:sub(-#extension)
+    if candidate_extension == extension and candidate_stem:sub(1, #stem) == stem then
+      local candidate_path = normalize_path(media_dir .. candidate_name, false)
+      if SelectionDragFilesMatch(real_path, candidate_path) then
+        CacheSelectionDragImportedSource(real_path, candidate_path, media_dir)
+        return candidate_path
+      end
+    end
+    index = index + 1
+  end
+end
+
+function EnsureSelectionDragSourceInMediaDirectory(real_path)
+  real_path = normalize_path(real_path or "", false)
+  if real_path == "" or not reaper.file_exists(real_path) then return nil end
+
+  local existing_path = FindSelectionDragSourceInMediaDirectory(real_path)
+  if existing_path then return existing_path, false end
+
+  local media_dir = GetSelectionDragMediaDirectory()
+  local filename = real_path:match("[^/\\]+$")
+  if not filename or filename == "" then return nil end
+  local stem, extension = filename:match("^(.*)(%.[^.]*)$")
+  if not stem then stem, extension = filename, "" end
+
+  for index = 0, 9999 do
+    local candidate_name = index == 0 and filename or string.format("%s-%03d%s", stem, index, extension)
+    local candidate_path = normalize_path(media_dir .. candidate_name, false)
+    if reaper.file_exists(candidate_path) then
+      if SelectionDragFilesMatch(real_path, candidate_path) then
+        CacheSelectionDragImportedSource(real_path, candidate_path, media_dir)
+        return candidate_path, false
+      end
+    elseif CopySelectionDragSourceFile(real_path, candidate_path) then
+      CacheSelectionDragImportedSource(real_path, candidate_path, media_dir)
+      return candidate_path, true
+    end
+  end
+end
+
+function ResolveSelectionDragSectionSource(real_path, dropped_source_path)
+  local media_dir = GetSelectionDragMediaDirectory()
+  dropped_source_path = normalize_path(dropped_source_path or "", false)
+
+  -- Respect REAPER's own imported-media copy when native drop already created one.
+  if reaper.file_exists(dropped_source_path) and IsPathInsideSelectionDragMediaDirectory(dropped_source_path, media_dir) then
+    CacheSelectionDragImportedSource(real_path, dropped_source_path, media_dir)
+    return dropped_source_path, false
+  end
+
+  local imported_path, was_copied = EnsureSelectionDragSourceInMediaDirectory(real_path)
+  if imported_path then return imported_path, was_copied end
+  if reaper.file_exists(dropped_source_path) then return dropped_source_path, false end
+  return real_path, false
+end
+
+function CleanupDroppedSelectionDragPreviewCopy(req, dropped_source_path)
+  if not req or not req.preview_path then return end
+  dropped_source_path = normalize_path(dropped_source_path or "", false)
+  if dropped_source_path == "" or SameSelectionDragPath(dropped_source_path, req.preview_path) then return end
+
+  local media_dir = GetSelectionDragMediaDirectory()
+  if IsPathInsideSelectionDragMediaDirectory(dropped_source_path, media_dir)
+    and SelectionDragFilesMatch(req.preview_path, dropped_source_path)
+  then
+    os.remove(dropped_source_path .. ".reapeaks")
+    if not os.remove(dropped_source_path) and reaper.file_exists(dropped_source_path) then
+      req.dropped_preview_copy_path = dropped_source_path
+    end
+  end
+end
+
+function CaptureProjectMediaItems()
+  local items = {}
+  for i = 0, reaper.CountMediaItems(0) - 1 do
+    items[reaper.GetMediaItem(0, i)] = true
+  end
+  return items
+end
+
+function SameSelectionDragPath(a, b)
+  a = normalize_path(a or "", false)
+  b = normalize_path(b or "", false)
+  if reaper.GetOS():find("Win") then
+    a, b = a:lower(), b:lower()
+  end
+  return a ~= "" and a == b
+end
+
+function SameSelectionDragFilename(a, b)
+  a, b = tostring(a or ""), tostring(b or "")
+  if reaper.GetOS():find("Win") then a, b = a:lower(), b:lower() end
+  return a ~= "" and a == b
+end
+
+function ReplaceNativeSelectionDropItem(req, item)
+  if not req or not item or not reaper.ValidatePtr(item, "MediaItem*") then return false end
+  local track = reaper.GetMediaItem_Track(item)
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return false end
+
+  local dropped_take = reaper.GetActiveTake(item)
+  local dropped_source = dropped_take and reaper.GetMediaItemTake_Source(dropped_take)
+  local dropped_source_path = dropped_source and reaper.GetMediaSourceFileName(dropped_source, "") or ""
+
+  local position = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+  local target_lane = math.floor(tonumber(reaper.GetMediaItemInfo_Value(item, "I_FIXEDLANE")) or 0)
+  local track_index = math.max(0, math.floor(tonumber(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) or 1) - 1)
+  local old_cursor = reaper.GetCursorPosition()
+  local project = reaper.EnumProjects(-1, "")
+
+  -- Replace the native preview/full-source drop with one SECTION undo state.
+  local native_drop_undone = false
+  if reaper.Undo_DoUndo2 then
+    native_drop_undone = (reaper.Undo_DoUndo2(project) or 0) ~= 0
+  end
+  if not native_drop_undone then return false end
+
+  CleanupDroppedSelectionDragPreviewCopy(req, dropped_source_path)
+  local section_source_path, section_source_was_copied
+  if req.preview_path then
+    section_source_path, section_source_was_copied = EnsureSelectionDragSourceInMediaDirectory(req.real_path)
+    section_source_path = section_source_path or req.real_path
+  else
+    section_source_path, section_source_was_copied = ResolveSelectionDragSectionSource(req.real_path, dropped_source_path)
+  end
+  if not section_source_path or section_source_path == "" or not reaper.file_exists(section_source_path) then return false end
+  req.final_section_source_path = section_source_path
+
+  if reaper.Undo_BeginBlock2 then reaper.Undo_BeginBlock2(project) end
+  if not reaper.ValidatePtr(track, "MediaTrack*") then
+    if reaper.InsertTrackAtIndex then
+      track_index = math.min(track_index, reaper.CountTracks(0))
+      reaper.InsertTrackAtIndex(track_index, true)
+    end
+    track = reaper.GetTrack(0, track_index)
+  end
+  if not track or not reaper.ValidatePtr(track, "MediaTrack*") then
+    if reaper.Undo_EndBlock2 then reaper.Undo_EndBlock2(project, "Soundmole: Insert selected audio section", -1) end
+    return false
+  end
+  reaper.SetOnlyTrackSelected(track)
+  reaper.SetEditCurPos(position, false, false)
+  local new_item = InsertSelectedAudioSection(
+    section_source_path,
+    req.start_time,
+    req.end_time,
+    req.section_offset or 0,
+    false,
+    target_lane
+  )
+  reaper.SetEditCurPos(old_cursor, false, false)
+
+  if not new_item then
+    if reaper.Undo_EndBlock2 then reaper.Undo_EndBlock2(project, "Soundmole: Insert selected audio section", -1) end
+    return false
+  end
+  reaper.SetMediaItemInfo_Value(new_item, "D_POSITION", position)
+  if reaper.SetMediaItemSelected then reaper.SetMediaItemSelected(new_item, true) end
+  reaper.UpdateItemInProject(new_item)
+  if reaper.Undo_EndBlock2 then reaper.Undo_EndBlock2(project, "Soundmole: Insert selected audio section", -1) end
+  if section_source_was_copied then
+    reaper.Main_OnCommand(40441, 0) -- Peaks: Rebuild peaks for selected items
+    if reaper.UpdateTimeline then reaper.UpdateTimeline() end
+  end
+  reaper.UpdateArrange()
+  return true
+end
+
+function ProcessPendingSelectionNativeDrops()
+  local pending = _G.pending_selection_native_drops
+  if not pending or #pending == 0 then return end
+
+  local now = reaper.time_precise()
+  for i = #pending, 1, -1 do
+    local req = pending[i]
+    local replaced = false
+    local matching_item = nil
+    local new_items = {}
+
+    for j = 0, reaper.CountMediaItems(0) - 1 do
+      local item = reaper.GetMediaItem(0, j)
+      local is_new_item = not req.items_before or not req.items_before[item]
+      if is_new_item then
+        table.insert(new_items, item)
+        local take = reaper.GetActiveTake(item)
+        local src = take and reaper.GetMediaItemTake_Source(take)
+        local source_path = src and reaper.GetMediaSourceFileName(src, "") or ""
+        local source_name = source_path:match("[^/\\]+$") or ""
+        if SameSelectionDragPath(source_path, req.native_drag_path)
+          or SameSelectionDragPath(source_path, req.real_path)
+          or SameSelectionDragFilename(source_name, req.native_drag_filename)
+          or SameSelectionDragFilename(source_name, req.original_filename)
+        then
+          matching_item = item
+        end
+      end
+    end
+
+    matching_item = matching_item or (#new_items == 1 and new_items[1])
+    if matching_item then replaced = ReplaceNativeSelectionDropItem(req, matching_item) end
+
+    if replaced or (not matching_item and now - (req.timestamp or now) > 5.0) then
+      CleanupSelectionDragPreview(req)
+      table.remove(pending, i)
+    end
+  end
+end
+
 function IsFiniteNumber(v)
   v = tonumber(v)
   return v and v == v and v ~= math.huge and v ~= -math.huge
@@ -4575,7 +5064,8 @@ function InsertMediaItemAtTrackFast(track, path, insert_time, start_offset, sour
   local source = reaper.PCM_Source_CreateFromFile(path)
   if not source or not reaper.ValidatePtr(source, "PCM_source*") then return end
 
-  local full_len = tonumber((reaper.GetMediaSourceLength(source))) or 0
+  local full_len = reaper.GetMediaSourceLength(source)
+  full_len = tonumber(full_len) or 0
   if full_len > 0 then
     if start_offset > full_len then start_offset = full_len end
     local max_len = math.max(0, full_len - start_offset)
@@ -13524,47 +14014,7 @@ function SM_ProcessBuilderLoop()
 end
 
 function loop()
-  if _G.pending_dummy_replacements and #_G.pending_dummy_replacements > 0 then
-    for i = #_G.pending_dummy_replacements, 1, -1 do
-      local req = _G.pending_dummy_replacements[i]
-      local replaced = false
-      local cnt = reaper.CountSelectedMediaItems(0)
-      for j = 0, cnt - 1 do
-        local item = reaper.GetSelectedMediaItem(0, j)
-        local take = reaper.GetActiveTake(item)
-        if take then
-          local src = reaper.GetMediaItemTake_Source(take)
-          local fn = reaper.GetMediaSourceFileName(src, "")
-          if fn then
-              local norm_fn = string.gsub(fn, "\\", "/")
-              local norm_dummy = string.gsub(req.dummy_path, "\\", "/")
-              if norm_fn == norm_dummy then
-                local real_src = reaper.PCM_Source_CreateFromFile(req.real_path)
-                reaper.SetMediaItemTake_Source(take, real_src)
-                reaper.SetMediaItemTakeInfo_Value(take, "D_STARTOFFS", req.start_time)
-                
-                if req.apply_rate_pitch then
-                  local sel_len = math.abs((tonumber(req.end_time) or 0) - (tonumber(req.start_time) or 0))
-                  local rate = tonumber(req.rate) or 1.0
-                  if math.abs(rate) < 1e-9 then rate = 1.0 end
-                  reaper.SetMediaItemInfo_Value(item, "D_LENGTH", sel_len / rate)
-                  reaper.SetMediaItemTakeInfo_Value(take, "D_PLAYRATE", rate)
-                  reaper.SetMediaItemTakeInfo_Value(take, "D_PITCH", tonumber(req.pitch) or 0.0)
-                  reaper.SetMediaItemTakeInfo_Value(take, "B_PPITCH", req.preserve_pitch and 1 or 0)
-                end
-                
-                reaper.UpdateItemInProject(item)
-                replaced = true
-              end
-          end
-        end
-      end
-      if replaced or (reaper.time_precise() - req.timestamp > 3.0) then
-        os.remove(req.dummy_path)
-        table.remove(_G.pending_dummy_replacements, i)
-      end
-    end
-  end
+  ProcessPendingSelectionNativeDrops()
   -- RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！(新版 C++ 代理模式下，数据瞬间就绪，无需运行后台分片加载器)
   -- SM_ProcessBuilderLoop() -- 处理数据库构建器
   ProcessAsyncMetadata() -- 处理后台元数据加载，浏览物理文件夹时触发
@@ -19591,6 +20041,7 @@ function loop()
         -- 选区拖拽到REAPER - 框选/拖拽释放是否在选区内
         if dragging_selection and reaper.ImGui_IsMouseReleased(ctx, 0) then -- 松开时仍在本窗口
           if reaper.ImGui_IsWindowHovered(ctx) then
+            CleanupSelectionDragPreview(dragging_selection)
             dragging_selection = nil
             selection_drag_click_valid = false
             if reaper.JS_Mouse_LoadCursor then
@@ -19811,50 +20262,40 @@ function loop()
       if selection_exists then
         if selection_drag_click_valid and not selection_edge_drag and reaper.ImGui_BeginDragDropSource(ctx) then
           reaper.ImGui_Text(ctx, "Drag selection to REAPER to insert")
-          -- 判断区段还是源音频
-          local drag_path = cur_info.path
-          local start_time = math.min(select_start_time, select_end_time) * play_rate
-          local end_time = math.max(select_start_time, select_end_time) * play_rate
-          -- 如果是SECTION，直接用区段路径和相对区段起点时间
-          if reaper.ValidatePtr(cur_info.source, "MediaSource*") and reaper.GetMediaSourceType(cur_info.source, "") == "SECTION" then
-            drag_path = cur_info.source
-          end
-
-          local dummy_wav_path = ""
-          if HAVE_SM_DROP_MEDIA_FILES then
-            local dur = GetDragPreviewTimelineLength(start_time, end_time)
-            if dur > 0 then
-              dummy_wav_path = string.gsub(reaper.GetResourcePath(), "\\", "/") .. "/sm_drag_dummy_" .. tostring(math.random(10000, 99999)) .. ".wav"
-              local f = io.open(dummy_wav_path, "wb")
-              if f then
-                local sr = 44100
-                local channels = 1
-                local bps = 16
-                local block_align = channels * (bps / 8)
-                local byte_rate = sr * block_align
-                local data_size = math.floor(dur * byte_rate)
-                local chunk_size = 36 + data_size
-                local function w32(v) f:write(string.char(v & 0xFF, (v >> 8) & 0xFF, (v >> 16) & 0xFF, (v >> 24) & 0xFF)) end
-                local function w16(v) f:write(string.char(v & 0xFF, (v >> 8) & 0xFF)) end
-                f:write("RIFF") w32(chunk_size) f:write("WAVEfmt ") w32(16) w16(1) w16(channels)
-                w32(sr) w32(byte_rate) w16(block_align) w16(bps) f:write("data") w32(data_size)
-                f:seek("set", 43 + data_size)
-                f:write("\0")
-                f:close()
-              end
+          if not dragging_selection then
+            -- 原生拖放使用选区时长预览载体，落入后复用有效媒体目录中的完整源文件并创建SECTION
+            local drag_path = cur_info.path
+            local start_time = math.min(select_start_time, select_end_time) * play_rate
+            local end_time = math.max(select_start_time, select_end_time) * play_rate
+            if reaper.ValidatePtr(cur_info.source, "MediaSource*") and reaper.GetMediaSourceType(cur_info.source, "") == "SECTION" then
+              drag_path = cur_info.source
             end
-          end
 
-          dragging_selection = {
-            path = drag_path,
-            paths = dummy_wav_path ~= "" and {dummy_wav_path} or {drag_path},
-            dummy_path = dummy_wav_path ~= "" and dummy_wav_path or nil,
-            start_time = start_time,
-            end_time = end_time,
-            section_offset = cur_info.section_offset or 0,
-            native_drop_pending = HAVE_SM_DROP_MEDIA_FILES,
-            native_drop_attempted = false
-          }
+            local real_path = GetPhysicalPath(drag_path)
+            local original_filename = real_path and real_path:match("[^/\\]+$")
+            local imported_path = HAVE_SM_DROP_MEDIA_FILES and GetCachedSelectionDragSourceInMediaDirectory(real_path) or nil
+            local preview_path, preview_dir
+            if HAVE_SM_DROP_MEDIA_FILES then
+              preview_path, preview_dir = CreateSelectionDragPreview(real_path, start_time, end_time)
+            end
+            local native_drag_path = HAVE_SM_DROP_MEDIA_FILES and (preview_path or imported_path or real_path) or nil
+
+            dragging_selection = {
+              path = drag_path,
+              real_path = normalize_path(real_path or "", false),
+              native_drag_path = normalize_path(native_drag_path or "", false),
+              native_drag_filename = native_drag_path and native_drag_path:match("[^/\\]+$"),
+              preview_path = preview_path,
+              preview_dir = preview_dir,
+              original_filename = original_filename,
+              paths = native_drag_path and { native_drag_path } or nil,
+              start_time = start_time,
+              end_time = end_time,
+              section_offset = cur_info.section_offset or 0,
+              native_drop_pending = native_drag_path ~= nil and native_drag_path ~= "",
+              native_drop_attempted = false
+            }
+          end
           if reaper.JS_Mouse_LoadCursor then
             local cursor_path = script_path .. "lib/cursor_258.cur"
             local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
@@ -19867,33 +20308,26 @@ function loop()
         if dragging_selection then
           local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
           local over_arrange_drop_target = IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane)
-          local native_drop_consumed = false
 
-          if over_arrange_drop_target
-            and dragging_selection.native_drop_pending
+          -- 在仍位于 Soundmole 窗口时启动原生拖放会话，进入 Arrange 后才启动会被 REAPER 立即判定为drop
+          if dragging_selection.native_drop_pending
             and not dragging_selection.native_drop_attempted
             and reaper.ImGui_IsMouseDown(ctx, 0)
           then
             dragging_selection.native_drop_attempted = true
-            native_drop_consumed = TryNativeDropMediaFiles(dragging_selection.paths)
-            if native_drop_consumed then
-              if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
-              
-              if dragging_selection.dummy_path then
-                  _G.pending_dummy_replacements = _G.pending_dummy_replacements or {}
-                  table.insert(_G.pending_dummy_replacements, {
-                      dummy_path = dragging_selection.dummy_path,
-                      real_path = dragging_selection.path,
-                      start_time = dragging_selection.start_time,
-                      end_time = dragging_selection.end_time,
-                      apply_rate_pitch = keep_preview_rate_pitch_on_insert,
-                      rate = effective_rate_knob,
-                      pitch = pitch,
-                      preserve_pitch = preserve_pitch,
-                      timestamp = reaper.time_precise()
-                  })
+            dragging_selection.items_before = CaptureProjectMediaItems()
+            local native_drop_attempted, native_drop_completed = TryNativeDropMediaFiles(dragging_selection.paths)
+            if native_drop_attempted then
+              if native_drop_completed then
+                dragging_selection.timestamp = reaper.time_precise()
+                _G.pending_selection_native_drops = _G.pending_selection_native_drops or {}
+                table.insert(_G.pending_selection_native_drops, dragging_selection)
+              else
+                CleanupSelectionDragPreview(dragging_selection)
               end
               dragging_selection = nil
+              selection_drag_click_valid = false
+              if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
             end
           end
 
@@ -19903,9 +20337,8 @@ function loop()
               local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
               if cursor then reaper.JS_Mouse_SetCursor(cursor) end
             end
-            local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
 
-            if mouse_pos_time > -1 and IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
+            if mouse_pos_time > -1 and over_arrange_drop_target then
               local insert_time = reaper.SnapToGrid(0, mouse_pos_time)
               local item_len = GetDragPreviewTimelineLength(dragging_selection.start_time, dragging_selection.end_time)
               DrawArrangeInsertGuides(ctx, "guide_line_selection", insert_time, item_len, hover_track, hover_lane, hover_rect)
@@ -19913,7 +20346,7 @@ function loop()
 
             -- 拖拽释放检测
             if not reaper.ImGui_IsMouseDown(ctx, 0) then
-              if IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane) then
+              if over_arrange_drop_target then
                 local insert_time = mouse_pos_time
                 if insert_time == -1 then insert_time = reaper.GetCursorPosition() end
                 insert_time = reaper.SnapToGrid(0, insert_time)
@@ -19935,6 +20368,7 @@ function loop()
                   )
                 end
               end
+              CleanupSelectionDragPreview(dragging_selection)
               dragging_selection = nil -- 不管插入与否都要清除
               selection_drag_click_valid = false
               -- 恢复鼠标图标
@@ -20451,6 +20885,8 @@ end
 -- 退出清理函数
 function OnScriptExit()
   ResetWaveSelectionEdgeCursor()
+  pcall(ProcessPendingSelectionNativeDrops)
+  CleanupSelectionDragPreview(dragging_selection)
   -- 停止数据库构建器 (优先清理)
   if reaper.APIExists("SM_Builder_Stop") then
     reaper.SM_Builder_Stop()
