@@ -1,8 +1,9 @@
 -- @description SFX Snapshot Library
--- @version 1.0.14
+-- @version 1.0.15
 -- @author zaibuyidao
 -- @changelog
---   Add Alt+Enter and middle-click loading shortcuts, plus shortcut help.
+--   Make preview rendering independent from the project's render settings.
+--   Stabilize list tooltips and add updating the selected snapshot from the current capture area.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -79,7 +80,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.14"
+local SCRIPT_VERSION = "1.0.15"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -108,6 +109,7 @@ local TEXT = {
     apply = "Apply",
     save = "Save",
     load = "Load",
+    update_snapshot = "Update Snapshot",
     play = "Play",
     stop = "Stop",
     options = "Options",
@@ -180,6 +182,7 @@ local TEXT = {
     tooltip_choose_categories = "Choose from existing categories",
     tooltip_append_tags = "Append from existing tags",
     confirm_overwrite_snapshot = "A snapshot named \"{name}\" already exists.\n\nOK will overwrite it. Cancel returns to the save window so you can rename it.",
+    confirm_update_snapshot = "Replace snapshot \"{name}\" with the current Razor Edit or time selection?\n\nThe old snapshot content will be permanently replaced. Its name, category, tags, and description will be preserved.",
     tip_reuse_names = "Tip: click Category or Tags to reuse existing names.",
 
     load_snapshot_name = "Load: {name}",
@@ -342,6 +345,7 @@ local TEXT = {
     apply = "应用",
     save = "保存",
     load = "载入",
+    update_snapshot = "更新快照",
     play = "播放",
     stop = "停止",
     options = "选项",
@@ -414,6 +418,7 @@ local TEXT = {
     tooltip_choose_categories = "从现有分类中选择",
     tooltip_append_tags = "从现有标签中追加",
     confirm_overwrite_snapshot = "已存在同名快照: {name}\n\n点击[确定]将覆盖，点击[取消]返回保存窗口以便改名。",
+    confirm_update_snapshot = "是否使用当前剃刀编辑或时间选区替换快照“{name}”？\n\n旧快照内容将被永久替换，并保留其名称、分类、标签和描述。",
     tip_reuse_names = "提示: 点击分类或标签可复用现有名称。",
 
     load_snapshot_name = "载入: {name}",
@@ -576,6 +581,7 @@ local TEXT = {
     apply = "套用",
     save = "儲存",
     load = "載入",
+    update_snapshot = "更新快照",
     play = "播放",
     stop = "停止",
     options = "選項",
@@ -648,6 +654,7 @@ local TEXT = {
     tooltip_choose_categories = "從現有分類中選擇",
     tooltip_append_tags = "從現有標籤中追加",
     confirm_overwrite_snapshot = "已存在同名快照: {name}\n\n點擊[確定]將覆寫，點擊[取消]返回儲存視窗以便改名。",
+    confirm_update_snapshot = "是否使用目前剃刀編輯或時間選區取代快照「{name}」？\n\n舊快照內容將被永久取代，並保留其名稱、分類、標籤和描述。",
     tip_reuse_names = "提示: 點擊分類或標籤可重用現有名稱。",
 
     load_snapshot_name = "載入: {name}",
@@ -1234,6 +1241,10 @@ function ResolveOriginalMediaPath(path)
 end
 
 function CopyFileBinary(src_path, dst_path)
+  if NormalizePathForCompare and NormalizePathForCompare(src_path) == NormalizePathForCompare(dst_path) then
+    return true
+  end
+
   local src = io.open(src_path, "rb")
   if not src then return false, Tr("error_failed_open_source_media", { path = tostring(src_path) }) end
 
@@ -3881,14 +3892,21 @@ end
 function SaveRenderSettings()
   local settings = {}
 
+  settings.render_settings = reaper.GetSetProjectInfo(0, "RENDER_SETTINGS", 0, false)
   settings.render_bounds = reaper.GetSetProjectInfo(0, "RENDER_BOUNDSFLAG", 0, false)
+  settings.render_channels = reaper.GetSetProjectInfo(0, "RENDER_CHANNELS", 0, false)
+  settings.render_srate = reaper.GetSetProjectInfo(0, "RENDER_SRATE", 0, false)
   settings.render_start = reaper.GetSetProjectInfo(0, "RENDER_STARTPOS", 0, false)
   settings.render_end = reaper.GetSetProjectInfo(0, "RENDER_ENDPOS", 0, false)
   settings.render_tail = reaper.GetSetProjectInfo(0, "RENDER_TAILFLAG", 0, false)
+  settings.render_addtoproj = reaper.GetSetProjectInfo(0, "RENDER_ADDTOPROJ", 0, false)
+  settings.render_dither = reaper.GetSetProjectInfo(0, "RENDER_DITHER", 0, false)
+  settings.render_normalize = reaper.GetSetProjectInfo(0, "RENDER_NORMALIZE", 0, false)
 
   settings.render_file_ok, settings.render_file = reaper.GetSetProjectInfo_String(0, "RENDER_FILE", "", false)
   settings.render_pattern_ok, settings.render_pattern = reaper.GetSetProjectInfo_String(0, "RENDER_PATTERN", "", false)
   settings.render_format_ok, settings.render_format = reaper.GetSetProjectInfo_String(0, "RENDER_FORMAT", "", false)
+  settings.render_format2_ok, settings.render_format2 = reaper.GetSetProjectInfo_String(0, "RENDER_FORMAT2", "", false)
 
   return settings
 end
@@ -3896,10 +3914,16 @@ end
 function RestoreRenderSettings(settings)
   if not settings then return end
 
+  reaper.GetSetProjectInfo(0, "RENDER_SETTINGS", settings.render_settings or 0, true)
   reaper.GetSetProjectInfo(0, "RENDER_BOUNDSFLAG", settings.render_bounds or 0, true)
+  reaper.GetSetProjectInfo(0, "RENDER_CHANNELS", settings.render_channels or 0, true)
+  reaper.GetSetProjectInfo(0, "RENDER_SRATE", settings.render_srate or 0, true)
   reaper.GetSetProjectInfo(0, "RENDER_STARTPOS", settings.render_start or 0, true)
   reaper.GetSetProjectInfo(0, "RENDER_ENDPOS", settings.render_end or 0, true)
   reaper.GetSetProjectInfo(0, "RENDER_TAILFLAG", settings.render_tail or 0, true)
+  reaper.GetSetProjectInfo(0, "RENDER_ADDTOPROJ", settings.render_addtoproj or 0, true)
+  reaper.GetSetProjectInfo(0, "RENDER_DITHER", settings.render_dither or 0, true)
+  reaper.GetSetProjectInfo(0, "RENDER_NORMALIZE", settings.render_normalize or 0, true)
 
   if settings.render_file_ok then
     reaper.GetSetProjectInfo_String(0, "RENDER_FILE", settings.render_file or "", true)
@@ -3911,6 +3935,10 @@ function RestoreRenderSettings(settings)
 
   if settings.render_format_ok then
     reaper.GetSetProjectInfo_String(0, "RENDER_FORMAT", settings.render_format or "", true)
+  end
+
+  if settings.render_format2_ok then
+    reaper.GetSetProjectInfo_String(0, "RENDER_FORMAT2", settings.render_format2 or "", true)
   end
 end
 
@@ -4094,14 +4122,22 @@ function RenderPreviewMp3(snapshot_folder, start_pos, end_pos, render_data)
 
     reaper.GetSet_LoopTimeRange(true, false, start_pos, end_pos, false)
 
+    -- Use a stable master-mix MP3 configuration instead of inheriting project render settings.
+    reaper.GetSetProjectInfo(0, "RENDER_SETTINGS", 0, true)
     reaper.GetSetProjectInfo(0, "RENDER_BOUNDSFLAG", 0, true)
+    reaper.GetSetProjectInfo(0, "RENDER_CHANNELS", 2, true)
+    reaper.GetSetProjectInfo(0, "RENDER_SRATE", 44100, true)
     reaper.GetSetProjectInfo(0, "RENDER_STARTPOS", start_pos, true)
     reaper.GetSetProjectInfo(0, "RENDER_ENDPOS", end_pos, true)
     reaper.GetSetProjectInfo(0, "RENDER_TAILFLAG", 0, true)
+    reaper.GetSetProjectInfo(0, "RENDER_ADDTOPROJ", 0, true)
+    reaper.GetSetProjectInfo(0, "RENDER_DITHER", 16, true)
+    reaper.GetSetProjectInfo(0, "RENDER_NORMALIZE", 262144, true)
 
     -- Output: snapshot folder / preview.mp3
     reaper.GetSetProjectInfo_String(0, "RENDER_FILE", snapshot_folder, true)
     reaper.GetSetProjectInfo_String(0, "RENDER_PATTERN", "preview", true)
+    reaper.GetSetProjectInfo_String(0, "RENDER_FORMAT2", "", true)
 
     SetRenderFormatMp3()
 
@@ -4165,6 +4201,16 @@ function ConfirmOverwriteSnapshot(name)
   return result == 1
 end
 
+function ConfirmUpdateSnapshot(name)
+  local result = reaper.MB(
+    Tr("confirm_update_snapshot", { name = tostring(name or "") }),
+    SCRIPT_NAME,
+    1
+  )
+
+  return result == 1
+end
+
 function PrepareSnapshotFolderForSave(existing_snapshot, folder_name)
   local folder = JoinPath(GetSnapshotsRoot(), folder_name)
 
@@ -4202,22 +4248,56 @@ function RemoveLegacySnapshotFolderAfterSave(existing_snapshot, folder_name)
   end
 end
 
-function SaveSnapshotFromPopupImpl()
-  local name = SanitizeFileName(state.save_name)
-  local category = Trim(state.save_category)
-  local tags = SplitTags(state.save_tags)
-  local desc = tostring(state.save_description or "")
-  local folder_name = SanitizeFileName(name)
+function SaveSnapshotFromPopupImpl(update_snapshot, skip_overwrite_confirm)
+  local is_update = type(update_snapshot) == "table"
+  local name = is_update and tostring(update_snapshot.name or "") or SanitizeFileName(state.save_name)
+  local category = is_update and tostring(update_snapshot.category or "") or Trim(state.save_category)
+  local tags = {}
+  local desc = is_update and tostring(update_snapshot.description or "") or tostring(state.save_description or "")
+  local folder_name = is_update and tostring(update_snapshot.folder or update_snapshot.id or "") or SanitizeFileName(name)
+
+  if is_update then
+    if type(update_snapshot.tags) == "table" then
+      for _, tag in ipairs(update_snapshot.tags) do
+        tags[#tags + 1] = tag
+      end
+    else
+      tags = SplitTags(update_snapshot.tags)
+    end
+  else
+    tags = SplitTags(state.save_tags)
+  end
+
+  if name == "" and not is_update then name = SanitizeFileName(state.save_name) end
+  if folder_name == "" then folder_name = SanitizeFileName(name) end
 
   local existing_snapshot = nil
   local existing_index = nil
 
-  existing_snapshot, existing_index = FindSnapshotForSaveName(name, folder_name)
+  if is_update then
+    for i, snapshot in ipairs(state.snapshots or {}) do
+      if snapshot == update_snapshot or (
+        tostring(update_snapshot.id or "") ~= "" and
+        tostring(snapshot.id or "") == tostring(update_snapshot.id or "")
+      ) then
+        existing_snapshot = snapshot
+        existing_index = i
+        break
+      end
+    end
+
+    if not existing_snapshot then
+      state.status = Tr("status_no_snapshot_selected")
+      return false
+    end
+  else
+    existing_snapshot, existing_index = FindSnapshotForSaveName(name, folder_name)
+  end
 
   local folder = JoinPath(GetSnapshotsRoot(), folder_name)
   local folder_exists = SnapshotDirectoryExists(folder)
 
-  if existing_snapshot or folder_exists then
+  if (existing_snapshot or folder_exists) and not skip_overwrite_confirm then
     if not ConfirmOverwriteSnapshot(name) then
       state.status = Tr("status_save_cancelled_same_name")
       return false
@@ -4244,7 +4324,7 @@ function SaveSnapshotFromPopupImpl()
   local meta = {
     id = id,
     name = name,
-    category = category ~= "" and category or "Uncategorized",
+    category = is_update and category or (category ~= "" and category or "Uncategorized"),
     tags = tags,
     description = desc,
     favorite = favorite,
@@ -4379,6 +4459,44 @@ function SaveSnapshotFromPopup()
 
   if result == true then
     state.save_submitted = true
+  end
+
+  return result == true
+end
+
+function UpdateSnapshotFromCurrentSelection(snapshot)
+  if type(snapshot) ~= "table" then
+    state.status = Tr("status_no_snapshot_selected")
+    return false
+  end
+
+  if not GetSmartCaptureContext() then
+    state.status = Tr("error_no_capture_context")
+    reaper.MB(state.status, SCRIPT_NAME, 0)
+    return false
+  end
+
+  if not ConfirmUpdateSnapshot(snapshot.name) then
+    return false
+  end
+
+  if state.save_in_progress then
+    return false
+  end
+
+  local target_preview_path = GetSnapshotPreviewPath(snapshot)
+  if NormalizePath(state.preview_path or "") == NormalizePath(target_preview_path or "") then
+    StopInternalPreview(true)
+  end
+
+  state.save_in_progress = true
+  local ok, result = pcall(SaveSnapshotFromPopupImpl, snapshot, true)
+  state.save_in_progress = false
+
+  if not ok then
+    state.status = tostring(result or Tr("status_capture_failed"))
+    reaper.MB(state.status, SCRIPT_NAME, 0)
+    return false
   end
 
   return result == true
@@ -6664,6 +6782,17 @@ function DrawWaveformCachePreviewBar()
   end
 end
 
+function BeginStableSnapshotTooltip()
+  local tooltip_w = 360
+  local mouse_x, mouse_y = ImGui.GetMousePos(ctx)
+  local x = (tonumber(mouse_x) or 0) + 16
+  local y = (tonumber(mouse_y) or 0) + 18
+
+  ImGui.SetNextWindowPos(ctx, x, y, ImGui.Cond_Always)
+  ImGui.SetNextWindowSize(ctx, tooltip_w, 0, ImGui.Cond_Always)
+  ImGui.BeginTooltip(ctx)
+end
+
 function DrawSnapshotList(width, height)
   width = width or 0
   height = height or -165
@@ -6740,6 +6869,10 @@ function DrawSnapshotList(width, height)
             RequestLoadSelectedSnapshot()
           end
 
+          if ImGui.MenuItem(ctx, Tr("update_snapshot")) then
+            list_changed = UpdateSnapshotFromCurrentSelection(s) == true
+          end
+
           if ImGui.MenuItem(ctx, Tr("open_folder")) then
             OpenFolder(GetSnapshotFolderForFileOperation(s))
           end
@@ -6766,7 +6899,7 @@ function DrawSnapshotList(width, height)
         end
 
         if state.show_tips and ImGui.IsItemHovered(ctx) then
-          ImGui.BeginTooltip(ctx)
+          BeginStableSnapshotTooltip()
           ImGui.Text(ctx, tostring(s.name or ""))
           ImGui.Separator(ctx)
           ImGui.Text(ctx, Tr("meta_category", { value = DisplayCategory(s.category) }))
