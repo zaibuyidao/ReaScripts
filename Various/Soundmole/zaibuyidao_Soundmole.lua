@@ -76,13 +76,39 @@ if reaper.ImGui_GetBuiltinPath then
   ImGui = require 'imgui' '0.10'
 end
 
-HAVE_SM_BUILDER = reaper.APIExists('SM_Builder_Start') and reaper.APIExists('SM_Builder_RunSlice') and reaper.APIExists('SM_Builder_GetInfo') and reaper.APIExists('SM_Builder_GetStatusString') and reaper.APIExists('SM_Builder_Stop')
+HAVE_SM_BUILDER = reaper.APIExists('SM_Builder_Start')
+  and reaper.APIExists('SM_Builder_RunSlice')
+  and reaper.APIExists('SM_Builder_GetInfo')
+  and reaper.APIExists('SM_Builder_GetStatusString')
+  and reaper.APIExists('SM_Builder_Stop')
 HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_GetRowRaw')
-HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw') and reaper.APIExists('SM_DB_Load') and reaper.APIExists('SM_DB_Release') and reaper.APIExists('SM_DB_GetCount')
-HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
-HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir') and reaper.APIExists('SM_GetWaveformCachePath') and reaper.APIExists('SM_BuildWaveformCache') and reaper.APIExists('SM_WFC_Begin') and reaper.APIExists('SM_WFC_Pump') and reaper.APIExists('SM_WFC_GetPathIfReady')
+HAVE_SM_DB_ROW_BY_PATH = reaper.APIExists('SM_DB_GetRowRawByPath')
+HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw')
+  and reaper.APIExists('SM_DB_Load')
+  and reaper.APIExists('SM_DB_Release')
+  and reaper.APIExists('SM_DB_GetCount')
+HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin')
+  and reaper.APIExists('SM_ProbeMediaNextJSONEx')
+  and reaper.APIExists('SM_ProbeMediaEnd')
+  and reaper.APIExists('SM_GetPeaksCSV')
+HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir')
+  and reaper.APIExists('SM_GetWaveformCachePath')
+  and reaper.APIExists('SM_BuildWaveformCache')
+  and reaper.APIExists('SM_WFC_Begin')
+  and reaper.APIExists('SM_WFC_Pump')
+  and reaper.APIExists('SM_WFC_GetPathIfReady')
 HAVE_SM_WFC_CANCEL = reaper.APIExists('SM_WFC_Cancel')
 HAVE_SM_DROP_MEDIA_FILES = reaper.APIExists('SM_DropMediaFiles')
+HAVE_SM_SIM = reaper.APIExists('SM_SIM_LoadIndex')
+  and reaper.APIExists('SM_SIM_QueryByPath')
+  and reaper.APIExists('SM_SIM_GetResultJSON')
+  and reaper.APIExists('SM_SIM_Release')
+HAVE_SM_SIM_CROSS_INDEX = reaper.APIExists('SM_SIM_QueryByPathFromIndex')
+  and reaper.APIExists('SM_SIM_Builder_Start')
+  and reaper.APIExists('SM_SIM_Builder_RunSlice')
+  and reaper.APIExists('SM_SIM_Builder_GetStatusJSON')
+  and reaper.APIExists('SM_SIM_Builder_Stop')
+
 SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local ctx = reaper.ImGui_CreateContext(SCRIPT_NAME)
@@ -288,6 +314,7 @@ local TableColumns = {
   BITS        = 15,
   KEY         = 16,
   BPM         = 17,
+  SIMILARITY  = 18,
 }
 
 -- 加载语言文件
@@ -536,6 +563,58 @@ COLLECT_MODE_SHORTCUT_MIRROR = 12
 COLLECT_MODE_FREESOUND       = 13
 COLLECT_MODE_SAMEFOLDER      = 14
 COLLECT_MODE_PLAY_HISTORY    = 15 -- 播放历史表格模式
+COLLECT_MODE_SIMILAR         = 16 -- 相似音效结果模式
+
+similarity_state = {
+  db_path = nil,
+  source_path = nil,
+  source_name = nil,
+  source_db_path = nil,
+  source_info = nil,
+  results = {},
+  max_results = math.max(1, math.min(1000, tonumber(reaper.GetExtState(EXT_SECTION, "similarity_max_results")) or 100)),
+  builder = nil,
+  builder_active = false,
+  builder_started = 0,
+}
+
+function SM_ParseDBRawRow(raw)
+  if not raw or raw == "" then return nil end
+  local fields, last_pos = {}, 1
+  for i = 1, 17 do
+    local p = raw:find('|', last_pos, true)
+    if p then
+      fields[i] = raw:sub(last_pos, p - 1)
+      last_pos = p + 1
+    else
+      fields[i] = raw:sub(last_pos)
+      break
+    end
+  end
+
+  if not fields[1] or fields[1] == "" then return nil end
+  local item = {
+    path = fields[1],
+    size = tonumber(fields[2]) or 0,
+    mtime = tonumber(fields[3]) or 0,
+  }
+  item.filename = item.path:match("[^/\\]+$") or item.path
+  if fields[4] and fields[4] ~= "" then item.samplerate = tonumber(fields[4]) end
+  if fields[5] and fields[5] ~= "" then item.channels = tonumber(fields[5]) end
+  if fields[6] and fields[6] ~= "" then item.length = tonumber(fields[6]) end
+  if fields[7] and fields[7] ~= "" then item.bits = tonumber(fields[7]) end
+  if fields[8] and fields[8] ~= "" then item.bpm = tonumber(fields[8]) end
+  if fields[9] and fields[9] ~= "" then item.type = fields[9] end
+  if fields[10] and fields[10] ~= "" then item.description = fields[10] end
+  if fields[11] and fields[11] ~= "" then item.comment = fields[11] end
+  if fields[12] and fields[12] ~= "" then item.genre = fields[12] end
+  if fields[13] and fields[13] ~= "" then item.bwf_orig_date = fields[13] end
+  if fields[14] and fields[14] ~= "" then item.ucs_category = fields[14] end
+  if fields[15] and fields[15] ~= "" then item.ucs_subcategory = fields[15] end
+  if fields[16] and fields[16] ~= "" then item.ucs_catid = fields[16] end
+  if fields[17] and fields[17] ~= "" then item.cover_id = fields[17] end
+  return item
+end
 
 -- 定义虚拟列表代理元表 (GC 优化版)
 local VirtualListMeta = {
@@ -548,119 +627,8 @@ local VirtualListMeta = {
     local raw = reaper.SM_DB_GetRowRaw(t._handle, k - 1)
     if not raw or raw == "" then return nil end
 
-    local item = {}
-    local last_pos = 1
-    local p, val_str
-
-    -- 1. Path
-    p = raw:find('|', last_pos, true)
-    if not p then return nil end -- 数据损坏保护
-    item.path = raw:sub(last_pos, p-1)
-    last_pos = p + 1
-
-    -- 2. Size
-    p = raw:find('|', last_pos, true)
-    item.size = tonumber(raw:sub(last_pos, p-1)) or 0
-    last_pos = p + 1
-
-    -- 3. MTime
-    p = raw:find('|', last_pos, true)
-    item.mtime = tonumber(raw:sub(last_pos, p-1)) or 0
-    last_pos = p + 1
-
-    -- 4. SampleRate
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.samplerate = tonumber(val_str) end
-    last_pos = p + 1
-
-    -- 5. Channels
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.channels = tonumber(val_str) end
-    last_pos = p + 1
-
-    -- 6. Length
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.length = tonumber(val_str) end
-    last_pos = p + 1
-
-    -- 7. Bits
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.bits = tonumber(val_str) end
-    last_pos = p + 1
-
-    -- 8. BPM
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.bpm = tonumber(val_str) end
-    last_pos = p + 1
-
-    -- 9. Type
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.type = val_str end
-    last_pos = p + 1
-
-    -- 10. Description
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.description = val_str end
-    last_pos = p + 1
-
-    -- 11. Comment
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.comment = val_str end
-    last_pos = p + 1
-
-    -- 12. Genre
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.genre = val_str end
-    last_pos = p + 1
-
-    -- 13. BWF Date
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.bwf_orig_date = val_str end
-    last_pos = p + 1
-
-    -- 14. UCS Category
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.ucs_category = val_str end
-    last_pos = p + 1
-
-    -- 15. UCS SubCategory
-    p = raw:find('|', last_pos, true)
-    val_str = raw:sub(last_pos, p-1)
-    if #val_str > 0 then item.ucs_subcategory = val_str end
-    last_pos = p + 1
-
-    -- 16. UCS CatID
-    p = raw:find('|', last_pos, true)
-    if p then
-      val_str = raw:sub(last_pos, p-1)
-      last_pos = p + 1
-    else
-      val_str = raw:sub(last_pos)
-      last_pos = nil
-    end
-    if #val_str > 0 then item.ucs_catid = val_str end
-
-    -- 17. Cover ID
-    if last_pos then
-      val_str = raw:sub(last_pos)
-      if #val_str > 0 then item.cover_id = val_str end
-    end
-
-    -- Filename
-    if item.path then
-      item.filename = item.path:match("[^/\\]+$") or item.path
-    end
+    local item = SM_ParseDBRawRow(raw)
+    if not item then return nil end
 
     rawset(t, k, item)
     return item
@@ -3006,6 +2974,10 @@ function CollectFiles()
     end
     selected_row = nil
 
+  elseif collect_mode == COLLECT_MODE_SIMILAR then
+    files_idx_cache = similarity_state.results or {}
+    selected_row = nil
+
   else
     files_idx_cache = {} -- collect_mode全部清空
   end
@@ -3024,7 +2996,9 @@ function CollectFiles()
   -- 按文件名排序。其中播放历史按钮模式不执行按文件名排序，保持最近播放顺序
   -- 如果是 C++ 代理模式，数据在加载时已由 C++ 排好序，无需 Lua 再次排序
   local is_proxy = files_idx_cache and files_idx_cache._handle
-  if not is_proxy and not (_G._mediadb_stream and not _G._mediadb_stream.eof) and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
+  if not is_proxy and not (_G._mediadb_stream and not _G._mediadb_stream.eof)
+    and collect_mode ~= COLLECT_MODE_PLAY_HISTORY
+    and collect_mode ~= COLLECT_MODE_SIMILAR then -- 播放历史和相似结果保持原始顺序
     SortFilesByFilenameAsc()
   end
 
@@ -3035,6 +3009,277 @@ function CollectFiles()
   if type(RequestActiveSearchRefresh) == "function" then
     RequestActiveSearchRefresh()
   end
+end
+
+function SM_SIM_CurrentBrowsingDBPath()
+  if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
+    return normalize_path(mediadb_dir, true) .. tree_state.cur_mediadb
+  end
+  return nil
+end
+
+function SM_SIM_CurrentDBPath()
+  return SM_SIM_CurrentBrowsingDBPath()
+    or ((collect_mode == COLLECT_MODE_SIMILAR) and similarity_state.db_path or nil)
+end
+
+function SM_SIM_DBDisplayName(db_path)
+  db_path = normalize_path(db_path or "", false)
+  return db_path:match("[^/\\]+$") or db_path
+end
+
+function SM_SIM_UnescapeJSONString(value)
+  return (tostring(value or ""):gsub("\\(.)", function(char)
+    local replacements = { n = "\n", r = "\r", t = "\t", b = "\b", f = "\f", ['"'] = '"', ['\\'] = '\\', ['/'] = '/' }
+    return replacements[char] or char
+  end))
+end
+
+function SM_SIM_ParseStatusJSON(json)
+  json = tostring(json or "")
+  local status = json:match('"status"%s*:%s*"(.-)"') or ""
+  local current = json:match('"current"%s*:%s*"(.-)"') or ""
+  local err = json:match('"error"%s*:%s*"(.-)"') or ""
+  return {
+    status = SM_SIM_UnescapeJSONString(status),
+    processed = tonumber(json:match('"processed"%s*:%s*(%d+)')) or 0,
+    total = tonumber(json:match('"total"%s*:%s*(%d+)')) or 0,
+    failed = tonumber(json:match('"failed"%s*:%s*(%d+)')) or 0,
+    elapsed = tonumber(json:match('"elapsed"%s*:%s*([%d%.]+)')) or 0,
+    current = SM_SIM_UnescapeJSONString(current),
+    error = SM_SIM_UnescapeJSONString(err),
+  }
+end
+
+function SM_SIM_StartBuild(db_path)
+  if not HAVE_SM_SIM then return false end
+  db_path = normalize_path(db_path or "", false)
+  if db_path == "" then return false end
+  if similarity_state.builder_active then
+    reaper.ShowMessageBox("A similarity index build is already running.", "Soundmole", 0)
+    return false
+  end
+
+  local handle = reaper.SM_SIM_Builder_Start(db_path, "CLAP")
+  if not handle then
+    reaper.ShowMessageBox("Could not start the similarity index builder.", "Soundmole", 0)
+    return false
+  end
+  similarity_state.builder = handle
+  similarity_state.builder_active = true
+  similarity_state.builder_started = reaper.time_precise()
+  similarity_state.builder_status = { status = "starting", processed = 0, total = 0, failed = 0 }
+  return true
+end
+
+function SM_SIM_ProcessBuilderLoop()
+  if not similarity_state.builder_active or not similarity_state.builder then return end
+  local handle = similarity_state.builder
+  local result = reaper.SM_SIM_Builder_RunSlice(handle)
+  similarity_state.builder_status = SM_SIM_ParseStatusJSON(reaper.SM_SIM_Builder_GetStatusJSON(handle))
+
+  local flags = reaper.ImGui_WindowFlags_TopMost()
+              | reaper.ImGui_WindowFlags_NoDocking()
+              | reaper.ImGui_WindowFlags_NoCollapse()
+              | reaper.ImGui_WindowFlags_AlwaysAutoResize()
+  local visible = reaper.ImGui_Begin(ctx, "Similarity Index Progress", true, flags)
+  if visible then
+    local status = similarity_state.builder_status or {}
+    reaper.ImGui_Text(ctx, "Building Similarity Index")
+    reaper.ImGui_Separator(ctx)
+    reaper.ImGui_Text(ctx, string.format("Processed: %d / %d", status.processed or 0, status.total or 0))
+    reaper.ImGui_Text(ctx, string.format("Failed: %d", status.failed or 0))
+    reaper.ImGui_Text(ctx, string.format("Time: %.1f s", status.elapsed or (reaper.time_precise() - similarity_state.builder_started)))
+    if status.current and status.current ~= "" then reaper.ImGui_TextWrapped(ctx, status.current) end
+    local fraction = (status.total and status.total > 0) and math.min(1, (status.processed or 0) / status.total) or 0
+    reaper.ImGui_ProgressBar(ctx, fraction, UIScale(360), 0)
+    if reaper.ImGui_Button(ctx, "Cancel", UIScale(90), 0) then
+      reaper.SM_SIM_Builder_Stop(handle)
+      similarity_state.builder = nil
+      similarity_state.builder_active = false
+      reaper.ImGui_End(ctx)
+      return
+    end
+  end
+  reaper.ImGui_End(ctx)
+
+  if result == 0 or result == -1 then
+    local status = similarity_state.builder_status or {}
+    reaper.SM_SIM_Builder_Stop(handle)
+    similarity_state.builder = nil
+    similarity_state.builder_active = false
+    if result == 0 then
+      reaper.ShowMessageBox("Similarity index build complete.", "Soundmole", 0)
+    else
+      reaper.ShowMessageBox(status.error ~= "" and status.error or "Similarity index build failed.", "Soundmole", 0)
+    end
+  end
+end
+
+function SM_SIM_FindSimilar(info, target_db_path, source_db_path)
+  if not HAVE_SM_SIM or not info or not info.path then return false end
+  target_db_path = normalize_path(target_db_path or SM_SIM_CurrentDBPath() or "", false)
+  if target_db_path == "" then
+    reaper.ShowMessageBox("Find Similar is available while browsing a Soundmole database.", "Soundmole", 0)
+    return false
+  end
+
+  local source_path = normalize_path(info.path, false)
+  local retained_source_path = normalize_path(similarity_state.source_path or "", false)
+  if not source_db_path and source_path == retained_source_path then
+    source_db_path = similarity_state.source_db_path
+  end
+  source_db_path = normalize_path(source_db_path or target_db_path, false)
+
+  local max_results = math.max(1, math.min(1000, tonumber(similarity_state.max_results) or 100))
+  similarity_state.max_results = max_results
+  local handle
+  if HAVE_SM_SIM_CROSS_INDEX then
+    handle = reaper.SM_SIM_QueryByPathFromIndex(target_db_path, source_db_path, source_path, max_results)
+  else
+    handle = reaper.SM_SIM_QueryByPath(target_db_path, source_path, max_results)
+  end
+  if not handle then
+    local answer = reaper.ShowMessageBox(
+      T("Similarity query failed. Ensure the source and current database indexes use the same model and are up to date.")
+        .. "\n\n" .. T("Build the current database similarity index now?"),
+      "Soundmole", 4)
+    if answer == 6 then SM_SIM_StartBuild(target_db_path) end
+    return false
+  end
+
+  local json = reaper.SM_SIM_GetResultJSON(handle, 0, max_results) or ""
+  reaper.SM_SIM_Release(handle)
+  local lookup = {}
+  for _, list in ipairs({ files_idx_cache, _G.current_display_list }) do
+    if type(list) == "table" and not list._handle then
+      for _, entry in ipairs(list) do
+        if entry and entry.path then lookup[normalize_path(entry.path, false)] = entry end
+      end
+    end
+  end
+
+  local results = {}
+  for rank, score, path in json:gmatch('{"rank":(%d+),"score":([%-%d%.eE]+),"path":"(.-)"}') do
+    path = SM_SIM_UnescapeJSONString(path)
+    local normalized = normalize_path(path, false)
+    local source = lookup[normalized]
+    if not source and HAVE_SM_DB_ROW_BY_PATH and _G.db_loader and _G.db_loader.ctx then
+      local raw = reaper.SM_DB_GetRowRawByPath(_G.db_loader.ctx, normalized)
+      source = SM_ParseDBRawRow(raw)
+    end
+    local item = {}
+    if source then for key, value in pairs(source) do item[key] = value end end
+    item.path = path
+    item.filename = item.filename or path:match("[^/\\]+$") or path
+    item.similarity = tonumber(score) or 0
+    item.similarity_rank = tonumber(rank) or (#results + 1)
+    results[#results + 1] = item
+  end
+  -- Keep the initial result order deterministic even before the table applies
+  -- its default Similarity sort specification.
+  table.sort(results, function(a, b)
+    local ascore = tonumber(a.similarity) or 0
+    local bscore = tonumber(b.similarity) or 0
+    if ascore ~= bscore then return ascore > bscore end
+    return (tonumber(a.similarity_rank) or math.huge) < (tonumber(b.similarity_rank) or math.huge)
+  end)
+
+  similarity_state.db_path = target_db_path
+  similarity_state.source_path = info.path
+  similarity_state.source_name = info.filename or info.path:match("[^/\\]+$") or info.path
+  similarity_state.source_db_path = source_db_path
+  similarity_state.source_info = {}
+  for key, value in pairs(info) do similarity_state.source_info[key] = value end
+  similarity_state.results = results
+  collect_mode = COLLECT_MODE_SIMILAR
+  startup_tab_name = "Similarity"
+  CollectFiles()
+  return true
+end
+
+function SM_SIM_DrawSidebar()
+  local source = similarity_state.source_info
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
+  reaper.ImGui_TextColored(ctx, colors.mole, T("Similarity Source"))
+  reaper.ImGui_Separator(ctx)
+
+  if not source or not source.path then
+    reaper.ImGui_TextWrapped(ctx, T("Select an indexed database sound and choose Find Similar."))
+    reaper.ImGui_PopStyleColor(ctx)
+    return
+  end
+
+  reaper.ImGui_TextDisabled(ctx, T("Name"))
+  reaper.ImGui_TextWrapped(ctx, similarity_state.source_name or source.filename or "")
+  reaper.ImGui_Spacing(ctx)
+  reaper.ImGui_TextDisabled(ctx, T("Path"))
+  reaper.ImGui_TextWrapped(ctx, source.path or "")
+  reaper.ImGui_Spacing(ctx)
+
+  local target_db_path = SM_SIM_CurrentDBPath()
+  if similarity_state.source_db_path and similarity_state.source_db_path ~= "" then
+    reaper.ImGui_TextDisabled(ctx, T("Source Index"))
+    reaper.ImGui_TextWrapped(ctx, SM_SIM_DBDisplayName(similarity_state.source_db_path))
+  end
+  if target_db_path and target_db_path ~= "" then
+    reaper.ImGui_TextDisabled(ctx, T("Current Target Database"))
+    reaper.ImGui_TextWrapped(ctx, SM_SIM_DBDisplayName(target_db_path))
+    reaper.ImGui_Spacing(ctx)
+  end
+
+  local specs = {}
+  local length = tonumber(source.length)
+  local channels = tonumber(source.channels or source.channel_count)
+  local samplerate = tonumber(source.samplerate)
+  local bits = tonumber(source.bits)
+  if length and length > 0 then specs[#specs + 1] = reaper.format_timestr(length, "") end
+  if samplerate and samplerate > 0 then
+    specs[#specs + 1] = samplerate >= 1000
+      and string.format("%.1f kHz", samplerate / 1000)
+      or string.format("%d Hz", samplerate)
+  end
+  if channels and channels > 0 then specs[#specs + 1] = string.format("%d ch", channels) end
+  if bits and bits > 0 then specs[#specs + 1] = string.format("%d-bit", bits) end
+  if #specs > 0 then
+    reaper.ImGui_TextDisabled(ctx, table.concat(specs, "  |  "))
+    reaper.ImGui_Spacing(ctx)
+  end
+
+  local is_source_playing = playing_preview and playing_path == source.path
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), colors.big_button_normal)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), colors.big_button_active)
+  if reaper.ImGui_Button(ctx, is_source_playing and T("Restart Source") or T("Play Source"), -1, UIScale(30)) then
+    PlayFromStart(source)
+  end
+  if reaper.ImGui_Button(ctx, T("Stop Preview"), -1, UIScale(26)) then
+    StopPreview()
+  end
+  reaper.ImGui_PopStyleColor(ctx, 3)
+
+  reaper.ImGui_Spacing(ctx)
+  reaper.ImGui_SeparatorText(ctx, T("Search Scope"))
+  reaper.ImGui_Text(ctx, T("Maximum results"))
+  reaper.ImGui_SameLine(ctx, nil, UIScale(10))
+  reaper.ImGui_SetNextItemWidth(ctx, -10)
+  local changed, value = reaper.ImGui_InputInt(ctx, "##similarity_max_results", similarity_state.max_results or 100, 10, 50)
+  if changed then
+    similarity_state.max_results = math.max(1, math.min(1000, tonumber(value) or 100))
+    reaper.SetExtState(EXT_SECTION, "similarity_max_results", tostring(similarity_state.max_results), true)
+  end
+  reaper.ImGui_TextDisabled(ctx, T("Range: 1-1000 results"))
+  reaper.ImGui_Text(ctx, string.format("%s: %d", T("Current results"), #(similarity_state.results or {})))
+  reaper.ImGui_BeginDisabled(ctx, not target_db_path or target_db_path == "")
+  if reaper.ImGui_Button(ctx, T("Find Similar in Current Database"), -10, UIScale(30)) then
+    SM_SIM_FindSimilar(source, target_db_path, similarity_state.source_db_path)
+  end
+  reaper.ImGui_EndDisabled(ctx)
+  if reaper.ImGui_IsItemHovered(ctx, reaper.ImGui_HoveredFlags_AllowWhenDisabled()) then
+    reaper.ImGui_SetTooltip(ctx, T("Use the retained source sound to search the currently selected Soundmole database."))
+  end
+
+  reaper.ImGui_PopStyleColor(ctx)
 end
 
 --------------------------------------------- 播放控件相关 ---------------------------------------------
@@ -9402,7 +9647,8 @@ end
 
 -- 保存当前模式列表折叠状态
 function SaveExitSettings()
-  reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
+  local saved_mode = (collect_mode == COLLECT_MODE_SIMILAR) and COLLECT_MODE_MEDIADB or collect_mode
+  reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(saved_mode), true)
 
   if collect_mode == COLLECT_MODE_ITEMS or collect_mode == COLLECT_MODE_RPP or collect_mode == COLLECT_MODE_DIR or collect_mode == COLLECT_MODE_ALL_ITEMS then
     reaper.SetExtState(EXT_SECTION, "project_header_open", tostring(project_open), true)
@@ -9817,7 +10063,9 @@ static.last_sort_specs_map  = static.last_sort_specs_map or {}
 -- 模式+选中项唯一key，用来切换音频列表
 function GetCurrentListKey()
   -- 不同模式下用不同字段拼接唯一key
-  if collect_mode == COLLECT_MODE_MEDIADB then
+  if collect_mode == COLLECT_MODE_SIMILAR then
+    return "SIMILAR:" .. tostring(similarity_state.source_path or "default")
+  elseif collect_mode == COLLECT_MODE_MEDIADB then
     return "MEDIADB:" .. tostring(tree_state.cur_mediadb or "default")
   elseif collect_mode == COLLECT_MODE_REAPERDB then -- 官方 .ReaperFileList
     return "REAPERDB:" .. tostring(tree_state.cur_reaper_db or "default")
@@ -10565,6 +10813,15 @@ function DrawRowPopup(ctx, i, info, collect_mode)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
 
   local is_item_mode = (collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP)
+
+  if HAVE_SM_SIM and SM_SIM_CurrentDBPath() then
+    if reaper.ImGui_MenuItem(ctx, T("Find Similar")) then
+      local target_db_path = SM_SIM_CurrentDBPath()
+      SM_SIM_FindSimilar(info, target_db_path, target_db_path)
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+    reaper.ImGui_Separator(ctx)
+  end
 
   if is_item_mode then
     -- Media Items / RPP，item 菜单
@@ -11564,7 +11821,18 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
     local is_genre_pos  = (col_name == T("Genre") or col_name == T("Position"))
 
     -- Waveform
-    if col_name == T("Waveform") then
+    if col_name == T("Similarity") then
+      local score = math.max(0, math.min(1, tonumber(info.similarity) or 0))
+      reaper.ImGui_Text(ctx, string.format("%d%%", math.floor(score * 100 + 0.5)))
+      if reaper.ImGui_IsItemHovered(ctx) then
+        reaper.ImGui_SetTooltip(ctx, string.format(
+          "%s: #%d\n%s: %.6f",
+          T("Similarity rank"), tonumber(info.similarity_rank) or 0,
+          T("Exact score"), tonumber(info.similarity) or 0
+        ))
+      end
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+    elseif col_name == T("Waveform") then
       RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     elseif col_name == T("Album Art") or col_name == "专辑图片" then
       RenderCoverCell(ctx, i, info, row_height)
@@ -14123,6 +14391,7 @@ function loop()
   if visible then UpdateSoundmoleMainWindowRect() end
 
   SM_ProcessBuilderLoop() -- 处理数据库构建器
+  SM_SIM_ProcessBuilderLoop() -- 处理独立的相似度索引构建器
 
   -- 脚本折叠时清理旧专辑封面，避免折叠展开时报错。
   if not visible and last_window_visible then
@@ -14809,6 +15078,34 @@ function loop()
       end
       preview_folder_input = normalize_path(init, true)
       reaper.ImGui_OpenPopup(ctx, "##preview_folder_popup")
+    end
+
+    -- 当前数据库选中项的相似度过滤快捷入口
+    if HAVE_SM_SIM then
+      local selected_similarity_info
+      if collect_mode == COLLECT_MODE_MEDIADB and _G.current_display_list and selected_row and selected_row > 0 then
+        selected_similarity_info = _G.current_display_list[selected_row]
+      end
+      local similarity_target_db = SM_SIM_CurrentBrowsingDBPath()
+      local can_find_similar = selected_similarity_info and selected_similarity_info.path and similarity_target_db and similarity_target_db ~= ""
+
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered)
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)
+      reaper.ImGui_SameLine(ctx, nil, top_button_gap)
+      reaper.ImGui_BeginDisabled(ctx, not can_find_similar)
+      local clicked_find_similar = reaper.ImGui_Button(ctx, T("Find Similar"), top_button_w, two_rows_h)
+      reaper.ImGui_EndDisabled(ctx)
+      reaper.ImGui_PopStyleColor(ctx, 3)
+
+      if clicked_find_similar and can_find_similar then
+        SM_SIM_FindSimilar(selected_similarity_info, similarity_target_db, similarity_target_db)
+      end
+      if reaper.ImGui_IsItemHovered(ctx, reaper.ImGui_HoveredFlags_AllowWhenDisabled()) then
+        reaper.ImGui_SetTooltip(ctx, can_find_similar
+          and T("Find sounds similar to the selected audio in the current database.")
+          or T("Select an audio item while browsing a Soundmole database."))
+      end
     end
 
     -- Play History 最近播放按钮
@@ -16781,6 +17078,11 @@ function loop()
                   end
                 end
 
+                if HAVE_SM_SIM and reaper.ImGui_MenuItem(ctx, "Build Similarity Index") then
+                  local dbpath = normalize_path(db_dir, true) .. dbfile
+                  SM_SIM_StartBuild(dbpath)
+                end
+
                 -- 仅重建当前数据库的专辑封面索引 JSON，不重新扫描/重建数据库
                 if reaper.ImGui_MenuItem(ctx, "Rebuild Album Cover Index") then
                   local dbpath = normalize_path(db_dir, true) .. dbfile
@@ -17659,6 +17961,20 @@ function loop()
           reaper.ImGui_EndTabItem(ctx)
         end
 
+        -- TAB 标签页 Similarity 节点
+        if HAVE_SM_SIM then
+          local flag_similarity = (startup_tab_name == "Similarity") and reaper.ImGui_TabItemFlags_SetSelected() or 0
+          if reaper.ImGui_BeginTabItem(ctx, T("Similarity"), nil, flag_similarity) then
+            current_sidebar_tab = "Similarity"
+            if startup_tab_name == "Similarity" then startup_tab_name = nil end
+            if reaper.ImGui_BeginChild(ctx, "SimilaritySidebarRegion") then
+              SM_SIM_DrawSidebar()
+              reaper.ImGui_EndChild(ctx)
+            end
+            reaper.ImGui_EndTabItem(ctx)
+          end
+        end
+
         --reaper.ImGui_PopStyleColor(ctx)
         reaper.ImGui_EndTabBar(ctx)
       end
@@ -17736,7 +18052,9 @@ function loop()
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     colors.red)                 -- 表格交替行背景 0xFF0F0F0F
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", table_w, child_h, 0) then
-      if reaper.ImGui_BeginTable(ctx, "filelist", 20,
+      local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 21 or 20
+      local filelist_table_id = (collect_mode == COLLECT_MODE_SIMILAR) and "filelist_similarity" or "filelist"
+      if reaper.ImGui_BeginTable(ctx, filelist_table_id, filelist_column_count,
         reaper.ImGui_TableFlags_Borders()      -- 表格分隔线
       | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
       | reaper.ImGui_TableFlags_Resizable()
@@ -17749,8 +18067,14 @@ function loop()
       ) then
         reaper.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- 只冻结表头
         local cover_col_w = math.max(28, math.ceil(GetScaledRowHeight()))
+        local similarity_column_flags = reaper.ImGui_TableColumnFlags_WidthFixed()
+          | reaper.ImGui_TableColumnFlags_DefaultSort()
+          | reaper.ImGui_TableColumnFlags_PreferSortDescending()
         if collect_mode == COLLECT_MODE_ALL_ITEMS then -- Media Items
           reaper.ImGui_TableSetupColumn(ctx, T("Waveform"),    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort() | reaper.ImGui_TableColumnFlags_NoReorder(), 100) -- 锁定列不允许拖动
+          if collect_mode == COLLECT_MODE_SIMILAR then
+            reaper.ImGui_TableSetupColumn(ctx, T("Similarity"), similarity_column_flags, 70, TableColumns.SIMILARITY)
+          end
           reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("Take Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
@@ -17772,6 +18096,9 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_RPP then -- RPP
           reaper.ImGui_TableSetupColumn(ctx, T("Waveform"),    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          if collect_mode == COLLECT_MODE_SIMILAR then
+            reaper.ImGui_TableSetupColumn(ctx, T("Similarity"), similarity_column_flags, 70, TableColumns.SIMILARITY)
+          end
           reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
@@ -17793,6 +18120,9 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         elseif collect_mode == COLLECT_MODE_FREESOUND then -- Freesound
           reaper.ImGui_TableSetupColumn(ctx, T("Waveform"),    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          if collect_mode == COLLECT_MODE_SIMILAR then
+            reaper.ImGui_TableSetupColumn(ctx, T("Similarity"), similarity_column_flags, 70, TableColumns.SIMILARITY)
+          end
           reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
@@ -17814,6 +18144,9 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
         else
           reaper.ImGui_TableSetupColumn(ctx, T("Waveform"),    reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 100)
+          if collect_mode == COLLECT_MODE_SIMILAR then
+            reaper.ImGui_TableSetupColumn(ctx, T("Similarity"), similarity_column_flags, 70, TableColumns.SIMILARITY)
+          end
           reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
@@ -17958,7 +18291,21 @@ function loop()
           if #sort_specs > 0 and filtered_list and (not filtered_list._handle) and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
             table.sort(filtered_list, function(a, b)
               for _, spec in ipairs(sort_specs) do
-                if spec.user_id == TableColumns.FILENAME then
+                if spec.user_id == TableColumns.SIMILARITY then
+                  local ascore = tonumber(a.similarity) or 0
+                  local bscore = tonumber(b.similarity) or 0
+                  if ascore ~= bscore then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return ascore > bscore
+                    else
+                      return ascore < bscore
+                    end
+                  end
+                  local arank = tonumber(a.similarity_rank) or math.huge
+                  local brank = tonumber(b.similarity_rank) or math.huge
+                  if arank ~= brank then return arank < brank end
+
+                elseif spec.user_id == TableColumns.FILENAME then
                   if a.filename ~= b.filename then
                     if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
                       return a.filename > b.filename
@@ -20890,6 +21237,11 @@ function OnScriptExit()
   -- 停止数据库构建器 (优先清理)
   if reaper.APIExists("SM_Builder_Stop") then
     reaper.SM_Builder_Stop()
+  end
+  if similarity_state and similarity_state.builder and reaper.APIExists("SM_SIM_Builder_Stop") then
+    reaper.SM_SIM_Builder_Stop(similarity_state.builder)
+    similarity_state.builder = nil
+    similarity_state.builder_active = false
   end
   if SaveExitSettings then pcall(SaveExitSettings) end
   -- 清理文件夹模式的后台扫描器 或使用 StopAsyncScan()

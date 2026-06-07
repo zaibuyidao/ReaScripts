@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.194
+-- @version 1.0.195
 -- @changelog
---   Fixed a Section source dragging issue.
---   Support reaper_soundmole-x64.dll v0.0.19
+--   Added support for similar audio recommendations as an experimental feature.
+--   Support reaper_soundmole-x64.dll v0.0.21
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
