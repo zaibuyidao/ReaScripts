@@ -22,6 +22,15 @@ import numpy as np
 FILE_RE = re.compile(r'^\s*FILE\s+"((?:\\.|[^"])*)"')
 
 
+def configure_model_cache() -> None:
+    """Keep model support files inside Soundmole's managed virtual environment."""
+    if sys.prefix == sys.base_prefix:
+        return
+    cache_root = Path(sys.prefix) / "cache"
+    os.environ["HF_HOME"] = str(cache_root / "huggingface")
+    os.environ["TORCH_HOME"] = str(cache_root / "torch")
+
+
 def atomic_write_bytes(path: Path, data: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(delete=False, dir=path.parent) as temp:
@@ -107,12 +116,13 @@ def create_test_embedder() -> tuple[Callable[[list[str]], np.ndarray], str]:
 
 
 def create_clap_embedder(model_name: str) -> tuple[Callable[[list[str]], np.ndarray], str]:
+    configure_model_cache()
     try:
         import laion_clap
     except ImportError as exc:
         raise RuntimeError(
-            "CLAP dependency is missing. Install laion-clap into the Python "
-            "selected by SOUNDMOLE_PYTHON."
+            "CLAP dependency is missing. Open Soundmole Settings > Similarity "
+            "and choose Install or Repair CLAP."
         ) from exc
 
     model = laion_clap.CLAP_Module(enable_fusion=False)

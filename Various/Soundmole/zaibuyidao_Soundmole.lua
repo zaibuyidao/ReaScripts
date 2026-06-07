@@ -108,6 +108,11 @@ HAVE_SM_SIM_CROSS_INDEX = reaper.APIExists('SM_SIM_QueryByPathFromIndex')
   and reaper.APIExists('SM_SIM_Builder_RunSlice')
   and reaper.APIExists('SM_SIM_Builder_GetStatusJSON')
   and reaper.APIExists('SM_SIM_Builder_Stop')
+HAVE_SM_SIM_BUILDER_EX = reaper.APIExists('SM_SIM_Builder_StartWithPython')
+HAVE_SM_SIM_SETUP = reaper.APIExists('SM_SIM_Setup_Start')
+  and reaper.APIExists('SM_SIM_Setup_RunSlice')
+  and reaper.APIExists('SM_SIM_Setup_GetStatusJSON')
+  and reaper.APIExists('SM_SIM_Setup_Stop')
 
 SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
@@ -357,6 +362,15 @@ end
 mediadb_dir = normalize_path(mediadb_dir, true)
 EnsureCacheDir(mediadb_dir)
 
+-- 相似度 Python 设置。用户选择兼容的已安装 Python 后，Soundmole 会创建并使用自己的托管环境。
+local similarity_base_python = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_base_python"), false)
+local DEFAULT_SIMILARITY_RUNTIME_DIR = normalize_path(reaper.GetResourcePath() .. sep .. "SoundmoleData" .. sep .. "python", false)
+local similarity_runtime_dir = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_runtime_dir"), false)
+if similarity_runtime_dir == "" then similarity_runtime_dir = DEFAULT_SIMILARITY_RUNTIME_DIR end
+local similarity_runtime_parent = similarity_runtime_dir:match("^(.*)[/\\][^/\\]+$") or normalize_path(reaper.GetResourcePath() .. sep .. "SoundmoleData", false)
+local similarity_setup_status_path = normalize_path(similarity_runtime_parent .. sep .. "similarity_setup_status.json", false)
+local similarity_setup_log_path = normalize_path(similarity_runtime_parent .. sep .. "similarity_setup.log", false)
+
 -- 读取上次选中的标签页名称
 local startup_tab_name = reaper.GetExtState(EXT_SECTION, "sidebar_active_tab")
 local current_sidebar_tab = "PeekTree" -- 默认为 PeekTree，用于记录当前状态
@@ -576,6 +590,10 @@ similarity_state = {
   builder = nil,
   builder_active = false,
   builder_started = 0,
+  setup = nil,
+  setup_active = false,
+  setup_started = 0,
+  setup_status = nil,
 }
 
 function SM_ParseDBRawRow(raw)
@@ -971,6 +989,8 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
   reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "similarity_base_python", similarity_base_python or "", true)
+  reaper.SetExtState(EXT_SECTION, "similarity_runtime_dir", similarity_runtime_dir or "", true)
   
   -- 视觉设置
   reaper.SetExtState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
@@ -1942,6 +1962,88 @@ do
     end
   end
 
+  function Section_SimilaritySetup()
+    if not HAVE_SM_SIM then
+      reaper.ImGui_TextWrapped(ctx, T("Similarity support requires the Soundmole C++ extension."))
+      return
+    end
+
+    reaper.ImGui_TextWrapped(ctx, T("Select a 64-bit Python 3.10, 3.11, or 3.12 executable. Soundmole will create its own managed environment and install CLAP without changing your selected Python installation."))
+    reaper.ImGui_Spacing(ctx)
+    reaper.ImGui_Text(ctx, T("Compatible Python executable:"))
+    reaper.ImGui_PushItemWidth(ctx, UIScale(600))
+    local changed_python, new_python = reaper.ImGui_InputText(ctx, "##similarity_base_python", similarity_base_python or "") -- , 1024
+    reaper.ImGui_PopItemWidth(ctx)
+    if changed_python then
+      similarity_base_python = normalize_path(new_python, false)
+      reaper.SetExtState(EXT_SECTION, "similarity_base_python", similarity_base_python, true)
+    end
+    reaper.ImGui_SameLine(ctx, nil, UIScale(8))
+    if reaper.ImGui_Button(ctx, T("Browse").."##SelectSimilarityPython", UIScale(70)) then
+      local init_dir = (similarity_base_python or ""):match("^(.*)[/\\]") or reaper.GetResourcePath()
+      local rv, out = reaper.JS_Dialog_BrowseForOpenFiles(T("Select Python executable"), init_dir, "", "", false)
+      if rv == 1 and out and out ~= "" then
+        similarity_base_python = normalize_path(out, false)
+        reaper.SetExtState(EXT_SECTION, "similarity_base_python", similarity_base_python, true)
+      end
+    end
+
+    reaper.ImGui_Text(ctx, T("Managed environment:"))
+    reaper.ImGui_SameLine(ctx, UIScale(200))
+    reaper.ImGui_TextWrapped(ctx, similarity_runtime_dir)
+
+    local managed_python = SM_SIM_ManagedPythonPath()
+    local setup_status = similarity_state.setup_status or SM_SIM_LoadSavedSetupStatus()
+    local ready = managed_python ~= "" and reaper.file_exists(managed_python)
+      and setup_status and setup_status.status == "done"
+      and setup_status.model_path ~= "" and reaper.file_exists(setup_status.model_path)
+    local status_label = ready and T("Ready") or T("Not ready")
+    local status_color = ready and 0x66CC88FF or 0xE0A050FF
+    reaper.ImGui_Text(ctx, T("CLAP status:"))
+    reaper.ImGui_SameLine(ctx, UIScale(200))
+    reaper.ImGui_TextColored(ctx, status_color, status_label)
+
+    if setup_status then
+      if setup_status.current and setup_status.current ~= "" then
+        reaper.ImGui_TextWrapped(ctx, setup_status.current)
+      end
+      if setup_status.model_path and setup_status.model_path ~= "" then
+        reaper.ImGui_TextWrapped(ctx, T("Model:") .. " " .. setup_status.model_path)
+      end
+      if setup_status.error and setup_status.error ~= "" then
+        reaper.ImGui_TextColored(ctx, 0xE06060FF, setup_status.error)
+      end
+    end
+
+    local can_install = HAVE_SM_SIM_SETUP
+      and not similarity_state.setup_active
+      and similarity_base_python ~= ""
+      and reaper.file_exists(similarity_base_python)
+    reaper.ImGui_BeginDisabled(ctx, not can_install)
+    if reaper.ImGui_Button(ctx, T("Install or Repair CLAP"), UIScale(180), UIScale(32)) then
+      SM_SIM_StartSetup()
+    end
+    reaper.ImGui_EndDisabled(ctx)
+    reaper.ImGui_SameLine(ctx, nil, UIScale(8))
+    if reaper.ImGui_Button(ctx, T("Download Python 3.12"), UIScale(160), UIScale(32)) then
+      reaper.CF_ShellExecute("https://www.python.org/downloads/release/python-31210/")
+    end
+    reaper.ImGui_SameLine(ctx, nil, UIScale(8))
+    reaper.ImGui_BeginDisabled(ctx, not reaper.file_exists(similarity_setup_log_path))
+    if reaper.ImGui_Button(ctx, T("Open Setup Log"), UIScale(140), UIScale(32)) then
+      reaper.CF_ShellExecute(similarity_setup_log_path)
+    end
+    reaper.ImGui_EndDisabled(ctx)
+
+    if not HAVE_SM_SIM_SETUP then
+      reaper.ImGui_TextWrapped(ctx, T("One-click CLAP setup requires the latest Soundmole extension. Please update the extension and restart REAPER."))
+    elseif similarity_base_python == "" or not reaper.file_exists(similarity_base_python) then
+      reaper.ImGui_TextWrapped(ctx, T("Install a compatible 64-bit Python version, then select its executable above."))
+    else
+      reaper.ImGui_TextWrapped(ctx, T("The installation includes CLAP, required Python packages, tokenizer files, and the CLAP model. The first installation requires internet access and may take several minutes."))
+    end
+  end
+
   function Section_Search()
     reaper.ImGui_Text(ctx, T("Search Settings:"))
     local sea_enter_changed, search_enter_v = reaper.ImGui_Checkbox(ctx, T("Update search only when enter key pressed").."##enter_mode", search_enter_mode)
@@ -2055,7 +2157,7 @@ do
   -- 顶层分页
   ----------------------------------------------------------------
   function GetSettingsPages()
-    return {
+    local pages = {
     -- 外观
     { id = "Appearance", label = T("Appearance"), fn = function()
         DrawPageHeader(T("Adjust UI appearance and display details"), colors.settings_header_bg, colors.normal_text)
@@ -2152,6 +2254,20 @@ do
       end
     },
   }
+    if HAVE_SM_SIM then
+      table.insert(pages, 5, {
+        id = "Similarity",
+        label = T("Similarity"),
+        fn = function()
+          DrawPageHeader(T("Configure Python and CLAP similarity support"), colors.settings_header_bg, colors.normal_text)
+          DrawSubTitle(T("Python and CLAP"))
+          Section_SimilaritySetup()
+        end
+      })
+    elseif settings_active_page == "Similarity" then
+      settings_active_page = "System"
+    end
+    return pages
   end
 
   -- Ctrl+P 打开设置弹窗
@@ -3048,7 +3164,107 @@ function SM_SIM_ParseStatusJSON(json)
     elapsed = tonumber(json:match('"elapsed"%s*:%s*([%d%.]+)')) or 0,
     current = SM_SIM_UnescapeJSONString(current),
     error = SM_SIM_UnescapeJSONString(err),
+    python = SM_SIM_UnescapeJSONString(json:match('"python"%s*:%s*"(.-)"') or ""),
+    model_path = SM_SIM_UnescapeJSONString(json:match('"model_path"%s*:%s*"(.-)"') or ""),
+    log_path = SM_SIM_UnescapeJSONString(json:match('"log_path"%s*:%s*"(.-)"') or ""),
   }
+end
+
+function SM_SIM_ReadTextFile(path)
+  local file = io.open(path or "", "rb")
+  if not file then return "" end
+  local text = file:read("*a") or ""
+  file:close()
+  return text
+end
+
+function SM_SIM_LoadSavedSetupStatus()
+  if similarity_state.setup_status then return similarity_state.setup_status end
+  local json = SM_SIM_ReadTextFile(similarity_setup_status_path)
+  if json ~= "" then similarity_state.setup_status = SM_SIM_ParseStatusJSON(json) end
+  return similarity_state.setup_status
+end
+
+function SM_SIM_ManagedPythonPath()
+  if similarity_runtime_dir == "" then return "" end
+  if sep == "\\" then
+    return normalize_path(similarity_runtime_dir .. sep .. "Scripts" .. sep .. "python.exe", false)
+  end
+  return normalize_path(similarity_runtime_dir .. sep .. "bin" .. sep .. "python3", false)
+end
+
+function SM_SIM_ConfiguredPythonPath()
+  local managed_python = SM_SIM_ManagedPythonPath()
+  if managed_python ~= "" and reaper.file_exists(managed_python) then return managed_python end
+  return ""
+end
+
+function SM_SIM_StartSetup()
+  if not HAVE_SM_SIM_SETUP or similarity_state.setup_active then return false end
+  if similarity_base_python == "" or not reaper.file_exists(similarity_base_python) then
+    reaper.ShowMessageBox(T("Install a compatible 64-bit Python version, then select its executable above."), "Soundmole", 0)
+    return false
+  end
+
+  local setup_worker = normalize_path(script_path .. "lib" .. sep .. "similarity_setup.py", false)
+  if not reaper.file_exists(setup_worker) then
+    reaper.ShowMessageBox(T("Missing similarity setup worker:") .. "\n" .. setup_worker, "Soundmole", 0)
+    return false
+  end
+  local handle = reaper.SM_SIM_Setup_Start(similarity_base_python, similarity_runtime_dir, setup_worker)
+  if not handle then
+    reaper.ShowMessageBox(T("Could not start CLAP setup."), "Soundmole", 0)
+    return false
+  end
+  similarity_state.setup = handle
+  similarity_state.setup_active = true
+  similarity_state.setup_started = reaper.time_precise()
+  similarity_state.setup_status = { status = "starting", processed = 0, total = 4, failed = 0 }
+  return true
+end
+
+function SM_SIM_ProcessSetupLoop()
+  if not similarity_state.setup_active or not similarity_state.setup then return end
+  local handle = similarity_state.setup
+  local result = reaper.SM_SIM_Setup_RunSlice(handle)
+  similarity_state.setup_status = SM_SIM_ParseStatusJSON(reaper.SM_SIM_Setup_GetStatusJSON(handle))
+
+  local flags = reaper.ImGui_WindowFlags_TopMost()
+              | reaper.ImGui_WindowFlags_NoDocking()
+              | reaper.ImGui_WindowFlags_NoCollapse()
+              | reaper.ImGui_WindowFlags_AlwaysAutoResize()
+  local visible = reaper.ImGui_Begin(ctx, T("CLAP Setup Progress"), true, flags)
+  if visible then
+    local status = similarity_state.setup_status or {}
+    reaper.ImGui_Text(ctx, T("Installing Soundmole CLAP"))
+    reaper.ImGui_Separator(ctx)
+    reaper.ImGui_Text(ctx, string.format("%s: %d / %d", T("Steps"), status.processed or 0, status.total or 4))
+    local elapsed = math.max(status.elapsed or 0, reaper.time_precise() - similarity_state.setup_started)
+    reaper.ImGui_Text(ctx, string.format("%s: %.1f s", T("Time"), elapsed))
+    if status.current and status.current ~= "" then reaper.ImGui_TextWrapped(ctx, status.current) end
+    local fraction = (status.total and status.total > 0) and math.min(1, (status.processed or 0) / status.total) or 0
+    reaper.ImGui_ProgressBar(ctx, fraction, UIScale(420), 0)
+    if reaper.ImGui_Button(ctx, T("Cancel"), UIScale(90), 0) then
+      reaper.SM_SIM_Setup_Stop(handle)
+      similarity_state.setup = nil
+      similarity_state.setup_active = false
+      reaper.ImGui_End(ctx)
+      return
+    end
+  end
+  reaper.ImGui_End(ctx)
+
+  if result == 0 or result == -1 then
+    local status = similarity_state.setup_status or {}
+    reaper.SM_SIM_Setup_Stop(handle)
+    similarity_state.setup = nil
+    similarity_state.setup_active = false
+    if result == 0 then
+      reaper.ShowMessageBox(T("Soundmole CLAP installation is complete and ready."), "Soundmole", 0)
+    else
+      reaper.ShowMessageBox(status.error ~= "" and status.error or T("Soundmole CLAP installation failed. Open the setup log for details."), "Soundmole", 0)
+    end
+  end
 end
 
 function SM_SIM_StartBuild(db_path)
@@ -3060,7 +3276,18 @@ function SM_SIM_StartBuild(db_path)
     return false
   end
 
-  local handle = reaper.SM_SIM_Builder_Start(db_path, "CLAP")
+  local handle
+  if HAVE_SM_SIM_BUILDER_EX then
+    local python_path = SM_SIM_ConfiguredPythonPath()
+    if python_path == "" then
+      reaper.ShowMessageBox(T("CLAP is not ready. Open Settings > Similarity and choose Install or Repair CLAP."), "Soundmole", 0)
+      return false
+    end
+    local worker_path = normalize_path(script_path .. "lib" .. sep .. "similarity.py", false)
+    handle = reaper.SM_SIM_Builder_StartWithPython(db_path, "CLAP", python_path, worker_path)
+  else
+    handle = reaper.SM_SIM_Builder_Start(db_path, "CLAP")
+  end
   if not handle then
     reaper.ShowMessageBox("Could not start the similarity index builder.", "Soundmole", 0)
     return false
@@ -14391,6 +14618,7 @@ function loop()
   if visible then UpdateSoundmoleMainWindowRect() end
 
   SM_ProcessBuilderLoop() -- 处理数据库构建器
+  SM_SIM_ProcessSetupLoop() -- 处理 Python/CLAP 安装器
   SM_SIM_ProcessBuilderLoop() -- 处理独立的相似度索引构建器
 
   -- 脚本折叠时清理旧专辑封面，避免折叠展开时报错。
@@ -21242,6 +21470,11 @@ function OnScriptExit()
     reaper.SM_SIM_Builder_Stop(similarity_state.builder)
     similarity_state.builder = nil
     similarity_state.builder_active = false
+  end
+  if similarity_state and similarity_state.setup and reaper.APIExists("SM_SIM_Setup_Stop") then
+    reaper.SM_SIM_Setup_Stop(similarity_state.setup)
+    similarity_state.setup = nil
+    similarity_state.setup_active = false
   end
   if SaveExitSettings then pcall(SaveExitSettings) end
   -- 清理文件夹模式的后台扫描器 或使用 StopAsyncScan()
