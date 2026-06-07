@@ -1,3 +1,4 @@
+# NoIndex: true
 #!/usr/bin/env python3
 """Build Soundmole audio embeddings without blocking REAPER's UI."""
 
