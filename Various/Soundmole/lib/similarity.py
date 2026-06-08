@@ -11,6 +11,7 @@ import math
 import os
 from pathlib import Path
 import re
+import sqlite3
 import sys
 import tempfile
 import time
@@ -20,6 +21,7 @@ import numpy as np
 
 
 FILE_RE = re.compile(r'^\s*FILE\s+"((?:\\.|[^"])*)"')
+CHECKPOINT_BATCH_SIZE = 64
 
 
 def configure_model_cache() -> None:
@@ -29,6 +31,30 @@ def configure_model_cache() -> None:
     cache_root = Path(sys.prefix) / "cache"
     os.environ["HF_HOME"] = str(cache_root / "huggingface")
     os.environ["TORCH_HOME"] = str(cache_root / "torch")
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
+
+def configured_device(torch: object) -> tuple[str, str]:
+    profile_path = Path(sys.prefix) / "soundmole_profile.json"
+    try:
+        profile = json.loads(profile_path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        profile = {}
+    accelerator = str(profile.get("accelerator", "cpu")).lower()
+    if accelerator != "gpu":
+        return "cpu", "cpu"
+    if torch.cuda.is_available():
+        return "cuda", "gpu"
+    if (
+        hasattr(torch.backends, "mps")
+        and torch.backends.mps.is_available()
+    ):
+        return "mps", "gpu"
+    raise RuntimeError(
+        "The Soundmole GPU profile is installed, but no compatible GPU is "
+        "available. Repair CLAP using the CPU profile or check the GPU driver."
+    )
 
 
 def atomic_write_bytes(path: Path, data: bytes) -> None:
@@ -99,7 +125,8 @@ def normalized_rows(vectors: np.ndarray) -> np.ndarray:
     return vectors / norms
 
 
-def create_test_embedder() -> tuple[Callable[[list[str]], np.ndarray], str]:
+def create_test_embedder(
+) -> tuple[Callable[[list[str]], np.ndarray], str, str, str]:
     # Used only by automated/local verification. The UI always requests CLAP.
     dimension = 64
 
@@ -112,20 +139,24 @@ def create_test_embedder() -> tuple[Callable[[list[str]], np.ndarray], str]:
             rows.append(row)
         return normalized_rows(np.stack(rows))
 
-    return embed, "test-hash"
+    return embed, "test-hash", "cpu", "cpu"
 
 
-def create_clap_embedder(model_name: str) -> tuple[Callable[[list[str]], np.ndarray], str]:
+def create_clap_embedder(
+    model_name: str,
+) -> tuple[Callable[[list[str]], np.ndarray], str, str, str]:
     configure_model_cache()
     try:
         import laion_clap
+        import torch
     except ImportError as exc:
         raise RuntimeError(
             "CLAP dependency is missing. Open Soundmole Settings > Similarity "
             "and choose Install or Repair CLAP."
         ) from exc
 
-    model = laion_clap.CLAP_Module(enable_fusion=False)
+    device, accelerator = configured_device(torch)
+    model = laion_clap.CLAP_Module(enable_fusion=False, device=device)
     if model_name and model_name.upper() != "CLAP" and Path(model_name).is_file():
         model.load_ckpt(str(Path(model_name)))
         resolved_name = str(Path(model_name))
@@ -134,17 +165,106 @@ def create_clap_embedder(model_name: str) -> tuple[Callable[[list[str]], np.ndar
         resolved_name = "CLAP"
 
     def embed(paths: list[str]) -> np.ndarray:
-        vectors = model.get_audio_embedding_from_filelist(
-            x=paths, use_tensor=False
-        )
+        with torch.inference_mode():
+            vectors = model.get_audio_embedding_from_filelist(
+                x=paths, use_tensor=False
+            )
         return normalized_rows(np.asarray(vectors, dtype=np.float32))
 
-    return embed, resolved_name
+    return embed, resolved_name, device, accelerator
 
 
 def batches(values: list[str], size: int) -> Iterable[list[str]]:
     for start in range(0, len(values), size):
         yield values[start : start + size]
+
+
+class EmbeddingCheckpoint:
+    """Persist completed embeddings so large builds can resume after interruption."""
+
+    def __init__(self, sim_dir: Path, model: str) -> None:
+        sim_dir.mkdir(parents=True, exist_ok=True)
+        self.path = sim_dir / "embedding_checkpoint.sqlite3"
+        self.connection = sqlite3.connect(self.path)
+        self.connection.execute("PRAGMA journal_mode=WAL")
+        self.connection.execute("PRAGMA synchronous=NORMAL")
+        self.connection.execute(
+            "CREATE TABLE IF NOT EXISTS metadata ("
+            "key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+        )
+        self.connection.execute(
+            "CREATE TABLE IF NOT EXISTS embeddings ("
+            "path TEXT PRIMARY KEY, size INTEGER NOT NULL, "
+            "mtime_ns INTEGER NOT NULL, dimension INTEGER NOT NULL, "
+            "vector BLOB NOT NULL)"
+        )
+        stored = self.connection.execute(
+            "SELECT value FROM metadata WHERE key = 'model'"
+        ).fetchone()
+        if not stored or stored[0] != model:
+            self.connection.execute("DELETE FROM embeddings")
+            self.connection.execute(
+                "INSERT OR REPLACE INTO metadata(key, value) VALUES('model', ?)",
+                (model,),
+            )
+            self.connection.commit()
+        self.pending: list[tuple[str, int, int, int, bytes]] = []
+
+    def load_reusable(
+        self, fingerprints: dict[str, dict[str, int]]
+    ) -> dict[str, np.ndarray]:
+        reusable: dict[str, np.ndarray] = {}
+        for path, size, mtime_ns, dimension, vector in self.connection.execute(
+            "SELECT path, size, mtime_ns, dimension, vector FROM embeddings"
+        ):
+            current = fingerprints.get(path)
+            if (
+                not current
+                or current["size"] != size
+                or current["mtime_ns"] != mtime_ns
+                or dimension <= 0
+                or len(vector) != dimension * 4
+            ):
+                continue
+            reusable[path] = np.frombuffer(vector, dtype="<f4").copy()
+        return reusable
+
+    def add(
+        self, path: str, fingerprint_value: dict[str, int], vector: np.ndarray
+    ) -> None:
+        row = np.asarray(vector, dtype="<f4").reshape(-1)
+        self.pending.append(
+            (
+                path,
+                fingerprint_value["size"],
+                fingerprint_value["mtime_ns"],
+                int(row.size),
+                row.tobytes(),
+            )
+        )
+        if len(self.pending) >= CHECKPOINT_BATCH_SIZE:
+            self.flush()
+
+    def flush(self) -> None:
+        if not self.pending:
+            return
+        self.connection.executemany(
+            "INSERT OR REPLACE INTO embeddings"
+            "(path, size, mtime_ns, dimension, vector) VALUES(?, ?, ?, ?, ?)",
+            self.pending,
+        )
+        self.connection.commit()
+        self.pending.clear()
+
+    def close(self, remove: bool = False) -> None:
+        self.flush()
+        self.connection.close()
+        if remove:
+            for suffix in ("", "-wal", "-shm"):
+                try:
+                    Path(str(self.path) + suffix).unlink(missing_ok=True)
+                except OSError:
+                    pass
 
 
 def load_old_cache(
@@ -169,12 +289,19 @@ def load_old_cache(
 
 def build(db_path: Path, model_name: str, batch_size: int) -> None:
     started = time.time()
+    resumed_count = 0
+    device = ""
+    accelerator = ""
     sim_dir = db_path.with_suffix(".sim")
     sim_dir.mkdir(parents=True, exist_ok=True)
     status_path = sim_dir / "status.json"
 
     def status(state: str, processed: int, total: int, failed: int,
                current: str = "", error: str = "") -> None:
+        elapsed = max(0.0, time.time() - started)
+        newly_processed = max(0, processed - resumed_count)
+        rate = newly_processed / elapsed if elapsed > 0 else 0.0
+        eta = (total - processed) / rate if rate > 0 and total > processed else 0.0
         atomic_write_json(
             status_path,
             {
@@ -182,7 +309,12 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
                 "processed": processed,
                 "total": total,
                 "failed": failed,
-                "elapsed": round(time.time() - started, 3),
+                "elapsed": round(elapsed, 3),
+                "rate": round(rate, 3),
+                "eta": round(eta, 3),
+                "resumed": resumed_count,
+                "device": device,
+                "accelerator": accelerator,
                 "current": current,
                 "error": error,
             },
@@ -194,7 +326,7 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
     if total == 0:
         raise RuntimeError("The database contains no FILE records.")
 
-    embed, resolved_model = (
+    embed, resolved_model, device, accelerator = (
         create_test_embedder()
         if model_name.lower() == "test-hash"
         else create_clap_embedder(model_name)
@@ -218,6 +350,10 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
         else:
             pending.append(path)
 
+    checkpoint = EmbeddingCheckpoint(sim_dir, resolved_model)
+    reusable.update(checkpoint.load_reusable(current_fingerprints))
+    pending = [path for path in pending if path not in reusable]
+    resumed_count = len(reusable)
     vectors_by_path: dict[str, np.ndarray] = dict(reusable)
     processed = len(reusable)
     status("embedding", processed, total, len(failures))
@@ -229,12 +365,16 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
                 raise RuntimeError("CLAP returned an unexpected batch size.")
             for path, vector in zip(group, embedded):
                 vectors_by_path[path] = vector
+                checkpoint.add(path, current_fingerprints[path], vector)
                 processed += 1
         except Exception:
             # Isolate failures so one unsupported/corrupt file does not abort a build.
             for path in group:
                 try:
                     vectors_by_path[path] = embed([path])[0]
+                    checkpoint.add(
+                        path, current_fingerprints[path], vectors_by_path[path]
+                    )
                     processed += 1
                 except Exception as exc:
                     failures.append({"path": path, "error": str(exc)})
@@ -243,6 +383,7 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
             Path(group[-1]).name if group else "",
         )
 
+    checkpoint.flush()
     ordered_paths = [path for path in valid_paths if path in vectors_by_path]
     if not ordered_paths:
         raise RuntimeError("No embeddings were generated.")
@@ -265,6 +406,8 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
             "version": 1,
             "status": "ready",
             "model": resolved_model,
+            "accelerator": accelerator,
+            "device": device,
             "backend": "exact-cosine",
             "dimension": dimension,
             "count": len(ordered_paths),
@@ -276,6 +419,7 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
         },
     )
     status("done", len(ordered_paths), total, len(failures))
+    checkpoint.close(remove=True)
 
 
 def main() -> int:
@@ -293,17 +437,34 @@ def main() -> int:
         return 0
     except Exception as exc:
         sim_dir.mkdir(parents=True, exist_ok=True)
-        atomic_write_json(
-            status_path,
+        existing: dict[str, object] = {}
+        try:
+            if status_path.is_file():
+                existing = json.loads(status_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            pass
+        for key, value in {
+            "processed": 0,
+            "total": 0,
+            "failed": 0,
+            "elapsed": 0,
+            "rate": 0,
+            "eta": 0,
+            "resumed": 0,
+            "device": "",
+            "accelerator": "",
+        }.items():
+            existing.setdefault(key, value)
+        existing.update(
             {
                 "status": "error",
-                "processed": 0,
-                "total": 0,
-                "failed": 0,
-                "elapsed": 0,
                 "current": "",
                 "error": str(exc),
-            },
+            }
+        )
+        atomic_write_json(
+            status_path,
+            existing,
         )
         print(f"Soundmole similarity build failed: {exc}", file=sys.stderr)
         return 1

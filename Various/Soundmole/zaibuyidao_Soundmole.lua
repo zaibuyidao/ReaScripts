@@ -113,6 +113,7 @@ HAVE_SM_SIM_SETUP = reaper.APIExists('SM_SIM_Setup_Start')
   and reaper.APIExists('SM_SIM_Setup_RunSlice')
   and reaper.APIExists('SM_SIM_Setup_GetStatusJSON')
   and reaper.APIExists('SM_SIM_Setup_Stop')
+HAVE_SM_SIM_SETUP_PROFILE = reaper.APIExists('SM_SIM_Setup_StartWithProfile')
 
 SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
@@ -364,12 +365,32 @@ EnsureCacheDir(mediadb_dir)
 
 -- 相似度 Python 设置。用户选择兼容的已安装 Python 后，Soundmole 会创建并使用自己的托管环境。
 local similarity_base_python = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_base_python"), false)
-local DEFAULT_SIMILARITY_RUNTIME_DIR = normalize_path(reaper.GetResourcePath() .. sep .. "SoundmoleData" .. sep .. "python", false)
-local similarity_runtime_dir = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_runtime_dir"), false)
-if similarity_runtime_dir == "" then similarity_runtime_dir = DEFAULT_SIMILARITY_RUNTIME_DIR end
-local similarity_runtime_parent = similarity_runtime_dir:match("^(.*)[/\\][^/\\]+$") or normalize_path(reaper.GetResourcePath() .. sep .. "SoundmoleData", false)
-local similarity_setup_status_path = normalize_path(similarity_runtime_parent .. sep .. "similarity_setup_status.json", false)
-local similarity_setup_log_path = normalize_path(similarity_runtime_parent .. sep .. "similarity_setup.log", false)
+DEFAULT_SIMILARITY_DATA_DIR = normalize_path(reaper.GetResourcePath() .. sep .. "SoundmoleData", false)
+similarity_data_dir = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_data_dir"), false)
+if similarity_data_dir == "" then
+  local legacy_runtime = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_runtime_dir"), false)
+  similarity_data_dir = legacy_runtime:match("^(.*)[/\\][^/\\]+$") or DEFAULT_SIMILARITY_DATA_DIR
+end
+similarity_accelerator = reaper.GetExtState(EXT_SECTION, "similarity_accelerator")
+if similarity_accelerator ~= "gpu" then similarity_accelerator = "cpu" end
+similarity_runtime_dir = ""
+similarity_setup_status_path = ""
+similarity_setup_log_path = ""
+
+function SM_SIM_ApplyDataDir(path, persist)
+  path = normalize_path(path or "", false)
+  if path == "" then path = DEFAULT_SIMILARITY_DATA_DIR end
+  similarity_data_dir = path
+  similarity_runtime_dir = normalize_path(similarity_data_dir .. sep .. "python", false)
+  similarity_setup_status_path = normalize_path(similarity_data_dir .. sep .. "similarity_setup_status.json", false)
+  similarity_setup_log_path = normalize_path(similarity_data_dir .. sep .. "similarity_setup.log", false)
+  if similarity_state then similarity_state.setup_status = nil end
+  if persist then
+    reaper.SetExtState(EXT_SECTION, "similarity_data_dir", similarity_data_dir, true)
+    reaper.SetExtState(EXT_SECTION, "similarity_runtime_dir", similarity_runtime_dir, true)
+  end
+end
+SM_SIM_ApplyDataDir(similarity_data_dir, false)
 
 -- 读取上次选中的标签页名称
 local startup_tab_name = reaper.GetExtState(EXT_SECTION, "sidebar_active_tab")
@@ -990,7 +1011,9 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "similarity_base_python", similarity_base_python or "", true)
+  reaper.SetExtState(EXT_SECTION, "similarity_data_dir", similarity_data_dir or "", true)
   reaper.SetExtState(EXT_SECTION, "similarity_runtime_dir", similarity_runtime_dir or "", true)
+  reaper.SetExtState(EXT_SECTION, "similarity_accelerator", similarity_accelerator or "cpu", true)
   
   -- 视觉设置
   reaper.SetExtState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
@@ -1988,14 +2011,55 @@ do
       end
     end
 
+    local similarity_paths_locked = similarity_state.setup_active or similarity_state.builder_active
+    reaper.ImGui_Text(ctx, T("Soundmole data folder:"))
+    reaper.ImGui_BeginDisabled(ctx, similarity_paths_locked)
+    reaper.ImGui_PushItemWidth(ctx, UIScale(600))
+    local changed_data_dir, new_data_dir = reaper.ImGui_InputText(ctx, "##similarity_data_dir", similarity_data_dir or "")
+    reaper.ImGui_PopItemWidth(ctx)
+    if changed_data_dir then SM_SIM_ApplyDataDir(new_data_dir, true) end
+    reaper.ImGui_SameLine(ctx, nil, UIScale(8))
+    if reaper.ImGui_Button(ctx, T("Browse").."##SelectSimilarityDataDir", UIScale(70)) then
+      local rv, out = reaper.JS_Dialog_BrowseForFolder(T("Select Soundmole data folder"), similarity_data_dir)
+      if rv == 1 and out and out ~= "" then SM_SIM_ApplyDataDir(out, true) end
+    end
+    reaper.ImGui_EndDisabled(ctx)
+    reaper.ImGui_SameLine(ctx, nil, UIScale(8))
+    if reaper.ImGui_Button(ctx, T("Open").."##OpenSimilarityDataDir", UIScale(70)) then
+      EnsureCacheDir(normalize_path(similarity_data_dir, true))
+      reaper.CF_ShellExecute(similarity_data_dir)
+    end
+    reaper.ImGui_TextWrapped(ctx, T("Changing the data folder uses a separate environment. Install or repair CLAP in the new folder before building indexes."))
+
     reaper.ImGui_Text(ctx, T("Managed environment:"))
     reaper.ImGui_SameLine(ctx, UIScale(200))
     reaper.ImGui_TextWrapped(ctx, similarity_runtime_dir)
+
+    reaper.ImGui_Text(ctx, T("Compute profile:"))
+    reaper.ImGui_SameLine(ctx, UIScale(200))
+    reaper.ImGui_BeginDisabled(ctx, similarity_paths_locked)
+    if reaper.ImGui_RadioButton(ctx, T("CPU (recommended)"), similarity_accelerator == "cpu") then
+      similarity_accelerator = "cpu"
+      reaper.SetExtState(EXT_SECTION, "similarity_accelerator", similarity_accelerator, true)
+    end
+    reaper.ImGui_EndDisabled(ctx)
+    reaper.ImGui_SameLine(ctx, nil, UIScale(18))
+    reaper.ImGui_BeginDisabled(ctx, similarity_paths_locked or not HAVE_SM_SIM_SETUP_PROFILE)
+    if reaper.ImGui_RadioButton(ctx, T("GPU acceleration"), similarity_accelerator == "gpu") then
+      similarity_accelerator = "gpu"
+      reaper.SetExtState(EXT_SECTION, "similarity_accelerator", similarity_accelerator, true)
+    end
+    reaper.ImGui_EndDisabled(ctx)
+    reaper.ImGui_TextWrapped(ctx, similarity_accelerator == "gpu"
+      and T("GPU uses NVIDIA CUDA on Windows or Apple Metal on macOS. Installation is larger and requires compatible hardware.")
+      or T("CPU is the default, most compatible installation."))
 
     local managed_python = SM_SIM_ManagedPythonPath()
     local setup_status = similarity_state.setup_status or SM_SIM_LoadSavedSetupStatus()
     local ready = managed_python ~= "" and reaper.file_exists(managed_python)
       and setup_status and setup_status.status == "done"
+      and (setup_status.accelerator == similarity_accelerator
+        or (similarity_accelerator == "cpu" and setup_status.accelerator == ""))
       and setup_status.model_path ~= "" and reaper.file_exists(setup_status.model_path)
     local status_label = ready and T("Ready") or T("Not ready")
     local status_color = ready and 0x66CC88FF or 0xE0A050FF
@@ -2004,11 +2068,18 @@ do
     reaper.ImGui_TextColored(ctx, status_color, status_label)
 
     if setup_status then
+      if setup_status.accelerator and setup_status.accelerator ~= "" then
+        reaper.ImGui_TextWrapped(ctx, T("Installed profile:") .. " "
+          .. (setup_status.accelerator == "gpu" and T("GPU acceleration") or T("CPU (recommended)")))
+      end
       if setup_status.current and setup_status.current ~= "" then
         reaper.ImGui_TextWrapped(ctx, setup_status.current)
       end
       if setup_status.model_path and setup_status.model_path ~= "" then
         reaper.ImGui_TextWrapped(ctx, T("Model:") .. " " .. setup_status.model_path)
+      end
+      if setup_status.device and setup_status.device ~= "" then
+        reaper.ImGui_TextWrapped(ctx, T("Active device:") .. " " .. setup_status.device)
       end
       if setup_status.error and setup_status.error ~= "" then
         reaper.ImGui_TextColored(ctx, 0xE06060FF, setup_status.error)
@@ -2019,6 +2090,7 @@ do
       and not similarity_state.setup_active
       and similarity_base_python ~= ""
       and reaper.file_exists(similarity_base_python)
+      and (similarity_accelerator == "cpu" or HAVE_SM_SIM_SETUP_PROFILE)
     reaper.ImGui_BeginDisabled(ctx, not can_install)
     if reaper.ImGui_Button(ctx, T("Install or Repair CLAP"), UIScale(180), UIScale(32)) then
       SM_SIM_StartSetup()
@@ -2037,6 +2109,8 @@ do
 
     if not HAVE_SM_SIM_SETUP then
       reaper.ImGui_TextWrapped(ctx, T("One-click CLAP setup requires the latest Soundmole extension. Please update the extension and restart REAPER."))
+    elseif similarity_accelerator == "gpu" and not HAVE_SM_SIM_SETUP_PROFILE then
+      reaper.ImGui_TextWrapped(ctx, T("GPU setup requires the latest Soundmole extension. Please update the extension and restart REAPER."))
     elseif similarity_base_python == "" or not reaper.file_exists(similarity_base_python) then
       reaper.ImGui_TextWrapped(ctx, T("Install a compatible 64-bit Python version, then select its executable above."))
     else
@@ -3127,6 +3201,8 @@ function CollectFiles()
   end
 end
 
+--------------------------------------------- 相似度音效 ---------------------------------------------
+
 function SM_SIM_CurrentBrowsingDBPath()
   if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
     return normalize_path(mediadb_dir, true) .. tree_state.cur_mediadb
@@ -3162,11 +3238,17 @@ function SM_SIM_ParseStatusJSON(json)
     total = tonumber(json:match('"total"%s*:%s*(%d+)')) or 0,
     failed = tonumber(json:match('"failed"%s*:%s*(%d+)')) or 0,
     elapsed = tonumber(json:match('"elapsed"%s*:%s*([%d%.]+)')) or 0,
+    rate = tonumber(json:match('"rate"%s*:%s*([%d%.]+)')) or 0,
+    eta = tonumber(json:match('"eta"%s*:%s*([%d%.]+)')) or 0,
+    resumed = tonumber(json:match('"resumed"%s*:%s*(%d+)')) or 0,
     current = SM_SIM_UnescapeJSONString(current),
     error = SM_SIM_UnescapeJSONString(err),
     python = SM_SIM_UnescapeJSONString(json:match('"python"%s*:%s*"(.-)"') or ""),
     model_path = SM_SIM_UnescapeJSONString(json:match('"model_path"%s*:%s*"(.-)"') or ""),
     log_path = SM_SIM_UnescapeJSONString(json:match('"log_path"%s*:%s*"(.-)"') or ""),
+    accelerator = SM_SIM_UnescapeJSONString(json:match('"accelerator"%s*:%s*"(.-)"') or ""),
+    accelerator_requested = SM_SIM_UnescapeJSONString(json:match('"accelerator_requested"%s*:%s*"(.-)"') or ""),
+    device = SM_SIM_UnescapeJSONString(json:match('"device"%s*:%s*"(.-)"') or ""),
   }
 end
 
@@ -3195,12 +3277,22 @@ end
 
 function SM_SIM_ConfiguredPythonPath()
   local managed_python = SM_SIM_ManagedPythonPath()
-  if managed_python ~= "" and reaper.file_exists(managed_python) then return managed_python end
+  local setup_status = similarity_state.setup_status or SM_SIM_LoadSavedSetupStatus()
+  if managed_python ~= "" and reaper.file_exists(managed_python)
+    and setup_status and setup_status.status == "done"
+    and (setup_status.accelerator == similarity_accelerator
+      or (similarity_accelerator == "cpu" and setup_status.accelerator == "")) then
+    return managed_python
+  end
   return ""
 end
 
 function SM_SIM_StartSetup()
   if not HAVE_SM_SIM_SETUP or similarity_state.setup_active then return false end
+  if similarity_accelerator == "gpu" and not HAVE_SM_SIM_SETUP_PROFILE then
+    reaper.ShowMessageBox(T("GPU setup requires the latest Soundmole extension. Please update the extension and restart REAPER."), "Soundmole", 0)
+    return false
+  end
   if similarity_base_python == "" or not reaper.file_exists(similarity_base_python) then
     reaper.ShowMessageBox(T("Install a compatible 64-bit Python version, then select its executable above."), "Soundmole", 0)
     return false
@@ -3211,7 +3303,13 @@ function SM_SIM_StartSetup()
     reaper.ShowMessageBox(T("Missing similarity setup worker:") .. "\n" .. setup_worker, "Soundmole", 0)
     return false
   end
-  local handle = reaper.SM_SIM_Setup_Start(similarity_base_python, similarity_runtime_dir, setup_worker)
+  EnsureCacheDir(normalize_path(similarity_data_dir, true))
+  local handle
+  if HAVE_SM_SIM_SETUP_PROFILE then
+    handle = reaper.SM_SIM_Setup_StartWithProfile(similarity_base_python, similarity_runtime_dir, setup_worker, similarity_accelerator)
+  else
+    handle = reaper.SM_SIM_Setup_Start(similarity_base_python, similarity_runtime_dir, setup_worker)
+  end
   if not handle then
     reaper.ShowMessageBox(T("Could not start CLAP setup."), "Soundmole", 0)
     return false
@@ -3219,7 +3317,10 @@ function SM_SIM_StartSetup()
   similarity_state.setup = handle
   similarity_state.setup_active = true
   similarity_state.setup_started = reaper.time_precise()
-  similarity_state.setup_status = { status = "starting", processed = 0, total = 4, failed = 0 }
+  similarity_state.setup_status = {
+    status = "starting", processed = 0, total = 4, failed = 0,
+    accelerator_requested = similarity_accelerator,
+  }
   return true
 end
 
@@ -3237,6 +3338,10 @@ function SM_SIM_ProcessSetupLoop()
   if visible then
     local status = similarity_state.setup_status or {}
     reaper.ImGui_Text(ctx, T("Installing Soundmole CLAP"))
+    if status.accelerator_requested and status.accelerator_requested ~= "" then
+      reaper.ImGui_Text(ctx, T("Compute profile:") .. " "
+        .. (status.accelerator_requested == "gpu" and T("GPU acceleration") or T("CPU (recommended)")))
+    end
     reaper.ImGui_Separator(ctx)
     reaper.ImGui_Text(ctx, string.format("%s: %d / %d", T("Steps"), status.processed or 0, status.total or 4))
     local elapsed = math.max(status.elapsed or 0, reaper.time_precise() - similarity_state.setup_started)
@@ -3317,6 +3422,22 @@ function SM_SIM_ProcessBuilderLoop()
     reaper.ImGui_Text(ctx, string.format("Processed: %d / %d", status.processed or 0, status.total or 0))
     reaper.ImGui_Text(ctx, string.format("Failed: %d", status.failed or 0))
     reaper.ImGui_Text(ctx, string.format("Time: %.1f s", status.elapsed or (reaper.time_precise() - similarity_state.builder_started)))
+    if status.device and status.device ~= "" then
+      reaper.ImGui_Text(ctx, string.format("%s: %s", T("Active device"), status.device))
+    end
+    if (status.resumed or 0) > 0 then
+      reaper.ImGui_Text(ctx, string.format("%s: %d", T("Resumed"), status.resumed))
+    end
+    if (status.rate or 0) > 0 then
+      reaper.ImGui_Text(ctx, string.format("%s: %.2f %s", T("Speed"), status.rate, T("files/s")))
+    end
+    if (status.eta or 0) > 0 then
+      local eta = status.eta
+      local hours = math.floor(eta / 3600)
+      local minutes = math.floor((eta % 3600) / 60)
+      local seconds = math.floor(eta % 60)
+      reaper.ImGui_Text(ctx, string.format("%s: %02d:%02d:%02d", T("Remaining"), hours, minutes, seconds))
+    end
     if status.current and status.current ~= "" then reaper.ImGui_TextWrapped(ctx, status.current) end
     local fraction = (status.total and status.total > 0) and math.min(1, (status.processed or 0) / status.total) or 0
     reaper.ImGui_ProgressBar(ctx, fraction, UIScale(360), 0)
@@ -14676,7 +14797,7 @@ function loop()
 
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
-    local filter_w = UIScaleF(350) -- 输入框宽度
+    local filter_w = UIScaleF(400) -- 输入框宽度
     local topbar_h = GetTopbarAlignHeight(ctx)
 
     -- 标题栏

@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.197
+-- @version 1.0.198
 -- @changelog
 --   Added support for similar audio recommendations as an experimental feature.
---   Support reaper_soundmole-x64.dll v0.0.21
+--   Support reaper_soundmole-x64.dll v0.0.23
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
