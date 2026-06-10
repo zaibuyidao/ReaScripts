@@ -1,14 +1,8 @@
 -- @description Translate Keywords and Send to Media Explorer Search
--- @version 1.0.5
+-- @version 1.0.6
 -- @author zaibuyidao
 -- @changelog
---   Add a label before the translation keyword input.
---   Fix visible synonym count so the requested count is not reduced by the hidden primary keyword.
---   Add Ctrl-click synonym selection and Search Selected Terms (OR) with an Include translated term option.
---   Hide the primary translated keyword from the synonym button row.
---   Keep the displayed synonym count matching the saved synonym count setting.
---   Add Shift+Enter shortcut to Translate Only and show it on the button.
---   Show Ctrl-click selection hint in the bottom status bar when hovering over Search Selected Terms (OR).
+--   Move bottom button shortcut descriptions to the existing status bar on hover without changing the status bar position.
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -51,7 +45,7 @@ local EXT_SECTION = "TRANSLATE_KEYWORDS_AND_SEND_TO_MEDIA_EXPLORER_SEARCH"
 local DEFAULT_API_KEY_B64 = "YjY2YzczMzA2OWQ4NDAyNWIyZTdkZTJlNTg1ZTk1MjcuMTdmUEdRRzY2OTE5UldMVA=="
 local DEFAULT_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
 local DEFAULT_MODEL_NAME = "glm-4-flash"
-local DEFAULT_SYNONYM_COUNT = 5
+local DEFAULT_SYNONYM_COUNT = 7
 local MIN_SYNONYM_COUNT = 1
 local MAX_SYNONYM_COUNT = 20
 
@@ -149,9 +143,12 @@ local UI_TEXT = {
   missing_openai = i18n("缺少 Python openai 包。请运行: pip install openai", "缺少 Python openai 套件。請執行: pip install openai", "Missing Python package openai. Run: pip install openai"),
   empty_translation_result = i18n("翻译结果为空。", "翻譯結果為空。", "Empty translation result"),
   dependency_hint = i18n("Python 依赖: 如果无法开始翻译，请运行 `pip install openai`。", "Python 相依套件: 如果無法開始翻譯，請執行 `pip install openai`。", "Python dependency: install with `pip install openai` if translation cannot start."),
-  button_translate = i18n("Enter: 翻译 + 搜索", "Enter: 翻譯 + 搜尋", "Enter: Translate + Search"),
-  button_send_current = i18n("Ctrl+Enter: 发送当前文本", "Ctrl+Enter: 傳送目前文字", "Ctrl+Enter: Send Current Text"),
-  button_translate_only = i18n("Shift+Enter: 仅翻译", "Shift+Enter: 僅翻譯", "Shift+Enter: Translate Only"),
+  button_translate = i18n("翻译 + 搜索", "翻譯 + 搜尋", "Translate + Search"),
+  button_send_current = i18n("发送当前文本", "傳送目前文字", "Send Current Text"),
+  button_translate_only = i18n("仅翻译", "僅翻譯", "Translate Only"),
+  button_translate_hint = i18n("按 Enter，会执行翻译，并将翻译结果发送到媒体资源管理器搜索框。", "按 Enter，會執行翻譯，並將翻譯結果傳送到 Media Explorer 搜尋框。", "Press Enter to translate and send the translation result to the Media Explorer search box."),
+  button_send_current_hint = i18n("按 Ctrl+Enter，会将当前输入文本直接发送到媒体资源管理器搜索框，不执行翻译。", "按 Ctrl+Enter，會將目前輸入文字直接傳送到 Media Explorer 搜尋框，不執行翻譯。", "Press Ctrl+Enter to send the current input text directly to the Media Explorer search box without translation."),
+  button_translate_only_hint = i18n("按 Shift+Enter，只执行翻译，不发送到媒体资源管理器搜索框。", "按 Shift+Enter，只執行翻譯，不傳送到 Media Explorer 搜尋框。", "Press Shift+Enter to translate only without sending it to the Media Explorer search box."),
 }
 
 local function trim(s)
@@ -801,6 +798,7 @@ local input_clear_serial = 0
 local selected_synonyms = {}
 local include_translation_term_state = reaper.GetExtState(EXT_SECTION, "include_translation_term")
 local include_translation_term = include_translation_term_state ~= "0"
+local button_hover_status_text = nil
 
 local function store_input_text()
   reaper.SetExtState(EXT_SECTION, "last_input", input_text or "", true)
@@ -954,7 +952,7 @@ local function on_translate_error(err)
 end
 
 function draw_ui()
-  reaper.ImGui_SetNextWindowSize(ctx, 500, 200, reaper.ImGui_Cond_FirstUseEver())
+  reaper.ImGui_SetNextWindowSize(ctx, 450, 200, reaper.ImGui_Cond_FirstUseEver())
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), WINDOW_ROUNDING)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(), TITLE_BG_COLOR)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true, reaper.ImGui_WindowFlags_NoCollapse())
@@ -966,7 +964,8 @@ function draw_ui()
     -- reaper.ImGui_TextWrapped(ctx, UI_TEXT.input_help)
     -- reaper.ImGui_Spacing(ctx)
 
-    local status_text_to_draw = status_text
+    local status_text_to_draw = button_hover_status_text or status_text
+    local next_button_hover_status_text = nil
     local input_hint = Translator.is_requesting and UI_TEXT.translating or ""
     reaper.ImGui_Text(ctx, UI_TEXT.translation_label)
     reaper.ImGui_SameLine(ctx)
@@ -1123,7 +1122,7 @@ function draw_ui()
       reaper.ImGui_Spacing(ctx)
       local disabled_text_color = reaper.ImGui_GetColor(ctx, reaper.ImGui_Col_TextDisabled())
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), disabled_text_color)
-      reaper.ImGui_TextWrapped(ctx, status_text_to_draw)
+      reaper.ImGui_Text(ctx, status_text_to_draw)
       reaper.ImGui_PopStyleColor(ctx)
     end
 
@@ -1134,16 +1133,27 @@ function draw_ui()
     if reaper.ImGui_Button(ctx, UI_TEXT.button_translate, button_width, 32) then
       begin_translation()
     end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      next_button_hover_status_text = UI_TEXT.button_translate_hint
+    end
 
     reaper.ImGui_SameLine(ctx)
     if reaper.ImGui_Button(ctx, UI_TEXT.button_send_current, button_width, 32) then
       send_current_input()
+    end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      next_button_hover_status_text = UI_TEXT.button_send_current_hint
     end
 
     reaper.ImGui_SameLine(ctx)
     if reaper.ImGui_Button(ctx, UI_TEXT.button_translate_only, button_width, 32) then
       begin_translation(false)
     end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      next_button_hover_status_text = UI_TEXT.button_translate_only_hint
+    end
+
+    button_hover_status_text = next_button_hover_status_text
 
     reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopFont(ctx)
