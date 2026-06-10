@@ -1,5 +1,5 @@
 -- @description Translate Keywords and Send to Media Explorer Search
--- @version 1.0.6
+-- @version 1.0.7
 -- @author zaibuyidao
 -- @changelog
 --   Move bottom button shortcut descriptions to the existing status bar on hover without changing the status bar position.
@@ -952,7 +952,7 @@ local function on_translate_error(err)
 end
 
 function draw_ui()
-  reaper.ImGui_SetNextWindowSize(ctx, 450, 200, reaper.ImGui_Cond_FirstUseEver())
+  reaper.ImGui_SetNextWindowSize(ctx, 520, 215, reaper.ImGui_Cond_FirstUseEver())
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), WINDOW_ROUNDING)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(), TITLE_BG_COLOR)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true, reaper.ImGui_WindowFlags_NoCollapse())
@@ -1024,7 +1024,8 @@ function draw_ui()
 
     --if #translated_synonyms > 0 then
       reaper.ImGui_Spacing(ctx)
-      -- reaper.ImGui_TextWrapped(ctx, UI_TEXT.synonyms)
+      reaper.ImGui_Text(ctx, UI_TEXT.synonyms)
+      reaper.ImGui_SameLine(ctx)
       local synonym_button_height = 24
       local synonym_row_width = reaper.ImGui_GetContentRegionAvail(ctx)
       local synonym_line_width = 0
@@ -1082,7 +1083,6 @@ function draw_ui()
 
       reaper.ImGui_Separator(ctx)
       reaper.ImGui_Spacing(ctx)
-
       -- reaper.ImGui_SameLine(ctx)
       reaper.ImGui_Text(ctx, UI_TEXT.synonym_count_label)
       reaper.ImGui_SameLine(ctx)
@@ -1130,7 +1130,7 @@ function draw_ui()
     local button_row_width = reaper.ImGui_GetContentRegionAvail(ctx)
     local button_width = math.max(1, (button_row_width - 16) / 3)
 
-    if reaper.ImGui_Button(ctx, UI_TEXT.button_translate, button_width, 32) then
+    if reaper.ImGui_Button(ctx, UI_TEXT.button_translate, button_width, 48) then
       begin_translation()
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -1138,7 +1138,7 @@ function draw_ui()
     end
 
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, UI_TEXT.button_send_current, button_width, 32) then
+    if reaper.ImGui_Button(ctx, UI_TEXT.button_send_current, button_width, 48) then
       send_current_input()
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -1146,7 +1146,7 @@ function draw_ui()
     end
 
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, UI_TEXT.button_translate_only, button_width, 32) then
+    if reaper.ImGui_Button(ctx, UI_TEXT.button_translate_only, button_width, 48) then
       begin_translation(false)
     end
     if reaper.ImGui_IsItemHovered(ctx) then
