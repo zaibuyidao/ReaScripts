@@ -1,8 +1,14 @@
 -- @description Translate Keywords and Send to Media Explorer Search
--- @version 1.0.4
+-- @version 1.0.5
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   Add a label before the translation keyword input.
+--   Fix visible synonym count so the requested count is not reduced by the hidden primary keyword.
+--   Add Ctrl-click synonym selection and Search Selected Terms (OR) with an Include translated term option.
+--   Hide the primary translated keyword from the synonym button row.
+--   Keep the displayed synonym count matching the saved synonym count setting.
+--   Add Shift+Enter shortcut to Translate Only and show it on the button.
+--   Show Ctrl-click selection hint in the bottom status bar when hovering over Search Selected Terms (OR).
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -45,6 +51,9 @@ local EXT_SECTION = "TRANSLATE_KEYWORDS_AND_SEND_TO_MEDIA_EXPLORER_SEARCH"
 local DEFAULT_API_KEY_B64 = "YjY2YzczMzA2OWQ4NDAyNWIyZTdkZTJlNTg1ZTk1MjcuMTdmUEdRRzY2OTE5UldMVA=="
 local DEFAULT_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
 local DEFAULT_MODEL_NAME = "glm-4-flash"
+local DEFAULT_SYNONYM_COUNT = 5
+local MIN_SYNONYM_COUNT = 1
+local MAX_SYNONYM_COUNT = 20
 
 if not reaper.ImGui_GetBuiltinPath then
   if reaper.APIExists("ReaPack_BrowsePackages") then
@@ -111,16 +120,24 @@ local UI_TEXT = {
   current_send_failed = i18n("发送当前文本失败。", "傳送目前文字失敗。", "Failed to send current text."),
   translated_sent = i18n("已翻译并发送到媒体资源管理器。", "已翻譯並傳送到 Media Explorer。", "Translated and sent to Media Explorer."),
   translated_sent_no_synonyms = i18n("已翻译并发送到媒体资源管理器。仅单个关键词输入支持同义词。", "已翻譯並傳送到 Media Explorer。只有單一關鍵字輸入支援同義詞。", "Translated and sent to Media Explorer. Synonyms are only available for single-keyword input."),
+  translated_only = i18n("已翻译。未发送到媒体资源管理器。", "已翻譯。未傳送到 Media Explorer。", "Translated only. Not sent to Media Explorer."),
+  translated_only_no_synonyms = i18n("已翻译。未发送到媒体资源管理器。仅单个关键词输入支持同义词。", "已翻譯。未傳送到 Media Explorer。只有單一關鍵字輸入支援同義詞。", "Translated only. Not sent to Media Explorer. Synonyms are only available for single-keyword input."),
   search_send_failed = i18n("发送搜索文本失败。", "傳送搜尋文字失敗。", "Failed to send search text."),
   translation_failed = i18n("翻译失败。", "翻譯失敗。", "Translation failed."),
-  input_help = i18n("输入任意语言文本。按 Enter 翻译成英文关键词并发送到媒体资源管理器搜索框。按 Ctrl+Enter 直接发送当前输入。", "輸入任意語言文字。按 Enter 翻譯成英文關鍵字並傳送到 Media Explorer 搜尋框。按 Ctrl+Enter 直接傳送目前輸入。", "Input text in any language. Press Enter to translate it into English keywords and send it to the Media Explorer search box. Press Ctrl+Enter to send the current input directly."),
+  input_help = i18n("输入任意语言文本。按 Enter 翻译成英文关键词并发送到媒体资源管理器搜索框。按 Shift+Enter 仅翻译。按 Ctrl+Enter 直接发送当前输入。", "輸入任意語言文字。按 Enter 翻譯成英文關鍵字並傳送到 Media Explorer 搜尋框。按 Shift+Enter 僅翻譯。按 Ctrl+Enter 直接傳送目前輸入。", "Input text in any language. Press Enter to translate it into English keywords and send it to the Media Explorer search box. Press Shift+Enter to translate only. Press Ctrl+Enter to send the current input directly."),
   translating = i18n("翻译中...", "翻譯中...", "Translating..."),
+  translation_label = i18n("翻译:", "翻譯:", "Translate:"),
   synonyms = i18n("同义词: ", "同義詞: ", "Synonyms:"),
   synonym_sent_prefix = i18n("同义词已发送到媒体资源管理器: ", "同義詞已傳送到 Media Explorer: ", "Synonym sent to Media Explorer: "),
   synonym_send_failed = i18n("发送同义词搜索失败。", "傳送同義詞搜尋失敗。", "Failed to send synonym search."),
-  search_all_terms = i18n("搜索全部词条 (OR)", "搜尋全部詞條 (OR)", "Search All Terms (or)"),
-  all_terms_sent = i18n("已使用 OR 逻辑发送翻译词和所有同义词。", "已使用 OR 邏輯傳送翻譯詞和所有同義詞。", "Translated term and all synonyms sent with OR logic."),
-  all_terms_send_failed = i18n("发送 OR 同义词搜索失败。", "傳送 OR 同義詞搜尋失敗。", "Failed to send OR synonym search."),
+  synonyms_placeholder = i18n("暂无同义词可显示。", "暫無同義詞可顯示。", "No synonyms to display."),
+  search_all_terms = i18n("搜索选中词条 (OR)", "搜尋選中詞條 (OR)", "Search Selected Terms (OR)"),
+  include_translation_term = i18n("包括翻译词", "包括翻譯詞", "Include translated term"),
+  synonym_count_label = i18n("同义词数量:", "同義詞數量:", "Synonym count:"),
+  all_terms_sent = i18n("已使用 OR 逻辑发送选中词条。", "已使用 OR 邏輯傳送選中詞條。", "Selected terms sent with OR logic."),
+  all_terms_send_failed = i18n("发送 OR 选中词条搜索失败。", "傳送 OR 選中詞條搜尋失敗。", "Failed to send selected OR search."),
+  no_selected_terms = i18n("没有可搜索的选中词条。", "沒有可搜尋的選中詞條。", "No selected terms to search."),
+  selected_terms_hint = i18n("按住 Ctrl + 鼠标左键点击任何一个同义词，将被添加到选中。", "按住 Ctrl + 滑鼠左鍵點擊任何一個同義詞，將被加入選中。", "Hold Ctrl and left-click any synonym to add it to the selection."),
   write_worker_failed = i18n("无法写入 Python worker: ", "無法寫入 Python worker: ", "Unable to write Python worker: "),
   write_launcher_failed = i18n("无法写入启动器: ", "無法寫入啟動器: ", "Unable to write launcher: "),
   empty_input = i18n("输入为空。", "輸入為空。", "Empty input"),
@@ -134,7 +151,7 @@ local UI_TEXT = {
   dependency_hint = i18n("Python 依赖: 如果无法开始翻译，请运行 `pip install openai`。", "Python 相依套件: 如果無法開始翻譯，請執行 `pip install openai`。", "Python dependency: install with `pip install openai` if translation cannot start."),
   button_translate = i18n("Enter: 翻译 + 搜索", "Enter: 翻譯 + 搜尋", "Enter: Translate + Search"),
   button_send_current = i18n("Ctrl+Enter: 发送当前文本", "Ctrl+Enter: 傳送目前文字", "Ctrl+Enter: Send Current Text"),
-  button_close = i18n("关闭", "關閉", "Close"),
+  button_translate_only = i18n("Shift+Enter: 仅翻译", "Shift+Enter: 僅翻譯", "Shift+Enter: Translate Only"),
 }
 
 local function trim(s)
@@ -382,29 +399,7 @@ local function join_with_separator(items, separator)
 end
 
 local function supports_synonyms_for_input(text)
-  text = trim(text)
-  if text == "" then
-    return false
-  end
-
-  if text:find("[,;/|]") then
-    return false
-  end
-
-  local lower = text:lower()
-  if lower:match("%s+or%s+") or lower:match("%s+and%s+") then
-    return false
-  end
-
-  local word_count = 0
-  for _ in text:gmatch("%S+") do
-    word_count = word_count + 1
-    if word_count > 1 then
-      return false
-    end
-  end
-
-  return word_count == 1
+  return trim(text) ~= ""
 end
 
 local function get_api_key()
@@ -425,6 +420,33 @@ local function get_model_name()
   local value = reaper.GetExtState(EXT_SECTION, "model_name")
   if value == "" then value = DEFAULT_MODEL_NAME end
   return value
+end
+
+local function normalize_synonym_count(value)
+  value = tonumber(value) or DEFAULT_SYNONYM_COUNT
+  value = math.floor(value + 0.5)
+  if value < MIN_SYNONYM_COUNT then value = MIN_SYNONYM_COUNT end
+  if value > MAX_SYNONYM_COUNT then value = MAX_SYNONYM_COUNT end
+  return value
+end
+
+local function get_synonym_count()
+  return normalize_synonym_count(reaper.GetExtState(EXT_SECTION, "synonym_count"))
+end
+
+local function set_synonym_count(value)
+  value = normalize_synonym_count(value)
+  reaper.SetExtState(EXT_SECTION, "synonym_count", tostring(value), true)
+  return value
+end
+
+local function build_synonym_prompt_line(count)
+  count = normalize_synonym_count(count)
+  local items = {}
+  for i = 1, count do
+    items[#items + 1] = "synonym " .. i
+  end
+  return table.concat(items, " | ")
 end
 
 local temp_input = script_path .. "__translate_input.txt"
@@ -525,7 +547,7 @@ build_python_worker = function()
     "API_KEY_B64 = " .. py_quote(base64_encode(get_api_key())),
     "BASE_URL = " .. py_quote(get_base_url()),
     "MODEL_NAME = " .. py_quote(get_model_name()),
-    "SYSTEM_PROMPT = " .. py_quote("You translate any user input into concise English for sound search, but the primary result should stay close to the literal core meaning of the original word or phrase. Return exactly two lines in this format:\nKEYWORDS: one primary english keyword or one short primary english phrase only\nSYNONYMS: synonym 1 | synonym 2 | synonym 3 | synonym 4 | synonym 5 | synonym 6 | synonym 7 | synonym 8 | synonym 9\nThe KEYWORDS line must contain only one primary result, not a list and not comma-separated alternatives. Do not append generic suffixes such as sound effect, sound effects, sound, audio, sfx, or fx unless they are part of the literal meaning. Both lines must contain English keywords only. Do not include Chinese, Japanese, Korean, Cyrillic, accented characters, emojis, or any non-English symbols. Use only English. Do not explain anything. Do not number items. Keep everything compact and search-friendly."),
+    "SYSTEM_PROMPT = " .. py_quote("You translate any user input into concise English for sound search, but the primary result should stay close to the literal core meaning of the original word or phrase. Return exactly two lines in this format:\nKEYWORDS: one primary english keyword or one short primary english phrase only\nSYNONYMS: " .. build_synonym_prompt_line(get_synonym_count()) .. "\nThe KEYWORDS line must contain only one primary result, not a list and not comma-separated alternatives. The SYNONYMS line must contain exactly " .. get_synonym_count() .. " English synonyms, separated by |. Do not append generic suffixes such as sound effect, sound effects, sound, audio, sfx, or fx unless they are part of the literal meaning. Both lines must contain English keywords only. Do not include Chinese, Japanese, Korean, Cyrillic, accented characters, emojis, or any non-English symbols. Use only English. Do not explain anything. Do not number items. Keep everything compact and search-friendly."),
     "",
     "def atomic_write(path, content):",
     "    tmp = path + '.tmp'",
@@ -768,11 +790,17 @@ if translated_text == "" then
   translated_text = reaper.GetExtState(EXT_SECTION, "last_keywords")
 end
 local translated_synonyms = split_lines(reaper.GetExtState(EXT_SECTION, "last_synonyms"))
+local synonym_count = get_synonym_count()
 local last_translation_source = ""
+local translate_send_to_search = true
+local translation_synonym_count = synonym_count
 local status_text = UI_TEXT.dependency_hint
 local should_close = false
 local pending_send_current_after_shortcut = false
 local input_clear_serial = 0
+local selected_synonyms = {}
+local include_translation_term_state = reaper.GetExtState(EXT_SECTION, "include_translation_term")
+local include_translation_term = include_translation_term_state ~= "0"
 
 local function store_input_text()
   reaper.SetExtState(EXT_SECTION, "last_input", input_text or "", true)
@@ -788,25 +816,82 @@ local function is_alt_down()
   return reaper.ImGui_Mod_Alt and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Alt())
 end
 
+local function is_ctrl_down()
+  return reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+end
+
 local function store_translation_state()
   reaper.SetExtState(EXT_SECTION, "last_translation_keywords", translated_text or "", false)
   reaper.SetExtState(EXT_SECTION, "last_synonyms", join_with_separator(translated_synonyms, "\n"), false)
 end
 
-local function send_all_synonyms_search()
-  if #translated_synonyms == 0 then
-    return nil, UI_TEXT.no_synonyms
+local function limit_synonym_terms(terms, count)
+  local max_terms = normalize_synonym_count(count) + 1
+  local limited = {}
+  for i = 1, math.min(#(terms or {}), max_terms) do
+    limited[#limited + 1] = terms[i]
   end
-  return apply_search_text(table.concat(translated_synonyms, " OR "))
+  return limited
 end
 
-local function begin_translation()
-  last_translation_source = trim(input_text)
+local function build_visible_synonyms(terms, primary_keyword, count)
+  local visible = {}
+  local primary_key = normalize_compare_text(primary_keyword or "")
+  local max_count = normalize_synonym_count(count)
+
+  for i = 1, #(terms or {}) do
+    local term = terms[i]
+    local term_key = normalize_compare_text(term)
+    if term_key ~= "" and term_key ~= primary_key then
+      visible[#visible + 1] = term
+      if #visible >= max_count then
+        break
+      end
+    end
+  end
+
+  return visible
+end
+
+local function build_selected_terms_for_search()
+  local all_terms = {}
+  local seen = {}
+
+  if include_translation_term then
+    push_unique(all_terms, seen, translated_text)
+  end
+
+  local visible_synonyms = build_visible_synonyms(translated_synonyms, translated_text, synonym_count)
+  for i = 1, #visible_synonyms do
+    local synonym = visible_synonyms[i]
+    if selected_synonyms[normalize_compare_text(synonym)] then
+      push_unique(all_terms, seen, synonym)
+    end
+  end
+
+  return all_terms
+end
+
+local function send_selected_terms_search()
+  local all_terms = build_selected_terms_for_search()
+  if #all_terms == 0 then
+    return nil, UI_TEXT.no_selected_terms
+  end
+  return apply_search_text(table.concat(all_terms, " OR "))
+end
+
+local function begin_translation(send_to_search)
+  local requested_send_to_search = send_to_search ~= false
+  local requested_synonym_count = synonym_count
+  local source_text = trim(input_text)
   local ok, err = Translator.SendRequest(input_text)
   if not ok then
     status_text = tostring(err or UI_TEXT.start_translation_failed)
     return
   end
+  last_translation_source = source_text
+  translate_send_to_search = requested_send_to_search
+  translation_synonym_count = requested_synonym_count
 end
 
 local function send_current_input()
@@ -815,9 +900,9 @@ local function send_current_input()
   if ok then
     input_text = clean_input
     store_input_text()
-    translated_text = clean_input
-    translated_synonyms = {}
-    store_translation_state()
+    -- translated_text = clean_input
+    -- translated_synonyms = {}
+    -- store_translation_state()
     status_text = UI_TEXT.current_sent
   else
     status_text = tostring(err or UI_TEXT.current_send_failed)
@@ -833,12 +918,25 @@ end
 local function on_translate_success(result)
   local allow_synonyms = supports_synonyms_for_input(last_translation_source)
   translated_text, translated_synonyms = parse_translation_payload(result)
-  if not allow_synonyms then
+  selected_synonyms = {}
+  if allow_synonyms then
+    translated_synonyms = limit_synonym_terms(translated_synonyms, translation_synonym_count)
+  else
     translated_synonyms = {}
   end
   input_text = translated_text
   store_input_text()
   store_translation_state()
+
+  if not translate_send_to_search then
+    if allow_synonyms then
+      status_text = UI_TEXT.translated_only
+    else
+      status_text = UI_TEXT.translated_only_no_synonyms
+    end
+    return
+  end
+
   local ok, err = apply_search_text(translated_text)
   if ok then
     if allow_synonyms then
@@ -856,7 +954,7 @@ local function on_translate_error(err)
 end
 
 function draw_ui()
-  reaper.ImGui_SetNextWindowSize(ctx, 530, 155, reaper.ImGui_Cond_FirstUseEver())
+  reaper.ImGui_SetNextWindowSize(ctx, 500, 200, reaper.ImGui_Cond_FirstUseEver())
   reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowRounding(), WINDOW_ROUNDING)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TitleBgActive(), TITLE_BG_COLOR)
   local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true, reaper.ImGui_WindowFlags_NoCollapse())
@@ -868,7 +966,10 @@ function draw_ui()
     -- reaper.ImGui_TextWrapped(ctx, UI_TEXT.input_help)
     -- reaper.ImGui_Spacing(ctx)
 
+    local status_text_to_draw = status_text
     local input_hint = Translator.is_requesting and UI_TEXT.translating or ""
+    reaper.ImGui_Text(ctx, UI_TEXT.translation_label)
+    reaper.ImGui_SameLine(ctx)
     reaper.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
     local changed
     changed, input_text = reaper.ImGui_InputText(ctx, "##keywords" .. input_clear_serial, input_text or "")
@@ -904,6 +1005,8 @@ function draw_ui()
       and (reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter())) then
       if reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl()) then
         pending_send_current_after_shortcut = true
+      elseif reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Shift()) then
+        begin_translation(false)
       else
         begin_translation()
       end
@@ -943,25 +1046,63 @@ function draw_ui()
         synonym_line_width = synonym_line_width + button_width
       end
 
-      for i = 1, #translated_synonyms do
-        local synonym = translated_synonyms[i]
+      local visible_synonyms = build_visible_synonyms(translated_synonyms, translated_text, synonym_count)
+      for i = 1, #visible_synonyms do
+        local synonym = visible_synonyms[i]
+        local synonym_key = normalize_compare_text(synonym)
+        local is_selected = selected_synonyms[synonym_key] == true
         place_synonym_button(synonym)
-        if reaper.ImGui_Button(ctx, synonym, 0) then
-          local ok, err = apply_search_text(synonym)
-          if ok then
-            status_text = UI_TEXT.synonym_sent_prefix .. synonym
+        if is_selected then
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), 0x2E6F57FF)
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x3D8A6EFF)
+          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), 0x245A47FF)
+        end
+        if reaper.ImGui_Button(ctx, synonym .. "##synonym_" .. i, 0) then
+          if is_ctrl_down() then
+            selected_synonyms[synonym_key] = not is_selected or nil
           else
-            status_text = tostring(err or UI_TEXT.synonym_send_failed)
+            local ok, err = apply_search_text(synonym)
+            if ok then
+              status_text = UI_TEXT.synonym_sent_prefix .. synonym
+            else
+              status_text = tostring(err or UI_TEXT.synonym_send_failed)
+            end
           end
+        end
+        if is_selected then
+          reaper.ImGui_PopStyleColor(ctx, 3)
         end
       end
 
-      place_synonym_button(UI_TEXT.search_all_terms)
+      if #visible_synonyms == 0 then
+        local disabled_text_color = reaper.ImGui_GetColor(ctx, reaper.ImGui_Col_TextDisabled())
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), disabled_text_color)
+        reaper.ImGui_Text(ctx, UI_TEXT.synonyms_placeholder)
+        reaper.ImGui_PopStyleColor(ctx)
+      end
+
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_Spacing(ctx)
+
+      -- reaper.ImGui_SameLine(ctx)
+      reaper.ImGui_Text(ctx, UI_TEXT.synonym_count_label)
+      reaper.ImGui_SameLine(ctx)
+      reaper.ImGui_SetNextItemWidth(ctx, 100)
+      local changed_count, new_synonym_count = reaper.ImGui_InputInt(ctx, "##synonym_count", synonym_count, 1, 7)
+      if changed_count then
+        synonym_count = set_synonym_count(new_synonym_count)
+      end
+
+      reaper.ImGui_SameLine(ctx)
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), 0x2E6F57FF)
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), 0x3D8A6EFF)
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), 0x245A47FF)
-      if reaper.ImGui_Button(ctx, UI_TEXT.search_all_terms, 0, synonym_button_height) then
-        local ok, err = send_all_synonyms_search()
+      local search_selected_clicked = reaper.ImGui_Button(ctx, UI_TEXT.search_all_terms, 0, synonym_button_height)
+      if reaper.ImGui_IsItemHovered(ctx) then
+        status_text_to_draw = UI_TEXT.selected_terms_hint
+      end
+      if search_selected_clicked then
+        local ok, err = send_selected_terms_search()
         if ok then
           status_text = UI_TEXT.all_terms_sent
         else
@@ -969,29 +1110,39 @@ function draw_ui()
         end
       end
       reaper.ImGui_PopStyleColor(ctx, 3)
+
+      reaper.ImGui_SameLine(ctx)
+      local changed_include_translation
+      changed_include_translation, include_translation_term = reaper.ImGui_Checkbox(ctx, UI_TEXT.include_translation_term, include_translation_term)
+      if changed_include_translation then
+        reaper.SetExtState(EXT_SECTION, "include_translation_term", include_translation_term and "1" or "0", true)
+      end
     --end
 
-    if status_text ~= "" then
-      -- reaper.ImGui_Spacing(ctx)
-      reaper.ImGui_TextWrapped(ctx, status_text)
+    if status_text_to_draw ~= "" then
+      reaper.ImGui_Spacing(ctx)
+      local disabled_text_color = reaper.ImGui_GetColor(ctx, reaper.ImGui_Col_TextDisabled())
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), disabled_text_color)
+      reaper.ImGui_TextWrapped(ctx, status_text_to_draw)
+      reaper.ImGui_PopStyleColor(ctx)
     end
 
     reaper.ImGui_Spacing(ctx)
     local button_row_width = reaper.ImGui_GetContentRegionAvail(ctx)
     local button_width = math.max(1, (button_row_width - 16) / 3)
 
-    if reaper.ImGui_Button(ctx, UI_TEXT.button_translate, button_width, 28) then
+    if reaper.ImGui_Button(ctx, UI_TEXT.button_translate, button_width, 32) then
       begin_translation()
     end
 
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, UI_TEXT.button_send_current, button_width, 28) then
+    if reaper.ImGui_Button(ctx, UI_TEXT.button_send_current, button_width, 32) then
       send_current_input()
     end
 
     reaper.ImGui_SameLine(ctx)
-    if reaper.ImGui_Button(ctx, UI_TEXT.button_close, button_width, 28) then
-      should_close = true
+    if reaper.ImGui_Button(ctx, UI_TEXT.button_translate_only, button_width, 32) then
+      begin_translation(false)
     end
 
     reaper.ImGui_PopStyleVar(ctx)
