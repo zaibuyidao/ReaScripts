@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="12e586d4b366fe1deee609a70103a0762fb81d5d">
+<index version="1" name="zaibuyidao Scripts" commit="6c1c6b95f3e4b6d218ae021e56bd9bde8f8200f1">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9490,6 +9490,16 @@ Stabilize list tooltips and add updating the selected snapshot from the current 
       <version name="1.0.4" author="zaibuyidao" time="2026-04-29T15:04:13Z">
         <changelog><![CDATA[New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/af2cd414952079b159ae537e89479e1c225259ad/Utility/zaibuyidao_Translate%20Keywords%20and%20Send%20to%20Media%20Explorer%20Search.lua</source>
+      </version>
+      <version name="1.0.5" author="zaibuyidao" time="2026-06-10T15:19:25Z">
+        <changelog><![CDATA[Add a label before the translation keyword input.
+Fix visible synonym count so the requested count is not reduced by the hidden primary keyword.
+Add Ctrl-click synonym selection and Search Selected Terms (OR) with an Include translated term option.
+Hide the primary translated keyword from the synonym button row.
+Keep the displayed synonym count matching the saved synonym count setting.
+Add Shift+Enter shortcut to Translate Only and show it on the button.
+Show Ctrl-click selection hint in the bottom status bar when hovering over Search Selected Terms (OR).]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/6c1c6b95f3e4b6d218ae021e56bd9bde8f8200f1/Utility/zaibuyidao_Translate%20Keywords%20and%20Send%20to%20Media%20Explorer%20Search.lua</source>
       </version>
     </reapack>
   </category>
