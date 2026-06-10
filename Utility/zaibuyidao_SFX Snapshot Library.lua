@@ -1,10 +1,8 @@
 -- @description SFX Snapshot Library
--- @version 1.0.16
+-- @version 1.0.17
 -- @author zaibuyidao
 -- @changelog
---   Remove media files no longer referenced after updating a snapshot.
---   Make preview rendering independent from the project's render settings.
---   Stabilize list tooltips and add updating the selected snapshot from the current capture area.
+--   Add drag-and-drop loading from the snapshot list into the REAPER arrange view.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -81,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.16"
+local SCRIPT_VERSION = "1.0.17"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -990,6 +988,12 @@ MOD_ALT = ImGuiValue(ImGui.Mod_Alt, MOD_ALT)
 local WINDOW_FLAGS_NO_COLLAPSE = ImGuiValue(ImGui.WindowFlags_NoCollapse, 32)
 local WINDOW_FLAGS_NO_TITLE_BAR = ImGuiValue(ImGui.WindowFlags_NoTitleBar, 1)
 local WINDOW_FLAGS_MAIN = WINDOW_FLAGS_NO_COLLAPSE + WINDOW_FLAGS_NO_TITLE_BAR
+local SNAPSHOT_ARRANGE_DND_PAYLOAD_TYPE = "SFXSnapshotDrag"
+local SNAPSHOT_ARRANGE_DRAG_CARRIER_DIR = "_native_drag_carriers"
+local SNAPSHOT_ARRANGE_NATIVE_DROP_TIMEOUT = 30.0
+local COND_ALWAYS = ImGuiValue(ImGui.Cond_Always, 1)
+local DRAGDROP_FLAGS_SOURCE_NO_PREVIEW_TOOLTIP = ImGuiValue(ImGui.DragDropFlags_SourceNoPreviewTooltip, 1)
+local SNAPSHOT_ARRANGE_DND_SOURCE_FLAGS = DRAGDROP_FLAGS_SOURCE_NO_PREVIEW_TOOLTIP
 
 local MOUSE_CURSOR_RESIZE_NS = ImGuiValue(ImGui.MouseCursor_ResizeNS, 3)
 local MOUSE_CURSOR_RESIZE_EW = ImGuiValue(ImGui.MouseCursor_ResizeEW, 4)
@@ -1121,6 +1125,10 @@ local state = {
   request_open_settings_popup = false,
   space_key_consumed_frame = false,
   request_close = false,
+  snapshot_arrange_drag = nil,
+  snapshot_arrange_drag_counter = 0,
+  snapshot_arrange_consumed_payload = "",
+  snapshot_arrange_consumed_until = 0,
 }
 
 ----------------------------------------
@@ -3704,8 +3712,9 @@ function PumpPeakBuildQueue(max_seconds)
   end
 end
 
-function TrackAreaHasItems(start_track_index, track_count, start_pos, end_pos)
+function TrackAreaHasItems(start_track_index, track_count, start_pos, end_pos, ignored_items)
   local existing_tracks = reaper.CountTracks(0)
+  ignored_items = type(ignored_items) == "table" and ignored_items or nil
 
   for i = start_track_index, math.min(existing_tracks - 1, start_track_index + track_count - 1) do
     local track = reaper.GetTrack(0, i)
@@ -3713,9 +3722,10 @@ function TrackAreaHasItems(start_track_index, track_count, start_pos, end_pos)
       local item_count = reaper.CountTrackMediaItems(track)
       for j = 0, item_count - 1 do
         local item = reaper.GetTrackMediaItem(track, j)
+        local ignore_item = ignored_items and ignored_items[item] == true
         local pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
         local len = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-        if RangeOverlaps(pos, pos + len, start_pos, end_pos) then
+        if not ignore_item and RangeOverlaps(pos, pos + len, start_pos, end_pos) then
           return true, i + 1
         end
       end
@@ -3876,12 +3886,19 @@ function SnapshotHasRestorableGlobalData(data)
   return false
 end
 
-function RestoreSnapshotData(data, snapshot_folder)
+function RestoreSnapshotData(data, snapshot_folder, options)
   if type(data) ~= "table" then
     return false, Tr("error_invalid_snapshot_data")
   end
 
-  local target_pos = reaper.GetCursorPosition()
+  options = type(options) == "table" and options or {}
+
+  local target_pos = tonumber(options.target_pos)
+  if target_pos == nil then
+    target_pos = reaper.GetCursorPosition()
+  end
+  target_pos = math.max(0, target_pos)
+
   local capture = data.capture or {}
   local duration = tonumber(capture.duration) or 0
   local track_plan, track_count = BuildRestoreTrackPlan(data)
@@ -3894,20 +3911,22 @@ function RestoreSnapshotData(data, snapshot_folder)
   local original_track_count = reaper.CountTracks(0)
   local new_track_indices = {}
 
-  if state.load_to_new_tracks then
+  if tonumber(options.start_track_index) ~= nil then
+    start_track_index = math.max(0, math.floor(tonumber(options.start_track_index) or 0))
+  elseif state.load_to_new_tracks then
     start_track_index = original_track_count
   else
     start_track_index = GetSelectedTrackIndexOrZero()
   end
 
   if state.check_empty_space and duration > 0 and track_count > 0 then
-    local blocked, track_number = TrackAreaHasItems(start_track_index, track_count, target_pos, target_pos + duration)
+    local blocked, track_number = TrackAreaHasItems(start_track_index, track_count, target_pos, target_pos + duration, options.ignore_empty_check_items)
     if blocked then
       return false, Tr("error_target_area_not_empty", { track = tostring(track_number) })
     end
   end
 
-  if state.load_to_new_tracks then
+  if state.load_to_new_tracks and tonumber(options.start_track_index) == nil then
     InsertTracksAt(start_track_index, track_count)
 
     for i = start_track_index, start_track_index + track_count - 1 do
@@ -4632,6 +4651,551 @@ function LoadSelectedSnapshot()
   end
 
   state.status = Tr("status_loaded_snapshot", { name = tostring(snapshot.name or "") })
+end
+
+
+function LoadSnapshotAtArrangeTarget(snapshot, target_pos, start_track_index, restore_options)
+  if type(snapshot) ~= "table" then
+    state.status = Tr("status_no_snapshot_selected")
+    return false
+  end
+
+  target_pos = tonumber(target_pos)
+  start_track_index = tonumber(start_track_index)
+  if not target_pos or not start_track_index then
+    state.status = Tr("status_load_failed")
+    return false
+  end
+
+  restore_options = type(restore_options) == "table" and restore_options or {}
+
+  local data_path = GetSnapshotDataPath(snapshot)
+  local data, err = LoadLuaTable(data_path)
+
+  if not data then
+    state.status = Tr("status_load_failed")
+    reaper.MB(Tr("error_load_snapshot_detail", { detail = tostring(err or data_path) }), SCRIPT_NAME, 0)
+    return false
+  end
+
+  local function LoadErrorHandler(load_err)
+    if debug and debug.traceback then
+      return debug.traceback(load_err, 2)
+    end
+    return tostring(load_err)
+  end
+
+  reaper.Undo_BeginBlock()
+  reaper.PreventUIRefresh(1)
+
+  local call_ok, ok, result_or_err = xpcall(function()
+    local restore_ok, restore_err = RestoreSnapshotData(data, GetSnapshotFolderForFileOperation(snapshot), {
+      target_pos = target_pos,
+      start_track_index = start_track_index,
+      ignore_empty_check_items = restore_options.ignore_empty_check_items,
+    })
+    if restore_ok then
+      if reaper.SetEditCurPos then
+        pcall(reaper.SetEditCurPos, target_pos, false, false)
+      end
+      PumpPeakBuildQueue(0.25)
+      reaper.UpdateArrange()
+    end
+    return restore_ok, restore_err
+  end, LoadErrorHandler)
+
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
+  reaper.Undo_EndBlock(Tr("undo_load_snapshot"), -1)
+
+  if not call_ok then
+    state.status = Tr("status_load_failed")
+    reaper.MB(Tr("error_load_snapshot_detail", { detail = tostring(ok or "") }), SCRIPT_NAME, 0)
+    return false
+  end
+
+  if not ok then
+    state.status = result_or_err or Tr("status_load_failed")
+    reaper.MB(state.status, SCRIPT_NAME, 0)
+    return false
+  end
+
+  state.status = Tr("status_loaded_snapshot", { name = tostring(snapshot.name or "") })
+  return true
+end
+
+function GetSnapshotArrangeDragDuration(snapshot)
+  local duration = tonumber(snapshot and snapshot.duration)
+  if duration and duration > 0 then return duration end
+
+  local data_path = GetSnapshotDataPath(snapshot)
+  local data = LoadLuaTable(data_path)
+  duration = tonumber(data and data.capture and data.capture.duration)
+  if duration and duration > 0 then return duration end
+
+  return 0.25
+end
+
+function GetSnapshotArrangeDragPayload(index, snapshot)
+  if type(snapshot) ~= "table" then return "" end
+
+  local id = tostring(snapshot.id or "")
+  if id ~= "" then return "id:" .. id end
+
+  local folder = tostring(snapshot.folder or "")
+  if folder ~= "" then return "folder:" .. folder end
+
+  return "index:" .. tostring(index or 0)
+end
+
+function FindSnapshotByArrangeDragPayload(payload)
+  payload = tostring(payload or "")
+  if payload == "" then return nil, nil end
+
+  local payload_kind, payload_value = payload:match("^([^:]+):(.+)$")
+  payload_kind = tostring(payload_kind or "")
+  payload_value = tostring(payload_value or "")
+
+  if payload_kind == "id" then
+    for i, snapshot in ipairs(state.snapshots or {}) do
+      if tostring(snapshot.id or "") == payload_value then
+        return i, snapshot
+      end
+    end
+  elseif payload_kind == "folder" then
+    for i, snapshot in ipairs(state.snapshots or {}) do
+      if tostring(snapshot.folder or "") == payload_value then
+        return i, snapshot
+      end
+    end
+  elseif payload_kind == "index" then
+    local index = tonumber(payload_value)
+    if index and state.snapshots[index] then
+      return index, state.snapshots[index]
+    end
+  end
+
+  return nil, nil
+end
+
+function ClearSnapshotArrangeDrag()
+  CleanupSnapshotArrangeNativeDragCarrier(state.snapshot_arrange_drag)
+  state.snapshot_arrange_drag = nil
+end
+
+function MarkSnapshotArrangeDragPayloadConsumed(payload)
+  payload = tostring(payload or "")
+  if payload == "" then return end
+
+  state.snapshot_arrange_consumed_payload = payload
+  local now = reaper.time_precise and reaper.time_precise() or os.clock()
+  state.snapshot_arrange_consumed_until = now + 2.0
+end
+
+function IsSnapshotArrangeDragPayloadConsumed(payload)
+  payload = tostring(payload or "")
+  if payload == "" then return false end
+  if tostring(state.snapshot_arrange_consumed_payload or "") ~= payload then return false end
+
+  local now = reaper.time_precise and reaper.time_precise() or os.clock()
+  if now <= (tonumber(state.snapshot_arrange_consumed_until) or 0) then
+    return true
+  end
+
+  state.snapshot_arrange_consumed_payload = ""
+  state.snapshot_arrange_consumed_until = 0
+  return false
+end
+
+function MakeSnapshotArrangeNativeDragToken()
+  state.snapshot_arrange_drag_counter = (tonumber(state.snapshot_arrange_drag_counter) or 0) + 1
+
+  local seed = reaper.time_precise and reaper.time_precise() or os.clock()
+  seed = math.floor((tonumber(seed) or 0) * 1000000)
+
+  return tostring(seed) .. "_" .. tostring(state.snapshot_arrange_drag_counter)
+end
+
+function GetSnapshotArrangeNativeDragCarrierDir()
+  local dir = JoinPath(state.library_dir, SNAPSHOT_ARRANGE_DRAG_CARRIER_DIR)
+  EnsureDir(dir)
+  return dir
+end
+
+function UInt16LE(value)
+  value = math.max(0, math.floor(tonumber(value) or 0))
+  return string.char(value % 256, math.floor(value / 256) % 256)
+end
+
+function UInt32LE(value)
+  value = math.max(0, math.floor(tonumber(value) or 0))
+  return string.char(
+    value % 256,
+    math.floor(value / 256) % 256,
+    math.floor(value / 65536) % 256,
+    math.floor(value / 16777216) % 256
+  )
+end
+
+function WriteSilentWavFile(path, duration)
+  duration = math.max(0.05, tonumber(duration) or 0.25)
+
+  -- REAPER 原生拖动参考块，使用非常低的采样率可以让载体文件保持很小
+  local sample_rate = 1000
+  local channels = 1
+  local bits_per_sample = 16
+  local bytes_per_sample = math.floor(bits_per_sample / 8)
+  local block_align = channels * bytes_per_sample
+  local sample_count = math.max(1, math.floor(duration * sample_rate + 0.5))
+  local data_size = sample_count * block_align
+  local byte_rate = sample_rate * block_align
+
+  local file = io.open(path, "wb")
+  if not file then return false end
+
+  file:write("RIFF")
+  file:write(UInt32LE(36 + data_size))
+  file:write("WAVE")
+  file:write("fmt ")
+  file:write(UInt32LE(16))
+  file:write(UInt16LE(1))
+  file:write(UInt16LE(channels))
+  file:write(UInt32LE(sample_rate))
+  file:write(UInt32LE(byte_rate))
+  file:write(UInt16LE(block_align))
+  file:write(UInt16LE(bits_per_sample))
+  file:write("data")
+  file:write(UInt32LE(data_size))
+
+  local chunk = string.rep("\0", 8192)
+  local remaining = data_size
+  while remaining > 0 do
+    local size = math.min(remaining, #chunk)
+    file:write(chunk:sub(1, size))
+    remaining = remaining - size
+  end
+
+  file:close()
+  return true
+end
+
+function PrepareSnapshotArrangeNativeDragCarrier(drag)
+  if type(drag) ~= "table" then return false end
+  if tostring(drag.carrier_path or "") ~= "" and FileExists(drag.carrier_path) then
+    return true
+  end
+
+  local dir = GetSnapshotArrangeNativeDragCarrierDir()
+  local snapshot = drag.snapshot or {}
+  local base = tostring(snapshot.id or snapshot.folder or snapshot.name or "snapshot")
+  base = SanitizeFileName(base)
+  if base == "" then base = "snapshot" end
+  if #base > 80 then base = base:sub(1, 80) end
+
+  local duration_ms = math.max(1, math.floor((tonumber(drag.duration) or 0.25) * 1000 + 0.5))
+  local token = tostring(drag.token or MakeSnapshotArrangeNativeDragToken())
+  drag.token = token
+  local filename = "SFX_Snapshot_Drag_" .. token .. "_" .. base .. "_" .. tostring(duration_ms) .. "ms.wav"
+  local path = JoinPath(dir, filename)
+
+  if not WriteSilentWavFile(path, drag.duration) then
+    return false
+  end
+
+  drag.carrier_path = path
+  drag.carrier_filename = filename
+  return true
+end
+
+function CleanupSnapshotArrangeNativeDragCarrier(drag)
+  if type(drag) ~= "table" then return end
+
+  local path = tostring(drag.carrier_path or "")
+  if path ~= "" and FileExists(path) then
+    pcall(os.remove, path)
+  end
+
+  drag.carrier_path = nil
+  drag.carrier_filename = nil
+end
+
+function SetSnapshotArrangeDragState(index, snapshot, payload)
+  if type(snapshot) ~= "table" then return nil end
+
+  local current = state.snapshot_arrange_drag
+  local same_drag = type(current) == "table" and tostring(current.payload or "") == tostring(payload or "")
+
+  if same_drag then
+    current.index = index
+    current.snapshot = snapshot
+    current.snapshot_id = tostring(snapshot.id or "")
+    current.duration = GetSnapshotArrangeDragDuration(snapshot)
+    return current
+  end
+
+  CleanupSnapshotArrangeNativeDragCarrier(current)
+
+  local drag = {
+    active = true,
+    index = index,
+    payload = tostring(payload or ""),
+    snapshot_id = tostring(snapshot.id or ""),
+    snapshot = snapshot,
+    duration = GetSnapshotArrangeDragDuration(snapshot),
+    token = MakeSnapshotArrangeNativeDragToken(),
+    native_drop_pending = true,
+    native_drop_attempted = false,
+    awaiting_carrier = false,
+    await_until = 0,
+  }
+
+  state.snapshot_arrange_drag = drag
+  StopInternalPreview(true)
+  return drag
+end
+
+function BeginSnapshotArrangeDragSource(index, snapshot)
+  if type(snapshot) ~= "table" then return false end
+  if not (ImGui.BeginDragDropSource and ImGui.SetDragDropPayload and ImGui.EndDragDropSource) then return false end
+
+  local begin_ok = ImGui.BeginDragDropSource(ctx, SNAPSHOT_ARRANGE_DND_SOURCE_FLAGS)
+  if not begin_ok then return false end
+
+  local payload = GetSnapshotArrangeDragPayload(index, snapshot)
+  if payload ~= "" then
+    ImGui.SetDragDropPayload(ctx, SNAPSHOT_ARRANGE_DND_PAYLOAD_TYPE, payload, COND_ALWAYS)
+
+    if not IsSnapshotSelected(index) then
+      SelectOnlySnapshot(index)
+    else
+      state.selected = index
+    end
+
+    state.snapshot_list_focused = true
+    local drag = SetSnapshotArrangeDragState(index, snapshot, payload)
+
+    if drag and ImGui.Text then
+      ImGui.Text(ctx, "Drag snapshot to REAPER to load")
+    end
+  end
+
+  ImGui.EndDragDropSource(ctx)
+  return true
+end
+
+function TryCallSnapshotNativeDropApi(path)
+  if not (reaper.APIExists and reaper.APIExists("SM_DropMediaFiles") and reaper.SM_DropMediaFiles) then
+    return false
+  end
+
+  path = NormalizePath(path)
+  if path == "" then return false end
+
+  local calls = {
+    { path },
+    { path .. "\n" },
+    { path, 1 },
+    { path .. "\n", 1 },
+  }
+
+  local unpack_args = table.unpack or unpack
+  for _, args in ipairs(calls) do
+    local ok, result = pcall(reaper.SM_DropMediaFiles, unpack_args(args))
+    if ok and result ~= false then
+      return true
+    end
+  end
+
+  return false
+end
+
+function StartSnapshotArrangeNativeDrop(drag)
+  if type(drag) ~= "table" or drag.native_drop_attempted then return false end
+
+  drag.native_drop_attempted = true
+  drag.native_drop_pending = false
+
+  if not PrepareSnapshotArrangeNativeDragCarrier(drag) then
+    state.status = Tr("status_load_failed")
+    return false
+  end
+
+  local ok = TryCallSnapshotNativeDropApi(drag.carrier_path)
+  drag.awaiting_carrier = ok == true
+  drag.await_until = (reaper.time_precise and reaper.time_precise() or os.clock()) + SNAPSHOT_ARRANGE_NATIVE_DROP_TIMEOUT
+
+  if not ok then
+    state.status = Tr("status_load_failed")
+    CleanupSnapshotArrangeNativeDragCarrier(drag)
+  end
+
+  return ok
+end
+
+
+function GetMediaItemSourcePathSafe(item)
+  if not IsMediaItemValid(item) then return "" end
+  if not (reaper.GetActiveTake and reaper.GetMediaItemTake_Source and reaper.GetMediaSourceFileName) then return "" end
+
+  local take = reaper.GetActiveTake(item)
+  if not take then return "" end
+
+  local source = reaper.GetMediaItemTake_Source(take)
+  if not source then return "" end
+
+  local ok, value1, value2 = pcall(reaper.GetMediaSourceFileName, source, "")
+  if not ok then return "" end
+
+  if type(value2) == "string" and value2 ~= "" then return value2 end
+  if type(value1) == "string" then return value1 end
+  return ""
+end
+
+function SnapshotNativeCarrierItemMatches(item, drag)
+  if type(drag) ~= "table" then return false end
+  if not IsMediaItemValid(item) then return false end
+
+  local source_path = NormalizePath(GetMediaItemSourcePathSafe(item))
+  local carrier_path = NormalizePath(drag.carrier_path or "")
+  local carrier_filename = tostring(drag.carrier_filename or "")
+
+  if source_path ~= "" and carrier_path ~= "" and NormalizePathForCompare and NormalizePathForCompare(source_path) == NormalizePathForCompare(carrier_path) then
+    return true
+  end
+
+  local source_filename = GetFileName(source_path)
+  if carrier_filename ~= "" and source_filename == carrier_filename then
+    local item_len = reaper.GetMediaItemInfo_Value and tonumber(reaper.GetMediaItemInfo_Value(item, "D_LENGTH")) or nil
+    local duration = tonumber(drag.duration) or 0.25
+    if not item_len or math.abs(item_len - duration) < 0.25 then
+      return true
+    end
+  end
+
+  return false
+end
+
+function FindSnapshotNativeCarrierItem(drag)
+  if type(drag) ~= "table" then return nil end
+
+  if reaper.CountSelectedMediaItems and reaper.GetSelectedMediaItem then
+    local selected_count = reaper.CountSelectedMediaItems(0)
+    for i = 0, selected_count - 1 do
+      local item = reaper.GetSelectedMediaItem(0, i)
+      if SnapshotNativeCarrierItemMatches(item, drag) then
+        return item
+      end
+    end
+  end
+
+  if not (reaper.CountTracks and reaper.GetTrack and reaper.CountTrackMediaItems and reaper.GetTrackMediaItem) then
+    return nil
+  end
+
+  local track_count = reaper.CountTracks(0)
+  for ti = 0, track_count - 1 do
+    local track = reaper.GetTrack(0, ti)
+    local item_count = reaper.CountTrackMediaItems(track)
+    for ii = item_count - 1, 0, -1 do
+      local item = reaper.GetTrackMediaItem(track, ii)
+      if SnapshotNativeCarrierItemMatches(item, drag) then
+        return item
+      end
+    end
+  end
+
+  return nil
+end
+
+function DeleteSnapshotNativeCarrierItem(item)
+  if not IsMediaItemValid(item) then return end
+  if not (reaper.GetMediaItem_Track and reaper.DeleteTrackMediaItem) then return end
+
+  local track = reaper.GetMediaItem_Track(item)
+  if track then
+    pcall(reaper.DeleteTrackMediaItem, track, item)
+  end
+end
+
+function GetSnapshotNativeDropTargetFromCarrierItem(item)
+  if not IsMediaItemValid(item) then return nil end
+  if not (reaper.GetMediaItemInfo_Value and reaper.GetMediaItem_Track and reaper.CSurf_TrackToID) then return nil end
+
+  local position = tonumber(reaper.GetMediaItemInfo_Value(item, "D_POSITION"))
+  local track = reaper.GetMediaItem_Track(item)
+  if not position or not track then return nil end
+
+  local track_id = tonumber(reaper.CSurf_TrackToID(track, false))
+  if not track_id or track_id < 1 then return nil end
+
+  return {
+    position = position,
+    track_index = track_id - 1,
+  }
+end
+
+function ResolveSnapshotArrangeNativeDrop(drag)
+  if type(drag) ~= "table" or drag.awaiting_carrier ~= true then return false end
+
+  local item = FindSnapshotNativeCarrierItem(drag)
+  if not item then return false end
+
+  local target = GetSnapshotNativeDropTargetFromCarrierItem(item)
+  if not target then return false end
+
+  local ignored_items = { [item] = true }
+  MarkSnapshotArrangeDragPayloadConsumed(drag.payload)
+
+  DeleteSnapshotNativeCarrierItem(item)
+  if reaper.UpdateArrange then reaper.UpdateArrange() end
+
+  CleanupSnapshotArrangeNativeDragCarrier(drag)
+  LoadSnapshotAtArrangeTarget(drag.snapshot, target.position, target.track_index, {
+    ignore_empty_check_items = ignored_items,
+  })
+  return true
+end
+
+function PeekSnapshotArrangeDragPayload()
+  if not ImGui.GetDragDropPayload then return false end
+
+  local ok, retval, payload_type, payload, is_preview, is_delivery = pcall(ImGui.GetDragDropPayload, ctx)
+  if not ok or retval ~= true then return false end
+  if tostring(payload_type or "") ~= SNAPSHOT_ARRANGE_DND_PAYLOAD_TYPE then return false end
+
+  return true, tostring(payload or ""), is_preview == true, is_delivery == true
+end
+
+function UpdateSnapshotArrangeDrag()
+  local payload_active, payload = PeekSnapshotArrangeDragPayload()
+  local drag = state.snapshot_arrange_drag
+
+  if payload_active then
+    if IsSnapshotArrangeDragPayloadConsumed(payload) then
+      return
+    end
+
+    local index, snapshot = FindSnapshotByArrangeDragPayload(payload)
+    if snapshot then
+      drag = SetSnapshotArrangeDragState(index, snapshot, payload)
+    end
+  end
+
+  if type(drag) ~= "table" then return end
+
+  if drag.native_drop_pending and not drag.native_drop_attempted then
+    StartSnapshotArrangeNativeDrop(drag)
+  end
+
+  if ResolveSnapshotArrangeNativeDrop(drag) then
+    ClearSnapshotArrangeDrag()
+    return
+  end
+
+  local now = reaper.time_precise and reaper.time_precise() or os.clock()
+  if drag.native_drop_attempted and (not drag.awaiting_carrier or now > (tonumber(drag.await_until) or 0)) then
+    ClearSnapshotArrangeDrag()
+  end
 end
 
 function PrimeLoadConfirmPopup()
@@ -6907,6 +7471,17 @@ function DrawSnapshotList(width, height)
           HandleSnapshotListClick(i)
         end
 
+        if ImGui.IsItemClicked and ImGui.IsItemClicked(ctx, MOUSE_BUTTON_LEFT) then
+          if not IsSnapshotSelected(i) then
+            SelectOnlySnapshot(i)
+          else
+            state.selected = i
+          end
+          state.snapshot_list_focused = true
+        end
+
+        BeginSnapshotArrangeDragSource(i, s)
+
         if ImGui.IsItemHovered(ctx) and ImGui.IsMouseDoubleClicked and ImGui.IsMouseDoubleClicked(ctx, MOUSE_BUTTON_LEFT) then
           state.selected = i
           AuditionSelectedSnapshot()
@@ -6976,7 +7551,7 @@ function DrawSnapshotList(width, height)
           break
         end
 
-        if state.show_tips and ImGui.IsItemHovered(ctx) then
+        if not (state.snapshot_arrange_drag and state.snapshot_arrange_drag.active) and state.show_tips and ImGui.IsItemHovered(ctx) then
           BeginStableSnapshotTooltip()
           ImGui.Text(ctx, tostring(s.name or ""))
           ImGui.Separator(ctx)
@@ -7837,6 +8412,8 @@ function MainLoop()
     ImGui.End(ctx)
   end
 
+  UpdateSnapshotArrangeDrag()
+
   PopStyle()
 
   if state.request_close then
@@ -7846,6 +8423,7 @@ function MainLoop()
   if open then
     reaper.defer(MainLoop)
   else
+    ClearSnapshotArrangeDrag()
     StopInternalPreview(true)
     ResetWaveformCacheState()
   end
