@@ -74,6 +74,8 @@ end
 -- 按扩展名判断是否为音频. 与IsValidAudioFile(path)重复
 function has_allowed_ext(p)
   if not p or p == "" then return false end
+  local filename = p:match("([^/\\]+)$") or p
+  if filename:sub(1, 2) == "._" then return false end
   local ext = p:match("%.([^.]+)$")
   if not ext then return false end
   ext = ext:lower()

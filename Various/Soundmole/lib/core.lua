@@ -9,8 +9,15 @@ script_path = script_path .. sep
 
 local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
 
+function IsAppleDoubleFile(path)
+  local filename = tostring(path or ""):match("([^/\\]+)$") or tostring(path or "")
+  return filename:sub(1, 2) == "._"
+end
+
 -- 过滤音频文件，与has_allowed_ext(p)重复
 function IsValidAudioFile(path)
+  if not path or path == "" then return false end
+  if IsAppleDoubleFile(path) then return false end
   local ext = path:match("%.([^.]+)$")
   if not ext then return false end
   ext = ext:lower()
@@ -2153,8 +2160,9 @@ end
 -- SubCategory:[ASWG tags]subCategory or [IXML tags]USER:SUBCATEGORY
 
 function WriteToMediaDB(info, dbfile, root_path, db_cover_index)
+  if not info or not IsValidAudioFile(info.path or "") then return false end
   local f = io.open(dbfile, "a+b")
-  if not f then return end
+  if not f then return false end
   local cover_path = nil
   if info and (not info.cover_id or info.cover_id == "") and info.path and type(SM_EnsureCoverForAudio) == "function" then
     local cover_id
@@ -2191,6 +2199,7 @@ function WriteToMediaDB(info, dbfile, root_path, db_cover_index)
   if info.cover_id and info.cover_id ~= "" and type(SM_AddDBCoverIndexEntry) == "function" then
     SM_AddDBCoverIndexEntry(dbfile, info.cover_id, cover_path, db_cover_index)
   end
+  return true
 end
 
 -- 获取下一个可用编号
@@ -2250,7 +2259,9 @@ function ParseMediaDBFile(dbpath)
         entry.path, entry.size, entry.type = line:match('^FILE%s+"(.-)"%s+(%d+)%s+(%S+)$')
       end
       entry.size = tonumber(entry.size) or 0
-      if entry.path then
+      if entry.path and IsAppleDoubleFile(entry.path) then
+        entry = {}
+      elseif entry.path then
         entry.filename = entry.path:match("([^/\\]+)$") or entry.path
       else
         entry.filename = ""
@@ -2536,7 +2547,11 @@ function MediaDBStreamRead(stream, max_count)
         added = added + 1
         if added >= (max_count or 1000) then
           local new_path, new_size = line:match('^FILE%s+"(.-)"%s+(%d+)')
-          entry = { path = new_path, size = tonumber(new_size) or 0, filename = new_path and (new_path:match("([^/\\]+)$") or new_path) or "" }
+          if new_path and not IsAppleDoubleFile(new_path) then
+            entry = { path = new_path, size = tonumber(new_size) or 0, filename = new_path:match("([^/\\]+)$") or new_path }
+          else
+            entry = {}
+          end
           s.entry = entry
           break
         end
@@ -2548,7 +2563,11 @@ function MediaDBStreamRead(stream, max_count)
         entry.path, entry.size = line:match('^FILE%s+"(.-)"%s+(%d+)%s*')
       end
       entry.size = tonumber(entry.size) or 0
-      entry.filename = entry.path and (entry.path:match("([^/\\]+)$") or entry.path) or ""
+      if entry.path and IsAppleDoubleFile(entry.path) then
+        entry = {}
+      else
+        entry.filename = entry.path and (entry.path:match("([^/\\]+)$") or entry.path) or ""
+      end
 
     elseif line:find("^DATA") then
       do

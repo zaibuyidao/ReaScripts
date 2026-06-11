@@ -104,6 +104,8 @@ def read_database_paths(db_path: Path) -> list[str]:
             if not match:
                 continue
             path = decode_db_string(match.group(1))
+            if Path(path).name.startswith("._"):
+                continue
             key = os.path.normcase(os.path.normpath(path))
             if path and key not in seen:
                 seen.add(key)

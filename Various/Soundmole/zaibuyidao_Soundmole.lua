@@ -3215,6 +3215,12 @@ function SM_SIM_CurrentDBPath()
     or ((collect_mode == COLLECT_MODE_SIMILAR) and similarity_state.db_path or nil)
 end
 
+function SM_SIM_PathKey(path)
+  local key = normalize_path(path or "", false)
+  if reaper.GetOS():find("Win") then key = key:lower() end
+  return key
+end
+
 function SM_SIM_DBDisplayName(db_path)
   db_path = normalize_path(db_path or "", false)
   return db_path:match("[^/\\]+$") or db_path
@@ -3502,18 +3508,31 @@ function SM_SIM_FindSimilar(info, target_db_path, source_db_path)
   for _, list in ipairs({ files_idx_cache, _G.current_display_list }) do
     if type(list) == "table" and not list._handle then
       for _, entry in ipairs(list) do
-        if entry and entry.path then lookup[normalize_path(entry.path, false)] = entry end
+        if entry and entry.path then lookup[SM_SIM_PathKey(entry.path)] = entry end
       end
+    end
+  end
+
+  local metadata_db_handle
+  local release_metadata_db_handle = false
+  if HAVE_SM_DB_ROW_BY_PATH then
+    local loaded_db_path = SM_SIM_PathKey(_G.current_db_fullpath or "")
+    if _G.db_loader and _G.db_loader.ctx
+      and loaded_db_path ~= "" and loaded_db_path == SM_SIM_PathKey(target_db_path) then
+      metadata_db_handle = _G.db_loader.ctx
+    elseif HAVE_SM_DB and reaper.SM_DB_Load then
+      metadata_db_handle = reaper.SM_DB_Load(target_db_path)
+      release_metadata_db_handle = metadata_db_handle ~= nil
     end
   end
 
   local results = {}
   for rank, score, path in json:gmatch('{"rank":(%d+),"score":([%-%d%.eE]+),"path":"(.-)"}') do
     path = SM_SIM_UnescapeJSONString(path)
-    local normalized = normalize_path(path, false)
+    local normalized = SM_SIM_PathKey(path)
     local source = lookup[normalized]
-    if not source and HAVE_SM_DB_ROW_BY_PATH and _G.db_loader and _G.db_loader.ctx then
-      local raw = reaper.SM_DB_GetRowRawByPath(_G.db_loader.ctx, normalized)
+    if not source and metadata_db_handle then
+      local raw = reaper.SM_DB_GetRowRawByPath(metadata_db_handle, path)
       source = SM_ParseDBRawRow(raw)
     end
     local item = {}
@@ -3524,6 +3543,7 @@ function SM_SIM_FindSimilar(info, target_db_path, source_db_path)
     item.similarity_rank = tonumber(rank) or (#results + 1)
     results[#results + 1] = item
   end
+  if release_metadata_db_handle then reaper.SM_DB_Release(metadata_db_handle) end
   -- Keep the initial result order deterministic even before the table applies
   -- its default Similarity sort specification.
   table.sort(results, function(a, b)
@@ -14797,10 +14817,10 @@ function loop()
 
     -- 过滤器控件居中
     reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
-    local filter_w = UIScaleF(400) -- 输入框宽度
+    local filter_w = UIScaleF(350) -- 输入框宽度
     local topbar_h = GetTopbarAlignHeight(ctx)
 
-    -- 标题栏
+    -- Soundmole标题栏，可在设置中隐藏显示，默认显示
     reaper.ImGui_BeginGroup(ctx)
     PushUIFont(ctx, fonts.odrf, 22)
     reaper.ImGui_SameLine(ctx, nil, 0)
@@ -15050,7 +15070,7 @@ function loop()
       local status_text = T("Translating...")
       local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, status_text)
       -- 计算输入框内部右侧位置
-      local draw_x = box_max_x - txt_w - 10
+      local draw_x = box_max_x - txt_w - 40
       local draw_y = box_min_y + (box_max_y - box_min_y - txt_h) / 2
 
       local text_col = colors.mole or 0xFF0000FF
