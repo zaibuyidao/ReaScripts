@@ -1511,8 +1511,34 @@ local function sm_write_all(path, data)
   return true
 end
 
-function SM_CoverCacheDir()
+function SM_CoverCacheRoot()
   local dir = normalize_path(script_path .. "cover_cache" .. sep, true)
+  if reaper and reaper.RecursiveCreateDirectory then
+    reaper.RecursiveCreateDirectory(dir, 0)
+  else
+    os.execute('mkdir "' .. dir .. '"')
+  end
+  return dir
+end
+
+function SM_DBCoverCacheScope(dbpath)
+  local name = tostring(dbpath or ""):match("([^/\\]+)$") or ""
+  local lower = name:lower()
+  for _, suffix in ipairs({ ".molefilelist", ".reaperfilelist" }) do
+    if lower:sub(-#suffix) == suffix then
+      name = name:sub(1, #name - #suffix)
+      break
+    end
+  end
+  name = name:gsub('[<>:"/\\|%?%*%c]', "_"):gsub("[ %.]+$", "")
+  return name ~= "" and name or "common"
+end
+
+function SM_CoverCacheDir(scope)
+  scope = tostring(scope or "common")
+  scope = scope:gsub('[<>:"/\\|%?%*%c]', "_"):gsub("[ %.]+$", "")
+  if scope == "" then scope = "common" end
+  local dir = normalize_path(SM_CoverCacheRoot() .. scope .. sep, true)
   if reaper and reaper.RecursiveCreateDirectory then
     reaper.RecursiveCreateDirectory(dir, 0)
   else
@@ -1766,7 +1792,7 @@ function SM_LoadDBCoverIndexItems(dbpath)
     local id = ids[i]
     local path = map[id]
     if not path or path == "" or (reaper and reaper.file_exists and not reaper.file_exists(path)) then
-      path = (type(SM_GetCoverPathByID) == "function") and SM_GetCoverPathByID(id) or nil
+      path = (type(SM_GetCoverPathByID) == "function") and SM_GetCoverPathByID(id, dbpath) or nil
     end
     if path and path ~= "" then
       items[#items + 1] = { cover_id = id, path = path }
@@ -1777,6 +1803,26 @@ function SM_LoadDBCoverIndexItems(dbpath)
   cached.items = items
   SM_DB_COVER_INDEX_CACHE[dbpath] = cached
   return items
+end
+
+function SM_DBCoverIndexNeedsRebuild(dbpath)
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  if dbpath == "" then return false end
+  local map = SM_LoadDBCoverIndexMap(dbpath)
+  if not map then return true end
+
+  local expected_dir = normalize_path(SM_CoverCacheDir(SM_DBCoverCacheScope(dbpath)), true):lower()
+  local count = 0
+  for _, path in pairs(map) do
+    count = count + 1
+    local normalized = normalize_path(tostring(path or ""), false)
+    if normalized == ""
+      or (reaper and reaper.file_exists and not reaper.file_exists(normalized))
+      or normalized:lower():sub(1, #expected_dir) ~= expected_dir then
+      return true
+    end
+  end
+  return count == 0
 end
 
 function SM_SaveDBCoverIndex(dbpath, map)
@@ -1812,7 +1858,7 @@ function SM_AddDBCoverIndexEntry(dbpath, cover_id, cover_path, map)
   cover_id = tostring(cover_id or "")
   if dbpath == "" or not sm_is_valid_cover_id(cover_id) then return map end
 
-  cover_path = cover_path or ((type(SM_GetCoverPathByID) == "function") and SM_GetCoverPathByID(cover_id) or nil)
+  cover_path = cover_path or ((type(SM_GetCoverPathByID) == "function") and SM_GetCoverPathByID(cover_id, dbpath) or nil)
   if not cover_path or cover_path == "" then return map end
 
   if map then
@@ -1834,12 +1880,17 @@ function SM_RebuildDBCoverIndexFromDB(dbpath)
   if not f then return nil end
 
   local map = {}
+  local current_audio = nil
   for raw in f:lines() do
     local line = (raw or ""):gsub("\r", "")
-    local id = line:match('"cover_id:([^"]-)"') or line:match('cover_id:"([^"]-)"') or line:match('cover_id:([^%s"]+)')
-    if sm_is_valid_cover_id(id or "") then
-      local path = (type(SM_GetCoverPathByID) == "function") and SM_GetCoverPathByID(id) or nil
-      if path and path ~= "" then map[id] = path end
+    if line:find("^FILE%s+") then
+      current_audio = line:match('^FILE%s+"(.-)"')
+    else
+      local id = line:match('"cover_id:([^"]-)"') or line:match('cover_id:"([^"]-)"') or line:match('cover_id:([^%s"]+)')
+      if current_audio and sm_is_valid_cover_id(id or "") and not map[id] then
+        local actual_id, path = SM_EnsureCoverForAudio(current_audio, dbpath)
+        if actual_id == id and path and path ~= "" then map[id] = path end
+      end
     end
   end
   f:close()
@@ -1854,10 +1905,21 @@ function SM_PrepareDBCoverIndexForAppend(dbpath)
   return SM_RebuildDBCoverIndexFromDB(dbpath) or {}
 end
 
-function SM_GetCoverPathByID(cover_id)
+function SM_GetCoverPathByID(cover_id, dbpath)
   if not cover_id or cover_id == "" then return nil end
+  if dbpath and dbpath ~= "" then
+    local db_map = SM_LoadDBCoverIndexMap(dbpath)
+    local db_path = db_map and db_map[cover_id]
+    if db_path and db_path ~= "" and (not reaper or not reaper.file_exists or reaper.file_exists(db_path)) then
+      return db_path
+    end
+    return nil
+  end
   local p = SM_LoadCoverIndex()[cover_id]
-  if p and p ~= "" and (not reaper or not reaper.file_exists or reaper.file_exists(p)) then
+  local common_dir = normalize_path(SM_CoverCacheDir("common"), true):lower()
+  if p and p ~= ""
+    and normalize_path(p, false):lower():sub(1, #common_dir) == common_dir
+    and (not reaper or not reaper.file_exists or reaper.file_exists(p)) then
     return p
   end
   return nil
@@ -2072,13 +2134,38 @@ local function sm_read_external_cover(audio_path)
   return nil, nil
 end
 
-function SM_EnsureCoverForAudio(audio_path)
+function SM_EnsureCoverForAudio(audio_path, dbpath)
   audio_path = normalize_path(audio_path or "", false)
   if audio_path == "" then return nil, nil end
-  if SM_COVER_CACHE[audio_path] ~= nil then
-    local hit = SM_COVER_CACHE[audio_path]
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  local scope = (dbpath ~= "") and SM_DBCoverCacheScope(dbpath) or "common"
+  local cache_key = scope .. "|" .. audio_path
+  if SM_COVER_CACHE[cache_key] ~= nil then
+    local hit = SM_COVER_CACHE[cache_key]
     if hit == false then return nil, nil end
-    return hit.cover_id, hit.path
+    if hit.path and (not reaper or not reaper.file_exists or reaper.file_exists(hit.path)) then
+      return hit.cover_id, hit.path
+    end
+    SM_COVER_CACHE[cache_key] = nil
+  end
+
+  if reaper and reaper.APIExists and reaper.APIExists("SM_Cover_Ensure") and reaper.SM_Cover_Ensure then
+    local json = reaper.SM_Cover_Ensure(audio_path, SM_CoverCacheRoot(), scope)
+    local cover_id = json and json:match('"cover_id"%s*:%s*"(.-)"') or nil
+    local out_path = json and json:match('"path"%s*:%s*"(.-)"') or nil
+    if cover_id then cover_id = sm_json_unescape(cover_id) end
+    if out_path then out_path = sm_json_unescape(out_path) end
+    if sm_is_valid_cover_id(cover_id or "") and out_path and out_path ~= "" then
+      local index = SM_LoadCoverIndex()
+      if index[cover_id] ~= out_path then
+        index[cover_id] = out_path
+        SM_SaveCoverIndex(index)
+      end
+      SM_COVER_CACHE[cache_key] = { cover_id = cover_id, path = out_path }
+      return cover_id, out_path
+    end
+    SM_COVER_CACHE[cache_key] = false
+    return nil, nil
   end
 
   local mime, data
@@ -2091,17 +2178,17 @@ function SM_EnsureCoverForAudio(audio_path)
   end
 
   if not data or data == "" then
-    SM_COVER_CACHE[audio_path] = false
+    SM_COVER_CACHE[cache_key] = false
     return nil, nil
   end
 
   local cover_id = sm_cover_hash(data)
   if not cover_id then
-    SM_COVER_CACHE[audio_path] = false
+    SM_COVER_CACHE[cache_key] = false
     return nil, nil
   end
 
-  local out_path = SM_CoverCacheDir() .. cover_id .. sm_image_ext(mime, data)
+  local out_path = SM_CoverCacheDir(scope) .. cover_id .. sm_image_ext(mime, data)
   if not reaper or not reaper.file_exists or not reaper.file_exists(out_path) then
     sm_write_all(out_path, data)
   end
@@ -2112,7 +2199,7 @@ function SM_EnsureCoverForAudio(audio_path)
     SM_SaveCoverIndex(index)
   end
 
-  SM_COVER_CACHE[audio_path] = { cover_id = cover_id, path = out_path }
+  SM_COVER_CACHE[cache_key] = { cover_id = cover_id, path = out_path }
   return cover_id, out_path
 end
 
@@ -2166,10 +2253,15 @@ function WriteToMediaDB(info, dbfile, root_path, db_cover_index)
   local cover_path = nil
   if info and (not info.cover_id or info.cover_id == "") and info.path and type(SM_EnsureCoverForAudio) == "function" then
     local cover_id
-    cover_id, cover_path = SM_EnsureCoverForAudio(info.path)
+    cover_id, cover_path = SM_EnsureCoverForAudio(info.path, dbfile)
     if cover_id and cover_id ~= "" then info.cover_id = cover_id end
   elseif info and info.cover_id and info.cover_id ~= "" and type(SM_GetCoverPathByID) == "function" then
-    cover_path = SM_GetCoverPathByID(info.cover_id)
+    cover_path = SM_GetCoverPathByID(info.cover_id, dbfile)
+    if not cover_path and info.path and type(SM_EnsureCoverForAudio) == "function" then
+      local actual_id
+      actual_id, cover_path = SM_EnsureCoverForAudio(info.path, dbfile)
+      if actual_id ~= info.cover_id then cover_path = nil end
+    end
   end
   -- FILE行
   f:write(('FILE "%s" %d 0 %d 0\n'):format(info.path, tonumber(info.size), tonumber(info.mtime) or 0))
@@ -2356,7 +2448,14 @@ function RemoveFromMediaDB(path, dbfile, skip_cover_rebuild)
   local f = io.open(dbfile, "wb")
   for _, l in ipairs(tmp) do f:write(l, "\n") end
   f:close()
-  if not skip_cover_rebuild and SM_DBCoverIndexExists(dbfile) then SM_RebuildDBCoverIndexFromDB(dbfile) end
+  if not skip_cover_rebuild and SM_DBCoverIndexExists(dbfile) then
+    if reaper and reaper.APIExists and reaper.APIExists("SM_CoverIndex_Start")
+      and type(SM_QueueDBCoverIndexRebuild) == "function" then
+      SM_QueueDBCoverIndexRebuild(dbfile)
+    else
+      SM_RebuildDBCoverIndexFromDB(dbfile)
+    end
+  end
 end
 
 -- 获取数据库路径列表

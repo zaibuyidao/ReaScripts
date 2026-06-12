@@ -1,10 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.199
+-- @version 1.0.200
 -- @changelog
---   Fixed an issue where metadata was not displayed in the similarity audio list.
---   AppleDouble metadata sidecar files are now automatically excluded when creating databases.
---   Support reaper_soundmole-x64.dll v0.0.25
+--   Fixed an issue where Artwork could cause lag in large databases.
+--   Support reaper_soundmole-x64.dll v0.0.26
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

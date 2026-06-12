@@ -183,7 +183,7 @@ Start at Next Bar (Link Transport required, Spacebar to trigger)=从下一小节
 
 # 表格文件列
 Waveform=波形
-Album Art=专辑
+Artwork=封面
 File Name=文件名
 Size=大小
 Type=格式
@@ -213,6 +213,11 @@ Set as Active RS5K Sample=设为活跃 RS5K 采样
 Add to Collections=添加到收藏夹
 (No Collections created)=(尚未创建收藏夹)
 
+# 专辑封面
+No artwork=无封面
+Scanning artwork...=正在扫描封面
+Rebuild Artwork Index=重建封面索引
+
 # 数据库
 Browse DB Folders=浏览数据库文件夹
 Not in Database mode=当前非数据库模式
@@ -224,6 +229,7 @@ Choose folder to scan audio files:=选择用于扫描音频文件的文件夹:
 No database selected.=未选择数据库。
 Cannot Delete=无法删除
 This database is currently rebuilding.\nPlease stop the task before deleting.=该数据库正在重建。\n请先停止任务再删除。
+Rebuild Database=重建数据库
 
 # 状态栏
 Files found: %d=找到文件: %d 个

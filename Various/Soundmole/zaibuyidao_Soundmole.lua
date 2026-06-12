@@ -81,6 +81,11 @@ HAVE_SM_BUILDER = reaper.APIExists('SM_Builder_Start')
   and reaper.APIExists('SM_Builder_GetInfo')
   and reaper.APIExists('SM_Builder_GetStatusString')
   and reaper.APIExists('SM_Builder_Stop')
+HAVE_SM_COVER_INDEX = reaper.APIExists('SM_Cover_Ensure')
+  and reaper.APIExists('SM_CoverIndex_Start')
+  and reaper.APIExists('SM_CoverIndex_RunSlice')
+  and reaper.APIExists('SM_CoverIndex_GetStatusJSON')
+  and reaper.APIExists('SM_CoverIndex_Stop')
 HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_GetRowRaw')
 HAVE_SM_DB_ROW_BY_PATH = reaper.APIExists('SM_DB_GetRowRawByPath')
 HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw')
@@ -7381,6 +7386,9 @@ function PlayFromStart(info)
     -- 保存最后播放的信息
     last_playing_info = {}
     for k, v in pairs(info) do last_playing_info[k] = v end
+    if type(SM_StoreStablePreviewCover) == "function" then
+      SM_StoreStablePreviewCover(last_playing_info, info)
+    end
     -- 顺序播放新增
     preview_play_len = reaper.GetMediaSourceLength(source) or 0
     playing_path = info.path or ""
@@ -7437,6 +7445,9 @@ function PlayFromCursor(info)
     -- 保存最后播放的信息
     last_playing_info = {}
     for k, v in pairs(info) do last_playing_info[k] = v end
+    if type(SM_StoreStablePreviewCover) == "function" then
+      SM_StoreStablePreviewCover(last_playing_info, info)
+    end
   end
 end
 
@@ -9120,7 +9131,7 @@ local bad_cover_cache = {}
 local last_cover_img = nil
 local last_cover_path = nil
 
-local img_cache_dir = script_path .. "cover_cache" .. sep
+local img_cache_dir = script_path .. "cover_cache" .. sep .. "common" .. sep
 img_cache_dir = normalize_path(img_cache_dir, true)
 if reaper.file_exists(img_cache_dir) == false then
   reaper.RecursiveCreateDirectory(img_cache_dir, 0)
@@ -9420,6 +9431,7 @@ function SaveCoverToTemp(file_path)
   if type(SM_EnsureCoverForAudio) == "function" then
     local _, cover_path = SM_EnsureCoverForAudio(file_path)
     if cover_path then return cover_path end
+    if HAVE_SM_COVER_INDEX then return nil end
   end
   -- 提取二进制
   local mime, data = ExtractID3Cover(file_path)
@@ -9462,6 +9474,10 @@ function GetCoverImagePath(audio_path)
       cover_path_cache[audio_path] = cover_path
       return cover_path
     end
+    if HAVE_SM_COVER_INDEX then
+      cover_path_cache[audio_path] = false
+      return nil
+    end
   end
   -- 已缓存则直接返回
   if cover_path_cache[audio_path] ~= nil then
@@ -9494,12 +9510,76 @@ function GetCoverImagePath(audio_path)
   return nil
 end
 
+function SM_IsExistingCoverPath(path)
+  if not path or path == "" then return false end
+  if reaper and reaper.file_exists then return reaper.file_exists(path) end
+  local f = io.open(path, "rb")
+  if f then f:close() return true end
+  return false
+end
+
+function SM_StoreStablePreviewCover(dst, src)
+  if type(dst) ~= "table" then return end
+  src = (type(src) == "table") and src or dst
+
+  local cover_path, cover_id
+  if type(ResolveCoverPathForEntry) == "function" then
+    cover_path, cover_id = ResolveCoverPathForEntry(src)
+  end
+  if (not cover_path or cover_path == "") and src.path and type(GetCoverImagePath) == "function" then
+    cover_path = GetCoverImagePath(src.path)
+  end
+
+  if cover_path and cover_path ~= "" then
+    dst._stable_cover_path = cover_path
+  end
+  cover_id = cover_id or src.cover_id
+  if cover_id and cover_id ~= "" then
+    dst._stable_cover_id = cover_id
+  end
+
+  local dbpath = (type(SM_GetCurrentDBCoverIndexPath) == "function") and SM_GetCurrentDBCoverIndexPath() or _G.current_db_fullpath
+  if dbpath and dbpath ~= "" then
+    dst._stable_cover_dbpath = dbpath
+  end
+end
+
+function SM_GetStablePreviewCoverPath(info)
+  if type(info) ~= "table" then return nil, nil end
+
+  local stable_path = info._stable_cover_path or info._preview_cover_path
+  local stable_id = info._stable_cover_id or info._preview_cover_id or info.cover_id
+  if SM_IsExistingCoverPath(stable_path) then
+    return stable_path, stable_id
+  end
+
+  local stable_dbpath = info._stable_cover_dbpath or info._preview_cover_dbpath
+  if stable_id and stable_id ~= "" and stable_dbpath and stable_dbpath ~= "" and type(SM_GetCoverPathByID) == "function" then
+    local path = SM_GetCoverPathByID(stable_id, stable_dbpath)
+    if path then
+      info._stable_cover_path = path
+      return path, stable_id
+    end
+  end
+
+  return nil, stable_id
+end
+
 -- 判断 info 是否存在有效专辑封面
 function HasCoverImage(img_info)
   if not img_info then return false end
+  local stable_path = type(SM_GetStablePreviewCoverPath) == "function" and select(1, SM_GetStablePreviewCoverPath(img_info)) or nil
+  if stable_path then return true end
   if img_info.path and bad_cover_cache[img_info.path] then return false end
   if img_info.cover_id and type(SM_GetCoverPathByID) == "function" then
-    return SM_GetCoverPathByID(img_info.cover_id) ~= nil
+    local dbpath = (type(SM_GetCurrentDBCoverIndexPath) == "function") and SM_GetCurrentDBCoverIndexPath() or nil
+    local path = SM_GetCoverPathByID(img_info.cover_id, dbpath)
+    if path then return true end
+    if dbpath and HAVE_SM_COVER_INDEX then return false end
+  end
+  if HAVE_SM_COVER_INDEX and img_info.path and type(SM_EnsureCoverForAudio) == "function" then
+    local _, path = SM_EnsureCoverForAudio(img_info.path)
+    return path ~= nil
   end
   local mime, data = GetCoverImageData(img_info.path)
   return data ~= nil
@@ -11479,7 +11559,9 @@ function DrawRowPopup(ctx, i, info, collect_mode)
           end
         end
       end
-      if SM_DBCoverIndexExists(dbpath) then SM_RebuildDBCoverIndexFromDB(dbpath) end
+      if SM_DBCoverIndexExists(dbpath) then
+        if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) else SM_RebuildDBCoverIndexFromDB(dbpath) end
+      end
 
       -- 强制重建列表，失效当前数据库的过滤缓存
       local current_db_key = GetCurrentListKey()
@@ -11644,11 +11726,19 @@ end
 
 function ResolveCoverPathForEntry(info)
   if not info then return nil, nil end
+  local stable_path, stable_id
+  if type(SM_GetStablePreviewCoverPath) == "function" then
+    stable_path, stable_id = SM_GetStablePreviewCoverPath(info)
+  end
+  if stable_path then return stable_path, stable_id or info.cover_id end
   local cover_id = info.cover_id
+  local dbpath = (type(SM_GetCurrentDBCoverIndexPath) == "function") and SM_GetCurrentDBCoverIndexPath() or nil
   if cover_id and cover_id ~= "" and type(SM_GetCoverPathByID) == "function" then
-    local path = SM_GetCoverPathByID(cover_id)
+    local path = SM_GetCoverPathByID(cover_id, dbpath)
     if path then return path, cover_id end
   end
+
+  if dbpath and HAVE_SM_COVER_INDEX then return nil, cover_id end
   if info.path and info.path ~= "" and type(SM_EnsureCoverForAudio) == "function" then
     local id, path = SM_EnsureCoverForAudio(info.path)
     if id and id ~= "" then info.cover_id = id end
@@ -11998,12 +12088,12 @@ function SM_DrawAlbumArtTab(ctx)
 
   if #items == 0 then
     if cache.done then
-      reaper.ImGui_TextDisabled(ctx, T("No album art"))
+      reaper.ImGui_TextDisabled(ctx, T("No artwork"))
     else
-      reaper.ImGui_TextDisabled(ctx, T("Scanning album art..."))
+      reaper.ImGui_TextDisabled(ctx, T("Scanning artwork..."))
     end
   elseif not cache.done then
-    reaper.ImGui_TextDisabled(ctx, T("Scanning album art..."))
+    reaper.ImGui_TextDisabled(ctx, T("Scanning artwork..."))
   end
 end
 
@@ -12085,7 +12175,7 @@ function SM_DrawAlbumPanel(ctx, panel_w, panel_h)
     if reaper.ImGui_BeginTabBar(ctx, "AlbumPanelTabs", reaper.ImGui_TabBarFlags_None()) then
       local restore_tab = album_panel_tab_restore_pending
       local album_flags = (restore_tab and album_panel_active_tab == "album") and reaper.ImGui_TabItemFlags_SetSelected() or 0
-      if reaper.ImGui_BeginTabItem(ctx, T("Album Art"), nil, album_flags) then
+      if reaper.ImGui_BeginTabItem(ctx, T("Artwork"), nil, album_flags) then
         if album_panel_active_tab ~= "album" then
           album_panel_active_tab = "album"
           reaper.SetExtState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
@@ -12202,7 +12292,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
     elseif col_name == T("Waveform") then
       RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
-    elseif col_name == T("Album Art") or col_name == "专辑图片" then
+    elseif col_name == T("Artwork") or col_name == "专辑图片" then
       RenderCoverCell(ctx, i, info, row_height)
     -- File & Teak name
     elseif is_name_col then
@@ -12834,6 +12924,7 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   if not dbfile or dbfile == "" then return false end
   local fullpath = db_dir .. sep .. dbfile
   _G.current_db_fullpath = fullpath
+  if type(SM_RequestDBCoverIndex) == "function" then SM_RequestDBCoverIndex(fullpath, false) end
 
   -- 分支 A: 极速模式, C++ 极速加载分支
   if HAVE_SM_DB then
@@ -14447,6 +14538,116 @@ end
 
 --------------------------------------------- C++ 从文件夹构建数据库 ---------------------------------------------
 
+local cover_index_state = {
+  handle = nil,
+  db_path = "",
+  explicit = false,
+  attempted = {}
+}
+
+function SM_ParseCoverIndexStatus(json)
+  json = tostring(json or "")
+  return {
+    status = json:match('"status"%s*:%s*"(.-)"') or "",
+    covers = tonumber(json:match('"covers"%s*:%s*(%d+)')) or 0,
+    files = tonumber(json:match('"files"%s*:%s*(%d+)')) or 0,
+    current = json:match('"current"%s*:%s*"(.-)"') or "",
+    error = json:match('"error"%s*:%s*"(.-)"') or ""
+  }
+end
+
+function SM_StopCoverIndexTask()
+  local stopped_db = cover_index_state.db_path
+  if cover_index_state.handle and HAVE_SM_COVER_INDEX then
+    reaper.SM_CoverIndex_Stop(cover_index_state.handle)
+  end
+  if stopped_db and stopped_db ~= "" then cover_index_state.attempted[stopped_db] = nil end
+  cover_index_state.handle = nil
+  cover_index_state.db_path = ""
+  cover_index_state.explicit = false
+end
+
+function SM_RequestDBCoverIndex(dbpath, explicit)
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  if dbpath == "" or not reaper.file_exists(dbpath) then return false end
+  if cover_index_state.handle and cover_index_state.db_path ~= dbpath then
+    SM_StopCoverIndexTask()
+  elseif cover_index_state.handle and not explicit then
+    return true
+  end
+
+  if not explicit then
+    if cover_index_state.attempted[dbpath] then return false end
+    if type(SM_DBCoverIndexNeedsRebuild) == "function" and not SM_DBCoverIndexNeedsRebuild(dbpath) then
+      cover_index_state.attempted[dbpath] = true
+      return false
+    end
+  end
+  cover_index_state.attempted[dbpath] = true
+
+  if not HAVE_SM_COVER_INDEX then
+    if not explicit then return false end
+    local map = SM_RebuildDBCoverIndexFromDB(dbpath) or {}
+    if type(SM_ClearDBCoverIndexCache) == "function" then SM_ClearDBCoverIndexCache(dbpath) end
+    if type(SM_ResetAlbumPanelCache) == "function" then SM_ResetAlbumPanelCache(nil, nil) end
+    local count = 0
+    for _ in pairs(map) do count = count + 1 end
+    reaper.ShowMessageBox(("Artwork index rebuilt with Lua fallback:\n%s\n\n%d artwork images found."):format(
+      SM_DBCoverIndexPath(dbpath), count), "Soundmole", 0)
+    return true
+  end
+
+  if cover_index_state.handle then SM_StopCoverIndexTask() end
+  local handle = reaper.SM_CoverIndex_Start(dbpath, SM_CoverCacheRoot(), SM_CoverIndexPath())
+  if not handle then
+    if explicit then reaper.ShowMessageBox("Could not start the C++ artwork index rebuild.", "Soundmole", 0) end
+    return false
+  end
+
+  cover_index_state.handle = handle
+  cover_index_state.db_path = dbpath
+  cover_index_state.explicit = explicit == true
+  return true
+end
+
+function SM_QueueDBCoverIndexRebuild(dbpath)
+  dbpath = normalize_path(tostring(dbpath or ""), false)
+  if dbpath == "" then return false end
+  cover_index_state.attempted[dbpath] = nil
+  return SM_RequestDBCoverIndex(dbpath, false)
+end
+
+function SM_ProcessCoverIndexLoop()
+  local handle = cover_index_state.handle
+  if not handle or not HAVE_SM_COVER_INDEX then return end
+
+  local result = reaper.SM_CoverIndex_RunSlice(handle, 4)
+  if result == 1 then return end
+
+  local dbpath = cover_index_state.db_path
+  local explicit = cover_index_state.explicit
+  local status = SM_ParseCoverIndexStatus(reaper.SM_CoverIndex_GetStatusJSON(handle))
+  reaper.SM_CoverIndex_Stop(handle)
+  cover_index_state.handle = nil
+  cover_index_state.db_path = ""
+  cover_index_state.explicit = false
+
+  SM_COVER_INDEX_CACHE = nil
+  if type(SM_ClearDBCoverIndexCache) == "function" then SM_ClearDBCoverIndexCache(dbpath) end
+  if type(ReleaseAllCoverImages) == "function" then ReleaseAllCoverImages() end
+  if type(SM_ResetAlbumPanelCache) == "function" then SM_ResetAlbumPanelCache(nil, nil) end
+
+  if explicit then
+    local idx_path = (type(SM_DBCoverIndexPath) == "function") and SM_DBCoverIndexPath(dbpath) or (dbpath .. ".coverids.json")
+    if result == 0 then
+      reaper.ShowMessageBox(("Artwork index rebuilt with C++:\n%s\n\n%d artwork images found."):format(
+        idx_path, status.covers), "Soundmole", 0)
+    else
+      reaper.ShowMessageBox(("Artwork index rebuild failed:\n%s"):format(status.error ~= "" and status.error or "Unknown error"), "Soundmole", 0)
+    end
+  end
+end
+
 local builder_state = {
   active = false,
   should_open = false, -- 用于通知 loop 打开弹窗
@@ -14759,6 +14960,7 @@ function loop()
   if visible then UpdateSoundmoleMainWindowRect() end
 
   SM_ProcessBuilderLoop() -- 处理数据库构建器
+  SM_ProcessCoverIndexLoop() -- C++ 分片重建专辑封面索引
   SM_SIM_ProcessSetupLoop() -- 处理 Python/CLAP 安装器
   SM_SIM_ProcessBuilderLoop() -- 处理独立的相似度索引构建器
 
@@ -17405,7 +17607,7 @@ function loop()
                 end
 
                 -- 全量重建数据库
-                if reaper.ImGui_MenuItem(ctx, "Rebuild Database") then
+                if reaper.ImGui_MenuItem(ctx, T("Rebuild Database")) then
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   -- 读取所有 PATH 行
                   local path_list = GetPathListFromDB(dbpath)
@@ -17453,19 +17655,12 @@ function loop()
                 end
 
                 -- 仅重建当前数据库的专辑封面索引 JSON，不重新扫描/重建数据库
-                if reaper.ImGui_MenuItem(ctx, "Rebuild Album Cover Index") then
+                if reaper.ImGui_MenuItem(ctx, T("Rebuild Artwork Index")) then
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   if not reaper.file_exists(dbpath) then
                     reaper.ShowMessageBox("Database file not found:\n" .. dbpath, "Error", 0)
                   else
-                    local map = SM_RebuildDBCoverIndexFromDB(dbpath) or {}
-                    if type(SM_ClearDBCoverIndexCache) == "function" then SM_ClearDBCoverIndexCache(dbpath) end
-                    if type(SM_ResetAlbumPanelCache) == "function" then SM_ResetAlbumPanelCache(nil, nil) end
-
-                    local count = 0
-                    for _ in pairs(map) do count = count + 1 end
-                    local idx_path = (type(SM_DBCoverIndexPath) == "function") and SM_DBCoverIndexPath(dbpath) or (dbpath .. ".coverids.json")
-                    reaper.ShowMessageBox(("Album cover index rebuilt:\n%s\n\n%d covers found."):format(idx_path, count), "Soundmole", 0)
+                    SM_RequestDBCoverIndex(dbpath, true)
                   end
                 end
 
@@ -18444,7 +18639,7 @@ function loop()
           if collect_mode == COLLECT_MODE_SIMILAR then
             reaper.ImGui_TableSetupColumn(ctx, T("Similarity"), similarity_column_flags, 70, TableColumns.SIMILARITY)
           end
-          reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
+          reaper.ImGui_TableSetupColumn(ctx, T("Artwork"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("Take Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, T("Type"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -18468,7 +18663,7 @@ function loop()
           if collect_mode == COLLECT_MODE_SIMILAR then
             reaper.ImGui_TableSetupColumn(ctx, T("Similarity"), similarity_column_flags, 70, TableColumns.SIMILARITY)
           end
-          reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
+          reaper.ImGui_TableSetupColumn(ctx, T("Artwork"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 200, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, T("Type"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -18492,7 +18687,7 @@ function loop()
           if collect_mode == COLLECT_MODE_SIMILAR then
             reaper.ImGui_TableSetupColumn(ctx, T("Similarity"), similarity_column_flags, 70, TableColumns.SIMILARITY)
           end
-          reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
+          reaper.ImGui_TableSetupColumn(ctx, T("Artwork"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, T("Type"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -18516,7 +18711,7 @@ function loop()
           if collect_mode == COLLECT_MODE_SIMILAR then
             reaper.ImGui_TableSetupColumn(ctx, T("Similarity"), similarity_column_flags, 70, TableColumns.SIMILARITY)
           end
-          reaper.ImGui_TableSetupColumn(ctx, T("Album Art"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
+          reaper.ImGui_TableSetupColumn(ctx, T("Artwork"),   reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), cover_col_w)
           reaper.ImGui_TableSetupColumn(ctx, T("File Name"),   reaper.ImGui_TableColumnFlags_WidthFixed(), 250, TableColumns.FILENAME)
           reaper.ImGui_TableSetupColumn(ctx, T("Size"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 55, TableColumns.SIZE)
           reaper.ImGui_TableSetupColumn(ctx, T("Type"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.TYPE)
@@ -20217,8 +20412,10 @@ function loop()
       img_info = current_recent_play_info
     elseif _G.current_display_list and selected_row and _G.current_display_list[selected_row] then
       img_info = _G.current_display_list[selected_row]
+    elseif playing_path and playing_path ~= "" and last_playing_info then
+      img_info = last_playing_info
     else
-      img_info = last_selected_info
+      img_info = last_selected_info or last_playing_info
     end
     local has_cover = img_info and HasCoverImage(img_info)
     local left_img_w = has_cover and UIScale(130) or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
@@ -20229,7 +20426,10 @@ function loop()
     if reaper.ImGui_BeginChild(ctx, "cover_art", left_img_w, img_h) then
       local audio_path = img_info and img_info.path
       local cover_path = nil
-      if audio_path and not bad_cover_cache[audio_path] then
+      if img_info and type(ResolveCoverPathForEntry) == "function" then
+        cover_path = ResolveCoverPathForEntry(img_info)
+      end
+      if not cover_path and audio_path and not bad_cover_cache[audio_path] then
         -- 计算封面临时文件路径
         cover_path = GetCoverImagePath(audio_path)
       end
@@ -20565,6 +20765,9 @@ function loop()
 
             last_selected_info = {}
             for k, v in pairs(cur_info) do last_selected_info[k] = v end
+            if type(SM_StoreStablePreviewCover) == "function" then
+              SM_StoreStablePreviewCover(last_selected_info, cur_info)
+            end
           end
           last_selected_row = selected_row
         end
@@ -21391,7 +21594,9 @@ function loop()
           local f = io.open(dbpath, "wb")
           for _, l in ipairs(lines) do f:write(l, "\n") end
           f:close()
-          if SM_DBCoverIndexExists(dbpath) then SM_RebuildDBCoverIndexFromDB(dbpath) end
+          if SM_DBCoverIndexExists(dbpath) then
+            if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) else SM_RebuildDBCoverIndexFromDB(dbpath) end
+          end
           files_idx_cache = nil
           CollectFiles()
 
@@ -21606,6 +21811,9 @@ function OnScriptExit()
   -- 停止数据库构建器 (优先清理)
   if reaper.APIExists("SM_Builder_Stop") then
     reaper.SM_Builder_Stop()
+  end
+  if cover_index_state and cover_index_state.handle then
+    SM_StopCoverIndexTask()
   end
   if similarity_state and similarity_state.builder and reaper.APIExists("SM_SIM_Builder_Stop") then
     reaper.SM_SIM_Builder_Stop(similarity_state.builder)
