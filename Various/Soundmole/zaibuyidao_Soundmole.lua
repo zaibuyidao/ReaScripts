@@ -268,6 +268,16 @@ end
 
 -- 状态变量
 WFC_PX_DEFAULT               = 2048  -- 默认缓存像素（与C++对齐）
+TABLE_WAVEFORM_IDLE_SECONDS  = 2.0   -- 表格停止滚动后，等待多少秒开始加载单元格波形
+TABLE_WAVEFORM_ENQUEUE_LIMIT = 2     -- 每帧最多加入多少个可见单元格波形任务
+TABLE_WAVEFORM_PROCESS_LIMIT = 2     -- 每帧最多推进多少个表格波形任务
+TABLE_WAVEFORM_PUMP_ITERS    = 128   -- 单个 C++ 异步任务每帧最多推进多少内部小步
+TABLE_WAVEFORM_PUMP_MS       = 0.35  -- 单个 C++ 异步任务每帧最多占用多少毫秒
+TABLE_WAVEFORM_LUA_PROCESS_LIMIT = 2    -- 无扩展时每帧最多推进多少个 Lua 波形任务
+TABLE_WAVEFORM_LUA_BUILD_ITERS = 64     -- 无扩展时单个任务每帧最多推进多少次 REAPER 峰值构建
+TABLE_WAVEFORM_LUA_ROWS_PER_SLICE = 256 -- 无扩展时单个任务每帧最多处理多少个缓存像素
+TABLE_WAVEFORM_LUA_PUMP_MS = 0.75       -- 无扩展时单个任务每帧最多占用多少毫秒
+TABLE_WAVEFORM_LUA_PRIORITY_STEPS = 16  -- 无扩展时优先连续推进当前任务的次数，随后轮转防止阻塞
 files_idx_cache              = nil   -- 文件缓存
 waveform_task_queue          = {}    -- 表格列表波形预览
 ui_bottom_offset             = 231   -- 底部总高度
@@ -466,6 +476,10 @@ function RegisterWaveformJob(key)
 end
 
 function CancelWaveformState(state)
+  if type(state) == "table" and state.backend == "lua" and type(CancelLuaTableWaveformState) == "function" then
+    CancelLuaTableWaveformState(state)
+    return
+  end
   if type(state) == "table" and state.status == "pending" then
     CancelTrackedWaveformJob(state.key)
   end
@@ -490,8 +504,12 @@ function CancelAllWaveformJobs()
 end
 
 function ClearWaveformRuntimeCache()
+  if type(ClearTableWaveformTaskQueue) == "function" then
+    ClearTableWaveformTaskQueue()
+  else
+    waveform_task_queue = {}
+  end
   CancelAllWaveformJobs()
-  waveform_task_queue = {}
   peaks, pixel_cnt, src_len, channel_count = nil, nil, nil, nil
   last_pixel_cnt, last_view_len, last_scroll = nil, nil, nil
   last_wave_info = nil
@@ -570,6 +588,7 @@ local Wave = {
   scroll = 0,
   zoom = 1,
   w = 0, -- 波形宽度
+  sample_rate = 44100,
 }
 
 -- 读取本地持久化设置
@@ -2796,25 +2815,45 @@ function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
 
   local window_len = (end_time or 0) - (start_time or 0)
 
-  -- 对每个显示像素，找到在缓存中的位置做插值
+  if cache_pixel_cnt <= 0 or cache_len <= 0 or pixel_cnt <= 0 or window_len <= 0 then
+    return peaks_new, 0, math.max(0, window_len), chs
+  end
+
+  -- 缩小时聚合每个显示像素覆盖的全部缓存峰值，避免线性插值吞掉瞬态。
+  -- 放大时才在相邻缓存点之间插值。
   for px = 1, pixel_cnt do
-    -- 当前像素在窗口中的时间
-    local t = (px-1)/(pixel_cnt-1) * window_len + start_time
-    -- 时间 t 在缓存中的采样点位置
-    local src_px = t / cache_len * (cache_pixel_cnt-1) + 1
-    local i = math.floor(src_px)
-    local frac = src_px - i
+    local t0 = start_time + ((px - 1) / pixel_cnt) * window_len
+    local t1 = start_time + (px / pixel_cnt) * window_len
+    local src_a = t0 / cache_len * cache_pixel_cnt
+    local src_b = t1 / cache_len * cache_pixel_cnt
+    local first = math.max(1, math.min(cache_pixel_cnt, math.floor(src_a) + 1))
+    local last = math.max(first, math.min(cache_pixel_cnt, math.ceil(src_b)))
+    local aggregate = (src_b - src_a) >= 1
 
     for ch = 1, chs do
-      -- 检查 peaks[ch] 是否存在，防止 cache 结构损坏报错
-      if cache.peaks and cache.peaks[ch] then
-        local v1 = cache.peaks[ch][i] or {0,0}
-        local v2 = cache.peaks[ch][i+1] or v1
-        local minv = v1[1] + (v2[1] - v1[1]) * frac
-        local maxv = v1[2] + (v2[2] - v1[2]) * frac
+      local row = cache.peaks and cache.peaks[ch]
+      if row and aggregate then
+        local minv, maxv = math.huge, -math.huge
+        for i = first, last do
+          local p = row[i]
+          if p then
+            minv = math.min(minv, p[1] or 0)
+            maxv = math.max(maxv, p[2] or 0)
+          end
+        end
+        if minv == math.huge then minv, maxv = 0, 0 end
         peaks_new[ch][px] = {minv, maxv}
+      elseif row then
+        local center = ((t0 + t1) * 0.5) / cache_len * (cache_pixel_cnt - 1) + 1
+        local i = math.max(1, math.min(cache_pixel_cnt, math.floor(center)))
+        local frac = center - i
+        local v1 = row[i] or {0, 0}
+        local v2 = row[math.min(cache_pixel_cnt, i + 1)] or v1
+        peaks_new[ch][px] = {
+          v1[1] + (v2[1] - v1[1]) * frac,
+          v1[2] + (v2[2] - v1[2]) * frac
+        }
       else
-        -- 如果某通道数据缺失，填充静音
         peaks_new[ch][px] = {0, 0}
       end
     end
@@ -2862,9 +2901,6 @@ end
 ApplyWaveformCacheDir(cache_dir, false, false) -- 设置波形缓存路径
 ApplyFreesoundCacheDir(fs_cache_dir, false, false)
 
- -- 每帧任务上限
-MAX_WAVEFORM_PER_FRAME =  8
-
 -- 单帧推进预算传给 SM_WFC_Pump
 local WF_PUMP_ITERS = 800 -- 最多执行多少内部小步
 local WF_PUMP_MS    = 1.5 -- 最多用多少毫秒 CPU 时间来推进构建
@@ -2903,7 +2939,7 @@ end
 function SM_EnsureWaveformCache(path, pixel_cnt, start_time, end_time, max_channels)
   if not path or path == "" then return nil, "invalid path" end
 
-  local px = math.max(1, math.floor(tonumber(pixel_cnt or 0)))
+  local px = math.max(1, math.floor(tonumber(pixel_cnt or WFC_PX_DEFAULT)))
   local st = tonumber(start_time) or 0
   local et = tonumber(end_time) or 0
   if et <= st then et = 0 end -- 0/<=start 表示整段
@@ -2940,7 +2976,7 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
   max_iters = tonumber(max_iters) or WF_PUMP_ITERS
   max_ms = tonumber(max_ms) or WF_PUMP_MS
 
-  reaper.SM_WFC_Pump(state.key, max_iters, max_ms)
+  local pumped = reaper.SM_WFC_Pump(state.key, max_iters, max_ms)
   local smwf = reaper.SM_WFC_GetPathIfReady(state.key)
   if smwf ~= "" then
     CancelTrackedWaveformJob(state.key)
@@ -2952,6 +2988,12 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
       CancelTrackedWaveformJob(state.key)
       return ready
     end
+  end
+  -- 新版扩展返回负值表示任务已失败或已不存在。旧版扩展返回 nil，仍保持兼容
+  local pump_result = tonumber(pumped)
+  if pump_result and pump_result < 0 then
+    CancelTrackedWaveformJob(state.key)
+    return nil
   end
   return state
 end
@@ -2978,6 +3020,44 @@ function SM_LoadWaveformCache(path, pixel_cnt, start_time, end_time, max_channel
   else
     return nil, select(2, sm) or "unknown error"
   end
+end
+
+-- 严格读取现有的 C++ 缓存，不启动或同步构建缓存。
+function SM_LoadWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, max_channels)
+  if not HAVE_SM_WFC or not path or path == "" then return nil end
+  local px = math.max(1, math.floor(tonumber(pixel_cnt or WFC_PX_DEFAULT)))
+  local st = tonumber(start_time) or 0
+  local et = tonumber(end_time) or 0
+  if et <= st then et = 0 end
+  local maxch = math.max(1, math.min(64, tonumber(max_channels or 6)))
+  local smwf = reaper.SM_GetWaveformCachePath(path, px, st, et, maxch)
+  if not smwf or smwf == "" then return nil end
+  local peaks, px_real, win_len, ch_real = SM_ReadSMWF(smwf)
+  if not peaks then return nil end
+  return {
+    status = "ready", peaks = peaks, pixel_cnt = px_real,
+    channel_count = ch_real, src_len = win_len, smwf_path = smwf
+  }
+end
+
+-- 启动一个 C++ 缓存任务，不回退到同步构建。
+function SM_BeginWaveformCacheAsync(path, pixel_cnt, start_time, end_time, max_channels)
+  local ready = SM_LoadWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, max_channels)
+  if ready then return ready end
+  if not HAVE_SM_WFC or not path or path == "" then return nil end
+
+  local px = math.max(1, math.floor(tonumber(pixel_cnt or WFC_PX_DEFAULT)))
+  local st = tonumber(start_time) or 0
+  local et = tonumber(end_time) or 0
+  if et <= st then et = 0 end
+  local maxch = math.max(1, math.min(64, tonumber(max_channels or 6)))
+  local key = reaper.SM_WFC_Begin(path, px, st, et, maxch)
+  if not key or key == "" then return nil end
+  RegisterWaveformJob(key)
+  return {
+    status = "pending", key = key, req_path = path, req_px = px,
+    req_st = st, req_et = et, req_maxch = maxch
+  }
 end
 
 -- wf_step 已失效，仅保留形参但不使用
@@ -3249,8 +3329,8 @@ function CollectFiles()
   end
 
   -- 切换模式后清空表格列表波形预览队列
+  ClearTableWaveformTaskQueue()
   CancelAllWaveformJobs()
-  waveform_task_queue = {}
 
   if type(RequestActiveSearchRefresh) == "function" then
     RequestActiveSearchRefresh()
@@ -7080,7 +7160,6 @@ end
 
 -- 绘制波形
 function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, vertical_scale)
-  -- 如果没有传入缩放比例，默认使用 1.0
   local v_scale = vertical_scale or 1.0
 
   reaper.ImGui_InvisibleButton(ctx, "##wave", img_w, img_h)
@@ -7088,84 +7167,77 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
   local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
   local drawlist = reaper.ImGui_GetWindowDrawList(ctx)
 
-  if peaks then
-    local w = img_w
-    local h = img_h
-    for ch = 1, channel_count do
-      local ch_y = min_y + (ch - 1) * h / channel_count
-      local ch_h = h / channel_count
-      local y_mid = ch_y + ch_h / 2
+  if not peaks then return end
 
-      -- 画中心参考线
-      reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, colors.wave_center, 1.0) 
+  local w = math.max(1, math.floor(img_w))
+  local h = img_h
+  channel_count = math.max(0, tonumber(channel_count) or #peaks)
 
-      for i = 1, w do
-        local frac = (i - 1) / (w - 1)
-        local idx = math.floor(frac * #peaks[ch]) + 1
-        local p = (peaks[ch] and peaks[ch][idx]) or {0, 0}
-        local minv = p[1] or 0
-        local maxv = p[2] or 0
+  local function wave_color(minv, maxv)
+    if waveform_color_mode == WAVE_COLOR_MONO then return colors.wave_line end
+    local amp = math.min(1.0, math.max(math.abs(minv), math.abs(maxv)) * v_scale)
+    if waveform_color_mode == WAVE_COLOR_ALPHA then
+      return (colors.wave_line & 0xFFFFFF00) | math.floor((0.25 + amp * 0.75) * 255)
+    end
+    local hue = ((math.max(0, 0.6 - amp * 0.6)) + (spectral_hue_shift or 0)) % 1.0
+    local sat = (0.7 + amp * 0.3) * (spectral_grad_sat or 1.0)
+    local val = 0.6 + amp * 0.3
+    local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, sat, val)
+    return reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 1.0)
+  end
 
-        -- 计算线条高度
-        local y1 = y_mid - minv * ch_h / 2 * v_scale
-        local y2 = y_mid - maxv * ch_h / 2 * v_scale
+  local function is_sample_curve(row)
+    local n = row and #row or 0
+    if n < 2 or n > w * 4 then return false end
+    local step = math.max(1, math.floor(n / 128))
+    local equal, tested = 0, 0
+    for i = 1, n, step do
+      local p = row[i]
+      if p then
+        tested = tested + 1
+        if math.abs((p[1] or 0) - (p[2] or 0)) < 1e-9 then equal = equal + 1 end
+      end
+    end
+    return tested > 0 and equal / tested > 0.98
+  end
 
-        -- 确定线条颜色
-        local col = colors.wave_line -- 默认 (模式 0)
+  for ch = 1, channel_count do
+    local row = peaks[ch] or {}
+    local ch_y = min_y + (ch - 1) * h / channel_count
+    local ch_h = h / channel_count
+    local y_mid = ch_y + ch_h / 2
+    reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, colors.wave_center, 1.0)
 
-        -- 如果不是默认模式，进行动态计算
-        if waveform_color_mode ~= WAVE_COLOR_MONO then
-          -- 获取当前采样点的振幅 (0.0 ~ 1.0)
-          local amp = math.max(math.abs(minv), math.abs(maxv)) * v_scale
-          -- 限制在 0~1 之间
-          if amp > 1.0 then amp = 1.0 end
-
-          if waveform_color_mode == WAVE_COLOR_ALPHA then
-            -- A: 动态透明度 (振幅越小越透明，最小 0.2，最大 1.0)
-            local alpha_ratio = 0.25 + (amp * 0.75) 
-            if alpha_ratio > 1.0 then alpha_ratio = 1.0 end
-            local alpha_byte = math.floor(alpha_ratio * 255)
-            -- 保留原颜色的 RGB，替换 Alpha 通道
-            col = (colors.wave_line & 0xFFFFFF00) | alpha_byte
-
-          --  elseif waveform_color_mode == WAVE_COLOR_GRADIENT then
-          --    -- B: 颜色渐变 (HSV 转换)
-          --    -- Hue: 0.6(蓝) -> 0.3(绿) -> 0.0(红/黄)
-          --    local hue = 0.6 - (amp * 0.6)
-          --    if hue < 0 then hue = 0 end
-
-          --    -- Saturation: 声音越大越饱和
-          --    local sat = 0.7 + (amp * 0.3)
-
-          --    -- local val = 0.85 -- 始终保持较亮
-          --    local val = 0.6 + (amp * 0.3) -- 亮度随音量动态变化
-
-          --    local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, sat, val)
-          --    col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 1.0)
-          --  end
-          elseif waveform_color_mode == WAVE_COLOR_GRADIENT then
-            -- B: 颜色渐变 (HSV 转换)
-            -- Hue: 0.6(蓝) -> 0.3(绿) -> 0.0(红/黄)
-            local base_hue = 0.6 - (amp * 0.6)
-            if base_hue < 0 then base_hue = 0 end
-
-            -- 应用色相偏移
-            local hue = (base_hue + (spectral_hue_shift or 0)) % 1.0
-            -- Saturation: 声音越大越饱和 (0.7 ~ 1.0)
-            -- 乘以全局饱和度系数，降低此值可使颜色变柔和(Pastel)
-            local sat_mult = spectral_grad_sat or 1.0
-            local sat = (0.7 + (amp * 0.3)) * sat_mult
-
-            -- local val = 0.85 -- 始终保持较亮
-            local val = 0.6 + (amp * 0.3) -- 亮度随音量动态变化
-
-            local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, sat, val)
-            col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, 1.0)
-          end
+    if is_sample_curve(row) then
+      local n = #row
+      local spacing = w / math.max(1, n - 1)
+      local prev_x, prev_y
+      for i = 1, n do
+        local sample = row[i][1] or 0
+        local x = min_x + ((i - 1) / math.max(1, n - 1)) * w
+        local y = y_mid - sample * ch_h / 2 * v_scale
+        local col = wave_color(sample, sample)
+        if prev_x then reaper.ImGui_DrawList_AddLine(drawlist, prev_x, prev_y, x, y, col, 1.0) end
+        if spacing >= 4 then
+          reaper.ImGui_DrawList_AddCircleFilled(drawlist, x, y, math.min(2.5, spacing * 0.22), col)
         end
-
-        -- 绘制线条
-        reaper.ImGui_DrawList_AddLine(drawlist, min_x + i, y1, min_x + i, y2, col, 1.0) 
+        prev_x, prev_y = x, y
+      end
+    else
+      for i = 1, w do
+        local frac = (i - 1) / math.max(1, w - 1)
+        local idx = math.min(#row, math.floor(frac * math.max(0, #row - 1)) + 1)
+        local p = row[idx] or {0, 0}
+        local minv, maxv = p[1] or 0, p[2] or 0
+        local y_min = y_mid - minv * ch_h / 2 * v_scale
+        local y_max = y_mid - maxv * ch_h / 2 * v_scale
+        local col = wave_color(minv, maxv)
+        -- Paint every envelope column exactly once in all color modes.
+        -- Repeated antialiased lines caused particles in monochrome mode and
+        -- muddy alpha/gradient colors where the strokes overlapped.
+        local x0 = min_x + i - 1
+        reaper.ImGui_DrawList_AddRectFilled(
+          drawlist, x0, math.min(y_min, y_max), x0 + 1, math.max(y_min, y_max), col)
       end
     end
   end
@@ -7561,6 +7633,15 @@ function ClampWaveView(wave)
   wave.scroll = _clamp(tonumber(wave.scroll) or 0, 0, max_scroll)
 end
 
+function GetWaveMaxZoom(wave)
+  if not wave then return 1 end
+  local src_len = math.max(0, tonumber(wave.src_len) or 0)
+  local sample_rate = math.max(1, tonumber(wave.sample_rate) or 44100)
+  local display_width = math.max(1, tonumber(wave.w) or 1)
+  -- Stop at roughly four screen pixels per source sample.
+  return math.max(1, math.min(1e9, src_len * sample_rate * 4 / display_width))
+end
+
 function ZoomWaveAtFraction(wave, anchor_frac, zoom_factor, min_zoom, max_zoom)
   if not wave then return false end
   local src_len = math.max(0, tonumber(wave.src_len) or 0)
@@ -7588,6 +7669,36 @@ function ZoomWaveAtFraction(wave, anchor_frac, zoom_factor, min_zoom, max_zoom)
   return true
 end
 
+function FormatTimelineTime(seconds, show_milliseconds)
+  local total_milliseconds = math.floor(math.max(0, tonumber(seconds) or 0) * 1000 + 0.5)
+  local whole_seconds = math.floor(total_milliseconds / 1000)
+  local minutes = math.floor(whole_seconds / 60)
+  local seconds_in_minute = whole_seconds % 60
+  if show_milliseconds then
+    return string.format("%02d:%02d.%03d", minutes, seconds_in_minute, total_milliseconds % 1000)
+  end
+  return string.format("%02d:%02d", minutes, seconds_in_minute)
+end
+
+function GetTimelineTickStep(view_len, pixels_per_sec, min_tick_px)
+  local tick_step = 0.25
+  local min_tick_step = 0.001
+
+  -- 极短视图至少保留约四个主刻度，最低显示到毫秒。
+  while tick_step > min_tick_step and tick_step > view_len / 4 do
+    tick_step = tick_step / 2
+  end
+  if tick_step < min_tick_step then
+    tick_step = min_tick_step
+  end
+
+  -- 视图变长时按 0.25、0.5、1、2、4、8... 无限翻倍。
+  while pixels_per_sec > 0 and tick_step * pixels_per_sec < min_tick_px do
+    tick_step = tick_step * 2
+  end
+  return tick_step
+end
+
 -- 绘制时间线
 function DrawTimeLine(ctx, wave, view_start, view_end)
   local y_offset    = 0            -- 距离波形底部-9像素
@@ -7595,10 +7706,9 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
   local tick_middle = UIScale(10)  -- 中间刻度高度
   local tick_secmid = UIScale(7)   -- 次中间刻度高度
   local tick_short  = UIScale(3)   -- 次刻度高度
-  local min_tick_px = UIScale(150) -- 两个主刻度最小像素距离
+  local min_tick_px = UIScale(80)  -- 两个主刻度最小像素距离
   local line_th     = UIScaleF(1)
   local label_x_pad = UIScaleF(4)
-  local label_margin = UIScaleF(6)
 
   -- 绘制时间线基础线
   local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
@@ -7615,33 +7725,13 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
   -- 设置基础线颜色
   reaper.ImGui_DrawList_AddLine(drawlist, x0, base_y, x1, base_y, colors.timeline_def_color, line_th)
 
-  -- 智能自适应主刻度数
+  -- 智能自适应主刻度
   local avail_w = max_x - min_x
-  local target_ticks_visible = math.max(1, math.floor(avail_w / min_tick_px + 0.5))
-  local show_end_label = wave and math.abs((tonumber(wave.zoom) or 1) - 1) < 1e-9 and math.abs(view_start or 0) < 1e-9
-  local end_text, end_text_w = nil, 0
-  if show_end_label then
-    end_text = reaper.format_timestr(tonumber(view_end) or 0, "")
-    PushUIFont(ctx, fonts.sans_serif, 12)
-    end_text_w = select(1, reaper.ImGui_CalcTextSize(ctx, end_text))
-    reaper.ImGui_PopFont(ctx)
-  end
-
-  -- 计算自适应的主刻度间隔
   local view_len = view_end - view_start
   if view_len <= 0 then view_len = 1 end -- 防止为0
   local pixels_per_sec = avail_w / view_len
-  local tick_steps = {0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 30, 60, 120, 300}
-  local tick_step = view_len / target_ticks_visible
-  for _, v in ipairs(tick_steps) do
-    if v * pixels_per_sec >= min_tick_px then
-      tick_step = v
-      break
-    end
-  end
-  if not tick_step or tick_step <= 0 or tick_step ~= tick_step then
-    tick_step = 1
-  end
+  local tick_step = GetTimelineTickStep(view_len, pixels_per_sec, min_tick_px)
+  local show_milliseconds = tick_step < 1
 
   -- 绘制主刻度和时间标签
   local start_tick = math.ceil(view_start / tick_step) * tick_step
@@ -7652,12 +7742,11 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
     reaper.ImGui_DrawList_AddLine(drawlist, x, base_y, x, base_y - tick_long, colors.timeline_def_color, line_th)
     -- 时间标签
     PushUIFont(ctx, fonts.sans_serif, 12)
-    local text = reaper.format_timestr(t or 0, "")
-    local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
+    local text = FormatTimelineTime(t, show_milliseconds)
+    local text_w = select(1, reaper.ImGui_CalcTextSize(ctx, text))
     local text_y = base_y - tick_long - UIScaleF(3) -- 100% 保持原始位置，放大时按比例抬高
     local text_x = x + label_x_pad
-    local overlaps_end_label = show_end_label and ((text_x + text_w + label_margin) > (max_x - end_text_w - label_x_pad))
-    if not overlaps_end_label then
+    if text_x + text_w + label_x_pad <= max_x then
       reaper.ImGui_DrawList_AddText(drawlist, text_x, text_y, colors.timeline_text, text) -- 文本左右偏移量
     end
     reaper.ImGui_PopFont(ctx)
@@ -7692,16 +7781,17 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
     end
   end
 
-  -- 完整视图下，最右侧始终显示音频结束时间
-  if show_end_label then
-    PushUIFont(ctx, fonts.sans_serif, 12)
-    local text_w = end_text_w
-    local text_x = math.max(min_x, max_x - text_w - label_x_pad)
-    local text_y = base_y - tick_long - UIScaleF(3)
-    reaper.ImGui_DrawList_AddLine(drawlist, max_x, base_y, max_x, base_y - tick_long, colors.timeline_def_color, line_th)
-    reaper.ImGui_DrawList_AddText(drawlist, text_x, text_y, colors.timeline_text, end_text)
-    reaper.ImGui_PopFont(ctx)
-  end
+  -- 暂不强制显示最右侧的音频结束时间，只显示正常落在视图内的主刻度。
+  --[[
+  PushUIFont(ctx, fonts.sans_serif, 12)
+  local end_text = FormatTimelineTime(view_end, show_milliseconds)
+  local end_text_w = select(1, reaper.ImGui_CalcTextSize(ctx, end_text))
+  local text_x = math.max(min_x, max_x - end_text_w - label_x_pad)
+  local text_y = base_y - tick_long - UIScaleF(3)
+  reaper.ImGui_DrawList_AddLine(drawlist, max_x, base_y, max_x, base_y - tick_long, colors.timeline_def_color, line_th)
+  reaper.ImGui_DrawList_AddText(drawlist, text_x, text_y, colors.timeline_text, end_text)
+  reaper.ImGui_PopFont(ctx)
+  ]]
 end
 
 -- 智能波形采集入口，info 必须包含 .path 字段
@@ -9158,25 +9248,244 @@ LoadRecentPlayed()
 ---------------------------------------------  表格列表波形预览节点 ---------------------------------------------
 
 function EnqueueWaveformTask(info, thumb_w)
+  if not info or not info.path or info.path == "" or not thumb_w or thumb_w <= 0 then return false end
   for _, task in ipairs(waveform_task_queue) do
     if task.info == info and task.width == thumb_w then
-      return
+      info._loading_waveform = true
+      return false
     end
   end
   table.insert(waveform_task_queue, {info=info, width=thumb_w})
+  info._loading_waveform = true
+  return true
+end
+
+function ClearTableWaveformTaskQueue()
+  for _, task in ipairs(waveform_task_queue) do
+    local info = task and task.info
+    if info then
+      CancelInfoWaveformJobs(info)
+      info._loading_waveform = false
+    end
+  end
+  waveform_task_queue = {}
+end
+
+function CancelLuaTableWaveformState(state)
+  if type(state) ~= "table" then return end
+  if state.source and reaper.PCM_Source_Destroy then
+    pcall(reaper.PCM_Source_Destroy, state.source)
+  end
+  state.source = nil
+  if state.cache_file then pcall(function() state.cache_file:close() end) end
+  state.cache_file = nil
+  if state.cache_tmp then pcall(os.remove, state.cache_tmp) end
+  state.status = "cancelled"
+end
+
+function BeginLuaTableWaveformTask(info, width)
+  local cache = LoadWaveformCache(info.path)
+  if cache then return {status = "ready", cache = cache} end
+  if not reaper.PCM_Source_CreateFromFile or not reaper.PCM_Source_GetPeaks then return nil end
+
+  local path = normalize_path(info.path, false)
+  local source = reaper.PCM_Source_CreateFromFile(path)
+  if not source then return nil end
+
+  local src_len = tonumber((reaper.GetMediaSourceLength(source))) or 0
+  local channels = math.max(1, math.min(6, tonumber(reaper.GetMediaSourceNumChannels(source)) or 1))
+  if src_len <= 0 then
+    reaper.PCM_Source_Destroy(source)
+    return nil
+  end
+
+  local pixel_cnt = WFC_PX_DEFAULT
+  local peaks = {}
+  for ch = 1, channels do peaks[ch] = {} end
+  local build_pending = false
+  if reaper.PCM_Source_BuildPeaks then
+    build_pending = (tonumber(reaper.PCM_Source_BuildPeaks(source, 0)) or 0) ~= 0
+  end
+
+  return {
+    backend = "lua", status = "pending",
+    phase = build_pending and "build" or "sample",
+    source = source, path = path, width = width,
+    src_len = src_len, channels = channels, channel_count = channels,
+    pixel_cnt = pixel_cnt, pixel_rate = pixel_cnt / src_len,
+    peaks = peaks, row = 1
+  }
+end
+
+function BeginLuaTableWaveformCacheWrite(state)
+  local fpath = CacheFilename(state.path)
+  local dir = fpath:match("^(.*[\\/])") or cache_dir
+  EnsureCacheDir(dir)
+  local tmp = fpath .. "." .. tostring(state.width or 0) .. ".tmp"
+  local f = io.open(tmp, "w+b")
+  if not f then return false end
+  f:write(string.format("%d,%d,%f\n", state.pixel_cnt, state.channels, state.src_len))
+  state.cache_path, state.cache_tmp, state.cache_file = fpath, tmp, f
+  state.save_row, state.phase = 1, "save"
+  return true
+end
+
+function FinishLuaTableWaveformCacheWrite(state)
+  if state.cache_file then state.cache_file:close() end
+  state.cache_file = nil
+  if state.cache_tmp and state.cache_path then
+    os.remove(state.cache_path)
+    os.rename(state.cache_tmp, state.cache_path)
+  end
+  state.cache_tmp = nil
+end
+
+function PumpLuaTableWaveformTask(state, max_rows, max_ms)
+  if type(state) ~= "table" or state.backend ~= "lua" or state.status ~= "pending" then return nil end
+  max_rows = math.max(1, math.floor(tonumber(max_rows) or TABLE_WAVEFORM_LUA_ROWS_PER_SLICE))
+  max_ms = math.max(0.05, tonumber(max_ms) or TABLE_WAVEFORM_LUA_PUMP_MS)
+  local started = reaper.time_precise()
+
+  if state.phase == "build" then
+    local remaining = 1
+    local iters = 0
+    while remaining ~= 0 and iters < TABLE_WAVEFORM_LUA_BUILD_ITERS
+      and (iters == 0 or (reaper.time_precise() - started) * 1000 < max_ms)
+    do
+      remaining = tonumber(reaper.PCM_Source_BuildPeaks(state.source, 1)) or 0
+      iters = iters + 1
+    end
+    if remaining == 0 then
+      reaper.PCM_Source_BuildPeaks(state.source, 2)
+      state.phase = "sample"
+    end
+    return state
+  end
+
+  if state.phase == "sample" then
+    local processed = 0
+    while state.row <= state.pixel_cnt and processed < max_rows
+      and (processed == 0 or (reaper.time_precise() - started) * 1000 < max_ms)
+    do
+      local rows = math.min(max_rows - processed, state.pixel_cnt - state.row + 1)
+      local buf = reaper.new_array(math.max(1, rows * state.channels * 2))
+      local start_time = (state.row - 1) / state.pixel_rate
+      local retval = tonumber(reaper.PCM_Source_GetPeaks(
+        state.source, state.pixel_rate, start_time, state.channels, rows, 0, buf
+      )) or 0
+      local got = (retval > 0) and (retval & 0xFFFFF) or 0
+      if got > rows then got = rows end
+      if got <= 0 then
+        -- 仅在确实还有峰值要构建时重试；否则把当前空块作为静音推进，避免无限重建。
+        local build_pending = 0
+        if reaper.PCM_Source_BuildPeaks then
+          build_pending = tonumber(reaper.PCM_Source_BuildPeaks(state.source, 0)) or 0
+        end
+        if build_pending ~= 0 then
+          state.phase = "build"
+          return state
+        end
+        for j = 0, rows - 1 do
+          local out_row = state.row + j
+          for ch = 1, state.channels do
+            state.peaks[ch][out_row] = {0, 0}
+          end
+        end
+        state.row = state.row + rows
+        processed = processed + rows
+        goto continue_lua_peak_sample
+      end
+      local min_offset = rows * state.channels
+
+      for j = 0, rows - 1 do
+        local out_row = state.row + j
+        for ch = 1, state.channels do
+          local index = j * state.channels + ch
+          state.peaks[ch][out_row] = (j < got) and {
+            tonumber(buf[min_offset + index]) or 0,
+            tonumber(buf[index]) or 0
+          } or {0, 0}
+        end
+      end
+      state.row = state.row + rows
+      processed = processed + rows
+      ::continue_lua_peak_sample::
+    end
+
+    if state.row > state.pixel_cnt then
+      if state.source then reaper.PCM_Source_Destroy(state.source) end
+      state.source = nil
+      state.display_ready = true
+      if not BeginLuaTableWaveformCacheWrite(state) then
+        state.status = "ready"
+      end
+    end
+    return state
+  end
+
+  if state.phase == "save" then
+    local written = 0
+    while state.save_row <= state.pixel_cnt and written < max_rows
+      and (written == 0 or (reaper.time_precise() - started) * 1000 < max_ms)
+    do
+      local cols = {}
+      for ch = 1, state.channels do
+        local peak = state.peaks[ch][state.save_row] or {0, 0}
+        cols[#cols + 1] = string.format("%f,%f", tonumber(peak[1]) or 0, tonumber(peak[2]) or 0)
+      end
+      state.cache_file:write(table.concat(cols, ","), "\n")
+      state.save_row = state.save_row + 1
+      written = written + 1
+    end
+    if state.save_row > state.pixel_cnt then
+      FinishLuaTableWaveformCacheWrite(state)
+      state.status = "ready"
+    end
+    return state
+  end
+
+  CancelLuaTableWaveformState(state)
+  return nil
+end
+
+function StoreTableWaveformFromCache(info, width, cache)
+  if not info or not width or not cache or not cache.peaks then
+    if info then info._loading_waveform = false end
+    return false
+  end
+  local peaks_new, pixel_cnt_new, _, chs = RemapWaveformToWindow(cache, width, 0, cache.src_len)
+  if not peaks_new or not pixel_cnt_new or pixel_cnt_new <= 0 or not chs or chs <= 0 then
+    info._loading_waveform = false
+    return false
+  end
+  info._thumb_waveform = info._thumb_waveform or {}
+  info._thumb_waveform[width] = {
+    _key = tostring(info.path or "") .. "|" .. tostring(width),
+    peaks = peaks_new, pixel_cnt = pixel_cnt_new,
+    src_len = cache.src_len, channel_count = chs
+  }
+  info._loading_waveform = false
+  return true
 end
 
 function ProcessWaveformTasks()
+  local list_state = _G._soundmole_static or {}
+  local last_scroll_time = tonumber(list_state.last_scroll_time)
+  if last_scroll_time and reaper.time_precise() - last_scroll_time < TABLE_WAVEFORM_IDLE_SECONDS then
+    return
+  end
+
+  local process_limit = HAVE_SM_WFC and TABLE_WAVEFORM_PROCESS_LIMIT or TABLE_WAVEFORM_LUA_PROCESS_LIMIT
   local n = 0
-  while n < MAX_WAVEFORM_PER_FRAME and #waveform_task_queue > 0 do
+  while n < process_limit and #waveform_task_queue > 0 do
     local task = table.remove(waveform_task_queue, 1)
     local info = task and task.info
     local width = task and task.width
 
     if info and info.path and info.path ~= "" and width then
       info._thumb_waveform = info._thumb_waveform or {}
-
-      if not info._thumb_waveform[width] then
+      local lua_state = (not HAVE_SM_WFC) and info._wf_state and info._wf_state[width]
+      if not info._thumb_waveform[width] or lua_state then
         if HAVE_SM_WFC then
           info._wf_state = info._wf_state or {}
           local maxch = info.max_channels or info.channel_count or 6
@@ -9184,44 +9493,87 @@ function ProcessWaveformTasks()
 
           local state = info._wf_state[width]
           if state then
-            local smwf_or_state = SM_EnsureWaveformCache_Pump(state, WF_PUMP_ITERS, WF_PUMP_MS)
+            local smwf_or_state = SM_EnsureWaveformCache_Pump(state, TABLE_WAVEFORM_PUMP_ITERS, TABLE_WAVEFORM_PUMP_MS)
             if type(smwf_or_state) == "string" then
               local peaks, px, win_len, ch = SM_ReadSMWF(smwf_or_state)
               if peaks and ch then
-                info._thumb_waveform[width] = { _key = expected_key, peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch }
+                StoreTableWaveformFromCache(info, width, {
+                  peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch
+                })
+              else
+                info._loading_waveform = false
               end
               info._wf_state[width] = nil
             elseif type(smwf_or_state) == "table" then
               table.insert(waveform_task_queue, task)
-              break
             else
               info._wf_state[width] = nil
+              info._loading_waveform = false
             end
           else
-            local peaks, px, win_len, ch = SM_GetPeaksWithCache(info, nil, width)
-            if peaks then
-              info._thumb_waveform[width] = { _key = expected_key, peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch }
+            local cache_or_state = SM_BeginWaveformCacheAsync(info.path, WFC_PX_DEFAULT, 0, 0, maxch)
+            if cache_or_state and cache_or_state.status == "ready" then
+              StoreTableWaveformFromCache(info, width, cache_or_state)
+            elseif cache_or_state and cache_or_state.status == "pending" then
+              info._wf_state[width] = cache_or_state
+              table.insert(waveform_task_queue, task)
             else
-              local _, reason, st = SM_GetPeaksWithCache(info, nil, width)
-              if reason == "pending" and st then
-                info._wf_state[width] = st
-                table.insert(waveform_task_queue, task)
-                break
-              end
+              info._loading_waveform = false
             end
           end
         else
-          -- 回退到旧逻辑
-          if not info._thumb_waveform[width] then
-            local peaks, pixel_cnt, src_len, channel_count = GetPeaksWithCache(info, wf_step, width) -- 统一采样步长 wf_step=400
-            if peaks and channel_count then
-              info._thumb_waveform[width] = {
-                _key = expected_key, peaks = peaks, pixel_cnt = pixel_cnt, src_len = src_len, channel_count = channel_count
-              }
+          -- 无扩展时使用 REAPER 原生 API 分片生成，避免一次性采样整段音频。
+          info._wf_state = info._wf_state or {}
+          local state = info._wf_state[width]
+          if state then
+            local pumped = PumpLuaTableWaveformTask(state, TABLE_WAVEFORM_LUA_ROWS_PER_SLICE, TABLE_WAVEFORM_LUA_PUMP_MS)
+            if pumped and pumped.display_ready and not pumped.displayed then
+              pumped.displayed = StoreTableWaveformFromCache(info, width, {
+                peaks = pumped.peaks, pixel_cnt = pumped.pixel_cnt,
+                src_len = pumped.src_len, channel_count = pumped.channel_count or pumped.channels
+              })
+            end
+            if pumped and pumped.status == "ready" then
+              if not pumped.displayed then
+                StoreTableWaveformFromCache(info, width, {
+                  peaks = pumped.peaks, pixel_cnt = pumped.pixel_cnt,
+                  src_len = pumped.src_len, channel_count = pumped.channel_count or pumped.channels
+                })
+              end
+              info._wf_state[width] = nil
+            elseif pumped and pumped.status == "pending" then
+              if not pumped.display_ready and pumped.phase ~= "save" then
+                task.lua_priority_steps = (task.lua_priority_steps or 0) + 1
+              else
+                task.lua_priority_steps = 0
+              end
+              if task.lua_priority_steps > 0 and task.lua_priority_steps < TABLE_WAVEFORM_LUA_PRIORITY_STEPS then
+                table.insert(waveform_task_queue, 1, task)
+              else
+                task.lua_priority_steps = 0
+                table.insert(waveform_task_queue, task)
+              end
+            else
+              info._wf_state[width] = nil
+              info._loading_waveform = false
+            end
+          else
+            local started = BeginLuaTableWaveformTask(info, width)
+            if started and started.status == "ready" then
+              StoreTableWaveformFromCache(info, width, started.cache)
+            elseif started and started.status == "pending" then
+              info._wf_state[width] = started
+              table.insert(waveform_task_queue, task)
+            else
+              info._loading_waveform = false
             end
           end
         end
+      else
+        info._loading_waveform = false
       end
+    elseif info then
+      info._loading_waveform = false
     end
     n = n + 1
   end
@@ -9735,8 +10087,8 @@ function RefreshFolderFiles(dir)
   previewed_files = {}
   SortFilesByFilenameAsc()
   -- 切换模式后清空表格列表波形预览队列
+  ClearTableWaveformTaskQueue()
   CancelAllWaveformJobs()
-  waveform_task_queue = {}
 
   if type(RequestActiveSearchRefresh) == "function" then
     RequestActiveSearchRefresh()
@@ -10842,8 +11194,6 @@ _G.commit_filter_text = _G.commit_filter_text or ""
 -- 只在过滤/排序状态变化时重建 filtered_list，普通渲染时只用缓存，用于解决滚动卡死问题
 local static = _G._soundmole_static or {}
 _G._soundmole_static = static
-static.wf_delay_cached = static.wf_delay_cached or 0.5 -- 表格列表波形已缓存延迟0.5秒
-static.wf_delay_miss   = static.wf_delay_miss   or 1.0 -- 表格列表波形未缓存延迟2秒
 static.filtered_list_map = static.filtered_list_map or {} -- 用于存放所有列表缓存
 static.last_filter_text_map = static.last_filter_text_map or {}
 static.last_sort_specs_map  = static.last_sort_specs_map or {}
@@ -12012,9 +12362,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
   reaper.ImGui_PopStyleColor(ctx, 1)
 end
 
--- 用双延迟渲染波形
--- 已缓存波形 - 停止滚动满 wf_delay_cached 0.5秒 后，按本帧上限 fast_wf_load_limit 2从磁盘缓存批量直读并显示。
--- 未缓存波形 - 停止滚动满 wf_delay_miss 2秒 后，进入创建队列，沿用已有的 load_limit/loaded_count 限流。
+-- 表格停止滚动满 TABLE_WAVEFORM_IDLE_SECONDS 后，读取缓存或加入异步创建队列。
 function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
   local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx)) -- 自适应宽度
   local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2px padding
@@ -12026,7 +12374,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
       info._thumb_waveform[info._last_thumb_w] = nil
     end
     info._last_thumb_w = thumb_w
-    info._loading_waveform = false -- 重置标记，让 Clip­per 在空闲2秒后再次入队
+    info._loading_waveform = false -- 重置标记，让可见行在空闲延迟后再次入队
   end
 
   -- 表格列表波形预览支持鼠标点击切换播放光标
@@ -12051,30 +12399,21 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     end
   end
 
-  -- 已缓存时，尝试磁盘缓存直读+重映射
-  if not freesound_not_downloaded and not wf and idle_time >= (static.wf_delay_cached or 0.5) and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2) then
-    -- 只读磁盘缓存
+  -- 已缓存时只读现成缓存，绝不在渲染过程中同步构建
+  if not freesound_not_downloaded and not wf
+    and idle_time >= TABLE_WAVEFORM_IDLE_SECONDS
+    and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2)
+  then
     local cache
     if HAVE_SM_WFC then
-      cache = SM_LoadWaveformCache(info.path) -- API扩展版本
+      local maxch = info.max_channels or info.channel_count or 6
+      cache = SM_LoadWaveformCacheIfReady(info.path, WFC_PX_DEFAULT, 0, 0, maxch)
     else
       cache = LoadWaveformCache(info.path)
     end
-    if cache and cache.peaks and cache.pixel_cnt and cache.channel_count and cache.src_len then
-      -- 按当前列宽重采样
-      local peaks_new, pixel_cnt_new, _, chs = RemapWaveformToWindow(cache, thumb_w, 0, cache.src_len)
-      if peaks_new and pixel_cnt_new and chs then
-        info._thumb_waveform[thumb_w] = {
-          _key = expected_key, -- 写入防串台 key
-          peaks = peaks_new,
-          pixel_cnt = pixel_cnt_new,
-          src_len = cache.src_len,
-          channel_count = chs
-        }
-        wf = info._thumb_waveform[thumb_w]
-        info._loading_waveform = false
-        static.fast_wf_load_count = (static.fast_wf_load_count or 0) + 1
-      end
+    if cache and StoreTableWaveformFromCache(info, thumb_w, cache) then
+      wf = info._thumb_waveform[thumb_w]
+      static.fast_wf_load_count = (static.fast_wf_load_count or 0) + 1
     end
   end
 
@@ -12138,9 +12477,14 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     end
 
     -- 未缓存时兜底入队
-    if not freesound_not_downloaded and idle_time >= (static.wf_delay_miss or 1) and not info._loading_waveform then
-      info._loading_waveform = true
-      EnqueueWaveformTask(info, thumb_w)
+    if not freesound_not_downloaded
+      and idle_time >= TABLE_WAVEFORM_IDLE_SECONDS
+      and not info._loading_waveform
+      and (static.wf_enqueue_count or 0) < TABLE_WAVEFORM_ENQUEUE_LIMIT
+    then
+      if EnqueueWaveformTask(info, thumb_w) then
+        static.wf_enqueue_count = (static.wf_enqueue_count or 0) + 1
+      end
     end
 
     -- 画灰色占位条
@@ -19245,8 +19589,11 @@ function loop()
           -- 新数据库只失效自己的显示缓存，保留每个数据库的选中路径。
           static.filtered_list_map[current_db_key] = nil
           static.last_filter_text_map[current_db_key] = nil
+          ClearTableWaveformTaskQueue()
           static.clipper = nil
           static.last_db_key          = current_db_key
+          static.last_scroll_time     = reaper.time_precise()
+          static.last_scroll_y        = nil
           SM_RequestDBSelectionRestore(current_db_key)
         end
 
@@ -19675,29 +20022,10 @@ function loop()
           _G.scroll_target = 0.5 -- 0.0=顶部
         end
 
-        local wave_col = -1
-        local col_count = reaper.ImGui_TableGetColumnCount(ctx)
-        for c = 0, col_count - 1 do
-          if (reaper.ImGui_TableGetColumnName(ctx, c) or "") == T("Waveform") then
-            wave_col = c
-            break
-          end
-        end
-
-        local wave_w
-        if wave_col >= 0 then
-          reaper.ImGui_TableSetColumnIndex(ctx, wave_col)
-          wave_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-        else
-          wave_w = 120 -- 没有 Waveform 列时的兜底宽度
-        end
-
-        local tw = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-        local load_limit   = 1 -- 每帧最多2个波形加载任务，波形加载限制2个
-        local loaded_count = 0
         -- 限制本帧已缓存直读次数，避免IO抖动
         static.fast_wf_load_count = 0
         static.fast_wf_load_limit = static.fast_wf_load_limit or 2
+        static.wf_enqueue_count = 0
 
         -- 限制加载波形，指定列表无滚动时多少秒之后才开始加载。用于解决脚本卡顿问题。
         local now_time = reaper.time_precise()
@@ -19760,20 +20088,6 @@ function loop()
 
         while reaper.ImGui_ListClipper_Step(clipper) do
           local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
-          if idle_time >= (static.wf_delay_miss or 1) then -- 未缓存，停顿2秒再入队
-            -- clipper+限流+防止重复加入
-            for idx = display_start + 1, display_end do
-              if loaded_count >= load_limit then break end -- 波形加载，限制本帧最大加载数2个
-
-              local inf = filtered_list[idx]
-              inf._thumb_waveform = inf._thumb_waveform or {}
-              if not inf._thumb_waveform[tw] and not inf._loading_waveform then
-                inf._loading_waveform = true -- 设置加载标记，防止重复加入
-                EnqueueWaveformTask(inf, tw)
-                loaded_count = loaded_count + 1
-              end
-            end
-          end
 
           -- 每行渲染，按当前列名
           local scaled_row_height = GetScaledRowHeight()
@@ -20896,11 +21210,13 @@ function loop()
     end
     local has_cover = img_info and HasCoverImage(img_info)
     local left_img_w = has_cover and UIScale(130) or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
-    local gap = has_cover and UIScaleF(6) or 0
+    local gap = 0
     local right_img_w = avail_w - left_img_w - gap
 
     -- 专辑图片显示
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
     if reaper.ImGui_BeginChild(ctx, "cover_art", left_img_w, img_h) then
+      reaper.ImGui_PopStyleVar(ctx)
       local audio_path = img_info and img_info.path
       local cover_path = nil
       if img_info and type(ResolveCoverPathForEntry) == "function" then
@@ -21018,6 +21334,7 @@ function loop()
       end
       reaper.ImGui_EndChild(ctx)
     else
+      reaper.ImGui_PopStyleVar(ctx)
       -- 无封面时重置
       last_cover_img  = nil
       last_cover_path = nil
@@ -21030,7 +21347,9 @@ function loop()
       reaper.ImGui_SameLine(ctx)
     end
     -- 波形预览
-    if reaper.ImGui_BeginChild(ctx, T("Waveform"), right_img_w, img_h) then -- 微调波形宽度（计划预留右侧空间-75用于放置专辑图片）和高度（补偿时间线高度+时间线间隔9）
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding(), 0, 0)
+    reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), 0, 0)
+    if reaper.ImGui_BeginChild(ctx, T("Waveform"), right_img_w, img_h) then
       local pw_min_x, pw_min_y = reaper.ImGui_GetItemRectMin(ctx)
       local pw_max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local pw_region_w = math.max(64, math.floor(pw_max_x - pw_min_x))
@@ -21063,10 +21382,15 @@ function loop()
         -- 用完整源音频路径
         local root_src = GetRootSource(cur_info.source)
         local root_path
+        local root_length = 0
         if reaper.ValidatePtr(root_src, "MediaSource*") then
           root_path = reaper.GetMediaSourceFileName(root_src, "")
+          root_length = tonumber((reaper.GetMediaSourceLength(root_src))) or 0
+          Wave.sample_rate = tonumber(reaper.GetMediaSourceSampleRate(root_src)) or tonumber(cur_info.samplerate) or 44100
         else
           root_path = cur_info.path or ""
+          root_length = tonumber(cur_info.length) or 0
+          Wave.sample_rate = tonumber(cur_info.samplerate) or Wave.sample_rate or 44100
         end
         root_path = normalize_path(root_path, false)
         local cur_key = (root_path or cur_info.path) .. "|" .. tostring(section_offset) .. "|" .. tostring(section_length)
@@ -21096,7 +21420,7 @@ function loop()
             -- 区段音频
             local zoom = Wave.zoom or 1
             local section_len = section_length
-            local visible_len = math.max(section_len / zoom, 0.01)
+            local visible_len = math.max(section_len / zoom, 1 / math.max(1, Wave.sample_rate or 44100))
             if visible_len > section_len then visible_len = section_len end
 
             local max_scroll = math.max(0, section_len - visible_len)
@@ -21109,10 +21433,10 @@ function loop()
             ok_for_remap = true
           else
             -- 全音频
-            local audio_len = tonumber(cache and cache.src_len) or 0
+            local audio_len = tonumber(cache and cache.src_len) or root_length
             if audio_len > 0 then
               local zoom = Wave.zoom or 1
-              local visible_len = math.max(audio_len / zoom, 0.01)
+              local visible_len = math.max(audio_len / zoom, 1 / math.max(1, Wave.sample_rate or 44100))
               if visible_len > audio_len then visible_len = audio_len end
 
               local max_scroll = math.max(0, audio_len - visible_len)
@@ -21129,7 +21453,16 @@ function loop()
           end
 
           if ok_for_remap then
-            peaks, pixel_cnt, _, channel_count = RemapWaveformToWindow(cache, pw_region_w, window_start, window_end)
+            local view_peaks, view_pixel_cnt, _, view_channel_count
+            if HAVE_SM_EXT then
+              view_peaks, view_pixel_cnt, _, view_channel_count = GetPeaksForInfo(
+                { path = root_path }, wf_step, pw_region_w, window_start, window_end)
+            end
+            if view_peaks and view_channel_count then
+              peaks, pixel_cnt, channel_count = view_peaks, view_pixel_cnt, view_channel_count
+            else
+              peaks, pixel_cnt, _, channel_count = RemapWaveformToWindow(cache, pw_region_w, window_start, window_end)
+            end
             last_wave_info = cur_key
             last_pixel_cnt = pw_region_w
             last_view_len = view_len
@@ -21215,12 +21548,12 @@ function loop()
 
       -- 小键盘 + 号放大波形
       if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadAdd()) then
-        if ZoomWaveAtFraction(Wave, 0.5, 1.25, 1, 16) then last_view_len = nil end
+        if ZoomWaveAtFraction(Wave, 0.5, 1.25, 1, GetWaveMaxZoom(Wave)) then last_view_len = nil end
       end
 
       -- 小键盘 - 号缩小波形
       if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadSubtract()) then
-        if ZoomWaveAtFraction(Wave, 0.5, 1 / 1.25, 1, 16) then last_view_len = nil end
+        if ZoomWaveAtFraction(Wave, 0.5, 1 / 1.25, 1, GetWaveMaxZoom(Wave)) then last_view_len = nil end
       end
 
       -- 单击自动播放，选中项变化时触发
@@ -21309,7 +21642,7 @@ function loop()
           local mouse_wheel = reaper.ImGui_GetMouseWheel(ctx)
           if mouse_wheel ~= 0 then
             local zoom_factor = (mouse_wheel > 0) and 1.25 or (1 / 1.25)
-            if ZoomWaveAtFraction(Wave, frac, zoom_factor, 1, 16) then
+            if ZoomWaveAtFraction(Wave, frac, zoom_factor, 1, GetWaveMaxZoom(Wave)) then
               last_view_len = nil
               visible_len = Wave.src_len / Wave.zoom
               mouse_time_visual = Wave.scroll + frac * visible_len
@@ -21811,6 +22144,7 @@ function loop()
       end
       reaper.ImGui_EndChild(ctx)
     end
+    reaper.ImGui_PopStyleVar(ctx, 2)
 
     -- 状态栏行
     local display_list = _G.current_display_list or {}
