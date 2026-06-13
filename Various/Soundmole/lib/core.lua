@@ -2246,10 +2246,8 @@ end
 -- CatID:[ASWG tags]catId             or [IXML tags]USER:CATID
 -- SubCategory:[ASWG tags]subCategory or [IXML tags]USER:SUBCATEGORY
 
-function WriteToMediaDB(info, dbfile, root_path, db_cover_index)
+function SM_PrepareMediaDBRecord(info, dbfile)
   if not info or not IsValidAudioFile(info.path or "") then return false end
-  local f = io.open(dbfile, "a+b")
-  if not f then return false end
   local cover_path = nil
   if info and (not info.cover_id or info.cover_id == "") and info.path and type(SM_EnsureCoverForAudio) == "function" then
     local cover_id
@@ -2263,16 +2261,14 @@ function WriteToMediaDB(info, dbfile, root_path, db_cover_index)
       if actual_id ~= info.cover_id then cover_path = nil end
     end
   end
-  -- FILE行
-  f:write(('FILE "%s" %d 0 %d 0\n'):format(info.path, tonumber(info.size), tonumber(info.mtime) or 0))
-  -- DATA基本属性行
-  -- f:write(('DATA %s l:%s n:%s s:%s i:%s\n'):format(quote_if_space('y:' .. (info.bwf_orig_date or "")), info.length or "", info.channels or "", info.samplerate or "", info.bits or ""))
-  f:write(('DATA %sl:%s n:%s s:%s i:%s\n'):format(
+
+  local lines = {}
+  lines[#lines + 1] = ('FILE "%s" %d 0 %d 0'):format(info.path, tonumber(info.size) or 0, tonumber(info.mtime) or 0)
+  lines[#lines + 1] = ('DATA %sl:%s n:%s s:%s i:%s'):format(
     (info.bwf_orig_date and info.bwf_orig_date ~= "") and (quote_if_space('y:' .. (info.bwf_orig_date))..' ') or '',
     info.length or "", info.channels or "", info.samplerate or "", info.bits or ""
-  ))
+  )
 
-  -- DATA类别行
   local ucs = {}
   if info.genre           and info.genre           ~= "" then table.insert(ucs, quote_if_space('g:' .. info.genre))         end
   if info.key             and info.key             ~= "" then table.insert(ucs, quote_if_space('k:' .. info.key))           end
@@ -2280,18 +2276,78 @@ function WriteToMediaDB(info, dbfile, root_path, db_cover_index)
   if info.ucs_category    and info.ucs_category    ~= "" then table.insert(ucs, quote_if_space('category:'    .. info.ucs_category))    end
   if info.ucs_subcategory and info.ucs_subcategory ~= "" then table.insert(ucs, quote_if_space('subcategory:' .. info.ucs_subcategory)) end
   if info.ucs_catid       and info.ucs_catid       ~= "" then table.insert(ucs, quote_if_space('catid:'       .. info.ucs_catid))       end
-  if #ucs > 0 then f:write('DATA ' .. table.concat(ucs, " ") .. '\n') end
-  -- DATA描述行
+  if #ucs > 0 then lines[#lines + 1] = 'DATA ' .. table.concat(ucs, " ") end
+
   local desc = {}
   if info.comment and info.comment ~= "" then table.insert(desc, quote_if_space('c:' .. info.comment)) end
   if info.description and info.description ~= "" then table.insert(desc, quote_if_space('d:' .. info.description)) end
   if info.cover_id and info.cover_id ~= "" then table.insert(desc, 'cover_id:' .. tostring(info.cover_id)) end
-  if #desc > 0 then f:write('DATA ' .. table.concat(desc, ' ') .. '\n') end
+  if #desc > 0 then lines[#lines + 1] = 'DATA ' .. table.concat(desc, ' ') end
+
+  return table.concat(lines, "\n") .. "\n", cover_path
+end
+
+function WriteToMediaDB(info, dbfile, root_path, db_cover_index)
+  local record, cover_path = SM_PrepareMediaDBRecord(info, dbfile)
+  if not record then return false end
+  local f = io.open(dbfile, "a+b")
+  if not f then return false end
+  f:write(record)
   f:close()
   if info.cover_id and info.cover_id ~= "" and type(SM_AddDBCoverIndexEntry) == "function" then
     SM_AddDBCoverIndexEntry(dbfile, info.cover_id, cover_path, db_cover_index)
   end
   return true
+end
+
+function AppendPathsToMediaDB(paths, dbfile, db_cover_index)
+  local unique_paths, seen = {}, {}
+  for _, path in ipairs(paths or {}) do
+    local normalized = normalize_path(path or "", false)
+    if normalized ~= "" and not seen[normalized] then
+      seen[normalized] = true
+      unique_paths[#unique_paths + 1] = normalized
+    end
+  end
+  if #unique_paths == 0 then return 0 end
+
+  if HAVE_SM_DB_APPEND then
+    if not reaper.SM_DB_AppendRawRecords then return -1 end
+    local records, prepared = {}, {}
+    for _, path in ipairs(unique_paths) do
+      local info = CollectFileInfo(path)
+      local record, cover_path = SM_PrepareMediaDBRecord(info, dbfile)
+      if record then
+        records[#records + 1] = record
+        prepared[#prepared + 1] = { info = info, cover_path = cover_path }
+      end
+    end
+    if #records == 0 then return 0 end
+
+    local added = tonumber(reaper.SM_DB_AppendRawRecords(dbfile, table.concat(records))) or -1
+    if added > 0 and type(SM_AddDBCoverIndexEntry) == "function" then
+      for _, entry in ipairs(prepared) do
+        local info = entry.info
+        if info.cover_id and info.cover_id ~= "" then
+          SM_AddDBCoverIndexEntry(dbfile, info.cover_id, entry.cover_path, db_cover_index)
+        end
+      end
+    end
+    return added
+  end
+
+  local existing_map = DB_ReadExistingFileSet(dbfile)
+  local added = 0
+  for _, path in ipairs(unique_paths) do
+    if not existing_map[path] then
+      local info = CollectFileInfo(path)
+      if info and WriteToMediaDB(info, dbfile, nil, db_cover_index) then
+        existing_map[path] = true
+        added = added + 1
+      end
+    end
+  end
+  return added
 end
 
 -- 获取下一个可用编号
@@ -2432,23 +2488,42 @@ function ParseMediaDBFile(dbpath)
   return entries
 end
 
-function RemoveFromMediaDB(path, dbfile, skip_cover_rebuild)
-  local tmp = {}
-  local keep = true
-  for line in io.lines(dbfile) do
-    -- 当遇到 FILE 行且路径匹配时，切换到跳过状态
-    if line:match('^FILE%s+"(.-)"') == path then
-      keep = false
-    elseif line:find("^FILE") then
-      keep = true
+function RemovePathsFromMediaDB(paths, dbfile, skip_cover_rebuild)
+  local remove_paths, encoded_paths = {}, {}
+  for _, path in ipairs(paths or {}) do
+    local normalized = normalize_path(path or "", false)
+    if normalized ~= "" and not remove_paths[normalized] then
+      remove_paths[normalized] = true
+      encoded_paths[#encoded_paths + 1] = normalized:gsub("[\r\n]", "")
     end
-    if keep then table.insert(tmp, line) end
   end
-  -- 写回文件
-  local f = io.open(dbfile, "wb")
-  for _, l in ipairs(tmp) do f:write(l, "\n") end
-  f:close()
-  if not skip_cover_rebuild and SM_DBCoverIndexExists(dbfile) then
+  if #encoded_paths == 0 then return 0 end
+
+  local removed
+  if HAVE_SM_DB_REMOVE then
+    if not reaper.SM_DB_RemovePaths then return -1 end
+    removed = tonumber(reaper.SM_DB_RemovePaths(dbfile, table.concat(encoded_paths, "\n"))) or -1
+  else
+    local tmp = {}
+    local keep = true
+    removed = 0
+    for line in io.lines(dbfile) do
+      local file_path = line:match('^FILE%s+"(.-)"')
+      if file_path then
+        keep = not remove_paths[normalize_path(file_path, false)]
+        if not keep then removed = removed + 1 end
+      end
+      if keep then tmp[#tmp + 1] = line end
+    end
+    if removed > 0 then
+      local f = io.open(dbfile, "wb")
+      if not f then return -1 end
+      for _, line in ipairs(tmp) do f:write(line, "\n") end
+      f:close()
+    end
+  end
+
+  if removed > 0 and not skip_cover_rebuild and SM_DBCoverIndexExists(dbfile) then
     if reaper and reaper.APIExists and reaper.APIExists("SM_CoverIndex_Start")
       and type(SM_QueueDBCoverIndexRebuild) == "function" then
       SM_QueueDBCoverIndexRebuild(dbfile)
@@ -2456,6 +2531,11 @@ function RemoveFromMediaDB(path, dbfile, skip_cover_rebuild)
       SM_RebuildDBCoverIndexFromDB(dbfile)
     end
   end
+  return removed
+end
+
+function RemoveFromMediaDB(path, dbfile, skip_cover_rebuild)
+  return RemovePathsFromMediaDB({ path }, dbfile, skip_cover_rebuild)
 end
 
 -- 获取数据库路径列表

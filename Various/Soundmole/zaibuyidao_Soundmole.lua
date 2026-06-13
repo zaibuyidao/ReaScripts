@@ -98,6 +98,8 @@ HAVE_SM_DB_FOLDERS = HAVE_SM_DB
   and reaper.APIExists('SM_DB_GetRootsRaw')
   and reaper.APIExists('SM_DB_ListSubdirsRaw')
 HAVE_SM_DB_ROOTS_BY_PATH = reaper.APIExists('SM_DB_ReadRootsRaw')
+HAVE_SM_DB_APPEND = reaper.APIExists('SM_DB_AppendRawRecords')
+HAVE_SM_DB_REMOVE = reaper.APIExists('SM_DB_RemovePaths')
 HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin')
   and reaper.APIExists('SM_ProbeMediaNextJSONEx')
   and reaper.APIExists('SM_ProbeMediaEnd')
@@ -8738,6 +8740,26 @@ function norm_files(files)
   return t
 end
 
+function AddUniquePathsToCollection(node, paths)
+  if not node then return false end
+  node.files = node.files or {}
+  local existing = {}
+  for _, path in ipairs(node.files) do
+    existing[normalize_path(path, false)] = true
+  end
+
+  local changed = false
+  for _, path in ipairs(paths or {}) do
+    local normalized = normalize_path(path or "", false)
+    if normalized ~= "" and not existing[normalized] then
+      node.files[#node.files + 1] = normalized
+      existing[normalized] = true
+      changed = true
+    end
+  end
+  return changed
+end
+
 function SaveAdvancedFolders()
   local lines = {}
   for id, node in pairs(advanced_folders) do
@@ -8877,39 +8899,40 @@ function draw_advanced_folder_node(id, selected_id, depth)
     reaper.ImGui_EndPopup(ctx)
   end
 
-  -- 拖动文件到高级文件夹中，媒体资源管理器文件+内部 AUDIO_PATHS (左侧选中项)
+  -- PeakTree Collections 节点接收内部音频和外部文件拖放。
   if reaper.ImGui_BeginDragDropTarget(ctx) then
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview)
     node.files = node.files or {}
     local changed = false
+    local existing = {}
+    for _, old in ipairs(node.files) do
+      existing[normalize_path(old, false)] = true
+    end
 
     local function add_path(p)
       if not p or p == "" then return end
       local np = normalize_path(p, false)
-      for _, old in ipairs(node.files) do
-        if old == np then return end
-      end
+      if existing[np] then return end
+      existing[np] = true
       table.insert(node.files, np)
       changed = true
     end
 
-    -- 接收媒体资源管理器文件型负载
+    if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
+      local retval, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+      if retval and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
+        for _, path in ipairs(split(payload, "|;|")) do
+          add_path(path)
+        end
+      end
+    end
+
     local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 1024)
     if ok_files and count and count > 0 then
       for i = 0, count - 1 do
         local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
         if ok1 and filepath and filepath ~= "" then
           add_path(filepath)
-        end
-      end
-    end
-
-    -- 接收脚本内部自定义负载
-    if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
-      local ok2, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
-      if ok2 and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
-        for raw in payload:gmatch("([^|;|]+)") do
-          add_path(raw)
         end
       end
     end
@@ -8979,11 +9002,7 @@ function ShowAddToCollectionMenu(node_ids, file_paths)
       if has_children then
         if reaper.ImGui_BeginMenu(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##col_menu_" .. id) then
           if reaper.ImGui_MenuItem(ctx, "Add to this folder") then
-            -- 循环添加所有选中的文件
-            for _, p in ipairs(file_paths) do
-              table.insert(node.files, p)
-            end
-            SaveAdvancedFolders()
+            if AddUniquePathsToCollection(node, file_paths) then SaveAdvancedFolders() end
           end
 
           reaper.ImGui_Separator(ctx)
@@ -8994,11 +9013,7 @@ function ShowAddToCollectionMenu(node_ids, file_paths)
       else
         -- 没有子级，直接点击添加
         if reaper.ImGui_MenuItem(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##col_item_" .. id) then
-          -- 循环添加所有选中的文件
-          for _, p in ipairs(file_paths) do
-            table.insert(node.files, p)
-          end
-          SaveAdvancedFolders()
+          if AddUniquePathsToCollection(node, file_paths) then SaveAdvancedFolders() end
         end
       end
     end
@@ -10353,21 +10368,7 @@ function SM_Action_AddSelectionToTargetDB()
 
   if #paths_to_add == 0 then return end -- 无选中内容
 
-  -- 执行写入
-  local existing_map = DB_ReadExistingFileSet(target_db_path)
-  local added_count = 0
-  
-  for _, p in ipairs(paths_to_add) do
-    local norm_p = normalize_path(p, false)
-    if not existing_map[norm_p] then
-      local file_info_to_add = CollectFileInfo(p)
-      if file_info_to_add then
-        WriteToMediaDB(file_info_to_add, target_db_path)
-        existing_map[norm_p] = true
-        added_count = added_count + 1
-      end
-    end
-  end
+  local added_count = AppendPathsToMediaDB(paths_to_add, target_db_path)
 
   -- 刷新显示
   if added_count > 0 then
@@ -11249,21 +11250,7 @@ function HandleRowKeybinds(ctx, i, info, collect_mode)
           local fallback_idx = (selected_row and selected_row > 0) and selected_row or i
           local paths_to_add = GetSelectedFilePaths(_G.current_display_list or {}, fallback_idx)
 
-          -- 执行写入
-          local existing_map = DB_ReadExistingFileSet(target_db_path)
-          local added_count = 0
-          for _, p in ipairs(paths_to_add) do
-            local norm_p = normalize_path(p, false)
-            if not existing_map[norm_p] then
-              -- 重新收集完整信息确保元数据齐全
-              local file_info_to_add = CollectFileInfo(p) 
-              if file_info_to_add then
-                WriteToMediaDB(file_info_to_add, target_db_path)
-                existing_map[norm_p] = true
-                added_count = added_count + 1
-              end
-            end
-          end
+          local added_count = AppendPathsToMediaDB(paths_to_add, target_db_path)
 
           -- 如果当前正在查看该目标库，则刷新显示
           if added_count > 0 then
@@ -11505,23 +11492,10 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         -- 收集要添加的路径
         local paths_to_add = GetFilePathsForRowAction(_G.current_display_list or {}, i)
 
-        -- 执行写入
-        local existing_map = DB_ReadExistingFileSet(target_db_path)
-        local added_count = 0
-        for _, p in ipairs(paths_to_add) do
-          local norm_p = normalize_path(p, false)
-          if not existing_map[norm_p] then
-            local file_info = CollectFileInfo(p) -- 重新收集信息以确保数据完整
-            if file_info then
-              WriteToMediaDB(file_info, target_db_path)
-              existing_map[norm_p] = true
-              added_count = added_count + 1
-            end
-          end
-        end
+        local added_count = AppendPathsToMediaDB(paths_to_add, target_db_path)
 
         -- 如果当前正处于该目标数据库视图，刷新列表
-        if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == tree_state.target_mediadb then
+        if added_count > 0 and collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == tree_state.target_mediadb then
           files_idx_cache = nil
           CollectFiles()
         end
@@ -11574,17 +11548,10 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       for _, path in ipairs(GetFilePathsForRowAction(_G.current_display_list or {}, i)) do
         remove_paths[normalize_path(path, false)] = true
       end
-      -- 移除选中项
-      for path in pairs(remove_paths) do
-        RemoveFromMediaDB(path, dbpath, true)
-        for k = #files_idx_cache, 1, -1 do
-          if normalize_path(files_idx_cache[k].path, false) == path then
-            table.remove(files_idx_cache, k)
-            break
-          end
-        end
-      end
-      if SM_DBCoverIndexExists(dbpath) then
+      local remove_list = {}
+      for path in pairs(remove_paths) do remove_list[#remove_list + 1] = path end
+      local removed_count = RemovePathsFromMediaDB(remove_list, dbpath, true)
+      if removed_count > 0 and SM_DBCoverIndexExists(dbpath) then
         if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) else SM_RebuildDBCoverIndexFromDB(dbpath) end
       end
 
@@ -17805,93 +17772,61 @@ function loop()
                 reaper.ImGui_EndPopup(ctx)
               end
 
-              -- 拖动列表的音频文件到数据库中（左侧折叠标题区域）
+              -- PeakTree 数据库节点接收内部音频和外部文件拖放。
               if reaper.ImGui_BeginDragDropTarget(ctx) then
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview)
+                local pending_set, pending = {}, {}
+                local function push_path(p_abs)
+                  if not p_abs or p_abs == "" then return end
+                  local np = normalize_path(p_abs, false)
+                  if not pending_set[np] then
+                    pending_set[np] = true
+                    table.insert(pending, np)
+                  end
+                end
+
                 if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
-                  local ok, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
-                  if ok and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
-                    -- 目标数据库文件绝对路径 .MoleFileList
-                    local dbpath = normalize_path(db_dir, true) .. dbfile
-                    local existing_map = DB_ReadExistingFileSet(dbpath)
-                    local any_added = false
-                    local root_dir = tree_state.cur_scan_folder or ""
-                    for path in payload:gmatch("([^|;|]+)") do
-                      local p = normalize_path(path, false)
-                      -- DB 中不存在才写入
-                      if not existing_map[p] then
-                        local info = CollectFileInfo(p)
-                        WriteToMediaDB(info, dbpath)
-                        existing_map[p] = true -- 写入后立刻标记，避免批量内重复
-                        any_added = true
-                      end
-                    end
-                    -- 刷新文件列表
-                    if any_added and collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile then
-                      CollectFiles()
+                  local retval, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
+                  if retval and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
+                    for _, path in ipairs(split(payload, "|;|")) do
+                      push_path(path)
                     end
                   end
                 end
 
-                -- 从系统文件管理器拖入
-                do
-                  local pending_set, pending = {}, {}
-                  local function push_path(p_abs)
-                    if not p_abs or p_abs == "" then return end
-                    local np = normalize_path(p_abs, false)
-                    if not pending_set[np] then
-                      pending_set[np] = true
-                      table.insert(pending, np)
-                    end
-                  end
-
-                  local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 2048)
-                  if ok_files and count and count > 0 then
-                    for i = 0, count - 1 do
-                      local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
-                      if ok1 and filepath and filepath ~= "" then
-                        local p = normalize_path(filepath, false)
-                        local looks_dir = (p:match("[/\\]$") ~= nil) or (p:match("^.+%.[^/\\%.]+$") == nil)
-                        if looks_dir then
-                          for _, f in ipairs(ScanAllAudioFiles(normalize_path(p, true))) do
-                            push_path(f)
-                          end
-                        else
-                          push_path(p)
+                local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 2048)
+                if ok_files and count and count > 0 then
+                  for i = 0, count - 1 do
+                    local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
+                    if ok1 and filepath and filepath ~= "" then
+                      local p = normalize_path(filepath, false)
+                      local looks_dir = (p:match("[/\\]$") ~= nil) or (p:match("^.+%.[^/\\%.]+$") == nil)
+                      if looks_dir then
+                        for _, f in ipairs(ScanAllAudioFiles(normalize_path(p, true))) do
+                          push_path(f)
                         end
+                      else
+                        push_path(p)
                       end
                     end
                   end
+                end
 
-                  if #pending > 0 then
-                    local dbpath = normalize_path(db_dir, true) .. dbfile
-                    local existing_map = DB_ReadExistingFileSet(dbpath)
-                    local any_added = false
-                    local root_dir = tree_state and tree_state.cur_scan_folder or ""
+                if #pending > 0 then
+                  local dbpath = normalize_path(db_dir, true) .. dbfile
+                  local added_count = AppendPathsToMediaDB(pending, dbpath)
 
-                    for _, p in ipairs(pending) do
-                      if not existing_map[p] then
-                        local info = CollectFileInfo(p)
-                        if info then
-                          WriteToMediaDB(info, dbpath)
-                          existing_map[p] = true
-                          any_added = true -- 标记为脏
-                        end
-                      end
-                    end
+                  -- 刷新文件列表
+                  if added_count > 0 and collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb == dbfile then
+                    files_idx_cache = nil
+                    CollectFiles()
 
-                    -- 刷新文件列表
-                    if any_added and collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb == dbfile then
-                      files_idx_cache = nil
-                      CollectFiles()
+                    ClearFileSelection()
+                    selected_row = -1
 
-                      ClearFileSelection()
-                      selected_row = -1
-
-                      local static = _G._soundmole_static or {}
-                      _G._soundmole_static = static
-                      static.filtered_list_map, static.last_filter_text_map = {}, {}
-                    end
+                    local static = _G._soundmole_static or {}
+                    _G._soundmole_static = static
+                    static.filtered_list_map, static.last_filter_text_map = {}, {}
                   end
                 end
 
@@ -19514,7 +19449,7 @@ function loop()
         end
       end
 
-      -- 拖动文件到高级文件夹中，媒体资源管理器文件+内部 AUDIO_PATHS (右侧列表)
+      -- Collections 列表只接收来自 Soundmole 外部的文件拖放。
       if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and tree_state.cur_advanced_folder then
         local cur_id = tree_state.cur_advanced_folder
         local node = advanced_folders[cur_id]
@@ -19523,34 +19458,31 @@ function loop()
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview)
           node.files = node.files or {}
           local changed = false
+          local existing = {}
+          for _, old in ipairs(node.files) do
+            existing[normalize_path(old, false)] = true
+          end
 
           local function add_path(p)
             if not p or p == "" then return end
             local np = normalize_path(p, false)
-            for _, old in ipairs(node.files) do
-              if old == np then return end
-            end
+            if existing[np] then return end
+            existing[np] = true
             table.insert(node.files, np)
             changed = true
           end
 
-          -- 接收媒体资源管理器文件型负载
-          local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 1024)
-          if ok_files and count and count > 0 then
-            for i = 0, count - 1 do
-              local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
-              if ok1 and filepath and filepath ~= "" then
-                add_path(filepath)
-              end
-            end
-          end
-
-          -- 接收脚本内部自定义负载
-          if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
-            local ok2, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
-            if ok2 and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
-              for raw in payload:gmatch("([^|;|]+)") do
-                add_path(raw)
+          local payload_ok, payload_type = reaper.ImGui_GetDragDropPayload(ctx)
+          local internal_audio_drag = dragging_audio ~= nil or dragging_selection ~= nil
+            or (payload_ok and payload_type == "AUDIO_PATHS")
+          if not internal_audio_drag then
+            local ok_files, count = reaper.ImGui_AcceptDragDropPayloadFiles(ctx, 1024)
+            if ok_files and count and count > 0 then
+              for i = 0, count - 1 do
+                local ok1, filepath = reaper.ImGui_GetDragDropPayloadFile(ctx, i)
+                if ok1 and filepath and filepath ~= "" then
+                  add_path(filepath)
+                end
               end
             end
           end
@@ -19574,40 +19506,17 @@ function loop()
         end
       end
 
-      -- 拖动文件到数据库中，媒体资源管理器文件+内部 AUDIO_PATHS (右侧列表)
+      -- 数据库列表只接收来自 Soundmole 外部的文件拖放。
       if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
         local dbfile = tree_state.cur_mediadb
         local db_dir = script_path .. "SoundmoleDB"
 
         if reaper.ImGui_BeginDragDropTarget(ctx) then
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_DragDropTarget(), colors.dnd_preview)
-          if reaper.ImGui_AcceptDragDropPayload(ctx, "AUDIO_PATHS") then
-            local ok, dtype, payload = reaper.ImGui_GetDragDropPayload(ctx)
-            if ok and dtype == "AUDIO_PATHS" and type(payload) == "string" and payload ~= "" then
-              -- 目标数据库文件绝对路径 .MoleFileList
-              local dbpath = normalize_path(db_dir, true) .. dbfile
-              local existing_map = DB_ReadExistingFileSet(dbpath)
-              local root_dir = (tree_state and tree_state.cur_scan_folder) or ""
-              for path in payload:gmatch("([^|;|]+)") do
-                local p = normalize_path(path, false)
-                -- DB 中不存在才写入
-                if not existing_map[p] then
-                  local info = CollectFileInfo(p)
-                  if info then
-                    WriteToMediaDB(info, dbpath)
-                    existing_map[p] = true -- 写入后立刻标记，避免批量内重复
-                  end
-                end
-              end
-              -- 刷新文件列表
-              if collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile then
-                CollectFiles()
-              end
-            end
-          end
-
-          -- 从系统文件管理器拖入
-          do
+          local payload_ok, payload_type = reaper.ImGui_GetDragDropPayload(ctx)
+          local internal_audio_drag = dragging_audio ~= nil or dragging_selection ~= nil
+            or (payload_ok and payload_type == "AUDIO_PATHS")
+          if not internal_audio_drag then
             local pending_set, pending = {}, {}
             local function push_path(p_abs)
               if not p_abs or p_abs == "" then return end
@@ -19638,21 +19547,10 @@ function loop()
 
             if #pending > 0 then
               local dbpath = normalize_path(db_dir, true) .. dbfile
-              local existing_map = DB_ReadExistingFileSet(dbpath)
-              local root_dir = (tree_state and tree_state.cur_scan_folder) or ""
-
-              for _, p in ipairs(pending) do
-                if not existing_map[p] then
-                  local info = CollectFileInfo(p)
-                  if info then
-                    WriteToMediaDB(info, dbpath)
-                    existing_map[p] = true
-                  end
-                end
-              end
+              local added_count = AppendPathsToMediaDB(pending, dbpath)
 
               -- 刷新文件列表
-              if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb == dbfile then
+              if added_count > 0 and collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb == dbfile then
                 files_idx_cache = nil
                 CollectFiles()
 

@@ -1,12 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.201
+-- @version 1.0.202
 -- @changelog
---   Added a C++ folder index for database folder filtering when the extension is available.
---   Added C++ multi-path incremental scanning for new database files while preserving existing data and artwork indexes.
---   Improved waveform preview for undownloaded Freesound by leaving the preview area blank.
---   Fixed incomplete ## and ### display in folder, collection, and derived database names.
---   Support reaper_soundmole-x64.dll v0.0.27
+--   Fixed Favorites and database lists incorrectly accepting internal AUDIO_PATHS drops; they now only accept external file drops.
+--   Improved Favorites add and drop handling with deduplication and faster checks for large favorites lists.
+--   Support reaper_soundmole-x64.dll v0.0.28
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
