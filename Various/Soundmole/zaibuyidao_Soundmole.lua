@@ -81,6 +81,8 @@ HAVE_SM_BUILDER = reaper.APIExists('SM_Builder_Start')
   and reaper.APIExists('SM_Builder_GetInfo')
   and reaper.APIExists('SM_Builder_GetStatusString')
   and reaper.APIExists('SM_Builder_Stop')
+HAVE_SM_BUILDER_INCREMENTAL = HAVE_SM_BUILDER
+  and reaper.APIExists('SM_Builder_StartIncremental')
 HAVE_SM_COVER_INDEX = reaper.APIExists('SM_Cover_Ensure')
   and reaper.APIExists('SM_CoverIndex_Start')
   and reaper.APIExists('SM_CoverIndex_RunSlice')
@@ -92,6 +94,10 @@ HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw')
   and reaper.APIExists('SM_DB_Load')
   and reaper.APIExists('SM_DB_Release')
   and reaper.APIExists('SM_DB_GetCount')
+HAVE_SM_DB_FOLDERS = HAVE_SM_DB
+  and reaper.APIExists('SM_DB_GetRootsRaw')
+  and reaper.APIExists('SM_DB_ListSubdirsRaw')
+HAVE_SM_DB_ROOTS_BY_PATH = reaper.APIExists('SM_DB_ReadRootsRaw')
 HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin')
   and reaper.APIExists('SM_ProbeMediaNextJSONEx')
   and reaper.APIExists('SM_ProbeMediaEnd')
@@ -969,6 +975,7 @@ local DOUBLECLICK_PREVIEW       = 1
 local DOUBLECLICK_NONE          = 2
 local doubleclick_action        = DOUBLECLICK_NONE
 local bg_alpha                  = 1.0   -- 默认背景不透明
+local hide_soundmole_title      = false -- 默认显示 Soundmole 标题
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
 local mirror_database           = false -- 默认关闭 Database (Mirror)
 local show_peektree_recent      = false -- 默认开启 播放历史
@@ -1024,6 +1031,7 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
   reaper.SetExtState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
   reaper.SetExtState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "hide_soundmole_title", hide_soundmole_title and "1" or "0", true)
 
   -- 镜像与侧边栏
   reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
@@ -1131,6 +1139,12 @@ do
   local v = reaper.GetExtState(EXT_SECTION, "show_tooltips")
   if v == "1" then show_tooltips = true
   elseif v == "0" then show_tooltips = false end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "hide_soundmole_title")
+  if v == "1" then hide_soundmole_title = true
+  elseif v == "0" then hide_soundmole_title = false end
 end
 
 do
@@ -1603,6 +1617,12 @@ do
     if changed_bg then
       bg_alpha = math.max(0, math.min(1, new_bg_alpha or 1))
       reaper.SetExtState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
+    end
+
+    local changed_title, new_hide_title = reaper.ImGui_Checkbox(ctx, T("Hide Soundmole title"), hide_soundmole_title)
+    if changed_title then
+      hide_soundmole_title = new_hide_title
+      reaper.SetExtState(EXT_SECTION, "hide_soundmole_title", hide_soundmole_title and "1" or "0", true)
     end
   end
 
@@ -2203,6 +2223,7 @@ do
       spectral_grad_sat     = 1
       show_tooltips         = false -- 默认提示开关
       waveform_hint_enabled = false -- 波形预览鼠标提示开关
+      hide_soundmole_title  = false -- 默认显示 Soundmole 标题
 
       -- 镜像与侧边栏
       mirror_folder_shortcuts = false
@@ -8163,6 +8184,10 @@ function AddThisComputerContextMenu(path)
   end
 end
 
+function ImGuiEscapeVisibleLabel(text)
+  return tostring(text or ""):gsub("#", "#\u{200B}")
+end
+
 -- 树状目录
 function draw_tree(name, path, depth)
   path = normalize_path(path, true)
@@ -8174,7 +8199,7 @@ function draw_tree(name, path, depth)
 
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
   local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0
-  local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##" .. path, flags | highlight)
+  local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##" .. path, flags | highlight)
 
   -- 此电脑右键菜单
   AddThisComputerContextMenu(path)
@@ -8309,7 +8334,7 @@ function draw_shortcut_tree(sc, base_path, depth)
     flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
   end
 
-  local node_open = reaper.ImGui_TreeNode(ctx, show_name .. "##shortcut_" .. path, flags | highlight)
+  local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_" .. path, flags | highlight)
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
   -- local cy = (miny + maxy) * 0.5
@@ -8793,7 +8818,7 @@ function draw_advanced_folder_node(id, selected_id, depth)
     flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
   end
 
-  local node_open = reaper.ImGui_TreeNode(ctx, node.name .. "##" .. id, flags)
+  local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##" .. id, flags)
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
   -- local cy = (miny + maxy) * 0.5
@@ -8952,7 +8977,7 @@ function ShowAddToCollectionMenu(node_ids, file_paths)
       local has_children = node.children and #node.children > 0
 
       if has_children then
-        if reaper.ImGui_BeginMenu(ctx, node.name .. "##col_menu_" .. id) then
+        if reaper.ImGui_BeginMenu(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##col_menu_" .. id) then
           if reaper.ImGui_MenuItem(ctx, "Add to this folder") then
             -- 循环添加所有选中的文件
             for _, p in ipairs(file_paths) do
@@ -8968,7 +8993,7 @@ function ShowAddToCollectionMenu(node_ids, file_paths)
         end
       else
         -- 没有子级，直接点击添加
-        if reaper.ImGui_MenuItem(ctx, node.name .. "##col_item_" .. id) then
+        if reaper.ImGui_MenuItem(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##col_item_" .. id) then
           -- 循环添加所有选中的文件
           for _, p in ipairs(file_paths) do
             table.insert(node.files, p)
@@ -11468,7 +11493,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
     local is_d = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_B())
     local trigger_shortcut = is_ctrl and is_d
 
-    if reaper.ImGui_MenuItem(ctx, T("Add to Target DB: ") .. alias, "Ctrl+B") or trigger_shortcut then
+    if reaper.ImGui_MenuItem(ctx, ImGuiEscapeVisibleLabel(T("Add to Target DB: ") .. alias), "Ctrl+B") or trigger_shortcut then
       -- 如果是通过快捷键触发，立即关闭菜单
       if trigger_shortcut then reaper.ImGui_CloseCurrentPopup(ctx) end
       if not reaper.file_exists(target_db_path) then
@@ -11586,6 +11611,7 @@ end
 function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
   local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx)) -- 自适应宽度
   local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2px padding
+  local freesound_not_downloaded = false
 
   -- 检查宽度变化
   if info._last_thumb_w ~= thumb_w then
@@ -11607,17 +11633,19 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     wf = nil
   end
 
-  -- Freesound 本地未落地时，先确保有0值占位波形
-  if (not wf) and collect_mode == COLLECT_MODE_FREESOUND then
+  -- Freesound 本地未落地时保持波形栏为空
+  if collect_mode == COLLECT_MODE_FREESOUND then
     local p = normalize_path(info.path or "", false)
     if not reaper.file_exists(p) then
-      FS_EnsureEmptyWaveform(info, thumb_w)
-      wf = info._thumb_waveform[thumb_w]
+      freesound_not_downloaded = true
+      info._thumb_waveform[thumb_w] = nil
+      info._loading_waveform = false
+      wf = nil
     end
   end
 
   -- 已缓存时，尝试磁盘缓存直读+重映射
-  if not wf and idle_time >= (static.wf_delay_cached or 0.5) and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2) then
+  if not freesound_not_downloaded and not wf and idle_time >= (static.wf_delay_cached or 0.5) and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2) then
     -- 只读磁盘缓存
     local cache
     if HAVE_SM_WFC then
@@ -11695,8 +11723,15 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     end
     reaper.ImGui_PopID(ctx)
   else
+    if collect_mode == COLLECT_MODE_FREESOUND and (info._fs_downloading or info._fs_download_failed) then
+      local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+      local dl = reaper.ImGui_GetWindowDrawList(ctx)
+      local label = info._fs_download_failed and T("Download failed") or T("Downloading...")
+      reaper.ImGui_DrawList_AddText(dl, x + 6, y + math.max(1, (thumb_h - reaper.ImGui_GetTextLineHeight(ctx)) * 0.5), colors.normal_text or 0xFFFFFFFF, label)
+    end
+
     -- 未缓存时兜底入队
-    if idle_time >= (static.wf_delay_miss or 1) and not info._loading_waveform then
+    if not freesound_not_downloaded and idle_time >= (static.wf_delay_miss or 1) and not info._loading_waveform then
       info._loading_waveform = true
       EnqueueWaveformTask(info, thumb_w)
     end
@@ -12693,7 +12728,7 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
     flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
   end
 
-  local label = show_name .. "##shortcut_mirror_" .. tostring(root_idx) .. path
+  local label = ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_mirror_" .. tostring(root_idx) .. path
 
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
   -- 捕获本行矩形与中心y
@@ -14171,13 +14206,32 @@ end
 
 local DBPF_State = {
   roots_cache  = {},
+  path_roots_cache = {},
   subdir_cache = {},
   db_abs_file  = "",
+  cpp_handle = nil,
+  cpp_handle_path = "",
 }
+
+function DBPF_PathKey(path)
+  local key = normalize_path(path or "", false)
+  if reaper.GetOS():find("Win") then key = key:lower() end
+  return key
+end
+
+function DBPF_ReleaseCppHandle()
+  if DBPF_State.cpp_handle then
+    reaper.SM_DB_Release(DBPF_State.cpp_handle)
+    DBPF_State.cpp_handle = nil
+    DBPF_State.cpp_handle_path = ""
+  end
+end
 
 -- 失效全部缓存，切库/改PATH后调用
 function DBPF_InvalidateAllCaches()
+  DBPF_ReleaseCppHandle()
   DBPF_State.roots_cache  = {}
+  DBPF_State.path_roots_cache = {}
   DBPF_State.subdir_cache = {}
   DBPF_State.db_abs_file  = ""
 end
@@ -14195,6 +14249,63 @@ function DBPF_GetCurrentDBAbsPath()
   return ""
 end
 
+function DBPF_GetCppHandle()
+  if not HAVE_SM_DB_FOLDERS then return nil end
+
+  local abs = DBPF_GetCurrentDBAbsPath()
+  if abs == "" then return nil end
+  local abs_key = DBPF_PathKey(abs)
+
+  if _G.db_loader and _G.db_loader.ctx
+    and DBPF_PathKey(_G.current_db_fullpath or "") == abs_key then
+    return _G.db_loader.ctx
+  end
+
+  if DBPF_State.cpp_handle and DBPF_State.cpp_handle_path == abs_key then
+    return DBPF_State.cpp_handle
+  end
+
+  DBPF_ReleaseCppHandle()
+  DBPF_State.cpp_handle = reaper.SM_DB_Load(abs)
+  if DBPF_State.cpp_handle then DBPF_State.cpp_handle_path = abs_key end
+  return DBPF_State.cpp_handle
+end
+
+function DBPF_ParseRawPaths(raw)
+  local out, seen = {}, {}
+  for path in tostring(raw or ""):gmatch("[^\r\n]+") do
+    local normalized = normalize_path(path, true)
+    local key = DBPF_PathKey(normalized)
+    if normalized ~= "" and not seen[key] then
+      seen[key] = true
+      out[#out+1] = normalized
+    end
+  end
+  return out
+end
+
+function DBPF_ReadRootsForDB(dbpath)
+  dbpath = normalize_path(dbpath or "", false)
+  local key = DBPF_PathKey(dbpath)
+  if key == "" then return {} end
+
+  local cached = DBPF_State.path_roots_cache[key]
+  if cached then return cached end
+
+  local roots
+  if HAVE_SM_DB_FOLDERS and _G.db_loader and _G.db_loader.ctx
+    and DBPF_PathKey(_G.current_db_fullpath or "") == key then
+    roots = DBPF_ParseRawPaths(reaper.SM_DB_GetRootsRaw(_G.db_loader.ctx))
+  elseif HAVE_SM_DB_ROOTS_BY_PATH then
+    roots = DBPF_ParseRawPaths(reaper.SM_DB_ReadRootsRaw(dbpath))
+  else
+    roots = GetPathListFromDB(dbpath)
+  end
+
+  DBPF_State.path_roots_cache[key] = roots or {}
+  return DBPF_State.path_roots_cache[key]
+end
+
 -- 从DB文件读取PATH
 function DBPF_ReadRootsFromDB()
   local abs = DBPF_GetCurrentDBAbsPath()
@@ -14206,7 +14317,10 @@ function DBPF_ReadRootsFromDB()
   DBPF_State.roots_cache = {}
   local roots, seen = {}, {}
 
-  if abs ~= "" and reaper.file_exists(abs) then
+  if HAVE_SM_DB_FOLDERS then
+    local handle = DBPF_GetCppHandle()
+    if handle then roots = DBPF_ParseRawPaths(reaper.SM_DB_GetRootsRaw(handle)) end
+  elseif abs ~= "" and reaper.file_exists(abs) then
     for line in io.lines(abs) do
       if line:sub(1, 3) == "\239\187\191" then line = line:sub(4) end -- 去BOM
       local p = line:match('^%s*[Pp][Aa][Tt][Hh]%s+"(.-)"%s*$') or line:match('^%s*[Pp][Aa][Tt][Hh]%s+(.+)%s*$')
@@ -14229,12 +14343,18 @@ function DBPF_ListSubdirs(dir)
   local cached = DBPF_State.subdir_cache[dir]
   if cached then return cached end
 
-  local out, i = {}, 0
-  while true do
-    local sub = reaper.EnumerateSubdirectories(dir, i)
-    if not sub then break end
-    out[#out+1] = normalize_path(dir .. sub, true)
-    i = i + 1
+  local out = {}
+  if HAVE_SM_DB_FOLDERS then
+    local handle = DBPF_GetCppHandle()
+    if handle then out = DBPF_ParseRawPaths(reaper.SM_DB_ListSubdirsRaw(handle, dir)) end
+  else
+    local i = 0
+    while true do
+      local sub = reaper.EnumerateSubdirectories(dir, i)
+      if not sub then break end
+      out[#out+1] = normalize_path(dir .. sub, true)
+      i = i + 1
+    end
   end
   table.sort(out, function(a,b) return a:lower() < b:lower() end)
   DBPF_State.subdir_cache[dir] = out
@@ -14266,9 +14386,10 @@ end
 
 function DBPF_DrawDirMenuRecursive(dir, display_name)
   local has_child = DBPF_HasSubdir(dir)
+  local label = ImGuiEscapeVisibleLabel(display_name)
 
   if not has_child then
-    if reaper.ImGui_MenuItem(ctx, display_name) then
+    if reaper.ImGui_MenuItem(ctx, label) then
       DBPF_ApplyPathFilter(dir)
       reaper.ImGui_CloseCurrentPopup(ctx)
       return true
@@ -14277,7 +14398,7 @@ function DBPF_DrawDirMenuRecursive(dir, display_name)
   end
 
   reaper.ImGui_PushID(ctx, dir)
-  local opened = reaper.ImGui_BeginMenu(ctx, display_name)
+  local opened = reaper.ImGui_BeginMenu(ctx, label)
 
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     DBPF_ApplyPathFilter(dir)
@@ -14691,6 +14812,7 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
       builder_state.db_path = db_file_path
       builder_state.root_path = root_path
       builder_state.start_time = reaper.time_precise()
+      builder_state.is_incremental = false
       db_build_task = nil
       return true
     else
@@ -14722,6 +14844,29 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
     cover_index  = {}
   }
 
+  return true
+end
+
+function SM_StartDatabaseIncremental(db_file_path)
+  if not HAVE_SM_BUILDER_INCREMENTAL then return false end
+
+  db_file_path = normalize_path(db_file_path, false)
+  local result = reaper.SM_Builder_StartIncremental(db_file_path)
+  if result ~= 1 then
+    local err = reaper.SM_Builder_GetStatusString(1)
+    if not err or err == "" then err = "Check database paths and read/write permissions." end
+    reaper.MB("C++ Incremental Scan Start Failed.\n" .. err, "Soundmole Error", 0)
+    return false
+  end
+
+  builder_state = builder_state or {}
+  builder_state.active = true
+  builder_state.should_open = true
+  builder_state.db_path = db_file_path
+  builder_state.root_path = ""
+  builder_state.start_time = reaper.time_precise()
+  builder_state.is_incremental = true
+  db_build_task = nil
   return true
 end
 
@@ -15023,17 +15168,21 @@ function loop()
     local topbar_h = GetTopbarAlignHeight(ctx)
 
     -- Soundmole标题栏，可在设置中隐藏显示，默认显示
-    reaper.ImGui_BeginGroup(ctx)
-    PushUIFont(ctx, fonts.odrf, 22)
-    reaper.ImGui_SameLine(ctx, nil, 0)
-    DrawTitleTextCenteredInBox(ctx, 'Sound', nil, topbar_h, "##title_sound")
-    reaper.ImGui_SameLine(ctx, nil, 0)
-    DrawTitleTextCenteredInBox(ctx, 'mole', colors.mole, topbar_h, "##title_mole")
-    reaper.ImGui_PopFont(ctx)
-    reaper.ImGui_EndGroup(ctx)
+    if not hide_soundmole_title then
+      reaper.ImGui_BeginGroup(ctx)
+      PushUIFont(ctx, fonts.odrf, 22)
+      reaper.ImGui_SameLine(ctx, nil, 0)
+      DrawTitleTextCenteredInBox(ctx, 'Sound', nil, topbar_h, "##title_sound")
+      reaper.ImGui_SameLine(ctx, nil, 0)
+      DrawTitleTextCenteredInBox(ctx, 'mole', colors.mole, topbar_h, "##title_mole")
+      reaper.ImGui_PopFont(ctx)
+      reaper.ImGui_EndGroup(ctx)
+      reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+    else
+      reaper.ImGui_SameLine(ctx, nil, 0)
+    end
 
     -- 搜索历史: 上一条 / Ctrl+点击下一条
-    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     do
       local history_count = #recent_search_keywords
       local cur_idx = search_history_index or 0
@@ -17030,7 +17179,7 @@ function loop()
                 -- PeakTree选中状态高亮
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
               end
-              if reaper.ImGui_Selectable(ctx, folder, is_selected) then
+              if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(folder) .. "##custom_folder_" .. tostring(i), is_selected) then
                 -- 切换自定义文件夹目录选中状态，清空文件列表多选/主选中
                 ClearFileSelection()
                 selected_row = -1
@@ -17423,7 +17572,7 @@ function loop()
                 -- PeakTree选中状态高亮
                 reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
               end
-              if reaper.ImGui_Selectable(ctx, alias, is_selected) then
+              if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##mediadb_" .. tostring(dbfile), is_selected) then
                 if collect_mode ~= COLLECT_MODE_MEDIADB or tree_state.cur_mediadb ~= dbfile then
                   collect_mode = COLLECT_MODE_MEDIADB
                   tree_state.cur_mediadb = dbfile
@@ -17535,7 +17684,7 @@ function loop()
                 if reaper.ImGui_BeginMenu(ctx, T("Remove Path from Database")) then
                   local db_dir = script_path .. "SoundmoleDB"
                   local dbpath = normalize_path(db_dir, true) .. dbfile
-                  local path_list = GetPathListFromDB(dbpath)
+                  local path_list = DBPF_ReadRootsForDB(dbpath)
                   for _, p in ipairs(path_list) do
                     if reaper.ImGui_MenuItem(ctx, p) then
                       -- 记录要删除的信息
@@ -17544,64 +17693,53 @@ function loop()
                       tree_state.remove_path_confirm = true
                     end
                   end
-                  DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
                   reaper.ImGui_EndMenu(ctx)
                 end
 
                 -- 增量更新数据库
                 if reaper.ImGui_MenuItem(ctx, "Scan Database for New Files") then -- Incremental Database Update
-                  -- 读取PATH行拿到根目录
                   local dbpath = normalize_path(db_dir, true) .. dbfile
-                  local root
-                  for line in io.lines(dbpath) do
-                    root = line:match('^PATH%s+"(.-)"')
-                    if root then break end
-                  end
-                  if not root or root == "" then
-                    reaper.ShowMessageBox("No PATH in DB file", "Error", 0)
-                  elseif SM_CanBuilderReplaceDB(dbpath) then
-                    local success = SM_StartDatabaseBuild(root, dbpath)
+                  if HAVE_SM_BUILDER_INCREMENTAL then
+                    local success = SM_StartDatabaseIncremental(dbpath)
                     if success then
                       DBPF_InvalidateAllCaches()
                     end
                   else
-                    -- 扫描所有音频，筛选出未入库的新文件
-                    local newfiles = ScanAllAudioFiles(root)
-
-                    -- 旧逻辑以内存 files_idx_cache 做已存在集合
-                    -- local existing = {}
-                    -- for _, info in ipairs(files_idx_cache or {}) do
-                    --   existing[normalize_path(info.path, false)] = true
-                    -- end
-
-                    -- 以数据库内容做已存在集合
-                    local existing = DB_ReadExistingFileSet(dbpath)
-                    -- 仅保留新增的文件
-                    local to_add = {}
-                    for _, fpath in ipairs(newfiles) do
-                      local key = normalize_path(fpath, false)
-                      if not existing[key] then
-                        table.insert(to_add, fpath)
-                      end
+                    -- 无增量扩展 API 时回退到 Lua 慢模式
+                    local root
+                    for line in io.lines(dbpath) do
+                      root = line:match('^PATH%s+"(.-)"')
+                      if root then break end
                     end
-                    -- 如果没有新文件直接提示
-                    if #to_add == 0 then
-                      reaper.ShowMessageBox("No new files to add.", "Update Complete", 0)
+                    if not root or root == "" then
+                      reaper.ShowMessageBox("No PATH in DB file", "Error", 0)
                     else
-                      -- 异步任务，由主循环进度条处理
-                      local filename = dbfile:match("[^/\\]+$")
-                      db_build_task = {
-                        filelist = to_add,
-                        dbfile = dbpath,
-                        idx = 1,
-                        total = #to_add,
-                        finished = false,
-                        alias = mediadb_alias[filename] or filename, -- mediadb_alias[dbfile] or "Unnamed",
-                        root_path = root,
-                        is_incremental = true,
-                        existing_map = DB_ReadExistingFileSet(dbpath), -- 读入已存在的FILE
-                        cover_index = SM_PrepareDBCoverIndexForAppend(dbpath)
-                      }
+                      local newfiles = ScanAllAudioFiles(root)
+                      local existing = DB_ReadExistingFileSet(dbpath)
+                      local to_add = {}
+                      for _, fpath in ipairs(newfiles) do
+                        local key = normalize_path(fpath, false)
+                        if not existing[key] then
+                          table.insert(to_add, fpath)
+                        end
+                      end
+                      if #to_add == 0 then
+                        reaper.ShowMessageBox("No new files to add.", "Update Complete", 0)
+                      else
+                        local filename = dbfile:match("[^/\\]+$")
+                        db_build_task = {
+                          filelist = to_add,
+                          dbfile = dbpath,
+                          idx = 1,
+                          total = #to_add,
+                          finished = false,
+                          alias = mediadb_alias[filename] or filename,
+                          root_path = root,
+                          is_incremental = true,
+                          existing_map = DB_ReadExistingFileSet(dbpath),
+                          cover_index = SM_PrepareDBCoverIndexForAppend(dbpath)
+                        }
+                      end
                     end
                   end
                 end
@@ -17795,7 +17933,7 @@ function loop()
                   local fn    = it.filename
                   local is_sel = (collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db == fn)
 
-                  if reaper.ImGui_Selectable(ctx, alias .. "##reaperdb_" .. fn, is_sel) then
+                  if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_" .. fn, is_sel) then
                     if collect_mode ~= COLLECT_MODE_REAPERDB or tree_state.cur_reaper_db ~= fn then
                       collect_mode = COLLECT_MODE_REAPERDB
                       tree_state.cur_reaper_db = fn
@@ -18347,7 +18485,7 @@ function loop()
                   local flags = reaper.ImGui_TreeNodeFlags_SpanAllColumns()
                   reaper.ImGui_SetNextItemOpen(ctx, force_open or node.open, reaper.ImGui_Cond_Always())
 
-                  local is_node_open = reaper.ImGui_TreeNode(ctx, node.name, flags)
+                  local is_node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##saved_search_folder_" .. tostring(id), flags)
 
                   if not is_filtering then
                     HandleDragDropSource(id, node.name, true)
@@ -18392,7 +18530,7 @@ function loop()
                   end
                 else -- Item Node
                   local is_selected = (active_saved_search == id)
-                  if reaper.ImGui_Selectable(ctx, node.name, is_selected, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+                  if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##saved_search_" .. tostring(id), is_selected, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
                     active_saved_search = id
                     if filename_filter then reaper.ImGui_TextFilter_Set(filename_filter, node.term) end
                     _G.commit_filter_text = node.term
@@ -20141,7 +20279,7 @@ function loop()
         local alias = (mediadb_alias and mediadb_alias[dbfile]) or dbfile
         local is_selected = (tree_state.target_mediadb == dbfile)
 
-        if reaper.ImGui_Selectable(ctx, alias, is_selected) then
+        if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##target_mediadb_" .. tostring(dbfile), is_selected) then
           tree_state.target_mediadb = dbfile
           reaper.SetExtState(EXT_SECTION, "target_mediadb", dbfile, true) -- 保存选中状态
         end
@@ -21594,6 +21732,7 @@ function loop()
           local f = io.open(dbpath, "wb")
           for _, l in ipairs(lines) do f:write(l, "\n") end
           f:close()
+          DBPF_InvalidateAllCaches()
           if SM_DBCoverIndexExists(dbpath) then
             if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) else SM_RebuildDBCoverIndexFromDB(dbpath) end
           end
@@ -21840,6 +21979,7 @@ function OnScriptExit()
     end
     _G.db_loader.ctx = nil
   end
+  if type(DBPF_ReleaseCppHandle) == "function" then DBPF_ReleaseCppHandle() end
   -- 上一次搜索结果句柄
   if _G._last_search_handle then
     if reaper.APIExists("SM_DB_Release") then 

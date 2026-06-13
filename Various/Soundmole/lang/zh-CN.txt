@@ -247,6 +247,7 @@ Adjust system preferences=调整系统首选项
 Stop audio device settings=音频设备停止设置
 User Interface Settings=用户界面设置
 Appearance=外观
+Hide Soundmole title=隐藏 Soundmole 标题
 UI=用户界面
 Window=窗口
 Peak Meter=峰值表

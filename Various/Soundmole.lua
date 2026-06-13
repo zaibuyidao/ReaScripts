@@ -1,9 +1,12 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.200
+-- @version 1.0.201
 -- @changelog
---   Fixed an issue where Artwork could cause lag in large databases.
---   Support reaper_soundmole-x64.dll v0.0.26
+--   Added a C++ folder index for database folder filtering when the extension is available.
+--   Added C++ multi-path incremental scanning for new database files while preserving existing data and artwork indexes.
+--   Improved waveform preview for undownloaded Freesound by leaving the preview area blank.
+--   Fixed incomplete ## and ### display in folder, collection, and derived database names.
+--   Support reaper_soundmole-x64.dll v0.0.27
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

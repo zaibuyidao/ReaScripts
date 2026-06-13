@@ -939,30 +939,6 @@ function FS_local_cache_path_for(info)
   return FS_join(cache_dir, base:gsub("[^%w%._%-]+","_"):sub(1,80))
 end
 
--- 占位波形
-function FS_EnsureEmptyWaveform(info, thumb_w)
-  if not info or not thumb_w or thumb_w <= 0 then return end
-  info._thumb_waveform = info._thumb_waveform or {}
-  if info._thumb_waveform[thumb_w] then return end
-
-  local chs = math.max(1, tonumber(info.channels or 1) or 1) -- 强制 1 声道以省CPU
-  local peaks = {}
-  for ch = 1, chs do
-    peaks[ch] = {}
-    for i = 1, thumb_w do
-      peaks[ch][i] = {0, 0}  -- 零值峰，画出一条居中的细线
-    end
-  end
-  local src_len = tonumber(info.length or 0) or 0
-  info._thumb_waveform[thumb_w] = {
-    _key        = expected_key, -- 与 RenderWaveformCell 的防串写一致
-    peaks       = peaks,
-    pixel_cnt   = thumb_w,
-    src_len     = src_len,
-    channel_count = chs
-  }
-end
-
 function FS_run(cmd)
   local p = io.popen(cmd .. " 2>&1", "r")
   if not p then return "", -1 end
@@ -1492,7 +1468,7 @@ function FS_InitHooks()
     end
   end
 
-  -- 波形单元渲染本地未落地时，先放空波形占位
+  -- 波形单元渲染前，优先切换到已下载的本地文件
   if type(RenderWaveformCell)=="function" and not _G.__FS_WRAP_RENDER_CELL then
     _G.__FS_WRAP_RENDER_CELL = true
     local __orig_render = RenderWaveformCell
@@ -1500,12 +1476,6 @@ function FS_InitHooks()
       if cmode == COLLECT_MODE_FREESOUND and info and info.path then
         if type(FS_MaybeSwapEntryPathToLocal) == "function" then
           FS_MaybeSwapEntryPathToLocal(info)
-        end
-        -- 本地文件不存在给占位波形，避免首次加载 FLAC/OGG 不显示
-        local p = normalize_path(info.path, false)
-        if not reaper.file_exists(p) then
-          local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-          FS_EnsureEmptyWaveform(info, thumb_w)
         end
       end
       return __orig_render(ctx, i, info, row_height, cmode, idle_time)
