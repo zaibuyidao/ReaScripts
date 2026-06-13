@@ -981,6 +981,7 @@ local hide_soundmole_title      = false -- 默认显示 Soundmole 标题
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
 local mirror_database           = false -- 默认关闭 Database (Mirror)
 local show_peektree_recent      = false -- 默认开启 播放历史
+local ucs_show_english_with_localized = false -- UCS 英文主列 + 本地化名称
 
 -- Tips提示显示
 function DrawTooltip(text)
@@ -1039,6 +1040,7 @@ function SaveSettings()
   reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
+  reaper.SetExtState(EXT_SECTION, "ucs_show_english_with_localized", ucs_show_english_with_localized and "1" or "0", true)
   reaper.SetExtState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
   reaper.SetExtState(EXT_SECTION, "album_panel_visible", ALBUM_PANEL_VISIBLE and "true" or "false", true)
   reaper.SetExtState(EXT_SECTION, "album_panel_px", tostring(album_panel_px or 280), true)
@@ -1111,6 +1113,11 @@ do
   local v = reaper.GetExtState(EXT_SECTION, "show_peektree_recent")
   if v == "1" then show_peektree_recent = true
   else show_peektree_recent = false end
+end
+
+do
+  local v = reaper.GetExtState(EXT_SECTION, "ucs_show_english_with_localized")
+  ucs_show_english_with_localized = (v == "1")
 end
 
 do
@@ -2187,6 +2194,12 @@ do
   function Section_UCS()
     reaper.ImGui_Text(ctx, T("UCS Settings:"))
     DrawUcsLanguageSelector(ctx)
+    local changed, enabled = reaper.ImGui_Checkbox(ctx, T("Show English alongside localized names"), ucs_show_english_with_localized)
+    if changed then
+      ucs_show_english_with_localized = enabled
+      ucs_last_filter_text = nil
+      reaper.SetExtState(EXT_SECTION, "ucs_show_english_with_localized", enabled and "1" or "0", true)
+    end
   end
 
   function Section_ResetToDefaults()
@@ -2231,6 +2244,8 @@ do
       mirror_folder_shortcuts = false
       mirror_database         = false
       show_peektree_recent    = false -- 播放历史
+      ucs_show_english_with_localized = false
+      ucs_last_filter_text     = nil
       current_sidebar_tab     = "PeekTree"
       ALBUM_PANEL_VISIBLE     = true
       album_panel_px          = 280
@@ -8120,6 +8135,22 @@ function list_dir(path)
   return dirs, audios, ok
 end
 
+function IsExistingDirectory(path)
+  path = (path or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  if path == "" then return false end
+
+  local folder = normalize_path(path, true)
+  if reaper.EnumerateFiles(folder, 0) ~= nil
+    or reaper.EnumerateSubdirectories(folder, 0) ~= nil then
+    return true
+  end
+
+  -- Enumeration cannot distinguish an empty folder from a missing path.
+  -- The trailing separator prevents regular files from passing this probe.
+  local ok, _, error_code = os.rename(folder, folder)
+  return ok == true or error_code == 5 or error_code == 13
+end
+
 -- 此电脑右键菜单
 function AddThisComputerContextMenu(path)
   if not path or path == "" then return end
@@ -8134,22 +8165,7 @@ function AddThisComputerContextMenu(path)
 
     -- 添加到文件夹快捷方式
     if reaper.ImGui_MenuItem(ctx, T("Add to Folder Shortcuts")) then
-      local folder = normalize_path(path, true)
-      local exists = false
-      -- 检查是否已存在
-      for _, v in ipairs(folder_shortcuts) do
-        if normalize_path(v.path, true) == folder then
-          exists = true
-          break
-        end
-      end
-      -- 不存在则添加
-      if not exists then
-        -- 提取文件夹名称作为快捷方式名称
-        local name = folder:match("([^/\\]+)[/\\]?$") or folder
-        table.insert(folder_shortcuts, { name = name, path = folder })
-        SaveFolderShortcuts()
-      end
+      AddFolderShortcut(path)
     end
 
     -- 将路径添加为新数据库
@@ -8271,6 +8287,26 @@ shortcut_last_target_index = shortcut_last_target_index or nil -- 上一次交�
 function GetFolderName(path)
   local name = path and path:match("([^\\/]+)[\\/]?$")
   return name or "/"
+end
+
+function AddFolderShortcut(path)
+  path = (path or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  if path == "" then return false end
+  local folder = normalize_path(path, true)
+  if not IsExistingDirectory(folder) then return false end
+  local folder_key = reaper.GetOS():find("Win") and folder:lower() or folder
+
+  for _, shortcut in ipairs(folder_shortcuts or {}) do
+    local shortcut_path = normalize_path(shortcut.path, true)
+    local shortcut_key = reaper.GetOS():find("Win") and shortcut_path:lower() or shortcut_path
+    if shortcut_key == folder_key then
+      return false
+    end
+  end
+
+  table.insert(folder_shortcuts, { name = GetFolderName(folder), path = folder })
+  SaveFolderShortcuts()
+  return true
 end
 
 function SaveFolderShortcuts()
@@ -9679,20 +9715,181 @@ end
 
 --------------------------------------------- 快速预览文件夹节点 ---------------------------------------------
 
-preview_folder_input = preview_folder_input or ""
-reopen_preview_popup = reopen_preview_popup or false
-preview_popup_pos_x  = preview_popup_pos_x -- 记住上次弹窗位置
-preview_popup_pos_y  = preview_popup_pos_y
+local saved_preview_folder_root = reaper.GetExtState(EXT_SECTION, "preview_folder_root")
+preview_folder_input = preview_folder_input or saved_preview_folder_root or ""
+preview_folder_root  = preview_folder_root or saved_preview_folder_root or ""
+preview_folder_error = preview_folder_error or ""
+preview_folder_popup_w = preview_folder_popup_w or tonumber(reaper.GetExtState(EXT_SECTION, "preview_folder_popup_w")) or UIScale(760)
+preview_folder_popup_h = preview_folder_popup_h or tonumber(reaper.GetExtState(EXT_SECTION, "preview_folder_popup_h")) or UIScale(560)
+preview_folder_popup_open = preview_folder_popup_open or false
+preview_folder_popup_size_dirty = preview_folder_popup_size_dirty or false
 
--- 快速预览文件夹
-function BrowseForFolder(init_dir)
-  if reaper.JS_Dialog_BrowseForFolder then
-    local ok, path = reaper.JS_Dialog_BrowseForFolder("Select a folder", init_dir or "")
-    if ok and path and path ~= "" then
-      return path
-    end
+function GetPreviewFolderPopupName()
+  return T("Pick Folder") .. "###preview_folder_popup"
+end
+
+function UpdatePreviewFolderPopupSize()
+  local width, height = reaper.ImGui_GetWindowSize(ctx)
+  width = math.floor((width or 0) + 0.5)
+  height = math.floor((height or 0) + 0.5)
+  if width > 0 and height > 0
+    and (width ~= preview_folder_popup_w or height ~= preview_folder_popup_h) then
+    preview_folder_popup_w = width
+    preview_folder_popup_h = height
+    preview_folder_popup_size_dirty = true
   end
-  return nil
+
+  if preview_folder_popup_size_dirty and not reaper.ImGui_IsMouseDown(ctx, 0) then
+    reaper.SetExtState(EXT_SECTION, "preview_folder_popup_w", tostring(preview_folder_popup_w), true)
+    reaper.SetExtState(EXT_SECTION, "preview_folder_popup_h", tostring(preview_folder_popup_h), true)
+    preview_folder_popup_size_dirty = false
+  end
+end
+
+function OpenPreviewFolderPath(path)
+  path = (path or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  if path == "" then
+    preview_folder_error = T("Folder does not exist:") .. " " .. T("(empty)")
+    return false
+  end
+  path = normalize_path(path, true)
+  if not IsExistingDirectory(path) then
+    preview_folder_error = T("Folder does not exist:") .. " " .. path
+    return false
+  end
+
+  preview_folder_error = ""
+  collect_mode = COLLECT_MODE_SAMEFOLDER
+  tree_state.cur_path = path
+  RefreshFolderFiles(path)
+  reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
+  reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+
+  ClearFileSelection()
+  selected_row = nil
+  files_idx_cache = nil
+  CollectFiles()
+
+  local static = _G._soundmole_static or {}
+  _G._soundmole_static = static
+  static.filtered_list_map, static.last_filter_text_map = {}, {}
+  return true
+end
+
+function CommitPreviewFolderRoot(path)
+  path = (path or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  if not OpenPreviewFolderPath(path) then return false end
+
+  local root = normalize_path(path, true)
+  preview_folder_input = root
+  preview_folder_root = root
+  reaper.SetExtState(EXT_SECTION, "preview_folder_root", root, true)
+  dir_cache[root] = nil
+  return true
+end
+
+function draw_preview_folder_tree(name, path, depth)
+  path = normalize_path(path, true)
+  depth = depth or 0
+
+  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
+  if depth == 0 then
+    flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
+  end
+  if tree_state.cur_path == path then
+    flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
+  end
+
+  local label = ImGuiEscapeVisibleLabel(name or GetFolderName(path)) .. "##preview_folder_tree_" .. path
+  local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
+  AddThisComputerContextMenu(path)
+
+  if reaper.ImGui_IsItemClicked(ctx, 0) then
+    OpenPreviewFolderPath(path)
+  end
+
+  if node_open then
+    if not dir_cache[path] then
+      local dirs, audios, ok = list_dir(path)
+      dir_cache[path] = { dirs = dirs, audios = audios, ok = ok }
+    end
+    local cache = dir_cache[path] or { dirs = {}, audios = {}, ok = true }
+    for _, subdir in ipairs(cache.dirs) do
+      draw_preview_folder_tree(subdir, normalize_path(path .. sep .. subdir, true), depth + 1)
+    end
+    reaper.ImGui_TreePop(ctx)
+  end
+end
+
+function DrawPreviewFolderWindow()
+  if not preview_folder_popup_open then return end
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameBorderSize(), 0)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Border(), colors.table_border_light)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), colors.button_normal)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.button_hovered)
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), colors.button_active)
+  reaper.ImGui_SetNextWindowSizeConstraints(ctx, UIScale(520), UIScale(360), 100000, 100000)
+  reaper.ImGui_SetNextWindowSize(
+    ctx,
+    math.max(UIScale(520), preview_folder_popup_w or UIScale(760)),
+    math.max(UIScale(360), preview_folder_popup_h or UIScale(560)),
+    reaper.ImGui_Cond_Appearing()
+  )
+
+  local popup_visible, popup_open = reaper.ImGui_Begin(ctx, GetPreviewFolderPopupName(), true, 0)
+  preview_folder_popup_open = popup_open
+  if popup_visible then
+    UpdatePreviewFolderPopupSize()
+    reaper.ImGui_Text(ctx, T("Folder address:"))
+    local popup_spacing_x, popup_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
+    local popup_avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx))
+    local visit_button_w = UIScale(80)
+    reaper.ImGui_PushItemWidth(ctx, math.max(UIScale(180), popup_avail_w - visit_button_w - popup_spacing_x))
+
+    local changed, new_str = reaper.ImGui_InputText(ctx, "##preview_folder_input", preview_folder_input or "")
+    if changed then
+      preview_folder_input = new_str
+    end
+    reaper.ImGui_PopItemWidth(ctx)
+
+    reaper.ImGui_SameLine(ctx, nil, popup_spacing_x)
+    local visit_requested = reaper.ImGui_Button(ctx, T("Visit"), visit_button_w, UIScale(26))
+    if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter())
+      or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+      visit_requested = true
+    end
+    if visit_requested then CommitPreviewFolderRoot(preview_folder_input) end
+
+    if preview_folder_error ~= "" then
+      reaper.ImGui_TextWrapped(ctx, preview_folder_error)
+    else
+      reaper.ImGui_TextWrapped(ctx, T("Click a folder to visit it. Right-click for more actions."))
+    end
+
+    reaper.ImGui_Separator(ctx)
+    local _, popup_avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
+    local tree_h = math.max(UIScale(120), popup_avail_h - reaper.ImGui_GetFrameHeight(ctx) - popup_spacing_y * 3)
+    if reaper.ImGui_BeginChild(ctx, "##preview_folder_tree_region", 0, tree_h, 0) then
+      local root = preview_folder_root or ""
+      if root ~= "" then root = normalize_path(root, true) end
+      if root ~= "" and IsExistingDirectory(root) then
+        draw_preview_folder_tree(GetFolderName(root), root, 0)
+      end
+      reaper.ImGui_EndChild(ctx)
+    end
+
+    reaper.ImGui_Separator(ctx)
+    if reaper.ImGui_Button(ctx, T("Add to Folder Shortcuts"), UIScale(190), UIScale(26)) then
+      AddFolderShortcut(preview_folder_input)
+    end
+    reaper.ImGui_SameLine(ctx, nil, popup_spacing_x)
+    if reaper.ImGui_Button(ctx, T("Close"), UIScale(80), UIScale(26)) then
+      preview_folder_popup_open = false
+    end
+    reaper.ImGui_End(ctx)
+  end
+  reaper.ImGui_PopStyleColor(ctx, 4)
+  reaper.ImGui_PopStyleVar(ctx)
 end
 
 --------------------------------------------- UCS节点 ---------------------------------------------
@@ -9804,6 +10001,32 @@ function LoadUCS_NoSort_WithENMap(lang)
   return categories, cat_names, ucs_maps
 end
 
+function UCSCategoryDisplayLabels(cat)
+  local english = (ucs_maps and ucs_maps.cat_to_en and ucs_maps.cat_to_en[cat]) or cat
+  if ucs_show_english_with_localized and CURRENT_LANG ~= "en" and english ~= cat then
+    return english, cat
+  end
+  return cat, nil
+end
+
+function UCSSubcategoryDisplayLabels(cat, sub)
+  local sub_map = ucs_maps and ucs_maps.sub_to_en and ucs_maps.sub_to_en[cat]
+  local english = (sub_map and sub_map[sub]) or sub
+  if ucs_show_english_with_localized and CURRENT_LANG ~= "en" and english ~= sub then
+    return english, sub
+  end
+  return sub, nil
+end
+
+function UCSDisplayTextPassesFilter(filter_text, primary, localized)
+  if filter_text == "" then return true end
+  local visible_text = tostring(primary or "")
+  if localized and localized ~= "" then
+    visible_text = visible_text .. " " .. tostring(localized)
+  end
+  return reaper.ImGui_TextFilter_PassFilter(usc_filter, visible_text)
+end
+
 -- 将当前折叠展开状态显示语言key映射到英文key
 function SnapshotOpenStateToEN()
   if not (cat_open_state and ucs_maps and ucs_maps.cat_to_en) then return end
@@ -9905,23 +10128,46 @@ function IconButton(ctx, id, glyph, w, h)
 end
 
 -- 悬浮变色
-function HoverSelectable(ctx, label, id, width, flags)
+function HoverSelectable(ctx, label, id, width, flags, right_label)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(),        0x00000000)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), 0x00000000)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(),  0x00000000)
 
   local pos_x, pos_y = reaper.ImGui_GetCursorScreenPos(ctx)
-  local clicked = reaper.ImGui_Selectable(ctx, id, false, flags or 0, math.max(0, width or 0), 0)
+  local item_width = math.max(0, width or 0)
+  local clicked = reaper.ImGui_Selectable(ctx, id, false, flags or 0, item_width, 0)
   local hovered = reaper.ImGui_IsItemHovered(ctx)
 
-  reaper.ImGui_SetCursorScreenPos(ctx, pos_x, pos_y)
-  if hovered then
-    -- reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.link_text)
-    reaper.ImGui_Text(ctx, label or "")
-    reaper.ImGui_PopStyleColor(ctx)
+  if right_label and right_label ~= "" then
+    local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+    local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+    local _, text_h = reaper.ImGui_CalcTextSize(ctx, label or "")
+    local right_w = reaper.ImGui_CalcTextSize(ctx, right_label)
+    local text_y = min_y + math.max(0, (max_y - min_y - text_h) * 0.5)
+    local right_padding = UIScale(10)
+    local right_edge = math.max(pos_x, max_x - right_padding)
+    local right_x = math.max(pos_x, math.min(right_edge - right_w, pos_x + item_width - right_padding - right_w))
+    local gap = UIScale(8)
+    local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+    local left_color = hovered and colors.link_text or colors.normal_text
+    local right_color = hovered and colors.link_text or (colors.gray or colors.normal_text)
+
+    reaper.ImGui_DrawList_PushClipRect(draw_list, min_x, min_y, math.max(min_x, right_x - gap), max_y, true)
+    reaper.ImGui_DrawList_AddText(draw_list, pos_x, text_y, left_color, label or "")
+    reaper.ImGui_DrawList_PopClipRect(draw_list)
+    reaper.ImGui_DrawList_PushClipRect(draw_list, right_x, min_y, right_edge, max_y, true)
+    reaper.ImGui_DrawList_AddText(draw_list, right_x, text_y, right_color, right_label)
+    reaper.ImGui_DrawList_PopClipRect(draw_list)
   else
-    reaper.ImGui_Text(ctx, label or "")
+    reaper.ImGui_SetCursorScreenPos(ctx, pos_x, pos_y)
+    if hovered then
+      -- reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.link_text)
+      reaper.ImGui_Text(ctx, label or "")
+      reaper.ImGui_PopStyleColor(ctx)
+    else
+      reaper.ImGui_Text(ctx, label or "")
+    end
   end
 
   reaper.ImGui_PopStyleColor(ctx, 3)
@@ -15753,8 +15999,13 @@ function loop()
     local clicked_pick_folder = reaper.ImGui_Button(ctx, T("Pick Folder"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_pick_folder then
-      local init = preview_folder_input
-      if not init or init == "" then
+      local saved_root = reaper.GetExtState(EXT_SECTION, "preview_folder_root")
+      if saved_root and saved_root ~= "" and IsExistingDirectory(saved_root) then
+        preview_folder_input = normalize_path(saved_root, true)
+        preview_folder_root = preview_folder_input
+      elseif not preview_folder_root or preview_folder_root == ""
+        or not IsExistingDirectory(preview_folder_root) then
+        local init
         if same_folder and same_folder ~= "" then
           init = same_folder
         elseif tree_state and tree_state.cur_path and tree_state.cur_path ~= "" then
@@ -15762,9 +16013,11 @@ function loop()
         else
           init = reaper.GetResourcePath() -- 默认给个 REAPER 资源目录
         end
+        preview_folder_input = normalize_path(init, true)
+        preview_folder_root = preview_folder_input
       end
-      preview_folder_input = normalize_path(init, true)
-      reaper.ImGui_OpenPopup(ctx, "##preview_folder_popup")
+      preview_folder_error = ""
+      preview_folder_popup_open = true
     end
 
     -- 当前数据库选中项的相似度过滤快捷入口
@@ -15820,66 +16073,6 @@ function loop()
       if reaper.ImGui_IsItemHovered(ctx) then
         DrawTooltip("Show Recently Played list in the table")
       end
-    end
-
-    if reopen_preview_popup then
-      if preview_popup_pos_x and preview_popup_pos_y then
-        reaper.ImGui_SetNextWindowPos(ctx, preview_popup_pos_x, preview_popup_pos_y, reaper.ImGui_Cond_Appearing(), 0, 0)
-      end
-      reaper.ImGui_OpenPopup(ctx, "##preview_folder_popup")
-      reopen_preview_popup = false
-    end
-
-    if reaper.ImGui_BeginPopup(ctx, "##preview_folder_popup") then
-      if reaper.ImGui_IsWindowAppearing(ctx) then
-        preview_popup_pos_x, preview_popup_pos_y = reaper.ImGui_GetWindowPos(ctx)
-      end
-      reaper.ImGui_Text(ctx, T("Type or pick a folder to preview:"))
-      reaper.ImGui_PushItemWidth(ctx, 480)
-
-      local changed, new_str = reaper.ImGui_InputText(ctx, "##preview_folder_input", preview_folder_input or "")
-      if changed then
-        preview_folder_input = new_str
-      end
-      reaper.ImGui_PopItemWidth(ctx)
-
-      reaper.ImGui_SameLine(ctx, nil, 10)
-      if reaper.ImGui_Button(ctx, T("Select..."), 80, 26) then
-        local start_dir = normalize_path(preview_folder_input or tree_state.cur_path or "", true)
-        local rv, out = reaper.JS_Dialog_BrowseForFolder(T("Select a directory:"), start_dir)
-        if rv == 1 and out and out ~= "" then
-          preview_folder_input = normalize_path(out, true)
-        end
-        reopen_preview_popup = true
-      end
-
-      reaper.ImGui_Separator(ctx)
-      if reaper.ImGui_Button(ctx, T("OK"), 80, 26) then
-        local path = (preview_folder_input or ""):gsub("%s+$", "")
-        if path ~= "" then
-          collect_mode        = COLLECT_MODE_SAMEFOLDER
-          tree_state.cur_path = normalize_path(path, true)
-          RefreshFolderFiles(tree_state.cur_path)
-          reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
-          reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
-
-          ClearFileSelection()
-          selected_row = nil
-          files_idx_cache = nil
-          CollectFiles()
-
-          local static = _G._soundmole_static or {}
-          _G._soundmole_static = static
-          static.filtered_list_map, static.last_filter_text_map = {}, {}
-          reaper.ImGui_CloseCurrentPopup(ctx)
-        end
-      end
-      reaper.ImGui_SameLine(ctx, nil, 10)
-      if reaper.ImGui_Button(ctx, T("Cancel"), 80, 26) then
-        reaper.ImGui_CloseCurrentPopup(ctx)
-      end
-
-      reaper.ImGui_EndPopup(ctx)
     end
 
     -- 创建数据库按钮
@@ -16567,15 +16760,7 @@ function loop()
 
               local rv, folder = reaper.JS_Dialog_BrowseForFolder(T("Choose folder to add shortcut:"), "")
               if rv == 1 and folder and folder ~= "" then
-                folder = normalize_path(folder, true)
-                local exists = false
-                for _, v in ipairs(folder_shortcuts) do
-                  if v.path == folder then exists = true break end
-                end
-                if not exists then
-                  table.insert(folder_shortcuts, { name = folder:match("[^/\\]+$"), path = folder })
-                  SaveFolderShortcuts()
-                end
+                AddFolderShortcut(folder)
               end
             end
           end
@@ -18110,12 +18295,14 @@ function loop()
                   local filtered = {}
                   local cat_matched = false
                   if filter_text ~= "" then
-                    cat_matched = reaper.ImGui_TextFilter_PassFilter(usc_filter, cat)
+                    local cat_primary, cat_localized = UCSCategoryDisplayLabels(cat)
+                    cat_matched = UCSDisplayTextPassesFilter(filter_text, cat_primary, cat_localized)
                     if cat_matched then
                       filtered = subs
                     else
                       for _, entry in ipairs(subs) do
-                        if reaper.ImGui_TextFilter_PassFilter(usc_filter, entry.name) then
+                        local sub_primary, sub_localized = UCSSubcategoryDisplayLabels(cat, entry.name)
+                        if UCSDisplayTextPassesFilter(filter_text, sub_primary, sub_localized) then
                           table.insert(filtered, entry)
                         end
                       end
@@ -18138,12 +18325,14 @@ function loop()
               local filtered = {}
               local cat_matched = false
               if filter_text ~= "" then
-                cat_matched = reaper.ImGui_TextFilter_PassFilter(usc_filter, cat)
+                local cat_primary, cat_localized = UCSCategoryDisplayLabels(cat)
+                cat_matched = UCSDisplayTextPassesFilter(filter_text, cat_primary, cat_localized)
                 if cat_matched then
                   filtered = subs
                 else
                   for _, entry in ipairs(subs) do
-                    if reaper.ImGui_TextFilter_PassFilter(usc_filter, entry.name) then
+                    local sub_primary, sub_localized = UCSSubcategoryDisplayLabels(cat, entry.name)
+                    if UCSDisplayTextPassesFilter(filter_text, sub_primary, sub_localized) then
                       table.insert(filtered, entry)
                     end
                   end
@@ -18168,8 +18357,9 @@ function loop()
 
                 -- 点击主分类提交隐式搜索，主分类统一悬浮样式
                 local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
+                local cat_primary, cat_localized = UCSCategoryDisplayLabels(cat)
                 -- local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat), "##cat", text_w, reaper.ImGui_SelectableFlags_SpanAllColumns()))
-                local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat), "##cat", text_w, 0))
+                local clicked_cat = select(1, HoverSelectable(ctx, tostring(cat_primary), "##cat", text_w, 0, cat_localized))
                 if clicked_cat then
                   local send_cat = cat
                   if UCS_FORCE_EN and ucs_maps and ucs_maps.cat_to_en[cat] then
@@ -18193,7 +18383,8 @@ function loop()
                     reaper.ImGui_PushID(ctx, entry.name)
                     reaper.ImGui_Indent(ctx, 28)
                     local w_sub = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
-                    local clicked_sub = select(1, HoverSelectable(ctx, tostring(entry.name), "##sub", w_sub, 0))
+                    local sub_primary, sub_localized = UCSSubcategoryDisplayLabels(cat, entry.name)
+                    local clicked_sub = select(1, HoverSelectable(ctx, tostring(sub_primary), "##sub", w_sub, 0, sub_localized))
                     if clicked_sub then
                       local send_cat = cat
                       local send_sub = entry.name
@@ -21760,6 +21951,9 @@ function loop()
     reaper.ImGui_PopStyleColor(ctx, 3) -- 仅TAB页签颜色，放外部会失效
     reaper.ImGui_End(ctx)
   end
+
+  -- 仅在主窗口结束后，才绘制独立的顶层窗口
+  DrawPreviewFolderWindow()
 
   -- 设置窗口作为独立窗口绘制，避免嵌套在主面板内导致中心停靠闪白
   DrawSettingsWindow()

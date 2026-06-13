@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.202
+-- @version 1.0.203
 -- @changelog
---   Fixed Favorites and database lists incorrectly accepting internal AUDIO_PATHS drops; they now only accept external file drops.
---   Improved Favorites add and drop handling with deduplication and faster checks for large favorites lists.
+--   Added a UCS option to show English and localized names side by side, with English on the left and localized text right-aligned.
+--   Improved the Pick Folder window to use the entered path as the root and display subfolders in a tree view.
 --   Support reaper_soundmole-x64.dll v0.0.28
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
