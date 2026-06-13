@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.203
+-- @version 1.0.204
 -- @changelog
---   Added a UCS option to show English and localized names side by side, with English on the left and localized text right-aligned.
---   Improved the Pick Folder window to use the entered path as the root and display subfolders in a tree view.
+--   Moved Soundmole persistent settings to data\Soundmole.ini for centralized configuration storage.
 --   Support reaper_soundmole-x64.dll v0.0.28
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

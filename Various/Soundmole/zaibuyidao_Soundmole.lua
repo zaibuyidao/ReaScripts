@@ -1,6 +1,13 @@
 -- NoIndex: true
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
+local Persistence = require('lib.persistence')
+-- Persistent values go to data/Soundmole.ini. Only these runtime signals use non-persistent ExtState.
+Persistence.install_state_facade({
+  "CMD_AddSelectedToTarget",
+  "CMD_ToggleMainCollapse",
+  "fs_query",
+})
 require ('lib.core')
 require ('lib.utils')
 local L = require('lib.locales')
@@ -144,7 +151,7 @@ function ClampUIScale(v)
   return v
 end
 
-local ui_scale = ClampUIScale(tonumber(reaper.GetExtState(EXT_SECTION, "ui_scale")) or 1.0)
+local ui_scale = ClampUIScale(tonumber(SM_GetState(EXT_SECTION, "ui_scale")) or 1.0)
 
 function FormatUIScale(v)
   return string.format("%d%%", math.floor(ClampUIScale(v) * 100 + 0.5))
@@ -152,7 +159,7 @@ end
 
 function SetUIScale(v)
   ui_scale = ClampUIScale(v)
-  reaper.SetExtState(EXT_SECTION, "ui_scale", string.format("%.2f", ui_scale), true)
+  SM_SetState(EXT_SECTION, "ui_scale", string.format("%.2f", ui_scale), true)
 end
 
 function UIScale(v)
@@ -337,7 +344,7 @@ local TableColumns = {
 }
 
 -- 加载语言文件
-local saved_lang = reaper.GetExtState(EXT_SECTION, "language")
+local saved_lang = SM_GetState(EXT_SECTION, "language")
 if saved_lang == "" then saved_lang = "en-US" end
 L.load(saved_lang)
 function T(str) return L.get(str) end
@@ -351,7 +358,7 @@ _G.async_probe_handle = nil
 -- Soundmole 波形缓存路径
 local sep = package.config:sub(1, 1)
 local DEFAULT_CACHE_DIR = script_path .. "waveform_cache" .. sep
-local cache_dir = reaper.GetExtState(EXT_SECTION, "cache_dir")
+local cache_dir = SM_GetState(EXT_SECTION, "cache_dir")
 if not cache_dir or cache_dir == "" then
   cache_dir = DEFAULT_CACHE_DIR
 end
@@ -360,7 +367,7 @@ EnsureCacheDir(cache_dir)
 
 -- Freesound 波形缓存路径
 local DEFAULT_FS_CACHE_DIR = script_path .. "freesound_cache" .. sep
-local fs_cache_dir = reaper.GetExtState(EXT_SECTION, "fs_cache_dir")
+local fs_cache_dir = SM_GetState(EXT_SECTION, "fs_cache_dir")
 if not fs_cache_dir or fs_cache_dir == "" then
   fs_cache_dir = DEFAULT_FS_CACHE_DIR
 end
@@ -369,7 +376,7 @@ EnsureCacheDir(fs_cache_dir)
 
 -- SoundmoleDB 路径
 local DEFAULT_MEDIADB_DIR = script_path .. "SoundmoleDB" .. sep
-local mediadb_dir = reaper.GetExtState(EXT_SECTION, "soundmoledb_dir")
+local mediadb_dir = SM_GetState(EXT_SECTION, "soundmoledb_dir")
 if not mediadb_dir or mediadb_dir == "" then
   mediadb_dir = DEFAULT_MEDIADB_DIR
 end
@@ -377,14 +384,14 @@ mediadb_dir = normalize_path(mediadb_dir, true)
 EnsureCacheDir(mediadb_dir)
 
 -- 相似度 Python 设置。用户选择兼容的已安装 Python 后，Soundmole 会创建并使用自己的托管环境。
-local similarity_base_python = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_base_python"), false)
+local similarity_base_python = normalize_path(SM_GetState(EXT_SECTION, "similarity_base_python"), false)
 DEFAULT_SIMILARITY_DATA_DIR = normalize_path(reaper.GetResourcePath() .. sep .. "SoundmoleData", false)
-similarity_data_dir = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_data_dir"), false)
+similarity_data_dir = normalize_path(SM_GetState(EXT_SECTION, "similarity_data_dir"), false)
 if similarity_data_dir == "" then
-  local legacy_runtime = normalize_path(reaper.GetExtState(EXT_SECTION, "similarity_runtime_dir"), false)
+  local legacy_runtime = normalize_path(SM_GetState(EXT_SECTION, "similarity_runtime_dir"), false)
   similarity_data_dir = legacy_runtime:match("^(.*)[/\\][^/\\]+$") or DEFAULT_SIMILARITY_DATA_DIR
 end
-similarity_accelerator = reaper.GetExtState(EXT_SECTION, "similarity_accelerator")
+similarity_accelerator = SM_GetState(EXT_SECTION, "similarity_accelerator")
 if similarity_accelerator ~= "gpu" then similarity_accelerator = "cpu" end
 similarity_runtime_dir = ""
 similarity_setup_status_path = ""
@@ -399,14 +406,14 @@ function SM_SIM_ApplyDataDir(path, persist)
   similarity_setup_log_path = normalize_path(similarity_data_dir .. sep .. "similarity_setup.log", false)
   if similarity_state then similarity_state.setup_status = nil end
   if persist then
-    reaper.SetExtState(EXT_SECTION, "similarity_data_dir", similarity_data_dir, true)
-    reaper.SetExtState(EXT_SECTION, "similarity_runtime_dir", similarity_runtime_dir, true)
+    SM_SetState(EXT_SECTION, "similarity_data_dir", similarity_data_dir, true)
+    SM_SetState(EXT_SECTION, "similarity_runtime_dir", similarity_runtime_dir, true)
   end
 end
 SM_SIM_ApplyDataDir(similarity_data_dir, false)
 
 -- 读取上次选中的标签页名称
-local startup_tab_name = reaper.GetExtState(EXT_SECTION, "sidebar_active_tab")
+local startup_tab_name = SM_GetState(EXT_SECTION, "sidebar_active_tab")
 local current_sidebar_tab = "PeekTree" -- 默认为 PeekTree，用于记录当前状态
 
 -- 波形预览状态变量
@@ -509,7 +516,7 @@ function ApplyWaveformCacheDir(new_dir, persist, clear_runtime)
     reaper.SM_SetCacheBaseDir(cache_dir)
   end
   if persist ~= false then
-    reaper.SetExtState(EXT_SECTION, "cache_dir", cache_dir, true)
+    SM_SetState(EXT_SECTION, "cache_dir", cache_dir, true)
   end
   if clear_runtime ~= false and old_dir ~= cache_dir then
     ClearWaveformRuntimeCache()
@@ -538,7 +545,7 @@ function ApplyFreesoundCacheDir(new_dir, persist, clear_runtime)
     FS._download_dir = nil
   end
   if persist ~= false then
-    reaper.SetExtState(EXT_SECTION, "fs_cache_dir", fs_cache_dir, true)
+    SM_SetState(EXT_SECTION, "fs_cache_dir", fs_cache_dir, true)
   end
   if clear_runtime ~= false and old_dir ~= fs_cache_dir then
     ClearWaveformRuntimeCache()
@@ -563,37 +570,37 @@ local Wave = {
   w = 0, -- 波形宽度
 }
 
--- 读取ExtState
-waveform_color_mode = tonumber(reaper.GetExtState(EXT_SECTION, "waveform_color_mode")) or WAVE_COLOR_MONO
-last_peak_chans = tonumber(reaper.GetExtState(EXT_SECTION, "peak_chans"))
+-- 读取本地持久化设置
+waveform_color_mode = tonumber(SM_GetState(EXT_SECTION, "waveform_color_mode")) or WAVE_COLOR_MONO
+last_peak_chans = tonumber(SM_GetState(EXT_SECTION, "peak_chans"))
 if last_peak_chans then peak_chans = math.min(math.max(last_peak_chans, 2), 128) end
-last_font_size = tonumber(reaper.GetExtState(EXT_SECTION, "font_size"))
+last_font_size = tonumber(SM_GetState(EXT_SECTION, "font_size"))
 if last_font_size then font_size = math.min(math.max(last_font_size, FONT_SIZE_MIN), FONT_SIZE_MAX) end
-last_max_db = tonumber(reaper.GetExtState(EXT_SECTION, "max_db"))
+last_max_db = tonumber(SM_GetState(EXT_SECTION, "max_db"))
 if last_max_db then max_db = last_max_db end
-last_pitch_knob_min = tonumber(reaper.GetExtState(EXT_SECTION, "pitch_knob_min"))
+last_pitch_knob_min = tonumber(SM_GetState(EXT_SECTION, "pitch_knob_min"))
 if last_pitch_knob_min then pitch_knob_min = last_pitch_knob_min end
-last_pitch_knob_max = tonumber(reaper.GetExtState(EXT_SECTION, "pitch_knob_max"))
+last_pitch_knob_max = tonumber(SM_GetState(EXT_SECTION, "pitch_knob_max"))
 if last_pitch_knob_max then pitch_knob_max = last_pitch_knob_max end
-last_rate_min = tonumber(reaper.GetExtState(EXT_SECTION, "rate_min"))
+last_rate_min = tonumber(SM_GetState(EXT_SECTION, "rate_min"))
 if last_rate_min then rate_min = last_rate_min end
-last_rate_max = tonumber(reaper.GetExtState(EXT_SECTION, "rate_max"))
+last_rate_max = tonumber(SM_GetState(EXT_SECTION, "rate_max"))
 if last_rate_max then rate_max = last_rate_max end
-last_volume = tonumber(reaper.GetExtState(EXT_SECTION, "volume"))
+last_volume = tonumber(SM_GetState(EXT_SECTION, "volume"))
 if last_volume then volume = last_volume end
-last_auto_scroll = reaper.GetExtState(EXT_SECTION, "auto_scroll")
+last_auto_scroll = SM_GetState(EXT_SECTION, "auto_scroll")
 if last_auto_scroll == "0" then auto_scroll_enabled = false end
 if last_auto_scroll == "1" then auto_scroll_enabled = true end
-last_hover_hint = reaper.GetExtState(EXT_SECTION, "waveform_hover_hint")
+last_hover_hint = SM_GetState(EXT_SECTION, "waveform_hover_hint")
 if last_hover_hint == "0" then waveform_hint_enabled = false end
 if last_hover_hint == "1" then waveform_hint_enabled = true end
-last_row_height = tonumber(reaper.GetExtState(EXT_SECTION, "table_row_height"))
+last_row_height = tonumber(SM_GetState(EXT_SECTION, "table_row_height"))
 if last_row_height then row_height = math.max(12, math.min(48, last_row_height)) end -- 内容行高限制范围
-last_hue_shift = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_hue_shift")) -- 读取色相偏移设置
+last_hue_shift = tonumber(SM_GetState(EXT_SECTION, "spectral_hue_shift")) -- 读取色相偏移设置
 spectral_hue_shift = last_hue_shift or 0.0
-last_grad_sat = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_grad_sat")) -- 读取饱和度设置
+last_grad_sat = tonumber(SM_GetState(EXT_SECTION, "spectral_grad_sat")) -- 读取饱和度设置
 spectral_grad_sat = last_grad_sat or 1.0
-pitch_semitone_step = reaper.GetExtState(EXT_SECTION, "pitch_semitone_step") == "1" -- 读取半音步进设置
+pitch_semitone_step = SM_GetState(EXT_SECTION, "pitch_semitone_step") == "1" -- 读取半音步进设置
 
 -- 默认收集模式（0=Items, 1=RPP, 2=Directory, 3=Media Items, 4=This Computer, 5=Shortcuts）
 collect_mode                 = -1 -- -1 表示未设置
@@ -620,7 +627,7 @@ similarity_state = {
   source_db_path = nil,
   source_info = nil,
   results = {},
-  max_results = math.max(1, math.min(1000, tonumber(reaper.GetExtState(EXT_SECTION, "similarity_max_results")) or 100)),
+  max_results = math.max(1, math.min(1000, tonumber(SM_GetState(EXT_SECTION, "similarity_max_results")) or 100)),
   builder = nil,
   builder_active = false,
   builder_started = 0,
@@ -808,9 +815,9 @@ if Freesound and Freesound.configure then
 end
 
 -- 加载已保存颜色
-function LoadColorsFromExtState()
+function LoadColorsFromState()
   for k in pairs(DEFAULT_COLORS) do
-    local saved = reaper.GetExtState(EXT_SECTION, "jb_color" .. k)
+    local saved = SM_GetState(EXT_SECTION, "jb_color" .. k)
     if saved and saved ~= "" then
       local n = tonumber(saved)
       if n then colors[k] = n end
@@ -819,22 +826,22 @@ function LoadColorsFromExtState()
 end
 
 -- 保存单个颜色
-function SaveOneColorToExtState(key)
+function SaveOneColorToState(key)
   local v = colors[key]
   if v ~= nil then
-    reaper.SetExtState(EXT_SECTION, "jb_color" .. key, tostring(v), true)
+    SM_SetState(EXT_SECTION, "jb_color" .. key, tostring(v), true)
   end
 end
 
 -- 保存全部颜色
-function SaveAllColorsToExtState()
-  for k in pairs(DEFAULT_COLORS) do SaveOneColorToExtState(k) end
+function SaveAllColorsToState()
+  for k in pairs(DEFAULT_COLORS) do SaveOneColorToState(k) end
 end
 
 -- 恢复默认并保存
 function RestoreAllColorsToDefault()
   for k, v in pairs(DEFAULT_COLORS) do colors[k] = v end
-  SaveAllColorsToExtState()
+  SaveAllColorsToState()
 end
 
 -- 排序后的颜色键名
@@ -896,7 +903,7 @@ function ImportColorsFromFile(path)
         if n then
           if colors[key] ~= n then changed = changed + 1 end
           colors[key] = n
-          reaper.SetExtState(EXT_SECTION, "jb_color" .. key, tostring(n), true)
+          SM_SetState(EXT_SECTION, "jb_color" .. key, tostring(n), true)
         end
       end
     end
@@ -965,7 +972,7 @@ function DrawColorsMenuIcon(ctx)
   end
 end
 
-LoadColorsFromExtState()
+LoadColorsFromState()
 
 --------------------------------------------- 设置弹窗相关 ---------------------------------------------
 
@@ -999,170 +1006,170 @@ function SaveSettings()
   ApplyFreesoundCacheDir(fs_cache_dir, false, false)
 
   -- 基础设置
-  -- reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
-  reaper.SetExtState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
-  reaper.SetExtState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
-  reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
-  reaper.SetExtState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
-  reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
-  reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
-  reaper.SetExtState(EXT_SECTION, "ui_scale", string.format("%.2f", ui_scale), true)
-  reaper.SetExtState(EXT_SECTION, "max_db", tostring(max_db), true)
+  -- SM_SetState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
+  SM_SetState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
+  SM_SetState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
+  SM_SetState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
+  SM_SetState(EXT_SECTION, "font_size", tostring(font_size), true)
+  SM_SetState(EXT_SECTION, "ui_scale", string.format("%.2f", ui_scale), true)
+  SM_SetState(EXT_SECTION, "max_db", tostring(max_db), true)
   
   -- 播放控制范围
-  reaper.SetExtState(EXT_SECTION, "pitch_knob_min", tostring(pitch_knob_min), true)
-  reaper.SetExtState(EXT_SECTION, "pitch_knob_max", tostring(pitch_knob_max), true)
-  reaper.SetExtState(EXT_SECTION, "rate_min", tostring(rate_min), true)
-  reaper.SetExtState(EXT_SECTION, "rate_max", tostring(rate_max), true)
+  SM_SetState(EXT_SECTION, "pitch_knob_min", tostring(pitch_knob_min), true)
+  SM_SetState(EXT_SECTION, "pitch_knob_max", tostring(pitch_knob_max), true)
+  SM_SetState(EXT_SECTION, "rate_min", tostring(rate_min), true)
+  SM_SetState(EXT_SECTION, "rate_max", tostring(rate_max), true)
   
   -- 缓存与列表
-  reaper.SetExtState(EXT_SECTION, "cache_dir", tostring(cache_dir), true)
-  reaper.SetExtState(EXT_SECTION, "fs_cache_dir", tostring(fs_cache_dir), true)
-  reaper.SetExtState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
-  reaper.SetExtState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
-  reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
-  reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
-  reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
-  reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "similarity_base_python", similarity_base_python or "", true)
-  reaper.SetExtState(EXT_SECTION, "similarity_data_dir", similarity_data_dir or "", true)
-  reaper.SetExtState(EXT_SECTION, "similarity_runtime_dir", similarity_runtime_dir or "", true)
-  reaper.SetExtState(EXT_SECTION, "similarity_accelerator", similarity_accelerator or "cpu", true)
+  SM_SetState(EXT_SECTION, "cache_dir", tostring(cache_dir), true)
+  SM_SetState(EXT_SECTION, "fs_cache_dir", tostring(fs_cache_dir), true)
+  SM_SetState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
+  SM_SetState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
+  SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
+  SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "similarity_base_python", similarity_base_python or "", true)
+  SM_SetState(EXT_SECTION, "similarity_data_dir", similarity_data_dir or "", true)
+  SM_SetState(EXT_SECTION, "similarity_runtime_dir", similarity_runtime_dir or "", true)
+  SM_SetState(EXT_SECTION, "similarity_accelerator", similarity_accelerator or "cpu", true)
   
   -- 视觉设置
-  reaper.SetExtState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
-  reaper.SetExtState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
-  reaper.SetExtState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "hide_soundmole_title", hide_soundmole_title and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
+  SM_SetState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
+  SM_SetState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "hide_soundmole_title", hide_soundmole_title and "1" or "0", true)
 
   -- 镜像与侧边栏
-  reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "ucs_show_english_with_localized", ucs_show_english_with_localized and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
-  reaper.SetExtState(EXT_SECTION, "album_panel_visible", ALBUM_PANEL_VISIBLE and "true" or "false", true)
-  reaper.SetExtState(EXT_SECTION, "album_panel_px", tostring(album_panel_px or 280), true)
-  reaper.SetExtState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab or "album", true)
+  SM_SetState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "ucs_show_english_with_localized", ucs_show_english_with_localized and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
+  SM_SetState(EXT_SECTION, "album_panel_visible", ALBUM_PANEL_VISIBLE and "true" or "false", true)
+  SM_SetState(EXT_SECTION, "album_panel_px", tostring(album_panel_px or 280), true)
+  SM_SetState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab or "album", true)
 
   -- 播放行为与同步
-  reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
-  reaper.SetExtState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
 end
 
 -- 恢复设置
 do
-  local v = tonumber(reaper.GetExtState(EXT_SECTION, "doubleclick_action"))
+  local v = tonumber(SM_GetState(EXT_SECTION, "doubleclick_action"))
   if v then doubleclick_action = v end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "auto_play_selected")
+  local v = SM_GetState(EXT_SECTION, "auto_play_selected")
   if v == "1" then auto_play_selected = true
   elseif v == "0" then auto_play_selected = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "preserve_pitch")
+  local v = SM_GetState(EXT_SECTION, "preserve_pitch")
   if v == "1" then preserve_pitch = true
   elseif v == "0" then preserve_pitch = false end
 end
 
 do
-  local v = tonumber(reaper.GetExtState(EXT_SECTION, "bg_alpha"))
+  local v = tonumber(SM_GetState(EXT_SECTION, "bg_alpha"))
   if v then bg_alpha = v end
 end
 
 do
-  local v = tonumber(reaper.GetExtState(EXT_SECTION, "ui_scale"))
+  local v = tonumber(SM_GetState(EXT_SECTION, "ui_scale"))
   if v then ui_scale = ClampUIScale(v) end
 end
 
 do
-  local v = tonumber(reaper.GetExtState(EXT_SECTION, "img_h_offset"))
+  local v = tonumber(SM_GetState(EXT_SECTION, "img_h_offset"))
   if v then img_h_offset = v end
 end
 
 do
-  local v = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_play"))
+  local v = tonumber(SM_GetState(EXT_SECTION, "max_recent_play"))
   if v then max_recent_files = math.max(1, math.min(100, v)) end
 end
 
 do
-  local v = tonumber(reaper.GetExtState(EXT_SECTION, "max_recent_search"))
+  local v = tonumber(SM_GetState(EXT_SECTION, "max_recent_search"))
   if v then max_recent_search = math.max(1, math.min(100, v)) end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "mirror_folder_shortcuts")
+  local v = SM_GetState(EXT_SECTION, "mirror_folder_shortcuts")
   if v == "1" then mirror_folder_shortcuts = true
   elseif v == "0" then mirror_folder_shortcuts = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "mirror_database")
+  local v = SM_GetState(EXT_SECTION, "mirror_database")
   if v == "1" then mirror_database = true
   elseif v == "0" then mirror_database = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "show_peektree_recent")
+  local v = SM_GetState(EXT_SECTION, "show_peektree_recent")
   if v == "1" then show_peektree_recent = true
   else show_peektree_recent = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "ucs_show_english_with_localized")
+  local v = SM_GetState(EXT_SECTION, "ucs_show_english_with_localized")
   ucs_show_english_with_localized = (v == "1")
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "insert_keep_rate_pitch")
+  local v = SM_GetState(EXT_SECTION, "insert_keep_rate_pitch")
   if v == "1" then keep_preview_rate_pitch_on_insert = true
   elseif v == "0" then keep_preview_rate_pitch_on_insert = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "tempo_sync")
+  local v = SM_GetState(EXT_SECTION, "tempo_sync")
   if v == "1" then tempo_sync_enabled = true
   elseif v == "0" then tempo_sync_enabled = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "link_transport")
+  local v = SM_GetState(EXT_SECTION, "link_transport")
   if v == "1" then link_with_reaper = true
   elseif v == "0" then link_with_reaper = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "wait_nextbar")
+  local v = SM_GetState(EXT_SECTION, "wait_nextbar")
   if v == "1" then wait_nextbar_play = true
   elseif v == "0" then wait_nextbar_play = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "show_tooltips")
+  local v = SM_GetState(EXT_SECTION, "show_tooltips")
   if v == "1" then show_tooltips = true
   elseif v == "0" then show_tooltips = false end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "hide_soundmole_title")
+  local v = SM_GetState(EXT_SECTION, "hide_soundmole_title")
   if v == "1" then hide_soundmole_title = true
   elseif v == "0" then hide_soundmole_title = false end
 end
 
 do
-  local v = tonumber(reaper.GetExtState(EXT_SECTION, "spectral_grad_sat"))
+  local v = tonumber(SM_GetState(EXT_SECTION, "spectral_grad_sat"))
   if v then spectral_grad_sat = v else spectral_grad_sat = 1.0 end
 end
 
 do
-  local v = reaper.GetExtState(EXT_SECTION, "pitch_semitone_step")
+  local v = SM_GetState(EXT_SECTION, "pitch_semitone_step")
   if v == "1" then pitch_semitone_step = true
   elseif v == "0" then pitch_semitone_step = false 
   else pitch_semitone_step = false -- 默认为关
@@ -1492,13 +1499,13 @@ do
       local changed, new_col = reaper.ImGui_ColorPicker4(ctx, "##picker", colors[key], flags)
       if changed then
         colors[key] = new_col
-        SaveOneColorToExtState(key)
+        SaveOneColorToState(key)
       end
 
       -- 按 Enter ，保存当前值并关闭弹窗
       if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
         colors[key] = new_col
-        SaveOneColorToExtState(key)
+        SaveOneColorToState(key)
         reaper.ImGui_CloseCurrentPopup(ctx)
       end
 
@@ -1602,7 +1609,7 @@ do
     reaper.ImGui_PopItemWidth(ctx)
     if changed_font then
       font_size = SnapFontSize(new_font_size)
-      reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
+      SM_SetState(EXT_SECTION, "font_size", tostring(font_size), true)
       MarkFontDirty()
     end
 
@@ -1613,7 +1620,7 @@ do
     reaper.ImGui_PopItemWidth(ctx)
     if changed_row_height then
       row_height = new_row_height
-      reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
+      SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
     end
   end
 
@@ -1625,13 +1632,13 @@ do
     reaper.ImGui_PopItemWidth(ctx)
     if changed_bg then
       bg_alpha = math.max(0, math.min(1, new_bg_alpha or 1))
-      reaper.SetExtState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
+      SM_SetState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
     end
 
     local changed_title, new_hide_title = reaper.ImGui_Checkbox(ctx, T("Hide Soundmole title"), hide_soundmole_title)
     if changed_title then
       hide_soundmole_title = new_hide_title
-      reaper.SetExtState(EXT_SECTION, "hide_soundmole_title", hide_soundmole_title and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "hide_soundmole_title", hide_soundmole_title and "1" or "0", true)
     end
   end
 
@@ -1645,7 +1652,7 @@ do
       peak_chans = math.floor((new_peaks or 2) + 0.5)
       if peak_chans < 2 then peak_chans = 2 end
       if peak_chans > 128 then peak_chans = 128 end
-      reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
+      SM_SetState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
     end
     reaper.ImGui_SameLine(ctx)
     if HelpMarker then HelpMarker(T("Number of peak meter channels to show. Range: 2~128.")) end
@@ -1659,7 +1666,7 @@ do
     local chg_fs
     chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, T("Mirror Media Explorer Shortcuts"), mirror_folder_shortcuts)
     if chg_fs then
-      reaper.SetExtState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       DrawTooltip(
@@ -1677,7 +1684,7 @@ do
     local chg_db
     chg_db, mirror_database = reaper.ImGui_Checkbox(ctx, T("Mirror Media Explorer Databases"), mirror_database)
     if chg_db then
-      reaper.SetExtState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       DrawTooltip(
@@ -1694,14 +1701,14 @@ do
 
   function Section_PeekTreeRecentToggle()
     if show_peektree_recent == nil then
-      local ext = reaper.GetExtState(EXT_SECTION, "show_peektree_recent")
+      local ext = SM_GetState(EXT_SECTION, "show_peektree_recent")
       show_peektree_recent = (ext == nil or ext == "" or ext == "1")
     end
 
     local changed, v = reaper.ImGui_Checkbox(ctx, T('Show "Recently Played" in PeekTree (hides the "Play History" button)'), show_peektree_recent)
     if changed then
       show_peektree_recent = v
-      reaper.SetExtState(EXT_SECTION, "show_peektree_recent", v and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "show_peektree_recent", v and "1" or "0", true)
     end
     -- if reaper.ImGui_IsItemHovered(ctx) then
     --   reaper.ImGui_SetTooltip(ctx, 'When enabled, the "Play History" button is hidden. Disable this to show the button.')
@@ -1715,7 +1722,7 @@ do
       { name = "简体中文", code = "zh-CN" }
     }
 
-    local current_code = reaper.GetExtState(EXT_SECTION, "language")
+    local current_code = SM_GetState(EXT_SECTION, "language")
     if current_code == "" then current_code = "en-US" end
 
     local preview_name = "English"
@@ -1732,7 +1739,7 @@ do
       for _, lang in ipairs(languages) do
         local is_selected = (current_code == lang.code)
         if reaper.ImGui_Selectable(ctx, lang.name, is_selected) then
-          reaper.SetExtState(EXT_SECTION, "language", lang.code, true)
+          SM_SetState(EXT_SECTION, "language", lang.code, true)
           -- 重新加载语言包
           L.load(lang.code)
           if PAGE_ALIASES and PAGE_ALIASES[settings_active_page] then
@@ -1768,7 +1775,7 @@ do
 
     if changed then
       show_tooltips = new_val
-      reaper.SetExtState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true) -- 立即保存设置到本地
+      SM_SetState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true) -- 立即保存设置到本地
     end
     -- 提示
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -1817,7 +1824,7 @@ do
       if new_max_db < 0 then new_max_db = 0 end
       if new_max_db > 24 then new_max_db = 24 end
       max_db = new_max_db
-      reaper.SetExtState(EXT_SECTION, "max_db", tostring(max_db), true)
+      SM_SetState(EXT_SECTION, "max_db", tostring(max_db), true)
     end
 
     reaper.ImGui_Text(ctx, T("Pitch Knob Min:"))
@@ -1828,7 +1835,7 @@ do
     if changed_pmin then
       if new_pmin > pitch_knob_max then new_pmin = pitch_knob_max end
       pitch_knob_min = new_pmin
-      reaper.SetExtState(EXT_SECTION, "pitch_knob_min", tostring(pitch_knob_min), true)
+      SM_SetState(EXT_SECTION, "pitch_knob_min", tostring(pitch_knob_min), true)
     end
 
     reaper.ImGui_SameLine(ctx)
@@ -1840,7 +1847,7 @@ do
     if changed_pmax then
       if new_pmax < pitch_knob_min then new_pmax = pitch_knob_min end
       pitch_knob_max = new_pmax
-      reaper.SetExtState(EXT_SECTION, "pitch_knob_max", tostring(pitch_knob_max), true)
+      SM_SetState(EXT_SECTION, "pitch_knob_max", tostring(pitch_knob_max), true)
     end
 
     -- 半音步进勾选项
@@ -1848,7 +1855,7 @@ do
     local changed_step, new_step = reaper.ImGui_Checkbox(ctx, T("Semitone Steps"), pitch_semitone_step)
     if changed_step then
       pitch_semitone_step = new_step
-      reaper.SetExtState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
     end
 
     reaper.ImGui_Text(ctx, T("Rate Min:"))
@@ -1860,7 +1867,7 @@ do
       if new_rmin < 0.01 then new_rmin = 0.01 end
       if new_rmin > rate_max then new_rmin = rate_max end
       rate_min = new_rmin
-      reaper.SetExtState(EXT_SECTION, "rate_min", tostring(rate_min), true)
+      SM_SetState(EXT_SECTION, "rate_min", tostring(rate_min), true)
     end
 
     reaper.ImGui_SameLine(ctx)
@@ -1872,7 +1879,7 @@ do
     if changed_rmax then
       if new_rmax < rate_min then new_rmax = rate_min end
       rate_max = new_rmax
-      reaper.SetExtState(EXT_SECTION, "rate_max", tostring(rate_max), true)
+      SM_SetState(EXT_SECTION, "rate_max", tostring(rate_max), true)
     end
   end
 
@@ -1883,14 +1890,14 @@ do
     local changed_scroll, new_scroll = reaper.ImGui_Checkbox(ctx, T("Auto scroll waveform during playback"), auto_scroll_enabled)
     if changed_scroll then
       auto_scroll_enabled = new_scroll
-      reaper.SetExtState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
+      SM_SetState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
     end
 
     -- 是否显示鼠标悬停提示线与时间
     local changed_hover, new_hover = reaper.ImGui_Checkbox(ctx, T("Show mouse hover cursor & time on waveform preview"), waveform_hint_enabled)
     if changed_hover then
       waveform_hint_enabled = new_hover
-      reaper.SetExtState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
+      SM_SetState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
     end
 
     -- 波形着色模式选择
@@ -1900,14 +1907,14 @@ do
     -- 选项1: 默认单色
     if reaper.ImGui_RadioButton(ctx, T("Default (Monochrome)"), waveform_color_mode == WAVE_COLOR_MONO) then
       waveform_color_mode = WAVE_COLOR_MONO
-      reaper.SetExtState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
+      SM_SetState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
     end
     reaper.ImGui_SameLine(ctx)
 
     -- 选项2: 动态透明度
     if reaper.ImGui_RadioButton(ctx, T("Dynamic Alpha"), waveform_color_mode == WAVE_COLOR_ALPHA) then
       waveform_color_mode = WAVE_COLOR_ALPHA
-      reaper.SetExtState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
+      SM_SetState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
     end
     -- if reaper.ImGui_IsItemHovered(ctx) then
     --   reaper.ImGui_SetTooltip(ctx, "Louder parts are opaque, quieter parts are transparent.")
@@ -1917,7 +1924,7 @@ do
     -- 选项3: 颜色渐变
     if reaper.ImGui_RadioButton(ctx, T("Spectral Gradient"), waveform_color_mode == WAVE_COLOR_GRADIENT) then
       waveform_color_mode = WAVE_COLOR_GRADIENT
-      reaper.SetExtState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
+      SM_SetState(EXT_SECTION, "waveform_color_mode", tostring(waveform_color_mode), true)
     end
 
     -- 仅在渐变模式下显示色相偏移滑块
@@ -1930,7 +1937,7 @@ do
       local changed_h, v_h = reaper.ImGui_SliderDouble(ctx, "##hue_shift", spectral_hue_shift, 0.0, 1.0, "%.2f")
       if changed_h then
         spectral_hue_shift = v_h
-        reaper.SetExtState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
+        SM_SetState(EXT_SECTION, "spectral_hue_shift", tostring(spectral_hue_shift), true)
       end
       reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
       -- 饱和度 (Saturation)
@@ -1941,7 +1948,7 @@ do
       local changed_s, v_s = reaper.ImGui_SliderDouble(ctx, "##grad_sat", spectral_grad_sat, 0.0, 1.0, "%.2f")
       if changed_s then
         spectral_grad_sat = v_s
-        reaper.SetExtState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
+        SM_SetState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
       end
       if reaper.ImGui_IsItemHovered(ctx) then
         DrawTooltip(T("Lower this value to make colors softer (pastel). Default is 1.0."))
@@ -1955,7 +1962,7 @@ do
     local chg_keep, v_keep = reaper.ImGui_Checkbox(ctx, T("Keep preview rate & pitch when inserting to arrange"), keep_preview_rate_pitch_on_insert)
     if chg_keep then
       keep_preview_rate_pitch_on_insert = v_keep
-      reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", v_keep and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", v_keep and "1" or "0", true)
     end
   end
 
@@ -1964,7 +1971,7 @@ do
     local chg_wf, v_wf = reaper.ImGui_Checkbox(ctx, T("Build waveform cache during DB creation").."##wf_cache", build_waveform_cache)
     if chg_wf then
       build_waveform_cache = v_wf
-      reaper.SetExtState(EXT_SECTION, "build_waveform_cache", v_wf and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "build_waveform_cache", v_wf and "1" or "0", true)
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       DrawTooltip(
@@ -2033,7 +2040,7 @@ do
     reaper.ImGui_PopItemWidth(ctx)
     if changed_python then
       similarity_base_python = normalize_path(new_python, false)
-      reaper.SetExtState(EXT_SECTION, "similarity_base_python", similarity_base_python, true)
+      SM_SetState(EXT_SECTION, "similarity_base_python", similarity_base_python, true)
     end
     reaper.ImGui_SameLine(ctx, nil, UIScale(8))
     if reaper.ImGui_Button(ctx, T("Browse").."##SelectSimilarityPython", UIScale(70)) then
@@ -2041,7 +2048,7 @@ do
       local rv, out = reaper.JS_Dialog_BrowseForOpenFiles(T("Select Python executable"), init_dir, "", "", false)
       if rv == 1 and out and out ~= "" then
         similarity_base_python = normalize_path(out, false)
-        reaper.SetExtState(EXT_SECTION, "similarity_base_python", similarity_base_python, true)
+        SM_SetState(EXT_SECTION, "similarity_base_python", similarity_base_python, true)
       end
     end
 
@@ -2074,14 +2081,14 @@ do
     reaper.ImGui_BeginDisabled(ctx, similarity_paths_locked)
     if reaper.ImGui_RadioButton(ctx, T("CPU (recommended)"), similarity_accelerator == "cpu") then
       similarity_accelerator = "cpu"
-      reaper.SetExtState(EXT_SECTION, "similarity_accelerator", similarity_accelerator, true)
+      SM_SetState(EXT_SECTION, "similarity_accelerator", similarity_accelerator, true)
     end
     reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_SameLine(ctx, nil, UIScale(18))
     reaper.ImGui_BeginDisabled(ctx, similarity_paths_locked or not HAVE_SM_SIM_SETUP_PROFILE)
     if reaper.ImGui_RadioButton(ctx, T("GPU acceleration"), similarity_accelerator == "gpu") then
       similarity_accelerator = "gpu"
-      reaper.SetExtState(EXT_SECTION, "similarity_accelerator", similarity_accelerator, true)
+      SM_SetState(EXT_SECTION, "similarity_accelerator", similarity_accelerator, true)
     end
     reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_TextWrapped(ctx, similarity_accelerator == "gpu"
@@ -2157,7 +2164,7 @@ do
     local sea_enter_changed, search_enter_v = reaper.ImGui_Checkbox(ctx, T("Update search only when enter key pressed").."##enter_mode", search_enter_mode)
     if sea_enter_changed then
       search_enter_mode = search_enter_v
-      reaper.SetExtState(EXT_SECTION, "search_enter_mode", search_enter_v and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_v and "1" or "0", true)
     end
   end
 
@@ -2169,7 +2176,7 @@ do
     reaper.ImGui_PopItemWidth(ctx)
     if chg_rs then
       max_recent_search = math.max(1, math.min(100, v_rs or 20))
-      reaper.SetExtState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
+      SM_SetState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
       while #recent_search_keywords > max_recent_search do table.remove(recent_search_keywords) end
       SaveRecentSearched()
     end
@@ -2181,7 +2188,7 @@ do
     reaper.ImGui_PopItemWidth(ctx)
     if chg_rp then
       max_recent_files = math.max(1, math.min(100, v_rp or 20))
-      reaper.SetExtState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
+      SM_SetState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
       while #recent_audio_files > max_recent_files do table.remove(recent_audio_files) end
       SaveRecentPlayed()
     end
@@ -2198,7 +2205,7 @@ do
     if changed then
       ucs_show_english_with_localized = enabled
       ucs_last_filter_text = nil
-      reaper.SetExtState(EXT_SECTION, "ucs_show_english_with_localized", enabled and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "ucs_show_english_with_localized", enabled and "1" or "0", true)
     end
   end
 
@@ -2391,7 +2398,7 @@ do
   function HandleSettingsWindowShortcut()
     if (reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())) and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_P()) then
       settings_window_open = true
-      reaper.SetExtState(EXT_SECTION, "popup_settings_open", "true", true)
+      SM_SetState(EXT_SECTION, "popup_settings_open", "true", true)
     end
   end
 
@@ -2438,7 +2445,7 @@ do
 
     if settings_window_open ~= open then
       settings_window_open = open
-      reaper.SetExtState(EXT_SECTION, "popup_settings_open", tostring(open), true)
+      SM_SetState(EXT_SECTION, "popup_settings_open", tostring(open), true)
     end
   end
 end
@@ -2622,7 +2629,7 @@ function UpdateGenreSearchFieldLabel()
 end
 
 local EXT_KEY_SEARCH_FIELDS = "enabled_fields"
-local stored = reaper.GetExtState(EXT_SECTION, EXT_KEY_SEARCH_FIELDS)
+local stored = SM_GetState(EXT_SECTION, EXT_KEY_SEARCH_FIELDS)
 if stored and stored ~= "" then
   local set = {}
   for key in stored:gmatch('([^,]+)') do
@@ -2638,7 +2645,7 @@ function SaveSearchFields()
   for _, f in ipairs(search_fields) do
     if f.enabled then table.insert(list, f.key) end
   end
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_SEARCH_FIELDS, table.concat(list, ","), true)
+  SM_SetState(EXT_SECTION, EXT_KEY_SEARCH_FIELDS, table.concat(list, ","), true)
 end
 
 --------------------------------------------- 波形缓存相关函数 ---------------------------------------------
@@ -3677,7 +3684,7 @@ function SM_SIM_DrawSidebar()
   local changed, value = reaper.ImGui_InputInt(ctx, "##similarity_max_results", similarity_state.max_results or 100, 10, 50)
   if changed then
     similarity_state.max_results = math.max(1, math.min(1000, tonumber(value) or 100))
-    reaper.SetExtState(EXT_SECTION, "similarity_max_results", tostring(similarity_state.max_results), true)
+    SM_SetState(EXT_SECTION, "similarity_max_results", tostring(similarity_state.max_results), true)
   end
   reaper.ImGui_TextDisabled(ctx, T("Range: 1-1000 results"))
   reaper.ImGui_Text(ctx, string.format("%s: %d", T("Current results"), #(similarity_state.results or {})))
@@ -4013,8 +4020,8 @@ function GetCachedSelectionDragSourceInMediaDirectory(real_path)
     return cached_path
   end
 
-  if reaper.GetExtState then
-    local value = reaper.GetExtState(EXT_SECTION, GetSelectionDragPersistentStateKey(real_path, media_dir))
+  if SM_GetState then
+    local value = SM_GetState(EXT_SECTION, GetSelectionDragPersistentStateKey(real_path, media_dir))
     if value and value ~= "" then
       local source_length, stored_paths = value:match("^(%d+):(.*)$")
       source_length = tonumber(source_length)
@@ -4040,9 +4047,9 @@ function CacheSelectionDragImportedSource(real_path, imported_path, media_dir)
   media_dir = media_dir or GetSelectionDragMediaDirectory()
   if real_path ~= "" and imported_path ~= "" then
     selection_drag_import_cache[GetSelectionDragImportCacheKey(real_path, media_dir)] = imported_path
-    if reaper.SetExtState then
+    if SM_SetState then
       local value = tostring(#real_path) .. ":" .. real_path .. imported_path
-      reaper.SetExtState(EXT_SECTION, GetSelectionDragPersistentStateKey(real_path, media_dir), value, true)
+      SM_SetState(EXT_SECTION, GetSelectionDragPersistentStateKey(real_path, media_dir), value, true)
     end
   end
 end
@@ -8317,11 +8324,11 @@ function SaveFolderShortcuts()
     table.insert(t, name .. ";;" .. path)
   end
   local str = table.concat(t, "||")
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_SHORTCUTS, str, true)
+  SM_SetState(EXT_SECTION, EXT_KEY_SHORTCUTS, str, true)
 end
 
 function LoadFolderShortcuts()
-  local str = reaper.GetExtState(EXT_SECTION, EXT_KEY_SHORTCUTS)
+  local str = SM_GetState(EXT_SECTION, EXT_KEY_SHORTCUTS)
   local shortcuts = {}
   if not str or str == "" then
     return shortcuts
@@ -8541,7 +8548,7 @@ function SaveCustomFolders()
   end
   local plain = table.concat(segments, "||")
   local encoded = reaper.NF_Base64_Encode(plain, true)
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_CUSTOM_CONTENT, encoded, true)
+  SM_SetState(EXT_SECTION, EXT_KEY_CUSTOM_CONTENT, encoded, true)
 end
 
 function split_by_delimiter(str, delimiter)
@@ -8560,7 +8567,7 @@ function split_by_delimiter(str, delimiter)
 end
 
 function LoadCustomFolders()
-  local content_str = reaper.GetExtState(EXT_SECTION, EXT_KEY_CUSTOM_CONTENT)
+  local content_str = SM_GetState(EXT_SECTION, EXT_KEY_CUSTOM_CONTENT)
   local decoded = ""
   if content_str and content_str ~= "" then
     local ret, dec = reaper.NF_Base64_Decode(content_str)
@@ -8810,22 +8817,22 @@ function SaveAdvancedFolders()
   end
   local plain = table.concat(lines, "\n")
   local enc = reaper.NF_Base64_Encode(plain, 0):gsub("[\r\n]", "")
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_ADVANCED_FOLDERS, enc, true)
+  SM_SetState(EXT_SECTION, EXT_KEY_ADVANCED_FOLDERS, enc, true)
   local root_csv = table.concat(root_advanced_folders, ",")
-  reaper.SetExtState(EXT_SECTION, EXT_KEY_ADVANCED_ROOT, root_csv, true)
+  SM_SetState(EXT_SECTION, EXT_KEY_ADVANCED_ROOT, root_csv, true)
 end
 
 function LoadAdvancedFolders()
   advanced_folders, root_advanced_folders = {}, {}
   -- 读 Root
-  local rootstr = reaper.GetExtState(EXT_SECTION, EXT_KEY_ADVANCED_ROOT)
+  local rootstr = SM_GetState(EXT_SECTION, EXT_KEY_ADVANCED_ROOT)
   if rootstr and rootstr~="" then
     for id in rootstr:gmatch("[^,]+") do
       table.insert(root_advanced_folders, id)
     end
   end
   -- 读主数据
-  local enc = reaper.GetExtState(EXT_SECTION, EXT_KEY_ADVANCED_FOLDERS)
+  local enc = SM_GetState(EXT_SECTION, EXT_KEY_ADVANCED_FOLDERS)
   if not enc or enc=="" then return end
   enc = enc:gsub("[\r\n]", "")
   local ok, dec = reaper.NF_Base64_Decode(enc)
@@ -9063,7 +9070,7 @@ LoadAdvancedFolders()
 
 function LoadRecentPlayed()
   recent_audio_files = {}
-  local str = reaper.GetExtState(EXT_SECTION, "recent_played_files")
+  local str = SM_GetState(EXT_SECTION, "recent_played_files")
   if not str or str == "" then return end
   local list = split(str, "|;|")
   for _, item in ipairs(list) do
@@ -9081,7 +9088,7 @@ function SaveRecentPlayed()
     table.insert(t, (info.path or "") .. "||" .. (info.filename or ""))
   end
   local str = table.concat(t, "|;|") -- 用 |;| 分隔每一条
-  reaper.SetExtState(EXT_SECTION, "recent_played_files", str, true)
+  SM_SetState(EXT_SECTION, "recent_played_files", str, true)
 end
 
 function RemoveDuplicateRecentFiles()
@@ -9715,12 +9722,12 @@ end
 
 --------------------------------------------- 快速预览文件夹节点 ---------------------------------------------
 
-local saved_preview_folder_root = reaper.GetExtState(EXT_SECTION, "preview_folder_root")
+local saved_preview_folder_root = SM_GetState(EXT_SECTION, "preview_folder_root")
 preview_folder_input = preview_folder_input or saved_preview_folder_root or ""
 preview_folder_root  = preview_folder_root or saved_preview_folder_root or ""
 preview_folder_error = preview_folder_error or ""
-preview_folder_popup_w = preview_folder_popup_w or tonumber(reaper.GetExtState(EXT_SECTION, "preview_folder_popup_w")) or UIScale(760)
-preview_folder_popup_h = preview_folder_popup_h or tonumber(reaper.GetExtState(EXT_SECTION, "preview_folder_popup_h")) or UIScale(560)
+preview_folder_popup_w = preview_folder_popup_w or tonumber(SM_GetState(EXT_SECTION, "preview_folder_popup_w")) or UIScale(760)
+preview_folder_popup_h = preview_folder_popup_h or tonumber(SM_GetState(EXT_SECTION, "preview_folder_popup_h")) or UIScale(560)
 preview_folder_popup_open = preview_folder_popup_open or false
 preview_folder_popup_size_dirty = preview_folder_popup_size_dirty or false
 
@@ -9740,8 +9747,8 @@ function UpdatePreviewFolderPopupSize()
   end
 
   if preview_folder_popup_size_dirty and not reaper.ImGui_IsMouseDown(ctx, 0) then
-    reaper.SetExtState(EXT_SECTION, "preview_folder_popup_w", tostring(preview_folder_popup_w), true)
-    reaper.SetExtState(EXT_SECTION, "preview_folder_popup_h", tostring(preview_folder_popup_h), true)
+    SM_SetState(EXT_SECTION, "preview_folder_popup_w", tostring(preview_folder_popup_w), true)
+    SM_SetState(EXT_SECTION, "preview_folder_popup_h", tostring(preview_folder_popup_h), true)
     preview_folder_popup_size_dirty = false
   end
 end
@@ -9762,8 +9769,8 @@ function OpenPreviewFolderPath(path)
   collect_mode = COLLECT_MODE_SAMEFOLDER
   tree_state.cur_path = path
   RefreshFolderFiles(path)
-  reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
-  reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+  SM_SetState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
+  SM_SetState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
 
   ClearFileSelection()
   selected_row = nil
@@ -9783,7 +9790,7 @@ function CommitPreviewFolderRoot(path)
   local root = normalize_path(path, true)
   preview_folder_input = root
   preview_folder_root = root
-  reaper.SetExtState(EXT_SECTION, "preview_folder_root", root, true)
+  SM_SetState(EXT_SECTION, "preview_folder_root", root, true)
   dir_cache[root] = nil
   return true
 end
@@ -9896,7 +9903,7 @@ end
 
 -- 强制英文搜索，当点击UCS主分类/子分类时，提交英文关键词
 UCS_FORCE_EN = UCS_FORCE_EN == nil and true or UCS_FORCE_EN
-CURRENT_LANG = CURRENT_LANG or (reaper.GetExtState(EXT_SECTION, "ucs_lang") ~= "" and reaper.GetExtState(EXT_SECTION, "ucs_lang") or "en")
+CURRENT_LANG = CURRENT_LANG or (SM_GetState(EXT_SECTION, "ucs_lang") ~= "" and SM_GetState(EXT_SECTION, "ucs_lang") or "en")
 local UCS_LANG_OPTS = {
   { key = "en", label = "English" },
   { key = "zh", label = "简体中文" },
@@ -10053,7 +10060,7 @@ function ReloadUCSData(new_lang)
   SnapshotOpenStateToEN()
 
   CURRENT_LANG = new_lang
-  reaper.SetExtState(EXT_SECTION, "ucs_lang", CURRENT_LANG, true)
+  SM_SetState(EXT_SECTION, "ucs_lang", CURRENT_LANG, true)
   categories, cat_names, ucs_maps = LoadUCS_NoSort_WithENMap(CURRENT_LANG)
   RestoreOpenStateFromEN()
 
@@ -10176,7 +10183,7 @@ end
 
 --------------------------------------------- 跳过静音节点 ---------------------------------------------
 
-skip_silence_enabled = (tonumber(reaper.GetExtState(EXT_SECTION, "skip_silence")) or 1) == 1
+skip_silence_enabled = (tonumber(SM_GetState(EXT_SECTION, "skip_silence")) or 1) == 1
 
 -- 从缓存中寻找首个有声位置
 function FindFirstNonSilentTime(info)
@@ -10232,11 +10239,11 @@ end
 --------------------------------------------- 退出时保存各个模式列表状态 ---------------------------------------------
 
 function LoadExitSettings()
-  collect_mode = tonumber(reaper.GetExtState(EXT_SECTION, "collect_mode") or "")
+  collect_mode = tonumber(SM_GetState(EXT_SECTION, "collect_mode") or "")
 
   -- 恢复 工程文件资源 四个模式
   if collect_mode == COLLECT_MODE_ITEMS or collect_mode == COLLECT_MODE_RPP or collect_mode == COLLECT_MODE_DIR or collect_mode == COLLECT_MODE_ALL_ITEMS then
-    local ext = reaper.GetExtState(EXT_SECTION, "project_header_open")
+    local ext = SM_GetState(EXT_SECTION, "project_header_open")
     if ext == "true" then
       project_open = true
     elseif ext == "false" then
@@ -10248,7 +10255,7 @@ function LoadExitSettings()
 
   -- 恢复 This Computer (Tree) 模式
   if collect_mode == COLLECT_MODE_TREE then
-    local ext = reaper.GetExtState(EXT_SECTION, "this_computer_open")
+    local ext = SM_GetState(EXT_SECTION, "this_computer_open")
     if ext == "true" then
       this_computer_open = true
     elseif ext == "false" then
@@ -10256,12 +10263,12 @@ function LoadExitSettings()
     else
       this_computer_open = false -- 默认折叠
     end
-    tree_state.cur_path = reaper.GetExtState(EXT_SECTION, "cur_tree_path") or ""
+    tree_state.cur_path = SM_GetState(EXT_SECTION, "cur_tree_path") or ""
   end
 
   -- 恢复 Shortcuts 模式
   if collect_mode == COLLECT_MODE_SHORTCUT then -- collect_mode == COLLECT_MODE_TREE or
-    local ext = reaper.GetExtState(EXT_SECTION, "shortcut_header_open")
+    local ext = SM_GetState(EXT_SECTION, "shortcut_header_open")
     if ext == "true" then
       shortcut_open = true
     elseif ext == "false" then
@@ -10270,12 +10277,12 @@ function LoadExitSettings()
       shortcut_open = false
     end
 
-    tree_state.cur_path = reaper.GetExtState(EXT_SECTION, "cur_tree_path") or ""
+    tree_state.cur_path = SM_GetState(EXT_SECTION, "cur_tree_path") or ""
   end
 
   -- 恢复 Group 模式
   if collect_mode == COLLECT_MODE_CUSTOMFOLDER then
-    local ext = reaper.GetExtState(EXT_SECTION, "group_header_open")
+    local ext = SM_GetState(EXT_SECTION, "group_header_open")
     if ext == "true" then
       group_open = true
     elseif ext == "false" then
@@ -10284,46 +10291,46 @@ function LoadExitSettings()
       group_open = false
     end
 
-    tree_state.cur_custom_folder = reaper.GetExtState(EXT_SECTION, "cur_custom_folder") or ""
+    tree_state.cur_custom_folder = SM_GetState(EXT_SECTION, "cur_custom_folder") or ""
   end
 
   -- 恢复数据库模式
   if collect_mode == COLLECT_MODE_MEDIADB then
-    local ext = reaper.GetExtState(EXT_SECTION, "soundmoledb_header_open")
+    local ext = SM_GetState(EXT_SECTION, "soundmoledb_header_open")
     if ext == "true" then
       mediadb_open = true
     else
       mediadb_open = false
     end
-    tree_state.cur_mediadb = reaper.GetExtState(EXT_SECTION, "cur_soundmoledb") or ""
+    tree_state.cur_mediadb = SM_GetState(EXT_SECTION, "cur_soundmoledb") or ""
   end
 
   -- 恢复REAPER自带数据库模式
   if collect_mode == COLLECT_MODE_REAPERDB then
-    local ext = reaper.GetExtState(EXT_SECTION, "reaperdb_header_open")
+    local ext = SM_GetState(EXT_SECTION, "reaperdb_header_open")
     if ext == "true" then
       reaper_db_open = true
     else
       reaper_db_open = false
     end
-    tree_state.cur_reaper_db = reaper.GetExtState(EXT_SECTION, "cur_reaperdb") or ""
+    tree_state.cur_reaper_db = SM_GetState(EXT_SECTION, "cur_reaperdb") or ""
   end
 
   -- 恢复REAPER自带快捷方式模式
   if collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
-    local ext = reaper.GetExtState(EXT_SECTION, "shortcut_mirror_header_open")
+    local ext = SM_GetState(EXT_SECTION, "shortcut_mirror_header_open")
     if ext == "true" then
       shortcut_mirror_open = true
     else
       shortcut_mirror_open = false
     end
-    tree_state.cur_path = reaper.GetExtState(EXT_SECTION, "cur_sc_mirror") or ""
+    tree_state.cur_path = SM_GetState(EXT_SECTION, "cur_sc_mirror") or ""
   end
 
   -- 恢复 Collections 模式
   if collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
     -- 折叠状态
-    local ext = reaper.GetExtState(EXT_SECTION, "collections_header_open")
+    local ext = SM_GetState(EXT_SECTION, "collections_header_open")
     if ext == "true" then
       collection_open = true
     elseif ext == "false" then
@@ -10333,7 +10340,7 @@ function LoadExitSettings()
     end
 
     -- 选中状态
-    local last = reaper.GetExtState(EXT_SECTION, "last_collections")
+    local last = SM_GetState(EXT_SECTION, "last_collections")
     if last and last ~= "" and advanced_folders[last] then
       tree_state.cur_advanced_folder = last
     end
@@ -10341,7 +10348,7 @@ function LoadExitSettings()
 
   -- 恢复 最近播放 模式
   if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
-    local ext = reaper.GetExtState(EXT_SECTION, "recent_header_open")
+    local ext = SM_GetState(EXT_SECTION, "recent_header_open")
     if ext == "true" then
       recent_open = true
     elseif ext == "false" then
@@ -10350,12 +10357,12 @@ function LoadExitSettings()
       recent_open = false
     end
 
-    selected_recent_row = tonumber(reaper.GetExtState(EXT_SECTION, "cur_recent_row") or "") or 0
+    selected_recent_row = tonumber(SM_GetState(EXT_SECTION, "cur_recent_row") or "") or 0
   end
 
   -- 恢复 相同目录 模式
   if collect_mode == COLLECT_MODE_SAMEFOLDER then
-    local saved = reaper.GetExtState(EXT_SECTION, "cur_samefolder_path") or ""
+    local saved = SM_GetState(EXT_SECTION, "cur_samefolder_path") or ""
     if saved ~= "" then
       tree_state.cur_path = normalize_path(saved, true)
       RefreshFolderFiles(tree_state.cur_path)
@@ -10363,11 +10370,11 @@ function LoadExitSettings()
   end
 
 -- 恢复目标数据库设置
-  tree_state.target_mediadb = reaper.GetExtState(EXT_SECTION, "target_mediadb")
+  tree_state.target_mediadb = SM_GetState(EXT_SECTION, "target_mediadb")
   if tree_state.target_mediadb == "" then tree_state.target_mediadb = nil end
 
   if collect_mode == COLLECT_MODE_PLAY_HISTORY then
-    local ext = reaper.GetExtState(EXT_SECTION, "play_history_header_open")
+    local ext = SM_GetState(EXT_SECTION, "play_history_header_open")
     if ext == "true" then
       play_history_open = true
     elseif ext == "false" then
@@ -10375,64 +10382,64 @@ function LoadExitSettings()
     else
       play_history_open = false
     end
-    selected_play_history_row = tonumber(reaper.GetExtState(EXT_SECTION, "cur_play_history_row") or "") or 0
+    selected_play_history_row = tonumber(SM_GetState(EXT_SECTION, "cur_play_history_row") or "") or 0
   end
 end
 
 -- 保存当前模式列表折叠状态
 function SaveExitSettings()
   local saved_mode = (collect_mode == COLLECT_MODE_SIMILAR) and COLLECT_MODE_MEDIADB or collect_mode
-  reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(saved_mode), true)
+  SM_SetState(EXT_SECTION, "collect_mode", tostring(saved_mode), true)
 
   if collect_mode == COLLECT_MODE_ITEMS or collect_mode == COLLECT_MODE_RPP or collect_mode == COLLECT_MODE_DIR or collect_mode == COLLECT_MODE_ALL_ITEMS then
-    reaper.SetExtState(EXT_SECTION, "project_header_open", tostring(project_open), true)
+    SM_SetState(EXT_SECTION, "project_header_open", tostring(project_open), true)
 
   elseif collect_mode == COLLECT_MODE_TREE then
-    reaper.SetExtState(EXT_SECTION, "this_computer_open", tostring(this_computer_open), true)
-    reaper.SetExtState(EXT_SECTION, "cur_tree_path", tree_state.cur_path or "", true)
+    SM_SetState(EXT_SECTION, "this_computer_open", tostring(this_computer_open), true)
+    SM_SetState(EXT_SECTION, "cur_tree_path", tree_state.cur_path or "", true)
 
   elseif collect_mode == COLLECT_MODE_SHORTCUT then -- collect_mode == COLLECT_MODE_TREE or
-    reaper.SetExtState(EXT_SECTION, "shortcut_header_open", tostring(shortcut_open), true)
-    reaper.SetExtState(EXT_SECTION, "cur_tree_path", tree_state.cur_path or "", true)
+    SM_SetState(EXT_SECTION, "shortcut_header_open", tostring(shortcut_open), true)
+    SM_SetState(EXT_SECTION, "cur_tree_path", tree_state.cur_path or "", true)
 
   elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
-    reaper.SetExtState(EXT_SECTION, "group_header_open", tostring(group_open), true)
-    reaper.SetExtState(EXT_SECTION, "cur_custom_folder", tree_state.cur_custom_folder or "", true)
+    SM_SetState(EXT_SECTION, "group_header_open", tostring(group_open), true)
+    SM_SetState(EXT_SECTION, "cur_custom_folder", tree_state.cur_custom_folder or "", true)
 
   elseif collect_mode == COLLECT_MODE_MEDIADB then
-    reaper.SetExtState(EXT_SECTION, "soundmoledb_header_open", tostring(mediadb_open), true)
-    reaper.SetExtState(EXT_SECTION, "cur_soundmoledb", tree_state.cur_mediadb or "", true)
+    SM_SetState(EXT_SECTION, "soundmoledb_header_open", tostring(mediadb_open), true)
+    SM_SetState(EXT_SECTION, "cur_soundmoledb", tree_state.cur_mediadb or "", true)
 
   elseif collect_mode == COLLECT_MODE_REAPERDB then
-    reaper.SetExtState(EXT_SECTION, "reaperdb_header_open", tostring(reaper_db_open), true)
-    reaper.SetExtState(EXT_SECTION, "cur_reaperdb", tree_state.cur_reaper_db or "", true)
+    SM_SetState(EXT_SECTION, "reaperdb_header_open", tostring(reaper_db_open), true)
+    SM_SetState(EXT_SECTION, "cur_reaperdb", tree_state.cur_reaper_db or "", true)
 
   elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
-    reaper.SetExtState(EXT_SECTION, "shortcut_mirror_header_open", tostring(shortcut_mirror_open), true)
-    reaper.SetExtState(EXT_SECTION, "cur_sc_mirror", tree_state.cur_path or "", true)
+    SM_SetState(EXT_SECTION, "shortcut_mirror_header_open", tostring(shortcut_mirror_open), true)
+    SM_SetState(EXT_SECTION, "cur_sc_mirror", tree_state.cur_path or "", true)
 
   elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
-    reaper.SetExtState(EXT_SECTION, "collections_header_open", tostring(collection_open), true)
-    reaper.SetExtState(EXT_SECTION, "last_collections", tree_state.cur_advanced_folder or "", true)
+    SM_SetState(EXT_SECTION, "collections_header_open", tostring(collection_open), true)
+    SM_SetState(EXT_SECTION, "last_collections", tree_state.cur_advanced_folder or "", true)
 
   elseif collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
-    reaper.SetExtState(EXT_SECTION, "recent_header_open", tostring(recent_open), true)
-    reaper.SetExtState(EXT_SECTION, "cur_recent_row", tostring(selected_recent_row or 0), true)
+    SM_SetState(EXT_SECTION, "recent_header_open", tostring(recent_open), true)
+    SM_SetState(EXT_SECTION, "cur_recent_row", tostring(selected_recent_row or 0), true)
 
   elseif collect_mode == COLLECT_MODE_SAMEFOLDER then
-    reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+    SM_SetState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
 
   elseif collect_mode == COLLECT_MODE_PLAY_HISTORY then
-    reaper.SetExtState(EXT_SECTION, "play_history_header_open", tostring(play_history_open), true)
-    reaper.SetExtState(EXT_SECTION, "cur_play_history_row", tostring(selected_play_history_row or 0), true)
+    SM_SetState(EXT_SECTION, "play_history_header_open", tostring(play_history_open), true)
+    SM_SetState(EXT_SECTION, "cur_play_history_row", tostring(selected_play_history_row or 0), true)
 
   end
   -- 保存目标数据库设置
-  reaper.SetExtState(EXT_SECTION, "target_mediadb", tree_state.target_mediadb or "", true)
+  SM_SetState(EXT_SECTION, "target_mediadb", tree_state.target_mediadb or "", true)
 
   -- 保存当前侧边栏选中的标签页
   if current_sidebar_tab then
-    reaper.SetExtState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
+    SM_SetState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
   end
 end
 
@@ -10442,7 +10449,7 @@ LoadExitSettings()
 
 saved_search_nodes = {}          -- 存储节点详情
 root_saved_searches = {}         -- 存储根目录的 ID 排序列表
-_G.saved_searches_loaded = false -- 标记是否已从 ExtState 加载过数据
+_G.saved_searches_loaded = false -- 标记是否已从本地持久化设置加载过数据
 
 local active_saved_search = nil  -- 当前选中的搜索项 ID
 show_add_popup = false           -- 控制添加搜索弹窗显示
@@ -10470,7 +10477,7 @@ end
 
 function SaveTreeData()
   local data = { roots = root_saved_searches, nodes = saved_search_nodes }
-  reaper.SetExtState(EXT_SECTION, "SavedSearchesTree", TableToString(data), true)
+  SM_SetState(EXT_SECTION, "SavedSearchesTree", TableToString(data), true)
 end
 
 --------------------------------------------- 最近搜索节点 ---------------------------------------------
@@ -10484,7 +10491,7 @@ local search_history_index = nil
 
 function LoadRecentSearched()
   recent_search_keywords = {}
-  local str = reaper.GetExtState(EXT_SECTION, "recently_searched")
+  local str = SM_GetState(EXT_SECTION, "recently_searched")
   if not str or str == "" then return end
   local list = split(str, "|;|")
   for _, keyword in ipairs(list) do
@@ -10500,7 +10507,7 @@ function SaveRecentSearched()
     table.insert(t, keyword)
   end
   local str = table.concat(t, "|;|")
-  reaper.SetExtState(EXT_SECTION, "recently_searched", str, true)
+  SM_SetState(EXT_SECTION, "recently_searched", str, true)
 end
 
 function AddToRecentSearched(keyword)
@@ -10576,14 +10583,14 @@ tree_state.remove_path_dbfile = tree_state.remove_path_dbfile or nil
 tree_state.remove_path_to_remove = tree_state.remove_path_to_remove or nil
 tree_state.remove_path_confirm = tree_state.remove_path_confirm or false
 -- clipper = clipper or reaper.ImGui_CreateListClipper(ctx)
-build_waveform_cache = (reaper.GetExtState(EXT_SECTION, "build_waveform_cache") == "1")
+build_waveform_cache = (SM_GetState(EXT_SECTION, "build_waveform_cache") == "1")
 -- 数据库列表拖动状态
 mediadb_drag_index = mediadb_drag_index or nil -- 当前被拖动的行索引
 mediadb_last_target_index = mediadb_last_target_index or nil -- 上一次交换的目标行索引
 -- 读取数据库排序
 if mediadb_order == nil then
   mediadb_order = {}
-  local s = reaper.GetExtState(EXT_SECTION, "mediadb_order")
+  local s = SM_GetState(EXT_SECTION, "mediadb_order")
   if s and s ~= "" then
     for name in s:gmatch("([^|;|]+)") do
       if name ~= "" then
@@ -10765,7 +10772,7 @@ end
 --------------------------------------------- 右侧表格列表优化 ---------------------------------------------
 
 -- Enter模式搜索过滤
-local search_enter_ext = reaper.GetExtState(EXT_SECTION, "search_enter_mode")
+local search_enter_ext = SM_GetState(EXT_SECTION, "search_enter_mode")
 if search_enter_ext == "" then
   search_enter_mode = true else search_enter_mode = (search_enter_ext == "1")
 end
@@ -11733,7 +11740,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         reaper.ShowMessageBox(T("Target database file not found:\n") .. target_db_path, T("Error"), 0)
         -- 自动清除无效的目标
         -- tree_state.target_mediadb = nil
-        -- reaper.SetExtState(EXT_SECTION, "target_mediadb", "", true)
+        -- SM_SetState(EXT_SECTION, "target_mediadb", "", true)
       else
         -- 收集要添加的路径
         local paths_to_add = GetFilePathsForRowAction(_G.current_display_list or {}, i)
@@ -12426,7 +12433,7 @@ function SM_DrawAlbumPanel(ctx, panel_w, panel_h)
       if reaper.ImGui_BeginTabItem(ctx, T("Artwork"), nil, album_flags) then
         if album_panel_active_tab ~= "album" then
           album_panel_active_tab = "album"
-          reaper.SetExtState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
+          SM_SetState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
         end
         if reaper.ImGui_BeginChild(ctx, "##album_art_scroll", 0, 0, 0) then
           SM_DrawAlbumArtTab(ctx)
@@ -12439,7 +12446,7 @@ function SM_DrawAlbumPanel(ctx, panel_w, panel_h)
       if reaper.ImGui_BeginTabItem(ctx, T("Metadata"), nil, metadata_flags) then
         if album_panel_active_tab ~= "metadata" then
           album_panel_active_tab = "metadata"
-          reaper.SetExtState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
+          SM_SetState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
         end
         if reaper.ImGui_BeginChild(ctx, "##metadata_scroll", 0, 0, 0) then
           SM_DrawMetadataTab(ctx)
@@ -13353,15 +13360,15 @@ end
 
 --------------------------------------------- 预览输出路由到轨道 ---------------------------------------------
 
-local preview_route_enable = reaper.GetExtState(EXT_SECTION, "preview_route_enable") == "1"
-local preview_route_name   = reaper.GetExtState(EXT_SECTION, "preview_route_name")
+local preview_route_enable = SM_GetState(EXT_SECTION, "preview_route_enable") == "1"
+local preview_route_name   = SM_GetState(EXT_SECTION, "preview_route_name")
 if not preview_route_name or preview_route_name == "" then preview_route_name = "Soundmole Preview" end
-local preview_route_mode   = reaper.GetExtState(EXT_SECTION, "preview_route_mode")
+local preview_route_mode   = SM_GetState(EXT_SECTION, "preview_route_mode")
 if preview_route_mode ~= "auto" and preview_route_mode ~= "named" and preview_route_mode ~= "selected" then
   preview_route_mode = "auto"
 end
-local preview_out_to_track = reaper.GetExtState(EXT_SECTION, "preview_out_to_track") ~= "0" -- 默认经轨道，1=经轨道 0=硬件输出
-local preview_output_chan  = tonumber(reaper.GetExtState(EXT_SECTION, "preview_output_chan")) or 0 -- 默认1/2 (I_OUTCHAN: 低10位=物理输出起始通道，1024位(1<<10)为Mono标志)
+local preview_out_to_track = SM_GetState(EXT_SECTION, "preview_out_to_track") ~= "0" -- 默认经轨道，1=经轨道 0=硬件输出
+local preview_output_chan  = tonumber(SM_GetState(EXT_SECTION, "preview_output_chan")) or 0 -- 默认1/2 (I_OUTCHAN: 低10位=物理输出起始通道，1024位(1<<10)为Mono标志)
 
 -- 找到最上方的同名轨道
 function FindTopmostTrackByName(name)
@@ -13551,7 +13558,7 @@ end
 function load_active(mode, default_on)
   local key = ACTIVE_KEYS[mode]
   if not key then return default_on and true or false end
-  local s = reaper.GetExtState(EXT_SECTION, key)
+  local s = SM_GetState(EXT_SECTION, key)
   if s == nil or s == "" then return default_on and true or false end
   return s == "1"
 end
@@ -13559,19 +13566,19 @@ end
 function save_active(mode, on)
   local key = ACTIVE_KEYS[mode]
   if not key then return end
-  reaper.SetExtState(EXT_SECTION, key, on and "1" or "0", true)
+  SM_SetState(EXT_SECTION, key, on and "1" or "0", true)
 end
 
 function load_map(mode)
   local key = PRESET_KEYS[mode]
   if not key then return {} end
-  return split_csv_int(reaper.GetExtState(EXT_SECTION, key))
+  return split_csv_int(SM_GetState(EXT_SECTION, key))
 end
 
 function save_map(mode, t)
   local key = PRESET_KEYS[mode]
   if not key then return end
-  reaper.SetExtState(EXT_SECTION, key, join_csv_int(t or {}), true)
+  SM_SetState(EXT_SECTION, key, join_csv_int(t or {}), true)
 end
 
 function ensure_map(mode, num_out)
@@ -13582,7 +13589,7 @@ function ensure_map(mode, num_out)
   local active_default = (mode == "stereo") -- 仅立体声默认激活
 
   if not m then
-    local s = (key and reaper.GetExtState(EXT_SECTION, key)) or ""
+    local s = (key and SM_GetState(EXT_SECTION, key)) or ""
     if s ~= "" then
       m = split_csv_int(s)
     else
@@ -13615,7 +13622,7 @@ function update_map(mode, new_tbl, num_out)
     local mono_flag = (mode == "mono") and 1024 or 0
     local base0 = math.max(0, ((t[1] or 1) - 1))
     _G.preview_output_chan = (base0 | mono_flag)
-    reaper.SetExtState(EXT_SECTION, "preview_output_chan", tostring(_G.preview_output_chan), true)
+    SM_SetState(EXT_SECTION, "preview_output_chan", tostring(_G.preview_output_chan), true)
   end
 end
 
@@ -13791,13 +13798,13 @@ function RenderPreviewRouteSettingsUI(ctx)
   local changed_enable, new_enable = reaper.ImGui_Checkbox(ctx, T("Enable preview routing"), preview_route_enable)
   if changed_enable then
     preview_route_enable = new_enable
-    reaper.SetExtState(EXT_SECTION, "preview_route_enable", new_enable and "1" or "0", true)
+    SM_SetState(EXT_SECTION, "preview_route_enable", new_enable and "1" or "0", true)
   end
   reaper.ImGui_Text(ctx, T("Output target:"))
   local changed_hw = reaper.ImGui_RadioButton(ctx, T("Hardware output"), not preview_out_to_track)
   if changed_hw then
     preview_out_to_track = false
-    reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "0", true)
+    SM_SetState(EXT_SECTION, "preview_out_to_track", "0", true)
   end
   reaper.ImGui_SameLine(ctx, nil, 10)
   HelpMarker(T("The number of available hardware output channels is determined by 'REAPER Preferences > Audio > Device > Output range'. To expose more outputs, set first to the first available channel and last to the last available channel."))
@@ -13805,7 +13812,7 @@ function RenderPreviewRouteSettingsUI(ctx)
   local changed_tr = reaper.ImGui_RadioButton(ctx, T("Through track"), preview_out_to_track)
   if changed_tr then
     preview_out_to_track = true
-    reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "1", true)
+    SM_SetState(EXT_SECTION, "preview_out_to_track", "1", true)
   end
 
   local num_out = reaper.GetNumAudioOutputs() or 2
@@ -13830,7 +13837,7 @@ function RenderPreviewRouteSettingsUI(ctx)
     if changed then
       cur_i = i
       preview_route_mode = map[i]
-      reaper.SetExtState(EXT_SECTION, "preview_route_mode", preview_route_mode, true)
+      SM_SetState(EXT_SECTION, "preview_route_mode", preview_route_mode, true)
     end
   end
 
@@ -13840,7 +13847,7 @@ function RenderPreviewRouteSettingsUI(ctx)
   local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
   if changed_name and new_name ~= nil then
     preview_route_name = new_name
-    reaper.SetExtState(EXT_SECTION, "preview_route_name", preview_route_name or "", true)
+    SM_SetState(EXT_SECTION, "preview_route_name", preview_route_name or "", true)
   end
   reaper.ImGui_SameLine(ctx, nil, 10)
   HelpMarker(T("If multiple tracks share the same name, the topmost one is used."))
@@ -14337,17 +14344,17 @@ function DrawPreviewRouteMenu(ctx)
 
   if reaper.ImGui_BeginPopup(ctx, "##preview_route_menu") then
     if preview_out_to_track == nil then
-      preview_out_to_track = reaper.GetExtState(EXT_SECTION, "preview_out_to_track") ~= "0" -- 默认走轨道
+      preview_out_to_track = SM_GetState(EXT_SECTION, "preview_out_to_track") ~= "0" -- 默认走轨道
     end
     if preview_output_chan == nil then
-      preview_output_chan = tonumber(reaper.GetExtState(EXT_SECTION, "preview_output_chan")) or 0 -- 低10位起始通道，1024位为Mono
+      preview_output_chan = tonumber(SM_GetState(EXT_SECTION, "preview_output_chan")) or 0 -- 低10位起始通道，1024位为Mono
     end
 
     -- 激活勾选
     local changed_enable, new_enable = reaper.ImGui_Checkbox(ctx, T("Enable preview routing"), preview_route_enable)
     if changed_enable then
       preview_route_enable = new_enable
-      reaper.SetExtState(EXT_SECTION, "preview_route_enable", new_enable and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "preview_route_enable", new_enable and "1" or "0", true)
     end
 
     reaper.ImGui_Separator(ctx)
@@ -14355,13 +14362,13 @@ function DrawPreviewRouteMenu(ctx)
     local changed_hw = reaper.ImGui_RadioButton(ctx, T("Hardware output"), not preview_out_to_track)
     if changed_hw then
       preview_out_to_track = false
-      reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "0", true)
+      SM_SetState(EXT_SECTION, "preview_out_to_track", "0", true)
     end
     reaper.ImGui_SameLine(ctx)
     local changed_tr = reaper.ImGui_RadioButton(ctx, T("Through track"), preview_out_to_track)
     if changed_tr then
       preview_out_to_track = true
-      reaper.SetExtState(EXT_SECTION, "preview_out_to_track", "1", true)
+      SM_SetState(EXT_SECTION, "preview_out_to_track", "1", true)
     end
 
     -- 硬件输出
@@ -14383,7 +14390,7 @@ function DrawPreviewRouteMenu(ctx)
       if reaper.ImGui_RadioButton(ctx, modes[i], cur_i == i) then
         cur_i = i
         preview_route_mode = map[i]
-        reaper.SetExtState(EXT_SECTION, "preview_route_mode", preview_route_mode, true)
+        SM_SetState(EXT_SECTION, "preview_route_mode", preview_route_mode, true)
       end
     end
 
@@ -14396,7 +14403,7 @@ function DrawPreviewRouteMenu(ctx)
       local changed_name, new_name = reaper.ImGui_InputText(ctx, "##preview_route_name", preview_route_name or "")
       if changed_name and new_name ~= nil then
         preview_route_name = new_name
-        reaper.SetExtState(EXT_SECTION, "preview_route_name", preview_route_name or "", true)
+        SM_SetState(EXT_SECTION, "preview_route_name", preview_route_name or "", true)
       end
     end
     reaper.ImGui_EndDisabled(ctx)
@@ -14773,17 +14780,17 @@ end
 
 --------------------------------------------- 分割条相关代码 ---------------------------------------------
 
-LEFT_TABLE_VISIBLE = (reaper.GetExtState(EXT_SECTION, "left_table_visible") ~= "false")
-ALBUM_PANEL_VISIBLE = (reaper.GetExtState(EXT_SECTION, "album_panel_visible") ~= "false")
+LEFT_TABLE_VISIBLE = (SM_GetState(EXT_SECTION, "left_table_visible") ~= "false")
+ALBUM_PANEL_VISIBLE = (SM_GetState(EXT_SECTION, "album_panel_visible") ~= "false")
 splitter_w = 3 -- 分割条宽度
-left_ratio = tonumber(reaper.GetExtState(EXT_SECTION, "left_ratio")) or 0.15 -- 启动时读取上次保存的
+left_ratio = tonumber(SM_GetState(EXT_SECTION, "left_ratio")) or 0.15 -- 启动时读取上次保存的
 splitter_drag = false
 splitter_drag_offset = 0
-album_panel_px = tonumber(reaper.GetExtState(EXT_SECTION, "album_panel_px")) or 280
+album_panel_px = tonumber(SM_GetState(EXT_SECTION, "album_panel_px")) or 280
 album_splitter_drag = false
 album_splitter_start_mouse_x = 0
 album_splitter_start_w = 0
-album_panel_active_tab = reaper.GetExtState(EXT_SECTION, "album_panel_active_tab")
+album_panel_active_tab = SM_GetState(EXT_SECTION, "album_panel_active_tab")
 if album_panel_active_tab ~= "metadata" then album_panel_active_tab = "album" end
 album_panel_tab_restore_pending = true
 
@@ -14811,7 +14818,7 @@ function SM_DrawLeftTableToggle(ctx)
 
   if clicked then
     LEFT_TABLE_VISIBLE = not LEFT_TABLE_VISIBLE
-    reaper.SetExtState(EXT_SECTION, "left_table_visible", LEFT_TABLE_VISIBLE and "true" or "false", true)
+    SM_SetState(EXT_SECTION, "left_table_visible", LEFT_TABLE_VISIBLE and "true" or "false", true)
   end
 
   reaper.ImGui_PopFont(ctx)
@@ -14858,7 +14865,7 @@ function SM_DrawAlbumPanelToggle(ctx, align_right)
 
   if clicked then
     ALBUM_PANEL_VISIBLE = not ALBUM_PANEL_VISIBLE
-    reaper.SetExtState(EXT_SECTION, "album_panel_visible", ALBUM_PANEL_VISIBLE and "true" or "false", true)
+    SM_SetState(EXT_SECTION, "album_panel_visible", ALBUM_PANEL_VISIBLE and "true" or "false", true)
   end
 
   reaper.ImGui_PopFont(ctx)
@@ -15216,16 +15223,16 @@ function loop()
   MonitorShortcut(virtual_key_code) -- 监控快捷键，使用操作列表脚本控制主脚本添加条目到目标数据库
 
   -- 接收信号
-  local ext_signal = reaper.GetExtState(EXT_SECTION, "CMD_AddSelectedToTarget")
+  local ext_signal = SM_GetRuntimeState(EXT_SECTION, "CMD_AddSelectedToTarget")
   if ext_signal == "1" then
-    reaper.SetExtState(EXT_SECTION, "CMD_AddSelectedToTarget", "0", false)
+    SM_SetRuntimeState(EXT_SECTION, "CMD_AddSelectedToTarget", "0")
     SM_Action_AddSelectionToTargetDB()
   end
 
   local collapse_signal_handled = false
-  local collapse_signal = reaper.GetExtState(EXT_SECTION, CMD_TOGGLE_MAIN_COLLAPSE)
+  local collapse_signal = SM_GetRuntimeState(EXT_SECTION, CMD_TOGGLE_MAIN_COLLAPSE)
   if collapse_signal and collapse_signal ~= "" and collapse_signal ~= "0" then
-    reaper.SetExtState(EXT_SECTION, CMD_TOGGLE_MAIN_COLLAPSE, "0", false)
+    SM_SetRuntimeState(EXT_SECTION, CMD_TOGGLE_MAIN_COLLAPSE, "0")
     local now = reaper.time_precise()
     if (now - (collapse_action_shortcut_last_time or 0)) > 0.20 then
       RequestMainWindowCollapseToggle()
@@ -15983,8 +15990,8 @@ function loop()
       collect_mode = COLLECT_MODE_SAMEFOLDER
       tree_state.cur_path = normalize_path(same_folder, true)
       RefreshFolderFiles(same_folder)
-      reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
-      reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+      SM_SetState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
+      SM_SetState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
     end
 
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -15999,7 +16006,7 @@ function loop()
     local clicked_pick_folder = reaper.ImGui_Button(ctx, T("Pick Folder"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_pick_folder then
-      local saved_root = reaper.GetExtState(EXT_SECTION, "preview_folder_root")
+      local saved_root = SM_GetState(EXT_SECTION, "preview_folder_root")
       if saved_root and saved_root ~= "" and IsExistingDirectory(saved_root) then
         preview_folder_input = normalize_path(saved_root, true)
         preview_folder_root = preview_folder_input
@@ -16357,7 +16364,7 @@ function loop()
     end
     if clicked then
       settings_window_open = true
-      reaper.SetExtState(EXT_SECTION, "popup_settings_open", tostring(settings_window_open), true)
+      SM_SetState(EXT_SECTION, "popup_settings_open", tostring(settings_window_open), true)
     end
     
     -- 界面缩放图标
@@ -16468,7 +16475,7 @@ function loop()
     local album_splitter_w = ALBUM_PANEL_VISIBLE and (album_splitter_line_w + album_splitter_gap * 2) or 0
     local min_left_px = math.floor(avail_x * 0.005) -- 左侧最小像素宽
     local left_w, table_w, album_w = 0, avail_x, 0
-    local left_px = tonumber(reaper.GetExtState(EXT_SECTION, "left_px")) or 700
+    local left_px = tonumber(SM_GetState(EXT_SECTION, "left_px")) or 700
 
     if ALBUM_PANEL_VISIBLE then
       local left_reserve_px = LEFT_TABLE_VISIBLE and (min_left_px + left_splitter_w) or 0
@@ -16514,7 +16521,7 @@ function loop()
       left_px = new_left_px
       left_w = left_px
       table_w = math.max(10, avail_x - left_w - left_splitter_w - album_w - album_splitter_w)
-      reaper.SetExtState(EXT_SECTION, "left_px", tostring(left_px), true)
+      SM_SetState(EXT_SECTION, "left_px", tostring(left_px), true)
     end
 
     if LEFT_TABLE_VISIBLE then -- 开关切换隐藏左侧表格
@@ -16542,7 +16549,7 @@ function loop()
             idx = idx + (wheel > 0 and 1 or -1)
             idx = math.max(1, math.min(#preview_font_sizes, idx))
             font_size = preview_font_sizes[idx]
-            reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
+            SM_SetState(EXT_SECTION, "font_size", tostring(font_size), true)
             -- 激活字体提示
             show_font_size_popup = true
             show_font_size_timer = reaper.time_precise()
@@ -17671,7 +17678,7 @@ function loop()
                         parts[#parts + 1] = name
                       end
                     end
-                    reaper.SetExtState(EXT_SECTION, "mediadb_order", table.concat(parts, "|;|"), true)
+                    SM_SetState(EXT_SECTION, "mediadb_order", table.concat(parts, "|;|"), true)
                   end
                 end
 
@@ -17760,11 +17767,11 @@ function loop()
                   local is_target = (tree_state.target_mediadb == dbfile)
                   if reaper.ImGui_MenuItem(ctx, T("Set as Target Database"), nil, is_target) then
                     tree_state.target_mediadb = dbfile
-                    reaper.SetExtState(EXT_SECTION, "target_mediadb", dbfile, true)
+                    SM_SetState(EXT_SECTION, "target_mediadb", dbfile, true)
                   end
                   if reaper.ImGui_MenuItem(ctx, T("Clear Target Database")) then
                     tree_state.target_mediadb = nil
-                    reaper.SetExtState(EXT_SECTION, "target_mediadb", "", true)
+                    SM_SetState(EXT_SECTION, "target_mediadb", "", true)
                   end
                   reaper.ImGui_EndMenu(ctx)
                 end
@@ -18146,7 +18153,7 @@ function loop()
               if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
                 if (new_search_name or "") ~= "" and (save_search_keyword or "") ~= "" then
                   if not _G.saved_searches_loaded then
-                    local str = reaper.GetExtState(EXT_SECTION, "SavedSearchesTree")
+                    local str = SM_GetState(EXT_SECTION, "SavedSearchesTree")
                     if str and str ~= "" then
                       local func = load("return " .. str)
                       if func then
@@ -18432,7 +18439,7 @@ function loop()
 
           -- 加载数据
           if not _G.saved_searches_loaded then
-            local str = reaper.GetExtState(EXT_SECTION, "SavedSearchesTree")
+            local str = SM_GetState(EXT_SECTION, "SavedSearchesTree")
             if str and str ~= "" then
               local func = load("return " .. str)
               if func then
@@ -18833,7 +18840,7 @@ function loop()
     --   local new_left = mx - wx - splitter_drag_offset
     --   new_left = math.max(min_left, math.min(max_left, new_left))
     --   left_ratio = new_left / avail_x
-    --   reaper.SetExtState(EXT_SECTION, "left_ratio", tostring(left_ratio), true) -- 保存分割条位置
+    --   SM_SetState(EXT_SECTION, "left_ratio", tostring(left_ratio), true) -- 保存分割条位置
     -- end
 
     -- 拖动
@@ -18841,7 +18848,7 @@ function loop()
       local new_left_px = mx - wx - (splitter_drag_offset or 0)
       new_left_px = math.max(min_left_px, math.min(max_left_px, new_left_px))
       left_px = new_left_px
-      reaper.SetExtState(EXT_SECTION, "left_px", tostring(left_px), true) -- 持久化像素宽
+      SM_SetState(EXT_SECTION, "left_px", tostring(left_px), true) -- 持久化像素宽
       left_w = left_px
       table_w = math.max(10, avail_x - left_w - left_splitter_w - album_w - album_splitter_w)
     end
@@ -19361,7 +19368,7 @@ function loop()
           idx = idx + (wheel > 0 and 1 or -1)
           idx = math.max(1, math.min(#preview_font_sizes, idx))
           font_size = preview_font_sizes[idx]
-          reaper.SetExtState(EXT_SECTION, "font_size", tostring(font_size), true)
+          SM_SetState(EXT_SECTION, "font_size", tostring(font_size), true)
           -- 激活字体提示
           show_font_size_popup = true
           show_font_size_timer = reaper.time_precise()
@@ -19372,7 +19379,7 @@ function loop()
           -- 限制范围 (12 ~ 48)
           if row_height < 12 then row_height = 12 end
           if row_height > 48 then row_height = 48 end
-          reaper.SetExtState(EXT_SECTION, "table_row_height", tostring(row_height), true)
+          SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
 
           -- 激活提示
           show_row_height_popup = true
@@ -19790,7 +19797,7 @@ function loop()
         end
         album_w = new_album_w
         album_panel_px = album_w
-        reaper.SetExtState(EXT_SECTION, "album_panel_px", tostring(album_panel_px), true)
+        SM_SetState(EXT_SECTION, "album_panel_px", tostring(album_panel_px), true)
       end
 
       if not album_splitter_active then
@@ -19873,16 +19880,16 @@ function loop()
     if reaper.ImGui_BeginPopupContextItem(ctx) then
       if reaper.ImGui_MenuItem(ctx, T("Preserve pitch when changing rate"), nil, preserve_pitch) then
         preserve_pitch = not preserve_pitch
-        reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
+        SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
       end
       if reaper.ImGui_MenuItem(ctx, T("Keep preview rate & pitch when inserting to arrange"), nil, keep_preview_rate_pitch_on_insert) then
         keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
-        reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
       end
 
       if reaper.ImGui_MenuItem(ctx, T("Semitone Steps"), nil, pitch_semitone_step) then
         pitch_semitone_step = not pitch_semitone_step
-        reaper.SetExtState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
         -- 激活时立即将当前音高吸附到整数
         if pitch_semitone_step then pitch = math.floor(pitch + 0.5) end
       end
@@ -19890,7 +19897,7 @@ function loop()
       reaper.ImGui_Separator(ctx)
       if reaper.ImGui_MenuItem(ctx, T("Tempo Sync"), nil, tempo_sync_enabled, true) then
         tempo_sync_enabled = not tempo_sync_enabled
-        reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
         -- 新增同步速率立刻应用
         if tempo_sync_enabled then
           play_rate = 1.0
@@ -19903,11 +19910,11 @@ function loop()
       end
       if reaper.ImGui_MenuItem(ctx, T("Link Transport"), nil, link_with_reaper, true) then
         link_with_reaper = not link_with_reaper
-        reaper.SetExtState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
       end
       if reaper.ImGui_MenuItem(ctx, T("Start at Next Bar (Link Transport required, Spacebar to trigger)"), nil, wait_nextbar_play, link_with_reaper) then
         wait_nextbar_play = not wait_nextbar_play
-        reaper.SetExtState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
       end
 
       reaper.ImGui_EndPopup(ctx)
@@ -20059,22 +20066,22 @@ function loop()
     if _popup_opened then
       if reaper.ImGui_MenuItem(ctx, T("Preserve pitch when changing rate"), nil, preserve_pitch) then
         preserve_pitch = not preserve_pitch
-        reaper.SetExtState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
+        SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
       end
       if reaper.ImGui_MenuItem(ctx, T("Keep preview rate & pitch when inserting to arrange"), nil, keep_preview_rate_pitch_on_insert) then
         keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
-        reaper.SetExtState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
       end
       if reaper.ImGui_MenuItem(ctx, T("Semitone Steps"), nil, pitch_semitone_step) then
         pitch_semitone_step = not pitch_semitone_step
-        reaper.SetExtState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
         -- 激活时立即将当前音高吸附到整数
         if pitch_semitone_step then pitch = math.floor(pitch + 0.5) end
       end
       reaper.ImGui_Separator(ctx)
       if reaper.ImGui_MenuItem(ctx, T("Tempo Sync"), nil, tempo_sync_enabled, true) then
         tempo_sync_enabled = not tempo_sync_enabled
-        reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
         -- 新增同步速率立刻应用
         if tempo_sync_enabled then
           play_rate = 1.0
@@ -20087,11 +20094,11 @@ function loop()
       end
       if reaper.ImGui_MenuItem(ctx, T("Link Transport"), nil, link_with_reaper, true) then
         link_with_reaper = not link_with_reaper
-        reaper.SetExtState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
       end
       if reaper.ImGui_MenuItem(ctx, T("Start at Next Bar (Link Transport required, Spacebar to trigger)"), nil, wait_nextbar_play, link_with_reaper) then
         wait_nextbar_play = not wait_nextbar_play
-        reaper.SetExtState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
+        SM_SetState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
       end
 
       reaper.ImGui_EndPopup(ctx)
@@ -20150,7 +20157,7 @@ function loop()
     end
     if rv2 then
       if playing_preview then SmoothSetPreviewVolume(volume, 60) end
-      reaper.SetExtState(EXT_SECTION, "volume", tostring(volume), true)
+      SM_SetState(EXT_SECTION, "volume", tostring(volume), true)
     end
 
     --------------------------------------------- 设置弹窗 ---------------------------------------------
@@ -20168,7 +20175,7 @@ function loop()
     -- reaper.ImGui_PopStyleVar(ctx)
     if rv5 then
       peak_chans = math.max(2, math.min(128, new_peaks or 2))
-      reaper.SetExtState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
+      SM_SetState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
     end
 
     -- 竖直电平条 mini
@@ -20276,7 +20283,7 @@ function loop()
     silence_changed, skip_silence_enabled = reaper.ImGui_Checkbox(ctx, T("Skip Silence") .. "###Skip_Silence", skip_silence_enabled)
     -- reaper.ImGui_PopStyleVar(ctx)
     if silence_changed then
-      reaper.SetExtState(EXT_SECTION, "skip_silence", skip_silence_enabled and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "skip_silence", skip_silence_enabled and "1" or "0", true)
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       DrawTooltip("Automatically skip initial silence when playing")
@@ -20296,7 +20303,7 @@ function loop()
     local sync_changed, new_sync = reaper.ImGui_Checkbox(ctx, T("Tempo Sync"), tempo_sync_enabled)
     if sync_changed then
       tempo_sync_enabled = new_sync
-      reaper.SetExtState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
       -- 立即刷新当前播放的速率
       if playing_preview and file_info then
         local base = GetTempoBase(file_info.path)
@@ -20326,7 +20333,7 @@ function loop()
       -- 选项无，取消目标
       if reaper.ImGui_Selectable(ctx, "None", (tree_state.target_mediadb == nil or tree_state.target_mediadb == "")) then
         tree_state.target_mediadb = nil
-        reaper.SetExtState(EXT_SECTION, "target_mediadb", "", true) -- 清除保存的状态
+        SM_SetState(EXT_SECTION, "target_mediadb", "", true) -- 清除保存的状态
       end
 
       -- 动态获取并排序数据库列表(只在展开时运行)
@@ -20370,7 +20377,7 @@ function loop()
 
         if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##target_mediadb_" .. tostring(dbfile), is_selected) then
           tree_state.target_mediadb = dbfile
-          reaper.SetExtState(EXT_SECTION, "target_mediadb", dbfile, true) -- 保存选中状态
+          SM_SetState(EXT_SECTION, "target_mediadb", dbfile, true) -- 保存选中状态
         end
         -- 鼠标悬停显示真实文件名提示
         if reaper.ImGui_IsItemHovered(ctx) then
@@ -20558,8 +20565,8 @@ function loop()
           collect_mode = COLLECT_MODE_SAMEFOLDER -- 切换到同目录模式
           tree_state.cur_path = path -- 当前文件夹
           RefreshFolderFiles(path) -- 刷新文件
-          reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
-          reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+          SM_SetState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
+          SM_SetState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
         end
 
         -- 右键目录段弹出菜单
@@ -20610,7 +20617,7 @@ function loop()
       local delta = (my - h_splitter_start_mouse_y) / ui_scale
       local new_off = h_splitter_start_offset - delta
       img_h_offset = math.max(0, math.min(300, new_off)) -- 专辑封面高度限制
-      reaper.SetExtState(EXT_SECTION, "img_h_offset", tostring(img_h_offset), true)
+      SM_SetState(EXT_SECTION, "img_h_offset", tostring(img_h_offset), true)
     end
 
     -- 松开时结束拖拽
@@ -20755,8 +20762,8 @@ function loop()
                 tree_state.cur_path = normalize_path(parent_dir, true)
                 RefreshFolderFiles(parent_dir)
 
-                reaper.SetExtState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
-                reaper.SetExtState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+                SM_SetState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
+                SM_SetState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
               end
             end
           end

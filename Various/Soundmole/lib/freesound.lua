@@ -61,8 +61,8 @@ function FS_LoadSearchDB(basename)
   FS_DedupIncremental()
 end
 
-function FS_bool_from_es(key, default)
-  local v = reaper.GetExtState(EXT_SECTION, key)
+function FS_bool_from_state(key, default)
+  local v = SM_GetState(EXT_SECTION, key)
   if v == "1" or v == "true" or v == "TRUE" then return true end
   if v == "0" or v == "false" or v == "FALSE" then return false end
   return default
@@ -341,10 +341,10 @@ FS = FS or {
   API_PAGE_SIZE     = 150,   -- Freesound 上限 150
   FIRST_PAGE_COUNT  = 5000,  -- 首屏加载数
   last_query        = "",
-  USE_ORIGINAL      = FS_bool_from_es("fs_use_original", false), -- 勾选后使用原始文件
-  AUTO_DOWNLOAD_RESULTS = FS_bool_from_es("fs_auto_download_results", false), -- 搜索完成后自动下载整张结果列表
+  USE_ORIGINAL      = FS_bool_from_state("fs_use_original", false), -- 勾选后使用原始文件
+  AUTO_DOWNLOAD_RESULTS = FS_bool_from_state("fs_auto_download_results", false), -- 搜索完成后自动下载整张结果列表
   AUTO_DOWNLOAD_CONCURRENCY = 3,
-  OAUTH_BEARER      = reaper.GetExtState(EXT_SECTION,"fs_oauth") or "", -- OAuth2 Access Token
+  OAUTH_BEARER      = SM_GetState(EXT_SECTION,"fs_oauth") or "", -- OAuth2 Access Token
   DOWNLOAD_METHOD   = "curl", -- nil=自动选择 "curl"=强制用curl "ps_iwr"=PowerShell Invoke-WebRequest "ps_bits"=PowerShell BITS
   ui = {
     query       = "",
@@ -355,7 +355,7 @@ FS = FS or {
   }
 }
 if FS.AUTO_DOWNLOAD_RESULTS == nil then
-  FS.AUTO_DOWNLOAD_RESULTS = FS_bool_from_es("fs_auto_download_results", false)
+  FS.AUTO_DOWNLOAD_RESULTS = FS_bool_from_state("fs_auto_download_results", false)
 end
 if FS.AUTO_DOWNLOAD_CONCURRENCY == nil then
   FS.AUTO_DOWNLOAD_CONCURRENCY = 3
@@ -364,14 +364,14 @@ end
 function FS_get_query()
   local q = tostring(FS and FS.ui and FS.ui.query or "")
   if q ~= "" then return q end
-  local qx = reaper.GetExtState(EXT_SECTION, "fs_query") or ""
+  local qx = SM_GetRuntimeState(EXT_SECTION, "fs_query") or ""
   return qx
 end
 
 function FS_set_query(q)
   q = tostring(q or "")
   if FS and FS.ui then FS.ui.query = q end
-  reaper.SetExtState(EXT_SECTION, "fs_query", q, false)
+  SM_SetRuntimeState(EXT_SECTION, "fs_query", q)
 end
 
 function FS_DB_DIR()
@@ -1494,32 +1494,32 @@ local FS_K = {
   client_secret = "fs_oauth_client_secret",
   code          = "fs_oauth_code"
 }
-function FS_set_es(k, v)
-  reaper.SetExtState(EXT_SECTION, k, tostring(v or ""), true)
+function FS_set_state(k, v)
+  SM_SetState(EXT_SECTION, k, tostring(v or ""), true)
 end
-function FS_get_es(k)
-  return reaper.GetExtState(EXT_SECTION, k) or ""
+function FS_get_state(k)
+  return SM_GetState(EXT_SECTION, k) or ""
 end
 function FS_trim(s)
   return tostring(s or ""):match("^%s*(.-)%s*$") or ""
 end
 
 function FS_OAuth_ClientID()
-  return FS_trim(FS_get_es(FS_K.client_id))
+  return FS_trim(FS_get_state(FS_K.client_id))
 end
 
 function FS_OAuth_ClientSecret()
-  return FS_trim(FS_get_es(FS_K.client_secret))
+  return FS_trim(FS_get_state(FS_K.client_secret))
 end
 
 function FS_OAuth_DefaultCode()
-  return FS_trim(FS_get_es(FS_K.code))
+  return FS_trim(FS_get_state(FS_K.code))
 end
 
 -- 打开授权页
 function FS_OAuth_OpenAuthorize()
   local client_id = FS_OAuth_ClientID()
-  local redirect  = FS_get_es(FS_K.redir)
+  local redirect  = FS_get_state(FS_K.redir)
   if client_id == "" then
     reaper.MB(T("Please enter a Freesound Client ID first."), "Freesound OAuth2", 0)
     return
@@ -1592,7 +1592,7 @@ function FS_OAuth_ExchangeCode(auth_code, silent)
   if auth_code == "" then auth_code = FS_OAuth_DefaultCode() end
   local client_id     = FS_OAuth_ClientID()
   local client_secret = FS_OAuth_ClientSecret()
-  -- local redirect_uri  = FS_get_es(FS_K.redir)
+  -- local redirect_uri  = FS_get_state(FS_K.redir)
 
   if client_id=="" or client_secret=="" then
     if not silent then reaper.MB(T("Please enter Freesound Client ID and Client Secret."), "Freesound OAuth2", 0) end
@@ -1626,9 +1626,9 @@ function FS_OAuth_ExchangeCode(auth_code, silent)
   end
 
   -- 保存 token
-  FS_set_es(FS_K.acc, obj.access_token or "")
-  FS_set_es(FS_K.ref, obj.refresh_token or "")
-  FS_set_es(FS_K.code, "")
+  FS_set_state(FS_K.acc, obj.access_token or "")
+  FS_set_state(FS_K.ref, obj.refresh_token or "")
+  FS_set_state(FS_K.code, "")
 
   FS.OAUTH_BEARER = obj.access_token or ""
   FS.ui = FS.ui or {}
@@ -1644,7 +1644,7 @@ end
 function FS_OAuth_Refresh(silent)
   local client_id     = FS_OAuth_ClientID()
   local client_secret = FS_OAuth_ClientSecret()
-  local refresh_token = FS_get_es(FS_K.ref)
+  local refresh_token = FS_get_state(FS_K.ref)
   if client_id=="" or client_secret=="" or refresh_token=="" then
     if not silent then reaper.MB(T("Freesound needs to connect once before it can refresh the access token."), "Freesound OAuth2", 0) end
     return false
@@ -1662,9 +1662,9 @@ function FS_OAuth_Refresh(silent)
     if not silent then reaper.MB((T("Refresh failed:\n%s")):format(tostring(body):sub(1,400)), "Freesound OAuth2", 0) end
     return false
   end
-  FS_set_es(FS_K.acc, obj.access_token or "")
+  FS_set_state(FS_K.acc, obj.access_token or "")
   if obj.refresh_token and obj.refresh_token ~= "" then
-    FS_set_es(FS_K.ref, obj.refresh_token) -- 如果返回了新的 refresh_token，则一并保存
+    FS_set_state(FS_K.ref, obj.refresh_token) -- 如果返回了新的 refresh_token，则一并保存
   end
   FS.OAUTH_BEARER = obj.access_token or ""
   -- if not silent then reaper.MB("Access Token 已刷新。", "Freesound OAuth2", 0) end
@@ -1673,13 +1673,13 @@ function FS_OAuth_Refresh(silent)
 end
 
 function FS_OAuth_EnsureReady(silent)
-  local acc = FS_get_es(FS_K.acc)
+  local acc = FS_get_state(FS_K.acc)
   if acc ~= "" then
     FS.OAUTH_BEARER = acc
     return true
   end
 
-  if FS_get_es(FS_K.ref) ~= "" and FS_OAuth_Refresh(true) then
+  if FS_get_state(FS_K.ref) ~= "" and FS_OAuth_Refresh(true) then
     return true
   end
 
@@ -1694,15 +1694,15 @@ function FS_OAuth_EnsureReady(silent)
 end
 
 function FS_DrawApiTokenField(ctx)
-  FS.OAUTH_BEARER = FS_get_es(FS_K.acc)
+  FS.OAUTH_BEARER = FS_get_state(FS_K.acc)
 end
 
 function FS_DrawOAuthTextField(ctx, label, widget_id, key, flags)
   reaper.ImGui_Text(ctx, T(label))
   reaper.ImGui_SetNextItemWidth(ctx, -10)
-  local changed, value = reaper.ImGui_InputText(ctx, "##" .. widget_id, FS_get_es(key), flags or 0)
+  local changed, value = reaper.ImGui_InputText(ctx, "##" .. widget_id, FS_get_state(key), flags or 0)
   if changed and value ~= nil then
-    FS_set_es(key, value)
+    FS_set_state(key, value)
     FS.ui = FS.ui or {}
     FS.ui._default_oauth_failed = nil
   end
@@ -1790,7 +1790,7 @@ function FS_DrawSidebar(ctx)
   local changed_ad, val_ad = reaper.ImGui_Checkbox(ctx, T("Auto-download search results"), FS.AUTO_DOWNLOAD_RESULTS)
   if changed_ad then
     FS.AUTO_DOWNLOAD_RESULTS = val_ad
-    reaper.SetExtState(EXT_SECTION, "fs_auto_download_results", (val_ad and "1" or "0"), true)
+    SM_SetState(EXT_SECTION, "fs_auto_download_results", (val_ad and "1" or "0"), true)
   end
   reaper.ImGui_SameLine(ctx)
   HelpMarker(T("After a Freesound search finishes, queue every result in the list for background download. Existing cached files are reused."))
@@ -1890,7 +1890,7 @@ function FS_DrawSidebar(ctx)
   local changed_uo, val_uo = reaper.ImGui_Checkbox(ctx, T("Prefer Original Files over Previews"), FS.USE_ORIGINAL)
   if changed_uo then
     FS.USE_ORIGINAL = val_uo
-    reaper.SetExtState(EXT_SECTION, "fs_use_original", (val_uo and "1" or "0"), true)
+    SM_SetState(EXT_SECTION, "fs_use_original", (val_uo and "1" or "0"), true)
     if val_uo then FS_OAuth_EnsureReady(true) end
   end
   reaper.ImGui_SameLine(ctx)
@@ -1909,7 +1909,7 @@ function FS_DrawSidebar(ctx)
   end
   FS_DrawOAuthTextField(ctx, T("Authorization Code"), "fs_oauth_code", FS_K.code)
 
-  local has_acc = (FS_get_es(FS_K.acc) ~= "") or ((FS.OAUTH_BEARER or "") ~= "")
+  local has_acc = (FS_get_state(FS_K.acc) ~= "") or ((FS.OAUTH_BEARER or "") ~= "")
   reaper.ImGui_Text(ctx, has_acc and T("Freesound authorization: ready") or T("Freesound authorization: not connected"))
 
   if reaper.ImGui_Button(ctx, has_acc and T("Reconnect Freesound") or T("Connect Freesound"), -10, UIScaleF(32)) then
@@ -1941,12 +1941,12 @@ function FS_DrawSidebar(ctx)
   -- reaper.ImGui_SameLine(ctx)
   reaper.ImGui_SeparatorText(ctx, T("Reset Freesound Authorization"))
   if reaper.ImGui_Button(ctx, T("Reset Freesound authorization"), -10, UIScaleF(32)) then
-    FS_set_es(FS_K.client_id, "")
-    FS_set_es(FS_K.client_secret, "")
-    FS_set_es(FS_K.code, "")
-    FS_set_es(FS_K.redir, "")
-    FS_set_es(FS_K.acc, "")
-    FS_set_es(FS_K.ref, "")
+    FS_set_state(FS_K.client_id, "")
+    FS_set_state(FS_K.client_secret, "")
+    FS_set_state(FS_K.code, "")
+    FS_set_state(FS_K.redir, "")
+    FS_set_state(FS_K.acc, "")
+    FS_set_state(FS_K.ref, "")
     -- 同步清理内存态
     FS.OAUTH_BEARER = ""
     FS.ui.oauth_code = ""
