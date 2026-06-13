@@ -179,12 +179,21 @@ function SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
     table.insert(t, filename .. "||" .. alias)
   end
   local str = table.concat(t, "|;|") or ""
-  reaper.SetExtState(EXT_SECTION, "moledb_alias", str, true)
+  if type(SM_SetState) == "function" then
+    SM_SetState(EXT_SECTION, "moledb_alias", str, true)
+  else
+    reaper.SetExtState(EXT_SECTION, "moledb_alias", str, true)
+  end
 end
 
 function LoadMediaDBAlias(EXT_SECTION)
   local alias_map = {}
-  local str = reaper.GetExtState(EXT_SECTION, "moledb_alias")
+  local str
+  if type(SM_GetState) == "function" then
+    str = SM_GetState(EXT_SECTION, "moledb_alias")
+  else
+    str = reaper.GetExtState(EXT_SECTION, "moledb_alias")
+  end
   if not str or str == "" then return alias_map end
   for _, item in ipairs(split(str, "|;|")) do
     local filename, alias = item:match("^(.-)%|%|(.*)$")

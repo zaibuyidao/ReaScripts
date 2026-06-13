@@ -97,10 +97,12 @@ HAVE_SM_COVER_INDEX = reaper.APIExists('SM_Cover_Ensure')
   and reaper.APIExists('SM_CoverIndex_Stop')
 HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_GetRowRaw')
 HAVE_SM_DB_ROW_BY_PATH = reaper.APIExists('SM_DB_GetRowRawByPath')
+HAVE_SM_DB_FIND_INDEX = reaper.APIExists('SM_DB_FindIndexByPath')
 HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw')
   and reaper.APIExists('SM_DB_Load')
   and reaper.APIExists('SM_DB_Release')
   and reaper.APIExists('SM_DB_GetCount')
+  and reaper.APIExists('SM_DB_Sort')
 HAVE_SM_DB_FOLDERS = HAVE_SM_DB
   and reaper.APIExists('SM_DB_GetRootsRaw')
   and reaper.APIExists('SM_DB_ListSubdirsRaw')
@@ -3130,6 +3132,10 @@ function StopAsyncScan()
 end
 
 function CollectFiles()
+  local list_state = _G._soundmole_static or {}
+  if type(SM_RememberDBSelection) == "function" and list_state.last_db_key then
+    SM_RememberDBSelection(list_state.last_db_key, _G.current_display_list, selected_row)
+  end
   -- 切换模式时，强制停止之前大型文件夹的后台扫描
   StopAsyncScan()
   -- 切模式时清空文件列表多选/主选中
@@ -6599,6 +6605,9 @@ function DrawImplicitSearchTag(ctx)
   local clicked_main, clicked_close = ImGui_Tag(ctx, "##ucs", "UCS Tag: " .. (implicit_kw:upper()), { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5 })
 
   if clicked_close then
+    if type(SM_RequestSelectionRestoreAfterFilterExpansion) == "function" then
+      SM_RequestSelectionRestoreAfterFilterExpansion()
+    end
     -- 清除UCS隐式搜索关键词
     active_saved_search = nil
     temp_search_field, temp_search_keyword = nil
@@ -6637,6 +6646,9 @@ function DrawDBPathFilterTag(ctx)
   local clicked_main, clicked_close = ImGui_Tag(ctx, "##dbpf", "Pathname: " .. display_path, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5})
 
   if clicked_close then
+    if type(SM_RequestSelectionRestoreAfterFilterExpansion) == "function" then
+      SM_RequestSelectionRestoreAfterFilterExpansion()
+    end
     -- 清空数据库路径过滤
     _G._db_path_prefix_filter = nil
 
@@ -6658,6 +6670,9 @@ function DrawCoverFilterTag(ctx)
   local clicked_main, clicked_close = ImGui_Tag(ctx, "##cover_filter", "Cover: " .. label_id, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5})
 
   if clicked_close then
+    if type(SM_RequestSelectionRestoreAfterFilterExpansion) == "function" then
+      SM_RequestSelectionRestoreAfterFilterExpansion()
+    end
     _G._cover_id_filter = nil
     local static = _G._soundmole_static or {}
     _G._soundmole_static = static
@@ -6715,6 +6730,9 @@ function DrawFilterSearchTag(ctx)
     local clicked_main, clicked_close = ImGui_Tag(ctx, "##locked_" .. i, "Search: " .. tag_text, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5 })
     any_clicked = any_clicked or clicked_main
     if clicked_close then
+      if type(SM_RequestSelectionRestoreAfterFilterExpansion) == "function" then
+        SM_RequestSelectionRestoreAfterFilterExpansion()
+      end
       table.remove(locked, i)
       reset_cache()
       any_closed = true
@@ -6736,6 +6754,9 @@ function DrawFilterSearchTag(ctx)
       local clicked_main, clicked_close = ImGui_Tag(ctx, "##filter_text", "Search: " .. ft, { pad_y = 1, close_d = 16, pad_r = 0, text_to_x_gap = 5 })
       any_clicked = any_clicked or clicked_main
       if clicked_close then
+        if type(SM_RequestSelectionRestoreAfterFilterExpansion) == "function" then
+          SM_RequestSelectionRestoreAfterFilterExpansion()
+        end
         _G.commit_filter_text = nil
         if _G.global_filter then reaper.ImGui_TextFilter_Set(_G.global_filter, "") end
         if _G.filename_filter then reaper.ImGui_TextFilter_Set(_G.filename_filter, "") end
@@ -8197,6 +8218,7 @@ function AddThisComputerContextMenu(path)
         if alias ~= "" then
           mediadb_alias = mediadb_alias or {}
           mediadb_alias[dbfile] = alias
+          mediadb_display_name_cache[dbfile] = nil
           SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
         end
 
@@ -8445,6 +8467,7 @@ function draw_shortcut_tree(sc, base_path, depth)
           if alias ~= "" then
             mediadb_alias = mediadb_alias or {}
             mediadb_alias[dbfile] = alias
+            mediadb_display_name_cache[dbfile] = nil
             SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
           end
 
@@ -10579,6 +10602,44 @@ end
 
 db_build_task = nil
 mediadb_alias = LoadMediaDBAlias(EXT_SECTION) -- 加载数据库别名
+mediadb_display_name_cache = mediadb_display_name_cache or {}
+
+function GetMediaDBDisplayName(dbfile)
+  dbfile = tostring(dbfile or "")
+  if dbfile == "" then return "" end
+
+  local alias = mediadb_alias and mediadb_alias[dbfile]
+  if alias and alias ~= "" and alias ~= dbfile then return alias end
+
+  local dbpath = normalize_path(mediadb_dir or (script_path .. "SoundmoleDB"), true) .. dbfile
+  local path_alias = mediadb_alias and (
+    mediadb_alias[dbpath]
+    or mediadb_alias[normalize_path(dbpath, false)]
+  )
+  if path_alias and path_alias ~= "" and path_alias ~= dbfile then return path_alias end
+
+  if mediadb_display_name_cache[dbfile] == nil then
+    local derived = ""
+    local f = io.open(dbpath, "rb")
+    if f then
+      for line in f:lines() do
+        local root = line:match('^%s*PATH%s+"(.-)"')
+        if root and root ~= "" then
+          root = root:gsub("[/\\]+$", "")
+          derived = root:match("([^/\\]+)$") or ""
+          break
+        end
+      end
+      f:close()
+    end
+    mediadb_display_name_cache[dbfile] = derived
+  end
+
+  local derived = mediadb_display_name_cache[dbfile]
+  if derived and derived ~= "" then return derived end
+  return (alias and alias ~= "") and alias or dbfile
+end
+
 tree_state.remove_path_dbfile = tree_state.remove_path_dbfile or nil
 tree_state.remove_path_to_remove = tree_state.remove_path_to_remove or nil
 tree_state.remove_path_confirm = tree_state.remove_path_confirm or false
@@ -10786,6 +10847,7 @@ static.wf_delay_miss   = static.wf_delay_miss   or 1.0 -- 表格列表波形未�
 static.filtered_list_map = static.filtered_list_map or {} -- 用于存放所有列表缓存
 static.last_filter_text_map = static.last_filter_text_map or {}
 static.last_sort_specs_map  = static.last_sort_specs_map or {}
+static.db_selection_path_map = static.db_selection_path_map or {}
 
 -- 模式+选中项唯一key，用来切换音频列表
 function GetCurrentListKey()
@@ -10822,6 +10884,131 @@ function GetCurrentListKey()
     return "PLAY_HISTORY"
   else
     return "UNKNOWN"
+  end
+end
+
+function SM_DBColumnNameFromUserID(user_id)
+  if user_id == TableColumns.SIZE then return "size"
+  elseif user_id == TableColumns.DATE then return "date"
+  elseif user_id == TableColumns.LENGTH then return "len"
+  elseif user_id == TableColumns.BPM then return "bpm"
+  elseif user_id == TableColumns.SAMPLERATE then return "sr"
+  elseif user_id == TableColumns.CHANNELS then return "ch"
+  elseif user_id == TableColumns.BITS then return "bits"
+  elseif user_id == TableColumns.TYPE then return "type"
+  elseif user_id == TableColumns.GENRE then return "genre"
+  elseif user_id == TableColumns.DESCRIPTION then return "desc"
+  elseif user_id == TableColumns.COMMENT then return "comment"
+  elseif user_id == TableColumns.CATEGORY then return "cat"
+  elseif user_id == TableColumns.SUBCATEGORY then return "subcat"
+  elseif user_id == TableColumns.CATID then return "catid"
+  elseif user_id == TableColumns.KEY then return "key"
+  end
+  return "filename"
+end
+
+function SM_GetActiveDBSortState()
+  local s = _G._soundmole_static or {}
+  _G._soundmole_static = s
+  if s.active_db_sort and s.active_db_sort.col_name then
+    return s.active_db_sort
+  end
+
+  local sort_dir = reaper.ImGui_SortDirection_Ascending()
+  return {
+    user_id = TableColumns.FILENAME,
+    sort_dir = sort_dir,
+    col_name = "filename",
+    ascending = 1,
+    signature = tostring(TableColumns.FILENAME) .. tostring(sort_dir)
+  }
+end
+
+function SM_RememberDBSelection(list_key, list, row)
+  if type(list_key) ~= "string"
+    or (not list_key:match("^MEDIADB:") and not list_key:match("^REAPERDB:")) then
+    return
+  end
+
+  local s = _G._soundmole_static or {}
+  _G._soundmole_static = s
+  s.db_selection_path_map = s.db_selection_path_map or {}
+
+  local idx = tonumber(row)
+  local info = idx and idx > 0 and type(list) == "table" and list[idx] or nil
+  if info and info.path and info.path ~= "" then
+    s.db_selection_path_map[list_key] = normalize_path(info.path, false)
+  else
+    s.db_selection_path_map[list_key] = nil
+  end
+end
+
+function SM_FindListIndexByPath(list, path)
+  if type(list) ~= "table" or not path or path == "" then return nil end
+  if list._handle then
+    if HAVE_SM_DB_FIND_INDEX then
+      local index0 = reaper.SM_DB_FindIndexByPath(list._handle, path)
+      if index0 and index0 >= 0 then return index0 + 1 end
+    end
+    -- Older extensions do not have the direct lookup API; avoid materializing
+    -- an entire large virtual database just to restore one selection.
+    return nil
+  end
+
+  local target = normalize_path(path, false)
+  for i = 1, #list do
+    local info = list[i]
+    if info and info.path and normalize_path(info.path, false) == target then return i end
+  end
+  return nil
+end
+
+function SM_RequestDBSelectionRestore(list_key)
+  local s = _G._soundmole_static or {}
+  _G._soundmole_static = s
+  s.db_selection_path_map = s.db_selection_path_map or {}
+  s.pending_db_selection_restore = {
+    key = list_key,
+    path = s.db_selection_path_map[list_key]
+  }
+end
+
+function SM_RequestSelectionRestoreAfterFilterExpansion()
+  local list_key = GetCurrentListKey()
+  if type(list_key) ~= "string"
+    or (not list_key:match("^MEDIADB:") and not list_key:match("^REAPERDB:")) then
+    return
+  end
+
+  -- 过滤池放宽前按路径记录选择；无选中项时记录为空，重建后回到顶部。
+  SM_RememberDBSelection(list_key, _G.current_display_list, selected_row)
+  SM_RequestDBSelectionRestore(list_key)
+end
+
+function SM_ApplyPendingDBSelectionRestore(list_key, list)
+  local s = _G._soundmole_static or {}
+  local pending = s.pending_db_selection_restore
+  if not pending or pending.key ~= list_key or type(list) ~= "table" then return end
+  s.pending_db_selection_restore = nil
+
+  ClearFileSelection()
+  local idx = SM_FindListIndexByPath(list, pending.path)
+  if idx then
+    selected_row = idx
+    -- 数据库切换/排序后的选中恢复属于程序化定位，不应触发“自动播放选中项”。
+    -- 同步自动播放基准行，仅更新选择与滚动位置，保持当前预听状态不变。
+    last_selected_row = idx
+    _G.scroll_request_index = idx
+    _G.scroll_request_align = 0.5
+    _G.scroll_request_top = nil
+  else
+    selected_row = -1
+    last_selected_row = -1
+    _G.scroll_request_index = nil
+    _G.scroll_request_align = nil
+    _G.scroll_request_index_exact = nil
+    _G.scroll_request_align_exact = nil
+    _G.scroll_request_top = true
   end
 end
 
@@ -11726,14 +11913,14 @@ function DrawRowPopup(ctx, i, info, collect_mode)
   if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
     local db_dir = script_path .. "SoundmoleDB"
     local target_db_path = normalize_path(db_dir, true) .. tree_state.target_mediadb
-    local alias = (mediadb_alias and mediadb_alias[tree_state.target_mediadb]) or tree_state.target_mediadb
+    local alias = GetMediaDBDisplayName(tree_state.target_mediadb)
 
     -- reaper.ImGui_Separator(ctx)
     local is_ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
     local is_d = reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_B())
     local trigger_shortcut = is_ctrl and is_d
 
-    if reaper.ImGui_MenuItem(ctx, ImGuiEscapeVisibleLabel(T("Add to Target DB: ") .. alias), "Ctrl+B") or trigger_shortcut then
+    if reaper.ImGui_MenuItem(ctx, ImGuiEscapeVisibleLabel(T("Add to Target DB:") .. " " .. alias), "Ctrl+B") or trigger_shortcut then
       -- 如果是通过快捷键触发，立即关闭菜单
       if trigger_shortcut then reaper.ImGui_CloseCurrentPopup(ctx) end
       if not reaper.file_exists(target_db_path) then
@@ -13161,6 +13348,8 @@ _G.db_loader = {
 function StartDBFirstPage(db_dir, dbfile, first_n)
   db_loader = _G.db_loader
   local sep = package.config:sub(1, 1)
+  local static = _G._soundmole_static or {}
+  _G._soundmole_static = static
 
   -- 清理旧状态
   if _G.db_loader and _G.db_loader.ctx then
@@ -13183,9 +13372,14 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
 
   -- 分支 A: 极速模式, C++ 极速加载分支
   if HAVE_SM_DB then
-    -- C++ Load 已经在内部完成了读取和按文件名排序，耗时极短
+    -- C++ 只读取数据库；这里在列表显示前按当前列完成唯一一次排序。
     local ctx = reaper.SM_DB_Load(fullpath)
     if ctx then
+      local sort_state = SM_GetActiveDBSortState()
+      if reaper.APIExists("SM_DB_Sort") then
+        reaper.SM_DB_Sort(ctx, sort_state.col_name, sort_state.ascending)
+      end
+
       -- 初始化加载器容器，但不激活 active，只为了保存 ctx 给搜索/排序用
       _G.db_loader = _G.db_loader or {}
       _G.db_loader.ctx = ctx
@@ -13200,16 +13394,20 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
 
       -- 赋值给全局缓存，立即生效
       files_idx_cache = proxy
-      selected_row = nil
+      selected_row = -1
 
-      -- 清空过滤缓存，确保 UI 刷新
-      local static = _G._soundmole_static or {}
-      static.filtered_list_map = {} 
-      static.last_filter_text_map = {}
-      -- static.last_sort_specs_map = {} -- 强制清空排序状态缓存，当前不需要
+      -- 只失效当前数据库，保留其他数据库的选中记录。
+      local current_key = GetCurrentListKey()
+      static.filtered_list_map = static.filtered_list_map or {}
+      static.last_filter_text_map = static.last_filter_text_map or {}
+      static.last_sort_specs_map = static.last_sort_specs_map or {}
+      static.filtered_list_map[current_key] = nil
+      static.last_filter_text_map[current_key] = nil
+      static.last_sort_specs_map[current_key] = sort_state.signature
+      SM_RequestDBSelectionRestore(current_key)
 
-      -- 强制内存回收
-      collectgarbage("collect")
+      -- 避免切换大型数据库时被一次完整 Lua GC 再次阻塞。
+      collectgarbage("step", 200)
 
       return true -- 成功启动异步任务，直接返回
     end
@@ -15894,6 +16092,7 @@ function loop()
     local clicked_clear = reaper.ImGui_Button(ctx, T("Clear"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_clear then
+      SM_RequestSelectionRestoreAfterFilterExpansion()
       reaper.ImGui_TextFilter_Set(filename_filter, "")
 
       _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
@@ -15940,6 +16139,7 @@ function loop()
     local clicked_res_all = reaper.ImGui_Button(ctx, T("Restore All"), top_button_w, two_rows_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_res_all then
+      SM_RequestSelectionRestoreAfterFilterExpansion()
       reaper.ImGui_TextFilter_Set(filename_filter, "")
 
       _G.commit_filter_text = ""     -- 立即清空生效查询（Enter模式）
@@ -15956,7 +16156,6 @@ function loop()
 
       static.filtered_list_map    = {}
       static.last_filter_text_map = {}
-      selected_row = nil
     end
     if reaper.ImGui_IsItemHovered(ctx) then
       DrawTooltip('Restore all (undo all filters/search).')
@@ -16232,6 +16431,7 @@ function loop()
                   mediadb_alias = mediadb_alias or {}
                   mediadb_alias[path] = alias
                   mediadb_alias[fname] = alias
+                  mediadb_display_name_cache[fname] = nil
                   SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
                 end
                 _G.__sm_db_msg = nil
@@ -16275,6 +16475,7 @@ function loop()
           if alias ~= "" then
             mediadb_alias = mediadb_alias or {}
             mediadb_alias[dbfile] = alias
+            mediadb_display_name_cache[dbfile] = nil
             SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
           end
 
@@ -16297,7 +16498,7 @@ function loop()
           reaper.ShowMessageBox(T("This database is currently rebuilding.\nPlease stop the task before deleting."), T("Cannot Delete"), 0)
         else
           local filename = target_dbfile:match("[^/\\]+$")
-          local alias = (mediadb_alias and mediadb_alias[filename]) or filename
+          local alias = GetMediaDBDisplayName(filename)
           local res = reaper.ShowMessageBox(
             ("Are you sure you want to delete the database?\nAlias: %s\nFile: %s\n\nThis action cannot be undone."):format(tostring(alias), tostring(target_dbfile)),
             "Confirm Delete",
@@ -16322,6 +16523,7 @@ function loop()
               -- 清理别名
               if mediadb_alias then
                 mediadb_alias[filename] = nil
+                mediadb_display_name_cache[filename] = nil
                 SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
               end
 
@@ -17560,6 +17762,7 @@ function loop()
                         mediadb_alias = mediadb_alias or {}
                         mediadb_alias[path] = alias
                         mediadb_alias[fname] = alias
+                        mediadb_display_name_cache[fname] = nil
                         SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
                       end
                       _G.__sm_db_msg = nil
@@ -17651,7 +17854,7 @@ function loop()
 
                 local drag_idx    = mediadb_drag_index or idx
                 local drag_dbfile = mediadb_files[drag_idx] or dbfile
-                local drag_alias  = mediadb_alias[drag_dbfile] or drag_dbfile
+                local drag_alias  = GetMediaDBDisplayName(drag_dbfile)
 
                 reaper.ImGui_SetDragDropPayload(ctx, "SM_DB_REORDER", tostring(drag_idx))
                 reaper.ImGui_Text(ctx, drag_alias)
@@ -17725,7 +17928,7 @@ function loop()
 
               reaper.ImGui_SameLine(ctx)
 
-              local alias = mediadb_alias[dbfile] or dbfile -- 优先显示别名
+              local alias = GetMediaDBDisplayName(dbfile) -- 优先显示别名或数据库来源文件夹名
               local is_selected = (collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile)
               if is_selected then
                 -- PeakTree选中状态高亮
@@ -17733,18 +17936,10 @@ function loop()
               end
               if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##mediadb_" .. tostring(dbfile), is_selected) then
                 if collect_mode ~= COLLECT_MODE_MEDIADB or tree_state.cur_mediadb ~= dbfile then
+                  SM_RememberDBSelection(GetCurrentListKey(), _G.current_display_list, selected_row)
                   collect_mode = COLLECT_MODE_MEDIADB
                   tree_state.cur_mediadb = dbfile
                   _G._db_path_prefix_filter = "" -- 切换数据库时清空路径前缀过滤
-
-                  -- 清除选中状态
-                  ClearFileSelection()
-                  selected_row = -1
-
-                  local static = _G._soundmole_static or {}
-                  _G._soundmole_static = static
-                  static.filtered_list_map    = {}
-                  static.last_filter_text_map = {}
 
                   -- 触发重建
                   files_idx_cache = nil
@@ -17779,9 +17974,10 @@ function loop()
 
                 -- 重命名数据库
                 if reaper.ImGui_MenuItem(ctx, T("Rename Database")) then
-                  local ret, newname = reaper.GetUserInputs(T("Rename Database"), 1, T("New Name:") .. ",extrawidth=180", mediadb_alias[dbfile] or dbfile)
+                  local ret, newname = reaper.GetUserInputs(T("Rename Database"), 1, T("New Name:") .. ",extrawidth=180", GetMediaDBDisplayName(dbfile))
                   if ret and newname and newname ~= "" and newname ~= dbfile then
                     mediadb_alias[dbfile] = newname
+                    mediadb_display_name_cache[dbfile] = nil
                     SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
                   end
                 end
@@ -17792,7 +17988,7 @@ function loop()
                     reaper.ShowMessageBox("This database is currently rebuilding.\nPlease stop the task before deleting.", "Cannot Delete", 0)
                   else
                     local filename = dbfile:match("[^/\\]+$")
-                    local alias = mediadb_alias[filename] or filename
+                    local alias = GetMediaDBDisplayName(filename)
                     local res = reaper.ShowMessageBox(
                       ("Are you sure you want to delete the database?\nAlias: %s\nFile: %s\n\nThis action cannot be undone."):format(alias, dbfile),
                       "Confirm Delete",
@@ -17820,6 +18016,7 @@ function loop()
                       else
                         -- 清理别名
                         mediadb_alias[filename] = nil
+                        mediadb_display_name_cache[filename] = nil
                         SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
 
                         -- 清理当前选择与缓存并刷新
@@ -17835,7 +18032,7 @@ function loop()
 
                 reaper.ImGui_Separator(ctx)
                 -- 添加路径到数据库
-                if reaper.ImGui_MenuItem(ctx, "Add Path to Database...") then
+                if reaper.ImGui_MenuItem(ctx, T("Add Path to Database...")) then
                   tree_state.add_path_dbfile = dbfile -- 记录当前要添加路径的数据库
                   tree_state.add_path_popup = true -- 标记弹窗
                 end
@@ -17856,7 +18053,7 @@ function loop()
                 end
 
                 -- 增量更新数据库
-                if reaper.ImGui_MenuItem(ctx, "Scan Database for New Files") then -- Incremental Database Update
+                if reaper.ImGui_MenuItem(ctx, T("Scan Database for New Files")) then -- Incremental Database Update
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   if HAVE_SM_BUILDER_INCREMENTAL then
                     local success = SM_StartDatabaseIncremental(dbpath)
@@ -17892,7 +18089,7 @@ function loop()
                           idx = 1,
                           total = #to_add,
                           finished = false,
-                          alias = mediadb_alias[filename] or filename,
+                          alias = GetMediaDBDisplayName(filename),
                           root_path = root,
                           is_incremental = true,
                           existing_map = DB_ReadExistingFileSet(dbpath),
@@ -17936,7 +18133,7 @@ function loop()
                       idx         = 1,
                       total       = #all,
                       finished    = false,
-                      alias       = mediadb_alias[filename] or filename, -- mediadb_alias[dbfile] or "Unnamed",
+                      alias       = GetMediaDBDisplayName(filename),
                       root_path   = path_list[1], -- 兼容旧逻辑用到 root_path 的情况
                       root_paths  = path_list,
                       is_rebuild  = true,
@@ -17946,7 +18143,7 @@ function loop()
                   end
                 end
 
-                if HAVE_SM_SIM and reaper.ImGui_MenuItem(ctx, "Build Similarity Index") then
+                if HAVE_SM_SIM and reaper.ImGui_MenuItem(ctx, T("Build Similarity Index")) then
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   SM_SIM_StartBuild(dbpath)
                 end
@@ -18062,11 +18259,10 @@ function loop()
 
                   if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_" .. fn, is_sel) then
                     if collect_mode ~= COLLECT_MODE_REAPERDB or tree_state.cur_reaper_db ~= fn then
+                      SM_RememberDBSelection(GetCurrentListKey(), _G.current_display_list, selected_row)
                       collect_mode = COLLECT_MODE_REAPERDB
                       tree_state.cur_reaper_db = fn
 
-                      ClearFileSelection()
-                      selected_row = -1
                       files_idx_cache = nil
                       CollectFiles()
                     end
@@ -18513,14 +18709,48 @@ function loop()
             end
           end
 
+          local function TrimSavedSearchText(value)
+            return tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
+          end
+
+          local function SavedSearchItemParts(node)
+            local term = TrimSavedSearchText(node and node.term)
+            local alias = TrimSavedSearchText(node and node.name)
+
+            -- 别名已带括号时避免重复包裹。
+            local unwrapped = alias:match("^%((.*)%)$") or alias:match("^（(.*)）$")
+            if unwrapped then alias = TrimSavedSearchText(unwrapped) end
+            if alias == term then alias = "" end
+            return term, alias
+          end
+
+          local function SavedSearchItemLabel(node)
+            local term, alias = SavedSearchItemParts(node)
+            if term == "" then return alias end
+            if alias == "" then return term end
+            return term .. " (" .. alias .. ")"
+          end
+
           local function NodePassesFilter(id, filter_string)
             if not filter_string or filter_string == "" then return true, false end
             local node = saved_search_nodes[id]
             if not node then return false, false end
 
-            local f_lower = filter_string:lower()
-            local self_match = (node.name and node.name:lower():find(f_lower, 1, true)) or 
-                               (node.term and node.term:lower():find(f_lower, 1, true))
+            local searchable
+            if node.type == "item" then
+              local term, alias = SavedSearchItemParts(node)
+              searchable = (term .. "\n" .. alias .. "\n" .. SavedSearchItemLabel(node)):lower()
+            else
+              searchable = TrimSavedSearchText(node.name):lower()
+            end
+
+            local self_match = true
+            for token in TrimSavedSearchText(filter_string):lower():gmatch("%S+") do
+              if not searchable:find(token, 1, true) then
+                self_match = false
+                break
+              end
+            end
 
             local child_match = false
             if node.children then
@@ -18663,7 +18893,8 @@ function loop()
                   end
                 else -- Item Node
                   local is_selected = (active_saved_search == id)
-                  if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##saved_search_" .. tostring(id), is_selected, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+                  local item_label = SavedSearchItemLabel(node)
+                  if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(item_label) .. "##saved_search_" .. tostring(id), is_selected, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
                     active_saved_search = id
                     if filename_filter then reaper.ImGui_TextFilter_Set(filename_filter, node.term) end
                     _G.commit_filter_text = node.term
@@ -18673,7 +18904,7 @@ function loop()
                   end
 
                   if not is_filtering then
-                    HandleDragDropSource(id, node.name, false)
+                    HandleDragDropSource(id, item_label, false)
                     HandleDragDropTarget(id, false)
                   end
 
@@ -18735,7 +18966,7 @@ function loop()
           end
 
           reaper.ImGui_SameLine(ctx)
-          if reaper.ImGui_Button(ctx, T("+"), UIScale(40)) then
+          if reaper.ImGui_Button(ctx, T("New"), UIScale(40)) then
             local new_id = new_guid()
             saved_search_nodes[new_id] = { id=new_id, type="folder", name=T("New Group"), children={}, open=true }
             table.insert(root_saved_searches, new_id)
@@ -19011,11 +19242,12 @@ function loop()
         -- 检测数据库切换，清空静态缓存（解决数据库创建时列表为空问题）
         static.last_db_key = static.last_db_key or ""
         if current_db_key ~= static.last_db_key then
-          -- 新数据库，清空所有缓存
-          static.filtered_list_map    = {}
-          static.last_filter_text_map = {}
-          static.last_sort_specs_map  = {}
+          -- 新数据库只失效自己的显示缓存，保留每个数据库的选中路径。
+          static.filtered_list_map[current_db_key] = nil
+          static.last_filter_text_map[current_db_key] = nil
+          static.clipper = nil
           static.last_db_key          = current_db_key
+          SM_RequestDBSelectionRestore(current_db_key)
         end
 
         -- 获取排序状态
@@ -19035,6 +19267,16 @@ function loop()
 
         -- 判断是否有过滤/排序变化
         local sort_specs_str = tostring(sort_specs[1] and sort_specs[1].user_id or "") .. (sort_specs[1] and sort_specs[1].sort_dir or "")
+        if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and sort_specs[1] then
+          local spec = sort_specs[1]
+          static.active_db_sort = {
+            user_id = spec.user_id,
+            sort_dir = spec.sort_dir,
+            col_name = SM_DBColumnNameFromUserID(spec.user_id),
+            ascending = (spec.sort_dir == reaper.ImGui_SortDirection_Ascending()) and 1 or 0,
+            signature = sort_specs_str
+          }
+        end
 
         local eff_text = _G.commit_filter_text or ""
         local ucs_sig  = tostring(temp_search_field or "") .. "|" .. tostring(temp_search_keyword or "")
@@ -19071,27 +19313,12 @@ function loop()
           -- 执行排序
           if target_ctx and #sort_specs > 0 then
             local spec = sort_specs[1]
-            local col_name = "filename"
-            -- 映射列 ID 到数据库列名，C++ 接口要求
-            if spec.user_id == TableColumns.SIZE then col_name = "size"
-            elseif spec.user_id == TableColumns.DATE then col_name = "date" -- elseif spec.user_id == TableColumns.DATE then col_name = "mtime" 日期与最后修改时间临时修改
-            elseif spec.user_id == TableColumns.LENGTH then col_name = "len"
-            elseif spec.user_id == TableColumns.BPM then col_name = "bpm"
-            elseif spec.user_id == TableColumns.SAMPLERATE then col_name = "sr"
-            elseif spec.user_id == TableColumns.CHANNELS then col_name = "ch"
-            elseif spec.user_id == TableColumns.BITS then col_name = "bits"
-            elseif spec.user_id == TableColumns.TYPE then col_name = "type"
-            elseif spec.user_id == TableColumns.GENRE then col_name = "genre"
-            elseif spec.user_id == TableColumns.DESCRIPTION then col_name = "desc"
-            elseif spec.user_id == TableColumns.COMMENT then col_name = "comment"
-            elseif spec.user_id == TableColumns.CATEGORY then col_name = "cat"
-            elseif spec.user_id == TableColumns.SUBCATEGORY then col_name = "subcat"
-            elseif spec.user_id == TableColumns.CATID then col_name = "catid"
-            elseif spec.user_id == TableColumns.KEY then col_name = "key"
-            end
+            local col_name = SM_DBColumnNameFromUserID(spec.user_id)
 
             local is_asc = (spec.sort_dir == reaper.ImGui_SortDirection_Ascending()) and 1 or 0
+            SM_RememberDBSelection(current_db_key, filtered_list or _G.current_display_list, selected_row)
             reaper.SM_DB_Sort(target_ctx, col_name, is_asc)
+            SM_RequestDBSelectionRestore(current_db_key)
 
             -- 接管列表
             if not is_search_view then
@@ -19122,6 +19349,21 @@ function loop()
 
         if not db_loader.active and (filter_changed or sort_changed or not filtered_list) then
           filtered_list = BuildFilteredList(files_idx_cache)
+          local native_handle_sorted = false
+          if #sort_specs > 0 and filtered_list and filtered_list._handle
+            and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+            and reaper.APIExists("SM_DB_Sort")
+            and (filtered_list._handle ~= db_loader.ctx or sort_changed) then
+            local spec = sort_specs[1]
+            SM_RememberDBSelection(current_db_key, _G.current_display_list, selected_row)
+            reaper.SM_DB_Sort(
+              filtered_list._handle,
+              SM_DBColumnNameFromUserID(spec.user_id),
+              (spec.sort_dir == reaper.ImGui_SortDirection_Ascending()) and 1 or 0
+            )
+            native_handle_sorted = true
+            SM_RequestDBSelectionRestore(current_db_key)
+          end
           -- 回退到旧排序
           if #sort_specs > 0 and filtered_list and (not filtered_list._handle) and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
             table.sort(filtered_list, function(a, b)
@@ -19338,7 +19580,8 @@ function loop()
           end
           static.filtered_list_map[current_db_key] = filtered_list
           static.last_filter_text_map[current_db_key] = eff
-          if filter_changed and filtered_list and filtered_list._handle and #sort_specs > 0 then
+          if filter_changed and filtered_list and filtered_list._handle and #sort_specs > 0
+            and filtered_list._handle ~= db_loader.ctx and not native_handle_sorted then
             static.last_sort_specs_map[current_db_key] = ""
           else
             static.last_sort_specs_map[current_db_key] = sort_specs_str
@@ -19354,6 +19597,7 @@ function loop()
         end
 
         _G.current_display_list = filtered_list
+        SM_ApplyPendingDBSelectionRestore(current_db_key, filtered_list)
 
         -- 字体大小自由缩放
         local wheel = reaper.ImGui_GetMouseWheel(ctx)
@@ -19487,29 +19731,30 @@ function loop()
         if not static.clipper then static.clipper = reaper.ImGui_CreateListClipper(ctx) end
         reaper.ImGui_ListClipper_Begin(static.clipper, display_count)
 
-        -- 新增随机播放预滚动，强制把目标行拉入可视区并居中
+        -- 先让 clipper 强制提交目标行，再在该行真正渲染后精确居中。
+        -- 直接按滚动比例估算在大型列表首次显示时不可靠，此时 ScrollMaxY 仍可能为 0。
         do
-          if _G.scroll_request_index and #filtered_list > 0 then
-            local total = #filtered_list
+          if _G.scroll_request_top and not _G.scroll_request_index and not _G.scroll_request_index_exact then
+            reaper.ImGui_SetScrollY(ctx, 0)
+            _G.scroll_request_top = nil
+          end
+          if _G.scroll_request_index and display_count > 0 then
+            local total = display_count
             local idx   = math.max(1, math.min(total, _G.scroll_request_index))
             local align = _G.scroll_request_align or 0.5
-
-            local max_y = reaper.ImGui_GetScrollMaxY(ctx)   -- 当前窗口的最大可滚动距离
-            local win_h = reaper.ImGui_GetWindowHeight(ctx) -- 可视高度
-            local total_h = max_y + win_h                   -- 估算内容总高度
-
-            local center_ratio = (idx - 0.5) / total
-            local target_top = center_ratio * total_h - align * win_h
-            target_top = math.max(0, math.min(target_top, max_y))
-
-            local y0 = reaper.ImGui_GetScrollY(ctx)
-            reaper.ImGui_SetScrollY(ctx, target_top)
-            local y1 = reaper.ImGui_GetScrollY(ctx)
 
             _G.scroll_request_index_exact = idx
             _G.scroll_request_align_exact = align
             _G.scroll_request_index = nil
             _G.scroll_request_align = nil
+            _G.scroll_request_top = nil
+          end
+
+          if _G.scroll_request_index_exact and reaper.ImGui_ListClipper_IncludeItemByIndex then
+            reaper.ImGui_ListClipper_IncludeItemByIndex(
+              static.clipper,
+              math.max(0, _G.scroll_request_index_exact - 1)
+            )
           end
         end
 
@@ -19536,15 +19781,13 @@ function loop()
             local info = filtered_list[i]
             reaper.ImGui_TableNextRow(ctx, reaper.ImGui_TableRowFlags_None(), scaled_row_height)
 
-            -- 新增随机播放精确置中，当目标行提交到可视区时做最终对齐
+            RenderFileRowByColumns(ctx, i, info, scaled_row_height, collect_mode, idle_time)
+
+            -- 目标行已提交完成，此时 SetScrollHereY 可以可靠地让选中项居中可见。
             if _G.scroll_request_index_exact and i == _G.scroll_request_index_exact then
-              local y0 = reaper.ImGui_GetScrollY(ctx)
               reaper.ImGui_SetScrollHereY(ctx, _G.scroll_request_align_exact or 0.5)
-              local y1 = reaper.ImGui_GetScrollY(ctx)
               _G.scroll_request_index_exact, _G.scroll_request_align_exact = nil, nil
             end
-
-            RenderFileRowByColumns(ctx, i, info, scaled_row_height, collect_mode, idle_time)
 
             -- 上下按键自动滚动到可见行并且高亮
             if selected_row == i and _G.scroll_target then
@@ -20326,7 +20569,7 @@ function loop()
     -- 计算当前显示的名称
     local current_target_alias = "None"
     if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
-      current_target_alias = (mediadb_alias and mediadb_alias[tree_state.target_mediadb]) or tree_state.target_mediadb
+      current_target_alias = GetMediaDBDisplayName(tree_state.target_mediadb)
     end
 
     if reaper.ImGui_BeginCombo(ctx, "##target_db_combo", current_target_alias, reaper.ImGui_ComboFlags_HeightLarge()) then
@@ -20372,7 +20615,7 @@ function loop()
 
       -- 渲染数据库列表选项
       for _, dbfile in ipairs(ordered_dbs) do
-        local alias = (mediadb_alias and mediadb_alias[dbfile]) or dbfile
+        local alias = GetMediaDBDisplayName(dbfile)
         local is_selected = (tree_state.target_mediadb == dbfile)
 
         if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##target_mediadb_" .. tostring(dbfile), is_selected) then
@@ -21871,7 +22114,8 @@ function loop()
             -- 自动用文件夹名
             alias = db_build_task.root_path and db_build_task.root_path:match("([^/\\]+)[/\\]?$") or filename
           end
-          mediadb_alias[filename] = filename -- alias -- 中断时不使用别名
+          mediadb_alias[filename] = alias
+          mediadb_display_name_cache[filename] = nil
           SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
 
           db_build_task = nil

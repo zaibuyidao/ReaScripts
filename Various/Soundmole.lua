@@ -1,9 +1,12 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.204
+-- @version 1.0.205
 -- @changelog
---   Moved Soundmole persistent settings to data\Soundmole.ini for centralized configuration storage.
---   Support reaper_soundmole-x64.dll v0.0.28
+--   Improved filename sorting performance by avoiding repeated full-path scans in large databases.
+--   Database switching now applies the current column sort before showing the list, avoiding a visible resort refresh.
+--   Each database now remembers its selected file independently and restores it with automatic scrolling when switching back.
+--   Optimized memory cleanup during large database switching to reduce stutter.
+--   Support reaper_soundmole-x64.dll v0.0.29
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
