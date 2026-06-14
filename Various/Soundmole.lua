@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.206
+-- @version 1.0.207
 -- @changelog
---   Improved waveform preview timeline labels with a clearer new display format.
---   Improved waveform zoom rendering by using true min/max aggregation, preserving transients and tail content.
+--   Improved system icon rendering.
 --   Support reaper_soundmole-x64.dll v0.0.30
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -19,10 +18,7 @@
 --   [nomain] Soundmole/lib/*.py
 --   [nomain] Soundmole/lib/*.cur
 --   Soundmole/lang/*.txt
---   Soundmole/data/*.csv
---   Soundmole/data/icons.otf
---   Soundmole/data/icons-regular.otf
---   Soundmole/data/odrf_upr_regular.otf
+--   Soundmole/fonts/*.otf
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about
 --   Requires:

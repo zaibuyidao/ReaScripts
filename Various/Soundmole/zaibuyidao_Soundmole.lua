@@ -221,11 +221,48 @@ reaper.ImGui_Attach(ctx, fonts.medium)
 reaper.ImGui_Attach(ctx, fonts.large)
 reaper.ImGui_Attach(ctx, fonts.title)
 -- 图标字体
-local icon_font_path = normalize_path(script_path .. "data/icons-regular.otf", false)
+ICON_CODEPOINTS = {
+  search_previous_next = 0x0180,
+  lock_closed          = 0x0162,
+  lock_open            = 0x0163,
+  folder_closed        = 0x0164,
+  folder_open          = 0x0165,
+
+  database             = 0x0169,
+  settings             = 0x0114,
+  zoom_menu            = 0x0130,
+
+  sidebar_left         = 0x0110,
+  sidebar_right        = 0x0116,
+
+  play                 = 0x0103,
+  pause                = 0x0104,
+  jump_to_start        = 0x0102,
+  previous_track       = 0x0100,
+  stop                 = 0x0105,
+  next_track           = 0x0108,
+  repeat_on            = 0x010D,
+  shuffle              = 0x0147,
+
+  thesaurus            = 0x0117,
+  edit_thesaurus       = 0x00E0,
+}
+material_font_path = normalize_path(script_path .. "fonts/icons-regular.otf", false)
+MATERIAL_ICONS_USING_FULL_SET = reaper.file_exists(material_font_path)
+icon_font_path = MATERIAL_ICONS_USING_FULL_SET and material_font_path
+MATERIAL_ICONS = {}
+for name, codepoint in pairs(ICON_CODEPOINTS) do
+  local effective_codepoint = codepoint
+  MATERIAL_ICONS[name] = utf8.char(effective_codepoint)
+end
+fonts.material = reaper.ImGui_CreateFontFromFile(icon_font_path, 0)
+reaper.ImGui_Attach(ctx, fonts.material)
+-- 图标字体
+local icon_font_path = normalize_path(script_path .. "fonts/icons-regular.otf", false)
 fonts.icon = reaper.ImGui_CreateFontFromFile(icon_font_path, 0)
 reaper.ImGui_Attach(ctx, fonts.icon)
 -- 数字字体
-local odrf_font_path = normalize_path(script_path .. "data/odrf_upr_regular.otf", false)
+local odrf_font_path = normalize_path(script_path .. "fonts/odrf_upr_regular.otf", false)
 fonts.odrf = reaper.ImGui_CreateFontFromFile(odrf_font_path, 0)
 reaper.ImGui_Attach(ctx, fonts.odrf)
 
@@ -6858,12 +6895,12 @@ function DrawFilterLockToggle(ctx)
 
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text)
 
-  PushUIFont(ctx, fonts.icon, 20)
+  PushUIFont(ctx, fonts.material, 20)
   local lock_on = _G.filter_lock_enabled
-  local text_label = (lock_on and '\u{0163}') or '\u{0162}' -- 关=0163; 开=0162
+  local text_label = lock_on and MATERIAL_ICONS.lock_open or MATERIAL_ICONS.lock_closed -- 关=0163; 开=0162
   -- 固定宽高占位，并与顶部工具栏其它图标共用同一套居中规则
-  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0163}'))
-  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0162}'))
+  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, MATERIAL_ICONS.lock_open))
+  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, MATERIAL_ICONS.lock_closed))
   local reserve_w = math.max(w1 or 0, w2 or 0)
   local col = lock_on and colors.icon_on or colors.icon_off
   local hovered, clicked = DrawTextCenteredInBox(ctx, text_label, col, GetTopbarAlignHeight(ctx), "##filter_lock_toggle", reserve_w)
@@ -14471,11 +14508,25 @@ function DrawTitleTextCenteredInBox(ctx, text, col, box_h, id)
   return reaper.ImGui_IsItemHovered(ctx), reaper.ImGui_IsItemClicked(ctx, 0), text_w or 0, box_h
 end
 
+function DrawMaterialIconCenteredInRect(ctx, glyph, col, x, y, w, h, font_size)
+  PushUIFont(ctx, fonts.material, font_size)
+  local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph)
+  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+  reaper.ImGui_DrawList_AddText(
+    draw_list,
+    x + math.max(0, (w - (tw or 0)) * 0.5),
+    y + math.max(0, (h - (th or 0)) * 0.5),
+    col,
+    glyph
+  )
+  reaper.ImGui_PopFont(ctx)
+end
+
 --------------------------------------------- 播放控制按钮 ---------------------------------------------
 
 function UI_PlayIconTrigger_Play(ctx)
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0103}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.play
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -14540,8 +14591,8 @@ end
 function UI_PlayIconTrigger_Pause(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   local highlight_resume = (is_paused and playing_source) and true or false
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0104}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.pause
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -14605,8 +14656,8 @@ end
 
 function UI_PlayIconTrigger_JumpToStart(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0102}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.jump_to_start
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -14647,8 +14698,8 @@ end
 
 function UI_PlayIconTrigger_Stop(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0105}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.stop
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -14681,8 +14732,8 @@ end
 
 function UI_PlayIconTrigger_Prev(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0100}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.previous_track
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -14726,8 +14777,8 @@ end
 
 function UI_PlayIconTrigger_Next(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0108}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.next_track
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -14771,8 +14822,8 @@ end
 
 function UI_PlayIconTrigger_Rand(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0147}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.shuffle
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -14818,8 +14869,8 @@ function UI_PlayIconTrigger_Loop(ctx)
 
   local highlight_loop = loop_enabled and true or false
 
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{010D}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.repeat_on
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
   local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -15286,11 +15337,11 @@ function DBPF_DrawDatabaseFolderButton(ctx)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- in_db_mode and colors.icon_on or colors.normal_text
 
   -- 固定字体宽度占位 + 居中绘制，确保两种字形宽度一致
-  PushUIFont(ctx, fonts.icon, 20)
-  local text_label = in_db_mode and '\u{0165}' or '\u{0164}'
+  PushUIFont(ctx, fonts.material, 20)
+  local text_label = in_db_mode and MATERIAL_ICONS.folder_open or MATERIAL_ICONS.folder_closed
   -- 计算两种字形在该字号下的最大宽度
-  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0165}'))
-  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, '\u{0164}'))
+  local w1 = select(1, reaper.ImGui_CalcTextSize(ctx, MATERIAL_ICONS.folder_open))
+  local w2 = select(1, reaper.ImGui_CalcTextSize(ctx, MATERIAL_ICONS.folder_closed))
   local reserve_w = math.max(w1 or 0, w2 or 0)
   local col = in_db_mode and colors.icon_on or colors.icon_off
   local hovered, clicked = DrawTextCenteredInBox(ctx, text_label, col, GetTopbarAlignHeight(ctx), "##db_icon", reserve_w)
@@ -15338,8 +15389,8 @@ album_panel_tab_restore_pending = true
 
 -- 左侧表格显示/隐藏切换按钮
 function SM_DrawLeftTableToggle(ctx)
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0110}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.sidebar_left
   local dy = 0
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
@@ -15374,8 +15425,8 @@ end
 
 -- 右侧专辑/metadata 面板显示/隐藏切换按钮
 function SM_DrawAlbumPanelToggle(ctx, align_right)
-  PushUIFont(ctx, fonts.icon, 16)
-  local glyph = '\u{0110}'
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.sidebar_right
   local dy = 0
   if align_right then
     reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
@@ -15952,8 +16003,8 @@ function loop()
       local can_next = (history_count > 1) and (cur_idx > 1)
       local can_any  = can_prev or can_next
 
-      PushUIFont(ctx, fonts.icon, 20)
-      local glyph = '\u{0160}' -- 使用'上一条'图标
+      PushUIFont(ctx, fonts.material, 20)
+      local glyph = MATERIAL_ICONS.search_previous_next -- 使用'上一条'图标
 
       local hovered, clicked = DrawTextCenteredInBox(ctx, glyph, function(is_hovered, is_active)
         if not can_any then return colors.icon_off end
@@ -16112,7 +16163,7 @@ function loop()
 
       local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
 
-      if reaper.ImGui_InvisibleButton(ctx, "T##use_synonyms", button_w, button_h) then
+      if reaper.ImGui_InvisibleButton(ctx, "##use_synonyms", button_w, button_h) then
         use_synonyms = not use_synonyms
 
         -- 同义词勾选时强制重建，否则不工作
@@ -16129,49 +16180,10 @@ function loop()
       end
 
       local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-
       local col = (use_synonyms or hovered) and colors.icon_on or colors.icon_off
-      local border_col = (use_synonyms or hovered) and colors.icon_on or colors.icon_off
-      local pad = UIScale(1)
-      local rounding = UIScale(4)
-      local thickness = UIScale(1)
 
-      reaper.ImGui_DrawList_AddRect(
-        draw_list,
-        x + pad, y + pad,
-        x + button_w - pad, y + button_h - pad,
-        border_col,
-        rounding,
-        0,
-        thickness
-      )
+      DrawMaterialIconCenteredInRect(ctx, MATERIAL_ICONS.thesaurus, col, x, y, button_w, button_h, 16)
 
-      -- 像素 T 图标
-      local icon_size = button_h * 0.52
-      local icon_x = x + (button_w - icon_size) * 0.5
-      local icon_y = y + (button_h - icon_size) * 0.5
-
-      local unit = icon_size / 5
-
-      -- 横条：XXXXX
-      reaper.ImGui_DrawList_AddRectFilled(
-        draw_list,
-        icon_x,
-        icon_y,
-        icon_x + icon_size,
-        icon_y + unit,
-        col
-      )
-
-      -- 竖条：中间一格
-      reaper.ImGui_DrawList_AddRectFilled(
-        draw_list,
-        icon_x + unit * 2,
-        icon_y + unit,
-        icon_x + unit * 3,
-        icon_y + icon_size,
-        col
-      )
     end
 
     _G.just_committed_filter = false
@@ -16333,7 +16345,7 @@ function loop()
 
       local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
 
-      if reaper.ImGui_InvisibleButton(ctx, "E##open_thesaurus", button_w, button_h) then
+      if reaper.ImGui_InvisibleButton(ctx, "##open_thesaurus", button_w, button_h) then
         reaper.CF_ShellExecute(thesaurus_csv_path)
       end
 
@@ -16349,72 +16361,9 @@ function loop()
       end
 
       local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-
-      -- 状态颜色
       local col = hovered and colors.icon_on or colors.icon_off
-      local border_col = hovered and colors.icon_on or colors.icon_off
 
-      -- 按钮外框细线
-      local pad = UIScale(1)
-      local rounding = UIScale(4)
-      local thickness = UIScale(1)
-
-      reaper.ImGui_DrawList_AddRect(
-        draw_list,
-        x + pad, y + pad,
-        x + button_w - pad, y + button_h - pad,
-        border_col,
-        rounding,
-        0,
-        thickness
-      )
-
-      -- 像素 E 图标
-      local icon_size = button_h * 0.52
-      local icon_x = x + (button_w - icon_size) * 0.5
-      local icon_y = y + (button_h - icon_size) * 0.5
-
-      local unit = icon_size / 5
-
-      -- 左竖条
-      reaper.ImGui_DrawList_AddRectFilled(
-        draw_list,
-        icon_x,
-        icon_y,
-        icon_x + unit,
-        icon_y + icon_size,
-        col
-      )
-
-      -- 上横条
-      reaper.ImGui_DrawList_AddRectFilled(
-        draw_list,
-        icon_x,
-        icon_y,
-        icon_x + icon_size,
-        icon_y + unit,
-        col
-      )
-
-      -- 中横条
-      reaper.ImGui_DrawList_AddRectFilled(
-        draw_list,
-        icon_x,
-        icon_y + unit * 2,
-        icon_x + icon_size * 0.85,
-        icon_y + unit * 3,
-        col
-      )
-
-      -- 下横条
-      reaper.ImGui_DrawList_AddRectFilled(
-        draw_list,
-        icon_x,
-        icon_y + unit * 4,
-        icon_x + icon_size,
-        icon_y + icon_size,
-        col
-      )
+      DrawMaterialIconCenteredInRect(ctx, MATERIAL_ICONS.edit_thesaurus, col, x, y, button_w, button_h, 16)
     end
 
     reaper.ImGui_PopStyleColor(ctx)
@@ -16669,8 +16618,8 @@ function loop()
     end
 
     reaper.ImGui_SameLine(ctx, nil, 10)
-    PushUIFont(ctx, fonts.icon, 16)
-    local glyph = '\u{0169}'
+    PushUIFont(ctx, fonts.material, 16)
+    local glyph = MATERIAL_ICONS.database
     local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
     local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -16887,8 +16836,8 @@ function loop()
 
     -- 设置弹窗图标
     reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
-    PushUIFont(ctx, fonts.icon, 16)
-    local glyph = '\u{0114}'
+    PushUIFont(ctx, fonts.material, 16)
+    local glyph = MATERIAL_ICONS.settings
     local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
     local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
@@ -16915,8 +16864,8 @@ function loop()
     
     -- 界面缩放图标
     reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
-    PushUIFont(ctx, fonts.icon, 16)
-    local glyph = '\u{0130}'
+    PushUIFont(ctx, fonts.material, 16)
+    local glyph = MATERIAL_ICONS.zoom_menu
     local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
 
     local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
