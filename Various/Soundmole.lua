@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.207
+-- @version 1.0.208
 -- @changelog
 --   Improved system icon rendering.
 --   Support reaper_soundmole-x64.dll v0.0.30
@@ -18,6 +18,7 @@
 --   [nomain] Soundmole/lib/*.py
 --   [nomain] Soundmole/lib/*.cur
 --   Soundmole/lang/*.txt
+--   Soundmole/data/*.csv
 --   Soundmole/fonts/*.otf
 -- @donation http://www.paypal.me/zaibuyidao
 -- @about
