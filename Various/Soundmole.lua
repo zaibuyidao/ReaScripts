@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.208
+-- @version 1.0.209
 -- @changelog
---   Improved system icon rendering.
+--   Added support for new themes.
 --   Support reaper_soundmole-x64.dll v0.0.30
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
@@ -18,6 +18,7 @@
 --   [nomain] Soundmole/lib/*.py
 --   [nomain] Soundmole/lib/*.cur
 --   Soundmole/lang/*.txt
+--   Soundmole/themes/*.smcol
 --   Soundmole/data/*.csv
 --   Soundmole/fonts/*.otf
 -- @donation http://www.paypal.me/zaibuyidao

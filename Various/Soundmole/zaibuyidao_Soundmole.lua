@@ -863,6 +863,116 @@ function copy_shallow(t)
   return r
 end
 local DEFAULT_COLORS = copy_shallow(colors)
+SM_Theme = {
+  builtin_professional_colors = {
+  big_button_active           = 0x526678FF,
+  big_button_border           = 0xE8ECEF28,
+  big_button_hovered          = 0x526678FF,
+  big_button_normal           = 0x22272CFF,
+  button_active               = 0x526678FF,
+  button_hovered              = 0x526678FF,
+  button_normal               = 0x3C4854FF,
+  check_mark                  = 0x78A4C4FF,
+  cyan                        = 0x71B6C8FF,
+  dnd_preview                 = 0x6EAA8690,
+  drag_reference_block        = 0x929CA5FF,
+  frame_bg                    = 0x293038FF,
+  frame_bg_active             = 0x40505EFF,
+  frame_bg_hovered            = 0x343E48FF,
+  fs_button_active            = 0x78A4C4FF,
+  fs_button_hovered           = 0x78A4C4E0,
+  fs_button_normal            = 0x526678FF,
+  fs_search_button_active     = 0xC4A468C8,
+  fs_search_button_hovered    = 0xC4A468E8,
+  fs_search_button_normal     = 0xC4A46878,
+  gray                        = 0x929CA5FF,
+  header                      = 0x3C485438,
+  header_active               = 0x526678FF,
+  header_hovered              = 0x526678E8,
+  header_item_selected        = 0x78A4C458,
+  icon_active                 = 0x78A4C4FF,
+  icon_hovered                = 0x78A4C4FF,
+  icon_normal                 = 0xE8ECEF88,
+  icon_off                    = 0x929CA588,
+  icon_on                     = 0xE8ECEFFF,
+  knob_active                 = 0x526678FF,
+  knob_hovered                = 0x526678FF,
+  knob_indicator              = 0x78A4C4FF,
+  knob_normal                 = 0x3C4854FF,
+  knob_outline                = 0xE8ECEF28,
+  link_text                   = 0x78A4C4FF,
+  mole                        = 0xC4A468FF,
+  normal_text                 = 0xE8ECEFFF,
+  peak_meter_bg               = 0x0B0D0FFF,
+  peak_meter_normal           = 0x6EAA86FF,
+  popup_bg                    = 0x181B1EFF,
+  preview_pint_bg             = 0x6EAA86FF,
+  preview_pint_play_cursor    = 0xC4A468FF,
+  preview_pint_text           = 0xE8ECEFFF,
+  preview_play_cursor         = 0x78A4C4FF,
+  previewed_text              = 0x929CA5FF,
+  scrollbar_bg                = 0x0B0D0FA0,
+  scrollbar_grab_active       = 0x526678FF,
+  scrollbar_grab_hovered      = 0x526678E8,
+  scrollbar_grab_normal       = 0x3C4854E0,
+  separator_line              = 0x929CA568,
+  separator_line_active       = 0x78A4C4FF,
+  settings_header_bg          = 0x3C485470,
+  slider_grab                 = 0x929CA5E0,
+  slider_grab_active          = 0xE8ECEFFF,
+  status_active               = 0x78A4C4FF,
+  tab                         = 0x3C4854FF,
+  tab_hovered                 = 0x526678E8,
+  tab_selected                = 0x526678FF,
+  tab_selected_overline       = 0x78A4C4FF,
+  table_border_light          = 0x929CA558,
+  table_border_strong         = 0xE8ECEF38,
+  table_header                = 0x3C4854A0,
+  table_header_active         = 0x526678FF,
+  table_header_bg             = 0x3C485480,
+  table_header_hovered        = 0x526678E8,
+  table_play_cursor           = 0x78A4C4FF,
+  table_separator             = 0x929CA5D0,
+  table_separator_active      = 0x78A4C4FF,
+  table_separator_hovered     = 0xE8ECEFC8,
+  tag_border                  = 0x929CA570,
+  tag_close_bg                = 0x0B0D0FD0,
+  tag_hovered                 = 0x526678FF,
+  tag_normal                  = 0x3C4854FF,
+  tag_selected                = 0x526678FF,
+  thesaurus_text              = 0x6EAA86FF,
+  timeline_bg_color           = 0x3C485458,
+  timeline_def_color          = 0x929CA588,
+  timeline_text               = 0xE8ECEFFF,
+  title_bg                    = 0x0B0D0FFF,
+  title_bg_active             = 0x22272CFF,
+  title_bg_collapse           = 0x0B0D0FB0,
+  transparent                 = 0x11131500,
+  volume_bg                   = 0x0B0D0F70,
+  volume_bg_border            = 0xE8ECEF20,
+  volume_fader                = 0x929CA5D0,
+  volume_fader_active         = 0xE8ECEFFF,
+  volume_fader_outline        = 0xE8ECEFFF,
+  volume_line_hovered         = 0x78A4C4FF,
+  volume_line_normal          = 0x526678FF,
+  volume_line_tick            = 0xE8ECEFFF,
+  wave_center                 = 0x8FA9B878,
+  wave_line                   = 0x8FA9B8D8,
+  wave_line_selected          = 0x78A4C488,
+  window_bg                   = 0x181B1EFF,
+  },
+  dir = script_path .. "themes" .. sep,
+  default_filename = "Soundmole_Default_Professional.smcol",
+  state_key = "color_theme",
+  current_filename = "Soundmole_Default_Professional.smcol",
+  last_import_msg = nil,
+  last_export_msg = nil,
+}
+
+for k, v in pairs(SM_Theme.builtin_professional_colors) do
+  DEFAULT_COLORS[k] = v
+  colors[k] = v
+end
 if Freesound and Freesound.configure then
   Freesound.configure({
     script_path = script_path,
@@ -874,13 +984,7 @@ end
 
 -- 加载已保存颜色
 function LoadColorsFromState()
-  for k in pairs(DEFAULT_COLORS) do
-    local saved = SM_GetState(EXT_SECTION, "jb_color" .. k)
-    if saved and saved ~= "" then
-      local n = tonumber(saved)
-      if n then colors[k] = n end
-    end
-  end
+  SM_Theme.LoadSelectedAtStartup()
 end
 
 -- 保存单个颜色
@@ -898,8 +1002,7 @@ end
 
 -- 恢复默认并保存
 function RestoreAllColorsToDefault()
-  for k, v in pairs(DEFAULT_COLORS) do colors[k] = v end
-  SaveAllColorsToState()
+  SM_Theme.ActivateDefault(true)
 end
 
 -- 排序后的颜色键名
@@ -946,31 +1049,191 @@ function ExportColorsToFile(path)
   return true
 end
 
--- 导入
-function ImportColorsFromFile(path)
+-- 颜色菜单
+function SM_Theme.IsFilename(filename)
+  return type(filename) == "string"
+    and filename ~= ""
+    and not filename:find("[/\\]")
+    and filename:lower():match("%.smcol$") ~= nil
+end
+
+function SM_Theme.Path(filename)
+  return SM_Theme.dir .. filename
+end
+
+function SM_Theme.FileExists(filename)
+  return SM_Theme.IsFilename(filename) and reaper.file_exists(SM_Theme.Path(filename))
+end
+
+function SM_Theme.ListFiles()
+  local files = {}
+  local i = 0
+  while true do
+    local filename = reaper.EnumerateFiles(SM_Theme.dir, i)
+    if not filename then break end
+    if SM_Theme.IsFilename(filename) then files[#files + 1] = filename end
+    i = i + 1
+  end
+  table.sort(files, function(a, b) return a:lower() < b:lower() end)
+  return files
+end
+
+function SM_Theme.ReadColorConfigFile(path)
   local f, err = io.open(path, "r")
-  if not f then return false, 0, 0, ("Unable to read file: " .. tostring(err or "")) end -- 无法读取文件
-  local changed, total = 0, 0
+  if not f then return false, nil, 0, ("Unable to read file: " .. tostring(err or "")) end
+
+  local values, total = {}, 0
   for line in f:lines() do
     local s = line:match("^%s*(.-)%s*$")
     if s ~= "" and not s:match("^#") and not s:match("^;") then
       local key, val = s:match("^([%w_]+)%s*=%s*(.+)$")
       if key and val and colors[key] ~= nil then
-        total = total + 1
         local n = _parse_color_value(val)
         if n then
-          if colors[key] ~= n then changed = changed + 1 end
-          colors[key] = n
-          SM_SetState(EXT_SECTION, "jb_color" .. key, tostring(n), true)
+          if values[key] == nil then total = total + 1 end
+          values[key] = n
         end
       end
     end
   end
   f:close()
+
+  if total == 0 then return false, nil, 0, T("No valid Soundmole colors were found in the selected file.") end
+  return true, values, total
+end
+
+function SM_Theme.ApplyColorValues(values, reset_to_professional, persist)
+  local before = copy_shallow(colors)
+  if reset_to_professional then
+    for k, v in pairs(DEFAULT_COLORS) do colors[k] = v end
+  end
+  for k, v in pairs(values or {}) do
+    if colors[k] ~= nil then colors[k] = v end
+  end
+
+  local changed = 0
+  for k, v in pairs(colors) do
+    if before[k] ~= v then changed = changed + 1 end
+  end
+  if persist then SaveAllColorsToState() end
+  return changed
+end
+
+function SM_Theme.ActivateBuiltInProfessional(persist)
+  local changed = SM_Theme.ApplyColorValues(DEFAULT_COLORS, true, persist)
+  SM_Theme.current_filename = SM_Theme.default_filename
+  if persist then SM_SetState(EXT_SECTION, SM_Theme.state_key, SM_Theme.current_filename, true) end
+  return true, changed, #sorted_color_keys()
+end
+
+function SM_Theme.ActivateFile(filename, persist)
+  if not SM_Theme.FileExists(filename) then
+    return false, 0, 0, string.format(T("Theme file not found: %s"), tostring(filename or ""))
+  end
+
+  local ok, values, total, err = SM_Theme.ReadColorConfigFile(SM_Theme.Path(filename))
+  if not ok then return false, 0, total or 0, err end
+
+  local changed = SM_Theme.ApplyColorValues(values, true, persist)
+  SM_Theme.current_filename = filename
+  if persist then SM_SetState(EXT_SECTION, SM_Theme.state_key, SM_Theme.current_filename, true) end
   return true, changed, total
 end
 
--- 颜色菜单
+function SM_Theme.ActivateDefault(persist)
+  if SM_Theme.FileExists(SM_Theme.default_filename) then
+    local ok, changed, total, err = SM_Theme.ActivateFile(SM_Theme.default_filename, persist)
+    if ok then return ok, changed, total, err end
+  end
+  return SM_Theme.ActivateBuiltInProfessional(persist)
+end
+
+function SM_Theme.LoadSelectedAtStartup()
+  local selected = SM_GetState(EXT_SECTION, SM_Theme.state_key)
+  if not selected or selected == "" then selected = SM_Theme.default_filename end
+
+  if SM_Theme.FileExists(selected) then
+    local ok, changed, total, err = SM_Theme.ActivateFile(selected, false)
+    if ok then return ok, changed, total, err end
+  end
+  return SM_Theme.ActivateDefault(false)
+end
+
+function ImportColorsFromFile(path, persist)
+  local ok, values, total, err = SM_Theme.ReadColorConfigFile(path)
+  if not ok then return false, 0, total or 0, err end
+  local changed = SM_Theme.ApplyColorValues(values, false, persist ~= false)
+  return true, changed, total
+end
+
+function SM_Theme.ComparablePath(path)
+  return tostring(path or ""):gsub("/", "\\"):gsub("\\+$", ""):lower()
+end
+
+function SM_Theme.CopyFile(source_path, destination_path)
+  if SM_Theme.ComparablePath(source_path) == SM_Theme.ComparablePath(destination_path) then return true end
+
+  local source, source_err = io.open(source_path, "rb")
+  if not source then return false, source_err end
+  local destination, destination_err = io.open(destination_path, "wb")
+  if not destination then
+    source:close()
+    return false, destination_err
+  end
+
+  while true do
+    local chunk = source:read(65536)
+    if not chunk then break end
+    local ok, write_err = destination:write(chunk)
+    if not ok then
+      source:close()
+      destination:close()
+      return false, write_err
+    end
+  end
+  source:close()
+  local ok, close_err = destination:close()
+  if not ok then return false, close_err end
+  return true
+end
+
+function SM_Theme.UniqueImportedFilename(filename, source_path)
+  local destination = SM_Theme.Path(filename)
+  if SM_Theme.ComparablePath(source_path) == SM_Theme.ComparablePath(destination) or not reaper.file_exists(destination) then
+    return filename
+  end
+
+  local stem = filename:sub(1, -7)
+  local i = 2
+  while reaper.file_exists(SM_Theme.Path(string.format("%s (%d).smcol", stem, i))) do
+    i = i + 1
+  end
+  return string.format("%s (%d).smcol", stem, i)
+end
+
+function SM_Theme.ImportFile(path)
+  local filename = tostring(path or ""):match("([^/\\]+)$")
+  if not SM_Theme.IsFilename(filename) then
+    return false, nil, 0, 0, T("Please select a .smcol theme file.")
+  end
+
+  local ok, values, total, err = SM_Theme.ReadColorConfigFile(path)
+  if not ok then return false, nil, 0, total or 0, err end
+
+  if reaper.RecursiveCreateDirectory then reaper.RecursiveCreateDirectory(SM_Theme.dir, 0) end
+  filename = SM_Theme.UniqueImportedFilename(filename, path)
+  local destination = SM_Theme.Path(filename)
+  local copied, copy_err = SM_Theme.CopyFile(path, destination)
+  if not copied then
+    return false, nil, 0, total, string.format(T("Unable to copy theme file: %s"), tostring(copy_err or ""))
+  end
+
+  local changed = SM_Theme.ApplyColorValues(values, true, true)
+  SM_Theme.current_filename = filename
+  SM_SetState(EXT_SECTION, SM_Theme.state_key, SM_Theme.current_filename, true)
+  return true, filename, changed, total
+end
+
 function DrawColorsMenuIcon(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
   PushUIFont(ctx, fonts.icon, 18)
@@ -998,31 +1261,63 @@ function DrawColorsMenuIcon(ctx)
   end
 
   if reaper.ImGui_BeginPopup(ctx, "##colors_menu") then
+    if reaper.ImGui_BeginMenu(ctx, T("Themes")) then
+      local theme_files = SM_Theme.ListFiles()
+      local default_file_found = false
+
+      for _, filename in ipairs(theme_files) do
+        if filename == SM_Theme.default_filename then default_file_found = true end
+        local selected = SM_Theme.current_filename == filename
+        if reaper.ImGui_MenuItem(ctx, filename, nil, selected) then
+          local ok, changed, total, err = SM_Theme.ActivateFile(filename, true)
+          SM_Theme.last_import_msg = ok
+            and string.format(T("Theme loaded: %s"), filename)
+            or (err or T("Unable to load theme."))
+        end
+      end
+
+      if #theme_files == 0 then
+        reaper.ImGui_MenuItem(ctx, T("No theme files found"), nil, false, false)
+      end
+
+      if not default_file_found then
+        if #theme_files > 0 then reaper.ImGui_Separator(ctx) end
+        local builtin_label = SM_Theme.default_filename .. " " .. T("(Built-in)")
+        if reaper.ImGui_MenuItem(ctx, builtin_label, nil, SM_Theme.current_filename == SM_Theme.default_filename) then
+          SM_Theme.ActivateBuiltInProfessional(true)
+          SM_Theme.last_import_msg = string.format(T("Theme loaded: %s"), SM_Theme.default_filename)
+        end
+      end
+
+      reaper.ImGui_EndMenu(ctx)
+    end
+
     -- Restore
     if reaper.ImGui_MenuItem(ctx, T("Restore All to Defaults")) then
       RestoreAllColorsToDefault()
+      SM_Theme.last_import_msg = string.format(T("Theme loaded: %s"), SM_Theme.default_filename)
     end
 
     reaper.ImGui_Separator(ctx)
 
     -- Import
     if reaper.ImGui_MenuItem(ctx, T("Import...")) then
-      local dir = reaper.GetResourcePath()
-      local rv, path = reaper.JS_Dialog_BrowseForOpenFiles(T("Import Color Config"), dir, "", "", false)
+      local rv, path = reaper.JS_Dialog_BrowseForOpenFiles(T("Import Color Config"), SM_Theme.dir, "", "", false)
       if rv == 1 and path and path ~= "" then
-        local ok, changed, total, err = ImportColorsFromFile(path)
-        _colors_last_import_msg = ok and (string.format("Imported %d of %d items", changed or 0, total or 0)) or (err or "Import failed")
+        local ok, filename, changed, total, err = SM_Theme.ImportFile(path)
+        SM_Theme.last_import_msg = ok
+          and string.format(T("Imported theme: %s"), filename)
+          or (err or T("Import failed"))
       end
     end
 
     -- Export
     if reaper.ImGui_MenuItem(ctx, T("Export...")) then
-      local dir = reaper.GetResourcePath()
-      local rv, path = reaper.JS_Dialog_BrowseForSaveFile(T("Export Color Config"), dir, "SoundmoleColors.smcol", "")
+      local rv, path = reaper.JS_Dialog_BrowseForSaveFile(T("Export Color Config"), SM_Theme.dir, "SoundmoleColors.smcol", "")
       if rv == 1 and path and path ~= "" then
         if not path:lower():match("%.smcol$") then path = path .. ".smcol" end
         local ok, err = ExportColorsToFile(path)
-        _colors_last_export_msg = ok and ("Exported: " .. path) or (err or "Export failed")
+        SM_Theme.last_export_msg = ok and string.format(T("Exported: %s"), path) or (err or T("Export failed"))
       end
     end
 
@@ -1321,7 +1616,6 @@ do
   -- 各子区块内容
   ----------------------------------------------------------------
   -- 颜色设置
-  local _colors_last_import_msg, _colors_last_export_msg = nil, nil
 
   -- 颜色分组，具体显示内容
   local COLOR_GROUPS = {
@@ -1645,13 +1939,13 @@ do
 
     reaper.ImGui_NewLine(ctx)
     DrawColorsMenuIcon(ctx)
-    if _colors_last_import_msg then
+    if SM_Theme.last_import_msg then
       reaper.ImGui_SameLine(ctx, nil, 10)
-      reaper.ImGui_TextColored(ctx, colors.gray, _colors_last_import_msg)
+      reaper.ImGui_TextColored(ctx, colors.gray, SM_Theme.last_import_msg)
     end
-    if _colors_last_export_msg then
+    if SM_Theme.last_export_msg then
       reaper.ImGui_SameLine(ctx, nil, 10)
-      reaper.ImGui_TextColored(ctx, colors.gray, _colors_last_export_msg)
+      reaper.ImGui_TextColored(ctx, colors.gray, SM_Theme.last_export_msg)
     end
   end
 
