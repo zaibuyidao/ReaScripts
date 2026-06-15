@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.209
+-- @version 1.0.210
 -- @changelog
 --   Added support for new themes.
 --   Support reaper_soundmole-x64.dll v0.0.30
