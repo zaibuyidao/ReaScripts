@@ -481,6 +481,7 @@ local select_start_time = nil          -- 选区起点时间
 local select_end_time = nil            -- 选区终点时间
 selection_edge_drag = nil
 selection_drag_click_valid = false
+audio_drag_block_until_mouse_up = false
 selection_edge_cursor_cache = selection_edge_cursor_cache or {}
 selection_edge_cursor_active = false
 SELECTION_EDGE_HIT_PX = SELECTION_EDGE_HIT_PX or 7
@@ -2830,8 +2831,8 @@ end
 function FirstRowInSelectionMap(rows)
   local first = nil
   for row, selected in pairs(rows or {}) do
-    row = tonumber(row)
-    if selected and row and (not first or row < first) then first = row end
+    local row_num = tonumber(row)
+    if selected and row_num and (not first or row_num < first) then first = row_num end
   end
   return first
 end
@@ -2850,8 +2851,8 @@ function CollectSelectedFileRows(list, fallback_idx)
 
   if type(file_selected_rows) == "table" then
     for row, selected in pairs(file_selected_rows) do
-      row = tonumber(row)
-      if selected and row and list[row] then rows[row] = true end
+      local row_num = tonumber(row)
+      if selected and row_num and list[row_num] then rows[row_num] = true end
     end
   end
 
@@ -8473,13 +8474,14 @@ $h.Keys | Sort-Object | ForEach-Object {
     if f then
       local first = true
       for line in f:lines() do
+        local line_text = line
         if first then
           first = false
-          if line:sub(1,3) == string.char(0xEF,0xBB,0xBF) then
-            line = line:sub(4)
+          if line_text:sub(1,3) == string.char(0xEF,0xBB,0xBF) then
+            line_text = line_text:sub(4)
           end
         end
-        local drv, vol = line:match('^([A-Z]:)%|(.*)$')
+        local drv, vol = line_text:match('^([A-Z]:)%|(.*)$')
         if drv then
           local path = drv .. '\\'
           table.insert(drives, path)
@@ -9031,10 +9033,10 @@ function LoadCustomFolders()
         local exist = {}
         local paths = {}
         for path in items:gmatch("[^;]+") do
-          path = normalize_path(path, false)
-          if path ~= "" and not exist[path] then
-            table.insert(paths, path)
-            exist[path] = true
+          local normalized_path = normalize_path(path, false)
+          if normalized_path ~= "" and not exist[normalized_path] then
+            table.insert(paths, normalized_path)
+            exist[normalized_path] = true
           end
         end
         contents[folder] = paths
@@ -9970,7 +9972,7 @@ end
 -- 读取 Little Endian 32位整数
 function read_le32(f)
   local b = f:read(4)
-  if not b then return 0 end
+  if not b or #b < 4 then return nil end
   local b1, b2, b3, b4 = b:byte(1, 4)
   return b1 + (b2 * 256) + (b3 * 65536) + (b4 * 16777216)
 end
@@ -13445,33 +13447,36 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       end
 
       -- 拖动音频到REAPER或自定义文件夹
-      if reaper.ImGui_BeginDragDropSource(ctx) then
-        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 菜单文字颜色
-        reaper.ImGui_Text(ctx, "Drag to insert or collect")
-        local paths = GetDragPathsForRow(i)
+      local audio_drag_source_flags = reaper.ImGui_DragDropFlags_SourceNoPreviewTooltip
+        and reaper.ImGui_DragDropFlags_SourceNoPreviewTooltip() or 0
+      if not audio_drag_block_until_mouse_up and reaper.ImGui_BeginDragDropSource(ctx, audio_drag_source_flags) then
+        local paths = dragging_audio and dragging_audio.paths or GetDragPathsForRow(i)
+        if not paths then paths = {} end
         if #paths == 0 and info and info.path and info.path ~= "" then
           table.insert(paths, normalize_path(info.path, false))
         end
-        local drag_preview_end_time = tonumber(info and info.section_length) or 0
-        if drag_preview_end_time <= 0 then
-          drag_preview_end_time = tonumber(info and info.length) or 0
+        if not dragging_audio then
+          local drag_preview_end_time = tonumber(info and info.section_length) or 0
+          if drag_preview_end_time <= 0 then
+            drag_preview_end_time = tonumber(info and info.length) or 0
+          end
+          dragging_audio = {
+            path = info and info.path,
+            paths = paths,
+            start_time = 0,
+            end_time = drag_preview_end_time,
+            preview_end_time = drag_preview_end_time,
+            section_offset = info and info.section_offset or 0,
+            native_drop_pending = (HAVE_SM_DROP_MEDIA_FILES and #paths > 0),
+            native_drop_attempted = false
+          }
         end
-        dragging_audio = {
-          path = info and info.path,
-          paths = paths,
-          start_time = 0,
-          end_time = drag_preview_end_time,
-          preview_end_time = drag_preview_end_time,
-          section_offset = info and info.section_offset or 0,
-          native_drop_pending = (HAVE_SM_DROP_MEDIA_FILES and #paths > 0)
-        }
         if reaper.JS_Mouse_LoadCursor then
           local cursor_path = script_path .. "lib/cursor_258.cur"
           local cursor = reaper.JS_Mouse_LoadCursorFromFile(cursor_path)
           if cursor then reaper.JS_Mouse_SetCursor(cursor) end
         end
         reaper.ImGui_SetDragDropPayload(ctx, "AUDIO_PATHS", table.concat(paths, "|;|"))
-        reaper.ImGui_PopStyleColor(ctx, 1)
         reaper.ImGui_EndDragDropSource(ctx)
       end
 
@@ -15429,8 +15434,9 @@ function DBPF_ReadRootsFromDB()
     if handle then roots = DBPF_ParseRawPaths(reaper.SM_DB_GetRootsRaw(handle)) end
   elseif abs ~= "" and reaper.file_exists(abs) then
     for line in io.lines(abs) do
-      if line:sub(1, 3) == "\239\187\191" then line = line:sub(4) end -- 去BOM
-      local p = line:match('^%s*[Pp][Aa][Tt][Hh]%s+"(.-)"%s*$') or line:match('^%s*[Pp][Aa][Tt][Hh]%s+(.+)%s*$')
+      local line_text = line
+      if line_text:sub(1, 3) == "\239\187\191" then line_text = line_text:sub(4) end -- 去BOM
+      local p = line_text:match('^%s*[Pp][Aa][Tt][Hh]%s+"(.-)"%s*$') or line_text:match('^%s*[Pp][Aa][Tt][Hh]%s+(.+)%s*$')
       if p and p ~= "" then
         local np = normalize_path(p, true)
         if np ~= "" and not seen[np] then
@@ -15579,10 +15585,11 @@ function DBPF_GetCurrentDBRoots()
   end
 
   for line in io.lines(dbabs) do
-    if line:sub(1,3) == "\239\187\191" then line = line:sub(4) end -- 去BOM
-    local p = line:match('^%s*[Pp][Aa][Tt][Hh]%s+"(.-)"%s*$')
+    local line_text = line
+    if line_text:sub(1,3) == "\239\187\191" then line_text = line_text:sub(4) end -- 去BOM
+    local p = line_text:match('^%s*[Pp][Aa][Tt][Hh]%s+"(.-)"%s*$')
     if not p then
-      p = line:match('^%s*[Pp][Aa][Tt][Hh]%s+(.+)%s*$')
+      p = line_text:match('^%s*[Pp][Aa][Tt][Hh]%s+(.+)%s*$')
     end
 
     if p and p ~= "" then
@@ -20388,6 +20395,9 @@ function loop()
       _G.prev_selected_row = selected_row
 
       -- 拖动音频到REAPER
+      if audio_drag_block_until_mouse_up and not reaper.ImGui_IsMouseDown(ctx, 0) then
+        audio_drag_block_until_mouse_up = false
+      end
       if dragging_audio then
         if reaper.JS_Mouse_LoadCursor then
           local cursor_path = script_path .. "lib/cursor_258.cur"
@@ -20396,16 +20406,23 @@ function loop()
         end
         local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
         local over_arrange_drop_target = IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane)
-        local native_drop_consumed = false
+        local should_start_native_drop = over_arrange_drop_target
+        if not should_start_native_drop and IsMacOS() and reaper.GetMousePosition then
+          local mouse_x, mouse_y = reaper.GetMousePosition()
+          should_start_native_drop = IsFiniteNumber(mouse_x)
+            and IsFiniteNumber(mouse_y)
+            and not NativePointOverSoundmoleWindow(mouse_x, mouse_y)
+        end
 
-        if over_arrange_drop_target
+        if should_start_native_drop
           and dragging_audio.native_drop_pending
           and not dragging_audio.native_drop_attempted
           and reaper.ImGui_IsMouseDown(ctx, 0)
         then
           dragging_audio.native_drop_attempted = true
-          native_drop_consumed = TryNativeDropMediaFiles(dragging_audio.paths)
-          if native_drop_consumed then
+          local native_drop_attempted = TryNativeDropMediaFiles(dragging_audio.paths)
+          if native_drop_attempted then
+            audio_drag_block_until_mouse_up = true
             dragging_audio = nil
             if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
           end
@@ -22232,8 +22249,9 @@ function loop()
 
       -- 选区拖拽到REAPER
       if selection_exists then
-        if selection_drag_click_valid and not selection_edge_drag and reaper.ImGui_BeginDragDropSource(ctx) then
-          reaper.ImGui_Text(ctx, "Drag selection to REAPER to insert")
+        local selection_drag_source_flags = reaper.ImGui_DragDropFlags_SourceNoPreviewTooltip
+          and reaper.ImGui_DragDropFlags_SourceNoPreviewTooltip() or 0
+        if selection_drag_click_valid and not selection_edge_drag and reaper.ImGui_BeginDragDropSource(ctx, selection_drag_source_flags) then
           if not dragging_selection then
             -- 原生拖放使用选区时长预览载体，落入后复用有效媒体目录中的完整源文件并创建SECTION
             local drag_path = cur_info.path
