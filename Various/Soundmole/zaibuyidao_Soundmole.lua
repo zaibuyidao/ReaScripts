@@ -9971,9 +9971,11 @@ end
 
 -- 读取 Little Endian 32位整数
 function read_le32(f)
+  if not f then return nil end
   local b = f:read(4)
   if not b or #b < 4 then return nil end
   local b1, b2, b3, b4 = b:byte(1, 4)
+  if not (b1 and b2 and b3 and b4) then return nil end
   return b1 + (b2 * 256) + (b3 * 65536) + (b4 * 16777216)
 end
 
@@ -10021,11 +10023,15 @@ end
 
 -- ID3v2 同步安全整数 & 大端整数解析
 function syncsafe_to_int(bs)
+  if not bs or #bs < 4 then return nil end
   local b1,b2,b3,b4 = bs:byte(1,4)
+  if not (b1 and b2 and b3 and b4) then return nil end
   return b1 * 2^21 + b2 * 2^14 + b3 * 2^7 + b4
 end
 function be_to_int(bs)
+  if not bs or #bs < 4 then return nil end
   local b1,b2,b3,b4 = bs:byte(1,4)
+  if not (b1 and b2 and b3 and b4) then return nil end
   return b1 * 2^24 + b2 * 2^16 + b3 * 2^8 + b4
 end
 
@@ -10041,7 +10047,8 @@ function parse_id3_apic(tag_data, ver)
     if id == "\0\0\0\0" then break end
     local size_bs = tag_data:sub(pos + 4, pos + 7)
     if #size_bs < 4 then break end
-    local sz      = (ver==4) and syncsafe_to_int(size_bs) or be_to_int(size_bs)
+    local sz = (ver==4) and syncsafe_to_int(size_bs) or be_to_int(size_bs)
+    if not sz or sz <= 0 then break end
     if pos + 10 + sz > len + 1 then break end -- 安全检查
 
     if id == "APIC" then

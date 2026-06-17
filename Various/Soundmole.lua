@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.211
+-- @version 1.0.212
 -- @changelog
 --   Fixed a possible script error on macOS arm64 when parsing malformed WAV/RIFF artwork data.
 --   Fixed an issue where files in the audio list could not be dragged properly on macOS.
