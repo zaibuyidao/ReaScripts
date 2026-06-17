@@ -64,6 +64,40 @@ def managed_environment(runtime_dir: Path) -> dict[str, str]:
     return env
 
 
+def configure_certificate_environment(
+    python: Path, env: dict[str, str], log_path: Path
+) -> None:
+    if os.name == "nt":
+        return
+
+    command = [str(python), "-c", "import certifi; print(certifi.where())"]
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            env=env,
+            check=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError(
+            "Could not configure Python HTTPS certificates. "
+            "Repair CLAP again so Soundmole can install certifi."
+        ) from exc
+
+    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    cert_file = Path(lines[-1]) if lines else Path()
+    if not cert_file.is_file():
+        raise RuntimeError(f"Python certificate bundle is missing: {cert_file}")
+
+    cert_path = str(cert_file)
+    env["SSL_CERT_FILE"] = cert_path
+    env["REQUESTS_CA_BUNDLE"] = cert_path
+    env["CURL_CA_BUNDLE"] = cert_path
+    with log_path.open("a", encoding="utf-8", errors="replace") as log:
+        log.write(f"\nUsing Python certificate bundle: {cert_path}\n")
+
+
 def run_logged(command: list[str], log_path: Path, env: dict[str, str]) -> None:
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("a", encoding="utf-8", errors="replace") as log:
@@ -116,6 +150,26 @@ def find_model(python: Path, env: dict[str, str]) -> Path:
     )
     lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
     return Path(lines[-1]) if lines else Path()
+
+
+def remove_existing_model(python: Path, env: dict[str, str], log_path: Path) -> bool:
+    try:
+        model_path = find_model(python, env)
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    if not model_path.is_file():
+        return False
+    try:
+        size = model_path.stat().st_size
+        model_path.unlink()
+    except OSError:
+        return False
+    with log_path.open("a", encoding="utf-8", errors="replace") as log:
+        log.write(
+            "\nRemoved cached CLAP model after failed verification: "
+            f"{model_path} ({size} bytes)\n"
+        )
+    return True
 
 
 def read_runtime_profile(runtime_dir: Path) -> dict[str, str]:
@@ -247,6 +301,9 @@ def setup(
     else:
         torch_command.extend(["torch", "torchvision"])
     run_logged(torch_command, log_path, env)
+    clap_packages = ["numpy<2", "transformers<5", "laion-clap==1.1.7"]
+    if os.name != "nt":
+        clap_packages.insert(0, "certifi")
     run_logged(
         [
             str(runtime_python),
@@ -254,17 +311,21 @@ def setup(
             "pip",
             "install",
             "--upgrade",
-            "numpy<2",
-            "transformers<5",
-            "laion-clap==1.1.7",
-        ],
+        ] + clap_packages,
         log_path,
         env,
     )
 
+    configure_certificate_environment(runtime_python, env, log_path)
+
     status("running", 3, "Downloading and verifying the CLAP model")
     verify_code = verification_code(accelerator)
-    run_logged([str(runtime_python), "-c", verify_code], log_path, env)
+    try:
+        run_logged([str(runtime_python), "-c", verify_code], log_path, env)
+    except RuntimeError:
+        if os.name == "nt" or not remove_existing_model(runtime_python, env, log_path):
+            raise
+        run_logged([str(runtime_python), "-c", verify_code], log_path, env)
 
     model_path = find_model(runtime_python, env)
     if not model_path.is_file() or model_path.stat().st_size < 1_000_000_000:

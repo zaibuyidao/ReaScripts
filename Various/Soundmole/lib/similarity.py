@@ -24,6 +24,22 @@ FILE_RE = re.compile(r'^\s*FILE\s+"((?:\\.|[^"])*)"')
 CHECKPOINT_BATCH_SIZE = 64
 
 
+def configure_certificate_store() -> None:
+    if os.name == "nt":
+        return
+
+    try:
+        import certifi
+    except ImportError:
+        return
+
+    cert_file = certifi.where()
+    if cert_file:
+        os.environ.setdefault("SSL_CERT_FILE", cert_file)
+        os.environ.setdefault("REQUESTS_CA_BUNDLE", cert_file)
+        os.environ.setdefault("CURL_CA_BUNDLE", cert_file)
+
+
 def configure_model_cache() -> None:
     """Keep model support files inside Soundmole's managed virtual environment."""
     if sys.prefix == sys.base_prefix:
@@ -147,6 +163,7 @@ def create_test_embedder(
 def create_clap_embedder(
     model_name: str,
 ) -> tuple[Callable[[list[str]], np.ndarray], str, str, str]:
+    configure_certificate_store()
     configure_model_cache()
     try:
         import laion_clap

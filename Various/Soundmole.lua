@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.212
+-- @version 1.0.213
 -- @changelog
---   Fixed a possible script error on macOS arm64 when parsing malformed WAV/RIFF artwork data.
---   Fixed an issue where files in the audio list could not be dragged properly on macOS.
+--   Fixed possible errors during CLAP installation on macOS.
 --   Soundmole native extension support: reaper_soundmole-x64.dll v0.0.30 for Windows and reaper_soundmole-arm64.dylib v0.0.1 for macOS.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
