@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="50e3cc9727bd7efa7f6805130e3ed89b969800c6">
+<index version="1" name="zaibuyidao Scripts" commit="c6fab6975477beb5ee0dd8d9eb3bfe82ef56fce5">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9376,6 +9376,10 @@ Stabilize list tooltips and add updating the selected snapshot from the current 
       <version name="1.0.17" author="zaibuyidao" time="2026-06-10T07:22:21Z">
         <changelog><![CDATA[Add drag-and-drop loading from the snapshot list into the REAPER arrange view.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/12e586d4b366fe1deee609a70103a0762fb81d5d/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
+      </version>
+      <version name="1.0.18" author="zaibuyidao" time="2026-06-17T18:45:36Z">
+        <changelog><![CDATA[Add drag-and-drop loading from the snapshot list into the REAPER arrange view.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/c6fab6975477beb5ee0dd8d9eb3bfe82ef56fce5/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Tap Tempo Checker (No Tempo Change).lua" type="script" desc="Tap Tempo Checker (No Tempo Change)">
