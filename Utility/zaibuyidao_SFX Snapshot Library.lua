@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.17
+-- @version 1.0.18
 -- @author zaibuyidao
 -- @changelog
 --   Add drag-and-drop loading from the snapshot list into the REAPER arrange view.
@@ -7472,11 +7472,11 @@ function DrawSnapshotList(width, height)
         end
 
         if ImGui.IsItemClicked and ImGui.IsItemClicked(ctx, MOUSE_BUTTON_LEFT) then
-          if not IsSnapshotSelected(i) then
-            SelectOnlySnapshot(i)
-          else
-            state.selected = i
-          end
+          -- if not IsSnapshotSelected(i) then
+          --   SelectOnlySnapshot(i)
+          -- else
+          --   state.selected = i
+          -- end
           state.snapshot_list_focused = true
         end
 
