@@ -120,6 +120,11 @@ HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir')
   and reaper.APIExists('SM_WFC_Pump')
   and reaper.APIExists('SM_WFC_GetPathIfReady')
 HAVE_SM_WFC_CANCEL = reaper.APIExists('SM_WFC_Cancel')
+HAVE_SM_WFC_PARTIAL = HAVE_SM_WFC
+  and reaper.APIExists('SM_WFC_GetPartial')
+HAVE_SM_WFC_TABLE = HAVE_SM_WFC
+  and reaper.APIExists('SM_GetTableWaveformCachePath')
+  and reaper.APIExists('SM_WFC_BeginTable')
 HAVE_SM_DROP_MEDIA_FILES = reaper.APIExists('SM_DropMediaFiles')
 HAVE_SM_SIM = reaper.APIExists('SM_SIM_LoadIndex')
   and reaper.APIExists('SM_SIM_QueryByPath')
@@ -305,7 +310,7 @@ end
 
 -- 状态变量
 WFC_PX_DEFAULT               = 2048  -- 默认缓存像素（与C++对齐）
-TABLE_WAVEFORM_IDLE_SECONDS  = 2.0   -- 表格停止滚动后，等待多少秒开始加载单元格波形
+TABLE_WAVEFORM_IDLE_SECONDS  = 1.0   -- 表格停止滚动后，等待多少秒开始加载单元格波形
 TABLE_WAVEFORM_ENQUEUE_LIMIT = 2     -- 每帧最多加入多少个可见单元格波形任务
 TABLE_WAVEFORM_PROCESS_LIMIT = 2     -- 每帧最多推进多少个表格波形任务
 TABLE_WAVEFORM_PUMP_ITERS    = 128   -- 单个 C++ 异步任务每帧最多推进多少内部小步
@@ -315,6 +320,9 @@ TABLE_WAVEFORM_LUA_BUILD_ITERS = 64     -- 无扩展时单个任务每帧最多�
 TABLE_WAVEFORM_LUA_ROWS_PER_SLICE = 256 -- 无扩展时单个任务每帧最多处理多少个缓存像素
 TABLE_WAVEFORM_LUA_PUMP_MS = 0.75       -- 无扩展时单个任务每帧最多占用多少毫秒
 TABLE_WAVEFORM_LUA_PRIORITY_STEPS = 16  -- 无扩展时优先连续推进当前任务的次数，随后轮转防止阻塞
+TABLE_WAVEFORM_CACHE_PX_MIN = 64
+TABLE_WAVEFORM_CACHE_PX_MAX = 512
+TABLE_WAVEFORM_PREFETCH_PX = 256
 files_idx_cache              = nil   -- 文件缓存
 waveform_task_queue          = {}    -- 表格列表波形预览
 ui_bottom_offset             = 231   -- 底部总高度
@@ -499,6 +507,13 @@ local VERTICAL_ZOOM_MAX = 4.0
 
 sm_wfc_pending_jobs = {}
 
+function SM_TableWaveformPixelCount(width)
+  local px = math.floor(tonumber(width) or TABLE_WAVEFORM_PREFETCH_PX)
+  if px < TABLE_WAVEFORM_CACHE_PX_MIN then px = TABLE_WAVEFORM_CACHE_PX_MIN end
+  if px > TABLE_WAVEFORM_CACHE_PX_MAX then px = TABLE_WAVEFORM_CACHE_PX_MAX end
+  return px
+end
+
 function CancelTrackedWaveformJob(key)
   if not key or key == "" then return end
   if HAVE_SM_WFC_CANCEL and reaper.SM_WFC_Cancel then
@@ -548,6 +563,7 @@ function ClearWaveformRuntimeCache()
     waveform_task_queue = {}
   end
   CancelAllWaveformJobs()
+  main_wave_wfc_state = nil
   peaks, pixel_cnt, src_len, channel_count = nil, nil, nil, nil
   last_pixel_cnt, last_view_len, last_scroll = nil, nil, nil
   last_wave_info = nil
@@ -3138,6 +3154,9 @@ function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
   local cache_len = cache.src_len or 1 -- 防止除以0
   local cache_pixel_cnt = cache.pixel_cnt or 0
   local chs = cache.channel_count or 0
+  local loaded_cache_rows = tonumber(cache.loaded_rows or cache.partial_rows or cache_pixel_cnt) or cache_pixel_cnt
+  loaded_cache_rows = math.max(0, math.min(cache_pixel_cnt, math.floor(loaded_cache_rows)))
+  local is_partial = loaded_cache_rows < cache_pixel_cnt
   local peaks_new = {}
 
   -- 如果是 0 则不执行循环
@@ -3164,20 +3183,29 @@ function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
 
     for ch = 1, chs do
       local row = cache.peaks and cache.peaks[ch]
-      if row and aggregate then
+      if row and is_partial and first > loaded_cache_rows then
+        peaks_new[ch][px] = nil
+      elseif row and aggregate then
         local minv, maxv = math.huge, -math.huge
-        for i = first, last do
+        local last_loaded = is_partial and math.min(last, loaded_cache_rows) or last
+        for i = first, last_loaded do
           local p = row[i]
           if p then
             minv = math.min(minv, p[1] or 0)
             maxv = math.max(maxv, p[2] or 0)
           end
         end
-        if minv == math.huge then minv, maxv = 0, 0 end
-        peaks_new[ch][px] = {minv, maxv}
+        if minv ~= math.huge then
+          peaks_new[ch][px] = {minv, maxv}
+        elseif not is_partial then
+          peaks_new[ch][px] = {0, 0}
+        end
       elseif row then
         local center = ((t0 + t1) * 0.5) / cache_len * (cache_pixel_cnt - 1) + 1
         local i = math.max(1, math.min(cache_pixel_cnt, math.floor(center)))
+        if is_partial and i > loaded_cache_rows then
+          peaks_new[ch][px] = nil
+        else
         local frac = center - i
         local v1 = row[i] or {0, 0}
         local v2 = row[math.min(cache_pixel_cnt, i + 1)] or v1
@@ -3185,10 +3213,17 @@ function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
           v1[1] + (v2[1] - v1[1]) * frac,
           v1[2] + (v2[2] - v1[2]) * frac
         }
+        end
       else
         peaks_new[ch][px] = {0, 0}
       end
     end
+  end
+
+  if is_partial then
+    peaks_new._pixel_cnt = pixel_cnt
+    peaks_new._loaded_rows = math.max(0, math.min(pixel_cnt,
+      math.floor((loaded_cache_rows / math.max(1, cache_pixel_cnt)) * pixel_cnt + 0.5)))
   end
 
   return peaks_new, pixel_cnt, window_len, chs
@@ -3315,7 +3350,9 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
     return smwf
   end
   if state.req_path and reaper.SM_GetWaveformCachePath then
-    local ready = reaper.SM_GetWaveformCachePath(state.req_path, state.req_px or WFC_PX_DEFAULT, state.req_st or 0, state.req_et or 0, state.req_maxch or 6)
+    local lookup = (state.req_table and HAVE_SM_WFC_TABLE and reaper.SM_GetTableWaveformCachePath)
+      or reaper.SM_GetWaveformCachePath
+    local ready = lookup(state.req_path, state.req_px or WFC_PX_DEFAULT, state.req_st or 0, state.req_et or 0, state.req_maxch or 6)
     if ready ~= "" then
       CancelTrackedWaveformJob(state.key)
       return ready
@@ -3328,6 +3365,72 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
     return nil
   end
   return state
+end
+
+function SM_ReadWaveformPartial(state)
+  if not HAVE_SM_WFC_PARTIAL or type(state) ~= "table" or not state.key then return nil end
+
+  local from_row = math.max(0, math.floor(tonumber(state.partial_rows or 0) or 0))
+  local raw = reaper.SM_WFC_GetPartial(state.key, from_row)
+  if not raw or raw == "" then return nil end
+
+  local header, body = raw:match("^([^\n]*)\n?(.*)$")
+  if not header then return nil end
+  local magic, px_s, ch_s, win_len_s, rows_done_s, first_s, count_s =
+    header:match("^(%S+)%s+(%d+)%s+(%d+)%s+([^%s]+)%s+(%d+)%s+(%d+)%s+(%d+)")
+  if magic ~= "SMWP1" then return nil end
+
+  local px = tonumber(px_s) or 0
+  local ch = tonumber(ch_s) or 0
+  local win_len = tonumber(win_len_s) or 0
+  local rows_done = tonumber(rows_done_s) or 0
+  local first = tonumber(first_s) or 0
+  local count = tonumber(count_s) or 0
+  if px <= 0 or ch <= 0 or count <= 0 then return nil end
+
+  local peaks_partial = state.partial_peaks
+  if type(peaks_partial) ~= "table" or state.partial_px ~= px or state.partial_ch ~= ch then
+    peaks_partial = {}
+    for c = 1, ch do peaks_partial[c] = {} end
+    state.partial_peaks = peaks_partial
+    state.partial_rows = 0
+    state.partial_px = px
+    state.partial_ch = ch
+  end
+
+  local row_index = first + 1
+  local parsed = 0
+  for line in body:gmatch("[^\n]+") do
+    if parsed >= count then break end
+    local vals = {}
+    for v in line:gmatch("[^,]+") do
+      vals[#vals + 1] = tonumber(v) or 0
+    end
+    for c = 1, ch do
+      local base = (c - 1) * 2
+      peaks_partial[c][row_index] = { vals[base + 1] or 0, vals[base + 2] or 0 }
+    end
+    row_index = row_index + 1
+    parsed = parsed + 1
+  end
+  if parsed <= 0 then return nil end
+
+  local loaded_rows = math.max(tonumber(state.partial_rows or 0) or 0, first + parsed)
+  state.partial_rows = loaded_rows
+  peaks_partial._pixel_cnt = px
+  peaks_partial._loaded_rows = loaded_rows
+  state.partial_len = win_len
+
+  return {
+    status = "partial",
+    peaks = peaks_partial,
+    pixel_cnt = px,
+    channel_count = ch,
+    src_len = win_len,
+    partial_rows = loaded_rows,
+    loaded_rows = loaded_rows,
+    rows_done = rows_done
+  }
 end
 
 -- 加载波形缓存
@@ -3392,7 +3495,112 @@ function SM_BeginWaveformCacheAsync(path, pixel_cnt, start_time, end_time, max_c
   }
 end
 
+function SM_LoadTableWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, max_channels)
+  if not HAVE_SM_WFC or not path or path == "" then return nil end
+  if not HAVE_SM_WFC_TABLE then
+    return SM_LoadWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, 1)
+  end
+
+  local px = math.max(1, math.floor(tonumber(pixel_cnt or TABLE_WAVEFORM_PREFETCH_PX)))
+  local st = tonumber(start_time) or 0
+  local et = tonumber(end_time) or 0
+  if et <= st then et = 0 end
+  local maxch = 1
+  local smwf = reaper.SM_GetTableWaveformCachePath(path, px, st, et, maxch)
+  if not smwf or smwf == "" then return nil end
+  local peaks, px_real, win_len, ch_real = SM_ReadSMWF(smwf)
+  if not peaks then return nil end
+  return {
+    status = "ready", peaks = peaks, pixel_cnt = px_real,
+    channel_count = ch_real, src_len = win_len, smwf_path = smwf
+  }
+end
+
+function SM_BeginTableWaveformCacheAsync(path, pixel_cnt, start_time, end_time, max_channels)
+  local ready = SM_LoadTableWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, max_channels)
+  if ready then return ready end
+  if not HAVE_SM_WFC or not path or path == "" then return nil end
+  if not HAVE_SM_WFC_TABLE then
+    return SM_BeginWaveformCacheAsync(path, pixel_cnt, start_time, end_time, 1)
+  end
+
+  local px = math.max(1, math.floor(tonumber(pixel_cnt or TABLE_WAVEFORM_PREFETCH_PX)))
+  local st = tonumber(start_time) or 0
+  local et = tonumber(end_time) or 0
+  if et <= st then et = 0 end
+  local maxch = 1
+  local key = reaper.SM_WFC_BeginTable(path, px, st, et, maxch)
+  if not key or key == "" then return nil end
+  RegisterWaveformJob(key)
+  return {
+    status = "pending", key = key, req_path = path, req_px = px,
+    req_st = st, req_et = et, req_maxch = maxch, req_table = true
+  }
+end
+
 -- wf_step 已失效，仅保留形参但不使用
+function SM_GetMainPreviewWaveformCache(path, max_channels)
+  if not HAVE_SM_WFC or not path or path == "" then return nil end
+
+  local px = WFC_PX_DEFAULT
+  local st, et = 0, 0
+  local maxch = math.max(1, math.min(64, tonumber(max_channels or 6)))
+  local sig = tostring(path) .. "|" .. tostring(px) .. "|" .. tostring(maxch) .. "|0|0"
+
+  local ready = SM_LoadWaveformCacheIfReady(path, px, st, et, maxch)
+  if ready then
+    if main_wave_wfc_state then
+      CancelWaveformState(main_wave_wfc_state)
+    end
+    main_wave_wfc_state = nil
+    return ready
+  end
+
+  if not main_wave_wfc_state or main_wave_wfc_state.req_sig ~= sig then
+    if main_wave_wfc_state then CancelWaveformState(main_wave_wfc_state) end
+    main_wave_wfc_state = SM_BeginWaveformCacheAsync(path, px, st, et, maxch)
+    if type(main_wave_wfc_state) == "table" then
+      main_wave_wfc_state.req_sig = sig
+    else
+      return main_wave_wfc_state
+    end
+  end
+
+  local pumped = SM_EnsureWaveformCache_Pump(main_wave_wfc_state, WF_PUMP_ITERS, WF_PUMP_MS)
+  if type(pumped) == "string" then
+    CancelTrackedWaveformJob(main_wave_wfc_state.key)
+    main_wave_wfc_state = nil
+    local peaks_ready, px_real, win_len, ch_real = SM_ReadSMWF(pumped)
+    if peaks_ready then
+      return {
+        status = "ready",
+        peaks = peaks_ready,
+        pixel_cnt = px_real,
+        channel_count = ch_real,
+        src_len = win_len,
+        smwf_path = pumped
+      }
+    end
+    return nil
+  elseif type(pumped) == "table" then
+    main_wave_wfc_state = pumped
+    local partial = SM_ReadWaveformPartial(main_wave_wfc_state)
+    if partial and partial.peaks then return partial end
+    return {
+      status = "partial",
+      peaks = main_wave_wfc_state.partial_peaks,
+      pixel_cnt = main_wave_wfc_state.partial_px or px,
+      channel_count = main_wave_wfc_state.partial_ch or maxch,
+      src_len = main_wave_wfc_state.partial_len or 0,
+      loaded_rows = main_wave_wfc_state.partial_rows or 0,
+      partial_rows = main_wave_wfc_state.partial_rows or 0
+    }
+  else
+    main_wave_wfc_state = nil
+    return nil
+  end
+end
+
 function SM_GetPeaksWithCache(info, wf_step_unused, pixel_cnt, start_time, end_time)
   if not info or not info.path or info.path == "" then return nil end
 
@@ -7491,7 +7699,7 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
 end
 
 -- 绘制波形
-function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, vertical_scale)
+function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, vertical_scale, loaded_pixels, total_pixels, draw_empty_centerline)
   local v_scale = vertical_scale or 1.0
 
   reaper.ImGui_InvisibleButton(ctx, "##wave", img_w, img_h)
@@ -7499,11 +7707,25 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
   local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
   local drawlist = reaper.ImGui_GetWindowDrawList(ctx)
 
-  if not peaks then return end
+  local function draw_center_line(y)
+    local y0 = math.floor(y)
+    reaper.ImGui_DrawList_AddRectFilled(
+      drawlist, math.floor(min_x), y0, math.floor(max_x), y0 + 1, colors.wave_center)
+  end
+
+  if not peaks then
+    if draw_empty_centerline then
+      draw_center_line((min_y + max_y) * 0.5)
+    end
+    return
+  end
 
   local w = math.max(1, math.floor(img_w))
   local h = img_h
   channel_count = math.max(0, tonumber(channel_count) or #peaks)
+  local total_px_hint = math.floor(tonumber(total_pixels or (type(peaks) == "table" and peaks._pixel_cnt)) or 0)
+  local loaded_px_hint = tonumber(loaded_pixels or (type(peaks) == "table" and peaks._loaded_rows))
+  if loaded_px_hint then loaded_px_hint = math.max(0, math.floor(loaded_px_hint)) end
 
   local function wave_color(minv, maxv)
     if waveform_color_mode == WAVE_COLOR_MONO then return colors.wave_line end
@@ -7535,12 +7757,15 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
 
   for ch = 1, channel_count do
     local row = peaks[ch] or {}
+    local row_total = total_px_hint > 0 and total_px_hint or #row
+    row_total = math.max(1, row_total)
+    local loaded_row_count = loaded_px_hint and math.min(row_total, loaded_px_hint) or nil
     local ch_y = min_y + (ch - 1) * h / channel_count
     local ch_h = h / channel_count
     local y_mid = ch_y + ch_h / 2
-    reaper.ImGui_DrawList_AddLine(drawlist, min_x, y_mid, max_x, y_mid, colors.wave_center, 1.0)
+    draw_center_line(y_mid)
 
-    if is_sample_curve(row) then
+    if not loaded_row_count and is_sample_curve(row) then
       local n = #row
       local spacing = w / math.max(1, n - 1)
       local prev_x, prev_y
@@ -7558,18 +7783,22 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
     else
       for i = 1, w do
         local frac = (i - 1) / math.max(1, w - 1)
-        local idx = math.min(#row, math.floor(frac * math.max(0, #row - 1)) + 1)
-        local p = row[idx] or {0, 0}
-        local minv, maxv = p[1] or 0, p[2] or 0
-        local y_min = y_mid - minv * ch_h / 2 * v_scale
-        local y_max = y_mid - maxv * ch_h / 2 * v_scale
-        local col = wave_color(minv, maxv)
-        -- Paint every envelope column exactly once in all color modes.
-        -- Repeated antialiased lines caused particles in monochrome mode and
-        -- muddy alpha/gradient colors where the strokes overlapped.
-        local x0 = min_x + i - 1
-        reaper.ImGui_DrawList_AddRectFilled(
-          drawlist, x0, math.min(y_min, y_max), x0 + 1, math.max(y_min, y_max), col)
+        local idx = math.min(row_total, math.floor(frac * math.max(0, row_total - 1)) + 1)
+        if not loaded_row_count or idx <= loaded_row_count then
+          local p = row[idx]
+          if p then
+            local minv, maxv = p[1] or 0, p[2] or 0
+            local y_min = y_mid - minv * ch_h / 2 * v_scale
+            local y_max = y_mid - maxv * ch_h / 2 * v_scale
+            local col = wave_color(minv, maxv)
+            -- Paint every envelope column exactly once in all color modes.
+            -- Repeated antialiased lines caused particles in monochrome mode and
+            -- muddy alpha/gradient colors where the strokes overlapped.
+            local x0 = min_x + i - 1
+            reaper.ImGui_DrawList_AddRectFilled(
+              drawlist, x0, math.min(y_min, y_max), x0 + 1, math.max(y_min, y_max), col)
+          end
+        end
       end
     end
   end
@@ -7785,6 +8014,7 @@ function StopPreview()
   SM_PreviewStop()
   -- 下一个小节播放
   if wait_nextbar_cur then wait_nextbar_cur.active = false end
+  pending_skip_silence_seek = nil
 end
 
 -- 从头播放
@@ -7800,22 +8030,21 @@ function PlayFromStart(info)
   local start_pos = 0
   if skip_silence_enabled then
     if HAVE_SM_WFC then
-      local st, et, maxch = 0, 0, (info.max_channels or info.channel_count or 6)
-      local state_or_path = SM_EnsureWaveformCache(normalize_path(info.path, false), WFC_PX_DEFAULT, st, et, maxch)
-      if type(state_or_path) == "table" and state_or_path.status == "pending" then
-        state_or_path = SM_EnsureWaveformCache_Pump(state_or_path, WF_PUMP_ITERS, WF_PUMP_MS)
+      local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
+      if non_sil and non_sil > 0 then
+        start_pos = non_sil
+      elseif status == "pending" then
+        QueuePendingSkipSilenceSeek(info)
       end
-      -- 同步回退（弃用）
-      -- reaper.SM_BuildWaveformCache(normalize_path(info.path, false), px_for_skip, st, et, maxch, 1)
+    else
+      start_pos = FindFirstNonSilentTime(info) or 0 -- 某些情况下需要为0，避免报错。有些文件没有波形。
     end
-
-    start_pos = FindFirstNonSilentTime(info) or 0 -- 某些情况下需要为0，避免报错。有些文件没有波形。
   end
 
   -- 将当前要播放的文件插到波形任务队列头部，提升优先级
   if HAVE_SM_WFC and waveform_task_queue and info and info.path and info.path ~= "" then
     info._wf_enqueued = info._wf_enqueued or {}
-    local want_width = WFC_PX_DEFAULT -- 与 C++ 的 kCACHE_PX_STABLE 保持一致
+    local want_width = SM_TableWaveformPixelCount(info._last_thumb_w or TABLE_WAVEFORM_PREFETCH_PX)
     if not info._wf_enqueued[want_width] then
       table.insert(waveform_task_queue, 1, { info = info, width = want_width })
       info._wf_enqueued[want_width] = true
@@ -7843,6 +8072,7 @@ function PlayFromStart(info)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
       end
+      AttachPendingSkipSilenceSeekPreview(info)
       ApplyPreviewOutputTrack(playing_preview, info)
       reaper.CF_Preview_Play(playing_preview)
       wf_play_start_time = os.clock()
@@ -7899,13 +8129,22 @@ function PlayFromCursor(info)
           local eps = 1e-6
           if base_pos <= eps then
             -- 仅在从头起播的场景下应用跳过静音
-            local non_sil = FindFirstNonSilentTime(info)
+            local non_sil, status
+            if HAVE_SM_WFC then
+              non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
+              if status == "pending" then
+                QueuePendingSkipSilenceSeek(info)
+              end
+            else
+              non_sil = FindFirstNonSilentTime(info)
+            end
             if non_sil and non_sil > 0 then start_pos = non_sil end
           end
         end
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
         Wave.play_cursor = start_pos
       end
+      AttachPendingSkipSilenceSeekPreview(info)
       ApplyPreviewOutputTrack(playing_preview, info)
       reaper.CF_Preview_Play(playing_preview)
       wf_play_start_time = os.clock()
@@ -7918,6 +8157,7 @@ function PlayFromCursor(info)
     if type(SM_StoreStablePreviewCover) == "function" then
       SM_StoreStablePreviewCover(last_playing_info, info)
     end
+    playing_path = info.path or ""
   end
 end
 
@@ -9795,7 +10035,9 @@ function StoreTableWaveformFromCache(info, width, cache)
   info._thumb_waveform[width] = {
     _key = tostring(info.path or "") .. "|" .. tostring(width),
     peaks = peaks_new, pixel_cnt = pixel_cnt_new,
-    src_len = cache.src_len, channel_count = chs
+    src_len = cache.src_len, channel_count = chs,
+    loaded_rows = peaks_new and peaks_new._loaded_rows or cache.loaded_rows or cache.partial_rows,
+    partial = cache.status == "partial"
   }
   info._loading_waveform = false
   return true
@@ -9818,11 +10060,12 @@ function ProcessWaveformTasks()
     if info and info.path and info.path ~= "" and width then
       info._thumb_waveform = info._thumb_waveform or {}
       local lua_state = (not HAVE_SM_WFC) and info._wf_state and info._wf_state[width]
-      if not info._thumb_waveform[width] or lua_state then
+      local cpp_state = HAVE_SM_WFC and info._wf_state and info._wf_state[width]
+      if not info._thumb_waveform[width] or lua_state or cpp_state then
         if HAVE_SM_WFC then
           info._wf_state = info._wf_state or {}
-          local maxch = info.max_channels or info.channel_count or 6
-          if maxch < 1 then maxch = 1 elseif maxch > 64 then maxch = 64 end
+          local maxch = 1
+          local table_px = SM_TableWaveformPixelCount(width)
 
           local state = info._wf_state[width]
           if state then
@@ -9838,13 +10081,17 @@ function ProcessWaveformTasks()
               end
               info._wf_state[width] = nil
             elseif type(smwf_or_state) == "table" then
+              local partial = SM_ReadWaveformPartial(state)
+              if partial and partial.peaks then
+                StoreTableWaveformFromCache(info, width, partial)
+              end
               table.insert(waveform_task_queue, task)
             else
               info._wf_state[width] = nil
               info._loading_waveform = false
             end
           else
-            local cache_or_state = SM_BeginWaveformCacheAsync(info.path, WFC_PX_DEFAULT, 0, 0, maxch)
+            local cache_or_state = SM_BeginTableWaveformCacheAsync(info.path, table_px, 0, 0, maxch)
             if cache_or_state and cache_or_state.status == "ready" then
               StoreTableWaveformFromCache(info, width, cache_or_state)
             elseif cache_or_state and cache_or_state.status == "pending" then
@@ -10899,6 +11146,130 @@ end
 --------------------------------------------- 跳过静音节点 ---------------------------------------------
 
 skip_silence_enabled = (tonumber(SM_GetState(EXT_SECTION, "skip_silence")) or 1) == 1
+
+function FindFirstNonSilentTimeInCache(cache)
+  if type(cache) ~= "table" then return nil, "empty" end
+
+  local status = cache.status
+  local pixel_cnt = math.floor(tonumber(cache.pixel_cnt) or 0)
+  local src_len = tonumber(cache.src_len) or 0
+  local channel_count = math.floor(tonumber(cache.channel_count) or 0)
+  local loaded_rows = math.floor(tonumber(cache.loaded_rows or cache.partial_rows or pixel_cnt) or 0)
+  if loaded_rows < 0 then loaded_rows = 0 end
+  if pixel_cnt > 0 and loaded_rows > pixel_cnt then loaded_rows = pixel_cnt end
+
+  if type(cache.peaks) ~= "table" then
+    if status == "partial" then return nil, "pending" end
+    return nil, "empty"
+  end
+  if pixel_cnt <= 0 or channel_count <= 0 or src_len <= 0 then
+    if status == "partial" then return nil, "pending" end
+    return nil, "empty"
+  end
+
+  local denom = math.max(1, pixel_cnt - 1)
+  for px = 1, loaded_rows do
+    for ch = 1, channel_count do
+      local peak = (cache.peaks[ch] or {})[px]
+      if peak then
+        local lo = tonumber(peak[1]) or 0
+        local hi = tonumber(peak[2]) or 0
+        if math.abs(lo) > skip_silence_threshold or math.abs(hi) > skip_silence_threshold then
+          return (px - 1) / denom * src_len, "found"
+        end
+      end
+    end
+  end
+
+  if status == "partial" and loaded_rows < pixel_cnt then
+    return nil, "pending"
+  end
+  return nil, "silent"
+end
+
+function FindFirstNonSilentTimeCxx(info, max_wait_ms)
+  if not HAVE_SM_WFC or not info or not info.path or info.path == "" then return nil, "empty" end
+
+  local path = normalize_path(info.path, false)
+  local maxch = math.max(1, math.min(64, tonumber(info.max_channels or info.channel_count or 6) or 6))
+  local wait_ms = math.max(0, tonumber(max_wait_ms) or 0)
+  local deadline = (reaper.time_precise and reaper.time_precise() or 0) + wait_ms / 1000.0
+
+  repeat
+    local cache = SM_GetMainPreviewWaveformCache(path, maxch)
+    local pos, status = FindFirstNonSilentTimeInCache(cache)
+    if pos then return pos, "found" end
+    if status ~= "pending" then return nil, status end
+    if (reaper.time_precise and reaper.time_precise() or 0) >= deadline then
+      return nil, "pending"
+    end
+  until false
+end
+
+function QueuePendingSkipSilenceSeek(info)
+  if not HAVE_SM_WFC or not info or not info.path or info.path == "" then return end
+
+  local now = reaper.time_precise and reaper.time_precise() or 0
+  pending_skip_silence_seek = {
+    info = info,
+    path = normalize_path(info.path, false),
+    preview = playing_preview,
+    queued_at = now,
+    deadline = now + 30.0
+  }
+end
+
+function AttachPendingSkipSilenceSeekPreview(info)
+  local pending = pending_skip_silence_seek
+  if not pending or not playing_preview or not info or not info.path then return end
+
+  local path = normalize_path(info.path, false)
+  if path ~= "" and path == pending.path then
+    pending.preview = playing_preview
+  end
+end
+
+function ProcessPendingSkipSilenceSeek()
+  local pending = pending_skip_silence_seek
+  if not pending then return end
+
+  if not skip_silence_enabled or not HAVE_SM_WFC or not playing_preview then
+    pending_skip_silence_seek = nil
+    return
+  end
+  if pending.preview and pending.preview ~= playing_preview then
+    pending_skip_silence_seek = nil
+    return
+  end
+  if pending.path and playing_path and playing_path ~= "" and normalize_path(playing_path, false) ~= pending.path then
+    pending_skip_silence_seek = nil
+    return
+  end
+
+  local now = reaper.time_precise and reaper.time_precise() or 0
+  if pending.deadline and now > pending.deadline then
+    pending_skip_silence_seek = nil
+    return
+  end
+
+  local pos, status = FindFirstNonSilentTimeCxx(pending.info, 0)
+  if pos and pos > 0 then
+    local current_pos = 0
+    if reaper.CF_Preview_GetValue then
+      local ok, cur = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+      if ok then current_pos = tonumber(cur) or 0 end
+    end
+    pending_skip_silence_seek = nil
+    if current_pos < pos - 0.01 and reaper.CF_Preview_SetValue then
+      reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", pos)
+      Wave.play_cursor = pos
+      wf_play_start_cursor = pos
+      wf_play_start_time = os.clock()
+    end
+  elseif status ~= "pending" then
+    pending_skip_silence_seek = nil
+  end
+end
 
 -- 从缓存中寻找首个有声位置
 function FindFirstNonSilentTime(info)
@@ -12746,8 +13117,8 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
   then
     local cache
     if HAVE_SM_WFC then
-      local maxch = info.max_channels or info.channel_count or 6
-      cache = SM_LoadWaveformCacheIfReady(info.path, WFC_PX_DEFAULT, 0, 0, maxch)
+      local maxch = 1
+      cache = SM_LoadTableWaveformCacheIfReady(info.path, SM_TableWaveformPixelCount(thumb_w), 0, 0, maxch)
     else
       cache = LoadWaveformCache(info.path)
     end
@@ -12768,7 +13139,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     -- 绘制波形
     local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
     reaper.ImGui_PushID(ctx, i)
-    DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, src_len, 1, 1.0)
+    DrawWaveformInImGui(ctx, {wf.peaks[1]}, thumb_w, thumb_h, src_len, 1, 1.0, wf.loaded_rows, wf.pixel_cnt)
     reaper.ImGui_PopID(ctx)
     if collect_mode == COLLECT_MODE_FREESOUND and (info._fs_downloading or info._fs_download_failed) then
       local dl = reaper.ImGui_GetWindowDrawList(ctx)
@@ -16152,6 +16523,7 @@ function loop()
   -- 表格列表波形预览，每帧先处理任务队列
   ProcessWaveformTasks()
   ProcessPendingPreviewSeek()
+  ProcessPendingSkipSilenceSeek()
   if need_refresh_font then -- mark相关代码
     fonts.sans_serif = reaper.ImGui_CreateFont(set_font, 14)
     reaper.ImGui_Attach(ctx, fonts.sans_serif)
@@ -21666,10 +22038,16 @@ function loop()
           or (last_pixel_cnt ~= pw_region_w)
           or (last_view_len ~= view_len)
           or (last_scroll ~= Wave.scroll)
+          or (type(peaks) == "table" and peaks._loaded_rows and peaks._loaded_rows < (peaks._pixel_cnt or 0))
         then
+          if last_wave_info ~= cur_key then
+            peaks, pixel_cnt, channel_count = nil, nil, nil
+            last_pixel_cnt, last_view_len, last_scroll = nil, nil, nil
+          end
           local cache
           if HAVE_SM_WFC then
-            cache = SM_LoadWaveformCache(root_path)
+            local maxch = math.max(1, math.min(64, tonumber(cur_info.max_channels or cur_info.channel_count or 6)))
+            cache = SM_GetMainPreviewWaveformCache(root_path, maxch)
           else
             cache = LoadWaveformCache(root_path)
             if not cache then
@@ -21721,14 +22099,16 @@ function loop()
 
           if ok_for_remap then
             local view_peaks, view_pixel_cnt, _, view_channel_count
-            if HAVE_SM_EXT then
+            if HAVE_SM_EXT and cache and cache.status ~= "partial" then
               view_peaks, view_pixel_cnt, _, view_channel_count = GetPeaksForInfo(
                 { path = root_path }, wf_step, pw_region_w, window_start, window_end)
             end
             if view_peaks and view_channel_count then
               peaks, pixel_cnt, channel_count = view_peaks, view_pixel_cnt, view_channel_count
-            else
+            elseif cache and cache.peaks then
               peaks, pixel_cnt, _, channel_count = RemapWaveformToWindow(cache, pw_region_w, window_start, window_end)
+            else
+              peaks, pixel_cnt, channel_count = nil, nil, nil
             end
             last_wave_info = cur_key
             last_pixel_cnt = pw_region_w
@@ -21762,7 +22142,11 @@ function loop()
       local _, item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
       local waveform_h = math.max(1, wave_child_avail_h - timeline_h - scrollbar_h - item_spacing_y * 2)
       reaper.ImGui_Dummy(ctx, 0, timeline_h) -- 占位时间线高度，与波形预览之间的间隔所在位置
-      DrawWaveformInImGui(ctx, peaks, pw_region_w, waveform_h, src_len, channel_count, waveform_vertical_zoom)
+      DrawWaveformInImGui(ctx, peaks, pw_region_w, waveform_h, Wave.src_len or src_len, channel_count,
+        waveform_vertical_zoom,
+        type(peaks) == "table" and peaks._loaded_rows or nil,
+        type(peaks) == "table" and peaks._pixel_cnt or nil,
+        cur_info ~= nil and (Wave.src_len or 0) > 0)
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
       end
