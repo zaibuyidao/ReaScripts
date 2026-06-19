@@ -1,8 +1,8 @@
 -- @description SFX Snapshot Library
--- @version 1.0.18
+-- @version 1.0.19
 -- @author zaibuyidao
 -- @changelog
---   Add drag-and-drop loading from the snapshot list into the REAPER arrange view.
+--   Fixed an issue where items in the snapshot list could not be dragged properly on macOS.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
 --   https://github.com/zaibuyidao/ReaScripts
@@ -79,7 +79,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.17"
+local SCRIPT_VERSION = "1.0.19"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -991,6 +991,7 @@ local WINDOW_FLAGS_MAIN = WINDOW_FLAGS_NO_COLLAPSE + WINDOW_FLAGS_NO_TITLE_BAR
 local SNAPSHOT_ARRANGE_DND_PAYLOAD_TYPE = "SFXSnapshotDrag"
 local SNAPSHOT_ARRANGE_DRAG_CARRIER_DIR = "_native_drag_carriers"
 local SNAPSHOT_ARRANGE_NATIVE_DROP_TIMEOUT = 30.0
+local SNAPSHOT_ARRANGE_NATIVE_DROP_RELEASE_GRACE = 3.0
 local COND_ALWAYS = ImGuiValue(ImGui.Cond_Always, 1)
 local DRAGDROP_FLAGS_SOURCE_NO_PREVIEW_TOOLTIP = ImGuiValue(ImGui.DragDropFlags_SourceNoPreviewTooltip, 1)
 local SNAPSHOT_ARRANGE_DND_SOURCE_FLAGS = DRAGDROP_FLAGS_SOURCE_NO_PREVIEW_TOOLTIP
@@ -1030,6 +1031,27 @@ if font_title then ImGui.Attach(ctx, font_title) end
 if font_normal then ImGui.Attach(ctx, font_normal) end
 if font_small then ImGui.Attach(ctx, font_small) end
 if font_tiny then ImGui.Attach(ctx, font_tiny) end
+
+function IsInvalidImGuiContextError(err)
+  return tostring(err or ""):find("expected a valid ImGui_Context", 1, true) ~= nil
+end
+
+function RecreateImGuiContextAfterNativeDrag()
+  local ok, new_ctx = pcall(ImGui.CreateContext, SCRIPT_NAME)
+  if not ok or not new_ctx then return false end
+
+  ctx = new_ctx
+  font_title = CreateUIFont(21)
+  font_normal = CreateUIFont(14)
+  font_small = CreateUIFont(12)
+  font_tiny = CreateUIFont(11)
+
+  if font_title then pcall(ImGui.Attach, ctx, font_title) end
+  if font_normal then pcall(ImGui.Attach, ctx, font_normal) end
+  if font_small then pcall(ImGui.Attach, ctx, font_small) end
+  if font_tiny then pcall(ImGui.Attach, ctx, font_tiny) end
+  return true
+end
 
 local STATUS_BAR_FONT_SIZE = 12
 local STATUS_BAR_PADDING_Y = 4
@@ -4956,6 +4978,34 @@ end
 
 function BeginSnapshotArrangeDragSource(index, snapshot)
   if type(snapshot) ~= "table" then return false end
+
+  if IsMacOS and IsMacOS() then
+    if not (reaper.APIExists and reaper.APIExists("SM_DropMediaFiles") and reaper.SM_DropMediaFiles) then return false end
+    if not (ImGui.IsItemActive and ImGui.IsMouseDragging and ImGui.IsMouseDown) then return false end
+    if not ImGui.IsItemActive(ctx) then return false end
+    if not ImGui.IsMouseDown(ctx, MOUSE_BUTTON_LEFT) then return false end
+    if not ImGui.IsMouseDragging(ctx, MOUSE_BUTTON_LEFT, 6) then return false end
+
+    local payload = GetSnapshotArrangeDragPayload(index, snapshot)
+    if payload == "" or IsSnapshotArrangeDragPayloadConsumed(payload) then return false end
+
+    local current = state.snapshot_arrange_drag
+    if type(current) == "table" and current.native_drop_attempted then
+      return true
+    end
+
+    if not IsSnapshotSelected(index) then
+      SelectOnlySnapshot(index)
+    else
+      state.selected = index
+    end
+
+    state.snapshot_list_focused = true
+    local drag = SetSnapshotArrangeDragState(index, snapshot, payload)
+    if not drag then return false end
+    return true
+  end
+
   if not (ImGui.BeginDragDropSource and ImGui.SetDragDropPayload and ImGui.EndDragDropSource) then return false end
 
   local begin_ok = ImGui.BeginDragDropSource(ctx, SNAPSHOT_ARRANGE_DND_SOURCE_FLAGS)
@@ -5001,8 +5051,15 @@ function TryCallSnapshotNativeDropApi(path)
   local unpack_args = table.unpack or unpack
   for _, args in ipairs(calls) do
     local ok, result = pcall(reaper.SM_DropMediaFiles, unpack_args(args))
-    if ok and result ~= false then
-      return true
+    if ok then
+      if IsMacOS and IsMacOS() then
+        local numeric_result = tonumber(result)
+        if (numeric_result and numeric_result > 0) or (numeric_result == nil and result == true) then
+          return true
+        end
+      elseif result ~= false then
+        return true
+      end
     end
   end
 
@@ -5014,6 +5071,10 @@ function StartSnapshotArrangeNativeDrop(drag)
 
   drag.native_drop_attempted = true
   drag.native_drop_pending = false
+
+  if IsMacOS and IsMacOS() then
+    drag.native_drop_mouse_released_at = nil
+  end
 
   if not PrepareSnapshotArrangeNativeDragCarrier(drag) then
     state.status = Tr("status_load_failed")
@@ -5167,6 +5228,44 @@ function PeekSnapshotArrangeDragPayload()
 end
 
 function UpdateSnapshotArrangeDrag()
+  if IsMacOS and IsMacOS() then
+    local drag = state.snapshot_arrange_drag
+    if type(drag) ~= "table" then return end
+
+    if drag.native_drop_pending and not drag.native_drop_attempted then
+      StartSnapshotArrangeNativeDrop(drag)
+    end
+
+    if ResolveSnapshotArrangeNativeDrop(drag) then
+      ClearSnapshotArrangeDrag()
+      return
+    end
+
+    local now = reaper.time_precise and reaper.time_precise() or os.clock()
+    if drag.native_drop_attempted and drag.awaiting_carrier and reaper.JS_Mouse_GetState then
+      local ok, buttons = pcall(reaper.JS_Mouse_GetState, 1)
+      if ok and tonumber(buttons) then
+        if tonumber(buttons) == 0 then
+          drag.native_drop_mouse_released_at = drag.native_drop_mouse_released_at or now
+        else
+          drag.native_drop_mouse_released_at = nil
+        end
+      end
+
+      if drag.native_drop_mouse_released_at
+        and now - drag.native_drop_mouse_released_at > SNAPSHOT_ARRANGE_NATIVE_DROP_RELEASE_GRACE
+      then
+        ClearSnapshotArrangeDrag()
+        return
+      end
+    end
+
+    if drag.native_drop_attempted and (not drag.awaiting_carrier or now > (tonumber(drag.await_until) or 0)) then
+      ClearSnapshotArrangeDrag()
+    end
+    return
+  end
+
   local payload_active, payload = PeekSnapshotArrangeDragPayload()
   local drag = state.snapshot_arrange_drag
 
@@ -8278,6 +8377,9 @@ function DrawMainContentLayout()
   avail_w = math.max(1, math.floor(tonumber(avail_w) or 900))
   avail_h = math.max(1, math.floor(tonumber(avail_h) or 420))
 
+  -- macOS 的字体行高和边界取整会比固定状态栏高度多占几个像素。
+  local status_bar_height = STATUS_BAR_HEIGHT + ((IsMacOS and IsMacOS()) and 3 or 0)
+
   local gap_size = 5
   local splitter_size = 5
   local middle_size = gap_size + splitter_size + gap_size
@@ -8286,7 +8388,7 @@ function DrawMainContentLayout()
   local min_info = 150
 
   local safe_w = math.max(1, avail_w - 1)
-  local safe_h = math.max(1, avail_h - STATUS_BAR_HEIGHT - 1)
+  local safe_h = math.max(1, avail_h - status_bar_height - 1)
   local layout_cursor_x = ImGui.GetCursorPosX and ImGui.GetCursorPosX(ctx) or nil
   local layout_cursor_y = ImGui.GetCursorPosY and ImGui.GetCursorPosY(ctx) or nil
 
@@ -8342,7 +8444,7 @@ function DrawMainContentLayout()
     ImGui.SetCursorPosX(ctx, layout_cursor_x)
   end
 
-  DrawBottomStatusBar(0, STATUS_BAR_HEIGHT)
+  DrawBottomStatusBar(0, status_bar_height)
 
   ImGui.PopStyleVar(ctx)
 end
@@ -8355,7 +8457,19 @@ function MainLoop()
   UpdatePreviewState()
   PumpPeakBuildQueue(0.02)
   MaybeSynchronizeSnapshotsWithDisk(false)
-  ImGui.SetNextWindowSize(ctx, 430, 670, ImGui.Cond_FirstUseEver)
+
+  if IsMacOS and IsMacOS() then
+    local ok_size, size_err = pcall(ImGui.SetNextWindowSize, ctx, 430, 670, ImGui.Cond_FirstUseEver)
+    if not ok_size then
+      if IsInvalidImGuiContextError(size_err) and RecreateImGuiContextAfterNativeDrag() then
+        ImGui.SetNextWindowSize(ctx, 430, 670, ImGui.Cond_FirstUseEver)
+      else
+        error(size_err)
+      end
+    end
+  else
+    ImGui.SetNextWindowSize(ctx, 430, 670, ImGui.Cond_FirstUseEver)
+  end
 
   PushStyle()
 
