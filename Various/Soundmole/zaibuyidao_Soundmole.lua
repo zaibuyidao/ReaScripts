@@ -249,8 +249,8 @@ ICON_CODEPOINTS = {
   repeat_on            = 0x010D,
   shuffle              = 0x0147,
 
-  thesaurus            = 0x0117,
-  edit_thesaurus       = 0x00E0,
+  thesaurus            = 0x00E5,
+  edit_thesaurus       = 0x0118,
 }
 material_font_path = normalize_path(script_path .. "fonts/icons-regular.otf", false)
 MATERIAL_ICONS_USING_FULL_SET = reaper.file_exists(material_font_path)
@@ -320,9 +320,9 @@ TABLE_WAVEFORM_LUA_BUILD_ITERS = 64     -- 无扩展时单个任务每帧最多�
 TABLE_WAVEFORM_LUA_ROWS_PER_SLICE = 256 -- 无扩展时单个任务每帧最多处理多少个缓存像素
 TABLE_WAVEFORM_LUA_PUMP_MS = 0.75       -- 无扩展时单个任务每帧最多占用多少毫秒
 TABLE_WAVEFORM_LUA_PRIORITY_STEPS = 16  -- 无扩展时优先连续推进当前任务的次数，随后轮转防止阻塞
-TABLE_WAVEFORM_CACHE_PX_MIN = 64
-TABLE_WAVEFORM_CACHE_PX_MAX = 512
-TABLE_WAVEFORM_PREFETCH_PX = 256
+TABLE_WAVEFORM_CACHE_PX = 256           -- 表格磁盘缓存固定分辨率；列宽变化只重采样，不创建新缓存
+TABLE_WAVEFORM_PREFETCH_PX = TABLE_WAVEFORM_CACHE_PX
+TABLE_WAVEFORM_CACHE_HIT_LIMIT = 3       -- 扩展缓存命中后，每帧最多整段加载多少项
 files_idx_cache              = nil   -- 文件缓存
 waveform_task_queue          = {}    -- 表格列表波形预览
 ui_bottom_offset             = 231   -- 底部总高度
@@ -507,11 +507,9 @@ local VERTICAL_ZOOM_MAX = 4.0
 
 sm_wfc_pending_jobs = {}
 
-function SM_TableWaveformPixelCount(width)
-  local px = math.floor(tonumber(width) or TABLE_WAVEFORM_PREFETCH_PX)
-  if px < TABLE_WAVEFORM_CACHE_PX_MIN then px = TABLE_WAVEFORM_CACHE_PX_MIN end
-  if px > TABLE_WAVEFORM_CACHE_PX_MAX then px = TABLE_WAVEFORM_CACHE_PX_MAX end
-  return px
+function SM_TableWaveformPixelCount(_width)
+  -- 显示宽度由 RemapWaveformToWindow 单独处理
+  return TABLE_WAVEFORM_CACHE_PX
 end
 
 function CancelTrackedWaveformJob(key)
@@ -572,6 +570,7 @@ function ClearWaveformRuntimeCache()
     for _, info in ipairs(files_idx_cache) do
       if type(info) == "table" then
         info._thumb_waveform = nil
+        info._table_waveform_cache = nil
         info._last_thumb_w = nil
         CancelInfoWaveformJobs(info)
         info._wf_enqueued = nil
@@ -3343,18 +3342,28 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
   max_iters = tonumber(max_iters) or WF_PUMP_ITERS
   max_ms = tonumber(max_ms) or WF_PUMP_MS
 
+  -- 缓存存在时命中时先整段直读，不再额外推进一次分片创建。只有确实无缓存时才进入 Pump。
+  local lookup
+  if state.req_path and reaper.SM_GetWaveformCachePath then
+    lookup = (state.req_table and HAVE_SM_WFC_TABLE and reaper.SM_GetTableWaveformCachePath)
+      or reaper.SM_GetWaveformCachePath
+    local ready = lookup(state.req_path, state.req_px or WFC_PX_DEFAULT, state.req_st or 0, state.req_et or 0, state.req_maxch or 6)
+    if ready ~= "" then
+      CancelWaveformState(state)
+      return ready
+    end
+  end
+
   local pumped = reaper.SM_WFC_Pump(state.key, max_iters, max_ms)
   local smwf = reaper.SM_WFC_GetPathIfReady(state.key)
   if smwf ~= "" then
     CancelTrackedWaveformJob(state.key)
     return smwf
   end
-  if state.req_path and reaper.SM_GetWaveformCachePath then
-    local lookup = (state.req_table and HAVE_SM_WFC_TABLE and reaper.SM_GetTableWaveformCachePath)
-      or reaper.SM_GetWaveformCachePath
+  if lookup then
     local ready = lookup(state.req_path, state.req_px or WFC_PX_DEFAULT, state.req_st or 0, state.req_et or 0, state.req_maxch or 6)
     if ready ~= "" then
-      CancelTrackedWaveformJob(state.key)
+      CancelWaveformState(state)
       return ready
     end
   end
@@ -3854,6 +3863,7 @@ function CollectFiles()
       info.group = GetCustomGroupsForPath(info.path)
       -- 清空表格列表的波形缓存
       info._thumb_waveform = nil
+      info._table_waveform_cache = nil
       info._last_thumb_w = nil
     end
   end
@@ -8044,7 +8054,7 @@ function PlayFromStart(info)
   -- 将当前要播放的文件插到波形任务队列头部，提升优先级
   if HAVE_SM_WFC and waveform_task_queue and info and info.path and info.path ~= "" then
     info._wf_enqueued = info._wf_enqueued or {}
-    local want_width = SM_TableWaveformPixelCount(info._last_thumb_w or TABLE_WAVEFORM_PREFETCH_PX)
+    local want_width = math.max(1, math.floor(tonumber(info._last_thumb_w) or TABLE_WAVEFORM_PREFETCH_PX))
     if not info._wf_enqueued[want_width] then
       table.insert(waveform_task_queue, 1, { info = info, width = want_width })
       info._wf_enqueued[want_width] = true
@@ -9822,11 +9832,19 @@ LoadRecentPlayed()
 
 function EnqueueWaveformTask(info, thumb_w)
   if not info or not info.path or info.path == "" or not thumb_w or thumb_w <= 0 then return false end
-  for _, task in ipairs(waveform_task_queue) do
+  -- 固定缓存创建状态会在不同宽度间共享
+  local already_queued = false
+  for index = #waveform_task_queue, 1, -1 do
+    local task = waveform_task_queue[index]
     if task.info == info and task.width == thumb_w then
-      info._loading_waveform = true
-      return false
+      already_queued = true
+    elseif task.info == info then
+      table.remove(waveform_task_queue, index)
     end
+  end
+  if already_queued then
+    info._loading_waveform = true
+    return false
   end
   table.insert(waveform_task_queue, {info=info, width=thumb_w})
   info._loading_waveform = true
@@ -10026,6 +10044,20 @@ function StoreTableWaveformFromCache(info, width, cache)
     if info then info._loading_waveform = false end
     return false
   end
+  local loaded_rows = tonumber(cache.loaded_rows or cache.partial_rows)
+  local cache_is_complete = cache.status ~= "partial" and cache.partial ~= true
+    and (not loaded_rows or loaded_rows >= (tonumber(cache.pixel_cnt) or 0))
+  if cache_is_complete then
+    -- 保留一份与列宽无关的原始表格缓存，后续改变列宽只在内存中重采样
+    info._table_waveform_cache = {
+      status = "ready",
+      peaks = cache.peaks,
+      pixel_cnt = cache.pixel_cnt,
+      src_len = cache.src_len,
+      channel_count = cache.channel_count,
+      smwf_path = cache.smwf_path
+    }
+  end
   local peaks_new, pixel_cnt_new, _, chs = RemapWaveformToWindow(cache, width, 0, cache.src_len)
   if not peaks_new or not pixel_cnt_new or pixel_cnt_new <= 0 or not chs or chs <= 0 then
     info._loading_waveform = false
@@ -10059,15 +10091,16 @@ function ProcessWaveformTasks()
 
     if info and info.path and info.path ~= "" and width then
       info._thumb_waveform = info._thumb_waveform or {}
+      local table_px = HAVE_SM_WFC and SM_TableWaveformPixelCount(width) or nil
       local lua_state = (not HAVE_SM_WFC) and info._wf_state and info._wf_state[width]
-      local cpp_state = HAVE_SM_WFC and info._wf_state and info._wf_state[width]
+      local cpp_state = HAVE_SM_WFC and info._wf_state and info._wf_state[table_px]
       if not info._thumb_waveform[width] or lua_state or cpp_state then
         if HAVE_SM_WFC then
           info._wf_state = info._wf_state or {}
           local maxch = 1
-          local table_px = SM_TableWaveformPixelCount(width)
 
-          local state = info._wf_state[width]
+          -- 异步创建状态按固定缓存分辨率共享，拖动列宽不会启动另一项创建任务
+          local state = info._wf_state[table_px]
           if state then
             local smwf_or_state = SM_EnsureWaveformCache_Pump(state, TABLE_WAVEFORM_PUMP_ITERS, TABLE_WAVEFORM_PUMP_MS)
             if type(smwf_or_state) == "string" then
@@ -10079,7 +10112,7 @@ function ProcessWaveformTasks()
               else
                 info._loading_waveform = false
               end
-              info._wf_state[width] = nil
+              info._wf_state[table_px] = nil
             elseif type(smwf_or_state) == "table" then
               local partial = SM_ReadWaveformPartial(state)
               if partial and partial.peaks then
@@ -10087,18 +10120,25 @@ function ProcessWaveformTasks()
               end
               table.insert(waveform_task_queue, task)
             else
-              info._wf_state[width] = nil
+              info._wf_state[table_px] = nil
               info._loading_waveform = false
             end
           else
-            local cache_or_state = SM_BeginTableWaveformCacheAsync(info.path, table_px, 0, 0, maxch)
-            if cache_or_state and cache_or_state.status == "ready" then
-              StoreTableWaveformFromCache(info, width, cache_or_state)
-            elseif cache_or_state and cache_or_state.status == "pending" then
-              info._wf_state[width] = cache_or_state
+            if (list_state.table_wf_cache_hit_count or 0) >= TABLE_WAVEFORM_CACHE_HIT_LIMIT then
               table.insert(waveform_task_queue, task)
             else
-              info._loading_waveform = false
+              local cache_or_state = SM_BeginTableWaveformCacheAsync(info.path, table_px, 0, 0, maxch)
+              if cache_or_state and cache_or_state.status == "ready" then
+                if StoreTableWaveformFromCache(info, width, cache_or_state) then
+                  -- 队列中也可能遇到已经存在的缓存，计入同一个每帧 3 项限额
+                  list_state.table_wf_cache_hit_count = (list_state.table_wf_cache_hit_count or 0) + 1
+                end
+              elseif cache_or_state and cache_or_state.status == "pending" then
+                info._wf_state[table_px] = cache_or_state
+                table.insert(waveform_task_queue, task)
+              else
+                info._loading_waveform = false
+              end
             end
           end
         else
@@ -10667,6 +10707,7 @@ function RefreshFolderFiles(dir)
       info.group = GetCustomGroupsForPath(info.path)
       -- 清空表格列表的波形缓存
       info._thumb_waveform = nil
+      info._table_waveform_cache = nil
       info._last_thumb_w = nil
     end
   end
@@ -13092,6 +13133,13 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
   info._thumb_waveform = info._thumb_waveform or {}
   local wf = info._thumb_waveform[thumb_w]
 
+  -- 列宽变化只使用已经加载到内存的固定分辨率缓存重新映射，不读盘、不重建
+  if not wf and info._table_waveform_cache then
+    if StoreTableWaveformFromCache(info, thumb_w, info._table_waveform_cache) then
+      wf = info._thumb_waveform[thumb_w]
+    end
+  end
+
   local expected_key = tostring(info.path or "") .. "|" .. tostring(thumb_w)
   if wf and wf._key ~= expected_key then
     -- 发现异步/串写，丢弃并回到未命中状态
@@ -13105,16 +13153,16 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     if not reaper.file_exists(p) then
       freesound_not_downloaded = true
       info._thumb_waveform[thumb_w] = nil
+      info._table_waveform_cache = nil
       info._loading_waveform = false
       wf = nil
     end
   end
 
-  -- 已缓存时只读现成缓存，绝不在渲染过程中同步构建
-  if not freesound_not_downloaded and not wf
-    and idle_time >= TABLE_WAVEFORM_IDLE_SECONDS
-    and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2)
-  then
+  -- 停止滚动后检查缓存，扩展缓存命中时整段读取
+  local extension_cache_hit_budget_exhausted = HAVE_SM_WFC and (static.table_wf_cache_hit_count or 0) >= TABLE_WAVEFORM_CACHE_HIT_LIMIT
+  local can_read_ready_cache = idle_time >= TABLE_WAVEFORM_IDLE_SECONDS and ((HAVE_SM_WFC and not extension_cache_hit_budget_exhausted) or (not HAVE_SM_WFC and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2)))
+  if not freesound_not_downloaded and not wf and can_read_ready_cache then
     local cache
     if HAVE_SM_WFC then
       local maxch = 1
@@ -13124,7 +13172,11 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     end
     if cache and StoreTableWaveformFromCache(info, thumb_w, cache) then
       wf = info._thumb_waveform[thumb_w]
-      static.fast_wf_load_count = (static.fast_wf_load_count or 0) + 1
+      if HAVE_SM_WFC then
+        static.table_wf_cache_hit_count = (static.table_wf_cache_hit_count or 0) + 1
+      else
+        static.fast_wf_load_count = (static.fast_wf_load_count or 0) + 1
+      end
     end
   end
 
@@ -13191,6 +13243,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     if not freesound_not_downloaded
       and idle_time >= TABLE_WAVEFORM_IDLE_SECONDS
       and not info._loading_waveform
+      and not extension_cache_hit_budget_exhausted
       and (static.wf_enqueue_count or 0) < TABLE_WAVEFORM_ENQUEUE_LIMIT
     then
       if EnqueueWaveformTask(info, thumb_w) then
@@ -16520,6 +16573,8 @@ function loop()
   if type(FS_ProcessDownloadJobs) == "function" then
     FS_ProcessDownloadJobs()
   end
+  -- 扩展缓存命中计数覆盖本帧的任务队列与表格渲染两条入口
+  static.table_wf_cache_hit_count = 0
   -- 表格列表波形预览，每帧先处理任务队列
   ProcessWaveformTasks()
   ProcessPendingPreviewSeek()
@@ -20651,7 +20706,7 @@ function loop()
           _G.scroll_target = 0.5 -- 0.0=顶部
         end
 
-        -- 限制本帧已缓存直读次数，避免IO抖动
+        -- 缓存命中整段直读
         static.fast_wf_load_count = 0
         static.fast_wf_load_limit = static.fast_wf_load_limit or 2
         static.wf_enqueue_count = 0
@@ -20673,8 +20728,6 @@ function loop()
           static.clipper = reaper.ImGui_CreateListClipper(ctx)
         end
         local clipper = static.clipper
-
-        -- reaper.ImGui_ListClipper_Begin(clipper, #filtered_list) -- 旧版，全部加载
 
         -- 瞬间加载的核心显示
         local display_count = 0
