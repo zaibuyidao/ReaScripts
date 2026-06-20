@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="57a8b688c9da76c37d43bdb6d359bc453ec21627">
+<index version="1" name="zaibuyidao Scripts" commit="b2a60cba15a3a11e98c5542077088d139315664e">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -9389,6 +9389,11 @@ Stabilize list tooltips and add updating the selected snapshot from the current 
         <changelog><![CDATA[Added 'Edit Snapshot' to the right-click menu for editing the snapshot name, category, tags, and description.
 Fixed an issue where items in the snapshot list could not be dragged properly on macOS.]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/57a8b688c9da76c37d43bdb6d359bc453ec21627/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
+      </version>
+      <version name="1.0.21" author="zaibuyidao" time="2026-06-20T07:05:12Z">
+        <changelog><![CDATA[Added 'Edit Snapshot' to the right-click menu for editing the snapshot name, category, tags, and description.
+Fixed an issue where items in the snapshot list could not be dragged properly on macOS.]]></changelog>
+        <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/b2a60cba15a3a11e98c5542077088d139315664e/Utility/zaibuyidao_SFX%20Snapshot%20Library.lua</source>
       </version>
     </reapack>
     <reapack name="zaibuyidao_Tap Tempo Checker (No Tempo Change).lua" type="script" desc="Tap Tempo Checker (No Tempo Change)">
