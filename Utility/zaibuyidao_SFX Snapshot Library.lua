@@ -1,7 +1,8 @@
 -- @description SFX Snapshot Library
--- @version 1.0.19
+-- @version 1.0.20
 -- @author zaibuyidao
 -- @changelog
+--   Added 'Edit Snapshot' to the right-click menu for editing the snapshot name, category, tags, and description.
 --   Fixed an issue where items in the snapshot list could not be dragged properly on macOS.
 -- @links
 --   https://www.soundengine.cn/u/zaibuyidao
@@ -79,7 +80,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.19"
+local SCRIPT_VERSION = "1.0.20"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -109,6 +110,7 @@ local TEXT = {
     save = "Save",
     load = "Load",
     update_snapshot = "Update Snapshot",
+    edit_snapshot = "Edit Snapshot",
     play = "Play",
     stop = "Stop",
     options = "Options",
@@ -137,6 +139,7 @@ local TEXT = {
     capture_unknown = "Unknown",
 
     popup_save_snapshot = "Save Snapshot",
+    popup_edit_snapshot = "Edit Snapshot",
     popup_load_snapshot = "Load Snapshot",
     popup_rename_snapshot = "Rename Snapshot",
     popup_settings = "Settings",
@@ -173,6 +176,7 @@ local TEXT = {
     meta_detail_summary = "Duration {duration}s    Tracks {tracks}    Items {items}    Media {media}",
 
     smart_save_info = "Smart save: Razor Edit has priority. If no Razor Edit exists, the current time selection will be captured.",
+    edit_snapshot_info = "Edit the selected snapshot's name, category, tags, and description.",
     field_name = "Name",
     field_new_name = "New name:",
     field_description = "Description",
@@ -308,6 +312,7 @@ local TEXT = {
     status_remove_delete_failed = "Delete failed. Snapshot was kept in the library.",
     status_removed_index_delete_failed = "Delete failed. Snapshot was kept in the library.",
     status_renamed_snapshot = "Renamed snapshot: {name}",
+    status_edited_snapshot = "Edited snapshot: {name}",
     status_rename_cancelled = "Rename cancelled.",
     status_no_preview_waveform = "No preview file found for waveform display.",
     status_waveform_extension_missing = "Waveform cache extension is not available.",
@@ -345,6 +350,7 @@ local TEXT = {
     save = "保存",
     load = "载入",
     update_snapshot = "更新快照",
+    edit_snapshot = "编辑快照",
     play = "播放",
     stop = "停止",
     options = "选项",
@@ -373,6 +379,7 @@ local TEXT = {
     capture_unknown = "未知",
 
     popup_save_snapshot = "保存快照",
+    popup_edit_snapshot = "编辑快照",
     popup_load_snapshot = "载入快照",
     popup_rename_snapshot = "重命名快照",
     popup_settings = "设置",
@@ -409,6 +416,7 @@ local TEXT = {
     meta_detail_summary = "时长 {duration}秒    轨道 {tracks}    对象 {items}    媒体 {media}",
 
     smart_save_info = "智能保存: 剃刀编辑优先。如果没有剃刀编辑，则捕获当前时间选区。",
+    edit_snapshot_info = "编辑当前快照的名称、分类、标签和描述。",
     field_name = "名称",
     field_new_name = "新名称:",
     field_description = "描述",
@@ -544,6 +552,7 @@ local TEXT = {
     status_remove_delete_failed = "删除失败，快照已保留在资源库中。",
     status_removed_index_delete_failed = "删除失败，快照已保留在资源库中。",
     status_renamed_snapshot = "已重命名快照: {name}",
+    status_edited_snapshot = "已编辑快照: {name}",
     status_rename_cancelled = "已取消重命名。",
     status_no_preview_waveform = "没有可用于波形显示的预览文件。",
     status_waveform_extension_missing = "波形缓存扩展不可用。",
@@ -581,6 +590,7 @@ local TEXT = {
     save = "儲存",
     load = "載入",
     update_snapshot = "更新快照",
+    edit_snapshot = "編輯快照",
     play = "播放",
     stop = "停止",
     options = "選項",
@@ -609,6 +619,7 @@ local TEXT = {
     capture_unknown = "未知",
 
     popup_save_snapshot = "儲存快照",
+    popup_edit_snapshot = "編輯快照",
     popup_load_snapshot = "載入快照",
     popup_rename_snapshot = "重新命名快照",
     popup_settings = "設定",
@@ -645,6 +656,7 @@ local TEXT = {
     meta_detail_summary = "長度 {duration}秒    軌道 {tracks}    物件 {items}    媒體 {media}",
 
     smart_save_info = "智慧儲存: 剃刀編輯優先。如果沒有剃刀編輯，則擷取目前時間選區。",
+    edit_snapshot_info = "編輯目前快照的名稱、分類、標籤和描述。",
     field_name = "名稱",
     field_new_name = "新名稱:",
     field_description = "描述",
@@ -780,6 +792,7 @@ local TEXT = {
     status_remove_delete_failed = "刪除失敗，快照已保留在資源庫中。",
     status_removed_index_delete_failed = "刪除失敗，快照已保留在資源庫中。",
     status_renamed_snapshot = "已重新命名快照: {name}",
+    status_edited_snapshot = "已編輯快照: {name}",
     status_rename_cancelled = "已取消重新命名。",
     status_no_preview_waveform = "沒有可用於波形顯示的預覽檔案。",
     status_waveform_extension_missing = "波形快取擴充不可用。",
@@ -1032,27 +1045,6 @@ if font_normal then ImGui.Attach(ctx, font_normal) end
 if font_small then ImGui.Attach(ctx, font_small) end
 if font_tiny then ImGui.Attach(ctx, font_tiny) end
 
-function IsInvalidImGuiContextError(err)
-  return tostring(err or ""):find("expected a valid ImGui_Context", 1, true) ~= nil
-end
-
-function RecreateImGuiContextAfterNativeDrag()
-  local ok, new_ctx = pcall(ImGui.CreateContext, SCRIPT_NAME)
-  if not ok or not new_ctx then return false end
-
-  ctx = new_ctx
-  font_title = CreateUIFont(21)
-  font_normal = CreateUIFont(14)
-  font_small = CreateUIFont(12)
-  font_tiny = CreateUIFont(11)
-
-  if font_title then pcall(ImGui.Attach, ctx, font_title) end
-  if font_normal then pcall(ImGui.Attach, ctx, font_normal) end
-  if font_small then pcall(ImGui.Attach, ctx, font_small) end
-  if font_tiny then pcall(ImGui.Attach, ctx, font_tiny) end
-  return true
-end
-
 local STATUS_BAR_FONT_SIZE = 12
 local STATUS_BAR_PADDING_Y = 4
 local STATUS_BAR_HEIGHT = STATUS_BAR_FONT_SIZE + STATUS_BAR_PADDING_Y * 2
@@ -1095,6 +1087,7 @@ local state = {
 
   show_save_popup = false,
   request_open_save_popup = false,
+  request_open_edit_popup = false,
   request_open_rename_popup = false,
   request_open_load_confirm_popup = false,
   request_execute_load = false,
@@ -1111,6 +1104,7 @@ local state = {
   save_description = "",
   save_in_progress = false,
   save_submitted = false,
+  edit_snapshot_id = "",
   rename_snapshot_id = "",
   rename_name = "",
 
@@ -5334,6 +5328,28 @@ function RequestSaveSnapshotPopup(open_now)
   end
 end
 
+function RequestEditSnapshotPopup(snapshot, open_now)
+  if type(snapshot) ~= "table" then
+    state.status = Tr("status_no_snapshot_selected")
+    return
+  end
+
+  state.edit_snapshot_id = tostring(snapshot.id or "")
+  state.save_name = tostring(snapshot.name or "")
+  state.save_category = tostring(snapshot.category or "")
+  if state.save_category == "Uncategorized" then state.save_category = "" end
+  state.save_tags = JoinTags(snapshot.tags)
+  state.save_description = tostring(snapshot.description or "")
+  state.save_in_progress = false
+  state.save_submitted = false
+
+  if open_now and ImGui.OpenPopup then
+    ImGui.OpenPopup(ctx, UiLabel("popup_edit_snapshot", "EditSnapshotPopup"))
+  else
+    state.request_open_edit_popup = true
+  end
+end
+
 function RequestLoadSelectedSnapshot()
   local snapshot = state.snapshots[state.selected]
   if not snapshot then
@@ -5776,7 +5792,7 @@ function PrimeRenameSnapshot(snapshot)
   state.request_open_rename_popup = true
 end
 
-function RenameSnapshotById(snapshot_id, requested_name)
+function RenameSnapshotById(snapshot_id, requested_name, metadata_updates)
   local index, snapshot = FindSnapshotIndexById(snapshot_id)
   if not snapshot then
     state.status = Tr("status_no_snapshot_selected")
@@ -5787,6 +5803,9 @@ function RenameSnapshotById(snapshot_id, requested_name)
   local new_folder_name = SanitizeFileName(new_name)
   local old_name = tostring(snapshot.name or "")
   local old_updated_at = snapshot.updated_at
+  local old_category = snapshot.category
+  local old_tags = snapshot.tags
+  local old_description = snapshot.description
   local old_folder, resolved_old_folder_name = ResolveSnapshotFolder(snapshot)
   local old_folder_name = tostring(resolved_old_folder_name or "")
   if old_folder_name == "" then
@@ -5797,10 +5816,18 @@ function RenameSnapshotById(snapshot_id, requested_name)
     old_folder = GetSnapshotFolderForFileOperation(snapshot)
   end
 
+  if type(metadata_updates) == "table" and new_name == old_name and old_folder_name ~= "" then
+    new_folder_name = old_folder_name
+  end
+
   local new_folder = JoinPath(GetSnapshotsRoot(), new_folder_name)
   local id = tostring(snapshot.id or "")
 
-  if new_name == old_name and old_folder_name == new_folder_name and tostring(snapshot.folder or "") == new_folder_name then
+  if new_name == old_name
+    and old_folder_name == new_folder_name
+    and tostring(snapshot.folder or "") == new_folder_name
+    and type(metadata_updates) ~= "table"
+  then
     state.status = Tr("status_rename_cancelled")
     return true
   end
@@ -5878,6 +5905,12 @@ function RenameSnapshotById(snapshot_id, requested_name)
 
   snapshot.name = new_name
   snapshot.folder = new_folder_name
+  if type(metadata_updates) == "table" then
+    local category = Trim(metadata_updates.category)
+    snapshot.category = category ~= "" and category or "Uncategorized"
+    snapshot.tags = type(metadata_updates.tags) == "table" and metadata_updates.tags or SplitTags(metadata_updates.tags)
+    snapshot.description = tostring(metadata_updates.description or "")
+  end
   snapshot.updated_at = os.date("%Y-%m-%d %H:%M:%S")
 
   local meta = data.meta
@@ -5895,6 +5928,9 @@ function RenameSnapshotById(snapshot_id, requested_name)
 
     snapshot.name = old_name
     snapshot.folder = old_folder_name
+    snapshot.category = old_category
+    snapshot.tags = old_tags
+    snapshot.description = old_description
     snapshot.updated_at = old_updated_at
 
     local msg = Tr("error_failed_update_snapshot_data")
@@ -5912,6 +5948,9 @@ function RenameSnapshotById(snapshot_id, requested_name)
 
     snapshot.name = old_name
     snapshot.folder = old_folder_name
+    snapshot.category = old_category
+    snapshot.tags = old_tags
+    snapshot.description = old_description
     snapshot.updated_at = old_updated_at
     state.snapshots[index] = snapshot
 
@@ -5927,8 +5966,45 @@ function RenameSnapshotById(snapshot_id, requested_name)
   EnsureSnapshotVisibleById(id)
   ResetWaveformCacheState()
 
-  state.status = Tr("status_renamed_snapshot", { name = new_name })
+  if type(metadata_updates) == "table" then
+    state.status = Tr("status_edited_snapshot", { name = new_name })
+  else
+    state.status = Tr("status_renamed_snapshot", { name = new_name })
+  end
   return true
+end
+
+function EditSnapshotFromPopup()
+  if state.save_in_progress or state.save_submitted then
+    return false
+  end
+
+  local metadata_updates = {
+    category = state.save_category,
+    tags = SplitTags(state.save_tags),
+    description = state.save_description,
+  }
+
+  state.save_in_progress = true
+  local ok, result = pcall(
+    RenameSnapshotById,
+    state.edit_snapshot_id,
+    state.save_name,
+    metadata_updates
+  )
+  state.save_in_progress = false
+
+  if not ok then
+    state.status = tostring(result or Tr("error_failed_update_snapshot_data"))
+    reaper.MB(state.status, SCRIPT_NAME, 0)
+    return false
+  end
+
+  if result == true then
+    state.save_submitted = true
+  end
+
+  return result == true
 end
 
 function BuildRemoveSnapshotConfirmMessage(entries)
@@ -7621,6 +7697,10 @@ function DrawSnapshotList(width, height)
             RequestLoadSelectedSnapshot()
           end
 
+          if ImGui.MenuItem(ctx, Tr("edit_snapshot")) then
+            RequestEditSnapshotPopup(s, false)
+          end
+
           if ImGui.MenuItem(ctx, Tr("update_snapshot")) then
             list_changed = UpdateSnapshotFromCurrentSelection(s) == true
           end
@@ -7772,59 +7852,63 @@ function DrawBottomStatusBar(width, height)
   end
 end
 
+function DrawSnapshotMetadataFields(info_key)
+  ImGui.Text(ctx, Tr(info_key))
+  ImGui.Separator(ctx)
+
+  ImGui.SetNextItemWidth(ctx, 400)
+  local changed, v = ImGui.InputText(ctx, UiLabel("field_name", "save_name"), state.save_name)
+  if changed then state.save_name = v end
+
+  ImGui.SetNextItemWidth(ctx, 400)
+  local changed2, v2 = ImGui.InputText(ctx, "##CategoryInput", state.save_category)
+  if changed2 then state.save_category = v2 end
+
+  ImGui.SameLine(ctx, nil, 3)
+
+  if ImGui.SmallButton(ctx, UiLabel("category_dropdown", "category_presets")) then
+    ImGui.OpenPopup(ctx, "CategoryPresetPopup")
+  end
+  if state.show_tips and ImGui.IsItemHovered(ctx) then
+    ImGui.SetTooltip(ctx, Tr("tooltip_choose_categories"))
+  end
+
+  DrawSelectablePopupList("CategoryPresetPopup", GetCategories(), function(item)
+    if item ~= "All" then
+      state.save_category = item == "Uncategorized" and "" or item
+    end
+  end, Tr("no_existing_categories"))
+
+  ImGui.SetNextItemWidth(ctx, 400)
+  local changed3, v3 = ImGui.InputText(ctx, "##TagsInput", state.save_tags)
+  if changed3 then state.save_tags = v3 end
+
+  ImGui.SameLine(ctx, nil, 3)
+
+  if ImGui.SmallButton(ctx, UiLabel("tags_dropdown", "tag_presets")) then
+    ImGui.OpenPopup(ctx, "TagPresetPopup")
+  end
+  if state.show_tips and ImGui.IsItemHovered(ctx) then
+    ImGui.SetTooltip(ctx, Tr("tooltip_append_tags"))
+  end
+
+  DrawSelectablePopupList("TagPresetPopup", GetAllTags(), function(item)
+    state.save_tags = AppendTagText(state.save_tags, item)
+  end, Tr("no_existing_tags"))
+
+  ImGui.SetNextItemWidth(ctx, 400)
+  local changed4, v4 = ImGui.InputTextMultiline(ctx, UiLabel("field_description", "save_description"), state.save_description, 400, 90)
+  if changed4 then state.save_description = v4 end
+
+  if state.show_tips then
+    ImGui.TextDisabled(ctx, Tr("tip_reuse_names"))
+  end
+end
+
 function DrawSavePopup()
   if ImGui.BeginPopupModal(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
     state.modal_popup_active = true
-    ImGui.Text(ctx, Tr("smart_save_info"))
-    ImGui.Separator(ctx)
-
-    ImGui.SetNextItemWidth(ctx, 400)
-    local changed, v = ImGui.InputText(ctx, UiLabel("field_name", "save_name"), state.save_name)
-    if changed then state.save_name = v end
-
-    ImGui.SetNextItemWidth(ctx, 400)
-    local changed2, v2 = ImGui.InputText(ctx, "##CategoryInput", state.save_category)
-    if changed2 then state.save_category = v2 end
-
-    ImGui.SameLine(ctx, nil, 3)
-
-    if ImGui.SmallButton(ctx, UiLabel("category_dropdown", "category_presets")) then
-      ImGui.OpenPopup(ctx, "CategoryPresetPopup")
-    end
-    if state.show_tips and ImGui.IsItemHovered(ctx) then
-      ImGui.SetTooltip(ctx, Tr("tooltip_choose_categories"))
-    end
-
-    DrawSelectablePopupList("CategoryPresetPopup", GetCategories(), function(item)
-      if item ~= "All" then
-        state.save_category = item == "Uncategorized" and "" or item
-      end
-    end, Tr("no_existing_categories"))
-
-    ImGui.SetNextItemWidth(ctx, 400)
-    local changed3, v3 = ImGui.InputText(ctx, "##TagsInput", state.save_tags)
-    if changed3 then state.save_tags = v3 end
-
-    ImGui.SameLine(ctx, nil, 3)
-
-    if ImGui.SmallButton(ctx, UiLabel("tags_dropdown", "tag_presets")) then
-      ImGui.OpenPopup(ctx, "TagPresetPopup")
-    end
-    if state.show_tips and ImGui.IsItemHovered(ctx) then
-      ImGui.SetTooltip(ctx, Tr("tooltip_append_tags"))
-    end
-
-    DrawSelectablePopupList("TagPresetPopup", GetAllTags(), function(item)
-      state.save_tags = AppendTagText(state.save_tags, item)
-    end, Tr("no_existing_tags"))
-
-    ImGui.SetNextItemWidth(ctx, 400)
-    local changed4, v4 = ImGui.InputTextMultiline(ctx, UiLabel("field_description", "save_description"), state.save_description, 400, 90)
-    if changed4 then state.save_description = v4 end
-
-    if state.show_tips then
-      ImGui.TextDisabled(ctx, Tr("tip_reuse_names"))
-    end
+    DrawSnapshotMetadataFields("smart_save_info")
 
     ImGui.Separator(ctx)
 
@@ -7842,6 +7926,45 @@ function DrawSavePopup()
       state.show_save_popup = false
       state.save_submitted = false
       ImGui.CloseCurrentPopup(ctx)
+    end
+
+    ImGui.EndPopup(ctx)
+  end
+end
+
+function DrawEditPopup()
+  if ImGui.BeginPopupModal(ctx, UiLabel("popup_edit_snapshot", "EditSnapshotPopup"), nil, ImGui.WindowFlags_AlwaysAutoResize) then
+    state.modal_popup_active = true
+    local _, snapshot = FindSnapshotIndexById(state.edit_snapshot_id)
+
+    if not snapshot then
+      ImGui.TextDisabled(ctx, Tr("no_snapshot_selected"))
+      ImGui.Separator(ctx)
+
+      if ImGui.Button(ctx, Tr("cancel"), 100, 30) then
+        state.edit_snapshot_id = ""
+        state.save_submitted = false
+        ImGui.CloseCurrentPopup(ctx)
+      end
+    else
+      DrawSnapshotMetadataFields("edit_snapshot_info")
+      ImGui.Separator(ctx)
+
+      local edit_requested = ImGui.Button(ctx, Tr("save"), 100, 30) or IsConfirmKeyPressed()
+      if edit_requested and not state.save_in_progress and not state.save_submitted then
+        if EditSnapshotFromPopup() then
+          state.edit_snapshot_id = ""
+          ImGui.CloseCurrentPopup(ctx)
+        end
+      end
+
+      ImGui.SameLine(ctx)
+
+      if ImGui.Button(ctx, Tr("cancel"), 100, 30) and not state.save_in_progress then
+        state.edit_snapshot_id = ""
+        state.save_submitted = false
+        ImGui.CloseCurrentPopup(ctx)
+      end
     end
 
     ImGui.EndPopup(ctx)
@@ -8378,7 +8501,7 @@ function DrawMainContentLayout()
   avail_h = math.max(1, math.floor(tonumber(avail_h) or 420))
 
   -- macOS 的字体行高和边界取整会比固定状态栏高度多占几个像素。
-  local status_bar_height = STATUS_BAR_HEIGHT + ((IsMacOS and IsMacOS()) and 3 or 0)
+  local status_bar_height = STATUS_BAR_HEIGHT + ((IsMacOS and IsMacOS()) and 1 or 0)
 
   local gap_size = 5
   local splitter_size = 5
@@ -8457,19 +8580,7 @@ function MainLoop()
   UpdatePreviewState()
   PumpPeakBuildQueue(0.02)
   MaybeSynchronizeSnapshotsWithDisk(false)
-
-  if IsMacOS and IsMacOS() then
-    local ok_size, size_err = pcall(ImGui.SetNextWindowSize, ctx, 430, 670, ImGui.Cond_FirstUseEver)
-    if not ok_size then
-      if IsInvalidImGuiContextError(size_err) and RecreateImGuiContextAfterNativeDrag() then
-        ImGui.SetNextWindowSize(ctx, 430, 670, ImGui.Cond_FirstUseEver)
-      else
-        error(size_err)
-      end
-    end
-  else
-    ImGui.SetNextWindowSize(ctx, 430, 670, ImGui.Cond_FirstUseEver)
-  end
+  ImGui.SetNextWindowSize(ctx, 430, 670, ImGui.Cond_FirstUseEver)
 
   PushStyle()
 
@@ -8499,6 +8610,11 @@ function MainLoop()
       ImGui.OpenPopup(ctx, UiLabel("popup_save_snapshot", "SaveSnapshotPopup"))
     end
     DrawSavePopup()
+    if state.request_open_edit_popup then
+      state.request_open_edit_popup = false
+      ImGui.OpenPopup(ctx, UiLabel("popup_edit_snapshot", "EditSnapshotPopup"))
+    end
+    DrawEditPopup()
     if state.request_open_rename_popup then
       state.request_open_rename_popup = false
       ImGui.OpenPopup(ctx, UiLabel("popup_rename_snapshot", "RenameSnapshotPopup"))
