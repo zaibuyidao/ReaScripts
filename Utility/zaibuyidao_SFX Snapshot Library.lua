@@ -1,5 +1,5 @@
 -- @description SFX Snapshot Library
--- @version 1.0.20
+-- @version 1.0.21
 -- @author zaibuyidao
 -- @changelog
 --   Added 'Edit Snapshot' to the right-click menu for editing the snapshot name, category, tags, and description.
@@ -80,7 +80,7 @@ end
 
 local RESOURCE_PATH = tostring(reaper.GetResourcePath() or ""):gsub("\\", "/"):gsub("/+$", "")
 local SCRIPT_NAME = "SFX Snapshot Library"
-local SCRIPT_VERSION = "1.0.20"
+local SCRIPT_VERSION = "1.0.21"
 local EXT_SECTION = "SFX_SNAPSHOT_LIBRARY"
 
 local LANGUAGE_DEFAULT = "en"
@@ -5018,9 +5018,9 @@ function BeginSnapshotArrangeDragSource(index, snapshot)
     state.snapshot_list_focused = true
     local drag = SetSnapshotArrangeDragState(index, snapshot, payload)
 
-    if drag and ImGui.Text then
-      ImGui.Text(ctx, "Drag snapshot to REAPER to load")
-    end
+    -- if drag and ImGui.Text then
+    --   ImGui.Text(ctx, "Drag snapshot to REAPER to load")
+    -- end
   end
 
   ImGui.EndDragDropSource(ctx)
