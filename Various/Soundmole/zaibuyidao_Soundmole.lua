@@ -1,6 +1,46 @@
 -- NoIndex: true
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
+
+SM_EXT_WIN_VERSION = "v0.0.31"
+SM_EXT_MAC_VERSION = "v0.0.2"
+SM_EXT_REQUIRED = reaper.APIExists('SM_GetPeaksCSV') and reaper.APIExists('SM_Builder_Stop')
+
+function SM_CheckRequiredExtension()
+  if SM_EXT_REQUIRED then return true end
+
+  local os_name = tostring(reaper.GetOS and reaper.GetOS() or "")
+  local is_windows = os_name:find("Win", 1, true) ~= nil
+  local download_url
+  local download_label
+  local platform_label
+
+  if is_windows then
+    download_url = "https://stash.reaper.fm/v/50782/reaper_soundmole-x64.dll"
+    download_label = "reaper_soundmole-x64.dll " .. SM_EXT_WIN_VERSION .. " (Windows)"
+    platform_label = "Windows"
+  else
+    download_url = "https://stash.reaper.fm/v/52429/reaper_soundmole-arm64.dylib"
+    download_label = "reaper_soundmole-arm64.dylib " .. SM_EXT_MAC_VERSION .. " (macOS, Apple Silicon arm64)"
+    platform_label = "macOS"
+  end
+
+  local message =
+    "Soundmole requires the matching Soundmole extension. The extension is missing or too old.\n\n" ..
+    -- platform_label .. ":\n" ..
+    download_label .. "\n" ..
+    download_url .. "\n\n" ..
+    "Install the file into REAPER/UserPlugins, restart REAPER, then run Soundmole again.\n" ..
+    "Click OK to open the recommended download for this system."
+
+  local response = reaper.MB(message, "Soundmole Extension Required", 1)
+  if response == 1 and reaper.CF_ShellExecute then
+    reaper.CF_ShellExecute(download_url)
+  end
+  return false
+end
+
+if not SM_CheckRequiredExtension() then return end
 local Persistence = require('lib.persistence')
 -- Persistent values go to data/Soundmole.ini. Only these runtime signals use non-persistent ExtState.
 Persistence.install_state_facade({
@@ -141,6 +181,18 @@ HAVE_SM_SIM_SETUP = reaper.APIExists('SM_SIM_Setup_Start')
   and reaper.APIExists('SM_SIM_Setup_GetStatusJSON')
   and reaper.APIExists('SM_SIM_Setup_Stop')
 HAVE_SM_SIM_SETUP_PROFILE = reaper.APIExists('SM_SIM_Setup_StartWithProfile')
+
+function SM_ShowExtensionUpdateRequired(feature)
+  local suffix = ""
+  if feature and feature ~= "" then suffix = " (" .. tostring(feature) .. ")" end
+  reaper.MB(
+    "This action requires the latest Soundmole extension" .. suffix .. ".\n\n" ..
+    "Please update the Soundmole extension, restart REAPER, then try again.\n\n" ..
+    "此操作需要最新版 Soundmole 扩展" .. suffix .. "。\n\n" ..
+    "请更新 Soundmole 扩展并重启 REAPER 后再试。",
+    "Soundmole Extension Required / 需要 Soundmole 扩展",
+    0)
+end
 
 SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
 FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
@@ -312,17 +364,12 @@ end
 WFC_PX_DEFAULT               = 2048  -- 默认缓存像素（与C++对齐）
 TABLE_WAVEFORM_IDLE_SECONDS  = 1.0   -- 表格停止滚动后，等待多少秒开始加载单元格波形
 TABLE_WAVEFORM_ENQUEUE_LIMIT = 2     -- 每帧最多加入多少个可见单元格波形任务
-TABLE_WAVEFORM_PROCESS_LIMIT = 2     -- 每帧最多推进多少个表格波形任务
-TABLE_WAVEFORM_PUMP_ITERS    = 128   -- 单个 C++ 异步任务每帧最多推进多少内部小步
+TABLE_WAVEFORM_PROCESS_LIMIT = 10    -- 每帧最多推进多少个表格波形任务
+TABLE_WAVEFORM_PUMP_ITERS    = 256   -- 单个 C++ 异步任务每帧最多推进多少内部小步
 TABLE_WAVEFORM_PUMP_MS       = 0.35  -- 单个 C++ 异步任务每帧最多占用多少毫秒
-TABLE_WAVEFORM_LUA_PROCESS_LIMIT = 2    -- 无扩展时每帧最多推进多少个 Lua 波形任务
-TABLE_WAVEFORM_LUA_BUILD_ITERS = 64     -- 无扩展时单个任务每帧最多推进多少次 REAPER 峰值构建
-TABLE_WAVEFORM_LUA_ROWS_PER_SLICE = 256 -- 无扩展时单个任务每帧最多处理多少个缓存像素
-TABLE_WAVEFORM_LUA_PUMP_MS = 0.75       -- 无扩展时单个任务每帧最多占用多少毫秒
-TABLE_WAVEFORM_LUA_PRIORITY_STEPS = 16  -- 无扩展时优先连续推进当前任务的次数，随后轮转防止阻塞
-TABLE_WAVEFORM_CACHE_PX = 256           -- 表格磁盘缓存固定分辨率；列宽变化只重采样，不创建新缓存
-TABLE_WAVEFORM_PREFETCH_PX = TABLE_WAVEFORM_CACHE_PX
-TABLE_WAVEFORM_CACHE_HIT_LIMIT = 3       -- 扩展缓存命中后，每帧最多整段加载多少项
+TABLE_WAVEFORM_CACHE_PX      = 1024  -- 表格磁盘缓存固定分辨率；列宽变化只重采样，不创建新缓存
+TABLE_WAVEFORM_PREFETCH_PX   = TABLE_WAVEFORM_CACHE_PX
+TABLE_WAVEFORM_CACHE_HIT_LIMIT = 10  -- 扩展缓存命中后，每帧最多整段加载多少项
 files_idx_cache              = nil   -- 文件缓存
 waveform_task_queue          = {}    -- 表格列表波形预览
 ui_bottom_offset             = 231   -- 底部总高度
@@ -527,10 +574,6 @@ function RegisterWaveformJob(key)
 end
 
 function CancelWaveformState(state)
-  if type(state) == "table" and state.backend == "lua" and type(CancelLuaTableWaveformState) == "function" then
-    CancelLuaTableWaveformState(state)
-    return
-  end
   if type(state) == "table" and state.status == "pending" then
     CancelTrackedWaveformJob(state.key)
   end
@@ -3076,75 +3119,6 @@ function _normalize_waveform_data(data)
   }
 end
 
-function CacheFilename(filepath)
-  filepath = normalize_path(filepath, false)
-  -- 文件大小安全获取
-  local fsize = GetFileSize(filepath)
-  if not fsize then fsize = 0 end -- 文件不存在或无法访问时，避免崩溃
-  local size = tostring(fsize)
-  local hash = SimpleHash(filepath .. "@" .. size)
-  local subdir = hash:sub(1, 2) -- 取前两位，16进制00~ff
-  local dir = cache_dir .. subdir .. sep
-  return dir .. hash .. ".wfc"
-end
-
--- 保存缓存。如果行是 MIDI/无效文件，直接不入队
-function SaveWaveformCache(filepath, data)
-  filepath = normalize_path(filepath, false)
-
-  local norm = _normalize_waveform_data(data)
-  if not norm then return end
-  if not (norm.pixel_cnt and norm.channel_count and norm.src_len) then return end
-  if norm.pixel_cnt <= 0 or norm.channel_count <= 0 or norm.src_len <= 0 then return end
-
-  local fpath = CacheFilename(filepath)
-  local dir = fpath:match("^(.*[\\/])") or cache_dir
-  EnsureCacheDir(dir) -- 只在真正写入时创建子目录
-
-  local f = io.open(CacheFilename(filepath), "w+b")
-  if not f then return end
-
-  -- 像素数,声道数,源时长
-  f:write(string.format("%d,%d,%f\n", norm.pixel_cnt, norm.channel_count, norm.src_len))
-  for px = 1, norm.pixel_cnt do
-    local cols = {}
-    for ch = 1, norm.channel_count do
-      local p = norm.peaks[ch][px]
-      local minv = tonumber(p and p[1]) or 0.0
-      local maxv = tonumber(p and p[2]) or 0.0
-      cols[#cols+1] = string.format("%f,%f", minv, maxv)
-    end
-    f:write(table.concat(cols, ","))
-    f:write("\n")
-  end
-
-  f:close()
-end
-
--- 读取缓存
-function LoadWaveformCache(filepath)
-  filepath = normalize_path(filepath, false)
-  local f = io.open(CacheFilename(filepath), "rb")
-  if not f then return nil end
-  local line = f:read("*l")
-  if not line then f:close() return nil end
-  local pixel_cnt, channel_count, src_len = line:match("^(%d+),(%d+),([%d%.]+)")
-  pixel_cnt, channel_count, src_len = tonumber(pixel_cnt), tonumber(channel_count), tonumber(src_len)
-  local peaks = {}
-  for ch = 1, channel_count do peaks[ch] = {} end
-  local px = 1
-  for l in f:lines() do
-    local vals = {}
-    for v in l:gmatch("([%-%d%.]+)") do table.insert(vals, tonumber(v)) end
-    for ch = 1, channel_count do
-      peaks[ch][px] = {vals[(ch-1)*2+1], vals[(ch-1)*2+2]}
-    end
-    px = px + 1
-  end
-  f:close()
-  return {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len}
-end
-
 function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
   if not cache or not pixel_cnt or type(pixel_cnt) ~= "number" then
     return {}, 0, 0, 0
@@ -3226,40 +3200,6 @@ function RemapWaveformToWindow(cache, pixel_cnt, start_time, end_time)
   end
 
   return peaks_new, pixel_cnt, window_len, chs
-end
-
--- 获取波形数据
-function GetPeaksWithCache(info, wf_step, pixel_cnt, start_time, end_time)
-  if not info or not info.path or info.path == "" then return end
-  local path = normalize_path(info.path, false)
-  local cache = LoadWaveformCache(path)
-  if not cache then
-    -- 第一次采样，直接全量采样最大宽度
-    local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, WFC_PX_DEFAULT, start_time, end_time)
-    if peaks and src_len and channel_count then
-      SaveWaveformCache(path, {peaks=peaks, pixel_cnt=WFC_PX_DEFAULT, channel_count=channel_count, src_len=src_len})
-      cache = {peaks=peaks, pixel_cnt=WFC_PX_DEFAULT, channel_count=channel_count, src_len=src_len}
-    end
-  end
-  if not cache then return end
-
-  -- 波形放大/缩小时，直接对缓存数据做插值采样。例如pixel_cnt=窗口宽度
-  local peaks_new = {}
-  for ch = 1, cache.channel_count do peaks_new[ch] = {} end
-  for px = 1, pixel_cnt do
-    local src_px = (px-1) / (pixel_cnt-1) * (cache.pixel_cnt-1) + 1
-    local i = math.floor(src_px)
-    local frac = src_px - i
-    for ch = 1, cache.channel_count do
-      local v1 = cache.peaks[ch][i] or {0, 0}
-      local v2 = cache.peaks[ch][i+1] or v1 -- 越界时用v1
-      -- 线性插值
-      local minv = v1[1] + (v2[1] - v1[1]) * frac
-      local maxv = v1[2] + (v2[2] - v1[2]) * frac
-      peaks_new[ch][px] = {minv, maxv}
-    end
-  end
-  return peaks_new, pixel_cnt, cache.src_len, cache.channel_count
 end
 
 --------------------------------------------- 波形缓存扩展相关 ---------------------------------------------
@@ -7446,144 +7386,56 @@ function GetWavPeaks(filepath, step, pixel_cnt, start_time, end_time)
   filepath = normalize_path(filepath, false)
   if not IsValidAudioFile(filepath) then return end
 
-  -- 优先使用扩展 SM_GetPeaksCSV（极速）
   pixel_cnt  = math.max(1, math.floor(tonumber(pixel_cnt or 1200)))
   start_time = tonumber(start_time) or 0
   end_time   = tonumber(end_time) or 0 -- 传 0 给扩展表示直到文件末尾
   local max_channels = 6
-
-  if HAVE_SM_EXT then
-    local src_len = 0
-    do
-      local src = reaper.PCM_Source_CreateFromFile(filepath)
-      if src then
-        src_len = reaper.GetMediaSourceLength(src) or 0
-        reaper.PCM_Source_Destroy(src)
-      end
+  local src_len = 0
+  do
+    local src = reaper.PCM_Source_CreateFromFile(filepath)
+    if src then
+      src_len = reaper.GetMediaSourceLength(src) or 0
+      reaper.PCM_Source_Destroy(src)
     end
-
-    local csv = reaper.SM_GetPeaksCSV(filepath, pixel_cnt, start_time, end_time, max_channels, step or 0)
-    if not csv or csv == "" then return nil end
-
-    local head_end = csv:find("\n", 1, true) or #csv
-    local head = csv:sub(1, head_end - 1)
-    local p_cnt_s, ch_s, win_len_s = head:match("([^,]+),([^,]+),([^,]+)")
-    local p_cnt = tonumber(p_cnt_s) or pixel_cnt
-    local channels = math.min(tonumber(ch_s) or max_channels, max_channels)
-
-    local peaks = {}
-    for ch = 1, channels do peaks[ch] = {} end
-
-    local row = 1
-    for line in csv:sub(head_end + 1):gmatch("([^\n]+)") do
-      local nums = {}
-      local col = 1
-      for num in line:gmatch("([^,]+)") do
-        nums[col] = tonumber(num) or 0
-        col = col + 1
-      end
-      for ch = 1, channels do
-        local b = (ch - 1) * 2 + 1
-        peaks[ch][row] = { nums[b] or 0, nums[b + 1] or 0 }
-      end
-      row = row + 1
-      if row > p_cnt then break end
-    end
-
-    return peaks, p_cnt, src_len, channels
   end
 
-  -- 回退旧的 AudioAccessor 逐像素取样
-  reaper.PreventUIRefresh(1) -- 防止UI刷新
-  local src = reaper.PCM_Source_CreateFromFile(filepath)
-  if not src then return end
-  local srate = reaper.GetMediaSourceSampleRate(src)
-  if not srate or srate == 0 then srate = 44100 end
-  local channels = math.min(reaper.GetMediaSourceNumChannels(src), 6)
-  local src_len = reaper.GetMediaSourceLength(src)
+  local csv = reaper.SM_GetPeaksCSV(filepath, pixel_cnt, start_time, end_time, max_channels, step or 0)
+  if not csv or csv == "" then return end
 
-  -- 支持整段还是窗口
-  start_time = tonumber(start_time) or 0
-  end_time = tonumber(end_time) or 0
-  if end_time <= 0 or end_time > src_len then end_time = src_len end
-  start_time = math.max(0, start_time)
-  end_time = math.max(start_time, math.min(src_len, end_time))
-  
-  local win_len = end_time - start_time
-  local total_samples = math.floor(win_len * srate)
-  local samples_per_pixel = math.max(1, math.floor(total_samples / pixel_cnt))
-
-  -- 临时插入 item/take
-  local track_idx = reaper.CountTracks(0)
-  reaper.InsertTrackAtIndex(track_idx, true)
-  local track = reaper.GetTrack(0, track_idx)
-  local item = reaper.AddMediaItemToTrack(track)
-  reaper.SetMediaItemLength(item, src_len, false)
-  local take = reaper.AddTakeToMediaItem(item)
-  reaper.SetMediaItemTake_Source(take, src)
-  reaper.UpdateItemInProject(item)
-  local accessor = reaper.CreateTakeAudioAccessor(take)
+  local head_end = csv:find("\n", 1, true) or #csv
+  local head = csv:sub(1, head_end - 1)
+  local p_cnt_s, ch_s = head:match("([^,]+),([^,]+),")
+  local p_cnt = tonumber(p_cnt_s) or pixel_cnt
+  local channels = math.min(tonumber(ch_s) or max_channels, max_channels)
+  if channels <= 0 then return end
 
   local peaks = {}
   for ch = 1, channels do peaks[ch] = {} end
-  local buf_size = math.max(1, math.floor(samples_per_pixel * channels))
-  local buf = reaper.new_array(buf_size)
 
-  -- 动态计算实际步长
-  local function calcAdaptiveStep(read_samples)
-    -- read_samples 当前像素对应的采样点数量。例如1秒音频采样率为44100Hz，波形窗口宽度是 1200 Px，那么samples_per_pixel = floor(44100 / 1200) ≈ 36.75，表示每个像素对应 36.75 个采样点
-    if read_samples >= 1000 then
-      return step -- 使用原始step
-    elseif read_samples >= 100 then
-      return math.max(1, math.floor(read_samples / 20))
-    elseif read_samples >= 10 then
-      return 1
-    else
-      return 1
+  local row = 1
+  for line in csv:sub(head_end + 1):gmatch("([^\n]+)") do
+    local nums = {}
+    local col = 1
+    for num in line:gmatch("([^,]+)") do
+      nums[col] = tonumber(num) or 0
+      col = col + 1
     end
+    for ch = 1, channels do
+      local b = (ch - 1) * 2 + 1
+      peaks[ch][row] = { nums[b] or 0, nums[b + 1] or 0 }
+    end
+    row = row + 1
+    if row > p_cnt then break end
   end
 
-  for px = 1, pixel_cnt do
-    local sample_start = (px - 1) * samples_per_pixel
-    local read_samples = math.min(samples_per_pixel, total_samples - sample_start)
-    if read_samples <= 0 then
-      for ch = 1, channels do peaks[ch][px] = {0, 0} end
-    else
-      buf.clear()
-      local offset = start_time + sample_start / srate
-      reaper.GetAudioAccessorSamples(accessor, srate, channels, offset, read_samples, buf)
-      local actual_step = calcAdaptiveStep(read_samples)
-      for ch = 1, channels do
-        local min, max = math.huge, -math.huge
-        for i = 0, read_samples - 1, actual_step do
-          local v = buf[(i * channels) + ch]
-          if v then
-            if v < min then min = v end
-            if v > max then max = v end
-          end
-        end
-        if min == math.huge or max == -math.huge then
-          min, max = 0, 0
-        end
-        peaks[ch][px] = {min, max}
-      end
-    end
-  end
-
-  -- 清理
-  reaper.DestroyAudioAccessor(accessor)
-  reaper.DeleteTrackMediaItem(track, item)
-  reaper.DeleteTrack(track)
-  reaper.PreventUIRefresh(-1)
-  reaper.UpdateArrange()
-  return peaks, pixel_cnt, src_len, channels
+  return peaks, p_cnt, src_len, channels
 end
 
 function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
-  -- 优先使用扩展 SM_GetPeaksCSV（极速）
   if not take or not reaper.ValidatePtr(take, "MediaItem_Take*") then return end
   local src = reaper.GetMediaItemTake_Source(take)
   if not src then return end
+
   local src_len = reaper.GetMediaSourceLength(src) or 0
   local max_channels = 6
   local ch_from_src = reaper.GetMediaSourceNumChannels(src) or 1
@@ -7594,118 +7446,37 @@ function GetPeaksFromTake(take, step, pixel_cnt, start_time, end_time)
   end_time   = tonumber(end_time) or 0 -- 传 0 给扩展表示直到文件末尾
 
   local filepath = reaper.GetMediaSourceFileName(src, "")
-  if HAVE_SM_EXT and filepath and filepath ~= "" then
-    local csv = reaper.SM_GetPeaksCSV(filepath, pixel_cnt, start_time, end_time, max_channels, step or 0)
-    if csv and csv ~= "" then
-      local head_end = csv:find("\n", 1, true) or #csv
-      local head = csv:sub(1, head_end - 1)
-      local p_cnt_s, ch_s = head:match("([^,]+),([^,]+),")
-      local p_cnt = tonumber(p_cnt_s) or pixel_cnt
-      local ch_hdr = tonumber(ch_s) or channel_count
-      local channels = math.min(ch_hdr, max_channels)
+  if not filepath or filepath == "" then return end
 
-      local peaks = {}
-      for ch = 1, channels do peaks[ch] = {} end
+  local csv = reaper.SM_GetPeaksCSV(filepath, pixel_cnt, start_time, end_time, max_channels, step or 0)
+  if not csv or csv == "" then return end
 
-      local row = 1
-      for line in csv:sub(head_end + 1):gmatch("([^\n]+)") do
-        local i, nums = 1, {}
-        for num in line:gmatch("([^,]+)") do
-          nums[i] = tonumber(num) or 0
-          i = i + 1
-        end
-        for ch = 1, channels do
-          local b = (ch - 1) * 2 + 1
-          peaks[ch][row] = { nums[b] or 0, nums[b + 1] or 0 }
-        end
-        row = row + 1
-        if row > p_cnt then break end
-      end
+  local head_end = csv:find("\n", 1, true) or #csv
+  local head = csv:sub(1, head_end - 1)
+  local p_cnt_s, ch_s = head:match("([^,]+),([^,]+),")
+  local p_cnt = tonumber(p_cnt_s) or pixel_cnt
+  local channels = math.min(tonumber(ch_s) or channel_count, max_channels)
+  if channels <= 0 then return end
 
-      return peaks, p_cnt, src_len, channels
-    end
-  end
-
-  -- 回退旧的 AudioAccessor 逐像素取样
-  reaper.PreventUIRefresh(1) -- 防止UI刷新
-  local src = reaper.GetMediaItemTake_Source(take)
-  local srate = reaper.GetMediaSourceSampleRate(src)
-  if not srate or srate == 0 then srate = 44100 end
-  local channel_count = math.min(reaper.GetMediaSourceNumChannels(src), 6)
-  local src_len = reaper.GetMediaSourceLength(src)
-  -- 强制读取媒体源完整长度，而不是take修剪区段
-  start_time = tonumber(start_time) or 0
-  end_time = tonumber(end_time) or 0
-  if end_time <= 0 or end_time > src_len then end_time = src_len end
-  start_time = math.max(0, start_time)
-  end_time = math.max(start_time, math.min(src_len, end_time))
-
-  local win_len = end_time - start_time
-  local total_samples = math.floor(win_len * srate)
-  local samples_per_pixel = math.max(1, math.floor(total_samples / pixel_cnt))
   local peaks = {}
-  for ch = 1, channel_count do peaks[ch] = {} end
-  local buf_size = math.max(1, math.floor(samples_per_pixel * channel_count))
-  local buf = reaper.new_array(buf_size)
+  for ch = 1, channels do peaks[ch] = {} end
 
-  -- 临时插入 item/take 访问 full source
-  local track_idx = reaper.CountTracks(0)
-  reaper.InsertTrackAtIndex(track_idx, true)
-  local track = reaper.GetTrack(0, track_idx)
-  local item = reaper.AddMediaItemToTrack(track)
-  reaper.SetMediaItemLength(item, src_len, false)
-  local tmp_take = reaper.AddTakeToMediaItem(item)
-  reaper.SetMediaItemTake_Source(tmp_take, src)
-  reaper.UpdateItemInProject(item)
-  local accessor = reaper.CreateTakeAudioAccessor(tmp_take)
-
-  -- 动态计算实际步长
-  local function calcAdaptiveStep(read_samples)
-    if read_samples >= 1000 then
-      return step
-    elseif read_samples >= 100 then
-      return math.max(1, math.floor(read_samples / 20))
-    elseif read_samples >= 10 then
-      return 1
-    else
-      return 1
+  local row = 1
+  for line in csv:sub(head_end + 1):gmatch("([^\n]+)") do
+    local i, nums = 1, {}
+    for num in line:gmatch("([^,]+)") do
+      nums[i] = tonumber(num) or 0
+      i = i + 1
     end
+    for ch = 1, channels do
+      local b = (ch - 1) * 2 + 1
+      peaks[ch][row] = { nums[b] or 0, nums[b + 1] or 0 }
+    end
+    row = row + 1
+    if row > p_cnt then break end
   end
 
-  for px = 1, pixel_cnt do
-    local sample_start = (px - 1) * samples_per_pixel
-    local read_samples = math.min(samples_per_pixel, total_samples - sample_start)
-    if read_samples <= 0 then
-      for ch = 1, channel_count do peaks[ch][px] = {0, 0} end
-    else
-      buf.clear()
-      local offset = start_time + sample_start / srate
-      reaper.GetAudioAccessorSamples(accessor, srate, channel_count, offset, read_samples, buf)
-      local actual_step = calcAdaptiveStep(read_samples)
-      for ch = 1, channel_count do
-        local min, max = math.huge, -math.huge
-        for i = 0, read_samples - 1, actual_step do
-          local v = buf[(i * channel_count) + ch]
-          if v then
-            if v < min then min = v end
-            if v > max then max = v end
-          end
-        end
-        if min == math.huge or max == -math.huge then
-          min, max = 0, 0
-        end
-        peaks[ch][px] = {min, max}
-      end
-    end
-  end
-
-  -- 清理
-  reaper.DestroyAudioAccessor(accessor)
-  reaper.DeleteTrackMediaItem(track, item)
-  reaper.DeleteTrack(track)
-  reaper.PreventUIRefresh(-1)
-  reaper.UpdateArrange()
-  return peaks, pixel_cnt, src_len, channel_count
+  return peaks, p_cnt, src_len, channels
 end
 
 -- 绘制波形
@@ -8038,16 +7809,12 @@ function PlayFromStart(info)
   -- Wave.play_cursor = 0
   -- 跳过静音
   local start_pos = 0
-  if skip_silence_enabled then
-    if HAVE_SM_WFC then
-      local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
-      if non_sil and non_sil > 0 then
-        start_pos = non_sil
-      elseif status == "pending" then
-        QueuePendingSkipSilenceSeek(info)
-      end
-    else
-      start_pos = FindFirstNonSilentTime(info) or 0 -- 某些情况下需要为0，避免报错。有些文件没有波形。
+  if skip_silence_enabled and HAVE_SM_WFC then
+    local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
+    if non_sil and non_sil > 0 then
+      start_pos = non_sil
+    elseif status == "pending" then
+      QueuePendingSkipSilenceSeek(info)
     end
   end
 
@@ -8135,18 +7902,12 @@ function PlayFromCursor(info)
         -- 决定光标起播位置
         local base_pos = (link_with_reaper and 0) or Wave.play_cursor or 0 --  or (tempo_sync_enabled and Wave.play_cursor / effective_rate_knob)
         local start_pos = base_pos
-        if skip_silence_enabled then
+        if skip_silence_enabled and HAVE_SM_WFC then
           local eps = 1e-6
           if base_pos <= eps then
-            -- 仅在从头起播的场景下应用跳过静音
-            local non_sil, status
-            if HAVE_SM_WFC then
-              non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
-              if status == "pending" then
-                QueuePendingSkipSilenceSeek(info)
-              end
-            else
-              non_sil = FindFirstNonSilentTime(info)
+            local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
+            if status == "pending" then
+              QueuePendingSkipSilenceSeek(info)
             end
             if non_sil and non_sil > 0 then start_pos = non_sil end
           end
@@ -9862,183 +9623,6 @@ function ClearTableWaveformTaskQueue()
   waveform_task_queue = {}
 end
 
-function CancelLuaTableWaveformState(state)
-  if type(state) ~= "table" then return end
-  if state.source and reaper.PCM_Source_Destroy then
-    pcall(reaper.PCM_Source_Destroy, state.source)
-  end
-  state.source = nil
-  if state.cache_file then pcall(function() state.cache_file:close() end) end
-  state.cache_file = nil
-  if state.cache_tmp then pcall(os.remove, state.cache_tmp) end
-  state.status = "cancelled"
-end
-
-function BeginLuaTableWaveformTask(info, width)
-  local cache = LoadWaveformCache(info.path)
-  if cache then return {status = "ready", cache = cache} end
-  if not reaper.PCM_Source_CreateFromFile or not reaper.PCM_Source_GetPeaks then return nil end
-
-  local path = normalize_path(info.path, false)
-  local source = reaper.PCM_Source_CreateFromFile(path)
-  if not source then return nil end
-
-  local src_len = tonumber((reaper.GetMediaSourceLength(source))) or 0
-  local channels = math.max(1, math.min(6, tonumber(reaper.GetMediaSourceNumChannels(source)) or 1))
-  if src_len <= 0 then
-    reaper.PCM_Source_Destroy(source)
-    return nil
-  end
-
-  local pixel_cnt = WFC_PX_DEFAULT
-  local peaks = {}
-  for ch = 1, channels do peaks[ch] = {} end
-  local build_pending = false
-  if reaper.PCM_Source_BuildPeaks then
-    build_pending = (tonumber(reaper.PCM_Source_BuildPeaks(source, 0)) or 0) ~= 0
-  end
-
-  return {
-    backend = "lua", status = "pending",
-    phase = build_pending and "build" or "sample",
-    source = source, path = path, width = width,
-    src_len = src_len, channels = channels, channel_count = channels,
-    pixel_cnt = pixel_cnt, pixel_rate = pixel_cnt / src_len,
-    peaks = peaks, row = 1
-  }
-end
-
-function BeginLuaTableWaveformCacheWrite(state)
-  local fpath = CacheFilename(state.path)
-  local dir = fpath:match("^(.*[\\/])") or cache_dir
-  EnsureCacheDir(dir)
-  local tmp = fpath .. "." .. tostring(state.width or 0) .. ".tmp"
-  local f = io.open(tmp, "w+b")
-  if not f then return false end
-  f:write(string.format("%d,%d,%f\n", state.pixel_cnt, state.channels, state.src_len))
-  state.cache_path, state.cache_tmp, state.cache_file = fpath, tmp, f
-  state.save_row, state.phase = 1, "save"
-  return true
-end
-
-function FinishLuaTableWaveformCacheWrite(state)
-  if state.cache_file then state.cache_file:close() end
-  state.cache_file = nil
-  if state.cache_tmp and state.cache_path then
-    os.remove(state.cache_path)
-    os.rename(state.cache_tmp, state.cache_path)
-  end
-  state.cache_tmp = nil
-end
-
-function PumpLuaTableWaveformTask(state, max_rows, max_ms)
-  if type(state) ~= "table" or state.backend ~= "lua" or state.status ~= "pending" then return nil end
-  max_rows = math.max(1, math.floor(tonumber(max_rows) or TABLE_WAVEFORM_LUA_ROWS_PER_SLICE))
-  max_ms = math.max(0.05, tonumber(max_ms) or TABLE_WAVEFORM_LUA_PUMP_MS)
-  local started = reaper.time_precise()
-
-  if state.phase == "build" then
-    local remaining = 1
-    local iters = 0
-    while remaining ~= 0 and iters < TABLE_WAVEFORM_LUA_BUILD_ITERS
-      and (iters == 0 or (reaper.time_precise() - started) * 1000 < max_ms)
-    do
-      remaining = tonumber(reaper.PCM_Source_BuildPeaks(state.source, 1)) or 0
-      iters = iters + 1
-    end
-    if remaining == 0 then
-      reaper.PCM_Source_BuildPeaks(state.source, 2)
-      state.phase = "sample"
-    end
-    return state
-  end
-
-  if state.phase == "sample" then
-    local processed = 0
-    while state.row <= state.pixel_cnt and processed < max_rows
-      and (processed == 0 or (reaper.time_precise() - started) * 1000 < max_ms)
-    do
-      local rows = math.min(max_rows - processed, state.pixel_cnt - state.row + 1)
-      local buf = reaper.new_array(math.max(1, rows * state.channels * 2))
-      local start_time = (state.row - 1) / state.pixel_rate
-      local retval = tonumber(reaper.PCM_Source_GetPeaks(
-        state.source, state.pixel_rate, start_time, state.channels, rows, 0, buf
-      )) or 0
-      local got = (retval > 0) and (retval & 0xFFFFF) or 0
-      if got > rows then got = rows end
-      if got <= 0 then
-        -- 仅在确实还有峰值要构建时重试；否则把当前空块作为静音推进，避免无限重建。
-        local build_pending = 0
-        if reaper.PCM_Source_BuildPeaks then
-          build_pending = tonumber(reaper.PCM_Source_BuildPeaks(state.source, 0)) or 0
-        end
-        if build_pending ~= 0 then
-          state.phase = "build"
-          return state
-        end
-        for j = 0, rows - 1 do
-          local out_row = state.row + j
-          for ch = 1, state.channels do
-            state.peaks[ch][out_row] = {0, 0}
-          end
-        end
-        state.row = state.row + rows
-        processed = processed + rows
-        goto continue_lua_peak_sample
-      end
-      local min_offset = rows * state.channels
-
-      for j = 0, rows - 1 do
-        local out_row = state.row + j
-        for ch = 1, state.channels do
-          local index = j * state.channels + ch
-          state.peaks[ch][out_row] = (j < got) and {
-            tonumber(buf[min_offset + index]) or 0,
-            tonumber(buf[index]) or 0
-          } or {0, 0}
-        end
-      end
-      state.row = state.row + rows
-      processed = processed + rows
-      ::continue_lua_peak_sample::
-    end
-
-    if state.row > state.pixel_cnt then
-      if state.source then reaper.PCM_Source_Destroy(state.source) end
-      state.source = nil
-      state.display_ready = true
-      if not BeginLuaTableWaveformCacheWrite(state) then
-        state.status = "ready"
-      end
-    end
-    return state
-  end
-
-  if state.phase == "save" then
-    local written = 0
-    while state.save_row <= state.pixel_cnt and written < max_rows
-      and (written == 0 or (reaper.time_precise() - started) * 1000 < max_ms)
-    do
-      local cols = {}
-      for ch = 1, state.channels do
-        local peak = state.peaks[ch][state.save_row] or {0, 0}
-        cols[#cols + 1] = string.format("%f,%f", tonumber(peak[1]) or 0, tonumber(peak[2]) or 0)
-      end
-      state.cache_file:write(table.concat(cols, ","), "\n")
-      state.save_row = state.save_row + 1
-      written = written + 1
-    end
-    if state.save_row > state.pixel_cnt then
-      FinishLuaTableWaveformCacheWrite(state)
-      state.status = "ready"
-    end
-    return state
-  end
-
-  CancelLuaTableWaveformState(state)
-  return nil
-end
-
 function StoreTableWaveformFromCache(info, width, cache)
   if not info or not width or not cache or not cache.peaks then
     if info then info._loading_waveform = false end
@@ -10076,113 +9660,61 @@ function StoreTableWaveformFromCache(info, width, cache)
 end
 
 function ProcessWaveformTasks()
+  if not HAVE_SM_WFC then return end
+
   local list_state = _G._soundmole_static or {}
   local last_scroll_time = tonumber(list_state.last_scroll_time)
   if last_scroll_time and reaper.time_precise() - last_scroll_time < TABLE_WAVEFORM_IDLE_SECONDS then
     return
   end
 
-  local process_limit = HAVE_SM_WFC and TABLE_WAVEFORM_PROCESS_LIMIT or TABLE_WAVEFORM_LUA_PROCESS_LIMIT
   local n = 0
-  while n < process_limit and #waveform_task_queue > 0 do
+  while n < TABLE_WAVEFORM_PROCESS_LIMIT and #waveform_task_queue > 0 do
     local task = table.remove(waveform_task_queue, 1)
     local info = task and task.info
     local width = task and task.width
 
     if info and info.path and info.path ~= "" and width then
       info._thumb_waveform = info._thumb_waveform or {}
-      local table_px = HAVE_SM_WFC and SM_TableWaveformPixelCount(width) or nil
-      local lua_state = (not HAVE_SM_WFC) and info._wf_state and info._wf_state[width]
-      local cpp_state = HAVE_SM_WFC and info._wf_state and info._wf_state[table_px]
-      if not info._thumb_waveform[width] or lua_state or cpp_state then
-        if HAVE_SM_WFC then
-          info._wf_state = info._wf_state or {}
-          local maxch = 1
-
-          -- 异步创建状态按固定缓存分辨率共享，拖动列宽不会启动另一项创建任务
-          local state = info._wf_state[table_px]
-          if state then
-            local smwf_or_state = SM_EnsureWaveformCache_Pump(state, TABLE_WAVEFORM_PUMP_ITERS, TABLE_WAVEFORM_PUMP_MS)
-            if type(smwf_or_state) == "string" then
-              local peaks, px, win_len, ch = SM_ReadSMWF(smwf_or_state)
-              if peaks and ch then
-                StoreTableWaveformFromCache(info, width, {
-                  peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch
-                })
-              else
-                info._loading_waveform = false
-              end
-              info._wf_state[table_px] = nil
-            elseif type(smwf_or_state) == "table" then
-              local partial = SM_ReadWaveformPartial(state)
-              if partial and partial.peaks then
-                StoreTableWaveformFromCache(info, width, partial)
-              end
-              table.insert(waveform_task_queue, task)
+      local table_px = SM_TableWaveformPixelCount(width)
+      local cpp_state = info._wf_state and info._wf_state[table_px]
+      if not info._thumb_waveform[width] or cpp_state then
+        info._wf_state = info._wf_state or {}
+        local maxch = 1
+        local state = info._wf_state[table_px]
+        if state then
+          local smwf_or_state = SM_EnsureWaveformCache_Pump(state, TABLE_WAVEFORM_PUMP_ITERS, TABLE_WAVEFORM_PUMP_MS)
+          if type(smwf_or_state) == "string" then
+            local peaks, px, win_len, ch = SM_ReadSMWF(smwf_or_state)
+            if peaks and ch then
+              StoreTableWaveformFromCache(info, width, {
+                peaks = peaks, pixel_cnt = px, src_len = win_len, channel_count = ch
+              })
             else
-              info._wf_state[table_px] = nil
               info._loading_waveform = false
             end
-          else
-            if (list_state.table_wf_cache_hit_count or 0) >= TABLE_WAVEFORM_CACHE_HIT_LIMIT then
-              table.insert(waveform_task_queue, task)
-            else
-              local cache_or_state = SM_BeginTableWaveformCacheAsync(info.path, table_px, 0, 0, maxch)
-              if cache_or_state and cache_or_state.status == "ready" then
-                if StoreTableWaveformFromCache(info, width, cache_or_state) then
-                  -- 队列中也可能遇到已经存在的缓存，计入同一个每帧 3 项限额
-                  list_state.table_wf_cache_hit_count = (list_state.table_wf_cache_hit_count or 0) + 1
-                end
-              elseif cache_or_state and cache_or_state.status == "pending" then
-                info._wf_state[table_px] = cache_or_state
-                table.insert(waveform_task_queue, task)
-              else
-                info._loading_waveform = false
-              end
+            info._wf_state[table_px] = nil
+          elseif type(smwf_or_state) == "table" then
+            local partial = SM_ReadWaveformPartial(state)
+            if partial and partial.peaks then
+              StoreTableWaveformFromCache(info, width, partial)
             end
+            table.insert(waveform_task_queue, task)
+          else
+            info._wf_state[table_px] = nil
+            info._loading_waveform = false
           end
         else
-          -- 无扩展时使用 REAPER 原生 API 分片生成，避免一次性采样整段音频。
-          info._wf_state = info._wf_state or {}
-          local state = info._wf_state[width]
-          if state then
-            local pumped = PumpLuaTableWaveformTask(state, TABLE_WAVEFORM_LUA_ROWS_PER_SLICE, TABLE_WAVEFORM_LUA_PUMP_MS)
-            if pumped and pumped.display_ready and not pumped.displayed then
-              pumped.displayed = StoreTableWaveformFromCache(info, width, {
-                peaks = pumped.peaks, pixel_cnt = pumped.pixel_cnt,
-                src_len = pumped.src_len, channel_count = pumped.channel_count or pumped.channels
-              })
-            end
-            if pumped and pumped.status == "ready" then
-              if not pumped.displayed then
-                StoreTableWaveformFromCache(info, width, {
-                  peaks = pumped.peaks, pixel_cnt = pumped.pixel_cnt,
-                  src_len = pumped.src_len, channel_count = pumped.channel_count or pumped.channels
-                })
-              end
-              info._wf_state[width] = nil
-            elseif pumped and pumped.status == "pending" then
-              if not pumped.display_ready and pumped.phase ~= "save" then
-                task.lua_priority_steps = (task.lua_priority_steps or 0) + 1
-              else
-                task.lua_priority_steps = 0
-              end
-              if task.lua_priority_steps > 0 and task.lua_priority_steps < TABLE_WAVEFORM_LUA_PRIORITY_STEPS then
-                table.insert(waveform_task_queue, 1, task)
-              else
-                task.lua_priority_steps = 0
-                table.insert(waveform_task_queue, task)
-              end
-            else
-              info._wf_state[width] = nil
-              info._loading_waveform = false
-            end
+          if (list_state.table_wf_cache_hit_count or 0) >= TABLE_WAVEFORM_CACHE_HIT_LIMIT then
+            table.insert(waveform_task_queue, task)
           else
-            local started = BeginLuaTableWaveformTask(info, width)
-            if started and started.status == "ready" then
-              StoreTableWaveformFromCache(info, width, started.cache)
-            elseif started and started.status == "pending" then
-              info._wf_state[width] = started
+            local cache_or_state = SM_BeginTableWaveformCacheAsync(info.path, table_px, 0, 0, maxch)
+            if cache_or_state and cache_or_state.status == "ready" then
+              if StoreTableWaveformFromCache(info, width, cache_or_state) then
+                list_state.table_wf_cache_hit_count = (list_state.table_wf_cache_hit_count or 0) + 1
+              end
+            elseif cache_or_state and cache_or_state.status == "pending" then
+              info._wf_state[table_px] = cache_or_state
               table.insert(waveform_task_queue, task)
             else
               info._loading_waveform = false
@@ -10198,7 +9730,6 @@ function ProcessWaveformTasks()
     n = n + 1
   end
 end
-
 --------------------------------------------- 专辑封面 ---------------------------------------------
 
 local last_window_visible = true
@@ -11312,57 +10843,6 @@ function ProcessPendingSkipSilenceSeek()
   end
 end
 
--- 从缓存中寻找首个有声位置
-function FindFirstNonSilentTime(info)
-  local path = normalize_path(info.path, false)
-  local cache
-  if HAVE_SM_WFC then
-    local maxch  = math.max(1, math.min(64, info.max_channels or info.channel_count or 6))
-    local px_req = WFC_PX_DEFAULT
-    local st, et = 0, 0
-
-    local smwf_ready = reaper.SM_GetWaveformCachePath(path, px_req, st, et, maxch)
-    if smwf_ready ~= "" then
-      local peaks, px, win_len, ch = SM_ReadSMWF(smwf_ready)
-      if not peaks then return nil end
-      cache = { status="ready", peaks=peaks, pixel_cnt=px, src_len=win_len, channel_count=ch }
-    else
-      cache = SM_LoadWaveformCache(path, px_req, st, et, maxch)
-      if type(cache) == "table" and cache.status == "pending" then
-        cache = SM_EnsureWaveformCache_Pump(cache, WF_PUMP_ITERS, WF_PUMP_MS)
-        if type(cache) == "table" and cache.status == "pending" then
-          return nil
-        elseif type(cache) == "string" then
-          local peaks, px, win_len, ch = SM_ReadSMWF(cache)
-          if not peaks then return nil end
-          cache = { status="ready", peaks=peaks, pixel_cnt=px, src_len=win_len, channel_count=ch }
-        end
-      end
-    end
-  else
-    cache = LoadWaveformCache(path)
-  end
-
-  if not cache or (cache.status and cache.status ~= "ready") then return end
-
-  local pixel_cnt     = cache.pixel_cnt
-  local src_len       = cache.src_len
-  local channel_count = cache.channel_count
-  local denom         = math.max(1, pixel_cnt - 1)
-
-  for px = 1, pixel_cnt do
-    for ch = 1, channel_count do
-      local peak = (cache.peaks[ch] or {})[px] or {0, 0}
-      if math.abs(peak[1]) > skip_silence_threshold or math.abs(peak[2]) > skip_silence_threshold then
-        -- 映射到实际时间
-        return (px - 1) / denom * src_len
-      end
-    end
-  end
-
-  return
-end
-
 --------------------------------------------- 退出时保存各个模式列表状态 ---------------------------------------------
 
 function LoadExitSettings()
@@ -12310,17 +11790,19 @@ function BuildFilteredList(list)
     return safe_cache
   end
 
+  local is_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
   local use_cpp = false
   local db_handle = nil
-  if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) then
-    if _G.db_loader and _G.db_loader.ctx and HAVE_SM_SEARCH then
-      use_cpp = true
-      db_handle = _G.db_loader.ctx
-    end
+  if is_db_mode and _G.db_loader and _G.db_loader.ctx and HAVE_SM_SEARCH then
+    use_cpp = true
+    db_handle = _G.db_loader.ctx
   end
 
-  -- 无扩展时回退
-  if (not use_cpp) and is_empty_request then 
+  if is_db_mode and not use_cpp then
+    return safe_cache
+  end
+
+  if (not use_cpp) and is_empty_request then
     return safe_cache
   end
 
@@ -12353,7 +11835,7 @@ function BuildFilteredList(list)
     end
   end
 
-  -- 回退到旧版逻辑
+  -- 非数据库列表使用 Lua 过滤逻辑
   local filtered = {}
   local raw_tokens = {}
 
@@ -13094,7 +12576,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       for path in pairs(remove_paths) do remove_list[#remove_list + 1] = path end
       local removed_count = RemovePathsFromMediaDB(remove_list, dbpath, true)
       if removed_count > 0 and SM_DBCoverIndexExists(dbpath) then
-        if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) else SM_RebuildDBCoverIndexFromDB(dbpath) end
+        if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) end
       end
 
       -- 强制重建列表，失效当前数据库的过滤缓存
@@ -13159,24 +12641,15 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     end
   end
 
-  -- 停止滚动后检查缓存，扩展缓存命中时整段读取
+  -- 停止滚动后检查扩展缓存，命中时整段读取
   local extension_cache_hit_budget_exhausted = HAVE_SM_WFC and (static.table_wf_cache_hit_count or 0) >= TABLE_WAVEFORM_CACHE_HIT_LIMIT
-  local can_read_ready_cache = idle_time >= TABLE_WAVEFORM_IDLE_SECONDS and ((HAVE_SM_WFC and not extension_cache_hit_budget_exhausted) or (not HAVE_SM_WFC and (static.fast_wf_load_count or 0) < (static.fast_wf_load_limit or 2)))
+  local can_read_ready_cache = HAVE_SM_WFC and idle_time >= TABLE_WAVEFORM_IDLE_SECONDS and not extension_cache_hit_budget_exhausted
   if not freesound_not_downloaded and not wf and can_read_ready_cache then
-    local cache
-    if HAVE_SM_WFC then
-      local maxch = 1
-      cache = SM_LoadTableWaveformCacheIfReady(info.path, SM_TableWaveformPixelCount(thumb_w), 0, 0, maxch)
-    else
-      cache = LoadWaveformCache(info.path)
-    end
+    local maxch = 1
+    local cache = SM_LoadTableWaveformCacheIfReady(info.path, SM_TableWaveformPixelCount(thumb_w), 0, 0, maxch)
     if cache and StoreTableWaveformFromCache(info, thumb_w, cache) then
       wf = info._thumb_waveform[thumb_w]
-      if HAVE_SM_WFC then
-        static.table_wf_cache_hit_count = (static.table_wf_cache_hit_count or 0) + 1
-      else
-        static.fast_wf_load_count = (static.fast_wf_load_count or 0) + 1
-      end
+      static.table_wf_cache_hit_count = (static.table_wf_cache_hit_count or 0) + 1
     end
   end
 
@@ -14524,54 +13997,8 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
     end
   end
 
-  -- 分支 B: 传统 Lua 流模式
-  -- 把搜索面板里已勾选的列映射为 DATA 行中的键，作为优先解析集合
-  local function build_eager_tags()
-    local m = {}
-    -- File Name/Path/Size/Type 不在 DATA 内，不用设置
-    if type(search_fields) == "table" then
-      for _, f in ipairs(search_fields) do
-        if f.enabled then
-          if f.key == "description"    then m.d = true end      -- d:
-          if f.key == "comment"        then m.c = true end      -- c:
-          if f.key == "genre"          then m.g = true end      -- g:
-          if f.key == "key"            then m.k = true end      -- k:
-          if f.key == "bpm"            then m.p = true end      -- p:
-          if f.key == "ucs_category"   then m.category = true end     -- category:
-          if f.key == "ucs_subcategory"then m.subcategory = true end  -- subcategory:
-          if f.key == "ucs_catid"      then m.catid = true end        -- catid:
-          if f.key == "bwf_orig_date"  then m.y = true end      -- y:
-          if f.key == "length"         then m.l = true end      -- l:
-          if f.key == "channels"       then m.n = true end      -- n:
-          if f.key == "samplerate"     then m.s = true end      -- s:
-          if f.key == "bits"           then m.i = true end      -- i:
-        end
-      end
-    end
-    return m
-  end
-
-  -- 懒解析流。DATA 行先不解析，仅缓存原文 + 按勾选列优先解析
-  _G._mediadb_stream = MediaDBStreamStart(fullpath, {lazy_data = true, eager_tags = build_eager_tags()})
-  if not _G._mediadb_stream then return false end
-
-  _G._stream_seen = {}
-  files_idx_cache = {}
-  selected_row = nil
-
-  -- 读取首屏 首批5000条
-  local first = MediaDBStreamRead(_G._mediadb_stream, first_n or 5000)
-  for _, e in ipairs(first) do
-    if collect_mode == COLLECT_MODE_FREESOUND then FS_MaybeSwapEntryPathToLocal(e) end -- Freesound 补丁，首屏条目立刻切换为本地路径（如果已下载）
-    files_idx_cache[#files_idx_cache+1] = e
-  end
-
-  if collect_mode == COLLECT_MODE_FREESOUND then
-    _G.__fs_seen_keys, _G.__fs_scanned_len = {}, 0
-    FS_DedupIncremental()
-  end
-
-  return true
+  SM_ShowExtensionUpdateRequired("database loading")
+  return false
 end
 
 -- 异步加载器
@@ -16252,15 +15679,8 @@ function SM_RequestDBCoverIndex(dbpath, explicit)
   cover_index_state.attempted[dbpath] = true
 
   if not HAVE_SM_COVER_INDEX then
-    if not explicit then return false end
-    local map = SM_RebuildDBCoverIndexFromDB(dbpath) or {}
-    if type(SM_ClearDBCoverIndexCache) == "function" then SM_ClearDBCoverIndexCache(dbpath) end
-    if type(SM_ResetAlbumPanelCache) == "function" then SM_ResetAlbumPanelCache(nil, nil) end
-    local count = 0
-    for _ in pairs(map) do count = count + 1 end
-    reaper.ShowMessageBox(("Artwork index rebuilt with Lua fallback:\n%s\n\n%d artwork images found."):format(
-      SM_DBCoverIndexPath(dbpath), count), "Soundmole", 0)
-    return true
+    if explicit then SM_ShowExtensionUpdateRequired("artwork index") end
+    return false
   end
 
   if cover_index_state.handle then SM_StopCoverIndexTask() end
@@ -16345,55 +15765,33 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
   root_path = normalize_path(root_path, true)
   db_file_path = normalize_path(db_file_path, false)
 
-  -- 优先尝试 C++ 扩展
-  if HAVE_SM_BUILDER then
-    -- 启动 C++ 构建线程
-    local result = reaper.SM_Builder_Start(root_path, db_file_path)
-
-    if result == 1 then
-      builder_state = builder_state or {} -- 防止未初始化
-      builder_state.active = true
-      builder_state.should_open = true -- 通知 GUI 打开进度弹窗
-      builder_state.db_path = db_file_path
-      builder_state.root_path = root_path
-      builder_state.start_time = reaper.time_precise()
-      builder_state.is_incremental = false
-      db_build_task = nil
-      return true
-    else
-      reaper.MB("C++ Builder Start Failed.\nCheck read/write permissions.", "Soundmole Error", 0)
-      return false
-    end
-  end
-
-  -- 回退到 Lua 旧逻辑
-  local filelist = ScanAllAudioFiles(root_path)
-  if not filelist or #filelist == 0 then
-    reaper.MB("No audio files found in this folder.", "Soundmole", 0)
+  if not HAVE_SM_BUILDER then
+    SM_ShowExtensionUpdateRequired("database builder")
     return false
   end
-  -- 创建空文件并写入根路径
-  local f = io.open(db_file_path, "wb")
-  if f then f:close() else return false end
-  AddPathToDBFile(db_file_path, root_path) -- 必要时改流式建库边扫描、边写入，StartScanAndBuildDB_Stream(root_dir)
 
-  -- 构建任务
-  db_build_task = {
-    filelist     = filelist,
-    dbfile       = db_file_path, -- 全路径
-    idx          = 1,
-    total        = #filelist,
-    finished     = false,
-    root_path    = root_path,
-    existing_map = DB_ReadExistingFileSet(db_file_path),
-    cover_index  = {}
-  }
+  local result = reaper.SM_Builder_Start(root_path, db_file_path)
+  if result ~= 1 then
+    reaper.MB("C++ Builder Start Failed.\nCheck read/write permissions.", "Soundmole Error", 0)
+    return false
+  end
 
+  builder_state = builder_state or {}
+  builder_state.active = true
+  builder_state.should_open = true
+  builder_state.db_path = db_file_path
+  builder_state.root_path = root_path
+  builder_state.start_time = reaper.time_precise()
+  builder_state.is_incremental = false
+  db_build_task = nil
   return true
 end
 
 function SM_StartDatabaseIncremental(db_file_path)
-  if not HAVE_SM_BUILDER_INCREMENTAL then return false end
+  if not HAVE_SM_BUILDER_INCREMENTAL then
+    SM_ShowExtensionUpdateRequired("incremental database scan")
+    return false
+  end
 
   db_file_path = normalize_path(db_file_path, false)
   local result = reaper.SM_Builder_StartIncremental(db_file_path)
@@ -17309,31 +16707,7 @@ function loop()
       end
     end
 
-    -- 创建数据库按钮
-    -- reaper.ImGui_SameLine(ctx, nil, 10)
-    -- if reaper.ImGui_Button(ctx, "Database##scan_folder_top", 80, 46) then -- Select Folder and Scan Audio
-    --   local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to scan audio files:", "")
-    --   if rv == 1 and folder and folder ~= "" then
-    --     folder = normalize_path(folder, true)
-    --     local filelist = ScanAllAudioFiles(folder)
-    --     local db_dir = script_path .. "SoundmoleDB"
-    --     EnsureCacheDir(db_dir)
-    --     -- 获取下一个可用编号
-    --     local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
-    --     local dbfile = string.format("%s.MoleFileList", db_index) -- 只有文件名
-    --     local dbpath = normalize_path(db_dir, true) .. dbfile     -- 全路径
-    --     local f = io.open(dbpath, "wb") if f then f:close() end
-    --     AddPathToDBFile(dbpath, folder)
-    --     db_build_task = {
-    --       filelist = filelist,
-    --       dbfile = dbpath,
-    --       idx = 1,
-    --       total = #filelist,
-    --       finished = false,
-    --       root_path  = folder,
-    --     }
-    --   end
-    -- end
+
     reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_EndGroup(ctx)
 
@@ -19083,91 +18457,28 @@ function loop()
                 -- 增量更新数据库
                 if reaper.ImGui_MenuItem(ctx, T("Scan Database for New Files")) then -- Incremental Database Update
                   local dbpath = normalize_path(db_dir, true) .. dbfile
-                  if HAVE_SM_BUILDER_INCREMENTAL then
-                    local success = SM_StartDatabaseIncremental(dbpath)
-                    if success then
-                      DBPF_InvalidateAllCaches()
-                    end
-                  else
-                    -- 无增量扩展 API 时回退到 Lua 慢模式
-                    local root
-                    for line in io.lines(dbpath) do
-                      root = line:match('^PATH%s+"(.-)"')
-                      if root then break end
-                    end
-                    if not root or root == "" then
-                      reaper.ShowMessageBox("No PATH in DB file", "Error", 0)
-                    else
-                      local newfiles = ScanAllAudioFiles(root)
-                      local existing = DB_ReadExistingFileSet(dbpath)
-                      local to_add = {}
-                      for _, fpath in ipairs(newfiles) do
-                        local key = normalize_path(fpath, false)
-                        if not existing[key] then
-                          table.insert(to_add, fpath)
-                        end
-                      end
-                      if #to_add == 0 then
-                        reaper.ShowMessageBox("No new files to add.", "Update Complete", 0)
-                      else
-                        local filename = dbfile:match("[^/\\]+$")
-                        db_build_task = {
-                          filelist = to_add,
-                          dbfile = dbpath,
-                          idx = 1,
-                          total = #to_add,
-                          finished = false,
-                          alias = GetMediaDBDisplayName(filename),
-                          root_path = root,
-                          is_incremental = true,
-                          existing_map = DB_ReadExistingFileSet(dbpath),
-                          cover_index = SM_PrepareDBCoverIndexForAppend(dbpath)
-                        }
-                      end
-                    end
+                  local success = SM_StartDatabaseIncremental(dbpath)
+                  if success then
+                    DBPF_InvalidateAllCaches()
                   end
                 end
 
                 -- 全量重建数据库
                 if reaper.ImGui_MenuItem(ctx, T("Rebuild Database")) then
                   local dbpath = normalize_path(db_dir, true) .. dbfile
-                  -- 读取所有 PATH 行
                   local path_list = GetPathListFromDB(dbpath)
                   if not path_list or #path_list == 0 then
                     reaper.ShowMessageBox("No PATH found in DB file", "Error", 0)
-                  elseif #path_list == 1 and HAVE_SM_BUILDER then
+                  elseif #path_list == 1 then
                     local success = SM_StartDatabaseBuild(path_list[1], dbpath)
                     if success then
                       DBPF_InvalidateAllCaches()
                     end
                   else
-                    -- 清空旧库并写入所有 PATH 头部
-                    local f = io.open(dbpath, "wb")
-                    for _, p in ipairs(path_list) do f:write(('PATH "%s"\n'):format(p)) end
-                    f:close()
-                    -- 合并扫描所有路径得到的文件列表
-                    local all = {}
-                    for _, root_dir in ipairs(path_list) do
-                      local lst = ScanAllAudioFiles(root_dir)
-                      for i = 1, #lst do
-                        all[#all + 1] = lst[i]
-                      end
-                    end
-                    -- 异步任务，由主循环进度条处理
-                    local filename = dbfile:match("[^/\\]+$")
-                    db_build_task = {
-                      filelist    = all,
-                      dbfile      = dbpath,
-                      idx         = 1,
-                      total       = #all,
-                      finished    = false,
-                      alias       = GetMediaDBDisplayName(filename),
-                      root_path   = path_list[1], -- 兼容旧逻辑用到 root_path 的情况
-                      root_paths  = path_list,
-                      is_rebuild  = true,
-                      existing_map = {},
-                      cover_index  = {}
-                    }
+                    reaper.ShowMessageBox(
+                      "Multi-root database rebuild now requires extension-side builder support.\n\nPlease rebuild each root as a separate database, or update the Soundmole extension when multi-root builder support is available.",
+                      "Soundmole Extension Required",
+                      0)
                   end
                 end
 
@@ -20395,7 +19706,7 @@ function loop()
             native_handle_sorted = true
             SM_RequestDBSelectionRestore(current_db_key)
           end
-          -- 回退到旧排序
+          -- 非原生列表使用 Lua 排序
           if #sort_specs > 0 and filtered_list and (not filtered_list._handle) and collect_mode ~= COLLECT_MODE_PLAY_HISTORY then -- 加入播放历史模式，避免被排序
             table.sort(filtered_list, function(a, b)
               for _, spec in ipairs(sort_specs) do
@@ -20707,8 +20018,6 @@ function loop()
         end
 
         -- 缓存命中整段直读
-        static.fast_wf_load_count = 0
-        static.fast_wf_load_limit = static.fast_wf_load_limit or 2
         static.wf_enqueue_count = 0
 
         -- 限制加载波形，指定列表无滚动时多少秒之后才开始加载。用于解决脚本卡顿问题。
@@ -22097,21 +21406,8 @@ function loop()
             peaks, pixel_cnt, channel_count = nil, nil, nil
             last_pixel_cnt, last_view_len, last_scroll = nil, nil, nil
           end
-          local cache
-          if HAVE_SM_WFC then
-            local maxch = math.max(1, math.min(64, tonumber(cur_info.max_channels or cur_info.channel_count or 6)))
-            cache = SM_GetMainPreviewWaveformCache(root_path, maxch)
-          else
-            cache = LoadWaveformCache(root_path)
-            if not cache then
-              local peaks_raw, pixel_cnt_raw, src_len_raw, channel_count_raw = GetPeaksForInfo(
-                { path = root_path }, wf_step, WFC_PX_DEFAULT, 0, nil)
-              SaveWaveformCache(root_path, {
-                peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw
-              })
-              cache = {peaks=peaks_raw, pixel_cnt=pixel_cnt_raw, channel_count=channel_count_raw, src_len=src_len_raw}
-            end
-          end
+          local maxch = math.max(1, math.min(64, tonumber(cur_info.max_channels or cur_info.channel_count or 6)))
+          local cache = SM_GetMainPreviewWaveformCache(root_path, maxch)
 
           local ok_for_remap = false
           if collect_mode == COLLECT_MODE_ALL_ITEMS and section_length > 0 then
@@ -22152,7 +21448,7 @@ function loop()
 
           if ok_for_remap then
             local view_peaks, view_pixel_cnt, _, view_channel_count
-            if HAVE_SM_EXT and cache and cache.status ~= "partial" then
+            if cache and cache.status ~= "partial" then
               view_peaks, view_pixel_cnt, _, view_channel_count = GetPeaksForInfo(
                 { path = root_path }, wf_step, pw_region_w, window_start, window_end)
             end
@@ -22213,12 +21509,7 @@ function loop()
             if last_play_cursor_before_play then
               Wave.play_cursor = last_play_cursor_before_play
             end
-            -- 跳过静音，强制播放光标复位
-            -- if skip_silence_enabled and last_playing_info then
-            --   last_play_cursor_before_play = FindFirstNonSilentTime(last_playing_info)
-            -- end
-            -- Wave.play_cursor = last_play_cursor_before_play
-            -- wf_play_start_cursor = last_play_cursor_before_play
+
           else
             if link_with_reaper then
               local playstate = reaper.GetPlayState()
@@ -23052,22 +22343,26 @@ function loop()
           if success then
             DBPF_InvalidateAllCaches()
           end
+        elseif not HAVE_SM_DB_APPEND then
+          SM_ShowExtensionUpdateRequired("database append")
         else
           local filelist = ScanAllAudioFiles(folder)
-          -- local alias_name = folder:match("([^/\\]+)[/\\]?$") or "Unnamed"
-          -- 先写PATH行
-          AddPathToDBFile(dbpath, folder)
-          db_build_task = {
-            filelist = filelist,
-            dbfile = dbpath,
-            idx = 1,
-            total = #filelist,
-            finished = false,
-            -- alias = alias_name, 不重命名数据库命名
-            root_path = folder,
-            existing_map = DB_ReadExistingFileSet(dbpath),
-            cover_index = SM_PrepareDBCoverIndexForAppend(dbpath)
-          }
+          if not filelist or #filelist == 0 then
+            reaper.ShowMessageBox("No audio files found in this folder.", "Soundmole", 0)
+          else
+            AddPathToDBFile(dbpath, folder)
+            local added_count = AppendPathsToMediaDB(filelist, dbpath)
+            if added_count and added_count > 0 then
+              DBPF_InvalidateAllCaches()
+              if SM_DBCoverIndexExists(dbpath) and HAVE_SM_COVER_INDEX then
+                SM_QueueDBCoverIndexRebuild(dbpath)
+              end
+              files_idx_cache = nil
+              CollectFiles()
+            elseif added_count and added_count < 0 then
+              SM_ShowExtensionUpdateRequired("database append")
+            end
+          end
         end
       end
       tree_state.add_path_dbfile = nil
@@ -23112,7 +22407,7 @@ function loop()
           f:close()
           DBPF_InvalidateAllCaches()
           if SM_DBCoverIndexExists(dbpath) then
-            if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) else SM_RebuildDBCoverIndexFromDB(dbpath) end
+            if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) end
           end
           files_idx_cache = nil
           CollectFiles()
@@ -23133,110 +22428,7 @@ function loop()
       end
     end
 
-    -- 显示数据库构建进度
-    if db_build_task and not db_build_task.finished then
-      reaper.ImGui_OpenPopup(ctx, "Database Build Progress")
-    end
-    if db_build_task and reaper.ImGui_BeginPopupModal(ctx, "Database Build Progress", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
-      local idx = db_build_task.idx
-      local total = db_build_task.total
-      local percent = (idx - 1) / math.max(1, total)
 
-      if db_build_task.aborted then
-        -- 被中断时弹窗内容
-        reaper.ImGui_Text(ctx, "Database build aborted!")
-        reaper.ImGui_Text(ctx, string.format("Processed: %d / %d", idx - 1, total))
-        if reaper.ImGui_Button(ctx, "OK") then
-          local filename = db_build_task.dbfile:match("[^/\\]+$")
-          local alias = db_build_task.alias
-          if not alias or alias == "" then
-            -- 自动用文件夹名
-            alias = db_build_task.root_path and db_build_task.root_path:match("([^/\\]+)[/\\]?$") or filename
-          end
-          mediadb_alias[filename] = alias
-          mediadb_display_name_cache[filename] = nil
-          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
-
-          db_build_task = nil
-          reaper.ImGui_CloseCurrentPopup(ctx)
-        end
-
-      elseif db_build_task.finished then
-        -- 正常完成时弹窗内容
-        reaper.ImGui_Text(ctx, "Database build complete!")
-        reaper.ImGui_Text(ctx, string.format("Total files: %d", total))
-        reaper.ImGui_Text(ctx, string.format("Processed: %d", idx - 1))
-        if reaper.ImGui_Button(ctx, "OK") then
-          static.filtered_list_map    = {}
-          static.last_filter_text_map = {}
-          static.last_sort_specs_map  = {}
-
-          files_idx_cache = nil
-          CollectFiles()
-          ClearFileSelection()
-          selected_row = -1
-          db_build_task = nil
-          reaper.ImGui_CloseCurrentPopup(ctx)
-        end
-
-      else
-        -- 构建中弹窗内容
-        reaper.ImGui_Text(ctx, "Collecting audio metadata and updating database...") -- "Generating waveform cache and collecting metadata..."
-        reaper.ImGui_ProgressBar(ctx, percent, -1, 20, string.format("%d / %d", idx-1, total))
-        if reaper.ImGui_Button(ctx, "Abort") then
-          db_build_task.aborted = true
-          if db_build_task.dbfile and db_build_task.cover_index then
-            SM_SaveDBCoverIndex(db_build_task.dbfile, db_build_task.cover_index)
-          end
-        end
-
-        if idx <= total then
-          local path = db_build_task.filelist[idx]
-          local key  = normalize_path(path, false)
-
-          local info = CollectFileInfo(path)
-          if not db_build_task.existing_map[key] then
-            -- local info = CollectFileInfo(path)
-            WriteToMediaDB(info, db_build_task.dbfile, nil, db_build_task.cover_index)
-            db_build_task.existing_map[key] = true
-          end
-          -- 使用build_waveform_cache开启或关闭构建波形缓存
-          if build_waveform_cache then
-            if HAVE_SM_WFC then
-              local path = normalize_path(root_path or info.path, false)
-              local pixel_cnt    = WFC_PX_DEFAULT
-              local start_time   = 0
-              local end_time     = 0 -- 0/<=start 表示整段
-              local max_channels = math.max(1, math.min(64, (info.max_channels or info.channel_count or 6)))
-
-              local smwf, err = SM_EnsureWaveformCache(path, pixel_cnt, start_time, end_time, max_channels)
-              if not smwf then
-                print("[WFCache][ERR] ensure failed: " .. tostring(err))
-              else
-                -- 留个路径给后续使用
-                info._smwf_path = smwf
-              end
-            else
-              local pixel_cnt = WFC_PX_DEFAULT
-              local start_time, end_time = 0, tonumber(info.length) or 0
-              local peaks, _, src_len, channel_count = GetPeaksForInfo(info, wf_step, pixel_cnt, start_time, end_time)
-              if peaks and src_len and channel_count then
-                SaveWaveformCache(path, {peaks=peaks, pixel_cnt=pixel_cnt, channel_count=channel_count, src_len=src_len})
-              end
-            end
-          end
-          db_build_task.idx = db_build_task.idx + 1
-        else
-          db_build_task.finished = true
-          SM_SaveDBCoverIndex(db_build_task.dbfile, db_build_task.cover_index or {})
-          -- 刷新
-          files_idx_cache = nil
-          CollectFiles()
-        end
-      end
-
-      reaper.ImGui_EndPopup(ctx)
-    end
 
     reaper.ImGui_PopStyleColor(ctx, 3) -- 仅TAB页签颜色，放外部会失效
     reaper.ImGui_End(ctx)

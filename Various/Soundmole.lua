@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.215
+-- @version 1.0.216
 -- @changelog
---   Improved waveform preview loading for faster display and smoother performance.
---   Soundmole native extension support: reaper_soundmole-x64.dll v0.0.31 for Windows and reaper_soundmole-arm64.dylib v0.0.2 for macOS.
+--   Soundmole now requires the dedicated Soundmole extension to run, and the Lua fallback path without the extension has been removed.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
