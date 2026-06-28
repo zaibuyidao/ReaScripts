@@ -29,6 +29,7 @@ UI Scale:=界面缩放:
 
 # 搜索导航
 Edit thesaurus=编辑同义词库
+Enable thesaurus or Hold CTRL for Edit Thesaurus=启用同义词, 按住 CTRL 为编辑同义词库
 Thesaurus:=同义词库:
 Previous Search=上一个搜索项
 No previous search=没有更早的搜索记录
@@ -316,6 +317,8 @@ Database=数据库
 Cache Directory=缓存目录
 Database Settings:=数据库设置:
 Build waveform cache during DB creation=创建数据库时生成波形缓存
+Browse database as folders=以文件夹方式浏览数据库
+Show database contents as a folder tree. Selecting a folder filters the database to that folder and its subfolders.=以树状文件夹方式显示数据库内容。选择文件夹后，仅显示该文件夹及其子文件夹中的数据库资源。
 When enabled, the database builder precomputes and saves waveform cache for each file.\nPros: faster preview later.\nCons: longer build time and extra disk usage.=启用后为每个文件预生成并保存波形缓存。\n优点: 预览更快。\n缺点: 构建时间更长，占用更多磁盘空间。
 Waveform Cache Folder:=波形缓存文件夹:
 Freesound Cache Folder:=Freesound 缓存文件夹:

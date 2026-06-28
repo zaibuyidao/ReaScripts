@@ -7,7 +7,6 @@ script_path = script_path:gsub("[/\\]lib$","") -- 确保不在lib目录下
 local sep = package.config:sub(1, 1)
 script_path = script_path .. sep
 
-local HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin') and reaper.APIExists('SM_ProbeMediaNextJSONEx') and reaper.APIExists('SM_ProbeMediaEnd') and reaper.APIExists('SM_GetPeaksCSV')
 
 function IsAppleDoubleFile(path)
   local filename = tostring(path or ""):match("([^/\\]+)$") or tostring(path or "")
@@ -206,8 +205,7 @@ end
 
 -- 递归扫描目录下所有音频文件
 function ScanAllAudioFiles(root_dir)
-  local have_sm = reaper.APIExists("SM_ListDirBegin") and reaper.APIExists("SM_ListDirNextJSON") and reaper.APIExists("SM_ListDirEnd")
-  if not have_sm or not root_dir or root_dir == "" then return {}, 0 end
+  if not root_dir or root_dir == "" then return {}, 0 end
 
   local files = {}
   local count = 0
@@ -348,7 +346,7 @@ end
 function CollectFileInfo(path)
   path = normalize_path(path or "", false)
   local info = { path = path, filename = path:match("[^/\\]+$") or path }
-  if not HAVE_SM_EXT or path == "" then return info end
+  if path == "" then return info end
 
   local h = reaper.SM_ProbeMediaBegin(path, 0, "", 6)
   if h then
@@ -376,7 +374,6 @@ end
 function CollectFromItems()
   local files, files_idx = {}, {}
   local item_cnt = reaper.CountMediaItems(0)
-  if not HAVE_SM_EXT then return files, files_idx end
 
   local wanted, first_src = {}, {}
   for i = 0, item_cnt - 1 do
@@ -418,7 +415,6 @@ end
 function CollectMediaItems()
   local files_idx = {}
   local item_cnt = reaper.CountMediaItems(0)
-  if not HAVE_SM_EXT then return files_idx end
 
   local wanted = {}
   for i = 0, item_cnt - 1 do
@@ -485,7 +481,6 @@ function CollectFromRPP()
       end
     end
   end
-  if not HAVE_SM_EXT then return files_idx end
 
   local meta_by_path = {}
   for p, _ in pairs(path_set) do
@@ -530,7 +525,7 @@ end
 function CollectFromProjectDirectory()
   local files, files_idx = {}, {}
   local proj_path = normalize_path(reaper.GetProjectPath(), true)
-  if not HAVE_SM_EXT or not proj_path or proj_path == "" then return files, files_idx end
+  if not proj_path or proj_path == "" then return files, files_idx end
 
   local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
   local h = reaper.SM_ProbeMediaBegin(proj_path, 0, exts_csv, 6)
@@ -562,7 +557,7 @@ end
 
 function CollectFromCustomFolder(paths)
   local files_idx = {}
-  if not HAVE_SM_EXT or type(paths) ~= "table" or #paths == 0 then return files_idx end
+  if type(paths) ~= "table" or #paths == 0 then return files_idx end
 
   local seen = {}
   for _, raw in ipairs(paths) do
@@ -607,77 +602,43 @@ function CollectFromDirectory(dir_path)
   if not dir_path or dir_path == "" then return files, files_idx end
 
   local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
-  if reaper.APIExists("SM_ListDirBegin") then
-    local h = reaper.SM_ListDirBegin(dir_path, 0, exts_csv)
-    if h then
-      while true do
-        local chunk = reaper.SM_ListDirNextJSON(h, 2000)
-        if not chunk or chunk == "" then break end
-        if chunk ~= "\n" then
-          for line in chunk:gmatch("[^\r\n]+") do
-            if line ~= "" then
-              local m = sm_parse_ndjson_line(line)
-              if m.path ~= "" then
-                local fullpath = normalize_path(m.path, false)
-                if not files[fullpath] then
-                  local info = SM_BuildFileInfoFromProbeMeta(fullpath, m, { extra = { type = "..." } })
-                  files[fullpath] = info
-                  files_idx[#files_idx + 1] = info
-                end
+  local h = reaper.SM_ListDirBegin(dir_path, 0, exts_csv)
+  if h then
+    while true do
+      local chunk = reaper.SM_ListDirNextJSON(h, 2000)
+      if not chunk or chunk == "" then break end
+      if chunk ~= "\n" then
+        for line in chunk:gmatch("[^\r\n]+") do
+          if line ~= "" then
+            local m = sm_parse_ndjson_line(line)
+            if m.path ~= "" then
+              local fullpath = normalize_path(m.path, false)
+              if not files[fullpath] then
+                local info = SM_BuildFileInfoFromProbeMeta(fullpath, m, { extra = { type = "..." } })
+                files[fullpath] = info
+                files_idx[#files_idx + 1] = info
               end
             end
           end
         end
       end
-      reaper.SM_ListDirEnd(h)
-      if _G.async_probe_handle then
-        reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
-        _G.async_probe_handle = nil
-      end
-      if reaper.APIExists("SM_ProbeMediaBegin") then
-        _G.async_probe_handle = reaper.SM_ProbeMediaBegin(dir_path, 0, exts_csv, 0)
-      end
-      return files, files_idx
     end
+    reaper.SM_ListDirEnd(h)
   end
 
-  if HAVE_SM_EXT then
-    local h = reaper.SM_ProbeMediaBegin(dir_path, 0, exts_csv, 6)
-    if h then
-      while true do
-        local chunk = reaper.SM_ProbeMediaNextJSONEx(h, 256, 8) -- 一次取一批，max_items=256 / 预算=8ms，按需调大
-        if not chunk or chunk == "" then break end
-        if chunk ~= "\n" then
-          for line in chunk:gmatch("[^\r\n]+") do
-            if line ~= "" then
-              local m = sm_parse_ndjson_line(line)
-              if m.path ~= "" then
-                local fullpath = normalize_path(m.path, false)
-                if not files[fullpath] then
-                  local info = SM_BuildFileInfoFromProbeMeta(fullpath, m)
-                  files[fullpath] = info
-                  files_idx[#files_idx + 1] = info
-                end
-              end
-            end
-          end
-        end
-      end
-      reaper.SM_ProbeMediaEnd(h)
-    end
+  if _G.async_probe_handle then
+    reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
+    _G.async_probe_handle = nil
   end
-
+  _G.async_probe_handle = reaper.SM_ProbeMediaBegin(dir_path, 0, exts_csv, 0)
   return files, files_idx
 end
-
 function ProcessAsyncMetadata()
   if not _G.async_probe_handle then return end
 
   -- 如果不在文件夹模式下，立即停止扫描
   if not _G.current_files_map then
-    if reaper.APIExists("SM_ProbeMediaEnd") then
-      reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
-    end
+    reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
     _G.async_probe_handle = nil
     return
   end
@@ -722,7 +683,7 @@ function BuildFileInfoFromPath(path, filename)
     section_length = 0
   }
 
-  if not IsValidAudioFile(path) or not HAVE_SM_EXT or path == "" then return info end
+  if not IsValidAudioFile(path) or path == "" then return info end
 
   local h = reaper.SM_ProbeMediaBegin(path, 0, "", 6)
   if h then
@@ -1395,60 +1356,24 @@ function SM_EnsureCoverForAudio(audio_path, dbpath)
     SM_COVER_CACHE[cache_key] = nil
   end
 
-  if reaper and reaper.APIExists and reaper.APIExists("SM_Cover_Ensure") and reaper.SM_Cover_Ensure then
-    local json = reaper.SM_Cover_Ensure(audio_path, SM_CoverCacheRoot(), scope)
-    local cover_id = json and json:match('"cover_id"%s*:%s*"(.-)"') or nil
-    local out_path = json and json:match('"path"%s*:%s*"(.-)"') or nil
-    if cover_id then cover_id = sm_json_unescape(cover_id) end
-    if out_path then out_path = sm_json_unescape(out_path) end
-    if sm_is_valid_cover_id(cover_id or "") and out_path and out_path ~= "" then
-      local index = SM_LoadCoverIndex()
-      if index[cover_id] ~= out_path then
-        index[cover_id] = out_path
-        SM_SaveCoverIndex(index)
-      end
-      SM_COVER_CACHE[cache_key] = { cover_id = cover_id, path = out_path }
-      return cover_id, out_path
+  local json = reaper.SM_Cover_Ensure(audio_path, SM_CoverCacheRoot(), scope)
+  local cover_id = json and json:match('"cover_id"%s*:%s*"(.-)"') or nil
+  local out_path = json and json:match('"path"%s*:%s*"(.-)"') or nil
+  if cover_id then cover_id = sm_json_unescape(cover_id) end
+  if out_path then out_path = sm_json_unescape(out_path) end
+  if sm_is_valid_cover_id(cover_id or "") and out_path and out_path ~= "" then
+    local index = SM_LoadCoverIndex()
+    if index[cover_id] ~= out_path then
+      index[cover_id] = out_path
+      SM_SaveCoverIndex(index)
     end
-    SM_COVER_CACHE[cache_key] = false
-    return nil, nil
+    SM_COVER_CACHE[cache_key] = { cover_id = cover_id, path = out_path }
+    return cover_id, out_path
   end
 
-  local mime, data
-  if type(GetCoverImageData) == "function" then
-    mime, data = GetCoverImageData(audio_path)
-  else
-    mime, data = ExtractID3Cover(audio_path)
-    if not data then mime, data = ExtractFlacCover(audio_path) end
-    if not data then mime, data = sm_read_external_cover(audio_path) end
-  end
-
-  if not data or data == "" then
-    SM_COVER_CACHE[cache_key] = false
-    return nil, nil
-  end
-
-  local cover_id = sm_cover_hash(data)
-  if not cover_id then
-    SM_COVER_CACHE[cache_key] = false
-    return nil, nil
-  end
-
-  local out_path = SM_CoverCacheDir(scope) .. cover_id .. sm_image_ext(mime, data)
-  if not reaper or not reaper.file_exists or not reaper.file_exists(out_path) then
-    sm_write_all(out_path, data)
-  end
-
-  local index = SM_LoadCoverIndex()
-  if index[cover_id] ~= out_path then
-    index[cover_id] = out_path
-    SM_SaveCoverIndex(index)
-  end
-
-  SM_COVER_CACHE[cache_key] = { cover_id = cover_id, path = out_path }
-  return cover_id, out_path
+  SM_COVER_CACHE[cache_key] = false
+  return nil, nil
 end
-
 function AddPathToDBFile(dbfile, new_path)
   local lines = {}
   for line in io.lines(dbfile) do table.insert(lines, line) end
@@ -1556,18 +1481,6 @@ function AppendPathsToMediaDB(paths, dbfile, db_cover_index)
     end
   end
   if #unique_paths == 0 then return 0 end
-  if not HAVE_SM_DB_APPEND or not reaper.SM_DB_AppendRawRecords then
-    if reaper and reaper.MB then
-      reaper.MB(
-        "Appending files to a database requires the latest Soundmole extension.\n\n" ..
-        "Please update the Soundmole extension, restart REAPER, then try again.\n\n" ..
-        "向数据库追加文件需要最新版 Soundmole 扩展。\n\n" ..
-        "请更新 Soundmole 扩展并重启 REAPER 后再试。",
-        "Soundmole Extension Required / 需要 Soundmole 扩展",
-        0)
-    end
-    return -1
-  end
 
   local records, prepared = {}, {}
   for _, path in ipairs(unique_paths) do
@@ -1723,45 +1636,21 @@ function ParseMediaDBFile(dbpath)
 end
 
 function RemovePathsFromMediaDB(paths, dbfile, skip_cover_rebuild)
-  local remove_paths, encoded_paths = {}, {}
+  local encoded_paths = {}
+  local seen = {}
   for _, path in ipairs(paths or {}) do
     local normalized = normalize_path(path or "", false)
-    if normalized ~= "" and not remove_paths[normalized] then
-      remove_paths[normalized] = true
+    if normalized ~= "" and not seen[normalized] then
+      seen[normalized] = true
       encoded_paths[#encoded_paths + 1] = normalized:gsub("[\r\n]", "")
     end
   end
   if #encoded_paths == 0 then return 0 end
 
-  local removed
-  if HAVE_SM_DB_REMOVE then
-    if not reaper.SM_DB_RemovePaths then return -1 end
-    removed = tonumber(reaper.SM_DB_RemovePaths(dbfile, table.concat(encoded_paths, "\n"))) or -1
-  else
-    local tmp = {}
-    local keep = true
-    removed = 0
-    for line in io.lines(dbfile) do
-      local file_path = line:match('^FILE%s+"(.-)"')
-      if file_path then
-        keep = not remove_paths[normalize_path(file_path, false)]
-        if not keep then removed = removed + 1 end
-      end
-      if keep then tmp[#tmp + 1] = line end
-    end
-    if removed > 0 then
-      local f = io.open(dbfile, "wb")
-      if not f then return -1 end
-      for _, line in ipairs(tmp) do f:write(line, "\n") end
-      f:close()
-    end
-  end
-
-  if removed > 0 and not skip_cover_rebuild and SM_DBCoverIndexExists(dbfile) then
-    if reaper and reaper.APIExists and reaper.APIExists("SM_CoverIndex_Start")
-      and type(SM_QueueDBCoverIndexRebuild) == "function" then
-      SM_QueueDBCoverIndexRebuild(dbfile)
-    end
+  local removed = tonumber(reaper.SM_DB_RemovePaths(dbfile, table.concat(encoded_paths, "\n"))) or -1
+  if removed > 0 and not skip_cover_rebuild and SM_DBCoverIndexExists(dbfile)
+    and type(SM_QueueDBCoverIndexRebuild) == "function" then
+    SM_QueueDBCoverIndexRebuild(dbfile)
   end
   return removed
 end

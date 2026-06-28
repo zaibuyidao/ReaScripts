@@ -1,8 +1,14 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.216
+-- @version 1.0.217
 -- @changelog
+--   Added a search history dropdown for quickly reusing recent searches from the button next to the search box.
+--   Added original Artwork preview in the main preview area. Hold Ctrl and click the cover to view it at its original size, and double click the preview window to close it quickly.
+--   Added database folder browsing mode, allowing database content to be viewed and filtered by its original folder structure.
+--   Improved the thesaurus button interaction, allowing click to toggle thesaurus search and Ctrl-click to edit the thesaurus.
+--   Fixed an issue where files navigated with the arrow keys in the table list were centered and played but not visually marked as selected.
 --   Soundmole now requires the dedicated Soundmole extension to run, and the Lua fallback path without the extension has been removed.
+--   Soundmole native extension support: reaper_soundmole-x64.dll v0.0.31 for Windows and reaper_soundmole-arm64.dylib v0.0.2 for macOS.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

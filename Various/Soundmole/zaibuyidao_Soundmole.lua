@@ -4,8 +4,72 @@ package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_pa
 
 SM_EXT_WIN_VERSION = "v0.0.31"
 SM_EXT_MAC_VERSION = "v0.0.2"
-SM_EXT_REQUIRED = reaper.APIExists('SM_GetPeaksCSV') and reaper.APIExists('SM_Builder_Stop')
+SM_MISSING_REQUIRED_APIS = {}
+do
+  local required_apis = {
+    "SM_Builder_GetInfo",
+    "SM_Builder_GetStatusString",
+    "SM_Builder_RunSlice",
+    "SM_Builder_Start",
+    "SM_Builder_StartIncremental",
+    "SM_Builder_Stop",
+    "SM_BuildWaveformCache",
+    "SM_Cover_Ensure",
+    "SM_CoverIndex_GetStatusJSON",
+    "SM_CoverIndex_RunSlice",
+    "SM_CoverIndex_Start",
+    "SM_CoverIndex_Stop",
+    "SM_DB_AppendRawRecords",
+    "SM_DB_Filter",
+    "SM_DB_FindIndexByPath",
+    "SM_DB_GetCount",
+    "SM_DB_GetNextBatchRaw",
+    "SM_DB_GetRootsRaw",
+    "SM_DB_GetRowRaw",
+    "SM_DB_GetRowRawByPath",
+    "SM_DB_ListSubdirsRaw",
+    "SM_DB_Load",
+    "SM_DB_ReadRootsRaw",
+    "SM_DB_Release",
+    "SM_DB_RemovePaths",
+    "SM_DB_Sort",
+    "SM_DropMediaFiles",
+    "SM_GetPeaksCSV",
+    "SM_GetTableWaveformCachePath",
+    "SM_GetWaveformCachePath",
+    "SM_ListDirBegin",
+    "SM_ListDirEnd",
+    "SM_ListDirNextJSON",
+    "SM_ProbeMediaBegin",
+    "SM_ProbeMediaEnd",
+    "SM_ProbeMediaNextJSONEx",
+    "SM_SetCacheBaseDir",
+    "SM_SIM_Builder_GetStatusJSON",
+    "SM_SIM_Builder_RunSlice",
+    "SM_SIM_Builder_StartWithPython",
+    "SM_SIM_Builder_Stop",
+    "SM_SIM_GetResultJSON",
+    "SM_SIM_QueryByPathFromIndex",
+    "SM_SIM_Release",
+    "SM_SIM_Setup_GetStatusJSON",
+    "SM_SIM_Setup_RunSlice",
+    "SM_SIM_Setup_StartWithProfile",
+    "SM_SIM_Setup_Stop",
+    "SM_WFC_Begin",
+    "SM_WFC_BeginTable",
+    "SM_WFC_Cancel",
+    "SM_WFC_GetPartial",
+    "SM_WFC_GetPathIfReady",
+    "SM_WFC_Pump",
+  }
 
+  for _, api_name in ipairs(required_apis) do
+    if not reaper.APIExists(api_name) then
+      SM_MISSING_REQUIRED_APIS[#SM_MISSING_REQUIRED_APIS + 1] = api_name
+    end
+  end
+end
+SM_EXT_REQUIRED = #SM_MISSING_REQUIRED_APIS == 0
 function SM_CheckRequiredExtension()
   if SM_EXT_REQUIRED then return true end
 
@@ -26,11 +90,12 @@ function SM_CheckRequiredExtension()
   end
 
   local message =
-    "Soundmole requires the matching Soundmole extension. The extension is missing or too old.\n\n" ..
+    "Soundmole requires the latest matching Soundmole extension. The extension is missing or too old.\n\n" ..
     -- platform_label .. ":\n" ..
     download_label .. "\n" ..
     download_url .. "\n\n" ..
     "Install the file into REAPER/UserPlugins, restart REAPER, then run Soundmole again.\n" ..
+    ((#SM_MISSING_REQUIRED_APIS > 0) and ("\nMissing APIs:\n" .. table.concat(SM_MISSING_REQUIRED_APIS, "\n") .. "\n\n") or "") ..
     "Click OK to open the recommended download for this system."
 
   local response = reaper.MB(message, "Soundmole Extension Required", 1)
@@ -121,77 +186,6 @@ local ImGui
 if reaper.ImGui_GetBuiltinPath then
   package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
   ImGui = require 'imgui' '0.10'
-end
-
-HAVE_SM_BUILDER = reaper.APIExists('SM_Builder_Start')
-  and reaper.APIExists('SM_Builder_RunSlice')
-  and reaper.APIExists('SM_Builder_GetInfo')
-  and reaper.APIExists('SM_Builder_GetStatusString')
-  and reaper.APIExists('SM_Builder_Stop')
-HAVE_SM_BUILDER_INCREMENTAL = HAVE_SM_BUILDER
-  and reaper.APIExists('SM_Builder_StartIncremental')
-HAVE_SM_COVER_INDEX = reaper.APIExists('SM_Cover_Ensure')
-  and reaper.APIExists('SM_CoverIndex_Start')
-  and reaper.APIExists('SM_CoverIndex_RunSlice')
-  and reaper.APIExists('SM_CoverIndex_GetStatusJSON')
-  and reaper.APIExists('SM_CoverIndex_Stop')
-HAVE_SM_SEARCH = reaper.APIExists('SM_DB_Filter') and reaper.APIExists('SM_DB_GetRowRaw')
-HAVE_SM_DB_ROW_BY_PATH = reaper.APIExists('SM_DB_GetRowRawByPath')
-HAVE_SM_DB_FIND_INDEX = reaper.APIExists('SM_DB_FindIndexByPath')
-HAVE_SM_DB = reaper.APIExists('SM_DB_GetNextBatchRaw')
-  and reaper.APIExists('SM_DB_Load')
-  and reaper.APIExists('SM_DB_Release')
-  and reaper.APIExists('SM_DB_GetCount')
-  and reaper.APIExists('SM_DB_Sort')
-HAVE_SM_DB_FOLDERS = HAVE_SM_DB
-  and reaper.APIExists('SM_DB_GetRootsRaw')
-  and reaper.APIExists('SM_DB_ListSubdirsRaw')
-HAVE_SM_DB_ROOTS_BY_PATH = reaper.APIExists('SM_DB_ReadRootsRaw')
-HAVE_SM_DB_APPEND = reaper.APIExists('SM_DB_AppendRawRecords')
-HAVE_SM_DB_REMOVE = reaper.APIExists('SM_DB_RemovePaths')
-HAVE_SM_EXT = reaper.APIExists('SM_ProbeMediaBegin')
-  and reaper.APIExists('SM_ProbeMediaNextJSONEx')
-  and reaper.APIExists('SM_ProbeMediaEnd')
-  and reaper.APIExists('SM_GetPeaksCSV')
-HAVE_SM_WFC = reaper.APIExists('SM_SetCacheBaseDir')
-  and reaper.APIExists('SM_GetWaveformCachePath')
-  and reaper.APIExists('SM_BuildWaveformCache')
-  and reaper.APIExists('SM_WFC_Begin')
-  and reaper.APIExists('SM_WFC_Pump')
-  and reaper.APIExists('SM_WFC_GetPathIfReady')
-HAVE_SM_WFC_CANCEL = reaper.APIExists('SM_WFC_Cancel')
-HAVE_SM_WFC_PARTIAL = HAVE_SM_WFC
-  and reaper.APIExists('SM_WFC_GetPartial')
-HAVE_SM_WFC_TABLE = HAVE_SM_WFC
-  and reaper.APIExists('SM_GetTableWaveformCachePath')
-  and reaper.APIExists('SM_WFC_BeginTable')
-HAVE_SM_DROP_MEDIA_FILES = reaper.APIExists('SM_DropMediaFiles')
-HAVE_SM_SIM = reaper.APIExists('SM_SIM_LoadIndex')
-  and reaper.APIExists('SM_SIM_QueryByPath')
-  and reaper.APIExists('SM_SIM_GetResultJSON')
-  and reaper.APIExists('SM_SIM_Release')
-HAVE_SM_SIM_CROSS_INDEX = reaper.APIExists('SM_SIM_QueryByPathFromIndex')
-  and reaper.APIExists('SM_SIM_Builder_Start')
-  and reaper.APIExists('SM_SIM_Builder_RunSlice')
-  and reaper.APIExists('SM_SIM_Builder_GetStatusJSON')
-  and reaper.APIExists('SM_SIM_Builder_Stop')
-HAVE_SM_SIM_BUILDER_EX = reaper.APIExists('SM_SIM_Builder_StartWithPython')
-HAVE_SM_SIM_SETUP = reaper.APIExists('SM_SIM_Setup_Start')
-  and reaper.APIExists('SM_SIM_Setup_RunSlice')
-  and reaper.APIExists('SM_SIM_Setup_GetStatusJSON')
-  and reaper.APIExists('SM_SIM_Setup_Stop')
-HAVE_SM_SIM_SETUP_PROFILE = reaper.APIExists('SM_SIM_Setup_StartWithProfile')
-
-function SM_ShowExtensionUpdateRequired(feature)
-  local suffix = ""
-  if feature and feature ~= "" then suffix = " (" .. tostring(feature) .. ")" end
-  reaper.MB(
-    "This action requires the latest Soundmole extension" .. suffix .. ".\n\n" ..
-    "Please update the Soundmole extension, restart REAPER, then try again.\n\n" ..
-    "此操作需要最新版 Soundmole 扩展" .. suffix .. "。\n\n" ..
-    "请更新 Soundmole 扩展并重启 REAPER 后再试。",
-    "Soundmole Extension Required / 需要 Soundmole 扩展",
-    0)
 end
 
 SCRIPT_NAME = 'Soundmole - Explore, Tag, and Organize Audio Resources'
@@ -376,11 +370,11 @@ ui_bottom_offset             = 231   -- 底部总高度
 playing_preview              = nil
 playing_path                 = nil
 playing_source               = nil
-local loop_enabled           = false -- 是否自动循环
-local preview_play_len       = 0     -- 当前预览音频长度
-local peak_chans             = 6     -- 默认显示6路电平
-local play_rate              = 1     -- 默认速率1.0
-local effective_rate_knob    = 1.0   -- 缓存旋钮显示的有效速率
+loop_enabled                 = false -- 是否自动循环
+preview_play_len             = 0     -- 当前预览音频长度
+peak_chans                   = 6     -- 默认显示6路电平
+play_rate                    = 1     -- 默认速率1.0
+effective_rate_knob          = 1.0   -- 缓存旋钮显示的有效速率
 local pitch                  = 0     -- 音高调节
 local preserve_pitch         = true  -- 变速时是否保持音高
 local is_paused              = false -- 是否处于暂停状态
@@ -401,6 +395,7 @@ local waveform_hint_enabled  = false -- 波形预览鼠标提示开关
 local recent_audio_files     = {}    -- 最近播放列表
 local max_recent_files       = 20    -- 最近播放最多保留20条
 local max_recent_search      = 20    -- 最近搜索最多保留20条
+browse_database_as_folders   = false -- 以文件夹方式浏览数据库
 local selected_recent_row    = 0
 local skip_silence_enabled   = false -- 跳过静音
 local skip_silence_db        = -60   -- 静音阈值，超过此值即认为有声
@@ -561,9 +556,7 @@ end
 
 function CancelTrackedWaveformJob(key)
   if not key or key == "" then return end
-  if HAVE_SM_WFC_CANCEL and reaper.SM_WFC_Cancel then
-    pcall(reaper.SM_WFC_Cancel, key)
-  end
+  pcall(reaper.SM_WFC_Cancel, key)
   sm_wfc_pending_jobs[key] = nil
 end
 
@@ -628,9 +621,7 @@ function ApplyWaveformCacheDir(new_dir, persist, clear_runtime)
   local old_dir = cache_dir
   cache_dir = normalize_path((new_dir and new_dir ~= "") and new_dir or DEFAULT_CACHE_DIR, true)
   EnsureCacheDir(cache_dir)
-  if HAVE_SM_WFC and reaper.SM_SetCacheBaseDir then
-    reaper.SM_SetCacheBaseDir(cache_dir)
-  end
+  reaper.SM_SetCacheBaseDir(cache_dir)
   if persist ~= false then
     SM_SetState(EXT_SECTION, "cache_dir", cache_dir, true)
   end
@@ -1444,6 +1435,7 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
   SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
   SM_SetState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "browse_database_as_folders", browse_database_as_folders and "1" or "0", true)
   SM_SetState(EXT_SECTION, "similarity_base_python", similarity_base_python or "", true)
   SM_SetState(EXT_SECTION, "similarity_data_dir", similarity_data_dir or "", true)
   SM_SetState(EXT_SECTION, "similarity_runtime_dir", similarity_runtime_dir or "", true)
@@ -2389,6 +2381,20 @@ do
         T("When enabled, the database builder precomputes and saves waveform cache for each file.\nPros: faster preview later.\nCons: longer build time and extra disk usage.")
       )
     end
+
+    local chg_db_tree, v_db_tree = reaper.ImGui_Checkbox(ctx, T("Browse database as folders") .. "##browse_database_as_folders", browse_database_as_folders)
+    if chg_db_tree then
+      browse_database_as_folders = v_db_tree
+      SM_SetState(EXT_SECTION, "browse_database_as_folders", v_db_tree and "1" or "0", true)
+      if not browse_database_as_folders then
+        _G._db_path_prefix_filter = ""
+        DBPF_InvalidateAllCaches()
+        RequestSearchRefresh()
+      end
+    end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      DrawTooltip(T("Show database contents as a folder tree. Selecting a folder filters the database to that folder and its subfolders."))
+    end
   end
 
   function Section_CacheDir()
@@ -2438,10 +2444,6 @@ do
   end
 
   function Section_SimilaritySetup()
-    if not HAVE_SM_SIM then
-      reaper.ImGui_TextWrapped(ctx, T("Similarity support requires the Soundmole C++ extension."))
-      return
-    end
 
     reaper.ImGui_TextWrapped(ctx, T("Select a 64-bit Python 3.10, 3.11, or 3.12 executable. Soundmole will create its own managed environment and install CLAP without changing your selected Python installation."))
     reaper.ImGui_Spacing(ctx)
@@ -2496,7 +2498,7 @@ do
     end
     reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_SameLine(ctx, nil, UIScale(18))
-    reaper.ImGui_BeginDisabled(ctx, similarity_paths_locked or not HAVE_SM_SIM_SETUP_PROFILE)
+    reaper.ImGui_BeginDisabled(ctx, similarity_paths_locked)
     if reaper.ImGui_RadioButton(ctx, T("GPU acceleration"), similarity_accelerator == "gpu") then
       similarity_accelerator = "gpu"
       SM_SetState(EXT_SECTION, "similarity_accelerator", similarity_accelerator, true)
@@ -2538,11 +2540,9 @@ do
       end
     end
 
-    local can_install = HAVE_SM_SIM_SETUP
-      and not similarity_state.setup_active
+    local can_install = not similarity_state.setup_active
       and similarity_base_python ~= ""
       and reaper.file_exists(similarity_base_python)
-      and (similarity_accelerator == "cpu" or HAVE_SM_SIM_SETUP_PROFILE)
     reaper.ImGui_BeginDisabled(ctx, not can_install)
     if reaper.ImGui_Button(ctx, T("Install or Repair CLAP"), UIScale(180), UIScale(32)) then
       SM_SIM_StartSetup()
@@ -2559,11 +2559,7 @@ do
     end
     reaper.ImGui_EndDisabled(ctx)
 
-    if not HAVE_SM_SIM_SETUP then
-      reaper.ImGui_TextWrapped(ctx, T("One-click CLAP setup requires the latest Soundmole extension. Please update the extension and restart REAPER."))
-    elseif similarity_accelerator == "gpu" and not HAVE_SM_SIM_SETUP_PROFILE then
-      reaper.ImGui_TextWrapped(ctx, T("GPU setup requires the latest Soundmole extension. Please update the extension and restart REAPER."))
-    elseif similarity_base_python == "" or not reaper.file_exists(similarity_base_python) then
+    if similarity_base_python == "" or not reaper.file_exists(similarity_base_python) then
       reaper.ImGui_TextWrapped(ctx, T("Install a compatible 64-bit Python version, then select its executable above."))
     else
       reaper.ImGui_TextWrapped(ctx, T("The installation includes CLAP, required Python packages, tokenizer files, and the CLAP model. The first installation requires internet access and may take several minutes."))
@@ -2638,6 +2634,7 @@ do
       auto_scroll_enabled  = false
       search_enter_mode    = true
       build_waveform_cache = false
+      browse_database_as_folders = false
 
       -- 播放控制范围
       pitch_knob_min       = -6
@@ -2789,19 +2786,15 @@ do
       end
     },
   }
-    if HAVE_SM_SIM then
-      table.insert(pages, 5, {
-        id = "Similarity",
-        label = T("Similarity"),
-        fn = function()
-          DrawPageHeader(T("Configure Python and CLAP similarity support"), colors.settings_header_bg, colors.normal_text)
-          DrawSubTitle(T("Python and CLAP"))
-          Section_SimilaritySetup()
-        end
-      })
-    elseif settings_active_page == "Similarity" then
-      settings_active_page = "System"
-    end
+    table.insert(pages, 5, {
+      id = "Similarity",
+      label = T("Similarity"),
+      fn = function()
+        DrawPageHeader(T("Configure Python and CLAP similarity support"), colors.settings_header_bg, colors.normal_text)
+        DrawSubTitle(T("Python and CLAP"))
+        Section_SimilaritySetup()
+      end
+    })
     return pages
   end
 
@@ -3285,7 +3278,7 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
   -- 缓存存在时命中时先整段直读，不再额外推进一次分片创建。只有确实无缓存时才进入 Pump。
   local lookup
   if state.req_path and reaper.SM_GetWaveformCachePath then
-    lookup = (state.req_table and HAVE_SM_WFC_TABLE and reaper.SM_GetTableWaveformCachePath)
+    lookup = (state.req_table and reaper.SM_GetTableWaveformCachePath)
       or reaper.SM_GetWaveformCachePath
     local ready = lookup(state.req_path, state.req_px or WFC_PX_DEFAULT, state.req_st or 0, state.req_et or 0, state.req_maxch or 6)
     if ready ~= "" then
@@ -3307,7 +3300,7 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
       return ready
     end
   end
-  -- 新版扩展返回负值表示任务已失败或已不存在。旧版扩展返回 nil，仍保持兼容
+  -- 扩展返回负值表示任务已失败或已不存在。
   local pump_result = tonumber(pumped)
   if pump_result and pump_result < 0 then
     CancelTrackedWaveformJob(state.key)
@@ -3317,7 +3310,7 @@ function SM_EnsureWaveformCache_Pump(state, max_iters, max_ms)
 end
 
 function SM_ReadWaveformPartial(state)
-  if not HAVE_SM_WFC_PARTIAL or type(state) ~= "table" or not state.key then return nil end
+  if type(state) ~= "table" or not state.key then return nil end
 
   local from_row = math.max(0, math.floor(tonumber(state.partial_rows or 0) or 0))
   local raw = reaper.SM_WFC_GetPartial(state.key, from_row)
@@ -3408,7 +3401,7 @@ end
 
 -- 严格读取现有的 C++ 缓存，不启动或同步构建缓存。
 function SM_LoadWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, max_channels)
-  if not HAVE_SM_WFC or not path or path == "" then return nil end
+  if not path or path == "" then return nil end
   local px = math.max(1, math.floor(tonumber(pixel_cnt or WFC_PX_DEFAULT)))
   local st = tonumber(start_time) or 0
   local et = tonumber(end_time) or 0
@@ -3428,7 +3421,7 @@ end
 function SM_BeginWaveformCacheAsync(path, pixel_cnt, start_time, end_time, max_channels)
   local ready = SM_LoadWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, max_channels)
   if ready then return ready end
-  if not HAVE_SM_WFC or not path or path == "" then return nil end
+  if not path or path == "" then return nil end
 
   local px = math.max(1, math.floor(tonumber(pixel_cnt or WFC_PX_DEFAULT)))
   local st = tonumber(start_time) or 0
@@ -3445,10 +3438,7 @@ function SM_BeginWaveformCacheAsync(path, pixel_cnt, start_time, end_time, max_c
 end
 
 function SM_LoadTableWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, max_channels)
-  if not HAVE_SM_WFC or not path or path == "" then return nil end
-  if not HAVE_SM_WFC_TABLE then
-    return SM_LoadWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, 1)
-  end
+  if not path or path == "" then return nil end
 
   local px = math.max(1, math.floor(tonumber(pixel_cnt or TABLE_WAVEFORM_PREFETCH_PX)))
   local st = tonumber(start_time) or 0
@@ -3468,10 +3458,7 @@ end
 function SM_BeginTableWaveformCacheAsync(path, pixel_cnt, start_time, end_time, max_channels)
   local ready = SM_LoadTableWaveformCacheIfReady(path, pixel_cnt, start_time, end_time, max_channels)
   if ready then return ready end
-  if not HAVE_SM_WFC or not path or path == "" then return nil end
-  if not HAVE_SM_WFC_TABLE then
-    return SM_BeginWaveformCacheAsync(path, pixel_cnt, start_time, end_time, 1)
-  end
+  if not path or path == "" then return nil end
 
   local px = math.max(1, math.floor(tonumber(pixel_cnt or TABLE_WAVEFORM_PREFETCH_PX)))
   local st = tonumber(start_time) or 0
@@ -3489,7 +3476,7 @@ end
 
 -- wf_step 已失效，仅保留形参但不使用
 function SM_GetMainPreviewWaveformCache(path, max_channels)
-  if not HAVE_SM_WFC or not path or path == "" then return nil end
+  if not path or path == "" then return nil end
 
   local px = WFC_PX_DEFAULT
   local st, et = 0, 0
@@ -3693,9 +3680,7 @@ end
 -- 停止扫描大型文件夹
 function StopAsyncScan()
   if _G.async_probe_handle then
-    if reaper.APIExists("SM_ProbeMediaEnd") then
-      reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
-    end
+    reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
     _G.async_probe_handle = nil
   end
 end
@@ -3920,11 +3905,7 @@ function SM_SIM_ConfiguredPythonPath()
 end
 
 function SM_SIM_StartSetup()
-  if not HAVE_SM_SIM_SETUP or similarity_state.setup_active then return false end
-  if similarity_accelerator == "gpu" and not HAVE_SM_SIM_SETUP_PROFILE then
-    reaper.ShowMessageBox(T("GPU setup requires the latest Soundmole extension. Please update the extension and restart REAPER."), "Soundmole", 0)
-    return false
-  end
+  if similarity_state.setup_active then return false end
   if similarity_base_python == "" or not reaper.file_exists(similarity_base_python) then
     reaper.ShowMessageBox(T("Install a compatible 64-bit Python version, then select its executable above."), "Soundmole", 0)
     return false
@@ -3936,12 +3917,7 @@ function SM_SIM_StartSetup()
     return false
   end
   EnsureCacheDir(normalize_path(similarity_data_dir, true))
-  local handle
-  if HAVE_SM_SIM_SETUP_PROFILE then
-    handle = reaper.SM_SIM_Setup_StartWithProfile(similarity_base_python, similarity_runtime_dir, setup_worker, similarity_accelerator)
-  else
-    handle = reaper.SM_SIM_Setup_Start(similarity_base_python, similarity_runtime_dir, setup_worker)
-  end
+  local handle = reaper.SM_SIM_Setup_StartWithProfile(similarity_base_python, similarity_runtime_dir, setup_worker, similarity_accelerator)
   if not handle then
     reaper.ShowMessageBox(T("Could not start CLAP setup."), "Soundmole", 0)
     return false
@@ -4005,7 +3981,6 @@ function SM_SIM_ProcessSetupLoop()
 end
 
 function SM_SIM_StartBuild(db_path)
-  if not HAVE_SM_SIM then return false end
   db_path = normalize_path(db_path or "", false)
   if db_path == "" then return false end
   if similarity_state.builder_active then
@@ -4013,18 +3988,13 @@ function SM_SIM_StartBuild(db_path)
     return false
   end
 
-  local handle
-  if HAVE_SM_SIM_BUILDER_EX then
-    local python_path = SM_SIM_ConfiguredPythonPath()
-    if python_path == "" then
-      reaper.ShowMessageBox(T("CLAP is not ready. Open Settings > Similarity and choose Install or Repair CLAP."), "Soundmole", 0)
-      return false
-    end
-    local worker_path = normalize_path(script_path .. "lib" .. sep .. "similarity.py", false)
-    handle = reaper.SM_SIM_Builder_StartWithPython(db_path, "CLAP", python_path, worker_path)
-  else
-    handle = reaper.SM_SIM_Builder_Start(db_path, "CLAP")
+  local python_path = SM_SIM_ConfiguredPythonPath()
+  if python_path == "" then
+    reaper.ShowMessageBox(T("CLAP is not ready. Open Settings > Similarity and choose Install or Repair CLAP."), "Soundmole", 0)
+    return false
   end
+  local worker_path = normalize_path(script_path .. "lib" .. sep .. "similarity.py", false)
+  local handle = reaper.SM_SIM_Builder_StartWithPython(db_path, "CLAP", python_path, worker_path)
   if not handle then
     reaper.ShowMessageBox("Could not start the similarity index builder.", "Soundmole", 0)
     return false
@@ -4097,7 +4067,7 @@ function SM_SIM_ProcessBuilderLoop()
 end
 
 function SM_SIM_FindSimilar(info, target_db_path, source_db_path)
-  if not HAVE_SM_SIM or not info or not info.path then return false end
+  if not info or not info.path then return false end
   target_db_path = normalize_path(target_db_path or SM_SIM_CurrentDBPath() or "", false)
   if target_db_path == "" then
     reaper.ShowMessageBox("Find Similar is available while browsing a Soundmole database.", "Soundmole", 0)
@@ -4113,12 +4083,7 @@ function SM_SIM_FindSimilar(info, target_db_path, source_db_path)
 
   local max_results = math.max(1, math.min(1000, tonumber(similarity_state.max_results) or 100))
   similarity_state.max_results = max_results
-  local handle
-  if HAVE_SM_SIM_CROSS_INDEX then
-    handle = reaper.SM_SIM_QueryByPathFromIndex(target_db_path, source_db_path, source_path, max_results)
-  else
-    handle = reaper.SM_SIM_QueryByPath(target_db_path, source_path, max_results)
-  end
+  local handle = reaper.SM_SIM_QueryByPathFromIndex(target_db_path, source_db_path, source_path, max_results)
   if not handle then
     local answer = reaper.ShowMessageBox(
       T("Similarity query failed. Ensure the source and current database indexes use the same model and are up to date.")
@@ -4141,15 +4106,13 @@ function SM_SIM_FindSimilar(info, target_db_path, source_db_path)
 
   local metadata_db_handle
   local release_metadata_db_handle = false
-  if HAVE_SM_DB_ROW_BY_PATH then
-    local loaded_db_path = SM_SIM_PathKey(_G.current_db_fullpath or "")
-    if _G.db_loader and _G.db_loader.ctx
-      and loaded_db_path ~= "" and loaded_db_path == SM_SIM_PathKey(target_db_path) then
-      metadata_db_handle = _G.db_loader.ctx
-    elseif HAVE_SM_DB and reaper.SM_DB_Load then
-      metadata_db_handle = reaper.SM_DB_Load(target_db_path)
-      release_metadata_db_handle = metadata_db_handle ~= nil
-    end
+  local loaded_db_path = SM_SIM_PathKey(_G.current_db_fullpath or "")
+  if _G.db_loader and _G.db_loader.ctx
+    and loaded_db_path ~= "" and loaded_db_path == SM_SIM_PathKey(target_db_path) then
+    metadata_db_handle = _G.db_loader.ctx
+  else
+    metadata_db_handle = reaper.SM_DB_Load(target_db_path)
+    release_metadata_db_handle = metadata_db_handle ~= nil
   end
 
   local results = {}
@@ -6402,7 +6365,6 @@ function EncodeDropMediaFileList(paths)
 end
 
 function TryNativeDropMediaFiles(paths)
-  if not (HAVE_SM_DROP_MEDIA_FILES and reaper.SM_DropMediaFiles) then return false, false end
   if not paths or #paths < 1 then return false, false end
 
   local payload = EncodeDropMediaFileList(paths)
@@ -7809,7 +7771,7 @@ function PlayFromStart(info)
   -- Wave.play_cursor = 0
   -- 跳过静音
   local start_pos = 0
-  if skip_silence_enabled and HAVE_SM_WFC then
+  if skip_silence_enabled then
     local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
     if non_sil and non_sil > 0 then
       start_pos = non_sil
@@ -7819,7 +7781,7 @@ function PlayFromStart(info)
   end
 
   -- 将当前要播放的文件插到波形任务队列头部，提升优先级
-  if HAVE_SM_WFC and waveform_task_queue and info and info.path and info.path ~= "" then
+  if waveform_task_queue and info and info.path and info.path ~= "" then
     info._wf_enqueued = info._wf_enqueued or {}
     local want_width = math.max(1, math.floor(tonumber(info._last_thumb_w) or TABLE_WAVEFORM_PREFETCH_PX))
     if not info._wf_enqueued[want_width] then
@@ -7902,7 +7864,7 @@ function PlayFromCursor(info)
         -- 决定光标起播位置
         local base_pos = (link_with_reaper and 0) or Wave.play_cursor or 0 --  or (tempo_sync_enabled and Wave.play_cursor / effective_rate_knob)
         local start_pos = base_pos
-        if skip_silence_enabled and HAVE_SM_WFC then
+        if skip_silence_enabled then
           local eps = 1e-6
           if base_pos <= eps then
             local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
@@ -9660,8 +9622,6 @@ function StoreTableWaveformFromCache(info, width, cache)
 end
 
 function ProcessWaveformTasks()
-  if not HAVE_SM_WFC then return end
-
   local list_state = _G._soundmole_static or {}
   local last_scroll_time = tonumber(list_state.last_scroll_time)
   if last_scroll_time and reaper.time_precise() - last_scroll_time < TABLE_WAVEFORM_IDLE_SECONDS then
@@ -9732,13 +9692,16 @@ function ProcessWaveformTasks()
 end
 --------------------------------------------- 专辑封面 ---------------------------------------------
 
-local last_window_visible = true
-local cover_cache = {}
-local cover_path_cache = {}
-local cover_image_cache = {}
-local bad_cover_cache = {}
-local last_cover_img = nil
-local last_cover_path = nil
+last_window_visible = true
+cover_cache = {}
+cover_path_cache = {}
+cover_image_cache = {}
+bad_cover_cache = {}
+last_cover_img = nil
+last_cover_path = nil
+original_cover_path = nil
+original_cover_img = nil
+open_original_cover_popup = false
 
 local img_cache_dir = script_path .. "cover_cache" .. sep .. "common" .. sep
 img_cache_dir = normalize_path(img_cache_dir, true)
@@ -10044,88 +10007,20 @@ end
 -- 提取封面并写到 cache_dir，返回完整文件路径
 function SaveCoverToTemp(file_path)
   file_path = normalize_path(file_path, false)
-  if type(SM_EnsureCoverForAudio) == "function" then
-    local _, cover_path = SM_EnsureCoverForAudio(file_path)
-    if cover_path then return cover_path end
-    if HAVE_SM_COVER_INDEX then return nil end
-  end
-  -- 提取二进制
-  local mime, data = ExtractID3Cover(file_path)
-  if not data then mime, data = ExtractFlacCover(file_path) end
-  if not data then return nil end
-  -- 生成唯一文件路径
-  local hash = SimpleHash(data)
-  local mime_l = tostring(mime or ""):lower()
-  local ext = ".jpg"
-  if mime_l:find("png", 1, true) or data:sub(1, 8) == "\137PNG\r\n\26\n" then ext = ".png"
-  elseif mime_l:find("gif", 1, true) or data:sub(1, 3) == "GIF" then ext = ".gif"
-  elseif mime_l:find("bmp", 1, true) or data:sub(1, 2) == "BM" then ext = ".bmp"
-  elseif mime_l:find("webp", 1, true) or (data:sub(1, 4) == "RIFF" and data:sub(9, 12) == "WEBP") then ext = ".webp" end
-  local out  = img_cache_dir .. hash .. ext
-  -- 文件不存在就写入
-  local f2 = io.open(out, "rb")
-  if not f2 then
-    -- 写文件
-    local f = io.open(out, "wb")
-    if not f then
-      return nil
-    end
-    f:write(data)
-    f:close()
-  else
-    f2:close()
-  end
-  -- 缓存data
-  cover_cache[file_path] = { mime = mime, data = data }
-
-  return out
+  local _, cover_path = SM_EnsureCoverForAudio(file_path)
+  return cover_path
 end
-
 -- 先调用 SaveCoverToTemp 获取内嵌封面临时文件路径，如果没有，再退回到同目录查找图片文件
+-- 通过扩展获取封面缓存路径
 function GetCoverImagePath(audio_path)
   audio_path = normalize_path(audio_path, false)
-  if type(SM_EnsureCoverForAudio) == "function" then
-    local _, cover_path = SM_EnsureCoverForAudio(audio_path)
-    if cover_path then
-      cover_path_cache[audio_path] = cover_path
-      return cover_path
-    end
-    if HAVE_SM_COVER_INDEX then
-      cover_path_cache[audio_path] = false
-      return nil
-    end
-  end
-  -- 已缓存则直接返回
   if cover_path_cache[audio_path] ~= nil then
     return cover_path_cache[audio_path] or nil
   end
-  -- 内嵌封面
-  local tmp = SaveCoverToTemp(audio_path)
-  if tmp then
-    cover_path_cache[audio_path] = tmp
-    return tmp
-  end
-  -- 同目录图片文件
-  local dir  = audio_path:match("^(.*[\\/])") or ""
-  local base = audio_path:match("([^\\/]+)%.")  or ""
-  for _, name in ipairs({
-    "cover.jpg", "cover.jpeg", "cover.png", "cover.gif", "cover.bmp", "cover.webp",
-    "folder.jpg", "folder.jpeg", "folder.png", "folder.gif", "folder.bmp", "folder.webp",
-    base .. ".jpg", base .. ".jpeg", base .. ".png", base .. ".gif", base .. ".bmp", base .. ".webp"
-  }) do
-    local p = dir .. name
-    local f = io.open(p, "rb")
-    if f then
-      f:close()
-      cover_path_cache[audio_path] = p
-      return p
-    end
-  end
-  -- 缓存查不到的情况，避免反复查找
-  cover_path_cache[audio_path] = false
-  return nil
+  local _, cover_path = SM_EnsureCoverForAudio(audio_path)
+  cover_path_cache[audio_path] = cover_path or false
+  return cover_path
 end
-
 function SM_IsExistingCoverPath(path)
   if not path or path == "" then return false end
   if reaper and reaper.file_exists then return reaper.file_exists(path) end
@@ -10191,16 +10086,14 @@ function HasCoverImage(img_info)
     local dbpath = (type(SM_GetCurrentDBCoverIndexPath) == "function") and SM_GetCurrentDBCoverIndexPath() or nil
     local path = SM_GetCoverPathByID(img_info.cover_id, dbpath)
     if path then return true end
-    if dbpath and HAVE_SM_COVER_INDEX then return false end
+    if dbpath then return false end
   end
-  if HAVE_SM_COVER_INDEX and img_info.path and type(SM_EnsureCoverForAudio) == "function" then
+  if img_info.path then
     local _, path = SM_EnsureCoverForAudio(img_info.path)
     return path ~= nil
   end
-  local mime, data = GetCoverImageData(img_info.path)
-  return data ~= nil
+  return false
 end
-
 function ReleaseAllCoverImages()
   if cover_image_cache and reaper.ImGui_DestroyImage then
     for k, cached in pairs(cover_image_cache) do
@@ -10760,7 +10653,7 @@ function FindFirstNonSilentTimeInCache(cache)
 end
 
 function FindFirstNonSilentTimeCxx(info, max_wait_ms)
-  if not HAVE_SM_WFC or not info or not info.path or info.path == "" then return nil, "empty" end
+  if not info or not info.path or info.path == "" then return nil, "empty" end
 
   local path = normalize_path(info.path, false)
   local maxch = math.max(1, math.min(64, tonumber(info.max_channels or info.channel_count or 6) or 6))
@@ -10779,7 +10672,7 @@ function FindFirstNonSilentTimeCxx(info, max_wait_ms)
 end
 
 function QueuePendingSkipSilenceSeek(info)
-  if not HAVE_SM_WFC or not info or not info.path or info.path == "" then return end
+  if not info or not info.path or info.path == "" then return end
 
   local now = reaper.time_precise and reaper.time_precise() or 0
   pending_skip_silence_seek = {
@@ -10805,7 +10698,7 @@ function ProcessPendingSkipSilenceSeek()
   local pending = pending_skip_silence_seek
   if not pending then return end
 
-  if not skip_silence_enabled or not HAVE_SM_WFC or not playing_preview then
+  if not skip_silence_enabled or not playing_preview then
     pending_skip_silence_seek = nil
     return
   end
@@ -11155,6 +11048,55 @@ function ApplySearchFromHistory(idx)
   search_input_timer       = reaper.time_precise()
 end
 
+search_history_popup_rect = search_history_popup_rect or {}
+
+function DrawRecentSearchPopupUnderFilter()
+  local rect = search_history_popup_rect
+  if not rect or not rect.x or not rect.y then return end
+
+  local popup_id = "SearchHistoryPopupFromThesaurus"
+  local width = math.max(1, tonumber(rect.w) or 1)
+  local visible_count = math.min(#recent_search_keywords, tonumber(max_recent_search) or #recent_search_keywords)
+  local popup_h = reaper.ImGui_GetFrameHeight(ctx) * math.max(1, visible_count) + UIScaleF(8)
+  reaper.ImGui_SetNextWindowPos(ctx, rect.x, rect.y, reaper.ImGui_Cond_Always())
+  reaper.ImGui_SetNextWindowSize(ctx, width, popup_h, reaper.ImGui_Cond_Always())
+
+  if reaper.ImGui_BeginPopup(ctx, popup_id) then
+    if visible_count <= 0 then
+      reaper.ImGui_TextDisabled(ctx, T("No recent search"))
+    else
+      for i = 1, visible_count do
+        local keyword = recent_search_keywords[i]
+        if keyword and keyword ~= "" then
+          if reaper.ImGui_Selectable(ctx, keyword, false, reaper.ImGui_SelectableFlags_SpanAllColumns()) then
+            ApplySearchFromHistory(i)
+            reaper.ImGui_CloseCurrentPopup(ctx)
+          end
+
+          local item_popup_id = "RecentSearchContextMenu##" .. tostring(i)
+          if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
+            reaper.ImGui_OpenPopup(ctx, item_popup_id)
+          end
+          if reaper.ImGui_BeginPopup(ctx, item_popup_id) then
+            if reaper.ImGui_MenuItem(ctx, T("Save as Saved Search")) then
+              show_add_popup = true
+              new_search_name = keyword
+              save_search_keyword = keyword
+              reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+            if reaper.ImGui_MenuItem(ctx, T("Delete this record")) then
+              table.remove(recent_search_keywords, i)
+              SaveRecentSearched()
+              reaper.ImGui_CloseCurrentPopup(ctx)
+            end
+            reaper.ImGui_EndPopup(ctx)
+          end
+        end
+      end
+    end
+    reaper.ImGui_EndPopup(ctx)
+  end
+end
 LoadRecentSearched()
 
 --------------------------------------------- 同义词搜索 ---------------------------------------------
@@ -11229,6 +11171,7 @@ tree_state.remove_path_to_remove = tree_state.remove_path_to_remove or nil
 tree_state.remove_path_confirm = tree_state.remove_path_confirm or false
 -- clipper = clipper or reaper.ImGui_CreateListClipper(ctx)
 build_waveform_cache = (SM_GetState(EXT_SECTION, "build_waveform_cache") == "1")
+browse_database_as_folders = (SM_GetState(EXT_SECTION, "browse_database_as_folders") == "1")
 -- 数据库列表拖动状态
 mediadb_drag_index = mediadb_drag_index or nil -- 当前被拖动的行索引
 mediadb_last_target_index = mediadb_last_target_index or nil -- 上一次交换的目标行索引
@@ -11528,12 +11471,8 @@ end
 function SM_FindListIndexByPath(list, path)
   if type(list) ~= "table" or not path or path == "" then return nil end
   if list._handle then
-    if HAVE_SM_DB_FIND_INDEX then
-      local index0 = reaper.SM_DB_FindIndexByPath(list._handle, path)
-      if index0 and index0 >= 0 then return index0 + 1 end
-    end
-    -- Older extensions do not have the direct lookup API; avoid materializing
-    -- an entire large virtual database just to restore one selection.
+    local index0 = reaper.SM_DB_FindIndexByPath(list._handle, path)
+    if index0 and index0 >= 0 then return index0 + 1 end
     return nil
   end
 
@@ -11577,7 +11516,7 @@ function SM_ApplyPendingDBSelectionRestore(list_key, list)
   local idx = SM_FindListIndexByPath(list, pending.path)
   if idx then
     selected_row = idx
-    -- 数据库切换/排序后的选中恢复属于程序化定位，不应触发“自动播放选中项”。
+    -- 数据库切换/排序后的选中恢复属于程序化定位，不应触发自动播放选中项。
     -- 同步自动播放基准行，仅更新选择与滚动位置，保持当前预听状态不变。
     last_selected_row = idx
     _G.scroll_request_index = idx
@@ -11700,9 +11639,7 @@ function SM_ReleaseDBSearchHandle(handle)
   if not handle then return end
   if _G.db_loader and handle == _G.db_loader.ctx then return end
   if handle == _G.SM_Cache_Full_Handle then return end
-  if reaper.APIExists("SM_DB_Release") then
-    reaper.SM_DB_Release(handle)
-  end
+  reaper.SM_DB_Release(handle)
 end
 
 function SM_AdoptDBSearchHandle(handle)
@@ -11724,7 +11661,6 @@ end
 function SM_TryDBCoverFilterWithExtension(handle, cover_id)
   cover_id = tostring(cover_id or "")
   if not handle or cover_id == "" then return nil end
-  if not (HAVE_SM_SEARCH and reaper.SM_DB_Filter and reaper.SM_DB_GetCount and reaper.SM_DB_GetRowRaw) then return nil end
 
   local source_raw = reaper.SM_DB_GetRowRaw(handle, 0)
   local source_has_cover_field = SM_RawDBRowHasCoverIDField(source_raw)
@@ -11757,7 +11693,8 @@ end
 -- 支持 "" 全字匹配，且支持延伸功能：" box" (词首), "box " (词尾)
 function BuildFilteredList(list)
   local safe_cache = list or files_idx_cache or {}
-  local db_path_filter = _G._db_path_prefix_filter or ""
+  local is_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+  local db_path_filter = is_db_mode and (_G._db_path_prefix_filter or "") or ""
   local cover_filter = _G._cover_id_filter or ""
 
   -- 准备搜索关键词
@@ -11790,10 +11727,9 @@ function BuildFilteredList(list)
     return safe_cache
   end
 
-  local is_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
   local use_cpp = false
   local db_handle = nil
-  if is_db_mode and _G.db_loader and _G.db_loader.ctx and HAVE_SM_SEARCH then
+  if is_db_mode and _G.db_loader and _G.db_loader.ctx then
     use_cpp = true
     db_handle = _G.db_loader.ctx
   end
@@ -12298,7 +12234,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
 
   local is_item_mode = (collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP)
 
-  if HAVE_SM_SIM and SM_SIM_CurrentDBPath() then
+  if SM_SIM_CurrentDBPath() then
     if reaper.ImGui_MenuItem(ctx, T("Find Similar")) then
       local target_db_path = SM_SIM_CurrentDBPath()
       SM_SIM_FindSimilar(info, target_db_path, target_db_path)
@@ -12576,7 +12512,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       for path in pairs(remove_paths) do remove_list[#remove_list + 1] = path end
       local removed_count = RemovePathsFromMediaDB(remove_list, dbpath, true)
       if removed_count > 0 and SM_DBCoverIndexExists(dbpath) then
-        if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) end
+        SM_QueueDBCoverIndexRebuild(dbpath)
       end
 
       -- 强制重建列表，失效当前数据库的过滤缓存
@@ -12642,8 +12578,8 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
   end
 
   -- 停止滚动后检查扩展缓存，命中时整段读取
-  local extension_cache_hit_budget_exhausted = HAVE_SM_WFC and (static.table_wf_cache_hit_count or 0) >= TABLE_WAVEFORM_CACHE_HIT_LIMIT
-  local can_read_ready_cache = HAVE_SM_WFC and idle_time >= TABLE_WAVEFORM_IDLE_SECONDS and not extension_cache_hit_budget_exhausted
+  local extension_cache_hit_budget_exhausted = (static.table_wf_cache_hit_count or 0) >= TABLE_WAVEFORM_CACHE_HIT_LIMIT
+  local can_read_ready_cache = idle_time >= TABLE_WAVEFORM_IDLE_SECONDS and not extension_cache_hit_budget_exhausted
   if not freesound_not_downloaded and not wf and can_read_ready_cache then
     local maxch = 1
     local cache = SM_LoadTableWaveformCacheIfReady(info.path, SM_TableWaveformPixelCount(thumb_w), 0, 0, maxch)
@@ -12761,7 +12697,7 @@ function ResolveCoverPathForEntry(info)
     if path then return path, cover_id end
   end
 
-  if dbpath and HAVE_SM_COVER_INDEX then return nil, cover_id end
+  if dbpath then return nil, cover_id end
   if info.path and info.path ~= "" and type(SM_EnsureCoverForAudio) == "function" then
     local id, path = SM_EnsureCoverForAudio(info.path)
     if id and id ~= "" then info.cover_id = id end
@@ -13371,7 +13307,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             end_time = drag_preview_end_time,
             preview_end_time = drag_preview_end_time,
             section_offset = info and info.section_offset or 0,
-            native_drop_pending = (HAVE_SM_DROP_MEDIA_FILES and #paths > 0),
+            native_drop_pending = (#paths > 0),
             native_drop_attempted = false
           }
         end
@@ -13954,51 +13890,42 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   _G.current_db_fullpath = fullpath
   if type(SM_RequestDBCoverIndex) == "function" then SM_RequestDBCoverIndex(fullpath, false) end
 
-  -- 分支 A: 极速模式, C++ 极速加载分支
-  if HAVE_SM_DB then
-    -- C++ 只读取数据库；这里在列表显示前按当前列完成唯一一次排序。
-    local ctx = reaper.SM_DB_Load(fullpath)
-    if ctx then
-      local sort_state = SM_GetActiveDBSortState()
-      if reaper.APIExists("SM_DB_Sort") then
-        reaper.SM_DB_Sort(ctx, sort_state.col_name, sort_state.ascending)
-      end
+  -- C++ 只读取数据库；这里在列表显示前按当前列完成唯一一次排序。
+  local ctx = reaper.SM_DB_Load(fullpath)
+  if not ctx then return false end
+  local sort_state = SM_GetActiveDBSortState()
+  reaper.SM_DB_Sort(ctx, sort_state.col_name, sort_state.ascending)
 
-      -- 初始化加载器容器，但不激活 active，只为了保存 ctx 给搜索/排序用
-      _G.db_loader = _G.db_loader or {}
-      _G.db_loader.ctx = ctx
-      _G.db_loader.active = false -- 关闭慢速加载循环，不显示进度条
-      _G.db_loader.op_type = nil
-      _G.db_loader.temp_list = nil
+  -- 初始化加载器容器，但不激活 active，只为了保存 ctx 给搜索/排序用
+  _G.db_loader = _G.db_loader or {}
+  _G.db_loader.ctx = ctx
+  _G.db_loader.active = false -- 关闭慢速加载循环，不显示进度条
+  _G.db_loader.op_type = nil
+  _G.db_loader.temp_list = nil
 
-      -- 直接构建代理，跳过搬运
-      local count = reaper.SM_DB_GetCount(ctx)
-      local proxy = { _handle = ctx, _count = count, _db_path = fullpath }
-      setmetatable(proxy, VirtualListMeta)
+  -- 直接构建代理，跳过搬运
+  local count = reaper.SM_DB_GetCount(ctx)
+  local proxy = { _handle = ctx, _count = count, _db_path = fullpath }
+  setmetatable(proxy, VirtualListMeta)
 
-      -- 赋值给全局缓存，立即生效
-      files_idx_cache = proxy
-      selected_row = -1
+  -- 赋值给全局缓存，立即生效
+  files_idx_cache = proxy
+  selected_row = -1
 
-      -- 只失效当前数据库，保留其他数据库的选中记录。
-      local current_key = GetCurrentListKey()
-      static.filtered_list_map = static.filtered_list_map or {}
-      static.last_filter_text_map = static.last_filter_text_map or {}
-      static.last_sort_specs_map = static.last_sort_specs_map or {}
-      static.filtered_list_map[current_key] = nil
-      static.last_filter_text_map[current_key] = nil
-      static.last_sort_specs_map[current_key] = sort_state.signature
-      SM_RequestDBSelectionRestore(current_key)
+  -- 只失效当前数据库，保留其他数据库的选中记录。
+  local current_key = GetCurrentListKey()
+  static.filtered_list_map = static.filtered_list_map or {}
+  static.last_filter_text_map = static.last_filter_text_map or {}
+  static.last_sort_specs_map = static.last_sort_specs_map or {}
+  static.filtered_list_map[current_key] = nil
+  static.last_filter_text_map[current_key] = nil
+  static.last_sort_specs_map[current_key] = sort_state.signature
+  SM_RequestDBSelectionRestore(current_key)
 
-      -- 避免切换大型数据库时被一次完整 Lua GC 再次阻塞。
-      collectgarbage("step", 200)
+  -- 避免切换大型数据库时被一次完整 Lua GC 再次阻塞。
+  collectgarbage("step", 200)
 
-      return true -- 成功启动异步任务，直接返回
-    end
-  end
-
-  SM_ShowExtensionUpdateRequired("database loading")
-  return false
+  return true
 end
 
 -- 异步加载器
@@ -15220,8 +15147,6 @@ function DBPF_GetCurrentDBAbsPath()
 end
 
 function DBPF_GetCppHandle()
-  if not HAVE_SM_DB_FOLDERS then return nil end
-
   local abs = DBPF_GetCurrentDBAbsPath()
   if abs == "" then return nil end
   local abs_key = DBPF_PathKey(abs)
@@ -15263,13 +15188,11 @@ function DBPF_ReadRootsForDB(dbpath)
   if cached then return cached end
 
   local roots
-  if HAVE_SM_DB_FOLDERS and _G.db_loader and _G.db_loader.ctx
+  if _G.db_loader and _G.db_loader.ctx
     and DBPF_PathKey(_G.current_db_fullpath or "") == key then
     roots = DBPF_ParseRawPaths(reaper.SM_DB_GetRootsRaw(_G.db_loader.ctx))
-  elseif HAVE_SM_DB_ROOTS_BY_PATH then
-    roots = DBPF_ParseRawPaths(reaper.SM_DB_ReadRootsRaw(dbpath))
   else
-    roots = GetPathListFromDB(dbpath)
+    roots = DBPF_ParseRawPaths(reaper.SM_DB_ReadRootsRaw(dbpath))
   end
 
   DBPF_State.path_roots_cache[key] = roots or {}
@@ -15285,25 +15208,9 @@ function DBPF_ReadRootsFromDB()
 
   DBPF_State.db_abs_file = abs
   DBPF_State.roots_cache = {}
-  local roots, seen = {}, {}
-
-  if HAVE_SM_DB_FOLDERS then
-    local handle = DBPF_GetCppHandle()
-    if handle then roots = DBPF_ParseRawPaths(reaper.SM_DB_GetRootsRaw(handle)) end
-  elseif abs ~= "" and reaper.file_exists(abs) then
-    for line in io.lines(abs) do
-      local line_text = line
-      if line_text:sub(1, 3) == "\239\187\191" then line_text = line_text:sub(4) end -- 去BOM
-      local p = line_text:match('^%s*[Pp][Aa][Tt][Hh]%s+"(.-)"%s*$') or line_text:match('^%s*[Pp][Aa][Tt][Hh]%s+(.+)%s*$')
-      if p and p ~= "" then
-        local np = normalize_path(p, true)
-        if np ~= "" and not seen[np] then
-          seen[np] = true
-          roots[#roots+1] = np
-        end
-      end
-    end
-  end
+  local roots = {}
+  local handle = DBPF_GetCppHandle()
+  if handle then roots = DBPF_ParseRawPaths(reaper.SM_DB_GetRootsRaw(handle)) end
 
   DBPF_State.roots_cache = roots
   return roots
@@ -15315,18 +15222,8 @@ function DBPF_ListSubdirs(dir)
   if cached then return cached end
 
   local out = {}
-  if HAVE_SM_DB_FOLDERS then
-    local handle = DBPF_GetCppHandle()
-    if handle then out = DBPF_ParseRawPaths(reaper.SM_DB_ListSubdirsRaw(handle, dir)) end
-  else
-    local i = 0
-    while true do
-      local sub = reaper.EnumerateSubdirectories(dir, i)
-      if not sub then break end
-      out[#out+1] = normalize_path(dir .. sub, true)
-      i = i + 1
-    end
-  end
+  local handle = DBPF_GetCppHandle()
+  if handle then out = DBPF_ParseRawPaths(reaper.SM_DB_ListSubdirsRaw(handle, dir)) end
   table.sort(out, function(a,b) return a:lower() < b:lower() end)
   DBPF_State.subdir_cache[dir] = out
   return out
@@ -15429,6 +15326,67 @@ function DBPF_DrawDBFoldersPopupBody()
       return
     end
   end
+end
+
+function DBPF_DrawDirTreeRecursive(dir, display_name)
+  local subs = DBPF_ListSubdirs(dir)
+  local has_child = #subs > 0
+  local label = ImGuiEscapeVisibleLabel(display_name)
+  local selected = DBPF_PathKey(_G._db_path_prefix_filter or "") == DBPF_PathKey(dir)
+  local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
+  if selected then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() end
+
+  reaper.ImGui_PushID(ctx, dir)
+  if has_child then
+    local open = reaper.ImGui_TreeNode(ctx, label, flags)
+    if reaper.ImGui_IsItemClicked(ctx, 0) then
+      DBPF_ApplyPathFilter(dir)
+    end
+    if open then
+      for _, child in ipairs(subs) do
+        local name = child:match("([^/\\]+)[/\\]$") or child
+        DBPF_DrawDirTreeRecursive(child, name)
+      end
+      reaper.ImGui_TreePop(ctx)
+    end
+  else
+    flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
+    reaper.ImGui_TreeNode(ctx, label, flags)
+    if reaper.ImGui_IsItemClicked(ctx, 0) then
+      DBPF_ApplyPathFilter(dir)
+    end
+  end
+  reaper.ImGui_PopID(ctx)
+end
+function DBPF_DrawDatabaseFolderTree(skip_single_root)
+  local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+  if not in_db_mode then return end
+
+  local roots = DBPF_ReadRootsFromDB()
+  if #roots == 0 then
+    reaper.ImGui_TextDisabled(ctx, T("No PATH found in current database."))
+    return
+  end
+
+  if skip_single_root and #roots == 1 then
+    for _, child in ipairs(DBPF_ListSubdirs(roots[1])) do
+      local name = child:match("([^/\\]+)[/\\]$") or child
+      DBPF_DrawDirTreeRecursive(child, name)
+    end
+    return
+  end
+
+  for _, root in ipairs(roots) do
+    local disp = root:match("([^/\\]+)[/\\]$") or root
+    DBPF_DrawDirTreeRecursive(root, disp)
+  end
+end
+
+function DBPF_ApplySingleRootFilterIfAvailable()
+  local roots = DBPF_ReadRootsFromDB()
+  if #roots ~= 1 then return false end
+  DBPF_ApplyPathFilter(roots[1])
+  return true
 end
 
 -- 从当前DB文件读取所有PATH
@@ -15651,7 +15609,7 @@ end
 
 function SM_StopCoverIndexTask()
   local stopped_db = cover_index_state.db_path
-  if cover_index_state.handle and HAVE_SM_COVER_INDEX then
+  if cover_index_state.handle then
     reaper.SM_CoverIndex_Stop(cover_index_state.handle)
   end
   if stopped_db and stopped_db ~= "" then cover_index_state.attempted[stopped_db] = nil end
@@ -15678,10 +15636,6 @@ function SM_RequestDBCoverIndex(dbpath, explicit)
   end
   cover_index_state.attempted[dbpath] = true
 
-  if not HAVE_SM_COVER_INDEX then
-    if explicit then SM_ShowExtensionUpdateRequired("artwork index") end
-    return false
-  end
 
   if cover_index_state.handle then SM_StopCoverIndexTask() end
   local handle = reaper.SM_CoverIndex_Start(dbpath, SM_CoverCacheRoot(), SM_CoverIndexPath())
@@ -15705,7 +15659,7 @@ end
 
 function SM_ProcessCoverIndexLoop()
   local handle = cover_index_state.handle
-  if not handle or not HAVE_SM_COVER_INDEX then return end
+  if not handle then return end
 
   local result = reaper.SM_CoverIndex_RunSlice(handle, 4)
   if result == 1 then return end
@@ -15758,17 +15712,13 @@ function SM_DBHasFileRecords(db_file_path)
 end
 
 function SM_CanBuilderReplaceDB(db_file_path)
-  return HAVE_SM_BUILDER and not SM_DBHasFileRecords(db_file_path)
+  return not SM_DBHasFileRecords(db_file_path)
 end
 
 function SM_StartDatabaseBuild(root_path, db_file_path)
   root_path = normalize_path(root_path, true)
   db_file_path = normalize_path(db_file_path, false)
 
-  if not HAVE_SM_BUILDER then
-    SM_ShowExtensionUpdateRequired("database builder")
-    return false
-  end
 
   local result = reaper.SM_Builder_Start(root_path, db_file_path)
   if result ~= 1 then
@@ -15788,10 +15738,6 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
 end
 
 function SM_StartDatabaseIncremental(db_file_path)
-  if not HAVE_SM_BUILDER_INCREMENTAL then
-    SM_ShowExtensionUpdateRequired("incremental database scan")
-    return false
-  end
 
   db_file_path = normalize_path(db_file_path, false)
   local result = reaper.SM_Builder_StartIncremental(db_file_path)
@@ -15965,6 +15911,13 @@ function loop()
   end
 
   -- 首次使用时收集音频文件
+  local was_db_mode = (_G._last_collect_mode_for_db_filter == COLLECT_MODE_MEDIADB or _G._last_collect_mode_for_db_filter == COLLECT_MODE_REAPERDB)
+  local is_db_mode_now = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+  if was_db_mode and not is_db_mode_now and _G._db_path_prefix_filter and _G._db_path_prefix_filter ~= "" then
+    _G._db_path_prefix_filter = ""
+    RequestSearchRefresh()
+  end
+  _G._last_collect_mode_for_db_filter = collect_mode
   if not files_idx_cache then
     CollectFiles()
   end
@@ -16283,6 +16236,9 @@ function loop()
 
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
+    search_history_popup_rect.x, search_history_popup_rect.input_y = reaper.ImGui_GetItemRectMin(ctx)
+    search_history_popup_rect.max_x, search_history_popup_rect.y = reaper.ImGui_GetItemRectMax(ctx)
+    search_history_popup_rect.w = math.max(1, search_history_popup_rect.max_x - search_history_popup_rect.x)
 
     -- 绘制后立刻记录搜索框状态
     filter_box_active  = reaper.ImGui_IsItemActive(ctx)
@@ -16297,23 +16253,17 @@ function loop()
       local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
 
       if reaper.ImGui_InvisibleButton(ctx, "##use_synonyms", button_w, button_h) then
-        use_synonyms = not use_synonyms
-
-        -- 同义词勾选时强制重建，否则不工作
-        static.filtered_list_map    = {}
-        static.last_filter_text_map = {}
+        reaper.ImGui_OpenPopup(ctx, "SearchHistoryPopupFromThesaurus")
       end
 
       local hovered = reaper.ImGui_IsItemHovered(ctx)
       local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
       local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
-
       if hovered then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
       end
 
-      local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-      local col = (use_synonyms or hovered) and colors.icon_on or colors.icon_off
+      local col = hovered and (colors.icon_hovered or colors.icon_on) or colors.icon_on
 
       DrawMaterialIconCenteredInRect(ctx, MATERIAL_ICONS.thesaurus, col, x, y, button_w, button_h, 16)
 
@@ -16335,6 +16285,8 @@ function loop()
       local draw_list = reaper.ImGui_GetForegroundDrawList(ctx)
       reaper.ImGui_DrawList_AddText(draw_list, draw_x, draw_y, text_col, status_text)
     end
+
+    DrawRecentSearchPopupUnderFilter()
 
     if _G.trans_append_mode == nil then _G.trans_append_mode = false end
     if _G.trans_src_txt == nil then _G.trans_src_txt = "" end
@@ -16470,6 +16422,8 @@ function loop()
     -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     reaper.ImGui_InputText(ctx, "##SynonymDisplay", synonym_display_text, reaper.ImGui_InputTextFlags_ReadOnly())
     -- reaper.ImGui_PopStyleVar(ctx)
+    reaper.ImGui_PopStyleColor(ctx)
+    reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_SameLine(ctx, nil, 10)
 
     do
@@ -16479,28 +16433,34 @@ function loop()
       local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
 
       if reaper.ImGui_InvisibleButton(ctx, "##open_thesaurus", button_w, button_h) then
-        reaper.CF_ShellExecute(thesaurus_csv_path)
+        local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+        if ctrl then
+          reaper.CF_ShellExecute(thesaurus_csv_path)
+        else
+          use_synonyms = not use_synonyms
+          static.filtered_list_map    = {}
+          static.last_filter_text_map = {}
+          RequestSearchRefresh()
+        end
       end
 
       local hovered = reaper.ImGui_IsItemHovered(ctx)
-      local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
-      local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
-
       if hovered then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
-      end
-      if reaper.ImGui_IsItemHovered(ctx) then
-        reaper.ImGui_SetTooltip(ctx, T("Edit thesaurus"))
+        reaper.ImGui_BeginTooltip(ctx)
+        local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+        if ctrl then
+          reaper.ImGui_Text(ctx, T("Edit thesaurus"))
+        else
+          reaper.ImGui_Text(ctx, T("Enable thesaurus or Hold CTRL for Edit Thesaurus"))
+        end
+        reaper.ImGui_EndTooltip(ctx)
       end
 
-      local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-      local col = hovered and colors.icon_on or colors.icon_off
-
+      local col = hovered and (colors.icon_hovered or colors.icon_on) or (use_synonyms and colors.icon_on or colors.icon_off)
       DrawMaterialIconCenteredInRect(ctx, MATERIAL_ICONS.edit_thesaurus, col, x, y, button_w, button_h, 16)
     end
 
-    reaper.ImGui_PopStyleColor(ctx)
-    reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_EndGroup(ctx)
 
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -16653,31 +16613,29 @@ function loop()
     end
 
     -- 当前数据库选中项的相似度过滤快捷入口
-    if HAVE_SM_SIM then
-      local selected_similarity_info
-      if collect_mode == COLLECT_MODE_MEDIADB and _G.current_display_list and selected_row and selected_row > 0 then
-        selected_similarity_info = _G.current_display_list[selected_row]
-      end
-      local similarity_target_db = SM_SIM_CurrentBrowsingDBPath()
-      local can_find_similar = selected_similarity_info and selected_similarity_info.path and similarity_target_db and similarity_target_db ~= ""
+    local selected_similarity_info
+    if collect_mode == COLLECT_MODE_MEDIADB and _G.current_display_list and selected_row and selected_row > 0 then
+      selected_similarity_info = _G.current_display_list[selected_row]
+    end
+    local similarity_target_db = SM_SIM_CurrentBrowsingDBPath()
+    local can_find_similar = selected_similarity_info and selected_similarity_info.path and similarity_target_db and similarity_target_db ~= ""
 
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered)
-      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)
-      reaper.ImGui_SameLine(ctx, nil, top_button_gap)
-      reaper.ImGui_BeginDisabled(ctx, not can_find_similar)
-      local clicked_find_similar = reaper.ImGui_Button(ctx, T("Find Similar"), top_button_w, two_rows_h)
-      reaper.ImGui_EndDisabled(ctx)
-      reaper.ImGui_PopStyleColor(ctx, 3)
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered)
+    reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)
+    reaper.ImGui_SameLine(ctx, nil, top_button_gap)
+    reaper.ImGui_BeginDisabled(ctx, not can_find_similar)
+    local clicked_find_similar = reaper.ImGui_Button(ctx, T("Find Similar"), top_button_w, two_rows_h)
+    reaper.ImGui_EndDisabled(ctx)
+    reaper.ImGui_PopStyleColor(ctx, 3)
 
-      if clicked_find_similar and can_find_similar then
-        SM_SIM_FindSimilar(selected_similarity_info, similarity_target_db, similarity_target_db)
-      end
-      if reaper.ImGui_IsItemHovered(ctx, reaper.ImGui_HoveredFlags_AllowWhenDisabled()) then
-        reaper.ImGui_SetTooltip(ctx, can_find_similar
-          and T("Find sounds similar to the selected audio in the current database.")
-          or T("Select an audio item while browsing a Soundmole database."))
-      end
+    if clicked_find_similar and can_find_similar then
+      SM_SIM_FindSimilar(selected_similarity_info, similarity_target_db, similarity_target_db)
+    end
+    if reaper.ImGui_IsItemHovered(ctx, reaper.ImGui_HoveredFlags_AllowWhenDisabled()) then
+      reaper.ImGui_SetTooltip(ctx, can_find_similar
+        and T("Find sounds similar to the selected audio in the current database.")
+        or T("Select an audio item while browsing a Soundmole database."))
     end
 
     -- Play History 最近播放按钮
@@ -16706,7 +16664,6 @@ function loop()
         DrawTooltip("Show Recently Played list in the table")
       end
     end
-
 
     reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_EndGroup(ctx)
@@ -17022,6 +16979,7 @@ function loop()
     end
     -- 是否显示数据库路径过滤标签
     function SM_HasDBTag()
+      if collect_mode ~= COLLECT_MODE_MEDIADB and collect_mode ~= COLLECT_MODE_REAPERDB then return false end
       local p = _G._db_path_prefix_filter
       return type(p) == "string" and p ~= ""
     end
@@ -18064,8 +18022,11 @@ function loop()
             local clip_x0, clip_y0 = win_x, win_y
             local clip_x1, clip_y1 = win_x + win_w, win_y + win_h
 
+            local folder_icon_x = icon_x + icon_w + 10 -- 文件夹图标相对位置, 间隔10像素
             local fully_inside = (icon_x >= clip_x0) and (icon_y >= clip_y0) and ((icon_x + icon_w) <= clip_x1) and ((icon_y + icon_h) <= clip_y1)
+            local folder_fully_inside = (folder_icon_x >= clip_x0) and (icon_y >= clip_y0) and ((folder_icon_x + icon_w) <= clip_x1) and ((icon_y + icon_h) <= clip_y1)
             local hovering_icon, clicked_icon = false, false
+            local hovering_folder_icon, clicked_folder_icon = false, false
             if fully_inside then
               hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
               clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
@@ -18090,6 +18051,33 @@ function loop()
                 reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
                 reaper.ImGui_BeginTooltip(ctx)
                 reaper.ImGui_Text(ctx, T("Create Database"))
+                reaper.ImGui_EndTooltip(ctx)
+              end
+            end
+            if folder_fully_inside then
+              hovering_folder_icon = reaper.ImGui_IsMouseHoveringRect(ctx, folder_icon_x, icon_y, folder_icon_x + icon_w, icon_y + icon_h, true)
+              clicked_folder_icon  = hovering_folder_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
+
+              local dl = reaper.ImGui_GetWindowDrawList(ctx)
+              reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
+
+              local col = (hovering_folder_icon and colors.icon_active) or (browse_database_as_folders and (colors.icon_on or colors.icon_normal) or (colors.icon_off or colors.icon_normal))
+              local glyph = '\u{0181}'
+              local icon_size = math.floor(icon_h * 0.90)
+
+              if fonts and fonts.icon then reaper.ImGui_PushFont(ctx, fonts.icon, icon_size) end
+              local tw, th = reaper.ImGui_CalcTextSize(ctx, glyph)
+              local tx = folder_icon_x + (icon_w - tw) * 0.5
+              local ty = icon_y + (icon_h - th) * 0.5
+              reaper.ImGui_DrawList_AddText(dl, tx, ty, col, glyph)
+              if fonts and fonts.icon then reaper.ImGui_PopFont(ctx) end
+
+              reaper.ImGui_DrawList_PopClipRect(dl)
+
+              if hovering_folder_icon then
+                reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+                reaper.ImGui_BeginTooltip(ctx)
+                reaper.ImGui_Text(ctx, T("Browse database as folders"))
                 reaper.ImGui_EndTooltip(ctx)
               end
             end
@@ -18120,6 +18108,18 @@ function loop()
             end
 
             -- 创建数据库，弹窗绘制
+            if clicked_folder_icon then -- 点击文件夹图标切换浏览模式
+              is_mediadb_open = prev_mediadb_open
+              mediadb_open = prev_mediadb_open
+              _G._mediadb_force_open_state = prev_mediadb_open
+
+              browse_database_as_folders = not browse_database_as_folders
+              SM_SetState(EXT_SECTION, "browse_database_as_folders", browse_database_as_folders and "1" or "0", true)
+              if not browse_database_as_folders then
+                _G._db_path_prefix_filter = ""
+                DBPF_InvalidateAllCaches()
+              end
+            end
             if _G.__sm_db_show then _G.__sm_db_show = false end
             -- 设置弹窗居中显示
             local vp = reaper.ImGui_GetMainViewport(ctx)
@@ -18328,32 +18328,52 @@ function loop()
                 end
               end
 
-              reaper.ImGui_SameLine(ctx)
+              if browse_database_as_folders then
+                reaper.ImGui_SameLine(ctx, nil, 0)
+              else
+                reaper.ImGui_SameLine(ctx)
+              end
 
               local alias = GetMediaDBDisplayName(dbfile) -- 优先显示别名或数据库来源文件夹名
               local is_selected = (collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile)
-              if is_selected then
-                -- PeakTree选中状态高亮
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+              local node_open = false
+              local db_clicked = false
+
+              if browse_database_as_folders then
+                local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
+                if is_selected then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() | reaper.ImGui_TreeNodeFlags_DefaultOpen() end
+                node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(alias) .. "##mediadb_tree_" .. tostring(dbfile), flags)
+                db_clicked = reaper.ImGui_IsItemClicked(ctx, 0)
+              else
+                if is_selected then
+                  -- PeakTree选中状态高亮
+                  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+                end
+                db_clicked = reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##mediadb_" .. tostring(dbfile), is_selected)
+                if is_selected then
+                  reaper.ImGui_PopStyleColor(ctx, 1)
+                end
               end
-              if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##mediadb_" .. tostring(dbfile), is_selected) then
+
+              if db_clicked then
                 if collect_mode ~= COLLECT_MODE_MEDIADB or tree_state.cur_mediadb ~= dbfile then
                   SM_RememberDBSelection(GetCurrentListKey(), _G.current_display_list, selected_row)
                   collect_mode = COLLECT_MODE_MEDIADB
                   tree_state.cur_mediadb = dbfile
                   _G._db_path_prefix_filter = "" -- 切换数据库时清空路径前缀过滤
 
-                  -- 触发重建
                   files_idx_cache = nil
                   CollectFiles()
                   DBPF_InvalidateAllCaches() -- 让数据库路径根缓存失效
+                  if browse_database_as_folders then
+                    DBPF_ApplySingleRootFilterIfAvailable()
+                  end
+                elseif browse_database_as_folders then
+                  DBPF_ApplySingleRootFilterIfAvailable()
                 end
               end
-              if is_selected then
-                reaper.ImGui_PopStyleColor(ctx, 1)
-              end
+              is_selected = (collect_mode == COLLECT_MODE_MEDIADB and tree_state.cur_mediadb == dbfile)
 
-              -- 右键菜单
               if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
                 reaper.ImGui_OpenPopup(ctx, "SoundmoleDBMenu_" .. dbfile)
               end
@@ -18466,7 +18486,7 @@ function loop()
                 -- 全量重建数据库
                 if reaper.ImGui_MenuItem(ctx, T("Rebuild Database")) then
                   local dbpath = normalize_path(db_dir, true) .. dbfile
-                  local path_list = GetPathListFromDB(dbpath)
+                  local path_list = DBPF_ReadRootsForDB(dbpath)
                   if not path_list or #path_list == 0 then
                     reaper.ShowMessageBox("No PATH found in DB file", "Error", 0)
                   elseif #path_list == 1 then
@@ -18476,13 +18496,13 @@ function loop()
                     end
                   else
                     reaper.ShowMessageBox(
-                      "Multi-root database rebuild now requires extension-side builder support.\n\nPlease rebuild each root as a separate database, or update the Soundmole extension when multi-root builder support is available.",
-                      "Soundmole Extension Required",
+                      "Multi-root database rebuild is not supported by the current database builder.\n\nPlease rebuild each root as a separate database.",
+                      "Soundmole",
                       0)
                   end
                 end
 
-                if HAVE_SM_SIM and reaper.ImGui_MenuItem(ctx, T("Build Similarity Index")) then
+                if reaper.ImGui_MenuItem(ctx, T("Build Similarity Index")) then
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   SM_SIM_StartBuild(dbpath)
                 end
@@ -18561,6 +18581,15 @@ function loop()
                 reaper.ImGui_PopStyleColor(ctx)
                 reaper.ImGui_EndDragDropTarget(ctx)
               end
+              if browse_database_as_folders and node_open then
+                if is_selected then
+                  local db_child_indent = handle_w + select(1, reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()))
+                  reaper.ImGui_Indent(ctx, db_child_indent)
+                  DBPF_DrawDatabaseFolderTree(true)
+                  reaper.ImGui_Unindent(ctx, db_child_indent)
+                end
+                reaper.ImGui_TreePop(ctx)
+              end
             end
 
             -- 数据库按钮
@@ -18595,16 +18624,42 @@ function loop()
                   local alias = it.alias
                   local fn    = it.filename
                   local is_sel = (collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db == fn)
+                  local node_open = false
+                  local db_clicked = false
 
-                  if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_" .. fn, is_sel) then
+                  if browse_database_as_folders then
+                    local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
+                    if is_sel then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() | reaper.ImGui_TreeNodeFlags_DefaultOpen() end
+                    node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_tree_" .. fn, flags)
+                    db_clicked = reaper.ImGui_IsItemClicked(ctx, 0)
+                  else
+                    db_clicked = reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_" .. fn, is_sel)
+                  end
+
+                  if db_clicked then
                     if collect_mode ~= COLLECT_MODE_REAPERDB or tree_state.cur_reaper_db ~= fn then
                       SM_RememberDBSelection(GetCurrentListKey(), _G.current_display_list, selected_row)
                       collect_mode = COLLECT_MODE_REAPERDB
                       tree_state.cur_reaper_db = fn
+                      _G._db_path_prefix_filter = ""
 
                       files_idx_cache = nil
                       CollectFiles()
+                      DBPF_InvalidateAllCaches()
+                      if browse_database_as_folders then
+                        DBPF_ApplySingleRootFilterIfAvailable()
+                      end
+                    elseif browse_database_as_folders then
+                      DBPF_ApplySingleRootFilterIfAvailable()
                     end
+                  end
+                  is_sel = (collect_mode == COLLECT_MODE_REAPERDB and tree_state.cur_reaper_db == fn)
+
+                  if browse_database_as_folders and node_open then
+                    if is_sel then
+                      DBPF_DrawDatabaseFolderTree(true)
+                    end
+                    reaper.ImGui_TreePop(ctx)
                   end
                 end
                 reaper.ImGui_PopStyleColor(ctx, 1)
@@ -18895,7 +18950,7 @@ function loop()
                   ucs_open_en = ucs_open_en or {}
                   if cat_open_state[cat] then ucs_open_en[en] = true else ucs_open_en[en] = nil end
                 end
-                reaper.ImGui_SameLine(ctx)
+                reaper.ImGui_SameLine(ctx, nil, 0)
 
                 -- 点击主分类提交隐式搜索，主分类统一悬浮样式
                 local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
@@ -19367,17 +19422,15 @@ function loop()
         end
 
         -- TAB 标签页 Similarity 节点
-        if HAVE_SM_SIM then
-          local flag_similarity = (startup_tab_name == "Similarity") and reaper.ImGui_TabItemFlags_SetSelected() or 0
-          if reaper.ImGui_BeginTabItem(ctx, T("Similarity"), nil, flag_similarity) then
-            current_sidebar_tab = "Similarity"
-            if startup_tab_name == "Similarity" then startup_tab_name = nil end
-            if reaper.ImGui_BeginChild(ctx, "SimilaritySidebarRegion") then
-              SM_SIM_DrawSidebar()
-              reaper.ImGui_EndChild(ctx)
-            end
-            reaper.ImGui_EndTabItem(ctx)
+        local flag_similarity = (startup_tab_name == "Similarity") and reaper.ImGui_TabItemFlags_SetSelected() or 0
+        if reaper.ImGui_BeginTabItem(ctx, T("Similarity"), nil, flag_similarity) then
+          current_sidebar_tab = "Similarity"
+          if startup_tab_name == "Similarity" then startup_tab_name = nil end
+          if reaper.ImGui_BeginChild(ctx, "SimilaritySidebarRegion") then
+            SM_SIM_DrawSidebar()
+            reaper.ImGui_EndChild(ctx)
           end
+          reaper.ImGui_EndTabItem(ctx)
         end
 
         --reaper.ImGui_PopStyleColor(ctx)
@@ -19622,7 +19675,7 @@ function loop()
 
         local eff_text = _G.commit_filter_text or ""
         local ucs_sig  = tostring(temp_search_field or "") .. "|" .. tostring(temp_search_keyword or "")
-        local path_sig = tostring(_G._db_path_prefix_filter or "")
+        local path_sig = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and tostring(_G._db_path_prefix_filter or "") or ""
         local cover_sig = tostring(_G._cover_id_filter or "")
         local eff      = eff_text .. "||" .. ucs_sig .. "||" .. path_sig .. "||" .. cover_sig
 
@@ -19641,7 +19694,7 @@ function loop()
         local sort_changed = (sort_specs_str ~= last_sort_specs)
         -- 检查是否需要排序
         local cover_filter_active = (type(_G._cover_id_filter) == "string" and _G._cover_id_filter ~= "")
-        if sort_changed and not filter_changed and not cover_filter_active and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) and reaper.APIExists("SM_DB_Sort") then
+        if sort_changed and not filter_changed and not cover_filter_active and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB) then
           -- 确定排序句柄
           local target_ctx = nil
           local is_search_view = false
@@ -19694,7 +19747,6 @@ function loop()
           local native_handle_sorted = false
           if #sort_specs > 0 and filtered_list and filtered_list._handle
             and (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
-            and reaper.APIExists("SM_DB_Sort")
             and (filtered_list._handle ~= db_loader.ctx or sort_changed) then
             local spec = sort_specs[1]
             SM_RememberDBSelection(current_db_key, _G.current_display_list, selected_row)
@@ -19995,6 +20047,8 @@ function loop()
               played = true
             end
           end
+
+          if played then ClearFileSelection() end -- 确保滚动时的居中状态
 
           -- 若勾选auto_play_selected，且确实有移动，则自动播放
           if auto_play_selected and played and selected_row and filtered_list[selected_row] then
@@ -21311,19 +21365,27 @@ function loop()
 
           -- 检测点击事件
           if reaper.ImGui_IsItemClicked(ctx) and audio_path then
-            local parent_dir = normalize_path(audio_path, false):match("^(.*)[/\\]")
+            local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
 
-            if parent_dir then
-              local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
-              if in_db_mode then
-                DBPF_ApplyPathFilter(parent_dir)
-              else
-                collect_mode = COLLECT_MODE_SAMEFOLDER -- 切换 SameFolder 模式
-                tree_state.cur_path = normalize_path(parent_dir, true)
-                RefreshFolderFiles(parent_dir)
+            if ctrl and cover_path and last_cover_img then
+              original_cover_path = cover_path
+              original_cover_img = last_cover_img
+              open_original_cover_popup = true
+            else
+              local parent_dir = normalize_path(audio_path, false):match("^(.*)[/\\]")
 
-                SM_SetState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
-                SM_SetState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+              if parent_dir then
+                local in_db_mode = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+                if in_db_mode then
+                  DBPF_ApplyPathFilter(parent_dir)
+                else
+                  collect_mode = COLLECT_MODE_SAMEFOLDER -- 切换 SameFolder 模式
+                  tree_state.cur_path = normalize_path(parent_dir, true)
+                  RefreshFolderFiles(parent_dir)
+
+                  SM_SetState(EXT_SECTION, "collect_mode", tostring(COLLECT_MODE_SAMEFOLDER), true)
+                  SM_SetState(EXT_SECTION, "cur_samefolder_path", tree_state.cur_path or "", true)
+                end
               end
             end
           end
@@ -21340,6 +21402,30 @@ function loop()
       last_cover_img  = nil
       last_cover_path = nil
     end
+    -- 显示封面原图
+    if open_original_cover_popup then
+      reaper.ImGui_OpenPopup(ctx, "##original_cover_popup")
+      open_original_cover_popup = false
+    end
+
+    if reaper.ImGui_BeginPopup(ctx, "##original_cover_popup") then
+      local ow, oh = SM_GetImageFileDimensions(original_cover_path)
+      if original_cover_img and ow and oh then
+        reaper.ImGui_Image(ctx, original_cover_img, ow, oh)
+      end
+
+      if reaper.ImGui_Button(ctx, T("Close")) then
+        reaper.ImGui_CloseCurrentPopup(ctx)
+      end
+
+      -- 双击弹窗任意位置关闭原图预览
+      if reaper.ImGui_IsWindowHovered(ctx) and reaper.ImGui_IsMouseDoubleClicked(ctx, 0) then
+        reaper.ImGui_CloseCurrentPopup(ctx)
+      end
+
+      reaper.ImGui_EndPopup(ctx)
+    end
+
     reaper.ImGui_SameLine(ctx, nil, gap)
 
     -- 无专辑封面时右侧内容的偏移补偿
@@ -21905,32 +21991,27 @@ function loop()
         reaper.ImGui_DrawList_AddLine(dl, hover_px, min_y, hover_px, max_y, colors.preview_pint_play_cursor, UIScaleF(1))
 
         -- 顶部左侧时间文本+背景
-        local time_str = reaper.format_timestr(mouse_time or 0, "")
+        local tip = {}
+        tip.time_str = reaper.format_timestr(mouse_time or 0, "")
 
         PushUIFont(ctx, nil, 12)
-        local tw, th = reaper.ImGui_CalcTextSize(ctx, time_str)
-        local pad_x, pad_y = UIScaleF(4), UIScaleF(2)
+        tip.tw, tip.th = reaper.ImGui_CalcTextSize(ctx, tip.time_str)
+        tip.pad_x, tip.pad_y = UIScaleF(4), UIScaleF(2)
 
         -- 自定义垂直偏移: 负值往上，正值往下
-        local offset_y = UIScaleF(24)
+        tip.offset_y = UIScaleF(24)
 
         -- 放在竖线顶部的左侧，稍微上移避免压住波形
-        local text_x = hover_px - tw - pad_x * 2 - 2
-        if text_x < min_x + 2 then
-          text_x = min_x + 2
+        tip.text_x = hover_px - tip.tw - tip.pad_x * 2 - 2
+        if tip.text_x < min_x + 2 then
+          tip.text_x = min_x + 2
         end
-        local text_y = min_y - th - pad_y * 2 + offset_y
+        tip.text_y = min_y - tip.th - tip.pad_y * 2 + tip.offset_y
+        tip.bg_col = colors.preview_pint_bg or 0x000000CC
+        tip.text_col = colors.preview_pint_text or 0xFFFFFFFF
 
-        local bg_x0 = text_x
-        local bg_y0 = text_y
-        local bg_x1 = text_x + tw + pad_x * 2
-        local bg_y1 = text_y + th + pad_y * 2
-
-        local bg_col = colors.preview_pint_bg or 0x000000CC
-        local text_col = colors.preview_pint_text or 0xFFFFFFFF
-
-        reaper.ImGui_DrawList_AddRectFilled(dl, bg_x0, bg_y0, bg_x1, bg_y1, bg_col)
-        reaper.ImGui_DrawList_AddText(dl, text_x + pad_x, text_y + pad_y, text_col, time_str)
+        reaper.ImGui_DrawList_AddRectFilled(dl, tip.text_x, tip.text_y, tip.text_x + tip.tw + tip.pad_x * 2, tip.text_y + tip.th + tip.pad_y * 2, tip.bg_col)
+        reaper.ImGui_DrawList_AddText(dl, tip.text_x + tip.pad_x, tip.text_y + tip.pad_y, tip.text_col, tip.time_str)
         -- 恢复原来的字体设置
         reaper.ImGui_PopFont(ctx)
       end
@@ -21998,12 +22079,9 @@ function loop()
 
             local real_path = GetPhysicalPath(drag_path)
             local original_filename = real_path and real_path:match("[^/\\]+$")
-            local imported_path = HAVE_SM_DROP_MEDIA_FILES and GetCachedSelectionDragSourceInMediaDirectory(real_path) or nil
-            local preview_path, preview_dir
-            if HAVE_SM_DROP_MEDIA_FILES then
-              preview_path, preview_dir = CreateSelectionDragPreview(real_path, start_time, end_time)
-            end
-            local native_drag_path = HAVE_SM_DROP_MEDIA_FILES and (preview_path or imported_path or real_path) or nil
+            local imported_path = GetCachedSelectionDragSourceInMediaDirectory(real_path)
+            local preview_path, preview_dir = CreateSelectionDragPreview(real_path, start_time, end_time)
+            local native_drag_path = preview_path or imported_path or real_path
 
             dragging_selection = {
               path = drag_path,
@@ -22343,8 +22421,6 @@ function loop()
           if success then
             DBPF_InvalidateAllCaches()
           end
-        elseif not HAVE_SM_DB_APPEND then
-          SM_ShowExtensionUpdateRequired("database append")
         else
           local filelist = ScanAllAudioFiles(folder)
           if not filelist or #filelist == 0 then
@@ -22354,13 +22430,13 @@ function loop()
             local added_count = AppendPathsToMediaDB(filelist, dbpath)
             if added_count and added_count > 0 then
               DBPF_InvalidateAllCaches()
-              if SM_DBCoverIndexExists(dbpath) and HAVE_SM_COVER_INDEX then
+              if SM_DBCoverIndexExists(dbpath) then
                 SM_QueueDBCoverIndexRebuild(dbpath)
               end
               files_idx_cache = nil
               CollectFiles()
             elseif added_count and added_count < 0 then
-              SM_ShowExtensionUpdateRequired("database append")
+              reaper.ShowMessageBox("Database append failed.", "Soundmole", 0)
             end
           end
         end
@@ -22407,7 +22483,7 @@ function loop()
           f:close()
           DBPF_InvalidateAllCaches()
           if SM_DBCoverIndexExists(dbpath) then
-            if HAVE_SM_COVER_INDEX then SM_QueueDBCoverIndexRebuild(dbpath) end
+            SM_QueueDBCoverIndexRebuild(dbpath)
           end
           files_idx_cache = nil
           CollectFiles()
@@ -22427,8 +22503,6 @@ function loop()
         reaper.ImGui_EndPopup(ctx)
       end
     end
-
-
 
     reaper.ImGui_PopStyleColor(ctx, 3) -- 仅TAB页签颜色，放外部会失效
     reaper.ImGui_End(ctx)
@@ -22522,18 +22596,16 @@ function OnScriptExit()
   pcall(ProcessPendingSelectionNativeDrops)
   CleanupSelectionDragPreview(dragging_selection)
   -- 停止数据库构建器 (优先清理)
-  if reaper.APIExists("SM_Builder_Stop") then
-    reaper.SM_Builder_Stop()
-  end
+  reaper.SM_Builder_Stop()
   if cover_index_state and cover_index_state.handle then
     SM_StopCoverIndexTask()
   end
-  if similarity_state and similarity_state.builder and reaper.APIExists("SM_SIM_Builder_Stop") then
+  if similarity_state and similarity_state.builder then
     reaper.SM_SIM_Builder_Stop(similarity_state.builder)
     similarity_state.builder = nil
     similarity_state.builder_active = false
   end
-  if similarity_state and similarity_state.setup and reaper.APIExists("SM_SIM_Setup_Stop") then
+  if similarity_state and similarity_state.setup then
     reaper.SM_SIM_Setup_Stop(similarity_state.setup)
     similarity_state.setup = nil
     similarity_state.setup_active = false
@@ -22541,31 +22613,23 @@ function OnScriptExit()
   if SaveExitSettings then pcall(SaveExitSettings) end
   -- 清理文件夹模式的后台扫描器 或使用 StopAsyncScan()
   if _G.async_probe_handle then
-    if reaper.APIExists("SM_ProbeMediaEnd") then
-      reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
-    end
+    reaper.SM_ProbeMediaEnd(_G.async_probe_handle)
     _G.async_probe_handle = nil
   end
   -- 释放 C++ 扩展内存 (防止内存泄漏)
   if _G.db_loader and _G.db_loader.ctx then
-    if reaper.APIExists("SM_DB_Release") then 
-      reaper.SM_DB_Release(_G.db_loader.ctx) 
-    end
+    reaper.SM_DB_Release(_G.db_loader.ctx)
     _G.db_loader.ctx = nil
   end
   if type(DBPF_ReleaseCppHandle) == "function" then DBPF_ReleaseCppHandle() end
   -- 上一次搜索结果句柄
   if _G._last_search_handle then
-    if reaper.APIExists("SM_DB_Release") then 
-      reaper.SM_DB_Release(_G._last_search_handle) 
-    end
+    reaper.SM_DB_Release(_G._last_search_handle)
     _G._last_search_handle = nil
   end
   -- 全量缓存句柄
   if _G.SM_Cache_Full_Handle then
-    if reaper.APIExists("SM_DB_Release") then 
-      reaper.SM_DB_Release(_G.SM_Cache_Full_Handle)
-    end
+    reaper.SM_DB_Release(_G.SM_Cache_Full_Handle)
   end
   -- 如果脚本在读取 CSV/DB 数据库的过程中被关闭，确保文件句柄被关闭
   if _G._mediadb_stream then 
