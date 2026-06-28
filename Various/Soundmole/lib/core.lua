@@ -7,7 +7,6 @@ script_path = script_path:gsub("[/\\]lib$","") -- 确保不在lib目录下
 local sep = package.config:sub(1, 1)
 script_path = script_path .. sep
 
-
 function IsAppleDoubleFile(path)
   local filename = tostring(path or ""):match("([^/\\]+)$") or tostring(path or "")
   return filename:sub(1, 2) == "._"
@@ -1739,6 +1738,126 @@ function LoadOnlySelectedToRS5k(track, path)
   reaper.TrackFX_SetNamedConfigParm(track, fx, "FILE0", path)
   reaper.TrackFX_SetOpen(track, fx, true)
   reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
+end
+
+--------------------------------------------- Cartridge ---------------------------------------------
+
+local CARTRIDGE_PLUGIN_NAME = "Cartridge"
+
+local function SM_T(text)
+  return (type(T) == "function") and T(text) or text
+end
+
+local function TriggerCartridgeLoad(track, fx_idx, path)
+  if not track or not fx_idx or fx_idx < 0 or not path or path == "" then return false end
+
+  local appdata = os.getenv("APPDATA")
+  if not appdata or appdata == "" then
+    local home = os.getenv("HOME")
+    if not home or home == "" then return false end
+    local os_name = reaper.GetOS and reaper.GetOS() or ""
+    appdata = (os_name:match("OSX") or os_name:match("macOS"))
+      and (home .. "/Library/Application Support")
+      or (home .. "/.config")
+  end
+
+  local dir = appdata .. "/Cartridge"
+  reaper.RecursiveCreateDirectory(dir, 0)
+
+  local f = io.open(dir .. "/pending_load.txt", "w")
+  if not f then return false end
+  f:write(path)
+  f:close()
+
+  for i = 0, reaper.TrackFX_GetNumParams(track, fx_idx) - 1 do
+    local _, name = reaper.TrackFX_GetParamName(track, fx_idx, i, "")
+    if name == "Load Trigger" then
+      local val = reaper.TrackFX_GetParam(track, fx_idx, i)
+      reaper.TrackFX_SetParam(track, fx_idx, i, val < 0.5 and 1 or 0)
+      return true
+    end
+  end
+  return false
+end
+
+local function FindOpenCartridge()
+  local function scan_track(track)
+    if not track then return nil, nil end
+    for fx = 0, reaper.TrackFX_GetCount(track) - 1 do
+      local _, name = reaper.TrackFX_GetFXName(track, fx, "")
+      if reaper.TrackFX_GetOpen(track, fx) and tostring(name):lower():find("cartridge", 1, true) then
+        return track, fx
+      end
+    end
+    return nil, nil
+  end
+
+  for t = 0, reaper.CountTracks(0) - 1 do
+    local track, fx = scan_track(reaper.GetTrack(0, t))
+    if track then return track, fx end
+  end
+  return scan_track(reaper.GetMasterTrack(0))
+end
+
+function LoadAudioToCartridge(track, path)
+  if not path or path == "" then return end
+  reaper.PreventUIRefresh(1)
+
+  local insert_idx = reaper.CountTracks(0)
+  if track and reaper.ValidatePtr(track, "MediaTrack*") then
+    local tn = tonumber(reaper.GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER")) or 0
+    if tn > 0 then insert_idx = math.floor(tn) end
+  end
+
+  reaper.InsertTrackAtIndex(insert_idx, true)
+  local new_tr = reaper.GetTrack(0, insert_idx)
+  if not new_tr then
+    reaper.PreventUIRefresh(-1)
+    return
+  end
+
+  local basename = (path:match("([^/\\]+)$") or "Sample"):gsub("%.%w+$", "")
+  reaper.GetSetMediaTrackInfo_String(new_tr, "P_NAME", basename, true)
+  reaper.SetMediaTrackInfo_Value(new_tr, "I_RECINPUT", 6112)
+  reaper.SetMediaTrackInfo_Value(new_tr, "I_RECARM", 1)
+  reaper.SetMediaTrackInfo_Value(new_tr, "I_RECMON", 1)
+
+  local fx = reaper.TrackFX_AddByName(new_tr, CARTRIDGE_PLUGIN_NAME, false, 1)
+  if fx < 0 then
+    fx = reaper.TrackFX_AddByName(new_tr, "VST3:" .. CARTRIDGE_PLUGIN_NAME, false, 1)
+  end
+  if fx < 0 then
+    reaper.PreventUIRefresh(-1)
+    reaper.ShowMessageBox(SM_T("Cartridge not found. Make sure it is installed."), CARTRIDGE_PLUGIN_NAME, 0)
+    reaper.UpdateArrange()
+    return
+  end
+
+  if not TriggerCartridgeLoad(new_tr, fx, path) then
+    reaper.PreventUIRefresh(-1)
+    reaper.ShowMessageBox(SM_T("Unable to load sample into Cartridge."), CARTRIDGE_PLUGIN_NAME, 0)
+    reaper.UpdateArrange()
+    return
+  end
+  reaper.TrackFX_Show(new_tr, fx, 3)
+  reaper.SetOnlyTrackSelected(new_tr)
+  reaper.PreventUIRefresh(-1)
+  reaper.UpdateArrange()
+end
+
+function LoadOnlySelectedToCartridge(path)
+  if not path or path == "" then return end
+  local track, fx = FindOpenCartridge()
+  if not track then
+    reaper.ShowMessageBox(SM_T("No open Cartridge instance found. Open Cartridge UI first, then run this action."), CARTRIDGE_PLUGIN_NAME, 0)
+    return
+  end
+  if not TriggerCartridgeLoad(track, fx, path) then
+    reaper.ShowMessageBox(SM_T("Unable to load sample into Cartridge."), CARTRIDGE_PLUGIN_NAME, 0)
+    return
+  end
+  reaper.TrackFX_Show(track, fx, 3)
   reaper.UpdateArrange()
 end
 

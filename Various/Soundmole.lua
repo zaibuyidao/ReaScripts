@@ -1,7 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.218
+-- @version 1.0.219
 -- @changelog
+--   Added a table context-menu action to add sample(s) to a new Cartridge track.
+--   Added a table context-menu action to load a sample into the active Cartridge instance.
 --   Added a search history dropdown for quickly reusing recent searches from the button next to the search box.
 --   Added original Artwork preview in the main preview area. Hold Ctrl and click the cover to view it at its original size, and double click the preview window to close it quickly.
 --   Added database folder browsing mode, allowing database content to be viewed and filtered by its original folder structure.

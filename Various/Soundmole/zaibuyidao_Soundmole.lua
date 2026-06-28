@@ -12576,6 +12576,23 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
       LoadOnlySelectedToRS5k(tr, info.path)
     end
+    reaper.ImGui_Separator(ctx)
+
+    if reaper.ImGui_MenuItem(ctx, T("Load Sample(s) to New Cartridge Track")) then
+      local selected_infos = GetFileInfosForRowAction(_G.current_display_list or {}, i)
+      if #selected_infos > 1 then
+        for _, sel_info in ipairs(selected_infos) do
+          if sel_info and sel_info.path then LoadAudioToCartridge(nil, sel_info.path) end
+        end
+      else
+        local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
+        LoadAudioToCartridge(tr, info.path)
+      end
+    end
+
+    if reaper.ImGui_MenuItem(ctx, T("Load Sample to Active Cartridge Instance")) then
+      LoadOnlySelectedToCartridge(info.path)
+    end
   end
 
   reaper.ImGui_Separator(ctx)
