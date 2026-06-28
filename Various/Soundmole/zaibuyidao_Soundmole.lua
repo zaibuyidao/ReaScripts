@@ -391,6 +391,7 @@ local last_audio_idx         = nil
 local auto_scroll_enabled    = false -- 自动滚屏
 local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
+local auto_play_waveform_when_stopped = false -- 未播放时点击波形位置自动播放
 local waveform_hint_enabled  = false -- 波形预览鼠标提示开关
 local recent_audio_files     = {}    -- 最近播放列表
 local max_recent_files       = 20    -- 最近播放最多保留20条
@@ -1391,6 +1392,11 @@ local hide_soundmole_title      = false -- 默认显示 Soundmole 标题
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
 local mirror_database           = false -- 默认关闭 Database (Mirror)
 local show_peektree_recent      = false -- 默认开启 播放历史
+local show_peektree_project_collection = true
+local show_peektree_folder_shortcuts   = true
+local show_peektree_collections        = true
+local show_peektree_groups             = true
+local show_peektree_recent_searches    = true
 local ucs_show_english_with_localized = false -- UCS 英文主列 + 本地化名称
 
 -- Tips提示显示
@@ -1412,6 +1418,7 @@ function SaveSettings()
   -- SM_SetState(EXT_SECTION, "collect_mode", tostring(collect_mode), true)
   SM_SetState(EXT_SECTION, "doubleclick_action", tostring(doubleclick_action), true)
   SM_SetState(EXT_SECTION, "auto_play_selected", tostring(auto_play_selected and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "auto_play_waveform_when_stopped", tostring(auto_play_waveform_when_stopped and 1 or 0), true)
   SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
   SM_SetState(EXT_SECTION, "bg_alpha", tostring(bg_alpha), true)
   SM_SetState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
@@ -1451,6 +1458,11 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
   SM_SetState(EXT_SECTION, "mirror_database", mirror_database and "1" or "0", true)
   SM_SetState(EXT_SECTION, "show_peektree_recent", show_peektree_recent and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "show_peektree_project_collection", show_peektree_project_collection and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "show_peektree_folder_shortcuts", show_peektree_folder_shortcuts and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "show_peektree_collections", show_peektree_collections and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "show_peektree_groups", show_peektree_groups and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "show_peektree_recent_searches", show_peektree_recent_searches and "1" or "0", true)
   SM_SetState(EXT_SECTION, "ucs_show_english_with_localized", ucs_show_english_with_localized and "1" or "0", true)
   SM_SetState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
   SM_SetState(EXT_SECTION, "album_panel_visible", ALBUM_PANEL_VISIBLE and "true" or "false", true)
@@ -1475,6 +1487,12 @@ do
   local v = SM_GetState(EXT_SECTION, "auto_play_selected")
   if v == "1" then auto_play_selected = true
   elseif v == "0" then auto_play_selected = false end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "auto_play_waveform_when_stopped")
+  if v == "1" then auto_play_waveform_when_stopped = true
+  elseif v == "0" then auto_play_waveform_when_stopped = false end
 end
 
 do
@@ -1524,6 +1542,31 @@ do
   local v = SM_GetState(EXT_SECTION, "show_peektree_recent")
   if v == "1" then show_peektree_recent = true
   else show_peektree_recent = false end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "show_peektree_project_collection")
+  if v == "0" then show_peektree_project_collection = false else show_peektree_project_collection = true end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "show_peektree_folder_shortcuts")
+  if v == "0" then show_peektree_folder_shortcuts = false else show_peektree_folder_shortcuts = true end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "show_peektree_collections")
+  if v == "0" then show_peektree_collections = false else show_peektree_collections = true end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "show_peektree_groups")
+  if v == "0" then show_peektree_groups = false else show_peektree_groups = true end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "show_peektree_recent_searches")
+  if v == "0" then show_peektree_recent_searches = false else show_peektree_recent_searches = true end
 end
 
 do
@@ -2118,6 +2161,40 @@ do
     -- end
   end
 
+  function Section_PeakTreeVisibility()
+    local changed, v
+
+    changed, v = reaper.ImGui_Checkbox(ctx, T('Show "Project Collection" in PeekTree'), show_peektree_project_collection)
+    if changed then
+      show_peektree_project_collection = v
+      SM_SetState(EXT_SECTION, "show_peektree_project_collection", v and "1" or "0", true)
+    end
+
+    changed, v = reaper.ImGui_Checkbox(ctx, T('Show "Folder Shortcuts" in PeekTree'), show_peektree_folder_shortcuts)
+    if changed then
+      show_peektree_folder_shortcuts = v
+      SM_SetState(EXT_SECTION, "show_peektree_folder_shortcuts", v and "1" or "0", true)
+    end
+
+    changed, v = reaper.ImGui_Checkbox(ctx, T('Show "Collections" in PeekTree'), show_peektree_collections)
+    if changed then
+      show_peektree_collections = v
+      SM_SetState(EXT_SECTION, "show_peektree_collections", v and "1" or "0", true)
+    end
+
+    changed, v = reaper.ImGui_Checkbox(ctx, T('Show "Groups" in PeekTree'), show_peektree_groups)
+    if changed then
+      show_peektree_groups = v
+      SM_SetState(EXT_SECTION, "show_peektree_groups", v and "1" or "0", true)
+    end
+
+    changed, v = reaper.ImGui_Checkbox(ctx, T('Show "Recently Searched" in PeekTree'), show_peektree_recent_searches)
+    if changed then
+      show_peektree_recent_searches = v
+      SM_SetState(EXT_SECTION, "show_peektree_recent_searches", v and "1" or "0", true)
+    end
+  end
+
   function Section_System_Language()
     -- 定义支持的语言列表
     local languages = {
@@ -2202,6 +2279,12 @@ do
     reaper.ImGui_Separator(ctx)
     local chg_auto
     chg_auto, auto_play_selected = reaper.ImGui_Checkbox(ctx, T("Auto-play selected media"), auto_play_selected)
+
+    local chg_wave_click, new_wave_click = reaper.ImGui_Checkbox(ctx, T("Auto-play from clicked waveform position when stopped"), auto_play_waveform_when_stopped)
+    if chg_wave_click then
+      auto_play_waveform_when_stopped = new_wave_click
+      SM_SetState(EXT_SECTION, "auto_play_waveform_when_stopped", auto_play_waveform_when_stopped and "1" or "0", true)
+    end
   end
 
   function Section_Playback()
@@ -2625,6 +2708,7 @@ do
       doubleclick_action   = DOUBLECLICK_NONE
       row_height           = DEFAULT_ROW_HEIGHT
       auto_play_selected   = true
+      auto_play_waveform_when_stopped = false
       preserve_pitch       = true
       bg_alpha             = 1.0
       peak_chans           = 6
@@ -2659,6 +2743,11 @@ do
       mirror_folder_shortcuts = false
       mirror_database         = false
       show_peektree_recent    = false -- 播放历史
+      show_peektree_project_collection = true
+      show_peektree_folder_shortcuts   = true
+      show_peektree_collections        = true
+      show_peektree_groups             = true
+      show_peektree_recent_searches    = true
       ucs_show_english_with_localized = false
       ucs_last_filter_text     = nil
       current_sidebar_tab     = "PeekTree"
@@ -2701,6 +2790,7 @@ do
         DrawSubTitle(T("PeekTree"))
         Section_MirrorToggles() -- Media Explorer Mirrors - Folder Shortcuts & Database
         Section_PeekTreeRecentToggle() -- Recently Played
+        Section_PeakTreeVisibility()
       end
     },
 
@@ -4286,6 +4376,20 @@ function RestartPreviewWithParams(from_wave_pos)
     reaper.CF_Preview_Play(playing_preview)
     is_paused = false
   end
+end
+
+function IsPreviewActuallyPlaying()
+  return playing_preview ~= nil and not is_paused
+end
+
+function MaybeAutoPlayWaveformClickWhenStopped(info)
+  if auto_play_waveform_when_stopped and not IsPreviewActuallyPlaying() and info then
+    PlayFromCursor(info)
+    is_paused = false
+    paused_position = 0
+    return true
+  end
+  return false
 end
 
 function VAL2DB(x)
@@ -8642,6 +8746,7 @@ function draw_tree(name, path, depth)
 
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
   local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0
+  SM_ForceNextPeakTreeNodeClosed()
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##" .. path, flags | highlight)
 
   -- 此电脑右键菜单
@@ -8797,6 +8902,7 @@ function draw_shortcut_tree(sc, base_path, depth)
     flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
   end
 
+  SM_ForceNextPeakTreeNodeClosed()
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_" .. path, flags | highlight)
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
@@ -9302,6 +9408,7 @@ function draw_advanced_folder_node(id, selected_id, depth)
     flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
   end
 
+  SM_ForceNextPeakTreeNodeClosed()
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##" .. id, flags)
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
@@ -11166,6 +11273,61 @@ function GetMediaDBDisplayName(dbfile)
   return (alias and alias ~= "") and alias or dbfile
 end
 
+function GetOrderedMediaDBFiles()
+  local db_list = {}
+  local db_dir = normalize_path(mediadb_dir or (script_path .. "SoundmoleDB"), true)
+  local i = 0
+  while true do
+    local dbfile = reaper.EnumerateFiles(db_dir, i)
+    if not dbfile then break end
+    if dbfile:match("%.MoleFileList$") then
+      db_list[#db_list + 1] = dbfile
+    end
+    i = i + 1
+  end
+
+  local ordered = {}
+  if mediadb_order then
+    local exist_map = {}
+    for _, f in ipairs(db_list) do exist_map[f] = true end
+    for _, name in ipairs(mediadb_order) do
+      if exist_map[name] then
+        ordered[#ordered + 1] = name
+        exist_map[name] = nil
+      end
+    end
+    table.sort(db_list)
+    for _, f in ipairs(db_list) do
+      if exist_map[f] then ordered[#ordered + 1] = f end
+    end
+  else
+    ordered = db_list
+    table.sort(ordered)
+  end
+  return ordered
+end
+
+function SelectMediaDatabase(dbfile)
+  if not dbfile or dbfile == "" then return end
+  if collect_mode ~= COLLECT_MODE_MEDIADB or tree_state.cur_mediadb ~= dbfile then
+    if type(SM_RememberDBSelection) == "function" then
+      SM_RememberDBSelection(GetCurrentListKey(), _G.current_display_list, selected_row)
+    end
+    collect_mode = COLLECT_MODE_MEDIADB
+    tree_state.cur_mediadb = dbfile
+    mediadb_open = true
+    _G._db_path_prefix_filter = ""
+    files_idx_cache = nil
+    CollectFiles()
+    DBPF_InvalidateAllCaches()
+    if browse_database_as_folders then
+      DBPF_ApplySingleRootFilterIfAvailable()
+    end
+  elseif browse_database_as_folders then
+    DBPF_ApplySingleRootFilterIfAvailable()
+  end
+end
+
 tree_state.remove_path_dbfile = tree_state.remove_path_dbfile or nil
 tree_state.remove_path_to_remove = tree_state.remove_path_to_remove or nil
 tree_state.remove_path_confirm = tree_state.remove_path_confirm or false
@@ -12625,16 +12787,25 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
         if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
           local rel_x = mx - x
           local new_pos = (rel_x / thumb_w) * src_len
+          local rate = (effective_rate_knob and effective_rate_knob ~= 0) and effective_rate_knob or 1
+          local cursor_pos = new_pos / rate
           current_recent_play_info = nil -- 解除最近播放锁定
           if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
             collect_mode = last_collect_mode -- or COLLECT_MODE_SHORTCUT
           end
-          if playing_path == info.path then
-            RestartPreviewWithParams(new_pos)
+          selected_row = i
+          last_selected_row = i
+          Wave.play_cursor = cursor_pos
+          wf_play_start_cursor = cursor_pos
+
+          if IsPreviewActuallyPlaying() then
+            if playing_path == info.path then
+              RestartPreviewWithParams(new_pos)
+            else
+              PlayFromCursor(info)
+            end
           else
-            selected_row = i
-            PlayFromStart(info)
-            RestartPreviewWithParams(new_pos)
+            MaybeAutoPlayWaveformClickWhenStopped(info)
           end
         end
       end
@@ -13657,6 +13828,7 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
 
   local label = ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_mirror_" .. tostring(root_idx) .. path
 
+  SM_ForceNextPeakTreeNodeClosed()
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
@@ -15338,6 +15510,7 @@ function DBPF_DrawDirTreeRecursive(dir, display_name)
 
   reaper.ImGui_PushID(ctx, dir)
   if has_child then
+    SM_ForceNextPeakTreeNodeClosed()
     local open = reaper.ImGui_TreeNode(ctx, label, flags)
     if reaper.ImGui_IsItemClicked(ctx, 0) then
       DBPF_ApplyPathFilter(dir)
@@ -15504,6 +15677,76 @@ album_panel_active_tab = SM_GetState(EXT_SECTION, "album_panel_active_tab")
 if album_panel_active_tab ~= "metadata" then album_panel_active_tab = "album" end
 album_panel_tab_restore_pending = true
 
+function SM_IsCtrlDown()
+  local left = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl())
+  local right = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+  local mods = reaper.ImGui_GetKeyMods and reaper.ImGui_GetKeyMods(ctx) or 0
+  local ctrl_mod = reaper.ImGui_Mod_Ctrl and reaper.ImGui_Mod_Ctrl() or 0
+  return left or right or (ctrl_mod ~= 0 and ((mods & ctrl_mod) ~= 0))
+end
+
+function SM_ForceNextPeakTreeHeaderClosed()
+  if _G._peektree_force_close_headers_once and reaper.ImGui_SetNextItemOpen then
+    reaper.ImGui_SetNextItemOpen(ctx, false, reaper.ImGui_Cond_Always())
+  end
+end
+
+function SM_ForceNextPeakTreeNodeClosed()
+  if _G._peektree_force_close_tree_once and reaper.ImGui_SetNextItemOpen then
+    reaper.ImGui_SetNextItemOpen(ctx, false, reaper.ImGui_Cond_Always())
+    _G._peektree_force_close_tree_used = true
+  end
+end
+
+function SM_FinishPeakTreeForceClosePass()
+  _G._peektree_force_close_headers_once = false
+  if _G._peektree_force_close_tree_used then
+    _G._peektree_force_close_tree_once = false
+    _G._peektree_force_close_tree_used = false
+  end
+end
+
+function CollapseAllPeakTreeFolders()
+  project_open = false
+  this_computer_open = false
+  shortcut_open = false
+  shortcut_mirror_open = false
+  collection_open = false
+  group_open = false
+  mediadb_open = false
+  reaper_db_open = false
+  recent_search_open = false
+  recent_open = false
+  play_history_open = false
+
+  tree_open = {}
+  expanded_paths = {}
+  expanded_ids = {}
+  shortcut_nodes_inited = true
+  shortcut_mirror_nodes_inited = true
+  adv_folder_nodes_inited = true
+
+  _G._this_computer_force_open_state = false
+  _G._shortcuts_force_open_state = false
+  _G._collections_force_open_state = false
+  _G._group_force_open_state = false
+  _G._mediadb_force_open_state = false
+  _G._peektree_force_close_headers_once = true
+  _G._peektree_force_close_tree_once = true
+  _G._peektree_force_close_tree_used = false
+
+  SM_SetState(EXT_SECTION, "project_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "this_computer_open", "false", true)
+  SM_SetState(EXT_SECTION, "shortcut_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "shortcut_mirror_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "collections_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "group_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "soundmoledb_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "reaperdb_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "recent_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "play_history_header_open", "false", true)
+end
+
 -- 左侧表格显示/隐藏切换按钮
 function SM_DrawLeftTableToggle(ctx)
   PushUIFont(ctx, fonts.material, 16)
@@ -15527,15 +15770,23 @@ function SM_DrawLeftTableToggle(ctx)
   end
 
   if clicked then
-    LEFT_TABLE_VISIBLE = not LEFT_TABLE_VISIBLE
-    SM_SetState(EXT_SECTION, "left_table_visible", LEFT_TABLE_VISIBLE and "true" or "false", true)
+    if SM_IsCtrlDown() then
+      CollapseAllPeakTreeFolders()
+    else
+      LEFT_TABLE_VISIBLE = not LEFT_TABLE_VISIBLE
+      SM_SetState(EXT_SECTION, "left_table_visible", LEFT_TABLE_VISIBLE and "true" or "false", true)
+    end
   end
 
   reaper.ImGui_PopFont(ctx)
 
   if hovered then
     reaper.ImGui_BeginTooltip(ctx)
-    reaper.ImGui_Text(ctx, LEFT_TABLE_VISIBLE and T("Click to hide the left table") or T("Click to show the left table"))
+    if SM_IsCtrlDown() then
+      reaper.ImGui_Text(ctx, T("Collapse all folders"))
+    else
+      reaper.ImGui_Text(ctx, LEFT_TABLE_VISIBLE and T("Click to hide the left table or Hold CTRL to Collapse All Folders") or T("Click to show the left table or Hold CTRL to Collapse All Folders"))
+    end
     reaper.ImGui_EndTooltip(ctx)
   end
 end
@@ -16452,7 +16703,7 @@ function loop()
         if ctrl then
           reaper.ImGui_Text(ctx, T("Edit thesaurus"))
         else
-          reaper.ImGui_Text(ctx, T("Enable thesaurus or Hold CTRL for Edit Thesaurus"))
+          reaper.ImGui_Text(ctx, T("Enable Thesaurus or Hold CTRL to Edit Thesaurus"))
         end
         reaper.ImGui_EndTooltip(ctx)
       end
@@ -17120,34 +17371,37 @@ function loop()
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.normal_text) -- 文本颜色
           
           -- 渲染单选列表
-          reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
+          if show_peektree_project_collection then
+            reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
 
-          local hdr_flags = project_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-          local is_project_open = reaper.ImGui_CollapsingHeader(ctx, T("Project Collection"), nil, hdr_flags)
-          project_open = is_project_open
+            SM_ForceNextPeakTreeHeaderClosed()
+            local hdr_flags = project_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
+            local is_project_open = reaper.ImGui_CollapsingHeader(ctx, T("Project Collection"), nil, hdr_flags)
+            project_open = is_project_open
 
-          reaper.ImGui_PopStyleColor(ctx)
-          if is_project_open then
-            reaper.ImGui_Indent(ctx, 25) -- 手动缩进16像素
-            for i, v in ipairs(collect_mode_labels) do
-              local selected = (collect_mode == v.value)
-              -- reaper.ImGui_AlignTextToFramePadding(ctx)
-              if selected then
-                -- PeakTree选中状态高亮
-                reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+            reaper.ImGui_PopStyleColor(ctx)
+            if is_project_open then
+              reaper.ImGui_Indent(ctx, 25) -- 手动缩进16像素
+              for i, v in ipairs(collect_mode_labels) do
+                local selected = (collect_mode == v.value)
+                -- reaper.ImGui_AlignTextToFramePadding(ctx)
+                if selected then
+                  -- PeakTree选中状态高亮
+                  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+                end
+                if reaper.ImGui_Selectable(ctx, v.label, selected) then
+                  collect_mode = v.value
+                  selected_index = i
+                  tree_open = {} -- 切到非tree时收起tree
+                  files_idx_cache = nil
+                  CollectFiles()
+                end
+                if selected then
+                  reaper.ImGui_PopStyleColor(ctx, 1)
+                end
               end
-              if reaper.ImGui_Selectable(ctx, v.label, selected) then
-                collect_mode = v.value
-                selected_index = i
-                tree_open = {} -- 切到非tree时收起tree
-                files_idx_cache = nil
-                CollectFiles()
-              end
-              if selected then
-                reaper.ImGui_PopStyleColor(ctx, 1)
-              end
+              reaper.ImGui_Unindent(ctx, 25)
             end
-            reaper.ImGui_Unindent(ctx, 25)
           end
 
           -- Tree模式特殊处理（折叠节点）
@@ -17162,6 +17416,7 @@ function loop()
             _G._this_computer_force_open_state = nil
           end
 
+          SM_ForceNextPeakTreeHeaderClosed()
           local hdr_flags = this_computer_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
           local prev_this_computer_open = this_computer_open == true -- 记录上一帧状态
           local is_this_computer_open = reaper.ImGui_CollapsingHeader(ctx, T("This Computer"), nil, hdr_flags)
@@ -17248,6 +17503,7 @@ function loop()
           end
 
           -- 文件夹快捷方式节点
+          if show_peektree_folder_shortcuts then
           if not shortcut_nodes_inited then
             expanded_paths = {}
             -- 递归将选中路径及其父目录都加入 expanded_paths
@@ -17269,6 +17525,7 @@ function loop()
             _G._shortcuts_force_open_state = nil
           end
 
+          SM_ForceNextPeakTreeHeaderClosed()
           local hdr_flags = shortcut_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
           local prev_shortcut_open = shortcut_open == true -- 记录上一帧状态
           local is_shortcut_open = reaper.ImGui_CollapsingHeader(ctx, T("Folder Shortcuts"), nil, hdr_flags)
@@ -17494,6 +17751,7 @@ function loop()
               end
 
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
+              SM_ForceNextPeakTreeHeaderClosed()
               local hdr_flags_sc_mirror = shortcut_mirror_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
               local is_sc_mirror_open = reaper.ImGui_CollapsingHeader(ctx, T("Folder Shortcuts (Mirror)") .. "###Shortcut_Mirror", nil, hdr_flags_sc_mirror)
               shortcut_mirror_open = is_sc_mirror_open
@@ -17510,7 +17768,10 @@ function loop()
             end
           end
 
+          end
+
           -- 高级文件夹节点 Collections
+          if show_peektree_collections then
           if not adv_folder_nodes_inited then
             expanded_ids = {}
             local p = tree_state.cur_advanced_folder
@@ -17529,6 +17790,7 @@ function loop()
             _G._collections_force_open_state = nil
           end
 
+          SM_ForceNextPeakTreeHeaderClosed()
           local hdr_flags = collection_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
           local prev_collection_open = collection_open == true -- 记录上一帧状态
           local is_collection_open = reaper.ImGui_CollapsingHeader(ctx, T("Collections"), nil, hdr_flags)
@@ -17720,7 +17982,10 @@ function loop()
             -- reaper.ImGui_Unindent(ctx, 7)
           end
 
+          end
+
           -- 自定义文件夹节点 Group
+          if show_peektree_groups then
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
           -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
           if _G._group_force_open_state ~= nil then
@@ -17728,6 +17993,7 @@ function loop()
             _G._group_force_open_state = nil
           end
 
+          SM_ForceNextPeakTreeHeaderClosed()
           local hdr_flags = group_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
           local prev_group_open = group_open == true -- 记录上一帧状态
           local is_group_open = reaper.ImGui_CollapsingHeader(ctx, T("Group") .. "###Group", nil, hdr_flags)
@@ -17991,6 +18257,8 @@ function loop()
             -- reaper.ImGui_Unindent(ctx, 7)
           end
 
+          end
+
           -- 数据库节点
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
           -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
@@ -17999,6 +18267,7 @@ function loop()
             _G._mediadb_force_open_state = nil
           end
 
+          SM_ForceNextPeakTreeHeaderClosed()
           local hdr_flags = mediadb_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
           local prev_mediadb_open = mediadb_open == true -- 记录上一帧状态
           local is_mediadb_open = reaper.ImGui_CollapsingHeader(ctx, T("Database") .. "###Soundmole_DB", nil, hdr_flags)
@@ -18342,6 +18611,7 @@ function loop()
               if browse_database_as_folders then
                 local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
                 if is_selected then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() | reaper.ImGui_TreeNodeFlags_DefaultOpen() end
+                SM_ForceNextPeakTreeNodeClosed()
                 node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(alias) .. "##mediadb_tree_" .. tostring(dbfile), flags)
                 db_clicked = reaper.ImGui_IsItemClicked(ctx, 0)
               else
@@ -18611,6 +18881,7 @@ function loop()
               -- 什么都不做
             else
               reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
+              SM_ForceNextPeakTreeHeaderClosed()
               local hdr_flags_readb = reaper_db_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
               local is_readb_open = reaper.ImGui_CollapsingHeader(ctx, T("Database (Mirror)") .. "###REAPER_DB", nil, hdr_flags_readb)
               reaper_db_open = is_readb_open
@@ -18630,6 +18901,7 @@ function loop()
                   if browse_database_as_folders then
                     local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
                     if is_sel then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() | reaper.ImGui_TreeNodeFlags_DefaultOpen() end
+                    SM_ForceNextPeakTreeNodeClosed()
                     node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_tree_" .. fn, flags)
                     db_clicked = reaper.ImGui_IsItemClicked(ctx, 0)
                   else
@@ -18670,8 +18942,10 @@ function loop()
           end
 
           -- 最近搜索节点
+          if show_peektree_recent_searches then
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
 
+          SM_ForceNextPeakTreeHeaderClosed()
           local hdr_flags_search = recent_search_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
           local is_search_open = reaper.ImGui_CollapsingHeader(ctx, T("Recently Searched") .. "###Recently_Searched", nil, hdr_flags_search)
           recent_search_open = is_search_open
@@ -18790,10 +19064,13 @@ function loop()
             reaper.ImGui_Unindent(ctx, 25)
           end
 
+          end
+
           -- 最近播放节点
           if show_peektree_recent then
             reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
 
+            SM_ForceNextPeakTreeHeaderClosed()
             local hdr_flags = recent_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
             local is_recent_open = reaper.ImGui_CollapsingHeader(ctx, T("Recently Played") .. "###Recently_Played", nil, hdr_flags)
             recent_open = is_recent_open
@@ -18843,6 +19120,7 @@ function loop()
           reaper.ImGui_PopStyleColor(ctx, 1) -- 恢复文本
           reaper.ImGui_PopFont(ctx)          -- 内容字体自由缩放
 
+          SM_FinishPeakTreeForceClosePass()
           reaper.ImGui_EndChild(ctx) -- PeakTreeRegion 结束
           end
 
@@ -20928,85 +21206,135 @@ function loop()
     end
 
     -- 目标数据库下拉菜单
+    -- reaper.ImGui_SameLine(ctx, nil, 10)
+    -- reaper.ImGui_AlignTextToFramePadding(ctx)
+    -- reaper.ImGui_TextColored(ctx, colors.mole, T("Target DB:")) -- 标签颜色使用 Mole 色
+    -- reaper.ImGui_SameLine(ctx)
+
+    -- reaper.ImGui_SetNextItemWidth(ctx, UIScale(150)) -- 设置下拉框宽度，可按需调整
+
+    -- -- 计算当前显示的名称
+    -- local current_target_alias = "None"
+    -- if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
+    --   current_target_alias = GetMediaDBDisplayName(tree_state.target_mediadb)
+    -- end
+
+    -- if reaper.ImGui_BeginCombo(ctx, "##target_db_combo", current_target_alias, reaper.ImGui_ComboFlags_HeightLarge()) then
+    --   -- 选项无，取消目标
+    --   if reaper.ImGui_Selectable(ctx, "None", (tree_state.target_mediadb == nil or tree_state.target_mediadb == "")) then
+    --     tree_state.target_mediadb = nil
+    --     SM_SetState(EXT_SECTION, "target_mediadb", "", true) -- 清除保存的状态
+    --   end
+
+    --   -- 动态获取并排序数据库列表(只在展开时运行)
+    --   local db_list_temp = {}
+    --   local db_dir = script_path .. "SoundmoleDB"
+    --   local i = 0
+    --   while true do
+    --     local dbfile = reaper.EnumerateFiles(db_dir, i)
+    --     if not dbfile then break end
+    --     if dbfile:match("%.MoleFileList$") then
+    --       table.insert(db_list_temp, dbfile)
+    --     end
+    --     i = i + 1
+    --   end
+
+    --   -- 使用 mediadb_order 进行排序，保持与左侧列表顺序一致
+    --   local ordered_dbs = {}
+    --   if mediadb_order then
+    --     local exist_map = {}
+    --     for _, f in ipairs(db_list_temp) do exist_map[f] = true end
+    --     -- 加入已排序的
+    --     for _, name in ipairs(mediadb_order) do
+    --       if exist_map[name] then
+    --         table.insert(ordered_dbs, name)
+    --         exist_map[name] = nil -- 标记已处理
+    --       end
+    --     end
+    --     -- 加入未排序的新文件
+    --     for _, f in ipairs(db_list_temp) do
+    --       if exist_map[f] then table.insert(ordered_dbs, f) end
+    --     end
+    --   else
+    --     ordered_dbs = db_list_temp -- 无排序配置则直接使用
+    --     table.sort(ordered_dbs)
+    --   end
+
+    --   -- 渲染数据库列表选项
+    --   for _, dbfile in ipairs(ordered_dbs) do
+    --     local alias = GetMediaDBDisplayName(dbfile)
+    --     local is_selected = (tree_state.target_mediadb == dbfile)
+
+    --     if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##target_mediadb_" .. tostring(dbfile), is_selected) then
+    --       tree_state.target_mediadb = dbfile
+    --       SM_SetState(EXT_SECTION, "target_mediadb", dbfile, true) -- 保存选中状态
+    --     end
+    --     -- 鼠标悬停显示真实文件名提示
+    --     if reaper.ImGui_IsItemHovered(ctx) then
+    --       DrawTooltip("File: " .. dbfile)
+    --     end
+    --     -- 保持选中项在视野内
+    --     if is_selected then
+    --       reaper.ImGui_SetItemDefaultFocus(ctx)
+    --     end
+    --   end
+
+    --   reaper.ImGui_EndCombo(ctx)
+    -- end
+
+    -- -- 下拉框本身的悬停提示
+    -- if reaper.ImGui_IsItemHovered(ctx) then
+    --   DrawTooltip("Select a database as the target for 'Add to Database' actions.\nRight-click files in the list to add them to this target.")
+    -- end
+
+    -- 当前选中的数据库下拉菜单
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_AlignTextToFramePadding(ctx)
-    reaper.ImGui_TextColored(ctx, colors.mole, T("Target DB:")) -- 标签颜色使用 Mole 色
+    reaper.ImGui_TextColored(ctx, colors.mole, T("Selected DB:"))
     reaper.ImGui_SameLine(ctx)
-
-    reaper.ImGui_SetNextItemWidth(ctx, UIScale(150)) -- 设置下拉框宽度，可按需调整
-
-    -- 计算当前显示的名称
-    local current_target_alias = "None"
-    if tree_state.target_mediadb and tree_state.target_mediadb ~= "" then
-      current_target_alias = GetMediaDBDisplayName(tree_state.target_mediadb)
-    end
-
-    if reaper.ImGui_BeginCombo(ctx, "##target_db_combo", current_target_alias, reaper.ImGui_ComboFlags_HeightLarge()) then
-      -- 选项无，取消目标
-      if reaper.ImGui_Selectable(ctx, "None", (tree_state.target_mediadb == nil or tree_state.target_mediadb == "")) then
-        tree_state.target_mediadb = nil
-        SM_SetState(EXT_SECTION, "target_mediadb", "", true) -- 清除保存的状态
+    if collect_mode == COLLECT_MODE_MEDIADB then
+      local current_db_alias = T("No database selected.")
+      if tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
+        current_db_alias = GetMediaDBDisplayName(tree_state.cur_mediadb)
       end
-
-      -- 动态获取并排序数据库列表(只在展开时运行)
-      local db_list_temp = {}
-      local db_dir = script_path .. "SoundmoleDB"
-      local i = 0
-      while true do
-        local dbfile = reaper.EnumerateFiles(db_dir, i)
-        if not dbfile then break end
-        if dbfile:match("%.MoleFileList$") then
-          table.insert(db_list_temp, dbfile)
-        end
-        i = i + 1
-      end
-
-      -- 使用 mediadb_order 进行排序，保持与左侧列表顺序一致
-      local ordered_dbs = {}
-      if mediadb_order then
-        local exist_map = {}
-        for _, f in ipairs(db_list_temp) do exist_map[f] = true end
-        -- 加入已排序的
-        for _, name in ipairs(mediadb_order) do
-          if exist_map[name] then
-            table.insert(ordered_dbs, name)
-            exist_map[name] = nil -- 标记已处理
+      reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
+      if reaper.ImGui_BeginCombo(ctx, "##selected_db_combo", current_db_alias, reaper.ImGui_ComboFlags_HeightLarge()) then
+        for _, dbfile in ipairs(GetOrderedMediaDBFiles()) do
+          local alias = GetMediaDBDisplayName(dbfile)
+          local is_selected = (tree_state.cur_mediadb == dbfile)
+          if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##selected_mediadb_" .. tostring(dbfile), is_selected) then
+            SelectMediaDatabase(dbfile)
+          end
+          if reaper.ImGui_IsItemHovered(ctx) then
+            DrawTooltip("File: " .. dbfile)
+          end
+          if is_selected then
+            reaper.ImGui_SetItemDefaultFocus(ctx)
           end
         end
-        -- 加入未排序的新文件
-        for _, f in ipairs(db_list_temp) do
-          if exist_map[f] then table.insert(ordered_dbs, f) end
-        end
-      else
-        ordered_dbs = db_list_temp -- 无排序配置则直接使用
-        table.sort(ordered_dbs)
+        reaper.ImGui_EndCombo(ctx)
       end
+    else
+      reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
+      if reaper.ImGui_BeginCombo(ctx, "##selected_db_combo", T("Not in Database mode"), reaper.ImGui_ComboFlags_HeightLarge()) then
+        -- 仅作为提示显示，不允许选择
+        reaper.ImGui_BeginDisabled(ctx, true)
+        reaper.ImGui_Selectable(ctx, T("Not in Database mode") .. "##selected_mediadb_not_db_mode", true)
+        reaper.ImGui_EndDisabled(ctx)
+        reaper.ImGui_Separator(ctx)
+        -- 非数据库模式下，也允许选择数据库
+        for _, dbfile in ipairs(GetOrderedMediaDBFiles()) do
+          local alias = GetMediaDBDisplayName(dbfile)
+          if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##selected_mediadb_" .. tostring(dbfile), false) then
+            SelectMediaDatabase(dbfile)
+          end
+          if reaper.ImGui_IsItemHovered(ctx) then
+            DrawTooltip("File: " .. dbfile)
+          end
+        end
 
-      -- 渲染数据库列表选项
-      for _, dbfile in ipairs(ordered_dbs) do
-        local alias = GetMediaDBDisplayName(dbfile)
-        local is_selected = (tree_state.target_mediadb == dbfile)
-
-        if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##target_mediadb_" .. tostring(dbfile), is_selected) then
-          tree_state.target_mediadb = dbfile
-          SM_SetState(EXT_SECTION, "target_mediadb", dbfile, true) -- 保存选中状态
-        end
-        -- 鼠标悬停显示真实文件名提示
-        if reaper.ImGui_IsItemHovered(ctx) then
-          DrawTooltip("File: " .. dbfile)
-        end
-        -- 保持选中项在视野内
-        if is_selected then
-          reaper.ImGui_SetItemDefaultFocus(ctx)
-        end
+        reaper.ImGui_EndCombo(ctx)
       end
-
-      reaper.ImGui_EndCombo(ctx)
-    end
-
-    -- 下拉框本身的悬停提示
-    if reaper.ImGui_IsItemHovered(ctx) then
-      DrawTooltip("Select a database as the target for 'Add to Database' actions.\nRight-click files in the list to add them to this target.")
     end
 
     do
@@ -21888,9 +22216,11 @@ function loop()
                 -- 选区内 - 定位
                 Wave.play_cursor = mouse_time
                 wf_play_start_cursor = mouse_time
-                if playing_preview then
+                if IsPreviewActuallyPlaying() then
                   StopPreview()
                   PlayFromCursor(cur_info)
+                else
+                  MaybeAutoPlayWaveformClickWhenStopped(cur_info)
                 end
               else
                 -- 选区外 - 清空选区
@@ -21902,18 +22232,22 @@ function loop()
                 ResetWaveSelectionEdgeCursor()
                 Wave.play_cursor = mouse_time
                 wf_play_start_cursor = mouse_time
-                if playing_preview then
+                if IsPreviewActuallyPlaying() then
                   StopPreview()
                   PlayFromCursor(cur_info)
+                else
+                  MaybeAutoPlayWaveformClickWhenStopped(cur_info)
                 end
               end
             else
               -- 无选区 - 正常定位
               Wave.play_cursor = mouse_time
               wf_play_start_cursor = mouse_time
-              if playing_preview then
+              if IsPreviewActuallyPlaying() then
                 StopPreview()
                 PlayFromCursor(cur_info)
+              else
+                MaybeAutoPlayWaveformClickWhenStopped(cur_info)
               end
             end
           end

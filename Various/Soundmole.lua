@@ -1,10 +1,14 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.217
+-- @version 1.0.218
 -- @changelog
 --   Added a search history dropdown for quickly reusing recent searches from the button next to the search box.
 --   Added original Artwork preview in the main preview area. Hold Ctrl and click the cover to view it at its original size, and double click the preview window to close it quickly.
 --   Added database folder browsing mode, allowing database content to be viewed and filtered by its original folder structure.
+--   Added automatic playback from the clicked waveform position when idle, supported by both the main waveform and table waveforms while keeping the existing seek behavior during playback.
+--   Added Ctrl+LeftClick support on the sidebar button to collapse the PeakTree header and tree nodes.
+--   Added PeakTree visibility options in the Appearance page for Project Assets, Shortcuts, Favorites, Groups, and Recent Searches.
+--   Added a "Selected DB" dropdown to the main panel control bar for switching databases in Database mode.
 --   Improved the thesaurus button interaction, allowing click to toggle thesaurus search and Ctrl-click to edit the thesaurus.
 --   Fixed an issue where files navigated with the arrow keys in the table list were centered and played but not visually marked as selected.
 --   Soundmole now requires the dedicated Soundmole extension to run, and the Lua fallback path without the extension has been removed.
