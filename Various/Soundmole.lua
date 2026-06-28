@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.219
+-- @version 1.0.220
 -- @changelog
 --   Added a table context-menu action to add sample(s) to a new Cartridge track.
 --   Added a table context-menu action to load a sample into the active Cartridge instance.

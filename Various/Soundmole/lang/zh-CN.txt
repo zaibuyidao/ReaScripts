@@ -225,6 +225,11 @@ License=授权
 %d shown / %d total=已显示 %d 条 / 共 %d 条
 Load Sample(s) to New RS5K Track=将采样加载到新的 RS5K 轨道
 Set as Active RS5K Sample=设为活跃 RS5K 采样
+Load Sample(s) to New Cartridge Track=将采样添加到新的 Cartridge 轨道
+Load Sample to Active Cartridge Instance=将采样加载到活跃 Cartridge 实例
+Cartridge not found. Make sure it is installed.=未找到 Cartridge。请确认已安装。
+Unable to load sample into Cartridge.=无法将采样加载到 Cartridge。
+No open Cartridge instance found. Open Cartridge UI first, then run this action.=未找到已打开的 Cartridge 实例。请先打开 Cartridge 界面，然后再执行此操作。
 Add to Collections=添加到收藏夹
 (No Collections created)=(尚未创建收藏夹)
 
