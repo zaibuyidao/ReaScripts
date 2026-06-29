@@ -1,18 +1,11 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.220
+-- @version 1.0.221
 -- @changelog
---   Added a table context-menu action to add sample(s) to a new Cartridge track.
---   Added a table context-menu action to load a sample into the active Cartridge instance.
---   Added a search history dropdown for quickly reusing recent searches from the button next to the search box.
---   Added original Artwork preview in the main preview area. Hold Ctrl and click the cover to view it at its original size, and double click the preview window to close it quickly.
---   Added database folder browsing mode, allowing database content to be viewed and filtered by its original folder structure.
---   Added automatic playback from the clicked waveform position when idle, supported by both the main waveform and table waveforms while keeping the existing seek behavior during playback.
---   Added Ctrl+LeftClick support on the sidebar button to collapse the PeakTree header and tree nodes.
---   Added PeakTree visibility options in the Appearance page for Project Assets, Shortcuts, Favorites, Groups, and Recent Searches.
---   Added a "Selected DB" dropdown to the main panel control bar for switching databases in Database mode.
---   Improved the thesaurus button interaction, allowing click to toggle thesaurus search and Ctrl-click to edit the thesaurus.
---   Fixed an issue where files navigated with the arrow keys in the table list were centered and played but not visually marked as selected.
+--   Fixed an issue where Collapse All Folders did not fully collapse all folders.
+--   Fixed incorrect selection highlighting when browsing databases in Folder View.
+--   Fixed an issue where folders could not be expanded correctly in Database Folder View.
+--   Improved the folder tree by automatically hiding the expand arrow for folders without child nodes.
 --   Soundmole now requires the dedicated Soundmole extension to run, and the Lua fallback path without the extension has been removed.
 --   Soundmole native extension support: reaper_soundmole-x64.dll v0.0.31 for Windows and reaper_soundmole-arm64.dylib v0.0.2 for macOS.
 -- @reference

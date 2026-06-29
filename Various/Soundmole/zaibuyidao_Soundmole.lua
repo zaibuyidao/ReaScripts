@@ -8410,6 +8410,7 @@ local audio_types = { WAVE=true, MP3=true, FLAC=true, OGG=true, AIFF=true, APE=t
 tree_state = tree_state or { cur_path = '', sel_audio = '' }
 local tree_open = {}
 local dir_cache = {}
+local dir_has_subdir_cache = {}
 local drive_cache = nil
 local drives_loaded = false
 local audio_file_cache = {}
@@ -8430,6 +8431,7 @@ function ForceRescan()
   local prev_mode = collect_mode
   -- 清空目录/文件缓存
   dir_cache        = {}
+  dir_has_subdir_cache = {}
   audio_file_cache = {}
   tree_open        = {}
   files_idx_cache  = nil
@@ -8660,7 +8662,34 @@ function list_dir(path)
 
   table.sort(dirs)
   table.sort(audios)
+  if dir_has_subdir_cache then dir_has_subdir_cache[path] = #dirs > 0 end
   return dirs, audios, ok
+end
+
+function HasVisibleSubdir(path)
+  path = normalize_path(path, true)
+  local cache = dir_cache and dir_cache[path]
+  if cache and cache.dirs then
+    local has_subdir = #cache.dirs > 0
+    if dir_has_subdir_cache then dir_has_subdir_cache[path] = has_subdir end
+    return has_subdir
+  end
+
+  local cached = dir_has_subdir_cache and dir_has_subdir_cache[path]
+  if cached ~= nil then return cached end
+
+  local i = 0
+  while true do
+    local subdir = reaper.EnumerateSubdirectories(path, i)
+    if not subdir then break end
+    if not ignored_sys_folders[subdir] and not subdir:match("^%.") and not subdir:match("^%$") then
+      if dir_has_subdir_cache then dir_has_subdir_cache[path] = true end
+      return true
+    end
+    i = i + 1
+  end
+  if dir_has_subdir_cache then dir_has_subdir_cache[path] = false end
+  return false
 end
 
 function IsExistingDirectory(path)
@@ -8746,7 +8775,11 @@ function draw_tree(name, path, depth)
 
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
   local highlight = (tree_state.cur_path == path) and reaper.ImGui_TreeNodeFlags_Selected() or 0
-  SM_ForceNextPeakTreeNodeClosed()
+  local has_child_dirs = HasVisibleSubdir(path)
+  if not has_child_dirs then
+    flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
+  end
+  if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("tree:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##" .. path, flags | highlight)
 
   -- 此电脑右键菜单
@@ -8772,7 +8805,7 @@ function draw_tree(name, path, depth)
     end
   end
 
-  if node_open then
+  if node_open and has_child_dirs then
     if not dir_cache[path] then
       local dirs, audios, ok = list_dir(path)
       dir_cache[path] = {dirs=dirs, audios=audios, ok=ok}
@@ -8902,7 +8935,11 @@ function draw_shortcut_tree(sc, base_path, depth)
     flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
   end
 
-  SM_ForceNextPeakTreeNodeClosed()
+  local has_child_dirs = HasVisibleSubdir(path)
+  if not has_child_dirs then
+    flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
+  end
+  if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_" .. path, flags | highlight)
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
@@ -8988,7 +9025,7 @@ function draw_shortcut_tree(sc, base_path, depth)
   end
 
   -- 递归绘制子文件夹
-  if node_open then
+  if node_open and has_child_dirs then
     if not dir_cache[path] then
       local dirs, audios, ok = list_dir(path)
       dir_cache[path] = {dirs=dirs, audios=audios, ok=ok}
@@ -9398,6 +9435,7 @@ function draw_advanced_folder_node(id, selected_id, depth)
   local node = advanced_folders[id]
   if not node then return end
   depth = depth or 0
+  local has_children = (node.children and #node.children > 0)
   -- 仅在 COLLECT_MODE_ADVANCEDFOLDER 模式下高亮
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes() -- reaper.ImGui_TreeNodeFlags_OpenOnArrow() -- 使用OpenOnArrow()将只能点击箭头有效。
   if collect_mode == COLLECT_MODE_ADVANCEDFOLDER and selected_id == id then -- 去掉 collect_mode == COLLECT_MODE_ADVANCEDFOLDER 则保持高亮
@@ -9407,8 +9445,11 @@ function draw_advanced_folder_node(id, selected_id, depth)
   if expanded_ids[id] then
     flags = flags | reaper.ImGui_TreeNodeFlags_DefaultOpen()
   end
+  if not has_children then
+    flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
+  end
 
-  SM_ForceNextPeakTreeNodeClosed()
+  if has_children then SM_ForceNextPeakTreeNodeClosed("collection:" .. tostring(id)) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##" .. id, flags)
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
@@ -9527,9 +9568,7 @@ function draw_advanced_folder_node(id, selected_id, depth)
   end
 
   -- 递归子节点，画虚线
-  if node_open then
-    local has_children = (node.children and #node.children > 0)
-
+  if node_open and has_children then
     -- 支持绘制虚线
     local pushed = false
     if has_children then
@@ -10326,6 +10365,7 @@ function CommitPreviewFolderRoot(path)
   preview_folder_root = root
   SM_SetState(EXT_SECTION, "preview_folder_root", root, true)
   dir_cache[root] = nil
+  if dir_has_subdir_cache then dir_has_subdir_cache[root] = nil end
   return true
 end
 
@@ -10340,6 +10380,10 @@ function draw_preview_folder_tree(name, path, depth)
   if tree_state.cur_path == path then
     flags = flags | reaper.ImGui_TreeNodeFlags_Selected()
   end
+  local has_child_dirs = HasVisibleSubdir(path)
+  if not has_child_dirs then
+    flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
+  end
 
   local label = ImGuiEscapeVisibleLabel(name or GetFolderName(path)) .. "##preview_folder_tree_" .. path
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
@@ -10349,7 +10393,7 @@ function draw_preview_folder_tree(name, path, depth)
     OpenPreviewFolderPath(path)
   end
 
-  if node_open then
+  if node_open and has_child_dirs then
     if not dir_cache[path] then
       local dirs, audios, ok = list_dir(path)
       dir_cache[path] = { dirs = dirs, audios = audios, ok = ok }
@@ -13844,8 +13888,12 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
   end
 
   local label = ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_mirror_" .. tostring(root_idx) .. path
+  local has_child_dirs = HasVisibleSubdir(path)
+  if not has_child_dirs then
+    flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
+  end
 
-  SM_ForceNextPeakTreeNodeClosed()
+  if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut_mirror:" .. tostring(root_idx) .. ":" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
@@ -13880,7 +13928,7 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
     reaper.ImGui_EndPopup(ctx)
   end
 
-  if node_open then
+  if node_open and has_child_dirs then
     if not dir_cache[path] then
       local dirs, audios, ok = list_dir(path)
       dir_cache[path] = { dirs = dirs, audios = audios, ok = ok }
@@ -15527,10 +15575,16 @@ function DBPF_DrawDirTreeRecursive(dir, display_name)
 
   reaper.ImGui_PushID(ctx, dir)
   if has_child then
-    SM_ForceNextPeakTreeNodeClosed()
+    if selected then
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+    end
+    SM_ForceNextPeakTreeNodeClosed("dbpf:" .. dir)
     local open = reaper.ImGui_TreeNode(ctx, label, flags)
     if reaper.ImGui_IsItemClicked(ctx, 0) then
       DBPF_ApplyPathFilter(dir)
+    end
+    if selected then
+      reaper.ImGui_PopStyleColor(ctx, 1)
     end
     if open then
       for _, child in ipairs(subs) do
@@ -15541,9 +15595,15 @@ function DBPF_DrawDirTreeRecursive(dir, display_name)
     end
   else
     flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
+    if selected then
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+    end
     reaper.ImGui_TreeNode(ctx, label, flags)
     if reaper.ImGui_IsItemClicked(ctx, 0) then
       DBPF_ApplyPathFilter(dir)
+    end
+    if selected then
+      reaper.ImGui_PopStyleColor(ctx, 1)
     end
   end
   reaper.ImGui_PopID(ctx)
@@ -15708,19 +15768,21 @@ function SM_ForceNextPeakTreeHeaderClosed()
   end
 end
 
-function SM_ForceNextPeakTreeNodeClosed()
+function SM_ForceNextPeakTreeNodeClosed(node_key)
   if _G._peektree_force_close_tree_once and reaper.ImGui_SetNextItemOpen then
+    local closed_nodes = _G._peektree_force_closed_nodes or {}
+    _G._peektree_force_closed_nodes = closed_nodes
+    local key = node_key and tostring(node_key) or nil
+    if key and closed_nodes and closed_nodes[key] then return end
     reaper.ImGui_SetNextItemOpen(ctx, false, reaper.ImGui_Cond_Always())
+    if key and closed_nodes then closed_nodes[key] = true end
     _G._peektree_force_close_tree_used = true
   end
 end
 
 function SM_FinishPeakTreeForceClosePass()
   _G._peektree_force_close_headers_once = false
-  if _G._peektree_force_close_tree_used then
-    _G._peektree_force_close_tree_once = false
-    _G._peektree_force_close_tree_used = false
-  end
+  _G._peektree_force_close_tree_used = false
 end
 
 function CollapseAllPeakTreeFolders()
@@ -15750,6 +15812,7 @@ function CollapseAllPeakTreeFolders()
   _G._mediadb_force_open_state = false
   _G._peektree_force_close_headers_once = true
   _G._peektree_force_close_tree_once = true
+  _G._peektree_force_closed_nodes = {}
   _G._peektree_force_close_tree_used = false
 
   SM_SetState(EXT_SECTION, "project_header_open", "false", true)
@@ -18627,10 +18690,16 @@ function loop()
 
               if browse_database_as_folders then
                 local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
-                if is_selected then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() | reaper.ImGui_TreeNodeFlags_DefaultOpen() end
-                SM_ForceNextPeakTreeNodeClosed()
+                if is_selected then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() end
+                if is_selected then
+                  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
+                end
+                SM_ForceNextPeakTreeNodeClosed("mediadb:" .. tostring(dbfile))
                 node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(alias) .. "##mediadb_tree_" .. tostring(dbfile), flags)
                 db_clicked = reaper.ImGui_IsItemClicked(ctx, 0)
+                if is_selected then
+                  reaper.ImGui_PopStyleColor(ctx, 1)
+                end
               else
                 if is_selected then
                   -- PeakTree选中状态高亮
@@ -18917,8 +18986,8 @@ function loop()
 
                   if browse_database_as_folders then
                     local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
-                    if is_sel then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() | reaper.ImGui_TreeNodeFlags_DefaultOpen() end
-                    SM_ForceNextPeakTreeNodeClosed()
+                    if is_sel then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() end
+                    SM_ForceNextPeakTreeNodeClosed("reaperdb:" .. tostring(fn))
                     node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_tree_" .. fn, flags)
                     db_clicked = reaper.ImGui_IsItemClicked(ctx, 0)
                   else
@@ -19534,8 +19603,13 @@ function loop()
                 reaper.ImGui_PushID(ctx, "node_" .. id)
 
                 if node.type == "folder" then
+                  local has_children = node.children and #node.children > 0
                   local flags = reaper.ImGui_TreeNodeFlags_SpanAllColumns()
-                  reaper.ImGui_SetNextItemOpen(ctx, force_open or node.open, reaper.ImGui_Cond_Always())
+                  if not has_children then
+                    flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
+                  else
+                    reaper.ImGui_SetNextItemOpen(ctx, force_open or node.open, reaper.ImGui_Cond_Always())
+                  end
 
                   local is_node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##saved_search_folder_" .. tostring(id), flags)
 
@@ -19544,7 +19618,7 @@ function loop()
                     HandleDragDropTarget(id, true)
                   end
 
-                  if reaper.ImGui_IsItemToggledOpen(ctx) and not is_filtering then
+                  if has_children and reaper.ImGui_IsItemToggledOpen(ctx) and not is_filtering then
                     node.open = not node.open
                     SaveTreeData()
                   end
@@ -19576,7 +19650,7 @@ function loop()
                     reaper.ImGui_EndPopup(ctx)
                   end
 
-                  if is_node_open then
+                  if is_node_open and has_children then
                     DrawSavedSearchTree(node.children, (depth or 0) + 1, filter_str)
                     reaper.ImGui_TreePop(ctx)
                   end
