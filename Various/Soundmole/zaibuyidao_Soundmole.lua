@@ -413,7 +413,7 @@ local TableColumns = {
 local saved_lang = SM_GetState(EXT_SECTION, "language")
 if saved_lang == "" then saved_lang = "en-US" end
 L.load(saved_lang)
-function T(str) return L.get(str) end
+function T(str, ...) return L.get(str, ...) end
 
 previewed_files = {} -- 预览已读标记
 function MarkPreviewed(path) previewed_files[path] = true end
@@ -8745,6 +8745,7 @@ function draw_tree(name, path, depth)
   if not has_child_dirs then
     flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
   end
+  if has_child_dirs then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
   if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("tree:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##" .. path, flags | highlight)
 
@@ -8769,6 +8770,10 @@ function draw_tree(name, path, depth)
       files_idx_cache = GetAudioFilesFromDirCached(path)
       selected_row = nil
     end
+  end
+
+  if node_open and has_child_dirs and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+    SM_RequestCollapseCachedPathBranch(path, "tree")
   end
 
   if node_open and has_child_dirs then
@@ -8905,6 +8910,7 @@ function draw_shortcut_tree(sc, base_path, depth)
   if not has_child_dirs then
     flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
   end
+  if has_child_dirs then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
   if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_" .. path, flags | highlight)
   -- 捕获本行矩形与中心y
@@ -8918,6 +8924,10 @@ function draw_shortcut_tree(sc, base_path, depth)
     collect_mode = COLLECT_MODE_SHORTCUT
     files_idx_cache = GetAudioFilesFromDirCached(path)
     selected_row = nil
+  end
+
+  if node_open and has_child_dirs and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+    SM_RequestCollapseCachedPathBranch(path, "shortcut")
   end
 
   -- 右键菜单
@@ -9415,6 +9425,7 @@ function draw_advanced_folder_node(id, selected_id, depth)
     flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
   end
 
+  if has_children then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
   if has_children then SM_ForceNextPeakTreeNodeClosed("collection:" .. tostring(id)) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##" .. id, flags)
   -- 捕获本行矩形与中心y
@@ -9434,6 +9445,9 @@ function draw_advanced_folder_node(id, selected_id, depth)
     -- 清空多选状态
     ClearFileSelection()
     selected_row = -1
+  end
+  if node_open and has_children and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+    SM_RequestCollapseCollectionBranch(id)
   end
   -- 右键菜单
   if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -13859,6 +13873,7 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
     flags = flags | reaper.ImGui_TreeNodeFlags_Leaf() | reaper.ImGui_TreeNodeFlags_NoTreePushOnOpen()
   end
 
+  if has_child_dirs then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
   if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut_mirror:" .. tostring(root_idx) .. ":" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
   -- 捕获本行矩形与中心y
@@ -13880,6 +13895,10 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
     local static = _G._soundmole_static or {}
     _G._soundmole_static = static
     static.filtered_list_map, static.last_filter_text_map = {}, {}
+  end
+
+  if node_open and has_child_dirs and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+    SM_RequestCollapseCachedPathBranch(path, "shortcut_mirror", root_idx)
   end
 
   if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -15538,6 +15557,7 @@ function DBPF_DrawDirTreeRecursive(dir, display_name)
   local selected = DBPF_PathKey(_G._db_path_prefix_filter or "") == DBPF_PathKey(dir)
   local flags = reaper.ImGui_TreeNodeFlags_SpanAvailWidth() | reaper.ImGui_TreeNodeFlags_DrawLinesToNodes()
   if selected then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() end
+  if has_child then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
 
   reaper.ImGui_PushID(ctx, dir)
   if has_child then
@@ -15548,6 +15568,9 @@ function DBPF_DrawDirTreeRecursive(dir, display_name)
     local open = reaper.ImGui_TreeNode(ctx, label, flags)
     if reaper.ImGui_IsItemClicked(ctx, 0) then
       DBPF_ApplyPathFilter(dir)
+    end
+    if open and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+      SM_RequestCollapseDBPFBranch(dir)
     end
     if selected then
       reaper.ImGui_PopStyleColor(ctx, 1)
@@ -15721,11 +15744,117 @@ if album_panel_active_tab ~= "metadata" then album_panel_active_tab = "album" en
 album_panel_tab_restore_pending = true
 
 function SM_IsCtrlDown()
+  local mods = reaper.ImGui_GetKeyMods and reaper.ImGui_GetKeyMods(ctx) or 0
+  if IsMacOS() then
+    local left_alt = reaper.ImGui_Key_LeftAlt and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftAlt())
+    local right_alt = reaper.ImGui_Key_RightAlt and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightAlt())
+    local alt_mod = reaper.ImGui_Mod_Alt and reaper.ImGui_Mod_Alt() or 0
+    return left_alt or right_alt or (alt_mod ~= 0 and ((mods & alt_mod) ~= 0))
+  end
+
   local left = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl())
   local right = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
-  local mods = reaper.ImGui_GetKeyMods and reaper.ImGui_GetKeyMods(ctx) or 0
   local ctrl_mod = reaper.ImGui_Mod_Ctrl and reaper.ImGui_Mod_Ctrl() or 0
   return left or right or (ctrl_mod ~= 0 and ((mods & ctrl_mod) ~= 0))
+end
+
+function SM_GetPrimaryModifierLabel()
+  return IsMacOS() and "Option" or "CTRL"
+end
+
+function SM_PeekTreeFlagsForCtrlBranch(flags)
+  if SM_IsCtrlDown() and reaper.ImGui_TreeNodeFlags_OpenOnArrow then
+    flags = flags | reaper.ImGui_TreeNodeFlags_OpenOnArrow()
+  end
+  return flags
+end
+
+local function SM_PeekTreeBranchPathKey(path)
+  local key = tostring(path or ""):gsub("[/\\]+$", "")
+  if reaper.GetOS():find("Win") then key = key:lower() end
+  return key
+end
+
+local function SM_PeekTreeIsDescendantPath(path, base)
+  local child_key = SM_PeekTreeBranchPathKey(path)
+  local base_key = SM_PeekTreeBranchPathKey(base)
+  if child_key == "" or base_key == "" or child_key == base_key then return false end
+  if child_key:sub(1, #base_key) ~= base_key then return false end
+  local next_ch = child_key:sub(#base_key + 1, #base_key + 1)
+  return next_ch == "/" or next_ch == "\\"
+end
+
+function SM_RequestClosePeakTreeNode(node_key)
+  if not node_key then return end
+  local key = tostring(node_key)
+  local targets = _G._peektree_force_close_tree_targets or {}
+  _G._peektree_force_close_tree_targets = targets
+  targets[key] = true
+  if _G._peektree_force_closed_nodes then
+    _G._peektree_force_closed_nodes[key] = nil
+  end
+end
+
+function SM_RequestCollapseCachedPathBranch(path, node_prefix, root_idx)
+  path = normalize_path(path or "", true)
+  if path == "" then return end
+
+  local function make_node_key(child_path, child_idx)
+    if node_prefix == "shortcut_mirror" then
+      return "shortcut_mirror:" .. tostring(child_idx or root_idx or "") .. ":" .. child_path
+    end
+    return tostring(node_prefix) .. ":" .. child_path
+  end
+
+  local function walk(parent_path)
+    local cache = dir_cache and dir_cache[parent_path]
+    if not cache then return end
+    for idx, sub in ipairs(cache.dirs or {}) do
+      local child_path = normalize_path(parent_path .. sep .. sub, true)
+      SM_RequestClosePeakTreeNode(make_node_key(child_path, idx))
+      walk(child_path)
+    end
+  end
+
+  walk(path)
+  if expanded_paths then
+    for expanded_path in pairs(expanded_paths) do
+      if SM_PeekTreeIsDescendantPath(expanded_path, path) then
+        expanded_paths[expanded_path] = nil
+      end
+    end
+  end
+end
+
+function SM_RequestCollapseCollectionBranch(id)
+  local function walk(parent_id)
+    local node = advanced_folders and advanced_folders[parent_id]
+    if not node then return end
+    for _, child_id in ipairs(node.children or {}) do
+      SM_RequestClosePeakTreeNode("collection:" .. tostring(child_id))
+      if expanded_ids then expanded_ids[child_id] = nil end
+      walk(child_id)
+    end
+  end
+  walk(id)
+end
+
+function SM_RequestCollapseDBPFBranch(dir)
+  dir = normalize_path(dir or "", true)
+  if dir == "" then return end
+  local visited = {}
+  local function walk(parent_dir)
+    if visited[parent_dir] then return end
+    visited[parent_dir] = true
+    local subs = DBPF_State and DBPF_State.subdir_cache and DBPF_State.subdir_cache[parent_dir]
+    if not subs then return end
+    for _, child in ipairs(subs) do
+      local child_dir = normalize_path(child, true)
+      SM_RequestClosePeakTreeNode("dbpf:" .. child_dir)
+      walk(child_dir)
+    end
+  end
+  walk(dir)
 end
 
 function SM_ForceNextPeakTreeHeaderClosed()
@@ -15735,12 +15864,15 @@ function SM_ForceNextPeakTreeHeaderClosed()
 end
 
 function SM_ForceNextPeakTreeNodeClosed(node_key)
-  if _G._peektree_force_close_tree_once and reaper.ImGui_SetNextItemOpen then
+  local key = node_key and tostring(node_key) or nil
+  local targets = _G._peektree_force_close_tree_targets
+  local close_target = key and targets and targets[key]
+  if (close_target or _G._peektree_force_close_tree_once) and reaper.ImGui_SetNextItemOpen then
     local closed_nodes = _G._peektree_force_closed_nodes or {}
     _G._peektree_force_closed_nodes = closed_nodes
-    local key = node_key and tostring(node_key) or nil
-    if key and closed_nodes and closed_nodes[key] then return end
+    if key and closed_nodes and closed_nodes[key] and not close_target then return end
     reaper.ImGui_SetNextItemOpen(ctx, false, reaper.ImGui_Cond_Always())
+    if close_target and targets then targets[key] = nil end
     if key and closed_nodes then closed_nodes[key] = true end
     _G._peektree_force_close_tree_used = true
   end
@@ -15748,6 +15880,12 @@ end
 
 function SM_FinishPeakTreeForceClosePass()
   _G._peektree_force_close_headers_once = false
+  local targets = _G._peektree_force_close_tree_targets
+  if targets then
+    local has_target = false
+    for _ in pairs(targets) do has_target = true break end
+    if not has_target then _G._peektree_force_close_tree_targets = nil end
+  end
   _G._peektree_force_close_tree_used = false
 end
 
@@ -15779,6 +15917,7 @@ function CollapseAllPeakTreeFolders()
   _G._peektree_force_close_headers_once = true
   _G._peektree_force_close_tree_once = true
   _G._peektree_force_closed_nodes = {}
+  _G._peektree_force_close_tree_targets = nil
   _G._peektree_force_close_tree_used = false
 
   SM_SetState(EXT_SECTION, "project_header_open", "false", true)
@@ -15831,7 +15970,7 @@ function SM_DrawLeftTableToggle(ctx)
     if SM_IsCtrlDown() then
       reaper.ImGui_Text(ctx, T("Collapse all folders"))
     else
-      reaper.ImGui_Text(ctx, LEFT_TABLE_VISIBLE and T("Click to hide the left table or Hold CTRL to Collapse All Folders") or T("Click to show the left table or Hold CTRL to Collapse All Folders"))
+      reaper.ImGui_Text(ctx, LEFT_TABLE_VISIBLE and T("Click to hide the left table or Hold %s to Collapse All Folders", SM_GetPrimaryModifierLabel()) or T("Click to show the left table or Hold %s to Collapse All Folders", SM_GetPrimaryModifierLabel()))
     end
     reaper.ImGui_EndTooltip(ctx)
   end
@@ -16403,7 +16542,7 @@ function loop()
       end
 
       if clicked and can_any then
-        local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+        local ctrl = SM_IsCtrlDown()
 
         if ctrl then
           -- Ctrl+点击：下一条
@@ -16427,7 +16566,7 @@ function loop()
       if hovered then
         reaper.ImGui_BeginTooltip(ctx)
 
-        local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+        local ctrl = SM_IsCtrlDown()
 
         if ctrl then
           if can_next then
@@ -16437,7 +16576,7 @@ function loop()
           end
         else
           if can_prev then
-            reaper.ImGui_Text(ctx, T("Previous Search or Hold CTRL for Next Search"))
+            reaper.ImGui_Text(ctx, T("Previous Search or Hold %s for Next Search", SM_GetPrimaryModifierLabel()))
           else
             reaper.ImGui_TextDisabled(ctx, T("No previous search"))
           end
@@ -16730,7 +16869,7 @@ function loop()
       local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
 
       if reaper.ImGui_InvisibleButton(ctx, "##open_thesaurus", button_w, button_h) then
-        local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Mod_Ctrl())
+        local ctrl = SM_IsCtrlDown()
         if ctrl then
           reaper.CF_ShellExecute(thesaurus_csv_path)
         else
@@ -16745,11 +16884,11 @@ function loop()
       if hovered then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
         reaper.ImGui_BeginTooltip(ctx)
-        local ctrl = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl())
+        local ctrl = SM_IsCtrlDown()
         if ctrl then
           reaper.ImGui_Text(ctx, T("Edit thesaurus"))
         else
-          reaper.ImGui_Text(ctx, T("Enable Thesaurus or Hold CTRL to Edit Thesaurus"))
+          reaper.ImGui_Text(ctx, T("Enable Thesaurus or Hold %s to Edit Thesaurus", SM_GetPrimaryModifierLabel()))
         end
         reaper.ImGui_EndTooltip(ctx)
       end

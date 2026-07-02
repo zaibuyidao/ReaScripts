@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.222
+-- @version 1.0.223
 -- @changelog
---   Optimized the Soundmole extension version check logic.
+--   Added Ctrl/Option-click branch collapse logic, allowing expanded or cached child branches to collapse while keeping the current folder and its parent folders open.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
