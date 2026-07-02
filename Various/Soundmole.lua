@@ -1,13 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.221
+-- @version 1.0.222
 -- @changelog
---   Fixed an issue where Collapse All Folders did not fully collapse all folders.
---   Fixed incorrect selection highlighting when browsing databases in Folder View.
---   Fixed an issue where folders could not be expanded correctly in Database Folder View.
---   Improved the folder tree by automatically hiding the expand arrow for folders without child nodes.
---   Soundmole now requires the dedicated Soundmole extension to run, and the Lua fallback path without the extension has been removed.
---   Soundmole native extension support: reaper_soundmole-x64.dll v0.0.31 for Windows and reaper_soundmole-arm64.dylib v0.0.2 for macOS.
+--   Optimized the Soundmole extension version check logic.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

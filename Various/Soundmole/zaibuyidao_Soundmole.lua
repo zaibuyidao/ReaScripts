@@ -2,105 +2,71 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_WIN_VERSION = "v0.0.31"
-SM_EXT_MAC_VERSION = "v0.0.2"
-SM_MISSING_REQUIRED_APIS = {}
-do
-  local required_apis = {
-    "SM_Builder_GetInfo",
-    "SM_Builder_GetStatusString",
-    "SM_Builder_RunSlice",
-    "SM_Builder_Start",
-    "SM_Builder_StartIncremental",
-    "SM_Builder_Stop",
-    "SM_BuildWaveformCache",
-    "SM_Cover_Ensure",
-    "SM_CoverIndex_GetStatusJSON",
-    "SM_CoverIndex_RunSlice",
-    "SM_CoverIndex_Start",
-    "SM_CoverIndex_Stop",
-    "SM_DB_AppendRawRecords",
-    "SM_DB_Filter",
-    "SM_DB_FindIndexByPath",
-    "SM_DB_GetCount",
-    "SM_DB_GetNextBatchRaw",
-    "SM_DB_GetRootsRaw",
-    "SM_DB_GetRowRaw",
-    "SM_DB_GetRowRawByPath",
-    "SM_DB_ListSubdirsRaw",
-    "SM_DB_Load",
-    "SM_DB_ReadRootsRaw",
-    "SM_DB_Release",
-    "SM_DB_RemovePaths",
-    "SM_DB_Sort",
-    "SM_DropMediaFiles",
-    "SM_GetPeaksCSV",
-    "SM_GetTableWaveformCachePath",
-    "SM_GetWaveformCachePath",
-    "SM_ListDirBegin",
-    "SM_ListDirEnd",
-    "SM_ListDirNextJSON",
-    "SM_ProbeMediaBegin",
-    "SM_ProbeMediaEnd",
-    "SM_ProbeMediaNextJSONEx",
-    "SM_SetCacheBaseDir",
-    "SM_SIM_Builder_GetStatusJSON",
-    "SM_SIM_Builder_RunSlice",
-    "SM_SIM_Builder_StartWithPython",
-    "SM_SIM_Builder_Stop",
-    "SM_SIM_GetResultJSON",
-    "SM_SIM_QueryByPathFromIndex",
-    "SM_SIM_Release",
-    "SM_SIM_Setup_GetStatusJSON",
-    "SM_SIM_Setup_RunSlice",
-    "SM_SIM_Setup_StartWithProfile",
-    "SM_SIM_Setup_Stop",
-    "SM_WFC_Begin",
-    "SM_WFC_BeginTable",
-    "SM_WFC_Cancel",
-    "SM_WFC_GetPartial",
-    "SM_WFC_GetPathIfReady",
-    "SM_WFC_Pump",
-  }
+SM_EXT_REQUIRED_VERSION = "0.0.35"
+SM_EXT_RELEASE_URL = "https://stash.reaper.fm/v/52517/soundmole-extension.zip"
+SM_EXT_INSTALLED_VERSION = nil
 
-  for _, api_name in ipairs(required_apis) do
-    if not reaper.APIExists(api_name) then
-      SM_MISSING_REQUIRED_APIS[#SM_MISSING_REQUIRED_APIS + 1] = api_name
-    end
+function SM_NormalizeVersion(version)
+  local parts = {}
+  version = tostring(version or ""):match("%d+%.%d+%.%d+") or ""
+  for part in version:gmatch("%d+") do
+    parts[#parts + 1] = tonumber(part) or 0
   end
+  return parts
 end
-SM_EXT_REQUIRED = #SM_MISSING_REQUIRED_APIS == 0
-function SM_CheckRequiredExtension()
-  if SM_EXT_REQUIRED then return true end
 
+function SM_CompareVersions(left, right)
+  local a = SM_NormalizeVersion(left)
+  local b = SM_NormalizeVersion(right)
+  for i = 1, math.max(#a, #b, 3) do
+    local av = a[i] or 0
+    local bv = b[i] or 0
+    if av ~= bv then return av < bv and -1 or 1 end
+  end
+  return 0
+end
+
+function SM_GetPlatformLabel()
   local os_name = tostring(reaper.GetOS and reaper.GetOS() or "")
-  local is_windows = os_name:find("Win", 1, true) ~= nil
-  local download_url
-  local download_label
-  local platform_label
+  local lower = os_name:lower()
+  if lower:find("win", 1, true) then return "Windows" end
+  if lower:find("osx", 1, true) or lower:find("mac", 1, true) then return "macOS" end
+  if lower:find("linux", 1, true) then return "Linux" end
+  return os_name ~= "" and os_name or "this system"
+end
 
-  if is_windows then
-    download_url = "https://stash.reaper.fm/v/50782/reaper_soundmole-x64.dll"
-    download_label = "reaper_soundmole-x64.dll " .. SM_EXT_WIN_VERSION .. " (Windows)"
-    platform_label = "Windows"
-  else
-    download_url = "https://stash.reaper.fm/v/52429/reaper_soundmole-arm64.dylib"
-    download_label = "reaper_soundmole-arm64.dylib " .. SM_EXT_MAC_VERSION .. " (macOS, Apple Silicon arm64)"
-    platform_label = "macOS"
+function SM_GetInstalledExtensionVersion()
+  if not (reaper.APIExists and reaper.APIExists("SM_GetVersion") and reaper.SM_GetVersion) then
+    return nil
+  end
+  local ok, version = pcall(reaper.SM_GetVersion)
+  if not ok then return nil end
+  version = tostring(version or "")
+  if version == "" then return nil end
+  return version
+end
+
+function SM_CheckRequiredExtension()
+  SM_EXT_INSTALLED_VERSION = SM_GetInstalledExtensionVersion()
+  if SM_EXT_INSTALLED_VERSION and SM_CompareVersions(SM_EXT_INSTALLED_VERSION, SM_EXT_REQUIRED_VERSION) >= 0 then
+    return true
   end
 
+  local platform_label = SM_GetPlatformLabel()
+  local installed_label = SM_EXT_INSTALLED_VERSION or "not detected"
   local message =
-    "Soundmole requires the latest matching Soundmole extension. The extension is missing or too old.\n\n" ..
-    -- platform_label .. ":\n" ..
-    download_label .. "\n" ..
-    download_url .. "\n\n" ..
-    "Install the file into REAPER/UserPlugins, restart REAPER, then run Soundmole again.\n" ..
-    ((#SM_MISSING_REQUIRED_APIS > 0) and ("\nMissing APIs:\n" .. table.concat(SM_MISSING_REQUIRED_APIS, "\n") .. "\n\n") or "") ..
-    "Click OK to open the recommended download for this system."
+    "Soundmole requires Soundmole extension " .. SM_EXT_REQUIRED_VERSION .. " or newer.\n\n" ..
+    "Installed extension version: " .. installed_label .. "\n" ..
+    "Required extension version: " .. SM_EXT_REQUIRED_VERSION .. "\n" ..
+    "Platform: " .. platform_label .. "\n\n" ..
+    "Install the matching Soundmole extension from:\n" ..
+    SM_EXT_RELEASE_URL .. "\n\n" ..
+    "Put the extension file into REAPER/UserPlugins, restart REAPER, then run Soundmole again.\n\n" ..
+    "Click OK to open the release page."
 
-  local response = reaper.MB(message, "Soundmole Extension Required", 1)
+  local response = reaper.MB(message, "Soundmole Extension Update Required", 1)
   if response == 1 and reaper.CF_ShellExecute then
-    reaper.CF_ShellExecute(download_url)
+    reaper.CF_ShellExecute(SM_EXT_RELEASE_URL)
   end
   return false
 end
