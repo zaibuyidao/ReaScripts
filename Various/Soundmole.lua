@@ -1,7 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.223
+-- @version 1.0.224
 -- @changelog
+--   Added Shift click support for same level branch collapse, allowing expanded or cached branches on the clicked subfolder’s level to collapse together.
 --   Added Ctrl/Option-click branch collapse logic, allowing expanded or cached child branches to collapse while keeping the current folder and its parent folders open.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

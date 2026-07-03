@@ -8731,7 +8731,7 @@ function ImGuiEscapeVisibleLabel(text)
 end
 
 -- 树状目录
-function draw_tree(name, path, depth)
+function draw_tree(name, path, depth, parent_path)
   path = normalize_path(path, true)
   depth = depth or 0
   local show_name = name
@@ -8774,6 +8774,8 @@ function draw_tree(name, path, depth)
 
   if node_open and has_child_dirs and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
     SM_RequestCollapseCachedPathBranch(path, "tree")
+  elseif parent_path and SM_IsShiftDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+    SM_RequestCollapseCachedPathBranch(parent_path, "tree")
   end
 
   if node_open and has_child_dirs then
@@ -8792,7 +8794,7 @@ function draw_tree(name, path, depth)
 
     for _, sub in ipairs(cache.dirs) do
       local sub_path = normalize_path(path .. sep .. sub, true)
-      draw_tree(sub, sub_path, depth + 1)
+      draw_tree(sub, sub_path, depth + 1, path)
     end
 
     if pushed then
@@ -8928,6 +8930,8 @@ function draw_shortcut_tree(sc, base_path, depth)
 
   if node_open and has_child_dirs and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
     SM_RequestCollapseCachedPathBranch(path, "shortcut")
+  elseif base_path and SM_IsShiftDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+    SM_RequestCollapseCachedPathBranch(base_path, "shortcut")
   end
 
   -- 右键菜单
@@ -9448,6 +9452,8 @@ function draw_advanced_folder_node(id, selected_id, depth)
   end
   if node_open and has_children and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
     SM_RequestCollapseCollectionBranch(id)
+  elseif node.parent and SM_IsShiftDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+    SM_RequestCollapseCollectionBranch(node.parent)
   end
   -- 右键菜单
   if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -13899,6 +13905,8 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
 
   if node_open and has_child_dirs and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
     SM_RequestCollapseCachedPathBranch(path, "shortcut_mirror", root_idx)
+  elseif base_path and SM_IsShiftDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+    SM_RequestCollapseCachedPathBranch(base_path, "shortcut_mirror", root_idx)
   end
 
   if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
@@ -15550,7 +15558,7 @@ function DBPF_DrawDBFoldersPopupBody()
   end
 end
 
-function DBPF_DrawDirTreeRecursive(dir, display_name)
+function DBPF_DrawDirTreeRecursive(dir, display_name, parent_dir)
   local subs = DBPF_ListSubdirs(dir)
   local has_child = #subs > 0
   local label = ImGuiEscapeVisibleLabel(display_name)
@@ -15571,6 +15579,8 @@ function DBPF_DrawDirTreeRecursive(dir, display_name)
     end
     if open and SM_IsCtrlDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
       SM_RequestCollapseDBPFBranch(dir)
+    elseif parent_dir and SM_IsShiftDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+      SM_RequestCollapseDBPFBranch(parent_dir)
     end
     if selected then
       reaper.ImGui_PopStyleColor(ctx, 1)
@@ -15578,7 +15588,7 @@ function DBPF_DrawDirTreeRecursive(dir, display_name)
     if open then
       for _, child in ipairs(subs) do
         local name = child:match("([^/\\]+)[/\\]$") or child
-        DBPF_DrawDirTreeRecursive(child, name)
+        DBPF_DrawDirTreeRecursive(child, name, dir)
       end
       reaper.ImGui_TreePop(ctx)
     end
@@ -15590,6 +15600,9 @@ function DBPF_DrawDirTreeRecursive(dir, display_name)
     reaper.ImGui_TreeNode(ctx, label, flags)
     if reaper.ImGui_IsItemClicked(ctx, 0) then
       DBPF_ApplyPathFilter(dir)
+    end
+    if parent_dir and SM_IsShiftDown() and reaper.ImGui_IsItemClicked(ctx, 0) then
+      SM_RequestCollapseDBPFBranch(parent_dir)
     end
     if selected then
       reaper.ImGui_PopStyleColor(ctx, 1)
@@ -15610,7 +15623,7 @@ function DBPF_DrawDatabaseFolderTree(skip_single_root)
   if skip_single_root and #roots == 1 then
     for _, child in ipairs(DBPF_ListSubdirs(roots[1])) do
       local name = child:match("([^/\\]+)[/\\]$") or child
-      DBPF_DrawDirTreeRecursive(child, name)
+      DBPF_DrawDirTreeRecursive(child, name, roots[1])
     end
     return
   end
@@ -15758,12 +15771,20 @@ function SM_IsCtrlDown()
   return left or right or (ctrl_mod ~= 0 and ((mods & ctrl_mod) ~= 0))
 end
 
+function SM_IsShiftDown()
+  local mods = reaper.ImGui_GetKeyMods and reaper.ImGui_GetKeyMods(ctx) or 0
+  local left = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift())
+  local right = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
+  local shift_mod = reaper.ImGui_Mod_Shift and reaper.ImGui_Mod_Shift() or 0
+  return left or right or (shift_mod ~= 0 and ((mods & shift_mod) ~= 0))
+end
+
 function SM_GetPrimaryModifierLabel()
   return IsMacOS() and "Option" or "CTRL"
 end
 
 function SM_PeekTreeFlagsForCtrlBranch(flags)
-  if SM_IsCtrlDown() and reaper.ImGui_TreeNodeFlags_OpenOnArrow then
+  if (SM_IsCtrlDown() or SM_IsShiftDown()) and reaper.ImGui_TreeNodeFlags_OpenOnArrow then
     flags = flags | reaper.ImGui_TreeNodeFlags_OpenOnArrow()
   end
   return flags
