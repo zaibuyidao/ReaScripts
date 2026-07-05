@@ -4824,14 +4824,15 @@ function ReplaceNativeSelectionDropItem(req, item)
     return false
   end
   reaper.SetOnlyTrackSelected(track)
-  reaper.SetEditCurPos(position, false, false)
   local new_item = InsertSelectedAudioSection(
     section_source_path,
     req.start_time,
     req.end_time,
     req.section_offset or 0,
     false,
-    target_lane
+    target_lane,
+    req.force_section,
+    position
   )
   reaper.SetEditCurPos(old_cursor, false, false)
 
@@ -6389,7 +6390,7 @@ function InsertMediaItemAtTrackFast(track, path, insert_time, start_offset, sour
   return item
 end
 
-function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, section_offset, target_lane, clear_selection)
+function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, section_offset, target_lane, clear_selection, force_section)
   local st = tonumber(start_time)
   local et = tonumber(end_time)
   if st and et and math.abs(et - st) > 0.01 then
@@ -6399,9 +6400,8 @@ function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, 
 
     local old_cursor = reaper.GetCursorPosition()
     reaper.SetOnlyTrackSelected(track)
-    reaper.SetEditCurPos(tonumber(insert_time) or old_cursor, false, false)
 
-    local item = InsertSelectedAudioSection(path, st, et, tonumber(section_offset) or 0, false, target_lane)
+    local item = InsertSelectedAudioSection(path, st, et, tonumber(section_offset) or 0, false, target_lane, force_section, tonumber(insert_time) or old_cursor)
 
     reaper.SetEditCurPos(old_cursor, false, false)
     return item
@@ -6485,8 +6485,11 @@ function InsertMediaWithKeepParams(path, target_lane)
   return new_item
 end
 
-function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end, target_lane)
+function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end, target_lane, force_section, final_position)
   path = normalize_path(path, false)
+  local target_position = tonumber(final_position)
+  local restore_cursor = nil
+  if target_position ~= nil and not move_cursor_to_end then restore_cursor = reaper.GetCursorPosition() end
   -- 保存Arrange视图状态 - 避免滚屏
   reaper.PreventUIRefresh(1) -- 防止UI刷新
   reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
@@ -6521,7 +6524,7 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
         local end_pos = math.max(start_pos, math.min(src_offset + sel_len, full_len))
         local start_pct = start_pos / full_len
         local end_pct = end_pos / full_len
-        local needs_section = (start_pos > 1e-9) or ((full_len - end_pos) > 1e-9)
+        local needs_section = force_section or (start_pos > 1e-9) or ((full_len - end_pos) > 1e-9)
 
         if needs_section and end_pct > start_pct then
           reaper.InsertMediaSection(path, 0, start_pct, end_pct, 0.0)
@@ -6543,6 +6546,7 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
   if not new_item then
     reaper.ShowMessageBox("Insert Media failed.", "Insert Error", 0)
     if need_restore then reaper.Main_OnCommand(40041, 0) end
+    if restore_cursor ~= nil then reaper.SetEditCurPos(restore_cursor, false, false) end
     reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
     reaper.PreventUIRefresh(-1)
     return
@@ -6551,6 +6555,7 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
   if not take then
     reaper.ShowMessageBox("Take error.", "Insert Error", 0)
     if need_restore then reaper.Main_OnCommand(40041, 0) end
+    if restore_cursor ~= nil then reaper.SetEditCurPos(restore_cursor, false, false) end
     reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_RESTOREVIEW"), 0)
     reaper.PreventUIRefresh(-1)
     return
@@ -6574,12 +6579,17 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
     reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
   end
 
+  if target_position ~= nil then
+    reaper.SetMediaItemInfo_Value(new_item, "D_POSITION", target_position)
+  end
   reaper.UpdateItemInProject(new_item)
   local pos = reaper.GetMediaItemInfo_Value(new_item, "D_POSITION")
   local item_len = reaper.GetMediaItemInfo_Value(new_item, "D_LENGTH")
   -- 是否移动光标到结尾
   if move_cursor_to_end then
     reaper.SetEditCurPos(pos + item_len, false, false)
+  elseif restore_cursor ~= nil then
+    reaper.SetEditCurPos(restore_cursor, false, false)
   end
 
   -- 恢复交叉淡化
@@ -13518,14 +13528,52 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           if drag_preview_end_time <= 0 then
             drag_preview_end_time = tonumber(info and info.length) or 0
           end
+          if keep_preview_rate_pitch_on_insert and drag_preview_end_time <= 0 and #paths == 1 then
+            local src = reaper.PCM_Source_CreateFromFile(paths[1])
+            if src then
+              drag_preview_end_time = tonumber(reaper.GetMediaSourceLength(src)) or 0
+              reaper.PCM_Source_Destroy(src)
+            end
+          end
+
+          local native_paths = paths
+          local use_section_drop_logic = keep_preview_rate_pitch_on_insert and #paths == 1 and drag_preview_end_time > 0
+          local real_path, native_drag_path, preview_path, preview_dir, original_filename
+          if use_section_drop_logic then
+            local drag_path = info and info.path
+            if info and reaper.ValidatePtr(info.source, "MediaSource*") and reaper.GetMediaSourceType(info.source, "") == "SECTION" then
+              drag_path = info.source
+            end
+            real_path = GetPhysicalPath(drag_path)
+            if real_path and real_path ~= "" and reaper.file_exists(real_path) then
+              original_filename = real_path:match("[^/\\]+$")
+              local imported_path = GetCachedSelectionDragSourceInMediaDirectory(real_path)
+              preview_path, preview_dir = CreateSelectionDragPreview(real_path, 0, drag_preview_end_time)
+              native_drag_path = preview_path or imported_path or real_path
+              native_paths = native_drag_path and { native_drag_path } or paths
+            else
+              use_section_drop_logic = false
+            end
+          end
+          local native_drop_pending = native_paths and #native_paths > 0
+
           dragging_audio = {
             path = info and info.path,
             paths = paths,
+            native_paths = native_paths,
+            real_path = normalize_path(real_path or "", false),
+            native_drag_path = normalize_path(native_drag_path or "", false),
+            native_drag_filename = native_drag_path and native_drag_path:match("[^/\\]+$"),
+            preview_path = preview_path,
+            preview_dir = preview_dir,
+            original_filename = original_filename,
             start_time = 0,
             end_time = drag_preview_end_time,
             preview_end_time = drag_preview_end_time,
             section_offset = info and info.section_offset or 0,
-            native_drop_pending = (#paths > 0),
+            force_section = use_section_drop_logic,
+            use_section_drop_logic = use_section_drop_logic,
+            native_drop_pending = native_drop_pending,
             native_drop_attempted = false
           }
         end
@@ -20710,8 +20758,20 @@ function loop()
           and reaper.ImGui_IsMouseDown(ctx, 0)
         then
           dragging_audio.native_drop_attempted = true
-          local native_drop_attempted = TryNativeDropMediaFiles(dragging_audio.paths)
+          if dragging_audio.use_section_drop_logic then
+            dragging_audio.items_before = CaptureProjectMediaItems()
+          end
+          local native_drop_attempted, native_drop_completed = TryNativeDropMediaFiles(dragging_audio.native_paths or dragging_audio.paths)
           if native_drop_attempted then
+            if dragging_audio.use_section_drop_logic then
+              if native_drop_completed then
+                dragging_audio.timestamp = reaper.time_precise()
+                _G.pending_selection_native_drops = _G.pending_selection_native_drops or {}
+                table.insert(_G.pending_selection_native_drops, dragging_audio)
+              else
+                CleanupSelectionDragPreview(dragging_audio)
+              end
+            end
             audio_drag_block_until_mouse_up = true
             dragging_audio = nil
             if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
@@ -20745,10 +20805,12 @@ function loop()
                 dragging_audio.end_time,
                 dragging_audio.section_offset or 0,
                 target_lane,
-                true
+                true,
+                dragging_audio.force_section
               )
             end
           end
+          CleanupSelectionDragPreview(dragging_audio)
           dragging_audio = nil -- 鼠标释放时重置
           if reaper.JS_Mouse_LoadCursor then reaper.JS_Mouse_SetCursor(reaper.JS_Mouse_LoadCursor(0)) end
         end
@@ -23146,6 +23208,7 @@ function OnScriptExit()
   ResetWaveSelectionEdgeCursor()
   pcall(ProcessPendingSelectionNativeDrops)
   CleanupSelectionDragPreview(dragging_selection)
+  CleanupSelectionDragPreview(dragging_audio)
   -- 停止数据库构建器 (优先清理)
   reaper.SM_Builder_Stop()
   if cover_index_state and cover_index_state.handle then
