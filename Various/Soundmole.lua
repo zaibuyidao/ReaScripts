@@ -1,8 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.225
+-- @version 1.0.226
 -- @changelog
---   Optimize single-file drag-and-drop logic in table view, switching to a unified preview pipeline when Keep preview rate & pitch is enabled.
+--   Added Stop preview playback when main window collapses in Settings > Playback & Preview > Playback to stop preview playback when the main window collapses.
+--   Added Show window titlebar in Settings > Appearance > Window to show or hide the window titlebar.
+--   Added Retain search text when closing script in Settings > Search & History > Search to retain the search text when closing the script.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

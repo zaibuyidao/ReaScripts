@@ -358,6 +358,7 @@ local auto_scroll_enabled    = false -- 自动滚屏
 local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
 local auto_play_waveform_when_stopped = false -- 未播放时点击波形位置自动播放
+local stop_preview_on_collapse = true -- 折叠主窗口时停止预览播放
 local waveform_hint_enabled  = false -- 波形预览鼠标提示开关
 local recent_audio_files     = {}    -- 最近播放列表
 local max_recent_files       = 20    -- 最近播放最多保留20条
@@ -669,6 +670,9 @@ if last_auto_scroll == "1" then auto_scroll_enabled = true end
 last_hover_hint = SM_GetState(EXT_SECTION, "waveform_hover_hint")
 if last_hover_hint == "0" then waveform_hint_enabled = false end
 if last_hover_hint == "1" then waveform_hint_enabled = true end
+last_stop_preview_on_collapse = SM_GetState(EXT_SECTION, "stop_preview_on_collapse")
+if last_stop_preview_on_collapse == "0" then stop_preview_on_collapse = false end
+if last_stop_preview_on_collapse == "1" then stop_preview_on_collapse = true end
 last_row_height = tonumber(SM_GetState(EXT_SECTION, "table_row_height"))
 if last_row_height then row_height = math.max(12, math.min(48, last_row_height)) end -- 内容行高限制范围
 last_hue_shift = tonumber(SM_GetState(EXT_SECTION, "spectral_hue_shift")) -- 读取色相偏移设置
@@ -1355,6 +1359,8 @@ local DOUBLECLICK_NONE          = 2
 local doubleclick_action        = DOUBLECLICK_NONE
 local bg_alpha                  = 1.0   -- 默认背景不透明
 local hide_soundmole_title      = false -- 默认显示 Soundmole 标题
+local show_window_titlebar      = true  -- 默认显示窗口标题栏
+local retain_search_on_exit     = false -- 关闭脚本时保留当前搜索内容
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
 local mirror_database           = false -- 默认关闭 Database (Mirror)
 local show_peektree_recent      = false -- 默认开启 播放历史
@@ -1403,10 +1409,12 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "fs_cache_dir", tostring(fs_cache_dir), true)
   SM_SetState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
   SM_SetState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
+  SM_SetState(EXT_SECTION, "stop_preview_on_collapse", stop_preview_on_collapse and "1" or "0", true)
   SM_SetState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
   SM_SetState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
   SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
   SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
   SM_SetState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
   SM_SetState(EXT_SECTION, "browse_database_as_folders", browse_database_as_folders and "1" or "0", true)
   SM_SetState(EXT_SECTION, "similarity_base_python", similarity_base_python or "", true)
@@ -1419,6 +1427,7 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "spectral_grad_sat", tostring(spectral_grad_sat), true)
   SM_SetState(EXT_SECTION, "show_tooltips", show_tooltips and "1" or "0", true)
   SM_SetState(EXT_SECTION, "hide_soundmole_title", hide_soundmole_title and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "show_window_titlebar", show_window_titlebar and "1" or "0", true)
 
   -- 镜像与侧边栏
   SM_SetState(EXT_SECTION, "mirror_folder_shortcuts", mirror_folder_shortcuts and "1" or "0", true)
@@ -1571,9 +1580,21 @@ do
 end
 
 do
+  local v = SM_GetState(EXT_SECTION, "retain_search_on_exit")
+  if v == "1" then retain_search_on_exit = true
+  elseif v == "0" then retain_search_on_exit = false end
+end
+
+do
   local v = SM_GetState(EXT_SECTION, "hide_soundmole_title")
   if v == "1" then hide_soundmole_title = true
   elseif v == "0" then hide_soundmole_title = false end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "show_window_titlebar")
+  if v == "0" then show_window_titlebar = false
+  else show_window_titlebar = true end
 end
 
 do
@@ -2052,6 +2073,12 @@ do
       hide_soundmole_title = new_hide_title
       SM_SetState(EXT_SECTION, "hide_soundmole_title", hide_soundmole_title and "1" or "0", true)
     end
+
+    local changed_titlebar, new_show_titlebar = reaper.ImGui_Checkbox(ctx, T("Show window titlebar"), show_window_titlebar)
+    if changed_titlebar then
+      show_window_titlebar = new_show_titlebar
+      SM_SetState(EXT_SECTION, "show_window_titlebar", show_window_titlebar and "1" or "0", true)
+    end
   end
 
   function Section_Peaks()
@@ -2259,6 +2286,11 @@ do
     changed_pp, preserve_pitch = reaper.ImGui_Checkbox(ctx, T("Preserve pitch when changing rate"), preserve_pitch)
     if changed_pp and playing_preview and reaper.CF_Preview_SetValue then
       reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
+    end
+    local changed_stop_collapse, new_stop_collapse = reaper.ImGui_Checkbox(ctx, T("Stop preview playback when main window collapses"), stop_preview_on_collapse)
+    if changed_stop_collapse then
+      stop_preview_on_collapse = new_stop_collapse
+      SM_SetState(EXT_SECTION, "stop_preview_on_collapse", stop_preview_on_collapse and "1" or "0", true)
     end
   end
 
@@ -2622,6 +2654,13 @@ do
       search_enter_mode = search_enter_v
       SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_v and "1" or "0", true)
     end
+
+    local retain_changed, retain_v = reaper.ImGui_Checkbox(ctx, T("Retain search text when closing script"), retain_search_on_exit)
+    if retain_changed then
+      retain_search_on_exit = retain_v
+      SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
+      if not retain_search_on_exit then SM_SetState(EXT_SECTION, "retained_search_text", "", true) end
+    end
   end
 
   function Section_Recent()
@@ -2682,7 +2721,10 @@ do
       ui_scale             = 1.0
       max_db               = 12
       auto_scroll_enabled  = false
+      stop_preview_on_collapse = true
       search_enter_mode    = true
+      retain_search_on_exit = false
+      SM_SetState(EXT_SECTION, "retained_search_text", "", true)
       build_waveform_cache = false
       browse_database_as_folders = false
 
@@ -2704,6 +2746,7 @@ do
       show_tooltips         = false -- 默认提示开关
       waveform_hint_enabled = false -- 波形预览鼠标提示开关
       hide_soundmole_title  = false -- 默认显示 Soundmole 标题
+      show_window_titlebar  = true  -- 默认显示窗口标题栏
 
       -- 镜像与侧边栏
       mirror_folder_shortcuts = false
@@ -11088,6 +11131,16 @@ function SaveExitSettings()
   if current_sidebar_tab then
     SM_SetState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
   end
+
+  if retain_search_on_exit then
+    local search_text = _G.commit_filter_text or ""
+    if filename_filter and reaper.ImGui_TextFilter_Get then
+      search_text = reaper.ImGui_TextFilter_Get(filename_filter) or search_text
+    end
+    SM_SetState(EXT_SECTION, "retained_search_text", search_text, true)
+  else
+    SM_SetState(EXT_SECTION, "retained_search_text", "", true)
+  end
 end
 
 LoadExitSettings()
@@ -11566,7 +11619,7 @@ local search_enter_ext = SM_GetState(EXT_SECTION, "search_enter_mode")
 if search_enter_ext == "" then
   search_enter_mode = true else search_enter_mode = (search_enter_ext == "1")
 end
-_G.commit_filter_text = _G.commit_filter_text or ""
+_G.commit_filter_text = retain_search_on_exit and (SM_GetState(EXT_SECTION, "retained_search_text") or "") or ""
 
 -- 只在过滤/排序状态变化时重建 filtered_list，普通渲染时只用缓存，用于解决滚动卡死问题
 local static = _G._soundmole_static or {}
@@ -16451,9 +16504,13 @@ function loop()
       collapse_action_shortcut_last_time = reaper.time_precise()
     end
   end
+  local collapse_requested = main_window_collapse_request == true
   if main_window_collapse_request ~= nil and reaper.ImGui_SetNextWindowCollapsed then
     reaper.ImGui_SetNextWindowCollapsed(ctx, main_window_collapse_request, reaper.ImGui_Cond_Always())
     main_window_collapse_request = nil
+  end
+  if reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly then
+    reaper.ImGui_SetConfigVar(ctx, reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly(), show_window_titlebar and 1 or 0)
   end
   reaper.ImGui_SetNextWindowBgAlpha(ctx, bg_alpha) -- 背景不透明度
 
@@ -16498,12 +16555,16 @@ function loop()
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrab(),        colors.slider_grab)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrabActive(),  colors.slider_grab_active)
 
-  local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true)
+  local was_main_window_collapsed = main_window_collapsed
+  local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true, show_window_titlebar and 0 or reaper.ImGui_WindowFlags_NoTitleBar())
   reaper.ImGui_PopStyleColor(ctx, 1)
   if reaper.ImGui_IsWindowCollapsed then
     main_window_collapsed = reaper.ImGui_IsWindowCollapsed(ctx)
   else
     main_window_collapsed = not visible
+  end
+  if collapse_requested and not was_main_window_collapsed and main_window_collapsed and stop_preview_on_collapse then
+    StopPreview()
   end
   main_window_focused = reaper.ImGui_IsWindowFocused(ctx, reaper.ImGui_FocusedFlags_RootAndChildWindows())
   if visible then UpdateSoundmoleMainWindowRect() end
@@ -16735,7 +16796,7 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_BeginGroup(ctx)
     if not filename_filter then
-      filename_filter = reaper.ImGui_CreateTextFilter()
+      filename_filter = reaper.ImGui_CreateTextFilter(_G.commit_filter_text or "")
       reaper.ImGui_Attach(ctx, filename_filter)
     end
 
