@@ -386,9 +386,27 @@ local show_font_size_timer    = 0
 local show_row_height_popup   = false -- 行高显示状态变量
 local show_row_height_timer   = 0
 local keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
-WAVE_COLOR_MONO               = 0     -- 波形-默认单色
-WAVE_COLOR_ALPHA              = 1     -- 波形-动态透明度
-WAVE_COLOR_GRADIENT           = 2     -- 波形-颜色渐变
+PREVIEW_START_QUANTIZE_OFF       = "off"
+PREVIEW_START_QUANTIZE_BAR       = "bar"
+PREVIEW_START_QUANTIZE_BEAT      = "beat"
+PREVIEW_START_QUANTIZE_HALF      = "half"
+PREVIEW_START_QUANTIZE_QUARTER   = "quarter"
+PREVIEW_START_QUANTIZE_EIGHTH    = "eighth"
+PREVIEW_START_QUANTIZE_SIXTEENTH = "sixteenth"
+PREVIEW_START_QUANTIZE_LABELS = {
+  [PREVIEW_START_QUANTIZE_OFF]       = "Off",
+  [PREVIEW_START_QUANTIZE_BAR]       = "Next Bar",
+  [PREVIEW_START_QUANTIZE_BEAT]      = "Next Beat",
+  [PREVIEW_START_QUANTIZE_HALF]      = "Next 1/2",
+  [PREVIEW_START_QUANTIZE_QUARTER]   = "Next 1/4",
+  [PREVIEW_START_QUANTIZE_EIGHTH]    = "Next 1/8",
+  [PREVIEW_START_QUANTIZE_SIXTEENTH] = "Next 1/16",
+}
+preview_start_quantize_mode = PREVIEW_START_QUANTIZE_OFF
+preview_start_quantize_beats = 1
+WAVE_COLOR_MONO              = 0 -- 波形-默认单色
+WAVE_COLOR_ALPHA             = 1 -- 波形-动态透明度
+WAVE_COLOR_GRADIENT          = 2 -- 波形-颜色渐变
 -- 表格排序常量，编号对应表格列
 local TableColumns = {
   FILENAME    = 2,
@@ -1448,7 +1466,10 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
   SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
   SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
+  wait_nextbar_play = preview_start_quantize_mode ~= PREVIEW_START_QUANTIZE_OFF
   SM_SetState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "preview_start_quantize", preview_start_quantize_mode or PREVIEW_START_QUANTIZE_OFF, true)
+  SM_SetState(EXT_SECTION, "preview_start_quantize_beats", tostring(preview_start_quantize_beats or 1), true)
   SM_SetState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
 end
 
@@ -1568,9 +1589,16 @@ do
 end
 
 do
-  local v = SM_GetState(EXT_SECTION, "wait_nextbar")
-  if v == "1" then wait_nextbar_play = true
-  elseif v == "0" then wait_nextbar_play = false end
+  local mode = SM_GetState(EXT_SECTION, "preview_start_quantize")
+  if mode == "" then
+    local legacy = SM_GetState(EXT_SECTION, "wait_nextbar")
+    mode = (legacy == "1") and PREVIEW_START_QUANTIZE_BAR or PREVIEW_START_QUANTIZE_OFF
+  end
+  if not PREVIEW_START_QUANTIZE_LABELS[mode] then mode = PREVIEW_START_QUANTIZE_OFF end
+  preview_start_quantize_mode = mode
+  local beats = tonumber(SM_GetState(EXT_SECTION, "preview_start_quantize_beats"))
+  if beats then preview_start_quantize_beats = math.max(1, math.min(64, math.floor(beats + 0.5))) end
+  wait_nextbar_play = preview_start_quantize_mode ~= PREVIEW_START_QUANTIZE_OFF
 end
 
 do
@@ -2758,7 +2786,7 @@ do
       show_peektree_groups             = true
       show_peektree_recent_searches    = true
       ucs_show_english_with_localized = false
-      ucs_last_filter_text     = nil
+      ucs_last_filter_text    = nil
       current_sidebar_tab     = "PeekTree"
       ALBUM_PANEL_VISIBLE     = true
       album_panel_px          = 280
@@ -2769,6 +2797,8 @@ do
       pitch_semitone_step     = false           -- 重置半音步进为关闭
       tempo_sync_enabled      = false           -- 重置速度同步为关闭
       link_with_reaper        = false           -- 重置与 REAPER 主速率链接为关闭
+      preview_start_quantize_mode = PREVIEW_START_QUANTIZE_OFF
+      preview_start_quantize_beats = 1
       wait_nextbar_play       = false           -- 重置等待小节末尾播放为关闭
       keep_preview_rate_pitch_on_insert = false -- 重置插入时保持预览速率和音高为关闭
 
@@ -4353,6 +4383,7 @@ end
 
 function RestartPreviewWithParams(from_wave_pos)
   if not playing_source then return end
+  ApplyEffectivePreviewRate(last_playing_info or last_selected_info, playing_source)
   local cur_pos = 0
 
   if from_wave_pos then
@@ -4380,7 +4411,7 @@ function RestartPreviewWithParams(from_wave_pos)
     reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
     reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
     reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", cur_pos)
-    local resume_info = last_play_info or SrcInfoFromPCM(playing_source)
+    local resume_info = last_playing_info or SrcInfoFromPCM(playing_source)
     ApplyPreviewOutputTrack(playing_preview, resume_info)
     reaper.CF_Preview_Play(playing_preview)
     is_paused = false
@@ -7675,7 +7706,7 @@ end
 tempo_sync_enabled = tempo_sync_enabled or false -- 同步速度
 link_with_reaper   = link_with_reaper or false   -- 联动走带
 link_prev_playing  = false
-wait_nextbar_play  = wait_nextbar_play or false  -- true=等待, false=立刻
+wait_nextbar_play  = preview_start_quantize_mode ~= PREVIEW_START_QUANTIZE_OFF  -- true=等待, false=立刻
 wait_nextbar_cur   = { active=false, target_t=0, deadline=0, info=nil }
 
 function GetBPMAtPos(timepos)
@@ -7695,7 +7726,7 @@ function GetBPMAtPos(timepos)
   return bpm
 end
 
-function GetTempoBase(src_or_path, timepos)
+function GetTempoBase(src_or_path, timepos, info)
   local base = 1.0
   local at_time = tonumber(timepos) or reaper.GetCursorPosition()
 
@@ -7709,8 +7740,9 @@ function GetTempoBase(src_or_path, timepos)
   -- 当前光标位置的BPM
   local proj_bpm = GetBPMAtPos(at_time)
   local maybe_bpm
-  if not maybe_bpm and file_info and tonumber(file_info.bpm) and tonumber(file_info.bpm) > 0 then
-    maybe_bpm = tonumber(file_info.bpm)
+  local tempo_info = info or file_info
+  if not maybe_bpm and tempo_info and tonumber(tempo_info.bpm) and tonumber(tempo_info.bpm) > 0 then
+    maybe_bpm = tonumber(tempo_info.bpm)
   end
   if not maybe_bpm and src then
     local function get_bpm_from_meta(s, id)
@@ -7735,18 +7767,90 @@ function GetTempoBase(src_or_path, timepos)
   return base
 end
 
+function ApplyEffectivePreviewRate(info, src_or_path)
+  local base = 1.0
+  if tempo_sync_enabled then
+    local b = GetTempoBase(src_or_path or (info and info.path) or nil, nil, info) or 1.0
+    b = tonumber(b) or 1.0
+    if b > 0 then base = b end
+  end
+  effective_rate_knob = (play_rate or 1.0) * base
+  return effective_rate_knob
+end
+
 function DistanceToNextBarFromCursor()
   local t = reaper.GetCursorPosition()
+  local mode = preview_start_quantize_mode or PREVIEW_START_QUANTIZE_OFF
+  if mode == PREVIEW_START_QUANTIZE_OFF then return 0, t, 0 end
+
   local qn = reaper.TimeMap_timeToQN(t)
   local num, denom = reaper.TimeMap_GetTimeSigAtTime(0, t)
   num = num or 4
   denom = denom or 4
-  local qn_per_bar = 4 * num / denom
-  local cur_bar_idx = math.floor(qn / qn_per_bar) -- 当前所处小节索引
-  local next_bar_qn = (cur_bar_idx + 1) * qn_per_bar -- 下个小节的 QN 位置
-  local next_bar_time = reaper.TimeMap_QNToTime(next_bar_qn) - 0.05 -- 提前0.05秒触发，避免误差
-  local dist = math.max(0, next_bar_time - t)
-  return dist, next_bar_time, qn_per_bar
+
+  local step_qn
+  if mode == PREVIEW_START_QUANTIZE_BAR then
+    step_qn = 4 * num / denom
+  elseif mode == PREVIEW_START_QUANTIZE_BEAT then
+    local beats = math.max(1, math.floor((tonumber(preview_start_quantize_beats) or 1) + 0.5))
+    step_qn = (4 / denom) * beats
+  elseif mode == PREVIEW_START_QUANTIZE_HALF then
+    step_qn = 2
+  elseif mode == PREVIEW_START_QUANTIZE_QUARTER then
+    step_qn = 1
+  elseif mode == PREVIEW_START_QUANTIZE_EIGHTH then
+    step_qn = 0.5
+  elseif mode == PREVIEW_START_QUANTIZE_SIXTEENTH then
+    step_qn = 0.25
+  end
+
+  if not step_qn or step_qn <= 0 then return 0, t, 0 end
+  local next_qn = (math.floor(qn / step_qn) + 1) * step_qn
+  local next_time_raw = reaper.TimeMap_QNToTime(next_qn)
+  local prev_time = reaper.TimeMap_QNToTime(math.max(0, next_qn - step_qn))
+  local grid_len = math.max(0, next_time_raw - prev_time)
+  local lead = math.min(0.05, math.max(0.002, grid_len * 0.1))
+  local next_time = next_time_raw - lead
+  local dist = math.max(0, next_time - t)
+  return dist, next_time, step_qn
+end
+
+function SetPreviewStartQuantizeMode(mode)
+  if not PREVIEW_START_QUANTIZE_LABELS[mode] then mode = PREVIEW_START_QUANTIZE_OFF end
+  preview_start_quantize_mode = mode
+  wait_nextbar_play = preview_start_quantize_mode ~= PREVIEW_START_QUANTIZE_OFF
+  SM_SetState(EXT_SECTION, "preview_start_quantize", preview_start_quantize_mode, true)
+  SM_SetState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
+end
+
+function DrawPreviewStartQuantizeMenu()
+  local mode = preview_start_quantize_mode or PREVIEW_START_QUANTIZE_OFF
+  local current = T(PREVIEW_START_QUANTIZE_LABELS[mode] or "Off")
+  if mode == PREVIEW_START_QUANTIZE_BEAT then current = current .. " " .. tostring(preview_start_quantize_beats or 1) end
+  local label = T("Preview Start Quantize") .. ": " .. current .. "###preview_start_quantize_menu"
+  if reaper.ImGui_BeginMenu(ctx, label, link_with_reaper) then
+    local opts = {
+      PREVIEW_START_QUANTIZE_OFF, PREVIEW_START_QUANTIZE_BAR, PREVIEW_START_QUANTIZE_BEAT,
+      PREVIEW_START_QUANTIZE_HALF, PREVIEW_START_QUANTIZE_QUARTER,
+      PREVIEW_START_QUANTIZE_EIGHTH, PREVIEW_START_QUANTIZE_SIXTEENTH
+    }
+    for _, opt in ipairs(opts) do
+      local shortcut = (opt == PREVIEW_START_QUANTIZE_BEAT) and tostring(preview_start_quantize_beats or 1) or nil
+      if reaper.ImGui_MenuItem(ctx, T(PREVIEW_START_QUANTIZE_LABELS[opt] or "Off"), shortcut, mode == opt) then
+        SetPreviewStartQuantizeMode(opt)
+        mode = opt
+      end
+    end
+    reaper.ImGui_Separator(ctx)
+    reaper.ImGui_Text(ctx, T("Beats") .. ":")
+    reaper.ImGui_SetNextItemWidth(ctx, UIScale(80))
+    local changed, beats = reaper.ImGui_InputInt(ctx, "##preview_start_quantize_beats", preview_start_quantize_beats or 1, 1, 4)
+    if changed then
+      preview_start_quantize_beats = math.max(1, math.min(64, math.floor((tonumber(beats) or 1) + 0.5)))
+      SM_SetState(EXT_SECTION, "preview_start_quantize_beats", tostring(preview_start_quantize_beats), true)
+    end
+    reaper.ImGui_EndMenu(ctx)
+  end
 end
 
 function WaitNextBarCursorTick()
@@ -7802,20 +7906,8 @@ function PlayStartAtNextBar(info, wait_next)
   if wait_nextbar_cur then wait_nextbar_cur.active = false end
   -- 立刻把当前文件切到本次要播的对象
   file_info = info
-  -- 基于当前 info 计算并写入有效速率
-  local function ApplyEffectiveRateForInfo(cur)
-    local base = 1.0
-    if tempo_sync_enabled then
-      local b = GetTempoBase((cur and cur.path) or nil) or 1.0
-      if b > 0 then base = b end
-      effective_rate_knob = (play_rate or 1.0) * base
-    else
-      effective_rate_knob = (play_rate or 1.0)
-    end
-  end
-
   if not wait_next then
-    ApplyEffectiveRateForInfo(info)
+    ApplyEffectivePreviewRate(info)
     PlayFromStart(info)
     local _, next_bar_time = DistanceToNextBarFromCursor()
     return 0, next_bar_time
@@ -7823,7 +7915,7 @@ function PlayStartAtNextBar(info, wait_next)
 
   local dist, next_bar_time = DistanceToNextBarFromCursor()
   if dist < 1e-4 then
-    ApplyEffectiveRateForInfo(info)
+    ApplyEffectivePreviewRate(info)
     PlayFromStart(info)
     return 0, next_bar_time
   end
@@ -7839,7 +7931,7 @@ function PlayStartAtNextBar(info, wait_next)
     if reaper.time_precise() + 1e-6 >= (st.deadline or 0) then
       st.active = false
       if st.info then
-        ApplyEffectiveRateForInfo(st.info) -- 起播前刷新一次速率
+        ApplyEffectivePreviewRate(st.info) -- 起播前刷新一次速率
         PlayFromStart(st.info)
       end
       return
@@ -7922,6 +8014,7 @@ function PlayFromStart(info)
     source = reaper.PCM_Source_CreateFromFile(info.path)
   end
   if source then
+    ApplyEffectivePreviewRate(info, source)
     playing_source = source
     playing_preview = reaper.CF_CreatePreview(source)
     SM_PreviewBegin(playing_source)
@@ -7974,6 +8067,7 @@ function PlayFromCursor(info)
     source = reaper.PCM_Source_CreateFromFile(info.path)
   end
   if source then
+    ApplyEffectivePreviewRate(info, source)
     playing_source = source
     playing_preview = reaper.CF_CreatePreview(source)
     SM_PreviewBegin(playing_source)
@@ -14970,12 +15064,13 @@ function UI_PlayIconTrigger_Play(ctx)
   if clicked then
     if is_paused and playing_source then
       -- 以Wave.play_cursor为准恢复播放
+      ApplyEffectivePreviewRate(last_playing_info or last_selected_info, playing_source)
       playing_preview = reaper.CF_CreatePreview(playing_source)
       if playing_preview then
         if reaper.CF_Preview_SetValue then
           reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
           reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-          reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+          reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
           reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
           reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
@@ -15048,12 +15143,13 @@ function UI_PlayIconTrigger_Pause(ctx)
       playing_preview = nil
     elseif is_paused and playing_source then
       -- 处于暂停，恢复
+      ApplyEffectivePreviewRate(last_playing_info or last_selected_info, playing_source)
       playing_preview = reaper.CF_CreatePreview(playing_source)
       if playing_preview then
         if reaper.CF_Preview_SetValue then
           reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
           reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
-          reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", play_rate)
+          reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
           reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
           reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", paused_position)
@@ -21142,10 +21238,7 @@ function loop()
         link_with_reaper = not link_with_reaper
         SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
       end
-      if reaper.ImGui_MenuItem(ctx, T("Start at Next Bar (Link Transport required, Spacebar to trigger)"), nil, wait_nextbar_play, link_with_reaper) then
-        wait_nextbar_play = not wait_nextbar_play
-        SM_SetState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
-      end
+      DrawPreviewStartQuantizeMenu()
 
       reaper.ImGui_EndPopup(ctx)
     end
@@ -21165,7 +21258,7 @@ function loop()
 
     -- 播放速率旋钮
     function _safe_base()
-      local b = GetTempoBase(file_info and file_info.path or nil) or 1.0
+      local b = GetTempoBase(file_info and file_info.path or nil, nil, file_info) or 1.0
       if b <= 0 then b = 1.0 end
       return b
     end
@@ -21326,10 +21419,7 @@ function loop()
         link_with_reaper = not link_with_reaper
         SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
       end
-      if reaper.ImGui_MenuItem(ctx, T("Start at Next Bar (Link Transport required, Spacebar to trigger)"), nil, wait_nextbar_play, link_with_reaper) then
-        wait_nextbar_play = not wait_nextbar_play
-        SM_SetState(EXT_SECTION, "wait_nextbar", wait_nextbar_play and "1" or "0", true)
-      end
+      DrawPreviewStartQuantizeMenu()
 
       reaper.ImGui_EndPopup(ctx)
     end
@@ -21536,7 +21626,7 @@ function loop()
       SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
       -- 立即刷新当前播放的速率
       if playing_preview and file_info then
-        local base = GetTempoBase(file_info.path)
+        local base = GetTempoBase(file_info.path, nil, file_info)
         effective_rate_knob = (play_rate or 1.0) * (tempo_sync_enabled and base or 1.0)
         reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
       end

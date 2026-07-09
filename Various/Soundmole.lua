@@ -1,10 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.226
+-- @version 1.0.227
 -- @changelog
---   Added Stop preview playback when main window collapses in Settings > Playback & Preview > Playback to stop preview playback when the main window collapses.
---   Added Show window titlebar in Settings > Appearance > Window to show or hide the window titlebar.
---   Added Retain search text when closing script in Settings > Search & History > Search to retain the search text when closing the script.
+--   Added Preview Start Quantize, allowing preview playback to start from the next beat or another selectable beat division.
+--   Improved Tempo Sync preview rate calculation to apply the correct rate for the current file during playback, restart, and resume.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

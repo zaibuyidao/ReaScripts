@@ -199,6 +199,15 @@ Volume:=音量:
 Peaks:=声道:
 Link Transport=联动走带
 Start at Next Bar (Link Transport required, Spacebar to trigger)=从下一小节开始 (需启用联动走带，按空格键触发)
+Preview Start Quantize=预览开始量化
+Off=关闭
+Next Bar=下一小节
+Next Beat=下一拍
+Next 1/2=下一个 1/2
+Next 1/4=下一个 1/4
+Next 1/8=下一个 1/8
+Next 1/16=下一个 1/16
+Beats=拍数
 
 # 表格文件列
 Waveform=波形
