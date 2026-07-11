@@ -2405,8 +2405,8 @@ do
       SM_SetState(EXT_SECTION, "auto_scroll", tostring(auto_scroll_enabled and 1 or 0), true)
     end
 
-    -- 是否显示鼠标悬停提示线与时间
-    local changed_hover, new_hover = reaper.ImGui_Checkbox(ctx, T("Show mouse hover cursor & time on waveform preview"), waveform_hint_enabled)
+    -- 是否显示鼠标悬停提示线与时间, 播放光标时间
+    local changed_hover, new_hover = reaper.ImGui_Checkbox(ctx, T("Show mouse hover cursor/time and play cursor time on waveform preview"), waveform_hint_enabled)
     if changed_hover then
       waveform_hint_enabled = new_hover
       SM_SetState(EXT_SECTION, "waveform_hover_hint", tostring(waveform_hint_enabled and 1 or 0), true)
@@ -22734,6 +22734,22 @@ function loop()
         local px = (adjusted_play_cursor - Wave.scroll) / (Wave.src_len / Wave.zoom) * region_w + min_x
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
         reaper.ImGui_DrawList_AddLine(dl, px, min_y, px, max_y, colors.preview_play_cursor, UIScaleF(2))
+
+        -- 播放光标时间标签: 默认右下侧，右侧空间不足时切换到左侧
+        if waveform_hint_enabled and px >= min_x and px <= max_x then
+          local time_str = reaper.format_timestr(math.max(0, math.min(Wave.src_len, Wave.play_cursor)), "")
+          PushUIFont(ctx, nil, 12)
+          local tw, th = reaper.ImGui_CalcTextSize(ctx, time_str)
+          local pad_x, pad_y = UIScaleF(4), UIScaleF(2)
+          local text_x = px + 2
+          if text_x + tw + pad_x * 2 > max_x - 2 then
+            text_x = px - tw - pad_x * 2 - 2
+          end
+          local text_y = max_y - UIScaleF(24)
+          reaper.ImGui_DrawList_AddRectFilled(dl, text_x, text_y, text_x + tw + pad_x * 2, text_y + th + pad_y * 2, colors.preview_pint_bg or 0x000000CC)
+          reaper.ImGui_DrawList_AddText(dl, text_x + pad_x, text_y + pad_y, colors.preview_pint_text or 0xFFFFFFFF, time_str)
+          reaper.ImGui_PopFont(ctx)
+        end
       end
 
       -- 鼠标悬停提示线与时间显示
@@ -22760,7 +22776,7 @@ function loop()
         -- 垂直提示线（跟随鼠标）
         local hover_px = min_x + frac * region_w
         local dl = reaper.ImGui_GetWindowDrawList(ctx)
-        reaper.ImGui_DrawList_AddLine(dl, hover_px, min_y, hover_px, max_y, colors.preview_pint_play_cursor, UIScaleF(1))
+        reaper.ImGui_DrawList_AddLine(dl, hover_px, min_y, hover_px, max_y, colors.preview_pint_play_cursor, UIScaleF(2))
 
         -- 顶部左侧时间文本+背景
         local tip = {}
@@ -22776,7 +22792,7 @@ function loop()
         -- 放在竖线顶部的左侧，稍微上移避免压住波形
         tip.text_x = hover_px - tip.tw - tip.pad_x * 2 - 2
         if tip.text_x < min_x + 2 then
-          tip.text_x = min_x + 2
+          tip.text_x = hover_px + 2
         end
         tip.text_y = min_y - tip.th - tip.pad_y * 2 + tip.offset_y
         tip.bg_col = colors.preview_pint_bg or 0x000000CC

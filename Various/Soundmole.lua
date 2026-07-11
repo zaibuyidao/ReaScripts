@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.228
+-- @version 1.0.229
 -- @changelog
---   Improved preview launch quantization and transport linking, fixing rapid switching, cursor positioning, and tempo-mapped playback issues.
+--   Added a playhead time label to the main waveform preview and improved hover cursor label positioning and line thickness.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
