@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.229
+-- @version 1.0.230
 -- @changelog
---   Added a playhead time label to the main waveform preview and improved hover cursor label positioning and line thickness.
+--   Optimized the table waveform column so hiding it now stops cell waveform rendering and background processing.
+--   Optimized table rendering so hidden columns no longer perform cell processing, reducing resource usage.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

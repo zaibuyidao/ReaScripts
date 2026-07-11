@@ -332,6 +332,7 @@ TABLE_WAVEFORM_PREFETCH_PX   = TABLE_WAVEFORM_CACHE_PX
 TABLE_WAVEFORM_CACHE_HIT_LIMIT = 10  -- 扩展缓存命中后，每帧最多整段加载多少项
 files_idx_cache              = nil   -- 文件缓存
 waveform_task_queue          = {}    -- 表格列表波形预览
+table_waveform_column_enabled = true -- 波形列是否被用户勾选显示
 ui_bottom_offset             = 231   -- 底部总高度
 playing_preview              = nil
 playing_path                 = nil
@@ -2944,7 +2945,9 @@ do
     end
 
     reaper.ImGui_SetNextWindowSize(ctx, UIScale(600), UIScale(400), reaper.ImGui_Cond_FirstUseEver())
-    local visible, open = reaper.ImGui_Begin(ctx, T("Settings") .. "###SettingsWindow", true, reaper.ImGui_WindowFlags_AlwaysAutoResize())
+    local settings_window_flags = reaper.ImGui_WindowFlags_AlwaysAutoResize()
+                                | reaper.ImGui_WindowFlags_NoCollapse()
+    local visible, open = reaper.ImGui_Begin(ctx, T("Settings") .. "###SettingsWindow", true, settings_window_flags)
     if visible then
       local pages = GetSettingsPages()
       -- 顶部导航
@@ -8008,7 +8011,7 @@ function PlayFromStart(info)
   end
 
   -- 将当前要播放的文件插到波形任务队列头部，提升优先级
-  if waveform_task_queue and info and info.path and info.path ~= "" then
+  if table_waveform_column_enabled and waveform_task_queue and info and info.path and info.path ~= "" then
     info._wf_enqueued = info._wf_enqueued or {}
     local want_width = math.max(1, math.floor(tonumber(info._last_thumb_w) or TABLE_WAVEFORM_PREFETCH_PX))
     if not info._wf_enqueued[want_width] then
@@ -9913,6 +9916,7 @@ function StoreTableWaveformFromCache(info, width, cache)
 end
 
 function ProcessWaveformTasks()
+  if not table_waveform_column_enabled then return end
   local list_state = _G._soundmole_static or {}
   local last_scroll_time = tonumber(list_state.last_scroll_time)
   if last_scroll_time and reaper.time_precise() - last_scroll_time < TABLE_WAVEFORM_IDLE_SECONDS then
@@ -13588,9 +13592,6 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
   if not info then return end -- 防御性检查
 
   EnsureEntryParsed(info) -- 右侧文件列表首次可见时解析 DATA 元数据
-  if not info.group then  -- 分组延迟到可见时再计算
-    info.group = GetCustomGroupsForPath(info.path)
-  end
 
   -- 表格标题文字颜色 -- 文字颜色
   if IsPreviewed(info.path) then
@@ -13618,12 +13619,13 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
   local col_count = reaper.ImGui_TableGetColumnCount(ctx)
   for c = 0, col_count - 1 do
     local is_item_mode = (collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP)
-    reaper.ImGui_TableSetColumnIndex(ctx, c)
+    local column_visible = reaper.ImGui_TableSetColumnIndex(ctx, c)
     local col_name = reaper.ImGui_TableGetColumnName(ctx, c) or ""
     -- 名称别名，避免模式差异
     local is_name_col   = (col_name == T("Take Name") or col_name == T("File Name"))
     local is_date_track = (col_name == T("Date") or col_name == T("Track"))
     local is_genre_pos  = (col_name == T("Genre") or col_name == T("Position"))
+    if not column_visible then goto continue_column end
 
     -- Waveform
     if col_name == T("Similarity") then
@@ -13953,7 +13955,10 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
 
     -- Group
     elseif col_name == T("Group") then
-      local group_names = GetCustomGroupsForPath(normalize_path(info.path, false))
+      if info.group == nil then
+        info.group = GetCustomGroupsForPath(normalize_path(info.path, false))
+      end
+      local group_names = info.group
       if group_names ~= "" then
         reaper.ImGui_Text(ctx, group_names)
       else
@@ -13980,6 +13985,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       reaper.ImGui_Text(ctx, normalize_path(info.path or "", false))
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
     end
+    ::continue_column::
   end
 
   reaper.ImGui_PopStyleColor(ctx, 3)
@@ -20340,6 +20346,11 @@ function loop()
         end
         -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectFromProjectDirectory()
         reaper.ImGui_TableHeadersRow(ctx)
+        local waveform_column_enabled = (reaper.ImGui_TableGetColumnFlags(ctx, 0) & reaper.ImGui_TableColumnFlags_IsEnabled()) ~= 0
+        if table_waveform_column_enabled and not waveform_column_enabled then
+          ClearTableWaveformTaskQueue()
+        end
+        table_waveform_column_enabled = waveform_column_enabled
         
         -- 获取当前激活数据库的唯一key
         local current_db_key = GetCurrentListKey() -- tostring(tree_state.cur_mediadb)
