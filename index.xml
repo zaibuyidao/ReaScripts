@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="6ffc5827c6387c31042954c60d16f1e19bfcb553">
+<index version="1" name="zaibuyidao Scripts" commit="e268841390e90eb247ed103468b9d28c39ad349a">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -19005,6 +19005,56 @@ Improved Tempo Sync preview rate calculation to apply the correct rate for the c
         <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/6ffc5827c6387c31042954c60d16f1e19bfcb553/Various/Soundmole/data/ucs.csv</source>
         <source file="Soundmole/fonts/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/6ffc5827c6387c31042954c60d16f1e19bfcb553/Various/Soundmole/fonts/icons-regular.otf</source>
         <source file="Soundmole/fonts/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/6ffc5827c6387c31042954c60d16f1e19bfcb553/Various/Soundmole/fonts/odrf_upr_regular.otf</source>
+      </version>
+      <version name="1.0.229" author="zaibuyidao" time="2026-07-11T12:51:03Z">
+        <changelog><![CDATA[Added a playhead time label to the main waveform preview and improved hover cursor label positioning and line thickness.]]></changelog>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/zaibuyidao_Soundmole.lua</source>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/zaibuyidao_Soundmole%20-%20Add%20Selected%20Files%20to%20Target%20Database.lua</source>
+        <source main="main" file="Soundmole/zaibuyidao_Soundmole - Toggle Main Window Collapse.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/zaibuyidao_Soundmole%20-%20Toggle%20Main%20Window%20Collapse.lua</source>
+        <source file="Soundmole/lib/core.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/core.lua</source>
+        <source file="Soundmole/lib/freesound.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/freesound.lua</source>
+        <source file="Soundmole/lib/locales.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/locales.lua</source>
+        <source file="Soundmole/lib/persistence.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/persistence.lua</source>
+        <source file="Soundmole/lib/translation.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/translation.lua</source>
+        <source file="Soundmole/lib/utils.lua">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/utils.lua</source>
+        <source file="Soundmole/lib/similarity.py">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/similarity.py</source>
+        <source file="Soundmole/lib/similarity_setup.py">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/similarity_setup.py</source>
+        <source file="Soundmole/lib/translator.py">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/translator.py</source>
+        <source file="Soundmole/lib/cursor_253.cur">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/cursor_253.cur</source>
+        <source file="Soundmole/lib/cursor_258.cur">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/cursor_258.cur</source>
+        <source file="Soundmole/lib/cursor_263.cur">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/cursor_263.cur</source>
+        <source file="Soundmole/lib/cursor_270.cur">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/cursor_270.cur</source>
+        <source file="Soundmole/lib/cursor_271.cur">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/cursor_271.cur</source>
+        <source file="Soundmole/lib/cursor_279.cur">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/cursor_279.cur</source>
+        <source file="Soundmole/lib/cursor_311.cur">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lib/cursor_311.cur</source>
+        <source file="Soundmole/lang/en-US.txt">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lang/en-US.txt</source>
+        <source file="Soundmole/lang/zh-CN.txt">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/lang/zh-CN.txt</source>
+        <source file="Soundmole/themes/Soundmole_BlueprintLab.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_BlueprintLab.smcol</source>
+        <source file="Soundmole/themes/Soundmole_CoffeeHouse.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_CoffeeHouse.smcol</source>
+        <source file="Soundmole/themes/Soundmole_CoralCurrent.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_CoralCurrent.smcol</source>
+        <source file="Soundmole/themes/Soundmole_CrimsonCinema.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_CrimsonCinema.smcol</source>
+        <source file="Soundmole/themes/Soundmole_CyberDusk.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_CyberDusk.smcol</source>
+        <source file="Soundmole/themes/Soundmole_Default_Graphite.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_Default_Graphite.smcol</source>
+        <source file="Soundmole/themes/Soundmole_Default_HighClarity.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_Default_HighClarity.smcol</source>
+        <source file="Soundmole/themes/Soundmole_Default_Professional.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_Default_Professional.smcol</source>
+        <source file="Soundmole/themes/Soundmole_Default_Studio.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_Default_Studio.smcol</source>
+        <source file="Soundmole/themes/Soundmole_Default_Warm.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_Default_Warm.smcol</source>
+        <source file="Soundmole/themes/Soundmole_EmeraldNoir.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_EmeraldNoir.smcol</source>
+        <source file="Soundmole/themes/Soundmole_ForestStudio.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_ForestStudio.smcol</source>
+        <source file="Soundmole/themes/Soundmole_InkLemon.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_InkLemon.smcol</source>
+        <source file="Soundmole/themes/Soundmole_IvoryRose.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_IvoryRose.smcol</source>
+        <source file="Soundmole/themes/Soundmole_MidnightGold.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_MidnightGold.smcol</source>
+        <source file="Soundmole/themes/Soundmole_MintBurgundy.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_MintBurgundy.smcol</source>
+        <source file="Soundmole/themes/Soundmole_MonochromeSplit.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_MonochromeSplit.smcol</source>
+        <source file="Soundmole/themes/Soundmole_NordicFog.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_NordicFog.smcol</source>
+        <source file="Soundmole/themes/Soundmole_OceanDepth.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_OceanDepth.smcol</source>
+        <source file="Soundmole/themes/Soundmole_RoyalPlum.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_RoyalPlum.smcol</source>
+        <source file="Soundmole/themes/Soundmole_TerracottaPaper.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_TerracottaPaper.smcol</source>
+        <source file="Soundmole/themes/Soundmole_VioletLime.smcol">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/themes/Soundmole_VioletLime.smcol</source>
+        <source file="Soundmole/data/thesaurus.csv">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/data/thesaurus.csv</source>
+        <source file="Soundmole/data/ucs.csv">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/data/ucs.csv</source>
+        <source file="Soundmole/fonts/icons-regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/fonts/icons-regular.otf</source>
+        <source file="Soundmole/fonts/odrf_upr_regular.otf">https://github.com/zaibuyidao/ReaScripts/raw/e268841390e90eb247ed103468b9d28c39ad349a/Various/Soundmole/fonts/odrf_upr_regular.otf</source>
       </version>
     </reapack>
     <reapack name="UCS Tag Search Rename Bundle.lua" type="script" desc="UCS Tag Search Rename Bundle">
