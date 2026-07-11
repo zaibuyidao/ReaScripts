@@ -7779,7 +7779,7 @@ function ApplyEffectivePreviewRate(info, src_or_path)
 end
 
 function DistanceToNextBarFromCursor()
-  local t = reaper.GetCursorPosition()
+  local t = reaper.GetPlayPosition()
   local mode = preview_start_quantize_mode or PREVIEW_START_QUANTIZE_OFF
   if mode == PREVIEW_START_QUANTIZE_OFF then return 0, t, 0 end
 
@@ -7828,7 +7828,7 @@ function DrawPreviewStartQuantizeMenu()
   local current = T(PREVIEW_START_QUANTIZE_LABELS[mode] or "Off")
   if mode == PREVIEW_START_QUANTIZE_BEAT then current = current .. " " .. tostring(preview_start_quantize_beats or 1) end
   local label = T("Preview Start Quantize") .. ": " .. current .. "###preview_start_quantize_menu"
-  if reaper.ImGui_BeginMenu(ctx, label, link_with_reaper) then
+  if reaper.ImGui_BeginMenu(ctx, label, true) then
     local opts = {
       PREVIEW_START_QUANTIZE_OFF, PREVIEW_START_QUANTIZE_BAR, PREVIEW_START_QUANTIZE_BEAT,
       PREVIEW_START_QUANTIZE_HALF, PREVIEW_START_QUANTIZE_QUARTER,
@@ -7901,11 +7901,34 @@ function PlayCursorAtNextBar(info, wait_next)
 end
 
 -- 等到下一个小节再从头播放
+function WaitNextBarStartTick()
+  local st = _G.wait_nextbar_start
+  if not st or not st.active then
+    if st then st.ticking = false end
+    return
+  end
+  if reaper.GetPlayPosition() + 0.0005 >= (st.target_t or 0) then
+    local info = st.info
+    st.active = false
+    st.info = nil
+    st.ticking = false
+    if info then
+      ApplyEffectivePreviewRate(info) -- 起播前刷新一次速率
+      PlayFromStart(info)
+    end
+    return
+  end
+  reaper.defer(WaitNextBarStartTick)
+end
+
 function PlayStartAtNextBar(info, wait_next)
   if wait_next == nil then wait_next = true end -- 兼容旧调用
   if wait_nextbar_cur then wait_nextbar_cur.active = false end
   -- 立刻把当前文件切到本次要播的对象
   file_info = info
+  if Wave then Wave.play_cursor = 0 end
+  wf_play_start_cursor = 0
+  last_play_cursor_before_play = 0
   if not wait_next then
     ApplyEffectivePreviewRate(info)
     PlayFromStart(info)
@@ -7920,25 +7943,14 @@ function PlayStartAtNextBar(info, wait_next)
     return 0, next_bar_time
   end
 
-  _G.wait_nextbar_start = _G.wait_nextbar_start or { active=false }
+  _G.wait_nextbar_start = _G.wait_nextbar_start or { active=false, ticking=false }
   _G.wait_nextbar_start.info = info
-  _G.wait_nextbar_start.deadline = reaper.time_precise() + dist
+  _G.wait_nextbar_start.target_t = next_bar_time
   _G.wait_nextbar_start.active = true
-
-  local function tick()
-    local st = _G.wait_nextbar_start
-    if not st or not st.active then return end
-    if reaper.time_precise() + 1e-6 >= (st.deadline or 0) then
-      st.active = false
-      if st.info then
-        ApplyEffectivePreviewRate(st.info) -- 起播前刷新一次速率
-        PlayFromStart(st.info)
-      end
-      return
-    end
-    reaper.defer(tick)
+  if not _G.wait_nextbar_start.ticking then
+    _G.wait_nextbar_start.ticking = true
+    reaper.defer(WaitNextBarStartTick)
   end
-  reaper.defer(tick)
 
   return dist, next_bar_time
 end
@@ -8079,7 +8091,7 @@ function PlayFromCursor(info)
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
         -- 决定光标起播位置
-        local base_pos = (link_with_reaper and 0) or Wave.play_cursor or 0 --  or (tempo_sync_enabled and Wave.play_cursor / effective_rate_knob)
+        local base_pos = Wave.play_cursor or 0 --  or (tempo_sync_enabled and Wave.play_cursor / effective_rate_knob)
         local start_pos = base_pos
         if skip_silence_enabled then
           local eps = 1e-6
@@ -12991,7 +13003,8 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
         if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
           local rel_x = mx - x
           local new_pos = (rel_x / thumb_w) * src_len
-          local rate = (effective_rate_knob and effective_rate_knob ~= 0) and effective_rate_knob or 1
+          local rate = ApplyEffectivePreviewRate(info)
+          if not rate or rate == 0 then rate = 1 end
           local cursor_pos = new_pos / rate
           current_recent_play_info = nil -- 解除最近播放锁定
           if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
@@ -22355,16 +22368,15 @@ function loop()
             end
 
           else
-            if link_with_reaper then
-              local playstate = reaper.GetPlayState()
-              if ((playstate & 1) == 1) then
-                reaper.Main_OnCommand(1016, 0)
-              else
-                reaper.Main_OnCommand(1007, 0)
-              end
-              -- PlayCursorAtNextBar(cur_info) -- 等待到下一个小节再预览
+            local transport_playing = ((reaper.GetPlayState() & 1) == 1)
+            if _G.wait_nextbar_start then _G.wait_nextbar_start.active = false end
+            if transport_playing and wait_nextbar_play then
+              PlayCursorAtNextBar(cur_info, true)
             else
               PlayFromCursor(cur_info)
+            end
+            if link_with_reaper and not transport_playing then
+              reaper.Main_OnCommand(1007, 0)
             end
           end
         end
@@ -22400,15 +22412,11 @@ function loop()
         if last_selected_row ~= selected_row then
           local cur_info = _G.current_display_list[selected_row]
           if cur_info then
-            if link_with_reaper then
-              reaper.Main_OnCommand(1007, 0)
+            if wait_nextbar_play and ((reaper.GetPlayState() & 1) == 1) then
               if playing_preview then StopPreview() end
-              if wait_nextbar_play then
-                PlayStartAtNextBar(cur_info, true) -- 下一个小节从头播
-              else
-                PlayStartAtNextBar(cur_info, false) -- 立即从头播
-              end
+              PlayStartAtNextBar(cur_info, true) -- 下一个量化点从头播
             else
+              if _G.wait_nextbar_start then _G.wait_nextbar_start.active = false end
               PlayFromStart(cur_info)
             end
 
@@ -23316,7 +23324,6 @@ function loop()
       link_prev_playing = is_play
     else
       link_prev_playing = false
-      if _G.wait_nextbar_start then _G.wait_nextbar_start.active = false end
     end
   end
 

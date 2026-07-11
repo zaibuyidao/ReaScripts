@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.227
+-- @version 1.0.228
 -- @changelog
---   Added Preview Start Quantize, allowing preview playback to start from the next beat or another selectable beat division.
---   Improved Tempo Sync preview rate calculation to apply the correct rate for the current file during playback, restart, and resume.
+--   Improved preview launch quantization and transport linking, fixing rapid switching, cursor positioning, and tempo-mapped playback issues.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
