@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="56cb397ac241224f4d4258542903ed4ec6d1e255">
+<index version="1" name="zaibuyidao Scripts" commit="1def1bf38ba513008112c7e83bf2d193a7a94304">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -279,6 +279,21 @@
         <source file="Lokasenna_GUI Library/Classes/Class - Window.lua">https://github.com/zaibuyidao/ReaScripts/raw/30911a6cbcceb554142429666c0fbe5367a670f0/Development/Lokasenna_GUI%20Library/Classes/Class%20-%20Window.lua</source>
         <source file="Lokasenna_GUI Library/Core.lua">https://github.com/zaibuyidao/ReaScripts/raw/30911a6cbcceb554142429666c0fbe5367a670f0/Development/Lokasenna_GUI%20Library/Core.lua</source>
         <source file="Lokasenna_GUI Library/Modules/Window - GetUserInputs.lua">https://github.com/zaibuyidao/ReaScripts/raw/30911a6cbcceb554142429666c0fbe5367a670f0/Development/Lokasenna_GUI%20Library/Modules/Window%20-%20GetUserInputs.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Extensions">
+    <reapack name="ReaMole.ext" type="extension" desc="ReaMole: Soundmole Extension for REAPER">
+      <metadata>
+        <link rel="donation">https://www.paypal.me/zaibuyidao</link>
+      </metadata>
+      <version name="0.0.35" author="zaibuyidao" time="2026-07-12T12:28:00Z">
+        <changelog><![CDATA[Initial release]]></changelog>
+        <source platform="darwin64" file="reaper_soundmole-x86_64.dylib">https://github.com/zaibuyidao/ReaScripts/raw/1def1bf38ba513008112c7e83bf2d193a7a94304/Extensions/ReaMole/reaper_soundmole-x86_64.dylib</source>
+        <source platform="darwin-arm64" file="reaper_soundmole-arm64.dylib">https://github.com/zaibuyidao/ReaScripts/raw/1def1bf38ba513008112c7e83bf2d193a7a94304/Extensions/ReaMole/reaper_soundmole-arm64.dylib</source>
+        <source platform="linux64" file="reaper_soundmole-x86_64.so">https://github.com/zaibuyidao/ReaScripts/raw/1def1bf38ba513008112c7e83bf2d193a7a94304/Extensions/ReaMole/reaper_soundmole-x86_64.so</source>
+        <source platform="linux-aarch64" file="reaper_soundmole-aarch64.so">https://github.com/zaibuyidao/ReaScripts/raw/1def1bf38ba513008112c7e83bf2d193a7a94304/Extensions/ReaMole/reaper_soundmole-aarch64.so</source>
+        <source platform="win64" file="reaper_soundmole-x64.dll">https://github.com/zaibuyidao/ReaScripts/raw/1def1bf38ba513008112c7e83bf2d193a7a94304/Extensions/ReaMole/reaper_soundmole-x64.dll</source>
       </version>
     </reapack>
   </category>
