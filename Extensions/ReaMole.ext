@@ -1,0 +1,12 @@
+@description ReaMole: Soundmole Extension for REAPER
+@version 0.0.35
+@author zaibuyidao
+@donation https://www.paypal.me/zaibuyidao
+@provides
+  [darwin64      ] ReaMole/reaper_soundmole-x86_64.dylib > reaper_soundmole-x86_64.dylib
+  [darwin-arm64  ] ReaMole/reaper_soundmole-arm64.dylib  > reaper_soundmole-arm64.dylib
+  [linux64       ] ReaMole/reaper_soundmole-x86_64.so    > reaper_soundmole-x86_64.so
+  [linux-aarch64 ] ReaMole/reaper_soundmole-aarch64.so   > reaper_soundmole-aarch64.so
+  [win64         ] ReaMole/reaper_soundmole-x64.dll      > reaper_soundmole-x64.dll
+@changelog
+  Initial release
