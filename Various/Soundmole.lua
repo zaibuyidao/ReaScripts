@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.232
+-- @version 1.0.233
 -- @changelog
 --   Added support for MIDI files.
 -- @reference
@@ -26,7 +26,7 @@
 --   1. ReaImGui
 --   2. JS_ReaScriptAPI
 --   3. SWS Extension
---   4. Soundmole Extension (https://stash.reaper.fm/v/50782/reaper_soundmole-x64.dll)
+--   4. Soundmole Extension (https://stash.reaper.fm/v/52517/soundmole-extension.zip)
 --   5. Python
 
 -- Licensed under the GNU GPL v3

@@ -264,7 +264,15 @@ Cannot Delete=无法删除
 This database is currently rebuilding.\nPlease stop the task before deleting.=该数据库正在重建。\n请先停止任务再删除。
 Rebuild Database=重建数据库
 Add Path to Database...=添加路径到数据库...
+Filename=文件名
+Pathname=路径
+Channels=通道
+Duration=时长
 Scan Database for New Files=扫描数据库中的新文件
+MIDI events=MIDI 事件
+quarter notes=四分音符
+Estimated=估算
+Ticks per quarter note=每四分音符滴答数
 
 # 状态栏
 Files found: %d=找到文件: %d 个
