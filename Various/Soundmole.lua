@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.231
+-- @version 1.0.232
 -- @changelog
 --   Added support for MIDI files.
 -- @reference

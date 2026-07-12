@@ -1,3 +1,4 @@
+-- NoIndex: true
 local M = {}
 
 local cache, errors, order = {}, {}, {}
