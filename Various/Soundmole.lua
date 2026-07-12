@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.230
+-- @version 1.0.231
 -- @changelog
---   Optimized the table waveform column so hiding it now stops cell waveform rendering and background processing.
---   Optimized table rendering so hidden columns no longer perform cell processing, reducing resource usage.
+--   Added support for MIDI files.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

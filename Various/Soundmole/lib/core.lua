@@ -22,6 +22,18 @@ function IsValidAudioFile(path)
   return (ext == "wav" or ext == "mp3" or ext == "flac" or ext == "ogg" or ext == "aiff" or ext == "ape" or ext == "wv" or ext == "m4a" or ext == "aac" or ext == "mp4")
 end
 
+function IsValidMIDIFile(path)
+  if not path or path == "" then return false end
+  if IsAppleDoubleFile(path) then return false end
+  local ext = path:match("%.([^.]+)$")
+  ext = ext and ext:lower() or ""
+  return ext == "mid" or ext == "midi"
+end
+
+function IsValidPreviewFile(path)
+  return IsValidAudioFile(path) or IsValidMIDIFile(path)
+end
+
 function split(str, sep)
   local result = {}
   local plain = true
@@ -208,7 +220,7 @@ function ScanAllAudioFiles(root_dir)
 
   local files = {}
   local count = 0
-  local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
+  local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4,mid,midi"
 
   local function json_unescape_min(s)
     if not s then return s end
@@ -228,7 +240,7 @@ function ScanAllAudioFiles(root_dir)
         local p = line:match([["path"%s*:%s*"([^"]+)"]])
         if p then
           p = normalize_path(json_unescape_min(p), false)
-          if IsValidAudioFile(p) then
+          if IsValidPreviewFile(p) then
             files[#files + 1] = p
             count = count + 1
           end
@@ -504,7 +516,7 @@ function CollectFromRPP()
     if take then
       local src = reaper.GetMediaItemTake_Source(take)
       if reaper.ValidatePtr(src, "MediaSource*") then
-        local root_src = GetRootSource(src)
+        local root_src = GetRootSource(src) or (IsValidMIDIFile(reaper.GetMediaSourceFileName(src, "")) and src)
         local path = ""
         if reaper.ValidatePtr(root_src, "MediaSource*") then
           path = normalize_path(reaper.GetMediaSourceFileName(root_src, ""), false)
@@ -526,7 +538,7 @@ function CollectFromProjectDirectory()
   local proj_path = normalize_path(reaper.GetProjectPath(), true)
   if not proj_path or proj_path == "" then return files, files_idx end
 
-  local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
+  local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4,mid,midi"
   local h = reaper.SM_ProbeMediaBegin(proj_path, 0, exts_csv, 6)
   if h then
     while true do
@@ -600,7 +612,7 @@ function CollectFromDirectory(dir_path)
   _G.current_files_map = files
   if not dir_path or dir_path == "" then return files, files_idx end
 
-  local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4"
+  local exts_csv = "wav,mp3,flac,ogg,aif,aiff,ape,wv,m4a,aac,mp4,mid,midi"
   local h = reaper.SM_ListDirBegin(dir_path, 0, exts_csv)
   if h then
     while true do
@@ -682,7 +694,7 @@ function BuildFileInfoFromPath(path, filename)
     section_length = 0
   }
 
-  if not IsValidAudioFile(path) or path == "" then return info end
+  if not IsValidPreviewFile(path) or path == "" then return info end
 
   local h = reaper.SM_ProbeMediaBegin(path, 0, "", 6)
   if h then
@@ -1417,9 +1429,9 @@ end
 -- SubCategory:[ASWG tags]subCategory or [IXML tags]USER:SUBCATEGORY
 
 function SM_PrepareMediaDBRecord(info, dbfile)
-  if not info or not IsValidAudioFile(info.path or "") then return false end
+  if not info or not IsValidPreviewFile(info.path or "") then return false end
   local cover_path = nil
-  if info and (not info.cover_id or info.cover_id == "") and info.path and type(SM_EnsureCoverForAudio) == "function" then
+  if info and not IsValidMIDIFile(info.path or "") and (not info.cover_id or info.cover_id == "") and info.path and type(SM_EnsureCoverForAudio) == "function" then
     local cover_id
     cover_id, cover_path = SM_EnsureCoverForAudio(info.path, dbfile)
     if cover_id and cover_id ~= "" then info.cover_id = cover_id end

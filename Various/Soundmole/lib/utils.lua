@@ -80,7 +80,7 @@ function has_allowed_ext(p)
   return (ext == "wav" or ext == "w64" or ext == "aif" or ext == "aiff"
     or ext == "mp3" or ext == "ogg" or ext == "opus" or ext == "flac"
     or ext == "ape" or ext == "wv"  or ext == "m4a"  or ext == "aac"
-    or ext == "mp4"
+    or ext == "mp4" or ext == "mid" or ext == "midi"
   )
 end
 

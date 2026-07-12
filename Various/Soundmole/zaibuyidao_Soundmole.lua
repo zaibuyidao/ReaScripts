@@ -81,6 +81,7 @@ Persistence.install_state_facade({
 })
 require ('lib.core')
 require ('lib.utils')
+MIDI = require('lib.midi')
 local L = require('lib.locales')
 local Freesound = require ('lib.freesound')
 local trans_status, trans_result = pcall(require, "lib.translation")
@@ -382,6 +383,7 @@ local expanded_paths          = {}    -- 已展开的文件夹路径表
 local show_vertical_zoom      = false -- 显示波形纵向缩放提示状态变量
 local show_vertical_zoom_timer = 0
 local pending_preview_seek    = nil   -- 框选释放后的预览跳转延后一帧，避免拖拽帧被高 PDC 工程卡住
+midi_preview_state            = { data = nil }
 local show_font_size_popup    = false -- 字体大小显示状态变量
 local show_font_size_timer    = 0
 local show_row_height_popup   = false -- 行高显示状态变量
@@ -4426,7 +4428,8 @@ function IsPreviewActuallyPlaying()
 end
 
 function MaybeAutoPlayWaveformClickWhenStopped(info)
-  if auto_play_waveform_when_stopped and not IsPreviewActuallyPlaying() and info then
+  local force_midi_click_play = info and IsValidMIDIFile(info.path or "")
+  if (auto_play_waveform_when_stopped or force_midi_click_play) and not IsPreviewActuallyPlaying() and info then
     PlayFromCursor(info)
     is_paused = false
     paused_position = 0
@@ -7704,6 +7707,121 @@ function DrawWaveformInImGui(ctx, peaks, img_w, img_h, src_len, channel_count, v
   end
 end
 
+function DrawMIDIInImGui(ctx, data, img_w, img_h, view_start, view_end, thumbnail)
+  reaper.ImGui_InvisibleButton(ctx, thumbnail and "##midi_thumb" or "##midi_preview", img_w, img_h)
+  local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
+  local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
+  if not data then return end
+
+  local drawlist = reaper.ImGui_GetWindowDrawList(ctx)
+  local duration = math.max(0.000001, tonumber(data.preview_seconds or data.estimated_seconds or data.duration_seconds) or 0)
+  view_start = math.max(0, tonumber(view_start) or 0)
+  view_end = math.min(duration, tonumber(view_end) or duration)
+  if view_end <= view_start then view_end = view_start + 0.000001 end
+
+  local pc_h = thumbnail and math.min(4, math.max(2, img_h * 0.18)) or math.min(UIScaleF(18), math.max(UIScaleF(8), img_h * 0.14))
+  local note_top, note_bottom = min_y, math.max(min_y + 1, max_y - pc_h)
+  local note_h = note_bottom - note_top
+  local note_col = colors.wave_line or 0x99AA84FF
+  local grid_col = colors.wave_center or 0x6F7C63FF
+  local pc_col = colors.preview_play_cursor or note_col
+
+  if not thumbnail and note_h >= 32 then
+    for pitch = 0, 127, 12 do
+      local y = note_top + (128 - pitch) / 128 * note_h
+      reaper.ImGui_DrawList_AddLine(drawlist, min_x, y, max_x, y, grid_col, 1)
+    end
+  end
+
+  local projection_width = math.max(1, math.min(65536, math.ceil(img_w * math.max(1, duration / (view_end - view_start)))))
+  local points = data.points or MIDI.project(data, projection_width, true)
+  for p = 1, #points, 3 do
+    local start_time = (points[p] or 0) * duration
+    local end_time = (points[p + 1] or points[p] or 0) * duration
+    if end_time >= view_start and start_time <= view_end then
+      local pitch = math.max(0, math.min(127, tonumber(points[p + 2]) or 0))
+      local x0 = min_x + (math.max(view_start, start_time) - view_start) / (view_end - view_start) * img_w
+      local x1 = min_x + (math.min(view_end, end_time) - view_start) / (view_end - view_start) * img_w
+      if x1 < x0 + 1 then x1 = x0 + 1 end
+      local y0 = note_top + (127 - pitch) / 128 * note_h
+      local y1 = note_top + (128 - pitch) / 128 * note_h
+      if y1 < y0 + 1 then y1 = y0 + 1 end
+      reaper.ImGui_DrawList_AddRectFilled(drawlist, x0, y0, math.min(max_x, x1), math.min(note_bottom, y1), note_col)
+    end
+  end
+
+  reaper.ImGui_DrawList_AddLine(drawlist, min_x, note_bottom, max_x, note_bottom, grid_col, 1)
+  local pcs = data.program_changes or {}
+  if data.points then
+    -- Thumbnail points are normalized triples: time, channel, program.
+    for p = 1, #pcs, 3 do
+      local sec = (pcs[p] or 0) * duration
+      if sec >= view_start and sec <= view_end then
+        local x = min_x + (sec - view_start) / (view_end - view_start) * img_w
+        reaper.ImGui_DrawList_AddLine(drawlist, x, note_bottom, x, max_y, pc_col, thumbnail and 1 or UIScaleF(2))
+      end
+    end
+  else
+    for _, pc in ipairs(pcs) do
+      local sec = tonumber(pc.sec) or 0
+      if data.channel_enabled[pc.channel] ~= false and sec >= view_start and sec <= view_end then
+        local x = min_x + (sec - view_start) / (view_end - view_start) * img_w
+        reaper.ImGui_DrawList_AddLine(drawlist, x, note_bottom, x, max_y, pc_col, thumbnail and 1 or UIScaleF(2))
+        if not thumbnail and pc_h >= UIScaleF(12) then
+          reaper.ImGui_DrawList_AddTriangleFilled(drawlist, x, note_bottom, x - UIScaleF(3), note_bottom + UIScaleF(5), x + UIScaleF(3), note_bottom + UIScaleF(5), pc_col)
+        end
+      end
+    end
+  end
+  if not thumbnail and pc_h >= UIScaleF(12) then
+    reaper.ImGui_DrawList_AddText(drawlist, min_x + UIScaleF(2), note_bottom + UIScaleF(2), grid_col, "PC")
+  end
+end
+
+function DrawMIDIChannelSelector(ctx)
+  local data = midi_preview_state.data
+  reaper.ImGui_BeginDisabled(ctx, not data)
+
+  if reaper.ImGui_Button(ctx, "MIDI") then
+    reaper.ImGui_OpenPopup(ctx, "##midi_channel_popup")
+  end
+
+  if reaper.ImGui_BeginPopup(ctx, "##midi_channel_popup") then
+    local channels = data and data.channels or {}
+    -- 检查当前是否全部启用
+    local all_enabled = #channels > 0
+    for _, channel in ipairs(channels) do
+      if data.channel_enabled[channel] == false then
+        all_enabled = false
+        break
+      end
+    end
+    -- All
+    local all_changed, new_all_enabled = reaper.ImGui_Checkbox(ctx, T("All"), all_enabled)
+
+    if all_changed then
+      for _, channel in ipairs(channels) do
+        data.channel_enabled[channel] = new_all_enabled
+      end
+    end
+    reaper.ImGui_Separator(ctx)
+    -- 单独的 MIDI 通道
+    for _, channel in ipairs(channels) do
+      local enabled = data.channel_enabled[channel] ~= false
+      local changed
+
+      changed, enabled = reaper.ImGui_Checkbox(ctx, T("Channel") .. " " .. tostring(channel), enabled)
+
+      if changed then
+        data.channel_enabled[channel] = enabled
+      end
+    end
+    reaper.ImGui_EndPopup(ctx)
+  end
+
+  reaper.ImGui_EndDisabled(ctx)
+end
+
 --------------------------------------------- 同步速度与联动 ---------------------------------------------
 
 tempo_sync_enabled = tempo_sync_enabled or false -- 同步速度
@@ -8001,7 +8119,7 @@ function PlayFromStart(info)
   -- Wave.play_cursor = 0
   -- 跳过静音
   local start_pos = 0
-  if skip_silence_enabled then
+  if skip_silence_enabled and not IsValidMIDIFile(info and info.path or "") then
     local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
     if non_sil and non_sil > 0 then
       start_pos = non_sil
@@ -8011,7 +8129,7 @@ function PlayFromStart(info)
   end
 
   -- 将当前要播放的文件插到波形任务队列头部，提升优先级
-  if table_waveform_column_enabled and waveform_task_queue and info and info.path and info.path ~= "" then
+  if table_waveform_column_enabled and waveform_task_queue and info and info.path and info.path ~= "" and not IsValidMIDIFile(info.path) then
     info._wf_enqueued = info._wf_enqueued or {}
     local want_width = math.max(1, math.floor(tonumber(info._last_thumb_w) or TABLE_WAVEFORM_PREFETCH_PX))
     if not info._wf_enqueued[want_width] then
@@ -8021,11 +8139,11 @@ function PlayFromStart(info)
   end
 
   local source
-  if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidAudioFile(info.path) then -- RPP模式下强制用源音频路径
+  if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidPreviewFile(info.path) then -- RPP模式下强制用源媒体路径
     source = reaper.PCM_Source_CreateFromFile(info.path)
   elseif info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
     source = reaper.GetMediaItemTake_Source(info.take)
-  elseif info and info.path and IsValidAudioFile(info.path) then
+  elseif info and info.path and IsValidPreviewFile(info.path) then
     source = reaper.PCM_Source_CreateFromFile(info.path)
   end
   if source then
@@ -8074,11 +8192,11 @@ function PlayFromCursor(info)
   end
   StopPreview()
   local source
-  if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidAudioFile(info.path) then -- RPP模式下强制用源音频路径
+  if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidPreviewFile(info.path) then -- RPP模式下强制用源媒体路径
     source = reaper.PCM_Source_CreateFromFile(info.path)
   elseif info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
     source = reaper.GetMediaItemTake_Source(info.take)
-  elseif info and info.path and IsValidAudioFile(info.path) then
+  elseif info and info.path and IsValidPreviewFile(info.path) then
     source = reaper.PCM_Source_CreateFromFile(info.path)
   end
   if source then
@@ -8096,7 +8214,7 @@ function PlayFromCursor(info)
         -- 决定光标起播位置
         local base_pos = Wave.play_cursor or 0 --  or (tempo_sync_enabled and Wave.play_cursor / effective_rate_knob)
         local start_pos = base_pos
-        if skip_silence_enabled then
+        if skip_silence_enabled and not IsValidMIDIFile(info and info.path or "") then
           local eps = 1e-6
           if base_pos <= eps then
             local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
@@ -8534,7 +8652,7 @@ end
 
 --------------------------------------------- 树状文件夹 ---------------------------------------------
 
-local audio_types = { WAVE=true, MP3=true, FLAC=true, OGG=true, AIFF=true, APE=true, M4A=true, AAC=true, MP4=true }
+local audio_types = { WAVE=true, MP3=true, FLAC=true, OGG=true, AIFF=true, APE=true, M4A=true, AAC=true, MP4=true, MID=true, MIDI=true }
 tree_state = tree_state or { cur_path = '', sel_audio = '' }
 local tree_open = {}
 local dir_cache = {}
@@ -12914,8 +13032,68 @@ function DrawRowPopup(ctx, i, info, collect_mode)
   reaper.ImGui_PopStyleColor(ctx, 1)
 end
 
+function RenderMIDICell(ctx, i, info, row_height, collect_mode, idle_time)
+  local thumb_w = math.max(1, math.floor(reaper.ImGui_GetContentRegionAvail(ctx)))
+  local thumb_h = math.max(row_height - 2, 8)
+  local thumb = MIDI.thumbnail(info.path, false)
+
+  if not thumb
+    and idle_time >= TABLE_WAVEFORM_IDLE_SECONDS
+    and (static.wf_enqueue_count or 0) < TABLE_WAVEFORM_ENQUEUE_LIMIT
+  then
+    static.wf_enqueue_count = (static.wf_enqueue_count or 0) + 1
+    thumb = MIDI.thumbnail(info.path, true)
+  end
+
+  if not thumb then return end
+
+  local duration = math.max(0, tonumber(thumb.preview_seconds or thumb.estimated_seconds or thumb.duration_seconds) or 0)
+  local draw_data = {
+    points = thumb.points or {},
+    program_changes = thumb.program_changes or {},
+    preview_seconds = duration,
+  }
+
+  reaper.ImGui_PushID(ctx, "midi_cell_" .. tostring(info.path or i))
+  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+  DrawMIDIInImGui(ctx, draw_data, thumb_w, thumb_h, 0, duration, true)
+
+  if duration > 0 and collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and playing_path == info.path and Wave and Wave.play_cursor then
+    local play_px = ((Wave.play_cursor * effective_rate_knob) / duration) * thumb_w
+    play_px = math.max(0, math.min(thumb_w, play_px))
+    local dl = reaper.ImGui_GetWindowDrawList(ctx)
+    reaper.ImGui_DrawList_AddLine(dl, x + play_px, y, x + play_px, y + thumb_h, colors.table_play_cursor, UIScaleF(2))
+  end
+
+  if duration > 0 and reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsItemClicked(ctx, 0) then
+    local mx = select(1, reaper.ImGui_GetMousePos(ctx))
+    local new_pos = math.max(0, math.min(duration, ((mx - x) / thumb_w) * duration))
+    local rate = ApplyEffectivePreviewRate(info)
+    if not rate or rate == 0 then rate = 1 end
+    local cursor_pos = new_pos / rate
+    current_recent_play_info = nil
+    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then collect_mode = last_collect_mode end
+    selected_row = i
+    last_selected_row = i
+    Wave.play_cursor = cursor_pos
+    wf_play_start_cursor = cursor_pos
+
+    if IsPreviewActuallyPlaying() then
+      if playing_path == info.path then RestartPreviewWithParams(new_pos)
+      else PlayFromCursor(info) end
+    else
+      MaybeAutoPlayWaveformClickWhenStopped(info)
+    end
+  end
+  reaper.ImGui_PopID(ctx)
+end
+
 -- 表格停止滚动满 TABLE_WAVEFORM_IDLE_SECONDS 后，读取缓存或加入异步创建队列。
 function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
+  if MIDI.is_file(info and info.path or "") then
+    RenderMIDICell(ctx, i, info, row_height, collect_mode, idle_time)
+    return
+  end
   local thumb_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx)) -- 自适应宽度
   local thumb_h = math.max(row_height - 2, 8) -- 自适应高度，预留 2px padding
   local freesound_not_downloaded = false
@@ -13485,6 +13663,7 @@ function SM_DrawMetadataTab(ctx)
 
   local path = tostring(info.pathname or info.path or "")
   local filename = tostring(info.filename or path:match("[^/\\]+$") or "")
+  local midi_data = MIDI.is_file(path) and MIDI.get(path, true) or nil
   local channels = tostring(info.channels or info.channel_count or "")
   local duration = SM_FormatMetadataDuration(info)
 
@@ -13513,10 +13692,19 @@ function SM_DrawMetadataTab(ctx)
   if reaper.ImGui_BeginTable(ctx, "album_metadata_table", 2, flags) then
     reaper.ImGui_TableSetupColumn(ctx, "Field", reaper.ImGui_TableColumnFlags_WidthFixed(), UIScale(78))
     reaper.ImGui_TableSetupColumn(ctx, "Value", reaper.ImGui_TableColumnFlags_WidthStretch())
-    SM_MetadataRow(ctx, "filename", filename)
-    SM_MetadataRow(ctx, "channels", channels)
-    SM_MetadataRow(ctx, "duration", duration)
-    SM_MetadataRow(ctx, "pathname", path)
+    SM_MetadataRow(ctx, T("Filename"), filename)
+    if midi_data then
+      local total_ms = math.floor((tonumber(midi_data.estimated_seconds) or 0) * 1000 + 0.5)
+      local length_qn = string.format("%.3f", tonumber(midi_data.length_qn) or 0):gsub("%.?0+$", "")
+      SM_MetadataRow(ctx, T("MIDI events"), midi_data.event_count or 0)
+      SM_MetadataRow(ctx, T("Length"), length_qn .. " " .. T("quarter notes"))
+      SM_MetadataRow(ctx, T("Length"), string.format("%d:%02d.%03d", math.floor(total_ms / 60000), math.floor(total_ms / 1000) % 60, total_ms % 1000) .. " " .. T("Estimated"))
+      SM_MetadataRow(ctx, T("PPQ"), midi_data.ppq or "")
+    else
+      SM_MetadataRow(ctx, T("Channels"), channels)
+      SM_MetadataRow(ctx, T("Duration"), duration)
+    end
+    SM_MetadataRow(ctx, T("Pathname"), path)
     reaper.ImGui_EndTable(ctx)
   end
 end
@@ -13686,11 +13874,15 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           table.insert(paths, normalize_path(info.path, false))
         end
         if not dragging_audio then
+          local is_midi_drag = #paths == 1 and MIDI.is_file(paths[1])
           local drag_preview_end_time = tonumber(info and info.section_length) or 0
           if drag_preview_end_time <= 0 then
             drag_preview_end_time = tonumber(info and info.length) or 0
           end
-          if keep_preview_rate_pitch_on_insert and drag_preview_end_time <= 0 and #paths == 1 then
+
+          -- MIDI 源长度可能以四分音符为单位返回，第二个返回值为 lengthIsQN。
+          -- MIDI 文件必须直接使用原始路径，而不能进入仅适用于音频的预览替换流程。
+          if keep_preview_rate_pitch_on_insert and not is_midi_drag and drag_preview_end_time <= 0 and #paths == 1 then
             local src = reaper.PCM_Source_CreateFromFile(paths[1])
             if src then
               drag_preview_end_time = tonumber(reaper.GetMediaSourceLength(src)) or 0
@@ -13699,7 +13891,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           end
 
           local native_paths = paths
-          local use_section_drop_logic = keep_preview_rate_pitch_on_insert and #paths == 1 and drag_preview_end_time > 0
+          local use_section_drop_logic = keep_preview_rate_pitch_on_insert and not is_midi_drag and #paths == 1 and drag_preview_end_time > 0
           local real_path, native_drag_path, preview_path, preview_dir, original_filename
           if use_section_drop_logic then
             local drag_path = info and info.path
@@ -14560,7 +14752,17 @@ function ConfigureHWBusRouting(bus_tr, src_channels, map, num_out)
 end
 
 function ApplyPreviewOutputTrack(preview, info)
-  if not preview or not preview_route_enable then return end
+  if not preview then return end
+
+  if info and IsValidMIDIFile(info.path or "") then
+    local target = reaper.CF_Preview_SetOutputTrack and FindFirstSelectedTrack()
+    if target then
+      reaper.CF_Preview_SetOutputTrack(preview, reaper.EnumProjects(-1, ""), target)
+    end
+    return
+  end
+
+  if not preview_route_enable then return end
 
   if preview_out_to_track then
     if not reaper.CF_Preview_SetOutputTrack then return end
@@ -15094,7 +15296,7 @@ function UI_PlayIconTrigger_Play(ctx)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
           reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
         end
-        local resume_info = SrcInfoFromPCM(playing_source)
+        local resume_info = last_playing_info or last_selected_info or SrcInfoFromPCM(playing_source)
         ApplyPreviewOutputTrack(playing_preview, resume_info)
         reaper.CF_Preview_Play(playing_preview)
         is_paused = false
@@ -15173,7 +15375,7 @@ function UI_PlayIconTrigger_Pause(ctx)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
           reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", paused_position)
         end
-        local resume_info = SrcInfoFromPCM(playing_source)
+        local resume_info = last_playing_info or last_selected_info or SrcInfoFromPCM(playing_source)
         ApplyPreviewOutputTrack(playing_preview, resume_info)
         reaper.CF_Preview_Play(playing_preview)
         wf_play_start_time = os.clock()
@@ -21791,6 +21993,9 @@ function loop()
       end
     end
 
+    reaper.ImGui_SameLine(ctx, nil, 10)
+    DrawMIDIChannelSelector(ctx)
+
     do
       -- 时间容差
       local END_EPS = 0.10
@@ -22241,6 +22446,7 @@ function loop()
       if not cur_info then
         cur_info = last_selected_info
       end
+      midi_preview_state.data = nil
       if cur_info then
         -- 限制只有在选中表格项或双击预览播放时加载波形，但效果不佳。目前默认只要选中就会加载波形。
         -- if (auto_play_selected and last_selected_row ~= selected_row) or (doubleclick_action == DOUBLECLICK_PREVIEW and reaper.ImGui_IsMouseDoubleClicked(ctx, 0)) then
@@ -22263,7 +22469,27 @@ function loop()
         end
         root_path = normalize_path(root_path, false)
         local cur_key = (root_path or cur_info.path) .. "|" .. tostring(section_offset) .. "|" .. tostring(section_length)
-        if (not peaks)
+        if MIDI.is_file(root_path) then
+          midi_preview_state.data = MIDI.get(root_path, true)
+          peaks, pixel_cnt, channel_count = nil, nil, nil
+          if midi_preview_state.data then
+            if last_wave_info ~= cur_key then
+              Wave.zoom, Wave.scroll = 1, 0
+            end
+            Wave.src_len = math.max(0, tonumber(midi_preview_state.data.preview_seconds) or 0)
+            Wave.sample_rate = tonumber(midi_preview_state.data.ppq) or 960
+            ClampWaveView(Wave)
+            view_len = (Wave.zoom and Wave.zoom > 0) and (Wave.src_len / Wave.zoom) or Wave.src_len
+            window_start = Wave.scroll or 0
+            window_end = math.min(Wave.src_len, window_start + view_len)
+            last_wave_info = cur_key
+            last_pixel_cnt = pw_region_w
+            last_view_len = view_len
+            last_scroll = Wave.scroll
+          else
+            Wave.src_len = 0
+          end
+        elseif (not peaks)
           or (last_wave_info ~= cur_key)
           or (last_pixel_cnt ~= pw_region_w)
           or (last_view_len ~= view_len)
@@ -22359,11 +22585,15 @@ function loop()
       local _, item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
       local waveform_h = math.max(1, wave_child_avail_h - timeline_h - scrollbar_h - item_spacing_y * 2)
       reaper.ImGui_Dummy(ctx, 0, timeline_h) -- 占位时间线高度，与波形预览之间的间隔所在位置
-      DrawWaveformInImGui(ctx, peaks, pw_region_w, waveform_h, Wave.src_len or src_len, channel_count,
-        waveform_vertical_zoom,
-        type(peaks) == "table" and peaks._loaded_rows or nil,
-        type(peaks) == "table" and peaks._pixel_cnt or nil,
-        cur_info ~= nil and (Wave.src_len or 0) > 0)
+      if midi_preview_state.data then
+        DrawMIDIInImGui(ctx, midi_preview_state.data, pw_region_w, waveform_h, view_start, view_end, false)
+      else
+        DrawWaveformInImGui(ctx, peaks, pw_region_w, waveform_h, Wave.src_len or src_len, channel_count,
+          waveform_vertical_zoom,
+          type(peaks) == "table" and peaks._loaded_rows or nil,
+          type(peaks) == "table" and peaks._pixel_cnt or nil,
+          cur_info ~= nil and (Wave.src_len or 0) > 0)
+      end
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
       end
