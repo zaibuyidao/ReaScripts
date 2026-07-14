@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.233
+-- @version 1.0.234
 -- @changelog
---   Added support for MIDI files.
+--   Added reverse playback with selection positioning, active-state highlighting, and reverse rate control.
+--   Improved rate control for smoother transitions and fixed playback issues.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

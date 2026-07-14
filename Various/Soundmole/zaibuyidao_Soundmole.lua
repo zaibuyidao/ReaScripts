@@ -259,6 +259,7 @@ ICON_CODEPOINTS = {
   previous_track       = 0x0100,
   stop                 = 0x0105,
   next_track           = 0x0108,
+  rewind               = 0x010B,
   repeat_on            = 0x010D,
   shuffle              = 0x0147,
 
@@ -339,6 +340,7 @@ playing_preview              = nil
 playing_path                 = nil
 playing_source               = nil
 loop_enabled                 = false -- 是否自动循环
+reverse_enabled              = false -- 是否倒序播放
 preview_play_len             = 0     -- 当前预览音频长度
 peak_chans                   = 6     -- 默认显示6路电平
 play_rate                    = 1     -- 默认速率1.0
@@ -374,6 +376,8 @@ local last_selected_info     = nil   -- 上次选中的音频信息
 local last_playing_info      = nil   -- 上次播放的音频信息
 local is_knob_dragging       = false
 local prev_preview_pos       = 0
+__rate_ramp_id, __rate_ramp_preview, __rate_ramp_rate = 0, nil, nil
+__rate_cursor_preview, __rate_cursor_offset = nil, 0
 local filename_filter        = nil   -- 列表音效搜索过滤
 local last_collect_mode
 local adv_folder_nodes_inited = false -- 是否已初始化高级文件夹节点的展开
@@ -4392,11 +4396,22 @@ function RestartPreviewWithParams(from_wave_pos)
   local cur_pos = 0
 
   if from_wave_pos then
-    cur_pos = from_wave_pos / effective_rate_knob -- 用新的速率换算
+    if reverse_enabled then
+      cur_pos = math.max(0, preview_play_len - from_wave_pos) / math.max(1e-9, effective_rate_knob or 1.0)
+    else
+      cur_pos = from_wave_pos / effective_rate_knob -- 用新的速率换算
+    end
   else
     if playing_preview and reaper.CF_Preview_GetValue then
       local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-      if ok then cur_pos = pos end
+      if ok then
+        if __rate_cursor_preview == playing_preview then
+          local rate = (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or effective_rate_knob
+          local source_pos = pos * rate + (__rate_cursor_offset or 0)
+          pos = source_pos / math.max(1e-9, effective_rate_knob or 1.0)
+        end
+        cur_pos = pos
+      end
     end
   end
 
@@ -4407,6 +4422,9 @@ function RestartPreviewWithParams(from_wave_pos)
     return { channels = ch }
   end
 
+  __rate_ramp_id = __rate_ramp_id + 1
+  __rate_ramp_preview, __rate_ramp_rate = nil, nil
+  __rate_cursor_preview, __rate_cursor_offset = nil, 0
   StopPlay()
   playing_preview = reaper.CF_CreatePreview(playing_source)
   if playing_preview then
@@ -6968,6 +6986,69 @@ function SmoothSetPreviewPitch(target_semitones, ramp_ms)
   reaper.defer(step)
 end
 
+function SmoothSetPreviewRate(target_rate, ramp_ms)
+  if not playing_preview or not reaper.CF_Preview_SetValue or not reaper.CF_Preview_GetValue then return end
+  target_rate = math.max(0.01, math.min(100, tonumber(target_rate) or 1.0))
+  ramp_ms = math.max(10, tonumber(ramp_ms) or 120)
+
+  local preview = playing_preview
+  local ok, current_rate = reaper.CF_Preview_GetValue(preview, "D_PLAYRATE")
+  current_rate = (ok and tonumber(current_rate)) or target_rate
+  if __rate_cursor_preview ~= preview then
+    __rate_cursor_preview, __rate_cursor_offset = preview, 0
+  end
+
+  __rate_ramp_id = __rate_ramp_id + 1
+  local ok_pos, position = reaper.CF_Preview_GetValue(preview, "D_POSITION")
+  local progress = ok_pos and (position * current_rate + (__rate_cursor_offset or 0)) or nil
+  local path_lower = type(playing_path) == "string" and playing_path:lower() or ""
+  local is_midi = path_lower:match("%.midi?$") ~= nil
+  local target_length = preview_play_len > 0 and (preview_play_len / target_rate) or 0
+  local end_guard = ramp_ms / 1000 + 0.05
+  if not is_midi and progress and target_rate > current_rate and target_length > 0
+    and position >= target_length - end_guard and progress < preview_play_len - 0.01
+  then
+    reaper.CF_Preview_SetValue(preview, "B_LOOP", 1)
+    reaper.CF_Preview_SetValue(preview, "D_PLAYRATE", target_rate)
+    reaper.CF_Preview_SetValue(preview, "D_POSITION", progress / target_rate)
+    reaper.CF_Preview_SetValue(preview, "B_LOOP", loop_enabled and 1 or 0)
+    __rate_cursor_offset = 0
+    __rate_ramp_preview, __rate_ramp_rate = nil, nil
+    return
+  end
+  if math.abs(target_rate - current_rate) < 1e-5 then
+    reaper.CF_Preview_SetValue(preview, "D_PLAYRATE", target_rate)
+    __rate_ramp_preview, __rate_ramp_rate = nil, nil
+    return
+  end
+
+  local myid, t0, dur = __rate_ramp_id, reaper.time_precise(), ramp_ms / 1000
+  __rate_ramp_preview, __rate_ramp_rate = preview, current_rate
+
+  local function step()
+    if myid ~= __rate_ramp_id or playing_preview ~= preview then return end
+    local a = math.min(1, (reaper.time_precise() - t0) / dur)
+    local eased = a * a * (3 - 2 * a)
+    local next_rate = current_rate + (target_rate - current_rate) * eased
+    local previous_rate = __rate_ramp_rate or current_rate
+    local ok_pos, position = reaper.CF_Preview_GetValue(preview, "D_POSITION")
+    if ok_pos then
+      local source_pos = position * previous_rate + (__rate_cursor_offset or 0)
+      __rate_cursor_offset = source_pos - position * next_rate
+    end
+    reaper.CF_Preview_SetValue(preview, "D_PLAYRATE", next_rate)
+    __rate_ramp_rate = next_rate
+
+    if a < 1 then
+      reaper.defer(step)
+    else
+      reaper.CF_Preview_SetValue(preview, "D_PLAYRATE", target_rate)
+      __rate_ramp_preview, __rate_ramp_rate = nil, nil
+    end
+  end
+  reaper.defer(step)
+end
+
 --------------------------------------------- mini 频谱视觉反馈 ---------------------------------------------
 
 function ResetMiniSpectrum()
@@ -8080,6 +8161,9 @@ end
 
 -- 停止播放预览
 function StopPreview()
+  __rate_ramp_id = __rate_ramp_id + 1
+  __rate_ramp_preview, __rate_ramp_rate = nil, nil
+  __rate_cursor_preview, __rate_cursor_offset = nil, 0
   -- 重置峰值
   for i = 1, peak_chans do
     peak_hold[i] = 0
@@ -8108,6 +8192,16 @@ function StopPreview()
   pending_skip_silence_seek = nil
 end
 
+function ApplyPreviewReverse(source)
+  if not reverse_enabled or not source or not reaper.CF_PCM_Source_SetSectionInfo then return source end
+  local section = reaper.PCM_Source_CreateFromType("SECTION")
+  if section then
+    reaper.CF_PCM_Source_SetSectionInfo(section, source, 0, 0, true)
+    return section
+  end
+  return source
+end
+
 -- 从头播放
 function PlayFromStart(info)
   last_play_cursor_before_play = 0
@@ -8119,7 +8213,7 @@ function PlayFromStart(info)
   -- Wave.play_cursor = 0
   -- 跳过静音
   local start_pos = 0
-  if skip_silence_enabled and not IsValidMIDIFile(info and info.path or "") then
+  if skip_silence_enabled and not reverse_enabled and not IsValidMIDIFile(info and info.path or "") then
     local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
     if non_sil and non_sil > 0 then
       start_pos = non_sil
@@ -8148,6 +8242,8 @@ function PlayFromStart(info)
   end
   if source then
     ApplyEffectivePreviewRate(info, source)
+    source = ApplyPreviewReverse(source)
+    local source_len = reaper.GetMediaSourceLength(source) or 0
     playing_source = source
     playing_preview = reaper.CF_CreatePreview(source)
     SM_PreviewBegin(playing_source)
@@ -8159,6 +8255,9 @@ function PlayFromStart(info)
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
+        if reverse_enabled and Wave then
+          Wave.play_cursor = source_len / math.max(1e-9, effective_rate_knob or 1.0)
+        end
       end
       AttachPendingSkipSilenceSeekPreview(info)
       ApplyPreviewOutputTrack(playing_preview, info)
@@ -8178,7 +8277,7 @@ function PlayFromStart(info)
       SM_StoreStablePreviewCover(last_playing_info, info)
     end
     -- 顺序播放新增
-    preview_play_len = reaper.GetMediaSourceLength(source) or 0
+    preview_play_len = source_len
     playing_path = info.path or ""
   end
 end
@@ -8201,6 +8300,8 @@ function PlayFromCursor(info)
   end
   if source then
     ApplyEffectivePreviewRate(info, source)
+    source = ApplyPreviewReverse(source)
+    local source_len = reaper.GetMediaSourceLength(source) or 0
     playing_source = source
     playing_preview = reaper.CF_CreatePreview(source)
     SM_PreviewBegin(playing_source)
@@ -8214,7 +8315,11 @@ function PlayFromCursor(info)
         -- 决定光标起播位置
         local base_pos = Wave.play_cursor or 0 --  or (tempo_sync_enabled and Wave.play_cursor / effective_rate_knob)
         local start_pos = base_pos
-        if skip_silence_enabled and not IsValidMIDIFile(info and info.path or "") then
+        if reverse_enabled then
+          local reverse_len = source_len / math.max(1e-9, effective_rate_knob or 1.0)
+          start_pos = base_pos > 1e-6 and math.max(0, reverse_len - base_pos) or 0
+          Wave.play_cursor = base_pos > 1e-6 and base_pos or reverse_len
+        elseif skip_silence_enabled and not IsValidMIDIFile(info and info.path or "") then
           local eps = 1e-6
           if base_pos <= eps then
             local non_sil, status = FindFirstNonSilentTimeCxx(info, 12)
@@ -8225,7 +8330,7 @@ function PlayFromCursor(info)
           end
         end
         reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", start_pos)
-        Wave.play_cursor = start_pos
+        if not reverse_enabled then Wave.play_cursor = start_pos end
       end
       AttachPendingSkipSilenceSeekPreview(info)
       ApplyPreviewOutputTrack(playing_preview, info)
@@ -8240,6 +8345,7 @@ function PlayFromCursor(info)
     if type(SM_StoreStablePreviewCover) == "function" then
       SM_StoreStablePreviewCover(last_playing_info, info)
     end
+    preview_play_len = source_len
     playing_path = info.path or ""
   end
 end
@@ -8272,7 +8378,18 @@ function ProcessPendingPreviewSeek()
   if pending.restart then
     PlayFromCursor(pending.info)
   elseif reaper.CF_Preview_SetValue then
-    reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", pending.pos)
+    local target_pos = pending.pos
+    if reverse_enabled and reaper.CF_Preview_GetValue then
+      local ok, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+      if ok then target_pos = math.max(0, length - target_pos) end
+    end
+    if __rate_ramp_preview == playing_preview then
+      __rate_ramp_id = __rate_ramp_id + 1
+      reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
+      __rate_ramp_preview, __rate_ramp_rate = nil, nil
+    end
+    reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", target_pos)
+    __rate_cursor_preview, __rate_cursor_offset = nil, 0
   end
 end
 
@@ -11144,7 +11261,13 @@ function ProcessPendingSkipSilenceSeek()
     end
     pending_skip_silence_seek = nil
     if current_pos < pos - 0.01 and reaper.CF_Preview_SetValue then
+      if __rate_ramp_preview == playing_preview then
+        __rate_ramp_id = __rate_ramp_id + 1
+        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
+        __rate_ramp_preview, __rate_ramp_rate = nil, nil
+      end
       reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", pos)
+      __rate_cursor_preview, __rate_cursor_offset = nil, 0
       Wave.play_cursor = pos
       wf_play_start_cursor = pos
       wf_play_start_time = os.clock()
@@ -13079,7 +13202,7 @@ function RenderMIDICell(ctx, i, info, row_height, collect_mode, idle_time)
     wf_play_start_cursor = cursor_pos
 
     if IsPreviewActuallyPlaying() then
-      if playing_path == info.path then RestartPreviewWithParams(new_pos)
+      if playing_path == info.path and not reverse_enabled then RestartPreviewWithParams(new_pos)
       else PlayFromCursor(info) end
     else
       MaybeAutoPlayWaveformClickWhenStopped(info)
@@ -13198,7 +13321,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
           wf_play_start_cursor = cursor_pos
 
           if IsPreviewActuallyPlaying() then
-            if playing_path == info.path then
+            if playing_path == info.path and not reverse_enabled then
               RestartPreviewWithParams(new_pos)
             else
               PlayFromCursor(info)
@@ -15294,7 +15417,7 @@ function UI_PlayIconTrigger_Play(ctx)
           reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
           reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
-          reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", Wave.play_cursor or 0)
+          reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", paused_position)
         end
         local resume_info = last_playing_info or last_selected_info or SrcInfoFromPCM(playing_source)
         ApplyPreviewOutputTrack(playing_preview, resume_info)
@@ -15356,12 +15479,29 @@ function UI_PlayIconTrigger_Pause(ctx)
       local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
       if ok then
         paused_position = pos
-        wf_play_start_cursor = paused_position
-        Wave.play_cursor = paused_position
+        local ok_len, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+        if __rate_cursor_preview == playing_preview then
+          local rate = (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or effective_rate_knob
+          local progress = pos * rate + (__rate_cursor_offset or 0)
+          paused_position = progress / math.max(1e-9, effective_rate_knob or 1.0)
+          if reverse_enabled then
+            Wave.play_cursor = math.max(0, preview_play_len - progress) / math.max(1e-9, effective_rate_knob or 1.0)
+          else
+            Wave.play_cursor = paused_position
+          end
+        elseif reverse_enabled and ok_len then
+          Wave.play_cursor = math.max(0, length - pos)
+        else
+          Wave.play_cursor = pos
+        end
+        wf_play_start_cursor = Wave.play_cursor
       end
       reaper.CF_Preview_Stop(playing_preview)
       is_paused = true
       playing_preview = nil
+      __rate_ramp_id = __rate_ramp_id + 1
+      __rate_ramp_preview, __rate_ramp_rate = nil, nil
+      __rate_cursor_preview, __rate_cursor_offset = nil, 0
     elseif is_paused and playing_source then
       -- 处于暂停，恢复
       ApplyEffectivePreviewRate(last_playing_info or last_selected_info, playing_source)
@@ -15379,7 +15519,7 @@ function UI_PlayIconTrigger_Pause(ctx)
         ApplyPreviewOutputTrack(playing_preview, resume_info)
         reaper.CF_Preview_Play(playing_preview)
         wf_play_start_time = os.clock()
-        wf_play_start_cursor = paused_position
+        wf_play_start_cursor = Wave.play_cursor or paused_position
         is_paused = false
       end
     end
@@ -15593,6 +15733,60 @@ function UI_PlayIconTrigger_Rand(ctx)
     ClearFileSelection()
     _G.scroll_request_index = rand_idx -- 目标索引
     _G.scroll_request_align = 0.5      -- 居中
+  end
+end
+
+function UI_PlayIconTrigger_Rewind(ctx)
+  reaper.ImGui_SameLine(ctx, nil, 10)
+  local highlight_reverse = reverse_enabled and true or false
+  PushUIFont(ctx, fonts.material, 15)
+  local glyph = MATERIAL_ICONS.rewind
+  local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
+  local active  = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+  local col_on      = colors.status_active
+  local col_normal  = highlight_reverse and col_on or colors.icon_normal or 0xFFFFFFFF
+  local col_hovered = highlight_reverse and col_on or colors.icon_hovered or 0xFFCC66FF
+  local col_active  = highlight_reverse and col_on or colors.icon_active or col_hovered
+  local col         = hovered and (active and col_active or col_hovered) or col_normal
+
+  DrawTextVOffset(ctx, glyph, col, 4)
+  if hovered then reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand()) end
+  reaper.ImGui_PopFont(ctx)
+
+  if clicked then
+    local was_reverse = reverse_enabled
+    local was_playing = playing_preview and not is_paused
+    local list = _G.current_display_list or {}
+    local info = last_playing_info or list[selected_row] or last_selected_info
+    if was_playing and reaper.CF_Preview_GetValue then
+      local ok_pos, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+      local ok_len, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+      if ok_pos and ok_len and Wave then
+        if __rate_cursor_preview == playing_preview then
+          local rate = (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or effective_rate_knob
+          local progress = pos * rate + (__rate_cursor_offset or 0)
+          if was_reverse then
+            Wave.play_cursor = math.max(0, preview_play_len - progress) / math.max(1e-9, effective_rate_knob or 1.0)
+          else
+            Wave.play_cursor = progress / math.max(1e-9, effective_rate_knob or 1.0)
+          end
+        elseif was_reverse then
+          Wave.play_cursor = math.max(0, length - pos)
+        else
+          Wave.play_cursor = pos
+        end
+      end
+    end
+    reverse_enabled = not reverse_enabled
+    if was_playing and info then
+      PlayFromCursor(info)
+    elseif is_paused then
+      playing_source, is_paused, paused_position = nil, false, 0
+      SM_PreviewStop()
+    end
   end
 end
 
@@ -21398,6 +21592,9 @@ function loop()
     -- 随机播放按钮
     UI_PlayIconTrigger_Rand(ctx)
 
+    -- 倒序播放开关
+    UI_PlayIconTrigger_Rewind(ctx)
+
     -- 预览路由
     reaper.ImGui_SameLine(ctx, nil, 10)
     DrawPreviewRouteMenu(ctx)
@@ -21520,12 +21717,13 @@ function loop()
           select_end_time   = e_vis / new_eff
         end
 
-        if playing_preview and reaper.CF_Preview_GetValue then
+        if playing_preview and (reverse_enabled or (__rate_ramp_preview ~= playing_preview and __rate_cursor_preview ~= playing_preview)) and reaper.CF_Preview_GetValue then
           local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
           if ok then wave_pos = pos * old_eff end
         else
-          wave_pos = Wave.play_cursor * old_eff
+          wave_pos = (Wave.play_cursor or 0) * old_eff
         end
+        wave_pos = wave_pos or (Wave.play_cursor or 0) * old_eff
 
         play_rate = pr_new
         Wave.play_cursor = wave_pos / new_eff
@@ -21593,18 +21791,16 @@ function loop()
         select_end_time = select_end_visual / r2
       end
 
-      if playing_preview and reaper.CF_Preview_GetValue then
-        local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-        if ok then wave_pos = pos * r1 end -- 播放时
-      else
-        wave_pos = Wave.play_cursor * r1 -- 停止时
-      end
+      wave_pos = (Wave.play_cursor or 0) * r1
+      wave_pos = wave_pos or (Wave.play_cursor or 0) * r1
 
       play_rate = knob_value
       Wave.play_cursor = wave_pos / r2 -- 更新光标位置，确保视觉稳定
       effective_rate_knob = r2
       _prev_eff_rate = r2
-      if playing_preview then RestartPreviewWithParams(wave_pos) end
+      if playing_preview then
+        SmoothSetPreviewRate(r2, 120)
+      end
     end
 
     -- 双向同步（输入框改了也会更新旋钮）
@@ -21660,6 +21856,7 @@ function loop()
     reaper.ImGui_PopItemWidth(ctx)
 
     if rv4 and not ui_locked then
+      new_play_rate = math.max(rate_min, math.min(rate_max, tonumber(new_play_rate) or play_rate))
       local base_now = _safe_base()
       local r1 = (tempo_sync_enabled and (play_rate * base_now)) or play_rate
       local r2 = (tempo_sync_enabled and (new_play_rate * base_now)) or new_play_rate
@@ -21672,18 +21869,16 @@ function loop()
         select_end_time = select_end_visual / r2
       end
 
-      if playing_preview and reaper.CF_Preview_GetValue then
-        local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
-        if ok then wave_pos = pos * r1 end -- 播放时
-      else
-        wave_pos = Wave.play_cursor * r1 -- 停止时
-      end
+      wave_pos = (Wave.play_cursor or 0) * r1
+      wave_pos = wave_pos or (Wave.play_cursor or 0) * r1
 
       play_rate = new_play_rate
       Wave.play_cursor = wave_pos / r2
       effective_rate_knob = r2
       _prev_eff_rate = r2
-      if playing_preview then RestartPreviewWithParams(wave_pos) end
+      if playing_preview then
+        SmoothSetPreviewRate(r2, 120)
+      end
     end
 
     -- 水平音量推子
@@ -21854,7 +22049,8 @@ function loop()
       if playing_preview and file_info then
         local base = GetTempoBase(file_info.path, nil, file_info)
         effective_rate_knob = (play_rate or 1.0) * (tempo_sync_enabled and base or 1.0)
-        reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
+        if __rate_cursor_preview == playing_preview then RestartPreviewWithParams()
+        else reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob) end
       end
     end
     if reaper.ImGui_IsItemHovered(ctx) then
@@ -22010,9 +22206,19 @@ function loop()
       end
 
       if auto_play_next and playing_preview and not is_paused and not auto_play_next_pending and not pending_preview_seek and not selecting and not dragging_selection and not dragging_audio then
-        local rate = play_rate or 1
+        local rate = effective_rate_knob or 1
         local cursor_pos = ((Wave and Wave.play_cursor) or 0) * rate
         local duration = (Wave and Wave.src_len) or 0
+        if __rate_cursor_preview == playing_preview then
+          local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+          if ok then
+            local actual_rate = (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or rate
+            cursor_pos = pos * actual_rate + (__rate_cursor_offset or 0)
+          end
+        elseif reverse_enabled then
+          local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+          if ok then cursor_pos = pos * rate end
+        end
         local should_trigger = false
 
         if duration and duration > 0 then
@@ -22802,13 +23008,13 @@ function loop()
         if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
           selecting = false
           if has_selection() then
-            local select_min = math.min(select_start_time, select_end_time)
-            select_min = (tempo_sync_enabled and select_min / effective_rate_knob) or select_min
+            local select_pos = reverse_enabled and math.max(select_start_time, select_end_time) or math.min(select_start_time, select_end_time)
+            select_pos = (tempo_sync_enabled and select_pos / effective_rate_knob) or select_pos
             just_selected_range = true
-            Wave.play_cursor = select_min
-            wf_play_start_cursor = select_min
+            Wave.play_cursor = select_pos
+            wf_play_start_cursor = select_pos
             if playing_preview then
-              QueuePreviewSeek(cur_info, select_min, false)
+              QueuePreviewSeek(cur_info, select_pos, false)
               -- if reaper.CF_Preview_SetValue then
               --   PlayFromCursor(cur_info)
               -- end
@@ -22821,14 +23027,14 @@ function loop()
           selecting = false
           -- 框选松开时自动跳光标
           if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
-            local select_min = math.min(select_start_time, select_end_time)
-            -- select_min = (tempo_sync_enabled and select_min / effective_rate_knob) or select_min
-            Wave.play_cursor = select_min
-            wf_play_start_cursor = select_min
+            local select_pos = reverse_enabled and math.max(select_start_time, select_end_time) or math.min(select_start_time, select_end_time)
+            -- select_pos = (tempo_sync_enabled and select_pos / effective_rate_knob) or select_pos
+            Wave.play_cursor = select_pos
+            wf_play_start_cursor = select_pos
             if playing_preview then
               -- 直接设置播放位置
               if reaper.CF_Preview_SetValue then
-                QueuePreviewSeek(cur_info, select_min, true) -- 从框选区域的起始位置开始播放
+                QueuePreviewSeek(cur_info, select_pos, true) -- 从框选区域的起始边界开始播放
               end
             end
           end
@@ -22838,6 +23044,17 @@ function loop()
         if playing_preview and not pending_preview_seek and not selecting and not dragging_selection and not dragging_audio and select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 and not loop_enabled then
           local ok, pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
           if ok then
+            if __rate_cursor_preview == playing_preview then
+              local rate = (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or effective_rate_knob
+              local progress = pos * rate + (__rate_cursor_offset or 0)
+              if reverse_enabled then
+                pos = math.max(0, preview_play_len - progress) / math.max(1e-9, effective_rate_knob or 1.0)
+              else
+                pos = progress / math.max(1e-9, effective_rate_knob or 1.0)
+              end
+            elseif reverse_enabled then
+              pos = math.max(0, preview_play_len / math.max(1e-9, effective_rate_knob or 1.0) - pos)
+            end
             local select_max = math.max(select_start_time, select_end_time)
             local select_min = math.min(select_start_time, select_end_time)
             -- 框选选区的左右范围值
@@ -22845,10 +23062,10 @@ function loop()
             select_min = (tempo_sync_enabled and (select_min / effective_rate_knob)) or select_min
 
             if prev_play_cursor and prev_play_cursor >= select_min and prev_play_cursor <= select_max then
-              if pos >= select_max then
+              if (not reverse_enabled and pos >= select_max) or (reverse_enabled and pos <= select_min) then
                 StopPreview(cur_info)
-                Wave.play_cursor = select_min
-                wf_play_start_cursor = select_min
+                Wave.play_cursor = reverse_enabled and select_max or select_min
+                wf_play_start_cursor = Wave.play_cursor
               end
             end
             prev_play_cursor = pos
@@ -22961,9 +23178,9 @@ function loop()
       if playing_preview and loop_enabled and has_selection then
         local sel_min = math.min(select_start_time, select_end_time)
         local sel_max = math.max(select_start_time, select_end_time)
-        if Wave.play_cursor >= sel_max then
+        if (not reverse_enabled and Wave.play_cursor >= sel_max) or (reverse_enabled and Wave.play_cursor <= sel_min) then
           StopPreview()
-          Wave.play_cursor = sel_min
+          Wave.play_cursor = reverse_enabled and sel_max or sel_min
           PlayFromCursor(cur_info)
         end
       end
@@ -23069,7 +23286,29 @@ function loop()
       if playing_preview and reaper.CF_Preview_GetValue and not pending_preview_seek and not selecting and not dragging_selection and not dragging_audio then
         local ok, position = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
         if ok then
-          Wave.play_cursor = position
+          local ok_len, length = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+          if __rate_cursor_preview == playing_preview then
+            local rate = math.max(1e-9, (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or effective_rate_knob or 1.0)
+            local progress = position * rate + (__rate_cursor_offset or 0)
+            if ok_len and math.abs(__rate_cursor_offset or 0) > 1e-6
+              and (length - position) < 0.25 and progress < preview_play_len - 0.01
+            then
+              local safe_position = progress / rate
+              reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", 1)
+              reaper.CF_Preview_SetValue(playing_preview, "D_POSITION", safe_position)
+              reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
+              __rate_cursor_offset = 0
+            end
+            if reverse_enabled then
+              Wave.play_cursor = math.max(0, preview_play_len - progress) / math.max(1e-9, effective_rate_knob or 1.0)
+            else
+              Wave.play_cursor = progress / math.max(1e-9, effective_rate_knob or 1.0)
+            end
+          elseif reverse_enabled and ok_len then
+            Wave.play_cursor = math.max(0, length - position)
+          else
+            Wave.play_cursor = position
+          end
           prev_play_cursor = Wave.play_cursor
         end
       else
@@ -23412,7 +23651,15 @@ function loop()
     if playing_preview and not loop_enabled and not auto_play_next and not pending_preview_seek and not selecting and not dragging_selection and not dragging_audio then
       local ok_pos, position = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
       local ok_len, length   = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
-      if ok_pos and ok_len and (length - position) < 0.01 then -- 距离结尾小于0.03秒
+      local should_stop
+      if ok_pos and __rate_cursor_preview == playing_preview and preview_play_len > 0 then
+        local rate = math.max(1e-9, (__rate_ramp_preview == playing_preview and __rate_ramp_rate) or effective_rate_knob or 1.0)
+        local progress = position * rate + (__rate_cursor_offset or 0)
+        should_stop = progress >= preview_play_len - 0.01
+      else
+        should_stop = ok_pos and ok_len and (length - position) < 0.01
+      end
+      if should_stop then -- 距离结尾小于0.01秒
         StopPreview()
         if last_play_cursor_before_play then
           Wave.play_cursor = last_play_cursor_before_play
