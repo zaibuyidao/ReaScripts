@@ -365,6 +365,7 @@ Configure search and history=设置搜索与历史
 Search=搜索
 Recent=最近
 Search Settings:=搜索设置:
+Focus main search box on startup=脚本启动时聚焦主搜索框
 Update search only when enter key pressed=仅在按下回车键时更新搜索结果
 Retain search text when closing script=关闭脚本时保留当前搜索内容
 Max Recent Searched:=最近搜索数量上限:

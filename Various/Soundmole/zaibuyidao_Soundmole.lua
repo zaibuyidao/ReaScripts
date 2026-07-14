@@ -76,6 +76,7 @@ local Persistence = require('lib.persistence')
 -- Persistent values go to data/Soundmole.ini. Only these runtime signals use non-persistent ExtState.
 Persistence.install_state_facade({
   "CMD_AddSelectedToTarget",
+  "CMD_FocusMainSearchBox",
   "CMD_ToggleMainCollapse",
   "fs_query",
 })
@@ -1383,9 +1384,11 @@ local DOUBLECLICK_PREVIEW       = 1
 local DOUBLECLICK_NONE          = 2
 local doubleclick_action        = DOUBLECLICK_NONE
 local bg_alpha                  = 1.0   -- 默认背景不透明
-local hide_soundmole_title      = false -- 默认显示 Soundmole 标题
-local show_window_titlebar      = true  -- 默认显示窗口标题栏
-local retain_search_on_exit     = false -- 关闭脚本时保留当前搜索内容
+hide_soundmole_title            = false -- 默认显示 Soundmole 标题
+show_window_titlebar            = true  -- 默认显示窗口标题栏
+retain_search_on_exit           = false -- 关闭脚本时保留当前搜索内容
+focus_main_search_on_startup    = false -- 启动脚本时聚焦主搜索框
+focus_main_search_requested     = false
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
 local mirror_database           = false -- 默认关闭 Database (Mirror)
 local show_peektree_recent      = false -- 默认开启 播放历史
@@ -1440,6 +1443,7 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
   SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
   SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "focus_main_search_on_startup", focus_main_search_on_startup and "1" or "0", true)
   SM_SetState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
   SM_SetState(EXT_SECTION, "browse_database_as_folders", browse_database_as_folders and "1" or "0", true)
   SM_SetState(EXT_SECTION, "similarity_base_python", similarity_base_python or "", true)
@@ -1618,6 +1622,11 @@ do
   local v = SM_GetState(EXT_SECTION, "retain_search_on_exit")
   if v == "1" then retain_search_on_exit = true
   elseif v == "0" then retain_search_on_exit = false end
+end
+
+do
+  focus_main_search_on_startup = SM_GetState(EXT_SECTION, "focus_main_search_on_startup") == "1"
+  focus_main_search_requested = focus_main_search_on_startup
 end
 
 do
@@ -2696,6 +2705,12 @@ do
       SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
       if not retain_search_on_exit then SM_SetState(EXT_SECTION, "retained_search_text", "", true) end
     end
+
+    local focus_changed, focus_v = reaper.ImGui_Checkbox(ctx, T("Focus main search box on startup"), focus_main_search_on_startup)
+    if focus_changed then
+      focus_main_search_on_startup = focus_v
+      SM_SetState(EXT_SECTION, "focus_main_search_on_startup", focus_v and "1" or "0", true)
+    end
   end
 
   function Section_Recent()
@@ -2759,6 +2774,7 @@ do
       stop_preview_on_collapse = true
       search_enter_mode    = true
       retain_search_on_exit = false
+      focus_main_search_on_startup = false
       SM_SetState(EXT_SECTION, "retained_search_text", "", true)
       build_waveform_cache = false
       browse_database_as_folders = false
@@ -11843,6 +11859,7 @@ virtual_key_code = 0 -- 目标按键 (F9 = 120)
 g_last_time = 0
 COLLAPSE_ACTION_SCRIPT_NAME = "zaibuyidao_Soundmole - Toggle Main Window Collapse.lua"
 CMD_TOGGLE_MAIN_COLLAPSE = "CMD_ToggleMainCollapse"
+CMD_FOCUS_MAIN_SEARCH_BOX = "CMD_FocusMainSearchBox"
 
 binds = SM_GetActionShortcuts("_RS20af4fb17f06c6fe528a48b9e27fee68b6fb18ee", 0) -- 0=Main section
 for i, b in ipairs(binds) do
@@ -16967,6 +16984,17 @@ function loop()
     SM_Action_AddSelectionToTargetDB()
   end
 
+  ext_signal = SM_GetRuntimeState(EXT_SECTION, CMD_FOCUS_MAIN_SEARCH_BOX)
+  if ext_signal and ext_signal ~= "" and ext_signal ~= "0" then
+    SM_SetRuntimeState(EXT_SECTION, CMD_FOCUS_MAIN_SEARCH_BOX, "0")
+    focus_main_search_requested = true
+  end
+
+  if (reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftCtrl()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightCtrl()))
+  and reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F()) then
+    focus_main_search_requested = true
+  end
+
   local collapse_signal_handled = false
   local collapse_signal = SM_GetRuntimeState(EXT_SECTION, CMD_TOGGLE_MAIN_COLLAPSE)
   if collapse_signal and collapse_signal ~= "" and collapse_signal ~= "0" then
@@ -17312,6 +17340,10 @@ function loop()
     end
 
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
+    if focus_main_search_requested then
+      reaper.ImGui_SetKeyboardFocusHere(ctx)
+      focus_main_search_requested = false
+    end
     reaper.ImGui_TextFilter_Draw(filename_filter, ctx, "##FilterQWERT")
     search_history_popup_rect.x, search_history_popup_rect.input_y = reaper.ImGui_GetItemRectMin(ctx)
     search_history_popup_rect.max_x, search_history_popup_rect.y = reaper.ImGui_GetItemRectMax(ctx)

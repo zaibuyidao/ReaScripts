@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.234
+-- @version 1.0.235
 -- @changelog
---   Added reverse playback with selection positioning, active-state highlighting, and reverse rate control.
---   Improved rate control for smoother transitions and fixed playback issues.
+--   Added an option to focus the main search box on startup, a Ctrl+F shortcut, and a companion focus script.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
@@ -14,6 +13,7 @@
 --   [main=main] Soundmole/zaibuyidao_Soundmole.lua
 --   [main=main] Soundmole/zaibuyidao_Soundmole - Add Selected Files to Target Database.lua
 --   [main=main] Soundmole/zaibuyidao_Soundmole - Toggle Main Window Collapse.lua
+--   [main=main] Soundmole/zaibuyidao_Soundmole - Focus Main Search Box.lua
 --   [nomain] Soundmole/lib/*.lua
 --   [nomain] Soundmole/lib/*.py
 --   [nomain] Soundmole/lib/*.cur
