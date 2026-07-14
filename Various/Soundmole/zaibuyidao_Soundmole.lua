@@ -368,6 +368,7 @@ local waveform_hint_enabled  = false -- 波形预览鼠标提示开关
 local recent_audio_files     = {}    -- 最近播放列表
 local max_recent_files       = 20    -- 最近播放最多保留20条
 local max_recent_search      = 20    -- 最近搜索最多保留20条
+local recent_search_keywords = {}    -- 最近搜索列表
 browse_database_as_folders   = false -- 以文件夹方式浏览数据库
 local selected_recent_row    = 0
 local skip_silence_enabled   = false -- 跳过静音
@@ -11549,7 +11550,6 @@ end
 
 --------------------------------------------- 最近搜索节点 ---------------------------------------------
 
-local recent_search_keywords = {}
 local search_input_timer = 0
 local last_search_input = ""
 local save_search_keyword = nil -- 保存最近搜索

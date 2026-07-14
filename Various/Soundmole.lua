@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.235
+-- @version 1.0.236
 -- @changelog
---   Added an option to focus the main search box on startup, a Ctrl+F shortcut, and a companion focus script.
+--   Fixed an error when adjusting the maximum number of recent searches.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
