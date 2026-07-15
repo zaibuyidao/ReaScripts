@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.237
+-- @version 1.0.238
 -- @changelog
---   Added full persistence and restoration of PeakTree headers, folder expansion states, and selections.
+--   The mini spectrum now uses C++ to capture the final hardware output for real FFT analysis.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

@@ -2,7 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.35"
+SM_EXT_REQUIRED_VERSION = "0.0.36"
 SM_EXT_RELEASE_URL = "https://stash.reaper.fm/v/52517/soundmole-extension.zip"
 SM_EXT_INSTALLED_VERSION = nil
 
@@ -538,7 +538,8 @@ local peaks, pixel_cnt, src_len, channel_count
 local last_pixel_cnt, last_view_len, last_scroll
 local last_wave_info -- 记录上次渲染的info
 local peak_hold = {} -- 存放各通道的峰值保持
-local spectrum_mini = { levels = {}, last_t = 0 } -- mini 频谱视觉反馈
+local spectrum_mini = { levels = {}, last_t = 0 } -- 最终硬件输出的真实 FFT 频谱
+reaper.SM_Spectrum_SetEnabled(true)
 local last_manual_wave_zoom_time = 0 -- 手动缩放后短暂抑制自动滚屏覆盖鼠标锚点
 local waveform_vertical_zoom = 1 -- 默认纵向缩放为1（100%）
 local VERTICAL_ZOOM_MIN = 0.3
@@ -7089,34 +7090,8 @@ function DrawMiniSpectrumAnalyzer(ctx, width, height)
   if dt > 0.12 then dt = 0.12 end
   spectrum_mini.last_t = now
 
-  local peak_sum, peak_max, peak_count = 0, 0, 0
-  local visual_gain = 1
-  if playing_preview then
-    local preview_volume = tonumber(volume) or 1
-    if reaper.CF_Preview_GetValue then
-      local ok, cur_volume = reaper.CF_Preview_GetValue(playing_preview, "D_VOLUME")
-      if ok then preview_volume = tonumber(cur_volume) or preview_volume end
-    end
-    if preview_volume > 0.000001 then
-      visual_gain = 1 / preview_volume
-    end
-  end
-
-  if playing_preview and reaper.CF_Preview_GetPeak then
-    for i = 0, math.max(0, peak_chans - 1) do
-      local valid, value = reaper.CF_Preview_GetPeak(playing_preview, i)
-      if valid then
-        value = math.max(0, math.min(1, (value or 0) * visual_gain))
-        peak_sum = peak_sum + value
-        if value > peak_max then peak_max = value end
-        peak_count = peak_count + 1
-      end
-    end
-  end
-
-  local active = playing_preview and peak_count > 0 and peak_max > 0.0005
-  local amp = active and math.min(1, (peak_max * 0.72) + ((peak_sum / peak_count) * 0.55)) or 0
   local bars = math.max(8, math.min(18, math.floor(width / 4)))
+  local band_count = reaper.SM_Spectrum_GetBandCount()
   local gap = 1
   local bar_w = math.max(2, math.floor((width - (bars - 1) * gap) / bars))
   local used_w = bars * bar_w + (bars - 1) * gap
@@ -7127,10 +7102,8 @@ function DrawMiniSpectrumAnalyzer(ctx, width, height)
 
   for i = 1, bars do
     local ratio = (i - 1) / math.max(1, bars - 1)
-    local curve = 1.02 - ratio * 0.48
-    local motion = 0.5 + 0.5 * math.sin(now * (6.0 + ratio * 5.5) + i * 1.77)
-    local ripple = 0.5 + 0.5 * math.sin(now * 3.1 + i * 0.63)
-    local target = active and math.min(1, amp * curve * (0.42 + motion * 0.48 + ripple * 0.18)) or 0
+    local band = math.min(band_count - 1, math.floor((i - 1) * band_count / bars))
+    local target = math.max(0, math.min(1, reaper.SM_Spectrum_GetBand(band)))
     local cur = spectrum_mini.levels[i] or 0
     if target > cur then
       cur = cur + (target - cur) * 0.55
@@ -7147,13 +7120,13 @@ function DrawMiniSpectrumAnalyzer(ctx, width, height)
     local hue = 0.46 - ratio * 0.34
     if hue < 0 then hue = 0 end
     local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(hue, 0.78, 0.45 + cur * 0.5)
-    local col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, active and 1.0 or 0.45)
+    local col = reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, cur > 0.001 and 1.0 or 0.45)
     reaper.ImGui_DrawList_AddRectFilled(draw_list, bx1, by1, bx2, by2, col, 1)
   end
 
   reaper.ImGui_Dummy(ctx, width, height)
   if reaper.ImGui_IsItemHovered(ctx) then
-    DrawTooltip("Mini spectrum visualizer")
+    DrawTooltip("Real-time output spectrum")
   end
 end
 
@@ -23972,6 +23945,7 @@ function loop()
 end
 -- 退出清理函数
 function OnScriptExit()
+  reaper.SM_Spectrum_SetEnabled(false)
   ResetWaveSelectionEdgeCursor()
   pcall(ProcessPendingSelectionNativeDrops)
   CleanupSelectionDragPreview(dragging_selection)
