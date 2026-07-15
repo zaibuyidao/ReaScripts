@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.236
+-- @version 1.0.237
 -- @changelog
---   Fixed an error when adjusting the maximum number of recent searches.
+--   Added full persistence and restoration of PeakTree headers, folder expansion states, and selections.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

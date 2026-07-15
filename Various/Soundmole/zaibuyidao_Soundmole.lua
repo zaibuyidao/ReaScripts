@@ -386,6 +386,8 @@ local adv_folder_nodes_inited = false -- 是否已初始化高级文件夹节点
 local expanded_ids            = {}    -- 已展开的高级文件夹ID列表
 local shortcut_nodes_inited   = false -- 是否已初始化快捷方式节点的展开
 local expanded_paths          = {}    -- 已展开的文件夹路径表
+peektree_open_nodes           = {}    -- PeakTree 中手动展开的文件夹节点
+peektree_open_nodes_loaded    = false -- 是否已有新版持久化节点状态
 local show_vertical_zoom      = false -- 显示波形纵向缩放提示状态变量
 local show_vertical_zoom_timer = 0
 local pending_preview_seek    = nil   -- 框选释放后的预览跳转延后一帧，避免拖拽帧被高 PDC 工程卡住
@@ -9162,6 +9164,7 @@ function draw_tree(name, path, depth, parent_path)
   if has_child_dirs then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
   if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("tree:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##" .. path, flags | highlight)
+  if has_child_dirs then peektree_open_nodes["tree:" .. path] = node_open and true or nil end
 
   -- 此电脑右键菜单
   AddThisComputerContextMenu(path)
@@ -9329,6 +9332,7 @@ function draw_shortcut_tree(sc, base_path, depth)
   if has_child_dirs then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
   if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_" .. path, flags | highlight)
+  if has_child_dirs then peektree_open_nodes["shortcut:" .. path] = node_open and true or nil end
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
   -- local cy = (miny + maxy) * 0.5
@@ -9846,6 +9850,7 @@ function draw_advanced_folder_node(id, selected_id, depth)
   if has_children then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
   if has_children then SM_ForceNextPeakTreeNodeClosed("collection:" .. tostring(id)) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##" .. id, flags)
+  if has_children then peektree_open_nodes["collection:" .. tostring(id)] = node_open and true or nil end
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
   -- local cy = (miny + maxy) * 0.5
@@ -11296,8 +11301,42 @@ end
 
 --------------------------------------------- 退出时保存各个模式列表状态 ---------------------------------------------
 
+function SM_LoadPeakTreeOpenNodes()
+  peektree_open_nodes = {}
+  local saved = SM_GetState(EXT_SECTION, "peektree_open_nodes") or ""
+  peektree_open_nodes_loaded = saved == "v1" or saved:sub(1, 3) == "v1\n"
+  if not peektree_open_nodes_loaded then return end
+  for key in saved:gmatch("[^\r\n]+") do
+    if key ~= "v1" then peektree_open_nodes[key] = true end
+  end
+end
+
+function SM_SavePeakTreeOpenNodes()
+  local keys = {}
+  for key, is_open in pairs(peektree_open_nodes or {}) do
+    if is_open then keys[#keys + 1] = key end
+  end
+  table.sort(keys)
+  peektree_open_nodes_loaded = true
+  SM_SetState(EXT_SECTION, "peektree_open_nodes", "v1" .. (#keys > 0 and ("\n" .. table.concat(keys, "\n")) or ""), true)
+end
+
 function LoadExitSettings()
   collect_mode = tonumber(SM_GetState(EXT_SECTION, "collect_mode") or "")
+  SM_LoadPeakTreeOpenNodes()
+
+  -- 所有主标题栏互相独立
+  project_open         = SM_GetState(EXT_SECTION, "project_header_open") == "true"
+  this_computer_open   = SM_GetState(EXT_SECTION, "this_computer_open") == "true"
+  shortcut_open        = SM_GetState(EXT_SECTION, "shortcut_header_open") == "true"
+  shortcut_mirror_open = SM_GetState(EXT_SECTION, "shortcut_mirror_header_open") == "true"
+  collection_open      = SM_GetState(EXT_SECTION, "collections_header_open") == "true"
+  group_open           = SM_GetState(EXT_SECTION, "group_header_open") == "true"
+  mediadb_open         = SM_GetState(EXT_SECTION, "soundmoledb_header_open") == "true"
+  reaper_db_open       = SM_GetState(EXT_SECTION, "reaperdb_header_open") == "true"
+  recent_search_open   = SM_GetState(EXT_SECTION, "recent_search_header_open") == "true"
+  recent_open          = SM_GetState(EXT_SECTION, "recent_header_open") == "true"
+  play_history_open    = SM_GetState(EXT_SECTION, "play_history_header_open") == "true"
 
   -- 恢复 工程文件资源 四个模式
   if collect_mode == COLLECT_MODE_ITEMS or collect_mode == COLLECT_MODE_RPP or collect_mode == COLLECT_MODE_DIR or collect_mode == COLLECT_MODE_ALL_ITEMS then
@@ -11361,6 +11400,7 @@ function LoadExitSettings()
       mediadb_open = false
     end
     tree_state.cur_mediadb = SM_GetState(EXT_SECTION, "cur_soundmoledb") or ""
+    _G._db_path_prefix_filter = SM_GetState(EXT_SECTION, "db_path_prefix_filter") or ""
   end
 
   -- 恢复REAPER自带数据库模式
@@ -11372,6 +11412,7 @@ function LoadExitSettings()
       reaper_db_open = false
     end
     tree_state.cur_reaper_db = SM_GetState(EXT_SECTION, "cur_reaperdb") or ""
+    _G._db_path_prefix_filter = SM_GetState(EXT_SECTION, "db_path_prefix_filter") or ""
   end
 
   -- 恢复REAPER自带快捷方式模式
@@ -11449,6 +11490,20 @@ function SaveExitSettings()
   local saved_mode = (collect_mode == COLLECT_MODE_SIMILAR) and COLLECT_MODE_MEDIADB or collect_mode
   SM_SetState(EXT_SECTION, "collect_mode", tostring(saved_mode), true)
 
+  -- 标题栏和文件夹可能同时展开多个，退出时必须保存整棵 PeakTree。
+  SM_SetState(EXT_SECTION, "project_header_open", tostring(project_open == true), true)
+  SM_SetState(EXT_SECTION, "this_computer_open", tostring(this_computer_open == true), true)
+  SM_SetState(EXT_SECTION, "shortcut_header_open", tostring(shortcut_open == true), true)
+  SM_SetState(EXT_SECTION, "shortcut_mirror_header_open", tostring(shortcut_mirror_open == true), true)
+  SM_SetState(EXT_SECTION, "collections_header_open", tostring(collection_open == true), true)
+  SM_SetState(EXT_SECTION, "group_header_open", tostring(group_open == true), true)
+  SM_SetState(EXT_SECTION, "soundmoledb_header_open", tostring(mediadb_open == true), true)
+  SM_SetState(EXT_SECTION, "reaperdb_header_open", tostring(reaper_db_open == true), true)
+  SM_SetState(EXT_SECTION, "recent_search_header_open", tostring(recent_search_open == true), true)
+  SM_SetState(EXT_SECTION, "recent_header_open", tostring(recent_open == true), true)
+  SM_SetState(EXT_SECTION, "play_history_header_open", tostring(play_history_open == true), true)
+  SM_SavePeakTreeOpenNodes()
+
   if collect_mode == COLLECT_MODE_ITEMS or collect_mode == COLLECT_MODE_RPP or collect_mode == COLLECT_MODE_DIR or collect_mode == COLLECT_MODE_ALL_ITEMS then
     SM_SetState(EXT_SECTION, "project_header_open", tostring(project_open), true)
 
@@ -11464,13 +11519,15 @@ function SaveExitSettings()
     SM_SetState(EXT_SECTION, "group_header_open", tostring(group_open), true)
     SM_SetState(EXT_SECTION, "cur_custom_folder", tree_state.cur_custom_folder or "", true)
 
-  elseif collect_mode == COLLECT_MODE_MEDIADB then
+  elseif collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_SIMILAR then
     SM_SetState(EXT_SECTION, "soundmoledb_header_open", tostring(mediadb_open), true)
     SM_SetState(EXT_SECTION, "cur_soundmoledb", tree_state.cur_mediadb or "", true)
+    SM_SetState(EXT_SECTION, "db_path_prefix_filter", _G._db_path_prefix_filter or "", true)
 
   elseif collect_mode == COLLECT_MODE_REAPERDB then
     SM_SetState(EXT_SECTION, "reaperdb_header_open", tostring(reaper_db_open), true)
     SM_SetState(EXT_SECTION, "cur_reaperdb", tree_state.cur_reaper_db or "", true)
+    SM_SetState(EXT_SECTION, "db_path_prefix_filter", _G._db_path_prefix_filter or "", true)
 
   elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
     SM_SetState(EXT_SECTION, "shortcut_mirror_header_open", tostring(shortcut_mirror_open), true)
@@ -14426,8 +14483,9 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
   end
 
   if has_child_dirs then flags = SM_PeekTreeFlagsForCtrlBranch(flags) end
-  if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut_mirror:" .. tostring(root_idx) .. ":" .. path) end
+  if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut_mirror:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
+  if has_child_dirs then peektree_open_nodes["shortcut_mirror:" .. path] = node_open and true or nil end
   -- 捕获本行矩形与中心y
   -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
   -- local cy = (miny + maxy) * 0.5
@@ -16201,8 +16259,9 @@ function DBPF_DrawDirTreeRecursive(dir, display_name, parent_dir)
     if selected then
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
     end
-    SM_ForceNextPeakTreeNodeClosed("dbpf:" .. dir)
+    SM_ForceNextPeakTreeNodeClosed("dbpf:" .. tostring(GetCurrentListKey()) .. ":" .. dir)
     local open = reaper.ImGui_TreeNode(ctx, label, flags)
+    peektree_open_nodes["dbpf:" .. tostring(GetCurrentListKey()) .. ":" .. dir] = open and true or nil
     if reaper.ImGui_IsItemClicked(ctx, 0) then
       DBPF_ApplyPathFilter(dir)
     end
@@ -16437,6 +16496,7 @@ end
 function SM_RequestClosePeakTreeNode(node_key)
   if not node_key then return end
   local key = tostring(node_key)
+  peektree_open_nodes[key] = nil
   local targets = _G._peektree_force_close_tree_targets or {}
   _G._peektree_force_close_tree_targets = targets
   targets[key] = true
@@ -16451,7 +16511,7 @@ function SM_RequestCollapseCachedPathBranch(path, node_prefix, root_idx)
 
   local function make_node_key(child_path, child_idx)
     if node_prefix == "shortcut_mirror" then
-      return "shortcut_mirror:" .. tostring(child_idx or root_idx or "") .. ":" .. child_path
+      return "shortcut_mirror:" .. child_path
     end
     return tostring(node_prefix) .. ":" .. child_path
   end
@@ -16500,7 +16560,7 @@ function SM_RequestCollapseDBPFBranch(dir)
     if not subs then return end
     for _, child in ipairs(subs) do
       local child_dir = normalize_path(child, true)
-      SM_RequestClosePeakTreeNode("dbpf:" .. child_dir)
+      SM_RequestClosePeakTreeNode("dbpf:" .. tostring(GetCurrentListKey()) .. ":" .. child_dir)
       walk(child_dir)
     end
   end
@@ -16525,6 +16585,8 @@ function SM_ForceNextPeakTreeNodeClosed(node_key)
     if close_target and targets then targets[key] = nil end
     if key and closed_nodes then closed_nodes[key] = true end
     _G._peektree_force_close_tree_used = true
+  elseif key and peektree_open_nodes[key] and reaper.ImGui_SetNextItemOpen then
+    reaper.ImGui_SetNextItemOpen(ctx, true, reaper.ImGui_Cond_Once())
   end
 end
 
@@ -16555,6 +16617,7 @@ function CollapseAllPeakTreeFolders()
   tree_open = {}
   expanded_paths = {}
   expanded_ids = {}
+  peektree_open_nodes = {}
   shortcut_nodes_inited = true
   shortcut_mirror_nodes_inited = true
   adv_folder_nodes_inited = true
@@ -16578,8 +16641,10 @@ function CollapseAllPeakTreeFolders()
   SM_SetState(EXT_SECTION, "group_header_open", "false", true)
   SM_SetState(EXT_SECTION, "soundmoledb_header_open", "false", true)
   SM_SetState(EXT_SECTION, "reaperdb_header_open", "false", true)
+  SM_SetState(EXT_SECTION, "recent_search_header_open", "false", true)
   SM_SetState(EXT_SECTION, "recent_header_open", "false", true)
   SM_SetState(EXT_SECTION, "play_history_header_open", "false", true)
+  SM_SavePeakTreeOpenNodes()
 end
 
 -- 左侧表格显示/隐藏切换按钮
@@ -18363,14 +18428,16 @@ function loop()
           -- 文件夹快捷方式节点
           if show_peektree_folder_shortcuts then
           if not shortcut_nodes_inited then
-            expanded_paths = {}
-            -- 递归将选中路径及其父目录都加入 expanded_paths
-            if tree_state.cur_path and tree_state.cur_path ~= "" then
-              local p = tree_state.cur_path:gsub("[/\\]+$", "")
-              while p and p ~= "" do
-                expanded_paths[p] = true
-                local parent = p:match("^(.*)[/\\][^/\\]+$") -- 只去掉最后一级
-                p = parent
+            if not peektree_open_nodes_loaded then
+              expanded_paths = {}
+              -- 旧版无节点状态时，仍沿用按选中路径展开父级的兼容行为。
+              if tree_state.cur_path and tree_state.cur_path ~= "" then
+                local p = tree_state.cur_path:gsub("[/\\]+$", "")
+                while p and p ~= "" do
+                  expanded_paths[p] = true
+                  local parent = p:match("^(.*)[/\\][^/\\]+$") -- 只去掉最后一级
+                  p = parent
+                end
               end
             end
             shortcut_nodes_inited = true
@@ -18596,13 +18663,15 @@ function loop()
               -- 什么都不做
             else
               if not shortcut_mirror_nodes_inited then
-                expanded_paths = expanded_paths or {}
-                if tree_state.cur_path and tree_state.cur_path ~= "" then
-                  local p = tree_state.cur_path:gsub("[/\\]+$", "")
-                  while p and p ~= "" do
-                    expanded_paths[p] = true
-                    local parent = p:match("^(.*)[/\\][^/\\]+$")
-                    p = parent
+                if not peektree_open_nodes_loaded then
+                  expanded_paths = expanded_paths or {}
+                  if tree_state.cur_path and tree_state.cur_path ~= "" then
+                    local p = tree_state.cur_path:gsub("[/\\]+$", "")
+                    while p and p ~= "" do
+                      expanded_paths[p] = true
+                      local parent = p:match("^(.*)[/\\][^/\\]+$")
+                      p = parent
+                    end
                   end
                 end
                 shortcut_mirror_nodes_inited = true
@@ -18631,12 +18700,14 @@ function loop()
           -- 高级文件夹节点 Collections
           if show_peektree_collections then
           if not adv_folder_nodes_inited then
-            expanded_ids = {}
-            local p = tree_state.cur_advanced_folder
-            while p and advanced_folders[p] and advanced_folders[p].parent do
-              local par = advanced_folders[p].parent
-              expanded_ids[par] = true
-              p = par
+            if not peektree_open_nodes_loaded then
+              expanded_ids = {}
+              local p = tree_state.cur_advanced_folder
+              while p and advanced_folders[p] and advanced_folders[p].parent do
+                local par = advanced_folders[p].parent
+                expanded_ids[par] = true
+                p = par
+              end
             end
             adv_folder_nodes_inited = true
           end
@@ -19474,6 +19545,7 @@ function loop()
                 end
                 SM_ForceNextPeakTreeNodeClosed("mediadb:" .. tostring(dbfile))
                 node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(alias) .. "##mediadb_tree_" .. tostring(dbfile), flags)
+                peektree_open_nodes["mediadb:" .. tostring(dbfile)] = node_open and true or nil
                 db_clicked = reaper.ImGui_IsItemClicked(ctx, 0)
                 if is_selected then
                   reaper.ImGui_PopStyleColor(ctx, 1)
@@ -19767,6 +19839,7 @@ function loop()
                     if is_sel then flags = flags | reaper.ImGui_TreeNodeFlags_Selected() end
                     SM_ForceNextPeakTreeNodeClosed("reaperdb:" .. tostring(fn))
                     node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_tree_" .. fn, flags)
+                    peektree_open_nodes["reaperdb:" .. tostring(fn)] = node_open and true or nil
                     db_clicked = reaper.ImGui_IsItemClicked(ctx, 0)
                   else
                     db_clicked = reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##reaperdb_" .. fn, is_sel)
