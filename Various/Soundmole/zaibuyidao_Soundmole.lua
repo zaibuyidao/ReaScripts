@@ -2,7 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.36"
+SM_EXT_REQUIRED_VERSION = "0.0.37"
 SM_EXT_RELEASE_URL = "https://stash.reaper.fm/v/52517/soundmole-extension.zip"
 SM_EXT_INSTALLED_VERSION = nil
 
@@ -538,6 +538,9 @@ local peaks, pixel_cnt, src_len, channel_count
 local last_pixel_cnt, last_view_len, last_scroll
 local last_wave_info -- 记录上次渲染的info
 local peak_hold = {} -- 存放各通道的峰值保持
+local MINI_SPECTRUM_BANDS = 31 -- 扩展支持 8-64，默认31
+local MINI_SPECTRUM_DISPLAY_GAIN = 1 -- 放大显示高度，不改变各频段的相对差异
+MINI_SPECTRUM_BANDS = reaper.SM_Spectrum_SetBandCount(MINI_SPECTRUM_BANDS)
 local spectrum_mini = { levels = {}, last_t = 0 } -- 最终硬件输出的真实 FFT 频谱
 reaper.SM_Spectrum_SetEnabled(true)
 local last_manual_wave_zoom_time = 0 -- 手动缩放后短暂抑制自动滚屏覆盖鼠标锚点
@@ -7090,8 +7093,8 @@ function DrawMiniSpectrumAnalyzer(ctx, width, height)
   if dt > 0.12 then dt = 0.12 end
   spectrum_mini.last_t = now
 
-  local bars = math.max(8, math.min(18, math.floor(width / 4)))
   local band_count = reaper.SM_Spectrum_GetBandCount()
+  local bars = math.max(1, math.min(band_count, math.floor((width + 1) / 3)))
   local gap = 1
   local bar_w = math.max(2, math.floor((width - (bars - 1) * gap) / bars))
   local used_w = bars * bar_w + (bars - 1) * gap
@@ -7103,7 +7106,7 @@ function DrawMiniSpectrumAnalyzer(ctx, width, height)
   for i = 1, bars do
     local ratio = (i - 1) / math.max(1, bars - 1)
     local band = math.min(band_count - 1, math.floor((i - 1) * band_count / bars))
-    local target = math.max(0, math.min(1, reaper.SM_Spectrum_GetBand(band)))
+    local target = math.max(0, math.min(1, reaper.SM_Spectrum_GetBand(band) * MINI_SPECTRUM_DISPLAY_GAIN))
     local cur = spectrum_mini.levels[i] or 0
     if target > cur then
       cur = cur + (target - cur) * 0.55
@@ -22026,7 +22029,7 @@ function loop()
 
     -- 简易频谱反馈
     reaper.ImGui_SameLine(ctx, nil, 10)
-    DrawMiniSpectrumAnalyzer(ctx, UIScale(90), bar_height)
+    DrawMiniSpectrumAnalyzer(ctx, UIScale(math.max(90, MINI_SPECTRUM_BANDS * 4)), bar_height)
 
     -- 播放器控件
     reaper.ImGui_SameLine(ctx)

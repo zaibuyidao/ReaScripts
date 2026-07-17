@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.238
+-- @version 1.0.239
 -- @changelog
 --   The mini spectrum now uses C++ to capture the final hardware output for real FFT analysis.
 -- @reference
