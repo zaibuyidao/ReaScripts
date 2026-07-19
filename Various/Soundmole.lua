@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.240
+-- @version 1.0.241
 -- @changelog
---   Fixed scrollbar flickering and layout instability when resizing the main preview waveform.
---   Fixed the scrollbar briefly shifting when resizing the right artwork sidebar.
+--   Fixed search saving issues and improved UCS category spacing.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

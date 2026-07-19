@@ -17440,6 +17440,74 @@ function loop()
 
     DrawRecentSearchPopupUnderFilter()
 
+    -- 保存搜索关键词弹窗
+    if show_add_popup then
+      reaper.ImGui_OpenPopup(ctx, "Add Search")
+      show_add_popup = false
+    end
+
+    if reaper.ImGui_BeginPopupModal(ctx, "Add Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize()) then
+      reaper.ImGui_Text(ctx, T("Name:"))
+      reaper.ImGui_SameLine(ctx)
+      local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
+      if input_changed then new_search_name = input_val end
+      reaper.ImGui_Text(ctx, "Keyword: " .. (save_search_keyword or ""))
+      reaper.ImGui_Separator(ctx)
+
+      local win_w = reaper.ImGui_GetWindowWidth(ctx)
+      local btn_w = 64
+      local spacing = 8 -- 两个按钮间距
+      -- 光标移到右侧对齐
+      local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
+      reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
+
+      if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
+        if (new_search_name or "") ~= "" and (save_search_keyword or "") ~= "" then
+          if not _G.saved_searches_loaded then
+            local str = SM_GetState(EXT_SECTION, "SavedSearchesTree")
+            if str and str ~= "" then
+              local func = load("return " .. str)
+              if func then
+                local data = func()
+                if data then
+                  root_saved_searches = data.roots or {}
+                  saved_search_nodes = data.nodes or {}
+                end
+              end
+            end
+            _G.saved_searches_loaded = true
+          end
+
+          -- 初始化表
+          if not saved_search_nodes then saved_search_nodes = {} end
+          if not root_saved_searches then root_saved_searches = {} end
+          -- 插入数据
+          local new_id = new_guid()
+          -- 创建节点
+          saved_search_nodes[new_id] = {
+            id = new_id,
+            type = "item",
+            name = new_search_name,
+            term = save_search_keyword
+          }
+          -- 插入到根目录末尾
+          table.insert(root_saved_searches, new_id)
+          SaveTreeData()
+        end
+        reaper.ImGui_CloseCurrentPopup(ctx)
+        new_search_name = ""
+        save_search_keyword = ""
+      end
+
+      reaper.ImGui_SameLine(ctx)
+      if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
+        reaper.ImGui_CloseCurrentPopup(ctx)
+        new_search_name = ""
+        save_search_keyword = ""
+      end
+      reaper.ImGui_EndPopup(ctx)
+    end
+
     if _G.trans_append_mode == nil then _G.trans_append_mode = false end
     if _G.trans_src_txt == nil then _G.trans_src_txt = "" end
 
@@ -19919,74 +19987,6 @@ function loop()
               end
             end
             reaper.ImGui_PopStyleColor(ctx, 1)
-            -- 保存搜索关键词弹窗
-            if show_add_popup then
-              reaper.ImGui_OpenPopup(ctx, "Add Search")
-              show_add_popup = false
-            end
-
-            local add_visible = reaper.ImGui_BeginPopupModal(ctx, "Add Search", nil, reaper.ImGui_WindowFlags_AlwaysAutoResize())
-            if add_visible then
-              reaper.ImGui_Text(ctx, T("Name:"))
-              reaper.ImGui_SameLine(ctx)
-              local input_changed, input_val = reaper.ImGui_InputText(ctx, "##new_name", new_search_name or "", 256)
-              if input_changed then new_search_name = input_val end
-              reaper.ImGui_Text(ctx, "Keyword: " .. (save_search_keyword or ""))
-              reaper.ImGui_Separator(ctx)
-
-              local win_w = reaper.ImGui_GetWindowWidth(ctx)
-              local btn_w = 64
-              local spacing = 8 -- 两个按钮间距
-              -- 光标移到右侧对齐
-              local padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())
-              reaper.ImGui_SetCursorPosX(ctx, win_w - (btn_w * 2 + spacing + padding_x * 2))
-
-              if reaper.ImGui_Button(ctx, "OK", btn_w) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Enter()) or reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_KeypadEnter()) then
-                if (new_search_name or "") ~= "" and (save_search_keyword or "") ~= "" then
-                  if not _G.saved_searches_loaded then
-                    local str = SM_GetState(EXT_SECTION, "SavedSearchesTree")
-                    if str and str ~= "" then
-                      local func = load("return " .. str)
-                      if func then
-                        local data = func()
-                        if data then
-                          root_saved_searches = data.roots or {}
-                          saved_search_nodes = data.nodes or {}
-                        end
-                      end
-                    end
-                    _G.saved_searches_loaded = true
-                  end
-
-                  -- 初始化表
-                  if not saved_search_nodes then saved_search_nodes = {} end
-                  if not root_saved_searches then root_saved_searches = {} end
-                  -- 插入数据
-                  local new_id = new_guid()
-                  -- 创建节点
-                  saved_search_nodes[new_id] = {
-                    id = new_id,
-                    type = "item",
-                    name = new_search_name,
-                    term = save_search_keyword
-                  }
-                  -- 插入到根目录末尾
-                  table.insert(root_saved_searches, new_id)
-                  SaveTreeData()
-                end
-                reaper.ImGui_CloseCurrentPopup(ctx)
-                new_search_name = ""
-                save_search_keyword = ""
-              end
-
-              reaper.ImGui_SameLine(ctx)
-              if reaper.ImGui_Button(ctx, "Cancel", btn_w) then
-                reaper.ImGui_CloseCurrentPopup(ctx)
-                new_search_name = ""
-                save_search_keyword = ""
-              end
-              reaper.ImGui_EndPopup(ctx)
-            end
 
             reaper.ImGui_Unindent(ctx, 25)
           end
@@ -20155,7 +20155,7 @@ function loop()
                   ucs_open_en = ucs_open_en or {}
                   if cat_open_state[cat] then ucs_open_en[en] = true else ucs_open_en[en] = nil end
                 end
-                reaper.ImGui_SameLine(ctx, nil, 0)
+                reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
 
                 -- 点击主分类提交隐式搜索，主分类统一悬浮样式
                 local text_w = math.floor(reaper.ImGui_GetContentRegionAvail(ctx))
@@ -20521,8 +20521,13 @@ function loop()
                       end
                     end
                     if reaper.ImGui_MenuItem(ctx, T("Update with Current Filter")) then
-                      node.term = reaper.ImGui_TextFilter_Get(filename_filter) or ""
-                      SaveTreeData()
+                      local current_filter = filename_filter and TrimSavedSearchText(reaper.ImGui_TextFilter_Get(filename_filter)) or ""
+                      if current_filter ~= "" then
+                        node.term = current_filter
+                        SaveTreeData()
+                      else
+                        reaper.ShowMessageBox(T("Main search filter is empty."), T("Update with Current Filter"), 0)
+                      end
                     end
                     reaper.ImGui_Separator(ctx)
                     if reaper.ImGui_MenuItem(ctx, T("Delete")) then
