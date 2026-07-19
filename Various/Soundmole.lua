@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.239
+-- @version 1.0.240
 -- @changelog
---   The mini spectrum now uses C++ to capture the final hardware output for real FFT analysis.
+--   Fixed scrollbar flickering and layout instability when resizing the main preview waveform.
+--   Fixed the scrollbar briefly shifting when resizing the right artwork sidebar.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
