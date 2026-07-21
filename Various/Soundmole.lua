@@ -1,7 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.242
+-- @version 1.0.243
 -- @changelog
+--   Fixed an issue on Linux where a UI height rounding error caused a scrollbar to appear on the right side of the main window.
 --   Fixed an issue where audio could not be dragged from Soundmole to the REAPER arrange view on Linux.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916

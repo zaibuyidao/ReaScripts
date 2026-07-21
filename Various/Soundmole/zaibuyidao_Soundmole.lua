@@ -18249,7 +18249,7 @@ function loop()
     -- 自动缩放音频表格
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
     local _, main_item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
-    local main_overflow_guard = math.max(1, UIScaleF(20))
+    local main_overflow_guard = math.max(1, UIScaleF(20)) + (IsLinux() and 2 or 0) -- 修复 Linux 下因界面高度取整误差导致主窗口右侧出现滚动条问题
     max_img_h_offset = math.max(0, math.min(300, (avail_y - UIScaleF(bottom_fixed_height) - main_item_spacing_y - main_overflow_guard - 10) / ui_scale - base_img_h))
     if h_splitter_drag and reaper.ImGui_IsMouseDown(ctx, 0) then
       local _, my = reaper.ImGui_GetMousePos(ctx)
