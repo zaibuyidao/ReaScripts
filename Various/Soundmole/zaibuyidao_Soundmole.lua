@@ -5028,6 +5028,14 @@ function IsMacOS()
   return SOUNDMOLE_IS_MACOS
 end
 
+SOUNDMOLE_IS_LINUX = SOUNDMOLE_IS_LINUX
+function IsLinux()
+  if SOUNDMOLE_IS_LINUX ~= nil then return SOUNDMOLE_IS_LINUX end
+  local os_name = reaper.GetOS and reaper.GetOS() or ""
+  SOUNDMOLE_IS_LINUX = os_name:match("Linux") ~= nil
+  return SOUNDMOLE_IS_LINUX
+end
+
 function NativePointToImGui(ctx, x, y)
   if reaper.ImGui_PointConvertNative then
     if IsMacOS() then
@@ -21422,7 +21430,7 @@ function loop()
         local window, mouse_pos_time, hover_track, hover_lane, hover_valid, hover_rect = GetArrangeDragHoverState()
         local over_arrange_drop_target = IsArrangeDropTarget(window, hover_track, hover_valid, mouse_pos_time, hover_lane)
         local should_start_native_drop = over_arrange_drop_target
-        if not should_start_native_drop and IsMacOS() and reaper.GetMousePosition then
+        if not should_start_native_drop and (IsMacOS() or IsLinux()) and reaper.GetMousePosition then
           local mouse_x, mouse_y = reaper.GetMousePosition()
           should_start_native_drop = IsFiniteNumber(mouse_x)
             and IsFiniteNumber(mouse_y)

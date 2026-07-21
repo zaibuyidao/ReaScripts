@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.241
+-- @version 1.0.242
 -- @changelog
---   Fixed search saving issues and improved UCS category spacing.
+--   Fixed an issue where audio could not be dragged from Soundmole to the REAPER arrange view on Linux.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
