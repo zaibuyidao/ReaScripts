@@ -5032,7 +5032,7 @@ SOUNDMOLE_IS_LINUX = SOUNDMOLE_IS_LINUX
 function IsLinux()
   if SOUNDMOLE_IS_LINUX ~= nil then return SOUNDMOLE_IS_LINUX end
   local os_name = reaper.GetOS and reaper.GetOS() or ""
-  SOUNDMOLE_IS_LINUX = os_name:match("Linux") ~= nil
+  SOUNDMOLE_IS_LINUX = os_name:match("Linux") ~= nil or os_name == "Other"
   return SOUNDMOLE_IS_LINUX
 end
 
