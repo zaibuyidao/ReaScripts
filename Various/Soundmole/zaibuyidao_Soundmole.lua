@@ -14212,7 +14212,9 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           reaper.ImGui_EndPopup(ctx)
         end
       else
-        reaper.ImGui_Text(ctx, info.bwf_orig_date or "")
+        local date = tostring(info.bwf_orig_date or "")
+        date = date:gsub("^(%d%d%d%d%-%d%d%-%d%d)T(.-)Z$", "%1 %2")
+        reaper.ImGui_Text(ctx, date)
       end
 
       RowContextFallbackFromCell(ctx, i, info, false, popup_id, is_item_mode)  -- 只给 Q，不打开主菜单
@@ -14256,7 +14258,11 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
 
     -- Comment
     elseif col_name == T("Comment") then
-      DrawCellTextOneLine(ctx, info.comment) -- reaper.ImGui_Text(ctx, info.comment or "")
+      local comment = tostring(info.comment or "")
+      if comment:find("fid@%d+") and comment:find("src@", 1, true) then
+        comment = SM_ExtractLicenseFromComment(comment)
+      end
+      DrawCellTextOneLine(ctx, comment) -- reaper.ImGui_Text(ctx, info.comment or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
     -- Freesound模式的License
@@ -14338,7 +14344,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
         reaper.ImGui_Text(ctx, group_names)
       else
         -- 用固定像素宽度撑大区域
-        reaper.ImGui_InvisibleButton(ctx, "GroupCell_", 100, reaper.ImGui_GetTextLineHeight(ctx))
+        reaper.ImGui_InvisibleButton(ctx, "GroupCell_" .. i, 100, reaper.ImGui_GetTextLineHeight(ctx))
       end
 
       -- 右键弹出group菜单
@@ -21068,12 +21074,13 @@ function loop()
                   end
 
                 elseif spec.user_id == TableColumns.COMMENT then
-                  local ac = a.comment or ""
-                  local bc = b.comment or ""
+                  local ac = tostring(a.comment or "")
+                  local bc = tostring(b.comment or "")
 
-                  -- 在 FREESOUND 模式下，按提取出的 License 文本排序
-                  if collect_mode == COLLECT_MODE_FREESOUND then
+                  if ac:find("fid@%d+") and ac:find("src@", 1, true) then
                     ac = SM_ExtractLicenseFromComment(ac)
+                  end
+                  if bc:find("fid@%d+") and bc:find("src@", 1, true) then
                     bc = SM_ExtractLicenseFromComment(bc)
                   end
 

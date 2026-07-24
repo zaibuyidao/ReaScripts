@@ -1,10 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.245
+-- @version 1.0.246
 -- @changelog
---   Soundmole extension v0.0.38 or later is required.
---   Fixed an issue on Linux where a UI height rounding error caused a scrollbar to appear on the right side of the main window.
---   Fixed an issue where audio could not be dragged from Soundmole to the REAPER arrange view on Linux.
+--   Fixed Freesound license, date, and comment sorting display issues.
+--   Fixed the group column warning.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

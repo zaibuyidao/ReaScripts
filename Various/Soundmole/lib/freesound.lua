@@ -589,16 +589,6 @@ function FS_write_batch_to_db(results, dbpath)
     end
 
     local desc_prefix = {}
-    if s and tonumber(s.avg_rating) then
-      desc_prefix[#desc_prefix + 1] = ("⭐%02.1f"):format(tonumber(s.avg_rating))
-    end
-    if s and tonumber(s.num_downloads) then
-      desc_prefix[#desc_prefix + 1] = (function(n)
-        local t = tostring(n)
-        return "⬇" .. t .. string.rep(" ", math.max(0, 5 - #t))
-      end)
-      (tonumber(s.num_downloads))
-    end
     if s and s.license and s.license ~= "" then
       local t = tostring(FS_format_license(s.license))
       desc_prefix[#desc_prefix + 1] = ("license:%s%s"):format(t, string.rep(" ", math.max(0, 12 - #t)))
