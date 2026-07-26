@@ -2,7 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.38"
+SM_EXT_REQUIRED_VERSION = "0.0.40"
 SM_EXT_RELEASE_URL = "https://stash.reaper.fm/v/52517/soundmole-extension.zip"
 SM_EXT_INSTALLED_VERSION = nil
 
@@ -371,7 +371,8 @@ local max_recent_files       = 20    -- 最近播放最多保留20条
 local max_recent_search      = 20    -- 最近搜索最多保留20条
 local recent_search_keywords = {}    -- 最近搜索列表
 browse_database_as_folders   = false -- 以文件夹方式浏览数据库
-local selected_recent_row    = 0
+selected_recent_row          = 0
+media_analysis_task          = nil
 local skip_silence_enabled   = false -- 跳过静音
 local skip_silence_db        = -60   -- 静音阈值，超过此值即认为有声
 local skip_silence_threshold = 10^(skip_silence_db / 20) -- 换算成振幅阈值 amp = 10^(dB/20)
@@ -435,9 +436,11 @@ local TableColumns = {
   CHANNELS    = 13,
   SAMPLERATE  = 14,
   BITS        = 15,
-  KEY         = 16,
-  BPM         = 17,
-  SIMILARITY  = 18,
+  PEAK        = 16,
+  LOUDNESS    = 17,
+  KEY         = 18,
+  BPM         = 19,
+  SIMILARITY  = 20,
 }
 
 -- 加载语言文件
@@ -754,7 +757,7 @@ similarity_state = {
 function SM_ParseDBRawRow(raw)
   if not raw or raw == "" then return nil end
   local fields, last_pos = {}, 1
-  for i = 1, 17 do
+  for i = 1, 19 do
     local p = raw:find('|', last_pos, true)
     if p then
       fields[i] = raw:sub(last_pos, p - 1)
@@ -786,6 +789,8 @@ function SM_ParseDBRawRow(raw)
   if fields[15] and fields[15] ~= "" then item.ucs_subcategory = fields[15] end
   if fields[16] and fields[16] ~= "" then item.ucs_catid = fields[16] end
   if fields[17] and fields[17] ~= "" then item.cover_id = fields[17] end
+  if fields[18] and fields[18] ~= "" then item.peak = tonumber(fields[18]) end
+  if fields[19] and fields[19] ~= "" then item.loudness = tonumber(fields[19]) end
   return item
 end
 
@@ -3127,6 +3132,84 @@ function GetFilePathsForRowAction(list, row_index)
     end
   end
   return paths
+end
+
+function SM_StartMediaAnalysis(list, row_index)
+  if media_analysis_task then return false end
+  if type(reaper.SM_DB_AnalyzeMediaStart) ~= "function" then
+    reaper.ShowMessageBox(
+      T("Peak/loudness analysis requires the latest Soundmole extension."),
+      "Soundmole", 0)
+    return false
+  end
+
+  local dbpath = normalize_path(_G.current_db_fullpath or "", false)
+  if dbpath == "" or not reaper.file_exists(dbpath) then
+    reaper.ShowMessageBox(T("No media database is active."), "Soundmole", 0)
+    return false
+  end
+
+  local paths, seen = {}, {}
+  for _, info in ipairs(GetFileInfosForRowAction(list, row_index)) do
+    local path = normalize_path(info and info.path or "", false):gsub("[\r\n]", "")
+    if path ~= "" and not seen[path] then
+      seen[path] = true
+      paths[#paths + 1] = path
+    end
+  end
+  if #paths == 0 then
+    reaper.ShowMessageBox(T("No readable media files were selected."), "Soundmole", 0)
+    return false
+  end
+
+  local handle = reaper.SM_DB_AnalyzeMediaStart(dbpath, table.concat(paths, "\n"))
+  if not handle then
+    reaper.ShowMessageBox(T("Could not start peak/loudness analysis."), "Soundmole", 0)
+    return false
+  end
+
+  media_analysis_task = {
+    handle = handle,
+    dbpath = dbpath,
+    processed = 0,
+    total = #paths,
+  }
+  return true
+end
+
+function SM_PollMediaAnalysis()
+  local task = media_analysis_task
+  if not task or not task.handle then return end
+
+  local raw = reaper.SM_DB_AnalyzeMediaPoll(task.handle)
+  local state, processed, total, succeeded, failed, err =
+    tostring(raw or ""):match("^([^|]*)|(%d+)|(%d+)|(%d+)|(%d+)|(.*)$")
+  if not state then return end
+  task.processed = tonumber(processed) or task.processed
+  task.total = tonumber(total) or task.total
+  if state == "running" then return end
+
+  reaper.SM_DB_AnalyzeMediaRelease(task.handle)
+  media_analysis_task = nil
+
+  if state == "done" then
+    local current_path = normalize_path(_G.current_db_fullpath or "", false)
+    if current_path == task.dbpath then
+      local key = GetCurrentListKey()
+      SM_RememberDBSelection(key, _G.current_display_list, selected_row)
+      local dir, file = task.dbpath:match("^(.*)[/\\]([^/\\]+)$")
+      if dir and file then StartDBFirstPage(dir, file, 0) end
+    end
+    reaper.ShowMessageBox(
+      T("Peak/loudness analysis completed: %d succeeded, %d failed.",
+        tonumber(succeeded) or 0, tonumber(failed) or 0),
+      "Soundmole", 0)
+  elseif state == "error" then
+    local message = (err and err ~= "") and T(err) or T("Unknown error")
+    reaper.ShowMessageBox(
+      T("Peak/loudness analysis failed: %s", message),
+      "Soundmole", 0)
+  end
 end
 
 function IsFileRowSelected(idx)
@@ -12086,6 +12169,8 @@ function SM_DBColumnNameFromUserID(user_id)
   elseif user_id == TableColumns.SAMPLERATE then return "sr"
   elseif user_id == TableColumns.CHANNELS then return "ch"
   elseif user_id == TableColumns.BITS then return "bits"
+  elseif user_id == TableColumns.PEAK then return "peak"
+  elseif user_id == TableColumns.LOUDNESS then return "loudness"
   elseif user_id == TableColumns.TYPE then return "type"
   elseif user_id == TableColumns.GENRE then return "genre"
   elseif user_id == TableColumns.DESCRIPTION then return "desc"
@@ -12285,7 +12370,8 @@ function SM_GetCoverIDFromRawDBRow(raw)
     if not p then return "" end
     pos = p + 1
   end
-  return raw:sub(pos)
+  local next_pipe = raw:find("|", pos, true)
+  return next_pipe and raw:sub(pos, next_pipe - 1) or raw:sub(pos)
 end
 
 function SM_RawDBRowHasCoverIDField(raw)
@@ -13176,6 +13262,18 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         static.filtered_list_map, static.last_filter_text_map = {}, {}
       end
     end
+  end
+
+  -- 批量计算当前数据库媒体的采样峰值与综合响度
+  if collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB then
+    reaper.ImGui_Separator(ctx)
+    local analysis_busy = media_analysis_task ~= nil
+    if analysis_busy then reaper.ImGui_BeginDisabled(ctx, true) end
+    if reaper.ImGui_MenuItem(ctx, T("Calculate peak volume and loudness (LUFS-I) for media")) then
+      SM_StartMediaAnalysis(_G.current_display_list or {}, i)
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+    if analysis_busy then reaper.ImGui_EndDisabled(ctx) end
   end
 
   -- 批量数据库列表文件移除
@@ -14312,6 +14410,22 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       reaper.ImGui_Text(ctx, info.bits or "")
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
+    -- Peak dB
+    elseif col_name == T("Peak dB") then
+      local peak = tonumber(info.peak)
+      local text = ""
+      if peak then
+        text = peak > 0 and string.format("%.1f", 20 * math.log(peak) / math.log(10)) or "-inf"
+      end
+      reaper.ImGui_Text(ctx, text)
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
+    -- Loudness (LUFS-I)
+    elseif col_name == T("Loudness") then
+      local loudness = tonumber(info.loudness)
+      reaper.ImGui_Text(ctx, loudness and string.format("%.1f", loudness) or "")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
     -- Key
     elseif col_name == T("Key") then
       local key = (info.key and info.key ~= "" and info.key) or ""
@@ -14801,8 +14915,8 @@ function RunDatabaseLoaderTick()
       local item = {}
       local last_pos = 1
       local fields = {} 
-      -- 17 个字段
-      for i=1,17 do
+      -- 19 个字段
+      for i=1,19 do
         local p = line:find('|', last_pos, true)
         if p then
           fields[i] = line:sub(last_pos, p-1)
@@ -14835,6 +14949,8 @@ function RunDatabaseLoaderTick()
         if fields[15]~="" then item.ucs_subcategory = fields[15] end
         if fields[16]~="" then item.ucs_catid = fields[16] end
         if fields[17]~="" then item.cover_id = fields[17] end
+        if fields[18]~="" then item.peak = tonumber(fields[18]) end
+        if fields[19]~="" then item.loudness = tonumber(fields[19]) end
 
         table.insert(db_loader.temp_list, item)
         db_loader.loaded_count = db_loader.loaded_count + 1
@@ -17032,6 +17148,7 @@ function loop()
   -- RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！(新版 C++ 代理模式下，数据瞬间就绪，无需运行后台分片加载器)
   -- SM_ProcessBuilderLoop() -- 处理数据库构建器
   ProcessAsyncMetadata() -- 处理后台元数据加载，浏览物理文件夹时触发
+  SM_PollMediaAnalysis()
   MonitorShortcut(virtual_key_code) -- 监控快捷键，使用操作列表脚本控制主脚本添加条目到目标数据库
 
   -- 接收信号
@@ -20739,7 +20856,7 @@ function loop()
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     colors.red)                 -- 表格交替行背景 0xFF0F0F0F
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", table_w, child_h, 0) then
-      local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 21 or 20
+      local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 23 or 22
       local filelist_table_id = (collect_mode == COLLECT_MODE_SIMILAR) and "filelist_similarity" or "filelist"
       if reaper.ImGui_BeginTable(ctx, filelist_table_id, filelist_column_count,
         reaper.ImGui_TableFlags_Borders()      -- 表格分隔线
@@ -20777,6 +20894,8 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Channels"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, T("Samplerate"),  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, T("Bits"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
+          reaper.ImGui_TableSetupColumn(ctx, T("Peak dB"),     reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.PEAK)
+          reaper.ImGui_TableSetupColumn(ctx, T("Loudness"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.LOUDNESS)
           reaper.ImGui_TableSetupColumn(ctx, T("Key"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
           reaper.ImGui_TableSetupColumn(ctx, T("BPM"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, T("Group"),       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
@@ -20801,6 +20920,8 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Channels"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, T("Samplerate"),  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, T("Bits"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
+          reaper.ImGui_TableSetupColumn(ctx, T("Peak dB"),     reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.PEAK)
+          reaper.ImGui_TableSetupColumn(ctx, T("Loudness"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.LOUDNESS)
           reaper.ImGui_TableSetupColumn(ctx, T("Key"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
           reaper.ImGui_TableSetupColumn(ctx, T("BPM"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, T("Group"),       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
@@ -20825,6 +20946,8 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Channels"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, T("Samplerate"),  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, T("Bits"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
+          reaper.ImGui_TableSetupColumn(ctx, T("Peak dB"),     reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.PEAK)
+          reaper.ImGui_TableSetupColumn(ctx, T("Loudness"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.LOUDNESS)
           reaper.ImGui_TableSetupColumn(ctx, T("Key"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
           reaper.ImGui_TableSetupColumn(ctx, T("BPM"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, T("Group"),       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
@@ -20849,6 +20972,8 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Channels"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.CHANNELS)
           reaper.ImGui_TableSetupColumn(ctx, T("Samplerate"),  reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.SAMPLERATE)
           reaper.ImGui_TableSetupColumn(ctx, T("Bits"),        reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BITS)
+          reaper.ImGui_TableSetupColumn(ctx, T("Peak dB"),     reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.PEAK)
+          reaper.ImGui_TableSetupColumn(ctx, T("Loudness"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.LOUDNESS)
           reaper.ImGui_TableSetupColumn(ctx, T("Key"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
           reaper.ImGui_TableSetupColumn(ctx, T("BPM"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, T("Group"),       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
@@ -21144,6 +21269,28 @@ function loop()
                       return abits > bbits
                     else
                       return abits < bbits
+                    end
+                  end
+
+                elseif spec.user_id == TableColumns.PEAK then
+                  local apeak = tonumber(a.peak) or 0
+                  local bpeak = tonumber(b.peak) or 0
+                  if apeak ~= bpeak then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return apeak > bpeak
+                    else
+                      return apeak < bpeak
+                    end
+                  end
+
+                elseif spec.user_id == TableColumns.LOUDNESS then
+                  local aloudness = tonumber(a.loudness) or 0
+                  local bloudness = tonumber(b.loudness) or 0
+                  if aloudness ~= bloudness then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return aloudness > bloudness
+                    else
+                      return aloudness < bloudness
                     end
                   end
 
@@ -23690,6 +23837,11 @@ function loop()
           end)())
         end
 
+        if media_analysis_task then
+          reaper.ImGui_SameLine(ctx, nil, UIScale(10))
+          reaper.ImGui_Text(ctx, T("Calculating peak volume and loudness: %d/%d", media_analysis_task.processed or 0, media_analysis_task.total or 0))
+        end
+
         -- 插入选区音频到REAPER文本提示
         reaper.ImGui_SameLine(ctx, nil,  UIScale(10))
         if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
@@ -23983,6 +24135,10 @@ end
 -- 退出清理函数
 function OnScriptExit()
   reaper.SM_Spectrum_SetEnabled(false)
+  if media_analysis_task and media_analysis_task.handle and type(reaper.SM_DB_AnalyzeMediaRelease) == "function" then
+    reaper.SM_DB_AnalyzeMediaRelease(media_analysis_task.handle)
+    media_analysis_task = nil
+  end
   ResetWaveSelectionEdgeCursor()
   pcall(ProcessPendingSelectionNativeDrops)
   CleanupSelectionDragPreview(dragging_selection)

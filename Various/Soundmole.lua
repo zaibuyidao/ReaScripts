@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.246
+-- @version 1.0.247
 -- @changelog
---   Fixed Freesound license, date, and comment sorting display issues.
---   Fixed the group column warning.
+--   Added batch media peak dB and integrated loudness (LUFS-I) analysis.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

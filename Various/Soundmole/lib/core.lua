@@ -1465,6 +1465,9 @@ function SM_PrepareMediaDBRecord(info, dbfile)
   if info.description and info.description ~= "" then table.insert(desc, quote_if_space('d:' .. info.description)) end
   if info.cover_id and info.cover_id ~= "" then table.insert(desc, 'cover_id:' .. tostring(info.cover_id)) end
   if #desc > 0 then lines[#lines + 1] = 'DATA ' .. table.concat(desc, ' ') end
+  if info.peak ~= nil and info.loudness ~= nil then
+    lines[#lines + 1] = ('DATA v:%.6f o:%.1f'):format(info.peak, info.loudness)
+  end
 
   return table.concat(lines, "\n") .. "\n", cover_path
 end
@@ -1634,6 +1637,13 @@ function ParseMediaDBFile(dbpath)
       do
         local v = line:match('"cover_id:([^"]-)"') or line:match('cover_id:"([^"]-)"') or line:match('cover_id:([^%s"]+)')
         if v and v ~= "" then entry.cover_id = v end
+      end
+      do
+        local peak, loudness = line:match(
+          '^DATA%s+[Vv]:([%+%-]?[%d%.]+)%s+[Oo]:([%+%-]?[%d%.]+)%s*$')
+        if peak and loudness then
+          entry.peak, entry.loudness = tonumber(peak), tonumber(loudness)
+        end
       end
 
       entry.data = entry.data or {}
@@ -1938,6 +1948,13 @@ function _apply_data_line(entry, line)
   do
     local v = line:match('"cover_id:([^"]-)"') or line:match('cover_id:"([^"]-)"') or line:match('cover_id:([^%s"]+)')
     if v and v ~= "" then entry.cover_id = v end
+  end
+  do
+    local peak, loudness = line:match(
+      '^DATA%s+[Vv]:([%+%-]?[%d%.]+)%s+[Oo]:([%+%-]?[%d%.]+)%s*$')
+    if peak and loudness then
+      entry.peak, entry.loudness = tonumber(peak), tonumber(loudness)
+    end
   end
 end
 

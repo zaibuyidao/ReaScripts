@@ -485,3 +485,18 @@ Remaining=预计剩余
 Soundmole CLAP installation is complete and ready.=Soundmole CLAP 已安装完成并可使用。
 Soundmole CLAP installation failed. Open the setup log for details.=Soundmole CLAP 安装失败。请打开安装日志查看详情。
 Build Similarity Index=构建相似度索引
+
+# 峰值与响度分析
+Peak dB=峰值 dB
+Loudness=响度
+Calculate peak volume and loudness (LUFS-I) for media=为媒体计算峰值音量和响度
+Calculating peak volume and loudness: %d/%d=正在计算峰值音量和响度：%d/%d
+Peak/loudness analysis completed: %d succeeded, %d failed.=峰值与响度分析完成: %d 个成功, %d 个失败。
+Peak/loudness analysis failed: %s=峰值与响度分析失败：%s
+Peak/loudness analysis requires the latest Soundmole extension.=峰值与响度分析需要最新版 Soundmole 扩展。
+No media database is active.=当前未打开媒体数据库。
+No readable media files were selected.=未选择可读取的媒体文件。
+Could not start peak/loudness analysis.=无法启动峰值与响度分析。
+Database changed during analysis.=分析期间数据库已发生更改。
+Could not open the media database.=无法打开媒体数据库。
+Could not update the media database.=无法更新媒体数据库。
