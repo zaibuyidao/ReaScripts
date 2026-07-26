@@ -1431,6 +1431,7 @@ end
 
 function SM_PrepareMediaDBRecord(info, dbfile)
   if not info or not IsValidPreviewFile(info.path or "") then return false end
+  if IsValidAudioFile(info.path) and ((tonumber(info.channels) or 0) <= 0 or (tonumber(info.length) or 0) * (tonumber(info.samplerate) or 0) < 2) then return false end
   local cover_path = nil
   if info and not IsValidMIDIFile(info.path or "") and (not info.cover_id or info.cover_id == "") and info.path and type(SM_EnsureCoverForAudio) == "function" then
     local cover_id

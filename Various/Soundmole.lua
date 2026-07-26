@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.248
+-- @version 1.0.249
 -- @changelog
---   Added a Custom Tags column.
+--   Automatically exclude undecodable files or files without valid audio data when building databases.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
