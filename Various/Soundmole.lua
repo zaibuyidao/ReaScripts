@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.247
+-- @version 1.0.248
 -- @changelog
---   Added batch media peak dB and integrated loudness (LUFS-I) analysis.
+--   Added a Custom Tags column.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

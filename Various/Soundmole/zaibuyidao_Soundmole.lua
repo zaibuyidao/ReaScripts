@@ -2,7 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.40"
+SM_EXT_REQUIRED_VERSION = "0.0.41"
 SM_EXT_RELEASE_URL = "https://stash.reaper.fm/v/52517/soundmole-extension.zip"
 SM_EXT_INSTALLED_VERSION = nil
 
@@ -373,6 +373,10 @@ local recent_search_keywords = {}    -- 最近搜索列表
 browse_database_as_folders   = false -- 以文件夹方式浏览数据库
 selected_recent_row          = 0
 media_analysis_task          = nil
+custom_tags_update_task      = nil
+custom_tags_probe_queue      = {}
+custom_tags_probe_by_path    = {}
+custom_tags_probe_active     = nil
 local skip_silence_enabled   = false -- 跳过静音
 local skip_silence_db        = -60   -- 静音阈值，超过此值即认为有声
 local skip_silence_threshold = 10^(skip_silence_db / 20) -- 换算成振幅阈值 amp = 10^(dB/20)
@@ -441,6 +445,7 @@ local TableColumns = {
   KEY         = 18,
   BPM         = 19,
   SIMILARITY  = 20,
+  CUSTOM_TAGS = 21,
 }
 
 -- 加载语言文件
@@ -757,7 +762,7 @@ similarity_state = {
 function SM_ParseDBRawRow(raw)
   if not raw or raw == "" then return nil end
   local fields, last_pos = {}, 1
-  for i = 1, 19 do
+  for i = 1, 21 do
     local p = raw:find('|', last_pos, true)
     if p then
       fields[i] = raw:sub(last_pos, p - 1)
@@ -791,6 +796,8 @@ function SM_ParseDBRawRow(raw)
   if fields[17] and fields[17] ~= "" then item.cover_id = fields[17] end
   if fields[18] and fields[18] ~= "" then item.peak = tonumber(fields[18]) end
   if fields[19] and fields[19] ~= "" then item.loudness = tonumber(fields[19]) end
+  item.custom_tags = fields[20] or ""
+  item._custom_tags_from_db = fields[21] == "1"
   return item
 end
 
@@ -3212,6 +3219,130 @@ function SM_PollMediaAnalysis()
   end
 end
 
+function SM_StartCustomTagsUpdate(list, row_index, custom_tags)
+  if custom_tags_update_task then
+    reaper.ShowMessageBox(T("A custom-tag update is already running."), "Soundmole", 0)
+    return false
+  end
+  if type(reaper.SM_DB_UpdateCustomTagsStart) ~= "function" then
+    reaper.ShowMessageBox(T("Custom-tag editing requires the latest Soundmole extension."), "Soundmole", 0)
+    return false
+  end
+
+  local dbpath = normalize_path(_G.current_db_fullpath or "", false)
+  if dbpath == "" or not reaper.file_exists(dbpath) then
+    reaper.ShowMessageBox(T("No media database is active."), "Soundmole", 0)
+    return false
+  end
+
+  local values, seen = {}, {}
+  custom_tags = tostring(custom_tags or ""):gsub("[\r\n\t]", " ")
+  for _, info in ipairs(GetFileInfosForRowAction(list, row_index)) do
+    local path = normalize_path(info and info.path or "", false)
+    if path ~= "" and not seen[path] then
+      seen[path] = true
+      values[#values + 1] = tostring(#path) .. ":" .. tostring(#custom_tags) .. ":" .. path .. custom_tags
+    end
+  end
+  if #values == 0 then
+    reaper.ShowMessageBox(T("No readable media files were selected."), "Soundmole", 0)
+    return false
+  end
+
+  local handle = reaper.SM_DB_UpdateCustomTagsStart(dbpath, table.concat(values))
+  if not handle then
+    reaper.ShowMessageBox(T("Could not start custom-tag update."), "Soundmole", 0)
+    return false
+  end
+  custom_tags_update_task = {
+    handle = handle,
+    dbpath = dbpath,
+    total = #values,
+    updated = 0,
+  }
+  return true
+end
+
+function SM_PollCustomTagsUpdate()
+  local task = custom_tags_update_task
+  if not task or not task.handle then return end
+
+  local raw = reaper.SM_DB_UpdateCustomTagsPoll(task.handle)
+  local state, updated, total, err = tostring(raw or ""):match("^([^|]*)|(%d+)|(%d+)|(.*)$")
+  if not state then return end
+  task.updated = tonumber(updated) or task.updated
+  task.total = tonumber(total) or task.total
+  if state == "running" then return end
+
+  reaper.SM_DB_UpdateCustomTagsRelease(task.handle)
+  custom_tags_update_task = nil
+  if state == "done" then
+    local current_path = normalize_path(_G.current_db_fullpath or "", false)
+    if current_path == task.dbpath then
+      local key = GetCurrentListKey()
+      SM_RememberDBSelection(key, _G.current_display_list, selected_row)
+      local dir, file = task.dbpath:match("^(.*)[/\\]([^/\\]+)$")
+      if dir and file then StartDBFirstPage(dir, file, 0) end
+    end
+    reaper.ShowMessageBox(T("Custom tags updated for %d media file(s).", task.updated or 0), "Soundmole", 0)
+  elseif state == "error" then
+    local message = (err and err ~= "") and T(err) or T("Unknown error")
+    reaper.ShowMessageBox(T("Custom-tag update failed: %s", message), "Soundmole", 0)
+  end
+end
+
+function SM_QueueCustomTagsMetadataProbe(info)
+  if not info or info._custom_tags_from_db or info._custom_tags_probe_done or info._custom_tags_probe_queued or not info.path or info.path == "" then
+    return
+  end
+  local path = normalize_path(info.path, false)
+  local entry = custom_tags_probe_by_path[path]
+  if not entry then
+    entry = { path = path, infos = {} }
+    custom_tags_probe_by_path[path] = entry
+    custom_tags_probe_queue[#custom_tags_probe_queue + 1] = entry
+  end
+  entry.infos[#entry.infos + 1] = info
+  info._custom_tags_probe_queued = true
+end
+
+function SM_ProcessCustomTagsMetadataProbe()
+  if not custom_tags_probe_active then
+    local entry = table.remove(custom_tags_probe_queue, 1)
+    if not entry then return end
+    entry.handle = reaper.SM_ProbeMediaBegin(entry.path, 0, "", 0)
+    if not entry.handle then
+      for _, info in ipairs(entry.infos) do
+        info.custom_tags, info._custom_tags_probe_done = "", true
+      end
+      custom_tags_probe_by_path[entry.path] = nil
+      return
+    end
+    custom_tags_probe_active = entry
+  end
+
+  local entry = custom_tags_probe_active
+  local chunk = reaper.SM_ProbeMediaNextJSONEx(entry.handle, 1, 4)
+  if chunk == "\n" then return end
+
+  local custom_tags = ""
+  if chunk and chunk ~= "" then
+    local line = chunk:match("[^\r\n]+")
+    if line then
+      local meta = sm_parse_ndjson_line(line)
+      custom_tags = tostring(meta.custom_tags or "")
+    end
+  end
+  reaper.SM_ProbeMediaEnd(entry.handle)
+  for _, info in ipairs(entry.infos) do
+    info.custom_tags = custom_tags
+    info._custom_tags_probe_done = true
+    info._custom_tags_probe_queued = nil
+  end
+  custom_tags_probe_by_path[entry.path] = nil
+  custom_tags_probe_active = nil
+end
+
 function IsFileRowSelected(idx)
   idx = tonumber(idx)
   if not idx then return false end
@@ -3238,6 +3369,7 @@ local search_fields = {
   { label = "Channels",         key = "channels",      enabled = false }, -- 声道数
   { label = "Bits",             key = "bits",          enabled = false }, -- 位深度
   { label = "Key",              key = "key",           enabled = false }, -- 调号
+  { label = "Custom Tags",      key = "custom_tags",   enabled = false }, -- 自定义标签
   { label = "BPM",              key = "bpm",           enabled = false }, -- 速度
   { label = "Length",           key = "length",        enabled = false }, -- 时长
   { label = "Genre",            key = "genre",         enabled = false }, -- 流派
@@ -12179,6 +12311,7 @@ function SM_DBColumnNameFromUserID(user_id)
   elseif user_id == TableColumns.SUBCATEGORY then return "subcat"
   elseif user_id == TableColumns.CATID then return "catid"
   elseif user_id == TableColumns.KEY then return "key"
+  elseif user_id == TableColumns.CUSTOM_TAGS then return "custom_tags"
   end
   return "filename"
 end
@@ -12992,6 +13125,26 @@ function DrawRowPopup(ctx, i, info, collect_mode)
       SM_SIM_FindSimilar(info, target_db_path, target_db_path)
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
+    reaper.ImGui_Separator(ctx)
+  end
+
+  if collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB then
+    local tags_busy = custom_tags_update_task ~= nil
+    if tags_busy then reaper.ImGui_BeginDisabled(ctx, true) end
+    if reaper.ImGui_MenuItem(ctx, T("Edit Custom Tags")) then
+      local infos = GetFileInfosForRowAction(_G.current_display_list or {}, i)
+      local initial = infos[1] and tostring(infos[1].custom_tags or "") or ""
+      for n = 2, #infos do
+        if tostring(infos[n].custom_tags or "") ~= initial then
+          initial = ""
+          break
+        end
+      end
+      local ok, value = reaper.GetUserInputs(T("Edit Custom Tags"), 1, T("Custom Tags:") .. ",extrawidth=240", initial)
+      if ok then SM_StartCustomTagsUpdate(_G.current_display_list or {}, i, value) end
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+    if tags_busy then reaper.ImGui_EndDisabled(ctx) end
     reaper.ImGui_Separator(ctx)
   end
 
@@ -14432,6 +14585,15 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       reaper.ImGui_Text(ctx, key)
       RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
 
+    -- Custom Tags
+    elseif col_name == T("Custom Tags") then
+      if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
+        and not info._custom_tags_from_db and not info._custom_tags_probe_done then
+        SM_QueueCustomTagsMetadataProbe(info)
+      end
+      DrawCellTextOneLine(ctx, info.custom_tags or "")
+      RowContextFallbackFromCell(ctx, i, info, true, popup_id, is_item_mode)
+
     -- BPM
     elseif col_name == T("BPM") then
       local bpm = info.bpm
@@ -14812,6 +14974,17 @@ function StartDBFirstPage(db_dir, dbfile, first_n)
   _G._soundmole_static = static
 
   -- 清理旧状态
+  if custom_tags_probe_active and custom_tags_probe_active.handle then
+    reaper.SM_ProbeMediaEnd(custom_tags_probe_active.handle)
+  end
+  custom_tags_probe_queue, custom_tags_probe_by_path, custom_tags_probe_active = {}, {}, nil
+  if _G._last_search_handle then
+    local old_search_handle = _G._last_search_handle
+    _G._last_search_handle = nil
+    if not (_G.db_loader and old_search_handle == _G.db_loader.ctx) then
+      reaper.SM_DB_Release(old_search_handle)
+    end
+  end
   if _G.db_loader and _G.db_loader.ctx then
     reaper.SM_DB_Release(_G.db_loader.ctx)
     _G.db_loader.ctx = nil
@@ -14915,8 +15088,8 @@ function RunDatabaseLoaderTick()
       local item = {}
       local last_pos = 1
       local fields = {} 
-      -- 19 个字段
-      for i=1,19 do
+      -- 21 个字段
+      for i=1,21 do
         local p = line:find('|', last_pos, true)
         if p then
           fields[i] = line:sub(last_pos, p-1)
@@ -14951,6 +15124,8 @@ function RunDatabaseLoaderTick()
         if fields[17]~="" then item.cover_id = fields[17] end
         if fields[18]~="" then item.peak = tonumber(fields[18]) end
         if fields[19]~="" then item.loudness = tonumber(fields[19]) end
+        item.custom_tags = fields[20] or ""
+        item._custom_tags_from_db = fields[21] == "1"
 
         table.insert(db_loader.temp_list, item)
         db_loader.loaded_count = db_loader.loaded_count + 1
@@ -17149,6 +17324,8 @@ function loop()
   -- SM_ProcessBuilderLoop() -- 处理数据库构建器
   ProcessAsyncMetadata() -- 处理后台元数据加载，浏览物理文件夹时触发
   SM_PollMediaAnalysis()
+  SM_PollCustomTagsUpdate()
+  SM_ProcessCustomTagsMetadataProbe()
   MonitorShortcut(virtual_key_code) -- 监控快捷键，使用操作列表脚本控制主脚本添加条目到目标数据库
 
   -- 接收信号
@@ -20856,7 +21033,7 @@ function loop()
     -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     colors.red)                 -- 表格交替行背景 0xFF0F0F0F
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", table_w, child_h, 0) then
-      local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 23 or 22
+      local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 24 or 23
       local filelist_table_id = (collect_mode == COLLECT_MODE_SIMILAR) and "filelist_similarity" or "filelist"
       if reaper.ImGui_BeginTable(ctx, filelist_table_id, filelist_column_count,
         reaper.ImGui_TableFlags_Borders()      -- 表格分隔线
@@ -20897,6 +21074,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Peak dB"),     reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.PEAK)
           reaper.ImGui_TableSetupColumn(ctx, T("Loudness"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.LOUDNESS)
           reaper.ImGui_TableSetupColumn(ctx, T("Key"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
+          reaper.ImGui_TableSetupColumn(ctx, T("Custom Tags"), reaper.ImGui_TableColumnFlags_WidthFixed(), 100, TableColumns.CUSTOM_TAGS)
           reaper.ImGui_TableSetupColumn(ctx, T("BPM"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, T("Group"),       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
@@ -20923,6 +21101,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Peak dB"),     reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.PEAK)
           reaper.ImGui_TableSetupColumn(ctx, T("Loudness"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.LOUDNESS)
           reaper.ImGui_TableSetupColumn(ctx, T("Key"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
+          reaper.ImGui_TableSetupColumn(ctx, T("Custom Tags"), reaper.ImGui_TableColumnFlags_WidthFixed(), 100, TableColumns.CUSTOM_TAGS)
           reaper.ImGui_TableSetupColumn(ctx, T("BPM"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, T("Group"),       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
@@ -20949,6 +21128,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Peak dB"),     reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.PEAK)
           reaper.ImGui_TableSetupColumn(ctx, T("Loudness"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.LOUDNESS)
           reaper.ImGui_TableSetupColumn(ctx, T("Key"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
+          reaper.ImGui_TableSetupColumn(ctx, T("Custom Tags"), reaper.ImGui_TableColumnFlags_WidthFixed(), 100, TableColumns.CUSTOM_TAGS)
           reaper.ImGui_TableSetupColumn(ctx, T("BPM"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, T("Group"),       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
@@ -20975,6 +21155,7 @@ function loop()
           reaper.ImGui_TableSetupColumn(ctx, T("Peak dB"),     reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.PEAK)
           reaper.ImGui_TableSetupColumn(ctx, T("Loudness"),    reaper.ImGui_TableColumnFlags_WidthFixed(), 70, TableColumns.LOUDNESS)
           reaper.ImGui_TableSetupColumn(ctx, T("Key"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.KEY)
+          reaper.ImGui_TableSetupColumn(ctx, T("Custom Tags"), reaper.ImGui_TableColumnFlags_WidthFixed(), 100, TableColumns.CUSTOM_TAGS)
           reaper.ImGui_TableSetupColumn(ctx, T("BPM"),         reaper.ImGui_TableColumnFlags_WidthFixed(), 40, TableColumns.BPM)
           reaper.ImGui_TableSetupColumn(ctx, T("Group"),       reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 40)
           reaper.ImGui_TableSetupColumn(ctx, T("Path"),        reaper.ImGui_TableColumnFlags_WidthFixed() | reaper.ImGui_TableColumnFlags_NoSort(), 300)
@@ -21302,6 +21483,17 @@ function loop()
                       return ak > bk
                     else
                       return ak < bk
+                    end
+                  end
+
+                elseif spec.user_id == TableColumns.CUSTOM_TAGS then
+                  local atags = a.custom_tags or ""
+                  local btags = b.custom_tags or ""
+                  if atags ~= btags then
+                    if spec.sort_dir == reaper.ImGui_SortDirection_Descending() then
+                      return atags > btags
+                    else
+                      return atags < btags
                     end
                   end
 
@@ -23841,6 +24033,10 @@ function loop()
           reaper.ImGui_SameLine(ctx, nil, UIScale(10))
           reaper.ImGui_Text(ctx, T("Calculating peak volume and loudness: %d/%d", media_analysis_task.processed or 0, media_analysis_task.total or 0))
         end
+        if custom_tags_update_task then
+          reaper.ImGui_SameLine(ctx, nil, UIScale(10))
+          reaper.ImGui_Text(ctx, T("Updating custom tags..."))
+        end
 
         -- 插入选区音频到REAPER文本提示
         reaper.ImGui_SameLine(ctx, nil,  UIScale(10))
@@ -24138,6 +24334,14 @@ function OnScriptExit()
   if media_analysis_task and media_analysis_task.handle and type(reaper.SM_DB_AnalyzeMediaRelease) == "function" then
     reaper.SM_DB_AnalyzeMediaRelease(media_analysis_task.handle)
     media_analysis_task = nil
+  end
+  if custom_tags_update_task and custom_tags_update_task.handle and type(reaper.SM_DB_UpdateCustomTagsRelease) == "function" then
+    reaper.SM_DB_UpdateCustomTagsRelease(custom_tags_update_task.handle)
+    custom_tags_update_task = nil
+  end
+  if custom_tags_probe_active and custom_tags_probe_active.handle then
+    reaper.SM_ProbeMediaEnd(custom_tags_probe_active.handle)
+    custom_tags_probe_active = nil
   end
   ResetWaveSelectionEdgeCursor()
   pcall(ProcessPendingSelectionNativeDrops)

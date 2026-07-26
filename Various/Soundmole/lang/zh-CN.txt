@@ -500,3 +500,15 @@ Could not start peak/loudness analysis.=无法启动峰值与响度分析。
 Database changed during analysis.=分析期间数据库已发生更改。
 Could not open the media database.=无法打开媒体数据库。
 Could not update the media database.=无法更新媒体数据库。
+
+# 自定义标签
+Custom Tags=自定义标签
+Edit Custom Tags=编辑自定义标签
+Custom Tags:=自定义标签:
+Updating custom tags...=正在更新自定义标签...
+Custom tags updated for %d media file(s).=已更新 %d 个媒体文件的自定义标签。
+Custom-tag update failed: %s=自定义标签更新失败：%s
+Custom-tag editing requires the latest Soundmole extension.=编辑自定义标签需要最新版 Soundmole 扩展。
+Could not start custom-tag update.=无法启动自定义标签更新。
+A custom-tag update is already running.=已有一个自定义标签更新任务正在运行。
+Database changed while custom tags were being updated.=更新自定义标签期间数据库已发生更改。

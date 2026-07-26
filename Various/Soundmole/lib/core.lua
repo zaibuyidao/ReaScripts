@@ -282,6 +282,7 @@ function SM_BuildFileInfoFromProbeMeta(path, meta, opts)
     ucs_catid       = meta.ucs_catid or "",
     key             = meta.key or "",
     bpm             = meta.bpm or "",
+    custom_tags     = meta.custom_tags or "",
   }
 
   if opts.section_length ~= nil then info.section_length = opts.section_length end
@@ -1463,6 +1464,7 @@ function SM_PrepareMediaDBRecord(info, dbfile)
   local desc = {}
   if info.comment and info.comment ~= "" then table.insert(desc, quote_if_space('c:' .. info.comment)) end
   if info.description and info.description ~= "" then table.insert(desc, quote_if_space('d:' .. info.description)) end
+  if info.custom_tags and info.custom_tags ~= "" then table.insert(desc, quote_if_space('U:' .. info.custom_tags)) end
   if info.cover_id and info.cover_id ~= "" then table.insert(desc, 'cover_id:' .. tostring(info.cover_id)) end
   if #desc > 0 then lines[#lines + 1] = 'DATA ' .. table.concat(desc, ' ') end
   if info.peak ~= nil and info.loudness ~= nil then
@@ -1611,6 +1613,10 @@ function ParseMediaDBFile(dbpath)
       do
         local v = line:match('"[Dd]:([^"]-)"') or line:match('[Dd]:"([^"]-)"') or line:match('[Dd]:([^%s"]+)')
         if v and v ~= "" then entry.description = v end
+      end
+      do
+        local v = line:match('"[Uu]:([^"]-)"') or line:match('[Uu]:"([^"]-)"') or line:match('%f[%w][Uu]:([^%s"]*)')
+        if v ~= nil then entry.custom_tags, entry._custom_tags_from_db = v, true end
       end
       -- y / l / n / s / i
       do
@@ -1923,6 +1929,10 @@ function _apply_data_line(entry, line)
     local v = line:match('"[Dd]:([^"]-)"') or line:match('[Dd]:"([^"]-)"') or line:match('[Dd]:([^%s"]+)')
     if v and v ~= "" then entry.description = v end
   end
+  do
+    local v = line:match('"[Uu]:([^"]-)"') or line:match('[Uu]:"([^"]-)"') or line:match('%f[%w][Uu]:([^%s"]*)')
+    if v ~= nil then entry.custom_tags, entry._custom_tags_from_db = v, true end
+  end
   -- y / l / n / s / i
   do
     local v = line:match('"[Yy]:([^"]-)"') or line:match('[Yy]:"([^"]-)"') or line:match('[Yy]:([%d%-]+)')
@@ -2056,6 +2066,10 @@ function MediaDBStreamRead(stream, max_count)
           if eager.d then
             local v = line:match('"[Dd]:([^"]-)"') or line:match('[Dd]:"([^"]-)"') or line:match('[Dd]:([^%s"]+)')
             if v and v ~= "" then entry.description = v end
+          end
+          if eager.u then
+            local v = line:match('"[Uu]:([^"]-)"') or line:match('[Uu]:"([^"]-)"') or line:match('%f[%w][Uu]:([^%s"]*)')
+            if v ~= nil then entry.custom_tags, entry._custom_tags_from_db = v, true end
           end
           if eager.y then
             local v = line:match('"[Yy]:([^"]-)"') or line:match('[Yy]:"([^"]-)"') or line:match('[Yy]:([%d%-]+)')
