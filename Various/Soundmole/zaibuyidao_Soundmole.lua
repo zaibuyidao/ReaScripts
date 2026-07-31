@@ -1980,10 +1980,6 @@ do
 
     local display = (COLOR_LABELS and COLOR_LABELS[key]) or label or key
 
-    -- 左列名称，非右对齐
-    -- reaper.ImGui_TableSetColumnIndex(ctx, 0)
-    -- reaper.ImGui_Text(ctx, display)
-
     -- 左列名称右对齐
     reaper.ImGui_TableSetColumnIndex(ctx, 0)
     do
@@ -2181,9 +2177,6 @@ do
   end
 
   function Section_MirrorToggles()
-    -- reaper.ImGui_Text(ctx, "Mirror")
-    -- reaper.ImGui_Spacing(ctx)
-
     -- Folder Shortcuts (Mirror)
     local chg_fs
     chg_fs, mirror_folder_shortcuts = reaper.ImGui_Checkbox(ctx, T("Mirror Media Explorer Shortcuts"), mirror_folder_shortcuts)
@@ -2197,10 +2190,6 @@ do
         "Turn off to hide this section and skip enumerating shortcuts for faster UI."
       )
     end
-    -- reaper.ImGui_TextColored(ctx, colors.gray, 
-    --   "Mirror Media Explorer's \"Folder Shortcuts\" here. Read-only display. \n" ..
-    --   "Disable to hide this section and skip shortcut enumeration for faster UI."
-    -- )
 
     -- Database (Mirror)
     local chg_db
@@ -2215,10 +2204,6 @@ do
         "Turn off to hide this section and skip querying databases on startup."
       )
     end
-    -- reaper.ImGui_TextColored(ctx, colors.gray, 
-    --   "Mirror the Media Explorer \"Database\" list and entries. Read-only display. \n" ..
-    --   "Create or rescan databases in Media Explorer. Disable to hide this section and skip queries on startup."
-    -- )
   end
 
   function Section_PeekTreeRecentToggle()
@@ -2232,9 +2217,6 @@ do
       show_peektree_recent = v
       SM_SetState(EXT_SECTION, "show_peektree_recent", v and "1" or "0", true)
     end
-    -- if reaper.ImGui_IsItemHovered(ctx) then
-    --   reaper.ImGui_SetTooltip(ctx, 'When enabled, the "Play History" button is hidden. Disable this to show the button.')
-    -- end
   end
 
   function Section_PeakTreeVisibility()
@@ -6850,7 +6832,7 @@ function TryNativeDropMediaFiles(paths)
   return true, result > 0
 end
 
-function InsertMediaWithKeepParams(path, target_lane, loudness)
+function InsertMediaWithKeepParams(path, loudness)
   path = normalize_path(path, false)
   local before = {}
   for i = 0, reaper.CountMediaItems(0) - 1 do
@@ -6865,8 +6847,6 @@ function InsertMediaWithKeepParams(path, target_lane, loudness)
     if not before[item] then new_item = item break end
   end
   if not new_item then return end
-
-  ApplyInsertedItemToTargetLane(new_item, target_lane)
 
   local take = reaper.GetActiveTake(new_item)
   if take and keep_preview_rate_pitch_on_insert then
@@ -7073,12 +7053,6 @@ function ImGui_Knob(ctx, label, value, v_min, v_max, size, default_value)
     value = (default_value ~= nil) and default_value or v_min
     changed = true
   end
-  -- Tooltip
-  -- if hovered or active then
-  --   reaper.ImGui_BeginTooltip(ctx)
-  --   reaper.ImGui_Text(ctx, string.format("%.3f", value))
-  --   reaper.ImGui_EndTooltip(ctx)
-  -- end
 
   return changed, value
 end
@@ -7209,12 +7183,6 @@ function ImGui_VolumeLine(ctx, label, gain_value, min_db, max_db, width, line_th
       changed = true
     end
   end
-  -- 悬浮提示
-  -- if hovered then
-  --   reaper.ImGui_BeginTooltip(ctx)
-  --   reaper.ImGui_Text(ctx, string.format("Volume: %.2f dB", cur_db))
-  --   reaper.ImGui_EndTooltip(ctx)
-  -- end
 
   return changed, gain_value
 end
@@ -8863,18 +8831,6 @@ function DrawTimeLine(ctx, wave, view_start, view_end)
       end
     end
   end
-
-  -- 暂不强制显示最右侧的音频结束时间，只显示正常落在视图内的主刻度。
-  --[[
-  PushUIFont(ctx, fonts.sans_serif, 12)
-  local end_text = FormatTimelineTime(view_end, show_milliseconds)
-  local end_text_w = select(1, reaper.ImGui_CalcTextSize(ctx, end_text))
-  local text_x = math.max(min_x, max_x - end_text_w - label_x_pad)
-  local text_y = base_y - tick_long - UIScaleF(3)
-  reaper.ImGui_DrawList_AddLine(drawlist, max_x, base_y, max_x, base_y - tick_long, colors.timeline_def_color, line_th)
-  reaper.ImGui_DrawList_AddText(drawlist, text_x, text_y, colors.timeline_text, end_text)
-  reaper.ImGui_PopFont(ctx)
-  ]]
 end
 
 -- 智能波形采集入口，info 必须包含 .path 字段
@@ -9376,8 +9332,6 @@ function IsExistingDirectory(path)
     return true
   end
 
-  -- Enumeration cannot distinguish an empty folder from a missing path.
-  -- The trailing separator prevents regular files from passing this probe.
   local ok, _, error_code = os.rename(folder, folder)
   return ok == true or error_code == 5 or error_code == 13
 end
@@ -9461,12 +9415,6 @@ function draw_tree(name, path, depth, parent_path)
   -- 此电脑右键菜单
   AddThisComputerContextMenu(path)
 
-  -- 捕获本行矩形与中心y
-  -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
-  -- local cy = (miny + maxy) * 0.5
-  -- if #_guide.stack > 0 then
-  --   DrawChildTeeFromParent(ctx, minx, cy)
-  -- end
   -- 只要点击树节点，不管当前什么模式，都切换到tree模式
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     if collect_mode ~= COLLECT_MODE_TREE then
@@ -9625,12 +9573,7 @@ function draw_shortcut_tree(sc, base_path, depth)
   if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(show_name) .. "##shortcut_" .. path, flags | highlight)
   if has_child_dirs then peektree_open_nodes["shortcut:" .. path] = node_open and true or nil end
-  -- 捕获本行矩形与中心y
-  -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
-  -- local cy = (miny + maxy) * 0.5
-  -- if #_guide.stack > 0 then
-  --   DrawChildTeeFromParent(ctx, minx, cy)
-  -- end
+
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
     collect_mode = COLLECT_MODE_SHORTCUT
@@ -10143,12 +10086,6 @@ function draw_advanced_folder_node(id, selected_id, depth)
   if has_children then SM_ForceNextPeakTreeNodeClosed("collection:" .. tostring(id)) end
   local node_open = reaper.ImGui_TreeNode(ctx, ImGuiEscapeVisibleLabel(node.name) .. "##" .. id, flags)
   if has_children then peektree_open_nodes["collection:" .. tostring(id)] = node_open and true or nil end
-  -- 捕获本行矩形与中心y
-  -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
-  -- local cy = (miny + maxy) * 0.5
-  -- if #_guide.stack > 0 then
-  --   DrawChildTeeFromParent(ctx, minx, cy)
-  -- end
 
   -- 切换当前高级文件夹目录选中状态
   if reaper.ImGui_IsItemClicked(ctx, 0) then
@@ -10951,11 +10888,6 @@ function ReleaseAllCoverImages()
   end
   cover_path_cache = {}
   bad_cover_cache = {}
-end
-
-function DeleteCoverCacheFiles()
-  -- cover_cache is content-addressed and referenced by cover_index.json /
-  -- per-database coverids files, so keep the files across sessions.
 end
 
 --------------------------------------------- 地址栏音频文件地址点击文件夹目录段节点 ---------------------------------------------
@@ -13348,7 +13280,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         if info.path and info.path ~= "" then
           local insert_path = normalize_path(info.path, false)
           if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
-            InsertMediaWithKeepParams(insert_path, nil, info.loudness)
+            InsertMediaWithKeepParams(insert_path, info.loudness)
           else
             reaper.InsertMedia(insert_path, 0)
           end
@@ -13385,12 +13317,6 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         reaper.CF_LocateInExplorer(normalize_path(path, false)) -- 规范分隔符
       end
     end
-
-    -- 右键加载到RS5k，单选处理备用
-    -- if reaper.ImGui_MenuItem(ctx, "Load Sample to New RS5K Track (Q)") then
-    --   local tr = reaper.GetSelectedTrack(0, 0) or reaper.GetLastTouchedTrack()
-    --   LoadAudioToRS5k(tr, info.path)
-    -- end
 
     -- 右键批量加载到RS5k
     if reaper.ImGui_MenuItem(ctx, T("Load Sample(s) to New RS5K Track"), "Q") then
@@ -13679,9 +13605,9 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     reaper.ImGui_PushID(ctx, info.path or i)
     -- 可见窗口总时长，避免 src_len 为 nil
     local src_len = tonumber(wf.src_len)
-                  or tonumber(info and info.length)
-                  or ((wf.s_per_px and wf.pixel_cnt) and (wf.s_per_px * wf.pixel_cnt))
-                  or 0
+                 or tonumber(info and info.length)
+                 or ((wf.s_per_px and wf.pixel_cnt) and (wf.s_per_px * wf.pixel_cnt))
+                 or 0
     -- 绘制波形
     local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
     reaper.ImGui_PushID(ctx, i)
@@ -13754,12 +13680,6 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
         static.wf_enqueue_count = (static.wf_enqueue_count or 0) + 1
       end
     end
-
-    -- 画灰色占位条
-    -- local dl = reaper.ImGui_GetWindowDrawList(ctx)
-    -- local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-    -- reaper.ImGui_DrawList_AddRectFilled(dl, x, y, x + thumb_w, y + thumb_h, 0x444444FF)
-    -- reaper.ImGui_Dummy(ctx, thumb_w, thumb_h)
   end
 end
 
@@ -14316,19 +14236,6 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), colors.table_header_hovered)
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(), colors.table_header_active)
 
-  -- mark 原mark相关代码备留
-  -- reaper.ImGui_TableSetColumnIndex(ctx, 0)
-  -- if IsPreviewed(info.path) then
-  --   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-  --   local cx, cy = reaper.ImGui_GetCursorScreenPos(ctx)
-  --   local radius = 1.5
-  --   local color = 0xFFF0F0F0 -- 0x00FFFFFF -- 0x22ff22ff
-  --   reaper.ImGui_DrawList_AddCircleFilled(draw_list, cx + radius + 10, cy + radius + 5, radius, color)
-  --   reaper.ImGui_Dummy(ctx, radius*2+4, radius*2+4)
-  -- else
-  --   reaper.ImGui_Dummy(ctx, 10, 10)
-  -- end
-
   local col_count = reaper.ImGui_TableGetColumnCount(ctx)
   for c = 0, col_count - 1 do
     local is_item_mode = (collect_mode == COLLECT_MODE_ALL_ITEMS or collect_mode == COLLECT_MODE_RPP)
@@ -14373,7 +14280,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             local old_cursor = reaper.GetCursorPosition()
             reaper.PreventUIRefresh(1) -- 防止UI刷新
             if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
-              InsertMediaWithKeepParams(normalize_path(info.path, false), nil, info.loudness)
+              InsertMediaWithKeepParams(normalize_path(info.path, false), info.loudness)
             else
               reaper.InsertMedia(normalize_path(info.path, false), 0)
             end
@@ -14477,7 +14384,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           local old_cursor = reaper.GetCursorPosition()
           reaper.PreventUIRefresh(1) -- 防止UI刷新
           if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
-            InsertMediaWithKeepParams(normalize_path(info.path, false), nil, info.loudness)
+            InsertMediaWithKeepParams(normalize_path(info.path, false), info.loudness)
           else
             reaper.InsertMedia(normalize_path(info.path, false), 0)
           end
@@ -14848,12 +14755,7 @@ function draw_shortcut_tree_mirror(sc, base_path, depth, root_idx)
   if has_child_dirs then SM_ForceNextPeakTreeNodeClosed("shortcut_mirror:" .. path) end
   local node_open = reaper.ImGui_TreeNode(ctx, label, flags)
   if has_child_dirs then peektree_open_nodes["shortcut_mirror:" .. path] = node_open and true or nil end
-  -- 捕获本行矩形与中心y
-  -- local minx, miny, maxx, maxy = CaptureNodeRectAndInit(ctx, depth)
-  -- local cy = (miny + maxy) * 0.5
-  -- if #_guide.stack > 0 then
-  --   DrawChildTeeFromParent(ctx, minx, cy)
-  -- end
+
   if reaper.ImGui_IsItemClicked(ctx, 0) then
     tree_state.cur_path = path
     if collect_mode ~= COLLECT_MODE_SHORTCUT_MIRROR then
@@ -15624,13 +15526,6 @@ function RenderHWAngledTable(ctx)
       if reaper.ImGui_TableSetColumnIndex(ctx, 0) then
         reaper.ImGui_AlignTextToFramePadding(ctx)
         reaper.ImGui_Text(ctx, label)
-        -- 右侧增加已选映射概览
-        -- local cur = ensure_map(mode, num_out)
-        -- if #cur > 0 then
-        --   local s = (" (%s)"):format(join_csv_int(cur))
-        --   reaper.ImGui_SameLine(ctx)
-        --   reaper.ImGui_TextColored(ctx, colors.normal_text, s)
-        -- end
       end
 
       local cur = { table.unpack(ensure_map(mode, num_out)) }
@@ -15881,12 +15776,6 @@ function UI_PlayIconTrigger_Play(ctx)
       end
 
     elseif type(selected_row) == "number" and selected_row > 0 and type(_G.current_display_list) == "table" and _G.current_display_list[selected_row] then
-      -- 非暂停时，从头开始或当前位置
-      -- if Wave and Wave.play_cursor and Wave.play_cursor > 0 then
-      --   PlayFromCursor(_G.current_display_list[selected_row])
-      -- else
-      --   PlayFromStart(_G.current_display_list[selected_row])
-      -- end
       PlayFromCursor(_G.current_display_list[selected_row])
       is_paused = false
       paused_position = 0
@@ -16304,11 +16193,6 @@ function DrawPreviewRouteMenu(ctx)
   end
   reaper.ImGui_PopFont(ctx)
 
-  -- 触发按钮
-  -- if reaper.ImGui_Button(ctx, "Routing") then
-  --   reaper.ImGui_OpenPopup(ctx, "##preview_route_menu")
-  -- end
-
   if clicked then
     reaper.ImGui_OpenPopup(ctx, "##preview_route_menu")
   end
@@ -16388,10 +16272,6 @@ function SM_RequestCenterRow(idx, align)
   _G.scroll_request_index = idx
   _G.scroll_request_align = align or 0.5 -- 0 顶部, 0.5 居中, 1 底部
 end
-
--- 跳到搜索命中的第一个结果并居中
--- selected_row = hit_index
--- SM_RequestCenterRow(hit_index, 0.5)
 
 --------------------------------------------- 数据库路径过滤节点 ---------------------------------------------
 
@@ -16855,13 +16735,13 @@ function SM_PeekTreeFlagsForCtrlBranch(flags)
   return flags
 end
 
-local function SM_PeekTreeBranchPathKey(path)
+function SM_PeekTreeBranchPathKey(path)
   local key = tostring(path or ""):gsub("[/\\]+$", "")
   if reaper.GetOS():find("Win") then key = key:lower() end
   return key
 end
 
-local function SM_PeekTreeIsDescendantPath(path, base)
+function SM_PeekTreeIsDescendantPath(path, base)
   local child_key = SM_PeekTreeBranchPathKey(path)
   local base_key = SM_PeekTreeBranchPathKey(base)
   if child_key == "" or base_key == "" or child_key == base_key then return false end
@@ -17266,7 +17146,6 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
 end
 
 function SM_StartDatabaseIncremental(db_file_path)
-
   db_file_path = normalize_path(db_file_path, false)
   local result = reaper.SM_Builder_StartIncremental(db_file_path)
   if result ~= 1 then
@@ -17572,8 +17451,6 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Tab(),         colors.tab)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabHovered(),  colors.tab_hovered)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelected(), colors.tab_selected)
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabDimmed(),         colors.tab_dimmed)
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabDimmedSelected(), colors.tab_dimmed_selected)
 
     -- 在界面最上层显示加载进度条 (当 db_loader 激活时)
     if db_loader.active then
@@ -18041,9 +17918,7 @@ function loop()
 
     reaper.ImGui_SetNextItemWidth(ctx, filter_w)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), colors.thesaurus_text)
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     reaper.ImGui_InputText(ctx, "##SynonymDisplay", synonym_display_text, reaper.ImGui_InputTextFlags_ReadOnly())
-    -- reaper.ImGui_PopStyleVar(ctx)
     reaper.ImGui_PopStyleColor(ctx)
     reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -18105,11 +17980,6 @@ function loop()
 
       _G.commit_filter_text = "" -- 立即清空生效查询（Enter模式）
       _G._cover_id_filter = nil
-      -- 清除临时搜索字段，UCS隐式搜索临时关键词
-      -- active_saved_search = nil
-      -- temp_search_field, temp_search_keyword = nil
-      -- temp_ucs_cat_keyword, temp_ucs_sub_keyword = nil, nil
-
       static.filtered_list_map    = {}
       static.last_filter_text_map = {}
       -- selected_row = nil
@@ -18117,9 +17987,6 @@ function loop()
     if reaper.ImGui_IsItemHovered(ctx) then
       DrawTooltip('Clear the search box.')
     end
-    -- if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
-    --   reaper.ImGui_TextFilter_Set(filename_filter, "")
-    -- end
 
     -- 刷新按钮
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
@@ -18168,10 +18035,6 @@ function loop()
     if reaper.ImGui_IsItemHovered(ctx) then
       DrawTooltip('Restore all (undo all filters/search).')
     end
-    -- if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F6()) then
-    --   reaper.ImGui_TextFilter_Set(filename_filter, "")
-    --   active_saved_search = nil
-    -- end
 
     -- 当前播放文件的路径
     local file_info
@@ -18638,8 +18501,6 @@ function loop()
     if has_cover then DrawCoverFilterTag(ctx) end
     SM_DrawAlbumPanelToggle(ctx, true) -- 右侧专辑/metadata 面板开关按钮
 
-    -- reaper.ImGui_Dummy(ctx, 1, 1) -- 控件下方 + 1px 间距
-
     -- 自动缩放音频表格
     local avail_x, avail_y = reaper.ImGui_GetContentRegionAvail(ctx)
     local _, main_item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing())
@@ -18787,11 +18648,6 @@ function loop()
             end
           end
 
-          -- Tree模式特殊处理（折叠节点）
-          -- 初始化持久化状态变量，防止点击图标时状态丢失
-          -- if this_computer_open == nil then 
-          --   this_computer_open = (collect_mode == COLLECT_MODE_TREE) 
-          -- end
           -- 如果上一帧点了图标，本帧强制恢复折叠状态
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
           if _G._this_computer_force_open_state ~= nil then
@@ -19097,23 +18953,6 @@ function loop()
               draw_shortcut_tree(sc, nil, 0)
               reaper.ImGui_PopStyleColor(ctx, 1)
             end
-
-            -- 添加新快捷方式按钮
-            -- if reaper.ImGui_Button(ctx, "Create Shortcut##add_folder_shortcut", 140, 40) then
-            --   local rv, folder = reaper.JS_Dialog_BrowseForFolder("Choose folder to add shortcut:", "")
-            --   if rv == 1 and folder and folder ~= "" then
-            --     folder = normalize_path(folder, true)
-            --     local exists = false
-            --     for _, v in ipairs(folder_shortcuts) do
-            --       if v.path == folder then exists = true break end
-            --     end
-            --     if not exists then
-            --       table.insert(folder_shortcuts, { name = folder:match("[^/\\]+$"), path = folder })
-            --       SaveFolderShortcuts()
-            --     end
-            --   end
-            -- end
-            -- reaper.ImGui_Unindent(ctx, 7)
           end
 
           -- 镜像官方快捷键方式
@@ -19252,8 +19091,6 @@ function loop()
           -- 顶层 Collection 拖动手柄宽度
           local COLLECTION_HANDLE_W = 20
           if is_collection_open then
-            -- reaper.ImGui_Indent(ctx, 7) -- 手动缩进16像素
-
             -- 鼠标抬起时重置 Collections 拖动状态
             if not reaper.ImGui_IsMouseDown(ctx, 0) then
               collection_drag_index = nil
@@ -19357,18 +19194,6 @@ function loop()
                 reaper.ImGui_PopStyleColor(ctx, 1)
               end
             end
-
-            -- 按钮注释，改为标题旁边的+号
-            -- if reaper.ImGui_Button(ctx, "Create Collection##add_adv_folder", 140, 40) then
-            --   local ret, name = reaper.GetUserInputs("Create Collection", 1, "Collection Name:,extrawidth=200", "")
-            --   if ret and name and name ~= "" then
-            --     local new_id = new_guid()
-            --     advanced_folders[new_id] = { id = new_id, name = name, parent = nil, children = {}, files = {} } -- 写入 advanced_folders 表
-            --     table.insert(root_advanced_folders, new_id)
-            --     SaveAdvancedFolders()
-            --   end
-            -- end
-            -- reaper.ImGui_Unindent(ctx, 7)
           end
 
           end
@@ -19628,22 +19453,6 @@ function loop()
                 reaper.ImGui_EndDragDropTarget(ctx)
               end
             end
-            -- 新建自定义文件夹按钮
-            -- if reaper.ImGui_Button(ctx, "Create Group##add_custom_folder", 140, 40) then
-            --   local ret, name = reaper.GetUserInputs("Create Group", 1, "Group Name:,extrawidth=200", "")
-            --   if ret and name and name ~= "" then
-            --     local exists = false
-            --     for _, v in ipairs(custom_folders) do
-            --       if v == name then exists = true break end
-            --     end
-            --     if not exists then
-            --       table.insert(custom_folders, name)
-            --       custom_folders_content[name] = {}
-            --       SaveCustomFolders()
-            --     end
-            --   end
-            -- end
-            -- reaper.ImGui_Unindent(ctx, 7)
           end
 
           end
@@ -19748,9 +19557,6 @@ function loop()
               local db_dir = script_path .. "SoundmoleDB"
               EnsureCacheDir(db_dir)
               local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
-              -- 仅简单创建空数据库文件（弃用）
-              -- local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
-              -- local f = io.open(dbfile, "wb") f:close()
 
               local dbfile_name = string.format("%s.MoleFileList", db_index)
               local dbfile_path = string.format("%s/%s", db_dir, dbfile_name)
@@ -20257,17 +20063,6 @@ function loop()
                 reaper.ImGui_TreePop(ctx)
               end
             end
-
-            -- 数据库按钮
-            -- if reaper.ImGui_Button(ctx, "Create Database", 140, 40) then
-            --   local db_dir = script_path .. "SoundmoleDB"
-            --   EnsureCacheDir(db_dir)
-            --   local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
-            --   local dbfile = string.format("%s/%s.MoleFileList", db_dir, db_index)
-            --   local f = io.open(dbfile, "wb") f:close()
-            -- end
-
-            -- reaper.ImGui_Unindent(ctx, 7)
           end
 
           -- REAPER Database
@@ -20366,9 +20161,6 @@ function loop()
                 last_search_input        = kw
                 search_input_timer       = reaper.time_precise()
               end
-              -- if reaper.ImGui_Selectable(ctx, keyword, selected) then
-              --   ApplySearchFromHistory(i)
-              -- end
               -- 右键菜单
               if reaper.ImGui_IsItemHovered(ctx) and reaper.ImGui_IsMouseClicked(ctx, 1) then
                 reaper.ImGui_OpenPopup(ctx, "recent_search_menu_" .. i)
@@ -20389,7 +20181,6 @@ function loop()
               end
             end
             reaper.ImGui_PopStyleColor(ctx, 1)
-
             reaper.ImGui_Unindent(ctx, 25)
           end
 
@@ -21074,15 +20865,6 @@ function loop()
       splitter_just_started = true
     end
 
-    -- 旧版拖动逻辑，基于比例计算新左宽（弃用）
-    -- if splitter_drag and splitter_active then
-    --   -- 拖动时，基于初始点击的偏移修正
-    --   local new_left = mx - wx - splitter_drag_offset
-    --   new_left = math.max(min_left, math.min(max_left, new_left))
-    --   left_ratio = new_left / avail_x
-    --   SM_SetState(EXT_SECTION, "left_ratio", tostring(left_ratio), true) -- 保存分割条位置
-    -- end
-
     -- 拖动
     if splitter_drag and splitter_active and not splitter_just_started then
       local new_left_px = mx - wx - (splitter_drag_offset or 0)
@@ -21123,8 +20905,6 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SeparatorHovered(),  colors.table_separator_hovered)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SeparatorActive(),   colors.table_separator_active)
 
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBg(),        colors.yellow)              -- 表格行背景色 0xFF0F0F0F
-    -- reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TableRowBgAlt(),     colors.red)                 -- 表格交替行背景 0xFF0F0F0F
     -- 右侧表格列表, 支持表格排序和冻结首行
     if reaper.ImGui_BeginChild(ctx, "##file_table_child", table_w, child_h, 0) then
       local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 24 or 23
@@ -22556,25 +22336,9 @@ function loop()
       reaper.ImGui_PopFont(ctx)
     end
 
-    -- 跳过静音的勾选项，放置右侧代码。
-    -- reaper.ImGui_SameLine(ctx, nil, 0)
-    -- local avail = reaper.ImGui_GetContentRegionAvail(ctx) -- 计算可用宽度
-    -- local txt_w, txt_h = reaper.ImGui_CalcTextSize(ctx, "Skip Silence") -- 文字尺寸
-    -- local cb_w = txt_w + txt_h + 16 -- 文字宽度+勾选框大小+间距
-
-    -- -- 如果可用宽度足够，把光标推到右侧
-    -- if avail > cb_w then
-    --   reaper.ImGui_Dummy(ctx, avail - cb_w, 0)
-    --   reaper.ImGui_SameLine(ctx, nil, 0)
-    -- end
-
     -- 跳过静音
     local silence_changed
-    --reaper.ImGui_Text(ctx, "Skip Silence:")
-    --reaper.ImGui_SameLine(ctx, nil, 10)
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     silence_changed, skip_silence_enabled = reaper.ImGui_Checkbox(ctx, T("Skip Silence") .. "###Skip_Silence", skip_silence_enabled)
-    -- reaper.ImGui_PopStyleVar(ctx)
     if silence_changed then
       SM_SetState(EXT_SECTION, "skip_silence", skip_silence_enabled and "1" or "0", true)
     end
@@ -22584,12 +22348,8 @@ function loop()
 
     -- 自动播放切换按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
-    -- reaper.ImGui_Text(ctx, "Auto Play Next:")
-    -- reaper.ImGui_SameLine(ctx)
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
     local rv6
     rv6, auto_play_next = reaper.ImGui_Checkbox(ctx, T("Auto Play Next") .. "###Auto_Play_Next", auto_play_next)
-    -- reaper.ImGui_PopStyleVar(ctx)
 
     -- Tempo Sync 速度同步复选框
     reaper.ImGui_SameLine(ctx, nil, 10)
@@ -22817,20 +22577,6 @@ function loop()
       last_preview_handle = playing_preview
     end
 
-    -- 同步速度复选框
-    -- reaper.ImGui_SameLine(ctx, nil, 10)
-    -- local _rv_sync, _sync = reaper.ImGui_Checkbox(ctx, "Tempo Sync##sm_sync", tempo_sync_enabled)
-    -- if _rv_sync then
-    --   tempo_sync_enabled = _sync
-    --   if playing_preview then
-    --     if RestartPreviewWithParams then RestartPreviewWithParams() end
-    --   end
-    -- end
-    -- 联动复选框
-    -- reaper.ImGui_SameLine(ctx, nil, 10)
-    -- local _rv_link, _link = reaper.ImGui_Checkbox(ctx, "Link Transport##sm_link", link_with_reaper)
-    -- if _rv_link then link_with_reaper = _link end
-
     -- 文件路径，始终跟随 file_info
     local show_path = file_info and file_info.path or ""
     show_path = normalize_path(show_path, false)
@@ -22949,8 +22695,6 @@ function loop()
         end
         reaper.ImGui_EndPopup(ctx)
       end
-      -- reaper.ImGui_SameLine(ctx)
-      -- HelpMarker("Hovering over a folder segment highlights it. Click to navigate into that folder.\nRight-click the path to show and highlight the file in Explorer/Finder.")
     end
 
     -- 横向分割条
@@ -23044,19 +22788,6 @@ function loop()
         local pad_y = PixelFloor((avail_h - img_h) * 0.5)
 
         reaper.ImGui_SetCursorPos(ctx, cur_x + math.max(0, pad_x), cur_y + math.max(0, pad_y))
-
-        -- 旧版使用 Dummy 实现居中，缺点是 Dummy 会增加 Child 的内容高度，导致在某些 UI 缩放下出现不必要的滚动条
-        -- local img_w, img_h = UIScale(130), UIScale(130)
-        -- local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx) -- 可用宽度和高度
-        -- local pad_x = (avail_w - img_w) * 0.5
-        -- if pad_x > 0 then
-        --   reaper.ImGui_Dummy(ctx, pad_x, 0)
-        --   reaper.ImGui_SameLine(ctx)
-        -- end
-        -- local pad_y = (avail_h - img_h) * 0.5
-        -- if pad_y > 0 then
-        --   reaper.ImGui_Dummy(ctx, 0, pad_y - UIScale(15))
-        -- end
 
         -- 缓存并创建纹理
         if last_cover_path ~= cover_path then
@@ -23206,8 +22937,6 @@ function loop()
       end
       midi_preview_state.data = nil
       if cur_info then
-        -- 限制只有在选中表格项或双击预览播放时加载波形，但效果不佳。目前默认只要选中就会加载波形。
-        -- if (auto_play_selected and last_selected_row ~= selected_row) or (doubleclick_action == DOUBLECLICK_PREVIEW and reaper.ImGui_IsMouseDoubleClicked(ctx, 0)) then
         -- 获取完整源音频及区段参数
         local section_offset = cur_info.section_offset or 0
         local section_length = cur_info.section_length or 0
@@ -23567,9 +23296,6 @@ function loop()
             wf_play_start_cursor = select_pos
             if playing_preview then
               QueuePreviewSeek(cur_info, select_pos, false)
-              -- if reaper.CF_Preview_SetValue then
-              --   PlayFromCursor(cur_info)
-              -- end
             end
           end
         end
@@ -24072,16 +23798,6 @@ function loop()
         reaper.ImGui_Text(ctx, string.format("%d loaded ...", loaded_total)) -- fixed width 7
       else
         if is_db then
-          -- 是否存在任意过滤
-          -- local has_filter = false
-          -- do
-          --   local t = _G.commit_filter_text
-          --   if type(t) == "string" and t ~= "" then has_filter = true end
-          --   if _G.temp_search_keyword then has_filter = true end
-          --   if _G.active_saved_search then has_filter = true end
-          --   if _G.temp_ucs_cat_keyword or _G.temp_ucs_sub_keyword then has_filter = true end
-          -- end
-
           local has_filter = false
           do
             local t = _G.commit_filter_text
@@ -24363,7 +24079,6 @@ function loop()
     if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_F4()) then
       StopPreview()
       ReleaseAllCoverImages() -- 释放封面纹理
-      DeleteCoverCacheFiles() -- 删除缓存图片
       SaveExitSettings()      -- 保存状态
       return -- 退出脚本
     end
@@ -24409,7 +24124,6 @@ function loop()
       -- 无选区，退出脚本
       StopPreview()
       ReleaseAllCoverImages() -- 释放封面纹理
-      DeleteCoverCacheFiles() -- 删除缓存图片
       SaveExitSettings()      -- 保存状态
       return
     end
@@ -24425,7 +24139,6 @@ function loop()
   else
     StopPreview()
     ReleaseAllCoverImages() -- 释放封面纹理
-    DeleteCoverCacheFiles() -- 删除缓存图片
     SaveExitSettings()      -- 退出时保存最后使用的模式状态
   end
 end
@@ -24493,7 +24206,6 @@ function OnScriptExit()
   CancelAllWaveformJobs()
   StopPreview()
   ReleaseAllCoverImages() -- 释放封面纹理
-  DeleteCoverCacheFiles() -- 删除缓存图片
 end
 reaper.atexit(OnScriptExit)
 reaper.defer(loop)
