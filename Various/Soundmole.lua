@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.250
+-- @version 1.0.251
 -- @changelog
 --   Added a target loudness control with preset and custom LUFS values.
 --   Audio is automatically adjusted to the target loudness when inserted into the REAPER arrange view.

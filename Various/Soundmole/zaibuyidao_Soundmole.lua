@@ -2,7 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.43"
+SM_EXT_REQUIRED_VERSION = "0.0.42"
 SM_EXT_INSTALLED_VERSION = nil
 
 function SM_NormalizeVersion(version)
