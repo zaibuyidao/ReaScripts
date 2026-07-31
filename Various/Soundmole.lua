@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.249
+-- @version 1.0.250
 -- @changelog
---   Automatically exclude undecodable files or files without valid audio data when building databases.
+--   Added a target loudness control with preset and custom LUFS values.
+--   Audio is automatically adjusted to the target loudness when inserted into the REAPER arrange view.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

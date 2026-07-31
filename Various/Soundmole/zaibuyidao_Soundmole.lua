@@ -2,8 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.42"
-SM_EXT_RELEASE_URL = "https://stash.reaper.fm/v/52517/soundmole-extension.zip"
+SM_EXT_REQUIRED_VERSION = "0.0.43"
 SM_EXT_INSTALLED_VERSION = nil
 
 function SM_NormalizeVersion(version)
@@ -26,15 +25,6 @@ function SM_CompareVersions(left, right)
   return 0
 end
 
-function SM_GetPlatformLabel()
-  local os_name = tostring(reaper.GetOS and reaper.GetOS() or "")
-  local lower = os_name:lower()
-  if lower:find("win", 1, true) then return "Windows" end
-  if lower:find("osx", 1, true) or lower:find("mac", 1, true) then return "macOS" end
-  if lower:find("linux", 1, true) then return "Linux" end
-  return os_name ~= "" and os_name or "this system"
-end
-
 function SM_GetInstalledExtensionVersion()
   if not (reaper.APIExists and reaper.APIExists("SM_GetVersion") and reaper.SM_GetVersion) then
     return nil
@@ -52,21 +42,28 @@ function SM_CheckRequiredExtension()
     return true
   end
 
-  local platform_label = SM_GetPlatformLabel()
   local installed_label = SM_EXT_INSTALLED_VERSION or "not detected"
   local message =
-    "Soundmole requires Soundmole extension " .. SM_EXT_REQUIRED_VERSION .. " or newer.\n\n" ..
+    "Soundmole requires ReaMole extension " .. SM_EXT_REQUIRED_VERSION .. " or newer.\n\n" ..
     "Installed extension version: " .. installed_label .. "\n" ..
-    "Required extension version: " .. SM_EXT_REQUIRED_VERSION .. "\n" ..
-    "Platform: " .. platform_label .. "\n\n" ..
-    "Install the matching Soundmole extension from:\n" ..
-    SM_EXT_RELEASE_URL .. "\n\n" ..
-    "Put the extension file into REAPER/UserPlugins, restart REAPER, then run Soundmole again.\n\n" ..
-    "Click OK to open the release page."
+    "Required extension version: " .. SM_EXT_REQUIRED_VERSION .. "\n\n" ..
+    -- 新增扩展更名说明
+    "Important: the extension files have been renamed from 'reaper_soundmole-*' to 'reaper_reamole-*'.\n" ..
+    "Please remove the old 'reaper_soundmole-*' extension files from REAPER/UserPlugins before installing ReaMole.\n\n" ..
 
-  local response = reaper.MB(message, "Soundmole Extension Update Required", 1)
-  if response == 1 and reaper.CF_ShellExecute then
-    reaper.CF_ShellExecute(SM_EXT_RELEASE_URL)
+    "The ReaPack package browser will open. Please install or update 'ReaMole.ext', " ..
+    "restart REAPER, then run Soundmole again."
+
+  reaper.MB(message, "ReaMole Extension Update Required", 0)
+  if reaper.APIExists("ReaPack_AddSetRepository") and reaper.APIExists("ReaPack_BrowsePackages") then
+    local ok, err = reaper.ReaPack_AddSetRepository("zaibuyidao Scripts", "https://github.com/zaibuyidao/ReaScripts/raw/master/index.xml", true, 1)
+    if ok then
+      reaper.ReaPack_BrowsePackages("ReaMole: Soundmole Extension for REAPER")
+    else
+      reaper.MB(tostring(err), "Error", 0)
+    end
+  else
+    reaper.MB("ReaPack is not installed. Please install it from https://reapack.com and run Soundmole again.", "ReaPack Not Found", 0)
   end
   return false
 end
@@ -353,6 +350,16 @@ local is_paused              = false -- 是否处于暂停状态
 local paused_position        = 0     -- 暂停时的进度
 local base_height            = reaper.ImGui_GetFrameHeight(ctx) * 1.5 -- 底部进度条和电平条一致的高度控制
 local volume                 = 1     -- 线性音量默认值（1=0dB，0.5=-6dB，2=+6dB）
+target_loudness              = -14
+target_loudness_presets = {
+  { -24, "-24 LUFS (ATSC A/85 / US broadcast)" },
+  { -23, "-23 LUFS (EBU R128 / broadcast)" },
+  { -19, "-19 LUFS (Spotify Quiet / mono podcast)" },
+  { -16, "-16 LUFS (music streaming / stereo podcast)" },
+  { -14, "-14 LUFS (Spotify / YouTube / TIDAL / Amazon Music)" },
+  { -11, "-11 LUFS (Spotify Loud)" },
+  {  -9, "-9 LUFS (loud music master)" },
+}
 local max_db                 = 12    -- 音量最大值
 local min_db                 = -150  -- 音量最小值
 local pitch_knob_min         = -6    -- 音高旋钮最低
@@ -402,7 +409,8 @@ local show_font_size_popup    = false -- 字体大小显示状态变量
 local show_font_size_timer    = 0
 local show_row_height_popup   = false -- 行高显示状态变量
 local show_row_height_timer   = 0
-local keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
+keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
+keep_target_loudness_on_insert = true -- 顶层状态使用全局，插入或拖动时默认保持目标响度
 PREVIEW_START_QUANTIZE_OFF       = "off"
 PREVIEW_START_QUANTIZE_BAR       = "bar"
 PREVIEW_START_QUANTIZE_BEAT      = "beat"
@@ -707,6 +715,8 @@ last_rate_max = tonumber(SM_GetState(EXT_SECTION, "rate_max"))
 if last_rate_max then rate_max = last_rate_max end
 last_volume = tonumber(SM_GetState(EXT_SECTION, "volume"))
 if last_volume then volume = last_volume end
+last_target_loudness = tonumber(SM_GetState(EXT_SECTION, "target_loudness"))
+if last_target_loudness then target_loudness = math.max(-60, math.min(0, last_target_loudness)) end
 last_auto_scroll = SM_GetState(EXT_SECTION, "auto_scroll")
 if last_auto_scroll == "0" then auto_scroll_enabled = false end
 if last_auto_scroll == "1" then auto_scroll_enabled = true end
@@ -1496,6 +1506,8 @@ function SaveSettings()
 
   -- 播放行为与同步
   SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "insert_keep_target_loudness", keep_target_loudness_on_insert and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "target_loudness", tostring(target_loudness), true)
   SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
   SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
   wait_nextbar_play = preview_start_quantize_mode ~= PREVIEW_START_QUANTIZE_OFF
@@ -1606,6 +1618,12 @@ do
   local v = SM_GetState(EXT_SECTION, "insert_keep_rate_pitch")
   if v == "1" then keep_preview_rate_pitch_on_insert = true
   elseif v == "0" then keep_preview_rate_pitch_on_insert = false end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "insert_keep_target_loudness")
+  if v == "1" then keep_target_loudness_on_insert = true
+  elseif v == "0" then keep_target_loudness_on_insert = false end
 end
 
 do
@@ -2513,6 +2531,11 @@ do
       keep_preview_rate_pitch_on_insert = v_keep
       SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", v_keep and "1" or "0", true)
     end
+    local chg_loudness, v_loudness = reaper.ImGui_Checkbox(ctx, T("Keep target loudness when inserting to arrange"), keep_target_loudness_on_insert)
+    if chg_loudness then
+      keep_target_loudness_on_insert = v_loudness
+      SM_SetState(EXT_SECTION, "insert_keep_target_loudness", v_loudness and "1" or "0", true)
+    end
   end
 
   function Section_Database()
@@ -2845,6 +2868,8 @@ do
       preview_start_quantize_beats = 1
       wait_nextbar_play       = false           -- 重置等待小节末尾播放为关闭
       keep_preview_rate_pitch_on_insert = false -- 重置插入时保持预览速率和音高为关闭
+      keep_target_loudness_on_insert = true     -- 重置插入时保持目标响度为开启
+      target_loudness         = -14
 
       ApplyWaveformCacheDir(cache_dir, false, true)
       ApplyFreesoundCacheDir(fs_cache_dir, false, true)
@@ -4619,6 +4644,27 @@ end
 
 --------------------------------------------- 播放控件相关 ---------------------------------------------
 
+function GetTargetLoudnessGain(info_or_loudness)
+  local measured = type(info_or_loudness) == "table" and info_or_loudness.loudness or info_or_loudness
+  measured = tonumber(measured)
+  if not measured or measured ~= measured or measured == math.huge or measured == -math.huge then return 1.0 end
+  local gain_db = math.max(-120, math.min(120, target_loudness - measured))
+  return 10 ^ (gain_db / 20)
+end
+
+function ApplyTargetLoudnessToItem(item, loudness)
+  if not keep_target_loudness_on_insert or tonumber(loudness) == nil
+    or not item or not reaper.ValidatePtr(item, "MediaItem*")
+  then
+    return
+  end
+  local take = reaper.GetActiveTake(item)
+  if take then
+    reaper.SetMediaItemTakeInfo_Value(take, "D_VOL", GetTargetLoudnessGain(loudness))
+    reaper.UpdateItemInProject(item)
+  end
+end
+
 function StopPlay()
   if playing_preview then
     reaper.CF_Preview_Stop(playing_preview)
@@ -4669,7 +4715,7 @@ function RestartPreviewWithParams(from_wave_pos)
   playing_preview = reaper.CF_CreatePreview(playing_source)
   if playing_preview then
     reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-    reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+    reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(last_playing_info or last_selected_info))
     reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
     reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
     reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -5170,7 +5216,8 @@ function ReplaceNativeSelectionDropItem(req, item)
     false,
     target_lane,
     req.force_section,
-    position
+    position,
+    req.loudness
   )
   reaper.SetEditCurPos(old_cursor, false, false)
 
@@ -5221,7 +5268,15 @@ function ProcessPendingSelectionNativeDrops()
     end
 
     matching_item = matching_item or (#new_items == 1 and new_items[1])
-    if matching_item then replaced = ReplaceNativeSelectionDropItem(req, matching_item) end
+    if matching_item then
+      if req.postprocess_target_loudness_only then
+        ApplyTargetLoudnessToItem(matching_item, req.loudness)
+        replaced = true
+        reaper.UpdateArrange()
+      else
+        replaced = ReplaceNativeSelectionDropItem(req, matching_item)
+      end
+    end
 
     if replaced or (not matching_item and now - (req.timestamp or now) > 5.0) then
       CleanupSelectionDragPreview(req)
@@ -6671,7 +6726,7 @@ function UnselectAllMediaItemsFast()
   end
 end
 
-function InsertMediaItemAtTrackFast(track, path, insert_time, start_offset, source_len, target_lane, clear_selection)
+function InsertMediaItemAtTrackFast(track, path, insert_time, start_offset, source_len, target_lane, clear_selection, loudness)
   if not track or not reaper.ValidatePtr(track, "MediaTrack*") then return end
   path = normalize_path(path or "", false)
   if path == "" then return end
@@ -6731,12 +6786,13 @@ function InsertMediaItemAtTrackFast(track, path, insert_time, start_offset, sour
 
   reaper.SetMediaItemInfo_Value(item, "D_LENGTH", timeline_len)
   ApplyInsertedItemToTargetLane(item, target_lane)
+  ApplyTargetLoudnessToItem(item, loudness)
   if reaper.SetMediaItemSelected then reaper.SetMediaItemSelected(item, true) end
   reaper.UpdateItemInProject(item)
   return item
 end
 
-function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, section_offset, target_lane, clear_selection, force_section)
+function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, section_offset, target_lane, clear_selection, force_section, loudness)
   local st = tonumber(start_time)
   local et = tonumber(end_time)
   if st and et and math.abs(et - st) > 0.01 then
@@ -6747,12 +6803,12 @@ function InsertDraggedMediaFast(track, path, insert_time, start_time, end_time, 
     local old_cursor = reaper.GetCursorPosition()
     reaper.SetOnlyTrackSelected(track)
 
-    local item = InsertSelectedAudioSection(path, st, et, tonumber(section_offset) or 0, false, target_lane, force_section, tonumber(insert_time) or old_cursor)
+    local item = InsertSelectedAudioSection(path, st, et, tonumber(section_offset) or 0, false, target_lane, force_section, tonumber(insert_time) or old_cursor, loudness)
 
     reaper.SetEditCurPos(old_cursor, false, false)
     return item
   end
-  return InsertMediaItemAtTrackFast(track, path, insert_time, tonumber(section_offset) or 0, nil, target_lane, clear_selection)
+  return InsertMediaItemAtTrackFast(track, path, insert_time, tonumber(section_offset) or 0, nil, target_lane, clear_selection, loudness)
 end
 
 function GetDragPathsForRow(row_index)
@@ -6794,7 +6850,7 @@ function TryNativeDropMediaFiles(paths)
   return true, result > 0
 end
 
-function InsertMediaWithKeepParams(path, target_lane)
+function InsertMediaWithKeepParams(path, target_lane, loudness)
   path = normalize_path(path, false)
   local before = {}
   for i = 0, reaper.CountMediaItems(0) - 1 do
@@ -6827,11 +6883,12 @@ function InsertMediaWithKeepParams(path, target_lane)
     end
     reaper.UpdateItemInProject(new_item)
   end
+  ApplyTargetLoudnessToItem(new_item, loudness)
 
   return new_item
 end
 
-function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end, target_lane, force_section, final_position)
+function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end, target_lane, force_section, final_position, loudness)
   path = normalize_path(path, false)
   local target_position = tonumber(final_position)
   local restore_cursor = nil
@@ -6924,6 +6981,7 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
     -- 长度等于源选区时长
     reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
   end
+  ApplyTargetLoudnessToItem(new_item, loudness)
 
   if target_position ~= nil then
     reaper.SetMediaItemInfo_Value(new_item, "D_POSITION", target_position)
@@ -7198,6 +7256,39 @@ function SmoothSetPreviewVolume(target_lin, ramp_ms)
   end
 
   reaper.defer(step)
+end
+
+function DrawTargetLoudnessControl()
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+  reaper.ImGui_Text(ctx, T("Target Loudness:"))
+  reaper.ImGui_SameLine(ctx)
+  reaper.ImGui_SetNextItemWidth(ctx, UIScale(100))
+  local target_changed = false
+  if reaper.ImGui_BeginCombo(ctx, "##TargetLoudnessPreset", string.format("%.1f LUFS", target_loudness)) then
+    for _, preset in ipairs(target_loudness_presets) do
+      local selected = math.abs(target_loudness - preset[1]) < 0.001
+      if reaper.ImGui_Selectable(ctx, T(preset[2]), selected) then
+        target_loudness = preset[1]
+        target_changed = true
+      end
+      if selected then reaper.ImGui_SetItemDefaultFocus(ctx) end
+    end
+    reaper.ImGui_Separator(ctx)
+    reaper.ImGui_Text(ctx, T("Custom:"))
+    reaper.ImGui_SetNextItemWidth(ctx, UIScale(120))
+    local custom_changed, custom_target = reaper.ImGui_InputDouble(ctx, "##TargetLoudnessValue", target_loudness, 0, 0, "%.1f LUFS")
+    if custom_changed then
+      target_loudness = math.max(-60, math.min(0, tonumber(custom_target) or target_loudness))
+      target_changed = true
+    end
+    reaper.ImGui_EndCombo(ctx)
+  end
+  if target_changed then
+    SM_SetState(EXT_SECTION, "target_loudness", tostring(target_loudness), true)
+    if playing_preview then
+      SmoothSetPreviewVolume(volume * GetTargetLoudnessGain(last_playing_info or last_selected_info), 60)
+    end
+  end
 end
 
 -- 平滑设置预听音高
@@ -8470,7 +8561,7 @@ function PlayFromStart(info)
     if playing_preview then
       if reaper.CF_Preview_SetValue then
         reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(info))
         reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob) -- 同步速度与联动
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -8528,7 +8619,7 @@ function PlayFromCursor(info)
     if playing_preview then
       if reaper.CF_Preview_SetValue then
         reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(info))
         reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob) -- 同步速度与联动
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -13256,8 +13347,8 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
         if info.path and info.path ~= "" then
           local insert_path = normalize_path(info.path, false)
-          if keep_preview_rate_pitch_on_insert then
-            InsertMediaWithKeepParams(insert_path)
+          if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
+            InsertMediaWithKeepParams(insert_path, nil, info.loudness)
           else
             reaper.InsertMedia(insert_path, 0)
           end
@@ -14281,8 +14372,8 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
             local old_cursor = reaper.GetCursorPosition()
             reaper.PreventUIRefresh(1) -- 防止UI刷新
-            if keep_preview_rate_pitch_on_insert then
-              InsertMediaWithKeepParams(normalize_path(info.path, false))
+            if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
+              InsertMediaWithKeepParams(normalize_path(info.path, false), nil, info.loudness)
             else
               reaper.InsertMedia(normalize_path(info.path, false), 0)
             end
@@ -14359,8 +14450,11 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             end_time = drag_preview_end_time,
             preview_end_time = drag_preview_end_time,
             section_offset = info and info.section_offset or 0,
+            loudness = info and info.loudness,
             force_section = use_section_drop_logic,
             use_section_drop_logic = use_section_drop_logic,
+            postprocess_target_loudness_only = not use_section_drop_logic
+              and keep_target_loudness_on_insert and tonumber(info and info.loudness) ~= nil and not is_midi_drag and #paths == 1,
             native_drop_pending = native_drop_pending,
             native_drop_attempted = false
           }
@@ -14382,8 +14476,8 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
           local old_cursor = reaper.GetCursorPosition()
           reaper.PreventUIRefresh(1) -- 防止UI刷新
-          if keep_preview_rate_pitch_on_insert then
-            InsertMediaWithKeepParams(normalize_path(info.path, false))
+          if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
+            InsertMediaWithKeepParams(normalize_path(info.path, false), nil, info.loudness)
           else
             reaper.InsertMedia(normalize_path(info.path, false), 0)
           end
@@ -15771,7 +15865,7 @@ function UI_PlayIconTrigger_Play(ctx)
       if playing_preview then
         if reaper.CF_Preview_SetValue then
           reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(last_playing_info or last_selected_info))
           reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
           reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -15867,7 +15961,7 @@ function UI_PlayIconTrigger_Pause(ctx)
       if playing_preview then
         if reaper.CF_Preview_SetValue then
           reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume)
+          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(last_playing_info or last_selected_info))
           reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
           reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -21789,12 +21883,12 @@ function loop()
           and reaper.ImGui_IsMouseDown(ctx, 0)
         then
           dragging_audio.native_drop_attempted = true
-          if dragging_audio.use_section_drop_logic then
+          if dragging_audio.use_section_drop_logic or dragging_audio.postprocess_target_loudness_only then
             dragging_audio.items_before = CaptureProjectMediaItems()
           end
           local native_drop_attempted, native_drop_completed = TryNativeDropMediaFiles(dragging_audio.native_paths or dragging_audio.paths)
           if native_drop_attempted then
-            if dragging_audio.use_section_drop_logic then
+            if dragging_audio.use_section_drop_logic or dragging_audio.postprocess_target_loudness_only then
               if native_drop_completed then
                 dragging_audio.timestamp = reaper.time_precise()
                 _G.pending_selection_native_drops = _G.pending_selection_native_drops or {}
@@ -21837,7 +21931,8 @@ function loop()
                 dragging_audio.section_offset or 0,
                 target_lane,
                 true,
-                dragging_audio.force_section
+                dragging_audio.force_section,
+                dragging_audio.loudness
               )
             end
           end
@@ -22335,6 +22430,9 @@ function loop()
       end
     end
 
+    -- 目标响度
+    DrawTargetLoudnessControl()
+
     -- 水平音量推子
     reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     reaper.ImGui_Text(ctx, T("Volume:"))
@@ -22345,13 +22443,16 @@ function loop()
     reaper.ImGui_SameLine(ctx, nil, UIScaleF(15))
     reaper.ImGui_PushItemWidth(ctx, UIScale(50))
     local rv7, db_edit = reaper.ImGui_InputDouble(ctx, "dB##VolDB", db_now, 0, 0, "%.1f") -- dB 输入框
+    reaper.ImGui_PopItemWidth(ctx)
     if rv7 then
       db_edit = math.max(min_db, math.min(max_db, db_edit))
       volume  = dB_to_gain(db_edit)
       rv2     = true
     end
     if rv2 then
-      if playing_preview then SmoothSetPreviewVolume(volume, 60) end
+      if playing_preview then
+        SmoothSetPreviewVolume(volume * GetTargetLoudnessGain(last_playing_info or last_selected_info), 60)
+      end
       SM_SetState(EXT_SECTION, "volume", tostring(volume), true)
     end
 
@@ -22360,18 +22461,15 @@ function loop()
     HandleSettingsWindowShortcut()
 
     -- 电平表通道选项
-    -- reaper.ImGui_Separator(ctx)
-    reaper.ImGui_SameLine(ctx, nil, 10)
-    reaper.ImGui_Text(ctx, T("Peaks:"))
-    reaper.ImGui_SameLine(ctx)
-    reaper.ImGui_SetNextItemWidth(ctx, UIScale(100))
-    -- reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FramePadding(), 2, 1)
-    local rv5, new_peaks = reaper.ImGui_InputInt(ctx, '##Peaks', peak_chans, 1, 1)
-    -- reaper.ImGui_PopStyleVar(ctx)
-    if rv5 then
-      peak_chans = math.max(2, math.min(128, new_peaks or 2))
-      SM_SetState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
-    end
+    -- reaper.ImGui_SameLine(ctx, nil, 10)
+    -- reaper.ImGui_Text(ctx, T("Peaks:"))
+    -- reaper.ImGui_SameLine(ctx)
+    -- reaper.ImGui_SetNextItemWidth(ctx, UIScale(100))
+    -- local rv5, new_peaks = reaper.ImGui_InputInt(ctx, '##Peaks', peak_chans, 1, 1)
+    -- if rv5 then
+    --   peak_chans = math.max(2, math.min(128, new_peaks or 2))
+    --   SM_SetState(EXT_SECTION, "peak_chans", tostring(peak_chans), true)
+    -- end
 
     -- 竖直电平条 mini
     -- reaper.ImGui_SameLine(ctx, nil, 10)
@@ -23817,6 +23915,7 @@ function loop()
               start_time = start_time,
               end_time = end_time,
               section_offset = cur_info.section_offset or 0,
+              loudness = cur_info.loudness,
               native_drop_pending = native_drag_path ~= nil and native_drag_path ~= "",
               native_drop_attempted = false
             }
@@ -23889,7 +23988,9 @@ function loop()
                     dragging_selection.end_time,
                     dragging_selection.section_offset or 0,
                     target_lane,
-                    false
+                    false,
+                    nil,
+                    dragging_selection.loudness
                   )
                 end
               end
@@ -24060,7 +24161,7 @@ function loop()
 
           if do_insert and cur_info and cur_info.path then
             local path = normalize_path(cur_info.path, false)
-            InsertSelectedAudioSection(path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true)
+            InsertSelectedAudioSection(path, select_start_time * play_rate, select_end_time * play_rate, cur_info.section_offset or 0, true, nil, nil, nil, cur_info.loudness)
           end
         end
       end
