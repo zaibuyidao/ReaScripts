@@ -9,4 +9,5 @@
   [linux-aarch64 ] ReaMole/reaper_reamole-aarch64.so   > reaper_reamole-aarch64.so
   [win64         ] ReaMole/reaper_reamole-x64.dll      > reaper_reamole-x64.dll
 @changelog
-  Initial release
+  Updated ReaMole extension to v0.0.42.
+  Renamed extension binaries from reaper_soundmole-* to reaper_reamole-*.
