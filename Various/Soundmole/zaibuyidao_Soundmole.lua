@@ -15865,12 +15865,9 @@ function CalcTextHitRect(ctx, text, dy)
   return x, y + voffY, x + tw, y + voffY + font_sz, tw, line_h
 end
 
-local TOPBAR_ALIGN_HEIGHT = 30
-local TOPBAR_ALIGN_Y_OFFSET = 6
-local TOPBAR_TITLE_Y_OFFSET = 12
-
 function GetTopbarAlignHeight(ctx)
-  return math.max(reaper.ImGui_GetFrameHeight(ctx), UIScaleF(TOPBAR_ALIGN_HEIGHT))
+  return reaper.ImGui_GetFrameHeight(ctx) * 2
+    + select(2, reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()))
 end
 
 function DrawTextCenteredInBox(ctx, text, col, box_h, id, min_w)
@@ -15886,28 +15883,12 @@ function DrawTextCenteredInBox(ctx, text, col, box_h, id, min_w)
 
   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
   local tx = x + math.max(0, (box_w - (text_w or 0)) * 0.5)
-  local ty = y + math.max(0, (box_h - (text_h or 0)) * 0.5) + UIScaleF(TOPBAR_ALIGN_Y_OFFSET)
+  local ty = y + math.max(0, (box_h - (text_h or 0)) * 0.5)
   reaper.ImGui_DrawList_AddText(
     draw_list, tx, ty,
     col or reaper.ImGui_GetColor(ctx, reaper.ImGui_Col_Text()), text
   )
   return hovered, clicked, box_w, box_h
-end
-
-function DrawTitleTextCenteredInBox(ctx, text, col, box_h, id)
-  box_h = box_h or GetTopbarAlignHeight(ctx)
-  local text_w, text_h = reaper.ImGui_CalcTextSize(ctx, text)
-  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
-  reaper.ImGui_InvisibleButton(ctx, id or ("##title_text_" .. tostring(text)), text_w or 0, box_h)
-
-  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
-  local title_offset = math.max(UIScaleF(TOPBAR_TITLE_Y_OFFSET), TOPBAR_TITLE_Y_OFFSET)
-  local ty = y + math.max(0, (box_h - (text_h or 0)) * 0.5) + title_offset
-  reaper.ImGui_DrawList_AddText(
-    draw_list, x, ty,
-    col or reaper.ImGui_GetColor(ctx, reaper.ImGui_Col_Text()), text
-  )
-  return reaper.ImGui_IsItemHovered(ctx), reaper.ImGui_IsItemClicked(ctx, 0), text_w or 0, box_h
 end
 
 function DrawMaterialIconCenteredInRect(ctx, glyph, col, x, y, w, h, font_size)
@@ -17771,22 +17752,24 @@ function loop()
     end
 
     -- 过滤器控件居中
-    reaper.ImGui_Dummy(ctx, 1, 1) -- 控件上方 + 1px 间距
+    reaper.ImGui_SetCursorPosY(ctx, reaper.ImGui_GetCursorPosY(ctx) + 5) -- 顶部固定留白 5px
+    reaper.ImGui_Dummy(ctx, 1, 1) -- 同行布局锚点
     local filter_w = UIScaleF(350) -- 输入框宽度
     local topbar_h = GetTopbarAlignHeight(ctx)
 
     -- Soundmole标题栏，可在设置中隐藏显示，默认显示
+    reaper.ImGui_SameLine(ctx, nil, 0)
     if not hide_soundmole_title then
       reaper.ImGui_BeginGroup(ctx)
       PushUIFont(ctx, fonts.odrf, 22)
+      DrawTextCenteredInBox(ctx, 'Sound', nil, topbar_h, "##title_sound")
       reaper.ImGui_SameLine(ctx, nil, 0)
-      DrawTitleTextCenteredInBox(ctx, 'Sound', nil, topbar_h, "##title_sound")
-      reaper.ImGui_SameLine(ctx, nil, 0)
-      DrawTitleTextCenteredInBox(ctx, 'mole', colors.mole, topbar_h, "##title_mole")
+      DrawTextCenteredInBox(ctx, 'mole', colors.mole, topbar_h, "##title_mole")
       reaper.ImGui_PopFont(ctx)
       reaper.ImGui_EndGroup(ctx)
       reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     else
+      reaper.ImGui_Dummy(ctx, 0, topbar_h)
       reaper.ImGui_SameLine(ctx, nil, 0)
     end
 
@@ -18244,17 +18227,15 @@ function loop()
 
     reaper.ImGui_SameLine(ctx, nil, 10)
     reaper.ImGui_BeginGroup(ctx)
-    local _, item_spacing_y = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()) -- 取垂直行距
     local top_button_w = UIScale(90)
     local top_button_gap = UIScaleF(10)
-    local two_rows_h = reaper.ImGui_GetFrameHeight(ctx) * 2 + item_spacing_y -- 两行高
     -- 清空过滤器内容
     reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_FrameBorderSize(), UIScaleF(3)) -- 按钮边框
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(),        colors.big_button_normal)  -- 常态
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, top_button_gap)
-    local clicked_clear = reaper.ImGui_Button(ctx, T("Clear"), top_button_w, two_rows_h)
+    local clicked_clear = reaper.ImGui_Button(ctx, T("Clear"), top_button_w, topbar_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_clear then
       SM_RequestSelectionRestoreAfterFilterExpansion()
@@ -18275,7 +18256,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, top_button_gap)
-    local clicked_rescan = reaper.ImGui_Button(ctx, T("Rescan"), top_button_w, two_rows_h)
+    local clicked_rescan = reaper.ImGui_Button(ctx, T("Rescan"), top_button_w, topbar_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_rescan then
       ForceRescan()
@@ -18293,7 +18274,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, top_button_gap)
-    local clicked_res_all = reaper.ImGui_Button(ctx, T("Restore All"), top_button_w, two_rows_h)
+    local clicked_res_all = reaper.ImGui_Button(ctx, T("Restore All"), top_button_w, topbar_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_res_all then
       SM_RequestSelectionRestoreAfterFilterExpansion()
@@ -18336,7 +18317,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, top_button_gap)
-    local clicked_sanme_folder = reaper.ImGui_Button(ctx, T("Same Folder"), top_button_w, two_rows_h)
+    local clicked_sanme_folder = reaper.ImGui_Button(ctx, T("Same Folder"), top_button_w, topbar_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_sanme_folder then
       collect_mode = COLLECT_MODE_SAMEFOLDER
@@ -18355,7 +18336,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
     reaper.ImGui_SameLine(ctx, nil, top_button_gap)
-    local clicked_pick_folder = reaper.ImGui_Button(ctx, T("Pick Folder"), top_button_w, two_rows_h)
+    local clicked_pick_folder = reaper.ImGui_Button(ctx, T("Pick Folder"), top_button_w, topbar_h)
     reaper.ImGui_PopStyleColor(ctx, 3)
     if clicked_pick_folder then
       local saved_root = SM_GetState(EXT_SECTION, "preview_folder_root")
@@ -18392,7 +18373,7 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)
     reaper.ImGui_SameLine(ctx, nil, top_button_gap)
     reaper.ImGui_BeginDisabled(ctx, not can_find_similar)
-    local clicked_find_similar = reaper.ImGui_Button(ctx, T("Find Similar"), top_button_w, two_rows_h)
+    local clicked_find_similar = reaper.ImGui_Button(ctx, T("Find Similar"), top_button_w, topbar_h)
     reaper.ImGui_EndDisabled(ctx)
     reaper.ImGui_PopStyleColor(ctx, 3)
 
@@ -18411,7 +18392,7 @@ function loop()
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.big_button_hovered) -- 悬停
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(),  colors.big_button_active)  -- 按下
       reaper.ImGui_SameLine(ctx, nil, top_button_gap)
-      local clicked_play_his = reaper.ImGui_Button(ctx, T("Play History"), top_button_w, two_rows_h)
+      local clicked_play_his = reaper.ImGui_Button(ctx, T("Play History"), top_button_w, topbar_h)
       reaper.ImGui_PopStyleColor(ctx, 3)
       if clicked_play_his then
         LoadRecentPlayed()

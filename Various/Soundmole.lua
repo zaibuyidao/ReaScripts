@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.257
+-- @version 1.0.258
 -- @changelog
---   PeakTree tabs now support persistent drag reordering and closing.
+--   Fixed top spacing and toolbar vertical alignment.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
