@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="ac20d6ea544f531a1348cb40e7ba2cd3607a80aa">
+<index version="1" name="zaibuyidao Scripts" commit="84b6600bebc48782f0a0c319323a5ddb4176cf11">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -303,6 +303,15 @@ Renamed extension binaries from reaper_soundmole-* to reaper_reamole-*.]]></chan
         <source platform="linux64" file="reaper_reamole-x86_64.so">https://github.com/zaibuyidao/ReaScripts/raw/671bb9983255dc155d8bb0fcc63fb6d6202634ea/Extensions/ReaMole/reaper_reamole-x86_64.so</source>
         <source platform="linux-aarch64" file="reaper_reamole-aarch64.so">https://github.com/zaibuyidao/ReaScripts/raw/671bb9983255dc155d8bb0fcc63fb6d6202634ea/Extensions/ReaMole/reaper_reamole-aarch64.so</source>
         <source platform="win64" file="reaper_reamole-x64.dll">https://github.com/zaibuyidao/ReaScripts/raw/671bb9983255dc155d8bb0fcc63fb6d6202634ea/Extensions/ReaMole/reaper_reamole-x64.dll</source>
+      </version>
+      <version name="0.0.43" author="zaibuyidao" time="2026-08-01T13:04:22Z">
+        <changelog><![CDATA[Updated ReaMole extension to v0.0.42.
+Renamed extension binaries from reaper_soundmole-* to reaper_reamole-*.]]></changelog>
+        <source platform="darwin64" file="reaper_reamole-x86_64.dylib">https://github.com/zaibuyidao/ReaScripts/raw/84b6600bebc48782f0a0c319323a5ddb4176cf11/Extensions/ReaMole/reaper_reamole-x86_64.dylib</source>
+        <source platform="darwin-arm64" file="reaper_reamole-arm64.dylib">https://github.com/zaibuyidao/ReaScripts/raw/84b6600bebc48782f0a0c319323a5ddb4176cf11/Extensions/ReaMole/reaper_reamole-arm64.dylib</source>
+        <source platform="linux64" file="reaper_reamole-x86_64.so">https://github.com/zaibuyidao/ReaScripts/raw/84b6600bebc48782f0a0c319323a5ddb4176cf11/Extensions/ReaMole/reaper_reamole-x86_64.so</source>
+        <source platform="linux-aarch64" file="reaper_reamole-aarch64.so">https://github.com/zaibuyidao/ReaScripts/raw/84b6600bebc48782f0a0c319323a5ddb4176cf11/Extensions/ReaMole/reaper_reamole-aarch64.so</source>
+        <source platform="win64" file="reaper_reamole-x64.dll">https://github.com/zaibuyidao/ReaScripts/raw/84b6600bebc48782f0a0c319323a5ddb4176cf11/Extensions/ReaMole/reaper_reamole-x64.dll</source>
       </version>
     </reapack>
   </category>
