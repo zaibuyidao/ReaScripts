@@ -411,6 +411,7 @@ local show_row_height_popup   = false -- 行高显示状态变量
 local show_row_height_timer   = 0
 keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
 keep_target_loudness_on_insert = true -- 顶层状态使用全局，插入或拖动时默认保持目标响度
+preview_volume_after_target_loudness = false -- 有 LUFS 时允许音量推子叠加在目标响度补偿之后
 PREVIEW_START_QUANTIZE_OFF       = "off"
 PREVIEW_START_QUANTIZE_BAR       = "bar"
 PREVIEW_START_QUANTIZE_BEAT      = "beat"
@@ -717,6 +718,7 @@ last_volume = tonumber(SM_GetState(EXT_SECTION, "volume"))
 if last_volume then volume = last_volume end
 last_target_loudness = tonumber(SM_GetState(EXT_SECTION, "target_loudness"))
 if last_target_loudness then target_loudness = math.max(-60, math.min(0, last_target_loudness)) end
+preview_volume_after_target_loudness = SM_GetState(EXT_SECTION, "preview_volume_after_target_loudness") == "1"
 last_auto_scroll = SM_GetState(EXT_SECTION, "auto_scroll")
 if last_auto_scroll == "0" then auto_scroll_enabled = false end
 if last_auto_scroll == "1" then auto_scroll_enabled = true end
@@ -1507,6 +1509,7 @@ function SaveSettings()
   -- 播放行为与同步
   SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
   SM_SetState(EXT_SECTION, "insert_keep_target_loudness", keep_target_loudness_on_insert and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "preview_volume_after_target_loudness", preview_volume_after_target_loudness and "1" or "0", true)
   SM_SetState(EXT_SECTION, "target_loudness", tostring(target_loudness), true)
   SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
   SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
@@ -2357,6 +2360,14 @@ do
       stop_preview_on_collapse = new_stop_collapse
       SM_SetState(EXT_SECTION, "stop_preview_on_collapse", stop_preview_on_collapse and "1" or "0", true)
     end
+    local changed_loudness_volume, new_loudness_volume = reaper.ImGui_Checkbox(ctx, T("Use volume fader as monitoring level after target loudness compensation"), preview_volume_after_target_loudness)
+    if changed_loudness_volume then
+      preview_volume_after_target_loudness = new_loudness_volume
+      SM_SetState(EXT_SECTION, "preview_volume_after_target_loudness", new_loudness_volume and "1" or "0", true)
+      if playing_preview then
+        SmoothSetPreviewVolume(GetEffectivePreviewVolume(last_playing_info or last_selected_info), 60)
+      end
+    end
   end
 
   function Section_PlaybackCtrl()
@@ -2851,6 +2862,7 @@ do
       wait_nextbar_play       = false           -- 重置等待小节末尾播放为关闭
       keep_preview_rate_pitch_on_insert = false -- 重置插入时保持预览速率和音高为关闭
       keep_target_loudness_on_insert = true     -- 重置插入时保持目标响度为开启
+      preview_volume_after_target_loudness = false
       target_loudness         = -14
 
       ApplyWaveformCacheDir(cache_dir, false, true)
@@ -3148,7 +3160,7 @@ function GetFilePathsForRowAction(list, row_index)
   return paths
 end
 
-function SM_StartMediaAnalysis(list, row_index)
+function SM_StartMediaAnalysis(list, row_index, dbpath, analyze_all)
   if media_analysis_task then return false end
   if type(reaper.SM_DB_AnalyzeMediaStart) ~= "function" then
     reaper.ShowMessageBox(
@@ -3157,22 +3169,40 @@ function SM_StartMediaAnalysis(list, row_index)
     return false
   end
 
-  local dbpath = normalize_path(_G.current_db_fullpath or "", false)
+  dbpath = normalize_path(dbpath or _G.current_db_fullpath or "", false)
   if dbpath == "" or not reaper.file_exists(dbpath) then
     reaper.ShowMessageBox(T("No media database is active."), "Soundmole", 0)
     return false
   end
 
   local paths, seen = {}, {}
-  for _, info in ipairs(GetFileInfosForRowAction(list, row_index)) do
-    local path = normalize_path(info and info.path or "", false):gsub("[\r\n]", "")
-    if path ~= "" and not seen[path] then
-      seen[path] = true
-      paths[#paths + 1] = path
+  if analyze_all then
+    local db_handle = reaper.SM_DB_Load(dbpath)
+    if not db_handle then
+      reaper.ShowMessageBox(T("Could not open the media database."), "Soundmole", 0)
+      return false
+    end
+    local count = reaper.SM_DB_GetCount(db_handle) or 0
+    for index = 0, count - 1 do
+      local raw = reaper.SM_DB_GetRowRaw(db_handle, index)
+      local path = normalize_path(tostring(raw or ""):match("^([^|]*)") or "", false):gsub("[\r\n]", "")
+      if path ~= "" and not seen[path] then
+        seen[path] = true
+        paths[#paths + 1] = path
+      end
+    end
+    reaper.SM_DB_Release(db_handle)
+  else
+    for _, info in ipairs(GetFileInfosForRowAction(list, row_index)) do
+      local path = normalize_path(info and info.path or "", false):gsub("[\r\n]", "")
+      if path ~= "" and not seen[path] then
+        seen[path] = true
+        paths[#paths + 1] = path
+      end
     end
   end
   if #paths == 0 then
-    reaper.ShowMessageBox(T("No readable media files were selected."), "Soundmole", 0)
+    reaper.ShowMessageBox(T(analyze_all and "No media files were found in the database." or "No readable media files were selected."), "Soundmole", 0)
     return false
   end
 
@@ -4634,6 +4664,11 @@ function GetTargetLoudnessGain(info_or_loudness)
   return 10 ^ (gain_db / 20)
 end
 
+function GetEffectivePreviewVolume(info)
+  local loudness_gain = preview_volume_after_target_loudness and GetTargetLoudnessGain(info) or 1.0
+  return volume * loudness_gain
+end
+
 function ApplyTargetLoudnessToItem(item, loudness)
   if not keep_target_loudness_on_insert or tonumber(loudness) == nil
     or not item or not reaper.ValidatePtr(item, "MediaItem*")
@@ -4697,7 +4732,7 @@ function RestartPreviewWithParams(from_wave_pos)
   playing_preview = reaper.CF_CreatePreview(playing_source)
   if playing_preview then
     reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-    reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(last_playing_info or last_selected_info))
+    reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", GetEffectivePreviewVolume(last_playing_info or last_selected_info))
     reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
     reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
     reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -7254,7 +7289,7 @@ function DrawTargetLoudnessControl()
   if target_changed then
     SM_SetState(EXT_SECTION, "target_loudness", tostring(target_loudness), true)
     if playing_preview then
-      SmoothSetPreviewVolume(volume * GetTargetLoudnessGain(last_playing_info or last_selected_info), 60)
+      SmoothSetPreviewVolume(GetEffectivePreviewVolume(last_playing_info or last_selected_info), 60)
     end
   end
 end
@@ -8529,7 +8564,7 @@ function PlayFromStart(info)
     if playing_preview then
       if reaper.CF_Preview_SetValue then
         reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(info))
+        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", GetEffectivePreviewVolume(info))
         reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob) -- 同步速度与联动
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -8587,7 +8622,7 @@ function PlayFromCursor(info)
     if playing_preview then
       if reaper.CF_Preview_SetValue then
         reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(info))
+        reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", GetEffectivePreviewVolume(info))
         reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob) -- 同步速度与联动
         reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
         reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -15760,7 +15795,7 @@ function UI_PlayIconTrigger_Play(ctx)
       if playing_preview then
         if reaper.CF_Preview_SetValue then
           reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(last_playing_info or last_selected_info))
+          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", GetEffectivePreviewVolume(last_playing_info or last_selected_info))
           reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
           reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -15850,7 +15885,7 @@ function UI_PlayIconTrigger_Pause(ctx)
       if playing_preview then
         if reaper.CF_Preview_SetValue then
           reaper.CF_Preview_SetValue(playing_preview, "B_LOOP", loop_enabled and 1 or 0)
-          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", volume * GetTargetLoudnessGain(last_playing_info or last_selected_info))
+          reaper.CF_Preview_SetValue(playing_preview, "D_VOLUME", GetEffectivePreviewVolume(last_playing_info or last_selected_info))
           reaper.CF_Preview_SetValue(playing_preview, "D_PLAYRATE", effective_rate_knob)
           reaper.CF_Preview_SetValue(playing_preview, "D_PITCH", pitch)
           reaper.CF_Preview_SetValue(playing_preview, "B_PPITCH", preserve_pitch and 1 or 0)
@@ -19974,6 +20009,12 @@ function loop()
                   end
                 end
 
+                reaper.ImGui_BeginDisabled(ctx, media_analysis_task ~= nil)
+                if reaper.ImGui_MenuItem(ctx, T("Calculate Peak Volume and Loudness (LUFS-I)")) then
+                  SM_StartMediaAnalysis(nil, nil, normalize_path(db_dir, true) .. dbfile, true)
+                end
+                reaper.ImGui_EndDisabled(ctx)
+
                 if reaper.ImGui_MenuItem(ctx, T("Build Similarity Index")) then
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   SM_SIM_StartBuild(dbpath)
@@ -22231,7 +22272,7 @@ function loop()
     end
     if rv2 then
       if playing_preview then
-        SmoothSetPreviewVolume(volume * GetTargetLoudnessGain(last_playing_info or last_selected_info), 60)
+        SmoothSetPreviewVolume(GetEffectivePreviewVolume(last_playing_info or last_selected_info), 60)
       end
       SM_SetState(EXT_SECTION, "volume", tostring(volume), true)
     end

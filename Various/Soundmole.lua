@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.252
+-- @version 1.0.253
 -- @changelog
---   Removed redundant code and unused parameters to improve clarity and maintainability.
+--   Added an optional switch to apply preview monitoring volume after target loudness compensation.
+--   Added full-database peak level and LUFS-I loudness analysis.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
