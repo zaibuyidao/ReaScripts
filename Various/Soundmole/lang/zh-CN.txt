@@ -404,6 +404,7 @@ Lower this value to make colors softer (pastel). Default is 1.0.=降低该值可
 Insert and drag:=插入并拖动:
 Keep preview rate & pitch when inserting to arrange=插入到编排视图时保持预览速率和音高
 Keep target loudness when inserting to arrange=插入到编排视图时保持目标响度
+Apply preview volume to inserted media item=将预览音量应用于插入的媒体对象
 Database & Cache=数据库与缓存
 Manage database and cache=管理数据库与缓存
 Database=数据库

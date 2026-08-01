@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.254
+-- @version 1.0.255
 -- @changelog
---   Fixed premature large database creation, missing completion notifications, and CRC errors caused by corrupted PNG artwork.
+--   Added an option to apply preview volume to inserted media items.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

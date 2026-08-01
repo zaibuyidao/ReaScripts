@@ -411,6 +411,7 @@ local show_row_height_popup   = false -- 行高显示状态变量
 local show_row_height_timer   = 0
 keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
 keep_target_loudness_on_insert = true -- 顶层状态使用全局，插入或拖动时默认保持目标响度
+apply_preview_volume_on_insert = false -- 将预览音量推子应用于插入的媒体对象
 preview_volume_after_target_loudness = false -- 有 LUFS 时允许音量推子叠加在目标响度补偿之后
 PREVIEW_START_QUANTIZE_OFF       = "off"
 PREVIEW_START_QUANTIZE_BAR       = "bar"
@@ -1509,6 +1510,7 @@ function SaveSettings()
   -- 播放行为与同步
   SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
   SM_SetState(EXT_SECTION, "insert_keep_target_loudness", keep_target_loudness_on_insert and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "insert_apply_preview_volume", apply_preview_volume_on_insert and "1" or "0", true)
   SM_SetState(EXT_SECTION, "preview_volume_after_target_loudness", preview_volume_after_target_loudness and "1" or "0", true)
   SM_SetState(EXT_SECTION, "target_loudness", tostring(target_loudness), true)
   SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
@@ -1627,6 +1629,13 @@ do
   local v = SM_GetState(EXT_SECTION, "insert_keep_target_loudness")
   if v == "1" then keep_target_loudness_on_insert = true
   elseif v == "0" then keep_target_loudness_on_insert = false end
+end
+
+-- apply_preview_volume_on_insert = SM_GetState(EXT_SECTION, "insert_apply_preview_volume") == "1"
+do
+  local v = SM_GetState(EXT_SECTION, "insert_apply_preview_volume")
+  if v == "1" then apply_preview_volume_on_insert = true
+  elseif v == "0" then apply_preview_volume_on_insert = false end
 end
 
 do
@@ -2529,6 +2538,11 @@ do
       keep_target_loudness_on_insert = v_loudness
       SM_SetState(EXT_SECTION, "insert_keep_target_loudness", v_loudness and "1" or "0", true)
     end
+    local chg_volume, v_volume = reaper.ImGui_Checkbox(ctx, T("Apply preview volume to inserted media item"), apply_preview_volume_on_insert)
+    if chg_volume then
+      apply_preview_volume_on_insert = v_volume
+      SM_SetState(EXT_SECTION, "insert_apply_preview_volume", v_volume and "1" or "0", true)
+    end
   end
 
   function Section_Database()
@@ -2862,6 +2876,7 @@ do
       wait_nextbar_play       = false           -- 重置等待小节末尾播放为关闭
       keep_preview_rate_pitch_on_insert = false -- 重置插入时保持预览速率和音高为关闭
       keep_target_loudness_on_insert = true     -- 重置插入时保持目标响度为开启
+      apply_preview_volume_on_insert = false    -- 重置插入时应用预览音量为关闭
       preview_volume_after_target_loudness = false
       target_loudness         = -14
 
@@ -4669,17 +4684,18 @@ function GetEffectivePreviewVolume(info)
   return volume * loudness_gain
 end
 
-function ApplyTargetLoudnessToItem(item, loudness)
-  if not keep_target_loudness_on_insert or tonumber(loudness) == nil
-    or not item or not reaper.ValidatePtr(item, "MediaItem*")
-  then
-    return
-  end
+function ApplyInsertVolumeToItem(item, loudness)
+  if not item or not reaper.ValidatePtr(item, "MediaItem*") then return end
+  local has_target_loudness = keep_target_loudness_on_insert and tonumber(loudness) ~= nil
+  if not has_target_loudness and not apply_preview_volume_on_insert then return end
   local take = reaper.GetActiveTake(item)
-  if take then
-    reaper.SetMediaItemTakeInfo_Value(take, "D_VOL", GetTargetLoudnessGain(loudness))
-    reaper.UpdateItemInProject(item)
+  if not take then return end
+  local take_volume = apply_preview_volume_on_insert and (tonumber(volume) or 1.0) or 1.0
+  if has_target_loudness then
+    take_volume = take_volume * GetTargetLoudnessGain(loudness)
   end
+  reaper.SetMediaItemTakeInfo_Value(take, "D_VOL", take_volume)
+  reaper.UpdateItemInProject(item)
 end
 
 function StopPlay()
@@ -5285,14 +5301,16 @@ function ProcessPendingSelectionNativeDrops()
     end
 
     matching_item = matching_item or (#new_items == 1 and new_items[1])
-    if matching_item then
-      if req.postprocess_target_loudness_only then
-        ApplyTargetLoudnessToItem(matching_item, req.loudness)
-        replaced = true
-        reaper.UpdateArrange()
-      else
-        replaced = ReplaceNativeSelectionDropItem(req, matching_item)
+    if req.postprocess_insert_volume_only
+      and #new_items >= #(req.native_paths or req.paths or {})
+    then
+      for _, item in ipairs(new_items) do
+        ApplyInsertVolumeToItem(item, #new_items == 1 and req.loudness or nil)
       end
+      replaced = true
+      reaper.UpdateArrange()
+    elseif matching_item then
+      replaced = ReplaceNativeSelectionDropItem(req, matching_item)
     end
 
     if replaced or (not matching_item and now - (req.timestamp or now) > 5.0) then
@@ -6803,7 +6821,7 @@ function InsertMediaItemAtTrackFast(track, path, insert_time, start_offset, sour
 
   reaper.SetMediaItemInfo_Value(item, "D_LENGTH", timeline_len)
   ApplyInsertedItemToTargetLane(item, target_lane)
-  ApplyTargetLoudnessToItem(item, loudness)
+  ApplyInsertVolumeToItem(item, loudness)
   if reaper.SetMediaItemSelected then reaper.SetMediaItemSelected(item, true) end
   reaper.UpdateItemInProject(item)
   return item
@@ -6898,7 +6916,7 @@ function InsertMediaWithKeepParams(path, loudness)
     end
     reaper.UpdateItemInProject(new_item)
   end
-  ApplyTargetLoudnessToItem(new_item, loudness)
+  ApplyInsertVolumeToItem(new_item, loudness)
 
   return new_item
 end
@@ -6996,7 +7014,7 @@ function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, mo
     -- 长度等于源选区时长
     reaper.SetMediaItemInfo_Value(new_item, "D_LENGTH", sel_len)
   end
-  ApplyTargetLoudnessToItem(new_item, loudness)
+  ApplyInsertVolumeToItem(new_item, loudness)
 
   if target_position ~= nil then
     reaper.SetMediaItemInfo_Value(new_item, "D_POSITION", target_position)
@@ -13296,7 +13314,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
         reaper.Main_OnCommand(40289, 0) -- Item: Unselect (clear selection of) all items
         if info.path and info.path ~= "" then
           local insert_path = normalize_path(info.path, false)
-          if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
+          if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert or apply_preview_volume_on_insert then
             InsertMediaWithKeepParams(insert_path, info.loudness)
           else
             reaper.InsertMedia(insert_path, 0)
@@ -14333,7 +14351,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
             local old_cursor = reaper.GetCursorPosition()
             reaper.PreventUIRefresh(1) -- 防止UI刷新
-            if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
+            if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert or apply_preview_volume_on_insert then
               InsertMediaWithKeepParams(normalize_path(info.path, false), info.loudness)
             else
               reaper.InsertMedia(normalize_path(info.path, false), 0)
@@ -14414,8 +14432,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             loudness = info and info.loudness,
             force_section = use_section_drop_logic,
             use_section_drop_logic = use_section_drop_logic,
-            postprocess_target_loudness_only = not use_section_drop_logic
-              and keep_target_loudness_on_insert and tonumber(info and info.loudness) ~= nil and not is_midi_drag and #paths == 1,
+            postprocess_insert_volume_only = not use_section_drop_logic and not is_midi_drag and (apply_preview_volume_on_insert or (#paths == 1 and keep_target_loudness_on_insert and tonumber(info and info.loudness) ~= nil)),
             native_drop_pending = native_drop_pending,
             native_drop_attempted = false
           }
@@ -14437,7 +14454,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           reaper.Main_OnCommand(reaper.NamedCommandLookup("_SWS_SAVEVIEW"), 0)
           local old_cursor = reaper.GetCursorPosition()
           reaper.PreventUIRefresh(1) -- 防止UI刷新
-          if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert then
+          if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert or apply_preview_volume_on_insert then
             InsertMediaWithKeepParams(normalize_path(info.path, false), info.loudness)
           else
             reaper.InsertMedia(normalize_path(info.path, false), 0)
@@ -21785,12 +21802,12 @@ function loop()
           and reaper.ImGui_IsMouseDown(ctx, 0)
         then
           dragging_audio.native_drop_attempted = true
-          if dragging_audio.use_section_drop_logic or dragging_audio.postprocess_target_loudness_only then
+          if dragging_audio.use_section_drop_logic or dragging_audio.postprocess_insert_volume_only then
             dragging_audio.items_before = CaptureProjectMediaItems()
           end
           local native_drop_attempted, native_drop_completed = TryNativeDropMediaFiles(dragging_audio.native_paths or dragging_audio.paths)
           if native_drop_attempted then
-            if dragging_audio.use_section_drop_logic or dragging_audio.postprocess_target_loudness_only then
+            if dragging_audio.use_section_drop_logic or dragging_audio.postprocess_insert_volume_only then
               if native_drop_completed then
                 dragging_audio.timestamp = reaper.time_precise()
                 _G.pending_selection_native_drops = _G.pending_selection_native_drops or {}
