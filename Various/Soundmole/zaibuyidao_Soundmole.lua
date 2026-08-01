@@ -7279,6 +7279,52 @@ function SmoothSetPreviewVolume(target_lin, ramp_ms)
   reaper.defer(step)
 end
 
+function DrawPitchRateContextMenu()
+  if reaper.ImGui_MenuItem(ctx, T("Preserve pitch when changing rate"), nil, preserve_pitch) then
+    preserve_pitch = not preserve_pitch
+    SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
+  end
+  if reaper.ImGui_MenuItem(ctx, T("Keep preview rate & pitch when inserting to arrange"), nil, keep_preview_rate_pitch_on_insert) then
+    keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
+    SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
+  end
+  if reaper.ImGui_MenuItem(ctx, T("Keep target loudness when inserting to arrange"), nil, keep_target_loudness_on_insert) then
+    keep_target_loudness_on_insert = not keep_target_loudness_on_insert
+    SM_SetState(EXT_SECTION, "insert_keep_target_loudness", keep_target_loudness_on_insert and "1" or "0", true)
+  end
+  if reaper.ImGui_MenuItem(ctx, T("Apply preview volume to inserted media item"), nil, apply_preview_volume_on_insert) then
+    apply_preview_volume_on_insert = not apply_preview_volume_on_insert
+    SM_SetState(EXT_SECTION, "insert_apply_preview_volume", apply_preview_volume_on_insert and "1" or "0", true)
+  end
+
+  if reaper.ImGui_MenuItem(ctx, T("Semitone Steps"), nil, pitch_semitone_step) then
+    pitch_semitone_step = not pitch_semitone_step
+    SM_SetState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
+    -- 激活时立即将当前音高吸附到整数
+    if pitch_semitone_step then pitch = math.floor(pitch + 0.5) end
+  end
+
+  reaper.ImGui_Separator(ctx)
+  if reaper.ImGui_MenuItem(ctx, T("Tempo Sync"), nil, tempo_sync_enabled, true) then
+    tempo_sync_enabled = not tempo_sync_enabled
+    SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
+    -- 新增同步速率立刻应用
+    if tempo_sync_enabled then
+      play_rate = 1.0
+      sync_rate_reset_done = true
+    else
+      sync_rate_reset_done = false
+    end
+    -- 正在播放则立刻按新速率重启预览
+    if playing_preview then RestartPreviewWithParams() end
+  end
+  if reaper.ImGui_MenuItem(ctx, T("Link Transport"), nil, link_with_reaper, true) then
+    link_with_reaper = not link_with_reaper
+    SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
+  end
+  DrawPreviewStartQuantizeMenu()
+end
+
 function DrawTargetLoudnessControl()
   reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
   reaper.ImGui_Text(ctx, T("Target Loudness:"))
@@ -7303,6 +7349,10 @@ function DrawTargetLoudnessControl()
       target_changed = true
     end
     reaper.ImGui_EndCombo(ctx)
+  end
+  if reaper.ImGui_BeginPopupContextItem(ctx, "##TargetLoudnessContext") then
+    DrawPitchRateContextMenu()
+    reaper.ImGui_EndPopup(ctx)
   end
   if target_changed then
     SM_SetState(EXT_SECTION, "target_loudness", tostring(target_loudness), true)
@@ -22095,42 +22145,7 @@ function loop()
     if pitch > pitch_knob_max then pitch = pitch_knob_max end
 
     if reaper.ImGui_BeginPopupContextItem(ctx) then
-      if reaper.ImGui_MenuItem(ctx, T("Preserve pitch when changing rate"), nil, preserve_pitch) then
-        preserve_pitch = not preserve_pitch
-        SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
-      end
-      if reaper.ImGui_MenuItem(ctx, T("Keep preview rate & pitch when inserting to arrange"), nil, keep_preview_rate_pitch_on_insert) then
-        keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
-        SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
-      end
-
-      if reaper.ImGui_MenuItem(ctx, T("Semitone Steps"), nil, pitch_semitone_step) then
-        pitch_semitone_step = not pitch_semitone_step
-        SM_SetState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
-        -- 激活时立即将当前音高吸附到整数
-        if pitch_semitone_step then pitch = math.floor(pitch + 0.5) end
-      end
-
-      reaper.ImGui_Separator(ctx)
-      if reaper.ImGui_MenuItem(ctx, T("Tempo Sync"), nil, tempo_sync_enabled, true) then
-        tempo_sync_enabled = not tempo_sync_enabled
-        SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
-        -- 新增同步速率立刻应用
-        if tempo_sync_enabled then
-          play_rate = 1.0
-          sync_rate_reset_done = true
-        else
-          sync_rate_reset_done = false
-        end
-        -- 正在播放则立刻按新速率重启预览
-        if playing_preview then RestartPreviewWithParams() end
-      end
-      if reaper.ImGui_MenuItem(ctx, T("Link Transport"), nil, link_with_reaper, true) then
-        link_with_reaper = not link_with_reaper
-        SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
-      end
-      DrawPreviewStartQuantizeMenu()
-
+      DrawPitchRateContextMenu()
       reaper.ImGui_EndPopup(ctx)
     end
 
@@ -22277,40 +22292,7 @@ function loop()
 
     local _popup_opened = ui_locked and reaper.ImGui_BeginPopupContextItem(ctx, "##rate_knob_ctx") or reaper.ImGui_BeginPopupContextItem(ctx)
     if _popup_opened then
-      if reaper.ImGui_MenuItem(ctx, T("Preserve pitch when changing rate"), nil, preserve_pitch) then
-        preserve_pitch = not preserve_pitch
-        SM_SetState(EXT_SECTION, "preserve_pitch", tostring(preserve_pitch and 1 or 0), true)
-      end
-      if reaper.ImGui_MenuItem(ctx, T("Keep preview rate & pitch when inserting to arrange"), nil, keep_preview_rate_pitch_on_insert) then
-        keep_preview_rate_pitch_on_insert = not keep_preview_rate_pitch_on_insert
-        SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
-      end
-      if reaper.ImGui_MenuItem(ctx, T("Semitone Steps"), nil, pitch_semitone_step) then
-        pitch_semitone_step = not pitch_semitone_step
-        SM_SetState(EXT_SECTION, "pitch_semitone_step", pitch_semitone_step and "1" or "0", true)
-        -- 激活时立即将当前音高吸附到整数
-        if pitch_semitone_step then pitch = math.floor(pitch + 0.5) end
-      end
-      reaper.ImGui_Separator(ctx)
-      if reaper.ImGui_MenuItem(ctx, T("Tempo Sync"), nil, tempo_sync_enabled, true) then
-        tempo_sync_enabled = not tempo_sync_enabled
-        SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
-        -- 新增同步速率立刻应用
-        if tempo_sync_enabled then
-          play_rate = 1.0
-          sync_rate_reset_done = true
-        else
-          sync_rate_reset_done = false
-        end
-        -- 正在播放则立刻按新速率重启预览
-        if playing_preview then RestartPreviewWithParams() end
-      end
-      if reaper.ImGui_MenuItem(ctx, T("Link Transport"), nil, link_with_reaper, true) then
-        link_with_reaper = not link_with_reaper
-        SM_SetState(EXT_SECTION, "link_transport", link_with_reaper and "1" or "0", true)
-      end
-      DrawPreviewStartQuantizeMenu()
-
+      DrawPitchRateContextMenu()
       reaper.ImGui_EndPopup(ctx)
     end
 

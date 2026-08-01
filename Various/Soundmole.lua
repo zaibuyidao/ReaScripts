@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.255
+-- @version 1.0.256
 -- @changelog
---   Added an option to apply preview volume to inserted media items.
+--   Added options to preserve target loudness and apply preview volume on insert, now also available from the Target Loudness context menu.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
