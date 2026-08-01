@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.256
+-- @version 1.0.257
 -- @changelog
---   Added options to preserve target loudness and apply preview volume on insert, now also available from the Target Loudness context menu.
+--   PeakTree tabs now support persistent drag reordering and closing.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

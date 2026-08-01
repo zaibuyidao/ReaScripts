@@ -531,6 +531,87 @@ SM_SIM_ApplyDataDir(similarity_data_dir, false)
 local startup_tab_name = SM_GetState(EXT_SECTION, "sidebar_active_tab")
 local current_sidebar_tab = "PeekTree" -- 默认为 PeekTree，用于记录当前状态
 
+SM_SIDEBAR_TAB_IDS = { "PeekTree", "UCS", "SavedSearch", "Freesound", "Similarity" }
+SM_SIDEBAR_TAB_LABELS = {
+  PeekTree = "PeekTree", UCS = "UCS", SavedSearch = "Saved Search",
+  Freesound = "Freesound", Similarity = "Similarity",
+}
+SM_SIDEBAR_TAB_ORDER, SM_SIDEBAR_TAB_VISIBLE, SM_SIDEBAR_TAB_X = {}, {}, {}
+do
+  local valid, seen = {}, {}
+  for _, id in ipairs(SM_SIDEBAR_TAB_IDS) do valid[id] = true end
+  for id in SM_GetState(EXT_SECTION, "sidebar_tab_order"):gmatch("[^,]+") do
+    if valid[id] and not seen[id] then
+      SM_SIDEBAR_TAB_ORDER[#SM_SIDEBAR_TAB_ORDER + 1], seen[id] = id, true
+    end
+  end
+  for _, id in ipairs(SM_SIDEBAR_TAB_IDS) do
+    if not seen[id] then SM_SIDEBAR_TAB_ORDER[#SM_SIDEBAR_TAB_ORDER + 1] = id end
+  end
+
+  local saved_visible = SM_GetState(EXT_SECTION, "sidebar_tabs_visible")
+  if saved_visible == "" then
+    for _, id in ipairs(SM_SIDEBAR_TAB_IDS) do SM_SIDEBAR_TAB_VISIBLE[id] = true end
+  else
+    for id in saved_visible:gmatch("[^,]+") do
+      if valid[id] then SM_SIDEBAR_TAB_VISIBLE[id] = true end
+    end
+  end
+end
+
+function SM_SaveSidebarTabs()
+  local visible = {}
+  for _, id in ipairs(SM_SIDEBAR_TAB_IDS) do
+    if SM_SIDEBAR_TAB_VISIBLE[id] then visible[#visible + 1] = id end
+  end
+  SM_SetState(EXT_SECTION, "sidebar_tab_order", table.concat(SM_SIDEBAR_TAB_ORDER, ","), true)
+  SM_SetState(EXT_SECTION, "sidebar_tabs_visible", #visible > 0 and table.concat(visible, ",") or "-", true)
+end
+
+function SM_BeginSidebarTab(id, label, flags)
+  local selected, open = reaper.ImGui_BeginTabItem(ctx, label .. "###Sidebar_" .. id, true, flags)
+  SM_SIDEBAR_TAB_X[id] = select(1, reaper.ImGui_GetItemRectMin(ctx))
+  if not open then
+    SM_SIDEBAR_TAB_VISIBLE[id] = false
+    SM_SIDEBAR_TAB_X[id] = nil
+    SM_SaveSidebarTabs()
+  end
+  return selected
+end
+
+function SM_DrawSidebarTabMenu()
+  if reaper.ImGui_TabItemButton(ctx, "+", reaper.ImGui_TabItemFlags_Trailing() | reaper.ImGui_TabItemFlags_NoTooltip()) then
+    reaper.ImGui_OpenPopup(ctx, "SidebarTabsMenu")
+  end
+  if reaper.ImGui_BeginPopup(ctx, "SidebarTabsMenu") then
+    for _, id in ipairs(SM_SIDEBAR_TAB_IDS) do
+      local changed, visible = reaper.ImGui_Checkbox(ctx, T(SM_SIDEBAR_TAB_LABELS[id]), SM_SIDEBAR_TAB_VISIBLE[id] == true)
+      if changed then
+        SM_SIDEBAR_TAB_VISIBLE[id] = visible
+        if visible then startup_tab_name = id end
+        SM_SaveSidebarTabs()
+      end
+    end
+    reaper.ImGui_EndPopup(ctx)
+  end
+end
+
+function SM_UpdateSidebarTabOrder()
+  local visible_order, changed = {}, false
+  for id, x in pairs(SM_SIDEBAR_TAB_X) do visible_order[#visible_order + 1] = { id = id, x = x } end
+  table.sort(visible_order, function(a, b) return a.x < b.x end)
+  local n = 1
+  for i, id in ipairs(SM_SIDEBAR_TAB_ORDER) do
+    if SM_SIDEBAR_TAB_VISIBLE[id] then
+      local reordered_id = visible_order[n] and visible_order[n].id or id
+      if reordered_id ~= id then changed = true end
+      SM_SIDEBAR_TAB_ORDER[i], n = reordered_id, n + 1
+    end
+  end
+  SM_SIDEBAR_TAB_X = {}
+  if changed then SM_SaveSidebarTabs() end
+end
+
 -- 波形预览状态变量
 local wf_step = 400                    -- 波形预览步长
 local img_w, img_h = 1200, 130         -- 波形图像宽度和高度
@@ -18768,12 +18849,19 @@ function loop()
     local left_child_flags = reaper.ImGui_WindowFlags_HorizontalScrollbar()
     if PEAKTREE_TAB_AUTO_SHRINK and splitter_drag then left_child_flags = 0 end
     if reaper.ImGui_BeginChild(ctx, "##left", left_w, child_h, 0, left_child_flags) then
-      local peektree_tab_flags = PEAKTREE_TAB_AUTO_SHRINK and reaper.ImGui_TabBarFlags_FittingPolicyResizeDown() or reaper.ImGui_TabBarFlags_None()
+      local peektree_tab_flags = reaper.ImGui_TabBarFlags_Reorderable()
+      if PEAKTREE_TAB_AUTO_SHRINK then peektree_tab_flags = peektree_tab_flags | reaper.ImGui_TabBarFlags_FittingPolicyResizeDown() end
       if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar', peektree_tab_flags) then -- | reaper.ImGui_TabBarFlags_DrawSelectedOverline()
         --reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelectedOverline(), colors.tab_selected_overline) -- tab 选中态上划线颜色
+        SM_DrawSidebarTabMenu()
+        SM_SIDEBAR_TAB_INDEX = 1
+        while SM_SIDEBAR_TAB_INDEX <= #SM_SIDEBAR_TAB_ORDER do
+        SM_SIDEBAR_TAB_ID = SM_SIDEBAR_TAB_ORDER[SM_SIDEBAR_TAB_INDEX]
+
+        if SM_SIDEBAR_TAB_ID == "PeekTree" and SM_SIDEBAR_TAB_VISIBLE.PeekTree then
         -- PeekTree列表
         local flag_pt = (startup_tab_name == "PeekTree") and reaper.ImGui_TabItemFlags_SetSelected() or 0
-        if reaper.ImGui_BeginTabItem(ctx, T('PeekTree'), nil, flag_pt) then
+        if SM_BeginSidebarTab("PeekTree", T("PeekTree"), flag_pt) then
           current_sidebar_tab = "PeekTree" -- 记录当前状态
           if startup_tab_name == "PeekTree" then startup_tab_name = nil end -- 清除强制标记
 
@@ -20435,9 +20523,12 @@ function loop()
 
           reaper.ImGui_EndTabItem(ctx)
         end
+        end
+
+        if SM_SIDEBAR_TAB_ID == "UCS" and SM_SIDEBAR_TAB_VISIBLE.UCS then
         -- UCS列表
         local flag_ucs = (startup_tab_name == "UCS") and reaper.ImGui_TabItemFlags_SetSelected() or 0
-        if reaper.ImGui_BeginTabItem(ctx, T("UCS"), nil, flag_ucs) then
+        if SM_BeginSidebarTab("UCS", T("UCS"), flag_ucs) then
           current_sidebar_tab = "UCS"
           if startup_tab_name == "UCS" then startup_tab_name = nil end
 
@@ -20600,10 +20691,12 @@ function loop()
 
           reaper.ImGui_EndTabItem(ctx)
         end
+        end
 
+        if SM_SIDEBAR_TAB_ID == "SavedSearch" and SM_SIDEBAR_TAB_VISIBLE.SavedSearch then
         -- TAB 标签页 Saved Search
         local flag_ss = (startup_tab_name == "SavedSearch") and reaper.ImGui_TabItemFlags_SetSelected() or 0
-        if reaper.ImGui_BeginTabItem(ctx, T("Saved Search") .. "###Saved_Search", nil, flag_ss) then
+        if SM_BeginSidebarTab("SavedSearch", T("Saved Search"), flag_ss) then
           current_sidebar_tab = "SavedSearch"
           if startup_tab_name == "SavedSearch" then startup_tab_name = nil end
 
@@ -21002,10 +21095,12 @@ function loop()
 
           reaper.ImGui_EndTabItem(ctx)
         end
+        end
 
+        if SM_SIDEBAR_TAB_ID == "Freesound" and SM_SIDEBAR_TAB_VISIBLE.Freesound then
         -- TAB 标签页 Freesound 节点
         local flag_fs = (startup_tab_name == "Freesound") and reaper.ImGui_TabItemFlags_SetSelected() or 0
-        if reaper.ImGui_BeginTabItem(ctx, T("Freesound"), nil, flag_fs) then
+        if SM_BeginSidebarTab("Freesound", T("Freesound"), flag_fs) then
           current_sidebar_tab = "Freesound"
           if startup_tab_name == "Freesound" then startup_tab_name = nil end
 
@@ -21017,10 +21112,12 @@ function loop()
           end
           reaper.ImGui_EndTabItem(ctx)
         end
+        end
 
+        if SM_SIDEBAR_TAB_ID == "Similarity" and SM_SIDEBAR_TAB_VISIBLE.Similarity then
         -- TAB 标签页 Similarity 节点
         local flag_similarity = (startup_tab_name == "Similarity") and reaper.ImGui_TabItemFlags_SetSelected() or 0
-        if reaper.ImGui_BeginTabItem(ctx, T("Similarity"), nil, flag_similarity) then
+        if SM_BeginSidebarTab("Similarity", T("Similarity"), flag_similarity) then
           current_sidebar_tab = "Similarity"
           if startup_tab_name == "Similarity" then startup_tab_name = nil end
           if reaper.ImGui_BeginChild(ctx, "SimilaritySidebarRegion") then
@@ -21029,6 +21126,11 @@ function loop()
           end
           reaper.ImGui_EndTabItem(ctx)
         end
+        end
+
+        SM_SIDEBAR_TAB_INDEX = SM_SIDEBAR_TAB_INDEX + 1
+        end
+        SM_UpdateSidebarTabOrder()
 
         --reaper.ImGui_PopStyleColor(ctx)
         reaper.ImGui_EndTabBar(ctx)
