@@ -2,7 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.42"
+SM_EXT_REQUIRED_VERSION = "0.0.43"
 SM_EXT_INSTALLED_VERSION = nil
 
 function SM_NormalizeVersion(version)
@@ -9399,24 +9399,7 @@ function AddThisComputerContextMenu(path)
       local dbpath   = normalize_path(db_dir, true) .. dbfile     -- 全路径
 
       -- 启动构建任务
-      local success = SM_StartDatabaseBuild(folder, dbpath)
-
-      if success then
-        -- 用该文件夹名作为数据库别名
-        local alias = (folder or ""):gsub("[/\\]+$","")
-        alias = alias:match("([^/\\]+)$") or alias
-        alias = alias:gsub("^%s+",""):gsub("%s+$","")
-
-        if alias ~= "" then
-          mediadb_alias = mediadb_alias or {}
-          mediadb_alias[dbfile] = alias
-          mediadb_display_name_cache[dbfile] = nil
-          SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
-        end
-
-        -- 让数据库缓存失效
-        DBPF_InvalidateAllCaches()
-      end
+      SM_StartDatabaseBuild(folder, dbpath)
     end
 
     reaper.ImGui_EndPopup(ctx)
@@ -9663,24 +9646,7 @@ function draw_shortcut_tree(sc, base_path, depth)
         local dbpath   = normalize_path(db_dir, true) .. dbfile     -- 全路径
 
         -- 启动构建任务
-        local success = SM_StartDatabaseBuild(folder, dbpath)
-
-        if success then
-          -- 用该文件夹名作为数据库别名
-          local alias = (folder or ""):gsub("[/\\]+$","")
-          alias = alias:match("([^/\\]+)$") or alias
-          alias = alias:gsub("^%s+",""):gsub("%s+$","")
-
-          if alias ~= "" then
-            mediadb_alias = mediadb_alias or {}
-            mediadb_alias[dbfile] = alias
-            mediadb_display_name_cache[dbfile] = nil
-            SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
-          end
-
-          -- 让数据库缓存失效
-          DBPF_InvalidateAllCaches()
-        end
+        SM_StartDatabaseBuild(folder, dbpath)
       end
     end
 
@@ -10512,6 +10478,7 @@ last_window_visible = true
 cover_cache = {}
 cover_path_cache = {}
 cover_image_cache = {}
+valid_image_cache = {}
 bad_cover_cache = {}
 last_cover_img = nil
 last_cover_path = nil
@@ -10528,6 +10495,15 @@ end
 -- 读取文件头
 function IsValidImageFile(path)
   if not path then return false end
+  if valid_image_cache[path] then return true end
+
+  if reaper.APIExists and reaper.APIExists("SM_Cover_ValidateImage") and reaper.SM_Cover_ValidateImage then
+    local ok, valid = pcall(reaper.SM_Cover_ValidateImage, path)
+    if ok then
+      if valid == 1 then valid_image_cache[path] = true end
+      return valid == 1
+    end
+  end
 
   -- 以二进制只读模式打开
   local f = io.open(path, "rb") 
@@ -10540,26 +10516,31 @@ function IsValidImageFile(path)
 
   -- 检查 PNG (89 50 4E 47 ...)
   if header:sub(1, 8) == "\137PNG\r\n\26\n" then 
+    valid_image_cache[path] = true
     return true 
   end
 
   -- 检查 JPG (FF D8 ...)
   if header:sub(1, 2) == "\255\216" then 
+    valid_image_cache[path] = true
     return true 
   end
 
   -- 检查 GIF (GIF87a 或 GIF89a) GIF，文件头前3个字节是 "GIF" (ASCII: 47 49 46)
   if header:sub(1, 3) == "GIF" then
+    valid_image_cache[path] = true
     return true
   end
 
   -- 检查 BMP，BMP 文件头前2个字节是 "BM" (ASCII: 66 77)
   if header:sub(1, 2) == "BM" then
+    valid_image_cache[path] = true
     return true
   end
 
   -- 检查 WEBP，文件头为 RIFF....WEBP
   if header:sub(1, 4) == "RIFF" and header:sub(9, 12) == "WEBP" then
+    valid_image_cache[path] = true
     return true
   end
 
@@ -10922,6 +10903,7 @@ function ReleaseAllCoverImages()
     for k in pairs(cover_cache) do cover_cache[k] = nil end
   end
   cover_path_cache = {}
+  valid_image_cache = {}
   bad_cover_cache = {}
 end
 
@@ -13733,28 +13715,65 @@ function ApplyCoverFilter(cover_id)
   end
 end
 
+function SM_DiscardInvalidCoverCacheFile(path)
+  path = normalize_path(tostring(path or ""), false)
+  if path == "" then return end
+
+  valid_image_cache[path] = nil
+  cover_image_cache[path] = nil
+  local cache_root = normalize_path(script_path .. "cover_cache" .. sep, true)
+  local candidate = path
+  if reaper.GetOS():find("Win", 1, true) then
+    cache_root = cache_root:lower()
+    candidate = candidate:lower()
+  end
+  if candidate:sub(1, #cache_root) == cache_root then
+    os.remove(path)
+  end
+end
+
+function SM_AcceptValidCoverPath(info, path)
+  if not path or path == "" then return nil end
+  if IsValidImageFile(path) then return path end
+  SM_DiscardInvalidCoverCacheFile(path)
+  if info then
+    if info._stable_cover_path == path then info._stable_cover_path = nil end
+    if info._preview_cover_path == path then info._preview_cover_path = nil end
+  end
+  return nil
+end
+
 function ResolveCoverPathForEntry(info)
   if not info then return nil, nil end
   local stable_path, stable_id
   if type(SM_GetStablePreviewCoverPath) == "function" then
     stable_path, stable_id = SM_GetStablePreviewCoverPath(info)
   end
+  stable_path = SM_AcceptValidCoverPath(info, stable_path)
   if stable_path then return stable_path, stable_id or info.cover_id end
   local cover_id = info.cover_id
   local dbpath = (type(SM_GetCurrentDBCoverIndexPath) == "function") and SM_GetCurrentDBCoverIndexPath() or nil
   if cover_id and cover_id ~= "" and type(SM_GetCoverPathByID) == "function" then
     local path = SM_GetCoverPathByID(cover_id, dbpath)
+    path = SM_AcceptValidCoverPath(info, path)
     if path then return path, cover_id end
   end
 
-  if dbpath then return nil, cover_id end
   if info.path and info.path ~= "" and type(SM_EnsureCoverForAudio) == "function" then
-    local id, path = SM_EnsureCoverForAudio(info.path)
-    if id and id ~= "" then info.cover_id = id end
-    if path then return path, id end
+    local id, path = SM_EnsureCoverForAudio(info.path, dbpath)
+    path = SM_AcceptValidCoverPath(info, path)
+    if id and id ~= "" and path then
+      info.cover_id = id
+      if dbpath and dbpath ~= "" and type(SM_AddDBCoverIndexEntry) == "function" then
+        SM_AddDBCoverIndexEntry(dbpath, id, path)
+      end
+      return path, id
+    end
   end
+  if dbpath then return nil, cover_id end
   if info.path and info.path ~= "" then
     local path = GetCoverImagePath(info.path)
+    path = SM_AcceptValidCoverPath(info, path)
     if path then return path, cover_id end
   end
   return nil, cover_id
@@ -17139,6 +17158,27 @@ local builder_state = {
   start_time = 0
 }
 
+function SM_IsDatabaseBuildActive(db_file_path)
+  if not (builder_state and builder_state.active) then return false end
+  if not db_file_path or db_file_path == "" then return true end
+  return normalize_path(builder_state.db_path or "", false)
+      == normalize_path(db_file_path, false)
+end
+
+function SM_CommitPendingBuilderAlias()
+  local alias = builder_state and builder_state.pending_alias or nil
+  local dbpath = builder_state and builder_state.db_path or ""
+  builder_state.pending_alias = nil
+  if not alias or alias == "" or dbpath == "" then return end
+
+  local dbfile = dbpath:match("[^/\\]+$")
+  if not dbfile or dbfile == "" then return end
+  mediadb_alias = mediadb_alias or {}
+  mediadb_alias[dbfile] = alias
+  mediadb_display_name_cache[dbfile] = nil
+  SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
+end
+
 function SM_DBHasFileRecords(db_file_path)
   local f = io.open(db_file_path, "rb")
   if not f then return false end
@@ -17162,10 +17202,16 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
   root_path = normalize_path(root_path, true)
   db_file_path = normalize_path(db_file_path, false)
 
+  if builder_state and builder_state.active then
+    reaper.MB(T("Another database build is already running.") .. "\n" .. T("Please wait for it to finish or cancel it first."), "Soundmole", 0)
+    return false
+  end
 
   local result = reaper.SM_Builder_Start(root_path, db_file_path)
   if result ~= 1 then
-    reaper.MB("C++ Builder Start Failed.\nCheck read/write permissions.", "Soundmole Error", 0)
+    local err = reaper.SM_Builder_GetStatusString(1)
+    if not err or err == "" then err = "Check the source path and read/write permissions." end
+    reaper.MB(T("C++ Builder Start Failed.") .. "\n" .. T(err), T("Soundmole Error"), 0)
     return false
   end
 
@@ -17176,17 +17222,33 @@ function SM_StartDatabaseBuild(root_path, db_file_path)
   builder_state.root_path = root_path
   builder_state.start_time = reaper.time_precise()
   builder_state.is_incremental = false
+  builder_state.current_count = 0
+  builder_state.final_count = 0
+  builder_state.err_msg = nil
+  builder_state.warning_msg = nil
+  builder_state.cancelled = false
+  builder_state.pending_alias = nil
+  if not reaper.file_exists(db_file_path) then
+    local alias = (root_path or ""):gsub("[/\\]+$", "")
+    alias = alias:match("([^/\\]+)$") or alias
+    alias = alias:gsub("^%s+", ""):gsub("%s+$", "")
+    if alias ~= "" then builder_state.pending_alias = alias end
+  end
   db_build_task = nil
   return true
 end
 
 function SM_StartDatabaseIncremental(db_file_path)
   db_file_path = normalize_path(db_file_path, false)
+  if builder_state and builder_state.active then
+    reaper.MB(T("Another database build is already running.") .. "\n" .. T("Please wait for it to finish or cancel it first."), "Soundmole", 0)
+    return false
+  end
   local result = reaper.SM_Builder_StartIncremental(db_file_path)
   if result ~= 1 then
     local err = reaper.SM_Builder_GetStatusString(1)
     if not err or err == "" then err = "Check database paths and read/write permissions." end
-    reaper.MB("C++ Incremental Scan Start Failed.\n" .. err, "Soundmole Error", 0)
+    reaper.MB(T("C++ Incremental Scan Start Failed.") .. "\n" .. T(err), T("Soundmole Error"), 0)
     return false
   end
 
@@ -17197,11 +17259,22 @@ function SM_StartDatabaseIncremental(db_file_path)
   builder_state.root_path = ""
   builder_state.start_time = reaper.time_precise()
   builder_state.is_incremental = true
+  builder_state.current_count = 0
+  builder_state.final_count = 0
+  builder_state.err_msg = nil
+  builder_state.warning_msg = nil
+  builder_state.cancelled = false
+  builder_state.pending_alias = nil
   db_build_task = nil
   return true
 end
 
 function SM_ProcessBuilderLoop()
+  local progress_window_name = T("Database Builder Progress") .. "###SM_DatabaseBuilderProgress"
+  local complete_popup_name = T("Build Complete") .. "###SM_DatabaseBuildComplete"
+  local failed_popup_name = T("Build Failed") .. "###SM_DatabaseBuildFailed"
+  local cancelled_popup_name = T("Build Cancelled") .. "###SM_DatabaseBuildCancelled"
+
   if builder_state.active then
     local status = reaper.SM_Builder_RunSlice(20) -- 20ms 时间片
     local count = reaper.SM_Builder_GetInfo() -- 获取数量
@@ -17215,15 +17288,20 @@ function SM_ProcessBuilderLoop()
       builder_state.active = false -- 停止 C++ 引擎
       builder_state.final_count = count -- 保存最终数量
       builder_state.total_time = reaper.time_precise() - (builder_state.start_time or reaper.time_precise()) -- 计算总耗时
+      local warning = reaper.SM_Builder_GetStatusString(1)
+      builder_state.warning_msg = (warning and warning ~= "") and warning or nil
+      SM_CommitPendingBuilderAlias()
+      if DBPF_InvalidateAllCaches then DBPF_InvalidateAllCaches() end
       if type(SM_ClearDBCoverIndexCache) == "function" then SM_ClearDBCoverIndexCache(builder_state.db_path) end
       if type(SM_ResetAlbumPanelCache) == "function" then SM_ResetAlbumPanelCache(nil, nil) end
-      reaper.ImGui_OpenPopup(ctx, "Build Complete") -- 触发完成弹窗
+      reaper.ImGui_OpenPopup(ctx, complete_popup_name) -- 触发完成弹窗
 
     -- 扫描失败
     elseif status == -1 then
       builder_state.active = false -- 停止 C++ 引擎
       builder_state.err_msg = reaper.SM_Builder_GetStatusString(1)
-      reaper.ImGui_OpenPopup(ctx, "Build Failed") -- 触发失败弹窗
+      builder_state.pending_alias = nil
+      reaper.ImGui_OpenPopup(ctx, failed_popup_name) -- 触发失败弹窗
     end
 
     -- 正在扫描，显示浮动进度条
@@ -17235,23 +17313,24 @@ function SM_ProcessBuilderLoop()
 
       local center_x, center_y = reaper.ImGui_Viewport_GetCenter(reaper.ImGui_GetMainViewport(ctx))
       reaper.ImGui_SetNextWindowPos(ctx, center_x, center_y, reaper.ImGui_Cond_Appearing(), 0.5, 0.5)
-      reaper.ImGui_SetNextWindowSize(ctx, UIScale(400), UIScale(180), reaper.ImGui_Cond_Always())
+      reaper.ImGui_SetNextWindowSize(ctx, UIScale(400), UIScale(210), reaper.ImGui_Cond_Always())
 
-      local visible, open = reaper.ImGui_Begin(ctx, "Database Builder Progress", true, win_flags)
+      local visible, open = reaper.ImGui_Begin(ctx, progress_window_name, true, win_flags)
       if visible then
         local elapsed = reaper.time_precise() - (builder_state.start_time or 0)
         -- 文字宽度
-        local title_w, _ = reaper.ImGui_CalcTextSize(ctx, "Creating Database")
+        local build_title = T("Creating Database")
+        local title_w, _ = reaper.ImGui_CalcTextSize(ctx, build_title)
         local win_w = reaper.ImGui_GetWindowWidth(ctx)
         reaper.ImGui_SetCursorPosX(ctx, (win_w - title_w) * 0.5)
-        reaper.ImGui_Text(ctx, "Creating Database")
+        reaper.ImGui_Text(ctx, build_title)
         reaper.ImGui_Separator(ctx)
 
-        reaper.ImGui_Text(ctx, string.format("Files: %d", count))
-        reaper.ImGui_Text(ctx, string.format("Time : %.1f s", elapsed))
+        reaper.ImGui_Text(ctx, T("Files: %d", count))
+        reaper.ImGui_Text(ctx, T("Time: %.1f s", elapsed))
         reaper.ImGui_Spacing(ctx)
 
-        local show_name = (cur_file and cur_file ~= "") and cur_file or "Processing..."
+        local show_name = (cur_file and cur_file ~= "") and cur_file or T("Processing...")
         local text_w, _ = reaper.ImGui_CalcTextSize(ctx, show_name)
         local win_w = reaper.ImGui_GetWindowWidth(ctx)
         reaper.ImGui_SetCursorPosX(ctx, (win_w - text_w) * 0.5)
@@ -17269,7 +17348,7 @@ function SM_ProcessBuilderLoop()
         local center_pos_x = (window_width - btn_width) / 2
 
         reaper.ImGui_SetCursorPosX(ctx, center_pos_x)
-        if reaper.ImGui_Button(ctx, "Cancel", btn_width, UIScaleF(30)) then
+        if reaper.ImGui_Button(ctx, T("Cancel") .. "###SM_DatabaseBuildCancel", btn_width, UIScaleF(30)) then
           open = false
         end
         reaper.ImGui_End(ctx)
@@ -17278,6 +17357,11 @@ function SM_ProcessBuilderLoop()
       if not open then
         reaper.SM_Builder_Stop()
         builder_state.active = false
+        builder_state.cancelled = true
+        builder_state.pending_alias = nil
+        builder_state.final_count = count
+        builder_state.total_time = reaper.time_precise() - (builder_state.start_time or reaper.time_precise())
+        reaper.ImGui_OpenPopup(ctx, cancelled_popup_name)
       end
     end
   end
@@ -17286,19 +17370,23 @@ function SM_ProcessBuilderLoop()
   local modal_flags = reaper.ImGui_WindowFlags_AlwaysAutoResize() | reaper.ImGui_WindowFlags_TopMost()
 
   -- 完成弹窗
-    reaper.ImGui_SetNextWindowSize(ctx, UIScale(300), UIScale(150), reaper.ImGui_Cond_Always())
-  if reaper.ImGui_BeginPopupModal(ctx, "Build Complete", nil, modal_flags) then
-    reaper.ImGui_Text(ctx, "Database build finished successfully!")
+    reaper.ImGui_SetNextWindowSize(ctx, UIScale(300), UIScale(170), reaper.ImGui_Cond_Always())
+  if reaper.ImGui_BeginPopupModal(ctx, complete_popup_name, nil, modal_flags) then
+    reaper.ImGui_Text(ctx, T("Database build finished successfully!"))
     reaper.ImGui_Separator(ctx)
-    reaper.ImGui_Text(ctx, string.format("Total Files Processed: %d", builder_state.final_count or 0))
-    reaper.ImGui_Text(ctx, string.format("Total Time Spent: %.2f s", builder_state.total_time or 0))
+    reaper.ImGui_Text(ctx, T("Total Files Processed: %d", builder_state.final_count or 0))
+    reaper.ImGui_Text(ctx, T("Total Time Spent: %.2f s", builder_state.total_time or 0))
+    if builder_state.warning_msg then
+      reaper.ImGui_Separator(ctx)
+      reaper.ImGui_TextWrapped(ctx, T(builder_state.warning_msg))
+    end
     reaper.ImGui_Spacing(ctx)
     -- 计算居中位置
     local btn_width = UIScaleF(80)
     local window_width = reaper.ImGui_GetWindowWidth(ctx)
     local center_pos_x = (window_width - btn_width) / 2
     reaper.ImGui_SetCursorPosX(ctx, center_pos_x)
-    if reaper.ImGui_Button(ctx, "OK", btn_width, UIScaleF(30)) then
+    if reaper.ImGui_Button(ctx, T("OK") .. "###SM_DatabaseBuildCompleteOK", btn_width, UIScaleF(30)) then
       if DBPF_InvalidateAllCaches then DBPF_InvalidateAllCaches() end
       if collect_mode == COLLECT_MODE_MEDIADB and tree_state and tree_state.cur_mediadb then
         local current_db_name = builder_state.db_path:match("[^/\\]+$")
@@ -17311,15 +17399,26 @@ function SM_ProcessBuilderLoop()
   end
 
   -- 失败弹窗
-  if reaper.ImGui_BeginPopupModal(ctx, "Build Failed", nil, modal_flags) then
-    reaper.ImGui_TextColored(ctx, colors.gray, "Critical Error Occurred")
+  if reaper.ImGui_BeginPopupModal(ctx, failed_popup_name, nil, modal_flags) then
+    reaper.ImGui_TextColored(ctx, colors.gray, T("Critical Error Occurred"))
     reaper.ImGui_Separator(ctx)
     reaper.ImGui_PushTextWrapPos(ctx, 400)
-    reaper.ImGui_Text(ctx, builder_state.err_msg or "Unknown Error")
+    reaper.ImGui_Text(ctx, T(builder_state.err_msg or "Unknown Error"))
     reaper.ImGui_PopTextWrapPos(ctx)
 
     reaper.ImGui_Spacing(ctx)
-    if reaper.ImGui_Button(ctx, "Close", UIScaleF(80), UIScaleF(30)) then
+    if reaper.ImGui_Button(ctx, T("Close") .. "###SM_DatabaseBuildFailedClose", UIScaleF(80), UIScaleF(30)) then
+      reaper.ImGui_CloseCurrentPopup(ctx)
+    end
+    reaper.ImGui_EndPopup(ctx)
+  end
+
+  if reaper.ImGui_BeginPopupModal(ctx, cancelled_popup_name, nil, modal_flags) then
+    reaper.ImGui_Text(ctx, T("Database build was cancelled."))
+    reaper.ImGui_TextWrapped(ctx, T("No incomplete database was published. An existing database, if any, was left unchanged."))
+    reaper.ImGui_Separator(ctx)
+    reaper.ImGui_Text(ctx, T("Files processed before cancellation: %d", builder_state.final_count or 0))
+    if reaper.ImGui_Button(ctx, T("Close") .. "###SM_DatabaseBuildCancelledClose", UIScaleF(80), UIScaleF(30)) then
       reaper.ImGui_CloseCurrentPopup(ctx)
     end
     reaper.ImGui_EndPopup(ctx)
@@ -18343,24 +18442,7 @@ function loop()
         local dbpath = normalize_path(db_dir, true) .. dbfile     -- 全路径
 
         -- 启动构建任务
-        local success = SM_StartDatabaseBuild(folder, dbpath)
-
-        if success then
-          -- 用该文件夹名作为数据库别名
-          local alias = (folder or ""):gsub("[/\\]+$","")
-          alias = alias:match("([^/\\]+)$") or alias
-          alias = alias:gsub("^%s+",""):gsub("%s+$","")
-
-          if alias ~= "" then
-            mediadb_alias = mediadb_alias or {}
-            mediadb_alias[dbfile] = alias
-            mediadb_display_name_cache[dbfile] = nil
-            SaveMediaDBAlias(EXT_SECTION, mediadb_alias)
-          end
-
-          -- 让数据库缓存失效
-          DBPF_InvalidateAllCaches()
-        end
+        SM_StartDatabaseBuild(folder, dbpath)
       end
     end
 
@@ -18373,7 +18455,7 @@ function loop()
         -- 保护操作，如果正在重建这个 DB，先禁止删除
         local db_dir   = script_path .. "SoundmoleDB"
         local db_path  = normalize_path(db_dir, true) .. target_dbfile -- 构造全路径
-        if db_build_task and not db_build_task.finished and db_build_task.dbfile == db_path then
+        if SM_IsDatabaseBuildActive(db_path) then
           reaper.ShowMessageBox(T("This database is currently rebuilding.\nPlease stop the task before deleting."), T("Cannot Delete"), 0)
         else
           local filename = target_dbfile:match("[^/\\]+$")
@@ -19913,7 +19995,8 @@ function loop()
                 -- 删除数据库
                 if reaper.ImGui_MenuItem(ctx, T("Delete Database")) then
                   -- 保护操作，如果正在重建这个 DB，先禁止删除
-                  if db_build_task and not db_build_task.finished and db_build_task.dbfile == dbfile then
+                  local active_dbpath = normalize_path(db_dir, true) .. dbfile
+                  if SM_IsDatabaseBuildActive(active_dbpath) then
                     reaper.ShowMessageBox("This database is currently rebuilding.\nPlease stop the task before deleting.", "Cannot Delete", 0)
                   else
                     local filename = dbfile:match("[^/\\]+$")
@@ -19995,7 +20078,7 @@ function loop()
                   local dbpath = normalize_path(db_dir, true) .. dbfile
                   local path_list = DBPF_ReadRootsForDB(dbpath)
                   if not path_list or #path_list == 0 then
-                    reaper.ShowMessageBox("No PATH found in DB file", "Error", 0)
+                    reaper.ShowMessageBox(T("No PATH found in DB file"), T("Error"), 0)
                   elseif #path_list == 1 then
                     local success = SM_StartDatabaseBuild(path_list[1], dbpath)
                     if success then
@@ -20003,9 +20086,7 @@ function loop()
                     end
                   else
                     reaper.ShowMessageBox(
-                      "Multi-root database rebuild is not supported by the current database builder.\n\nPlease rebuild each root as a separate database.",
-                      "Soundmole",
-                      0)
+                      T("Multi-root database rebuild is not supported by the current database builder.") .. "\n\n" .. T("Please rebuild each root as a separate database."), "Soundmole", 0)
                   end
                 end
 

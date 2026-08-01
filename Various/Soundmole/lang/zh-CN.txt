@@ -274,6 +274,52 @@ quarter notes=四分音符
 Estimated=估算
 Ticks per quarter note=每四分音符滴答数
 
+# 数据库构建
+Another database build is already running.=已有一个数据库构建任务正在运行。
+Please wait for it to finish or cancel it first.=请等待其完成, 或先取消该任务。
+Check the source path and read/write permissions.=请检查源路径和读写权限。
+Check database paths and read/write permissions.=请检查数据库路径和读写权限。
+C++ Builder Start Failed.=C++ 数据库构建器启动失败。
+C++ Incremental Scan Start Failed.=C++ 增量扫描启动失败。
+Soundmole Error=Soundmole 错误
+Database Builder Progress=数据库构建进度
+Creating Database=正在构建数据库
+Files: %d=文件数: %d
+Time: %.1f s=用时: %.1f 秒
+Processing...=处理中...
+Cancel=取消
+Build Complete=构建完成
+Database build finished successfully!=数据库构建成功完成！
+Total Files Processed: %d=已处理文件总数: %d
+Total Time Spent: %.2f s=总用时: %.2f 秒
+Build Failed=构建失败
+Critical Error Occurred=发生严重错误
+Unknown Error=未知错误
+Build Cancelled=构建已取消
+Database build was cancelled.=数据库构建已取消。
+No incomplete database was published. An existing database, if any, was left unchanged.=未发布任何不完整的数据库。如原数据库已存在，则保持不变。
+Files processed before cancellation: %d=取消前已处理文件数: %d
+No PATH found in DB file=数据库文件中没有 PATH 记录
+Multi-root database rebuild is not supported by the current database builder.=当前数据库构建器不支持重建包含多个根路径的数据库。
+Please rebuild each root as a separate database.=请将每个根路径分别重建为独立数据库。
+
+# 数据库构建 C++
+Cannot Read Database File=无法读取数据库文件
+No PATH Found in Database File=数据库文件中没有 PATH 记录
+Invalid Root Directory or Access Denied=根目录无效或访问被拒绝
+Cannot Create Database File=无法创建数据库文件
+Iterator Init Failed=目录遍历器初始化失败
+Invalid Database File=数据库文件无效
+Cannot Create Database Working File=无法创建数据库工作文件
+No Accessible PATH Found in Database File=数据库文件中没有可访问的 PATH 记录
+Cannot Append Database File=无法追加数据库文件
+Disk Write Error=磁盘写入错误
+Disk Write Error: could not flush database file=磁盘写入错误: 无法刷新数据库文件
+Disk Write Error: could not close database file=磁盘写入错误: 无法关闭数据库文件
+Disk Write Error: could not save database artwork index=磁盘写入错误: 无法保存数据库封面索引
+Cannot publish completed database file=无法发布已完成的数据库文件
+Database created; artwork index will be rebuilt=数据库已创建; 封面索引将重新构建
+
 # 状态栏
 Files found: %d=找到文件: %d 个
 Vertical Zoom:=垂直缩放:

@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.253
+-- @version 1.0.254
 -- @changelog
---   Added an optional switch to apply preview monitoring volume after target loudness compensation.
---   Added full-database peak level and LUFS-I loudness analysis.
+--   Fixed premature large database creation, missing completion notifications, and CRC errors caused by corrupted PNG artwork.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
