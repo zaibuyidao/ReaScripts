@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.258
+-- @version 1.0.259
 -- @changelog
---   Fixed top spacing and toolbar vertical alignment.
+--   Added persistence for the right sidebar Artwork and Metadata tab selection.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

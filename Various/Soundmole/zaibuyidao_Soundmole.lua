@@ -11946,6 +11946,7 @@ function SaveExitSettings()
   if current_sidebar_tab then
     SM_SetState(EXT_SECTION, "sidebar_active_tab", current_sidebar_tab, true)
   end
+  SM_SetState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab or "album", true)
 
   if retain_search_on_exit then
     local search_text = _G.commit_filter_text or ""
@@ -14363,7 +14364,7 @@ function SM_DrawAlbumPanel(ctx, panel_w, panel_h)
       local restore_tab = album_panel_tab_restore_pending
       local album_flags = (restore_tab and album_panel_active_tab == "album") and reaper.ImGui_TabItemFlags_SetSelected() or 0
       if reaper.ImGui_BeginTabItem(ctx, T("Artwork"), nil, album_flags) then
-        if album_panel_active_tab ~= "album" then
+        if not restore_tab and album_panel_active_tab ~= "album" then
           album_panel_active_tab = "album"
           SM_SetState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
         end
@@ -14376,7 +14377,7 @@ function SM_DrawAlbumPanel(ctx, panel_w, panel_h)
 
       local metadata_flags = (restore_tab and album_panel_active_tab == "metadata") and reaper.ImGui_TabItemFlags_SetSelected() or 0
       if reaper.ImGui_BeginTabItem(ctx, T("Metadata"), nil, metadata_flags) then
-        if album_panel_active_tab ~= "metadata" then
+        if not restore_tab and album_panel_active_tab ~= "metadata" then
           album_panel_active_tab = "metadata"
           SM_SetState(EXT_SECTION, "album_panel_active_tab", album_panel_active_tab, true)
         end
