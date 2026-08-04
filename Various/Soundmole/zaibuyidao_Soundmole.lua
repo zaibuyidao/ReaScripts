@@ -2,7 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.43"
+SM_EXT_REQUIRED_VERSION = "0.0.44"
 SM_EXT_INSTALLED_VERSION = nil
 
 function SM_NormalizeVersion(version)
@@ -10667,52 +10667,66 @@ function IsValidImageFile(path)
 
   if reaper.APIExists and reaper.APIExists("SM_Cover_ValidateImage") and reaper.SM_Cover_ValidateImage then
     local ok, valid = pcall(reaper.SM_Cover_ValidateImage, path)
-    if ok then
-      if valid == 1 then valid_image_cache[path] = true end
-      return valid == 1
-    end
+    if ok and valid ~= 1 then return false end
   end
 
-  -- 以二进制只读模式打开
-  local f = io.open(path, "rb") 
+  -- 保留 Lua 结构检查以兼容旧版扩展。截断封面不能只检查文件头
+  local f = io.open(path, "rb")
   if not f then return false end
-  -- 读取前 12 个字节，兼容 PNG/JPG/GIF/BMP/WEBP 头
-  local header = f:read(12) 
+  local header = f:read(12) or ""
+  local file_size = f:seek("end") or 0
+  f:seek("set", math.max(0, file_size - 12))
+  local tail = f:read(12) or ""
+  local valid = false
+
+  if header:sub(1, 2) == "\255\216" and tail:sub(-2) == "\255\217" then
+    -- JPEG 必须在扫描数据前包含有效的帧头。避免把 EXIF 内嵌缩略图误当成外层 JPEG
+    local pos, saw_frame = 2, false
+    while pos + 3 < file_size do
+      f:seek("set", pos)
+      if f:read(1) ~= "\255" then break end
+      local marker_byte = f:read(1)
+      while marker_byte == "\255" do marker_byte = f:read(1) end
+      local marker = marker_byte and marker_byte:byte() or 0
+      if marker == 0xD8 or marker == 0xD9 or marker == 0 then break end
+      if marker == 0x01 or (marker >= 0xD0 and marker <= 0xD7) then
+        pos = f:seek()
+      else
+        local length_bytes = f:read(2)
+        if not length_bytes or #length_bytes < 2 then break end
+        local segment_size = length_bytes:byte(1) * 256 + length_bytes:byte(2)
+        local payload_pos = f:seek()
+        if segment_size < 2 or payload_pos + segment_size - 2 > file_size then break end
+        local is_frame = marker >= 0xC0 and marker <= 0xCF
+          and marker ~= 0xC4 and marker ~= 0xC8 and marker ~= 0xCC
+        if is_frame then
+          if segment_size < 8 then break end
+          local frame = f:read(5)
+          saw_frame = frame and #frame == 5
+            and (frame:byte(2) * 256 + frame:byte(3)) > 0
+            and (frame:byte(4) * 256 + frame:byte(5)) > 0
+        elseif marker == 0xDA then
+          valid = saw_frame
+          break
+        end
+        pos = payload_pos + segment_size - 2
+      end
+    end
+  elseif header:sub(1, 8) == "\137PNG\r\n\26\n" then
+    valid = file_size >= 20 and tail:sub(-8, -5) == "IEND"
+  elseif header:sub(1, 6) == "GIF87a" or header:sub(1, 6) == "GIF89a" then
+    valid = file_size >= 13 and tail:sub(-1) == ";"
+  elseif header:sub(1, 2) == "BM" and #header >= 6 then
+    local b3, b4, b5, b6 = header:byte(3, 6)
+    valid = b3 + b4 * 256 + b5 * 65536 + b6 * 16777216 == file_size
+  elseif header:sub(1, 4) == "RIFF" and header:sub(9, 12) == "WEBP" then
+    local b5, b6, b7, b8 = header:byte(5, 8)
+    valid = b5 + b6 * 256 + b7 * 65536 + b8 * 16777216 + 8 == file_size
+  end
+
   f:close()
-
-  if not header or #header < 2 then return false end
-
-  -- 检查 PNG (89 50 4E 47 ...)
-  if header:sub(1, 8) == "\137PNG\r\n\26\n" then 
-    valid_image_cache[path] = true
-    return true 
-  end
-
-  -- 检查 JPG (FF D8 ...)
-  if header:sub(1, 2) == "\255\216" then 
-    valid_image_cache[path] = true
-    return true 
-  end
-
-  -- 检查 GIF (GIF87a 或 GIF89a) GIF，文件头前3个字节是 "GIF" (ASCII: 47 49 46)
-  if header:sub(1, 3) == "GIF" then
-    valid_image_cache[path] = true
-    return true
-  end
-
-  -- 检查 BMP，BMP 文件头前2个字节是 "BM" (ASCII: 66 77)
-  if header:sub(1, 2) == "BM" then
-    valid_image_cache[path] = true
-    return true
-  end
-
-  -- 检查 WEBP，文件头为 RIFF....WEBP
-  if header:sub(1, 4) == "RIFF" and header:sub(9, 12) == "WEBP" then
-    valid_image_cache[path] = true
-    return true
-  end
-
-  return false
+  if valid then valid_image_cache[path] = true end
+  return valid
 end
 
 -- 读取 Little Endian 32位整数

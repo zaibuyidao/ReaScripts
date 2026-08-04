@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.260
+-- @version 1.0.261
 -- @changelog
---   Added pagination, a resident state caching option, and Alt-click page deletion.
+--   Fixed startup errors caused by corrupted or nested cover art and improved image validation and extraction.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
