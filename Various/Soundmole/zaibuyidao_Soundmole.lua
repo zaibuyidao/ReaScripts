@@ -1502,6 +1502,7 @@ local bg_alpha                  = 1.0   -- 默认背景不透明
 hide_soundmole_title            = false -- 默认显示 Soundmole 标题
 show_window_titlebar            = true  -- 默认显示窗口标题栏
 retain_search_on_exit           = false -- 关闭脚本时保留当前搜索内容
+page_resident_cache_enabled     = true  -- 分页状态常驻，并受控保留列表/数据库重资源
 focus_main_search_on_startup    = false -- 启动脚本时聚焦主搜索框
 focus_main_search_requested     = false
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
@@ -1558,6 +1559,7 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
   SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
   SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "page_resident_cache_enabled", page_resident_cache_enabled and "1" or "0", true)
   SM_SetState(EXT_SECTION, "focus_main_search_on_startup", focus_main_search_on_startup and "1" or "0", true)
   SM_SetState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
   SM_SetState(EXT_SECTION, "browse_database_as_folders", browse_database_as_folders and "1" or "0", true)
@@ -1754,6 +1756,10 @@ do
   local v = SM_GetState(EXT_SECTION, "retain_search_on_exit")
   if v == "1" then retain_search_on_exit = true
   elseif v == "0" then retain_search_on_exit = false end
+end
+
+do
+  page_resident_cache_enabled = SM_GetState(EXT_SECTION, "page_resident_cache_enabled") ~= "0"
 end
 
 do
@@ -2628,6 +2634,18 @@ do
 
   function Section_Database()
     reaper.ImGui_Text(ctx, T("Database Settings:"))
+    local chg_page_cache, v_page_cache = reaper.ImGui_Checkbox(ctx, T("Keep page state and loaded content in memory") .. "##page_resident_cache", page_resident_cache_enabled)
+    if chg_page_cache then
+      page_resident_cache_enabled = v_page_cache
+      SM_SetState(EXT_SECTION, "page_resident_cache_enabled", v_page_cache and "1" or "0", true)
+      if not page_resident_cache_enabled and type(SM_ClearInactivePageCaches) == "function" then
+        SM_ClearInactivePageCaches()
+      end
+    end
+    if reaper.ImGui_IsItemHovered(ctx) then
+      DrawTooltip(T("Keep inactive pages ready for fast switching. Disabling this releases their loaded lists and database resources."))
+    end
+
     local chg_wf, v_wf = reaper.ImGui_Checkbox(ctx, T("Build waveform cache during DB creation").."##wf_cache", build_waveform_cache)
     if chg_wf then
       build_waveform_cache = v_wf
@@ -2906,6 +2924,7 @@ do
       stop_preview_on_collapse = true
       search_enter_mode    = true
       retain_search_on_exit = false
+      page_resident_cache_enabled = true
       focus_main_search_on_startup = false
       SM_SetState(EXT_SECTION, "retained_search_text", "", true)
       build_waveform_cache = false
@@ -12445,42 +12464,452 @@ static.last_filter_text_map = static.last_filter_text_map or {}
 static.last_sort_specs_map  = static.last_sort_specs_map or {}
 static.db_selection_path_map = static.db_selection_path_map or {}
 
--- 模式+选中项唯一key，用来切换音频列表
-function GetCurrentListKey()
-  -- 不同模式下用不同字段拼接唯一key
-  if collect_mode == COLLECT_MODE_SIMILAR then
-    return "SIMILAR:" .. tostring(similarity_state.source_path or "default")
-  elseif collect_mode == COLLECT_MODE_MEDIADB then
-    return "MEDIADB:" .. tostring(tree_state.cur_mediadb or "default")
-  elseif collect_mode == COLLECT_MODE_REAPERDB then -- 官方 .ReaperFileList
-    return "REAPERDB:" .. tostring(tree_state.cur_reaper_db or "default")
-  elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
-    return "ADVANCEDFOLDER:" .. tostring(tree_state.cur_advanced_folder or "default")
-  elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
-    return "CUSTOMFOLDER:" .. tostring(tree_state.cur_custom_folder or "default")
-  elseif collect_mode == COLLECT_MODE_TREE or collect_mode == COLLECT_MODE_SHORTCUT then
-    return "DIR:" .. tostring(tree_state.cur_path or "default")
-  elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
-    return "SHORTCUT_MIRROR:" .. tostring(tree_state.cur_path or "default")
-  elseif collect_mode == COLLECT_MODE_SAMEFOLDER then
-    return "SAMEFOLDER:" .. tostring(tree_state.cur_path or "default")
-  elseif collect_mode == COLLECT_MODE_FREESOUND then
-    return "FREESOUND"
-  elseif collect_mode == COLLECT_MODE_ITEMS then
-    return "ITEMS"
-  elseif collect_mode == COLLECT_MODE_DIR then
-    return "DIR"
-  elseif collect_mode == COLLECT_MODE_RPP then
-    return "RPP"
-  elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
-    return "ALL_ITEMS"
-  elseif collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
-    return "RECENTLY_PLAYED"
-  elseif collect_mode == COLLECT_MODE_PLAY_HISTORY then
-    return "PLAY_HISTORY"
-  else
-    return "UNKNOWN"
+--------------------------------------------- 分页 ---------------------------------------------
+
+SM_PAGES = SM_PAGES or {}
+SM_ACTIVE_PAGE = SM_ACTIVE_PAGE or 1
+SM_NEXT_PAGE = SM_NEXT_PAGE or 2
+SM_NEXT_PAGE_UID = SM_NEXT_PAGE_UID or 1
+
+function SM_PageCopyMap(source)
+  local copy = {}
+  for key, value in pairs(source or {}) do copy[key] = value end
+  return copy
+end
+
+function SM_GetPageUID(page_index)
+  local page = SM_PAGES[page_index] or {}
+  if not page.uid then
+    page.uid = SM_NEXT_PAGE_UID
+    SM_NEXT_PAGE_UID = SM_NEXT_PAGE_UID + 1
+    SM_PAGES[page_index] = page
   end
+  return page.uid
+end
+
+function SM_ReleasePageCache(page)
+  local cache = page and page.cache
+  if not cache then return end
+
+  if cache.mediadb_stream and type(MediaDBStreamClose) == "function" then
+    pcall(MediaDBStreamClose, cache.mediadb_stream)
+  end
+  if cache.search_handle
+    and cache.search_handle ~= cache.db_ctx
+    and cache.search_handle ~= _G.SM_Cache_Full_Handle then
+    pcall(reaper.SM_DB_Release, cache.search_handle)
+  end
+  if cache.db_ctx and cache.db_ctx ~= _G.SM_Cache_Full_Handle then
+    pcall(reaper.SM_DB_Release, cache.db_ctx)
+  end
+
+  local page_key = cache.page_key
+  if page_key then
+    static.filtered_list_map[page_key] = nil
+    static.last_filter_text_map[page_key] = nil
+    static.last_sort_specs_map[page_key] = nil
+    static.db_selection_path_map[page_key] = nil
+    if static.pending_db_selection_restore and static.pending_db_selection_restore.key == page_key then
+      static.pending_db_selection_restore = nil
+    end
+  end
+  page.cache = nil
+end
+
+function SM_ParkActivePage(page)
+  if page.cache then SM_ReleasePageCache(page) end
+  page.cache = {
+    page_key = GetCurrentListKey(),
+    files_idx_cache = files_idx_cache,
+    current_display_list = _G.current_display_list,
+    db_ctx = _G.db_loader and _G.db_loader.ctx or nil,
+    db_loader_active = _G.db_loader and _G.db_loader.active or false,
+    db_loader_temp_list = _G.db_loader and _G.db_loader.temp_list or nil,
+    db_loader_op_type = _G.db_loader and _G.db_loader.op_type or nil,
+    db_loader_loaded_count = _G.db_loader and _G.db_loader.loaded_count or 0,
+    db_loader_total_estimate = _G.db_loader and _G.db_loader.total_estimate or 0,
+    search_handle = _G._last_search_handle,
+    mediadb_stream = _G._mediadb_stream,
+    current_db_fullpath = _G.current_db_fullpath,
+    fs_seen_keys = _G.__fs_seen_keys,
+    fs_scanned_len = _G.__fs_scanned_len,
+    force_filter_refresh = _G.SM_ForceFilterRefresh,
+  }
+
+  files_idx_cache = nil
+  _G.current_display_list = nil
+  _G._last_search_handle = nil
+  _G._mediadb_stream = nil
+  _G.current_db_fullpath = nil
+  _G.__fs_seen_keys = nil
+  _G.__fs_scanned_len = 0
+  _G.SM_ForceFilterRefresh = nil
+  if _G.db_loader then
+    _G.db_loader.ctx = nil
+    _G.db_loader.active = false
+    _G.db_loader.temp_list = nil
+    _G.db_loader.op_type = nil
+  end
+  db_loader = _G.db_loader
+
+  if not page_resident_cache_enabled then SM_ReleasePageCache(page) end
+end
+
+function SM_RestorePageCache(page)
+  local cache = page and page.cache
+  if not cache then return false end
+  if cache.files_idx_cache == nil then
+    SM_ReleasePageCache(page)
+    return false
+  end
+
+  local page_key = GetCurrentListKey()
+  if cache.page_key and cache.page_key ~= page_key then
+    for _, cache_map in ipairs({
+      static.filtered_list_map,
+      static.last_filter_text_map,
+      static.last_sort_specs_map,
+      static.db_selection_path_map,
+    }) do
+      cache_map[page_key] = cache_map[cache.page_key]
+      cache_map[cache.page_key] = nil
+    end
+    cache.page_key = page_key
+  end
+
+  files_idx_cache = cache.files_idx_cache
+  _G.current_display_list = cache.current_display_list
+  _G._last_search_handle = cache.search_handle
+  _G._mediadb_stream = cache.mediadb_stream
+  _G.current_db_fullpath = cache.current_db_fullpath
+  _G.__fs_seen_keys = cache.fs_seen_keys
+  _G.__fs_scanned_len = cache.fs_scanned_len or 0
+  _G.SM_ForceFilterRefresh = cache.force_filter_refresh
+  _G.db_loader = _G.db_loader or {}
+  _G.db_loader.ctx = cache.db_ctx
+  _G.db_loader.active = cache.db_loader_active == true
+  _G.db_loader.temp_list = cache.db_loader_temp_list
+  _G.db_loader.op_type = cache.db_loader_op_type
+  _G.db_loader.loaded_count = cache.db_loader_loaded_count or 0
+  _G.db_loader.total_estimate = cache.db_loader_total_estimate or 0
+  db_loader = _G.db_loader
+  page.cache = nil
+  return true
+end
+
+function SM_ClearInactivePageCaches()
+  for _, page in ipairs(SM_PAGES) do
+    if page.cache then SM_ReleasePageCache(page) end
+  end
+  collectgarbage("step")
+end
+
+function SM_DeletePage(page_index)
+  local page_count = #SM_PAGES
+  if page_count <= 1 or not SM_PAGES[page_index] then return false end
+
+  if page_index == SM_ACTIVE_PAGE then
+    SM_ActivatePage(page_index > 1 and page_index - 1 or 2)
+  end
+
+  SM_ReleasePageCache(SM_PAGES[page_index])
+  table.remove(SM_PAGES, page_index)
+  if page_index < SM_ACTIVE_PAGE then SM_ACTIVE_PAGE = SM_ACTIVE_PAGE - 1 end
+  SM_NEXT_PAGE = #SM_PAGES + 1
+  collectgarbage("step")
+  return true
+end
+
+function SM_CapturePageState(page_index)
+  local page = SM_PAGES[page_index] or {}
+  if not page.uid then
+    page.uid = SM_NEXT_PAGE_UID
+    SM_NEXT_PAGE_UID = SM_NEXT_PAGE_UID + 1
+  end
+  local list = _G.current_display_list or {}
+  local primary = list[tonumber(selected_row) or -1]
+  local selection = {
+    primary_path = primary and primary.path or nil,
+    primary_row = tonumber(selected_row) or -1,
+    explicit = FileSelectionHasExplicitRows(),
+    paths = {},
+    rows = {},
+  }
+
+  if selection.explicit then
+    for _, row in ipairs(CollectSelectedFileRows(list, selected_row)) do
+      local info = list[row]
+      selection.rows[#selection.rows + 1] = row
+      if info and info.path then selection.paths[#selection.paths + 1] = info.path end
+    end
+  end
+  if file_selection_anchor and list[file_selection_anchor] then
+    selection.anchor_path = list[file_selection_anchor].path
+    selection.anchor_row = file_selection_anchor
+  end
+
+  if type(SM_RememberDBSelection) == "function" then
+    SM_RememberDBSelection(GetCurrentListKey(), list, selected_row)
+  end
+
+  page.collect_mode = collect_mode
+  page.tree_state = {
+    cur_path = tree_state.cur_path,
+    sel_audio = tree_state.sel_audio,
+    cur_mediadb = tree_state.cur_mediadb,
+    cur_reaper_db = tree_state.cur_reaper_db,
+    cur_custom_folder = tree_state.cur_custom_folder,
+    cur_advanced_folder = tree_state.cur_advanced_folder,
+    target_mediadb = tree_state.target_mediadb,
+  }
+  page.sidebar_tab = current_sidebar_tab or "PeekTree"
+  page.album_panel_tab = album_panel_active_tab
+  page.search_text = (filename_filter and reaper.ImGui_TextFilter_Get(filename_filter)) or _G.commit_filter_text or ""
+  page.commit_filter_text = _G.commit_filter_text or ""
+  page.active_saved_search = active_saved_search
+  page.temp_search_field = temp_search_field
+  page.temp_search_keyword = temp_search_keyword
+  page.temp_ucs_cat_keyword = temp_ucs_cat_keyword
+  page.temp_ucs_sub_keyword = temp_ucs_sub_keyword
+  page.db_path_prefix_filter = _G._db_path_prefix_filter
+  page.cover_id_filter = _G._cover_id_filter
+  page.filter_lock_enabled = _G.filter_lock_enabled
+  page.locked_filter_terms = SM_PageCopyMap(_G.locked_filter_terms)
+  page.use_synonyms = use_synonyms
+  page.search_fields = {}
+  for index, field in ipairs(search_fields) do page.search_fields[index] = field.enabled == true end
+  page.search_history_index = search_history_index
+  page.last_search_input = last_search_input
+  page.search_input_timer = search_input_timer
+  page.live_prev = _G._live_prev
+  page.live_t = _G._live_t
+  page.selection = selection
+  page.selected_recent_row = selected_recent_row
+  page.selected_play_history_row = selected_play_history_row
+  page.current_recent_play_info = current_recent_play_info
+  page.last_collect_mode = last_collect_mode
+  page.browse_database_as_folders = browse_database_as_folders
+  page.active_db_sort = SM_PageCopyMap(static.active_db_sort)
+  page.peektree_open_nodes = SM_PageCopyMap(peektree_open_nodes)
+  page.tree_open = SM_PageCopyMap(tree_open)
+  page.expanded_paths = SM_PageCopyMap(expanded_paths)
+  page.expanded_ids = SM_PageCopyMap(expanded_ids)
+  page.headers = {
+    project_open = project_open,
+    this_computer_open = this_computer_open,
+    shortcut_open = shortcut_open,
+    shortcut_mirror_open = shortcut_mirror_open,
+    collection_open = collection_open,
+    group_open = group_open,
+    mediadb_open = mediadb_open,
+    reaper_db_open = reaper_db_open,
+    recent_search_open = recent_search_open,
+    recent_open = recent_open,
+    play_history_open = play_history_open,
+  }
+  page.similarity = {
+    db_path = similarity_state.db_path,
+    source_path = similarity_state.source_path,
+    source_name = similarity_state.source_name,
+    source_db_path = similarity_state.source_db_path,
+    source_info = SM_PageCopyMap(similarity_state.source_info),
+    results = SM_PageCopyMap(similarity_state.results),
+    max_results = similarity_state.max_results,
+  }
+  if FS then
+    page.fs_ui = SM_PageCopyMap(FS.ui)
+    page.fs_query = type(FS_get_query) == "function" and FS_get_query() or (FS.ui and FS.ui.query or "")
+    page.fs_last_query = FS.last_query
+    page.fs_last_collect_mode = FS._last_collect_mode
+  end
+  page.restore_selection = nil
+  page.initialized = true
+  SM_PAGES[page_index] = page
+  return page
+end
+
+function SM_ActivatePage(page_index)
+  if page_index == SM_ACTIVE_PAGE or not SM_PAGES[page_index] then return end
+  local previous_page = SM_CapturePageState(SM_ACTIVE_PAGE)
+  StopAsyncScan()
+  ClearTableWaveformTaskQueue()
+  CancelAllWaveformJobs()
+  previewed_files = {}
+  if custom_tags_probe_active and custom_tags_probe_active.handle then
+    reaper.SM_ProbeMediaEnd(custom_tags_probe_active.handle)
+  end
+  if custom_tags_probe_active then
+    for _, info in ipairs(custom_tags_probe_active.infos or {}) do info._custom_tags_probe_queued = nil end
+  end
+  for _, entry in ipairs(custom_tags_probe_queue or {}) do
+    for _, info in ipairs(entry.infos or {}) do info._custom_tags_probe_queued = nil end
+  end
+  custom_tags_probe_queue, custom_tags_probe_by_path, custom_tags_probe_active = {}, {}, nil
+  if type(DBPF_InvalidateAllCaches) == "function" then DBPF_InvalidateAllCaches() end
+  SM_ParkActivePage(previous_page)
+
+  local page = SM_PAGES[page_index]
+  local headers = page.headers or {}
+  local sim = page.similarity or {}
+  SM_ACTIVE_PAGE = page_index
+  collect_mode = page.collect_mode or -1
+  tree_state = SM_PageCopyMap(page.tree_state)
+  current_sidebar_tab = page.sidebar_tab or "PeekTree"
+  startup_tab_name = current_sidebar_tab
+  album_panel_active_tab = page.album_panel_tab or "album"
+  album_panel_tab_restore_pending = true
+  active_saved_search = page.active_saved_search
+  _G.active_saved_search = active_saved_search
+  temp_search_field = page.temp_search_field
+  temp_search_keyword = page.temp_search_keyword
+  temp_ucs_cat_keyword = page.temp_ucs_cat_keyword
+  temp_ucs_sub_keyword = page.temp_ucs_sub_keyword
+  _G.commit_filter_text = page.commit_filter_text or ""
+  _G._db_path_prefix_filter = page.db_path_prefix_filter
+  _G._cover_id_filter = page.cover_id_filter
+  _G.filter_lock_enabled = page.filter_lock_enabled
+  _G.locked_filter_terms = SM_PageCopyMap(page.locked_filter_terms)
+  use_synonyms = page.use_synonyms == true
+  for index, enabled in ipairs(page.search_fields or {}) do
+    if search_fields[index] then search_fields[index].enabled = enabled end
+  end
+  search_history_index = page.search_history_index
+  last_search_input = page.last_search_input or ""
+  search_input_timer = page.search_input_timer or 0
+  _G._live_prev = page.live_prev
+  _G._live_t = page.live_t
+  selected_recent_row = page.selected_recent_row or 0
+  selected_play_history_row = page.selected_play_history_row or 0
+  current_recent_play_info = page.current_recent_play_info
+  last_collect_mode = page.last_collect_mode
+  browse_database_as_folders = page.browse_database_as_folders == true
+  static.active_db_sort = SM_PageCopyMap(page.active_db_sort)
+  peektree_open_nodes = SM_PageCopyMap(page.peektree_open_nodes)
+  peektree_open_nodes_loaded = true
+  tree_open = SM_PageCopyMap(page.tree_open)
+  expanded_paths = SM_PageCopyMap(page.expanded_paths)
+  expanded_ids = SM_PageCopyMap(page.expanded_ids)
+  project_open = headers.project_open == true
+  this_computer_open = headers.this_computer_open == true
+  shortcut_open = headers.shortcut_open == true
+  shortcut_mirror_open = headers.shortcut_mirror_open == true
+  collection_open = headers.collection_open == true
+  group_open = headers.group_open == true
+  mediadb_open = headers.mediadb_open == true
+  reaper_db_open = headers.reaper_db_open == true
+  recent_search_open = headers.recent_search_open == true
+  recent_open = headers.recent_open == true
+  play_history_open = headers.play_history_open == true
+  similarity_state.db_path = sim.db_path
+  similarity_state.source_path = sim.source_path
+  similarity_state.source_name = sim.source_name
+  similarity_state.source_db_path = sim.source_db_path
+  similarity_state.source_info = SM_PageCopyMap(sim.source_info)
+  similarity_state.results = SM_PageCopyMap(sim.results)
+  similarity_state.max_results = sim.max_results or similarity_state.max_results
+
+  if FS and page.fs_ui then
+    FS.ui = SM_PageCopyMap(page.fs_ui)
+    FS.last_query = page.fs_last_query or ""
+    FS._last_collect_mode = page.fs_last_collect_mode
+    if type(FS_set_query) == "function" then FS_set_query(page.fs_query or "") end
+  end
+  if filename_filter then
+    reaper.ImGui_TextFilter_Set(filename_filter, page.search_text or page.commit_filter_text or "")
+  end
+
+  ClearFileSelection()
+  selected_row = -1
+  last_selected_row = -1
+  _G.scroll_request_index = nil
+  _G.scroll_request_align = nil
+  _G.scroll_request_index_exact = nil
+  _G.scroll_request_align_exact = nil
+  _G.scroll_request_top = nil
+  _G._last_collect_mode_for_db_filter = collect_mode
+  static.clipper = nil
+  static.last_db_key = GetCurrentListKey()
+  page.restore_selection = true
+  if not (page_resident_cache_enabled and SM_RestorePageCache(page)) then
+    CollectFiles()
+    RequestSearchRefresh()
+  end
+end
+
+function SM_ApplyPageSelection(list)
+  local page = SM_PAGES[SM_ACTIVE_PAGE]
+  if not page or not page.restore_selection or type(list) ~= "table" then return end
+  page.restore_selection = nil
+
+  local selection = page.selection or {}
+  local primary_index = SM_FindListIndexByPath(list, selection.primary_path)
+  if not primary_index and selection.primary_row and list[selection.primary_row] then
+    primary_index = selection.primary_row
+  end
+
+  ClearFileSelection()
+  if selection.explicit then
+    for index, path in ipairs(selection.paths or {}) do
+      local row = SM_FindListIndexByPath(list, path)
+      if not row and selection.rows and list[selection.rows[index]] then row = selection.rows[index] end
+      if row then file_selected_rows[row] = true end
+    end
+  end
+
+  file_selection_anchor = SM_FindListIndexByPath(list, selection.anchor_path)
+  if not file_selection_anchor and selection.anchor_row and list[selection.anchor_row] then
+    file_selection_anchor = selection.anchor_row
+  end
+  selected_row = primary_index or FirstRowInSelectionMap(file_selected_rows) or -1
+  last_selected_row = selected_row
+  _G.prev_selected_row = selected_row
+  if selected_row > 0 then
+    _G.scroll_request_index = selected_row
+    _G.scroll_request_align = 0.5
+  else
+    _G.scroll_request_top = true
+  end
+end
+
+-- 模式+选中项唯一key，用来切换音频列表
+function GetCurrentListKey(without_page)
+  -- 不同模式下用不同字段拼接唯一key
+  local key
+  if collect_mode == COLLECT_MODE_SIMILAR then
+    key = "SIMILAR:" .. tostring(similarity_state.source_path or "default")
+  elseif collect_mode == COLLECT_MODE_MEDIADB then
+    key = "MEDIADB:" .. tostring(tree_state.cur_mediadb or "default")
+  elseif collect_mode == COLLECT_MODE_REAPERDB then -- 官方 .ReaperFileList
+    key = "REAPERDB:" .. tostring(tree_state.cur_reaper_db or "default")
+  elseif collect_mode == COLLECT_MODE_ADVANCEDFOLDER then
+    key = "ADVANCEDFOLDER:" .. tostring(tree_state.cur_advanced_folder or "default")
+  elseif collect_mode == COLLECT_MODE_CUSTOMFOLDER then
+    key = "CUSTOMFOLDER:" .. tostring(tree_state.cur_custom_folder or "default")
+  elseif collect_mode == COLLECT_MODE_TREE or collect_mode == COLLECT_MODE_SHORTCUT then
+    key = "DIR:" .. tostring(tree_state.cur_path or "default")
+  elseif collect_mode == COLLECT_MODE_SHORTCUT_MIRROR then
+    key = "SHORTCUT_MIRROR:" .. tostring(tree_state.cur_path or "default")
+  elseif collect_mode == COLLECT_MODE_SAMEFOLDER then
+    key = "SAMEFOLDER:" .. tostring(tree_state.cur_path or "default")
+  elseif collect_mode == COLLECT_MODE_FREESOUND then
+    key = "FREESOUND"
+  elseif collect_mode == COLLECT_MODE_ITEMS then
+    key = "ITEMS"
+  elseif collect_mode == COLLECT_MODE_DIR then
+    key = "DIR"
+  elseif collect_mode == COLLECT_MODE_RPP then
+    key = "RPP"
+  elseif collect_mode == COLLECT_MODE_ALL_ITEMS then
+    key = "ALL_ITEMS"
+  elseif collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
+    key = "RECENTLY_PLAYED"
+  elseif collect_mode == COLLECT_MODE_PLAY_HISTORY then
+    key = "PLAY_HISTORY"
+  else
+    key = "UNKNOWN"
+  end
+  if without_page then return key end
+  return key .. "|PAGE:" .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE or 1))
 end
 
 function SM_DBColumnNameFromUserID(user_id)
@@ -16700,9 +17129,9 @@ function DBPF_DrawDirTreeRecursive(dir, display_name, parent_dir)
     if selected then
       reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header_item_selected or 0x222222FF)
     end
-    SM_ForceNextPeakTreeNodeClosed("dbpf:" .. tostring(GetCurrentListKey()) .. ":" .. dir)
+    SM_ForceNextPeakTreeNodeClosed("dbpf:" .. tostring(GetCurrentListKey(true)) .. ":" .. dir)
     local open = reaper.ImGui_TreeNode(ctx, label, flags)
-    peektree_open_nodes["dbpf:" .. tostring(GetCurrentListKey()) .. ":" .. dir] = open and true or nil
+    peektree_open_nodes["dbpf:" .. tostring(GetCurrentListKey(true)) .. ":" .. dir] = open and true or nil
     if reaper.ImGui_IsItemClicked(ctx, 0) then
       DBPF_ApplyPathFilter(dir)
     end
@@ -16908,6 +17337,14 @@ function SM_IsShiftDown()
   return left or right or (shift_mod ~= 0 and ((mods & shift_mod) ~= 0))
 end
 
+function SM_IsAltDown()
+  local mods = reaper.ImGui_GetKeyMods and reaper.ImGui_GetKeyMods(ctx) or 0
+  local left = reaper.ImGui_Key_LeftAlt and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftAlt())
+  local right = reaper.ImGui_Key_RightAlt and reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightAlt())
+  local alt_mod = reaper.ImGui_Mod_Alt and reaper.ImGui_Mod_Alt() or 0
+  return left or right or (alt_mod ~= 0 and ((mods & alt_mod) ~= 0))
+end
+
 function SM_GetPrimaryModifierLabel()
   return IsMacOS() and "Option" or "CTRL"
 end
@@ -17001,7 +17438,7 @@ function SM_RequestCollapseDBPFBranch(dir)
     if not subs then return end
     for _, child in ipairs(subs) do
       local child_dir = normalize_path(child, true)
-      SM_RequestClosePeakTreeNode("dbpf:" .. tostring(GetCurrentListKey()) .. ":" .. child_dir)
+      SM_RequestClosePeakTreeNode("dbpf:" .. tostring(GetCurrentListKey(true)) .. ":" .. child_dir)
       walk(child_dir)
     end
   end
@@ -17130,6 +17567,69 @@ function SM_DrawLeftTableToggle(ctx)
     end
     reaper.ImGui_EndTooltip(ctx)
   end
+end
+
+function SM_DrawPageBar(ctx)
+  if not (SM_PAGES[SM_ACTIVE_PAGE] and SM_PAGES[SM_ACTIVE_PAGE].initialized) then
+    SM_CapturePageState(SM_ACTIVE_PAGE)
+  end
+
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+  reaper.ImGui_Text(ctx, T("Pages:"))
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
+
+  local page_count = #SM_PAGES
+  local visible_pages = {}
+  local delete_page_index
+  if page_count <= 7 then
+    for page_index = 1, page_count do visible_pages[#visible_pages + 1] = page_index end
+  elseif SM_ACTIVE_PAGE <= 4 then
+    visible_pages = { 1, 2, 3, 4, 5, false, page_count }
+  elseif SM_ACTIVE_PAGE >= page_count - 3 then
+    visible_pages = { 1, false, page_count - 4, page_count - 3, page_count - 2, page_count - 1, page_count }
+  else
+    visible_pages = { 1, false, SM_ACTIVE_PAGE - 1, SM_ACTIVE_PAGE, SM_ACTIVE_PAGE + 1, false, page_count }
+  end
+
+  reaper.ImGui_PushID(ctx, "SoundmolePages")
+  for slot_index, page_index in ipairs(visible_pages) do
+    if slot_index > 1 then reaper.ImGui_SameLine(ctx, nil, UIScaleF(4)) end
+    if page_index == false then
+      reaper.ImGui_TextDisabled(ctx, "...")
+    else
+      local is_active = page_index == SM_ACTIVE_PAGE
+      if is_active then
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Button(), colors.tab_selected)
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonHovered(), colors.tab_hovered)
+        reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_ButtonActive(), colors.tab_selected)
+      end
+      local page_label = tostring(page_index)
+      local page_text_w = select(1, reaper.ImGui_CalcTextSize(ctx, page_label))
+      if reaper.ImGui_Button(ctx, page_label .. "##page", math.max(UIScaleF(24), page_text_w + UIScaleF(10)), 0) then
+        if SM_IsAltDown() then
+          delete_page_index = page_index
+        else
+          SM_ActivatePage(page_index)
+        end
+      end
+      if reaper.ImGui_IsItemHovered(ctx) then
+        DrawTooltip(page_count > 1 and T("Alt+Click to Close Page") or T("At least one page must remain"))
+      end
+      if is_active then reaper.ImGui_PopStyleColor(ctx, 3) end
+    end
+  end
+
+  if delete_page_index then SM_DeletePage(delete_page_index) end
+
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
+  if reaper.ImGui_Button(ctx, "+##add_page", UIScaleF(24), 0) then
+    local new_page = SM_NEXT_PAGE
+    SM_NEXT_PAGE = SM_NEXT_PAGE + 1
+    SM_CapturePageState(new_page)
+    SM_ActivatePage(new_page)
+  end
+  if reaper.ImGui_IsItemHovered(ctx) then DrawTooltip(T("Add page")) end
+  reaper.ImGui_PopID(ctx)
 end
 
 -- 右侧专辑/metadata 面板显示/隐藏切换按钮
@@ -18830,10 +19330,10 @@ function loop()
     -- 左侧树状目录(此处需要使用 if 才有效，否则报错)
     local left_child_flags = reaper.ImGui_WindowFlags_HorizontalScrollbar()
     if PEAKTREE_TAB_AUTO_SHRINK and splitter_drag then left_child_flags = 0 end
-    if reaper.ImGui_BeginChild(ctx, "##left", left_w, child_h, 0, left_child_flags) then
+    if reaper.ImGui_BeginChild(ctx, "##left_page_" .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE)), left_w, child_h, 0, left_child_flags) then
       local peektree_tab_flags = reaper.ImGui_TabBarFlags_Reorderable()
       if PEAKTREE_TAB_AUTO_SHRINK then peektree_tab_flags = peektree_tab_flags | reaper.ImGui_TabBarFlags_FittingPolicyResizeDown() end
-      if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar', peektree_tab_flags) then -- | reaper.ImGui_TabBarFlags_DrawSelectedOverline()
+      if reaper.ImGui_BeginTabBar(ctx, 'PeekTreeUcsTabBar_page_' .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE)), peektree_tab_flags) then -- | reaper.ImGui_TabBarFlags_DrawSelectedOverline()
         --reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelectedOverline(), colors.tab_selected_overline) -- tab 选中态上划线颜色
         SM_DrawSidebarTabMenu()
         SM_SIDEBAR_TAB_INDEX = 1
@@ -21179,9 +21679,9 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SeparatorActive(),   colors.table_separator_active)
 
     -- 右侧表格列表, 支持表格排序和冻结首行
-    if reaper.ImGui_BeginChild(ctx, "##file_table_child", table_w, child_h, 0) then
+    if reaper.ImGui_BeginChild(ctx, "##file_table_child_page_" .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE)), table_w, child_h, 0) then
       local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 24 or 23
-      local filelist_table_id = (collect_mode == COLLECT_MODE_SIMILAR) and "filelist_similarity" or "filelist"
+      local filelist_table_id = ((collect_mode == COLLECT_MODE_SIMILAR) and "filelist_similarity_page_" or "filelist_page_") .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE))
       if reaper.ImGui_BeginTable(ctx, filelist_table_id, filelist_column_count,
         reaper.ImGui_TableFlags_Borders()      -- 表格分隔线
       | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
@@ -21713,6 +22213,7 @@ function loop()
 
         _G.current_display_list = filtered_list
         SM_ApplyPendingDBSelectionRestore(current_db_key, filtered_list)
+        SM_ApplyPageSelection(filtered_list)
 
         -- 字体大小自由缩放
         local wheel = reaper.ImGui_GetMouseWheel(ctx)
@@ -22708,6 +23209,7 @@ function loop()
 
     reaper.ImGui_SameLine(ctx, nil, 10)
     DrawMIDIChannelSelector(ctx)
+    SM_DrawPageBar(ctx)
 
     do
       -- 时间容差
@@ -24388,6 +24890,9 @@ function OnScriptExit()
     _G.async_probe_handle = nil
   end
   -- 释放 C++ 扩展内存 (防止内存泄漏)
+  if type(SM_ClearInactivePageCaches) == "function" then
+    SM_ClearInactivePageCaches()
+  end
   if _G.db_loader and _G.db_loader.ctx then
     reaper.SM_DB_Release(_G.db_loader.ctx)
     _G.db_loader.ctx = nil

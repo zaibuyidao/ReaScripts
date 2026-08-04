@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.259
+-- @version 1.0.260
 -- @changelog
---   Added persistence for the right sidebar Artwork and Metadata tab selection.
+--   Added pagination, a resident state caching option, and Alt-click page deletion.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
