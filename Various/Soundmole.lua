@@ -1,8 +1,10 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.261
+-- @version 1.0.262
 -- @changelog
---   Fixed startup errors caused by corrupted or nested cover art and improved image validation and extraction.
+--   Added independent options to stop preview when dragging or inserting audio, enabled by default.
+--   Added right-click to stop preview playback in the main waveform area.
+--   Fixed waveform selection stopping when the mouse leaves the waveform or script window.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

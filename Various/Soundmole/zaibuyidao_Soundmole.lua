@@ -393,7 +393,7 @@ local is_knob_dragging       = false
 local prev_preview_pos       = 0
 __rate_ramp_id, __rate_ramp_preview, __rate_ramp_rate = 0, nil, nil
 __rate_cursor_preview, __rate_cursor_offset = nil, 0
-local filename_filter        = nil   -- 列表音效搜索过滤
+local filename_filter        = nil    -- 列表音效搜索过滤
 local last_collect_mode
 local adv_folder_nodes_inited = false -- 是否已初始化高级文件夹节点的展开
 local expanded_ids            = {}    -- 已展开的高级文件夹ID列表
@@ -412,6 +412,8 @@ local show_row_height_timer   = 0
 keep_preview_rate_pitch_on_insert = false -- 保持预听速率与音高用于插入的总开关
 keep_target_loudness_on_insert = true -- 顶层状态使用全局，插入或拖动时默认保持目标响度
 apply_preview_volume_on_insert = false -- 将预览音量推子应用于插入的媒体对象
+stop_preview_on_drag          = true  -- 拖动音频时停止预览播放
+stop_preview_on_insert        = true  -- 插入音频时停止预览播放
 preview_volume_after_target_loudness = false -- 有 LUFS 时允许音量推子叠加在目标响度补偿之后
 PREVIEW_START_QUANTIZE_OFF       = "off"
 PREVIEW_START_QUANTIZE_BAR       = "bar"
@@ -1594,6 +1596,8 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "insert_keep_rate_pitch", keep_preview_rate_pitch_on_insert and "1" or "0", true)
   SM_SetState(EXT_SECTION, "insert_keep_target_loudness", keep_target_loudness_on_insert and "1" or "0", true)
   SM_SetState(EXT_SECTION, "insert_apply_preview_volume", apply_preview_volume_on_insert and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "stop_preview_on_drag", stop_preview_on_drag and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "stop_preview_on_insert", stop_preview_on_insert and "1" or "0", true)
   SM_SetState(EXT_SECTION, "preview_volume_after_target_loudness", preview_volume_after_target_loudness and "1" or "0", true)
   SM_SetState(EXT_SECTION, "target_loudness", tostring(target_loudness), true)
   SM_SetState(EXT_SECTION, "tempo_sync", tempo_sync_enabled and "1" or "0", true)
@@ -1719,6 +1723,18 @@ do
   local v = SM_GetState(EXT_SECTION, "insert_apply_preview_volume")
   if v == "1" then apply_preview_volume_on_insert = true
   elseif v == "0" then apply_preview_volume_on_insert = false end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "stop_preview_on_drag")
+  if v == "1" then stop_preview_on_drag = true
+  elseif v == "0" then stop_preview_on_drag = false end
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "stop_preview_on_insert")
+  if v == "1" then stop_preview_on_insert = true
+  elseif v == "0" then stop_preview_on_insert = false end
 end
 
 do
@@ -2630,6 +2646,16 @@ do
       apply_preview_volume_on_insert = v_volume
       SM_SetState(EXT_SECTION, "insert_apply_preview_volume", v_volume and "1" or "0", true)
     end
+    local chg_stop_drag, v_stop_drag = reaper.ImGui_Checkbox(ctx, T("Stop preview playback when dragging audio"), stop_preview_on_drag)
+    if chg_stop_drag then
+      stop_preview_on_drag = v_stop_drag
+      SM_SetState(EXT_SECTION, "stop_preview_on_drag", v_stop_drag and "1" or "0", true)
+    end
+    local chg_stop_insert, v_stop_insert = reaper.ImGui_Checkbox(ctx, T("Stop preview playback when inserting audio"), stop_preview_on_insert)
+    if chg_stop_insert then
+      stop_preview_on_insert = v_stop_insert
+      SM_SetState(EXT_SECTION, "stop_preview_on_insert", v_stop_insert and "1" or "0", true)
+    end
   end
 
   function Section_Database()
@@ -2977,6 +3003,8 @@ do
       keep_preview_rate_pitch_on_insert = false -- 重置插入时保持预览速率和音高为关闭
       keep_target_loudness_on_insert = true     -- 重置插入时保持目标响度为开启
       apply_preview_volume_on_insert = false    -- 重置插入时应用预览音量为关闭
+      stop_preview_on_drag    = true            -- 重置拖动时停止预览为开启
+      stop_preview_on_insert  = true            -- 重置插入时停止预览为开启
       preview_volume_after_target_loudness = false
       target_loudness         = -14
 
@@ -6890,6 +6918,7 @@ function InsertMediaItemAtTrackFast(track, path, insert_time, start_offset, sour
     return
   end
 
+  if stop_preview_on_insert then StopPreview() end
   if clear_selection then UnselectAllMediaItemsFast() end
 
   local item = reaper.AddMediaItemToTrack(track)
@@ -6982,11 +7011,13 @@ function TryNativeDropMediaFiles(paths)
 
   result = tonumber(result) or 0
   if result < 0 then return true, false end
+  if result > 0 and stop_preview_on_insert then StopPreview() end
   return true, result > 0
 end
 
 function InsertMediaWithKeepParams(path, loudness)
   path = normalize_path(path, false)
+  if stop_preview_on_insert then StopPreview() end
   local before = {}
   for i = 0, reaper.CountMediaItems(0) - 1 do
     before[reaper.GetMediaItem(0, i)] = true
@@ -7023,6 +7054,7 @@ end
 
 function InsertSelectedAudioSection(path, sel_start, sel_end, section_offset, move_cursor_to_end, target_lane, force_section, final_position, loudness)
   path = normalize_path(path, false)
+  if stop_preview_on_insert then StopPreview() end
   local target_position = tonumber(final_position)
   local restore_cursor = nil
   if target_position ~= nil and not move_cursor_to_end then restore_cursor = reaper.GetCursorPosition() end
@@ -7395,6 +7427,14 @@ function DrawPitchRateContextMenu()
   if reaper.ImGui_MenuItem(ctx, T("Apply preview volume to inserted media item"), nil, apply_preview_volume_on_insert) then
     apply_preview_volume_on_insert = not apply_preview_volume_on_insert
     SM_SetState(EXT_SECTION, "insert_apply_preview_volume", apply_preview_volume_on_insert and "1" or "0", true)
+  end
+  if reaper.ImGui_MenuItem(ctx, T("Stop preview playback when dragging audio"), nil, stop_preview_on_drag) then
+    stop_preview_on_drag = not stop_preview_on_drag
+    SM_SetState(EXT_SECTION, "stop_preview_on_drag", stop_preview_on_drag and "1" or "0", true)
+  end
+  if reaper.ImGui_MenuItem(ctx, T("Stop preview playback when inserting audio"), nil, stop_preview_on_insert) then
+    stop_preview_on_insert = not stop_preview_on_insert
+    SM_SetState(EXT_SECTION, "stop_preview_on_insert", stop_preview_on_insert and "1" or "0", true)
   end
 
   if reaper.ImGui_MenuItem(ctx, T("Semitone Steps"), nil, pitch_semitone_step) then
@@ -9075,6 +9115,13 @@ function mouse_in_selection(time)
   local sel_min = math.min(select_start_time, select_end_time)
   local sel_max = math.max(select_start_time, select_end_time)
   return t >= sel_min and t <= sel_max
+end
+
+function IsWaveSelectionMouseDown()
+  if reaper.JS_Mouse_GetState then
+    return (reaper.JS_Mouse_GetState(1) & 1) ~= 0
+  end
+  return reaper.ImGui_IsMouseDown(ctx, 0)
 end
 
 function WaveSelectionTimeFromX(mouse_x, min_x, region_w, wave, rate)
@@ -13892,6 +13939,7 @@ function DrawRowPopup(ctx, i, info, collect_mode)
           if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert or apply_preview_volume_on_insert then
             InsertMediaWithKeepParams(insert_path, info.loudness)
           else
+            if stop_preview_on_insert then StopPreview() end
             reaper.InsertMedia(insert_path, 0)
           end
           reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
@@ -14929,6 +14977,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
             if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert or apply_preview_volume_on_insert then
               InsertMediaWithKeepParams(normalize_path(info.path, false), info.loudness)
             else
+              if stop_preview_on_insert then StopPreview() end
               reaper.InsertMedia(normalize_path(info.path, false), 0)
             end
             reaper.SetEditCurPos(old_cursor, true, false) -- 恢复光标到插入前
@@ -14953,6 +15002,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           table.insert(paths, normalize_path(info.path, false))
         end
         if not dragging_audio then
+          if stop_preview_on_drag then StopPreview() end
           local is_midi_drag = #paths == 1 and MIDI.is_file(paths[1])
           local drag_preview_end_time = tonumber(info and info.section_length) or 0
           if drag_preview_end_time <= 0 then
@@ -15032,6 +15082,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
           if keep_preview_rate_pitch_on_insert or keep_target_loudness_on_insert or apply_preview_volume_on_insert then
             InsertMediaWithKeepParams(normalize_path(info.path, false), info.loudness)
           else
+            if stop_preview_on_insert then StopPreview() end
             reaper.InsertMedia(normalize_path(info.path, false), 0)
           end
           reaper.SetEditCurPos(old_cursor, false, false) -- 恢复光标到插入前
@@ -23804,6 +23855,9 @@ function loop()
       end
       if reaper.ImGui_IsItemHovered(ctx) then
         reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_TextInput())
+        if IsPreviewActuallyPlaying() and reaper.ImGui_IsMouseClicked(ctx, 1) then
+          StopPreview()
+        end
       end
       -- 空格播放
       if reaper.ImGui_IsKeyPressed(ctx, reaper.ImGui_Key_Space()) then
@@ -23882,11 +23936,14 @@ function loop()
       end
 
       local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
+      if (selecting or pending_clear_selection or selection_edge_drag) and reaper.GetMousePosition then
+        mouse_x, mouse_y = reaper.GetMousePosition()
+      end
       local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
       local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local region_w = max_x - min_x
       local skip_waveform_release = false
-      if not reaper.ImGui_IsMouseDown(ctx, 0) and not dragging_selection then
+      if not IsWaveSelectionMouseDown() and not dragging_selection then
         selection_drag_click_valid = false
         pending_clear_selection = false
         pending_new_selection_start_time = nil
@@ -23894,7 +23951,7 @@ function loop()
       end
 
       if selection_edge_drag and not is_knob_dragging then
-        if reaper.ImGui_IsMouseDown(ctx, 0) then
+        if IsWaveSelectionMouseDown() then
           local drag_time = WaveSelectionTimeFromX(mouse_x, min_x, region_w, Wave, play_rate)
           if drag_time then
             if selection_edge_drag.edge == "start" then
@@ -23912,7 +23969,7 @@ function loop()
         end
       end
 
-      if reaper.ImGui_IsItemHovered(ctx) then
+      if reaper.ImGui_IsItemHovered(ctx) or selecting or pending_clear_selection then
         local rel_x = mouse_x - min_x
         local frac = (region_w > 0) and (rel_x / region_w) or 0.5
         frac = math.max(0, math.min(1, frac))
@@ -23984,7 +24041,7 @@ function loop()
           end
         end
 
-        if pending_clear_selection and reaper.ImGui_IsMouseDown(ctx, 0) and not selecting and not selection_edge_drag and not is_knob_dragging then
+        if pending_clear_selection and IsWaveSelectionMouseDown() and not selecting and not selection_edge_drag and not is_knob_dragging then
           local start_x = pending_new_selection_start_x or mouse_x
           if math.abs(mouse_x - start_x) > UIScaleF(3) then
             selecting = true
@@ -24000,14 +24057,14 @@ function loop()
         end
 
         -- 框选/拖拽
-        if selecting and reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
+        if selecting and IsWaveSelectionMouseDown() and not is_knob_dragging then
           local mouse_time_visual = Wave.scroll + frac * visible_len
           local mouse_time = mouse_time_visual / play_rate
           select_end_time = mouse_time
         end
 
         -- 框选松开，移动光标（未播放时）
-        if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
+        if selecting and not IsWaveSelectionMouseDown() and not is_knob_dragging then
           selecting = false
           if has_selection() then
             local select_pos = reverse_enabled and math.max(select_start_time, select_end_time) or math.min(select_start_time, select_end_time)
@@ -24022,7 +24079,7 @@ function loop()
         end
 
         -- 框选自动跳转到起始位置
-        if selecting and not reaper.ImGui_IsMouseDown(ctx, 0) and not is_knob_dragging then
+        if selecting and not IsWaveSelectionMouseDown() and not is_knob_dragging then
           selecting = false
           -- 框选松开时自动跳光标
           if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
@@ -24336,6 +24393,7 @@ function loop()
           and reaper.ImGui_DragDropFlags_SourceNoPreviewTooltip() or 0
         if selection_drag_click_valid and not selection_edge_drag and reaper.ImGui_BeginDragDropSource(ctx, selection_drag_source_flags) then
           if not dragging_selection then
+            if stop_preview_on_drag then StopPreview() end
             -- 原生拖放使用选区时长预览载体，落入后复用有效媒体目录中的完整源文件并创建SECTION
             local drag_path = cur_info.path
             local start_time = math.min(select_start_time, select_end_time) * play_rate
