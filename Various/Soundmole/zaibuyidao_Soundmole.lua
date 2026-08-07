@@ -23936,9 +23936,6 @@ function loop()
       end
 
       local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
-      if (selecting or pending_clear_selection or selection_edge_drag) and reaper.GetMousePosition then
-        mouse_x, mouse_y = reaper.GetMousePosition()
-      end
       local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
       local max_x, max_y = reaper.ImGui_GetItemRectMax(ctx)
       local region_w = max_x - min_x

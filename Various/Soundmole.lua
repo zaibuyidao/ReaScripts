@@ -1,10 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.262
+-- @version 1.0.263
 -- @changelog
---   Added independent options to stop preview when dragging or inserting audio, enabled by default.
---   Added right-click to stop preview playback in the main waveform area.
---   Fixed waveform selection stopping when the mouse leaves the waveform or script window.
+--   Fixed waveform drag-selection misalignment under display scaling on Windows, macOS, and Linux.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
