@@ -11959,6 +11959,11 @@ end
 function SaveExitSettings()
   local saved_mode = (collect_mode == COLLECT_MODE_SIMILAR) and COLLECT_MODE_MEDIADB or collect_mode
   SM_SetState(EXT_SECTION, "collect_mode", tostring(saved_mode), true)
+  SM_SetState(EXT_SECTION, "main_window_mini_mode", main_window_mini_mode and "1" or "0", true)
+  if main_window_normal_w and main_window_normal_h then
+    SM_SetState(EXT_SECTION, "main_window_normal_w", tostring(main_window_normal_w), true)
+    SM_SetState(EXT_SECTION, "main_window_normal_h", tostring(main_window_normal_h), true)
+  end
 
   -- 标题栏和文件夹可能同时展开多个，退出时必须保存整棵 PeakTree。
   SM_SetState(EXT_SECTION, "project_header_open", tostring(project_open == true), true)
@@ -12377,6 +12382,10 @@ end
 main_window_focused = false
 main_window_collapsed = false
 main_window_collapse_request = nil
+main_window_mini_mode = not show_window_titlebar and SM_GetState(EXT_SECTION, "main_window_mini_mode") == "1"
+main_window_mini_resize_pending = main_window_mini_mode
+main_window_normal_w = tonumber(SM_GetState(EXT_SECTION, "main_window_normal_w")) or UIScale(1400)
+main_window_normal_h = tonumber(SM_GetState(EXT_SECTION, "main_window_normal_h")) or UIScale(857)
 collapse_action_cmd = nil
 collapse_action_shortcuts = {}
 collapse_action_shortcuts_last_scan = 0
@@ -12416,7 +12425,12 @@ function MonitorShortcut(virtual_key_code)
 end
 
 function RequestMainWindowCollapseToggle()
-  main_window_collapse_request = not main_window_collapsed
+  if show_window_titlebar then
+    main_window_collapse_request = not main_window_collapsed
+  else
+    main_window_mini_mode = not main_window_mini_mode
+    main_window_mini_resize_pending = true
+  end
 end
 
 function SM_FindActionCommandByScriptName(script_name)
@@ -16848,6 +16862,69 @@ function UI_PlayIconTrigger_Loop(ctx)
   end
 end
 
+function DrawMainWindowMiniControls(ctx)
+  UI_PlayIconTrigger_Play(ctx)
+  UI_PlayIconTrigger_Pause(ctx)
+  UI_PlayIconTrigger_JumpToStart(ctx)
+  UI_PlayIconTrigger_Prev(ctx)
+  UI_PlayIconTrigger_Stop(ctx)
+  UI_PlayIconTrigger_Next(ctx)
+  UI_PlayIconTrigger_Loop(ctx)
+  UI_PlayIconTrigger_Rand(ctx)
+  UI_PlayIconTrigger_Rewind(ctx)
+
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(20))
+  reaper.ImGui_Text(ctx, T("Volume:"))
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+  local volume_changed
+  volume_changed, volume = ImGui_VolumeLine(ctx, "##volume_line", volume, min_db, max_db, 140, 3, 8, 0, 50)
+  local db_now = math.max(min_db, math.min(max_db, VAL2DB(volume or 1)))
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+  reaper.ImGui_PushItemWidth(ctx, UIScale(50))
+  local db_changed, db_edit = reaper.ImGui_InputDouble(ctx, "dB##VolDB", db_now, 0, 0, "%.1f")
+  reaper.ImGui_PopItemWidth(ctx)
+  if db_changed then
+    volume = dB_to_gain(math.max(min_db, math.min(max_db, db_edit)))
+    volume_changed = true
+  end
+  if volume_changed then
+    if playing_preview then
+      SmoothSetPreviewVolume(GetEffectivePreviewVolume(last_playing_info or last_selected_info), 60)
+    end
+    SM_SetState(EXT_SECTION, "volume", tostring(volume), true)
+  end
+
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+  DrawMiniSpectrumAnalyzer(ctx, UIScale(math.max(90, MINI_SPECTRUM_BANDS * 4)), UIScale(28))
+
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+  PushUIFont(ctx, fonts.material, 16)
+  local glyph = MATERIAL_ICONS.zoom_menu
+  local glyph_w = reaper.ImGui_CalcTextSize(ctx, glyph)
+  local avail = reaper.ImGui_GetContentRegionAvail(ctx)
+  if avail > glyph_w then
+    reaper.ImGui_Dummy(ctx, avail - glyph_w, 0)
+    reaper.ImGui_SameLine(ctx, nil, 0)
+  end
+  local x0, y0, x1, y1 = CalcTextHitRect(ctx, glyph, dy)
+  local hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
+  local active = hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local clicked = hovered and reaper.ImGui_IsMouseClicked(ctx, 0)
+  local col_normal = colors.icon_normal or 0xFFFFFFFF
+  local col_hovered = colors.icon_hovered or 0xFFCC66FF
+  local col_active = colors.icon_active or col_hovered
+  local col = hovered and (active and col_active or col_hovered) or col_normal
+  reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Text(), col)
+  reaper.ImGui_Text(ctx, glyph)
+  reaper.ImGui_PopStyleColor(ctx)
+  reaper.ImGui_PopFont(ctx)
+  if hovered then reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand()) end
+  if clicked then
+    main_window_mini_mode = false
+    main_window_mini_resize_pending = true
+  end
+end
+
 -- 路由按钮与下拉菜单
 function DrawPreviewRouteMenu(ctx)
   reaper.ImGui_SameLine(ctx, nil, 10)
@@ -18201,6 +18278,19 @@ function loop()
     reaper.ImGui_SetNextWindowCollapsed(ctx, main_window_collapse_request, reaper.ImGui_Cond_Always())
     main_window_collapse_request = nil
   end
+  if show_window_titlebar and main_window_mini_mode then
+    main_window_mini_mode = false
+    main_window_mini_resize_pending = true
+  end
+  if main_window_mini_resize_pending then
+    if main_window_mini_mode and not show_window_titlebar then
+      -- 迷你模式宽度和高度设置
+      reaper.ImGui_SetNextWindowSize(ctx, UIScale(700), UIScale(40), reaper.ImGui_Cond_Always())
+    elseif main_window_normal_w and main_window_normal_h then
+      reaper.ImGui_SetNextWindowSize(ctx, main_window_normal_w, main_window_normal_h, reaper.ImGui_Cond_Always())
+    end
+    main_window_mini_resize_pending = false
+  end
   if reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly then
     reaper.ImGui_SetConfigVar(ctx, reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly(), show_window_titlebar and 1 or 0)
   end
@@ -18248,7 +18338,8 @@ function loop()
   reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SliderGrabActive(),  colors.slider_grab_active)
 
   local was_main_window_collapsed = main_window_collapsed
-  local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true, show_window_titlebar and 0 or reaper.ImGui_WindowFlags_NoTitleBar())
+  local visible, open = reaper.ImGui_Begin(ctx, SCRIPT_NAME, true, show_window_titlebar and 0 or reaper.ImGui_WindowFlags_NoTitleBar()
+      | (main_window_mini_mode and (reaper.ImGui_WindowFlags_NoResize() | reaper.ImGui_WindowFlags_NoScrollbar()) or 0))
   reaper.ImGui_PopStyleColor(ctx, 1)
   if reaper.ImGui_IsWindowCollapsed then
     main_window_collapsed = reaper.ImGui_IsWindowCollapsed(ctx)
@@ -18260,6 +18351,9 @@ function loop()
   end
   main_window_focused = reaper.ImGui_IsWindowFocused(ctx, reaper.ImGui_FocusedFlags_RootAndChildWindows())
   if visible then UpdateSoundmoleMainWindowRect() end
+  if visible and not main_window_mini_mode then
+    main_window_normal_w, main_window_normal_h = reaper.ImGui_GetWindowSize(ctx)
+  end
 
   SM_ProcessBuilderLoop() -- 处理数据库构建器
   SM_ProcessCoverIndexLoop() -- C++ 分片重建专辑封面索引
@@ -18281,6 +18375,10 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabHovered(),  colors.tab_hovered)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_TabSelected(), colors.tab_selected)
 
+    if main_window_mini_mode and not show_window_titlebar then
+      static.clipper = nil -- 迷你模式跳过列表绘制，恢复前必须丢弃上一帧的 clipper 句柄
+      DrawMainWindowMiniControls(ctx)
+    else
     -- 在界面最上层显示加载进度条 (当 db_loader 激活时)
     if db_loader.active then
       -- 计算百分比
@@ -24836,6 +24934,7 @@ function loop()
       end
     end
 
+    end
     reaper.ImGui_PopStyleColor(ctx, 3) -- 仅TAB页签颜色，放外部会失效
     reaper.ImGui_End(ctx)
   end

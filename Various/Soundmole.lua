@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.263
+-- @version 1.0.264
 -- @changelog
---   Fixed waveform drag-selection misalignment under display scaling on Windows, macOS, and Linux.
+--   Added mini-mode and full-window size persistence, allowing the script to reopen minimized and restore the main interface correctly.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
