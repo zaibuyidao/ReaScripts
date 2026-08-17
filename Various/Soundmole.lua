@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.264
+-- @version 1.0.265
 -- @changelog
---   Added mini-mode and full-window size persistence, allowing the script to reopen minimized and restore the main interface correctly.
+--   Optimized similarity index building with staged progress and significantly faster long-audio processing.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

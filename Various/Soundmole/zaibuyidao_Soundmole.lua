@@ -4412,6 +4412,8 @@ function SM_SIM_ParseStatusJSON(json)
     processed = tonumber(json:match('"processed"%s*:%s*(%d+)')) or 0,
     total = tonumber(json:match('"total"%s*:%s*(%d+)')) or 0,
     failed = tonumber(json:match('"failed"%s*:%s*(%d+)')) or 0,
+    stage_processed = tonumber(json:match('"stage_processed"%s*:%s*(%d+)')) or 0,
+    stage_total = tonumber(json:match('"stage_total"%s*:%s*(%d+)')) or 0,
     elapsed = tonumber(json:match('"elapsed"%s*:%s*([%d%.]+)')) or 0,
     rate = tonumber(json:match('"rate"%s*:%s*([%d%.]+)')) or 0,
     eta = tonumber(json:match('"eta"%s*:%s*([%d%.]+)')) or 0,
@@ -4424,6 +4426,7 @@ function SM_SIM_ParseStatusJSON(json)
     accelerator = SM_SIM_UnescapeJSONString(json:match('"accelerator"%s*:%s*"(.-)"') or ""),
     accelerator_requested = SM_SIM_UnescapeJSONString(json:match('"accelerator_requested"%s*:%s*"(.-)"') or ""),
     device = SM_SIM_UnescapeJSONString(json:match('"device"%s*:%s*"(.-)"') or ""),
+    batch_size = tonumber(json:match('"batch_size"%s*:%s*(%d+)')) or 0,
   }
 end
 
@@ -4560,7 +4563,7 @@ function SM_SIM_StartBuild(db_path)
   similarity_state.builder = handle
   similarity_state.builder_active = true
   similarity_state.builder_started = reaper.time_precise()
-  similarity_state.builder_status = { status = "starting", processed = 0, total = 0, failed = 0 }
+  similarity_state.builder_status = { status = "starting", processed = 0, total = 0, failed = 0, stage_processed = 0, stage_total = 0 }
   return true
 end
 
@@ -4577,13 +4580,38 @@ function SM_SIM_ProcessBuilderLoop()
   local visible = reaper.ImGui_Begin(ctx, "Similarity Index Progress", true, flags)
   if visible then
     local status = similarity_state.builder_status or {}
-    reaper.ImGui_Text(ctx, "Building Similarity Index")
+    local stage_labels = {
+      starting = T("Starting similarity worker"),
+      scanning = T("Scanning database"),
+      validating = T("Checking audio files"),
+      loading_model = T("Loading CLAP model"),
+      preparing = T("Preparing existing embeddings"),
+      embedding = T("Generating embeddings"),
+      writing = T("Writing similarity index"),
+      done = T("Similarity index is ready"),
+      error = T("Similarity index build failed"),
+    }
+    reaper.ImGui_Text(ctx, T("Building Similarity Index"))
     reaper.ImGui_Separator(ctx)
-    reaper.ImGui_Text(ctx, string.format("Processed: %d / %d", status.processed or 0, status.total or 0))
-    reaper.ImGui_Text(ctx, string.format("Failed: %d", status.failed or 0))
-    reaper.ImGui_Text(ctx, string.format("Time: %.1f s", status.elapsed or (reaper.time_precise() - similarity_state.builder_started)))
+    local stage_label = stage_labels[status.status]
+    if stage_label and stage_label ~= "" then
+      reaper.ImGui_Text(ctx, T("Stage:") .. " " .. stage_label)
+    end
+    if status.status == "scanning" then
+      reaper.ImGui_Text(ctx, string.format(T("Files found: %d"), status.stage_processed or 0))
+    elseif status.status == "validating" then
+      reaper.ImGui_Text(ctx, string.format(T("Checked: %d / %d"), status.stage_processed or 0, status.stage_total or status.total or 0))
+    else
+      reaper.ImGui_Text(ctx, string.format(T("Processed: %d / %d"), status.processed or 0, status.total or 0))
+    end
+    reaper.ImGui_Text(ctx, string.format(T("Failed: %d"), status.failed or 0))
+    local live_elapsed = math.max(status.elapsed or 0, reaper.time_precise() - similarity_state.builder_started)
+    reaper.ImGui_Text(ctx, string.format(T("Time: %.1f s"), live_elapsed))
     if status.device and status.device ~= "" then
       reaper.ImGui_Text(ctx, string.format("%s: %s", T("Active device"), status.device))
+    end
+    if (status.batch_size or 0) > 0 then
+      reaper.ImGui_Text(ctx, string.format("%s: %d", T("Batch size"), status.batch_size))
     end
     if (status.resumed or 0) > 0 then
       reaper.ImGui_Text(ctx, string.format("%s: %d", T("Resumed"), status.resumed))
@@ -4599,9 +4627,16 @@ function SM_SIM_ProcessBuilderLoop()
       reaper.ImGui_Text(ctx, string.format("%s: %02d:%02d:%02d", T("Remaining"), hours, minutes, seconds))
     end
     if status.current and status.current ~= "" then reaper.ImGui_TextWrapped(ctx, status.current) end
-    local fraction = (status.total and status.total > 0) and math.min(1, (status.processed or 0) / status.total) or 0
+    local fraction = 0
+    if status.status == "validating" and (status.stage_total or 0) > 0 then
+      fraction = math.min(1, (status.stage_processed or 0) / status.stage_total)
+    elseif status.status == "done" then
+      fraction = 1
+    elseif (status.total or 0) > 0 then
+      fraction = math.min(1, ((status.processed or 0) + (status.failed or 0)) / status.total)
+    end
     reaper.ImGui_ProgressBar(ctx, fraction, UIScale(360), 0)
-    if reaper.ImGui_Button(ctx, "Cancel", UIScale(90), 0) then
+    if reaper.ImGui_Button(ctx, T("Cancel"), UIScale(90), 0) then
       reaper.SM_SIM_Builder_Stop(handle)
       similarity_state.builder = nil
       similarity_state.builder_active = false
@@ -4617,9 +4652,9 @@ function SM_SIM_ProcessBuilderLoop()
     similarity_state.builder = nil
     similarity_state.builder_active = false
     if result == 0 then
-      reaper.ShowMessageBox("Similarity index build complete.", "Soundmole", 0)
+      reaper.ShowMessageBox(T("Similarity index build complete."), "Soundmole", 0)
     else
-      reaper.ShowMessageBox(status.error ~= "" and status.error or "Similarity index build failed.", "Soundmole", 0)
+      reaper.ShowMessageBox(status.error ~= "" and status.error or T("Similarity index build failed."), "Soundmole", 0)
     end
   end
 end

@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import math
@@ -22,6 +23,11 @@ import numpy as np
 
 FILE_RE = re.compile(r'^\s*FILE\s+"((?:\\.|[^"])*)"')
 CHECKPOINT_BATCH_SIZE = 64
+PROGRESS_UPDATE_INTERVAL = 0.25
+PROGRESS_UPDATE_ITEMS = 256
+CLAP_SAMPLE_RATE = 48_000
+CLAP_WINDOW_SECONDS = 10.0
+CLAP_IO_WORKERS = 4
 
 
 def configure_certificate_store() -> None:
@@ -111,9 +117,14 @@ def decode_db_string(value: str) -> str:
     return "".join(out)
 
 
-def read_database_paths(db_path: Path) -> list[str]:
+def read_database_paths(
+    db_path: Path,
+    on_progress: Callable[[int], None] | None = None,
+) -> list[str]:
     paths: list[str] = []
     seen: set[str] = set()
+    last_reported = 0
+    last_report_at = time.monotonic()
     with db_path.open("r", encoding="utf-8", errors="replace") as database:
         for line in database:
             match = FILE_RE.match(line)
@@ -126,6 +137,16 @@ def read_database_paths(db_path: Path) -> list[str]:
             if path and key not in seen:
                 seen.add(key)
                 paths.append(path)
+                now = time.monotonic()
+                if on_progress and (
+                    len(paths) - last_reported >= PROGRESS_UPDATE_ITEMS
+                    or now - last_report_at >= PROGRESS_UPDATE_INTERVAL
+                ):
+                    on_progress(len(paths))
+                    last_reported = len(paths)
+                    last_report_at = now
+    if on_progress and len(paths) != last_reported:
+        on_progress(len(paths))
     return paths
 
 
@@ -141,6 +162,48 @@ def normalized_rows(vectors: np.ndarray) -> np.ndarray:
     norms = np.linalg.norm(vectors, axis=1, keepdims=True)
     norms[~np.isfinite(norms) | (norms <= 0)] = 1.0
     return vectors / norms
+
+
+def stable_audio_window_offset(path: str, duration: float) -> float:
+    """Choose a repeatable CLAP-sized window without decoding the whole file."""
+    available = max(0.0, float(duration) - CLAP_WINDOW_SECONDS)
+    if available <= 0:
+        return 0.0
+    key = os.path.normcase(os.path.normpath(path)).encode("utf-8", errors="replace")
+    value = int.from_bytes(hashlib.blake2b(key, digest_size=8).digest(), "big")
+    return available * (value / ((1 << 64) - 1))
+
+
+def automatic_batch_size(requested: int, device: str) -> int:
+    if requested > 0:
+        return requested
+    # A batch of 16 stays within a 4 GB CUDA device in the supported CLAP
+    # profile while reducing the amount of time the GPU waits between batches.
+    if device == "cuda":
+        return 16
+    if device == "mps":
+        return 8
+    return 4
+
+
+def load_clap_audio_window(
+    path: str,
+    librosa_module: object,
+    soundfile_module: object,
+) -> np.ndarray:
+    try:
+        duration = float(soundfile_module.info(path).duration)
+    except Exception:
+        duration = CLAP_WINDOW_SECONDS
+    offset = stable_audio_window_offset(path, duration)
+    waveform, _ = librosa_module.load(
+        path,
+        sr=CLAP_SAMPLE_RATE,
+        mono=True,
+        offset=offset,
+        duration=CLAP_WINDOW_SECONDS,
+    )
+    return np.asarray(waveform, dtype=np.float32)
 
 
 def create_test_embedder(
@@ -167,6 +230,8 @@ def create_clap_embedder(
     configure_model_cache()
     try:
         import laion_clap
+        import librosa
+        import soundfile
         import torch
     except ImportError as exc:
         raise RuntimeError(
@@ -177,16 +242,37 @@ def create_clap_embedder(
     device, accelerator = configured_device(torch)
     model = laion_clap.CLAP_Module(enable_fusion=False, device=device)
     if model_name and model_name.upper() != "CLAP" and Path(model_name).is_file():
-        model.load_ckpt(str(Path(model_name)))
+        model.load_ckpt(str(Path(model_name)), verbose=False)
         resolved_name = str(Path(model_name))
     else:
-        model.load_ckpt()
+        model.load_ckpt(verbose=False)
         resolved_name = "CLAP"
 
+    if device == "cuda":
+        torch.backends.cudnn.benchmark = True
+
     def embed(paths: list[str]) -> np.ndarray:
+        # File decoding/resampling is the dominant cost for network databases.
+        # Prepare a few inputs concurrently, then send one larger batch to CUDA.
+        worker_count = min(CLAP_IO_WORKERS, len(paths))
+        if worker_count > 1:
+            with ThreadPoolExecutor(max_workers=worker_count) as executor:
+                waveforms = list(
+                    executor.map(
+                        lambda path: load_clap_audio_window(
+                            path, librosa, soundfile
+                        ),
+                        paths,
+                    )
+                )
+        else:
+            waveforms = [
+                load_clap_audio_window(path, librosa, soundfile)
+                for path in paths
+            ]
         with torch.inference_mode():
-            vectors = model.get_audio_embedding_from_filelist(
-                x=paths, use_tensor=False
+            vectors = model.get_audio_embedding_from_data(
+                x=waveforms, use_tensor=False
             )
         return normalized_rows(np.asarray(vectors, dtype=np.float32))
 
@@ -308,19 +394,39 @@ def load_old_cache(
 
 def build(db_path: Path, model_name: str, batch_size: int) -> None:
     started = time.time()
+    embedding_started_at: float | None = None
+    embedding_started_processed = 0
     resumed_count = 0
     device = ""
     accelerator = ""
+    active_batch_size = max(0, batch_size)
     sim_dir = db_path.with_suffix(".sim")
     sim_dir.mkdir(parents=True, exist_ok=True)
     status_path = sim_dir / "status.json"
 
-    def status(state: str, processed: int, total: int, failed: int,
-               current: str = "", error: str = "") -> None:
-        elapsed = max(0.0, time.time() - started)
-        newly_processed = max(0, processed - resumed_count)
-        rate = newly_processed / elapsed if elapsed > 0 else 0.0
-        eta = (total - processed) / rate if rate > 0 and total > processed else 0.0
+    def status(
+        state: str,
+        processed: int,
+        total: int,
+        failed: int,
+        current: str = "",
+        error: str = "",
+        stage_processed: int = 0,
+        stage_total: int = 0,
+    ) -> None:
+        now = time.time()
+        elapsed = max(0.0, now - started)
+        embedding_elapsed = (
+            max(0.0, now - embedding_started_at)
+            if embedding_started_at is not None
+            else 0.0
+        )
+        newly_processed = max(0, processed - embedding_started_processed)
+        rate = (
+            newly_processed / embedding_elapsed if embedding_elapsed > 0 else 0.0
+        )
+        remaining = max(0, total - processed - failed)
+        eta = remaining / rate if rate > 0 else 0.0
         atomic_write_json(
             status_path,
             {
@@ -328,38 +434,101 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
                 "processed": processed,
                 "total": total,
                 "failed": failed,
+                "stage_processed": stage_processed,
+                "stage_total": stage_total,
                 "elapsed": round(elapsed, 3),
                 "rate": round(rate, 3),
                 "eta": round(eta, 3),
                 "resumed": resumed_count,
                 "device": device,
                 "accelerator": accelerator,
+                "batch_size": active_batch_size,
                 "current": current,
                 "error": error,
             },
         )
 
-    status("scanning", 0, 0, 0)
-    paths = read_database_paths(db_path)
+    status("scanning", 0, 0, 0, "Scanning database")
+    paths = read_database_paths(
+        db_path,
+        lambda count: status(
+            "scanning",
+            0,
+            0,
+            0,
+            f"Scanning database: {count} files found",
+            stage_processed=count,
+        ),
+    )
     total = len(paths)
     if total == 0:
         raise RuntimeError("The database contains no FILE records.")
 
-    embed, resolved_model, device, accelerator = (
-        create_test_embedder()
-        if model_name.lower() == "test-hash"
-        else create_clap_embedder(model_name)
-    )
-    old_fingerprints, old_vectors = load_old_cache(sim_dir, resolved_model)
     valid_paths: list[str] = []
     current_fingerprints: dict[str, dict[str, int]] = {}
     failures: list[dict[str, str]] = []
-    for path in paths:
+    status(
+        "validating",
+        0,
+        total,
+        0,
+        "Checking audio file availability",
+        stage_total=total,
+    )
+    last_validation_report_at = time.monotonic()
+    for index, path in enumerate(paths, start=1):
         try:
             current_fingerprints[path] = fingerprint(path)
             valid_paths.append(path)
         except OSError as exc:
             failures.append({"path": path, "error": str(exc)})
+        now = time.monotonic()
+        if (
+            index == total
+            or index % PROGRESS_UPDATE_ITEMS == 0
+            or now - last_validation_report_at >= PROGRESS_UPDATE_INTERVAL
+        ):
+            status(
+                "validating",
+                0,
+                total,
+                len(failures),
+                Path(path).name,
+                stage_processed=index,
+                stage_total=total,
+            )
+            last_validation_report_at = now
+
+    if not valid_paths:
+        raise RuntimeError(
+            f"None of the {total} database audio files can be accessed. "
+            "Check that the database drives are mounted and readable."
+        )
+
+    status(
+        "loading_model",
+        0,
+        total,
+        len(failures),
+        "Loading CLAP model" if model_name.lower() != "test-hash" else "Loading test model",
+        stage_total=1,
+    )
+    embed, resolved_model, device, accelerator = (
+        create_test_embedder()
+        if model_name.lower() == "test-hash"
+        else create_clap_embedder(model_name)
+    )
+    active_batch_size = automatic_batch_size(batch_size, device)
+    status(
+        "preparing",
+        0,
+        total,
+        len(failures),
+        "Loading reusable embeddings",
+        stage_processed=1,
+        stage_total=1,
+    )
+    old_fingerprints, old_vectors = load_old_cache(sim_dir, resolved_model)
 
     reusable: dict[str, np.ndarray] = {}
     pending: list[str] = []
@@ -375,9 +544,17 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
     resumed_count = len(reusable)
     vectors_by_path: dict[str, np.ndarray] = dict(reusable)
     processed = len(reusable)
-    status("embedding", processed, total, len(failures))
+    embedding_started_at = time.time()
+    embedding_started_processed = processed
+    status(
+        "embedding",
+        processed,
+        total,
+        len(failures),
+        f"Generating embeddings (batch size {active_batch_size})",
+    )
 
-    for group in batches(pending, max(1, batch_size)):
+    for group in batches(pending, active_batch_size):
         try:
             embedded = embed(group)
             if embedded.shape[0] != len(group):
@@ -409,7 +586,14 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
     vectors = normalized_rows(np.stack([vectors_by_path[path] for path in ordered_paths]))
     dimension = int(vectors.shape[1])
 
-    status("writing", len(ordered_paths), total, len(failures))
+    status(
+        "writing",
+        len(ordered_paths),
+        total,
+        len(failures),
+        "Writing similarity index",
+        stage_total=1,
+    )
     atomic_write_bytes(sim_dir / "vectors.f32", vectors.astype("<f4").tobytes())
     atomic_write_bytes(
         sim_dir / "ids.map",
@@ -428,6 +612,10 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
             "accelerator": accelerator,
             "device": device,
             "backend": "exact-cosine",
+            "batch_size": active_batch_size,
+            "audio_window_seconds": (
+                CLAP_WINDOW_SECONDS if resolved_model != "test-hash" else 0
+            ),
             "dimension": dimension,
             "count": len(ordered_paths),
             "database_count": total,
@@ -437,7 +625,15 @@ def build(db_path: Path, model_name: str, batch_size: int) -> None:
             "updated_at_unix": int(time.time()),
         },
     )
-    status("done", len(ordered_paths), total, len(failures))
+    status(
+        "done",
+        len(ordered_paths),
+        total,
+        len(failures),
+        "Similarity index is ready",
+        stage_processed=1,
+        stage_total=1,
+    )
     checkpoint.close(remove=True)
 
 
@@ -445,7 +641,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--db", required=True)
     parser.add_argument("--model", default="CLAP")
-    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=0,
+        help="Embedding batch size; 0 selects a safe device-specific value.",
+    )
     args = parser.parse_args()
 
     db_path = Path(args.db).expanduser().resolve()
@@ -466,12 +667,15 @@ def main() -> int:
             "processed": 0,
             "total": 0,
             "failed": 0,
+            "stage_processed": 0,
+            "stage_total": 0,
             "elapsed": 0,
             "rate": 0,
             "eta": 0,
             "resumed": 0,
             "device": "",
             "accelerator": "",
+            "batch_size": 0,
         }.items():
             existing.setdefault(key, value)
         existing.update(
