@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.265
+-- @version 1.0.266
 -- @changelog
---   Optimized similarity index building with staged progress and significantly faster long-audio processing.
+--   Mini and normal modes now remember their own window positions independently when switching between them.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

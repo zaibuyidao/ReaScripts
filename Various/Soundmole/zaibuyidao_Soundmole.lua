@@ -11995,9 +11995,17 @@ function SaveExitSettings()
   local saved_mode = (collect_mode == COLLECT_MODE_SIMILAR) and COLLECT_MODE_MEDIADB or collect_mode
   SM_SetState(EXT_SECTION, "collect_mode", tostring(saved_mode), true)
   SM_SetState(EXT_SECTION, "main_window_mini_mode", main_window_mini_mode and "1" or "0", true)
+  if main_window_normal_x and main_window_normal_y then
+    SM_SetState(EXT_SECTION, "main_window_normal_x", tostring(main_window_normal_x), true)
+    SM_SetState(EXT_SECTION, "main_window_normal_y", tostring(main_window_normal_y), true)
+  end
   if main_window_normal_w and main_window_normal_h then
     SM_SetState(EXT_SECTION, "main_window_normal_w", tostring(main_window_normal_w), true)
     SM_SetState(EXT_SECTION, "main_window_normal_h", tostring(main_window_normal_h), true)
+  end
+  if main_window_mini_x and main_window_mini_y then
+    SM_SetState(EXT_SECTION, "main_window_mini_x", tostring(main_window_mini_x), true)
+    SM_SetState(EXT_SECTION, "main_window_mini_y", tostring(main_window_mini_y), true)
   end
 
   -- 标题栏和文件夹可能同时展开多个，退出时必须保存整棵 PeakTree。
@@ -12419,8 +12427,14 @@ main_window_collapsed = false
 main_window_collapse_request = nil
 main_window_mini_mode = not show_window_titlebar and SM_GetState(EXT_SECTION, "main_window_mini_mode") == "1"
 main_window_mini_resize_pending = main_window_mini_mode
+-- 隐藏标题栏时，普通模式和迷你模式共用同一个 ImGui 窗口 ID，需自行保存两套坐标。
+main_window_position_restore_pending = true
+main_window_normal_x = tonumber(SM_GetState(EXT_SECTION, "main_window_normal_x"))
+main_window_normal_y = tonumber(SM_GetState(EXT_SECTION, "main_window_normal_y"))
 main_window_normal_w = tonumber(SM_GetState(EXT_SECTION, "main_window_normal_w")) or UIScale(1400)
 main_window_normal_h = tonumber(SM_GetState(EXT_SECTION, "main_window_normal_h")) or UIScale(857)
+main_window_mini_x = tonumber(SM_GetState(EXT_SECTION, "main_window_mini_x"))
+main_window_mini_y = tonumber(SM_GetState(EXT_SECTION, "main_window_mini_y"))
 collapse_action_cmd = nil
 collapse_action_shortcuts = {}
 collapse_action_shortcuts_last_scan = 0
@@ -12465,6 +12479,7 @@ function RequestMainWindowCollapseToggle()
   else
     main_window_mini_mode = not main_window_mini_mode
     main_window_mini_resize_pending = true
+    main_window_position_restore_pending = true
   end
 end
 
@@ -16957,6 +16972,7 @@ function DrawMainWindowMiniControls(ctx)
   if clicked then
     main_window_mini_mode = false
     main_window_mini_resize_pending = true
+    main_window_position_restore_pending = true
   end
 end
 
@@ -18316,6 +18332,7 @@ function loop()
   if show_window_titlebar and main_window_mini_mode then
     main_window_mini_mode = false
     main_window_mini_resize_pending = true
+    main_window_position_restore_pending = true
   end
   if main_window_mini_resize_pending then
     if main_window_mini_mode and not show_window_titlebar then
@@ -18325,6 +18342,15 @@ function loop()
       reaper.ImGui_SetNextWindowSize(ctx, main_window_normal_w, main_window_normal_h, reaper.ImGui_Cond_Always())
     end
     main_window_mini_resize_pending = false
+  end
+  if main_window_position_restore_pending then
+    -- 切换后只恢复目标模式自己的坐标，首次使用该模式时沿用当前位置。
+    local restore_x = main_window_mini_mode and main_window_mini_x or main_window_normal_x
+    local restore_y = main_window_mini_mode and main_window_mini_y or main_window_normal_y
+    if restore_x and restore_y then
+      reaper.ImGui_SetNextWindowPos(ctx, restore_x, restore_y, reaper.ImGui_Cond_Always())
+    end
+    main_window_position_restore_pending = false
   end
   if reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly then
     reaper.ImGui_SetConfigVar(ctx, reaper.ImGui_ConfigVar_WindowsMoveFromTitleBarOnly(), show_window_titlebar and 1 or 0)
@@ -18386,8 +18412,15 @@ function loop()
   end
   main_window_focused = reaper.ImGui_IsWindowFocused(ctx, reaper.ImGui_FocusedFlags_RootAndChildWindows())
   if visible then UpdateSoundmoleMainWindowRect() end
-  if visible and not main_window_mini_mode then
-    main_window_normal_w, main_window_normal_h = reaper.ImGui_GetWindowSize(ctx)
+  if visible then
+    -- 每帧捕获当前模式的位置，拖动后的坐标会在下次切换时使用。
+    local window_x, window_y = reaper.ImGui_GetWindowPos(ctx)
+    if main_window_mini_mode then
+      main_window_mini_x, main_window_mini_y = window_x, window_y
+    else
+      main_window_normal_x, main_window_normal_y = window_x, window_y
+      main_window_normal_w, main_window_normal_h = reaper.ImGui_GetWindowSize(ctx)
+    end
   end
 
   SM_ProcessBuilderLoop() -- 处理数据库构建器
