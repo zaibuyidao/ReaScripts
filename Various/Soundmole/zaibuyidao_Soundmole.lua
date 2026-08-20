@@ -1502,7 +1502,7 @@ local DOUBLECLICK_NONE          = 2
 local doubleclick_action        = DOUBLECLICK_NONE
 local bg_alpha                  = 1.0   -- 默认背景不透明
 hide_soundmole_title            = false -- 默认显示 Soundmole 标题
-show_window_titlebar            = true  -- 默认显示窗口标题栏
+show_window_titlebar            = false -- 默认显示窗口标题栏
 retain_search_on_exit           = false -- 关闭脚本时保留当前搜索内容
 page_resident_cache_enabled     = true  -- 分页状态常驻，并受控保留列表/数据库重资源
 focus_main_search_on_startup    = false -- 启动脚本时聚焦主搜索框
@@ -1791,8 +1791,8 @@ end
 
 do
   local v = SM_GetState(EXT_SECTION, "show_window_titlebar")
-  if v == "0" then show_window_titlebar = false
-  else show_window_titlebar = true end
+  if v == "1" then show_window_titlebar = true
+  else show_window_titlebar = false end
 end
 
 do
@@ -2974,7 +2974,7 @@ do
       show_tooltips         = false -- 默认提示开关
       waveform_hint_enabled = false -- 波形预览鼠标提示开关
       hide_soundmole_title  = false -- 默认显示 Soundmole 标题
-      show_window_titlebar  = true  -- 默认显示窗口标题栏
+      show_window_titlebar  = false -- 默认显示窗口标题栏
 
       -- 镜像与侧边栏
       mirror_folder_shortcuts = false
@@ -16717,16 +16717,18 @@ function UI_PlayIconTrigger_Prev(ctx)
     local info = list[prev_idx]
     if not info then return end
 
-    auto_play_next_pending    = info
-    _G.auto_play_next_pending = info
-
     ClearFileSelection()
     selected_row = prev_idx
+    last_selected_row = prev_idx
     _G.scroll_request_index = prev_idx
     _G.scroll_request_align = 0.5
     -- _G.scroll_target = 0.5
+    auto_play_next_pending = nil
+    _G.auto_play_next_pending = nil
     is_paused = false
     paused_position = 0
+    if Wave then Wave.play_cursor = 0 end
+    PlayFromStart(info)
   end
 end
 
@@ -16762,16 +16764,18 @@ function UI_PlayIconTrigger_Next(ctx)
     local info = list[next_idx]
     if not info then return end
 
-    auto_play_next_pending    = info
-    _G.auto_play_next_pending = info
-
     ClearFileSelection()
     selected_row = next_idx
+    last_selected_row = next_idx
     _G.scroll_request_index = next_idx
     _G.scroll_request_align = 0.5
     -- _G.scroll_target = 0.5
+    auto_play_next_pending = nil
+    _G.auto_play_next_pending = nil
     is_paused = false
     paused_position = 0
+    if Wave then Wave.play_cursor = 0 end
+    PlayFromStart(info)
   end
 end
 
@@ -16912,7 +16916,141 @@ function UI_PlayIconTrigger_Loop(ctx)
   end
 end
 
+function MiniEllipsizeText(ctx, text, max_width)
+  text = tostring(text or "")
+  max_width = math.max(0, tonumber(max_width) or 0)
+  if select(1, reaper.ImGui_CalcTextSize(ctx, text)) <= max_width then return text end
+
+  local ellipsis = "\u{2026}"
+  if select(1, reaper.ImGui_CalcTextSize(ctx, ellipsis)) > max_width then return "" end
+  local char_count = utf8.len(text)
+  if not char_count or char_count <= 1 then return ellipsis end
+
+  local function prefix(count)
+    if count <= 0 then return "" end
+    local next_byte = utf8.offset(text, count + 1)
+    return next_byte and text:sub(1, next_byte - 1) or text
+  end
+
+  local function suffix(count)
+    if count <= 0 then return "" end
+    local first_byte = utf8.offset(text, char_count - count + 1)
+    return first_byte and text:sub(first_byte) or ""
+  end
+
+  local best = ellipsis
+  local low, high = 1, char_count - 1
+  while low <= high do
+    local keep = math.floor((low + high) * 0.5)
+    local head = math.max(1, math.ceil(keep * 0.65))
+    local tail = math.max(0, keep - head)
+    local candidate = prefix(head) .. ellipsis .. suffix(tail)
+    if select(1, reaper.ImGui_CalcTextSize(ctx, candidate)) <= max_width then
+      best = candidate
+      low = keep + 1
+    else
+      high = keep - 1
+    end
+  end
+  return best
+end
+
+function DrawMainWindowMiniNowPlaying(ctx)
+  local list = _G.current_display_list or {}
+  local selected_info = type(selected_row) == "number" and selected_row > 0 and list[selected_row] or nil
+  local is_playing = playing_preview ~= nil
+  local is_preview_paused = is_paused and playing_source ~= nil
+  local info = (is_playing or is_preview_paused)
+    and (last_playing_info or selected_info or last_selected_info)
+    or (selected_info or last_selected_info or last_playing_info)
+
+  local status_text, status_col
+  if is_playing then
+    status_text, status_col = T("Playing"), colors.status_active
+  elseif is_preview_paused then
+    status_text, status_col = T("Paused"), colors.mole
+  elseif info then
+    status_text, status_col = T("Selected"), colors.icon_normal
+  else
+    status_text, status_col = T("Ready"), colors.icon_normal
+  end
+
+  local active_path = (is_playing or is_preview_paused) and playing_path or nil
+  local full_path = tostring((info and info.path) or active_path or "")
+  local filename = tostring(info and (info.filename or info.name) or "")
+  if filename == "" and full_path ~= "" then filename = full_path:match("[^/\\]+$") or full_path end
+  if filename == "" then filename = T("No selection") end
+
+  local position = 0
+  local duration = tonumber(info and (info.duration or info.length or info.section_length)) or 0
+  if is_playing and reaper.CF_Preview_GetValue then
+    local ok_pos, preview_pos = reaper.CF_Preview_GetValue(playing_preview, "D_POSITION")
+    local ok_len, preview_len = reaper.CF_Preview_GetValue(playing_preview, "D_LENGTH")
+    if ok_pos then position = math.max(0, tonumber(preview_pos) or 0) end
+    local preview_duration = tonumber(preview_len)
+    if ok_len and preview_duration and preview_duration > 0 then duration = preview_duration end
+  elseif is_preview_paused then
+    position = math.max(0, tonumber(paused_position) or 0)
+  end
+  if duration <= 0 then duration = math.max(0, tonumber(preview_play_len) or 0) end
+  if duration > 0 then position = math.min(position, duration) end
+
+  local time_text = ""
+  if duration > 0 then
+    time_text = (is_playing or is_preview_paused)
+      and (FormatTimelineTime(position, false) .. " / " .. FormatTimelineTime(duration, false))
+      or FormatTimelineTime(duration, false)
+  end
+
+  local width = math.max(1, (select(1, reaper.ImGui_GetContentRegionAvail(ctx))))
+  local line_h = reaper.ImGui_GetTextLineHeight(ctx)
+  local gap = UIScaleF(7)
+  local dot_r = UIScaleF(2)
+  local dot_slot = UIScaleF(10)
+  local progress_gap = UIScaleF(3)
+  local progress_h = UIScaleF(2)
+  local block_h = line_h + progress_gap + progress_h
+  local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
+  local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
+  local status_w = select(1, reaper.ImGui_CalcTextSize(ctx, status_text))
+  local time_w = time_text ~= "" and select(1, reaper.ImGui_CalcTextSize(ctx, time_text)) or 0
+  local status_x = x + dot_slot
+  local filename_x = status_x + status_w + gap
+  local time_x = x + width - time_w
+  local filename_max_w = math.max(0, time_x - filename_x - (time_w > 0 and gap or 0))
+  local display_filename = MiniEllipsizeText(ctx, filename, filename_max_w)
+
+  reaper.ImGui_DrawList_AddCircleFilled(draw_list, x + dot_r, y + line_h * 0.5, dot_r, status_col or 0xFFFFFFFF, 16)
+  reaper.ImGui_DrawList_AddText(draw_list, status_x, y, status_col or colors.normal_text, status_text)
+  if display_filename ~= "" then
+    reaper.ImGui_DrawList_AddText(draw_list, filename_x, y, colors.normal_text, display_filename)
+  end
+  if time_text ~= "" then
+    reaper.ImGui_DrawList_AddText(draw_list, time_x, y, colors.previewed_text or colors.icon_normal, time_text)
+  end
+
+  local progress_y = y + line_h + progress_gap
+  if duration > 0 and (is_playing or is_preview_paused) then
+    local progress = math.max(0, math.min(1, position / duration))
+    reaper.ImGui_DrawList_AddRectFilled(draw_list, x, progress_y, x + width, progress_y + progress_h, colors.peak_meter_bg, progress_h * 0.5)
+    if progress > 0 then
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, x, progress_y, x + width * progress, progress_y + progress_h,
+        status_col or colors.status_active, progress_h * 0.5)
+    end
+  end
+
+  reaper.ImGui_Dummy(ctx, width, block_h)
+  if show_tooltips and reaper.ImGui_IsItemHovered(ctx) then
+    local detail = full_path ~= "" and full_path or filename
+    if time_text ~= "" then detail = status_text .. "  " .. time_text .. "\n" .. detail end
+    reaper.ImGui_SetTooltip(ctx, detail)
+  end
+end
+
 function DrawMainWindowMiniControls(ctx)
+  local spacing_x = select(1, reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing()))
+  reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_ItemSpacing(), spacing_x, UIScaleF(2))
+
   UI_PlayIconTrigger_Play(ctx)
   UI_PlayIconTrigger_Pause(ctx)
   UI_PlayIconTrigger_JumpToStart(ctx)
@@ -16974,6 +17112,9 @@ function DrawMainWindowMiniControls(ctx)
     main_window_mini_resize_pending = true
     main_window_position_restore_pending = true
   end
+
+  DrawMainWindowMiniNowPlaying(ctx)
+  reaper.ImGui_PopStyleVar(ctx)
 end
 
 -- 路由按钮与下拉菜单
@@ -18337,7 +18478,7 @@ function loop()
   if main_window_mini_resize_pending then
     if main_window_mini_mode and not show_window_titlebar then
       -- 迷你模式宽度和高度设置
-      reaper.ImGui_SetNextWindowSize(ctx, UIScale(700), UIScale(40), reaper.ImGui_Cond_Always())
+      reaper.ImGui_SetNextWindowSize(ctx, UIScale(700), UIScale(52) + select(2, reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_WindowPadding())) * 2, reaper.ImGui_Cond_Always())
     elseif main_window_normal_w and main_window_normal_h then
       reaper.ImGui_SetNextWindowSize(ctx, main_window_normal_w, main_window_normal_h, reaper.ImGui_Cond_Always())
     end

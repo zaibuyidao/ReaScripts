@@ -1,6 +1,6 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.266
+-- @version 1.0.267
 -- @changelog
 --   Mini and normal modes now remember their own window positions independently when switching between them.
 -- @reference
