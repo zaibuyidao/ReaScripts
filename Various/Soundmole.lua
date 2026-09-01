@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.268
+-- @version 1.0.269
 -- @changelog
---   Added centered compact/full pagination and fixed lost page states.
+--   Improved the middle footer layout with centered database selection and pagination.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
