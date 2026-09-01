@@ -247,6 +247,8 @@ ICON_CODEPOINTS = {
   database             = 0x0169,
   settings             = 0x0114,
   zoom_menu            = 0x0130,
+  page_compact         = 0x012C,
+  page_full            = 0x012D,
 
   sidebar_left         = 0x0110,
   sidebar_right        = 0x0116,
@@ -1505,6 +1507,8 @@ hide_soundmole_title            = false -- 默认显示 Soundmole 标题
 show_window_titlebar            = false -- 默认显示窗口标题栏
 retain_search_on_exit           = false -- 关闭脚本时保留当前搜索内容
 page_resident_cache_enabled     = true  -- 分页状态常驻，并受控保留列表/数据库重资源
+page_bar_centered               = true  -- 分页栏默认居中显示在音频表格与播放区域之间
+page_bar_full                   = true  -- 居中分页栏默认完整显示页码
 focus_main_search_on_startup    = false -- 启动脚本时聚焦主搜索框
 focus_main_search_requested     = false
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
@@ -1562,6 +1566,8 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
   SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
   SM_SetState(EXT_SECTION, "page_resident_cache_enabled", page_resident_cache_enabled and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "page_bar_centered", page_bar_centered and "1" or "0", true)
+  SM_SetState(EXT_SECTION, "page_bar_full", page_bar_full and "1" or "0", true)
   SM_SetState(EXT_SECTION, "focus_main_search_on_startup", focus_main_search_on_startup and "1" or "0", true)
   SM_SetState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
   SM_SetState(EXT_SECTION, "browse_database_as_folders", browse_database_as_folders and "1" or "0", true)
@@ -1776,6 +1782,15 @@ end
 
 do
   page_resident_cache_enabled = SM_GetState(EXT_SECTION, "page_resident_cache_enabled") ~= "0"
+end
+
+do
+  page_bar_centered = SM_GetState(EXT_SECTION, "page_bar_centered") ~= "0"
+end
+
+do
+  local v = SM_GetState(EXT_SECTION, "page_bar_full")
+  page_bar_full = (v == "") and page_bar_centered or (v == "1")
 end
 
 do
@@ -2248,6 +2263,14 @@ do
     if changed_row_height then
       row_height = new_row_height
       SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
+    end
+
+    local changed_page_bar, new_page_bar_centered = reaper.ImGui_Checkbox(ctx, T("Center page bar between the audio table and playback area"), page_bar_centered)
+    if changed_page_bar then
+      page_bar_centered = new_page_bar_centered
+      page_bar_full = page_bar_centered
+      SM_SetState(EXT_SECTION, "page_bar_centered", page_bar_centered and "1" or "0", true)
+      SM_SetState(EXT_SECTION, "page_bar_full", page_bar_full and "1" or "0", true)
     end
   end
 
@@ -2951,6 +2974,8 @@ do
       search_enter_mode    = true
       retain_search_on_exit = false
       page_resident_cache_enabled = true
+      page_bar_centered    = true
+      page_bar_full        = true
       focus_main_search_on_startup = false
       SM_SetState(EXT_SECTION, "retained_search_text", "", true)
       build_waveform_cache = false
@@ -12085,6 +12110,7 @@ function SaveExitSettings()
   else
     SM_SetState(EXT_SECTION, "retained_search_text", "", true)
   end
+  if type(SM_SavePages) == "function" then SM_SavePages() end
 end
 
 LoadExitSettings()
@@ -12602,6 +12628,76 @@ function SM_PageCopyMap(source)
   return copy
 end
 
+SM_PAGE_PERSIST_KEYS = {
+  "uid", "collect_mode", "tree_state", "sidebar_tab", "album_panel_tab",
+  "search_text", "commit_filter_text", "active_saved_search", "temp_search_field",
+  "temp_search_keyword", "temp_ucs_cat_keyword", "temp_ucs_sub_keyword",
+  "db_path_prefix_filter", "cover_id_filter", "filter_lock_enabled",
+  "locked_filter_terms", "use_synonyms", "search_fields", "search_history_index",
+  "last_search_input", "selection", "selected_recent_row", "selected_play_history_row",
+  "last_collect_mode", "browse_database_as_folders", "active_db_sort",
+  "peektree_open_nodes", "tree_open", "expanded_paths", "expanded_ids", "headers",
+  "similarity", "fs_ui", "fs_query", "fs_last_query", "fs_last_collect_mode",
+}
+
+function SM_PagePersistentCopy(value, seen)
+  local value_type = type(value)
+  if value_type == "string" or value_type == "number" or value_type == "boolean" then return value end
+  if value_type ~= "table" then return nil end
+  seen = seen or {}
+  if seen[value] then return nil end
+  seen[value] = true
+  local copy = {}
+  for key, item in pairs(value) do
+    if (type(key) == "string" or type(key) == "number")
+      and (type(key) ~= "string" or key:sub(1, 1) ~= "_") then
+      copy[key] = SM_PagePersistentCopy(item, seen)
+    end
+  end
+  seen[value] = nil
+  return copy
+end
+
+function SM_SavePages()
+  if not SM_PAGES[SM_ACTIVE_PAGE] then return end
+  SM_CapturePageState(SM_ACTIVE_PAGE)
+  local data = { version = 1, active_page = SM_ACTIVE_PAGE, next_uid = SM_NEXT_PAGE_UID, pages = {} }
+  for page_index, page in ipairs(SM_PAGES) do
+    local saved_page = { initialized = true }
+    for _, key in ipairs(SM_PAGE_PERSIST_KEYS) do
+      saved_page[key] = SM_PagePersistentCopy(page[key])
+    end
+    data.pages[page_index] = saved_page
+  end
+  SM_SetState(EXT_SECTION, "pages_state_v1", TableToString(data), true)
+end
+
+function SM_LoadPages()
+  local saved = SM_GetState(EXT_SECTION, "pages_state_v1")
+  if not saved or saved == "" then return false end
+  local chunk = load("return " .. saved, "Soundmole page state", "t", {})
+  if not chunk then return false end
+  local ok, data = pcall(chunk)
+  if not ok or type(data) ~= "table" or type(data.pages) ~= "table" then return false end
+
+  local pages, max_uid = {}, 0
+  for page_index, page in ipairs(data.pages) do
+    if page_index > 50 then break end
+    if type(page) == "table" then
+      page.cache, page.restore_selection, page.initialized = nil, nil, true
+      pages[#pages + 1] = page
+      max_uid = math.max(max_uid, tonumber(page.uid) or 0)
+    end
+  end
+  if #pages == 0 then return false end
+
+  SM_PAGES = pages
+  SM_ACTIVE_PAGE = math.max(1, math.min(#pages, tonumber(data.active_page) or 1))
+  SM_NEXT_PAGE = #pages + 1
+  SM_NEXT_PAGE_UID = math.max(max_uid + 1, tonumber(data.next_uid) or 1)
+  return true
+end
+
 function SM_GetPageUID(page_index)
   local page = SM_PAGES[page_index] or {}
   if not page.uid then
@@ -12853,25 +12949,27 @@ function SM_CapturePageState(page_index)
   return page
 end
 
-function SM_ActivatePage(page_index)
-  if page_index == SM_ACTIVE_PAGE or not SM_PAGES[page_index] then return end
-  local previous_page = SM_CapturePageState(SM_ACTIVE_PAGE)
-  StopAsyncScan()
-  ClearTableWaveformTaskQueue()
-  CancelAllWaveformJobs()
-  previewed_files = {}
-  if custom_tags_probe_active and custom_tags_probe_active.handle then
-    reaper.SM_ProbeMediaEnd(custom_tags_probe_active.handle)
+function SM_ActivatePage(page_index, initial_restore)
+  if (page_index == SM_ACTIVE_PAGE and not initial_restore) or not SM_PAGES[page_index] then return end
+  if not initial_restore then
+    local previous_page = SM_CapturePageState(SM_ACTIVE_PAGE)
+    StopAsyncScan()
+    ClearTableWaveformTaskQueue()
+    CancelAllWaveformJobs()
+    previewed_files = {}
+    if custom_tags_probe_active and custom_tags_probe_active.handle then
+      reaper.SM_ProbeMediaEnd(custom_tags_probe_active.handle)
+    end
+    if custom_tags_probe_active then
+      for _, info in ipairs(custom_tags_probe_active.infos or {}) do info._custom_tags_probe_queued = nil end
+    end
+    for _, entry in ipairs(custom_tags_probe_queue or {}) do
+      for _, info in ipairs(entry.infos or {}) do info._custom_tags_probe_queued = nil end
+    end
+    custom_tags_probe_queue, custom_tags_probe_by_path, custom_tags_probe_active = {}, {}, nil
+    if type(DBPF_InvalidateAllCaches) == "function" then DBPF_InvalidateAllCaches() end
+    SM_ParkActivePage(previous_page)
   end
-  if custom_tags_probe_active then
-    for _, info in ipairs(custom_tags_probe_active.infos or {}) do info._custom_tags_probe_queued = nil end
-  end
-  for _, entry in ipairs(custom_tags_probe_queue or {}) do
-    for _, info in ipairs(entry.infos or {}) do info._custom_tags_probe_queued = nil end
-  end
-  custom_tags_probe_queue, custom_tags_probe_by_path, custom_tags_probe_active = {}, {}, nil
-  if type(DBPF_InvalidateAllCaches) == "function" then DBPF_InvalidateAllCaches() end
-  SM_ParkActivePage(previous_page)
 
   local page = SM_PAGES[page_index]
   local headers = page.headers or {}
@@ -12955,7 +13053,11 @@ function SM_ActivatePage(page_index)
   static.clipper = nil
   static.last_db_key = GetCurrentListKey()
   page.restore_selection = true
-  if not (page_resident_cache_enabled and SM_RestorePageCache(page)) then
+  if initial_restore then
+    files_idx_cache = nil
+    _G.current_display_list = nil
+    RequestSearchRefresh()
+  elseif not (page_resident_cache_enabled and SM_RestorePageCache(page)) then
     CollectFiles()
     RequestSearchRefresh()
   end
@@ -13173,6 +13275,8 @@ function RequestSearchRefresh()
     if s.last_filter_text_map then s.last_filter_text_map[key] = nil end
   end
 end
+
+if SM_LoadPages() then SM_ActivatePage(SM_ACTIVE_PAGE, true) end
 
 function RequestActiveSearchRefresh()
   local ft = _G.commit_filter_text
@@ -17903,19 +18007,15 @@ function SM_DrawLeftTableToggle(ctx)
   end
 end
 
-function SM_DrawPageBar(ctx)
+function SM_DrawPageBar(ctx, centered)
   if not (SM_PAGES[SM_ACTIVE_PAGE] and SM_PAGES[SM_ACTIVE_PAGE].initialized) then
     SM_CapturePageState(SM_ACTIVE_PAGE)
   end
 
-  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
-  reaper.ImGui_Text(ctx, T("Pages:"))
-  reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
-
   local page_count = #SM_PAGES
   local visible_pages = {}
   local delete_page_index
-  if page_count <= 7 then
+  if page_bar_full or page_count <= 7 then
     for page_index = 1, page_count do visible_pages[#visible_pages + 1] = page_index end
   elseif SM_ACTIVE_PAGE <= 4 then
     visible_pages = { 1, 2, 3, 4, 5, false, page_count }
@@ -17924,6 +18024,47 @@ function SM_DrawPageBar(ctx)
   else
     visible_pages = { 1, false, SM_ACTIVE_PAGE - 1, SM_ACTIVE_PAGE, SM_ACTIVE_PAGE + 1, false, page_count }
   end
+
+  PushUIFont(ctx, fonts.material, 16)
+  local page_mode_glyph = page_bar_full and MATERIAL_ICONS.page_full or MATERIAL_ICONS.page_compact
+  local page_mode_w = select(1, reaper.ImGui_CalcTextSize(ctx, page_mode_glyph))
+  reaper.ImGui_PopFont(ctx)
+
+  if centered then
+    local total_w = page_mode_w + select(1, reaper.ImGui_CalcTextSize(ctx, T("Pages:"))) + UIScaleF(4) * (#visible_pages + 2) + UIScaleF(24)
+    for _, page_index in ipairs(visible_pages) do
+      local label = page_index == false and "..." or tostring(page_index)
+      local text_w = select(1, reaper.ImGui_CalcTextSize(ctx, label))
+      total_w = total_w + (page_index == false and text_w or math.max(UIScaleF(24), text_w + UIScaleF(10)))
+    end
+    local cursor_x = select(1, reaper.ImGui_GetCursorPos(ctx))
+    local avail_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx))
+    reaper.ImGui_SetCursorPosX(ctx, cursor_x + math.max(0, (avail_w - total_w) * 0.5))
+  else
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
+  end
+
+  PushUIFont(ctx, fonts.material, 16)
+  local x0, y0, x1, y1 = CalcTextHitRect(ctx, page_mode_glyph, 4)
+  local page_mode_hovered = reaper.ImGui_IsMouseHoveringRect(ctx, x0, y0, x1, y1 + 2, true)
+  local page_mode_active = page_mode_hovered and reaper.ImGui_IsMouseDown(ctx, 0)
+  local page_mode_col = page_mode_hovered
+    and (page_mode_active and (colors.icon_active or colors.icon_hovered or colors.icon_normal or 0xFFFFFFFF)
+      or (colors.icon_hovered or colors.icon_normal or 0xFFFFFFFF))
+    or (colors.icon_normal or 0xFFFFFFFF)
+  DrawTextVOffset(ctx, page_mode_glyph, page_mode_col, 4)
+  reaper.ImGui_PopFont(ctx)
+  if page_mode_hovered then
+    reaper.ImGui_SetMouseCursor(ctx, reaper.ImGui_MouseCursor_Hand())
+    DrawTooltip(page_bar_full and T("Show compact page numbers") or T("Show all page numbers"))
+    if reaper.ImGui_IsMouseClicked(ctx, 0) then
+      page_bar_full = not page_bar_full
+      SM_SetState(EXT_SECTION, "page_bar_full", page_bar_full and "1" or "0", true)
+    end
+  end
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
+  reaper.ImGui_Text(ctx, T("Pages:"))
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
 
   reaper.ImGui_PushID(ctx, "SoundmolePages")
   for slot_index, page_index in ipairs(visible_pages) do
@@ -23042,6 +23183,8 @@ function loop()
     local bottom_layout_start_y = select(2, reaper.ImGui_GetCursorPos(ctx))
     reaper.ImGui_Separator(ctx)
 
+    if page_bar_centered then SM_DrawPageBar(ctx, true) end
+
     -- 播放控制按钮
     -- Play 按钮
     UI_PlayIconTrigger_Play(ctx)
@@ -23581,7 +23724,7 @@ function loop()
 
     reaper.ImGui_SameLine(ctx, nil, 10)
     DrawMIDIChannelSelector(ctx)
-    SM_DrawPageBar(ctx)
+    if not page_bar_centered then SM_DrawPageBar(ctx) end
 
     do
       -- 时间容差

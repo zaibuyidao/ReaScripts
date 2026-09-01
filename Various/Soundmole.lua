@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.267
+-- @version 1.0.268
 -- @changelog
---   Mini and normal modes now remember their own window positions independently when switching between them.
+--   Added centered compact/full pagination and fixed lost page states.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
