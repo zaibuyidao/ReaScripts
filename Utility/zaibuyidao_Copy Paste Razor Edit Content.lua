@@ -1,8 +1,8 @@
 -- @description Copy/Paste Razor Edit Content
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   Fix content/marker/region alignment when pasting far along the timeline
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -168,7 +168,8 @@ local function key(prefix, index)
 end
 
 local function set_ext(name, value)
-  reaper.SetExtState(EXT_SECTION, name, tostring(value), false)
+  local text = type(value) == "number" and string.format("%.17g", value) or tostring(value)
+  reaper.SetExtState(EXT_SECTION, name, text, false)
 end
 
 local function get_ext(name)
@@ -196,7 +197,7 @@ local function pack_values(values)
   for i = 1, #values do
     local value = values[i]
     local value_type = type(value)
-    local value_text = tostring(value)
+    local value_text = value_type == "number" and string.format("%.17g", value) or tostring(value)
     out[#out + 1] = value_type .. ":" .. #value_text .. ":" .. value_text
   end
   return table.concat(out)
@@ -233,8 +234,13 @@ local function unpack_values(text)
 end
 
 local function clear_clipboard()
+  local item_count = math.max(get_ext_number("item_count", 0), 0)
   local marker_count = math.max(get_ext_number("marker_count", 0), 0)
   local tempo_count = math.max(get_ext_number("tempo_count", 0), 0)
+
+  for i = 1, item_count do
+    reaper.DeleteExtState(EXT_SECTION, key("item_pos", i), false)
+  end
 
   for i = 1, marker_count do
     reaper.DeleteExtState(EXT_SECTION, key("marker", i), false)
@@ -245,7 +251,7 @@ local function clear_clipboard()
   end
 
   local names = {
-    "source_start", "source_end", "marker_count", "tempo_count",
+    "source_start", "source_end", "item_count", "marker_count", "tempo_count", "data_version",
     "has_content", "has_markers", "has_regions", "has_tempo", "last_copy_time"
   }
 
@@ -254,14 +260,28 @@ local function clear_clipboard()
   end
 end
 
-local function parse_razor_data(data, ranges)
+local function parse_razor_data(data, ranges, extended)
   local found = false
 
-  for start_text, end_text in data:gmatch('([%-%d%.]+)%s+([%-%d%.]+)%s+"[^"]*"') do
+  if extended then
+    for area in data:gmatch("[^,]+") do
+      local start_text, end_text, rest = area:match("^%s*([%-%d%.]+)%s+([%-%d%.]+)%s*(.-)%s*$")
+      local guid, top_text, bottom_text = (rest or ""):match('^"([^"]*)"%s*([%-%d%.]*)%s*([%-%d%.]*)')
+      if start_text and end_text and (rest == "" or guid == "") then
+        ranges[#ranges + 1] = {
+          start_pos = tonumber(start_text), end_pos = tonumber(end_text),
+          top = tonumber(top_text) or 0, bottom = tonumber(bottom_text) or 1
+        }
+      end
+    end
+    return
+  end
+
+  for start_text, end_text, guid in data:gmatch('([%-%d%.]+)%s+([%-%d%.]+)%s+"([^"]*)"') do
     local start_pos = tonumber(start_text)
     local end_pos = tonumber(end_text)
     if start_pos and end_pos and end_pos > start_pos then
-      ranges[#ranges + 1] = { start_pos = start_pos, end_pos = end_pos }
+      ranges[#ranges + 1] = { start_pos = start_pos, end_pos = end_pos, is_item = guid == "" }
       found = true
     end
   end
@@ -272,13 +292,14 @@ local function parse_razor_data(data, ranges)
     local start_pos = tonumber(start_text)
     local end_pos = tonumber(end_text)
     if start_pos and end_pos and end_pos > start_pos then
-      ranges[#ranges + 1] = { start_pos = start_pos, end_pos = end_pos }
+      ranges[#ranges + 1] = { start_pos = start_pos, end_pos = end_pos, is_item = true }
     end
   end
 end
 
-local function get_razor_ranges()
+local function get_razor_ranges(want_items)
   local ranges = {}
+  local item_positions = {}
   local seen = {}
   local track_count = reaper.CountTracks(0)
 
@@ -287,7 +308,20 @@ local function get_razor_ranges()
     local _, data = reaper.GetSetMediaTrackInfo_String(track, "P_RAZOREDITS", "", false)
     if data and data ~= "" then
       local parsed = {}
+      local item_ranges = {}
+      local track_item_positions = {}
       parse_razor_data(data, parsed)
+      if want_items then
+        local _, extended = reaper.GetSetMediaTrackInfo_String(track, "P_RAZOREDITS_EXT", "", false)
+        parse_razor_data(extended or "", item_ranges, true)
+        if #item_ranges == 0 then
+          for i = 1, #parsed do
+            if parsed[i].is_item then
+              item_ranges[#item_ranges + 1] = { start_pos = parsed[i].start_pos, end_pos = parsed[i].end_pos, top = 0, bottom = 1 }
+            end
+          end
+        end
+      end
       for i = 1, #parsed do
         local range = parsed[i]
         local range_key = string.format("%.12f:%.12f", range.start_pos, range.end_pos)
@@ -295,6 +329,25 @@ local function get_razor_ranges()
           seen[range_key] = true
           ranges[#ranges + 1] = range
         end
+      end
+      if want_items then
+        for item_index = 0, reaper.CountTrackMediaItems(track) - 1 do
+          local item = reaper.GetTrackMediaItem(track, item_index)
+          local item_pos = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+          local item_end = item_pos + reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+          local item_y = reaper.GetMediaItemInfo_Value(item, "F_FREEMODE_Y")
+          local item_bottom = item_y + reaper.GetMediaItemInfo_Value(item, "F_FREEMODE_H")
+          for i = 1, #item_ranges do
+            local range = item_ranges[i]
+            if item_pos < range.end_pos and item_end > range.start_pos and item_y < range.bottom and item_bottom > range.top then
+              track_item_positions[#track_item_positions + 1] = math.max(item_pos, range.start_pos)
+            end
+          end
+        end
+      end
+      table.sort(track_item_positions)
+      for i = 1, #track_item_positions do
+        item_positions[#item_positions + 1] = track_item_positions[i]
       end
     end
   end
@@ -315,7 +368,7 @@ local function get_razor_ranges()
     end
   end
 
-  return merged
+  return merged, item_positions
 end
 
 local function position_in_ranges(position, ranges)
@@ -362,7 +415,7 @@ local function copy_project_markers(ranges, want_markers, want_regions)
         marker_count = marker_count + 1
       end
 
-      local data = { is_region, position, region_end, name or "", marker_index or -1, color or 0 }
+      local data = { is_region, position - ranges[1].start_pos, region_end - ranges[1].start_pos, name or "", marker_index or -1, color or 0 }
       reaper.SetExtState(EXT_SECTION, key("marker", copied), pack_values(data), false)
     end
   end
@@ -381,7 +434,7 @@ local function copy_tempo_markers(ranges)
     local ok, time_pos, measure_pos, beat_pos, bpm, timesig_num, timesig_denom, linear_tempo = reaper.GetTempoTimeSigMarker(0, i)
     if ok and position_in_ranges(time_pos, ranges) then
       copied = copied + 1
-      local data = { time_pos, measure_pos, beat_pos, bpm, timesig_num, timesig_denom, linear_tempo }
+      local data = { time_pos - ranges[1].start_pos, measure_pos, beat_pos, bpm, timesig_num, timesig_denom, linear_tempo }
       reaper.SetExtState(EXT_SECTION, key("tempo", copied), pack_values(data), false)
     end
   end
@@ -405,14 +458,14 @@ local function read_project_markers()
   return markers
 end
 
-local function paste_project_markers(want_markers, want_regions)
+local function paste_project_markers(want_markers, want_regions, paste_pos)
   local source_start = tonumber(get_ext("source_start"))
   local source_end = tonumber(get_ext("source_end"))
   if not source_start or not source_end then return 0, 0 end
 
   local source_length = math.max(0, source_end - source_start)
-  local cursor = reaper.GetCursorPosition()
-  local offset = cursor - source_start
+  local relative = get_ext_number("data_version", 1) >= 2
+  local offset = paste_pos - source_start
   local markers = read_project_markers()
   local pasted_markers = 0
   local pasted_regions = 0
@@ -422,8 +475,10 @@ local function paste_project_markers(want_markers, want_regions)
     local is_region = marker[1] == true
 
     if (is_region and want_regions) or ((not is_region) and want_markers) then
-      local new_start = (tonumber(marker[2]) or 0) + offset
-      local new_end = is_region and ((tonumber(marker[3]) or tonumber(marker[2]) or 0) + offset) or 0
+      local marker_start = tonumber(marker[2]) or 0
+      local marker_end = tonumber(marker[3]) or marker_start
+      local new_start = marker_start + (relative and paste_pos or offset)
+      local new_end = is_region and (marker_end + (relative and paste_pos or offset)) or 0
 
       if is_region and source_length > 0 and new_end - new_start > source_length then
         new_end = new_start + source_length
@@ -456,18 +511,18 @@ local function read_tempo_markers()
   return markers
 end
 
-local function paste_tempo_markers()
+local function paste_tempo_markers(paste_pos)
   local source_start = tonumber(get_ext("source_start"))
   if not source_start then return 0 end
 
-  local cursor = reaper.GetCursorPosition()
-  local offset = cursor - source_start
+  local relative = get_ext_number("data_version", 1) >= 2
+  local offset = paste_pos - source_start
   local markers = read_tempo_markers()
   local pasted = 0
 
   for i = 1, #markers do
     local marker = markers[i]
-    local new_pos = (tonumber(marker[1]) or 0) + offset
+    local new_pos = (tonumber(marker[1]) or 0) + (relative and paste_pos or offset)
     reaper.SetTempoTimeSigMarker(
       0,
       -1,
@@ -485,10 +540,20 @@ local function paste_tempo_markers()
   return pasted
 end
 
-local function paste_content()
+local function paste_content(paste_pos)
   if not get_ext_bool("has_content") then return 0 end
+  reaper.SetEditCurPos(paste_pos, false, false)
   prepare_arrange_command()
+  reaper.Main_OnCommand(40289, 0) -- Item: Unselect all items
   reaper.Main_OnCommand(42398, 0) -- Item: Paste items/tracks
+  local item_count = get_ext_number("item_count", 0)
+  if item_count > 0 and reaper.CountSelectedMediaItems(0) == item_count then
+    for i = 1, item_count do
+      local item = reaper.GetSelectedMediaItem(0, i - 1)
+      reaper.SetMediaItemInfo_Value(item, "D_POSITION", paste_pos + get_ext_number(key("item_pos", i), 0))
+    end
+  end
+  reaper.SetEditCurPos(paste_pos, false, false)
   return 1
 end
 
@@ -504,7 +569,7 @@ local function copy_razor_edit(options)
     return
   end
 
-  local ranges = get_razor_ranges()
+  local ranges, item_positions = get_razor_ranges(options.content)
   if #ranges == 0 then
     message(T.no_razor_edit)
     return
@@ -517,17 +582,23 @@ local function copy_razor_edit(options)
 
   local ok, err = pcall(function()
     clear_clipboard()
+    set_ext("data_version", 2)
     set_ext("source_start", source_start)
     set_ext("source_end", source_end)
     set_ext("last_copy_time", os.time())
 
     local copied_content = 0
     if options.content then
+      set_ext("item_count", #item_positions)
+      for i = 1, #item_positions do
+        set_ext(key("item_pos", i), item_positions[i] - source_start)
+      end
       prepare_arrange_command()
       reaper.Main_OnCommand(40057, 0) -- Edit: Copy items/tracks/envelope points (depending on focus)
       copied_content = 1
       set_ext("has_content", "1")
     else
+      set_ext("item_count", 0)
       set_ext("has_content", "0")
     end
 
@@ -573,12 +644,13 @@ local function paste_razor_edit(options)
   reaper.Undo_BeginBlock()
 
   local ok, err = pcall(function()
-    local pasted_tempo = options.tempo and paste_tempo_markers() or 0
+    local paste_pos = reaper.GetCursorPosition()
+    local pasted_tempo = options.tempo and paste_tempo_markers(paste_pos) or 0
     local pasted_markers, pasted_regions = 0, 0
     if options.markers or options.regions then
-      pasted_markers, pasted_regions = paste_project_markers(options.markers, options.regions)
+      pasted_markers, pasted_regions = paste_project_markers(options.markers, options.regions, paste_pos)
     end
-    local pasted_content = options.content and paste_content() or 0
+    local pasted_content = options.content and paste_content(paste_pos) or 0
 
     last_status = string.format(T.pasted_status, pasted_content, pasted_markers, pasted_regions, pasted_tempo)
   end)

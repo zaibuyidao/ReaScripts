@@ -1,8 +1,8 @@
 -- @description Copy/Paste Time Selection Content
--- @version 1.0.1
+-- @version 1.0.2
 -- @author zaibuyidao
 -- @changelog
---   New Script
+--   Fix item/marker/region alignment when pasting far along the timeline
 -- @links
 --   https://www.soundengine.cn/user/%E5%86%8D%E8%A3%9C%E4%B8%80%E5%88%80
 --   https://github.com/zaibuyidao/ReaScripts
@@ -168,7 +168,8 @@ local function key(prefix, index)
 end
 
 local function set_ext(name, value)
-  reaper.SetExtState(EXT_SECTION, name, tostring(value), false)
+  local text = type(value) == "number" and string.format("%.17g", value) or tostring(value)
+  reaper.SetExtState(EXT_SECTION, name, text, false)
 end
 
 local function get_ext(name)
@@ -196,7 +197,7 @@ local function pack_values(values)
   for i = 1, #values do
     local value = values[i]
     local value_type = type(value)
-    local value_text = tostring(value)
+    local value_text = value_type == "number" and string.format("%.17g", value) or tostring(value)
     out[#out + 1] = value_type .. ":" .. #value_text .. ":" .. value_text
   end
   return table.concat(out)
@@ -233,8 +234,13 @@ local function unpack_values(text)
 end
 
 local function clear_clipboard()
+  local item_count = math.max(get_ext_number("item_count", 0), 0)
   local marker_count = math.max(get_ext_number("marker_count", 0), 0)
   local tempo_count = math.max(get_ext_number("tempo_count", 0), 0)
+
+  for i = 1, item_count do
+    reaper.DeleteExtState(EXT_SECTION, key("item_pos", i), false)
+  end
 
   for i = 1, marker_count do
     reaper.DeleteExtState(EXT_SECTION, key("marker", i), false)
@@ -245,7 +251,7 @@ local function clear_clipboard()
   end
 
   local names = {
-    "source_start", "source_end", "item_offset", "marker_count", "tempo_count",
+    "source_start", "source_end", "item_offset", "item_count", "marker_count", "tempo_count", "data_version",
     "has_items", "has_markers", "has_regions", "has_tempo", "last_copy_time"
   }
 
@@ -356,7 +362,13 @@ local function copy_items(start_time, end_time)
   local targets, earliest = collect_items_for_time_selection(start_time, end_time)
   if #targets == 0 or earliest == nil then
     set_ext("has_items", "0")
+    set_ext("item_count", 0)
     return 0
+  end
+
+  set_ext("item_count", #targets)
+  for i = 1, #targets do
+    set_ext(key("item_pos", i), reaper.GetMediaItemInfo_Value(targets[i], "D_POSITION") - start_time)
   end
 
   local original_selection = capture_item_selection()
@@ -398,7 +410,7 @@ local function copy_project_markers(start_time, end_time, want_markers, want_reg
         marker_count = marker_count + 1
       end
 
-      local data = { is_region, position, region_end, name or "", marker_index or -1, color or 0 }
+      local data = { is_region, position - start_time, region_end - start_time, name or "", marker_index or -1, color or 0 }
       reaper.SetExtState(EXT_SECTION, key("marker", copied), pack_values(data), false)
     end
   end
@@ -417,7 +429,7 @@ local function copy_tempo_markers(start_time, end_time)
     local ok, time_pos, measure_pos, beat_pos, bpm, timesig_num, timesig_denom, linear_tempo = reaper.GetTempoTimeSigMarker(0, i)
     if ok and time_pos >= start_time and time_pos <= end_time then
       copied = copied + 1
-      local data = { time_pos, measure_pos, beat_pos, bpm, timesig_num, timesig_denom, linear_tempo }
+      local data = { time_pos - start_time, measure_pos, beat_pos, bpm, timesig_num, timesig_denom, linear_tempo }
       reaper.SetExtState(EXT_SECTION, key("tempo", copied), pack_values(data), false)
     end
   end
@@ -441,14 +453,14 @@ local function read_project_markers()
   return markers
 end
 
-local function paste_project_markers(want_markers, want_regions)
+local function paste_project_markers(want_markers, want_regions, paste_pos)
   local source_start = tonumber(get_ext("source_start"))
   local source_end = tonumber(get_ext("source_end"))
   if not source_start or not source_end then return 0, 0 end
 
   local source_length = math.max(0, source_end - source_start)
-  local cursor = reaper.GetCursorPosition()
-  local offset = cursor - source_start
+  local relative = get_ext_number("data_version", 1) >= 2
+  local offset = paste_pos - source_start
   local markers = read_project_markers()
   local pasted_markers = 0
   local pasted_regions = 0
@@ -458,8 +470,10 @@ local function paste_project_markers(want_markers, want_regions)
     local is_region = marker[1] == true
 
     if (is_region and want_regions) or ((not is_region) and want_markers) then
-      local new_start = (tonumber(marker[2]) or 0) + offset
-      local new_end = is_region and ((tonumber(marker[3]) or tonumber(marker[2]) or 0) + offset) or 0
+      local marker_start = tonumber(marker[2]) or 0
+      local marker_end = tonumber(marker[3]) or marker_start
+      local new_start = marker_start + (relative and paste_pos or offset)
+      local new_end = is_region and (marker_end + (relative and paste_pos or offset)) or 0
 
       if is_region and source_length > 0 and new_end - new_start > source_length then
         new_end = new_start + source_length
@@ -492,18 +506,18 @@ local function read_tempo_markers()
   return markers
 end
 
-local function paste_tempo_markers()
+local function paste_tempo_markers(paste_pos)
   local source_start = tonumber(get_ext("source_start"))
   if not source_start then return 0 end
 
-  local cursor = reaper.GetCursorPosition()
-  local offset = cursor - source_start
+  local relative = get_ext_number("data_version", 1) >= 2
+  local offset = paste_pos - source_start
   local markers = read_tempo_markers()
   local pasted = 0
 
   for i = 1, #markers do
     local marker = markers[i]
-    local new_pos = (tonumber(marker[1]) or 0) + offset
+    local new_pos = (tonumber(marker[1]) or 0) + (relative and paste_pos or offset)
     reaper.SetTempoTimeSigMarker(
       0,
       -1,
@@ -521,26 +535,31 @@ local function paste_tempo_markers()
   return pasted
 end
 
-local function paste_items()
+local function paste_items(paste_pos)
   if not get_ext_bool("has_items") then return 0 end
 
-  local cursor = reaper.GetCursorPosition()
   local item_offset = get_ext_number("item_offset", 0)
-  reaper.SetEditCurPos(cursor + item_offset, false, false)
+  reaper.SetEditCurPos(paste_pos + item_offset, false, false)
   prepare_arrange_command()
+  reaper.Main_OnCommand(40289, 0) -- Item: Unselect all items
   reaper.Main_OnCommand(42398, 0) -- Item: Paste items/tracks
-  reaper.SetEditCurPos(cursor, false, false)
+  local item_count = get_ext_number("item_count", 0)
+  if item_count > 0 and reaper.CountSelectedMediaItems(0) == item_count then
+    for i = 1, item_count do
+      local item = reaper.GetSelectedMediaItem(0, i - 1)
+      reaper.SetMediaItemInfo_Value(item, "D_POSITION", paste_pos + get_ext_number(key("item_pos", i), 0))
+    end
+  end
+  reaper.SetEditCurPos(paste_pos, false, false)
   return 1
 end
 
-local function set_pasted_time_selection()
+local function set_pasted_time_selection(paste_pos)
   local source_start = tonumber(get_ext("source_start"))
   local source_end = tonumber(get_ext("source_end"))
   if not source_start or not source_end then return end
 
-  local cursor = reaper.GetCursorPosition()
-  local offset = cursor - source_start
-  reaper.GetSet_LoopTimeRange(true, false, source_start + offset, source_end + offset, false)
+  reaper.GetSet_LoopTimeRange(true, false, paste_pos, paste_pos + source_end - source_start, false)
 end
 
 local function option_has_any(options)
@@ -565,6 +584,7 @@ local function copy_time_selection(options)
 
   local ok, err = pcall(function()
     clear_clipboard()
+    set_ext("data_version", 2)
     set_ext("source_start", start_time)
     set_ext("source_end", end_time)
     set_ext("last_copy_time", os.time())
@@ -612,15 +632,16 @@ local function paste_time_selection(options)
   reaper.Undo_BeginBlock()
 
   local ok, err = pcall(function()
-    local pasted_tempo = options.tempo and paste_tempo_markers() or 0
+    local paste_pos = reaper.GetCursorPosition()
+    local pasted_tempo = options.tempo and paste_tempo_markers(paste_pos) or 0
     local pasted_markers, pasted_regions = 0, 0
     if options.markers or options.regions then
-      pasted_markers, pasted_regions = paste_project_markers(options.markers, options.regions)
+      pasted_markers, pasted_regions = paste_project_markers(options.markers, options.regions, paste_pos)
     end
-    local pasted_items = options.items and paste_items() or 0
+    local pasted_items = options.items and paste_items(paste_pos) or 0
 
     if pasted_items > 0 or pasted_markers > 0 or pasted_regions > 0 then
-      set_pasted_time_selection()
+      set_pasted_time_selection(paste_pos)
     end
 
     last_status = string.format(T.pasted_status, pasted_items, pasted_markers, pasted_regions, pasted_tempo)
