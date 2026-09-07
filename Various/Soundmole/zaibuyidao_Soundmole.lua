@@ -368,7 +368,7 @@ local pitch_knob_min         = -6    -- 音高旋钮最低
 local pitch_knob_max         = 6     -- 音高旋钮最高
 local rate_min               = 0.25  -- 速率旋钮最低
 local rate_max               = 4.0   -- 速率旋钮最高
-local last_audio_idx         = nil
+local last_preview_key       = nil
 local auto_scroll_enabled    = false -- 自动滚屏
 local auto_play_next         = false -- 连续播放勾选
 local auto_play_next_pending = nil
@@ -690,9 +690,11 @@ function CancelInfoWaveformJobs(info)
   info._wf_state = nil
 end
 
-function CancelAllWaveformJobs()
+function CancelAllWaveformJobs(keep_main_preview)
   for key in pairs(sm_wfc_pending_jobs) do
-    CancelTrackedWaveformJob(key)
+    if not (keep_main_preview and main_wave_wfc_state and main_wave_wfc_state.key == key) then
+      CancelTrackedWaveformJob(key)
+    end
   end
 end
 
@@ -783,6 +785,21 @@ local Wave = {
   w = 0, -- 波形宽度
   sample_rate = 44100,
 }
+
+-- 主预览只跟随主动选择/播放，浏览模式及程序化恢复选中行不改变它
+function SM_SetMainPreviewInfo(info, from_selection)
+  if type(info) ~= "table" then return end
+  Wave.preview_selection_pending = from_selection and info ~= last_selected_info or nil
+  if info ~= last_selected_info then
+    last_selected_info = info
+    Wave.preview_mode = info._preview_collect_mode or collect_mode
+    Wave.preview_key = normalize_path(info.path or "", false) .. "|" .. tostring(info.section_offset or 0) .. "|" .. tostring(info.section_length or 0)
+    if type(SM_StoreStablePreviewCover) == "function" then
+      SM_StoreStablePreviewCover(info, info)
+    end
+  end
+  if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED then selected_recent_row = 0 end
+end
 
 -- 读取本地持久化设置
 waveform_color_mode = tonumber(SM_GetState(EXT_SECTION, "waveform_color_mode")) or WAVE_COLOR_MONO
@@ -4086,6 +4103,34 @@ function SM_GetMainPreviewWaveformCache(path, max_channels)
 
   if not main_wave_wfc_state or main_wave_wfc_state.req_sig ~= sig then
     if main_wave_wfc_state then CancelWaveformState(main_wave_wfc_state) end
+    main_wave_wfc_state = nil
+    -- 新请求先整段读取已有的 REAPER 峰值，未读全才沿用异步分段构建
+    local src = reaper.PCM_Source_CreateFromFile(path)
+    if src then
+      local len, is_qn = reaper.GetMediaSourceLength(src)
+      local ch = math.max(1, math.min(maxch, reaper.GetMediaSourceNumChannels(src)))
+      if not is_qn and len > 0 then
+        local buf = reaper.new_array(px * ch * 2)
+        local got = reaper.PCM_Source_GetPeaks(src, px / len, 0, ch, px, 0, buf)
+        if (got & 0xFFFFF) == px then
+          buf = buf.table()
+          local peaks_ready = {}
+          for c = 1, ch do
+            peaks_ready[c] = {}
+            for row = 1, px do
+              local i = (row - 1) * ch + c
+              peaks_ready[c][row] = {buf[px * ch + i], buf[i]}
+            end
+          end
+          ready = {
+            status = "ready", peaks = peaks_ready, pixel_cnt = px,
+            channel_count = ch, src_len = len
+          }
+        end
+      end
+      reaper.PCM_Source_Destroy(src)
+      if ready then return ready end
+    end
     main_wave_wfc_state = SM_BeginWaveformCacheAsync(path, px, st, et, maxch)
     if type(main_wave_wfc_state) == "table" then
       main_wave_wfc_state.req_sig = sig
@@ -4111,6 +4156,10 @@ function SM_GetMainPreviewWaveformCache(path, max_channels)
     end
     return nil
   elseif type(pumped) == "table" then
+    if pumped.status == "ready" then
+      main_wave_wfc_state = nil
+      return pumped
+    end
     main_wave_wfc_state = pumped
     local partial = SM_ReadWaveformPartial(main_wave_wfc_state)
     if partial and partial.peaks then return partial end
@@ -4278,6 +4327,7 @@ function StopAsyncScan()
 end
 
 function CollectFiles()
+  Wave.preview_selection_pending = nil
   local list_state = _G._soundmole_static or {}
   if type(SM_RememberDBSelection) == "function" and list_state.last_db_key then
     SM_RememberDBSelection(list_state.last_db_key, _G.current_display_list, selected_row)
@@ -4397,7 +4447,7 @@ function CollectFiles()
 
   -- 切换模式后清空表格列表波形预览队列
   ClearTableWaveformTaskQueue()
-  CancelAllWaveformJobs()
+  CancelAllWaveformJobs(true)
 
   if type(RequestActiveSearchRefresh) == "function" then
     RequestActiveSearchRefresh()
@@ -8795,6 +8845,7 @@ end
 
 -- 从头播放
 function PlayFromStart(info)
+  SM_SetMainPreviewInfo(info)
   last_play_cursor_before_play = 0
   -- 重置峰值
   for i = 1, peak_chans do
@@ -8824,7 +8875,7 @@ function PlayFromStart(info)
   end
 
   local source
-  if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidPreviewFile(info.path) then -- RPP模式下强制用源媒体路径
+  if Wave.preview_mode == COLLECT_MODE_RPP and info and info.path and IsValidPreviewFile(info.path) then -- RPP模式下强制用源媒体路径
     source = reaper.PCM_Source_CreateFromFile(info.path)
   elseif info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
     source = reaper.GetMediaItemTake_Source(info.take)
@@ -8864,6 +8915,7 @@ function PlayFromStart(info)
     -- 保存最后播放的信息
     last_playing_info = {}
     for k, v in pairs(info) do last_playing_info[k] = v end
+    last_playing_info._preview_collect_mode = Wave.preview_mode
     if type(SM_StoreStablePreviewCover) == "function" then
       SM_StoreStablePreviewCover(last_playing_info, info)
     end
@@ -8875,6 +8927,7 @@ end
 
 -- 从光标开始播放
 function PlayFromCursor(info)
+  SM_SetMainPreviewInfo(info)
   last_play_cursor_before_play = Wave.play_cursor or 0
   -- 重置峰值
   for i = 1, peak_chans do
@@ -8882,7 +8935,7 @@ function PlayFromCursor(info)
   end
   StopPreview()
   local source
-  if collect_mode == COLLECT_MODE_RPP and info and info.path and IsValidPreviewFile(info.path) then -- RPP模式下强制用源媒体路径
+  if Wave.preview_mode == COLLECT_MODE_RPP and info and info.path and IsValidPreviewFile(info.path) then -- RPP模式下强制用源媒体路径
     source = reaper.PCM_Source_CreateFromFile(info.path)
   elseif info and info.take and reaper.ValidatePtr(info.take, "MediaItem_Take*") then
     source = reaper.GetMediaItemTake_Source(info.take)
@@ -8933,6 +8986,7 @@ function PlayFromCursor(info)
     -- 保存最后播放的信息
     last_playing_info = {}
     for k, v in pairs(info) do last_playing_info[k] = v end
+    last_playing_info._preview_collect_mode = Wave.preview_mode
     if type(SM_StoreStablePreviewCover) == "function" then
       SM_StoreStablePreviewCover(last_playing_info, info)
     end
@@ -10225,6 +10279,7 @@ function handle_file_click(idx)
   if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then
     collect_mode = last_collect_mode
   end
+  SM_SetMainPreviewInfo((_G.current_display_list or {})[selected_row], true)
 end
 
 -- 启动时加载自定义文件夹
@@ -11208,6 +11263,7 @@ end
 --------------------------------------------- 地址栏音频文件地址点击文件夹目录段节点 ---------------------------------------------
 
 function RefreshFolderFiles(dir)
+  Wave.preview_selection_pending = nil
   if collect_mode ~= COLLECT_MODE_RECENTLY_PLAYED and collect_mode ~= COLLECT_MODE_SAMEFOLDER then
     collect_mode = COLLECT_MODE_TREE -- 如果不是最近播放则使用树形目录
     current_recent_play_info = nil
@@ -11231,7 +11287,7 @@ function RefreshFolderFiles(dir)
   SortFilesByFilenameAsc()
   -- 切换模式后清空表格列表波形预览队列
   ClearTableWaveformTaskQueue()
-  CancelAllWaveformJobs()
+  CancelAllWaveformJobs(true)
 
   if type(RequestActiveSearchRefresh) == "function" then
     RequestActiveSearchRefresh()
@@ -12964,7 +13020,7 @@ function SM_ActivatePage(page_index, initial_restore)
     local previous_page = SM_CapturePageState(SM_ACTIVE_PAGE)
     StopAsyncScan()
     ClearTableWaveformTaskQueue()
-    CancelAllWaveformJobs()
+    CancelAllWaveformJobs(true)
     previewed_files = {}
     if custom_tags_probe_active and custom_tags_probe_active.handle then
       reaper.SM_ProbeMediaEnd(custom_tags_probe_active.handle)
@@ -12984,6 +13040,7 @@ function SM_ActivatePage(page_index, initial_restore)
   local headers = page.headers or {}
   local sim = page.similarity or {}
   SM_ACTIVE_PAGE = page_index
+  Wave.preview_selection_pending = nil
   collect_mode = page.collect_mode or -1
   tree_state = SM_PageCopyMap(page.tree_state)
   current_sidebar_tab = page.sidebar_tab or "PeekTree"
@@ -14361,6 +14418,7 @@ function RenderMIDICell(ctx, i, info, row_height, collect_mode, idle_time)
     if collect_mode == COLLECT_MODE_RECENTLY_PLAYED then collect_mode = last_collect_mode end
     selected_row = i
     last_selected_row = i
+    SM_SetMainPreviewInfo(info)
     Wave.play_cursor = cursor_pos
     wf_play_start_cursor = cursor_pos
 
@@ -14480,6 +14538,7 @@ function RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
           end
           selected_row = i
           last_selected_row = i
+          SM_SetMainPreviewInfo(info)
           Wave.play_cursor = cursor_pos
           wf_play_start_cursor = cursor_pos
 
@@ -16636,8 +16695,8 @@ function UI_PlayIconTrigger_Play(ctx)
         wf_play_start_cursor = Wave.play_cursor or 0
       end
 
-    elseif type(selected_row) == "number" and selected_row > 0 and type(_G.current_display_list) == "table" and _G.current_display_list[selected_row] then
-      PlayFromCursor(_G.current_display_list[selected_row])
+    elseif last_selected_info then
+      PlayFromCursor(last_selected_info)
       is_paused = false
       paused_position = 0
     end
@@ -17075,8 +17134,7 @@ function MiniEllipsizeText(ctx, text, max_width)
 end
 
 function DrawMainWindowMiniNowPlaying(ctx)
-  local list = _G.current_display_list or {}
-  local selected_info = type(selected_row) == "number" and selected_row > 0 and list[selected_row] or nil
+  local selected_info = last_selected_info
   local is_playing = playing_preview ~= nil
   local is_preview_paused = is_paused and playing_source ~= nil
   local info = (is_playing or is_preview_paused)
@@ -19329,15 +19387,7 @@ function loop()
     end
 
     -- 当前播放文件的路径
-    local file_info
-    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then -- 最近播放模式时使用播放列表项
-      file_info = current_recent_play_info
-    elseif _G.current_display_list and selected_row and _G.current_display_list[selected_row] then
-      file_info = _G.current_display_list[selected_row] -- 其他模式用右侧表格选中项
-      selected_recent_row = 0 -- 清空最近播放选中项
-    else
-      file_info = last_playing_info
-    end
+    local file_info = last_selected_info
 
     local show_cur_path = file_info and file_info.path or ""
     show_cur_path = normalize_path(show_cur_path, false)
@@ -22800,7 +22850,10 @@ function loop()
             end
           end
 
-          if played then ClearFileSelection() end -- 确保滚动时的居中状态
+          if played then
+            ClearFileSelection() -- 确保滚动时的居中状态
+            SM_SetMainPreviewInfo(filtered_list[selected_row])
+          end
 
           -- 若勾选auto_play_selected，且确实有移动，则自动播放
           if auto_play_selected and played and selected_row and filtered_list[selected_row] then
@@ -23990,16 +24043,7 @@ function loop()
     img_h = GetWaveformPreviewHeight()
     -- reaper.ImGui_Separator(ctx)
     local avail_w, avail_h = reaper.ImGui_GetContentRegionAvail(ctx)
-    local img_info
-    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then
-      img_info = current_recent_play_info
-    elseif _G.current_display_list and selected_row and _G.current_display_list[selected_row] then
-      img_info = _G.current_display_list[selected_row]
-    elseif playing_path and playing_path ~= "" and last_playing_info then
-      img_info = last_playing_info
-    else
-      img_info = last_selected_info or last_playing_info
-    end
+    local img_info = last_selected_info
     local has_cover = img_info and HasCoverImage(img_info)
     local left_img_w = has_cover and UIScale(130) or 1 -- 无图片时显示为1的宽度，后续使用reaper.ImGui_Dummy(ctx, -11, 0)补偿回正常宽度
     local gap = 0
@@ -24170,19 +24214,8 @@ function loop()
       local window_start = Wave.scroll
       local window_end = Wave.scroll + view_len
 
-      -- 获取峰值
-      -- local cur_info = files_idx_cache and files_idx_cache[selected_row] -- 因添加最近播放分支注释
-      local cur_info = nil
-      if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then -- 最近播放模式时使用播放列表项
-        cur_info = current_recent_play_info
-        selected_row = 0 -- 清空右侧表格选中项
-      elseif _G.current_display_list and selected_row and _G.current_display_list[selected_row] then
-        cur_info = _G.current_display_list[selected_row] -- 其他模式用右侧表格选中项
-        selected_recent_row = 0 -- 清空最近播放选中项
-      end
-      if not cur_info then
-        cur_info = last_selected_info
-      end
+      -- 获取峰值：保留当前主预览音频，不从切换后列表的选中行重新取音频。
+      local cur_info = last_selected_info
       midi_preview_state.data = nil
       if cur_info then
         -- 获取完整源音频及区段参数
@@ -24239,7 +24272,7 @@ function loop()
           local cache = SM_GetMainPreviewWaveformCache(root_path, maxch)
 
           local ok_for_remap = false
-          if collect_mode == COLLECT_MODE_ALL_ITEMS and section_length > 0 then
+          if Wave.preview_mode == COLLECT_MODE_ALL_ITEMS and section_length > 0 then
             -- 区段音频
             local zoom = Wave.zoom or 1
             local section_len = section_length
@@ -24277,7 +24310,11 @@ function loop()
 
           if ok_for_remap then
             local view_peaks, view_pixel_cnt, _, view_channel_count
-            if cache and cache.status ~= "partial" then
+            -- 完整缓存足够覆盖当前视图时直接映射，放大细节及采样点视图保留原采集方式
+            if cache and cache.status ~= "partial"
+              and ((window_end - window_start) * cache.pixel_cnt < pw_region_w * cache.src_len
+                or (window_end - window_start) * Wave.sample_rate <= pw_region_w * 4)
+            then
               view_peaks, view_pixel_cnt, _, view_channel_count = GetPeaksForInfo(
                 { path = root_path }, wf_step, pw_region_w, window_start, window_end)
             end
@@ -24386,30 +24423,18 @@ function loop()
         if ZoomWaveAtFraction(Wave, 0.5, 1 / 1.25, 1, GetWaveMaxZoom(Wave)) then last_view_len = nil end
       end
 
-      -- 单击自动播放，选中项变化时触发
-      if auto_play_selected and selected_row and selected_row > 0 and _G.current_display_list then
-        if last_selected_row ~= selected_row then
-          local cur_info = _G.current_display_list[selected_row]
-          if cur_info then
-            if wait_nextbar_play and ((reaper.GetPlayState() & 1) == 1) then
-              if playing_preview then StopPreview() end
-              PlayStartAtNextBar(cur_info, true) -- 下一个量化点从头播
-            else
-              if _G.wait_nextbar_start then _G.wait_nextbar_start.active = false end
-              PlayFromStart(cur_info)
-            end
-
-            last_selected_info = {}
-            for k, v in pairs(cur_info) do last_selected_info[k] = v end
-            if type(SM_StoreStablePreviewCover) == "function" then
-              SM_StoreStablePreviewCover(last_selected_info, cur_info)
-            end
-          end
-          last_selected_row = selected_row
+      -- 仅主动点击选中触发自动播放，模式/页面恢复选中行不触发
+      if auto_play_selected and Wave.preview_selection_pending and cur_info then
+        if wait_nextbar_play and ((reaper.GetPlayState() & 1) == 1) then
+          if playing_preview then StopPreview() end
+          PlayStartAtNextBar(cur_info, true) -- 下一个量化点从头播
+        else
+          if _G.wait_nextbar_start then _G.wait_nextbar_start.active = false end
+          PlayFromStart(cur_info)
         end
-      else
-        last_selected_row = selected_row
       end
+      Wave.preview_selection_pending = nil
+      last_selected_row = selected_row
 
       local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
       local min_x, min_y = reaper.ImGui_GetItemRectMin(ctx)
@@ -24680,16 +24705,16 @@ function loop()
       end
 
       -- 切换源时清除选区高亮和重置波形的缩放与滚动位置
-      if selected_row ~= last_audio_idx then
+      if Wave.preview_key ~= last_preview_key then
         select_start_time = nil
         select_end_time = nil
         selection_edge_drag = nil
         selection_drag_click_valid = false
         ResetWaveSelectionEdgeCursor()
-        last_audio_idx = selected_row
-          Wave.zoom = 1
-          Wave.scroll = 0
-          waveform_vertical_zoom = 1
+        last_preview_key = Wave.preview_key
+        Wave.zoom = 1
+        Wave.scroll = 0
+        waveform_vertical_zoom = 1
       end
 
       -- 选区高亮 - 框选颜色
@@ -25029,15 +25054,7 @@ function loop()
       sr = nil
     end
 
-    local file_info
-    if collect_mode == COLLECT_MODE_RECENTLY_PLAYED and current_recent_play_info then -- 最近播放模式时使用播放列表项
-      file_info = current_recent_play_info
-    elseif sr and display_list[sr] then
-      file_info = display_list[sr] -- 其他模式用右侧表格选中项
-      selected_recent_row = 0 -- 清空最近播放选中项
-    else
-      file_info = last_playing_info
-    end
+    local file_info = last_selected_info
 
     do
       local is_db = (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
@@ -25110,11 +25127,7 @@ function loop()
         -- 插入选区音频到REAPER文本提示
         reaper.ImGui_SameLine(ctx, nil,  UIScale(10))
         if select_start_time and select_end_time and math.abs(select_end_time - select_start_time) > 0.01 then
-          local list = _G.current_display_list or {}
-          local cur_info = list[selected_row]
-          if not cur_info then
-            cur_info = last_selected_info
-          end
+          local cur_info = last_selected_info
           local do_insert = false
           -- Shift+S
           local shift = reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_LeftShift()) or reaper.ImGui_IsKeyDown(ctx, reaper.ImGui_Key_RightShift())
@@ -25344,7 +25357,7 @@ function loop()
       local is_play = (((st or 0) & 1) == 1)
 
       if is_play and not link_prev_playing then
-        local info = (_G.current_display_list and selected_row and _G.current_display_list[selected_row]) or last_selected_info or last_playing_info or file_info
+        local info = last_selected_info
         if info and info.path and not playing_preview then
           if wait_nextbar_play then
             PlayStartAtNextBar(info, true)

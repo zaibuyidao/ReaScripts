@@ -1,9 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.270
+-- @version 1.0.271
 -- @changelog
---   Added an audio row hover/press color toggle, off by default.
---   Fixed click-to-play failures and row height changes after horizontal scrolling.
+--   Optimized waveform preview loading and caching.
+--   Preserved waveform preview and playback state when switching modes.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
