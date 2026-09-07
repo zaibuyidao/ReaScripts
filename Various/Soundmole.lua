@@ -1,8 +1,9 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.269
+-- @version 1.0.270
 -- @changelog
---   Improved the middle footer layout with centered database selection and pagination.
+--   Added an audio row hover/press color toggle, off by default.
+--   Fixed click-to-play failures and row height changes after horizontal scrolling.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

@@ -816,6 +816,7 @@ if last_stop_preview_on_collapse == "0" then stop_preview_on_collapse = false en
 if last_stop_preview_on_collapse == "1" then stop_preview_on_collapse = true end
 last_row_height = tonumber(SM_GetState(EXT_SECTION, "table_row_height"))
 if last_row_height then row_height = math.max(12, math.min(48, last_row_height)) end -- 内容行高限制范围
+table_row_hover_feedback = SM_GetState(EXT_SECTION, "table_row_hover_feedback") == "1" -- 音频行悬停/按下变色，默认关闭
 last_hue_shift = tonumber(SM_GetState(EXT_SECTION, "spectral_hue_shift")) -- 读取色相偏移设置
 spectral_hue_shift = last_hue_shift or 0.0
 last_grad_sat = tonumber(SM_GetState(EXT_SECTION, "spectral_grad_sat")) -- 读取饱和度设置
@@ -1563,6 +1564,7 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "max_recent_play", tostring(max_recent_files), true)
   SM_SetState(EXT_SECTION, "max_recent_search", tostring(max_recent_search), true)
   SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
+  SM_SetState(EXT_SECTION, "table_row_hover_feedback", table_row_hover_feedback and "1" or "0", true)
   SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
   SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
   SM_SetState(EXT_SECTION, "page_resident_cache_enabled", page_resident_cache_enabled and "1" or "0", true)
@@ -2265,6 +2267,12 @@ do
       SM_SetState(EXT_SECTION, "table_row_height", tostring(row_height), true)
     end
 
+    local changed_row_feedback, new_row_feedback = reaper.ImGui_Checkbox(ctx, T("Show audio row hover and press colors"), table_row_hover_feedback)
+    if changed_row_feedback then
+      table_row_hover_feedback = new_row_feedback
+      SM_SetState(EXT_SECTION, "table_row_hover_feedback", table_row_hover_feedback and "1" or "0", true)
+    end
+
     local changed_page_bar, new_page_bar_centered = reaper.ImGui_Checkbox(ctx, T("Show page bar below the audio table"), page_bar_centered)
     if changed_page_bar then
       page_bar_centered = new_page_bar_centered
@@ -2961,6 +2969,7 @@ do
       collect_mode         = -1
       doubleclick_action   = DOUBLECLICK_NONE
       row_height           = DEFAULT_ROW_HEIGHT
+      table_row_hover_feedback = false
       auto_play_selected   = true
       auto_play_waveform_when_stopped = false
       preserve_pitch       = true
@@ -15108,7 +15117,8 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
     local is_name_col   = (col_name == T("Take Name") or col_name == T("File Name"))
     local is_date_track = (col_name == T("Date") or col_name == T("Track"))
     local is_genre_pos  = (col_name == T("Genre") or col_name == T("Position"))
-    if not column_visible then goto continue_column end
+    -- 名称列的跨列选择控件负责整行交互和行高，横向滚出视野后保持有效
+    if not column_visible and not is_name_col then goto continue_column end
 
     -- Waveform
     if col_name == T("Similarity") then
@@ -15131,7 +15141,12 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
       local display_name = (info.filename or ""):gsub("#", "#\u{200B}")
       local row_label = display_name .. "##RowContext__" .. tostring(i)
       local is_sel = IsFileRowSelected(i)
-      if reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height) then
+      -- 按设置切换音频行的悬停/按下变色，保留选中底色及右键菜单的颜色反馈
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderHovered(), table_row_hover_feedback and colors.table_header_hovered or (is_sel and colors.header or 0x00000000))
+      reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_HeaderActive(), table_row_hover_feedback and colors.table_header_active or (is_sel and colors.header or 0x00000000))
+      local clicked = reaper.ImGui_Selectable(ctx, row_label, is_sel, reaper.ImGui_SelectableFlags_SpanAllColumns(), nil, row_height)
+      reaper.ImGui_PopStyleColor(ctx, 2)
+      if clicked then
         handle_file_click(i)
       end
 

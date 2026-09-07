@@ -349,6 +349,7 @@ PeekTree=媒体库
 Adjust UI appearance and display details=调整界面外观及显示细节
 Content Font Size:=内容字体大小:
 Content Row Height:=内容行高:
+Show audio row hover and press colors=显示音频行悬停和按下时的颜色反馈
 Window background alpha:=窗口背景透明度:
 Peaks meter channels:=峰值通道数:
 Number of peak meter channels to show. Range: 2~128.=显示峰值通道数。范围: 2~128。
