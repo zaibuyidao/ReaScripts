@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.272
+-- @version 1.0.273
 -- @changelog
---   Updated the main layout.
+--   Improved large database loading speed and reduced synchronous reads during scrolling for smoother list navigation.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

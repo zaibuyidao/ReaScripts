@@ -3523,6 +3523,7 @@ function SM_QueueCustomTagsMetadataProbe(info)
 end
 
 function SM_ProcessCustomTagsMetadataProbe()
+  if (_G._soundmole_static or {}).table_scroll_busy then return end
   if not custom_tags_probe_active then
     local entry = table.remove(custom_tags_probe_queue, 1)
     if not entry then return end
@@ -10729,6 +10730,7 @@ end
 function ProcessWaveformTasks()
   if not table_waveform_column_enabled then return end
   local list_state = _G._soundmole_static or {}
+  if list_state.table_scroll_busy then return end
   local last_scroll_time = tonumber(list_state.last_scroll_time)
   if last_scroll_time and reaper.time_precise() - last_scroll_time < TABLE_WAVEFORM_IDLE_SECONDS then
     return
@@ -11230,6 +11232,7 @@ function HasCoverImage(img_info)
   return false
 end
 function ReleaseAllCoverImages()
+  if _G._soundmole_static then _G._soundmole_static.table_cover_cache = nil end
   if cover_image_cache and reaper.ImGui_DestroyImage then
     for k, cached in pairs(cover_image_cache) do
       local img = (type(cached) == "table") and cached.image or cached
@@ -14672,10 +14675,24 @@ function GetCoverImageTexture(ctx, path)
   return nil
 end
 
-function RenderCoverCell(ctx, i, info, row_height)
+function RenderCoverCell(ctx, i, info, row_height, idle_time)
   local side = math.max(1, math.floor(row_height or GetScaledRowHeight()))
-  local cover_path, cover_id = ResolveCoverPathForEntry(info)
-  local img = cover_path and GetCoverImageTexture(ctx, cover_path) or nil
+  -- 滚动时只读内存缓存。停稳后每帧最多补两项，避免整屏同步打开音频和图片
+  static.table_cover_cache = static.table_cover_cache or setmetatable({}, { __mode = "k" })
+  local cached = static.table_cover_cache[info]
+  if cached and cached.source_id ~= info.cover_id then cached = nil end
+  if not cached and (idle_time or 0) >= 0.15 and (static.table_cover_load_count or 0) < 2 then
+    static.table_cover_load_count = (static.table_cover_load_count or 0) + 1
+    local cover_path, cover_id = ResolveCoverPathForEntry(info)
+    cached = {
+      image = cover_path and GetCoverImageTexture(ctx, cover_path) or nil,
+      cover_id = cover_id,
+      source_id = info.cover_id
+    }
+    static.table_cover_cache[info] = cached
+  end
+  local cover_id = cached and cached.cover_id or info.cover_id
+  local img = cached and cached.image
 
   reaper.ImGui_PushID(ctx, "cover_" .. tostring(info and info.path or i))
   local cur_x = reaper.ImGui_GetCursorPosX(ctx)
@@ -15179,7 +15196,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
     elseif col_name == T("Waveform") then
       RenderWaveformCell(ctx, i, info, row_height, collect_mode, idle_time)
     elseif col_name == T("Artwork") or col_name == "专辑图片" then
-      RenderCoverCell(ctx, i, info, row_height)
+      RenderCoverCell(ctx, i, info, row_height, idle_time)
     -- File & Teak name
     elseif is_name_col then
       local display_name = (info.filename or ""):gsub("#", "#\u{200B}")
@@ -15513,7 +15530,7 @@ function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_tim
     -- Custom Tags
     elseif col_name == T("Custom Tags") then
       if (collect_mode == COLLECT_MODE_MEDIADB or collect_mode == COLLECT_MODE_REAPERDB)
-        and not info._custom_tags_from_db and not info._custom_tags_probe_done then
+        and idle_time >= 0.15 and not info._custom_tags_from_db and not info._custom_tags_probe_done then
         SM_QueueCustomTagsMetadataProbe(info)
       end
       DrawCellTextOneLine(ctx, info.custom_tags or "")
@@ -18269,6 +18286,7 @@ end
 function SM_ProcessCoverIndexLoop()
   local handle = cover_index_state.handle
   if not handle then return end
+  if static.table_scroll_busy then return end
 
   local result = reaper.SM_CoverIndex_RunSlice(handle, 4)
   if result == 1 then return end
@@ -18573,6 +18591,8 @@ function SM_ProcessBuilderLoop()
 end
 
 function loop()
+  -- 在任何后台读盘前检查本帧鼠标状态，避免滚动检测滞后一帧
+  static.table_scroll_busy = reaper.ImGui_IsMouseDown(ctx, 0) or reaper.ImGui_GetMouseWheel(ctx) ~= 0 or (static.last_scroll_time and reaper.time_precise() - static.last_scroll_time < 0.15)
   ProcessPendingSelectionNativeDrops()
   -- RunDatabaseLoaderTick() -- 调用分片加载器，否则永远不会加载数据！(新版 C++ 代理模式下，数据瞬间就绪，无需运行后台分片加载器)
   -- SM_ProcessBuilderLoop() -- 处理数据库构建器
@@ -22846,6 +22866,7 @@ function loop()
 
         -- 缓存命中整段直读
         static.wf_enqueue_count = 0
+        static.table_cover_load_count = 0
 
         -- 限制加载波形，指定列表无滚动时多少秒之后才开始加载。用于解决脚本卡顿问题。
         local now_time = reaper.time_precise()
@@ -22853,9 +22874,15 @@ function loop()
         static.last_scroll_y    = static.last_scroll_y or reaper.ImGui_GetScrollY(ctx)
         local cur_scroll_y      = reaper.ImGui_GetScrollY(ctx)
         local wheel             = reaper.ImGui_GetMouseWheel(ctx)
-        if cur_scroll_y ~= static.last_scroll_y or wheel ~= 0 then
+        if cur_scroll_y ~= static.last_scroll_y or wheel ~= 0 or reaper.ImGui_IsMouseDown(ctx, 0) then
           static.last_scroll_y    = cur_scroll_y
           static.last_scroll_time = now_time
+          -- 丢弃离开视区的标签探测，可见行停稳后重新入队
+          for _, entry in ipairs(custom_tags_probe_queue) do
+            custom_tags_probe_by_path[entry.path] = nil
+            for _, info in ipairs(entry.infos) do info._custom_tags_probe_queued = nil end
+          end
+          custom_tags_probe_queue = {}
         end
         local idle_time = now_time - static.last_scroll_time -- 停止滚动多久
 
