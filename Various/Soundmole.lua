@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.273
+-- @version 1.0.274
 -- @changelog
---   Improved large database loading speed and reduced synchronous reads during scrolling for smoother list navigation.
+--   Limited audio list column resizing to header borders.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

@@ -15154,6 +15154,46 @@ function SM_ExtractLicenseFromComment(comment)
   return body -- return "license:" .. body
 end
 
+-- NoBordersInBody 将列宽拖动命中区域限制在表头。内容区竖线单独绘制，不参与鼠标交互
+function SM_CaptureFileTableBodyBorders(ctx)
+  local _, header_bottom = reaper.ImGui_GetItemRectMax(ctx)
+  local wx, wy = reaper.ImGui_GetWindowPos(ctx)
+  local ww, wh = reaper.ImGui_GetWindowSize(ctx)
+  local scrollbar_size = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_ScrollbarSize())
+  local borders = {
+    x1 = wx + 1, y1 = header_bottom + 1,
+    x2 = wx + ww - (reaper.ImGui_GetScrollMaxY(ctx) > 0 and scrollbar_size or 0) - 1,
+    y2 = wy + wh - (reaper.ImGui_GetScrollMaxX(ctx) > 0 and scrollbar_size or 0) - 1,
+    columns = {},
+  }
+  local current_column = reaper.ImGui_TableGetColumnIndex(ctx)
+  local cell_padding_x = reaper.ImGui_GetStyleVar(ctx, reaper.ImGui_StyleVar_CellPadding())
+  for column = 0, reaper.ImGui_TableGetColumnCount(ctx) - 1 do
+    if reaper.ImGui_TableSetColumnIndex(ctx, column) then
+      borders.draw_column = column
+      local x = reaper.ImGui_GetCursorScreenPos(ctx)
+      local width = reaper.ImGui_GetContentRegionAvail(ctx)
+      local border_x = x + width + cell_padding_x
+      if border_x > borders.x1 and border_x < borders.x2 then
+        borders.columns[#borders.columns + 1] = border_x
+      end
+    end
+  end
+  reaper.ImGui_TableSetColumnIndex(ctx, current_column)
+  return borders
+end
+
+function SM_DrawFileTableBodyBorders(ctx, borders)
+  if not borders.draw_column or borders.x2 <= borders.x1 or borders.y2 <= borders.y1 then return end
+  reaper.ImGui_TableSetColumnIndex(ctx, borders.draw_column)
+  local dl = reaper.ImGui_GetWindowDrawList(ctx)
+  reaper.ImGui_DrawList_PushClipRect(dl, borders.x1, borders.y1, borders.x2, borders.y2, false)
+  for _, x in ipairs(borders.columns) do
+    reaper.ImGui_DrawList_AddLine(dl, x, borders.y1, x, borders.y2, colors.table_border_light, 1)
+  end
+  reaper.ImGui_DrawList_PopClipRect(dl)
+end
+
 function RenderFileRowByColumns(ctx, i, info, row_height, collect_mode, idle_time)
   if not info then return end -- 防御性检查
 
@@ -22250,10 +22290,12 @@ function loop()
     if reaper.ImGui_BeginChild(ctx, "##file_table_child_page_" .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE)), table_w, child_h, 0) then
       local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 24 or 23
       local filelist_table_id = ((collect_mode == COLLECT_MODE_SIMILAR) and "filelist_similarity_page_" or "filelist_page_") .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE))
+      local header_resize_flag = reaper.ImGui_TableFlags_NoBordersInBody and reaper.ImGui_TableFlags_NoBordersInBody() or (1 << 11)
       if reaper.ImGui_BeginTable(ctx, filelist_table_id, filelist_column_count,
         reaper.ImGui_TableFlags_Borders()      -- 表格分隔线
       | reaper.ImGui_TableFlags_BordersOuter() -- 表格边界线
       | reaper.ImGui_TableFlags_Resizable()
+      | header_resize_flag                     -- 仅表头列线接受悬停、拖动和双击自动列宽
       | reaper.ImGui_TableFlags_ScrollY()
       | reaper.ImGui_TableFlags_ScrollX()
       | reaper.ImGui_TableFlags_Sortable()
@@ -22377,6 +22419,7 @@ function loop()
         end
         -- 此处新增时，记得累加 filelist 的列表数量。测试元数据内容 - CollectFromProjectDirectory()
         reaper.ImGui_TableHeadersRow(ctx)
+        SM_DrawFileTableBodyBorders(ctx, SM_CaptureFileTableBodyBorders(ctx))
         local waveform_column_enabled = (reaper.ImGui_TableGetColumnFlags(ctx, 0) & reaper.ImGui_TableColumnFlags_IsEnabled()) ~= 0
         if table_waveform_column_enabled and not waveform_column_enabled then
           ClearTableWaveformTaskQueue()
