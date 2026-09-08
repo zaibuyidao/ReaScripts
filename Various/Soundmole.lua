@@ -1,9 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.271
+-- @version 1.0.272
 -- @changelog
---   Optimized waveform preview loading and caching.
---   Preserved waveform preview and playback state when switching modes.
+--   Updated the main layout.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

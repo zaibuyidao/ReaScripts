@@ -1525,8 +1525,7 @@ hide_soundmole_title            = false -- 默认显示 Soundmole 标题
 show_window_titlebar            = false -- 默认显示窗口标题栏
 retain_search_on_exit           = false -- 关闭脚本时保留当前搜索内容
 page_resident_cache_enabled     = true  -- 分页状态常驻，并受控保留列表/数据库重资源
-page_bar_centered               = true  -- 分页栏默认显示在中间音频表格底部
-page_bar_full                   = true  -- 音频表格底部分页栏默认完整显示页码
+page_bar_full                   = true  -- 分页栏默认完整显示页码
 focus_main_search_on_startup    = false -- 启动脚本时聚焦主搜索框
 focus_main_search_requested     = false
 local mirror_folder_shortcuts   = false -- 默认关闭 Folder Shortcuts (Mirror)
@@ -1585,7 +1584,6 @@ function SaveSettings()
   SM_SetState(EXT_SECTION, "search_enter_mode", search_enter_mode and "1" or "0", true)
   SM_SetState(EXT_SECTION, "retain_search_on_exit", retain_search_on_exit and "1" or "0", true)
   SM_SetState(EXT_SECTION, "page_resident_cache_enabled", page_resident_cache_enabled and "1" or "0", true)
-  SM_SetState(EXT_SECTION, "page_bar_centered", page_bar_centered and "1" or "0", true)
   SM_SetState(EXT_SECTION, "page_bar_full", page_bar_full and "1" or "0", true)
   SM_SetState(EXT_SECTION, "focus_main_search_on_startup", focus_main_search_on_startup and "1" or "0", true)
   SM_SetState(EXT_SECTION, "build_waveform_cache", build_waveform_cache and "1" or "0", true)
@@ -1804,12 +1802,8 @@ do
 end
 
 do
-  page_bar_centered = SM_GetState(EXT_SECTION, "page_bar_centered") ~= "0"
-end
-
-do
   local v = SM_GetState(EXT_SECTION, "page_bar_full")
-  page_bar_full = (v == "") and page_bar_centered or (v == "1")
+  page_bar_full = (v == "") or (v == "1")
 end
 
 do
@@ -2288,14 +2282,6 @@ do
     if changed_row_feedback then
       table_row_hover_feedback = new_row_feedback
       SM_SetState(EXT_SECTION, "table_row_hover_feedback", table_row_hover_feedback and "1" or "0", true)
-    end
-
-    local changed_page_bar, new_page_bar_centered = reaper.ImGui_Checkbox(ctx, T("Show page bar below the audio table"), page_bar_centered)
-    if changed_page_bar then
-      page_bar_centered = new_page_bar_centered
-      page_bar_full = page_bar_centered
-      SM_SetState(EXT_SECTION, "page_bar_centered", page_bar_centered and "1" or "0", true)
-      SM_SetState(EXT_SECTION, "page_bar_full", page_bar_full and "1" or "0", true)
     end
   end
 
@@ -3000,7 +2986,6 @@ do
       search_enter_mode    = true
       retain_search_on_exit = false
       page_resident_cache_enabled = true
-      page_bar_centered    = true
       page_bar_full        = true
       focus_main_search_on_startup = false
       SM_SetState(EXT_SECTION, "retained_search_text", "", true)
@@ -18080,7 +18065,7 @@ function SM_DrawLeftTableToggle(ctx)
   end
 end
 
-function SM_DrawPageBar(ctx, centered, centered_width)
+function SM_DrawPageBar(ctx)
   if not (SM_PAGES[SM_ACTIVE_PAGE] and SM_PAGES[SM_ACTIVE_PAGE].initialized) then
     SM_CapturePageState(SM_ACTIVE_PAGE)
   end
@@ -18098,24 +18083,8 @@ function SM_DrawPageBar(ctx, centered, centered_width)
     visible_pages = { 1, false, SM_ACTIVE_PAGE - 1, SM_ACTIVE_PAGE, SM_ACTIVE_PAGE + 1, false, page_count }
   end
 
-  PushUIFont(ctx, fonts.material, 16)
   local page_mode_glyph = page_bar_full and MATERIAL_ICONS.page_full or MATERIAL_ICONS.page_compact
-  local page_mode_w = select(1, reaper.ImGui_CalcTextSize(ctx, page_mode_glyph))
-  reaper.ImGui_PopFont(ctx)
-
-  if centered then
-    local total_w = page_mode_w + select(1, reaper.ImGui_CalcTextSize(ctx, T("Pages:"))) + UIScaleF(4) * (#visible_pages + 2) + UIScaleF(24)
-    for _, page_index in ipairs(visible_pages) do
-      local label = page_index == false and "..." or tostring(page_index)
-      local text_w = select(1, reaper.ImGui_CalcTextSize(ctx, label))
-      total_w = total_w + (page_index == false and text_w or math.max(UIScaleF(24), text_w + UIScaleF(10)))
-    end
-    local cursor_x = select(1, reaper.ImGui_GetCursorPos(ctx))
-    local avail_w = centered_width or select(1, reaper.ImGui_GetContentRegionAvail(ctx))
-    reaper.ImGui_SetCursorPosX(ctx, cursor_x + math.max(0, avail_w - total_w) * 0.5)
-  else
-    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
-  end
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
 
   PushUIFont(ctx, fonts.material, 16)
   local x0, y0, x1, y1 = CalcTextHitRect(ctx, page_mode_glyph, 4)
@@ -22256,10 +22225,9 @@ function loop()
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SeparatorHovered(),  colors.table_separator_hovered)
     reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_SeparatorActive(),   colors.table_separator_active)
 
-    -- 中间音频表格底部固定显示数据库选择，分页栏启用时在同一行右侧显示
-    local file_table_h = math.max(10, child_h - reaper.ImGui_GetFrameHeight(ctx) - main_item_spacing_y)
+    -- 中间音频表格使用完整高度
     reaper.ImGui_BeginGroup(ctx)
-    if reaper.ImGui_BeginChild(ctx, "##file_table_child_page_" .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE)), table_w, file_table_h, 0) then
+    if reaper.ImGui_BeginChild(ctx, "##file_table_child_page_" .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE)), table_w, child_h, 0) then
       local filelist_column_count = (collect_mode == COLLECT_MODE_SIMILAR) and 24 or 23
       local filelist_table_id = ((collect_mode == COLLECT_MODE_SIMILAR) and "filelist_similarity_page_" or "filelist_page_") .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE))
       if reaper.ImGui_BeginTable(ctx, filelist_table_id, filelist_column_count,
@@ -23203,66 +23171,6 @@ function loop()
     else
       static.clipper = nil
     end
-    if reaper.ImGui_BeginChild(ctx, "##file_table_footer_page_" .. tostring(SM_GetPageUID(SM_ACTIVE_PAGE)), table_w, reaper.ImGui_GetFrameHeight(ctx), 0,
-      reaper.ImGui_WindowFlags_NoScrollbar() | (reaper.ImGui_WindowFlags_NoScrollWithMouse and reaper.ImGui_WindowFlags_NoScrollWithMouse() or 0)) then
-      -- 当前选中的数据库下拉菜单
-      local footer_x = select(1, reaper.ImGui_GetCursorPos(ctx))
-      local footer_w = select(1, reaper.ImGui_GetContentRegionAvail(ctx))
-      local selected_db_w = select(1, reaper.ImGui_CalcTextSize(ctx, T("Selected DB:"))) + UIScaleF(4) + UIScale(150)
-      reaper.ImGui_SetCursorPosX(ctx, footer_x + math.max(0, footer_w * 0.25 - selected_db_w * 0.5))
-      reaper.ImGui_AlignTextToFramePadding(ctx)
-      reaper.ImGui_TextColored(ctx, colors.mole, T("Selected DB:"))
-      reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
-      if collect_mode == COLLECT_MODE_MEDIADB then
-        local current_db_alias = T("No database selected.")
-        if tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
-          current_db_alias = GetMediaDBDisplayName(tree_state.cur_mediadb)
-        end
-        reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
-        if reaper.ImGui_BeginCombo(ctx, "##selected_db_combo", current_db_alias, reaper.ImGui_ComboFlags_HeightLarge()) then
-          for _, dbfile in ipairs(GetOrderedMediaDBFiles()) do
-            local alias = GetMediaDBDisplayName(dbfile)
-            local is_selected = (tree_state.cur_mediadb == dbfile)
-            if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##selected_mediadb_" .. tostring(dbfile), is_selected) then
-              SelectMediaDatabase(dbfile)
-            end
-            if reaper.ImGui_IsItemHovered(ctx) then
-              DrawTooltip("File: " .. dbfile)
-            end
-            if is_selected then
-              reaper.ImGui_SetItemDefaultFocus(ctx)
-            end
-          end
-          reaper.ImGui_EndCombo(ctx)
-        end
-      else
-        reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
-        if reaper.ImGui_BeginCombo(ctx, "##selected_db_combo", T("Not in Database mode"), reaper.ImGui_ComboFlags_HeightLarge()) then
-          -- 仅作为提示显示，不允许选择
-          reaper.ImGui_BeginDisabled(ctx, true)
-          reaper.ImGui_Selectable(ctx, T("Not in Database mode") .. "##selected_mediadb_not_db_mode", true)
-          reaper.ImGui_EndDisabled(ctx)
-          reaper.ImGui_Separator(ctx)
-          -- 非数据库模式下，也允许选择数据库
-          for _, dbfile in ipairs(GetOrderedMediaDBFiles()) do
-            local alias = GetMediaDBDisplayName(dbfile)
-            if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##selected_mediadb_" .. tostring(dbfile), false) then
-              SelectMediaDatabase(dbfile)
-            end
-            if reaper.ImGui_IsItemHovered(ctx) then
-              DrawTooltip("File: " .. dbfile)
-            end
-          end
-          reaper.ImGui_EndCombo(ctx)
-        end
-      end
-      if page_bar_centered then
-        reaper.ImGui_SameLine(ctx, nil, 0)
-        reaper.ImGui_SetCursorPosX(ctx, footer_x + footer_w * 0.5)
-        SM_DrawPageBar(ctx, true, footer_w * 0.5)
-      end
-      reaper.ImGui_EndChild(ctx)
-    end
     reaper.ImGui_EndGroup(ctx)
 
     if ALBUM_PANEL_VISIBLE then
@@ -23631,6 +23539,7 @@ function loop()
     -- 简易频谱反馈
     reaper.ImGui_SameLine(ctx, nil, 10)
     DrawMiniSpectrumAnalyzer(ctx, UIScale(math.max(90, MINI_SPECTRUM_BANDS * 4)), bar_height)
+    SM_DrawPageBar(ctx)
 
     -- 播放器控件
     reaper.ImGui_SameLine(ctx)
@@ -23686,7 +23595,56 @@ function loop()
       reaper.ImGui_PopFont(ctx)
     end
 
+    -- 当前选中的数据库下拉菜单
+    reaper.ImGui_AlignTextToFramePadding(ctx)
+    reaper.ImGui_TextColored(ctx, colors.mole, T("Selected DB:"))
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
+    if collect_mode == COLLECT_MODE_MEDIADB then
+      local current_db_alias = T("No database selected.")
+      if tree_state.cur_mediadb and tree_state.cur_mediadb ~= "" then
+        current_db_alias = GetMediaDBDisplayName(tree_state.cur_mediadb)
+      end
+      reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
+      if reaper.ImGui_BeginCombo(ctx, "##selected_db_combo", current_db_alias, reaper.ImGui_ComboFlags_HeightLarge()) then
+        for _, dbfile in ipairs(GetOrderedMediaDBFiles()) do
+          local alias = GetMediaDBDisplayName(dbfile)
+          local is_selected = (tree_state.cur_mediadb == dbfile)
+          if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##selected_mediadb_" .. tostring(dbfile), is_selected) then
+            SelectMediaDatabase(dbfile)
+          end
+          if reaper.ImGui_IsItemHovered(ctx) then
+            DrawTooltip("File: " .. dbfile)
+          end
+          if is_selected then
+            reaper.ImGui_SetItemDefaultFocus(ctx)
+          end
+        end
+        reaper.ImGui_EndCombo(ctx)
+      end
+    else
+      reaper.ImGui_SetNextItemWidth(ctx, UIScale(150))
+      if reaper.ImGui_BeginCombo(ctx, "##selected_db_combo", T("Not in Database mode"), reaper.ImGui_ComboFlags_HeightLarge()) then
+        -- 仅作为提示显示，不允许选择
+        reaper.ImGui_BeginDisabled(ctx, true)
+        reaper.ImGui_Selectable(ctx, T("Not in Database mode") .. "##selected_mediadb_not_db_mode", true)
+        reaper.ImGui_EndDisabled(ctx)
+        reaper.ImGui_Separator(ctx)
+        -- 非数据库模式下，也允许选择数据库
+        for _, dbfile in ipairs(GetOrderedMediaDBFiles()) do
+          local alias = GetMediaDBDisplayName(dbfile)
+          if reaper.ImGui_Selectable(ctx, ImGuiEscapeVisibleLabel(alias) .. "##selected_mediadb_" .. tostring(dbfile), false) then
+            SelectMediaDatabase(dbfile)
+          end
+          if reaper.ImGui_IsItemHovered(ctx) then
+            DrawTooltip("File: " .. dbfile)
+          end
+        end
+        reaper.ImGui_EndCombo(ctx)
+      end
+    end
+
     -- 跳过静音
+    reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
     local silence_changed
     silence_changed, skip_silence_enabled = reaper.ImGui_Checkbox(ctx, T("Skip Silence") .. "###Skip_Silence", skip_silence_enabled)
     if silence_changed then
@@ -23803,7 +23761,6 @@ function loop()
 
     reaper.ImGui_SameLine(ctx, nil, 10)
     DrawMIDIChannelSelector(ctx)
-    if not page_bar_centered then SM_DrawPageBar(ctx) end
 
     do
       -- 时间容差
