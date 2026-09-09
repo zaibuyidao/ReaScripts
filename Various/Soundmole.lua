@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.276
+-- @version 1.0.277
 -- @changelog
---   Fixed unstable toggling of collapsible library headers and click conflicts with adjacent icons.
+--   Fixed layout shifts caused by changing row height when search keyword tags appear or are closed.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

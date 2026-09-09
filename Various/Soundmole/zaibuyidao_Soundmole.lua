@@ -19814,6 +19814,8 @@ function loop()
     end
     reaper.ImGui_EndGroup(ctx)
 
+    -- 记录整行基线，搜索标签出现或关闭时保持对齐
+    local base_x, base_y = reaper.ImGui_GetCursorPos(ctx)
     SM_DrawLeftTableToggle(ctx) -- 左侧表格开关按钮
     reaper.ImGui_SameLine(ctx, nil, 10)
     DrawFilterSearchTag(ctx) -- 绘制过滤标签
@@ -19840,9 +19842,6 @@ function loop()
     local has_ucs = SM_HasUCSTag()
     local has_db  = SM_HasDBTag()
     local has_cover = SM_HasCoverTag()
-    -- 记录当前行的基线（相对坐标）
-    local base_x, base_y = reaper.ImGui_GetCursorPos(ctx)
-
     if has_ucs or has_db or has_cover then
       reaper.ImGui_SameLine(ctx, nil, 10)
       local cur_x = select(1, reaper.ImGui_GetCursorPos(ctx))
@@ -19863,6 +19862,9 @@ function loop()
       reaper.ImGui_SetCursorPos(ctx, cur_x, base_y)
     end
     if has_cover then DrawCoverFilterTag(ctx) end
+    -- 预留标签/面板图标的最大高度，避免标签关闭导致行基线偏移
+    reaper.ImGui_SetCursorPos(ctx, select(1, reaper.ImGui_GetCursorPos(ctx)), base_y)
+    reaper.ImGui_Dummy(ctx, 0, math.max(reaper.ImGui_GetTextLineHeight(ctx) + 2, 18, UIFontSize(16)))
     SM_DrawAlbumPanelToggle(ctx, true) -- 右侧专辑/metadata 面板开关按钮
 
     -- 自动缩放音频表格
