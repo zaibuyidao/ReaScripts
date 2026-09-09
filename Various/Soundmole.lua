@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.274
+-- @version 1.0.275
 -- @changelog
---   Limited audio list column resizing to header borders.
+--   Improved spectrum displays in normal and mini modes with consistent control height.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links

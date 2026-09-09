@@ -2,7 +2,7 @@
 local script_path = debug.getinfo(1,'S').source:match[[^@?(.*[\/])[^\/]-$]]
 package.path = package.path .. ";" .. script_path .. "?.lua" .. ";" .. script_path .. "/lib/?.lua"
 
-SM_EXT_REQUIRED_VERSION = "0.0.44"
+SM_EXT_REQUIRED_VERSION = "0.0.49"
 SM_EXT_INSTALLED_VERSION = nil
 
 function SM_NormalizeVersion(version)
@@ -644,7 +644,7 @@ local last_pixel_cnt, last_view_len, last_scroll
 local last_wave_info -- 记录上次渲染的info
 local peak_hold = {} -- 存放各通道的峰值保持
 local MINI_SPECTRUM_BANDS = 31 -- 扩展支持 8-64，默认31
-local MINI_SPECTRUM_DISPLAY_GAIN = 1 -- 放大显示高度，不改变各频段的相对差异
+local MINI_SPECTRUM_DISPLAY_GAIN = 1.5 -- 仅放大显示，使频段达到满格，不改变实际音量
 MINI_SPECTRUM_BANDS = reaper.SM_Spectrum_SetBandCount(MINI_SPECTRUM_BANDS)
 local spectrum_mini = { levels = {}, last_t = 0 } -- 最终硬件输出的真实 FFT 频谱
 reaper.SM_Spectrum_SetEnabled(true)
@@ -7713,9 +7713,9 @@ function ResetMiniSpectrum()
   spectrum_mini.last_t = 0
 end
 
-function DrawMiniSpectrumAnalyzer(ctx, width, height)
+function DrawMiniSpectrumAnalyzer(ctx, width)
   width = math.max(24, width or 72)
-  height = math.max(8, height or reaper.ImGui_GetFrameHeight(ctx))
+  local height = reaper.ImGui_GetFrameHeight(ctx) -- 两种模式统一使用标准控件行高
 
   local draw_list = reaper.ImGui_GetWindowDrawList(ctx)
   local x, y = reaper.ImGui_GetCursorScreenPos(ctx)
@@ -7743,11 +7743,11 @@ function DrawMiniSpectrumAnalyzer(ctx, width, height)
     if target > cur then
       cur = cur + (target - cur) * 0.55
     else
-      cur = math.max(0, cur - (dt * 3.5))
+      cur = math.max(target, cur - (dt * 3.5))
     end
     spectrum_mini.levels[i] = cur
 
-    local bar_h = math.max(1, cur * (height - 3))
+    local bar_h = math.max(1, cur * (height - 2)) -- 上下各留 1 像素，满格柱顶贴近框内顶部
     local bx1 = start_x + (i - 1) * (bar_w + gap)
     local bx2 = bx1 + bar_w
     local by2 = y + height - 1
@@ -17302,7 +17302,7 @@ function DrawMainWindowMiniControls(ctx)
   end
 
   reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
-  DrawMiniSpectrumAnalyzer(ctx, UIScale(math.max(90, MINI_SPECTRUM_BANDS * 4)), UIScale(28))
+  DrawMiniSpectrumAnalyzer(ctx, UIScale(math.max(90, MINI_SPECTRUM_BANDS * 4)))
 
   reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
   PushUIFont(ctx, fonts.material, 16)
@@ -18161,9 +18161,9 @@ function SM_DrawPageBar(ctx)
       SM_SetState(EXT_SECTION, "page_bar_full", page_bar_full and "1" or "0", true)
     end
   end
-  reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
   reaper.ImGui_Text(ctx, T("Pages:"))
-  reaper.ImGui_SameLine(ctx, nil, UIScaleF(4))
+  reaper.ImGui_SameLine(ctx, nil, UIScaleF(10))
 
   reaper.ImGui_PushID(ctx, "SoundmolePages")
   for slot_index, page_index in ipairs(visible_pages) do
@@ -23608,7 +23608,8 @@ function loop()
 
     -- 简易频谱反馈
     reaper.ImGui_SameLine(ctx, nil, 10)
-    DrawMiniSpectrumAnalyzer(ctx, UIScale(math.max(90, MINI_SPECTRUM_BANDS * 4)), bar_height)
+    DrawMiniSpectrumAnalyzer(ctx, UIScale(math.max(90, MINI_SPECTRUM_BANDS * 4)))
+    reaper.ImGui_SameLine(ctx, nil, 10)
     SM_DrawPageBar(ctx)
 
     -- 播放器控件
