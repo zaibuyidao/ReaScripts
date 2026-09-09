@@ -17998,6 +17998,16 @@ function SM_RequestCollapseDBPFBranch(dir)
   walk(dir)
 end
 
+-- 图标使用独立按钮接收点击，配合标题的 AllowOverlap，避免同时触发开合
+function SM_PeekTreeHeaderIconButton(id, x, y, w, h)
+  local cursor_x, cursor_y = reaper.ImGui_GetCursorScreenPos(ctx)
+  reaper.ImGui_SetCursorScreenPos(ctx, x, y)
+  local clicked = reaper.ImGui_InvisibleButton(ctx, id, w, h)
+  local hovered = reaper.ImGui_IsItemHovered(ctx)
+  reaper.ImGui_SetCursorScreenPos(ctx, cursor_x, cursor_y)
+  return hovered, clicked
+end
+
 function SM_ForceNextPeakTreeHeaderClosed()
   if _G._peektree_force_close_headers_once and reaper.ImGui_SetNextItemOpen then
     reaper.ImGui_SetNextItemOpen(ctx, false, reaper.ImGui_Cond_Always())
@@ -20009,16 +20019,15 @@ function loop()
             end
           end
 
-          -- 如果上一帧点了图标，本帧强制恢复折叠状态
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
+          -- 响应 '全部折叠' 请求，隐藏的标题在重新显示时也会收起
           if _G._this_computer_force_open_state ~= nil then
             reaper.ImGui_SetNextItemOpen(ctx, _G._this_computer_force_open_state, reaper.ImGui_Cond_Always())
             _G._this_computer_force_open_state = nil
           end
 
           SM_ForceNextPeakTreeHeaderClosed()
-          local hdr_flags = this_computer_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-          local prev_this_computer_open = this_computer_open == true -- 记录上一帧状态
+          local hdr_flags = (this_computer_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0) | reaper.ImGui_TreeNodeFlags_AllowOverlap()
           local is_this_computer_open = reaper.ImGui_CollapsingHeader(ctx, T("This Computer"), nil, hdr_flags)
           this_computer_open = is_this_computer_open -- 更新当前状态
           reaper.ImGui_PopStyleColor(ctx)
@@ -20044,8 +20053,7 @@ function loop()
             local fully_inside = (icon_x >= clip_x0) and (icon_y >= clip_y0) and ((icon_x + icon_w) <= clip_x1) and ((icon_y + icon_h) <= clip_y1)
             local hovering_icon, clicked_icon = false, false
             if fully_inside then
-              hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-              clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
+              hovering_icon, clicked_icon = SM_PeekTreeHeaderIconButton("##ThisComputerRefresh", icon_x, icon_y, icon_w, icon_h)
 
               local dl = reaper.ImGui_GetWindowDrawList(ctx)
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
@@ -20072,10 +20080,6 @@ function loop()
             end
 
             if clicked_icon then
-              is_this_computer_open = prev_this_computer_open
-              this_computer_open = prev_this_computer_open
-              _G._this_computer_force_open_state = prev_this_computer_open
-
               -- 清空缓存并标记需要重新加载
               drive_cache = nil
               drives_loaded = false
@@ -20121,15 +20125,14 @@ function loop()
           end
 
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
-          -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
+          -- 响应 '全部折叠' 请求，隐藏的标题在重新显示时也会收起
           if _G._shortcuts_force_open_state ~= nil then
             reaper.ImGui_SetNextItemOpen(ctx, _G._shortcuts_force_open_state, reaper.ImGui_Cond_Always())
             _G._shortcuts_force_open_state = nil
           end
 
           SM_ForceNextPeakTreeHeaderClosed()
-          local hdr_flags = shortcut_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-          local prev_shortcut_open = shortcut_open == true -- 记录上一帧状态
+          local hdr_flags = (shortcut_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0) | reaper.ImGui_TreeNodeFlags_AllowOverlap()
           local is_shortcut_open = reaper.ImGui_CollapsingHeader(ctx, T("Folder Shortcuts"), nil, hdr_flags)
           shortcut_open = is_shortcut_open
 
@@ -20154,8 +20157,7 @@ function loop()
             local fully_inside = (icon_x >= clip_x0) and (icon_y >= clip_y0) and ((icon_x + icon_w) <= clip_x1) and ((icon_y + icon_h) <= clip_y1)
             local hovering_icon, clicked_icon = false, false
             if fully_inside then
-              hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-              clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
+              hovering_icon, clicked_icon = SM_PeekTreeHeaderIconButton("##ShortcutsAdd", icon_x, icon_y, icon_w, icon_h)
 
               local dl = reaper.ImGui_GetWindowDrawList(ctx)
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
@@ -20182,10 +20184,6 @@ function loop()
             end
 
             if clicked_icon then
-              is_shortcut_open = prev_shortcut_open
-              shortcut_open = prev_shortcut_open
-              _G._shortcuts_force_open_state = prev_shortcut_open
-
               local rv, folder = reaper.JS_Dialog_BrowseForFolder(T("Choose folder to add shortcut:"), "")
               if rv == 1 and folder and folder ~= "" then
                 AddFolderShortcut(folder)
@@ -20373,15 +20371,14 @@ function loop()
           end
 
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
-          -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
+          -- 响应 '全部折叠' 请求，隐藏的标题在重新显示时也会收起
           if _G._collections_force_open_state ~= nil then
             reaper.ImGui_SetNextItemOpen(ctx, _G._collections_force_open_state, reaper.ImGui_Cond_Always())
             _G._collections_force_open_state = nil
           end
 
           SM_ForceNextPeakTreeHeaderClosed()
-          local hdr_flags = collection_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-          local prev_collection_open = collection_open == true -- 记录上一帧状态
+          local hdr_flags = (collection_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0) | reaper.ImGui_TreeNodeFlags_AllowOverlap()
           local is_collection_open = reaper.ImGui_CollapsingHeader(ctx, T("Collections"), nil, hdr_flags)
           collection_open = is_collection_open
 
@@ -20406,8 +20403,7 @@ function loop()
             local fully_inside = (icon_x >= clip_x0) and (icon_y >= clip_y0) and ((icon_x + icon_w) <= clip_x1) and ((icon_y + icon_h) <= clip_y1)
             local hovering_icon, clicked_icon = false, false
             if fully_inside then
-              hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-              clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
+              hovering_icon, clicked_icon = SM_PeekTreeHeaderIconButton("##CollectionsAdd", icon_x, icon_y, icon_w, icon_h)
 
               local dl = reaper.ImGui_GetWindowDrawList(ctx)
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
@@ -20434,10 +20430,6 @@ function loop()
             end
 
             if clicked_icon then
-              is_collection_open = prev_collection_open
-              collection_open = prev_collection_open
-              _G._collections_force_open_state = prev_collection_open
-
               local ret, name = reaper.GetUserInputs(T("Create Collection"), 1, T("Name:") .. ",extrawidth=200", "")
               if ret and name and name ~= "" then
                 local new_id = new_guid()
@@ -20562,15 +20554,14 @@ function loop()
           -- 自定义文件夹节点 Group
           if show_peektree_groups then
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
-          -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
+          -- 响应 '全部折叠' 请求，隐藏的标题在重新显示时也会收起
           if _G._group_force_open_state ~= nil then
             reaper.ImGui_SetNextItemOpen(ctx, _G._group_force_open_state, reaper.ImGui_Cond_Always())
             _G._group_force_open_state = nil
           end
 
           SM_ForceNextPeakTreeHeaderClosed()
-          local hdr_flags = group_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-          local prev_group_open = group_open == true -- 记录上一帧状态
+          local hdr_flags = (group_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0) | reaper.ImGui_TreeNodeFlags_AllowOverlap()
           local is_group_open = reaper.ImGui_CollapsingHeader(ctx, T("Group") .. "###Group", nil, hdr_flags)
           group_open = is_group_open
 
@@ -20595,8 +20586,7 @@ function loop()
             local fully_inside = (icon_x >= clip_x0) and (icon_y >= clip_y0) and ((icon_x + icon_w) <= clip_x1) and ((icon_y + icon_h) <= clip_y1)
             local hovering_icon, clicked_icon = false, false
             if fully_inside then
-              hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-              clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
+              hovering_icon, clicked_icon = SM_PeekTreeHeaderIconButton("##GroupAdd", icon_x, icon_y, icon_w, icon_h)
 
               local dl = reaper.ImGui_GetWindowDrawList(ctx)
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
@@ -20623,10 +20613,6 @@ function loop()
             end
 
             if clicked_icon then
-              is_group_open = prev_group_open
-              group_open = prev_group_open
-              _G._group_force_open_state = prev_group_open
-
               local ret, name = reaper.GetUserInputs(T("Create Group"), 1, T("Name:") .. ",extrawidth=200", "")
               if ret and name and name ~= "" then
                 local exists = false
@@ -20820,15 +20806,14 @@ function loop()
 
           -- 数据库节点
           reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_Header(), colors.header)
-          -- 如果上一帧点了+号，本帧强制恢复折叠状态，避免连带开合
+          -- 响应 '全部折叠' 请求，隐藏的标题在重新显示时也会收起
           if _G._mediadb_force_open_state ~= nil then
             reaper.ImGui_SetNextItemOpen(ctx, _G._mediadb_force_open_state, reaper.ImGui_Cond_Always())
             _G._mediadb_force_open_state = nil
           end
 
           SM_ForceNextPeakTreeHeaderClosed()
-          local hdr_flags = mediadb_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0
-          local prev_mediadb_open = mediadb_open == true -- 记录上一帧状态
+          local hdr_flags = (mediadb_open and reaper.ImGui_TreeNodeFlags_DefaultOpen() or 0) | reaper.ImGui_TreeNodeFlags_AllowOverlap()
           local is_mediadb_open = reaper.ImGui_CollapsingHeader(ctx, T("Database") .. "###Soundmole_DB", nil, hdr_flags)
           mediadb_open = is_mediadb_open
 
@@ -20856,8 +20841,7 @@ function loop()
             local hovering_icon, clicked_icon = false, false
             local hovering_folder_icon, clicked_folder_icon = false, false
             if fully_inside then
-              hovering_icon = reaper.ImGui_IsMouseHoveringRect(ctx, icon_x, icon_y, icon_x + icon_w, icon_y + icon_h, true)
-              clicked_icon  = hovering_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
+              hovering_icon, clicked_icon = SM_PeekTreeHeaderIconButton("##MediaDBAdd", icon_x, icon_y, icon_w, icon_h)
 
               local dl = reaper.ImGui_GetWindowDrawList(ctx)
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
@@ -20883,8 +20867,7 @@ function loop()
               end
             end
             if folder_fully_inside then
-              hovering_folder_icon = reaper.ImGui_IsMouseHoveringRect(ctx, folder_icon_x, icon_y, folder_icon_x + icon_w, icon_y + icon_h, true)
-              clicked_folder_icon  = hovering_folder_icon and reaper.ImGui_IsMouseReleased(ctx, 0)
+              hovering_folder_icon, clicked_folder_icon = SM_PeekTreeHeaderIconButton("##MediaDBFolders", folder_icon_x, icon_y, icon_w, icon_h)
 
               local dl = reaper.ImGui_GetWindowDrawList(ctx)
               reaper.ImGui_DrawList_PushClipRect(dl, clip_x0, clip_y0, clip_x1, clip_y1, true)
@@ -20911,10 +20894,6 @@ function loop()
             end
 
             if clicked_icon then
-              is_mediadb_open = prev_mediadb_open
-              mediadb_open = prev_mediadb_open
-              _G._mediadb_force_open_state = prev_mediadb_open
-
               local db_dir = script_path .. "SoundmoleDB"
               EnsureCacheDir(db_dir)
               local db_index = GetNextMediaDBIndex(db_dir) -- 00~FF
@@ -20934,10 +20913,6 @@ function loop()
 
             -- 创建数据库，弹窗绘制
             if clicked_folder_icon then -- 点击文件夹图标切换浏览模式
-              is_mediadb_open = prev_mediadb_open
-              mediadb_open = prev_mediadb_open
-              _G._mediadb_force_open_state = prev_mediadb_open
-
               browse_database_as_folders = not browse_database_as_folders
               SM_SetState(EXT_SECTION, "browse_database_as_folders", browse_database_as_folders and "1" or "0", true)
               if not browse_database_as_folders then

@@ -1,8 +1,8 @@
 -- @description Soundmole
 -- @author zaibuyidao
--- @version 1.0.275
+-- @version 1.0.276
 -- @changelog
---   Improved spectrum displays in normal and mini modes with consistent control height.
+--   Fixed unstable toggling of collapsible library headers and click conflicts with adjacent icons.
 -- @reference
 --   https://forum.cockos.com/showthread.php?t=300916
 -- @links
