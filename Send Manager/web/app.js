@@ -16,7 +16,8 @@
   }
   const trackElements = new Map(), nodeElements = new Map(), edgeElements = new Map(), edgeHitElements = new Map(), positions = new Map();
   const collapsedFolders = new Set(), movedNodes = new Set();
-  const receiverPositions = new Map(), receiverMovedNodes = new Set();
+  const receiverLayouts = new Map();
+  let activeReceiverLayout = null;
   const draftReceivers = new Map();
   const receiverTargets = new Map();
   let receiverCategory = "send";
@@ -25,13 +26,21 @@
   let draftSerial = 0, sourceMenu = null, connectionOperation = null;
   const displayTrack = id => tracks.get(id) || draftReceivers.get(id);
   const isReceiver = id => !!displayTrack(id) && ((routingInfo.get(id)?.receiveCount || 0) > 0 || draftReceivers.has(id));
-  let receiverTarget = "", receiverNeedsFit = false, receiverLayoutKey = "";
+  let receiverTarget = "";
   let allFocusLayoutKey = "", allCanvasTarget = "", selectionAnchor = "", batchOperation = null;
   const selectedTracks = new Set();
   let draggingTracks = [];
   let allCanvasChain = SendPlusRouting.focusedChain(tracks, routingInfo, "");
   let receiverChain = SendPlusRouting.receiveChain(tracks, routingInfo, "");
-  const graphPositions = () => filter === "receive" ? receiverPositions : positions;
+  const receiverLayoutId = (category, target) => JSON.stringify([category, target]);
+  function receiverLayout() {
+    // Each category overview and sidebar focus owns its layout for this project session.
+    const key = receiverLayoutId(receiverCategory, receiverTarget);
+    if (!receiverLayouts.has(key)) receiverLayouts.set(key, {category:receiverCategory, target:receiverTarget,
+      positions:new Map(), movedNodes:new Set(), signature:"", pan:null});
+    return receiverLayouts.get(key);
+  }
+  const graphPositions = () => filter === "receive" ? receiverLayout().positions : positions;
   const demo = new URLSearchParams(location.search).get("demo") === "1";
   let project = "", epoch = 0, requestId = 0, selected = "", filter = "all", mode = "matrix";
   let frame = 0, flushTimer = 0, toastTimer = 0, matrixHover = null, activeControl = "";
@@ -152,7 +161,7 @@
     if (id) receiverTargets.set(filter === "receive" ? receiverCategory : "all", id);
     if (receiverTarget === id) return;
     closeSourceMenu();
-    receiverTarget = id; receiverPositions.clear(); receiverMovedNodes.clear(); receiverNeedsFit = true; receiverLayoutKey = "";
+    receiverTarget = id;
     if (filter === "receive") { $("track-list").scrollTo(0, 0); $("matrix-scroll").scrollTo(0, 0); }
   }
   function receiverInCategory(id, category = receiverCategory) {
@@ -171,8 +180,6 @@
     filter = "receive"; receiverCategory = category;
     // Every category click returns to its overview; only a sidebar track click focuses a chain.
     setReceiverTarget(""); selected = ""; activeControl = "";
-    receiverPositions.clear(); receiverMovedNodes.clear(); receiverLayoutKey = ""; receiverNeedsFit = true;
-    graphPan.x = graphPan.y = 0; graphPan.scale = 1; updateGraphPan();
     $("matrix-scroll").scrollTo(0, 0);
     $("track-list").scrollTo(0, 0); matrixHover = null; $("matrix-tooltip").hidden = true;
     renderStatus(); renderTracks(); renderInspector(); resizeMatrix(); renderGraph();
@@ -205,8 +212,6 @@
     receiverChain = isSendView() ? SendPlusRouting.sendChain(tracks, routingInfo, roots) : SendPlusRouting.receiveChain(new Map([...tracks, ...draftReceivers]), routingInfo, roots);
     refreshAllCanvas();
     if (!enabled) return;
-    const layoutKey = JSON.stringify([receiverCategory, [...receiverChain.distance]]);
-    if (layoutKey !== receiverLayoutKey) { receiverLayoutKey = layoutKey; receiverNeedsFit = true; }
     if (selected && !receiverChain.sendIds.has(selected)) { flushControls(); selected = ""; activeControl = ""; }
   }
   function chooseReceiver(id) {
@@ -279,7 +284,7 @@
     if (changedContext) { staged.clear(); sendModeEdits.clear(); clearTimeout(flushTimer); flushTimer = 0; }
     const changedProject = project !== message.project;
     if (changedProject && connectionOperation) settleConnection(connectionOperation, null);
-    if (changedProject) { for (const map of [nodeElements, edgeElements, edgeHitElements]) { for (const element of map.values()) element.remove(); map.clear(); } parentLayer.replaceChildren(); draftReceivers.clear(); receiverTargets.clear(); receiverCategory = "send"; connectionOperation = null; closeSourceMenu(); $("receiver-dialog").close(); setReceiverTarget(""); receiverPositions.clear(); receiverMovedNodes.clear(); }
+    if (changedProject) { for (const map of [nodeElements, edgeElements, edgeHitElements]) { for (const element of map.values()) element.remove(); map.clear(); } parentLayer.replaceChildren(); draftReceivers.clear(); receiverTargets.clear(); receiverCategory = "send"; connectionOperation = null; closeSourceMenu(); $("receiver-dialog").close(); setReceiverTarget(""); receiverLayouts.clear(); activeReceiverLayout = null; }
     if (message.full) { tracks.clear(); sends.clear(); }
     if (changedProject) { selected = ""; allCanvasTarget = ""; allFocusLayoutKey = ""; selectedTracks.clear(); selectionAnchor = ""; draggingTracks = []; batchOperation = null; positions.clear(); collapsedFolders.clear(); movedNodes.clear(); activeControl = ""; graphPan.x = graphPan.y = 0; graphPan.scale = 1; updateGraphPan(); $("matrix-scroll").scrollTo(0, 0); }
     project = message.project; epoch = message.epoch;
@@ -292,6 +297,10 @@
     finishConnection();
     for (const id of collapsedFolders) if (!tracks.get(id)?.folder) collapsedFolders.delete(id);
     for (const id of positions.keys()) if (!displayTrack(id)) { positions.delete(id); movedNodes.delete(id); }
+    for (const [key, layout] of receiverLayouts) {
+      if (layout.target && !displayTrack(layout.target)) { receiverLayouts.delete(key); continue; }
+      for (const id of layout.positions.keys()) if (!displayTrack(id)) { layout.positions.delete(id); layout.movedNodes.delete(id); }
+    }
     if (!sends.has(selected)) selected = "";
     lastChangeCount = message.change_count; renderStatus();
     $("empty-state").hidden = tracks.size > 0;
@@ -467,6 +476,15 @@
       if (positions.has(operation.destination)) positions.set(track_id, positions.get(operation.destination));
       if (movedNodes.has(operation.destination)) movedNodes.add(track_id);
       positions.delete(operation.destination); movedNodes.delete(operation.destination);
+      for (const [key, layout] of [...receiverLayouts]) {
+        if (layout.positions.has(operation.destination)) layout.positions.set(track_id, layout.positions.get(operation.destination));
+        if (layout.movedNodes.delete(operation.destination)) layout.movedNodes.add(track_id);
+        layout.positions.delete(operation.destination);
+        if (layout.target === operation.destination) {
+          receiverLayouts.delete(key); layout.target = track_id;
+          receiverLayouts.set(receiverLayoutId(layout.category, track_id), layout);
+        }
+      }
       nodeElements.get(operation.destination)?.remove(); nodeElements.delete(operation.destination);
       if (receiverTarget === operation.destination) setReceiverTarget(track_id);
     }
@@ -525,12 +543,16 @@
     if (restoreFocus && previous?.focus?.isConnected) previous.focus.focus();
   }
   function renderSourceOptions() {
-    if (!sourceMenu || sourceMenu.project !== project || sourceMenu.target !== receiverTarget || sourceMenu.outgoing !== isSendView() || !displayTrack(receiverTarget)) { closeSourceMenu(); return; }
+    if (!sourceMenu || sourceMenu.project !== project || sourceMenu.outgoing !== isSendView() || !displayTrack(sourceMenu.target)) { closeSourceMenu(); return; }
+    const {target, outgoing} = sourceMenu;
+    // Menu candidates belong to the chosen node, even when the canvas shows several chains.
+    const chain = outgoing ? SendPlusRouting.sendChain(tracks, routingInfo, target)
+      : SendPlusRouting.receiveChain(new Map([...tracks, ...draftReceivers]), routingInfo, target);
     const query = $("source-search").value.trim().toLocaleLowerCase();
-    const all = orderedTracks().filter(t => !receiverChain.trackIds.has(t.id) && (!isSendView() || SendPlusRouting.canAddSource(tracks, routingInfo, receiverTarget, t.id)));
+    const all = orderedTracks().filter(t => !chain.trackIds.has(t.id) && (!outgoing || SendPlusRouting.canAddSource(tracks, routingInfo, target, t.id)));
     const candidates = all.filter(t => !query || t.name.toLocaleLowerCase().includes(query) || String(t.index).includes(query));
     const focused = document.activeElement?.dataset.source;
-    $("source-menu-title").textContent = tr(isSendView() ? "addDestination" : "addSource", {name:displayTrack(receiverTarget).name});
+    $("source-menu-title").textContent = tr(outgoing ? "addDestination" : "addSource", {name:displayTrack(target).name});
     $("source-search").placeholder = tr(isSendView() ? "searchDestination" : "searchSource");
     $("source-search").setAttribute("aria-label", $("source-search").placeholder);
     $("source-options").replaceChildren(...candidates.map(t => {
@@ -538,7 +560,7 @@
       const number = make("span", "source-number", String(t.index).padStart(2,"0")); number.style.color = color(t);
       button.append(number, make("span", "source-name", t.name)); button.title = `${t.index}. ${t.name}`;
       button.addEventListener("click", () => {
-        if (!sourceMenu || receiverChain.trackIds.has(t.id) || !tracks.has(t.id)) return;
+        if (!sourceMenu || chain.trackIds.has(t.id) || !tracks.has(t.id)) return;
         const target = sourceMenu.target, outgoing = sourceMenu.outgoing;
         if (outgoing && !SendPlusRouting.canAddSource(tracks, routingInfo, target, t.id)) return;
         closeSourceMenu(true); if (outgoing) connect(target, t.id); else connect(t.id, target);
@@ -554,23 +576,26 @@
   }
   function openSourceMenu(event) {
     event.preventDefault();
-    if (filter === "all") {
-      let target = event.target?.closest(".graph-node, .track-item")?.dataset.track;
-      if (!event.keyboard && event.currentTarget === $("matrix-scroll")) {
-        const rect = event.currentTarget.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
-        if (x >= rowLabel && x < event.currentTarget.clientWidth && y >= 0 && (y < colLabel || matrixCell(event))) {
-          target = matrixTracks().columns[Math.floor((x - rowLabel + event.currentTarget.scrollLeft) / cell)]?.id;
-        }
-      }
-      if (isReceiver(target)) {
-        setReceiverTarget(target);
-        receiverChain = SendPlusRouting.receiveChain(new Map([...tracks, ...draftReceivers]), routingInfo, target);
+    let clicked = event.target?.closest(".graph-node, .track-item")?.dataset.track;
+    if (!event.keyboard && event.currentTarget === $("matrix-scroll")) {
+      const rect = event.currentTarget.getBoundingClientRect(), x = event.clientX - rect.left, y = event.clientY - rect.top;
+      if (isSendView()) {
+        if (y >= colLabel && y < event.currentTarget.clientHeight && x >= 0 && (x < rowLabel || matrixCell(event)))
+          clicked = matrixTracks().rows[Math.floor((y - colLabel + event.currentTarget.scrollTop) / cell)]?.id;
+      } else if (x >= rowLabel && x < event.currentTarget.clientWidth && y >= 0 && (y < colLabel || matrixCell(event))) {
+        clicked = matrixTracks().columns[Math.floor((x - rowLabel + event.currentTarget.scrollLeft) / cell)]?.id;
       }
     }
-    if (!displayTrack(receiverTarget)) { notify(tr(isSendView() ? "chooseSender" : "chooseReceiver")); return; }
+    const eligible = isSendView() ? tracks.has(clicked) : isReceiver(clicked);
+    const target = eligible ? clicked : receiverTarget || (filter === "receive" ? receiverRoots()[0] : "");
+    if (!displayTrack(target)) { notify(tr(isSendView() ? "chooseSender" : "chooseReceiver")); return; }
+    if (filter === "all" && eligible) {
+      setReceiverTarget(target);
+      receiverChain = SendPlusRouting.receiveChain(new Map([...tracks, ...draftReceivers]), routingInfo, target);
+    }
     if (connectionOperation) { notify(tr("connectingSource")); return; }
     matrixHover = null; $("matrix-tooltip").hidden = true;
-    sourceMenu = {target:receiverTarget, outgoing:isSendView(), project, focus:event.currentTarget, x:event.clientX, y:event.clientY};
+    sourceMenu = {target, outgoing:isSendView(), project, focus:event.currentTarget, x:event.clientX, y:event.clientY};
     $("source-search").value = ""; $("source-menu").hidden = false;
     renderSourceOptions();
     $("source-search").focus();
@@ -747,6 +772,7 @@
   const world=svg("g"),parentLayer=svg("g"),edgeHitLayer=svg("g"),edgeLayer=svg("g"),nodeLayer=svg("g");world.append(parentLayer,edgeHitLayer,edgeLayer,nodeLayer);$("graph").append(world);
   const graphPan = {x: 0, y: 0, scale: 1};
   function updateGraphPan() {
+    if (activeReceiverLayout) activeReceiverLayout.pan = {...graphPan};
     world.setAttribute("transform", `translate(${graphPan.x},${graphPan.y}) scale(${graphPan.scale})`);
     $("graph-view").style.backgroundPosition = `${graphPan.x}px ${graphPan.y}px`;
     $("graph-view").style.backgroundSize = `${22 * graphPan.scale}px ${22 * graphPan.scale}px`;
@@ -790,6 +816,11 @@
   let graphDrag=null;
   function renderGraph() {
     if(mode!=="graph") return;
+    const savedLayout=filter==="receive"?receiverLayout():null;
+    if(activeReceiverLayout!==savedLayout){
+      activeReceiverLayout=savedLayout;
+      if(savedLayout?.pan){Object.assign(graphPan,savedLayout.pan);updateGraphPan();}
+    }
     const list=visibleTracks(),visible=new Set(list.map(t=>t.id)),layout=graphPositions();
     const chainRows=new Map(),maxDistance=filter==="receive"?Math.max(0,...receiverChain.distance.values()):0;
     for(const [id,node]of nodeElements)if(!visible.has(id)){node.remove();nodeElements.delete(id);}
@@ -798,7 +829,7 @@
       const type=kind(t),row=type==="BUS"?buses++:type==="FX"?fx++:regular++;
       if(filter==="receive"){
         const depth=receiverChain.distance.get(t.id),chainRow=chainRows.get(depth)||0;chainRows.set(depth,chainRow+1);
-        if(!receiverMovedNodes.has(t.id))layout.set(t.id,{x:35+(isSendView()?depth:maxDistance-depth)*255,y:35+chainRow*108});
+        if(!savedLayout.movedNodes.has(t.id))layout.set(t.id,{x:35+(isSendView()?depth:maxDistance-depth)*255,y:35+chainRow*108});
       }else if(!layout.has(t.id))layout.set(t.id,{x:type==="BUS"?300:type==="FX"?560:35,y:35+row*108+(type==="BUS"?54:0)});
       const p=layout.get(t.id);
       let node=nodeElements.get(t.id);
@@ -866,16 +897,18 @@
     }
     const searchKey=filter==="all"&&allCanvasTarget?JSON.stringify([project,allCanvasTarget,[...visible]]):"";
     const searchNeedsFit=!!searchKey&&searchKey!==allFocusLayoutKey;allFocusLayoutKey=searchKey;
-    if(((filter==="receive"&&receiverNeedsFit)||searchNeedsFit)&&list.length){
+    const receiverSignature=savedLayout?JSON.stringify([[...receiverChain.distance],$("graph").clientWidth,$("graph").clientHeight]):"";
+    if(((savedLayout&&savedLayout.signature!==receiverSignature)||searchNeedsFit)&&list.length){
       const points=list.map(t=>layout.get(t.id)),left=Math.min(...points.map(p=>p.x)),top=Math.min(...points.map(p=>p.y));
       const width=Math.max(...points.map(p=>p.x))+170-left,height=Math.max(...points.map(p=>p.y))+68-top;
       graphPan.scale=Math.max(.25,Math.min(1,($("graph").clientWidth-48)/width,($("graph").clientHeight-72)/height));
-      graphPan.x=24-left*graphPan.scale;graphPan.y=24-top*graphPan.scale;updateGraphPan();receiverNeedsFit=false;
+      graphPan.x=24-left*graphPan.scale;graphPan.y=24-top*graphPan.scale;updateGraphPan();
     }
+    if(savedLayout)savedLayout.signature=receiverSignature;
   }
   $("graph").addEventListener("pointermove",event=>{
     if(!graphDrag)return;
-    if(!graphDrag.port){if(Math.hypot(event.clientX-graphDrag.startX,event.clientY-graphDrag.startY)>3)(filter==="receive"?receiverMovedNodes:movedNodes).add(graphDrag.id);graphPositions().set(graphDrag.id,{x:graphDrag.x+(event.clientX-graphDrag.startX)/graphPan.scale,y:graphDrag.y+(event.clientY-graphDrag.startY)/graphPan.scale});renderGraph();}
+    if(!graphDrag.port){if(Math.hypot(event.clientX-graphDrag.startX,event.clientY-graphDrag.startY)>3)(filter==="receive"?receiverLayout().movedNodes:movedNodes).add(graphDrag.id);graphPositions().set(graphDrag.id,{x:graphDrag.x+(event.clientX-graphDrag.startX)/graphPan.scale,y:graphDrag.y+(event.clientY-graphDrag.startY)/graphPan.scale});renderGraph();}
   });
   $("graph").addEventListener("pointerup",event=>{
     if(!graphDrag)return;const drag=graphDrag;graphDrag=null;
@@ -964,9 +997,8 @@
   for(const button of document.querySelectorAll("[data-filter]"))button.addEventListener("click",()=>{
     flushControls();closeSourceMenu();
     const previous=filter;filter=button.dataset.filter;
-    if(filter==="all"){allCanvasTarget="";allFocusLayoutKey="";selectedTracks.clear();selectionAnchor="";selected="";activeControl="";graphPan.x=graphPan.y=0;graphPan.scale=1;updateGraphPan();$("matrix-scroll").scrollTo(0,0);}
+    if(filter==="all"){activeReceiverLayout=null;allCanvasTarget="";allFocusLayoutKey="";selectedTracks.clear();selectionAnchor="";selected="";activeControl="";graphPan.x=graphPan.y=0;graphPan.scale=1;updateGraphPan();$("matrix-scroll").scrollTo(0,0);}
     if(previous!==filter&&(previous==="receive"||filter==="receive")){
-      graphPan.x=graphPan.y=0;graphPan.scale=1;updateGraphPan();receiverNeedsFit=true;
       $("track-list").scrollTo(0,0);$("matrix-scroll").scrollTo(0,0);
       closeSourceMenu();
     }
@@ -976,7 +1008,7 @@
   $("matrix-tab").addEventListener("click",()=>setMode("matrix"));$("graph-tab").addEventListener("click",()=>setMode("graph"));
   document.addEventListener("keydown",event=>{if(event.key==="Delete"&&selected&&!sourceMenu&&!$("receiver-dialog").open&&!["INPUT","SELECT","TEXTAREA"].includes(document.activeElement.tagName)){event.preventDefault();deleteSend(selected);}});
   new ResizeObserver(resizeMatrix).observe($("matrix-scroll"));
-  new ResizeObserver(()=>{if(filter==="receive"){receiverNeedsFit=true;renderGraph();}}).observe($("graph-view"));
+  new ResizeObserver(()=>{if(filter==="receive")renderGraph();}).observe($("graph-view"));
   $("demo-button").addEventListener("click",()=>{location.search="?demo=1";});
 
   // Explicit browser-only demo; never presented as a live REAPER session.
