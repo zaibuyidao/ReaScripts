@@ -1,44 +1,44 @@
 @description Send Manager
-@version 0.2.0.3
+@version 0.2.1
 @author zaibuyidao
 @link https://github.com/zaibuyidao/Sendmanager
 @provides
-  [win64 extension] reaper_sendmanager-x64.dll https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-x64.dll
-  [win64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html
-  [win64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js
-  [win64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js
-  [win64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js
-  [win64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css
-  [win64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md
-  [darwin64 extension] reaper_sendmanager-x86_64.dylib https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-x86_64.dylib
-  [darwin64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html
-  [darwin64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js
-  [darwin64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js
-  [darwin64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js
-  [darwin64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css
-  [darwin64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md
-  [darwin-arm64 extension] reaper_sendmanager-arm64.dylib https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-arm64.dylib
-  [darwin-arm64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html
-  [darwin-arm64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js
-  [darwin-arm64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js
-  [darwin-arm64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js
-  [darwin-arm64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css
-  [darwin-arm64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md
-  [linux64 extension] reaper_sendmanager-x86_64.so https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-x86_64.so
-  [linux64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html
-  [linux64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js
-  [linux64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js
-  [linux64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js
-  [linux64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css
-  [linux64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md
-  [linux64 script nomain] sendmanager-webview-x86_64 https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/sendmanager-webview-x86_64
-  [linux-aarch64 extension] reaper_sendmanager-aarch64.so https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-aarch64.so
-  [linux-aarch64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html
-  [linux-aarch64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js
-  [linux-aarch64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js
-  [linux-aarch64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js
-  [linux-aarch64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css
-  [linux-aarch64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md
-  [linux-aarch64 script nomain] sendmanager-webview-aarch64 https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/sendmanager-webview-aarch64
+  [win64 extension] reaper_sendmanager-x64.dll https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.1/reaper_sendmanager-x64.dll
+  [win64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/index.html
+  [win64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/app.js
+  [win64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/i18n.js
+  [win64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/routing.js
+  [win64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/style.css
+  [win64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/docs/THIRD_PARTY.md
+  [darwin64 extension] reaper_sendmanager-x86_64.dylib https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.1/reaper_sendmanager-x86_64.dylib
+  [darwin64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/index.html
+  [darwin64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/app.js
+  [darwin64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/i18n.js
+  [darwin64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/routing.js
+  [darwin64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/style.css
+  [darwin64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/docs/THIRD_PARTY.md
+  [darwin-arm64 extension] reaper_sendmanager-arm64.dylib https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.1/reaper_sendmanager-arm64.dylib
+  [darwin-arm64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/index.html
+  [darwin-arm64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/app.js
+  [darwin-arm64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/i18n.js
+  [darwin-arm64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/routing.js
+  [darwin-arm64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/style.css
+  [darwin-arm64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/docs/THIRD_PARTY.md
+  [linux64 extension] reaper_sendmanager-x86_64.so https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.1/reaper_sendmanager-x86_64.so
+  [linux64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/index.html
+  [linux64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/app.js
+  [linux64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/i18n.js
+  [linux64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/routing.js
+  [linux64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/style.css
+  [linux64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/docs/THIRD_PARTY.md
+  [linux64 script nomain] sendmanager-webview-x86_64 https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.1/sendmanager-webview-x86_64
+  [linux-aarch64 extension] reaper_sendmanager-aarch64.so https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.1/reaper_sendmanager-aarch64.so
+  [linux-aarch64 script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/index.html
+  [linux-aarch64 script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/app.js
+  [linux-aarch64 script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/i18n.js
+  [linux-aarch64 script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/routing.js
+  [linux-aarch64 script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/ui/style.css
+  [linux-aarch64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.1/docs/THIRD_PARTY.md
+  [linux-aarch64 script nomain] sendmanager-webview-aarch64 https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.1/sendmanager-webview-aarch64
 @changelog
-  Send Manager v0.2.0
+  Send Manager v0.2.1
