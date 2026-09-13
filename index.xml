@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="35fa6066c1c0fabfd4f2da2c9fea1eb5626edab4">
+<index version="1" name="zaibuyidao Scripts" commit="b561aa16967c3030cd554d1b9dbe6099b29dbaf0">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7684,6 +7684,22 @@ Added mode selection:
         <source type="script" file="THIRD_PARTY.md">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/THIRD_PARTY.md</source>
       </version>
       <version name="0.2.2.1" author="zaibuyidao" time="2026-09-13T15:26:48Z">
+        <changelog><![CDATA[Send Manager v0.2.2]]></changelog>
+        <source platform="win64" type="extension" file="reaper_sendmanager-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/reaper_sendmanager-x64.dll</source>
+        <source platform="darwin64" type="extension" file="reaper_sendmanager-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/reaper_sendmanager-x86_64.dylib</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_sendmanager-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/reaper_sendmanager-arm64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_sendmanager-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/reaper_sendmanager-x86_64.so</source>
+        <source platform="linux64" type="script" file="sendmanager-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/sendmanager-webview-x86_64</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_sendmanager-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/reaper_sendmanager-aarch64.so</source>
+        <source platform="linux-aarch64" type="script" file="sendmanager-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/sendmanager-webview-aarch64</source>
+        <source type="script" file="index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/index.html</source>
+        <source type="script" file="app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/app.js</source>
+        <source type="script" file="i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/i18n.js</source>
+        <source type="script" file="routing.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/routing.js</source>
+        <source type="script" file="style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/style.css</source>
+        <source type="script" file="THIRD_PARTY.md">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/THIRD_PARTY.md</source>
+      </version>
+      <version name="0.2.2.2" author="zaibuyidao" time="2026-09-13T17:08:14Z">
         <changelog><![CDATA[Send Manager v0.2.2]]></changelog>
         <source platform="win64" type="extension" file="reaper_sendmanager-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/reaper_sendmanager-x64.dll</source>
         <source platform="darwin64" type="extension" file="reaper_sendmanager-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/extension/reaper_sendmanager-x86_64.dylib</source>
