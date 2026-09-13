@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="93062045baee09b8ec728542fa2e1a4573819fa5">
+<index version="1" name="zaibuyidao Scripts" commit="93534fdc234b8596b0c9f7f76bc2802e10b8a83f">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7492,6 +7492,46 @@ Added mode selection:
         <link rel="website">https://github.com/zaibuyidao/Sendmanager</link>
       </metadata>
       <version name="0.2.0" author="zaibuyidao" time="2026-09-13T05:44:52Z">
+        <changelog><![CDATA[See the matching GitHub Release for changes.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_sendmanager-x64.dll">https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-x64.dll</source>
+        <source platform="win64" type="script" file="index.html">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html</source>
+        <source platform="win64" type="script" file="app.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js</source>
+        <source platform="win64" type="script" file="i18n.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js</source>
+        <source platform="win64" type="script" file="routing.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js</source>
+        <source platform="win64" type="script" file="style.css">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css</source>
+        <source platform="win64" type="script" file="THIRD_PARTY.md">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md</source>
+        <source platform="darwin64" type="extension" file="reaper_sendmanager-x86_64.dylib">https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-x86_64.dylib</source>
+        <source platform="darwin64" type="script" file="index.html">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html</source>
+        <source platform="darwin64" type="script" file="app.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js</source>
+        <source platform="darwin64" type="script" file="i18n.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js</source>
+        <source platform="darwin64" type="script" file="routing.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js</source>
+        <source platform="darwin64" type="script" file="style.css">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css</source>
+        <source platform="darwin64" type="script" file="THIRD_PARTY.md">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_sendmanager-arm64.dylib">https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-arm64.dylib</source>
+        <source platform="darwin-arm64" type="script" file="index.html">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html</source>
+        <source platform="darwin-arm64" type="script" file="app.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js</source>
+        <source platform="darwin-arm64" type="script" file="i18n.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js</source>
+        <source platform="darwin-arm64" type="script" file="routing.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js</source>
+        <source platform="darwin-arm64" type="script" file="style.css">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css</source>
+        <source platform="darwin-arm64" type="script" file="THIRD_PARTY.md">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md</source>
+        <source platform="linux64" type="extension" file="reaper_sendmanager-x86_64.so">https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-x86_64.so</source>
+        <source platform="linux64" type="script" file="index.html">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html</source>
+        <source platform="linux64" type="script" file="app.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js</source>
+        <source platform="linux64" type="script" file="i18n.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js</source>
+        <source platform="linux64" type="script" file="routing.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js</source>
+        <source platform="linux64" type="script" file="style.css">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css</source>
+        <source platform="linux64" type="script" file="THIRD_PARTY.md">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md</source>
+        <source platform="linux64" type="script" file="sendmanager-webview-x86_64">https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/sendmanager-webview-x86_64</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_sendmanager-aarch64.so">https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-aarch64.so</source>
+        <source platform="linux-aarch64" type="script" file="index.html">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html</source>
+        <source platform="linux-aarch64" type="script" file="app.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/app.js</source>
+        <source platform="linux-aarch64" type="script" file="i18n.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/i18n.js</source>
+        <source platform="linux-aarch64" type="script" file="routing.js">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/routing.js</source>
+        <source platform="linux-aarch64" type="script" file="style.css">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/style.css</source>
+        <source platform="linux-aarch64" type="script" file="THIRD_PARTY.md">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md</source>
+        <source platform="linux-aarch64" type="script" file="sendmanager-webview-aarch64">https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/sendmanager-webview-aarch64</source>
+      </version>
+      <version name="0.2.0.2" author="zaibuyidao" time="2026-09-13T06:48:45Z">
         <changelog><![CDATA[See the matching GitHub Release for changes.]]></changelog>
         <source platform="win64" type="extension" file="reaper_sendmanager-x64.dll">https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/reaper_sendmanager-x64.dll</source>
         <source platform="win64" type="script" file="index.html">https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/ui/index.html</source>
