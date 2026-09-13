@@ -1,5 +1,5 @@
 @description Send Manager
-@version 0.2.0.2
+@version 0.2.0.3
 @author zaibuyidao
 @link https://github.com/zaibuyidao/Sendmanager
 @provides
@@ -41,4 +41,4 @@
   [linux-aarch64 script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/Sendmanager/v0.2.0/docs/THIRD_PARTY.md
   [linux-aarch64 script nomain] sendmanager-webview-aarch64 https://github.com/zaibuyidao/Sendmanager/releases/download/v0.2.0/sendmanager-webview-aarch64
 @changelog
-  See the matching GitHub Release for changes.
+  Send Manager v0.2.0
