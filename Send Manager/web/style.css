@@ -106,8 +106,23 @@ main{padding:14px 18px 0}
 @media(min-width:721px){.workspace{grid-template-columns:310px minmax(220px,1fr) 250px}}
 @media(min-width:1500px){.workspace{grid-template-columns:320px minmax(300px,1fr) 285px}}
 @media(min-width:721px) and (max-width:1000px){.workspace{grid-template-columns:290px minmax(0,1fr) 215px}}
-#track-filters{display:flex;flex-wrap:nowrap;gap:5px;margin:12px 8px;flex:none}
+#track-filters{display:flex;flex-wrap:wrap;gap:5px;margin:12px 8px;flex:none}
 #track-filters button{display:flex;align-items:center;gap:4px;min-width:0;padding:6px 5px;font-size:10px;text-align:left;background:transparent;color:var(--muted);border-color:var(--line)}
 #track-filters button.active{background:#263b35;color:var(--text);border-color:#3c5c50}
 #track-filters button>span{min-width:0;white-space:nowrap}
 @media(max-width:1000px){#track-filters button{font-size:9px;padding:6px 4px}}
+
+/* Allow localized labels to wrap without covering adjacent controls. */
+:root:lang(zh-TW){--font:Inter,"Segoe UI","PingFang TC","Microsoft JhengHei",sans-serif}
+:root:lang(ja){--font:Inter,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif}
+:root:lang(ko){--font:Inter,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+.language-control select{width:112px}
+.brand{min-width:0}.brand>div{min-width:0}.brand [data-i18n="appName"]{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand small{letter-spacing:1px}.project-label{min-width:0;flex-shrink:1}
+.control-head{gap:8px;letter-spacing:.6px}.control-head output{flex:none}
+.mapping label>span,.new-route label>span{min-width:0;overflow-wrap:anywhere}
+.mapping select{flex:0 1 132px}.new-route select{min-width:64px}
+.workspace-foot{gap:10px;flex-wrap:wrap;letter-spacing:.3px;line-height:1.5}
+.graph-caption>span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:1000px){.topbar{padding:0 16px;gap:10px}.brand{font-size:18px}.project-label{font-size:8px;letter-spacing:.4px}}
+@media(max-width:720px){.topbar{gap:8px}.brand{font-size:16px}.language-control select{width:104px}.topbar>.quiet{white-space:normal;max-width:120px}.workspace-foot>span{min-width:0}}

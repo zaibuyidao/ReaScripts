@@ -14,7 +14,7 @@
   <header class="topbar">
     <div class="brand"><div><span data-i18n="appName">Send Manager</span><small><span data-i18n="workspace">ROUTING WORKSPACE</span></small></div></div>
     <div class="project-label"><span class="live-dot"></span><span id="connection"><span data-i18n="connecting">CONNECTING</span></span></div>
-    <label class="language-control"><span data-i18n="language">Language</span><select id="language" aria-label="Language / 语言"><option value="en">English</option><option value="zh-CN">中文</option></select></label>
+    <label class="language-control"><span data-i18n="language">Language</span><select id="language" aria-label="Language" data-i18n-aria-label="language"></select></label>
     <button id="dock-toggle" class="quiet" hidden></button>
     <button id="refresh" class="quiet" title="Refresh project state" data-i18n-title="refreshTip">↻ <span><span data-i18n="refresh">同步工程</span></span></button>
   </header>
@@ -36,7 +36,7 @@
     </aside>
     <main>
       <div class="workspace-head"><div class="view-switch"><button id="matrix-tab" class="active"><span data-i18n="matrix">▦ 矩阵</span></button><button id="graph-tab"><span data-i18n="graph">⌘ 节点图</span></button></div><p id="route-summary"><span data-i18n="waiting">等待 REAPER 工程</span></p></div>
-      <div class="legend"><span><i class="send-dot"></i>Send</span><span><i class="sc-dot"></i><span data-i18n="sidechain">Sidechain</span></span><span><i class="muted-dot"></i><span data-i18n="muted">Muted</span></span><span><i class="parent-dot"></i><span data-i18n="parentSend">Parent send</span></span><span class="legend-hint" id="view-hint"><span data-i18n="matrixHint">点击空格连接 · 点击连接编辑 · Del 删除</span></span></div>
+      <div class="legend"><span><i class="send-dot"></i><span data-i18n="sendLegend">Send</span></span><span><i class="sc-dot"></i><span data-i18n="sidechain">Sidechain</span></span><span><i class="muted-dot"></i><span data-i18n="muted">Muted</span></span><span><i class="parent-dot"></i><span data-i18n="parentSend">Parent send</span></span><span class="legend-hint" id="view-hint"><span data-i18n="matrixHint">点击空格连接 · 点击连接编辑 · Del 删除</span></span></div>
       <section id="matrix-view" class="matrix-view" aria-label="Send 路由矩阵" data-i18n-aria-label="matrixLabel">
         <div id="matrix-scroll" class="matrix-scroll" tabindex="0" aria-label="滚动矩阵，点击空单元格创建 Send" data-i18n-aria-label="scrollLabel"><div id="matrix-space"></div></div>
         <canvas id="matrix" aria-label="路由矩阵。也可使用右侧源轨道与目标轨道选择器创建连接。" data-i18n-aria-label="canvasLabel"></canvas>

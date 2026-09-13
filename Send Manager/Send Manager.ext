@@ -1,5 +1,5 @@
 @description Send Manager
-@version 0.2.1.1
+@version 0.2.2
 @author zaibuyidao
 @link https://github.com/zaibuyidao/Sendmanager
 @provides
@@ -22,4 +22,4 @@
   [script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/style.css
   [script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/Send%20Manager/web/THIRD_PARTY.md
 @changelog
-  Send Manager v0.2.1
+  Send Manager v0.2.2

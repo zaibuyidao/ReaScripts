@@ -6,12 +6,12 @@
   const canonicalSendMode = value => value === 2 ? 3 : value;
   const validSendMode = value => [0, 3, 1, 8].includes(value);
   let routingInfo = new Map(), language = "en", docked = false, lastChangeCount = 0;
-  try { if (localStorage.getItem("sendplus.language") === "zh-CN") language = "zh-CN"; } catch (_) {}
-  const tr = (key, values = {}) => (SendPlusI18n[key]?.[language === "zh-CN" ? 1 : 0] || key)
-    .replace(/\{(\w+)\}/g, (match, name) => values[name] ?? match);
+  try { language = SendPlusLocale(localStorage.getItem("sendplus.language")); } catch (_) {}
+  const tr = (key, values = {}) => SendPlusTranslate(language, key, values);
+  let levelFormat = new Intl.NumberFormat(language, {minimumFractionDigits:1, maximumFractionDigits:1, useGrouping:false});
   function errorText(message) {
     const aliases = {"State changed; wait for the next state update":"stale", "Stale project/routing context; refresh and retry":"stale"};
-    const key = aliases[message] || Object.keys(SendPlusI18n).find(key => SendPlusI18n[key][0] === message);
+    const key = aliases[message] || Object.keys(SendPlusI18n.en).find(key => SendPlusI18n.en[key] === message);
     return key ? tr(key) : message;
   }
   const trackElements = new Map(), nodeElements = new Map(), edgeElements = new Map(), edgeHitElements = new Map(), positions = new Map();
@@ -42,14 +42,15 @@
   function renderStatus() {
     $("connection").textContent = tr(demo ? "demo" : receivedState ? "connected" : transport ? "connecting" : "preview");
     $("route-summary").textContent = receivedState ? tr("summary", {tracks: tracks.size, sends: sends.size, sc: [...sends.values()].filter(isSC).length}) : tr("waiting");
-    $("state-label").textContent = receivedState ? `${tr(demo ? "demo" : "sync")} / ${lastChangeCount} · EPOCH ${epoch}` : tr("native");
+    $("state-label").textContent = receivedState ? `${tr(demo ? "demo" : "sync")} / ${lastChangeCount} · ${tr("stateRevision", {n:epoch})}` : tr("native");
     $("view-hint").textContent = tr(isSendView() ? "sendHint" : filter === "receive" ? "receiveHint" : mode === "matrix" ? "matrixHint" : "graphHint");
     $("dock-toggle").textContent = tr(docked ? "undock" : "dock");
     $("dock-toggle").title = tr(docked ? "undockTip" : "dockTip");
     $("dock-toggle").setAttribute("aria-pressed", String(docked));
   }
   function setLanguage(value) {
-    language = value === "zh-CN" ? "zh-CN" : "en";
+    language = SendPlusLocale(value);
+    levelFormat = new Intl.NumberFormat(language, {minimumFractionDigits:1, maximumFractionDigits:1, useGrouping:false});
     try { localStorage.setItem("sendplus.language", language); } catch (_) {}
     document.documentElement.lang = language; document.title = `${tr("appName")} · ${tr("workspace")}`; $("language").value = language;
     for (const element of document.querySelectorAll("[data-i18n]")) element.textContent = tr(element.dataset.i18n);
@@ -59,6 +60,8 @@
       $("empty-state").querySelector("p").textContent = tr("previewBody");
     }
     renderStatus(); renderTracks(); renderInspector(); renderGraph(); scheduleDraw();
+    if (sourceMenu) renderSourceOptions();
+    matrixHover = null; $("matrix-tooltip").hidden = true;
   }
   function notify(text, error = false) {
     $("toast").textContent = text; $("toast").classList.toggle("error", error); $("toast").hidden = false;
@@ -269,7 +272,7 @@
   const color = track => /^#[0-9a-f]{6}$/i.test(track?.color) ? track.color : "#7f91a8";
   const db = value => value <= 0 ? -60 : Math.max(-60, Math.min(12, 20 * Math.log10(value)));
   const linear = value => value <= -60 ? 0 : Math.pow(10, value / 20);
-  const gainText = value => value <= 0 ? "−∞ dB" : `${(20 * Math.log10(value)).toFixed(1)} dB`;
+  const gainText = value => value <= 0 ? "−∞ dB" : `${levelFormat.format(20 * Math.log10(value))} dB`;
   function applyState(message) {
     receivedState = true;
     const changedContext = project !== message.project || epoch !== message.epoch;
@@ -818,7 +821,7 @@
         attachTrackDrop(node,t.id);
         nodeLayer.append(node);nodeElements.set(t.id,node);
       }
-      const typeLabel=kind(t)==="TRACK"?tr(t.folder?"folder":"track"):kind(t);
+      const typeLabel=kind(t)==="TRACK"?tr(t.folder?"folder":"track"):kind(t)==="BUS"?tr("bus"):"FX";
       node.setAttribute("transform",`translate(${p.x},${p.y})`);node.setAttribute("aria-label",`${t.name}, ${typeLabel}`);
       const nameLimit=t.folder?15:19;
       node.children[1].textContent=t.name.length>nameLimit?`${t.name.slice(0,nameLimit-1)}…`:t.name;
@@ -1018,6 +1021,9 @@
     window.SendPlusReceive({type:"result",id:c.id,ok:!error,...(error?{error}:{result})});
     setTimeout(()=>window.SendPlusReceive(structuredClone(demoState)),0);
   },10);}
+  $("language").replaceChildren(...Object.entries(SendPlusLanguages).map(([id, name]) => {
+    const option = new Option(name, id); option.lang = id; return option;
+  }));
   setLanguage(language);
   if(transport && !demo) perform("get_window_state");
   if(demo)createDemo();
