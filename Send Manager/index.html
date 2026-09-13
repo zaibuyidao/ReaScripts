@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <title>Send Manager · Routing workspace</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="i18n.js" defer></script>
+  <script src="routing.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div><span data-i18n="appName">Send Manager</span><small><span data-i18n="workspace">ROUTING WORKSPACE</span></small></div></div>
+    <div class="project-label"><span class="live-dot"></span><span id="connection"><span data-i18n="connecting">CONNECTING</span></span></div>
+    <label class="language-control"><span data-i18n="language">Language</span><select id="language" aria-label="Language / 语言"><option value="en">English</option><option value="zh-CN">中文</option></select></label>
+    <button id="dock-toggle" class="quiet" hidden></button>
+    <button id="refresh" class="quiet" title="Refresh project state" data-i18n-title="refreshTip">↻ <span><span data-i18n="refresh">同步工程</span></span></button>
+  </header>
+  <div class="workspace">
+    <aside class="sidebar">
+      <div class="section-head"><span><span data-i18n="tracks">TRACKS</span></span><span id="track-count" class="count">0</span></div>
+      <label class="search"><span>⌕</span><input id="search" type="search" placeholder="搜索轨道..." data-i18n-placeholder="search" aria-label="搜索轨道..." data-i18n-aria-label="search"></label>
+      <div id="track-filters" class="filters" role="group" data-i18n-aria-label="filters" aria-label="轨道筛选">
+        <button type="button" data-filter="all" class="active" aria-pressed="true"><span data-i18n="all">全部</span></button>
+        <button type="button" data-receiver-filter="outgoing" aria-pressed="false" data-i18n-title="sendTracksTip"><span data-i18n="sendTracks">发送</span></button>
+        <button type="button" data-receiver-filter="send" aria-pressed="false" data-i18n-title="receiveSendTip"><span data-i18n="receiveSend">接收</span></button>
+        <button type="button" data-receiver-filter="sidechain" aria-pressed="false" data-i18n-title="receiveSidechainTip"><span data-i18n="sidechain">侧链</span></button>
+        <button type="button" data-receiver-filter="parent" aria-pressed="false" data-i18n-title="receiveParentTip"><span data-i18n="parentCategory">父级</span></button>
+        <button type="button" data-receiver-filter="muted" aria-pressed="false" data-i18n-title="receiveMutedTip"><span data-i18n="muted">静音</span></button>
+      </div>
+      <div id="track-list" class="track-list"></div>
+      <p id="no-matches" class="filter-help" data-i18n="noMatches" hidden></p>
+      <div class="sidebar-foot"><span class="live-dot"></span><span data-i18n="syncColors">轨道颜色与 REAPER 同步</span><small><span data-i18n="dragTrack">拖动轨道到目标，建立 Send</span></small></div>
+    </aside>
+    <main>
+      <div class="workspace-head"><div class="view-switch"><button id="matrix-tab" class="active"><span data-i18n="matrix">▦ 矩阵</span></button><button id="graph-tab"><span data-i18n="graph">⌘ 节点图</span></button></div><p id="route-summary"><span data-i18n="waiting">等待 REAPER 工程</span></p></div>
+      <div class="legend"><span><i class="send-dot"></i>Send</span><span><i class="sc-dot"></i><span data-i18n="sidechain">Sidechain</span></span><span><i class="muted-dot"></i><span data-i18n="muted">Muted</span></span><span><i class="parent-dot"></i><span data-i18n="parentSend">Parent send</span></span><span class="legend-hint" id="view-hint"><span data-i18n="matrixHint">点击空格连接 · 点击连接编辑 · Del 删除</span></span></div>
+      <section id="matrix-view" class="matrix-view" aria-label="Send 路由矩阵" data-i18n-aria-label="matrixLabel">
+        <div id="matrix-scroll" class="matrix-scroll" tabindex="0" aria-label="滚动矩阵，点击空单元格创建 Send" data-i18n-aria-label="scrollLabel"><div id="matrix-space"></div></div>
+        <canvas id="matrix" aria-label="路由矩阵。也可使用右侧源轨道与目标轨道选择器创建连接。" data-i18n-aria-label="canvasLabel"></canvas>
+        <div id="matrix-tooltip" class="matrix-tooltip" hidden></div>
+      </section>
+      <section id="graph-view" class="graph-view" hidden><svg id="graph" role="img" aria-label="可拖动路由节点图" data-i18n-aria-label="graphLabel"></svg><div class="graph-caption"><span data-i18n="graphCaption">EXPLICIT SENDS </span><span><span data-i18n="graphPort">从节点右侧端口拖到目标节点</span></span></div></section>
+      <div id="empty-state" class="empty-state" hidden><span>⌁</span><h2><span data-i18n="emptyTitle">从一条轨道开始</span></h2><p><span data-i18n="emptyBody">在 REAPER 中添加轨道，即可在这里建立连接。</span></p><button id="demo-button" hidden><span data-i18n="openDemo">打开交互演示</span></button></div>
+      <footer class="workspace-foot"><span id="state-label"><span data-i18n="native">NATIVE BRIDGE / JSON</span></span><span><span data-i18n="local">LOCAL ENGINE </span><b>•</b><span data-i18n="noCloud"> NO CLOUD</span></span></footer>
+    </main>
+    <aside class="inspector">
+      <div class="section-head"><span data-i18n="inspector">SEND INSPECTOR</span></div>
+      <div id="inspector-empty" class="inspector-empty">
+        <svg class="inspector-graphic" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <path class="inspector-graphic-link" d="M26 19h9a12 12 0 0 1 12 12v7"/>
+          <rect x="8" y="12" width="18" height="14" rx="4"/><rect x="38" y="38" width="18" height="14" rx="4"/>
+          <path d="M14 19h6m24 26h6"/><circle cx="26" cy="19" r="2"/><circle cx="47" cy="38" r="2"/>
+        </svg>
+        <h3><span data-i18n="inspectorTitle">每一条连接，都可掌控</span></h3><p><span data-i18n="inspectorBody">选择一条发送，调整电平、声像与通道。</span></p>
+      </div>
+      <div id="send-editor" hidden>
+        <div class="route-card"><span class="eyebrow"><span data-i18n="source">SOURCE</span></span><h3 id="source-name"></h3><div class="route-line">↓ <span id="route-kind"><span data-i18n="audioSend">AUDIO SEND</span></span></div><span class="eyebrow"><span data-i18n="destination">DESTINATION</span></span><h3 id="destination-name"></h3></div>
+        <label class="parallel-label" id="parallel-label" hidden><span data-i18n="parallel">平行 Send</span><select id="parallel-send"></select></label>
+        <label class="send-mode-control" for="send-mode"><span data-i18n="sendMode">发送模式</span>
+          <select id="send-mode">
+            <option value="0" data-i18n="sendModePostFader">推子后（声像后）</option>
+            <option value="3" data-i18n="sendModePostFX">推子前（FX 后）</option>
+            <option value="1" data-i18n="sendModePreFX">推子前（FX 前）</option>
+            <option value="8" data-i18n="sendModePreReceive">接收前（仅媒体和监听）</option>
+          </select>
+        </label>
+        <div class="control-head"><label for="volume"><span data-i18n="level">SEND LEVEL</span></label><output id="volume-value">0.0 dB</output></div>
+        <div class="knob-area"><button id="volume-knob" class="knob" role="slider" aria-label="Send 音量，拖动或使用方向键" data-i18n-aria-label="knob" aria-valuemin="-60" aria-valuemax="12" aria-valuenow="0"><span class="knob-tick"></span></button><span class="knob-min">−∞</span><span class="knob-max">+12</span></div>
+        <input id="volume" class="range" type="range" min="-60" max="12" step="0.1" value="0" aria-label="Send Volume dB" data-i18n-aria-label="volume">
+        <div class="control-head pan-head"><label for="pan"><span data-i18n="pan">PAN</span></label><output id="pan-value"><span data-i18n="center">CENTER</span></output></div>
+        <input id="pan" class="range pan" type="range" min="-1" max="1" step="0.01" value="0"><div class="range-labels"><span><span data-i18n="left">L</span></span><span>•</span><span><span data-i18n="right">R</span></span></div>
+        <button id="mute" class="mute-button" aria-pressed="false">M <span><span data-i18n="mute">Mute send</span></span></button>
+        <div class="mapping"><div class="control-head"><span><span data-i18n="mapping">CHANNEL MAPPING</span></span><span>→</span></div><label><span data-i18n="channelMode">模式</span><select id="channel-mode"><option value="stereo" data-i18n="stereo">Stereo</option><option value="mono" data-i18n="mono">Mono</option></select></label><label><span data-i18n="sourceChannel">源通道</span><select id="source-channel"></select></label><label><span data-i18n="destinationChannel">目标通道</span><select id="destination-channel"></select></label><button id="apply-mapping" class="quiet"><span data-i18n="apply">应用声道映射</span></button><small id="mapping-note"><span data-i18n="mappingNote">目标 3/4 可用于 Sidechain</span></small></div>
+        <button id="delete-send" class="delete-button"><span data-i18n="delete">删除这条 Send </span><span>⌫</span></button>
+      </div>
+      <div class="new-route"><div class="section-head"><span><span data-i18n="quick">QUICK CONNECT</span></span></div><label><span data-i18n="from">从</span><select id="new-source" aria-label="创建 Send 的源轨道" data-i18n-aria-label="createSource"></select></label><label><span data-i18n="to">到</span><select id="new-destination" aria-label="创建 Send 的目标轨道" data-i18n-aria-label="createDestination"></select></label><button id="create-send"><span data-i18n="create">建立连接</span></button></div>
+    </aside>
+  </div>
+  <dialog id="receiver-dialog" class="receiver-dialog" aria-labelledby="receiver-dialog-title">
+    <form id="receiver-form">
+      <h3 id="receiver-dialog-title" data-i18n="addReceiver">添加接收轨</h3>
+      <label for="receiver-name" data-i18n="receiverName">接收轨名称</label>
+      <input id="receiver-name" maxlength="120" required autocomplete="off">
+      <p data-i18n="draftHelp">添加发送轨后，将自动在工程中创建接收轨与连接。</p>
+      <div class="dialog-actions"><button type="button" id="cancel-receiver" data-i18n="cancel">取消</button><button type="submit" data-i18n="add">添加</button></div>
+    </form>
+  </dialog>
+  <div id="source-menu" class="source-menu" role="dialog" aria-labelledby="source-menu-title" hidden>
+    <div class="source-menu-head"><h3 id="source-menu-title"></h3><button id="close-source-menu" type="button" data-i18n-aria-label="close" aria-label="关闭">×</button></div>
+    <input id="source-search" type="search" autocomplete="off" data-i18n-placeholder="searchSource" data-i18n-aria-label="searchSource">
+    <div id="source-options" class="source-options"></div><p id="source-menu-empty" hidden></p>
+  </div>
+  <div id="toast" role="status" hidden></div>
+</body>
+</html>
