@@ -32,8 +32,9 @@ const SendPlusRouting = {
   },
   receiveChain(tracks, info, target) {
     const trackIds = new Set(), sendIds = new Set(), parentIds = new Set(), distance = new Map();
-    if (!tracks.has(target)) return {trackIds, sendIds, parentIds, distance};
-    const queue = [target]; trackIds.add(target); distance.set(target, 0);
+    // Multiple roots combine category chains in one traversal, with shared nodes visited once.
+    const queue = [...new Set(Array.isArray(target) ? target : [target])].filter(id => tracks.has(id));
+    for (const id of queue) { trackIds.add(id); distance.set(id, 0); }
     for (let cursor = 0; cursor < queue.length; cursor++) {
       const id = queue[cursor], entry = info.get(id);
       const visit = source => {
@@ -47,8 +48,8 @@ const SendPlusRouting = {
   },
   sendChain(tracks, info, source) {
     const trackIds = new Set(), sendIds = new Set(), parentIds = new Set(), distance = new Map();
-    if (!tracks.has(source)) return {trackIds, sendIds, parentIds, distance};
-    const queue = [source]; trackIds.add(source); distance.set(source, 0);
+    const queue = [...new Set(Array.isArray(source) ? source : [source])].filter(id => tracks.has(id));
+    for (const id of queue) { trackIds.add(id); distance.set(id, 0); }
     for (let cursor = 0; cursor < queue.length; cursor++) {
       const id = queue[cursor], entry = info.get(id), track = tracks.get(id);
       const visit = destination => {

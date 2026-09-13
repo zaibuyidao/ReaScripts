@@ -162,18 +162,15 @@
     return [...orderedTracks(), ...draftReceivers.values()].filter(t => receiverInCategory(t.id))
       .filter(t => !searching || !query || t.name.toLocaleLowerCase().includes(query) || String(t.index) === query);
   }
+  const receiverRoots = () => receiverTarget ? [receiverTarget] : receiverChoices(false).map(t => t.id);
   function setReceiverCategory(category) {
-    if (filter === "receive" && receiverCategory === category) return;
-    const entering = filter !== "receive";
     flushControls(); closeSourceMenu();
     filter = "receive"; receiverCategory = category;
-    if (entering) {
-      graphPan.x = graphPan.y = 0; graphPan.scale = 1; updateGraphPan(); receiverNeedsFit = true;
-      $("matrix-scroll").scrollTo(0, 0);
-    }
-    const previous = receiverTargets.get(category);
-    const candidate = category === "outgoing" ? sends.get(selected)?.source || receiverTarget || "" : receiverTarget || sends.get(selected)?.destination || "";
-    setReceiverTarget(receiverInCategory(previous) ? previous : receiverInCategory(candidate) ? candidate : "");
+    // Every category click returns to its overview; only a sidebar track click focuses a chain.
+    setReceiverTarget(""); selected = ""; activeControl = "";
+    receiverPositions.clear(); receiverMovedNodes.clear(); receiverLayoutKey = ""; receiverNeedsFit = true;
+    graphPan.x = graphPan.y = 0; graphPan.scale = 1; updateGraphPan();
+    $("matrix-scroll").scrollTo(0, 0);
     $("track-list").scrollTo(0, 0); matrixHover = null; $("matrix-tooltip").hidden = true;
     renderStatus(); renderTracks(); renderInspector(); resizeMatrix(); renderGraph();
   }
@@ -193,16 +190,16 @@
       ? tr("noCategoryReceivers", {category:receiverCategoryLabel(receiverCategory)}) : tr(enabled ? "noReceivers" : "noMatches");
     $("empty-state").hidden = enabled || tracks.size > 0 || draftReceivers.size > 0;
     if (enabled) {
-      const choices = receiverChoices();
       // Searching the sidebar never switches or hides the active editing canvas.
-      if (!receiverInCategory(receiverTarget)) setReceiverTarget((choices[0] || receiverChoices(false)[0])?.id || "");
+      if (receiverTarget && !receiverInCategory(receiverTarget)) setReceiverTarget("");
     } else {
       const previous = receiverTargets.get("all");
       const choices = allCanvasTarget ? visibleTracks() : [...orderedTracks(), ...draftReceivers.values()];
       const available = id => isReceiver(id) && choices.some(t => t.id === id);
       setReceiverTarget(available(previous) ? previous : available(receiverTarget) ? receiverTarget : choices.find(t => isReceiver(t.id))?.id || "");
     }
-    receiverChain = isSendView() ? SendPlusRouting.sendChain(tracks, routingInfo, receiverTarget) : SendPlusRouting.receiveChain(new Map([...tracks, ...draftReceivers]), routingInfo, receiverTarget);
+    const roots = enabled ? receiverRoots() : receiverTarget;
+    receiverChain = isSendView() ? SendPlusRouting.sendChain(tracks, routingInfo, roots) : SendPlusRouting.receiveChain(new Map([...tracks, ...draftReceivers]), routingInfo, roots);
     refreshAllCanvas();
     if (!enabled) return;
     const layoutKey = JSON.stringify([receiverCategory, [...receiverChain.distance]]);
@@ -605,7 +602,8 @@
   const matrixTracks = () => {
     const visible = visibleTracks();
     if (filter === "receive") {
-      const sources = new Set(isSendView() ? [receiverTarget] : []), destinations = new Set(isSendView() ? [] : [receiverTarget]);
+      const roots = receiverRoots();
+      const sources = new Set(isSendView() ? roots : []), destinations = new Set(isSendView() ? [] : roots);
       for (const id of receiverChain.sendIds) { const s = sends.get(id); sources.add(s.source); destinations.add(s.destination); }
       for (const id of receiverChain.parentIds) { sources.add(id); destinations.add(tracks.get(id).parent); }
       return {rows: visible.filter(t => sources.has(t.id)), columns: visible.filter(t => destinations.has(t.id))};
