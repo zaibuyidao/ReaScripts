@@ -1,5 +1,5 @@
 @description SendFlow - Visual Send Routing for REAPER
-@version 0.0.1.1
+@version 0.0.1.2
 @author zaibuyidao
 @provides
   [win64 extension] reaper_sendflow-x64.dll https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/extension/reaper_sendflow-x64.dll
@@ -19,6 +19,5 @@
   [script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/i18n.js
   [script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/routing.js
   [script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/style.css
-  [script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/THIRD_PARTY.md
 @changelog
   Send Manager v0.0.1
