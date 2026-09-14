@@ -1,0 +1,24 @@
+@description SendFlow - Visual Send Routing for REAPER
+@version 0.0.1
+@author zaibuyidao
+@provides
+  [win64 extension] reaper_sendmanager-x64.dll https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/extension/reaper_sendmanager-x64.dll
+
+  [darwin64 extension] reaper_sendmanager-x86_64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/extension/reaper_sendmanager-x86_64.dylib
+
+  [darwin-arm64 extension] reaper_sendmanager-arm64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/extension/reaper_sendmanager-arm64.dylib
+
+  [linux64 extension] reaper_sendmanager-x86_64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/extension/reaper_sendmanager-x86_64.so
+  [linux64 script nomain] sendmanager-webview-x86_64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/extension/sendmanager-webview-x86_64
+
+  [linux-aarch64 extension] reaper_sendmanager-aarch64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/extension/reaper_sendmanager-aarch64.so
+  [linux-aarch64 script nomain] sendmanager-webview-aarch64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/extension/sendmanager-webview-aarch64
+
+  [script nomain] index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/index.html
+  [script nomain] app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/app.js
+  [script nomain] i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/i18n.js
+  [script nomain] routing.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/routing.js
+  [script nomain] style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/style.css
+  [script nomain] THIRD_PARTY.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/SendFlow/web/THIRD_PARTY.md
+@changelog
+  Send Manager v0.0.1
