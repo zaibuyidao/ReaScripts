@@ -1,32 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>ReaGBA</title><style>:root{color-scheme:dark;--bg:#10171d;--card:#1a242b;--line:#2a353b;--muted:#8b9b9e;--text:#e5eded;--green:#b4eccb;font:13px Inter,"Segoe UI","Microsoft YaHei",sans-serif}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-button,input,select{font:inherit}button{cursor:pointer;color:var(--text);border:1px solid var(--line);background:#1d272e;border-radius:8px;padding:9px 12px}button:hover{background:#2c3b41}button:disabled{opacity:.35;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:2px}
-input,select{background:#182127;border:1px solid var(--line);border-radius:8px;padding:9px;color:var(--text);min-width:0}input[type=checkbox],input[type=range]{accent-color:var(--green)}input[type=range],input[type=text]{width:100%}input[type=text]{margin-bottom:10px}
-header{height:64px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);flex-shrink:0;gap:10px}.brand{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:750;white-space:nowrap}.brand small{display:block;font-size:8px;letter-spacing:1.5px;color:var(--muted);margin-top:3px}.logo{width:34px;height:38px;border-radius:8px 8px 12px 8px;background:var(--green);color:#20392c;display:flex;align-items:center;justify-content:center;font-size:25px;position:relative}.logo span{font-size:7px;position:absolute;right:4px;bottom:4px}.header-actions,.library-actions{display:flex;align-items:center;gap:7px}.icon{padding:7px;background:transparent;font-size:19px;border-color:transparent}.small{padding:7px 10px;font-size:11px}
-main{padding:16px 20px;flex:1;min-height:0;display:flex;flex-direction:column;gap:0;overflow:auto;scrollbar-width:thin;scrollbar-color:#36474b transparent}main>section{width:100%;min-width:0;margin:0}
-#library-view{flex:0 0 auto;min-height:0;display:flex;flex-direction:column}.heading{flex:0 0 auto}#library-body{display:flex;flex-direction:column;flex:1;min-height:0}#library-body nav,#library-body .search-row{flex:0 0 auto}.heading{display:flex;align-items:center;justify-content:space-between;gap:8px}h1{font-size:21px;font-weight:600;margin:0}h1 span{font-size:11px;vertical-align:middle;padding:3px 7px;margin-left:9px;background:#27332f;border-radius:6px;color:var(--green)}
-nav{display:flex;gap:20px;margin:14px 0 10px;border-bottom:1px solid var(--line)}.tab{border:none;background:transparent;color:var(--muted);padding:0 0 10px;border-radius:0;font-size:12px}.tab.active{color:var(--green);border-bottom:2px solid var(--green)}.search-row{display:flex;gap:7px;margin-bottom:12px}.search-row input{flex:1;width:100px;font-size:11px}.search-row select{width:75px;font-size:11px}.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:10px;flex:1;min-height:0;align-content:start;overflow:auto;scrollbar-width:thin;scrollbar-gutter:stable}
-.game{display:flex;gap:12px;padding:11px;background:var(--card);border:1px solid var(--line);border-radius:10px;cursor:pointer;position:relative;min-height:96px}.game:hover,.game.selected{border-color:#6d977c;background:#1d2c2c}.cover{width:60px;min-width:60px;height:72px;border-radius:6px 6px 11px 6px;background:linear-gradient(145deg,#39584b,#182d29);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#c1dba2}.cover b{font-family:Georgia,serif;font-size:32px}.cover span{font-size:6px;letter-spacing:1px}.game-info{min-width:0;flex:1}.game-info h2{font-size:13px;line-height:1.5;margin:2px 20px 7px 0;font-weight:600}.tag{font-size:9px;color:var(--green);background:#2c4136;border-radius:4px;padding:3px 5px}.game-meta{font-size:10px;color:var(--muted);margin-top:9px}.favorite{position:absolute;right:8px;top:6px;padding:2px 5px;font-size:16px;border:0;background:transparent;color:#84918d}.favorite.on{color:#ddcf93}.launch{position:absolute;right:9px;bottom:9px;font-size:10px;padding:4px 8px;border-color:#527361;color:var(--green)}#empty{text-align:center;padding:15px;color:var(--muted)}#empty h2{font-size:14px}#empty p{font-size:11px;line-height:1.6}.empty-icon{font-size:30px}
-.player{display:flex;flex-direction:column;flex:0 0 auto;min-height:0;gap:10px}.player-heading{flex:0 0 auto}.now-label{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--muted)}.dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%}.dot.idle{background:#78848b}#fps{margin-left:auto;font:10px Consolas,monospace;color:var(--green)}.player h2{margin:6px 0 3px;font-size:16px;line-height:1.4;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.player p{margin:0;color:var(--muted);font-size:10px}
-.play-workspace{flex:1;min-height:0;display:grid;grid-template-rows:minmax(64px,1fr) auto;gap:12px}.game-stage{display:grid;place-items:center;min-width:0;min-height:64px;overflow:hidden}#game-viewport{width:100%;aspect-ratio:3/2;flex:none;min-width:0;position:relative;background:#070a0e;border-radius:4px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:12px}#game-viewport:focus-visible{outline:2px solid var(--green)}
-.player-controls{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}.primary-controls{display:flex;gap:7px}.primary-controls .primary{background:var(--green);border-color:var(--green);color:#1c3728;flex:1;font-weight:650;white-space:nowrap}.primary-controls button:not(.primary){width:42px;flex:0 0 auto;font-size:14px;padding:8px}.secondary-controls{display:flex;gap:5px;justify-content:space-between;margin-top:6px}.secondary-controls button{font-size:11px;background:transparent;border:0;color:var(--muted);padding:5px}.save-panel{margin-top:auto}.save-heading{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:10px;margin-bottom:8px;font-size:11px;color:var(--muted)}#save-hint{font-size:10px}.slot-row{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}.slot-row button{padding:7px 0;font-size:11px;border-radius:5px;position:relative}.slot-row button.selected{border-color:var(--green);color:var(--green);background:#293d33}.slot-row button.saved:after{content:"";height:3px;width:3px;position:absolute;bottom:2px;left:calc(50% - 1px);background:var(--green);border-radius:50%}.save-actions{display:flex;gap:7px;margin-top:8px}.save-actions button{flex:1;font-size:11px;padding:9px 5px;background:transparent}
-
-footer{height:26px;padding:0 20px;display:flex;align-items:center;gap:7px;border-top:1px solid var(--line);font-size:8px;letter-spacing:1px;color:#81938d;flex-shrink:0}.version{margin-left:auto;color:#526661}
-#settings-view{flex:1;min-height:0;overflow:auto;scrollbar-width:thin}.settings-open .player{display:none}.settings-open main{overflow:hidden}.eyebrow{font-size:9px;letter-spacing:1.9px;color:var(--muted);margin-bottom:10px}h3{font-size:12px;font-weight:600;margin:20px 0 12px}.setting{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-size:12px}.setting select{font-size:11px;padding:7px}.hint{font-size:11px;line-height:1.8;color:var(--muted)}.key-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:8px}.key-pair{display:flex;align-items:center;justify-content:space-between;background:#19242a;border-radius:7px;padding:5px 8px;gap:5px;font-size:11px}.key-pair button{font-size:10px;padding:4px 6px;max-width:100px;overflow:hidden}.about{margin:25px 0;display:flex;flex-direction:column;gap:6px;font-size:10px;color:var(--muted)}#reset-keys{margin-top:12px}
-#toast{position:fixed;left:20px;right:20px;bottom:36px;padding:12px 15px;background:#c0ead0;color:#173626;border-radius:9px;font-size:12px;box-shadow:0 8px 30px #0008;opacity:0;pointer-events:none;transform:translateY(8px);transition:.15s}#toast.visible{opacity:1;transform:translateY(0)}#toast.error{background:#efc4b5;color:#542a1b}[hidden]{display:none!important}
-@media(max-width:480px){header{height:58px;padding:10px 12px;gap:6px}.brand{font-size:18px;gap:7px}.brand small{display:none}.logo{width:28px;height:31px;font-size:22px}.header-actions{gap:3px}.header-actions .small{padding:6px}.icon{padding:4px}main{padding:12px}.library-actions{gap:5px}.library-actions .small{font-size:10px;padding:7px}h1{font-size:17px}footer{padding:0 12px}}
-@media(max-height:560px){header{height:48px;padding-top:6px;padding-bottom:6px}.brand small{display:none}.logo{height:30px}main{padding-top:8px;padding-bottom:8px}.player{gap:7px}.player h2{font-size:14px;margin-top:4px}.player-heading p{display:none}.save-heading{padding-top:7px;margin-bottom:5px}.slot-row button{padding:4px 0}.save-actions button{padding:6px 4px}.player-controls{gap:7px}.play-workspace{gap:8px}}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
-@media(max-width:360px){.logo{display:none}.brand{font-size:16px}.header-actions .small{font-size:10px}.library-actions .small{padding:6px}.heading h1{font-size:16px}}
-
-#library-splitter{height:20px;flex:0 0 20px;position:relative;cursor:row-resize;touch-action:none;user-select:none;outline:none;display:flex;align-items:center;justify-content:center}
-#library-splitter:before{content:"";position:absolute;left:0;right:0;height:1px;background:var(--line)}#library-splitter span{position:relative;width:34px;height:5px;border-radius:4px;background:#4e6666;border:1px solid var(--bg)}
-#library-splitter:hover span,#library-splitter:focus-visible span,.resizing-library #library-splitter span{background:var(--green);width:46px}.resizing-library,.resizing-library *{cursor:row-resize!important;user-select:none!important}
-.library-collapsed #library-view{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}.settings-open #library-splitter{display:none}
-#empty{flex:1;min-height:0;overflow:auto}
-@media(max-height:440px){header{height:44px}footer{height:22px}.library-collapsed #library-view{margin-bottom:6px;padding-bottom:6px}.primary-controls button{padding-top:6px;padding-bottom:6px}.primary-controls button:not(.primary){padding:6px}.secondary-controls{margin-top:3px}.secondary-controls button{padding:3px}.player-controls{gap:5px}.save-heading{padding-top:4px}}
-</style></head>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>ReaGBA</title><link rel="stylesheet" href="style.css"></head>
 <body>
 <header><div class="brand"><span class="logo">R<span>●</span></span><div>ReaGBA<small>GAME BOY ADVANCE</small></div></div><div class="header-actions"><button id="dock-toggle" class="small" hidden>停靠</button><button id="settings-toggle" class="icon" title="设置" aria-label="设置">⚙</button></div></header>
 <main>
@@ -42,11 +15,12 @@ footer{height:26px;padding:0 20px;display:flex;align-items:center;gap:7px;border
 <div id="library-splitter" role="separator" tabindex="0" aria-label="调整游戏库与游戏区域的占比" aria-orientation="horizontal" aria-controls="library-view player" title="上下拖动调整占比 · 双击恢复自动大小"><span></span></div>
 <section id="settings-view" hidden>
   <div class="eyebrow">MAKE IT YOURS</div><h1>设置</h1>
+  <h3>ROM 游戏文件夹</h3><div class="path-picker"><input id="rom-directory" type="text" readonly placeholder="选择包含 .gba 游戏的文件夹"><button id="choose-rom-directory" class="small">选择文件夹</button></div><p class="hint">游戏库会扫描这里及其子文件夹；选择后会自动保存。</p>
   <h3>画面</h3><label class="setting">整数倍缩放<input id="integer" type="checkbox" checked></label><label class="setting">垂直同步<input id="vsync" type="checkbox" checked></label><label class="setting">纹理过滤<select id="filter"><option value="nearest">像素清晰</option><option value="linear">平滑</option></select></label><label class="setting">跳帧<select id="skip"><option value="0">关闭</option><option value="1">每 2 帧显示</option><option value="2">每 3 帧显示</option></select></label>
   <h3>音频</h3><label class="setting">音量 <span id="volume-value">70%</span></label><input id="volume" type="range" min="0" max="100" value="70"><p class="hint">快进时自动静音，恢复 1× 后继续播放。</p>
   <h3>键盘映射</h3><p class="hint">点击按键名称，再按下要使用的键。</p><div id="keys" class="key-grid"></div><button id="reset-keys" class="small">恢复默认键位</button><p class="hint">W / S / A / D = 上下左右 · J / K = A / B<br>Q / E = L / R · 回车 = Start · 空格 = Select<br>按住 R 以 4× 加速，松开恢复原倍率。</p>
   <h3>BIOS（可选）</h3><input id="bios" type="text" placeholder="用户自己的 16 KB GBA BIOS 完整路径"><button id="save-bios" class="small">保存路径</button><p class="hint">留空使用核心内置的 BIOS 功能实现。下次加载游戏时生效。</p>
-  <div class="about"><b>ReaGBA 0.0.2</b><span>mGBA 0.10.5 · GBA only</span></div>
+  <div class="about"><b>ReaGBA <span id="about-version"></span></b><span>mGBA 0.10.5 · GBA only</span></div>
 </section>
 <section class="player" id="player">
   <div class="player-heading">
@@ -67,154 +41,6 @@ footer{height:26px;padding:0 20px;display:flex;align-items:center;gap:7px;border
   </div>
 </section>
 </main>
-<footer><span class="dot"></span><span id="footer-text">NATIVE PLAY. WEB CONTROLS.</span><span class="version">v0.0.2</span></footer>
+<footer><span class="dot"></span><span id="footer-text">NATIVE PLAY. WEB CONTROLS.</span><span id="footer-version" class="version"></span></footer>
 <div id="toast" role="status" aria-live="polite"></div>
-<script>'use strict';
-// REAPER extension transport. The optional standalone test host supplies its own binding.
-(()=>{
- if(window.nativeRequest)return;
- const web=window.chrome?.webview,kit=window.webkit?.messageHandlers?.reagba;
- if(!web&&!kit)return;
- let next=0;const pending=new Map();
- window.ReaGBAReceive=message=>{
-   if(message.type==='state'){window.onNativeState?.(message.result);return;}
-   const entry=pending.get(message.id);if(!entry)return;
-   pending.delete(message.id);clearTimeout(entry.timer);entry.resolve(message);
- };
- web?.addEventListener('message',event=>window.ReaGBAReceive(event.data));
- window.nativeRequest=command=>new Promise((resolve,reject)=>{
-   const id=++next;
-   const timer=setTimeout(()=>{pending.delete(id);reject(Error('原生扩展响应超时，请重新打开 ReaGBA'));},30000);
-   pending.set(id,{resolve,timer});
-   try{(web||kit).postMessage({...command,id});}catch(error){clearTimeout(timer);pending.delete(id);reject(error);}
- });
-})();
-const $=id=>document.getElementById(id);
-let games=[],filter='all',selected=null,state={loaded:false,running:false},slot=1,slots=[],settings={},binding=-1;
-let toastTimer;
-function toast(message,error=false){$('toast').textContent=message;$('toast').className='visible'+(error?' error':'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').className='',3500);}
-async function call(action,values={}){if(!window.nativeRequest)throw Error('请从 REAPER 操作列表打开 ReaGBA 扩展');const result=await window.nativeRequest({action,...values});if(!result.ok)throw Error(result.error||'操作失败');return result.result;}
-function run(fn){return async(...args)=>{try{await fn(...args);}catch(error){toast(error.message,true);}};}
-function make(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
-function renderGames(){
- const search=$('search').value.trim().toLocaleLowerCase();let rows=games.filter(g=>(filter!=='favorite'||g.favorite)&&(filter!=='recent'||g.last_played>0)&&g.title.toLocaleLowerCase().includes(search));
- const mode=$('sort').value;rows.sort((a,b)=>mode==='time'?(b.play_seconds-a.play_seconds):mode==='recent'||filter==='recent'?(b.last_played-a.last_played):a.title.localeCompare(b.title,'zh-CN'));
- $('count').textContent=games.length;$('games').replaceChildren();$('empty').hidden=rows.length>0;$('games').hidden=rows.length===0;
- for(const g of rows){const card=make('article','game'+(selected?.path===g.path?' selected':''));card.tabIndex=0;card.setAttribute('aria-label',g.title);const cover=make('div','cover');cover.append(make('b','',g.code.slice(0,1)||'G'),make('span','','ADVANCE'));const info=make('div','game-info');info.append(make('h2','',g.title),make('span','tag','GBA'),make('div','game-meta',`${Math.round(g.size/1048576)} MB · ${g.play_seconds>60?Math.floor(g.play_seconds/60)+' 分钟':'尚未记录时长'}`));const fav=make('button','favorite'+(g.favorite?' on':''),g.favorite?'★':'☆');fav.title='收藏';fav.onclick=run(async e=>{e.stopPropagation();g.favorite=!g.favorite;await call('favorite',{path:g.path,value:g.favorite});renderGames();});const play=make('button','launch','▶ 游玩');play.onclick=run(async e=>{e.stopPropagation();await playGame(g);});card.append(cover,info,fav,play);card.onclick=()=>{selected=g;renderGames();if(!state.loaded)$('toggle').disabled=false;};card.ondblclick=run(()=>playGame(g));card.onkeydown=run(async e=>{if(e.key==='Enter'){e.preventDefault();await playGame(g);}});$('games').append(card);}
-}
-async function scan(){games=await call('scan_roms');if(!selected&&games.length)selected=games[0];renderGames();if(!state.loaded)$('toggle').disabled=!selected;}
-async function playGame(g){selected=g;const s=await call('load_rom',{path:g.path});onNativeState(s);await refreshSlots();await scan();scheduleViewport();toast('WASD 移动 · J / K = A / B · 回车开始 · 按住 R 加速');}
-window.onNativeState=function(s){const changed=state.game?.hash!==s.game?.hash;state=s;document.body.classList.toggle('playing',s.loaded);scheduleViewport();$('now-title').textContent=s.game?.title||selected?.title||'选择一个游戏';$('now-subtitle').textContent=s.loaded?`${s.game.code} · 240 × 160 · ${s.core}`:'240 × 160 · Game Boy Advance';$('play-status').textContent=s.loaded?(s.running?'正在游玩':'已暂停'):'准备就绪';$('play-dot').className='dot'+(s.running?'':' idle');$('fps').textContent=s.running?`${s.fps.toFixed(1)} FPS`:'— FPS';$('speed').textContent=s.speed+'×';$('toggle').textContent=s.running?'Ⅱ 暂停游戏':s.loaded?'▶ 继续游戏':'▶ 开始游戏';$('toggle').disabled=!s.loaded&&!selected;for(const id of ['reset','shot','stop','save'])$(id).disabled=!s.loaded;$('load').disabled=!s.loaded||!slots.find(x=>x.slot===slot)?.exists;if(changed)run(refreshSlots)();if(s.error)toast(s.error,true);};
-const updateNativeState=window.onNativeState;window.onNativeState=s=>{updateNativeState(s);if('reaper' in s){$('dock-toggle').hidden=!s.reaper;$('dock-toggle').textContent=s.docked?'取消停靠':'停靠';$('fullscreen').hidden=!!s.reaper;}};
-$('dock-toggle').onclick=run(()=>call('toggle_dock'));
-async function refreshSlots(){slots=state.loaded?await call('get_save_states'):[];renderSlots();}
-function renderSlots(){$('slots').replaceChildren();for(let n=1;n<=9;n++){const entry=slots.find(x=>x.slot===n);const b=make('button',(slot===n?'selected ':'')+(entry?.exists?'saved':''),n);b.title=entry?.metadata?new Date(entry.metadata.timestamp*1000).toLocaleString():'空槽位';b.onclick=()=>{slot=n;renderSlots();};$('slots').append(b);}$('save-hint').textContent=`槽位 ${slot} · ${slots.find(x=>x.slot===slot)?.exists?'已有存档':'空'}`;$('load').disabled=!state.loaded||!slots.find(x=>x.slot===slot)?.exists;}
-const defaultKeys=['J','K','Space','Return','D','A','W','S','E','Q'];const labels=['A','B','Select','Start','→','←','↑','↓','R','L','加速（按住）'];
-function renderKeys(){$('keys').replaceChildren();[...(settings.keys||defaultKeys),settings.fast_forward_key||'R'].forEach((key,i)=>{const row=make('div','key-pair');const b=make('button','',binding===i?'请按键…':key);b.onclick=()=>{binding=i;renderKeys();};row.append(make('span','',labels[i]),b);$('keys').append(row);});}
-async function saveSettings(values){settings=await call('set_settings',{settings:values});}
-document.addEventListener('keydown',run(async e=>{if(binding<0)return;e.preventDefault();e.stopPropagation();const map={ArrowUp:'Up',ArrowDown:'Down',ArrowLeft:'Left',ArrowRight:'Right',Enter:'Return',Space:'Space',Backspace:'Backspace',ShiftLeft:'Left Shift',ShiftRight:'Right Shift'};const key=map[e.code]||(/^Key[A-Z]$/.test(e.code)?e.code.slice(3):/^Digit[0-9]$/.test(e.code)?e.code.slice(5):null);if(e.key==='Escape'){binding=-1;renderKeys();return;}if(!key){toast('请选择字母、数字、方向键、Enter、空格或 Shift',true);return;}const index=binding;binding=-1;if(index===10)await saveSettings({fast_forward_key:key});else{const keys=[...(settings.keys||defaultKeys)];keys[index]=key;await saveSettings({keys});}renderKeys();}),true);
-$('settings-toggle').onclick=()=>{const show=$('settings-view').hidden;$('settings-view').hidden=!show;$('library-view').hidden=show;$('settings-toggle').textContent=show?'×':'⚙';binding=-1;document.body.classList.toggle('settings-open',show);updateKeyboardContext();scheduleViewport();};
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));renderGames();});
-$('search').oninput=renderGames;$('sort').onchange=renderGames;$('refresh').onclick=run(scan);
-$('open').onclick=run(async()=>{const s=await call('open_rom');if(s){onNativeState(s);await scan();await refreshSlots();}});
-$('toggle').onclick=run(async()=>{if(!state.loaded&&selected)return playGame(selected);onNativeState(await call(state.running?'pause':'start'));});
-for(const id of ['reset','stop'])$(id).onclick=run(async()=>onNativeState(await call(id)));
-$('speed').onclick=run(async()=>onNativeState(await call('set_speed',{value:state.base_speed===1?2:state.base_speed===2?4:1})));
-$('fullscreen').onclick=run(()=>call('fullscreen'));
-$('shot').onclick=run(async()=>{await call('screenshot');toast('截图已保存到 screenshots 文件夹');});
-$('save').onclick=run(async()=>{await call('save_state',{slot});await refreshSlots();toast(`进度已保存至槽位 ${slot}`);});
-$('load').onclick=run(async()=>{onNativeState(await call('load_state',{slot}));toast(`已读取槽位 ${slot}`);});
-$('volume').oninput=()=>$('volume-value').textContent=$('volume').value+'%';$('volume').onchange=run(()=>call('set_volume',{value:Number($('volume').value)/100}));
-$('integer').onchange=run(()=>saveSettings({integer_scaling:$('integer').checked}));$('vsync').onchange=run(()=>saveSettings({vsync:$('vsync').checked}));$('filter').onchange=run(()=>saveSettings({filter:$('filter').value}));$('skip').onchange=run(()=>call('set_frame_skip',{value:Number($('skip').value)}));$('save-bios').onclick=run(async()=>{await saveSettings({bios:$('bios').value.trim()});toast('BIOS 路径已保存');});
-
-// The library takes surplus height; the native game rectangle always stays 3:2.
-let libraryPreference=null,splitDrag=null,paneBounds=null,splitSaveTimer;
-const splitKey=()=>'library_split';
-const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
-function setPixels(element,property,value){const next=Math.max(0,value)+'px';if(element.style[property]!==next)element.style[property]=next;}
-function sizePanes(){
- const divider=$('library-splitter');
- if(!$('settings-view').hidden){divider.hidden=true;return;}
- const main=document.querySelector('main'),library=$('library-view'),body=$('library-body'),player=$('player');
- const style=getComputedStyle(main),available=main.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom);
- const outerHeight=e=>{const s=getComputedStyle(e);return e.getBoundingClientRect().height+parseFloat(s.marginTop)+parseFloat(s.marginBottom);};
- // Measure intrinsic controls, never the stretched height of the controls column.
- document.body.classList.remove('library-collapsed');body.hidden=false;
- const libraryChrome=library.querySelector('.heading').getBoundingClientRect().height+outerHeight(body.querySelector('nav'))+outerHeight(body.querySelector('.search-row'));
- const minLibrary=libraryChrome+96;
- const controls=document.querySelector('.player-controls'),workspace=document.querySelector('.play-workspace'),stage=document.querySelector('.game-stage');
- const controlsHeight=outerHeight(document.querySelector('.play-actions'))+outerHeight(document.querySelector('.save-heading'))+outerHeight($('slots'))+outerHeight(document.querySelector('.save-actions'))+parseFloat(getComputedStyle(controls).gap);
- const headingHeight=outerHeight(document.querySelector('.player-heading'))+parseFloat(getComputedStyle(player).gap);
- const chrome=headingHeight+controlsHeight+parseFloat(getComputedStyle(workspace).rowGap);
- const minPlayer=chrome+64,maxPlayer=chrome+stage.clientWidth/1.5;
- const expanded=libraryPreference??(available>=minLibrary+chrome+160+20);
- body.hidden=!expanded;divider.hidden=!expanded;
- document.body.classList.toggle('library-collapsed',!expanded);
- $('library-toggle').textContent=expanded?'收起游戏库':'展开游戏库';$('library-toggle').setAttribute('aria-expanded',String(expanded));
- if(expanded){
-   const total=Math.max(available-20,minLibrary+minPlayer);
-   const min=Math.max(minLibrary,total-maxPlayer),max=total-minPlayer;
-   const ratio=settings[splitKey()];
-   const libraryHeight=clamp(typeof ratio==='number'&&Number.isFinite(ratio)?ratio*total:min,min,max);
-   setPixels(library,'height',libraryHeight);setPixels(player,'height',total-libraryHeight);
-   paneBounds={min,max,total,height:libraryHeight};
-   for(const [name,value] of [['min',min],['max',max],['now',libraryHeight]])divider.setAttribute('aria-value'+name,Math.round(value/total*100));
-   divider.setAttribute('aria-valuetext',`游戏库 ${Math.round(libraryHeight/total*100)}%，游戏区域 ${Math.round((total-libraryHeight)/total*100)}%`);
- }else{
-   library.style.height='auto';paneBounds=null;
-   setPixels(player,'height',Math.max(minPlayer,Math.min(maxPlayer,available-outerHeight(library))));
- }
- const bounds=stage.getBoundingClientRect(),width=Math.max(0,Math.min(bounds.width,bounds.height*1.5));
- setPixels($('game-viewport'),'width',width);setPixels($('game-viewport'),'height',width/1.5);
-}
-function changeSplit(height){if(!paneBounds)return;settings[splitKey()]=clamp(height,paneBounds.min,paneBounds.max)/paneBounds.total;scheduleViewport();}
-function persistSplit(){clearTimeout(splitSaveTimer);const key=splitKey(),value=settings[key];return saveSettings({[key]:value});}
-$('library-splitter').addEventListener('pointerdown',e=>{
- if(e.button!==0||!paneBounds)return;e.preventDefault();clearTimeout(splitSaveTimer);
- const divider=$('library-splitter');divider.focus();divider.setPointerCapture(e.pointerId);
- splitDrag={id:e.pointerId,y:e.clientY,height:paneBounds.height,key:splitKey(),original:settings[splitKey()]??null};
- document.body.classList.add('resizing-library');updateKeyboardContext();
-});
-$('library-splitter').addEventListener('pointermove',e=>{if(splitDrag?.id===e.pointerId)changeSplit(splitDrag.height+e.clientY-splitDrag.y);});
-function endSplit(cancel=false){
- if(!splitDrag)return;const drag=splitDrag;splitDrag=null;
- if(cancel){settings[drag.key]=drag.original;scheduleViewport();}else if(settings[drag.key]!==undefined)run(()=>saveSettings({[drag.key]:settings[drag.key]}))();
- document.body.classList.remove('resizing-library');
- if($('library-splitter').hasPointerCapture(drag.id))$('library-splitter').releasePointerCapture(drag.id);
- updateKeyboardContext();
-}
-$('library-splitter').addEventListener('pointerup',()=>endSplit());
-$('library-splitter').addEventListener('pointercancel',()=>endSplit(true));
-$('library-splitter').addEventListener('lostpointercapture',()=>endSplit(true));
-window.addEventListener('blur',()=>endSplit(true));
-$('library-splitter').ondblclick=run(async()=>{settings[splitKey()]=null;scheduleViewport();await persistSplit();toast('已恢复自动大小');});
-$('library-splitter').addEventListener('keydown',e=>{
- if(e.key==='Escape'&&splitDrag){e.preventDefault();endSplit(true);return;}
- if(!paneBounds||!['ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
- e.preventDefault();const step=e.shiftKey?40:12;
- changeSplit(e.key==='Home'?paneBounds.min:e.key==='End'?paneBounds.max:paneBounds.height+(e.key==='ArrowDown'?step:-step));
- clearTimeout(splitSaveTimer);splitSaveTimer=setTimeout(run(persistSplit),200);
-});
-function setLibraryExpanded(expanded){libraryPreference=expanded;scheduleViewport();}
-$('library-toggle').onclick=()=>setLibraryExpanded($('library-body').hidden);
-$('reset-keys').onclick=run(async()=>{binding=-1;await saveSettings({keys:defaultKeys,fast_forward_key:'R'});renderKeys();toast('已恢复默认键位');});
-function editing(){const e=document.activeElement;return !$('settings-view').hidden||binding>=0||!!splitDrag||!!e?.matches('input,textarea,select,[role="separator"],[contenteditable="true"]');}
-let keyboardContext=null;
-function updateKeyboardContext(){const blocked=editing();if(blocked!==keyboardContext){keyboardContext=blocked;call('keyboard_context',{blocked}).catch(error=>toast(error.message,true));}}
-document.addEventListener('focusin',updateKeyboardContext,true);
-document.addEventListener('focusout',()=>queueMicrotask(updateKeyboardContext),true);
-$('game-viewport').onclick=run(()=>call('focus_game'));
-// Only a rectangle crosses the bridge; every game pixel stays in the native GPU view.
-let viewportQueued=false,lastViewport='';
-function layoutMetrics(){const box=id=>{const r=$(id).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,right:r.right};};return {mode:'vertical',window:{width:innerWidth,height:innerHeight},game:box('game-viewport'),save:box('save'),load:box('load'),player:box('player'),library:box('library-view'),splitter:box('library-splitter'),libraryExpanded:!$('library-body').hidden,mainBottom:document.querySelector('main').getBoundingClientRect().bottom,scrollHeight:document.querySelector('main').scrollHeight,clientHeight:document.querySelector('main').clientHeight};}
-function scheduleViewport(){if(viewportQueued)return;viewportQueued=true;requestAnimationFrame(()=>{viewportQueued=false;sizePanes();const r=$('game-viewport').getBoundingClientRect(),m=document.querySelector('main').getBoundingClientRect();const rect={x:r.x,y:r.y,width:r.width,height:r.height,clipTop:m.top,clipBottom:m.bottom,clientWidth:innerWidth,visible:state.loaded&&r.width>0&&r.bottom>m.top&&r.top<m.bottom};const serialized=JSON.stringify(rect);if(serialized!==lastViewport){lastViewport=serialized;call('game_viewport',{rect,layout:layoutMetrics()}).catch(error=>toast(error.message,true));}});}
-document.querySelector('main').addEventListener('scroll',scheduleViewport,{passive:true});
-window.addEventListener('resize',()=>{endSplit(true);scheduleViewport();});
-new ResizeObserver(scheduleViewport).observe(document.querySelector('main'));
-new ResizeObserver(scheduleViewport).observe($('player'));
-new ResizeObserver(scheduleViewport).observe($('game-viewport'));
-new ResizeObserver(scheduleViewport).observe($('library-view'));
-new ResizeObserver(scheduleViewport).observe(document.querySelector('.player-controls'));
-document.fonts.ready.then(scheduleViewport);
-renderSlots();run(async()=>{settings=await call('get_settings');scheduleViewport();$('integer').checked=settings.integer_scaling!==false;$('vsync').checked=settings.vsync!==false;$('filter').value=settings.filter||'nearest';$('bios').value=settings.bios||'';renderKeys();await scan();const s=await call('get_emulator_state');$('volume').value=Math.round(s.volume*100);$('volume-value').textContent=$('volume').value+'%';onNativeState(s);})();// The game framebuffer and PCM never enter this script.
-</script></body></html>
+<script src="app.js"></script></body></html>
