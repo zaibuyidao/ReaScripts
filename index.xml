@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="b1878b12d62630355a7bc0ce24617d9476ad7d64">
+<index version="1" name="zaibuyidao Scripts" commit="8e49d71fba6d573be4ed8f4fb430e8322a178bb9">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7261,6 +7261,26 @@ Added mode selection:
       <version name="1.0" author="zaibuyidao" time="2024-02-01T09:45:08Z">
         <changelog><![CDATA[+ New Script]]></changelog>
         <source main="main">https://github.com/zaibuyidao/ReaScripts/raw/7551e7c34563ebc35005e4b1d5edc223f04e1a9c/Razor%20Edit/zaibuyidao_Set%20Time%20Selection%20To%20Razor%20Edit%20Area.lua</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="ReaGBA">
+    <reapack name="ReaGBA.ext" type="extension" desc="ReaGBA">
+      <version name="0.0.2" author="zaibuyidao" time="2026-09-15T12:56:38Z">
+        <changelog><![CDATA[Native extension action: zaibuyidao: ReaGBA
+Install WebView assets under ReaGBA/web.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reagba-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/extension/reaper_reagba-x64.dll</source>
+        <source platform="win64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/web/index.html</source>
+        <source platform="darwin64" type="extension" file="reaper_reagba-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/extension/reaper_reagba-x86_64.dylib</source>
+        <source platform="darwin64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/web/index.html</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reagba-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/extension/reaper_reagba-arm64.dylib</source>
+        <source platform="darwin-arm64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/web/index.html</source>
+        <source platform="linux64" type="extension" file="reaper_reagba-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/extension/reaper_reagba-x86_64.so</source>
+        <source platform="linux64" type="script" file="extension/reagba-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/extension/reagba-webview-x86_64</source>
+        <source platform="linux64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/web/index.html</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reagba-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/extension/reaper_reagba-aarch64.so</source>
+        <source platform="linux-aarch64" type="script" file="extension/reagba-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/extension/reagba-webview-aarch64</source>
+        <source platform="linux-aarch64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/master/ReaGBA/web/index.html</source>
       </version>
     </reapack>
   </category>
