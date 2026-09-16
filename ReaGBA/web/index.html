@@ -16,7 +16,15 @@
   <nav><button class="tab active" data-filter="all">全部游戏</button><button class="tab" data-filter="favorite">收藏</button><button class="tab" data-filter="recent">最近游玩</button><select id="library-display" aria-label="游戏库显示方式" title="游戏库显示方式"><option value="details">详细列表</option><option value="grid">封面网格</option><option value="compact">紧凑列表</option></select></nav>
   <div class="search-row"><input id="search" type="search" placeholder="搜索游戏…" aria-label="搜索游戏"><select id="sort" aria-label="排序"><option value="name">名称</option><option value="recent">最近</option><option value="time">时长</option></select><button id="refresh" class="icon" title="重新扫描" aria-label="重新扫描">↻</button></div>
   <div id="games" class="games"></div>
-  <div id="empty" hidden><div class="empty-icon">▱</div><h2>下一段冒险，从这里开始</h2><p>将 .gba 文件放入 ROM 文件夹，<br>或点击「打开 ROM」选择游戏。</p></div>
+  <div id="empty" hidden><div class="empty-icon">
+    <svg width="32" height="24" viewBox="0 0 32 24" shape-rendering="crispEdges" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 1h24v2h2v17h-2v2H4v-2H2V3h2Z" fill="#b4eccb"/>
+      <path d="M6 3h20v2H6ZM4 19h24v1H4Zm2 1h20v2H6Z" fill="#8ba99a"/>
+      <path d="M6 7h20v11H6Zm7 13h6v2h-6Z" fill="#22363a"/>
+      <path d="M8 14h2v-2h2v2h2v2h2v-4h2v-2h2v2h2v2h2v2H8Z" fill="#8ba99a"/>
+      <path d="M9 9h3v3H9Z" fill="#b4eccb"/>
+    </svg>
+  </div><h2>下一段冒险，从这里开始</h2><p>将 .gba 文件放入 ROM 文件夹，<br>或点击「打开 ROM」选择游戏。</p></div>
   </div>
 </section>
 <div id="library-splitter" role="separator" tabindex="0" aria-label="调整游戏库与游戏区域的占比" aria-orientation="horizontal" aria-controls="library-view player" title="上下拖动调整占比 · 双击恢复自动大小"><span></span></div>
