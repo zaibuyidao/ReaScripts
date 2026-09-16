@@ -26,13 +26,77 @@ async function call(action,values={}){if(!window.nativeRequest)throw Error('请�
 function run(fn){return async(...args)=>{try{await fn(...args);}catch(error){toast(error.message,true);}};}
 function make(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
 function parentDirectory(path){const cut=Math.max(path.lastIndexOf('/'),path.lastIndexOf('\\'));if(cut<0)return '';if(cut===0)return path[0];if(cut===2&&path[1]===':')return path.slice(0,3);return path.slice(0,cut);}
+const coverCache=new Map();
+let coversLoading=false,coverRevision=0;
+function coverLetter(g){return Array.from((g.code||'').trim())[0]||Array.from(g.title||'')[0]||'G';}
+function fillCover(cover,g){
+ cover.replaceChildren();cover.classList.remove('has-image');
+ cover.append(make('b','',coverLetter(g)),make('span','','ADVANCE'));
+ cover.title='暂无封面 · 游戏编号 '+(g.code||'未知');
+ const source=coverCache.get(g.code)?.image;
+ if(!source)return;
+ const img=make('img');img.alt=g.title+' 封面';img.decoding='async';img.loading='lazy';
+ img.onload=()=>{cover.classList.add('has-image');cover.title=g.title+' · Libretro 封面';};
+ img.onerror=()=>{coverCache.set(g.code,{status:'error',retry:Date.now()+600000});img.remove();cover.classList.remove('has-image');cover.title='封面无法显示 · 游戏编号 '+g.code;renderCoverStatus();};
+ img.src=source;cover.append(img);
+}
+function refreshCover(code){for(const cover of document.querySelectorAll('.cover'))if(cover.dataset.code===code){const g=games.find(g=>g.path===cover.dataset.path);if(g)fillCover(cover,g);}}
+function renderCoverStatus(){
+ const codes=[...new Set(games.map(g=>g.code))],count=status=>codes.filter(code=>coverCache.get(code)?.status===status).length;
+ $('cover-status').textContent=(coversLoading?'正在后台检查封面 · ':'')+`已缓存 ${count('ready')} / ${codes.length}`+(count('missing')?` · 未匹配 ${count('missing')}`:'')+(count('error')?' · 部分封面暂不可用，稍后重新扫描可重试':'');
+}
+async function loadCovers(){
+ if(coversLoading)return;
+ coversLoading=true;renderCoverStatus();
+ try{
+  for(;;){
+   const g=games.find(g=>!coverCache.has(g.code)||(coverCache.get(g.code).retry||Infinity)<=Date.now());
+   if(!g)break;
+   const revision=coverRevision;let result;
+   try{
+    do{result=await call('get_cover',{code:g.code||''});if(result?.status==='pending'||result?.status==='busy')await new Promise(resolve=>setTimeout(resolve,150));}
+    while(result?.status==='pending'||result?.status==='busy');
+    if(!result||typeof result.status!=='string')result={status:'missing'};
+   }catch{result={status:'error'};}
+   if(revision!==coverRevision&&result.status!=='ready')continue;
+   coverCache.set(g.code,{...result,retry:result.status==='error'?Date.now()+600000:result.status==='missing'?Date.now()+604800000:Infinity});
+   refreshCover(g.code);renderCoverStatus();
+  }
+ }finally{coversLoading=false;renderCoverStatus();}
+}
+function renderLibrarySettings(){
+ const view=['grid','compact'].includes(settings.library_view)?settings.library_view:'details';
+ $('games').dataset.view=view;$('library-display').value=view;$('library-display-setting').value=view;
+ $('auto-covers').checked=settings.auto_download_covers===true;
+}
+async function changeLibraryView(value){try{await saveSettings({library_view:value});}finally{renderLibrarySettings();scheduleViewport();}}
+$('library-display').onchange=run(()=>changeLibraryView($('library-display').value));
+$('library-display-setting').onchange=run(()=>changeLibraryView($('library-display-setting').value));
+$('auto-covers').onchange=run(async()=>{
+ $('auto-covers').disabled=true;
+ try{await saveSettings({auto_download_covers:$('auto-covers').checked});++coverRevision;for(const [code,entry] of coverCache)if(entry.status!=='ready')coverCache.delete(code);void loadCovers();}
+ finally{$('auto-covers').disabled=false;renderLibrarySettings();}
+});
 function renderGames(){
  const search=$('search').value.trim().toLocaleLowerCase();let rows=games.filter(g=>(filter!=='favorite'||g.favorite)&&(filter!=='recent'||g.last_played>0)&&g.title.toLocaleLowerCase().includes(search));
  const mode=$('sort').value;rows.sort((a,b)=>mode==='time'?(b.play_seconds-a.play_seconds):mode==='recent'||filter==='recent'?(b.last_played-a.last_played):a.title.localeCompare(b.title,'zh-CN'));
  $('count').textContent=games.length;$('games').replaceChildren();$('empty').hidden=rows.length>0;$('games').hidden=rows.length===0;
- for(const g of rows){const card=make('article','game'+(selected?.path===g.path?' selected':''));card.tabIndex=0;card.setAttribute('aria-label',g.title);const cover=make('div','cover');cover.append(make('b','',g.code.slice(0,1)||'G'),make('span','','ADVANCE'));const info=make('div','game-info');info.append(make('h2','',g.title),make('span','tag','GBA'),make('div','game-meta',`${Math.round(g.size/1048576)} MB · ${g.play_seconds>60?Math.floor(g.play_seconds/60)+' 分钟':'尚未记录时长'}`));const fav=make('button','favorite'+(g.favorite?' on':''),g.favorite?'★':'☆');fav.title='收藏';fav.onclick=run(async e=>{e.stopPropagation();g.favorite=!g.favorite;await call('favorite',{path:g.path,value:g.favorite});renderGames();});const play=make('button','launch','▶ 游玩');play.onclick=run(async e=>{e.stopPropagation();await playGame(g);});card.append(cover,info,fav,play);card.onclick=()=>{selected=g;renderGames();if(!state.loaded)$('toggle').disabled=false;};card.ondblclick=run(()=>playGame(g));card.onkeydown=run(async e=>{if(e.key==='Enter'){e.preventDefault();await playGame(g);}});$('games').append(card);}
+ for(const g of rows){
+  const card=make('article','game'+(selected?.path===g.path?' selected':''));card.tabIndex=0;card.setAttribute('aria-label',g.title);card.dataset.path=g.path;
+  const cover=make('div','cover');cover.dataset.code=g.code||'';cover.dataset.path=g.path;fillCover(cover,g);
+  const info=make('div','game-info'),title=make('h2','',g.title);title.title=g.title;
+  info.append(title,make('span','tag','GBA'),make('div','game-meta',`${Math.round(g.size/1048576)} MB · ${g.play_seconds>=60?Math.floor(g.play_seconds/60)+' 分钟':'尚未记录时长'}`));
+  const fav=make('button','favorite'+(g.favorite?' on':''),g.favorite?'★':'☆');fav.title=g.favorite?'取消收藏':'收藏';fav.setAttribute('aria-label',fav.title+' '+g.title);fav.setAttribute('aria-pressed',String(g.favorite));
+  fav.onclick=run(async e=>{e.stopPropagation();await call('favorite',{path:g.path,value:!g.favorite});g.favorite=!g.favorite;renderGames();});
+  const play=make('button','launch','▶ 游玩');play.setAttribute('aria-label','游玩 '+g.title);play.onclick=run(async e=>{e.stopPropagation();await playGame(g);});
+  card.append(cover,info,fav,play);
+  card.onclick=()=>{selected=g;document.querySelectorAll('.game').forEach(c=>c.classList.toggle('selected',c.dataset.path===g.path));if(!state.loaded)$('toggle').disabled=false;};
+  card.ondblclick=run(e=>{if(!e.target.closest('button'))return playGame(g);});
+  card.onkeydown=run(async e=>{if(e.key==='Enter'&&e.target===card){e.preventDefault();await playGame(g);}});
+  $('games').append(card);
+ }
 }
-async function scan(){games=await call('scan_roms');if(selected)selected=games.find(g=>g.path===selected.path)||null;if(!selected&&games.length)selected=games[0];renderGames();if(!state.loaded)$('toggle').disabled=!selected;}
+async function scan(){games=await call('scan_roms');if(selected)selected=games.find(g=>g.path===selected.path)||null;if(!selected&&games.length)selected=games[0];renderGames();if(!state.loaded)$('toggle').disabled=!selected;void loadCovers();}
 async function playGame(g){selected=g;const s=await call('load_rom',{path:g.path});onNativeState(s);await refreshSlots();await scan();scheduleViewport();toast('WASD 移动 · J / K = A / B · 回车开始 · 按住 R 加速');}
 window.onNativeState=function(s){const changed=state.game?.hash!==s.game?.hash;state=s;if(s.game?.path)settings.last_rom_directory=parentDirectory(s.game.path);if(s.app_version){$('about-version').textContent=s.app_version;$('footer-version').textContent='v'+s.app_version;}document.body.classList.toggle('playing',s.loaded);scheduleViewport();$('now-title').textContent=s.game?.title||selected?.title||'选择一个游戏';$('now-subtitle').textContent=s.loaded?`${s.game.code} · 240 × 160 · ${s.core}`:'240 × 160 · Game Boy Advance';$('play-status').textContent=s.loaded?(s.running?'正在游玩':'已暂停'):'准备就绪';$('play-dot').className='dot'+(s.running?'':' idle');$('fps').textContent=s.running?`${s.fps.toFixed(1)} FPS`:'— FPS';$('speed').textContent=s.speed+'×';$('toggle').textContent=s.running?'Ⅱ 暂停游戏':s.loaded?'▶ 继续游戏':'▶ 开始游戏';$('toggle').disabled=!s.loaded&&!selected;for(const id of ['reset','shot','stop','save'])$(id).disabled=!s.loaded;$('load').disabled=!s.loaded||!slots.find(x=>x.slot===slot)?.exists;if(changed)run(refreshSlots)();if(s.error)toast(s.error,true);};
 const updateNativeState=window.onNativeState;window.onNativeState=s=>{updateNativeState(s);if('reaper' in s){$('dock-toggle').hidden=!s.reaper;$('dock-toggle').textContent=s.docked?'取消停靠':'停靠';$('fullscreen').hidden=!!s.reaper;}};
@@ -74,7 +138,9 @@ function sizePanes(){
  // Measure intrinsic controls, never the stretched height of the controls column.
  document.body.classList.remove('library-collapsed');body.hidden=false;
  const libraryChrome=library.querySelector('.heading').getBoundingClientRect().height+outerHeight(body.querySelector('nav'))+outerHeight(body.querySelector('.search-row'));
- const minLibrary=libraryChrome+96;
+ const firstCard=$('games').firstElementChild;
+ const rowHeight=settings.library_view==='grid'&&firstCard?Math.ceil(firstCard.getBoundingClientRect().height)+4:106;
+ const minLibrary=libraryChrome+Math.max(96,Math.min(rowHeight,400));
  const controls=document.querySelector('.player-controls'),workspace=document.querySelector('.play-workspace'),stage=document.querySelector('.game-stage');
  const controlsHeight=outerHeight(document.querySelector('.play-actions'))+outerHeight(document.querySelector('.save-heading'))+outerHeight($('slots'))+outerHeight(document.querySelector('.save-actions'))+parseFloat(getComputedStyle(controls).gap);
  const headingHeight=outerHeight(document.querySelector('.player-heading'))+parseFloat(getComputedStyle(player).gap);
@@ -149,4 +215,4 @@ new ResizeObserver(scheduleViewport).observe($('game-viewport'));
 new ResizeObserver(scheduleViewport).observe($('library-view'));
 new ResizeObserver(scheduleViewport).observe(document.querySelector('.player-controls'));
 document.fonts.ready.then(scheduleViewport);
-renderSlots();run(async()=>{settings=await call('get_settings');scheduleViewport();$('rom-directory').value=settings.rom_directory||'';$('integer').checked=settings.integer_scaling!==false;$('vsync').checked=settings.vsync!==false;$('filter').value=settings.filter||'nearest';renderShader();$('bios').value=settings.bios||'';renderKeys();await scan();const s=await call('get_emulator_state');$('volume').value=Math.round(s.volume*100);$('volume-value').textContent=$('volume').value+'%';onNativeState(s);})();// The game framebuffer and PCM never enter this script.
+renderSlots();run(async()=>{settings=await call('get_settings');renderLibrarySettings();scheduleViewport();$('rom-directory').value=settings.rom_directory||'';$('integer').checked=settings.integer_scaling!==false;$('vsync').checked=settings.vsync!==false;$('filter').value=settings.filter||'nearest';renderShader();$('bios').value=settings.bios||'';renderKeys();await scan();const s=await call('get_emulator_state');$('volume').value=Math.round(s.volume*100);$('volume-value').textContent=$('volume').value+'%';onNativeState(s);})();// The game framebuffer and PCM never enter this script.

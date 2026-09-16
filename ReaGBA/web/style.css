@@ -30,4 +30,37 @@ footer{height:26px;padding:0 20px;display:flex;align-items:center;gap:7px;border
 #library-splitter:hover span,#library-splitter:focus-visible span,.resizing-library #library-splitter span{background:var(--green);width:46px}.resizing-library,.resizing-library *{cursor:row-resize!important;user-select:none!important}
 .library-collapsed #library-view{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}.settings-open #library-splitter{display:none}
 #empty{flex:1;min-height:0;overflow:auto}
+/* Mint GBA on a 32x20 integer grid: mirrored shell, equal control footprints, 3:2 screen. */
+.brand{gap:8px;letter-spacing:-.7px;line-height:1}
+.brand-name{font-weight:650}.brand-name>span{font-weight:800;color:#c5f3dc}
+.brand small{font-size:7px;letter-spacing:2px;margin-top:7px;font-weight:500;color:#8ba7a7}
+.logo{display:block;width:32px;min-width:32px;height:20px;flex:none;border-radius:0;background:none;image-rendering:pixelated}
+@media(max-width:360px){.brand{gap:6px}}
+/* Library display modes share the same cards and controls. Covers retain their full artwork. */
+#library-body nav{gap:12px;flex-wrap:wrap;align-items:center}
+#library-display{margin-left:auto;padding:5px 7px;margin-bottom:7px;font-size:11px;max-width:110px}
+.game:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+.game{min-width:0;min-height:106px;gap:10px}
+.cover{position:relative;width:80px;min-width:80px;height:80px;overflow:hidden;flex-shrink:0}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#111a20;opacity:0}
+.cover.has-image img{opacity:1}.cover.has-image b,.cover.has-image span{visibility:hidden}
+.game-info h2{overflow-wrap:anywhere}.game-meta{margin-right:55px;line-height:1.6}
+.games[data-view=details]{grid-template-columns:1fr}
+.games[data-view=grid]{grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr));grid-auto-rows:max-content;gap:12px}
+.games[data-view=grid] .game{display:grid;grid-template-rows:auto 1fr auto;padding:9px;gap:8px;min-height:0}
+.games[data-view=grid] .cover{width:100%;min-width:0;height:auto;aspect-ratio:1;border-radius:6px}
+.games[data-view=grid] .cover b{font-size:48px}
+.games[data-view=grid] .game-info h2{margin:0 0 6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:39px}
+.games[data-view=grid] .game-meta{margin:6px 0 0}
+.games[data-view=grid] .favorite{top:13px;right:13px;background:#10171de8;border-radius:6px}
+.games[data-view=grid] .launch{position:static;width:100%;margin-top:auto;padding:6px}
+.games[data-view=compact]{grid-template-columns:1fr;gap:4px}
+.games[data-view=compact] .game{display:grid;grid-template-columns:32px minmax(0,1fr) 26px 56px;align-items:center;min-height:46px;padding:6px;gap:7px;border-radius:6px}
+.games[data-view=compact] .cover{width:32px;min-width:32px;height:32px;border-radius:4px}
+.games[data-view=compact] .cover b{font-size:22px}
+.games[data-view=compact] .cover span,.games[data-view=compact] .tag,.games[data-view=compact] .game-meta{display:none}
+.games[data-view=compact] .game-info h2{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+.games[data-view=compact] .favorite,.games[data-view=compact] .launch{position:static;margin:0}
+.games[data-view=compact] .launch{padding:4px;font-size:10px}
+@media(max-width:360px){#library-body nav{gap:8px}.tab{font-size:11px}#library-display{font-size:10px;padding:4px}.game{padding:8px;gap:8px}.cover{width:64px;min-width:64px;height:76px}.game-info h2{font-size:12px}.games[data-view=grid]{grid-template-columns:repeat(auto-fill,minmax(min(100%,115px),1fr));gap:8px}}
 @media(max-height:440px){header{height:44px}footer{height:22px}.library-collapsed #library-view{margin-bottom:6px;padding-bottom:6px}.primary-controls button{padding-top:6px;padding-bottom:6px}.primary-controls button:not(.primary){padding:6px}.secondary-controls{margin-top:3px}.secondary-controls button{padding:3px}.player-controls{gap:5px}.save-heading{padding-top:4px}}

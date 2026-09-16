@@ -1,5 +1,5 @@
 @description ReaGBA
-@version 0.0.4
+@version 0.0.5
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaScripts/tree/master/ReaGBA
 @provides
@@ -26,5 +26,5 @@
   [linux-aarch64 script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/index.html
   [linux-aarch64 script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/style.css
 @changelog
-  Native extension action: zaibuyidao: ReaGBA. No Lua launcher.
+  Native extension action: zaibuyidao: ReaGBA.
   Install the three WebView assets under ReaGBA/web.

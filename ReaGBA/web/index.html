@@ -1,12 +1,19 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>ReaGBA</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="brand"><span class="logo">R<span>●</span></span><div>ReaGBA<small>GAME BOY ADVANCE</small></div></div><div class="header-actions"><button id="dock-toggle" class="small" hidden>停靠</button><button id="settings-toggle" class="icon" title="设置" aria-label="设置">⚙</button></div></header>
+<header><div class="brand">
+  <svg class="logo" viewBox="0 0 32 20" shape-rendering="crispEdges" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 0h24v2h2v4h2v10h-2v2h-4v2H6v-2H2v-2H0V6h2V2h2Z" fill="#b4eccb"/>
+    <path d="M9 2h14v13H9ZM4 7h2v2h2v2H6v2H4v-2H2V9h2Zm23 0h3v3h-3Zm-3 3h3v3h-3Z" fill="#22363a"/>
+    <path d="M10 4h12v8H10Z" fill="#8ba99a"/>
+  </svg>
+  <div class="brand-name">Rea<span>GBA</span><small>GAME BOY ADVANCE</small></div>
+</div><div class="header-actions"><button id="dock-toggle" class="small" hidden>停靠</button><button id="settings-toggle" class="icon" title="设置" aria-label="设置">⚙</button></div></header>
 <main>
 <section id="library-view">
   <div class="heading"><h1>游戏库<span id="count">0</span></h1><div class="library-actions"><button id="library-toggle" class="small" aria-expanded="true" aria-controls="library-body">收起游戏库</button><button id="open" class="small">＋ 打开 ROM</button></div></div>
   <div id="library-body">
-  <nav><button class="tab active" data-filter="all">全部游戏</button><button class="tab" data-filter="favorite">收藏</button><button class="tab" data-filter="recent">最近游玩</button></nav>
+  <nav><button class="tab active" data-filter="all">全部游戏</button><button class="tab" data-filter="favorite">收藏</button><button class="tab" data-filter="recent">最近游玩</button><select id="library-display" aria-label="游戏库显示方式" title="游戏库显示方式"><option value="details">详细列表</option><option value="grid">封面网格</option><option value="compact">紧凑列表</option></select></nav>
   <div class="search-row"><input id="search" type="search" placeholder="搜索游戏…" aria-label="搜索游戏"><select id="sort" aria-label="排序"><option value="name">名称</option><option value="recent">最近</option><option value="time">时长</option></select><button id="refresh" class="icon" title="重新扫描" aria-label="重新扫描">↻</button></div>
   <div id="games" class="games"></div>
   <div id="empty" hidden><div class="empty-icon">▱</div><h2>下一段冒险，从这里开始</h2><p>将 .gba 文件放入 ROM 文件夹，<br>或点击「打开 ROM」选择游戏。</p></div>
@@ -16,6 +23,7 @@
 <section id="settings-view" hidden>
   <div class="eyebrow">MAKE IT YOURS</div><h1>设置</h1>
   <h3>ROM 游戏文件夹</h3><div class="path-picker"><input id="rom-directory" type="text" readonly placeholder="选择包含 .gba 游戏的文件夹"><button id="choose-rom-directory" class="small">选择文件夹</button></div><p class="hint">游戏库会扫描这里及其子文件夹；选择后会自动保存。</p>
+  <h3>游戏库</h3><label class="setting">自动下载游戏封面<input id="auto-covers" type="checkbox" aria-describedby="covers-hint"></label><p id="covers-hint" class="hint">默认关闭。开启后根据 ROM 内部编号，从 Libretro 下载封面并缓存，不上传 ROM 文件。关闭后保留已缓存封面；未找到封面时显示游戏编号首字母。汉化版、改版或自制游戏可能没有对应封面。</p><p id="cover-status" class="hint" role="status" aria-live="polite"></p><label class="setting">游戏库显示方式<select id="library-display-setting"><option value="details">详细列表</option><option value="grid">封面网格</option><option value="compact">紧凑列表</option></select></label><p class="hint">封面网格突出封面；详细列表显示封面、大小与时长；紧凑列表适合快速浏览。也可在游戏库顶部切换，选择自动保存。</p>
   <h3>画面</h3><label class="setting">整数倍缩放<input id="integer" type="checkbox" checked></label><label class="setting">垂直同步<input id="vsync" type="checkbox" checked></label><label class="setting">Shader<select id="shader" aria-describedby="shader-hint"><option value="none">关闭</option><option value="lcd3x">LCD3X</option><option value="lcd-grid-v2">lcd-grid-v2</option></select></label><p id="shader-hint" class="hint">内置 LCD 效果，选择后自动保存。建议使用整数倍缩放；LCD3X 在 3× 及以上更清晰。启用 Shader 时使用其自带的采样方式。</p><label class="setting">纹理过滤<select id="filter"><option value="nearest">像素清晰</option><option value="linear">平滑</option></select></label><label class="setting">跳帧<select id="skip"><option value="0">关闭</option><option value="1">每 2 帧显示</option><option value="2">每 3 帧显示</option></select></label>
   <h3>音频</h3><label class="setting">音量 <span id="volume-value">70%</span></label><input id="volume" type="range" min="0" max="100" value="70"><p class="hint">快进时自动静音，恢复 1× 后继续播放。</p>
   <h3>键盘映射</h3><p class="hint">点击按键名称，再按下要使用的键。</p><div id="keys" class="key-grid"></div><button id="reset-keys" class="small">恢复默认键位</button>
