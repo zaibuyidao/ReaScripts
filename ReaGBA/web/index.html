@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>ReaGBA</title><link rel="stylesheet" href="style.css"></head>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>ReaGBA</title><link rel="stylesheet" href="style.css"></head>
 <body>
 <header><div class="brand">
   <svg class="logo" viewBox="0 0 32 20" shape-rendering="crispEdges" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
@@ -8,13 +8,13 @@
     <path d="M10 4h12v8H10Z" fill="#8ba99a"/>
   </svg>
   <div class="brand-name">Rea<span>GBA</span><small>GAME BOY ADVANCE</small></div>
-</div><div class="header-actions"><button id="dock-toggle" class="small" hidden>停靠</button><button id="settings-toggle" class="icon" title="设置" aria-label="设置">⚙</button></div></header>
+</div><div class="header-actions"><button id="dock-toggle" class="small" hidden>Dock</button><button id="settings-toggle" class="icon" title="Settings" data-i18n-title="settings" aria-label="Settings" data-i18n-aria-label="settings">⚙</button></div></header>
 <main>
 <section id="library-view">
-  <div class="heading"><h1>游戏库<span id="count">0</span></h1><div class="library-actions"><button id="library-toggle" class="small" aria-expanded="true" aria-controls="library-body">收起游戏库</button><button id="open" class="small">＋ 打开 ROM</button></div></div>
+  <div class="heading"><h1><span data-i18n="library">Library</span><span id="count">0</span></h1><div class="library-actions"><button id="library-toggle" class="small" aria-expanded="true" aria-controls="library-body">Hide library</button><button id="open" class="small" data-i18n="openROM">＋ Open ROM</button></div></div>
   <div id="library-body">
-  <nav><button class="tab active" data-filter="all">全部游戏</button><button class="tab" data-filter="favorite">收藏</button><button class="tab" data-filter="recent">最近游玩</button><select id="library-display" aria-label="游戏库显示方式" title="游戏库显示方式"><option value="details">详细列表</option><option value="grid">封面网格</option><option value="compact">紧凑列表</option></select></nav>
-  <div class="search-row"><input id="search" type="search" placeholder="搜索游戏…" aria-label="搜索游戏"><select id="sort" aria-label="排序"><option value="name">名称</option><option value="recent">最近</option><option value="time">时长</option></select><button id="refresh" class="icon" title="重新扫描" aria-label="重新扫描">↻</button></div>
+  <nav><button class="tab active" data-filter="all" data-i18n="allGames">All games</button><button class="tab" data-filter="favorite" data-i18n="favorites">Favorites</button><button class="tab" data-filter="recent" data-i18n="recentGames">Recent</button><select id="library-display" aria-label="Library view" data-i18n-aria-label="libraryDisplay" title="Library view" data-i18n-title="libraryDisplay"><option value="details" data-i18n="details">Details</option><option value="grid" data-i18n="grid">Cover grid</option><option value="compact" data-i18n="compact">Compact list</option></select></nav>
+  <div class="search-row"><input id="search" type="search" placeholder="Search games…" data-i18n-placeholder="searchPlaceholder" aria-label="Search games" data-i18n-aria-label="search"><select id="sort" aria-label="Sort by" data-i18n-aria-label="sort"><option value="name" data-i18n="sortName">Name</option><option value="recent" data-i18n="sortRecent">Last played</option><option value="time" data-i18n="sortTime">Play time</option></select><button id="refresh" class="icon" title="Rescan" data-i18n-title="rescan" aria-label="Rescan" data-i18n-aria-label="rescan">↻</button></div>
   <div id="games" class="games"></div>
   <div id="empty" hidden><div class="empty-icon">
     <svg width="32" height="24" viewBox="0 0 32 24" shape-rendering="crispEdges" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
@@ -24,39 +24,41 @@
       <path d="M8 14h2v-2h2v2h2v2h2v-4h2v-2h2v2h2v2h2v2H8Z" fill="#8ba99a"/>
       <path d="M9 9h3v3H9Z" fill="#b4eccb"/>
     </svg>
-  </div><h2>下一段冒险，从这里开始</h2><p>将 .gba 文件放入 ROM 文件夹，<br>或点击「打开 ROM」选择游戏。</p></div>
+  </div><h2 data-i18n="emptyTitle">Your next adventure starts here</h2><p data-i18n="emptyHint">Add .gba files to your ROM folder, or choose Open ROM to pick a game.</p></div>
   </div>
 </section>
-<div id="library-splitter" role="separator" tabindex="0" aria-label="调整游戏库与游戏区域的占比" aria-orientation="horizontal" aria-controls="library-view player" title="上下拖动调整占比 · 双击恢复自动大小"><span></span></div>
+<div id="library-splitter" role="separator" tabindex="0" aria-label="Resize the library and game areas" data-i18n-aria-label="splitter" aria-orientation="horizontal" aria-controls="library-view player" title="Drag to resize · Double-click to reset" data-i18n-title="splitterHint"><span></span></div>
 <section id="settings-view" hidden>
-  <div class="eyebrow">MAKE IT YOURS</div><h1>设置</h1>
-  <h3>ROM 游戏文件夹</h3><div class="path-picker"><input id="rom-directory" type="text" readonly placeholder="选择包含 .gba 游戏的文件夹"><button id="choose-rom-directory" class="small">选择文件夹</button></div><p class="hint">游戏库会扫描这里及其子文件夹；选择后会自动保存。</p>
-  <h3>游戏库</h3><label class="setting">自动下载游戏封面<input id="auto-covers" type="checkbox" aria-describedby="covers-hint"></label><p id="covers-hint" class="hint">默认关闭。开启后根据 ROM 内部编号，从 Libretro 下载封面并缓存，不上传 ROM 文件。关闭后保留已缓存封面；未找到封面时显示游戏编号首字母。汉化版、改版或自制游戏可能没有对应封面。</p><p id="cover-status" class="hint" role="status" aria-live="polite"></p><label class="setting">游戏库显示方式<select id="library-display-setting"><option value="details">详细列表</option><option value="grid">封面网格</option><option value="compact">紧凑列表</option></select></label><p class="hint">封面网格突出封面；详细列表显示封面、大小与时长；紧凑列表适合快速浏览。也可在游戏库顶部切换，选择自动保存。</p>
-  <h3>画面</h3><label class="setting">整数倍缩放<input id="integer" type="checkbox" checked></label><label class="setting">垂直同步<input id="vsync" type="checkbox" checked></label><label class="setting">Shader<select id="shader" aria-describedby="shader-hint"><option value="none">关闭</option><option value="lcd3x">LCD3X</option><option value="lcd-grid-v2">lcd-grid-v2</option></select></label><p id="shader-hint" class="hint">内置 LCD 效果，选择后自动保存。建议使用整数倍缩放；LCD3X 在 3× 及以上更清晰。启用 Shader 时使用其自带的采样方式。</p><label class="setting">纹理过滤<select id="filter"><option value="nearest">像素清晰</option><option value="linear">平滑</option></select></label><label class="setting">跳帧<select id="skip"><option value="0">关闭</option><option value="1">每 2 帧显示</option><option value="2">每 3 帧显示</option></select></label>
-  <h3>音频</h3><label class="setting">音量 <span id="volume-value">30%</span></label><input id="volume" type="range" min="0" max="100" value="30"><p class="hint">快进时自动静音，恢复 1× 后继续播放。</p>
-  <h3>键盘映射</h3><p class="hint">点击按键名称，再按下要使用的键。</p><div id="keys" class="key-grid"></div><button id="reset-keys" class="small">恢复默认键位</button>
-  <h3>BIOS（可选）</h3><input id="bios" type="text" placeholder="用户自己的 16 KB GBA BIOS 完整路径"><button id="save-bios" class="small">保存路径</button><p class="hint">留空使用核心内置的 BIOS 功能实现。下次加载游戏时生效。</p>
-  <div class="about"><b>ReaGBA <span id="about-version"></span></b><span>mGBA 0.10.5 · GBA only</span></div>
+  <div class="eyebrow" data-i18n="settingsEyebrow">MAKE IT YOURS</div><h1 data-i18n="settings">Settings</h1>
+  <label class="setting language-setting"><span data-i18n="language">Language</span><select id="language" disabled aria-describedby="language-hint"></select></label><p id="language-hint" class="hint" data-i18n="languageHint">Changes apply immediately and are saved for next time.</p>
+  <h3 data-i18n="romFolder">ROM folder</h3><div class="path-picker"><input id="rom-directory" type="text" readonly placeholder="Choose a folder containing .gba games" data-i18n-placeholder="romPlaceholder"><button id="choose-rom-directory" class="small" data-i18n="chooseFolder">Choose folder</button></div><p class="hint" data-i18n="romHint">The library scans this folder and its subfolders. Your choice is saved automatically.</p>
+  <h3 data-i18n="library">Library</h3><label class="setting"><span data-i18n="autoCovers">Download covers automatically</span><input id="auto-covers" type="checkbox" aria-describedby="covers-hint"></label><p id="covers-hint" class="hint" data-i18n="coversHint">Off by default. Downloads and caches Libretro covers using the ROM’s game code; ROM files are never uploaded. Cached covers remain available when turned off. If no cover is found, the first letter of the game code is shown. Translations, ROM hacks and homebrew may not have matching covers.</p><p id="cover-status" class="hint" role="status" aria-live="polite"></p><label class="setting"><span data-i18n="libraryDisplay">Library view</span><select id="library-display-setting"><option value="details" data-i18n="details">Details</option><option value="grid" data-i18n="grid">Cover grid</option><option value="compact" data-i18n="compact">Compact list</option></select></label><p class="hint" data-i18n="libraryHint">Cover grid puts artwork first; Details shows covers, file sizes and play time; Compact list fits more games. You can also switch views above the library. Your choice is saved automatically.</p>
+  <h3 data-i18n="video">Video</h3><label class="setting"><span data-i18n="integerScaling">Integer scaling</span><input id="integer" type="checkbox" checked></label><label class="setting"><span data-i18n="vsync">Vertical sync</span><input id="vsync" type="checkbox" checked></label><label class="setting"><span data-i18n="shader">Shader</span><select id="shader" aria-describedby="shader-hint"><option value="none" data-i18n="off">Off</option><option value="lcd3x">LCD3X</option><option value="lcd-grid-v2">lcd-grid-v2</option></select></label><p id="shader-hint" class="hint" data-i18n="shaderHint">Built-in LCD effects. Your choice is saved automatically. Integer scaling is recommended; LCD3X looks best at 3× or higher. Shaders use their own texture sampling.</p><label class="setting"><span data-i18n="textureFilter">Texture filtering</span><select id="filter"><option value="nearest" data-i18n="nearest">Sharp pixels</option><option value="linear" data-i18n="linear">Smooth</option></select></label><label class="setting"><span data-i18n="frameSkip">Frame skipping</span><select id="skip"><option value="0" data-i18n="off">Off</option><option value="1" data-i18n="skip1">Show every 2nd frame</option><option value="2" data-i18n="skip2">Show every 3rd frame</option></select></label>
+  <h3 data-i18n="audio">Audio</h3><label class="setting"><span data-i18n="volume">Volume</span><span id="volume-value">30%</span></label><input id="volume" type="range" min="0" max="100" value="30"><p class="hint" data-i18n="audioHint">Audio is muted during fast-forward and resumes at 1× speed.</p>
+  <h3 data-i18n="keyBindings">Keyboard controls</h3><p class="hint" data-i18n="keysHint">Click a key, then press its replacement. Press Esc to cancel.</p><div id="keys" class="key-grid"></div><button id="reset-keys" class="small" data-i18n="resetKeys">Reset controls</button>
+  <h3 data-i18n="bios">BIOS (optional)</h3><input id="bios" type="text" placeholder="Full path to your own 16 KB GBA BIOS" data-i18n-placeholder="biosPlaceholder"><button id="save-bios" class="small" data-i18n="savePath">Save path</button><p class="hint" data-i18n="biosHint">Leave blank to use the built-in BIOS implementation. Takes effect the next time you load a game.</p>
+  <div class="about"><b>ReaGBA <span id="about-version"></span></b><span data-i18n="aboutCore">mGBA 0.10.5 · GBA only</span></div>
 </section>
 <section class="player" id="player">
   <div class="player-heading">
-  <div class="now-label"><span id="play-dot" class="dot idle"></span><span id="play-status">准备就绪</span><span id="fps">— FPS</span></div>
-  <h2 id="now-title">选择一个游戏</h2><p id="now-subtitle">240 × 160 · Game Boy Advance</p>
+  <div class="now-label"><span id="play-dot" class="dot idle"></span><span id="play-status">Ready</span><span id="fps">— FPS</span></div>
+  <h2 id="now-title">Choose a game</h2><p id="now-subtitle">240 × 160 · Game Boy Advance</p>
   </div>
   <div class="play-workspace">
-  <div class="game-stage"><div id="game-viewport" tabindex="0" aria-label="游戏画面"><span>选择游戏后在这里游玩</span></div></div>
+  <div class="game-stage"><div id="game-viewport" tabindex="0" aria-label="Game screen" data-i18n-aria-label="gameScreen"><span data-i18n="viewportHint">Choose a game to start playing</span></div></div>
   <div class="player-controls">
   <div class="play-actions">
-  <div class="primary-controls"><button id="toggle" class="primary" disabled>▶ 开始游戏</button><button id="speed" title="切换快进倍率">1×</button><button id="fullscreen" title="全屏 / F11">⛶</button></div>
-  <div class="secondary-controls"><button id="reset" disabled>↻ 重置</button><button id="shot" disabled>▣ 截图</button><button id="stop" disabled>■ 停止</button></div>
+  <div class="primary-controls"><button id="toggle" class="primary" disabled>▶ Play</button><button id="speed" title="Change fast-forward speed" data-i18n-title="speed">1×</button><button id="fullscreen" title="Full screen / F11" data-i18n-title="fullscreen">⛶</button></div>
+  <div class="secondary-controls"><button id="reset" disabled data-i18n="reset">↻ Reset</button><button id="shot" disabled data-i18n="screenshot">▣ Screenshot</button><button id="stop" disabled data-i18n="stop">■ Stop</button></div>
   </div>
   <div class="save-panel">
-  <div class="save-heading"><span>即时存档</span><span id="save-hint">选择槽位</span></div><div class="slot-row" id="slots"></div><div class="save-actions"><button id="save" disabled>保存当前进度</button><button id="load" disabled>读取所选存档</button></div>
+  <div class="save-heading"><span data-i18n="saveStates">Save states</span><span id="save-hint">Choose a slot</span></div><div class="slot-row" id="slots"></div><div class="save-actions"><button id="save" disabled data-i18n="save">Save state</button><button id="load" disabled data-i18n="load">Load state</button></div>
   </div>
   </div>
   </div>
 </section>
 </main>
-<footer><span class="dot"></span><span id="footer-text">NATIVE EMULATION · WEB UI</span><span id="footer-version" class="version"></span></footer>
+<footer><span class="dot"></span><span id="footer-text" data-i18n="footer">NATIVE EMULATION · WEB UI</span><span id="footer-version" class="version"></span></footer>
 <div id="toast" role="status" aria-live="polite"></div>
+<script src="i18n.js"></script>
 <script src="app.js"></script></body></html>

@@ -1,4 +1,4 @@
-:root{color-scheme:dark;--bg:#10171d;--card:#1a242b;--line:#2a353b;--muted:#8b9b9e;--text:#e5eded;--green:#b4eccb;font:13px Inter,"Segoe UI","Microsoft YaHei",sans-serif}
+:root{color-scheme:dark;--bg:#10171d;--card:#1a242b;--line:#2a353b;--muted:#8b9b9e;--text:#e5eded;--green:#b4eccb;font:13px Inter,"Segoe UI","Microsoft YaHei","Microsoft JhengHei","Yu Gothic","Malgun Gothic",sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
 button,input,select{font:inherit}button{cursor:pointer;color:var(--text);border:1px solid var(--line);background:#1d272e;border-radius:8px;padding:9px 12px}button:hover{background:#2c3b41}button:disabled{opacity:.35;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 input,select{background:#182127;border:1px solid var(--line);border-radius:8px;padding:9px;color:var(--text);min-width:0}input[type=checkbox],input[type=range]{accent-color:var(--green)}input[type=range],input[type=text]{width:100%}input[type=text]{margin-bottom:10px}
@@ -64,3 +64,21 @@ footer{height:26px;padding:0 20px;display:flex;align-items:center;gap:7px;border
 .games[data-view=compact] .launch{padding:4px;font-size:10px}
 @media(max-width:360px){#library-body nav{gap:8px}.tab{font-size:11px}#library-display{font-size:10px;padding:4px}.game{padding:8px;gap:8px}.cover{width:64px;min-width:64px;height:76px}.game-info h2{font-size:12px}.games[data-view=grid]{grid-template-columns:repeat(auto-fill,minmax(min(100%,115px),1fr));gap:8px}}
 @media(max-height:440px){header{height:44px}footer{height:22px}.library-collapsed #library-view{margin-bottom:6px;padding-bottom:6px}.primary-controls button{padding-top:6px;padding-bottom:6px}.primary-controls button:not(.primary){padding:6px}.secondary-controls{margin-top:3px}.secondary-controls button{padding:3px}.player-controls{gap:5px}.save-heading{padding-top:4px}}
+/* Labels can be longer in other languages; let controls wrap within their pane. */
+h1 [data-i18n]{font:inherit;vertical-align:baseline;padding:0;margin:0;background:none;border-radius:0;color:inherit}
+.heading,.library-actions{flex-wrap:wrap}.heading h1{overflow-wrap:anywhere}
+.library-actions{margin-left:auto}.library-actions button{min-width:0;white-space:normal}
+#library-display{max-width:100%;width:auto}.search-row select{width:auto;max-width:45%}
+.setting{flex-wrap:wrap}.setting>span{flex:1;min-width:90px}.setting select{max-width:100%}
+.language-setting{margin-top:20px}#language{min-width:135px}
+.path-picker{flex-wrap:wrap}.path-picker input{min-width:min(180px,100%)}.path-picker button{white-space:normal}
+.save-heading,.secondary-controls{gap:8px;flex-wrap:wrap}.save-heading>span{min-width:0;overflow-wrap:anywhere}
+.save-actions button,.secondary-controls button{min-width:0;overflow-wrap:anywhere}
+.primary-controls .primary{white-space:normal;min-width:0}
+.games[data-view=compact] .game{grid-template-columns:32px minmax(0,1fr) 26px auto}
+.games[data-view=compact] .launch{max-width:90px;overflow-wrap:anywhere}
+.game-meta{margin-right:0}
+.games[data-view=details] .game{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:1fr auto;row-gap:4px}
+.games[data-view=details] .cover{grid-row:1/3;align-self:center}
+.games[data-view=details] .launch{position:static;grid-column:2;justify-self:end;max-width:100%;overflow-wrap:anywhere}
+#footer-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.version{flex-shrink:0}

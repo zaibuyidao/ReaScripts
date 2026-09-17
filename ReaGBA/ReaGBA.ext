@@ -1,30 +1,35 @@
 @description ReaGBA
-@version 0.0.7
+@version 0.0.8
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaScripts/tree/master/ReaGBA
 @provides
   [win64 extension] reaper_reagba-x64.dll https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/extension/reaper_reagba-x64.dll
   [win64 script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/app.js
+  [win64 script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/i18n.js
   [win64 script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/index.html
   [win64 script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/style.css
   [darwin64 extension] reaper_reagba-x86_64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/extension/reaper_reagba-x86_64.dylib
   [darwin64 script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/app.js
+  [darwin64 script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/i18n.js
   [darwin64 script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/index.html
   [darwin64 script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/style.css
   [darwin-arm64 extension] reaper_reagba-arm64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/extension/reaper_reagba-arm64.dylib
   [darwin-arm64 script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/app.js
+  [darwin-arm64 script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/i18n.js
   [darwin-arm64 script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/index.html
   [darwin-arm64 script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/style.css
   [linux64 extension] reaper_reagba-x86_64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/extension/reaper_reagba-x86_64.so
   [linux64 script nomain] extension/reagba-webview-x86_64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/extension/reagba-webview-x86_64
   [linux64 script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/app.js
+  [linux64 script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/i18n.js
   [linux64 script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/index.html
   [linux64 script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/style.css
   [linux-aarch64 extension] reaper_reagba-aarch64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/extension/reaper_reagba-aarch64.so
   [linux-aarch64 script nomain] extension/reagba-webview-aarch64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/extension/reagba-webview-aarch64
   [linux-aarch64 script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/app.js
+  [linux-aarch64 script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/i18n.js
   [linux-aarch64 script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/index.html
   [linux-aarch64 script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaGBA/web/style.css
 @changelog
   Native extension action: zaibuyidao: ReaGBA.
-  Install the three WebView assets under ReaGBA/web.
+  Install the four WebView assets under ReaGBA/web.
