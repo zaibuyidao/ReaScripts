@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="a2d13f449e6d01baac16bf80af16160f942fbd5c">
+<index version="1" name="zaibuyidao Scripts" commit="e7f259f8f06e31efa2616928ecbe858a292d31f0">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7414,6 +7414,37 @@ Install the three WebView assets under ReaGBA/web.]]></changelog>
         <source platform="linux-aarch64" type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/a2d13f449e6d01baac16bf80af16160f942fbd5c/ReaGBA/web/app.js</source>
         <source platform="linux-aarch64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/a2d13f449e6d01baac16bf80af16160f942fbd5c/ReaGBA/web/index.html</source>
         <source platform="linux-aarch64" type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/a2d13f449e6d01baac16bf80af16160f942fbd5c/ReaGBA/web/style.css</source>
+      </version>
+      <version name="0.0.8" author="zaibuyidao" time="2026-09-17T03:51:18Z">
+        <changelog><![CDATA[Native extension action: zaibuyidao: ReaGBA.
+Install the four WebView assets under ReaGBA/web.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reagba-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/extension/reaper_reagba-x64.dll</source>
+        <source platform="win64" type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/app.js</source>
+        <source platform="win64" type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/i18n.js</source>
+        <source platform="win64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/index.html</source>
+        <source platform="win64" type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/style.css</source>
+        <source platform="darwin64" type="extension" file="reaper_reagba-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/extension/reaper_reagba-x86_64.dylib</source>
+        <source platform="darwin64" type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/app.js</source>
+        <source platform="darwin64" type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/i18n.js</source>
+        <source platform="darwin64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/index.html</source>
+        <source platform="darwin64" type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/style.css</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reagba-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/extension/reaper_reagba-arm64.dylib</source>
+        <source platform="darwin-arm64" type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/app.js</source>
+        <source platform="darwin-arm64" type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/i18n.js</source>
+        <source platform="darwin-arm64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/index.html</source>
+        <source platform="darwin-arm64" type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/style.css</source>
+        <source platform="linux64" type="extension" file="reaper_reagba-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/extension/reaper_reagba-x86_64.so</source>
+        <source platform="linux64" type="script" file="extension/reagba-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/extension/reagba-webview-x86_64</source>
+        <source platform="linux64" type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/app.js</source>
+        <source platform="linux64" type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/i18n.js</source>
+        <source platform="linux64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/index.html</source>
+        <source platform="linux64" type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/style.css</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reagba-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/extension/reaper_reagba-aarch64.so</source>
+        <source platform="linux-aarch64" type="script" file="extension/reagba-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/extension/reagba-webview-aarch64</source>
+        <source platform="linux-aarch64" type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/app.js</source>
+        <source platform="linux-aarch64" type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/i18n.js</source>
+        <source platform="linux-aarch64" type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/index.html</source>
+        <source platform="linux-aarch64" type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e7f259f8f06e31efa2616928ecbe858a292d31f0/ReaGBA/web/style.css</source>
       </version>
     </reapack>
   </category>
