@@ -1,0 +1,19 @@
+@description ReaWebAPI: JavaScript Runtime for REAPER
+@version 0.1.9
+@author zaibuyidao
+@link https://github.com/zaibuyidao/ReaScripts/tree/master/ReaWebAPI
+@provides
+  [win64 extension] reaper_reawebapi-x64.dll https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-x64.dll
+  [darwin-arm64 extension] reaper_reawebapi-arm64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib
+  [darwin64 extension] reaper_reawebapi-x86_64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-x86_64.dylib
+  [linux64 extension] reaper_reawebapi-x86_64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-x86_64.so
+  [linux64 extension] reawebapi-webview-x86_64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reawebapi-webview-x86_64
+  [linux-aarch64 extension] reaper_reawebapi-aarch64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-aarch64.so
+  [linux-aarch64 extension] reawebapi-webview-aarch64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reawebapi-webview-aarch64
+  [script main] web/ReaWebAPI_Demo.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/ReaWebAPI_Demo.lua
+  [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.js
+  [script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/index.html
+  [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
+  [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
+@changelog
+  v0.1.9
