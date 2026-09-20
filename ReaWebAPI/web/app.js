@@ -441,7 +441,7 @@ run(async () => {
   if (!window.reaper) {
     ui.status.textContent = 'Outside REAPER';
     for (const control of ['read-track', 'devtools', 'dock', 'diagnostics']) ui[control].disabled = true;
-    throw new Error('Load Example.lua from the REAPER Action List to open this demo.');
+    throw new Error('Load ReaWebAPI_Demo.lua from the REAPER Action List to open this demo.');
   }
   const capabilities = await reaper.lifecycle.ready;
   if (capabilities.api?.implemented !== 730 || !capabilities.methods.includes('MIDI_GetAllEvts')) {
@@ -449,8 +449,10 @@ run(async () => {
     throw new Error('Install the matching ReaWebAPI extension and restart REAPER to use this demo.');
   }
   projectEpoch = capabilities.projectEpoch;
-  const version = await reaper.GetAppVersion();
   ui.status.textContent = 'Runtime connected'; ui.status.classList.add('connected');
+  // First track data is independent of the version label and window setup.
+  void refresh();
+  const version = await reaper.GetAppVersion();
   ui.version.textContent = `REAPER ${version} / ReaWebAPI ${capabilities.version}`;
   ui['api-coverage'].textContent = `${capabilities.api.implemented} bound APIs / ${capabilities.api.official} definitions · ${capabilities.api.available} available in this REAPER · ${capabilities.api.reaperVersion} catalogue`;
   if (capabilities.api.unavailable.length)
