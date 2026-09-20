@@ -9,7 +9,6 @@ header { padding-bottom: 26px; border-bottom: 1px solid #344039; }
 .brand small { display: block; font-size: 9px; letter-spacing: 1.6px; color: #92a298; margin-top: 5px; font-weight: 400; }
 .mark { display: block; flex: 0 0 52px; height: 52px; width: 52px; }
 .toolbar { display: flex; align-items: center; gap: 12px; }
-.dock-button { padding: 8px 12px; }
 .status { font-size: 10px; border: 1px solid #405145; border-radius: 24px; padding: 8px 11px; white-space: nowrap; color: #a8b4ad; }
 .status.connected { color: #b7f58a; }
 .status::before { content: '●'; font-size: 7px; margin-right: 7px; }

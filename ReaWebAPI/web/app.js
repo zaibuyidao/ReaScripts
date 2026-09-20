@@ -1,9 +1,9 @@
 'use strict';
-const ui = Object.fromEntries(['status', 'track-count', 'track-name', 'read-track', 'devtools', 'dock', 'activity', 'error', 'version', 'pan', 'pan-value', 'center-pan', 'diagnostics', 'diagnostic-output', 'track-color', 'apply-color', 'reset-color', 'color-state', 'read-project', 'project-name', 'cursor-position', 'play-state', 'tempo', 'beat-position', 'cursor-target', 'move-cursor', 'marker-count', 'marker-list', 'read-fx', 'fx-list', 'run-checks', 'api-coverage', 'check-results'].map(id => [id, document.getElementById(id)]));
+const ui = Object.fromEntries(['status', 'track-count', 'track-name', 'read-track', 'devtools', 'activity', 'error', 'version', 'pan', 'pan-value', 'center-pan', 'diagnostics', 'diagnostic-output', 'track-color', 'apply-color', 'reset-color', 'color-state', 'read-project', 'project-name', 'cursor-position', 'play-state', 'tempo', 'beat-position', 'cursor-target', 'move-cursor', 'marker-count', 'marker-list', 'read-fx', 'fx-list', 'run-checks', 'api-coverage', 'check-results'].map(id => [id, document.getElementById(id)]));
 const events = [], dispose = [];
 for (const id of ['read-track-result', 'copy-log', 'clear-log', 'log-reaper', 'log-count', 'log-status']) ui[id] = document.getElementById(id);
 for (const id of ['diagnostic-panel', 'refresh-diagnostics', 'diagnostic-backend', 'diagnostic-stage', 'diagnostic-api', 'diagnostic-queue', 'diagnostic-snapshot', 'diagnostic-details']) ui[id] = document.getElementById(id);
-let selectedTrack = null, refreshWanted = false, refreshing = false, dockBusy = false;
+let selectedTrack = null, refreshWanted = false, refreshing = false;
 let selectionRevision = 0, colorRevision = 0;
 let pendingPan = Promise.resolve();
 let projectEpoch = 0, colorBusy = false;
@@ -184,18 +184,6 @@ ui['read-track'].addEventListener('click', () => {
   void refresh();
 });
 ui.devtools.addEventListener('click', () => run(async () => { await reaper.debug.openDevTools(); log('DevTools open requested.'); }));
-function showDockState(docked) {
-  ui.dock.textContent = docked ? 'Undock' : 'Dock';
-  ui.dock.setAttribute('aria-pressed', String(docked));
-}
-ui.dock.addEventListener('click', () => run(async () => {
-  if (dockBusy) return;
-  dockBusy = true; ui.dock.disabled = true;
-  try {
-    const docked = await reaper.window.setDocked(!(await reaper.window.isDocked()));
-    showDockState(docked); log(docked ? 'Window docked in REAPER.' : 'Window undocked.');
-  } finally { dockBusy = false; ui.dock.disabled = false; }
-}));
 async function applyColor(reset) {
   if (!selectedTrack || colorBusy) return;
   const track = selectedTrack, epoch = projectEpoch;
@@ -440,11 +428,11 @@ window.addEventListener('pagehide', () => {
 run(async () => {
   if (!window.reaper) {
     ui.status.textContent = 'Outside REAPER';
-    for (const control of ['read-track', 'devtools', 'dock', 'diagnostics']) ui[control].disabled = true;
+    for (const control of ['read-track', 'devtools', 'diagnostics']) ui[control].disabled = true;
     throw new Error('Load ReaWebAPI_Demo.lua from the REAPER Action List to open this demo.');
   }
   const capabilities = await reaper.lifecycle.ready;
-  if (capabilities.api?.implemented !== 730 || !capabilities.methods.includes('MIDI_GetAllEvts')) {
+  if (capabilities.api?.implemented !== 730 || !capabilities.methods.includes('MIDI_GetAllEvts') || typeof reaper.window?.setIcon !== 'function') {
     ui.status.textContent = 'Extension update required';
     throw new Error('Install the matching ReaWebAPI extension and restart REAPER to use this demo.');
   }
@@ -452,13 +440,13 @@ run(async () => {
   ui.status.textContent = 'Runtime connected'; ui.status.classList.add('connected');
   // First track data is independent of the version label and window setup.
   void refresh();
+  void reaper.window.setIcon('logo.svg').catch(error => log(`Window icon: ${error.message}`, 'warn', 'WINDOW'));
   const version = await reaper.GetAppVersion();
   ui.version.textContent = `REAPER ${version} / ReaWebAPI ${capabilities.version}`;
   ui['api-coverage'].textContent = `${capabilities.api.implemented} bound APIs / ${capabilities.api.official} definitions · ${capabilities.api.available} available in this REAPER · ${capabilities.api.reaperVersion} catalogue`;
   if (capabilities.api.unavailable.length)
     log(`${capabilities.api.unavailable.length} APIs require a newer REAPER version. See Runtime diagnostics for their names.`, 'warn', 'API');
   await reaper.window.setTitle('ReaWebAPI · API Workbench');
-  dispose.push(await reaper.events.on('windowstatechange', state => showDockState(state.docked)));
   dispose.push(await reaper.events.on('selectionchange', () => { list('fx-list', ['Selection changed. Inspect FX to refresh.']); void refresh(true); }));
   dispose.push(await reaper.events.on('projectchange', state => {
     const switched = projectEpoch !== state.projectEpoch;
@@ -469,7 +457,6 @@ run(async () => {
     list('marker-list', ['Read the project to refresh.']); list('fx-list', ['Inspect FX to refresh.']);
     void refresh(switched);
   }));
-  ui.dock.disabled = false;
   for (const id of ['read-track', 'log-reaper', 'read-project', 'move-cursor', 'cursor-target', 'run-checks']) ui[id].disabled = false;
   await refresh();
   await readProject();
