@@ -440,7 +440,6 @@ run(async () => {
   ui.status.textContent = 'Runtime connected'; ui.status.classList.add('connected');
   // First track data is independent of the version label and window setup.
   void refresh();
-  void reaper.window.setIcon('logo.svg').catch(error => log(`Window icon: ${error.message}`, 'warn', 'WINDOW'));
   const version = await reaper.GetAppVersion();
   ui.version.textContent = `REAPER ${version} / ReaWebAPI ${capabilities.version}`;
   ui['api-coverage'].textContent = `${capabilities.api.implemented} bound APIs / ${capabilities.api.official} definitions · ${capabilities.api.available} available in this REAPER · ${capabilities.api.reaperVersion} catalogue`;
