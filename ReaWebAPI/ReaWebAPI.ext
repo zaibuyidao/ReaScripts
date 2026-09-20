@@ -1,5 +1,5 @@
 @description ReaWebAPI: JavaScript Runtime for REAPER
-@version 0.2.0
+@version 0.2.2
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaScripts/tree/master/ReaWebAPI
 @provides
@@ -16,4 +16,4 @@
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  ReaWebAPI v0.2.0
+  ReaWebAPI v0.2.2

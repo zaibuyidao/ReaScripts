@@ -183,7 +183,7 @@ ui['read-track'].addEventListener('click', () => {
   ui.error.hidden = true;
   void refresh();
 });
-ui.devtools.addEventListener('click', () => run(async () => { await reaper.debug.openDevTools(); log('Developer Tools opened.'); }));
+ui.devtools.addEventListener('click', () => run(async () => { await reaper.debug.openDevTools(); log('DevTools open requested.'); }));
 function showDockState(docked) {
   ui.dock.textContent = docked ? 'Undock' : 'Dock';
   ui.dock.setAttribute('aria-pressed', String(docked));
