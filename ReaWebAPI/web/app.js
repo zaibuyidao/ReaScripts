@@ -1,5 +1,5 @@
 'use strict';
-const ui = Object.fromEntries(['status', 'track-count', 'track-name', 'read-track', 'devtools', 'activity', 'error', 'version', 'pan', 'pan-value', 'center-pan', 'diagnostics', 'diagnostic-output', 'track-color', 'apply-color', 'reset-color', 'color-state', 'read-project', 'project-name', 'cursor-position', 'play-state', 'tempo', 'beat-position', 'cursor-target', 'move-cursor', 'marker-count', 'marker-list', 'read-fx', 'fx-list', 'run-checks', 'api-coverage', 'check-results'].map(id => [id, document.getElementById(id)]));
+const ui = Object.fromEntries(['status', 'track-count', 'track-name', 'read-track', 'activity', 'error', 'version', 'pan', 'pan-value', 'center-pan', 'diagnostics', 'diagnostic-output', 'track-color', 'apply-color', 'reset-color', 'color-state', 'read-project', 'project-name', 'cursor-position', 'play-state', 'tempo', 'beat-position', 'cursor-target', 'move-cursor', 'marker-count', 'marker-list', 'read-fx', 'fx-list', 'run-checks', 'api-coverage', 'check-results'].map(id => [id, document.getElementById(id)]));
 const events = [], dispose = [];
 for (const id of ['read-track-result', 'copy-log', 'clear-log', 'log-reaper', 'log-count', 'log-status']) ui[id] = document.getElementById(id);
 for (const id of ['diagnostic-panel', 'refresh-diagnostics', 'diagnostic-backend', 'diagnostic-stage', 'diagnostic-api', 'diagnostic-queue', 'diagnostic-snapshot', 'diagnostic-details']) ui[id] = document.getElementById(id);
@@ -185,7 +185,6 @@ ui['read-track'].addEventListener('click', () => {
   ui.error.hidden = true;
   void refresh();
 });
-ui.devtools.addEventListener('click', () => run(async () => { await reaper.debug.openDevTools(); log('DevTools open requested.'); }));
 async function applyColor(reset) {
   if (!selectedTrack || colorBusy) return;
   const track = selectedTrack, epoch = projectEpoch;
@@ -431,7 +430,7 @@ window.addEventListener('pagehide', () => {
 run(async () => {
   if (!window.reaper) {
     ui.status.textContent = 'Outside REAPER';
-    for (const control of ['read-track', 'devtools', 'diagnostics']) ui[control].disabled = true;
+    for (const control of ['read-track', 'diagnostics']) ui[control].disabled = true;
     throw new Error('Load ReaWebAPI_Demo.lua from the REAPER Action List to open this demo.');
   }
   const capabilities = await reaper.lifecycle.ready;

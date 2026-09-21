@@ -1,5 +1,5 @@
 @description ReaWebAPI: JavaScript Runtime for REAPER
-@version 0.2.9
+@version 0.3.1
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -16,4 +16,6 @@
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Implement Mirror-aware reaper.transaction.batch() with automatic references, destructuring, and typed results.
+  Remove the Windows Embedded DevTools caption, window controls and frame from the panel, and expand the inspector content to eliminate surrounding gaps.
+  Restore the native DevTools window in Floating mode without an additional host frame. Mode switches retain the same Console and Inspector session.
+  Reduce the Windows DevTools divider to 1px in the system window-frame color while retaining width adjustment.
