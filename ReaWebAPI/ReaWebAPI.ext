@@ -1,5 +1,5 @@
 @description ReaWebAPI: JavaScript Runtime for REAPER
-@version 0.2.8
+@version 0.2.9
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -16,4 +16,4 @@
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Synchronize HTML PNG, ICO and SVG favicons to the native window, with in-memory rendering at the current DPI.
+  Implement Mirror-aware reaper.transaction.batch() with automatic references, destructuring, and typed results.

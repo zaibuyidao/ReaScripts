@@ -131,20 +131,22 @@ async function refresh(invalidate = false) {
       const revision = selectionRevision, requestedLog = readRequested, flushPan = flushPanOnRead;
       const track = await reaper.GetSelectedTrack(0, 0);
       if (revision !== selectionRevision) continue;
-      const calls = [{ method: 'CountTracks', args: [0] }];
-      if (track) calls.push({ method: 'GetTrackName', args: [track] },
-        { method: 'GetMediaTrackInfo_Value', args: [track, 'D_PAN'] }, { method: 'GetTrackColor', args: [track] });
-      const [count, name, pan, color = 0] = await reaper.transaction.batch(calls);
+      const { count, name, pan, color = 0 } = await reaper.transaction.batch(b => {
+        const count = b.CountTracks(0);
+        if (!track) return { count };
+        const [, name] = b.GetTrackName(track);
+        return { count, name, pan: b.GetMediaTrackInfo_Value(track, 'D_PAN'), color: b.GetTrackColor(track) };
+      });
       if (revision !== selectionRevision) continue;
       const trackChanged = selectedTrack?.id !== track?.id;
       selectedTrack = track;
-      ui['track-name'].textContent = name?.[1] ?? 'No track selected.';
+      ui['track-name'].textContent = name ?? 'No track selected.';
       ui['track-count'].textContent = `${count} ${count === 1 ? 'track' : 'tracks'} in project`;
       ui.pan.disabled = ui['center-pan'].disabled = !track;
       selectedControls();
       ui['color-state'].textContent = !track ? 'No track selected' : color ? 'Custom track color' : 'Default track color';
       if (trackChanged || document.activeElement !== ui.pan) showPan(pan ?? 0);
-      const snapshot = { id: track?.id ?? null, epoch: projectEpoch, name: name?.[1] ?? '(name unavailable)', pan: pan ?? 0 };
+      const snapshot = { id: track?.id ?? null, epoch: projectEpoch, name: name ?? '(name unavailable)', pan: pan ?? 0 };
       observeTrack(snapshot);
       if (requestedLog) {
         flushPanLog();
@@ -193,9 +195,10 @@ async function applyColor(reset) {
     const color = reset ? 0 : await reaper.ColorToNative(...rgb);
     if (projectEpoch !== epoch) throw new Error('Project changed. Select the track again.');
     // SetTrackColor(0) means black. Clearing a custom color uses I_CUSTOMCOLOR.
-    const call = reset ? { method: 'SetMediaTrackInfo_Value', args: [track, 'I_CUSTOMCOLOR', 0] }
-      : { method: 'SetTrackColor', args: [track, color] };
-    await reaper.transaction.batch([call], { undoLabel: 'ReaWebAPI: track color' });
+    await reaper.transaction.batch(b => {
+      if (reset) b.SetMediaTrackInfo_Value(track, 'I_CUSTOMCOLOR', 0);
+      else b.SetTrackColor(track, color);
+    }, { undoLabel: 'ReaWebAPI: track color' });
     const actual = await reaper.GetTrackColor(track);
     if (actual !== (reset ? 0 : color | 0x1000000)) throw new Error('Track color readback differs from the requested value.');
     const trackName = observedTrack?.id === track.id ? observedTrack.name : track.id;
@@ -366,7 +369,7 @@ ui['center-pan'].addEventListener('click', () => run(async () => {
   ui.pan.disabled = true;
   try {
     await pendingPan;
-    const [applied] = await reaper.transaction.batch([{ method: 'SetMediaTrackInfo_Value', args: [track, 'D_PAN', 0] }], { undoLabel: 'ReaWebAPI: center track pan' });
+    const applied = await reaper.transaction.batch(b => b.SetMediaTrackInfo_Value(track, 'D_PAN', 0), { undoLabel: 'ReaWebAPI: center track pan' });
     if (!applied) throw new Error('REAPER rejected the Center Pan command.');
     log(`${JSON.stringify(name)} · Center Pan applied · Undo available`, 'info', 'WRITE');
     if (epoch === projectEpoch && revision === selectionRevision && selectedTrack?.id === track.id) {
