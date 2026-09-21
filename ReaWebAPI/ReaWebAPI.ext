@@ -1,5 +1,5 @@
 @description ReaWebAPI: JavaScript Runtime for REAPER
-@version 0.3.2
+@version 0.3.3
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -16,6 +16,5 @@
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Add native macOS WKWebView Web Inspector with right-hand Embedded and native Floating modes, without an additional window frame.
-  Add state-aware Open/Hide/Float/Embed context-menu actions and Option+Command+I. Reuse the existing Runtime API and saved layout preferences, retaining the Inspector session across hiding and mode switches.
-  Detect WebKit Inspector capabilities at runtime and report native floating fallback when embedding is unavailable.
+  Fix macOS **Embed DevTools** being disabled in compact windows.
+  Reuse the same Inspector content view and native floating window across Embedded, Floating and Hidden states, retaining Console entries and the selected tab.
