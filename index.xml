@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="75dcc4305011def277e9ab9f1c953985b1c3ac06">
+<index version="1" name="zaibuyidao Scripts" commit="b291fa9574f8b81fdb13b554b8be4b0582660e71">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7609,6 +7609,23 @@ Reduce the Windows DevTools divider to 1px in the system window-frame color whil
         <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/75dcc4305011def277e9ab9f1c953985b1c3ac06/ReaWebAPI/web/index.html</source>
         <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/75dcc4305011def277e9ab9f1c953985b1c3ac06/ReaWebAPI/web/logo.svg</source>
         <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/75dcc4305011def277e9ab9f1c953985b1c3ac06/ReaWebAPI/web/style.css</source>
+      </version>
+      <version name="0.3.2" author="zaibuyidao" time="2026-09-21T15:37:37Z">
+        <changelog><![CDATA[Add native macOS WKWebView Web Inspector with right-hand Embedded and native Floating modes, without an additional window frame.
+Add state-aware Open/Hide/Float/Embed context-menu actions and Option+Command+I. Reuse the existing Runtime API and saved layout preferences, retaining the Inspector session across hiding and mode switches.
+Detect WebKit Inspector capabilities at runtime and report native floating fallback when embedding is unavailable.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reawebapi-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/extension/reaper_reawebapi-x64.dll</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reawebapi-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib</source>
+        <source platform="darwin64" type="extension" file="reaper_reawebapi-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/extension/reaper_reawebapi-x86_64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reawebapi-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/extension/reaper_reawebapi-x86_64.so</source>
+        <source platform="linux64" type="extension" file="reawebapi-webview-x86_64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/extension/reawebapi-webview-x86_64</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reawebapi-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/extension/reaper_reawebapi-aarch64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reawebapi-webview-aarch64">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/extension/reawebapi-webview-aarch64</source>
+        <source main="main" type="script" file="web/ReaWebAPI_Demo.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/web/ReaWebAPI_Demo.lua</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/web/app.js</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/web/index.html</source>
+        <source type="script" file="web/logo.svg">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/web/logo.svg</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/b291fa9574f8b81fdb13b554b8be4b0582660e71/ReaWebAPI/web/style.css</source>
       </version>
     </reapack>
   </category>
