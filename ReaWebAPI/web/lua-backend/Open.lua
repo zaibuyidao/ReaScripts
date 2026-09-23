@@ -1,4 +1,5 @@
 -- @description ReaWebAPI: Lua backend and WebView UI
+-- @noindex
 -- @author zaibuyidao
 local reaper = reaper
 if not reaper.APIExists("ReaWeb_Send") then
