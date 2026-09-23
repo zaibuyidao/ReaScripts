@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-src 'none'">
-  <title>ReaWebAPI - Runtime Showcase</title>
+  <title>ReaWebAPI - Lua Backend Demo</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg" sizes="any">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
@@ -12,29 +12,29 @@
 <body>
   <main>
     <header>
-      <div class="brand"><img class="mark" src="logo.svg" width="52" height="52" alt=""><div>ReaWebAPI<small>RUNTIME SHOWCASE</small></div></div>
+      <div class="brand"><img class="mark" src="logo.svg" width="52" height="52" alt=""><div>ReaWebAPI<small>LUA BACKEND DEMO</small></div></div>
       <div class="toolbar"><span class="status" id="status">Connecting</span></div>
     </header>
     <section class="intro">
-      <span class="eyebrow">REAPER MEETS JAVASCRIPT</span>
+      <span class="eyebrow">LUA BACKEND + WEBVIEW UI</span>
       <h1>Your project.<br><span>A new interface.</span></h1>
-      <p>Explore your project, inspect track FX, and call native REAPER APIs directly from JavaScript. Track edits integrate with REAPER Undo.</p>
+      <p>Adjust track volume, pan and color, explore your project, and inspect track FX through a WebView interface powered by Lua.</p>
     </section>
     <section class="track-panel" aria-labelledby="track-label">
       <div class="panel-top"><span class="eyebrow" id="track-label">SELECTED TRACK</span><span id="track-count">— tracks in project</span></div>
       <div class="track-name" id="track-name" aria-live="polite">Ready when you are.</div>
-      <div class="pan-control"><label for="pan">Pan <output id="pan-value">0.00</output></label><input id="pan" type="range" min="-1" max="1" step="0.01" value="0" disabled><button id="center-pan" class="text-button" type="button" disabled>Center pan (Undo)</button></div>
+      <div class="track-control"><label for="volume">Volume <output id="volume-value" for="volume">0.0 dB</output></label><input id="volume" type="range" min="-60" max="12" step="0.1" value="0" aria-describedby="volume-hint" disabled><button id="reset-volume" class="text-button" type="button" disabled>0 dB (Undo)</button></div>
+      <div class="track-control"><label for="pan">Pan <output id="pan-value" for="pan">0.00</output></label><input id="pan" type="range" min="-1" max="1" step="0.01" value="0" disabled><button id="center-pan" class="text-button" type="button" disabled>Center pan (Undo)</button></div>
       <div class="color-control"><label for="track-color">Track color</label><input id="track-color" type="color" value="#b7f58a" disabled><button id="apply-color" type="button" disabled>Apply color (Undo)</button><button id="reset-color" class="text-button" type="button" disabled>Default color (Undo)</button><span id="color-state" class="hint">No track selected</span></div>
-      <div class="panel-bottom"><button id="read-track" type="button" disabled>Log selected track</button><span class="read-result" id="read-track-result" role="status">Print the current name and Pan to the log.</span></div>
     </section>
     <section class="debug-panel" aria-labelledby="log-label">
       <div class="debug-heading"><h2 id="log-label">Debug log <span id="log-count">0 / 200</span></h2><div class="log-tools"><button id="copy-log" type="button" disabled>Copy</button><button id="clear-log" type="button">Clear</button></div></div>
-      <div class="log-options"><label><input id="log-reaper" type="checkbox" disabled> Also send to REAPER console</label><span id="log-status" role="status">Track changes and confirmed Pan values. Latest 200 entries.</span></div>
+      <div class="log-options"><label><input id="log-reaper" type="checkbox" disabled> Also send to REAPER console</label><span id="log-status" role="status">Track changes and confirmed volume / pan values. Latest 200 entries.</span></div>
       <div id="activity" role="log" aria-label="Debug log output" aria-live="off" tabindex="0"></div>
     </section>
     <section class="api-panel" aria-labelledby="project-label">
       <div class="panel-top"><h2 id="project-label">Project snapshot</h2><button id="read-project" type="button" disabled>Read project</button></div>
-      <p id="project-name">Waiting for REAPER.</p>
+      <p id="project-name">Waiting for Lua.</p>
       <dl class="metrics"><div><dt>Edit cursor</dt><dd id="cursor-position">—</dd></div><div><dt>Playback</dt><dd id="play-state">—</dd></div><div><dt>Tempo</dt><dd id="tempo">—</dd></div><div><dt>Bar / beat</dt><dd id="beat-position">—</dd></div></dl>
       <div class="cursor-control"><label for="cursor-target">Move edit cursor to</label><input id="cursor-target" type="number" step="0.1" value="0" disabled><span>seconds</span><button id="move-cursor" type="button" disabled>Move cursor</button></div>
       <p class="hint">Reads a snapshot on demand. Moving the edit cursor does not seek playback.</p>
@@ -45,24 +45,15 @@
       <ol id="fx-list" class="data-list"><li>Select a track, then inspect its FX.</li></ol>
       <p class="hint">Shows up to 16 FX with their parameter count and first parameter value. No FX settings are changed.</p>
     </section>
-    <section class="api-panel" aria-labelledby="checks-label">
-      <div class="panel-top"><h2 id="checks-label">API verification</h2><button id="run-checks" type="button" disabled>Run read-only checks</button></div>
-      <p id="api-coverage">Waiting for API definitions.</p>
-      <ol id="check-results" class="data-list" aria-live="polite"><li>Checks cover handles, tuples, GUIDs, rectangles, MIDI bytes and audio buffers. Select a track with a MIDI item to exercise every path. No project edits.</li></ol>
-    </section>
-      <section class="code-panel" aria-label="JavaScript example"><span class="eyebrow">REAPER API MIRROR, JAVASCRIPT RETURNS</span><pre><code><span class="keyword">const</span> [total, markers, regions] =
-  <span class="keyword">await</span> reaper.<span class="function">CountProjectMarkers</span>(0);
-<span class="keyword">const</span> [beat, bar, beatsPerBar] =
-  <span class="keyword">await</span> reaper.<span class="function">TimeMap2_timeToBeats</span>(0, 5);</code></pre></section>
-    <div class="host-tools"><input id="keyboard-test" type="text" aria-label="Keyboard focus test" placeholder="Type here to test keyboard focus"><button id="diagnostics" class="text-button disclosure-button" type="button" aria-expanded="false" aria-controls="diagnostic-panel"><span>Runtime diagnostics</span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4"/></svg></button></div>
+    <div class="host-tools"><input id="keyboard-test" type="text" aria-label="Keyboard focus test" placeholder="Type here to test keyboard focus"><button id="diagnostics" class="text-button disclosure-button" type="button" disabled aria-expanded="false" aria-controls="diagnostic-panel"><span>Backend diagnostics</span><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="m4 6 4 4 4-4"/></svg></button></div>
     <section id="diagnostic-panel" class="diagnostic-panel" aria-labelledby="diagnostics" hidden>
-      <div class="diagnostic-heading"><p>Connection, API availability and request activity.</p><button id="refresh-diagnostics" class="text-button" type="button">Refresh snapshot</button></div>
-      <dl class="metrics diagnostic-metrics"><div><dt>WebView backend</dt><dd id="diagnostic-backend">—</dd></div><div><dt>Connection</dt><dd id="diagnostic-stage">—</dd></div><div><dt>Available APIs</dt><dd id="diagnostic-api">—</dd></div><div><dt>Request queue</dt><dd id="diagnostic-queue">—</dd></div></dl>
+      <div class="diagnostic-heading"><p>Connection and message activity reported by Lua.</p><button id="refresh-diagnostics" class="text-button" type="button" disabled>Refresh snapshot</button></div>
+      <dl class="metrics diagnostic-metrics"><div><dt>WebView backend</dt><dd id="diagnostic-backend">—</dd></div><div><dt>Connection</dt><dd id="diagnostic-stage">—</dd></div><div><dt>REAPER access</dt><dd id="diagnostic-api">—</dd></div><div><dt>Lua messages</dt><dd id="diagnostic-queue">—</dd></div></dl>
       <p id="diagnostic-snapshot" class="diagnostic-caption" role="status"></p>
       <details id="diagnostic-details" hidden><summary>View diagnostic JSON</summary><pre id="diagnostic-output" tabindex="0" aria-label="Diagnostic JSON"></pre></details>
     </section>
     <p class="error" id="error" role="alert" hidden></p>
-    <footer><span>HTML + CSS + JavaScript</span><span id="version">ReaWebAPI</span></footer>
+    <footer><span>Lua backend · HTML + CSS + JavaScript UI</span><span id="version">ReaWebAPI</span></footer>
   </main>
 </body>
 </html>

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lua Backend · ReaWebAPI</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">REAWEBAPI · LUA BACKEND</p>
+    <h1>Selected track</h1>
+    <p id="name">Waiting for Lua…</p>
+    <label for="volume">Volume <output id="value">—</output></label>
+    <input id="volume" type="range" min="0" max="2" step="0.01" disabled>
+    <p>Lua reads and updates REAPER. This page sends commands and displays track state.</p>
+    <p id="status" role="status">Launch Open.lua from REAPER.</p>
+  </main>
+</body>
+</html>

@@ -1,5 +1,5 @@
 @description ReaWebAPI: JavaScript Runtime for REAPER
-@version 0.3.3
+@version 0.3.5.3
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -14,7 +14,11 @@
   [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.js
   [script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/index.html
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
+  [script main] web/lua-backend/Open.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/Open.lua
+  [script nomain] web/lua-backend/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/README.md
+  [script nomain] web/lua-backend/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/app.js
+  [script nomain] web/lua-backend/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/index.html
+  [script nomain] web/lua-backend/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Fix macOS **Embed DevTools** being disabled in compact windows.
-  Reuse the same Inspector content view and native floating window across Embedded, Floating and Hidden states, retaining Console entries and the selected tab.
+  Added HTML-based native window title support.

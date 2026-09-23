@@ -1,0 +1,9 @@
+:root { font: 16px/1.5 system-ui, sans-serif; color: #e6ece7; background: #17201b; color-scheme: dark; }
+body { margin: 0; padding: 32px; }
+main { max-width: 560px; margin: auto; }
+.eyebrow { color: #b7f58a; letter-spacing: .12em; font-size: 12px; }
+h1 { font-size: 32px; margin-bottom: 8px; }
+#name { overflow-wrap: anywhere; font-size: 22px; }
+label { display: flex; justify-content: space-between; margin-top: 32px; }
+input { width: 100%; accent-color: #b7f58a; }
+#status { color: #b7f58a; }
