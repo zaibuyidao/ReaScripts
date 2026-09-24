@@ -1,5 +1,5 @@
 @description ReaWebAPI: JavaScript Runtime for REAPER
-@version 0.3.5.5
+@version 0.3.6.1
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -21,4 +21,4 @@
   [script nomain] web/lua-backend/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Fix a Windows REAPER freeze when switching docked WebViews with embedded DevTools open.
+  Fix macOS and Linux floating Docker title bars not following the active WebView's icon and visibility.
