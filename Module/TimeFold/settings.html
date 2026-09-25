@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title></title><link rel="stylesheet" href="style.css"><script type="module" src="settings.mjs"></script></head>
+<body class="settings-page"><div id="error" role="alert" hidden></div>
+  <main id="settings">
+    <h2 data-i18n="settings"></h2>
+    <label class="setting"><span data-i18n="language"></span><select id="language" data-aria="language"></select></label>
+    <label class="setting"><span data-i18n="showLabels"></span><input type="checkbox" id="toggle-labels" aria-controls="label-panel"></label>
+    <label class="setting"><span data-i18n="showLabelGuides"></span><input type="checkbox" id="toggle-label-guides" checked></label>
+    <div class="settings-actions"><button id="fit" data-i18n="fitView" disabled></button><button id="undo" data-i18n="undo" disabled></button><button id="redo" data-i18n="redo" disabled></button></div>
+    <section class="settings-section"><h3 data-i18n="importLabels"></h3><div class="import-actions"><button id="import-markers" data-i18n="importMarkers" disabled></button><button id="import-regions" data-i18n="importRegions" disabled></button></div><p id="settings-status" role="status"></p></section>
+    <details id="shortcut-help" class="settings-section"><summary data-i18n="shortcuts"></summary><dl id="shortcuts" class="shortcut-list"></dl></details>
+    <div class="dialog-actions"><span></span><button id="close-settings" data-i18n="close"></button></div>
+  </main>
+</body></html>

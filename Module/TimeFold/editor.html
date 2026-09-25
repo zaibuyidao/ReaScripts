@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title></title><link rel="stylesheet" href="style.css"><script type="module" src="editor.mjs"></script></head>
+<body class="editor-page">
+  <main id="editor">
+    <form id="label-form"><h2 id="editor-title"></h2><label><span data-i18n="labelName"></span><input id="label-name" maxlength="200" autocomplete="off"></label><label class="color-field"><span data-i18n="labelColor"></span><input id="label-color" type="color" value="#718e86"></label><div class="range-fields"><label><span data-i18n="startSeconds"></span><input id="label-start" type="number" min="0" max="1000000000" step="any" required></label><label><span data-i18n="endSeconds"></span><input id="label-end" type="number" min="0.01" max="1000000000" step="any" required></label></div><p id="form-error" role="alert"></p><div class="dialog-actions"><button type="button" id="delete-label" class="danger" disabled data-i18n="deleteLabel"></button><span></span><button type="button" id="cancel" data-i18n="cancel"></button><button type="submit" id="save-label" class="primary" disabled data-i18n="save"></button></div></form>
+  </main>
+</body>
+</html>

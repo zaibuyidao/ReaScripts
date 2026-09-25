@@ -1,0 +1,27 @@
+-- @description TimeFold
+-- @author zaibuyidao
+-- @version 1.0
+-- @changelog
+--   Initial release.
+-- @links
+--   https://github.com/zaibuyidao/ReaWebAPI
+-- @metapackage
+-- @provides
+--   [main=main] zaibuyidao_TimeFold.lua
+--   [nomain] index.html
+--   [nomain] app.mjs
+--   [nomain] model.mjs
+--   [nomain] i18n.mjs
+--   [nomain] style.css
+--   [nomain] settings.html
+--   [nomain] settings.mjs
+--   [nomain] editor.html
+--   [nomain] editor.mjs
+--   [nomain] grid.lua
+--   [nomain] json.lua
+--   [nomain] locales/*.json
+-- @about
+--   TimeFold is a ReaWeb Module built on ReaWebAPI for navigating large REAPER projects.
+--   Collapse labeled time ranges in the overview, navigate the arrangement, and control playback.
+--   Requires ReaWebAPI and js_ReaScriptAPI. Run zaibuyidao_TimeFold.lua from the Action List.
+--   Press Ctrl+, to open settings.

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title></title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+  <div id="error" role="alert" hidden></div>
+  <main id="main" data-title="settingsHint">
+    <section class="arrangement" data-aria="arrangement">
+      <canvas id="label-guides" aria-hidden="true"></canvas>
+      <div id="timeline" data-aria="labels"><div id="labels"></div></div>
+      <div id="label-divider" tabindex="0" role="separator" aria-orientation="horizontal" data-aria="labelAreaSize" hidden></div>
+      <div id="tracks" tabindex="0" data-aria="arrangement"><canvas id="arrangement"></canvas><div id="viewport" data-aria="viewport"></div><canvas id="cursor"></canvas><div id="selection" hidden></div><div id="empty" data-i18n="waiting"></div></div>
+    </section>
+    <div id="sidebar-divider" tabindex="0" role="separator" aria-orientation="vertical" data-aria="sidebarSize" hidden></div>
+    <aside id="label-panel" hidden><div class="panel-heading"><h2 data-i18n="labels"></h2><span id="label-count"></span><button id="toggle-all" disabled></button></div><p id="no-labels" data-i18n="noLabels"></p><div id="label-list" role="listbox" data-aria="labels"></div></aside>
+  </main>
+
+</body>
+</html>
