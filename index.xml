@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="de4d7e899088d7bc04e7a394f45f44fb32a4dd25">
+<index version="1" name="zaibuyidao Scripts" commit="41bd9f70eb1715b2eb53ebd4391d295170569070">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7115,6 +7115,28 @@ Added mode selection:
         <source file="locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/locales/ko.json</source>
         <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/locales/zh-CN.json</source>
         <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/locales/zh-TW.json</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Modules/ReaGBA">
+    <reapack name="ReaGBA.ext" type="extension" desc="ReaGBA">
+      <metadata>
+        <link rel="website">https://forum.cockos.com/showthread.php?t=311202</link>
+      </metadata>
+      <version name="0.0.9" author="zaibuyidao" time="2026-09-26T12:29:50Z">
+        <changelog><![CDATA[ReaGBA is a native GBA emulation extension built on ReaWebAPI.
+Play GBA games with native frame streaming, low-latency input, save states, and WebView-based controls.
+Requires ReaWebAPI. Run zaibuyidao_ReaGBA.lua from the Action List.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reagba-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/extension/reaper_reagba-x64.dll</source>
+        <source platform="darwin64" type="extension" file="reaper_reagba-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/extension/reaper_reagba-x86_64.dylib</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reagba-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/extension/reaper_reagba-arm64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reagba-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/extension/reaper_reagba-x86_64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reagba-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/extension/reaper_reagba-aarch64.so</source>
+        <source main="main" type="script" file="web/zaibuyidao_ReaGBA.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/zaibuyidao_ReaGBA.lua</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/app.js</source>
+        <source type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/i18n.js</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/index.html</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/style.css</source>
       </version>
     </reapack>
   </category>
