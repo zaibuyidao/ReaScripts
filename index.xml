@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="41bd9f70eb1715b2eb53ebd4391d295170569070">
+<index version="1" name="zaibuyidao Scripts" commit="5763a2984eb88946f97394e5ba86c595729497b8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7084,40 +7084,6 @@ Added mode selection:
       </version>
     </reapack>
   </category>
-  <category name="Module/TimeFold">
-    <reapack name="TimeFold - Package.lua" type="script" desc="TimeFold">
-      <metadata>
-        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
-{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
-\widowctrl\hyphauto
-
-{\pard \ql \f0 \sa180 \li0 \fi0 TimeFold is a ReaWeb Module built on ReaWebAPI for navigating large REAPER projects. Collapse labeled time ranges in the overview, navigate the arrangement, and control playback. Requires ReaWebAPI and js_ReaScriptAPI. Run zaibuyidao_TimeFold.lua from the Action List. Press Ctrl+, to open settings.\par}
-}
-]]></description>
-        <link rel="website">https://github.com/zaibuyidao/ReaWebAPI</link>
-      </metadata>
-      <version name="1.0" author="zaibuyidao" time="2026-09-25T16:19:53Z">
-        <changelog><![CDATA[Initial release.]]></changelog>
-        <source main="main" file="zaibuyidao_TimeFold.lua">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/zaibuyidao_TimeFold.lua</source>
-        <source file="index.html">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/index.html</source>
-        <source file="app.mjs">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/app.mjs</source>
-        <source file="model.mjs">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/model.mjs</source>
-        <source file="i18n.mjs">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/i18n.mjs</source>
-        <source file="style.css">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/style.css</source>
-        <source file="settings.html">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/settings.html</source>
-        <source file="settings.mjs">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/settings.mjs</source>
-        <source file="editor.html">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/editor.html</source>
-        <source file="editor.mjs">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/editor.mjs</source>
-        <source file="grid.lua">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/grid.lua</source>
-        <source file="json.lua">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/json.lua</source>
-        <source file="locales/en.json">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/locales/en.json</source>
-        <source file="locales/ja.json">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/locales/ja.json</source>
-        <source file="locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/locales/ko.json</source>
-        <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/locales/zh-CN.json</source>
-        <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/321093e18629c00a0eb1c6f21cdd904fae025a1d/Module/TimeFold/locales/zh-TW.json</source>
-      </version>
-    </reapack>
-  </category>
   <category name="Modules/ReaGBA">
     <reapack name="ReaGBA.ext" type="extension" desc="ReaGBA">
       <metadata>
@@ -7137,6 +7103,40 @@ Requires ReaWebAPI. Run zaibuyidao_ReaGBA.lua from the Action List.]]></changelo
         <source type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/i18n.js</source>
         <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/index.html</source>
         <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/style.css</source>
+      </version>
+    </reapack>
+  </category>
+  <category name="Modules/TimeFold">
+    <reapack name="TimeFold - Package.lua" type="script" desc="TimeFold">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 TimeFold is a ReaWeb Module built on ReaWebAPI for navigating large REAPER projects. Collapse labeled time ranges in the overview, navigate the arrangement, and control playback. Requires ReaWebAPI and js_ReaScriptAPI. Run zaibuyidao_TimeFold.lua from the Action List. Press Ctrl+, to open settings.\par}
+}
+]]></description>
+        <link rel="website">https://github.com/zaibuyidao/ReaWebAPI</link>
+      </metadata>
+      <version name="1.0" author="zaibuyidao" time="2026-09-26T12:32:49Z">
+        <changelog><![CDATA[Initial release.]]></changelog>
+        <source main="main" file="zaibuyidao_TimeFold.lua">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/zaibuyidao_TimeFold.lua</source>
+        <source file="index.html">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/index.html</source>
+        <source file="app.mjs">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/app.mjs</source>
+        <source file="model.mjs">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/model.mjs</source>
+        <source file="i18n.mjs">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/i18n.mjs</source>
+        <source file="style.css">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/style.css</source>
+        <source file="settings.html">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/settings.html</source>
+        <source file="settings.mjs">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/settings.mjs</source>
+        <source file="editor.html">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/editor.html</source>
+        <source file="editor.mjs">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/editor.mjs</source>
+        <source file="grid.lua">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/grid.lua</source>
+        <source file="json.lua">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/json.lua</source>
+        <source file="locales/en.json">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/locales/en.json</source>
+        <source file="locales/ja.json">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/locales/ja.json</source>
+        <source file="locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/locales/ko.json</source>
+        <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/locales/zh-CN.json</source>
+        <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/5763a2984eb88946f97394e5ba86c595729497b8/Modules/TimeFold/locales/zh-TW.json</source>
       </version>
     </reapack>
   </category>
