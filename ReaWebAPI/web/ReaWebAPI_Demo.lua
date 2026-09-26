@@ -1,7 +1,4 @@
--- @description ReaWebAPI Demo (Lua backend)
 -- @noindex
--- @about Lua owns REAPER access; the WebView sends commands and renders snapshots.
-
 local reaper = reaper
 local bridge_apis = {
   "ReaWeb_Open", "ReaWeb_Close", "ReaWeb_IsOpen", "ReaWeb_IsReady",

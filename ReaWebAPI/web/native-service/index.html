@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'">
+  <title>ReaWebAPI — Native Events and Host Service</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body><main>
+  <h1>Native Events and Host Service</h1>
+  <p>Open.lua returns immediately. Native subscriptions and services stay active until this window closes.</p>
+  <p id="status" role="status">Connecting…</p>
+  <div id="controls">
+    <button id="subscribe">Subscribe</button><button id="unsubscribe">Unsubscribe</button>
+    <button id="ping">Test service: ping</button><button id="send">Test service: send</button>
+    <button id="pending">Test service: pending</button><button id="unregister">Test service: unregister</button>
+    <button id="lua">Lua echo (Coexist.lua)</button><button id="dock">Dock / undock</button>
+    <button id="clear">Clear log</button>
+  </div>
+  <p>The optional test extension registers <code>test</code>. Its pending method times out after 30 seconds, or rejects when unregistered. Run Coexist.lua to also enable Lua echo.</p>
+  <pre id="log" role="log" aria-live="off"></pre>
+</main></body>
+</html>

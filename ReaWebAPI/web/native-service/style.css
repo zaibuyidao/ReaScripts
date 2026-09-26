@@ -1,0 +1,7 @@
+:root { color-scheme: dark; font: 15px/1.5 system-ui, sans-serif; background: #171a20; color: #e9edf3; }
+body { margin: 0; } main { max-width: 1000px; margin: 36px auto; padding: 0 24px; }
+h1 { font-size: 26px; } p { color: #b8c4d1; }
+#controls { display: flex; gap: 8px; flex-wrap: wrap; }
+button { padding: 9px 14px; border: 1px solid #43546b; border-radius: 6px; background: #253247; color: inherit; cursor: pointer; }
+button:disabled { opacity: .5; cursor: default; }
+pre { min-height: 280px; max-height: 480px; overflow: auto; white-space: pre-wrap; padding: 16px; background: #0f1319; border-radius: 8px; }

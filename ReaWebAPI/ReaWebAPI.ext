@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.6.2
+@version 0.3.6.5
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -14,11 +14,25 @@
   [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.js
   [script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/index.html
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
-  [script main] web/lua-backend/Open.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/Open.lua
+  [script main] web/lua-backend/reawebapi-lua-backend.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/reawebapi-lua-backend.lua
   [script nomain] web/lua-backend/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/README.md
   [script nomain] web/lua-backend/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/app.js
   [script nomain] web/lua-backend/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/index.html
   [script nomain] web/lua-backend/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/style.css
+  [script main] web/native-service/Coexist.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/Coexist.lua
+  [script main] web/native-service/reawebapi-native-service.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/reawebapi-native-service.lua
+  [script nomain] web/native-service/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/README.md
+  [script nomain] web/native-service/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/app.js
+  [script nomain] web/native-service/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/index.html
+  [script nomain] web/native-service/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/style.css
+  [script main] web/native-stream/reawebapi-native-stream.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/native-stream.lua
+  [script nomain] web/native-stream/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/README.md
+  [script nomain] web/native-stream/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/app.js
+  [script nomain] web/native-stream/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/index.html
+  [script nomain] web/native-stream/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Share ReaWebAPI/WebViewData/ across Apps and Modules on Windows, macOS and Linux, with one native browser backend for active Apps.
+  Add binary Native Streams for frames, PCM, spectrum, meters, waveforms, MIDI and custom data, with independent transport and bounded consumer queues.
+  Add built-in audio analysis, MIDI input streams, device/display information, file watching, binary clipboard and native timers.
+  Add service input dispatch and producer shutdown hooks, Stream SDK types and a Native Stream Demo for third-party extension integration.
+  Fix Linux embedded WebKit focus notifications and page-close isolation for native-input applications.

@@ -1,6 +1,6 @@
 # Lua backend + WebView UI
 
-Run `Open.lua` in REAPER, select a track, then adjust the volume slider. Lua owns REAPER access and polls `ReaWeb_Receive` with `defer`. The page uses only `reaper.host.send` and the `message` event. Closing the window ends the backend. Stopping the script closes its window.
+Run `reawebapi-lua-backend.lua` in REAPER, select a track, then adjust the volume slider. Lua owns REAPER access and polls `ReaWeb_Receive` with `defer`. The page uses only `reaper.host.send` and the `message` event. Closing the window ends the backend. Stopping the script closes its window.
 
 Rerunning the same launcher focuses its existing window. After close, it opens a new window with fresh queues. The launcher passes its `debug.getinfo(1, "S").source` as `instanceKey` to `ReaWeb_Open(path, instanceKey)`. C++ manages window reuse. Nonpersistent ExtState only prevents duplicate Lua polling loops.
 

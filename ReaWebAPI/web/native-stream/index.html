@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Native Streams</title><link rel="stylesheet" href="style.css">
+<main><h1>Native Streams</h1><p>Binary analysis and third-party producers</p>
+<div class="controls"><label>Kind<select id="kind"><option>spectrum</option><option>meter</option><option>waveform</option><option>audio</option><option>midi</option><option>named stream</option></select></label>
+<label>Source<select id="source"><option value="master">Master output 0/1</option><option value="input">Hardware input 0/1</option><option value="selected-track">Selected track · pre-FX</option></select></label>
+<label>MIDI input<select id="midi"><option value="-1">All inputs</option></select></label>
+<label>Stream name<input id="name" value="reagba.video"></label><button id="open" disabled>Open</button><button id="close" disabled>Detach</button></div>
+<canvas id="view" width="900" height="320"></canvas><output id="status">Connecting…</output><pre id="info"></pre>
+<div class="controls"><button id="devices">Devices and displays</button><button id="watch">Watch folder</button><button id="unwatch" disabled>Stop watching</button></div><pre id="events"></pre>
+</main><script src="app.js"></script></html>
