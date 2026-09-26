@@ -29,6 +29,13 @@ footer{height:26px;padding:0 20px;display:flex;align-items:center;gap:7px;border
 #library-splitter:before{content:"";position:absolute;left:0;right:0;height:1px;background:var(--line)}#library-splitter span{position:relative;width:34px;height:5px;border-radius:4px;background:#4e6666;border:1px solid var(--bg)}
 #library-splitter:hover span,#library-splitter:focus-visible span,.resizing-library #library-splitter span{background:var(--green);width:46px}.resizing-library,.resizing-library *{cursor:row-resize!important;user-select:none!important}
 .library-collapsed #library-view{margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}.settings-open #library-splitter{display:none}
+.library-collapsed .player{margin-top:0;margin-bottom:0}
+main{scrollbar-gutter:stable}
+.game-detached #game-frame,.game-detached #game-viewport>span{visibility:hidden}
+.game-window{padding:3px}
+.game-window main{padding:0;overflow:hidden;scrollbar-gutter:auto}
+.game-window .game-stage{height:100%;min-height:0}
+.game-window #game-viewport{width:100%;height:100%;aspect-ratio:auto}
 #empty{flex:1;min-height:0;overflow:auto}
 /* Mint GBA on a 32x20 integer grid: mirrored shell, equal control footprints, 3:2 screen. */
 .brand{gap:8px;letter-spacing:-.7px;line-height:1}
@@ -45,7 +52,7 @@ footer{height:26px;padding:0 20px;display:flex;align-items:center;gap:7px;border
 .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#111a20;opacity:0}
 .cover.has-image img{opacity:1}.cover.has-image b,.cover.has-image span{visibility:hidden}
 .game-info h2{overflow-wrap:anywhere}.game-meta{margin-right:55px;line-height:1.6}
-.games[data-view=details]{grid-template-columns:1fr}
+.games[data-view=details]{grid-template-columns:1fr;grid-auto-rows:max-content}
 .games[data-view=grid]{grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr));grid-auto-rows:max-content;gap:12px}
 .games[data-view=grid] .game{display:grid;grid-template-rows:auto 1fr auto;padding:9px;gap:8px;min-height:0}
 .games[data-view=grid] .cover{width:100%;min-width:0;height:auto;aspect-ratio:1;border-radius:6px}

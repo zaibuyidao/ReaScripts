@@ -48,7 +48,7 @@
   <div class="game-stage"><div id="game-viewport" tabindex="0" aria-label="Game screen" data-i18n-aria-label="gameScreen"><span data-i18n="viewportHint">Choose a game to start playing</span></div></div>
   <div class="player-controls">
   <div class="play-actions">
-  <div class="primary-controls"><button id="toggle" class="primary" disabled>▶ Play</button><button id="speed" title="Change fast-forward speed" data-i18n-title="speed">1×</button><button id="fullscreen" title="Full screen / F11" data-i18n-title="fullscreen">⛶</button></div>
+  <div class="primary-controls"><button id="toggle" class="primary" disabled>Play</button><button id="speed" title="Change fast-forward speed" data-i18n-title="speed">1×</button><button id="fullscreen" title="Full screen / F11" data-i18n-title="fullscreen">⛶</button><button id="popout" title="Pop out game" data-i18n-title="popout" aria-label="Pop out game" data-i18n-aria-label="popout">↗</button></div>
   <div class="secondary-controls"><button id="reset" disabled data-i18n="reset">↻ Reset</button><button id="shot" disabled data-i18n="screenshot">▣ Screenshot</button><button id="stop" disabled data-i18n="stop">■ Stop</button></div>
   </div>
   <div class="save-panel">
@@ -61,4 +61,7 @@
 <footer><span class="dot"></span><span id="footer-text" data-i18n="footer">NATIVE EMULATION · WEB UI</span><span id="footer-version" class="version"></span></footer>
 <div id="toast" role="status" aria-live="polite"></div>
 <script src="i18n.js"></script>
+<script src="video.js"></script>
+<script src="popout.js"></script>
+<script src="bridge.js"></script>
 <script src="app.js"></script></body></html>

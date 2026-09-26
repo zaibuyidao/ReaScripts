@@ -1,5 +1,5 @@
 @description ReaGBA
-@version 0.1.0
+@version 0.1.1
 @author zaibuyidao
 @link https://forum.cockos.com/showthread.php?t=311202
 @provides
@@ -13,5 +13,12 @@
   [all script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/style.css
   [all script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/i18n.js
   [all script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/app.js
+  [all script nomain] web/bridge.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/bridge.js
+  [all script nomain] web/video.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/video.js
+  [all script nomain] web/popout.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/popout.js
+  [all script nomain] web/game.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/game.html
+  [all script nomain] web/game.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/game.js
 @changelog
-  Move runtime data to Scripts/zaibuyidao Scripts/Modules/ReaGBA.
+  Add a canvas-only game window with the game name in its title, 3px page spacing and restoration on Windows, macOS and Linux.
+  Preserve game size on height changes and retain the main canvas across pop-out and restore, with collapsed-library information at the top and controls at the bottom.
+  Fix detail-card cover alignment and play-button overflow, preserve status spacing when detached, and remove symbols from start, resume and pause buttons.
