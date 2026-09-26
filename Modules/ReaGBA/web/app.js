@@ -69,7 +69,7 @@
    const result=await request(Object.keys(core).length?{action:'set_settings',settings:core}:{action:'get_settings'});
    if(!result.ok)return result;
    if(!displayPreferences){
-    displayPath=(await runtime.GetResourcePath())+'/Scripts/zaibuyidao Scripts/ReaGBA/config/ui.json';
+    displayPath=(await runtime.GetResourcePath())+'/Scripts/zaibuyidao Scripts/Modules/ReaGBA/config/ui.json';
     const loaded={...displayDefaults};
     for(const key of displayKeys)if(key in result.result)loaded[key]=result.result[key];
     if((await runtime.fs.stat(displayPath)).exists){

@@ -1,21 +1,17 @@
 @description ReaGBA
-@version 0.0.9
+@version 0.1.0
 @author zaibuyidao
-@link
-  https://forum.cockos.com/showthread.php?t=311202
+@link https://forum.cockos.com/showthread.php?t=311202
 @provides
   [win64 extension] reaper_reagba-x64.dll https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/extension/reaper_reagba-x64.dll
   [darwin64 extension] reaper_reagba-x86_64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/extension/reaper_reagba-x86_64.dylib
   [darwin-arm64 extension] reaper_reagba-arm64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/extension/reaper_reagba-arm64.dylib
   [linux64 extension] reaper_reagba-x86_64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/extension/reaper_reagba-x86_64.so
   [linux-aarch64 extension] reaper_reagba-aarch64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/extension/reaper_reagba-aarch64.so
-
-  [script main] web/zaibuyidao_ReaGBA.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/zaibuyidao_ReaGBA.lua
-  [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/app.js
-  [script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/i18n.js
-  [script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/index.html
-  [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/style.css
+  [all script nomain] web/zaibuyidao_ReaGBA.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/zaibuyidao_ReaGBA.lua
+  [all script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/index.html
+  [all script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/style.css
+  [all script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/i18n.js
+  [all script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/app.js
 @changelog
-  ReaGBA is a native GBA emulation extension built on ReaWebAPI.
-  Play GBA games with native frame streaming, low-latency input, save states, and WebView-based controls.
-  Requires ReaWebAPI. Run zaibuyidao_ReaGBA.lua from the Action List.
+  Move runtime data to Scripts/zaibuyidao Scripts/Modules/ReaGBA.
