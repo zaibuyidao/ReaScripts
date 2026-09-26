@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.6.5
+@version 0.3.6.6
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -25,7 +25,7 @@
   [script nomain] web/native-service/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/app.js
   [script nomain] web/native-service/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/index.html
   [script nomain] web/native-service/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-service/style.css
-  [script main] web/native-stream/reawebapi-native-stream.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/native-stream.lua
+  [script main] web/native-stream/reawebapi-native-stream.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/reawebapi-native-stream.lua
   [script nomain] web/native-stream/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/README.md
   [script nomain] web/native-stream/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/app.js
   [script nomain] web/native-stream/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/index.html
