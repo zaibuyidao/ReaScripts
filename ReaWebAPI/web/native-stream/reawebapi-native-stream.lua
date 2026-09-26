@@ -1,4 +1,5 @@
 -- @noindex
+-- @description ReaWebAPI: Native Streams
 if not reaper.APIExists('ReaWeb_Open') then
   reaper.MB('Install ReaWebAPI v0.3.6.4 or later and restart REAPER.', 'ReaWebAPI', 0)
   return

@@ -1,4 +1,5 @@
 -- @noindex
+-- @description ReaWebAPI Demo (Lua backend)
 local reaper = reaper
 local bridge_apis = {
   "ReaWeb_Open", "ReaWeb_Close", "ReaWeb_IsOpen", "ReaWeb_IsReady",

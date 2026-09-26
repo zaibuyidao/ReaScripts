@@ -1,5 +1,5 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.6.6
+@version 0.3.6.7
 @author zaibuyidao
 @link https://github.com/zaibuyidao/ReaWebAPI
 @provides
@@ -32,7 +32,4 @@
   [script nomain] web/native-stream/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Add binary Native Streams for frames, PCM, spectrum, meters, waveforms, MIDI and custom data, with independent transport and bounded consumer queues.
-  Add built-in audio analysis, MIDI input streams, device/display information, file watching, binary clipboard and native timers.
-  Add service input dispatch and producer shutdown hooks, Stream SDK types and a Native Stream Demo for third-party extension integration.
-  Fix Linux embedded WebKit focus notifications and page-close isolation for native-input applications.
+  Open blocked external HTTP, HTTPS and mailto navigation with the system default handler on Windows, macOS and Linux, preserving the current page.
