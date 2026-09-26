@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="02e14cc307ddcb8c2b5be587c4d2c1f0e23916b8">
+<index version="1" name="zaibuyidao Scripts" commit="e1cf8fbe4840335a71e84e3ad81f09bf9c571df1">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7103,6 +7103,19 @@ Requires ReaWebAPI. Run zaibuyidao_ReaGBA.lua from the Action List.]]></changelo
         <source type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/i18n.js</source>
         <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/index.html</source>
         <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/41bd9f70eb1715b2eb53ebd4391d295170569070/Modules/ReaGBA/web/style.css</source>
+      </version>
+      <version name="0.1.0" author="zaibuyidao" time="2026-09-26T19:43:46Z">
+        <changelog><![CDATA[Move runtime data to Scripts/zaibuyidao Scripts/Modules/ReaGBA.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reagba-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/extension/reaper_reagba-x64.dll</source>
+        <source platform="darwin64" type="extension" file="reaper_reagba-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/extension/reaper_reagba-x86_64.dylib</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reagba-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/extension/reaper_reagba-arm64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reagba-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/extension/reaper_reagba-x86_64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reagba-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/extension/reaper_reagba-aarch64.so</source>
+        <source type="script" file="web/zaibuyidao_ReaGBA.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/web/zaibuyidao_ReaGBA.lua</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/web/index.html</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/web/style.css</source>
+        <source type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/web/i18n.js</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/e1cf8fbe4840335a71e84e3ad81f09bf9c571df1/Modules/ReaGBA/web/app.js</source>
       </version>
     </reapack>
   </category>
