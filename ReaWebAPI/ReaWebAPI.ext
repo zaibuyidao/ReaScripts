@@ -1,7 +1,7 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.7.0
+@version 0.3.7.2
 @author zaibuyidao
-@link https://github.com/zaibuyidao/ReaWebAPI
+@link https://github.com/zaibuyidao/ReaScripts/tree/master/ReaWebAPI
 @provides
   [win64 extension] reaper_reawebapi-x64.dll https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-x64.dll
   [darwin-arm64 extension] reaper_reawebapi-arm64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib
@@ -32,5 +32,4 @@
   [script nomain] web/native-stream/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Limit WebView context menus to docking and DevTools controls on Windows, macOS and Linux.
-  Add App-specific Docker tab menus for docking, reload, DevTools, opening the App folder and closing the App.
+  Rename the sRGB checkbox to "Use sRGB for WebView rendering on Windows".
