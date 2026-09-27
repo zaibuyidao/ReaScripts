@@ -81,19 +81,55 @@ function renderGames(){
 async function scan(){games=await call('scan_roms');if(selected)selected=games.find(g=>g.path===selected.path)||null;if(!selected&&games.length)selected=games[0];renderGames();if(!state.loaded)$('toggle').disabled=!selected;void loadCovers();}
 async function playGame(g){selected=g;const s=await call('load_rom',{path:g.path});onNativeState(s);await refreshSlots();await scan();scheduleViewport();showKeyHint();}
 function renderState(s){if(s.app_version){$('about-version').textContent=s.app_version;$('footer-version').textContent='v'+s.app_version;}document.body.classList.toggle('playing',s.loaded);scheduleViewport();$('now-title').textContent=s.game?.title||selected?.title||t('chooseGame');$('now-subtitle').textContent=s.loaded?`${s.game.code} · 240 × 160 · ${s.core}`:'240 × 160 · Game Boy Advance';$('play-status').textContent=t(s.loaded?(s.running?'playing':'paused'):'ready');$('play-dot').className='dot'+(s.running?'':' idle');$('fps').textContent=s.running?`${i18n.number(s.fps,{minimumFractionDigits:1,maximumFractionDigits:1})} FPS`:'— FPS';$('speed').textContent=s.speed+'×';$('toggle').textContent=t(s.running?'pause':s.loaded?'resume':'start');$('toggle').disabled=!s.loaded&&!selected;for(const id of ['reset','shot','stop','save'])$(id).disabled=!s.loaded;$('load').disabled=!s.loaded||!slots.find(x=>x.slot===slot)?.exists;if('reaper' in s){$('dock-toggle').hidden=!s.reaper;$('dock-toggle').textContent=t(s.docked?'undock':'dock');$('fullscreen').hidden=!!s.reaper;}}
-window.onNativeState=function(s){const changed=state.game?.hash!==s.game?.hash;state=s;if(s.game?.path)settings.last_rom_directory=parentDirectory(s.game.path);renderState(s);if(changed)run(refreshSlots)();if(s.error)toast(i18n.error(s.error),true);};
+window.onNativeState=function(s){const changed=state.game?.hash!==s.game?.hash;state=s;renderAudioStatus(s);if(s.game?.path)settings.last_rom_directory=parentDirectory(s.game.path);renderState(s);if(changed)run(refreshSlots)();if(s.error)toast(i18n.error(s.error),true);};
 $('dock-toggle').onclick=run(()=>call('toggle_dock'));
 $('popout').onclick=run(()=>call('popout'));
 async function refreshSlots(){slots=state.loaded?await call('get_save_states'):[];renderSlots();}
 function renderSlots(){$('slots').replaceChildren();for(let n=1;n<=9;n++){const entry=slots.find(x=>x.slot===n);const b=make('button',(slot===n?'selected ':'')+(entry?.exists?'saved':''),n);b.title=entry?.metadata?i18n.date(new Date(entry.metadata.timestamp*1000)):t('emptySlot');b.onclick=()=>{slot=n;renderSlots();};b.setAttribute('aria-label',t('slotLabel',{slot:i18n.number(n),detail:b.title}));b.setAttribute('aria-pressed',String(slot===n));$('slots').append(b);}$('save-hint').textContent=t(slots.find(x=>x.slot===slot)?.exists?'slotSaved':'slotEmpty',{slot:i18n.number(slot)});$('load').disabled=!state.loaded||!slots.find(x=>x.slot===slot)?.exists;}
-const defaultKeys=['J','K','Space','Return','D','A','W','S','Q','O'];const labels=['A','B','Select','Start','→','←','↑','↓','R','L','holdFast'];
+const defaultKeys=['J','K','Space','Return','D','A','W','S','Q','O'];const labels=['A','B','Select','Start','Right','Left','Up','Down','R','L','holdFast'];
 function showKeyHint(){const keys=settings.keys||defaultKeys;toast(t('keyHint',{up:keys[6],down:keys[7],left:keys[5],right:keys[4],a:keys[0],b:keys[1],r:keys[8],l:keys[9],start:keys[3],select:keys[2],fast:settings.fast_forward_key||'L'}));}
-function renderKeys(){$('keys').replaceChildren();[...(settings.keys||defaultKeys),settings.fast_forward_key||'L'].forEach((key,i)=>{const row=make('div','key-pair');const b=make('button','',binding===i?t('pressKey'):key);b.onclick=()=>{binding=i;renderKeys();};row.append(make('span','',i===10?t('holdFast'):labels[i]),b);$('keys').append(row);});}
+function renderKeys(){$('keys').replaceChildren();const keys=[...(settings.keys||defaultKeys),settings.fast_forward_key||'L',...(settings.turbo_keys||['',''])];gamepadActions.forEach(action=>{const i=action==='a_turbo'?11:action==='b_turbo'?12:gamepadTargets.indexOf(action),row=make('div','key-pair');const b=make('button','',binding===i?t('pressKey'):keys[i]||t('gamepadBind'));b.dataset.action=action;b.onclick=()=>{cancelCapture();binding=i;renderKeys();};row.append(make('span','',actionLabel(action)),b);$('keys').append(row);});}
+initGamepadBindings();
 async function saveSettings(values){settings=await call('set_settings',{settings:values});}
+let audioBusy=false,audioRefreshing=false,audioOutputs={};
+function renderAudio(){
+ $('audio-output').value=settings.audio_output||'system';
+ $('audio-track-row').hidden=settings.audio_output!=='reaper_track';
+ $('audio-track').value=settings.audio_track||'preview';
+ $('audio-hardware-row').hidden=settings.audio_output!=='reaper_output';
+ const device=audioOutputs.reaper_device,channels=device?.channels||[];
+ const channel=settings.audio_channel||0,mono=settings.audio_mono===true,value=channel+':'+(mono?1:2);
+ const options=[],label=(index,count)=>`${index+1} ${Array.from({length:count},(_,i)=>channels[index+i]||`OUT ${index+i+1}`).join(' / ')}`;
+ for(let i=0;i+1<channels.length;i++)options.push(new Option(label(i,2),i+':2'));
+ for(let i=0;i<channels.length;i++)options.push(new Option(label(i,1),i+':1'));
+ if(!options.some(option=>option.value===value))options.push(new Option(label(channel,mono?1:2)+' · '+t('audioChannelMissing'),value));
+ $('audio-channels').replaceChildren(...options);$('audio-channels').value=value;
+ $('audio-device').hidden=!device||!settings.audio_output||settings.audio_output==='system';
+ $('audio-device').textContent=device?t('audioDevice',{device:device.IDENT_OUT||device.MODE||t('unknown')})+(device.SRATE?' · '+device.SRATE+' Hz':''):'';
+ renderAudioStatus(state);
+}
+function renderAudioStatus(s){
+ const key={no_track:'audioNoTrack',engine_stopped:'audioEngineStopped',channel_unavailable:'audioChannelUnavailable'}[s.audio_state];
+ $('audio-status').hidden=!key&&!s.audio_error;$('audio-status').textContent=key?t(key):s.audio_error?t('audioUnavailable'):'';
+ if(!$('settings-view').hidden&&s.audio_outputs_revision!==undefined&&s.audio_outputs_revision!==audioOutputs.status?.audio_outputs_revision&&!audioRefreshing)run(refreshAudioOutput)();
+}
+async function refreshAudioOutput(){
+ if(audioRefreshing)return;audioRefreshing=true;
+ try{const result=await call('get_audio_outputs');if(result?.status){audioOutputs=result;Object.assign(state,result.status);renderAudio();}}
+ finally{audioRefreshing=false;}
+}
+async function changeAudio(values){
+ if(audioBusy)return;audioBusy=true;$('audio-output').disabled=$('audio-track').disabled=$('audio-channels').disabled=true;
+ try{await saveSettings(values);await refreshAudioOutput();}
+ finally{audioBusy=false;$('audio-output').disabled=$('audio-track').disabled=$('audio-channels').disabled=false;renderAudio();}
+}
+$('audio-output').onchange=run(()=>changeAudio({audio_output:$('audio-output').value}));
+$('audio-track').onchange=run(()=>changeAudio({audio_track:$('audio-track').value}));
+$('audio-channels').onchange=run(()=>{const [channel,count]=$('audio-channels').value.split(':').map(Number);return changeAudio({audio_channel:channel,audio_mono:count===1});});
 function renderShader(){const preset=settings.shader||'none';$('shader').value=preset;$('filter').disabled=preset!=='none';}
 $('shader').onchange=run(async()=>{try{await saveSettings({shader:$('shader').value});}finally{renderShader();}});
-document.addEventListener('keydown',run(async e=>{if(binding<0)return;e.preventDefault();e.stopPropagation();const map={ArrowUp:'Up',ArrowDown:'Down',ArrowLeft:'Left',ArrowRight:'Right',Enter:'Return',Space:'Space',Backspace:'Backspace',ShiftLeft:'Left Shift',ShiftRight:'Right Shift'};const key=map[e.code]||(/^Key[A-Z]$/.test(e.code)?e.code.slice(3):/^Digit[0-9]$/.test(e.code)?e.code.slice(5):null);if(e.key==='Escape'){binding=-1;renderKeys();return;}if(!key){toast(t('unsupportedKey'),true);return;}const index=binding;binding=-1;if(index===10)await saveSettings({fast_forward_key:key});else{const keys=[...(settings.keys||defaultKeys)];keys[index]=key;await saveSettings({keys});}renderKeys();}),true);
-$('settings-toggle').onclick=()=>{const show=$('settings-view').hidden;$('settings-view').hidden=!show;$('library-view').hidden=show;$('settings-toggle').textContent=show?'×':'⚙';renderSettingsToggle();binding=-1;document.body.classList.toggle('settings-open',show);updateKeyboardContext();scheduleViewport();};
+document.addEventListener('keydown',run(async e=>{if(binding<0)return;e.preventDefault();e.stopPropagation();const map={ArrowUp:'Up',ArrowDown:'Down',ArrowLeft:'Left',ArrowRight:'Right',Enter:'Return',Space:'Space',Backspace:'Backspace',ShiftLeft:'Left Shift',ShiftRight:'Right Shift'};const key=map[e.code]||(/^Key[A-Z]$/.test(e.code)?e.code.slice(3):/^Digit[0-9]$/.test(e.code)?e.code.slice(5):null);if(e.key==='Escape'){binding=-1;renderKeys();return;}if(!key){toast(t('unsupportedKey'),true);return;}const index=binding;binding=-1;if(index>=11){const turbo_keys=[...(settings.turbo_keys||['',''])];turbo_keys[index-11]=key;await saveSettings({turbo_keys});}else if(index===10)await saveSettings({fast_forward_key:key});else{const keys=[...(settings.keys||defaultKeys)];keys[index]=key;await saveSettings({keys});}renderKeys();}),true);
+$('settings-toggle').onclick=()=>{const show=$('settings-view').hidden;$('settings-view').hidden=!show;$('library-view').hidden=show;$('settings-toggle').textContent=show?'×':'⚙';renderSettingsToggle();binding=-1;cancelCapture();document.body.classList.toggle('settings-open',show);if(show)run(refreshAudioOutput)();updateKeyboardContext();scheduleViewport();};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{filter=b.dataset.filter;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));renderGames();});
 $('search').oninput=renderGames;$('sort').onchange=renderGames;$('refresh').onclick=run(scan);
 $('open').onclick=run(async()=>{const s=await call('open_rom',{dialog_title:t('dialogROM'),initial_path:settings.last_rom_directory||settings.rom_directory||''});if(s){onNativeState(s);await scan();await refreshSlots();showKeyHint();}});
@@ -102,6 +138,7 @@ for(const id of ['reset','stop'])$(id).onclick=run(async()=>onNativeState(await 
 $('speed').onclick=run(async()=>onNativeState(await call('set_speed',{value:state.base_speed===1?2:state.base_speed===2?4:1})));
 $('fullscreen').onclick=run(()=>call('fullscreen'));
 $('shot').onclick=run(async()=>{await call('screenshot');toast(t('shotSaved'));});
+window.onStateSlot=async n=>{slot=n;await refreshSlots();};
 $('save').onclick=run(async()=>{await call('save_state',{slot});await refreshSlots();toast(t('stateSaved',{slot:i18n.number(slot)}));});
 $('load').onclick=run(async()=>{onNativeState(await call('load_state',{slot}));toast(t('stateLoaded',{slot:i18n.number(slot)}));});
 $('volume').oninput=()=>$('volume-value').textContent=$('volume').value+'%';$('volume').onchange=run(()=>call('set_volume',{value:Number($('volume').value)/100}));
@@ -185,7 +222,7 @@ $('library-splitter').addEventListener('keydown',e=>{
 });
 function setLibraryExpanded(expanded){libraryPreference=expanded;scheduleViewport();run(()=>saveSettings({library_expanded:expanded}))();}
 $('library-toggle').onclick=()=>setLibraryExpanded($('library-body').hidden);
-$('reset-keys').onclick=run(async()=>{binding=-1;await saveSettings({keys:defaultKeys,fast_forward_key:'L'});renderKeys();toast(t('keysReset'));});
+$('reset-keys').onclick=run(async()=>{binding=-1;await saveSettings({keys:defaultKeys,fast_forward_key:'L',turbo_keys:['','']});renderKeys();toast(t('keysReset'));});
 function editing(){const e=document.activeElement;return !$('settings-view').hidden||binding>=0||!!splitDrag||!!e?.matches('input,textarea,select,[role="separator"],[contenteditable="true"]');}
 let keyboardContext=null;
 function updateKeyboardContext(){const blocked=editing();if(blocked!==keyboardContext){keyboardContext=blocked;call('keyboard_context',{blocked}).catch(error=>toast(error.message,true));}}
@@ -209,11 +246,12 @@ function renderSettingsToggle(){const text=t($('settings-view').hidden?'settings
 function applyLanguage(value){
  i18n.set(value);document.documentElement.lang=i18n.language;i18n.apply();$('language').value=i18n.language;
  window.ReaGBAPopout?.render();
- renderSettingsToggle();renderGames();renderCoverStatus();renderKeys();renderSlots();renderState(state);scheduleViewport();
+ $('save').title=t('save')+' · Ctrl+1–9';$('load').title=t('load')+' · Shift+1–9';
+ renderSettingsToggle();renderAudio();renderGames();renderCoverStatus();renderKeys();renderGamepad();renderSlots();renderState(state);scheduleViewport();
 }
 for(const [code,catalog] of Object.entries(i18n.catalogs)){const option=make('option','',catalog.name);option.value=code;option.lang=code;$('language').append(option);}
 $('language').onchange=run(async()=>{
- const previous=i18n.language,next=$('language').value;binding=-1;$('language').disabled=true;clearTimeout(toastTimer);$('toast').className='';
+ const previous=i18n.language,next=$('language').value;binding=-1;cancelCapture();$('language').disabled=true;clearTimeout(toastTimer);$('toast').className='';
  applyLanguage(next);
  try{await saveSettings({language:next});if(settings.language!==next)throw Error(t('languageSaveFailed'));}
  catch(error){applyLanguage(previous);throw error;}
