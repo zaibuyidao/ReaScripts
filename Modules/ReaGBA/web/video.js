@@ -1,12 +1,13 @@
 'use strict';
-// GBA pixels are presented inside the WebView. PCM stays in the core extension.
+// Emulator pixels are presented inside the WebView. PCM stays in the core extension.
 // LCD3X: Gigaherz's public-domain sinusoidal mask (libretro/glsl-shaders).
 // lcd-grid-v2: cgwg's integrated LCD subpixel model, preserving ReaGBA's equations.
 function createGameVideo(){
  const holder=document.getElementById('game-viewport'),canvas=document.createElement('canvas');
  canvas.id='game-frame';canvas.setAttribute('aria-hidden','true');holder.append(canvas);
  const gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:true});
- let pixels=null,queued=false,program,texture,ctx,source,sourceContext;
+ let sourceWidth=240,sourceHeight=160;
+ let lastMessage=null,pixels=null,queued=false,program,texture,ctx,source,sourceContext;
  if(gl){
   const compile=(type,text)=>{const shader=gl.createShader(type);gl.shaderSource(shader,text);gl.compileShader(shader);if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(shader));return shader;};
   program=gl.createProgram();
@@ -82,19 +83,19 @@ void main(){color=vec4(shadeFrame(uv),1.0);}`));
  // CPU fallback uses the same subpixel equations when WebGL2 is unavailable.
  function softwareShader(width,height,preset){
   const image=ctx.createImageData(width,height),out=image.data;
-  const sample=(x,y,c)=>pixels[(Math.max(0,Math.min(159,y))*240+Math.max(0,Math.min(239,x)))*4+c]/255;
+  const sample=(x,y,c)=>pixels[(Math.max(0,Math.min(sourceHeight-1,y))*sourceWidth+Math.max(0,Math.min(sourceWidth-1,x)))*4+c]/255;
   const integral=(z,h)=>{const q=z*z;return h?z*(1+q*(-2/3+q*(-1/5+q*(4/7+q*(-1/9+q*(-2/11+q/13)))))):z*(1+q*q*(-4/5+q*(2/7+q*(4/9+q*(-4/11+q/13)))));};
   const coverage=(distance,footprint,radius,h)=>{
    const lo=Math.max(-1,Math.min(1,(distance-footprint*.5)/radius)),hi=Math.max(-1,Math.min(1,(distance+footprint*.5)/radius));
    return Math.max(0,(integral(hi,h)-integral(lo,h))*radius/footprint);
   };
   const columns=Array.from({length:width},(_,x)=>{
-   const u=(x+.5)*240/width,position=u-.4999,origin=Math.floor(position),fraction=position-origin;
-   return {u,origin,left:[1,0,-1].map(n=>coverage(fraction*3+n,240/width*3,1.5,true)),right:[-2,-3,-4].map(n=>coverage(fraction*3+n,240/width*3,1.5,true))};
+   const u=(x+.5)*sourceWidth/width,position=u-.4999,origin=Math.floor(position),fraction=position-origin;
+   return {u,origin,left:[1,0,-1].map(n=>coverage(fraction*3+n,sourceWidth/width*3,1.5,true)),right:[-2,-3,-4].map(n=>coverage(fraction*3+n,sourceWidth/width*3,1.5,true))};
   });
   for(let y=0;y<height;y++){
-   const v=(y+.5)*160/height,position=v-.4999,origin=Math.floor(position),fraction=position-origin;
-   const upper=coverage(fraction,160/height,.63,false),lower=coverage(fraction-1,160/height,.63,false);
+   const v=(y+.5)*sourceHeight/height,position=v-.4999,origin=Math.floor(position),fraction=position-origin;
+   const upper=coverage(fraction,sourceHeight/height,.63,false),lower=coverage(fraction-1,sourceHeight/height,.63,false);
    for(let x=0;x<width;x++){
     const column=columns[x],offset=(y*width+x)*4;
     for(let c=0;c<3;c++){
@@ -118,8 +119,8 @@ void main(){color=vec4(shadeFrame(uv),1.0);}`));
   queued=false;if(!pixels)return;
   const ratio=window.devicePixelRatio||1,w=Math.max(1,Math.round(holder.clientWidth*ratio)),h=Math.max(1,Math.round(holder.clientHeight*ratio));
   if(canvas.width!==w)canvas.width=w;if(canvas.height!==h)canvas.height=h;
-  let scale=Math.min(w/240,h/160);if(settings.integer_scaling!==false&&scale>=1)scale=Math.floor(scale);
-  const width=Math.max(1,Math.floor(240*scale)),height=Math.max(1,Math.floor(160*scale));
+  let scale=Math.min(w/sourceWidth,h/sourceHeight);if(settings.integer_scaling!==false&&scale>=1)scale=Math.floor(scale);
+  const width=Math.max(1,Math.floor(sourceWidth*scale)),height=Math.max(1,Math.floor(sourceHeight*scale));
   const x=Math.floor((w-width)/2),y=Math.floor((h-height)/2);
   if(gl){
    gl.viewport(0,0,w,h);gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.viewport(x,y,width,height);
@@ -134,13 +135,27 @@ void main(){color=vec4(shadeFrame(uv),1.0);}`));
    else{ctx.imageSmoothingEnabled=settings.filter==='linear';ctx.drawImage(source,x,y,width,height);}
   }
  }
- function draw(){if(settings.vsync===false)drawNow();else if(!queued){queued=true;requestAnimationFrame(drawNow);}}
+ function isGB(){const system=typeof state==='undefined'?'GBA':state.game?.system||state.system;return system==='GB'||system==='GBC';}
+ function draw(){
+  if(lastMessage&&sourceWidth!==(isGB()?160:240))upload(lastMessage);
+  if(settings.vsync===false)drawNow();else if(!queued){queued=true;requestAnimationFrame(drawNow);}
+ }
  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();toast('Graphics context lost. Reopen ReaGBA.',true);});
- return {draw,frame(message){
+ function upload(message){
   if(message.width!==240||message.height!==160||!(message.data instanceof Uint8Array)||message.data.byteLength!==240*160*4)throw Error('Invalid GBA frame');
-  pixels=message.data;
-  if(gl)gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,240,160,0,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
-  else sourceContext.putImageData(new ImageData(new Uint8ClampedArray(pixels.buffer),240,160),0,0);
-  draw();
- }};
+  const gb=isGB();
+  sourceWidth=gb?160:240;sourceHeight=gb?144:160;
+  if(gb){
+   if(!pixels||pixels.length!==160*144*4)pixels=new Uint8Array(160*144*4);
+   for(let y=0;y<144;y++)pixels.set(message.data.subarray(((y+8)*240+40)*4,((y+8)*240+200)*4),y*160*4);
+  }else pixels=message.data;
+  if(gl){
+   gl.uniform2f(gl.getUniformLocation(program,'sourceSize'),sourceWidth,sourceHeight);
+   gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,sourceWidth,sourceHeight,0,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+  }else{
+   if(source.width!==sourceWidth)source.width=sourceWidth;if(source.height!==sourceHeight)source.height=sourceHeight;
+   sourceContext.putImageData(new ImageData(new Uint8ClampedArray(pixels.buffer,pixels.byteOffset,pixels.byteLength),sourceWidth,sourceHeight),0,0);
+  }
+ }
+ return {draw,frame(message){upload(message);lastMessage=message;draw();}};
 }

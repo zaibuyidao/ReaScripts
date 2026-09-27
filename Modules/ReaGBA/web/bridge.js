@@ -45,7 +45,7 @@ function initReaGBABridge(){
   let updating=false;
   stopStatus=await runtime.system.schedule(async()=>{
    if(disposed||updating)return;updating=true;
-   try{const value=await gba.invoke('getState');if(!disposed)window.onNativeState?.(enrich(value));}catch(error){if(!disposed){report(error);}}finally{updating=false;}
+   try{const value=await gba.invoke('getState');if(!disposed){const previousSystem=state.game?.system;window.onNativeState?.(enrich(value));if(previousSystem!==value.game?.system)video?.draw();}}catch(error){if(!disposed){report(error);}}finally{updating=false;}
   },{delay:250,interval:250});
   if(disposed)await stopStatus();
  })();
@@ -109,7 +109,7 @@ function initReaGBABridge(){
    case 'fullscreen':await document.getElementById('game-viewport').requestFullscreen();return ok(true);
    case 'open_rom':{
     release();
-    const path=await runtime.dialog.openFile({title:command.dialog_title,initialPath:command.initial_path,filters:[{name:'GBA ROM',extensions:['gba']}]});
+    const path=await runtime.dialog.openFile({title:command.dialog_title,initialPath:command.initial_path,filters:[{name:'GBA / GB / GBC ROM',extensions:['gba','gb','gbc']}]});
     if(!path)return ok(null);
     const result=await request({action:'load_rom',path});if(result.ok)await focusGame();return result;
    }

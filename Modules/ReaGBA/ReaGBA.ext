@@ -1,5 +1,5 @@
 @description ReaGBA
-@version 0.1.7
+@version 0.1.9
 @author zaibuyidao
 @link https://forum.cockos.com/showthread.php?t=311202
 @provides
@@ -20,5 +20,6 @@
   [all script nomain] web/game.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/game.js
   [all script nomain] web/gamepad.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/gamepad.js
 @changelog
-  Align keyboard and gamepad binding layouts.
-  Add independently configurable A/B Turbo keyboard bindings with saved settings and native 10 Hz repeat.
+  Add GB/GBC ROM library scanning and playback on Windows, macOS and Linux, including input, audio, battery saves and save states.
+  Add native 160x144 GB/GBC display and screenshots, with a 10:9 resizable viewport.
+  Fix low-frequency distortion in GB/GBC audio resampling.
