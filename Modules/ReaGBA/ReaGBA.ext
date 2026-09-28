@@ -1,5 +1,5 @@
 @description ReaGBA
-@version 0.1.9
+@version 0.2.0
 @author zaibuyidao
 @link https://forum.cockos.com/showthread.php?t=311202
 @provides
@@ -8,17 +8,17 @@
   [darwin-arm64 extension] reaper_reagba-arm64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/extension/reaper_reagba-arm64.dylib
   [linux64 extension] reaper_reagba-x86_64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/extension/reaper_reagba-x86_64.so
   [linux-aarch64 extension] reaper_reagba-aarch64.so https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/extension/reaper_reagba-aarch64.so
-  [all script nomain] web/zaibuyidao_ReaGBA.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/zaibuyidao_ReaGBA.lua
-  [all script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/index.html
-  [all script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/style.css
-  [all script nomain] web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/i18n.js
-  [all script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/app.js
-  [all script nomain] web/bridge.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/bridge.js
-  [all script nomain] web/video.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/video.js
-  [all script nomain] web/popout.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/popout.js
-  [all script nomain] web/game.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/game.html
-  [all script nomain] web/game.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/game.js
-  [all script nomain] web/gamepad.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/gamepad.js
+  [main=main] web/zaibuyidao_ReaGBA.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/zaibuyidao_ReaGBA.lua
+  web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/index.html
+  web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/style.css
+  web/i18n.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/i18n.js
+  web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/app.js
+  web/bridge.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/bridge.js
+  web/video.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/video.js
+  web/popout.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/popout.js
+  web/game.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/game.html
+  web/game.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/game.js
+  web/gamepad.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/Modules/ReaGBA/web/gamepad.js
 @changelog
   Add GB/GBC ROM library scanning and playback on Windows, macOS and Linux, including input, audio, battery saves and save states.
   Add native 160x144 GB/GBC display and screenshots, with a 10:9 resizable viewport.
