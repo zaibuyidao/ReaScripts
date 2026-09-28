@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="5aece7c84fefd0972abd632c3c2bf8d2f2cc6681">
+<index version="1" name="zaibuyidao Scripts" commit="d11f6667cbce2baea981f7b93fc59f46b0820f2c">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7219,6 +7219,27 @@ Fix low-frequency distortion in GB/GBC audio resampling.]]></changelog>
         <source file="web/game.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/5aece7c84fefd0972abd632c3c2bf8d2f2cc6681/Modules/ReaGBA/web/game.html</source>
         <source file="web/game.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/5aece7c84fefd0972abd632c3c2bf8d2f2cc6681/Modules/ReaGBA/web/game.js</source>
         <source file="web/gamepad.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/5aece7c84fefd0972abd632c3c2bf8d2f2cc6681/Modules/ReaGBA/web/gamepad.js</source>
+      </version>
+      <version name="0.2.2" author="zaibuyidao" time="2026-09-28T05:33:20Z">
+        <changelog><![CDATA[Add GB/GBC ROM library scanning and playback on Windows, macOS and Linux, including input, audio, battery saves and save states.
+Add native 160x144 GB/GBC display and screenshots, with a 10:9 resizable viewport.
+Fix low-frequency distortion in GB/GBC audio resampling.]]></changelog>
+        <source platform="win64" type="extension" file="reaper_reagba-x64.dll">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/extension/reaper_reagba-x64.dll</source>
+        <source platform="darwin64" type="extension" file="reaper_reagba-x86_64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/extension/reaper_reagba-x86_64.dylib</source>
+        <source platform="darwin-arm64" type="extension" file="reaper_reagba-arm64.dylib">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/extension/reaper_reagba-arm64.dylib</source>
+        <source platform="linux64" type="extension" file="reaper_reagba-x86_64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/extension/reaper_reagba-x86_64.so</source>
+        <source platform="linux-aarch64" type="extension" file="reaper_reagba-aarch64.so">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/extension/reaper_reagba-aarch64.so</source>
+        <source main="main" type="script" file="web/zaibuyidao_ReaGBA.lua">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/zaibuyidao_ReaGBA.lua</source>
+        <source type="script" file="web/index.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/index.html</source>
+        <source type="script" file="web/style.css">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/style.css</source>
+        <source type="script" file="web/i18n.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/i18n.js</source>
+        <source type="script" file="web/app.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/app.js</source>
+        <source type="script" file="web/bridge.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/bridge.js</source>
+        <source type="script" file="web/video.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/video.js</source>
+        <source type="script" file="web/popout.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/popout.js</source>
+        <source type="script" file="web/game.html">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/game.html</source>
+        <source type="script" file="web/game.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/game.js</source>
+        <source type="script" file="web/gamepad.js">https://raw.githubusercontent.com/zaibuyidao/ReaScripts/d11f6667cbce2baea981f7b93fc59f46b0820f2c/Modules/ReaGBA/web/gamepad.js</source>
       </version>
     </reapack>
   </category>
