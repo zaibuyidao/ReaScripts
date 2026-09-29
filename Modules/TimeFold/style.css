@@ -15,15 +15,23 @@ main{display:flex;flex:1;min-height:0;position:relative}
 #labels{position:relative;width:100%;height:100%;overflow:hidden}
 .time-label{position:absolute;min-height:18px;border:1px solid #17201d;border-radius:3px;background:#35474d;color:#d4e1e3;padding:0 8px;cursor:default;white-space:nowrap;font-size:11px;line-height:16px;overflow:hidden;text-overflow:ellipsis}
 .time-label[data-collapsed=true]{background:#34313e;border-color:#736881;color:#e0d8eb;cursor:pointer;white-space:nowrap;}
+.time-label[data-selected=true]{box-shadow:inset 0 0 0 1px currentColor}
 .time-label .edge{position:absolute;top:0;width:6px;height:100%;cursor:ew-resize}.edge.start{left:0}.edge.finish{right:0}
 #tracks{flex:1;min-height:0;overflow:hidden;position:relative;touch-action:none;user-select:none}
 #tracks canvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
 #cursor{z-index:2}
 .viewport{position:absolute;border:1px solid #637069;box-shadow:inset 0 0 0 1px #11171455;cursor:default;z-index:1}
+.viewport[data-selected=true]{border-color:#89988f;box-shadow:inset 0 0 0 1px #92beaf33}
+.viewport:focus-visible{outline:1px solid #89988f;outline-offset:-1px}
 
 #selection{position:absolute;top:0;bottom:0;background:#a1cfc630;border:1px solid #b4dacb;z-index:3;pointer-events:none}
 #empty{position:absolute;inset:45% 12px auto;text-align:center;color:var(--muted);pointer-events:none}
-#label-panel{width:var(--sidebar-width,25%);max-width:40%;min-width:0;flex-shrink:0;background:#1b1f24;overflow:auto;padding:6px 3px}
+#label-panel{width:var(--sidebar-width,25%);max-width:40%;min-width:0;flex-shrink:0;background:#1b1f24;overflow:hidden;padding:6px 3px;display:flex;flex-direction:column}
+#label-list{flex:1;min-height:0;overflow:auto}
+.panel-heading,#no-labels,.panel-footer{flex-shrink:0}
+.panel-footer{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;padding:4px 5px 0}
+.panel-footer button{display:flex;align-items:center;justify-content:center;flex:0 0 23px;width:23px;height:23px;min-height:23px;padding:3px;color:var(--muted)}
+.panel-footer svg{width:14px;height:14px}
 .panel-heading{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:4px 5px 8px}
 h2{font-size:12px;font-weight:600;margin:0}#label-count{color:var(--muted)}#no-labels{line-height:1.6;color:var(--muted);padding:0 5px}
 .label-card{display:flex;align-items:center;gap:6px;min-width:0;height:29px;padding:3px 5px;border-radius:2px;cursor:default;user-select:none}
@@ -36,6 +44,7 @@ h2{font-size:12px;font-weight:600;margin:0}#label-count{color:var(--muted)}#no-l
 #sidebar-divider:hover,#label-divider:hover{background:#718e86}
 .setting{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0}
 .setting input{width:16px;height:16px;margin:0}.settings-actions{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0}
+.setting-hint{color:var(--muted);font-size:11px;line-height:1.5;margin:-8px 0 18px}
 .color-field input{height:32px;padding:2px;width:64px}.time-label{height:18px;min-width:8px}
 dialog{border:1px solid #48515b;border-radius:7px;background:#20252c;color:inherit;padding:22px;width:min(460px,calc(100vw - 28px))}
 dialog::backdrop{background:#090c10a8}dialog h2{font-size:16px;margin-bottom:20px}

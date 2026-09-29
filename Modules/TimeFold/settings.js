@@ -1,9 +1,10 @@
-import { I18n } from './i18n.mjs';
+import { I18n } from './i18n.js';
 
 const i18n = new I18n();
 const ui = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
 const shortcuts = ['settings', 'sidebar', 'create', 'seek', 'edit', 'fold', 'delete', 'moveLabel', 'resizeLabel', 'undo', 'redo', 'navigate', 'zoom', 'play', 'selectRow', 'deleteRow', 'viewportKeys', 'dividerKeys', 'escape'];
 let state = null, session = null, updates = Promise.resolve();
+let colorTimer = null, pendingColor = null;
 let firstOpen = true;
 try { firstOpen = localStorage.getItem('ArrangeNavigator.settingsWindow.initialized') !== '1'; } catch {}
 function error(code) { ui.error.textContent = i18n.t(code); ui.error.hidden = false; }
@@ -14,6 +15,8 @@ async function action(name, value) {
 }
 async function render(data) {
   if (data.type !== 'settings-state') return;
+  const reset = session !== data.session;
+  if (reset) { clearTimeout(colorTimer); colorTimer = pendingColor = null; }
   session = data.session; state = data.state;
   if (i18n.locale !== state.language) await i18n.load(state.language);
   i18n.apply(); document.title = i18n.t('settings');
@@ -24,6 +27,12 @@ async function render(data) {
   ui.language.value = state.language; ui.language.disabled = false;
   ui['toggle-labels'].checked = state.labelsVisible;
   ui['toggle-label-guides'].checked = state.showLabelGuides;
+  ui['show-tcp-hidden-tracks'].checked = state.showTCPHiddenTracks;
+  ui['show-muted-tracks'].checked = state.showMutedTracks;
+  ui['show-muted-items'].checked = state.showMutedItems;
+  ui['custom-item-color-enabled'].checked = state.customItemColorEnabled;
+  ui['custom-item-color'].disabled = !state.customItemColorEnabled;
+  if (reset || document.activeElement !== ui['custom-item-color'] && pendingColor === null) ui['custom-item-color'].value = state.customItemColor || '#888888';
   ui.undo.disabled = state.stateError || !state.canUndo; ui.redo.disabled = state.stateError || !state.canRedo;
   ui.fit.disabled = false;
   ui['import-markers'].disabled = ui['import-regions'].disabled = state.stateError;
@@ -48,12 +57,25 @@ async function render(data) {
 ui.language.addEventListener('change', () => { ui.language.disabled = true; action('language', ui.language.value); });
 ui['toggle-labels'].addEventListener('change', () => action('labels', ui['toggle-labels'].checked));
 ui['toggle-label-guides'].addEventListener('change', () => action('label-guides', ui['toggle-label-guides'].checked));
+for (const name of ['tcp-hidden-tracks', 'muted-tracks', 'muted-items']) ui[`show-${name}`].addEventListener('change', () => action(name, ui[`show-${name}`].checked));
+ui['custom-item-color-enabled'].addEventListener('change', () => action('custom-item-color-enabled', ui['custom-item-color-enabled'].checked));
+function flushColor() {
+  clearTimeout(colorTimer); colorTimer = null;
+  if (pendingColor === null) return;
+  const value = pendingColor; pendingColor = null;
+  action('custom-item-color', value);
+}
+ui['custom-item-color'].addEventListener('input', () => {
+  pendingColor = ui['custom-item-color'].value;
+  if (colorTimer === null) colorTimer = setTimeout(flushColor, 50);
+});
+ui['custom-item-color'].addEventListener('change', () => { pendingColor = ui['custom-item-color'].value; flushColor(); });
 for (const name of ['fit', 'undo', 'redo']) ui[name].addEventListener('click', () => action(name));
 for (const name of ['markers', 'regions']) ui[`import-${name}`].addEventListener('click', () => action(name));
 const close = () => reaper.window.close().catch(() => error('connectionLost'));
 ui['close-settings'].addEventListener('click', close);
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' || event.ctrlKey && !event.altKey && event.code === 'Comma') { event.preventDefault(); close(); }
+  if (event.key === 'Escape' || event.ctrlKey && (!event.altKey && (event.code === 'Comma' || event.key === ',') || event.altKey && event.code === 'KeyS')) { event.preventDefault(); close(); }
   else if (event.ctrlKey && event.shiftKey && event.code === 'KeyT') { event.preventDefault(); action('labels', !state?.labelsVisible); }
   else if (event.ctrlKey && !event.altKey && !event.target.closest('input,textarea,select')) {
     if (event.code === 'KeyZ' || event.code === 'KeyY') { event.preventDefault(); action(event.code === 'KeyY' || event.shiftKey ? 'redo' : 'undo'); }

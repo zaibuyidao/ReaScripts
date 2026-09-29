@@ -1,4 +1,4 @@
-import { I18n } from './i18n.mjs';
+import { I18n } from './i18n.js';
 
 const i18n = new I18n();
 const ui = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));

@@ -37,7 +37,7 @@ table.sort(languages, function(a, b) if language_order[a.code] ~= language_order
 local locale = "en"
 local function t(key) return (resources[locale] or {})[key] or english.strings[key] or key end
 if not reaper.APIExists("ReaWeb_Send") then reaper.MB(t("bridgeMissing"), t("appTitle"), 0) return end
-if not reaper.APIExists("JS_Window_GetScrollInfo") or not reaper.APIExists("JS_Window_SetScrollPos") then
+if not reaper.APIExists("JS_Window_GetScrollInfo") then
   reaper.MB(t("jsMissing"), t("appTitle"), 0) return
 end
 
@@ -248,7 +248,7 @@ function vertical_view()
     page = math.max(1, height)
   end
 
-  return position, page, minimum, math.max(minimum, maximum - page + 1)
+  return position, page, minimum, math.max(minimum, maximum - page)
 end
 
 function publish_layout()
@@ -296,7 +296,9 @@ function start_snapshot(now, count)
       if not track then changed = -1 return end
 
       local id = reaper.GetTrackGUID(track)
-      add({ kind = "track", index = i + 1, id = id, pinned = reaper.GetMediaTrackInfo_Value(track, "B_TCPPIN") ~= 0, spacer = reaper.GetMediaTrackInfo_Value(track, "I_SPACER") ~= 0 })
+      local free_positioning = reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE") == 1
+      add({ kind = "track", index = i + 1, id = id, pinned = reaper.GetMediaTrackInfo_Value(track, "B_TCPPIN") ~= 0, spacer = reaper.GetMediaTrackInfo_Value(track, "I_SPACER") ~= 0,
+        visible = reaper.GetMediaTrackInfo_Value(track, "B_SHOWINTCP") ~= 0, muted = reaper.GetMediaTrackInfo_Value(track, "B_MUTE") ~= 0, freePositioning = free_positioning })
       track = reaper.GetTrack(proj, i)
 
       if not track or reaper.GetTrackGUID(track) ~= id then changed = -1 return end
@@ -308,7 +310,12 @@ function start_snapshot(now, count)
         local item = reaper.GetTrackMediaItem(track, j)
         local position = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
         local length = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
-        add({ kind = "item", track = i + 1, start = position, finish = position + length, color = color(reaper.GetDisplayedMediaItemColor(item)) })
+        local displayed_color = reaper.GetDisplayedMediaItemColor(item)
+        add({ kind = "item", track = i + 1, start = position, finish = position + length, color = color(displayed_color),
+          freeY = free_positioning and reaper.GetMediaItemInfo_Value(item, "F_FREEMODE_Y") or nil,
+          freeHeight = free_positioning and reaper.GetMediaItemInfo_Value(item, "F_FREEMODE_H") or nil,
+          uncolored = displayed_color == 0 and reaper.GetTrackColor(track) == 0 and reaper.GetMediaItemInfo_Value(item, "I_CUSTOMCOLOR") & 0x1000000 == 0,
+          selected = reaper.GetMediaItemInfo_Value(item, "B_UISEL") ~= 0, muted = reaper.GetMediaItemInfo_Value(item, "B_MUTE_ACTUAL") ~= 0 })
       end
     end
 
@@ -379,8 +386,11 @@ function command(message)
   elseif data.type == "view" and range(data.start, data.finish) then
     reaper.GetSet_ArrangeView2(project, true, 0, 0, data.start, data.finish)
     if finite(data.top) then
-      local _, _, minimum, maximum = vertical_view()
-      reaper.JS_Window_SetScrollPos(arrange, "v", math.floor(math.max(minimum, math.min(maximum, data.top)) + 0.5))
+      local position, _, minimum, maximum = vertical_view()
+      local top = math.floor(math.max(minimum, math.min(maximum, data.top)) + 0.5)
+      local delta = (top - position) / 8
+      local scroll = top == minimum and math.floor(delta) or top == maximum and math.ceil(delta) or math.floor(delta + 0.5)
+      if scroll ~= 0 then reaper.CSurf_OnScroll(0, scroll) end
     end
 
     next_transport = 0

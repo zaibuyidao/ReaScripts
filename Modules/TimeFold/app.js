@@ -1,5 +1,5 @@
-import { I18n } from './i18n.mjs';
-import { clamp, createTimeMap, interpolatedPosition, createTrackMap, viewportBands, nativeAtY, packLabels, labelContrast, zoomRange } from './model.mjs';
+import { I18n } from './i18n.js';
+import { clamp, createTimeMap, interpolatedPosition, createTrackMap, viewportBands, nativeAtY, packLabels, labelContrast, zoomRange } from './model.js';
 
 const i18n = new I18n();
 const ui = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
@@ -11,9 +11,12 @@ let connected = false, loaded = false, stateError = false, errorCode = null;
 let width = 1, height = 1, guideHeight = 1, pixelRatio = 0, map = createTimeMap(1, 1, []);
 let resizePending = true, labelsVisible = false, sidebarRatio = 0.25, labelHeight = 18;
 let showLabelGuides = true, guidesDirty = true;
+let showTCPHiddenTracks = true, showMutedTracks = true, showMutedItems = true;
+let customItemColorEnabled = false, customItemColor = null;
 let trackMap = createTrackMap([], 1), viewDirty = true, snapshotKey = null, selectedLabel = null, canUndo = false, canRedo = false;
 let dirty = true, gesture = null, editing = null, viewPending = null, viewTimer = null, viewInFlight = false;
 let previewView = null, previewAt = 0, lastCursor = '';
+let selectedViewport = null;
 let labelNodes = new Map();
 let ackSequence = 0, ackTimer = null;
 let snapSequence = 0, snapPending = null, snapTimer = null, snapQueued = null, notice = null;
@@ -51,16 +54,23 @@ async function send(type, data = {}) {
   }
 }
 function controls() {
+  if (!connected) selectViewport(null);
   ui.tracks.setAttribute('aria-disabled', String(!connected));
   ui.viewport.setAttribute('aria-disabled', String(!connected));
   ui['toggle-all'].disabled = !connected || stateError || !labels.length;
+  ui['open-settings'].disabled = !connected;
+  ui['sidebar-fit'].disabled = !connected;
+  ui['sidebar-undo'].disabled = !connected || stateError || !canUndo;
+  ui['sidebar-redo'].disabled = !connected || stateError || !canRedo;
+  ui['sidebar-markers'].disabled = ui['sidebar-regions'].disabled = !connected || stateError;
   publishSettings();
   for (const button of ui['label-list'].querySelectorAll('button')) button.disabled = !connected || stateError;
 }
 function displayName(label) { return label.name || t('labelDefault', { number: i18n.numbers.format(label.id) }); }
 function labelRange(label) { return t('range', { start: i18n.time(label.start, true), end: i18n.time(label.finish, true) }); }
 function storePreferences() {
-  try { localStorage.setItem('ArrangeNavigator.ui', JSON.stringify({ language: i18n.locale, labelsVisible, sidebarRatio, labelHeight, showLabelGuides })); } catch {}
+  try { localStorage.setItem('ArrangeNavigator.ui', JSON.stringify({ language: i18n.locale, labelsVisible, sidebarRatio, labelHeight, showLabelGuides,
+    showTCPHiddenTracks, showMutedTracks, showMutedItems, customItemColorEnabled, customItemColor })); } catch {}
 }
 function setPanel(visible) {
   labelsVisible = visible;
@@ -69,6 +79,19 @@ function setPanel(visible) {
   applyPanels(); resizePending = true;
 }
 function labelHeightLimit() { return Math.max(0, Math.floor(ui.timeline.parentElement.clientHeight * 0.4)); }
+function resizePanel(horizontal, value, save = false) {
+  if (horizontal) sidebarRatio = clamp(value, Math.min(96 / Math.max(1, ui.main.clientWidth), 0.4), 0.4);
+  else labelHeight = clamp(value, Math.min(18, labelHeightLimit()), labelHeightLimit());
+  applyPanels(); positionLabels(); resizePending = true;
+  if (save) storePreferences();
+}
+function resizePanelByKey(horizontal, key) {
+  const increase = horizontal ? key === 'ArrowLeft' : key === 'ArrowDown';
+  const decrease = horizontal ? key === 'ArrowRight' : key === 'ArrowUp';
+  if (!increase && !decrease) return false;
+  resizePanel(horizontal, (horizontal ? sidebarRatio : labelHeight) + (increase ? 1 : -1) * (horizontal ? 0.02 : 18), true);
+  return true;
+}
 function applyPanels() {
   const mainWidth = ui.main.clientWidth;
   const panelWidth = Math.round(mainWidth * clamp(sidebarRatio, Math.min(96 / Math.max(1, mainWidth), 0.4), 0.4));
@@ -85,16 +108,20 @@ function applyPanels() {
 }
 function refreshText() {
   i18n.apply(); setPanel(labelsVisible);
-  ui.empty.textContent = t(loaded ? 'emptyProject' : 'waiting');
-  ui.empty.hidden = loaded && tracks.length > 0;
+  refreshEmpty();
   if (errorCode) ui.error.textContent = t(errorCode);
   renderLabels(); dirty = true;
+}
+function refreshEmpty() {
+  ui.empty.textContent = t(loaded ? tracks.length ? 'noVisibleTracks' : 'emptyProject' : 'waiting');
+  ui.empty.hidden = loaded && trackMap.rows.length > 0;
 }
 function rebuildMap() {
   const labelEnd = labels.reduce((end, label) => Math.max(end, label.finish), 0);
   const length = Math.max(1, projectLength, labelEnd);
   map = createTimeMap(length, width, labels);
-  trackMap = createTrackMap(tracks, height);
+  trackMap = createTrackMap(tracks.filter(track => (showTCPHiddenTracks || track.visible !== false) && (showMutedTracks || !track.muted)), height);
+  refreshEmpty();
   positionLabels();
   viewDirty = true; dirty = true;
   lastCursor = '';
@@ -122,10 +149,24 @@ function drawTracks() {
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i], y = row.top, h = row.height;
     ctx.fillStyle = i % 2 ? '#222831' : '#1a2028'; ctx.fillRect(0, y, width, h);
-    const inset = Math.min(3, h * 0.16);
     for (const item of row.items) {
-      ctx.fillStyle = item.color || defaultItemColor;
-      for (const [a, b] of map.visible(item.start, item.finish)) ctx.fillRect(a, y + inset, Math.max(1, b - a), Math.max(0.5, h - inset * 2));
+      if (!showMutedItems && item.muted) continue;
+      const offset = row.freePositioning ? clamp(item.freeY ?? 0, 0, 1) : 0;
+      const extent = row.freePositioning ? clamp(item.freeHeight ?? 1, 0, 1 - offset) : 1;
+      const inset = Math.min(3, h * extent * 0.16), itemY = y + h * offset + inset;
+      const itemHeight = row.freePositioning ? h * extent - inset * 2 : Math.max(0.5, h - inset * 2);
+      if (itemHeight <= 0) continue;
+      const color = customItemColorEnabled && customItemColor && item.uncolored ? customItemColor : item.color || defaultItemColor;
+      for (const [a, b] of map.visible(item.start, item.finish)) {
+        const w = Math.max(1, b - a);
+        ctx.fillStyle = color; ctx.fillRect(a, itemY, w, itemHeight);
+        if (item.selected) {
+          const border = Math.min(2, w / 2, itemHeight / 2);
+          ctx.fillStyle = labelContrast(color);
+          ctx.fillRect(a, itemY, w, border); ctx.fillRect(a, itemY + itemHeight - border, w, border);
+          ctx.fillRect(a, itemY, border, itemHeight); ctx.fillRect(a + w - border, itemY, border, itemHeight);
+        }
+      }
     }
   }
   for (const segment of map.segments) if (segment.folded) {
@@ -138,6 +179,14 @@ function drawTracks() {
   }
   viewDirty = true;
 }
+function selectViewport(node) {
+  if (selectedViewport === node) return;
+  const previous = selectedViewport;
+  previous?.removeAttribute('data-selected');
+  selectedViewport = node;
+  selectedViewport?.setAttribute('data-selected', 'true');
+  if (!node && document.activeElement === previous) previous.blur();
+}
 function positionViewports() {
   viewDirty = false;
   const view = viewRange(), bands = viewportBands(trackMap, layout, view.top);
@@ -149,11 +198,13 @@ function positionViewports() {
       node = document.createElement('div'); node.className = 'viewport'; node.tabIndex = 0;
       node.setAttribute('role', 'group'); ui.viewport.append(node);
     }
+    if (node === selectedViewport && node.dataset.pinned !== String(band.pinned)) selectViewport(null);
     node.dataset.pinned = String(band.pinned);
     node.hidden = w <= 0;
     Object.assign(node.style, { left: `${left}px`, top: `${band.top}px`, width: `${w}px`, height: `${Math.max(1, band.bottom - band.top)}px` });
     node.setAttribute('aria-label', t(band.pinned ? 'pinnedViewport' : 'viewRange', { start: i18n.time(view.start, true), end: i18n.time(view.finish, true) }));
   });
+  if (selectedViewport && (!selectedViewport.isConnected || selectedViewport.hidden)) selectViewport(null);
 }
 function positionLabels() {
   guidesDirty = true;
@@ -187,7 +238,7 @@ function drawLabelGuides() {
     const node = labelNodes.get(label.id);
     if (!node) continue;
     const rect = node.getBoundingClientRect(), startY = rect.bottom - bounds.top;
-    for (const edge of [rect.left, rect.right - 1]) {
+    for (const edge of label.collapsed ? [rect.left] : [rect.left, rect.right - 1]) {
       const x = clamp(Math.round((edge - bounds.left) * pixelRatio) / pixelRatio, 0, Math.max(0, width - 1));
       lines.set(x, { startY: Math.min(startY, lines.get(x)?.startY ?? startY), color: label.color || '#718e86' });
     }
@@ -200,6 +251,7 @@ function drawLabelGuides() {
 function selectLabel(label) {
   if (!connected) return;
   selectedLabel = label.id; send('seek', { position: label.start });
+  for (const [id, node] of labelNodes) node.dataset.selected = String(id === selectedLabel);
   for (const row of ui['label-list'].children) row.setAttribute('aria-selected', String(Number(row.dataset.id) === selectedLabel));
 }
 function renderLabels() {
@@ -209,7 +261,7 @@ function renderLabels() {
   ui['toggle-all'].textContent = t(labels.some(label => !label.collapsed) ? 'collapseAll' : 'expandAll');
   for (const label of [...labels].sort((a, b) => a.start - b.start || a.id - b.id)) {
     const node = document.createElement('div');
-    node.className = 'time-label'; node.dataset.id = label.id; node.dataset.collapsed = label.collapsed;
+    node.className = 'time-label'; node.dataset.id = label.id; node.dataset.collapsed = label.collapsed; node.dataset.selected = label.id === selectedLabel;
     node.title = `${displayName(label)} · ${labelRange(label)}`;
     node.textContent = displayName(label);
     const color = label.color || '#718e86';
@@ -221,7 +273,7 @@ function renderLabels() {
     }
     node.addEventListener('dblclick', event => { if (!event.ctrlKey && !event.altKey) openEditor(label); });
     node.addEventListener('keydown', event => {
-      if (event.key === 'Enter') { event.preventDefault(); send('seek', { position: label.start }); openEditor(label); }
+      if (event.key === 'Enter') { event.preventDefault(); selectLabel(label); openEditor(label); }
     });
     ui.labels.append(node); labelNodes.set(label.id, node);
     const card = document.createElement('div'); card.className = 'label-card'; card.dataset.id = label.id;
@@ -244,7 +296,7 @@ function renderLabels() {
       if (event.target !== card) return;
       if (event.key === 'Enter') { event.preventDefault(); selectLabel(label); openEditor(label); }
       if (event.key === 'Delete') { event.preventDefault(); changeLabel('delete', { id: label.id }); }
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      if (!event.shiftKey && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
         event.preventDefault(); const next = event.key === 'ArrowDown' ? card.nextElementSibling : card.previousElementSibling;
         if (next) { next.focus(); selectLabel(labels.find(label => label.id === Number(next.dataset.id))); }
       }
@@ -280,9 +332,13 @@ async function editorAction(data) {
   if (sent) send('editor-close', { request: data.request });
 }
 ui['toggle-all'].addEventListener('click', () => { clearError(); send('label-batch', { action: 'collapse', collapsed: labels.some(label => !label.collapsed), revision }); });
+for (const action of ['fit', 'undo', 'redo', 'markers', 'regions']) ui[`sidebar-${action}`].addEventListener('click', () => {
+  settingsAction({ action, revision }).catch(() => report('syncFailed'));
+});
 function publishSettings(force = false) {
   if (!connected) return;
-  const state = { language: i18n.locale, languages, labelsVisible, showLabelGuides, canUndo, canRedo, stateError, revision, notice, errorCode };
+  const state = { language: i18n.locale, languages, labelsVisible, showLabelGuides, showTCPHiddenTracks, showMutedTracks, showMutedItems,
+    customItemColorEnabled, customItemColor, canUndo, canRedo, stateError, revision, notice, errorCode };
   const key = JSON.stringify(state);
   if (force || key !== settingsKey) { settingsKey = key; send('settings-state', { state }); }
 }
@@ -292,6 +348,15 @@ async function settingsAction(data) {
     catch { report('languageFailed'); }
   } else if (data.action === 'labels') { setPanel(data.value === true); storePreferences(); }
   else if (data.action === 'label-guides') { showLabelGuides = data.value === true; guidesDirty = true; storePreferences(); }
+  else if (['tcp-hidden-tracks', 'muted-tracks', 'muted-items'].includes(data.action)) {
+    if (data.action === 'tcp-hidden-tracks') showTCPHiddenTracks = data.value === true;
+    else if (data.action === 'muted-tracks') showMutedTracks = data.value === true;
+    else showMutedItems = data.value === true;
+    cancelGesture(); rebuildMap(); storePreferences();
+  } else if (data.action === 'custom-item-color-enabled') { customItemColorEnabled = data.value === true; dirty = true; storePreferences(); }
+  else if (data.action === 'custom-item-color' && typeof data.value === 'string' && /^#[\da-f]{6}$/i.test(data.value)) {
+    customItemColor = data.value; dirty = true; storePreferences();
+  }
   else if (data.action === 'fit') queueView(0, map.length);
   else if (data.action === 'undo' || data.action === 'redo') send('history', { action: data.action });
   else if (data.action === 'markers' || data.action === 'regions') {
@@ -347,6 +412,8 @@ function queueSnap(target, position) {
 function pointerDown(event) {
   if (!connected || event.button !== 0 || editing) return;
   cancelGesture();
+  const viewport = event.target.closest('.viewport');
+  if (viewport) { selectViewport(viewport); viewport.focus({ preventScroll: true }); }
   const node = event.target.closest('.time-label');
   if (node) {
     const label = labels.find(label => label.id === Number(node.dataset.id));
@@ -360,8 +427,8 @@ function pointerDown(event) {
     gesture = { kind: 'label', label, preview: { ...label }, edge: event.target.dataset.edge, start: eventTime(event), mapping: map, revision };
   } else if (event.ctrlKey && !stateError) {
     gesture = { kind: 'create', start: eventTime(event), mapping: map };
-  } else if (event.target.closest('.viewport')) {
-    gesture = { kind: 'view', view: { ...viewRange() }, start: eventTime(event), mapping: map, pinned: event.target.closest('.viewport').dataset.pinned === 'true', trackMapping: trackMap, geometry: layout, areaTop: ui.tracks.getBoundingClientRect().top };
+  } else if (viewport) {
+    gesture = { kind: 'view', view: { ...viewRange() }, start: eventTime(event), mapping: map, pinned: viewport.dataset.pinned === 'true', trackMapping: trackMap, geometry: layout, areaTop: ui.tracks.getBoundingClientRect().top };
   } else {
     gesture = { kind: 'seek', start: eventTime(event), mapping: map };
   }
@@ -427,17 +494,38 @@ for (const element of [ui.timeline, ui.tracks]) {
     queueView(next.start, next.finish);
   }, { passive: false });
 }
+document.addEventListener('pointerdown', event => { if (!event.target.closest('.viewport')) selectViewport(null); }, true);
+document.addEventListener('focusin', event => { selectViewport(connected && !editing ? event.target.closest('.viewport') : null); });
+window.addEventListener('blur', () => {
+  if (!selectedViewport) return;
+  bridge.window.getState().then(state => { if (!state.focused && !document.hasFocus()) selectViewport(null); }).catch(() => {});
+});
 ui.viewport.addEventListener('keydown', event => {
+  if (!connected || editing || gesture || !selectedViewport || event.target !== selectedViewport || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey) return;
   const view = viewRange(), horizontal = (view.finish - view.start) * 0.1, vertical = (sample?.viewHeight || 1) * 0.1;
   if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
   event.preventDefault();
+  if (selectedViewport.dataset.pinned === 'true' && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) return;
   const dx = event.key === 'ArrowLeft' ? -horizontal : event.key === 'ArrowRight' ? horizontal : 0;
   const dy = event.target.dataset.pinned === 'true' ? 0 : event.key === 'ArrowUp' ? -vertical : event.key === 'ArrowDown' ? vertical : 0;
   queueView(view.start + dx, view.finish + dx, view.top + dy);
 });
+function openSettings() {
+  if (!connected || editing) return;
+  cancelGesture(); publishSettings(true); send('settings-open');
+}
+ui['open-settings'].addEventListener('click', openSettings);
 document.addEventListener('keydown', event => {
-  if (event.ctrlKey && !event.altKey && (event.code === 'Comma' || event.key === ',')) {
-    event.preventDefault(); if (!editing) { cancelGesture(); publishSettings(true); send('settings-open'); } return;
+  if (event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey && !editing && !event.defaultPrevented
+    && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key) && !event.target.closest?.('input,textarea,select,[contenteditable=true]')) {
+    const horizontal = event.key === 'ArrowLeft' || event.key === 'ArrowRight';
+    if (!(horizontal ? ui['sidebar-divider'] : ui['label-divider']).hidden) {
+      event.preventDefault(); cancelGesture(); resizePanelByKey(horizontal, event.key);
+    }
+    return;
+  }
+  if (event.ctrlKey && (!event.altKey && (event.code === 'Comma' || event.key === ',') || event.altKey && event.code === 'KeyS')) {
+    event.preventDefault(); openSettings(); return;
   }
   if (event.ctrlKey && event.shiftKey && event.code === 'KeyT') { event.preventDefault(); setPanel(!labelsVisible); storePreferences(); publishSettings(); return; }
   if (event.ctrlKey && !event.altKey && !event.target.closest?.('input,textarea,[contenteditable=true]') && !editing) {
@@ -454,24 +542,17 @@ for (const [element, horizontal] of [[ui['sidebar-divider'], true], [ui['label-d
   element.addEventListener('pointerdown', event => {
     if (event.button !== 0) return;
     cancelGesture(); drag = { pointer: event.pointerId, x: event.clientX, y: event.clientY, ratio: ui['label-panel'].getBoundingClientRect().width / ui.main.clientWidth, labelHeight: ui.timeline.clientHeight };
-    element.setPointerCapture(event.pointerId); event.preventDefault();
+    element.focus({ preventScroll: true }); element.setPointerCapture(event.pointerId); event.preventDefault();
   });
   element.addEventListener('pointermove', event => {
     if (!drag || event.pointerId !== drag.pointer) return;
-    if (horizontal) sidebarRatio = clamp(drag.ratio + (drag.x - event.clientX) / ui.main.clientWidth, Math.min(96 / ui.main.clientWidth, 0.4), 0.4);
-    else labelHeight = clamp(drag.labelHeight + event.clientY - drag.y, Math.min(18, labelHeightLimit()), labelHeightLimit());
-    applyPanels(); positionLabels(); resizePending = true;
+    resizePanel(horizontal, horizontal ? drag.ratio + (drag.x - event.clientX) / ui.main.clientWidth : drag.labelHeight + event.clientY - drag.y);
   });
   const release = () => { drag = null; storePreferences(); };
   element.addEventListener('pointerup', release); element.addEventListener('pointercancel', release); element.addEventListener('lostpointercapture', release);
   element.addEventListener('keydown', event => {
-    const increase = horizontal ? event.key === 'ArrowLeft' : event.key === 'ArrowDown';
-    const decrease = horizontal ? event.key === 'ArrowRight' : event.key === 'ArrowUp';
-    if (!increase && !decrease) return;
-    event.preventDefault();
-    if (horizontal) sidebarRatio = clamp(sidebarRatio + (increase ? 0.02 : -0.02), Math.min(96 / ui.main.clientWidth, 0.4), 0.4);
-    else labelHeight = clamp(labelHeight + (increase ? 18 : -18), Math.min(18, labelHeightLimit()), labelHeightLimit());
-    applyPanels(); positionLabels(); resizePending = true; storePreferences();
+    if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || editing) return;
+    if (resizePanelByKey(horizontal, event.key)) event.preventDefault();
   });
 }
 function receive(text) {
@@ -479,7 +560,7 @@ function receive(text) {
   try { data = JSON.parse(text); } catch { report('syncFailed'); return; }
   if (data.type === 'hello') {
     if (session !== data.session) {
-      cancelGesture(); editing = null;
+      cancelGesture(); selectViewport(null); editing = null;
       session = data.session; sample = staging = layout = clockOffset = snapshotKey = null; selectedLabel = null; canUndo = canRedo = false;
       ackSequence = 0; clearTimeout(ackTimer); ackTimer = null;
       tracks = []; labels = []; projectLength = 1; loaded = false; stateError = false;
@@ -572,7 +653,15 @@ function frame(now) {
 async function start() {
   await i18n.load();
   let preferred = 'en';
-  try { const prefs = JSON.parse(localStorage.getItem('ArrangeNavigator.ui')); preferred = prefs?.language || 'en'; labelsVisible = prefs?.labelsVisible === true; showLabelGuides = prefs?.showLabelGuides !== false; if (Number.isFinite(prefs?.sidebarRatio)) sidebarRatio = clamp(prefs.sidebarRatio, 0.05, 0.4); if (Number.isFinite(prefs?.labelHeight)) labelHeight = clamp(prefs.labelHeight === 27 ? 18 : prefs.labelHeight, 18, 1000); } catch {}
+  try {
+    const prefs = JSON.parse(localStorage.getItem('ArrangeNavigator.ui'));
+    preferred = prefs?.language || 'en'; labelsVisible = prefs?.labelsVisible === true; showLabelGuides = prefs?.showLabelGuides !== false;
+    if (Number.isFinite(prefs?.sidebarRatio)) sidebarRatio = clamp(prefs.sidebarRatio, 0.05, 0.4);
+    if (Number.isFinite(prefs?.labelHeight)) labelHeight = clamp(prefs.labelHeight === 27 ? 18 : prefs.labelHeight, 18, 1000);
+    showTCPHiddenTracks = prefs?.showTCPHiddenTracks !== false; showMutedTracks = prefs?.showMutedTracks !== false; showMutedItems = prefs?.showMutedItems !== false;
+    customItemColorEnabled = prefs?.customItemColorEnabled === true;
+    if (typeof prefs?.customItemColor === 'string' && /^#[\da-f]{6}$/i.test(prefs.customItemColor)) customItemColor = prefs.customItemColor;
+  } catch {}
   if (preferred !== 'en') { try { await i18n.load(preferred); } catch { report('languageFailed'); } }
   storePreferences(); refreshText();
   const observer = new ResizeObserver(() => { resizePending = true; }); observer.observe(ui.tracks); observer.observe(ui.main);
