@@ -1,7 +1,7 @@
 @description ReaWebAPI: Web Runtime for REAPER
-@version 0.3.7.2
+@version 0.3.7.6
 @author zaibuyidao
-@link https://github.com/zaibuyidao/ReaScripts/tree/master/ReaWebAPI
+@link https://github.com/zaibuyidao/ReaWebAPI
 @provides
   [win64 extension] reaper_reawebapi-x64.dll https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-x64.dll
   [darwin-arm64 extension] reaper_reawebapi-arm64.dylib https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reaper_reawebapi-arm64.dylib
@@ -12,6 +12,10 @@
   [linux-aarch64 extension] reawebapi-webview-aarch64 https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/extension/reawebapi-webview-aarch64
   [script main] web/ReaWebAPI_Demo.lua https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/ReaWebAPI_Demo.lua
   [script nomain] web/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/app.js
+  [script nomain] web/external-client/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/README.md
+  [script nomain] web/external-client/app.js https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/app.js
+  [script nomain] web/external-client/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/index.html
+  [script nomain] web/external-client/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/external-client/style.css
   [script nomain] web/index.html https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/index.html
   [script nomain] web/logo.svg https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/logo.svg
   [script nomain] web/lua-backend/README.md https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/lua-backend/README.md
@@ -32,4 +36,4 @@
   [script nomain] web/native-stream/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/native-stream/style.css
   [script nomain] web/style.css https://raw.githubusercontent.com/zaibuyidao/ReaScripts/$commit/ReaWebAPI/web/style.css
 @changelog
-  Rename the sRGB checkbox to "Use sRGB for WebView rendering on Windows".
+  Add optional localhost External Clients with token authentication, independent sessions.

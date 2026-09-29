@@ -1,0 +1,17 @@
+:root { color-scheme: light dark; font: 14px/1.55 system-ui, sans-serif; }
+body { margin: 0; background: light-dark(#f6f7f8, #17191c); color: light-dark(#20252b, #e0e4ea); }
+main { max-width: 840px; margin: 36px auto; padding: 0 24px; }
+h1 { font-size: 28px; margin-bottom: 8px; }
+h2 { font-size: 16px; }
+p { color: light-dark(#52606b, #aeb9c4); }
+fieldset { border: 1px solid light-dark(#cbd2d9, #3b4651); border-radius: 6px; margin: 20px 0; padding: 18px; }
+legend { padding: 0 6px; font-weight: 600; }
+label { display: block; margin-bottom: 12px; }
+input { display: block; box-sizing: border-box; width: 100%; margin-top: 5px; padding: 8px; font: inherit; }
+#port { max-width: 140px; }
+button { padding: 7px 12px; font: inherit; cursor: pointer; }
+button:disabled { cursor: default; }
+.buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+#status { padding-left: 10px; }
+.log-title { display: flex; align-items: center; justify-content: space-between; }
+pre { min-height: 180px; max-height: 480px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: 16px; border: 1px solid light-dark(#cbd2d9, #3b4651); font: 12px/1.5 ui-monospace, monospace; }

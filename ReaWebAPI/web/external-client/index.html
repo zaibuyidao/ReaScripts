@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ReaWebAPI External Client</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>External Client</h1>
+    <p>Enable External Clients in REAPER Preferences > Plug-ins > ReaWebAPI, then copy the access token.</p>
+    <fieldset>
+      <legend>Connection</legend>
+      <label>Port <input id="port" type="number" min="1" max="65535" value="9123"></label>
+      <label>Access token <input id="token" type="password" autocomplete="off" spellcheck="false"></label>
+      <div><button id="connect">Connect</button> <button id="disconnect" disabled>Disconnect</button> <span id="status" role="status">Disconnected</span></div>
+    </fieldset>
+    <fieldset id="commands" disabled>
+      <legend>Native capabilities</legend>
+      <div class="buttons"><button id="info">Get info</button><button id="capabilities">Get capabilities</button><button id="call">Count tracks</button><button id="batch">Run batch</button><button id="service">Invoke runtime.getInfo</button><button id="subscribe">Subscribe to transport</button><button id="unsubscribe">Unsubscribe</button></div>
+      <label>Registered stream name <input id="stream-name" placeholder="test.binary" spellcheck="false"></label>
+      <div><button id="open-stream">Open stream</button> <button id="close-stream">Close streams</button></div>
+      <p>Streams require an active native producer. Disconnect releases this session's subscriptions, pending invokes and stream consumers.</p>
+    </fieldset>
+    <div class="log-title"><h2>Messages</h2><button id="clear">Clear</button></div>
+    <pre id="log" aria-live="polite"></pre>
+  </main>
+</body>
+</html>
