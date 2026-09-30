@@ -1,8 +1,8 @@
 -- @description TimeFold
 -- @author zaibuyidao
--- @version 1.0.1
+-- @version 1.0.2
 -- @changelog
---   Add display colors, item selection feedback, display filters, and settings access.
+--   Add independent project, preset, and automatic folder color modes with Show/Dim/Hide visibility.
 -- @links
 --   https://github.com/zaibuyidao/ReaWebAPI
 -- @metapackage
@@ -11,6 +11,7 @@
 --   [nomain] index.html
 --   [nomain] app.js
 --   [nomain] model.js
+--   [nomain] colors.js
 --   [nomain] i18n.js
 --   [nomain] style.css
 --   [nomain] settings.html

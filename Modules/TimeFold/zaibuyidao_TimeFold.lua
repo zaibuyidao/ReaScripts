@@ -296,8 +296,10 @@ function start_snapshot(now, count)
       if not track then changed = -1 return end
 
       local id = reaper.GetTrackGUID(track)
+      local _, name = reaper.GetTrackName(track)
       local free_positioning = reaper.GetMediaTrackInfo_Value(track, "I_FREEMODE") == 1
       add({ kind = "track", index = i + 1, id = id, pinned = reaper.GetMediaTrackInfo_Value(track, "B_TCPPIN") ~= 0, spacer = reaper.GetMediaTrackInfo_Value(track, "I_SPACER") ~= 0,
+        name = name, folderDepth = reaper.GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH"), color = color(reaper.GetTrackColor(track)),
         visible = reaper.GetMediaTrackInfo_Value(track, "B_SHOWINTCP") ~= 0, muted = reaper.GetMediaTrackInfo_Value(track, "B_MUTE") ~= 0, freePositioning = free_positioning })
       track = reaper.GetTrack(proj, i)
 

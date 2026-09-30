@@ -1,5 +1,6 @@
 import { I18n } from './i18n.js';
 import { clamp, createTimeMap, interpolatedPosition, createTrackMap, viewportBands, nativeAtY, packLabels, labelContrast, zoomRange } from './model.js';
+import { defaultColorSettings, normalizeColorSettings, updateColorSettings, normalizeVisibility, trackVisibility, colorTracks, itemDisplayColor } from './colors.js';
 
 const i18n = new I18n();
 const ui = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
@@ -11,7 +12,7 @@ let connected = false, loaded = false, stateError = false, errorCode = null;
 let width = 1, height = 1, guideHeight = 1, pixelRatio = 0, map = createTimeMap(1, 1, []);
 let resizePending = true, labelsVisible = false, sidebarRatio = 0.25, labelHeight = 18;
 let showLabelGuides = true, guidesDirty = true;
-let showTCPHiddenTracks = true, showMutedTracks = true, showMutedItems = true;
+let visibility = normalizeVisibility(), colorSettings = defaultColorSettings();
 let customItemColorEnabled = false, customItemColor = null;
 let trackMap = createTrackMap([], 1), viewDirty = true, snapshotKey = null, selectedLabel = null, canUndo = false, canRedo = false;
 let dirty = true, gesture = null, editing = null, viewPending = null, viewTimer = null, viewInFlight = false;
@@ -70,7 +71,7 @@ function displayName(label) { return label.name || t('labelDefault', { number: i
 function labelRange(label) { return t('range', { start: i18n.time(label.start, true), end: i18n.time(label.finish, true) }); }
 function storePreferences() {
   try { localStorage.setItem('ArrangeNavigator.ui', JSON.stringify({ language: i18n.locale, labelsVisible, sidebarRatio, labelHeight, showLabelGuides,
-    showTCPHiddenTracks, showMutedTracks, showMutedItems, customItemColorEnabled, customItemColor })); } catch {}
+    visibility, colorSettings, customItemColorEnabled, customItemColor })); } catch {}
 }
 function setPanel(visible) {
   labelsVisible = visible;
@@ -120,7 +121,7 @@ function rebuildMap() {
   const labelEnd = labels.reduce((end, label) => Math.max(end, label.finish), 0);
   const length = Math.max(1, projectLength, labelEnd);
   map = createTimeMap(length, width, labels);
-  trackMap = createTrackMap(tracks.filter(track => (showTCPHiddenTracks || track.visible !== false) && (showMutedTracks || !track.muted)), height);
+  trackMap = createTrackMap(colorTracks(tracks, colorSettings).filter(track => trackVisibility(track, visibility) !== 'hide'), height);
   refreshEmpty();
   positionLabels();
   viewDirty = true; dirty = true;
@@ -148,15 +149,19 @@ function drawTracks() {
   const rows = trackMap.rows;
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i], y = row.top, h = row.height;
+    const rowAlpha = trackVisibility(row, visibility) === 'dim' ? 0.35 : 1;
+    ctx.globalAlpha = rowAlpha;
     ctx.fillStyle = i % 2 ? '#222831' : '#1a2028'; ctx.fillRect(0, y, width, h);
+    if (row.displayColor) { ctx.fillStyle = row.displayColor; ctx.fillRect(0, y, Math.min(3, width), h); }
     for (const item of row.items) {
-      if (!showMutedItems && item.muted) continue;
+      if (visibility.mutedItems === 'hide' && item.muted) continue;
+      ctx.globalAlpha = rowAlpha * (visibility.mutedItems === 'dim' && item.muted ? 0.35 : 1);
       const offset = row.freePositioning ? clamp(item.freeY ?? 0, 0, 1) : 0;
       const extent = row.freePositioning ? clamp(item.freeHeight ?? 1, 0, 1 - offset) : 1;
       const inset = Math.min(3, h * extent * 0.16), itemY = y + h * offset + inset;
       const itemHeight = row.freePositioning ? h * extent - inset * 2 : Math.max(0.5, h - inset * 2);
       if (itemHeight <= 0) continue;
-      const color = customItemColorEnabled && customItemColor && item.uncolored ? customItemColor : item.color || defaultItemColor;
+      const color = itemDisplayColor(item, row, colorSettings, customItemColorEnabled, customItemColor, defaultItemColor);
       for (const [a, b] of map.visible(item.start, item.finish)) {
         const w = Math.max(1, b - a);
         ctx.fillStyle = color; ctx.fillRect(a, itemY, w, itemHeight);
@@ -169,6 +174,7 @@ function drawTracks() {
       }
     }
   }
+  ctx.globalAlpha = 1;
   for (const segment of map.segments) if (segment.folded) {
     const x = segment.left, w = segment.right - segment.left;
     ctx.fillStyle = '#302b39'; ctx.fillRect(x, 0, w, height);
@@ -337,7 +343,7 @@ for (const action of ['fit', 'undo', 'redo', 'markers', 'regions']) ui[`sidebar-
 });
 function publishSettings(force = false) {
   if (!connected) return;
-  const state = { language: i18n.locale, languages, labelsVisible, showLabelGuides, showTCPHiddenTracks, showMutedTracks, showMutedItems,
+  const state = { language: i18n.locale, languages, labelsVisible, showLabelGuides, visibility, colorSettings,
     customItemColorEnabled, customItemColor, canUndo, canRedo, stateError, revision, notice, errorCode };
   const key = JSON.stringify(state);
   if (force || key !== settingsKey) { settingsKey = key; send('settings-state', { state }); }
@@ -348,11 +354,12 @@ async function settingsAction(data) {
     catch { report('languageFailed'); }
   } else if (data.action === 'labels') { setPanel(data.value === true); storePreferences(); }
   else if (data.action === 'label-guides') { showLabelGuides = data.value === true; guidesDirty = true; storePreferences(); }
-  else if (['tcp-hidden-tracks', 'muted-tracks', 'muted-items'].includes(data.action)) {
-    if (data.action === 'tcp-hidden-tracks') showTCPHiddenTracks = data.value === true;
-    else if (data.action === 'muted-tracks') showMutedTracks = data.value === true;
-    else showMutedItems = data.value === true;
+  else if (data.action === 'visibility' && ['tcpHiddenTracks', 'mutedTracks', 'mutedItems'].includes(data.value?.key) && ['show', 'dim', 'hide'].includes(data.value.mode)) {
+    visibility = { ...visibility, [data.value.key]: data.value.mode };
     cancelGesture(); rebuildMap(); storePreferences();
+  } else if (['color-mode', 'auto-palette-color', 'auto-palette-reset', 'preset-select', 'preset-add', 'preset-copy', 'preset-rename', 'preset-delete', 'folder-add', 'folder-update', 'folder-delete'].includes(data.action)) {
+    colorSettings = updateColorSettings(colorSettings, data.action, data.value);
+    rebuildMap(); storePreferences();
   } else if (data.action === 'custom-item-color-enabled') { customItemColorEnabled = data.value === true; dirty = true; storePreferences(); }
   else if (data.action === 'custom-item-color' && typeof data.value === 'string' && /^#[\da-f]{6}$/i.test(data.value)) {
     customItemColor = data.value; dirty = true; storePreferences();
@@ -658,7 +665,7 @@ async function start() {
     preferred = prefs?.language || 'en'; labelsVisible = prefs?.labelsVisible === true; showLabelGuides = prefs?.showLabelGuides !== false;
     if (Number.isFinite(prefs?.sidebarRatio)) sidebarRatio = clamp(prefs.sidebarRatio, 0.05, 0.4);
     if (Number.isFinite(prefs?.labelHeight)) labelHeight = clamp(prefs.labelHeight === 27 ? 18 : prefs.labelHeight, 18, 1000);
-    showTCPHiddenTracks = prefs?.showTCPHiddenTracks !== false; showMutedTracks = prefs?.showMutedTracks !== false; showMutedItems = prefs?.showMutedItems !== false;
+    visibility = normalizeVisibility(prefs); colorSettings = normalizeColorSettings(prefs?.colorSettings);
     customItemColorEnabled = prefs?.customItemColorEnabled === true;
     if (typeof prefs?.customItemColor === 'string' && /^#[\da-f]{6}$/i.test(prefs.customItemColor)) customItemColor = prefs.customItemColor;
   } catch {}

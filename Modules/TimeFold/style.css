@@ -43,7 +43,7 @@ h2{font-size:12px;font-weight:600;margin:0}#label-count{color:var(--muted)}#no-l
 #label-divider{flex:0 0 3px;cursor:row-resize;background:#252c34;touch-action:none}
 #sidebar-divider:hover,#label-divider:hover{background:#718e86}
 .setting{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0}
-.setting input{width:16px;height:16px;margin:0}.settings-actions{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0}
+.setting input{width:16px;height:16px;margin:0}
 .setting-hint{color:var(--muted);font-size:11px;line-height:1.5;margin:-8px 0 18px}
 .color-field input{height:32px;padding:2px;width:64px}.time-label{height:18px;min-width:8px}
 dialog{border:1px solid #48515b;border-radius:7px;background:#20252c;color:inherit;padding:22px;width:min(460px,calc(100vw - 28px))}
@@ -61,9 +61,11 @@ input{background:#14191f;border:1px solid #444e5a;border-radius:3px;padding:8px;
 .settings-page{height:auto;min-height:100vh;overflow:auto;background:#20252c}.settings-page #settings{display:block;flex:none;width:min(760px,100%);padding:22px;margin:0 auto}.settings-page h2{font-size:16px;margin-bottom:20px}
 .editor-page{height:auto;min-height:100vh;overflow:auto;background:#20252c;line-height:1.5}.editor-page #editor{display:block;flex:none;padding:22px;width:100%}.editor-page h2{font-size:16px;margin-bottom:20px}
 .settings-section{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}.settings-section h3{font-size:12px;font-weight:600;margin:0 0 8px}
+.settings-group{border:0;border-top:1px solid var(--line);padding:12px 0 0;margin-inline:0;min-width:0}.settings-group legend{font-weight:600;padding:0 8px 0 0}.color-modes label{display:flex;align-items:center;gap:8px;margin:10px 0}.color-modes input{width:16px;height:16px;margin:0}
+.preset-name{display:flex;align-items:center;gap:12px}.preset-name input{flex:1;min-width:0}.preset-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 20px}#view-preset{max-width:70%}#timefold-colors h3,#auto-colors h3{font-size:12px}
+#auto-color-palette .setting{margin:8px 0}#auto-palette-reset{margin-top:4px}
+.folder-color{display:flex;align-items:center;gap:8px;margin:8px 0}.folder-name{flex:1;min-width:0}.folder-swatch{flex:0 0 48px;width:48px;height:32px;padding:2px}.folder-color button{flex-shrink:0}.color-hint{color:var(--muted);font-size:11px;line-height:1.5}
 #shortcut-help{margin-bottom:20px}#shortcut-help summary{cursor:pointer;font-size:12px;font-weight:600}#shortcut-help .shortcut-list{margin-top:14px}
-.import-actions{display:flex;gap:8px;flex-wrap:wrap}
-#settings-status{color:#a7bfb4;font-size:11px;line-height:1.5;min-height:0;margin:6px 0}
 .shortcut-list{margin:0;display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,1.4fr);gap:8px 14px;font-size:11px;line-height:1.5}
 .shortcut-list dt{color:#bdc7d0;overflow-wrap:anywhere}.shortcut-list dd{margin:0;color:var(--muted);overflow-wrap:anywhere}
 @media(max-width:420px){.shortcut-list{grid-template-columns:1fr;gap:2px}.shortcut-list dd{margin-bottom:8px}}
