@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>TrackAxis</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="brand"><span>TRACK<b>AXIS</b></span></div>
+    <button id="settings-open" class="icon" data-title="settings" aria-label="Settings" aria-keyshortcuts="Control+, Control+Alt+S">⚙</button>
+  </header>
+  <div class="search-wrap"><input id="search" type="search" data-placeholder="searchPlaceholder" autocomplete="off"><div id="search-results" hidden></div></div>
+  <div id="status" role="status" aria-live="polite"></div>
+  <main>
+    <div id="empty" class="empty"><span class="empty-mark" aria-hidden="true">▥</span><h1 data-i18n="noTrack"></h1><p data-i18n="selectTrackHint"></p></div>
+    <div id="inspector" hidden>
+      <section id="track-header" class="track-header"></section>
+      <section id="mixer" class="mixer" aria-label="Mix controls"></section>
+      <details id="panel-fx" data-panel="fx"><summary><span data-i18n="fx"></span><span class="badge" id="fx-count"></span></summary><div class="panel-content"><div id="fx"></div><section id="fx-parameter-panel" aria-labelledby="fx-parameter-title" hidden><h3 id="fx-parameter-title" data-i18n="fxParameters"></h3><div id="fx-parameters"></div></section></div></details>
+      <details id="panel-routing" data-panel="routing"><summary><span data-i18n="routing"></span><span class="badge" id="routing-count"></span></summary><div class="panel-content" id="routing"></div></details>
+      <details id="panel-analysis" data-panel="analysis"><summary data-i18n="analysis"></summary><div class="panel-content">
+        <p id="analysis-notice" class="hint"></p>
+        <details class="analysis-card" id="analysis-livePeak" open><summary data-i18n="livePeak"></summary><p class="hint" data-i18n="livePeakHint"></p><p class="analysis-status"></p><div class="readout"></div></details>
+        <details class="analysis-card" id="analysis-meter" open><summary data-i18n="meter"></summary><p class="analysis-status"></p><div class="readout"></div></details>
+        <details class="analysis-card" id="analysis-spectrum" open><summary data-i18n="spectrum"></summary><p class="analysis-status"></p><canvas height="130" aria-label="Spectrum"></canvas><div class="axis"><span>20 Hz</span><span>1 kHz</span><span>20 kHz</span></div></details>
+        <details class="analysis-card" id="analysis-waveform" open><summary data-i18n="waveform"></summary><p class="analysis-status"></p><canvas height="110" aria-label="Realtime waveform"></canvas></details>
+      </div></details>
+      <details id="panel-parameters" data-panel="parameters"><summary data-i18n="parameters"></summary><div class="panel-content" id="parameters"></div></details>
+      <details id="panel-items" data-panel="items"><summary><span data-i18n="items"></span><span class="badge" id="items-count"></span></summary><div class="panel-content"><div id="items"></div><div id="overview" hidden><p id="overview-status" class="hint"></p><canvas id="overview-canvas" height="100" aria-label="Source waveform overview"></canvas></div></div></details>
+      <details id="panel-metadata" data-panel="metadata"><summary data-i18n="metadata"></summary><div class="panel-content" id="metadata"></div></details>
+      <details id="panel-appearance" data-panel="appearance"><summary data-i18n="appearance"></summary><div class="panel-content" id="appearance"></div></details>
+      <details id="panel-quick" data-panel="quick"><summary data-i18n="quick"></summary><div class="panel-content button-grid" id="quick"></div></details>
+    </div>
+  </main>
+  <footer><span class="connection-dot"></span><span id="connection" data-i18n="connecting"></span><span id="project-name"></span></footer>
+  <div id="record-menu" class="context-menu" hidden></div>
+  <div id="pan-menu" class="context-menu" role="menu" hidden></div>
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <form id="settings-form">
+      <div class="dialog-header"><div><p class="eyebrow">TRACKAXIS</p><h2 id="settings-title" data-i18n="settings"></h2></div><button type="button" class="icon" data-close="settings-dialog" data-title="cancel">×</button></div>
+      <div class="dialog-body settings-body">
+        <h3 data-i18n="displaySettings"></h3>
+        <label class="row"><span data-i18n="language"></span><select name="language" id="setting-language"></select></label>
+        <label class="row"><span data-i18n="density"></span><select name="density"><option value="comfortable" data-i18n="comfortable"></option><option value="compact" data-i18n="compact"></option></select></label>
+        <label class="row"><span data-i18n="theme"></span><select name="theme"><option value="reaper" data-i18n="themeReaper"></option><option value="custom" data-i18n="themeCustom"></option></select></label>
+        <div id="custom-colors" class="custom-colors" hidden>
+          <label class="row"><span data-i18n="colorBackground"></span><input type="color" name="colorBackground"></label>
+          <label class="row"><span data-i18n="colorPanel"></span><input type="color" name="colorPanel"></label>
+          <label class="row"><span data-i18n="colorText"></span><input type="color" name="colorText"></label>
+          <label class="row"><span data-i18n="colorAccent"></span><input type="color" name="colorAccent"></label>
+          <label class="row"><span data-i18n="colorBorder"></span><input type="color" name="colorBorder"></label>
+        </div>
+        <label class="check"><input type="checkbox" name="fxCompact"><span data-i18n="fxCompact"></span></label>
+        <h3 data-i18n="analysisSettings"></h3>
+        <label class="check"><input type="checkbox" name="analysis"><span data-i18n="enableAnalysis"></span></label>
+        <label class="row"><span data-i18n="analysisSource"></span><select name="source"><option value="track" data-i18n="sourceTrack"></option><option value="master" data-i18n="sourceMaster"></option><option value="input" data-i18n="sourceInput"></option></select></label>
+        <p class="hint" data-i18n="preFXHint"></p>
+        <div class="setting-checks"><label class="check"><input type="checkbox" name="meter"><span data-i18n="meter"></span></label><label class="check"><input type="checkbox" name="spectrum"><span data-i18n="spectrum"></span></label><label class="check"><input type="checkbox" name="waveform"><span data-i18n="waveform"></span></label><label class="check"><input type="checkbox" name="livePeak"><span data-i18n="livePeak"></span></label></div>
+        <label class="row"><span data-i18n="fftSize"></span><select name="fftSize"><option>512</option><option>1024</option><option>2048</option><option>4096</option><option>8192</option></select></label>
+        <label class="row"><span data-i18n="streamRate"></span><select name="streamRate"><option value="10">10 Hz</option><option value="20">20 Hz</option><option value="30">30 Hz</option><option value="60">60 Hz</option></select></label>
+        <label class="row"><span data-i18n="drawRate"></span><select name="drawRate"><option value="15">15 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option></select></label>
+        <label class="row"><span data-i18n="spectrumFloor"></span><select name="floor"><option value="-60">−60 dBFS</option><option value="-90">−90 dBFS</option><option value="-120">−120 dBFS</option></select></label>
+        <p class="hint" data-i18n="settingsHint"></p>
+        <h3 data-i18n="shortcuts"></h3><div class="row"><span data-i18n="openSettings"></span><span><kbd>Ctrl+,</kbd> / <kbd>Ctrl+Alt+S</kbd></span></div>
+      </div>
+      <div class="dialog-footer"><button type="button" id="settings-reset" data-i18n="restoreDefaults"></button><span class="spacer"></span><button type="button" data-close="settings-dialog" data-i18n="cancel"></button><button type="submit" class="primary" data-i18n="save"></button></div>
+    </form>
+  </dialog>
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title"><form method="dialog"><div class="dialog-header"><h2 id="confirm-title" data-i18n="confirmDelete"></h2></div><div class="dialog-body"><p id="confirm-message"></p><p class="hint" data-i18n="undoHint"></p></div><div class="dialog-footer"><button value="cancel" autofocus data-i18n="cancel"></button><button value="delete" class="danger" data-i18n="delete"></button></div></form></dialog>
+  <dialog id="fx-dialog" aria-labelledby="fx-title"><div class="dialog-header"><h2 id="fx-title" data-i18n="addFX"></h2><button class="icon" data-close="fx-dialog" data-title="cancel">×</button></div><div class="dialog-body"><input id="fx-search" type="search" role="combobox" aria-autocomplete="list" aria-controls="fx-catalog" aria-expanded="true" data-placeholder="fxSearch" autocomplete="off"><p id="fx-catalog-status" class="hint"></p><div id="fx-catalog" role="listbox"></div><form id="fx-add-form" class="row"><input id="fx-name" data-placeholder="fxExactName" required><button class="primary" data-i18n="add"></button></form></div></dialog>
+  <dialog id="route-dialog" aria-labelledby="route-title"><div class="dialog-header"><h2 id="route-title"></h2><button class="icon" data-close="route-dialog" data-title="cancel">×</button></div><div class="dialog-body"><input id="route-search" type="search" data-placeholder="searchPlaceholder" autocomplete="off"><div id="route-catalog"></div></div></dialog>
+
+</body>
+</html>

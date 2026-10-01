@@ -1,0 +1,23 @@
+-- @description TrackAxis
+-- @author zaibuyidao
+-- @version 0.1.0
+-- @changelog
+--   Initial release.
+-- @links
+--   https://github.com/zaibuyidao/ReaWebAPI
+-- @metapackage
+-- @provides
+--   [main=main] zaibuyidao_TrackAxis.lua
+--   [nomain] app.js
+--   [nomain] app.json
+--   [nomain] audio.js
+--   [nomain] backend.lua
+--   [nomain] index.html
+--   [nomain] json.lua
+--   [nomain] model.js
+--   [nomain] style.css
+--   [nomain] locales/*.json
+-- @about
+--   TrackAxis is a ReaWeb Module built on ReaWebAPI for inspecting and controlling REAPER tracks.
+--   Manage routing, FX, media items, track parameters, and audio analysis from one workspace.
+--   Includes dedicated Track and Master views. Requires ReaWebAPI. Run zaibuyidao_TrackAxis.lua from the Action List.
