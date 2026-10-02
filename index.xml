@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="zaibuyidao Scripts" commit="9ed811ba7b52cda35855a586a0114d09670619a7">
+<index version="1" name="zaibuyidao Scripts" commit="3afbebcbd9cc6892eb7b0ce27618daaab90ccee8">
   <category name="Development">
     <reapack name="Lokasenna_GUI library.lua" type="script" desc="Get Lokasenna_GUI library">
       <metadata>
@@ -7347,6 +7347,24 @@ Fix low-frequency distortion in GB/GBC audio resampling.]]></changelog>
         <source file="locales/languages.json">https://github.com/zaibuyidao/ReaScripts/raw/9ed811ba7b52cda35855a586a0114d09670619a7/Modules/TrackAxis/locales/languages.json</source>
         <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/9ed811ba7b52cda35855a586a0114d09670619a7/Modules/TrackAxis/locales/zh-CN.json</source>
         <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/9ed811ba7b52cda35855a586a0114d09670619a7/Modules/TrackAxis/locales/zh-TW.json</source>
+      </version>
+      <version name="0.1.1" author="zaibuyidao" time="2026-10-02T10:33:04Z">
+        <changelog><![CDATA[Initial release.]]></changelog>
+        <source main="main" file="zaibuyidao_TrackAxis.lua">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/zaibuyidao_TrackAxis.lua</source>
+        <source file="app.js">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/app.js</source>
+        <source file="app.json">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/app.json</source>
+        <source file="audio.js">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/audio.js</source>
+        <source file="backend.lua">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/backend.lua</source>
+        <source file="index.html">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/index.html</source>
+        <source file="json.lua">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/json.lua</source>
+        <source file="model.js">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/model.js</source>
+        <source file="style.css">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/style.css</source>
+        <source file="locales/en.json">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/locales/en.json</source>
+        <source file="locales/ja.json">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/locales/ja.json</source>
+        <source file="locales/ko.json">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/locales/ko.json</source>
+        <source file="locales/languages.json">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/locales/languages.json</source>
+        <source file="locales/zh-CN.json">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/locales/zh-CN.json</source>
+        <source file="locales/zh-TW.json">https://github.com/zaibuyidao/ReaScripts/raw/3afbebcbd9cc6892eb7b0ce27618daaab90ccee8/Modules/TrackAxis/locales/zh-TW.json</source>
       </version>
     </reapack>
   </category>
